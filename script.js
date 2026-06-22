@@ -21,12 +21,12 @@
 
 // --- אתחול Firebase Auth ---
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyCpVZS9qEnpPz-gyu12yD3FLiu3Lf-Tg04",
+  authDomain: "newsite-f76e2.firebaseapp.com",
+  projectId: "newsite-f76e2",
+  storageBucket: "newsite-f76e2.firebasestorage.app",
+  messagingSenderId: "484000020563",
+  appId: "1:484000020563:web:d1a6f7c80419a6173d6ea6"
 };
 
 // אתחול Firebase רק אם הוא לא מאותחל כבר וקיים בדף
