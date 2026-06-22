@@ -2466,14 +2466,36 @@ document.addEventListener('DOMContentLoaded', () => {
   const messagesContainer = document.getElementById('chat-messages-container');
 
   const managerBtn = document.querySelector('.manager-btn');
+  const loginBtn = document.querySelector('.login-btn');
+
   if (managerBtn) {
-    managerBtn.textContent = isEditMode ? 'מנהל' : 'אורח';
-    
     managerBtn.addEventListener('click', () => {
       if (typeof firebase !== 'undefined') {
         const user = firebase.auth().currentUser;
-        if (user && user.email === 'yoni98321@gmail.com') {
-          if (confirm('האם ברצונך להתנתק ממערכת הניהול?')) {
+        if (user) {
+          if (user.email === 'yoni98321@gmail.com') {
+            if (confirm('האם ברצונך להתנתק ממערכת הניהול?')) {
+              firebase.auth().signOut();
+            }
+          } else {
+            alert('אין לך הרשאת מנהל! רק yoni98321@gmail.com מורשה לגשת לפאנל הניהול.');
+          }
+        } else {
+          const loginModal = document.getElementById('login-modal');
+          if (loginModal) loginModal.style.display = 'flex';
+        }
+      } else {
+        alert('שגיאה: ספריית Firebase לא נטענה.');
+      }
+    });
+  }
+
+  if (loginBtn) {
+    loginBtn.addEventListener('click', () => {
+      if (typeof firebase !== 'undefined') {
+        const user = firebase.auth().currentUser;
+        if (user) {
+          if (confirm(`מחובר כעת כ-${user.email}. האם ברצונך להתנתק?`)) {
             firebase.auth().signOut();
           }
         } else {
@@ -2584,17 +2606,32 @@ if (typeof firebase !== 'undefined') {
   // מאזין למצב התחברות
   firebase.auth().onAuthStateChanged((user) => {
     const managerBtn = document.querySelector('.manager-btn');
+    const loginBtn = document.querySelector('.login-btn');
     const ft = document.getElementById('floating-toolbar');
     
-    if (user && user.email === 'yoni98321@gmail.com') {
-      isEditMode = true;
-      if (managerBtn) managerBtn.textContent = 'מנהל (מחובר) 🟢';
-      if (ft) ft.style.display = 'flex';
-      applyEditModeToContent();
-      renderSideMenu();
-      renderTopNav();
+    if (user) {
+      if (loginBtn) {
+        loginBtn.textContent = `התנתק (${user.email.split('@')[0]}) 👤`;
+      }
+      
+      if (user.email === 'yoni98321@gmail.com') {
+        isEditMode = true;
+        if (managerBtn) managerBtn.textContent = 'מנהל (מחובר) 🟢';
+        if (ft) ft.style.display = 'flex';
+        applyEditModeToContent();
+        renderSideMenu();
+        renderTopNav();
+      } else {
+        isEditMode = false;
+        if (managerBtn) managerBtn.textContent = 'מנהל (אורח) 👤';
+        if (ft) ft.style.display = 'none';
+        removeEditModeFromContent();
+        renderSideMenu();
+        renderTopNav();
+      }
     } else {
       isEditMode = false;
+      if (loginBtn) loginBtn.textContent = 'התחבר 👤';
       if (managerBtn) managerBtn.textContent = 'מנהל 👤';
       if (ft) ft.style.display = 'none';
       removeEditModeFromContent();
@@ -2613,6 +2650,37 @@ document.addEventListener('DOMContentLoaded', () => {
   const authPasswordInput = document.getElementById('auth-password');
   const authErrorDiv = document.getElementById('auth-error');
   
+  // אלמנטים לשינוי מצב התחברות / הרשמה
+  const btnToggleAuthMode = document.getElementById('btn-toggle-auth-mode');
+  const authToggleText = document.getElementById('auth-toggle-text');
+  const authTitle = loginModal ? loginModal.querySelector('.auth-title') : null;
+  const authSubtitle = loginModal ? loginModal.querySelector('.auth-subtitle') : null;
+  
+  let isSignUpMode = false;
+
+  if (btnToggleAuthMode) {
+    btnToggleAuthMode.addEventListener('click', (e) => {
+      e.preventDefault();
+      isSignUpMode = !isSignUpMode;
+      
+      if (authErrorDiv) authErrorDiv.style.display = 'none';
+      
+      if (isSignUpMode) {
+        if (authTitle) authTitle.textContent = 'Create Account';
+        if (authSubtitle) authSubtitle.textContent = 'Sign up for a free account to join us';
+        if (btnSubmitLogin) btnSubmitLogin.textContent = 'Sign Up →';
+        if (authToggleText) authToggleText.textContent = 'Already have an account?';
+        btnToggleAuthMode.textContent = 'Sign In';
+      } else {
+        if (authTitle) authTitle.textContent = 'Welcome Back';
+        if (authSubtitle) authSubtitle.textContent = 'Enter your details to continue';
+        if (btnSubmitLogin) btnSubmitLogin.textContent = 'Sign In →';
+        if (authToggleText) authToggleText.textContent = "Don't have an account?";
+        btnToggleAuthMode.textContent = 'Sign Up';
+      }
+    });
+  }
+
   if (btnTogglePassword && authPasswordInput) {
     btnTogglePassword.addEventListener('click', () => {
       const isPassword = authPasswordInput.type === 'password';
@@ -2643,25 +2711,27 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
       
-      if (email !== 'yoni98321@gmail.com') {
-        if (authErrorDiv) {
-          authErrorDiv.textContent = 'אין לך הרשאת מנהל! רק yoni98321@gmail.com מורשה לערוך.';
-          authErrorDiv.style.display = 'block';
-        }
-        return;
-      }
-      
       try {
-        await firebase.auth().signInWithEmailAndPassword(email, password);
+        if (isSignUpMode) {
+          await firebase.auth().createUserWithEmailAndPassword(email, password);
+        } else {
+          await firebase.auth().signInWithEmailAndPassword(email, password);
+        }
         loginModal.style.display = 'none';
         authEmailInput.value = '';
         authPasswordInput.value = '';
       } catch (error) {
         console.error(error);
         if (authErrorDiv) {
-          let errorMsg = 'שגיאת התחברות. אנא ודא שהמייל והסיסמה נכונים.';
+          let errorMsg = 'שגיאה בפעולה זו. אנא בדוק את הפרטים שהזנת.';
           if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
             errorMsg = 'אימייל או סיסמה שגויים!';
+          } else if (error.code === 'auth/email-already-in-use') {
+            errorMsg = 'כתובת האימייל הזו כבר רשומה במערכת!';
+          } else if (error.code === 'auth/weak-password') {
+            errorMsg = 'הסיסמה חלשה מדי! יש להזין לפחות 6 תווים.';
+          } else if (error.code === 'auth/invalid-email') {
+            errorMsg = 'כתובת אימייל לא תקינה!';
           }
           authErrorDiv.textContent = errorMsg;
           authErrorDiv.style.display = 'block';
