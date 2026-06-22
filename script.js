@@ -2610,8 +2610,9 @@ if (typeof firebase !== 'undefined') {
     const ft = document.getElementById('floating-toolbar');
     
     if (user) {
+      const displayName = user.email ? user.email.split('@')[0] : 'אורח';
       if (loginBtn) {
-        loginBtn.textContent = `התנתק (${user.email.split('@')[0]}) 👤`;
+        loginBtn.textContent = `התנתק (${displayName}) 👤`;
       }
       
       if (user.email === 'yoni98321@gmail.com') {
@@ -2656,6 +2657,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const authTitle = loginModal ? loginModal.querySelector('.auth-title') : null;
   const authSubtitle = loginModal ? loginModal.querySelector('.auth-subtitle') : null;
   
+  // כפתורים חברתיים
+  const btnLoginGoogle = document.getElementById('btn-login-google');
+  const btnLoginAnonymous = document.getElementById('btn-login-anonymous');
+
   let isSignUpMode = false;
 
   if (btnToggleAuthMode) {
@@ -2666,17 +2671,17 @@ document.addEventListener('DOMContentLoaded', () => {
       if (authErrorDiv) authErrorDiv.style.display = 'none';
       
       if (isSignUpMode) {
-        if (authTitle) authTitle.textContent = 'Create Account';
-        if (authSubtitle) authSubtitle.textContent = 'Sign up for a free account to join us';
-        if (btnSubmitLogin) btnSubmitLogin.textContent = 'Sign Up →';
-        if (authToggleText) authToggleText.textContent = 'Already have an account?';
-        btnToggleAuthMode.textContent = 'Sign In';
+        if (authTitle) authTitle.textContent = 'יצירת חשבון';
+        if (authSubtitle) authSubtitle.textContent = 'הרשמו כדי להצטרף אלינו וליצור אתר בחינם';
+        if (btnSubmitLogin) btnSubmitLogin.textContent = 'הרשמה ←';
+        if (authToggleText) authToggleText.textContent = 'כבר יש לך חשבון?';
+        btnToggleAuthMode.textContent = 'התחברות';
       } else {
-        if (authTitle) authTitle.textContent = 'Welcome Back';
-        if (authSubtitle) authSubtitle.textContent = 'Enter your details to continue';
-        if (btnSubmitLogin) btnSubmitLogin.textContent = 'Sign In →';
-        if (authToggleText) authToggleText.textContent = "Don't have an account?";
-        btnToggleAuthMode.textContent = 'Sign Up';
+        if (authTitle) authTitle.textContent = 'ברוכים הבאים';
+        if (authSubtitle) authSubtitle.textContent = 'הזינו את הפרטים שלכם כדי להמשיך';
+        if (btnSubmitLogin) btnSubmitLogin.textContent = 'התחברות ←';
+        if (authToggleText) authToggleText.textContent = 'אין לך חשבון?';
+        btnToggleAuthMode.textContent = 'הרשמה עכשיו';
       }
     });
   }
@@ -2739,4 +2744,41 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+
+  // התחברות עם Google
+  if (btnLoginGoogle) {
+    btnLoginGoogle.addEventListener('click', async () => {
+      if (authErrorDiv) authErrorDiv.style.display = 'none';
+      try {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        await firebase.auth().signInWithPopup(provider);
+        loginModal.style.display = 'none';
+      } catch (error) {
+        console.error(error);
+        if (authErrorDiv) {
+          authErrorDiv.textContent = 'התחברות באמצעות Google נכשלה. אנא נסה שנית.';
+          authErrorDiv.style.display = 'block';
+        }
+      }
+    });
+  }
+
+  // התחברות אנונימית
+  if (btnLoginAnonymous) {
+    btnLoginAnonymous.addEventListener('click', async () => {
+      if (authErrorDiv) authErrorDiv.style.display = 'none';
+      try {
+        await firebase.auth().signInAnonymously();
+        loginModal.style.display = 'none';
+      } catch (error) {
+        console.error(error);
+        if (authErrorDiv) {
+          authErrorDiv.textContent = 'התחברות כאורח נכשלה. אנא נסה שנית.';
+          authErrorDiv.style.display = 'block';
+        }
+      }
+    });
+  }
 });
+
+
