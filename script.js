@@ -17,13 +17,25 @@
  * 10. קיצורי מקלדת מקצועיים (Shortcuts - Ctrl+C/V/Z)
  * 11. מערכות צד ג' (Cookie Consent, צ'אט תמיכה)
  * 
- * הערה ארכיטקטונית (Architecture Note):
- * -------------------------------------
- * נכון לעכשיו, קוד זה (והממשק הויזואלי כולו) משמש את *מנהל האתר* (Admin / Editor).
- * כל הכלים כאן נועדו לבניית האתר ועריכתו בזמן אמת.
- * בעתיד ייווצר "מצב צופה" ללא יכולות עריכה עבור משתמשי הקצה.
- * ============================================================================
  */
+
+// --- אתחול Firebase Auth ---
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_AUTH_DOMAIN",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_STORAGE_BUCKET",
+  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+
+// אתחול Firebase רק אם הוא לא מאותחל כבר וקיים בדף
+if (typeof firebase !== 'undefined') {
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+}
+
 // --- שלב 1: הגדרות בסיס ומצב התחלתי (State) ---
 
 // נגדיר את רשימת העמודים ההתחלתית שלנו (ברירת המחדל למקרה שאין כלום בזיכרון)
@@ -54,7 +66,7 @@ const defaultPages = [
 let pages = defaultPages;
 let activePageId = 'page-main';
 let topNavPages = ['page-main', 'page-shop', 'page-charts', 'page-forum']; // העמודים שמופיעים בתפריט העליון
-let isEditMode = true;
+let isEditMode = false;
 let undoStack = []; // מערך לשמירת היסטוריית שינויים לצורך ביטול (Undo)
 let siteBackgrounds = { dashboard: null, topNav: null, main: null };
 
@@ -234,11 +246,6 @@ async function initSite() {
   // אחרי שהכל נטען (ואולי תוקן), נצייר את האתר
   renderSideMenu();
   renderPage();
-
-  // ברירת מחדל: הפעלת מצב עריכה/מנהל עם כניסה לאתר
-  if (!isEditMode && btnEditMode) {
-    btnEditMode.click();
-  }
 }
 
 // קריאה לאתחול
@@ -2460,17 +2467,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const managerBtn = document.querySelector('.manager-btn');
   if (managerBtn) {
-    // אתחול טקסט התחלתי לפי מצב העריכה
     managerBtn.textContent = isEditMode ? 'מנהל' : 'אורח';
     
     managerBtn.addEventListener('click', () => {
-      // במקום רק לשנות טקסט, נפעיל גם את פונקציית העריכה האמיתית של המערכת!
-      btnEditMode.click();
-      
-      if (isEditMode) {
-        managerBtn.textContent = 'מנהל';
+      if (typeof firebase !== 'undefined') {
+        const user = firebase.auth().currentUser;
+        if (user && user.email === 'yoni98321@gmail.com') {
+          if (confirm('האם ברצונך להתנתק ממערכת הניהול?')) {
+            firebase.auth().signOut();
+          }
+        } else {
+          const loginModal = document.getElementById('login-modal');
+          if (loginModal) loginModal.style.display = 'flex';
+        }
       } else {
-        managerBtn.textContent = 'אורח';
+        alert('שגיאה: ספריית Firebase לא נטענה.');
       }
     });
   }
@@ -2565,5 +2576,88 @@ mainContent.addEventListener('click', (e) => {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
+  }
+});
+
+// --- מאזיני Firebase Auth והתחברות ---
+if (typeof firebase !== 'undefined') {
+  // מאזין למצב התחברות
+  firebase.auth().onAuthStateChanged((user) => {
+    const managerBtn = document.querySelector('.manager-btn');
+    const ft = document.getElementById('floating-toolbar');
+    
+    if (user && user.email === 'yoni98321@gmail.com') {
+      isEditMode = true;
+      if (managerBtn) managerBtn.textContent = 'מנהל (מחובר) 🟢';
+      if (ft) ft.style.display = 'flex';
+      applyEditModeToContent();
+      renderSideMenu();
+      renderTopNav();
+    } else {
+      isEditMode = false;
+      if (managerBtn) managerBtn.textContent = 'מנהל 👤';
+      if (ft) ft.style.display = 'none';
+      removeEditModeFromContent();
+      renderSideMenu();
+      renderTopNav();
+    }
+  });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const loginModal = document.getElementById('login-modal');
+  const btnCloseLogin = document.getElementById('btn-close-login');
+  const btnSubmitLogin = document.getElementById('btn-submit-login');
+  const authEmailInput = document.getElementById('auth-email');
+  const authPasswordInput = document.getElementById('auth-password');
+  const authErrorDiv = document.getElementById('auth-error');
+  
+  if (btnCloseLogin && loginModal) {
+    btnCloseLogin.addEventListener('click', () => {
+      loginModal.style.display = 'none';
+      if (authErrorDiv) authErrorDiv.style.display = 'none';
+    });
+  }
+  
+  if (btnSubmitLogin && loginModal) {
+    btnSubmitLogin.addEventListener('click', async () => {
+      const email = authEmailInput.value.trim();
+      const password = authPasswordInput.value;
+      
+      if (authErrorDiv) authErrorDiv.style.display = 'none';
+      
+      if (!email || !password) {
+        if (authErrorDiv) {
+          authErrorDiv.textContent = 'נא להזין אימייל וסיסמה!';
+          authErrorDiv.style.display = 'block';
+        }
+        return;
+      }
+      
+      if (email !== 'yoni98321@gmail.com') {
+        if (authErrorDiv) {
+          authErrorDiv.textContent = 'אין לך הרשאת מנהל! רק yoni98321@gmail.com מורשה לערוך.';
+          authErrorDiv.style.display = 'block';
+        }
+        return;
+      }
+      
+      try {
+        await firebase.auth().signInWithEmailAndPassword(email, password);
+        loginModal.style.display = 'none';
+        authEmailInput.value = '';
+        authPasswordInput.value = '';
+      } catch (error) {
+        console.error(error);
+        if (authErrorDiv) {
+          let errorMsg = 'שגיאת התחברות. אנא ודא שהמייל והסיסמה נכונים.';
+          if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+            errorMsg = 'אימייל או סיסמה שגויים!';
+          }
+          authErrorDiv.textContent = errorMsg;
+          authErrorDiv.style.display = 'block';
+        }
+      }
+    });
   }
 });
