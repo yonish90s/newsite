@@ -1320,3 +1320,146 @@ body {
   }
 }
 
+/* --- Premium Auth Modal (Dark Glassmorphism) --- */
+.auth-modal-premium {
+  background: #111111;
+  color: #ffffff;
+  padding: 40px 30px;
+  border-radius: 20px;
+  width: 420px;
+  max-width: 90%;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+  position: relative;
+  border: 1px solid rgba(255,255,255,0.08);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  text-align: left;
+}
+
+.close-auth-modal {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: transparent;
+  border: none;
+  color: #666;
+  font-size: 20px;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.close-auth-modal:hover {
+  color: #fff;
+}
+
+.auth-title {
+  font-size: 32px;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+  letter-spacing: -0.5px;
+}
+
+.auth-subtitle {
+  color: #888888;
+  font-size: 15px;
+  margin: 0 0 32px 0;
+}
+
+.auth-input-group {
+  margin-bottom: 24px;
+}
+
+.auth-label {
+  display: block;
+  font-size: 14px;
+  color: #aaaaaa;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.forgot-link {
+  font-size: 13px;
+  color: #888888;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.forgot-link:hover {
+  color: #ffffff;
+}
+
+.input-with-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  left: 16px;
+  color: #666666;
+  font-size: 18px;
+}
+
+.input-icon-right {
+  position: absolute;
+  right: 16px;
+  color: #666666;
+  font-size: 18px;
+}
+
+.input-with-icon input {
+  width: 100%;
+  padding: 14px 16px 14px 44px;
+  background: #1a1a1a;
+  border: 1px solid #2d2d2d;
+  border-radius: 12px;
+  color: #ffffff;
+  font-size: 16px;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.input-with-icon input:focus {
+  outline: none;
+  border-color: #444444;
+  background: #222222;
+}
+
+.auth-error-msg {
+  color: #ff4444;
+  font-size: 14px;
+  margin-bottom: 20px;
+  font-weight: 500;
+  text-align: left;
+}
+
+.auth-submit-btn {
+  width: 100%;
+  padding: 16px;
+  background: #ffffff;
+  color: #000000;
+  border: none;
+  border-radius: 30px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.auth-submit-btn:hover {
+  background: #e6e6e6;
+}
+
+.auth-submit-btn:active {
+  transform: scale(0.98);
+}
+

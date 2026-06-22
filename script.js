@@ -2608,9 +2608,18 @@ document.addEventListener('DOMContentLoaded', () => {
   const loginModal = document.getElementById('login-modal');
   const btnCloseLogin = document.getElementById('btn-close-login');
   const btnSubmitLogin = document.getElementById('btn-submit-login');
+  const btnTogglePassword = document.getElementById('btn-toggle-password-visibility');
   const authEmailInput = document.getElementById('auth-email');
   const authPasswordInput = document.getElementById('auth-password');
   const authErrorDiv = document.getElementById('auth-error');
+  
+  if (btnTogglePassword && authPasswordInput) {
+    btnTogglePassword.addEventListener('click', () => {
+      const isPassword = authPasswordInput.type === 'password';
+      authPasswordInput.type = isPassword ? 'text' : 'password';
+      btnTogglePassword.textContent = isPassword ? '🙈' : '👁️';
+    });
+  }
   
   if (btnCloseLogin && loginModal) {
     btnCloseLogin.addEventListener('click', () => {
