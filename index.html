@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <!-- שם של האתר  -->
+      
+  <title>propile</title>
+  <!-- ספריית interact.js לגרירה ושינוי גודל -->
+  <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
+  <!-- ספריית localforage לשמירת כמות בלתי מוגבלת של תמונות (במקום localStorage המוגבל) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
+  <!-- קישור לקובץ העיצוב החיצוני (עם פרמטר למניעת שמירה במטמון) -->
+  <link rel="stylesheet" href="./style.css?v=4">
+</head>
+<body class="light-mode">
+  
+  <!-- המעטפת הראשית של כל האתר, מסדרת את הכל בעמודה אחת -->
+  <div class="main-layout">
+    
+    <!-- הסרגל העליון של האתר (Header) -->
+    <header class="top-bar">
+      <!-- כפתור המבורגר למובייל -->
+      <button class="mobile-menu-btn" id="mobileMenuBtn">☰</button>
+      
+      <!-- צד ימין של הסרגל -->
+      <div class="left-side">
+        <!-- אזור הלוגו בצד ימין -->
+        <div class="logo-area" style="margin-left: 15px; display: flex; align-items: center; gap: 8px;">
+          <img id="main-logo" src="./logo.png" alt="לוגו האתר" style="height: 36px; display: block; cursor: pointer;" title="לוגו האתר (לחץ לעריכה במצב מנהל)">
+          <span id="main-logo-text" class="logo-text" style="font-weight: bold; font-size: 20px; color: #111;">YHSH</span>
+        </div>
+        
+        <!-- כפתור התחברות -->
+        <button class="login-btn">התחבר 👤</button>
+        <!-- שורת חיפוש עליונה -->
+        <input type="text" class="search-top" placeholder="חיפוש...">
+        <!-- כפתור הוספת מודעה -->
+        <button class="add-btn">פרסום מודעה +</button>
+        <!-- כפתור מנהל -->
+        <button class="add-btn manager-btn">מנהל</button>
+      </div>
+      
+      <!-- תפריט הניווט העליון המרכזי -->
+      <nav class="nav-links" dir="rtl">
+        <a href="#" id="top-nav-main">🏠 ראשי</a>
+        <a href="#" id="top-nav-shop">🛍️ חנות</a>
+        <a href="#" id="top-nav-charts">📈 גרפים ונתונים</a>
+        <a href="#" id="top-nav-forum">💬 פורום</a>
+        <a href="#" id="top-nav-services">שירותים</a>
+        <a href="#" id="top-nav-meeting">הזמנת פגישה</a>
+      </nav>
+      
+      <!-- אזור ריק בצד שמאל כדי שהתפריט יישאר באמצע -->
+      <div class="empty-left" style="width: 250px;"></div>
+    </header>
+
+    <!-- מעטפת התוכן: מחלקת את המסך לאזור מרכזי ולתפריט צדדי -->
+    <div class="content-wrapper">
+      
+      <!-- האזור המרכזי הראשי (כאן יתחלף התוכן כשנלחץ על כפתורים) -->
+      <main class="center-content" id="mainContent">
+      </main>
+
+      <!-- סרגל צד ימין (דשבורד) -->
+      <aside class="side-dashboard">
+        <!-- כותרת תפריט הצד -->
+        <div class="side-header">
+          <h3>הדשבורד שלי</h3>
+          <span id="btn-toggle-sidebar" style="cursor: pointer; font-size: 20px;" title="סגור תפריט">☰</span>
+        </div>
+        <!-- חיפוש בתפריט הצד -->
+        <input type="text" class="search-side" placeholder="חיפוש...">
+        
+        <!-- רשימת הקישורים של תפריט הצד (מתמלאת אוטומטית מקוד ה-JS) -->
+        <ul class="side-menu" id="sideMenuContainer">
+          <!-- הפריטים ייווצרו כאן דינמית -->
+        </ul>
+        
+        <!-- כפתור להוספת עמוד חדש -->
+        <button id="btn-add-page" class="add-page-btn">+ הוסף עמוד חדש</button>
+        
+        <!-- סרגל כלים מרחף בתחתית המסך (במצב סגור הוא מופיע כאן) -->
+        <div class="floating-toolbar minimized" id="floating-toolbar">
+          <!-- ידית גרירה -->
+          <div class="toolbar-drag-handle" title="גרור לשנות מיקום" style="cursor: grab; display: flex; align-items: center; justify-content: center; padding: 0 10px; font-size: 22px; font-weight: bold; color: #888;">∷</div>
+          <!-- כפתור הרחבה/מזעור -->
+          <button id="btn-minimize-toolbar" class="float-btn" style="padding: 5px 10px; font-size: 16px; font-weight: bold; background: transparent; border: 1px solid #ddd; box-shadow: none; color: #333; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;" title="הרחב">+</button>
+          
+          <!-- קו מפריד -->
+          <div class="toolbar-separator" style="width: 1px; background: #ddd; margin: 0 5px;"></div>
+        
+          <button id="btn-edit-mode" class="float-btn edit-float-btn">מצב עריכה ✏️</button>
+          <button id="btn-save-site" class="float-btn edit-float-btn" style="background: #4CAF50; color: white;">שמור שינויים 💾</button>
+          <button id="btn-reset-site" class="float-btn edit-float-btn" style="background: #f44336; color: white;">איפוס אתר 🗑️</button>
+          <button id="btn-add-bg" class="float-btn add-float-btn">הוסף רקע 🎨</button>
+          <button id="btn-add-image" class="float-btn add-float-btn">הוסף תמונה 🖼️</button>
+          <button id="btn-add-video" class="float-btn add-float-btn">הוסף וידאו 📹</button>
+          <button id="btn-make-slideshow" class="float-btn add-float-btn">הוסף מצגת 🎞️</button>
+          <button id="btn-make-download" class="float-btn add-float-btn">הפוך להורדה 📥</button>
+          <button id="btn-add-text" class="float-btn add-float-btn">הוסף טקסט 📝</button>
+          <button id="btn-block" class="float-btn add-float-btn">בלוק 📦</button>
+          <button id="btn-split-el" class="float-btn edit-float-btn">חתוך ✂️</button>
+        </div>
+      </aside>
+      
+    </div>
+  </div>
+<!-- WEBSITE PRELOADER -->
+<div id="website-preloader" style="position: fixed; inset: 0; background: #ffffff; z-index: 9999999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.4s ease, visibility 0.4s ease;">
+  <div style="display: flex; flex-direction: column; align-items: center; gap: 24px;">
+    <div style="position: relative; display: flex; align-items: center; justify-content: center; animation: pulse-logo 1.4s infinite ease-in-out;">
+      <img id="loader-img" src="./logo.png" alt="Loading..." style="width: 120px; height: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-radius: 24px;">
+    </div>
+    <div style="width: 120px; height: 4px; background: rgba(0,0,0,0.05); border-radius: 10px; overflow: hidden; position: relative;">
+      <div style="position: absolute; top: 0; left: 0; height: 100%; width: 40%; background: #111; border-radius: 10px; animation: loading-bar 1.2s infinite linear;"></div>
+    </div>
+  </div>
+</div>
+
+<style>
+@keyframes pulse-logo {
+  0% { transform: scale(0.96); opacity: 0.85; }
+  50% { transform: scale(1.04); opacity: 1; }
+  100% { transform: scale(0.96); opacity: 0.85; }
+}
+@keyframes loading-bar {
+  0% { left: -40%; }
+  100% { left: 100%; }
+}
+</style>
+
+<script>
+  
+  setTimeout(function() {
+    document.getElementById('website-preloader').style.opacity = '0';
+    document.getElementById('website-preloader').style.visibility = 'hidden';
+  }, 1200);
+</script>
+<script>
+  // Hide preloader after 1.2 seconds
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      const preloader = document.getElementById('website-preloader');
+      if (preloader) {
+        preloader.style.opacity = '0';
+        preloader.style.visibility = 'hidden';
+        setTimeout(() => preloader.remove(), 400);
+      }
+    }, 1100);
+  });
+
+  
+  // Safety timeout in case window load event is delayed
+  setTimeout(() => {
+    const preloader = document.getElementById('website-preloader');
+    if (preloader) {
+      preloader.style.opacity = '0';
+      preloader.style.visibility = 'hidden';
+      setTimeout(() => preloader.remove(), 400);
+    }
+  }, 2500);
+
+  if (localStorage.getItem('theme') === 'dark') {
+    document.body.classList.add('dark-theme');
+  }
+</script>
+
+
+
+<!-- חלונית בחירת קישור (Link Modal) -->
+<div id="link-modal" class="modal-overlay" style="display: none;">
+  <div class="modal-content">
+    <h3>הגדרת קישור</h3>
+    
+    <label for="link-internal-select">בחר עמוד פנימי באתר:</label>
+    <select id="link-internal-select">
+      <!-- Options will be dynamically populated -->
+    </select>
+
+    <div style="margin: 15px 0; text-align: center; font-weight: bold;">-- או --</div>
+
+    <label for="link-external-input">הזן קישור חיצוני (https://...):</label>
+    <input type="text" id="link-external-input" placeholder="https://google.com">
+
+    <div class="modal-actions" style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
+      <button id="btn-cancel-link" class="modal-btn cancel-btn">ביטול</button>
+      <button id="btn-remove-link" class="modal-btn danger-btn">הסר קישור</button>
+      <button id="btn-save-link" class="modal-btn save-btn">שמור</button>
+    </div>
+  </div>
+</div>
+
+<!-- חלונית הוספת רקע (Background Modal) -->
+<div id="bg-modal" class="modal-overlay" style="display: none;">
+  <div class="modal-content" style="max-width: 300px;">
+    <h3>הוספת רקע</h3>
+    <p style="margin-bottom: 15px;">בחר לאיזה אזור להוסיף רקע:</p>
+    <button id="bg-target-dashboard" class="action-btn" style="width:100%; margin-bottom:10px; padding: 10px;">רקע לדשבורד</button>
+    <button id="bg-target-topnav" class="action-btn" style="width:100%; margin-bottom:10px; padding: 10px;">רקע לסרגל העליון</button>
+    <button id="bg-target-main" class="action-btn" style="width:100%; margin-bottom:10px; padding: 10px;">רקע לשאר האתר</button>
+    
+    <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee;">
+      <button id="bg-clear-all" class="action-btn" style="width:100%; background:#f1f1f1; margin-bottom:10px; padding: 10px; color: #333;">נקה רקעים 🗑️</button>
+      <button onclick="document.getElementById('bg-modal').style.display='none'" class="action-btn" style="width:100%; background:#ff4444; color:white; padding: 10px;">ביטול</button>
+    </div>
+    
+    <input type="file" id="bg-file-input" accept="image/*" style="display:none;">
+  </div>
+</div>
+
+<!-- קישור לקובץ הפקודות והלוגיקה (מופעל בסוף הטעינה בעזרת defer) -->
+  <!-- פופאפ אישור עוגיות (Cookie Consent) -->
+  <div id="cookie-consent-banner" class="cookie-consent" style="display: none;">
+    <div class="cookie-content">
+      <button id="close-cookie-btn" class="close-cookie">✕</button>
+      <p>
+        This site employs data tracking technologies (e.g. cookies and pixels) that we and our third party providers use to collect and analyze data about your interactions with our site and to market to you. <strong>By continuing, you agree to the use of these technologies.</strong> To customize your preferences, please click the "Manage" button below.
+      </p>
+      <p class="cookie-policy">
+        To learn more about our data practices, please see our <a href="#">Privacy Policy</a>
+      </p>
+      <div class="cookie-actions">
+        <button id="accept-cookie-btn" class="btn-green">Manage</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- סרגל תחתון מרחף (AI/Chat) -->
+  <div class="bottom-floating-bar">
+    <div class="bar-edge-indicator"></div>
+    <button class="bar-icon history-btn" data-tooltip="היסטוריה">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+        <path d="M3 3v5h5"></path>
+        <path d="M12 7v5l3 3"></path>
+      </svg>
+    </button>
+    <button class="bar-icon chat-btn" data-tooltip="שיחות">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M6 3h10a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3H6l-4 4V6a3 3 0 0 1 3-3z"/>
+        <path d="M19 8h-1a3 3 0 0 0-3 3v3a3 3 0 0 0 3 3h3l4 4V11a3 3 0 0 0-3-3z" fill="rgba(255,255,255,0.4)"/>
+      </svg>
+    </button>
+    <button class="bar-ai-btn" data-tooltip="בינה מלאכותית">AI</button>
+  </div>
+
+  <!-- חלון שיחה (AI Chat Drawer) -->
+  <div id="support-chat-modal" class="chat-modal-overlay">
+    <div class="chat-modal-window">
+      <div class="chat-modal-header">
+        <span class="chat-close-btn" id="support-chat-close">✕</span>
+        <div class="chat-header-title">שירות לקוחות AI 🤖</div>
+      </div>
+      
+      <div class="chat-modal-body" id="chat-messages-container">
+        <!-- הודעה אוטומטית -->
+        <div class="chat-message automated-msg">
+          <div class="msg-content">
+            <div class="msg-sender">🤖 נציג AI</div>
+            שלום! אני נציג ה-AI שלך. איך אוכל לעזור לך היום?
+            <div class="msg-time">עכשיו</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="chat-modal-footer">
+        <button class="chat-send-btn" id="support-chat-send">Send</button>
+        <input type="text" id="support-chat-input" placeholder="כתוב הודעה לתומך...">
+      </div>
+    </div>
+  </div>
+
+  <script src="./script.js?v=2"></script>
+</body>
+</html>
