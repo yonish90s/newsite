@@ -2678,8 +2678,8 @@ document.addEventListener('click', (event) => {
     firebase.auth().onAuthStateChanged((user) => {
       // עדכון כפתורי header
       updateHeaderButtons(user);
-      // עדכון badge אם יש הודעות חדשות (למנהל)
-      if (user && user.email === ADMIN_EMAIL && db) {
+      // עדכון badge אם יש הודעות חדשות (למנהל ולמשתמש)
+      if (user && db) {
         listenForUnreadBadge();
       } else {
         clearUnreadListeners();
@@ -2807,6 +2807,12 @@ document.addEventListener('click', (event) => {
       messagesBox.scrollTop = messagesBox.scrollHeight;
     });
 
+    // כשהמשתמש פותח את השיחה, מאפסים את התראת "לא נקרא"
+    const isUserAdmin = user && user.email === ADMIN_EMAIL;
+    if (!isUserAdmin) {
+      db.ref(`chats/${uid}/hasUnreadUser`).set(false);
+    }
+
     setTimeout(() => { if (chatInput) chatInput.focus(); }, 300);
   }
 
@@ -2854,8 +2860,31 @@ document.addEventListener('click', (event) => {
       lastMessage: text,
       lastTimestamp: Date.now(),
       displayName: isAdmin ? (convTitle ? convTitle.textContent : targetUid) : senderName,
-      hasUnread: !isAdmin  // הודעה מהמשתמש = לא נקראה
+      hasUnread: !isAdmin,  // הודעה מהמשתמש = לא נקראה על ידי המנהל
+      hasUnreadUser: isAdmin // הודעה ממנהל = לא נקראה על ידי המשתמש
     }).catch(err => console.error('Error updating chat metadata:', err));
+
+    // תגובה אוטומטית למשתמש
+    if (!isAdmin) {
+      // בדיקה אם עברו 5 דקות מהתגובה האוטומטית האחרונה כדי לא להציף
+      if (!window.lastAutoReplyTime || Date.now() - window.lastAutoReplyTime > 1000 * 60 * 5) {
+        window.lastAutoReplyTime = Date.now();
+        setTimeout(() => {
+          const autoMsg = {
+            text: 'מנהל האתר בקרוב יחזור אליכם',
+            sender: 'admin',
+            senderName: 'מערכת',
+            timestamp: Date.now()
+          };
+          chatRef.child('messages').push(autoMsg).catch(err => console.error(err));
+          chatRef.update({
+            lastMessage: autoMsg.text,
+            lastTimestamp: autoMsg.timestamp,
+            hasUnreadUser: true 
+          });
+        }, 1000);
+      }
+    }
 
     chatInput.value = '';
     chatInput.focus();
@@ -2890,12 +2919,27 @@ document.addEventListener('click', (event) => {
   // ─── badge הודעות חדשות ──────────────────────────────
   function listenForUnreadBadge() {
     if (!db) return;
-    db.ref('chats').on('value', (snap) => {
-      if (!snap.exists()) { removeBadge(); return; }
-      let hasAny = false;
-      snap.forEach(child => { if (child.val().hasUnread) hasAny = true; });
-      hasAny ? addBadge() : removeBadge();
-    });
+    const user = firebase.auth().currentUser;
+    if (!user) return;
+    
+    const isAdmin = user.email === ADMIN_EMAIL;
+
+    if (isAdmin) {
+      db.ref('chats').on('value', (snap) => {
+        if (!snap.exists()) { removeBadge(); return; }
+        let hasAny = false;
+        snap.forEach(child => { if (child.val().hasUnread) hasAny = true; });
+        hasAny ? addBadge() : removeBadge();
+      });
+    } else {
+      db.ref(`chats/${user.uid}/hasUnreadUser`).on('value', (snap) => {
+        if (snap.exists() && snap.val() === true) {
+          addBadge();
+        } else {
+          removeBadge();
+        }
+      });
+    }
   }
 
   function addBadge() {
@@ -2914,7 +2958,11 @@ document.addEventListener('click', (event) => {
   }
 
   function clearUnreadListeners() {
-    if (db) db.ref('chats').off();
+    if (db) {
+      db.ref('chats').off();
+      const user = firebase.auth().currentUser;
+      if (user) db.ref(`chats/${user.uid}/hasUnreadUser`).off();
+    }
   }
 
   // ─── ניתוק listener ──────────────────────────────────
