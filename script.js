@@ -21,12 +21,14 @@
 
 // --- אתחול Firebase Auth & Firestore ---
 const firebaseConfig = {
-  apiKey: "AIzaSyAs7z0v_YI6GbyK-2y0mP0BwV9L5FvP98k",
-  authDomain: "newsite-f852e.firebaseapp.com",
-  projectId: "newsite-f852e",
-  storageBucket: "newsite-f852e.firebasestorage.app",
-  messagingSenderId: "542718167690",
-  appId: "1:542718167690:web:8e3d64fe305ca705bcfdf6"
+  apiKey: "AIzaSyCpVZS9qEnpPz-gyu12yD3FLiu3Lf-Tg04",
+  authDomain: "newsite-f76e2.firebaseapp.com",
+  databaseURL: "https://newsite-f76e2-default-rtdb.firebaseio.com",
+  projectId: "newsite-f76e2",
+  storageBucket: "newsite-f76e2.firebasestorage.app",
+  messagingSenderId: "484000020563",
+  appId: "1:484000020563:web:d1a6f7c80419a6173d6ea6",
+  measurementId: "G-VH9TFF4TQT"
 };
 
 // אתחול Firebase רק אם הוא לא מאותחל כבר וקיים בדף
