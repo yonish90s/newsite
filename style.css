@@ -1430,27 +1430,19 @@ body {
 @media (max-width: 900px) {
   .mobile-menu-btn {
     display: block;
+    margin: 0;
     z-index: 20;
+    order: 0;
   }
   
   .top-bar {
+    display: flex;
     flex-wrap: nowrap;
-    padding: 10px 15px;
     justify-content: space-between;
     align-items: center;
-    position: relative;
+    padding: 10px 15px;
     height: 60px;
-  }
-  
-  .left-side {
-    width: auto;
-    flex: 1;
-    justify-content: flex-end; /* Left side in RTL */
-    margin-bottom: 0;
-    flex-wrap: nowrap;
-    gap: 12px;
-    order: 0;
-    z-index: 20;
+    position: relative;
   }
   
   .logo-area {
@@ -1462,32 +1454,61 @@ body {
     z-index: 10;
   }
   
-  /* Hide login button text on mobile, just icon */
+  .logo-area img {
+    height: 28px !important;
+    width: auto;
+  }
+  
+  .logo-text {
+    font-size: 16px !important;
+  }
+  
+  .left-side {
+    width: auto;
+    flex: none;
+    justify-content: flex-end;
+    align-items: center;
+    margin: 0;
+    gap: 15px;
+    order: 2;
+    z-index: 20;
+  }
+  
+  /* שחזור כפתור התחברות נקי במובייל (אייקון בלבד לסימטריה) */
   .manager-btn {
     font-size: 0 !important;
     padding: 6px !important;
     background: transparent !important;
     color: #111 !important;
     border: none !important;
-    box-shadow: none !important;
   }
   .manager-btn svg {
+    display: block !important;
+    width: 22px;
+    height: 22px;
     margin: 0 !important;
+  }
+
+  .search-top-icon {
     width: 22px;
     height: 22px;
   }
 
-  /* Expanded search on mobile overlays nicely */
+  /* חיפוש שנפתח לכל הרוחב במובייל */
   .search-top-input.expanded {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    left: 50px;
-    width: calc(100vw - 120px);
-    max-width: 200px;
+    left: 15px;
+    right: 15px;
+    width: calc(100% - 30px);
+    max-width: none;
     z-index: 30;
-    background: #f0f0f0;
-    border: 1px solid #ccc;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 10px 15px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   }
   
   .empty-left {
@@ -1518,13 +1539,12 @@ body {
   }
   
   .side-dashboard {
-    width: 100% !important;
-    max-width: 100% !important;
-    border-left: none !important;
-    border-bottom: 1px solid #e0e0e0 !important;
-    padding: 15px !important;
-    box-sizing: border-box !important;
-    white-space: normal !important;
+    display: none !important;
+  }
+  
+  .bottom-floating-bar,
+  #support-chat-modal {
+    display: none !important;
   }
 
   .floating-toolbar {

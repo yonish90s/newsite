@@ -1386,7 +1386,7 @@ interact('.draggable-resizable')
     const linkBtn = document.createElement('button');
     linkBtn.className = 'action-btn link-btn';
     linkBtn.innerHTML = '🔗';
-    linkBtn.title = 'הוסף קישור';
+    linkBtn.title = 'הוסף/ערוך קישור';
     linkBtn.addEventListener('mousedown', (e) => {
       e.stopPropagation();
       currentEditingLinkElement = target;
@@ -1396,7 +1396,6 @@ interact('.draggable-resizable')
       const linkExternalInput = document.getElementById('link-external-input');
       const linkModal = document.getElementById('link-modal');
 
-      // מילוי ה-Select בעמודים קיימים
       linkInternalSelect.innerHTML = '<option value="">-- בחר עמוד פנימי --</option>';
       pages.forEach(p => {
         const opt = document.createElement('option');
@@ -1405,11 +1404,9 @@ interact('.draggable-resizable')
         linkInternalSelect.appendChild(opt);
       });
       
-      // איפוס
       linkExternalInput.value = '';
       linkInternalSelect.value = '';
       
-      // טעינת קישור קיים אם יש
       if (currentLink) {
         if (pages.find(p => p.id === currentLink || p.title === currentLink)) {
           const found = pages.find(p => p.id === currentLink || p.title === currentLink);
@@ -1421,6 +1418,24 @@ interact('.draggable-resizable')
       
       linkModal.style.display = 'flex';
     });
+    actionsContainer.appendChild(linkBtn);
+
+    // 1.5. כפתור כניסה לקישור (מוצג רק אם יש קישור) - האייקון של הכניסה
+    if (target.getAttribute('data-href')) {
+      const goBtn = document.createElement('button');
+      goBtn.className = 'action-btn go-btn';
+      goBtn.innerHTML = '🚪'; // אייקון כניסה
+      goBtn.title = 'כנס לקישור (אייקון כניסה)';
+      goBtn.style.background = '#4CAF50'; // צבע ירוק בולט
+      goBtn.style.color = 'white';
+      goBtn.addEventListener('mousedown', (e) => {
+        e.stopPropagation();
+        // מדמה לחיצה של 3 פעמים כדי לעקוף את חסימת העריכה ולעבור לעמוד
+        target.dispatchEvent(new MouseEvent('click', { detail: 3, bubbles: true }));
+      });
+      actionsContainer.appendChild(goBtn);
+    }
+
 
     // 2. כפתור העתקה
     const copyBtn = document.createElement('button');
