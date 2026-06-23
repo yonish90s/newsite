@@ -19,22 +19,23 @@
  * 
  */
 
-// --- אתחול Firebase Auth ---
+// --- אתחול Firebase Auth & Firestore ---
 const firebaseConfig = {
-  apiKey: "AIzaSyCpVZS9qEnpPz-gyu12yD3FLiu3Lf-Tg04",
-  authDomain: "newsite-f76e2.firebaseapp.com",
-  databaseURL: "https://newsite-f76e2-default-rtdb.firebaseio.com",
-  projectId: "newsite-f76e2",
-  storageBucket: "newsite-f76e2.firebasestorage.app",
-  messagingSenderId: "484000020563",
-  appId: "1:484000020563:web:d1a6f7c80419a6173d6ea6"
+  apiKey: "AIzaSyAs7z0v_YI6GbyK-2y0mP0BwV9L5FvP98k",
+  authDomain: "newsite-f852e.firebaseapp.com",
+  projectId: "newsite-f852e",
+  storageBucket: "newsite-f852e.firebasestorage.app",
+  messagingSenderId: "542718167690",
+  appId: "1:542718167690:web:8e3d64fe305ca705bcfdf6"
 };
 
 // אתחול Firebase רק אם הוא לא מאותחל כבר וקיים בדף
+let db;
 if (typeof firebase !== 'undefined') {
   if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
   }
+  db = firebase.firestore();
 }
 
 // --- שלב 1: הגדרות בסיס ומצב התחלתי (State) ---
@@ -105,28 +106,52 @@ function applyBackgrounds() {
   }
 }
 
-// פונקציית אתחול אסינכרונית - טוענת מהמסד הנתונים החדש והבלתי מוגבל
+// פונקציית אתחול אסינכרונית - טוענת מהענן של Firebase (ומגבה מ-localForage במידת הצורך)
 async function initSite() {
   try {
-    // הגירת נתונים: אם למשתמש יש שמירה ישנה ב-localStorage שמוגבל ל-5MB, נעביר אותה
-    const oldPages = localStorage.getItem('mySitePages_v3');
-    const oldActive = localStorage.getItem('myActivePage_v3');
-    const oldTopNav = localStorage.getItem('mySiteTopNav_v3');
-    
-    // איפוס חד פעמי כדי לטעון את התפריט עם האימוג'ים מ-HTML
-    if (!localStorage.getItem('force_emoji_nav_reset')) {
-      await localforage.removeItem('mySiteTopNavHTML_v3');
-      localStorage.setItem('force_emoji_nav_reset', 'true');
+    if (db) {
+      const doc = await db.collection("site").doc("config").get();
+      if (doc.exists) {
+        const data = doc.data();
+        if (data.pages) pages = data.pages;
+        if (data.activePageId) activePageId = data.activePageId;
+        if (data.topNavPages) topNavPages = data.topNavPages;
+        if (data.topNavHTML) {
+          navLinksContainer.innerHTML = data.topNavHTML;
+        }
+        if (data.siteBackgrounds) {
+          siteBackgrounds = data.siteBackgrounds;
+          applyBackgrounds();
+        }
+        if (data.logo) {
+          const mainLogo = document.getElementById('main-logo');
+          const loaderImg = document.getElementById('loader-img');
+          const favicon = document.getElementById('favicon');
+          if (mainLogo) mainLogo.src = data.logo;
+          if (loaderImg) loaderImg.src = data.logo;
+          if (favicon) favicon.href = data.logo;
+        }
+        if (data.logoText) {
+          const logoTextEl = document.getElementById('main-logo-text');
+          if (logoTextEl) logoTextEl.textContent = data.logoText;
+        }
+        console.log("הנתונים נטענו בהצלחה מהענן!");
+        
+        // סינון עמודי דוגמה גם מהענן (ליתר ביטחון)
+        const demoPageIds = ['page-articles-example', 'page-forum-example', 'page-store-example'];
+        pages = pages.filter(p => !demoPageIds.includes(p.id));
+        topNavPages = topNavPages.filter(id => !demoPageIds.includes(id));
+        
+        return; // סיימנו לטעון מהענן
+      }
     }
+  } catch(e) {
+    console.error("שגיאה בטעינה מהענן, מנסה לטעון מהזיכרון המקומי:", e);
+  }
 
-    if (oldPages) {
-      await localforage.setItem('mySitePages_v3', JSON.parse(oldPages));
-      localStorage.removeItem('mySitePages_v3');
-    }
-    if (oldActive) {
-      await localforage.setItem('myActivePage_v3', oldActive);
-      localStorage.removeItem('myActivePage_v3');
-    }
+  // --- גיבוי: משיכה מ-localForage אם הענן ריק ---
+  console.log("אין מידע שמור בענן, טוען נתונים מהדפדפן (ומגבה לענן)");
+  try {
     const savedActive = await localforage.getItem('myActivePage_v3');
     if (savedActive) activePageId = savedActive;
     
@@ -140,64 +165,47 @@ async function initSite() {
       if (mainLogo) mainLogo.src = savedLogo;
       if (loaderImg) loaderImg.src = savedLogo;
       if (favicon) favicon.href = savedLogo;
+      if (db) db.collection("site").doc("config").set({ logo: savedLogo }, { merge: true });
     }
     
     if (savedLogoText) {
       const logoTextEl = document.getElementById('main-logo-text');
       if (logoTextEl) logoTextEl.textContent = savedLogoText;
+      if (db) db.collection("site").doc("config").set({ logoText: savedLogoText }, { merge: true });
     }
     
     const savedTopNav = await localforage.getItem('mySiteTopNav_v3');
     if (savedTopNav) {
       const demoPageIds = ['page-articles-example', 'page-forum-example', 'page-store-example'];
       topNavPages = savedTopNav.filter(id => !demoPageIds.includes(id));
-      await localforage.setItem('mySiteTopNav_v3', topNavPages);
     }
 
     const savedTopNavHTML = await localforage.getItem('mySiteTopNavHTML_v3');
     if (savedTopNavHTML) {
       navLinksContainer.innerHTML = savedTopNavHTML;
-      // ניקוי כפתורי עריכה למקרה שנשמרו בטעות בגרסאות קודמות
       navLinksContainer.querySelectorAll('.top-nav-controls').forEach(el => el.remove());
       const addBtn = document.getElementById('add-nav-link-btn');
       if (addBtn) addBtn.remove();
-      
-      // ניקוי כפתורי ה-X והעין הישנים שנתקעו בטקסטים
-      navLinksContainer.querySelectorAll('a').forEach(a => {
-        a.querySelectorAll('span').forEach(span => {
-          if (span.textContent.includes('✖') || span.textContent.includes('👁️') || span.textContent.includes('🙈') || span.style.color === 'red') {
-            span.remove();
-          }
-        });
-      });
-      // נשמור מחדש את הגרסה הנקייה
-      const tempNav = navLinksContainer.cloneNode(true);
-      localforage.setItem('mySiteTopNavHTML_v3', tempNav.innerHTML);
     }
-
-
 
     const savedPages = await localforage.getItem('mySitePages_v3');
     if (savedPages) {
-      // סינון עמודי כתבות היסטוריים שנשארו במסד הנתונים
       pages = savedPages;
     }
     
-    // הסרת עמודי הדוגמה הישנים (כתבות, פורום, חנות) אם הם קיימים
     const demoPageIds = ['page-articles-example', 'page-forum-example', 'page-store-example'];
-    const initialPagesLength = pages.length;
     pages = pages.filter(p => !demoPageIds.includes(p.id));
     
-    if (pages.length < initialPagesLength) {
-      await localforage.setItem('mySitePages_v3', pages);
-    }
     const savedBackgrounds = await localforage.getItem('mySiteBackgrounds_v3');
     if (savedBackgrounds) {
       siteBackgrounds = savedBackgrounds;
       applyBackgrounds();
     }
+    
+    // שמירה לענן כדי לגבות את הנתונים
+    saveToStorage();
   } catch(e) {
-    console.error('Error loading data', e);
+    console.error('Error loading data from fallback', e);
   }
   
   // תיקון אוטומטי (Migration) לקישורים מתים בתפריט העליון
@@ -307,7 +315,11 @@ if (mainLogo) {
           if (loaderImg) loaderImg.src = dataUrl;
           if (favicon) favicon.href = dataUrl;
           
-          localforage.setItem('mySiteLogo_v3', dataUrl);
+          if (db) {
+            db.collection("site").doc("config").set({ logo: dataUrl }, { merge: true })
+              .then(() => console.log("הלוגו נשמר בענן!"))
+              .catch(err => console.error("שגיאה בשמירת לוגו לענן", err));
+          }
         };
         reader.readAsDataURL(file);
       }
@@ -319,7 +331,9 @@ if (mainLogo) {
 if (mainLogoText) {
   mainLogoText.addEventListener('blur', () => {
     if (isEditMode) {
-      localforage.setItem('mySiteLogoText_v3', mainLogoText.textContent);
+      if (db) {
+        db.collection("site").doc("config").set({ logoText: mainLogoText.textContent }, { merge: true });
+      }
     }
   });
 }
@@ -351,19 +365,24 @@ window.addEventListener('resize', () => {
 
 // --- שלב 3: פונקציות ליבה (Rendering & Logic) ---
 
-// פונקציה לשמירת הנתונים למסד הנתונים (מבוסס localforage כך שאין מגבלת מקום לתמונות)
+// פונקציה לשמירת הנתונים לענן (Firebase)
 function saveToStorage() {
-  localforage.setItem('mySitePages_v3', pages);
-  localforage.setItem('myActivePage_v3', activePageId);
-  localforage.setItem('mySiteTopNav_v3', topNavPages); // שמירת התפריט העליון
-  
-  // שמירת מבנה ה-HTML של התפריט העליון ללא כפתורי העריכה
   const tempNav = navLinksContainer.cloneNode(true);
   tempNav.querySelectorAll('.top-nav-controls').forEach(el => el.remove());
   const addBtn = tempNav.querySelector('#add-nav-link-btn');
   if (addBtn) addBtn.remove();
   
-  localforage.setItem('mySiteTopNavHTML_v3', tempNav.innerHTML); 
+  if (db) {
+    db.collection("site").doc("config").set({
+      pages: pages,
+      activePageId: activePageId,
+      topNavPages: topNavPages,
+      topNavHTML: tempNav.innerHTML,
+      siteBackgrounds: siteBackgrounds
+    }, { merge: true })
+    .then(() => console.log("הנתונים נשמרו בהצלחה בענן!"))
+    .catch((error) => console.error("שגיאה בשמירה:", error));
+  }
   
   // הוספה למערך ההיסטוריה עבור פעולת Undo (שומרים את 20 הפעולות האחרונות)
   undoStack.push(JSON.stringify({ pages, topNavPages }));
@@ -2370,9 +2389,7 @@ document.addEventListener('keydown', async (event) => {
       }
       
       // שומרים ומרעננים הכל
-      localforage.setItem('mySitePages_v3', pages);
-      localforage.setItem('myActivePage_v3', activePageId);
-      localforage.setItem('mySiteTopNav_v3', topNavPages);
+      saveToStorage();
       renderSideMenu();
       renderTopNav();
       renderPage();
