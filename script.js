@@ -19,40 +19,22 @@
  * 
  */
 
-// --- אתחול Firebase Auth & Firestore ---
-const firebaseConfig = {
-  apiKey: "AIzaSyAHBvl2r0CQkRRTW1G2qng4T0HgebHVF2s",
-  authDomain: "newsite-660bd.firebaseapp.com",
-  projectId: "newsite-660bd",
-  storageBucket: "newsite-660bd.firebasestorage.app",
-  messagingSenderId: "440574689191",
-  appId: "1:440574689191:web:c03ffcda226d2f6d380082",
-  measurementId: "G-L95FHDCD80"
-};
+// פיירבייס נותק לחלוטין.
+let db = null;
+let storage = null;
 
-// אתחול Firebase רק אם הוא לא מאותחל כבר וקיים בדף
-let db;
-let storage;
-if (typeof firebase !== 'undefined') {
-  if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-  }
-  db = firebase.firestore();
-  storage = firebase.storage();
-}
-
-// פונקציית עזר להעלאת תמונות ל-Firebase Storage
+// פונקציית עזר להמרת תמונות לבייס64 ללא שרת (מקומי)
 async function uploadImageToStorage(file) {
-  if (!storage) return null;
-  try {
-    const fileRef = storage.ref().child(`images/${Date.now()}_${file.name}`);
-    await fileRef.put(file);
-    return await fileRef.getDownloadURL();
-  } catch (error) {
-    console.error("שגיאה בהעלאת התמונה לענן:", error);
-    alert("שגיאה בהעלאת התמונה: ייתכן שהרשאות ה-Storage שלך חסומות. אנא הגדר את כללי ה-Storage ל-allow read, write: if true; במסוף של פיירבייס.");
-    return null;
-  }
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = error => {
+      console.error("שגיאה בהמרת התמונה:", error);
+      alert("שגיאה בקריאת התמונה!");
+      resolve(null);
+    };
+    reader.readAsDataURL(file);
+  });
 }
 
 // --- שלב 1: הגדרות בסיס ומצב התחלתי (State) ---
