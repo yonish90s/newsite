@@ -3133,34 +3133,19 @@ document.addEventListener('click', (event) => {
     const loginBtn   = document.querySelector('.login-btn');
     const ft         = document.getElementById('floating-toolbar');
 
+    // -- הפעלה זמנית של מצב עריכה לכולם --
+    isEditMode = true;
+    if (managerBtn) managerBtn.textContent = 'מצב עריכה פתוח לכולם 🟢';
+    if (ft) ft.style.display = 'flex';
+    applyEditModeToContent();
+    renderSideMenu();
+    renderTopNav();
+
     if (user) {
       const name = user.email ? user.email.split('@')[0] : 'אורח';
       if (loginBtn) loginBtn.textContent = `התנתק (${name}) 👤`;
-
-      if (user.email === ADMIN_EMAIL) {
-        isEditMode = true;
-        if (managerBtn) managerBtn.textContent = 'מנהל (התנתק) 🟢';
-        if (ft) ft.style.display = 'flex';
-        applyEditModeToContent();
-        renderSideMenu();
-        renderTopNav();
-      } else {
-        isEditMode = false;
-        if (managerBtn) managerBtn.textContent = 'התנתק (אורח) 👤';
-        if (ft) ft.style.display = 'none';
-        removeEditModeFromContent();
-        renderSideMenu();
-        renderTopNav();
-      }
     } else {
-      isEditMode = false;
-      if (loginBtn)   loginBtn.textContent   = 'התחבר 👤';
-      if (managerBtn) managerBtn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="margin-left: 6px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>התחברות';
-      const ft2 = document.getElementById('floating-toolbar');
-      if (ft2) ft2.style.display = 'none';
-      removeEditModeFromContent();
-      renderSideMenu();
-      renderTopNav();
+      if (loginBtn) loginBtn.textContent = 'התחבר 👤';
     }
   }
 
