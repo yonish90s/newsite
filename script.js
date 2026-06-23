@@ -76,7 +76,7 @@ let siteBackgrounds = { dashboard: null, topNav: null, main: null };
 function applyBackgrounds() {
   const dash = document.querySelector('.side-dashboard');
   const top = document.querySelector('.top-bar');
-  const mainWrapper = document.body;
+  const mainWrapper = document.getElementById('mainContent');
   
   if (siteBackgrounds.dashboard) {
     dash.style.backgroundImage = `url(${siteBackgrounds.dashboard})`;
@@ -98,9 +98,10 @@ function applyBackgrounds() {
     mainWrapper.style.backgroundImage = `url(${siteBackgrounds.main})`;
     mainWrapper.style.backgroundSize = 'cover';
     mainWrapper.style.backgroundPosition = 'center';
-    mainWrapper.style.backgroundAttachment = 'fixed';
+    mainWrapper.style.backgroundColor = 'transparent';
   } else {
     mainWrapper.style.backgroundImage = '';
+    mainWrapper.style.backgroundColor = '';
   }
 }
 
@@ -374,6 +375,11 @@ function saveToStorage() {
 // פונקציה שמייצרת את תפריט הצד (מייצרת את שורות ה-HTML של הלינקים לפי מערך העמודים)
 function renderSideMenu() {
   sideMenuContainer.innerHTML = ''; // מנקים את התפריט הישן
+  
+  const btnAddPage = document.getElementById('btn-add-page');
+  if (btnAddPage) {
+    btnAddPage.style.display = isEditMode ? 'block' : 'none';
+  }
   
   pages.forEach(page => {
     // עמודים נסתרי-מנהל (adminOnly) לא מופיעים בתפריט בכלל
@@ -1832,7 +1838,7 @@ if (btnAddImage) {
             el.setAttribute('data-x', '150');
             el.setAttribute('data-y', '150');
             
-            el.style.backgroundImage = 'url(' + event.target.result + ')';
+            el.style.backgroundImage = `url("${event.target.result}")`;
             el.style.backgroundSize = 'contain';
             el.style.backgroundRepeat = 'no-repeat';
             el.style.backgroundPosition = 'center';

@@ -1430,20 +1430,64 @@ body {
 @media (max-width: 900px) {
   .mobile-menu-btn {
     display: block;
+    z-index: 20;
   }
   
   .top-bar {
-    flex-wrap: wrap;
-    padding: 10px;
+    flex-wrap: nowrap;
+    padding: 10px 15px;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    height: 60px;
   }
   
   .left-side {
-    width: 100%;
-    justify-content: space-between;
-    margin-bottom: 10px;
-    flex-wrap: wrap;
-    gap: 8px;
-    order: -1;
+    width: auto;
+    flex: 1;
+    justify-content: flex-end; /* Left side in RTL */
+    margin-bottom: 0;
+    flex-wrap: nowrap;
+    gap: 12px;
+    order: 0;
+    z-index: 20;
+  }
+  
+  .logo-area {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    margin: 0 !important;
+    z-index: 10;
+  }
+  
+  /* Hide login button text on mobile, just icon */
+  .manager-btn {
+    font-size: 0 !important;
+    padding: 6px !important;
+    background: transparent !important;
+    color: #111 !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+  .manager-btn svg {
+    margin: 0 !important;
+    width: 22px;
+    height: 22px;
+  }
+
+  /* Expanded search on mobile overlays nicely */
+  .search-top-input.expanded {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    left: 50px;
+    width: calc(100vw - 120px);
+    max-width: 200px;
+    z-index: 30;
+    background: #f0f0f0;
+    border: 1px solid #ccc;
   }
   
   .empty-left {
