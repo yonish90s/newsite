@@ -413,22 +413,16 @@ function saveToStorage() {
   const addBtn = tempNav.querySelector('#add-nav-link-btn');
   if (addBtn) addBtn.remove();
   
-  if (db) {
-    db.collection("site").doc("config").set({
-      pages: pages,
-      activePageId: activePageId,
-      topNavPages: topNavPages,
-      topNavHTML: tempNav.innerHTML,
-      siteBackgrounds: siteBackgrounds
-    }, { merge: true })
-    .then(() => console.log("הנתונים נשמרו בהצלחה בענן!"))
-    .catch((error) => {
-      console.error("שגיאה בשמירה:", error);
-      alert("שגיאה! פיירבייס חסם את השמירה. זה קורה בגלל שהמנעול ב-Firestore Rules עדיין נעול. ההודעה המדויקת של גוגל היא: " + error.message);
-    });
-  } else {
-    alert("פיירבייס לא מחובר!");
-  }
+  // ניתוק זמני של פיירבייס - שומרים הכל מקומית בדפדפן (localStorage)
+  localforage.setItem('sitePages', {
+    pages: pages,
+    activePageId: activePageId,
+    topNavPages: topNavPages,
+    topNavHTML: tempNav.innerHTML,
+    siteBackgrounds: siteBackgrounds
+  }).then(() => {
+    console.log("הנתונים נשמרו מקומית בדפדפן (פיירבייס מנותק).");
+  });
   
   // הוספה למערך ההיסטוריה עבור פעולת Undo (שומרים את 20 הפעולות האחרונות)
   undoStack.push(JSON.stringify({ pages, topNavPages }));
