@@ -118,6 +118,14 @@ async function initSite() {
         if (data.topNavPages) topNavPages = data.topNavPages;
         if (data.topNavHTML) {
           navLinksContainer.innerHTML = data.topNavHTML;
+          // מחיקת 4 קישורי ברירת מחדל כדי שלא יופיעו במובייל אם לא נמחקו ידנית
+          const unwantedTitles = ["גרפים ונתונים", "פורום", "שירותים", "הזמנת פגישה", "📈 גרפים ונתונים", "💬 פורום"];
+          navLinksContainer.querySelectorAll('a').forEach(a => {
+            const linkText = (a.childNodes[0]?.nodeValue || a.textContent).replace('⌄', '').trim();
+            if (unwantedTitles.includes(linkText)) {
+              a.remove();
+            }
+          });
         }
         if (data.siteBackgrounds) {
           siteBackgrounds = data.siteBackgrounds;
@@ -141,6 +149,17 @@ async function initSite() {
         const demoPageIds = ['page-articles-example', 'page-forum-example', 'page-store-example'];
         pages = pages.filter(p => !demoPageIds.includes(p.id));
         topNavPages = topNavPages.filter(id => !demoPageIds.includes(id));
+        
+        // מחיקה חד פעמית של 4 העמודים שנוצרו אוטומטית (כדי שלא יופיעו במובייל או במחשב אם לא רוצים אותם)
+        const unwantedTitles = ["גרפים ונתונים", "פורום", "שירותים", "הזמנת פגישה", "📈 גרפים ונתונים", "💬 פורום"];
+        const pagesToRemove = pages.filter(p => unwantedTitles.includes(p.title.trim()));
+        if (pagesToRemove.length > 0) {
+          const idsToRemove = pagesToRemove.map(p => p.id);
+          pages = pages.filter(p => !idsToRemove.includes(p.id));
+          topNavPages = topNavPages.filter(id => !idsToRemove.includes(id));
+          // שומרים מיד את העדכון לענן
+          db.collection("site").doc("config").set({ pages: pages, topNavPages: topNavPages }, { merge: true });
+        }
         
         return; // סיימנו לטעון מהענן
       }
@@ -183,6 +202,14 @@ async function initSite() {
     const savedTopNavHTML = await localforage.getItem('mySiteTopNavHTML_v3');
     if (savedTopNavHTML) {
       navLinksContainer.innerHTML = savedTopNavHTML;
+      // מחיקת 4 קישורי ברירת מחדל כדי שלא יופיעו במובייל
+      const unwantedTitles = ["גרפים ונתונים", "פורום", "שירותים", "הזמנת פגישה", "📈 גרפים ונתונים", "💬 פורום"];
+      navLinksContainer.querySelectorAll('a').forEach(a => {
+        const linkText = (a.childNodes[0]?.nodeValue || a.textContent).replace('⌄', '').trim();
+        if (unwantedTitles.includes(linkText)) {
+          a.remove();
+        }
+      });
       navLinksContainer.querySelectorAll('.top-nav-controls').forEach(el => el.remove());
       const addBtn = document.getElementById('add-nav-link-btn');
       if (addBtn) addBtn.remove();
