@@ -422,7 +422,12 @@ function saveToStorage() {
       siteBackgrounds: siteBackgrounds
     }, { merge: true })
     .then(() => console.log("הנתונים נשמרו בהצלחה בענן!"))
-    .catch((error) => console.error("שגיאה בשמירה:", error));
+    .catch((error) => {
+      console.error("שגיאה בשמירה:", error);
+      alert("שגיאה! פיירבייס חסם את השמירה. זה קורה בגלל שהמנעול ב-Firestore Rules עדיין נעול. ההודעה המדויקת של גוגל היא: " + error.message);
+    });
+  } else {
+    alert("פיירבייס לא מחובר!");
   }
   
   // הוספה למערך ההיסטוריה עבור פעולת Undo (שומרים את 20 הפעולות האחרונות)
