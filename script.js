@@ -244,6 +244,25 @@ async function initSite() {
     saveToStorage();
   }
 
+  // שורת החיפוש העליונה - הרחבה בלחיצה
+  const searchTopIcon = document.getElementById('search-top-icon');
+  const searchTopInput = document.getElementById('search-top-input');
+  if (searchTopIcon && searchTopInput) {
+    searchTopIcon.addEventListener('click', (e) => {
+      e.stopPropagation();
+      searchTopInput.classList.toggle('expanded');
+      if (searchTopInput.classList.contains('expanded')) {
+        searchTopInput.focus();
+      }
+    });
+    // סגירה בלחיצה בחוץ
+    document.addEventListener('click', (e) => {
+      if (!searchTopInput.contains(e.target) && e.target !== searchTopIcon) {
+        searchTopInput.classList.remove('expanded');
+      }
+    });
+  }
+
   // אחרי שהכל נטען (ואולי תוקן), נצייר את האתר
   renderSideMenu();
   renderPage();
@@ -2368,12 +2387,51 @@ document.addEventListener('keydown', async (event) => {
 
 // --- שלב 14: הוספת קישורים לתמונות וטקסטים (חיצוניים ופנימיים) ---
 const linkModal = document.getElementById('link-modal');
+let chatModal, adminView, convView, guestView;
+let chatBtn, convList, convTitle, backBtn, messagesBox, chatInput, chatSendBtn, chatImageBtn, chatImageInput;
 const linkInternalSelect = document.getElementById('link-internal-select');
 const linkExternalInput = document.getElementById('link-external-input');
 const btnCancelLink = document.getElementById('btn-cancel-link');
 const btnRemoveLink = document.getElementById('btn-remove-link');
 const btnSaveLink = document.getElementById('btn-save-link');
 let currentEditingLinkElement = null;
+
+function initChat() {
+  chatModal       = document.getElementById('support-chat-modal');
+  adminView       = document.getElementById('chat-admin-view');
+  convView        = document.getElementById('chat-conversation-view');
+  guestView       = document.getElementById('chat-guest-view');
+  
+  chatBtn         = document.querySelector('.chat-btn');
+  convList        = document.getElementById('chat-conversations-list');
+  convTitle       = document.getElementById('chat-conv-title');
+  backBtn         = document.getElementById('chat-back-btn');
+  messagesBox     = document.getElementById('chat-messages-container');
+  chatInput       = document.getElementById('support-chat-input');
+  chatSendBtn     = document.getElementById('support-chat-send');
+  chatImageBtn    = document.getElementById('support-chat-image-btn');
+  chatImageInput  = document.getElementById('support-chat-image-input');
+
+  if (!chatModal || !chatBtn) return;
+  if (chatSendBtn) chatSendBtn.addEventListener('click', () => handleSend(null));
+  if (chatInput) chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleSend(null); });
+
+  if (chatImageBtn && chatImageInput) {
+    chatImageBtn.addEventListener('click', () => chatImageInput.click());
+    chatImageInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        handleSend(ev.target.result);
+      };
+      reader.readAsDataURL(file);
+      chatImageInput.value = '';
+    });
+  }
+
+  const guestLoginBtn = document.getElementById('chat-login-prompt-btn');
+}
 
 // לחיצה כפולה במצב עריכה כדי להוסיף קישור
 document.addEventListener('dblclick', (event) => {
@@ -2817,10 +2875,13 @@ document.addEventListener('click', (event) => {
   }
 
   // ─── שליחת הודעה ─────────────────────────────────────
-  function handleSend() {
-    if (!chatInput) return;
-    const text = chatInput.value.trim();
-    if (!text) return;
+  function handleSend(imageUrl = null) {
+    let text = '';
+    if (!imageUrl) {
+      if (!chatInput) return;
+      text = chatInput.value.trim();
+      if (!text) return;
+    }
 
     const user = firebase && firebase.auth ? firebase.auth().currentUser : null;
 
@@ -2846,6 +2907,7 @@ document.addEventListener('click', (event) => {
       senderName,
       timestamp: Date.now()
     };
+    if (imageUrl) msg.imageUrl = imageUrl;
 
     const chatRef = db.ref(`chats/${targetUid}`);
 
@@ -2857,7 +2919,7 @@ document.addEventListener('click', (event) => {
 
     // עדכן מטא-דאטה של שיחה
     chatRef.update({
-      lastMessage: text,
+      lastMessage: imageUrl ? '📷 תמונה' : text,
       lastTimestamp: Date.now(),
       displayName: isAdmin ? (convTitle ? convTitle.textContent : targetUid) : senderName,
       hasUnread: !isAdmin,  // הודעה מהמשתמש = לא נקראה על ידי המנהל
@@ -2886,8 +2948,10 @@ document.addEventListener('click', (event) => {
       }
     }
 
-    chatInput.value = '';
-    chatInput.focus();
+    if (!imageUrl && chatInput) {
+      chatInput.value = '';
+      chatInput.focus();
+    }
   }
 
   // ─── ציור הודעה ─────────────────────────────────────
@@ -2906,10 +2970,16 @@ document.addEventListener('click', (event) => {
     const timeAlign = isMine ? 'text-align:left;' : '';
     const senderLabel = isMine ? 'אתה' : escHtml(msg.senderName || '');
 
+    let imgHtml = '';
+    if (msg.imageUrl) {
+      imgHtml = `<img src="${msg.imageUrl}" style="max-width: 100%; border-radius: 8px; margin-bottom: 5px; display: block; cursor: pointer;" onclick="window.open(this.src)">`;
+    }
+
     div.innerHTML = `
       <div class="msg-content">
         <div class="msg-sender" style="${isMine ? 'text-align:left;display:block;width:100%;' : ''}">${senderLabel}</div>
-        ${escHtml(msg.text)}
+        ${imgHtml}
+        ${msg.text ? escHtml(msg.text) : ''}
         <div class="msg-time" style="${timeAlign}">${time}</div>
       </div>
     `;

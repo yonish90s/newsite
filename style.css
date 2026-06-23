@@ -55,46 +55,73 @@ body {
   background: #444444;
 }
 
-/* שורת חיפוש עליונה */
-.search-top {
-  padding: 6px 12px;
+/* שורת חיפוש עליונה - סגנון מתרחב */
+.search-top-container {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.search-top-icon {
+  cursor: pointer;
+  color: #111;
+  transition: color 0.2s;
+  margin-left: 8px;
+}
+
+.search-top-icon:hover {
+  color: #555;
+}
+
+.search-top-input {
+  width: 0;
+  opacity: 0;
+  padding: 0;
   border: none;
   border-radius: 20px;
-  background: rgba(0, 0, 0, 0.05); /* רקע אפרפר שקוף של אפל */
+  background: rgba(0, 0, 0, 0.05);
   outline: none;
   font-size: 13px;
-  transition: background 0.2s, box-shadow 0.2s;
-}
-
-/* כשלוחצים על שורת החיפוש */
-.search-top:focus {
-  background: rgba(0, 0, 0, 0.08);
-  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
-}
-
-/* עיצוב קישורי התפריט העליון (תגית a) בסגנון אפל */
-.nav-links a {
-  margin: 0 4px;
-  padding: 6px 14px;
-  border-radius: 20px;
-  text-decoration: none;
   color: #111;
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+
+.search-top-input.expanded {
+  width: 150px;
+  opacity: 1;
+  padding: 6px 12px;
+  pointer-events: auto;
+}
+
+.search-top-input:focus {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+/* עיצוב קישורי התפריט העליון בסגנון אפל בהיר */
+.nav-links a {
+  margin: 0 10px;
+  padding: 4px 0;
+  text-decoration: none;
+  color: rgba(0, 0, 0, 0.8);
   font-size: 13px;
   font-weight: 400;
   letter-spacing: -0.01em;
-  transition: all 0.2s ease;
+  transition: color 0.2s ease;
+  background: transparent;
 }
 
 /* ריחוף על קישורים */
 .nav-links a:hover {
   color: #000;
-  background-color: rgba(0, 0, 0, 0.05);
+  background: transparent;
 }
 
-/* העמוד הפעיל (במידה ונוסיף class="active") */
+/* העמוד הפעיל */
 .nav-links a.active {
-  background-color: #222222;
-  color: #ffffff;
+  color: #000;
+  font-weight: 600;
+  background: transparent;
 }
 
 /* אזור הלוגו */
@@ -1201,6 +1228,25 @@ body {
 
 .chat-modal-footer input:focus {
   border-color: #555;
+}
+
+.chat-image-btn {
+  background: #2c2c2e;
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 18px;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+.chat-image-btn:hover {
+  background: #3c3c3e;
 }
 
 .chat-send-btn {

@@ -36,8 +36,11 @@
           <span id="main-logo-text" class="logo-text" style="font-weight: bold; font-size: 20px; color: #111;">YHSH</span>
         </div>
         
-        <!-- שורת חיפוש עליונה -->
-        <input type="text" class="search-top" placeholder="חיפוש...">
+        <!-- שורת חיפוש עליונה (מתרחבת) -->
+        <div class="search-top-container">
+          <svg class="search-top-icon" id="search-top-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input type="text" class="search-top-input" id="search-top-input" placeholder="חיפוש...">
+        </div>
         
         <!-- כפתור התחברות (לשעבר מנהל) -->
         <button class="add-btn manager-btn" style="display:flex; align-items:center; gap:6px;">
@@ -286,6 +289,8 @@
       <div class="chat-modal-footer">
         <button class="chat-send-btn" id="support-chat-send">שלח</button>
         <input type="text" id="support-chat-input" placeholder="כתוב הודעה...">
+        <button class="chat-image-btn" id="support-chat-image-btn" title="שלח תמונה">🖼️</button>
+        <input type="file" id="support-chat-image-input" accept="image/*" style="display:none;">
       </div>
     </div>
 
