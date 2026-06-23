@@ -426,7 +426,7 @@ function renderSideMenu() {
       deleteBtn.onclick = (e) => {
         e.stopPropagation();
         if (pages.length === 1) {
-          alert('אי אפשר למחוק את העמוד האחרון באתר!');
+          console.log('אי אפשר למחוק את העמוד האחרון באתר!');
           return;
         }
         pages.splice(pages.findIndex(p => p.id === page.id), 1);
@@ -1119,11 +1119,11 @@ if (btnResetSite) {
       try {
         await localforage.clear();
         localStorage.clear();
-        alert('האתר אופס בהצלחה! העמוד ייטען מחדש כעת.');
+        console.log('האתר אופס בהצלחה! העמוד ייטען מחדש כעת.');
         window.location.reload();
       } catch (e) {
         console.error(e);
-        alert('שגיאה במהלך האיפוס.');
+        console.error('שגיאה במהלך האיפוס.');
       }
     }
   });
@@ -1405,7 +1405,7 @@ interact('.draggable-resizable')
     copyBtn.addEventListener('mousedown', async (e) => {
       e.stopPropagation();
       await copySelectedElements([target]);
-      alert('האלמנט הועתק! עכשיו אפשר להדביק אותו בעמוד אחר בעזרת כפתור "הדבק" או Ctrl+V.');
+      console.log('האלמנט הועתק! עכשיו אפשר להדביק אותו בעמוד אחר בעזרת כפתור "הדבק" או Ctrl+V.');
     });
 
     // 3. כפתור מחיקה
@@ -1674,7 +1674,7 @@ if (btnMakeSlideshow) {
               mainContent.appendChild(el);
               saveCurrentPageContent();
               initSlideshows(); // מפעיל מיד את המצגת
-              alert('נוצרה מצגת עם ' + files.length + ' תמונות בהצלחה! התמונות יתחלפו כל 3 שניות.');
+              console.log('נוצרה מצגת עם ' + files.length + ' תמונות בהצלחה! התמונות יתחלפו כל 3 שניות.');
             }
           };
           reader.readAsDataURL(file);
@@ -1913,7 +1913,7 @@ async function copySelectedElements(elements) {
 async function pasteElements(silent = false) {
   const copiedHTML = await localforage.getItem('copiedElementHTML');
   if (!copiedHTML) {
-    if (!silent) alert('לא העתקת שום דבר עדיין!');
+    if (!silent) console.log('לא העתקת שום דבר עדיין!');
     return;
   }
   
@@ -1979,7 +1979,7 @@ if (btnBlock) {
     }
     
     if (selectedEls.length < 2) {
-      alert('יש לסמן לפחות 2 אלמנטים כדי ליצור בלוק, או לסמן בלוק קיים כדי לפרק אותו!');
+      console.log('יש לסמן לפחות 2 אלמנטים כדי ליצור בלוק, או לסמן בלוק קיים כדי לפרק אותו!');
       return;
     }
     
@@ -2051,11 +2051,11 @@ if (btnSplitEl) {
   btnSplitEl.addEventListener('click', () => {
     const selectedEls = Array.from(document.querySelectorAll('.draggable-resizable.selected'));
     if (selectedEls.length === 0) {
-      alert('יש לסמן אלמנט שברצונך לחתוך!');
+      console.log('יש לסמן אלמנט שברצונך לחתוך!');
       return;
     }
     if (selectedEls.length > 1) {
-      alert('אפשר לחתוך רק אלמנט אחד בכל פעם!');
+      console.log('אפשר לחתוך רק אלמנט אחד בכל פעם!');
       return;
     }
     
@@ -2184,7 +2184,7 @@ if (btnSaveSite) {
     // הפונקציה הזו אוספת את כל המידע מהמסך ושומרת אותו עמוק בזיכרון של האתר
     saveCurrentPageContent(); 
     // עכשיו גם נקפיץ הודעה יפה למשתמש כדי שיידע שהכל בטוח
-    alert('כל השינויים שלך נשמרו בהצלחה! 💾✨');
+    console.log('כל השינויים שלך נשמרו בהצלחה! 💾✨');
   });
 }
 
@@ -2844,7 +2844,10 @@ document.addEventListener('click', (event) => {
     const chatRef = db.ref(`chats/${targetUid}`);
 
     // שמור הודעה
-    chatRef.child('messages').push(msg);
+    chatRef.child('messages').push(msg).catch(err => {
+      console.error('Error pushing message:', err);
+      console.error('שגיאה בשליחת הודעה (ייתכן ואין הרשאות לכתוב למסד הנתונים)');
+    });
 
     // עדכן מטא-דאטה של שיחה
     chatRef.update({
@@ -2852,7 +2855,7 @@ document.addEventListener('click', (event) => {
       lastTimestamp: Date.now(),
       displayName: isAdmin ? (convTitle ? convTitle.textContent : targetUid) : senderName,
       hasUnread: !isAdmin  // הודעה מהמשתמש = לא נקראה
-    });
+    }).catch(err => console.error('Error updating chat metadata:', err));
 
     chatInput.value = '';
     chatInput.focus();
@@ -2944,14 +2947,14 @@ document.addEventListener('click', (event) => {
 
       if (user.email === ADMIN_EMAIL) {
         isEditMode = true;
-        if (managerBtn) managerBtn.textContent = 'מנהל (מחובר) 🟢';
+        if (managerBtn) managerBtn.textContent = 'מנהל (התנתק) 🟢';
         if (ft) ft.style.display = 'flex';
         applyEditModeToContent();
         renderSideMenu();
         renderTopNav();
       } else {
         isEditMode = false;
-        if (managerBtn) managerBtn.textContent = 'מנהל (אורח) 👤';
+        if (managerBtn) managerBtn.textContent = 'התנתק (אורח) 👤';
         if (ft) ft.style.display = 'none';
         removeEditModeFromContent();
         renderSideMenu();
@@ -2960,7 +2963,7 @@ document.addEventListener('click', (event) => {
     } else {
       isEditMode = false;
       if (loginBtn)   loginBtn.textContent   = 'התחבר 👤';
-      if (managerBtn) managerBtn.textContent = 'מנהל 👤';
+      if (managerBtn) managerBtn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="margin-left: 6px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>התחברות';
       const ft2 = document.getElementById('floating-toolbar');
       if (ft2) ft2.style.display = 'none';
       removeEditModeFromContent();
@@ -2975,14 +2978,10 @@ document.addEventListener('click', (event) => {
 
   if (managerBtnEl) {
     managerBtnEl.addEventListener('click', () => {
-      if (typeof firebase === 'undefined') { alert('Firebase לא נטען'); return; }
+      if (typeof firebase === 'undefined') { console.error('Firebase לא נטען'); return; }
       const user = firebase.auth().currentUser;
       if (user) {
-        if (user.email === ADMIN_EMAIL) {
-          if (confirm('האם ברצונך להתנתק?')) firebase.auth().signOut();
-        } else {
-          alert('אין הרשאת מנהל.');
-        }
+        firebase.auth().signOut();
       } else {
         const lm = document.getElementById('login-modal');
         if (lm) lm.style.display = 'flex';
@@ -2992,10 +2991,10 @@ document.addEventListener('click', (event) => {
 
   if (loginBtnEl) {
     loginBtnEl.addEventListener('click', () => {
-      if (typeof firebase === 'undefined') { alert('Firebase לא נטען'); return; }
+      if (typeof firebase === 'undefined') { console.error('Firebase לא נטען'); return; }
       const user = firebase.auth().currentUser;
       if (user) {
-        if (confirm(`מחובר כ-${user.email}. האם להתנתק?`)) firebase.auth().signOut();
+        firebase.auth().signOut();
       } else {
         const lm = document.getElementById('login-modal');
         if (lm) lm.style.display = 'flex';
