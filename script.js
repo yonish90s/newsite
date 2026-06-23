@@ -1595,7 +1595,9 @@ interact('.draggable-resizable')
       burnBtn.addEventListener('mousedown', async (e) => {
         e.stopPropagation();
         siteBackgrounds['main'] = bgUrl;
-        await localforage.setItem('mySiteBackgrounds_v3', siteBackgrounds);
+        if (db) {
+          db.collection("site").doc("config").set({ siteBackgrounds: siteBackgrounds }, { merge: true });
+        }
         applyBackgrounds();
         
         target.remove();
@@ -1926,8 +1928,10 @@ if (bgFileInput) {
       if (currentBgTarget === 'dashboard')  siteBackgrounds.dashboard = dataUrl;
       else if (currentBgTarget === 'topnav') siteBackgrounds.topNav    = dataUrl;
       else if (currentBgTarget === 'main')   siteBackgrounds.main      = dataUrl;
-
-      await localforage.setItem('mySiteBackgrounds_v3', siteBackgrounds);
+      
+      if (db) {
+        db.collection("site").doc("config").set({ siteBackgrounds: siteBackgrounds }, { merge: true });
+      }
       applyBackgrounds();
       if (bgModal) bgModal.style.display = 'none';
     };
@@ -1941,7 +1945,9 @@ const bgClearBtn = document.getElementById('bg-clear-all');
 if (bgClearBtn) {
   bgClearBtn.addEventListener('click', async () => {
     siteBackgrounds = { dashboard: null, topNav: null, main: null };
-    await localforage.setItem('mySiteBackgrounds_v3', siteBackgrounds);
+    if (db) {
+      db.collection("site").doc("config").set({ siteBackgrounds: siteBackgrounds }, { merge: true });
+    }
     applyBackgrounds();
     if (bgModal) bgModal.style.display = 'none';
   });
