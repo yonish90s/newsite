@@ -33,11 +33,27 @@ const firebaseConfig = {
 
 // אתחול Firebase רק אם הוא לא מאותחל כבר וקיים בדף
 let db;
+let storage;
 if (typeof firebase !== 'undefined') {
   if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
   }
   db = firebase.firestore();
+  storage = firebase.storage();
+}
+
+// פונקציית עזר להעלאת תמונות ל-Firebase Storage
+async function uploadImageToStorage(file) {
+  if (!storage) return null;
+  try {
+    const fileRef = storage.ref().child(`images/${Date.now()}_${file.name}`);
+    await fileRef.put(file);
+    return await fileRef.getDownloadURL();
+  } catch (error) {
+    console.error("שגיאה בהעלאת התמונה לענן:", error);
+    alert("שגיאה בהעלאת התמונה: ייתכן שהרשאות ה-Storage שלך חסומות. אנא הגדר את כללי ה-Storage ל-allow read, write: if true; במסוף של פיירבייס.");
+    return null;
+  }
 }
 
 // --- שלב 1: הגדרות בסיס ומצב התחלתי (State) ---
@@ -331,26 +347,23 @@ if (mainLogo) {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
-    input.onchange = e => {
+    input.onchange = async e => {
       const file = e.target.files[0];
       if (file) {
-        const reader = new FileReader();
-        reader.onload = event => {
-          const dataUrl = event.target.result;
-          this.src = dataUrl;
-          
-          const loaderImg = document.getElementById('loader-img');
-          const favicon = document.getElementById('favicon');
-          if (loaderImg) loaderImg.src = dataUrl;
-          if (favicon) favicon.href = dataUrl;
-          
-          if (db) {
-            db.collection("site").doc("config").set({ logo: dataUrl }, { merge: true })
-              .then(() => console.log("הלוגו נשמר בענן!"))
-              .catch(err => console.error("שגיאה בשמירת לוגו לענן", err));
-          }
-        };
-        reader.readAsDataURL(file);
+        const dataUrl = await uploadImageToStorage(file);
+        if (!dataUrl) return;
+        this.src = dataUrl;
+        
+        const loaderImg = document.getElementById('loader-img');
+        const favicon = document.getElementById('favicon');
+        if (loaderImg) loaderImg.src = dataUrl;
+        if (favicon) favicon.href = dataUrl;
+        
+        if (db) {
+          db.collection("site").doc("config").set({ logo: dataUrl }, { merge: true })
+            .then(() => console.log("הלוגו נשמר בענן!"))
+            .catch(err => console.error("שגיאה בשמירת לוגו לענן", err));
+        }
       }
     };
     input.click();
@@ -982,15 +995,13 @@ function makeImagesEditable() {
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = 'image/*';
-        input.onchange = e => {
+        input.onchange = async e => {
           const file = e.target.files[0];
           if (file) {
-            const reader = new FileReader();
-            reader.onload = event => {
-              this.src = event.target.result;
-              saveCurrentPageContent();
-            };
-            reader.readAsDataURL(file);
+            const dataUrl = await uploadImageToStorage(file);
+            if (!dataUrl) return;
+            this.src = dataUrl;
+            saveCurrentPageContent();
           }
         };
         input.click();
@@ -1728,47 +1739,39 @@ if (btnMakeSlideshow) {
     input.accept = 'image/*';
     input.multiple = true; // מאפשר בחירת מספר קבצים
     
-    input.onchange = e => {
+    input.onchange = async e => {
       const files = Array.from(e.target.files).slice(0, 5); // הגבלת 5 תמונות
       if (files.length > 0) {
-        const urls = [];
-        let loadedCount = 0;
+        const uploadPromises = files.map(file => uploadImageToStorage(file));
+        const results = await Promise.all(uploadPromises);
+        const urls = results.filter(url => url !== null);
         
-        files.forEach((file, index) => {
-          const reader = new FileReader();
-          reader.onload = event => {
-            urls[index] = event.target.result;
-            loadedCount++;
-            
-            if (loadedCount === files.length) {
-              const el = document.createElement('div');
-              el.className = 'draggable-resizable';
-              
-              // מידות התחלתיות סבירות
-              el.style.width = '400px';
-              el.style.height = '300px';
-              el.style.left = '150px';
-              el.style.top = '150px';
-              el.setAttribute('data-x', '150');
-              el.setAttribute('data-y', '150');
-              
-              el.style.backgroundImage = 'url(' + urls[0] + ')';
-              el.style.backgroundSize = 'cover';
-              el.style.backgroundRepeat = 'no-repeat';
-              el.style.backgroundPosition = 'center';
-              el.style.borderRadius = '12px';
-              
-              el.dataset.slideshowUrls = JSON.stringify(urls);
-              el.dataset.slideshowIndex = '0';
-              
-              mainContent.appendChild(el);
-              saveCurrentPageContent();
-              initSlideshows(); // מפעיל מיד את המצגת
-              console.log('נוצרה מצגת עם ' + files.length + ' תמונות בהצלחה! התמונות יתחלפו כל 3 שניות.');
-            }
-          };
-          reader.readAsDataURL(file);
-        });
+        if (urls.length > 0) {
+          const el = document.createElement('div');
+          el.className = 'draggable-resizable';
+          
+          // מידות התחלתיות סבירות
+          el.style.width = '400px';
+          el.style.height = '300px';
+          el.style.left = '150px';
+          el.style.top = '150px';
+          el.setAttribute('data-x', '150');
+          el.setAttribute('data-y', '150');
+          
+          el.style.backgroundImage = 'url(' + urls[0] + ')';
+          el.style.backgroundSize = 'cover';
+          el.style.backgroundRepeat = 'no-repeat';
+          el.style.backgroundPosition = 'center';
+          el.style.borderRadius = '12px';
+          
+          el.dataset.slideshowUrls = JSON.stringify(urls);
+          el.dataset.slideshowIndex = '0';
+          
+          mainContent.appendChild(el);
+          saveCurrentPageContent();
+          initSlideshows(); // מפעיל מיד את המצגת
+          console.log('נוצרה מצגת עם ' + urls.length + ' תמונות בהצלחה! התמונות יתחלפו כל 3 שניות.');
+        }
       }
     };
     input.click();
@@ -1782,29 +1785,28 @@ if (btnAddVideo) {
     input.type = 'file';
     input.accept = 'video/*';
     
-    input.onchange = e => {
+    input.onchange = async e => {
       const file = e.target.files[0];
       if (file) {
-        const reader = new FileReader();
-        reader.onload = event => {
-          const el = document.createElement('div');
-          el.className = 'draggable-resizable';
-          
-          el.style.width = '480px';
-          el.style.height = '270px';
-          el.style.left = '150px';
-          el.style.top = '150px';
-          el.setAttribute('data-x', '150');
-          el.setAttribute('data-y', '150');
-          
-          el.innerHTML = `
-            <video src="${event.target.result}" controls style="width: 100%; height: 100%; object-fit: contain; border-radius: 8px;"></video>
-          `;
-          
-          mainContent.appendChild(el);
-          saveCurrentPageContent();
-        };
-        reader.readAsDataURL(file);
+        const dataUrl = await uploadImageToStorage(file);
+        if (!dataUrl) return;
+        
+        const el = document.createElement('div');
+        el.className = 'draggable-resizable';
+        
+        el.style.width = '480px';
+        el.style.height = '270px';
+        el.style.left = '150px';
+        el.style.top = '150px';
+        el.setAttribute('data-x', '150');
+        el.setAttribute('data-y', '150');
+        
+        el.innerHTML = `
+          <video src="${dataUrl}" controls style="width: 100%; height: 100%; object-fit: contain; border-radius: 8px;"></video>
+        `;
+        
+        mainContent.appendChild(el);
+        saveCurrentPageContent();
       }
     };
     input.click();
@@ -1817,37 +1819,36 @@ if (btnMakeDownload) {
     const input = document.createElement('input');
     input.type = 'file';
     
-    input.onchange = e => {
+    input.onchange = async e => {
       const file = e.target.files[0];
       if (file) {
-        const reader = new FileReader();
-        reader.onload = event => {
-          const el = document.createElement('div');
-          el.className = 'draggable-resizable';
-          
-          el.style.width = '250px';
-          el.style.left = '200px';
-          el.style.top = '200px';
-          el.setAttribute('data-x', '200');
-          el.setAttribute('data-y', '200');
-          
-          // שומרים את מידע ההורדה
-          el.dataset.downloadUrl = event.target.result;
-          el.dataset.downloadName = file.name;
-          el.title = "לחיצה תוריד קובץ: " + file.name;
-          
-          // עיצוב כפתור ההורדה שיופיע על המסך
-          el.innerHTML = `
-            <div style="background: linear-gradient(135deg, #4CAF50, #2E7D32); color: white; border-radius: 12px; padding: 15px 20px; display: flex; align-items: center; justify-content: center; gap: 10px; font-family: 'Inter', sans-serif; font-size: 16px; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.1); cursor: pointer; height: 100%; box-sizing: border-box;">
-              <span style="font-size: 24px;">📥</span>
-              <span style="flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" contenteditable="plaintext-only">הורד קובץ</span>
-            </div>
-          `;
-          
-          mainContent.appendChild(el);
-          saveCurrentPageContent();
-        };
-        reader.readAsDataURL(file);
+        const downloadUrl = await uploadImageToStorage(file);
+        if (!downloadUrl) return;
+        
+        const el = document.createElement('div');
+        el.className = 'draggable-resizable';
+        
+        el.style.width = '250px';
+        el.style.left = '200px';
+        el.style.top = '200px';
+        el.setAttribute('data-x', '200');
+        el.setAttribute('data-y', '200');
+        
+        // שומרים את מידע ההורדה
+        el.dataset.downloadUrl = downloadUrl;
+        el.dataset.downloadName = file.name;
+        el.title = "לחיצה תוריד קובץ: " + file.name;
+        
+        // עיצוב כפתור ההורדה שיופיע על המסך
+        el.innerHTML = `
+          <div style="background: linear-gradient(135deg, #4CAF50, #2E7D32); color: white; border-radius: 12px; padding: 15px 20px; display: flex; align-items: center; justify-content: center; gap: 10px; font-family: 'Inter', sans-serif; font-size: 16px; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.1); cursor: pointer; height: 100%; box-sizing: border-box;">
+            <span style="font-size: 24px;">📥</span>
+            <span style="flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" contenteditable="plaintext-only">הורד קובץ</span>
+          </div>
+        `;
+        
+        mainContent.appendChild(el);
+        saveCurrentPageContent();
       }
     };
     input.click();
@@ -1881,40 +1882,39 @@ if (btnAddImage) {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
-    input.onchange = e => {
+    input.onchange = async e => {
       const file = e.target.files[0];
       if (file) {
-        const reader = new FileReader();
-        reader.onload = event => {
-          const imgObj = new Image();
-          imgObj.onload = () => {
-            const el = document.createElement('div');
-            el.className = 'draggable-resizable';
-            
-            // מתאימים את הגודל ההתחלתי לפרופורציות האמיתיות של התמונה
-            const targetWidth = 300; // רוחב התחלתי סביר
-            const ratio = imgObj.height / imgObj.width;
-            const targetHeight = targetWidth * ratio;
-            
-            el.style.width = targetWidth + 'px';
-            el.style.height = targetHeight + 'px';
-            el.style.left = '150px';
-            el.style.top = '150px';
-            el.setAttribute('data-x', '150');
-            el.setAttribute('data-y', '150');
-            
-            el.style.backgroundImage = `url("${event.target.result}")`;
-            el.style.backgroundSize = 'contain';
-            el.style.backgroundRepeat = 'no-repeat';
-            el.style.backgroundPosition = 'center';
-            el.style.borderRadius = '12px'; // קצת יופי
-            
-            mainContent.appendChild(el);
-            saveCurrentPageContent();
-          };
-          imgObj.src = event.target.result;
+        const dataUrl = await uploadImageToStorage(file);
+        if (!dataUrl) return;
+        
+        const imgObj = new Image();
+        imgObj.onload = () => {
+          const el = document.createElement('div');
+          el.className = 'draggable-resizable';
+          
+          // מתאימים את הגודל ההתחלתי לפרופורציות האמיתיות של התמונה
+          const targetWidth = 300; // רוחב התחלתי סביר
+          const ratio = imgObj.height / imgObj.width;
+          const targetHeight = targetWidth * ratio;
+          
+          el.style.width = targetWidth + 'px';
+          el.style.height = targetHeight + 'px';
+          el.style.left = '150px';
+          el.style.top = '150px';
+          el.setAttribute('data-x', '150');
+          el.setAttribute('data-y', '150');
+          
+          el.style.backgroundImage = `url("${dataUrl}")`;
+          el.style.backgroundSize = 'contain';
+          el.style.backgroundRepeat = 'no-repeat';
+          el.style.backgroundPosition = 'center';
+          el.style.borderRadius = '12px'; // קצת יופי
+          
+          mainContent.appendChild(el);
+          saveCurrentPageContent();
         };
-        reader.readAsDataURL(file);
+        imgObj.src = dataUrl;
       }
     };
     input.click(); // לוחצים "וירטואלית" על שדה העלאת הקובץ
@@ -1950,21 +1950,18 @@ if (bgFileInput) {
     const file = e.target.files[0];
     if (!file || !currentBgTarget) return;
 
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-      const dataUrl = event.target.result;
+    const dataUrl = await uploadImageToStorage(file);
+    if (!dataUrl) return;
 
-      if (currentBgTarget === 'dashboard')  siteBackgrounds.dashboard = dataUrl;
-      else if (currentBgTarget === 'topnav') siteBackgrounds.topNav    = dataUrl;
-      else if (currentBgTarget === 'main')   siteBackgrounds.main      = dataUrl;
-      
-      if (db) {
-        db.collection("site").doc("config").set({ siteBackgrounds: siteBackgrounds }, { merge: true });
-      }
-      applyBackgrounds();
-      if (bgModal) bgModal.style.display = 'none';
-    };
-    reader.readAsDataURL(file);
+    if (currentBgTarget === 'dashboard')  siteBackgrounds.dashboard = dataUrl;
+    else if (currentBgTarget === 'topnav') siteBackgrounds.topNav    = dataUrl;
+    else if (currentBgTarget === 'main')   siteBackgrounds.main      = dataUrl;
+    
+    if (db) {
+      db.collection("site").doc("config").set({ siteBackgrounds: siteBackgrounds }, { merge: true });
+    }
+    applyBackgrounds();
+    if (bgModal) bgModal.style.display = 'none';
     bgFileInput.value = '';
   });
 }
@@ -2491,14 +2488,14 @@ function initChat() {
 
   if (chatImageBtn && chatImageInput) {
     chatImageBtn.addEventListener('click', () => chatImageInput.click());
-    chatImageInput.addEventListener('change', (e) => {
+    chatImageInput.addEventListener('change', async (e) => {
       const file = e.target.files[0];
       if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        handleSend(ev.target.result);
-      };
-      reader.readAsDataURL(file);
+      
+      const dataUrl = await uploadImageToStorage(file);
+      if (dataUrl) {
+        handleSend(dataUrl);
+      }
       chatImageInput.value = '';
     });
   }
