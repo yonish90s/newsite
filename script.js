@@ -23,6 +23,7 @@
 const firebaseConfig = {
   apiKey: "AIzaSyCpVZS9qEnpPz-gyu12yD3FLiu3Lf-Tg04",
   authDomain: "newsite-f76e2.firebaseapp.com",
+  databaseURL: "https://newsite-f76e2-default-rtdb.firebaseio.com",
   projectId: "newsite-f76e2",
   storageBucket: "newsite-f76e2.firebasestorage.app",
   messagingSenderId: "484000020563",
@@ -356,16 +357,11 @@ function renderSideMenu() {
   sideMenuContainer.innerHTML = ''; // מנקים את התפריט הישן
   
   pages.forEach(page => {
-    // אם אנחנו לא במצב עריכה והעמוד מוסתר - לא נציג אותו
-    if (!isEditMode && page.isHidden) return;
+    // עמודים נסתרי-מנהל (adminOnly) לא מופיעים בתפריט בכלל
+    if (page.adminOnly) return;
 
-    const li = document.createElement('li'); // יוצרים אלמנט רשימה חדש
-    li.id = page.id;
-    
-    // אם במצב עריכה והעמוד מוסתר, נציג אותו חצי שקוף
-    if (isEditMode && page.isHidden) {
-      li.style.opacity = '0.5';
-    }
+    // אם העמוד מוסתר – לא מציגים אותו בכלל (גם לא במצב עריכה)
+    if (page.isHidden) return;
     
     // מיכל לטקסט ולכפתורים
     li.style.display = 'flex';
@@ -472,6 +468,7 @@ function renderTopNav() {
   topNavPages.forEach(pageId => {
     const page = pages.find(p => p.id === pageId);
     if (!page) return; // במקרה שהעמוד נמחק
+    if (page.adminOnly) return; // עמודים נסתרי-מנהל לא מופיעים בתפריט העליון
     if (!isEditMode && page.isHidden) return; // מסתיר עמודים מוסתרים גם למעלה
     
     const a = document.createElement('a');
@@ -977,25 +974,143 @@ btnEditMode.addEventListener('click', () => {
 
 // האזנה ללחיצה על כפתור "+ הוסף עמוד חדש"
 btnAddPage.addEventListener('click', () => {
-  // מקפיצים חלונית שמבקשת מהמשתמש את שם העמוד
   const newTitle = prompt('איך תרצה לקרוא לעמוד החדש? (למשל: 📞 צור קשר)');
   
   if (newTitle && newTitle.trim() !== '') {
-    // יוצרים אובייקט של עמוד חדש
     const newPage = {
-      id: 'page-' + Date.now(), // מזהה ייחודי שמבוסס על הזמן הנוכחי
-      title: newTitle, // השם שהמשתמש הקליד
+      id: 'page-' + Date.now(),
+      title: newTitle,
       content: ''
     };
     
-    pages.push(newPage); // מוסיפים למערך שלנו
-    activePageId = newPage.id; // מעבירים אותו להיות העמוד הפעיל
+    pages.push(newPage);
+    activePageId = newPage.id;
     
-    saveToStorage(); // שומרים
-    renderSideMenu(); // מרעננים את התפריט שיציג את העמוד החדש
-    renderPage(); // מרעננים את המסך שיציג את העמוד החדש
+    saveToStorage();
+    renderSideMenu();
+    renderHiddenPages();
+    renderPage();
   }
 });
+
+// --- עמודים נסתרים (Admin-only hidden pages) ---
+
+function renderHiddenPages() {
+  const section = document.getElementById('hidden-pages-section');
+  const list    = document.getElementById('hidden-pages-list-sidebar');
+  if (!section || !list) return;
+
+  // מציג את האזור רק כשמנהל מחובר
+  section.style.display = isEditMode ? 'block' : 'none';
+  list.innerHTML = '';
+
+  const hiddenPages = pages.filter(p => p.isHidden && p.adminOnly);
+
+  if (hiddenPages.length === 0) {
+    list.innerHTML = '<li style="font-size:12px; color:#666; padding:4px 8px;">אין עמודים נסתרים</li>';
+    return;
+  }
+
+  hiddenPages.forEach(page => {
+    const li = document.createElement('li');
+    li.style.cssText = 'display:flex; align-items:center; justify-content:space-between; padding:6px 8px; border-radius:6px; margin-bottom:3px; background:rgba(108,63,197,0.08);';
+
+    // שם העמוד
+    const nameSpan = document.createElement('span');
+    nameSpan.textContent = page.title;
+    nameSpan.style.cssText = 'font-size:13px; color:#c0a8f0; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;';
+
+    // כפתורי ניהול
+    const actions = document.createElement('span');
+    actions.style.cssText = 'display:flex; gap:6px; flex-shrink:0;';
+
+    // פתח / ערוך
+    const openBtn = document.createElement('span');
+    openBtn.textContent = '📂';
+    openBtn.title = 'פתח לעריכה';
+    openBtn.style.cursor = 'pointer';
+    openBtn.onclick = (e) => {
+      e.stopPropagation();
+      if (isEditMode) saveCurrentPageContent();
+      activePageId = page.id;
+      saveToStorage();
+      renderPage();
+      renderSideMenu();
+      renderHiddenPages();
+    };
+
+    // שינוי שם
+    const renameBtn = document.createElement('span');
+    renameBtn.textContent = '✏️';
+    renameBtn.title = 'שנה שם';
+    renameBtn.style.cursor = 'pointer';
+    renameBtn.onclick = (e) => {
+      e.stopPropagation();
+      const newName = prompt('שם חדש לעמוד הנסתר:', page.title);
+      if (newName && newName.trim()) {
+        page.title = newName.trim();
+        saveToStorage();
+        renderHiddenPages();
+      }
+    };
+
+    // מחיקה
+    const delBtn = document.createElement('span');
+    delBtn.textContent = '🗑️';
+    delBtn.title = 'מחק עמוד';
+    delBtn.style.cursor = 'pointer';
+    delBtn.onclick = (e) => {
+      e.stopPropagation();
+      if (!confirm(`למחוק את "${page.title}"?`)) return;
+      pages.splice(pages.findIndex(p => p.id === page.id), 1);
+      if (activePageId === page.id && pages.length > 0) {
+        activePageId = pages[0].id;
+        renderPage();
+      }
+      saveToStorage();
+      renderSideMenu();
+      renderHiddenPages();
+    };
+
+    actions.appendChild(openBtn);
+    actions.appendChild(renameBtn);
+    actions.appendChild(delBtn);
+
+    // אם זה העמוד הפעיל – הדגש
+    if (page.id === activePageId) {
+      li.style.background = 'rgba(108,63,197,0.25)';
+      nameSpan.style.color = '#d4baff';
+    }
+
+    li.appendChild(nameSpan);
+    li.appendChild(actions);
+    list.appendChild(li);
+  });
+}
+
+// כפתור יצירת עמוד נסתר חדש
+const btnAddHiddenSidebar = document.getElementById('btn-add-hidden-page-sidebar');
+if (btnAddHiddenSidebar) {
+  btnAddHiddenSidebar.addEventListener('click', () => {
+    const newTitle = prompt('שם לעמוד הנסתר החדש:');
+    if (!newTitle || !newTitle.trim()) return;
+
+    const newPage = {
+      id: 'hidden-' + Date.now(),
+      title: newTitle.trim(),
+      content: '',
+      isHidden: true,   // לא יופיע בתפריטים
+      adminOnly: true   // סימון עמוד נסתר-מנהל
+    };
+
+    pages.push(newPage);
+    activePageId = newPage.id; // נפתח ישירות לעריכה
+    saveToStorage();
+    renderPage();
+    renderSideMenu();
+    renderHiddenPages();
+  });
+}
 
 // האזנה ללחיצה על כפתור "איפוס אתר"
 if (btnResetSite) {
@@ -1432,6 +1547,31 @@ interact('.draggable-resizable')
     }
 
     actionsContainer.appendChild(linkBtn);
+
+    // כפתור "כנס לעמוד הנסתר" – מופיע רק אם האלמנט מקושר לעמוד נסתר
+    const linkedHref = target.getAttribute('data-href');
+    if (linkedHref) {
+      const linkedPage = pages.find(p => p.id === linkedHref && p.adminOnly);
+      if (linkedPage) {
+        const enterBtn = document.createElement('button');
+        enterBtn.className = 'action-btn';
+        enterBtn.innerHTML = '↩️';
+        enterBtn.title = `כנס לעמוד הנסתר: ${linkedPage.title}`;
+        enterBtn.style.background = 'rgba(108,63,197,0.15)';
+        enterBtn.style.border = '1px solid rgba(108,63,197,0.4)';
+        enterBtn.addEventListener('mousedown', (e) => {
+          e.stopPropagation();
+          saveCurrentPageContent();
+          activePageId = linkedPage.id;
+          saveToStorage();
+          renderPage();
+          renderSideMenu();
+          if (typeof renderHiddenPages === 'function') renderHiddenPages();
+        });
+        actionsContainer.appendChild(enterBtn);
+      }
+    }
+
     actionsContainer.appendChild(copyBtn);
     actionsContainer.appendChild(delBtn);
     
@@ -1696,34 +1836,48 @@ const bgModal = document.getElementById('bg-modal');
 const bgFileInput = document.getElementById('bg-file-input');
 let currentBgTarget = null;
 
-// קריאת בחירת קובץ ישירה בלי חלון ביניים
-const directBgInput = document.createElement('input');
-directBgInput.type = 'file';
-directBgInput.accept = 'image/*';
-directBgInput.style.display = 'none';
-document.body.appendChild(directBgInput);
-
+// פתיחת חלונית בחירת אזור הרקע
 if (btnAddBg) {
   btnAddBg.addEventListener('click', () => {
-    directBgInput.click();
-  });
-  
-  directBgInput.addEventListener('change', async (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = async (event) => {
-        siteBackgrounds.main = event.target.result;
-        await localforage.setItem('mySiteBackgrounds_v3', siteBackgrounds);
-        applyBackgrounds();
-      };
-      reader.readAsDataURL(file);
-    }
-    directBgInput.value = '';
+    if (bgModal) bgModal.style.display = 'flex';
   });
 }
 
-// שמירת תמיכה בכפתור ניקוי רקע דרך החלון הישן (אם קיים)
+// כפתורי בחירת אזור – כל אחד שומר את היעד ופותח בורר קובץ
+['dashboard', 'topnav', 'main'].forEach(target => {
+  const btn = document.getElementById(`bg-target-${target}`);
+  if (btn) {
+    btn.addEventListener('click', () => {
+      currentBgTarget = target;
+      bgFileInput.click();
+    });
+  }
+});
+
+// קריאת הקובץ שנבחר ושמירה לפי אזור
+if (bgFileInput) {
+  bgFileInput.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file || !currentBgTarget) return;
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const dataUrl = event.target.result;
+
+      if (currentBgTarget === 'dashboard')  siteBackgrounds.dashboard = dataUrl;
+      else if (currentBgTarget === 'topnav') siteBackgrounds.topNav    = dataUrl;
+      else if (currentBgTarget === 'main')   siteBackgrounds.main      = dataUrl;
+
+      await localforage.setItem('mySiteBackgrounds_v3', siteBackgrounds);
+      applyBackgrounds();
+      if (bgModal) bgModal.style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+    bgFileInput.value = '';
+  });
+}
+
+// ניקוי כל הרקעים
 const bgClearBtn = document.getElementById('bg-clear-all');
 if (bgClearBtn) {
   bgClearBtn.addEventListener('click', async () => {
@@ -2152,53 +2306,9 @@ document.addEventListener('keydown', async (event) => {
     return;
   }
 
-  // 13.5 סידור חכם בגריד (Command + Z)
+
+  // 13.6 ביטול פעולה אחרונה (Undo) בעזרת Command + Z
   if (isCmdOrCtrl && event.key.toLowerCase() === 'z') {
-    event.preventDefault(); 
-    
-    if (selectedEls.length > 0) {
-      // מיון: מלמעלה למטה, ומימין לשמאל (RTL)
-      selectedEls.sort((a, b) => {
-        const topA = parseFloat(a.style.top) || parseFloat(a.getAttribute('data-y')) || 0;
-        const topB = parseFloat(b.style.top) || parseFloat(b.getAttribute('data-y')) || 0;
-        const leftA = parseFloat(a.style.left) || parseFloat(a.getAttribute('data-x')) || 0;
-        const leftB = parseFloat(b.style.left) || parseFloat(b.getAttribute('data-x')) || 0;
-        
-        if (Math.abs(topA - topB) > 50) return topA - topB; // שורות שונות
-        return leftB - leftA; // מימינה לשמאלה
-      });
-
-      const ITEM_SIZE = 200; // גודל קבוע לכל התמונות ברשת
-      const GAP = 20;
-      const COLUMNS = 4; // כמות עמודות
-      
-      // נתחיל מהמיקום של האלמנט הראשון
-      const startX = parseFloat(selectedEls[0].style.left) || parseFloat(selectedEls[0].getAttribute('data-x')) || 100;
-      const startY = parseFloat(selectedEls[0].style.top) || parseFloat(selectedEls[0].getAttribute('data-y')) || 100;
-
-      selectedEls.forEach((el, index) => {
-        const row = Math.floor(index / COLUMNS);
-        const col = index % COLUMNS;
-        
-        // ב-RTL מחסרים את ה-X כדי ללכת ימינה->שמאלה
-        const newX = startX - (col * (ITEM_SIZE + GAP));
-        const newY = startY + (row * (ITEM_SIZE + GAP));
-        
-        el.style.width = ITEM_SIZE + 'px';
-        el.style.height = ITEM_SIZE + 'px';
-        el.style.left = newX + 'px';
-        el.style.top = newY + 'px';
-        el.setAttribute('data-x', newX);
-        el.setAttribute('data-y', newY);
-      });
-      
-      saveCurrentPageContent();
-    }
-    return;
-  }
-  
-  // 13.6 ביטול פעולה אחרונה (Undo) בעזרת Command + B
-  if (isCmdOrCtrl && event.key.toLowerCase() === 'b') {
     event.preventDefault();
     if (undoStack.length > 1) {
       undoStack.pop(); // זורקים את המצב השגוי האחרון
@@ -2335,6 +2445,35 @@ btnSaveLink.onclick = () => {
   currentEditingLinkElement = null;
 };
 
+// כפתור יצירת עמוד נסתר וקישור אליו – ללא שאלת שם, מיידי
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('#btn-create-hidden-link');
+  if (!btn) return;
+  e.preventDefault();
+
+  // שם אוטומטי
+  const hiddenCount = pages.filter(p => p.adminOnly).length + 1;
+  const newPage = {
+    id: 'hidden-' + Date.now(),
+    title: `עמוד נסתר ${hiddenCount}`,
+    content: '',
+    isHidden: true,
+    adminOnly: true
+  };
+  pages.push(newPage);
+  saveToStorage();
+  if (typeof renderHiddenPages === 'function') renderHiddenPages();
+
+  // קישור האלמנט הנוכחי לעמוד החדש
+  if (currentEditingLinkElement) {
+    currentEditingLinkElement.setAttribute('data-href', newPage.id);
+    currentEditingLinkElement.style.cursor = 'pointer';
+    saveCurrentPageContent();
+  }
+
+  if (linkModal) linkModal.style.display = 'none';
+  currentEditingLinkElement = null;
+});
 
 
 // --- Cookie Consent Logic ---
@@ -2384,11 +2523,12 @@ document.addEventListener('click', (event) => {
       const internalPage = pages.find(p => p.title.trim() === link.trim() || p.id === link.trim());
       
       if (internalPage) {
-        // נווט לעמוד הפנימי
+        // נווט לעמוד הפנימי (כולל עמודים נסתרים)
         activePageId = internalPage.id;
         saveToStorage();
         renderSideMenu();
         renderTopNav();
+        renderHiddenPages();
         renderPage();
       } else {
         // זה קישור חיצוני
@@ -2456,128 +2596,414 @@ document.addEventListener('click', (event) => {
 
 
 
-// --- Support Chat Modal Logic ---
-document.addEventListener('DOMContentLoaded', () => {
-  const chatBtn = document.querySelector('.chat-btn');
-  const chatModal = document.getElementById('support-chat-modal');
-  const chatCloseBtn = document.getElementById('support-chat-close');
-  const chatSendBtn = document.getElementById('support-chat-send');
-  const chatInput = document.getElementById('support-chat-input');
-  const messagesContainer = document.getElementById('chat-messages-container');
+// --- מערכת צ'אט מלאה עם Firebase ---
+(function initChatSystem() {
 
-  const managerBtn = document.querySelector('.manager-btn');
-  const loginBtn = document.querySelector('.login-btn');
+  const ADMIN_EMAIL = 'yoni98321@gmail.com';
+  let db = null;
+  let currentChatUid = null;     // UID של השיחה הפתוחה (למנהל)
+  let chatListener = null;       // listener פעיל ל-Firebase
+  let unreadListeners = {};      // listeners לספירת הודעות חדשות
 
-  if (managerBtn) {
-    managerBtn.addEventListener('click', () => {
-      if (typeof firebase !== 'undefined') {
-        const user = firebase.auth().currentUser;
-        if (user) {
-          if (user.email === 'yoni98321@gmail.com') {
-            if (confirm('האם ברצונך להתנתק ממערכת הניהול?')) {
-              firebase.auth().signOut();
-            }
-          } else {
-            alert('אין לך הרשאת מנהל! רק yoni98321@gmail.com מורשה לגשת לפאנל הניהול.');
-          }
+  // DOM Elements
+  const chatBtn       = document.querySelector('.chat-btn');
+  const chatModal     = document.getElementById('support-chat-modal');
+  const adminView     = document.getElementById('chat-admin-view');
+  const convView      = document.getElementById('chat-conversation-view');
+  const guestView     = document.getElementById('chat-guest-view');
+  const convList      = document.getElementById('chat-conversations-list');
+  const messagesBox   = document.getElementById('chat-messages-container');
+  const chatInput     = document.getElementById('support-chat-input');
+  const sendBtn       = document.getElementById('support-chat-send');
+  const convTitle     = document.getElementById('chat-conv-title');
+  const backBtn       = document.getElementById('chat-back-btn');
+
+  if (!chatBtn || !chatModal) return;
+
+  // ─── פתיחה/סגירה בטוגל ──────────────────────────────
+  chatBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (chatModal.classList.contains('chat-open')) {
+      closeChat();
+    } else {
+      openChat();
+    }
+  });
+
+  // סגירה בלחיצה על ✕
+  ['support-chat-close','support-chat-close-2','support-chat-close-3'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('click', closeChat);
+  });
+
+  // כפתור חזרה למנהל
+  if (backBtn) {
+    backBtn.addEventListener('click', () => {
+      detachChatListener();
+      showAdminView();
+    });
+  }
+
+  // כפתור כניסה (אורח)
+  const loginPromptBtn = document.getElementById('chat-login-prompt-btn');
+  if (loginPromptBtn) {
+    loginPromptBtn.addEventListener('click', () => {
+      closeChat();
+      const loginModal = document.getElementById('login-modal');
+      if (loginModal) loginModal.style.display = 'flex';
+    });
+  }
+
+  // סגירה בלחיצה מחוץ
+  document.addEventListener('click', (e) => {
+    if (chatModal.classList.contains('chat-open') &&
+        !chatModal.contains(e.target) &&
+        !chatBtn.contains(e.target)) {
+      closeChat();
+    }
+  });
+
+  // שליחה
+  if (sendBtn)  sendBtn.addEventListener('click', handleSend);
+  if (chatInput) chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleSend(); });
+
+  // ─── Firebase Ready ──────────────────────────────────
+  if (typeof firebase !== 'undefined') {
+    try {
+      db = firebase.database();
+    } catch(err) {
+      console.warn('Firebase Database לא זמין:', err);
+    }
+
+    firebase.auth().onAuthStateChanged((user) => {
+      // עדכון כפתורי header
+      updateHeaderButtons(user);
+      // עדכון badge אם יש הודעות חדשות (למנהל)
+      if (user && user.email === ADMIN_EMAIL && db) {
+        listenForUnreadBadge();
+      } else {
+        clearUnreadListeners();
+        removeBadge();
+      }
+    });
+  }
+
+  // ─── פונקציות פתיחה/סגירה ───────────────────────────
+  function openChat() {
+    chatModal.classList.add('chat-open');
+    const user = firebase && firebase.auth ? firebase.auth().currentUser : null;
+
+    if (!user) {
+      // אורח לא מחובר
+      showGuestView();
+    } else if (user.email === ADMIN_EMAIL) {
+      // מנהל: הצג רשימת שיחות
+      showAdminView();
+      loadConversationsList();
+    } else {
+      // משתמש רגיל: פתח ישירות את השיחה שלו
+      openConversation(user.uid, user.displayName || user.email.split('@')[0]);
+    }
+  }
+
+  function closeChat() {
+    chatModal.classList.remove('chat-open');
+    detachChatListener();
+  }
+
+  function showAdminView() {
+    adminView.style.display   = 'flex';
+    convView.style.display    = 'none';
+    guestView.style.display   = 'none';
+    currentChatUid = null;
+  }
+
+  function showConvView() {
+    adminView.style.display   = 'none';
+    convView.style.display    = 'flex';
+    guestView.style.display   = 'none';
+  }
+
+  function showGuestView() {
+    adminView.style.display   = 'none';
+    convView.style.display    = 'none';
+    guestView.style.display   = 'flex';
+  }
+
+  // ─── רשימת שיחות (מנהל) ─────────────────────────────
+  function loadConversationsList() {
+    if (!db) { convList.innerHTML = '<div class="chat-empty-state">Firebase לא זמין</div>'; return; }
+
+    convList.innerHTML = '<div class="chat-empty-state">טוען שיחות...</div>';
+
+    db.ref('chats').on('value', (snap) => {
+      convList.innerHTML = '';
+      if (!snap.exists()) {
+        convList.innerHTML = '<div class="chat-empty-state">אין שיחות עדיין</div>';
+        return;
+      }
+
+      const chatsData = snap.val();
+      const sorted = Object.entries(chatsData)
+        .map(([uid, data]) => ({ uid, ...data }))
+        .sort((a, b) => (b.lastTimestamp || 0) - (a.lastTimestamp || 0));
+
+      sorted.forEach(chat => {
+        const item = document.createElement('div');
+        item.className = 'conv-list-item';
+        if (chat.hasUnread) item.classList.add('conv-unread');
+
+        const name = chat.displayName || chat.uid.slice(0,8);
+        const lastMsg = chat.lastMessage || '';
+        const time = chat.lastTimestamp
+          ? formatTime(new Date(chat.lastTimestamp))
+          : '';
+
+        item.innerHTML = `
+          <div class="conv-info">
+            <div class="conv-name">${escHtml(name)}</div>
+            <div class="conv-last">${escHtml(lastMsg.slice(0,50))}</div>
+          </div>
+          <div class="conv-meta">
+            <div class="conv-time">${time}</div>
+            ${chat.hasUnread ? '<div class="conv-dot"></div>' : ''}
+          </div>
+        `;
+        item.addEventListener('click', () => {
+          // סמן כנקרא
+          db.ref(`chats/${chat.uid}/hasUnread`).set(false);
+          openConversation(chat.uid, name);
+        });
+        convList.appendChild(item);
+      });
+    });
+  }
+
+  // ─── פתיחת שיחה ─────────────────────────────────────
+  function openConversation(uid, name) {
+    currentChatUid = uid;
+    if (convTitle) convTitle.textContent = name;
+
+    // כפתור חזרה רק למנהל
+    const user = firebase.auth().currentUser;
+    if (backBtn) backBtn.style.display = (user && user.email === ADMIN_EMAIL) ? 'inline' : 'none';
+
+    showConvView();
+    if (messagesBox) messagesBox.innerHTML = '';
+
+    if (!db) return;
+
+    detachChatListener();
+
+    chatListener = db.ref(`chats/${uid}/messages`).on('value', (snap) => {
+      if (!messagesBox) return;
+      messagesBox.innerHTML = '';
+      if (!snap.exists()) return;
+
+      snap.forEach(child => {
+        const msg = child.val();
+        renderMessage(msg);
+      });
+      messagesBox.scrollTop = messagesBox.scrollHeight;
+    });
+
+    setTimeout(() => { if (chatInput) chatInput.focus(); }, 300);
+  }
+
+  // ─── שליחת הודעה ─────────────────────────────────────
+  function handleSend() {
+    if (!chatInput) return;
+    const text = chatInput.value.trim();
+    if (!text) return;
+
+    const user = firebase && firebase.auth ? firebase.auth().currentUser : null;
+
+    // אורח לא מחובר
+    if (!user) {
+      showGuestView();
+      return;
+    }
+
+    if (!db) return;
+
+    const isAdmin = user.email === ADMIN_EMAIL;
+    const targetUid = isAdmin ? currentChatUid : user.uid;
+    if (!targetUid) return;
+
+    const senderName = isAdmin
+      ? 'מנהל האתר'
+      : (user.displayName || user.email.split('@')[0]);
+
+    const msg = {
+      text,
+      sender: isAdmin ? 'admin' : 'user',
+      senderName,
+      timestamp: Date.now()
+    };
+
+    const chatRef = db.ref(`chats/${targetUid}`);
+
+    // שמור הודעה
+    chatRef.child('messages').push(msg);
+
+    // עדכן מטא-דאטה של שיחה
+    chatRef.update({
+      lastMessage: text,
+      lastTimestamp: Date.now(),
+      displayName: isAdmin ? (convTitle ? convTitle.textContent : targetUid) : senderName,
+      hasUnread: !isAdmin  // הודעה מהמשתמש = לא נקראה
+    });
+
+    chatInput.value = '';
+    chatInput.focus();
+  }
+
+  // ─── ציור הודעה ─────────────────────────────────────
+  function renderMessage(msg) {
+    if (!messagesBox) return;
+    const user = firebase && firebase.auth ? firebase.auth().currentUser : null;
+    const isAdmin = user && user.email === ADMIN_EMAIL;
+
+    // מצד מי ההודעה הזו?
+    const isMine = isAdmin ? (msg.sender === 'admin') : (msg.sender === 'user');
+
+    const div = document.createElement('div');
+    div.className = `chat-message ${isMine ? 'user-msg' : 'automated-msg'}`;
+
+    const time = msg.timestamp ? formatTime(new Date(msg.timestamp)) : '';
+    const timeAlign = isMine ? 'text-align:left;' : '';
+    const senderLabel = isMine ? 'אתה' : escHtml(msg.senderName || '');
+
+    div.innerHTML = `
+      <div class="msg-content">
+        <div class="msg-sender" style="${isMine ? 'text-align:left;display:block;width:100%;' : ''}">${senderLabel}</div>
+        ${escHtml(msg.text)}
+        <div class="msg-time" style="${timeAlign}">${time}</div>
+      </div>
+    `;
+    messagesBox.appendChild(div);
+  }
+
+  // ─── badge הודעות חדשות ──────────────────────────────
+  function listenForUnreadBadge() {
+    if (!db) return;
+    db.ref('chats').on('value', (snap) => {
+      if (!snap.exists()) { removeBadge(); return; }
+      let hasAny = false;
+      snap.forEach(child => { if (child.val().hasUnread) hasAny = true; });
+      hasAny ? addBadge() : removeBadge();
+    });
+  }
+
+  function addBadge() {
+    if (!chatBtn) return;
+    if (!chatBtn.querySelector('.chat-badge')) {
+      const b = document.createElement('span');
+      b.className = 'chat-badge';
+      chatBtn.appendChild(b);
+    }
+  }
+
+  function removeBadge() {
+    if (!chatBtn) return;
+    const b = chatBtn.querySelector('.chat-badge');
+    if (b) b.remove();
+  }
+
+  function clearUnreadListeners() {
+    if (db) db.ref('chats').off();
+  }
+
+  // ─── ניתוק listener ──────────────────────────────────
+  function detachChatListener() {
+    if (chatListener && db && currentChatUid) {
+      db.ref(`chats/${currentChatUid}/messages`).off('value', chatListener);
+      chatListener = null;
+    }
+  }
+
+  // ─── עזרים ───────────────────────────────────────────
+  function formatTime(date) {
+    return `${date.getHours().toString().padStart(2,'0')}:${date.getMinutes().toString().padStart(2,'0')}`;
+  }
+
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function updateHeaderButtons(user) {
+    const managerBtn = document.querySelector('.manager-btn');
+    const loginBtn   = document.querySelector('.login-btn');
+    const ft         = document.getElementById('floating-toolbar');
+
+    if (user) {
+      const name = user.email ? user.email.split('@')[0] : 'אורח';
+      if (loginBtn) loginBtn.textContent = `התנתק (${name}) 👤`;
+
+      if (user.email === ADMIN_EMAIL) {
+        isEditMode = true;
+        if (managerBtn) managerBtn.textContent = 'מנהל (מחובר) 🟢';
+        if (ft) ft.style.display = 'flex';
+        applyEditModeToContent();
+        renderSideMenu();
+        renderTopNav();
+      } else {
+        isEditMode = false;
+        if (managerBtn) managerBtn.textContent = 'מנהל (אורח) 👤';
+        if (ft) ft.style.display = 'none';
+        removeEditModeFromContent();
+        renderSideMenu();
+        renderTopNav();
+      }
+    } else {
+      isEditMode = false;
+      if (loginBtn)   loginBtn.textContent   = 'התחבר 👤';
+      if (managerBtn) managerBtn.textContent = 'מנהל 👤';
+      const ft2 = document.getElementById('floating-toolbar');
+      if (ft2) ft2.style.display = 'none';
+      removeEditModeFromContent();
+      renderSideMenu();
+      renderTopNav();
+    }
+  }
+
+  // כפתורי manager/login
+  const managerBtnEl = document.querySelector('.manager-btn');
+  const loginBtnEl   = document.querySelector('.login-btn');
+
+  if (managerBtnEl) {
+    managerBtnEl.addEventListener('click', () => {
+      if (typeof firebase === 'undefined') { alert('Firebase לא נטען'); return; }
+      const user = firebase.auth().currentUser;
+      if (user) {
+        if (user.email === ADMIN_EMAIL) {
+          if (confirm('האם ברצונך להתנתק?')) firebase.auth().signOut();
         } else {
-          const loginModal = document.getElementById('login-modal');
-          if (loginModal) loginModal.style.display = 'flex';
+          alert('אין הרשאת מנהל.');
         }
       } else {
-        alert('שגיאה: ספריית Firebase לא נטענה.');
+        const lm = document.getElementById('login-modal');
+        if (lm) lm.style.display = 'flex';
       }
     });
   }
 
-  if (loginBtn) {
-    loginBtn.addEventListener('click', () => {
-      if (typeof firebase !== 'undefined') {
-        const user = firebase.auth().currentUser;
-        if (user) {
-          if (confirm(`מחובר כעת כ-${user.email}. האם ברצונך להתנתק?`)) {
-            firebase.auth().signOut();
-          }
-        } else {
-          const loginModal = document.getElementById('login-modal');
-          if (loginModal) loginModal.style.display = 'flex';
-        }
+  if (loginBtnEl) {
+    loginBtnEl.addEventListener('click', () => {
+      if (typeof firebase === 'undefined') { alert('Firebase לא נטען'); return; }
+      const user = firebase.auth().currentUser;
+      if (user) {
+        if (confirm(`מחובר כ-${user.email}. האם להתנתק?`)) firebase.auth().signOut();
       } else {
-        alert('שגיאה: ספריית Firebase לא נטענה.');
+        const lm = document.getElementById('login-modal');
+        if (lm) lm.style.display = 'flex';
       }
     });
   }
 
-  if (chatBtn && chatModal) {
-    const aiBtn = document.querySelector('.bar-ai-btn');
-    
-    const openChat = (e) => {
-      e.preventDefault();
-      chatModal.classList.add('chat-open');
-      setTimeout(() => chatInput.focus(), 300);
-    };
-    
-    chatBtn.addEventListener('click', openChat);
-    if (aiBtn) aiBtn.addEventListener('click', openChat);
-
-    chatCloseBtn.addEventListener('click', () => {
-      chatModal.classList.remove('chat-open');
-    });
-
-    document.addEventListener('click', (e) => {
-      // אם לוחצים מחוץ לחלון הצ'אט ומחוץ לכפתור הפתיחה
-      if (chatModal.classList.contains('chat-open') && 
-          !chatModal.contains(e.target) && 
-          !chatBtn.contains(e.target) &&
-          !(aiBtn && aiBtn.contains(e.target))) {
-        chatModal.classList.remove('chat-open');
-      }
-    });
-
-    const addMessage = (text, isUser = true) => {
-      const msgDiv = document.createElement('div');
-      msgDiv.className = `chat-message ${isUser ? 'user-msg' : 'automated-msg'}`;
-      
-      const now = new Date();
-      const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-      
-      const senderHtml = isUser 
-        ? `<div class="msg-sender" style="text-align: left; width: 100%; display: block;">אתה</div>` 
-        : `<div class="msg-sender">🤖 נציג AI</div>`;
-        
-      const timeAlign = isUser ? 'text-align: left;' : '';
-
-      msgDiv.innerHTML = `
-        <div class="msg-content">
-          ${senderHtml}
-          ${text}
-          <div class="msg-time" style="${timeAlign}">${timeStr}</div>
-        </div>
-      `;
-      
-      messagesContainer.appendChild(msgDiv);
-      messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    };
-
-    const handleSend = () => {
-      const text = chatInput.value.trim();
-      if (!text) return;
-      
-      addMessage(text, true);
-      chatInput.value = '';
-      
-      // סימולציית שירות לקוחות AI
-      setTimeout(() => {
-        addMessage('אני בודק את הפנייה שלך. כרגע אני נציג AI בהדגמה, אבל בקרוב אוכל לעזור לך באופן מלא! האם יש משהו ספציפי שתרצה לדעת?', false);
-      }, 1200);
-    };
-
-    chatSendBtn.addEventListener('click', handleSend);
-    chatInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') handleSend();
-    });
-  }
-});
+})();
 
 // --- מנגנון הורדת קבצים ---
 // מאזין ללחיצות על אזור התוכן הראשי. אם לחצו על אלמנט שיש לו data-download-url במצב אורח, מוריד את הקובץ
@@ -2601,46 +3027,7 @@ mainContent.addEventListener('click', (e) => {
   }
 });
 
-// --- מאזיני Firebase Auth והתחברות ---
-if (typeof firebase !== 'undefined') {
-  // מאזין למצב התחברות
-  firebase.auth().onAuthStateChanged((user) => {
-    const managerBtn = document.querySelector('.manager-btn');
-    const loginBtn = document.querySelector('.login-btn');
-    const ft = document.getElementById('floating-toolbar');
-    
-    if (user) {
-      const displayName = user.email ? user.email.split('@')[0] : 'אורח';
-      if (loginBtn) {
-        loginBtn.textContent = `התנתק (${displayName}) 👤`;
-      }
-      
-      if (user.email === 'yoni98321@gmail.com') {
-        isEditMode = true;
-        if (managerBtn) managerBtn.textContent = 'מנהל (מחובר) 🟢';
-        if (ft) ft.style.display = 'flex';
-        applyEditModeToContent();
-        renderSideMenu();
-        renderTopNav();
-      } else {
-        isEditMode = false;
-        if (managerBtn) managerBtn.textContent = 'מנהל (אורח) 👤';
-        if (ft) ft.style.display = 'none';
-        removeEditModeFromContent();
-        renderSideMenu();
-        renderTopNav();
-      }
-    } else {
-      isEditMode = false;
-      if (loginBtn) loginBtn.textContent = 'התחבר 👤';
-      if (managerBtn) managerBtn.textContent = 'מנהל 👤';
-      if (ft) ft.style.display = 'none';
-      removeEditModeFromContent();
-      renderSideMenu();
-      renderTopNav();
-    }
-  });
-}
+
 
 document.addEventListener('DOMContentLoaded', () => {
   const loginModal = document.getElementById('login-modal');
