@@ -17,84 +17,84 @@ body {
 
 /* --- סרגל עליון (Header) --- */
 .top-bar {
-  display: flex; /* סידור האלמנטים בשורה */
-  justify-content: space-between; /* דוחף את האלמנטים לקצוות כדי ליצור ריווח שווה */
-  align-items: center; /* יישור כל האלמנטים לאמצע הגובה של הסרגל */
-  padding: 10px 20px; /* ריווח פנימי: 10px למעלה ולמטה, 20px בצדדים */
-  border-bottom: 1px solid #e0e0e0; /* פס תחתון עדין להפרדה בין הסרגל לתוכן האתר */
-  background: #fff; /* רקע לבן נקי לסרגל */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+  height: 48px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
 }
 
 /* אזור הכפתורים והחיפוש משמאל */
 .left-side {
   display: flex;
   align-items: center;
-  gap: 12px; /* רווח קבוע של 12px בין הכפתורים ושורת החיפוש */
+  gap: 12px;
 }
 
-/* כפתור התחברות */
-.login-btn {
-  background: #111; /* צבע רקע שחור */
-  color: white; /* צבע טקסט לבן */
-  border: none; /* ביטול המסגרת הרגילה של כפתורים */
-  padding: 6px 15px; /* הוספת שוליים פנימיים לכפתור (עובי ורוחב) */
-  border-radius: 20px; /* הופך את פינות הכפתור לעגולות לחלוטין */
-  cursor: pointer; /* הופך את סמן העכבר לאצבע לחיצה (יד) כשהוא עובר מעל */
-  transition: opacity 0.2s; /* מגדיר שאנימציות (כמו שינוי שקיפות) יקרו בצורה חלקה תוך 0.2 שניות */
+/* כפתור התחברות (וסגנון כללי לכפתורים) */
+.login-btn, .add-btn {
+  background: #222222; /* צבע כהה כמו בתמונה השנייה */
+  color: white;
+  border: none;
+  padding: 6px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s ease;
 }
 
-/* מה קורה כשעוברים עם העכבר על כפתור ההתחברות (Hover) */
-.login-btn:hover {
-  opacity: 0.8; /* הכפתור נהיה טיפה שקוף (80%) לאפקט יוקרתי */
+.login-btn:hover, .add-btn:hover {
+  background: #444444;
 }
 
 /* שורת חיפוש עליונה */
 .search-top {
   padding: 6px 12px;
-  border: 1px solid #ccc; /* מסגרת אפורה דקה */
-  border-radius: 20px; /* פינות עגולות בדיוק כמו הכפתורים */
-  background: #f0f0f0; /* רקע אפור בהיר */
-  outline: none; /* מעלים את המסגרת הכחולה/שחורה שהדפדפן מוסיף אוטומטית כשלוחצים */
-  transition: border-color 0.2s; /* האנימציה להחלפת צבע המסגרת תהיה הדרגתית */
-}
-
-/* כשלוחצים על שורת החיפוש (Focus) */
-.search-top:focus {
-  border-color: #111; /* המסגרת הופכת לשחורה כדי להראות התמקדות */
-}
-
-/* כפתור הוספת מודעה (כפתור שקוף עם מסגרת) */
-.add-btn {
-  background: transparent; /* רקע שקוף */
-  border: 1px solid #111; /* מסגרת שחורה */
-  padding: 6px 12px;
+  border: none;
   border-radius: 20px;
-  cursor: pointer;
-  transition: background 0.2s, color 0.2s; /* כשמרחפים, גם הרקע וגם הטקסט ישתנו לאט */
+  background: rgba(0, 0, 0, 0.05); /* רקע אפרפר שקוף של אפל */
+  outline: none;
+  font-size: 13px;
+  transition: background 0.2s, box-shadow 0.2s;
 }
 
-/* אפקט ריחוף לכפתור הוספת מודעה */
-.add-btn:hover {
-  background: #111; /* הרקע מתמלא בשחור */
-  color: white; /* והטקסט הופך ללבן, אפקט נגטיב מאוד נפוץ */
+/* כשלוחצים על שורת החיפוש */
+.search-top:focus {
+  background: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
 }
 
-/* עיצוב קישורי התפריט העליון (תגית a) */
+/* עיצוב קישורי התפריט העליון (תגית a) בסגנון אפל */
 .nav-links a {
-  margin: 0 4px; /* ריווח עדין */
-  padding: 6px 14px; /* ריפוד פנימי ליצירת צורת כדורית (Pill) */
-  border-radius: 20px; /* פינות עגולות */
-  text-decoration: none; /* ביטול קו תחתון */
-  color: #555; /* צבע טקסט אפור נעים */
-  font-size: 15px;
-  font-weight: 500;
-  transition: all 0.2s ease; /* מעבר חלק של כל המאפיינים (כולל רקע) */
+  margin: 0 4px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  text-decoration: none;
+  color: #111;
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  transition: all 0.2s ease;
 }
 
-/* כשמעבירים עכבר על אחד מהקישורים למעלה */
+/* ריחוף על קישורים */
 .nav-links a:hover {
-  color: #111; /* הדגשת צבע הטקסט */
-  background-color: #f9fafb; /* רקע אפרפר מאוד עדין בריחוף */
+  color: #000;
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* העמוד הפעיל (במידה ונוסיף class="active") */
+.nav-links a.active {
+  background-color: #222222;
+  color: #ffffff;
 }
 
 /* אזור הלוגו */
