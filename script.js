@@ -54,7 +54,7 @@ const defaultPages = [
 let pages = defaultPages;
 let activePageId = 'page-main';
 let topNavPages = ['page-main', 'page-shop', 'page-charts', 'page-forum']; // העמודים שמופיעים בתפריט העליון
-let isEditMode = true;
+let isEditMode = false; // ברירת מחדל: אורח (ללא עריכה)
 let undoStack = []; // מערך לשמירת היסטוריית שינויים לצורך ביטול (Undo)
 let siteBackgrounds = { dashboard: null, topNav: null, main: null };
 
@@ -2427,20 +2427,31 @@ document.addEventListener('DOMContentLoaded', () => {
   const chatInput = document.getElementById('support-chat-input');
   const messagesContainer = document.getElementById('chat-messages-container');
 
-  const managerBtn = document.querySelector('.manager-btn');
+  const managerBtn = document.getElementById('manager-btn');
+  const floatingToolbarEl = document.getElementById('floating-toolbar');
+
+  function updateManagerUI() {
+    if (!managerBtn) return;
+    if (isEditMode) {
+      managerBtn.textContent = 'מנהל ✏️';
+      managerBtn.classList.add('is-admin');
+      if (floatingToolbarEl) floatingToolbarEl.style.display = '';
+    } else {
+      managerBtn.textContent = 'אורח';
+      managerBtn.classList.remove('is-admin');
+      if (floatingToolbarEl) floatingToolbarEl.style.display = 'none';
+    }
+  }
+
   if (managerBtn) {
-    // אתחול טקסט התחלתי לפי מצב העריכה
-    managerBtn.textContent = isEditMode ? 'מנהל' : 'אורח';
-    
+    // הסתרת סרגל הכלים בהתחלה (מצב אורח)
+    updateManagerUI();
+
     managerBtn.addEventListener('click', () => {
-      // במקום רק לשנות טקסט, נפעיל גם את פונקציית העריכה האמיתית של המערכת!
+      // מפעיל את כפתור מצב העריכה הקיים
       btnEditMode.click();
-      
-      if (isEditMode) {
-        managerBtn.textContent = 'מנהל';
-      } else {
-        managerBtn.textContent = 'אורח';
-      }
+      // מעדכן את הכפתור שלנו
+      updateManagerUI();
     });
   }
 
