@@ -1331,3 +1331,72 @@ html.mobile-view .top-bar {
 html.mobile-view .center-content {
   margin-right: 0 !important;
 }
+
+/* התאמה פשוטה למובייל דרך Media Queries תקני */
+@media (max-width: 768px) {
+  body, .main-layout {
+    overflow-y: auto !important; /* מאפשר גלילה רגילה במובייל */
+    height: auto !important;
+  }
+  
+  /* הסתרת סרגלים מיותרים לאורח במובייל */
+  .floating-toolbar, .side-menu {
+    display: none !important;
+  }
+
+  /* התאמת תפריט עליון */
+  .apple-header {
+    height: auto !important;
+    padding: 10px !important;
+  }
+  
+  .apple-nav-content {
+    flex-wrap: wrap; /* קיפול שורות */
+    gap: 12px;
+    justify-content: center !important;
+  }
+  
+  .nav-links {
+    gap: 12px !important;
+    justify-content: center;
+    width: 100%;
+    order: 3; /* זורק את הקישורים לשורה שניה */
+  }
+  
+  .nav-links a {
+    padding: 4px 8px !important;
+    font-size: 13px !important;
+  }
+
+  .logo-area {
+    order: 1;
+  }
+
+  .right-icons {
+    order: 2;
+  }
+
+  /* התאמת התוכן המרכזי שיוצג בצורה טובה */
+  .center-content {
+    padding: 10px !important;
+    overflow-x: hidden !important;
+    min-height: calc(100vh - 100px);
+  }
+
+  /* התאמת אלמנטים שנגררו בעלי מיקומים אבסולוטיים */
+  .draggable-resizable {
+    position: relative !important; /* ביטול מיקום אבסולוטי נוקשה במובייל */
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important; /* תפיסת כל רוחב המסך */
+    margin-bottom: 20px !important;
+    height: auto !important;
+    transform: none !important;
+  }
+
+  .draggable-resizable img, 
+  .draggable-resizable video {
+    width: 100% !important;
+    height: auto !important;
+  }
+}
