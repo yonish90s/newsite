@@ -1218,3 +1218,20 @@ body {
   background: #e1e1e1;
 }
 
+
+
+/* --- Mobile View Overrides --- */
+html.mobile-view .bottom-floating-bar,
+html.mobile-view .chat-modal-overlay,
+html.mobile-view .floating-toolbar,
+html.mobile-view .side-menu {
+  display: none !important;
+}
+
+html.mobile-view .top-bar {
+  padding: 5px 10px !important;
+}
+
+html.mobile-view .center-content {
+  margin-right: 0 !important;
+}
