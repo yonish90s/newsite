@@ -69,6 +69,7 @@
         <div class="toolbar-separator" style="width: 1px; background: #ddd; margin: 0 5px;"></div>
       
         <button id="btn-add-page" class="float-btn edit-float-btn" style="background: #2196F3; color: white;">+ הוסף עמוד</button>
+        <button id="btn-add-hidden-page" class="float-btn edit-float-btn" style="background: #6366f1; color: white;">+ דף מוסתר 🔒</button>
         <button id="btn-edit-mode" class="float-btn edit-float-btn">מצב עריכה ✏️</button>
         <button id="btn-save-site" class="float-btn edit-float-btn" style="background: #4CAF50; color: white;">שמור שינויים 💾</button>
         <button id="btn-reset-site" class="float-btn edit-float-btn" style="background: #f44336; color: white;">איפוס אתר 🗑️</button>
@@ -84,6 +85,21 @@
       
     </div>
   </div>
+
+<!-- מודאל קישור לדף פנימי -->
+<div id="page-link-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:99999; align-items:center; justify-content:center; direction:rtl;">
+  <div style="background:#fff; border-radius:16px; padding:28px; width:90%; max-width:420px; box-shadow:0 20px 60px rgba(0,0,0,0.25);">
+    <h3 style="margin:0 0 18px; font-size:18px; font-weight:700;">קשר אלמנט לדף פנימי</h3>
+    <p style="font-size:13px; color:#666; margin:0 0 16px;">בחר דף שייפתח כשלוחצים על האלמנט:</p>
+    <select id="page-link-select" style="width:100%; padding:10px 12px; border:1.5px solid #ddd; border-radius:8px; font-size:14px; direction:rtl; margin-bottom:20px;">
+      <option value="">— ללא קישור —</option>
+    </select>
+    <div style="display:flex; gap:10px; justify-content:flex-end;">
+      <button id="page-link-cancel" style="background:#f5f5f5; border:none; border-radius:8px; padding:9px 20px; font-size:14px; cursor:pointer;">ביטול</button>
+      <button id="page-link-save" style="background:#6366f1; color:white; border:none; border-radius:8px; padding:9px 20px; font-size:14px; font-weight:600; cursor:pointer;">שמור קישור</button>
+    </div>
+  </div>
+</div>
 <!-- WEBSITE PRELOADER -->
 <div id="website-preloader" style="position: fixed; inset: 0; background: #ffffff; z-index: 9999999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.4s ease, visibility 0.4s ease;">
   <div style="display: flex; flex-direction: column; align-items: center; gap: 24px;">

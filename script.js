@@ -2547,3 +2547,129 @@ mainContent.addEventListener('click', (e) => {
     document.body.removeChild(a);
   }
 });
+
+// ============================================================
+// דפים מוסתרים וקישורים פנימיים
+// ============================================================
+
+// --- יצירת דף מוסתר (לא מופיע בניווט) ---
+const btnAddHiddenPage = document.getElementById('btn-add-hidden-page');
+if (btnAddHiddenPage) {
+  btnAddHiddenPage.addEventListener('click', () => {
+    const newTitle = prompt('שם הדף המוסתר (לא יופיע בתפריט):\nלמשל: "דף פרטים", "עמוד הסבר", "גלריה"');
+    if (newTitle && newTitle.trim()) {
+      const newPage = {
+        id: 'page-hidden-' + Date.now(),
+        title: newTitle.trim(),
+        content: '',
+        isHidden: true  // מסומן כמוסתר מהניווט
+      };
+      pages.push(newPage);
+      // לא מוסיפים ל-topNavPages — הדף קיים אבל לא מופיע בתפריט
+
+      // מעבר לדף החדש לצורך עריכה
+      activePageId = newPage.id;
+      saveToStorage();
+      renderPage();
+      alert('✅ הדף "' + newPage.title + '" נוצר!\nעכשיו ערוך אותו, ואז חזור לעמוד הראשי וקשר אליו תמונה או כפתור.');
+    }
+  });
+}
+
+// --- מודאל "קשר לדף פנימי" ---
+const pageLinkModal = document.getElementById('page-link-modal');
+const pageLinkSelect = document.getElementById('page-link-select');
+const pageLinkCancel = document.getElementById('page-link-cancel');
+const pageLinkSave = document.getElementById('page-link-save');
+let _pageLinkTargetEl = null;
+
+function openPageLinkModal(el) {
+  _pageLinkTargetEl = el;
+
+  // מילוי רשימת כל הדפים (כולל מוסתרים)
+  pageLinkSelect.innerHTML = '<option value="">— ללא קישור —</option>';
+  pages.forEach(p => {
+    if (p.id === activePageId) return; // לא מקשרים לעמוד עצמו
+    const opt = document.createElement('option');
+    opt.value = p.id;
+    opt.textContent = p.title + (p.isHidden ? ' 🔒' : '');
+    if (el.dataset.pageLink === p.id) opt.selected = true;
+    pageLinkSelect.appendChild(opt);
+  });
+
+  pageLinkModal.style.display = 'flex';
+}
+
+if (pageLinkCancel) {
+  pageLinkCancel.addEventListener('click', () => {
+    pageLinkModal.style.display = 'none';
+    _pageLinkTargetEl = null;
+  });
+}
+
+if (pageLinkSave) {
+  pageLinkSave.addEventListener('click', () => {
+    if (!_pageLinkTargetEl) return;
+    const selectedId = pageLinkSelect.value;
+    if (selectedId) {
+      _pageLinkTargetEl.dataset.pageLink = selectedId;
+      _pageLinkTargetEl.style.cursor = 'pointer';
+      // אינדיקטור ויזואלי קטן שיודע שיש קישור
+      _pageLinkTargetEl.title = 'קישור לדף: ' + (pages.find(p => p.id === selectedId)?.title || selectedId);
+    } else {
+      delete _pageLinkTargetEl.dataset.pageLink;
+      _pageLinkTargetEl.style.cursor = '';
+      _pageLinkTargetEl.title = '';
+    }
+    saveCurrentPageContent();
+    pageLinkModal.style.display = 'none';
+    _pageLinkTargetEl = null;
+  });
+}
+
+// --- כפתור "קשר לדף" בתוך action panel של אלמנטים ---
+// מוסיפים hook על יצירת actions-container
+const _origApplyEditMode = applyEditModeToContent;
+applyEditModeToContent = function() {
+  _origApplyEditMode();
+
+  // מוסיפים כפתור קישור-דף לכל actions-container שנוצר
+  setTimeout(() => {
+    mainContent.querySelectorAll('.actions-container').forEach(container => {
+      if (container.querySelector('.page-link-btn')) return; // כבר יש
+      const parentEl = container.closest('.draggable-resizable');
+      if (!parentEl) return;
+
+      const pageLinkBtn = document.createElement('button');
+      pageLinkBtn.className = 'action-btn page-link-btn';
+      pageLinkBtn.innerHTML = '📄→';
+      pageLinkBtn.title = 'קשר לדף פנימי';
+      pageLinkBtn.style.background = parentEl.dataset.pageLink ? '#6366f1' : '';
+      pageLinkBtn.style.color = parentEl.dataset.pageLink ? 'white' : '';
+
+      pageLinkBtn.addEventListener('mousedown', (e) => {
+        e.stopPropagation();
+        openPageLinkModal(parentEl);
+      });
+
+      container.appendChild(pageLinkBtn);
+    });
+  }, 50);
+};
+
+// --- ניווט לדף בלחיצה על אלמנט מקושר (מצב צופה) ---
+mainContent.addEventListener('click', (e) => {
+  if (isEditMode) return; // רק במצב צופה
+  const linked = e.target.closest('[data-page-link]');
+  if (linked && linked.dataset.pageLink) {
+    const targetPage = pages.find(p => p.id === linked.dataset.pageLink);
+    if (targetPage) {
+      if (isEditMode) saveCurrentPageContent();
+      activePageId = linked.dataset.pageLink;
+      renderPage();
+      // גלילה חזרה למעלה
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+});
+
