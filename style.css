@@ -130,7 +130,7 @@ body {
 .center-content {
   flex: 1; /* דוחף את סרגל הצד ומתרחב על רוב המסך */
   padding: 0; /* ללא ריווח כדי שהאלמנטים יוכלו לזוז חופשי */
-  background-color: #ffffff; /* רקע לבן למשטח העבודה (בקשת משתמש) */
+  background-color: transparent; /* שקוף כדי שהרקע המותאם אישית יראה */
   position: relative; /* חובה כדי שאלמנטים פנימיים ימוקמו בצורה אבסולוטית בתוכו */
   overflow: auto; /* מאפשר גלילה אם אלמנט יוצא מהגבולות במובייל */
   -webkit-overflow-scrolling: touch; /* החלקה חלקה במסכי מגע */

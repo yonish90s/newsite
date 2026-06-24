@@ -87,19 +87,19 @@ function applyBackgrounds() {
   
   // רקע ייחודי לכל עמוד
   const currentPage = pages.find(p => p.id === activePageId);
-  if (currentPage && currentPage.background) {
-    mainWrapper.style.backgroundImage = `url(${currentPage.background})`;
-    mainWrapper.style.backgroundSize = 'cover';
-    mainWrapper.style.backgroundPosition = 'center';
-    mainWrapper.style.backgroundAttachment = 'fixed';
-  } else if (siteBackgrounds.main) {
-    // ברירת מחדל אם אין רקע ספציפי לעמוד
-    mainWrapper.style.backgroundImage = `url(${siteBackgrounds.main})`;
-    mainWrapper.style.backgroundSize = 'cover';
-    mainWrapper.style.backgroundPosition = 'center';
-    mainWrapper.style.backgroundAttachment = 'fixed';
-  } else {
-    mainWrapper.style.backgroundImage = '';
+  const mainContentEl = document.getElementById('mainContent');
+  if (mainContentEl) {
+    if (currentPage && currentPage.background) {
+      mainContentEl.style.backgroundImage = `url(${currentPage.background})`;
+      mainContentEl.style.backgroundSize = 'cover';
+      mainContentEl.style.backgroundPosition = 'center';
+    } else if (siteBackgrounds.main) {
+      mainContentEl.style.backgroundImage = `url(${siteBackgrounds.main})`;
+      mainContentEl.style.backgroundSize = 'cover';
+      mainContentEl.style.backgroundPosition = 'center';
+    } else {
+      mainContentEl.style.backgroundImage = '';
+    }
   }
 }
 
