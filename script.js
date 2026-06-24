@@ -135,8 +135,8 @@ async function initSite() {
     
     const savedTopNav = await localforage.getItem('mySiteTopNav_v3');
     if (savedTopNav) {
-      const demoPageIds = ['page-articles-example', 'page-forum-example', 'page-store-example'];
-      topNavPages = savedTopNav.filter(id => !demoPageIds.includes(id));
+      // User requested to keep ONLY the 'ראשי' (Main) page
+      topNavPages = ['page-main'];
       await localforage.setItem('mySiteTopNav_v3', topNavPages);
     }
 
@@ -165,18 +165,27 @@ async function initSite() {
 
     const savedPages = await localforage.getItem('mySitePages_v3');
     if (savedPages) {
-      // סינון עמודי כתבות היסטוריים שנשארו במסד הנתונים
-      pages = savedPages;
-    }
-    
-    // הסרת עמודי הדוגמה הישנים (כתבות, פורום, חנות) אם הם קיימים
-    const demoPageIds = ['page-articles-example', 'page-forum-example', 'page-store-example'];
-    const initialPagesLength = pages.length;
-    pages = pages.filter(p => !demoPageIds.includes(p.id));
-    
-    if (pages.length < initialPagesLength) {
+      // User requested to keep ONLY the 'ראשי' (Main) page
+      pages = savedPages.filter(p => p.id === 'page-main');
+      if (pages.length === 0) {
+        // Fallback in case page-main was deleted
+        pages = [
+          {
+            id: 'page-main',
+            title: 'ראשי',
+            content: ''
+          }
+        ];
+      }
       await localforage.setItem('mySitePages_v3', pages);
+      
+      // Ensure active page is valid
+      if (activePageId !== 'page-main') {
+        activePageId = 'page-main';
+        await localforage.setItem('myActivePage_v3', activePageId);
+      }
     }
+    
     const savedBackgrounds = await localforage.getItem('mySiteBackgrounds_v3');
     if (savedBackgrounds) {
       siteBackgrounds = savedBackgrounds;
@@ -233,6 +242,7 @@ async function initSite() {
 
   // אחרי שהכל נטען (ואולי תוקן), נצייר את האתר
   renderSideMenu();
+  renderTopNav();
   renderPage();
 
   // ברירת מחדל: הפעלת מצב עריכה/מנהל עם כניסה לאתר
@@ -329,6 +339,7 @@ function saveToStorage() {
 
 // פונקציה שמייצרת את תפריט הצד (מייצרת את שורות ה-HTML של הלינקים לפי מערך העמודים)
 function renderSideMenu() {
+  if (!sideMenuContainer) return; // הדשבורד הוסר
   sideMenuContainer.innerHTML = ''; // מנקים את התפריט הישן
   
   pages.forEach(page => {
@@ -452,7 +463,7 @@ function renderTopNav() {
     
     const a = document.createElement('a');
     a.href = '#';
-    a.textContent = page.title;
+    a.textContent = page.title.replace(/[\u1000-\uFFFF]+/g, '').trim();
     a.dataset.pageId = pageId; // שמירת המזהה כדי שנוכל למחוק אותו מהמערך בעריכה
     
     // סימון עמוד פעיל למעלה

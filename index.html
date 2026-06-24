@@ -25,39 +25,29 @@
   <!-- המעטפת הראשית של כל האתר, מסדרת את הכל בעמודה אחת -->
   <div class="main-layout">
     
-    <!-- הסרגל העליון של האתר (Header) -->
-    <header class="top-bar">
-      
-      <!-- צד ימין של הסרגל -->
-      <div class="left-side">
-        <!-- אזור הלוגו בצד ימין -->
-        <div class="logo-area" style="margin-left: 15px; display: flex; align-items: center; gap: 8px;">
-          <img id="main-logo" src="./logo.png" alt="לוגו האתר" style="height: 36px; display: block; cursor: pointer;" title="לוגו האתר (לחץ לעריכה במצב מנהל)">
-          <span id="main-logo-text" class="logo-text" style="font-weight: bold; font-size: 20px; color: #111;">YHSH</span>
+    <!-- הסרגל העליון של האתר (Apple Nav) -->
+    <header class="apple-nav">
+      <div class="apple-nav-content">
+        <!-- אזור הלוגו משמאל (מותאם ל-RTL ולמראה של אפל) -->
+        <div class="logo-area" style="cursor: pointer;" title="לוגו האתר">
+          <img id="main-logo" src="./logo.png" alt="לוגו" style="height: 20px; display: block;">
         </div>
         
-        <!-- כפתור התחברות -->
-        <button class="login-btn">התחבר 👤</button>
-        <!-- שורת חיפוש עליונה -->
-        <input type="text" class="search-top" placeholder="חיפוש...">
-        <!-- כפתור הוספת מודעה -->
-        <button class="add-btn">פרסום מודעה +</button>
-        <!-- כפתור מנהל -->
-        <button class="add-btn manager-btn">מנהל</button>
+        <!-- תפריט הניווט העליון המרכזי -->
+        <nav class="nav-links" dir="ltr" style="display: flex; gap: 32px; align-items: center;">
+          <!-- הקישורים ייווצרו על ידי script.js ללא אימוג'ים -->
+          <a href="#" id="top-nav-main">ראשי</a>
+          <a href="#" id="top-nav-shop">חנות</a>
+          <a href="#" id="top-nav-charts">גרפים</a>
+          <a href="#" id="top-nav-forum">פורום</a>
+          <a href="#" id="top-nav-services">שירותים</a>
+        </nav>
+        
+        <!-- צד ימין של הסרגל (כפתור התחברות וחיפוש) -->
+        <div class="right-icons" style="display: flex; gap: 16px; align-items: center;">
+          <button class="login-btn" style="background: transparent; border: none; color: #f5f5f7; cursor: pointer; font-size: 12px;">התחבר</button>
+        </div>
       </div>
-      
-      <!-- תפריט הניווט העליון המרכזי -->
-      <nav class="nav-links" dir="rtl">
-        <a href="#" id="top-nav-main">🏠 ראשי</a>
-        <a href="#" id="top-nav-shop">🛍️ חנות</a>
-        <a href="#" id="top-nav-charts">📈 גרפים ונתונים</a>
-        <a href="#" id="top-nav-forum">💬 פורום</a>
-        <a href="#" id="top-nav-services">שירותים</a>
-        <a href="#" id="top-nav-meeting">הזמנת פגישה</a>
-      </nav>
-      
-      <!-- אזור ריק בצד שמאל כדי שהתפריט יישאר באמצע -->
-      <div class="empty-left" style="width: 250px;"></div>
     </header>
 
     <!-- מעטפת התוכן: מחלקת את המסך לאזור מרכזי ולתפריט צדדי -->
@@ -77,37 +67,29 @@
         <!-- חיפוש בתפריט הצד -->
         <input type="text" class="search-side" placeholder="חיפוש...">
         
-        <!-- רשימת הקישורים של תפריט הצד (מתמלאת אוטומטית מקוד ה-JS) -->
-        <ul class="side-menu" id="sideMenuContainer">
-          <!-- הפריטים ייווצרו כאן דינמית -->
-        </ul>
+      <!-- סרגל כלים מרחף בתחתית המסך -->
+      <div class="floating-toolbar minimized" id="floating-toolbar">
+        <!-- ידית גרירה -->
+        <div class="toolbar-drag-handle" title="גרור לשנות מיקום" style="cursor: grab; display: flex; align-items: center; justify-content: center; padding: 0 10px; font-size: 22px; font-weight: bold; color: #888;">∷</div>
+        <!-- כפתור הרחבה/מזעור -->
+        <button id="btn-minimize-toolbar" class="float-btn" style="padding: 5px 10px; font-size: 16px; font-weight: bold; background: transparent; border: 1px solid #ddd; box-shadow: none; color: #333; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;" title="הרחב">+</button>
         
-        <!-- כפתור להוספת עמוד חדש -->
-        <button id="btn-add-page" class="add-page-btn">+ הוסף עמוד חדש</button>
-        
-        <!-- סרגל כלים מרחף בתחתית המסך (במצב סגור הוא מופיע כאן) -->
-        <div class="floating-toolbar minimized" id="floating-toolbar">
-          <!-- ידית גרירה -->
-          <div class="toolbar-drag-handle" title="גרור לשנות מיקום" style="cursor: grab; display: flex; align-items: center; justify-content: center; padding: 0 10px; font-size: 22px; font-weight: bold; color: #888;">∷</div>
-          <!-- כפתור הרחבה/מזעור -->
-          <button id="btn-minimize-toolbar" class="float-btn" style="padding: 5px 10px; font-size: 16px; font-weight: bold; background: transparent; border: 1px solid #ddd; box-shadow: none; color: #333; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;" title="הרחב">+</button>
-          
-          <!-- קו מפריד -->
-          <div class="toolbar-separator" style="width: 1px; background: #ddd; margin: 0 5px;"></div>
-        
-          <button id="btn-edit-mode" class="float-btn edit-float-btn">מצב עריכה ✏️</button>
-          <button id="btn-save-site" class="float-btn edit-float-btn" style="background: #4CAF50; color: white;">שמור שינויים 💾</button>
-          <button id="btn-reset-site" class="float-btn edit-float-btn" style="background: #f44336; color: white;">איפוס אתר 🗑️</button>
-          <button id="btn-add-bg" class="float-btn add-float-btn">הוסף רקע 🎨</button>
-          <button id="btn-add-image" class="float-btn add-float-btn">הוסף תמונה 🖼️</button>
-          <button id="btn-add-video" class="float-btn add-float-btn">הוסף וידאו 📹</button>
-          <button id="btn-make-slideshow" class="float-btn add-float-btn">הוסף מצגת 🎞️</button>
-          <button id="btn-make-download" class="float-btn add-float-btn">הפוך להורדה 📥</button>
-          <button id="btn-add-text" class="float-btn add-float-btn">הוסף טקסט 📝</button>
-          <button id="btn-block" class="float-btn add-float-btn">בלוק 📦</button>
-          <button id="btn-split-el" class="float-btn edit-float-btn">חתוך ✂️</button>
-        </div>
-      </aside>
+        <!-- קו מפריד -->
+        <div class="toolbar-separator" style="width: 1px; background: #ddd; margin: 0 5px;"></div>
+      
+        <button id="btn-add-page" class="float-btn edit-float-btn" style="background: #2196F3; color: white;">+ הוסף עמוד</button>
+        <button id="btn-edit-mode" class="float-btn edit-float-btn">מצב עריכה ✏️</button>
+        <button id="btn-save-site" class="float-btn edit-float-btn" style="background: #4CAF50; color: white;">שמור שינויים 💾</button>
+        <button id="btn-reset-site" class="float-btn edit-float-btn" style="background: #f44336; color: white;">איפוס אתר 🗑️</button>
+        <button id="btn-add-bg" class="float-btn add-float-btn">הוסף רקע 🎨</button>
+        <button id="btn-add-image" class="float-btn add-float-btn">הוסף תמונה 🖼️</button>
+        <button id="btn-add-video" class="float-btn add-float-btn">הוסף וידאו 📹</button>
+        <button id="btn-make-slideshow" class="float-btn add-float-btn">הוסף מצגת 🎞️</button>
+        <button id="btn-make-download" class="float-btn add-float-btn">הפוך להורדה 📥</button>
+        <button id="btn-add-text" class="float-btn add-float-btn">הוסף טקסט 📝</button>
+        <button id="btn-block" class="float-btn add-float-btn">בלוק 📦</button>
+        <button id="btn-split-el" class="float-btn edit-float-btn">חתוך ✂️</button>
+      </div>
       
     </div>
   </div>
@@ -231,50 +213,7 @@
     </div>
   </div>
 
-  <!-- סרגל תחתון מרחף (AI/Chat) -->
-  <div class="bottom-floating-bar">
-    <div class="bar-edge-indicator"></div>
-    <button class="bar-icon history-btn" data-tooltip="היסטוריה">
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
-        <path d="M3 3v5h5"></path>
-        <path d="M12 7v5l3 3"></path>
-      </svg>
-    </button>
-    <button class="bar-icon chat-btn" data-tooltip="שיחות">
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M6 3h10a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3H6l-4 4V6a3 3 0 0 1 3-3z"/>
-        <path d="M19 8h-1a3 3 0 0 0-3 3v3a3 3 0 0 0 3 3h3l4 4V11a3 3 0 0 0-3-3z" fill="rgba(255,255,255,0.4)"/>
-      </svg>
-    </button>
-    <button class="bar-ai-btn" data-tooltip="בינה מלאכותית">AI</button>
-  </div>
 
-  <!-- חלון שיחה (AI Chat Drawer) -->
-  <div id="support-chat-modal" class="chat-modal-overlay">
-    <div class="chat-modal-window">
-      <div class="chat-modal-header">
-        <span class="chat-close-btn" id="support-chat-close">✕</span>
-        <div class="chat-header-title">שירות לקוחות AI 🤖</div>
-      </div>
-      
-      <div class="chat-modal-body" id="chat-messages-container">
-        <!-- הודעה אוטומטית -->
-        <div class="chat-message automated-msg">
-          <div class="msg-content">
-            <div class="msg-sender">🤖 נציג AI</div>
-            שלום! אני נציג ה-AI שלך. איך אוכל לעזור לך היום?
-            <div class="msg-time">עכשיו</div>
-          </div>
-        </div>
-      </div>
-      
-      <div class="chat-modal-footer">
-        <button class="chat-send-btn" id="support-chat-send">Send</button>
-        <input type="text" id="support-chat-input" placeholder="כתוב הודעה לתומך...">
-      </div>
-    </div>
-  </div>
 
   <script src="./script.js?v=2"></script>
 </body>
