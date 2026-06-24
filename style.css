@@ -1344,36 +1344,47 @@ html.mobile-view .center-content {
     display: none !important;
   }
 
-  /* התאמת תפריט עליון */
-  .apple-header {
-    height: auto !important;
-    padding: 10px !important;
+  /* התאמת תפריט עליון במובייל - ללא חריגה מהשחור ובקטן ואלגנטי */
+  .apple-nav {
+    height: 44px !important;
+    background: rgba(0, 0, 0, 0.9) !important;
   }
   
   .apple-nav-content {
-    flex-wrap: wrap; /* קיפול שורות */
-    gap: 12px;
-    justify-content: center !important;
+    flex-wrap: nowrap !important;
+    gap: 8px !important;
+    padding: 0 10px !important;
+    justify-content: space-between !important;
+    height: 100% !important;
   }
   
   .nav-links {
-    gap: 12px !important;
-    justify-content: center;
-    width: 100%;
-    order: 3; /* זורק את הקישורים לשורה שניה */
+    gap: 8px !important;
+    justify-content: center !important;
+    width: auto !important;
+    order: unset !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto; /* מאפשר החלקה אופקית אם יש הרבה קישורים */
+    scrollbar-width: none; /* מסתיר פס גלילה */
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .nav-links::-webkit-scrollbar {
+    display: none;
   }
   
   .nav-links a {
-    padding: 4px 8px !important;
-    font-size: 13px !important;
+    padding: 4px 6px !important;
+    font-size: 11px !important;
+    white-space: nowrap !important; /* מונע שבירת שורה */
   }
 
   .logo-area {
-    order: 1;
+    order: unset !important;
   }
 
   .right-icons {
-    order: 2;
+    order: unset !important;
   }
 
   /* התאמת התוכן המרכזי שיוצג בצורה טובה */
