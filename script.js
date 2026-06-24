@@ -66,22 +66,34 @@ function applyBackgrounds() {
   const mainWrapper = document.body;
   
   if (siteBackgrounds.dashboard) {
-    dash.style.backgroundImage = `url(${siteBackgrounds.dashboard})`;
-    dash.style.backgroundSize = 'cover';
-    dash.style.backgroundPosition = 'center';
+    if (dash) {
+      dash.style.backgroundImage = `url(${siteBackgrounds.dashboard})`;
+      dash.style.backgroundSize = 'cover';
+      dash.style.backgroundPosition = 'center';
+    }
   } else {
-    dash.style.backgroundImage = '';
+    if (dash) dash.style.backgroundImage = '';
   }
   
   if (siteBackgrounds.topNav) {
-    top.style.backgroundImage = `url(${siteBackgrounds.topNav})`;
-    top.style.backgroundSize = 'cover';
-    top.style.backgroundPosition = 'center';
+    if (top) {
+      top.style.backgroundImage = `url(${siteBackgrounds.topNav})`;
+      top.style.backgroundSize = 'cover';
+      top.style.backgroundPosition = 'center';
+    }
   } else {
-    top.style.backgroundImage = '';
+    if (top) top.style.backgroundImage = '';
   }
   
-  if (siteBackgrounds.main) {
+  // רקע ייחודי לכל עמוד
+  const currentPage = pages.find(p => p.id === activePageId);
+  if (currentPage && currentPage.background) {
+    mainWrapper.style.backgroundImage = `url(${currentPage.background})`;
+    mainWrapper.style.backgroundSize = 'cover';
+    mainWrapper.style.backgroundPosition = 'center';
+    mainWrapper.style.backgroundAttachment = 'fixed';
+  } else if (siteBackgrounds.main) {
+    // ברירת מחדל אם אין רקע ספציפי לעמוד
     mainWrapper.style.backgroundImage = `url(${siteBackgrounds.main})`;
     mainWrapper.style.backgroundSize = 'cover';
     mainWrapper.style.backgroundPosition = 'center';
@@ -607,6 +619,9 @@ function renderPage() {
   
   // הפעלת מצגות תמונות (Slideshows)
   initSlideshows();
+  
+  // עדכון רקע ייחודי לעמוד הנוכחי
+  applyBackgrounds();
 }
 
 let slideshowIntervals = [];
@@ -1685,8 +1700,14 @@ if (btnAddBg) {
     if (file) {
       const reader = new FileReader();
       reader.onload = async (event) => {
-        siteBackgrounds.main = event.target.result;
-        await localforage.setItem('mySiteBackgrounds_v3', siteBackgrounds);
+        const currentPage = pages.find(p => p.id === activePageId);
+        if (currentPage) {
+          currentPage.background = event.target.result;
+          await localforage.setItem('mySitePages_v3', pages);
+        } else {
+          siteBackgrounds.main = event.target.result;
+          await localforage.setItem('mySiteBackgrounds_v3', siteBackgrounds);
+        }
         applyBackgrounds();
       };
       reader.readAsDataURL(file);
