@@ -262,9 +262,8 @@ const btnAddPage = document.getElementById('btn-add-page');
 const btnResetSite = document.getElementById('btn-reset-site');
 const btnAddVideo = document.getElementById('btn-add-video');
 const navLinksContainer = document.querySelector('.nav-links'); // התפריט העליון
-const megaMenuContainer = document.createElement('div'); // הקונטיינר של מגה-תפריט
-megaMenuContainer.className = 'mega-menu-panel';
-document.body.appendChild(megaMenuContainer);
+// מגה-מנו הוסר לחלוטין
+const megaMenuContainer = { classList: { add: ()=>{}, remove: ()=>{} }, style: {}, innerHTML: '' };
 
 // טיפול בלוגו ובטקסט הלוגו
 const mainLogo = document.getElementById('main-logo');
@@ -481,24 +480,7 @@ function renderTopNav() {
       renderPage();
     });
     
-    // מגה-תפריט מופיע בעת מעבר עכבר
-    let hoverTimeout;
-    a.addEventListener('mouseenter', () => {
-      clearTimeout(hoverTimeout);
-      // מציגים את המגה תפריט שמכיל את התוכן המלא של העמוד
-      megaMenuContainer.innerHTML = `<div class="mega-menu-content">${page.content}</div>`;
-      
-      // מיקום ה-Mega Menu מתחת לתפריט בדיוק
-      const rect = navLinksContainer.getBoundingClientRect();
-      megaMenuContainer.style.top = (rect.bottom) + 'px';
-      megaMenuContainer.classList.add('visible');
-    });
-    
-    a.addEventListener('mouseleave', () => {
-      hoverTimeout = setTimeout(() => {
-        megaMenuContainer.classList.remove('visible');
-      }, 300); // מחכה 300 מילישניות לפני העלמה (כדי שהעכבר יספיק לעבור אליו)
-    });
+
     
     if (isEditMode) {
       a.style.cursor = 'move'; // נראות של גרירה ומיקום
@@ -594,13 +576,7 @@ navLinksContainer.addEventListener('drop', (e) => {
   }
 });
 
-// מאזינים גם ל-Mega Menu עצמו כדי שלא ייסגר כשהעכבר בתוכו
-megaMenuContainer.addEventListener('mouseenter', () => {
-  megaMenuContainer.classList.add('visible');
-});
-megaMenuContainer.addEventListener('mouseleave', () => {
-  megaMenuContainer.classList.remove('visible');
-});
+// מגה-מנו הוסר לחלוטין - הניווט עובד רק בלחיצה
 
 
 
