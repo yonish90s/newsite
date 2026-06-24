@@ -17,26 +17,13 @@
  * 10. קיצורי מקלדת מקצועיים (Shortcuts - Ctrl+C/V/Z)
  * 11. מערכות צד ג' (Cookie Consent, צ'אט תמיכה)
  * 
+ * הערה ארכיטקטונית (Architecture Note):
+ * -------------------------------------
+ * נכון לעכשיו, קוד זה (והממשק הויזואלי כולו) משמש את *מנהל האתר* (Admin / Editor).
+ * כל הכלים כאן נועדו לבניית האתר ועריכתו בזמן אמת.
+ * בעתיד ייווצר "מצב צופה" ללא יכולות עריכה עבור משתמשי הקצה.
+ * ============================================================================
  */
-
-// פיירבייס נותק לחלוטין.
-let db = null;
-let storage = null;
-
-// פונקציית עזר להמרת תמונות לבייס64 ללא שרת (מקומי)
-async function uploadImageToStorage(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = error => {
-      console.error("שגיאה בהמרת התמונה:", error);
-      alert("שגיאה בקריאת התמונה!");
-      resolve(null);
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
 // --- שלב 1: הגדרות בסיס ומצב התחלתי (State) ---
 
 // נגדיר את רשימת העמודים ההתחלתית שלנו (ברירת המחדל למקרה שאין כלום בזיכרון)
@@ -67,7 +54,7 @@ const defaultPages = [
 let pages = defaultPages;
 let activePageId = 'page-main';
 let topNavPages = ['page-main', 'page-shop', 'page-charts', 'page-forum']; // העמודים שמופיעים בתפריט העליון
-let isEditMode = false;
+let isEditMode = true;
 let undoStack = []; // מערך לשמירת היסטוריית שינויים לצורך ביטול (Undo)
 let siteBackgrounds = { dashboard: null, topNav: null, main: null };
 
@@ -76,7 +63,7 @@ let siteBackgrounds = { dashboard: null, topNav: null, main: null };
 function applyBackgrounds() {
   const dash = document.querySelector('.side-dashboard');
   const top = document.querySelector('.top-bar');
-  const mainWrapper = document.getElementById('mainContent');
+  const mainWrapper = document.body;
   
   if (siteBackgrounds.dashboard) {
     dash.style.backgroundImage = `url(${siteBackgrounds.dashboard})`;
@@ -98,45 +85,106 @@ function applyBackgrounds() {
     mainWrapper.style.backgroundImage = `url(${siteBackgrounds.main})`;
     mainWrapper.style.backgroundSize = 'cover';
     mainWrapper.style.backgroundPosition = 'center';
-    mainWrapper.style.backgroundColor = 'transparent';
+    mainWrapper.style.backgroundAttachment = 'fixed';
   } else {
     mainWrapper.style.backgroundImage = '';
-    mainWrapper.style.backgroundColor = '';
   }
 }
 
-// פונקציית אתחול אסינכרונית - טוענת מהזיכרון המקומי בלבד (לצורך בדיקות - פיירבייס מנותק)
+// פונקציית אתחול אסינכרונית - טוענת מהמסד הנתונים החדש והבלתי מוגבל
 async function initSite() {
-  console.log("טוען נתונים מהדפדפן (פיירבייס מנותק)");
   try {
-    const localData = await localforage.getItem('sitePages');
-    if (localData) {
-      if (localData.pages) pages = localData.pages;
-      if (localData.activePageId) activePageId = localData.activePageId;
-      if (localData.topNavPages) topNavPages = localData.topNavPages;
-      if (localData.topNavHTML) {
-        navLinksContainer.innerHTML = localData.topNavHTML;
-        // מחיקת קישורי ברירת מחדל לא רצויים
-        const unwantedTitles = ["גרפים ונתונים", "פורום", "שירותים", "הזמנת פגישה", "📈 גרפים ונתונים", "💬 פורום"];
-        navLinksContainer.querySelectorAll('a').forEach(a => {
-          const linkText = (a.childNodes[0]?.nodeValue || a.textContent).replace('⌄', '').trim();
-          if (unwantedTitles.includes(linkText)) {
-            a.remove();
+    // הגירת נתונים: אם למשתמש יש שמירה ישנה ב-localStorage שמוגבל ל-5MB, נעביר אותה
+    const oldPages = localStorage.getItem('mySitePages_v3');
+    const oldActive = localStorage.getItem('myActivePage_v3');
+    const oldTopNav = localStorage.getItem('mySiteTopNav_v3');
+    
+    // איפוס חד פעמי כדי לטעון את התפריט עם האימוג'ים מ-HTML
+    if (!localStorage.getItem('force_emoji_nav_reset')) {
+      await localforage.removeItem('mySiteTopNavHTML_v3');
+      localStorage.setItem('force_emoji_nav_reset', 'true');
+    }
+
+    if (oldPages) {
+      await localforage.setItem('mySitePages_v3', JSON.parse(oldPages));
+      localStorage.removeItem('mySitePages_v3');
+    }
+    if (oldActive) {
+      await localforage.setItem('myActivePage_v3', oldActive);
+      localStorage.removeItem('myActivePage_v3');
+    }
+    const savedActive = await localforage.getItem('myActivePage_v3');
+    if (savedActive) activePageId = savedActive;
+    
+    const savedLogo = await localforage.getItem('mySiteLogo_v3');
+    const savedLogoText = await localforage.getItem('mySiteLogoText_v3');
+    
+    if (savedLogo) {
+      const mainLogo = document.getElementById('main-logo');
+      const loaderImg = document.getElementById('loader-img');
+      const favicon = document.getElementById('favicon');
+      if (mainLogo) mainLogo.src = savedLogo;
+      if (loaderImg) loaderImg.src = savedLogo;
+      if (favicon) favicon.href = savedLogo;
+    }
+    
+    if (savedLogoText) {
+      const logoTextEl = document.getElementById('main-logo-text');
+      if (logoTextEl) logoTextEl.textContent = savedLogoText;
+    }
+    
+    const savedTopNav = await localforage.getItem('mySiteTopNav_v3');
+    if (savedTopNav) {
+      const demoPageIds = ['page-articles-example', 'page-forum-example', 'page-store-example'];
+      topNavPages = savedTopNav.filter(id => !demoPageIds.includes(id));
+      await localforage.setItem('mySiteTopNav_v3', topNavPages);
+    }
+
+    const savedTopNavHTML = await localforage.getItem('mySiteTopNavHTML_v3');
+    if (savedTopNavHTML) {
+      navLinksContainer.innerHTML = savedTopNavHTML;
+      // ניקוי כפתורי עריכה למקרה שנשמרו בטעות בגרסאות קודמות
+      navLinksContainer.querySelectorAll('.top-nav-controls').forEach(el => el.remove());
+      const addBtn = document.getElementById('add-nav-link-btn');
+      if (addBtn) addBtn.remove();
+      
+      // ניקוי כפתורי ה-X והעין הישנים שנתקעו בטקסטים
+      navLinksContainer.querySelectorAll('a').forEach(a => {
+        a.querySelectorAll('span').forEach(span => {
+          if (span.textContent.includes('✖') || span.textContent.includes('👁️') || span.textContent.includes('🙈') || span.style.color === 'red') {
+            span.remove();
           }
         });
-        navLinksContainer.querySelectorAll('.top-nav-controls').forEach(el => el.remove());
-        const addBtn = document.getElementById('add-nav-link-btn');
-        if (addBtn) addBtn.remove();
-      }
-      if (localData.siteBackgrounds) {
-        siteBackgrounds = localData.siteBackgrounds;
-        applyBackgrounds();
-      }
+      });
+      // נשמור מחדש את הגרסה הנקייה
+      const tempNav = navLinksContainer.cloneNode(true);
+      localforage.setItem('mySiteTopNavHTML_v3', tempNav.innerHTML);
+    }
+
+
+
+    const savedPages = await localforage.getItem('mySitePages_v3');
+    if (savedPages) {
+      // סינון עמודי כתבות היסטוריים שנשארו במסד הנתונים
+      pages = savedPages;
+    }
+    
+    // הסרת עמודי הדוגמה הישנים (כתבות, פורום, חנות) אם הם קיימים
+    const demoPageIds = ['page-articles-example', 'page-forum-example', 'page-store-example'];
+    const initialPagesLength = pages.length;
+    pages = pages.filter(p => !demoPageIds.includes(p.id));
+    
+    if (pages.length < initialPagesLength) {
+      await localforage.setItem('mySitePages_v3', pages);
+    }
+    const savedBackgrounds = await localforage.getItem('mySiteBackgrounds_v3');
+    if (savedBackgrounds) {
+      siteBackgrounds = savedBackgrounds;
+      applyBackgrounds();
     }
   } catch(e) {
-    console.error("שגיאה בטעינת הנתונים המקומיים:", e);
+    console.error('Error loading data', e);
   }
-
   
   // תיקון אוטומטי (Migration) לקישורים מתים בתפריט העליון
   const allNavLinks = navLinksContainer.querySelectorAll('a');
@@ -183,28 +231,14 @@ async function initSite() {
     saveToStorage();
   }
 
-  // שורת החיפוש העליונה - הרחבה בלחיצה
-  const searchTopIcon = document.getElementById('search-top-icon');
-  const searchTopInput = document.getElementById('search-top-input');
-  if (searchTopIcon && searchTopInput) {
-    searchTopIcon.addEventListener('click', (e) => {
-      e.stopPropagation();
-      searchTopInput.classList.toggle('expanded');
-      if (searchTopInput.classList.contains('expanded')) {
-        searchTopInput.focus();
-      }
-    });
-    // סגירה בלחיצה בחוץ
-    document.addEventListener('click', (e) => {
-      if (!searchTopInput.contains(e.target) && e.target !== searchTopIcon) {
-        searchTopInput.classList.remove('expanded');
-      }
-    });
-  }
-
   // אחרי שהכל נטען (ואולי תוקן), נצייר את האתר
   renderSideMenu();
   renderPage();
+
+  // ברירת מחדל: הפעלת מצב עריכה/מנהל עם כניסה לאתר
+  if (!isEditMode && btnEditMode) {
+    btnEditMode.click();
+  }
 }
 
 // קריאה לאתחול
@@ -232,23 +266,22 @@ if (mainLogo) {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
-    input.onchange = async e => {
+    input.onchange = e => {
       const file = e.target.files[0];
       if (file) {
-        const dataUrl = await uploadImageToStorage(file);
-        if (!dataUrl) return;
-        this.src = dataUrl;
-        
-        const loaderImg = document.getElementById('loader-img');
-        const favicon = document.getElementById('favicon');
-        if (loaderImg) loaderImg.src = dataUrl;
-        if (favicon) favicon.href = dataUrl;
-        
-        if (db) {
-          db.collection("site").doc("config").set({ logo: dataUrl }, { merge: true })
-            .then(() => console.log("הלוגו נשמר בענן!"))
-            .catch(err => console.error("שגיאה בשמירת לוגו לענן", err));
-        }
+        const reader = new FileReader();
+        reader.onload = event => {
+          const dataUrl = event.target.result;
+          this.src = dataUrl;
+          
+          const loaderImg = document.getElementById('loader-img');
+          const favicon = document.getElementById('favicon');
+          if (loaderImg) loaderImg.src = dataUrl;
+          if (favicon) favicon.href = dataUrl;
+          
+          localforage.setItem('mySiteLogo_v3', dataUrl);
+        };
+        reader.readAsDataURL(file);
       }
     };
     input.click();
@@ -258,57 +291,34 @@ if (mainLogo) {
 if (mainLogoText) {
   mainLogoText.addEventListener('blur', () => {
     if (isEditMode) {
-      if (db) {
-        db.collection("site").doc("config").set({ logoText: mainLogoText.textContent }, { merge: true });
-      }
+      localforage.setItem('mySiteLogoText_v3', mainLogoText.textContent);
     }
   });
 }
 
-// מנגנון פתיחה וסגירה של התפריט במובייל
-const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-if (mobileMenuBtn) {
-  mobileMenuBtn.addEventListener('click', () => {
-    navLinksContainer.classList.toggle('mobile-open');
-    sideMenuContainer.classList.toggle('mobile-open');
-  });
-}
-
-// סגירת התפריט בלחיצה על קישור במובייל
-navLinksContainer.addEventListener('click', (e) => {
-  if (window.innerWidth <= 900 && e.target.tagName === 'A') {
-    navLinksContainer.classList.remove('mobile-open');
-    sideMenuContainer.classList.remove('mobile-open');
-  }
-});
 
 // התאמת חווית עריכה למובייל בזמן אמת בשינוי גודל מסך
 window.addEventListener('resize', () => {
   if (isEditMode) {
-    const isMobile = window.innerWidth <= 900;
-    interact('.draggable-resizable').draggable({ enabled: !isMobile }).resizable({ enabled: !isMobile });
+    interact('.draggable-resizable').draggable({ enabled: true }).resizable({ enabled: true });
   }
 });
 
 // --- שלב 3: פונקציות ליבה (Rendering & Logic) ---
 
-// פונקציה לשמירת הנתונים לענן (Firebase)
+// פונקציה לשמירת הנתונים למסד הנתונים (מבוסס localforage כך שאין מגבלת מקום לתמונות)
 function saveToStorage() {
+  localforage.setItem('mySitePages_v3', pages);
+  localforage.setItem('myActivePage_v3', activePageId);
+  localforage.setItem('mySiteTopNav_v3', topNavPages); // שמירת התפריט העליון
+  
+  // שמירת מבנה ה-HTML של התפריט העליון ללא כפתורי העריכה
   const tempNav = navLinksContainer.cloneNode(true);
   tempNav.querySelectorAll('.top-nav-controls').forEach(el => el.remove());
   const addBtn = tempNav.querySelector('#add-nav-link-btn');
   if (addBtn) addBtn.remove();
   
-  // ניתוק זמני של פיירבייס - שומרים הכל מקומית בדפדפן (localStorage)
-  localforage.setItem('sitePages', {
-    pages: pages,
-    activePageId: activePageId,
-    topNavPages: topNavPages,
-    topNavHTML: tempNav.innerHTML,
-    siteBackgrounds: siteBackgrounds
-  }).then(() => {
-    console.log("הנתונים נשמרו מקומית בדפדפן (פיירבייס מנותק).");
-  });
+  localforage.setItem('mySiteTopNavHTML_v3', tempNav.innerHTML); 
   
   // הוספה למערך ההיסטוריה עבור פעולת Undo (שומרים את 20 הפעולות האחרונות)
   undoStack.push(JSON.stringify({ pages, topNavPages }));
@@ -321,17 +331,17 @@ function saveToStorage() {
 function renderSideMenu() {
   sideMenuContainer.innerHTML = ''; // מנקים את התפריט הישן
   
-  const btnAddPage = document.getElementById('btn-add-page');
-  if (btnAddPage) {
-    btnAddPage.style.display = isEditMode ? 'block' : 'none';
-  }
-  
   pages.forEach(page => {
-    // עמודים נסתרי-מנהל (adminOnly) לא מופיעים בתפריט בכלל
-    if (page.adminOnly) return;
+    // אם אנחנו לא במצב עריכה והעמוד מוסתר - לא נציג אותו
+    if (!isEditMode && page.isHidden) return;
 
-    // אם העמוד מוסתר – לא מציגים אותו בכלל (גם לא במצב עריכה)
-    if (page.isHidden) return;
+    const li = document.createElement('li'); // יוצרים אלמנט רשימה חדש
+    li.id = page.id;
+    
+    // אם במצב עריכה והעמוד מוסתר, נציג אותו חצי שקוף
+    if (isEditMode && page.isHidden) {
+      li.style.opacity = '0.5';
+    }
     
     // מיכל לטקסט ולכפתורים
     li.style.display = 'flex';
@@ -396,7 +406,7 @@ function renderSideMenu() {
       deleteBtn.onclick = (e) => {
         e.stopPropagation();
         if (pages.length === 1) {
-          console.log('אי אפשר למחוק את העמוד האחרון באתר!');
+          alert('אי אפשר למחוק את העמוד האחרון באתר!');
           return;
         }
         pages.splice(pages.findIndex(p => p.id === page.id), 1);
@@ -438,7 +448,6 @@ function renderTopNav() {
   topNavPages.forEach(pageId => {
     const page = pages.find(p => p.id === pageId);
     if (!page) return; // במקרה שהעמוד נמחק
-    if (page.adminOnly) return; // עמודים נסתרי-מנהל לא מופיעים בתפריט העליון
     if (!isEditMode && page.isHidden) return; // מסתיר עמודים מוסתרים גם למעלה
     
     const a = document.createElement('a');
@@ -674,8 +683,7 @@ function applyEditModeToContent() {
   if (ft) ft.style.display = 'flex';
   
   // הדלקת יכולות הגרירה ושינוי הגודל (אך לא במסכים קטנים כדי לשמור על רספונסיביות)
-  const isMobile = window.innerWidth <= 900;
-  interact('.draggable-resizable').draggable({ enabled: !isMobile }).resizable({ enabled: !isMobile });
+  interact('.draggable-resizable').draggable({ enabled: true }).resizable({ enabled: true });
 
   // --- עריכת תפריט עליון ---
   Array.from(navLinksContainer.children).forEach(child => {
@@ -879,13 +887,15 @@ function makeImagesEditable() {
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = 'image/*';
-        input.onchange = async e => {
+        input.onchange = e => {
           const file = e.target.files[0];
           if (file) {
-            const dataUrl = await uploadImageToStorage(file);
-            if (!dataUrl) return;
-            this.src = dataUrl;
-            saveCurrentPageContent();
+            const reader = new FileReader();
+            reader.onload = event => {
+              this.src = event.target.result;
+              saveCurrentPageContent();
+            };
+            reader.readAsDataURL(file);
           }
         };
         input.click();
@@ -942,143 +952,25 @@ btnEditMode.addEventListener('click', () => {
 
 // האזנה ללחיצה על כפתור "+ הוסף עמוד חדש"
 btnAddPage.addEventListener('click', () => {
+  // מקפיצים חלונית שמבקשת מהמשתמש את שם העמוד
   const newTitle = prompt('איך תרצה לקרוא לעמוד החדש? (למשל: 📞 צור קשר)');
   
   if (newTitle && newTitle.trim() !== '') {
+    // יוצרים אובייקט של עמוד חדש
     const newPage = {
-      id: 'page-' + Date.now(),
-      title: newTitle,
+      id: 'page-' + Date.now(), // מזהה ייחודי שמבוסס על הזמן הנוכחי
+      title: newTitle, // השם שהמשתמש הקליד
       content: ''
     };
     
-    pages.push(newPage);
-    activePageId = newPage.id;
+    pages.push(newPage); // מוסיפים למערך שלנו
+    activePageId = newPage.id; // מעבירים אותו להיות העמוד הפעיל
     
-    saveToStorage();
-    renderSideMenu();
-    renderHiddenPages();
-    renderPage();
+    saveToStorage(); // שומרים
+    renderSideMenu(); // מרעננים את התפריט שיציג את העמוד החדש
+    renderPage(); // מרעננים את המסך שיציג את העמוד החדש
   }
 });
-
-// --- עמודים נסתרים (Admin-only hidden pages) ---
-
-function renderHiddenPages() {
-  const section = document.getElementById('hidden-pages-section');
-  const list    = document.getElementById('hidden-pages-list-sidebar');
-  if (!section || !list) return;
-
-  // מציג את האזור רק כשמנהל מחובר
-  section.style.display = isEditMode ? 'block' : 'none';
-  list.innerHTML = '';
-
-  const hiddenPages = pages.filter(p => p.isHidden && p.adminOnly);
-
-  if (hiddenPages.length === 0) {
-    list.innerHTML = '<li style="font-size:12px; color:#666; padding:4px 8px;">אין עמודים נסתרים</li>';
-    return;
-  }
-
-  hiddenPages.forEach(page => {
-    const li = document.createElement('li');
-    li.style.cssText = 'display:flex; align-items:center; justify-content:space-between; padding:6px 8px; border-radius:6px; margin-bottom:3px; background:rgba(108,63,197,0.08);';
-
-    // שם העמוד
-    const nameSpan = document.createElement('span');
-    nameSpan.textContent = page.title;
-    nameSpan.style.cssText = 'font-size:13px; color:#c0a8f0; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;';
-
-    // כפתורי ניהול
-    const actions = document.createElement('span');
-    actions.style.cssText = 'display:flex; gap:6px; flex-shrink:0;';
-
-    // פתח / ערוך
-    const openBtn = document.createElement('span');
-    openBtn.textContent = '📂';
-    openBtn.title = 'פתח לעריכה';
-    openBtn.style.cursor = 'pointer';
-    openBtn.onclick = (e) => {
-      e.stopPropagation();
-      if (isEditMode) saveCurrentPageContent();
-      activePageId = page.id;
-      saveToStorage();
-      renderPage();
-      renderSideMenu();
-      renderHiddenPages();
-    };
-
-    // שינוי שם
-    const renameBtn = document.createElement('span');
-    renameBtn.textContent = '✏️';
-    renameBtn.title = 'שנה שם';
-    renameBtn.style.cursor = 'pointer';
-    renameBtn.onclick = (e) => {
-      e.stopPropagation();
-      const newName = prompt('שם חדש לעמוד הנסתר:', page.title);
-      if (newName && newName.trim()) {
-        page.title = newName.trim();
-        saveToStorage();
-        renderHiddenPages();
-      }
-    };
-
-    // מחיקה
-    const delBtn = document.createElement('span');
-    delBtn.textContent = '🗑️';
-    delBtn.title = 'מחק עמוד';
-    delBtn.style.cursor = 'pointer';
-    delBtn.onclick = (e) => {
-      e.stopPropagation();
-      if (!confirm(`למחוק את "${page.title}"?`)) return;
-      pages.splice(pages.findIndex(p => p.id === page.id), 1);
-      if (activePageId === page.id && pages.length > 0) {
-        activePageId = pages[0].id;
-        renderPage();
-      }
-      saveToStorage();
-      renderSideMenu();
-      renderHiddenPages();
-    };
-
-    actions.appendChild(openBtn);
-    actions.appendChild(renameBtn);
-    actions.appendChild(delBtn);
-
-    // אם זה העמוד הפעיל – הדגש
-    if (page.id === activePageId) {
-      li.style.background = 'rgba(108,63,197,0.25)';
-      nameSpan.style.color = '#d4baff';
-    }
-
-    li.appendChild(nameSpan);
-    li.appendChild(actions);
-    list.appendChild(li);
-  });
-}
-
-// כפתור יצירת עמוד נסתר חדש
-const btnAddHiddenSidebar = document.getElementById('btn-add-hidden-page-sidebar');
-if (btnAddHiddenSidebar) {
-  btnAddHiddenSidebar.addEventListener('click', () => {
-    const newTitle = prompt('שם לעמוד הנסתר החדש:');
-    if (!newTitle || !newTitle.trim()) return;
-
-    const newPage = {
-      id: 'hidden-' + Date.now(),
-      title: newTitle.trim(),
-      content: '',
-      isHidden: true,   // לא יופיע בתפריטים
-      adminOnly: true   // סימון עמוד נסתר-מנהל
-    };
-
-    pages.push(newPage);
-    activePageId = newPage.id; // נפתח ישירות לעריכה
-    saveToStorage();
-    renderPage();
-    renderSideMenu();
-    renderHiddenPages();
-  });
-}
 
 // האזנה ללחיצה על כפתור "איפוס אתר"
 if (btnResetSite) {
@@ -1087,11 +979,11 @@ if (btnResetSite) {
       try {
         await localforage.clear();
         localStorage.clear();
-        console.log('האתר אופס בהצלחה! העמוד ייטען מחדש כעת.');
+        alert('האתר אופס בהצלחה! העמוד ייטען מחדש כעת.');
         window.location.reload();
       } catch (e) {
         console.error(e);
-        console.error('שגיאה במהלך האיפוס.');
+        alert('שגיאה במהלך האיפוס.');
       }
     }
   });
@@ -1329,7 +1221,7 @@ interact('.draggable-resizable')
     const linkBtn = document.createElement('button');
     linkBtn.className = 'action-btn link-btn';
     linkBtn.innerHTML = '🔗';
-    linkBtn.title = 'הוסף/ערוך קישור';
+    linkBtn.title = 'הוסף קישור';
     linkBtn.addEventListener('mousedown', (e) => {
       e.stopPropagation();
       currentEditingLinkElement = target;
@@ -1339,6 +1231,7 @@ interact('.draggable-resizable')
       const linkExternalInput = document.getElementById('link-external-input');
       const linkModal = document.getElementById('link-modal');
 
+      // מילוי ה-Select בעמודים קיימים
       linkInternalSelect.innerHTML = '<option value="">-- בחר עמוד פנימי --</option>';
       pages.forEach(p => {
         const opt = document.createElement('option');
@@ -1347,9 +1240,11 @@ interact('.draggable-resizable')
         linkInternalSelect.appendChild(opt);
       });
       
+      // איפוס
       linkExternalInput.value = '';
       linkInternalSelect.value = '';
       
+      // טעינת קישור קיים אם יש
       if (currentLink) {
         if (pages.find(p => p.id === currentLink || p.title === currentLink)) {
           const found = pages.find(p => p.id === currentLink || p.title === currentLink);
@@ -1361,24 +1256,6 @@ interact('.draggable-resizable')
       
       linkModal.style.display = 'flex';
     });
-    actionsContainer.appendChild(linkBtn);
-
-    // 1.5. כפתור כניסה לקישור (מוצג רק אם יש קישור) - האייקון של הכניסה
-    if (target.getAttribute('data-href')) {
-      const goBtn = document.createElement('button');
-      goBtn.className = 'action-btn go-btn';
-      goBtn.innerHTML = '🚪'; // אייקון כניסה
-      goBtn.title = 'כנס לקישור (אייקון כניסה)';
-      goBtn.style.background = '#4CAF50'; // צבע ירוק בולט
-      goBtn.style.color = 'white';
-      goBtn.addEventListener('mousedown', (e) => {
-        e.stopPropagation();
-        // מדמה לחיצה של 3 פעמים כדי לעקוף את חסימת העריכה ולעבור לעמוד
-        target.dispatchEvent(new MouseEvent('click', { detail: 3, bubbles: true }));
-      });
-      actionsContainer.appendChild(goBtn);
-    }
-
 
     // 2. כפתור העתקה
     const copyBtn = document.createElement('button');
@@ -1388,7 +1265,7 @@ interact('.draggable-resizable')
     copyBtn.addEventListener('mousedown', async (e) => {
       e.stopPropagation();
       await copySelectedElements([target]);
-      console.log('האלמנט הועתק! עכשיו אפשר להדביק אותו בעמוד אחר בעזרת כפתור "הדבק" או Ctrl+V.');
+      alert('האלמנט הועתק! עכשיו אפשר להדביק אותו בעמוד אחר בעזרת כפתור "הדבק" או Ctrl+V.');
     });
 
     // 3. כפתור מחיקה
@@ -1519,9 +1396,7 @@ interact('.draggable-resizable')
       burnBtn.addEventListener('mousedown', async (e) => {
         e.stopPropagation();
         siteBackgrounds['main'] = bgUrl;
-        if (db) {
-          db.collection("site").doc("config").set({ siteBackgrounds: siteBackgrounds }, { merge: true });
-        }
+        await localforage.setItem('mySiteBackgrounds_v3', siteBackgrounds);
         applyBackgrounds();
         
         target.remove();
@@ -1532,31 +1407,6 @@ interact('.draggable-resizable')
     }
 
     actionsContainer.appendChild(linkBtn);
-
-    // כפתור "כנס לעמוד הנסתר" – מופיע רק אם האלמנט מקושר לעמוד נסתר
-    const linkedHref = target.getAttribute('data-href');
-    if (linkedHref) {
-      const linkedPage = pages.find(p => p.id === linkedHref && p.adminOnly);
-      if (linkedPage) {
-        const enterBtn = document.createElement('button');
-        enterBtn.className = 'action-btn';
-        enterBtn.innerHTML = '↩️';
-        enterBtn.title = `כנס לעמוד הנסתר: ${linkedPage.title}`;
-        enterBtn.style.background = 'rgba(108,63,197,0.15)';
-        enterBtn.style.border = '1px solid rgba(108,63,197,0.4)';
-        enterBtn.addEventListener('mousedown', (e) => {
-          e.stopPropagation();
-          saveCurrentPageContent();
-          activePageId = linkedPage.id;
-          saveToStorage();
-          renderPage();
-          renderSideMenu();
-          if (typeof renderHiddenPages === 'function') renderHiddenPages();
-        });
-        actionsContainer.appendChild(enterBtn);
-      }
-    }
-
     actionsContainer.appendChild(copyBtn);
     actionsContainer.appendChild(delBtn);
     
@@ -1623,39 +1473,47 @@ if (btnMakeSlideshow) {
     input.accept = 'image/*';
     input.multiple = true; // מאפשר בחירת מספר קבצים
     
-    input.onchange = async e => {
+    input.onchange = e => {
       const files = Array.from(e.target.files).slice(0, 5); // הגבלת 5 תמונות
       if (files.length > 0) {
-        const uploadPromises = files.map(file => uploadImageToStorage(file));
-        const results = await Promise.all(uploadPromises);
-        const urls = results.filter(url => url !== null);
+        const urls = [];
+        let loadedCount = 0;
         
-        if (urls.length > 0) {
-          const el = document.createElement('div');
-          el.className = 'draggable-resizable';
-          
-          // מידות התחלתיות סבירות
-          el.style.width = '400px';
-          el.style.height = '300px';
-          el.style.left = '150px';
-          el.style.top = '150px';
-          el.setAttribute('data-x', '150');
-          el.setAttribute('data-y', '150');
-          
-          el.style.backgroundImage = 'url(' + urls[0] + ')';
-          el.style.backgroundSize = 'cover';
-          el.style.backgroundRepeat = 'no-repeat';
-          el.style.backgroundPosition = 'center';
-          el.style.borderRadius = '12px';
-          
-          el.dataset.slideshowUrls = JSON.stringify(urls);
-          el.dataset.slideshowIndex = '0';
-          
-          mainContent.appendChild(el);
-          saveCurrentPageContent();
-          initSlideshows(); // מפעיל מיד את המצגת
-          console.log('נוצרה מצגת עם ' + urls.length + ' תמונות בהצלחה! התמונות יתחלפו כל 3 שניות.');
-        }
+        files.forEach((file, index) => {
+          const reader = new FileReader();
+          reader.onload = event => {
+            urls[index] = event.target.result;
+            loadedCount++;
+            
+            if (loadedCount === files.length) {
+              const el = document.createElement('div');
+              el.className = 'draggable-resizable';
+              
+              // מידות התחלתיות סבירות
+              el.style.width = '400px';
+              el.style.height = '300px';
+              el.style.left = '150px';
+              el.style.top = '150px';
+              el.setAttribute('data-x', '150');
+              el.setAttribute('data-y', '150');
+              
+              el.style.backgroundImage = 'url(' + urls[0] + ')';
+              el.style.backgroundSize = 'cover';
+              el.style.backgroundRepeat = 'no-repeat';
+              el.style.backgroundPosition = 'center';
+              el.style.borderRadius = '12px';
+              
+              el.dataset.slideshowUrls = JSON.stringify(urls);
+              el.dataset.slideshowIndex = '0';
+              
+              mainContent.appendChild(el);
+              saveCurrentPageContent();
+              initSlideshows(); // מפעיל מיד את המצגת
+              alert('נוצרה מצגת עם ' + files.length + ' תמונות בהצלחה! התמונות יתחלפו כל 3 שניות.');
+            }
+          };
+          reader.readAsDataURL(file);
+        });
       }
     };
     input.click();
@@ -1669,28 +1527,29 @@ if (btnAddVideo) {
     input.type = 'file';
     input.accept = 'video/*';
     
-    input.onchange = async e => {
+    input.onchange = e => {
       const file = e.target.files[0];
       if (file) {
-        const dataUrl = await uploadImageToStorage(file);
-        if (!dataUrl) return;
-        
-        const el = document.createElement('div');
-        el.className = 'draggable-resizable';
-        
-        el.style.width = '480px';
-        el.style.height = '270px';
-        el.style.left = '150px';
-        el.style.top = '150px';
-        el.setAttribute('data-x', '150');
-        el.setAttribute('data-y', '150');
-        
-        el.innerHTML = `
-          <video src="${dataUrl}" controls style="width: 100%; height: 100%; object-fit: contain; border-radius: 8px;"></video>
-        `;
-        
-        mainContent.appendChild(el);
-        saveCurrentPageContent();
+        const reader = new FileReader();
+        reader.onload = event => {
+          const el = document.createElement('div');
+          el.className = 'draggable-resizable';
+          
+          el.style.width = '480px';
+          el.style.height = '270px';
+          el.style.left = '150px';
+          el.style.top = '150px';
+          el.setAttribute('data-x', '150');
+          el.setAttribute('data-y', '150');
+          
+          el.innerHTML = `
+            <video src="${event.target.result}" controls style="width: 100%; height: 100%; object-fit: contain; border-radius: 8px;"></video>
+          `;
+          
+          mainContent.appendChild(el);
+          saveCurrentPageContent();
+        };
+        reader.readAsDataURL(file);
       }
     };
     input.click();
@@ -1703,36 +1562,37 @@ if (btnMakeDownload) {
     const input = document.createElement('input');
     input.type = 'file';
     
-    input.onchange = async e => {
+    input.onchange = e => {
       const file = e.target.files[0];
       if (file) {
-        const downloadUrl = await uploadImageToStorage(file);
-        if (!downloadUrl) return;
-        
-        const el = document.createElement('div');
-        el.className = 'draggable-resizable';
-        
-        el.style.width = '250px';
-        el.style.left = '200px';
-        el.style.top = '200px';
-        el.setAttribute('data-x', '200');
-        el.setAttribute('data-y', '200');
-        
-        // שומרים את מידע ההורדה
-        el.dataset.downloadUrl = downloadUrl;
-        el.dataset.downloadName = file.name;
-        el.title = "לחיצה תוריד קובץ: " + file.name;
-        
-        // עיצוב כפתור ההורדה שיופיע על המסך
-        el.innerHTML = `
-          <div style="background: linear-gradient(135deg, #4CAF50, #2E7D32); color: white; border-radius: 12px; padding: 15px 20px; display: flex; align-items: center; justify-content: center; gap: 10px; font-family: 'Inter', sans-serif; font-size: 16px; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.1); cursor: pointer; height: 100%; box-sizing: border-box;">
-            <span style="font-size: 24px;">📥</span>
-            <span style="flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" contenteditable="plaintext-only">הורד קובץ</span>
-          </div>
-        `;
-        
-        mainContent.appendChild(el);
-        saveCurrentPageContent();
+        const reader = new FileReader();
+        reader.onload = event => {
+          const el = document.createElement('div');
+          el.className = 'draggable-resizable';
+          
+          el.style.width = '250px';
+          el.style.left = '200px';
+          el.style.top = '200px';
+          el.setAttribute('data-x', '200');
+          el.setAttribute('data-y', '200');
+          
+          // שומרים את מידע ההורדה
+          el.dataset.downloadUrl = event.target.result;
+          el.dataset.downloadName = file.name;
+          el.title = "לחיצה תוריד קובץ: " + file.name;
+          
+          // עיצוב כפתור ההורדה שיופיע על המסך
+          el.innerHTML = `
+            <div style="background: linear-gradient(135deg, #4CAF50, #2E7D32); color: white; border-radius: 12px; padding: 15px 20px; display: flex; align-items: center; justify-content: center; gap: 10px; font-family: 'Inter', sans-serif; font-size: 16px; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.1); cursor: pointer; height: 100%; box-sizing: border-box;">
+              <span style="font-size: 24px;">📥</span>
+              <span style="flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" contenteditable="plaintext-only">הורד קובץ</span>
+            </div>
+          `;
+          
+          mainContent.appendChild(el);
+          saveCurrentPageContent();
+        };
+        reader.readAsDataURL(file);
       }
     };
     input.click();
@@ -1766,39 +1626,40 @@ if (btnAddImage) {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
-    input.onchange = async e => {
+    input.onchange = e => {
       const file = e.target.files[0];
       if (file) {
-        const dataUrl = await uploadImageToStorage(file);
-        if (!dataUrl) return;
-        
-        const imgObj = new Image();
-        imgObj.onload = () => {
-          const el = document.createElement('div');
-          el.className = 'draggable-resizable';
-          
-          // מתאימים את הגודל ההתחלתי לפרופורציות האמיתיות של התמונה
-          const targetWidth = 300; // רוחב התחלתי סביר
-          const ratio = imgObj.height / imgObj.width;
-          const targetHeight = targetWidth * ratio;
-          
-          el.style.width = targetWidth + 'px';
-          el.style.height = targetHeight + 'px';
-          el.style.left = '150px';
-          el.style.top = '150px';
-          el.setAttribute('data-x', '150');
-          el.setAttribute('data-y', '150');
-          
-          el.style.backgroundImage = `url("${dataUrl}")`;
-          el.style.backgroundSize = 'contain';
-          el.style.backgroundRepeat = 'no-repeat';
-          el.style.backgroundPosition = 'center';
-          el.style.borderRadius = '12px'; // קצת יופי
-          
-          mainContent.appendChild(el);
-          saveCurrentPageContent();
+        const reader = new FileReader();
+        reader.onload = event => {
+          const imgObj = new Image();
+          imgObj.onload = () => {
+            const el = document.createElement('div');
+            el.className = 'draggable-resizable';
+            
+            // מתאימים את הגודל ההתחלתי לפרופורציות האמיתיות של התמונה
+            const targetWidth = 300; // רוחב התחלתי סביר
+            const ratio = imgObj.height / imgObj.width;
+            const targetHeight = targetWidth * ratio;
+            
+            el.style.width = targetWidth + 'px';
+            el.style.height = targetHeight + 'px';
+            el.style.left = '150px';
+            el.style.top = '150px';
+            el.setAttribute('data-x', '150');
+            el.setAttribute('data-y', '150');
+            
+            el.style.backgroundImage = 'url(' + event.target.result + ')';
+            el.style.backgroundSize = 'contain';
+            el.style.backgroundRepeat = 'no-repeat';
+            el.style.backgroundPosition = 'center';
+            el.style.borderRadius = '12px'; // קצת יופי
+            
+            mainContent.appendChild(el);
+            saveCurrentPageContent();
+          };
+          imgObj.src = event.target.result;
         };
-        imgObj.src = dataUrl;
+        reader.readAsDataURL(file);
       }
     };
     input.click(); // לוחצים "וירטואלית" על שדה העלאת הקובץ
@@ -1810,54 +1671,39 @@ const bgModal = document.getElementById('bg-modal');
 const bgFileInput = document.getElementById('bg-file-input');
 let currentBgTarget = null;
 
-// פתיחת חלונית בחירת אזור הרקע
+// קריאת בחירת קובץ ישירה בלי חלון ביניים
+const directBgInput = document.createElement('input');
+directBgInput.type = 'file';
+directBgInput.accept = 'image/*';
+directBgInput.style.display = 'none';
+document.body.appendChild(directBgInput);
+
 if (btnAddBg) {
   btnAddBg.addEventListener('click', () => {
-    if (bgModal) bgModal.style.display = 'flex';
+    directBgInput.click();
   });
-}
-
-// כפתורי בחירת אזור – כל אחד שומר את היעד ופותח בורר קובץ
-['dashboard', 'topnav', 'main'].forEach(target => {
-  const btn = document.getElementById(`bg-target-${target}`);
-  if (btn) {
-    btn.addEventListener('click', () => {
-      currentBgTarget = target;
-      bgFileInput.click();
-    });
-  }
-});
-
-// קריאת הקובץ שנבחר ושמירה לפי אזור
-if (bgFileInput) {
-  bgFileInput.addEventListener('change', async (e) => {
+  
+  directBgInput.addEventListener('change', async (e) => {
     const file = e.target.files[0];
-    if (!file || !currentBgTarget) return;
-
-    const dataUrl = await uploadImageToStorage(file);
-    if (!dataUrl) return;
-
-    if (currentBgTarget === 'dashboard')  siteBackgrounds.dashboard = dataUrl;
-    else if (currentBgTarget === 'topnav') siteBackgrounds.topNav    = dataUrl;
-    else if (currentBgTarget === 'main')   siteBackgrounds.main      = dataUrl;
-    
-    if (db) {
-      db.collection("site").doc("config").set({ siteBackgrounds: siteBackgrounds }, { merge: true });
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        siteBackgrounds.main = event.target.result;
+        await localforage.setItem('mySiteBackgrounds_v3', siteBackgrounds);
+        applyBackgrounds();
+      };
+      reader.readAsDataURL(file);
     }
-    applyBackgrounds();
-    if (bgModal) bgModal.style.display = 'none';
-    bgFileInput.value = '';
+    directBgInput.value = '';
   });
 }
 
-// ניקוי כל הרקעים
+// שמירת תמיכה בכפתור ניקוי רקע דרך החלון הישן (אם קיים)
 const bgClearBtn = document.getElementById('bg-clear-all');
 if (bgClearBtn) {
   bgClearBtn.addEventListener('click', async () => {
     siteBackgrounds = { dashboard: null, topNav: null, main: null };
-    if (db) {
-      db.collection("site").doc("config").set({ siteBackgrounds: siteBackgrounds }, { merge: true });
-    }
+    await localforage.setItem('mySiteBackgrounds_v3', siteBackgrounds);
     applyBackgrounds();
     if (bgModal) bgModal.style.display = 'none';
   });
@@ -1888,7 +1734,7 @@ async function copySelectedElements(elements) {
 async function pasteElements(silent = false) {
   const copiedHTML = await localforage.getItem('copiedElementHTML');
   if (!copiedHTML) {
-    if (!silent) console.log('לא העתקת שום דבר עדיין!');
+    if (!silent) alert('לא העתקת שום דבר עדיין!');
     return;
   }
   
@@ -1954,7 +1800,7 @@ if (btnBlock) {
     }
     
     if (selectedEls.length < 2) {
-      console.log('יש לסמן לפחות 2 אלמנטים כדי ליצור בלוק, או לסמן בלוק קיים כדי לפרק אותו!');
+      alert('יש לסמן לפחות 2 אלמנטים כדי ליצור בלוק, או לסמן בלוק קיים כדי לפרק אותו!');
       return;
     }
     
@@ -2026,11 +1872,11 @@ if (btnSplitEl) {
   btnSplitEl.addEventListener('click', () => {
     const selectedEls = Array.from(document.querySelectorAll('.draggable-resizable.selected'));
     if (selectedEls.length === 0) {
-      console.log('יש לסמן אלמנט שברצונך לחתוך!');
+      alert('יש לסמן אלמנט שברצונך לחתוך!');
       return;
     }
     if (selectedEls.length > 1) {
-      console.log('אפשר לחתוך רק אלמנט אחד בכל פעם!');
+      alert('אפשר לחתוך רק אלמנט אחד בכל פעם!');
       return;
     }
     
@@ -2159,7 +2005,7 @@ if (btnSaveSite) {
     // הפונקציה הזו אוספת את כל המידע מהמסך ושומרת אותו עמוק בזיכרון של האתר
     saveCurrentPageContent(); 
     // עכשיו גם נקפיץ הודעה יפה למשתמש כדי שיידע שהכל בטוח
-    console.log('כל השינויים שלך נשמרו בהצלחה! 💾✨');
+    alert('כל השינויים שלך נשמרו בהצלחה! 💾✨');
   });
 }
 
@@ -2281,9 +2127,53 @@ document.addEventListener('keydown', async (event) => {
     return;
   }
 
-
-  // 13.6 ביטול פעולה אחרונה (Undo) בעזרת Command + Z
+  // 13.5 סידור חכם בגריד (Command + Z)
   if (isCmdOrCtrl && event.key.toLowerCase() === 'z') {
+    event.preventDefault(); 
+    
+    if (selectedEls.length > 0) {
+      // מיון: מלמעלה למטה, ומימין לשמאל (RTL)
+      selectedEls.sort((a, b) => {
+        const topA = parseFloat(a.style.top) || parseFloat(a.getAttribute('data-y')) || 0;
+        const topB = parseFloat(b.style.top) || parseFloat(b.getAttribute('data-y')) || 0;
+        const leftA = parseFloat(a.style.left) || parseFloat(a.getAttribute('data-x')) || 0;
+        const leftB = parseFloat(b.style.left) || parseFloat(b.getAttribute('data-x')) || 0;
+        
+        if (Math.abs(topA - topB) > 50) return topA - topB; // שורות שונות
+        return leftB - leftA; // מימינה לשמאלה
+      });
+
+      const ITEM_SIZE = 200; // גודל קבוע לכל התמונות ברשת
+      const GAP = 20;
+      const COLUMNS = 4; // כמות עמודות
+      
+      // נתחיל מהמיקום של האלמנט הראשון
+      const startX = parseFloat(selectedEls[0].style.left) || parseFloat(selectedEls[0].getAttribute('data-x')) || 100;
+      const startY = parseFloat(selectedEls[0].style.top) || parseFloat(selectedEls[0].getAttribute('data-y')) || 100;
+
+      selectedEls.forEach((el, index) => {
+        const row = Math.floor(index / COLUMNS);
+        const col = index % COLUMNS;
+        
+        // ב-RTL מחסרים את ה-X כדי ללכת ימינה->שמאלה
+        const newX = startX - (col * (ITEM_SIZE + GAP));
+        const newY = startY + (row * (ITEM_SIZE + GAP));
+        
+        el.style.width = ITEM_SIZE + 'px';
+        el.style.height = ITEM_SIZE + 'px';
+        el.style.left = newX + 'px';
+        el.style.top = newY + 'px';
+        el.setAttribute('data-x', newX);
+        el.setAttribute('data-y', newY);
+      });
+      
+      saveCurrentPageContent();
+    }
+    return;
+  }
+  
+  // 13.6 ביטול פעולה אחרונה (Undo) בעזרת Command + B
+  if (isCmdOrCtrl && event.key.toLowerCase() === 'b') {
     event.preventDefault();
     if (undoStack.length > 1) {
       undoStack.pop(); // זורקים את המצב השגוי האחרון
@@ -2305,7 +2195,9 @@ document.addEventListener('keydown', async (event) => {
       }
       
       // שומרים ומרעננים הכל
-      saveToStorage();
+      localforage.setItem('mySitePages_v3', pages);
+      localforage.setItem('myActivePage_v3', activePageId);
+      localforage.setItem('mySiteTopNav_v3', topNavPages);
       renderSideMenu();
       renderTopNav();
       renderPage();
@@ -2341,51 +2233,12 @@ document.addEventListener('keydown', async (event) => {
 
 // --- שלב 14: הוספת קישורים לתמונות וטקסטים (חיצוניים ופנימיים) ---
 const linkModal = document.getElementById('link-modal');
-let chatModal, adminView, convView, guestView;
-let chatBtn, convList, convTitle, backBtn, messagesBox, chatInput, chatSendBtn, chatImageBtn, chatImageInput;
 const linkInternalSelect = document.getElementById('link-internal-select');
 const linkExternalInput = document.getElementById('link-external-input');
 const btnCancelLink = document.getElementById('btn-cancel-link');
 const btnRemoveLink = document.getElementById('btn-remove-link');
 const btnSaveLink = document.getElementById('btn-save-link');
 let currentEditingLinkElement = null;
-
-function initChat() {
-  chatModal       = document.getElementById('support-chat-modal');
-  adminView       = document.getElementById('chat-admin-view');
-  convView        = document.getElementById('chat-conversation-view');
-  guestView       = document.getElementById('chat-guest-view');
-  
-  chatBtn         = document.querySelector('.chat-btn');
-  convList        = document.getElementById('chat-conversations-list');
-  convTitle       = document.getElementById('chat-conv-title');
-  backBtn         = document.getElementById('chat-back-btn');
-  messagesBox     = document.getElementById('chat-messages-container');
-  chatInput       = document.getElementById('support-chat-input');
-  chatSendBtn     = document.getElementById('support-chat-send');
-  chatImageBtn    = document.getElementById('support-chat-image-btn');
-  chatImageInput  = document.getElementById('support-chat-image-input');
-
-  if (!chatModal || !chatBtn) return;
-  if (chatSendBtn) chatSendBtn.addEventListener('click', () => handleSend(null));
-  if (chatInput) chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleSend(null); });
-
-  if (chatImageBtn && chatImageInput) {
-    chatImageBtn.addEventListener('click', () => chatImageInput.click());
-    chatImageInput.addEventListener('change', async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      
-      const dataUrl = await uploadImageToStorage(file);
-      if (dataUrl) {
-        handleSend(dataUrl);
-      }
-      chatImageInput.value = '';
-    });
-  }
-
-  const guestLoginBtn = document.getElementById('chat-login-prompt-btn');
-}
 
 // לחיצה כפולה במצב עריכה כדי להוסיף קישור
 document.addEventListener('dblclick', (event) => {
@@ -2457,35 +2310,6 @@ btnSaveLink.onclick = () => {
   currentEditingLinkElement = null;
 };
 
-// כפתור יצירת עמוד נסתר וקישור אליו – ללא שאלת שם, מיידי
-document.addEventListener('click', (e) => {
-  const btn = e.target.closest('#btn-create-hidden-link');
-  if (!btn) return;
-  e.preventDefault();
-
-  // שם אוטומטי
-  const hiddenCount = pages.filter(p => p.adminOnly).length + 1;
-  const newPage = {
-    id: 'hidden-' + Date.now(),
-    title: `עמוד נסתר ${hiddenCount}`,
-    content: '',
-    isHidden: true,
-    adminOnly: true
-  };
-  pages.push(newPage);
-  saveToStorage();
-  if (typeof renderHiddenPages === 'function') renderHiddenPages();
-
-  // קישור האלמנט הנוכחי לעמוד החדש
-  if (currentEditingLinkElement) {
-    currentEditingLinkElement.setAttribute('data-href', newPage.id);
-    currentEditingLinkElement.style.cursor = 'pointer';
-    saveCurrentPageContent();
-  }
-
-  if (linkModal) linkModal.style.display = 'none';
-  currentEditingLinkElement = null;
-});
 
 
 // --- Cookie Consent Logic ---
@@ -2535,12 +2359,11 @@ document.addEventListener('click', (event) => {
       const internalPage = pages.find(p => p.title.trim() === link.trim() || p.id === link.trim());
       
       if (internalPage) {
-        // נווט לעמוד הפנימי (כולל עמודים נסתרים)
+        // נווט לעמוד הפנימי
         activePageId = internalPage.id;
         saveToStorage();
         renderSideMenu();
         renderTopNav();
-        renderHiddenPages();
         renderPage();
       } else {
         // זה קישור חיצוני
@@ -2608,458 +2431,102 @@ document.addEventListener('click', (event) => {
 
 
 
-// --- מערכת צ'אט מלאה עם Firebase ---
-(function initChatSystem() {
+// --- Support Chat Modal Logic ---
+document.addEventListener('DOMContentLoaded', () => {
+  const chatBtn = document.querySelector('.chat-btn');
+  const chatModal = document.getElementById('support-chat-modal');
+  const chatCloseBtn = document.getElementById('support-chat-close');
+  const chatSendBtn = document.getElementById('support-chat-send');
+  const chatInput = document.getElementById('support-chat-input');
+  const messagesContainer = document.getElementById('chat-messages-container');
 
-  const ADMIN_EMAIL = 'yoni98321@gmail.com';
-  let db = null;
-  let currentChatUid = null;     // UID של השיחה הפתוחה (למנהל)
-  let chatListener = null;       // listener פעיל ל-Firebase
-  let unreadListeners = {};      // listeners לספירת הודעות חדשות
-
-  // DOM Elements
-  const chatBtn       = document.querySelector('.chat-btn');
-  const chatModal     = document.getElementById('support-chat-modal');
-  const adminView     = document.getElementById('chat-admin-view');
-  const convView      = document.getElementById('chat-conversation-view');
-  const guestView     = document.getElementById('chat-guest-view');
-  const convList      = document.getElementById('chat-conversations-list');
-  const messagesBox   = document.getElementById('chat-messages-container');
-  const chatInput     = document.getElementById('support-chat-input');
-  const sendBtn       = document.getElementById('support-chat-send');
-  const convTitle     = document.getElementById('chat-conv-title');
-  const backBtn       = document.getElementById('chat-back-btn');
-
-  if (!chatBtn || !chatModal) return;
-
-  // ─── פתיחה/סגירה בטוגל ──────────────────────────────
-  chatBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    if (chatModal.classList.contains('chat-open')) {
-      closeChat();
-    } else {
-      openChat();
-    }
-  });
-
-  // סגירה בלחיצה על ✕
-  ['support-chat-close','support-chat-close-2','support-chat-close-3'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.addEventListener('click', closeChat);
-  });
-
-  // כפתור חזרה למנהל
-  if (backBtn) {
-    backBtn.addEventListener('click', () => {
-      detachChatListener();
-      showAdminView();
-    });
-  }
-
-  // כפתור כניסה (אורח)
-  const loginPromptBtn = document.getElementById('chat-login-prompt-btn');
-  if (loginPromptBtn) {
-    loginPromptBtn.addEventListener('click', () => {
-      closeChat();
-      const loginModal = document.getElementById('login-modal');
-      if (loginModal) loginModal.style.display = 'flex';
-    });
-  }
-
-  // סגירה בלחיצה מחוץ
-  document.addEventListener('click', (e) => {
-    if (chatModal.classList.contains('chat-open') &&
-        !chatModal.contains(e.target) &&
-        !chatBtn.contains(e.target)) {
-      closeChat();
-    }
-  });
-
-  // שליחה
-  if (sendBtn)  sendBtn.addEventListener('click', handleSend);
-  if (chatInput) chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleSend(); });
-
-  // ─── Firebase Ready ──────────────────────────────────
-  if (typeof firebase !== 'undefined') {
-    try {
-      db = firebase.database();
-    } catch(err) {
-      console.warn('Firebase Database לא זמין:', err);
-    }
-
-    firebase.auth().onAuthStateChanged((user) => {
-      // עדכון כפתורי header
-      updateHeaderButtons(user);
-      // עדכון badge אם יש הודעות חדשות (למנהל ולמשתמש)
-      if (user && db) {
-        listenForUnreadBadge();
-      } else {
-        clearUnreadListeners();
-        removeBadge();
-      }
-    });
-  }
-
-  // ─── פונקציות פתיחה/סגירה ───────────────────────────
-  function openChat() {
-    chatModal.classList.add('chat-open');
-    const user = firebase && firebase.auth ? firebase.auth().currentUser : null;
-
-    if (!user) {
-      // אורח לא מחובר
-      showGuestView();
-    } else if (user.email === ADMIN_EMAIL) {
-      // מנהל: הצג רשימת שיחות
-      showAdminView();
-      loadConversationsList();
-    } else {
-      // משתמש רגיל: פתח ישירות את השיחה שלו
-      openConversation(user.uid, user.displayName || user.email.split('@')[0]);
-    }
-  }
-
-  function closeChat() {
-    chatModal.classList.remove('chat-open');
-    detachChatListener();
-  }
-
-  function showAdminView() {
-    adminView.style.display   = 'flex';
-    convView.style.display    = 'none';
-    guestView.style.display   = 'none';
-    currentChatUid = null;
-  }
-
-  function showConvView() {
-    adminView.style.display   = 'none';
-    convView.style.display    = 'flex';
-    guestView.style.display   = 'none';
-  }
-
-  function showGuestView() {
-    adminView.style.display   = 'none';
-    convView.style.display    = 'none';
-    guestView.style.display   = 'flex';
-  }
-
-  // ─── רשימת שיחות (מנהל) ─────────────────────────────
-  function loadConversationsList() {
-    if (!db) { convList.innerHTML = '<div class="chat-empty-state">Firebase לא זמין</div>'; return; }
-
-    convList.innerHTML = '<div class="chat-empty-state">טוען שיחות...</div>';
-
-    db.ref('chats').on('value', (snap) => {
-      convList.innerHTML = '';
-      if (!snap.exists()) {
-        convList.innerHTML = '<div class="chat-empty-state">אין שיחות עדיין</div>';
-        return;
-      }
-
-      const chatsData = snap.val();
-      const sorted = Object.entries(chatsData)
-        .map(([uid, data]) => ({ uid, ...data }))
-        .sort((a, b) => (b.lastTimestamp || 0) - (a.lastTimestamp || 0));
-
-      sorted.forEach(chat => {
-        const item = document.createElement('div');
-        item.className = 'conv-list-item';
-        if (chat.hasUnread) item.classList.add('conv-unread');
-
-        const name = chat.displayName || chat.uid.slice(0,8);
-        const lastMsg = chat.lastMessage || '';
-        const time = chat.lastTimestamp
-          ? formatTime(new Date(chat.lastTimestamp))
-          : '';
-
-        item.innerHTML = `
-          <div class="conv-info">
-            <div class="conv-name">${escHtml(name)}</div>
-            <div class="conv-last">${escHtml(lastMsg.slice(0,50))}</div>
-          </div>
-          <div class="conv-meta">
-            <div class="conv-time">${time}</div>
-            ${chat.hasUnread ? '<div class="conv-dot"></div>' : ''}
-          </div>
-        `;
-        item.addEventListener('click', () => {
-          // סמן כנקרא
-          db.ref(`chats/${chat.uid}/hasUnread`).set(false);
-          openConversation(chat.uid, name);
-        });
-        convList.appendChild(item);
-      });
-    });
-  }
-
-  // ─── פתיחת שיחה ─────────────────────────────────────
-  function openConversation(uid, name) {
-    currentChatUid = uid;
-    if (convTitle) convTitle.textContent = name;
-
-    // כפתור חזרה רק למנהל
-    const user = firebase.auth().currentUser;
-    if (backBtn) backBtn.style.display = (user && user.email === ADMIN_EMAIL) ? 'inline' : 'none';
-
-    showConvView();
-    if (messagesBox) messagesBox.innerHTML = '';
-
-    if (!db) return;
-
-    detachChatListener();
-
-    chatListener = db.ref(`chats/${uid}/messages`).on('value', (snap) => {
-      if (!messagesBox) return;
-      messagesBox.innerHTML = '';
-      if (!snap.exists()) return;
-
-      snap.forEach(child => {
-        const msg = child.val();
-        renderMessage(msg);
-      });
-      messagesBox.scrollTop = messagesBox.scrollHeight;
-    });
-
-    // כשהמשתמש פותח את השיחה, מאפסים את התראת "לא נקרא"
-    const isUserAdmin = user && user.email === ADMIN_EMAIL;
-    if (!isUserAdmin) {
-      db.ref(`chats/${uid}/hasUnreadUser`).set(false);
-    }
-
-    setTimeout(() => { if (chatInput) chatInput.focus(); }, 300);
-  }
-
-  // ─── שליחת הודעה ─────────────────────────────────────
-  function handleSend(imageUrl = null) {
-    let text = '';
-    if (!imageUrl) {
-      if (!chatInput) return;
-      text = chatInput.value.trim();
-      if (!text) return;
-    }
-
-    const user = firebase && firebase.auth ? firebase.auth().currentUser : null;
-
-    // אורח לא מחובר
-    if (!user) {
-      showGuestView();
-      return;
-    }
-
-    if (!db) return;
-
-    const isAdmin = user.email === ADMIN_EMAIL;
-    const targetUid = isAdmin ? currentChatUid : user.uid;
-    if (!targetUid) return;
-
-    const senderName = isAdmin
-      ? 'מנהל האתר'
-      : (user.displayName || user.email.split('@')[0]);
-
-    const msg = {
-      text,
-      sender: isAdmin ? 'admin' : 'user',
-      senderName,
-      timestamp: Date.now()
-    };
-    if (imageUrl) msg.imageUrl = imageUrl;
-
-    const chatRef = db.ref(`chats/${targetUid}`);
-
-    // שמור הודעה
-    chatRef.child('messages').push(msg).catch(err => {
-      console.error('Error pushing message:', err);
-      console.error('שגיאה בשליחת הודעה (ייתכן ואין הרשאות לכתוב למסד הנתונים)');
-    });
-
-    // עדכן מטא-דאטה של שיחה
-    chatRef.update({
-      lastMessage: imageUrl ? '📷 תמונה' : text,
-      lastTimestamp: Date.now(),
-      displayName: isAdmin ? (convTitle ? convTitle.textContent : targetUid) : senderName,
-      hasUnread: !isAdmin,  // הודעה מהמשתמש = לא נקראה על ידי המנהל
-      hasUnreadUser: isAdmin // הודעה ממנהל = לא נקראה על ידי המשתמש
-    }).catch(err => console.error('Error updating chat metadata:', err));
-
-    // תגובה אוטומטית למשתמש
-    if (!isAdmin) {
-      // בדיקה אם עברו 5 דקות מהתגובה האוטומטית האחרונה כדי לא להציף
-      if (!window.lastAutoReplyTime || Date.now() - window.lastAutoReplyTime > 1000 * 60 * 5) {
-        window.lastAutoReplyTime = Date.now();
-        setTimeout(() => {
-          const autoMsg = {
-            text: 'מנהל האתר בקרוב יחזור אליכם',
-            sender: 'admin',
-            senderName: 'מערכת',
-            timestamp: Date.now()
-          };
-          chatRef.child('messages').push(autoMsg).catch(err => console.error(err));
-          chatRef.update({
-            lastMessage: autoMsg.text,
-            lastTimestamp: autoMsg.timestamp,
-            hasUnreadUser: true 
-          });
-        }, 1000);
-      }
-    }
-
-    if (!imageUrl && chatInput) {
-      chatInput.value = '';
-      chatInput.focus();
-    }
-  }
-
-  // ─── ציור הודעה ─────────────────────────────────────
-  function renderMessage(msg) {
-    if (!messagesBox) return;
-    const user = firebase && firebase.auth ? firebase.auth().currentUser : null;
-    const isAdmin = user && user.email === ADMIN_EMAIL;
-
-    // מצד מי ההודעה הזו?
-    const isMine = isAdmin ? (msg.sender === 'admin') : (msg.sender === 'user');
-
-    const div = document.createElement('div');
-    div.className = `chat-message ${isMine ? 'user-msg' : 'automated-msg'}`;
-
-    const time = msg.timestamp ? formatTime(new Date(msg.timestamp)) : '';
-    const timeAlign = isMine ? 'text-align:left;' : '';
-    const senderLabel = isMine ? 'אתה' : escHtml(msg.senderName || '');
-
-    let imgHtml = '';
-    if (msg.imageUrl) {
-      imgHtml = `<img src="${msg.imageUrl}" style="max-width: 100%; border-radius: 8px; margin-bottom: 5px; display: block; cursor: pointer;" onclick="window.open(this.src)">`;
-    }
-
-    div.innerHTML = `
-      <div class="msg-content">
-        <div class="msg-sender" style="${isMine ? 'text-align:left;display:block;width:100%;' : ''}">${senderLabel}</div>
-        ${imgHtml}
-        ${msg.text ? escHtml(msg.text) : ''}
-        <div class="msg-time" style="${timeAlign}">${time}</div>
-      </div>
-    `;
-    messagesBox.appendChild(div);
-  }
-
-  // ─── badge הודעות חדשות ──────────────────────────────
-  function listenForUnreadBadge() {
-    if (!db) return;
-    const user = firebase.auth().currentUser;
-    if (!user) return;
+  const managerBtn = document.querySelector('.manager-btn');
+  if (managerBtn) {
+    // אתחול טקסט התחלתי לפי מצב העריכה
+    managerBtn.textContent = isEditMode ? 'מנהל' : 'אורח';
     
-    const isAdmin = user.email === ADMIN_EMAIL;
-
-    if (isAdmin) {
-      db.ref('chats').on('value', (snap) => {
-        if (!snap.exists()) { removeBadge(); return; }
-        let hasAny = false;
-        snap.forEach(child => { if (child.val().hasUnread) hasAny = true; });
-        hasAny ? addBadge() : removeBadge();
-      });
-    } else {
-      db.ref(`chats/${user.uid}/hasUnreadUser`).on('value', (snap) => {
-        if (snap.exists() && snap.val() === true) {
-          addBadge();
-        } else {
-          removeBadge();
-        }
-      });
-    }
-  }
-
-  function addBadge() {
-    if (!chatBtn) return;
-    if (!chatBtn.querySelector('.chat-badge')) {
-      const b = document.createElement('span');
-      b.className = 'chat-badge';
-      chatBtn.appendChild(b);
-    }
-  }
-
-  function removeBadge() {
-    if (!chatBtn) return;
-    const b = chatBtn.querySelector('.chat-badge');
-    if (b) b.remove();
-  }
-
-  function clearUnreadListeners() {
-    if (db) {
-      db.ref('chats').off();
-      const user = firebase.auth().currentUser;
-      if (user) db.ref(`chats/${user.uid}/hasUnreadUser`).off();
-    }
-  }
-
-  // ─── ניתוק listener ──────────────────────────────────
-  function detachChatListener() {
-    if (chatListener && db && currentChatUid) {
-      db.ref(`chats/${currentChatUid}/messages`).off('value', chatListener);
-      chatListener = null;
-    }
-  }
-
-  // ─── עזרים ───────────────────────────────────────────
-  function formatTime(date) {
-    return `${date.getHours().toString().padStart(2,'0')}:${date.getMinutes().toString().padStart(2,'0')}`;
-  }
-
-  function escHtml(str) {
-    return String(str)
-      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
-
-  function updateHeaderButtons(user) {
-    const managerBtn = document.querySelector('.manager-btn');
-    const loginBtn   = document.querySelector('.login-btn');
-    const ft         = document.getElementById('floating-toolbar');
-
-    // -- הפעלה זמנית של מצב עריכה לכולם --
-    isEditMode = true;
-    if (managerBtn) managerBtn.textContent = 'מצב עריכה פתוח לכולם 🟢';
-    if (ft) ft.style.display = 'flex';
-    applyEditModeToContent();
-    renderSideMenu();
-    renderTopNav();
-
-    if (user) {
-      const name = user.email ? user.email.split('@')[0] : 'אורח';
-      if (loginBtn) loginBtn.textContent = `התנתק (${name}) 👤`;
-    } else {
-      if (loginBtn) loginBtn.textContent = 'התחבר 👤';
-    }
-  }
-
-  // כפתורי manager/login
-  const managerBtnEl = document.querySelector('.manager-btn');
-  const loginBtnEl   = document.querySelector('.login-btn');
-
-  if (managerBtnEl) {
-    managerBtnEl.addEventListener('click', () => {
-      if (typeof firebase === 'undefined') { console.error('Firebase לא נטען'); return; }
-      const user = firebase.auth().currentUser;
-      if (user) {
-        firebase.auth().signOut();
+    managerBtn.addEventListener('click', () => {
+      // במקום רק לשנות טקסט, נפעיל גם את פונקציית העריכה האמיתית של המערכת!
+      btnEditMode.click();
+      
+      if (isEditMode) {
+        managerBtn.textContent = 'מנהל';
       } else {
-        const lm = document.getElementById('login-modal');
-        if (lm) lm.style.display = 'flex';
+        managerBtn.textContent = 'אורח';
       }
     });
   }
 
-  if (loginBtnEl) {
-    loginBtnEl.addEventListener('click', () => {
-      if (typeof firebase === 'undefined') { console.error('Firebase לא נטען'); return; }
-      const user = firebase.auth().currentUser;
-      if (user) {
-        firebase.auth().signOut();
-      } else {
-        const lm = document.getElementById('login-modal');
-        if (lm) lm.style.display = 'flex';
+  if (chatBtn && chatModal) {
+    const aiBtn = document.querySelector('.bar-ai-btn');
+    
+    const openChat = (e) => {
+      e.preventDefault();
+      chatModal.classList.add('chat-open');
+      setTimeout(() => chatInput.focus(), 300);
+    };
+    
+    chatBtn.addEventListener('click', openChat);
+    if (aiBtn) aiBtn.addEventListener('click', openChat);
+
+    chatCloseBtn.addEventListener('click', () => {
+      chatModal.classList.remove('chat-open');
+    });
+
+    document.addEventListener('click', (e) => {
+      // אם לוחצים מחוץ לחלון הצ'אט ומחוץ לכפתור הפתיחה
+      if (chatModal.classList.contains('chat-open') && 
+          !chatModal.contains(e.target) && 
+          !chatBtn.contains(e.target) &&
+          !(aiBtn && aiBtn.contains(e.target))) {
+        chatModal.classList.remove('chat-open');
       }
     });
-  }
 
-})();
+    const addMessage = (text, isUser = true) => {
+      const msgDiv = document.createElement('div');
+      msgDiv.className = `chat-message ${isUser ? 'user-msg' : 'automated-msg'}`;
+      
+      const now = new Date();
+      const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+      
+      const senderHtml = isUser 
+        ? `<div class="msg-sender" style="text-align: left; width: 100%; display: block;">אתה</div>` 
+        : `<div class="msg-sender">🤖 נציג AI</div>`;
+        
+      const timeAlign = isUser ? 'text-align: left;' : '';
+
+      msgDiv.innerHTML = `
+        <div class="msg-content">
+          ${senderHtml}
+          ${text}
+          <div class="msg-time" style="${timeAlign}">${timeStr}</div>
+        </div>
+      `;
+      
+      messagesContainer.appendChild(msgDiv);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    };
+
+    const handleSend = () => {
+      const text = chatInput.value.trim();
+      if (!text) return;
+      
+      addMessage(text, true);
+      chatInput.value = '';
+      
+      // סימולציית שירות לקוחות AI
+      setTimeout(() => {
+        addMessage('אני בודק את הפנייה שלך. כרגע אני נציג AI בהדגמה, אבל בקרוב אוכל לעזור לך באופן מלא! האם יש משהו ספציפי שתרצה לדעת?', false);
+      }, 1200);
+    };
+
+    chatSendBtn.addEventListener('click', handleSend);
+    chatInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') handleSend();
+    });
+  }
+});
 
 // --- מנגנון הורדת קבצים ---
 // מאזין ללחיצות על אזור התוכן הראשי. אם לחצו על אלמנט שיש לו data-download-url במצב אורח, מוריד את הקובץ
@@ -3082,146 +2549,3 @@ mainContent.addEventListener('click', (e) => {
     document.body.removeChild(a);
   }
 });
-
-
-
-document.addEventListener('DOMContentLoaded', () => {
-  const loginModal = document.getElementById('login-modal');
-  const btnCloseLogin = document.getElementById('btn-close-login');
-  const btnSubmitLogin = document.getElementById('btn-submit-login');
-  const btnTogglePassword = document.getElementById('btn-toggle-password-visibility');
-  const authEmailInput = document.getElementById('auth-email');
-  const authPasswordInput = document.getElementById('auth-password');
-  const authErrorDiv = document.getElementById('auth-error');
-  
-  // אלמנטים לשינוי מצב התחברות / הרשמה
-  const btnToggleAuthMode = document.getElementById('btn-toggle-auth-mode');
-  const authToggleText = document.getElementById('auth-toggle-text');
-  const authTitle = loginModal ? loginModal.querySelector('.auth-title') : null;
-  const authSubtitle = loginModal ? loginModal.querySelector('.auth-subtitle') : null;
-  
-  // כפתורים חברתיים
-  const btnLoginGoogle = document.getElementById('btn-login-google');
-  const btnLoginAnonymous = document.getElementById('btn-login-anonymous');
-
-  let isSignUpMode = false;
-
-  if (btnToggleAuthMode) {
-    btnToggleAuthMode.addEventListener('click', (e) => {
-      e.preventDefault();
-      isSignUpMode = !isSignUpMode;
-      
-      if (authErrorDiv) authErrorDiv.style.display = 'none';
-      
-      if (isSignUpMode) {
-        if (authTitle) authTitle.textContent = 'יצירת חשבון';
-        if (authSubtitle) authSubtitle.textContent = 'הרשמו כדי להצטרף אלינו וליצור אתר בחינם';
-        if (btnSubmitLogin) btnSubmitLogin.textContent = 'הרשמה ←';
-        if (authToggleText) authToggleText.textContent = 'כבר יש לך חשבון?';
-        btnToggleAuthMode.textContent = 'התחברות';
-      } else {
-        if (authTitle) authTitle.textContent = 'ברוכים הבאים';
-        if (authSubtitle) authSubtitle.textContent = 'הזינו את הפרטים שלכם כדי להמשיך';
-        if (btnSubmitLogin) btnSubmitLogin.textContent = 'התחברות ←';
-        if (authToggleText) authToggleText.textContent = 'אין לך חשבון?';
-        btnToggleAuthMode.textContent = 'הרשמה עכשיו';
-      }
-    });
-  }
-
-  if (btnTogglePassword && authPasswordInput) {
-    btnTogglePassword.addEventListener('click', () => {
-      const isPassword = authPasswordInput.type === 'password';
-      authPasswordInput.type = isPassword ? 'text' : 'password';
-      btnTogglePassword.textContent = isPassword ? '🙈' : '👁️';
-    });
-  }
-  
-  if (btnCloseLogin && loginModal) {
-    btnCloseLogin.addEventListener('click', () => {
-      loginModal.style.display = 'none';
-      if (authErrorDiv) authErrorDiv.style.display = 'none';
-    });
-  }
-  
-  if (btnSubmitLogin && loginModal) {
-    btnSubmitLogin.addEventListener('click', async () => {
-      const email = authEmailInput.value.trim();
-      const password = authPasswordInput.value;
-      
-      if (authErrorDiv) authErrorDiv.style.display = 'none';
-      
-      if (!email || !password) {
-        if (authErrorDiv) {
-          authErrorDiv.textContent = 'נא להזין אימייל וסיסמה!';
-          authErrorDiv.style.display = 'block';
-        }
-        return;
-      }
-      
-      try {
-        if (isSignUpMode) {
-          await firebase.auth().createUserWithEmailAndPassword(email, password);
-        } else {
-          await firebase.auth().signInWithEmailAndPassword(email, password);
-        }
-        loginModal.style.display = 'none';
-        authEmailInput.value = '';
-        authPasswordInput.value = '';
-      } catch (error) {
-        console.error(error);
-        if (authErrorDiv) {
-          let errorMsg = 'שגיאה בפעולה זו. אנא בדוק את הפרטים שהזנת.';
-          if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-            errorMsg = 'אימייל או סיסמה שגויים!';
-          } else if (error.code === 'auth/email-already-in-use') {
-            errorMsg = 'כתובת האימייל הזו כבר רשומה במערכת!';
-          } else if (error.code === 'auth/weak-password') {
-            errorMsg = 'הסיסמה חלשה מדי! יש להזין לפחות 6 תווים.';
-          } else if (error.code === 'auth/invalid-email') {
-            errorMsg = 'כתובת אימייל לא תקינה!';
-          }
-          authErrorDiv.textContent = errorMsg;
-          authErrorDiv.style.display = 'block';
-        }
-      }
-    });
-  }
-
-  // התחברות עם Google
-  if (btnLoginGoogle) {
-    btnLoginGoogle.addEventListener('click', async () => {
-      if (authErrorDiv) authErrorDiv.style.display = 'none';
-      try {
-        const provider = new firebase.auth.GoogleAuthProvider();
-        await firebase.auth().signInWithPopup(provider);
-        loginModal.style.display = 'none';
-      } catch (error) {
-        console.error(error);
-        if (authErrorDiv) {
-          authErrorDiv.textContent = 'התחברות באמצעות Google נכשלה. אנא נסה שנית.';
-          authErrorDiv.style.display = 'block';
-        }
-      }
-    });
-  }
-
-  // התחברות אנונימית
-  if (btnLoginAnonymous) {
-    btnLoginAnonymous.addEventListener('click', async () => {
-      if (authErrorDiv) authErrorDiv.style.display = 'none';
-      try {
-        await firebase.auth().signInAnonymously();
-        loginModal.style.display = 'none';
-      } catch (error) {
-        console.error(error);
-        if (authErrorDiv) {
-          authErrorDiv.textContent = 'התחברות כאורח נכשלה. אנא נסה שנית.';
-          authErrorDiv.style.display = 'block';
-        }
-      }
-    });
-  }
-});
-
-
