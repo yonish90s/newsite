@@ -831,10 +831,20 @@ function removeEditModeFromContent() {
     logoText.style.outline = 'none';
   }
 
-  // הסרת אירועי עריכת תמונות
+  // הסרת אירועי עריכת תמונות (למעט מקושרות לדף)
   mainContent.querySelectorAll('img').forEach(img => {
-    img.style.cursor = 'default';
-    img.title = '';
+    const linked = img.closest('[data-page-link]');
+    if (!linked) {
+      img.style.cursor = 'default';
+      img.title = '';
+    } else {
+      img.style.cursor = 'pointer'; // שומרים על pointer לתמונות מקושרות
+    }
+  });
+
+  // כפתור מצביע על אלמנטים מקושרים
+  mainContent.querySelectorAll('[data-page-link]').forEach(el => {
+    el.style.cursor = 'pointer';
   });
 
   // הסרת כפתורי העריכה של התפריט העליון
@@ -2658,16 +2668,17 @@ applyEditModeToContent = function() {
 };
 
 // --- ניווט לדף בלחיצה על אלמנט מקושר (מצב צופה) ---
-mainContent.addEventListener('click', (e) => {
+// משתמשים ב-document במקום mainContent כדי לתפוס גם קליקים מבפנים
+document.addEventListener('click', (e) => {
   if (isEditMode) return; // רק במצב צופה
   const linked = e.target.closest('[data-page-link]');
   if (linked && linked.dataset.pageLink) {
     const targetPage = pages.find(p => p.id === linked.dataset.pageLink);
     if (targetPage) {
-      if (isEditMode) saveCurrentPageContent();
+      e.preventDefault();
+      e.stopPropagation();
       activePageId = linked.dataset.pageLink;
       renderPage();
-      // גלילה חזרה למעלה
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }
