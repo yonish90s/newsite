@@ -165,8 +165,8 @@ async function initSite() {
 
     const savedPages = await localforage.getItem('mySitePages_v3');
     if (savedPages) {
-      // User requested to keep ONLY the 'ראשי' (Main) page
-      pages = savedPages.filter(p => p.id === 'page-main');
+      // User requested to keep ONLY the 'ראשי' (Main) page and any custom hidden pages
+      pages = savedPages.filter(p => p.id === 'page-main' || p.isHidden === true);
       if (pages.length === 0) {
         // Fallback in case page-main was deleted
         pages = [
@@ -180,7 +180,7 @@ async function initSite() {
       await localforage.setItem('mySitePages_v3', pages);
       
       // Ensure active page is valid
-      if (activePageId !== 'page-main') {
+      if (activePageId !== 'page-main' && !pages.find(p => p.id === activePageId)) {
         activePageId = 'page-main';
         await localforage.setItem('myActivePage_v3', activePageId);
       }
