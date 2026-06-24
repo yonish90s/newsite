@@ -28,8 +28,8 @@
     <!-- הסרגל העליון של האתר (Apple Nav) -->
     <header class="apple-nav">
       <div class="apple-nav-content">
-        <!-- אזור הלוגו (הוזז 5 סנטימטר ימינה לבקשת המשתמש) -->
-        <div class="logo-area" style="cursor: pointer; transform: translateX(190px);" title="לוגו האתר">
+        <!-- לוגו האתר -->
+        <div class="logo-area" style="cursor: pointer;" title="לוגו האתר">
           <img id="main-logo" src="./logo.png" alt="לוגו" style="height: 20px; display: block;">
         </div>
         
@@ -43,9 +43,9 @@
           <a href="#" id="top-nav-services">שירותים</a>
         </nav>
         
-        <!-- צד ימין של הסרגל (כפתור התחברות וחיפוש) -->
+        <!-- כפתור מנהל/אורח -->
         <div class="right-icons" style="display: flex; gap: 16px; align-items: center;">
-          <button class="login-btn" style="background: transparent; border: none; color: #f5f5f7; cursor: pointer; font-size: 12px;">התחבר</button>
+          <button class="manager-btn" id="manager-btn">אורח</button>
         </div>
       </div>
     </header>
@@ -78,12 +78,78 @@
         <button id="btn-make-slideshow" class="float-btn add-float-btn">הוסף מצגת 🎞️</button>
         <button id="btn-make-download" class="float-btn add-float-btn">הפוך להורדה 📥</button>
         <button id="btn-add-text" class="float-btn add-float-btn">הוסף טקסט 📝</button>
+        <button id="btn-add-article" class="float-btn add-float-btn" style="background: #7c3aed; color: white;">הוסף כתבה 📰</button>
         <button id="btn-block" class="float-btn add-float-btn">בלוק 📦</button>
         <button id="btn-split-el" class="float-btn edit-float-btn">חתוך ✂️</button>
       </div>
       
     </div>
   </div>
+
+<!-- תצוגת כתבה מלאה -->
+<div id="article-full-view">
+  <div class="article-full-nav">
+    <button class="article-back-btn" id="article-back-btn">← חזרה</button>
+    <span id="article-full-page-name" style="font-size:13px; color:#888;"></span>
+    <button id="article-full-edit-btn" class="article-edit-btn" style="margin-right: auto; display:none;">עריכת כתבה ✏️</button>
+  </div>
+  <div class="article-full-content">
+    <h1 class="article-full-title" id="article-full-title"></h1>
+    <div class="article-full-meta">
+      <span class="author" id="article-full-author"></span>
+      <span id="article-full-date"></span>
+    </div>
+    <img class="article-full-image" id="article-full-image" src="" alt="" style="display:none;">
+    <div class="article-full-body" id="article-full-body"></div>
+  </div>
+</div>
+
+<!-- מודאל עריכת כתבה -->
+<div id="article-editor-modal">
+  <div class="article-editor-window">
+    <h2 id="article-editor-title-heading">כתבה חדשה</h2>
+    <input type="hidden" id="article-editor-id">
+
+    <div class="article-editor-field">
+      <label>כותרת הכתבה *</label>
+      <input type="text" id="article-editor-title" placeholder="למשל: גוגל משדרגת את Chrome...">
+    </div>
+
+    <div class="article-editor-field">
+      <label>תקציר (מה יוצג בכרטיסייה)</label>
+      <textarea id="article-editor-excerpt" placeholder="כמה משפטים שיתנו רושע ראשוני..."></textarea>
+    </div>
+
+    <div class="article-editor-field">
+      <label>שם הכותב</label>
+      <input type="text" id="article-editor-author" placeholder="שם הכותב">
+    </div>
+
+    <div class="article-editor-field">
+      <label>תאריך</label>
+      <input type="text" id="article-editor-date" placeholder="24.6.2026">
+    </div>
+
+    <div class="article-editor-field">
+      <label>תמונה לכתבה</label>
+      <div class="article-editor-image-row">
+        <button class="article-editor-image-btn" id="article-editor-img-btn">📷 בחר תמונה</button>
+        <img class="article-editor-image-preview" id="article-editor-img-preview">
+        <input type="file" id="article-editor-img-input" accept="image/*" style="display:none;">
+      </div>
+    </div>
+
+    <div class="article-editor-field">
+      <label>תוכן מלא של הכתבה</label>
+      <textarea id="article-editor-fullcontent" style="min-height: 160px;" placeholder="כתוב כאן את הכתבה המלאה..."></textarea>
+    </div>
+
+    <div class="article-editor-actions">
+      <button class="article-editor-cancel" id="article-editor-cancel">ביטול</button>
+      <button class="article-editor-save" id="article-editor-save">שמור כתבה</button>
+    </div>
+  </div>
+</div>
 <!-- WEBSITE PRELOADER -->
 <div id="website-preloader" style="position: fixed; inset: 0; background: #ffffff; z-index: 9999999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.4s ease, visibility 0.4s ease;">
   <div style="display: flex; flex-direction: column; align-items: center; gap: 24px;">
