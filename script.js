@@ -3,13 +3,13 @@ import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChang
 
 // הגדרות הפרויקט של Firebase
 const firebaseConfig = {
-    apiKey: "AIzaSyCpVZS9qEnPpZ-gyu12yD3Fliu3Lf-Tg04",
+    apiKey: "AIzaSyCpVZS9qEnpPz-gyu12yD3FLiu3Lf-Tg04",
     authDomain: "newsite-f76e2.firebaseapp.com",
     databaseURL: "https://newsite-f76e2-default-rtdb.firebaseio.com",
     projectId: "newsite-f76e2",
     storageBucket: "newsite-f76e2.firebasestorage.app",
     messagingSenderId: "484000020563",
-    appId: "1:484000020563:web:da9bdcfd08d63433d6ea6",
+    appId: "1:484000020563:web:da9bd9cfd08d63433d6ea6",
     measurementId: "G-7W3NCN6GQP"
 };
 
