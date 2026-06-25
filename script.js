@@ -2335,32 +2335,7 @@ btnSaveLink.onclick = () => {
 
 
 
-// --- Cookie Consent Logic ---
-document.addEventListener('DOMContentLoaded', () => {
-  const cookieBanner = document.getElementById('cookie-consent-banner');
-  const btnAcceptCookie = document.getElementById('accept-cookie-btn');
-  const btnCloseCookie = document.getElementById('close-cookie-btn');
 
-  // Check if user already consented
-  const hasConsented = localStorage.getItem('cookieConsent');
-
-  if (!hasConsented) {
-    // Show banner if no consent
-    cookieBanner.style.display = 'block';
-  }
-
-  // Handle accept button
-  btnAcceptCookie.addEventListener('click', () => {
-    localStorage.setItem('cookieConsent', 'true');
-    cookieBanner.style.display = 'none';
-  });
-
-  // Handle close button
-  btnCloseCookie.addEventListener('click', () => {
-    localStorage.setItem('cookieConsent', 'true');
-    cookieBanner.style.display = 'none';
-  });
-});
 
 // ניקוי אוטומטי של השדה השני
 linkExternalInput.addEventListener('input', () => {
