@@ -989,8 +989,26 @@ if (btnResetSite) {
   btnResetSite.addEventListener('click', async () => {
     if (confirm('האם אתה בטוח שברצונך לאפס את האתר? כל העמודים והעיצובים השמורים יימחקו לצמיתות.')) {
       try {
+        // איפוס מקומי
         await localforage.clear();
         localStorage.clear();
+        
+        // איפוס ב-Firebase DB (מוחק את הכל ושומר רק עמוד ראשי נקי)
+        const dbRef = ref(db, 'website');
+        await set(dbRef, {
+          pages: [
+            {
+              id: 'page-main',
+              title: 'ראשי',
+              content: ''
+            }
+          ],
+          activePageId: 'page-main',
+          topNavPages: ['page-main'],
+          navHTML: '<a href="#" id="top-nav-main" data-page-id="page-main">ראשי</a>',
+          siteBackgrounds: { dashboard: null, topNav: null, main: null }
+        });
+        
         alert('האתר אופס בהצלחה! העמוד ייטען מחדש כעת.');
         window.location.reload();
       } catch (e) {
