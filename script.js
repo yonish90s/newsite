@@ -656,6 +656,15 @@ function renderPage() {
         el.style.transform = 'none'; // מוחקים את הטרנספורמציה
       }
     });
+
+    // 4. מיון דינמי של כל האלמנטים לפי גובה Y (מלמעלה למטה) כדי שיסתדרו נכון במובייל
+    const childrenToSort = Array.from(mainContent.children).filter(el => el.classList.contains('draggable-resizable'));
+    childrenToSort.sort((a, b) => {
+      const yA = parseFloat(a.getAttribute('data-y')) || parseFloat(a.style.top) || 0;
+      const yB = parseFloat(b.getAttribute('data-y')) || parseFloat(b.style.top) || 0;
+      return yA - yB;
+    });
+    childrenToSort.forEach(el => mainContent.appendChild(el));
   }
   
   // אם מצב עריכה דלוק כרגע, אנחנו צריכים להחיל אותו מיד על התוכן החדש שנטען
