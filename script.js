@@ -602,6 +602,52 @@ function renderPage() {
     // זה קריטי כדי שגלילת המסך (Scroll) תעבוד כשיש הרבה תוכן למטה
     const draggables = mainContent.querySelectorAll('.draggable-resizable');
     draggables.forEach(el => {
+      // 1. המרת תמונות רקע ישנות לתגיות <img> אמיתיות למניעת קריסה במובייל
+      let bgUrl = el.style.backgroundImage;
+      if (bgUrl && bgUrl !== 'none') {
+        const url = bgUrl.replace(/^url\(["']?/, '').replace(/["']?\)$/, '');
+        if (url && !el.querySelector('img') && !el.dataset.slideshowUrls) {
+          el.style.backgroundImage = '';
+          el.style.backgroundSize = '';
+          el.style.backgroundRepeat = '';
+          el.style.backgroundPosition = '';
+          
+          const img = document.createElement('img');
+          img.src = url;
+          img.style.width = '100%';
+          img.style.height = '100%';
+          img.style.objectFit = 'cover';
+          img.style.borderRadius = el.style.borderRadius || '12px';
+          img.style.display = 'block';
+          el.appendChild(img);
+        }
+      }
+
+      // 2. המרת מצגות תמונות ישנות לתגיות <img> אמיתיות
+      if (el.dataset.slideshowUrls && !el.querySelector('img')) {
+        try {
+          const urls = JSON.parse(el.dataset.slideshowUrls);
+          if (urls && urls.length > 0) {
+            el.style.backgroundImage = '';
+            el.style.backgroundSize = '';
+            el.style.backgroundRepeat = '';
+            el.style.backgroundPosition = '';
+            
+            const img = document.createElement('img');
+            img.src = urls[0];
+            img.style.width = '100%';
+            img.style.height = '100%';
+            img.style.objectFit = 'cover';
+            img.style.borderRadius = el.style.borderRadius || '12px';
+            img.style.display = 'block';
+            el.appendChild(img);
+          }
+        } catch(e) {
+          console.error("שגיאה בהמרת מצגת ישנה:", e);
+        }
+      }
+
+      // 3. המרת מיקומים ישנים
       if (el.style.transform && el.style.transform.includes('translate')) {
         const x = el.getAttribute('data-x') || 0;
         const y = el.getAttribute('data-y') || 0;
