@@ -242,11 +242,6 @@ async function initSite() {
   renderSideMenu();
   renderTopNav();
   renderPage();
-
-  // ברירת מחדל: הפעלת מצב עריכה/מנהל עם כניסה לאתר
-  if (!isEditMode && btnEditMode) {
-    btnEditMode.click();
-  }
 }
 
 // קריאה לאתחול
