@@ -1387,26 +1387,8 @@ html.mobile-view .center-content {
     order: unset !important;
   }
 
-  /* התאמת התוכן המרכזי שיוצג בצורה טובה */
+  /* התאמת התוכן המרכזי במובייל */
   .center-content {
-    padding: 10px !important;
-    overflow-x: hidden !important;
     min-height: calc(100vh - 100px);
-  }
-
-  /* התאמת אלמנטים שנגררו בעלי מיקומים אבסולוטיים */
-  .draggable-resizable {
-    position: relative !important; /* ביטול מיקום אבסולוטי נוקשה במובייל */
-    left: 0 !important;
-    top: 0 !important;
-    width: 100% !important; /* תפיסת כל רוחב המסך */
-    margin-bottom: 20px !important;
-    transform: none !important;
-  }
-
-  .draggable-resizable img, 
-  .draggable-resizable video {
-    width: 100% !important;
-    height: auto !important;
   }
 }
