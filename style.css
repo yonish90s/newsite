@@ -1418,13 +1418,26 @@ html.mobile-view .center-content {
     left: 0 !important;
     top: 0 !important;
     width: 100% !important; /* רוחב מלא במובייל */
-    margin-bottom: 24px !important; /* מרווח נשימה בין אלמנטים */
+    margin-bottom: 12px !important; /* מרווח ברירת מחדל קטן יותר */
     transform: none !important;
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important; /* מרכוז אלמנטים פנימית */
     text-align: center !important; /* מרכוז טקסטים */
     box-sizing: border-box !important;
+  }
+
+  /* מרווחים מותאמים לפי סוג התוכן למראה צפוף ונקי כמו באפל */
+  .draggable-resizable:has(p, h1, h2, h3, h4, h5, h6, span):not(:has(img, video, a, button)) {
+    margin-bottom: 6px !important; /* מרווח קטן מאוד בין שורות טקסט עוקבות */
+  }
+
+  .draggable-resizable:has(img, video) {
+    margin-bottom: 16px !important; /* מרווח קצת יותר גדול אחרי תמונות או סרטונים */
+  }
+
+  .draggable-resizable:has(a, button) {
+    margin-bottom: 16px !important; /* מרווח אחרי כפתורים */
   }
 
   /* נחיל height: auto רק אם הבלוק מכיל מלל או תג תמונה/וידאו פנימי. 
@@ -1455,15 +1468,16 @@ html.mobile-view .center-content {
     display: inline-block !important;
   }
 
-  /* התאמת תמונות ווידאו בפרופורציה מושלמת במובייל (טיפ 1) */
+  /* התאמת תמונות ווידאו כריבועים יוקרתיים במובייל (טיפ 1) */
   .draggable-resizable img, 
   .draggable-resizable video {
     width: 100% !important;
     max-width: 100% !important;
-    height: auto !important; /* שמירה על יחס הגובה-רוחב המקורי */
-    object-fit: contain !important;
+    aspect-ratio: 1 / 1 !important; /* יחס גובה-רוחב ריבועי מושלם במובייל */
+    height: auto !important; 
+    object-fit: cover !important; /* מילוי הריבוע בצורה יפה ללא עיוות */
     display: block !important;
     margin: 0 auto !important;
-    border-radius: 8px !important;
+    border-radius: 12px !important; /* פינות מעוגלות אלגנטיות */
   }
 }
