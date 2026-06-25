@@ -1390,5 +1390,61 @@ html.mobile-view .center-content {
   /* התאמת התוכן המרכזי במובייל */
   .center-content {
     min-height: calc(100vh - 100px);
+    padding: 10px !important;
+  }
+
+  /* התאמת אלמנטים שנגררו למצב מוערם, גדול וקריא במובייל (טיפ 2) */
+  .draggable-resizable {
+    position: relative !important; /* ביטול מיקום אבסולוטי במובייל להערמה אנכית */
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important; /* רוחב מלא במובייל */
+    margin-bottom: 24px !important; /* מרווח נשימה בין אלמנטים */
+    transform: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important; /* מרכוז אלמנטים פנימית */
+    text-align: center !important; /* מרכוז טקסטים */
+    box-sizing: border-box !important;
+  }
+
+  /* נחיל height: auto רק אם הבלוק מכיל מלל או תג תמונה/וידאו פנימי. 
+     אם הבלוק הוא ריק (לדוגמה רקע של תמונה), הוא ישמור על הגובה המקורי שלו מהמחשב */
+  .draggable-resizable:has(p, h1, h2, h3, h4, h5, h6, img, video, span, a) {
+    height: auto !important;
+  }
+
+  /* מרכוז כל הטקסטים במובייל בסגנון Apple */
+  .draggable-resizable p,
+  .draggable-resizable h1,
+  .draggable-resizable h2,
+  .draggable-resizable h3,
+  .draggable-resizable h4,
+  .draggable-resizable h5,
+  .draggable-resizable h6,
+  .draggable-resizable span {
+    text-align: center !important;
+    width: 100% !important;
+  }
+
+  /* כפתורים וקישורים לא יימתחו במובייל, אלא יתמרכזו כגלולה */
+  .draggable-resizable a,
+  .draggable-resizable button {
+    width: auto !important;
+    max-width: max-content !important;
+    margin: 8px auto !important;
+    display: inline-block !important;
+  }
+
+  /* התאמת תמונות ווידאו בפרופורציה מושלמת במובייל (טיפ 1) */
+  .draggable-resizable img, 
+  .draggable-resizable video {
+    width: auto !important;
+    max-width: 100% !important;
+    height: auto !important; /* שמירה על יחס הגובה-רוחב המקורי */
+    object-fit: contain !important;
+    display: block !important;
+    margin: 0 auto !important;
+    border-radius: 8px !important;
   }
 }

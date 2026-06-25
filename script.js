@@ -1526,12 +1526,16 @@ if (btnMakeSlideshow) {
               el.style.top = '150px';
               el.setAttribute('data-x', '150');
               el.setAttribute('data-y', '150');
-              
-              el.style.backgroundImage = 'url(' + urls[0] + ')';
-              el.style.backgroundSize = 'cover';
-              el.style.backgroundRepeat = 'no-repeat';
-              el.style.backgroundPosition = 'center';
               el.style.borderRadius = '12px';
+              
+              const img = document.createElement('img');
+              img.src = urls[0];
+              img.style.width = '100%';
+              img.style.height = '100%';
+              img.style.objectFit = 'cover';
+              img.style.borderRadius = '12px';
+              img.style.display = 'block';
+              el.appendChild(img);
               
               el.dataset.slideshowUrls = JSON.stringify(urls);
               el.dataset.slideshowIndex = '0';
@@ -1677,12 +1681,16 @@ if (btnAddImage) {
             el.style.top = '150px';
             el.setAttribute('data-x', '150');
             el.setAttribute('data-y', '150');
-            
-            el.style.backgroundImage = 'url(' + event.target.result + ')';
-            el.style.backgroundSize = 'contain';
-            el.style.backgroundRepeat = 'no-repeat';
-            el.style.backgroundPosition = 'center';
             el.style.borderRadius = '12px'; // קצת יופי
+            
+            const img = document.createElement('img');
+            img.src = event.target.result;
+            img.style.width = '100%';
+            img.style.height = '100%';
+            img.style.objectFit = 'cover';
+            img.style.borderRadius = '12px';
+            img.style.display = 'block';
+            el.appendChild(img);
             
             mainContent.appendChild(el);
             saveCurrentPageContent();
