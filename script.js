@@ -590,7 +590,24 @@ navLinksContainer.addEventListener('drop', (e) => {
 
 // מגה-מנו הוסר לחלוטין - הניווט עובד רק בלחיצה
 
+// פונקציה לבדיקת יחס הגובה-רוחב של התמונה והוספת מחלקה אם היא רחבה (Landscape)
+function adjustImgAspectRatio(img) {
+  const checkRatio = () => {
+    if (img.naturalWidth && img.naturalHeight) {
+      const ratio = img.naturalWidth / img.naturalHeight;
+      if (ratio > 1.2) {
+        img.classList.add('landscape-img');
+      } else {
+        img.classList.remove('landscape-img');
+      }
+    }
+  };
 
+  if (img.complete) {
+    checkRatio();
+  }
+  img.addEventListener('load', checkRatio);
+}
 
 // פונקציה שמציגה את התוכן של העמוד הנוכחי במרכז המסך
 function renderPage() {
@@ -671,6 +688,10 @@ function renderPage() {
       return yA - yB;
     });
     childrenToSort.forEach(el => mainContent.appendChild(el));
+
+    // התאמה דינמית לתמונות רחבות במובייל כדי שלא ייחתכו ויקבלו מראה של באנר רחב
+    const imgs = mainContent.querySelectorAll('img');
+    imgs.forEach(adjustImgAspectRatio);
   }
   
   // אם מצב עריכה דלוק כרגע, אנחנו צריכים להחיל אותו מיד על התוכן החדש שנטען

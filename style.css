@@ -1500,4 +1500,11 @@ html.mobile-view .center-content {
     margin: 0 auto !important;
     border-radius: 12px !important; /* פינות מעוגלות אלגנטיות */
   }
+
+  /* מניעת חיתוך (Crop) לתמונות רחבות במיוחד (Landscape) - הן יוצגו כבאנרים רחבים בפרופורציה המקורית שלהן */
+  .draggable-resizable img.landscape-img, 
+  .draggable-resizable video.landscape-img {
+    aspect-ratio: auto !important; /* ביטול החובה של ריבוע 1:1 */
+    object-fit: contain !important; /* הצגת התמונה במלואה ללא חיתוך */
+  }
 }
