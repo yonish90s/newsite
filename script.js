@@ -616,7 +616,7 @@ function renderPage() {
           img.src = url;
           img.style.width = '100%';
           img.style.height = '100%';
-          img.style.objectFit = 'cover';
+          img.style.objectFit = 'contain';
           img.style.borderRadius = el.style.borderRadius || '12px';
           img.style.display = 'block';
           el.appendChild(img);
@@ -637,7 +637,7 @@ function renderPage() {
             img.src = urls[0];
             img.style.width = '100%';
             img.style.height = '100%';
-            img.style.objectFit = 'cover';
+            img.style.objectFit = 'contain';
             img.style.borderRadius = el.style.borderRadius || '12px';
             img.style.display = 'block';
             el.appendChild(img);
@@ -645,6 +645,12 @@ function renderPage() {
         } catch(e) {
           console.error("שגיאה בהמרת מצגת ישנה:", e);
         }
+      }
+
+      // תיקון דינמי לתמונות שכבר נשמרו עם cover בעבר
+      const existingImg = el.querySelector('img');
+      if (existingImg && existingImg.style.objectFit === 'cover') {
+        existingImg.style.objectFit = 'contain';
       }
 
       // 3. המרת מיקומים ישנים
@@ -1587,7 +1593,7 @@ if (btnMakeSlideshow) {
               img.src = urls[0];
               img.style.width = '100%';
               img.style.height = '100%';
-              img.style.objectFit = 'cover';
+              img.style.objectFit = 'contain';
               img.style.borderRadius = '12px';
               img.style.display = 'block';
               el.appendChild(img);
@@ -1742,7 +1748,7 @@ if (btnAddImage) {
             img.src = event.target.result;
             img.style.width = '100%';
             img.style.height = '100%';
-            img.style.objectFit = 'cover';
+            img.style.objectFit = 'contain';
             img.style.borderRadius = '12px';
             img.style.display = 'block';
             el.appendChild(img);

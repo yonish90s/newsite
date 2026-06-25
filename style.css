@@ -526,6 +526,16 @@ body {
   color: white; 
 }
 
+/* מניעת עיוות, מתיחה או הגדלה (Crop) של תמונות ווידאו במחשב */
+.draggable-resizable img,
+.draggable-resizable video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  display: block;
+}
+
+
 /* כשלוחצים וגוררים באמת */
 .draggable-resizable:active {
   cursor: grabbing;
@@ -1451,7 +1461,7 @@ html.mobile-view .center-content {
     width: 100% !important;
     max-width: 100% !important;
     height: auto !important; /* שמירה על יחס הגובה-רוחב המקורי */
-    object-fit: cover !important;
+    object-fit: contain !important;
     display: block !important;
     margin: 0 auto !important;
     border-radius: 8px !important;
