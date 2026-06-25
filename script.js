@@ -1,3 +1,23 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+// הגדרות הפרויקט של Firebase
+const firebaseConfig = {
+    apiKey: "AIzaSyCpVZS9qEnPpZ-gyu12yD3Fliu3Lf-Tg04",
+    authDomain: "newsite-f76e2.firebaseapp.com",
+    databaseURL: "https://newsite-f76e2-default-rtdb.firebaseio.com",
+    projectId: "newsite-f76e2",
+    storageBucket: "newsite-f76e2.firebasestorage.app",
+    messagingSenderId: "484000020563",
+    appId: "1:484000020563:web:da9bdcfd08d63433d6ea6",
+    measurementId: "G-7W3NCN6GQP"
+};
+
+// אתחול פיירבייס והגדרת ה-Auth והפרוביידר של גוגל
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const provider = new GoogleAuthProvider();
+
 /**
  * ============================================================================
  * YHSH Website Builder - מנוע האתר המרכזי
@@ -2461,28 +2481,72 @@ document.addEventListener('DOMContentLoaded', () => {
   const managerBtn = document.getElementById('manager-btn');
   const floatingToolbarEl = document.getElementById('floating-toolbar');
 
-  function updateManagerUI() {
+  // הגדרת המנהל המורשה
+  const ADMIN_EMAIL = "yoni98321@gmail.com";
+
+  function updateManagerUI(user = null) {
     if (!managerBtn) return;
-    if (isEditMode) {
+    if (user && user.email === ADMIN_EMAIL) {
       managerBtn.textContent = 'מנהל ✏️';
       managerBtn.classList.add('is-admin');
       if (floatingToolbarEl) floatingToolbarEl.style.display = '';
+      
+      // הפעלת מצב עריכה
+      if (!isEditMode) {
+        isEditMode = true;
+        btnEditMode.classList.add('active');
+        btnEditMode.textContent = 'שמור שינויים 💾';
+        applyEditModeToContent();
+        renderSideMenu();
+      }
     } else {
       managerBtn.textContent = 'אורח';
       managerBtn.classList.remove('is-admin');
       if (floatingToolbarEl) floatingToolbarEl.style.display = 'none';
+      
+      // כיבוי מצב עריכה
+      if (isEditMode) {
+        isEditMode = false;
+        btnEditMode.classList.remove('active');
+        btnEditMode.textContent = 'מצב עריכה ✏️';
+        saveCurrentPageContent();
+        renderSideMenu();
+      }
     }
   }
 
-  if (managerBtn) {
-    // הסתרת סרגל הכלים בהתחלה (מצב אורח)
-    updateManagerUI();
+  // מאזין לשינויי מצב התחברות
+  onAuthStateChanged(auth, (user) => {
+    updateManagerUI(user);
+  });
 
+  if (managerBtn) {
     managerBtn.addEventListener('click', () => {
-      // מפעיל את כפתור מצב העריכה הקיים
-      btnEditMode.click();
-      // מעדכן את הכפתור שלנו
-      updateManagerUI();
+      const currentUser = auth.currentUser;
+      if (currentUser) {
+        // אם מחובר, לחיצה תנתק אותו
+        signOut(auth).then(() => {
+          alert("התנתקת בהצלחה!");
+        }).catch((err) => {
+          console.error("שגיאה בהתנתקות:", err);
+        });
+      } else {
+        // אם לא מחובר, פתיחת פופאפ גוגל
+        signInWithPopup(auth, provider)
+          .then((result) => {
+            const user = result.user;
+            if (user.email === ADMIN_EMAIL) {
+              alert(`שלום מנהל! התחברת בהצלחה עם המייל: ${user.email}`);
+            } else {
+              alert(`התחברת כמשתמש רגיל (${user.email}). רק מנהל מורשה יכול לערוך את האתר.`);
+              signOut(auth);
+            }
+          })
+          .catch((error) => {
+            console.error("שגיאה בהתחברות:", error);
+            alert("התחברות נכשלה או בוטלה.");
+          });
+      }
     });
   }
 
