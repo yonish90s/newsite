@@ -2520,6 +2520,10 @@ document.addEventListener('DOMContentLoaded', () => {
     updateManagerUI(user);
   });
 
+  const authModal = document.getElementById('auth-modal');
+  const authGoogleLoginBtn = document.getElementById('auth-google-login-btn');
+  const authModalClose = document.getElementById('auth-modal-close');
+
   if (managerBtn) {
     managerBtn.addEventListener('click', () => {
       const currentUser = auth.currentUser;
@@ -2531,22 +2535,35 @@ document.addEventListener('DOMContentLoaded', () => {
           console.error("שגיאה בהתנתקות:", err);
         });
       } else {
-        // אם לא מחובר, פתיחת פופאפ גוגל
-        signInWithPopup(auth, provider)
-          .then((result) => {
-            const user = result.user;
-            if (user.email === ADMIN_EMAIL) {
-              alert(`שלום מנהל! התחברת בהצלחה עם המייל: ${user.email}`);
-            } else {
-              alert(`התחברת כמשתמש רגיל (${user.email}). רק מנהל מורשה יכול לערוך את האתר.`);
-              signOut(auth);
-            }
-          })
-          .catch((error) => {
-            console.error("שגיאה בהתחברות:", error);
-            alert("התחברות נכשלה או בוטלה.");
-          });
+        // פתיחת מודאל התחברות
+        if (authModal) authModal.style.display = 'flex';
       }
+    });
+  }
+
+  if (authModalClose && authModal) {
+    authModalClose.addEventListener('click', () => {
+      authModal.style.display = 'none';
+    });
+  }
+
+  if (authGoogleLoginBtn && authModal) {
+    authGoogleLoginBtn.addEventListener('click', () => {
+      authModal.style.display = 'none'; // סגירת המודאל לקראת הפופאפ
+      signInWithPopup(auth, provider)
+        .then((result) => {
+          const user = result.user;
+          if (user.email === ADMIN_EMAIL) {
+            alert(`שלום מנהל! התחברת בהצלחה עם המייל: ${user.email}`);
+          } else {
+            alert(`התחברת כמשתמש רגיל (${user.email}). רק מנהל מורשה יכול לערוך את האתר.`);
+            signOut(auth);
+          }
+        })
+        .catch((error) => {
+          console.error("שגיאה בהתחברות:", error);
+          alert("התחברות נכשלה או בוטלה.");
+        });
     });
   }
 
