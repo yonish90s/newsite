@@ -2561,8 +2561,8 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         })
         .catch((error) => {
-          console.error("שגיאה בהתחברות:", error);
-          alert("התחברות נכשלה או בוטלה.");
+          console.error("שגיאה מפורטת בהתחברות:", error);
+          alert("התחברות נכשלה. קוד שגיאה: " + error.code + "\nהודעה: " + error.message);
         });
     });
   }
