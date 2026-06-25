@@ -1446,16 +1446,36 @@ html.mobile-view .center-content {
     height: auto !important;
   }
 
-  /* מרכוז כל הטקסטים במובייל בסגנון Apple */
-  .draggable-resizable p,
-  .draggable-resizable h1,
-  .draggable-resizable h2,
-  .draggable-resizable h3,
-  .draggable-resizable h4,
-  .draggable-resizable h5,
-  .draggable-resizable h6,
-  .draggable-resizable span {
+  /* יישור טקסטים במובייל: באנרים של אפל (עם כפתורים/תמונות) יישארו במרכז, וטקסט חופשי יישר לימין באופן סימטרי */
+  
+  /* 1. התאמת באנרים/אלמנטים עם כפתורים, קישורים או מדיה - מרכוז */
+  .draggable-resizable:has(a, button, img, video) p,
+  .draggable-resizable:has(a, button, img, video) h1,
+  .draggable-resizable:has(a, button, img, video) h2,
+  .draggable-resizable:has(a, button, img, video) h3,
+  .draggable-resizable:has(a, button, img, video) h4,
+  .draggable-resizable:has(a, button, img, video) h5,
+  .draggable-resizable:has(a, button, img, video) h6,
+  .draggable-resizable:has(a, button, img, video) span {
     text-align: center !important;
+    width: 100% !important;
+  }
+
+  /* 2. התאמת מיכלי טקסט חופשי בלבד - יישור לימין (RTL) להתחלת שורה סימטרית */
+  .draggable-resizable:not(:has(a, button, img, video)) {
+    align-items: flex-start !important;
+    text-align: right !important;
+  }
+
+  .draggable-resizable:not(:has(a, button, img, video)) p,
+  .draggable-resizable:not(:has(a, button, img, video)) h1,
+  .draggable-resizable:not(:has(a, button, img, video)) h2,
+  .draggable-resizable:not(:has(a, button, img, video)) h3,
+  .draggable-resizable:not(:has(a, button, img, video)) h4,
+  .draggable-resizable:not(:has(a, button, img, video)) h5,
+  .draggable-resizable:not(:has(a, button, img, video)) h6,
+  .draggable-resizable:not(:has(a, button, img, video)) span {
+    text-align: right !important;
     width: 100% !important;
   }
 
