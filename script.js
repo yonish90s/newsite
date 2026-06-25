@@ -1,5 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 // הגדרות הפרויקט של Firebase
 const firebaseConfig = {
@@ -17,6 +18,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
+const db = getDatabase(app);
 
 /**
  * ============================================================================
@@ -123,108 +125,72 @@ function applyBackgrounds() {
   }
 }
 
-// פונקציית אתחול אסינכרונית - טוענת מהמסד הנתונים החדש והבלתי מוגבל
+// פונקציית אתחול אסינכרונית - טוענת מהמסד הנתונים של Firebase עם גיבוי מקומי ב-localforage
 async function initSite() {
   try {
-    // הגירת נתונים: אם למשתמש יש שמירה ישנה ב-localStorage שמוגבל ל-5MB, נעביר אותה
-    const oldPages = localStorage.getItem('mySitePages_v3');
-    const oldActive = localStorage.getItem('myActivePage_v3');
-    const oldTopNav = localStorage.getItem('mySiteTopNav_v3');
+    // 1. ננסה למשוך קודם כל מ-Firebase DB לעדכון בין מכשירים
+    const dbRef = ref(db);
+    const snapshot = await get(child(dbRef, 'website'));
     
-    // איפוס חד פעמי כדי לטעון את התפריט עם האימוג'ים מ-HTML
-    if (!localStorage.getItem('force_emoji_nav_reset')) {
-      await localforage.removeItem('mySiteTopNavHTML_v3');
-      localStorage.setItem('force_emoji_nav_reset', 'true');
-    }
-
-    if (oldPages) {
-      await localforage.setItem('mySitePages_v3', JSON.parse(oldPages));
-      localStorage.removeItem('mySitePages_v3');
-    }
-    if (oldActive) {
-      await localforage.setItem('myActivePage_v3', oldActive);
-      localStorage.removeItem('myActivePage_v3');
-    }
-    const savedActive = await localforage.getItem('myActivePage_v3');
-    if (savedActive) activePageId = savedActive;
-    
-    const savedLogo = await localforage.getItem('mySiteLogo_v3');
-    const savedLogoText = await localforage.getItem('mySiteLogoText_v3');
-    
-    if (savedLogo) {
-      const mainLogo = document.getElementById('main-logo');
-      const loaderImg = document.getElementById('loader-img');
-      const favicon = document.getElementById('favicon');
-      if (mainLogo) mainLogo.src = savedLogo;
-      if (loaderImg) loaderImg.src = savedLogo;
-      if (favicon) favicon.href = savedLogo;
-    }
-    
-    if (savedLogoText) {
-      const logoTextEl = document.getElementById('main-logo-text');
-      if (logoTextEl) logoTextEl.textContent = savedLogoText;
-    }
-    
-    const savedTopNav = await localforage.getItem('mySiteTopNav_v3');
-    if (savedTopNav) {
-      // User requested to keep ONLY the 'ראשי' (Main) page
-      topNavPages = ['page-main'];
-      await localforage.setItem('mySiteTopNav_v3', topNavPages);
-    }
-
-    const savedTopNavHTML = await localforage.getItem('mySiteTopNavHTML_v3');
-    if (savedTopNavHTML) {
-      navLinksContainer.innerHTML = savedTopNavHTML;
-      // ניקוי כפתורי עריכה למקרה שנשמרו בטעות בגרסאות קודמות
-      navLinksContainer.querySelectorAll('.top-nav-controls').forEach(el => el.remove());
-      const addBtn = document.getElementById('add-nav-link-btn');
-      if (addBtn) addBtn.remove();
+    if (snapshot.exists()) {
+      const data = snapshot.val();
+      console.log("נטען בהצלחה מענן Firebase:", data);
       
-      // ניקוי כפתורי ה-X והעין הישנים שנתקעו בטקסטים
-      navLinksContainer.querySelectorAll('a').forEach(a => {
-        a.querySelectorAll('span').forEach(span => {
-          if (span.textContent.includes('✖') || span.textContent.includes('👁️') || span.textContent.includes('🙈') || span.style.color === 'red') {
-            span.remove();
-          }
-        });
-      });
-      // נשמור מחדש את הגרסה הנקייה
-      const tempNav = navLinksContainer.cloneNode(true);
-      localforage.setItem('mySiteTopNavHTML_v3', tempNav.innerHTML);
-    }
-
-
-
-    const savedPages = await localforage.getItem('mySitePages_v3');
-    if (savedPages) {
-      // User requested to keep ONLY the 'ראשי' (Main) page and any custom hidden pages
-      pages = savedPages.filter(p => p.id === 'page-main' || p.isHidden === true);
-      if (pages.length === 0) {
-        // Fallback in case page-main was deleted
-        pages = [
-          {
-            id: 'page-main',
-            title: 'ראשי',
-            content: ''
-          }
-        ];
-      }
-      await localforage.setItem('mySitePages_v3', pages);
+      if (data.pages) pages = data.pages;
+      if (data.activePageId) activePageId = data.activePageId;
+      if (data.topNavPages) topNavPages = data.topNavPages;
+      if (data.siteBackgrounds) siteBackgrounds = data.siteBackgrounds;
       
-      // Ensure active page is valid
-      if (activePageId !== 'page-main' && !pages.find(p => p.id === activePageId)) {
-        activePageId = 'page-main';
-        await localforage.setItem('myActivePage_v3', activePageId);
+      if (data.navHTML) {
+        navLinksContainer.innerHTML = data.navHTML;
       }
-    }
-    
-    const savedBackgrounds = await localforage.getItem('mySiteBackgrounds_v3');
-    if (savedBackgrounds) {
-      siteBackgrounds = savedBackgrounds;
+      
+      // נעדכן גם את הזיכרון המקומי לגיבוי
+      localforage.setItem('mySitePages_v3', pages);
+      localforage.setItem('myActivePage_v3', activePageId);
+      localforage.setItem('mySiteTopNav_v3', topNavPages);
+      if (data.navHTML) localforage.setItem('mySiteTopNavHTML_v3', data.navHTML);
+      localforage.setItem('mySiteBackgrounds_v3', siteBackgrounds);
+      
+      applyBackgrounds();
+      
+    } else {
+      // 2. אם ה-Firebase ריק (פעם ראשונה), נטען מ-localforage
+      console.log("לא נמצאו נתונים ב-Firebase, טוען מגיבוי מקומי...");
+      
+      const savedActive = await localforage.getItem('myActivePage_v3');
+      if (savedActive) activePageId = savedActive;
+      
+      const savedTopNavHTML = await localforage.getItem('mySiteTopNavHTML_v3');
+      if (savedTopNavHTML) {
+        navLinksContainer.innerHTML = savedTopNavHTML;
+      }
+
+      const savedPages = await localforage.getItem('mySitePages_v3');
+      if (savedPages) {
+        pages = savedPages.filter(p => p.id === 'page-main' || p.isHidden === true);
+      }
+      
+      const savedBackgrounds = await localforage.getItem('mySiteBackgrounds_v3');
+      if (savedBackgrounds) {
+        siteBackgrounds = savedBackgrounds;
+      }
       applyBackgrounds();
     }
   } catch(e) {
-    console.error('Error loading data', e);
+    console.error('Error loading data from Firebase DB, trying localforage...', e);
+    // גיבוי למקרה של שגיאת חיבור
+    try {
+      const savedActive = await localforage.getItem('myActivePage_v3');
+      if (savedActive) activePageId = savedActive;
+      const savedPages = await localforage.getItem('mySitePages_v3');
+      if (savedPages) pages = savedPages;
+      const savedBackgrounds = await localforage.getItem('mySiteBackgrounds_v3');
+      if (savedBackgrounds) siteBackgrounds = savedBackgrounds;
+      applyBackgrounds();
+    } catch (localErr) {
+      console.error("Local load failed too", localErr);
+    }
   }
   
   // תיקון אוטומטי (Migration) לקישורים מתים בתפריט העליון
@@ -347,7 +313,7 @@ window.addEventListener('resize', () => {
 
 // --- שלב 3: פונקציות ליבה (Rendering & Logic) ---
 
-// פונקציה לשמירת הנתונים למסד הנתונים (מבוסס localforage כך שאין מגבלת מקום לתמונות)
+// פונקציה לשמירת הנתונים למסד הנתונים (מבוסס localforage + Firebase RTDB לסנכרון)
 function saveToStorage() {
   localforage.setItem('mySitePages_v3', pages);
   localforage.setItem('myActivePage_v3', activePageId);
@@ -359,7 +325,26 @@ function saveToStorage() {
   const addBtn = tempNav.querySelector('#add-nav-link-btn');
   if (addBtn) addBtn.remove();
   
-  localforage.setItem('mySiteTopNavHTML_v3', tempNav.innerHTML); 
+  const navHTML = tempNav.innerHTML;
+  localforage.setItem('mySiteTopNavHTML_v3', navHTML); 
+  
+  // שמירה ל-Firebase Database
+  try {
+    const dbRef = ref(db, 'website');
+    set(dbRef, {
+      pages: pages,
+      activePageId: activePageId,
+      topNavPages: topNavPages,
+      navHTML: navHTML,
+      siteBackgrounds: siteBackgrounds
+    }).then(() => {
+      console.log("סונכרן בהצלחה לענן Firebase!");
+    }).catch(err => {
+      console.error("שגיאה בסנכרון לענן:", err);
+    });
+  } catch (firebaseErr) {
+    console.error("שגיאת פיירבייס:", firebaseErr);
+  }
   
   // הוספה למערך ההיסטוריה עבור פעולת Undo (שומרים את 20 הפעולות האחרונות)
   undoStack.push(JSON.stringify({ pages, topNavPages }));
