@@ -682,13 +682,20 @@ function renderPage() {
     });
 
     // 4. מיון דינמי של כל האלמנטים לפי גובה Y (מלמעלה למטה) כדי שיסתדרו נכון במובייל
+    // המיון קורה תמיד - גם במחשב וגם במובייל - כדי שסדר ה-DOM יתאים לסדר הוויזואלי
     const childrenToSort = Array.from(mainContent.children).filter(el => el.classList.contains('draggable-resizable'));
+    // מיון: בעיקר לפי Y, ובמקרה של שוויון - לפי סדר ה-DOM המקורי (stable sort)
+    const domOrder = new Map(childrenToSort.map((el, i) => [el, i]));
     childrenToSort.sort((a, b) => {
       const yA = parseFloat(a.getAttribute('data-y')) || parseFloat(a.style.top) || 0;
       const yB = parseFloat(b.getAttribute('data-y')) || parseFloat(b.style.top) || 0;
+      if (Math.abs(yA - yB) < 5) return domOrder.get(a) - domOrder.get(b); // tiebreaker: סדר DOM מקורי
       return yA - yB;
     });
-    childrenToSort.forEach(el => mainContent.appendChild(el));
+    childrenToSort.forEach((el, index) => {
+      mainContent.appendChild(el);
+      el.style.order = index;
+    });
 
     // התאמה דינמית לתמונות רחבות במובייל כדי שלא ייחתכו ויקבלו מראה של באנר רחב
     const imgs = mainContent.querySelectorAll('img');
