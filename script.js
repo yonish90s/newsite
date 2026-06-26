@@ -3181,7 +3181,7 @@ function renderHotspotsOnEl(el) {
     div.style.width = hs.w + '%';
     div.style.height = hs.h + '%';
     div.dataset.href = hs.href;
-    div.title = hs.href;
+    div.title = '';
 
     // כפתור מחיקה (נראה רק במצב עריכה)
     const delBtn = document.createElement('button');

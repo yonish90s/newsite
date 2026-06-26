@@ -1763,10 +1763,11 @@ html.mobile-view .center-content {
   background: rgba(33, 150, 243, 0.15);
 }
 
-/* במצב צפייה - שקוף לחלוטין */
+/* במצב צפייה - שקוף עם cursor pointer */
 body:not(.edit-mode) .hotspot-overlay {
   border: none;
   background: transparent;
+  cursor: pointer !important;
 }
 
 .hotspot-delete-btn {
