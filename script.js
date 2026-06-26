@@ -1369,6 +1369,49 @@ interact('.draggable-resizable')
       linkModal.style.display = 'flex';
     });
 
+    // 1.5 כפתור פתח קישור (במצב עריכה)
+    const openLinkBtn = document.createElement('button');
+    openLinkBtn.className = 'action-btn open-link-btn';
+    openLinkBtn.innerHTML = '↗️';
+    openLinkBtn.title = 'פתח קישור / נווט לדף';
+    openLinkBtn.addEventListener('mousedown', (e) => {
+      e.stopPropagation();
+      const href = target.getAttribute('data-href');
+      const pageLink = target.dataset.pageLink;
+      
+      if (!href && !pageLink) {
+        alert('לא הוגדר קישור לאלמנט זה עדיין. הגדר קישור באמצעות כפתור 🔗 או 📄→.');
+        return;
+      }
+      
+      if (pageLink) {
+        const targetPage = pages.find(p => p.id === pageLink);
+        if (targetPage) {
+          activePageId = pageLink;
+          saveToStorage();
+          renderSideMenu();
+          renderTopNav();
+          renderPage();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+          alert('דף היעד אינו קיים עוד.');
+        }
+      } else if (href) {
+        const internalPage = pages.find(p => p.title.trim() === href.trim() || p.id === href.trim());
+        if (internalPage) {
+          activePageId = internalPage.id;
+          saveToStorage();
+          renderSideMenu();
+          renderTopNav();
+          renderPage();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+          const finalLink = href.startsWith('http') ? href : 'https://' + href;
+          window.open(finalLink, '_blank');
+        }
+      }
+    });
+
     // 2. כפתור העתקה
     const copyBtn = document.createElement('button');
     copyBtn.className = 'action-btn copy-btn';
@@ -1519,6 +1562,7 @@ interact('.draggable-resizable')
     }
 
     actionsContainer.appendChild(linkBtn);
+    actionsContainer.appendChild(openLinkBtn);
     actionsContainer.appendChild(copyBtn);
     actionsContainer.appendChild(delBtn);
     

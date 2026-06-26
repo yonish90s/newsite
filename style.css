@@ -526,6 +526,14 @@ body {
   color: white; 
 }
 
+/* הצגת סמן יד (pointer) עבור אלמנטים מקושרים במצב תצוגה/צופה */
+body:not(.edit-mode) .draggable-resizable[data-href],
+body:not(.edit-mode) .draggable-resizable[data-page-link],
+body:not(.edit-mode) .draggable-resizable[data-href] *,
+body:not(.edit-mode) .draggable-resizable[data-page-link] * {
+  cursor: pointer !important;
+}
+
 /* מניעת עיוות, מתיחה או הגדלה (Crop) של תמונות ווידאו במחשב */
 .draggable-resizable img,
 .draggable-resizable video {
