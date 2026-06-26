@@ -1598,8 +1598,45 @@ interact('.draggable-resizable')
         target.remove(); // Remove the group container
         removeSelection();
         saveCurrentPageContent();
-      });
       actionsContainer.appendChild(ungroupBtn);
+
+      // כפתורים לעימוד מיוחד במובייל (תמונה מימין / משמאל)
+      const layoutRightBtn = document.createElement('button');
+      layoutRightBtn.className = 'action-btn';
+      layoutRightBtn.innerHTML = '📝🖼️';
+      layoutRightBtn.title = 'מובייל: תמונה מימין, טקסט משמאל';
+      layoutRightBtn.addEventListener('mousedown', (e) => {
+        e.stopPropagation();
+        target.setAttribute('data-mobile-layout', 'image-right');
+        saveCurrentPageContent();
+        alert('הוגדר בהצלחה: במובייל יוצגו התמונה מימין והטקסט משמאל!');
+      });
+
+      const layoutLeftBtn = document.createElement('button');
+      layoutLeftBtn.className = 'action-btn';
+      layoutLeftBtn.innerHTML = '🖼️📝';
+      layoutLeftBtn.title = 'מובייל: תמונה משמאל, טקסט מימין';
+      layoutLeftBtn.addEventListener('mousedown', (e) => {
+        e.stopPropagation();
+        target.setAttribute('data-mobile-layout', 'image-left');
+        saveCurrentPageContent();
+        alert('הוגדר בהצלחה: במובייל יוצגו התמונה משמאל והטקסט מימין!');
+      });
+
+      const layoutResetBtn = document.createElement('button');
+      layoutResetBtn.className = 'action-btn';
+      layoutResetBtn.innerHTML = '🥞';
+      layoutResetBtn.title = 'מובייל: חזור לערמה אנכית';
+      layoutResetBtn.addEventListener('mousedown', (e) => {
+        e.stopPropagation();
+        target.removeAttribute('data-mobile-layout');
+        saveCurrentPageContent();
+        alert('הוגדר בהצלחה: חזר לעיצוב מובייל רגיל (הערמה אנכית).');
+      });
+
+      actionsContainer.appendChild(layoutRightBtn);
+      actionsContainer.appendChild(layoutLeftBtn);
+      actionsContainer.appendChild(layoutResetBtn);
     }
     
     target.appendChild(actionsContainer);

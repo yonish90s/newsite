@@ -1514,6 +1514,46 @@ html.mobile-view .center-content {
     aspect-ratio: auto !important; /* ביטול החובה של ריבוע 1:1 */
     object-fit: contain !important; /* הצגת התמונה במלואה ללא חיתוך */
   }
+
+  /* פריסות צד לצד מיוחדות במובייל עבור קבוצות/בלוקים */
+  .draggable-resizable[data-is-group="true"][data-mobile-layout="image-right"] {
+    display: flex !important;
+    flex-direction: row-reverse !important; /* תמונה מימין, טקסט משמאל */
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 16px !important;
+    width: 100% !important;
+    height: auto !important;
+  }
+
+  .draggable-resizable[data-is-group="true"][data-mobile-layout="image-left"] {
+    display: flex !important;
+    flex-direction: row !important; /* תמונה משמאל, טקסט מימין */
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 16px !important;
+    width: 100% !important;
+    height: auto !important;
+  }
+
+  /* עיצוב הילדים בתוך קבוצה עם פריסה צידית */
+  .draggable-resizable[data-is-group="true"][data-mobile-layout] > .draggable-resizable {
+    position: relative !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 48% !important; /* חלוקה שווה של הרוחב */
+    margin: 0 !important;
+    transform: none !important;
+    height: auto !important;
+  }
+
+  /* תמונות ומלל בתוך קבוצה עם פריסה צידית */
+  .draggable-resizable[data-is-group="true"][data-mobile-layout] > .draggable-resizable img,
+  .draggable-resizable[data-is-group="true"][data-mobile-layout] > .draggable-resizable video {
+    width: 100% !important;
+    height: auto !important;
+    object-fit: contain !important;
+  }
 }
 
 /* --- Premium Auth Modal Styles --- */
