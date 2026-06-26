@@ -254,6 +254,7 @@ const btnEditMode = document.getElementById('btn-edit-mode');
 const btnAddPage = document.getElementById('btn-add-page');
 const btnResetSite = document.getElementById('btn-reset-site');
 const btnAddVideo = document.getElementById('btn-add-video');
+const btnAddLoopVideo = document.getElementById('btn-add-loop-video');
 const navLinksContainer = document.querySelector('.nav-links'); // התפריט העליון
 // מגה-מנו הוסר לחלוטין
 const megaMenuContainer = { classList: { add: ()=>{}, remove: ()=>{} }, style: {}, innerHTML: '' };
@@ -1704,6 +1705,43 @@ if (btnAddVideo) {
           
           el.innerHTML = `
             <video src="${event.target.result}" controls style="width: 100%; height: 100%; object-fit: contain; border-radius: 8px;"></video>
+          `;
+          
+          mainContent.appendChild(el);
+          saveCurrentPageContent();
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+    input.click();
+  });
+}
+
+// 9.0 הוספת וידאו בלופ 🔁
+if (btnAddLoopVideo) {
+  btnAddLoopVideo.addEventListener('click', () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'video/*';
+    
+    input.onchange = e => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = event => {
+          const el = document.createElement('div');
+          el.className = 'draggable-resizable';
+          
+          el.style.width = '480px';
+          el.style.height = '270px';
+          el.style.left = '150px';
+          el.style.top = '150px';
+          el.setAttribute('data-x', '150');
+          el.setAttribute('data-y', '150');
+          
+          // סרטון לופ: ללא כפתורי שליטה (controls), מתנגן אוטומטית (autoplay), בלולאה (loop), מושתק (muted) ומותאם לניידים (playsinline)
+          el.innerHTML = `
+            <video src="${event.target.result}" autoplay loop muted playsinline style="width: 100%; height: 100%; object-fit: contain; border-radius: 8px;"></video>
           `;
           
           mainContent.appendChild(el);
