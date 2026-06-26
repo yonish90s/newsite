@@ -709,9 +709,57 @@ function renderPage() {
   
   // הפעלת מצגות תמונות (Slideshows)
   initSlideshows();
-  
+
   // עדכון רקע ייחודי לעמוד הנוכחי
   applyBackgrounds();
+
+  // קיצור גובה הקונטיינר לתוכן בלבד (מניעת רקע ענק מתחת לתוכן)
+  if (window.innerWidth > 768) {
+    fitPageToContent();
+  }
+}
+
+function fitPageToContent() {
+  const imgs = Array.from(mainContent.querySelectorAll('img'));
+  const pending = imgs.filter(img => !img.complete || img.naturalHeight === 0);
+
+  if (pending.length === 0) {
+    _applyContentHeight();
+    return;
+  }
+
+  // מחכים שכל התמונות יטענו לגמרי לפני מדידה
+  let done = 0;
+  pending.forEach(img => {
+    const finish = () => { done++; if (done === pending.length) _applyContentHeight(); };
+    img.addEventListener('load', finish, { once: true });
+    img.addEventListener('error', finish, { once: true });
+  });
+}
+
+function _applyContentHeight() {
+  // מחכים frame נוסף כדי שה-browser יסיים layout
+  requestAnimationFrame(() => {
+    const els = mainContent.querySelectorAll('.draggable-resizable');
+    if (!els.length) return;
+    let maxBottom = 0;
+    els.forEach(el => {
+      const rect = el.getBoundingClientRect();
+      const containerRect = mainContent.getBoundingClientRect();
+      const bottom = (rect.bottom - containerRect.top) + mainContent.scrollTop;
+      if (bottom > maxBottom) maxBottom = bottom;
+    });
+    const availableHeight = mainContent.parentElement ? mainContent.parentElement.clientHeight : window.innerHeight;
+    if (maxBottom > 0 && maxBottom < availableHeight) {
+      // תוכן קצר ממסך - מגבילים גובה למניעת רקע ענק
+      mainContent.style.height = (maxBottom + 4) + 'px';
+      mainContent.style.minHeight = '0';
+    } else {
+      // תוכן ארוך - משאירים גלילה רגילה ללא הגבלה
+      mainContent.style.height = '';
+      mainContent.style.minHeight = '';
+    }
+  });
 }
 
 let slideshowIntervals = [];
@@ -2556,64 +2604,9 @@ document.addEventListener('click', (event) => {
         renderTopNav();
         renderPage();
       } else {
-        // זה קישור חיצוני
+        // קישור חיצוני - פתיחה בטאב חדש
         const finalLink = link.startsWith('http') ? link : 'https://' + link;
-        
-        // יצירת חלון קופץ (Modal) עם iframe להצגת הכתבה בתוך האתר
-        const modalOverlay = document.createElement('div');
-        modalOverlay.style.position = 'fixed';
-        modalOverlay.style.top = '0';
-        modalOverlay.style.left = '0';
-        modalOverlay.style.width = '100vw';
-        modalOverlay.style.height = '100vh';
-        modalOverlay.style.backgroundColor = 'rgba(0,0,0,0.8)';
-        modalOverlay.style.zIndex = '999999';
-        modalOverlay.style.display = 'flex';
-        modalOverlay.style.justifyContent = 'center';
-        modalOverlay.style.alignItems = 'center';
-        modalOverlay.style.backdropFilter = 'blur(5px)';
-        
-        const modalContainer = document.createElement('div');
-        modalContainer.style.width = '90%';
-        modalContainer.style.height = '90%';
-        modalContainer.style.backgroundColor = '#fff';
-        modalContainer.style.borderRadius = '12px';
-        modalContainer.style.overflow = 'hidden';
-        modalContainer.style.position = 'relative';
-        modalContainer.style.boxShadow = '0 10px 40px rgba(0,0,0,0.5)';
-        
-        const closeBtn = document.createElement('button');
-        closeBtn.innerHTML = '✖';
-        closeBtn.style.position = 'absolute';
-        closeBtn.style.top = '15px';
-        closeBtn.style.left = '15px';
-        closeBtn.style.background = '#e53935';
-        closeBtn.style.color = 'white';
-        closeBtn.style.border = 'none';
-        closeBtn.style.borderRadius = '50%';
-        closeBtn.style.width = '40px';
-        closeBtn.style.height = '40px';
-        closeBtn.style.fontSize = '20px';
-        closeBtn.style.cursor = 'pointer';
-        closeBtn.style.zIndex = '10';
-        closeBtn.style.display = 'flex';
-        closeBtn.style.alignItems = 'center';
-        closeBtn.style.justifyContent = 'center';
-        
-        closeBtn.onclick = () => {
-          document.body.removeChild(modalOverlay);
-        };
-        
-        const iframe = document.createElement('iframe');
-        iframe.src = finalLink;
-        iframe.style.width = '100%';
-        iframe.style.height = '100%';
-        iframe.style.border = 'none';
-        
-        modalContainer.appendChild(closeBtn);
-        modalContainer.appendChild(iframe);
-        modalOverlay.appendChild(modalContainer);
-        document.body.appendChild(modalOverlay);
+        window.open(finalLink, '_blank');
       }
     }
   }
@@ -2807,9 +2800,46 @@ document.addEventListener('DOMContentLoaded', () => {
 // --- מנגנון הורדת קבצים ---
 // מאזין ללחיצות על אזור התוכן הראשי. אם לחצו על אלמנט שיש לו data-download-url במצב אורח, מוריד את הקובץ
 mainContent.addEventListener('click', (e) => {
-  // אם אנחנו במצב עריכה - הלחיצה מיועדת לבחירת האלמנט, לא להורדה
+  // אם אנחנו במצב עריכה - הלחיצה מיועדת לבחירת האלמנט, לא לניווט
   if (isEditMode) return;
-  
+
+  // פתיחת קישור חיצוני / ניווט לדף פנימי בלחיצה על אלמנט מקושר
+  const linkedEl = e.target.closest('[data-href]');
+  if (linkedEl) {
+    const href = linkedEl.getAttribute('data-href');
+    if (href) {
+      const internalPage = pages.find(p => p.title.trim() === href.trim() || p.id === href.trim());
+      if (internalPage) {
+        activePageId = internalPage.id;
+        saveToStorage();
+        renderSideMenu();
+        renderTopNav();
+        renderPage();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        const finalLink = href.startsWith('http') ? href : 'https://' + href;
+        window.open(finalLink, '_blank');
+      }
+      return;
+    }
+  }
+
+  // ניווט לדף פנימי (data-page-link)
+  const pageLinkEl = e.target.closest('[data-page-link]');
+  if (pageLinkEl) {
+    const targetPageId = pageLinkEl.dataset.pageLink;
+    const targetPage = pages.find(p => p.id === targetPageId);
+    if (targetPage) {
+      activePageId = targetPageId;
+      saveToStorage();
+      renderSideMenu();
+      renderTopNav();
+      renderPage();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    return;
+  }
+
   // בודק אם האלמנט שעליו לחצו (או אחד מאבותיו) מכיל את מאפיין ההורדה
   const downloadEl = e.target.closest('[data-download-url]');
   if (downloadEl) {

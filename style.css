@@ -526,6 +526,12 @@ body {
   color: white; 
 }
 
+/* במצב צפייה - מאפשרים סימון והעתקת טקסט */
+body:not(.edit-mode) .draggable-resizable {
+  user-select: text;
+  cursor: default;
+}
+
 /* הצגת סמן יד (pointer) עבור אלמנטים מקושרים במצב תצוגה/צופה */
 body:not(.edit-mode) .draggable-resizable[data-href],
 body:not(.edit-mode) .draggable-resizable[data-page-link],
@@ -1416,8 +1422,9 @@ html.mobile-view .center-content {
 
   /* התאמת התוכן המרכזי במובייל */
   .center-content {
-    min-height: calc(100vh - 100px);
-    padding: 10px !important;
+    min-height: auto !important;
+    height: auto !important;
+    padding: 10px 10px 20px !important;
   }
 
   /* התאמת אלמנטים שנגררו למצב מוערם, גדול וקריא במובייל (טיפ 2) */
