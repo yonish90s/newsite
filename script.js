@@ -975,6 +975,9 @@ function applyEditModeToContent() {
 function removeEditModeFromContent() {
   document.body.classList.remove('edit-mode');
 
+  // סיום מצב ציור hotspot אם פעיל
+  if (typeof exitHotspotDrawMode === 'function') exitHotspotDrawMode();
+
   const editableElements = mainContent.querySelectorAll('[contenteditable]');
   editableElements.forEach(el => {
     el.removeAttribute('contenteditable');
@@ -3065,6 +3068,7 @@ if (btnAddHotspot) {
 }
 
 function enterHotspotDrawMode(el) {
+  if (!isEditMode) return; // אורח לא יכול לסמן אזורים
   hotspotDrawingEl = el;
   el.classList.add('hotspot-drawing-mode');
   el.style.position = 'relative';
