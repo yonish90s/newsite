@@ -1441,6 +1441,10 @@ html.mobile-view .center-content {
   }
 
   .draggable-resizable:has(img, video) {
+    width: fit-content !important;
+    max-width: 92% !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
     margin-bottom: 16px !important; /* מרווח קצת יותר גדול אחרי תמונות או סרטונים */
   }
 
