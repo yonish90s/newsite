@@ -1499,9 +1499,10 @@ html.mobile-view .center-content {
   /* התאמת תמונות ווידאו להצגה מלאה ללא חיתוך במובייל */
   .draggable-resizable img, 
   .draggable-resizable video {
-    width: 100% !important;
+    width: auto !important; /* מאפשר לתמונה להצטמצם רוחבית לפי הגובה */
     max-width: 100% !important;
     height: auto !important; 
+    max-height: 70vh !important; /* מונע מתמונות לאורך להפוך לענקיות ולהשתרע על כל גובה המסך */
     object-fit: contain !important; /* מציג את התמונה במלואה ללא עיוות או חיתוך */
     display: block !important;
     margin: 0 auto !important;
