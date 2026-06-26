@@ -713,6 +713,9 @@ function renderPage() {
   // עדכון רקע ייחודי לעמוד הנוכחי
   applyBackgrounds();
 
+  // רנדור אזורי לחיצה (Hotspots)
+  renderAllHotspots();
+
   // קיצור גובה הקונטיינר לתוכן בלבד (מניעת רקע ענק מתחת לתוכן)
   if (window.innerWidth > 768) {
     fitPageToContent();
@@ -1617,8 +1620,19 @@ interact('.draggable-resizable')
       actionsContainer.appendChild(burnBtn);
     }
 
+    // כפתור אזור לחיץ (hotspot)
+    const hotspotBtn = document.createElement('button');
+    hotspotBtn.className = 'action-btn hotspot-action-btn';
+    hotspotBtn.innerHTML = '🎯';
+    hotspotBtn.title = 'הוסף אזור לחיץ';
+    hotspotBtn.addEventListener('mousedown', (e) => {
+      e.stopPropagation();
+      enterHotspotDrawMode(target);
+    });
+
     actionsContainer.appendChild(linkBtn);
     actionsContainer.appendChild(openLinkBtn);
+    actionsContainer.appendChild(hotspotBtn);
     actionsContainer.appendChild(copyBtn);
     actionsContainer.appendChild(delBtn);
     
@@ -1812,43 +1826,57 @@ if (btnAddLoopVideo) {
 // 9.0 הוספת כפתור הורדת קובץ
 if (btnMakeDownload) {
   btnMakeDownload.addEventListener('click', () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    
-    input.onchange = e => {
-      const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = event => {
-          const el = document.createElement('div');
-          el.className = 'draggable-resizable';
-          
-          el.style.width = '250px';
-          el.style.left = '200px';
-          el.style.top = '200px';
-          el.setAttribute('data-x', '200');
-          el.setAttribute('data-y', '200');
-          
-          // שומרים את מידע ההורדה
-          el.dataset.downloadUrl = event.target.result;
-          el.dataset.downloadName = file.name;
-          el.title = "לחיצה תוריד קובץ: " + file.name;
-          
-          // עיצוב כפתור ההורדה שיופיע על המסך
-          el.innerHTML = `
-            <div style="background: linear-gradient(135deg, #4CAF50, #2E7D32); color: white; border-radius: 12px; padding: 15px 20px; display: flex; align-items: center; justify-content: center; gap: 10px; font-family: 'Inter', sans-serif; font-size: 16px; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.1); cursor: pointer; height: 100%; box-sizing: border-box;">
-              <span style="font-size: 24px;">📥</span>
-              <span style="flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" contenteditable="plaintext-only">הורד קובץ</span>
-            </div>
-          `;
-          
-          mainContent.appendChild(el);
-          saveCurrentPageContent();
+    // שלב 1: בחירת תמונת אייקון
+    const imgInput = document.createElement('input');
+    imgInput.type = 'file';
+    imgInput.accept = 'image/*';
+
+    imgInput.onchange = e => {
+      const imgFile = e.target.files[0];
+      if (!imgFile) return;
+
+      const imgReader = new FileReader();
+      imgReader.onload = imgEvent => {
+        const iconDataUrl = imgEvent.target.result;
+
+        // שלב 2: בחירת קובץ להורדה
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+
+        fileInput.onchange = e2 => {
+          const dlFile = e2.target.files[0];
+          if (!dlFile) return;
+
+          const dlReader = new FileReader();
+          dlReader.onload = dlEvent => {
+            const el = document.createElement('div');
+            el.className = 'draggable-resizable';
+            el.style.width = '180px';
+            el.style.left = '200px';
+            el.style.top = '200px';
+            el.setAttribute('data-x', '200');
+            el.setAttribute('data-y', '200');
+            el.dataset.downloadUrl = dlEvent.target.result;
+            el.dataset.downloadName = dlFile.name;
+            el.title = 'לחיצה תוריד: ' + dlFile.name;
+
+            el.innerHTML = `
+              <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; cursor:pointer; height:100%; box-sizing:border-box; padding:10px;">
+                <img src="${iconDataUrl}" style="width:100%; height:auto; object-fit:contain; border-radius:8px; display:block;" draggable="false" />
+                <span contenteditable="plaintext-only" style="font-size:13px; color:#333; text-align:center; font-weight:600;">${dlFile.name}</span>
+              </div>
+            `;
+
+            mainContent.appendChild(el);
+            saveCurrentPageContent();
+          };
+          dlReader.readAsDataURL(dlFile);
         };
-        reader.readAsDataURL(file);
-      }
+        fileInput.click();
+      };
+      imgReader.readAsDataURL(imgFile);
     };
-    input.click();
+    imgInput.click();
   });
 }
 
@@ -2541,6 +2569,7 @@ document.addEventListener('dblclick', (event) => {
 btnCancelLink.onclick = () => {
   linkModal.style.display = 'none';
   currentEditingLinkElement = null;
+  hotspotPendingData = null;
 };
 
 btnRemoveLink.onclick = () => {
@@ -2554,12 +2583,23 @@ btnRemoveLink.onclick = () => {
 };
 
 btnSaveLink.onclick = () => {
-  if (currentEditingLinkElement) {
-    const internalVal = linkInternalSelect.value;
-    const externalVal = linkExternalInput.value.trim();
-    
-    const finalVal = externalVal || internalVal; // עדיפות לקישור חיצוני אם הוזן
-    
+  const internalVal = linkInternalSelect.value;
+  const externalVal = linkExternalInput.value.trim();
+  const finalVal = externalVal || internalVal;
+
+  if (hotspotPendingData) {
+    // שמירת hotspot
+    if (finalVal) {
+      const { el, hsData } = hotspotPendingData;
+      let hotspots = [];
+      try { hotspots = JSON.parse(el.dataset.hotspots || '[]'); } catch(e) {}
+      hotspots.push({ ...hsData, href: finalVal });
+      el.dataset.hotspots = JSON.stringify(hotspots);
+      renderHotspotsOnEl(el);
+      saveToStorage();
+    }
+    hotspotPendingData = null;
+  } else if (currentEditingLinkElement) {
     if (finalVal) {
       currentEditingLinkElement.setAttribute('data-href', finalVal);
       currentEditingLinkElement.style.cursor = 'pointer';
@@ -2569,6 +2609,7 @@ btnSaveLink.onclick = () => {
     }
     saveCurrentPageContent();
   }
+
   linkModal.style.display = 'none';
   currentEditingLinkElement = null;
 };
@@ -2982,3 +3023,210 @@ document.addEventListener('click', (e) => {
   }
 });
 
+
+// ============================================================
+// אזורי לחיצה (Hotspots) - ציור אזורים לחיצים על תמונות
+// ============================================================
+
+let hotspotPendingData = null; // נתוני hotspot שממתינים לקישור
+
+function openLinkModalForHotspot(el, hsData) {
+  // מילוי רשימת עמודים פנימיים
+  linkInternalSelect.innerHTML = '<option value="">-- בחר עמוד פנימי --</option>';
+  pages.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p.id;
+    opt.textContent = p.title;
+    linkInternalSelect.appendChild(opt);
+  });
+  linkExternalInput.value = '';
+  linkInternalSelect.value = '';
+
+  // שמור נתונים זמנית
+  hotspotPendingData = { el, hsData };
+  currentEditingLinkElement = null; // לא עורכים אלמנט רגיל
+  linkModal.style.display = 'flex';
+}
+
+let hotspotDrawingEl = null; // האלמנט שעליו מציירים
+let hotspotStartX = 0, hotspotStartY = 0;
+let hotspotDrawRect = null;
+let isDrawingHotspot = false;
+
+const btnAddHotspot = document.getElementById('btn-add-hotspot');
+if (btnAddHotspot) {
+  btnAddHotspot.addEventListener('click', () => {
+    if (!selectedElement) {
+      alert('בחר קודם אלמנט (תמונה) שעליו תרצה לסמן אזורים לחיצים.');
+      return;
+    }
+    enterHotspotDrawMode(selectedElement);
+  });
+}
+
+function enterHotspotDrawMode(el) {
+  hotspotDrawingEl = el;
+  el.classList.add('hotspot-drawing-mode');
+  el.style.position = 'relative';
+
+  // נטרול גרירה ושינוי גודל כדי שלא יתנגשו עם ציור הריבוע
+  interact('.draggable-resizable').draggable({ enabled: false }).resizable({ enabled: false });
+
+  // יצירת ריבוע הגרירה
+  hotspotDrawRect = document.createElement('div');
+  hotspotDrawRect.id = 'hotspot-draw-rect';
+  el.appendChild(hotspotDrawRect);
+
+  el.addEventListener('mousedown', onHotspotMouseDown);
+  document.addEventListener('mousemove', onHotspotMouseMove);
+  document.addEventListener('mouseup', onHotspotMouseUp);
+  document.addEventListener('keydown', onHotspotKeyDown);
+
+  showHotspotHint('סמן אזור על התמונה - גרור ריבוע ולחץ ESC לסיום');
+}
+
+function exitHotspotDrawMode() {
+  if (!hotspotDrawingEl) return;
+  hotspotDrawingEl.classList.remove('hotspot-drawing-mode');
+  hotspotDrawingEl.removeEventListener('mousedown', onHotspotMouseDown);
+  document.removeEventListener('mousemove', onHotspotMouseMove);
+  document.removeEventListener('mouseup', onHotspotMouseUp);
+  document.removeEventListener('keydown', onHotspotKeyDown);
+  if (hotspotDrawRect) hotspotDrawRect.remove();
+  hotspotDrawRect = null;
+  hotspotDrawingEl = null;
+  hideHotspotHint();
+
+  // החזרת גרירה ושינוי גודל
+  interact('.draggable-resizable').draggable({ enabled: true }).resizable({ enabled: true });
+}
+
+function onHotspotKeyDown(e) {
+  if (e.key === 'Escape') exitHotspotDrawMode();
+}
+
+function onHotspotMouseDown(e) {
+  e.stopPropagation();
+  e.preventDefault();
+  isDrawingHotspot = true;
+  const rect = hotspotDrawingEl.getBoundingClientRect();
+  hotspotStartX = e.clientX - rect.left;
+  hotspotStartY = e.clientY - rect.top;
+  hotspotDrawRect.style.display = 'block';
+  hotspotDrawRect.style.left = hotspotStartX + 'px';
+  hotspotDrawRect.style.top = hotspotStartY + 'px';
+  hotspotDrawRect.style.width = '0';
+  hotspotDrawRect.style.height = '0';
+}
+
+function onHotspotMouseMove(e) {
+  if (!isDrawingHotspot || !hotspotDrawingEl) return;
+  const rect = hotspotDrawingEl.getBoundingClientRect();
+  const curX = e.clientX - rect.left;
+  const curY = e.clientY - rect.top;
+  const x = Math.min(hotspotStartX, curX);
+  const y = Math.min(hotspotStartY, curY);
+  const w = Math.abs(curX - hotspotStartX);
+  const h = Math.abs(curY - hotspotStartY);
+  hotspotDrawRect.style.left = x + 'px';
+  hotspotDrawRect.style.top = y + 'px';
+  hotspotDrawRect.style.width = w + 'px';
+  hotspotDrawRect.style.height = h + 'px';
+}
+
+function onHotspotMouseUp(e) {
+  if (!isDrawingHotspot || !hotspotDrawingEl) return;
+  isDrawingHotspot = false;
+  hotspotDrawRect.style.display = 'none';
+
+  const rect = hotspotDrawingEl.getBoundingClientRect();
+  const curX = e.clientX - rect.left;
+  const curY = e.clientY - rect.top;
+  const x = Math.min(hotspotStartX, curX);
+  const y = Math.min(hotspotStartY, curY);
+  const w = Math.abs(curX - hotspotStartX);
+  const h = Math.abs(curY - hotspotStartY);
+
+  if (w < 10 || h < 10) return; // התעלם מלחיצות קטנות
+
+  // שמור כאחוזים מגודל האלמנט
+  const elW = hotspotDrawingEl.offsetWidth;
+  const elH = hotspotDrawingEl.offsetHeight;
+  const xPct = (x / elW) * 100;
+  const yPct = (y / elH) * 100;
+  const wPct = (w / elW) * 100;
+  const hPct = (h / elH) * 100;
+
+  // פתח את חלון "הגדרת קישור" הקיים עם callback לשמירת hotspot
+  openLinkModalForHotspot(hotspotDrawingEl, { x: xPct, y: yPct, w: wPct, h: hPct });
+}
+
+// רנדור hotspots על אלמנט
+function renderHotspotsOnEl(el) {
+  // הסר hotspots ישנים
+  el.querySelectorAll('.hotspot-overlay').forEach(h => h.remove());
+
+  let hotspots = [];
+  try { hotspots = JSON.parse(el.dataset.hotspots || '[]'); } catch(e) {}
+
+  hotspots.forEach((hs, index) => {
+    const div = document.createElement('div');
+    div.className = 'hotspot-overlay';
+    div.style.left = hs.x + '%';
+    div.style.top = hs.y + '%';
+    div.style.width = hs.w + '%';
+    div.style.height = hs.h + '%';
+    div.dataset.href = hs.href;
+    div.title = hs.href;
+
+    // כפתור מחיקה (נראה רק במצב עריכה)
+    const delBtn = document.createElement('button');
+    delBtn.className = 'hotspot-delete-btn';
+    delBtn.innerHTML = '✕';
+    delBtn.title = 'מחק אזור';
+    delBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      hotspots.splice(index, 1);
+      el.dataset.hotspots = JSON.stringify(hotspots);
+      renderHotspotsOnEl(el);
+      saveToStorage();
+    });
+
+    // לחיצה במצב צפייה - פתח קישור
+    div.addEventListener('click', (e) => {
+      if (isEditMode) return;
+      e.stopPropagation();
+      const link = hs.href.startsWith('http') ? hs.href : 'https://' + hs.href;
+      window.open(link, '_blank');
+    });
+
+    div.appendChild(delBtn);
+    el.appendChild(div);
+  });
+}
+
+// רנדור hotspots על כל האלמנטים בעמוד
+function renderAllHotspots() {
+  mainContent.querySelectorAll('[data-hotspots]').forEach(el => {
+    if (el.dataset.hotspots && el.dataset.hotspots !== '[]') {
+      renderHotspotsOnEl(el);
+    }
+  });
+}
+
+// הנחיית hotspot
+function showHotspotHint(msg) {
+  let hint = document.getElementById('hotspot-hint');
+  if (!hint) {
+    hint = document.createElement('div');
+    hint.id = 'hotspot-hint';
+    hint.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 20px;border-radius:20px;z-index:99999;font-size:14px;pointer-events:none;';
+    document.body.appendChild(hint);
+  }
+  hint.textContent = msg;
+}
+
+function hideHotspotHint() {
+  const hint = document.getElementById('hotspot-hint');
+  if (hint) hint.remove();
+}
