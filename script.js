@@ -2630,6 +2630,20 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  const authMicrosoftLoginBtn = document.getElementById('auth-microsoft-login-btn');
+  if (authMicrosoftLoginBtn) {
+    authMicrosoftLoginBtn.addEventListener('click', () => {
+      alert("התחברות באמצעות Microsoft אינה פעילה כרגע. אנא השתמש בהתחברות באמצעות Google.");
+    });
+  }
+
+  const authEmailSubmitBtn = document.getElementById('auth-email-submit-btn');
+  if (authEmailSubmitBtn) {
+    authEmailSubmitBtn.addEventListener('click', () => {
+      alert("התחברות באמצעות דוא\"ל אינה פעילה כרגע. אנא השתמש בהתחברות באמצעות Google.");
+    });
+  }
+
   if (chatBtn && chatModal) {
     const aiBtn = document.querySelector('.bar-ai-btn');
     
