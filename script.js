@@ -3495,7 +3495,7 @@ function buildArticlesPage(articles) {
     </div>
   `).join('');
 
-  const json = artEsc(JSON.stringify(articles));
+  const json = encodeURIComponent(JSON.stringify(articles));
   return `<div class="articles-page" data-articles-json="${json}">
     <div class="art-inner">
       <div class="art-featured-grid">${featuredHTML}</div>
@@ -3527,7 +3527,7 @@ function artOpenDetail(id) {
   const container = mainContent.querySelector('.articles-page');
   if (!container) return;
   let arts = [];
-  try { arts = JSON.parse(container.dataset.articlesJson.replace(/&quot;/g,'"').replace(/&#39;/g,"'")); } catch(e){ return; }
+  try { arts = JSON.parse(decodeURIComponent(container.dataset.articlesJson)); } catch(e){ return; }
   const a = arts.find(x => x.id === id);
   if (!a) return;
 
@@ -3559,10 +3559,16 @@ function artGoBack() {
   renderPage();
 }
 
+// חשיפת הפונקציות ל-window כדי ש-onclick יעבוד (הקובץ הוא module)
+window.artOpenDetail = artOpenDetail;
+window.artGoBack = artGoBack;
+window.artDelete = artDelete;
+window.openArtModal = openArtModal;
+
 function artGetArticles() {
   const container = mainContent.querySelector('.articles-page');
   if (!container) return [];
-  try { return JSON.parse(container.dataset.articlesJson.replace(/&quot;/g,'"').replace(/&#39;/g,"'")); } catch(e){ return []; }
+  try { return JSON.parse(decodeURIComponent(container.dataset.articlesJson)); } catch(e){ return []; }
 }
 
 function artDelete(id, btn) {
