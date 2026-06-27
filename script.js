@@ -3410,48 +3410,56 @@ const ARTICLES_SAMPLES = [
   {
     id: 'a1',
     title: 'גוגל משדרגת את Chrome עם מילוי אוטומטי של מסמכי זיהוי, טיסות ועוד מ-Google Wallet',
-    summary: 'גוגל הודיעה על העמקת השילוב בין שירות הארנק שלה לדפדפן הכרום במובייל ובדסקטופ. הדפדפן יאפשר מילוי אוטומטי של מסמכי זיהוי, דרכונים ורישיונות...',
+    summary: 'גוגל הודיעה על העמקת השילוב בין שירות הארנק שלה לדפדפן הכרום במובייל ובדסקטופ. הדפדפן יאפשר מילוי אוטומטי של מסמכי זיהוי, דרכונים ורישיונות נהיגה ישירות מהאפליקציה.',
+    body: 'גוגל הכריזה הבוקר על שדרוג משמעותי לדפדפן Chrome, שיאפשר למשתמשים למלא טפסים מקוונים אוטומטית תוך שימוש בנתוני זיהוי שמורים ב-Google Wallet.\n\nהשדרוג החדש יתמוך במסמכי זיהוי ממשלתיים, כולל תעודות זהות ודרכונים, כרטיסי טיסה ועוד. פיצ\'ר זה יהיה זמין תחילה בארצות הברית ויורחב לשאר המדינות בהמשך השנה.\n\nלדברי גוגל, כל המידע מוצפן ואינו נשלח לשרתי החברה - הוא נשאר בטוח במכשיר המשתמש בלבד.',
     author: 'יאל לכברמן', category: 'חדשות', categoryColor: '#1565C0', timestamp: 'היום, 11:20',
-    image: 'https://images.unsplash.com/photo-1573804633927-bfcbcd909acd?w=600&q=80', link: ''
+    image: 'https://images.unsplash.com/photo-1573804633927-bfcbcd909acd?w=800&q=80', link: ''
   },
   {
     id: 'a2',
     title: 'הוכרז: Honor X80 Pro Max עם סוללת 11,000mAh ו-Snapdragon 6 Gen 5-i',
-    summary: 'מותג הסמארטפונים הסיני מציג מכשיר חדש עם סוללה יוצאת דופן של 11,000 מיליאמפר-שעה לצד סיכה מהירה ומעבד עדכני...',
+    summary: 'מותג הסמארטפונים הסיני מציג מכשיר חדש עם סוללה יוצאת דופן של 11,000 מיליאמפר-שעה לצד טעינה מהירה ומעבד עדכני.',
+    body: 'Honor השיקה היום רשמית את ה-X80 Pro Max, מכשיר פלאגשיפ חדש עם אחת הסוללות הגדולות ביותר שנראו בשוק הסמארטפונים.\n\nהמכשיר מגיע עם סוללת 11,000mAh וטעינה מהירה של 100W, שלפי החברה מסוגלת לטעון את הסוללה מ-0 ל-50% תוך 25 דקות בלבד.\n\nמבחינת ביצועים, ה-X80 Pro Max מופעל על ידי מעבד Snapdragon 6 Gen 5-i עם 12GB RAM ו-256GB אחסון. תצוגת ה-AMOLED בגודל 6.8 אינץ\' תומכת ב-120Hz רענון.',
     author: 'רנן מנדזיצקי', category: 'חדשות', categoryColor: '#1565C0', timestamp: 'היום, 09:30',
-    image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=600&q=80', link: ''
+    image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=800&q=80', link: ''
   },
   {
     id: 'a3',
     title: 'טיינה מהירה וטוחה מרשים: רכב הפנאי ההיברידי החדש הגיע לישראל',
-    summary: 'הרכב החדש מציע עיצוב אגרסיבי וביצועים מרשימים עם מנוע היברידי חסכוני. הגרסה הישראלית מגיעה עם ציוד עשיר במיוחד...',
+    summary: 'הרכב החדש מציע עיצוב אגרסיבי וביצועים מרשימים עם מנוע היברידי חסכוני. הגרסה הישראלית מגיעה עם ציוד עשיר במיוחד.',
+    body: 'רכב הפנאי ההיברידי החדש הגיע רשמית לשוק הישראלי ומציע שילוב מרשים של עיצוב ספורטיבי עם יעילות דלק יוצאת דופן.\n\nהמנוע ההיברידי מייצר 245 כ"ס ומאפשר צריכת דלק ממוצעת של 5.2 ליטר ל-100 ק"מ. זמן ה-0-100 עומד על 7.8 שניות בלבד.\n\nהגרסה הישראלית מגיעה עם ציוד עשיר כולל מסך מגע 12.3 אינץ\', מערכת שמע פרימיום, רדאר לזיהוי מכשולים ועוד.',
     author: 'אורן מנרד', category: 'רכב', categoryColor: '#1B5E20', timestamp: 'אתמול, 20:40',
-    image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=80', link: ''
+    image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80', link: ''
   },
   {
     id: 'a4',
     title: 'סקירה: Sony WH-CH720N – אוזניות מסננות רעשים בתקציב שפוי',
-    summary: 'סוני מראה את הכוח בשוק הרעשים האקטיבי (ANC) גם לקטגוריית מחיר גמוכה מ-500 שקלים. האם הן שוות את הרכישה?',
+    summary: 'סוני מראה את הכוח בשוק הרעשים האקטיבי (ANC) גם לקטגוריית מחיר נמוכה מ-500 שקלים. האם הן שוות את הרכישה?',
+    body: 'אוזניות ה-WH-CH720N של סוני מגיעות לשוק הישראלי במחיר מומלץ של 449 שקלים ומתיימרות להביא ביצועי ANC ברמה גבוהה לקטגוריית מחיר נגישה.\n\nמבחינת עיצוב, האוזניות קלות במיוחד (192 גרם) ונוחות לשימוש ממושך. כרית האוזן מרופדת בחומר רך שאינו מחמם.\n\nביצועי ה-ANC מרשימים לקטגוריית המחיר - הן מסוגלות לסנן רעשי סביבה כמו מזגנים ותנועה בצורה יעילה. הסאונד בהיר ומאוזן עם בס נעים שאינו מוגזם.',
     author: 'רנן מנדזיצקי', category: 'סקירות', categoryColor: '#6A1B9A', timestamp: 'לפני יומיים',
-    image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&q=80', link: ''
+    image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&q=80', link: ''
   },
   {
     id: 'a5',
     title: 'מבצע סוף עונה: MacBook Air M3 במחיר חסר תקדים באילת',
-    summary: 'דיל יום: אם אתם מתכננים ירידה לאילת בקרוב, רשתות השיווק המקומיות יוצאות במבצע ענק ללא מע"מ על ה-MacBook Air M3...',
+    summary: 'דיל יום: אם אתם מתכננים ירידה לאילת בקרוב, רשתות השיווק המקומיות יוצאות במבצע ענק ללא מע"מ על ה-MacBook Air M3.',
+    body: 'לקראת עונת הקיץ, רשתות האלקטרוניקה באילת מציעות מחירים חסרי תקדים על ה-MacBook Air M3 - ללא מע"מ, המחיר יורד לכ-3,800 שקלים לגרסת הבסיס.\n\nה-MacBook Air עם שבב M3 מציע שיפור של 35% בביצועים לעומת M2 הקודם, כולל תמיכה בשני מסכים חיצוניים - תכונה שחסרה בדור הקודם.\n\nהמבצע תקף לחודש יולי בלבד ונסיעה לאילת לצורך רכישה עשויה לחסוך מאות שקלים לעומת קנייה בצפון המדינה.',
     author: 'רנן מנדזיצקי', category: 'מבצעים', categoryColor: '#2E7D32', timestamp: 'לפני 3 ימים',
-    image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=600&q=80', link: ''
+    image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800&q=80', link: ''
   }
 ];
 
+function artEsc(str) {
+  return String(str||'').replace(/\\/g,'\\\\').replace(/'/g,'&#39;').replace(/"/g,'&quot;');
+}
+
 function buildArticlesPage(articles) {
   const featured = articles.slice(0, 3);
-  const list = articles; // כל הכתבות ברשימה
   const popular = articles.slice(0, 5);
 
   const featuredHTML = featured.map(a => `
-    <div class="art-featured-card" ${a.link ? `onclick="window.open('${a.link}','_blank')"` : ''} style="${a.link ? 'cursor:pointer' : 'cursor:default'}">
-      <img src="${a.image || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=600&q=80'}" alt="">
+    <div class="art-featured-card" onclick="artOpenDetail('${artEsc(a.id)}')">
+      <img src="${a.image || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80'}" alt="">
       <div class="art-featured-overlay"></div>
       <div class="art-featured-info">
         <span class="art-category-badge" style="background:${a.categoryColor||'#e65100'}">${a.category}</span>
@@ -3461,10 +3469,9 @@ function buildArticlesPage(articles) {
     </div>
   `).join('');
 
-  const listHTML = list.map((a) => `
-    <div class="art-row" ${a.link ? `onclick="window.open('${a.link}','_blank')"` : ''} style="${a.link ? 'cursor:pointer' : 'cursor:default'}">
-      ${a.image ? `<img class="art-row-img" src="${a.image}" alt="">` : '<div class="art-row-img art-row-img-placeholder"></div>'}
-      <div class="art-row-text">
+  const listHTML = articles.map((a) => `
+    <div class="art-card" onclick="artOpenDetail('${artEsc(a.id)}')">
+      <div class="art-card-text">
         <div class="art-meta">
           <span class="art-category-badge" style="background:${a.categoryColor||'#e65100'}">${a.category}</span>
           <span>${a.author}</span>
@@ -3473,20 +3480,24 @@ function buildArticlesPage(articles) {
         </div>
         <h3>${a.title}</h3>
         <p>${a.summary}</p>
+        <span class="art-read-more">קרא עוד ›</span>
       </div>
-      <button class="art-delete-btn" onclick="event.stopPropagation();artDelete('${a.id}',this)">✕</button>
+      <div class="art-card-img-wrap">
+        ${a.image ? `<img src="${a.image}" alt="">` : '<div class="art-card-img-placeholder"></div>'}
+        <button class="art-delete-btn" onclick="event.stopPropagation();artDelete('${artEsc(a.id)}',this)">✕</button>
+      </div>
     </div>
   `).join('');
 
   const popularHTML = popular.map((a, i) => `
-    <div class="art-popular-item" ${a.link ? `onclick="window.open('${a.link}','_blank')"` : ''} style="${a.link ? 'cursor:pointer' : ''}">
+    <div class="art-popular-item" onclick="artOpenDetail('${artEsc(a.id)}')">
       <span class="art-popular-num">${String(i+1).padStart(2,'0')}</span>
       <div style="flex:1;font-size:13px;font-weight:600;line-height:1.4;color:#222">${a.title}</div>
     </div>
   `).join('');
 
-  const json = JSON.stringify(articles).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-  return `<div class="articles-page" data-articles-json='${json}'>
+  const json = artEsc(JSON.stringify(articles));
+  return `<div class="articles-page" data-articles-json="${json}">
     <div class="art-inner">
       <div class="art-featured-grid">${featuredHTML}</div>
       <div class="art-layout">
@@ -3513,13 +3524,51 @@ function buildArticlesPage(articles) {
   </div>`;
 }
 
-function artDelete(id, btn) {
-  if (!isEditMode) return;
+function artOpenDetail(id) {
   const container = mainContent.querySelector('.articles-page');
   if (!container) return;
   let arts = [];
-  try { arts = JSON.parse(container.dataset.articlesJson); } catch(e){}
-  arts = arts.filter(a => a.id !== id);
+  try { arts = JSON.parse(container.dataset.articlesJson.replace(/&quot;/g,'"').replace(/&#39;/g,"'")); } catch(e){ return; }
+  const a = arts.find(x => x.id === id);
+  if (!a) return;
+
+  const bodyHTML = (a.body || a.summary || '').split('\n').map(p => p.trim() ? `<p>${p}</p>` : '').join('');
+
+  mainContent.innerHTML = `
+    <div class="art-detail" data-article-id="${id}">
+      <div class="art-detail-inner">
+        <button class="art-back-btn" onclick="artGoBack()">← חזרה לכתבות</button>
+        ${a.image ? `<img class="art-detail-hero" src="${a.image}" alt="">` : ''}
+        <div class="art-detail-body">
+          <div class="art-meta" style="margin-bottom:12px">
+            <span class="art-category-badge" style="background:${a.categoryColor||'#e65100'}">${a.category}</span>
+            <span>${a.author}</span>
+            <span>·</span>
+            <span>${a.timestamp}</span>
+          </div>
+          <h1 class="art-detail-title">${a.title}</h1>
+          <div class="art-detail-content">${bodyHTML}</div>
+          ${a.link ? `<a href="${a.link}" target="_blank" class="art-detail-link">קרא באתר המקור ↗</a>` : ''}
+        </div>
+      </div>
+    </div>
+  `;
+  mainContent.scrollTop = 0;
+}
+
+function artGoBack() {
+  renderPage();
+}
+
+function artGetArticles() {
+  const container = mainContent.querySelector('.articles-page');
+  if (!container) return [];
+  try { return JSON.parse(container.dataset.articlesJson.replace(/&quot;/g,'"').replace(/&#39;/g,"'")); } catch(e){ return []; }
+}
+
+function artDelete(id, btn) {
+  if (!isEditMode) return;
+  const arts = artGetArticles().filter(a => a.id !== id);
   mainContent.innerHTML = buildArticlesPage(arts);
   saveCurrentPageContent();
 }
@@ -3528,6 +3577,7 @@ function openArtModal() {
   if (!isEditMode) return;
   document.getElementById('art-title').value = '';
   document.getElementById('art-summary').value = '';
+  document.getElementById('art-body').value = '';
   document.getElementById('art-author').value = '';
   document.getElementById('art-category').value = '';
   document.getElementById('art-link').value = '';
@@ -3563,14 +3613,12 @@ document.getElementById('art-cancel').addEventListener('click', () => {
 document.getElementById('art-save').addEventListener('click', () => {
   const title = document.getElementById('art-title').value.trim();
   if (!title) { alert('חובה כותרת'); return; }
-  const container = mainContent.querySelector('.articles-page');
-  if (!container) return;
-  let arts = [];
-  try { arts = JSON.parse(container.dataset.articlesJson); } catch(e){}
+  const arts = artGetArticles();
   arts.push({
     id: 'a' + Date.now(),
     title,
     summary: document.getElementById('art-summary').value.trim(),
+    body: document.getElementById('art-body').value.trim(),
     author: document.getElementById('art-author').value.trim() || 'עורך',
     category: document.getElementById('art-category').value.trim() || 'כללי',
     categoryColor: '#e65100',
