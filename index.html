@@ -65,6 +65,7 @@
         <button id="btn-add-page" class="float-btn edit-float-btn" style="background: #2196F3; color: white;">+ הוסף עמוד</button>
         <button id="btn-manage-pages" class="float-btn edit-float-btn" style="background: #555; color: white;">ניהול עמודים 🗂️</button>
         <button id="btn-add-hidden-page" class="float-btn edit-float-btn" style="background: #6366f1; color: white;">+ דף מוסתר 🔒</button>
+        <button id="btn-add-articles-page" class="float-btn edit-float-btn" style="background: #e65100; color: white;">דף כתבות 📰</button>
         <button id="btn-edit-mode" class="float-btn edit-float-btn">מצב עריכה ✏️</button>
         <button id="btn-save-site" class="float-btn edit-float-btn" style="background: #4CAF50; color: white;">שמור שינויים 💾</button>
         <button id="btn-reset-site" class="float-btn edit-float-btn" style="background: #f44336; color: white;">איפוס אתר 🗑️</button>
@@ -189,6 +190,30 @@
 </div>
 
 <!-- מודאל התחברות מעוצב בסגנון אפל/מינימליסטי -->
+
+<!-- מודל הוספת כתבה -->
+<div id="article-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:99999; align-items:center; justify-content:center; direction:rtl;">
+  <div style="background:#fff; border-radius:16px; padding:28px; width:90%; max-width:460px; max-height:85vh; overflow-y:auto; display:flex; flex-direction:column; gap:12px;">
+    <h3 style="margin:0 0 4px; font-size:18px;">הוספת כתבה חדשה</h3>
+    <label style="font-size:13px; font-weight:600;">כותרת <span style="color:red">*</span></label>
+    <input id="art-title" type="text" placeholder="כותרת הכתבה" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+    <label style="font-size:13px; font-weight:600;">תקציר</label>
+    <textarea id="art-summary" rows="3" placeholder="תיאור קצר של הכתבה..." style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box; resize:vertical;"></textarea>
+    <label style="font-size:13px; font-weight:600;">שם הכותב</label>
+    <input id="art-author" type="text" placeholder="שם הכותב" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+    <label style="font-size:13px; font-weight:600;">קטגוריה</label>
+    <input id="art-category" type="text" placeholder="למשל: חדשות, סקירות, טכנולוגיה" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+    <label style="font-size:13px; font-weight:600;">קישור חיצוני (URL)</label>
+    <input id="art-link" type="url" placeholder="https://..." style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+    <label style="font-size:13px; font-weight:600;">תמונה</label>
+    <button id="art-img-pick" style="padding:9px 12px; border:1px dashed #bbb; border-radius:8px; background:#f9f9f9; cursor:pointer; font-size:13px; text-align:right;">לחץ לבחירת תמונה מהמחשב</button>
+    <img id="art-img-preview" src="" alt="" style="display:none; max-height:140px; border-radius:8px; object-fit:cover; width:100%;">
+    <div style="display:flex; gap:10px; margin-top:4px;">
+      <button id="art-cancel" style="flex:1; padding:10px; border:1px solid #ddd; border-radius:8px; background:#fff; cursor:pointer; font-size:14px;">ביטול</button>
+      <button id="art-save" style="flex:1; padding:10px; border:none; border-radius:8px; background:#e65100; color:#fff; cursor:pointer; font-size:14px; font-weight:700;">שמור כתבה</button>
+    </div>
+  </div>
+</div>
 
 <div id="auth-modal" class="auth-modal-overlay">
   <div class="auth-modal-card">

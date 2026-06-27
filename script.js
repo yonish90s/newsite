@@ -3395,3 +3395,192 @@ removeEditModeFromContent = function() {
 
 // כפתור קרא עוד בסרגל הכלים של האלמנט - מוסיף דרך applyEditModeToContent
 // לכן מאזינים ל-renderPage ומוסיפים את הכפתור לשם
+
+// ===== דף כתבות =====
+
+const ARTICLES_SAMPLES = [
+  {
+    id: 'a1',
+    title: 'גוגל משדרגת את Chrome עם מילוי אוטומטי של מסמכי זיהוי, טיסות ועוד מ-Google Wallet',
+    summary: 'גוגל הודיעה על העמקת השילוב בין שירות הארנק שלה לדפדפן הכרום במובייל ובדסקטופ. הדפדפן יאפשר מילוי אוטומטי של מסמכי זיהוי, דרכונים ורישיונות...',
+    author: 'יאל לכברמן', category: 'חדשות', categoryColor: '#1565C0', timestamp: 'היום, 11:20',
+    image: 'https://images.unsplash.com/photo-1573804633927-bfcbcd909acd?w=600&q=80', link: ''
+  },
+  {
+    id: 'a2',
+    title: 'הוכרז: Honor X80 Pro Max עם סוללת 11,000mAh ו-Snapdragon 6 Gen 5-i',
+    summary: 'מותג הסמארטפונים הסיני מציג מכשיר חדש עם סוללה יוצאת דופן של 11,000 מיליאמפר-שעה לצד סיכה מהירה ומעבד עדכני...',
+    author: 'רנן מנדזיצקי', category: 'חדשות', categoryColor: '#1565C0', timestamp: 'היום, 09:30',
+    image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=600&q=80', link: ''
+  },
+  {
+    id: 'a3',
+    title: 'טיינה מהירה וטוחה מרשים: רכב הפנאי ההיברידי החדש הגיע לישראל',
+    summary: 'הרכב החדש מציע עיצוב אגרסיבי וביצועים מרשימים עם מנוע היברידי חסכוני. הגרסה הישראלית מגיעה עם ציוד עשיר במיוחד...',
+    author: 'אורן מנרד', category: 'רכב', categoryColor: '#1B5E20', timestamp: 'אתמול, 20:40',
+    image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=80', link: ''
+  },
+  {
+    id: 'a4',
+    title: 'סקירה: Sony WH-CH720N – אוזניות מסננות רעשים בתקציב שפוי',
+    summary: 'סוני מראה את הכוח בשוק הרעשים האקטיבי (ANC) גם לקטגוריית מחיר גמוכה מ-500 שקלים. האם הן שוות את הרכישה?',
+    author: 'רנן מנדזיצקי', category: 'סקירות', categoryColor: '#6A1B9A', timestamp: 'לפני יומיים',
+    image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&q=80', link: ''
+  },
+  {
+    id: 'a5',
+    title: 'מבצע סוף עונה: MacBook Air M3 במחיר חסר תקדים באילת',
+    summary: 'דיל יום: אם אתם מתכננים ירידה לאילת בקרוב, רשתות השיווק המקומיות יוצאות במבצע ענק ללא מע"מ על ה-MacBook Air M3...',
+    author: 'רנן מנדזיצקי', category: 'מבצעים', categoryColor: '#2E7D32', timestamp: 'לפני 3 ימים',
+    image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=600&q=80', link: ''
+  }
+];
+
+function buildArticlesPage(articles) {
+  const featured = articles.slice(0, 3);
+  const list = articles.slice(3);
+  const popular = articles.slice(0, 5);
+
+  const featuredHTML = featured.map(a => `
+    <div class="art-featured-card" onclick="${a.link ? `window.open('${a.link}','_blank')` : ''}">
+      <img src="${a.image || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=600&q=80'}" alt="">
+      <div class="art-featured-overlay"></div>
+      <div class="art-featured-info">
+        <span class="art-category-badge" style="background:${a.categoryColor||'#e65100'}">${a.category}</span>
+        <h3>${a.title}</h3>
+      </div>
+    </div>
+  `).join('');
+
+  const listHTML = list.map((a, i) => `
+    <div class="art-row" onclick="${a.link ? `window.open('${a.link}','_blank')` : ''}">
+      <div class="art-row-text">
+        <div class="art-meta">
+          <span class="art-category-badge" style="background:${a.categoryColor||'#e65100'}">${a.category}</span>
+          <span>${a.author}</span>
+          <span>|</span>
+          <span>${a.timestamp}</span>
+        </div>
+        <h3>${a.title}</h3>
+        <p>${a.summary}</p>
+      </div>
+      ${a.image ? `<img class="art-row-img" src="${a.image}" alt="">` : ''}
+      <button class="art-delete-btn" onclick="event.stopPropagation();artDelete('${a.id}',this)">✕ מחק</button>
+    </div>
+  `).join('');
+
+  const popularHTML = popular.map((a, i) => `
+    <div class="art-popular-item">
+      <span class="art-popular-num">0${i+1}</span>
+      <div style="flex:1;font-size:13px;font-weight:600;line-height:1.3;color:#222">${a.title}</div>
+    </div>
+  `).join('');
+
+  return `<div class="articles-page" data-articles='${JSON.stringify(articles).replace(/'/g,"&#39;").replace(/"/g,"&quot;")}'>
+    <div class="art-featured-grid">${featuredHTML}</div>
+    <div class="art-layout">
+      <div class="art-main">
+        ${listHTML}
+        <button class="art-add-btn" onclick="openArtModal()">+ הוסף כתבה חדשה</button>
+      </div>
+      <div class="art-sidebar">
+        <div class="art-sidebar-box art-newsletter">
+          <h4 style="margin:0 0 8px;font-size:15px">הישארו מעודכנים!</h4>
+          <p style="font-size:12px;color:#666;margin:0 0 10px">הירשמו לניוזלטר שלנו וקבלו את כל עדכוני הטכנולוגיה החמים ישירות לתיבת הדואר שלכם.</p>
+          <input type="text" placeholder="כתבו את שמכם">
+          <input type="email" placeholder="כתובת האימייל שלכם">
+          <button onclick="alert('תודה!')">הרשמה</button>
+        </div>
+        <div class="art-sidebar-box">
+          <h4 style="margin:0 0 12px;font-size:15px;border-bottom:3px solid #e53935;padding-bottom:8px">הכי נקראות השבוע</h4>
+          ${popularHTML}
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function artDelete(id, btn) {
+  if (!isEditMode) return;
+  const container = mainContent.querySelector('.articles-page');
+  if (!container) return;
+  let arts = [];
+  try { arts = JSON.parse(container.dataset.articles.replace(/&quot;/g,'"')); } catch(e){}
+  arts = arts.filter(a => a.id !== id);
+  mainContent.innerHTML = buildArticlesPage(arts);
+  saveCurrentPageContent();
+}
+
+function openArtModal() {
+  if (!isEditMode) return;
+  document.getElementById('art-title').value = '';
+  document.getElementById('art-summary').value = '';
+  document.getElementById('art-author').value = '';
+  document.getElementById('art-category').value = '';
+  document.getElementById('art-link').value = '';
+  const preview = document.getElementById('art-img-preview');
+  preview.style.display = 'none'; preview.src = '';
+  artImgData = '';
+  document.getElementById('art-img-pick').textContent = 'לחץ לבחירת תמונה מהמחשב';
+  document.getElementById('article-modal').style.display = 'flex';
+}
+
+let artImgData = '';
+
+document.getElementById('art-img-pick').addEventListener('click', () => {
+  const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
+  inp.onchange = e => {
+    const f = e.target.files[0]; if (!f) return;
+    const r = new FileReader();
+    r.onload = ev => {
+      artImgData = ev.target.result;
+      const p = document.getElementById('art-img-preview');
+      p.src = artImgData; p.style.display = 'block';
+      document.getElementById('art-img-pick').textContent = '✓ תמונה נבחרה';
+    };
+    r.readAsDataURL(f);
+  };
+  inp.click();
+});
+
+document.getElementById('art-cancel').addEventListener('click', () => {
+  document.getElementById('article-modal').style.display = 'none';
+});
+
+document.getElementById('art-save').addEventListener('click', () => {
+  const title = document.getElementById('art-title').value.trim();
+  if (!title) { alert('חובה כותרת'); return; }
+  const container = mainContent.querySelector('.articles-page');
+  if (!container) return;
+  let arts = [];
+  try { arts = JSON.parse(container.dataset.articles.replace(/&quot;/g,'"')); } catch(e){}
+  arts.push({
+    id: 'a' + Date.now(),
+    title,
+    summary: document.getElementById('art-summary').value.trim(),
+    author: document.getElementById('art-author').value.trim() || 'עורך',
+    category: document.getElementById('art-category').value.trim() || 'כללי',
+    categoryColor: '#e65100',
+    timestamp: 'עכשיו',
+    image: artImgData,
+    link: document.getElementById('art-link').value.trim()
+  });
+  mainContent.innerHTML = buildArticlesPage(arts);
+  saveCurrentPageContent();
+  document.getElementById('article-modal').style.display = 'none';
+});
+
+const btnAddArticlesPage = document.getElementById('btn-add-articles-page');
+if (btnAddArticlesPage) {
+  btnAddArticlesPage.addEventListener('click', () => {
+    const title = prompt('שם העמוד הראשי של הכתבות:') || 'כתבות';
+    const newId = 'page-' + Date.now();
+    pages.unshift({ id: newId, title: title.trim(), content: buildArticlesPage(ARTICLES_SAMPLES) });
+    topNavPages.unshift(newId);
+    activePageId = newId;
+    saveToStorage();
+    renderSideMenu();
+    renderTopNav();
+    renderPage();
+  });
+}
