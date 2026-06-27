@@ -63,6 +63,7 @@
         <div class="toolbar-separator" style="width: 1px; background: #ddd; margin: 0 5px;"></div>
       
         <button id="btn-add-page" class="float-btn edit-float-btn" style="background: #2196F3; color: white;">+ הוסף עמוד</button>
+        <button id="btn-manage-pages" class="float-btn edit-float-btn" style="background: #555; color: white;">ניהול עמודים 🗂️</button>
         <button id="btn-add-hidden-page" class="float-btn edit-float-btn" style="background: #6366f1; color: white;">+ דף מוסתר 🔒</button>
         <button id="btn-edit-mode" class="float-btn edit-float-btn">מצב עריכה ✏️</button>
         <button id="btn-save-site" class="float-btn edit-float-btn" style="background: #4CAF50; color: white;">שמור שינויים 💾</button>
@@ -173,6 +174,17 @@
       <button id="btn-remove-link" class="modal-btn danger-btn">הסר קישור</button>
       <button id="btn-save-link" class="modal-btn save-btn">שמור</button>
     </div>
+  </div>
+</div>
+
+<!-- מודל ניהול עמודים -->
+<div id="manage-pages-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:99999; align-items:center; justify-content:center; direction:rtl;">
+  <div style="background:#fff; border-radius:16px; padding:28px; width:90%; max-width:420px; max-height:80vh; overflow-y:auto; display:flex; flex-direction:column; gap:0;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
+      <h3 style="margin:0; font-size:18px;">ניהול עמודים</h3>
+      <button id="manage-pages-close" style="background:none; border:none; font-size:20px; cursor:pointer; color:#888;">✕</button>
+    </div>
+    <div id="manage-pages-list" style="display:flex; flex-direction:column; gap:8px;"></div>
   </div>
 </div>
 

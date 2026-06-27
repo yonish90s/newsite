@@ -3235,3 +3235,66 @@ function hideHotspotHint() {
   if (hint) hint.remove();
 }
 
+
+// ============================================================
+// ניהול עמודים - מחיקה ושינוי שם
+// ============================================================
+
+const btnManagePages = document.getElementById('btn-manage-pages');
+const managePagesModal = document.getElementById('manage-pages-modal');
+const managePagesClose = document.getElementById('manage-pages-close');
+const managePagesList = document.getElementById('manage-pages-list');
+
+function openManagePagesModal() {
+  managePagesList.innerHTML = '';
+  pages.forEach(page => {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex; align-items:center; gap:10px; padding:12px 14px; border:1px solid #eee; border-radius:10px; background:#fafafa;';
+
+    const name = document.createElement('span');
+    name.textContent = page.title;
+    name.style.cssText = 'flex:1; font-size:15px; font-weight:500;';
+
+    const renameBtn = document.createElement('button');
+    renameBtn.textContent = '✏️';
+    renameBtn.title = 'שנה שם';
+    renameBtn.style.cssText = 'background:none; border:1px solid #ddd; border-radius:8px; padding:5px 8px; cursor:pointer; font-size:14px;';
+    renameBtn.onclick = () => {
+      const newName = prompt('שם חדש לעמוד:', page.title);
+      if (newName && newName.trim()) {
+        page.title = newName.trim();
+        saveToStorage();
+        renderSideMenu();
+        renderTopNav();
+        openManagePagesModal();
+      }
+    };
+
+    const delBtn = document.createElement('button');
+    delBtn.textContent = '🗑️ מחק';
+    delBtn.title = 'מחק עמוד';
+    delBtn.style.cssText = 'background:#fee2e2; border:none; border-radius:8px; padding:5px 10px; cursor:pointer; font-size:13px; color:#b91c1c; font-weight:600;';
+    delBtn.onclick = () => {
+      if (pages.length === 1) { alert('אי אפשר למחוק את העמוד האחרון!'); return; }
+      if (!confirm(`למחוק את "${page.title}"?`)) return;
+      pages.splice(pages.findIndex(p => p.id === page.id), 1);
+      topNavPages.splice(topNavPages.indexOf(page.id), 1);
+      if (activePageId === page.id) activePageId = pages[0].id;
+      saveToStorage();
+      renderSideMenu();
+      renderTopNav();
+      renderPage();
+      openManagePagesModal();
+    };
+
+    row.appendChild(name);
+    row.appendChild(renameBtn);
+    row.appendChild(delBtn);
+    managePagesList.appendChild(row);
+  });
+
+  managePagesModal.style.display = 'flex';
+}
+
+if (btnManagePages) btnManagePages.addEventListener('click', openManagePagesModal);
+if (managePagesClose) managePagesClose.onclick = () => { managePagesModal.style.display = 'none'; };
