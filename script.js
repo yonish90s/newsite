@@ -3618,7 +3618,7 @@ document.getElementById('art-save').addEventListener('click', () => {
   const title = document.getElementById('art-title').value.trim();
   if (!title) { alert('חובה כותרת'); return; }
   const arts = artGetArticles();
-  arts.push({
+  arts.unshift({
     id: 'a' + Date.now(),
     title,
     summary: document.getElementById('art-summary').value.trim(),
