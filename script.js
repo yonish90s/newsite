@@ -3470,20 +3470,19 @@ function buildArticlesPage(articles) {
   `).join('');
 
   const listHTML = articles.map((a) => `
-    <div class="art-card" onclick="artOpenDetail('${artEsc(a.id)}')">
-      <div class="art-card-img-wrap">
-        ${a.image ? `<img src="${a.image}" alt="">` : '<div class="art-card-img-placeholder"></div>'}
-        <span class="art-card-badge art-category-badge" style="background:${a.categoryColor||'#e65100'}">${a.category}</span>
-        <button class="art-delete-btn" onclick="event.stopPropagation();artDelete('${artEsc(a.id)}',this)">✕</button>
-      </div>
-      <div class="art-card-text">
+    <div class="art-row" onclick="artOpenDetail('${artEsc(a.id)}')">
+      <div class="art-row-text">
         <h3>${a.title}</h3>
         <p>${a.summary}</p>
-        <div class="art-card-meta">
+        <div class="art-row-meta">
           <span>${a.author}</span>
-          <span>·</span>
+          <span class="art-row-sep">|</span>
           <span>${a.timestamp}</span>
         </div>
+      </div>
+      <div class="art-row-img-wrap">
+        ${a.image ? `<img src="${a.image}" alt="">` : '<div class="art-row-img-placeholder"></div>'}
+        <button class="art-delete-btn" onclick="event.stopPropagation();artDelete('${artEsc(a.id)}',this)">✕</button>
       </div>
     </div>
   `).join('');
@@ -3502,7 +3501,7 @@ function buildArticlesPage(articles) {
       <div class="art-layout">
         <div class="art-main">
           <div class="art-section-title">כל הכתבות</div>
-          <div class="art-grid">${listHTML}</div>
+          <div class="art-rows">${listHTML}</div>
           <button class="art-add-btn" onclick="openArtModal()">+ הוסף כתבה חדשה</button>
         </div>
         <div class="art-sidebar">
