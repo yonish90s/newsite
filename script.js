@@ -192,7 +192,15 @@ async function initSite() {
       console.error("Local load failed too", localErr);
     }
   }
-  
+
+  // הוספת עמוד כתבות אוטומטית אם עוד לא קיים
+  if (!pages.find(p => p.title.includes('כתבות'))) {
+    const artPage = { id: 'page-articles-' + Date.now(), title: 'כתבות', content: buildArticlesPage(ARTICLES_SAMPLES) };
+    pages.push(artPage);
+    if (!topNavPages.includes(artPage.id)) topNavPages.push(artPage.id);
+    saveToStorage();
+  }
+
   // תיקון אוטומטי (Migration) לקישורים מתים בתפריט העליון
   const allNavLinks = navLinksContainer.querySelectorAll('a');
   let madeChanges = false;
