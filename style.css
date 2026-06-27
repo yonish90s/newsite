@@ -1876,16 +1876,19 @@ body:not(.edit-mode) .hotspot-delete-btn {
 .art-main { flex: 1; min-width: 0; }
 .art-sidebar { width: 270px; flex-shrink: 0; }
 
-/* Article cards */
-.art-card { display: flex; flex-direction: row; gap: 0; background: #fff; border-radius: 12px; margin-bottom: 14px; box-shadow: 0 1px 6px rgba(0,0,0,0.07); cursor: pointer; overflow: hidden; transition: box-shadow 0.2s, transform 0.15s; }
-.art-card:hover { box-shadow: 0 6px 22px rgba(0,0,0,0.13); transform: translateY(-2px); }
-.art-card-text { flex: 1; padding: 18px 20px; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
-.art-card-text h3 { font-size: 17px; font-weight: 800; margin: 4px 0 8px; line-height: 1.45; color: #111; }
-.art-card-text p { font-size: 13.5px; color: #666; margin: 0 0 10px; line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-.art-read-more { font-size: 13px; font-weight: 700; color: #e53935; }
-.art-card-img-wrap { position: relative; width: 200px; flex-shrink: 0; }
-.art-card-img-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.art-card-img-placeholder { width: 100%; height: 100%; min-height: 140px; background: #e8e8e8; }
+/* Article cards grid */
+.art-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+.art-card { display: flex; flex-direction: column; background: #fff; border-radius: 12px; box-shadow: 0 1px 6px rgba(0,0,0,0.08); cursor: pointer; overflow: hidden; transition: box-shadow 0.2s, transform 0.15s; }
+.art-card:hover { box-shadow: 0 8px 26px rgba(0,0,0,0.15); transform: translateY(-3px); }
+.art-card-img-wrap { position: relative; width: 100%; height: 180px; overflow: hidden; flex-shrink: 0; }
+.art-card-img-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.35s; }
+.art-card:hover .art-card-img-wrap img { transform: scale(1.05); }
+.art-card-img-placeholder { width: 100%; height: 100%; background: #e8e8e8; }
+.art-card-badge { position: absolute; top: 10px; right: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.25); }
+.art-card-text { flex: 1; padding: 16px 18px; min-width: 0; display: flex; flex-direction: column; }
+.art-card-text h3 { font-size: 16px; font-weight: 800; margin: 0 0 8px; line-height: 1.45; color: #111; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.art-card-text p { font-size: 13px; color: #666; margin: 0 0 12px; line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; flex: 1; }
+.art-card-meta { display: flex; gap: 6px; font-size: 12px; color: #999; align-items: center; margin-top: auto; }
 
 /* Sidebar */
 .art-sidebar-box { background: #fff; border-radius: 14px; padding: 20px; margin-bottom: 18px; box-shadow: 0 1px 8px rgba(0,0,0,0.07); }
@@ -1923,7 +1926,6 @@ body:not(.edit-mode) .hotspot-delete-btn {
 @media (max-width: 900px) {
   .art-featured-grid { grid-template-columns: 1fr 1fr; }
   .art-featured-grid .art-featured-card:last-child { display: none; }
-  .art-card-img-wrap { width: 150px; }
 }
 @media (max-width: 768px) {
   .art-inner { padding: 14px 12px 36px; }
@@ -1931,8 +1933,8 @@ body:not(.edit-mode) .hotspot-delete-btn {
   .art-featured-grid .art-featured-card:last-child { display: block; }
   .art-layout { flex-direction: column; }
   .art-sidebar { width: 100%; }
-  .art-card { flex-direction: column; }
-  .art-card-img-wrap { width: 100%; height: 190px; }
+  .art-grid { grid-template-columns: 1fr; }
+  .art-card-img-wrap { height: 190px; }
   .art-detail-title { font-size: 22px; }
   .art-detail-content p { font-size: 15px; }
 }

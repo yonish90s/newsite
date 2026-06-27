@@ -3471,20 +3471,19 @@ function buildArticlesPage(articles) {
 
   const listHTML = articles.map((a) => `
     <div class="art-card" onclick="artOpenDetail('${artEsc(a.id)}')">
+      <div class="art-card-img-wrap">
+        ${a.image ? `<img src="${a.image}" alt="">` : '<div class="art-card-img-placeholder"></div>'}
+        <span class="art-card-badge art-category-badge" style="background:${a.categoryColor||'#e65100'}">${a.category}</span>
+        <button class="art-delete-btn" onclick="event.stopPropagation();artDelete('${artEsc(a.id)}',this)">✕</button>
+      </div>
       <div class="art-card-text">
-        <div class="art-meta">
-          <span class="art-category-badge" style="background:${a.categoryColor||'#e65100'}">${a.category}</span>
+        <h3>${a.title}</h3>
+        <p>${a.summary}</p>
+        <div class="art-card-meta">
           <span>${a.author}</span>
           <span>·</span>
           <span>${a.timestamp}</span>
         </div>
-        <h3>${a.title}</h3>
-        <p>${a.summary}</p>
-        <span class="art-read-more">קרא עוד ›</span>
-      </div>
-      <div class="art-card-img-wrap">
-        ${a.image ? `<img src="${a.image}" alt="">` : '<div class="art-card-img-placeholder"></div>'}
-        <button class="art-delete-btn" onclick="event.stopPropagation();artDelete('${artEsc(a.id)}',this)">✕</button>
       </div>
     </div>
   `).join('');
@@ -3503,7 +3502,7 @@ function buildArticlesPage(articles) {
       <div class="art-layout">
         <div class="art-main">
           <div class="art-section-title">כל הכתבות</div>
-          ${listHTML}
+          <div class="art-grid">${listHTML}</div>
           <button class="art-add-btn" onclick="openArtModal()">+ הוסף כתבה חדשה</button>
         </div>
         <div class="art-sidebar">
