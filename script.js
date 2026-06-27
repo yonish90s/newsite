@@ -3446,62 +3446,67 @@ const ARTICLES_SAMPLES = [
 
 function buildArticlesPage(articles) {
   const featured = articles.slice(0, 3);
-  const list = articles.slice(3);
+  const list = articles; // כל הכתבות ברשימה
   const popular = articles.slice(0, 5);
 
   const featuredHTML = featured.map(a => `
-    <div class="art-featured-card" onclick="${a.link ? `window.open('${a.link}','_blank')` : ''}">
+    <div class="art-featured-card" ${a.link ? `onclick="window.open('${a.link}','_blank')"` : ''} style="${a.link ? 'cursor:pointer' : 'cursor:default'}">
       <img src="${a.image || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=600&q=80'}" alt="">
       <div class="art-featured-overlay"></div>
       <div class="art-featured-info">
         <span class="art-category-badge" style="background:${a.categoryColor||'#e65100'}">${a.category}</span>
         <h3>${a.title}</h3>
+        <div class="art-featured-meta">${a.author} · ${a.timestamp}</div>
       </div>
     </div>
   `).join('');
 
-  const listHTML = list.map((a, i) => `
-    <div class="art-row" onclick="${a.link ? `window.open('${a.link}','_blank')` : ''}">
+  const listHTML = list.map((a) => `
+    <div class="art-row" ${a.link ? `onclick="window.open('${a.link}','_blank')"` : ''} style="${a.link ? 'cursor:pointer' : 'cursor:default'}">
+      ${a.image ? `<img class="art-row-img" src="${a.image}" alt="">` : '<div class="art-row-img art-row-img-placeholder"></div>'}
       <div class="art-row-text">
         <div class="art-meta">
           <span class="art-category-badge" style="background:${a.categoryColor||'#e65100'}">${a.category}</span>
           <span>${a.author}</span>
-          <span>|</span>
+          <span>·</span>
           <span>${a.timestamp}</span>
         </div>
         <h3>${a.title}</h3>
         <p>${a.summary}</p>
       </div>
-      ${a.image ? `<img class="art-row-img" src="${a.image}" alt="">` : ''}
-      <button class="art-delete-btn" onclick="event.stopPropagation();artDelete('${a.id}',this)">✕ מחק</button>
+      <button class="art-delete-btn" onclick="event.stopPropagation();artDelete('${a.id}',this)">✕</button>
     </div>
   `).join('');
 
   const popularHTML = popular.map((a, i) => `
-    <div class="art-popular-item">
-      <span class="art-popular-num">0${i+1}</span>
-      <div style="flex:1;font-size:13px;font-weight:600;line-height:1.3;color:#222">${a.title}</div>
+    <div class="art-popular-item" ${a.link ? `onclick="window.open('${a.link}','_blank')"` : ''} style="${a.link ? 'cursor:pointer' : ''}">
+      <span class="art-popular-num">${String(i+1).padStart(2,'0')}</span>
+      <div style="flex:1;font-size:13px;font-weight:600;line-height:1.4;color:#222">${a.title}</div>
     </div>
   `).join('');
 
-  return `<div class="articles-page" data-articles='${JSON.stringify(articles).replace(/'/g,"&#39;").replace(/"/g,"&quot;")}'>
-    <div class="art-featured-grid">${featuredHTML}</div>
-    <div class="art-layout">
-      <div class="art-main">
-        ${listHTML}
-        <button class="art-add-btn" onclick="openArtModal()">+ הוסף כתבה חדשה</button>
-      </div>
-      <div class="art-sidebar">
-        <div class="art-sidebar-box art-newsletter">
-          <h4 style="margin:0 0 8px;font-size:15px">הישארו מעודכנים!</h4>
-          <p style="font-size:12px;color:#666;margin:0 0 10px">הירשמו לניוזלטר שלנו וקבלו את כל עדכוני הטכנולוגיה החמים ישירות לתיבת הדואר שלכם.</p>
-          <input type="text" placeholder="כתבו את שמכם">
-          <input type="email" placeholder="כתובת האימייל שלכם">
-          <button onclick="alert('תודה!')">הרשמה</button>
+  const json = JSON.stringify(articles).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  return `<div class="articles-page" data-articles-json='${json}'>
+    <div class="art-inner">
+      <div class="art-featured-grid">${featuredHTML}</div>
+      <div class="art-layout">
+        <div class="art-main">
+          <div class="art-section-title">כל הכתבות</div>
+          ${listHTML}
+          <button class="art-add-btn" onclick="openArtModal()">+ הוסף כתבה חדשה</button>
         </div>
-        <div class="art-sidebar-box">
-          <h4 style="margin:0 0 12px;font-size:15px;border-bottom:3px solid #e53935;padding-bottom:8px">הכי נקראות השבוע</h4>
-          ${popularHTML}
+        <div class="art-sidebar">
+          <div class="art-sidebar-box art-newsletter">
+            <h4 style="margin:0 0 6px;font-size:16px;font-weight:800">הישארו מעודכנים!</h4>
+            <p style="font-size:12px;color:#777;margin:0 0 12px;line-height:1.5">הירשמו לניוזלטר וקבלו עדכונים ישירות למייל.</p>
+            <input type="text" placeholder="השם שלכם">
+            <input type="email" placeholder="כתובת אימייל">
+            <button onclick="alert('תודה על ההרשמה!')">הרשמה לניוזלטר</button>
+          </div>
+          <div class="art-sidebar-box">
+            <div class="art-sidebar-title">הכי נקראות השבוע</div>
+            ${popularHTML}
+          </div>
         </div>
       </div>
     </div>
@@ -3513,7 +3518,7 @@ function artDelete(id, btn) {
   const container = mainContent.querySelector('.articles-page');
   if (!container) return;
   let arts = [];
-  try { arts = JSON.parse(container.dataset.articles.replace(/&quot;/g,'"')); } catch(e){}
+  try { arts = JSON.parse(container.dataset.articlesJson); } catch(e){}
   arts = arts.filter(a => a.id !== id);
   mainContent.innerHTML = buildArticlesPage(arts);
   saveCurrentPageContent();
@@ -3561,7 +3566,7 @@ document.getElementById('art-save').addEventListener('click', () => {
   const container = mainContent.querySelector('.articles-page');
   if (!container) return;
   let arts = [];
-  try { arts = JSON.parse(container.dataset.articles.replace(/&quot;/g,'"')); } catch(e){}
+  try { arts = JSON.parse(container.dataset.articlesJson); } catch(e){}
   arts.push({
     id: 'a' + Date.now(),
     title,
