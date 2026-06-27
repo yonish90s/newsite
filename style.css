@@ -1812,3 +1812,41 @@ body:not(.edit-mode) .hotspot-delete-btn {
   user-select: none !important;
 }
 
+
+/* ===== קרא עוד ===== */
+.readmore-wrapper {
+  position: relative;
+}
+
+.readmore-collapsed .readmore-content {
+  max-height: 120px;
+  overflow: hidden;
+}
+
+.readmore-fade {
+  display: none;
+  position: absolute;
+  bottom: 28px;
+  left: 0; right: 0;
+  height: 40px;
+  background: linear-gradient(to bottom, transparent, var(--rm-bg, #fff));
+  pointer-events: none;
+}
+
+.readmore-collapsed .readmore-fade {
+  display: block;
+}
+
+.readmore-btn {
+  display: block;
+  margin-top: 6px;
+  font-weight: 700;
+  font-size: 14px;
+  color: #111;
+  text-decoration: underline;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  direction: rtl;
+}

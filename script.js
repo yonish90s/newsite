@@ -716,6 +716,11 @@ function renderPage() {
   // רנדור אזורי לחיצה (Hotspots)
   renderAllHotspots();
 
+  // הפעלת קרא עוד על אלמנטים מסומנים
+  if (!isEditMode) {
+    mainContent.querySelectorAll('[data-has-readmore]').forEach(el => renderReadMore(el));
+  }
+
   // קיצור גובה הקונטיינר לתוכן בלבד (מניעת רקע ענק מתחת לתוכן)
   if (window.innerWidth > 768) {
     fitPageToContent();
@@ -1623,6 +1628,25 @@ interact('.draggable-resizable')
       actionsContainer.appendChild(burnBtn);
     }
 
+    // כפתור קרא עוד
+    const readMoreBtn = document.createElement('button');
+    readMoreBtn.className = 'action-btn';
+    const hasRM = target.dataset.hasReadmore === 'true';
+    readMoreBtn.innerHTML = hasRM ? '📖✕' : '📖';
+    readMoreBtn.title = hasRM ? 'הסר קרא עוד' : 'הוסף קרא עוד';
+    readMoreBtn.addEventListener('mousedown', (e) => {
+      e.stopPropagation();
+      if (target.dataset.hasReadmore === 'true') {
+        removeReadMoreFromEl(target);
+        readMoreBtn.innerHTML = '📖';
+        readMoreBtn.title = 'הוסף קרא עוד';
+      } else {
+        applyReadMoreToEl(target);
+        readMoreBtn.innerHTML = '📖✕';
+        readMoreBtn.title = 'הסר קרא עוד';
+      }
+    });
+
     // כפתור אזור לחיץ (hotspot)
     const hotspotBtn = document.createElement('button');
     hotspotBtn.className = 'action-btn hotspot-action-btn';
@@ -1635,6 +1659,7 @@ interact('.draggable-resizable')
 
     actionsContainer.appendChild(linkBtn);
     actionsContainer.appendChild(openLinkBtn);
+    actionsContainer.appendChild(readMoreBtn);
     actionsContainer.appendChild(hotspotBtn);
     actionsContainer.appendChild(copyBtn);
     actionsContainer.appendChild(delBtn);
@@ -3298,3 +3323,75 @@ function openManagePagesModal() {
 
 if (btnManagePages) btnManagePages.addEventListener('click', openManagePagesModal);
 if (managePagesClose) managePagesClose.onclick = () => { managePagesModal.style.display = 'none'; };
+
+// ============================================================
+// קרא עוד / הקטן
+// ============================================================
+
+function applyReadMoreToEl(el) {
+  // מסמן את האלמנט
+  el.dataset.hasReadmore = 'true';
+  renderReadMore(el);
+  saveCurrentPageContent();
+}
+
+function removeReadMoreFromEl(el) {
+  delete el.dataset.hasReadmore;
+  const wrapper = el.querySelector('.readmore-wrapper');
+  if (wrapper) {
+    // מחלץ את התוכן המקורי
+    const content = wrapper.querySelector('.readmore-content');
+    if (content) el.innerHTML = content.innerHTML;
+  }
+  saveCurrentPageContent();
+}
+
+function renderReadMore(el) {
+  if (!el.dataset.hasReadmore) return;
+  // אל תרנדר שוב אם כבר יש wrapper
+  if (el.querySelector('.readmore-wrapper')) return;
+
+  const originalHTML = el.innerHTML;
+  el.innerHTML = `
+    <div class="readmore-wrapper readmore-collapsed">
+      <div class="readmore-content">${originalHTML}</div>
+      <div class="readmore-fade"></div>
+      <button class="readmore-btn" onclick="toggleReadMore(this)">קראו עוד</button>
+    </div>
+  `;
+}
+
+function toggleReadMore(btn) {
+  const wrapper = btn.closest('.readmore-wrapper');
+  if (!wrapper) return;
+  const collapsed = wrapper.classList.toggle('readmore-collapsed');
+  btn.textContent = collapsed ? 'קראו עוד' : 'הקטן';
+}
+
+// החלת קרא עוד על כל האלמנטים שמסומנים אחרי renderPage
+const _origRenderPage = renderPage;
+// הוספת הפעלת readmore לתוך applyEditModeToContent ו-removeEditModeFromContent
+const _origApplyEdit = applyEditModeToContent;
+applyEditModeToContent = function() {
+  _origApplyEdit.apply(this, arguments);
+  // במצב עריכה - מסיר את ה-wrapper כדי שניתן לערוך
+  mainContent.querySelectorAll('[data-has-readmore]').forEach(el => {
+    const wrapper = el.querySelector('.readmore-wrapper');
+    if (wrapper) {
+      const content = wrapper.querySelector('.readmore-content');
+      if (content) el.innerHTML = content.innerHTML;
+    }
+  });
+};
+
+const _origRemoveEdit = removeEditModeFromContent;
+removeEditModeFromContent = function() {
+  _origRemoveEdit.apply(this, arguments);
+  // ביציאה ממצב עריכה - מחיל מחדש את קרא עוד
+  mainContent.querySelectorAll('[data-has-readmore]').forEach(el => {
+    renderReadMore(el);
+  });
+};
+
+// כפתור קרא עוד בסרגל הכלים של האלמנט - מוסיף דרך applyEditModeToContent
+// לכן מאזינים ל-renderPage ומוסיפים את הכפתור לשם
