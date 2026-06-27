@@ -12,7 +12,7 @@
   <!-- ספריית localforage לשמירת כמות בלתי מוגבלת של תמונות (במקום localStorage המוגבל) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
   <!-- קישור לקובץ העיצוב החיצוני (עם פרמטר למניעת שמירה במטמון) -->
-  <link rel="stylesheet" href="./style.css?v=6">
+  <link rel="stylesheet" href="./style.css?v=13">
 </head>
 <body class="light-mode">
   
@@ -217,6 +217,28 @@
   </div>
 </div>
 
+<!-- מודאל הוספת מוצר לחנות -->
+<div id="shop-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:99999; align-items:center; justify-content:center; direction:rtl;">
+  <div style="background:#fff; border-radius:16px; padding:28px; width:90%; max-width:460px; max-height:85vh; overflow-y:auto; display:flex; flex-direction:column; gap:12px;">
+    <h3 style="margin:0 0 4px; font-size:18px;">הוספת מוצר חדש</h3>
+    <label style="font-size:13px; font-weight:600;">שם המוצר <span style="color:red">*</span></label>
+    <input id="shop-name" type="text" placeholder="שם המוצר" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+    <label style="font-size:13px; font-weight:600;">תווית קטנה (אופציונלי)</label>
+    <input id="shop-label" type="text" placeholder="למשל: חריטה חינם, מבצע" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+    <label style="font-size:13px; font-weight:600;">מחיר</label>
+    <input id="shop-price" type="text" placeholder="למשל: ₪999" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+    <label style="font-size:13px; font-weight:600;">קישור לרכישה (אופציונלי)</label>
+    <input id="shop-link" type="url" placeholder="https://..." style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+    <label style="font-size:13px; font-weight:600;">תמונת מוצר</label>
+    <button id="shop-img-pick" style="padding:9px 12px; border:1px dashed #bbb; border-radius:8px; background:#f9f9f9; cursor:pointer; font-size:13px; text-align:right;">לחץ לבחירת תמונה מהמחשב</button>
+    <img id="shop-img-preview" src="" alt="" style="display:none; max-height:140px; border-radius:8px; object-fit:contain; width:100%;">
+    <div style="display:flex; gap:10px; margin-top:4px;">
+      <button id="shop-cancel" style="flex:1; padding:10px; border:1px solid #ddd; border-radius:8px; background:#fff; cursor:pointer; font-size:14px;">ביטול</button>
+      <button id="shop-save" style="flex:1; padding:10px; border:none; border-radius:8px; background:#111; color:#fff; cursor:pointer; font-size:14px; font-weight:700;">שמור מוצר</button>
+    </div>
+  </div>
+</div>
+
 <div id="auth-modal" class="auth-modal-overlay">
   <div class="auth-modal-card">
     <div class="auth-modal-top-bar">
@@ -297,6 +319,6 @@
 
 
 
-  <script type="module" src="./script.js?v=6"></script>
+  <script type="module" src="./script.js?v=12"></script>
 </body>
 </html>

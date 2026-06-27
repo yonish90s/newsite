@@ -201,6 +201,14 @@ async function initSite() {
     saveToStorage();
   }
 
+  // הוספת עמוד חנות אוטומטית אם עוד לא קיים
+  if (!pages.find(p => p.content && p.content.includes('shop-page'))) {
+    const shopPage = { id: 'page-shop-' + Date.now(), title: 'חנות', content: buildShopPage(SHOP_SAMPLES) };
+    pages.push(shopPage);
+    if (!topNavPages.includes(shopPage.id)) topNavPages.push(shopPage.id);
+    saveToStorage();
+  }
+
   // תיקון אוטומטי (Migration) לקישורים מתים בתפריט העליון
   const allNavLinks = navLinksContainer.querySelectorAll('a');
   let madeChanges = false;
@@ -623,7 +631,23 @@ function renderPage() {
   const currentPage = pages.find(p => p.id === activePageId); // מחפשים את העמוד ברשימה
   if (currentPage) {
     mainContent.innerHTML = currentPage.content; // מזריקים את ה-HTML של העמוד פנימה
-    
+
+    // עמוד כתבות: בונים מחדש מהנתונים השמורים כדי ששינויי מבנה (חיפוש, עיצוב) תמיד ייכנסו
+    const artPageEl = mainContent.querySelector('.articles-page');
+    if (artPageEl && typeof buildArticlesPage === 'function') {
+      let savedArts = [];
+      try { savedArts = JSON.parse(decodeURIComponent(artPageEl.dataset.articlesJson)); } catch(e){}
+      if (savedArts.length) mainContent.innerHTML = buildArticlesPage(savedArts);
+    }
+
+    // עמוד חנות: בונים מחדש מהנתונים השמורים
+    const shopPageEl = mainContent.querySelector('.shop-page');
+    if (shopPageEl && typeof buildShopPage === 'function') {
+      let savedProds = [];
+      try { savedProds = JSON.parse(decodeURIComponent(shopPageEl.dataset.productsJson)); } catch(e){}
+      if (savedProds.length) mainContent.innerHTML = buildShopPage(savedProds);
+    }
+
     // המרת מיקומים (Migration): הפיכת טרנספורמציות ישנות למיקום אבסולוטי (left/top)
     // זה קריטי כדי שגלילת המסך (Scroll) תעבוד כשיש הרבה תוכן למטה
     const draggables = mainContent.querySelectorAll('.draggable-resizable');
@@ -3500,8 +3524,12 @@ function buildArticlesPage(articles) {
       <div class="art-featured-grid">${featuredHTML}</div>
       <div class="art-layout">
         <div class="art-main">
+          <div class="art-search-wrap">
+            <input type="text" class="art-search" placeholder="🔍 חיפוש כתבות..." oninput="artSearch(this.value)">
+          </div>
           <div class="art-section-title">כל הכתבות</div>
           <div class="art-rows">${listHTML}</div>
+          <div class="art-no-results" style="display:none">לא נמצאו כתבות התואמות לחיפוש</div>
           <button class="art-add-btn" onclick="openArtModal()">+ הוסף כתבה חדשה</button>
         </div>
         <div class="art-sidebar">
@@ -3532,8 +3560,24 @@ function artOpenDetail(id) {
 
   const bodyHTML = (a.body || a.summary || '').split('\n').map(p => p.trim() ? `<p>${p}</p>` : '').join('');
 
+  // כתבות מומלצות - עד 3 כתבות אחרות
+  const recommended = arts.filter(x => x.id !== id).slice(0, 3);
+  const recHTML = recommended.map(r => `
+    <div class="art-rec-card" onclick="artOpenDetail('${artEsc(r.id)}')">
+      <div class="art-rec-img">
+        ${r.image ? `<img src="${r.image}" alt="">` : '<div class="art-card-img-placeholder"></div>'}
+        <span class="art-rec-badge art-category-badge" style="background:${r.categoryColor||'#e65100'}">${r.category}</span>
+      </div>
+      <div class="art-rec-text">
+        <h4>${r.title}</h4>
+        <div class="art-rec-meta">${r.author} · ${r.timestamp}</div>
+      </div>
+    </div>
+  `).join('');
+
+  const json = encodeURIComponent(JSON.stringify(arts));
   mainContent.innerHTML = `
-    <div class="art-detail" data-article-id="${id}">
+    <div class="art-detail articles-page" data-article-id="${id}" data-articles-json="${json}">
       <div class="art-detail-inner">
         <button class="art-back-btn" onclick="artGoBack()">← חזרה לכתבות</button>
         ${a.image ? `<img class="art-detail-hero" src="${a.image}" alt="">` : ''}
@@ -3548,14 +3592,34 @@ function artOpenDetail(id) {
           <div class="art-detail-content">${bodyHTML}</div>
           ${a.link ? `<a href="${a.link}" target="_blank" class="art-detail-link">קרא באתר המקור ↗</a>` : ''}
         </div>
+        ${recommended.length ? `
+        <div class="art-rec-section">
+          <div class="art-section-title">כתבות מומלצות</div>
+          <div class="art-rec-grid">${recHTML}</div>
+        </div>` : ''}
       </div>
     </div>
   `;
   mainContent.scrollTop = 0;
+  window.scrollTo(0, 0);
 }
 
 function artGoBack() {
   renderPage();
+}
+
+function artSearch(query) {
+  const q = (query || '').trim().toLowerCase();
+  const rows = mainContent.querySelectorAll('.art-row');
+  let visible = 0;
+  rows.forEach(row => {
+    const txt = row.textContent.toLowerCase();
+    const match = !q || txt.includes(q);
+    row.style.display = match ? '' : 'none';
+    if (match) visible++;
+  });
+  const noRes = mainContent.querySelector('.art-no-results');
+  if (noRes) noRes.style.display = visible === 0 ? 'block' : 'none';
 }
 
 // חשיפת הפונקציות ל-window כדי ש-onclick יעבוד (הקובץ הוא module)
@@ -3563,6 +3627,7 @@ window.artOpenDetail = artOpenDetail;
 window.artGoBack = artGoBack;
 window.artDelete = artDelete;
 window.openArtModal = openArtModal;
+window.artSearch = artSearch;
 
 function artGetArticles() {
   const container = mainContent.querySelector('.articles-page');
@@ -3649,3 +3714,230 @@ if (btnAddArticlesPage) {
     renderPage();
   });
 }
+
+// ===== עמוד חנות =====
+
+const SHOP_SAMPLES = [
+  { id: 'p1', name: 'AirPods Max 2 - Midnight', label: 'חריטה חינם', price: '₪2,199', image: 'https://images.unsplash.com/photo-1625245488600-f03fef636a3c?w=600&q=80', link: '' },
+  { id: 'p2', name: 'AirPods Pro 3', label: 'חריטה חינם', price: '₪999', image: 'https://images.unsplash.com/photo-1606220588913-b3aacb4d2f46?w=600&q=80', link: '' },
+  { id: 'p3', name: 'AirPods 4 עם ביטול רעשים אקטיבי', label: 'חריטה חינם', price: '₪749', image: 'https://images.unsplash.com/photo-1603351154351-5e2d0600bb77?w=600&q=80', link: '' },
+  { id: 'p4', name: 'iPhone 16 Pro', label: 'עד 24 תשלומים', price: '₪4,799', image: 'https://images.unsplash.com/photo-1592286927505-1def25115558?w=600&q=80', link: '' },
+  { id: 'p5', name: 'MacBook Air M3', label: 'הנחת סטודנט', price: '₪4,499', image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=600&q=80', link: '' },
+  { id: 'p6', name: 'Apple Watch Series 10', label: 'רצועה חינם', price: '₪1,799', image: 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=600&q=80', link: '' }
+];
+
+function buildShopPage(products) {
+  const cartSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>';
+  const cardsHTML = products.map(p => `
+    <div class="shop-card" ${p.link ? `onclick="window.open('${p.link}','_blank')"` : ''} style="${p.link ? 'cursor:pointer' : ''}">
+      <button class="shop-delete-btn" onclick="event.stopPropagation();shopDelete('${artEsc(p.id)}')">✕</button>
+      <div class="shop-card-img">
+        ${p.image ? `<img src="${p.image}" alt="">` : '<div class="shop-img-placeholder"></div>'}
+        <button class="shop-cart-btn" title="הוסף לסל" onclick="event.stopPropagation();shopAddToCart('${artEsc(p.id)}')">${cartSvg}<span class="shop-cart-plus">+</span></button>
+      </div>
+      <div class="shop-card-info">
+        ${p.label ? `<div class="shop-label">${p.label}</div>` : ''}
+        <h3 class="shop-name">${p.name}</h3>
+        <div class="shop-price">${p.price || ''}</div>
+      </div>
+    </div>
+  `).join('');
+
+  const bestSellers = products.slice(0, 5);
+  const bestHTML = bestSellers.map((p, i) => `
+    <div class="shop-best-item" ${p.link ? `onclick="window.open('${p.link}','_blank')"` : ''} style="${p.link ? 'cursor:pointer' : ''}">
+      <span class="shop-best-num">${String(i+1).padStart(2,'0')}</span>
+      ${p.image ? `<img class="shop-best-img" src="${p.image}" alt="">` : ''}
+      <div class="shop-best-text">
+        <div class="shop-best-name">${p.name}</div>
+        <div class="shop-best-price">${p.price || ''}</div>
+      </div>
+    </div>
+  `).join('');
+
+  const json = encodeURIComponent(JSON.stringify(products));
+  return `<div class="shop-page" data-products-json="${json}">
+    <div class="shop-inner">
+      <div class="shop-header">
+        <h1 class="shop-title">החנות</h1>
+        <p class="shop-subtitle">כל המוצרים שאתם אוהבים, במקום אחד.</p>
+      </div>
+      <div class="shop-search-wrap">
+        <input type="text" class="shop-search" placeholder="🔍 חיפוש מוצרים..." oninput="shopSearch(this.value)">
+      </div>
+      <div class="shop-layout">
+        <div class="shop-main">
+          <div class="shop-grid">${cardsHTML}</div>
+          <div class="shop-no-results" style="display:none">לא נמצאו מוצרים התואמים לחיפוש</div>
+          <button class="shop-add-btn" onclick="openShopModal()">+ הוסף מוצר חדש</button>
+        </div>
+        <div class="shop-sidebar">
+          <div class="shop-sidebar-box">
+            <div class="shop-sidebar-title">הנמכרות השבוע</div>
+            ${bestHTML}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button class="shop-cart-fab" onclick="shopToggleCart()" title="הסל שלי">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+      <span class="shop-cart-count" style="display:none">0</span>
+    </button>
+    <div class="shop-cart-panel" style="display:none">
+      <div class="shop-cart-header"><span>הסל שלי</span><button onclick="shopToggleCart()" class="shop-cart-close">✕</button></div>
+      <div class="shop-cart-items"></div>
+      <div class="shop-cart-footer">
+        <div class="shop-cart-total"></div>
+        <button class="shop-cart-checkout" onclick="alert('תודה על הקנייה!')">מעבר לתשלום</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+let shopCart = [];
+
+function shopAddToCart(id) {
+  const prods = shopGetProducts();
+  const p = prods.find(x => x.id === id);
+  if (!p) return;
+  const existing = shopCart.find(x => x.id === id);
+  if (existing) existing.qty++;
+  else shopCart.push({ id: p.id, name: p.name, price: p.price, image: p.image, qty: 1 });
+  shopRenderCart();
+  // אנימציית אישור קצרה
+  const fab = mainContent.querySelector('.shop-cart-fab');
+  if (fab) { fab.classList.add('shop-cart-bump'); setTimeout(() => fab.classList.remove('shop-cart-bump'), 300); }
+}
+
+function shopRemoveFromCart(id) {
+  shopCart = shopCart.filter(x => x.id !== id);
+  shopRenderCart();
+}
+
+function shopParsePrice(str) {
+  const n = parseFloat(String(str || '').replace(/[^\d.]/g, ''));
+  return isNaN(n) ? 0 : n;
+}
+
+function shopRenderCart() {
+  const count = shopCart.reduce((s, x) => s + x.qty, 0);
+  const countEl = mainContent.querySelector('.shop-cart-count');
+  if (countEl) { countEl.textContent = count; countEl.style.display = count ? 'flex' : 'none'; }
+  const itemsEl = mainContent.querySelector('.shop-cart-items');
+  if (itemsEl) {
+    if (!shopCart.length) {
+      itemsEl.innerHTML = '<div class="shop-cart-empty">הסל ריק</div>';
+    } else {
+      itemsEl.innerHTML = shopCart.map(x => `
+        <div class="shop-cart-row">
+          ${x.image ? `<img src="${x.image}" alt="">` : ''}
+          <div class="shop-cart-row-text">
+            <div class="shop-cart-row-name">${x.name}</div>
+            <div class="shop-cart-row-price">${x.price || ''} ${x.qty > 1 ? '× ' + x.qty : ''}</div>
+          </div>
+          <button class="shop-cart-remove" onclick="shopRemoveFromCart('${artEsc(x.id)}')">✕</button>
+        </div>
+      `).join('');
+    }
+  }
+  const totalEl = mainContent.querySelector('.shop-cart-total');
+  if (totalEl) {
+    const total = shopCart.reduce((s, x) => s + shopParsePrice(x.price) * x.qty, 0);
+    totalEl.textContent = total ? ('סה"כ: ₪' + total.toLocaleString()) : '';
+  }
+}
+
+function shopToggleCart() {
+  const panel = mainContent.querySelector('.shop-cart-panel');
+  if (!panel) return;
+  panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
+  shopRenderCart();
+}
+
+function shopSearch(query) {
+  const q = (query || '').trim().toLowerCase();
+  const cards = mainContent.querySelectorAll('.shop-card');
+  let visible = 0;
+  cards.forEach(card => {
+    const txt = card.textContent.toLowerCase();
+    const match = !q || txt.includes(q);
+    card.style.display = match ? '' : 'none';
+    if (match) visible++;
+  });
+  const noRes = mainContent.querySelector('.shop-no-results');
+  if (noRes) noRes.style.display = visible === 0 ? 'block' : 'none';
+}
+
+function shopGetProducts() {
+  const container = mainContent.querySelector('.shop-page');
+  if (!container) return [];
+  try { return JSON.parse(decodeURIComponent(container.dataset.productsJson)); } catch(e){ return []; }
+}
+
+function shopDelete(id) {
+  if (!isEditMode) return;
+  const prods = shopGetProducts().filter(p => p.id !== id);
+  mainContent.innerHTML = buildShopPage(prods);
+  saveCurrentPageContent();
+}
+
+let shopImgData = '';
+
+function openShopModal() {
+  if (!isEditMode) return;
+  document.getElementById('shop-name').value = '';
+  document.getElementById('shop-label').value = '';
+  document.getElementById('shop-price').value = '';
+  document.getElementById('shop-link').value = '';
+  const preview = document.getElementById('shop-img-preview');
+  preview.style.display = 'none'; preview.src = '';
+  shopImgData = '';
+  document.getElementById('shop-img-pick').textContent = 'לחץ לבחירת תמונה מהמחשב';
+  document.getElementById('shop-modal').style.display = 'flex';
+}
+
+document.getElementById('shop-img-pick').addEventListener('click', () => {
+  const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
+  inp.onchange = e => {
+    const f = e.target.files[0]; if (!f) return;
+    const r = new FileReader();
+    r.onload = ev => {
+      shopImgData = ev.target.result;
+      const p = document.getElementById('shop-img-preview');
+      p.src = shopImgData; p.style.display = 'block';
+      document.getElementById('shop-img-pick').textContent = '✓ תמונה נבחרה';
+    };
+    r.readAsDataURL(f);
+  };
+  inp.click();
+});
+
+document.getElementById('shop-cancel').addEventListener('click', () => {
+  document.getElementById('shop-modal').style.display = 'none';
+});
+
+document.getElementById('shop-save').addEventListener('click', () => {
+  const name = document.getElementById('shop-name').value.trim();
+  if (!name) { alert('חובה שם מוצר'); return; }
+  const prods = shopGetProducts();
+  prods.unshift({
+    id: 'p' + Date.now(),
+    name,
+    label: document.getElementById('shop-label').value.trim(),
+    price: document.getElementById('shop-price').value.trim(),
+    image: shopImgData,
+    link: document.getElementById('shop-link').value.trim()
+  });
+  mainContent.innerHTML = buildShopPage(prods);
+  saveCurrentPageContent();
+  document.getElementById('shop-modal').style.display = 'none';
+});
+
+window.buildShopPage = buildShopPage;
+window.shopDelete = shopDelete;
+window.openShopModal = openShopModal;
+window.shopSearch = shopSearch;
+window.shopAddToCart = shopAddToCart;
+window.shopRemoveFromCart = shopRemoveFromCart;
+window.shopToggleCart = shopToggleCart;
