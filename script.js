@@ -5542,4 +5542,5 @@ window.adminToggleChatHide = adminToggleChatHide;
 window.adminDeleteChat = adminDeleteChat;
 window.adminRestoreCart = adminRestoreCart;
 window.adminRestoreChat = adminRestoreChat;
+window.loadSingleChat = loadSingleChat;
 
