@@ -307,9 +307,11 @@
     <button id="course-img-pick" style="padding:9px 12px; border:1px dashed #bbb; border-radius:8px; background:#f9f9f9; cursor:pointer; font-size:13px; text-align:right;">לחץ לבחירת תמונה</button>
     <img id="course-img-preview" src="" alt="" style="display:none; max-height:100px; border-radius:8px; object-fit:cover; width:100%;">
     
-    <label style="font-size:13px; font-weight:600;">סרטון קצר (עד 10 שניות) <span style="color:red">*</span></label>
-    <button id="course-vid-pick" style="padding:9px 12px; border:1px dashed #bbb; border-radius:8px; background:#f9f9f9; cursor:pointer; font-size:13px; text-align:right;">לחץ לבחירת סרטון</button>
-    <video id="course-vid-preview" controls muted playsinline style="display:none; max-height:120px; border-radius:8px; width:100%;"></video>
+    <label style="font-size:13px; font-weight:600;">סרטון השיעור (קישור מ-Vimeo/YouTube או קובץ מקומי) <span style="color:red">*</span></label>
+    <input id="course-vid-url" type="text" placeholder="הדבק קישור (למשל: https://vimeo.com/1205176242)" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+    <div style="text-align:center; font-size:11px; color:#999; margin:2px 0;">- או -</div>
+    <button id="course-vid-pick" style="padding:9px 12px; border:1px dashed #bbb; border-radius:8px; background:#f9f9f9; cursor:pointer; font-size:13px; text-align:right; width:100%;">בחר קובץ מקומי מהמחשב (עד 10 שניות)</button>
+    <video id="course-vid-preview" controls muted playsinline style="display:none; max-height:120px; border-radius:8px; width:100%; margin-top:5px;"></video>
 
     <div style="display:flex; gap:10px; margin-top:4px;">
       <button id="course-cancel" style="flex:1; padding:10px; border:1px solid #ddd; border-radius:8px; background:#fff; cursor:pointer; font-size:14px;">ביטול</button>

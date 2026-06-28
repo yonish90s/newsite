@@ -4698,6 +4698,41 @@ function buildCoursesPage(courses) {
   </div>`;
 }
 
+function getCourseVideoPlayerHTML(videoUrl) {
+  if (!videoUrl) return '';
+  
+  // Check if Vimeo link
+  const vimeoRegex = /(?:vimeo\.com\/|player\.vimeo\.com\/video\/)(\d+)/;
+  const vimeoMatch = videoUrl.match(vimeoRegex);
+  if (vimeoMatch) {
+    const videoId = vimeoMatch[1];
+    return `
+      <div style="position:relative; width:100%; aspect-ratio:16/9; max-height:450px; overflow:hidden; border-radius:12px; margin-bottom:20px; background:#000;">
+        <iframe src="https://player.vimeo.com/video/${videoId}?autoplay=1&muted=1" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen style="position:absolute; top:0; left:0; width:100%; height:100%;"></iframe>
+      </div>
+    `;
+  }
+  
+  // Check if YouTube link
+  const ytRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+  const ytMatch = videoUrl.match(ytRegex);
+  if (ytMatch) {
+    const videoId = ytMatch[1];
+    return `
+      <div style="position:relative; width:100%; aspect-ratio:16/9; max-height:450px; overflow:hidden; border-radius:12px; margin-bottom:20px; background:#000;">
+        <iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="position:absolute; top:0; left:0; width:100%; height:100%;"></iframe>
+      </div>
+    `;
+  }
+  
+  // HTML5 Local video preview or direct MP4 URL
+  return `
+    <div style="position:relative; width:100%; max-height:450px; overflow:hidden; border-radius:12px; margin-bottom:20px; background:#000;">
+      <video src="${videoUrl}" controls autoplay muted playsinline style="width:100%; height:100%; display:block; max-height:450px; object-fit:contain;"></video>
+    </div>
+  `;
+}
+
 function courseOpenDetail(id) {
   const container = mainContent.querySelector('.courses-page');
   if (!container) return;
@@ -4727,11 +4762,7 @@ function courseOpenDetail(id) {
         <button class="art-back-btn" onclick="courseGoBack()">← חזרה לקורסים</button>
         
         <!-- נגן וידאו מובנה במקום תמונת כותרת -->
-        ${c.video ? `
-          <div style="position:relative; width:100%; max-height:450px; overflow:hidden; border-radius:12px; margin-bottom:20px; background:#000;">
-            <video src="${c.video}" controls autoplay muted playsinline style="width:100%; height:100%; display:block; max-height:450px; object-fit:contain;"></video>
-          </div>
-        ` : ''}
+        ${getCourseVideoPlayerHTML(c.video)}
 
         <div class="art-detail-body">
           <div class="art-meta" style="margin-bottom:12px">
@@ -4799,6 +4830,7 @@ function openCourseModal() {
   document.getElementById('course-summary').value = '';
   document.getElementById('course-author').value = '';
   document.getElementById('course-category').value = '';
+  document.getElementById('course-vid-url').value = '';
   
   const imgPreview = document.getElementById('course-img-preview');
   imgPreview.style.display = 'none'; imgPreview.src = '';
@@ -4808,7 +4840,7 @@ function openCourseModal() {
   const vidPreview = document.getElementById('course-vid-preview');
   vidPreview.style.display = 'none'; vidPreview.src = '';
   courseVidData = '';
-  document.getElementById('course-vid-pick').textContent = 'לחץ לבחירת סרטון';
+  document.getElementById('course-vid-pick').textContent = 'בחר קובץ מקומי מהמחשב (עד 10 שניות)';
   
   document.getElementById('course-modal').style.display = 'flex';
 }
@@ -4871,7 +4903,10 @@ document.getElementById('course-cancel').addEventListener('click', () => {
 document.getElementById('course-save').addEventListener('click', () => {
   const title = document.getElementById('course-title').value.trim();
   if (!title) { alert('חובה כותרת קורס'); return; }
-  if (!courseVidData) { alert('חובה לבחור סרטון של עד 10 שניות'); return; }
+  
+  const videoUrl = document.getElementById('course-vid-url').value.trim();
+  const finalVideo = videoUrl || courseVidData;
+  if (!finalVideo) { alert('חובה להדביק קישור לסרטון (Vimeo/YouTube) או לבחור קובץ מקומי'); return; }
 
   const courses = courseGetCourses();
   courses.unshift({
@@ -4879,7 +4914,7 @@ document.getElementById('course-save').addEventListener('click', () => {
     title,
     summary: document.getElementById('course-summary').value.trim(),
     image: courseImgData,
-    video: courseVidData,
+    video: finalVideo,
     author: document.getElementById('course-author').value.trim(),
     category: document.getElementById('course-category').value.trim(),
     categoryColor: '#2196F3',
