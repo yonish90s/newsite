@@ -5393,6 +5393,23 @@ function chatGoBackToAdminList() {
   loadChatContent(auth.currentUser);
 }
 
+// מעבר לצ'אט מסך מלא / שחזור
+function chatToggleMaximize() {
+  const panel = document.getElementById('global-chat-panel');
+  if (!panel) return;
+  
+  panel.classList.toggle('chat-maximized');
+  
+  const icon = document.getElementById('maximize-icon');
+  if (icon) {
+    if (panel.classList.contains('chat-maximized')) {
+      icon.innerHTML = '<path d="M4 14h6v6M20 10h-6V4M14 10l7-7M10 14l-7 7"/>';
+    } else {
+      icon.innerHTML = '<path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>';
+    }
+  }
+}
+
 // רינדור הודעות הצ'אט (משותף למשתמש ומנהל)
 function renderUserChatMessages(chatData) {
   const chatBody = document.getElementById('chat-body');
@@ -5549,9 +5566,7 @@ async function adminRestoreChat() {
 }
 
 // האזנה לכפתורי שחזור בסרגל
-const btnRestoreCart = document.getElementById('btn-restore-cart');
 const btnRestoreChat = document.getElementById('btn-restore-chat');
-if (btnRestoreCart) btnRestoreCart.addEventListener('click', adminRestoreCart);
 if (btnRestoreChat) btnRestoreChat.addEventListener('click', adminRestoreChat);
 
 window.adminToggleCartHide = adminToggleCartHide;
@@ -5561,4 +5576,5 @@ window.adminDeleteChat = adminDeleteChat;
 window.adminRestoreCart = adminRestoreCart;
 window.adminRestoreChat = adminRestoreChat;
 window.loadSingleChat = loadSingleChat;
+window.chatToggleMaximize = chatToggleMaximize;
 
