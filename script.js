@@ -228,6 +228,30 @@ async function initSite() {
     saveToStorage();
   }
 
+  // הוספת עמוד סיפורים אוטומטית אם עוד לא קיים
+  if (!pages.find(p => p.content && p.content.includes('stories-page'))) {
+    const storyPage = { id: 'page-stories-' + Date.now(), title: 'סיפורים', content: buildStoriesPage(STORIES_SAMPLES) };
+    pages.push(storyPage);
+    if (!topNavPages.includes(storyPage.id)) topNavPages.push(storyPage.id);
+    saveToStorage();
+  }
+
+  // הוספת עמוד תמונות אוטומטית אם עוד לא קיים
+  if (!pages.find(p => p.content && p.content.includes('photos-page'))) {
+    const photoPage = { id: 'page-photos-' + Date.now(), title: 'תמונות', content: buildPhotosPage(PHOTOS_SAMPLES) };
+    pages.push(photoPage);
+    if (!topNavPages.includes(photoPage.id)) topNavPages.push(photoPage.id);
+    saveToStorage();
+  }
+
+  // הוספת עמוד קורסים אוטומטית אם עוד לא קיים
+  if (!pages.find(p => p.content && p.content.includes('courses-page'))) {
+    const coursePage = { id: 'page-courses-' + Date.now(), title: 'קורסים', content: buildCoursesPage(COURSES_SAMPLES) };
+    pages.push(coursePage);
+    if (!topNavPages.includes(coursePage.id)) topNavPages.push(coursePage.id);
+    saveToStorage();
+  }
+
   // תיקון אוטומטי (Migration) לקישורים מתים בתפריט העליון
   const allNavLinks = navLinksContainer.querySelectorAll('a');
   let madeChanges = false;
@@ -655,11 +679,27 @@ function renderPage() {
     mainContent.innerHTML = currentPage.content; // מזריקים את ה-HTML של העמוד פנימה
 
     // עמוד כתבות: בונים מחדש מהנתונים השמורים כדי ששינויי מבנה (חיפוש, עיצוב) תמיד ייכנסו
-    const artPageEl = mainContent.querySelector('.articles-page');
+    const artPageEl = mainContent.querySelector('.articles-page:not(.stories-page):not(.photos-page):not(.courses-page)');
     if (artPageEl && typeof buildArticlesPage === 'function') {
       let savedArts = [];
       try { savedArts = JSON.parse(decodeURIComponent(artPageEl.dataset.articlesJson)); } catch(e){}
       if (savedArts.length) mainContent.innerHTML = buildArticlesPage(savedArts);
+    }
+
+    // עמוד סיפורים: בונים מחדש מהנתונים השמורים
+    const storyPageEl = mainContent.querySelector('.stories-page');
+    if (storyPageEl && typeof buildStoriesPage === 'function') {
+      let savedStories = [];
+      try { savedStories = JSON.parse(decodeURIComponent(storyPageEl.dataset.storiesJson)); } catch(e){}
+      if (savedStories.length) mainContent.innerHTML = buildStoriesPage(savedStories);
+    }
+
+    // עמוד קורסים: בונים מחדש מהנתונים השמורים
+    const coursePageEl = mainContent.querySelector('.courses-page');
+    if (coursePageEl && typeof buildCoursesPage === 'function') {
+      let savedCourses = [];
+      try { savedCourses = JSON.parse(decodeURIComponent(coursePageEl.dataset.coursesJson)); } catch(e){}
+      if (savedCourses.length) mainContent.innerHTML = buildCoursesPage(savedCourses);
     }
 
     // עמוד חנות: בונים מחדש מהנתונים השמורים
@@ -3968,3 +4008,894 @@ window.shopSearch = shopSearch;
 window.shopAddToCart = shopAddToCart;
 window.shopRemoveFromCart = shopRemoveFromCart;
 window.shopToggleCart = shopToggleCart;
+
+// ============================================================
+// מערכת סיפורים (Stories System)
+// ============================================================
+
+const STORIES_SAMPLES = [
+  {
+    id: 's1',
+    title: 'המסע אל מעבר להרי החושך',
+    summary: 'סיפור הרפתקאות מרתק על קבוצת חוקרים צעירים שיצאה למצוא את העיר האבודה בצפון הרחוק.',
+    body: 'הרוח נשבה בעוצמה כאשר עמדנו בפתח המערה הגדולה...\n\nזה היה המסע שהתכוננו אליו במשך שנים. ידענו שהדרך תהיה קשה ומאתגרת, אך איש מאיתנו לא תיאר לעצמו מה באמת מחכה לנו שם.\n\nלאחר שבועיים של טיפוס מפרך, מצאנו את עצמנו מול חומות אבן עתיקות שאיש לא ראה מזה אלפי שנים.',
+    author: 'יואב דרור', category: 'הרפתקאות', categoryColor: '#8b5cf6', timestamp: 'היום, 14:00',
+    image: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&q=80', link: ''
+  },
+  {
+    id: 's2',
+    title: 'הסוד של השען הזקן מרחוב הרצל',
+    summary: 'בסמטה צדדית בעיר העתיקה, שעון אחד קטן החל ללכת לאחור ומאז הכל השתנה.',
+    body: 'השען הזקן, מר לוי, עבד בסדנתו הקטנה מזה חמישים שנה. אנשים ידעו שהוא יכול לתקן כל דבר, אך השעון הזה היה שונה.\n\nיום אחד, הגיע לקוח מסתורי והשאיר שעון זהב עתיק. כשמר לוי פתח אותו, הוא גילה מנגנון שלא דמה לשום דבר שראה בחייו.\n\nכאשר מחוגי השעון החלו לזוז לאחור, מר לוי הרגיש פתאום צעיר בעשר שנים...',
+    author: 'מיכל ישראלי', category: 'פנטזיה', categoryColor: '#3b82f6', timestamp: 'אתמול, 10:15',
+    image: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=800&q=80', link: ''
+  }
+];
+
+function buildStoriesPage(stories) {
+  const featured = stories.slice(0, 3);
+  const popular = stories.slice(0, 5);
+
+  const featuredHTML = featured.map(s => `
+    <div class="art-featured-card" onclick="storyOpenDetail('${artEsc(s.id)}')">
+      <img src="${s.image || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80'}" alt="">
+      <div class="art-featured-overlay"></div>
+      <div class="art-featured-info">
+        <span class="art-category-badge" style="background:${s.categoryColor||'#8b5cf6'}">${s.category}</span>
+        <h3>${s.title}</h3>
+        <div class="art-featured-meta">${s.author} · ${s.timestamp}</div>
+      </div>
+    </div>
+  `).join('');
+
+  const listHTML = stories.map((s) => `
+    <div class="art-row" onclick="storyOpenDetail('${artEsc(s.id)}')">
+      <div class="art-row-text">
+        <h3>${s.title}</h3>
+        <p>${s.summary}</p>
+        <div class="art-row-meta">
+          <span>${s.author}</span>
+          <span class="art-row-sep">|</span>
+          <span>${s.timestamp}</span>
+        </div>
+      </div>
+      <div class="art-row-img-wrap">
+        ${s.image ? `<img src="${s.image}" alt="">` : '<div class="art-row-img-placeholder"></div>'}
+        <button class="art-delete-btn" onclick="event.stopPropagation();storyDelete('${artEsc(s.id)}',this)">✕</button>
+      </div>
+    </div>
+  `).join('');
+
+  const popularHTML = popular.map((s, i) => `
+    <div class="art-popular-item" onclick="storyOpenDetail('${artEsc(s.id)}')">
+      <span class="art-popular-num">${String(i+1).padStart(2,'0')}</span>
+      <div style="flex:1;font-size:13px;font-weight:600;line-height:1.4;color:#222">${s.title}</div>
+    </div>
+  `).join('');
+
+  const json = encodeURIComponent(JSON.stringify(stories));
+  return `<div class="articles-page stories-page" data-stories-json="${json}">
+    <div class="art-inner">
+      <div class="art-featured-grid">${featuredHTML}</div>
+      <div class="art-layout">
+        <div class="art-main">
+          <div class="art-search-wrap">
+            <input type="text" class="art-search" placeholder="🔍 חיפוש סיפורים..." oninput="storySearch(this.value)">
+          </div>
+          <div class="art-section-title">כל הסיפורים</div>
+          <div class="art-rows">${listHTML}</div>
+          <div class="art-no-results" style="display:none">לא נמצאו סיפורים התואמים לחיפוש</div>
+          <button class="art-add-btn" onclick="openStoryModal()" style="background:#8b5cf6">+ הוסף סיפור חדש</button>
+        </div>
+        <div class="art-sidebar">
+          <div class="art-sidebar-box art-newsletter">
+            <h4 style="margin:0 0 6px;font-size:16px;font-weight:800">הישארו מעודכנים!</h4>
+            <p style="font-size:12px;color:#777;margin:0 0 12px;line-height:1.5">הירשמו לקבלת סיפורים חמים ישירות אליכם.</p>
+            <input type="text" placeholder="השם שלכם">
+            <input type="email" placeholder="כתובת אימייל">
+            <button onclick="alert('תודה על ההרשמה!')" style="background:#8b5cf6">הרשמה לעדכונים</button>
+          </div>
+          <div class="art-sidebar-box">
+            <div class="art-sidebar-title">הסיפורים הנקראים ביותר</div>
+            ${popularHTML}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function storyOpenDetail(id) {
+  const container = mainContent.querySelector('.stories-page');
+  if (!container) return;
+  let stories = [];
+  try { stories = JSON.parse(decodeURIComponent(container.dataset.storiesJson)); } catch(e){ return; }
+  const s = stories.find(x => x.id === id);
+  if (!s) return;
+
+  const bodyHTML = (s.body || s.summary || '').split('\n').map(p => p.trim() ? `<p>${p}</p>` : '').join('');
+
+  const recommended = stories.filter(x => x.id !== id).slice(0, 3);
+  const recHTML = recommended.map(r => `
+    <div class="art-rec-card" onclick="storyOpenDetail('${artEsc(r.id)}')">
+      <div class="art-rec-img">
+        ${r.image ? `<img src="${r.image}" alt="">` : '<div class="art-card-img-placeholder"></div>'}
+        <span class="art-rec-badge art-category-badge" style="background:${r.categoryColor||'#8b5cf6'}">${r.category}</span>
+      </div>
+      <div class="art-rec-text">
+        <h4>${r.title}</h4>
+        <div class="art-rec-meta">${r.author} · ${r.timestamp}</div>
+      </div>
+    </div>
+  `).join('');
+
+  const json = encodeURIComponent(JSON.stringify(stories));
+  mainContent.innerHTML = `
+    <div class="art-detail articles-page stories-page" data-story-id="${id}" data-stories-json="${json}">
+      <div class="art-detail-inner">
+        <button class="art-back-btn" onclick="storyGoBack()">← חזרה לסיפורים</button>
+        ${s.image ? `<img class="art-detail-hero" src="${s.image}" alt="">` : ''}
+        <div class="art-detail-body">
+          <div class="art-meta" style="margin-bottom:12px">
+            <span class="art-category-badge" style="background:${s.categoryColor||'#8b5cf6'}">${s.category}</span>
+            <span>${s.author}</span>
+            <span>·</span>
+            <span>${s.timestamp}</span>
+          </div>
+          <h1 class="art-detail-title">${s.title}</h1>
+          <div class="art-detail-content">${bodyHTML}</div>
+          ${s.link ? `<a href="${s.link}" target="_blank" class="art-detail-link">קרא באתר המקור ↗</a>` : ''}
+        </div>
+        <div class="art-rec-section">
+          <h3 style="margin:0 0 16px;font-size:18px;font-weight:800">סיפורים נוספים שיעניינו אותך</h3>
+          <div class="art-rec-grid">${recHTML}</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function storyGoBack() {
+  const container = mainContent.querySelector('.stories-page');
+  if (!container) return;
+  let stories = [];
+  try { stories = JSON.parse(decodeURIComponent(container.dataset.storiesJson)); } catch(e){}
+  mainContent.innerHTML = buildStoriesPage(stories);
+  if (isEditMode) applyEditModeToContent();
+}
+
+function storyGetStories() {
+  const container = mainContent.querySelector('.stories-page');
+  if (!container) return [];
+  try { return JSON.parse(decodeURIComponent(container.dataset.storiesJson)); } catch(e){ return []; }
+}
+
+function storyDelete(id, el) {
+  if (!isEditMode) return;
+  if (!confirm('האם למחוק סיפור זה?')) return;
+  const stories = storyGetStories().filter(s => s.id !== id);
+  mainContent.innerHTML = buildStoriesPage(stories);
+  saveCurrentPageContent();
+}
+
+function storySearch(val) {
+  const q = (val || '').toLowerCase().trim();
+  const rows = mainContent.querySelectorAll('.stories-page .art-row');
+  let visible = 0;
+  rows.forEach(r => {
+    const text = r.textContent.toLowerCase();
+    const match = text.includes(q);
+    r.style.display = match ? '' : 'none';
+    if (match) visible++;
+  });
+  const noResults = mainContent.querySelector('.stories-page .art-no-results');
+  if (noResults) noResults.style.display = visible === 0 ? 'block' : 'none';
+}
+
+let storyImgData = '';
+
+function openStoryModal() {
+  if (!isEditMode) return;
+  document.getElementById('story-title').value = '';
+  document.getElementById('story-summary').value = '';
+  document.getElementById('story-body').value = '';
+  document.getElementById('story-author').value = '';
+  document.getElementById('story-category').value = '';
+  document.getElementById('story-link').value = '';
+  const preview = document.getElementById('story-img-preview');
+  preview.style.display = 'none'; preview.src = '';
+  storyImgData = '';
+  document.getElementById('story-img-pick').textContent = 'לחץ לבחירת תמונה מהמחשב';
+  document.getElementById('story-modal').style.display = 'flex';
+}
+
+document.getElementById('story-img-pick').addEventListener('click', () => {
+  const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
+  inp.onchange = e => {
+    const f = e.target.files[0]; if (!f) return;
+    const r = new FileReader();
+    r.onload = ev => {
+      storyImgData = ev.target.result;
+      const p = document.getElementById('story-img-preview');
+      p.src = storyImgData; p.style.display = 'block';
+      document.getElementById('story-img-pick').textContent = '✓ תמונה נבחרה';
+    };
+    r.readAsDataURL(f);
+  };
+  inp.click();
+});
+
+document.getElementById('story-cancel').addEventListener('click', () => {
+  document.getElementById('story-modal').style.display = 'none';
+});
+
+document.getElementById('story-save').addEventListener('click', () => {
+  const title = document.getElementById('story-title').value.trim();
+  if (!title) { alert('חובה כותרת'); return; }
+  const stories = storyGetStories();
+  stories.unshift({
+    id: 's' + Date.now(),
+    title,
+    summary: document.getElementById('story-summary').value.trim(),
+    body: document.getElementById('story-body').value.trim(),
+    author: document.getElementById('story-author').value.trim(),
+    category: document.getElementById('story-category').value.trim(),
+    categoryColor: '#8b5cf6',
+    timestamp: 'הרגע',
+    image: storyImgData,
+    link: document.getElementById('story-link').value.trim()
+  });
+  mainContent.innerHTML = buildStoriesPage(stories);
+  saveCurrentPageContent();
+  document.getElementById('story-modal').style.display = 'none';
+});
+
+const btnAddStoriesPage = document.getElementById('btn-add-stories-page');
+if (btnAddStoriesPage) {
+  btnAddStoriesPage.addEventListener('click', () => {
+    const title = prompt('שם העמוד של הסיפורים:') || 'סיפורים';
+    const newId = 'page-' + Date.now();
+    pages.push({ id: newId, title: title.trim(), content: buildStoriesPage(STORIES_SAMPLES) });
+    topNavPages.push(newId);
+    activePageId = newId;
+    saveToStorage();
+    renderSideMenu();
+    renderTopNav();
+    renderPage();
+  });
+}
+
+// ============================================================
+// מערכת תמונות / גלריות (Photos System)
+// ============================================================
+
+const PHOTOS_SAMPLES = [
+  {
+    id: 'ph1',
+    title: 'זוהר הקוטב באיסלנד',
+    summary: 'אלבום תמונות מרהיב המתעד את האורות הירוקים של הצפון בלילות הקרים של החורף האיסלנדי.',
+    images: [
+      'https://images.unsplash.com/photo-1483168527879-c66136b56105?w=800&q=80',
+      'https://images.unsplash.com/photo-1529963183134-61a90db47eaf?w=800&q=80',
+      'https://images.unsplash.com/photo-1517411032315-54ef2cb783bb?w=800&q=80',
+      'https://images.unsplash.com/photo-1482862549707-f63cb32c5fd9?w=800&q=80',
+      'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80'
+    ],
+    author: 'אלכס לוין', category: 'טבע', categoryColor: '#10b981', timestamp: 'היום, 16:50'
+  },
+  {
+    id: 'ph2',
+    title: 'קצב הרחוב של טוקיו',
+    summary: 'סדרת צילומים אורבנית של רובע שיבויה, שלטי הניאון והאנשים בלילה גשום.',
+    images: [
+      'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=800&q=80',
+      'https://images.unsplash.com/photo-1540959733332-eab4deceeaf7?w=800&q=80',
+      'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800&q=80',
+      'https://images.unsplash.com/photo-1528164344705-47542687000d?w=800&q=80',
+      'https://images.unsplash.com/photo-1518826778787-1636e297f069?w=800&q=80'
+    ],
+    author: 'יוקי סאטו', category: 'אורבני', categoryColor: '#3b82f6', timestamp: 'אתמול, 22:30'
+  }
+];
+
+function buildPhotosPage(albums) {
+  const featured = albums.slice(0, 3);
+  const popular = albums.slice(0, 5);
+
+  const featuredHTML = featured.map(p => {
+    const mainImg = p.images && p.images[0] ? p.images[0] : 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80';
+    return `
+      <div class="art-featured-card" onclick="photoOpenDetail('${artEsc(p.id)}')">
+        <img src="${mainImg}" alt="">
+        <div class="art-featured-overlay"></div>
+        <div class="art-featured-info">
+          <span class="art-category-badge" style="background:${p.categoryColor||'#10b981'}">${p.category}</span>
+          <h3>${p.title}</h3>
+          <div class="art-featured-meta">${p.author} · ${p.timestamp}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  const listHTML = albums.map((p) => {
+    const mainImg = p.images && p.images[0] ? p.images[0] : '';
+    return `
+      <div class="art-row" onclick="photoOpenDetail('${artEsc(p.id)}')">
+        <div class="art-row-text">
+          <h3>${p.title}</h3>
+          <p>${p.summary}</p>
+          <div class="art-row-meta">
+            <span>${p.author}</span>
+            <span class="art-row-sep">|</span>
+            <span>${p.timestamp}</span>
+          </div>
+        </div>
+        <div class="art-row-img-wrap">
+          ${mainImg ? `<img src="${mainImg}" alt="">` : '<div class="art-row-img-placeholder"></div>'}
+          <button class="art-delete-btn" onclick="event.stopPropagation();photoDelete('${artEsc(p.id)}',this)">✕</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  const popularHTML = popular.map((p, i) => `
+    <div class="art-popular-item" onclick="photoOpenDetail('${artEsc(p.id)}')">
+      <span class="art-popular-num">${String(i+1).padStart(2,'0')}</span>
+      <div style="flex:1;font-size:13px;font-weight:600;line-height:1.4;color:#222">${p.title}</div>
+    </div>
+  `).join('');
+
+  const json = encodeURIComponent(JSON.stringify(albums));
+  return `<div class="articles-page photos-page" data-photos-json="${json}">
+    <div class="art-inner">
+      <div class="art-featured-grid">${featuredHTML}</div>
+      <div class="art-layout">
+        <div class="art-main">
+          <div class="art-search-wrap">
+            <input type="text" class="art-search" placeholder="🔍 חיפוש גלריות..." oninput="photoSearch(this.value)">
+          </div>
+          <div class="art-section-title">כל הגלריות והתמונות</div>
+          <div class="art-rows">${listHTML}</div>
+          <div class="art-no-results" style="display:none">לא נמצאו גלריות התואמות לחיפוש</div>
+          <button class="art-add-btn" onclick="openPhotoModal()" style="background:#10b981">+ הוסף גלריה חדשה</button>
+        </div>
+        <div class="art-sidebar">
+          <div class="art-sidebar-box art-newsletter">
+            <h4 style="margin:0 0 6px;font-size:16px;font-weight:800">הישארו מעודכנים!</h4>
+            <p style="font-size:12px;color:#777;margin:0 0 12px;line-height:1.5">הירשמו לקבלת גלריות מדהימות חדשות ישירות למייל.</p>
+            <input type="text" placeholder="השם שלכם">
+            <input type="email" placeholder="כתובת אימייל">
+            <button onclick="alert('תודה על ההרשמה!')" style="background:#10b981">הרשמה לעדכונים</button>
+          </div>
+          <div class="art-sidebar-box">
+            <div class="art-sidebar-title">הגלריות הנצפות ביותר</div>
+            ${popularHTML}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function photoOpenDetail(id) {
+  const container = mainContent.querySelector('.photos-page');
+  if (!container) return;
+  let albums = [];
+  try { albums = JSON.parse(decodeURIComponent(container.dataset.photosJson)); } catch(e){ return; }
+  const a = albums.find(x => x.id === id);
+  if (!a) return;
+
+  const validImages = (a.images || []).filter(img => !!img);
+  const mainImg = validImages[0] || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80';
+
+  // יצירת ריבועי דפדוף (Thumbnails)
+  const thumbnailsHTML = validImages.map((imgUrl, idx) => `
+    <div class="photo-thumb-square" onclick="photoSelectImage('${artEsc(imgUrl)}', this)" style="width:60px; height:60px; border-radius:8px; overflow:hidden; cursor:pointer; border:2.5px solid ${idx === 0 ? '#10b981' : '#ddd'}; transition:all 0.2s; flex-shrink:0;">
+      <img src="${imgUrl}" style="width:100%; height:100%; object-fit:cover;">
+    </div>
+  `).join('');
+
+  const recommended = albums.filter(x => x.id !== id).slice(0, 3);
+  const recHTML = recommended.map(r => {
+    const rImg = r.images && r.images[0] ? r.images[0] : '';
+    return `
+      <div class="art-rec-card" onclick="photoOpenDetail('${artEsc(r.id)}')">
+        <div class="art-rec-img">
+          ${rImg ? `<img src="${rImg}" alt="">` : '<div class="art-card-img-placeholder"></div>'}
+          <span class="art-rec-badge art-category-badge" style="background:${r.categoryColor||'#10b981'}">${r.category}</span>
+        </div>
+        <div class="art-rec-text">
+          <h4>${r.title}</h4>
+          <div class="art-rec-meta">${r.author} · ${r.timestamp}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  const json = encodeURIComponent(JSON.stringify(albums));
+  mainContent.innerHTML = `
+    <div class="art-detail articles-page photos-page" data-photo-id="${id}" data-photos-json="${json}">
+      <div class="art-detail-inner">
+        <button class="art-back-btn" onclick="photoGoBack()">← חזרה לגלריות</button>
+        
+        <!-- תמונה ראשית גדולה עם מזהה ספציפי -->
+        <div style="position:relative; width:100%; max-height:450px; overflow:hidden; border-radius:12px; margin-bottom:12px;">
+          <img id="photo-gallery-main-img" src="${mainImg}" style="width:100%; height:auto; max-height:450px; object-fit:cover; display:block;">
+        </div>
+
+        <!-- ריבועי דפדוף (Thumbnails) -->
+        <div style="display:flex; justify-content:center; gap:10px; margin-bottom:24px; flex-wrap:wrap; padding:5px;">
+          ${thumbnailsHTML}
+        </div>
+
+        <div class="art-detail-body">
+          <div class="art-meta" style="margin-bottom:12px">
+            <span class="art-category-badge" style="background:${a.categoryColor||'#10b981'}">${a.category}</span>
+            <span>צילום: ${a.author}</span>
+            <span>·</span>
+            <span>${a.timestamp}</span>
+          </div>
+          <h1 class="art-detail-title">${a.title}</h1>
+          <div class="art-detail-content"><p>${a.summary}</p></div>
+        </div>
+
+        <div class="art-rec-section">
+          <h3 style="margin:0 0 16px;font-size:18px;font-weight:800">גלריות נוספות שיעניינו אותך</h3>
+          <div class="art-rec-grid">${recHTML}</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function photoSelectImage(imgUrl, el) {
+  const mainImg = document.getElementById('photo-gallery-main-img');
+  if (mainImg) {
+    mainImg.src = imgUrl;
+  }
+  const squares = el.parentNode.querySelectorAll('.photo-thumb-square');
+  squares.forEach(sq => {
+    sq.style.borderColor = '#ddd';
+  });
+  el.style.borderColor = '#10b981';
+}
+
+function photoGoBack() {
+  const container = mainContent.querySelector('.photos-page');
+  if (!container) return;
+  let albums = [];
+  try { albums = JSON.parse(decodeURIComponent(container.dataset.photosJson)); } catch(e){}
+  mainContent.innerHTML = buildPhotosPage(albums);
+  if (isEditMode) applyEditModeToContent();
+}
+
+function photoGetAlbums() {
+  const container = mainContent.querySelector('.photos-page');
+  if (!container) return [];
+  try { return JSON.parse(decodeURIComponent(container.dataset.photosJson)); } catch(e){ return []; }
+}
+
+function photoDelete(id, el) {
+  if (!isEditMode) return;
+  if (!confirm('האם למחוק גלריה זו?')) return;
+  const albums = photoGetAlbums().filter(a => a.id !== id);
+  mainContent.innerHTML = buildPhotosPage(albums);
+  saveCurrentPageContent();
+}
+
+function photoSearch(val) {
+  const q = (val || '').toLowerCase().trim();
+  const rows = mainContent.querySelectorAll('.photos-page .art-row');
+  let visible = 0;
+  rows.forEach(r => {
+    const text = r.textContent.toLowerCase();
+    const match = text.includes(q);
+    r.style.display = match ? '' : 'none';
+    if (match) visible++;
+  });
+  const noResults = mainContent.querySelector('.photos-page .art-no-results');
+  if (noResults) noResults.style.display = visible === 0 ? 'block' : 'none';
+}
+
+let photoImgDataList = ['', '', '', '', ''];
+
+function openPhotoModal() {
+  if (!isEditMode) return;
+  document.getElementById('photo-title').value = '';
+  document.getElementById('photo-summary').value = '';
+  document.getElementById('photo-author').value = '';
+  document.getElementById('photo-category').value = '';
+  
+  photoImgDataList = ['', '', '', '', ''];
+  for (let i = 1; i <= 5; i++) {
+    const btn = document.getElementById('photo-img-pick-' + i);
+    const prev = document.getElementById('photo-img-preview-' + i);
+    btn.style.display = 'block';
+    btn.textContent = i + '️⃣';
+    prev.style.display = 'none';
+    prev.src = '';
+  }
+  document.getElementById('photo-modal').style.display = 'flex';
+}
+
+for (let i = 1; i <= 5; i++) {
+  const btn = document.getElementById('photo-img-pick-' + i);
+  if (btn) {
+    btn.addEventListener('click', () => {
+      const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
+      inp.onchange = e => {
+        const f = e.target.files[0]; if (!f) return;
+        const r = new FileReader();
+        r.onload = ev => {
+          photoImgDataList[i - 1] = ev.target.result;
+          const p = document.getElementById('photo-img-preview-' + i);
+          p.src = ev.target.result;
+          p.style.display = 'block';
+          btn.style.display = 'none';
+        };
+        r.readAsDataURL(f);
+      };
+      inp.click();
+    });
+  }
+}
+
+document.getElementById('photo-cancel').addEventListener('click', () => {
+  document.getElementById('photo-modal').style.display = 'none';
+});
+
+document.getElementById('photo-save').addEventListener('click', () => {
+  const title = document.getElementById('photo-title').value.trim();
+  if (!title) { alert('חובה כותרת'); return; }
+  const validImages = photoImgDataList.filter(img => !!img);
+  if (validImages.length === 0) { alert('חובה להעלות לפחות תמונה אחת'); return; }
+
+  const albums = photoGetAlbums();
+  albums.unshift({
+    id: 'ph' + Date.now(),
+    title,
+    summary: document.getElementById('photo-summary').value.trim(),
+    images: photoImgDataList,
+    author: document.getElementById('photo-author').value.trim(),
+    category: document.getElementById('photo-category').value.trim(),
+    categoryColor: '#10b981',
+    timestamp: 'הרגע'
+  });
+  mainContent.innerHTML = buildPhotosPage(albums);
+  saveCurrentPageContent();
+  document.getElementById('photo-modal').style.display = 'none';
+});
+
+const btnAddPhotosPage = document.getElementById('btn-add-photos-page');
+if (btnAddPhotosPage) {
+  btnAddPhotosPage.addEventListener('click', () => {
+    const title = prompt('שם העמוד של התמונות:') || 'תמונות';
+    const newId = 'page-' + Date.now();
+    pages.push({ id: newId, title: title.trim(), content: buildPhotosPage(PHOTOS_SAMPLES) });
+    topNavPages.push(newId);
+    activePageId = newId;
+    saveToStorage();
+    renderSideMenu();
+    renderTopNav();
+    renderPage();
+  });
+}
+
+window.buildStoriesPage = buildStoriesPage;
+window.storyDelete = storyDelete;
+window.openStoryModal = openStoryModal;
+window.storySearch = storySearch;
+window.storyOpenDetail = storyOpenDetail;
+window.storyGoBack = storyGoBack;
+
+window.buildPhotosPage = buildPhotosPage;
+window.photoDelete = photoDelete;
+window.openPhotoModal = openPhotoModal;
+window.photoSearch = photoSearch;
+window.photoOpenDetail = photoOpenDetail;
+window.photoGoBack = photoGoBack;
+window.photoSelectImage = photoSelectImage;
+
+// ============================================================
+// מערכת קורסים / שיעורים (Courses System)
+// ============================================================
+
+const COURSES_SAMPLES = [
+  {
+    id: 'c1',
+    title: 'מבוא לפיתוח אתרים ב-JavaScript',
+    summary: 'בשיעור זה נלמד את עקרונות הבסיס של שפת ה-JS, משתנים, לולאות ופונקציות.',
+    author: 'אלעד כהן', category: 'פיתוח', categoryColor: '#2196F3', timestamp: 'לפני שבוע',
+    image: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800&q=80',
+    video: 'https://assets.mixkit.co/videos/preview/mixkit-software-developer-working-on-code-screen-40292-large.mp4'
+  },
+  {
+    id: 'c2',
+    title: 'יסודות העיצוב הדיגיטלי',
+    summary: 'איך לעצב ממשקים יפהפיים שעובדים? עקרונות הצבע, קומפוזיציה וטיפוגרפיה.',
+    author: 'שירה רותם', category: 'עיצוב', categoryColor: '#e91e63', timestamp: 'לפני שבועיים',
+    image: 'https://images.unsplash.com/photo-1541462608141-2ff01dd914e0?w=800&q=80',
+    video: 'https://assets.mixkit.co/videos/preview/mixkit-graphic-designer-working-on-a-digital-tablet-41617-large.mp4'
+  }
+];
+
+function buildCoursesPage(courses) {
+  const featured = courses.slice(0, 3);
+  const popular = courses.slice(0, 5);
+
+  const featuredHTML = featured.map(c => `
+    <div class="art-featured-card" onclick="courseOpenDetail('${artEsc(c.id)}')">
+      <img src="${c.image || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80'}" alt="">
+      <div class="art-featured-overlay"></div>
+      <div class="art-featured-info">
+        <span class="art-category-badge" style="background:${c.categoryColor||'#2196F3'}">${c.category}</span>
+        <h3>${c.title}</h3>
+        <div class="art-featured-meta">${c.author} · ${c.timestamp}</div>
+      </div>
+    </div>
+  `).join('');
+
+  const listHTML = courses.map((c) => `
+    <div class="art-row" onclick="courseOpenDetail('${artEsc(c.id)}')">
+      <div class="art-row-text">
+        <h3>${c.title}</h3>
+        <p>${c.summary}</p>
+        <div class="art-row-meta">
+          <span>${c.author}</span>
+          <span class="art-row-sep">|</span>
+          <span>${c.timestamp}</span>
+        </div>
+      </div>
+      <div class="art-row-img-wrap">
+        ${c.image ? `<img src="${c.image}" alt="">` : '<div class="art-row-img-placeholder"></div>'}
+        <button class="art-delete-btn" onclick="event.stopPropagation();courseDelete('${artEsc(c.id)}',this)">✕</button>
+      </div>
+    </div>
+  `).join('');
+
+  const popularHTML = popular.map((c, i) => `
+    <div class="art-popular-item" onclick="courseOpenDetail('${artEsc(c.id)}')">
+      <span class="art-popular-num">${String(i+1).padStart(2,'0')}</span>
+      <div style="flex:1;font-size:13px;font-weight:600;line-height:1.4;color:#222">${c.title}</div>
+    </div>
+  `).join('');
+
+  const json = encodeURIComponent(JSON.stringify(courses));
+  return `<div class="articles-page courses-page" data-courses-json="${json}">
+    <div class="art-inner">
+      <div class="art-featured-grid">${featuredHTML}</div>
+      <div class="art-layout">
+        <div class="art-main">
+          <div class="art-search-wrap">
+            <input type="text" class="art-search" placeholder="🔍 חיפוש קורסים..." oninput="courseSearch(this.value)">
+          </div>
+          <div class="art-section-title">כל הקורסים והשיעורים</div>
+          <div class="art-rows">${listHTML}</div>
+          <div class="art-no-results" style="display:none">לא נמצאו קורסים התואמות לחיפוש</div>
+          <button class="art-add-btn" onclick="openCourseModal()" style="background:#2196F3">+ הוסף קורס חדש</button>
+        </div>
+        <div class="art-sidebar">
+          <div class="art-sidebar-box art-newsletter">
+            <h4 style="margin:0 0 6px;font-size:16px;font-weight:800">הישארו מעודכנים!</h4>
+            <p style="font-size:12px;color:#777;margin:0 0 12px;line-height:1.5">הירשמו לקבלת עדכונים על קורסים חדשים ושיעורים מעניינים.</p>
+            <input type="text" placeholder="השם שלכם">
+            <input type="email" placeholder="כתובת אימייל">
+            <button onclick="alert('תודה על ההרשמה!')" style="background:#2196F3">הרשמה לעדכונים</button>
+          </div>
+          <div class="art-sidebar-box">
+            <div class="art-sidebar-title">הנצפים ביותר השבוע</div>
+            ${popularHTML}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function courseOpenDetail(id) {
+  const container = mainContent.querySelector('.courses-page');
+  if (!container) return;
+  let courses = [];
+  try { courses = JSON.parse(decodeURIComponent(container.dataset.coursesJson)); } catch(e){ return; }
+  const c = courses.find(x => x.id === id);
+  if (!c) return;
+
+  const recommended = courses.filter(x => x.id !== id).slice(0, 3);
+  const recHTML = recommended.map(r => `
+    <div class="art-rec-card" onclick="courseOpenDetail('${artEsc(r.id)}')">
+      <div class="art-rec-img">
+        ${r.image ? `<img src="${r.image}" alt="">` : '<div class="art-card-img-placeholder"></div>'}
+        <span class="art-rec-badge art-category-badge" style="background:${r.categoryColor||'#2196F3'}">${r.category}</span>
+      </div>
+      <div class="art-rec-text">
+        <h4>${r.title}</h4>
+        <div class="art-rec-meta">${r.author} · ${r.timestamp}</div>
+      </div>
+    </div>
+  `).join('');
+
+  const json = encodeURIComponent(JSON.stringify(courses));
+  mainContent.innerHTML = `
+    <div class="art-detail articles-page courses-page" data-course-id="${id}" data-courses-json="${json}">
+      <div class="art-detail-inner">
+        <button class="art-back-btn" onclick="courseGoBack()">← חזרה לקורסים</button>
+        
+        <!-- נגן וידאו מובנה במקום תמונת כותרת -->
+        ${c.video ? `
+          <div style="position:relative; width:100%; max-height:450px; overflow:hidden; border-radius:12px; margin-bottom:20px; background:#000;">
+            <video src="${c.video}" controls autoplay style="width:100%; height:100%; display:block; max-height:450px; object-fit:contain;"></video>
+          </div>
+        ` : ''}
+
+        <div class="art-detail-body">
+          <div class="art-meta" style="margin-bottom:12px">
+            <span class="art-category-badge" style="background:${c.categoryColor||'#2196F3'}">${c.category}</span>
+            <span>מרצה: ${c.author}</span>
+            <span>·</span>
+            <span>${c.timestamp}</span>
+          </div>
+          <h1 class="art-detail-title">${c.title}</h1>
+          <div class="art-detail-content"><p>${c.summary}</p></div>
+        </div>
+
+        <div class="art-rec-section">
+          <h3 style="margin:0 0 16px;font-size:18px;font-weight:800">שיעורים נוספים שיעניינו אותך</h3>
+          <div class="art-rec-grid">${recHTML}</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function courseGoBack() {
+  const container = mainContent.querySelector('.courses-page');
+  if (!container) return;
+  let courses = [];
+  try { courses = JSON.parse(decodeURIComponent(container.dataset.coursesJson)); } catch(e){}
+  mainContent.innerHTML = buildCoursesPage(courses);
+  if (isEditMode) applyEditModeToContent();
+}
+
+function courseGetCourses() {
+  const container = mainContent.querySelector('.courses-page');
+  if (!container) return [];
+  try { return JSON.parse(decodeURIComponent(container.dataset.coursesJson)); } catch(e){ return []; }
+}
+
+function courseDelete(id, el) {
+  if (!isEditMode) return;
+  if (!confirm('האם למחוק קורס זה?')) return;
+  const courses = courseGetCourses().filter(c => c.id !== id);
+  mainContent.innerHTML = buildCoursesPage(courses);
+  saveCurrentPageContent();
+}
+
+function courseSearch(val) {
+  const q = (val || '').toLowerCase().trim();
+  const rows = mainContent.querySelectorAll('.courses-page .art-row');
+  let visible = 0;
+  rows.forEach(r => {
+    const text = r.textContent.toLowerCase();
+    const match = text.includes(q);
+    r.style.display = match ? '' : 'none';
+    if (match) visible++;
+  });
+  const noResults = mainContent.querySelector('.courses-page .art-no-results');
+  if (noResults) noResults.style.display = visible === 0 ? 'block' : 'none';
+}
+
+let courseImgData = '';
+let courseVidData = '';
+
+function openCourseModal() {
+  if (!isEditMode) return;
+  document.getElementById('course-title').value = '';
+  document.getElementById('course-summary').value = '';
+  document.getElementById('course-author').value = '';
+  document.getElementById('course-category').value = '';
+  
+  const imgPreview = document.getElementById('course-img-preview');
+  imgPreview.style.display = 'none'; imgPreview.src = '';
+  courseImgData = '';
+  document.getElementById('course-img-pick').textContent = 'לחץ לבחירת תמונה';
+  
+  const vidPreview = document.getElementById('course-vid-preview');
+  vidPreview.style.display = 'none'; vidPreview.src = '';
+  courseVidData = '';
+  document.getElementById('course-vid-pick').textContent = 'לחץ לבחירת סרטון';
+  
+  document.getElementById('course-modal').style.display = 'flex';
+}
+
+document.getElementById('course-img-pick').addEventListener('click', () => {
+  const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
+  inp.onchange = e => {
+    const f = e.target.files[0]; if (!f) return;
+    const r = new FileReader();
+    r.onload = ev => {
+      courseImgData = ev.target.result;
+      const p = document.getElementById('course-img-preview');
+      p.src = courseImgData; p.style.display = 'block';
+      document.getElementById('course-img-pick').textContent = '✓ תמונה נבחרה';
+    };
+    r.readAsDataURL(f);
+  };
+  inp.click();
+});
+
+document.getElementById('course-vid-pick').addEventListener('click', () => {
+  const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'video/*';
+  inp.onchange = e => {
+    const f = e.target.files[0]; if (!f) return;
+    
+    // בדיקת אורך הסרטון (עד 10 שניות)
+    const tempVideo = document.createElement('video');
+    tempVideo.preload = 'metadata';
+    tempVideo.src = URL.createObjectURL(f);
+    tempVideo.onloadedmetadata = () => {
+      window.URL.revokeObjectURL(tempVideo.src);
+      if (tempVideo.duration > 10.5) { // סף קל להבדלים זעירים בקודק
+        alert('שגיאה: הסרטון ארוך מ-10 שניות! (' + Math.round(tempVideo.duration) + ' שניות). אנא בחר סרטון קצר יותר.');
+        return;
+      }
+      
+      const r = new FileReader();
+      r.onload = ev => {
+        courseVidData = ev.target.result;
+        const p = document.getElementById('course-vid-preview');
+        p.src = courseVidData; p.style.display = 'block';
+        document.getElementById('course-vid-pick').textContent = '✓ סרטון נבחר';
+      };
+      r.readAsDataURL(f);
+    };
+  };
+  inp.click();
+});
+
+document.getElementById('course-cancel').addEventListener('click', () => {
+  document.getElementById('course-modal').style.display = 'none';
+});
+
+document.getElementById('course-save').addEventListener('click', () => {
+  const title = document.getElementById('course-title').value.trim();
+  if (!title) { alert('חובה כותרת קורס'); return; }
+  if (!courseVidData) { alert('חובה לבחור סרטון של עד 10 שניות'); return; }
+
+  const courses = courseGetCourses();
+  courses.unshift({
+    id: 'c' + Date.now(),
+    title,
+    summary: document.getElementById('course-summary').value.trim(),
+    image: courseImgData,
+    video: courseVidData,
+    author: document.getElementById('course-author').value.trim(),
+    category: document.getElementById('course-category').value.trim(),
+    categoryColor: '#2196F3',
+    timestamp: 'הרגע'
+  });
+  mainContent.innerHTML = buildCoursesPage(courses);
+  saveCurrentPageContent();
+  document.getElementById('course-modal').style.display = 'none';
+});
+
+const btnAddCoursesPage = document.getElementById('btn-add-courses-page');
+if (btnAddCoursesPage) {
+  btnAddCoursesPage.addEventListener('click', () => {
+    const title = prompt('שם העמוד של הקורסים:') || 'קורסים';
+    const newId = 'page-' + Date.now();
+    pages.push({ id: newId, title: title.trim(), content: buildCoursesPage(COURSES_SAMPLES) });
+    topNavPages.push(newId);
+    activePageId = newId;
+    saveToStorage();
+    renderSideMenu();
+    renderTopNav();
+    renderPage();
+  });
+}
+
+window.buildCoursesPage = buildCoursesPage;
+window.courseDelete = courseDelete;
+window.openCourseModal = openCourseModal;
+window.courseSearch = courseSearch;
+window.courseOpenDetail = courseOpenDetail;
+window.courseGoBack = courseGoBack;
