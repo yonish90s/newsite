@@ -80,6 +80,9 @@ let isEditMode = false; // ברירת מחדל: אורח (ללא עריכה)
 let undoStack = []; // מערך לשמירת היסטוריית שינויים לצורך ביטול (Undo)
 let siteBackgrounds = { dashboard: null, topNav: null, main: null };
 
+// פונקציית עזר לבדיקה האם המשתמש המחובר כרגע הוא המנהל המורשה
+const isAdmin = () => auth.currentUser && auth.currentUser.email === "yoni98321@gmail.com";
+
 // --- מערכות דינמיות ---
 // פונקציה ליישום הרקעים למסך
 function applyBackgrounds() {
@@ -371,14 +374,14 @@ function renderSideMenu() {
   sideMenuContainer.innerHTML = ''; // מנקים את התפריט הישן
   
   pages.forEach(page => {
-    // אם אנחנו לא במצב עריכה והעמוד מוסתר - לא נציג אותו
-    if (!isEditMode && page.isHidden) return;
+    // אם אנחנו לא במצב עריכה והעמוד מוסתר - לא נציג אותו (אלא אם המשתמש הוא מנהל)
+    if (!isEditMode && page.isHidden && !isAdmin()) return;
 
     const li = document.createElement('li'); // יוצרים אלמנט רשימה חדש
     li.id = page.id;
     
-    // אם במצב עריכה והעמוד מוסתר, נציג אותו חצי שקוף
-    if (isEditMode && page.isHidden) {
+    // אם במצב עריכה או שהמשתמש הוא מנהל והעמוד מוסתר, נציג אותו חצי שקוף
+    if (page.isHidden && (isEditMode || isAdmin())) {
       li.style.opacity = '0.5';
     }
     
@@ -487,11 +490,14 @@ function renderTopNav() {
   topNavPages.forEach(pageId => {
     const page = pages.find(p => p.id === pageId);
     if (!page) return; // במקרה שהעמוד נמחק
-    if (!isEditMode && page.isHidden) return; // מסתיר עמודים מוסתרים גם למעלה
+    if (!isEditMode && page.isHidden && !isAdmin()) return; // מסתיר עמודים מוסתרים גם למעלה
     
     const a = document.createElement('a');
     a.href = '#';
     a.textContent = page.title.replace(/[\u1000-\uFFFF]+/g, '').trim();
+    if (page.isHidden && (isEditMode || isAdmin())) {
+      a.style.opacity = '0.6';
+    }
     a.dataset.pageId = pageId; // שמירת המזהה כדי שנוכל למחוק אותו מהמערך בעריכה
     
     // סימון עמוד פעיל למעלה
@@ -1139,6 +1145,7 @@ btnEditMode.addEventListener('click', () => {
   }
   
   renderSideMenu(); // לעדכן את תפריט הצד (כדי להציג או להעלים את כפתורי העריכה/מחיקה)
+  renderTopNav(); // לעדכן את התפריט העליון
 });
 
 // --- שלב 5: הוספת עמודים חדשים ---
@@ -2744,6 +2751,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btnEditMode.textContent = 'שמור שינויים 💾';
         applyEditModeToContent();
         renderSideMenu();
+        renderTopNav();
       }
     } else {
       managerBtn.textContent = 'אורח';
@@ -2757,6 +2765,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btnEditMode.textContent = 'מצב עריכה ✏️';
         saveCurrentPageContent();
         renderSideMenu();
+        renderTopNav();
       }
     }
   }
