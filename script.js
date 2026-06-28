@@ -3575,6 +3575,7 @@ function buildArticlesPage(articles) {
       </div>
       <div class="art-row-img-wrap">
         ${a.image ? `<img src="${a.image}" alt="">` : '<div class="art-row-img-placeholder"></div>'}
+        ${a.image ? `<button class="art-zoom-btn" onclick="event.stopPropagation();artZoomImage('${artEsc(a.image)}')" title="מסך מלא">⛶</button>` : ''}
         <button class="art-delete-btn" onclick="event.stopPropagation();artDelete('${artEsc(a.id)}',this)">✕</button>
       </div>
     </div>
@@ -4063,6 +4064,7 @@ function buildStoriesPage(stories) {
       </div>
       <div class="art-row-img-wrap">
         ${s.image ? `<img src="${s.image}" alt="">` : '<div class="art-row-img-placeholder"></div>'}
+        ${s.image ? `<button class="art-zoom-btn" onclick="event.stopPropagation();artZoomImage('${artEsc(s.image)}')" title="מסך מלא">⛶</button>` : ''}
         <button class="art-delete-btn" onclick="event.stopPropagation();storyDelete('${artEsc(s.id)}',this)">✕</button>
       </div>
     </div>
@@ -4334,6 +4336,7 @@ function buildPhotosPage(albums) {
         </div>
         <div class="art-row-img-wrap">
           ${mainImg ? `<img src="${mainImg}" alt="">` : '<div class="art-row-img-placeholder"></div>'}
+          ${mainImg ? `<button class="art-zoom-btn" onclick="event.stopPropagation();artZoomImage('${artEsc(mainImg)}')" title="מסך מלא">⛶</button>` : ''}
           <button class="art-delete-btn" onclick="event.stopPropagation();photoDelete('${artEsc(p.id)}',this)">✕</button>
         </div>
       </div>
@@ -4650,6 +4653,7 @@ function buildCoursesPage(courses) {
       </div>
       <div class="art-row-img-wrap">
         ${c.image ? `<img src="${c.image}" alt="">` : '<div class="art-row-img-placeholder"></div>'}
+        ${c.image ? `<button class="art-zoom-btn" onclick="event.stopPropagation();artZoomImage('${artEsc(c.image)}')" title="מסך מלא">⛶</button>` : ''}
         <button class="art-delete-btn" onclick="event.stopPropagation();courseDelete('${artEsc(c.id)}',this)">✕</button>
       </div>
     </div>
@@ -4901,9 +4905,44 @@ if (btnAddCoursesPage) {
   });
 }
 
+function artZoomImage(imgUrl) {
+  let lightbox = document.getElementById('lightbox-modal');
+  if (!lightbox) {
+    lightbox = document.createElement('div');
+    lightbox.id = 'lightbox-modal';
+    lightbox.style.position = 'fixed';
+    lightbox.style.inset = '0';
+    lightbox.style.background = 'rgba(0,0,0,0.9)';
+    lightbox.style.zIndex = '999999';
+    lightbox.style.display = 'flex';
+    lightbox.style.alignItems = 'center';
+    lightbox.style.justifyContent = 'center';
+    lightbox.style.cursor = 'zoom-out';
+    
+    const img = document.createElement('img');
+    img.id = 'lightbox-img';
+    img.style.maxWidth = '95%';
+    img.style.maxHeight = '95%';
+    img.style.objectFit = 'contain';
+    img.style.borderRadius = '8px';
+    img.style.boxShadow = '0 5px 25px rgba(0,0,0,0.5)';
+    
+    lightbox.appendChild(img);
+    lightbox.onclick = () => {
+      lightbox.style.display = 'none';
+    };
+    document.body.appendChild(lightbox);
+  }
+  
+  const img = document.getElementById('lightbox-img');
+  img.src = imgUrl;
+  lightbox.style.display = 'flex';
+}
+
 window.buildCoursesPage = buildCoursesPage;
 window.courseDelete = courseDelete;
 window.openCourseModal = openCourseModal;
 window.courseSearch = courseSearch;
 window.courseOpenDetail = courseOpenDetail;
 window.courseGoBack = courseGoBack;
+window.artZoomImage = artZoomImage;
