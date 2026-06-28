@@ -5408,7 +5408,13 @@ function renderUserChatMessages(chatData) {
     const m = msgs[key];
     const isSenderAdmin = m.sender === 'admin';
     const bubbleClass = isSenderAdmin ? 'msg-admin' : 'msg-user';
-    return `<div class="chat-message ${bubbleClass}">${m.text}</div>`;
+    const timeString = m.timestamp ? new Date(m.timestamp).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }) : '';
+    return `
+      <div class="chat-message ${bubbleClass}">
+        <div class="chat-msg-text">${m.text}</div>
+        <span class="chat-msg-time">${timeString}</span>
+      </div>
+    `;
   }).join('');
   
   chatBody.innerHTML = msgsHTML;
