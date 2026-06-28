@@ -4725,7 +4725,7 @@ function courseOpenDetail(id) {
         <!-- נגן וידאו מובנה במקום תמונת כותרת -->
         ${c.video ? `
           <div style="position:relative; width:100%; max-height:450px; overflow:hidden; border-radius:12px; margin-bottom:20px; background:#000;">
-            <video src="${c.video}" controls autoplay style="width:100%; height:100%; display:block; max-height:450px; object-fit:contain;"></video>
+            <video src="${c.video}" controls autoplay muted playsinline style="width:100%; height:100%; display:block; max-height:450px; object-fit:contain;"></video>
           </div>
         ` : ''}
 
@@ -4829,6 +4829,12 @@ document.getElementById('course-vid-pick').addEventListener('click', () => {
   const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'video/*';
   inp.onchange = e => {
     const f = e.target.files[0]; if (!f) return;
+    
+    // בדיקת גודל הקובץ (עד 20MB) למניעת קריסת מסד הנתונים
+    if (f.size > 20 * 1024 * 1024) {
+      alert('שגיאה: קובץ הסרטון גדול מדי (מעל 20MB). אנא העלה סרטון קצר ומכווץ יותר כדי שיישמר בהצלחה.');
+      return;
+    }
     
     // בדיקת אורך הסרטון (עד 10 שניות)
     const tempVideo = document.createElement('video');
