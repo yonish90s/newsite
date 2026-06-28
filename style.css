@@ -2310,3 +2310,11 @@ body:not(.edit-mode) .hotspot-delete-btn {
     z-index: 10000 !important;
   }
 }
+.nav-telegram-link {
+  transition: opacity 0.2s, transform 0.15s;
+  color: inherit;
+}
+.nav-telegram-link:hover {
+  opacity: 0.8;
+  transform: scale(1.15);
+}

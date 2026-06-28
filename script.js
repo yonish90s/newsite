@@ -747,6 +747,26 @@ function renderTopNav() {
       // מעכשיו סרגל הכלים המרחף (top-nav-controls) מטפל בזה!
     }
     
+    const isPhotos = page.title && (page.title.includes('תמונות') || page.title.toLowerCase().includes('photo'));
+    if (isPhotos) {
+      const telegramLink = document.createElement('a');
+      telegramLink.href = 'https://t.me/yhsh98321';
+      telegramLink.target = '_blank';
+      telegramLink.className = 'nav-telegram-link';
+      telegramLink.style.display = 'inline-flex';
+      telegramLink.style.alignItems = 'center';
+      telegramLink.style.justifyContent = 'center';
+      telegramLink.style.padding = '0 10px';
+      telegramLink.style.verticalAlign = 'middle';
+      telegramLink.title = 'טלגרם';
+      telegramLink.innerHTML = `
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: inherit; display: block;">
+          <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+        </svg>
+      `;
+      navLinksContainer.appendChild(telegramLink);
+    }
+    
     navLinksContainer.appendChild(a);
   });
 }
