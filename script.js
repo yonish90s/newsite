@@ -376,30 +376,37 @@ async function initSite() {
 
   // החזרת עמוד הבית כעמוד הראשי הפעיל כברירת מחדל ושמירה על דף הכתבות כראשון
   if (pages && pages.length) {
-    let cleanedPages = [];
-    let seenTitles = new Set();
+    let pageMap = new Map();
     let madeCleanChanges = false;
     
     pages.forEach(p => {
-      const normalizedTitle = p.title.replace(/[\u1000-\uFFFF]+/g, '').trim(); // הסרת אימוג'ים
+      // הסרת תווים בלתי נראים ואימוג'ים
+      const normalizedTitle = p.title.replace(/[\u200b-\u200d\uFEFF]/g, '').replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, '').replace(/[\u1000-\uFFFF]+/g, '').trim();
       
       // הסרת עמודי "ראשי" ריקים
-      if ((normalizedTitle === 'ראשי' || normalizedTitle === '🏠 ראשי') && (!p.content || p.content.trim() === '')) {
+      if ((normalizedTitle === 'ראשי' || normalizedTitle === '🏠 ראשי' || normalizedTitle === '🏠ראשי') && (!p.content || p.content.trim() === '')) {
         madeCleanChanges = true;
         return;
       }
       
-      // מניעת כפילויות של עמודים עם כותרות דומות (כמו קורסים קורסים או תמונות תמונות)
-      if (normalizedTitle && seenTitles.has(normalizedTitle)) {
-        madeCleanChanges = true;
-        return;
-      }
+      if (!normalizedTitle) return;
       
-      if (normalizedTitle) {
-        seenTitles.add(normalizedTitle);
-        cleanedPages.push(p);
+      // מניעת כפילויות של עמודים עם כותרות דומות - מעדיפים תמיד את העמוד שיש בו תוכן
+      if (pageMap.has(normalizedTitle)) {
+        madeCleanChanges = true;
+        const existingPage = pageMap.get(normalizedTitle);
+        const existingEmpty = !existingPage.content || existingPage.content.trim() === '';
+        const currentEmpty = !p.content || p.content.trim() === '';
+        
+        if (existingEmpty && !currentEmpty) {
+          pageMap.set(normalizedTitle, p); // מחליפים בעמוד שיש לו תוכן אמיתי
+        }
+      } else {
+        pageMap.set(normalizedTitle, p);
       }
     });
+    
+    let cleanedPages = Array.from(pageMap.values());
     
     // מציאת עמוד הכתבות (מכיל articles-page ולא stories-page)
     let articlesPage = cleanedPages.find(p => p.content && p.content.includes('articles-page') && !p.content.includes('stories-page'));
