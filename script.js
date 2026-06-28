@@ -5403,11 +5403,23 @@ function renderUserChatMessages(chatData) {
     return;
   }
   
+  const user = auth.currentUser;
+  const ADMIN_EMAIL = "yoni98321@gmail.com";
+  const isCurrentUserAdmin = user && user.email === ADMIN_EMAIL;
+  
   const msgs = chatData.messages;
   const msgsHTML = Object.keys(msgs).map(key => {
     const m = msgs[key];
-    const isSenderAdmin = m.sender === 'admin';
-    const bubbleClass = isSenderAdmin ? 'msg-admin' : 'msg-user';
+    
+    // בודקים האם ההודעה נשלחה על ידי המשתמש המחובר כרגע
+    let isSentByMe = false;
+    if (isCurrentUserAdmin) {
+      isSentByMe = (m.sender === 'admin');
+    } else {
+      isSentByMe = (m.sender === 'user');
+    }
+    
+    const bubbleClass = isSentByMe ? 'msg-sent' : 'msg-received';
     const timeString = m.timestamp ? new Date(m.timestamp).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }) : '';
     return `
       <div class="chat-message ${bubbleClass}">

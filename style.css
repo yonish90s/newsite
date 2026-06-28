@@ -2198,13 +2198,13 @@ body:not(.edit-mode) .hotspot-delete-btn {
   display: flex;
   flex-direction: column;
 }
-.chat-message.msg-user {
-  background: #f1f1f1;
+.chat-message.msg-sent {
+  background: #d9fdd3;
   color: #000;
   align-self: flex-start;
   border-bottom-left-radius: 2px;
 }
-.chat-message.msg-admin {
+.chat-message.msg-received {
   background: #ffffff;
   color: #000;
   align-self: flex-end;
