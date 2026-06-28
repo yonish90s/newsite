@@ -5235,7 +5235,7 @@ function initChatBadgeListeners(user) {
   
   if (user.email === ADMIN_EMAIL) {
     // מנהל: סופר כמה שיחות יש שבהן adminRead === false
-    const chatsRef = ref(db, 'chats');
+    const chatsRef = ref(db, 'website/chats');
     chatBadgeUnsubscribe = onValue(chatsRef, (snapshot) => {
       const chats = snapshot.val();
       let unreadCount = 0;
@@ -5255,7 +5255,7 @@ function initChatBadgeListeners(user) {
     });
   } else {
     // משתמש רגיל: בודק האם יש הודעה חדשה עבורו מהמנהל
-    const userChatRef = ref(db, 'chats/' + user.uid);
+    const userChatRef = ref(db, 'website/chats/' + user.uid);
     chatBadgeUnsubscribe = onValue(userChatRef, (snapshot) => {
       const chatData = snapshot.val();
       if (chatData && chatData.userRead === false) {
@@ -5297,7 +5297,7 @@ function loadAdminChatsList() {
   
   if (chatBody) chatBody.innerHTML = '<div style="text-align:center;color:#999;padding:20px;">טוען פניות...</div>';
   
-  const chatsRef = ref(db, 'chats');
+  const chatsRef = ref(db, 'website/chats');
   chatListUnsubscribe = onValue(chatsRef, (snapshot) => {
     const chats = snapshot.val();
     if (activeChatUser) return; // הגנה ממרוץ תהליכים
@@ -5353,7 +5353,7 @@ function loadSingleChat(userId) {
   if (chatBody) chatBody.innerHTML = '<div style="text-align:center;color:#999;padding:20px;">טוען הודעות...</div>';
   
   // מעקב ריל-טיים אחרי השיחה הספציפית הזו
-  const userChatRef = ref(db, 'chats/' + userId);
+  const userChatRef = ref(db, 'website/chats/' + userId);
   if (chatUnsubscribe) chatUnsubscribe();
   chatUnsubscribe = onValue(userChatRef, (snapshot) => {
     const chatData = snapshot.val();
@@ -5379,9 +5379,9 @@ function loadSingleChat(userId) {
     // סימון שההודעות נקראו
     if (chatData) {
       if (isManager && chatData.adminRead === false) {
-        update(ref(db, 'chats/' + userId), { adminRead: true });
+        update(ref(db, 'website/chats/' + userId), { adminRead: true });
       } else if (!isManager && chatData.userRead === false) {
-        update(ref(db, 'chats/' + userId), { userRead: true });
+        update(ref(db, 'website/chats/' + userId), { userRead: true });
       }
     }
   });
@@ -5440,9 +5440,9 @@ function chatSendMessage() {
     timestamp: Date.now()
   };
   
-  const messagesRef = ref(db, 'chats/' + targetUserUid + '/messages');
+  const messagesRef = ref(db, 'website/chats/' + targetUserUid + '/messages');
   push(messagesRef, messagePayload).then(() => {
-    const chatRef = ref(db, 'chats/' + targetUserUid);
+    const chatRef = ref(db, 'website/chats/' + targetUserUid);
     const updates = {
       lastMessage: text,
       lastTimestamp: Date.now()
