@@ -2069,16 +2069,16 @@ body:not(.edit-mode) .hotspot-delete-btn {
 .chat-fab {
   position: fixed;
   bottom: 26px;
-  left: 96px;
-  width: 60px;
-  height: 60px;
-  border-radius: 16px;
+  left: 26px;
+  width: 45px;
+  height: 45px;
+  border-radius: 12px;
   background: #111;
   color: #fff;
   border: none;
   cursor: pointer;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-  display: flex; /* מוצג לכולם תמיד */
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  display: flex;
   align-items: center;
   justify-content: center;
   z-index: 9000;
@@ -2088,8 +2088,8 @@ body:not(.edit-mode) .hotspot-delete-btn {
   background: #000;
 }
 .chat-fab svg {
-  width: 26px;
-  height: 26px;
+  width: 20px;
+  height: 20px;
 }
 .chat-fab.chat-bump {
   transform: scale(1.2);
@@ -2108,10 +2108,10 @@ body:not(.edit-mode) .hotspot-delete-btn {
 }
 .chat-panel {
   position: fixed;
-  bottom: 96px;
+  bottom: 80px;
   left: 26px;
-  width: 340px;
-  height: 480px;
+  width: 255px;
+  height: 360px;
   background: #fff;
   border-radius: 16px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.2);
@@ -2266,7 +2266,7 @@ body:not(.edit-mode) .hotspot-delete-btn {
 /* כפתורי ניהול צפים מעל העגלה והצ'אט */
 .fab-admin-controls {
   position: fixed;
-  bottom: 92px;
+  bottom: 77px;
   display: flex;
   background: rgba(255, 255, 255, 0.95);
   border: 1px solid #ccc;
@@ -2276,11 +2276,8 @@ body:not(.edit-mode) .hotspot-delete-btn {
   z-index: 9005;
   backdrop-filter: blur(4px);
 }
-#cart-admin-controls {
-  left: 26px;
-}
 #chat-admin-controls {
-  left: 96px;
+  left: 26px;
 }
 .fab-control-btn {
   user-select: none;
