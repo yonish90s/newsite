@@ -882,10 +882,12 @@ function applyEditModeToContent() {
     const targetLink = child.tagName === 'A' ? child : child.querySelector('.mega-drop-trigger');
     if (!targetLink) return;
 
+    child.style.position = 'relative'; // וידוא שהכפתורים ימוקמו ביחס לעמוד הקיים
     const controls = document.createElement('span');
     controls.className = 'top-nav-controls';
     controls.style.position = 'absolute';
-    controls.style.top = '-25px';
+    controls.style.top = '100%';
+    controls.style.marginTop = '8px';
     controls.style.left = '50%';
     controls.style.transform = 'translateX(-50%)';
     controls.style.display = 'flex';
