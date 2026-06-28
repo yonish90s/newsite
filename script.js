@@ -271,29 +271,30 @@ async function initSite() {
     }
   }
 
-  // הוספת עמוד כתבות אוטומטית אם עוד לא קיים (בודקים אם קיים בעמוד כלשהו כולל העמוד הראשי)
-  if (!pages.find(p => p.content && p.content.includes('articles-page'))) {
+  // הוספת עמוד כתבות אוטומטית אם עוד לא קיים
+  if (!pages.find(p => p.content && p.content.includes('articles-page') && !p.content.includes('stories-page') && !p.content.includes('photos-page') && !p.content.includes('courses-page'))) {
     const mainPage = pages.find(p => p.id === 'page-main');
     if (mainPage) {
       mainPage.content = buildArticlesPage(ARTICLES_SAMPLES);
-      mainPage.title = '🏠 ראשי';
+      mainPage.title = 'כתבות';
     } else {
-      pages.unshift({ id: 'page-main', title: '🏠 ראשי', content: buildArticlesPage(ARTICLES_SAMPLES) });
-      if (!topNavPages.includes('page-main')) topNavPages.unshift('page-main');
+      const newPageId = 'page-articles-' + Date.now();
+      pages.unshift({ id: newPageId, title: 'כתבות', content: buildArticlesPage(ARTICLES_SAMPLES) });
+      if (!topNavPages.includes(newPageId)) topNavPages.unshift(newPageId);
+      activePageId = newPageId;
     }
-    activePageId = 'page-main'; // הפיכה לעמוד הראשי הפעיל
     saveToStorage();
   }
 
-  // העברת עמוד הכתבות לעמוד הראשי (page-main) ושינוי שמו ל"ראשי" אם הוא קיים בנפרד
+  // העברת עמוד הכתבות לעמוד הראשי ושינוי שמו ל"כתבות" אם הוא קיים בנפרד
   const mainPage = pages.find(p => p.id === 'page-main');
-  const separateArticlesPage = pages.find(p => p.content && p.content.includes('articles-page') && p.id !== 'page-main');
+  const separateArticlesPage = pages.find(p => p.content && p.content.includes('articles-page') && !p.content.includes('stories-page') && !p.content.includes('photos-page') && !p.content.includes('courses-page') && p.id !== 'page-main');
   if (mainPage && separateArticlesPage) {
     mainPage.content = separateArticlesPage.content;
-    mainPage.title = '🏠 ראשי';
+    mainPage.title = 'כתבות';
     pages = pages.filter(p => p.id !== separateArticlesPage.id);
     topNavPages = topNavPages.filter(id => id !== separateArticlesPage.id);
-    activePageId = 'page-main'; // הפניית המשתמש אוטומטית לעמוד הראשי החדש
+    activePageId = mainPage.id;
     saveToStorage();
   }
 
@@ -409,7 +410,7 @@ async function initSite() {
     let cleanedPages = Array.from(pageMap.values());
     
     // מציאת עמוד הכתבות (מכיל articles-page ולא stories-page)
-    let articlesPage = cleanedPages.find(p => p.content && p.content.includes('articles-page') && !p.content.includes('stories-page'));
+    let articlesPage = cleanedPages.find(p => p.content && p.content.includes('articles-page') && !p.content.includes('stories-page') && !p.content.includes('photos-page') && !p.content.includes('courses-page'));
     
     if (!articlesPage) {
       articlesPage = cleanedPages[0];
@@ -812,7 +813,7 @@ function renderPage() {
   
   // הגנה: אם העמוד מוסתר והמשתמש הוא לא מנהל/עורך, מפנים אותו לעמוד הראשי של הכתבות
   if (currentPage && currentPage.isHidden && !isEditMode && !isAdmin()) {
-    const articlesPage = pages.find(p => p.content && p.content.includes('articles-page') && !p.content.includes('stories-page'));
+    const articlesPage = pages.find(p => p.content && p.content.includes('articles-page') && !p.content.includes('stories-page') && !p.content.includes('photos-page') && !p.content.includes('courses-page'));
     activePageId = articlesPage ? articlesPage.id : pages[0].id;
     renderPage();
     return;
