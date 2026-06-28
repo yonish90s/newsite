@@ -760,11 +760,24 @@ function renderTopNav() {
       telegramLink.style.verticalAlign = 'middle';
       telegramLink.title = 'טלגרם';
       telegramLink.innerHTML = `
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: inherit; display: block;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: inherit; display: block; margin-left: 6px;">
           <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
         </svg>
+        <span>טלגרם</span>
       `;
       navLinksContainer.appendChild(telegramLink);
+      
+      // הוספת אייקון תמונות לכפתור תמונות
+      a.style.display = 'inline-flex';
+      a.style.alignItems = 'center';
+      a.innerHTML = `
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: inherit; display: block; margin-left: 6px;">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+          <circle cx="8.5" cy="8.5" r="1.5"/>
+          <polyline points="21 15 16 10 5 21"/>
+        </svg>
+        <span>${page.title.replace(/[\u1000-\uFFFF]+/g, '').trim()}</span>
+      `;
     }
     
     navLinksContainer.appendChild(a);
