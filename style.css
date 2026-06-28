@@ -2214,9 +2214,14 @@ body:not(.edit-mode) .hotspot-delete-btn {
 .chat-msg-time {
   font-size: 10px;
   color: #8c8c8c;
-  align-self: flex-end;
   margin-top: 4px;
   line-height: 1;
+}
+.msg-sent .chat-msg-time {
+  align-self: flex-end; /* צד שמאל - קרוב לשוליים */
+}
+.msg-received .chat-msg-time {
+  align-self: flex-start; /* צד ימין - קרוב לשוליים */
 }
 .chat-footer {
   padding: 10px 14px;
