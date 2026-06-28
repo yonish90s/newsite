@@ -2244,4 +2244,32 @@ body:not(.edit-mode) .hotspot-delete-btn {
 }
 .chat-send-btn:hover {
   background: #000;
+
+}
+
+/* כפתורי ניהול צפים מעל העגלה והצ'אט */
+.fab-admin-controls {
+  position: fixed;
+  bottom: 92px;
+  display: flex;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid #ccc;
+  padding: 4px 8px;
+  border-radius: 20px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  z-index: 9005;
+  backdrop-filter: blur(4px);
+}
+#cart-admin-controls {
+  left: 26px;
+}
+#chat-admin-controls {
+  left: 96px;
+}
+.fab-control-btn {
+  user-select: none;
+  transition: transform 0.1s;
+}
+.fab-control-btn:hover {
+  transform: scale(1.25);
 }

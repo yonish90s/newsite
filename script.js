@@ -81,6 +81,8 @@ let undoStack = []; // מערך לשמירת היסטוריית שינויים �
 let siteBackgrounds = { dashboard: null, topNav: null, main: null };
 let hideCart = false;
 let hideChat = false;
+let deleteCart = false;
+let deleteChat = false;
 
 // פונקציית עזר לבדיקה האם המשתמש המחובר כרגע הוא המנהל המורשה
 const isAdmin = () => auth.currentUser && auth.currentUser.email === "yoni98321@gmail.com";
@@ -134,36 +136,66 @@ function applyBackgrounds() {
 function updateFABsVisibility() {
   const cartFab = document.getElementById('global-shop-cart-fab');
   const chatFab = document.getElementById('global-chat-fab');
+  const cartControls = document.getElementById('cart-admin-controls');
+  const chatControls = document.getElementById('chat-admin-controls');
+  const btnRestoreCart = document.getElementById('btn-restore-cart');
+  const btnRestoreChat = document.getElementById('btn-restore-chat');
+  
   const admin = isAdmin();
-  
+  const edit = isEditMode; // האם כרגע במצב עריכה פעיל
+
+  // 1. טיפול בעגלת קניות
   if (cartFab) {
-    if (hideCart) {
-      cartFab.style.display = admin ? 'flex' : 'none';
-      cartFab.style.opacity = admin ? '0.4' : '1';
+    if (deleteCart) {
+      cartFab.style.display = 'none';
+      if (cartControls) cartControls.style.display = 'none';
+      if (btnRestoreCart && edit) btnRestoreCart.style.display = 'inline-block';
     } else {
-      cartFab.style.display = 'flex';
-      cartFab.style.opacity = '1';
-    }
-  }
-  
-  if (chatFab) {
-    if (hideChat) {
-      chatFab.style.display = admin ? 'flex' : 'none';
-      chatFab.style.opacity = admin ? '0.4' : '1';
-    } else {
-      chatFab.style.display = 'flex';
-      chatFab.style.opacity = '1';
+      if (btnRestoreCart) btnRestoreCart.style.display = 'none';
+      if (hideCart) {
+        cartFab.style.display = edit ? 'flex' : 'none';
+        cartFab.style.opacity = edit ? '0.4' : '1';
+      } else {
+        cartFab.style.display = 'flex';
+        cartFab.style.opacity = '1';
+      }
+      if (cartControls) {
+        cartControls.style.display = edit ? 'flex' : 'none';
+      }
     }
   }
 
-  // עדכון הטקסט של כפתורי העריכה בסרגל אם הם קיימים
-  const btnToggleCartVisibility = document.getElementById('btn-toggle-cart-visibility');
-  const btnToggleChatVisibility = document.getElementById('btn-toggle-chat-visibility');
-  if (btnToggleCartVisibility) {
-    btnToggleCartVisibility.textContent = hideCart ? '🙈 עגלה' : '👁️ עגלה';
+  // 2. טיפול בצ'אט תמיכה
+  if (chatFab) {
+    if (deleteChat) {
+      chatFab.style.display = 'none';
+      if (chatControls) chatControls.style.display = 'none';
+      if (btnRestoreChat && edit) btnRestoreChat.style.display = 'inline-block';
+    } else {
+      if (btnRestoreChat) btnRestoreChat.style.display = 'none';
+      if (hideChat) {
+        chatFab.style.display = edit ? 'flex' : 'none';
+        chatFab.style.opacity = edit ? '0.4' : '1';
+      } else {
+        chatFab.style.display = 'flex';
+        chatFab.style.opacity = '1';
+      }
+      if (chatControls) {
+        chatControls.style.display = edit ? 'flex' : 'none';
+      }
+    }
   }
-  if (btnToggleChatVisibility) {
-    btnToggleChatVisibility.textContent = hideChat ? '🙈 צ\'אט' : '👁️ צ\'אט';
+
+  // 3. עדכון האייקונים של העין/קוף בכפתורים המרחפים
+  const cartHideIcon = document.getElementById('cart-hide-icon');
+  const chatHideIcon = document.getElementById('chat-hide-icon');
+  if (cartHideIcon) {
+    cartHideIcon.textContent = hideCart ? '👁️' : '🙈';
+    cartHideIcon.title = hideCart ? 'הצג עגלה' : 'הסתר עגלה';
+  }
+  if (chatHideIcon) {
+    chatHideIcon.textContent = hideChat ? '👁️' : '🙈';
+    chatHideIcon.title = hideChat ? 'הצג צ\'אט' : 'הסתר צ\'אט';
   }
 }
 
@@ -184,6 +216,8 @@ async function initSite() {
        if (data.siteBackgrounds) siteBackgrounds = data.siteBackgrounds;
       if (data.hideCart !== undefined) hideCart = data.hideCart;
       if (data.hideChat !== undefined) hideChat = data.hideChat;
+      if (data.deleteCart !== undefined) deleteCart = data.deleteCart;
+      if (data.deleteChat !== undefined) deleteChat = data.deleteChat;
       
       if (data.navHTML) {
         navLinksContainer.innerHTML = data.navHTML;
@@ -5431,3 +5465,73 @@ window.chatGoBackToAdminList = chatGoBackToAdminList;
 window.chatCleanup = chatCleanup;
 window.initChatBadgeListeners = initChatBadgeListeners;
 window.updateFABsVisibility = updateFABsVisibility;
+
+// פונקציות ניהול עבור הלחצנים הצפים (הסתרה ומחיקה ישירה)
+async function adminToggleCartHide() {
+  hideCart = !hideCart;
+  try {
+    await update(ref(db, 'website'), { hideCart: hideCart });
+    updateFABsVisibility();
+  } catch(e) { console.error(e); }
+}
+
+async function adminDeleteCart() {
+  if (confirm("האם למחוק את כפתור עגלת הקניות לחלוטין מהאתר? (תוכל לשחזר אותו מסרגל הניהול)")) {
+    deleteCart = true;
+    try {
+      await update(ref(db, 'website'), { deleteCart: true });
+      updateFABsVisibility();
+    } catch(e) { console.error(e); }
+  }
+}
+
+async function adminToggleChatHide() {
+  hideChat = !hideChat;
+  try {
+    await update(ref(db, 'website'), { hideChat: hideChat });
+    updateFABsVisibility();
+  } catch(e) { console.error(e); }
+}
+
+async function adminDeleteChat() {
+  if (confirm("האם למחוק את כפתור הצ'אט לחלוטין מהאתר? (תוכל לשחזר אותו מסרגל הניהול)")) {
+    deleteChat = true;
+    try {
+      await update(ref(db, 'website'), { deleteChat: true });
+      updateFABsVisibility();
+    } catch(e) { console.error(e); }
+  }
+}
+
+// שחזור דרך סרגל הניהול
+async function adminRestoreCart() {
+  deleteCart = false;
+  try {
+    await update(ref(db, 'website'), { deleteCart: false });
+    updateFABsVisibility();
+    alert("סל הקניות שוחזר בהצלחה!");
+  } catch(e) { console.error(e); }
+}
+
+async function adminRestoreChat() {
+  deleteChat = false;
+  try {
+    await update(ref(db, 'website'), { deleteChat: false });
+    updateFABsVisibility();
+    alert("צ'אט התמיכה שוחזר בהצלחה!");
+  } catch(e) { console.error(e); }
+}
+
+// האזנה לכפתורי שחזור בסרגל
+const btnRestoreCart = document.getElementById('btn-restore-cart');
+const btnRestoreChat = document.getElementById('btn-restore-chat');
+if (btnRestoreCart) btnRestoreCart.addEventListener('click', adminRestoreCart);
+if (btnRestoreChat) btnRestoreChat.addEventListener('click', adminRestoreChat);
+
+window.adminToggleCartHide = adminToggleCartHide;
+window.adminDeleteCart = adminDeleteCart;
+window.adminToggleChatHide = adminToggleChatHide;
+window.adminDeleteChat = adminDeleteChat;
+window.adminRestoreCart = adminRestoreCart;
+window.adminRestoreChat = adminRestoreChat;
+
