@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getDatabase, ref, set, get, child, onValue, push, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 // הגדרות הפרויקט של Firebase
 const firebaseConfig = {
@@ -79,6 +79,8 @@ let topNavPages = ['page-main', 'page-shop', 'page-charts', 'page-forum']; // ה
 let isEditMode = false; // ברירת מחדל: אורח (ללא עריכה)
 let undoStack = []; // מערך לשמירת היסטוריית שינויים לצורך ביטול (Undo)
 let siteBackgrounds = { dashboard: null, topNav: null, main: null };
+let hideCart = false;
+let hideChat = false;
 
 // פונקציית עזר לבדיקה האם המשתמש המחובר כרגע הוא המנהל המורשה
 const isAdmin = () => auth.currentUser && auth.currentUser.email === "yoni98321@gmail.com";
@@ -128,6 +130,43 @@ function applyBackgrounds() {
   }
 }
 
+// עדכון נראות של כפתורי העגלה והצ'אט לפי הגדרות מנהל
+function updateFABsVisibility() {
+  const cartFab = document.getElementById('global-shop-cart-fab');
+  const chatFab = document.getElementById('global-chat-fab');
+  const admin = isAdmin();
+  
+  if (cartFab) {
+    if (hideCart) {
+      cartFab.style.display = admin ? 'flex' : 'none';
+      cartFab.style.opacity = admin ? '0.4' : '1';
+    } else {
+      cartFab.style.display = 'flex';
+      cartFab.style.opacity = '1';
+    }
+  }
+  
+  if (chatFab) {
+    if (hideChat) {
+      chatFab.style.display = admin ? 'flex' : 'none';
+      chatFab.style.opacity = admin ? '0.4' : '1';
+    } else {
+      chatFab.style.display = 'flex';
+      chatFab.style.opacity = '1';
+    }
+  }
+
+  // עדכון הטקסט של כפתורי העריכה בסרגל אם הם קיימים
+  const btnToggleCartVisibility = document.getElementById('btn-toggle-cart-visibility');
+  const btnToggleChatVisibility = document.getElementById('btn-toggle-chat-visibility');
+  if (btnToggleCartVisibility) {
+    btnToggleCartVisibility.textContent = hideCart ? '🙈 עגלה' : '👁️ עגלה';
+  }
+  if (btnToggleChatVisibility) {
+    btnToggleChatVisibility.textContent = hideChat ? '🙈 צ\'אט' : '👁️ צ\'אט';
+  }
+}
+
 // פונקציית אתחול אסינכרונית - טוענת מהמסד הנתונים של Firebase עם גיבוי מקומי ב-localforage
 async function initSite() {
   try {
@@ -142,7 +181,9 @@ async function initSite() {
       if (data.pages) pages = data.pages;
       if (data.activePageId) activePageId = data.activePageId;
       if (data.topNavPages) topNavPages = data.topNavPages;
-      if (data.siteBackgrounds) siteBackgrounds = data.siteBackgrounds;
+       if (data.siteBackgrounds) siteBackgrounds = data.siteBackgrounds;
+      if (data.hideCart !== undefined) hideCart = data.hideCart;
+      if (data.hideChat !== undefined) hideChat = data.hideChat;
       
       if (data.navHTML) {
         navLinksContainer.innerHTML = data.navHTML;
@@ -299,10 +340,59 @@ async function initSite() {
     saveToStorage();
   }
 
+  // החזרת עמוד הבית כעמוד הראשי הפעיל כברירת מחדל ושמירה על דף הכתבות כראשון
+  if (pages && pages.length) {
+    let cleanedPages = [];
+    let seenTitles = new Set();
+    let madeCleanChanges = false;
+    
+    pages.forEach(p => {
+      const normalizedTitle = p.title.replace(/[\u1000-\uFFFF]+/g, '').trim(); // הסרת אימוג'ים
+      
+      // הסרת עמודי "ראשי" ריקים
+      if ((normalizedTitle === 'ראשי' || normalizedTitle === '🏠 ראשי') && (!p.content || p.content.trim() === '')) {
+        madeCleanChanges = true;
+        return;
+      }
+      
+      // מניעת כפילויות של עמודים עם כותרות דומות (כמו קורסים קורסים או תמונות תמונות)
+      if (normalizedTitle && seenTitles.has(normalizedTitle)) {
+        madeCleanChanges = true;
+        return;
+      }
+      
+      if (normalizedTitle) {
+        seenTitles.add(normalizedTitle);
+        cleanedPages.push(p);
+      }
+    });
+    
+    // מציאת עמוד הכתבות (מכיל articles-page ולא stories-page)
+    let articlesPage = cleanedPages.find(p => p.content && p.content.includes('articles-page') && !p.content.includes('stories-page'));
+    
+    if (!articlesPage) {
+      articlesPage = cleanedPages[0];
+    }
+    
+    if (articlesPage) {
+      // העברת עמוד הכתבות לתחילת התפריט והרשימה
+      cleanedPages = [articlesPage, ...cleanedPages.filter(p => p.id !== articlesPage.id)];
+      activePageId = articlesPage.id;
+    }
+    
+    pages = cleanedPages;
+    topNavPages = pages.map(p => p.id);
+    
+    if (madeCleanChanges) {
+      saveToStorage();
+    }
+  }
+
   // אחרי שהכל נטען (ואולי תוקן), נצייר את האתר
   renderSideMenu();
   renderTopNav();
   renderPage();
+  updateFABsVisibility();
 }
 
 // קריאה לאתחול
@@ -480,6 +570,7 @@ function renderSideMenu() {
         page.isHidden = !page.isHidden;
         saveToStorage();
         renderSideMenu();
+        renderTopNav();
       };
       
       // כפתור מחיקה
@@ -677,6 +768,15 @@ function adjustImgAspectRatio(img) {
 // פונקציה שמציגה את התוכן של העמוד הנוכחי במרכז המסך
 function renderPage() {
   const currentPage = pages.find(p => p.id === activePageId); // מחפשים את העמוד ברשימה
+  
+  // הגנה: אם העמוד מוסתר והמשתמש הוא לא מנהל/עורך, מפנים אותו לעמוד הראשי של הכתבות
+  if (currentPage && currentPage.isHidden && !isEditMode && !isAdmin()) {
+    const articlesPage = pages.find(p => p.content && p.content.includes('articles-page') && !p.content.includes('stories-page'));
+    activePageId = articlesPage ? articlesPage.id : pages[0].id;
+    renderPage();
+    return;
+  }
+
   if (currentPage) {
     mainContent.innerHTML = currentPage.content; // מזריקים את ה-HTML של העמוד פנימה
 
@@ -1235,34 +1335,61 @@ btnAddPage.addEventListener('click', () => {
 // האזנה ללחיצה על כפתור "איפוס אתר"
 if (btnResetSite) {
   btnResetSite.addEventListener('click', async () => {
-    if (confirm('האם אתה בטוח שברצונך לאפס את האתר? כל העמודים והעיצובים השמורים יימחקו לצמיתות.')) {
+    if (confirm('האם אתה בטוח שברצונך לאפס את עיצובי האתר? הכתבות, המוצרים והקורסים שהעלית יישמרו, אך רקעי העיצוב יאופסו.')) {
       try {
-        // איפוס מקומי
+        // איפוס מקומי של העדפות דפדפן
         await localforage.clear();
         localStorage.clear();
         
-        // איפוס ב-Firebase DB (מוחק את הכל ושומר רק עמוד ראשי נקי)
+        // קריאת המצב הנוכחי כדי לשמור על העמודים והתוכן
         const dbRef = ref(db, 'website');
+        const snapshot = await get(dbRef);
+        const currentData = snapshot.val() || {};
+        const existingPages = currentData.pages || [];
+        
+        // שמירת התוכן ואיפוס רק של הרקעים והעיצובים
         await set(dbRef, {
-          pages: [
-            {
-              id: 'page-main',
-              title: 'ראשי',
-              content: ''
-            }
-          ],
-          activePageId: 'page-main',
-          topNavPages: ['page-main'],
-          navHTML: '<a href="#" id="top-nav-main" data-page-id="page-main">ראשי</a>',
-          siteBackgrounds: { dashboard: null, topNav: null, main: null }
+          pages: existingPages, // שומר על כל הכתבות והתכנים הקיימים
+          activePageId: currentData.activePageId || 'page-main',
+          topNavPages: currentData.topNavPages || ['page-main'],
+          navHTML: currentData.navHTML || null,
+          siteBackgrounds: { dashboard: null, topNav: null, main: null } // מאפס רקעים לדיפולט
         });
         
-        alert('האתר אופס בהצלחה! העמוד ייטען מחדש כעת.');
+        alert('העיצוב אופס בהצלחה! התוכן והכתבות שלך נשמרו. העמוד ייטען מחדש כעת.');
         window.location.reload();
       } catch (e) {
         console.error(e);
         alert('שגיאה במהלך האיפוס.');
       }
+    }
+  });
+}
+
+// האזנה לכפתורי הצגת/הסתרת עגלה וצ'אט בסרגל הניהול
+const btnToggleCartVisibility = document.getElementById('btn-toggle-cart-visibility');
+const btnToggleChatVisibility = document.getElementById('btn-toggle-chat-visibility');
+
+if (btnToggleCartVisibility) {
+  btnToggleCartVisibility.addEventListener('click', async () => {
+    hideCart = !hideCart;
+    try {
+      await update(ref(db, 'website'), { hideCart: hideCart });
+      updateFABsVisibility();
+    } catch(err) {
+      console.error(err);
+    }
+  });
+}
+
+if (btnToggleChatVisibility) {
+  btnToggleChatVisibility.addEventListener('click', async () => {
+    hideChat = !hideChat;
+    try {
+      await update(ref(db, 'website'), { hideChat: hideChat });
+      updateFABsVisibility();
+    } catch(err) {
+      console.error(err);
     }
   });
 }
@@ -2799,21 +2926,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function updateManagerUI(user = null) {
     if (!managerBtn) return;
-    if (user && user.email === ADMIN_EMAIL) {
-      managerBtn.textContent = 'מנהל ✏️';
-      managerBtn.classList.add('is-admin');
-      if (floatingToolbarEl) floatingToolbarEl.style.display = '';
-      
-      // הפעלת מצב עריכה
-      if (!isEditMode) {
-        isEditMode = true;
-        btnEditMode.classList.add('active');
-        btnEditMode.textContent = 'שמור שינויים 💾';
-        applyEditModeToContent();
-        renderSideMenu();
-        renderTopNav();
-      }
-    } else {
+    
+    if (!user) {
+      const chatPanel = document.getElementById('global-chat-panel');
+      if (chatPanel) chatPanel.style.display = 'none';
+      if (typeof chatCleanup === 'function') chatCleanup();
       managerBtn.textContent = 'אורח';
       managerBtn.classList.remove('is-admin');
       if (floatingToolbarEl) floatingToolbarEl.style.display = 'none';
@@ -2827,7 +2944,41 @@ document.addEventListener('DOMContentLoaded', () => {
         renderSideMenu();
         renderTopNav();
       }
+    } else {
+      if (typeof initChatBadgeListeners === 'function') initChatBadgeListeners(user);
+      
+      if (user.email === ADMIN_EMAIL) {
+        managerBtn.textContent = 'מנהל ✏️';
+        managerBtn.classList.add('is-admin');
+        if (floatingToolbarEl) floatingToolbarEl.style.display = '';
+        
+        // הפעלת מצב עריכה
+        if (!isEditMode) {
+          isEditMode = true;
+          btnEditMode.classList.add('active');
+          btnEditMode.textContent = 'שמור שינויים 💾';
+          applyEditModeToContent();
+          renderSideMenu();
+          renderTopNav();
+        }
+      } else {
+        managerBtn.textContent = 'התנתק';
+        managerBtn.classList.remove('is-admin');
+        if (floatingToolbarEl) floatingToolbarEl.style.display = 'none';
+        
+        // כיבוי מצב עריכה
+        if (isEditMode) {
+          isEditMode = false;
+          btnEditMode.classList.remove('active');
+          btnEditMode.textContent = 'מצב עריכה ✏️';
+          saveCurrentPageContent();
+          renderSideMenu();
+          renderTopNav();
+        }
+      }
     }
+
+    if (typeof updateFABsVisibility === 'function') updateFABsVisibility();
   }
 
   // מאזין לשינויי מצב התחברות
@@ -2871,8 +3022,7 @@ document.addEventListener('DOMContentLoaded', () => {
           if (user.email === ADMIN_EMAIL) {
             alert(`שלום מנהל! התחברת בהצלחה עם המייל: ${user.email}`);
           } else {
-            alert(`התחברת כמשתמש רגיל (${user.email}). רק מנהל מורשה יכול לערוך את האתר.`);
-            signOut(auth);
+            alert(`התחברת בהצלחה כמשתמש רגיל (${user.email})! כעת תוכל לפנות לתמיכה.`);
           }
         })
         .catch((error) => {
@@ -4981,3 +5131,303 @@ window.courseSearch = courseSearch;
 window.courseOpenDetail = courseOpenDetail;
 window.courseGoBack = courseGoBack;
 window.artZoomImage = artZoomImage;
+
+// ============================================================================
+// מערכת צ'אט תמיכה בזמן אמת (Support Chat Real-time Logic)
+// ============================================================================
+let chatUnsubscribe = null;
+let chatListUnsubscribe = null;
+let chatBadgeUnsubscribe = null;
+let activeChatUser = null; // מזהה המשתמש שהמנהל מתכתב איתו כרגע
+
+// פתיחה/סגירה של חלונית הצ'אט
+function chatTogglePanel() {
+  const panel = document.getElementById('global-chat-panel');
+  if (!panel) return;
+  
+  const user = auth.currentUser;
+  if (!user) {
+    alert("יש להתחבר עם המייל כדי לכתוב הודעה לתמיכה.");
+    const authModal = document.getElementById('auth-modal');
+    if (authModal) authModal.style.display = 'flex';
+    return;
+  }
+
+  const isOpening = panel.style.display === 'none';
+  panel.style.display = isOpening ? 'flex' : 'none';
+  
+  if (isOpening) {
+    const fab = document.getElementById('global-chat-fab');
+    if (fab) {
+      fab.classList.add('chat-bump');
+      setTimeout(() => fab.classList.remove('chat-bump'), 150);
+    }
+    loadChatContent(user);
+  } else {
+    chatCleanup();
+  }
+}
+
+// ניקוי מאזינים של הצ'אט
+function chatCleanup() {
+  if (chatUnsubscribe) {
+    chatUnsubscribe();
+    chatUnsubscribe = null;
+  }
+  if (chatListUnsubscribe) {
+    chatListUnsubscribe();
+    chatListUnsubscribe = null;
+  }
+}
+
+// האזנה והצגת התראות על הודעות חדשות (Badge)
+function initChatBadgeListeners(user) {
+  if (!user) return;
+  
+  const badgeEl = document.getElementById('global-chat-badge');
+  if (!badgeEl) return;
+  
+  const ADMIN_EMAIL = "yoni98321@gmail.com";
+  
+  if (chatBadgeUnsubscribe) chatBadgeUnsubscribe();
+  
+  if (user.email === ADMIN_EMAIL) {
+    // מנהל: סופר כמה שיחות יש שבהן adminRead === false
+    const chatsRef = ref(db, 'chats');
+    chatBadgeUnsubscribe = onValue(chatsRef, (snapshot) => {
+      const chats = snapshot.val();
+      let unreadCount = 0;
+      if (chats) {
+        Object.keys(chats).forEach(uid => {
+          if (chats[uid].adminRead === false) {
+            unreadCount++;
+          }
+        });
+      }
+      if (unreadCount > 0) {
+        badgeEl.textContent = unreadCount;
+        badgeEl.style.display = 'block';
+      } else {
+        badgeEl.style.display = 'none';
+      }
+    });
+  } else {
+    // משתמש רגיל: בודק האם יש הודעה חדשה עבורו מהמנהל
+    const userChatRef = ref(db, 'chats/' + user.uid);
+    chatBadgeUnsubscribe = onValue(userChatRef, (snapshot) => {
+      const chatData = snapshot.val();
+      if (chatData && chatData.userRead === false) {
+        badgeEl.textContent = '1';
+        badgeEl.style.display = 'block';
+      } else {
+        badgeEl.style.display = 'none';
+      }
+    });
+  }
+}
+
+// טעינת תוכן השיחה בהתאם לתפקיד המשתמש
+function loadChatContent(user) {
+  const ADMIN_EMAIL = "yoni98321@gmail.com";
+  const chatBody = document.getElementById('chat-body');
+  if (!chatBody) return;
+  
+  chatCleanup(); // ניקוי מאזינים קודמים
+
+  if (user.email === ADMIN_EMAIL) {
+    // מנהל רואה רשימת שיחות פעילות
+    if (activeChatUser) {
+      loadSingleChat(activeChatUser);
+    } else {
+      loadAdminChatsList();
+    }
+  } else {
+    // משתמש רגיל רואה את השיחה שלו
+    loadSingleChat(user.uid);
+  }
+}
+
+// טעינת רשימת הפניות למנהל
+function loadAdminChatsList() {
+  const chatBody = document.getElementById('chat-body');
+  const titleEl = document.getElementById('chat-title');
+  if (titleEl) titleEl.textContent = 'פניות לקוחות';
+  
+  if (chatBody) chatBody.innerHTML = '<div style="text-align:center;color:#999;padding:20px;">טוען פניות...</div>';
+  
+  const chatsRef = ref(db, 'chats');
+  chatListUnsubscribe = onValue(chatsRef, (snapshot) => {
+    const chats = snapshot.val();
+    if (activeChatUser) return; // הגנה ממרוץ תהליכים
+    renderAdminChatList(chats);
+  });
+}
+
+// רינדור רשימת השיחות של המנהל
+function renderAdminChatList(chats) {
+  const chatBody = document.getElementById('chat-body');
+  if (!chatBody) return;
+  
+  if (!chats) {
+    chatBody.innerHTML = '<div style="text-align:center;color:#999;padding:30px;">אין פניות פעילות כרגע.</div>';
+    return;
+  }
+  
+  // מיון השיחות לפי מועד ההודעה האחרונה
+  const sortedUids = Object.keys(chats).sort((a, b) => {
+    return (chats[b].lastTimestamp || 0) - (chats[a].lastTimestamp || 0);
+  });
+  
+  const listHTML = sortedUids.map(uid => {
+    const chat = chats[uid];
+    const hasUnread = chat.adminRead === false;
+    return `
+      <div class="chat-user-item" onclick="loadSingleChat('${uid}')">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span class="user-name">${chat.userName || 'משתמש'}</span>
+          ${hasUnread ? '<span class="unread-dot"></span>' : ''}
+        </div>
+        <span class="user-email">${chat.userEmail || ''}</span>
+        <div style="font-size:12px;color:#888;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+          ${chat.lastMessage || 'אין הודעות'}
+        </div>
+      </div>
+    `;
+  }).join('');
+  
+  chatBody.innerHTML = `<div class="chat-list-view">${listHTML}</div>`;
+}
+
+// טעינת שיחה בודדת (לגולש או למנהל)
+function loadSingleChat(userId) {
+  const ADMIN_EMAIL = "yoni98321@gmail.com";
+  const user = auth.currentUser;
+  if (!user) return;
+  
+  const isManager = user.email === ADMIN_EMAIL;
+  if (isManager) activeChatUser = userId;
+  
+  const chatBody = document.getElementById('chat-body');
+  if (chatBody) chatBody.innerHTML = '<div style="text-align:center;color:#999;padding:20px;">טוען הודעות...</div>';
+  
+  // מעקב ריל-טיים אחרי השיחה הספציפית הזו
+  const userChatRef = ref(db, 'chats/' + userId);
+  if (chatUnsubscribe) chatUnsubscribe();
+  chatUnsubscribe = onValue(userChatRef, (snapshot) => {
+    const chatData = snapshot.val();
+    if (isManager && activeChatUser !== userId) return; // הגנה ממרוץ תהליכים
+    
+    // עדכון כותרת השיחה
+    const titleEl = document.getElementById('chat-title');
+    if (titleEl) {
+      if (isManager) {
+        titleEl.innerHTML = `
+          <div style="display:flex; align-items:center; gap:8px;">
+            <button onclick="chatGoBackToAdminList()" style="font-size:16px; font-weight:900; background:none; border:none; color:#fff; cursor:pointer; padding:0 4px;">←</button>
+            <span>שיחה עם ${chatData ? (chatData.userName || 'משתמש') : 'תמיכה'}</span>
+          </div>
+        `;
+      } else {
+        titleEl.textContent = 'שיחה עם תמיכה';
+      }
+    }
+    
+    renderUserChatMessages(chatData);
+    
+    // סימון שההודעות נקראו
+    if (chatData) {
+      if (isManager && chatData.adminRead === false) {
+        update(ref(db, 'chats/' + userId), { adminRead: true });
+      } else if (!isManager && chatData.userRead === false) {
+        update(ref(db, 'chats/' + userId), { userRead: true });
+      }
+    }
+  });
+}
+
+// חזרה של מנהל לרשימת הפניות
+function chatGoBackToAdminList() {
+  activeChatUser = null;
+  loadChatContent(auth.currentUser);
+}
+
+// רינדור הודעות הצ'אט (משותף למשתמש ומנהל)
+function renderUserChatMessages(chatData) {
+  const chatBody = document.getElementById('chat-body');
+  if (!chatBody) return;
+  
+  if (!chatData || !chatData.messages) {
+    chatBody.innerHTML = '<div style="text-align:center;color:#999;padding:30px;line-height:1.5;">שלח הודעה כדי להתחיל בשיחה עם מנהל האתר!</div>';
+    return;
+  }
+  
+  const msgs = chatData.messages;
+  const msgsHTML = Object.keys(msgs).map(key => {
+    const m = msgs[key];
+    const isSenderAdmin = m.sender === 'admin';
+    const bubbleClass = isSenderAdmin ? 'msg-admin' : 'msg-user';
+    return `<div class="chat-message ${bubbleClass}">${m.text}</div>`;
+  }).join('');
+  
+  chatBody.innerHTML = msgsHTML;
+  chatBody.scrollTop = chatBody.scrollHeight; // גלילה אוטומטית למטה
+}
+
+// שליחת הודעה
+function chatSendMessage() {
+  const inputEl = document.getElementById('chat-input');
+  if (!inputEl) return;
+  const text = inputEl.value.trim();
+  if (!text) return;
+  
+  const user = auth.currentUser;
+  if (!user) return;
+  
+  const ADMIN_EMAIL = "yoni98321@gmail.com";
+  const isManager = user.email === ADMIN_EMAIL;
+  const targetUserUid = isManager ? activeChatUser : user.uid;
+  
+  if (!targetUserUid) {
+    alert("שגיאה: לא נבחר משתמש יעד לשליחת הודעה.");
+    return;
+  }
+  
+  const messagePayload = {
+    text: text,
+    sender: isManager ? 'admin' : 'user',
+    timestamp: Date.now()
+  };
+  
+  const messagesRef = ref(db, 'chats/' + targetUserUid + '/messages');
+  push(messagesRef, messagePayload).then(() => {
+    const chatRef = ref(db, 'chats/' + targetUserUid);
+    const updates = {
+      lastMessage: text,
+      lastTimestamp: Date.now()
+    };
+    
+    if (isManager) {
+      updates.adminRead = true;
+      updates.userRead = false;
+    } else {
+      updates.userName = user.displayName || 'משתמש';
+      updates.userEmail = user.email;
+      updates.adminRead = false;
+      updates.userRead = true;
+    }
+    
+    update(chatRef, updates);
+  }).catch(err => {
+    console.error("שגיאה בשליחת הודעה:", err);
+  });
+  
+  inputEl.value = '';
+}
+
+// ייצוא פונקציות לאובייקט החלון עבור ה-HTML
+window.chatTogglePanel = chatTogglePanel;
+window.chatSendMessage = chatSendMessage;
+window.chatGoBackToAdminList = chatGoBackToAdminList;
+window.chatCleanup = chatCleanup;
+window.initChatBadgeListeners = initChatBadgeListeners;
+window.updateFABsVisibility = updateFABsVisibility;
