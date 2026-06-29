@@ -409,17 +409,23 @@ async function initSite() {
     
     let cleanedPages = Array.from(pageMap.values());
     
-    // מציאת עמוד הכתבות (מכיל articles-page ולא stories-page)
-    let articlesPage = cleanedPages.find(p => p.content && p.content.includes('articles-page') && !p.content.includes('stories-page') && !p.content.includes('photos-page') && !p.content.includes('courses-page'));
+    // מציאת עמוד התמונות כעמוד ברירת המחדל
+    let photosPage = cleanedPages.find(p => p.content && p.content.includes('photos-page'));
     
-    if (!articlesPage) {
-      articlesPage = cleanedPages[0];
-    }
-    
-    if (articlesPage) {
-      // העברת עמוד הכתבות לתחילת התפריט והרשימה
-      cleanedPages = [articlesPage, ...cleanedPages.filter(p => p.id !== articlesPage.id)];
-      activePageId = articlesPage.id;
+    if (photosPage) {
+      // העברת עמוד התמונות לתחילת התפריט והרשימה
+      cleanedPages = [photosPage, ...cleanedPages.filter(p => p.id !== photosPage.id)];
+      activePageId = photosPage.id;
+    } else {
+      // מציאת עמוד הכתבות כברירת מחדל משנית
+      let articlesPage = cleanedPages.find(p => p.content && p.content.includes('articles-page') && !p.content.includes('stories-page') && !p.content.includes('photos-page') && !p.content.includes('courses-page'));
+      if (!articlesPage) {
+        articlesPage = cleanedPages[0];
+      }
+      if (articlesPage) {
+        cleanedPages = [articlesPage, ...cleanedPages.filter(p => p.id !== articlesPage.id)];
+        activePageId = articlesPage.id;
+      }
     }
     
     pages = cleanedPages;
@@ -3844,7 +3850,7 @@ function artEsc(str) {
 }
 
 function buildArticlesPage(articles) {
-  const featured = articles.slice(0, 3);
+  const featured = articles.filter(a => a.pinned).slice(0, 3);
   const popular = articles.slice(0, 5);
 
   const featuredHTML = featured.map(a => `
@@ -3873,6 +3879,7 @@ function buildArticlesPage(articles) {
       <div class="art-row-img-wrap">
         ${a.image ? `<img src="${a.image}" alt="">` : '<div class="art-row-img-placeholder"></div>'}
         ${a.image ? `<button class="art-zoom-btn" onclick="event.stopPropagation();artZoomImage('${artEsc(a.image)}')" title="מסך מלא">⛶</button>` : ''}
+        <button class="art-pin-btn" onclick="event.stopPropagation(); togglePinArticle('${artEsc(a.id)}')" title="${a.pinned ? 'בטל נעץ' : 'נעץ בגריד'}" style="${a.pinned ? 'color:#ffd700;display:flex;' : ''}">${a.pinned ? '★' : '☆'}</button>
         <button class="art-delete-btn" onclick="event.stopPropagation();artDelete('${artEsc(a.id)}',this)">✕</button>
       </div>
     </div>
@@ -4327,7 +4334,7 @@ const STORIES_SAMPLES = [
 ];
 
 function buildStoriesPage(stories) {
-  const featured = stories.slice(0, 3);
+  const featured = stories.filter(s => s.pinned).slice(0, 3);
   const popular = stories.slice(0, 5);
 
   const featuredHTML = featured.map(s => `
@@ -4356,6 +4363,7 @@ function buildStoriesPage(stories) {
       <div class="art-row-img-wrap">
         ${s.image ? `<img src="${s.image}" alt="">` : '<div class="art-row-img-placeholder"></div>'}
         ${s.image ? `<button class="art-zoom-btn" onclick="event.stopPropagation();artZoomImage('${artEsc(s.image)}')" title="מסך מלא">⛶</button>` : ''}
+        <button class="art-pin-btn" onclick="event.stopPropagation(); togglePinStory('${artEsc(s.id)}')" title="${s.pinned ? 'בטל נעץ' : 'נעץ בגריד'}" style="${s.pinned ? 'color:#ffd700;display:flex;' : ''}">${s.pinned ? '★' : '☆'}</button>
         <button class="art-delete-btn" onclick="event.stopPropagation();storyDelete('${artEsc(s.id)}',this)">✕</button>
       </div>
     </div>
@@ -4588,7 +4596,7 @@ const PHOTOS_SAMPLES = [
 ];
 
 function buildPhotosPage(albums) {
-  const featured = albums.slice(0, 3);
+  const featured = albums.filter(p => p.pinned).slice(0, 3);
   const popular = albums.slice(0, 5);
 
   const featuredHTML = featured.map(p => {
@@ -4622,6 +4630,7 @@ function buildPhotosPage(albums) {
         <div class="art-row-img-wrap">
           ${mainImg ? `<img src="${mainImg}" alt="">` : '<div class="art-row-img-placeholder"></div>'}
           ${mainImg ? `<button class="art-zoom-btn" onclick="event.stopPropagation();artZoomImage('${artEsc(mainImg)}')" title="מסך מלא">⛶</button>` : ''}
+          <button class="art-pin-btn" onclick="event.stopPropagation(); togglePinPhoto('${artEsc(p.id)}')" title="${p.pinned ? 'בטל נעץ' : 'נעץ בגריד'}" style="${p.pinned ? 'color:#ffd700;display:flex;' : ''}">${p.pinned ? '★' : '☆'}</button>
           <button class="art-delete-btn" onclick="event.stopPropagation();photoDelete('${artEsc(p.id)}',this)">✕</button>
         </div>
       </div>
@@ -4904,7 +4913,7 @@ const COURSES_SAMPLES = [
 ];
 
 function buildCoursesPage(courses) {
-  const featured = courses.slice(0, 3);
+  const featured = courses.filter(c => c.pinned).slice(0, 3);
   const popular = courses.slice(0, 5);
 
   const featuredHTML = featured.map(c => `
@@ -4933,6 +4942,7 @@ function buildCoursesPage(courses) {
       <div class="art-row-img-wrap">
         ${c.image ? `<img src="${c.image}" alt="">` : '<div class="art-row-img-placeholder"></div>'}
         ${c.image ? `<button class="art-zoom-btn" onclick="event.stopPropagation();artZoomImage('${artEsc(c.image)}')" title="מסך מלא">⛶</button>` : ''}
+        <button class="art-pin-btn" onclick="event.stopPropagation(); togglePinCourse('${artEsc(c.id)}')" title="${c.pinned ? 'בטל נעץ' : 'נעץ בגריד'}" style="${c.pinned ? 'color:#ffd700;display:flex;' : ''}">${c.pinned ? '★' : '☆'}</button>
         <button class="art-delete-btn" onclick="event.stopPropagation();courseDelete('${artEsc(c.id)}',this)">✕</button>
       </div>
     </div>
@@ -5743,4 +5753,53 @@ if (btnPromotedSiteSave) {
 window.deletePromotedSite = deletePromotedSite;
 window.openPromotedSiteModal = openPromotedSiteModal;
 window.refreshCurrentPage = refreshCurrentPage;
+
+function togglePinArticle(id) {
+  if (!isEditMode) return;
+  const arts = artGetArticles();
+  const art = arts.find(a => a.id === id);
+  if (art) {
+    art.pinned = !art.pinned;
+    mainContent.innerHTML = buildArticlesPage(arts);
+    saveCurrentPageContent();
+  }
+}
+
+function togglePinStory(id) {
+  if (!isEditMode) return;
+  const stories = storyGetStories();
+  const story = stories.find(s => s.id === id);
+  if (story) {
+    story.pinned = !story.pinned;
+    mainContent.innerHTML = buildStoriesPage(stories);
+    saveCurrentPageContent();
+  }
+}
+
+function togglePinPhoto(id) {
+  if (!isEditMode) return;
+  const albums = photoGetAlbums();
+  const album = albums.find(a => a.id === id);
+  if (album) {
+    album.pinned = !album.pinned;
+    mainContent.innerHTML = buildPhotosPage(albums);
+    saveCurrentPageContent();
+  }
+}
+
+function togglePinCourse(id) {
+  if (!isEditMode) return;
+  const courses = courseGetCourses();
+  const course = courses.find(c => c.id === id);
+  if (course) {
+    course.pinned = !course.pinned;
+    mainContent.innerHTML = buildCoursesPage(courses);
+    saveCurrentPageContent();
+  }
+}
+
+window.togglePinArticle = togglePinArticle;
+window.togglePinStory = togglePinStory;
+window.togglePinPhoto = togglePinPhoto;
+window.togglePinCourse = togglePinCourse;
 

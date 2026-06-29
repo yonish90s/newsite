@@ -1916,6 +1916,10 @@ body:not(.edit-mode) .hotspot-delete-btn {
 .art-delete-btn { display: none; position: absolute; top: 8px; left: 8px; background: rgba(0,0,0,0.55); border: none; border-radius: 50%; width: 28px; height: 28px; color: #fff; cursor: pointer; font-size: 14px; font-weight: 700; line-height: 1; align-items: center; justify-content: center; transition: background 0.15s; }
 .art-delete-btn:hover { background: #b91c1c; }
 .edit-mode .art-delete-btn { display: flex; }
+.art-pin-btn { display: none; position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.55); border: none; border-radius: 50%; width: 28px; height: 28px; color: #fff; cursor: pointer; font-size: 14px; line-height: 1; align-items: center; justify-content: center; transition: background 0.15s, transform 0.15s; }
+.art-pin-btn:hover { background: #d97706; transform: scale(1.1); }
+.edit-mode .art-pin-btn { display: flex; }
+
 
 /* Article detail view */
 .art-detail { width: 100%; background: #fff; direction: rtl; min-height: 100%; }
