@@ -4604,12 +4604,6 @@ function buildPhotosPage(albums) {
     return `
       <div class="art-featured-card" onclick="photoOpenDetail('${artEsc(p.id)}')">
         <img src="${mainImg}" alt="">
-        <div class="art-featured-overlay"></div>
-        <div class="art-featured-info">
-          <span class="art-category-badge" style="background:${p.categoryColor||'#10b981'}">${p.category}</span>
-          <h3>${p.title}</h3>
-          <div class="art-featured-meta">${p.author} · ${p.timestamp}</div>
-        </div>
       </div>
     `;
   }).join('');
