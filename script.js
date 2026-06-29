@@ -4706,8 +4706,8 @@ function photoOpenDetail(id) {
         <button class="art-back-btn" onclick="photoGoBack()">← חזרה לגלריות</button>
         
         <!-- תמונה ראשית גדולה עם מזהה ספציפי -->
-        <div style="position:relative; width:100%; height:450px; overflow:hidden; border-radius:12px; margin-bottom:12px; background:#0c0c0c; display:flex; align-items:center; justify-content:center;">
-          <img id="photo-gallery-main-img" src="${mainImg}" style="max-width:100%; max-height:100%; width:auto; height:auto; object-fit:contain; display:block;">
+        <div style="position:relative; width:100%; border-radius:12px; margin-bottom:12px; overflow:hidden;">
+          <img id="photo-gallery-main-img" src="${mainImg}" style="width:100%; height:auto; display:block; border-radius:12px;">
         </div>
 
         <!-- ריבועי דפדוף (Thumbnails) -->
