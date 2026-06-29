@@ -879,6 +879,14 @@ function renderPage() {
       if (savedCourses.length) mainContent.innerHTML = buildCoursesPage(savedCourses);
     }
 
+    // עמוד תמונות: בונים מחדש מהנתונים השמורים
+    const photoPageEl = mainContent.querySelector('.photos-page');
+    if (photoPageEl && typeof buildPhotosPage === 'function') {
+      let savedPhotos = [];
+      try { savedPhotos = JSON.parse(decodeURIComponent(photoPageEl.dataset.photosJson)); } catch(e){}
+      if (savedPhotos.length) mainContent.innerHTML = buildPhotosPage(savedPhotos);
+    }
+
     // עמוד חנות: בונים מחדש מהנתונים השמורים
     const shopPageEl = mainContent.querySelector('.shop-page');
     if (shopPageEl && typeof buildShopPage === 'function') {
@@ -3767,6 +3775,70 @@ const ARTICLES_SAMPLES = [
   }
 ];
 
+let PROMOTED_SITES = [];
+try {
+  const savedSites = localStorage.getItem('promoted_sites');
+  if (savedSites) {
+    PROMOTED_SITES = JSON.parse(savedSites);
+  } else {
+    PROMOTED_SITES = [
+      { name: 'גוגל (Google)', url: 'https://www.google.com', icon: '🌐' },
+      { name: 'וואלה! (Walla)', url: 'https://www.walla.co.il', icon: '📰' },
+      { name: 'ויינט (Ynet)', url: 'https://www.ynet.co.il', icon: '🔥' },
+      { name: 'יוטיוב (YouTube)', url: 'https://www.youtube.com', icon: '🎥' }
+    ];
+    localStorage.setItem('promoted_sites', JSON.stringify(PROMOTED_SITES));
+  }
+} catch (e) {
+  PROMOTED_SITES = [
+    { name: 'גוגל (Google)', url: 'https://www.google.com', icon: '🌐' },
+    { name: 'וואלה! (Walla)', url: 'https://www.walla.co.il', icon: '📰' },
+    { name: 'ויינט (Ynet)', url: 'https://www.ynet.co.il', icon: '🔥' },
+    { name: 'יוטיוב (YouTube)', url: 'https://www.youtube.com', icon: '🎥' }
+  ];
+}
+
+function buildPromotedSitesBox() {
+  const sitesHTML = PROMOTED_SITES.map((site, index) => {
+    let iconHTML = '';
+    if (site.icon && (site.icon.startsWith('data:image') || site.icon.startsWith('http'))) {
+      iconHTML = `<img src="${site.icon}" alt="" style="width:24px;height:24px;border-radius:4px;object-fit:cover;flex-shrink:0;">`;
+    } else {
+      iconHTML = `<span style="font-size:18px;width:24px;height:24px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${site.icon || '🌐'}</span>`;
+    }
+
+    const deleteBtn = isEditMode ? `
+      <button onclick="event.preventDefault(); event.stopPropagation(); deletePromotedSite(${index})" style="background:none;border:none;color:#ff4444;cursor:pointer;font-size:14px;padding:4px;margin-right:auto;display:flex;align-items:center;justify-content:center;" title="מחק קישור">✕</button>
+    ` : '';
+
+    return `
+      <li style="display:flex;align-items:center;gap:10px;padding:8px;border-radius:8px;background:#f9f9f9;border:1px solid #f0f0f0;transition:all 0.2s ease-in-out;">
+        <a href="${site.url}" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;gap:8px;color:#000;text-decoration:none;font-weight:bold;font-size:14px;flex:1;min-width:0;">
+          ${iconHTML}
+          <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${site.name}</span>
+        </a>
+        ${deleteBtn}
+      </li>
+    `;
+  }).join('');
+
+  const addBtnHTML = isEditMode ? `
+    <button onclick="openPromotedSiteModal()" style="width:100%;background:#16a34a;color:#fff;padding:8px;border:none;border-radius:8px;cursor:pointer;font-weight:700;font-size:13px;margin-top:10px;transition:background 0.2s;display:flex;align-items:center;justify-content:center;gap:6px;">
+      <span>+ הוסף קישור</span>
+    </button>
+  ` : '';
+
+  return `
+    <div class="art-sidebar-box art-promoted-sites" style="margin-bottom:20px; border:1px solid #e2e8f0; border-radius:12px; padding:16px; background:#fff;">
+      <h4 style="margin:0 0 12px;font-size:16px;font-weight:800;color:#000;border-bottom:2px solid #eaeaea;padding-bottom:6px;">אתרים שאני מקדם</h4>
+      <ul style="list-style:none;padding:0 0 0 4px;margin:0;display:flex;flex-direction:column;gap:8px;max-height:240px;overflow-y:auto;scrollbar-width:thin;direction:rtl;">
+        ${sitesHTML || '<li style="font-size:13px;color:#888;text-align:center;padding:10px;">אין קישורים ממומנים</li>'}
+      </ul>
+      ${addBtnHTML}
+    </div>
+  `;
+}
+
 function artEsc(str) {
   return String(str||'').replace(/\\/g,'\\\\').replace(/'/g,'&#39;').replace(/"/g,'&quot;');
 }
@@ -3828,13 +3900,7 @@ function buildArticlesPage(articles) {
           <button class="art-add-btn" onclick="openArtModal()">+ הוסף כתבה חדשה</button>
         </div>
         <div class="art-sidebar">
-          <div class="art-sidebar-box art-newsletter">
-            <h4 style="margin:0 0 6px;font-size:16px;font-weight:800">הישארו מעודכנים!</h4>
-            <p style="font-size:12px;color:#777;margin:0 0 12px;line-height:1.5">הירשמו לניוזלטר וקבלו עדכונים ישירות למייל.</p>
-            <input type="text" placeholder="השם שלכם">
-            <input type="email" placeholder="כתובת אימייל">
-            <button onclick="alert('תודה על ההרשמה!')">הרשמה לניוזלטר</button>
-          </div>
+          ${buildPromotedSitesBox()}
           <div class="art-sidebar-box">
             <div class="art-sidebar-title">הכי נקראות השבוע</div>
             ${popularHTML}
@@ -4317,13 +4383,7 @@ function buildStoriesPage(stories) {
           <button class="art-add-btn" onclick="openStoryModal()" style="background:#8b5cf6">+ הוסף סיפור חדש</button>
         </div>
         <div class="art-sidebar">
-          <div class="art-sidebar-box art-newsletter">
-            <h4 style="margin:0 0 6px;font-size:16px;font-weight:800">הישארו מעודכנים!</h4>
-            <p style="font-size:12px;color:#777;margin:0 0 12px;line-height:1.5">הירשמו לקבלת סיפורים חמים ישירות אליכם.</p>
-            <input type="text" placeholder="השם שלכם">
-            <input type="email" placeholder="כתובת אימייל">
-            <button onclick="alert('תודה על ההרשמה!')" style="background:#8b5cf6">הרשמה לעדכונים</button>
-          </div>
+          ${buildPromotedSitesBox()}
           <div class="art-sidebar-box">
             <div class="art-sidebar-title">הסיפורים הנקראים ביותר</div>
             ${popularHTML}
@@ -4470,7 +4530,7 @@ document.getElementById('story-save').addEventListener('click', () => {
     author: document.getElementById('story-author').value.trim(),
     category: document.getElementById('story-category').value.trim(),
     categoryColor: '#8b5cf6',
-    timestamp: 'הרגע',
+    timestamp: new Date().toLocaleDateString('he-IL'),
     image: storyImgData,
     link: document.getElementById('story-link').value.trim()
   });
@@ -4590,13 +4650,7 @@ function buildPhotosPage(albums) {
           <button class="art-add-btn" onclick="openPhotoModal()" style="background:#10b981">+ הוסף גלריה חדשה</button>
         </div>
         <div class="art-sidebar">
-          <div class="art-sidebar-box art-newsletter">
-            <h4 style="margin:0 0 6px;font-size:16px;font-weight:800">הישארו מעודכנים!</h4>
-            <p style="font-size:12px;color:#777;margin:0 0 12px;line-height:1.5">הירשמו לקבלת גלריות מדהימות חדשות ישירות למייל.</p>
-            <input type="text" placeholder="השם שלכם">
-            <input type="email" placeholder="כתובת אימייל">
-            <button onclick="alert('תודה על ההרשמה!')" style="background:#10b981">הרשמה לעדכונים</button>
-          </div>
+          ${buildPromotedSitesBox()}
           <div class="art-sidebar-box">
             <div class="art-sidebar-title">הגלריות הנצפות ביותר</div>
             ${popularHTML}
@@ -4789,7 +4843,7 @@ document.getElementById('photo-save').addEventListener('click', () => {
     author: document.getElementById('photo-author').value.trim(),
     category: document.getElementById('photo-category').value.trim(),
     categoryColor: '#10b981',
-    timestamp: 'הרגע'
+    timestamp: new Date().toLocaleDateString('he-IL')
   });
   mainContent.innerHTML = buildPhotosPage(albums);
   saveCurrentPageContent();
@@ -4906,13 +4960,7 @@ function buildCoursesPage(courses) {
           <button class="art-add-btn" onclick="openCourseModal()" style="background:#2196F3">+ הוסף קורס חדש</button>
         </div>
         <div class="art-sidebar">
-          <div class="art-sidebar-box art-newsletter">
-            <h4 style="margin:0 0 6px;font-size:16px;font-weight:800">הישארו מעודכנים!</h4>
-            <p style="font-size:12px;color:#777;margin:0 0 12px;line-height:1.5">הירשמו לקבלת עדכונים על קורסים חדשים ושיעורים מעניינים.</p>
-            <input type="text" placeholder="השם שלכם">
-            <input type="email" placeholder="כתובת אימייל">
-            <button onclick="alert('תודה על ההרשמה!')" style="background:#2196F3">הרשמה לעדכונים</button>
-          </div>
+          ${buildPromotedSitesBox()}
           <div class="art-sidebar-box">
             <div class="art-sidebar-title">הנצפים ביותר השבוע</div>
             ${popularHTML}
@@ -5143,7 +5191,7 @@ document.getElementById('course-save').addEventListener('click', () => {
     author: document.getElementById('course-author').value.trim(),
     category: document.getElementById('course-category').value.trim(),
     categoryColor: '#2196F3',
-    timestamp: 'הרגע'
+    timestamp: new Date().toLocaleDateString('he-IL')
   });
   mainContent.innerHTML = buildCoursesPage(courses);
   saveCurrentPageContent();
@@ -5610,4 +5658,89 @@ window.adminRestoreCart = adminRestoreCart;
 window.adminRestoreChat = adminRestoreChat;
 window.loadSingleChat = loadSingleChat;
 window.chatToggleMaximize = chatToggleMaximize;
+
+let promotedSiteImgData = '';
+
+function openPromotedSiteModal() {
+  if (!isEditMode) return;
+  document.getElementById('promoted-site-name').value = '';
+  document.getElementById('promoted-site-url').value = '';
+  const preview = document.getElementById('promoted-site-img-preview');
+  preview.style.display = 'none'; preview.src = '';
+  promotedSiteImgData = '';
+  document.getElementById('promoted-site-img-pick').textContent = 'בחר תמונת אייקון';
+  document.getElementById('promoted-site-modal').style.display = 'flex';
+}
+
+function deletePromotedSite(index) {
+  if (!isEditMode) return;
+  if (!confirm('האם למחוק קישור זה?')) return;
+  PROMOTED_SITES.splice(index, 1);
+  localStorage.setItem('promoted_sites', JSON.stringify(PROMOTED_SITES));
+  refreshCurrentPage();
+}
+
+function refreshCurrentPage() {
+  renderPage();
+  const currentPage = pages.find(p => p.id === activePageId);
+  if (currentPage) {
+    currentPage.content = mainContent.innerHTML;
+    saveToStorage();
+  }
+}
+
+// Modal Listeners
+const btnPromotedSitePick = document.getElementById('promoted-site-img-pick');
+if (btnPromotedSitePick) {
+  btnPromotedSitePick.addEventListener('click', () => {
+    const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
+    inp.onchange = e => {
+      const f = e.target.files[0]; if (!f) return;
+      const r = new FileReader();
+      r.onload = ev => {
+        promotedSiteImgData = ev.target.result;
+        const p = document.getElementById('promoted-site-img-preview');
+        p.src = promotedSiteImgData; p.style.display = 'block';
+        btnPromotedSitePick.textContent = '✓ אייקון נבחר';
+      };
+      r.readAsDataURL(f);
+    };
+    inp.click();
+  });
+}
+
+const btnPromotedSiteCancel = document.getElementById('promoted-site-cancel');
+if (btnPromotedSiteCancel) {
+  btnPromotedSiteCancel.addEventListener('click', () => {
+    document.getElementById('promoted-site-modal').style.display = 'none';
+  });
+}
+
+const btnPromotedSiteSave = document.getElementById('promoted-site-save');
+if (btnPromotedSiteSave) {
+  btnPromotedSiteSave.addEventListener('click', () => {
+    const name = document.getElementById('promoted-site-name').value.trim();
+    const url = document.getElementById('promoted-site-url').value.trim();
+    if (!name || !url) { alert('חובה למלא שם וכתובת קישור'); return; }
+
+    let formattedUrl = url;
+    if (!/^https?:\/\//i.test(formattedUrl)) {
+      formattedUrl = 'https://' + formattedUrl;
+    }
+
+    PROMOTED_SITES.push({
+      name,
+      url: formattedUrl,
+      icon: promotedSiteImgData || '🌐'
+    });
+
+    localStorage.setItem('promoted_sites', JSON.stringify(PROMOTED_SITES));
+    refreshCurrentPage();
+    document.getElementById('promoted-site-modal').style.display = 'none';
+  });
+}
+
+window.deletePromotedSite = deletePromotedSite;
+window.openPromotedSiteModal = openPromotedSiteModal;
+window.refreshCurrentPage = refreshCurrentPage;
 

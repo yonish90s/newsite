@@ -378,6 +378,30 @@
   </div>
 </div>
 
+<!-- מודל הוספת קישור ממומן -->
+<div id="promoted-site-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:99999; align-items:center; justify-content:center; direction:rtl;">
+  <div style="background:#fff; border-radius:16px; padding:28px; width:95%; max-width:400px; display:flex; flex-direction:column; gap:12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+    <h3 style="margin:0 0 4px; font-size:18px;">הוספת אתר לקידום</h3>
+    
+    <label style="font-size:13px; font-weight:600;">שם האתר/הקישור <span style="color:red">*</span></label>
+    <input id="promoted-site-name" type="text" placeholder="למשל: גוגל" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+    
+    <label style="font-size:13px; font-weight:600;">כתובת הקישור (URL) <span style="color:red">*</span></label>
+    <input id="promoted-site-url" type="text" placeholder="https://www.example.com" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+    
+    <label style="font-size:13px; font-weight:600;">אייקון של האתר (תמונה ריבועית)</label>
+    <div style="display:flex; align-items:center; gap:12px;">
+      <button id="promoted-site-img-pick" style="flex:1; padding:9px 12px; border:1px dashed #bbb; border-radius:8px; background:#f9f9f9; cursor:pointer; font-size:13px; font-weight:600;">בחר תמונת אייקון</button>
+      <img id="promoted-site-img-preview" style="display:none; width:40px; height:40px; border-radius:4px; object-fit:cover; border:1px solid #eee;">
+    </div>
+
+    <div style="display:flex; gap:10px; margin-top:8px;">
+      <button id="promoted-site-cancel" style="flex:1; padding:10px; border:1px solid #ddd; border-radius:8px; background:#fff; cursor:pointer; font-size:14px;">ביטול</button>
+      <button id="promoted-site-save" style="flex:1; padding:10px; border:none; border-radius:8px; background:#16a34a; color:#fff; cursor:pointer; font-size:14px; font-weight:700;">שמור קישור</button>
+    </div>
+  </div>
+</div>
+
 <!-- חלונית הוספת רקע (Background Modal) -->
 <div id="bg-modal" class="modal-overlay" style="display: none;">
   <div class="modal-content" style="max-width: 300px;">
