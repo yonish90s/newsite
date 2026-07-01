@@ -4582,7 +4582,7 @@ function buildPhotosPage(albums) {
   const popular = [...albums]
     .filter(p => p.approved !== false)
     .sort((a, b) => (b.likes || 0) - (a.likes || 0))
-    .slice(0, 10);
+    .slice(0, 5);
 
   const featuredHTML = featured.map(p => {
     const mainImg = p.images && p.images[0] ? p.images[0] : 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80';
@@ -4608,8 +4608,10 @@ function buildPhotosPage(albums) {
             <span>${p.author}</span>
             <span class="art-row-sep">|</span>
             <span>${p.timestamp}</span>
-            <button onclick="event.stopPropagation(); photoToggleLike('${artEsc(p.id)}')" class="photo-like-btn" style="background: none; border: none; cursor: pointer; color: #e11d48; display: flex; align-items: center; gap: 4px; padding: 2px 6px; border-radius: 4px; transition: background 0.2s; font-weight: bold; font-size: 13px;">
-              <span class="heart-icon">${photoIsLikedLocal(p.id) ? '❤️' : '🤍'}</span>
+            <button onclick="event.stopPropagation(); photoToggleLike('${artEsc(p.id)}')" class="photo-like-btn" style="background: none; border: none; cursor: pointer; color: #000; display: flex; align-items: center; gap: 4px; padding: 2px 6px; border-radius: 4px; transition: background 0.2s; font-weight: bold; font-size: 13px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="${photoIsLikedLocal(p.id) ? '#000' : 'none'}" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+                <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
+              </svg>
               <span>${p.likes || 0}</span>
             </button>
           </div>
@@ -4647,8 +4649,11 @@ function buildPhotosPage(albums) {
         <span class="art-popular-num">${String(i+1).padStart(2,'0')}</span>
         <div style="font-size:13px;font-weight:600;line-height:1.4;color:#222; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${p.title}</div>
       </div>
-      <div style="font-size: 12px; color: #e11d48; display: flex; align-items: center; gap: 3px; font-weight: bold; flex-shrink: 0;">
-        ❤️ ${p.likes || 0}
+      <div style="font-size: 12px; color: #000; display: flex; align-items: center; gap: 4px; font-weight: bold; flex-shrink: 0;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+          <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
+        </svg>
+        <span>${p.likes || 0}</span>
       </div>
     </div>
   `).join('');
@@ -4683,7 +4688,7 @@ function buildPhotosPage(albums) {
           </button>
           ${buildPromotedSitesBox()}
           <div class="art-sidebar-box">
-            <div class="art-sidebar-title">עשרת הגלריות האהובות ביותר</div>
+            <div class="art-sidebar-title">חמשת הגלריות האהובות ביותר</div>
             ${popularHTML}
           </div>
         </div>
@@ -4749,8 +4754,10 @@ function photoOpenDetail(id) {
             <span>צילום: ${a.author}</span>
             <span>·</span>
             <span>${a.timestamp}</span>
-            <button onclick="photoToggleLike('${artEsc(a.id)}')" class="photo-like-btn" style="background: rgba(225,29,72,0.1); border: none; cursor: pointer; color: #e11d48; display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; transition: background 0.2s; font-weight: bold; font-size: 13px;">
-              <span class="heart-icon">${photoIsLikedLocal(a.id) ? '❤️' : '🤍'}</span>
+            <button onclick="photoToggleLike('${artEsc(a.id)}')" class="photo-like-btn" style="background: rgba(0,0,0,0.05); border: 1px solid #ddd; cursor: pointer; color: #000; display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; transition: background 0.2s; font-weight: bold; font-size: 13px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="${photoIsLikedLocal(a.id) ? '#000' : 'none'}" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+                <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
+              </svg>
               <span>${a.likes || 0} לייקים</span>
             </button>
           </div>
