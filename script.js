@@ -4579,7 +4579,10 @@ const PHOTOS_SAMPLES = [
 
 function buildPhotosPage(albums) {
   const featured = albums.filter(p => p.pinned).slice(0, 3);
-  const popular = albums.slice(0, 5);
+  const popular = [...albums]
+    .filter(p => p.approved !== false)
+    .sort((a, b) => (b.likes || 0) - (a.likes || 0))
+    .slice(0, 10);
 
   const featuredHTML = featured.map(p => {
     const mainImg = p.images && p.images[0] ? p.images[0] : 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80';
@@ -4601,10 +4604,14 @@ function buildPhotosPage(albums) {
           ${isPending ? `<div style="color: #d97706; font-weight: bold; font-size: 13px; margin-bottom: 4px; display: flex; align-items: center; gap: 4px;">⚠️ ממתין לאישור מנהל</div>` : ''}
           <h3>${p.title}</h3>
           <p>${p.summary}</p>
-          <div class="art-row-meta">
+          <div class="art-row-meta" style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
             <span>${p.author}</span>
             <span class="art-row-sep">|</span>
             <span>${p.timestamp}</span>
+            <button onclick="event.stopPropagation(); photoToggleLike('${artEsc(p.id)}')" class="photo-like-btn" style="background: none; border: none; cursor: pointer; color: #e11d48; display: flex; align-items: center; gap: 4px; padding: 2px 6px; border-radius: 4px; transition: background 0.2s; font-weight: bold; font-size: 13px;">
+              <span class="heart-icon">${photoIsLikedLocal(p.id) ? '❤️' : '🤍'}</span>
+              <span>${p.likes || 0}</span>
+            </button>
           </div>
           ${p.telegramUrl ? `
           <div class="art-telegram-row" style="margin-top: 8px;">
@@ -4635,9 +4642,14 @@ function buildPhotosPage(albums) {
   }).join('');
 
   const popularHTML = popular.map((p, i) => `
-    <div class="art-popular-item" onclick="photoOpenDetail('${artEsc(p.id)}')">
-      <span class="art-popular-num">${String(i+1).padStart(2,'0')}</span>
-      <div style="flex:1;font-size:13px;font-weight:600;line-height:1.4;color:#222">${p.title}</div>
+    <div class="art-popular-item" onclick="photoOpenDetail('${artEsc(p.id)}')" style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+      <div style="display: flex; align-items: center; gap: 8px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+        <span class="art-popular-num">${String(i+1).padStart(2,'0')}</span>
+        <div style="font-size:13px;font-weight:600;line-height:1.4;color:#222; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${p.title}</div>
+      </div>
+      <div style="font-size: 12px; color: #e11d48; display: flex; align-items: center; gap: 3px; font-weight: bold; flex-shrink: 0;">
+        ❤️ ${p.likes || 0}
+      </div>
     </div>
   `).join('');
 
@@ -4658,7 +4670,7 @@ function buildPhotosPage(albums) {
         <div class="art-sidebar">
           ${buildPromotedSitesBox()}
           <div class="art-sidebar-box">
-            <div class="art-sidebar-title">הגלריות הנצפות ביותר</div>
+            <div class="art-sidebar-title">עשרת הגלריות האהובות ביותר</div>
             ${popularHTML}
           </div>
         </div>
@@ -4719,11 +4731,15 @@ function photoOpenDetail(id) {
         </div>
 
         <div class="art-detail-body">
-          <div class="art-meta" style="margin-bottom:12px">
+          <div class="art-meta" style="margin-bottom:12px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
             <span class="art-category-badge" style="background:${a.categoryColor||'#10b981'}">${a.category}</span>
             <span>צילום: ${a.author}</span>
             <span>·</span>
             <span>${a.timestamp}</span>
+            <button onclick="photoToggleLike('${artEsc(a.id)}')" class="photo-like-btn" style="background: rgba(225,29,72,0.1); border: none; cursor: pointer; color: #e11d48; display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; transition: background 0.2s; font-weight: bold; font-size: 13px;">
+              <span class="heart-icon">${photoIsLikedLocal(a.id) ? '❤️' : '🤍'}</span>
+              <span>${a.likes || 0} לייקים</span>
+            </button>
           </div>
           ${a.telegramUrl ? `
           <div style="margin-bottom: 16px;">
@@ -4930,6 +4946,56 @@ function photoApprove(id) {
   }
 }
 window.photoApprove = photoApprove;
+
+function photoIsLikedLocal(id) {
+  try {
+    const liked = JSON.parse(localStorage.getItem('liked_galleries') || '{}');
+    return !!liked[id];
+  } catch (e) {
+    return false;
+  }
+}
+window.photoIsLikedLocal = photoIsLikedLocal;
+
+function photoToggleLike(id) {
+  const container = mainContent.querySelector('.photos-page');
+  if (!container) return;
+  
+  let albums = [];
+  try { albums = JSON.parse(decodeURIComponent(container.dataset.photosJson)); } catch(e){ return; }
+  
+  const album = albums.find(a => a.id === id);
+  if (!album) return;
+
+  let liked = {};
+  try {
+    liked = JSON.parse(localStorage.getItem('liked_galleries') || '{}');
+  } catch (e) {}
+
+  if (liked[id]) {
+    delete liked[id];
+    album.likes = Math.max(0, (album.likes || 0) - 1);
+  } else {
+    liked[id] = true;
+    album.likes = (album.likes || 0) + 1;
+  }
+
+  localStorage.setItem('liked_galleries', JSON.stringify(liked));
+  
+  const newJson = encodeURIComponent(JSON.stringify(albums));
+  
+  const isDetailView = mainContent.querySelector('.art-detail') !== null;
+  if (isDetailView) {
+    photoOpenDetail(id);
+    const newContainer = mainContent.querySelector('.photos-page');
+    if (newContainer) newContainer.dataset.photosJson = newJson;
+  } else {
+    mainContent.innerHTML = buildPhotosPage(albums);
+  }
+  
+  saveCurrentPageContent();
+}
+window.photoToggleLike = photoToggleLike;
 
 // ============================================================
 // מערכת קורסים / שיעורים (Courses System)
