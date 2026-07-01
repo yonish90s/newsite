@@ -755,24 +755,6 @@ function renderTopNav() {
     
     const isPhotos = page.title && (page.title.includes('תמונות') || page.title.toLowerCase().includes('photo'));
     if (isPhotos) {
-      const telegramLink = document.createElement('a');
-      telegramLink.href = 'https://t.me/yhsh98321';
-      telegramLink.target = '_blank';
-      telegramLink.className = 'nav-telegram-link';
-      telegramLink.style.display = 'inline-flex';
-      telegramLink.style.alignItems = 'center';
-      telegramLink.style.justifyContent = 'center';
-      telegramLink.style.padding = '0 10px';
-      telegramLink.style.verticalAlign = 'middle';
-      telegramLink.title = 'טלגרם';
-      telegramLink.innerHTML = `
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: inherit; display: block; margin-left: 6px;">
-          <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
-        </svg>
-        <span>טלגרם</span>
-      `;
-      navLinksContainer.appendChild(telegramLink);
-      
       // הוספת אייקון תמונות לכפתור תמונות
       a.style.display = 'inline-flex';
       a.style.alignItems = 'center';
@@ -4620,6 +4602,16 @@ function buildPhotosPage(albums) {
             <span class="art-row-sep">|</span>
             <span>${p.timestamp}</span>
           </div>
+          ${p.telegramUrl ? `
+          <div class="art-telegram-row" style="margin-top: 8px;">
+            <a href="${p.telegramUrl}" target="_blank" onclick="event.stopPropagation();" class="art-telegram-btn" style="display: inline-flex; align-items: center; background: #2f2f2f; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 13px; text-decoration: none; font-weight: bold; gap: 6px; border: 1px solid rgba(255,255,255,0.1);">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+                <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+              </svg>
+              <span>טלגרם</span>
+            </a>
+          </div>
+          ` : ''}
         </div>
         <div class="art-row-img-wrap">
           ${mainImg ? `<img src="${mainImg}" alt="">` : '<div class="art-row-img-placeholder"></div>'}
@@ -4722,6 +4714,16 @@ function photoOpenDetail(id) {
             <span>·</span>
             <span>${a.timestamp}</span>
           </div>
+          ${a.telegramUrl ? `
+          <div style="margin-bottom: 16px;">
+            <a href="${a.telegramUrl}" target="_blank" class="art-telegram-btn" style="display: inline-flex; align-items: center; background: #2f2f2f; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 13px; text-decoration: none; font-weight: bold; gap: 6px; border: 1px solid rgba(255,255,255,0.1);">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+                <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+              </svg>
+              <span>טלגרם</span>
+            </a>
+          </div>
+          ` : ''}
           <h1 class="art-detail-title">${a.title}</h1>
           <div class="art-detail-content"><p>${a.summary}</p></div>
         </div>
@@ -4792,6 +4794,7 @@ function openPhotoModal() {
   document.getElementById('photo-summary').value = '';
   document.getElementById('photo-author').value = '';
   document.getElementById('photo-category').value = '';
+  document.getElementById('photo-telegram').value = '';
   
   photoImgDataList = ['', '', '', '', ''];
   for (let i = 1; i <= 5; i++) {
@@ -4846,7 +4849,8 @@ document.getElementById('photo-save').addEventListener('click', () => {
     author: document.getElementById('photo-author').value.trim(),
     category: document.getElementById('photo-category').value.trim(),
     categoryColor: '#10b981',
-    timestamp: new Date().toLocaleDateString('he-IL')
+    timestamp: new Date().toLocaleDateString('he-IL'),
+    telegramUrl: document.getElementById('photo-telegram').value.trim()
   });
   mainContent.innerHTML = buildPhotosPage(albums);
   saveCurrentPageContent();
