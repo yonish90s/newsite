@@ -257,8 +257,13 @@
     <textarea id="photo-summary" rows="2" placeholder="תיאור קצר..." style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box; resize:vertical;"></textarea>
     <label style="font-size:13px; font-weight:600;">שם הצלם / היוצר</label>
     <input id="photo-author" type="text" placeholder="שם הצלם" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
-    <label style="font-size:13px; font-weight:600;">קטגוריה</label>
-    <input id="photo-category" type="text" placeholder="למשל: טבע, אופנה, ארכיטקטורה" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+    <label style="font-size:13px; font-weight:600;">קטגוריה <span style="color:red">*</span></label>
+    <select id="photo-category" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box; background: white;">
+      <option value="גברים">גברים</option>
+      <option value="נשים">נשים</option>
+      <option value="זוגות">זוגות</option>
+      <option value="כללי">כללי</option>
+    </select>
     <label style="font-size:13px; font-weight:600;">קישור לטלגרם (URL) — אופציונלי</label>
     <input id="photo-telegram" type="url" placeholder="https://t.me/..." style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
     

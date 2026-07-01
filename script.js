@@ -4599,7 +4599,7 @@ function buildPhotosPage(albums) {
 
     const mainImg = p.images && p.images[0] ? p.images[0] : '';
     return `
-      <div class="art-row" onclick="${isPending ? '' : `photoOpenDetail('${artEsc(p.id)}')`}" style="${isPending ? 'border: 2px dashed #f59e0b; background: #fffbeb; cursor: default;' : ''}">
+      <div class="art-row" data-category="${p.category || 'כללי'}" onclick="${isPending ? '' : `photoOpenDetail('${artEsc(p.id)}')`}" style="${isPending ? 'border: 2px dashed #f59e0b; background: #fffbeb; cursor: default;' : ''}">
         <div class="art-row-text">
           ${isPending ? `<div style="color: #d97706; font-weight: bold; font-size: 13px; margin-bottom: 4px; display: flex; align-items: center; gap: 4px;">⚠️ ממתין לאישור מנהל</div>` : ''}
           <h3>${p.title}</h3>
@@ -4663,6 +4663,12 @@ function buildPhotosPage(albums) {
             <input type="text" class="art-search" placeholder="🔍 חיפוש גלריות..." oninput="photoSearch(this.value)">
           </div>
           <div class="art-section-title">כל הגלריות והתמונות</div>
+          <div class="photo-category-tabs" style="display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; padding: 5px 0;">
+            <button onclick="photoFilterCategory('הכל', this)" class="photo-tab-btn active" style="padding: 8px 16px; border: none; border-radius: 20px; background: #e11d48; color: white; font-weight: bold; cursor: pointer; font-size: 13px; transition: all 0.2s; white-space: nowrap;">הכל</button>
+            <button onclick="photoFilterCategory('גברים', this)" class="photo-tab-btn" style="padding: 8px 16px; border: 1px solid #ddd; border-radius: 20px; background: white; color: #555; font-weight: bold; cursor: pointer; font-size: 13px; transition: all 0.2s; white-space: nowrap;">גברים</button>
+            <button onclick="photoFilterCategory('נשים', this)" class="photo-tab-btn" style="padding: 8px 16px; border: 1px solid #ddd; border-radius: 20px; background: white; color: #555; font-weight: bold; cursor: pointer; font-size: 13px; transition: all 0.2s; white-space: nowrap;">נשים</button>
+            <button onclick="photoFilterCategory('זוגות', this)" class="photo-tab-btn" style="padding: 8px 16px; border: 1px solid #ddd; border-radius: 20px; background: white; color: #555; font-weight: bold; cursor: pointer; font-size: 13px; transition: all 0.2s; white-space: nowrap;">זוגות</button>
+          </div>
           <div class="art-rows">${listHTML}</div>
           <div class="art-no-results" style="display:none">לא נמצאו גלריות התואמות לחיפוש</div>
           <button class="art-add-btn" onclick="openPhotoModal()" style="background:#10b981">+ הוסף גלריה חדשה</button>
@@ -4800,17 +4806,7 @@ function photoDelete(id, el) {
 }
 
 function photoSearch(val) {
-  const q = (val || '').toLowerCase().trim();
-  const rows = mainContent.querySelectorAll('.photos-page .art-row');
-  let visible = 0;
-  rows.forEach(r => {
-    const text = r.textContent.toLowerCase();
-    const match = text.includes(q);
-    r.style.display = match ? '' : 'none';
-    if (match) visible++;
-  });
-  const noResults = mainContent.querySelector('.photos-page .art-no-results');
-  if (noResults) noResults.style.display = visible === 0 ? 'block' : 'none';
+  photoApplyFilters();
 }
 
 let photoImgDataList = ['', '', '', '', ''];
@@ -4996,6 +4992,49 @@ function photoToggleLike(id) {
   saveCurrentPageContent();
 }
 window.photoToggleLike = photoToggleLike;
+
+let currentPhotoCategoryFilter = 'הכל';
+
+function photoFilterCategory(category, btn) {
+  currentPhotoCategoryFilter = category;
+  
+  const tabs = btn.parentNode.querySelectorAll('.photo-tab-btn');
+  tabs.forEach(t => {
+    t.style.background = 'white';
+    t.style.color = '#555';
+    t.style.border = '1px solid #ddd';
+  });
+  btn.style.background = '#e11d48';
+  btn.style.color = 'white';
+  btn.style.border = 'none';
+  
+  photoApplyFilters();
+}
+window.photoFilterCategory = photoFilterCategory;
+
+function photoApplyFilters() {
+  const searchInput = mainContent.querySelector('.photos-page .art-search');
+  const q = searchInput ? searchInput.value.toLowerCase().trim() : '';
+  
+  const rows = mainContent.querySelectorAll('.photos-page .art-row');
+  let visible = 0;
+  
+  rows.forEach(r => {
+    const rowCategory = r.dataset.category || 'כללי';
+    const text = r.textContent.toLowerCase();
+    
+    const categoryMatch = (currentPhotoCategoryFilter === 'הכל' || rowCategory === currentPhotoCategoryFilter);
+    const textMatch = text.includes(q);
+    
+    const show = categoryMatch && textMatch;
+    r.style.display = show ? '' : 'none';
+    if (show) visible++;
+  });
+  
+  const noResults = mainContent.querySelector('.photos-page .art-no-results');
+  if (noResults) noResults.style.display = visible === 0 ? 'block' : 'none';
+}
+window.photoApplyFilters = photoApplyFilters;
 
 // ============================================================
 // מערכת קורסים / שיעורים (Courses System)
