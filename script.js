@@ -4591,10 +4591,14 @@ function buildPhotosPage(albums) {
   }).join('');
 
   const listHTML = albums.map((p) => {
+    const isPending = p.approved === false;
+    if (!isEditMode && isPending) return '';
+
     const mainImg = p.images && p.images[0] ? p.images[0] : '';
     return `
-      <div class="art-row" onclick="photoOpenDetail('${artEsc(p.id)}')">
+      <div class="art-row" onclick="${isPending ? '' : `photoOpenDetail('${artEsc(p.id)}')`}" style="${isPending ? 'border: 2px dashed #f59e0b; background: #fffbeb; cursor: default;' : ''}">
         <div class="art-row-text">
+          ${isPending ? `<div style="color: #d97706; font-weight: bold; font-size: 13px; margin-bottom: 4px; display: flex; align-items: center; gap: 4px;">⚠️ ממתין לאישור מנהל</div>` : ''}
           <h3>${p.title}</h3>
           <p>${p.summary}</p>
           <div class="art-row-meta">
@@ -4610,6 +4614,13 @@ function buildPhotosPage(albums) {
               </svg>
               <span>טלגרם</span>
             </a>
+          </div>
+          ` : ''}
+          ${isEditMode && isPending ? `
+          <div style="margin-top: 10px;">
+            <button onclick="event.stopPropagation(); photoApprove('${artEsc(p.id)}')" style="background: #10b981; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer; transition: background 0.2s;">
+              ✓ אשר גלריה לפרסום
+            </button>
           </div>
           ` : ''}
         </div>
@@ -4789,7 +4800,7 @@ function photoSearch(val) {
 let photoImgDataList = ['', '', '', '', ''];
 
 function openPhotoModal() {
-  if (!isEditMode) return;
+  // Everyone can open the modal to add a gallery
   document.getElementById('photo-title').value = '';
   document.getElementById('photo-summary').value = '';
   document.getElementById('photo-author').value = '';
@@ -4841,20 +4852,40 @@ document.getElementById('photo-save').addEventListener('click', () => {
   if (validImages.length === 0) { alert('חובה להעלות לפחות תמונה אחת'); return; }
 
   const albums = photoGetAlbums();
+  
+  let telegramInput = document.getElementById('photo-telegram').value.trim();
+  if (telegramInput) {
+    if (telegramInput.startsWith('@')) {
+      telegramInput = telegramInput.substring(1);
+    }
+    if (!telegramInput.startsWith('http://') && !telegramInput.startsWith('https://')) {
+      if (telegramInput.startsWith('t.me/')) {
+        telegramInput = 'https://' + telegramInput;
+      } else {
+        telegramInput = 'https://t.me/' + telegramInput;
+      }
+    }
+  }
+
   albums.unshift({
     id: 'ph' + Date.now(),
     title,
     summary: document.getElementById('photo-summary').value.trim(),
     images: photoImgDataList,
-    author: document.getElementById('photo-author').value.trim(),
-    category: document.getElementById('photo-category').value.trim(),
+    author: document.getElementById('photo-author').value.trim() || (isEditMode ? 'מנהל' : 'אורח'),
+    category: document.getElementById('photo-category').value.trim() || 'כללי',
     categoryColor: '#10b981',
     timestamp: new Date().toLocaleDateString('he-IL'),
-    telegramUrl: document.getElementById('photo-telegram').value.trim()
+    telegramUrl: telegramInput,
+    approved: isEditMode
   });
   mainContent.innerHTML = buildPhotosPage(albums);
   saveCurrentPageContent();
   document.getElementById('photo-modal').style.display = 'none';
+  
+  if (!isEditMode) {
+    alert('הגלריה הועלה בהצלחה וממתינה לאישור מנהל!');
+  }
 });
 
 const btnAddPhotosPage = document.getElementById('btn-add-photos-page');
@@ -4886,6 +4917,19 @@ window.photoSearch = photoSearch;
 window.photoOpenDetail = photoOpenDetail;
 window.photoGoBack = photoGoBack;
 window.photoSelectImage = photoSelectImage;
+
+function photoApprove(id) {
+  if (!isEditMode) return;
+  const albums = photoGetAlbums();
+  const album = albums.find(a => a.id === id);
+  if (album) {
+    album.approved = true;
+    mainContent.innerHTML = buildPhotosPage(albums);
+    saveCurrentPageContent();
+    alert('הגלריה אושרה ופורסמה בהצלחה!');
+  }
+}
+window.photoApprove = photoApprove;
 
 // ============================================================
 // מערכת קורסים / שיעורים (Courses System)
