@@ -110,27 +110,13 @@
       <div class="gate-paper-card">
         
         <!-- איור מפתח ועין בראש הנייר -->
-        <div style="width: 100px; height: 100px; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; position: relative;">
-          <svg viewBox="0 0 100 100" width="100" height="100" style="display: block;">
-            <defs>
-              <clipPath id="keyhole-clip">
-                <path d="M50 15 A25 25 0 0 0 28 52 L36 85 A15 15 0 0 0 64 85 L72 52 A25 25 0 0 0 50 15 Z" />
-              </clipPath>
-            </defs>
-            <g clip-path="url(#keyhole-clip)">
-              <rect width="100" height="100" fill="#2d152b" />
-              <ellipse cx="50" cy="50" rx="35" ry="20" fill="#ffffff" />
-              <circle cx="50" cy="50" r="18" fill="#586c75" />
-              <circle cx="50" cy="50" r="10" fill="#000000" />
-              <circle cx="46" cy="46" r="3" fill="#ffffff" />
-            </g>
-            <path d="M50 15 A25 25 0 0 0 28 52 L36 85 A15 15 0 0 0 64 85 L72 52 A25 25 0 0 0 50 15 Z" fill="none" stroke="#6b5c54" stroke-width="4" />
-          </svg>
+        <div style="margin-bottom: 20px; display: flex; align-items: center; justify-content: center;">
+          <img src="./keyhole.png" alt="מפתח" style="width: 80px; height: auto;">
         </div>
 
         <!-- כותרת ראשית של השער -->
         <div style="background: rgba(225, 29, 72, 0.05); border: 2px dashed #e11d48; padding: 10px 30px; border-radius: 8px; margin-bottom: 30px;">
-          <h1 style="margin: 0; font-size: 32px; font-weight: 900; color: #b91c1c; letter-spacing: 1px; font-family: system-ui;">עדשת עירום</h1>
+          <h1 style="margin: 0; font-size: 32px; font-weight: 900; color: #b91c1c; letter-spacing: 1px; font-family: system-ui;">הכרויות דרך המיטה</h1>
         </div>
 
         <!-- שתי פתקיות צהובות side by side -->
@@ -170,7 +156,7 @@
           </svg>
           
           <button id="gate-confirm-btn" onclick="confirmAge()" disabled style="background: #991b1b; color: white; border: none; padding: 16px 40px; border-radius: 50px; font-size: 20px; font-weight: 800; cursor: not-allowed; opacity: 0.5; pointer-events: none; box-shadow: 0 4px 15px rgba(153, 27, 27, 0.4); transition: all 0.2s; text-align: center;">
-            כניסה לעדשת עירום
+            כניסה להכרויות דרך המיטה
             <span style="display: block; font-size: 12px; font-weight: normal; opacity: 0.8; margin-top: 2px;">והסכמה לתנאי השימוש</span>
           </button>
         </div>
@@ -180,9 +166,8 @@
       </div>
 
       <!-- לוגו RTA -->
-      <div style="border: 2px solid #000000; background: #000000; color: #ffffff; padding: 4px 12px; text-align: center; font-family: Arial, sans-serif; margin-top: 20px; border-radius: 2px; width: fit-content;">
-        <div style="font-size: 20px; font-weight: 900; letter-spacing: 2px; line-height: 1;">RTA</div>
-        <div style="font-size: 8px; font-weight: bold; letter-spacing: 0.5px; border-top: 1px solid #ffffff; margin-top: 2px; padding-top: 2px;">RESTRICTED TO ADULTS</div>
+      <div style="margin-top: 20px;">
+        <img src="./rta.png" alt="RTA" style="width: 150px; height: auto;">
       </div>
 
     </div>
