@@ -78,6 +78,8 @@
       (function() {
         if (sessionStorage.getItem('age_verified') === 'true') {
           document.write('<style>#age-gate-overlay { display: none !important; }</style>');
+        } else {
+          document.write('<style>#website-preloader { display: none !important; }</style>');
         }
       })();
       function confirmAge() {
