@@ -16,6 +16,162 @@
 </head>
 <body class="light-mode">
   
+  <!-- שער אישור גיל (Age Gate Overlay) -->
+  <div id="age-gate-overlay" style="display: flex; position: fixed; inset: 0; z-index: 1000000; background-color: #f7f4eb; font-family: system-ui, -apple-system, sans-serif; align-items: center; justify-content: center; overflow-y: auto; direction: rtl; padding: 20px;">
+    <style>
+      #age-gate-overlay {
+        --gate-bg: #f7f4eb;
+        --card-bg: #ffffff;
+        --note-bg: #fefcbf;
+        --brand-red: #991b1b;
+      }
+      .gate-paper-card {
+        background: var(--card-bg);
+        border-radius: 4px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        padding: 40px;
+        position: relative;
+        width: 100%;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        border: 1px solid #e5e5e0;
+      }
+      .gate-notes-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        width: 100%;
+        margin-bottom: 20px;
+      }
+      .gate-note {
+        background: var(--note-bg);
+        box-shadow: 2px 5px 15px rgba(0,0,0,0.06);
+        padding: 24px;
+        border-radius: 2px;
+        font-size: 14px;
+        line-height: 1.6;
+        color: #744210;
+        border-left: 5px solid #ecc94b;
+        text-align: justify;
+      }
+      .gate-note-right {
+        transform: rotate(-1deg);
+      }
+      .gate-note-left {
+        transform: rotate(1deg);
+      }
+      @media (max-width: 768px) {
+        .gate-notes-grid {
+          grid-template-columns: 1fr;
+        }
+        .gate-paper-card {
+          padding: 20px;
+        }
+        .gate-note-right, .gate-note-left {
+          transform: none;
+        }
+      }
+    </style>
+    <script>
+      (function() {
+        if (sessionStorage.getItem('age_verified') === 'true') {
+          document.write('<style>#age-gate-overlay { display: none !important; }</style>');
+        }
+      })();
+      function confirmAge() {
+        sessionStorage.setItem('age_verified', 'true');
+        const overlay = document.getElementById('age-gate-overlay');
+        if (overlay) {
+          overlay.style.setProperty('display', 'none', 'important');
+        }
+      }
+    </script>
+    <div class="gate-container" style="max-width: 900px; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 24px; margin: auto;">
+      
+      <!-- דף הנייר המרכזי -->
+      <div class="gate-paper-card">
+        
+        <!-- איור מפתח ועין בראש הנייר -->
+        <div style="width: 100px; height: 100px; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; position: relative;">
+          <svg viewBox="0 0 100 100" width="100" height="100" style="display: block;">
+            <defs>
+              <clipPath id="keyhole-clip">
+                <path d="M50 15 A25 25 0 0 0 28 52 L36 85 A15 15 0 0 0 64 85 L72 52 A25 25 0 0 0 50 15 Z" />
+              </clipPath>
+            </defs>
+            <g clip-path="url(#keyhole-clip)">
+              <rect width="100" height="100" fill="#2d152b" />
+              <ellipse cx="50" cy="50" rx="35" ry="20" fill="#ffffff" />
+              <circle cx="50" cy="50" r="18" fill="#586c75" />
+              <circle cx="50" cy="50" r="10" fill="#000000" />
+              <circle cx="46" cy="46" r="3" fill="#ffffff" />
+            </g>
+            <path d="M50 15 A25 25 0 0 0 28 52 L36 85 A15 15 0 0 0 64 85 L72 52 A25 25 0 0 0 50 15 Z" fill="none" stroke="#6b5c54" stroke-width="4" />
+          </svg>
+        </div>
+
+        <!-- כותרת ראשית של השער -->
+        <div style="background: rgba(225, 29, 72, 0.05); border: 2px dashed #e11d48; padding: 10px 30px; border-radius: 8px; margin-bottom: 30px;">
+          <h1 style="margin: 0; font-size: 32px; font-weight: 900; color: #b91c1c; letter-spacing: 1px; font-family: system-ui;">עדשת עירום</h1>
+        </div>
+
+        <!-- שתי פתקיות צהובות side by side -->
+        <div class="gate-notes-grid">
+          
+          <!-- פתקית ימין -->
+          <div class="gate-note gate-note-right">
+            בכניסתכם לאתר, בעיונכם בתכנים המופיעים בו, בהקלקה על הקישורים המופיעים בו, בהעלאת תכנים לאתר, בהורדת קבצים המאוחסנים באתר או בכל שימוש או צפייה אחרים בו אתם מקבלים על עצמכם ומסכימים ל<a href="#" style="color: #b7791f; font-weight: bold; text-decoration: underline;">תנאי השימוש</a> של האתר ול<a href="#" style="color: #b7791f; font-weight: bold; text-decoration: underline;">מדיניות הפרטיות</a> של האתר והם יחולו כהסכם מחייב ביניכם לבין האתר.
+          </div>
+
+          <!-- פתקית שמאל -->
+          <div class="gate-note gate-note-left">
+            בכניסתכם לאתר אתם מצהירים ומתחייבים - שעברתם את גיל 18 ואינכם קטינים ולא תאפשרו לקטינים גישה לתכני האתר; שאתם מבינים שעם הכניסה לאתר תחשפו לתכנים אירוטיים ומיניים, גרפיים וטקסטואליים, שעלולים להיות בוטים ומפורשים; שברצונכם לצפות בתכנים אלו ולא תהיה לכם כל טענה כלפי האתר מכל מין וסוג שהוא באשר לנזק שאותם תכנים יגרמו לכם; שאין דבר האוסר עליכם לצפות בתכנים שבאתר ושהצפייה בהם היא בהתאם לחוק.
+          </div>
+
+        </div>
+      </div>
+
+      <!-- כפתורי אישור ויציאה מתחת לדף הנייר -->
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 16px; margin-top: 10px;">
+        
+        <!-- כיסא הבמאי והכניסה -->
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 12px;">
+          <!-- כיסא במאי SVG -->
+          <svg viewBox="0 0 64 64" width="70" height="70" style="display: block; opacity: 0.85;">
+            <rect x="16" y="16" width="32" height="10" rx="1" fill="#78350f" />
+            <rect x="14" y="34" width="36" height="4" rx="1" fill="#78350f" />
+            <line x1="18" y1="26" x2="46" y2="56" stroke="#4b5563" stroke-width="3" stroke-linecap="round" />
+            <line x1="46" y1="26" x2="18" y2="56" stroke="#4b5563" stroke-width="3" stroke-linecap="round" />
+            <line x1="14" y1="26" x2="14" y2="34" stroke="#4b5563" stroke-width="3" stroke-linecap="round" />
+            <line x1="50" y1="26" x2="50" y2="34" stroke="#4b5563" stroke-width="3" stroke-linecap="round" />
+            <line x1="16" y1="12" x2="16" y2="26" stroke="#4b5563" stroke-width="3" />
+            <line x1="48" y1="12" x2="48" y2="26" stroke="#4b5563" stroke-width="3" />
+            <line x1="12" y1="34" x2="52" y2="34" stroke="#374151" stroke-width="2" />
+            <line x1="14" y1="56" x2="24" y2="56" stroke="#374151" stroke-width="3" stroke-linecap="round" />
+            <line x1="40" y1="56" x2="50" y2="56" stroke="#374151" stroke-width="3" stroke-linecap="round" />
+          </svg>
+          
+          <button onclick="confirmAge()" style="background: #991b1b; color: white; border: none; padding: 16px 40px; border-radius: 50px; font-size: 20px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 15px rgba(153, 27, 27, 0.4); transition: all 0.2s; text-align: center;">
+            כניסה לעדשת עירום
+            <span style="display: block; font-size: 12px; font-weight: normal; opacity: 0.8; margin-top: 2px;">והסכמה לתנאי השימוש</span>
+          </button>
+        </div>
+
+        <!-- כפתור יציאה -->
+        <a href="https://www.google.com" style="color: #991b1b; text-decoration: none; font-weight: bold; font-size: 16px; transition: opacity 0.2s;">יציאה</a>
+      </div>
+
+      <!-- לוגו RTA -->
+      <div style="border: 2px solid #000000; background: #000000; color: #ffffff; padding: 4px 12px; text-align: center; font-family: Arial, sans-serif; margin-top: 20px; border-radius: 2px; width: fit-content;">
+        <div style="font-size: 20px; font-weight: 900; letter-spacing: 2px; line-height: 1;">RTA</div>
+        <div style="font-size: 8px; font-weight: bold; letter-spacing: 0.5px; border-top: 1px solid #ffffff; margin-top: 2px; padding-top: 2px;">RESTRICTED TO ADULTS</div>
+      </div>
+
+    </div>
+  </div>
+
   <!-- המעטפת הראשית של כל האתר, מסדרת את הכל בעמודה אחת -->
   <div class="main-layout">
     
