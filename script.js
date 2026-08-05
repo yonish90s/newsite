@@ -3055,6 +3055,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // מאזין לשינויי מצב התחברות
   onAuthStateChanged(auth, (user) => {
     updateManagerUI(user);
+    if (typeof renderPage === 'function') renderPage();
   });
 
   const authModal = document.getElementById('auth-modal');
@@ -4584,39 +4585,41 @@ function buildPhotosPage(albums) {
     .sort((a, b) => (b.likes || 0) - (a.likes || 0))
     .slice(0, 5);
 
-  const savedMap = (() => {
-    try { return JSON.parse(localStorage.getItem('saved_galleries') || '{}'); } catch(e) { return {}; }
-  })();
-  const savedAlbums = albums.filter(a => savedMap[a.id]);
-
   let savedHTML = '';
-  if (savedAlbums.length > 0) {
-    savedHTML = `
-      <div class="art-sidebar-box">
-        <div class="art-sidebar-title">גלריות שמורות</div>
-        <div style="display:flex; flex-direction:column; gap:10px;">
-          ${savedAlbums.map(p => `
-            <div class="art-popular-item" onclick="photoOpenDetail('${artEsc(p.id)}')" style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-              <div style="display: flex; align-items: center; gap: 8px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                <div style="font-size:13px;font-weight:600;line-height:1.4;color:#222; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer;">${p.title}</div>
+  if (auth.currentUser) {
+    const savedMap = (() => {
+      try { return JSON.parse(localStorage.getItem('saved_galleries') || '{}'); } catch(e) { return {}; }
+    })();
+    const savedAlbums = albums.filter(a => savedMap[a.id]);
+
+    if (savedAlbums.length > 0) {
+      savedHTML = `
+        <div class="art-sidebar-box">
+          <div class="art-sidebar-title">גלריות שמורות</div>
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            ${savedAlbums.map(p => `
+              <div class="art-popular-item" onclick="photoOpenDetail('${artEsc(p.id)}')" style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                <div style="display: flex; align-items: center; gap: 8px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                  <div style="font-size:13px;font-weight:600;line-height:1.4;color:#222; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer;">${p.title}</div>
+                </div>
+                <button onclick="event.stopPropagation(); photoToggleSave('${artEsc(p.id)}')" style="background:none; border:none; cursor:pointer; color:#e11d48; padding:4px; display: flex; align-items: center;">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+                    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                  </svg>
+                </button>
               </div>
-              <button onclick="event.stopPropagation(); photoToggleSave('${artEsc(p.id)}')" style="background:none; border:none; cursor:pointer; color:#e11d48; padding:4px; display: flex; align-items: center;">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
-                  <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
-                </svg>
-              </button>
-            </div>
-          `).join('')}
+            `).join('')}
+          </div>
         </div>
-      </div>
-    `;
-  } else {
-    savedHTML = `
-      <div class="art-sidebar-box">
-        <div class="art-sidebar-title">גלריות שמורות</div>
-        <div style="font-size: 13px; color: #777; text-align: center; padding: 10px 0;">אין גלריות שמורות עדיין</div>
-      </div>
-    `;
+      `;
+    } else {
+      savedHTML = `
+        <div class="art-sidebar-box">
+          <div class="art-sidebar-title">גלריות שמורות</div>
+          <div style="font-size: 13px; color: #777; text-align: center; padding: 10px 0;">אין גלריות שמורות עדיין</div>
+        </div>
+      `;
+    }
   }
 
   const featuredHTML = featured.map(p => {
@@ -5091,6 +5094,14 @@ function photoIsSavedLocal(id) {
 window.photoIsSavedLocal = photoIsSavedLocal;
 
 function photoToggleSave(id) {
+  const user = auth.currentUser;
+  if (!user) {
+    alert("עליך להתחבר כדי לשמור גלריות!");
+    const authModal = document.getElementById('auth-modal');
+    if (authModal) authModal.style.display = 'flex';
+    return;
+  }
+
   let saved = {};
   try {
     saved = JSON.parse(localStorage.getItem('saved_galleries') || '{}');
