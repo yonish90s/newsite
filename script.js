@@ -218,6 +218,10 @@ async function initSite() {
       if (data.hideChat !== undefined) hideChat = data.hideChat;
       if (data.deleteCart !== undefined) deleteCart = data.deleteCart;
       if (data.deleteChat !== undefined) deleteChat = data.deleteChat;
+      if (data.promotedSites) {
+        PROMOTED_SITES = data.promotedSites;
+        localStorage.setItem('promoted_sites', JSON.stringify(PROMOTED_SITES));
+      }
       
       if (data.navHTML) {
         navLinksContainer.innerHTML = data.navHTML;
@@ -531,7 +535,8 @@ function saveToStorage() {
       activePageId: activePageId,
       topNavPages: topNavPages,
       navHTML: navHTML,
-      siteBackgrounds: siteBackgrounds
+      siteBackgrounds: siteBackgrounds,
+      promotedSites: PROMOTED_SITES
     }).then(() => {
       console.log("סונכרן בהצלחה לענן Firebase!");
     }).catch(err => {
