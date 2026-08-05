@@ -3058,8 +3058,20 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // מאזין לשינויי מצב התחברות
-  onAuthStateChanged(auth, (user) => {
+  onAuthStateChanged(auth, async (user) => {
     updateManagerUI(user);
+    if (user) {
+      // טעינת גלריות שמורות מהענן
+      try {
+        const userSavedRef = ref(db, `website/users/${user.uid}/saved_galleries`);
+        const snapshot = await get(userSavedRef);
+        if (snapshot.exists()) {
+          localStorage.setItem(`saved_galleries_${user.uid}`, JSON.stringify(snapshot.val()));
+        }
+      } catch (e) {
+        console.error("שגיאה בטעינת שמורים מפיירבייס:", e);
+      }
+    }
     if (typeof renderPage === 'function') renderPage();
   });
 
@@ -4593,7 +4605,7 @@ function buildPhotosPage(albums) {
   let savedHTML = '';
   if (auth.currentUser) {
     const savedMap = (() => {
-      try { return JSON.parse(localStorage.getItem('saved_galleries') || '{}'); } catch(e) { return {}; }
+      try { return JSON.parse(localStorage.getItem(`saved_galleries_${auth.currentUser.uid}`) || '{}'); } catch(e) { return {}; }
     })();
     const savedAlbums = albums.filter(a => savedMap[a.id]);
 
@@ -5090,7 +5102,10 @@ window.photoToggleLike = photoToggleLike;
 
 function photoIsSavedLocal(id) {
   try {
-    const saved = JSON.parse(localStorage.getItem('saved_galleries') || '{}');
+    const user = auth.currentUser;
+    if (!user) return false;
+    const localKey = `saved_galleries_${user.uid}`;
+    const saved = JSON.parse(localStorage.getItem(localKey) || '{}');
     return !!saved[id];
   } catch (e) {
     return false;
@@ -5108,8 +5123,9 @@ function photoToggleSave(id) {
   }
 
   let saved = {};
+  const localKey = `saved_galleries_${user.uid}`;
   try {
-    saved = JSON.parse(localStorage.getItem('saved_galleries') || '{}');
+    saved = JSON.parse(localStorage.getItem(localKey) || '{}');
   } catch (e) {}
 
   if (saved[id]) {
@@ -5118,7 +5134,15 @@ function photoToggleSave(id) {
     saved[id] = true;
   }
 
-  localStorage.setItem('saved_galleries', JSON.stringify(saved));
+  localStorage.setItem(localKey, JSON.stringify(saved));
+  
+  // סנכרון ל-Firebase
+  try {
+    const userSavedRef = ref(db, `website/users/${user.uid}/saved_galleries`);
+    set(userSavedRef, saved);
+  } catch (e) {
+    console.error("שגיאה בסנכרון השמורים לענן:", e);
+  }
   
   const container = mainContent.querySelector('.photos-page');
   if (container) {
