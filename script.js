@@ -4738,9 +4738,9 @@ function photoOpenDetail(id) {
       <div class="art-detail-inner">
         <button class="art-back-btn" onclick="photoGoBack()">← חזרה לגלריות</button>
         
-        <!-- תמונה ראשית גדולה עם מזהה ספציפי -->
-        <div style="position:relative; width:100%; border-radius:12px; margin-bottom:12px; overflow:hidden;">
-          <img id="photo-gallery-main-img" src="${mainImg}" style="width:100%; height:auto; display:block; border-radius:12px;">
+        <!-- תמונה ראשית גדולה עם מזהה ספציפי (פרופורציונלית ולא ענקית) -->
+        <div style="position:relative; width:100%; max-height:480px; display:flex; align-items:center; justify-content:center; border-radius:12px; margin-bottom:12px; overflow:hidden; background:#fafafa; border:1px solid #f0f0f0;">
+          <img id="photo-gallery-main-img" src="${mainImg}" style="max-width:100%; max-height:480px; object-fit:contain; display:block; border-radius:12px;">
         </div>
 
         <!-- ריבועי דפדוף (Thumbnails) -->
@@ -4829,7 +4829,6 @@ function openPhotoModal() {
   // Everyone can open the modal to add a gallery
   document.getElementById('photo-title').value = '';
   document.getElementById('photo-summary').value = '';
-  document.getElementById('photo-author').value = '';
   document.getElementById('photo-category').value = '';
   document.getElementById('photo-telegram').value = '';
   
@@ -4898,7 +4897,7 @@ document.getElementById('photo-save').addEventListener('click', () => {
     title,
     summary: document.getElementById('photo-summary').value.trim(),
     images: photoImgDataList,
-    author: document.getElementById('photo-author').value.trim() || (isEditMode ? 'מנהל' : 'אורח'),
+    author: auth.currentUser ? (auth.currentUser.displayName || auth.currentUser.email.split('@')[0]) : (isEditMode ? 'מנהל' : 'אורח'),
     category: document.getElementById('photo-category').value.trim() || 'כללי',
     categoryColor: '#10b981',
     timestamp: new Date().toLocaleDateString('he-IL'),
@@ -4971,6 +4970,14 @@ function photoToggleLike(id) {
   const container = mainContent.querySelector('.photos-page');
   if (!container) return;
   
+  const user = auth.currentUser;
+  if (!user) {
+    alert("עליך להתחבר כדי לתת לייק!");
+    const authModal = document.getElementById('auth-modal');
+    if (authModal) authModal.style.display = 'flex';
+    return;
+  }
+  
   let albums = [];
   try { albums = JSON.parse(decodeURIComponent(container.dataset.photosJson)); } catch(e){ return; }
   
@@ -4982,12 +4989,30 @@ function photoToggleLike(id) {
     liked = JSON.parse(localStorage.getItem('liked_galleries') || '{}');
   } catch (e) {}
 
+  const isAddingLike = !liked[id];
+
+  if (isAddingLike) {
+    const lastLikeKey = `last_like_time_${user.uid || user.email || 'guest'}`;
+    const lastLikeTime = localStorage.getItem(lastLikeKey);
+    if (lastLikeTime) {
+      const diffMs = Date.now() - parseInt(lastLikeTime, 10);
+      const oneDayMs = 24 * 60 * 60 * 1000;
+      if (diffMs < oneDayMs) {
+        const remainingHours = Math.ceil((oneDayMs - diffMs) / (60 * 60 * 1000));
+        alert(`ניתן לתת לייק אחד בלבד ביום! תוכל לתת לייק נוסף בעוד ${remainingHours} שעות.`);
+        return;
+      }
+    }
+  }
+
   if (liked[id]) {
     delete liked[id];
     album.likes = Math.max(0, (album.likes || 0) - 1);
   } else {
     liked[id] = true;
     album.likes = (album.likes || 0) + 1;
+    const lastLikeKey = `last_like_time_${user.uid || user.email || 'guest'}`;
+    localStorage.setItem(lastLikeKey, Date.now().toString());
   }
 
   localStorage.setItem('liked_galleries', JSON.stringify(liked));
