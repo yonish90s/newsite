@@ -4584,6 +4584,41 @@ function buildPhotosPage(albums) {
     .sort((a, b) => (b.likes || 0) - (a.likes || 0))
     .slice(0, 5);
 
+  const savedMap = (() => {
+    try { return JSON.parse(localStorage.getItem('saved_galleries') || '{}'); } catch(e) { return {}; }
+  })();
+  const savedAlbums = albums.filter(a => savedMap[a.id]);
+
+  let savedHTML = '';
+  if (savedAlbums.length > 0) {
+    savedHTML = `
+      <div class="art-sidebar-box">
+        <div class="art-sidebar-title">גלריות שמורות</div>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          ${savedAlbums.map(p => `
+            <div class="art-popular-item" onclick="photoOpenDetail('${artEsc(p.id)}')" style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+              <div style="display: flex; align-items: center; gap: 8px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                <div style="font-size:13px;font-weight:600;line-height:1.4;color:#222; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer;">${p.title}</div>
+              </div>
+              <button onclick="event.stopPropagation(); photoToggleSave('${artEsc(p.id)}')" style="background:none; border:none; cursor:pointer; color:#e11d48; padding:4px; display: flex; align-items: center;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+                  <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                </svg>
+              </button>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  } else {
+    savedHTML = `
+      <div class="art-sidebar-box">
+        <div class="art-sidebar-title">גלריות שמורות</div>
+        <div style="font-size: 13px; color: #777; text-align: center; padding: 10px 0;">אין גלריות שמורות עדיין</div>
+      </div>
+    `;
+  }
+
   const featuredHTML = featured.map(p => {
     const mainImg = p.images && p.images[0] ? p.images[0] : 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80';
     return `
@@ -4613,6 +4648,12 @@ function buildPhotosPage(albums) {
                 <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
               </svg>
               <span>${p.likes || 0}</span>
+            </button>
+            <button onclick="event.stopPropagation(); photoToggleSave('${artEsc(p.id)}')" class="photo-save-btn" style="background: none; border: none; cursor: pointer; color: #000; display: flex; align-items: center; gap: 4px; padding: 2px 6px; border-radius: 4px; transition: background 0.2s; font-weight: bold; font-size: 13px;" title="${photoIsSavedLocal(p.id) ? 'הסר משמורים' : 'שמור גלריה'}">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="${photoIsSavedLocal(p.id) ? '#000' : 'none'}" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+              </svg>
+              <span>${photoIsSavedLocal(p.id) ? 'שמור' : 'שמור'}</span>
             </button>
           </div>
           ${p.telegramUrl ? `
@@ -4687,6 +4728,7 @@ function buildPhotosPage(albums) {
             העלאת תמונות לאתר
           </button>
           ${buildPromotedSitesBox()}
+          ${savedHTML}
           <div class="art-sidebar-box">
             <div class="art-sidebar-title">חמשת הגלריות האהובות ביותר</div>
             ${popularHTML}
@@ -4759,6 +4801,12 @@ function photoOpenDetail(id) {
                 <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
               </svg>
               <span>${a.likes || 0} לייקים</span>
+            </button>
+            <button onclick="photoToggleSave('${artEsc(a.id)}')" class="photo-save-btn" style="background: rgba(0,0,0,0.05); border: 1px solid #ddd; cursor: pointer; color: #000; display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; transition: background 0.2s; font-weight: bold; font-size: 13px;" title="${photoIsSavedLocal(a.id) ? 'הסר משמורים' : 'שמור גלריה'}">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="${photoIsSavedLocal(a.id) ? '#000' : 'none'}" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+              </svg>
+              <span>שמור</span>
             </button>
           </div>
           ${a.telegramUrl ? `
@@ -5031,6 +5079,49 @@ function photoToggleLike(id) {
   saveCurrentPageContent();
 }
 window.photoToggleLike = photoToggleLike;
+
+function photoIsSavedLocal(id) {
+  try {
+    const saved = JSON.parse(localStorage.getItem('saved_galleries') || '{}');
+    return !!saved[id];
+  } catch (e) {
+    return false;
+  }
+}
+window.photoIsSavedLocal = photoIsSavedLocal;
+
+function photoToggleSave(id) {
+  let saved = {};
+  try {
+    saved = JSON.parse(localStorage.getItem('saved_galleries') || '{}');
+  } catch (e) {}
+
+  if (saved[id]) {
+    delete saved[id];
+  } else {
+    saved[id] = true;
+  }
+
+  localStorage.setItem('saved_galleries', JSON.stringify(saved));
+  
+  const container = mainContent.querySelector('.photos-page');
+  if (container) {
+    let albums = [];
+    try { albums = JSON.parse(decodeURIComponent(container.dataset.photosJson)); } catch(e){ return; }
+    
+    const isDetailView = mainContent.querySelector('.art-detail') !== null;
+    const activeDetailId = isDetailView ? mainContent.querySelector('.art-detail').dataset.photoId : null;
+    
+    if (isDetailView && activeDetailId) {
+      photoOpenDetail(activeDetailId);
+      const newContainer = mainContent.querySelector('.photos-page');
+      if (newContainer) newContainer.dataset.photosJson = encodeURIComponent(JSON.stringify(albums));
+    } else {
+      mainContent.innerHTML = buildPhotosPage(albums);
+    }
+  }
+}
+window.photoToggleSave = photoToggleSave;
 
 let currentPhotoCategoryFilter = 'הכל';
 
