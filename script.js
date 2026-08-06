@@ -20,6 +20,137 @@ const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 const db = getDatabase(app);
 
+// הגדרת התראות מעוצבות ומאוירות במקום התראות הדפדפן הרגילות
+window.alert = function(message) {
+  if (!document.getElementById('custom-alert-styles')) {
+    const style = document.createElement('style');
+    style.id = 'custom-alert-styles';
+    style.textContent = `
+      .custom-alert-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        z-index: 1000000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.25s ease;
+        direction: rtl;
+        font-family: system-ui, -apple-system, sans-serif;
+        padding: 20px;
+      }
+      .custom-alert-overlay.show {
+        opacity: 1;
+      }
+      .custom-alert-card {
+        background: rgba(255, 255, 255, 0.95);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15), 0 0 120px rgba(225, 29, 72, 0.05);
+        border-radius: 28px;
+        width: 100%;
+        max-width: 360px;
+        padding: 32px 24px 24px;
+        text-align: center;
+        transform: scale(0.85) translateY(15px);
+        transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+      }
+      .custom-alert-overlay.show .custom-alert-card {
+        transform: scale(1) translateY(0);
+      }
+      .custom-alert-icon-wrap {
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        background: rgba(225, 29, 72, 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #e11d48;
+        font-size: 34px;
+        box-shadow: inset 0 2px 10px rgba(225, 29, 72, 0.1), 0 8px 20px rgba(225, 29, 72, 0.05);
+        margin-bottom: 4px;
+      }
+      .custom-alert-message {
+        font-size: 16px;
+        font-weight: 700;
+        color: #111827;
+        line-height: 1.6;
+        margin: 0;
+        white-space: pre-line;
+      }
+      .custom-alert-btn {
+        background: #e11d48;
+        color: white;
+        border: none;
+        border-radius: 50px;
+        padding: 12px 36px;
+        font-size: 15px;
+        font-weight: 800;
+        cursor: pointer;
+        width: 100%;
+        transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+        box-shadow: 0 4px 15px rgba(225, 29, 72, 0.3);
+      }
+      .custom-alert-btn:hover {
+        background: #be123c;
+        box-shadow: 0 6px 20px rgba(225, 29, 72, 0.45);
+      }
+      .custom-alert-btn:active {
+        transform: scale(0.98);
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  const overlay = document.createElement('div');
+  overlay.className = 'custom-alert-overlay';
+  
+  let icon = '🔔';
+  if (message.includes('התחבר') || message.includes('רשום')) {
+    icon = '🔑';
+  } else if (message.includes('שגיאה') || message.includes('נכשל') || message.includes('גדול מדי') || message.includes('לא הוגדר')) {
+    icon = '❌';
+  } else if (message.includes('בהצלחה') || message.includes('נשמר') || message.includes('אושר') || message.includes('שוחזר')) {
+    icon = '✨';
+  } else if (message.includes('מחיקה') || message.includes('למחוק')) {
+    icon = '🗑️';
+  } else if (message.includes('שים לב') || message.includes('חובה') || message.includes('לפחות')) {
+    icon = '⚠️';
+  }
+
+  overlay.innerHTML = `
+    <div class="custom-alert-card">
+      <div class="custom-alert-icon-wrap">${icon}</div>
+      <p class="custom-alert-message">${message}</p>
+      <button class="custom-alert-btn">אישור</button>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  overlay.offsetHeight; 
+  overlay.classList.add('show');
+
+  const closeAlert = () => {
+    overlay.classList.remove('show');
+    setTimeout(() => {
+      overlay.remove();
+    }, 250);
+  };
+
+  overlay.querySelector('.custom-alert-btn').addEventListener('click', closeAlert);
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) closeAlert();
+  });
+};
+
 /**
  * ============================================================================
  * YHSH Website Builder - מנוע האתר המרכזי
