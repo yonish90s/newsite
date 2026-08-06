@@ -3192,6 +3192,9 @@ document.addEventListener('DOMContentLoaded', () => {
   onAuthStateChanged(auth, async (user) => {
     updateManagerUI(user);
     if (user) {
+      // סנכרון יתרת הלייקים היומית
+      await syncUserLikeBudget(user);
+      
       // טעינת גלריות שמורות מהענן
       try {
         const userSavedRef = ref(db, `website/users/${user.uid}/saved_galleries`);
@@ -4734,6 +4737,19 @@ function buildPhotosPage(albums) {
     .slice(0, 5);
 
   let savedHTML = '';
+  let budgetHTML = '';
+  if (auth.currentUser) {
+    const user = auth.currentUser;
+    const budget = localStorage.getItem(`like_budget_${user.uid}`) || '5';
+    budgetHTML = `
+      <div class="art-sidebar-box" style="border: 1px solid rgba(225,29,72,0.15); background: rgba(225,29,72,0.02); display: flex; align-items: center; gap: 12px; padding: 16px; border-radius: 12px;">
+        <span style="font-size: 24px; filter: drop-shadow(0 2px 4px rgba(225,29,72,0.2));">❤️</span>
+        <div style="text-align: right;">
+          <div style="font-size: 13px; font-weight: 800; color: #e11d48; margin-bottom: 2px;">יתרת הלייקים שלך: ${budget}</div>
+          <div style="font-size: 11px; color: #777; font-weight: 500;">מצטברים 5 לייקים נוספים בכל יום!</div>
+      </div>
+    `;
+  }
   if (auth.currentUser) {
     const savedMap = (() => {
       try { return JSON.parse(localStorage.getItem(`saved_galleries_${auth.currentUser.uid}`) || '{}'); } catch(e) { return {}; }
@@ -4824,16 +4840,25 @@ function buildPhotosPage(albums) {
               <span>${photoIsSavedLocal(p.id) ? 'שמור' : 'שמור'}</span>
             </button>
           </div>
-          ${p.telegramUrl ? `
-          <div class="art-telegram-row" style="margin-top: 8px;">
-            <a href="${p.telegramUrl}" target="_blank" onclick="event.stopPropagation();" class="art-telegram-btn" style="display: inline-flex; align-items: center; background: #2f2f2f; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 13px; text-decoration: none; font-weight: bold; gap: 6px; border: 1px solid rgba(255,255,255,0.1);">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
-                <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
-              </svg>
-              <span>טלגרם</span>
-            </a>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;">
+            ${p.telegramUrl ? `
+              <a href="${p.telegramUrl}" target="_blank" onclick="event.stopPropagation();" class="art-telegram-btn" style="display: inline-flex; align-items: center; background: #2f2f2f; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 13px; text-decoration: none; font-weight: bold; gap: 6px; border: 1px solid rgba(255,255,255,0.1);">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+                  <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+                </svg>
+                <span>טלגרם</span>
+              </a>
+            ` : ''}
+            ${p.emailUrl ? `
+              <a href="${p.emailUrl}" target="_blank" onclick="event.stopPropagation();" class="art-telegram-btn" style="display: inline-flex; align-items: center; background: #2f2f2f; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 13px; text-decoration: none; font-weight: bold; gap: 6px; border: 1px solid rgba(255,255,255,0.1);">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                  <polyline points="22,6 12,13 2,6"/>
+                </svg>
+                <span>אימייל</span>
+              </a>
+            ` : ''}
           </div>
-          ` : ''}
           ${isEditMode && isPending ? `
           <div style="margin-top: 10px;">
             <button onclick="event.stopPropagation(); photoApprove('${artEsc(p.id)}')" style="background: #10b981; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer; transition: background 0.2s;">
@@ -4899,6 +4924,7 @@ function buildPhotosPage(albums) {
             העלאת תמונות לאתר
           </button>
           ${buildPromotedSitesBox()}
+          ${budgetHTML}
           ${savedHTML}
           <div class="art-sidebar-box">
             <div class="art-sidebar-title">חמשת הגלריות האהובות ביותר</div>
@@ -4980,16 +5006,25 @@ function photoOpenDetail(id) {
               <span>שמור</span>
             </button>
           </div>
-          ${a.telegramUrl ? `
-          <div style="margin-bottom: 16px;">
-            <a href="${a.telegramUrl}" target="_blank" class="art-telegram-btn" style="display: inline-flex; align-items: center; background: #2f2f2f; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 13px; text-decoration: none; font-weight: bold; gap: 6px; border: 1px solid rgba(255,255,255,0.1);">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
-                <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
-              </svg>
-              <span>טלגרם</span>
-            </a>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;">
+            ${a.telegramUrl ? `
+              <a href="${a.telegramUrl}" target="_blank" class="art-telegram-btn" style="display: inline-flex; align-items: center; background: #2f2f2f; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 13px; text-decoration: none; font-weight: bold; gap: 6px; border: 1px solid rgba(255,255,255,0.1);">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+                  <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+                </svg>
+                <span>טלגרם</span>
+              </a>
+            ` : ''}
+            ${a.emailUrl ? `
+              <a href="${a.emailUrl}" target="_blank" class="art-telegram-btn" style="display: inline-flex; align-items: center; background: #2f2f2f; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 13px; text-decoration: none; font-weight: bold; gap: 6px; border: 1px solid rgba(255,255,255,0.1);">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                  <polyline points="22,6 12,13 2,6"/>
+                </svg>
+                <span>אימייל</span>
+              </a>
+            ` : ''}
           </div>
-          ` : ''}
           <h1 class="art-detail-title">${a.title}</h1>
           <div class="art-detail-content"><p>${a.summary}</p></div>
         </div>
@@ -5070,6 +5105,8 @@ function openPhotoModal() {
   document.getElementById('photo-summary').value = '';
   document.getElementById('photo-category').value = '';
   document.getElementById('photo-telegram').value = '';
+  const emailInp = document.getElementById('photo-email');
+  if (emailInp) emailInp.value = '';
   
   photoImgDataList = ['', '', '', '', ''];
   for (let i = 1; i <= 5; i++) {
@@ -5131,6 +5168,15 @@ document.getElementById('photo-save').addEventListener('click', () => {
     }
   }
 
+  let emailInput = '';
+  const emailInp = document.getElementById('photo-email');
+  if (emailInp && emailInp.value.trim()) {
+    emailInput = emailInp.value.trim();
+    if (!emailInput.startsWith('mailto:')) {
+      emailInput = 'mailto:' + emailInput;
+    }
+  }
+
   albums.unshift({
     id: 'ph' + Date.now(),
     title,
@@ -5141,6 +5187,7 @@ document.getElementById('photo-save').addEventListener('click', () => {
     categoryColor: '#10b981',
     timestamp: new Date().toLocaleDateString('he-IL'),
     telegramUrl: telegramInput,
+    emailUrl: emailInput,
     approved: isEditMode
   });
   mainContent.innerHTML = buildPhotosPage(albums);
@@ -5205,7 +5252,43 @@ function photoIsLikedLocal(id) {
 }
 window.photoIsLikedLocal = photoIsLikedLocal;
 
-function photoToggleLike(id) {
+async function syncUserLikeBudget(user) {
+  if (!user) return 0;
+  try {
+    const budgetRef = ref(db, `website/users/${user.uid}/likes_data`);
+    const snapshot = await get(budgetRef);
+    let budget = 5;
+    let lastUpdate = Date.now();
+    
+    if (snapshot.exists()) {
+      const data = snapshot.val();
+      budget = data.budget !== undefined ? data.budget : 5;
+      lastUpdate = data.lastUpdate || Date.now();
+      
+      const elapsedMs = Date.now() - lastUpdate;
+      const oneDayMs = 24 * 60 * 60 * 1000;
+      const elapsedDays = Math.floor(elapsedMs / oneDayMs);
+      
+      if (elapsedDays > 0) {
+        budget += elapsedDays * 5;
+        lastUpdate = lastUpdate + elapsedDays * oneDayMs;
+        await set(budgetRef, { budget, lastUpdate });
+      }
+    } else {
+      await set(budgetRef, { budget, lastUpdate });
+    }
+    
+    localStorage.setItem(`like_budget_${user.uid}`, budget);
+    localStorage.setItem(`like_budget_update_${user.uid}`, lastUpdate);
+    return budget;
+  } catch (e) {
+    console.error("שגיאה בסנכרון יתרת הלייקים:", e);
+    return parseInt(localStorage.getItem(`like_budget_${user.uid}`) || '5', 10);
+  }
+}
+window.syncUserLikeBudget = syncUserLikeBudget;
+
+async function photoToggleLike(id) {
   const container = mainContent.querySelector('.photos-page');
   if (!container) return;
   
@@ -5229,29 +5312,31 @@ function photoToggleLike(id) {
   } catch (e) {}
 
   const isAddingLike = !liked[id];
+  let budget = await syncUserLikeBudget(user);
 
   if (isAddingLike) {
-    const lastLikeKey = `last_like_time_${user.uid || user.email || 'guest'}`;
-    const lastLikeTime = localStorage.getItem(lastLikeKey);
-    if (lastLikeTime) {
-      const diffMs = Date.now() - parseInt(lastLikeTime, 10);
-      const oneDayMs = 24 * 60 * 60 * 1000;
-      if (diffMs < oneDayMs) {
-        const remainingHours = Math.ceil((oneDayMs - diffMs) / (60 * 60 * 1000));
-        alert(`ניתן לתת לייק אחד בלבד ביום! תוכל לתת לייק נוסף בעוד ${remainingHours} שעות.`);
-        return;
-      }
+    if (budget <= 0) {
+      alert("אין לך לייקים פנויים ביתרה! הלייקים שלך מצטברים בקצב של 5 לייקים נוספים בכל יום.");
+      return;
     }
   }
 
   if (liked[id]) {
     delete liked[id];
     album.likes = Math.max(0, (album.likes || 0) - 1);
+    budget += 1;
   } else {
     liked[id] = true;
     album.likes = (album.likes || 0) + 1;
-    const lastLikeKey = `last_like_time_${user.uid || user.email || 'guest'}`;
-    localStorage.setItem(lastLikeKey, Date.now().toString());
+    budget = Math.max(0, budget - 1);
+  }
+
+  localStorage.setItem(`like_budget_${user.uid}`, budget);
+  try {
+    const budgetRef = ref(db, `website/users/${user.uid}/likes_data`);
+    await update(budgetRef, { budget: budget });
+  } catch (e) {
+    console.error("שגיאה בעדכון יתרת הלייקים:", e);
   }
 
   localStorage.setItem('liked_galleries', JSON.stringify(liked));
