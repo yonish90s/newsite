@@ -4860,11 +4860,7 @@ function buildPhotosPage(albums) {
           <h3>${p.title}</h3>
           <p>${p.summary}</p>
           <div class="art-row-meta" style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-            ${p.authorId ? `
-              <span class="photo-author-link" onclick="event.stopPropagation(); openUserProfile('${artEsc(p.authorId)}', '${artEsc(p.author)}')" style="cursor: pointer; color: #e11d48; text-decoration: underline; font-weight: 600;">${p.author}</span>
-            ` : `
-              <span>${p.author}</span>
-            `}
+            <span class="photo-author-link" onclick="event.stopPropagation(); openUserProfile('${artEsc(p.authorId || '')}', '${artEsc(p.author)}')" style="cursor: pointer; color: #e11d48; text-decoration: underline; font-weight: 600;">${p.author}</span>
             <span class="art-row-sep">|</span>
             <span>${p.timestamp}</span>
             <button onclick="event.stopPropagation(); photoToggleLike('${artEsc(p.id)}')" class="photo-like-btn" style="background: none; border: none; cursor: pointer; color: #000; display: flex; align-items: center; gap: 4px; padding: 2px 6px; border-radius: 4px; transition: background 0.2s; font-weight: bold; font-size: 13px;">
@@ -5182,7 +5178,11 @@ async function openUserProfile(authorId, authorFallbackName) {
   }
 
   const albums = photoGetAlbums();
-  const authorAlbums = albums.filter(a => a.authorId === authorId && a.approved !== false);
+  const authorAlbums = albums.filter(a => {
+    const matchesId = authorId && a.authorId === authorId;
+    const matchesName = a.author && a.author.toLowerCase() === authorFallbackName.toLowerCase();
+    return ((a.authorId && authorId) ? matchesId : matchesName) && a.approved !== false;
+  });
 
   if (authorAlbums.length > 0) {
     postsContainer.innerHTML = authorAlbums.map(p => {
