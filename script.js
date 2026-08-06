@@ -4783,7 +4783,24 @@ function buildPhotosPage(albums) {
     const isPending = p.approved === false;
     if (!isEditMode && isPending) return '';
 
-    const mainImg = p.images && p.images[0] ? p.images[0] : '';
+    const validImages = (p.images || []).filter(img => !!img);
+    const mainImg = validImages[0] || '';
+
+    let miniThumbnailsHTML = '';
+    if (validImages.length > 1) {
+      miniThumbnailsHTML = `
+        <div class="photo-mini-thumbs" style="display: flex; gap: 4px; justify-content: center; margin-top: 6px; width: 170px; flex-wrap: wrap;">
+          ${validImages.map((imgUrl, idx) => `
+            <div class="photo-mini-thumb" 
+                 onclick="event.stopPropagation(); photoSelectRowImage('${artEsc(p.id)}', '${artEsc(imgUrl)}', this)" 
+                 style="width: 24px; height: 24px; border-radius: 4px; overflow: hidden; cursor: pointer; border: 1.5px solid ${idx === 0 ? '#e11d48' : '#ddd'}; transition: all 0.2s; background: #eee; flex-shrink:0;">
+              <img src="${imgUrl}" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
     return `
       <div class="art-row" data-category="${p.category || 'כללי'}" onclick="${isPending ? '' : `photoOpenDetail('${artEsc(p.id)}')`}" style="${isPending ? 'border: 2px dashed #f59e0b; background: #fffbeb; cursor: default;' : ''}">
         <div class="art-row-text">
@@ -4825,11 +4842,14 @@ function buildPhotosPage(albums) {
           </div>
           ` : ''}
         </div>
-        <div class="art-row-img-wrap">
-          ${mainImg ? `<img src="${mainImg}" alt="">` : '<div class="art-row-img-placeholder"></div>'}
-          ${mainImg ? `<button class="art-zoom-btn" onclick="event.stopPropagation();artZoomImage('${artEsc(mainImg)}')" title="מסך מלא">⛶</button>` : ''}
-          ${isEditMode ? `<button class="art-pin-btn" onclick="event.stopPropagation(); togglePinPhoto('${artEsc(p.id)}')" title="${p.pinned ? 'בטל נעץ' : 'נעץ בגריד'}" style="${p.pinned ? 'color:#ffd700;display:flex;' : ''}">${p.pinned ? '★' : '☆'}</button>` : ''}
-          <button class="art-delete-btn" onclick="event.stopPropagation();photoDelete('${artEsc(p.id)}',this)">✕</button>
+        <div class="art-row-img-container" style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0;">
+          <div class="art-row-img-wrap">
+            ${mainImg ? `<img src="${mainImg}" alt="">` : '<div class="art-row-img-placeholder"></div>'}
+            ${mainImg ? `<button class="art-zoom-btn" onclick="event.stopPropagation();artZoomImage('${artEsc(mainImg)}')" title="מסך מלא">⛶</button>` : ''}
+            ${isEditMode ? `<button class="art-pin-btn" onclick="event.stopPropagation(); togglePinPhoto('${artEsc(p.id)}')" title="${p.pinned ? 'בטל נעץ' : 'נעץ בגריד'}" style="${p.pinned ? 'color:#ffd700;display:flex;' : ''}">${p.pinned ? '★' : '☆'}</button>` : ''}
+            <button class="art-delete-btn" onclick="event.stopPropagation();photoDelete('${artEsc(p.id)}',this)">✕</button>
+          </div>
+          ${miniThumbnailsHTML}
         </div>
       </div>
     `;
@@ -4994,6 +5014,26 @@ function photoSelectImage(imgUrl, el) {
   });
   el.style.borderColor = '#e11d48';
 }
+
+function photoSelectRowImage(albumId, imgUrl, thumbEl) {
+  const container = thumbEl.closest('.art-row-img-container');
+  if (container) {
+    const mainImg = container.querySelector('.art-row-img-wrap img');
+    if (mainImg) {
+      mainImg.src = imgUrl;
+      const zoomBtn = container.querySelector('.art-zoom-btn');
+      if (zoomBtn) {
+        zoomBtn.setAttribute('onclick', `event.stopPropagation();artZoomImage('${artEsc(imgUrl)}')`);
+      }
+    }
+    const thumbs = container.querySelectorAll('.photo-mini-thumb');
+    thumbs.forEach(t => {
+      t.style.borderColor = '#ddd';
+    });
+    thumbEl.style.borderColor = '#e11d48';
+  }
+}
+window.photoSelectRowImage = photoSelectRowImage;
 
 function photoGoBack() {
   const container = mainContent.querySelector('.photos-page');
