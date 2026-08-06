@@ -151,6 +151,17 @@ window.alert = function(message) {
   });
 };
 
+function updateUserActivity(user) {
+  if (!user) return;
+  try {
+    const userRef = ref(db, `website/users/${user.uid}/last_seen`);
+    set(userRef, Date.now());
+  } catch (e) {
+    console.error("Error updating user activity:", e);
+  }
+}
+window.updateUserActivity = updateUserActivity;
+
 /**
  * ============================================================================
  * YHSH Website Builder - מנוע האתר המרכזי
@@ -3189,9 +3200,17 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // מאזין לשינויי מצב התחברות
+  let userActivityInterval = null;
   onAuthStateChanged(auth, async (user) => {
     updateManagerUI(user);
+    if (userActivityInterval) {
+      clearInterval(userActivityInterval);
+      userActivityInterval = null;
+    }
     if (user) {
+      updateUserActivity(user);
+      userActivityInterval = setInterval(() => updateUserActivity(user), 45000);
+
       // סנכרון יתרת הלייקים היומית
       await syncUserLikeBudget(user);
       
@@ -4760,6 +4779,8 @@ function buildPhotosPage(albums) {
     const nick = profile.nickname || user.displayName || user.email.split('@')[0];
     const age = profile.age || '--';
     const location = profile.location || '--';
+    const tg = profile.telegram || '';
+    const email = profile.email || '';
 
     myProfileHTML = `
       <div class="art-sidebar-box" id="my-profile-sidebar-box" style="border: 1px solid rgba(0,0,0,0.15); padding: 16px; border-radius: 12px; display: flex; flex-direction: column; gap: 10px;">
@@ -4771,13 +4792,17 @@ function buildPhotosPage(albums) {
         <div id="profile-view-state" style="display: block;">
           <div style="font-size: 13px; font-weight: 800; color: #111; margin-bottom: 6px;">כינוי: <span style="font-weight: 500; color: #4b5563;">${nick}</span></div>
           <div style="font-size: 13px; font-weight: 800; color: #111; margin-bottom: 6px;">גיל: <span style="font-weight: 500; color: #4b5563;">${age}</span></div>
-          <div style="font-size: 13px; font-weight: 800; color: #111;">מגורים: <span style="font-weight: 500; color: #4b5563;">${location}</span></div>
+          <div style="font-size: 13px; font-weight: 800; color: #111; margin-bottom: 6px;">מגורים: <span style="font-weight: 500; color: #4b5563;">${location}</span></div>
+          ${tg ? `<div style="font-size: 13px; font-weight: 800; color: #111; margin-bottom: 6px;">טלגרם: <span style="font-weight: 500; color: #4b5563;">@${tg}</span></div>` : ''}
+          ${email ? `<div style="font-size: 13px; font-weight: 800; color: #111;">אימייל: <span style="font-weight: 500; color: #4b5563;">${email}</span></div>` : ''}
         </div>
 
         <div id="profile-edit-state" style="display:none; flex-direction:column; gap:8px;">
           <input id="profile-edit-nickname" type="text" placeholder="כינוי" value="${artEsc(nick)}" style="padding:8px 12px; border:1px solid #ddd; border-radius:8px; font-size:13px; width:100%; box-sizing:border-box;">
           <input id="profile-edit-age" type="number" placeholder="גיל" value="${age !== '--' ? age : ''}" style="padding:8px 12px; border:1px solid #ddd; border-radius:8px; font-size:13px; width:100%; box-sizing:border-box;">
           <input id="profile-edit-location" type="text" placeholder="אזור מגורים" value="${location !== '--' ? location : ''}" style="padding:8px 12px; border:1px solid #ddd; border-radius:8px; font-size:13px; width:100%; box-sizing:border-box;">
+          <input id="profile-edit-telegram" type="text" placeholder="שם משתמש בטלגרם (ללא @)" value="${artEsc(tg)}" style="padding:8px 12px; border:1px solid #ddd; border-radius:8px; font-size:13px; width:100%; box-sizing:border-box;">
+          <input id="profile-edit-email" type="email" placeholder="אימייל" value="${artEsc(email)}" style="padding:8px 12px; border:1px solid #ddd; border-radius:8px; font-size:13px; width:100%; box-sizing:border-box;">
           <div style="display:flex; gap:6px; margin-top: 4px;">
             <button onclick="photoSaveProfile()" style="background:#e11d48; color:white; border:none; padding:8px 12px; border-radius:8px; font-size:12px; font-weight:800; cursor:pointer; flex:1;">שמור</button>
             <button onclick="photoToggleProfileEdit()" style="background:#f3f4f6; color:#555; border:none; padding:8px 12px; border-radius:8px; font-size:12px; font-weight:800; cursor:pointer;">ביטול</button>
@@ -4878,7 +4903,7 @@ function buildPhotosPage(albums) {
           </div>
           <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;">
             ${p.telegramUrl ? `
-              <a href="${p.telegramUrl}" target="_blank" onclick="event.stopPropagation();" class="art-telegram-btn" style="display: inline-flex; align-items: center; background: #2f2f2f; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 13px; text-decoration: none; font-weight: bold; gap: 6px; border: 1px solid rgba(255,255,255,0.1);">
+              <a href="${p.telegramUrl}" target="_blank" onclick="event.stopPropagation();" title="${artEsc(p.telegramUrl.replace('https://t.me/', '@'))}" class="art-telegram-btn" style="display: inline-flex; align-items: center; background: #2f2f2f; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 13px; text-decoration: none; font-weight: bold; gap: 6px; border: 1px solid rgba(255,255,255,0.1);">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
                   <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
                 </svg>
@@ -4886,7 +4911,7 @@ function buildPhotosPage(albums) {
               </a>
             ` : ''}
             ${p.emailUrl ? `
-              <a href="${p.emailUrl}" target="_blank" onclick="event.stopPropagation();" class="art-telegram-btn" style="display: inline-flex; align-items: center; background: #2f2f2f; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 13px; text-decoration: none; font-weight: bold; gap: 6px; border: 1px solid rgba(255,255,255,0.1);">
+              <a href="${p.emailUrl}" target="_blank" onclick="event.stopPropagation();" title="${artEsc(p.emailUrl.replace('mailto:', ''))}" class="art-telegram-btn" style="display: inline-flex; align-items: center; background: #2f2f2f; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 13px; text-decoration: none; font-weight: bold; gap: 6px; border: 1px solid rgba(255,255,255,0.1);">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
                   <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
                   <polyline points="22,6 12,13 2,6"/>
@@ -5015,8 +5040,8 @@ function photoOpenDetail(id) {
         <button class="art-back-btn" onclick="photoGoBack()">← חזרה לגלריות</button>
         
         <!-- תמונה ראשית גדולה עם מזהה ספציפי (פרופורציונלית ולא ענקית) -->
-        <div style="position:relative; width:100%; max-height:480px; display:flex; align-items:center; justify-content:center; border-radius:12px; margin-bottom:12px; overflow:hidden; background:#fafafa; border:1px solid #f0f0f0;">
-          <img id="photo-gallery-main-img" src="${mainImg}" style="max-width:100%; max-height:480px; object-fit:contain; display:block; border-radius:12px;">
+        <div class="photo-main-img-container">
+          <img id="photo-gallery-main-img" src="${mainImg}" style="width:100%; height:100%; object-fit:contain; display:block; border-radius:12px;">
         </div>
 
         <!-- ריבועי דפדוף (Thumbnails) -->
@@ -5045,7 +5070,7 @@ function photoOpenDetail(id) {
           </div>
           <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;">
             ${a.telegramUrl ? `
-              <a href="${a.telegramUrl}" target="_blank" class="art-telegram-btn" style="display: inline-flex; align-items: center; background: #2f2f2f; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 13px; text-decoration: none; font-weight: bold; gap: 6px; border: 1px solid rgba(255,255,255,0.1);">
+              <a href="${a.telegramUrl}" target="_blank" title="${artEsc(a.telegramUrl.replace('https://t.me/', '@'))}" class="art-telegram-btn" style="display: inline-flex; align-items: center; background: #2f2f2f; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 13px; text-decoration: none; font-weight: bold; gap: 6px; border: 1px solid rgba(255,255,255,0.1);">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
                   <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
                 </svg>
@@ -5053,7 +5078,7 @@ function photoOpenDetail(id) {
               </a>
             ` : ''}
             ${a.emailUrl ? `
-              <a href="${a.emailUrl}" target="_blank" class="art-telegram-btn" style="display: inline-flex; align-items: center; background: #2f2f2f; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 13px; text-decoration: none; font-weight: bold; gap: 6px; border: 1px solid rgba(255,255,255,0.1);">
+              <a href="${a.emailUrl}" target="_blank" title="${artEsc(a.emailUrl.replace('mailto:', ''))}" class="art-telegram-btn" style="display: inline-flex; align-items: center; background: #2f2f2f; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 13px; text-decoration: none; font-weight: bold; gap: 6px; border: 1px solid rgba(255,255,255,0.1);">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
                   <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
                   <polyline points="22,6 12,13 2,6"/>
@@ -5126,12 +5151,22 @@ async function photoSaveProfile() {
   const age = document.getElementById('profile-edit-age').value.trim();
   const location = document.getElementById('profile-edit-location').value.trim();
 
+  let telegram = document.getElementById('profile-edit-telegram').value.trim();
+  if (telegram.startsWith('@')) telegram = telegram.substring(1);
+  const email = document.getElementById('profile-edit-email').value.trim();
+
   if (!nickname) {
     alert("חובה להזין כינוי!");
     return;
   }
 
-  const profile = { nickname, age: age || '--', location: location || '--' };
+  const profile = { 
+    nickname, 
+    age: age || '--', 
+    location: location || '--',
+    telegram: telegram || '',
+    email: email || ''
+  };
   localStorage.setItem(`user_profile_${user.uid}`, JSON.stringify(profile));
 
   try {
@@ -5154,12 +5189,38 @@ async function openUserProfile(authorId, authorFallbackName) {
   document.getElementById('profile-modal-age').textContent = 'גיל: טוען...';
   document.getElementById('profile-modal-location').textContent = 'אזור: טוען...';
   
+  const statusEl = document.getElementById('profile-modal-status');
+  if (statusEl) statusEl.style.display = 'none';
+
+  const contactWrap = document.getElementById('profile-modal-contact-info');
+  if (contactWrap) contactWrap.innerHTML = '';
+  
   const postsContainer = document.getElementById('profile-modal-posts');
   postsContainer.innerHTML = '<div style="font-size:13px; color:#666; text-align:center; padding:20px;">טוען גלריות...</div>';
   
   modal.style.display = 'flex';
 
   try {
+    if (authorId) {
+      const statusRef = ref(db, `website/users/${authorId}/last_seen`);
+      const statusSnap = await get(statusRef);
+      if (statusSnap.exists() && statusEl) {
+        const lastSeen = statusSnap.val();
+        const isOnline = Date.now() - lastSeen < 120000;
+        statusEl.style.display = 'inline-flex';
+        if (isOnline) {
+          statusEl.textContent = '🟢 מחובר כעת';
+          statusEl.style.background = 'rgba(16, 185, 129, 0.1)';
+          statusEl.style.color = '#10b981';
+        } else {
+          const dateStr = new Date(lastSeen).toLocaleString('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+          statusEl.textContent = `נראה לאחרונה: ${dateStr}`;
+          statusEl.style.background = 'rgba(107, 114, 128, 0.1)';
+          statusEl.style.color = '#6b7280';
+        }
+      }
+    }
+
     const profileRef = ref(db, `website/users/${authorId}/profile`);
     const snapshot = await get(profileRef);
     if (snapshot.exists()) {
@@ -5167,6 +5228,33 @@ async function openUserProfile(authorId, authorFallbackName) {
       document.getElementById('profile-modal-nickname').textContent = profile.nickname || authorFallbackName;
       document.getElementById('profile-modal-age').textContent = `גיל: ${profile.age || '--'}`;
       document.getElementById('profile-modal-location').textContent = `אזור: ${profile.location || '--'}`;
+      
+      if (contactWrap) {
+        let contactHTML = '';
+        if (profile.telegram) {
+          const cleanTg = profile.telegram.startsWith('@') ? profile.telegram.substring(1) : profile.telegram;
+          contactHTML += `
+            <a href="https://t.me/${cleanTg}" target="_blank" title="@${cleanTg}" style="display:inline-flex; align-items:center; background:#2f2f2f; color:white; padding:4px 8px; border-radius:6px; font-size:11px; text-decoration:none; font-weight:bold; gap:4px; border:1px solid rgba(255,255,255,0.1);">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:block;">
+                <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+              </svg>
+              <span>טלגרם</span>
+            </a>
+          `;
+        }
+        if (profile.email) {
+          contactHTML += `
+            <a href="mailto:${profile.email}" target="_blank" title="${profile.email}" style="display:inline-flex; align-items:center; background:#2f2f2f; color:white; padding:4px 8px; border-radius:6px; font-size:11px; text-decoration:none; font-weight:bold; gap:4px; border:1px solid rgba(255,255,255,0.1);">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:block;">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                <polyline points="22,6 12,13 2,6"/>
+              </svg>
+              <span>אימייל</span>
+            </a>
+          `;
+        }
+        contactWrap.innerHTML = contactHTML;
+      }
     } else {
       document.getElementById('profile-modal-age').textContent = 'גיל: --';
       document.getElementById('profile-modal-location').textContent = 'אזור: --';

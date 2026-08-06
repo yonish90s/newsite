@@ -612,11 +612,19 @@
         👤
       </div>
       <div>
-        <h4 id="profile-modal-nickname" style="margin:0 0 4px; font-size:18px; font-weight:800; color:#111;">טוען...</h4>
-        <div style="display:flex; gap:12px; font-size:13px; color:#555; font-weight:500;">
-          <span id="profile-modal-age">גיל: --</span>
-          <span>|</span>
-          <span id="profile-modal-location">אזור: --</span>
+        <div style="display:flex; align-items:center; flex-wrap:wrap; gap:8px;">
+          <h4 id="profile-modal-nickname" style="margin:0; font-size:18px; font-weight:800; color:#111;">טוען...</h4>
+          <span id="profile-modal-status" style="font-size:11px; font-weight:bold; display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:12px;"></span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:4px; font-size:13px; color:#555; font-weight:500; margin-top:2px;">
+          <div style="display:flex; gap:12px;">
+            <span id="profile-modal-age">גיל: --</span>
+            <span>|</span>
+            <span id="profile-modal-location">אזור: --</span>
+          </div>
+          <div id="profile-modal-contact-info" style="display:flex; gap:8px; margin-top:4px;">
+            <!-- ייטען דינמית -->
+          </div>
         </div>
       </div>
     </div>
