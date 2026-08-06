@@ -4738,6 +4738,7 @@ function buildPhotosPage(albums) {
 
   let savedHTML = '';
   let budgetHTML = '';
+  let myProfileHTML = '';
   if (auth.currentUser) {
     const user = auth.currentUser;
     const budget = localStorage.getItem(`like_budget_${user.uid}`) || '5';
@@ -4747,6 +4748,41 @@ function buildPhotosPage(albums) {
         <div style="text-align: right;">
           <div style="font-size: 13px; font-weight: 800; color: #e11d48; margin-bottom: 2px;">יתרת הלייקים שלך: ${budget}</div>
           <div style="font-size: 11px; color: #777; font-weight: 500;">מצטברים 5 לייקים נוספים בכל יום!</div>
+        </div>
+      </div>
+    `;
+
+    const profile = (() => {
+      try {
+        return JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}');
+      } catch (e) { return {}; }
+    })();
+    const nick = profile.nickname || user.displayName || user.email.split('@')[0];
+    const age = profile.age || '--';
+    const location = profile.location || '--';
+
+    myProfileHTML = `
+      <div class="art-sidebar-box" id="my-profile-sidebar-box" style="border: 1px solid rgba(0,0,0,0.15); padding: 16px; border-radius: 12px; display: flex; flex-direction: column; gap: 10px;">
+        <div class="art-sidebar-title" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0;">
+          <span style="font-size: 14px; font-weight: 800;">👤 הפרופיל שלי</span>
+          <button onclick="photoToggleProfileEdit()" style="background:none; border:none; color:#e11d48; font-size:12px; font-weight:800; cursor:pointer; padding: 0;">עריכה ✏️</button>
+        </div>
+        
+        <div id="profile-view-state" style="display: block;">
+          <div style="font-size: 13px; font-weight: 800; color: #111; margin-bottom: 6px;">כינוי: <span style="font-weight: 500; color: #4b5563;">${nick}</span></div>
+          <div style="font-size: 13px; font-weight: 800; color: #111; margin-bottom: 6px;">גיל: <span style="font-weight: 500; color: #4b5563;">${age}</span></div>
+          <div style="font-size: 13px; font-weight: 800; color: #111;">מגורים: <span style="font-weight: 500; color: #4b5563;">${location}</span></div>
+        </div>
+
+        <div id="profile-edit-state" style="display:none; flex-direction:column; gap:8px;">
+          <input id="profile-edit-nickname" type="text" placeholder="כינוי" value="${artEsc(nick)}" style="padding:8px 12px; border:1px solid #ddd; border-radius:8px; font-size:13px; width:100%; box-sizing:border-box;">
+          <input id="profile-edit-age" type="number" placeholder="גיל" value="${age !== '--' ? age : ''}" style="padding:8px 12px; border:1px solid #ddd; border-radius:8px; font-size:13px; width:100%; box-sizing:border-box;">
+          <input id="profile-edit-location" type="text" placeholder="אזור מגורים" value="${location !== '--' ? location : ''}" style="padding:8px 12px; border:1px solid #ddd; border-radius:8px; font-size:13px; width:100%; box-sizing:border-box;">
+          <div style="display:flex; gap:6px; margin-top: 4px;">
+            <button onclick="photoSaveProfile()" style="background:#e11d48; color:white; border:none; padding:8px 12px; border-radius:8px; font-size:12px; font-weight:800; cursor:pointer; flex:1;">שמור</button>
+            <button onclick="photoToggleProfileEdit()" style="background:#f3f4f6; color:#555; border:none; padding:8px 12px; border-radius:8px; font-size:12px; font-weight:800; cursor:pointer;">ביטול</button>
+          </div>
+        </div>
       </div>
     `;
   }
@@ -4824,7 +4860,11 @@ function buildPhotosPage(albums) {
           <h3>${p.title}</h3>
           <p>${p.summary}</p>
           <div class="art-row-meta" style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-            <span>${p.author}</span>
+            ${p.authorId ? `
+              <span class="photo-author-link" onclick="event.stopPropagation(); openUserProfile('${artEsc(p.authorId)}', '${artEsc(p.author)}')" style="cursor: pointer; color: #e11d48; text-decoration: underline; font-weight: 600;">${p.author}</span>
+            ` : `
+              <span>${p.author}</span>
+            `}
             <span class="art-row-sep">|</span>
             <span>${p.timestamp}</span>
             <button onclick="event.stopPropagation(); photoToggleLike('${artEsc(p.id)}')" class="photo-like-btn" style="background: none; border: none; cursor: pointer; color: #000; display: flex; align-items: center; gap: 4px; padding: 2px 6px; border-radius: 4px; transition: background 0.2s; font-weight: bold; font-size: 13px;">
@@ -4925,6 +4965,7 @@ function buildPhotosPage(albums) {
           </button>
           ${buildPromotedSitesBox()}
           ${budgetHTML}
+          ${myProfileHTML}
           ${savedHTML}
           <div class="art-sidebar-box">
             <div class="art-sidebar-title">חמשת הגלריות האהובות ביותר</div>
@@ -5070,6 +5111,98 @@ function photoSelectRowImage(albumId, imgUrl, thumbEl) {
 }
 window.photoSelectRowImage = photoSelectRowImage;
 
+function photoToggleProfileEdit() {
+  const view = document.getElementById('profile-view-state');
+  const edit = document.getElementById('profile-edit-state');
+  if (view && edit) {
+    const isEditing = edit.style.display === 'flex';
+    edit.style.display = isEditing ? 'none' : 'flex';
+    view.style.display = isEditing ? 'block' : 'none';
+  }
+}
+window.photoToggleProfileEdit = photoToggleProfileEdit;
+
+async function photoSaveProfile() {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  const nickname = document.getElementById('profile-edit-nickname').value.trim();
+  const age = document.getElementById('profile-edit-age').value.trim();
+  const location = document.getElementById('profile-edit-location').value.trim();
+
+  if (!nickname) {
+    alert("חובה להזין כינוי!");
+    return;
+  }
+
+  const profile = { nickname, age: age || '--', location: location || '--' };
+  localStorage.setItem(`user_profile_${user.uid}`, JSON.stringify(profile));
+
+  try {
+    const profileRef = ref(db, `website/users/${user.uid}/profile`);
+    await set(profileRef, profile);
+    alert("הפרופיל עודכן בהצלחה! ✨");
+    renderPage();
+  } catch (e) {
+    console.error("שגיאה בעדכון הפרופיל:", e);
+    alert("שגיאה בעדכון הפרופיל.");
+  }
+}
+window.photoSaveProfile = photoSaveProfile;
+
+async function openUserProfile(authorId, authorFallbackName) {
+  const modal = document.getElementById('user-profile-modal');
+  if (!modal) return;
+
+  document.getElementById('profile-modal-nickname').textContent = authorFallbackName;
+  document.getElementById('profile-modal-age').textContent = 'גיל: טוען...';
+  document.getElementById('profile-modal-location').textContent = 'אזור: טוען...';
+  
+  const postsContainer = document.getElementById('profile-modal-posts');
+  postsContainer.innerHTML = '<div style="font-size:13px; color:#666; text-align:center; padding:20px;">טוען גלריות...</div>';
+  
+  modal.style.display = 'flex';
+
+  try {
+    const profileRef = ref(db, `website/users/${authorId}/profile`);
+    const snapshot = await get(profileRef);
+    if (snapshot.exists()) {
+      const profile = snapshot.val();
+      document.getElementById('profile-modal-nickname').textContent = profile.nickname || authorFallbackName;
+      document.getElementById('profile-modal-age').textContent = `גיל: ${profile.age || '--'}`;
+      document.getElementById('profile-modal-location').textContent = `אזור: ${profile.location || '--'}`;
+    } else {
+      document.getElementById('profile-modal-age').textContent = 'גיל: --';
+      document.getElementById('profile-modal-location').textContent = 'אזור: --';
+    }
+  } catch(e) {
+    console.error("שגיאה בטעינת פרופיל משתמש:", e);
+    document.getElementById('profile-modal-age').textContent = 'גיל: --';
+    document.getElementById('profile-modal-location').textContent = 'אזור: --';
+  }
+
+  const albums = photoGetAlbums();
+  const authorAlbums = albums.filter(a => a.authorId === authorId && a.approved !== false);
+
+  if (authorAlbums.length > 0) {
+    postsContainer.innerHTML = authorAlbums.map(p => {
+      const img = p.images && p.images[0] ? p.images[0] : '';
+      return `
+        <div class="art-popular-item" onclick="document.getElementById('user-profile-modal').style.display='none'; photoOpenDetail('${artEsc(p.id)}')" style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px; background:#f9f9f9; border-radius:12px; border:1px solid #eee; cursor:pointer; transition:background 0.2s;">
+          <div style="display:flex; align-items:center; gap:10px; overflow:hidden;">
+            ${img ? `<img src="${img}" style="width:40px; height:40px; border-radius:6px; object-fit:cover;">` : '<div style="width:40px; height:40px; border-radius:6px; background:#eee;"></div>'}
+            <div style="font-size:13px; font-weight:bold; color:#222; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${p.title}</div>
+          </div>
+          <span style="font-size:11px; color:#e11d48; font-weight:bold; white-space:nowrap;">צפייה ➔</span>
+        </div>
+      `;
+    }).join('');
+  } else {
+    postsContainer.innerHTML = '<div style="font-size:13px; color:#777; text-align:center; padding:20px 0;">אין גלריות להצגה עבור יוצר זה</div>';
+  }
+}
+window.openUserProfile = openUserProfile;
+
 function photoGoBack() {
   const container = mainContent.querySelector('.photos-page');
   if (!container) return;
@@ -5177,12 +5310,26 @@ document.getElementById('photo-save').addEventListener('click', () => {
     }
   }
 
+  const user = auth.currentUser;
+  let authorNickname = 'אורח';
+  if (user) {
+    try {
+      const profile = JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}');
+      authorNickname = profile.nickname || user.displayName || user.email.split('@')[0];
+    } catch(e) {
+      authorNickname = user.displayName || user.email.split('@')[0];
+    }
+  } else if (isEditMode) {
+    authorNickname = 'מנהל';
+  }
+
   albums.unshift({
     id: 'ph' + Date.now(),
     title,
     summary: document.getElementById('photo-summary').value.trim(),
     images: photoImgDataList,
-    author: auth.currentUser ? (auth.currentUser.displayName || auth.currentUser.email.split('@')[0]) : (isEditMode ? 'מנהל' : 'אורח'),
+    author: authorNickname,
+    authorId: user ? user.uid : '',
     category: document.getElementById('photo-category').value.trim() || 'כללי',
     categoryColor: '#10b981',
     timestamp: new Date().toLocaleDateString('he-IL'),
