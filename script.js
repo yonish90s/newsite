@@ -4563,7 +4563,35 @@ function storyOpenDetail(id) {
   const s = stories.find(x => x.id === id);
   if (!s) return;
 
-  const bodyHTML = (s.body || s.summary || '').split('\n').map(p => p.trim() ? `<p>${p}</p>` : '').join('');
+  const validImages = s.images ? s.images.filter(img => !!img) : (s.image ? [s.image] : []);
+  const mainImg = validImages[0] || '';
+  const extraImages = validImages.slice(1);
+
+  const lines = (s.body || s.summary || '').split('\n').map(l => l.trim()).filter(Boolean);
+  const chunks = [];
+  for (let i = 0; i < lines.length; i += 5) {
+    chunks.push(lines.slice(i, i + 5).join('<br>'));
+  }
+
+  let bodyHTML = '';
+  if (extraImages.length > 0) {
+    bodyHTML = chunks.map((chunkText, idx) => {
+      const imgUrl = extraImages[idx % extraImages.length];
+      const isEven = idx % 2 === 0;
+      return `
+        <div class="photo-story-row" style="display:flex; flex-direction:${isEven ? 'row' : 'row-reverse'}; gap:24px; align-items:center; margin-bottom:32px; flex-wrap:wrap;">
+          <div style="flex:1; min-width:280px; height:240px; border-radius:12px; overflow:hidden; border:1px solid #f0f0f0; background:#fafafa; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+            <img src="${imgUrl}" style="width:100%; height:100%; object-fit:cover; display:block;">
+          </div>
+          <div style="flex:1.5; min-width:280px; font-size:16px; line-height:1.8; color:#374151; text-align:justify;">
+            ${chunkText}
+          </div>
+        </div>
+      `;
+    }).join('');
+  } else {
+    bodyHTML = chunks.map(chunkText => `<p style="font-size:16px; line-height:1.8; color:#374151; margin-bottom:16px; text-align:justify;">${chunkText}</p>`).join('');
+  }
 
   const recommended = stories.filter(x => x.id !== id).slice(0, 3);
   const recHTML = recommended.map(r => `
@@ -4584,7 +4612,10 @@ function storyOpenDetail(id) {
     <div class="art-detail articles-page stories-page" data-story-id="${id}" data-stories-json="${json}">
       <div class="art-detail-inner">
         <button class="art-back-btn" onclick="storyGoBack()">← חזרה לסיפורים</button>
-        ${s.image ? `<img class="art-detail-hero" src="${s.image}" alt="">` : ''}
+        ${mainImg ? `
+        <div class="photo-main-img-container" style="margin-bottom: 20px;">
+          <img src="${mainImg}" style="width:100%; height:100%; object-fit:cover; display:block; border-radius:12px;">
+        </div>` : ''}
         <div class="art-detail-body">
           <div class="art-meta" style="margin-bottom:12px">
             <span class="art-category-badge" style="background:${s.categoryColor||'#8b5cf6'}">${s.category}</span>
@@ -4643,6 +4674,7 @@ function storySearch(val) {
 }
 
 let storyImgData = '';
+let storyExtraImgData = {};
 
 function openStoryModal() {
   if (!isEditMode) return;
@@ -4656,6 +4688,16 @@ function openStoryModal() {
   preview.style.display = 'none'; preview.src = '';
   storyImgData = '';
   document.getElementById('story-img-pick').textContent = 'לחץ לבחירת תמונה מהמחשב';
+
+  // ניקוי תמונות נוספות של הסיפור
+  storyExtraImgData = {};
+  for (let idx = 1; idx <= 5; idx++) {
+    const p = document.getElementById(`story-extra-preview-${idx}`);
+    if (p) { p.src = ''; p.style.display = 'none'; }
+    const btn = document.getElementById(`story-extra-pick-${idx}`);
+    if (btn) { btn.textContent = `${idx}️⃣`; }
+  }
+
   document.getElementById('story-modal').style.display = 'flex';
 }
 
@@ -4675,6 +4717,28 @@ document.getElementById('story-img-pick').addEventListener('click', () => {
   inp.click();
 });
 
+// מאזינים לבחירת תמונות נוספות לגוף הסיפור
+for (let idx = 1; idx <= 5; idx++) {
+  const btn = document.getElementById(`story-extra-pick-${idx}`);
+  if (btn) {
+    btn.addEventListener('click', () => {
+      const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
+      inp.onchange = e => {
+        const f = e.target.files[0]; if (!f) return;
+        const r = new FileReader();
+        r.onload = ev => {
+          storyExtraImgData[idx] = ev.target.result;
+          const p = document.getElementById(`story-extra-preview-${idx}`);
+          if (p) { p.src = storyExtraImgData[idx]; p.style.display = 'block'; }
+          btn.textContent = '✓';
+        };
+        r.readAsDataURL(f);
+      };
+      inp.click();
+    });
+  }
+}
+
 document.getElementById('story-cancel').addEventListener('click', () => {
   document.getElementById('story-modal').style.display = 'none';
 });
@@ -4682,6 +4746,13 @@ document.getElementById('story-cancel').addEventListener('click', () => {
 document.getElementById('story-save').addEventListener('click', () => {
   const title = document.getElementById('story-title').value.trim();
   if (!title) { alert('חובה כותרת'); return; }
+  
+  const storyImages = [storyImgData];
+  for (let idx = 1; idx <= 5; idx++) {
+    const extraImg = storyExtraImgData[idx];
+    if (extraImg) storyImages.push(extraImg);
+  }
+
   const stories = storyGetStories();
   stories.unshift({
     id: 's' + Date.now(),
@@ -4693,6 +4764,7 @@ document.getElementById('story-save').addEventListener('click', () => {
     categoryColor: '#8b5cf6',
     timestamp: new Date().toLocaleDateString('he-IL'),
     image: storyImgData,
+    images: storyImages,
     link: document.getElementById('story-link').value.trim()
   });
   mainContent.innerHTML = buildStoriesPage(stories);
