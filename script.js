@@ -5033,6 +5033,31 @@ function photoOpenDetail(id) {
     `;
   }).join('');
 
+  const paragraphs = (a.summary || '').split(/\n+/).map(p => p.trim()).filter(Boolean);
+  const showRowImages = validImages.length > 1;
+  let contentHTML = '';
+  
+  if (showRowImages) {
+    contentHTML = paragraphs.map((pText, idx) => {
+      const imgUrl = validImages[(idx + 1) % validImages.length];
+      const isEven = idx % 2 === 0;
+      return `
+        <div class="photo-story-row" style="display:flex; flex-direction:${isEven ? 'row' : 'row-reverse'}; gap:24px; align-items:center; margin-bottom:32px; flex-wrap:wrap;">
+          <div style="flex:1; min-width:280px; height:240px; border-radius:12px; overflow:hidden; border:1px solid #f0f0f0; background:#fafafa; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+            <img src="${imgUrl}" style="width:100%; height:100%; object-fit:cover; display:block;">
+          </div>
+          <div style="flex:1.5; min-width:280px; font-size:16px; line-height:1.8; color:#374151; text-align:justify;">
+            ${pText}
+          </div>
+        </div>
+      `;
+    }).join('');
+  } else {
+    contentHTML = paragraphs.map(pText => `
+      <p style="font-size:16px; line-height:1.8; color:#374151; margin-bottom:16px; text-align:justify;">${pText}</p>
+    `).join('');
+  }
+
   const json = encodeURIComponent(JSON.stringify(albums));
   mainContent.innerHTML = `
     <div class="art-detail articles-page photos-page" data-photo-id="${id}" data-photos-json="${json}">
@@ -5088,7 +5113,7 @@ function photoOpenDetail(id) {
             ` : ''}
           </div>
           <h1 class="art-detail-title">${a.title}</h1>
-          <div class="art-detail-content"><p>${a.summary}</p></div>
+          <div class="art-detail-content">${contentHTML}</div>
         </div>
 
         <div class="art-rec-section">

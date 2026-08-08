@@ -2351,3 +2351,10 @@ body:not(.edit-mode) .hidden-nav {
 .edit-mode .hidden-nav {
   opacity: 0.5 !important;
 }
+
+@media (max-width: 768px) {
+  .photo-story-row {
+    flex-direction: column !important;
+    gap: 16px !important;
+  }
+}
