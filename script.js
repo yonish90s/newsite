@@ -332,11 +332,11 @@ function updateFABsVisibility() {
   const cartHideIcon = document.getElementById('cart-hide-icon');
   const chatHideIcon = document.getElementById('chat-hide-icon');
   if (cartHideIcon) {
-    cartHideIcon.textContent = hideCart ? '👁️' : '🙈';
+    cartHideIcon.textContent = hideCart ? '🙈' : '👁️';
     cartHideIcon.title = hideCart ? 'הצג עגלה' : 'הסתר עגלה';
   }
   if (chatHideIcon) {
-    chatHideIcon.textContent = hideChat ? '👁️' : '🙈';
+    chatHideIcon.textContent = hideChat ? '🙈' : '👁️';
     chatHideIcon.title = hideChat ? 'הצג צ\'אט' : 'הסתר צ\'אט';
   }
 }
@@ -757,7 +757,7 @@ function renderSideMenu() {
       
       // כפתור הסתרה/תצוגה
       const hideBtn = document.createElement('span');
-      hideBtn.textContent = page.isHidden ? '👁️' : '🙈';
+      hideBtn.textContent = page.isHidden ? '🙈' : '👁️';
       hideBtn.style.cursor = 'pointer';
       hideBtn.title = page.isHidden ? 'הצג עמוד' : 'הסתר עמוד ממבקרים';
       hideBtn.onclick = (e) => {
@@ -1304,17 +1304,17 @@ function applyEditModeToContent() {
     };
 
     const hideBtn = document.createElement('span');
-    hideBtn.textContent = child.classList.contains('hidden-nav') ? '👁️' : '🙈';
+    hideBtn.textContent = child.classList.contains('hidden-nav') ? '🙈' : '👁️';
     hideBtn.style.cursor = 'pointer';
     hideBtn.title = 'הסתר/הצג';
     hideBtn.onclick = (e) => {
       e.preventDefault(); e.stopPropagation();
       if (child.classList.contains('hidden-nav')) {
         child.classList.remove('hidden-nav');
-        hideBtn.textContent = '🙈';
+        hideBtn.textContent = '👁️';
       } else {
         child.classList.add('hidden-nav');
-        hideBtn.textContent = '👁️';
+        hideBtn.textContent = '🙈';
       }
       // אם זה קישור מקושר לעמוד, נשמור את מצב ההסתרה
       if (child.dataset.pageId) {

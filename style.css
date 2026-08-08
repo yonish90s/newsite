@@ -2343,3 +2343,11 @@ body:not(.edit-mode) .hotspot-delete-btn {
     height: 320px;
   }
 }
+
+/* מנגנון הסתרת קישורים בתפריט הניווט העליון */
+body:not(.edit-mode) .hidden-nav {
+  display: none !important;
+}
+.edit-mode .hidden-nav {
+  opacity: 0.5 !important;
+}
