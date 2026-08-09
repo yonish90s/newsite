@@ -4071,6 +4071,7 @@ function buildArticlesPage(articles) {
             <div class="art-sidebar-title">הכי נקראות השבוע</div>
             ${popularHTML}
           </div>
+          ${buildSocialCommunityBox()}
         </div>
       </div>
     </div>
@@ -4555,6 +4556,7 @@ function buildStoriesPage(stories) {
             <div class="art-sidebar-title">הסיפורים הנקראים ביותר</div>
             ${popularHTML}
           </div>
+          ${buildSocialCommunityBox()}
         </div>
       </div>
     </div>
@@ -5085,6 +5087,7 @@ function buildPhotosPage(albums) {
             <div class="art-sidebar-title">חמשת הגלריות האהובות ביותר</div>
             ${popularHTML}
           </div>
+          ${buildSocialCommunityBox()}
         </div>
       </div>
     </div>
@@ -5901,6 +5904,7 @@ function buildCoursesPage(courses) {
             <div class="art-sidebar-title">הנצפים ביותר השבוע</div>
             ${popularHTML}
           </div>
+          ${buildSocialCommunityBox()}
         </div>
       </div>
     </div>
@@ -7015,4 +7019,29 @@ async function deleteCommunityPost(postId) {
   }
 }
 window.deleteCommunityPost = deleteCommunityPost;
+
+function buildSocialCommunityBox() {
+  return `
+    <div class="art-sidebar-box" style="text-align: right; display: flex; flex-direction: column; gap: 12px; padding: 16px; border-radius: 12px; border: 1px solid rgba(236, 72, 153, 0.15); background: rgba(236, 72, 153, 0.02); box-sizing: border-box; width: 100%;">
+      <div class="art-sidebar-title" style="margin-bottom: 8px; border-bottom: 2px solid #ec4899; padding-bottom: 6px; font-size: 14px; font-weight: 800; color: #ec4899; width: 100%; box-sizing: border-box;">
+        👥 הקהילות שלנו ברשת
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; box-sizing: border-box;">
+        <a href="https://facebook.com" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; background: #1877f2; color: white; text-decoration: none; border-radius: 8px; font-size: 12px; font-weight: bold; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+          <span>Facebook</span>
+        </a>
+        <a href="https://instagram.com" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); color: white; text-decoration: none; border-radius: 8px; font-size: 12px; font-weight: bold; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+          <span>Instagram</span>
+        </a>
+        <a href="https://twitter.com" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; background: #000000; color: white; text-decoration: none; border-radius: 8px; font-size: 12px; font-weight: bold; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+          <span>Twitter / X</span>
+        </a>
+        <a href="https://reddit.com" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; background: #ff4500; color: white; text-decoration: none; border-radius: 8px; font-size: 12px; font-weight: bold; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+          <span>Reddit</span>
+        </a>
+      </div>
+    </div>
+  `;
+}
+window.buildSocialCommunityBox = buildSocialCommunityBox;
 
