@@ -1022,6 +1022,12 @@ function renderPage() {
       if (savedPhotos.length) mainContent.innerHTML = buildPhotosPage(savedPhotos);
     }
 
+    // עמוד קהילה: בונים מחדש
+    const commPageEl = mainContent.querySelector('.community-page');
+    if (commPageEl && typeof buildCommunityPage === 'function') {
+      mainContent.innerHTML = buildCommunityPage();
+    }
+
     // עמוד חנות: בונים מחדש מהנתונים השמורים
     const shopPageEl = mainContent.querySelector('.shop-page');
     if (shopPageEl && typeof buildShopPage === 'function') {
@@ -4787,6 +4793,21 @@ if (btnAddStoriesPage) {
   });
 }
 
+const btnAddCommunityPage = document.getElementById('btn-add-community-page');
+if (btnAddCommunityPage) {
+  btnAddCommunityPage.addEventListener('click', () => {
+    const title = prompt('שם עמוד הקהילה:') || 'קהילה';
+    const newId = 'page-' + Date.now();
+    pages.push({ id: newId, title: title.trim(), content: `<div class="articles-page community-page" data-page-id="${newId}"></div>` });
+    topNavPages.push(newId);
+    activePageId = newId;
+    saveToStorage();
+    renderSideMenu();
+    renderTopNav();
+    renderPage();
+  });
+}
+
 // ============================================================
 // מערכת תמונות / גלריות (Photos System)
 // ============================================================
@@ -6707,4 +6728,291 @@ window.togglePinArticle = togglePinArticle;
 window.togglePinStory = togglePinStory;
 window.togglePinPhoto = togglePinPhoto;
 window.togglePinCourse = togglePinCourse;
+
+// ============================================================
+// מערכת קהילה ושיתוף פנטזיות (Community System)
+// ============================================================
+
+let communityPosts = [];
+let communitySearchQuery = '';
+let currentCommPostImgData = '';
+
+// סנכרון פוסטים בזמן אמת מול פיירבייס
+onValue(ref(db, 'website/community_posts'), (snapshot) => {
+  const data = snapshot.val();
+  communityPosts = [];
+  if (data) {
+    for (let key in data) {
+      communityPosts.push({ id: key, ...data[key] });
+    }
+    // מיון לפי תאריך יצירה (הכי חדש בהתחלה)
+    communityPosts.sort((a, b) => b.timestamp - a.timestamp);
+  }
+  // רענון העמוד אם אנחנו כרגע בדף קהילה
+  const current = pages.find(p => p.id === activePageId);
+  if (current && current.content && current.content.includes('community-page')) {
+    const listEl = document.getElementById('community-posts-list');
+    if (listEl) {
+      listEl.innerHTML = renderCommunityPostsList();
+    }
+  }
+});
+
+function buildCommunityPage() {
+  return `
+    <div class="articles-page community-page" style="direction: rtl; font-family: system-ui, -apple-system, sans-serif;">
+      <!-- כותרת ראשית -->
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; flex-wrap:wrap; gap:16px; border-bottom:2px solid #f0f0f0; padding-bottom:16px;">
+        <div>
+          <h2 style="font-size:24px; font-weight:800; color:#ec4899; margin:0; display:flex; align-items:center; gap:8px;">👥 קהילת השיתופים והפנטזיות</h2>
+          <p style="font-size:14px; color:#6b7280; margin:6px 0 0 0;">מרחב פתוח לשתף סיפורים, פנטזיות ותמונות, לקרוא ולהגיב אחד לשני!</p>
+        </div>
+        <button onclick="openNewPostModal()" style="background:#ec4899; color:white; border:none; padding:12px 24px; border-radius:14px; font-size:14px; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:8px; box-shadow:0 4px 12px rgba(236,72,153,0.3); transition:transform 0.2s, background 0.2s;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1.0)'">
+          ✍️ שתף פנטזיה חדשה
+        </button>
+      </div>
+      
+      <!-- חיפוש וסינון -->
+      <div style="margin-bottom:24px; position:relative;">
+        <input type="text" id="community-search" placeholder="חפש כותרת, תוכן או יוצר..." oninput="filterCommunityPosts(this.value)" value="${artEsc(communitySearchQuery)}" style="width:100%; padding:12px 16px; border:1.5px solid #e5e7eb; border-radius:14px; font-size:14px; box-sizing:border-box; outline:none; transition:border-color 0.2s;" onfocus="this.style.borderColor='#ec4899'">
+      </div>
+
+      <!-- רשימת הפוסטים -->
+      <div id="community-posts-list" style="display:flex; flex-direction:column; gap:20px;">
+        ${renderCommunityPostsList()}
+      </div>
+    </div>
+  `;
+}
+window.buildCommunityPage = buildCommunityPage;
+
+function filterCommunityPosts(val) {
+  communitySearchQuery = val;
+  const listEl = document.getElementById('community-posts-list');
+  if (listEl) {
+    listEl.innerHTML = renderCommunityPostsList();
+  }
+}
+window.filterCommunityPosts = filterCommunityPosts;
+
+function renderCommunityPostsList() {
+  const query = communitySearchQuery.toLowerCase().trim();
+  const filtered = communityPosts.filter(p => {
+    return p.title.toLowerCase().includes(query) || 
+           p.body.toLowerCase().includes(query) || 
+           (p.author || '').toLowerCase().includes(query);
+  });
+
+  if (filtered.length === 0) {
+    return `<div style="text-align:center; padding:40px; color:#888; background:#fff; border-radius:16px; border:1px solid #eee; font-size:14px;">לא נמצאו שיתופים תואמים בקהילה. היה הראשון לשתף! ✨</div>`;
+  }
+
+  return filtered.map(p => {
+    const formattedDate = new Date(p.timestamp).toLocaleString('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    const commentsList = p.comments ? Object.keys(p.comments).map(k => ({ id: k, ...p.comments[k] })).sort((a,b) => a.timestamp - b.timestamp) : [];
+    
+    return `
+      <div class="art-sidebar-box" style="background:#fff; border:1px solid #eee; border-radius:18px; padding:20px; box-shadow:0 4px 15px rgba(0,0,0,0.02); display:flex; flex-direction:column; gap:14px; text-align:right;">
+        <!-- כותרת ופרטי כותב -->
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px;">
+          <div>
+            <h3 style="margin:0 0 4px 0; font-size:18px; font-weight:800; color:#111;">${p.title}</h3>
+            <div style="font-size:12px; color:#6b7280; display:flex; align-items:center; gap:8px;">
+              <span class="photo-author-link" onclick="event.stopPropagation(); openUserProfile('${artEsc(p.authorId || '')}', '${artEsc(p.author)}')" style="cursor:pointer; color:#ec4899; text-decoration:underline; font-weight:700;">👤 ${p.author}</span>
+              <span>·</span>
+              <span>🕒 ${formattedDate}</span>
+            </div>
+          </div>
+          ${isEditMode ? `
+            <button onclick="deleteCommunityPost('${p.id}')" style="background:#fef2f2; color:#ef4444; border:none; padding:6px 12px; border-radius:8px; font-size:12px; cursor:pointer; font-weight:bold;">הסר פוסט 🗑️</button>
+          ` : ''}
+        </div>
+
+        <!-- תוכן הפוסט -->
+        <p style="margin:0; font-size:15px; line-height:1.7; color:#374151; white-space:pre-wrap; text-align:justify;">${p.body}</p>
+
+        <!-- תמונה מצורפת אם קיימת -->
+        ${p.image ? `
+          <div style="width:100%; max-height:350px; border-radius:12px; overflow:hidden; border:1px solid #f0f0f0; background:#f9f9f9; margin-top:4px;">
+            <img src="${p.image}" style="width:100%; height:100%; max-height:350px; object-fit:contain; display:block; cursor:zoom-in;" onclick="artZoomImage('${artEsc(p.image)}')">
+          </div>
+        ` : ''}
+
+        <!-- שורת פעולות (לייקים ותגובות) -->
+        <div style="display:flex; align-items:center; gap:16px; border-top:1px solid #f3f4f6; border-bottom:1px solid #f3f4f6; padding:10px 0; margin-top:6px;">
+          <button onclick="toggleCommunityLike('${p.id}')" style="background:none; border:none; cursor:pointer; display:flex; align-items:center; gap:6px; font-weight:bold; font-size:13px; color:#4b5563; padding:4px 8px; border-radius:6px; transition:background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='none'">
+            <span style="font-size:16px;">❤️</span>
+            <span>${p.likes || 0} לייקים</span>
+          </button>
+          <div style="font-size:13px; color:#4b5563; font-weight:bold; display:flex; align-items:center; gap:6px;">
+            <span style="font-size:16px;">💬</span>
+            <span>${commentsList.length} תגובות</span>
+          </div>
+        </div>
+
+        <!-- רשימת תגובות -->
+        ${commentsList.length > 0 ? `
+          <div style="display:flex; flex-direction:column; gap:10px; background:#f9fafb; padding:12px; border-radius:12px; border:1px solid #f3f4f6;">
+            ${commentsList.map(c => {
+              const cDate = new Date(c.timestamp).toLocaleString('he-IL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+              return `
+                <div style="border-bottom:1px solid #f1f2f4; padding-bottom:8px; margin-bottom:8px; &:last-child { border:none; padding-bottom:0; margin-bottom:0; }">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                    <span class="photo-author-link" onclick="openUserProfile('${artEsc(c.authorId || '')}', '${artEsc(c.author)}')" style="font-size:12px; font-weight:800; color:#ec4899; cursor:pointer; text-decoration:underline;">${c.author}</span>
+                    <span style="font-size:10px; color:#9ca3af;">${cDate}</span>
+                  </div>
+                  <p style="margin:0; font-size:13.5px; color:#4b5563; line-height:1.5;">${c.body}</p>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        ` : ''}
+
+        <!-- כתיבת תגובה חדשה -->
+        <div style="display:flex; gap:8px; align-items:center;">
+          <input type="text" id="comment-input-${p.id}" placeholder="כתוב תגובה לפנטזיה..." style="flex:1; padding:8px 12px; border:1px solid #ddd; border-radius:10px; font-size:13px; outline:none;" onkeydown="if(event.key==='Enter')submitCommunityComment('${p.id}')">
+          <button onclick="submitCommunityComment('${p.id}')" style="background:#ec4899; color:white; border:none; padding:8px 16px; border-radius:10px; font-size:13px; font-weight:bold; cursor:pointer; transition:background 0.2s;">שלח 🚀</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+window.renderCommunityPostsList = renderCommunityPostsList;
+
+function openNewPostModal() {
+  const user = auth.currentUser;
+  if (!user) {
+    alert("עלייך להתחבר למשתמש על מנת לשתף בקהילה! ❤️");
+    return;
+  }
+  document.getElementById('comm-post-title').value = '';
+  document.getElementById('comm-post-body').value = '';
+  const preview = document.getElementById('comm-post-img-preview');
+  if (preview) { preview.style.display = 'none'; preview.src = ''; }
+  currentCommPostImgData = '';
+  document.getElementById('comm-post-img-pick').textContent = '📷 לחץ לבחירת תמונה';
+  document.getElementById('community-post-modal').style.display = 'flex';
+}
+window.openNewPostModal = openNewPostModal;
+
+// מאזין לבחירת תמונה לפוסט בקהילה
+const commImgPick = document.getElementById('comm-post-img-pick');
+if (commImgPick) {
+  commImgPick.addEventListener('click', () => {
+    const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
+    inp.onchange = e => {
+      const f = e.target.files[0]; if (!f) return;
+      const r = new FileReader();
+      r.onload = ev => {
+        currentCommPostImgData = ev.target.result;
+        const p = document.getElementById('comm-post-img-preview');
+        if (p) { p.src = currentCommPostImgData; p.style.display = 'block'; }
+        commImgPick.textContent = '✓ תמונה נבחרה';
+      };
+      r.readAsDataURL(f);
+    };
+    inp.click();
+  });
+}
+
+async function submitCommunityPost() {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  const title = document.getElementById('comm-post-title').value.trim();
+  const body = document.getElementById('comm-post-body').value.trim();
+
+  if (!title || !body) {
+    alert("חובה להזין כותרת ותוכן לפוסט!");
+    return;
+  }
+
+  // שליפת פרופיל מקומי לכינוי עדכני
+  const localProfile = (() => {
+    try { return JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}'); } catch(e) { return {}; }
+  })();
+  const authorName = localProfile.nickname || user.displayName || user.email.split('@')[0];
+
+  const postData = {
+    title,
+    body,
+    author: authorName,
+    authorId: user.uid,
+    image: currentCommPostImgData,
+    timestamp: Date.now(),
+    likes: 0
+  };
+
+  try {
+    const newPostRef = push(ref(db, 'website/community_posts'));
+    await set(newPostRef, postData);
+    document.getElementById('community-post-modal').style.display = 'none';
+    alert("השיתוף שלך פורסם בקהילה בהצלחה! 🚀");
+  } catch(e) {
+    console.error(e);
+    alert("שגיאה בפרסום הפוסט.");
+  }
+}
+window.submitCommunityPost = submitCommunityPost;
+
+async function toggleCommunityLike(postId) {
+  const post = communityPosts.find(p => p.id === postId);
+  if (!post) return;
+  
+  const currentLikes = post.likes || 0;
+  try {
+    const postRef = ref(db, `website/community_posts/${postId}/likes`);
+    await set(postRef, currentLikes + 1);
+  } catch(e) { console.error(e); }
+}
+window.toggleCommunityLike = toggleCommunityLike;
+
+async function submitCommunityComment(postId) {
+  const user = auth.currentUser;
+  if (!user) {
+    alert("עלייך להתחבר למשתמש על מנת להגיב! ❤️");
+    return;
+  }
+
+  const inputEl = document.getElementById(`comment-input-${postId}`);
+  if (!inputEl) return;
+
+  const body = inputEl.value.trim();
+  if (!body) return;
+
+  const localProfile = (() => {
+    try { return JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}'); } catch(e) { return {}; }
+  })();
+  const authorName = localProfile.nickname || user.displayName || user.email.split('@')[0];
+
+  const commentData = {
+    author: authorName,
+    authorId: user.uid,
+    body,
+    timestamp: Date.now()
+  };
+
+  try {
+    const commentsRef = push(ref(db, `website/community_posts/${postId}/comments`));
+    await set(commentsRef, commentData);
+    inputEl.value = '';
+  } catch(e) {
+    console.error(e);
+    alert("שגיאה בשליחת התגובה.");
+  }
+}
+window.submitCommunityComment = submitCommunityComment;
+
+async function deleteCommunityPost(postId) {
+  if (confirm("האם אתה בטוח שברצונך למחוק את הפוסט הזה מהקהילה?")) {
+    try {
+      await set(ref(db, `website/community_posts/${postId}`), null);
+      alert("הפוסט נמחק בהצלחה. 🗑️");
+    } catch(e) {
+      console.error(e);
+      alert("שגיאה במחיקת הפוסט.");
+    }
+  }
+}
+window.deleteCommunityPost = deleteCommunityPost;
 
