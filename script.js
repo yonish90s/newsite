@@ -672,7 +672,7 @@ function saveToStorage() {
   // שמירה ל-Firebase Database
   try {
     const dbRef = ref(db, 'website');
-    set(dbRef, {
+    update(dbRef, {
       pages: pages,
       activePageId: activePageId,
       topNavPages: topNavPages,
@@ -1572,7 +1572,7 @@ if (btnResetSite) {
         const existingPages = currentData.pages || [];
         
         // שמירת התוכן ואיפוס רק של הרקעים והעיצובים
-        await set(dbRef, {
+        await update(dbRef, {
           pages: existingPages, // שומר על כל הכתבות והתכנים הקיימים
           activePageId: currentData.activePageId || 'page-main',
           topNavPages: currentData.topNavPages || ['page-main'],
