@@ -2018,18 +2018,14 @@ body:not(.edit-mode) .hotspot-delete-btn {
 /* בכרטיס מוקטן התקציר רק מייצר רעש — הוא נשאר בעמוד הפריט המלא */
 .photos-page .art-row-text p,
 .stories-page .art-row-text p { display: none; }
-/* כרטיס תמונות מכיל רק תמונה וטלגרם */
+/* כרטיס תמונות מכיל את התמונה בלבד. הבלוק הזה נשאר רק עבור סימון
+   "ממתין לאישור" וכפתור האישור שרואה המנהל */
 .photos-page .photo-card-actions {
   display: flex;
   flex-direction: column;
   align-items: stretch;
   gap: 6px;
   padding: 8px;
-}
-.photos-page .photo-card-actions .art-telegram-btn {
-  justify-content: center;
-  width: 100%;
-  box-sizing: border-box;
 }
 .photos-page .art-row-meta,
 .stories-page .art-row-meta { font-size: 11px; gap: 5px !important; row-gap: 3px !important; }
@@ -2130,16 +2126,9 @@ body:not(.edit-mode) .hotspot-delete-btn {
   .photos-page .art-row-meta svg,
   .stories-page .art-row-meta svg { width: 10px; height: 10px; }
   .photos-page .art-row-meta button { padding: 0 !important; font-size: 9px !important; }
-  /* בכרטיס ברוחב ~80px התצוגות המקדימות לא קריאות. הטלגרם כן נשאר —
-     הוא אחד משני הדברים שהכרטיס אמור להציג */
+  /* בכרטיס ברוחב ~80px התצוגות המקדימות לא קריאות */
   .photos-page .photo-mini-thumbs { display: none !important; }
   .photos-page .photo-card-actions { padding: 5px; gap: 4px; }
-  .photos-page .photo-card-actions .art-telegram-btn {
-    padding: 4px 6px !important;
-    font-size: 10px !important;
-    gap: 3px !important;
-  }
-  .photos-page .photo-card-actions .art-telegram-btn svg { width: 10px; height: 10px; }
   /* בכרטיס כזה קטן כפתור הזום מכסה את התמונה, ולחיצה על הכרטיס
      ממילא פותחת את הגלריה */
   .photos-page .art-zoom-btn,
@@ -2743,14 +2732,19 @@ body:not(.edit-mode) .hidden-nav {
 .articles-page .art-delete-btn,
 .articles-page .art-pin-btn { border-radius: 9px; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
 
-/* --- סרגל סינון: שלוש קבוצות באותה שורה, מופרדות בקו --- */
+/* --- סרגל סינון: קו, ומתחתיו מין / גיל / מיקום שנפתחים במקום --- */
+.photo-filter-section { margin-bottom: 18px; }
+.photo-filter-rule {
+  height: 1px;
+  width: 100%;
+  background: rgba(17, 17, 26, 0.14);
+  margin: 4px 0 14px;
+}
 .photo-filter-bar {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 10px;
-  margin-bottom: 20px;
-  padding: 5px 0;
   overflow: visible;
 }
 .photo-filter-group {
@@ -2764,15 +2758,77 @@ body:not(.edit-mode) .hidden-nav {
   font-weight: 800;
   color: #9ca3af;
   letter-spacing: 0.01em;
-  margin-left: 2px;
   white-space: nowrap;
 }
-.photo-filter-sep {
-  width: 1px;
-  align-self: stretch;
-  min-height: 24px;
-  background: rgba(17, 17, 26, 0.22);
+
+/* הכפתורים הסגורים */
+.photo-filter-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 15px;
+  border: 1px solid var(--line, rgba(17,17,26,0.10));
+  border-radius: 999px;
+  background: #fff;
+  color: #374151;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.18s ease, color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+}
+.photo-filter-trigger:hover {
+  transform: translateY(-1px);
+  border-color: var(--acc, #e11d48);
+  color: var(--acc, #e11d48);
+  box-shadow: var(--shadow-sm);
+}
+.photo-filter-trigger.has-value {
+  border-color: var(--acc, #e11d48);
+  color: var(--acc, #e11d48);
+}
+.photo-filter-trigger-value {
+  background: var(--acc, #e11d48);
+  color: #fff;
+  border-radius: 999px;
+  padding: 2px 9px;
+  font-size: 11px;
+  font-weight: 800;
+}
+.photo-filter-caret { font-size: 9px; opacity: 0.55; }
+.photo-filter-clear {
+  border: none;
+  background: none;
+  color: #9ca3af;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 6px 4px;
+}
+.photo-filter-clear:hover { color: var(--acc, #e11d48); }
+
+/* המצב הפתוח, שמחליף את שלושת הכפתורים */
+.photo-filter-back {
+  width: 28px;
+  height: 28px;
   flex-shrink: 0;
+  border: 1px solid var(--line, rgba(17,17,26,0.10));
+  border-radius: 50%;
+  background: #fff;
+  color: #6b7280;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+}
+.photo-filter-back:hover {
+  background: var(--acc, #e11d48);
+  border-color: var(--acc, #e11d48);
+  color: #fff;
 }
 .photo-tab-btn {
   padding: 7px 14px;
@@ -2800,15 +2856,13 @@ body:not(.edit-mode) .hidden-nav {
 }
 .photo-tab-btn.active:hover { color: #fff; }
 @media (max-width: 768px) {
-  /* בטלפון: שלוש שורות, שורה לכל קבוצה, בגודל מוקטן.
-     nowrap שומר כל קבוצה על שורה אחת, וגלילה אופקית היא רשת ביטחון
-     למסכים צרים במיוחד כדי שאף צ'יפ לא ייחתך. */
-  .photo-filter-bar {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 5px;
-    margin-bottom: 14px;
-  }
+  /* בטלפון הכל נשאר בשורה אחת ומתכווץ. במצב הפתוח האפשרויות לא
+     נשברות לשורה שנייה, וגלילה אופקית היא רשת ביטחון למסך צר במיוחד. */
+  .photo-filter-section { margin-bottom: 12px; }
+  .photo-filter-rule { margin: 2px 0 10px; }
+  .photo-filter-bar { gap: 6px; flex-wrap: nowrap; }
+  .photo-filter-trigger { padding: 6px 11px; font-size: 11px; gap: 5px; flex-shrink: 0; }
+  .photo-filter-trigger-value { font-size: 10px; padding: 1px 7px; }
   .photo-filter-group {
     flex-wrap: nowrap;
     overflow-x: auto;
@@ -2819,13 +2873,8 @@ body:not(.edit-mode) .hidden-nav {
   }
   .photo-filter-group::-webkit-scrollbar { display: none; }
   .photo-tab-btn { padding: 5px 9px; font-size: 10px; flex-shrink: 0; }
-  .photo-filter-label { font-size: 9px; flex-shrink: 0; margin-left: 1px; }
-  .photo-filter-sep {
-    width: 100%;
-    min-height: 0;
-    height: 1px;
-    align-self: auto;
-  }
+  .photo-filter-label { font-size: 9px; flex-shrink: 0; }
+  .photo-filter-back { width: 24px; height: 24px; font-size: 11px; }
 }
 
 /* --- עמוד פריט מלא --- */

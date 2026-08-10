@@ -4961,29 +4961,87 @@ const PHOTOS_SAMPLES = [
   }
 ];
 
-// סרגל הסינון: שלוש קבוצות עצמאיות באותה שורה, מופרדות בקו.
-// המצב הפעיל נקבע מהמשתנים הגלובליים ולכן שורד בנייה מחדש של העמוד.
+// סרגל הסינון: קו מפריד ומתחתיו שלושה כפתורים — מין, גיל, מיקום.
+// לחיצה על אחד מהם פותחת את האפשרויות שלו *במקום* שלושת הכפתורים,
+// ובחירה מחזירה אותם עם הערך שנבחר מוצג על הכפתור.
+// המצב חי מחוץ ל-buildPhotosPage ולכן שורד בנייה מחדש של העמוד.
+function photoCurrentFilter(kind) {
+  if (kind === 'category') return currentPhotoCategoryFilter;
+  if (kind === 'age') return currentPhotoAgeFilter;
+  return currentPhotoRegionFilter;
+}
+
 function photoFilterBarHTML() {
-  const group = (kind, label, values, current) => `
-    <div class="photo-filter-group" data-kind="${kind}">
-      <span class="photo-filter-label">${label}</span>
-      ${values.map(v => `
-        <button type="button"
-                class="photo-tab-btn${v === current ? ' active' : ''}"
-                onclick="photoSetFilter('${kind}', '${artEsc(v)}', this)">${v}</button>
-      `).join('')}
-    </div>
-  `;
+  const open = PHOTO_FILTER_GROUPS.find(g => g.kind === photoOpenFilterGroup);
+
+  if (open) {
+    const current = photoCurrentFilter(open.kind);
+    return `
+      <div class="photo-filter-bar is-open" data-open="${open.kind}">
+        <button type="button" class="photo-filter-back" onclick="photoToggleFilterGroup(null)" title="סגור">✕</button>
+        <span class="photo-filter-label">${open.label}</span>
+        <div class="photo-filter-group" data-kind="${open.kind}">
+          ${open.values.map(v => `
+            <button type="button"
+                    class="photo-tab-btn${v === current ? ' active' : ''}"
+                    onclick="photoSetFilter('${open.kind}', '${artEsc(v)}', this)">${v}</button>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  const anySet = PHOTO_FILTER_GROUPS.some(g => photoCurrentFilter(g.kind) !== 'הכל');
   return `
-    <div class="photo-category-tabs photo-filter-bar">
-      ${group('category', 'קטגוריה', PHOTO_CATEGORIES, currentPhotoCategoryFilter)}
-      <span class="photo-filter-sep" aria-hidden="true"></span>
-      ${group('age', 'טווח גיל', PHOTO_AGE_RANGES, currentPhotoAgeFilter)}
-      <span class="photo-filter-sep" aria-hidden="true"></span>
-      ${group('region', 'מיקום', PHOTO_REGIONS, currentPhotoRegionFilter)}
+    <div class="photo-filter-bar">
+      ${PHOTO_FILTER_GROUPS.map(g => {
+        const cur = photoCurrentFilter(g.kind);
+        const isSet = cur !== 'הכל';
+        return `
+          <button type="button" class="photo-filter-trigger${isSet ? ' has-value' : ''}"
+                  onclick="photoToggleFilterGroup('${g.kind}')">
+            <span class="photo-filter-trigger-label">${g.label}</span>
+            ${isSet ? `<span class="photo-filter-trigger-value">${cur}</span>` : ''}
+            <span class="photo-filter-caret" aria-hidden="true">▾</span>
+          </button>
+        `;
+      }).join('')}
+      ${anySet ? `<button type="button" class="photo-filter-clear" onclick="photoClearFilters()">נקה הכל</button>` : ''}
     </div>
   `;
 }
+
+// קו מפריד מעל הסרגל. הוא נשאר במקומו כשהסרגל מתחלף, כי מחליפים
+// רק את .photo-filter-bar ולא את כל המקטע.
+function photoFilterSectionHTML() {
+  return `
+    <div class="photo-filter-section">
+      <div class="photo-filter-rule" aria-hidden="true"></div>
+      ${photoFilterBarHTML()}
+    </div>
+  `;
+}
+
+function photoRenderFilterBar() {
+  const bar = mainContent.querySelector('.photos-page .photo-filter-bar');
+  if (bar) bar.outerHTML = photoFilterBarHTML();
+}
+
+function photoToggleFilterGroup(kind) {
+  photoOpenFilterGroup = (photoOpenFilterGroup === kind) ? null : kind;
+  photoRenderFilterBar();
+}
+window.photoToggleFilterGroup = photoToggleFilterGroup;
+
+function photoClearFilters() {
+  currentPhotoCategoryFilter = 'הכל';
+  currentPhotoAgeFilter = 'הכל';
+  currentPhotoRegionFilter = 'הכל';
+  photoOpenFilterGroup = null;
+  photoRenderFilterBar();
+  photoApplyFilters();
+}
+window.photoClearFilters = photoClearFilters;
 
 function buildPhotosPage(albums) {
   const featured = albums.filter(p => p.pinned).slice(0, 3);
@@ -5115,20 +5173,13 @@ function buildPhotosPage(albums) {
       `;
     }
 
-    // הכרטיס מציג רק תמונה וטלגרם. הכותרת, התקציר והכותב עברו לתכונת
+    // הכרטיס מציג את התמונה בלבד. הכותרת, התקציר והכותב עברו לתכונת
     // data-search כדי שהחיפוש ימשיך לעבוד גם בלי שהם מוצגים על הכרטיס,
-    // והם עדיין מופיעים בעמוד הגלריה המלא.
+    // והם — יחד עם הטלגרם, הלייק והשמירה — נמצאים בעמוד הגלריה המלא.
     const searchText = artEsc([p.title, p.summary, p.author, p.category].filter(Boolean).join(' '));
 
-    const telegramHTML = p.telegramUrl ? `
-      <a href="${p.telegramUrl}" target="_blank" onclick="event.stopPropagation();" title="${artEsc(p.telegramUrl.replace('https://t.me/', '@'))}" class="art-telegram-btn" style="display: inline-flex; align-items: center; background: #2f2f2f; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 13px; text-decoration: none; font-weight: bold; gap: 6px; border: 1px solid rgba(255,255,255,0.1);">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
-          <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
-        </svg>
-        <span>טלגרם</span>
-      </a>
-    ` : '';
-
+    // היוצא מן הכלל היחיד: גלריה שממתינה לאישור מוצגת למנהל עם סימון
+    // וכפתור אישור, אחרת אי אפשר לאשר אותה בכלל
     const pendingHTML = isPending ? `<div style="color: #d97706; font-weight: bold; font-size: 12px; display: flex; align-items: center; gap: 4px;">⚠️ ממתין לאישור מנהל</div>` : '';
     const approveHTML = (isEditMode && isPending) ? `
       <button onclick="event.stopPropagation(); photoApprove('${artEsc(p.id)}')" style="background: #10b981; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer; transition: background 0.2s;">
@@ -5137,8 +5188,8 @@ function buildPhotosPage(albums) {
     ` : '';
 
     // בלי תוכן כלל לא מרנדרים את הבלוק, אחרת נשארת רצועה לבנה ריקה
-    const textBlock = (pendingHTML || telegramHTML || approveHTML)
-      ? `<div class="art-row-text photo-card-actions">${pendingHTML}${telegramHTML}${approveHTML}</div>`
+    const textBlock = (pendingHTML || approveHTML)
+      ? `<div class="art-row-text photo-card-actions">${pendingHTML}${approveHTML}</div>`
       : '';
 
     return `
@@ -5182,7 +5233,7 @@ function buildPhotosPage(albums) {
             <input type="text" class="art-search" placeholder="🔍 חיפוש גלריות..." oninput="photoSearch(this.value)">
           </div>
           <div class="art-section-title">כל הגלריות והתמונות</div>
-          ${photoFilterBarHTML()}
+          ${photoFilterSectionHTML()}
           <div class="art-rows">${listHTML}</div>
           <div class="art-pagination" style="display:none"></div>
           <div class="art-no-results" style="display:none">לא נמצאו גלריות התואמות לחיפוש</div>
@@ -5904,29 +5955,33 @@ const PHOTO_CATEGORIES = ['הכל', 'גברים', 'נשים', 'זוגות'];
 const PHOTO_AGE_RANGES = ['הכל', '18-25', '26-35', '36-45', '46+'];
 const PHOTO_REGIONS = ['הכל', 'צפון', 'מרכז', 'דרום'];
 
+const PHOTO_FILTER_GROUPS = [
+  { kind: 'category', label: 'מין',   values: PHOTO_CATEGORIES },
+  { kind: 'age',      label: 'גיל',   values: PHOTO_AGE_RANGES },
+  { kind: 'region',   label: 'מיקום', values: PHOTO_REGIONS }
+];
+
 let currentPhotoCategoryFilter = 'הכל';
 let currentPhotoAgeFilter = 'הכל';
 let currentPhotoRegionFilter = 'הכל';
+let photoOpenFilterGroup = null;
 
-function photoSetFilter(kind, value, btn) {
+function photoSetFilter(kind, value) {
   if (kind === 'category') currentPhotoCategoryFilter = value;
   else if (kind === 'age') currentPhotoAgeFilter = value;
   else if (kind === 'region') currentPhotoRegionFilter = value;
 
-  // מסמנים רק בתוך הקבוצה שנלחצה, כדי ששלוש הקבוצות יהיו עצמאיות
-  const group = btn.closest('.photo-filter-group');
-  if (group) {
-    group.querySelectorAll('.photo-tab-btn').forEach(t => t.classList.remove('active'));
-  }
-  btn.classList.add('active');
-
+  // אחרי בחירה סוגרים וחוזרים לשלושת הכפתורים. הרינדור מחליף את
+  // הסרגל כולו, ולכן אין טעם לגעת ב-classList של הכפתור שנלחץ.
+  photoOpenFilterGroup = null;
+  photoRenderFilterBar();
   photoApplyFilters();
 }
 window.photoSetFilter = photoSetFilter;
 
 // נשמר לתאימות אחורה עם קריאות ישנות
-function photoFilterCategory(category, btn) {
-  photoSetFilter('category', category, btn);
+function photoFilterCategory(category) {
+  photoSetFilter('category', category);
 }
 window.photoFilterCategory = photoFilterCategory;
 
