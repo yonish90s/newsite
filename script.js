@@ -4968,6 +4968,7 @@ const PHOTOS_SAMPLES = [
 function photoCurrentFilter(kind) {
   if (kind === 'category') return currentPhotoCategoryFilter;
   if (kind === 'age') return currentPhotoAgeFilter;
+  if (kind === 'date') return currentPhotoDateFilter;
   return currentPhotoRegionFilter;
 }
 
@@ -5037,6 +5038,7 @@ function photoClearFilters() {
   currentPhotoCategoryFilter = 'הכל';
   currentPhotoAgeFilter = 'הכל';
   currentPhotoRegionFilter = 'הכל';
+  currentPhotoDateFilter = 'הכל';
   photoOpenFilterGroup = null;
   photoRenderFilterBar();
   photoApplyFilters();
@@ -5193,7 +5195,7 @@ function buildPhotosPage(albums) {
       : '';
 
     return `
-      <div class="art-row" data-category="${p.category || 'כללי'}" data-age="${artEsc(p.ageRange || '')}" data-region="${artEsc(p.region || '')}" data-search="${searchText}" onclick="${isPending ? '' : `photoOpenDetail('${artEsc(p.id)}')`}" style="${isPending ? 'border: 2px dashed #f59e0b; background: #fffbeb; cursor: default;' : ''}">
+      <div class="art-row" data-category="${p.category || 'כללי'}" data-age="${artEsc(p.ageRange || '')}" data-region="${artEsc(p.region || '')}" data-time="${photoAlbumTime(p) ?? ''}" data-search="${searchText}" onclick="${isPending ? '' : `photoOpenDetail('${artEsc(p.id)}')`}" style="${isPending ? 'border: 2px dashed #f59e0b; background: #fffbeb; cursor: default;' : ''}">
         ${textBlock}
         <div class="art-row-img-container" style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0;">
           <div class="art-row-img-wrap" style="--bg-img: url('${mainImg || ''}');">
@@ -5715,6 +5717,7 @@ document.getElementById('photo-save').addEventListener('click', () => {
     region: (document.getElementById('photo-region') || {}).value || '',
     categoryColor: '#10b981',
     timestamp: new Date().toLocaleDateString('he-IL'),
+    createdAt: Date.now(),
     telegramUrl: telegramInput,
     emailUrl: emailInput,
     approved: isEditMode
@@ -5953,22 +5956,52 @@ window.photoToggleSave = photoToggleSave;
 const PHOTO_CATEGORIES = ['הכל', 'גברים', 'נשים', 'זוגות'];
 const PHOTO_AGE_RANGES = ['הכל', '18-25', '26-35', '36-45', '46+'];
 const PHOTO_REGIONS = ['הכל', 'צפון', 'מרכז', 'דרום'];
+const PHOTO_DATE_RANGES = ['הכל', 'השבוע', 'החודש', 'השנה'];
 
 const PHOTO_FILTER_GROUPS = [
-  { kind: 'category', label: 'מין',   values: PHOTO_CATEGORIES },
-  { kind: 'age',      label: 'גיל',   values: PHOTO_AGE_RANGES },
-  { kind: 'region',   label: 'מיקום', values: PHOTO_REGIONS }
+  { kind: 'category', label: 'מין',    values: PHOTO_CATEGORIES },
+  { kind: 'age',      label: 'גיל',    values: PHOTO_AGE_RANGES },
+  { kind: 'region',   label: 'מיקום',  values: PHOTO_REGIONS },
+  { kind: 'date',     label: 'תאריך',  values: PHOTO_DATE_RANGES }
 ];
 
 let currentPhotoCategoryFilter = 'הכל';
 let currentPhotoAgeFilter = 'הכל';
 let currentPhotoRegionFilter = 'הכל';
+let currentPhotoDateFilter = 'הכל';
 let photoOpenFilterGroup = null;
+
+// זמן היצירה של גלריה. גלריות חדשות שומרות createdAt מספרי; לישנות
+// נופלים לפרסור של התאריך המוצג (d.m.yyyy מ-toLocaleDateString בעברית).
+function photoAlbumTime(p) {
+  if (typeof p.createdAt === 'number' && isFinite(p.createdAt)) return p.createdAt;
+  const m = String(p.timestamp || '').match(/(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})/);
+  if (m) {
+    const t = new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1])).getTime();
+    if (isFinite(t)) return t;
+  }
+  return null;
+}
+
+// גבול תחתון לפי לוח השנה, כדי שהתוויות יהיו נכונות מילולית:
+// "השבוע" מתחילת השבוע הנוכחי, "החודש" מה-1 בחודש, "השנה" מ-1 בינואר.
+function photoDateThreshold(range) {
+  const now = new Date();
+  if (range === 'השבוע') {
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    d.setDate(d.getDate() - d.getDay()); // ראשון הוא תחילת השבוע
+    return d.getTime();
+  }
+  if (range === 'החודש') return new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+  if (range === 'השנה') return new Date(now.getFullYear(), 0, 1).getTime();
+  return null;
+}
 
 function photoSetFilter(kind, value) {
   if (kind === 'category') currentPhotoCategoryFilter = value;
   else if (kind === 'age') currentPhotoAgeFilter = value;
   else if (kind === 'region') currentPhotoRegionFilter = value;
+  else if (kind === 'date') currentPhotoDateFilter = value;
 
   // אחרי בחירה סוגרים וחוזרים לשלושת הכפתורים. הרינדור מחליף את
   // הסרגל כולו, ולכן אין טעם לגעת ב-classList של הכפתור שנלחץ.
@@ -5989,6 +6022,7 @@ function photoApplyFilters() {
   const q = searchInput ? searchInput.value.toLowerCase().trim() : '';
   
   const rows = mainContent.querySelectorAll('.photos-page .art-row');
+  const dateThreshold = photoDateThreshold(currentPhotoDateFilter);
   let visible = 0;
 
   rows.forEach(r => {
@@ -5999,9 +6033,12 @@ function photoApplyFilters() {
     const categoryMatch = (currentPhotoCategoryFilter === 'הכל' || rowCategory === currentPhotoCategoryFilter);
     const ageMatch = (currentPhotoAgeFilter === 'הכל' || (r.dataset.age || '') === currentPhotoAgeFilter);
     const regionMatch = (currentPhotoRegionFilter === 'הכל' || (r.dataset.region || '') === currentPhotoRegionFilter);
+    // גלריה בלי תאריך שניתן לקרוא מוצגת רק תחת "הכל"
+    const rowTime = r.dataset.time ? Number(r.dataset.time) : null;
+    const dateMatch = (dateThreshold === null) || (rowTime !== null && rowTime >= dateThreshold);
     const textMatch = text.includes(q);
 
-    const show = categoryMatch && ageMatch && regionMatch && textMatch;
+    const show = categoryMatch && ageMatch && regionMatch && dateMatch && textMatch;
     // העימוד הוא זה שקובע display בפועל; כאן רק מסמנים מה תואם
     r.dataset.artMatch = show ? '1' : '0';
     if (show) visible++;

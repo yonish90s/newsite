@@ -1949,6 +1949,14 @@ body:not(.edit-mode) .hotspot-delete-btn {
   .art-rec-grid { grid-template-columns: 1fr; }
   .art-rec-img { height: 160px; }
 }
+/* בפלאפון תיבות סרגל הצד של עמוד התמונות מוסתרות (אתרים מומלצים,
+   הגלריות האהובות, הקהילות). כפתור העלאת התמונות נשאר — הוא דרך
+   הפעולה היחידה להעלות גלריה מהנייד. */
+@media (max-width: 768px) {
+  .photos-page .art-sidebar .art-sidebar-box { display: none !important; }
+  .photos-page .art-sidebar { gap: 0; }
+}
+
 /* בעמוד גלריה ההמלצות נשארות שלושה ריבועים קטנים גם בפלאפון */
 @media (max-width: 768px) {
   .photos-page .art-rec-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
