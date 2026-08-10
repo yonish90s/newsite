@@ -2973,3 +2973,94 @@ body:not(.edit-mode) .hidden-nav {
   .art-detail-title { font-size: 24px; }
   .articles-page .art-zoom-btn { opacity: 1; }
 }
+
+/* ============================================================
+   צפייה במסך מלא עם דפדוף (Gallery Lightbox)
+   ============================================================ */
+.art-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 1000000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.92);
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: pan-y;
+}
+.art-lb-img {
+  max-width: 92vw;
+  max-height: 88vh;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.55);
+}
+.art-lb-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 52px;
+  height: 52px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-size: 30px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.18s ease;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+.art-lb-nav:hover { background: rgba(255, 255, 255, 0.25); }
+.art-lb-prev { left: 16px; }
+.art-lb-next { right: 16px; }
+.art-lb-close {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.18s ease;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+.art-lb-close:hover { background: rgba(255, 255, 255, 0.25); }
+.art-lb-counter {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  background: rgba(0, 0, 0, 0.45);
+  padding: 5px 14px;
+  border-radius: 999px;
+  letter-spacing: 0.5px;
+  /* האתר RTL — בלי זה "1 / 4" מתהפך ל-"4 / 1" */
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+@media (max-width: 768px) {
+  .art-lb-img { max-width: 96vw; max-height: 82vh; }
+  .art-lb-nav { width: 44px; height: 44px; font-size: 26px; }
+  .art-lb-prev { left: 8px; }
+  .art-lb-next { right: 8px; }
+  .art-lb-close { top: 10px; left: 10px; width: 40px; height: 40px; }
+  .art-lb-counter { bottom: 14px; }
+}

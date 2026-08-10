@@ -4545,7 +4545,7 @@ function buildStoriesPage(stories) {
       </div>
       <div class="art-row-img-wrap" style="--bg-img: url('${s.image || ''}');">
         ${s.image ? `<img src="${s.image}" alt="">` : '<div class="art-row-img-placeholder"></div>'}
-        ${s.image ? `<button class="art-zoom-btn" onclick="event.stopPropagation();artZoomImage('${artEsc(s.image)}')" title="מסך מלא">⛶</button>` : ''}
+        ${s.image ? `<button class="art-zoom-btn" onclick="event.stopPropagation();artGalleryById('stories','${artEsc(s.id)}', this.closest('.art-row-img-wrap').querySelector('img') && this.closest('.art-row-img-wrap').querySelector('img').getAttribute('src'))" title="מסך מלא">⛶</button>` : ''}
         ${isEditMode ? `<button class="art-pin-btn" onclick="event.stopPropagation(); togglePinStory('${artEsc(s.id)}')" title="${s.pinned ? 'בטל נעץ' : 'נעץ בגריד'}" style="${s.pinned ? 'color:#ffd700;display:flex;' : ''}">${s.pinned ? '★' : '☆'}</button>` : ''}
         <button class="art-delete-btn" onclick="event.stopPropagation();storyDelete('${artEsc(s.id)}',this)">✕</button>
       </div>
@@ -4613,7 +4613,7 @@ function storyOpenDetail(id) {
       return `
         <div class="photo-story-row" style="display:flex; flex-direction:${isEven ? 'row' : 'row-reverse'}; gap:24px; align-items:center; margin-bottom:32px; flex-wrap:wrap;">
           <div style="flex:1; min-width:280px; height:240px; border-radius:12px; overflow:hidden; border:1px solid #f0f0f0; background:#fafafa; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
-            <img src="${imgUrl}" style="width:100%; height:100%; object-fit:contain; display:block;">
+            <img src="${imgUrl}" style="width:100%; height:100%; object-fit:contain; display:block; cursor:zoom-in;" onclick="artGalleryById('stories','${artEsc(id)}', this.getAttribute('src'))">
           </div>
           <div style="flex:1.5; min-width:280px; font-size:16px; line-height:1.8; color:#374151; text-align:justify;">
             ${chunkText}
@@ -4646,7 +4646,7 @@ function storyOpenDetail(id) {
         <button class="art-back-btn" onclick="storyGoBack()">← חזרה לסיפורים</button>
         ${mainImg ? `
         <div class="photo-main-img-container" style="margin-bottom: 20px; background: #fafafa; border: 1px solid #f0f0f0;">
-          <img src="${mainImg}" style="width:100%; height:100%; object-fit:contain; display:block; border-radius:12px;">
+          <img src="${mainImg}" style="width:100%; height:100%; object-fit:contain; display:block; border-radius:12px; cursor:zoom-in;" onclick="artGalleryById('stories','${artEsc(id)}', this.getAttribute('src'))">
         </div>` : ''}
         <div class="art-detail-body">
           <div class="art-meta" style="margin-bottom:12px">
@@ -5240,7 +5240,7 @@ function buildPhotosPage(albums) {
         <div class="art-row-img-container" style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0;">
           <div class="art-row-img-wrap" style="--bg-img: url('${mainImg || ''}');">
             ${mainImg ? `<img src="${mainImg}" alt="">` : '<div class="art-row-img-placeholder"></div>'}
-            ${mainImg ? `<button class="art-zoom-btn" onclick="event.stopPropagation();artZoomImage('${artEsc(mainImg)}')" title="מסך מלא">⛶</button>` : ''}
+            ${mainImg ? `<button class="art-zoom-btn" onclick="event.stopPropagation();artGalleryById('photos','${artEsc(p.id)}', this.closest('.art-row-img-wrap').querySelector('img') && this.closest('.art-row-img-wrap').querySelector('img').getAttribute('src'))" title="מסך מלא">⛶</button>` : ''}
             ${isEditMode ? `<button class="art-pin-btn" onclick="event.stopPropagation(); togglePinPhoto('${artEsc(p.id)}')" title="${p.pinned ? 'בטל נעץ' : 'נעץ בגריד'}" style="${p.pinned ? 'color:#ffd700;display:flex;' : ''}">${p.pinned ? '★' : '☆'}</button>` : ''}
             <button class="art-delete-btn" onclick="event.stopPropagation();photoDelete('${artEsc(p.id)}',this)">✕</button>
           </div>
@@ -5350,7 +5350,7 @@ function photoOpenDetail(id) {
       return `
         <div class="photo-story-row" style="display:flex; flex-direction:${isEven ? 'row' : 'row-reverse'}; gap:24px; align-items:center; margin-bottom:32px; flex-wrap:wrap;">
           <div style="flex:1; min-width:280px; height:240px; border-radius:12px; overflow:hidden; border:1px solid #f0f0f0; background:#fafafa; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
-            <img src="${imgUrl}" style="width:100%; height:100%; object-fit:contain; display:block;">
+            <img src="${imgUrl}" style="width:100%; height:100%; object-fit:contain; display:block; cursor:zoom-in;" onclick="artGalleryById('photos','${artEsc(id)}', this.getAttribute('src'))">
           </div>
           <div style="flex:1.5; min-width:280px; font-size:16px; line-height:1.8; color:#374151; text-align:justify;">
             ${pText}
@@ -5413,7 +5413,7 @@ function photoOpenDetail(id) {
 
         <!-- תמונה ראשית גדולה עם מזהה ספציפי (פרופורציונלית ולא ענקית) -->
         <div class="photo-main-img-container">
-          <img id="photo-gallery-main-img" src="${mainImg}" style="width:100%; height:100%; object-fit:contain; display:block; border-radius:12px;">
+          <img id="photo-gallery-main-img" src="${mainImg}" style="width:100%; height:100%; object-fit:contain; display:block; border-radius:12px; cursor:zoom-in;" onclick="artGalleryById('photos','${artEsc(id)}', this.getAttribute('src'))">
         </div>
 
         <!-- ריבועי דפדוף (Thumbnails) -->
@@ -6428,38 +6428,107 @@ if (btnAddCoursesPage) {
   });
 }
 
-function artZoomImage(imgUrl) {
-  let lightbox = document.getElementById('lightbox-modal');
-  if (!lightbox) {
-    lightbox = document.createElement('div');
-    lightbox.id = 'lightbox-modal';
-    lightbox.style.position = 'fixed';
-    lightbox.style.inset = '0';
-    lightbox.style.background = 'rgba(0,0,0,0.9)';
-    lightbox.style.zIndex = '999999';
-    lightbox.style.display = 'flex';
-    lightbox.style.alignItems = 'center';
-    lightbox.style.justifyContent = 'center';
-    lightbox.style.cursor = 'zoom-out';
-    
-    const img = document.createElement('img');
-    img.id = 'lightbox-img';
-    img.style.maxWidth = '95%';
-    img.style.maxHeight = '95%';
-    img.style.objectFit = 'contain';
-    img.style.borderRadius = '8px';
-    img.style.boxShadow = '0 5px 25px rgba(0,0,0,0.5)';
-    
-    lightbox.appendChild(img);
-    lightbox.onclick = () => {
-      lightbox.style.display = 'none';
-    };
-    document.body.appendChild(lightbox);
-  }
-  
+// ============================================================
+// צפייה במסך מלא עם דפדוף בין התמונות (Gallery Lightbox)
+// עובד בעמוד התמונות ובעמוד הסיפורים, במחשב ובנייד:
+// חצים, מקלדת (חצים + Esc), החלקה במגע, ומונה תמונות.
+// ============================================================
+let lbImages = [];
+let lbIndex = 0;
+
+function artBuildLightbox() {
+  if (document.getElementById('lightbox-modal')) return;
+  const lb = document.createElement('div');
+  lb.id = 'lightbox-modal';
+  lb.className = 'art-lightbox';
+  lb.innerHTML = `
+    <button class="art-lb-close" type="button" aria-label="סגור">✕</button>
+    <button class="art-lb-nav art-lb-prev" type="button" aria-label="הקודם">‹</button>
+    <img class="art-lb-img" id="lightbox-img" alt="">
+    <button class="art-lb-nav art-lb-next" type="button" aria-label="הבא">›</button>
+    <div class="art-lb-counter" id="lightbox-counter"></div>
+  `;
+  document.body.appendChild(lb);
+
+  lb.querySelector('.art-lb-close').onclick = (e) => { e.stopPropagation(); artCloseLightbox(); };
+  lb.querySelector('.art-lb-prev').onclick = (e) => { e.stopPropagation(); artLightboxStep(-1); };
+  lb.querySelector('.art-lb-next').onclick = (e) => { e.stopPropagation(); artLightboxStep(1); };
+  // לחיצה על הרקע (לא על התמונה או הכפתורים) סוגרת
+  lb.onclick = (e) => { if (e.target === lb) artCloseLightbox(); };
+
+  // החלקה בנייד: שמאלה = הבאה, ימינה = הקודמת
+  let sx = 0, sy = 0;
+  lb.addEventListener('touchstart', (e) => { const t = e.changedTouches[0]; sx = t.clientX; sy = t.clientY; }, { passive: true });
+  lb.addEventListener('touchend', (e) => {
+    const t = e.changedTouches[0];
+    const dx = t.clientX - sx, dy = t.clientY - sy;
+    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) artLightboxStep(dx < 0 ? 1 : -1);
+  }, { passive: true });
+}
+
+function artUpdateLightbox() {
   const img = document.getElementById('lightbox-img');
-  img.src = imgUrl;
-  lightbox.style.display = 'flex';
+  const counter = document.getElementById('lightbox-counter');
+  const lb = document.getElementById('lightbox-modal');
+  if (!img || !lb) return;
+  img.src = lbImages[lbIndex];
+  const multi = lbImages.length > 1;
+  counter.textContent = multi ? `${lbIndex + 1} / ${lbImages.length}` : '';
+  lb.querySelector('.art-lb-prev').style.display = multi ? '' : 'none';
+  lb.querySelector('.art-lb-next').style.display = multi ? '' : 'none';
+}
+
+function artLightboxStep(dir) {
+  if (lbImages.length < 2) return;
+  lbIndex = (lbIndex + dir + lbImages.length) % lbImages.length;
+  artUpdateLightbox();
+}
+
+function artLightboxKey(e) {
+  if (e.key === 'Escape') artCloseLightbox();
+  else if (e.key === 'ArrowRight') artLightboxStep(1);
+  else if (e.key === 'ArrowLeft') artLightboxStep(-1);
+}
+
+function artCloseLightbox() {
+  const lb = document.getElementById('lightbox-modal');
+  if (lb) lb.style.display = 'none';
+  document.removeEventListener('keydown', artLightboxKey);
+}
+
+// פותח צפייה במסך מלא עם רשימת תמונות ואינדקס התחלתי
+function artOpenGallery(images, startIndex) {
+  lbImages = (Array.isArray(images) ? images : [images]).filter(Boolean);
+  if (!lbImages.length) return;
+  lbIndex = Math.min(Math.max(startIndex || 0, 0), lbImages.length - 1);
+  artBuildLightbox();
+  artUpdateLightbox();
+  document.getElementById('lightbox-modal').style.display = 'flex';
+  document.addEventListener('keydown', artLightboxKey);
+}
+window.artOpenGallery = artOpenGallery;
+
+// פותח את הגלריה של פריט לפי המזהה שלו, מהנתונים השמורים בעמוד.
+// scope הוא 'photos' או 'stories'. currentSrc קובע באיזו תמונה להתחיל.
+function artGalleryById(scope, id, currentSrc) {
+  const container = mainContent.querySelector('.' + scope + '-page');
+  if (!container) return;
+  const key = scope === 'photos' ? 'photosJson' : 'storiesJson';
+  let items = [];
+  try { items = JSON.parse(decodeURIComponent(container.dataset[key] || '')); } catch (e) { return; }
+  const item = (items || []).find(x => x.id === id);
+  if (!item) return;
+  const imgs = (item.images && item.images.length) ? item.images.filter(Boolean) : (item.image ? [item.image] : []);
+  if (!imgs.length) return;
+  let idx = currentSrc ? imgs.indexOf(currentSrc) : 0;
+  if (idx < 0) idx = 0;
+  artOpenGallery(imgs, idx);
+}
+window.artGalleryById = artGalleryById;
+
+// תאימות אחורה: קריאה עם תמונה אחת פותחת את אותה צפייה עם תמונה יחידה
+function artZoomImage(imgUrl) {
+  artOpenGallery([imgUrl], 0);
 }
 
 window.buildCoursesPage = buildCoursesPage;
