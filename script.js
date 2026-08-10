@@ -4593,7 +4593,7 @@ function storyOpenDetail(id) {
       return `
         <div class="photo-story-row" style="display:flex; flex-direction:${isEven ? 'row' : 'row-reverse'}; gap:24px; align-items:center; margin-bottom:32px; flex-wrap:wrap;">
           <div style="flex:1; min-width:280px; height:240px; border-radius:12px; overflow:hidden; border:1px solid #f0f0f0; background:#fafafa; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
-            <img src="${imgUrl}" style="width:100%; height:100%; object-fit:cover; display:block;">
+            <img src="${imgUrl}" style="width:100%; height:100%; object-fit:contain; display:block;">
           </div>
           <div style="flex:1.5; min-width:280px; font-size:16px; line-height:1.8; color:#374151; text-align:justify;">
             ${chunkText}
@@ -4625,8 +4625,8 @@ function storyOpenDetail(id) {
       <div class="art-detail-inner">
         <button class="art-back-btn" onclick="storyGoBack()">← חזרה לסיפורים</button>
         ${mainImg ? `
-        <div class="photo-main-img-container" style="margin-bottom: 20px;">
-          <img src="${mainImg}" style="width:100%; height:100%; object-fit:cover; display:block; border-radius:12px;">
+        <div class="photo-main-img-container" style="margin-bottom: 20px; background: #fafafa; border: 1px solid #f0f0f0;">
+          <img src="${mainImg}" style="width:100%; height:100%; object-fit:contain; display:block; border-radius:12px;">
         </div>` : ''}
         <div class="art-detail-body">
           <div class="art-meta" style="margin-bottom:12px">
@@ -5144,7 +5144,7 @@ function photoOpenDetail(id) {
       return `
         <div class="photo-story-row" style="display:flex; flex-direction:${isEven ? 'row' : 'row-reverse'}; gap:24px; align-items:center; margin-bottom:32px; flex-wrap:wrap;">
           <div style="flex:1; min-width:280px; height:240px; border-radius:12px; overflow:hidden; border:1px solid #f0f0f0; background:#fafafa; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
-            <img src="${imgUrl}" style="width:100%; height:100%; object-fit:cover; display:block;">
+            <img src="${imgUrl}" style="width:100%; height:100%; object-fit:contain; display:block;">
           </div>
           <div style="flex:1.5; min-width:280px; font-size:16px; line-height:1.8; color:#374151; text-align:justify;">
             ${pText}
