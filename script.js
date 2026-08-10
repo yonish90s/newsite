@@ -4039,7 +4039,7 @@ function buildArticlesPage(articles) {
           <span>${a.timestamp}</span>
         </div>
       </div>
-      <div class="art-row-img-wrap">
+      <div class="art-row-img-wrap" style="--bg-img: url('${a.image || ''}');">
         ${a.image ? `<img src="${a.image}" alt="">` : '<div class="art-row-img-placeholder"></div>'}
         ${a.image ? `<button class="art-zoom-btn" onclick="event.stopPropagation();artZoomImage('${artEsc(a.image)}')" title="מסך מלא">⛶</button>` : ''}
         ${isEditMode ? `<button class="art-pin-btn" onclick="event.stopPropagation(); togglePinArticle('${artEsc(a.id)}')" title="${a.pinned ? 'בטל נעץ' : 'נעץ בגריד'}" style="${a.pinned ? 'color:#ffd700;display:flex;' : ''}">${a.pinned ? '★' : '☆'}</button>` : ''}
@@ -4524,7 +4524,7 @@ function buildStoriesPage(stories) {
           <span>${s.timestamp}</span>
         </div>
       </div>
-      <div class="art-row-img-wrap">
+      <div class="art-row-img-wrap" style="--bg-img: url('${s.image || ''}');">
         ${s.image ? `<img src="${s.image}" alt="">` : '<div class="art-row-img-placeholder"></div>'}
         ${s.image ? `<button class="art-zoom-btn" onclick="event.stopPropagation();artZoomImage('${artEsc(s.image)}')" title="מסך מלא">⛶</button>` : ''}
         ${isEditMode ? `<button class="art-pin-btn" onclick="event.stopPropagation(); togglePinStory('${artEsc(s.id)}')" title="${s.pinned ? 'בטל נעץ' : 'נעץ בגריד'}" style="${s.pinned ? 'color:#ffd700;display:flex;' : ''}">${s.pinned ? '★' : '☆'}</button>` : ''}
@@ -5028,7 +5028,7 @@ function buildPhotosPage(albums) {
           ` : ''}
         </div>
         <div class="art-row-img-container" style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0;">
-          <div class="art-row-img-wrap">
+          <div class="art-row-img-wrap" style="--bg-img: url('${mainImg || ''}');">
             ${mainImg ? `<img src="${mainImg}" alt="">` : '<div class="art-row-img-placeholder"></div>'}
             ${mainImg ? `<button class="art-zoom-btn" onclick="event.stopPropagation();artZoomImage('${artEsc(mainImg)}')" title="מסך מלא">⛶</button>` : ''}
             ${isEditMode ? `<button class="art-pin-btn" onclick="event.stopPropagation(); togglePinPhoto('${artEsc(p.id)}')" title="${p.pinned ? 'בטל נעץ' : 'נעץ בגריד'}" style="${p.pinned ? 'color:#ffd700;display:flex;' : ''}">${p.pinned ? '★' : '☆'}</button>` : ''}
@@ -5872,7 +5872,7 @@ function buildCoursesPage(courses) {
           <span>${c.timestamp}</span>
         </div>
       </div>
-      <div class="art-row-img-wrap">
+      <div class="art-row-img-wrap" style="--bg-img: url('${c.image || ''}');">
         ${c.image ? `<img src="${c.image}" alt="">` : '<div class="art-row-img-placeholder"></div>'}
         ${c.image ? `<button class="art-zoom-btn" onclick="event.stopPropagation();artZoomImage('${artEsc(c.image)}')" title="מסך מלא">⛶</button>` : ''}
         ${isEditMode ? `<button class="art-pin-btn" onclick="event.stopPropagation(); togglePinCourse('${artEsc(c.id)}')" title="${c.pinned ? 'בטל נעץ' : 'נעץ בגריד'}" style="${c.pinned ? 'color:#ffd700;display:flex;' : ''}">${c.pinned ? '★' : '☆'}</button>` : ''}
