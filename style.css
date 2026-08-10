@@ -1971,6 +1971,151 @@ body:not(.edit-mode) .hotspot-delete-btn {
   .art-detail-content p { font-size: 15px; }
 }
 
+/* ===== גריד כרטיסים בעמודי תמונות וסיפורים: 3 בשורה במקום שורה אחת לכל פריט ===== */
+/* מבנה ה-DOM הוא טקסט ואז תמונה, ולכן column-reverse מציב את התמונה בראש הכרטיס */
+.photos-page .art-rows,
+.stories-page .art-rows {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+}
+.photos-page .art-row,
+.stories-page .art-row {
+  flex-direction: column-reverse;
+  justify-content: flex-end;
+  align-items: stretch;
+  gap: 0;
+  padding: 0;
+  border-bottom: none;
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.07);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+.photos-page .art-row:hover,
+.stories-page .art-row:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 28px rgba(0,0,0,0.14);
+}
+/* הטקסט תופס רק את הגובה שהוא צריך; העודף בשורה נבלע בתמונה
+   ולא נשאר כשטח לבן ריק בתחתית הכרטיס */
+.photos-page .art-row-text,
+.stories-page .art-row-text { flex: 0 0 auto; min-width: 0; padding: 8px 10px 9px; }
+.photos-page .art-row-text h3,
+.stories-page .art-row-text h3 {
+  font-size: 13px;
+  line-height: 1.35;
+  margin: 0 0 5px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+/* בכרטיס מוקטן התקציר רק מייצר רעש — הוא נשאר בעמוד הפריט המלא */
+.photos-page .art-row-text p,
+.stories-page .art-row-text p { display: none; }
+.photos-page .art-row-meta,
+.stories-page .art-row-meta { font-size: 11px; gap: 5px !important; row-gap: 3px !important; }
+.photos-page .art-row-meta svg,
+.stories-page .art-row-meta svg { width: 12px; height: 12px; }
+.photos-page .art-row-meta button { padding: 1px 3px !important; font-size: 11px !important; }
+.photos-page .art-telegram-btn { padding: 3px 8px !important; font-size: 11px !important; }
+.photos-page .art-row-img-container {
+  width: 100%;
+  flex-grow: 1;
+  align-items: stretch !important;
+  gap: 0 !important;
+}
+/* יחס קבוע במקום הגובה הטבעי של התמונה — כך גובה הכרטיס צפוי
+   ואחיד בכל הגריד. flex-grow נשאר כדי שהתמונה תבלע עודף גובה בשורה */
+.photos-page .art-row-img-wrap,
+.stories-page .art-row-img-wrap {
+  width: 100%;
+  flex-grow: 1;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  min-height: 0;
+  border-radius: 0;
+}
+.photos-page .photo-mini-thumb { width: 16px !important; height: 16px !important; }
+
+/* --- סרגל העימוד --- */
+.art-pagination {
+  display: none;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  margin-top: 22px;
+}
+.art-page-btn {
+  min-width: 32px;
+  height: 32px;
+  padding: 0 9px;
+  border: 1px solid var(--line, rgba(17,17,26,0.08));
+  border-radius: 9px;
+  background: #fff;
+  color: #374151;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+.art-page-btn:hover:not(:disabled) {
+  border-color: var(--acc, #111827);
+  color: var(--acc, #111827);
+  transform: translateY(-1px);
+}
+.art-page-btn.active {
+  background: var(--acc, #111827);
+  border-color: var(--acc, #111827);
+  color: #fff;
+}
+.art-page-btn:disabled { opacity: 0.4; cursor: default; }
+.art-page-gap { color: #9ca3af; padding: 0 2px; font-size: 13px; }
+.photos-page .art-row-img-wrap img,
+.stories-page .art-row-img-wrap img { border-radius: 0; }
+.photos-page .photo-mini-thumbs {
+  width: 100% !important;
+  box-sizing: border-box;
+  padding: 8px 12px 0;
+  margin-top: 0 !important;
+}
+@media (max-width: 1100px) {
+  .photos-page .art-rows,
+  .stories-page .art-rows { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 768px) {
+  .photos-page .art-rows,
+  .stories-page .art-rows { grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 0; }
+  .photos-page .art-row,
+  .stories-page .art-row { gap: 0; padding: 0; }
+  .photos-page .art-row-img-wrap,
+  .stories-page .art-row-img-wrap { width: 100%; height: auto; }
+  .photos-page .art-row-text,
+  .stories-page .art-row-text { padding: 7px 8px 8px; }
+  .photos-page .art-row-text h3,
+  .stories-page .art-row-text h3 { font-size: 12px; }
+}
+@media (max-width: 460px) {
+  .photos-page .art-rows,
+  .stories-page .art-rows { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  /* התמונות הקטנות מוגדרות inline ב-JS, ולכן צריך !important כדי לכווץ אותן */
+  .photos-page .photo-mini-thumb { width: 16px !important; height: 16px !important; }
+  .photos-page .photo-mini-thumbs { gap: 3px !important; padding: 5px 7px 0; }
+  .photos-page .art-row-img-wrap,
+  .stories-page .art-row-img-wrap { height: auto; }
+  .photos-page .art-row-text,
+  .stories-page .art-row-text { padding: 7px 9px 8px; }
+  .photos-page .art-row-text h3,
+  .stories-page .art-row-text h3 { font-size: 12px; margin-bottom: 4px; }
+}
+
 /* ===== עמוד חנות ===== */
 .shop-page { width: 100%; background: #f5f5f7; direction: rtl; box-sizing: border-box; font-family: -apple-system, 'Segoe UI', Arial, sans-serif; }
 .shop-inner { max-width: 1140px; margin: 0 auto; padding: 48px 18px 50px; box-sizing: border-box; }
@@ -2360,4 +2505,254 @@ body:not(.edit-mode) .hidden-nav {
     flex-direction: column !important;
     gap: 16px !important;
   }
+}
+
+/* ============================================================
+   שכבת רענון עיצובי — מראה מודרני לעמודי התוכן
+   (תמונות / סיפורים / כתבות / קורסים). שכבה תוספתית בלבד:
+   נטענת אחרונה ודורסת את הכללים הישנים בלי לשנות מבנה HTML.
+   ============================================================ */
+
+.articles-page {
+  --acc: #111827;
+  --acc-soft: rgba(17, 24, 39, 0.08);
+  --surface: #ffffff;
+  --line: rgba(17, 17, 26, 0.08);
+  --text: #0f1115;
+  --muted: #6b7280;
+  --r-lg: 16px;
+  --r-md: 12px;
+  --shadow-sm: 0 1px 2px rgba(16,24,40,0.04), 0 1px 3px rgba(16,24,40,0.06);
+  --shadow-md: 0 2px 4px rgba(16,24,40,0.04), 0 12px 28px -14px rgba(16,24,40,0.20);
+  --shadow-lg: 0 4px 8px rgba(16,24,40,0.05), 0 28px 52px -22px rgba(16,24,40,0.30);
+
+  background: linear-gradient(180deg, #f7f8fa 0%, #f2f3f6 100%);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, 'Helvetica Neue', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: var(--text);
+}
+.photos-page  { --acc: #e11d48; --acc-soft: rgba(225, 29, 72, 0.10); }
+.stories-page { --acc: #8b5cf6; --acc-soft: rgba(139, 92, 246, 0.12); }
+.courses-page { --acc: #2563eb; --acc-soft: rgba(37, 99, 235, 0.10); }
+
+/* --- ניצול רוחב המסך: פחות שוליים ריקים בצדדים --- */
+.articles-page .art-inner { max-width: 1560px; padding: 34px 26px 40px; }
+.articles-page .art-layout { gap: 30px; }
+@media (max-width: 1100px) {
+  .articles-page .art-inner { padding: 24px 16px 36px; }
+}
+
+/* --- כותרות מקטע: פס אקסנט קצר במקום קו שחור עבה --- */
+.articles-page .art-section-title {
+  position: relative;
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  border-bottom: none;
+  padding-bottom: 12px;
+  margin-bottom: 18px;
+}
+.articles-page .art-section-title::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 44px;
+  height: 3px;
+  border-radius: 99px;
+  background: var(--acc);
+}
+
+/* --- שדה חיפוש --- */
+.articles-page .art-search {
+  padding: 14px 20px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  font-size: 15px;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.articles-page .art-search::placeholder { color: #9ca3af; }
+.articles-page .art-search:focus {
+  border-color: var(--acc);
+  box-shadow: 0 0 0 4px var(--acc-soft);
+}
+.articles-page .art-search-wrap { margin-bottom: 22px; }
+
+/* --- גריד מומלצים בראש העמוד --- */
+.articles-page .art-featured-grid { gap: 16px; margin-bottom: 32px; }
+.articles-page .art-featured-card {
+  height: 220px;
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-md);
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.28s ease;
+}
+.articles-page .art-featured-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-lg);
+}
+.articles-page .art-featured-card img { transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1); }
+.articles-page .art-featured-card:hover img { transform: scale(1.06); }
+.articles-page .art-featured-info h3 { font-size: 15px; letter-spacing: -0.01em; }
+
+/* --- כרטיסים בגריד (תמונות / סיפורים) --- */
+.photos-page .art-row,
+.stories-page .art-row {
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.24s ease, border-color 0.24s ease;
+}
+.photos-page .art-row:hover,
+.stories-page .art-row:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+  border-color: transparent;
+}
+.photos-page .art-row-img-wrap img,
+.stories-page .art-row-img-wrap img {
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.photos-page .art-row:hover .art-row-img-wrap img,
+.stories-page .art-row:hover .art-row-img-wrap img { transform: scale(1.04); }
+.photos-page .art-row-text h3,
+.stories-page .art-row-text h3 { letter-spacing: -0.015em; line-height: 1.4; }
+.photos-page .art-row-text p,
+.stories-page .art-row-text p { color: var(--muted); font-size: 13px; }
+
+/* --- רשימת שורות בעמוד הכתבות (נשאר רשימה, רק מרווח ונקי יותר) --- */
+.articles-page:not(.photos-page):not(.stories-page) .art-rows {
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+}
+.articles-page:not(.photos-page):not(.stories-page) .art-row { border-bottom-color: var(--line); }
+.articles-page:not(.photos-page):not(.stories-page) .art-row-img-wrap { border-radius: var(--r-md); }
+
+/* --- סרגל צד --- */
+.articles-page .art-sidebar { gap: 14px; }
+.articles-page .art-sidebar-box {
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 18px;
+}
+.articles-page .art-sidebar-title {
+  position: relative;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 12px;
+  margin-bottom: 10px;
+}
+.articles-page .art-sidebar-title::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  right: 0;
+  width: 32px;
+  height: 2px;
+  border-radius: 99px;
+  background: var(--acc);
+}
+.articles-page .art-popular-item {
+  border-bottom: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 11px 8px;
+  margin: 0 -8px;
+  transition: background 0.18s ease, transform 0.18s ease;
+}
+.articles-page .art-popular-item:hover { background: var(--acc-soft); transform: translateX(-3px); }
+.articles-page .art-popular-num {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--acc);
+  opacity: 0.28;
+  min-width: 28px;
+}
+
+/* --- כפתורי פעולה --- */
+.articles-page .art-add-btn {
+  border: 1.5px dashed var(--line);
+  background: rgba(255,255,255,0.6);
+  color: var(--muted);
+  border-radius: var(--r-md);
+  font-weight: 700;
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+.articles-page .art-add-btn:hover {
+  background: var(--surface);
+  border-color: var(--acc);
+  color: var(--acc);
+}
+.articles-page .art-zoom-btn {
+  border-radius: 8px;
+  width: 28px;
+  height: 28px;
+  background: rgba(15, 17, 21, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  opacity: 0;
+  transition: opacity 0.2s ease, background 0.2s ease;
+}
+.articles-page .art-row:hover .art-zoom-btn,
+.articles-page .art-featured-card:hover .art-zoom-btn,
+.articles-page .art-zoom-btn:focus-visible { opacity: 1; }
+.articles-page .art-delete-btn,
+.articles-page .art-pin-btn { border-radius: 9px; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+
+/* --- לשוניות קטגוריה: ליטוש בלבד, בלי לגעת בצבעים שה-JS מחליף --- */
+.photo-tab-btn {
+  transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease !important;
+}
+.photo-tab-btn:hover { transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+
+/* --- עמוד פריט מלא --- */
+.art-detail.articles-page { background: #fff; }
+.art-detail-title { letter-spacing: -0.025em; font-size: 30px; line-height: 1.25; }
+.art-detail-hero { border-radius: var(--r-lg, 16px); border-color: rgba(17,17,26,0.08); }
+.art-detail-content p { font-size: 16px; line-height: 1.8; color: #374151; }
+.art-detail-link { border-radius: 12px; padding: 13px 26px; transition: transform 0.18s ease, box-shadow 0.18s ease; }
+.art-detail-link:hover { transform: translateY(-2px); box-shadow: 0 10px 24px -10px rgba(0,0,0,0.5); }
+
+/* --- מיקוד נגיש --- */
+.articles-page a:focus-visible,
+.articles-page button:focus-visible {
+  outline: 2px solid var(--acc);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* --- פס גלילה דק --- */
+.center-content { scrollbar-width: thin; scrollbar-color: rgba(17,17,26,0.22) transparent; }
+.center-content::-webkit-scrollbar { width: 10px; }
+.center-content::-webkit-scrollbar-track { background: transparent; }
+.center-content::-webkit-scrollbar-thumb {
+  background: rgba(17,17,26,0.18);
+  border-radius: 99px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+.center-content::-webkit-scrollbar-thumb:hover { background: rgba(17,17,26,0.32); background-clip: content-box; }
+
+@media (prefers-reduced-motion: reduce) {
+  .articles-page *,
+  .articles-page *::before,
+  .articles-page *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+  .articles-page .art-row:hover,
+  .articles-page .art-featured-card:hover { transform: none; }
+}
+
+@media (max-width: 768px) {
+  .articles-page .art-section-title { font-size: 17px; }
+  .articles-page .art-featured-card { height: 180px; }
+  .art-detail-title { font-size: 24px; }
+  .articles-page .art-zoom-btn { opacity: 1; }
 }

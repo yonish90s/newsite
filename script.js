@@ -983,10 +983,18 @@ function adjustImgAspectRatio(img) {
 function renderPage() {
   const currentPage = pages.find(p => p.id === activePageId); // מחפשים את העמוד ברשימה
   
-  // הגנה: אם העמוד מוסתר והמשתמש הוא לא מנהל/עורך, מפנים אותו לעמוד הראשי של הכתבות
+  // הגנה: אם העמוד מוסתר והמשתמש הוא לא מנהל/עורך, מפנים אותו לעמוד גלוי.
+  // חשוב שהיעד יהיה גלוי בעצמו — נפילה חזרה ל-pages[0] כשהוא מוסתר
+  // גרמה לרקורסיה אינסופית (Maximum call stack size exceeded).
   if (currentPage && currentPage.isHidden && !isEditMode && !isAdmin()) {
-    const articlesPage = pages.find(p => p.content && p.content.includes('articles-page') && !p.content.includes('stories-page') && !p.content.includes('photos-page') && !p.content.includes('courses-page'));
-    activePageId = articlesPage ? articlesPage.id : pages[0].id;
+    const isVisible = p => p && !p.isHidden;
+    const articlesPage = pages.find(p => isVisible(p) && p.content && p.content.includes('articles-page') && !p.content.includes('stories-page') && !p.content.includes('photos-page') && !p.content.includes('courses-page'));
+    const fallback = articlesPage || pages.find(isVisible);
+    if (!fallback || fallback.id === activePageId) {
+      mainContent.innerHTML = '';
+      return;
+    }
+    activePageId = fallback.id;
     renderPage();
     return;
   }
@@ -4551,6 +4559,7 @@ function buildStoriesPage(stories) {
           </div>
           <div class="art-section-title">כל הסיפורים</div>
           <div class="art-rows">${listHTML}</div>
+          <div class="art-pagination" style="display:none"></div>
           <div class="art-no-results" style="display:none">לא נמצאו סיפורים התואמים לחיפוש</div>
           <button class="art-add-btn" onclick="openStoryModal()" style="background:#8b5cf6">+ הוסף סיפור חדש</button>
         </div>
@@ -4678,9 +4687,14 @@ function storySearch(val) {
   rows.forEach(r => {
     const text = r.textContent.toLowerCase();
     const match = text.includes(q);
-    r.style.display = match ? '' : 'none';
+    // העימוד הוא זה שקובע display בפועל; כאן רק מסמנים מה תואם
+    r.dataset.artMatch = match ? '1' : '0';
     if (match) visible++;
   });
+
+  artPageState.stories = 1;
+  artSyncPagination();
+
   const noResults = mainContent.querySelector('.stories-page .art-no-results');
   if (noResults) noResults.style.display = visible === 0 ? 'block' : 'none';
 }
@@ -4813,6 +4827,95 @@ if (btnAddCommunityPage) {
     renderPage();
   });
 }
+
+// ============================================================
+// מערכת עימוד לגרידים (Pagination)
+// ============================================================
+// הגריד מציג 4 כרטיסים בשורה ו-5 שורות = 20 פריטים בעמוד.
+// כל הפריטים נשארים ב-DOM (כדי שהחיפוש והסינון יעבדו על כולם),
+// והעימוד רק מחליט אילו מהם מוצגים.
+
+const ART_PAGE_SIZE = 20;
+const artPageState = { photos: 1, stories: 1 };
+
+function artApplyPagination(container, key) {
+  if (!container || !container.querySelector('.art-rows')) return;
+
+  const rows = Array.from(container.querySelectorAll('.art-rows > .art-row'));
+  // artMatch מסומן על ידי החיפוש והסינון; פריט בלי סימון נחשב תואם
+  const matching = rows.filter(r => r.dataset.artMatch !== '0');
+  const totalPages = Math.max(1, Math.ceil(matching.length / ART_PAGE_SIZE));
+
+  let page = artPageState[key] || 1;
+  page = Math.min(Math.max(page, 1), totalPages);
+  artPageState[key] = page;
+
+  rows.forEach(r => { r.style.display = 'none'; });
+  const start = (page - 1) * ART_PAGE_SIZE;
+  matching.slice(start, start + ART_PAGE_SIZE).forEach(r => { r.style.display = ''; });
+
+  const bar = container.querySelector('.art-pagination');
+  if (!bar) return;
+  if (totalPages <= 1) {
+    bar.innerHTML = '';
+    bar.style.display = 'none';
+    return;
+  }
+  bar.style.display = 'flex';
+
+  // חלון מספרים מצומצם כדי שהסרגל לא יתארך בלי סוף
+  const nums = [];
+  const from = Math.max(1, Math.min(page - 2, totalPages - 4));
+  const to = Math.min(totalPages, Math.max(page + 2, 5));
+  if (from > 1) nums.push(1, '…');
+  for (let i = from; i <= to; i++) nums.push(i);
+  if (to < totalPages) nums.push('…', totalPages);
+
+  let html = `<button class="art-page-btn art-page-nav" ${page === 1 ? 'disabled' : ''} onclick="artGoToPage('${key}', ${page - 1})">הקודם</button>`;
+  nums.forEach(n => {
+    if (n === '…') {
+      html += `<span class="art-page-gap">…</span>`;
+    } else {
+      html += `<button class="art-page-btn${n === page ? ' active' : ''}" onclick="artGoToPage('${key}', ${n})">${n}</button>`;
+    }
+  });
+  html += `<button class="art-page-btn art-page-nav" ${page === totalPages ? 'disabled' : ''} onclick="artGoToPage('${key}', ${page + 1})">הבא</button>`;
+  bar.innerHTML = html;
+}
+
+function artGoToPage(key, page) {
+  artPageState[key] = page;
+  artSyncPagination();
+  const container = mainContent.querySelector(key === 'photos' ? '.photos-page' : '.stories-page');
+  const anchor = container && container.querySelector('.art-section-title');
+  if (anchor) anchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+window.artGoToPage = artGoToPage;
+
+let artPagObserver = null;
+
+// כל בניית עמוד דורסת את ה-HTML מחדש ממקומות רבים בקוד, ולכן במקום
+// לקרוא לעימוד בכל אתר קריאה בנפרד מסנכרנים אותו אחרי כל שינוי ב-DOM
+function artSyncPagination() {
+  if (typeof mainContent === 'undefined' || !mainContent) return;
+  if (artPagObserver) artPagObserver.disconnect();
+  try {
+    artApplyPagination(mainContent.querySelector('.photos-page'), 'photos');
+    artApplyPagination(mainContent.querySelector('.stories-page'), 'stories');
+  } finally {
+    if (artPagObserver) artPagObserver.observe(mainContent, { childList: true, subtree: true });
+  }
+}
+window.artSyncPagination = artSyncPagination;
+
+function artInitPaginationObserver() {
+  if (artPagObserver || typeof mainContent === 'undefined' || !mainContent) return;
+  artPagObserver = new MutationObserver(() => artSyncPagination());
+  artPagObserver.observe(mainContent, { childList: true, subtree: true });
+  artSyncPagination();
+}
+
+artInitPaginationObserver();
 
 // ============================================================
 // מערכת תמונות / גלריות (Photos System)
@@ -5072,6 +5175,7 @@ function buildPhotosPage(albums) {
             <button onclick="photoFilterCategory('זוגות', this)" class="photo-tab-btn" style="padding: 8px 16px; border: 1px solid #ddd; border-radius: 20px; background: white; color: #555; font-weight: bold; cursor: pointer; font-size: 13px; transition: all 0.2s; white-space: nowrap;">זוגות</button>
           </div>
           <div class="art-rows">${listHTML}</div>
+          <div class="art-pagination" style="display:none"></div>
           <div class="art-no-results" style="display:none">לא נמצאו גלריות התואמות לחיפוש</div>
           <button class="art-add-btn" onclick="openPhotoModal()" style="background:#e11d48">+ הוסף גלריה חדשה</button>
         </div>
@@ -5804,19 +5908,24 @@ function photoApplyFilters() {
   
   const rows = mainContent.querySelectorAll('.photos-page .art-row');
   let visible = 0;
-  
+
   rows.forEach(r => {
     const rowCategory = r.dataset.category || 'כללי';
     const text = r.textContent.toLowerCase();
-    
+
     const categoryMatch = (currentPhotoCategoryFilter === 'הכל' || rowCategory === currentPhotoCategoryFilter);
     const textMatch = text.includes(q);
-    
+
     const show = categoryMatch && textMatch;
-    r.style.display = show ? '' : 'none';
+    // העימוד הוא זה שקובע display בפועל; כאן רק מסמנים מה תואם
+    r.dataset.artMatch = show ? '1' : '0';
     if (show) visible++;
   });
-  
+
+  // כל שינוי בחיפוש או בקטגוריה מחזיר לעמוד הראשון של התוצאות
+  artPageState.photos = 1;
+  artSyncPagination();
+
   const noResults = mainContent.querySelector('.photos-page .art-no-results');
   if (noResults) noResults.style.display = visible === 0 ? 'block' : 'none';
 }
@@ -7063,7 +7172,11 @@ onValue(ref(db, 'website'), (snapshot) => {
     pages = data.pages;
     changed = true;
   }
-  if (data.activePageId && activePageId !== data.activePageId) {
+  // activePageId הוא הניווט המקומי של הגולש, לא מצב גלובלי של האתר.
+  // סנכרון שלו מהשרת החזיר את המבקר לעמוד ברירת המחדל באמצע גלישה
+  // (למשל קפיצה מ"סיפורים" בחזרה ל"תמונות"). מיישרים רק אם העמוד
+  // שהגולש נמצא בו כבר לא קיים אחרי העדכון.
+  if (data.activePageId && !pages.some(p => p.id === activePageId)) {
     activePageId = data.activePageId;
     changed = true;
   }
