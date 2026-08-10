@@ -4576,7 +4576,7 @@ function buildStoriesPage(stories) {
         </div>
         <div class="art-sidebar">
           ${buildPromotedSitesBox()}
-          <div class="art-sidebar-box">
+          <div class="art-sidebar-box art-popular-box">
             <div class="art-sidebar-title">הסיפורים הנקראים ביותר</div>
             ${popularHTML}
           </div>
@@ -5175,10 +5175,38 @@ function buildPhotosPage(albums) {
       `;
     }
 
-    // הכרטיס מציג את התמונה בלבד. הכותרת, התקציר והכותב עברו לתכונת
-    // data-search כדי שהחיפוש ימשיך לעבוד גם בלי שהם מוצגים על הכרטיס,
-    // והם — יחד עם הטלגרם, הלייק והשמירה — נמצאים בעמוד הגלריה המלא.
+    // במחשב הכרטיס מציג כותרת, כותב, תאריך וכפתורי טלגרם/אימייל.
+    // בפלאפון הבלוק הזה מוסתר ב-CSS ונשארת רק התמונה.
+    // data-search מחזיק את הטקסט כדי שהחיפוש יעבוד גם כשהוא מוסתר.
     const searchText = artEsc([p.title, p.summary, p.author, p.category].filter(Boolean).join(' '));
+
+    const cardLink = (url, label, iconPath, extraPath) => `
+      <a href="${url}" target="_blank" onclick="event.stopPropagation();" class="art-telegram-btn" style="display: inline-flex; align-items: center; background: #2f2f2f; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 13px; text-decoration: none; font-weight: bold; gap: 6px; border: 1px solid rgba(255,255,255,0.1);">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+          <path d="${iconPath}"/>${extraPath || ''}
+        </svg>
+        <span>${label}</span>
+      </a>
+    `;
+
+    const cardLinksHTML = (p.telegramUrl || p.emailUrl) ? `
+      <div class="photo-card-links">
+        ${p.telegramUrl ? cardLink(p.telegramUrl, 'טלגרם', 'M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z') : ''}
+        ${p.emailUrl ? cardLink(p.emailUrl, 'אימייל', 'M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z', '<polyline points="22,6 12,13 2,6"/>') : ''}
+      </div>
+    ` : '';
+
+    const infoBlock = `
+      <div class="art-row-text photo-card-info">
+        <h3>${p.title}</h3>
+        <div class="art-row-meta">
+          <span class="photo-author-link" onclick="event.stopPropagation(); openUserProfile('${artEsc(p.authorId || '')}', '${artEsc(p.author)}')" style="cursor: pointer; color: #e11d48; text-decoration: underline; font-weight: 600;">${p.author}</span>
+          <span class="art-row-sep">|</span>
+          <span>${p.timestamp}</span>
+        </div>
+        ${cardLinksHTML}
+      </div>
+    `;
 
     // היוצא מן הכלל היחיד: גלריה שממתינה לאישור מוצגת למנהל עם סימון
     // וכפתור אישור, אחרת אי אפשר לאשר אותה בכלל
@@ -5189,10 +5217,13 @@ function buildPhotosPage(albums) {
       </button>
     ` : '';
 
-    // בלי תוכן כלל לא מרנדרים את הבלוק, אחרת נשארת רצועה לבנה ריקה
-    const textBlock = (pendingHTML || approveHTML)
+    // בלי תוכן כלל לא מרנדרים את הבלוק, אחרת נשארת רצועה לבנה ריקה.
+    // הסדר כאן הפוך לסדר שנראה על המסך, כי הכרטיס הוא column-reverse:
+    // קודם הפעולות ואז המידע ב-DOM, ועל המסך תמונה, מידע, פעולות.
+    const actionsBlock = (pendingHTML || approveHTML)
       ? `<div class="art-row-text photo-card-actions">${pendingHTML}${approveHTML}</div>`
       : '';
+    const textBlock = actionsBlock + infoBlock;
 
     return `
       <div class="art-row" data-category="${p.category || 'כללי'}" data-age="${artEsc(p.ageRange || '')}" data-region="${artEsc(p.region || '')}" data-time="${photoAlbumTime(p) ?? ''}" data-search="${searchText}" onclick="${isPending ? '' : `photoOpenDetail('${artEsc(p.id)}')`}" style="${isPending ? 'border: 2px dashed #f59e0b; background: #fffbeb; cursor: default;' : ''}">
@@ -5253,7 +5284,7 @@ function buildPhotosPage(albums) {
           ${budgetHTML}
           ${myProfileHTML}
           ${savedHTML}
-          <div class="art-sidebar-box">
+          <div class="art-sidebar-box art-popular-box">
             <div class="art-sidebar-title">חמשת הגלריות האהובות ביותר</div>
             ${popularHTML}
           </div>
@@ -7257,7 +7288,7 @@ window.deleteCommunityPost = deleteCommunityPost;
 
 function buildSocialCommunityBox() {
   return `
-    <div class="art-sidebar-box" style="text-align: right; display: flex; flex-direction: column; gap: 12px; padding: 16px; border-radius: 12px; border: 1px solid rgba(236, 72, 153, 0.15); background: rgba(236, 72, 153, 0.02); box-sizing: border-box; width: 100%;">
+    <div class="art-sidebar-box art-social-box" style="text-align: right; display: flex; flex-direction: column; gap: 12px; padding: 16px; border-radius: 12px; border: 1px solid rgba(236, 72, 153, 0.15); background: rgba(236, 72, 153, 0.02); box-sizing: border-box; width: 100%;">
       <div class="art-sidebar-title" style="margin-bottom: 8px; border-bottom: 2px solid #ec4899; padding-bottom: 6px; font-size: 14px; font-weight: 800; color: #ec4899; width: 100%; box-sizing: border-box;">
         👥 הקהילות שלנו ברשת
       </div>

@@ -1949,12 +1949,14 @@ body:not(.edit-mode) .hotspot-delete-btn {
   .art-rec-grid { grid-template-columns: 1fr; }
   .art-rec-img { height: 160px; }
 }
-/* בפלאפון תיבות סרגל הצד של עמוד התמונות מוסתרות (אתרים מומלצים,
-   הגלריות האהובות, הקהילות). כפתור העלאת התמונות נשאר — הוא דרך
-   הפעולה היחידה להעלות גלריה מהנייד. */
+/* בפלאפון מוסתרות בסרגל הצד רק "אתרים מומלצים" ותיבת המובילים,
+   בעמוד התמונות ובעמוד הסיפורים. תיבת הקהילות נשארת, וכך גם כפתור
+   העלאת התמונות — הוא הדרך היחידה להעלות גלריה מהנייד. */
 @media (max-width: 768px) {
-  .photos-page .art-sidebar .art-sidebar-box { display: none !important; }
-  .photos-page .art-sidebar { gap: 0; }
+  .photos-page .art-promoted-sites,
+  .photos-page .art-popular-box,
+  .stories-page .art-promoted-sites,
+  .stories-page .art-popular-box { display: none !important; }
 }
 
 /* בעמוד גלריה ההמלצות נשארות שלושה ריבועים קטנים גם בפלאפון */
@@ -2034,14 +2036,20 @@ body:not(.edit-mode) .hotspot-delete-btn {
 /* בכרטיס מוקטן התקציר רק מייצר רעש — הוא נשאר בעמוד הפריט המלא */
 .photos-page .art-row-text p,
 .stories-page .art-row-text p { display: none; }
-/* כרטיס תמונות מכיל את התמונה בלבד. הבלוק הזה נשאר רק עבור סימון
-   "ממתין לאישור" וכפתור האישור שרואה המנהל */
+/* בלוק "ממתין לאישור" וכפתור האישור שרואה המנהל */
 .photos-page .photo-card-actions {
   display: flex;
   flex-direction: column;
   align-items: stretch;
   gap: 6px;
   padding: 8px;
+}
+/* מידע הכרטיס — מוצג במחשב בלבד */
+.photos-page .photo-card-links {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 8px;
 }
 .photos-page .art-row-meta,
 .stories-page .art-row-meta { font-size: 11px; gap: 5px !important; row-gap: 3px !important; }
@@ -2127,6 +2135,10 @@ body:not(.edit-mode) .hotspot-delete-btn {
   .stories-page .art-row-meta { font-size: 10px; gap: 4px !important; }
   .photos-page .photo-mini-thumb { width: 13px !important; height: 13px !important; }
   .photos-page .photo-mini-thumbs { gap: 2px !important; padding: 4px 5px 0; }
+  /* בפלאפון כרטיס התמונות הוא תמונה בלבד — הכותרת, הכותב, התאריך
+     והטלגרם/אימייל מוסתרים לגמרי (ולא רק מוקטנים) כדי שלא תישאר
+     רצועה לבנה מתחת לתמונה. במחשב הם מוצגים. */
+  .photos-page .photo-card-info { display: none !important; }
 }
 @media (max-width: 460px) {
   .photos-page .art-rows,
