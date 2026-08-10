@@ -1955,12 +1955,14 @@ body:not(.edit-mode) .hotspot-delete-btn {
   .art-featured-grid .art-featured-card:last-child { display: none; }
 }
 @media (max-width: 768px) {
-  .art-inner { padding: 14px 12px 36px; }
+  .articles-page { width: 100% !important; box-sizing: border-box; }
+  .art-inner { width: 100% !important; padding: 14px 12px 36px; box-sizing: border-box; }
   .art-featured-grid { display: none; }
-  .art-layout { flex-direction: column; }
-  .art-sidebar { width: 100%; display: flex !important; flex-direction: column !important; gap: 16px !important; }
-  .art-rows { padding: 4px 14px; }
-  .art-row { gap: 12px; padding: 16px 0; }
+  .art-layout { width: 100% !important; flex-direction: column; box-sizing: border-box; }
+  .art-main { width: 100% !important; box-sizing: border-box; }
+  .art-sidebar { width: 100% !important; display: flex !important; flex-direction: column !important; gap: 16px !important; box-sizing: border-box; }
+  .art-rows { padding: 4px 14px; width: 100% !important; box-sizing: border-box; }
+  .art-row { gap: 12px; padding: 16px 0; width: 100% !important; box-sizing: border-box; }
   .art-row-img-wrap { width: 110px; height: 80px; }
   .art-row-text h3 { font-size: 15px; margin-bottom: 8px; }
   .art-row-text p { display: none; }
