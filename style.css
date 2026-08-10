@@ -2086,34 +2086,47 @@ body:not(.edit-mode) .hotspot-delete-btn {
   padding: 8px 12px 0;
   margin-top: 0 !important;
 }
-@media (max-width: 1100px) {
-  .photos-page .art-rows,
-  .stories-page .art-rows { grid-template-columns: repeat(3, 1fr); }
-}
+/* 4 בשורה נשמר בכל רוחב מסך, כולל פלאפון — רק המידות מתכווצות */
 @media (max-width: 768px) {
   .photos-page .art-rows,
-  .stories-page .art-rows { grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 0; }
+  .stories-page .art-rows { grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 0; }
   .photos-page .art-row,
-  .stories-page .art-row { gap: 0; padding: 0; }
+  .stories-page .art-row { gap: 0; padding: 0; border-radius: 10px; }
   .photos-page .art-row-img-wrap,
   .stories-page .art-row-img-wrap { width: 100%; height: auto; }
   .photos-page .art-row-text,
-  .stories-page .art-row-text { padding: 7px 8px 8px; }
+  .stories-page .art-row-text { padding: 6px 7px 7px; }
   .photos-page .art-row-text h3,
-  .stories-page .art-row-text h3 { font-size: 12px; }
+  .stories-page .art-row-text h3 { font-size: 11px; margin-bottom: 4px; }
+  .photos-page .art-row-meta,
+  .stories-page .art-row-meta { font-size: 10px; gap: 4px !important; }
+  .photos-page .photo-mini-thumb { width: 13px !important; height: 13px !important; }
+  .photos-page .photo-mini-thumbs { gap: 2px !important; padding: 4px 5px 0; }
 }
 @media (max-width: 460px) {
   .photos-page .art-rows,
-  .stories-page .art-rows { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-  /* התמונות הקטנות מוגדרות inline ב-JS, ולכן צריך !important כדי לכווץ אותן */
-  .photos-page .photo-mini-thumb { width: 16px !important; height: 16px !important; }
-  .photos-page .photo-mini-thumbs { gap: 3px !important; padding: 5px 7px 0; }
-  .photos-page .art-row-img-wrap,
-  .stories-page .art-row-img-wrap { height: auto; }
+  .stories-page .art-rows { gap: 6px; }
+  .photos-page .art-row,
+  .stories-page .art-row { border-radius: 8px; }
   .photos-page .art-row-text,
-  .stories-page .art-row-text { padding: 7px 9px 8px; }
+  .stories-page .art-row-text { padding: 5px 5px 6px; }
   .photos-page .art-row-text h3,
-  .stories-page .art-row-text h3 { font-size: 12px; margin-bottom: 4px; }
+  .stories-page .art-row-text h3 { font-size: 10px; line-height: 1.3; margin-bottom: 3px; }
+  .photos-page .art-row-meta,
+  .stories-page .art-row-meta { font-size: 9px; gap: 3px !important; }
+  .photos-page .art-row-meta svg,
+  .stories-page .art-row-meta svg { width: 10px; height: 10px; }
+  .photos-page .art-row-meta button { padding: 0 !important; font-size: 9px !important; }
+  /* בכרטיס ברוחב ~80px התצוגות המקדימות והכפתורים החיצוניים לא קריאים */
+  .photos-page .photo-mini-thumbs { display: none !important; }
+  .photos-page .art-telegram-btn { display: none !important; }
+  /* בכרטיס כזה קטן כפתור הזום מכסה את התמונה, ולחיצה על הכרטיס
+     ממילא פותחת את הגלריה */
+  .photos-page .art-zoom-btn,
+  .stories-page .art-zoom-btn { display: none !important; }
+  .art-delete-btn, .art-pin-btn { width: 22px; height: 22px; font-size: 12px; top: 4px; }
+  .art-delete-btn { left: 4px; }
+  .art-pin-btn { right: 4px; }
 }
 
 /* ===== עמוד חנות ===== */
@@ -2702,6 +2715,11 @@ body:not(.edit-mode) .hidden-nav {
 .articles-page .art-row:hover .art-zoom-btn,
 .articles-page .art-featured-card:hover .art-zoom-btn,
 .articles-page .art-zoom-btn:focus-visible { opacity: 1; }
+/* התמונה היא position:relative עם z-index:1, ולכן כפתורים ממוקמים בלי
+   z-index משלהם נצבעים מתחתיה ולא ניתנים ללחיצה. זו הסיבה שכפתור
+   המחיקה לא עבד במצב עריכה בעוד כפתור הזום (z-index:10) כן עבד. */
+.art-delete-btn,
+.art-pin-btn { z-index: 10; }
 .articles-page .art-delete-btn,
 .articles-page .art-pin-btn { border-radius: 9px; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
 
