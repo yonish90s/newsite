@@ -3064,3 +3064,18 @@ body:not(.edit-mode) .hidden-nav {
   .art-lb-close { top: 10px; left: 10px; width: 40px; height: 40px; }
   .art-lb-counter { bottom: 14px; }
 }
+
+/* בורר סוג הפרסום במודל הקהילה (שיתוף / סקר / שאלה) */
+.comm-type-btn {
+  border: 1.5px solid #e5e7eb;
+  background: #fff;
+  color: #6b7280;
+  font-family: inherit;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+}
+.comm-type-btn:hover { border-color: #ec4899; color: #ec4899; }
+.comm-type-btn.active {
+  background: #ec4899;
+  border-color: #ec4899;
+  color: #fff;
+}

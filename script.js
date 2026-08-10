@@ -479,6 +479,15 @@ async function initSite() {
     saveToStorage();
   }
 
+  // הוספת עמוד קהילה אוטומטית אם עוד לא קיים (סקרים, שאלות ותגובות)
+  if (!pages.find(p => p.content && p.content.includes('community-page'))) {
+    const communityId = 'page-community-' + Date.now();
+    const communityPage = { id: communityId, title: 'קהילה', content: `<div class="articles-page community-page" data-page-id="${communityId}"></div>` };
+    pages.push(communityPage);
+    if (!topNavPages.includes(communityPage.id)) topNavPages.push(communityPage.id);
+    saveToStorage();
+  }
+
   // הוספת עמוד קורסים אוטומטית אם עוד לא קיים
   if (!pages.find(p => p.content && p.content.includes('courses-page'))) {
     const coursePage = { id: 'page-courses-' + Date.now(), title: 'קורסים', content: buildCoursesPage(COURSES_SAMPLES) };
@@ -7143,11 +7152,44 @@ function filterCommunityPosts(val) {
 }
 window.filterCommunityPosts = filterCommunityPosts;
 
+// מציג את אפשרויות הסקר כפסי הצבעה. כל אחד יכול להצביע, וההצבעה שלו
+// מודגשת. הפס גדל מימין (RTL) לפי אחוז ההצבעות.
+function communityPollHTML(p) {
+  if (p.type !== 'poll' || !Array.isArray(p.options) || !p.options.length) return '';
+  const votes = p.votes || {};
+  const counts = p.options.map((_, i) => Object.values(votes).filter(v => v === i).length);
+  const total = counts.reduce((a, b) => a + b, 0);
+  const user = auth.currentUser;
+  const myVote = (user && votes[user.uid] !== undefined) ? votes[user.uid] : null;
+
+  return `
+    <div style="display:flex; flex-direction:column; gap:8px; margin-top:2px;">
+      ${p.options.map((opt, i) => {
+        const c = counts[i];
+        const pct = total ? Math.round((c / total) * 100) : 0;
+        const chosen = myVote === i;
+        return `
+          <button onclick="submitCommunityVote('${p.id}', ${i})" style="position:relative; overflow:hidden; text-align:right; border:1.5px solid ${chosen ? '#ec4899' : '#e5e7eb'}; background:#fff; border-radius:12px; padding:11px 14px; cursor:pointer; font-family:inherit; transition:border-color 0.2s;">
+            <span style="position:absolute; top:0; bottom:0; right:0; width:${pct}%; background:${chosen ? 'rgba(236,72,153,0.16)' : 'rgba(0,0,0,0.05)'}; z-index:0; transition:width 0.3s ease;"></span>
+            <span style="position:relative; z-index:1; display:flex; justify-content:space-between; align-items:center; gap:10px; font-size:14px; font-weight:600; color:#374151;">
+              <span>${chosen ? '✓ ' : ''}${opt}</span>
+              <span style="font-size:12px; color:#6b7280; font-weight:700; white-space:nowrap;">${pct}% · ${c}</span>
+            </span>
+          </button>
+        `;
+      }).join('')}
+      <div style="font-size:12px; color:#9ca3af; font-weight:700;">סה"כ ${total} הצבעות${myVote === null ? ' · לחץ כדי להצביע' : ' · אפשר לשנות בחירה'}</div>
+    </div>
+  `;
+}
+
+window.communityPollHTML = communityPollHTML;
+
 function renderCommunityPostsList() {
   const query = communitySearchQuery.toLowerCase().trim();
   const filtered = communityPosts.filter(p => {
-    return p.title.toLowerCase().includes(query) || 
-           p.body.toLowerCase().includes(query) || 
+    return (p.title || '').toLowerCase().includes(query) ||
+           (p.body || '').toLowerCase().includes(query) ||
            (p.author || '').toLowerCase().includes(query);
   });
 
@@ -7158,12 +7200,23 @@ function renderCommunityPostsList() {
   return filtered.map(p => {
     const formattedDate = new Date(p.timestamp).toLocaleString('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
     const commentsList = p.comments ? Object.keys(p.comments).map(k => ({ id: k, ...p.comments[k] })).sort((a,b) => a.timestamp - b.timestamp) : [];
-    
+    const isQuestion = p.type === 'question';
+    const isPoll = p.type === 'poll';
+    // תוויות לפי סוג: שאלה נענית ב"תשובות", השאר ב"תגובות"
+    const commentsLabel = isQuestion ? 'תשובות' : 'תגובות';
+    const commentPlaceholder = isQuestion ? 'כתוב תשובה...' : 'כתוב תגובה...';
+    const typeBadge = isPoll
+      ? `<span style="display:inline-block; font-size:11px; font-weight:800; color:#7c3aed; background:rgba(124,58,237,0.1); padding:3px 10px; border-radius:999px; margin-bottom:6px;">🗳️ סקר</span>`
+      : isQuestion
+      ? `<span style="display:inline-block; font-size:11px; font-weight:800; color:#2563eb; background:rgba(37,99,235,0.1); padding:3px 10px; border-radius:999px; margin-bottom:6px;">❓ שאלה</span>`
+      : '';
+
     return `
       <div class="art-sidebar-box" style="background:#fff; border:1px solid #eee; border-radius:18px; padding:20px; box-shadow:0 4px 15px rgba(0,0,0,0.02); display:flex; flex-direction:column; gap:14px; text-align:right;">
         <!-- כותרת ופרטי כותב -->
         <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px;">
           <div>
+            ${typeBadge}
             <h3 style="margin:0 0 4px 0; font-size:18px; font-weight:800; color:#111;">${p.title}</h3>
             <div style="font-size:12px; color:#6b7280; display:flex; align-items:center; gap:8px;">
               <span class="photo-author-link" onclick="event.stopPropagation(); openUserProfile('${artEsc(p.authorId || '')}', '${artEsc(p.author)}')" style="cursor:pointer; color:#ec4899; text-decoration:underline; font-weight:700;">👤 ${p.author}</span>
@@ -7176,8 +7229,11 @@ function renderCommunityPostsList() {
           ` : ''}
         </div>
 
-        <!-- תוכן הפוסט -->
-        <p style="margin:0; font-size:15px; line-height:1.7; color:#374151; white-space:pre-wrap; text-align:justify;">${p.body}</p>
+        <!-- תוכן הפוסט (מוסתר אם ריק, למשל בסקר בלי הסבר) -->
+        ${p.body ? `<p style="margin:0; font-size:15px; line-height:1.7; color:#374151; white-space:pre-wrap; text-align:justify;">${p.body}</p>` : ''}
+
+        <!-- אפשרויות הסקר -->
+        ${communityPollHTML(p)}
 
         <!-- תמונה מצורפת אם קיימת -->
         ${p.image ? `
@@ -7194,7 +7250,7 @@ function renderCommunityPostsList() {
           </button>
           <div style="font-size:13px; color:#4b5563; font-weight:bold; display:flex; align-items:center; gap:6px;">
             <span style="font-size:16px;">💬</span>
-            <span>${commentsList.length} תגובות</span>
+            <span>${commentsList.length} ${commentsLabel}</span>
           </div>
         </div>
 
@@ -7218,7 +7274,7 @@ function renderCommunityPostsList() {
 
         <!-- כתיבת תגובה חדשה -->
         <div style="display:flex; gap:8px; align-items:center;">
-          <input type="text" id="comment-input-${p.id}" placeholder="כתוב תגובה לפנטזיה..." style="flex:1; padding:8px 12px; border:1px solid #ddd; border-radius:10px; font-size:13px; outline:none;" onkeydown="if(event.key==='Enter')submitCommunityComment('${p.id}')">
+          <input type="text" id="comment-input-${p.id}" placeholder="${commentPlaceholder}" style="flex:1; padding:8px 12px; border:1px solid #ddd; border-radius:10px; font-size:13px; outline:none;" onkeydown="if(event.key==='Enter')submitCommunityComment('${p.id}')">
           <button onclick="submitCommunityComment('${p.id}')" style="background:#ec4899; color:white; border:none; padding:8px 16px; border-radius:10px; font-size:13px; font-weight:bold; cursor:pointer; transition:background 0.2s;">שלח 🚀</button>
         </div>
       </div>
@@ -7226,6 +7282,47 @@ function renderCommunityPostsList() {
   }).join('');
 }
 window.renderCommunityPostsList = renderCommunityPostsList;
+
+// סוג הפרסום שנבחר במודל: 'share' (שיתוף) / 'poll' (סקר) / 'question' (שאלה)
+let currentCommPostType = 'share';
+
+function setCommPostType(type) {
+  currentCommPostType = type;
+  ['share', 'poll', 'question'].forEach(t => {
+    const btn = document.getElementById('comm-type-' + t);
+    if (btn) btn.classList.toggle('active', t === type);
+  });
+  const bodyWrap = document.getElementById('comm-body-wrap');
+  const pollWrap = document.getElementById('comm-poll-wrap');
+  const titleLabel = document.getElementById('comm-title-label');
+  const bodyLabel = document.getElementById('comm-body-label');
+  const titleInput = document.getElementById('comm-post-title');
+  const modalTitle = document.getElementById('comm-modal-title');
+
+  if (type === 'poll') {
+    pollWrap.style.display = 'flex';
+    bodyWrap.style.display = 'flex';
+    if (titleLabel) titleLabel.textContent = 'שאלת הסקר *';
+    if (titleInput) titleInput.placeholder = 'על מה מצביעים?';
+    if (bodyLabel) bodyLabel.textContent = 'הסבר (אופציונלי)';
+    if (modalTitle) modalTitle.textContent = '🗳️ יצירת סקר חדש';
+  } else if (type === 'question') {
+    pollWrap.style.display = 'none';
+    bodyWrap.style.display = 'flex';
+    if (titleLabel) titleLabel.textContent = 'השאלה שלך *';
+    if (titleInput) titleInput.placeholder = 'מה תרצה לשאול את הקהילה?';
+    if (bodyLabel) bodyLabel.textContent = 'פירוט (אופציונלי)';
+    if (modalTitle) modalTitle.textContent = '❓ שאלה חדשה לקהילה';
+  } else {
+    pollWrap.style.display = 'none';
+    bodyWrap.style.display = 'flex';
+    if (titleLabel) titleLabel.textContent = 'כותרת *';
+    if (titleInput) titleInput.placeholder = 'מה כותרת השיתוף?';
+    if (bodyLabel) bodyLabel.textContent = 'תוכן *';
+    if (modalTitle) modalTitle.textContent = '✍️ שיתוף חדש בקהילה';
+  }
+}
+window.setCommPostType = setCommPostType;
 
 function openNewPostModal() {
   const user = auth.currentUser;
@@ -7235,10 +7332,12 @@ function openNewPostModal() {
   }
   document.getElementById('comm-post-title').value = '';
   document.getElementById('comm-post-body').value = '';
+  document.querySelectorAll('#comm-poll-wrap .comm-poll-opt').forEach(inp => inp.value = '');
   const preview = document.getElementById('comm-post-img-preview');
   if (preview) { preview.style.display = 'none'; preview.src = ''; }
   currentCommPostImgData = '';
   document.getElementById('comm-post-img-pick').textContent = '📷 לחץ לבחירת תמונה';
+  setCommPostType('share');
   document.getElementById('community-post-modal').style.display = 'flex';
 }
 window.openNewPostModal = openNewPostModal;
@@ -7269,10 +7368,27 @@ async function submitCommunityPost() {
 
   const title = document.getElementById('comm-post-title').value.trim();
   const body = document.getElementById('comm-post-body').value.trim();
+  const type = currentCommPostType || 'share';
 
-  if (!title || !body) {
-    alert("חובה להזין כותרת ותוכן לפוסט!");
+  if (!title) {
+    alert("חובה להזין כותרת!");
     return;
+  }
+  // בשיתוף רגיל התוכן חובה; בסקר ובשאלה הוא אופציונלי
+  if (type === 'share' && !body) {
+    alert("חובה להזין תוכן לשיתוף!");
+    return;
+  }
+
+  let pollOptions = null;
+  if (type === 'poll') {
+    pollOptions = Array.from(document.querySelectorAll('#comm-poll-wrap .comm-poll-opt'))
+      .map(inp => inp.value.trim())
+      .filter(Boolean);
+    if (pollOptions.length < 2) {
+      alert("לסקר צריך לפחות שתי אפשרויות!");
+      return;
+    }
   }
 
   // שליפת פרופיל מקומי לכינוי עדכני
@@ -7282,6 +7398,7 @@ async function submitCommunityPost() {
   const authorName = localProfile.nickname || user.displayName || user.email.split('@')[0];
 
   const postData = {
+    type,
     title,
     body,
     author: authorName,
@@ -7290,12 +7407,14 @@ async function submitCommunityPost() {
     timestamp: Date.now(),
     likes: 0
   };
+  if (pollOptions) postData.options = pollOptions;
 
   try {
     const newPostRef = push(ref(db, 'website/community_posts'));
     await set(newPostRef, postData);
     document.getElementById('community-post-modal').style.display = 'none';
-    alert("השיתוף שלך פורסם בקהילה בהצלחה! 🚀");
+    const msg = type === 'poll' ? "הסקר פורסם בקהילה! 🗳️" : type === 'question' ? "השאלה פורסמה בקהילה! ❓" : "השיתוף שלך פורסם בקהילה בהצלחה! 🚀";
+    alert(msg);
   } catch(e) {
     console.error(e);
     alert("שגיאה בפרסום הפוסט.");
@@ -7314,6 +7433,22 @@ async function toggleCommunityLike(postId) {
   } catch(e) { console.error(e); }
 }
 window.toggleCommunityLike = toggleCommunityLike;
+
+// הצבעה בסקר. כל משתמש מחובר מצביע פעם אחת ויכול לשנות את בחירתו.
+async function submitCommunityVote(postId, optionIndex) {
+  const user = auth.currentUser;
+  if (!user) {
+    alert("עלייך להתחבר כדי להצביע בסקר! ❤️");
+    return;
+  }
+  try {
+    await set(ref(db, `website/community_posts/${postId}/votes/${user.uid}`), optionIndex);
+  } catch (e) {
+    console.error(e);
+    alert("שגיאה בשליחת ההצבעה.");
+  }
+}
+window.submitCommunityVote = submitCommunityVote;
 
 async function submitCommunityComment(postId) {
   const user = auth.currentUser;
