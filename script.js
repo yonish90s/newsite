@@ -587,6 +587,10 @@ async function initSite() {
   renderTopNav();
   renderPage();
   updateFABsVisibility();
+  
+  if (typeof window.hidePreloader === 'function') {
+    window.hidePreloader();
+  }
 }
 
 // קריאה לאתחול

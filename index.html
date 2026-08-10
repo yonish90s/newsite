@@ -165,11 +165,6 @@
         <!-- תפריט הניווט העליון המרכזי -->
         <nav class="nav-links" dir="ltr" style="display: flex; gap: 32px; align-items: center;">
           <!-- הקישורים ייווצרו על ידי script.js ללא אימוג'ים -->
-          <a href="#" id="top-nav-main">ראשי</a>
-          <a href="#" id="top-nav-shop">חנות</a>
-          <a href="#" id="top-nav-charts">גרפים</a>
-          <a href="#" id="top-nav-forum">פורום</a>
-          <a href="#" id="top-nav-services">שירותים</a>
         </nav>
         
         <!-- כפתור אורח/מנהל -->
@@ -255,37 +250,18 @@
 </style>
 
 <script>
-  setTimeout(function() {
+  function hidePreloader() {
     const preloader = document.getElementById('website-preloader');
     if (preloader) {
       preloader.style.opacity = '0';
       preloader.style.visibility = 'hidden';
       setTimeout(() => preloader.remove(), 400);
     }
-  }, 3500);
-</script>
-<script>
-  // Hide preloader after 3.5 seconds
-  window.addEventListener('load', () => {
-    setTimeout(() => {
-      const preloader = document.getElementById('website-preloader');
-      if (preloader) {
-        preloader.style.opacity = '0';
-        preloader.style.visibility = 'hidden';
-        setTimeout(() => preloader.remove(), 400);
-      }
-    }, 3500);
-  });
+  }
+  window.hidePreloader = hidePreloader;
 
-  // Safety timeout in case window load event is delayed
-  setTimeout(() => {
-    const preloader = document.getElementById('website-preloader');
-    if (preloader) {
-      preloader.style.opacity = '0';
-      preloader.style.visibility = 'hidden';
-      setTimeout(() => preloader.remove(), 400);
-    }
-  }, 5000);
+  // גיבוי בטיחותי למקרה של עיכוב בטעינת האתר
+  setTimeout(hidePreloader, 4500);
 
   if (localStorage.getItem('theme') === 'dark') {
     document.body.classList.add('dark-theme');
