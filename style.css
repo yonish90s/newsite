@@ -2018,6 +2018,19 @@ body:not(.edit-mode) .hotspot-delete-btn {
 /* בכרטיס מוקטן התקציר רק מייצר רעש — הוא נשאר בעמוד הפריט המלא */
 .photos-page .art-row-text p,
 .stories-page .art-row-text p { display: none; }
+/* כרטיס תמונות מכיל רק תמונה וטלגרם */
+.photos-page .photo-card-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  padding: 8px;
+}
+.photos-page .photo-card-actions .art-telegram-btn {
+  justify-content: center;
+  width: 100%;
+  box-sizing: border-box;
+}
 .photos-page .art-row-meta,
 .stories-page .art-row-meta { font-size: 11px; gap: 5px !important; row-gap: 3px !important; }
 .photos-page .art-row-meta svg,
@@ -2117,9 +2130,16 @@ body:not(.edit-mode) .hotspot-delete-btn {
   .photos-page .art-row-meta svg,
   .stories-page .art-row-meta svg { width: 10px; height: 10px; }
   .photos-page .art-row-meta button { padding: 0 !important; font-size: 9px !important; }
-  /* בכרטיס ברוחב ~80px התצוגות המקדימות והכפתורים החיצוניים לא קריאים */
+  /* בכרטיס ברוחב ~80px התצוגות המקדימות לא קריאות. הטלגרם כן נשאר —
+     הוא אחד משני הדברים שהכרטיס אמור להציג */
   .photos-page .photo-mini-thumbs { display: none !important; }
-  .photos-page .art-telegram-btn { display: none !important; }
+  .photos-page .photo-card-actions { padding: 5px; gap: 4px; }
+  .photos-page .photo-card-actions .art-telegram-btn {
+    padding: 4px 6px !important;
+    font-size: 10px !important;
+    gap: 3px !important;
+  }
+  .photos-page .photo-card-actions .art-telegram-btn svg { width: 10px; height: 10px; }
   /* בכרטיס כזה קטן כפתור הזום מכסה את התמונה, ולחיצה על הכרטיס
      ממילא פותחת את הגלריה */
   .photos-page .art-zoom-btn,
@@ -2780,11 +2800,26 @@ body:not(.edit-mode) .hidden-nav {
 }
 .photo-tab-btn.active:hover { color: #fff; }
 @media (max-width: 768px) {
-  .photo-filter-bar { gap: 8px; }
-  .photo-filter-group { gap: 5px; }
-  .photo-tab-btn { padding: 6px 11px; font-size: 12px; }
-  .photo-filter-label { font-size: 10px; }
-  /* בטלפון הקבוצות נערמות, ולכן קו אופקי מפריד טוב יותר מאנכי */
+  /* בטלפון: שלוש שורות, שורה לכל קבוצה, בגודל מוקטן.
+     nowrap שומר כל קבוצה על שורה אחת, וגלילה אופקית היא רשת ביטחון
+     למסכים צרים במיוחד כדי שאף צ'יפ לא ייחתך. */
+  .photo-filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 5px;
+    margin-bottom: 14px;
+  }
+  .photo-filter-group {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 4px;
+    padding-bottom: 1px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .photo-filter-group::-webkit-scrollbar { display: none; }
+  .photo-tab-btn { padding: 5px 9px; font-size: 10px; flex-shrink: 0; }
+  .photo-filter-label { font-size: 9px; flex-shrink: 0; margin-left: 1px; }
   .photo-filter-sep {
     width: 100%;
     min-height: 0;

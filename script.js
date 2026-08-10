@@ -5115,56 +5115,35 @@ function buildPhotosPage(albums) {
       `;
     }
 
+    // הכרטיס מציג רק תמונה וטלגרם. הכותרת, התקציר והכותב עברו לתכונת
+    // data-search כדי שהחיפוש ימשיך לעבוד גם בלי שהם מוצגים על הכרטיס,
+    // והם עדיין מופיעים בעמוד הגלריה המלא.
+    const searchText = artEsc([p.title, p.summary, p.author, p.category].filter(Boolean).join(' '));
+
+    const telegramHTML = p.telegramUrl ? `
+      <a href="${p.telegramUrl}" target="_blank" onclick="event.stopPropagation();" title="${artEsc(p.telegramUrl.replace('https://t.me/', '@'))}" class="art-telegram-btn" style="display: inline-flex; align-items: center; background: #2f2f2f; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 13px; text-decoration: none; font-weight: bold; gap: 6px; border: 1px solid rgba(255,255,255,0.1);">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+          <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+        </svg>
+        <span>טלגרם</span>
+      </a>
+    ` : '';
+
+    const pendingHTML = isPending ? `<div style="color: #d97706; font-weight: bold; font-size: 12px; display: flex; align-items: center; gap: 4px;">⚠️ ממתין לאישור מנהל</div>` : '';
+    const approveHTML = (isEditMode && isPending) ? `
+      <button onclick="event.stopPropagation(); photoApprove('${artEsc(p.id)}')" style="background: #10b981; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer; transition: background 0.2s;">
+        ✓ אשר גלריה לפרסום
+      </button>
+    ` : '';
+
+    // בלי תוכן כלל לא מרנדרים את הבלוק, אחרת נשארת רצועה לבנה ריקה
+    const textBlock = (pendingHTML || telegramHTML || approveHTML)
+      ? `<div class="art-row-text photo-card-actions">${pendingHTML}${telegramHTML}${approveHTML}</div>`
+      : '';
+
     return `
-      <div class="art-row" data-category="${p.category || 'כללי'}" data-age="${artEsc(p.ageRange || '')}" data-region="${artEsc(p.region || '')}" onclick="${isPending ? '' : `photoOpenDetail('${artEsc(p.id)}')`}" style="${isPending ? 'border: 2px dashed #f59e0b; background: #fffbeb; cursor: default;' : ''}">
-        <div class="art-row-text">
-          ${isPending ? `<div style="color: #d97706; font-weight: bold; font-size: 13px; margin-bottom: 4px; display: flex; align-items: center; gap: 4px;">⚠️ ממתין לאישור מנהל</div>` : ''}
-          <h3>${p.title}</h3>
-          <p>${p.summary}</p>
-          <div class="art-row-meta" style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-            <span class="photo-author-link" onclick="event.stopPropagation(); openUserProfile('${artEsc(p.authorId || '')}', '${artEsc(p.author)}')" style="cursor: pointer; color: #e11d48; text-decoration: underline; font-weight: 600;">${p.author}</span>
-            <span class="art-row-sep">|</span>
-            <span>${p.timestamp}</span>
-            <button onclick="event.stopPropagation(); photoToggleLike('${artEsc(p.id)}')" class="photo-like-btn" style="background: none; border: none; cursor: pointer; color: #000; display: flex; align-items: center; gap: 4px; padding: 2px 6px; border-radius: 4px; transition: background 0.2s; font-weight: bold; font-size: 13px;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="${photoIsLikedLocal(p.id) ? '#000' : 'none'}" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
-                <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
-              </svg>
-              <span>${p.likes || 0}</span>
-            </button>
-            <button onclick="event.stopPropagation(); photoToggleSave('${artEsc(p.id)}')" class="photo-save-btn" style="background: none; border: none; cursor: pointer; color: #000; display: flex; align-items: center; gap: 4px; padding: 2px 6px; border-radius: 4px; transition: background 0.2s; font-weight: bold; font-size: 13px;" title="${photoIsSavedLocal(p.id) ? 'הסר משמורים' : 'שמור גלריה'}">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="${photoIsSavedLocal(p.id) ? '#000' : 'none'}" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
-                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
-              </svg>
-              <span>${photoIsSavedLocal(p.id) ? 'שמור' : 'שמור'}</span>
-            </button>
-          </div>
-          <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;">
-            ${p.telegramUrl ? `
-              <a href="${p.telegramUrl}" target="_blank" onclick="event.stopPropagation();" title="${artEsc(p.telegramUrl.replace('https://t.me/', '@'))}" class="art-telegram-btn" style="display: inline-flex; align-items: center; background: #2f2f2f; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 13px; text-decoration: none; font-weight: bold; gap: 6px; border: 1px solid rgba(255,255,255,0.1);">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
-                  <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
-                </svg>
-                <span>טלגרם</span>
-              </a>
-            ` : ''}
-            ${p.emailUrl ? `
-              <a href="${p.emailUrl}" target="_blank" onclick="event.stopPropagation();" title="${artEsc(p.emailUrl.replace('mailto:', ''))}" class="art-telegram-btn" style="display: inline-flex; align-items: center; background: #2f2f2f; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 13px; text-decoration: none; font-weight: bold; gap: 6px; border: 1px solid rgba(255,255,255,0.1);">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
-                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                  <polyline points="22,6 12,13 2,6"/>
-                </svg>
-                <span>אימייל</span>
-              </a>
-            ` : ''}
-          </div>
-          ${isEditMode && isPending ? `
-          <div style="margin-top: 10px;">
-            <button onclick="event.stopPropagation(); photoApprove('${artEsc(p.id)}')" style="background: #10b981; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer; transition: background 0.2s;">
-              ✓ אשר גלריה לפרסום
-            </button>
-          </div>
-          ` : ''}
-        </div>
+      <div class="art-row" data-category="${p.category || 'כללי'}" data-age="${artEsc(p.ageRange || '')}" data-region="${artEsc(p.region || '')}" data-search="${searchText}" onclick="${isPending ? '' : `photoOpenDetail('${artEsc(p.id)}')`}" style="${isPending ? 'border: 2px dashed #f59e0b; background: #fffbeb; cursor: default;' : ''}">
+        ${textBlock}
         <div class="art-row-img-container" style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0;">
           <div class="art-row-img-wrap" style="--bg-img: url('${mainImg || ''}');">
             ${mainImg ? `<img src="${mainImg}" alt="">` : '<div class="art-row-img-placeholder"></div>'}
@@ -5960,7 +5939,8 @@ function photoApplyFilters() {
 
   rows.forEach(r => {
     const rowCategory = r.dataset.category || 'כללי';
-    const text = r.textContent.toLowerCase();
+    // הכרטיס מציג רק תמונה, ולכן מחפשים בתכונת data-search ולא בטקסט הגלוי
+    const text = (r.dataset.search || r.textContent).toLowerCase();
 
     const categoryMatch = (currentPhotoCategoryFilter === 'הכל' || rowCategory === currentPhotoCategoryFilter);
     const ageMatch = (currentPhotoAgeFilter === 'הכל' || (r.dataset.age || '') === currentPhotoAgeFilter);
