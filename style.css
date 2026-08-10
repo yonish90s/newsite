@@ -2051,6 +2051,29 @@ body:not(.edit-mode) .hotspot-delete-btn {
   flex-wrap: wrap;
   margin-top: 8px;
 }
+/* כפתורי הכרטיס — הבסיס עבר מ-inline לכאן כדי לתמוך במצב מושבת.
+   שני הכפתורים תמיד קיימים; המושבת מעומעם ולא לחיץ, וכך המבנה זהה
+   בכל הכרטיסים גם כשאין טלגרם או אימייל. */
+.photos-page .photo-card-links .art-telegram-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #2f2f2f;
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: bold;
+  text-decoration: none;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.photos-page .photo-card-links .art-telegram-btn.is-disabled {
+  background: #e5e7eb;
+  color: #9ca3af;
+  border-color: #e5e7eb;
+  cursor: default;
+  pointer-events: none;
+}
 .photos-page .art-row-meta,
 .stories-page .art-row-meta { font-size: 11px; gap: 5px !important; row-gap: 3px !important; }
 .photos-page .art-row-meta svg,

@@ -5180,21 +5180,30 @@ function buildPhotosPage(albums) {
     // data-search מחזיק את הטקסט כדי שהחיפוש יעבוד גם כשהוא מוסתר.
     const searchText = artEsc([p.title, p.summary, p.author, p.category].filter(Boolean).join(' '));
 
-    const cardLink = (url, label, iconPath, extraPath) => `
-      <a href="${url}" target="_blank" onclick="event.stopPropagation();" class="art-telegram-btn" style="display: inline-flex; align-items: center; background: #2f2f2f; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 13px; text-decoration: none; font-weight: bold; gap: 6px; border: 1px solid rgba(255,255,255,0.1);">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
-          <path d="${iconPath}"/>${extraPath || ''}
-        </svg>
-        <span>${label}</span>
-      </a>
-    `;
+    // המבנה זהה לכל הכרטיסים: שני הכפתורים תמיד מוצגים. כשאין קישור
+    // הכפתור מוצג מעומעם ולא לחיץ, כדי שכל הכרטיסים ייראו אותו דבר.
+    const cardLink = (url, label, iconPath, extraPath) => {
+      const svg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;"><path d="${iconPath}"/>${extraPath || ''}</svg>`;
+      if (url) {
+        return `
+          <a href="${url}" target="_blank" onclick="event.stopPropagation();" class="art-telegram-btn">
+            ${svg}<span>${label}</span>
+          </a>
+        `;
+      }
+      return `
+        <span class="art-telegram-btn is-disabled" onclick="event.stopPropagation();" aria-disabled="true">
+          ${svg}<span>${label}</span>
+        </span>
+      `;
+    };
 
-    const cardLinksHTML = (p.telegramUrl || p.emailUrl) ? `
+    const cardLinksHTML = `
       <div class="photo-card-links">
-        ${p.telegramUrl ? cardLink(p.telegramUrl, 'טלגרם', 'M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z') : ''}
-        ${p.emailUrl ? cardLink(p.emailUrl, 'אימייל', 'M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z', '<polyline points="22,6 12,13 2,6"/>') : ''}
+        ${cardLink(p.telegramUrl, 'טלגרם', 'M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z')}
+        ${cardLink(p.emailUrl, 'אימייל', 'M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z', '<polyline points="22,6 12,13 2,6"/>')}
       </div>
-    ` : '';
+    `;
 
     const infoBlock = `
       <div class="art-row-text photo-card-info">
