@@ -1949,6 +1949,14 @@ body:not(.edit-mode) .hotspot-delete-btn {
   .art-rec-grid { grid-template-columns: 1fr; }
   .art-rec-img { height: 160px; }
 }
+/* בעמוד גלריה ההמלצות נשארות שלושה ריבועים קטנים גם בפלאפון */
+@media (max-width: 768px) {
+  .photos-page .art-rec-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .photos-page .art-rec-img { height: auto; aspect-ratio: 1 / 1; }
+  .photos-page .art-rec-text { padding: 6px 7px 8px; }
+  .photos-page .art-rec-text h4 { font-size: 11px; line-height: 1.3; margin: 0 0 4px; }
+  .photos-page .art-rec-meta { font-size: 9px; }
+}
 
 /* Responsive */
 @media (max-width: 900px) {

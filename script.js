@@ -5327,18 +5327,10 @@ function photoOpenDetail(id) {
     <div class="art-detail articles-page photos-page" data-photo-id="${id}" data-photos-json="${json}">
       <div class="art-detail-inner">
         <button class="art-back-btn" onclick="photoGoBack()">← חזרה לגלריות</button>
-        
-        <!-- תמונה ראשית גדולה עם מזהה ספציפי (פרופורציונלית ולא ענקית) -->
-        <div class="photo-main-img-container">
-          <img id="photo-gallery-main-img" src="${mainImg}" style="width:100%; height:100%; object-fit:contain; display:block; border-radius:12px;">
-        </div>
 
-        <!-- ריבועי דפדוף (Thumbnails) -->
-        <div style="display:flex; justify-content:center; gap:10px; margin-bottom:24px; flex-wrap:wrap; padding:5px;">
-          ${thumbnailsHTML}
-        </div>
-
+        <!-- בעמוד גלריה המלל בא לפני התמונה -->
         <div class="art-detail-body">
+          <h1 class="art-detail-title">${a.title}</h1>
           <div class="art-meta" style="margin-bottom:12px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
             <span class="art-category-badge" style="background:${a.categoryColor||'#10b981'}">${a.category}</span>
             <span>צילום: ${a.author}</span>
@@ -5356,8 +5348,6 @@ function photoOpenDetail(id) {
               </svg>
               <span>שמור</span>
             </button>
-          </div>
-          <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;">
             ${a.telegramUrl ? `
               <a href="${a.telegramUrl}" target="_blank" title="${artEsc(a.telegramUrl.replace('https://t.me/', '@'))}" class="art-telegram-btn" style="display: inline-flex; align-items: center; background: #2f2f2f; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 13px; text-decoration: none; font-weight: bold; gap: 6px; border: 1px solid rgba(255,255,255,0.1);">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
@@ -5376,8 +5366,17 @@ function photoOpenDetail(id) {
               </a>
             ` : ''}
           </div>
-          <h1 class="art-detail-title">${a.title}</h1>
           <div class="art-detail-content">${contentHTML}</div>
+        </div>
+
+        <!-- תמונה ראשית גדולה עם מזהה ספציפי (פרופורציונלית ולא ענקית) -->
+        <div class="photo-main-img-container">
+          <img id="photo-gallery-main-img" src="${mainImg}" style="width:100%; height:100%; object-fit:contain; display:block; border-radius:12px;">
+        </div>
+
+        <!-- ריבועי דפדוף (Thumbnails) -->
+        <div style="display:flex; justify-content:center; gap:10px; margin-bottom:24px; flex-wrap:wrap; padding:5px;">
+          ${thumbnailsHTML}
         </div>
 
         <div class="art-rec-section">
