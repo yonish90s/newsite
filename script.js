@@ -341,13 +341,24 @@ function updateFABsVisibility() {
   }
 }
 
+// כמה זמן מחכים ל-Firebase לפני שמציגים את האתר מהגיבוי המקומי.
+// בלי התקרה הזו כל הרינדור תלוי בבקשת רשת אחת: כש-WebSocket של
+// Firebase נתקע (רשת חוסמת, חיבור איטי) ה-get לא נפתר ולא נכשל,
+// initSite נתקע לנצח, והגולש נשאר מול שלד ריק של האתר.
+const BOOT_FETCH_TIMEOUT_MS = 4000;
+
 // פונקציית אתחול אסינכרונית - טוענת מהמסד הנתונים של Firebase עם גיבוי מקומי ב-localforage
 async function initSite() {
   try {
     // 1. ננסה למשוך קודם כל מ-Firebase DB לעדכון בין מכשירים
     const dbRef = ref(db);
-    const snapshot = await get(child(dbRef, 'website'));
-    
+    const snapshot = await Promise.race([
+      get(child(dbRef, 'website')),
+      new Promise((_, reject) => setTimeout(
+        () => reject(new Error('Firebase boot fetch timed out')), BOOT_FETCH_TIMEOUT_MS
+      ))
+    ]);
+
     if (snapshot.exists()) {
       const data = snapshot.val();
       console.log("נטען בהצלחה מענן Firebase:", data);

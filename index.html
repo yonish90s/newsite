@@ -12,7 +12,7 @@
   <!-- ספריית localforage לשמירת כמות בלתי מוגבלת של תמונות (במקום localStorage המוגבל) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
   <!-- קישור לקובץ העיצוב החיצוני (עם פרמטר למניעת שמירה במטמון) -->
-  <link rel="stylesheet" href="./style.css?v=15">
+  <link rel="stylesheet" href="./style.css?v=16">
 </head>
 <body class="light-mode">
   
@@ -87,6 +87,14 @@
         const overlay = document.getElementById('age-gate-overlay');
         if (overlay) {
           overlay.style.setProperty('display', 'none', 'important');
+        }
+        // מסך הטעינה מוסתר כל עוד שער הגיל פתוח (הוא מכסה אותו).
+        // אם האתר עוד לא סיים להיטען כשסוגרים את השער, צריך להחזיר
+        // אותו — אחרת הגולש רואה את השלד הריק של האתר במקום טעינה.
+        if (!window.__siteReady) {
+          const pre = document.getElementById('website-preloader');
+          if (pre) pre.style.setProperty('display', 'flex', 'important');
+          if (typeof window.armPreloaderSafety === 'function') window.armPreloaderSafety();
         }
       }
       // Enable button after 2.5 seconds
@@ -250,7 +258,10 @@
 </style>
 
 <script>
+  window.__siteReady = false;
+
   function hidePreloader() {
+    window.__siteReady = true;
     const preloader = document.getElementById('website-preloader');
     if (preloader) {
       preloader.style.opacity = '0';
@@ -261,7 +272,19 @@
   window.hidePreloader = hidePreloader;
 
   // גיבוי בטיחותי למקרה של עיכוב בטעינת האתר
-  setTimeout(hidePreloader, 4500);
+  let preloaderSafetyTimer = null;
+  function armPreloaderSafety() {
+    if (preloaderSafetyTimer) return;
+    preloaderSafetyTimer = setTimeout(hidePreloader, 4500);
+  }
+  window.armPreloaderSafety = armPreloaderSafety;
+
+  // כששער הגיל פתוח לא מפעילים את הטיימר: הוא היה מוחק את מסך
+  // הטעינה עוד לפני שהגולש בכלל אישר, ואז confirmAge לא היה מוצא
+  // אותו כדי להחזיר אותו. במקרה הזה confirmAge מפעיל אותו.
+  if (sessionStorage.getItem('age_verified') === 'true') {
+    armPreloaderSafety();
+  }
 
   if (localStorage.getItem('theme') === 'dark') {
     document.body.classList.add('dark-theme');
@@ -664,6 +687,6 @@
   </div>
 </div>
 
-  <script type="module" src="./script.js?v=15"></script>
+  <script type="module" src="./script.js?v=16"></script>
 </body>
 </html>
