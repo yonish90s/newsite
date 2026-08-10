@@ -4961,6 +4961,30 @@ const PHOTOS_SAMPLES = [
   }
 ];
 
+// סרגל הסינון: שלוש קבוצות עצמאיות באותה שורה, מופרדות בקו.
+// המצב הפעיל נקבע מהמשתנים הגלובליים ולכן שורד בנייה מחדש של העמוד.
+function photoFilterBarHTML() {
+  const group = (kind, label, values, current) => `
+    <div class="photo-filter-group" data-kind="${kind}">
+      <span class="photo-filter-label">${label}</span>
+      ${values.map(v => `
+        <button type="button"
+                class="photo-tab-btn${v === current ? ' active' : ''}"
+                onclick="photoSetFilter('${kind}', '${artEsc(v)}', this)">${v}</button>
+      `).join('')}
+    </div>
+  `;
+  return `
+    <div class="photo-category-tabs photo-filter-bar">
+      ${group('category', 'קטגוריה', PHOTO_CATEGORIES, currentPhotoCategoryFilter)}
+      <span class="photo-filter-sep" aria-hidden="true"></span>
+      ${group('age', 'טווח גיל', PHOTO_AGE_RANGES, currentPhotoAgeFilter)}
+      <span class="photo-filter-sep" aria-hidden="true"></span>
+      ${group('region', 'מיקום', PHOTO_REGIONS, currentPhotoRegionFilter)}
+    </div>
+  `;
+}
+
 function buildPhotosPage(albums) {
   const featured = albums.filter(p => p.pinned).slice(0, 3);
   const popular = [...albums]
@@ -5092,7 +5116,7 @@ function buildPhotosPage(albums) {
     }
 
     return `
-      <div class="art-row" data-category="${p.category || 'כללי'}" onclick="${isPending ? '' : `photoOpenDetail('${artEsc(p.id)}')`}" style="${isPending ? 'border: 2px dashed #f59e0b; background: #fffbeb; cursor: default;' : ''}">
+      <div class="art-row" data-category="${p.category || 'כללי'}" data-age="${artEsc(p.ageRange || '')}" data-region="${artEsc(p.region || '')}" onclick="${isPending ? '' : `photoOpenDetail('${artEsc(p.id)}')`}" style="${isPending ? 'border: 2px dashed #f59e0b; background: #fffbeb; cursor: default;' : ''}">
         <div class="art-row-text">
           ${isPending ? `<div style="color: #d97706; font-weight: bold; font-size: 13px; margin-bottom: 4px; display: flex; align-items: center; gap: 4px;">⚠️ ממתין לאישור מנהל</div>` : ''}
           <h3>${p.title}</h3>
@@ -5179,12 +5203,7 @@ function buildPhotosPage(albums) {
             <input type="text" class="art-search" placeholder="🔍 חיפוש גלריות..." oninput="photoSearch(this.value)">
           </div>
           <div class="art-section-title">כל הגלריות והתמונות</div>
-          <div class="photo-category-tabs" style="display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; padding: 5px 0;">
-            <button onclick="photoFilterCategory('הכל', this)" class="photo-tab-btn active" style="padding: 8px 16px; border: none; border-radius: 20px; background: #e11d48; color: white; font-weight: bold; cursor: pointer; font-size: 13px; transition: all 0.2s; white-space: nowrap;">הכל</button>
-            <button onclick="photoFilterCategory('גברים', this)" class="photo-tab-btn" style="padding: 8px 16px; border: 1px solid #ddd; border-radius: 20px; background: white; color: #555; font-weight: bold; cursor: pointer; font-size: 13px; transition: all 0.2s; white-space: nowrap;">גברים</button>
-            <button onclick="photoFilterCategory('נשים', this)" class="photo-tab-btn" style="padding: 8px 16px; border: 1px solid #ddd; border-radius: 20px; background: white; color: #555; font-weight: bold; cursor: pointer; font-size: 13px; transition: all 0.2s; white-space: nowrap;">נשים</button>
-            <button onclick="photoFilterCategory('זוגות', this)" class="photo-tab-btn" style="padding: 8px 16px; border: 1px solid #ddd; border-radius: 20px; background: white; color: #555; font-weight: bold; cursor: pointer; font-size: 13px; transition: all 0.2s; white-space: nowrap;">זוגות</button>
-          </div>
+          ${photoFilterBarHTML()}
           <div class="art-rows">${listHTML}</div>
           <div class="art-pagination" style="display:none"></div>
           <div class="art-no-results" style="display:none">לא נמצאו גלריות התואמות לחיפוש</div>
@@ -5566,6 +5585,10 @@ function openPhotoModal() {
   document.getElementById('photo-summary').value = '';
   document.getElementById('photo-category').value = '';
   document.getElementById('photo-telegram').value = '';
+  const ageInp = document.getElementById('photo-age');
+  if (ageInp) ageInp.value = '';
+  const regionInp = document.getElementById('photo-region');
+  if (regionInp) regionInp.value = '';
   const emailInp = document.getElementById('photo-email');
   if (emailInp) emailInp.value = '';
   
@@ -5659,6 +5682,8 @@ document.getElementById('photo-save').addEventListener('click', () => {
     author: authorNickname,
     authorId: user ? user.uid : '',
     category: document.getElementById('photo-category').value.trim() || 'כללי',
+    ageRange: (document.getElementById('photo-age') || {}).value || '',
+    region: (document.getElementById('photo-region') || {}).value || '',
     categoryColor: '#10b981',
     timestamp: new Date().toLocaleDateString('he-IL'),
     telegramUrl: telegramInput,
@@ -5894,22 +5919,35 @@ function photoToggleSave(id) {
 }
 window.photoToggleSave = photoToggleSave;
 
-let currentPhotoCategoryFilter = 'הכל';
+// ערכי הסינון של עמוד התמונות. הם חיים מחוץ ל-buildPhotosPage כדי
+// שהבחירה תישמר גם כשהעמוד נבנה מחדש (מחיקה, לייק, עדכון מהענן).
+const PHOTO_CATEGORIES = ['הכל', 'גברים', 'נשים', 'זוגות'];
+const PHOTO_AGE_RANGES = ['הכל', '18-25', '26-35', '36-45', '46+'];
+const PHOTO_REGIONS = ['הכל', 'צפון', 'מרכז', 'דרום'];
 
-function photoFilterCategory(category, btn) {
-  currentPhotoCategoryFilter = category;
-  
-  const tabs = btn.parentNode.querySelectorAll('.photo-tab-btn');
-  tabs.forEach(t => {
-    t.style.background = 'white';
-    t.style.color = '#555';
-    t.style.border = '1px solid #ddd';
-  });
-  btn.style.background = '#e11d48';
-  btn.style.color = 'white';
-  btn.style.border = 'none';
-  
+let currentPhotoCategoryFilter = 'הכל';
+let currentPhotoAgeFilter = 'הכל';
+let currentPhotoRegionFilter = 'הכל';
+
+function photoSetFilter(kind, value, btn) {
+  if (kind === 'category') currentPhotoCategoryFilter = value;
+  else if (kind === 'age') currentPhotoAgeFilter = value;
+  else if (kind === 'region') currentPhotoRegionFilter = value;
+
+  // מסמנים רק בתוך הקבוצה שנלחצה, כדי ששלוש הקבוצות יהיו עצמאיות
+  const group = btn.closest('.photo-filter-group');
+  if (group) {
+    group.querySelectorAll('.photo-tab-btn').forEach(t => t.classList.remove('active'));
+  }
+  btn.classList.add('active');
+
   photoApplyFilters();
+}
+window.photoSetFilter = photoSetFilter;
+
+// נשמר לתאימות אחורה עם קריאות ישנות
+function photoFilterCategory(category, btn) {
+  photoSetFilter('category', category, btn);
 }
 window.photoFilterCategory = photoFilterCategory;
 
@@ -5925,9 +5963,11 @@ function photoApplyFilters() {
     const text = r.textContent.toLowerCase();
 
     const categoryMatch = (currentPhotoCategoryFilter === 'הכל' || rowCategory === currentPhotoCategoryFilter);
+    const ageMatch = (currentPhotoAgeFilter === 'הכל' || (r.dataset.age || '') === currentPhotoAgeFilter);
+    const regionMatch = (currentPhotoRegionFilter === 'הכל' || (r.dataset.region || '') === currentPhotoRegionFilter);
     const textMatch = text.includes(q);
 
-    const show = categoryMatch && textMatch;
+    const show = categoryMatch && ageMatch && regionMatch && textMatch;
     // העימוד הוא זה שקובע display בפועל; כאן רק מסמנים מה תואם
     r.dataset.artMatch = show ? '1' : '0';
     if (show) visible++;
