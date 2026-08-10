@@ -7049,3 +7049,59 @@ function buildSocialCommunityBox() {
 }
 window.buildSocialCommunityBox = buildSocialCommunityBox;
 
+// האזנה לשינויים בזמן אמת במסד הנתונים מכל מכשיר (למשל מהמחשב לנייד)
+onValue(ref(db, 'website'), (snapshot) => {
+  if (!snapshot.exists()) return;
+  
+  // אם המכשיר הנוכחי נמצא במצב עריכה פעיל, לא נדרוס את השינויים המקומיים שלו באמצע עבודה
+  if (isEditMode) return;
+  
+  const data = snapshot.val();
+  let changed = false;
+  
+  if (data.pages && JSON.stringify(pages) !== JSON.stringify(data.pages)) {
+    pages = data.pages;
+    changed = true;
+  }
+  if (data.activePageId && activePageId !== data.activePageId) {
+    activePageId = data.activePageId;
+    changed = true;
+  }
+  if (data.topNavPages && JSON.stringify(topNavPages) !== JSON.stringify(data.topNavPages)) {
+    topNavPages = data.topNavPages;
+    changed = true;
+  }
+  if (data.siteBackgrounds && JSON.stringify(siteBackgrounds) !== JSON.stringify(data.siteBackgrounds)) {
+    siteBackgrounds = data.siteBackgrounds;
+    applyBackgrounds();
+    changed = true;
+  }
+  if (data.hideCart !== undefined && hideCart !== data.hideCart) {
+    hideCart = data.hideCart;
+    changed = true;
+  }
+  if (data.hideChat !== undefined && hideChat !== data.hideChat) {
+    hideChat = data.hideChat;
+    changed = true;
+  }
+  if (data.deleteCart !== undefined && deleteCart !== data.deleteCart) {
+    deleteCart = data.deleteCart;
+    changed = true;
+  }
+  if (data.deleteChat !== undefined && deleteChat !== data.deleteChat) {
+    deleteChat = data.deleteChat;
+    changed = true;
+  }
+  if (data.promotedSites) {
+    PROMOTED_SITES = data.promotedSites;
+    localStorage.setItem('promoted_sites', JSON.stringify(PROMOTED_SITES));
+  }
+  
+  if (changed) {
+    renderSideMenu();
+    renderTopNav();
+    renderPage();
+    updateFABsVisibility();
+  }
+});
+
