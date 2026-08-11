@@ -12,7 +12,7 @@
   <!-- ספריית localforage לשמירת כמות בלתי מוגבלת של תמונות (במקום localStorage המוגבל) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
   <!-- קישור לקובץ העיצוב החיצוני (עם פרמטר למניעת שמירה במטמון) -->
-  <link rel="stylesheet" href="./style.css?v=29">
+  <link rel="stylesheet" href="./style.css?v=30">
 </head>
 <body class="light-mode">
   
@@ -359,7 +359,7 @@
 <!-- מודל הוספת סיפור -->
 <div id="story-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:99999; align-items:center; justify-content:center; direction:rtl;">
   <div style="background:#fff; border-radius:16px; padding:28px; width:90%; max-width:460px; max-height:85vh; overflow-y:auto; display:flex; flex-direction:column; gap:12px;">
-    <h3 style="margin:0 0 4px; font-size:18px;">הוספת סיפור חדש</h3>
+    <h3 id="story-modal-title" style="margin:0 0 4px; font-size:18px;">הוספת סיפור חדש</h3>
     <label style="font-size:13px; font-weight:600;">כותרת <span style="color:red">*</span></label>
     <input id="story-title" type="text" placeholder="כותרת הסיפור" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
     <label style="font-size:13px; font-weight:600;">תקציר</label>
@@ -725,6 +725,6 @@
   </div>
 </div>
 
-  <script type="module" src="./script.js?v=29"></script>
+  <script type="module" src="./script.js?v=30"></script>
 </body>
 </html>

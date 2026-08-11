@@ -1920,6 +1920,10 @@ body:not(.edit-mode) .hotspot-delete-btn {
 .art-pin-btn { display: none; position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.55); border: none; border-radius: 50%; width: 28px; height: 28px; color: #fff; cursor: pointer; font-size: 14px; line-height: 1; align-items: center; justify-content: center; transition: background 0.15s, transform 0.15s; }
 .art-pin-btn:hover { background: #d97706; transform: scale(1.1); }
 .edit-mode .art-pin-btn { display: flex; }
+/* כפתור עריכה — ליד כפתור המחיקה (מנהל בלבד) */
+.art-edit-btn { display: none; position: absolute; top: 8px; left: 42px; z-index: 10; background: rgba(0,0,0,0.55); border: none; border-radius: 50%; width: 28px; height: 28px; color: #fff; cursor: pointer; font-size: 14px; line-height: 1; align-items: center; justify-content: center; transition: background 0.15s, transform 0.15s; }
+.art-edit-btn:hover { background: #2563eb; transform: scale(1.1); }
+.edit-mode .art-edit-btn { display: flex; }
 
 
 /* Article detail view */

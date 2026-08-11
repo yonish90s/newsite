@@ -4684,6 +4684,7 @@ function buildStoriesPage(stories) {
         ${s.image ? `<img src="${s.image}" alt="">` : '<div class="art-row-img-placeholder"></div>'}
         ${s.image ? `<button class="art-zoom-btn" onclick="event.stopPropagation();artGalleryById('stories','${artEsc(s.id)}', this.closest('.art-row-img-wrap').querySelector('img') && this.closest('.art-row-img-wrap').querySelector('img').getAttribute('src'))" title="מסך מלא">⛶</button>` : ''}
         ${isEditMode ? `<button class="art-pin-btn" onclick="event.stopPropagation(); togglePinStory('${artEsc(s.id)}')" title="${s.pinned ? 'בטל נעץ' : 'נעץ בגריד'}" style="${s.pinned ? 'color:#ffd700;display:flex;' : ''}">${s.pinned ? '★' : '☆'}</button>` : ''}
+        ${isEditMode ? `<button class="art-edit-btn" onclick="event.stopPropagation(); openStoryEditModal('${artEsc(s.id)}')" title="ערוך סיפור">✎</button>` : ''}
         <button class="art-delete-btn" onclick="event.stopPropagation();storyDelete('${artEsc(s.id)}',this)">✕</button>
       </div>
     </div>
@@ -4841,8 +4842,16 @@ function storySearch(val) {
 let storyImgData = '';
 let storyExtraImgData = {};
 
+// מזהה הסיפור שנמצא כרגע בעריכה; null = יצירת סיפור חדש
+let storyEditingId = null;
+
 function openStoryModal() {
   if (!isEditMode) return;
+  storyEditingId = null;
+  const h = document.getElementById('story-modal-title');
+  if (h) h.textContent = 'הוספת סיפור חדש';
+  const saveBtn = document.getElementById('story-save');
+  if (saveBtn) saveBtn.textContent = 'שמור סיפור';
   document.getElementById('story-title').value = '';
   document.getElementById('story-summary').value = '';
   document.getElementById('story-body').value = '';
@@ -4865,6 +4874,57 @@ function openStoryModal() {
 
   document.getElementById('story-modal').style.display = 'flex';
 }
+
+// פותח את חלון הסיפור עם הנתונים הקיימים לעריכה (מנהל בלבד)
+function openStoryEditModal(id) {
+  if (!isEditMode) return;
+  const s = storyGetStories().find(x => x.id === id);
+  if (!s) return;
+  storyEditingId = id;
+
+  const h = document.getElementById('story-modal-title');
+  if (h) h.textContent = 'עריכת סיפור';
+  const saveBtn = document.getElementById('story-save');
+  if (saveBtn) saveBtn.textContent = 'עדכן סיפור';
+
+  document.getElementById('story-title').value = s.title || '';
+  document.getElementById('story-summary').value = s.summary || '';
+  document.getElementById('story-body').value = s.body || '';
+  document.getElementById('story-author').value = s.author || '';
+  document.getElementById('story-category').value = s.category || 'כללי';
+  document.getElementById('story-link').value = s.link || '';
+
+  // טוענים את התמונות הקיימות כך שאם לא בוחרים חדשות — הן נשמרות
+  const imgs = (s.images && s.images.length) ? s.images.filter(Boolean) : (s.image ? [s.image] : []);
+  storyImgData = imgs[0] || '';
+  const preview = document.getElementById('story-img-preview');
+  const mainPick = document.getElementById('story-img-pick');
+  if (storyImgData) {
+    preview.src = storyImgData; preview.style.display = 'block';
+    if (mainPick) mainPick.textContent = '✓ תמונה נבחרה';
+  } else {
+    preview.src = ''; preview.style.display = 'none';
+    if (mainPick) mainPick.textContent = 'לחץ לבחירת תמונה מהמחשב';
+  }
+
+  storyExtraImgData = {};
+  for (let idx = 1; idx <= 5; idx++) {
+    const extra = imgs[idx];
+    const p = document.getElementById(`story-extra-preview-${idx}`);
+    const btn = document.getElementById(`story-extra-pick-${idx}`);
+    if (extra) {
+      storyExtraImgData[idx] = extra;
+      if (p) { p.src = extra; p.style.display = 'block'; }
+      if (btn) btn.textContent = '✓';
+    } else {
+      if (p) { p.src = ''; p.style.display = 'none'; }
+      if (btn) btn.textContent = `${idx}️⃣`;
+    }
+  }
+
+  document.getElementById('story-modal').style.display = 'flex';
+}
+window.openStoryEditModal = openStoryEditModal;
 
 document.getElementById('story-img-pick').addEventListener('click', () => {
   const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
@@ -4901,33 +4961,41 @@ for (let idx = 1; idx <= 5; idx++) {
 }
 
 document.getElementById('story-cancel').addEventListener('click', () => {
+  storyEditingId = null;
   document.getElementById('story-modal').style.display = 'none';
 });
 
 document.getElementById('story-save').addEventListener('click', () => {
   const title = document.getElementById('story-title').value.trim();
   if (!title) { alert('חובה כותרת'); return; }
-  
+
   const storyImages = [storyImgData];
   for (let idx = 1; idx <= 5; idx++) {
     const extraImg = storyExtraImgData[idx];
     if (extraImg) storyImages.push(extraImg);
   }
 
-  const stories = storyGetStories();
-  stories.unshift({
-    id: 's' + Date.now(),
+  const data = {
     title,
     summary: document.getElementById('story-summary').value.trim(),
     body: document.getElementById('story-body').value.trim(),
     author: document.getElementById('story-author').value.trim(),
     category: document.getElementById('story-category').value.trim(),
     categoryColor: '#8b5cf6',
-    timestamp: new Date().toLocaleDateString('he-IL'),
     image: storyImgData,
     images: storyImages,
     link: document.getElementById('story-link').value.trim()
-  });
+  };
+
+  const stories = storyGetStories();
+  if (storyEditingId) {
+    // עריכה: מעדכנים את הסיפור הקיים ושומרים id, תאריך ונעיצה
+    const idx = stories.findIndex(x => x.id === storyEditingId);
+    if (idx >= 0) stories[idx] = { ...stories[idx], ...data };
+    storyEditingId = null;
+  } else {
+    stories.unshift({ id: 's' + Date.now(), ...data, timestamp: new Date().toLocaleDateString('he-IL') });
+  }
   mainContent.innerHTML = buildStoriesPage(stories);
   saveCurrentPageContent();
   document.getElementById('story-modal').style.display = 'none';
