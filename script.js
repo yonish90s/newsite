@@ -4878,11 +4878,48 @@ function storySearch(val) {
   storyApplyFilters();
 }
 
-let storyImgData = '';
-let storyExtraImgData = {};
+// רשימת תמונות הסיפור לפי סדר. הראשונה (אינדקס 0) היא התמונה הראשית.
+let storyImageList = [];
 
 // מזהה הסיפור שנמצא כרגע בעריכה; null = יצירת סיפור חדש
 let storyEditingId = null;
+
+// מצייר את עורך התמונות: תצוגה מקדימה לכל תמונה עם כפתורי הזזה והסרה.
+// המיכל הוא LTR, ולכן אינדקס 0 בשמאל: ◀ מקדים (לכיוון הראשית), ▶ מאחר.
+function renderStoryImagesEditor() {
+  const box = document.getElementById('story-images-editor');
+  if (!box) return;
+  if (!storyImageList.length) {
+    box.innerHTML = '<div style="font-size:12px; color:#999; direction:rtl;">אין תמונות עדיין — הוסף תמונה למטה.</div>';
+    return;
+  }
+  const last = storyImageList.length - 1;
+  box.innerHTML = storyImageList.map((src, i) => `
+    <div style="position:relative; width:74px;">
+      <img src="${src}" style="width:74px; height:74px; object-fit:cover; border-radius:8px; border:1px solid #ddd; display:block;">
+      ${i === 0 ? '<span style="position:absolute; top:2px; left:2px; background:#8b5cf6; color:#fff; font-size:9px; font-weight:800; padding:1px 5px; border-radius:6px;">ראשית</span>' : ''}
+      <div style="display:flex; justify-content:center; gap:3px; margin-top:3px;">
+        <button type="button" onclick="storyMoveImage(${i}, -1)" title="הזז קדימה" ${i === 0 ? 'disabled' : ''} style="border:1px solid #ddd; background:#fff; border-radius:5px; width:22px; height:22px; cursor:pointer; font-size:12px;${i === 0 ? 'opacity:0.35; cursor:default;' : ''}">◀</button>
+        <button type="button" onclick="storyMoveImage(${i}, 1)" title="הזז אחורה" ${i === last ? 'disabled' : ''} style="border:1px solid #ddd; background:#fff; border-radius:5px; width:22px; height:22px; cursor:pointer; font-size:12px;${i === last ? 'opacity:0.35; cursor:default;' : ''}">▶</button>
+        <button type="button" onclick="storyRemoveImage(${i})" title="הסר" style="border:1px solid #fca5a5; color:#dc2626; background:#fff; border-radius:5px; width:22px; height:22px; cursor:pointer; font-size:12px;">✕</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function storyMoveImage(i, dir) {
+  const j = i + dir;
+  if (j < 0 || j >= storyImageList.length) return;
+  const t = storyImageList[i]; storyImageList[i] = storyImageList[j]; storyImageList[j] = t;
+  renderStoryImagesEditor();
+}
+window.storyMoveImage = storyMoveImage;
+
+function storyRemoveImage(i) {
+  storyImageList.splice(i, 1);
+  renderStoryImagesEditor();
+}
+window.storyRemoveImage = storyRemoveImage;
 
 function openStoryModal() {
   if (!isEditMode) return;
@@ -4897,20 +4934,8 @@ function openStoryModal() {
   document.getElementById('story-author').value = '';
   document.getElementById('story-category').value = 'כללי';
   document.getElementById('story-link').value = '';
-  const preview = document.getElementById('story-img-preview');
-  preview.style.display = 'none'; preview.src = '';
-  storyImgData = '';
-  document.getElementById('story-img-pick').textContent = 'לחץ לבחירת תמונה מהמחשב';
-
-  // ניקוי תמונות נוספות של הסיפור
-  storyExtraImgData = {};
-  for (let idx = 1; idx <= 5; idx++) {
-    const p = document.getElementById(`story-extra-preview-${idx}`);
-    if (p) { p.src = ''; p.style.display = 'none'; }
-    const btn = document.getElementById(`story-extra-pick-${idx}`);
-    if (btn) { btn.textContent = `${idx}️⃣`; }
-  }
-
+  storyImageList = [];
+  renderStoryImagesEditor();
   document.getElementById('story-modal').style.display = 'flex';
 }
 
@@ -4933,70 +4958,27 @@ function openStoryEditModal(id) {
   document.getElementById('story-category').value = s.category || 'כללי';
   document.getElementById('story-link').value = s.link || '';
 
-  // טוענים את התמונות הקיימות כך שאם לא בוחרים חדשות — הן נשמרות
-  const imgs = (s.images && s.images.length) ? s.images.filter(Boolean) : (s.image ? [s.image] : []);
-  storyImgData = imgs[0] || '';
-  const preview = document.getElementById('story-img-preview');
-  const mainPick = document.getElementById('story-img-pick');
-  if (storyImgData) {
-    preview.src = storyImgData; preview.style.display = 'block';
-    if (mainPick) mainPick.textContent = '✓ תמונה נבחרה';
-  } else {
-    preview.src = ''; preview.style.display = 'none';
-    if (mainPick) mainPick.textContent = 'לחץ לבחירת תמונה מהמחשב';
-  }
-
-  storyExtraImgData = {};
-  for (let idx = 1; idx <= 5; idx++) {
-    const extra = imgs[idx];
-    const p = document.getElementById(`story-extra-preview-${idx}`);
-    const btn = document.getElementById(`story-extra-pick-${idx}`);
-    if (extra) {
-      storyExtraImgData[idx] = extra;
-      if (p) { p.src = extra; p.style.display = 'block'; }
-      if (btn) btn.textContent = '✓';
-    } else {
-      if (p) { p.src = ''; p.style.display = 'none'; }
-      if (btn) btn.textContent = `${idx}️⃣`;
-    }
-  }
+  // טוענים את התמונות הקיימות לפי הסדר, כדי שאפשר יהיה לשנות אותו
+  storyImageList = (s.images && s.images.length) ? s.images.filter(Boolean) : (s.image ? [s.image] : []);
+  renderStoryImagesEditor();
 
   document.getElementById('story-modal').style.display = 'flex';
 }
 window.openStoryEditModal = openStoryEditModal;
 
-document.getElementById('story-img-pick').addEventListener('click', () => {
-  const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
-  inp.onchange = e => {
-    const f = e.target.files[0]; if (!f) return;
-    artCompressImage(f).then(data => {
-      storyImgData = data;
-      const p = document.getElementById('story-img-preview');
-      p.src = storyImgData; p.style.display = 'block';
-      document.getElementById('story-img-pick').textContent = '✓ תמונה נבחרה';
-    });
-  };
-  inp.click();
-});
-
-// מאזינים לבחירת תמונות נוספות לגוף הסיפור
-for (let idx = 1; idx <= 5; idx++) {
-  const btn = document.getElementById(`story-extra-pick-${idx}`);
-  if (btn) {
-    btn.addEventListener('click', () => {
-      const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
-      inp.onchange = e => {
-        const f = e.target.files[0]; if (!f) return;
-        artCompressImage(f).then(data => {
-          storyExtraImgData[idx] = data;
-          const p = document.getElementById(`story-extra-preview-${idx}`);
-          if (p) { p.src = storyExtraImgData[idx]; p.style.display = 'block'; }
-          btn.textContent = '✓';
-        });
-      };
-      inp.click();
-    });
-  }
+// הוספת תמונה חדשה לרשימה (בסוף)
+const storyAddImageBtn = document.getElementById('story-add-image');
+if (storyAddImageBtn) {
+  storyAddImageBtn.addEventListener('click', () => {
+    const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
+    inp.onchange = e => {
+      const f = e.target.files[0]; if (!f) return;
+      artCompressImage(f).then(data => {
+        if (data) { storyImageList.push(data); renderStoryImagesEditor(); }
+      });
+    };
+    inp.click();
+  });
 }
 
 document.getElementById('story-cancel').addEventListener('click', () => {
@@ -5008,11 +4990,8 @@ document.getElementById('story-save').addEventListener('click', () => {
   const title = document.getElementById('story-title').value.trim();
   if (!title) { alert('חובה כותרת'); return; }
 
-  const storyImages = [storyImgData];
-  for (let idx = 1; idx <= 5; idx++) {
-    const extraImg = storyExtraImgData[idx];
-    if (extraImg) storyImages.push(extraImg);
-  }
+  // התמונות לפי הסדר שנקבע בעורך; הראשונה היא התמונה הראשית
+  const storyImages = storyImageList.filter(Boolean);
 
   const data = {
     title,
@@ -5021,7 +5000,7 @@ document.getElementById('story-save').addEventListener('click', () => {
     author: document.getElementById('story-author').value.trim(),
     category: document.getElementById('story-category').value.trim(),
     categoryColor: '#8b5cf6',
-    image: storyImgData,
+    image: storyImages[0] || '',
     images: storyImages,
     link: document.getElementById('story-link').value.trim()
   };

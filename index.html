@@ -12,7 +12,7 @@
   <!-- ספריית localforage לשמירת כמות בלתי מוגבלת של תמונות (במקום localStorage המוגבל) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
   <!-- קישור לקובץ העיצוב החיצוני (עם פרמטר למניעת שמירה במטמון) -->
-  <link rel="stylesheet" href="./style.css?v=33">
+  <link rel="stylesheet" href="./style.css?v=34">
 </head>
 <body class="light-mode">
   
@@ -377,33 +377,9 @@
     <textarea id="story-body" rows="6" placeholder="כתוב את תוכן הסיפור המלא כאן..." style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box; resize:vertical;"></textarea>
     <label style="font-size:13px; font-weight:600;">קישור חיצוני (URL) — אופציונלי</label>
     <input id="story-link" type="url" placeholder="https://..." style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
-    <label style="font-size:13px; font-weight:600;">תמונה ראשית</label>
-    <button id="story-img-pick" style="padding:9px 12px; border:1px dashed #bbb; border-radius:8px; background:#f9f9f9; cursor:pointer; font-size:13px; text-align:right;">לחץ לבחירת תמונה מהמחשב</button>
-    <img id="story-img-preview" src="" alt="" style="display:none; max-height:140px; border-radius:8px; object-fit:cover; width:100%;">
-
-    <label style="font-size:13px; font-weight:600;">תמונות נוספות לגוף הסיפור (עד 5 תמונות) — אופציונלי</label>
-    <div style="display:grid; grid-template-columns:repeat(5, 1fr); gap:8px;">
-      <div style="display:flex; flex-direction:column; align-items:center; gap:4px;">
-        <button id="story-extra-pick-1" style="width:100%; aspect-ratio:1; border:1px dashed #bbb; border-radius:8px; background:#f9f9f9; cursor:pointer; font-size:14px; padding:0; height:45px;">1️⃣</button>
-        <img id="story-extra-preview-1" style="display:none; width:100%; aspect-ratio:1; border-radius:8px; object-fit:cover; height:45px;">
-      </div>
-      <div style="display:flex; flex-direction:column; align-items:center; gap:4px;">
-        <button id="story-extra-pick-2" style="width:100%; aspect-ratio:1; border:1px dashed #bbb; border-radius:8px; background:#f9f9f9; cursor:pointer; font-size:14px; padding:0; height:45px;">2️⃣</button>
-        <img id="story-extra-preview-2" style="display:none; width:100%; aspect-ratio:1; border-radius:8px; object-fit:cover; height:45px;">
-      </div>
-      <div style="display:flex; flex-direction:column; align-items:center; gap:4px;">
-        <button id="story-extra-pick-3" style="width:100%; aspect-ratio:1; border:1px dashed #bbb; border-radius:8px; background:#f9f9f9; cursor:pointer; font-size:14px; padding:0; height:45px;">3️⃣</button>
-        <img id="story-extra-preview-3" style="display:none; width:100%; aspect-ratio:1; border-radius:8px; object-fit:cover; height:45px;">
-      </div>
-      <div style="display:flex; flex-direction:column; align-items:center; gap:4px;">
-        <button id="story-extra-pick-4" style="width:100%; aspect-ratio:1; border:1px dashed #bbb; border-radius:8px; background:#f9f9f9; cursor:pointer; font-size:14px; padding:0; height:45px;">4️⃣</button>
-        <img id="story-extra-preview-4" style="display:none; width:100%; aspect-ratio:1; border-radius:8px; object-fit:cover; height:45px;">
-      </div>
-      <div style="display:flex; flex-direction:column; align-items:center; gap:4px;">
-        <button id="story-extra-pick-5" style="width:100%; aspect-ratio:1; border:1px dashed #bbb; border-radius:8px; background:#f9f9f9; cursor:pointer; font-size:14px; padding:0; height:45px;">5️⃣</button>
-        <img id="story-extra-preview-5" style="display:none; width:100%; aspect-ratio:1; border-radius:8px; object-fit:cover; height:45px;">
-      </div>
-    </div>
+    <label style="font-size:13px; font-weight:600;">תמונות הסיפור — הראשונה (משמאל) היא התמונה הראשית. אפשר לשנות סדר ולהסיר.</label>
+    <div id="story-images-editor" style="display:flex; flex-wrap:wrap; gap:8px; direction:ltr;"></div>
+    <button id="story-add-image" type="button" style="padding:9px 12px; border:1px dashed #bbb; border-radius:8px; background:#f9f9f9; cursor:pointer; font-size:13px; text-align:center; font-weight:600;">➕ הוסף תמונה</button>
     <div style="display:flex; gap:10px; margin-top:4px;">
       <button id="story-cancel" style="flex:1; padding:10px; border:1px solid #ddd; border-radius:8px; background:#fff; cursor:pointer; font-size:14px;">ביטול</button>
       <button id="story-save" style="flex:1; padding:10px; border:none; border-radius:8px; background:#8b5cf6; color:#fff; cursor:pointer; font-size:14px; font-weight:700;">שמור סיפור</button>
@@ -725,6 +701,6 @@
   </div>
 </div>
 
-  <script type="module" src="./script.js?v=33"></script>
+  <script type="module" src="./script.js?v=34"></script>
 </body>
 </html>
