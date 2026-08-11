@@ -4580,6 +4580,79 @@ const STORIES_SAMPLES = [
   }
 ];
 
+// קטגוריות הסיפורים (ניתן להוסיף/לשנות כאן)
+const STORY_CATEGORIES = ['כללי', 'סטרייט', 'ביסקסואל', 'שחורים על לבנות'];
+
+// גודל הגריד בעמוד הסיפורים (מספר עמודות). נשמר בין ביקורים.
+let storyGridCols = (function () {
+  const v = parseInt(localStorage.getItem('story_grid_cols') || '', 10);
+  return (v === 2 || v === 3 || v === 4) ? v : 4;
+})();
+let currentStoryCategoryFilter = 'הכל';
+
+// בורר גודל: 2 / 3 / 4 סיפורים בשורה. משנה את הגריד ושומר את הבחירה.
+function storySizeBarHTML() {
+  return `
+    <div class="story-size-bar">
+      <span class="story-size-label">גודל</span>
+      ${[4, 3, 2].map(n => `<button type="button" class="story-size-btn${storyGridCols === n ? ' active' : ''}" onclick="storySetGridSize(${n})">${n}</button>`).join('')}
+    </div>
+  `;
+}
+
+function storySetGridSize(n) {
+  if (![2, 3, 4].includes(n)) return;
+  storyGridCols = n;
+  try { localStorage.setItem('story_grid_cols', String(n)); } catch (e) {}
+  const root = mainContent.querySelector('.stories-page');
+  if (root) {
+    root.classList.remove('story-cols-2', 'story-cols-3', 'story-cols-4');
+    root.classList.add('story-cols-' + n);
+  }
+  mainContent.querySelectorAll('.story-size-btn').forEach(b => b.classList.toggle('active', b.textContent.trim() === String(n)));
+}
+window.storySetGridSize = storySetGridSize;
+
+// שורת סינון קטגוריות לסיפורים
+function storyCategoryBarHTML() {
+  const cats = ['הכל', ...STORY_CATEGORIES];
+  return `
+    <div class="story-category-tabs">
+      ${cats.map(c => `<button type="button" class="story-cat-btn${currentStoryCategoryFilter === c ? ' active' : ''}" onclick="storyFilterCategory('${artEsc(c)}', this)">${c}</button>`).join('')}
+    </div>
+  `;
+}
+
+function storyFilterCategory(cat, btn) {
+  currentStoryCategoryFilter = cat;
+  const bar = btn.closest('.story-category-tabs');
+  if (bar) bar.querySelectorAll('.story-cat-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  artPageState.stories = 1;
+  storyApplyFilters();
+}
+window.storyFilterCategory = storyFilterCategory;
+
+// מסמן אילו סיפורים תואמים לחיפוש ולקטגוריה; העימוד מציג את התוצאות
+function storyApplyFilters() {
+  const searchInput = mainContent.querySelector('.stories-page .art-search');
+  const q = searchInput ? searchInput.value.toLowerCase().trim() : '';
+  const rows = mainContent.querySelectorAll('.stories-page .art-row');
+  let visible = 0;
+  rows.forEach(r => {
+    const text = (r.dataset.search || r.textContent).toLowerCase();
+    const rowCat = r.dataset.category || 'כללי';
+    const catMatch = (currentStoryCategoryFilter === 'הכל' || rowCat === currentStoryCategoryFilter);
+    const match = catMatch && text.includes(q);
+    r.dataset.artMatch = match ? '1' : '0';
+    if (match) visible++;
+  });
+  artSyncPagination();
+  const noResults = mainContent.querySelector('.stories-page .art-no-results');
+  if (noResults) noResults.style.display = visible === 0 ? 'block' : 'none';
+}
+window.storyApplyFilters = storyApplyFilters;
+
 function buildStoriesPage(stories) {
   const featured = stories.filter(s => s.pinned).slice(0, 3);
   const popular = stories.slice(0, 5);
@@ -4597,7 +4670,7 @@ function buildStoriesPage(stories) {
   `).join('');
 
   const listHTML = stories.map((s) => `
-    <div class="art-row" onclick="storyOpenDetail('${artEsc(s.id)}')">
+    <div class="art-row" data-category="${artEsc(s.category || 'כללי')}" data-search="${artEsc([s.title, s.summary, s.author, s.category].filter(Boolean).join(' '))}" onclick="storyOpenDetail('${artEsc(s.id)}')">
       <div class="art-row-text">
         <h3>${s.title}</h3>
         <p>${s.summary}</p>
@@ -4624,7 +4697,7 @@ function buildStoriesPage(stories) {
   `).join('');
 
   const json = encodeURIComponent(JSON.stringify(stories));
-  return `<div class="articles-page stories-page" data-stories-json="${json}">
+  return `<div class="articles-page stories-page story-cols-${storyGridCols}" data-stories-json="${json}">
     <div class="art-inner">
       <div class="art-featured-grid">${featuredHTML}</div>
       <div class="art-layout">
@@ -4632,7 +4705,11 @@ function buildStoriesPage(stories) {
           <div class="art-search-wrap">
             <input type="text" class="art-search" placeholder="🔍 חיפוש סיפורים..." oninput="storySearch(this.value)">
           </div>
-          <div class="art-section-title">כל הסיפורים</div>
+          <div class="art-section-title-row">
+            <div class="art-section-title">כל הסיפורים</div>
+            ${storySizeBarHTML()}
+          </div>
+          ${storyCategoryBarHTML()}
           <div class="art-rows">${listHTML}</div>
           <div class="art-pagination" style="display:none"></div>
           <div class="art-no-results" style="display:none">לא נמצאו סיפורים התואמים לחיפוש</div>
@@ -4756,22 +4833,9 @@ function storyDelete(id, el) {
 }
 
 function storySearch(val) {
-  const q = (val || '').toLowerCase().trim();
-  const rows = mainContent.querySelectorAll('.stories-page .art-row');
-  let visible = 0;
-  rows.forEach(r => {
-    const text = r.textContent.toLowerCase();
-    const match = text.includes(q);
-    // העימוד הוא זה שקובע display בפועל; כאן רק מסמנים מה תואם
-    r.dataset.artMatch = match ? '1' : '0';
-    if (match) visible++;
-  });
-
+  // מאחד חיפוש + סינון קטגוריה; העימוד מציג את התוצאות
   artPageState.stories = 1;
-  artSyncPagination();
-
-  const noResults = mainContent.querySelector('.stories-page .art-no-results');
-  if (noResults) noResults.style.display = visible === 0 ? 'block' : 'none';
+  storyApplyFilters();
 }
 
 let storyImgData = '';
@@ -4783,7 +4847,7 @@ function openStoryModal() {
   document.getElementById('story-summary').value = '';
   document.getElementById('story-body').value = '';
   document.getElementById('story-author').value = '';
-  document.getElementById('story-category').value = '';
+  document.getElementById('story-category').value = 'כללי';
   document.getElementById('story-link').value = '';
   const preview = document.getElementById('story-img-preview');
   preview.style.display = 'none'; preview.src = '';

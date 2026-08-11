@@ -3079,3 +3079,49 @@ body:not(.edit-mode) .hidden-nav {
   border-color: #ec4899;
   color: #fff;
 }
+
+/* ===== בקרות עמוד הסיפורים: בורר גודל + סינון קטגוריה ===== */
+.stories-page .art-section-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.story-size-bar { display: flex; align-items: center; gap: 6px; }
+.story-size-label { font-size: 12px; font-weight: 800; color: #9ca3af; }
+.story-size-btn {
+  width: 30px; height: 30px;
+  border: 1px solid var(--line, rgba(17,17,26,0.1));
+  background: #fff; color: #4b5563;
+  border-radius: 8px; font-weight: 700; font-size: 13px;
+  cursor: pointer; font-family: inherit;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+}
+.story-size-btn:hover { border-color: var(--acc, #8b5cf6); color: var(--acc, #8b5cf6); }
+.story-size-btn.active { background: var(--acc, #8b5cf6); border-color: var(--acc, #8b5cf6); color: #fff; }
+
+.story-category-tabs {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  margin: 14px 0 18px;
+}
+.story-cat-btn {
+  padding: 7px 14px;
+  border: 1px solid var(--line, rgba(17,17,26,0.1));
+  border-radius: 999px;
+  background: #fff; color: #4b5563;
+  font-weight: 700; font-size: 13px;
+  cursor: pointer; font-family: inherit; white-space: nowrap;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+}
+.story-cat-btn:hover { transform: translateY(-1px); border-color: var(--acc, #8b5cf6); color: var(--acc, #8b5cf6); }
+.story-cat-btn.active { background: var(--acc, #8b5cf6); border-color: var(--acc, #8b5cf6); color: #fff; }
+
+/* בחירת הגודל גוברת על ברירת המחדל הרספונסיבית, בכל רוחב מסך */
+.stories-page.story-cols-2 .art-rows { grid-template-columns: repeat(2, 1fr) !important; }
+.stories-page.story-cols-3 .art-rows { grid-template-columns: repeat(3, 1fr) !important; }
+.stories-page.story-cols-4 .art-rows { grid-template-columns: repeat(4, 1fr) !important; }
+@media (max-width: 768px) {
+  .story-cat-btn { padding: 5px 11px; font-size: 11px; }
+  .story-size-btn { width: 26px; height: 26px; font-size: 12px; }
+}
