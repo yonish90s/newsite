@@ -4616,7 +4616,9 @@ let storyGridCols = (function () {
   const v = parseInt(localStorage.getItem('story_grid_cols') || '', 10);
   return (v === 2 || v === 3 || v === 4) ? v : 4;
 })();
-let currentStoryCategoryFilter = 'הכל';
+// קטגוריות נבחרות לסינון. סט ריק = "הכל" (כל הסיפורים). אפשר לבחור כמה
+// קטגוריות בו-זמנית, וסיפור מוצג אם הקטגוריה שלו נמצאת באחת מהן.
+let selectedStoryCategories = new Set();
 
 // בורר גודל: 2 / 3 / 4 סיפורים בשורה. משנה את הגריד ושומר את הבחירה.
 function storySizeBarHTML() {
@@ -4641,27 +4643,36 @@ function storySetGridSize(n) {
 }
 window.storySetGridSize = storySetGridSize;
 
-// שורת סינון קטגוריות לסיפורים
+// שורת סינון קטגוריות לסיפורים (בחירה מרובה)
+function storyCatIsActive(c) {
+  return c === 'הכל' ? selectedStoryCategories.size === 0 : selectedStoryCategories.has(c);
+}
 function storyCategoryBarHTML() {
   const cats = ['הכל', ...STORY_CATEGORIES];
   return `
     <div class="story-category-tabs">
-      ${cats.map(c => `<button type="button" class="story-cat-btn${currentStoryCategoryFilter === c ? ' active' : ''}" onclick="storyFilterCategory('${artEsc(c)}', this)">${c}</button>`).join('')}
+      ${cats.map(c => `<button type="button" class="story-cat-btn${storyCatIsActive(c) ? ' active' : ''}" onclick="storyFilterCategory('${artEsc(c)}', this)">${c}</button>`).join('')}
     </div>
   `;
 }
 
 function storyFilterCategory(cat, btn) {
-  currentStoryCategoryFilter = cat;
+  // "הכל" מנקה את הבחירה; קטגוריה רגילה מתחלפת (מצטרפת/יורדת) — כך אפשר לבחור כמה
+  if (cat === 'הכל') {
+    selectedStoryCategories.clear();
+  } else if (selectedStoryCategories.has(cat)) {
+    selectedStoryCategories.delete(cat);
+  } else {
+    selectedStoryCategories.add(cat);
+  }
   const bar = btn.closest('.story-category-tabs');
-  if (bar) bar.querySelectorAll('.story-cat-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
+  if (bar) bar.querySelectorAll('.story-cat-btn').forEach(b => b.classList.toggle('active', storyCatIsActive(b.textContent.trim())));
   artPageState.stories = 1;
   storyApplyFilters();
 }
 window.storyFilterCategory = storyFilterCategory;
 
-// מסמן אילו סיפורים תואמים לחיפוש ולקטגוריה; העימוד מציג את התוצאות
+// מסמן אילו סיפורים תואמים לחיפוש ולקטגוריות שנבחרו; העימוד מציג את התוצאות
 function storyApplyFilters() {
   const searchInput = mainContent.querySelector('.stories-page .art-search');
   const q = searchInput ? searchInput.value.toLowerCase().trim() : '';
@@ -4670,7 +4681,7 @@ function storyApplyFilters() {
   rows.forEach(r => {
     const text = (r.dataset.search || r.textContent).toLowerCase();
     const rowCat = r.dataset.category || 'כללי';
-    const catMatch = (currentStoryCategoryFilter === 'הכל' || rowCat === currentStoryCategoryFilter);
+    const catMatch = (selectedStoryCategories.size === 0 || selectedStoryCategories.has(rowCat));
     const match = catMatch && text.includes(q);
     r.dataset.artMatch = match ? '1' : '0';
     if (match) visible++;
