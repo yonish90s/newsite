@@ -496,6 +496,18 @@ async function initSite() {
     saveToStorage();
   }
 
+  // מיגרציה חד-פעמית: מכווצים תוכן עמודים ישן ל"גרסה קלה" (רק ה-JSON,
+  // בלי כל ה-HTML המרונדר שכפל כל תמונה). בלי זה הבלוב הכולל שנשמר
+  // ל-Firebase נשאר ענק, הכתיבה נכשלת בשקט, וההעלאות (סיפורים/תמונות)
+  // לא מגיעות למכשירים אחרים. אחרי הכיווץ הכתיבה מצליחה והסנכרון עובד.
+  let lightened = false;
+  pages.forEach(p => {
+    if (!p.content) return;
+    const light = artLightenContent(p.content);
+    if (light && light !== p.content) { p.content = light; lightened = true; }
+  });
+  if (lightened) saveToStorage();
+
   // תיקון אוטומטי (Migration) לקישורים מתים בתפריט העליון
   const allNavLinks = navLinksContainer.querySelectorAll('a');
   let madeChanges = false;
@@ -1519,7 +1531,6 @@ function makeImagesEditable() {
   });
 }
 
-// פונקציה ששומרת את מה שערכנו לתוך המערך ואז לזיכרון
 // מחזיר גרסה קלה לשמירה של תוכן העמוד הנוכחי. עמודי תמונות/סיפורים/
 // קורסים/כתבות/קהילה נבנים תמיד מחדש מה-JSON בזמן הרינדור, ולכן אין
 // טעם לשמור את כל ה-HTML המרונדר — הוא מכפיל כל תמונת base64 פעמים
@@ -1550,6 +1561,28 @@ function artSerializePageContent() {
   return mainContent.innerHTML;
 }
 
+// מכווץ מחרוזת תוכן עמוד שמורה לגרסה קלה (רק המעטפת עם ה-JSON).
+// משמש למיגרציה של תוכן ישן בטעינה. מנתח בעזרת DOMParser כדי לא לטעון
+// את התמונות לדף החי.
+function artLightenContent(content) {
+  if (!content || typeof content !== 'string') return content;
+  if (content.indexOf('-json=') === -1 && content.indexOf('community-page') === -1) return content;
+  let doc;
+  try { doc = new DOMParser().parseFromString(content, 'text/html'); } catch (e) { return content; }
+  const ph = doc.querySelector('.photos-page');
+  if (ph && ph.dataset.photosJson) return `<div class="articles-page photos-page" data-photos-json="${ph.dataset.photosJson}"></div>`;
+  const st = doc.querySelector('.stories-page');
+  if (st && st.dataset.storiesJson) return `<div class="articles-page stories-page" data-stories-json="${st.dataset.storiesJson}"></div>`;
+  const co = doc.querySelector('.courses-page');
+  if (co && co.dataset.coursesJson) return `<div class="articles-page courses-page" data-courses-json="${co.dataset.coursesJson}"></div>`;
+  const cm = doc.querySelector('.community-page');
+  if (cm) return `<div class="articles-page community-page" data-page-id="${cm.dataset.pageId || ''}"></div>`;
+  const ar = doc.querySelector('.articles-page:not(.stories-page):not(.photos-page):not(.courses-page):not(.community-page)');
+  if (ar && ar.dataset.articlesJson) return `<div class="articles-page" data-articles-json="${ar.dataset.articlesJson}"></div>`;
+  return content;
+}
+
+// שומר את התוכן הערוך (בגרסה קלה) למערך ואז ל-localforage ול-Firebase
 function saveCurrentPageContent() {
   // קודם נוריד את מצב העריכה ואת סימוני הבחירה של הגרירה (כדי שהם לא יישמרו לקוד הסטטי!)
   removeEditModeFromContent();
