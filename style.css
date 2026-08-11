@@ -3021,8 +3021,9 @@ body:not(.edit-mode) .hidden-nav {
   backdrop-filter: blur(6px);
 }
 .art-lb-nav:hover { background: rgba(255, 255, 255, 0.25); }
-.art-lb-prev { left: 16px; }
-.art-lb-next { right: 16px; }
+/* אתר RTL: הקודם מימין, הבא משמאל */
+.art-lb-prev { right: 16px; }
+.art-lb-next { left: 16px; }
 .art-lb-close {
   position: absolute;
   top: 16px;
@@ -3063,8 +3064,8 @@ body:not(.edit-mode) .hidden-nav {
 @media (max-width: 768px) {
   .art-lb-img { max-width: 96vw; max-height: 82vh; }
   .art-lb-nav { width: 44px; height: 44px; font-size: 26px; }
-  .art-lb-prev { left: 8px; }
-  .art-lb-next { right: 8px; }
+  .art-lb-prev { right: 8px; }
+  .art-lb-next { left: 8px; }
   .art-lb-close { top: 10px; left: 10px; width: 40px; height: 40px; }
   .art-lb-counter { bottom: 14px; }
 }

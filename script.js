@@ -6717,9 +6717,9 @@ function artBuildLightbox() {
   lb.className = 'art-lightbox';
   lb.innerHTML = `
     <button class="art-lb-close" type="button" aria-label="סגור">✕</button>
-    <button class="art-lb-nav art-lb-prev" type="button" aria-label="הקודם">‹</button>
+    <button class="art-lb-nav art-lb-prev" type="button" aria-label="הקודם">›</button>
     <img class="art-lb-img" id="lightbox-img" alt="">
-    <button class="art-lb-nav art-lb-next" type="button" aria-label="הבא">›</button>
+    <button class="art-lb-nav art-lb-next" type="button" aria-label="הבא">‹</button>
     <div class="art-lb-counter" id="lightbox-counter"></div>
   `;
   document.body.appendChild(lb);
@@ -6760,8 +6760,8 @@ function artLightboxStep(dir) {
 
 function artLightboxKey(e) {
   if (e.key === 'Escape') artCloseLightbox();
-  else if (e.key === 'ArrowRight') artLightboxStep(1);
-  else if (e.key === 'ArrowLeft') artLightboxStep(-1);
+  else if (e.key === 'ArrowLeft') artLightboxStep(1);   // באתר RTL שמאלה = הבא
+  else if (e.key === 'ArrowRight') artLightboxStep(-1); // ימינה = הקודם
 }
 
 function artCloseLightbox() {
