@@ -1520,6 +1520,36 @@ function makeImagesEditable() {
 }
 
 // פונקציה ששומרת את מה שערכנו לתוך המערך ואז לזיכרון
+// מחזיר גרסה קלה לשמירה של תוכן העמוד הנוכחי. עמודי תמונות/סיפורים/
+// קורסים/כתבות/קהילה נבנים תמיד מחדש מה-JSON בזמן הרינדור, ולכן אין
+// טעם לשמור את כל ה-HTML המרונדר — הוא מכפיל כל תמונת base64 פעמים
+// רבות (תמונה ראשית + תצוגות מקדימות + data-json) ומנפח את הבלוב
+// שמסונכרן ל-Firebase עד כדי קריסה. שומרים רק את המעטפת עם ה-data.
+function artSerializePageContent() {
+  const photos = mainContent.querySelector('.photos-page');
+  if (photos && photos.dataset.photosJson) {
+    return `<div class="articles-page photos-page" data-photos-json="${photos.dataset.photosJson}"></div>`;
+  }
+  const stories = mainContent.querySelector('.stories-page');
+  if (stories && stories.dataset.storiesJson) {
+    return `<div class="articles-page stories-page" data-stories-json="${stories.dataset.storiesJson}"></div>`;
+  }
+  const courses = mainContent.querySelector('.courses-page');
+  if (courses && courses.dataset.coursesJson) {
+    return `<div class="articles-page courses-page" data-courses-json="${courses.dataset.coursesJson}"></div>`;
+  }
+  const community = mainContent.querySelector('.community-page');
+  if (community) {
+    return `<div class="articles-page community-page" data-page-id="${community.dataset.pageId || activePageId}"></div>`;
+  }
+  const articles = mainContent.querySelector('.articles-page:not(.stories-page):not(.photos-page):not(.courses-page):not(.community-page)');
+  if (articles && articles.dataset.articlesJson) {
+    return `<div class="articles-page" data-articles-json="${articles.dataset.articlesJson}"></div>`;
+  }
+  // עמוד רגיל (בלוקים חופשיים, טקסט, תמונות שנגררו) — נשמר כרגיל
+  return mainContent.innerHTML;
+}
+
 function saveCurrentPageContent() {
   // קודם נוריד את מצב העריכה ואת סימוני הבחירה של הגרירה (כדי שהם לא יישמרו לקוד הסטטי!)
   removeEditModeFromContent();
@@ -1528,7 +1558,7 @@ function saveCurrentPageContent() {
   // נמצא את העמוד הנוכחי במערך שלנו
   const currentPage = pages.find(p => p.id === activePageId);
   if (currentPage) {
-    currentPage.content = mainContent.innerHTML; // שומרים את ה-HTML החדש בחזרה לעמוד
+    currentPage.content = artSerializePageContent(); // שומרים גרסה קלה, בלי כפילויות תמונות
     saveToStorage(); // שומרים לזיכרון של הדפדפן
   }
 
@@ -2216,11 +2246,10 @@ if (btnMakeSlideshow) {
         let loadedCount = 0;
         
         files.forEach((file, index) => {
-          const reader = new FileReader();
-          reader.onload = event => {
-            urls[index] = event.target.result;
+          artCompressImage(file).then(data => {
+            urls[index] = data;
             loadedCount++;
-            
+
             if (loadedCount === files.length) {
               const el = document.createElement('div');
               el.className = 'draggable-resizable';
@@ -2251,8 +2280,7 @@ if (btnMakeSlideshow) {
               initSlideshows(); // מפעיל מיד את המצגת
               alert('נוצרה מצגת עם ' + files.length + ' תמונות בהצלחה! התמונות יתחלפו כל 3 שניות.');
             }
-          };
-          reader.readAsDataURL(file);
+          });
         });
       }
     };
@@ -2420,18 +2448,17 @@ if (btnAddImage) {
     input.onchange = e => {
       const file = e.target.files[0];
       if (file) {
-        const reader = new FileReader();
-        reader.onload = event => {
+        artCompressImage(file).then(data => {
           const imgObj = new Image();
           imgObj.onload = () => {
             const el = document.createElement('div');
             el.className = 'draggable-resizable';
-            
+
             // מתאימים את הגודל ההתחלתי לפרופורציות האמיתיות של התמונה
             const targetWidth = 300; // רוחב התחלתי סביר
             const ratio = imgObj.height / imgObj.width;
             const targetHeight = targetWidth * ratio;
-            
+
             el.style.width = targetWidth + 'px';
             el.style.height = targetHeight + 'px';
             el.style.left = '150px';
@@ -2439,22 +2466,21 @@ if (btnAddImage) {
             el.setAttribute('data-x', '150');
             el.setAttribute('data-y', '150');
             el.style.borderRadius = '12px'; // קצת יופי
-            
+
             const img = document.createElement('img');
-            img.src = event.target.result;
+            img.src = data;
             img.style.width = '100%';
             img.style.height = '100%';
             img.style.objectFit = 'contain';
             img.style.borderRadius = '12px';
             img.style.display = 'block';
             el.appendChild(img);
-            
+
             mainContent.appendChild(el);
             saveCurrentPageContent();
           };
-          imgObj.src = event.target.result;
-        };
-        reader.readAsDataURL(file);
+          imgObj.src = data;
+        });
       }
     };
     input.click(); // לוחצים "וירטואלית" על שדה העלאת הקובץ
@@ -4223,14 +4249,12 @@ document.getElementById('art-img-pick').addEventListener('click', () => {
   const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
   inp.onchange = e => {
     const f = e.target.files[0]; if (!f) return;
-    const r = new FileReader();
-    r.onload = ev => {
-      artImgData = ev.target.result;
+    artCompressImage(f).then(data => {
+      artImgData = data;
       const p = document.getElementById('art-img-preview');
       p.src = artImgData; p.style.display = 'block';
       document.getElementById('art-img-pick').textContent = '✓ תמונה נבחרה';
-    };
-    r.readAsDataURL(f);
+    });
   };
   inp.click();
 });
@@ -4461,14 +4485,12 @@ document.getElementById('shop-img-pick').addEventListener('click', () => {
   const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
   inp.onchange = e => {
     const f = e.target.files[0]; if (!f) return;
-    const r = new FileReader();
-    r.onload = ev => {
-      shopImgData = ev.target.result;
+    artCompressImage(f).then(data => {
+      shopImgData = data;
       const p = document.getElementById('shop-img-preview');
       p.src = shopImgData; p.style.display = 'block';
       document.getElementById('shop-img-pick').textContent = '✓ תמונה נבחרה';
-    };
-    r.readAsDataURL(f);
+    });
   };
   inp.click();
 });
@@ -4751,14 +4773,12 @@ document.getElementById('story-img-pick').addEventListener('click', () => {
   const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
   inp.onchange = e => {
     const f = e.target.files[0]; if (!f) return;
-    const r = new FileReader();
-    r.onload = ev => {
-      storyImgData = ev.target.result;
+    artCompressImage(f).then(data => {
+      storyImgData = data;
       const p = document.getElementById('story-img-preview');
       p.src = storyImgData; p.style.display = 'block';
       document.getElementById('story-img-pick').textContent = '✓ תמונה נבחרה';
-    };
-    r.readAsDataURL(f);
+    });
   };
   inp.click();
 });
@@ -4771,14 +4791,12 @@ for (let idx = 1; idx <= 5; idx++) {
       const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
       inp.onchange = e => {
         const f = e.target.files[0]; if (!f) return;
-        const r = new FileReader();
-        r.onload = ev => {
-          storyExtraImgData[idx] = ev.target.result;
+        artCompressImage(f).then(data => {
+          storyExtraImgData[idx] = data;
           const p = document.getElementById(`story-extra-preview-${idx}`);
           if (p) { p.src = storyExtraImgData[idx]; p.style.display = 'block'; }
           btn.textContent = '✓';
-        };
-        r.readAsDataURL(f);
+        });
       };
       inp.click();
     });
@@ -4847,6 +4865,51 @@ if (btnAddCommunityPage) {
     renderPage();
   });
 }
+
+// ============================================================
+// דחיסת תמונות לפני שמירה (Image Compression)
+// ============================================================
+// תמונות נשמרות כ-base64 בתוך הנתונים המסונכרנים ל-Firebase. קובץ גולמי
+// של כמה מגה-בייט הופך למחרוזת ענקית שמנפחת את הבלוב, מאיטה את האתר,
+// גורמת לו לקרוס, ולעיתים נכשלת בכתיבה ל-Firebase — ואז ההעלאה גם לא
+// מגיעה למכשירים אחרים. דחיסה לרוחב/גובה סביר ואיכות JPEG חוסכת פי 10-20.
+function artCompressImage(file, maxDim = 1600, quality = 0.82) {
+  return new Promise((resolve) => {
+    if (!file) { resolve(''); return; }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const src = reader.result;
+      // GIF מונפש יאבד את ההנפשה בדחיסה — משאירים אותו כמו שהוא
+      if (file.type === 'image/gif') { resolve(src); return; }
+      const img = new Image();
+      img.onload = () => {
+        let w = img.naturalWidth || img.width;
+        let h = img.naturalHeight || img.height;
+        if (!w || !h) { resolve(src); return; }
+        if (w > maxDim || h > maxDim) {
+          if (w >= h) { h = Math.round(h * maxDim / w); w = maxDim; }
+          else { w = Math.round(w * maxDim / h); h = maxDim; }
+        }
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          const out = canvas.toDataURL('image/jpeg', quality);
+          // אם משום מה היצוא גדול מהמקור, עדיף לשמור את המקור
+          resolve(out && out.length < src.length ? out : src);
+        } catch (e) {
+          resolve(src);
+        }
+      };
+      img.onerror = () => resolve(src);
+      img.src = src;
+    };
+    reader.onerror = () => resolve('');
+    reader.readAsDataURL(file);
+  });
+}
+window.artCompressImage = artCompressImage;
 
 // ============================================================
 // מערכת עימוד לגרידים (Pagination)
@@ -5691,15 +5754,13 @@ for (let i = 1; i <= 5; i++) {
       const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
       inp.onchange = e => {
         const f = e.target.files[0]; if (!f) return;
-        const r = new FileReader();
-        r.onload = ev => {
-          photoImgDataList[i - 1] = ev.target.result;
+        artCompressImage(f).then(data => {
+          photoImgDataList[i - 1] = data;
           const p = document.getElementById('photo-img-preview-' + i);
-          p.src = ev.target.result;
+          p.src = data;
           p.style.display = 'block';
           btn.style.display = 'none';
-        };
-        r.readAsDataURL(f);
+        });
       };
       inp.click();
     });
@@ -7349,14 +7410,12 @@ if (commImgPick) {
     const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
     inp.onchange = e => {
       const f = e.target.files[0]; if (!f) return;
-      const r = new FileReader();
-      r.onload = ev => {
-        currentCommPostImgData = ev.target.result;
+      artCompressImage(f).then(data => {
+        currentCommPostImgData = data;
         const p = document.getElementById('comm-post-img-preview');
         if (p) { p.src = currentCommPostImgData; p.style.display = 'block'; }
         commImgPick.textContent = '✓ תמונה נבחרה';
-      };
-      r.readAsDataURL(f);
+      });
     };
     inp.click();
   });
