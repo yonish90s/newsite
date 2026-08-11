@@ -586,7 +586,35 @@ async function initSite() {
     });
     
     let cleanedPages = Array.from(pageMap.values());
-    
+
+    // הסרת עמודי סיפורים כפולים וריקים: אם יש יותר מעמוד סיפורים אחד,
+    // מסירים את אלו ללא סיפורים (0) כל עוד נשאר אחד עם תוכן. אם כולם
+    // ריקים — משאירים אחד בלבד. כך נעלם עמוד "סיפורים" ריק כפול.
+    const storyItemCount = (p) => {
+      try {
+        const m = p.content && p.content.match(/data-stories-json="([^"]*)"/);
+        if (!m) return 0;
+        const arr = JSON.parse(decodeURIComponent(m[1]));
+        return Array.isArray(arr) ? arr.length : 0;
+      } catch (e) { return 0; }
+    };
+    const storyPages = cleanedPages.filter(p => p.content && p.content.includes('stories-page'));
+    if (storyPages.length > 1) {
+      const hasNonEmpty = storyPages.some(p => storyItemCount(p) > 0);
+      let removeIds = [];
+      if (hasNonEmpty) {
+        removeIds = storyPages.filter(p => storyItemCount(p) === 0).map(p => p.id);
+      } else {
+        removeIds = storyPages.slice(1).map(p => p.id); // כולם ריקים — משאירים אחד
+      }
+      if (removeIds.length) {
+        cleanedPages = cleanedPages.filter(p => !removeIds.includes(p.id));
+        topNavPages = topNavPages.filter(id => !removeIds.includes(id));
+        if (removeIds.includes(activePageId)) activePageId = 'page-main';
+        madeCleanChanges = true;
+      }
+    }
+
     // מציאת עמוד התמונות כעמוד ברירת המחדל
     let photosPage = cleanedPages.find(p => p.content && p.content.includes('photos-page'));
     
