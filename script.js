@@ -531,23 +531,14 @@ async function initSite() {
       }
     }
 
-    // מציאת עמוד התמונות כעמוד ברירת המחדל
-    let photosPage = cleanedPages.find(p => p.content && p.content.includes('photos-page'));
-    
-    if (photosPage) {
-      // העברת עמוד התמונות לתחילת התפריט והרשימה
-      cleanedPages = [photosPage, ...cleanedPages.filter(p => p.id !== photosPage.id)];
-      activePageId = photosPage.id;
-    } else {
-      // מציאת עמוד הכתבות כברירת מחדל משנית
-      let articlesPage = cleanedPages.find(p => p.content && p.content.includes('articles-page') && !p.content.includes('stories-page') && !p.content.includes('photos-page') && !p.content.includes('courses-page'));
-      if (!articlesPage) {
-        articlesPage = cleanedPages[0];
-      }
-      if (articlesPage) {
-        cleanedPages = [articlesPage, ...cleanedPages.filter(p => p.id !== articlesPage.id)];
-        activePageId = articlesPage.id;
-      }
+    // הגדרת עמוד הכתבות כעמוד ברירת המחדל הראשי של האתר
+    let articlesPage = cleanedPages.find(p => p.id === 'page-main' || (p.content && p.content.includes('articles-page') && !p.content.includes('stories-page') && !p.content.includes('photos-page') && !p.content.includes('courses-page')));
+    if (!articlesPage) {
+      articlesPage = cleanedPages[0];
+    }
+    if (articlesPage) {
+      cleanedPages = [articlesPage, ...cleanedPages.filter(p => p.id !== articlesPage.id)];
+      activePageId = articlesPage.id;
     }
     
     pages = cleanedPages;
