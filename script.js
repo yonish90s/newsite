@@ -361,15 +361,10 @@ async function initSite() {
         localStorage.setItem('promoted_sites', JSON.stringify(PROMOTED_SITES));
       }
       
-      if (data.navHTML) {
-        navLinksContainer.innerHTML = data.navHTML;
-      }
-      
       // נעדכן גם את הזיכרון המקומי לגיבוי
       localforage.setItem('mySitePages_v3', pages);
       localforage.setItem('myActivePage_v3', activePageId);
       localforage.setItem('mySiteTopNav_v3', topNavPages);
-      if (data.navHTML) localforage.setItem('mySiteTopNavHTML_v3', data.navHTML);
       localforage.setItem('mySiteBackgrounds_v3', siteBackgrounds);
       
       applyBackgrounds();
@@ -380,15 +375,10 @@ async function initSite() {
       
       const savedActive = await localforage.getItem('myActivePage_v3');
       if (savedActive) activePageId = savedActive;
-      
-      const savedTopNavHTML = await localforage.getItem('mySiteTopNavHTML_v3');
-      if (savedTopNavHTML) {
-        navLinksContainer.innerHTML = savedTopNavHTML;
-      }
 
       const savedPages = await localforage.getItem('mySitePages_v3');
       if (savedPages) {
-        pages = savedPages.filter(p => p.id === 'page-main' || p.isHidden === true);
+        pages = savedPages;
       }
       
       const savedBackgrounds = await localforage.getItem('mySiteBackgrounds_v3');
@@ -4059,8 +4049,8 @@ function buildArticlesPage(articles) {
   return `<div class="articles-page" data-articles-json="${json}">
     <div class="art-inner">
       <div class="art-featured-grid">${featuredHTML}</div>
-      <div class="art-layout" style="display:block;">
-        <div class="art-main" style="width: 100%; max-width: 100%;">
+      <div class="art-layout">
+        <div class="art-main">
           <div class="art-search-wrap">
             <input type="text" class="art-search" placeholder="🔍 חיפוש כתבות..." oninput="artSearch(this.value)">
           </div>
@@ -4068,6 +4058,14 @@ function buildArticlesPage(articles) {
           <div class="art-rows">${listHTML}</div>
           <div class="art-no-results" style="display:none">לא נמצאו כתבות התואמות לחיפוש</div>
           ${(isAdmin() || isEditMode) ? `<button class="art-add-btn" onclick="openArtModal()">+ הוסף כתבה חדשה</button>` : ''}
+        </div>
+        <div class="art-sidebar">
+          ${buildPromotedSitesBox()}
+          <div class="art-sidebar-box">
+            <div class="art-sidebar-title">הכי נקראות השבוע</div>
+            ${popularHTML}
+          </div>
+          ${buildSocialCommunityBox()}
         </div>
       </div>
     </div>
