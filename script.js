@@ -5578,8 +5578,6 @@ function buildPhotosPage(albums) {
           </button>
           ` : ''}
           ${buildPromotedSitesBox()}
-          ${budgetHTML}
-          ${myProfileHTML}
           ${savedHTML}
           <div class="art-sidebar-box art-popular-box">
             <div class="art-sidebar-title">חמשת העיצובים המובילים</div>
