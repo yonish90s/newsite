@@ -3457,6 +3457,23 @@ body:not(.edit-mode) .hidden-nav {
   .em-results-grid {
     grid-template-columns: 1fr;
   }
+.em-pill-btn {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #334155;
+  padding: 6px 14px;
+  border-radius: 50px;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.em-pill-btn:hover {
+  background: #fce7f3;
+  border-color: #f472b6;
+  color: #db2777;
+  transform: translateY(-1px);
 }
 
 .em-result-card {
