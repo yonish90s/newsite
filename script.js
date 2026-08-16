@@ -5195,29 +5195,55 @@ artInitPaginationObserver();
 const PHOTOS_SAMPLES = [
   {
     id: 'ph1',
-    title: 'זוהר הקוטב באיסלנד',
-    summary: 'אלבום תמונות מרהיב המתעד את האורות הירוקים של הצפון בלילות הקרים של החורף האיסלנדי.',
+    title: 'Apex Luxury - אתר תדמית ויוקרה כהה',
+    summary: 'עיצוב פרימיום כהה בגימור יוקרתי, מתאים לעסקים, יועצים, מותגי יוקרה וסוכנויות.',
     images: [
-      'https://images.unsplash.com/photo-1483168527879-c66136b56105?w=800&q=80',
-      'https://images.unsplash.com/photo-1529963183134-61a90db47eaf?w=800&q=80',
-      'https://images.unsplash.com/photo-1517411032315-54ef2cb783bb?w=800&q=80',
-      'https://images.unsplash.com/photo-1482862549707-f63cb32c5fd9?w=800&q=80',
-      'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80'
+      'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80',
+      'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=800&q=80',
+      'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80'
     ],
-    author: 'אלכס לוין', category: 'טבע', categoryColor: '#10b981', timestamp: 'היום, 16:50'
+    author: 'סטודיו אופק', category: 'אתר תדמית', categoryColor: '#8b5cf6', timestamp: 'עודכן היום'
   },
   {
     id: 'ph2',
-    title: 'קצב הרחוב של טוקיו',
-    summary: 'סדרת צילומים אורבנית של רובע שיבויה, שלטי הניאון והאנשים בלילה גשום.',
+    title: 'Nova Store - חנות אופנה ודיגיטל מודרנית',
+    summary: 'חנות אונליין מלאה עם קטלוג מוצרים, עגלת קניות, סינון מוצרים וממשק רספונסיבי מרהיב.',
     images: [
-      'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=800&q=80',
-      'https://images.unsplash.com/photo-1540959733332-eab4deceeaf7?w=800&q=80',
-      'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800&q=80',
-      'https://images.unsplash.com/photo-1528164344705-47542687000d?w=800&q=80',
-      'https://images.unsplash.com/photo-1518826778787-1636e297f069?w=800&q=80'
+      'https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=800&q=80',
+      'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&q=80',
+      'https://images.unsplash.com/photo-1526178613552-2b45c6c302f0?w=800&q=80'
     ],
-    author: 'יוקי סאטו', category: 'אורבני', categoryColor: '#3b82f6', timestamp: 'אתמול, 22:30'
+    author: 'קולקציית הבוטיק', category: 'חנות E-Commerce', categoryColor: '#ec4899', timestamp: 'עודכן היום'
+  },
+  {
+    id: 'ph3',
+    title: 'Zenith SaaS - דף נחיתה להמרות גבוהות',
+    summary: 'דף נחיתה מודרני לאפליקציות, שירותים דיגיטליים ומוצרים עם הנעה חזקה לפעולה.',
+    images: [
+      'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=800&q=80',
+      'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=800&q=80'
+    ],
+    author: 'נקסט טק', category: 'דף נחיתה', categoryColor: '#10b981', timestamp: 'חדש'
+  },
+  {
+    id: 'ph4',
+    title: 'Pulse Media - אתר תוכן, מגזין ומדיה',
+    summary: 'פורטל תוכן דינמי הכולל כתבות, גלריות תמונות, סיפורים, וידאו וקהילה חיה.',
+    images: [
+      'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80',
+      'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800&q=80'
+    ],
+    author: 'מגזין פולס', category: 'מדיה ותוכן', categoryColor: '#3b82f6', timestamp: 'חדש'
+  },
+  {
+    id: 'ph5',
+    title: 'Vibe Agency - אתר פורטפוליו לסוכנויות ויוצרים',
+    summary: 'פורטפוליו קריאטיבי עם גלריית עבודות מרהיבה, אנימציות חלקות והצגת פרויקטים.',
+    images: [
+      'https://images.unsplash.com/photo-1542744094-3a31b272c390?w=800&q=80',
+      'https://images.unsplash.com/photo-1522542550221-31fd19575a2d?w=800&q=80'
+    ],
+    author: 'וייב דיזיין', category: 'פורטפוליו', categoryColor: '#f59e0b', timestamp: 'עודכן השבוע'
   }
 ];
 
@@ -5532,29 +5558,31 @@ function buildPhotosPage(albums) {
       <div class="art-layout">
         <div class="art-main">
           <div class="art-search-wrap">
-            <input type="text" class="art-search" placeholder="🔍 חיפוש גלריות..." oninput="photoSearch(this.value)">
+            <input type="text" class="art-search" placeholder="🔍 חיפוש קולקציית אתרים מעוצבים..." oninput="photoSearch(this.value)">
           </div>
-          <div class="art-section-title">כל הגלריות והתמונות</div>
+          <div class="art-section-title">קולקציית אתרים מעוצבים לבחירה</div>
           ${photoFilterSectionHTML()}
           <div class="art-rows">${listHTML}</div>
           <div class="art-pagination" style="display:none"></div>
-          <div class="art-no-results" style="display:none">לא נמצאו גלריות התואמות לחיפוש</div>
-          <button class="art-add-btn" onclick="openPhotoModal()" style="background:#e11d48">+ הוסף גלריה חדשה</button>
+          <div class="art-no-results" style="display:none">לא נמצאו עיצובים התואמים לחיפוש</div>
+          ${(isAdmin() || isEditMode) ? `<button class="art-add-btn" onclick="openPhotoModal()" style="background:#e11d48">+ הוסף עיצוב אתר חדש</button>` : ''}
         </div>
         <div class="art-sidebar">
+          ${(isAdmin() || isEditMode) ? `
           <button onclick="openPhotoModal()" style="background:#e11d48; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: white; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.2s;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
               <line x1="12" y1="5" x2="12" y2="19"></line>
               <line x1="5" y1="12" x2="19" y2="12"></line>
             </svg>
-            העלאת תמונות לאתר
+            העלאת אתר מעוצב לאתר
           </button>
+          ` : ''}
           ${buildPromotedSitesBox()}
           ${budgetHTML}
           ${myProfileHTML}
           ${savedHTML}
           <div class="art-sidebar-box art-popular-box">
-            <div class="art-sidebar-title">חמשת הגלריות האהובות ביותר</div>
+            <div class="art-sidebar-title">חמשת העיצובים המובילים</div>
             ${popularHTML}
           </div>
           ${buildSocialCommunityBox()}
