@@ -451,7 +451,12 @@ async function initSite() {
     mainPage.title = 'כתבות';
     pages = pages.filter(p => p.id !== separateArticlesPage.id);
     topNavPages = topNavPages.filter(id => id !== separateArticlesPage.id);
-    activePageId = mainPage.id;
+    const photosP = pages.find(p => p.content && p.content.includes('photos-page'));
+    if (photosP) {
+      activePageId = photosP.id;
+    } else {
+      activePageId = mainPage.id;
+    }
     saveToStorage();
   }
 
