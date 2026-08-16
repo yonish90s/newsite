@@ -407,7 +407,7 @@ async function initSite() {
   let mainPage = pages.find(p => p.id === 'page-main');
   if (!mainPage) {
     mainPage = { id: 'page-main', title: 'כתבות', content: buildArticlesPage(ARTICLES_SAMPLES) };
-    pages.unshift(mainPage);
+    pages = [mainPage];
   } else {
     mainPage.title = 'כתבות';
     if (!mainPage.content || !mainPage.content.includes('articles-page')) {
@@ -415,17 +415,18 @@ async function initSite() {
     }
   }
 
-  // הסרת עמודי כתבות כפולים אם קיימים בנפרד
-  const separateArticlesPage = pages.find(p => p.content && p.content.includes('articles-page') && !p.content.includes('stories-page') && !p.content.includes('photos-page') && !p.content.includes('courses-page') && p.id !== 'page-main');
-  if (separateArticlesPage) {
-    pages = pages.filter(p => p.id !== separateArticlesPage.id);
-    topNavPages = topNavPages.filter(id => id !== separateArticlesPage.id);
-  }
-
+  // ניקוי מוחלט מהזיכרון ומהענן של עמודים ישנים שנמחקו
+  pages = pages.filter(p => p.id === 'page-main' || p.isHidden === true);
+  topNavPages = ['page-main'];
   activePageId = 'page-main';
-  if (!topNavPages.includes('page-main')) {
-    topNavPages.unshift('page-main');
-  }
+
+  // ניקוי המטמון הישן ב-localforage וב-localStorage
+  localforage.removeItem('mySiteTopNavHTML_v3');
+  localforage.setItem('mySitePages_v3', pages);
+  localforage.setItem('mySiteTopNav_v3', topNavPages);
+  localforage.setItem('myActivePage_v3', activePageId);
+
+  // סנכרון מיידי לפיירבייס 
   saveToStorage();
 
   // כיווץ קל של תוכן עמודים מרונדר ישן אם קיים
