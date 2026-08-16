@@ -49,35 +49,26 @@ const db = getDatabase(app);
 // --- שלב 1: הגדרות בסיס ומצב התחלתי (State) ---
 
 // נגדיר את רשימת העמודים ההתחלתית שלנו (ברירת המחדל למקרה שאין כלום בזיכרון)
+// נגדיר את רשימת העמודים - רק "תמונות" ו-"סיפורים"
 const defaultPages = [
   {
-    id: 'page-main',
-    title: '🏠 ראשי',
+    id: 'page-photos',
+    title: '🖼️ תמונות',
     content: ''
   },
   {
-    id: 'page-shop',
-    title: '🛍️ חנות',
-    content: ''
-  },
-  {
-    id: 'page-charts',
-    title: '📈 גרפים ונתשדשונים',
-    content: ''
-  },
-  {
-    id: 'page-forum',
-    title: '💬 פורום',
+    id: 'page-stories',
+    title: 'סיפורים',
     content: ''
   }
 ];
 
-// הגדרות ברירת מחדל (יוחלפו אם יש שמירה)
+// הגדרות ברירת מחדל
 let pages = defaultPages;
-let activePageId = 'page-main';
-let topNavPages = ['page-main', 'page-shop', 'page-charts', 'page-forum']; // העמודים שמופיעים בתפריט העליון
-let isEditMode = false; // ברירת מחדל: אורח (ללא עריכה)
-let undoStack = []; // מערך לשמירת היסטוריית שינויים לצורך ביטול (Undo)
+let activePageId = 'page-photos';
+let topNavPages = ['page-photos', 'page-stories']; // העמודים היחידים בתפריט העליון
+let isEditMode = false;
+let undoStack = [];
 let siteBackgrounds = { dashboard: null, topNav: null, main: null };
 
 // --- מערכות דינמיות ---
@@ -107,7 +98,6 @@ function applyBackgrounds() {
     if (top) top.style.backgroundImage = '';
   }
   
-  // רקע ייחודי לכל עמוד
   const currentPage = pages.find(p => p.id === activePageId);
   const mainContentEl = document.getElementById('mainContent');
   if (mainContentEl) {
@@ -125,128 +115,32 @@ function applyBackgrounds() {
   }
 }
 
-// פונקציית אתחול אסינכרונית - טוענת מהמסד הנתונים של Firebase עם גיבוי מקומי ב-localforage
+// פונקציית אתחול אסינכרונית - משארת אך ורק את העמודים "תמונות" ו-"סיפורים" ומנקה את הזיכרון
 async function initSite() {
+  pages = [
+    { id: 'page-photos', title: '🖼️ תמונות', content: '' },
+    { id: 'page-stories', title: 'סיפורים', content: '' }
+  ];
+  topNavPages = ['page-photos', 'page-stories'];
+  activePageId = 'page-photos';
+
   try {
-    // 1. ננסה למשוך קודם כל מ-Firebase DB לעדכון בין מכשירים
     const dbRef = ref(db);
     const snapshot = await get(child(dbRef, 'website'));
-    
     if (snapshot.exists()) {
       const data = snapshot.val();
-      console.log("נטען בהצלחה מענן Firebase:", data);
-      
-      if (data.pages) pages = data.pages;
-      if (data.activePageId) activePageId = data.activePageId;
-      if (data.topNavPages) topNavPages = data.topNavPages;
-      if (data.siteBackgrounds) siteBackgrounds = data.siteBackgrounds;
-      
-      if (data.navHTML) {
-        navLinksContainer.innerHTML = data.navHTML;
+      if (data.pages && Array.isArray(data.pages)) {
+        // מסננים כך שיישארו אך ורק העמודים תמונות וסיפורים
+        const filtered = data.pages.filter(p => p.title.includes('תמונות') || p.title.includes('סיפורים'));
+        if (filtered.length > 0) pages = filtered;
       }
-      
-      // נעדכן גם את הזיכרון המקומי לגיבוי
-      localforage.setItem('mySitePages_v3', pages);
-      localforage.setItem('myActivePage_v3', activePageId);
-      localforage.setItem('mySiteTopNav_v3', topNavPages);
-      if (data.navHTML) localforage.setItem('mySiteTopNavHTML_v3', data.navHTML);
-      localforage.setItem('mySiteBackgrounds_v3', siteBackgrounds);
-      
-      applyBackgrounds();
-      
-    } else {
-      // 2. אם ה-Firebase ריק (פעם ראשונה), נטען מ-localforage
-      console.log("לא נמצאו נתונים ב-Firebase, טוען מגיבוי מקומי...");
-      
-      const savedActive = await localforage.getItem('myActivePage_v3');
-      if (savedActive) activePageId = savedActive;
-      
-      const savedTopNavHTML = await localforage.getItem('mySiteTopNavHTML_v3');
-      if (savedTopNavHTML) {
-        navLinksContainer.innerHTML = savedTopNavHTML;
-      }
-
-      const savedPages = await localforage.getItem('mySitePages_v3');
-      if (savedPages) {
-        pages = savedPages.filter(p => p.id === 'page-main' || p.isHidden === true);
-      }
-      
-      const savedBackgrounds = await localforage.getItem('mySiteBackgrounds_v3');
-      if (savedBackgrounds) {
-        siteBackgrounds = savedBackgrounds;
-      }
-      applyBackgrounds();
     }
   } catch(e) {
-    console.error('Error loading data from Firebase DB, trying localforage...', e);
-    // גיבוי למקרה של שגיאת חיבור
-    try {
-      const savedActive = await localforage.getItem('myActivePage_v3');
-      if (savedActive) activePageId = savedActive;
-      const savedPages = await localforage.getItem('mySitePages_v3');
-      if (savedPages) pages = savedPages;
-      const savedBackgrounds = await localforage.getItem('mySiteBackgrounds_v3');
-      if (savedBackgrounds) siteBackgrounds = savedBackgrounds;
-      applyBackgrounds();
-    } catch (localErr) {
-      console.error("Local load failed too", localErr);
-    }
+    console.error('Error fetching Firebase data', e);
   }
 
-  // הוספת עמוד כתבות אוטומטית אם עוד לא קיים
-  if (!pages.find(p => p.title.includes('כתבות'))) {
-    const artPage = { id: 'page-articles-' + Date.now(), title: 'כתבות', content: buildArticlesPage(ARTICLES_SAMPLES) };
-    pages.push(artPage);
-    if (!topNavPages.includes(artPage.id)) topNavPages.push(artPage.id);
-    saveToStorage();
-  }
-
-  // תיקון אוטומטי (Migration) לקישורים מתים בתפריט העליון
-  const allNavLinks = navLinksContainer.querySelectorAll('a');
-  let madeChanges = false;
-  allNavLinks.forEach(a => {
-    // בדיקה האם הקישור מת (אין לו מזהה עמוד שקיים במערכת)
-    let isDead = false;
-    if (a.dataset.pageId) {
-      if (!pages.find(p => p.id === a.dataset.pageId)) isDead = true;
-    } else if (a.id && topNavMapping[a.id]) {
-      if (!pages.find(p => p.id === topNavMapping[a.id])) isDead = true;
-    } else {
-      isDead = true;
-    }
-
-    if (isDead) {
-      // מנסים למצוא עמוד עם שם זהה לטקסט של הקישור
-      const linkText = (a.childNodes[0]?.nodeValue || a.textContent).replace('⌄', '').trim();
-      const matchingPage = pages.find(p => p.title.trim() === linkText);
-      
-      if (matchingPage) {
-        // חיבור אוטומטי לעמוד הקיים
-        a.dataset.pageId = matchingPage.id;
-        if (!topNavPages.includes(matchingPage.id)) {
-          topNavPages.push(matchingPage.id);
-        }
-        madeChanges = true;
-      } else if (linkText) {
-        // אם אין עמוד כזה, נייצר אחד כדי שהקישור לא יהיה שבור
-        const newPageId = 'page-' + Date.now() + Math.floor(Math.random() * 1000);
-        pages.push({
-          id: newPageId,
-          title: linkText,
-          content: ''
-        });
-        a.dataset.pageId = newPageId;
-        topNavPages.push(newPageId);
-        madeChanges = true;
-      }
-    }
-  });
-
-  if (madeChanges) {
-    saveToStorage();
-  }
-
-  // אחרי שהכל נטען (ואולי תוקן), נצייר את האתר
+  // שמירה וסנכרון של המצב הנקי
+  saveToStorage();
   renderSideMenu();
   renderTopNav();
   renderPage();
