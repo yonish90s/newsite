@@ -4584,11 +4584,11 @@ window.buildEverythingMoneyPage = function() {
     <div class="calc-page-wrapper">
       <div class="calc-header-box" style="background: linear-gradient(135deg, #18181b 0%, #09090b 100%); border: 1px solid #27272a;">
         <div class="calc-header-title">
-          <h1 style="color: #84cc16;">📊 מחשבון תשואה ושיווי משקל - Everything Money</h1>
-          <p style="color: #a1a1aa;">ניתוח מניות מקצועי בשיטת 8 הפילירים (Stock Analyzer Matrix)</p>
+          <h1 style="color: #84cc16;">📊 מחשבון תשואה ושיווי משקל</h1>
+          <p style="color: #a1a1aa;">ניתוח מניות מקצועי בשיטת 8 הפילירים (Everything Money)</p>
         </div>
         <div style="background: rgba(132, 204, 22, 0.15); border: 1px solid #84cc16; color: #84cc16; padding: 10px 18px; border-radius: 12px; font-weight: 800; font-size: 14px;">
-          🟢 8-Pillar Stock Valuation Framework
+          🟢 מודל הערכת שווי מניות 8 הפילירים
         </div>
       </div>
 
@@ -4597,19 +4597,19 @@ window.buildEverythingMoneyPage = function() {
         <h3 style="margin-top:0; color:#84cc16; font-size:16px; margin-bottom:16px;">🏢 נתוני המניה והחברה בשוק</h3>
         <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:16px;">
           <div>
-            <label style="color:#a1a1aa; font-size:12px; font-weight:700;">סימול / שם המניה (Ticker)</label>
+            <label style="color:#a1a1aa; font-size:12px; font-weight:700;">סימול המניה (למשל AAPL)</label>
             <input type="text" id="em-ticker" value="AAPL" style="width:100%; padding:9px; background:#27272a; border:1px solid #3f3f46; color:#fff; border-radius:8px; font-weight:800; text-align:center;">
           </div>
           <div>
-            <label style="color:#a1a1aa; font-size:12px; font-weight:700;">מחיר מניה נוכחי ($ Price)</label>
+            <label style="color:#a1a1aa; font-size:12px; font-weight:700;">מחיר מניה נוכחי בשוק ($)</label>
             <input type="number" id="em-price" value="220.00" step="0.01" style="width:100%; padding:9px; background:#27272a; border:1px solid #3f3f46; color:#fff; border-radius:8px; font-weight:800; text-align:center;">
           </div>
           <div>
-            <label style="color:#a1a1aa; font-size:12px; font-weight:700;">הכנסות $ במיליארדים (Revenue TTM)</label>
+            <label style="color:#a1a1aa; font-size:12px; font-weight:700;">הכנסות שנתיות במיליארדי $ (TTM)</label>
             <input type="number" id="em-rev" value="385.6" step="0.1" style="width:100%; padding:9px; background:#27272a; border:1px solid #3f3f46; color:#fff; border-radius:8px; font-weight:800; text-align:center;">
           </div>
           <div>
-            <label style="color:#a1a1aa; font-size:12px; font-weight:700;">מניות במחזור במיליארדים (Shares)</label>
+            <label style="color:#a1a1aa; font-size:12px; font-weight:700;">מספר מניות במחזור (במיליארדים)</label>
             <input type="number" id="em-shares" value="15.3" step="0.1" style="width:100%; padding:9px; background:#27272a; border:1px solid #3f3f46; color:#fff; border-radius:8px; font-weight:800; text-align:center;">
           </div>
         </div>
@@ -4618,32 +4618,32 @@ window.buildEverythingMoneyPage = function() {
       <!-- Everything Money Table Matrix -->
       <div class="em-container">
         <div class="em-header-banner">
-          <span>EVERYTHING MONEY STOCK ANALYZER</span>
-          <span>MY ASSUMPTIONS</span>
+          <span>ניתוח מניות ושיווי משקל</span>
+          <span>הנחות היסוד שלי</span>
         </div>
         <div style="overflow-x: auto;">
           <table class="em-table">
             <thead>
               <tr>
-                <th style="text-align:left; padding-left:20px;">METRIC</th>
-                <th>1 YEAR</th>
-                <th>5 YEARS</th>
-                <th>10 YEARS</th>
-                <th style="color:#fef08a;">LOW</th>
-                <th style="color:#fef08a;">MID</th>
-                <th style="color:#fef08a;">HIGH</th>
+                <th style="text-align:right; padding-right:20px;">מדד פיננסי</th>
+                <th>שנה 1</th>
+                <th>5 שנים</th>
+                <th>10 שנים</th>
+                <th style="color:#fef08a;">שמרני</th>
+                <th style="color:#fef08a;">בינוני</th>
+                <th style="color:#fef08a;">אופטימי</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td class="em-row-label">ROIC (תשואה על ההון)</td>
+                <td class="em-row-label" style="text-align:right; padding-right:20px;">תשואה על ההון המושקע (ROIC)</td>
                 <td class="em-hist-val">18.56%</td>
                 <td class="em-hist-val">18.93%</td>
                 <td class="em-hist-val">19.04%</td>
                 <td>-</td><td>-</td><td>-</td>
               </tr>
               <tr>
-                <td class="em-row-label">Rev. Growth % (צמיחת הכנסות)</td>
+                <td class="em-row-label" style="text-align:right; padding-right:20px;">צמיחה בהכנסות (%)</td>
                 <td class="em-hist-val">30.56%</td>
                 <td class="em-hist-val">25.04%</td>
                 <td class="em-hist-val">18.10%</td>
@@ -4652,7 +4652,7 @@ window.buildEverythingMoneyPage = function() {
                 <td><input type="number" id="em-g-high" value="15" class="em-input">%</td>
               </tr>
               <tr>
-                <td class="em-row-label">Profit Margin (שולי רווח נקי)</td>
+                <td class="em-row-label" style="text-align:right; padding-right:20px;">שולי רווח נקי (%)</td>
                 <td class="em-hist-val">49.92%</td>
                 <td class="em-hist-val">43.78%</td>
                 <td class="em-hist-val">41.47%</td>
@@ -4661,7 +4661,7 @@ window.buildEverythingMoneyPage = function() {
                 <td><input type="number" id="em-pm-high" value="41" class="em-input">%</td>
               </tr>
               <tr>
-                <td class="em-row-label">Free Cash Flow Margin (שולי תזרים)</td>
+                <td class="em-row-label" style="text-align:right; padding-right:20px;">שולי תזרים מזומנים חופשי (%)</td>
                 <td class="em-hist-val">25.61%</td>
                 <td class="em-hist-val">24.77%</td>
                 <td class="em-hist-val">22.98%</td>
@@ -4670,21 +4670,21 @@ window.buildEverythingMoneyPage = function() {
                 <td><input type="number" id="em-fcf-high" value="26" class="em-input">%</td>
               </tr>
               <tr>
-                <td class="em-row-label">P/E (מכפיל רווח צפוי)</td>
+                <td class="em-row-label" style="text-align:right; padding-right:20px;">מכפיל רווח צפוי (P/E)</td>
                 <td>-</td><td>-</td><td>-</td>
                 <td><input type="number" id="em-pe-low" value="17" class="em-input"></td>
                 <td><input type="number" id="em-pe-mid" value="20" class="em-input"></td>
                 <td><input type="number" id="em-pe-high" value="23" class="em-input"></td>
               </tr>
               <tr>
-                <td class="em-row-label">P/FCF (מכפיל תזרים צפוי)</td>
+                <td class="em-row-label" style="text-align:right; padding-right:20px;">מכפיל תזרים מזומנים צפוי (P/FCF)</td>
                 <td>-</td><td>-</td><td>-</td>
                 <td><input type="number" id="em-pfcf-low" value="17" class="em-input"></td>
                 <td><input type="number" id="em-pfcf-mid" value="20" class="em-input"></td>
                 <td><input type="number" id="em-pfcf-high" value="23" class="em-input"></td>
               </tr>
               <tr>
-                <td class="em-row-label">Desired Annual Return (תשואה מבוקשת)</td>
+                <td class="em-row-label" style="text-align:right; padding-right:20px;">תשואה שנתית מבוקשת (%)</td>
                 <td>-</td><td>-</td><td>-</td>
                 <td><input type="number" id="em-ret-low" value="9" class="em-input">%</td>
                 <td><input type="number" id="em-ret-mid" value="9" class="em-input">%</td>
@@ -4696,7 +4696,7 @@ window.buildEverythingMoneyPage = function() {
 
         <div style="padding: 18px; text-align: center; background: #0f0f11; border-top: 1px solid #27272a;">
           <button onclick="calculateEMValuation()" style="background: linear-gradient(90deg, #65a30d 0%, #84cc16 100%); color: #ffffff; border: none; padding: 14px 40px; border-radius: 50px; font-size: 18px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 20px rgba(132, 204, 22, 0.4); transition: transform 0.2s ease;">
-            🚀 נתח מניה (ANALYZE STOCK)
+            🚀 נתח מניה ומצא מחיר קנייה יעד
           </button>
         </div>
 
@@ -4704,14 +4704,14 @@ window.buildEverythingMoneyPage = function() {
         <div id="em-output-container" class="em-results-grid" style="display: grid;">
           <!-- Scenario Low -->
           <div class="em-result-card low">
-            <div class="em-scenario-title">LOW ASSUMPTION (שמרני)</div>
-            <div style="font-size:12px; color:#a1a1aa; margin-bottom:4px;">Multiple of Profit Margin</div>
+            <div class="em-scenario-title">תרחיש שמרני (Low)</div>
+            <div style="font-size:12px; color:#a1a1aa; margin-bottom:4px;">מחיר יעד לפי מכפיל רווח</div>
             <div class="em-buy-price" id="em-res-pm-low" style="color:#ef4444;">$178.29 <span style="font-size:16px;">⊕</span></div>
             
-            <div style="font-size:12px; color:#a1a1aa; margin-top:12px; margin-bottom:4px;">Multiple of Cash Flow</div>
+            <div style="font-size:12px; color:#a1a1aa; margin-top:12px; margin-bottom:4px;">מחיר יעד לפי מכפיל תזרים</div>
             <div class="em-buy-price" id="em-res-fcf-low" style="color:#ef4444;">$101.88 <span style="font-size:16px;">⊕</span></div>
 
-            <div style="font-size:12px; color:#a1a1aa; margin-top:12px; margin-bottom:4px;">Current Price Return ⓘ</div>
+            <div style="font-size:12px; color:#a1a1aa; margin-top:12px; margin-bottom:4px;">תשואה שנתית צפויה במחיר הנוכחי ⓘ</div>
             <div style="font-size:16px; font-weight:900; color:#ef4444;" id="em-res-ret-low">-7.59%</div>
             
             <span class="em-val-tag over" id="em-tag-low">מחיר יתר (Overvalued)</span>
@@ -4719,14 +4719,14 @@ window.buildEverythingMoneyPage = function() {
 
           <!-- Scenario Mid -->
           <div class="em-result-card mid">
-            <div class="em-scenario-title">MID ASSUMPTION (בינוני)</div>
-            <div style="font-size:12px; color:#a1a1aa; margin-bottom:4px;">Multiple of Profit Margin</div>
+            <div class="em-scenario-title">תרחיש בינוני (Mid)</div>
+            <div style="font-size:12px; color:#a1a1aa; margin-bottom:4px;">מחיר יעד לפי מכפיל רווח</div>
             <div class="em-buy-price" id="em-res-pm-mid" style="color:#ef4444;">$315.97 <span style="font-size:16px;">⊕</span></div>
             
-            <div style="font-size:12px; color:#a1a1aa; margin-top:12px; margin-bottom:4px;">Multiple of Cash Flow</div>
+            <div style="font-size:12px; color:#a1a1aa; margin-top:12px; margin-bottom:4px;">מחיר יעד לפי מכפיל תזרים</div>
             <div class="em-buy-price" id="em-res-fcf-mid" style="color:#ef4444;">$191.24 <span style="font-size:16px;">⊕</span></div>
 
-            <div style="font-size:12px; color:#a1a1aa; margin-top:12px; margin-bottom:4px;">Current Price Return ⓘ</div>
+            <div style="font-size:12px; color:#a1a1aa; margin-top:12px; margin-bottom:4px;">תשואה שנתית צפויה במחיר הנוכחי ⓘ</div>
             <div style="font-size:16px; font-weight:900; color:#ef4444;" id="em-res-ret-mid">-0.30%</div>
 
             <span class="em-val-tag over" id="em-tag-mid">מחיר יתר (Overvalued)</span>
@@ -4734,14 +4734,14 @@ window.buildEverythingMoneyPage = function() {
 
           <!-- Scenario High -->
           <div class="em-result-card high">
-            <div class="em-scenario-title">HIGH ASSUMPTION (אופטימי)</div>
-            <div style="font-size:12px; color:#a1a1aa; margin-bottom:4px;">Multiple of Profit Margin</div>
+            <div class="em-scenario-title">תרחיש אופטימי (High)</div>
+            <div style="font-size:12px; color:#a1a1aa; margin-bottom:4px;">מחיר יעד לפי מכפיל רווח</div>
             <div class="em-buy-price" id="em-res-pm-high" style="color:#10b981;">$556.83 <span style="font-size:16px;">⊕</span></div>
             
-            <div style="font-size:12px; color:#a1a1aa; margin-top:12px; margin-bottom:4px;">Multiple of Cash Flow</div>
+            <div style="font-size:12px; color:#a1a1aa; margin-top:12px; margin-bottom:4px;">מחיר יעד לפי מכפיל תזרים</div>
             <div class="em-buy-price" id="em-res-fcf-high" style="color:#ef4444;">$353.11 <span style="font-size:16px;">⊕</span></div>
 
-            <div style="font-size:12px; color:#a1a1aa; margin-top:12px; margin-bottom:4px;">Current Price Return ⓘ</div>
+            <div style="font-size:12px; color:#a1a1aa; margin-top:12px; margin-bottom:4px;">תשואה שנתית צפויה במחיר הנוכחי ⓘ</div>
             <div style="font-size:16px; font-weight:900; color:#10b981;" id="em-res-ret-high">6.94%</div>
 
             <span class="em-val-tag fair" id="em-tag-high">מחיר הוגן (Fair Value)</span>
