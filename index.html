@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <!-- שם של האתר  -->
+      
+  <title>propile</title>
+  <!-- ספריית interact.js לגרירה ושינוי גודל -->
+  <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
+  <!-- ספריית localforage לשמירת כמות בלתי מוגבלת של תמונות (במקום localStorage המוגבל) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
+  <!-- קישור לקובץ העיצוב החיצוני (עם פרמטר למניעת שמירה במטמון) -->
+  <link rel="stylesheet" href="./style.css?v=34">
+</head>
+<body class="light-mode">
+  
+
+
+  <!-- המעטפת הראשית של כל האתר, מסדרת את הכל בעמודה אחת -->
+  <div class="main-layout">
+    
+    <!-- הסרגל העליון של האתר (Apple Nav) -->
+    <header class="apple-nav">
+      <div class="apple-nav-content">
+        <!-- לוגו האתר -->
+        <div class="logo-area" style="cursor: pointer;" title="לוגו האתר">
+          <img id="main-logo" src="./logo.png" alt="לוגו" style="height: 20px; display: block;">
+        </div>
+        
+        <!-- תפריט הניווט העליון המרכזי -->
+        <nav class="nav-links" dir="ltr" style="display: flex; gap: 32px; align-items: center;">
+          <!-- הקישורים ייווצרו על ידי script.js ללא אימוג'ים -->
+        </nav>
+        
+        <!-- כפתור אורח/מנהל -->
+        <div class="right-icons" style="display: flex; gap: 16px; align-items: center;">
+          <button id="manager-btn" class="manager-btn">אורח</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- מעטפת התוכן: מחלקת את המסך לאזור מרכזי ולתפריט צדדי -->
+    <div class="content-wrapper">
+      
+      <!-- האזור המרכזי הראשי (כאן יתחלף התוכן כשנלחץ על כפתורים) -->
+      <main class="center-content" id="mainContent">
+      </main>
+
+
+      <!-- סרגל כלים מרחף בתחתית המסך -->
+      <div class="floating-toolbar minimized" id="floating-toolbar" style="display: none;">
+        <!-- ידית גרירה -->
+        <div class="toolbar-drag-handle" title="גרור לשנות מיקום" style="cursor: grab; display: flex; align-items: center; justify-content: center; padding: 0 10px; font-size: 22px; font-weight: bold; color: #888;">∷</div>
+        <!-- כפתור הרחבה/מזעור -->
+        <button id="btn-minimize-toolbar" class="float-btn" style="padding: 5px 10px; font-size: 16px; font-weight: bold; background: transparent; border: 1px solid #ddd; box-shadow: none; color: #333; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;" title="הרחב">+</button>
+        
+        <!-- קו מפריד -->
+        <div class="toolbar-separator" style="width: 1px; background: #ddd; margin: 0 5px;"></div>
+      
+        <button id="btn-add-page" class="float-btn edit-float-btn" style="background: #2196F3; color: white;">+ הוסף עמוד</button>
+        <button id="btn-manage-pages" class="float-btn edit-float-btn" style="background: #555; color: white;">ניהול עמודים 🗂️</button>
+        <button id="btn-add-hidden-page" class="float-btn edit-float-btn" style="background: #6366f1; color: white;">+ דף מוסתר 🔒</button>
+        <button id="btn-add-articles-page" class="float-btn edit-float-btn" style="background: #e65100; color: white;">דף כתבות 📰</button>
+        <button id="btn-add-stories-page" class="float-btn edit-float-btn" style="background: #8b5cf6; color: white;">דף סיפורים 📖</button>
+        <button id="btn-add-photos-page" class="float-btn edit-float-btn" style="background: #10b981; color: white;">דף תמונות 🖼️</button>
+        <button id="btn-add-community-page" class="float-btn edit-float-btn" style="background: #ec4899; color: white;">דף קהילה 👥</button>
+        <button id="btn-edit-mode" class="float-btn edit-float-btn">מצב עריכה ✏️</button>
+        <button id="btn-save-site" class="float-btn edit-float-btn" style="background: #4CAF50; color: white;">שמור שינויים 💾</button>
+        <button id="btn-reset-site" class="float-btn edit-float-btn" style="background: #f44336; color: white;">איפוס אתר 🗑️</button>
+        <button id="btn-add-bg" class="float-btn add-float-btn">הוסף רקע 🎨</button>
+        <button id="btn-add-image" class="float-btn add-float-btn">הוסף תמונה 🖼️</button>
+        <button id="btn-add-video" class="float-btn add-float-btn">הוסף וידאו 📹</button>
+        <button id="btn-add-loop-video" class="float-btn add-float-btn">וידאו בלופ 🔁</button>
+        <button id="btn-make-slideshow" class="float-btn add-float-btn">הוסף מצגת 🎞️</button>
+        <button id="btn-make-download" class="float-btn add-float-btn">הפוך להורדה 📥</button>
+        <button id="btn-add-text" class="float-btn add-float-btn">הוסף טקסט 📝</button>
+        <button id="btn-block" class="float-btn add-float-btn">בלוק 📦</button>
+        <button id="btn-split-el" class="float-btn edit-float-btn">חתוך ✂️</button>
+        <button id="btn-add-hotspot" class="float-btn add-float-btn">אזור לחיץ 🎯</button>
+        <button id="btn-restore-chat" class="float-btn edit-float-btn" style="background: #8b5cf6; color: white; display: none;">שחזר צ'אט 💬</button>
+      </div>
+      
+    </div>
+  </div>
+
+<!-- מודאל קישור לדף פנימי -->
+<div id="page-link-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:99999; align-items:center; justify-content:center; direction:rtl;">
+  <div style="background:#fff; border-radius:16px; padding:28px; width:90%; max-width:420px; box-shadow:0 20px 60px rgba(0,0,0,0.25);">
+    <h3 style="margin:0 0 18px; font-size:18px; font-weight:700;">קשר אלמנט לדף פנימי</h3>
+    <p style="font-size:13px; color:#666; margin:0 0 16px;">בחר דף שייפתח כשלוחצים על האלמנט:</p>
+    <select id="page-link-select" style="width:100%; padding:10px 12px; border:1.5px solid #ddd; border-radius:8px; font-size:14px; direction:rtl; margin-bottom:20px;">
+      <option value="">— ללא קישור —</option>
+    </select>
+    <div style="display:flex; gap:10px; justify-content:flex-end;">
+      <button id="page-link-cancel" style="background:#f5f5f5; border:none; border-radius:8px; padding:9px 20px; font-size:14px; cursor:pointer;">ביטול</button>
+      <button id="page-link-save" style="background:#6366f1; color:white; border:none; border-radius:8px; padding:9px 20px; font-size:14px; font-weight:600; cursor:pointer;">שמור קישור</button>
+    </div>
+  </div>
+</div>
+<!-- WEBSITE PRELOADER -->
+<div id="website-preloader" style="position: fixed; inset: 0; background: #121212; z-index: 9999999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.4s ease, visibility 0.4s ease;">
+  <div style="display: flex; flex-direction: column; align-items: center; gap: 24px;">
+    <div style="position: relative; display: flex; align-items: center; justify-content: center; animation: pulse-logo 1.4s infinite ease-in-out;">
+      <img id="loader-img" src="./logo.png" alt="Loading..." style="width: 120px; height: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.3); border-radius: 24px;">
+    </div>
+  </div>
+</div>
+
+<style>
+@keyframes pulse-logo {
+  0% { transform: scale(0.96); opacity: 0.85; }
+  50% { transform: scale(1.04); opacity: 1; }
+  100% { transform: scale(0.96); opacity: 0.85; }
+}
+</style>
+
+<script>
+  window.__siteReady = false;
+
+  function hidePreloader() {
+    window.__siteReady = true;
+    const preloader = document.getElementById('website-preloader');
+    if (preloader) {
+      preloader.style.opacity = '0';
+      preloader.style.visibility = 'hidden';
+      setTimeout(() => preloader.remove(), 400);
+    }
+  }
+  window.hidePreloader = hidePreloader;
+
+  // גיבוי בטיחותי למקרה של עיכוב בטעינת האתר
+  let preloaderSafetyTimer = null;
+  function armPreloaderSafety() {
+    if (preloaderSafetyTimer) return;
+    preloaderSafetyTimer = setTimeout(hidePreloader, 4500);
+  }
+  window.armPreloaderSafety = armPreloaderSafety;
+
+  armPreloaderSafety();
+
+  if (localStorage.getItem('theme') === 'dark') {
+    document.body.classList.add('dark-theme');
+  }
+</script>
+
+
+
+<!-- חלונית בחירת קישור (Link Modal) -->
+<div id="link-modal" class="modal-overlay" style="display: none;">
+  <div class="modal-content">
+    <h3>הגדרת קישור</h3>
+    
+    <label for="link-internal-select">בחר עמוד פנימי באתר:</label>
+    <select id="link-internal-select">
+      <!-- Options will be dynamically populated -->
+    </select>
+
+    <div style="margin: 15px 0; text-align: center; font-weight: bold;">-- או --</div>
+
+    <label for="link-external-input">הזן קישור חיצוני (https://...):</label>
+    <input type="text" id="link-external-input" placeholder="https://google.com">
+
+    <div class="modal-actions" style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
+      <button id="btn-cancel-link" class="modal-btn cancel-btn">ביטול</button>
+      <button id="btn-remove-link" class="modal-btn danger-btn">הסר קישור</button>
+      <button id="btn-save-link" class="modal-btn save-btn">שמור</button>
+    </div>
+  </div>
+</div>
+
+<!-- מודל ניהול עמודים -->
+<div id="manage-pages-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:99999; align-items:center; justify-content:center; direction:rtl;">
+  <div style="background:#fff; border-radius:16px; padding:28px; width:90%; max-width:420px; max-height:80vh; overflow-y:auto; display:flex; flex-direction:column; gap:0;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
+      <h3 style="margin:0; font-size:18px;">ניהול עמודים</h3>
+      <button id="manage-pages-close" style="background:none; border:none; font-size:20px; cursor:pointer; color:#888;">✕</button>
+    </div>
+    <div id="manage-pages-list" style="display:flex; flex-direction:column; gap:8px;"></div>
+  </div>
+</div>
+
+<!-- מודאל התחברות מעוצב בסגנון אפל/מינימליסטי -->
+
+<!-- מודל הוספת כתבה -->
+<!-- מודל הוספת כתבה -->
+<div id="article-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:99999; align-items:center; justify-content:center; direction:rtl;">
+  <div style="background:#fff; border-radius:16px; padding:28px; width:90%; max-width:460px; max-height:85vh; overflow-y:auto; display:flex; flex-direction:column; gap:12px;">
+    <h3 style="margin:0 0 4px; font-size:18px;">הוספת כתבה חדשה</h3>
+    <label style="font-size:13px; font-weight:600;">כותרת <span style="color:red">*</span></label>
+    <input id="art-title" type="text" placeholder="כותרת הכתבה" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+    <label style="font-size:13px; font-weight:600;">תקציר</label>
+    <textarea id="art-summary" rows="3" placeholder="תיאור קצר של הכתבה..." style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box; resize:vertical;"></textarea>
+    <label style="font-size:13px; font-weight:600;">שם הכותב</label>
+    <input id="art-author" type="text" placeholder="שם הכותב" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+    <label style="font-size:13px; font-weight:600;">קטגוריה</label>
+    <input id="art-category" type="text" placeholder="למשל: חדשות, סקירות, טכנולוגיה" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+    <label style="font-size:13px; font-weight:600;">תוכן הכתבה</label>
+    <textarea id="art-body" rows="6" placeholder="כתוב את תוכן הכתבה המלא כאן..." style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box; resize:vertical;"></textarea>
+    <label style="font-size:13px; font-weight:600;">קישור חיצוני (URL) — אופציונלי</label>
+    <input id="art-link" type="url" placeholder="https://..." style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+    <label style="font-size:13px; font-weight:600;">תמונה</label>
+    <button id="art-img-pick" style="padding:9px 12px; border:1px dashed #bbb; border-radius:8px; background:#f9f9f9; cursor:pointer; font-size:13px; text-align:right;">לחץ לבחירת תמונה מהמחשב</button>
+    <img id="art-img-preview" src="" alt="" style="display:none; max-height:140px; border-radius:8px; object-fit:cover; width:100%;">
+    <div style="display:flex; gap:10px; margin-top:4px;">
+      <button id="art-cancel" style="flex:1; padding:10px; border:1px solid #ddd; border-radius:8px; background:#fff; cursor:pointer; font-size:14px;">ביטול</button>
+      <button id="art-save" style="flex:1; padding:10px; border:none; border-radius:8px; background:#e65100; color:#fff; cursor:pointer; font-size:14px; font-weight:700;">שמור כתבה</button>
+    </div>
+  </div>
+</div>
+
+<!-- מודל הוספת סיפור -->
+<div id="story-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:99999; align-items:center; justify-content:center; direction:rtl;">
+  <div style="background:#fff; border-radius:16px; padding:28px; width:90%; max-width:460px; max-height:85vh; overflow-y:auto; display:flex; flex-direction:column; gap:12px;">
+    <h3 id="story-modal-title" style="margin:0 0 4px; font-size:18px;">הוספת סיפור חדש</h3>
+    <label style="font-size:13px; font-weight:600;">כותרת <span style="color:red">*</span></label>
+    <input id="story-title" type="text" placeholder="כותרת הסיפור" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+    <label style="font-size:13px; font-weight:600;">תקציר</label>
+    <textarea id="story-summary" rows="3" placeholder="תיאור קצר של הסיפור..." style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box; resize:vertical;"></textarea>
+    <label style="font-size:13px; font-weight:600;">שם הכותב</label>
+    <input id="story-author" type="text" placeholder="שם הכותב" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+    <label style="font-size:13px; font-weight:600;">קטגוריה</label>
+    <select id="story-category" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box; background:white;">
+      <option value="כללי">כללי</option>
+      <option value="סטרייט">סטרייט</option>
+      <option value="ביסקסואל">ביסקסואל</option>
+      <option value="שחורים על לבנות">שחורים על לבנות</option>
+    </select>
+    <label style="font-size:13px; font-weight:600;">תוכן הסיפור</label>
+    <textarea id="story-body" rows="6" placeholder="כתוב את תוכן הסיפור המלא כאן..." style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box; resize:vertical;"></textarea>
+    <label style="font-size:13px; font-weight:600;">קישור חיצוני (URL) — אופציונלי</label>
+    <input id="story-link" type="url" placeholder="https://..." style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+    <label style="font-size:13px; font-weight:600;">תמונות הסיפור — הראשונה (משמאל) היא התמונה הראשית. אפשר לשנות סדר ולהסיר.</label>
+    <div id="story-images-editor" style="display:flex; flex-wrap:wrap; gap:8px; direction:ltr;"></div>
+    <button id="story-add-image" type="button" style="padding:9px 12px; border:1px dashed #bbb; border-radius:8px; background:#f9f9f9; cursor:pointer; font-size:13px; text-align:center; font-weight:600;">➕ הוסף תמונה</button>
+    <div style="display:flex; gap:10px; margin-top:4px;">
+      <button id="story-cancel" style="flex:1; padding:10px; border:1px solid #ddd; border-radius:8px; background:#fff; cursor:pointer; font-size:14px;">ביטול</button>
+      <button id="story-save" style="flex:1; padding:10px; border:none; border-radius:8px; background:#8b5cf6; color:#fff; cursor:pointer; font-size:14px; font-weight:700;">שמור סיפור</button>
+    </div>
+  </div>
+</div>
+
+<!-- מודל הוספת תמונות (אלבום/גלריה) -->
+<div id="photo-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:99999; align-items:center; justify-content:center; direction:rtl;">
+  <div style="background:#fff; border-radius:16px; padding:28px; width:90%; max-width:480px; max-height:85vh; overflow-y:auto; display:flex; flex-direction:column; gap:12px;">
+    <h3 style="margin:0 0 4px; font-size:18px;">הוספת גלריית תמונות חדשה</h3>
+    <label style="font-size:13px; font-weight:600;">כותרת <span style="color:red">*</span></label>
+    <input id="photo-title" type="text" placeholder="כותרת הגלריה" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+    <label style="font-size:13px; font-weight:600;">תקציר</label>
+    <textarea id="photo-summary" rows="2" placeholder="תיאור קצר..." style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box; resize:vertical;"></textarea>
+    <label style="font-size:13px; font-weight:600;">קטגוריה <span style="color:red">*</span></label>
+    <select id="photo-category" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box; background: white;">
+      <option value="גברים">גברים</option>
+      <option value="נשים">נשים</option>
+      <option value="זוגות">זוגות</option>
+      <option value="כללי">כללי</option>
+    </select>
+    <label style="font-size:13px; font-weight:600;">טווח גיל</label>
+    <select id="photo-age" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box; background: white;">
+      <option value="">לא צוין</option>
+      <option value="18-25">18-25</option>
+      <option value="26-35">26-35</option>
+      <option value="36-45">36-45</option>
+      <option value="46+">46+</option>
+    </select>
+    <label style="font-size:13px; font-weight:600;">מיקום</label>
+    <select id="photo-region" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box; background: white;">
+      <option value="">לא צוין</option>
+      <option value="צפון">צפון</option>
+      <option value="מרכז">מרכז</option>
+      <option value="דרום">דרום</option>
+    </select>
+    <label style="font-size:13px; font-weight:600;">טלגרם (שם משתמש או קישור) — אופציונלי</label>
+    <input id="photo-telegram" type="text" placeholder="לדוגמה: @username" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+    
+    <label style="font-size:13px; font-weight:600;">אימייל ליצירת קשר — אופציונלי</label>
+    <input id="photo-email" type="text" placeholder="לדוגמה: example@mail.com" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+    
+    <label style="font-size:13px; font-weight:600;">גלריית תמונות (עד 5 תמונות) <span style="color:red">*</span></label>
+    <div style="display:grid; grid-template-columns:repeat(5, 1fr); gap:8px;">
+      <div style="display:flex; flex-direction:column; align-items:center; gap:4px;">
+        <button id="photo-img-pick-1" style="width:100%; aspect-ratio:1; border:1px dashed #bbb; border-radius:8px; background:#f9f9f9; cursor:pointer; font-size:14px; padding:0; height:45px;">1️⃣</button>
+        <img id="photo-img-preview-1" style="display:none; width:100%; aspect-ratio:1; border-radius:8px; object-fit:cover; height:45px;">
+      </div>
+      <div style="display:flex; flex-direction:column; align-items:center; gap:4px;">
+        <button id="photo-img-pick-2" style="width:100%; aspect-ratio:1; border:1px dashed #bbb; border-radius:8px; background:#f9f9f9; cursor:pointer; font-size:14px; padding:0; height:45px;">2️⃣</button>
+        <img id="photo-img-preview-2" style="display:none; width:100%; aspect-ratio:1; border-radius:8px; object-fit:cover; height:45px;">
+      </div>
+      <div style="display:flex; flex-direction:column; align-items:center; gap:4px;">
+        <button id="photo-img-pick-3" style="width:100%; aspect-ratio:1; border:1px dashed #bbb; border-radius:8px; background:#f9f9f9; cursor:pointer; font-size:14px; padding:0; height:45px;">3️⃣</button>
+        <img id="photo-img-preview-3" style="display:none; width:100%; aspect-ratio:1; border-radius:8px; object-fit:cover; height:45px;">
+      </div>
+      <div style="display:flex; flex-direction:column; align-items:center; gap:4px;">
+        <button id="photo-img-pick-4" style="width:100%; aspect-ratio:1; border:1px dashed #bbb; border-radius:8px; background:#f9f9f9; cursor:pointer; font-size:14px; padding:0; height:45px;">4️⃣</button>
+        <img id="photo-img-preview-4" style="display:none; width:100%; aspect-ratio:1; border-radius:8px; object-fit:cover; height:45px;">
+      </div>
+      <div style="display:flex; flex-direction:column; align-items:center; gap:4px;">
+        <button id="photo-img-pick-5" style="width:100%; aspect-ratio:1; border:1px dashed #bbb; border-radius:8px; background:#f9f9f9; cursor:pointer; font-size:14px; padding:0; height:45px;">5️⃣</button>
+        <img id="photo-img-preview-5" style="display:none; width:100%; aspect-ratio:1; border-radius:8px; object-fit:cover; height:45px;">
+      </div>
+    </div>
+
+    <div style="display:flex; gap:10px; margin-top:8px;">
+      <button id="photo-cancel" style="flex:1; padding:10px; border:1px solid #ddd; border-radius:8px; background:#fff; cursor:pointer; font-size:14px;">ביטול</button>
+      <button id="photo-save" style="flex:1; padding:10px; border:none; border-radius:8px; background:#e11d48; color:#fff; cursor:pointer; font-size:14px; font-weight:700;">שמור גלריה</button>
+    </div>
+  </div>
+</div>
+
+<!-- מודל הוספת קורס -->
+<div id="course-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:99999; align-items:center; justify-content:center; direction:rtl;">
+  <div style="background:#fff; border-radius:16px; padding:28px; width:90%; max-width:460px; max-height:85vh; overflow-y:auto; display:flex; flex-direction:column; gap:12px;">
+    <h3 style="margin:0 0 4px; font-size:18px;">הוספת קורס/סרטון חדש</h3>
+    <label style="font-size:13px; font-weight:600;">שם הקורס / שיעור <span style="color:red">*</span></label>
+    <input id="course-title" type="text" placeholder="שם הקורס או השיעור" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+    <label style="font-size:13px; font-weight:600;">תקציר</label>
+    <textarea id="course-summary" rows="3" placeholder="תיאור קצר של הקורס..." style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box; resize:vertical;"></textarea>
+    <label style="font-size:13px; font-weight:600;">שם המרצה / מורה</label>
+    <input id="course-author" type="text" placeholder="שם המרצה" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+    <label style="font-size:13px; font-weight:600;">קטגוריה</label>
+    <input id="course-category" type="text" placeholder="למשל: תכנות, שיווק, עיצוב" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+    
+    <label style="font-size:13px; font-weight:600;">תמונת שער (קאבר)</label>
+    <button id="course-img-pick" style="padding:9px 12px; border:1px dashed #bbb; border-radius:8px; background:#f9f9f9; cursor:pointer; font-size:13px; text-align:right;">לחץ לבחירת תמונה</button>
+    <img id="course-img-preview" src="" alt="" style="display:none; max-height:100px; border-radius:8px; object-fit:cover; width:100%;">
+    
+    <label style="font-size:13px; font-weight:600;">סרטון השיעור (קישור מ-Vimeo/YouTube או קובץ מקומי) <span style="color:red">*</span></label>
+    <input id="course-vid-url" type="text" placeholder="הדבק קישור (למשל: https://vimeo.com/1205176242)" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+    <div style="text-align:center; font-size:11px; color:#999; margin:2px 0;">- או -</div>
+    <button id="course-vid-pick" style="padding:9px 12px; border:1px dashed #bbb; border-radius:8px; background:#f9f9f9; cursor:pointer; font-size:13px; text-align:right; width:100%;">בחר קובץ מקומי מהמחשב (עד 10 שניות)</button>
+    <video id="course-vid-preview" controls muted playsinline style="display:none; max-height:120px; border-radius:8px; width:100%; margin-top:5px;"></video>
+
+    <div style="display:flex; gap:10px; margin-top:4px;">
+      <button id="course-cancel" style="flex:1; padding:10px; border:1px solid #ddd; border-radius:8px; background:#fff; cursor:pointer; font-size:14px;">ביטול</button>
+      <button id="course-save" style="flex:1; padding:10px; border:none; border-radius:8px; background:#2196F3; color:#fff; cursor:pointer; font-size:14px; font-weight:700;">שמור שיעור</button>
+    </div>
+  </div>
+</div>
+
+<!-- מודאל הוספת מוצר לחנות -->
+<div id="shop-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:99999; align-items:center; justify-content:center; direction:rtl;">
+  <div style="background:#fff; border-radius:16px; padding:28px; width:90%; max-width:460px; max-height:85vh; overflow-y:auto; display:flex; flex-direction:column; gap:12px;">
+    <h3 style="margin:0 0 4px; font-size:18px;">הוספת מוצר חדש</h3>
+    <label style="font-size:13px; font-weight:600;">שם המוצר <span style="color:red">*</span></label>
+    <input id="shop-name" type="text" placeholder="שם המוצר" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+    <label style="font-size:13px; font-weight:600;">תווית קטנה (אופציונלי)</label>
+    <input id="shop-label" type="text" placeholder="למשל: חריטה חינם, מבצע" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+    <label style="font-size:13px; font-weight:600;">מחיר</label>
+    <input id="shop-price" type="text" placeholder="למשל: ₪999" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+    <label style="font-size:13px; font-weight:600;">קישור לרכישה (אופציונלי)</label>
+    <input id="shop-link" type="url" placeholder="https://..." style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+    <label style="font-size:13px; font-weight:600;">תמונת מוצר</label>
+    <button id="shop-img-pick" style="padding:9px 12px; border:1px dashed #bbb; border-radius:8px; background:#f9f9f9; cursor:pointer; font-size:13px; text-align:right;">לחץ לבחירת תמונה מהמחשב</button>
+    <img id="shop-img-preview" src="" alt="" style="display:none; max-height:140px; border-radius:8px; object-fit:contain; width:100%;">
+    <div style="display:flex; gap:10px; margin-top:4px;">
+      <button id="shop-cancel" style="flex:1; padding:10px; border:1px solid #ddd; border-radius:8px; background:#fff; cursor:pointer; font-size:14px;">ביטול</button>
+      <button id="shop-save" style="flex:1; padding:10px; border:none; border-radius:8px; background:#111; color:#fff; cursor:pointer; font-size:14px; font-weight:700;">שמור מוצר</button>
+    </div>
+  </div>
+</div>
+
+<div id="auth-modal" class="auth-modal-overlay">
+  <div class="auth-modal-card">
+    <div class="auth-modal-top-bar">
+      <h3 class="auth-modal-title">Login/Signup</h3>
+      <button id="auth-modal-close" class="auth-modal-close-btn" title="סגור">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:block;">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+    
+    <!-- לוגו האתר -->
+    <img src="./logo.png" alt="Logo" class="auth-modal-logo">
+    
+    <div class="auth-section-title" style="margin-bottom:16px;">התחברות באמצעות גוגל</div>
+    
+    <div class="auth-social-buttons" style="justify-content: center; margin-bottom:24px;">
+      <!-- כפתור גוגל -->
+      <button id="auth-google-login-btn" class="auth-social-btn" title="התחבר עם Google" style="padding:0; border:none; outline:none; font:inherit; color:inherit; background:none; cursor:pointer;">
+        <svg width="48" height="48" viewBox="0 0 18 18">
+          <path fill="#4285F4" d="M17.64 9.2c0-.63-.06-1.25-.16-1.84H9v3.47h4.84c-.21 1.12-.84 2.07-1.8 2.71v2.24h2.91c1.7-1.56 2.69-3.86 2.69-6.58z"/>
+          <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.91-2.24c-.8.54-1.84.87-3.05.87-2.35 0-4.33-1.58-5.04-3.71H.95v2.3A9 9 0 0 0 9 18z"/>
+          <path fill="#FBBC05" d="M3.96 10.74A5.4 5.4 0 0 1 3.6 9c0-.6.1-1.19.29-1.74V4.96H.95A8.99 8.99 0 0 0 0 9c0 1.48.36 2.89.99 4.13l2.97-2.39z"/>
+          <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.59C13.47.89 11.43 0 9 0 5.02 0 1.57 2.29.21 5.62l3.04 2.36c.7-2.13 2.68-3.71 5.04-3.71z"/>
+        </svg>
+      </button>
+    </div>
+    
+    <div class="auth-modal-footer">
+      By signing up or logging in you are agreeing to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+    </div>
+  </div>
+</div>
+
+<!-- מודל הוספת קישור ממומן -->
+<div id="promoted-site-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:99999; align-items:center; justify-content:center; direction:rtl;">
+  <div style="background:#fff; border-radius:16px; padding:28px; width:95%; max-width:400px; display:flex; flex-direction:column; gap:12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+    <h3 style="margin:0 0 4px; font-size:18px;">הוספת אתר לקידום</h3>
+    
+    <label style="font-size:13px; font-weight:600;">שם האתר/הקישור <span style="color:red">*</span></label>
+    <input id="promoted-site-name" type="text" placeholder="למשל: גוגל" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+    
+    <label style="font-size:13px; font-weight:600;">כתובת הקישור (URL) <span style="color:red">*</span></label>
+    <input id="promoted-site-url" type="text" placeholder="https://www.example.com" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+    
+    <label style="font-size:13px; font-weight:600;">אייקון של האתר (תמונה ריבועית)</label>
+    <div style="display:flex; align-items:center; gap:12px;">
+      <button id="promoted-site-img-pick" style="flex:1; padding:9px 12px; border:1px dashed #bbb; border-radius:8px; background:#f9f9f9; cursor:pointer; font-size:13px; font-weight:600;">בחר תמונת אייקון</button>
+      <img id="promoted-site-img-preview" style="display:none; width:40px; height:40px; border-radius:4px; object-fit:cover; border:1px solid #eee;">
+    </div>
+
+    <div style="display:flex; gap:10px; margin-top:8px;">
+      <button id="promoted-site-cancel" style="flex:1; padding:10px; border:1px solid #ddd; border-radius:8px; background:#fff; cursor:pointer; font-size:14px;">ביטול</button>
+      <button id="promoted-site-save" style="flex:1; padding:10px; border:none; border-radius:8px; background:#16a34a; color:#fff; cursor:pointer; font-size:14px; font-weight:700;">שמור קישור</button>
+    </div>
+  </div>
+</div>
+
+<!-- חלונית הוספת רקע (Background Modal) -->
+<div id="bg-modal" class="modal-overlay" style="display: none;">
+  <div class="modal-content" style="max-width: 300px;">
+    <h3>הוספת רקע</h3>
+    <p style="margin-bottom: 15px;">בחר לאיזה אזור להוסיף רקע:</p>
+    <button id="bg-target-dashboard" class="action-btn" style="width:100%; margin-bottom:10px; padding: 10px;">רקע לדשבורד</button>
+    <button id="bg-target-topnav" class="action-btn" style="width:100%; margin-bottom:10px; padding: 10px;">רקע לסרגל העליון</button>
+    <button id="bg-target-main" class="action-btn" style="width:100%; margin-bottom:10px; padding: 10px;">רקע לשאר האתר</button>
+    
+    <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee;">
+      <button id="bg-clear-all" class="action-btn" style="width:100%; background:#f1f1f1; margin-bottom:10px; padding: 10px; color: #333;">נקה רקעים 🗑️</button>
+      <button onclick="document.getElementById('bg-modal').style.display='none'" class="action-btn" style="width:100%; background:#ff4444; color:white; padding: 10px;">ביטול</button>
+    </div>
+    
+    <input type="file" id="bg-file-input" accept="image/*" style="display:none;">
+  </div>
+</div>
+
+
+
+
+
+
+<!-- צ'אט תמיכה צף גלובלי קבוע -->
+<div class="fab-admin-controls" id="chat-admin-controls" style="display:none">
+  <span class="fab-control-btn hide-btn" id="chat-hide-icon" onclick="event.stopPropagation();adminToggleChatHide()" title="הסתר/הצג" style="cursor:pointer; font-size:16px;">🙈</span>
+  <span class="fab-control-btn delete-btn" onclick="event.stopPropagation();adminDeleteChat()" title="מחק לגמרי" style="cursor:pointer; font-size:16px; margin-right:6px;">🗑️</span>
+</div>
+<button id="global-chat-fab" class="chat-fab" onclick="chatTogglePanel()" title="צ'אט תמיכה">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+  <span id="global-chat-badge" class="chat-badge" style="display:none">0</span>
+</button>
+<div id="global-chat-panel" class="chat-panel" style="display:none">
+  <div class="chat-header">
+    <span id="chat-title">צ'אט תמיכה</span>
+    <div style="display:flex; gap:10px; align-items:center;">
+      <button onclick="chatToggleMaximize()" style="background:none; border:none; color:#fff; cursor:pointer; font-size:14px; padding:0; display:flex; align-items:center;" title="מסך מלא">
+        <svg id="maximize-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
+        </svg>
+      </button>
+      <button onclick="chatTogglePanel()" style="background:none; border:none; color:#fff; cursor:pointer; font-size:16px; padding:0; display:flex; align-items:center;">✕</button>
+    </div>
+  </div>
+  <div id="chat-body" class="chat-body">
+    <!-- הודעות או רשימת צ'אטים למנהל ייטענו כאן -->
+  </div>
+  <div id="chat-footer" class="chat-footer">
+    <button onclick="chatSendMessage()" class="chat-send-btn">שלח</button>
+    <input type="text" id="chat-input" class="chat-input" placeholder="הקלד הודעה..." onkeydown="if(event.key==='Enter')chatSendMessage()">
+  </div>
+</div>
+
+<!-- מודל פרופיל משתמש צופה -->
+<div id="user-profile-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:1000000; align-items:center; justify-content:center; direction:rtl; font-family:system-ui, -apple-system, sans-serif;">
+  <div class="modal-content" style="max-width: 500px; width:90%; padding:24px; border-radius:24px; background:rgba(255,255,255,0.95); backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.25); box-shadow:0 20px 50px rgba(0,0,0,0.15);">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid #eee; padding-bottom:12px;">
+      <h3 style="margin:0; font-size:18px; font-weight:800; color:#111;">👤 פרופיל יוצר</h3>
+      <button onclick="document.getElementById('user-profile-modal').style.display='none'" style="background:none; border:none; font-size:18px; cursor:pointer; color:#777; font-weight:bold;">✕</button>
+    </div>
+    
+    <!-- פרטי הפרופיל -->
+    <div style="display:flex; align-items:center; gap:16px; margin-bottom:24px; background:#f9fafb; padding:16px; border-radius:16px; border:1px solid #f3f4f6;">
+      <div style="width:64px; height:64px; border-radius:50%; background:#e11d48; display:flex; align-items:center; justify-content:center; color:white; font-size:28px; font-weight:bold; box-shadow:0 4px 10px rgba(225,29,72,0.2);">
+        👤
+      </div>
+      <div>
+        <div style="display:flex; align-items:center; flex-wrap:wrap; gap:8px;">
+          <h4 id="profile-modal-nickname" style="margin:0; font-size:18px; font-weight:800; color:#111;">טוען...</h4>
+          <span id="profile-modal-status" style="font-size:11px; font-weight:bold; display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:12px;"></span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:4px; font-size:13px; color:#555; font-weight:500; margin-top:2px;">
+          <div style="display:flex; gap:12px;">
+            <span id="profile-modal-age">גיל: --</span>
+            <span>|</span>
+            <span id="profile-modal-location">אזור: --</span>
+          </div>
+          <div id="profile-modal-contact-info" style="display:flex; gap:8px; margin-top:4px;">
+            <!-- ייטען דינמית -->
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <h4 style="margin:0 0 12px; font-size:14px; font-weight:800; color:#374151;">🖼️ גלריות שהועלו על ידי היוצר</h4>
+    
+    <!-- רשימת הגלריות של המשתמש -->
+    <div id="profile-modal-posts" style="max-height: 250px; overflow-y:auto; display:flex; flex-direction:column; gap:10px; padding-left:4px;">
+      <!-- גלריות ייטענו כאן דינמית -->
+    </div>
+  </div>
+</div>
+
+<!-- מודל שיתוף פוסט קהילה -->
+<div id="community-post-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:99999; align-items:center; justify-content:center; direction:rtl; font-family:system-ui, -apple-system, sans-serif;">
+  <div style="background:#fff; border-radius:18px; padding:28px; width:90%; max-width:480px; max-height:85vh; overflow-y:auto; display:flex; flex-direction:column; gap:14px; box-shadow:0 20px 50px rgba(0,0,0,0.15);">
+    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding-bottom:10px;">
+      <h3 id="comm-modal-title" style="margin:0; font-size:18px; font-weight:800; color:#111;">✏️ שיתוף חדש בקהילה</h3>
+      <button onclick="document.getElementById('community-post-modal').style.display='none'" style="background:none; border:none; font-size:18px; cursor:pointer; color:#777; font-weight:bold;">✕</button>
+    </div>
+
+    <label style="font-size:13px; font-weight:700; color:#374151;">סוג הפרסום</label>
+    <div style="display:flex; gap:8px;">
+      <button type="button" id="comm-type-share" onclick="setCommPostType('share')" class="comm-type-btn active" style="flex:1; padding:9px; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer;">✍️ שיתוף</button>
+      <button type="button" id="comm-type-poll" onclick="setCommPostType('poll')" class="comm-type-btn" style="flex:1; padding:9px; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer;">🗳️ סקר</button>
+      <button type="button" id="comm-type-question" onclick="setCommPostType('question')" class="comm-type-btn" style="flex:1; padding:9px; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer;">❓ שאלה</button>
+    </div>
+
+    <label id="comm-title-label" style="font-size:13px; font-weight:700; color:#374151;">כותרת *</label>
+    <input id="comm-post-title" type="text" placeholder="מה כותרת השיתוף?" style="padding:10px 14px; border:1px solid #ddd; border-radius:10px; font-size:14px; width:100%; box-sizing:border-box;">
+
+    <div id="comm-body-wrap" style="display:flex; flex-direction:column; gap:8px;">
+      <label id="comm-body-label" style="font-size:13px; font-weight:700; color:#374151;">תוכן *</label>
+      <textarea id="comm-post-body" rows="6" placeholder="כאן כותבים את השיתוף המלא..." style="padding:10px 14px; border:1px solid #ddd; border-radius:10px; font-size:14px; width:100%; box-sizing:border-box; resize:vertical; font-family:inherit;"></textarea>
+    </div>
+
+    <div id="comm-poll-wrap" style="display:none; flex-direction:column; gap:8px;">
+      <label style="font-size:13px; font-weight:700; color:#374151;">אפשרויות הסקר (לפחות 2)</label>
+      <input class="comm-poll-opt" type="text" placeholder="אפשרות 1 *" style="padding:10px 14px; border:1px solid #ddd; border-radius:10px; font-size:14px; width:100%; box-sizing:border-box;">
+      <input class="comm-poll-opt" type="text" placeholder="אפשרות 2 *" style="padding:10px 14px; border:1px solid #ddd; border-radius:10px; font-size:14px; width:100%; box-sizing:border-box;">
+      <input class="comm-poll-opt" type="text" placeholder="אפשרות 3 (אופציונלי)" style="padding:10px 14px; border:1px solid #ddd; border-radius:10px; font-size:14px; width:100%; box-sizing:border-box;">
+      <input class="comm-poll-opt" type="text" placeholder="אפשרות 4 (אופציונלי)" style="padding:10px 14px; border:1px solid #ddd; border-radius:10px; font-size:14px; width:100%; box-sizing:border-box;">
+      <input class="comm-poll-opt" type="text" placeholder="אפשרות 5 (אופציונלי)" style="padding:10px 14px; border:1px solid #ddd; border-radius:10px; font-size:14px; width:100%; box-sizing:border-box;">
+    </div>
+
+    <label style="font-size:13px; font-weight:700; color:#374151;">צרף תמונה (אופציונלי)</label>
+    <button id="comm-post-img-pick" style="padding:10px 14px; border:1px dashed #bbb; border-radius:10px; background:#f9f9f9; cursor:pointer; font-size:13px; text-align:right; font-weight:600;">📷 לחץ לבחירת תמונה</button>
+    <img id="comm-post-img-preview" src="" alt="" style="display:none; max-height:160px; border-radius:10px; object-fit:cover; width:100%;">
+    
+    <div style="display:flex; gap:10px; margin-top:8px;">
+      <button onclick="document.getElementById('community-post-modal').style.display='none'" style="flex:1; padding:12px; border:1px solid #ddd; border-radius:10px; background:#fff; cursor:pointer; font-size:14px; font-weight:bold; color:#555;">ביטול</button>
+      <button onclick="submitCommunityPost()" style="flex:1; padding:12px; border:none; border-radius:10px; background:#ec4899; color:#fff; cursor:pointer; font-size:14px; font-weight:bold; box-shadow:0 4px 12px rgba(236,72,153,0.3);">פרסם בקהילה 🚀</button>
+    </div>
+  </div>
+</div>
+
+  <script type="module" src="./script.js?v=34"></script>
+</body>
+</html>

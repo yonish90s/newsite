@@ -1,0 +1,8141 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getDatabase, ref, set, get, child, onValue, push, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+// הגדרות הפרויקט של Firebase
+const firebaseConfig = {
+    apiKey: "AIzaSyCpVZS9qEnpPz-gyu12yD3FLiu3Lf-Tg04",
+    authDomain: "newsite-f76e2.firebaseapp.com",
+    databaseURL: "https://newsite-f76e2-default-rtdb.firebaseio.com",
+    projectId: "newsite-f76e2",
+    storageBucket: "newsite-f76e2.firebasestorage.app",
+    messagingSenderId: "484000020563",
+    appId: "1:484000020563:web:da9bd9cfd08d63433d6ea6",
+    measurementId: "G-7W3NCN6GQP"
+};
+
+// אתחול פיירבייס והגדרת ה-Auth והפרוביידר של גוגל
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const provider = new GoogleAuthProvider();
+const db = getDatabase(app);
+
+// הגדרת התראות מעוצבות ומאוירות במקום התראות הדפדפן הרגילות
+window.alert = function(message) {
+  if (!document.getElementById('custom-alert-styles')) {
+    const style = document.createElement('style');
+    style.id = 'custom-alert-styles';
+    style.textContent = `
+      .custom-alert-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        z-index: 1000000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.25s ease;
+        direction: rtl;
+        font-family: system-ui, -apple-system, sans-serif;
+        padding: 20px;
+      }
+      .custom-alert-overlay.show {
+        opacity: 1;
+      }
+      .custom-alert-card {
+        background: rgba(255, 255, 255, 0.95);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15), 0 0 120px rgba(225, 29, 72, 0.05);
+        border-radius: 28px;
+        width: 100%;
+        max-width: 360px;
+        padding: 32px 24px 24px;
+        text-align: center;
+        transform: scale(0.85) translateY(15px);
+        transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+      }
+      .custom-alert-overlay.show .custom-alert-card {
+        transform: scale(1) translateY(0);
+      }
+      .custom-alert-icon-wrap {
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        background: rgba(225, 29, 72, 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #e11d48;
+        font-size: 34px;
+        box-shadow: inset 0 2px 10px rgba(225, 29, 72, 0.1), 0 8px 20px rgba(225, 29, 72, 0.05);
+        margin-bottom: 4px;
+      }
+      .custom-alert-message {
+        font-size: 16px;
+        font-weight: 700;
+        color: #111827;
+        line-height: 1.6;
+        margin: 0;
+        white-space: pre-line;
+      }
+      .custom-alert-btn {
+        background: #e11d48;
+        color: white;
+        border: none;
+        border-radius: 50px;
+        padding: 12px 36px;
+        font-size: 15px;
+        font-weight: 800;
+        cursor: pointer;
+        width: 100%;
+        transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+        box-shadow: 0 4px 15px rgba(225, 29, 72, 0.3);
+      }
+      .custom-alert-btn:hover {
+        background: #be123c;
+        box-shadow: 0 6px 20px rgba(225, 29, 72, 0.45);
+      }
+      .custom-alert-btn:active {
+        transform: scale(0.98);
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  const overlay = document.createElement('div');
+  overlay.className = 'custom-alert-overlay';
+  
+  let icon = '🔔';
+  if (message.includes('התחבר') || message.includes('רשום')) {
+    icon = '🔑';
+  } else if (message.includes('שגיאה') || message.includes('נכשל') || message.includes('גדול מדי') || message.includes('לא הוגדר')) {
+    icon = '❌';
+  } else if (message.includes('בהצלחה') || message.includes('נשמר') || message.includes('אושר') || message.includes('שוחזר')) {
+    icon = '✨';
+  } else if (message.includes('מחיקה') || message.includes('למחוק')) {
+    icon = '🗑️';
+  } else if (message.includes('שים לב') || message.includes('חובה') || message.includes('לפחות')) {
+    icon = '⚠️';
+  }
+
+  overlay.innerHTML = `
+    <div class="custom-alert-card">
+      <div class="custom-alert-icon-wrap">${icon}</div>
+      <p class="custom-alert-message">${message}</p>
+      <button class="custom-alert-btn">אישור</button>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  overlay.offsetHeight; 
+  overlay.classList.add('show');
+
+  const closeAlert = () => {
+    overlay.classList.remove('show');
+    setTimeout(() => {
+      overlay.remove();
+    }, 250);
+  };
+
+  overlay.querySelector('.custom-alert-btn').addEventListener('click', closeAlert);
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) closeAlert();
+  });
+};
+
+function updateUserActivity(user) {
+  if (!user) return;
+  try {
+    const userRef = ref(db, `website/users/${user.uid}/last_seen`);
+    set(userRef, Date.now());
+  } catch (e) {
+    console.error("Error updating user activity:", e);
+  }
+}
+window.updateUserActivity = updateUserActivity;
+
+/**
+ * ============================================================================
+ * YHSH Website Builder - מנוע האתר המרכזי
+ * ============================================================================
+ * 
+ * תוכן עניינים מהיר (Table of Contents):
+ * --------------------------------------
+ * 1. הגדרות בסיס ומצב התחלתי (State)
+ * 2. תפיסת אלמנטים מרכזיים מה-HTML (DOM Elements)
+ * 3. פונקציות ליבה (Rendering & Logic - שמירה, טעינה וניווט)
+ * 4. מערכת העריכה הויזואלית (Edit Mode, מודלים, קישורים)
+ * 5. מנגנוני הוספת עמודים וניווט
+ * 6. גרירה, שינוי גודל (interact.js) ומנגנון בחירה מרובה (Marquee)
+ * 7. הוספת אלמנטים חדשים (טקסט, תמונות, כפתורים - מסרגל הכלים)
+ * 8. פונקציות עזר (העתקה, הדבקה, מחיקה)
+ * 9. אנימציות וסרגלי כלים מרחפים
+ * 10. קיצורי מקלדת מקצועיים (Shortcuts - Ctrl+C/V/Z)
+ * 11. מערכות צד ג' (Cookie Consent, צ'אט תמיכה)
+ * 
+ * הערה ארכיטקטונית (Architecture Note):
+ * -------------------------------------
+ * נכון לעכשיו, קוד זה (והממשק הויזואלי כולו) משמש את *מנהל האתר* (Admin / Editor).
+ * כל הכלים כאן נועדו לבניית האתר ועריכתו בזמן אמת.
+ * בעתיד ייווצר "מצב צופה" ללא יכולות עריכה עבור משתמשי הקצה.
+ * ============================================================================
+ */
+// --- שלב 1: הגדרות בסיס ומצב התחלתי (State) ---
+
+// נגדיר את רשימת העמודים ההתחלתית שלנו (ברירת המחדל למקרה שאין כלום בזיכרון)
+const defaultPages = [
+  {
+    id: 'page-main',
+    title: 'כתבות',
+    content: ''
+  }
+];
+
+// הגדרות ברירת מחדל (יוחלפו אם יש שמירה)
+let pages = defaultPages;
+let activePageId = 'page-main';
+let topNavPages = ['page-main']; // העמודים שמופיעים בתפריט העליון
+let isEditMode = false; // ברירת מחדל: אורח (ללא עריכה)
+let undoStack = []; // מערך לשמירת היסטוריית שינויים לצורך ביטול (Undo)
+let siteBackgrounds = { dashboard: null, topNav: null, main: null };
+let hideCart = false;
+let hideChat = false;
+let deleteCart = false;
+let deleteChat = false;
+
+// פונקציית עזר לבדיקה האם המשתמש המחובר כרגע הוא המנהל המורשה
+const isAdmin = () => auth.currentUser && auth.currentUser.email === "yoni98321@gmail.com";
+
+// --- מערכות דינמיות ---
+// פונקציה ליישום הרקעים למסך
+function applyBackgrounds() {
+  const dash = document.querySelector('.side-dashboard');
+  const top = document.querySelector('.top-bar');
+  const mainWrapper = document.body;
+  
+  if (siteBackgrounds.dashboard) {
+    if (dash) {
+      dash.style.backgroundImage = `url(${siteBackgrounds.dashboard})`;
+      dash.style.backgroundSize = 'cover';
+      dash.style.backgroundPosition = 'center';
+    }
+  } else {
+    if (dash) dash.style.backgroundImage = '';
+  }
+  
+  if (siteBackgrounds.topNav) {
+    if (top) {
+      top.style.backgroundImage = `url(${siteBackgrounds.topNav})`;
+      top.style.backgroundSize = 'cover';
+      top.style.backgroundPosition = 'center';
+    }
+  } else {
+    if (top) top.style.backgroundImage = '';
+  }
+  
+  // רקע ייחודי לכל עמוד
+  const currentPage = pages.find(p => p.id === activePageId);
+  const mainContentEl = document.getElementById('mainContent');
+  if (mainContentEl) {
+    if (currentPage && currentPage.background) {
+      mainContentEl.style.backgroundImage = `url(${currentPage.background})`;
+      mainContentEl.style.backgroundSize = 'cover';
+      mainContentEl.style.backgroundPosition = 'center';
+    } else if (siteBackgrounds.main) {
+      mainContentEl.style.backgroundImage = `url(${siteBackgrounds.main})`;
+      mainContentEl.style.backgroundSize = 'cover';
+      mainContentEl.style.backgroundPosition = 'center';
+    } else {
+      mainContentEl.style.backgroundImage = '';
+    }
+  }
+}
+
+// עדכון נראות של כפתורי העגלה והצ'אט לפי הגדרות מנהל
+function updateFABsVisibility() {
+  const cartFab = document.getElementById('global-shop-cart-fab');
+  const chatFab = document.getElementById('global-chat-fab');
+  const cartControls = document.getElementById('cart-admin-controls');
+  const chatControls = document.getElementById('chat-admin-controls');
+  const btnRestoreCart = document.getElementById('btn-restore-cart');
+  const btnRestoreChat = document.getElementById('btn-restore-chat');
+  
+  const admin = isAdmin();
+  const edit = isEditMode; // האם כרגע במצב עריכה פעיל
+
+  // 1. טיפול בעגלת קניות
+  if (cartFab) {
+    if (deleteCart) {
+      cartFab.style.display = 'none';
+      if (cartControls) cartControls.style.display = 'none';
+      if (btnRestoreCart && edit) btnRestoreCart.style.display = 'inline-block';
+    } else {
+      if (btnRestoreCart) btnRestoreCart.style.display = 'none';
+      if (hideCart) {
+        cartFab.style.display = edit ? 'flex' : 'none';
+        cartFab.style.opacity = edit ? '0.4' : '1';
+      } else {
+        cartFab.style.display = 'flex';
+        cartFab.style.opacity = '1';
+      }
+      if (cartControls) {
+        cartControls.style.display = edit ? 'flex' : 'none';
+      }
+    }
+  }
+
+  // 2. טיפול בצ'אט תמיכה
+  if (chatFab) {
+    if (deleteChat) {
+      chatFab.style.display = 'none';
+      if (chatControls) chatControls.style.display = 'none';
+      if (btnRestoreChat && edit) btnRestoreChat.style.display = 'inline-block';
+    } else {
+      if (btnRestoreChat) btnRestoreChat.style.display = 'none';
+      if (hideChat) {
+        chatFab.style.display = edit ? 'flex' : 'none';
+        chatFab.style.opacity = edit ? '0.4' : '1';
+      } else {
+        chatFab.style.display = 'flex';
+        chatFab.style.opacity = '1';
+      }
+      if (chatControls) {
+        chatControls.style.display = edit ? 'flex' : 'none';
+      }
+    }
+  }
+
+  // 3. עדכון האייקונים של העין/קוף בכפתורים המרחפים
+  const cartHideIcon = document.getElementById('cart-hide-icon');
+  const chatHideIcon = document.getElementById('chat-hide-icon');
+  if (cartHideIcon) {
+    cartHideIcon.textContent = hideCart ? '🙈' : '👁️';
+    cartHideIcon.title = hideCart ? 'הצג עגלה' : 'הסתר עגלה';
+  }
+  if (chatHideIcon) {
+    chatHideIcon.textContent = hideChat ? '🙈' : '👁️';
+    chatHideIcon.title = hideChat ? 'הצג צ\'אט' : 'הסתר צ\'אט';
+  }
+}
+
+// כמה זמן מחכים ל-Firebase לפני שמציגים את האתר מהגיבוי המקומי.
+// בלי התקרה הזו כל הרינדור תלוי בבקשת רשת אחת: כש-WebSocket של
+// Firebase נתקע (רשת חוסמת, חיבור איטי) ה-get לא נפתר ולא נכשל,
+// initSite נתקע לנצח, והגולש נשאר מול שלד ריק של האתר.
+const BOOT_FETCH_TIMEOUT_MS = 4000;
+
+// פונקציית אתחול אסינכרונית - טוענת מהמסד הנתונים של Firebase עם גיבוי מקומי ב-localforage
+async function initSite() {
+  try {
+    // 1. ננסה למשוך קודם כל מ-Firebase DB לעדכון בין מכשירים
+    const dbRef = ref(db);
+    const snapshot = await Promise.race([
+      get(child(dbRef, 'website')),
+      new Promise((_, reject) => setTimeout(
+        () => reject(new Error('Firebase boot fetch timed out')), BOOT_FETCH_TIMEOUT_MS
+      ))
+    ]);
+
+    if (snapshot.exists()) {
+      const data = snapshot.val();
+      console.log("נטען בהצלחה מענן Firebase:", data);
+      
+      if (data.pages) pages = data.pages;
+      if (data.activePageId) activePageId = data.activePageId;
+      if (data.topNavPages) topNavPages = data.topNavPages;
+       if (data.siteBackgrounds) siteBackgrounds = data.siteBackgrounds;
+      if (data.hideCart !== undefined) hideCart = data.hideCart;
+      if (data.hideChat !== undefined) hideChat = data.hideChat;
+      if (data.deleteCart !== undefined) deleteCart = data.deleteCart;
+      if (data.deleteChat !== undefined) deleteChat = data.deleteChat;
+      if (data.promotedSites) {
+        PROMOTED_SITES = data.promotedSites;
+        localStorage.setItem('promoted_sites', JSON.stringify(PROMOTED_SITES));
+      }
+      
+      // נעדכן גם את הזיכרון המקומי לגיבוי
+      localforage.setItem('mySitePages_v3', pages);
+      localforage.setItem('myActivePage_v3', activePageId);
+      localforage.setItem('mySiteTopNav_v3', topNavPages);
+      localforage.setItem('mySiteBackgrounds_v3', siteBackgrounds);
+      
+      applyBackgrounds();
+      
+    } else {
+      // 2. אם ה-Firebase ריק (פעם ראשונה), נטען מ-localforage
+      console.log("לא נמצאו נתונים ב-Firebase, טוען מגיבוי מקומי...");
+      
+      const savedActive = await localforage.getItem('myActivePage_v3');
+      if (savedActive) activePageId = savedActive;
+
+      const savedPages = await localforage.getItem('mySitePages_v3');
+      if (savedPages) {
+        pages = savedPages;
+      }
+      
+      const savedBackgrounds = await localforage.getItem('mySiteBackgrounds_v3');
+      if (savedBackgrounds) {
+        siteBackgrounds = savedBackgrounds;
+      }
+      applyBackgrounds();
+    }
+  } catch(e) {
+    console.error('Error loading data from Firebase DB, trying localforage...', e);
+    // גיבוי למקרה של שגיאת חיבור
+    try {
+      const savedActive = await localforage.getItem('myActivePage_v3');
+      if (savedActive) activePageId = savedActive;
+      const savedPages = await localforage.getItem('mySitePages_v3');
+      if (savedPages) pages = savedPages;
+      const savedBackgrounds = await localforage.getItem('mySiteBackgrounds_v3');
+      if (savedBackgrounds) siteBackgrounds = savedBackgrounds;
+      applyBackgrounds();
+    } catch (localErr) {
+      console.error("Local load failed too", localErr);
+    }
+  }
+
+  // הגדרת עמוד הבית הראשי (page-main) כעמוד "כתבות"
+  let mainPage = pages.find(p => p.id === 'page-main');
+  if (!mainPage) {
+    mainPage = { id: 'page-main', title: 'כתבות', content: buildArticlesPage(ARTICLES_SAMPLES) };
+    pages = [mainPage];
+  } else {
+    mainPage.title = 'כתבות';
+    if (!mainPage.content || !mainPage.content.includes('articles-page')) {
+      mainPage.content = buildArticlesPage(ARTICLES_SAMPLES);
+    }
+  }
+
+  // הוספת עמודי המחשבונים הפיננסיים (ריבית דריבית + Everything Money) כעמודים עצמאיים באתר
+  let ciPage = pages.find(p => p.id === 'page-ci');
+  if (!ciPage) {
+    ciPage = { id: 'page-ci', title: 'ריבית דריבית', content: buildCompoundInterestPage() };
+    pages.push(ciPage);
+  } else {
+    ciPage.title = 'ריבית דריבית';
+    ciPage.content = buildCompoundInterestPage();
+  }
+
+  let emPage = pages.find(p => p.id === 'page-em');
+  if (!emPage) {
+    emPage = { id: 'page-em', title: 'מחשבון Everything Money', content: buildEverythingMoneyPage() };
+    pages.push(emPage);
+  } else {
+    emPage.title = 'מחשבון Everything Money';
+    emPage.content = buildEverythingMoneyPage();
+  }
+
+  topNavPages = ['page-main', 'page-ci', 'page-em'];
+  activePageId = 'page-main';
+
+  // ניקוי המטמון הישן ב-localforage וב-localStorage
+  localforage.removeItem('mySiteTopNavHTML_v3');
+  localforage.setItem('mySitePages_v3', pages);
+  localforage.setItem('mySiteTopNav_v3', topNavPages);
+  localforage.setItem('myActivePage_v3', activePageId);
+
+  // סנכרון מיידי לפיירבייס 
+  saveToStorage();
+
+  // כיווץ קל של תוכן עמודים מרונדר ישן אם קיים
+  let lightened = false;
+  pages.forEach(p => {
+    if (!p.content) return;
+    const light = artLightenContent(p.content);
+    if (light && light !== p.content) { p.content = light; lightened = true; }
+  });
+  if (lightened) saveToStorage();
+
+  // החזרת עמוד הבית כעמוד הראשי הפעיל כברירת מחדל ושמירה על דף הכתבות כראשון
+  if (pages && pages.length) {
+    let pageMap = new Map();
+    let madeCleanChanges = false;
+    
+    pages.forEach(p => {
+      if (!p || !p.id) return;
+      // מניעת כפילויות של עמודים עם מזהה זהה
+      if (pageMap.has(p.id)) {
+        madeCleanChanges = true;
+        const existingPage = pageMap.get(p.id);
+        const existingEmpty = !existingPage.content || existingPage.content.trim() === '';
+        const currentEmpty = !p.content || p.content.trim() === '';
+        if (existingEmpty && !currentEmpty) {
+          pageMap.set(p.id, p);
+        }
+      } else {
+        pageMap.set(p.id, p);
+      }
+    });
+    
+    let cleanedPages = Array.from(pageMap.values());
+
+    // הסרת עמודי סיפורים כפולים וריקים: אם יש יותר מעמוד סיפורים אחד,
+    // מסירים את אלו ללא סיפורים (0) כל עוד נשאר אחד עם תוכן. אם כולם
+    // ריקים — משאירים אחד בלבד. כך נעלם עמוד "סיפורים" ריק כפול.
+    const storyItemCount = (p) => {
+      try {
+        const m = p.content && p.content.match(/data-stories-json="([^"]*)"/);
+        if (!m) return 0;
+        const arr = JSON.parse(decodeURIComponent(m[1]));
+        return Array.isArray(arr) ? arr.length : 0;
+      } catch (e) { return 0; }
+    };
+    const storyPages = cleanedPages.filter(p => p.content && p.content.includes('stories-page'));
+    if (storyPages.length > 1) {
+      const hasNonEmpty = storyPages.some(p => storyItemCount(p) > 0);
+      let removeIds = [];
+      if (hasNonEmpty) {
+        removeIds = storyPages.filter(p => storyItemCount(p) === 0).map(p => p.id);
+      } else {
+        removeIds = storyPages.slice(1).map(p => p.id); // כולם ריקים — משאירים אחד
+      }
+      if (removeIds.length) {
+        cleanedPages = cleanedPages.filter(p => !removeIds.includes(p.id));
+        topNavPages = topNavPages.filter(id => !removeIds.includes(id));
+        if (removeIds.includes(activePageId)) activePageId = 'page-main';
+        madeCleanChanges = true;
+      }
+    }
+
+    // הגדרת עמוד הכתבות כעמוד ברירת המחדל הראשי של האתר
+    let articlesPage = cleanedPages.find(p => p.id === 'page-main' || (p.content && p.content.includes('articles-page') && !p.content.includes('stories-page') && !p.content.includes('photos-page') && !p.content.includes('courses-page')));
+    if (!articlesPage) {
+      articlesPage = cleanedPages[0];
+    }
+    if (articlesPage) {
+      cleanedPages = [articlesPage, ...cleanedPages.filter(p => p.id !== articlesPage.id)];
+      activePageId = articlesPage.id;
+    }
+    
+    pages = cleanedPages;
+    topNavPages = pages.map(p => p.id);
+    
+    if (madeCleanChanges) {
+      saveToStorage();
+    }
+  }
+
+  // אחרי שהכל נטען (ואולי תוקן), נצייר את האתר
+  renderSideMenu();
+  renderTopNav();
+  renderPage();
+  updateFABsVisibility();
+  
+  if (typeof window.hidePreloader === 'function') {
+    window.hidePreloader();
+  }
+}
+
+// קריאה לאתחול
+initSite();
+
+// --- שלב 2: תפיסת אלמנטים מרכזיים מה-HTML ---
+const mainContent = document.getElementById('mainContent');
+const sideMenuContainer = document.getElementById('sideMenuContainer');
+const btnEditMode = document.getElementById('btn-edit-mode');
+const btnAddPage = document.getElementById('btn-add-page');
+const btnResetSite = document.getElementById('btn-reset-site');
+const btnAddVideo = document.getElementById('btn-add-video');
+const btnAddLoopVideo = document.getElementById('btn-add-loop-video');
+const navLinksContainer = document.querySelector('.nav-links'); // התפריט העליון
+// מגה-מנו הוסר לחלוטין
+const megaMenuContainer = { classList: { add: ()=>{}, remove: ()=>{} }, style: {}, innerHTML: '' };
+
+// טיפול בלוגו ובטקסט הלוגו
+const mainLogo = document.getElementById('main-logo');
+const mainLogoText = document.getElementById('main-logo-text');
+
+if (mainLogo) {
+  mainLogo.addEventListener('click', function() {
+    if (!isEditMode) return;
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = e => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = event => {
+          const dataUrl = event.target.result;
+          this.src = dataUrl;
+          
+          const loaderImg = document.getElementById('loader-img');
+          const favicon = document.getElementById('favicon');
+          if (loaderImg) loaderImg.src = dataUrl;
+          if (favicon) favicon.href = dataUrl;
+          
+          localforage.setItem('mySiteLogo_v3', dataUrl);
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+    input.click();
+  });
+}
+
+if (mainLogoText) {
+  mainLogoText.addEventListener('blur', () => {
+    if (isEditMode) {
+      localforage.setItem('mySiteLogoText_v3', mainLogoText.textContent);
+    }
+  });
+}
+
+
+// התאמת חווית עריכה למובייל בזמן אמת בשינוי גודל מסך
+window.addEventListener('resize', () => {
+  if (isEditMode) {
+    interact('.draggable-resizable').draggable({ enabled: true }).resizable({ enabled: true });
+  }
+});
+
+// --- שלב 3: פונקציות ליבה (Rendering & Logic) ---
+
+// פונקציה לשמירת הנתונים למסד הנתונים (מבוסס localforage + Firebase RTDB לסנכרון)
+function saveToStorage() {
+  localforage.setItem('mySitePages_v3', pages);
+  localforage.setItem('myActivePage_v3', activePageId);
+  localforage.setItem('mySiteTopNav_v3', topNavPages); // שמירת התפריט העליון
+  
+  // שמירת מבנה ה-HTML של התפריט העליון ללא כפתורי העריכה
+  const tempNav = navLinksContainer.cloneNode(true);
+  tempNav.querySelectorAll('.top-nav-controls').forEach(el => el.remove());
+  const addBtn = tempNav.querySelector('#add-nav-link-btn');
+  if (addBtn) addBtn.remove();
+  
+  const navHTML = tempNav.innerHTML;
+  localforage.setItem('mySiteTopNavHTML_v3', navHTML); 
+  
+  // שמירה ל-Firebase Database
+  try {
+    const dbRef = ref(db, 'website');
+    update(dbRef, {
+      pages: pages,
+      activePageId: activePageId,
+      topNavPages: topNavPages,
+      navHTML: navHTML,
+      siteBackgrounds: siteBackgrounds,
+      promotedSites: PROMOTED_SITES
+    }).then(() => {
+      console.log("סונכרן בהצלחה לענן Firebase!");
+    }).catch(err => {
+      console.error("שגיאה בסנכרון לענן:", err);
+    });
+  } catch (firebaseErr) {
+    console.error("שגיאת פיירבייס:", firebaseErr);
+  }
+  
+  // הוספה למערך ההיסטוריה עבור פעולת Undo (שומרים את 20 הפעולות האחרונות)
+  undoStack.push(JSON.stringify({ pages, topNavPages }));
+  if (undoStack.length > 20) {
+    undoStack.shift(); // מוחק את הישן ביותר כדי לא לפוצץ את זיכרון הראם
+  }
+}
+
+// פונקציה שמייצרת את תפריט הצד (מייצרת את שורות ה-HTML של הלינקים לפי מערך העמודים)
+function renderSideMenu() {
+  if (!sideMenuContainer) return; // הדשבורד הוסר
+  sideMenuContainer.innerHTML = ''; // מנקים את התפריט הישן
+  
+  pages.forEach(page => {
+    // אם אנחנו לא במצב עריכה והעמוד מוסתר - לא נציג אותו (אלא אם המשתמש הוא מנהל)
+    if (!isEditMode && page.isHidden && !isAdmin()) return;
+
+    const li = document.createElement('li'); // יוצרים אלמנט רשימה חדש
+    li.id = page.id;
+    
+    // אם במצב עריכה או שהמשתמש הוא מנהל והעמוד מוסתר, נציג אותו חצי שקוף
+    if (page.isHidden && (isEditMode || isAdmin())) {
+      li.style.opacity = '0.5';
+    }
+    
+    // מיכל לטקסט ולכפתורים
+    li.style.display = 'flex';
+    li.style.justifyContent = 'space-between';
+    li.style.alignItems = 'center';
+    
+    const textSpan = document.createElement('span');
+    textSpan.textContent = page.title;
+    li.appendChild(textSpan);
+    
+    // אם זה העמוד שאנחנו נמצאים בו עכשיו, נוסיף לו את המחלקה השחורה
+    if (page.id === activePageId) {
+      li.classList.add('active-item');
+    }
+    
+    // הוספת כפתורי ניהול רק במצב עריכה
+    if (isEditMode) {
+      // הופך את האלמנט לגריר (Draggable) אל תוך התפריט העליון
+      li.setAttribute('draggable', 'true');
+      li.addEventListener('dragstart', (e) => {
+        e.dataTransfer.setData('text/plain', page.id);
+        e.dataTransfer.effectAllowed = 'copy';
+      });
+
+      const actionsSpan = document.createElement('span');
+      actionsSpan.style.display = 'flex';
+      actionsSpan.style.gap = '8px';
+      actionsSpan.style.fontSize = '14px';
+      
+      // כפתור שינוי שם
+      const renameBtn = document.createElement('span');
+      renameBtn.textContent = '✏️';
+      renameBtn.style.cursor = 'pointer';
+      renameBtn.title = 'שנה שם';
+      renameBtn.onclick = (e) => {
+        e.stopPropagation(); // מונע מעבר עמוד כשלוחצים על הכפתור
+        const newName = prompt('הכנס שם חדש לעמוד:', page.title);
+        if (newName && newName.trim() !== '') {
+          page.title = newName.trim();
+          saveToStorage();
+          renderSideMenu();
+        }
+      };
+      
+      // כפתור הסתרה/תצוגה
+      const hideBtn = document.createElement('span');
+      hideBtn.textContent = page.isHidden ? '🙈' : '👁️';
+      hideBtn.style.cursor = 'pointer';
+      hideBtn.title = page.isHidden ? 'הצג עמוד' : 'הסתר עמוד ממבקרים';
+      hideBtn.onclick = (e) => {
+        e.stopPropagation();
+        page.isHidden = !page.isHidden;
+        saveToStorage();
+        renderSideMenu();
+        renderTopNav();
+      };
+      
+      // כפתור מחיקה
+      const deleteBtn = document.createElement('span');
+      deleteBtn.textContent = '🗑️';
+      deleteBtn.style.cursor = 'pointer';
+      deleteBtn.title = 'מחק עמוד';
+      deleteBtn.onclick = (e) => {
+        e.stopPropagation();
+        if (pages.length === 1) {
+          alert('אי אפשר למחוק את העמוד האחרון באתר!');
+          return;
+        }
+        pages.splice(pages.findIndex(p => p.id === page.id), 1);
+        // אם מחקנו את העמוד שאנחנו נמצאים בו, נעבור לעמוד הראשון ברשימה
+        if (activePageId === page.id) {
+          activePageId = pages[0].id;
+          renderPage();
+        }
+        saveToStorage();
+        renderSideMenu();
+        renderTopNav();
+      };
+      
+      actionsSpan.appendChild(renameBtn);
+      actionsSpan.appendChild(hideBtn);
+      actionsSpan.appendChild(deleteBtn);
+      li.appendChild(actionsSpan);
+    }
+    
+    // לחיצה על שם העמוד תעביר אותנו אליו
+    li.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (isEditMode) saveCurrentPageContent();
+      activePageId = page.id;
+      saveToStorage();
+      renderPage();
+      renderSideMenu(); // מעדכן איזה עמוד מודגש כרגע
+      renderTopNav(); // מעדכן את הפיל הפעיל בתפריט העליון
+    });
+    
+    sideMenuContainer.appendChild(li); // מוסיפים את הכפתור לתפריט
+  });
+}
+
+// פונקציה שמייצרת את התפריט העליון ומוסיפה לו מגה-תפריט
+function renderTopNav() {
+  navLinksContainer.innerHTML = ''; // מנקה את התפריט הסטטי מה-HTML
+  
+  topNavPages.forEach(pageId => {
+    const page = pages.find(p => p.id === pageId);
+    if (!page) return; // במקרה שהעמוד נמחק
+    if (!isEditMode && page.isHidden && !isAdmin()) return; // מסתיר עמודים מוסתרים גם למעלה
+    
+    const a = document.createElement('a');
+    a.href = '#';
+    a.textContent = page.title;
+    if (page.isHidden && (isEditMode || isAdmin())) {
+      a.style.opacity = '0.6';
+    }
+    a.dataset.pageId = pageId; // שמירת המזהה כדי שנוכל למחוק אותו מהמערך בעריכה
+    
+    // סימון עמוד פעיל למעלה
+    if (pageId === activePageId) {
+      a.classList.add('active-top-nav');
+    }
+    
+    a.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (isEditMode) saveCurrentPageContent();
+      activePageId = page.id;
+      saveToStorage();
+      renderSideMenu();
+      renderTopNav();
+      renderPage();
+    });
+    
+
+    
+    if (isEditMode) {
+      a.style.cursor = 'move'; // נראות של גרירה ומיקום
+      
+      // הפיכת הלינק לגריר לצורך שינוי מיקום (Reorder)
+      a.setAttribute('draggable', 'true');
+      a.addEventListener('dragstart', (e) => {
+        e.dataTransfer.setData('text/plain', 'topnav:' + pageId);
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      a.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        // מציג קו סמן בצד ימין (RTL)
+        a.style.borderRight = '3px solid #111';
+        a.style.paddingRight = '5px';
+      });
+      a.addEventListener('dragleave', (e) => {
+        a.style.borderRight = '';
+        a.style.paddingRight = '';
+      });
+      a.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        a.style.borderRight = '';
+        a.style.paddingRight = '';
+        
+        const data = e.dataTransfer.getData('text/plain');
+        if (data.startsWith('topnav:')) {
+          const draggedPageId = data.replace('topnav:', '');
+          if (draggedPageId !== pageId) {
+            const draggedIdx = topNavPages.indexOf(draggedPageId);
+            if (draggedIdx > -1) {
+              topNavPages.splice(draggedIdx, 1);
+              const targetIdx = topNavPages.indexOf(pageId);
+              // מכיוון שזה RTL, צד ימין אומר שזה יופיע לפניו במערך
+              topNavPages.splice(targetIdx, 0, draggedPageId);
+              saveToStorage();
+              renderTopNav();
+            }
+          }
+        } else if (data) {
+          // אם זה נגרר מתפריט הצד
+          if (!topNavPages.includes(data)) {
+            const targetIdx = topNavPages.indexOf(pageId);
+            topNavPages.splice(targetIdx, 0, data);
+            saveToStorage();
+            renderTopNav();
+          }
+        }
+      });
+      
+      // הוסרו הכפתורים הישנים והמכוערים (✖ ו-👁️) שהיו מוצמדים לטקסט
+      // מעכשיו סרגל הכלים המרחף (top-nav-controls) מטפל בזה!
+    }
+    
+    const isPhotos = page.title && (page.title.includes('תמונות') || page.title.toLowerCase().includes('photo'));
+    if (isPhotos) {
+      // הוספת אייקון תמונות לכפתור תמונות
+      a.style.display = 'inline-flex';
+      a.style.alignItems = 'center';
+      a.innerHTML = `
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: inherit; display: block; margin-left: 6px;">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+          <circle cx="8.5" cy="8.5" r="1.5"/>
+          <polyline points="21 15 16 10 5 21"/>
+        </svg>
+        <span>${page.title.replace(/[\u1000-\uFFFF]+/g, '').trim()}</span>
+      `;
+    }
+    
+    navLinksContainer.appendChild(a);
+  });
+}
+
+// אזור הקליטה (Drop Zone) בתפריט העליון
+navLinksContainer.addEventListener('dragover', (e) => {
+  if (!isEditMode) return;
+  e.preventDefault(); // חובה כדי לאפשר Drop
+  navLinksContainer.classList.add('drag-over');
+});
+
+navLinksContainer.addEventListener('dragleave', () => {
+  navLinksContainer.classList.remove('drag-over');
+});
+
+navLinksContainer.addEventListener('drop', (e) => {
+  if (!isEditMode) return;
+  e.preventDefault();
+  navLinksContainer.classList.remove('drag-over');
+  
+  const data = e.dataTransfer.getData('text/plain');
+  if (data.startsWith('topnav:')) {
+    // נגרר בתוך התפריט העליון לחלל הריק (בסוף)
+    const draggedPageId = data.replace('topnav:', '');
+    const draggedIdx = topNavPages.indexOf(draggedPageId);
+    if (draggedIdx > -1) {
+      topNavPages.splice(draggedIdx, 1);
+      topNavPages.push(draggedPageId);
+      saveToStorage();
+      renderTopNav();
+    }
+  } else if (data && !topNavPages.includes(data)) {
+    // מוסיף את העמוד לתפריט העליון (בסוף)
+    topNavPages.push(data);
+    saveToStorage();
+    renderTopNav();
+  }
+});
+
+// מגה-מנו הוסר לחלוטין - הניווט עובד רק בלחיצה
+
+// פונקציה לבדיקת יחס הגובה-רוחב של התמונה והוספת מחלקה אם היא רחבה (Landscape)
+function adjustImgAspectRatio(img) {
+  const checkRatio = () => {
+    if (img.naturalWidth && img.naturalHeight) {
+      const ratio = img.naturalWidth / img.naturalHeight;
+      if (ratio > 1.2) {
+        img.classList.add('landscape-img');
+      } else {
+        img.classList.remove('landscape-img');
+      }
+    }
+  };
+
+  if (img.complete) {
+    checkRatio();
+  }
+  img.addEventListener('load', checkRatio);
+}
+
+// פונקציה שמציגה את התוכן של העמוד הנוכחי במרכז המסך
+function renderPage() {
+  const currentPage = pages.find(p => p.id === activePageId); // מחפשים את העמוד ברשימה
+  
+  // הגנה: אם העמוד מוסתר והמשתמש הוא לא מנהל/עורך, מפנים אותו לעמוד גלוי.
+  // חשוב שהיעד יהיה גלוי בעצמו — נפילה חזרה ל-pages[0] כשהוא מוסתר
+  // גרמה לרקורסיה אינסופית (Maximum call stack size exceeded).
+  if (currentPage && currentPage.isHidden && !isEditMode && !isAdmin()) {
+    const isVisible = p => p && !p.isHidden;
+    const articlesPage = pages.find(p => isVisible(p) && p.content && p.content.includes('articles-page') && !p.content.includes('stories-page') && !p.content.includes('photos-page') && !p.content.includes('courses-page'));
+    const fallback = articlesPage || pages.find(isVisible);
+    if (!fallback || fallback.id === activePageId) {
+      mainContent.innerHTML = '';
+      return;
+    }
+    activePageId = fallback.id;
+    renderPage();
+    return;
+  }
+
+  if (currentPage) {
+    if (currentPage.id === 'page-ci' || (currentPage.title && currentPage.title.includes('ריבית'))) {
+      mainContent.innerHTML = buildCompoundInterestPage();
+      calculateCompoundInterest();
+      return;
+    }
+    if (currentPage.id === 'page-em' || (currentPage.title && currentPage.title.includes('Everything'))) {
+      mainContent.innerHTML = buildEverythingMoneyPage();
+      calculateEMValuation();
+      return;
+    }
+
+    mainContent.innerHTML = currentPage.content; // מזריקים את ה-HTML של העמוד פנימה
+
+    // עמוד כתבות: בונים מחדש מהנתונים השמורים כדי ששינויי מבנה (חיפוש, עיצוב) תמיד ייכנסו
+    const artPageEl = mainContent.querySelector('.articles-page:not(.stories-page):not(.photos-page):not(.courses-page)');
+    if (artPageEl && typeof buildArticlesPage === 'function') {
+      let savedArts = [];
+      try { savedArts = JSON.parse(decodeURIComponent(artPageEl.dataset.articlesJson)); } catch(e){}
+      if (savedArts.length) mainContent.innerHTML = buildArticlesPage(savedArts);
+    }
+
+    // עמוד סיפורים: בונים מחדש מהנתונים השמורים
+    const storyPageEl = mainContent.querySelector('.stories-page');
+    if (storyPageEl && typeof buildStoriesPage === 'function') {
+      let savedStories = [];
+      try { savedStories = JSON.parse(decodeURIComponent(storyPageEl.dataset.storiesJson)); } catch(e){}
+      if (savedStories.length) mainContent.innerHTML = buildStoriesPage(savedStories);
+    }
+
+    // עמוד קורסים: בונים מחדש מהנתונים השמורים
+    const coursePageEl = mainContent.querySelector('.courses-page');
+    if (coursePageEl && typeof buildCoursesPage === 'function') {
+      let savedCourses = [];
+      try { savedCourses = JSON.parse(decodeURIComponent(coursePageEl.dataset.coursesJson)); } catch(e){}
+      if (savedCourses.length) mainContent.innerHTML = buildCoursesPage(savedCourses);
+    }
+
+    // עמוד תמונות: בונים מחדש מהנתונים השמורים
+    const photoPageEl = mainContent.querySelector('.photos-page');
+    if (photoPageEl && typeof buildPhotosPage === 'function') {
+      let savedPhotos = [];
+      try { savedPhotos = JSON.parse(decodeURIComponent(photoPageEl.dataset.photosJson)); } catch(e){}
+      if (savedPhotos.length) mainContent.innerHTML = buildPhotosPage(savedPhotos);
+    }
+
+    // עמוד קהילה: בונים מחדש
+    const commPageEl = mainContent.querySelector('.community-page');
+    if (commPageEl && typeof buildCommunityPage === 'function') {
+      mainContent.innerHTML = buildCommunityPage();
+    }
+
+    // עמוד חנות: בונים מחדש מהנתונים השמורים
+    const shopPageEl = mainContent.querySelector('.shop-page');
+    if (shopPageEl && typeof buildShopPage === 'function') {
+      let savedProds = [];
+      try { savedProds = JSON.parse(decodeURIComponent(shopPageEl.dataset.productsJson)); } catch(e){}
+      if (savedProds.length) mainContent.innerHTML = buildShopPage(savedProds);
+    }
+
+    // המרת מיקומים (Migration): הפיכת טרנספורמציות ישנות למיקום אבסולוטי (left/top)
+    // זה קריטי כדי שגלילת המסך (Scroll) תעבוד כשיש הרבה תוכן למטה
+    const draggables = mainContent.querySelectorAll('.draggable-resizable');
+    draggables.forEach(el => {
+      // 1. המרת תמונות רקע ישנות לתגיות <img> אמיתיות למניעת קריסה במובייל
+      let bgUrl = el.style.backgroundImage;
+      if (bgUrl && bgUrl !== 'none') {
+        const url = bgUrl.replace(/^url\(["']?/, '').replace(/["']?\)$/, '');
+        if (url && !el.querySelector('img') && !el.dataset.slideshowUrls) {
+          el.style.backgroundImage = '';
+          el.style.backgroundSize = '';
+          el.style.backgroundRepeat = '';
+          el.style.backgroundPosition = '';
+          
+          const img = document.createElement('img');
+          img.src = url;
+          img.style.width = '100%';
+          img.style.height = '100%';
+          img.style.objectFit = 'contain';
+          img.style.borderRadius = el.style.borderRadius || '12px';
+          img.style.display = 'block';
+          el.appendChild(img);
+        }
+      }
+
+      // 2. המרת מצגות תמונות ישנות לתגיות <img> אמיתיות
+      if (el.dataset.slideshowUrls && !el.querySelector('img')) {
+        try {
+          const urls = JSON.parse(el.dataset.slideshowUrls);
+          if (urls && urls.length > 0) {
+            el.style.backgroundImage = '';
+            el.style.backgroundSize = '';
+            el.style.backgroundRepeat = '';
+            el.style.backgroundPosition = '';
+            
+            const img = document.createElement('img');
+            img.src = urls[0];
+            img.style.width = '100%';
+            img.style.height = '100%';
+            img.style.objectFit = 'contain';
+            img.style.borderRadius = el.style.borderRadius || '12px';
+            img.style.display = 'block';
+            el.appendChild(img);
+          }
+        } catch(e) {
+          console.error("שגיאה בהמרת מצגת ישנה:", e);
+        }
+      }
+
+      // תיקון דינמי לתמונות שכבר נשמרו עם cover בעבר
+      const existingImg = el.querySelector('img');
+      if (existingImg && existingImg.style.objectFit === 'cover') {
+        existingImg.style.objectFit = 'contain';
+      }
+
+      // 3. המרת מיקומים ישנים
+      if (el.style.transform && el.style.transform.includes('translate')) {
+        const x = el.getAttribute('data-x') || 0;
+        const y = el.getAttribute('data-y') || 0;
+        el.style.left = x + 'px';
+        el.style.top = y + 'px';
+        el.style.transform = 'none'; // מוחקים את הטרנספורמציה
+      }
+    });
+
+    // 4. מיון דינמי של כל האלמנטים לפי גובה Y (מלמעלה למטה) כדי שיסתדרו נכון במובייל
+    // המיון קורה תמיד - גם במחשב וגם במובייל - כדי שסדר ה-DOM יתאים לסדר הוויזואלי
+    const childrenToSort = Array.from(mainContent.children).filter(el => el.classList.contains('draggable-resizable'));
+    // מיון: בעיקר לפי Y, ובמקרה של שוויון - לפי סדר ה-DOM המקורי (stable sort)
+    const domOrder = new Map(childrenToSort.map((el, i) => [el, i]));
+    childrenToSort.sort((a, b) => {
+      const yA = parseFloat(a.getAttribute('data-y')) || parseFloat(a.style.top) || 0;
+      const yB = parseFloat(b.getAttribute('data-y')) || parseFloat(b.style.top) || 0;
+      if (Math.abs(yA - yB) < 5) return domOrder.get(a) - domOrder.get(b); // tiebreaker: סדר DOM מקורי
+      return yA - yB;
+    });
+    childrenToSort.forEach((el, index) => {
+      mainContent.appendChild(el);
+      el.style.order = index;
+    });
+
+    // התאמה דינמית לתמונות רחבות במובייל כדי שלא ייחתכו ויקבלו מראה של באנר רחב
+    const imgs = mainContent.querySelectorAll('img');
+    imgs.forEach(adjustImgAspectRatio);
+  }
+  
+  // אם מצב עריכה דלוק כרגע, אנחנו צריכים להחיל אותו מיד על התוכן החדש שנטען
+  if (isEditMode) {
+    applyEditModeToContent();
+  }
+  
+  // הפעלת מצגות תמונות (Slideshows)
+  initSlideshows();
+
+  // עדכון רקע ייחודי לעמוד הנוכחי
+  applyBackgrounds();
+
+  // רנדור אזורי לחיצה (Hotspots)
+  renderAllHotspots();
+
+  // הפעלת קרא עוד על אלמנטים מסומנים
+  if (!isEditMode) {
+    mainContent.querySelectorAll('[data-has-readmore]').forEach(el => renderReadMore(el));
+  }
+
+  // קיצור גובה הקונטיינר לתוכן בלבד (מניעת רקע ענק מתחת לתוכן)
+  if (window.innerWidth > 768) {
+    fitPageToContent();
+  }
+}
+
+function fitPageToContent() {
+  const imgs = Array.from(mainContent.querySelectorAll('img'));
+  const pending = imgs.filter(img => !img.complete || img.naturalHeight === 0);
+
+  if (pending.length === 0) {
+    _applyContentHeight();
+    return;
+  }
+
+  // מחכים שכל התמונות יטענו לגמרי לפני מדידה
+  let done = 0;
+  pending.forEach(img => {
+    const finish = () => { done++; if (done === pending.length) _applyContentHeight(); };
+    img.addEventListener('load', finish, { once: true });
+    img.addEventListener('error', finish, { once: true });
+  });
+}
+
+function _applyContentHeight() {
+  // מחכים frame נוסף כדי שה-browser יסיים layout
+  requestAnimationFrame(() => {
+    const els = mainContent.querySelectorAll('.draggable-resizable');
+    if (!els.length) return;
+    let maxBottom = 0;
+    els.forEach(el => {
+      const rect = el.getBoundingClientRect();
+      const containerRect = mainContent.getBoundingClientRect();
+      const bottom = (rect.bottom - containerRect.top) + mainContent.scrollTop;
+      if (bottom > maxBottom) maxBottom = bottom;
+    });
+    const availableHeight = mainContent.parentElement ? mainContent.parentElement.clientHeight : window.innerHeight;
+    if (maxBottom > 0 && maxBottom < availableHeight) {
+      // תוכן קצר ממסך - מגבילים גובה למניעת רקע ענק
+      mainContent.style.height = (maxBottom + 4) + 'px';
+      mainContent.style.minHeight = '0';
+    } else {
+      // תוכן ארוך - משאירים גלילה רגילה ללא הגבלה
+      mainContent.style.height = '';
+      mainContent.style.minHeight = '';
+    }
+  });
+}
+
+let slideshowIntervals = [];
+
+function initSlideshows() {
+  // ניקוי אינטרוולים ישנים כדי למנוע כפילויות
+  slideshowIntervals.forEach(clearInterval);
+  slideshowIntervals = [];
+  
+  const slideshowEls = mainContent.querySelectorAll('[data-slideshow-urls]');
+  slideshowEls.forEach(el => {
+    try {
+      const urls = JSON.parse(el.dataset.slideshowUrls);
+      if (urls && urls.length > 1) {
+        let currentIndex = parseInt(el.dataset.slideshowIndex || '0');
+        const imgTag = el.querySelector('img');
+        
+        const intervalId = setInterval(() => {
+          currentIndex = (currentIndex + 1) % urls.length;
+          el.dataset.slideshowIndex = currentIndex;
+          
+          if (imgTag) {
+            imgTag.src = urls[currentIndex];
+          } else {
+            el.style.backgroundImage = `url(${urls[currentIndex]})`;
+          }
+        }, 3000); // מתחלף כל 3 שניות
+        
+        slideshowIntervals.push(intervalId);
+      }
+    } catch (e) {
+      console.error('שגיאה בטעינת מצגת התמונות', e);
+    }
+  });
+}
+
+// --- שלב 4: מערכת העריכה (מצב עריכה ✏️) ---
+
+// פונקציה שהופכת טקסטים לניתנים לעריכה
+function applyEditModeToContent() {
+  document.body.classList.add('edit-mode');
+
+  // בוחרים את כל סוגי הטקסטים בתוך אזור התוכן המרכזי
+  const textElements = mainContent.querySelectorAll('h1, h2, h3, p, span');
+  textElements.forEach(el => {
+    // התכונה הזו אומרת לדפדפן לאפשר עריכה אך לחסום עיצובים מודבקים מבחוץ
+    el.setAttribute('contenteditable', 'plaintext-only');
+  });
+  
+  const logoText = document.getElementById('main-logo-text');
+  if (logoText) {
+    logoText.setAttribute('contenteditable', 'plaintext-only');
+    logoText.title = 'לחץ לעריכת טקסט הלוגו';
+    logoText.style.outline = '1px dashed #ccc';
+  }
+  
+  makeImagesEditable();
+
+  // הצגת סרגל הכלים המרחף למנהלים
+  const ft = document.getElementById('floating-toolbar');
+  if (ft) ft.style.display = 'flex';
+  
+  // הדלקת יכולות הגרירה ושינוי הגודל (אך לא במסכים קטנים כדי לשמור על רספונסיביות)
+  interact('.draggable-resizable').draggable({ enabled: true }).resizable({ enabled: true });
+
+  // --- עריכת תפריט עליון ---
+  Array.from(navLinksContainer.children).forEach(child => {
+    if (child.id === 'add-nav-link-btn' || child.classList.contains('top-nav-controls')) return;
+
+    // ניקוי כפתורים ישנים למקרה שנשארו
+    const oldControls = child.querySelectorAll('.top-nav-controls');
+    oldControls.forEach(c => c.remove());
+
+    const targetLink = child.tagName === 'A' ? child : child.querySelector('.mega-drop-trigger');
+    if (!targetLink) return;
+
+    child.style.position = 'relative'; // וידוא שהכפתורים ימוקמו ביחס לעמוד הקיים
+    const controls = document.createElement('span');
+    controls.className = 'top-nav-controls';
+    controls.style.position = 'absolute';
+    controls.style.top = '100%';
+    controls.style.marginTop = '8px';
+    controls.style.left = '50%';
+    controls.style.transform = 'translateX(-50%)';
+    controls.style.display = 'flex';
+    controls.style.gap = '5px';
+    controls.style.background = '#fff';
+    controls.style.border = '1px solid #ddd';
+    controls.style.borderRadius = '4px';
+    controls.style.padding = '2px 5px';
+    controls.style.zIndex = '1000';
+    controls.contentEditable = 'false';
+    controls.style.boxShadow = '0 2px 5px rgba(0,0,0,0.1)';
+    controls.style.fontSize = '12px';
+
+    const renameBtn = document.createElement('span');
+    renameBtn.textContent = '✏️';
+    renameBtn.style.cursor = 'pointer';
+    renameBtn.title = 'שנה שם';
+    renameBtn.onclick = (e) => {
+      e.preventDefault(); e.stopPropagation();
+      const currentText = targetLink.childNodes[0].nodeValue || targetLink.textContent;
+      const newName = prompt('שנה שם:', currentText.replace('⌄', '').trim());
+      if (newName !== null) {
+        targetLink.childNodes[0].nodeValue = newName + (targetLink.textContent.includes('⌄') ? ' ⌄' : '');
+      }
+    };
+
+    const arrowBtn = document.createElement('span');
+    arrowBtn.textContent = '⌄';
+    arrowBtn.style.cursor = 'pointer';
+    arrowBtn.title = 'הוסף/הסר חץ מגה-תפריט';
+    arrowBtn.onclick = (e) => {
+      e.preventDefault(); e.stopPropagation();
+      if (targetLink.textContent.includes('⌄')) {
+         targetLink.childNodes[0].nodeValue = targetLink.childNodes[0].nodeValue.replace(' ⌄', '').replace('⌄', '');
+      } else {
+         targetLink.childNodes[0].nodeValue += ' ⌄';
+      }
+    };
+
+    const hideBtn = document.createElement('span');
+    hideBtn.textContent = child.classList.contains('hidden-nav') ? '🙈' : '👁️';
+    hideBtn.style.cursor = 'pointer';
+    hideBtn.title = 'הסתר/הצג';
+    hideBtn.onclick = (e) => {
+      e.preventDefault(); e.stopPropagation();
+      if (child.classList.contains('hidden-nav')) {
+        child.classList.remove('hidden-nav');
+        hideBtn.textContent = '👁️';
+      } else {
+        child.classList.add('hidden-nav');
+        hideBtn.textContent = '🙈';
+      }
+      // אם זה קישור מקושר לעמוד, נשמור את מצב ההסתרה
+      if (child.dataset.pageId) {
+        const page = pages.find(p => p.id === child.dataset.pageId);
+        if (page) {
+          page.isHidden = child.classList.contains('hidden-nav');
+          saveToStorage();
+          renderSideMenu();
+        }
+      }
+    };
+
+    const removeBtn = document.createElement('span');
+    removeBtn.textContent = '🗑️';
+    removeBtn.style.cursor = 'pointer';
+    removeBtn.title = 'הסר קישור';
+    removeBtn.onclick = (e) => {
+      e.preventDefault(); e.stopPropagation();
+      child.remove();
+      // אם זה קישור דינמי שבא מהעמודים, נמחק אותו גם מהמערך
+      if (child.dataset.pageId) {
+        topNavPages = topNavPages.filter(id => id !== child.dataset.pageId);
+        saveToStorage();
+      }
+    };
+
+    controls.appendChild(renameBtn);
+    controls.appendChild(arrowBtn);
+    controls.appendChild(hideBtn);
+    controls.appendChild(removeBtn);
+
+    child.style.position = 'relative';
+    child.appendChild(controls);
+  });
+
+  if (!document.getElementById('add-nav-link-btn')) {
+    const addNavBtn = document.createElement('button');
+    addNavBtn.id = 'add-nav-link-btn';
+    addNavBtn.textContent = '+';
+    addNavBtn.title = 'הוסף קישור חדש';
+    addNavBtn.style.padding = '0 10px';
+    addNavBtn.style.marginLeft = '10px';
+    addNavBtn.style.background = '#f0f0f0';
+    addNavBtn.style.border = '1px dashed #ccc';
+    addNavBtn.style.borderRadius = '15px';
+    addNavBtn.style.cursor = 'pointer';
+    addNavBtn.onclick = () => {
+      const name = prompt('שם הקישור החדש (ייצור עמוד חדש גם בתפריט הצד):');
+      if (name && name.trim() !== '') {
+        const newPageId = 'page-' + Date.now();
+        // ניצור עמוד חדש במערכת
+        pages.push({
+          id: newPageId,
+          title: name.trim(),
+          content: ''
+        });
+        
+        // ניצור את הקישור הדינמי בתפריט העליון
+        const newA = document.createElement('a');
+        newA.href = '#';
+        newA.textContent = name.trim();
+        newA.dataset.pageId = newPageId;
+        navLinksContainer.insertBefore(newA, addNavBtn);
+        
+        topNavPages.push(newPageId);
+        activePageId = newPageId;
+        saveToStorage();
+        renderSideMenu();
+        removeEditModeFromContent();
+        applyEditModeToContent(); // This will re-add controls to the new link
+        renderPage();
+      }
+    };
+    navLinksContainer.appendChild(addNavBtn);
+  }
+}
+
+// פונקציה שמסירה את מצב העריכה מהטקסטים (לפני ששומרים)
+function removeEditModeFromContent() {
+  document.body.classList.remove('edit-mode');
+
+  // סיום מצב ציור hotspot אם פעיל
+  if (typeof exitHotspotDrawMode === 'function') exitHotspotDrawMode();
+
+  const editableElements = mainContent.querySelectorAll('[contenteditable]');
+  editableElements.forEach(el => {
+    el.removeAttribute('contenteditable');
+  });
+  
+  const logoText = document.getElementById('main-logo-text');
+  if (logoText) {
+    logoText.removeAttribute('contenteditable');
+    logoText.title = '';
+    logoText.style.outline = 'none';
+  }
+
+  // הסרת אירועי עריכת תמונות (למעט מקושרות לדף)
+  mainContent.querySelectorAll('img').forEach(img => {
+    const linked = img.closest('[data-page-link]');
+    if (!linked) {
+      img.style.cursor = 'default';
+      img.title = '';
+    } else {
+      img.style.cursor = 'pointer'; // שומרים על pointer לתמונות מקושרות
+    }
+  });
+
+  // כפתור מצביע על אלמנטים מקושרים
+  mainContent.querySelectorAll('[data-page-link]').forEach(el => {
+    el.style.cursor = 'pointer';
+  });
+
+  // הסרת כפתורי העריכה של התפריט העליון
+  const controls = navLinksContainer.querySelectorAll('.top-nav-controls');
+  controls.forEach(c => c.remove());
+  
+  // הסרת סמן הגרירה ואטריביוט הגרירה מהקישורים עצמם
+  navLinksContainer.querySelectorAll('a').forEach(a => {
+    a.style.cursor = '';
+    a.removeAttribute('draggable');
+    a.style.borderRight = '';
+    a.style.paddingRight = '';
+  });
+  
+  const addBtn = document.getElementById('add-nav-link-btn');
+  if (addBtn) addBtn.remove();
+  
+  // העלמת סרגל הכלים המרחף לאורחים
+  const ft = document.getElementById('floating-toolbar');
+  if (ft) ft.style.display = 'none';
+  
+  // כיבוי מוחלט של יכולות הגרירה ושינוי הגודל לאורחים
+  interact('.draggable-resizable').draggable({ enabled: false }).resizable({ enabled: false });
+}
+
+// פונקציית עזר לפתיחת דיאלוג בחירת תמונה והחלפתה
+function makeImagesEditable() {
+  mainContent.querySelectorAll('img').forEach(img => {
+    img.style.cursor = 'pointer';
+    img.title = 'לחץ פעמיים להחלפת התמונה';
+    
+    // מונע הוספת כפולה של מאזין אם הפעלנו את מצב עריכה שוב
+    if (!img.dataset.hasDblclick) {
+      img.dataset.hasDblclick = 'true';
+      img.addEventListener('dblclick', function() {
+        if (!isEditMode) return;
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = e => {
+          const file = e.target.files[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = event => {
+              this.src = event.target.result;
+              saveCurrentPageContent();
+            };
+            reader.readAsDataURL(file);
+          }
+        };
+        input.click();
+      });
+    }
+  });
+}
+
+// מחזיר גרסה קלה לשמירה של תוכן העמוד הנוכחי. עמודי תמונות/סיפורים/
+// קורסים/כתבות/קהילה נבנים תמיד מחדש מה-JSON בזמן הרינדור, ולכן אין
+// טעם לשמור את כל ה-HTML המרונדר — הוא מכפיל כל תמונת base64 פעמים
+// רבות (תמונה ראשית + תצוגות מקדימות + data-json) ומנפח את הבלוב
+// שמסונכרן ל-Firebase עד כדי קריסה. שומרים רק את המעטפת עם ה-data.
+function artSerializePageContent() {
+  const photos = mainContent.querySelector('.photos-page');
+  if (photos && photos.dataset.photosJson) {
+    return `<div class="articles-page photos-page" data-photos-json="${photos.dataset.photosJson}"></div>`;
+  }
+  const stories = mainContent.querySelector('.stories-page');
+  if (stories && stories.dataset.storiesJson) {
+    return `<div class="articles-page stories-page" data-stories-json="${stories.dataset.storiesJson}"></div>`;
+  }
+  const courses = mainContent.querySelector('.courses-page');
+  if (courses && courses.dataset.coursesJson) {
+    return `<div class="articles-page courses-page" data-courses-json="${courses.dataset.coursesJson}"></div>`;
+  }
+  const community = mainContent.querySelector('.community-page');
+  if (community) {
+    return `<div class="articles-page community-page" data-page-id="${community.dataset.pageId || activePageId}"></div>`;
+  }
+  const articles = mainContent.querySelector('.articles-page:not(.stories-page):not(.photos-page):not(.courses-page):not(.community-page)');
+  if (articles && articles.dataset.articlesJson) {
+    return `<div class="articles-page" data-articles-json="${articles.dataset.articlesJson}"></div>`;
+  }
+  // עמוד רגיל (בלוקים חופשיים, טקסט, תמונות שנגררו) — נשמר כרגיל
+  return mainContent.innerHTML;
+}
+
+// מכווץ מחרוזת תוכן עמוד שמורה לגרסה קלה (רק המעטפת עם ה-JSON).
+// משמש למיגרציה של תוכן ישן בטעינה. מנתח בעזרת DOMParser כדי לא לטעון
+// את התמונות לדף החי.
+function artLightenContent(content) {
+  if (!content || typeof content !== 'string') return content;
+  if (content.indexOf('-json=') === -1 && content.indexOf('community-page') === -1) return content;
+  let doc;
+  try { doc = new DOMParser().parseFromString(content, 'text/html'); } catch (e) { return content; }
+  const ph = doc.querySelector('.photos-page');
+  if (ph && ph.dataset.photosJson) return `<div class="articles-page photos-page" data-photos-json="${ph.dataset.photosJson}"></div>`;
+  const st = doc.querySelector('.stories-page');
+  if (st && st.dataset.storiesJson) return `<div class="articles-page stories-page" data-stories-json="${st.dataset.storiesJson}"></div>`;
+  const co = doc.querySelector('.courses-page');
+  if (co && co.dataset.coursesJson) return `<div class="articles-page courses-page" data-courses-json="${co.dataset.coursesJson}"></div>`;
+  const cm = doc.querySelector('.community-page');
+  if (cm) return `<div class="articles-page community-page" data-page-id="${cm.dataset.pageId || ''}"></div>`;
+  const ar = doc.querySelector('.articles-page:not(.stories-page):not(.photos-page):not(.courses-page):not(.community-page)');
+  if (ar && ar.dataset.articlesJson) return `<div class="articles-page" data-articles-json="${ar.dataset.articlesJson}"></div>`;
+  return content;
+}
+
+// שומר את התוכן הערוך (בגרסה קלה) למערך ואז ל-localforage ול-Firebase
+function saveCurrentPageContent() {
+  // קודם נוריד את מצב העריכה ואת סימוני הבחירה של הגרירה (כדי שהם לא יישמרו לקוד הסטטי!)
+  removeEditModeFromContent();
+  if (typeof removeSelection === 'function') removeSelection();
+  
+  // נמצא את העמוד הנוכחי במערך שלנו
+  const currentPage = pages.find(p => p.id === activePageId);
+  if (currentPage) {
+    currentPage.content = artSerializePageContent(); // שומרים גרסה קלה, בלי כפילויות תמונות
+    saveToStorage(); // שומרים לזיכרון של הדפדפן
+  }
+
+  // אם היינו במצב עריכה, נחזיר אותו כדי שיהיה אפשר להמשיך לערוך
+  if (isEditMode) {
+    applyEditModeToContent();
+  }
+}
+
+// מאזין לחיצה לכפתור מצב העריכה למעלה
+btnEditMode.addEventListener('click', () => {
+  isEditMode = !isEditMode; // הופכים את המצב (אם היה כבוי נדלק, ואם היה דלוק נכבה)
+  
+  if (isEditMode) {
+    // נדלק
+    btnEditMode.classList.add('active'); // מוסיף מחלקה שהופכת אותו לירוק ב-CSS
+    btnEditMode.textContent = 'שמור שינויים 💾';
+    applyEditModeToContent(); // הופך את הטקסטים לניתנים לעריכה
+  } else {
+  // נכבה (שמירה)
+    btnEditMode.classList.remove('active');
+    btnEditMode.textContent = 'מצב עריכה ✏️';
+    saveCurrentPageContent(); // שומר את מה שערכנו
+    // אין צורך לרענן מחדש כי התוכן כבר מופיע, פשוט הסרנו את יכולת העריכה
+  }
+  
+  const managerBtn = document.querySelector('.manager-btn');
+  if (managerBtn) {
+    managerBtn.textContent = isEditMode ? 'מנהל' : 'אורח';
+  }
+  
+  renderSideMenu(); // לעדכן את תפריט הצד (כדי להציג או להעלים את כפתורי העריכה/מחיקה)
+  renderTopNav(); // לעדכן את התפריט העליון
+});
+
+// --- שלב 5: הוספת עמודים חדשים ---
+
+// האזנה ללחיצה על כפתור "+ הוסף עמוד חדש"
+btnAddPage.addEventListener('click', () => {
+  // מקפיצים חלונית שמבקשת מהמשתמש את שם העמוד
+  const newTitle = prompt('איך תרצה לקרוא לעמוד החדש? (למשל: 📞 צור קשר)');
+  
+  if (newTitle && newTitle.trim() !== '') {
+    // יוצרים אובייקט של עמוד חדש
+    const newPage = {
+      id: 'page-' + Date.now(), // מזהה ייחודי שמבוסס על הזמן הנוכחי
+      title: newTitle, // השם שהמשתמש הקליד
+      content: ''
+    };
+    
+    pages.push(newPage); // מוסיפים למערך שלנו
+    activePageId = newPage.id; // מעבירים אותו להיות העמוד הפעיל
+    
+    saveToStorage(); // שומרים
+    renderSideMenu(); // מרעננים את התפריט שיציג את העמוד החדש
+    renderPage(); // מרעננים את המסך שיציג את העמוד החדש
+  }
+});
+
+// האזנה ללחיצה על כפתור "איפוס אתר"
+if (btnResetSite) {
+  btnResetSite.addEventListener('click', async () => {
+    if (confirm('האם אתה בטוח שברצונך לאפס את עיצובי האתר? הכתבות, המוצרים והקורסים שהעלית יישמרו, אך רקעי העיצוב יאופסו.')) {
+      try {
+        // איפוס מקומי של העדפות דפדפן
+        await localforage.clear();
+        localStorage.clear();
+        
+        // קריאת המצב הנוכחי כדי לשמור על העמודים והתוכן
+        const dbRef = ref(db, 'website');
+        const snapshot = await get(dbRef);
+        const currentData = snapshot.val() || {};
+        const existingPages = currentData.pages || [];
+        
+        // שמירת התוכן ואיפוס רק של הרקעים והעיצובים
+        await update(dbRef, {
+          pages: existingPages, // שומר על כל הכתבות והתכנים הקיימים
+          activePageId: currentData.activePageId || 'page-main',
+          topNavPages: currentData.topNavPages || ['page-main'],
+          navHTML: currentData.navHTML || null,
+          siteBackgrounds: { dashboard: null, topNav: null, main: null } // מאפס רקעים לדיפולט
+        });
+        
+        alert('העיצוב אופס בהצלחה! התוכן והכתבות שלך נשמרו. העמוד ייטען מחדש כעת.');
+        window.location.reload();
+      } catch (e) {
+        console.error(e);
+        alert('שגיאה במהלך האיפוס.');
+      }
+    }
+  });
+}
+
+// האזנה לכפתורי הצגת/הסתרת עגלה וצ'אט בסרגל הניהול
+const btnToggleCartVisibility = document.getElementById('btn-toggle-cart-visibility');
+const btnToggleChatVisibility = document.getElementById('btn-toggle-chat-visibility');
+
+if (btnToggleCartVisibility) {
+  btnToggleCartVisibility.addEventListener('click', async () => {
+    hideCart = !hideCart;
+    try {
+      await update(ref(db, 'website'), { hideCart: hideCart });
+      updateFABsVisibility();
+    } catch(err) {
+      console.error(err);
+    }
+  });
+}
+
+if (btnToggleChatVisibility) {
+  btnToggleChatVisibility.addEventListener('click', async () => {
+    hideChat = !hideChat;
+    try {
+      await update(ref(db, 'website'), { hideChat: hideChat });
+      updateFABsVisibility();
+    } catch(err) {
+      console.error(err);
+    }
+  });
+}
+
+// --- שלב 6: טיפול בתפריט העליון (Nav Links) ---
+// כדי שהתפריט העליון יעבוד כשהוא מפנה לעמודים ידועים (אם הם קיימים עדיין במערכת)
+const topNavMapping = {
+  'top-nav-main': 'page-main',
+  'top-nav-shop': 'page-shop',
+  'top-nav-charts': 'page-charts',
+  'top-nav-forum': 'page-forum',
+  'top-nav-services': 'page-services',
+  'top-nav-meeting': 'page-meeting'
+};
+
+// האזנה קבועה (Event Delegation) לכל הקישורים בתפריט העליון
+navLinksContainer.addEventListener('click', (e) => {
+  const a = e.target.closest('a');
+  if (!a) return;
+  
+  let targetPageId = null;
+  // קודם נבדוק אם זה קישור דינמי (שיש לו data-page-id)
+  if (a.dataset.pageId) {
+    targetPageId = a.dataset.pageId;
+  }
+  // אחרת נבדוק אם זה קישור סטטי מ-HTML שיש לו ID
+  else if (a.id && topNavMapping[a.id]) {
+    targetPageId = topNavMapping[a.id];
+  }
+
+  // אם מצאנו עמוד יעד, ננווט אליו
+  if (targetPageId) {
+    e.preventDefault();
+    const targetPage = pages.find(p => p.id === targetPageId);
+    if (targetPage) {
+      if (isEditMode) saveCurrentPageContent();
+      activePageId = targetPageId;
+      saveToStorage();
+      renderSideMenu();
+      renderPage();
+    }
+  }
+});
+
+// --- שלב 7: הרצה ראשונית של האתר! ---
+// (הפונקציות renderSideMenu ו- renderPage מופעלות כעת בתוך initSite בסיום טעינת הנתונים)
+
+// --- שלב 8: גרירה, שינוי גודל ומחיקת אלמנטים (interact.js) ---
+
+
+// פונקציה שמנקה את הבחירה מאלמנט (מעלימה מסגרת וכפתורי פעולה)
+function removeSelection() {
+  const selected = document.querySelectorAll('.draggable-resizable.selected');
+  selected.forEach(el => {
+    el.classList.remove('selected');
+    const actions = el.querySelector('.actions-container');
+    if (actions) actions.remove();
+  });
+}
+
+// --- מנגנון בחירה מרובה (Marquee Selection) ---
+let isDrawingSelection = false;
+let selectionBox = null;
+let startSelX = 0;
+let startSelY = 0;
+
+mainContent.addEventListener('mousedown', (e) => {
+  if (!isEditMode) return;
+  // בודקים שלחצו בדיוק על משטח העבודה (ולא על תמונה למשל)
+  if (e.target === mainContent) {
+    removeSelection(); // מנקים בחירה קודמת
+    saveCurrentPageContent();
+    
+    isDrawingSelection = true;
+    
+    // בגלל שייתכן גלילה, מחשבים מיקום מוחלט בתוך ה-mainContent
+    const rect = mainContent.getBoundingClientRect();
+    startSelX = e.clientX - rect.left + mainContent.scrollLeft;
+    startSelY = e.clientY - rect.top + mainContent.scrollTop;
+    
+    selectionBox = document.createElement('div');
+    selectionBox.className = 'selection-box';
+    selectionBox.style.left = startSelX + 'px';
+    selectionBox.style.top = startSelY + 'px';
+    selectionBox.style.width = '0px';
+    selectionBox.style.height = '0px';
+    mainContent.appendChild(selectionBox);
+  }
+});
+
+// מסיר בחירה כאשר לוחצים מחוץ לאלמנט
+document.addEventListener('mousedown', (e) => {
+  if (!e.target.closest('.draggable-resizable') && !e.target.closest('.actions-container') && !e.target.closest('.action-btn') && !e.target.closest('input[type=\"color\"]') && !e.target.closest('.selection-box') && !e.target.closest('#link-modal')) {
+    removeSelection();
+  }
+});
+
+mainContent.addEventListener('mousemove', (e) => {
+  if (!isEditMode || !isDrawingSelection || !selectionBox) return;
+  
+  const rect = mainContent.getBoundingClientRect();
+  const currentX = e.clientX - rect.left + mainContent.scrollLeft;
+  const currentY = e.clientY - rect.top + mainContent.scrollTop;
+  
+  const width = Math.abs(currentX - startSelX);
+  const height = Math.abs(currentY - startSelY);
+  const left = Math.min(startSelX, currentX);
+  const top = Math.min(startSelY, currentY);
+  
+  selectionBox.style.width = width + 'px';
+  selectionBox.style.height = height + 'px';
+  selectionBox.style.left = left + 'px';
+  selectionBox.style.top = top + 'px';
+  
+  // בדיקת חפיפה (Intersection) - אילו אלמנטים נתפסו בריבוע שלנו
+  const selectionRect = selectionBox.getBoundingClientRect();
+  const draggables = mainContent.querySelectorAll('.draggable-resizable');
+  
+  draggables.forEach(el => {
+    const elRect = el.getBoundingClientRect();
+    const isIntersecting = !(
+      selectionRect.right < elRect.left || 
+      selectionRect.left > elRect.right || 
+      selectionRect.bottom < elRect.top || 
+      selectionRect.top > elRect.bottom
+    );
+    
+    if (isIntersecting) {
+      el.classList.add('selected');
+      // כדי למנוע עומס על המסך בבחירה מרובה, נסיר את כפתורי המחיקה והעריכה האישיים
+      const actions = el.querySelector('.actions-container');
+      if (actions) actions.remove();
+    } else {
+      el.classList.remove('selected');
+    }
+  });
+});
+
+document.addEventListener('mouseup', () => {
+  if (isDrawingSelection) {
+    isDrawingSelection = false;
+    if (selectionBox) {
+      selectionBox.remove();
+      selectionBox = null;
+    }
+  }
+});
+
+// הגדרת ספריית interact.js על כל אלמנט שנושא את המחלקה 'draggable-resizable'
+interact('.draggable-resizable')
+  .draggable({
+    ignoreFrom: '[contenteditable]:focus, .action-btn, video', // מונע גרירה כשלוחצים על טקסט שבעריכה, כפתורי פעולה או נגן וידאו
+    listeners: {
+      move(event) {
+        if (!isEditMode) return;
+        const target = event.target;
+        
+        // אם האלמנט שגוררים כרגע מסומן, נגרור את כל מה שמסומן יחד
+        if (target.classList.contains('selected')) {
+          const selectedEls = document.querySelectorAll('.draggable-resizable.selected');
+          selectedEls.forEach(el => {
+            const x = (parseFloat(el.getAttribute('data-x')) || 0) + event.dx;
+            const y = (parseFloat(el.getAttribute('data-y')) || 0) + event.dy;
+            el.style.left = x + 'px';
+            el.style.top = y + 'px';
+            el.setAttribute('data-x', x);
+            el.setAttribute('data-y', y);
+          });
+        } else {
+          // גרירה רגילה של אלמנט בודד
+          const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
+          const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
+          target.style.left = x + 'px';
+          target.style.top = y + 'px';
+          target.setAttribute('data-x', x);
+          target.setAttribute('data-y', y);
+        }
+      },
+      end() {
+        // כשמסיימים לגרור - שומרים הכל לזיכרון!
+        saveCurrentPageContent();
+      }
+    }
+  })
+  .resizable({
+    ignoreFrom: '[contenteditable]:focus, .action-btn, video',
+    // מאפשרים שינוי גודל מכל 4 הכיוונים (הפינות)
+    edges: { left: true, right: true, bottom: true, top: true },
+    listeners: {
+      move(event) {
+        const target = event.target;
+        let x = (parseFloat(target.getAttribute('data-x')) || 0);
+        let y = (parseFloat(target.getAttribute('data-y')) || 0);
+
+        // מעדכנים את הגודל (רוחב וגובה)
+        target.style.width = event.rect.width + 'px';
+        target.style.height = event.rect.height + 'px';
+
+        // אם מתחנו מהצד השמאלי או העליון, המיקום X/Y גם משתנה, לכן מוסיפים פיצוי
+        x += event.deltaRect.left;
+        y += event.deltaRect.top;
+
+        target.style.left = x + 'px';
+        target.style.top = y + 'px';
+        target.setAttribute('data-x', x);
+        target.setAttribute('data-y', y);
+      },
+      end() {
+        saveCurrentPageContent();
+      }
+    }
+  })
+  .on('down', function (event) {
+    if (!isEditMode) return;
+    // אם לחצנו על אחד מכפתורי הפעולה, אנחנו לא רוצים לבחור מחדש אלא לתת לכפתור לעבוד
+    if (event.target.closest('.action-btn') || event.target.closest('input[type=\"color\"]')) return;
+    
+    // כשלוחצים על אלמנט (MouseDown):
+    const target = event.currentTarget;
+    if (!target.classList.contains('selected')) {
+      removeSelection(); // קודם כל מנקים בחירה קודמת רק אם נבחר אלמנט חדש
+      target.classList.add('selected'); // מדליקים מסגרת כחולה
+    }
+    
+    // מנקים קונטיינר ישן אם קיים כדי לא ליצור כפילויות
+    const oldActions = target.querySelector('.actions-container');
+    if (oldActions) oldActions.remove();
+    
+    // יוצרים קונטיינר לכפתורי הפעולה
+    const actionsContainer = document.createElement('div');
+    actionsContainer.className = 'actions-container';
+    
+    // 1. כפתור קישור
+    const linkBtn = document.createElement('button');
+    linkBtn.className = 'action-btn link-btn';
+    linkBtn.innerHTML = '🔗';
+    linkBtn.title = 'הוסף קישור';
+    linkBtn.addEventListener('mousedown', (e) => {
+      e.stopPropagation();
+      currentEditingLinkElement = target;
+      const currentLink = target.getAttribute('data-href') || '';
+      
+      const linkInternalSelect = document.getElementById('link-internal-select');
+      const linkExternalInput = document.getElementById('link-external-input');
+      const linkModal = document.getElementById('link-modal');
+
+      // מילוי ה-Select בעמודים קיימים
+      linkInternalSelect.innerHTML = '<option value="">-- בחר עמוד פנימי --</option>';
+      pages.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.id;
+        opt.textContent = p.title;
+        linkInternalSelect.appendChild(opt);
+      });
+      
+      // איפוס
+      linkExternalInput.value = '';
+      linkInternalSelect.value = '';
+      
+      // טעינת קישור קיים אם יש
+      if (currentLink) {
+        if (pages.find(p => p.id === currentLink || p.title === currentLink)) {
+          const found = pages.find(p => p.id === currentLink || p.title === currentLink);
+          linkInternalSelect.value = found.id;
+        } else {
+          linkExternalInput.value = currentLink;
+        }
+      }
+      
+      linkModal.style.display = 'flex';
+    });
+
+    // 1.5 כפתור פתח קישור (במצב עריכה)
+    const openLinkBtn = document.createElement('button');
+    openLinkBtn.className = 'action-btn open-link-btn';
+    openLinkBtn.innerHTML = '↗️';
+    openLinkBtn.title = 'פתח קישור / נווט לדף';
+    openLinkBtn.addEventListener('mousedown', (e) => {
+      e.stopPropagation();
+      const href = target.getAttribute('data-href');
+      const pageLink = target.dataset.pageLink;
+      
+      if (!href && !pageLink) {
+        alert('לא הוגדר קישור לאלמנט זה עדיין. הגדר קישור באמצעות כפתור 🔗 או 📄→.');
+        return;
+      }
+      
+      if (pageLink) {
+        const targetPage = pages.find(p => p.id === pageLink);
+        if (targetPage) {
+          activePageId = pageLink;
+          saveToStorage();
+          renderSideMenu();
+          renderTopNav();
+          renderPage();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+          alert('דף היעד אינו קיים עוד.');
+        }
+      } else if (href) {
+        const internalPage = pages.find(p => p.title.trim() === href.trim() || p.id === href.trim());
+        if (internalPage) {
+          activePageId = internalPage.id;
+          saveToStorage();
+          renderSideMenu();
+          renderTopNav();
+          renderPage();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+          const finalLink = href.startsWith('http') ? href : 'https://' + href;
+          window.open(finalLink, '_blank');
+        }
+      }
+    });
+
+    // 2. כפתור העתקה
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'action-btn copy-btn';
+    copyBtn.innerHTML = '📄';
+    copyBtn.title = 'העתק אלמנט';
+    copyBtn.addEventListener('mousedown', async (e) => {
+      e.stopPropagation();
+      await copySelectedElements([target]);
+      alert('האלמנט הועתק! עכשיו אפשר להדביק אותו בעמוד אחר בעזרת כפתור "הדבק" או Ctrl+V.');
+    });
+
+    // 3. כפתור מחיקה
+    const delBtn = document.createElement('button');
+    delBtn.className = 'action-btn delete-btn';
+    delBtn.innerHTML = '🗑️';
+    delBtn.title = 'מחק אלמנט';
+    delBtn.addEventListener('mousedown', (e) => {
+      e.stopPropagation(); 
+      deleteSelectedElements([target]);
+    });
+    
+    // פונקציית עזר למציאת אלמנט הטקסט הפנימי
+    const getInnerEl = (t) => t.querySelector('h1, h2, h3, h4, h5, h6, p, span, div') || t;
+
+    // 4. כפתור בחירת צבע טקסט
+    const colorWrapper = document.createElement('div');
+    colorWrapper.className = 'action-btn';
+    colorWrapper.style.position = 'relative';
+    colorWrapper.style.overflow = 'hidden';
+    colorWrapper.title = 'שנה צבע טקסט';
+    
+    const colorIcon = document.createElement('span');
+    colorIcon.innerHTML = '🎨';
+    colorIcon.style.pointerEvents = 'none';
+    
+    const colorInput = document.createElement('input');
+    colorInput.type = 'color';
+    colorInput.style.position = 'absolute';
+    colorInput.style.opacity = '0';
+    colorInput.style.width = '100%';
+    colorInput.style.height = '100%';
+    colorInput.style.cursor = 'pointer';
+    
+    colorInput.addEventListener('mousedown', (e) => e.stopPropagation());
+    colorInput.addEventListener('input', (e) => {
+      getInnerEl(target).style.color = e.target.value;
+    });
+    colorInput.addEventListener('change', () => {
+      saveCurrentPageContent();
+    });
+    
+    colorWrapper.appendChild(colorIcon);
+    colorWrapper.appendChild(colorInput);
+
+    // 5. כפתור הדגשה (B)
+    const boldBtn = document.createElement('button');
+    boldBtn.className = 'action-btn';
+    boldBtn.innerHTML = '<b>B</b>';
+    boldBtn.title = 'הדגש טקסט';
+    boldBtn.addEventListener('mousedown', (e) => {
+      e.stopPropagation();
+      const el = getInnerEl(target);
+      const weight = window.getComputedStyle(el).fontWeight;
+      const isBold = weight === 'bold' || parseInt(weight) >= 700;
+      el.style.fontWeight = isBold ? 'normal' : 'bold';
+      saveCurrentPageContent();
+    });
+
+    // 6. כפתור הגדלת טקסט (A+)
+    const sizeUpBtn = document.createElement('button');
+    sizeUpBtn.className = 'action-btn';
+    sizeUpBtn.innerHTML = 'A+';
+    sizeUpBtn.title = 'הגדל טקסט';
+    sizeUpBtn.addEventListener('mousedown', (e) => {
+      e.stopPropagation();
+      const el = getInnerEl(target);
+      let size = parseInt(window.getComputedStyle(el).fontSize) || 16;
+      el.style.fontSize = (size + 2) + 'px';
+      saveCurrentPageContent();
+    });
+
+    // 7. כפתור הקטנת טקסט (A-)
+    const sizeDownBtn = document.createElement('button');
+    sizeDownBtn.className = 'action-btn';
+    sizeDownBtn.innerHTML = 'A-';
+    sizeDownBtn.title = 'הקטן טקסט';
+    sizeDownBtn.addEventListener('mousedown', (e) => {
+      e.stopPropagation();
+      const el = getInnerEl(target);
+      let size = parseInt(window.getComputedStyle(el).fontSize) || 16;
+      el.style.fontSize = Math.max(8, size - 2) + 'px';
+      saveCurrentPageContent();
+    });
+
+    // 8. כפתור מעל/מתחת (Z-Index Toggle)
+    const layerBtn = document.createElement('button');
+    layerBtn.className = 'action-btn';
+    
+    const currentZ = parseInt(window.getComputedStyle(target).zIndex) || 1;
+    layerBtn.innerHTML = currentZ >= 100 ? '⏬ מתחת' : '⏫ מעל';
+    layerBtn.title = 'הבא לקדמה / שלח לאחור';
+    
+    layerBtn.addEventListener('mousedown', (e) => {
+      e.stopPropagation();
+      const currentZIndex = parseInt(window.getComputedStyle(target).zIndex) || 1;
+      
+      if (currentZIndex < 100) {
+        target.style.zIndex = '100';
+        layerBtn.innerHTML = '⏬ מתחת';
+      } else {
+        target.style.zIndex = '1';
+        layerBtn.innerHTML = '⏫ מעל';
+      }
+      saveCurrentPageContent();
+    });
+
+    actionsContainer.appendChild(colorWrapper);
+    actionsContainer.appendChild(boldBtn);
+    actionsContainer.appendChild(sizeUpBtn);
+    actionsContainer.appendChild(sizeDownBtn);
+    actionsContainer.appendChild(layerBtn); // הוספת כפתור מעל/מתחת
+
+    // 8.5 כפתור צריבה לרקע (אם יש תמונה)
+    let bgUrl = target.style.backgroundImage;
+    if (bgUrl && bgUrl !== 'none') {
+       bgUrl = bgUrl.replace(/^url\(["']?/, '').replace(/["']?\)$/, '');
+    } else {
+       const img = target.querySelector('img');
+       if (img) bgUrl = img.src;
+    }
+    
+    if (bgUrl && bgUrl.startsWith('data:image')) {
+      const burnBtn = document.createElement('button');
+      burnBtn.className = 'action-btn';
+      burnBtn.innerHTML = '🔥';
+      burnBtn.title = 'קבע תמונה זו כרקע האתר';
+      burnBtn.addEventListener('mousedown', async (e) => {
+        e.stopPropagation();
+        siteBackgrounds['main'] = bgUrl;
+        await localforage.setItem('mySiteBackgrounds_v3', siteBackgrounds);
+        applyBackgrounds();
+        
+        target.remove();
+        removeSelection();
+        saveCurrentPageContent();
+      });
+      actionsContainer.appendChild(burnBtn);
+    }
+
+    // כפתור קרא עוד
+    const readMoreBtn = document.createElement('button');
+    readMoreBtn.className = 'action-btn';
+    const hasRM = target.dataset.hasReadmore === 'true';
+    readMoreBtn.innerHTML = hasRM ? '📖✕' : '📖';
+    readMoreBtn.title = hasRM ? 'הסר קרא עוד' : 'הוסף קרא עוד';
+    readMoreBtn.addEventListener('mousedown', (e) => {
+      e.stopPropagation();
+      if (target.dataset.hasReadmore === 'true') {
+        removeReadMoreFromEl(target);
+        readMoreBtn.innerHTML = '📖';
+        readMoreBtn.title = 'הוסף קרא עוד';
+      } else {
+        applyReadMoreToEl(target);
+        readMoreBtn.innerHTML = '📖✕';
+        readMoreBtn.title = 'הסר קרא עוד';
+      }
+    });
+
+    // כפתור אזור לחיץ (hotspot)
+    const hotspotBtn = document.createElement('button');
+    hotspotBtn.className = 'action-btn hotspot-action-btn';
+    hotspotBtn.innerHTML = '🎯';
+    hotspotBtn.title = 'הוסף אזור לחיץ';
+    hotspotBtn.addEventListener('mousedown', (e) => {
+      e.stopPropagation();
+      enterHotspotDrawMode(target);
+    });
+
+    actionsContainer.appendChild(linkBtn);
+    actionsContainer.appendChild(openLinkBtn);
+    actionsContainer.appendChild(readMoreBtn);
+    actionsContainer.appendChild(hotspotBtn);
+    actionsContainer.appendChild(copyBtn);
+    actionsContainer.appendChild(delBtn);
+    
+    // 3.5 כפתור פירוק קבוצה (אם זה בלוק)
+    if (target.getAttribute('data-is-group') === 'true') {
+      const ungroupBtn = document.createElement('button');
+      ungroupBtn.className = 'action-btn ungroup-btn';
+      ungroupBtn.innerHTML = '🔓';
+      ungroupBtn.title = 'פרק קבוצה';
+      ungroupBtn.addEventListener('mousedown', (e) => {
+        e.stopPropagation();
+        const groupX = parseFloat(target.getAttribute('data-x')) || parseFloat(target.style.left) || 0;
+        const groupY = parseFloat(target.getAttribute('data-y')) || parseFloat(target.style.top) || 0;
+        
+        const children = Array.from(target.children).filter(c => !c.classList.contains('actions-container'));
+        children.forEach(child => {
+           const childX = parseFloat(child.getAttribute('data-x')) || parseFloat(child.style.left) || 0;
+           const childY = parseFloat(child.getAttribute('data-y')) || parseFloat(child.style.top) || 0;
+           
+           const absX = groupX + childX;
+           const absY = groupY + childY;
+           
+           child.style.left = absX + 'px';
+           child.style.top = absY + 'px';
+           child.setAttribute('data-x', absX);
+           child.setAttribute('data-y', childY);
+           
+           child.classList.add('draggable-resizable'); // מחזירים לו יכולת גרירה בודדת
+           mainContent.appendChild(child);
+        });
+        
+        target.remove(); // Remove the group container
+        removeSelection();
+        saveCurrentPageContent();
+      });
+      actionsContainer.appendChild(ungroupBtn);
+    }
+    
+    target.appendChild(actionsContainer);
+  })
+  .on('doubletap', function (event) {
+    const target = event.currentTarget;
+    const link = target.getAttribute('data-link');
+    // אם לא במצב עריכה ויש קישור, נפתח אותו בלחיצה כפולה
+    if (link && !event.target.closest('.action-btn') && !isEditMode) {
+      window.open(link, '_blank');
+    }
+  });
+
+// --- שלב 9: הוספת אלמנטים חדשים (דרך הסרגל המרחף התחתון) ---
+
+// כפתורי ההוספה מהסרגל
+const btnAddText = document.getElementById('btn-add-text');
+const btnAddImage = document.getElementById('btn-add-image');
+const btnMakeDownload = document.getElementById('btn-make-download');
+const btnMakeSlideshow = document.getElementById('btn-make-slideshow');
+const btnAddBg = document.getElementById('btn-add-bg');
+
+// 9.0 הוספת מצגת 🎞️
+if (btnMakeSlideshow) {
+  btnMakeSlideshow.addEventListener('click', () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.multiple = true; // מאפשר בחירת מספר קבצים
+    
+    input.onchange = e => {
+      const files = Array.from(e.target.files).slice(0, 5); // הגבלת 5 תמונות
+      if (files.length > 0) {
+        const urls = [];
+        let loadedCount = 0;
+        
+        files.forEach((file, index) => {
+          artCompressImage(file).then(data => {
+            urls[index] = data;
+            loadedCount++;
+
+            if (loadedCount === files.length) {
+              const el = document.createElement('div');
+              el.className = 'draggable-resizable';
+              
+              // מידות התחלתיות סבירות
+              el.style.width = '400px';
+              el.style.height = '300px';
+              el.style.left = '150px';
+              el.style.top = '150px';
+              el.setAttribute('data-x', '150');
+              el.setAttribute('data-y', '150');
+              el.style.borderRadius = '12px';
+              
+              const img = document.createElement('img');
+              img.src = urls[0];
+              img.style.width = '100%';
+              img.style.height = '100%';
+              img.style.objectFit = 'contain';
+              img.style.borderRadius = '12px';
+              img.style.display = 'block';
+              el.appendChild(img);
+              
+              el.dataset.slideshowUrls = JSON.stringify(urls);
+              el.dataset.slideshowIndex = '0';
+              
+              mainContent.appendChild(el);
+              saveCurrentPageContent();
+              initSlideshows(); // מפעיל מיד את המצגת
+              alert('נוצרה מצגת עם ' + files.length + ' תמונות בהצלחה! התמונות יתחלפו כל 3 שניות.');
+            }
+          });
+        });
+      }
+    };
+    input.click();
+  });
+}
+
+// 9.0 הוספת וידאו 📹
+if (btnAddVideo) {
+  btnAddVideo.addEventListener('click', () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'video/*';
+    
+    input.onchange = e => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = event => {
+          const el = document.createElement('div');
+          el.className = 'draggable-resizable';
+          
+          el.style.width = '480px';
+          el.style.height = '270px';
+          el.style.left = '150px';
+          el.style.top = '150px';
+          el.setAttribute('data-x', '150');
+          el.setAttribute('data-y', '150');
+          
+          el.innerHTML = `
+            <video src="${event.target.result}" controls style="width: 100%; height: 100%; object-fit: contain; border-radius: 8px;"></video>
+          `;
+          
+          mainContent.appendChild(el);
+          saveCurrentPageContent();
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+    input.click();
+  });
+}
+
+// 9.0 הוספת וידאו בלופ 🔁
+if (btnAddLoopVideo) {
+  btnAddLoopVideo.addEventListener('click', () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'video/*';
+    
+    input.onchange = e => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = event => {
+          const el = document.createElement('div');
+          el.className = 'draggable-resizable';
+          
+          el.style.width = '480px';
+          el.style.height = '270px';
+          el.style.left = '150px';
+          el.style.top = '150px';
+          el.setAttribute('data-x', '150');
+          el.setAttribute('data-y', '150');
+          
+          // סרטון לופ: ללא כפתורי שליטה (controls), מתנגן אוטומטית (autoplay), בלולאה (loop), מושתק (muted) ומותאם לניידים (playsinline)
+          el.innerHTML = `
+            <video src="${event.target.result}" autoplay loop muted playsinline style="width: 100%; height: 100%; object-fit: contain; border-radius: 8px;"></video>
+          `;
+          
+          mainContent.appendChild(el);
+          saveCurrentPageContent();
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+    input.click();
+  });
+}
+
+// 9.0 הוספת כפתור הורדת קובץ
+if (btnMakeDownload) {
+  btnMakeDownload.addEventListener('click', () => {
+    // שלב 1: בחירת תמונת אייקון
+    const imgInput = document.createElement('input');
+    imgInput.type = 'file';
+    imgInput.accept = 'image/*';
+
+    imgInput.onchange = e => {
+      const imgFile = e.target.files[0];
+      if (!imgFile) return;
+
+      const imgReader = new FileReader();
+      imgReader.onload = imgEvent => {
+        const iconDataUrl = imgEvent.target.result;
+
+        // שלב 2: בחירת קובץ להורדה
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+
+        fileInput.onchange = e2 => {
+          const dlFile = e2.target.files[0];
+          if (!dlFile) return;
+
+          const dlReader = new FileReader();
+          dlReader.onload = dlEvent => {
+            const el = document.createElement('div');
+            el.className = 'draggable-resizable';
+            el.style.width = '180px';
+            el.style.left = '200px';
+            el.style.top = '200px';
+            el.setAttribute('data-x', '200');
+            el.setAttribute('data-y', '200');
+            el.dataset.downloadUrl = dlEvent.target.result;
+            el.dataset.downloadName = dlFile.name;
+            el.title = 'לחיצה תוריד: ' + dlFile.name;
+
+            el.innerHTML = `
+              <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; cursor:pointer; height:100%; box-sizing:border-box; padding:10px;">
+                <img src="${iconDataUrl}" style="width:100%; height:auto; object-fit:contain; border-radius:8px; display:block;" draggable="false" />
+                <span contenteditable="plaintext-only" style="font-size:13px; color:#333; text-align:center; font-weight:600;">${dlFile.name}</span>
+              </div>
+            `;
+
+            mainContent.appendChild(el);
+            saveCurrentPageContent();
+          };
+          dlReader.readAsDataURL(dlFile);
+        };
+        fileInput.click();
+      };
+      imgReader.readAsDataURL(imgFile);
+    };
+    imgInput.click();
+  });
+}
+
+// 9.1 הוספת טקסט חופשי
+if (btnAddText) {
+  btnAddText.addEventListener('click', () => {
+    // יוצרים קופסה חדשה
+    const el = document.createElement('div');
+    el.className = 'draggable-resizable'; // נותנים לה את מחלקת הקסם של interact.js
+    el.innerHTML = '<p style="margin:0; padding:10px; color:#111; font-family:\'Inter\', sans-serif; font-size:18px;">טקסט חופשי</p>';
+    
+    // מידות התחלתיות מוגדרות מראש
+    el.style.width = '200px';
+    el.style.left = '100px';
+    el.style.top = '100px'; // משתמשים במיקום אמיתי ולא טרנספורמציה כדי שייווצר פס גלילה
+    el.setAttribute('data-x', '100');
+    el.setAttribute('data-y', '100');
+    
+    mainContent.appendChild(el); // דוחפים למשטח
+    saveCurrentPageContent(); // שומרים
+  });
+}
+
+// 9.2 הוספת תמונה מותאמת אישית (העלאה מהמחשב)
+if (btnAddImage) {
+  btnAddImage.addEventListener('click', () => {
+    // פותחים חלון לבחירת תמונה (כמו שהיה לנו בגרסה הקודמת)
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = e => {
+      const file = e.target.files[0];
+      if (file) {
+        artCompressImage(file).then(data => {
+          const imgObj = new Image();
+          imgObj.onload = () => {
+            const el = document.createElement('div');
+            el.className = 'draggable-resizable';
+
+            // מתאימים את הגודל ההתחלתי לפרופורציות האמיתיות של התמונה
+            const targetWidth = 300; // רוחב התחלתי סביר
+            const ratio = imgObj.height / imgObj.width;
+            const targetHeight = targetWidth * ratio;
+
+            el.style.width = targetWidth + 'px';
+            el.style.height = targetHeight + 'px';
+            el.style.left = '150px';
+            el.style.top = '150px';
+            el.setAttribute('data-x', '150');
+            el.setAttribute('data-y', '150');
+            el.style.borderRadius = '12px'; // קצת יופי
+
+            const img = document.createElement('img');
+            img.src = data;
+            img.style.width = '100%';
+            img.style.height = '100%';
+            img.style.objectFit = 'contain';
+            img.style.borderRadius = '12px';
+            img.style.display = 'block';
+            el.appendChild(img);
+
+            mainContent.appendChild(el);
+            saveCurrentPageContent();
+          };
+          imgObj.src = data;
+        });
+      }
+    };
+    input.click(); // לוחצים "וירטואלית" על שדה העלאת הקובץ
+  });
+}
+
+// 9.3 הוספת רקע ישיר לאתר - לחיצה אחת = בחר תמונה = רקע קבוע
+const bgModal = document.getElementById('bg-modal');
+const bgFileInput = document.getElementById('bg-file-input');
+let currentBgTarget = null;
+
+// קריאת בחירת קובץ ישירה בלי חלון ביניים
+const directBgInput = document.createElement('input');
+directBgInput.type = 'file';
+directBgInput.accept = 'image/*';
+directBgInput.style.display = 'none';
+document.body.appendChild(directBgInput);
+
+if (btnAddBg) {
+  btnAddBg.addEventListener('click', () => {
+    directBgInput.click();
+  });
+  
+  directBgInput.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const currentPage = pages.find(p => p.id === activePageId);
+        if (currentPage) {
+          currentPage.background = event.target.result;
+          await localforage.setItem('mySitePages_v3', pages);
+        } else {
+          siteBackgrounds.main = event.target.result;
+          await localforage.setItem('mySiteBackgrounds_v3', siteBackgrounds);
+        }
+        applyBackgrounds();
+      };
+      reader.readAsDataURL(file);
+    }
+    directBgInput.value = '';
+  });
+}
+
+// שמירת תמיכה בכפתור ניקוי רקע דרך החלון הישן (אם קיים)
+const bgClearBtn = document.getElementById('bg-clear-all');
+if (bgClearBtn) {
+  bgClearBtn.addEventListener('click', async () => {
+    siteBackgrounds = { dashboard: null, topNav: null, main: null };
+    await localforage.setItem('mySiteBackgrounds_v3', siteBackgrounds);
+    applyBackgrounds();
+    if (bgModal) bgModal.style.display = 'none';
+  });
+}
+
+// --- שלב 10: פעולות מערכת מתקדמות (העתק-הדבק ושמירה) ---
+
+// פונקציות עזר מרכזיות לפעולות עריכה
+function deleteSelectedElements(elements) {
+  if (!elements || elements.length === 0) return;
+  elements.forEach(el => el.remove());
+  saveCurrentPageContent();
+}
+
+async function copySelectedElements(elements) {
+  if (!elements || elements.length === 0) return;
+  const wrapper = document.createElement('div');
+  elements.forEach(el => {
+    const clone = el.cloneNode(true);
+    clone.classList.remove('selected');
+    const cloneActions = clone.querySelector('.actions-container');
+    if (cloneActions) cloneActions.remove();
+    wrapper.appendChild(clone);
+  });
+  await localforage.setItem('copiedElementHTML', wrapper.innerHTML);
+}
+
+async function pasteElements(silent = false) {
+  const copiedHTML = await localforage.getItem('copiedElementHTML');
+  if (!copiedHTML) {
+    if (!silent) alert('לא העתקת שום דבר עדיין!');
+    return;
+  }
+  
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = copiedHTML;
+  const childrenToPaste = Array.from(tempDiv.children);
+  
+  childrenToPaste.forEach(pastedEl => {
+    let currentX = parseFloat(pastedEl.getAttribute('data-x')) || 100;
+    let currentY = parseFloat(pastedEl.getAttribute('data-y')) || 100;
+    
+    currentX += 30; // מזיזים קצת כדי שלא יסתיר לגמרי את המקור
+    currentY += 30;
+    
+    pastedEl.setAttribute('data-x', currentX);
+    pastedEl.setAttribute('data-y', currentY);
+    pastedEl.style.left = currentX + 'px';
+    pastedEl.style.top = currentY + 'px';
+    pastedEl.style.transform = 'none'; // מחיקת טרנספורמציה מהמקור (אם הייתה)
+    
+    mainContent.appendChild(pastedEl);
+  });
+  
+  saveCurrentPageContent();
+}
+
+// 10.1 הדבקת אלמנט שהועתק לזיכרון
+const btnPaste = document.getElementById('btn-paste');
+if (btnPaste) {
+  btnPaste.addEventListener('click', () => pasteElements(false));
+}
+
+// 10.1.5 סימון כבלוק (Group / Ungroup Elements)
+const btnBlock = document.getElementById('btn-block');
+if (btnBlock) {
+  btnBlock.addEventListener('click', () => {
+    const selectedEls = Array.from(document.querySelectorAll('.draggable-resizable.selected'));
+    
+    // אם מסומן בדיוק אלמנט אחד והוא בלוק - נפרק אותו (Ungroup)
+    if (selectedEls.length === 1 && selectedEls[0].getAttribute('data-is-group') === 'true') {
+      const groupEl = selectedEls[0];
+      const groupX = parseFloat(groupEl.getAttribute('data-x')) || parseFloat(groupEl.style.left) || 0;
+      const groupY = parseFloat(groupEl.getAttribute('data-y')) || parseFloat(groupEl.style.top) || 0;
+      
+      const children = Array.from(groupEl.children);
+      children.forEach(child => {
+        // מחשירים מחדש למיקום מוחלט בדף
+        const childX = (parseFloat(child.getAttribute('data-x')) || parseFloat(child.style.left) || 0) + groupX;
+        const childY = (parseFloat(child.getAttribute('data-y')) || parseFloat(child.style.top) || 0) + groupY;
+        
+        child.classList.add('draggable-resizable');
+        child.style.left = childX + 'px';
+        child.style.top = childY + 'px';
+        child.setAttribute('data-x', childX);
+        child.setAttribute('data-y', childY);
+        
+        mainContent.appendChild(child);
+      });
+      groupEl.remove();
+      removeSelection();
+      saveCurrentPageContent();
+      return;
+    }
+    
+    if (selectedEls.length < 2) {
+      alert('יש לסמן לפחות 2 אלמנטים כדי ליצור בלוק, או לסמן בלוק קיים כדי לפרק אותו!');
+      return;
+    }
+    
+    let minX = Infinity, minY = Infinity, maxR = -Infinity, maxB = -Infinity;
+    
+    selectedEls.forEach(el => {
+      const x = parseFloat(el.getAttribute('data-x')) || parseFloat(el.style.left) || 0;
+      const y = parseFloat(el.getAttribute('data-y')) || parseFloat(el.style.top) || 0;
+      const w = parseFloat(el.style.width) || el.getBoundingClientRect().width || 0;
+      const h = parseFloat(el.style.height) || el.getBoundingClientRect().height || 0;
+      
+      if (x < minX) minX = x;
+      if (y < minY) minY = y;
+      if (x + w > maxR) maxR = x + w;
+      if (y + h > maxB) maxB = y + h;
+    });
+    
+    const groupW = maxR - minX;
+    const groupH = maxB - minY;
+    
+    const groupEl = document.createElement('div');
+    groupEl.className = 'draggable-resizable';
+    groupEl.setAttribute('data-is-group', 'true');
+    groupEl.style.position = 'absolute';
+    groupEl.style.left = minX + 'px';
+    groupEl.style.top = minY + 'px';
+    groupEl.style.width = groupW + 'px';
+    groupEl.style.height = groupH + 'px';
+    groupEl.setAttribute('data-x', minX);
+    groupEl.setAttribute('data-y', minY);
+    // עיצוב קל שיראה שמדובר בבלוק אחד
+    groupEl.style.border = '2px dashed #0078d7';
+    groupEl.style.backgroundColor = 'rgba(0, 120, 215, 0.02)';
+    groupEl.style.borderRadius = '8px';
+    
+    mainContent.appendChild(groupEl);
+    
+    selectedEls.forEach(el => {
+      const x = parseFloat(el.getAttribute('data-x')) || parseFloat(el.style.left) || 0;
+      const y = parseFloat(el.getAttribute('data-y')) || parseFloat(el.style.top) || 0;
+      
+      const relX = x - minX;
+      const relY = y - minY;
+      
+      el.style.left = relX + 'px';
+      el.style.top = relY + 'px';
+      el.setAttribute('data-x', relX);
+      el.setAttribute('data-y', relY);
+      
+      el.classList.remove('draggable-resizable');
+      el.classList.remove('selected');
+      el.style.position = 'absolute';
+      
+      const actions = el.querySelector('.actions-container');
+      if (actions) actions.remove();
+      
+      groupEl.appendChild(el);
+    });
+    
+    removeSelection();
+    groupEl.classList.add('selected');
+    saveCurrentPageContent();
+  });
+}
+
+// 10.1.6 חיתוך אלמנט ל-2 חצאים (Split Element) באמצעות שרטוט קו
+const btnSplitEl = document.getElementById('btn-split-el');
+if (btnSplitEl) {
+  btnSplitEl.addEventListener('click', () => {
+    const selectedEls = Array.from(document.querySelectorAll('.draggable-resizable.selected'));
+    if (selectedEls.length === 0) {
+      alert('יש לסמן אלמנט שברצונך לחתוך!');
+      return;
+    }
+    if (selectedEls.length > 1) {
+      alert('אפשר לחתוך רק אלמנט אחד בכל פעם!');
+      return;
+    }
+    
+    const targetEl = selectedEls[0];
+    
+    // יצירת שכבת שרטוט על כל המסך
+    const overlay = document.createElement('div');
+    overlay.style.position = 'fixed';
+    overlay.style.inset = '0';
+    overlay.style.zIndex = '9999999';
+    overlay.style.cursor = 'crosshair';
+    document.body.appendChild(overlay);
+    
+    let startX, startY;
+    let line = document.createElement('div');
+    line.style.position = 'absolute';
+    line.style.background = '#ff0000';
+    line.style.boxShadow = '0 0 8px rgba(255,0,0,0.8)';
+    line.style.zIndex = '10000000';
+    line.style.pointerEvents = 'none';
+    
+    const onMouseDown = (e) => {
+      startX = e.clientX;
+      startY = e.clientY;
+      document.body.appendChild(line);
+    };
+    
+    const onMouseMove = (e) => {
+      if (startX === undefined) return;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      const length = Math.sqrt(dx*dx + dy*dy);
+      const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+      
+      line.style.width = length + 'px';
+      line.style.height = '2px';
+      line.style.left = startX + 'px';
+      line.style.top = startY + 'px';
+      line.style.transformOrigin = '0 0';
+      line.style.transform = `rotate(${angle}deg)`;
+    };
+    
+    const onMouseUp = (e) => {
+      if (startX === undefined) return;
+      overlay.remove();
+      line.remove();
+      document.removeEventListener('mousedown', onMouseDown);
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+      
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      
+      // אם לא באמת ציירו קו (סתם לחיצה)
+      if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
+      
+      const actions = targetEl.querySelector('.actions-container');
+      if (actions) actions.remove();
+      
+      const originalHTML = targetEl.innerHTML;
+      const w = targetEl.offsetWidth;
+      const h = targetEl.offsetHeight;
+      const leftPos = parseFloat(targetEl.style.left) || parseFloat(targetEl.getAttribute('data-x')) || 0;
+      const topPos = parseFloat(targetEl.style.top) || parseFloat(targetEl.getAttribute('data-y')) || 0;
+      
+      const rect = targetEl.getBoundingClientRect();
+      const avgX = (startX + e.clientX) / 2;
+      const avgY = (startY + e.clientY) / 2;
+      
+      const cutX = avgX - rect.left;
+      const cutY = avgY - rect.top;
+      
+      const part1 = targetEl.cloneNode(false);
+      part1.classList.remove('selected');
+      const part2 = targetEl.cloneNode(false);
+      part2.classList.remove('selected');
+      
+      // בדיקה אם הקו שורטט לרוחב (אופקי) או לאורך (אנכי)
+      if (Math.abs(dx) > Math.abs(dy)) {
+        // קו אופקי -> חיתוך למעלה ולמטה
+        if (cutY <= 0 || cutY >= h) return; // החיתוך מחוץ לאלמנט
+        
+        // חלק עליון
+        part1.style.height = cutY + 'px';
+        part1.innerHTML = '<div style="width:100%; height:100%; overflow:hidden; position:relative;"><div style="width:' + w + 'px; height:' + h + 'px; position:absolute; left:0; top:0;">' + originalHTML + '</div></div>';
+        
+        // חלק תחתון
+        part2.style.height = (h - cutY) + 'px';
+        part2.style.top = (topPos + cutY) + 'px';
+        part2.setAttribute('data-y', topPos + cutY);
+        part2.innerHTML = '<div style="width:100%; height:100%; overflow:hidden; position:relative;"><div style="width:' + w + 'px; height:' + h + 'px; position:absolute; left:0; top:-' + cutY + 'px;">' + originalHTML + '</div></div>';
+        
+      } else {
+        // קו אנכי -> חיתוך ימין ושמאל
+        if (cutX <= 0 || cutX >= w) return;
+        
+        // חלק שמאלי
+        part1.style.width = cutX + 'px';
+        part1.innerHTML = '<div style="width:100%; height:100%; overflow:hidden; position:relative;"><div style="width:' + w + 'px; height:' + h + 'px; position:absolute; left:0; top:0;">' + originalHTML + '</div></div>';
+        
+        // חלק ימני
+        part2.style.width = (w - cutX) + 'px';
+        part2.style.left = (leftPos + cutX) + 'px';
+        part2.setAttribute('data-x', leftPos + cutX);
+        part2.innerHTML = '<div style="width:100%; height:100%; overflow:hidden; position:relative;"><div style="width:' + w + 'px; height:' + h + 'px; position:absolute; left:-' + cutX + 'px; top:0;">' + originalHTML + '</div></div>';
+      }
+      
+      mainContent.appendChild(part1);
+      mainContent.appendChild(part2);
+      targetEl.remove();
+      
+      removeSelection();
+      saveCurrentPageContent();
+    };
+    
+    document.addEventListener('mousedown', onMouseDown);
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+  });
+}
+
+// 10.2 שמירת האתר באופן יזום בלחיצת כפתור
+const btnSaveSite = document.getElementById('btn-save-site');
+if (btnSaveSite) {
+  btnSaveSite.addEventListener('click', () => {
+    // הפונקציה הזו אוספת את כל המידע מהמסך ושומרת אותו עמוק בזיכרון של האתר
+    saveCurrentPageContent(); 
+    // עכשיו גם נקפיץ הודעה יפה למשתמש כדי שיידע שהכל בטוח
+    alert('כל השינויים שלך נשמרו בהצלחה! 💾✨');
+  });
+}
+
+// --- שלב 11: אנימציית קיפול של סרגל הצד (דשבורד) ---
+const btnToggleSidebar = document.getElementById('btn-toggle-sidebar');
+const sideDashboard = document.querySelector('.side-dashboard');
+
+if (btnToggleSidebar && sideDashboard) {
+  // כשלוחצים על ההמבורגר, אנחנו מקפלים או פותחים את התפריט
+  btnToggleSidebar.addEventListener('click', () => {
+    sideDashboard.classList.toggle('closed');
+  });
+}
+
+// --- שלב 12: סרגל הכלים המרחף (גרירה ומזעור) ---
+const floatingToolbar = document.getElementById('floating-toolbar');
+const btnMinimizeToolbar = document.getElementById('btn-minimize-toolbar');
+
+if (floatingToolbar && btnMinimizeToolbar) {
+  // 12.1 לוגיקה למזעור ופתיחה מחדש
+  btnMinimizeToolbar.addEventListener('click', () => {
+    floatingToolbar.classList.toggle('minimized');
+    
+    // אם זו פעם ראשונה שפותחים ולא גררו עדיין
+    if (!floatingToolbar.classList.contains('minimized') && !floatingToolbar.getAttribute('data-initialized-drag')) {
+      floatingToolbar.style.position = 'fixed';
+      floatingToolbar.style.top = '90px';
+      floatingToolbar.style.left = '30px';
+      floatingToolbar.style.bottom = 'auto';
+      floatingToolbar.style.transform = 'none';
+      floatingToolbar.style.margin = '0';
+      floatingToolbar.setAttribute('data-initialized-drag', 'true');
+      floatingToolbar.setAttribute('data-x', 0);
+      floatingToolbar.setAttribute('data-y', 0);
+    }
+
+    if (floatingToolbar.classList.contains('minimized')) {
+      btnMinimizeToolbar.innerHTML = '+'; // סמל להגדלה
+      btnMinimizeToolbar.title = 'הרחב';
+    } else {
+      btnMinimizeToolbar.innerHTML = '➖'; // סמל למזעור
+      btnMinimizeToolbar.title = 'מזער';
+    }
+  });
+
+  // 12.2 גרירה חופשית של הסרגל בכל המסך
+  interact('.floating-toolbar').draggable({
+    allowFrom: '.toolbar-drag-handle', // אפשר לגרור רק מהידית המיועדת
+    listeners: {
+      start(event) {
+        const target = event.target;
+        // בנגיעה הראשונה אנחנו הופכים את המיקום ל-Left/Top נקי כדי שהגרירה תעבוד חלק 
+        // ולא תתנגש עם ההגדרות הראשוניות של ה-CSS (transform)
+        if (!target.getAttribute('data-initialized-drag')) {
+          const rect = target.getBoundingClientRect();
+          target.style.position = 'fixed';
+          target.style.margin = '0';
+          target.style.left = rect.left + 'px';
+          target.style.top = rect.top + 'px';
+          target.style.bottom = 'auto'; // מבטל את הקיבוע לתחתית
+          target.style.transform = 'none'; // מבטל את המרכוז
+          target.setAttribute('data-initialized-drag', 'true');
+          target.setAttribute('data-x', 0);
+          target.setAttribute('data-y', 0);
+        }
+      },
+      move(event) {
+        const target = event.target;
+        const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
+        const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
+        
+        // מזיזים פיזית את הסרגל
+        target.style.transform = `translate(${x}px, ${y}px)`;
+        
+        // שומרים את המיקום
+        target.setAttribute('data-x', x);
+        target.setAttribute('data-y', y);
+      }
+    }
+  });
+}
+
+// --- שלב 13: קיצורי מקלדת מקצועיים (מחיקה, העתקה, הדבקה והזזה עם חיצים) ---
+document.addEventListener('keydown', async (event) => {
+  const activeEl = document.activeElement;
+  if (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.isContentEditable) {
+    return;
+  }
+
+  const selectedEls = Array.from(document.querySelectorAll('.draggable-resizable.selected'));
+  const isCmdOrCtrl = event.ctrlKey || event.metaKey;
+
+  // 13.1 הדבקה (Command + V)
+  if (isCmdOrCtrl && event.key.toLowerCase() === 'v') {
+    await pasteElements(true);
+    return;
+  }
+
+  // שאר הפעולות דורשות לפחות אלמנט אחד מסומן
+  if (selectedEls.length === 0) return;
+
+  // 13.2 מחיקה
+  if (event.key === 'Delete' || event.key === 'Backspace') {
+    event.preventDefault();
+    deleteSelectedElements(selectedEls);
+    return;
+  }
+
+  // 13.3 העתקה (Command + C)
+  if (isCmdOrCtrl && event.key.toLowerCase() === 'c') {
+    await copySelectedElements(selectedEls);
+    return;
+  }
+
+  // 13.4 גזירה (Command + X)
+  if (isCmdOrCtrl && event.key.toLowerCase() === 'x') {
+    await copySelectedElements(selectedEls);
+    deleteSelectedElements(selectedEls);
+    return;
+  }
+
+  // 13.5 סידור חכם בגריד (Command + Z)
+  if (isCmdOrCtrl && event.key.toLowerCase() === 'z') {
+    event.preventDefault(); 
+    
+    if (selectedEls.length > 0) {
+      // מיון: מלמעלה למטה, ומימין לשמאל (RTL)
+      selectedEls.sort((a, b) => {
+        const topA = parseFloat(a.style.top) || parseFloat(a.getAttribute('data-y')) || 0;
+        const topB = parseFloat(b.style.top) || parseFloat(b.getAttribute('data-y')) || 0;
+        const leftA = parseFloat(a.style.left) || parseFloat(a.getAttribute('data-x')) || 0;
+        const leftB = parseFloat(b.style.left) || parseFloat(b.getAttribute('data-x')) || 0;
+        
+        if (Math.abs(topA - topB) > 50) return topA - topB; // שורות שונות
+        return leftB - leftA; // מימינה לשמאלה
+      });
+
+      const ITEM_SIZE = 200; // גודל קבוע לכל התמונות ברשת
+      const GAP = 20;
+      const COLUMNS = 4; // כמות עמודות
+      
+      // נתחיל מהמיקום של האלמנט הראשון
+      const startX = parseFloat(selectedEls[0].style.left) || parseFloat(selectedEls[0].getAttribute('data-x')) || 100;
+      const startY = parseFloat(selectedEls[0].style.top) || parseFloat(selectedEls[0].getAttribute('data-y')) || 100;
+
+      selectedEls.forEach((el, index) => {
+        const row = Math.floor(index / COLUMNS);
+        const col = index % COLUMNS;
+        
+        // ב-RTL מחסרים את ה-X כדי ללכת ימינה->שמאלה
+        const newX = startX - (col * (ITEM_SIZE + GAP));
+        const newY = startY + (row * (ITEM_SIZE + GAP));
+        
+        el.style.width = ITEM_SIZE + 'px';
+        el.style.height = ITEM_SIZE + 'px';
+        el.style.left = newX + 'px';
+        el.style.top = newY + 'px';
+        el.setAttribute('data-x', newX);
+        el.setAttribute('data-y', newY);
+      });
+      
+      saveCurrentPageContent();
+    }
+    return;
+  }
+  
+  // 13.6 ביטול פעולה אחרונה (Undo) בעזרת Command + B
+  if (isCmdOrCtrl && event.key.toLowerCase() === 'b') {
+    event.preventDefault();
+    if (undoStack.length > 1) {
+      undoStack.pop(); // זורקים את המצב השגוי האחרון
+      const previousState = undoStack[undoStack.length - 1]; // לוקחים את הלפני-אחרון
+      const stateObj = JSON.parse(previousState);
+      
+      // תומך גם בפורמט הישן (רק pages) וגם בחדש (אובייקט עם pages ו-topNavPages)
+      if (Array.isArray(stateObj)) {
+        pages = stateObj;
+      } else {
+        pages = stateObj.pages || defaultPages;
+        topNavPages = stateObj.topNavPages || topNavPages;
+      }
+      
+      // בודקים אם העמוד שבו היינו עדיין קיים (אולי ביטלנו יצירת עמוד)
+      const pageExists = pages.find(p => p.id === activePageId);
+      if (!pageExists && pages.length > 0) {
+        activePageId = pages[0].id;
+      }
+      
+      // שומרים ומרעננים הכל
+      localforage.setItem('mySitePages_v3', pages);
+      localforage.setItem('myActivePage_v3', activePageId);
+      localforage.setItem('mySiteTopNav_v3', topNavPages);
+      renderSideMenu();
+      renderTopNav();
+      renderPage();
+    }
+    return;
+  }
+
+  // 13.7 הזזה מדויקת עם החיצים
+  if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) {
+    event.preventDefault();
+    const step = event.shiftKey ? 25 : 2.5;
+    
+    selectedEls.forEach(el => {
+      let x = parseFloat(el.style.left) || parseFloat(el.getAttribute('data-x')) || 0;
+      let y = parseFloat(el.style.top) || parseFloat(el.getAttribute('data-y')) || 0;
+      
+      if (event.key === 'ArrowUp') y -= step;
+      if (event.key === 'ArrowDown') y += step;
+      if (event.key === 'ArrowLeft') x -= step;
+      if (event.key === 'ArrowRight') x += step;
+      
+      el.style.left = x + 'px';
+      el.style.top = y + 'px';
+      el.setAttribute('data-x', x);
+      el.setAttribute('data-y', y);
+    });
+    clearTimeout(window.moveSaveTimeout);
+    window.moveSaveTimeout = setTimeout(() => {
+      saveCurrentPageContent();
+    }, 300);
+  }
+});
+
+// --- שלב 14: הוספת קישורים לתמונות וטקסטים (חיצוניים ופנימיים) ---
+const linkModal = document.getElementById('link-modal');
+const linkInternalSelect = document.getElementById('link-internal-select');
+const linkExternalInput = document.getElementById('link-external-input');
+const btnCancelLink = document.getElementById('btn-cancel-link');
+const btnRemoveLink = document.getElementById('btn-remove-link');
+const btnSaveLink = document.getElementById('btn-save-link');
+let currentEditingLinkElement = null;
+
+// לחיצה כפולה במצב עריכה כדי להוסיף קישור
+document.addEventListener('dblclick', (event) => {
+  if (!isEditMode) return;
+  const draggableEl = event.target.closest('.draggable-resizable');
+  if (draggableEl) {
+    currentEditingLinkElement = draggableEl;
+    const currentLink = draggableEl.getAttribute('data-href') || '';
+    
+    // מילוי ה-Select בעמודים קיימים
+    linkInternalSelect.innerHTML = '<option value="">-- בחר עמוד פנימי --</option>';
+    pages.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.id;
+      opt.textContent = p.title;
+      linkInternalSelect.appendChild(opt);
+    });
+    
+    // איפוס
+    linkExternalInput.value = '';
+    linkInternalSelect.value = '';
+    
+    // טעינת קישור קיים אם יש
+    if (currentLink) {
+      if (pages.find(p => p.id === currentLink || p.title === currentLink)) {
+        const found = pages.find(p => p.id === currentLink || p.title === currentLink);
+        linkInternalSelect.value = found.id;
+      } else {
+        linkExternalInput.value = currentLink;
+      }
+    }
+    
+    linkModal.style.display = 'flex';
+  }
+});
+
+btnCancelLink.onclick = () => {
+  linkModal.style.display = 'none';
+  currentEditingLinkElement = null;
+  hotspotPendingData = null;
+};
+
+btnRemoveLink.onclick = () => {
+  if (currentEditingLinkElement) {
+    currentEditingLinkElement.removeAttribute('data-href');
+    currentEditingLinkElement.style.cursor = 'move';
+    saveCurrentPageContent();
+  }
+  linkModal.style.display = 'none';
+  currentEditingLinkElement = null;
+};
+
+btnSaveLink.onclick = () => {
+  const internalVal = linkInternalSelect.value;
+  const externalVal = linkExternalInput.value.trim();
+  const finalVal = externalVal || internalVal;
+
+  if (hotspotPendingData) {
+    // שמירת hotspot
+    if (finalVal) {
+      const { el, hsData } = hotspotPendingData;
+      let hotspots = [];
+      try { hotspots = JSON.parse(el.dataset.hotspots || '[]'); } catch(e) {}
+      hotspots.push({ ...hsData, href: finalVal });
+      el.dataset.hotspots = JSON.stringify(hotspots);
+      renderHotspotsOnEl(el);
+      saveToStorage();
+    }
+    hotspotPendingData = null;
+  } else if (currentEditingLinkElement) {
+    if (finalVal) {
+      currentEditingLinkElement.setAttribute('data-href', finalVal);
+      currentEditingLinkElement.style.cursor = 'pointer';
+    } else {
+      currentEditingLinkElement.removeAttribute('data-href');
+      currentEditingLinkElement.style.cursor = 'move';
+    }
+    saveCurrentPageContent();
+  }
+
+  linkModal.style.display = 'none';
+  currentEditingLinkElement = null;
+};
+
+
+
+
+
+// ניקוי אוטומטי של השדה השני
+linkExternalInput.addEventListener('input', () => {
+  if (linkExternalInput.value.trim() !== '') linkInternalSelect.value = '';
+});
+linkInternalSelect.addEventListener('change', () => {
+  if (linkInternalSelect.value !== '') linkExternalInput.value = '';
+});
+
+document.addEventListener('click', (event) => {
+  // אם אנחנו במצב עריכה - ננווט לקישור רק אם לחצו 3 פעמים רצופות!
+  if (isEditMode && event.detail !== 3) return;
+
+  const draggableEl = event.target.closest('.draggable-resizable');
+  if (draggableEl) {
+    const link = draggableEl.getAttribute('data-href');
+    if (link) {
+      // בודקים אם הקישור הוא עמוד פנימי (לפי שם העמוד או ה-ID שלו)
+      const internalPage = pages.find(p => p.title.trim() === link.trim() || p.id === link.trim());
+      
+      if (internalPage) {
+        // נווט לעמוד הפנימי
+        activePageId = internalPage.id;
+        saveToStorage();
+        renderSideMenu();
+        renderTopNav();
+        renderPage();
+      } else {
+        // קישור חיצוני - פתיחה בטאב חדש
+        const finalLink = link.startsWith('http') ? link : 'https://' + link;
+        window.open(finalLink, '_blank');
+      }
+    }
+  }
+});
+
+
+
+// --- Support Chat Modal Logic ---
+document.addEventListener('DOMContentLoaded', () => {
+  const chatBtn = document.querySelector('.chat-btn');
+  const chatModal = document.getElementById('support-chat-modal');
+  const chatCloseBtn = document.getElementById('support-chat-close');
+  const chatSendBtn = document.getElementById('support-chat-send');
+  const chatInput = document.getElementById('support-chat-input');
+  const messagesContainer = document.getElementById('chat-messages-container');
+
+  const managerBtn = document.getElementById('manager-btn');
+  const floatingToolbarEl = document.getElementById('floating-toolbar');
+
+  // הגדרת המנהל המורשה
+  const ADMIN_EMAIL = "yoni98321@gmail.com";
+
+  function updateManagerUI(user = null) {
+    if (!managerBtn) return;
+    
+    if (!user) {
+      const chatPanel = document.getElementById('global-chat-panel');
+      if (chatPanel) chatPanel.style.display = 'none';
+      if (typeof chatCleanup === 'function') chatCleanup();
+      managerBtn.textContent = 'אורח';
+      managerBtn.classList.remove('is-admin');
+      if (floatingToolbarEl) floatingToolbarEl.style.display = 'none';
+      
+      // כיבוי מצב עריכה
+      if (isEditMode) {
+        isEditMode = false;
+        btnEditMode.classList.remove('active');
+        btnEditMode.textContent = 'מצב עריכה ✏️';
+        saveCurrentPageContent();
+        renderSideMenu();
+        renderTopNav();
+      }
+    } else {
+      if (typeof initChatBadgeListeners === 'function') initChatBadgeListeners(user);
+      
+      if (user.email === ADMIN_EMAIL) {
+        managerBtn.textContent = 'מנהל ✏️';
+        managerBtn.classList.add('is-admin');
+        if (floatingToolbarEl) floatingToolbarEl.style.display = '';
+        
+        // הפעלת מצב עריכה
+        if (!isEditMode) {
+          isEditMode = true;
+          btnEditMode.classList.add('active');
+          btnEditMode.textContent = 'שמור שינויים 💾';
+          applyEditModeToContent();
+          renderSideMenu();
+          renderTopNav();
+        }
+      } else {
+        managerBtn.textContent = 'התנתק';
+        managerBtn.classList.remove('is-admin');
+        if (floatingToolbarEl) floatingToolbarEl.style.display = 'none';
+        
+        // כיבוי מצב עריכה
+        if (isEditMode) {
+          isEditMode = false;
+          btnEditMode.classList.remove('active');
+          btnEditMode.textContent = 'מצב עריכה ✏️';
+          saveCurrentPageContent();
+          renderSideMenu();
+          renderTopNav();
+        }
+      }
+    }
+
+    if (typeof updateFABsVisibility === 'function') updateFABsVisibility();
+  }
+
+  // מאזין לשינויי מצב התחברות
+  let userActivityInterval = null;
+  onAuthStateChanged(auth, async (user) => {
+    updateManagerUI(user);
+    if (userActivityInterval) {
+      clearInterval(userActivityInterval);
+      userActivityInterval = null;
+    }
+    if (user) {
+      updateUserActivity(user);
+      userActivityInterval = setInterval(() => updateUserActivity(user), 45000);
+
+      // סנכרון יתרת הלייקים היומית
+      await syncUserLikeBudget(user);
+      
+      // טעינת גלריות שמורות מהענן
+      try {
+        const userSavedRef = ref(db, `website/users/${user.uid}/saved_galleries`);
+        const snapshot = await get(userSavedRef);
+        if (snapshot.exists()) {
+          localStorage.setItem(`saved_galleries_${user.uid}`, JSON.stringify(snapshot.val()));
+        }
+      } catch (e) {
+        console.error("שגיאה בטעינת שמורים מפיירבייס:", e);
+      }
+    }
+    if (typeof renderPage === 'function') renderPage();
+  });
+
+  const authModal = document.getElementById('auth-modal');
+  const authGoogleLoginBtn = document.getElementById('auth-google-login-btn');
+  const authModalClose = document.getElementById('auth-modal-close');
+
+  if (managerBtn) {
+    managerBtn.addEventListener('click', () => {
+      const currentUser = auth.currentUser;
+      if (currentUser) {
+        // אם מחובר, לחיצה תנתק אותו
+        signOut(auth).then(() => {
+          alert("התנתקת בהצלחה!");
+        }).catch((err) => {
+          console.error("שגיאה בהתנתקות:", err);
+        });
+      } else {
+        // פתיחת מודאל התחברות
+        if (authModal) authModal.style.display = 'flex';
+      }
+    });
+  }
+
+  if (authModalClose && authModal) {
+    authModalClose.addEventListener('click', () => {
+      authModal.style.display = 'none';
+    });
+  }
+
+  if (authGoogleLoginBtn && authModal) {
+    authGoogleLoginBtn.addEventListener('click', () => {
+      authModal.style.display = 'none'; // סגירת המודאל לקראת הפופאפ
+      signInWithPopup(auth, provider)
+        .then((result) => {
+          const user = result.user;
+          if (user.email === ADMIN_EMAIL) {
+            alert(`שלום מנהל! התחברת בהצלחה עם המייל: ${user.email}`);
+          } else {
+            alert(`התחברת בהצלחה כמשתמש רגיל (${user.email})! כעת תוכל לפנות לתמיכה.`);
+          }
+        })
+        .catch((error) => {
+          console.error("שגיאה מפורטת בהתחברות:", error);
+          alert("התחברות נכשלה. קוד שגיאה: " + error.code + "\nהודעה: " + error.message);
+        });
+    });
+  }
+
+  const authMicrosoftLoginBtn = document.getElementById('auth-microsoft-login-btn');
+  if (authMicrosoftLoginBtn) {
+    authMicrosoftLoginBtn.addEventListener('click', () => {
+      alert("התחברות באמצעות Microsoft אינה פעילה כרגע. אנא השתמש בהתחברות באמצעות Google.");
+    });
+  }
+
+  const authEmailSubmitBtn = document.getElementById('auth-email-submit-btn');
+  if (authEmailSubmitBtn) {
+    authEmailSubmitBtn.addEventListener('click', () => {
+      alert("התחברות באמצעות דוא\"ל אינה פעילה כרגע. אנא השתמש בהתחברות באמצעות Google.");
+    });
+  }
+
+  if (chatBtn && chatModal) {
+    const aiBtn = document.querySelector('.bar-ai-btn');
+    
+    const openChat = (e) => {
+      e.preventDefault();
+      chatModal.classList.add('chat-open');
+      setTimeout(() => chatInput.focus(), 300);
+    };
+    
+    chatBtn.addEventListener('click', openChat);
+    if (aiBtn) aiBtn.addEventListener('click', openChat);
+
+    chatCloseBtn.addEventListener('click', () => {
+      chatModal.classList.remove('chat-open');
+    });
+
+    document.addEventListener('click', (e) => {
+      // אם לוחצים מחוץ לחלון הצ'אט ומחוץ לכפתור הפתיחה
+      if (chatModal.classList.contains('chat-open') && 
+          !chatModal.contains(e.target) && 
+          !chatBtn.contains(e.target) &&
+          !(aiBtn && aiBtn.contains(e.target))) {
+        chatModal.classList.remove('chat-open');
+      }
+    });
+
+    const addMessage = (text, isUser = true) => {
+      const msgDiv = document.createElement('div');
+      msgDiv.className = `chat-message ${isUser ? 'user-msg' : 'automated-msg'}`;
+      
+      const now = new Date();
+      const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+      
+      const senderHtml = isUser 
+        ? `<div class="msg-sender" style="text-align: left; width: 100%; display: block;">אתה</div>` 
+        : `<div class="msg-sender">🤖 נציג AI</div>`;
+        
+      const timeAlign = isUser ? 'text-align: left;' : '';
+
+      msgDiv.innerHTML = `
+        <div class="msg-content">
+          ${senderHtml}
+          ${text}
+          <div class="msg-time" style="${timeAlign}">${timeStr}</div>
+        </div>
+      `;
+      
+      messagesContainer.appendChild(msgDiv);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    };
+
+    const handleSend = () => {
+      const text = chatInput.value.trim();
+      if (!text) return;
+      
+      addMessage(text, true);
+      chatInput.value = '';
+      
+      // סימולציית שירות לקוחות AI
+      setTimeout(() => {
+        addMessage('אני בודק את הפנייה שלך. כרגע אני נציג AI בהדגמה, אבל בקרוב אוכל לעזור לך באופן מלא! האם יש משהו ספציפי שתרצה לדעת?', false);
+      }, 1200);
+    };
+
+    chatSendBtn.addEventListener('click', handleSend);
+    chatInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') handleSend();
+    });
+  }
+});
+
+// --- מנגנון הורדת קבצים ---
+// מאזין ללחיצות על אזור התוכן הראשי. אם לחצו על אלמנט שיש לו data-download-url במצב אורח, מוריד את הקובץ
+mainContent.addEventListener('click', (e) => {
+  // אם אנחנו במצב עריכה - הלחיצה מיועדת לבחירת האלמנט, לא לניווט
+  if (isEditMode) return;
+
+  // פתיחת קישור חיצוני / ניווט לדף פנימי בלחיצה על אלמנט מקושר
+  const linkedEl = e.target.closest('[data-href]');
+  if (linkedEl) {
+    const href = linkedEl.getAttribute('data-href');
+    if (href) {
+      const internalPage = pages.find(p => p.title.trim() === href.trim() || p.id === href.trim());
+      if (internalPage) {
+        activePageId = internalPage.id;
+        saveToStorage();
+        renderSideMenu();
+        renderTopNav();
+        renderPage();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        const finalLink = href.startsWith('http') ? href : 'https://' + href;
+        window.open(finalLink, '_blank');
+      }
+      return;
+    }
+  }
+
+  // ניווט לדף פנימי (data-page-link)
+  const pageLinkEl = e.target.closest('[data-page-link]');
+  if (pageLinkEl) {
+    const targetPageId = pageLinkEl.dataset.pageLink;
+    const targetPage = pages.find(p => p.id === targetPageId);
+    if (targetPage) {
+      activePageId = targetPageId;
+      saveToStorage();
+      renderSideMenu();
+      renderTopNav();
+      renderPage();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    return;
+  }
+
+  // בודק אם האלמנט שעליו לחצו (או אחד מאבותיו) מכיל את מאפיין ההורדה
+  const downloadEl = e.target.closest('[data-download-url]');
+  if (downloadEl) {
+    const fileUrl = downloadEl.dataset.downloadUrl;
+    const fileName = downloadEl.dataset.downloadName || 'download';
+    
+    // יוצר תגית a נסתרת ומפעיל לחיצה מדומה כדי להוריד את הקובץ
+    const a = document.createElement('a');
+    a.href = fileUrl;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+});
+
+// ============================================================
+// דפים מוסתרים וקישורים פנימיים
+// ============================================================
+
+// --- יצירת דף מוסתר (לא מופיע בניווט) ---
+const btnAddHiddenPage = document.getElementById('btn-add-hidden-page');
+if (btnAddHiddenPage) {
+  btnAddHiddenPage.addEventListener('click', () => {
+    const newTitle = prompt('שם הדף המוסתר (לא יופיע בתפריט):\nלמשל: "דף פרטים", "עמוד הסבר", "גלריה"');
+    if (newTitle && newTitle.trim()) {
+      const newPage = {
+        id: 'page-hidden-' + Date.now(),
+        title: newTitle.trim(),
+        content: '',
+        isHidden: true  // מסומן כמוסתר מהניווט
+      };
+      pages.push(newPage);
+      // לא מוסיפים ל-topNavPages — הדף קיים אבל לא מופיע בתפריט
+
+      // מעבר לדף החדש לצורך עריכה
+      activePageId = newPage.id;
+      saveToStorage();
+      renderPage();
+      alert('✅ הדף "' + newPage.title + '" נוצר!\nעכשיו ערוך אותו, ואז חזור לעמוד הראשי וקשר אליו תמונה או כפתור.');
+    }
+  });
+}
+
+// --- מודאל "קשר לדף פנימי" ---
+const pageLinkModal = document.getElementById('page-link-modal');
+const pageLinkSelect = document.getElementById('page-link-select');
+const pageLinkCancel = document.getElementById('page-link-cancel');
+const pageLinkSave = document.getElementById('page-link-save');
+let _pageLinkTargetEl = null;
+
+function openPageLinkModal(el) {
+  _pageLinkTargetEl = el;
+
+  // מילוי רשימת כל הדפים (כולל מוסתרים)
+  pageLinkSelect.innerHTML = '<option value="">— ללא קישור —</option>';
+  pages.forEach(p => {
+    if (p.id === activePageId) return; // לא מקשרים לעמוד עצמו
+    const opt = document.createElement('option');
+    opt.value = p.id;
+    opt.textContent = p.title + (p.isHidden ? ' 🔒' : '');
+    if (el.dataset.pageLink === p.id) opt.selected = true;
+    pageLinkSelect.appendChild(opt);
+  });
+
+  pageLinkModal.style.display = 'flex';
+}
+
+if (pageLinkCancel) {
+  pageLinkCancel.addEventListener('click', () => {
+    pageLinkModal.style.display = 'none';
+    _pageLinkTargetEl = null;
+  });
+}
+
+if (pageLinkSave) {
+  pageLinkSave.addEventListener('click', () => {
+    if (!_pageLinkTargetEl) return;
+    const selectedId = pageLinkSelect.value;
+    if (selectedId) {
+      _pageLinkTargetEl.dataset.pageLink = selectedId;
+      _pageLinkTargetEl.style.cursor = 'pointer';
+      // אינדיקטור ויזואלי קטן שיודע שיש קישור
+      _pageLinkTargetEl.title = 'קישור לדף: ' + (pages.find(p => p.id === selectedId)?.title || selectedId);
+    } else {
+      delete _pageLinkTargetEl.dataset.pageLink;
+      _pageLinkTargetEl.style.cursor = '';
+      _pageLinkTargetEl.title = '';
+    }
+    saveCurrentPageContent();
+    pageLinkModal.style.display = 'none';
+    _pageLinkTargetEl = null;
+  });
+}
+
+// --- כפתור "קשר לדף" בתוך action panel של אלמנטים ---
+// מוסיפים hook על יצירת actions-container
+const _origApplyEditMode = applyEditModeToContent;
+applyEditModeToContent = function() {
+  _origApplyEditMode();
+
+  // מוסיפים כפתור קישור-דף לכל actions-container שנוצר
+  setTimeout(() => {
+    mainContent.querySelectorAll('.actions-container').forEach(container => {
+      if (container.querySelector('.page-link-btn')) return; // כבר יש
+      const parentEl = container.closest('.draggable-resizable');
+      if (!parentEl) return;
+
+      const pageLinkBtn = document.createElement('button');
+      pageLinkBtn.className = 'action-btn page-link-btn';
+      pageLinkBtn.innerHTML = '📄→';
+      pageLinkBtn.title = 'קשר לדף פנימי';
+      pageLinkBtn.style.background = parentEl.dataset.pageLink ? '#6366f1' : '';
+      pageLinkBtn.style.color = parentEl.dataset.pageLink ? 'white' : '';
+
+      pageLinkBtn.addEventListener('mousedown', (e) => {
+        e.stopPropagation();
+        openPageLinkModal(parentEl);
+      });
+
+      container.appendChild(pageLinkBtn);
+    });
+  }, 50);
+};
+
+// --- ניווט לדף בלחיצה על אלמנט מקושר (מצב צופה) ---
+// משתמשים ב-document במקום mainContent כדי לתפוס גם קליקים מבפנים
+document.addEventListener('click', (e) => {
+  if (isEditMode) return; // רק במצב צופה
+  const linked = e.target.closest('[data-page-link]');
+  if (linked && linked.dataset.pageLink) {
+    const targetPage = pages.find(p => p.id === linked.dataset.pageLink);
+    if (targetPage) {
+      e.preventDefault();
+      e.stopPropagation();
+      activePageId = linked.dataset.pageLink;
+      renderPage();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+});
+
+
+// ============================================================
+// אזורי לחיצה (Hotspots) - ציור אזורים לחיצים על תמונות
+// ============================================================
+
+let hotspotPendingData = null; // נתוני hotspot שממתינים לקישור
+
+function openLinkModalForHotspot(el, hsData) {
+  // מילוי רשימת עמודים פנימיים
+  linkInternalSelect.innerHTML = '<option value="">-- בחר עמוד פנימי --</option>';
+  pages.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p.id;
+    opt.textContent = p.title;
+    linkInternalSelect.appendChild(opt);
+  });
+  linkExternalInput.value = '';
+  linkInternalSelect.value = '';
+
+  // שמור נתונים זמנית
+  hotspotPendingData = { el, hsData };
+  currentEditingLinkElement = null; // לא עורכים אלמנט רגיל
+  linkModal.style.display = 'flex';
+}
+
+let hotspotDrawingEl = null; // האלמנט שעליו מציירים
+let hotspotStartX = 0, hotspotStartY = 0;
+let hotspotDrawRect = null;
+let isDrawingHotspot = false;
+
+const btnAddHotspot = document.getElementById('btn-add-hotspot');
+if (btnAddHotspot) {
+  btnAddHotspot.addEventListener('click', () => {
+    if (!selectedElement) {
+      alert('בחר קודם אלמנט (תמונה) שעליו תרצה לסמן אזורים לחיצים.');
+      return;
+    }
+    enterHotspotDrawMode(selectedElement);
+  });
+}
+
+function enterHotspotDrawMode(el) {
+  if (!isEditMode) return; // אורח לא יכול לסמן אזורים
+  hotspotDrawingEl = el;
+  el.classList.add('hotspot-drawing-mode');
+  el.style.position = 'relative';
+
+  // נטרול גרירה ושינוי גודל כדי שלא יתנגשו עם ציור הריבוע
+  interact('.draggable-resizable').draggable({ enabled: false }).resizable({ enabled: false });
+
+  // יצירת ריבוע הגרירה
+  hotspotDrawRect = document.createElement('div');
+  hotspotDrawRect.id = 'hotspot-draw-rect';
+  el.appendChild(hotspotDrawRect);
+
+  el.addEventListener('mousedown', onHotspotMouseDown);
+  document.addEventListener('mousemove', onHotspotMouseMove);
+  document.addEventListener('mouseup', onHotspotMouseUp);
+  document.addEventListener('keydown', onHotspotKeyDown);
+
+  showHotspotHint('סמן אזור על התמונה - גרור ריבוע ולחץ ESC לסיום');
+}
+
+function exitHotspotDrawMode() {
+  if (!hotspotDrawingEl) return;
+  hotspotDrawingEl.classList.remove('hotspot-drawing-mode');
+  hotspotDrawingEl.removeEventListener('mousedown', onHotspotMouseDown);
+  document.removeEventListener('mousemove', onHotspotMouseMove);
+  document.removeEventListener('mouseup', onHotspotMouseUp);
+  document.removeEventListener('keydown', onHotspotKeyDown);
+  if (hotspotDrawRect) hotspotDrawRect.remove();
+  hotspotDrawRect = null;
+  hotspotDrawingEl = null;
+  hideHotspotHint();
+
+  // החזרת גרירה ושינוי גודל
+  interact('.draggable-resizable').draggable({ enabled: true }).resizable({ enabled: true });
+}
+
+function onHotspotKeyDown(e) {
+  if (e.key === 'Escape') exitHotspotDrawMode();
+}
+
+function onHotspotMouseDown(e) {
+  e.stopPropagation();
+  e.preventDefault();
+  isDrawingHotspot = true;
+  const rect = hotspotDrawingEl.getBoundingClientRect();
+  hotspotStartX = e.clientX - rect.left;
+  hotspotStartY = e.clientY - rect.top;
+  hotspotDrawRect.style.display = 'block';
+  hotspotDrawRect.style.left = hotspotStartX + 'px';
+  hotspotDrawRect.style.top = hotspotStartY + 'px';
+  hotspotDrawRect.style.width = '0';
+  hotspotDrawRect.style.height = '0';
+}
+
+function onHotspotMouseMove(e) {
+  if (!isDrawingHotspot || !hotspotDrawingEl) return;
+  const rect = hotspotDrawingEl.getBoundingClientRect();
+  const curX = e.clientX - rect.left;
+  const curY = e.clientY - rect.top;
+  const x = Math.min(hotspotStartX, curX);
+  const y = Math.min(hotspotStartY, curY);
+  const w = Math.abs(curX - hotspotStartX);
+  const h = Math.abs(curY - hotspotStartY);
+  hotspotDrawRect.style.left = x + 'px';
+  hotspotDrawRect.style.top = y + 'px';
+  hotspotDrawRect.style.width = w + 'px';
+  hotspotDrawRect.style.height = h + 'px';
+}
+
+function onHotspotMouseUp(e) {
+  if (!isDrawingHotspot || !hotspotDrawingEl) return;
+  isDrawingHotspot = false;
+  hotspotDrawRect.style.display = 'none';
+
+  const rect = hotspotDrawingEl.getBoundingClientRect();
+  const curX = e.clientX - rect.left;
+  const curY = e.clientY - rect.top;
+  const x = Math.min(hotspotStartX, curX);
+  const y = Math.min(hotspotStartY, curY);
+  const w = Math.abs(curX - hotspotStartX);
+  const h = Math.abs(curY - hotspotStartY);
+
+  if (w < 10 || h < 10) return; // התעלם מלחיצות קטנות
+
+  // שמור כאחוזים מגודל האלמנט
+  const elW = hotspotDrawingEl.offsetWidth;
+  const elH = hotspotDrawingEl.offsetHeight;
+  const xPct = (x / elW) * 100;
+  const yPct = (y / elH) * 100;
+  const wPct = (w / elW) * 100;
+  const hPct = (h / elH) * 100;
+
+  // פתח את חלון "הגדרת קישור" הקיים עם callback לשמירת hotspot
+  openLinkModalForHotspot(hotspotDrawingEl, { x: xPct, y: yPct, w: wPct, h: hPct });
+}
+
+// רנדור hotspots על אלמנט
+function renderHotspotsOnEl(el) {
+  // הסר hotspots ישנים
+  el.querySelectorAll('.hotspot-overlay').forEach(h => h.remove());
+
+  let hotspots = [];
+  try { hotspots = JSON.parse(el.dataset.hotspots || '[]'); } catch(e) {}
+
+  hotspots.forEach((hs, index) => {
+    const div = document.createElement('div');
+    div.className = 'hotspot-overlay';
+    div.style.left = hs.x + '%';
+    div.style.top = hs.y + '%';
+    div.style.width = hs.w + '%';
+    div.style.height = hs.h + '%';
+    div.dataset.href = hs.href;
+    div.title = '';
+
+    // כפתור מחיקה (נראה רק במצב עריכה)
+    const delBtn = document.createElement('button');
+    delBtn.className = 'hotspot-delete-btn';
+    delBtn.innerHTML = '✕';
+    delBtn.title = 'מחק אזור';
+    delBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      hotspots.splice(index, 1);
+      el.dataset.hotspots = JSON.stringify(hotspots);
+      renderHotspotsOnEl(el);
+      saveToStorage();
+    });
+
+    // לחיצה במצב צפייה - פתח קישור
+    div.addEventListener('click', (e) => {
+      if (isEditMode) return;
+      e.stopPropagation();
+      const link = hs.href.startsWith('http') ? hs.href : 'https://' + hs.href;
+      window.open(link, '_blank');
+    });
+
+    div.appendChild(delBtn);
+    el.appendChild(div);
+  });
+}
+
+// רנדור hotspots על כל האלמנטים בעמוד
+function renderAllHotspots() {
+  mainContent.querySelectorAll('[data-hotspots]').forEach(el => {
+    if (el.dataset.hotspots && el.dataset.hotspots !== '[]') {
+      renderHotspotsOnEl(el);
+    }
+  });
+}
+
+// הנחיית hotspot
+function showHotspotHint(msg) {
+  let hint = document.getElementById('hotspot-hint');
+  if (!hint) {
+    hint = document.createElement('div');
+    hint.id = 'hotspot-hint';
+    hint.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 20px;border-radius:20px;z-index:99999;font-size:14px;pointer-events:none;';
+    document.body.appendChild(hint);
+  }
+  hint.textContent = msg;
+}
+
+function hideHotspotHint() {
+  const hint = document.getElementById('hotspot-hint');
+  if (hint) hint.remove();
+}
+
+
+// ============================================================
+// ניהול עמודים - מחיקה ושינוי שם
+// ============================================================
+
+const btnManagePages = document.getElementById('btn-manage-pages');
+const managePagesModal = document.getElementById('manage-pages-modal');
+const managePagesClose = document.getElementById('manage-pages-close');
+const managePagesList = document.getElementById('manage-pages-list');
+
+function openManagePagesModal() {
+  managePagesList.innerHTML = '';
+  pages.forEach(page => {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex; align-items:center; gap:10px; padding:12px 14px; border:1px solid #eee; border-radius:10px; background:#fafafa;';
+
+    const name = document.createElement('span');
+    name.textContent = page.title;
+    name.style.cssText = 'flex:1; font-size:15px; font-weight:500;';
+
+    const renameBtn = document.createElement('button');
+    renameBtn.textContent = '✏️';
+    renameBtn.title = 'שנה שם';
+    renameBtn.style.cssText = 'background:none; border:1px solid #ddd; border-radius:8px; padding:5px 8px; cursor:pointer; font-size:14px;';
+    renameBtn.onclick = () => {
+      const newName = prompt('שם חדש לעמוד:', page.title);
+      if (newName && newName.trim()) {
+        page.title = newName.trim();
+        saveToStorage();
+        renderSideMenu();
+        renderTopNav();
+        openManagePagesModal();
+      }
+    };
+
+    const delBtn = document.createElement('button');
+    delBtn.textContent = '🗑️ מחק';
+    delBtn.title = 'מחק עמוד';
+    delBtn.style.cssText = 'background:#fee2e2; border:none; border-radius:8px; padding:5px 10px; cursor:pointer; font-size:13px; color:#b91c1c; font-weight:600;';
+    delBtn.onclick = () => {
+      if (pages.length === 1) { alert('אי אפשר למחוק את העמוד האחרון!'); return; }
+      if (!confirm(`למחוק את "${page.title}"?`)) return;
+      pages.splice(pages.findIndex(p => p.id === page.id), 1);
+      topNavPages.splice(topNavPages.indexOf(page.id), 1);
+      if (activePageId === page.id) activePageId = pages[0].id;
+      saveToStorage();
+      renderSideMenu();
+      renderTopNav();
+      renderPage();
+      openManagePagesModal();
+    };
+
+    row.appendChild(name);
+    row.appendChild(renameBtn);
+    row.appendChild(delBtn);
+    managePagesList.appendChild(row);
+  });
+
+  managePagesModal.style.display = 'flex';
+}
+
+if (btnManagePages) btnManagePages.addEventListener('click', openManagePagesModal);
+if (managePagesClose) managePagesClose.onclick = () => { managePagesModal.style.display = 'none'; };
+
+// ============================================================
+// קרא עוד / הקטן
+// ============================================================
+
+function applyReadMoreToEl(el) {
+  // מסמן את האלמנט
+  el.dataset.hasReadmore = 'true';
+  renderReadMore(el);
+  saveCurrentPageContent();
+}
+
+function removeReadMoreFromEl(el) {
+  delete el.dataset.hasReadmore;
+  const wrapper = el.querySelector('.readmore-wrapper');
+  if (wrapper) {
+    // מחלץ את התוכן המקורי
+    const content = wrapper.querySelector('.readmore-content');
+    if (content) el.innerHTML = content.innerHTML;
+  }
+  saveCurrentPageContent();
+}
+
+function renderReadMore(el) {
+  if (!el.dataset.hasReadmore) return;
+  // אל תרנדר שוב אם כבר יש wrapper
+  if (el.querySelector('.readmore-wrapper')) return;
+
+  const originalHTML = el.innerHTML;
+  el.innerHTML = `
+    <div class="readmore-wrapper readmore-collapsed">
+      <div class="readmore-content">${originalHTML}</div>
+      <div class="readmore-fade"></div>
+      <button class="readmore-btn" onclick="toggleReadMore(this)">קראו עוד</button>
+    </div>
+  `;
+}
+
+function toggleReadMore(btn) {
+  const wrapper = btn.closest('.readmore-wrapper');
+  if (!wrapper) return;
+  const collapsed = wrapper.classList.toggle('readmore-collapsed');
+  btn.textContent = collapsed ? 'קראו עוד' : 'הקטן';
+}
+
+// החלת קרא עוד על כל האלמנטים שמסומנים אחרי renderPage
+const _origRenderPage = renderPage;
+// הוספת הפעלת readmore לתוך applyEditModeToContent ו-removeEditModeFromContent
+const _origApplyEdit = applyEditModeToContent;
+applyEditModeToContent = function() {
+  _origApplyEdit.apply(this, arguments);
+  // במצב עריכה - מסיר את ה-wrapper כדי שניתן לערוך
+  mainContent.querySelectorAll('[data-has-readmore]').forEach(el => {
+    const wrapper = el.querySelector('.readmore-wrapper');
+    if (wrapper) {
+      const content = wrapper.querySelector('.readmore-content');
+      if (content) el.innerHTML = content.innerHTML;
+    }
+  });
+};
+
+const _origRemoveEdit = removeEditModeFromContent;
+removeEditModeFromContent = function() {
+  _origRemoveEdit.apply(this, arguments);
+  // ביציאה ממצב עריכה - מחיל מחדש את קרא עוד
+  mainContent.querySelectorAll('[data-has-readmore]').forEach(el => {
+    renderReadMore(el);
+  });
+};
+
+// כפתור קרא עוד בסרגל הכלים של האלמנט - מוסיף דרך applyEditModeToContent
+// לכן מאזינים ל-renderPage ומוסיפים את הכפתור לשם
+
+// ===== דף כתבות =====
+
+const ARTICLES_SAMPLES = [
+  {
+    id: 'a1',
+    title: 'גוגל משדרגת את Chrome עם מילוי אוטומטי של מסמכי זיהוי, טיסות ועוד מ-Google Wallet',
+    summary: 'גוגל הודיעה על העמקת השילוב בין שירות הארנק שלה לדפדפן הכרום במובייל ובדסקטופ. הדפדפן יאפשר מילוי אוטומטי של מסמכי זיהוי, דרכונים ורישיונות נהיגה ישירות מהאפליקציה.',
+    body: 'גוגל הכריזה הבוקר על שדרוג משמעותי לדפדפן Chrome, שיאפשר למשתמשים למלא טפסים מקוונים אוטומטית תוך שימוש בנתוני זיהוי שמורים ב-Google Wallet.\n\nהשדרוג החדש יתמוך במסמכי זיהוי ממשלתיים, כולל תעודות זהות ודרכונים, כרטיסי טיסה ועוד. פיצ\'ר זה יהיה זמין תחילה בארצות הברית ויורחב לשאר המדינות בהמשך השנה.\n\nלדברי גוגל, כל המידע מוצפן ואינו נשלח לשרתי החברה - הוא נשאר בטוח במכשיר המשתמש בלבד.',
+    author: 'יאל לכברמן', category: 'חדשות', categoryColor: '#1565C0', timestamp: 'היום, 11:20',
+    image: 'https://images.unsplash.com/photo-1573804633927-bfcbcd909acd?w=800&q=80', link: ''
+  },
+  {
+    id: 'a2',
+    title: 'הוכרז: Honor X80 Pro Max עם סוללת 11,000mAh ו-Snapdragon 6 Gen 5-i',
+    summary: 'מותג הסמארטפונים הסיני מציג מכשיר חדש עם סוללה יוצאת דופן של 11,000 מיליאמפר-שעה לצד טעינה מהירה ומעבד עדכני.',
+    body: 'Honor השיקה היום רשמית את ה-X80 Pro Max, מכשיר פלאגשיפ חדש עם אחת הסוללות הגדולות ביותר שנראו בשוק הסמארטפונים.\n\nהמכשיר מגיע עם סוללת 11,000mAh וטעינה מהירה של 100W, שלפי החברה מסוגלת לטעון את הסוללה מ-0 ל-50% תוך 25 דקות בלבד.\n\nמבחינת ביצועים, ה-X80 Pro Max מופעל על ידי מעבד Snapdragon 6 Gen 5-i עם 12GB RAM ו-256GB אחסון. תצוגת ה-AMOLED בגודל 6.8 אינץ\' תומכת ב-120Hz רענון.',
+    author: 'רנן מנדזיצקי', category: 'חדשות', categoryColor: '#1565C0', timestamp: 'היום, 09:30',
+    image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=800&q=80', link: ''
+  },
+  {
+    id: 'a3',
+    title: 'טיינה מהירה וטוחה מרשים: רכב הפנאי ההיברידי החדש הגיע לישראל',
+    summary: 'הרכב החדש מציע עיצוב אגרסיבי וביצועים מרשימים עם מנוע היברידי חסכוני. הגרסה הישראלית מגיעה עם ציוד עשיר במיוחד.',
+    body: 'רכב הפנאי ההיברידי החדש הגיע רשמית לשוק הישראלי ומציע שילוב מרשים של עיצוב ספורטיבי עם יעילות דלק יוצאת דופן.\n\nהמנוע ההיברידי מייצר 245 כ"ס ומאפשר צריכת דלק ממוצעת של 5.2 ליטר ל-100 ק"מ. זמן ה-0-100 עומד על 7.8 שניות בלבד.\n\nהגרסה הישראלית מגיעה עם ציוד עשיר כולל מסך מגע 12.3 אינץ\', מערכת שמע פרימיום, רדאר לזיהוי מכשולים ועוד.',
+    author: 'אורן מנרד', category: 'רכב', categoryColor: '#1B5E20', timestamp: 'אתמול, 20:40',
+    image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80', link: ''
+  },
+  {
+    id: 'a4',
+    title: 'סקירה: Sony WH-CH720N – אוזניות מסננות רעשים בתקציב שפוי',
+    summary: 'סוני מראה את הכוח בשוק הרעשים האקטיבי (ANC) גם לקטגוריית מחיר נמוכה מ-500 שקלים. האם הן שוות את הרכישה?',
+    body: 'אוזניות ה-WH-CH720N של סוני מגיעות לשוק הישראלי במחיר מומלץ של 449 שקלים ומתיימרות להביא ביצועי ANC ברמה גבוהה לקטגוריית מחיר נגישה.\n\nמבחינת עיצוב, האוזניות קלות במיוחד (192 גרם) ונוחות לשימוש ממושך. כרית האוזן מרופדת בחומר רך שאינו מחמם.\n\nביצועי ה-ANC מרשימים לקטגוריית המחיר - הן מסוגלות לסנן רעשי סביבה כמו מזגנים ותנועה בצורה יעילה. הסאונד בהיר ומאוזן עם בס נעים שאינו מוגזם.',
+    author: 'רנן מנדזיצקי', category: 'סקירות', categoryColor: '#6A1B9A', timestamp: 'לפני יומיים',
+    image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&q=80', link: ''
+  },
+  {
+    id: 'a5',
+    title: 'מבצע סוף עונה: MacBook Air M3 במחיר חסר תקדים באילת',
+    summary: 'דיל יום: אם אתם מתכננים ירידה לאילת בקרוב, רשתות השיווק המקומיות יוצאות במבצע ענק ללא מע"מ על ה-MacBook Air M3.',
+    body: 'לקראת עונת הקיץ, רשתות האלקטרוניקה באילת מציעות מחירים חסרי תקדים על ה-MacBook Air M3 - ללא מע"מ, המחיר יורד לכ-3,800 שקלים לגרסת הבסיס.\n\nה-MacBook Air עם שבב M3 מציע שיפור של 35% בביצועים לעומת M2 הקודם, כולל תמיכה בשני מסכים חיצוניים - תכונה שחסרה בדור הקודם.\n\nהמבצע תקף לחודש יולי בלבד ונסיעה לאילת לצורך רכישה עשויה לחסוך מאות שקלים לעומת קנייה בצפון המדינה.',
+    author: 'רנן מנדזיצקי', category: 'מבצעים', categoryColor: '#2E7D32', timestamp: 'לפני 3 ימים',
+    image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800&q=80', link: ''
+  }
+];
+
+let PROMOTED_SITES = [];
+try {
+  const savedSites = localStorage.getItem('promoted_sites');
+  if (savedSites) {
+    PROMOTED_SITES = JSON.parse(savedSites);
+  } else {
+    PROMOTED_SITES = [
+      { name: 'גוגל (Google)', url: 'https://www.google.com', icon: '🌐' },
+      { name: 'וואלה! (Walla)', url: 'https://www.walla.co.il', icon: '📰' },
+      { name: 'ויינט (Ynet)', url: 'https://www.ynet.co.il', icon: '🔥' },
+      { name: 'יוטיוב (YouTube)', url: 'https://www.youtube.com', icon: '🎥' }
+    ];
+    localStorage.setItem('promoted_sites', JSON.stringify(PROMOTED_SITES));
+  }
+} catch (e) {
+  PROMOTED_SITES = [
+    { name: 'גוגל (Google)', url: 'https://www.google.com', icon: '🌐' },
+    { name: 'וואלה! (Walla)', url: 'https://www.walla.co.il', icon: '📰' },
+    { name: 'ויינט (Ynet)', url: 'https://www.ynet.co.il', icon: '🔥' },
+    { name: 'יוטיוב (YouTube)', url: 'https://www.youtube.com', icon: '🎥' }
+  ];
+}
+
+function buildPromotedSitesBox() {
+  const sitesHTML = PROMOTED_SITES.map((site, index) => {
+    let iconHTML = '';
+    if (site.icon && (site.icon.startsWith('data:image') || site.icon.startsWith('http'))) {
+      iconHTML = `<img src="${site.icon}" alt="" style="width:24px;height:24px;border-radius:4px;object-fit:cover;flex-shrink:0;">`;
+    } else {
+      iconHTML = `<span style="font-size:18px;width:24px;height:24px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${site.icon || '🌐'}</span>`;
+    }
+
+    const deleteBtn = isEditMode ? `
+      <button onclick="event.preventDefault(); event.stopPropagation(); deletePromotedSite(${index})" style="background:none;border:none;color:#ff4444;cursor:pointer;font-size:14px;padding:4px;margin-right:auto;display:flex;align-items:center;justify-content:center;" title="מחק קישור">✕</button>
+    ` : '';
+
+    return `
+      <li style="display:flex;align-items:center;gap:10px;padding:8px;border-radius:8px;background:#f9f9f9;border:1px solid #f0f0f0;transition:all 0.2s ease-in-out;">
+        <a href="${site.url}" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;gap:8px;color:#000;text-decoration:none;font-weight:bold;font-size:14px;flex:1;min-width:0;">
+          ${iconHTML}
+          <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${site.name}</span>
+        </a>
+        ${deleteBtn}
+      </li>
+    `;
+  }).join('');
+
+  const addBtnHTML = isEditMode ? `
+    <button onclick="openPromotedSiteModal()" style="width:100%;background:#16a34a;color:#fff;padding:8px;border:none;border-radius:8px;cursor:pointer;font-weight:700;font-size:13px;margin-top:10px;transition:background 0.2s;display:flex;align-items:center;justify-content:center;gap:6px;">
+      <span>+ הוסף קישור</span>
+    </button>
+  ` : '';
+
+  return `
+    <div class="art-sidebar-box art-promoted-sites" style="margin-bottom:20px; border:1px solid #e2e8f0; border-radius:12px; padding:16px; background:#fff;">
+      <h4 style="margin:0 0 12px;font-size:16px;font-weight:800;color:#000;border-bottom:2px solid #eaeaea;padding-bottom:6px;">אתרים מומלצים</h4>
+      <ul style="list-style:none;padding:0 0 0 4px;margin:0;display:flex;flex-direction:column;gap:8px;max-height:240px;overflow-y:auto;scrollbar-width:thin;direction:rtl;">
+        ${sitesHTML || '<li style="font-size:13px;color:#888;text-align:center;padding:10px;">אין קישורים ממומנים</li>'}
+      </ul>
+      ${addBtnHTML}
+    </div>
+  `;
+}
+
+function artEsc(str) {
+  return String(str||'').replace(/\\/g,'\\\\').replace(/'/g,'&#39;').replace(/"/g,'&quot;');
+}
+
+function buildArticlesPage(articles) {
+  const featured = articles.filter(a => a.pinned).slice(0, 3);
+  const popular = articles.slice(0, 5);
+
+  const featuredHTML = featured.map(a => `
+    <div class="art-featured-card" onclick="artOpenDetail('${artEsc(a.id)}')">
+      <img src="${a.image || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80'}" alt="">
+      <div class="art-featured-overlay"></div>
+      <div class="art-featured-info">
+        <span class="art-category-badge" style="background:${a.categoryColor||'#e65100'}">${a.category}</span>
+        <h3>${a.title}</h3>
+        <div class="art-featured-meta">${a.author} · ${a.timestamp}</div>
+      </div>
+    </div>
+  `).join('');
+
+  const listHTML = articles.map((a) => `
+    <div class="art-row" onclick="artOpenDetail('${artEsc(a.id)}')">
+      <div class="art-row-text">
+        <h3>${a.title}</h3>
+        <p>${a.summary}</p>
+        <div class="art-row-meta">
+          <span>${a.author}</span>
+          <span class="art-row-sep">|</span>
+          <span>${a.timestamp}</span>
+        </div>
+      </div>
+      <div class="art-row-img-wrap" style="--bg-img: url('${a.image || ''}');">
+        ${a.image ? `<img src="${a.image}" alt="">` : '<div class="art-row-img-placeholder"></div>'}
+        ${a.image ? `<button class="art-zoom-btn" onclick="event.stopPropagation();artZoomImage('${artEsc(a.image)}')" title="מסך מלא">⛶</button>` : ''}
+        ${isEditMode ? `<button class="art-pin-btn" onclick="event.stopPropagation(); togglePinArticle('${artEsc(a.id)}')" title="${a.pinned ? 'בטל נעץ' : 'נעץ בגריד'}" style="${a.pinned ? 'color:#ffd700;display:flex;' : ''}">${a.pinned ? '★' : '☆'}</button>` : ''}
+        <button class="art-delete-btn" onclick="event.stopPropagation();artDelete('${artEsc(a.id)}',this)">✕</button>
+      </div>
+    </div>
+  `).join('');
+
+  const popularHTML = popular.map((a, i) => `
+    <div class="art-popular-item" onclick="artOpenDetail('${artEsc(a.id)}')">
+      <span class="art-popular-num">${String(i+1).padStart(2,'0')}</span>
+      <div style="flex:1;font-size:13px;font-weight:600;line-height:1.4;color:#222">${a.title}</div>
+    </div>
+  `).join('');
+
+  const json = encodeURIComponent(JSON.stringify(articles));
+  return `<div class="articles-page" data-articles-json="${json}">
+    <div class="art-inner">
+      <div class="art-featured-grid">${featuredHTML}</div>
+      <div class="art-layout">
+        <div class="art-main">
+          <div class="art-search-wrap">
+            <input type="text" class="art-search" placeholder="🔍 חיפוש כתבות..." oninput="artSearch(this.value)">
+          </div>
+          <div class="art-section-title">כל הכתבות</div>
+          <div class="art-rows">${listHTML}</div>
+          <div class="art-no-results" style="display:none">לא נמצאו כתבות התואמות לחיפוש</div>
+          ${(isAdmin() || isEditMode) ? `<button class="art-add-btn" onclick="openArtModal()">+ הוסף כתבה חדשה</button>` : ''}
+        </div>
+        <div class="art-sidebar">
+          <div class="art-sidebar-box" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #fff; border: 1px solid #334155;">
+            <div class="art-sidebar-title" style="color: #38bdf8; border-bottom: 2px solid #0284c7;">🧮 מחשבונים פיננסיים</div>
+            <div style="display:flex; flex-direction:column; gap:10px; margin-top:12px;">
+              <button onclick="openCalculatorPage('page-ci')" style="padding:11px 14px; background:#0284c7; color:#fff; border:none; border-radius:10px; font-weight:800; font-size:13px; cursor:pointer; text-align:right; display:flex; justify-content:space-between; align-items:center; transition:transform 0.2s ease;">
+                <span>📈 מחשבון ריבית דריבית</span>
+                <span style="font-size:16px;">←</span>
+              </button>
+              <button onclick="openCalculatorPage('page-em')" style="padding:11px 14px; background:#84cc16; color:#18181b; border:none; border-radius:10px; font-weight:900; font-size:13px; cursor:pointer; text-align:right; display:flex; justify-content:space-between; align-items:center; transition:transform 0.2s ease;">
+                <span>📊 מחשבון Everything Money</span>
+                <span style="font-size:16px;">←</span>
+              </button>
+            </div>
+          </div>
+          ${buildPromotedSitesBox()}
+          <div class="art-sidebar-box">
+            <div class="art-sidebar-title">הכי נקראות השבוע</div>
+            ${popularHTML}
+          </div>
+          ${buildSocialCommunityBox()}
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function artOpenDetail(id) {
+  const container = mainContent.querySelector('.articles-page');
+  if (!container) return;
+  let arts = [];
+  try { arts = JSON.parse(decodeURIComponent(container.dataset.articlesJson)); } catch(e){ return; }
+  const a = arts.find(x => x.id === id);
+  if (!a) return;
+
+  const bodyHTML = (a.body || a.summary || '').split('\n').map(p => p.trim() ? `<p>${p}</p>` : '').join('');
+
+  // כתבות מומלצות - עד 3 כתבות אחרות
+  const recommended = arts.filter(x => x.id !== id).slice(0, 3);
+  const recHTML = recommended.map(r => `
+    <div class="art-rec-card" onclick="artOpenDetail('${artEsc(r.id)}')">
+      <div class="art-rec-img">
+        ${r.image ? `<img src="${r.image}" alt="">` : '<div class="art-card-img-placeholder"></div>'}
+        <span class="art-rec-badge art-category-badge" style="background:${r.categoryColor||'#e65100'}">${r.category}</span>
+      </div>
+      <div class="art-rec-text">
+        <h4>${r.title}</h4>
+        <div class="art-rec-meta">${r.author} · ${r.timestamp}</div>
+      </div>
+    </div>
+  `).join('');
+
+  const json = encodeURIComponent(JSON.stringify(arts));
+  mainContent.innerHTML = `
+    <div class="art-detail articles-page" data-article-id="${id}" data-articles-json="${json}">
+      <div class="art-detail-inner">
+        <button class="art-back-btn" onclick="artGoBack()">← חזרה לכתבות</button>
+        ${a.image ? `<img class="art-detail-hero" src="${a.image}" alt="">` : ''}
+        <div class="art-detail-body">
+          <div class="art-meta" style="margin-bottom:12px">
+            <span class="art-category-badge" style="background:${a.categoryColor||'#e65100'}">${a.category}</span>
+            <span>${a.author}</span>
+            <span>·</span>
+            <span>${a.timestamp}</span>
+          </div>
+          <h1 class="art-detail-title">${a.title}</h1>
+          <div class="art-detail-content">${bodyHTML}</div>
+          ${a.link ? `<a href="${a.link}" target="_blank" class="art-detail-link">קרא באתר המקור ↗</a>` : ''}
+        </div>
+        ${recommended.length ? `
+        <div class="art-rec-section">
+          <div class="art-section-title">כתבות מומלצות</div>
+          <div class="art-rec-grid">${recHTML}</div>
+        </div>` : ''}
+      </div>
+    </div>
+  `;
+  mainContent.scrollTop = 0;
+  window.scrollTo(0, 0);
+}
+
+function artGoBack() {
+  renderPage();
+}
+
+function artSearch(query) {
+  const q = (query || '').trim().toLowerCase();
+  const rows = mainContent.querySelectorAll('.art-row');
+  let visible = 0;
+  rows.forEach(row => {
+    const txt = row.textContent.toLowerCase();
+    const match = !q || txt.includes(q);
+    row.style.display = match ? '' : 'none';
+    if (match) visible++;
+  });
+  const noRes = mainContent.querySelector('.art-no-results');
+  if (noRes) noRes.style.display = visible === 0 ? 'block' : 'none';
+}
+
+// חשיפת הפונקציות ל-window כדי ש-onclick יעבוד (הקובץ הוא module)
+window.artOpenDetail = artOpenDetail;
+window.artGoBack = artGoBack;
+window.artDelete = artDelete;
+window.openArtModal = openArtModal;
+window.artSearch = artSearch;
+
+function artGetArticles() {
+  const container = mainContent.querySelector('.articles-page');
+  if (!container) return [];
+  try { return JSON.parse(decodeURIComponent(container.dataset.articlesJson)); } catch(e){ return []; }
+}
+
+function artDelete(id, btn) {
+  if (!isEditMode) return;
+  const arts = artGetArticles().filter(a => a.id !== id);
+  mainContent.innerHTML = buildArticlesPage(arts);
+  saveCurrentPageContent();
+}
+
+function openArtModal() {
+  if (!isEditMode) return;
+  document.getElementById('art-title').value = '';
+  document.getElementById('art-summary').value = '';
+  document.getElementById('art-body').value = '';
+  document.getElementById('art-author').value = '';
+  document.getElementById('art-category').value = '';
+  document.getElementById('art-link').value = '';
+  const preview = document.getElementById('art-img-preview');
+  preview.style.display = 'none'; preview.src = '';
+  artImgData = '';
+  document.getElementById('art-img-pick').textContent = 'לחץ לבחירת תמונה מהמחשב';
+  document.getElementById('article-modal').style.display = 'flex';
+}
+
+let artImgData = '';
+
+document.getElementById('art-img-pick').addEventListener('click', () => {
+  const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
+  inp.onchange = e => {
+    const f = e.target.files[0]; if (!f) return;
+    artCompressImage(f).then(data => {
+      artImgData = data;
+      const p = document.getElementById('art-img-preview');
+      p.src = artImgData; p.style.display = 'block';
+      document.getElementById('art-img-pick').textContent = '✓ תמונה נבחרה';
+    });
+  };
+  inp.click();
+});
+
+document.getElementById('art-cancel').addEventListener('click', () => {
+  document.getElementById('article-modal').style.display = 'none';
+});
+
+document.getElementById('art-save').addEventListener('click', () => {
+  const title = document.getElementById('art-title').value.trim();
+  if (!title) { alert('חובה כותרת'); return; }
+  const arts = artGetArticles();
+  arts.unshift({
+    id: 'a' + Date.now(),
+    title,
+    summary: document.getElementById('art-summary').value.trim(),
+    body: document.getElementById('art-body').value.trim(),
+    author: document.getElementById('art-author').value.trim() || 'עורך',
+    category: document.getElementById('art-category').value.trim() || 'כללי',
+    categoryColor: '#e65100',
+    timestamp: 'עכשיו',
+    image: artImgData,
+    link: document.getElementById('art-link').value.trim()
+  });
+  mainContent.innerHTML = buildArticlesPage(arts);
+  saveCurrentPageContent();
+  document.getElementById('article-modal').style.display = 'none';
+});
+
+const btnAddArticlesPage = document.getElementById('btn-add-articles-page');
+if (btnAddArticlesPage) {
+  btnAddArticlesPage.addEventListener('click', () => {
+    const title = prompt('שם העמוד הראשי של הכתבות:') || 'כתבות';
+    const newId = 'page-' + Date.now();
+    pages.unshift({ id: newId, title: title.trim(), content: buildArticlesPage(ARTICLES_SAMPLES) });
+    topNavPages.unshift(newId);
+    activePageId = newId;
+    saveToStorage();
+    renderSideMenu();
+    renderTopNav();
+    renderPage();
+  });
+}
+
+// ===== עמוד חנות =====
+
+const SHOP_SAMPLES = [
+  { id: 'p1', name: 'AirPods Max 2 - Midnight', label: 'חריטה חינם', price: '₪2,199', image: 'https://images.unsplash.com/photo-1625245488600-f03fef636a3c?w=600&q=80', link: '' },
+  { id: 'p2', name: 'AirPods Pro 3', label: 'חריטה חינם', price: '₪999', image: 'https://images.unsplash.com/photo-1606220588913-b3aacb4d2f46?w=600&q=80', link: '' },
+  { id: 'p3', name: 'AirPods 4 עם ביטול רעשים אקטיבי', label: 'חריטה חינם', price: '₪749', image: 'https://images.unsplash.com/photo-1603351154351-5e2d0600bb77?w=600&q=80', link: '' },
+  { id: 'p4', name: 'iPhone 16 Pro', label: 'עד 24 תשלומים', price: '₪4,799', image: 'https://images.unsplash.com/photo-1592286927505-1def25115558?w=600&q=80', link: '' },
+  { id: 'p5', name: 'MacBook Air M3', label: 'הנחת סטודנט', price: '₪4,499', image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=600&q=80', link: '' },
+  { id: 'p6', name: 'Apple Watch Series 10', label: 'רצועה חינם', price: '₪1,799', image: 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=600&q=80', link: '' }
+];
+
+function buildShopPage(products) {
+  const cartSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>';
+  const cardsHTML = products.map(p => `
+    <div class="shop-card" ${p.link ? `onclick="window.open('${p.link}','_blank')"` : ''} style="${p.link ? 'cursor:pointer' : ''}">
+      <button class="shop-delete-btn" onclick="event.stopPropagation();shopDelete('${artEsc(p.id)}')">✕</button>
+      <div class="shop-card-img">
+        ${p.image ? `<img src="${p.image}" alt="">` : '<div class="shop-img-placeholder"></div>'}
+        <button class="shop-cart-btn" title="הוסף לסל" onclick="event.stopPropagation();shopAddToCart('${artEsc(p.id)}')">${cartSvg}<span class="shop-cart-plus">+</span></button>
+      </div>
+      <div class="shop-card-info">
+        ${p.label ? `<div class="shop-label">${p.label}</div>` : ''}
+        <h3 class="shop-name">${p.name}</h3>
+        <div class="shop-price">${p.price || ''}</div>
+      </div>
+    </div>
+  `).join('');
+
+  const bestSellers = products.slice(0, 5);
+  const bestHTML = bestSellers.map((p, i) => `
+    <div class="shop-best-item" ${p.link ? `onclick="window.open('${p.link}','_blank')"` : ''} style="${p.link ? 'cursor:pointer' : ''}">
+      <span class="shop-best-num">${String(i+1).padStart(2,'0')}</span>
+      ${p.image ? `<img class="shop-best-img" src="${p.image}" alt="">` : ''}
+      <div class="shop-best-text">
+        <div class="shop-best-name">${p.name}</div>
+        <div class="shop-best-price">${p.price || ''}</div>
+      </div>
+    </div>
+  `).join('');
+
+  const json = encodeURIComponent(JSON.stringify(products));
+  return `<div class="shop-page" data-products-json="${json}">
+    <div class="shop-inner">
+      <div class="shop-header">
+        <h1 class="shop-title">החנות</h1>
+        <p class="shop-subtitle">כל המוצרים שאתם אוהבים, במקום אחד.</p>
+      </div>
+      <div class="shop-search-wrap">
+        <input type="text" class="shop-search" placeholder="🔍 חיפוש מוצרים..." oninput="shopSearch(this.value)">
+      </div>
+      <div class="shop-layout">
+        <div class="shop-main">
+          <div class="shop-grid">${cardsHTML}</div>
+          <div class="shop-no-results" style="display:none">לא נמצאו מוצרים התואמים לחיפוש</div>
+          <button class="shop-add-btn" onclick="openShopModal()">+ הוסף מוצר חדש</button>
+        </div>
+        <div class="shop-sidebar">
+          <div class="shop-sidebar-box">
+            <div class="shop-sidebar-title">הנמכרות השבוע</div>
+            ${bestHTML}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button class="shop-cart-fab" onclick="shopToggleCart()" title="הסל שלי">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+      <span class="shop-cart-count" style="display:none">0</span>
+    </button>
+    <div class="shop-cart-panel" style="display:none">
+      <div class="shop-cart-header"><span>הסל שלי</span><button onclick="shopToggleCart()" class="shop-cart-close">✕</button></div>
+      <div class="shop-cart-items"></div>
+      <div class="shop-cart-footer">
+        <div class="shop-cart-total"></div>
+        <button class="shop-cart-checkout" onclick="alert('תודה על הקנייה!')">מעבר לתשלום</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+let shopCart = [];
+
+function shopAddToCart(id) {
+  const prods = shopGetProducts();
+  const p = prods.find(x => x.id === id);
+  if (!p) return;
+  const existing = shopCart.find(x => x.id === id);
+  if (existing) existing.qty++;
+  else shopCart.push({ id: p.id, name: p.name, price: p.price, image: p.image, qty: 1 });
+  shopRenderCart();
+  // אנימציית אישור קצרה
+  const fab = mainContent.querySelector('.shop-cart-fab');
+  if (fab) { fab.classList.add('shop-cart-bump'); setTimeout(() => fab.classList.remove('shop-cart-bump'), 300); }
+}
+
+function shopRemoveFromCart(id) {
+  shopCart = shopCart.filter(x => x.id !== id);
+  shopRenderCart();
+}
+
+function shopParsePrice(str) {
+  const n = parseFloat(String(str || '').replace(/[^\d.]/g, ''));
+  return isNaN(n) ? 0 : n;
+}
+
+function shopRenderCart() {
+  const count = shopCart.reduce((s, x) => s + x.qty, 0);
+  const countEl = mainContent.querySelector('.shop-cart-count');
+  if (countEl) { countEl.textContent = count; countEl.style.display = count ? 'flex' : 'none'; }
+  const itemsEl = mainContent.querySelector('.shop-cart-items');
+  if (itemsEl) {
+    if (!shopCart.length) {
+      itemsEl.innerHTML = '<div class="shop-cart-empty">הסל ריק</div>';
+    } else {
+      itemsEl.innerHTML = shopCart.map(x => `
+        <div class="shop-cart-row">
+          ${x.image ? `<img src="${x.image}" alt="">` : ''}
+          <div class="shop-cart-row-text">
+            <div class="shop-cart-row-name">${x.name}</div>
+            <div class="shop-cart-row-price">${x.price || ''} ${x.qty > 1 ? '× ' + x.qty : ''}</div>
+          </div>
+          <button class="shop-cart-remove" onclick="shopRemoveFromCart('${artEsc(x.id)}')">✕</button>
+        </div>
+      `).join('');
+    }
+  }
+  const totalEl = mainContent.querySelector('.shop-cart-total');
+  if (totalEl) {
+    const total = shopCart.reduce((s, x) => s + shopParsePrice(x.price) * x.qty, 0);
+    totalEl.textContent = total ? ('סה"כ: ₪' + total.toLocaleString()) : '';
+  }
+}
+
+function shopToggleCart() {
+  const panel = mainContent.querySelector('.shop-cart-panel');
+  if (!panel) return;
+  panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
+  shopRenderCart();
+}
+
+function shopSearch(query) {
+  const q = (query || '').trim().toLowerCase();
+  const cards = mainContent.querySelectorAll('.shop-card');
+  let visible = 0;
+  cards.forEach(card => {
+    const txt = card.textContent.toLowerCase();
+    const match = !q || txt.includes(q);
+    card.style.display = match ? '' : 'none';
+    if (match) visible++;
+  });
+  const noRes = mainContent.querySelector('.shop-no-results');
+  if (noRes) noRes.style.display = visible === 0 ? 'block' : 'none';
+}
+
+function shopGetProducts() {
+  const container = mainContent.querySelector('.shop-page');
+  if (!container) return [];
+  try { return JSON.parse(decodeURIComponent(container.dataset.productsJson)); } catch(e){ return []; }
+}
+
+function shopDelete(id) {
+  if (!isEditMode) return;
+  const prods = shopGetProducts().filter(p => p.id !== id);
+  mainContent.innerHTML = buildShopPage(prods);
+  saveCurrentPageContent();
+}
+
+window.openCalculatorPage = function(pageId) {
+  if (isEditMode) saveCurrentPageContent();
+  activePageId = pageId;
+  saveToStorage();
+  renderSideMenu();
+  renderTopNav();
+  renderPage();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+window.buildCompoundInterestPage = function() {
+  return `
+    <div class="calc-page-wrapper">
+      <div class="calc-header-box">
+        <div class="calc-header-title">
+          <h1>📈 מחשבון ריבית דריבית מתקדם</h1>
+          <p>חשב את צמיחת ההון, ההפקדות והריבית המצטברת לאורך זמן</p>
+        </div>
+        <div style="background: rgba(255,255,255,0.1); padding: 8px 16px; border-radius: 12px; font-weight: 800; font-size: 14px;">
+          💡 אפקט הריבית דריבית: הכסף שלך עובד בשבילך
+        </div>
+      </div>
+
+      <div class="calc-card-grid">
+        <div class="calc-box">
+          <h3 style="margin-top:0; font-size: 18px; margin-bottom: 20px; color: #0284c7;">⚙️ פרטי ההשקעה</h3>
+          
+          <div class="calc-form-group">
+            <label>סכום התחלתי (₪)</label>
+            <div class="calc-input-wrap">
+              <input type="number" id="ci-initial" value="10000" oninput="calculateCompoundInterest()">
+            </div>
+          </div>
+
+          <div class="calc-form-group">
+            <label>הפקדה חודשית (₪)</label>
+            <div class="calc-input-wrap">
+              <input type="number" id="ci-monthly" value="1000" oninput="calculateCompoundInterest()">
+            </div>
+          </div>
+
+          <div class="calc-form-group">
+            <label>תשואה שנתית צפויה (%)</label>
+            <div class="calc-input-wrap">
+              <input type="number" id="ci-rate" value="8" step="0.1" oninput="calculateCompoundInterest()">
+            </div>
+          </div>
+
+          <div class="calc-form-group">
+            <label>תקופת השקעה (בשנים)</label>
+            <div class="calc-input-wrap">
+              <input type="number" id="ci-years" value="20" min="1" max="50" oninput="calculateCompoundInterest()">
+            </div>
+          </div>
+
+          <div class="calc-form-group">
+            <label>תדירות חישוב הריבית</label>
+            <div class="calc-input-wrap">
+              <select id="ci-freq" onchange="calculateCompoundInterest()">
+                <option value="12">חודשית (12 פעמים בשנה)</option>
+                <option value="1">שנתית (פעם בשנה)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="calc-box">
+          <h3 style="margin-top:0; font-size: 18px; margin-bottom: 20px; color: #10b981;">📊 תוצאות הסימולציה</h3>
+          
+          <div class="calc-kpi-grid">
+            <div class="calc-kpi-card highlight">
+              <div class="calc-kpi-label">סך הכל חיסכון מצטבר</div>
+              <div class="calc-kpi-val" id="ci-res-total">₪0</div>
+            </div>
+            <div class="calc-kpi-card">
+              <div class="calc-kpi-label">סך הכל הפקדות</div>
+              <div class="calc-kpi-val" id="ci-res-principal">₪0</div>
+            </div>
+            <div class="calc-kpi-card highlight">
+              <div class="calc-kpi-label">רווח מריבית דריבית</div>
+              <div class="calc-kpi-val" id="ci-res-interest">₪0</div>
+            </div>
+            <div class="calc-kpi-card">
+              <div class="calc-kpi-label">מכפיל תשואה כולל</div>
+              <div class="calc-kpi-val" id="ci-res-mult">0x</div>
+            </div>
+          </div>
+
+          <!-- visual progress bar -->
+          <div style="margin-top: 20px;">
+            <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:700; margin-bottom:6px; color:#64748b;">
+              <span>הפקדות: <strong id="ci-bar-p-pct">50%</strong></span>
+              <span>רווח מריבית: <strong id="ci-bar-i-pct" style="color:#10b981;">50%</strong></span>
+            </div>
+            <div style="height: 14px; background: #e2e8f0; border-radius: 50px; overflow: hidden; display: flex;">
+              <div id="ci-bar-p" style="width: 50%; background: #3b82f6; transition: width 0.3s ease;"></div>
+              <div id="ci-bar-i" style="width: 50%; background: #10b981; transition: width 0.3s ease;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+};
+
+window.calculateCompoundInterest = function() {
+  const initial = parseFloat(document.getElementById('ci-initial')?.value) || 0;
+  const monthly = parseFloat(document.getElementById('ci-monthly')?.value) || 0;
+  const ratePct = parseFloat(document.getElementById('ci-rate')?.value) || 0;
+  const years = parseInt(document.getElementById('ci-years')?.value) || 0;
+  const freq = parseInt(document.getElementById('ci-freq')?.value) || 12;
+
+  const rate = ratePct / 100;
+  const totalMonths = years * 12;
+  const rPeriod = rate / freq;
+
+  let totalFV = initial * Math.pow(1 + rPeriod, years * freq);
+  let totalDeposits = initial;
+
+  for (let m = 1; m <= totalMonths; m++) {
+    totalDeposits += monthly;
+    const monthsRemaining = totalMonths - m;
+    const periodsRemaining = (monthsRemaining / 12) * freq;
+    totalFV += monthly * Math.pow(1 + rPeriod, periodsRemaining);
+  }
+
+  const interestProfit = totalFV - totalDeposits;
+  const multiplier = totalDeposits > 0 ? (totalFV / totalDeposits).toFixed(2) : '0';
+
+  const fmt = (num) => '₪' + Math.round(num).toLocaleString();
+
+  if (document.getElementById('ci-res-total')) document.getElementById('ci-res-total').textContent = fmt(totalFV);
+  if (document.getElementById('ci-res-principal')) document.getElementById('ci-res-principal').textContent = fmt(totalDeposits);
+  if (document.getElementById('ci-res-interest')) document.getElementById('ci-res-interest').textContent = fmt(interestProfit);
+  if (document.getElementById('ci-res-mult')) document.getElementById('ci-res-mult').textContent = multiplier + 'x';
+
+  const pPct = totalFV > 0 ? Math.round((totalDeposits / totalFV) * 100) : 50;
+  const iPct = 100 - pPct;
+
+  if (document.getElementById('ci-bar-p')) document.getElementById('ci-bar-p').style.width = pPct + '%';
+  if (document.getElementById('ci-bar-i')) document.getElementById('ci-bar-i').style.width = iPct + '%';
+  if (document.getElementById('ci-bar-p-pct')) document.getElementById('ci-bar-p-pct').textContent = pPct + '%';
+  if (document.getElementById('ci-bar-i-pct')) document.getElementById('ci-bar-i-pct').textContent = iPct + '%';
+};
+
+/* Everything Money Stock Analyzer Builder & Calculation */
+window.buildEverythingMoneyPage = function() {
+  return `
+    <div class="calc-page-wrapper">
+      <div class="calc-header-box" style="background: linear-gradient(135deg, #18181b 0%, #09090b 100%); border: 1px solid #27272a;">
+        <div class="calc-header-title">
+          <h1 style="color: #84cc16;">📊 מחשבון תשואה ושיווי משקל</h1>
+          <p style="color: #a1a1aa;">ניתוח מניות מקצועי בשיטת 8 הפילירים (Everything Money)</p>
+        </div>
+        <div style="background: rgba(132, 204, 22, 0.15); border: 1px solid #84cc16; color: #84cc16; padding: 10px 18px; border-radius: 12px; font-weight: 800; font-size: 14px;">
+          🟢 מודל הערכת שווי מניות 8 הפילירים
+        </div>
+      </div>
+
+      <!-- Stock Basics Input -->
+      <div class="calc-box" style="margin-bottom: 24px; background: #18181b; border-color: #27272a; color: #fff;">
+        <h3 style="margin-top:0; color:#84cc16; font-size:16px; margin-bottom:16px;">🏢 נתוני המניה והחברה בשוק</h3>
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:16px;">
+          <div>
+            <label style="color:#a1a1aa; font-size:12px; font-weight:700;">סימול המניה (למשל AAPL)</label>
+            <input type="text" id="em-ticker" value="AAPL" style="width:100%; padding:9px; background:#27272a; border:1px solid #3f3f46; color:#fff; border-radius:8px; font-weight:800; text-align:center;">
+          </div>
+          <div>
+            <label style="color:#a1a1aa; font-size:12px; font-weight:700;">מחיר מניה נוכחי בשוק ($)</label>
+            <input type="number" id="em-price" value="220.00" step="0.01" style="width:100%; padding:9px; background:#27272a; border:1px solid #3f3f46; color:#fff; border-radius:8px; font-weight:800; text-align:center;">
+          </div>
+          <div>
+            <label style="color:#a1a1aa; font-size:12px; font-weight:700;">הכנסות שנתיות במיליארדי $ (TTM)</label>
+            <input type="number" id="em-rev" value="385.6" step="0.1" style="width:100%; padding:9px; background:#27272a; border:1px solid #3f3f46; color:#fff; border-radius:8px; font-weight:800; text-align:center;">
+          </div>
+          <div>
+            <label style="color:#a1a1aa; font-size:12px; font-weight:700;">מספר מניות במחזור (במיליארדים)</label>
+            <input type="number" id="em-shares" value="15.3" step="0.1" style="width:100%; padding:9px; background:#27272a; border:1px solid #3f3f46; color:#fff; border-radius:8px; font-weight:800; text-align:center;">
+          </div>
+        </div>
+      </div>
+
+      <!-- Everything Money Table Matrix -->
+      <div class="em-container">
+        <div class="em-header-banner">
+          <span>ניתוח מניות ושיווי משקל</span>
+          <span>הנחות היסוד שלי</span>
+        </div>
+        <div style="overflow-x: auto;">
+          <table class="em-table">
+            <thead>
+              <tr>
+                <th style="text-align:right; padding-right:20px;">מדד פיננסי</th>
+                <th>שנה 1</th>
+                <th>5 שנים</th>
+                <th>10 שנים</th>
+                <th style="color:#fef08a;">שמרני</th>
+                <th style="color:#fef08a;">בינוני</th>
+                <th style="color:#fef08a;">אופטימי</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="em-row-label" style="text-align:right; padding-right:20px;">תשואה על ההון המושקע (ROIC)</td>
+                <td class="em-hist-val">18.56%</td>
+                <td class="em-hist-val">18.93%</td>
+                <td class="em-hist-val">19.04%</td>
+                <td>-</td><td>-</td><td>-</td>
+              </tr>
+              <tr>
+                <td class="em-row-label" style="text-align:right; padding-right:20px;">צמיחה בהכנסות (%)</td>
+                <td class="em-hist-val">30.56%</td>
+                <td class="em-hist-val">25.04%</td>
+                <td class="em-hist-val">18.10%</td>
+                <td><input type="number" id="em-g-low" value="5" class="em-input">%</td>
+                <td><input type="number" id="em-g-mid" value="10" class="em-input">%</td>
+                <td><input type="number" id="em-g-high" value="15" class="em-input">%</td>
+              </tr>
+              <tr>
+                <td class="em-row-label" style="text-align:right; padding-right:20px;">שולי רווח נקי (%)</td>
+                <td class="em-hist-val">49.92%</td>
+                <td class="em-hist-val">43.78%</td>
+                <td class="em-hist-val">41.47%</td>
+                <td><input type="number" id="em-pm-low" value="35" class="em-input">%</td>
+                <td><input type="number" id="em-pm-mid" value="38" class="em-input">%</td>
+                <td><input type="number" id="em-pm-high" value="41" class="em-input">%</td>
+              </tr>
+              <tr>
+                <td class="em-row-label" style="text-align:right; padding-right:20px;">שולי תזרים מזומנים חופשי (%)</td>
+                <td class="em-hist-val">25.61%</td>
+                <td class="em-hist-val">24.77%</td>
+                <td class="em-hist-val">22.98%</td>
+                <td><input type="number" id="em-fcf-low" value="20" class="em-input">%</td>
+                <td><input type="number" id="em-fcf-mid" value="23" class="em-input">%</td>
+                <td><input type="number" id="em-fcf-high" value="26" class="em-input">%</td>
+              </tr>
+              <tr>
+                <td class="em-row-label" style="text-align:right; padding-right:20px;">מכפיל רווח צפוי (P/E)</td>
+                <td>-</td><td>-</td><td>-</td>
+                <td><input type="number" id="em-pe-low" value="17" class="em-input"></td>
+                <td><input type="number" id="em-pe-mid" value="20" class="em-input"></td>
+                <td><input type="number" id="em-pe-high" value="23" class="em-input"></td>
+              </tr>
+              <tr>
+                <td class="em-row-label" style="text-align:right; padding-right:20px;">מכפיל תזרים מזומנים צפוי (P/FCF)</td>
+                <td>-</td><td>-</td><td>-</td>
+                <td><input type="number" id="em-pfcf-low" value="17" class="em-input"></td>
+                <td><input type="number" id="em-pfcf-mid" value="20" class="em-input"></td>
+                <td><input type="number" id="em-pfcf-high" value="23" class="em-input"></td>
+              </tr>
+              <tr>
+                <td class="em-row-label" style="text-align:right; padding-right:20px;">תשואה שנתית מבוקשת (%)</td>
+                <td>-</td><td>-</td><td>-</td>
+                <td><input type="number" id="em-ret-low" value="9" class="em-input">%</td>
+                <td><input type="number" id="em-ret-mid" value="9" class="em-input">%</td>
+                <td><input type="number" id="em-ret-high" value="9" class="em-input">%</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="em-btn-wrap">
+          <button onclick="calculateEMValuation()" class="em-analyze-btn">
+            🚀 נתח מניה ומצא מחיר קנייה יעד
+          </button>
+        </div>
+
+        <!-- Output Step (Matches Screenshot 2!) -->
+        <div id="em-output-container" class="em-results-grid" style="display: grid;">
+          <!-- Scenario Low -->
+          <div class="em-result-card low">
+            <div class="em-scenario-title">תרחיש שמרני (Low)</div>
+            <div style="font-size:12px; color:#a1a1aa; margin-bottom:4px;">מחיר יעד לפי מכפיל רווח</div>
+            <div class="em-buy-price" id="em-res-pm-low" style="color:#ef4444;">$178.29 <span style="font-size:16px;">⊕</span></div>
+            
+            <div style="font-size:12px; color:#a1a1aa; margin-top:12px; margin-bottom:4px;">מחיר יעד לפי מכפיל תזרים</div>
+            <div class="em-buy-price" id="em-res-fcf-low" style="color:#ef4444;">$101.88 <span style="font-size:16px;">⊕</span></div>
+
+            <div style="font-size:12px; color:#a1a1aa; margin-top:12px; margin-bottom:4px;">תשואה שנתית צפויה במחיר הנוכחי ⓘ</div>
+            <div style="font-size:16px; font-weight:900; color:#ef4444;" id="em-res-ret-low">-7.59%</div>
+            
+            <span class="em-val-tag over" id="em-tag-low">מחיר יתר (Overvalued)</span>
+          </div>
+
+          <!-- Scenario Mid -->
+          <div class="em-result-card mid">
+            <div class="em-scenario-title">תרחיש בינוני (Mid)</div>
+            <div style="font-size:12px; color:#a1a1aa; margin-bottom:4px;">מחיר יעד לפי מכפיל רווח</div>
+            <div class="em-buy-price" id="em-res-pm-mid" style="color:#ef4444;">$315.97 <span style="font-size:16px;">⊕</span></div>
+            
+            <div style="font-size:12px; color:#a1a1aa; margin-top:12px; margin-bottom:4px;">מחיר יעד לפי מכפיל תזרים</div>
+            <div class="em-buy-price" id="em-res-fcf-mid" style="color:#ef4444;">$191.24 <span style="font-size:16px;">⊕</span></div>
+
+            <div style="font-size:12px; color:#a1a1aa; margin-top:12px; margin-bottom:4px;">תשואה שנתית צפויה במחיר הנוכחי ⓘ</div>
+            <div style="font-size:16px; font-weight:900; color:#ef4444;" id="em-res-ret-mid">-0.30%</div>
+
+            <span class="em-val-tag over" id="em-tag-mid">מחיר יתר (Overvalued)</span>
+          </div>
+
+          <!-- Scenario High -->
+          <div class="em-result-card high">
+            <div class="em-scenario-title">תרחיש אופטימי (High)</div>
+            <div style="font-size:12px; color:#a1a1aa; margin-bottom:4px;">מחיר יעד לפי מכפיל רווח</div>
+            <div class="em-buy-price" id="em-res-pm-high" style="color:#10b981;">$556.83 <span style="font-size:16px;">⊕</span></div>
+            
+            <div style="font-size:12px; color:#a1a1aa; margin-top:12px; margin-bottom:4px;">מחיר יעד לפי מכפיל תזרים</div>
+            <div class="em-buy-price" id="em-res-fcf-high" style="color:#ef4444;">$353.11 <span style="font-size:16px;">⊕</span></div>
+
+            <div style="font-size:12px; color:#a1a1aa; margin-top:12px; margin-bottom:4px;">תשואה שנתית צפויה במחיר הנוכחי ⓘ</div>
+            <div style="font-size:16px; font-weight:900; color:#10b981;" id="em-res-ret-high">6.94%</div>
+
+            <span class="em-val-tag fair" id="em-tag-high">מחיר הוגן (Fair Value)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+};
+
+window.calculateEMValuation = function() {
+  const price = parseFloat(document.getElementById('em-price')?.value) || 220;
+  const revBillion = parseFloat(document.getElementById('em-rev')?.value) || 385.6;
+  const sharesBillion = parseFloat(document.getElementById('em-shares')?.value) || 15.3;
+
+  const calcScenario = (gKey, pmKey, fcfKey, peKey, pfcfKey, retKey, tagId, pmResId, fcfResId, retResId) => {
+    const g = (parseFloat(document.getElementById(gKey)?.value) || 10) / 100;
+    const pm = (parseFloat(document.getElementById(pmKey)?.value) || 35) / 100;
+    const fcf = (parseFloat(document.getElementById(fcfKey)?.value) || 20) / 100;
+    const pe = parseFloat(document.getElementById(peKey)?.value) || 20;
+    const pfcf = parseFloat(document.getElementById(pfcfKey)?.value) || 20;
+    const r = (parseFloat(document.getElementById(retKey)?.value) || 9) / 100;
+
+    const rev10 = revBillion * Math.pow(1 + g, 10);
+    const ni10 = rev10 * pm;
+    const fcf10 = rev10 * fcf;
+
+    const mcPE10 = ni10 * pe;
+    const mcFCF10 = fcf10 * pfcf;
+
+    const pricePE10 = mcPE10 / sharesBillion;
+    const priceFCF10 = mcFCF10 / sharesBillion;
+
+    const buyPricePM = pricePE10 / Math.pow(1 + r, 10);
+    const buyPriceFCF = priceFCF10 / Math.pow(1 + r, 10);
+
+    const retPEPct = (Math.pow(pricePE10 / price, 1 / 10) - 1) * 100;
+
+    const fmt = (val) => '$' + val.toFixed(2);
+
+    if (document.getElementById(pmResId)) document.getElementById(pmResId).innerHTML = fmt(buyPricePM) + ' <span style="font-size:16px;">⊕</span>';
+    if (document.getElementById(fcfResId)) document.getElementById(fcfResId).innerHTML = fmt(buyPriceFCF) + ' <span style="font-size:16px;">⊕</span>';
+    if (document.getElementById(retResId)) {
+      const el = document.getElementById(retResId);
+      el.textContent = retPEPct.toFixed(2) + '%';
+      el.style.color = retPEPct >= 0 ? '#10b981' : '#ef4444';
+    }
+
+    const tag = document.getElementById(tagId);
+    if (tag) {
+      if (price <= Math.min(buyPricePM, buyPriceFCF)) {
+        tag.className = 'em-val-tag under';
+        tag.textContent = 'מחיר חסר (Undervalued)';
+      } else if (price <= Math.max(buyPricePM, buyPriceFCF)) {
+        tag.className = 'em-val-tag fair';
+        tag.textContent = 'מחיר הוגן (Fair Value)';
+      } else {
+        tag.className = 'em-val-tag over';
+        tag.textContent = 'מחיר יתר (Overvalued)';
+      }
+    }
+  };
+
+  calcScenario('em-g-low', 'em-pm-low', 'em-fcf-low', 'em-pe-low', 'em-pfcf-low', 'em-ret-low', 'em-tag-low', 'em-res-pm-low', 'em-res-fcf-low', 'em-res-ret-low');
+  calcScenario('em-g-mid', 'em-pm-mid', 'em-fcf-mid', 'em-pe-mid', 'em-pfcf-mid', 'em-ret-mid', 'em-tag-mid', 'em-res-pm-mid', 'em-res-fcf-mid', 'em-res-ret-mid');
+  calcScenario('em-g-high', 'em-pm-high', 'em-fcf-high', 'em-pe-high', 'em-pfcf-high', 'em-ret-high', 'em-tag-high', 'em-res-pm-high', 'em-res-fcf-high', 'em-res-ret-high');
+};
+
+let shopImgData = '';
+
+function openShopModal() {
+  if (!isEditMode) return;
+  document.getElementById('shop-name').value = '';
+  document.getElementById('shop-label').value = '';
+  document.getElementById('shop-price').value = '';
+  document.getElementById('shop-link').value = '';
+  const preview = document.getElementById('shop-img-preview');
+  preview.style.display = 'none'; preview.src = '';
+  shopImgData = '';
+  document.getElementById('shop-img-pick').textContent = 'לחץ לבחירת תמונה מהמחשב';
+  document.getElementById('shop-modal').style.display = 'flex';
+}
+
+document.getElementById('shop-img-pick').addEventListener('click', () => {
+  const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
+  inp.onchange = e => {
+    const f = e.target.files[0]; if (!f) return;
+    artCompressImage(f).then(data => {
+      shopImgData = data;
+      const p = document.getElementById('shop-img-preview');
+      p.src = shopImgData; p.style.display = 'block';
+      document.getElementById('shop-img-pick').textContent = '✓ תמונה נבחרה';
+    });
+  };
+  inp.click();
+});
+
+document.getElementById('shop-cancel').addEventListener('click', () => {
+  document.getElementById('shop-modal').style.display = 'none';
+});
+
+document.getElementById('shop-save').addEventListener('click', () => {
+  const name = document.getElementById('shop-name').value.trim();
+  if (!name) { alert('חובה שם מוצר'); return; }
+  const prods = shopGetProducts();
+  prods.unshift({
+    id: 'p' + Date.now(),
+    name,
+    label: document.getElementById('shop-label').value.trim(),
+    price: document.getElementById('shop-price').value.trim(),
+    image: shopImgData,
+    link: document.getElementById('shop-link').value.trim()
+  });
+  mainContent.innerHTML = buildShopPage(prods);
+  saveCurrentPageContent();
+  document.getElementById('shop-modal').style.display = 'none';
+});
+
+window.buildShopPage = buildShopPage;
+window.shopDelete = shopDelete;
+window.openShopModal = openShopModal;
+window.shopSearch = shopSearch;
+window.shopAddToCart = shopAddToCart;
+window.shopRemoveFromCart = shopRemoveFromCart;
+window.shopToggleCart = shopToggleCart;
+
+// ============================================================
+// מערכת סיפורים (Stories System)
+// ============================================================
+
+const STORIES_SAMPLES = [
+  {
+    id: 's1',
+    title: 'המסע אל מעבר להרי החושך',
+    summary: 'סיפור הרפתקאות מרתק על קבוצת חוקרים צעירים שיצאה למצוא את העיר האבודה בצפון הרחוק.',
+    body: 'הרוח נשבה בעוצמה כאשר עמדנו בפתח המערה הגדולה...\n\nזה היה המסע שהתכוננו אליו במשך שנים. ידענו שהדרך תהיה קשה ומאתגרת, אך איש מאיתנו לא תיאר לעצמו מה באמת מחכה לנו שם.\n\nלאחר שבועיים של טיפוס מפרך, מצאנו את עצמנו מול חומות אבן עתיקות שאיש לא ראה מזה אלפי שנים.',
+    author: 'יואב דרור', category: 'הרפתקאות', categoryColor: '#8b5cf6', timestamp: 'היום, 14:00',
+    image: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&q=80', link: ''
+  },
+  {
+    id: 's2',
+    title: 'הסוד של השען הזקן מרחוב הרצל',
+    summary: 'בסמטה צדדית בעיר העתיקה, שעון אחד קטן החל ללכת לאחור ומאז הכל השתנה.',
+    body: 'השען הזקן, מר לוי, עבד בסדנתו הקטנה מזה חמישים שנה. אנשים ידעו שהוא יכול לתקן כל דבר, אך השעון הזה היה שונה.\n\nיום אחד, הגיע לקוח מסתורי והשאיר שעון זהב עתיק. כשמר לוי פתח אותו, הוא גילה מנגנון שלא דמה לשום דבר שראה בחייו.\n\nכאשר מחוגי השעון החלו לזוז לאחור, מר לוי הרגיש פתאום צעיר בעשר שנים...',
+    author: 'מיכל ישראלי', category: 'פנטזיה', categoryColor: '#3b82f6', timestamp: 'אתמול, 10:15',
+    image: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=800&q=80', link: ''
+  }
+];
+
+// קטגוריות הסיפורים (ניתן להוסיף/לשנות כאן)
+const STORY_CATEGORIES = ['כללי', 'סטרייט', 'ביסקסואל', 'שחורים על לבנות'];
+
+// גודל הגריד בעמוד הסיפורים (מספר עמודות). נשמר בין ביקורים.
+let storyGridCols = (function () {
+  const v = parseInt(localStorage.getItem('story_grid_cols') || '', 10);
+  return (v === 2 || v === 3 || v === 4) ? v : 4;
+})();
+// קטגוריות נבחרות לסינון. סט ריק = "הכל" (כל הסיפורים). אפשר לבחור כמה
+// קטגוריות בו-זמנית, וסיפור מוצג אם הקטגוריה שלו נמצאת באחת מהן.
+let selectedStoryCategories = new Set();
+
+// בורר גודל: 2 / 3 / 4 סיפורים בשורה. משנה את הגריד ושומר את הבחירה.
+function storySizeBarHTML() {
+  return `
+    <div class="story-size-bar">
+      <span class="story-size-label">גודל</span>
+      ${[4, 3, 2].map(n => `<button type="button" class="story-size-btn${storyGridCols === n ? ' active' : ''}" onclick="storySetGridSize(${n})">${n}</button>`).join('')}
+    </div>
+  `;
+}
+
+function storySetGridSize(n) {
+  if (![2, 3, 4].includes(n)) return;
+  storyGridCols = n;
+  try { localStorage.setItem('story_grid_cols', String(n)); } catch (e) {}
+  const root = mainContent.querySelector('.stories-page');
+  if (root) {
+    root.classList.remove('story-cols-2', 'story-cols-3', 'story-cols-4');
+    root.classList.add('story-cols-' + n);
+  }
+  mainContent.querySelectorAll('.story-size-btn').forEach(b => b.classList.toggle('active', b.textContent.trim() === String(n)));
+}
+window.storySetGridSize = storySetGridSize;
+
+// שורת סינון קטגוריות לסיפורים (בחירה מרובה)
+function storyCatIsActive(c) {
+  return c === 'הכל' ? selectedStoryCategories.size === 0 : selectedStoryCategories.has(c);
+}
+function storyCategoryBarHTML() {
+  const cats = ['הכל', ...STORY_CATEGORIES];
+  return `
+    <div class="story-category-tabs">
+      ${cats.map(c => `<button type="button" class="story-cat-btn${storyCatIsActive(c) ? ' active' : ''}" onclick="storyFilterCategory('${artEsc(c)}', this)">${c}</button>`).join('')}
+    </div>
+  `;
+}
+
+function storyFilterCategory(cat, btn) {
+  // "הכל" מנקה את הבחירה; קטגוריה רגילה מתחלפת (מצטרפת/יורדת) — כך אפשר לבחור כמה
+  if (cat === 'הכל') {
+    selectedStoryCategories.clear();
+  } else if (selectedStoryCategories.has(cat)) {
+    selectedStoryCategories.delete(cat);
+  } else {
+    selectedStoryCategories.add(cat);
+  }
+  const bar = btn.closest('.story-category-tabs');
+  if (bar) bar.querySelectorAll('.story-cat-btn').forEach(b => b.classList.toggle('active', storyCatIsActive(b.textContent.trim())));
+  artPageState.stories = 1;
+  storyApplyFilters();
+}
+window.storyFilterCategory = storyFilterCategory;
+
+// מסמן אילו סיפורים תואמים לחיפוש ולקטגוריות שנבחרו; העימוד מציג את התוצאות
+function storyApplyFilters() {
+  const searchInput = mainContent.querySelector('.stories-page .art-search');
+  const q = searchInput ? searchInput.value.toLowerCase().trim() : '';
+  const rows = mainContent.querySelectorAll('.stories-page .art-row');
+  let visible = 0;
+  rows.forEach(r => {
+    const text = (r.dataset.search || r.textContent).toLowerCase();
+    const rowCat = r.dataset.category || 'כללי';
+    const catMatch = (selectedStoryCategories.size === 0 || selectedStoryCategories.has(rowCat));
+    const match = catMatch && text.includes(q);
+    r.dataset.artMatch = match ? '1' : '0';
+    if (match) visible++;
+  });
+  artSyncPagination();
+  const noResults = mainContent.querySelector('.stories-page .art-no-results');
+  if (noResults) noResults.style.display = visible === 0 ? 'block' : 'none';
+}
+window.storyApplyFilters = storyApplyFilters;
+
+function buildStoriesPage(stories) {
+  const featured = stories.filter(s => s.pinned).slice(0, 3);
+  const popular = stories.slice(0, 5);
+
+  const featuredHTML = featured.map(s => `
+    <div class="art-featured-card" onclick="storyOpenDetail('${artEsc(s.id)}')">
+      <img src="${s.image || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80'}" alt="">
+      <div class="art-featured-overlay"></div>
+      <div class="art-featured-info">
+        <span class="art-category-badge" style="background:${s.categoryColor||'#8b5cf6'}">${s.category}</span>
+        <h3>${s.title}</h3>
+        <div class="art-featured-meta">${s.author} · ${s.timestamp}</div>
+      </div>
+    </div>
+  `).join('');
+
+  const listHTML = stories.map((s) => `
+    <div class="art-row" data-category="${artEsc(s.category || 'כללי')}" data-search="${artEsc([s.title, s.summary, s.author, s.category].filter(Boolean).join(' '))}" onclick="storyOpenDetail('${artEsc(s.id)}')">
+      <div class="art-row-text">
+        <h3>${s.title}</h3>
+        <p>${s.summary}</p>
+        <div class="art-row-meta">
+          <span>${s.author}</span>
+          <span class="art-row-sep">|</span>
+          <span>${s.timestamp}</span>
+        </div>
+      </div>
+      <div class="art-row-img-wrap" style="--bg-img: url('${s.image || ''}');">
+        ${s.image ? `<img src="${s.image}" alt="">` : '<div class="art-row-img-placeholder"></div>'}
+        ${s.image ? `<button class="art-zoom-btn" onclick="event.stopPropagation();artGalleryById('stories','${artEsc(s.id)}', this.closest('.art-row-img-wrap').querySelector('img') && this.closest('.art-row-img-wrap').querySelector('img').getAttribute('src'))" title="מסך מלא">⛶</button>` : ''}
+        ${isEditMode ? `<button class="art-pin-btn" onclick="event.stopPropagation(); togglePinStory('${artEsc(s.id)}')" title="${s.pinned ? 'בטל נעץ' : 'נעץ בגריד'}" style="${s.pinned ? 'color:#ffd700;display:flex;' : ''}">${s.pinned ? '★' : '☆'}</button>` : ''}
+        ${isEditMode ? `<button class="art-edit-btn" onclick="event.stopPropagation(); openStoryEditModal('${artEsc(s.id)}')" title="ערוך סיפור">✎</button>` : ''}
+        <button class="art-delete-btn" onclick="event.stopPropagation();storyDelete('${artEsc(s.id)}',this)">✕</button>
+      </div>
+    </div>
+  `).join('');
+
+  const popularHTML = popular.map((s, i) => `
+    <div class="art-popular-item" onclick="storyOpenDetail('${artEsc(s.id)}')">
+      <span class="art-popular-num">${String(i+1).padStart(2,'0')}</span>
+      <div style="flex:1;font-size:13px;font-weight:600;line-height:1.4;color:#222">${s.title}</div>
+    </div>
+  `).join('');
+
+  const json = encodeURIComponent(JSON.stringify(stories));
+  return `<div class="articles-page stories-page story-cols-${storyGridCols}" data-stories-json="${json}">
+    <div class="art-inner">
+      <div class="art-featured-grid">${featuredHTML}</div>
+      <div class="art-layout">
+        <div class="art-main">
+          <div class="art-search-wrap">
+            <input type="text" class="art-search" placeholder="🔍 חיפוש סיפורים..." oninput="storySearch(this.value)">
+          </div>
+          <div class="art-section-title-row">
+            <div class="art-section-title">כל הסיפורים</div>
+            ${storySizeBarHTML()}
+          </div>
+          ${storyCategoryBarHTML()}
+          <div class="art-rows">${listHTML}</div>
+          <div class="art-pagination" style="display:none"></div>
+          <div class="art-no-results" style="display:none">לא נמצאו סיפורים התואמים לחיפוש</div>
+          <button class="art-add-btn" onclick="openStoryModal()" style="background:#8b5cf6">+ הוסף סיפור חדש</button>
+        </div>
+        <div class="art-sidebar">
+          ${buildPromotedSitesBox()}
+          <div class="art-sidebar-box art-popular-box">
+            <div class="art-sidebar-title">הסיפורים הנקראים ביותר</div>
+            ${popularHTML}
+          </div>
+          ${buildSocialCommunityBox()}
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function storyOpenDetail(id) {
+  const container = mainContent.querySelector('.stories-page');
+  if (!container) return;
+  let stories = [];
+  try { stories = JSON.parse(decodeURIComponent(container.dataset.storiesJson)); } catch(e){ return; }
+  const s = stories.find(x => x.id === id);
+  if (!s) return;
+
+  const validImages = s.images ? s.images.filter(img => !!img) : (s.image ? [s.image] : []);
+  const mainImg = validImages[0] || '';
+  const extraImages = validImages.slice(1);
+
+  const lines = (s.body || s.summary || '').split('\n').map(l => l.trim()).filter(Boolean);
+  const chunks = [];
+  for (let i = 0; i < lines.length; i += 5) {
+    chunks.push(lines.slice(i, i + 5).join('<br>'));
+  }
+
+  let bodyHTML = '';
+  if (extraImages.length > 0) {
+    bodyHTML = chunks.map((chunkText, idx) => {
+      const imgUrl = extraImages[idx % extraImages.length];
+      const isEven = idx % 2 === 0;
+      return `
+        <div class="photo-story-row" style="display:flex; flex-direction:${isEven ? 'row' : 'row-reverse'}; gap:24px; align-items:center; margin-bottom:32px; flex-wrap:wrap;">
+          <div style="flex:1; min-width:280px; height:240px; border-radius:12px; overflow:hidden; border:1px solid #f0f0f0; background:#fafafa; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+            <img src="${imgUrl}" style="width:100%; height:100%; object-fit:contain; display:block; cursor:zoom-in;" onclick="artGalleryById('stories','${artEsc(id)}', this.getAttribute('src'))">
+          </div>
+          <div style="flex:1.5; min-width:280px; font-size:16px; line-height:1.8; color:#374151; text-align:justify;">
+            ${chunkText}
+          </div>
+        </div>
+      `;
+    }).join('');
+  } else {
+    bodyHTML = chunks.map(chunkText => `<p style="font-size:16px; line-height:1.8; color:#374151; margin-bottom:16px; text-align:justify;">${chunkText}</p>`).join('');
+  }
+
+  const recommended = stories.filter(x => x.id !== id).slice(0, 3);
+  const recHTML = recommended.map(r => `
+    <div class="art-rec-card" onclick="storyOpenDetail('${artEsc(r.id)}')">
+      <div class="art-rec-img">
+        ${r.image ? `<img src="${r.image}" alt="">` : '<div class="art-card-img-placeholder"></div>'}
+        <span class="art-rec-badge art-category-badge" style="background:${r.categoryColor||'#8b5cf6'}">${r.category}</span>
+      </div>
+      <div class="art-rec-text">
+        <h4>${r.title}</h4>
+        <div class="art-rec-meta">${r.author} · ${r.timestamp}</div>
+      </div>
+    </div>
+  `).join('');
+
+  const json = encodeURIComponent(JSON.stringify(stories));
+  mainContent.innerHTML = `
+    <div class="art-detail articles-page stories-page" data-story-id="${id}" data-stories-json="${json}">
+      <div class="art-detail-inner">
+        <button class="art-back-btn" onclick="storyGoBack()">← חזרה לסיפורים</button>
+        ${mainImg ? `
+        <div class="photo-main-img-container" style="margin-bottom: 20px; background: #fafafa; border: 1px solid #f0f0f0;">
+          <img src="${mainImg}" style="width:100%; height:100%; object-fit:contain; display:block; border-radius:12px; cursor:zoom-in;" onclick="artGalleryById('stories','${artEsc(id)}', this.getAttribute('src'))">
+        </div>` : ''}
+        <div class="art-detail-body">
+          <div class="art-meta" style="margin-bottom:12px">
+            <span class="art-category-badge" style="background:${s.categoryColor||'#8b5cf6'}">${s.category}</span>
+            <span>${s.author}</span>
+            <span>·</span>
+            <span>${s.timestamp}</span>
+          </div>
+          <h1 class="art-detail-title">${s.title}</h1>
+          <div class="art-detail-content">${bodyHTML}</div>
+          ${s.link ? `<a href="${s.link}" target="_blank" class="art-detail-link">קרא באתר המקור ↗</a>` : ''}
+        </div>
+        <div class="art-rec-section">
+          <h3 style="margin:0 0 16px;font-size:18px;font-weight:800">סיפורים נוספים שיעניינו אותך</h3>
+          <div class="art-rec-grid">${recHTML}</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function storyGoBack() {
+  const container = mainContent.querySelector('.stories-page');
+  if (!container) return;
+  let stories = [];
+  try { stories = JSON.parse(decodeURIComponent(container.dataset.storiesJson)); } catch(e){}
+  mainContent.innerHTML = buildStoriesPage(stories);
+  if (isEditMode) applyEditModeToContent();
+}
+
+function storyGetStories() {
+  const container = mainContent.querySelector('.stories-page');
+  if (!container) return [];
+  try { return JSON.parse(decodeURIComponent(container.dataset.storiesJson)); } catch(e){ return []; }
+}
+
+function storyDelete(id, el) {
+  if (!isEditMode) return;
+  if (!confirm('האם למחוק סיפור זה?')) return;
+  const stories = storyGetStories().filter(s => s.id !== id);
+  mainContent.innerHTML = buildStoriesPage(stories);
+  saveCurrentPageContent();
+}
+
+function storySearch(val) {
+  // מאחד חיפוש + סינון קטגוריה; העימוד מציג את התוצאות
+  artPageState.stories = 1;
+  storyApplyFilters();
+}
+
+// רשימת תמונות הסיפור לפי סדר. הראשונה (אינדקס 0) היא התמונה הראשית.
+let storyImageList = [];
+
+// מזהה הסיפור שנמצא כרגע בעריכה; null = יצירת סיפור חדש
+let storyEditingId = null;
+
+// מצייר את עורך התמונות: תצוגה מקדימה לכל תמונה עם כפתורי הזזה והסרה.
+// המיכל הוא LTR, ולכן אינדקס 0 בשמאל: ◀ מקדים (לכיוון הראשית), ▶ מאחר.
+function renderStoryImagesEditor() {
+  const box = document.getElementById('story-images-editor');
+  if (!box) return;
+  if (!storyImageList.length) {
+    box.innerHTML = '<div style="font-size:12px; color:#999; direction:rtl;">אין תמונות עדיין — הוסף תמונה למטה.</div>';
+    return;
+  }
+  const last = storyImageList.length - 1;
+  box.innerHTML = storyImageList.map((src, i) => `
+    <div style="position:relative; width:74px;">
+      <img src="${src}" style="width:74px; height:74px; object-fit:cover; border-radius:8px; border:1px solid #ddd; display:block;">
+      ${i === 0 ? '<span style="position:absolute; top:2px; left:2px; background:#8b5cf6; color:#fff; font-size:9px; font-weight:800; padding:1px 5px; border-radius:6px;">ראשית</span>' : ''}
+      <div style="display:flex; justify-content:center; gap:3px; margin-top:3px;">
+        <button type="button" onclick="storyMoveImage(${i}, -1)" title="הזז קדימה" ${i === 0 ? 'disabled' : ''} style="border:1px solid #ddd; background:#fff; border-radius:5px; width:22px; height:22px; cursor:pointer; font-size:12px;${i === 0 ? 'opacity:0.35; cursor:default;' : ''}">◀</button>
+        <button type="button" onclick="storyMoveImage(${i}, 1)" title="הזז אחורה" ${i === last ? 'disabled' : ''} style="border:1px solid #ddd; background:#fff; border-radius:5px; width:22px; height:22px; cursor:pointer; font-size:12px;${i === last ? 'opacity:0.35; cursor:default;' : ''}">▶</button>
+        <button type="button" onclick="storyRemoveImage(${i})" title="הסר" style="border:1px solid #fca5a5; color:#dc2626; background:#fff; border-radius:5px; width:22px; height:22px; cursor:pointer; font-size:12px;">✕</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function storyMoveImage(i, dir) {
+  const j = i + dir;
+  if (j < 0 || j >= storyImageList.length) return;
+  const t = storyImageList[i]; storyImageList[i] = storyImageList[j]; storyImageList[j] = t;
+  renderStoryImagesEditor();
+}
+window.storyMoveImage = storyMoveImage;
+
+function storyRemoveImage(i) {
+  storyImageList.splice(i, 1);
+  renderStoryImagesEditor();
+}
+window.storyRemoveImage = storyRemoveImage;
+
+function openStoryModal() {
+  if (!isEditMode) return;
+  storyEditingId = null;
+  const h = document.getElementById('story-modal-title');
+  if (h) h.textContent = 'הוספת סיפור חדש';
+  const saveBtn = document.getElementById('story-save');
+  if (saveBtn) saveBtn.textContent = 'שמור סיפור';
+  document.getElementById('story-title').value = '';
+  document.getElementById('story-summary').value = '';
+  document.getElementById('story-body').value = '';
+  document.getElementById('story-author').value = '';
+  document.getElementById('story-category').value = 'כללי';
+  document.getElementById('story-link').value = '';
+  storyImageList = [];
+  renderStoryImagesEditor();
+  document.getElementById('story-modal').style.display = 'flex';
+}
+
+// פותח את חלון הסיפור עם הנתונים הקיימים לעריכה (מנהל בלבד)
+function openStoryEditModal(id) {
+  if (!isEditMode) return;
+  const s = storyGetStories().find(x => x.id === id);
+  if (!s) return;
+  storyEditingId = id;
+
+  const h = document.getElementById('story-modal-title');
+  if (h) h.textContent = 'עריכת סיפור';
+  const saveBtn = document.getElementById('story-save');
+  if (saveBtn) saveBtn.textContent = 'עדכן סיפור';
+
+  document.getElementById('story-title').value = s.title || '';
+  document.getElementById('story-summary').value = s.summary || '';
+  document.getElementById('story-body').value = s.body || '';
+  document.getElementById('story-author').value = s.author || '';
+  document.getElementById('story-category').value = s.category || 'כללי';
+  document.getElementById('story-link').value = s.link || '';
+
+  // טוענים את התמונות הקיימות לפי הסדר, כדי שאפשר יהיה לשנות אותו
+  storyImageList = (s.images && s.images.length) ? s.images.filter(Boolean) : (s.image ? [s.image] : []);
+  renderStoryImagesEditor();
+
+  document.getElementById('story-modal').style.display = 'flex';
+}
+window.openStoryEditModal = openStoryEditModal;
+
+// הוספת תמונה חדשה לרשימה (בסוף)
+const storyAddImageBtn = document.getElementById('story-add-image');
+if (storyAddImageBtn) {
+  storyAddImageBtn.addEventListener('click', () => {
+    const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
+    inp.onchange = e => {
+      const f = e.target.files[0]; if (!f) return;
+      artCompressImage(f).then(data => {
+        if (data) { storyImageList.push(data); renderStoryImagesEditor(); }
+      });
+    };
+    inp.click();
+  });
+}
+
+document.getElementById('story-cancel').addEventListener('click', () => {
+  storyEditingId = null;
+  document.getElementById('story-modal').style.display = 'none';
+});
+
+document.getElementById('story-save').addEventListener('click', () => {
+  const title = document.getElementById('story-title').value.trim();
+  if (!title) { alert('חובה כותרת'); return; }
+
+  // התמונות לפי הסדר שנקבע בעורך; הראשונה היא התמונה הראשית
+  const storyImages = storyImageList.filter(Boolean);
+
+  const data = {
+    title,
+    summary: document.getElementById('story-summary').value.trim(),
+    body: document.getElementById('story-body').value.trim(),
+    author: document.getElementById('story-author').value.trim(),
+    category: document.getElementById('story-category').value.trim(),
+    categoryColor: '#8b5cf6',
+    image: storyImages[0] || '',
+    images: storyImages,
+    link: document.getElementById('story-link').value.trim()
+  };
+
+  const stories = storyGetStories();
+  if (storyEditingId) {
+    // עריכה: מעדכנים את הסיפור הקיים ושומרים id, תאריך ונעיצה
+    const idx = stories.findIndex(x => x.id === storyEditingId);
+    if (idx >= 0) stories[idx] = { ...stories[idx], ...data };
+    storyEditingId = null;
+  } else {
+    stories.unshift({ id: 's' + Date.now(), ...data, timestamp: new Date().toLocaleDateString('he-IL') });
+  }
+  mainContent.innerHTML = buildStoriesPage(stories);
+  saveCurrentPageContent();
+  document.getElementById('story-modal').style.display = 'none';
+});
+
+const btnAddStoriesPage = document.getElementById('btn-add-stories-page');
+if (btnAddStoriesPage) {
+  btnAddStoriesPage.addEventListener('click', () => {
+    const title = prompt('שם העמוד של הסיפורים:') || 'סיפורים';
+    const newId = 'page-' + Date.now();
+    pages.push({ id: newId, title: title.trim(), content: buildStoriesPage(STORIES_SAMPLES) });
+    topNavPages.push(newId);
+    activePageId = newId;
+    saveToStorage();
+    renderSideMenu();
+    renderTopNav();
+    renderPage();
+  });
+}
+
+const btnAddCommunityPage = document.getElementById('btn-add-community-page');
+if (btnAddCommunityPage) {
+  btnAddCommunityPage.addEventListener('click', () => {
+    const title = prompt('שם עמוד הקהילה:') || 'קהילה';
+    const newId = 'page-' + Date.now();
+    pages.push({ id: newId, title: title.trim(), content: `<div class="articles-page community-page" data-page-id="${newId}"></div>` });
+    topNavPages.push(newId);
+    activePageId = newId;
+    saveToStorage();
+    renderSideMenu();
+    renderTopNav();
+    renderPage();
+  });
+}
+
+// ============================================================
+// דחיסת תמונות לפני שמירה (Image Compression)
+// ============================================================
+// תמונות נשמרות כ-base64 בתוך הנתונים המסונכרנים ל-Firebase. קובץ גולמי
+// של כמה מגה-בייט הופך למחרוזת ענקית שמנפחת את הבלוב, מאיטה את האתר,
+// גורמת לו לקרוס, ולעיתים נכשלת בכתיבה ל-Firebase — ואז ההעלאה גם לא
+// מגיעה למכשירים אחרים. דחיסה לרוחב/גובה סביר ואיכות JPEG חוסכת פי 10-20.
+function artCompressImage(file, maxDim = 1600, quality = 0.82) {
+  return new Promise((resolve) => {
+    if (!file) { resolve(''); return; }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const src = reader.result;
+      // GIF מונפש יאבד את ההנפשה בדחיסה — משאירים אותו כמו שהוא
+      if (file.type === 'image/gif') { resolve(src); return; }
+      const img = new Image();
+      img.onload = () => {
+        let w = img.naturalWidth || img.width;
+        let h = img.naturalHeight || img.height;
+        if (!w || !h) { resolve(src); return; }
+        if (w > maxDim || h > maxDim) {
+          if (w >= h) { h = Math.round(h * maxDim / w); w = maxDim; }
+          else { w = Math.round(w * maxDim / h); h = maxDim; }
+        }
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          const out = canvas.toDataURL('image/jpeg', quality);
+          // אם משום מה היצוא גדול מהמקור, עדיף לשמור את המקור
+          resolve(out && out.length < src.length ? out : src);
+        } catch (e) {
+          resolve(src);
+        }
+      };
+      img.onerror = () => resolve(src);
+      img.src = src;
+    };
+    reader.onerror = () => resolve('');
+    reader.readAsDataURL(file);
+  });
+}
+window.artCompressImage = artCompressImage;
+
+// ============================================================
+// מערכת עימוד לגרידים (Pagination)
+// ============================================================
+// הגריד מציג 4 כרטיסים בשורה ו-5 שורות = 20 פריטים בעמוד.
+// כל הפריטים נשארים ב-DOM (כדי שהחיפוש והסינון יעבדו על כולם),
+// והעימוד רק מחליט אילו מהם מוצגים.
+
+const ART_PAGE_SIZE = 20;
+const artPageState = { photos: 1, stories: 1 };
+
+function artApplyPagination(container, key) {
+  if (!container || !container.querySelector('.art-rows')) return;
+
+  const rows = Array.from(container.querySelectorAll('.art-rows > .art-row'));
+  // artMatch מסומן על ידי החיפוש והסינון; פריט בלי סימון נחשב תואם
+  const matching = rows.filter(r => r.dataset.artMatch !== '0');
+  const totalPages = Math.max(1, Math.ceil(matching.length / ART_PAGE_SIZE));
+
+  let page = artPageState[key] || 1;
+  page = Math.min(Math.max(page, 1), totalPages);
+  artPageState[key] = page;
+
+  rows.forEach(r => { r.style.display = 'none'; });
+  const start = (page - 1) * ART_PAGE_SIZE;
+  matching.slice(start, start + ART_PAGE_SIZE).forEach(r => { r.style.display = ''; });
+
+  const bar = container.querySelector('.art-pagination');
+  if (!bar) return;
+  if (totalPages <= 1) {
+    bar.innerHTML = '';
+    bar.style.display = 'none';
+    return;
+  }
+  bar.style.display = 'flex';
+
+  // חלון מספרים מצומצם כדי שהסרגל לא יתארך בלי סוף
+  const nums = [];
+  const from = Math.max(1, Math.min(page - 2, totalPages - 4));
+  const to = Math.min(totalPages, Math.max(page + 2, 5));
+  if (from > 1) nums.push(1, '…');
+  for (let i = from; i <= to; i++) nums.push(i);
+  if (to < totalPages) nums.push('…', totalPages);
+
+  let html = `<button class="art-page-btn art-page-nav" ${page === 1 ? 'disabled' : ''} onclick="artGoToPage('${key}', ${page - 1})">הקודם</button>`;
+  nums.forEach(n => {
+    if (n === '…') {
+      html += `<span class="art-page-gap">…</span>`;
+    } else {
+      html += `<button class="art-page-btn${n === page ? ' active' : ''}" onclick="artGoToPage('${key}', ${n})">${n}</button>`;
+    }
+  });
+  html += `<button class="art-page-btn art-page-nav" ${page === totalPages ? 'disabled' : ''} onclick="artGoToPage('${key}', ${page + 1})">הבא</button>`;
+  bar.innerHTML = html;
+}
+
+function artGoToPage(key, page) {
+  artPageState[key] = page;
+  artSyncPagination();
+  const container = mainContent.querySelector(key === 'photos' ? '.photos-page' : '.stories-page');
+  const anchor = container && container.querySelector('.art-section-title');
+  if (anchor) anchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+window.artGoToPage = artGoToPage;
+
+let artPagObserver = null;
+
+// כל בניית עמוד דורסת את ה-HTML מחדש ממקומות רבים בקוד, ולכן במקום
+// לקרוא לעימוד בכל אתר קריאה בנפרד מסנכרנים אותו אחרי כל שינוי ב-DOM
+function artSyncPagination() {
+  if (typeof mainContent === 'undefined' || !mainContent) return;
+  if (artPagObserver) artPagObserver.disconnect();
+  try {
+    artApplyPagination(mainContent.querySelector('.photos-page'), 'photos');
+    artApplyPagination(mainContent.querySelector('.stories-page'), 'stories');
+  } finally {
+    if (artPagObserver) artPagObserver.observe(mainContent, { childList: true, subtree: true });
+  }
+}
+window.artSyncPagination = artSyncPagination;
+
+function artInitPaginationObserver() {
+  if (artPagObserver || typeof mainContent === 'undefined' || !mainContent) return;
+  artPagObserver = new MutationObserver(() => artSyncPagination());
+  artPagObserver.observe(mainContent, { childList: true, subtree: true });
+  artSyncPagination();
+}
+
+artInitPaginationObserver();
+
+// ============================================================
+// מערכת תמונות / גלריות (Photos System)
+// ============================================================
+
+const PHOTOS_SAMPLES = [
+  {
+    id: 'ph1',
+    title: 'Apex Luxury - אתר תדמית ויוקרה כהה',
+    summary: 'עיצוב פרימיום כהה בגימור יוקרתי, מתאים לעסקים, יועצים, מותגי יוקרה וסוכנויות.',
+    images: [
+      'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80',
+      'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=800&q=80',
+      'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80'
+    ],
+    author: 'סטודיו אופק', category: 'אתר תדמית', categoryColor: '#8b5cf6', timestamp: 'עודכן היום'
+  },
+  {
+    id: 'ph2',
+    title: 'Nova Store - חנות אופנה ודיגיטל מודרנית',
+    summary: 'חנות אונליין מלאה עם קטלוג מוצרים, עגלת קניות, סינון מוצרים וממשק רספונסיבי מרהיב.',
+    images: [
+      'https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=800&q=80',
+      'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&q=80',
+      'https://images.unsplash.com/photo-1526178613552-2b45c6c302f0?w=800&q=80'
+    ],
+    author: 'קולקציית הבוטיק', category: 'חנות E-Commerce', categoryColor: '#ec4899', timestamp: 'עודכן היום'
+  },
+  {
+    id: 'ph3',
+    title: 'Zenith SaaS - דף נחיתה להמרות גבוהות',
+    summary: 'דף נחיתה מודרני לאפליקציות, שירותים דיגיטליים ומוצרים עם הנעה חזקה לפעולה.',
+    images: [
+      'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=800&q=80',
+      'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=800&q=80'
+    ],
+    author: 'נקסט טק', category: 'דף נחיתה', categoryColor: '#10b981', timestamp: 'חדש'
+  },
+  {
+    id: 'ph4',
+    title: 'Pulse Media - אתר תוכן, מגזין ומדיה',
+    summary: 'פורטל תוכן דינמי הכולל כתבות, גלריות תמונות, סיפורים, וידאו וקהילה חיה.',
+    images: [
+      'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80',
+      'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800&q=80'
+    ],
+    author: 'מגזין פולס', category: 'מדיה ותוכן', categoryColor: '#3b82f6', timestamp: 'חדש'
+  },
+  {
+    id: 'ph5',
+    title: 'Vibe Agency - אתר פורטפוליו לסוכנויות ויוצרים',
+    summary: 'פורטפוליו קריאטיבי עם גלריית עבודות מרהיבה, אנימציות חלקות והצגת פרויקטים.',
+    images: [
+      'https://images.unsplash.com/photo-1542744094-3a31b272c390?w=800&q=80',
+      'https://images.unsplash.com/photo-1522542550221-31fd19575a2d?w=800&q=80'
+    ],
+    author: 'וייב דיזיין', category: 'פורטפוליו', categoryColor: '#f59e0b', timestamp: 'עודכן השבוע'
+  }
+];
+
+// סרגל הסינון: קו מפריד ומתחתיו שלושה כפתורים — מין, גיל, מיקום.
+// לחיצה על אחד מהם פותחת את האפשרויות שלו *במקום* שלושת הכפתורים,
+// ובחירה מחזירה אותם עם הערך שנבחר מוצג על הכפתור.
+// המצב חי מחוץ ל-buildPhotosPage ולכן שורד בנייה מחדש של העמוד.
+function photoCurrentFilter(kind) {
+  if (kind === 'category') return currentPhotoCategoryFilter;
+  if (kind === 'age') return currentPhotoAgeFilter;
+  if (kind === 'date') return currentPhotoDateFilter;
+  return currentPhotoRegionFilter;
+}
+
+function photoFilterBarHTML() {
+  const open = PHOTO_FILTER_GROUPS.find(g => g.kind === photoOpenFilterGroup);
+
+  if (open) {
+    const current = photoCurrentFilter(open.kind);
+    return `
+      <div class="photo-filter-bar is-open" data-open="${open.kind}">
+        <button type="button" class="photo-filter-back" onclick="photoToggleFilterGroup(null)" title="סגור">✕</button>
+        <span class="photo-filter-label">${open.label}</span>
+        <div class="photo-filter-group" data-kind="${open.kind}">
+          ${open.values.map(v => `
+            <button type="button"
+                    class="photo-tab-btn${v === current ? ' active' : ''}"
+                    onclick="photoSetFilter('${open.kind}', '${artEsc(v)}', this)">${v}</button>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  const anySet = PHOTO_FILTER_GROUPS.some(g => photoCurrentFilter(g.kind) !== 'הכל');
+  return `
+    <div class="photo-filter-bar">
+      ${PHOTO_FILTER_GROUPS.map(g => {
+        const cur = photoCurrentFilter(g.kind);
+        const isSet = cur !== 'הכל';
+        return `
+          <button type="button" class="photo-filter-trigger${isSet ? ' has-value' : ''}"
+                  onclick="photoToggleFilterGroup('${g.kind}')">
+            <span class="photo-filter-trigger-label">${g.label}</span>
+            ${isSet ? `<span class="photo-filter-trigger-value">${cur}</span>` : ''}
+            <span class="photo-filter-caret" aria-hidden="true">▾</span>
+          </button>
+        `;
+      }).join('')}
+      ${anySet ? `<button type="button" class="photo-filter-clear" onclick="photoClearFilters()">נקה הכל</button>` : ''}
+    </div>
+  `;
+}
+
+// קו מפריד מעל הסרגל. הוא נשאר במקומו כשהסרגל מתחלף, כי מחליפים
+// רק את .photo-filter-bar ולא את כל המקטע.
+function photoFilterSectionHTML() {
+  return `
+    <div class="photo-filter-section">
+      <div class="photo-filter-rule" aria-hidden="true"></div>
+      ${photoFilterBarHTML()}
+    </div>
+  `;
+}
+
+function photoRenderFilterBar() {
+  const bar = mainContent.querySelector('.photos-page .photo-filter-bar');
+  if (bar) bar.outerHTML = photoFilterBarHTML();
+}
+
+function photoToggleFilterGroup(kind) {
+  photoOpenFilterGroup = (photoOpenFilterGroup === kind) ? null : kind;
+  photoRenderFilterBar();
+}
+window.photoToggleFilterGroup = photoToggleFilterGroup;
+
+function photoClearFilters() {
+  currentPhotoCategoryFilter = 'הכל';
+  currentPhotoAgeFilter = 'הכל';
+  currentPhotoRegionFilter = 'הכל';
+  currentPhotoDateFilter = 'הכל';
+  photoOpenFilterGroup = null;
+  photoRenderFilterBar();
+  photoApplyFilters();
+}
+window.photoClearFilters = photoClearFilters;
+
+function buildPhotosPage(albums) {
+  const featured = albums.filter(p => p.pinned).slice(0, 3);
+  const popular = [...albums]
+    .filter(p => p.approved !== false)
+    .sort((a, b) => (b.likes || 0) - (a.likes || 0))
+    .slice(0, 5);
+
+  let savedHTML = '';
+  let budgetHTML = '';
+  let myProfileHTML = '';
+  if (auth.currentUser) {
+    const user = auth.currentUser;
+    const budget = localStorage.getItem(`like_budget_${user.uid}`) || '5';
+    budgetHTML = `
+      <div class="art-sidebar-box" style="border: 1px solid rgba(225,29,72,0.15); background: rgba(225,29,72,0.02); display: flex; align-items: center; gap: 12px; padding: 16px; border-radius: 12px;">
+        <span style="font-size: 24px; filter: drop-shadow(0 2px 4px rgba(225,29,72,0.2));">❤️</span>
+        <div style="text-align: right;">
+          <div style="font-size: 13px; font-weight: 800; color: #e11d48; margin-bottom: 2px;">יתרת הלייקים שלך: ${budget}</div>
+          <div style="font-size: 11px; color: #777; font-weight: 500;">מצטברים 5 לייקים נוספים בכל יום!</div>
+        </div>
+      </div>
+    `;
+
+    const profile = (() => {
+      try {
+        return JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}');
+      } catch (e) { return {}; }
+    })();
+    const nick = profile.nickname || user.displayName || user.email.split('@')[0];
+    const age = profile.age || '--';
+    const location = profile.location || '--';
+    const tg = profile.telegram || '';
+    const email = profile.email || '';
+
+    myProfileHTML = `
+      <div class="art-sidebar-box" id="my-profile-sidebar-box" style="border: 1px solid rgba(0,0,0,0.15); padding: 16px; border-radius: 12px; display: flex; flex-direction: column; gap: 10px;">
+        <div class="art-sidebar-title" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0;">
+          <span style="font-size: 14px; font-weight: 800;">👤 הפרופיל שלי</span>
+          <button onclick="photoToggleProfileEdit()" style="background:none; border:none; color:#e11d48; font-size:12px; font-weight:800; cursor:pointer; padding: 0;">עריכה ✏️</button>
+        </div>
+        
+        <div id="profile-view-state" style="display: block;">
+          <div style="font-size: 13px; font-weight: 800; color: #111; margin-bottom: 6px;">כינוי: <span style="font-weight: 500; color: #4b5563;">${nick}</span></div>
+          <div style="font-size: 13px; font-weight: 800; color: #111; margin-bottom: 6px;">גיל: <span style="font-weight: 500; color: #4b5563;">${age}</span></div>
+          <div style="font-size: 13px; font-weight: 800; color: #111; margin-bottom: 6px;">מגורים: <span style="font-weight: 500; color: #4b5563;">${location}</span></div>
+          ${tg ? `<div style="font-size: 13px; font-weight: 800; color: #111; margin-bottom: 6px;">טלגרם: <span style="font-weight: 500; color: #4b5563;">@${tg}</span></div>` : ''}
+          ${email ? `<div style="font-size: 13px; font-weight: 800; color: #111;">אימייל: <span style="font-weight: 500; color: #4b5563;">${email}</span></div>` : ''}
+        </div>
+
+        <div id="profile-edit-state" style="display:none; flex-direction:column; gap:8px;">
+          <input id="profile-edit-nickname" type="text" placeholder="כינוי" value="${artEsc(nick)}" style="padding:8px 12px; border:1px solid #ddd; border-radius:8px; font-size:13px; width:100%; box-sizing:border-box;">
+          <input id="profile-edit-age" type="number" placeholder="גיל" value="${age !== '--' ? age : ''}" style="padding:8px 12px; border:1px solid #ddd; border-radius:8px; font-size:13px; width:100%; box-sizing:border-box;">
+          <input id="profile-edit-location" type="text" placeholder="אזור מגורים" value="${location !== '--' ? location : ''}" style="padding:8px 12px; border:1px solid #ddd; border-radius:8px; font-size:13px; width:100%; box-sizing:border-box;">
+          <input id="profile-edit-telegram" type="text" placeholder="שם משתמש בטלגרם (ללא @)" value="${artEsc(tg)}" style="padding:8px 12px; border:1px solid #ddd; border-radius:8px; font-size:13px; width:100%; box-sizing:border-box;">
+          <input id="profile-edit-email" type="email" placeholder="אימייל" value="${artEsc(email)}" style="padding:8px 12px; border:1px solid #ddd; border-radius:8px; font-size:13px; width:100%; box-sizing:border-box;">
+          <div style="display:flex; gap:6px; margin-top: 4px;">
+            <button onclick="photoSaveProfile()" style="background:#e11d48; color:white; border:none; padding:8px 12px; border-radius:8px; font-size:12px; font-weight:800; cursor:pointer; flex:1;">שמור</button>
+            <button onclick="photoToggleProfileEdit()" style="background:#f3f4f6; color:#555; border:none; padding:8px 12px; border-radius:8px; font-size:12px; font-weight:800; cursor:pointer;">ביטול</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+  if (auth.currentUser) {
+    const savedMap = (() => {
+      try { return JSON.parse(localStorage.getItem(`saved_galleries_${auth.currentUser.uid}`) || '{}'); } catch(e) { return {}; }
+    })();
+    const savedAlbums = albums.filter(a => savedMap[a.id]);
+
+    if (savedAlbums.length > 0) {
+      savedHTML = `
+        <div class="art-sidebar-box">
+          <div class="art-sidebar-title">גלריות שמורות</div>
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            ${savedAlbums.map(p => `
+              <div class="art-popular-item" onclick="photoOpenDetail('${artEsc(p.id)}')" style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                <div style="display: flex; align-items: center; gap: 8px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                  <div style="font-size:13px;font-weight:600;line-height:1.4;color:#222; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer;">${p.title}</div>
+                </div>
+                <button onclick="event.stopPropagation(); photoToggleSave('${artEsc(p.id)}')" style="background:none; border:none; cursor:pointer; color:#e11d48; padding:4px; display: flex; align-items: center;">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+                    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                  </svg>
+                </button>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    } else {
+      savedHTML = `
+        <div class="art-sidebar-box">
+          <div class="art-sidebar-title">גלריות שמורות</div>
+          <div style="font-size: 13px; color: #777; text-align: center; padding: 10px 0;">אין גלריות שמורות עדיין</div>
+        </div>
+      `;
+    }
+  }
+
+  const featuredHTML = featured.map(p => {
+    const mainImg = p.images && p.images[0] ? p.images[0] : 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80';
+    return `
+      <div class="art-featured-card" onclick="photoOpenDetail('${artEsc(p.id)}')">
+        <img src="${mainImg}" alt="">
+      </div>
+    `;
+  }).join('');
+
+  const listHTML = albums.map((p) => {
+    const isPending = p.approved === false;
+    if (!isEditMode && isPending) return '';
+
+    const validImages = (p.images || []).filter(img => !!img);
+    const mainImg = validImages[0] || '';
+
+    let miniThumbnailsHTML = '';
+    if (validImages.length > 1) {
+      miniThumbnailsHTML = `
+        <div class="photo-mini-thumbs" style="display: flex; gap: 4px; justify-content: center; margin-top: 6px; width: 170px; flex-wrap: wrap;">
+          ${validImages.map((imgUrl, idx) => `
+            <div class="photo-mini-thumb" 
+                 onclick="event.stopPropagation(); photoSelectRowImage('${artEsc(p.id)}', '${artEsc(imgUrl)}', this)" 
+                 style="width: 24px; height: 24px; border-radius: 4px; overflow: hidden; cursor: pointer; border: 1.5px solid ${idx === 0 ? '#e11d48' : '#ddd'}; transition: all 0.2s; background: #eee; flex-shrink:0;">
+              <img src="${imgUrl}" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    // במחשב הכרטיס מציג כותרת, כותב, תאריך וכפתורי טלגרם/אימייל.
+    // בפלאפון הבלוק הזה מוסתר ב-CSS ונשארת רק התמונה.
+    // data-search מחזיק את הטקסט כדי שהחיפוש יעבוד גם כשהוא מוסתר.
+    const searchText = artEsc([p.title, p.summary, p.author, p.category].filter(Boolean).join(' '));
+
+    // המבנה זהה לכל הכרטיסים: שני הכפתורים תמיד מוצגים. כשאין קישור
+    // הכפתור מוצג מעומעם ולא לחיץ, כדי שכל הכרטיסים ייראו אותו דבר.
+    const cardLink = (url, label, iconPath, extraPath) => {
+      const svg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;"><path d="${iconPath}"/>${extraPath || ''}</svg>`;
+      if (url) {
+        return `
+          <a href="${url}" target="_blank" onclick="event.stopPropagation();" class="art-telegram-btn">
+            ${svg}<span>${label}</span>
+          </a>
+        `;
+      }
+      return `
+        <span class="art-telegram-btn is-disabled" onclick="event.stopPropagation();" aria-disabled="true">
+          ${svg}<span>${label}</span>
+        </span>
+      `;
+    };
+
+    const cardLinksHTML = `
+      <div class="photo-card-links">
+        ${cardLink(p.telegramUrl, 'טלגרם', 'M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z')}
+        ${cardLink(p.emailUrl, 'אימייל', 'M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z', '<polyline points="22,6 12,13 2,6"/>')}
+      </div>
+    `;
+
+    const infoBlock = `
+      <div class="art-row-text photo-card-info">
+        <h3>${p.title}</h3>
+        <div class="art-row-meta">
+          <span class="photo-author-link" onclick="event.stopPropagation(); openUserProfile('${artEsc(p.authorId || '')}', '${artEsc(p.author)}')" style="cursor: pointer; color: #e11d48; text-decoration: underline; font-weight: 600;">${p.author}</span>
+          <span class="art-row-sep">|</span>
+          <span>${p.timestamp}</span>
+        </div>
+        ${cardLinksHTML}
+      </div>
+    `;
+
+    // היוצא מן הכלל היחיד: גלריה שממתינה לאישור מוצגת למנהל עם סימון
+    // וכפתור אישור, אחרת אי אפשר לאשר אותה בכלל
+    const pendingHTML = isPending ? `<div style="color: #d97706; font-weight: bold; font-size: 12px; display: flex; align-items: center; gap: 4px;">⚠️ ממתין לאישור מנהל</div>` : '';
+    const approveHTML = (isEditMode && isPending) ? `
+      <button onclick="event.stopPropagation(); photoApprove('${artEsc(p.id)}')" style="background: #10b981; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer; transition: background 0.2s;">
+        ✓ אשר גלריה לפרסום
+      </button>
+    ` : '';
+
+    // בלי תוכן כלל לא מרנדרים את הבלוק, אחרת נשארת רצועה לבנה ריקה.
+    // הסדר כאן הפוך לסדר שנראה על המסך, כי הכרטיס הוא column-reverse:
+    // קודם הפעולות ואז המידע ב-DOM, ועל המסך תמונה, מידע, פעולות.
+    const actionsBlock = (pendingHTML || approveHTML)
+      ? `<div class="art-row-text photo-card-actions">${pendingHTML}${approveHTML}</div>`
+      : '';
+    const textBlock = actionsBlock + infoBlock;
+
+    return `
+      <div class="art-row" data-category="${p.category || 'כללי'}" data-age="${artEsc(p.ageRange || '')}" data-region="${artEsc(p.region || '')}" data-time="${photoAlbumTime(p) ?? ''}" data-search="${searchText}" onclick="${isPending ? '' : `photoOpenDetail('${artEsc(p.id)}')`}" style="${isPending ? 'border: 2px dashed #f59e0b; background: #fffbeb; cursor: default;' : ''}">
+        ${textBlock}
+        <div class="art-row-img-container" style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0;">
+          <div class="art-row-img-wrap" style="--bg-img: url('${mainImg || ''}');">
+            ${mainImg ? `<img src="${mainImg}" alt="">` : '<div class="art-row-img-placeholder"></div>'}
+            ${mainImg ? `<button class="art-zoom-btn" onclick="event.stopPropagation();artGalleryById('photos','${artEsc(p.id)}', this.closest('.art-row-img-wrap').querySelector('img') && this.closest('.art-row-img-wrap').querySelector('img').getAttribute('src'))" title="מסך מלא">⛶</button>` : ''}
+            ${isEditMode ? `<button class="art-pin-btn" onclick="event.stopPropagation(); togglePinPhoto('${artEsc(p.id)}')" title="${p.pinned ? 'בטל נעץ' : 'נעץ בגריד'}" style="${p.pinned ? 'color:#ffd700;display:flex;' : ''}">${p.pinned ? '★' : '☆'}</button>` : ''}
+            <button class="art-delete-btn" onclick="event.stopPropagation();photoDelete('${artEsc(p.id)}',this)">✕</button>
+          </div>
+          ${miniThumbnailsHTML}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  const popularHTML = popular.map((p, i) => `
+    <div class="art-popular-item" onclick="photoOpenDetail('${artEsc(p.id)}')" style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+      <div style="display: flex; align-items: center; gap: 8px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+        <span class="art-popular-num">${String(i+1).padStart(2,'0')}</span>
+        <div style="font-size:13px;font-weight:600;line-height:1.4;color:#222; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${p.title}</div>
+      </div>
+      <div style="font-size: 12px; color: #000; display: flex; align-items: center; gap: 4px; font-weight: bold; flex-shrink: 0;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+          <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
+        </svg>
+        <span>${p.likes || 0}</span>
+      </div>
+    </div>
+  `).join('');
+
+  const json = encodeURIComponent(JSON.stringify(albums));
+  return `<div class="articles-page photos-page" data-photos-json="${json}">
+    <div class="art-inner">
+      <div class="art-featured-grid">${featuredHTML}</div>
+      <div class="art-layout">
+        <div class="art-main">
+          <div class="art-search-wrap">
+            <input type="text" class="art-search" placeholder="🔍 חיפוש קולקציית אתרים מעוצבים..." oninput="photoSearch(this.value)">
+          </div>
+          <div class="art-section-title">קולקציית אתרים מעוצבים לבחירה</div>
+          ${photoFilterSectionHTML()}
+          <div class="art-rows">${listHTML}</div>
+          <div class="art-pagination" style="display:none"></div>
+          <div class="art-no-results" style="display:none">לא נמצאו עיצובים התואמים לחיפוש</div>
+          ${(isAdmin() || isEditMode) ? `<button class="art-add-btn" onclick="openPhotoModal()" style="background:#e11d48">+ הוסף עיצוב אתר חדש</button>` : ''}
+        </div>
+        <div class="art-sidebar">
+          ${(isAdmin() || isEditMode) ? `
+          <button onclick="openPhotoModal()" style="background:#e11d48; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: white; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.2s;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            העלאת אתר מעוצב לאתר
+          </button>
+          ` : ''}
+          ${buildPromotedSitesBox()}
+          ${savedHTML}
+          <div class="art-sidebar-box art-popular-box">
+            <div class="art-sidebar-title">חמשת העיצובים המובילים</div>
+            ${popularHTML}
+          </div>
+          ${buildSocialCommunityBox()}
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function photoOpenDetail(id) {
+  const container = mainContent.querySelector('.photos-page');
+  if (!container) return;
+  let albums = [];
+  try { albums = JSON.parse(decodeURIComponent(container.dataset.photosJson)); } catch(e){ return; }
+  const a = albums.find(x => x.id === id);
+  if (!a) return;
+
+  const validImages = (a.images || []).filter(img => !!img);
+  const mainImg = validImages[0] || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80';
+
+  // יצירת ריבועי דפדוף (Thumbnails)
+  const thumbnailsHTML = validImages.map((imgUrl, idx) => `
+    <div class="photo-thumb-square" onclick="photoSelectImage('${artEsc(imgUrl)}', this)" style="width:60px; height:60px; border-radius:8px; overflow:hidden; cursor:pointer; border:2.5px solid ${idx === 0 ? '#e11d48' : '#ddd'}; transition:all 0.2s; flex-shrink:0;">
+      <img src="${imgUrl}" style="width:100%; height:100%; object-fit:cover;">
+    </div>
+  `).join('');
+
+  const recommended = albums.filter(x => x.id !== id).slice(0, 3);
+  const recHTML = recommended.map(r => {
+    const rImg = r.images && r.images[0] ? r.images[0] : '';
+    return `
+      <div class="art-rec-card" onclick="photoOpenDetail('${artEsc(r.id)}')">
+        <div class="art-rec-img">
+          ${rImg ? `<img src="${rImg}" alt="">` : '<div class="art-card-img-placeholder"></div>'}
+          <span class="art-rec-badge art-category-badge" style="background:${r.categoryColor||'#10b981'}">${r.category}</span>
+        </div>
+        <div class="art-rec-text">
+          <h4>${r.title}</h4>
+          <div class="art-rec-meta">${r.author} · ${r.timestamp}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  const paragraphs = (a.summary || '').split(/\n+/).map(p => p.trim()).filter(Boolean);
+  const showRowImages = validImages.length > 1;
+  let contentHTML = '';
+  
+  if (showRowImages) {
+    contentHTML = paragraphs.map((pText, idx) => {
+      const imgUrl = validImages[(idx + 1) % validImages.length];
+      const isEven = idx % 2 === 0;
+      return `
+        <div class="photo-story-row" style="display:flex; flex-direction:${isEven ? 'row' : 'row-reverse'}; gap:24px; align-items:center; margin-bottom:32px; flex-wrap:wrap;">
+          <div style="flex:1; min-width:280px; height:240px; border-radius:12px; overflow:hidden; border:1px solid #f0f0f0; background:#fafafa; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+            <img src="${imgUrl}" style="width:100%; height:100%; object-fit:contain; display:block; cursor:zoom-in;" onclick="artGalleryById('photos','${artEsc(id)}', this.getAttribute('src'))">
+          </div>
+          <div style="flex:1.5; min-width:280px; font-size:16px; line-height:1.8; color:#374151; text-align:justify;">
+            ${pText}
+          </div>
+        </div>
+      `;
+    }).join('');
+  } else {
+    contentHTML = paragraphs.map(pText => `
+      <p style="font-size:16px; line-height:1.8; color:#374151; margin-bottom:16px; text-align:justify;">${pText}</p>
+    `).join('');
+  }
+
+  const json = encodeURIComponent(JSON.stringify(albums));
+  mainContent.innerHTML = `
+    <div class="art-detail articles-page photos-page" data-photo-id="${id}" data-photos-json="${json}">
+      <div class="art-detail-inner">
+        <button class="art-back-btn" onclick="photoGoBack()">← חזרה לגלריות</button>
+
+        <!-- בעמוד גלריה המלל בא לפני התמונה -->
+        <div class="art-detail-body">
+          <h1 class="art-detail-title">${a.title}</h1>
+          <div class="art-meta" style="margin-bottom:12px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+            <span class="art-category-badge" style="background:${a.categoryColor||'#10b981'}">${a.category}</span>
+            <span>צילום: ${a.author}</span>
+            <span>·</span>
+            <span>${a.timestamp}</span>
+            <button onclick="photoToggleLike('${artEsc(a.id)}')" class="photo-like-btn" style="background: rgba(0,0,0,0.05); border: 1px solid #ddd; cursor: pointer; color: #000; display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; transition: background 0.2s; font-weight: bold; font-size: 13px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="${photoIsLikedLocal(a.id) ? '#000' : 'none'}" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+                <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
+              </svg>
+              <span>${a.likes || 0} לייקים</span>
+            </button>
+            <button onclick="photoToggleSave('${artEsc(a.id)}')" class="photo-save-btn" style="background: rgba(0,0,0,0.05); border: 1px solid #ddd; cursor: pointer; color: #000; display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; transition: background 0.2s; font-weight: bold; font-size: 13px;" title="${photoIsSavedLocal(a.id) ? 'הסר משמורים' : 'שמור גלריה'}">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="${photoIsSavedLocal(a.id) ? '#000' : 'none'}" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+              </svg>
+              <span>שמור</span>
+            </button>
+            ${a.telegramUrl ? `
+              <a href="${a.telegramUrl}" target="_blank" title="${artEsc(a.telegramUrl.replace('https://t.me/', '@'))}" class="art-telegram-btn" style="display: inline-flex; align-items: center; background: #2f2f2f; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 13px; text-decoration: none; font-weight: bold; gap: 6px; border: 1px solid rgba(255,255,255,0.1);">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+                  <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+                </svg>
+                <span>טלגרם</span>
+              </a>
+            ` : ''}
+            ${a.emailUrl ? `
+              <a href="${a.emailUrl}" target="_blank" title="${artEsc(a.emailUrl.replace('mailto:', ''))}" class="art-telegram-btn" style="display: inline-flex; align-items: center; background: #2f2f2f; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 13px; text-decoration: none; font-weight: bold; gap: 6px; border: 1px solid rgba(255,255,255,0.1);">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                  <polyline points="22,6 12,13 2,6"/>
+                </svg>
+                <span>אימייל</span>
+              </a>
+            ` : ''}
+          </div>
+          <div class="art-detail-content">${contentHTML}</div>
+        </div>
+
+        <!-- תמונה ראשית גדולה עם מזהה ספציפי (פרופורציונלית ולא ענקית) -->
+        <div class="photo-main-img-container">
+          <img id="photo-gallery-main-img" src="${mainImg}" style="width:100%; height:100%; object-fit:contain; display:block; border-radius:12px; cursor:zoom-in;" onclick="artGalleryById('photos','${artEsc(id)}', this.getAttribute('src'))">
+        </div>
+
+        <!-- ריבועי דפדוף (Thumbnails) -->
+        <div style="display:flex; justify-content:center; gap:10px; margin-bottom:24px; flex-wrap:wrap; padding:5px;">
+          ${thumbnailsHTML}
+        </div>
+
+        <div class="art-rec-section">
+          <h3 style="margin:0 0 16px;font-size:18px;font-weight:800">גלריות נוספות שיעניינו אותך</h3>
+          <div class="art-rec-grid">${recHTML}</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function photoSelectImage(imgUrl, el) {
+  const mainImg = document.getElementById('photo-gallery-main-img');
+  if (mainImg) {
+    mainImg.src = imgUrl;
+  }
+  const squares = el.parentNode.querySelectorAll('.photo-thumb-square');
+  squares.forEach(sq => {
+    sq.style.borderColor = '#ddd';
+  });
+  el.style.borderColor = '#e11d48';
+}
+
+function photoSelectRowImage(albumId, imgUrl, thumbEl) {
+  const container = thumbEl.closest('.art-row-img-container');
+  if (container) {
+    const mainImg = container.querySelector('.art-row-img-wrap img');
+    if (mainImg) {
+      mainImg.src = imgUrl;
+      const zoomBtn = container.querySelector('.art-zoom-btn');
+      if (zoomBtn) {
+        zoomBtn.setAttribute('onclick', `event.stopPropagation();artZoomImage('${artEsc(imgUrl)}')`);
+      }
+    }
+    const thumbs = container.querySelectorAll('.photo-mini-thumb');
+    thumbs.forEach(t => {
+      t.style.borderColor = '#ddd';
+    });
+    thumbEl.style.borderColor = '#e11d48';
+  }
+}
+window.photoSelectRowImage = photoSelectRowImage;
+
+function photoToggleProfileEdit() {
+  const view = document.getElementById('profile-view-state');
+  const edit = document.getElementById('profile-edit-state');
+  if (view && edit) {
+    const isEditing = edit.style.display === 'flex';
+    edit.style.display = isEditing ? 'none' : 'flex';
+    view.style.display = isEditing ? 'block' : 'none';
+  }
+}
+window.photoToggleProfileEdit = photoToggleProfileEdit;
+
+async function photoSaveProfile() {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  const nickname = document.getElementById('profile-edit-nickname').value.trim();
+  const age = document.getElementById('profile-edit-age').value.trim();
+  const location = document.getElementById('profile-edit-location').value.trim();
+
+  let telegram = document.getElementById('profile-edit-telegram').value.trim();
+  if (telegram.startsWith('@')) telegram = telegram.substring(1);
+  const email = document.getElementById('profile-edit-email').value.trim();
+
+  if (!nickname) {
+    alert("חובה להזין כינוי!");
+    return;
+  }
+
+  const profile = { 
+    nickname, 
+    age: age || '--', 
+    location: location || '--',
+    telegram: telegram || '',
+    email: email || ''
+  };
+  localStorage.setItem(`user_profile_${user.uid}`, JSON.stringify(profile));
+
+  try {
+    const profileRef = ref(db, `website/users/${user.uid}/profile`);
+    await set(profileRef, profile);
+    alert("הפרופיל עודכן בהצלחה! ✨");
+    renderPage();
+  } catch (e) {
+    console.error("שגיאה בעדכון הפרופיל:", e);
+    alert("שגיאה בעדכון הפרופיל.");
+  }
+}
+window.photoSaveProfile = photoSaveProfile;
+
+async function openUserProfile(authorId, authorFallbackName) {
+  const modal = document.getElementById('user-profile-modal');
+  if (!modal) return;
+
+  document.getElementById('profile-modal-nickname').textContent = authorFallbackName;
+  document.getElementById('profile-modal-age').textContent = 'גיל: טוען...';
+  document.getElementById('profile-modal-location').textContent = 'אזור: טוען...';
+  
+  const statusEl = document.getElementById('profile-modal-status');
+  if (statusEl) statusEl.style.display = 'none';
+
+  const contactWrap = document.getElementById('profile-modal-contact-info');
+  if (contactWrap) contactWrap.innerHTML = '';
+  
+  const postsContainer = document.getElementById('profile-modal-posts');
+  postsContainer.innerHTML = '<div style="font-size:13px; color:#666; text-align:center; padding:20px;">טוען גלריות...</div>';
+  
+  modal.style.display = 'flex';
+
+  try {
+    if (authorId) {
+      const statusRef = ref(db, `website/users/${authorId}/last_seen`);
+      const statusSnap = await get(statusRef);
+      if (statusSnap.exists() && statusEl) {
+        const lastSeen = statusSnap.val();
+        const isOnline = Date.now() - lastSeen < 120000;
+        statusEl.style.display = 'inline-flex';
+        if (isOnline) {
+          statusEl.textContent = '🟢 מחובר כעת';
+          statusEl.style.background = 'rgba(16, 185, 129, 0.1)';
+          statusEl.style.color = '#10b981';
+        } else {
+          const dateStr = new Date(lastSeen).toLocaleString('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+          statusEl.textContent = `נראה לאחרונה: ${dateStr}`;
+          statusEl.style.background = 'rgba(107, 114, 128, 0.1)';
+          statusEl.style.color = '#6b7280';
+        }
+      }
+    }
+
+    const profileRef = ref(db, `website/users/${authorId}/profile`);
+    const snapshot = await get(profileRef);
+    if (snapshot.exists()) {
+      const profile = snapshot.val();
+      document.getElementById('profile-modal-nickname').textContent = profile.nickname || authorFallbackName;
+      document.getElementById('profile-modal-age').textContent = `גיל: ${profile.age || '--'}`;
+      document.getElementById('profile-modal-location').textContent = `אזור: ${profile.location || '--'}`;
+      
+      if (contactWrap) {
+        let contactHTML = '';
+        if (profile.telegram) {
+          const cleanTg = profile.telegram.startsWith('@') ? profile.telegram.substring(1) : profile.telegram;
+          contactHTML += `
+            <a href="https://t.me/${cleanTg}" target="_blank" title="@${cleanTg}" style="display:inline-flex; align-items:center; background:#2f2f2f; color:white; padding:4px 8px; border-radius:6px; font-size:11px; text-decoration:none; font-weight:bold; gap:4px; border:1px solid rgba(255,255,255,0.1);">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:block;">
+                <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+              </svg>
+              <span>טלגרם</span>
+            </a>
+          `;
+        }
+        if (profile.email) {
+          contactHTML += `
+            <a href="mailto:${profile.email}" target="_blank" title="${profile.email}" style="display:inline-flex; align-items:center; background:#2f2f2f; color:white; padding:4px 8px; border-radius:6px; font-size:11px; text-decoration:none; font-weight:bold; gap:4px; border:1px solid rgba(255,255,255,0.1);">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:block;">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                <polyline points="22,6 12,13 2,6"/>
+              </svg>
+              <span>אימייל</span>
+            </a>
+          `;
+        }
+        contactWrap.innerHTML = contactHTML;
+      }
+    } else {
+      document.getElementById('profile-modal-age').textContent = 'גיל: --';
+      document.getElementById('profile-modal-location').textContent = 'אזור: --';
+    }
+  } catch(e) {
+    console.error("שגיאה בטעינת פרופיל משתמש:", e);
+    document.getElementById('profile-modal-age').textContent = 'גיל: --';
+    document.getElementById('profile-modal-location').textContent = 'אזור: --';
+  }
+
+  const albums = photoGetAlbums();
+  const authorAlbums = albums.filter(a => {
+    const matchesId = authorId && a.authorId === authorId;
+    const matchesName = a.author && a.author.toLowerCase() === authorFallbackName.toLowerCase();
+    return ((a.authorId && authorId) ? matchesId : matchesName) && a.approved !== false;
+  });
+
+  if (authorAlbums.length > 0) {
+    postsContainer.innerHTML = authorAlbums.map(p => {
+      const img = p.images && p.images[0] ? p.images[0] : '';
+      return `
+        <div class="art-popular-item" onclick="document.getElementById('user-profile-modal').style.display='none'; photoOpenDetail('${artEsc(p.id)}')" style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px; background:#f9f9f9; border-radius:12px; border:1px solid #eee; cursor:pointer; transition:background 0.2s;">
+          <div style="display:flex; align-items:center; gap:10px; overflow:hidden;">
+            ${img ? `<img src="${img}" style="width:40px; height:40px; border-radius:6px; object-fit:cover;">` : '<div style="width:40px; height:40px; border-radius:6px; background:#eee;"></div>'}
+            <div style="font-size:13px; font-weight:bold; color:#222; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${p.title}</div>
+          </div>
+          <span style="font-size:11px; color:#e11d48; font-weight:bold; white-space:nowrap;">צפייה ➔</span>
+        </div>
+      `;
+    }).join('');
+  } else {
+    postsContainer.innerHTML = '<div style="font-size:13px; color:#777; text-align:center; padding:20px 0;">אין גלריות להצגה עבור יוצר זה</div>';
+  }
+}
+window.openUserProfile = openUserProfile;
+
+function photoGoBack() {
+  const container = mainContent.querySelector('.photos-page');
+  if (!container) return;
+  let albums = [];
+  try { albums = JSON.parse(decodeURIComponent(container.dataset.photosJson)); } catch(e){}
+  mainContent.innerHTML = buildPhotosPage(albums);
+  if (isEditMode) applyEditModeToContent();
+}
+
+function photoGetAlbums() {
+  const container = mainContent.querySelector('.photos-page');
+  if (!container) return [];
+  try { return JSON.parse(decodeURIComponent(container.dataset.photosJson)); } catch(e){ return []; }
+}
+
+function photoDelete(id, el) {
+  if (!isEditMode) return;
+  if (!confirm('האם למחוק גלריה זו?')) return;
+  const albums = photoGetAlbums().filter(a => a.id !== id);
+  mainContent.innerHTML = buildPhotosPage(albums);
+  saveCurrentPageContent();
+}
+
+function photoSearch(val) {
+  photoApplyFilters();
+}
+
+let photoImgDataList = ['', '', '', '', ''];
+
+function openPhotoModal() {
+  // Everyone can open the modal to add a gallery
+  document.getElementById('photo-title').value = '';
+  document.getElementById('photo-summary').value = '';
+  document.getElementById('photo-category').value = '';
+  document.getElementById('photo-telegram').value = '';
+  const ageInp = document.getElementById('photo-age');
+  if (ageInp) ageInp.value = '';
+  const regionInp = document.getElementById('photo-region');
+  if (regionInp) regionInp.value = '';
+  const emailInp = document.getElementById('photo-email');
+  if (emailInp) emailInp.value = '';
+  
+  photoImgDataList = ['', '', '', '', ''];
+  for (let i = 1; i <= 5; i++) {
+    const btn = document.getElementById('photo-img-pick-' + i);
+    const prev = document.getElementById('photo-img-preview-' + i);
+    btn.style.display = 'block';
+    btn.textContent = i + '️⃣';
+    prev.style.display = 'none';
+    prev.src = '';
+  }
+  document.getElementById('photo-modal').style.display = 'flex';
+}
+
+for (let i = 1; i <= 5; i++) {
+  const btn = document.getElementById('photo-img-pick-' + i);
+  if (btn) {
+    btn.addEventListener('click', () => {
+      const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
+      inp.onchange = e => {
+        const f = e.target.files[0]; if (!f) return;
+        artCompressImage(f).then(data => {
+          photoImgDataList[i - 1] = data;
+          const p = document.getElementById('photo-img-preview-' + i);
+          p.src = data;
+          p.style.display = 'block';
+          btn.style.display = 'none';
+        });
+      };
+      inp.click();
+    });
+  }
+}
+
+document.getElementById('photo-cancel').addEventListener('click', () => {
+  document.getElementById('photo-modal').style.display = 'none';
+});
+
+document.getElementById('photo-save').addEventListener('click', () => {
+  const title = document.getElementById('photo-title').value.trim();
+  if (!title) { alert('חובה כותרת'); return; }
+  const validImages = photoImgDataList.filter(img => !!img);
+  if (validImages.length === 0) { alert('חובה להעלות לפחות תמונה אחת'); return; }
+
+  const albums = photoGetAlbums();
+  
+  let telegramInput = document.getElementById('photo-telegram').value.trim();
+  if (telegramInput) {
+    if (telegramInput.startsWith('@')) {
+      telegramInput = telegramInput.substring(1);
+    }
+    if (!telegramInput.startsWith('http://') && !telegramInput.startsWith('https://')) {
+      if (telegramInput.startsWith('t.me/')) {
+        telegramInput = 'https://' + telegramInput;
+      } else {
+        telegramInput = 'https://t.me/' + telegramInput;
+      }
+    }
+  }
+
+  let emailInput = '';
+  const emailInp = document.getElementById('photo-email');
+  if (emailInp && emailInp.value.trim()) {
+    emailInput = emailInp.value.trim();
+    if (!emailInput.startsWith('mailto:')) {
+      emailInput = 'mailto:' + emailInput;
+    }
+  }
+
+  const user = auth.currentUser;
+  let authorNickname = 'אורח';
+  if (user) {
+    try {
+      const profile = JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}');
+      authorNickname = profile.nickname || user.displayName || user.email.split('@')[0];
+    } catch(e) {
+      authorNickname = user.displayName || user.email.split('@')[0];
+    }
+  } else if (isEditMode) {
+    authorNickname = 'מנהל';
+  }
+
+  albums.unshift({
+    id: 'ph' + Date.now(),
+    title,
+    summary: document.getElementById('photo-summary').value.trim(),
+    images: photoImgDataList,
+    author: authorNickname,
+    authorId: user ? user.uid : '',
+    category: document.getElementById('photo-category').value.trim() || 'כללי',
+    ageRange: (document.getElementById('photo-age') || {}).value || '',
+    region: (document.getElementById('photo-region') || {}).value || '',
+    categoryColor: '#10b981',
+    timestamp: new Date().toLocaleDateString('he-IL'),
+    createdAt: Date.now(),
+    telegramUrl: telegramInput,
+    emailUrl: emailInput,
+    approved: isEditMode
+  });
+  mainContent.innerHTML = buildPhotosPage(albums);
+  saveCurrentPageContent();
+  document.getElementById('photo-modal').style.display = 'none';
+  
+  if (!isEditMode) {
+    alert('הגלריה הועלה בהצלחה וממתינה לאישור מנהל!');
+  }
+});
+
+const btnAddPhotosPage = document.getElementById('btn-add-photos-page');
+if (btnAddPhotosPage) {
+  btnAddPhotosPage.addEventListener('click', () => {
+    const title = prompt('שם העמוד של התמונות:') || 'תמונות';
+    const newId = 'page-' + Date.now();
+    pages.push({ id: newId, title: title.trim(), content: buildPhotosPage(PHOTOS_SAMPLES) });
+    topNavPages.push(newId);
+    activePageId = newId;
+    saveToStorage();
+    renderSideMenu();
+    renderTopNav();
+    renderPage();
+  });
+}
+
+window.buildStoriesPage = buildStoriesPage;
+window.storyDelete = storyDelete;
+window.openStoryModal = openStoryModal;
+window.storySearch = storySearch;
+window.storyOpenDetail = storyOpenDetail;
+window.storyGoBack = storyGoBack;
+
+window.buildPhotosPage = buildPhotosPage;
+window.photoDelete = photoDelete;
+window.openPhotoModal = openPhotoModal;
+window.photoSearch = photoSearch;
+window.photoOpenDetail = photoOpenDetail;
+window.photoGoBack = photoGoBack;
+window.photoSelectImage = photoSelectImage;
+
+function photoApprove(id) {
+  if (!isEditMode) return;
+  const albums = photoGetAlbums();
+  const album = albums.find(a => a.id === id);
+  if (album) {
+    album.approved = true;
+    mainContent.innerHTML = buildPhotosPage(albums);
+    saveCurrentPageContent();
+    alert('הגלריה אושרה ופורסמה בהצלחה!');
+  }
+}
+window.photoApprove = photoApprove;
+
+function photoIsLikedLocal(id) {
+  try {
+    const liked = JSON.parse(localStorage.getItem('liked_galleries') || '{}');
+    return !!liked[id];
+  } catch (e) {
+    return false;
+  }
+}
+window.photoIsLikedLocal = photoIsLikedLocal;
+
+async function syncUserLikeBudget(user) {
+  if (!user) return 0;
+  try {
+    const budgetRef = ref(db, `website/users/${user.uid}/likes_data`);
+    const snapshot = await get(budgetRef);
+    let budget = 5;
+    let lastUpdate = Date.now();
+    
+    if (snapshot.exists()) {
+      const data = snapshot.val();
+      budget = data.budget !== undefined ? data.budget : 5;
+      lastUpdate = data.lastUpdate || Date.now();
+      
+      const elapsedMs = Date.now() - lastUpdate;
+      const oneDayMs = 24 * 60 * 60 * 1000;
+      const elapsedDays = Math.floor(elapsedMs / oneDayMs);
+      
+      if (elapsedDays > 0) {
+        budget += elapsedDays * 5;
+        lastUpdate = lastUpdate + elapsedDays * oneDayMs;
+        await set(budgetRef, { budget, lastUpdate });
+      }
+    } else {
+      await set(budgetRef, { budget, lastUpdate });
+    }
+    
+    localStorage.setItem(`like_budget_${user.uid}`, budget);
+    localStorage.setItem(`like_budget_update_${user.uid}`, lastUpdate);
+    return budget;
+  } catch (e) {
+    console.error("שגיאה בסנכרון יתרת הלייקים:", e);
+    return parseInt(localStorage.getItem(`like_budget_${user.uid}`) || '5', 10);
+  }
+}
+window.syncUserLikeBudget = syncUserLikeBudget;
+
+async function photoToggleLike(id) {
+  const container = mainContent.querySelector('.photos-page');
+  if (!container) return;
+  
+  const user = auth.currentUser;
+  if (!user) {
+    alert("עליך להתחבר כדי לתת לייק!");
+    const authModal = document.getElementById('auth-modal');
+    if (authModal) authModal.style.display = 'flex';
+    return;
+  }
+  
+  let albums = [];
+  try { albums = JSON.parse(decodeURIComponent(container.dataset.photosJson)); } catch(e){ return; }
+  
+  const album = albums.find(a => a.id === id);
+  if (!album) return;
+
+  let liked = {};
+  try {
+    liked = JSON.parse(localStorage.getItem('liked_galleries') || '{}');
+  } catch (e) {}
+
+  const isAddingLike = !liked[id];
+  let budget = await syncUserLikeBudget(user);
+
+  if (isAddingLike) {
+    if (budget <= 0) {
+      alert("אין לך לייקים פנויים ביתרה! הלייקים שלך מצטברים בקצב של 5 לייקים נוספים בכל יום.");
+      return;
+    }
+  }
+
+  if (liked[id]) {
+    delete liked[id];
+    album.likes = Math.max(0, (album.likes || 0) - 1);
+    budget += 1;
+  } else {
+    liked[id] = true;
+    album.likes = (album.likes || 0) + 1;
+    budget = Math.max(0, budget - 1);
+  }
+
+  localStorage.setItem(`like_budget_${user.uid}`, budget);
+  try {
+    const budgetRef = ref(db, `website/users/${user.uid}/likes_data`);
+    await update(budgetRef, { budget: budget });
+  } catch (e) {
+    console.error("שגיאה בעדכון יתרת הלייקים:", e);
+  }
+
+  localStorage.setItem('liked_galleries', JSON.stringify(liked));
+  
+  const newJson = encodeURIComponent(JSON.stringify(albums));
+  
+  const isDetailView = mainContent.querySelector('.art-detail') !== null;
+  if (isDetailView) {
+    photoOpenDetail(id);
+    const newContainer = mainContent.querySelector('.photos-page');
+    if (newContainer) newContainer.dataset.photosJson = newJson;
+  } else {
+    mainContent.innerHTML = buildPhotosPage(albums);
+  }
+  
+  saveCurrentPageContent();
+}
+window.photoToggleLike = photoToggleLike;
+
+function photoIsSavedLocal(id) {
+  try {
+    const user = auth.currentUser;
+    if (!user) return false;
+    const localKey = `saved_galleries_${user.uid}`;
+    const saved = JSON.parse(localStorage.getItem(localKey) || '{}');
+    return !!saved[id];
+  } catch (e) {
+    return false;
+  }
+}
+window.photoIsSavedLocal = photoIsSavedLocal;
+
+function photoToggleSave(id) {
+  const user = auth.currentUser;
+  if (!user) {
+    alert("עליך להתחבר כדי לשמור גלריות!");
+    const authModal = document.getElementById('auth-modal');
+    if (authModal) authModal.style.display = 'flex';
+    return;
+  }
+
+  let saved = {};
+  const localKey = `saved_galleries_${user.uid}`;
+  try {
+    saved = JSON.parse(localStorage.getItem(localKey) || '{}');
+  } catch (e) {}
+
+  if (saved[id]) {
+    delete saved[id];
+  } else {
+    saved[id] = true;
+  }
+
+  localStorage.setItem(localKey, JSON.stringify(saved));
+  
+  // סנכרון ל-Firebase
+  try {
+    const userSavedRef = ref(db, `website/users/${user.uid}/saved_galleries`);
+    set(userSavedRef, saved);
+  } catch (e) {
+    console.error("שגיאה בסנכרון השמורים לענן:", e);
+  }
+  
+  const container = mainContent.querySelector('.photos-page');
+  if (container) {
+    let albums = [];
+    try { albums = JSON.parse(decodeURIComponent(container.dataset.photosJson)); } catch(e){ return; }
+    
+    const isDetailView = mainContent.querySelector('.art-detail') !== null;
+    const activeDetailId = isDetailView ? mainContent.querySelector('.art-detail').dataset.photoId : null;
+    
+    if (isDetailView && activeDetailId) {
+      photoOpenDetail(activeDetailId);
+      const newContainer = mainContent.querySelector('.photos-page');
+      if (newContainer) newContainer.dataset.photosJson = encodeURIComponent(JSON.stringify(albums));
+    } else {
+      mainContent.innerHTML = buildPhotosPage(albums);
+    }
+  }
+}
+window.photoToggleSave = photoToggleSave;
+
+// ערכי הסינון של עמוד התמונות. הם חיים מחוץ ל-buildPhotosPage כדי
+// שהבחירה תישמר גם כשהעמוד נבנה מחדש (מחיקה, לייק, עדכון מהענן).
+const PHOTO_CATEGORIES = ['הכל', 'גברים', 'נשים', 'זוגות'];
+const PHOTO_AGE_RANGES = ['הכל', '18-25', '26-35', '36-45', '46+'];
+const PHOTO_REGIONS = ['הכל', 'צפון', 'מרכז', 'דרום'];
+const PHOTO_DATE_RANGES = ['הכל', 'השבוע', 'החודש', 'השנה'];
+
+const PHOTO_FILTER_GROUPS = [
+  { kind: 'category', label: 'מין',    values: PHOTO_CATEGORIES },
+  { kind: 'age',      label: 'גיל',    values: PHOTO_AGE_RANGES },
+  { kind: 'region',   label: 'מיקום',  values: PHOTO_REGIONS },
+  { kind: 'date',     label: 'תאריך',  values: PHOTO_DATE_RANGES }
+];
+
+let currentPhotoCategoryFilter = 'הכל';
+let currentPhotoAgeFilter = 'הכל';
+let currentPhotoRegionFilter = 'הכל';
+let currentPhotoDateFilter = 'הכל';
+let photoOpenFilterGroup = null;
+
+// זמן היצירה של גלריה. גלריות חדשות שומרות createdAt מספרי; לישנות
+// נופלים לפרסור של התאריך המוצג (d.m.yyyy מ-toLocaleDateString בעברית).
+function photoAlbumTime(p) {
+  if (typeof p.createdAt === 'number' && isFinite(p.createdAt)) return p.createdAt;
+  const m = String(p.timestamp || '').match(/(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})/);
+  if (m) {
+    const t = new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1])).getTime();
+    if (isFinite(t)) return t;
+  }
+  return null;
+}
+
+// גבול תחתון לפי לוח השנה, כדי שהתוויות יהיו נכונות מילולית:
+// "השבוע" מתחילת השבוע הנוכחי, "החודש" מה-1 בחודש, "השנה" מ-1 בינואר.
+function photoDateThreshold(range) {
+  const now = new Date();
+  if (range === 'השבוע') {
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    d.setDate(d.getDate() - d.getDay()); // ראשון הוא תחילת השבוע
+    return d.getTime();
+  }
+  if (range === 'החודש') return new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+  if (range === 'השנה') return new Date(now.getFullYear(), 0, 1).getTime();
+  return null;
+}
+
+function photoSetFilter(kind, value) {
+  if (kind === 'category') currentPhotoCategoryFilter = value;
+  else if (kind === 'age') currentPhotoAgeFilter = value;
+  else if (kind === 'region') currentPhotoRegionFilter = value;
+  else if (kind === 'date') currentPhotoDateFilter = value;
+
+  // אחרי בחירה סוגרים וחוזרים לשלושת הכפתורים. הרינדור מחליף את
+  // הסרגל כולו, ולכן אין טעם לגעת ב-classList של הכפתור שנלחץ.
+  photoOpenFilterGroup = null;
+  photoRenderFilterBar();
+  photoApplyFilters();
+}
+window.photoSetFilter = photoSetFilter;
+
+// נשמר לתאימות אחורה עם קריאות ישנות
+function photoFilterCategory(category) {
+  photoSetFilter('category', category);
+}
+window.photoFilterCategory = photoFilterCategory;
+
+function photoApplyFilters() {
+  const searchInput = mainContent.querySelector('.photos-page .art-search');
+  const q = searchInput ? searchInput.value.toLowerCase().trim() : '';
+  
+  const rows = mainContent.querySelectorAll('.photos-page .art-row');
+  const dateThreshold = photoDateThreshold(currentPhotoDateFilter);
+  let visible = 0;
+
+  rows.forEach(r => {
+    const rowCategory = r.dataset.category || 'כללי';
+    // הכרטיס מציג רק תמונה, ולכן מחפשים בתכונת data-search ולא בטקסט הגלוי
+    const text = (r.dataset.search || r.textContent).toLowerCase();
+
+    const categoryMatch = (currentPhotoCategoryFilter === 'הכל' || rowCategory === currentPhotoCategoryFilter);
+    const ageMatch = (currentPhotoAgeFilter === 'הכל' || (r.dataset.age || '') === currentPhotoAgeFilter);
+    const regionMatch = (currentPhotoRegionFilter === 'הכל' || (r.dataset.region || '') === currentPhotoRegionFilter);
+    // גלריה בלי תאריך שניתן לקרוא מוצגת רק תחת "הכל"
+    const rowTime = r.dataset.time ? Number(r.dataset.time) : null;
+    const dateMatch = (dateThreshold === null) || (rowTime !== null && rowTime >= dateThreshold);
+    const textMatch = text.includes(q);
+
+    const show = categoryMatch && ageMatch && regionMatch && dateMatch && textMatch;
+    // העימוד הוא זה שקובע display בפועל; כאן רק מסמנים מה תואם
+    r.dataset.artMatch = show ? '1' : '0';
+    if (show) visible++;
+  });
+
+  // כל שינוי בחיפוש או בקטגוריה מחזיר לעמוד הראשון של התוצאות
+  artPageState.photos = 1;
+  artSyncPagination();
+
+  const noResults = mainContent.querySelector('.photos-page .art-no-results');
+  if (noResults) noResults.style.display = visible === 0 ? 'block' : 'none';
+}
+window.photoApplyFilters = photoApplyFilters;
+
+// ============================================================
+// מערכת קורסים / שיעורים (Courses System)
+// ============================================================
+
+const COURSES_SAMPLES = [
+  {
+    id: 'c1',
+    title: 'מבוא לפיתוח אתרים ב-JavaScript',
+    summary: 'בשיעור זה נלמד את עקרונות הבסיס של שפת ה-JS, משתנים, לולאות ופונקציות.',
+    author: 'אלעד כהן', category: 'פיתוח', categoryColor: '#2196F3', timestamp: 'לפני שבוע',
+    image: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800&q=80',
+    video: 'https://assets.mixkit.co/videos/preview/mixkit-software-developer-working-on-code-screen-40292-large.mp4'
+  },
+  {
+    id: 'c2',
+    title: 'יסודות העיצוב הדיגיטלי',
+    summary: 'איך לעצב ממשקים יפהפיים שעובדים? עקרונות הצבע, קומפוזיציה וטיפוגרפיה.',
+    author: 'שירה רותם', category: 'עיצוב', categoryColor: '#e91e63', timestamp: 'לפני שבועיים',
+    image: 'https://images.unsplash.com/photo-1541462608141-2ff01dd914e0?w=800&q=80',
+    video: 'https://assets.mixkit.co/videos/preview/mixkit-graphic-designer-working-on-a-digital-tablet-41617-large.mp4'
+  }
+];
+
+function buildCoursesPage(courses) {
+  const featured = courses.filter(c => c.pinned).slice(0, 3);
+  const popular = courses.slice(0, 5);
+
+  const featuredHTML = featured.map(c => `
+    <div class="art-featured-card" onclick="courseOpenDetail('${artEsc(c.id)}')">
+      <img src="${c.image || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80'}" alt="">
+      <div class="art-featured-overlay"></div>
+      <div class="art-featured-info">
+        <span class="art-category-badge" style="background:${c.categoryColor||'#2196F3'}">${c.category}</span>
+        <h3>${c.title}</h3>
+        <div class="art-featured-meta">${c.author} · ${c.timestamp}</div>
+      </div>
+    </div>
+  `).join('');
+
+  const listHTML = courses.map((c) => `
+    <div class="art-row" onclick="courseOpenDetail('${artEsc(c.id)}')">
+      <div class="art-row-text">
+        <h3>${c.title}</h3>
+        <p>${c.summary}</p>
+        <div class="art-row-meta">
+          <span>${c.author}</span>
+          <span class="art-row-sep">|</span>
+          <span>${c.timestamp}</span>
+        </div>
+      </div>
+      <div class="art-row-img-wrap" style="--bg-img: url('${c.image || ''}');">
+        ${c.image ? `<img src="${c.image}" alt="">` : '<div class="art-row-img-placeholder"></div>'}
+        ${c.image ? `<button class="art-zoom-btn" onclick="event.stopPropagation();artZoomImage('${artEsc(c.image)}')" title="מסך מלא">⛶</button>` : ''}
+        ${isEditMode ? `<button class="art-pin-btn" onclick="event.stopPropagation(); togglePinCourse('${artEsc(c.id)}')" title="${c.pinned ? 'בטל נעץ' : 'נעץ בגריד'}" style="${c.pinned ? 'color:#ffd700;display:flex;' : ''}">${c.pinned ? '★' : '☆'}</button>` : ''}
+        <button class="art-delete-btn" onclick="event.stopPropagation();courseDelete('${artEsc(c.id)}',this)">✕</button>
+      </div>
+    </div>
+  `).join('');
+
+  const popularHTML = popular.map((c, i) => `
+    <div class="art-popular-item" onclick="courseOpenDetail('${artEsc(c.id)}')">
+      <span class="art-popular-num">${String(i+1).padStart(2,'0')}</span>
+      <div style="flex:1;font-size:13px;font-weight:600;line-height:1.4;color:#222">${c.title}</div>
+    </div>
+  `).join('');
+
+  const json = encodeURIComponent(JSON.stringify(courses));
+  return `<div class="articles-page courses-page" data-courses-json="${json}">
+    <div class="art-inner">
+      <div class="art-featured-grid">${featuredHTML}</div>
+      <div class="art-layout">
+        <div class="art-main">
+          <div class="art-search-wrap">
+            <input type="text" class="art-search" placeholder="🔍 חיפוש קורסים..." oninput="courseSearch(this.value)">
+          </div>
+          <div class="art-section-title">כל הקורסים והשיעורים</div>
+          <div class="art-rows">${listHTML}</div>
+          <div class="art-no-results" style="display:none">לא נמצאו קורסים התואמות לחיפוש</div>
+          <button class="art-add-btn" onclick="openCourseModal()" style="background:#2196F3">+ הוסף קורס חדש</button>
+        </div>
+        <div class="art-sidebar">
+          ${buildPromotedSitesBox()}
+          <div class="art-sidebar-box">
+            <div class="art-sidebar-title">הנצפים ביותר השבוע</div>
+            ${popularHTML}
+          </div>
+          ${buildSocialCommunityBox()}
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function getCourseVideoPlayerHTML(videoUrl) {
+  if (!videoUrl) return '';
+  
+  // Check if Vimeo link
+  const vimeoRegex = /(?:vimeo\.com\/|player\.vimeo\.com\/video\/)(\d+)/;
+  const vimeoMatch = videoUrl.match(vimeoRegex);
+  if (vimeoMatch) {
+    const videoId = vimeoMatch[1];
+    return `
+      <div style="position:relative; width:100%; aspect-ratio:16/9; max-height:450px; overflow:hidden; border-radius:12px; margin-bottom:20px; background:#000;">
+        <iframe src="https://player.vimeo.com/video/${videoId}?autoplay=1&muted=1" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen style="position:absolute; top:0; left:0; width:100%; height:100%;"></iframe>
+      </div>
+    `;
+  }
+  
+  // Check if YouTube link
+  const ytRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+  const ytMatch = videoUrl.match(ytRegex);
+  if (ytMatch) {
+    const videoId = ytMatch[1];
+    return `
+      <div style="position:relative; width:100%; aspect-ratio:16/9; max-height:450px; overflow:hidden; border-radius:12px; margin-bottom:20px; background:#000;">
+        <iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="position:absolute; top:0; left:0; width:100%; height:100%;"></iframe>
+      </div>
+    `;
+  }
+  
+  // HTML5 Local video preview or direct MP4 URL
+  return `
+    <div style="position:relative; width:100%; max-height:450px; overflow:hidden; border-radius:12px; margin-bottom:20px; background:#000;">
+      <video src="${videoUrl}" controls autoplay muted playsinline style="width:100%; height:100%; display:block; max-height:450px; object-fit:contain;"></video>
+    </div>
+  `;
+}
+
+function courseOpenDetail(id) {
+  const container = mainContent.querySelector('.courses-page');
+  if (!container) return;
+  let courses = [];
+  try { courses = JSON.parse(decodeURIComponent(container.dataset.coursesJson)); } catch(e){ return; }
+  const c = courses.find(x => x.id === id);
+  if (!c) return;
+
+  const recommended = courses.filter(x => x.id !== id).slice(0, 3);
+  const recHTML = recommended.map(r => `
+    <div class="art-rec-card" onclick="courseOpenDetail('${artEsc(r.id)}')">
+      <div class="art-rec-img">
+        ${r.image ? `<img src="${r.image}" alt="">` : '<div class="art-card-img-placeholder"></div>'}
+        <span class="art-rec-badge art-category-badge" style="background:${r.categoryColor||'#2196F3'}">${r.category}</span>
+      </div>
+      <div class="art-rec-text">
+        <h4>${r.title}</h4>
+        <div class="art-rec-meta">${r.author} · ${r.timestamp}</div>
+      </div>
+    </div>
+  `).join('');
+
+  const json = encodeURIComponent(JSON.stringify(courses));
+  mainContent.innerHTML = `
+    <div class="art-detail articles-page courses-page" data-course-id="${id}" data-courses-json="${json}">
+      <div class="art-detail-inner">
+        <button class="art-back-btn" onclick="courseGoBack()">← חזרה לקורסים</button>
+        
+        <!-- נגן וידאו מובנה במקום תמונת כותרת -->
+        ${getCourseVideoPlayerHTML(c.video)}
+
+        <div class="art-detail-body">
+          <div class="art-meta" style="margin-bottom:12px">
+            <span class="art-category-badge" style="background:${c.categoryColor||'#2196F3'}">${c.category}</span>
+            <span>מרצה: ${c.author}</span>
+            <span>·</span>
+            <span>${c.timestamp}</span>
+          </div>
+          <h1 class="art-detail-title">${c.title}</h1>
+          <div class="art-detail-content"><p>${c.summary}</p></div>
+        </div>
+
+        <div class="art-rec-section">
+          <h3 style="margin:0 0 16px;font-size:18px;font-weight:800">שיעורים נוספים שיעניינו אותך</h3>
+          <div class="art-rec-grid">${recHTML}</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function courseGoBack() {
+  const container = mainContent.querySelector('.courses-page');
+  if (!container) return;
+  let courses = [];
+  try { courses = JSON.parse(decodeURIComponent(container.dataset.coursesJson)); } catch(e){}
+  mainContent.innerHTML = buildCoursesPage(courses);
+  if (isEditMode) applyEditModeToContent();
+}
+
+function courseGetCourses() {
+  const container = mainContent.querySelector('.courses-page');
+  if (!container) return [];
+  try { return JSON.parse(decodeURIComponent(container.dataset.coursesJson)); } catch(e){ return []; }
+}
+
+function courseDelete(id, el) {
+  if (!isEditMode) return;
+  if (!confirm('האם למחוק קורס זה?')) return;
+  const courses = courseGetCourses().filter(c => c.id !== id);
+  mainContent.innerHTML = buildCoursesPage(courses);
+  saveCurrentPageContent();
+}
+
+function courseSearch(val) {
+  const q = (val || '').toLowerCase().trim();
+  const rows = mainContent.querySelectorAll('.courses-page .art-row');
+  let visible = 0;
+  rows.forEach(r => {
+    const text = r.textContent.toLowerCase();
+    const match = text.includes(q);
+    r.style.display = match ? '' : 'none';
+    if (match) visible++;
+  });
+  const noResults = mainContent.querySelector('.courses-page .art-no-results');
+  if (noResults) noResults.style.display = visible === 0 ? 'block' : 'none';
+}
+
+let courseImgData = '';
+let courseVidData = '';
+
+function openCourseModal() {
+  if (!isEditMode) return;
+  document.getElementById('course-title').value = '';
+  document.getElementById('course-summary').value = '';
+  document.getElementById('course-author').value = '';
+  document.getElementById('course-category').value = '';
+  document.getElementById('course-vid-url').value = '';
+  
+  const imgPreview = document.getElementById('course-img-preview');
+  imgPreview.style.display = 'none'; imgPreview.src = '';
+  courseImgData = '';
+  document.getElementById('course-img-pick').textContent = 'לחץ לבחירת תמונה';
+  
+  const vidPreview = document.getElementById('course-vid-preview');
+  vidPreview.style.display = 'none'; vidPreview.src = '';
+  courseVidData = '';
+  document.getElementById('course-vid-pick').textContent = 'בחר קובץ מקומי מהמחשב (עד 10 שניות)';
+  
+  document.getElementById('course-modal').style.display = 'flex';
+}
+
+document.getElementById('course-img-pick').addEventListener('click', () => {
+  const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
+  inp.onchange = e => {
+    const f = e.target.files[0]; if (!f) return;
+    const r = new FileReader();
+    r.onload = ev => {
+      courseImgData = ev.target.result;
+      const p = document.getElementById('course-img-preview');
+      p.src = courseImgData; p.style.display = 'block';
+      document.getElementById('course-img-pick').textContent = '✓ תמונה נבחרה';
+    };
+    r.readAsDataURL(f);
+  };
+  inp.click();
+});
+
+document.getElementById('course-vid-pick').addEventListener('click', () => {
+  const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'video/*';
+  inp.onchange = e => {
+    const f = e.target.files[0]; if (!f) return;
+    
+    // בדיקת גודל הקובץ (עד 20MB) למניעת קריסת מסד הנתונים
+    if (f.size > 20 * 1024 * 1024) {
+      alert('שגיאה: קובץ הסרטון גדול מדי (מעל 20MB). אנא העלה סרטון קצר ומכווץ יותר כדי שיישמר בהצלחה.');
+      return;
+    }
+    
+    // בדיקת אורך הסרטון (עד 10 שניות)
+    const tempVideo = document.createElement('video');
+    tempVideo.preload = 'metadata';
+    tempVideo.src = URL.createObjectURL(f);
+    tempVideo.onloadedmetadata = () => {
+      window.URL.revokeObjectURL(tempVideo.src);
+      if (tempVideo.duration > 10.5) { // סף קל להבדלים זעירים בקודק
+        alert('שגיאה: הסרטון ארוך מ-10 שניות! (' + Math.round(tempVideo.duration) + ' שניות). אנא בחר סרטון קצר יותר.');
+        return;
+      }
+      
+      const r = new FileReader();
+      r.onload = ev => {
+        courseVidData = ev.target.result;
+        const p = document.getElementById('course-vid-preview');
+        p.src = courseVidData; p.style.display = 'block';
+        document.getElementById('course-vid-pick').textContent = '✓ סרטון נבחר';
+      };
+      r.readAsDataURL(f);
+    };
+  };
+  inp.click();
+});
+
+document.getElementById('course-cancel').addEventListener('click', () => {
+  document.getElementById('course-modal').style.display = 'none';
+});
+
+document.getElementById('course-save').addEventListener('click', () => {
+  const title = document.getElementById('course-title').value.trim();
+  if (!title) { alert('חובה כותרת קורס'); return; }
+  
+  const videoUrl = document.getElementById('course-vid-url').value.trim();
+  const finalVideo = videoUrl || courseVidData;
+  if (!finalVideo) { alert('חובה להדביק קישור לסרטון (Vimeo/YouTube) או לבחור קובץ מקומי'); return; }
+
+  const courses = courseGetCourses();
+  courses.unshift({
+    id: 'c' + Date.now(),
+    title,
+    summary: document.getElementById('course-summary').value.trim(),
+    image: courseImgData,
+    video: finalVideo,
+    author: document.getElementById('course-author').value.trim(),
+    category: document.getElementById('course-category').value.trim(),
+    categoryColor: '#2196F3',
+    timestamp: new Date().toLocaleDateString('he-IL')
+  });
+  mainContent.innerHTML = buildCoursesPage(courses);
+  saveCurrentPageContent();
+  document.getElementById('course-modal').style.display = 'none';
+});
+
+const btnAddCoursesPage = document.getElementById('btn-add-courses-page');
+if (btnAddCoursesPage) {
+  btnAddCoursesPage.addEventListener('click', () => {
+    const title = prompt('שם העמוד של הקורסים:') || 'קורסים';
+    const newId = 'page-' + Date.now();
+    pages.push({ id: newId, title: title.trim(), content: buildCoursesPage(COURSES_SAMPLES) });
+    topNavPages.push(newId);
+    activePageId = newId;
+    saveToStorage();
+    renderSideMenu();
+    renderTopNav();
+    renderPage();
+  });
+}
+
+// ============================================================
+// צפייה במסך מלא עם דפדוף בין התמונות (Gallery Lightbox)
+// עובד בעמוד התמונות ובעמוד הסיפורים, במחשב ובנייד:
+// חצים, מקלדת (חצים + Esc), החלקה במגע, ומונה תמונות.
+// ============================================================
+let lbImages = [];
+let lbIndex = 0;
+
+function artBuildLightbox() {
+  if (document.getElementById('lightbox-modal')) return;
+  const lb = document.createElement('div');
+  lb.id = 'lightbox-modal';
+  lb.className = 'art-lightbox';
+  lb.innerHTML = `
+    <button class="art-lb-close" type="button" aria-label="סגור">✕</button>
+    <button class="art-lb-nav art-lb-prev" type="button" aria-label="הקודם">›</button>
+    <img class="art-lb-img" id="lightbox-img" alt="">
+    <button class="art-lb-nav art-lb-next" type="button" aria-label="הבא">‹</button>
+    <div class="art-lb-counter" id="lightbox-counter"></div>
+  `;
+  document.body.appendChild(lb);
+
+  lb.querySelector('.art-lb-close').onclick = (e) => { e.stopPropagation(); artCloseLightbox(); };
+  lb.querySelector('.art-lb-prev').onclick = (e) => { e.stopPropagation(); artLightboxStep(-1); };
+  lb.querySelector('.art-lb-next').onclick = (e) => { e.stopPropagation(); artLightboxStep(1); };
+  // לחיצה על הרקע (לא על התמונה או הכפתורים) סוגרת
+  lb.onclick = (e) => { if (e.target === lb) artCloseLightbox(); };
+
+  // החלקה בנייד: שמאלה = הבאה, ימינה = הקודמת
+  let sx = 0, sy = 0;
+  lb.addEventListener('touchstart', (e) => { const t = e.changedTouches[0]; sx = t.clientX; sy = t.clientY; }, { passive: true });
+  lb.addEventListener('touchend', (e) => {
+    const t = e.changedTouches[0];
+    const dx = t.clientX - sx, dy = t.clientY - sy;
+    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) artLightboxStep(dx < 0 ? 1 : -1);
+  }, { passive: true });
+}
+
+function artUpdateLightbox() {
+  const img = document.getElementById('lightbox-img');
+  const counter = document.getElementById('lightbox-counter');
+  const lb = document.getElementById('lightbox-modal');
+  if (!img || !lb) return;
+  img.src = lbImages[lbIndex];
+  const multi = lbImages.length > 1;
+  counter.textContent = multi ? `${lbIndex + 1} / ${lbImages.length}` : '';
+  lb.querySelector('.art-lb-prev').style.display = multi ? '' : 'none';
+  lb.querySelector('.art-lb-next').style.display = multi ? '' : 'none';
+}
+
+function artLightboxStep(dir) {
+  if (lbImages.length < 2) return;
+  lbIndex = (lbIndex + dir + lbImages.length) % lbImages.length;
+  artUpdateLightbox();
+}
+
+function artLightboxKey(e) {
+  if (e.key === 'Escape') artCloseLightbox();
+  else if (e.key === 'ArrowLeft') artLightboxStep(1);   // באתר RTL שמאלה = הבא
+  else if (e.key === 'ArrowRight') artLightboxStep(-1); // ימינה = הקודם
+}
+
+function artCloseLightbox() {
+  const lb = document.getElementById('lightbox-modal');
+  if (lb) lb.style.display = 'none';
+  document.removeEventListener('keydown', artLightboxKey);
+}
+
+// פותח צפייה במסך מלא עם רשימת תמונות ואינדקס התחלתי
+function artOpenGallery(images, startIndex) {
+  lbImages = (Array.isArray(images) ? images : [images]).filter(Boolean);
+  if (!lbImages.length) return;
+  lbIndex = Math.min(Math.max(startIndex || 0, 0), lbImages.length - 1);
+  artBuildLightbox();
+  artUpdateLightbox();
+  document.getElementById('lightbox-modal').style.display = 'flex';
+  document.addEventListener('keydown', artLightboxKey);
+}
+window.artOpenGallery = artOpenGallery;
+
+// פותח את הגלריה של פריט לפי המזהה שלו, מהנתונים השמורים בעמוד.
+// scope הוא 'photos' או 'stories'. currentSrc קובע באיזו תמונה להתחיל.
+function artGalleryById(scope, id, currentSrc) {
+  const container = mainContent.querySelector('.' + scope + '-page');
+  if (!container) return;
+  const key = scope === 'photos' ? 'photosJson' : 'storiesJson';
+  let items = [];
+  try { items = JSON.parse(decodeURIComponent(container.dataset[key] || '')); } catch (e) { return; }
+  const item = (items || []).find(x => x.id === id);
+  if (!item) return;
+  const imgs = (item.images && item.images.length) ? item.images.filter(Boolean) : (item.image ? [item.image] : []);
+  if (!imgs.length) return;
+  let idx = currentSrc ? imgs.indexOf(currentSrc) : 0;
+  if (idx < 0) idx = 0;
+  artOpenGallery(imgs, idx);
+}
+window.artGalleryById = artGalleryById;
+
+// תאימות אחורה: קריאה עם תמונה אחת פותחת את אותה צפייה עם תמונה יחידה
+function artZoomImage(imgUrl) {
+  artOpenGallery([imgUrl], 0);
+}
+
+window.buildCoursesPage = buildCoursesPage;
+window.courseDelete = courseDelete;
+window.openCourseModal = openCourseModal;
+window.courseSearch = courseSearch;
+window.courseOpenDetail = courseOpenDetail;
+window.courseGoBack = courseGoBack;
+window.artZoomImage = artZoomImage;
+
+// ============================================================================
+// מערכת צ'אט תמיכה בזמן אמת (Support Chat Real-time Logic)
+// ============================================================================
+let chatUnsubscribe = null;
+let chatListUnsubscribe = null;
+let chatBadgeUnsubscribe = null;
+let activeChatUser = null; // מזהה המשתמש שהמנהל מתכתב איתו כרגע
+
+// פתיחה/סגירה של חלונית הצ'אט
+function chatTogglePanel() {
+  const panel = document.getElementById('global-chat-panel');
+  if (!panel) return;
+  
+  const user = auth.currentUser;
+  if (!user) {
+    alert("יש להתחבר עם המייל כדי לכתוב הודעה לתמיכה.");
+    const authModal = document.getElementById('auth-modal');
+    if (authModal) authModal.style.display = 'flex';
+    return;
+  }
+
+  const isOpening = panel.style.display === 'none';
+  panel.style.display = isOpening ? 'flex' : 'none';
+  
+  if (isOpening) {
+    const fab = document.getElementById('global-chat-fab');
+    if (fab) {
+      fab.classList.add('chat-bump');
+      setTimeout(() => fab.classList.remove('chat-bump'), 150);
+    }
+    loadChatContent(user);
+  } else {
+    chatCleanup();
+  }
+}
+
+// ניקוי מאזינים של הצ'אט
+function chatCleanup() {
+  if (chatUnsubscribe) {
+    chatUnsubscribe();
+    chatUnsubscribe = null;
+  }
+  if (chatListUnsubscribe) {
+    chatListUnsubscribe();
+    chatListUnsubscribe = null;
+  }
+}
+
+// האזנה והצגת התראות על הודעות חדשות (Badge)
+function initChatBadgeListeners(user) {
+  if (!user) return;
+  
+  const badgeEl = document.getElementById('global-chat-badge');
+  if (!badgeEl) return;
+  
+  const ADMIN_EMAIL = "yoni98321@gmail.com";
+  
+  if (chatBadgeUnsubscribe) chatBadgeUnsubscribe();
+  
+  if (user.email === ADMIN_EMAIL) {
+    // מנהל: סופר כמה שיחות יש שבהן adminRead === false
+    const chatsRef = ref(db, 'website/chats');
+    chatBadgeUnsubscribe = onValue(chatsRef, (snapshot) => {
+      const chats = snapshot.val();
+      let unreadCount = 0;
+      if (chats) {
+        Object.keys(chats).forEach(uid => {
+          if (chats[uid].adminRead === false) {
+            unreadCount++;
+          }
+        });
+      }
+      if (unreadCount > 0) {
+        badgeEl.textContent = unreadCount;
+        badgeEl.style.display = 'block';
+      } else {
+        badgeEl.style.display = 'none';
+      }
+    });
+  } else {
+    // משתמש רגיל: בודק האם יש הודעה חדשה עבורו מהמנהל
+    const userChatRef = ref(db, 'website/chats/' + user.uid);
+    chatBadgeUnsubscribe = onValue(userChatRef, (snapshot) => {
+      const chatData = snapshot.val();
+      if (chatData && chatData.userRead === false) {
+        badgeEl.textContent = '1';
+        badgeEl.style.display = 'block';
+      } else {
+        badgeEl.style.display = 'none';
+      }
+    });
+  }
+}
+
+// טעינת תוכן השיחה בהתאם לתפקיד המשתמש
+function loadChatContent(user) {
+  const ADMIN_EMAIL = "yoni98321@gmail.com";
+  const chatBody = document.getElementById('chat-body');
+  if (!chatBody) return;
+  
+  chatCleanup(); // ניקוי מאזינים קודמים
+
+  if (user.email === ADMIN_EMAIL) {
+    // מנהל רואה רשימת שיחות פעילות
+    if (activeChatUser) {
+      loadSingleChat(activeChatUser);
+    } else {
+      loadAdminChatsList();
+    }
+  } else {
+    // משתמש רגיל רואה את השיחה שלו
+    loadSingleChat(user.uid);
+  }
+}
+
+// טעינת רשימת הפניות למנהל
+function loadAdminChatsList() {
+  const chatBody = document.getElementById('chat-body');
+  const titleEl = document.getElementById('chat-title');
+  if (titleEl) titleEl.textContent = 'פניות לקוחות';
+  
+  if (chatBody) chatBody.innerHTML = '<div style="text-align:center;color:#999;padding:20px;">טוען פניות...</div>';
+  
+  const chatsRef = ref(db, 'website/chats');
+  chatListUnsubscribe = onValue(chatsRef, (snapshot) => {
+    const chats = snapshot.val();
+    if (activeChatUser) return; // הגנה ממרוץ תהליכים
+    renderAdminChatList(chats);
+  });
+}
+
+// רינדור רשימת השיחות של המנהל
+function renderAdminChatList(chats) {
+  const chatBody = document.getElementById('chat-body');
+  if (!chatBody) return;
+  
+  if (!chats) {
+    chatBody.innerHTML = '<div style="text-align:center;color:#999;padding:30px;">אין פניות פעילות כרגע.</div>';
+    return;
+  }
+  
+  // מיון השיחות לפי מועד ההודעה האחרונה
+  const sortedUids = Object.keys(chats).sort((a, b) => {
+    return (chats[b].lastTimestamp || 0) - (chats[a].lastTimestamp || 0);
+  });
+  
+  const listHTML = sortedUids.map(uid => {
+    const chat = chats[uid];
+    const hasUnread = chat.adminRead === false;
+    return `
+      <div class="chat-user-item" onclick="loadSingleChat('${uid}')">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span class="user-name">${chat.userName || 'משתמש'}</span>
+          ${hasUnread ? '<span class="unread-dot"></span>' : ''}
+        </div>
+        <span class="user-email">${chat.userEmail || ''}</span>
+        <div style="font-size:12px;color:#888;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+          ${chat.lastMessage || 'אין הודעות'}
+        </div>
+      </div>
+    `;
+  }).join('');
+  
+  chatBody.innerHTML = `<div class="chat-list-view">${listHTML}</div>`;
+}
+
+// טעינת שיחה בודדת (לגולש או למנהל)
+function loadSingleChat(userId) {
+  const ADMIN_EMAIL = "yoni98321@gmail.com";
+  const user = auth.currentUser;
+  if (!user) return;
+  
+  const isManager = user.email === ADMIN_EMAIL;
+  if (isManager) activeChatUser = userId;
+  
+  const chatBody = document.getElementById('chat-body');
+  if (chatBody) chatBody.innerHTML = '<div style="text-align:center;color:#999;padding:20px;">טוען הודעות...</div>';
+  
+  // מעקב ריל-טיים אחרי השיחה הספציפית הזו
+  const userChatRef = ref(db, 'website/chats/' + userId);
+  if (chatUnsubscribe) chatUnsubscribe();
+  chatUnsubscribe = onValue(userChatRef, (snapshot) => {
+    const chatData = snapshot.val();
+    if (isManager && activeChatUser !== userId) return; // הגנה ממרוץ תהליכים
+    
+    // עדכון כותרת השיחה
+    const titleEl = document.getElementById('chat-title');
+    if (titleEl) {
+      if (isManager) {
+        titleEl.innerHTML = `
+          <div style="display:flex; align-items:center; gap:8px;">
+            <button onclick="chatGoBackToAdminList()" style="font-size:16px; font-weight:900; background:none; border:none; color:#fff; cursor:pointer; padding:0 4px;">←</button>
+            <span>שיחה עם ${chatData ? (chatData.userName || 'משתמש') : 'תמיכה'}</span>
+          </div>
+        `;
+      } else {
+        titleEl.textContent = 'שיחה עם תמיכה';
+      }
+    }
+    
+    renderUserChatMessages(chatData);
+    
+    // סימון שההודעות נקראו
+    if (chatData) {
+      if (isManager && chatData.adminRead === false) {
+        update(ref(db, 'website/chats/' + userId), { adminRead: true });
+      } else if (!isManager && chatData.userRead === false) {
+        update(ref(db, 'website/chats/' + userId), { userRead: true });
+      }
+    }
+  });
+}
+
+// חזרה של מנהל לרשימת הפניות
+function chatGoBackToAdminList() {
+  activeChatUser = null;
+  loadChatContent(auth.currentUser);
+}
+
+// מעבר לצ'אט מסך מלא / שחזור
+function chatToggleMaximize() {
+  const panel = document.getElementById('global-chat-panel');
+  if (!panel) return;
+  
+  panel.classList.toggle('chat-maximized');
+  
+  const icon = document.getElementById('maximize-icon');
+  if (icon) {
+    if (panel.classList.contains('chat-maximized')) {
+      icon.innerHTML = '<path d="M4 14h6v6M20 10h-6V4M14 10l7-7M10 14l-7 7"/>';
+    } else {
+      icon.innerHTML = '<path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>';
+    }
+  }
+}
+
+// רינדור הודעות הצ'אט (משותף למשתמש ומנהל)
+function renderUserChatMessages(chatData) {
+  const chatBody = document.getElementById('chat-body');
+  if (!chatBody) return;
+  
+  if (!chatData || !chatData.messages) {
+    chatBody.innerHTML = '<div style="text-align:center;color:#999;padding:30px;line-height:1.5;">שלח הודעה כדי להתחיל בשיחה עם מנהל האתר!</div>';
+    return;
+  }
+  
+  const user = auth.currentUser;
+  const ADMIN_EMAIL = "yoni98321@gmail.com";
+  const isCurrentUserAdmin = user && user.email === ADMIN_EMAIL;
+  
+  const msgs = chatData.messages;
+  const msgsHTML = Object.keys(msgs).map(key => {
+    const m = msgs[key];
+    
+    // בודקים האם ההודעה נשלחה על ידי המשתמש המחובר כרגע
+    let isSentByMe = false;
+    if (isCurrentUserAdmin) {
+      isSentByMe = (m.sender === 'admin');
+    } else {
+      isSentByMe = (m.sender === 'user');
+    }
+    
+    const bubbleClass = isSentByMe ? 'msg-sent' : 'msg-received';
+    const timeString = m.timestamp ? new Date(m.timestamp).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }) : '';
+    return `
+      <div class="chat-message ${bubbleClass}">
+        <div class="chat-msg-text">${m.text}</div>
+        <span class="chat-msg-time">${timeString}</span>
+      </div>
+    `;
+  }).join('');
+  
+  chatBody.innerHTML = msgsHTML;
+  chatBody.scrollTop = chatBody.scrollHeight; // גלילה אוטומטית למטה
+}
+
+// שליחת הודעה
+function chatSendMessage() {
+  const inputEl = document.getElementById('chat-input');
+  if (!inputEl) return;
+  const text = inputEl.value.trim();
+  if (!text) return;
+  
+  const user = auth.currentUser;
+  if (!user) return;
+  
+  const ADMIN_EMAIL = "yoni98321@gmail.com";
+  const isManager = user.email === ADMIN_EMAIL;
+  const targetUserUid = isManager ? activeChatUser : user.uid;
+  
+  if (!targetUserUid) {
+    alert("שגיאה: לא נבחר משתמש יעד לשליחת הודעה.");
+    return;
+  }
+  
+  const messagePayload = {
+    text: text,
+    sender: isManager ? 'admin' : 'user',
+    timestamp: Date.now()
+  };
+  
+  const messagesRef = ref(db, 'website/chats/' + targetUserUid + '/messages');
+  push(messagesRef, messagePayload).then(() => {
+    const chatRef = ref(db, 'website/chats/' + targetUserUid);
+    const updates = {
+      lastMessage: text,
+      lastTimestamp: Date.now()
+    };
+    
+    if (isManager) {
+      updates.adminRead = true;
+      updates.userRead = false;
+    } else {
+      updates.userName = user.displayName || 'משתמש';
+      updates.userEmail = user.email;
+      updates.adminRead = false;
+      updates.userRead = true;
+    }
+    
+    update(chatRef, updates);
+  }).catch(err => {
+    console.error("שגיאה בשליחת הודעה:", err);
+  });
+  
+  inputEl.value = '';
+}
+
+// ייצוא פונקציות לאובייקט החלון עבור ה-HTML
+window.chatTogglePanel = chatTogglePanel;
+window.chatSendMessage = chatSendMessage;
+window.chatGoBackToAdminList = chatGoBackToAdminList;
+window.chatCleanup = chatCleanup;
+window.initChatBadgeListeners = initChatBadgeListeners;
+window.updateFABsVisibility = updateFABsVisibility;
+
+// פונקציות ניהול עבור הלחצנים הצפים (הסתרה ומחיקה ישירה)
+async function adminToggleCartHide() {
+  hideCart = !hideCart;
+  try {
+    await update(ref(db, 'website'), { hideCart: hideCart });
+    updateFABsVisibility();
+  } catch(e) { console.error(e); }
+}
+
+async function adminDeleteCart() {
+  if (confirm("האם למחוק את כפתור עגלת הקניות לחלוטין מהאתר? (תוכל לשחזר אותו מסרגל הניהול)")) {
+    deleteCart = true;
+    try {
+      await update(ref(db, 'website'), { deleteCart: true });
+      updateFABsVisibility();
+    } catch(e) { console.error(e); }
+  }
+}
+
+async function adminToggleChatHide() {
+  hideChat = !hideChat;
+  try {
+    await update(ref(db, 'website'), { hideChat: hideChat });
+    updateFABsVisibility();
+  } catch(e) { console.error(e); }
+}
+
+async function adminDeleteChat() {
+  if (confirm("האם למחוק את כפתור הצ'אט לחלוטין מהאתר? (תוכל לשחזר אותו מסרגל הניהול)")) {
+    deleteChat = true;
+    try {
+      await update(ref(db, 'website'), { deleteChat: true });
+      updateFABsVisibility();
+    } catch(e) { console.error(e); }
+  }
+}
+
+// שחזור דרך סרגל הניהול
+async function adminRestoreCart() {
+  deleteCart = false;
+  try {
+    await update(ref(db, 'website'), { deleteCart: false });
+    updateFABsVisibility();
+    alert("סל הקניות שוחזר בהצלחה!");
+  } catch(e) { console.error(e); }
+}
+
+async function adminRestoreChat() {
+  deleteChat = false;
+  try {
+    await update(ref(db, 'website'), { deleteChat: false });
+    updateFABsVisibility();
+    alert("צ'אט התמיכה שוחזר בהצלחה!");
+  } catch(e) { console.error(e); }
+}
+
+// האזנה לכפתורי שחזור בסרגל
+const btnRestoreChat = document.getElementById('btn-restore-chat');
+if (btnRestoreChat) btnRestoreChat.addEventListener('click', adminRestoreChat);
+
+window.adminToggleCartHide = adminToggleCartHide;
+window.adminDeleteCart = adminDeleteCart;
+window.adminToggleChatHide = adminToggleChatHide;
+window.adminDeleteChat = adminDeleteChat;
+window.adminRestoreCart = adminRestoreCart;
+window.adminRestoreChat = adminRestoreChat;
+window.loadSingleChat = loadSingleChat;
+window.chatToggleMaximize = chatToggleMaximize;
+
+let promotedSiteImgData = '';
+
+function openPromotedSiteModal() {
+  if (!isEditMode) return;
+  document.getElementById('promoted-site-name').value = '';
+  document.getElementById('promoted-site-url').value = '';
+  const preview = document.getElementById('promoted-site-img-preview');
+  preview.style.display = 'none'; preview.src = '';
+  promotedSiteImgData = '';
+  document.getElementById('promoted-site-img-pick').textContent = 'בחר תמונת אייקון';
+  document.getElementById('promoted-site-modal').style.display = 'flex';
+}
+
+function deletePromotedSite(index) {
+  if (!isEditMode) return;
+  if (!confirm('האם למחוק קישור זה?')) return;
+  PROMOTED_SITES.splice(index, 1);
+  localStorage.setItem('promoted_sites', JSON.stringify(PROMOTED_SITES));
+  refreshCurrentPage();
+}
+
+function refreshCurrentPage() {
+  renderPage();
+  const currentPage = pages.find(p => p.id === activePageId);
+  if (currentPage) {
+    currentPage.content = mainContent.innerHTML;
+    saveToStorage();
+  }
+}
+
+// Modal Listeners
+const btnPromotedSitePick = document.getElementById('promoted-site-img-pick');
+if (btnPromotedSitePick) {
+  btnPromotedSitePick.addEventListener('click', () => {
+    const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
+    inp.onchange = e => {
+      const f = e.target.files[0]; if (!f) return;
+      const r = new FileReader();
+      r.onload = ev => {
+        promotedSiteImgData = ev.target.result;
+        const p = document.getElementById('promoted-site-img-preview');
+        p.src = promotedSiteImgData; p.style.display = 'block';
+        btnPromotedSitePick.textContent = '✓ אייקון נבחר';
+      };
+      r.readAsDataURL(f);
+    };
+    inp.click();
+  });
+}
+
+const btnPromotedSiteCancel = document.getElementById('promoted-site-cancel');
+if (btnPromotedSiteCancel) {
+  btnPromotedSiteCancel.addEventListener('click', () => {
+    document.getElementById('promoted-site-modal').style.display = 'none';
+  });
+}
+
+const btnPromotedSiteSave = document.getElementById('promoted-site-save');
+if (btnPromotedSiteSave) {
+  btnPromotedSiteSave.addEventListener('click', () => {
+    const name = document.getElementById('promoted-site-name').value.trim();
+    const url = document.getElementById('promoted-site-url').value.trim();
+    if (!name || !url) { alert('חובה למלא שם וכתובת קישור'); return; }
+
+    let formattedUrl = url;
+    if (!/^https?:\/\//i.test(formattedUrl)) {
+      formattedUrl = 'https://' + formattedUrl;
+    }
+
+    PROMOTED_SITES.push({
+      name,
+      url: formattedUrl,
+      icon: promotedSiteImgData || '🌐'
+    });
+
+    localStorage.setItem('promoted_sites', JSON.stringify(PROMOTED_SITES));
+    refreshCurrentPage();
+    document.getElementById('promoted-site-modal').style.display = 'none';
+  });
+}
+
+window.deletePromotedSite = deletePromotedSite;
+window.openPromotedSiteModal = openPromotedSiteModal;
+window.refreshCurrentPage = refreshCurrentPage;
+
+function togglePinArticle(id) {
+  if (!isEditMode) return;
+  const arts = artGetArticles();
+  const art = arts.find(a => a.id === id);
+  if (art) {
+    art.pinned = !art.pinned;
+    mainContent.innerHTML = buildArticlesPage(arts);
+    saveCurrentPageContent();
+  }
+}
+
+function togglePinStory(id) {
+  if (!isEditMode) return;
+  const stories = storyGetStories();
+  const story = stories.find(s => s.id === id);
+  if (story) {
+    story.pinned = !story.pinned;
+    mainContent.innerHTML = buildStoriesPage(stories);
+    saveCurrentPageContent();
+  }
+}
+
+function togglePinPhoto(id) {
+  if (!isEditMode) return;
+  const albums = photoGetAlbums();
+  const album = albums.find(a => a.id === id);
+  if (album) {
+    album.pinned = !album.pinned;
+    mainContent.innerHTML = buildPhotosPage(albums);
+    saveCurrentPageContent();
+  }
+}
+
+function togglePinCourse(id) {
+  if (!isEditMode) return;
+  const courses = courseGetCourses();
+  const course = courses.find(c => c.id === id);
+  if (course) {
+    course.pinned = !course.pinned;
+    mainContent.innerHTML = buildCoursesPage(courses);
+    saveCurrentPageContent();
+  }
+}
+
+window.togglePinArticle = togglePinArticle;
+window.togglePinStory = togglePinStory;
+window.togglePinPhoto = togglePinPhoto;
+window.togglePinCourse = togglePinCourse;
+
+// ============================================================
+// מערכת קהילה ושיתוף פנטזיות (Community System)
+// ============================================================
+
+let communityPosts = [];
+let communitySearchQuery = '';
+let currentCommPostImgData = '';
+
+// סנכרון פוסטים בזמן אמת מול פיירבייס
+onValue(ref(db, 'website/community_posts'), (snapshot) => {
+  const data = snapshot.val();
+  communityPosts = [];
+  if (data) {
+    for (let key in data) {
+      communityPosts.push({ id: key, ...data[key] });
+    }
+    // מיון לפי תאריך יצירה (הכי חדש בהתחלה)
+    communityPosts.sort((a, b) => b.timestamp - a.timestamp);
+  }
+  // רענון העמוד אם אנחנו כרגע בדף קהילה
+  const current = pages.find(p => p.id === activePageId);
+  if (current && current.content && current.content.includes('community-page')) {
+    const listEl = document.getElementById('community-posts-list');
+    if (listEl) {
+      listEl.innerHTML = renderCommunityPostsList();
+    }
+  }
+});
+
+function buildCommunityPage() {
+  return `
+    <div class="articles-page community-page" style="direction: rtl; font-family: system-ui, -apple-system, sans-serif;">
+      <!-- כותרת ראשית -->
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; flex-wrap:wrap; gap:16px; border-bottom:2px solid #f0f0f0; padding-bottom:16px;">
+        <div>
+          <h2 style="font-size:24px; font-weight:800; color:#ec4899; margin:0; display:flex; align-items:center; gap:8px;">👥 קהילת השיתופים והפנטזיות</h2>
+          <p style="font-size:14px; color:#6b7280; margin:6px 0 0 0;">מרחב פתוח לשתף סיפורים, פנטזיות ותמונות, לקרוא ולהגיב אחד לשני!</p>
+        </div>
+        <button onclick="openNewPostModal()" style="background:#ec4899; color:white; border:none; padding:12px 24px; border-radius:14px; font-size:14px; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:8px; box-shadow:0 4px 12px rgba(236,72,153,0.3); transition:transform 0.2s, background 0.2s;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1.0)'">
+          ✍️ שתף פנטזיה חדשה
+        </button>
+      </div>
+      
+      <!-- חיפוש וסינון -->
+      <div style="margin-bottom:24px; position:relative;">
+        <input type="text" id="community-search" placeholder="חפש כותרת, תוכן או יוצר..." oninput="filterCommunityPosts(this.value)" value="${artEsc(communitySearchQuery)}" style="width:100%; padding:12px 16px; border:1.5px solid #e5e7eb; border-radius:14px; font-size:14px; box-sizing:border-box; outline:none; transition:border-color 0.2s;" onfocus="this.style.borderColor='#ec4899'">
+      </div>
+
+      <!-- רשימת הפוסטים -->
+      <div id="community-posts-list" style="display:flex; flex-direction:column; gap:20px;">
+        ${renderCommunityPostsList()}
+      </div>
+    </div>
+  `;
+}
+window.buildCommunityPage = buildCommunityPage;
+
+function filterCommunityPosts(val) {
+  communitySearchQuery = val;
+  const listEl = document.getElementById('community-posts-list');
+  if (listEl) {
+    listEl.innerHTML = renderCommunityPostsList();
+  }
+}
+window.filterCommunityPosts = filterCommunityPosts;
+
+// מציג את אפשרויות הסקר כפסי הצבעה. כל אחד יכול להצביע, וההצבעה שלו
+// מודגשת. הפס גדל מימין (RTL) לפי אחוז ההצבעות.
+function communityPollHTML(p) {
+  if (p.type !== 'poll' || !Array.isArray(p.options) || !p.options.length) return '';
+  const votes = p.votes || {};
+  const counts = p.options.map((_, i) => Object.values(votes).filter(v => v === i).length);
+  const total = counts.reduce((a, b) => a + b, 0);
+  const user = auth.currentUser;
+  const myVote = (user && votes[user.uid] !== undefined) ? votes[user.uid] : null;
+
+  return `
+    <div style="display:flex; flex-direction:column; gap:8px; margin-top:2px;">
+      ${p.options.map((opt, i) => {
+        const c = counts[i];
+        const pct = total ? Math.round((c / total) * 100) : 0;
+        const chosen = myVote === i;
+        return `
+          <button onclick="submitCommunityVote('${p.id}', ${i})" style="position:relative; overflow:hidden; text-align:right; border:1.5px solid ${chosen ? '#ec4899' : '#e5e7eb'}; background:#fff; border-radius:12px; padding:11px 14px; cursor:pointer; font-family:inherit; transition:border-color 0.2s;">
+            <span style="position:absolute; top:0; bottom:0; right:0; width:${pct}%; background:${chosen ? 'rgba(236,72,153,0.16)' : 'rgba(0,0,0,0.05)'}; z-index:0; transition:width 0.3s ease;"></span>
+            <span style="position:relative; z-index:1; display:flex; justify-content:space-between; align-items:center; gap:10px; font-size:14px; font-weight:600; color:#374151;">
+              <span>${chosen ? '✓ ' : ''}${opt}</span>
+              <span style="font-size:12px; color:#6b7280; font-weight:700; white-space:nowrap;">${pct}% · ${c}</span>
+            </span>
+          </button>
+        `;
+      }).join('')}
+      <div style="font-size:12px; color:#9ca3af; font-weight:700;">סה"כ ${total} הצבעות${myVote === null ? ' · לחץ כדי להצביע' : ' · אפשר לשנות בחירה'}</div>
+    </div>
+  `;
+}
+
+window.communityPollHTML = communityPollHTML;
+
+function renderCommunityPostsList() {
+  const query = communitySearchQuery.toLowerCase().trim();
+  const filtered = communityPosts.filter(p => {
+    return (p.title || '').toLowerCase().includes(query) ||
+           (p.body || '').toLowerCase().includes(query) ||
+           (p.author || '').toLowerCase().includes(query);
+  });
+
+  if (filtered.length === 0) {
+    return `<div style="text-align:center; padding:40px; color:#888; background:#fff; border-radius:16px; border:1px solid #eee; font-size:14px;">לא נמצאו שיתופים תואמים בקהילה. היה הראשון לשתף! ✨</div>`;
+  }
+
+  return filtered.map(p => {
+    const formattedDate = new Date(p.timestamp).toLocaleString('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    const commentsList = p.comments ? Object.keys(p.comments).map(k => ({ id: k, ...p.comments[k] })).sort((a,b) => a.timestamp - b.timestamp) : [];
+    const isQuestion = p.type === 'question';
+    const isPoll = p.type === 'poll';
+    // תוויות לפי סוג: שאלה נענית ב"תשובות", השאר ב"תגובות"
+    const commentsLabel = isQuestion ? 'תשובות' : 'תגובות';
+    const commentPlaceholder = isQuestion ? 'כתוב תשובה...' : 'כתוב תגובה...';
+    const typeBadge = isPoll
+      ? `<span style="display:inline-block; font-size:11px; font-weight:800; color:#7c3aed; background:rgba(124,58,237,0.1); padding:3px 10px; border-radius:999px; margin-bottom:6px;">🗳️ סקר</span>`
+      : isQuestion
+      ? `<span style="display:inline-block; font-size:11px; font-weight:800; color:#2563eb; background:rgba(37,99,235,0.1); padding:3px 10px; border-radius:999px; margin-bottom:6px;">❓ שאלה</span>`
+      : '';
+
+    return `
+      <div class="art-sidebar-box" style="background:#fff; border:1px solid #eee; border-radius:18px; padding:20px; box-shadow:0 4px 15px rgba(0,0,0,0.02); display:flex; flex-direction:column; gap:14px; text-align:right;">
+        <!-- כותרת ופרטי כותב -->
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px;">
+          <div>
+            ${typeBadge}
+            <h3 style="margin:0 0 4px 0; font-size:18px; font-weight:800; color:#111;">${p.title}</h3>
+            <div style="font-size:12px; color:#6b7280; display:flex; align-items:center; gap:8px;">
+              <span class="photo-author-link" onclick="event.stopPropagation(); openUserProfile('${artEsc(p.authorId || '')}', '${artEsc(p.author)}')" style="cursor:pointer; color:#ec4899; text-decoration:underline; font-weight:700;">👤 ${p.author}</span>
+              <span>·</span>
+              <span>🕒 ${formattedDate}</span>
+            </div>
+          </div>
+          ${isEditMode ? `
+            <button onclick="deleteCommunityPost('${p.id}')" style="background:#fef2f2; color:#ef4444; border:none; padding:6px 12px; border-radius:8px; font-size:12px; cursor:pointer; font-weight:bold;">הסר פוסט 🗑️</button>
+          ` : ''}
+        </div>
+
+        <!-- תוכן הפוסט (מוסתר אם ריק, למשל בסקר בלי הסבר) -->
+        ${p.body ? `<p style="margin:0; font-size:15px; line-height:1.7; color:#374151; white-space:pre-wrap; text-align:justify;">${p.body}</p>` : ''}
+
+        <!-- אפשרויות הסקר -->
+        ${communityPollHTML(p)}
+
+        <!-- תמונה מצורפת אם קיימת -->
+        ${p.image ? `
+          <div style="width:100%; max-height:350px; border-radius:12px; overflow:hidden; border:1px solid #f0f0f0; background:#f9f9f9; margin-top:4px;">
+            <img src="${p.image}" style="width:100%; height:100%; max-height:350px; object-fit:contain; display:block; cursor:zoom-in;" onclick="artZoomImage('${artEsc(p.image)}')">
+          </div>
+        ` : ''}
+
+        <!-- שורת פעולות (לייקים ותגובות) -->
+        <div style="display:flex; align-items:center; gap:16px; border-top:1px solid #f3f4f6; border-bottom:1px solid #f3f4f6; padding:10px 0; margin-top:6px;">
+          <button onclick="toggleCommunityLike('${p.id}')" style="background:none; border:none; cursor:pointer; display:flex; align-items:center; gap:6px; font-weight:bold; font-size:13px; color:#4b5563; padding:4px 8px; border-radius:6px; transition:background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='none'">
+            <span style="font-size:16px;">❤️</span>
+            <span>${p.likes || 0} לייקים</span>
+          </button>
+          <div style="font-size:13px; color:#4b5563; font-weight:bold; display:flex; align-items:center; gap:6px;">
+            <span style="font-size:16px;">💬</span>
+            <span>${commentsList.length} ${commentsLabel}</span>
+          </div>
+        </div>
+
+        <!-- רשימת תגובות -->
+        ${commentsList.length > 0 ? `
+          <div style="display:flex; flex-direction:column; gap:10px; background:#f9fafb; padding:12px; border-radius:12px; border:1px solid #f3f4f6;">
+            ${commentsList.map(c => {
+              const cDate = new Date(c.timestamp).toLocaleString('he-IL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+              return `
+                <div style="border-bottom:1px solid #f1f2f4; padding-bottom:8px; margin-bottom:8px; &:last-child { border:none; padding-bottom:0; margin-bottom:0; }">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                    <span class="photo-author-link" onclick="openUserProfile('${artEsc(c.authorId || '')}', '${artEsc(c.author)}')" style="font-size:12px; font-weight:800; color:#ec4899; cursor:pointer; text-decoration:underline;">${c.author}</span>
+                    <span style="font-size:10px; color:#9ca3af;">${cDate}</span>
+                  </div>
+                  <p style="margin:0; font-size:13.5px; color:#4b5563; line-height:1.5;">${c.body}</p>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        ` : ''}
+
+        <!-- כתיבת תגובה חדשה -->
+        <div style="display:flex; gap:8px; align-items:center;">
+          <input type="text" id="comment-input-${p.id}" placeholder="${commentPlaceholder}" style="flex:1; padding:8px 12px; border:1px solid #ddd; border-radius:10px; font-size:13px; outline:none;" onkeydown="if(event.key==='Enter')submitCommunityComment('${p.id}')">
+          <button onclick="submitCommunityComment('${p.id}')" style="background:#ec4899; color:white; border:none; padding:8px 16px; border-radius:10px; font-size:13px; font-weight:bold; cursor:pointer; transition:background 0.2s;">שלח 🚀</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+window.renderCommunityPostsList = renderCommunityPostsList;
+
+// סוג הפרסום שנבחר במודל: 'share' (שיתוף) / 'poll' (סקר) / 'question' (שאלה)
+let currentCommPostType = 'share';
+
+function setCommPostType(type) {
+  currentCommPostType = type;
+  ['share', 'poll', 'question'].forEach(t => {
+    const btn = document.getElementById('comm-type-' + t);
+    if (btn) btn.classList.toggle('active', t === type);
+  });
+  const bodyWrap = document.getElementById('comm-body-wrap');
+  const pollWrap = document.getElementById('comm-poll-wrap');
+  const titleLabel = document.getElementById('comm-title-label');
+  const bodyLabel = document.getElementById('comm-body-label');
+  const titleInput = document.getElementById('comm-post-title');
+  const modalTitle = document.getElementById('comm-modal-title');
+
+  if (type === 'poll') {
+    pollWrap.style.display = 'flex';
+    bodyWrap.style.display = 'flex';
+    if (titleLabel) titleLabel.textContent = 'שאלת הסקר *';
+    if (titleInput) titleInput.placeholder = 'על מה מצביעים?';
+    if (bodyLabel) bodyLabel.textContent = 'הסבר (אופציונלי)';
+    if (modalTitle) modalTitle.textContent = '🗳️ יצירת סקר חדש';
+  } else if (type === 'question') {
+    pollWrap.style.display = 'none';
+    bodyWrap.style.display = 'flex';
+    if (titleLabel) titleLabel.textContent = 'השאלה שלך *';
+    if (titleInput) titleInput.placeholder = 'מה תרצה לשאול את הקהילה?';
+    if (bodyLabel) bodyLabel.textContent = 'פירוט (אופציונלי)';
+    if (modalTitle) modalTitle.textContent = '❓ שאלה חדשה לקהילה';
+  } else {
+    pollWrap.style.display = 'none';
+    bodyWrap.style.display = 'flex';
+    if (titleLabel) titleLabel.textContent = 'כותרת *';
+    if (titleInput) titleInput.placeholder = 'מה כותרת השיתוף?';
+    if (bodyLabel) bodyLabel.textContent = 'תוכן *';
+    if (modalTitle) modalTitle.textContent = '✍️ שיתוף חדש בקהילה';
+  }
+}
+window.setCommPostType = setCommPostType;
+
+function openNewPostModal() {
+  const user = auth.currentUser;
+  if (!user) {
+    alert("עלייך להתחבר למשתמש על מנת לשתף בקהילה! ❤️");
+    return;
+  }
+  document.getElementById('comm-post-title').value = '';
+  document.getElementById('comm-post-body').value = '';
+  document.querySelectorAll('#comm-poll-wrap .comm-poll-opt').forEach(inp => inp.value = '');
+  const preview = document.getElementById('comm-post-img-preview');
+  if (preview) { preview.style.display = 'none'; preview.src = ''; }
+  currentCommPostImgData = '';
+  document.getElementById('comm-post-img-pick').textContent = '📷 לחץ לבחירת תמונה';
+  setCommPostType('share');
+  document.getElementById('community-post-modal').style.display = 'flex';
+}
+window.openNewPostModal = openNewPostModal;
+
+// מאזין לבחירת תמונה לפוסט בקהילה
+const commImgPick = document.getElementById('comm-post-img-pick');
+if (commImgPick) {
+  commImgPick.addEventListener('click', () => {
+    const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
+    inp.onchange = e => {
+      const f = e.target.files[0]; if (!f) return;
+      artCompressImage(f).then(data => {
+        currentCommPostImgData = data;
+        const p = document.getElementById('comm-post-img-preview');
+        if (p) { p.src = currentCommPostImgData; p.style.display = 'block'; }
+        commImgPick.textContent = '✓ תמונה נבחרה';
+      });
+    };
+    inp.click();
+  });
+}
+
+async function submitCommunityPost() {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  const title = document.getElementById('comm-post-title').value.trim();
+  const body = document.getElementById('comm-post-body').value.trim();
+  const type = currentCommPostType || 'share';
+
+  if (!title) {
+    alert("חובה להזין כותרת!");
+    return;
+  }
+  // בשיתוף רגיל התוכן חובה; בסקר ובשאלה הוא אופציונלי
+  if (type === 'share' && !body) {
+    alert("חובה להזין תוכן לשיתוף!");
+    return;
+  }
+
+  let pollOptions = null;
+  if (type === 'poll') {
+    pollOptions = Array.from(document.querySelectorAll('#comm-poll-wrap .comm-poll-opt'))
+      .map(inp => inp.value.trim())
+      .filter(Boolean);
+    if (pollOptions.length < 2) {
+      alert("לסקר צריך לפחות שתי אפשרויות!");
+      return;
+    }
+  }
+
+  // שליפת פרופיל מקומי לכינוי עדכני
+  const localProfile = (() => {
+    try { return JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}'); } catch(e) { return {}; }
+  })();
+  const authorName = localProfile.nickname || user.displayName || user.email.split('@')[0];
+
+  const postData = {
+    type,
+    title,
+    body,
+    author: authorName,
+    authorId: user.uid,
+    image: currentCommPostImgData,
+    timestamp: Date.now(),
+    likes: 0
+  };
+  if (pollOptions) postData.options = pollOptions;
+
+  try {
+    const newPostRef = push(ref(db, 'website/community_posts'));
+    await set(newPostRef, postData);
+    document.getElementById('community-post-modal').style.display = 'none';
+    const msg = type === 'poll' ? "הסקר פורסם בקהילה! 🗳️" : type === 'question' ? "השאלה פורסמה בקהילה! ❓" : "השיתוף שלך פורסם בקהילה בהצלחה! 🚀";
+    alert(msg);
+  } catch(e) {
+    console.error(e);
+    alert("שגיאה בפרסום הפוסט.");
+  }
+}
+window.submitCommunityPost = submitCommunityPost;
+
+async function toggleCommunityLike(postId) {
+  const post = communityPosts.find(p => p.id === postId);
+  if (!post) return;
+  
+  const currentLikes = post.likes || 0;
+  try {
+    const postRef = ref(db, `website/community_posts/${postId}/likes`);
+    await set(postRef, currentLikes + 1);
+  } catch(e) { console.error(e); }
+}
+window.toggleCommunityLike = toggleCommunityLike;
+
+// הצבעה בסקר. כל משתמש מחובר מצביע פעם אחת ויכול לשנות את בחירתו.
+async function submitCommunityVote(postId, optionIndex) {
+  const user = auth.currentUser;
+  if (!user) {
+    alert("עלייך להתחבר כדי להצביע בסקר! ❤️");
+    return;
+  }
+  try {
+    await set(ref(db, `website/community_posts/${postId}/votes/${user.uid}`), optionIndex);
+  } catch (e) {
+    console.error(e);
+    alert("שגיאה בשליחת ההצבעה.");
+  }
+}
+window.submitCommunityVote = submitCommunityVote;
+
+async function submitCommunityComment(postId) {
+  const user = auth.currentUser;
+  if (!user) {
+    alert("עלייך להתחבר למשתמש על מנת להגיב! ❤️");
+    return;
+  }
+
+  const inputEl = document.getElementById(`comment-input-${postId}`);
+  if (!inputEl) return;
+
+  const body = inputEl.value.trim();
+  if (!body) return;
+
+  const localProfile = (() => {
+    try { return JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}'); } catch(e) { return {}; }
+  })();
+  const authorName = localProfile.nickname || user.displayName || user.email.split('@')[0];
+
+  const commentData = {
+    author: authorName,
+    authorId: user.uid,
+    body,
+    timestamp: Date.now()
+  };
+
+  try {
+    const commentsRef = push(ref(db, `website/community_posts/${postId}/comments`));
+    await set(commentsRef, commentData);
+    inputEl.value = '';
+  } catch(e) {
+    console.error(e);
+    alert("שגיאה בשליחת התגובה.");
+  }
+}
+window.submitCommunityComment = submitCommunityComment;
+
+async function deleteCommunityPost(postId) {
+  if (confirm("האם אתה בטוח שברצונך למחוק את הפוסט הזה מהקהילה?")) {
+    try {
+      await set(ref(db, `website/community_posts/${postId}`), null);
+      alert("הפוסט נמחק בהצלחה. 🗑️");
+    } catch(e) {
+      console.error(e);
+      alert("שגיאה במחיקת הפוסט.");
+    }
+  }
+}
+window.deleteCommunityPost = deleteCommunityPost;
+
+function buildSocialCommunityBox() {
+  return `
+    <div class="art-sidebar-box art-social-box" style="text-align: right; display: flex; flex-direction: column; gap: 12px; padding: 16px; border-radius: 12px; border: 1px solid rgba(236, 72, 153, 0.15); background: rgba(236, 72, 153, 0.02); box-sizing: border-box; width: 100%;">
+      <div class="art-sidebar-title" style="margin-bottom: 8px; border-bottom: 2px solid #ec4899; padding-bottom: 6px; font-size: 14px; font-weight: 800; color: #ec4899; width: 100%; box-sizing: border-box;">
+        👥 הקהילות שלנו ברשת
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; box-sizing: border-box;">
+        <a href="https://facebook.com" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; background: #1877f2; color: white; text-decoration: none; border-radius: 8px; font-size: 12px; font-weight: bold; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+          <span>Facebook</span>
+        </a>
+        <a href="https://instagram.com" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); color: white; text-decoration: none; border-radius: 8px; font-size: 12px; font-weight: bold; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+          <span>Instagram</span>
+        </a>
+        <a href="https://twitter.com" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; background: #000000; color: white; text-decoration: none; border-radius: 8px; font-size: 12px; font-weight: bold; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+          <span>Twitter / X</span>
+        </a>
+        <a href="https://reddit.com" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; background: #ff4500; color: white; text-decoration: none; border-radius: 8px; font-size: 12px; font-weight: bold; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+          <span>Reddit</span>
+        </a>
+      </div>
+    </div>
+  `;
+}
+window.buildSocialCommunityBox = buildSocialCommunityBox;
+
+// האזנה לשינויים בזמן אמת במסד הנתונים מכל מכשיר (למשל מהמחשב לנייד)
+onValue(ref(db, 'website'), (snapshot) => {
+  if (!snapshot.exists()) return;
+  
+  // אם המכשיר הנוכחי נמצא במצב עריכה פעיל, לא נדרוס את השינויים המקומיים שלו באמצע עבודה
+  if (isEditMode) return;
+  
+  const data = snapshot.val();
+  let changed = false;
+  
+  if (data.pages) {
+    let pList = [...data.pages];
+    if (!pList.some(p => p.id === 'page-ci')) pList.push({ id: 'page-ci', title: 'ריבית דריבית', content: buildCompoundInterestPage() });
+    if (!pList.some(p => p.id === 'page-em')) pList.push({ id: 'page-em', title: 'מחשבון Everything Money', content: buildEverythingMoneyPage() });
+    if (JSON.stringify(pages) !== JSON.stringify(pList)) {
+      pages = pList;
+      changed = true;
+    }
+  }
+
+  if (data.topNavPages) {
+    let navs = Array.from(new Set(data.topNavPages));
+    if (!navs.includes('page-main')) navs.unshift('page-main');
+    if (!navs.includes('page-ci')) navs.push('page-ci');
+    if (!navs.includes('page-em')) navs.push('page-em');
+    if (JSON.stringify(topNavPages) !== JSON.stringify(navs)) {
+      topNavPages = navs;
+      changed = true;
+    }
+  }
+  if (data.siteBackgrounds && JSON.stringify(siteBackgrounds) !== JSON.stringify(data.siteBackgrounds)) {
+    siteBackgrounds = data.siteBackgrounds;
+    applyBackgrounds();
+    changed = true;
+  }
+  if (data.hideCart !== undefined && hideCart !== data.hideCart) {
+    hideCart = data.hideCart;
+    changed = true;
+  }
+  if (data.hideChat !== undefined && hideChat !== data.hideChat) {
+    hideChat = data.hideChat;
+    changed = true;
+  }
+  if (data.deleteCart !== undefined && deleteCart !== data.deleteCart) {
+    deleteCart = data.deleteCart;
+    changed = true;
+  }
+  if (data.deleteChat !== undefined && deleteChat !== data.deleteChat) {
+    deleteChat = data.deleteChat;
+    changed = true;
+  }
+  if (data.promotedSites) {
+    PROMOTED_SITES = data.promotedSites;
+    localStorage.setItem('promoted_sites', JSON.stringify(PROMOTED_SITES));
+  }
+  
+  if (changed) {
+    renderSideMenu();
+    renderTopNav();
+    renderPage();
+    updateFABsVisibility();
+  }
+});
+
