@@ -4694,8 +4694,8 @@ window.buildEverythingMoneyPage = function() {
           </table>
         </div>
 
-        <div style="padding: 18px; text-align: center; background: #0f0f11; border-top: 1px solid #27272a;">
-          <button onclick="calculateEMValuation()" style="background: linear-gradient(90deg, #65a30d 0%, #84cc16 100%); color: #ffffff; border: none; padding: 14px 40px; border-radius: 50px; font-size: 18px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 20px rgba(132, 204, 22, 0.4); transition: transform 0.2s ease;">
+        <div class="em-btn-wrap">
+          <button onclick="calculateEMValuation()" class="em-analyze-btn">
             🚀 נתח מניה ומצא מחיר קנייה יעד
           </button>
         </div>

@@ -3132,190 +3132,184 @@ body:not(.edit-mode) .hidden-nav {
 }
 
 /* ============================================================
-   FINANCIAL CALCULATORS (COMPOUND INTEREST & EVERYTHING MONEY)
+   FINANCIAL CALCULATORS (ULTRA-MODERN FINTECH GLASSMORPHISM)
    ============================================================ */
 
-/* Compound Interest Calculator */
 .calc-page-wrapper {
-  max-width: 1100px;
+  max-width: 1150px;
   margin: 0 auto;
-  padding: 24px;
-  font-family: system-ui, -apple-system, sans-serif;
+  padding: 32px 20px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   direction: rtl;
 }
 
+/* Header Hero Banner */
 .calc-header-box {
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  background: linear-gradient(135deg, #090d16 0%, #111827 60%, #1e1035 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   color: #ffffff;
-  padding: 32px;
-  border-radius: 20px;
-  margin-bottom: 28px;
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.15);
+  padding: 36px 40px;
+  border-radius: 24px;
+  margin-bottom: 32px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 20px;
+  gap: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.calc-header-box::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -20%;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(132, 204, 22, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
+  pointer-events: none;
 }
 
 .calc-header-title h1 {
-  margin: 0 0 8px 0;
-  font-size: 28px;
+  margin: 0 0 10px 0;
+  font-size: 32px;
   font-weight: 900;
-  color: #38bdf8;
+  background: linear-gradient(90deg, #84cc16 0%, #10b981 50%, #38bdf8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.5px;
 }
 
 .calc-header-title p {
   margin: 0;
   color: #94a3b8;
-  font-size: 14px;
+  font-size: 15px;
+  font-weight: 500;
 }
 
+/* Card Layout */
 .calc-card-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 24px;
-  margin-bottom: 28px;
+  gap: 28px;
+  margin-bottom: 32px;
 }
 
-@media (max-width: 850px) {
+@media (max-width: 880px) {
   .calc-card-grid {
     grid-template-columns: 1fr;
   }
 }
 
 .calc-box {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
-}
-
-.dark-theme .calc-box {
-  background: #18181b;
-  border-color: #27272a;
-  color: #f4f4f5;
+  background: #111827;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 28px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(12px);
+  color: #f8fafc;
 }
 
 .calc-form-group {
-  margin-bottom: 18px;
+  margin-bottom: 22px;
 }
 
 .calc-form-group label {
   display: block;
   font-size: 13px;
   font-weight: 700;
-  color: #334155;
-  margin-bottom: 6px;
-}
-
-.dark-theme .calc-form-group label {
   color: #cbd5e1;
-}
-
-.calc-input-wrap {
-  position: relative;
-  display: flex;
-  align-items: center;
+  margin-bottom: 8px;
 }
 
 .calc-input-wrap input, .calc-input-wrap select {
   width: 100%;
-  padding: 12px 14px;
-  border: 1.5px solid #cbd5e1;
-  border-radius: 10px;
+  padding: 13px 16px;
+  border: 1.5px solid #374151;
+  border-radius: 12px;
   font-size: 15px;
-  font-weight: 700;
-  color: #0f172a;
-  background: #f8fafc;
-  outline: none;
-  transition: all 0.2s ease;
-}
-
-.dark-theme .calc-input-wrap input, .dark-theme .calc-input-wrap select {
-  background: #27272a;
-  border-color: #3f3f46;
+  font-weight: 800;
   color: #ffffff;
+  background: #1f2937;
+  outline: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-sizing: border-box;
 }
 
 .calc-input-wrap input:focus, .calc-input-wrap select:focus {
-  border-color: #0284c7;
-  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+  border-color: #84cc16;
+  box-shadow: 0 0 0 4px rgba(132, 204, 22, 0.2);
+  background: #111827;
 }
 
 .calc-kpi-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-  margin-bottom: 20px;
+  gap: 18px;
+  margin-bottom: 24px;
 }
 
 .calc-kpi-card {
-  background: #f1f5f9;
-  border-radius: 12px;
-  padding: 16px;
+  background: #1f2937;
+  border-radius: 16px;
+  padding: 20px 16px;
   text-align: center;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #374151;
+  transition: transform 0.2s ease, border-color 0.2s ease;
 }
 
-.dark-theme .calc-kpi-card {
-  background: #27272a;
-  border-color: #3f3f46;
+.calc-kpi-card:hover {
+  transform: translateY(-2px);
+  border-color: #4b5563;
 }
 
 .calc-kpi-card.highlight {
-  background: rgba(16, 185, 129, 0.1);
+  background: rgba(16, 185, 129, 0.12);
   border-color: #10b981;
 }
 
 .calc-kpi-label {
   font-size: 12px;
-  color: #64748b;
+  color: #94a3b8;
   font-weight: 700;
-  margin-bottom: 4px;
-}
-
-.dark-theme .calc-kpi-label {
-  color: #a1a1aa;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .calc-kpi-val {
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 900;
-  color: #0f172a;
-}
-
-.dark-theme .calc-kpi-val {
   color: #ffffff;
 }
 
 .calc-kpi-card.highlight .calc-kpi-val {
-  color: #10b981;
+  color: #34d399;
 }
 
-/* EVERYTHING MONEY CALCULATOR TABLE STYLING */
+/* EVERYTHING MONEY MATRIX GLASS TABLE */
 .em-container {
-  background: #18181b;
-  border-radius: 16px;
+  background: #0f172a;
+  border-radius: 24px;
   overflow: hidden;
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.3);
-  border: 1px solid #27272a;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   color: #ffffff;
-  direction: ltr; /* Keeping table data matrix aligned like official tool */
-  font-family: 'Inter', system-ui, sans-serif;
-  margin-bottom: 30px;
+  margin-bottom: 36px;
 }
 
 .em-header-banner {
-  background: linear-gradient(90deg, #65a30d 0%, #84cc16 100%);
+  background: linear-gradient(90deg, #65a30d 0%, #10b981 100%);
   color: #ffffff;
-  padding: 16px 24px;
+  padding: 18px 28px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   font-weight: 900;
-  text-transform: uppercase;
+  font-size: 15px;
   letter-spacing: 0.5px;
 }
 
@@ -3326,99 +3320,140 @@ body:not(.edit-mode) .hidden-nav {
 }
 
 .em-table th {
-  background: #65a30d;
-  color: #ffffff;
-  padding: 14px 10px;
-  font-size: 13px;
+  background: #1e293b;
+  color: #94a3b8;
+  padding: 16px 12px;
+  font-size: 12px;
   font-weight: 800;
   text-transform: uppercase;
-  border-bottom: 2px solid #4d7c0f;
+  letter-spacing: 1px;
+  border-bottom: 1px solid #334155;
 }
 
 .em-table td {
-  padding: 12px 10px;
-  border-bottom: 1px solid #27272a;
+  padding: 14px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   font-weight: 700;
   font-size: 14px;
 }
 
+.em-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
 .em-row-label {
-  text-align: left;
-  padding-left: 20px !important;
   font-size: 14px;
   font-weight: 800;
-  color: #f4f4f5;
-  width: 240px;
+  color: #f1f5f9;
+  width: 260px;
 }
 
 .em-hist-val {
-  color: #e4e4e7;
+  color: #cbd5e1;
   font-size: 14px;
+  font-weight: 600;
 }
 
 .em-input {
-  background: #27272a;
-  border: 1px solid #3f3f46;
-  border-radius: 6px;
-  color: #ffffff;
-  font-size: 14px;
-  font-weight: 800;
+  background: #1f2937;
+  border: 1.5px solid #374151;
+  border-radius: 8px;
+  color: #84cc16;
+  font-size: 15px;
+  font-weight: 900;
   text-align: center;
-  padding: 8px;
-  width: 70px;
+  padding: 8px 6px;
+  width: 72px;
   outline: none;
   transition: all 0.2s ease;
 }
 
 .em-input:focus {
   border-color: #84cc16;
-  background: #3f3f46;
-  box-shadow: 0 0 0 2px rgba(132, 204, 22, 0.2);
+  background: #111827;
+  box-shadow: 0 0 0 3px rgba(132, 204, 22, 0.25);
 }
 
+/* Analyze Action Button */
+.em-btn-wrap {
+  padding: 24px;
+  text-align: center;
+  background: #090d16;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.em-analyze-btn {
+  background: linear-gradient(135deg, #84cc16 0%, #10b981 100%);
+  color: #0f172a;
+  border: none;
+  padding: 16px 48px;
+  border-radius: 50px;
+  font-size: 18px;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 8px 30px rgba(132, 204, 22, 0.35);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.em-analyze-btn:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 12px 40px rgba(132, 204, 22, 0.5);
+}
+
+/* Analysis Output Cards Grid */
 .em-results-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  padding: 20px;
-  background: #0f0f11;
-  border-top: 1px solid #27272a;
+  gap: 20px;
+  padding: 24px;
+  background: #0b0f19;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-@media (max-width: 700px) {
+@media (max-width: 768px) {
   .em-results-grid {
     grid-template-columns: 1fr;
   }
 }
 
 .em-result-card {
-  background: #18181b;
-  border: 1px solid #27272a;
-  border-radius: 12px;
-  padding: 16px;
+  background: #1e293b;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 24px 20px;
   text-align: center;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  position: relative;
+}
+
+.em-result-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.3);
 }
 
 .em-result-card.low {
   border-top: 4px solid #f59e0b;
 }
+
 .em-result-card.mid {
-  border-top: 4px solid #3b82f6;
+  border-top: 4px solid #38bdf8;
 }
+
 .em-result-card.high {
   border-top: 4px solid #10b981;
 }
 
 .em-scenario-title {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 800;
   text-transform: uppercase;
-  color: #a1a1aa;
-  margin-bottom: 8px;
+  color: #94a3b8;
+  margin-bottom: 12px;
+  letter-spacing: 0.5px;
 }
 
 .em-buy-price {
-  font-size: 24px;
+  font-size: 26px;
   font-weight: 900;
   color: #ffffff;
   margin-bottom: 4px;
@@ -3426,26 +3461,30 @@ body:not(.edit-mode) .hidden-nav {
 
 .em-val-tag {
   display: inline-block;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
-  padding: 4px 10px;
+  padding: 6px 16px;
   border-radius: 50px;
-  margin-top: 6px;
+  margin-top: 12px;
+  letter-spacing: 0.3px;
 }
 
 .em-val-tag.under {
-  background: rgba(16, 185, 129, 0.15);
-  color: #10b981;
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
   border: 1px solid #10b981;
 }
+
 .em-val-tag.fair {
-  background: rgba(245, 158, 11, 0.15);
-  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
   border: 1px solid #f59e0b;
 }
+
 .em-val-tag.over {
-  background: rgba(239, 68, 68, 0.15);
-  color: #ef4444;
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
   border: 1px solid #ef4444;
 }
+
 
