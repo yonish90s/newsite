@@ -115,7 +115,7 @@ function applyBackgrounds() {
   }
 }
 
-// פונקציית אתחול אסינכרונית - משארת אך ורק את העמודים "תמונות" ו-"סיפורים" ומנקה את הזיכרון
+// פונקציית אתחול - מנקה לחלוטין את הזיכרון ומגדירה אך ורק את העמודים "תמונות" ו-"סיפורים"
 async function initSite() {
   pages = [
     { id: 'page-photos', title: '🖼️ תמונות', content: '' },
@@ -124,22 +124,28 @@ async function initSite() {
   topNavPages = ['page-photos', 'page-stories'];
   activePageId = 'page-photos';
 
+  // מנקה את הזיכרון המקומי הישן בדפדפן
   try {
-    const dbRef = ref(db);
-    const snapshot = await get(child(dbRef, 'website'));
-    if (snapshot.exists()) {
-      const data = snapshot.val();
-      if (data.pages && Array.isArray(data.pages)) {
-        // מסננים כך שיישארו אך ורק העמודים תמונות וסיפורים
-        const filtered = data.pages.filter(p => p.title.includes('תמונות') || p.title.includes('סיפורים'));
-        if (filtered.length > 0) pages = filtered;
-      }
-    }
+    await localforage.removeItem('mySitePages_v3');
+    await localforage.removeItem('mySiteTopNav_v3');
+    await localforage.removeItem('mySiteTopNavHTML_v3');
+    await localforage.removeItem('myActivePage_v3');
+  } catch(e) {}
+
+  // דורס ומסנכרן את ענן Firebase לרשימה הנקייה בלבד
+  try {
+    const dbRef = ref(db, 'website');
+    await set(dbRef, {
+      pages: pages,
+      activePageId: activePageId,
+      topNavPages: topNavPages,
+      navHTML: '<a href="#" data-page-id="page-photos" class="active">🖼️ תמונות</a><a href="#" data-page-id="page-stories">סיפורים</a>',
+      siteBackgrounds: siteBackgrounds
+    });
   } catch(e) {
-    console.error('Error fetching Firebase data', e);
+    console.error('Firebase sync error', e);
   }
 
-  // שמירה וסנכרון של המצב הנקי
   saveToStorage();
   renderSideMenu();
   renderTopNav();
@@ -366,7 +372,7 @@ function renderSideMenu() {
   });
 }
 
-// פונקציה שמייצרת את התפריט העליון ומוסיפה לו מגה-תפריט
+// פונקציה שמייצרת את התפריט העליון
 function renderTopNav() {
   navLinksContainer.innerHTML = ''; // מנקה את התפריט הסטטי מה-HTML
   
@@ -377,8 +383,8 @@ function renderTopNav() {
     
     const a = document.createElement('a');
     a.href = '#';
-    a.textContent = page.title.replace(/[\u1000-\uFFFF]+/g, '').trim();
-    a.dataset.pageId = pageId; // שמירת המזהה כדי שנוכל למחוק אותו מהמערך בעריכה
+    a.textContent = page.title.trim();
+    a.dataset.pageId = pageId;
     
     // סימון עמוד פעיל למעלה
     if (pageId === activePageId) {
