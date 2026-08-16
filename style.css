@@ -3130,3 +3130,322 @@ body:not(.edit-mode) .hidden-nav {
   .story-cat-btn { padding: 5px 11px; font-size: 11px; }
   .story-size-btn { width: 26px; height: 26px; font-size: 12px; }
 }
+
+/* ============================================================
+   FINANCIAL CALCULATORS (COMPOUND INTEREST & EVERYTHING MONEY)
+   ============================================================ */
+
+/* Compound Interest Calculator */
+.calc-page-wrapper {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px;
+  font-family: system-ui, -apple-system, sans-serif;
+  direction: rtl;
+}
+
+.calc-header-box {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: #ffffff;
+  padding: 32px;
+  border-radius: 20px;
+  margin-bottom: 28px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.15);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.calc-header-title h1 {
+  margin: 0 0 8px 0;
+  font-size: 28px;
+  font-weight: 900;
+  color: #38bdf8;
+}
+
+.calc-header-title p {
+  margin: 0;
+  color: #94a3b8;
+  font-size: 14px;
+}
+
+.calc-card-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 28px;
+}
+
+@media (max-width: 850px) {
+  .calc-card-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.calc-box {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+}
+
+.dark-theme .calc-box {
+  background: #18181b;
+  border-color: #27272a;
+  color: #f4f4f5;
+}
+
+.calc-form-group {
+  margin-bottom: 18px;
+}
+
+.calc-form-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: #334155;
+  margin-bottom: 6px;
+}
+
+.dark-theme .calc-form-group label {
+  color: #cbd5e1;
+}
+
+.calc-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.calc-input-wrap input, .calc-input-wrap select {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+  background: #f8fafc;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.dark-theme .calc-input-wrap input, .dark-theme .calc-input-wrap select {
+  background: #27272a;
+  border-color: #3f3f46;
+  color: #ffffff;
+}
+
+.calc-input-wrap input:focus, .calc-input-wrap select:focus {
+  border-color: #0284c7;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+}
+
+.calc-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.calc-kpi-card {
+  background: #f1f5f9;
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  border: 1px solid #e2e8f0;
+}
+
+.dark-theme .calc-kpi-card {
+  background: #27272a;
+  border-color: #3f3f46;
+}
+
+.calc-kpi-card.highlight {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: #10b981;
+}
+
+.calc-kpi-label {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.dark-theme .calc-kpi-label {
+  color: #a1a1aa;
+}
+
+.calc-kpi-val {
+  font-size: 20px;
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.dark-theme .calc-kpi-val {
+  color: #ffffff;
+}
+
+.calc-kpi-card.highlight .calc-kpi-val {
+  color: #10b981;
+}
+
+/* EVERYTHING MONEY CALCULATOR TABLE STYLING */
+.em-container {
+  background: #18181b;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.3);
+  border: 1px solid #27272a;
+  color: #ffffff;
+  direction: ltr; /* Keeping table data matrix aligned like official tool */
+  font-family: 'Inter', system-ui, sans-serif;
+  margin-bottom: 30px;
+}
+
+.em-header-banner {
+  background: linear-gradient(90deg, #65a30d 0%, #84cc16 100%);
+  color: #ffffff;
+  padding: 16px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.em-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: center;
+}
+
+.em-table th {
+  background: #65a30d;
+  color: #ffffff;
+  padding: 14px 10px;
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  border-bottom: 2px solid #4d7c0f;
+}
+
+.em-table td {
+  padding: 12px 10px;
+  border-bottom: 1px solid #27272a;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.em-row-label {
+  text-align: left;
+  padding-left: 20px !important;
+  font-size: 14px;
+  font-weight: 800;
+  color: #f4f4f5;
+  width: 240px;
+}
+
+.em-hist-val {
+  color: #e4e4e7;
+  font-size: 14px;
+}
+
+.em-input {
+  background: #27272a;
+  border: 1px solid #3f3f46;
+  border-radius: 6px;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 800;
+  text-align: center;
+  padding: 8px;
+  width: 70px;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.em-input:focus {
+  border-color: #84cc16;
+  background: #3f3f46;
+  box-shadow: 0 0 0 2px rgba(132, 204, 22, 0.2);
+}
+
+.em-results-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  padding: 20px;
+  background: #0f0f11;
+  border-top: 1px solid #27272a;
+}
+
+@media (max-width: 700px) {
+  .em-results-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.em-result-card {
+  background: #18181b;
+  border: 1px solid #27272a;
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+}
+
+.em-result-card.low {
+  border-top: 4px solid #f59e0b;
+}
+.em-result-card.mid {
+  border-top: 4px solid #3b82f6;
+}
+.em-result-card.high {
+  border-top: 4px solid #10b981;
+}
+
+.em-scenario-title {
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #a1a1aa;
+  margin-bottom: 8px;
+}
+
+.em-buy-price {
+  font-size: 24px;
+  font-weight: 900;
+  color: #ffffff;
+  margin-bottom: 4px;
+}
+
+.em-val-tag {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 50px;
+  margin-top: 6px;
+}
+
+.em-val-tag.under {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border: 1px solid #10b981;
+}
+.em-val-tag.fair {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+  border: 1px solid #f59e0b;
+}
+.em-val-tag.over {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid #ef4444;
+}
+

@@ -415,9 +415,20 @@ async function initSite() {
     }
   }
 
-  // ניקוי מוחלט מהזיכרון ומהענן של עמודים ישנים שנמחקו
-  pages = pages.filter(p => p.id === 'page-main' || p.isHidden === true);
-  topNavPages = ['page-main'];
+  // הוספת עמודי המחשבונים הפיננסיים (ריבית דריבית + Everything Money)
+  let ciPage = pages.find(p => p.id === 'page-ci');
+  if (!ciPage) {
+    ciPage = { id: 'page-ci', title: 'ריבית דריבית', content: '<div class="ci-page-wrapper"></div>' };
+    pages.push(ciPage);
+  }
+
+  let emPage = pages.find(p => p.id === 'page-em');
+  if (!emPage) {
+    emPage = { id: 'page-em', title: 'מחשבון Everything Money', content: '<div class="em-page-wrapper"></div>' };
+    pages.push(emPage);
+  }
+
+  topNavPages = ['page-main', 'page-ci', 'page-em'];
   activePageId = 'page-main';
 
   // ניקוי המטמון הישן ב-localforage וב-localStorage
@@ -936,6 +947,17 @@ function renderPage() {
   }
 
   if (currentPage) {
+    if (currentPage.id === 'page-ci' || (currentPage.title && currentPage.title.includes('ריבית'))) {
+      mainContent.innerHTML = buildCompoundInterestPage();
+      calculateCompoundInterest();
+      return;
+    }
+    if (currentPage.id === 'page-em' || (currentPage.title && currentPage.title.includes('Everything'))) {
+      mainContent.innerHTML = buildEverythingMoneyPage();
+      calculateEMValuation();
+      return;
+    }
+
     mainContent.innerHTML = currentPage.content; // מזריקים את ה-HTML של העמוד פנימה
 
     // עמוד כתבות: בונים מחדש מהנתונים השמורים כדי ששינויי מבנה (חיפוש, עיצוב) תמיד ייכנסו
@@ -4402,6 +4424,377 @@ function shopDelete(id) {
   mainContent.innerHTML = buildShopPage(prods);
   saveCurrentPageContent();
 }
+
+// ============================================================
+// FINANCIAL CALCULATORS (COMPOUND INTEREST & EVERYTHING MONEY)
+// ============================================================
+
+window.buildCompoundInterestPage = function() {
+  return `
+    <div class="calc-page-wrapper">
+      <div class="calc-header-box">
+        <div class="calc-header-title">
+          <h1>📈 מחשבון ריבית דריבית מתקדם</h1>
+          <p>חשב את צמיחת ההון, ההפקדות והריבית המצטברת לאורך זמן</p>
+        </div>
+        <div style="background: rgba(255,255,255,0.1); padding: 8px 16px; border-radius: 12px; font-weight: 800; font-size: 14px;">
+          💡 אפקט הריבית דריבית: הכסף שלך עובד בשבילך
+        </div>
+      </div>
+
+      <div class="calc-card-grid">
+        <div class="calc-box">
+          <h3 style="margin-top:0; font-size: 18px; margin-bottom: 20px; color: #0284c7;">⚙️ פרטי ההשקעה</h3>
+          
+          <div class="calc-form-group">
+            <label>סכום התחלתי (₪)</label>
+            <div class="calc-input-wrap">
+              <input type="number" id="ci-initial" value="10000" oninput="calculateCompoundInterest()">
+            </div>
+          </div>
+
+          <div class="calc-form-group">
+            <label>הפקדה חודשית (₪)</label>
+            <div class="calc-input-wrap">
+              <input type="number" id="ci-monthly" value="1000" oninput="calculateCompoundInterest()">
+            </div>
+          </div>
+
+          <div class="calc-form-group">
+            <label>תשואה שנתית צפויה (%)</label>
+            <div class="calc-input-wrap">
+              <input type="number" id="ci-rate" value="8" step="0.1" oninput="calculateCompoundInterest()">
+            </div>
+          </div>
+
+          <div class="calc-form-group">
+            <label>תקופת השקעה (בשנים)</label>
+            <div class="calc-input-wrap">
+              <input type="number" id="ci-years" value="20" min="1" max="50" oninput="calculateCompoundInterest()">
+            </div>
+          </div>
+
+          <div class="calc-form-group">
+            <label>תדירות חישוב הריבית</label>
+            <div class="calc-input-wrap">
+              <select id="ci-freq" onchange="calculateCompoundInterest()">
+                <option value="12">חודשית (12 פעמים בשנה)</option>
+                <option value="1">שנתית (פעם בשנה)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="calc-box">
+          <h3 style="margin-top:0; font-size: 18px; margin-bottom: 20px; color: #10b981;">📊 תוצאות הסימולציה</h3>
+          
+          <div class="calc-kpi-grid">
+            <div class="calc-kpi-card highlight">
+              <div class="calc-kpi-label">סך הכל חיסכון מצטבר</div>
+              <div class="calc-kpi-val" id="ci-res-total">₪0</div>
+            </div>
+            <div class="calc-kpi-card">
+              <div class="calc-kpi-label">סך הכל הפקדות</div>
+              <div class="calc-kpi-val" id="ci-res-principal">₪0</div>
+            </div>
+            <div class="calc-kpi-card highlight">
+              <div class="calc-kpi-label">רווח מריבית דריבית</div>
+              <div class="calc-kpi-val" id="ci-res-interest">₪0</div>
+            </div>
+            <div class="calc-kpi-card">
+              <div class="calc-kpi-label">מכפיל תשואה כולל</div>
+              <div class="calc-kpi-val" id="ci-res-mult">0x</div>
+            </div>
+          </div>
+
+          <!-- visual progress bar -->
+          <div style="margin-top: 20px;">
+            <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:700; margin-bottom:6px; color:#64748b;">
+              <span>הפקדות: <strong id="ci-bar-p-pct">50%</strong></span>
+              <span>רווח מריבית: <strong id="ci-bar-i-pct" style="color:#10b981;">50%</strong></span>
+            </div>
+            <div style="height: 14px; background: #e2e8f0; border-radius: 50px; overflow: hidden; display: flex;">
+              <div id="ci-bar-p" style="width: 50%; background: #3b82f6; transition: width 0.3s ease;"></div>
+              <div id="ci-bar-i" style="width: 50%; background: #10b981; transition: width 0.3s ease;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+};
+
+window.calculateCompoundInterest = function() {
+  const initial = parseFloat(document.getElementById('ci-initial')?.value) || 0;
+  const monthly = parseFloat(document.getElementById('ci-monthly')?.value) || 0;
+  const ratePct = parseFloat(document.getElementById('ci-rate')?.value) || 0;
+  const years = parseInt(document.getElementById('ci-years')?.value) || 0;
+  const freq = parseInt(document.getElementById('ci-freq')?.value) || 12;
+
+  const rate = ratePct / 100;
+  const totalMonths = years * 12;
+  const rPeriod = rate / freq;
+
+  let totalFV = initial * Math.pow(1 + rPeriod, years * freq);
+  let totalDeposits = initial;
+
+  for (let m = 1; m <= totalMonths; m++) {
+    totalDeposits += monthly;
+    const monthsRemaining = totalMonths - m;
+    const periodsRemaining = (monthsRemaining / 12) * freq;
+    totalFV += monthly * Math.pow(1 + rPeriod, periodsRemaining);
+  }
+
+  const interestProfit = totalFV - totalDeposits;
+  const multiplier = totalDeposits > 0 ? (totalFV / totalDeposits).toFixed(2) : '0';
+
+  const fmt = (num) => '₪' + Math.round(num).toLocaleString();
+
+  if (document.getElementById('ci-res-total')) document.getElementById('ci-res-total').textContent = fmt(totalFV);
+  if (document.getElementById('ci-res-principal')) document.getElementById('ci-res-principal').textContent = fmt(totalDeposits);
+  if (document.getElementById('ci-res-interest')) document.getElementById('ci-res-interest').textContent = fmt(interestProfit);
+  if (document.getElementById('ci-res-mult')) document.getElementById('ci-res-mult').textContent = multiplier + 'x';
+
+  const pPct = totalFV > 0 ? Math.round((totalDeposits / totalFV) * 100) : 50;
+  const iPct = 100 - pPct;
+
+  if (document.getElementById('ci-bar-p')) document.getElementById('ci-bar-p').style.width = pPct + '%';
+  if (document.getElementById('ci-bar-i')) document.getElementById('ci-bar-i').style.width = iPct + '%';
+  if (document.getElementById('ci-bar-p-pct')) document.getElementById('ci-bar-p-pct').textContent = pPct + '%';
+  if (document.getElementById('ci-bar-i-pct')) document.getElementById('ci-bar-i-pct').textContent = iPct + '%';
+};
+
+/* Everything Money Stock Analyzer Builder & Calculation */
+window.buildEverythingMoneyPage = function() {
+  return `
+    <div class="calc-page-wrapper">
+      <div class="calc-header-box" style="background: linear-gradient(135deg, #18181b 0%, #09090b 100%); border: 1px solid #27272a;">
+        <div class="calc-header-title">
+          <h1 style="color: #84cc16;">📊 מחשבון תשואה ושיווי משקל - Everything Money</h1>
+          <p style="color: #a1a1aa;">ניתוח מניות מקצועי בשיטת 8 הפילירים (Stock Analyzer Matrix)</p>
+        </div>
+        <div style="background: rgba(132, 204, 22, 0.15); border: 1px solid #84cc16; color: #84cc16; padding: 10px 18px; border-radius: 12px; font-weight: 800; font-size: 14px;">
+          🟢 8-Pillar Stock Valuation Framework
+        </div>
+      </div>
+
+      <!-- Stock Basics Input -->
+      <div class="calc-box" style="margin-bottom: 24px; background: #18181b; border-color: #27272a; color: #fff;">
+        <h3 style="margin-top:0; color:#84cc16; font-size:16px; margin-bottom:16px;">🏢 נתוני המניה והחברה בשוק</h3>
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:16px;">
+          <div>
+            <label style="color:#a1a1aa; font-size:12px; font-weight:700;">סימול / שם המניה (Ticker)</label>
+            <input type="text" id="em-ticker" value="AAPL" style="width:100%; padding:9px; background:#27272a; border:1px solid #3f3f46; color:#fff; border-radius:8px; font-weight:800; text-align:center;">
+          </div>
+          <div>
+            <label style="color:#a1a1aa; font-size:12px; font-weight:700;">מחיר מניה נוכחי ($ Price)</label>
+            <input type="number" id="em-price" value="220.00" step="0.01" style="width:100%; padding:9px; background:#27272a; border:1px solid #3f3f46; color:#fff; border-radius:8px; font-weight:800; text-align:center;">
+          </div>
+          <div>
+            <label style="color:#a1a1aa; font-size:12px; font-weight:700;">הכנסות $ במיליארדים (Revenue TTM)</label>
+            <input type="number" id="em-rev" value="385.6" step="0.1" style="width:100%; padding:9px; background:#27272a; border:1px solid #3f3f46; color:#fff; border-radius:8px; font-weight:800; text-align:center;">
+          </div>
+          <div>
+            <label style="color:#a1a1aa; font-size:12px; font-weight:700;">מניות במחזור במיליארדים (Shares)</label>
+            <input type="number" id="em-shares" value="15.3" step="0.1" style="width:100%; padding:9px; background:#27272a; border:1px solid #3f3f46; color:#fff; border-radius:8px; font-weight:800; text-align:center;">
+          </div>
+        </div>
+      </div>
+
+      <!-- Everything Money Table Matrix -->
+      <div class="em-container">
+        <div class="em-header-banner">
+          <span>EVERYTHING MONEY STOCK ANALYZER</span>
+          <span>MY ASSUMPTIONS</span>
+        </div>
+        <div style="overflow-x: auto;">
+          <table class="em-table">
+            <thead>
+              <tr>
+                <th style="text-align:left; padding-left:20px;">METRIC</th>
+                <th>1 YEAR</th>
+                <th>5 YEARS</th>
+                <th>10 YEARS</th>
+                <th style="color:#fef08a;">LOW</th>
+                <th style="color:#fef08a;">MID</th>
+                <th style="color:#fef08a;">HIGH</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="em-row-label">ROIC (תשואה על ההון)</td>
+                <td class="em-hist-val">18.56%</td>
+                <td class="em-hist-val">18.93%</td>
+                <td class="em-hist-val">19.04%</td>
+                <td>-</td><td>-</td><td>-</td>
+              </tr>
+              <tr>
+                <td class="em-row-label">Rev. Growth % (צמיחת הכנסות)</td>
+                <td class="em-hist-val">30.56%</td>
+                <td class="em-hist-val">25.04%</td>
+                <td class="em-hist-val">18.10%</td>
+                <td><input type="number" id="em-g-low" value="5" class="em-input">%</td>
+                <td><input type="number" id="em-g-mid" value="10" class="em-input">%</td>
+                <td><input type="number" id="em-g-high" value="15" class="em-input">%</td>
+              </tr>
+              <tr>
+                <td class="em-row-label">Profit Margin (שולי רווח נקי)</td>
+                <td class="em-hist-val">49.92%</td>
+                <td class="em-hist-val">43.78%</td>
+                <td class="em-hist-val">41.47%</td>
+                <td><input type="number" id="em-pm-low" value="35" class="em-input">%</td>
+                <td><input type="number" id="em-pm-mid" value="38" class="em-input">%</td>
+                <td><input type="number" id="em-pm-high" value="41" class="em-input">%</td>
+              </tr>
+              <tr>
+                <td class="em-row-label">Free Cash Flow Margin (שולי תזרים)</td>
+                <td class="em-hist-val">25.61%</td>
+                <td class="em-hist-val">24.77%</td>
+                <td class="em-hist-val">22.98%</td>
+                <td><input type="number" id="em-fcf-low" value="20" class="em-input">%</td>
+                <td><input type="number" id="em-fcf-mid" value="23" class="em-input">%</td>
+                <td><input type="number" id="em-fcf-high" value="26" class="em-input">%</td>
+              </tr>
+              <tr>
+                <td class="em-row-label">P/E (מכפיל רווח צפוי)</td>
+                <td>-</td><td>-</td><td>-</td>
+                <td><input type="number" id="em-pe-low" value="17" class="em-input"></td>
+                <td><input type="number" id="em-pe-mid" value="20" class="em-input"></td>
+                <td><input type="number" id="em-pe-high" value="23" class="em-input"></td>
+              </tr>
+              <tr>
+                <td class="em-row-label">P/FCF (מכפיל תזרים צפוי)</td>
+                <td>-</td><td>-</td><td>-</td>
+                <td><input type="number" id="em-pfcf-low" value="17" class="em-input"></td>
+                <td><input type="number" id="em-pfcf-mid" value="20" class="em-input"></td>
+                <td><input type="number" id="em-pfcf-high" value="23" class="em-input"></td>
+              </tr>
+              <tr>
+                <td class="em-row-label">Desired Annual Return (תשואה מבוקשת)</td>
+                <td>-</td><td>-</td><td>-</td>
+                <td><input type="number" id="em-ret-low" value="9" class="em-input">%</td>
+                <td><input type="number" id="em-ret-mid" value="9" class="em-input">%</td>
+                <td><input type="number" id="em-ret-high" value="9" class="em-input">%</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div style="padding: 18px; text-align: center; background: #0f0f11; border-top: 1px solid #27272a;">
+          <button onclick="calculateEMValuation()" style="background: linear-gradient(90deg, #65a30d 0%, #84cc16 100%); color: #ffffff; border: none; padding: 14px 40px; border-radius: 50px; font-size: 18px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 20px rgba(132, 204, 22, 0.4); transition: transform 0.2s ease;">
+            🚀 נתח מניה (ANALYZE STOCK)
+          </button>
+        </div>
+
+        <!-- Output Step (Matches Screenshot 2!) -->
+        <div id="em-output-container" class="em-results-grid" style="display: grid;">
+          <!-- Scenario Low -->
+          <div class="em-result-card low">
+            <div class="em-scenario-title">LOW ASSUMPTION (שמרני)</div>
+            <div style="font-size:12px; color:#a1a1aa; margin-bottom:4px;">Multiple of Profit Margin</div>
+            <div class="em-buy-price" id="em-res-pm-low" style="color:#ef4444;">$178.29 <span style="font-size:16px;">⊕</span></div>
+            
+            <div style="font-size:12px; color:#a1a1aa; margin-top:12px; margin-bottom:4px;">Multiple of Cash Flow</div>
+            <div class="em-buy-price" id="em-res-fcf-low" style="color:#ef4444;">$101.88 <span style="font-size:16px;">⊕</span></div>
+
+            <div style="font-size:12px; color:#a1a1aa; margin-top:12px; margin-bottom:4px;">Current Price Return ⓘ</div>
+            <div style="font-size:16px; font-weight:900; color:#ef4444;" id="em-res-ret-low">-7.59%</div>
+            
+            <span class="em-val-tag over" id="em-tag-low">מחיר יתר (Overvalued)</span>
+          </div>
+
+          <!-- Scenario Mid -->
+          <div class="em-result-card mid">
+            <div class="em-scenario-title">MID ASSUMPTION (בינוני)</div>
+            <div style="font-size:12px; color:#a1a1aa; margin-bottom:4px;">Multiple of Profit Margin</div>
+            <div class="em-buy-price" id="em-res-pm-mid" style="color:#ef4444;">$315.97 <span style="font-size:16px;">⊕</span></div>
+            
+            <div style="font-size:12px; color:#a1a1aa; margin-top:12px; margin-bottom:4px;">Multiple of Cash Flow</div>
+            <div class="em-buy-price" id="em-res-fcf-mid" style="color:#ef4444;">$191.24 <span style="font-size:16px;">⊕</span></div>
+
+            <div style="font-size:12px; color:#a1a1aa; margin-top:12px; margin-bottom:4px;">Current Price Return ⓘ</div>
+            <div style="font-size:16px; font-weight:900; color:#ef4444;" id="em-res-ret-mid">-0.30%</div>
+
+            <span class="em-val-tag over" id="em-tag-mid">מחיר יתר (Overvalued)</span>
+          </div>
+
+          <!-- Scenario High -->
+          <div class="em-result-card high">
+            <div class="em-scenario-title">HIGH ASSUMPTION (אופטימי)</div>
+            <div style="font-size:12px; color:#a1a1aa; margin-bottom:4px;">Multiple of Profit Margin</div>
+            <div class="em-buy-price" id="em-res-pm-high" style="color:#10b981;">$556.83 <span style="font-size:16px;">⊕</span></div>
+            
+            <div style="font-size:12px; color:#a1a1aa; margin-top:12px; margin-bottom:4px;">Multiple of Cash Flow</div>
+            <div class="em-buy-price" id="em-res-fcf-high" style="color:#ef4444;">$353.11 <span style="font-size:16px;">⊕</span></div>
+
+            <div style="font-size:12px; color:#a1a1aa; margin-top:12px; margin-bottom:4px;">Current Price Return ⓘ</div>
+            <div style="font-size:16px; font-weight:900; color:#10b981;" id="em-res-ret-high">6.94%</div>
+
+            <span class="em-val-tag fair" id="em-tag-high">מחיר הוגן (Fair Value)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+};
+
+window.calculateEMValuation = function() {
+  const price = parseFloat(document.getElementById('em-price')?.value) || 220;
+  const revBillion = parseFloat(document.getElementById('em-rev')?.value) || 385.6;
+  const sharesBillion = parseFloat(document.getElementById('em-shares')?.value) || 15.3;
+
+  const calcScenario = (gKey, pmKey, fcfKey, peKey, pfcfKey, retKey, tagId, pmResId, fcfResId, retResId) => {
+    const g = (parseFloat(document.getElementById(gKey)?.value) || 10) / 100;
+    const pm = (parseFloat(document.getElementById(pmKey)?.value) || 35) / 100;
+    const fcf = (parseFloat(document.getElementById(fcfKey)?.value) || 20) / 100;
+    const pe = parseFloat(document.getElementById(peKey)?.value) || 20;
+    const pfcf = parseFloat(document.getElementById(pfcfKey)?.value) || 20;
+    const r = (parseFloat(document.getElementById(retKey)?.value) || 9) / 100;
+
+    const rev10 = revBillion * Math.pow(1 + g, 10);
+    const ni10 = rev10 * pm;
+    const fcf10 = rev10 * fcf;
+
+    const mcPE10 = ni10 * pe;
+    const mcFCF10 = fcf10 * pfcf;
+
+    const pricePE10 = mcPE10 / sharesBillion;
+    const priceFCF10 = mcFCF10 / sharesBillion;
+
+    const buyPricePM = pricePE10 / Math.pow(1 + r, 10);
+    const buyPriceFCF = priceFCF10 / Math.pow(1 + r, 10);
+
+    const retPEPct = (Math.pow(pricePE10 / price, 1 / 10) - 1) * 100;
+
+    const fmt = (val) => '$' + val.toFixed(2);
+
+    if (document.getElementById(pmResId)) document.getElementById(pmResId).innerHTML = fmt(buyPricePM) + ' <span style="font-size:16px;">⊕</span>';
+    if (document.getElementById(fcfResId)) document.getElementById(fcfResId).innerHTML = fmt(buyPriceFCF) + ' <span style="font-size:16px;">⊕</span>';
+    if (document.getElementById(retResId)) {
+      const el = document.getElementById(retResId);
+      el.textContent = retPEPct.toFixed(2) + '%';
+      el.style.color = retPEPct >= 0 ? '#10b981' : '#ef4444';
+    }
+
+    const tag = document.getElementById(tagId);
+    if (tag) {
+      if (price <= Math.min(buyPricePM, buyPriceFCF)) {
+        tag.className = 'em-val-tag under';
+        tag.textContent = 'מחיר חסר (Undervalued)';
+      } else if (price <= Math.max(buyPricePM, buyPriceFCF)) {
+        tag.className = 'em-val-tag fair';
+        tag.textContent = 'מחיר הוגן (Fair Value)';
+      } else {
+        tag.className = 'em-val-tag over';
+        tag.textContent = 'מחיר יתר (Overvalued)';
+      }
+    }
+  };
+
+  calcScenario('em-g-low', 'em-pm-low', 'em-fcf-low', 'em-pe-low', 'em-pfcf-low', 'em-ret-low', 'em-tag-low', 'em-res-pm-low', 'em-res-fcf-low', 'em-res-ret-low');
+  calcScenario('em-g-mid', 'em-pm-mid', 'em-fcf-mid', 'em-pe-mid', 'em-pfcf-mid', 'em-ret-mid', 'em-tag-mid', 'em-res-pm-mid', 'em-res-fcf-mid', 'em-res-ret-mid');
+  calcScenario('em-g-high', 'em-pm-high', 'em-fcf-high', 'em-pe-high', 'em-pfcf-high', 'em-ret-high', 'em-tag-high', 'em-res-pm-high', 'em-res-fcf-high', 'em-res-ret-high');
+};
 
 let shopImgData = '';
 
