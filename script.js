@@ -460,51 +460,7 @@ async function initSite() {
     saveToStorage();
   }
 
-  // הוספת עמוד חנות אוטומטית אם עוד לא קיים
-  if (!pages.find(p => p.content && p.content.includes('shop-page'))) {
-    const shopPage = { id: 'page-shop-' + Date.now(), title: 'חנות', content: buildShopPage(SHOP_SAMPLES) };
-    pages.push(shopPage);
-    if (!topNavPages.includes(shopPage.id)) topNavPages.push(shopPage.id);
-    saveToStorage();
-  }
-
-  // הוספת עמוד סיפורים אוטומטית אם עוד לא קיים
-  if (!pages.find(p => p.content && p.content.includes('stories-page'))) {
-    const storyPage = { id: 'page-stories-' + Date.now(), title: 'סיפורים', content: buildStoriesPage(STORIES_SAMPLES) };
-    pages.push(storyPage);
-    if (!topNavPages.includes(storyPage.id)) topNavPages.push(storyPage.id);
-    saveToStorage();
-  }
-
-  // הוספת עמוד תמונות אוטומטית אם עוד לא קיים
-  if (!pages.find(p => p.content && p.content.includes('photos-page'))) {
-    const photoPage = { id: 'page-photos-' + Date.now(), title: 'תמונות', content: buildPhotosPage(PHOTOS_SAMPLES) };
-    pages.push(photoPage);
-    if (!topNavPages.includes(photoPage.id)) topNavPages.push(photoPage.id);
-    saveToStorage();
-  }
-
-  // הוספת עמוד קהילה אוטומטית אם עוד לא קיים (סקרים, שאלות ותגובות)
-  if (!pages.find(p => p.content && p.content.includes('community-page'))) {
-    const communityId = 'page-community-' + Date.now();
-    const communityPage = { id: communityId, title: 'קהילה', content: `<div class="articles-page community-page" data-page-id="${communityId}"></div>` };
-    pages.push(communityPage);
-    if (!topNavPages.includes(communityPage.id)) topNavPages.push(communityPage.id);
-    saveToStorage();
-  }
-
-  // הוספת עמוד קורסים אוטומטית אם עוד לא קיים
-  if (!pages.find(p => p.content && p.content.includes('courses-page'))) {
-    const coursePage = { id: 'page-courses-' + Date.now(), title: 'קורסים', content: buildCoursesPage(COURSES_SAMPLES) };
-    pages.push(coursePage);
-    if (!topNavPages.includes(coursePage.id)) topNavPages.push(coursePage.id);
-    saveToStorage();
-  }
-
-  // מיגרציה חד-פעמית: מכווצים תוכן עמודים ישן ל"גרסה קלה" (רק ה-JSON,
-  // בלי כל ה-HTML המרונדר שכפל כל תמונה). בלי זה הבלוב הכולל שנשמר
-  // ל-Firebase נשאר ענק, הכתיבה נכשלת בשקט, וההעלאות (סיפורים/תמונות)
-  // לא מגיעות למכשירים אחרים. אחרי הכיווץ הכתיבה מצליחה והסנכרון עובד.
+  // כיווץ קל של תוכן עמודים מרונדר ישן אם קיים
   let lightened = false;
   pages.forEach(p => {
     if (!p.content) return;
@@ -512,51 +468,6 @@ async function initSite() {
     if (light && light !== p.content) { p.content = light; lightened = true; }
   });
   if (lightened) saveToStorage();
-
-  // תיקון אוטומטי (Migration) לקישורים מתים בתפריט העליון
-  const allNavLinks = navLinksContainer.querySelectorAll('a');
-  let madeChanges = false;
-  allNavLinks.forEach(a => {
-    // בדיקה האם הקישור מת (אין לו מזהה עמוד שקיים במערכת)
-    let isDead = false;
-    if (a.dataset.pageId) {
-      if (!pages.find(p => p.id === a.dataset.pageId)) isDead = true;
-    } else if (a.id && topNavMapping[a.id]) {
-      if (!pages.find(p => p.id === topNavMapping[a.id])) isDead = true;
-    } else {
-      isDead = true;
-    }
-
-    if (isDead) {
-      // מנסים למצוא עמוד עם שם זהה לטקסט של הקישור
-      const linkText = (a.childNodes[0]?.nodeValue || a.textContent).replace('⌄', '').trim();
-      const matchingPage = pages.find(p => p.title.trim() === linkText);
-      
-      if (matchingPage) {
-        // חיבור אוטומטי לעמוד הקיים
-        a.dataset.pageId = matchingPage.id;
-        if (!topNavPages.includes(matchingPage.id)) {
-          topNavPages.push(matchingPage.id);
-        }
-        madeChanges = true;
-      } else if (linkText) {
-        // אם אין עמוד כזה, נייצר אחד כדי שהקישור לא יהיה שבור
-        const newPageId = 'page-' + Date.now() + Math.floor(Math.random() * 1000);
-        pages.push({
-          id: newPageId,
-          title: linkText,
-          content: ''
-        });
-        a.dataset.pageId = newPageId;
-        topNavPages.push(newPageId);
-        madeChanges = true;
-      }
-    }
-  });
-
-  if (madeChanges) {
-    saveToStorage();
-  }
 
   // החזרת עמוד הבית כעמוד הראשי הפעיל כברירת מחדל ושמירה על דף הכתבות כראשון
   if (pages && pages.length) {
