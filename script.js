@@ -8085,21 +8085,25 @@ onValue(ref(db, 'website'), (snapshot) => {
   const data = snapshot.val();
   let changed = false;
   
-  if (data.pages && JSON.stringify(pages) !== JSON.stringify(data.pages)) {
-    pages = data.pages;
-    changed = true;
+  if (data.pages) {
+    let pList = [...data.pages];
+    if (!pList.some(p => p.id === 'page-ci')) pList.push({ id: 'page-ci', title: 'ריבית דריבית', content: buildCompoundInterestPage() });
+    if (!pList.some(p => p.id === 'page-em')) pList.push({ id: 'page-em', title: 'מחשבון Everything Money', content: buildEverythingMoneyPage() });
+    if (JSON.stringify(pages) !== JSON.stringify(pList)) {
+      pages = pList;
+      changed = true;
+    }
   }
-  // activePageId הוא הניווט המקומי של הגולש, לא מצב גלובלי של האתר.
-  // סנכרון שלו מהשרת החזיר את המבקר לעמוד ברירת המחדל באמצע גלישה
-  // (למשל קפיצה מ"סיפורים" בחזרה ל"תמונות"). מיישרים רק אם העמוד
-  // שהגולש נמצא בו כבר לא קיים אחרי העדכון.
-  if (data.activePageId && !pages.some(p => p.id === activePageId)) {
-    activePageId = data.activePageId;
-    changed = true;
-  }
-  if (data.topNavPages && JSON.stringify(topNavPages) !== JSON.stringify(data.topNavPages)) {
-    topNavPages = data.topNavPages;
-    changed = true;
+
+  if (data.topNavPages) {
+    let navs = Array.from(new Set(data.topNavPages));
+    if (!navs.includes('page-main')) navs.unshift('page-main');
+    if (!navs.includes('page-ci')) navs.push('page-ci');
+    if (!navs.includes('page-em')) navs.push('page-em');
+    if (JSON.stringify(topNavPages) !== JSON.stringify(navs)) {
+      topNavPages = navs;
+      changed = true;
+    }
   }
   if (data.siteBackgrounds && JSON.stringify(siteBackgrounds) !== JSON.stringify(data.siteBackgrounds)) {
     siteBackgrounds = data.siteBackgrounds;
