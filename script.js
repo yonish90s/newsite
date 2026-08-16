@@ -194,22 +194,7 @@ window.updateUserActivity = updateUserActivity;
 const defaultPages = [
   {
     id: 'page-main',
-    title: '🏠 ראשי',
-    content: ''
-  },
-  {
-    id: 'page-shop',
-    title: '🛍️ חנות',
-    content: ''
-  },
-  {
-    id: 'page-charts',
-    title: '📈 גרפים ונתשדשונים',
-    content: ''
-  },
-  {
-    id: 'page-forum',
-    title: '💬 פורום',
+    title: 'כתבות',
     content: ''
   }
 ];
@@ -217,7 +202,7 @@ const defaultPages = [
 // הגדרות ברירת מחדל (יוחלפו אם יש שמירה)
 let pages = defaultPages;
 let activePageId = 'page-main';
-let topNavPages = ['page-main', 'page-shop', 'page-charts', 'page-forum']; // העמודים שמופיעים בתפריט העליון
+let topNavPages = ['page-main']; // העמודים שמופיעים בתפריט העליון
 let isEditMode = false; // ברירת מחדל: אורח (ללא עריכה)
 let undoStack = []; // מערך לשמירת היסטוריית שינויים לצורך ביטול (Undo)
 let siteBackgrounds = { dashboard: null, topNav: null, main: null };
@@ -428,37 +413,30 @@ async function initSite() {
     }
   }
 
-  // הוספת עמוד כתבות אוטומטית אם עוד לא קיים
-  if (!pages.find(p => p.content && p.content.includes('articles-page') && !p.content.includes('stories-page') && !p.content.includes('photos-page') && !p.content.includes('courses-page'))) {
-    const mainPage = pages.find(p => p.id === 'page-main');
-    if (mainPage) {
+  // הגדרת עמוד הבית הראשי (page-main) כעמוד "כתבות"
+  let mainPage = pages.find(p => p.id === 'page-main');
+  if (!mainPage) {
+    mainPage = { id: 'page-main', title: 'כתבות', content: buildArticlesPage(ARTICLES_SAMPLES) };
+    pages.unshift(mainPage);
+  } else {
+    mainPage.title = 'כתבות';
+    if (!mainPage.content || !mainPage.content.includes('articles-page')) {
       mainPage.content = buildArticlesPage(ARTICLES_SAMPLES);
-      mainPage.title = 'כתבות';
-    } else {
-      const newPageId = 'page-articles-' + Date.now();
-      pages.unshift({ id: newPageId, title: 'כתבות', content: buildArticlesPage(ARTICLES_SAMPLES) });
-      if (!topNavPages.includes(newPageId)) topNavPages.unshift(newPageId);
-      activePageId = newPageId;
     }
-    saveToStorage();
   }
 
-  // העברת עמוד הכתבות לעמוד הראשי ושינוי שמו ל"כתבות" אם הוא קיים בנפרד
-  const mainPage = pages.find(p => p.id === 'page-main');
+  // הסרת עמודי כתבות כפולים אם קיימים בנפרד
   const separateArticlesPage = pages.find(p => p.content && p.content.includes('articles-page') && !p.content.includes('stories-page') && !p.content.includes('photos-page') && !p.content.includes('courses-page') && p.id !== 'page-main');
-  if (mainPage && separateArticlesPage) {
-    mainPage.content = separateArticlesPage.content;
-    mainPage.title = 'כתבות';
+  if (separateArticlesPage) {
     pages = pages.filter(p => p.id !== separateArticlesPage.id);
     topNavPages = topNavPages.filter(id => id !== separateArticlesPage.id);
-    const photosP = pages.find(p => p.content && p.content.includes('photos-page'));
-    if (photosP) {
-      activePageId = photosP.id;
-    } else {
-      activePageId = mainPage.id;
-    }
-    saveToStorage();
   }
+
+  activePageId = 'page-main';
+  if (!topNavPages.includes('page-main')) {
+    topNavPages.unshift('page-main');
+  }
+  saveToStorage();
 
   // כיווץ קל של תוכן עמודים מרונדר ישן אם קיים
   let lightened = false;
