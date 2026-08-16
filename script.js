@@ -415,17 +415,23 @@ async function initSite() {
     }
   }
 
-  // הוספת עמודי המחשבונים הפיננסיים (ריבית דריבית + Everything Money)
+  // הוספת עמודי המחשבונים הפיננסיים (ריבית דריבית + Everything Money) כעמודים עצמאיים באתר
   let ciPage = pages.find(p => p.id === 'page-ci');
   if (!ciPage) {
-    ciPage = { id: 'page-ci', title: 'ריבית דריבית', content: '<div class="ci-page-wrapper"></div>' };
+    ciPage = { id: 'page-ci', title: 'ריבית דריבית', content: buildCompoundInterestPage() };
     pages.push(ciPage);
+  } else {
+    ciPage.title = 'ריבית דריבית';
+    ciPage.content = buildCompoundInterestPage();
   }
 
   let emPage = pages.find(p => p.id === 'page-em');
   if (!emPage) {
-    emPage = { id: 'page-em', title: 'מחשבון Everything Money', content: '<div class="em-page-wrapper"></div>' };
+    emPage = { id: 'page-em', title: 'מחשבון Everything Money', content: buildEverythingMoneyPage() };
     pages.push(emPage);
+  } else {
+    emPage.title = 'מחשבון Everything Money';
+    emPage.content = buildEverythingMoneyPage();
   }
 
   topNavPages = ['page-main', 'page-ci', 'page-em'];
