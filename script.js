@@ -455,29 +455,18 @@ async function initSite() {
     let madeCleanChanges = false;
     
     pages.forEach(p => {
-      // הסרת תווים בלתי נראים ואימוג'ים
-      const normalizedTitle = p.title.replace(/[\u200b-\u200d\uFEFF]/g, '').replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, '').replace(/[\u1000-\uFFFF]+/g, '').trim();
-      
-      // הסרת עמודי "ראשי" ריקים
-      if ((normalizedTitle === 'ראשי' || normalizedTitle === '🏠 ראשי' || normalizedTitle === '🏠ראשי') && (!p.content || p.content.trim() === '')) {
+      if (!p || !p.id) return;
+      // מניעת כפילויות של עמודים עם מזהה זהה
+      if (pageMap.has(p.id)) {
         madeCleanChanges = true;
-        return;
-      }
-      
-      if (!normalizedTitle) return;
-      
-      // מניעת כפילויות של עמודים עם כותרות דומות - מעדיפים תמיד את העמוד שיש בו תוכן
-      if (pageMap.has(normalizedTitle)) {
-        madeCleanChanges = true;
-        const existingPage = pageMap.get(normalizedTitle);
+        const existingPage = pageMap.get(p.id);
         const existingEmpty = !existingPage.content || existingPage.content.trim() === '';
         const currentEmpty = !p.content || p.content.trim() === '';
-        
         if (existingEmpty && !currentEmpty) {
-          pageMap.set(normalizedTitle, p); // מחליפים בעמוד שיש לו תוכן אמיתי
+          pageMap.set(p.id, p);
         }
       } else {
-        pageMap.set(normalizedTitle, p);
+        pageMap.set(p.id, p);
       }
     });
     
@@ -4086,11 +4075,11 @@ function buildArticlesPage(articles) {
           <div class="art-sidebar-box" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #fff; border: 1px solid #334155;">
             <div class="art-sidebar-title" style="color: #38bdf8; border-bottom: 2px solid #0284c7;">🧮 מחשבונים פיננסיים</div>
             <div style="display:flex; flex-direction:column; gap:10px; margin-top:12px;">
-              <button onclick="activePageId='page-ci'; renderSideMenu(); renderTopNav(); renderPage();" style="padding:11px 14px; background:#0284c7; color:#fff; border:none; border-radius:10px; font-weight:800; font-size:13px; cursor:pointer; text-align:right; display:flex; justify-content:space-between; align-items:center; transition:transform 0.2s ease;">
+              <button onclick="openCalculatorPage('page-ci')" style="padding:11px 14px; background:#0284c7; color:#fff; border:none; border-radius:10px; font-weight:800; font-size:13px; cursor:pointer; text-align:right; display:flex; justify-content:space-between; align-items:center; transition:transform 0.2s ease;">
                 <span>📈 מחשבון ריבית דריבית</span>
                 <span style="font-size:16px;">←</span>
               </button>
-              <button onclick="activePageId='page-em'; renderSideMenu(); renderTopNav(); renderPage();" style="padding:11px 14px; background:#84cc16; color:#18181b; border:none; border-radius:10px; font-weight:900; font-size:13px; cursor:pointer; text-align:right; display:flex; justify-content:space-between; align-items:center; transition:transform 0.2s ease;">
+              <button onclick="openCalculatorPage('page-em')" style="padding:11px 14px; background:#84cc16; color:#18181b; border:none; border-radius:10px; font-weight:900; font-size:13px; cursor:pointer; text-align:right; display:flex; justify-content:space-between; align-items:center; transition:transform 0.2s ease;">
                 <span>📊 מחשבון Everything Money</span>
                 <span style="font-size:16px;">←</span>
               </button>
@@ -4438,9 +4427,15 @@ function shopDelete(id) {
   saveCurrentPageContent();
 }
 
-// ============================================================
-// FINANCIAL CALCULATORS (COMPOUND INTEREST & EVERYTHING MONEY)
-// ============================================================
+window.openCalculatorPage = function(pageId) {
+  if (isEditMode) saveCurrentPageContent();
+  activePageId = pageId;
+  saveToStorage();
+  renderSideMenu();
+  renderTopNav();
+  renderPage();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
 
 window.buildCompoundInterestPage = function() {
   return `
