@@ -5767,11 +5767,74 @@ function buildPhotosPage(albums) {
     // data-search מחזיק את הטקסט כדי שהחיפוש יעבוד גם כשהוא מוסתר.
     const searchText = artEsc([p.title, p.summary, p.author, p.category].filter(Boolean).join(' '));
 
-    // המבנה זהה לכל הכרטיסים: שני הכפתורים תמיד מוצגים. כשאין קישור
-    // הכפתור מוצג מעומעם ולא לחיץ, כדי שכל הכרטיסים ייראו אותו דבר.
+// פונקציית העתקת אימייל ללוח העתקות בלחיצה אחת
+function copyEmailToClipboard(emailStr, e) {
+  if (e) {
+    if (typeof e.stopPropagation === 'function') e.stopPropagation();
+    if (typeof e.preventDefault === 'function') e.preventDefault();
+  }
+  if (!emailStr) return;
+  
+  let cleanEmail = emailStr.replace(/^mailto:/i, '').trim();
+  if (!cleanEmail) return;
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(cleanEmail).then(() => {
+      showCopyToast(`האימייל הועתק בהצלחה! 📋 (${cleanEmail})`);
+    }).catch(() => {
+      fallbackCopyText(cleanEmail);
+    });
+  } else {
+    fallbackCopyText(cleanEmail);
+  }
+}
+
+function fallbackCopyText(text) {
+  const textArea = document.createElement('textarea');
+  textArea.value = text;
+  textArea.style.position = 'fixed';
+  textArea.style.opacity = '0';
+  document.body.appendChild(textArea);
+  textArea.select();
+  try {
+    document.execCommand('copy');
+    showCopyToast(`האימייל הועתק בהצלחה! 📋 (${text})`);
+  } catch (err) {
+    alert(`כתובת אימייל: ${text}`);
+  }
+  document.body.removeChild(textArea);
+}
+
+function showCopyToast(msg) {
+  let toast = document.getElementById('global-copy-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'global-copy-toast';
+    toast.style.cssText = 'position:fixed; bottom:30px; left:50%; transform:translateX(-50%); background:#111; color:#fff; padding:12px 24px; border-radius:30px; font-size:14px; font-weight:bold; z-index:9999999; box-shadow:0 10px 30px rgba(0,0,0,0.3); transition:all 0.3s ease; direction:rtl; opacity:0; pointer-events:none;';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.style.opacity = '1';
+  toast.style.transform = 'translateX(-50%) translateY(0)';
+  
+  clearTimeout(window.__copyToastTimer);
+  window.__copyToastTimer = setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(-50%) translateY(10px)';
+  }, 2200);
+}
+window.copyEmailToClipboard = copyEmailToClipboard;
+
     const cardLink = (url, label, iconPath, extraPath) => {
       const svg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;"><path d="${iconPath}"/>${extraPath || ''}</svg>`;
       if (url) {
+        if (label === 'אימייל') {
+          return `
+            <button type="button" onclick="copyEmailToClipboard('${artEsc(url)}', event);" class="art-telegram-btn" title="לחץ להעתקת אימייל">
+              ${svg}<span>${label}</span>
+            </button>
+          `;
+        }
         return `
           <a href="${url}" target="_blank" onclick="event.stopPropagation();" class="art-telegram-btn">
             ${svg}<span>${label}</span>
@@ -5986,13 +6049,13 @@ function photoOpenDetail(id) {
               </a>
             ` : ''}
             ${a.emailUrl ? `
-              <a href="${a.emailUrl}" target="_blank" title="${artEsc(a.emailUrl.replace('mailto:', ''))}" class="art-telegram-btn" style="display: inline-flex; align-items: center; background: #2f2f2f; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 13px; text-decoration: none; font-weight: bold; gap: 6px; border: 1px solid rgba(255,255,255,0.1);">
+              <button type="button" onclick="copyEmailToClipboard('${artEsc(a.emailUrl)}', event);" title="לחץ להעתקת אימייל" class="art-telegram-btn" style="display: inline-flex; align-items: center; background: #2f2f2f; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 13px; text-decoration: none; font-weight: bold; gap: 6px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
                   <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
                   <polyline points="22,6 12,13 2,6"/>
                 </svg>
                 <span>אימייל</span>
-              </a>
+              </button>
             ` : ''}
           </div>
           <div class="art-detail-content">${contentHTML}</div>
