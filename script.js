@@ -519,7 +519,8 @@ function saveToStorage() {
       topNavPages: topNavPages,
       navHTML: navHTML,
       siteBackgrounds: siteBackgrounds,
-      promotedSites: PROMOTED_SITES
+      promotedSites: PROMOTED_SITES,
+      socialLinks: SOCIAL_LINKS
     }).then(() => {
       console.log("סונכרן בהצלחה לענן Firebase!");
     }).catch(err => {
@@ -8136,30 +8137,137 @@ async function deleteCommunityPost(postId) {
 }
 window.deleteCommunityPost = deleteCommunityPost;
 
+let SOCIAL_LINKS = {
+  instagram: 'https://instagram.com',
+  facebook: 'https://facebook.com',
+  telegram: 'https://t.me',
+  discord: 'https://discord.gg',
+  reddit: 'https://reddit.com',
+  twitter: 'https://twitter.com'
+};
+
+try {
+  const savedSocial = localStorage.getItem('social_community_links_v1');
+  if (savedSocial) SOCIAL_LINKS = { ...SOCIAL_LINKS, ...JSON.parse(savedSocial) };
+} catch(e) {}
+
 function buildSocialCommunityBox() {
+  const isEd = (typeof isAdmin === 'function' && isAdmin()) || (typeof isEditMode !== 'undefined' && isEditMode);
+
   return `
     <div class="art-sidebar-box art-social-box" style="text-align: right; display: flex; flex-direction: column; gap: 12px; padding: 16px; border-radius: 12px; border: 1px solid rgba(236, 72, 153, 0.15); background: rgba(236, 72, 153, 0.02); box-sizing: border-box; width: 100%;">
-      <div class="art-sidebar-title" style="margin-bottom: 8px; border-bottom: 2px solid #ec4899; padding-bottom: 6px; font-size: 14px; font-weight: 800; color: #ec4899; width: 100%; box-sizing: border-box;">
-        👥 הקהילות שלנו ברשת
+      <div class="art-sidebar-title" style="margin-bottom: 8px; border-bottom: 2px solid #ec4899; padding-bottom: 6px; font-size: 14px; font-weight: 800; color: #ec4899; width: 100%; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center;">
+        <span>👥 הקהילות שלנו ברשת</span>
+        ${isEd ? `<button type="button" onclick="openSocialLinksModal()" style="background: #ec4899; color: #fff; border: none; border-radius: 6px; padding: 3px 8px; font-size: 11px; font-weight: bold; cursor: pointer; transition: opacity 0.2s;">✏️ ערוך קישורים</button>` : ''}
       </div>
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; box-sizing: border-box;">
-        <a href="https://facebook.com" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; background: #1877f2; color: white; text-decoration: none; border-radius: 8px; font-size: 12px; font-weight: bold; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
-          <span>Facebook</span>
-        </a>
-        <a href="https://instagram.com" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); color: white; text-decoration: none; border-radius: 8px; font-size: 12px; font-weight: bold; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+        <a href="${SOCIAL_LINKS.instagram || 'https://instagram.com'}" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); color: white; text-decoration: none; border-radius: 8px; font-size: 12px; font-weight: bold; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
           <span>Instagram</span>
         </a>
-        <a href="https://twitter.com" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; background: #000000; color: white; text-decoration: none; border-radius: 8px; font-size: 12px; font-weight: bold; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
-          <span>Twitter / X</span>
+        <a href="${SOCIAL_LINKS.facebook || 'https://facebook.com'}" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; background: #1877f2; color: white; text-decoration: none; border-radius: 8px; font-size: 12px; font-weight: bold; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+          <span>Facebook</span>
         </a>
-        <a href="https://reddit.com" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; background: #ff4500; color: white; text-decoration: none; border-radius: 8px; font-size: 12px; font-weight: bold; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+        <a href="${SOCIAL_LINKS.telegram || 'https://t.me'}" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; background: #229ED9; color: white; text-decoration: none; border-radius: 8px; font-size: 12px; font-weight: bold; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+          <span>Telegram ✈️</span>
+        </a>
+        <a href="${SOCIAL_LINKS.discord || 'https://discord.gg'}" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; background: #5865F2; color: white; text-decoration: none; border-radius: 8px; font-size: 12px; font-weight: bold; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+          <span>Discord 👾</span>
+        </a>
+        <a href="${SOCIAL_LINKS.reddit || 'https://reddit.com'}" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; background: #ff4500; color: white; text-decoration: none; border-radius: 8px; font-size: 12px; font-weight: bold; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
           <span>Reddit</span>
+        </a>
+        <a href="${SOCIAL_LINKS.twitter || 'https://twitter.com'}" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; background: #000000; color: white; text-decoration: none; border-radius: 8px; font-size: 12px; font-weight: bold; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+          <span>Twitter / X</span>
         </a>
       </div>
     </div>
   `;
 }
+
+function openSocialLinksModal() {
+  let modal = document.getElementById('social-links-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'social-links-modal';
+    modal.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999999; align-items:center; justify-content:center; direction:rtl; padding:20px;';
+    modal.innerHTML = `
+      <div style="background:#fff; border-radius:16px; padding:24px; width:100%; max-width:440px; box-shadow:0 20px 60px rgba(0,0,0,0.3); display:flex; flex-direction:column; gap:14px; direction:rtl;">
+        <h3 style="margin:0; font-size:18px; font-weight:800; color:#ec4899; border-bottom:2px solid #ec4899; padding-bottom:8px;">👥 עריכת קישורי הקהילות ברשת</h3>
+        
+        <div style="display:flex; flex-direction:column; gap:10px; font-size:13px; font-weight:bold; max-height:60vh; overflow-y:auto; padding-left:5px;">
+          <label style="display:flex; flex-direction:column; gap:4px;">
+            <span>📸 Instagram:</span>
+            <input type="url" id="social-inp-instagram" placeholder="https://instagram.com/your-page" style="padding:8px 12px; border:1px solid #ddd; border-radius:8px; font-size:13px;">
+          </label>
+          
+          <label style="display:flex; flex-direction:column; gap:4px;">
+            <span>📘 Facebook:</span>
+            <input type="url" id="social-inp-facebook" placeholder="https://facebook.com/your-page" style="padding:8px 12px; border:1px solid #ddd; border-radius:8px; font-size:13px;">
+          </label>
+          
+          <label style="display:flex; flex-direction:column; gap:4px;">
+            <span>✈️ Telegram:</span>
+            <input type="url" id="social-inp-telegram" placeholder="https://t.me/your-channel" style="padding:8px 12px; border:1px solid #ddd; border-radius:8px; font-size:13px;">
+          </label>
+          
+          <label style="display:flex; flex-direction:column; gap:4px;">
+            <span>👾 Discord:</span>
+            <input type="url" id="social-inp-discord" placeholder="https://discord.gg/your-server" style="padding:8px 12px; border:1px solid #ddd; border-radius:8px; font-size:13px;">
+          </label>
+
+          <label style="display:flex; flex-direction:column; gap:4px;">
+            <span>🍊 Reddit:</span>
+            <input type="url" id="social-inp-reddit" placeholder="https://reddit.com/r/your-community" style="padding:8px 12px; border:1px solid #ddd; border-radius:8px; font-size:13px;">
+          </label>
+
+          <label style="display:flex; flex-direction:column; gap:4px;">
+            <span>🐦 Twitter / X:</span>
+            <input type="url" id="social-inp-twitter" placeholder="https://x.com/your-profile" style="padding:8px 12px; border:1px solid #ddd; border-radius:8px; font-size:13px;">
+          </label>
+        </div>
+
+        <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:8px;">
+          <button type="button" onclick="closeSocialLinksModal()" style="background:#f3f4f6; border:none; border-radius:8px; padding:8px 16px; font-weight:bold; cursor:pointer;">ביטול</button>
+          <button type="button" onclick="saveSocialLinksModal()" style="background:#ec4899; color:white; border:none; border-radius:8px; padding:8px 20px; font-weight:bold; cursor:pointer;">שמור קישורים 💾</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  }
+
+  document.getElementById('social-inp-instagram').value = SOCIAL_LINKS.instagram || '';
+  document.getElementById('social-inp-facebook').value = SOCIAL_LINKS.facebook || '';
+  document.getElementById('social-inp-telegram').value = SOCIAL_LINKS.telegram || '';
+  document.getElementById('social-inp-discord').value = SOCIAL_LINKS.discord || '';
+  document.getElementById('social-inp-reddit').value = SOCIAL_LINKS.reddit || '';
+  document.getElementById('social-inp-twitter').value = SOCIAL_LINKS.twitter || '';
+
+  modal.style.display = 'flex';
+}
+
+function closeSocialLinksModal() {
+  const modal = document.getElementById('social-links-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+function saveSocialLinksModal() {
+  SOCIAL_LINKS.instagram = document.getElementById('social-inp-instagram').value.trim() || 'https://instagram.com';
+  SOCIAL_LINKS.facebook = document.getElementById('social-inp-facebook').value.trim() || 'https://facebook.com';
+  SOCIAL_LINKS.telegram = document.getElementById('social-inp-telegram').value.trim() || 'https://t.me';
+  SOCIAL_LINKS.discord = document.getElementById('social-inp-discord').value.trim() || 'https://discord.gg';
+  SOCIAL_LINKS.reddit = document.getElementById('social-inp-reddit').value.trim() || 'https://reddit.com';
+  SOCIAL_LINKS.twitter = document.getElementById('social-inp-twitter').value.trim() || 'https://twitter.com';
+
+  localStorage.setItem('social_community_links_v1', JSON.stringify(SOCIAL_LINKS));
+  closeSocialLinksModal();
+  if (typeof saveToStorage === 'function') saveToStorage();
+  if (typeof renderPage === 'function') renderPage();
+}
+
 window.buildSocialCommunityBox = buildSocialCommunityBox;
+window.openSocialLinksModal = openSocialLinksModal;
+window.closeSocialLinksModal = closeSocialLinksModal;
+window.saveSocialLinksModal = saveSocialLinksModal;
 
 // האזנה לשינויים בזמן אמת במסד הנתונים מכל מכשיר (למשל מהמחשב לנייד)
 onValue(ref(db, 'website'), (snapshot) => {
