@@ -332,9 +332,9 @@ function updateFABsVisibility() {
 // initSite נתקע לנצח, והגולש נשאר מול שלד ריק של האתר.
 const BOOT_FETCH_TIMEOUT_MS = 4000;
 
-// פונקציית אתחול מהירה (Instant 0ms First Paint) - טוענת מהזיכרון המקומי מיד ומסנכרנת ברקע מ-Firebase DB
+// פונקציית אתחול מהירה (Instant 0ms First Paint) - ללא הבהוב עמודים ברקע
 async function initSite() {
-  // 0. טעינה מיידית מזיכרון מקומי (0ms) לרינדור מיידי ללא המתנה לרשת
+  // 0. טעינה מקומית ראשונית ב-0ms
   try {
     const savedActive = await localforage.getItem('myActivePage_v3');
     if (savedActive) activePageId = savedActive;
@@ -347,13 +347,30 @@ async function initSite() {
     applyBackgrounds();
   } catch (localErr) {}
 
-  // רינדור מיידי ראשוני (0 מילי-שניות)
+  // הכנת העמודים ומזהה העמוד הפעיל מראש לפני שרשראות הרינדור
+  if (pages && pages.length) {
+    let pageMap = new Map();
+    pages.forEach(p => { if (p && p.id) pageMap.set(p.id, p); });
+    let cleanedPages = Array.from(pageMap.values());
+    let articlesPage = cleanedPages.find(p => p.id === 'page-main' || (p.content && p.content.includes('articles-page') && !p.content.includes('stories-page') && !p.content.includes('photos-page') && !p.content.includes('courses-page')));
+    if (!articlesPage) articlesPage = cleanedPages[0];
+    if (articlesPage) {
+      cleanedPages = [articlesPage, ...cleanedPages.filter(p => p.id !== articlesPage.id)];
+      if (!activePageId || !cleanedPages.find(p => p.id === activePageId)) {
+        activePageId = articlesPage.id;
+      }
+    }
+    pages = cleanedPages;
+    topNavPages = pages.map(p => p.id);
+  }
+
+  // רינדור יחיד, נקי ומדויק מ-0 מילי-שניות (ללא הבהוב או מעבר עמודים)
   renderSideMenu();
   renderTopNav();
   renderPage();
   updateFABsVisibility();
 
-  // 1. סנכרון ברקע מ מ-Firebase DB לעדכון בין מכשירים ללא חסימת התצוגה
+  // 1. סנכרון ברקע מ-Firebase DB לעדכון בין מכשירים ללא חסימת התצוגה או הבהוב
   try {
     const dbRef = ref(db);
     const snapshot = await Promise.race([
@@ -365,14 +382,10 @@ async function initSite() {
 
     if (snapshot.exists()) {
       const data = snapshot.val();
-      if (data.pages) pages = data.pages;
+      if (data.pages && Array.isArray(data.pages)) pages = data.pages;
       if (data.activePageId) activePageId = data.activePageId;
       if (data.topNavPages) topNavPages = data.topNavPages;
       if (data.siteBackgrounds) siteBackgrounds = data.siteBackgrounds;
-      if (data.hideCart !== undefined) hideCart = data.hideCart;
-      if (data.hideChat !== undefined) hideChat = data.hideChat;
-      if (data.deleteCart !== undefined) deleteCart = data.deleteCart;
-      if (data.deleteChat !== undefined) deleteChat = data.deleteChat;
       if (data.promotedSites) {
         PROMOTED_SITES = data.promotedSites;
         localStorage.setItem('promoted_sites', JSON.stringify(PROMOTED_SITES));
@@ -392,133 +405,6 @@ async function initSite() {
     console.log('Firebase background sync complete');
   }
 
-  // הגדרת עמוד הבית הראשי (page-main) כעמוד "כתבות"
-  let mainPage = pages.find(p => p.id === 'page-main');
-  if (!mainPage) {
-    mainPage = { id: 'page-main', title: 'כתבות', content: buildArticlesPage(ARTICLES_SAMPLES) };
-    pages = [mainPage];
-  } else {
-    mainPage.title = 'כתבות';
-    if (!mainPage.content || !mainPage.content.includes('articles-page')) {
-      mainPage.content = buildArticlesPage(ARTICLES_SAMPLES);
-    }
-  }
-
-  // הוספת עמודי המחשבונים הפיננסיים (ריבית דריבית + Everything Money) כעמודים עצמאיים באתר
-  let ciPage = pages.find(p => p.id === 'page-ci');
-  if (!ciPage) {
-    ciPage = { id: 'page-ci', title: 'ריבית דריבית', content: buildCompoundInterestPage() };
-    pages.push(ciPage);
-  } else {
-    ciPage.title = 'ריבית דריבית';
-    ciPage.content = buildCompoundInterestPage();
-  }
-
-  let emPage = pages.find(p => p.id === 'page-em');
-  if (!emPage) {
-    emPage = { id: 'page-em', title: 'מחשבון Everything Money', content: buildEverythingMoneyPage() };
-    pages.push(emPage);
-  } else {
-    emPage.title = 'מחשבון Everything Money';
-    emPage.content = buildEverythingMoneyPage();
-  }
-
-  topNavPages = ['page-main', 'page-ci', 'page-em'];
-  activePageId = 'page-main';
-
-  // ניקוי המטמון הישן ב-localforage וב-localStorage
-  localforage.removeItem('mySiteTopNavHTML_v3');
-  localforage.setItem('mySitePages_v3', pages);
-  localforage.setItem('mySiteTopNav_v3', topNavPages);
-  localforage.setItem('myActivePage_v3', activePageId);
-
-  // סנכרון מיידי לפיירבייס 
-  saveToStorage();
-
-  // כיווץ קל של תוכן עמודים מרונדר ישן אם קיים
-  let lightened = false;
-  pages.forEach(p => {
-    if (!p.content) return;
-    const light = artLightenContent(p.content);
-    if (light && light !== p.content) { p.content = light; lightened = true; }
-  });
-  if (lightened) saveToStorage();
-
-  // החזרת עמוד הבית כעמוד הראשי הפעיל כברירת מחדל ושמירה על דף הכתבות כראשון
-  if (pages && pages.length) {
-    let pageMap = new Map();
-    let madeCleanChanges = false;
-    
-    pages.forEach(p => {
-      if (!p || !p.id) return;
-      // מניעת כפילויות של עמודים עם מזהה זהה
-      if (pageMap.has(p.id)) {
-        madeCleanChanges = true;
-        const existingPage = pageMap.get(p.id);
-        const existingEmpty = !existingPage.content || existingPage.content.trim() === '';
-        const currentEmpty = !p.content || p.content.trim() === '';
-        if (existingEmpty && !currentEmpty) {
-          pageMap.set(p.id, p);
-        }
-      } else {
-        pageMap.set(p.id, p);
-      }
-    });
-    
-    let cleanedPages = Array.from(pageMap.values());
-
-    // הסרת עמודי סיפורים כפולים וריקים: אם יש יותר מעמוד סיפורים אחד,
-    // מסירים את אלו ללא סיפורים (0) כל עוד נשאר אחד עם תוכן. אם כולם
-    // ריקים — משאירים אחד בלבד. כך נעלם עמוד "סיפורים" ריק כפול.
-    const storyItemCount = (p) => {
-      try {
-        const m = p.content && p.content.match(/data-stories-json="([^"]*)"/);
-        if (!m) return 0;
-        const arr = JSON.parse(decodeURIComponent(m[1]));
-        return Array.isArray(arr) ? arr.length : 0;
-      } catch (e) { return 0; }
-    };
-    const storyPages = cleanedPages.filter(p => p.content && p.content.includes('stories-page'));
-    if (storyPages.length > 1) {
-      const hasNonEmpty = storyPages.some(p => storyItemCount(p) > 0);
-      let removeIds = [];
-      if (hasNonEmpty) {
-        removeIds = storyPages.filter(p => storyItemCount(p) === 0).map(p => p.id);
-      } else {
-        removeIds = storyPages.slice(1).map(p => p.id); // כולם ריקים — משאירים אחד
-      }
-      if (removeIds.length) {
-        cleanedPages = cleanedPages.filter(p => !removeIds.includes(p.id));
-        topNavPages = topNavPages.filter(id => !removeIds.includes(id));
-        if (removeIds.includes(activePageId)) activePageId = 'page-main';
-        madeCleanChanges = true;
-      }
-    }
-
-    // הגדרת עמוד הכתבות כעמוד ברירת המחדל הראשי של האתר
-    let articlesPage = cleanedPages.find(p => p.id === 'page-main' || (p.content && p.content.includes('articles-page') && !p.content.includes('stories-page') && !p.content.includes('photos-page') && !p.content.includes('courses-page')));
-    if (!articlesPage) {
-      articlesPage = cleanedPages[0];
-    }
-    if (articlesPage) {
-      cleanedPages = [articlesPage, ...cleanedPages.filter(p => p.id !== articlesPage.id)];
-      activePageId = articlesPage.id;
-    }
-    
-    pages = cleanedPages;
-    topNavPages = pages.map(p => p.id);
-    
-    if (madeCleanChanges) {
-      saveToStorage();
-    }
-  }
-
-  // אחרי שהכל נטען (ואולי תוקן), נצייר את האתר
-  renderSideMenu();
-  renderTopNav();
-  renderPage();
-  updateFABsVisibility();
-  
   if (typeof window.hidePreloader === 'function') {
     window.hidePreloader();
   }
