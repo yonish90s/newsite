@@ -347,10 +347,17 @@ async function initSite() {
     applyBackgrounds();
   } catch (localErr) {}
 
-  // הכנת העמודים ומזהה העמוד הפעיל מראש לפני שרשראות הרינדור
+  // הכנת העמודים ומזהה העמוד הפעיל מראש לפני שרשראות הרינדור + סינון עמודי טסט (hn, khkh)
   if (pages && pages.length) {
     let pageMap = new Map();
-    pages.forEach(p => { if (p && p.id) pageMap.set(p.id, p); });
+    const isGibberish = (title) => {
+      if (!title) return true;
+      const clean = title.replace(/[\u200b-\u200d\uFEFF]/g, '').trim().toLowerCase();
+      if (clean.length <= 3 && !['הכל', 'ראשי', 'בית', 'חנות'].includes(clean)) return true;
+      if (/^[a-z]{1,4}$/i.test(clean) && !['shop', 'home', 'news'].includes(clean)) return true;
+      return false;
+    };
+    pages.forEach(p => { if (p && p.id && p.title && !isGibberish(p.title)) pageMap.set(p.id, p); });
     let cleanedPages = Array.from(pageMap.values());
     let articlesPage = cleanedPages.find(p => p.id === 'page-main' || (p.content && p.content.includes('articles-page') && !p.content.includes('stories-page') && !p.content.includes('photos-page') && !p.content.includes('courses-page')));
     if (!articlesPage) articlesPage = cleanedPages[0];
@@ -361,10 +368,10 @@ async function initSite() {
       }
     }
     pages = cleanedPages;
-    topNavPages = pages.map(p => p.id);
+    topNavPages = pages.filter(p => !p.isHidden).map(p => p.id);
   }
 
-  // רינדור יחיד, נקי ומדויק מ-0 מילי-שניות (ללא הבהוב או מעבר עמודים)
+  // רינדור יחיד, נקי ומדויק מ-0 מילי-שניות (ללא עמודי טסט או הבהוב)
   renderSideMenu();
   renderTopNav();
   renderPage();
