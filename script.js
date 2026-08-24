@@ -347,17 +347,19 @@ async function initSite() {
     applyBackgrounds();
   } catch (localErr) {}
 
-  // הכנת העמודים ומזהה העמוד הפעיל מראש לפני שרשראות הרינדור + סינון עמודי טסט (hn, khkh)
+  // הכנת העמודים ומזהה העמוד הפעיל מראש לפני שרשראות הרינדור + סינון עמודי מחשבונים וטסט
   if (pages && pages.length) {
     let pageMap = new Map();
-    const isGibberish = (title) => {
+    const isExcluded = (title, id) => {
       if (!title) return true;
+      if (id === 'page-ci' || id === 'page-em') return true;
       const clean = title.replace(/[\u200b-\u200d\uFEFF]/g, '').trim().toLowerCase();
+      if (clean.includes('ריבית') || clean.includes('everything')) return true;
       if (clean.length <= 3 && !['הכל', 'ראשי', 'בית', 'חנות'].includes(clean)) return true;
       if (/^[a-z]{1,4}$/i.test(clean) && !['shop', 'home', 'news'].includes(clean)) return true;
       return false;
     };
-    pages.forEach(p => { if (p && p.id && p.title && !isGibberish(p.title)) pageMap.set(p.id, p); });
+    pages.forEach(p => { if (p && p.id && p.title && !isExcluded(p.title, p.id)) pageMap.set(p.id, p); });
     let cleanedPages = Array.from(pageMap.values());
     let articlesPage = cleanedPages.find(p => p.id === 'page-main' || (p.content && p.content.includes('articles-page') && !p.content.includes('stories-page') && !p.content.includes('photos-page') && !p.content.includes('courses-page')));
     if (!articlesPage) articlesPage = cleanedPages[0];
@@ -646,6 +648,7 @@ function renderTopNav() {
   topNavPages.forEach(pageId => {
     const page = pages.find(p => p.id === pageId);
     if (!page) return; // במקרה שהעמוד נמחק
+    if (pageId === 'page-ci' || pageId === 'page-em' || page.title?.includes('ריבית') || page.title?.includes('Everything')) return;
     if (!isEditMode && page.isHidden && !isAdmin()) return; // מסתיר עמודים מוסתרים גם למעלה
     
     const a = document.createElement('a');
@@ -8095,9 +8098,7 @@ onValue(ref(db, 'website'), (snapshot) => {
   let changed = false;
   
   if (data.pages) {
-    let pList = [...data.pages];
-    if (!pList.some(p => p.id === 'page-ci')) pList.push({ id: 'page-ci', title: 'ריבית דריבית', content: buildCompoundInterestPage() });
-    if (!pList.some(p => p.id === 'page-em')) pList.push({ id: 'page-em', title: 'מחשבון Everything Money', content: buildEverythingMoneyPage() });
+    let pList = data.pages.filter(p => p && p.id !== 'page-ci' && p.id !== 'page-em' && !p.title?.includes('ריבית') && !p.title?.includes('Everything'));
     if (JSON.stringify(pages) !== JSON.stringify(pList)) {
       pages = pList;
       changed = true;
@@ -8105,10 +8106,8 @@ onValue(ref(db, 'website'), (snapshot) => {
   }
 
   if (data.topNavPages) {
-    let navs = Array.from(new Set(data.topNavPages));
+    let navs = Array.from(new Set(data.topNavPages)).filter(id => id !== 'page-ci' && id !== 'page-em');
     if (!navs.includes('page-main')) navs.unshift('page-main');
-    if (!navs.includes('page-ci')) navs.push('page-ci');
-    if (!navs.includes('page-em')) navs.push('page-em');
     if (JSON.stringify(topNavPages) !== JSON.stringify(navs)) {
       topNavPages = navs;
       changed = true;
