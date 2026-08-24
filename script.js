@@ -6224,13 +6224,13 @@ async function openUserProfile(authorId, authorFallbackName) {
         }
         if (profile.email) {
           contactHTML += `
-            <a href="mailto:${profile.email}" target="_blank" title="${profile.email}" style="display:inline-flex; align-items:center; background:#2f2f2f; color:white; padding:4px 8px; border-radius:6px; font-size:11px; text-decoration:none; font-weight:bold; gap:4px; border:1px solid rgba(255,255,255,0.1);">
+            <button type="button" onclick="copyEmailToClipboard('${artEsc(profile.email)}', event);" title="לחץ להעתקת אימייל (${artEsc(profile.email)})" style="display:inline-flex; align-items:center; background:#2f2f2f; color:white; padding:4px 8px; border-radius:6px; font-size:11px; text-decoration:none; font-weight:bold; gap:4px; border:1px solid rgba(255,255,255,0.1); cursor:pointer;">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:block;">
                 <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
                 <polyline points="22,6 12,13 2,6"/>
               </svg>
               <span>אימייל</span>
-            </a>
+            </button>
           `;
         }
         contactWrap.innerHTML = contactHTML;
