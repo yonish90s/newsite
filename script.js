@@ -5848,9 +5848,9 @@ function buildPhotosPage(albums) {
       <div class="art-layout">
         <div class="art-main">
           <div class="art-search-wrap">
-            <input type="text" class="art-search" placeholder="🔍 חיפוש קולקציית אתרים מעוצבים..." oninput="photoSearch(this.value)">
+            <input type="text" class="art-search" placeholder="🔍 חיפוש גלריות..." oninput="photoSearch(this.value)">
           </div>
-          <div class="art-section-title">קולקציית אתרים מעוצבים לבחירה</div>
+          <div class="art-section-title">גלריית התמונות</div>
           ${photoFilterSectionHTML()}
           <div class="art-rows">${listHTML}</div>
           <div class="art-pagination" style="display:none"></div>
