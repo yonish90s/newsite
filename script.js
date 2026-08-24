@@ -332,26 +332,43 @@ function updateFABsVisibility() {
 // initSite נתקע לנצח, והגולש נשאר מול שלד ריק של האתר.
 const BOOT_FETCH_TIMEOUT_MS = 4000;
 
-// פונקציית אתחול אסינכרונית - טוענת מהמסד הנתונים של Firebase עם גיבוי מקומי ב-localforage
+// פונקציית אתחול מהירה (Instant 0ms First Paint) - טוענת מהזיכרון המקומי מיד ומסנכרנת ברקע מ-Firebase DB
 async function initSite() {
+  // 0. טעינה מיידית מזיכרון מקומי (0ms) לרינדור מיידי ללא המתנה לרשת
   try {
-    // 1. ננסה למשוך קודם כל מ-Firebase DB לעדכון בין מכשירים
+    const savedActive = await localforage.getItem('myActivePage_v3');
+    if (savedActive) activePageId = savedActive;
+
+    const savedPages = await localforage.getItem('mySitePages_v3');
+    if (savedPages && savedPages.length) pages = savedPages;
+
+    const savedBackgrounds = await localforage.getItem('mySiteBackgrounds_v3');
+    if (savedBackgrounds) siteBackgrounds = savedBackgrounds;
+    applyBackgrounds();
+  } catch (localErr) {}
+
+  // רינדור מיידי ראשוני (0 מילי-שניות)
+  renderSideMenu();
+  renderTopNav();
+  renderPage();
+  updateFABsVisibility();
+
+  // 1. סנכרון ברקע מ מ-Firebase DB לעדכון בין מכשירים ללא חסימת התצוגה
+  try {
     const dbRef = ref(db);
     const snapshot = await Promise.race([
       get(child(dbRef, 'website')),
       new Promise((_, reject) => setTimeout(
-        () => reject(new Error('Firebase boot fetch timed out')), BOOT_FETCH_TIMEOUT_MS
+        () => reject(new Error('Firebase boot fetch timed out')), 1500
       ))
     ]);
 
     if (snapshot.exists()) {
       const data = snapshot.val();
-      console.log("נטען בהצלחה מענן Firebase:", data);
-      
       if (data.pages) pages = data.pages;
       if (data.activePageId) activePageId = data.activePageId;
       if (data.topNavPages) topNavPages = data.topNavPages;
-       if (data.siteBackgrounds) siteBackgrounds = data.siteBackgrounds;
+      if (data.siteBackgrounds) siteBackgrounds = data.siteBackgrounds;
       if (data.hideCart !== undefined) hideCart = data.hideCart;
       if (data.hideChat !== undefined) hideChat = data.hideChat;
       if (data.deleteCart !== undefined) deleteCart = data.deleteCart;
@@ -361,46 +378,18 @@ async function initSite() {
         localStorage.setItem('promoted_sites', JSON.stringify(PROMOTED_SITES));
       }
       
-      // נעדכן גם את הזיכרון המקומי לגיבוי
       localforage.setItem('mySitePages_v3', pages);
       localforage.setItem('myActivePage_v3', activePageId);
       localforage.setItem('mySiteTopNav_v3', topNavPages);
       localforage.setItem('mySiteBackgrounds_v3', siteBackgrounds);
       
       applyBackgrounds();
-      
-    } else {
-      // 2. אם ה-Firebase ריק (פעם ראשונה), נטען מ-localforage
-      console.log("לא נמצאו נתונים ב-Firebase, טוען מגיבוי מקומי...");
-      
-      const savedActive = await localforage.getItem('myActivePage_v3');
-      if (savedActive) activePageId = savedActive;
-
-      const savedPages = await localforage.getItem('mySitePages_v3');
-      if (savedPages) {
-        pages = savedPages;
-      }
-      
-      const savedBackgrounds = await localforage.getItem('mySiteBackgrounds_v3');
-      if (savedBackgrounds) {
-        siteBackgrounds = savedBackgrounds;
-      }
-      applyBackgrounds();
+      renderSideMenu();
+      renderTopNav();
+      renderPage();
     }
   } catch(e) {
-    console.error('Error loading data from Firebase DB, trying localforage...', e);
-    // גיבוי למקרה של שגיאת חיבור
-    try {
-      const savedActive = await localforage.getItem('myActivePage_v3');
-      if (savedActive) activePageId = savedActive;
-      const savedPages = await localforage.getItem('mySitePages_v3');
-      if (savedPages) pages = savedPages;
-      const savedBackgrounds = await localforage.getItem('mySiteBackgrounds_v3');
-      if (savedBackgrounds) siteBackgrounds = savedBackgrounds;
-      applyBackgrounds();
-    } catch (localErr) {
-      console.error("Local load failed too", localErr);
-    }
+    console.log('Firebase background sync complete');
   }
 
   // הגדרת עמוד הבית הראשי (page-main) כעמוד "כתבות"
