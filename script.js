@@ -7121,7 +7121,7 @@ function artUpdateLightbox() {
   if (!img || !lb) return;
   img.src = lbImages[lbIndex];
   const multi = lbImages.length > 1;
-  counter.textContent = multi ? `${lbIndex + 1} / ${lbImages.length}` : '';
+  counter.textContent = multi ? `תמונה מס' ${lbIndex + 1} מתוך ${lbImages.length}` : `תמונה 1 מתוך 1`;
   lb.querySelector('.art-lb-prev').style.display = multi ? '' : 'none';
   lb.querySelector('.art-lb-next').style.display = multi ? '' : 'none';
 }
