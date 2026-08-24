@@ -332,9 +332,42 @@ function updateFABsVisibility() {
 // initSite נתקע לנצח, והגולש נשאר מול שלד ריק של האתר.
 const BOOT_FETCH_TIMEOUT_MS = 4000;
 
-// פונקציית אתחול מהירה (Instant 0ms First Paint) - ללא הבהוב עמודים ברקע
+function sanitizeToOnlyPhotosAndStories() {
+  if (!Array.isArray(pages)) pages = [];
+  
+  let photoPage = pages.find(p => p && p.content && p.content.includes('photos-page'));
+  if (!photoPage) {
+    photoPage = pages.find(p => p && p.title && (p.title.includes('תמונות') || p.title.toLowerCase().includes('photo')));
+  }
+  if (!photoPage) {
+    const pId = 'page-photos-main';
+    photoPage = { id: pId, title: 'תמונות 🖼️', content: typeof buildPhotosPage === 'function' ? buildPhotosPage(typeof PHOTOS_SAMPLES !== 'undefined' ? PHOTOS_SAMPLES : []) : '' };
+  } else {
+    photoPage.title = 'תמונות 🖼️';
+  }
+
+  let storyPage = pages.find(p => p && p.content && p.content.includes('stories-page'));
+  if (!storyPage) {
+    storyPage = pages.find(p => p && p.title && (p.title.includes('סיפורים') || p.title.toLowerCase().includes('story')));
+  }
+  if (!storyPage) {
+    const sId = 'page-stories-main';
+    storyPage = { id: sId, title: 'סיפורים', content: typeof buildStoriesPage === 'function' ? buildStoriesPage(typeof STORIES_SAMPLES !== 'undefined' ? STORIES_SAMPLES : []) : '' };
+  } else {
+    storyPage.title = 'סיפורים';
+  }
+
+  // שמירה בלעדית אך ורק על 2 עמודים: תמונות וסיפורים
+  pages = [photoPage, storyPage];
+  topNavPages = [photoPage.id, storyPage.id];
+  
+  if (!activePageId || (activePageId !== photoPage.id && activePageId !== storyPage.id)) {
+    activePageId = photoPage.id;
+  }
+}
+
+// פונקציית אתחול מהירה (Instant 0ms First Paint) - לשמירה על 2 עמודים בלבד
 async function initSite() {
-  // 0. טעינה מקומית ראשונית ב-0ms
   try {
     const savedActive = await localforage.getItem('myActivePage_v3');
     if (savedActive) activePageId = savedActive;
@@ -347,39 +380,15 @@ async function initSite() {
     applyBackgrounds();
   } catch (localErr) {}
 
-  // הכנת העמודים ומזהה העמוד הפעיל מראש לפני שרשראות הרינדור + סינון עמודי מחשבונים וטסט
-  if (pages && pages.length) {
-    let pageMap = new Map();
-    const isExcluded = (title, id) => {
-      if (!title) return true;
-      if (id === 'page-ci' || id === 'page-em') return true;
-      const clean = title.replace(/[\u200b-\u200d\uFEFF]/g, '').trim().toLowerCase();
-      if (clean.includes('ריבית') || clean.includes('everything')) return true;
-      if (clean.length <= 3 && !['הכל', 'ראשי', 'בית', 'חנות'].includes(clean)) return true;
-      if (/^[a-z]{1,4}$/i.test(clean) && !['shop', 'home', 'news'].includes(clean)) return true;
-      return false;
-    };
-    pages.forEach(p => { if (p && p.id && p.title && !isExcluded(p.title, p.id)) pageMap.set(p.id, p); });
-    let cleanedPages = Array.from(pageMap.values());
-    let articlesPage = cleanedPages.find(p => p.id === 'page-main' || (p.content && p.content.includes('articles-page') && !p.content.includes('stories-page') && !p.content.includes('photos-page') && !p.content.includes('courses-page')));
-    if (!articlesPage) articlesPage = cleanedPages[0];
-    if (articlesPage) {
-      cleanedPages = [articlesPage, ...cleanedPages.filter(p => p.id !== articlesPage.id)];
-      if (!activePageId || !cleanedPages.find(p => p.id === activePageId)) {
-        activePageId = articlesPage.id;
-      }
-    }
-    pages = cleanedPages;
-    topNavPages = pages.filter(p => !p.isHidden).map(p => p.id);
-  }
+  // סינון קפדני ל-2 עמודים בלבד בלחיצה/טעינה
+  sanitizeToOnlyPhotosAndStories();
 
-  // רינדור יחיד, נקי ומדויק מ-0 מילי-שניות (ללא עמודי טסט או הבהוב)
   renderSideMenu();
   renderTopNav();
   renderPage();
   updateFABsVisibility();
 
-  // 1. סנכרון ברקע מ-Firebase DB לעדכון בין מכשירים ללא חסימת התצוגה או הבהוב
+  // סנכרון ברקע מ-Firebase DB עם סינון קפדני
   try {
     const dbRef = ref(db);
     const snapshot = await Promise.race([
@@ -393,12 +402,13 @@ async function initSite() {
       const data = snapshot.val();
       if (data.pages && Array.isArray(data.pages)) pages = data.pages;
       if (data.activePageId) activePageId = data.activePageId;
-      if (data.topNavPages) topNavPages = data.topNavPages;
       if (data.siteBackgrounds) siteBackgrounds = data.siteBackgrounds;
       if (data.promotedSites) {
         PROMOTED_SITES = data.promotedSites;
         localStorage.setItem('promoted_sites', JSON.stringify(PROMOTED_SITES));
       }
+      
+      sanitizeToOnlyPhotosAndStories();
       
       localforage.setItem('mySitePages_v3', pages);
       localforage.setItem('myActivePage_v3', activePageId);
@@ -486,6 +496,7 @@ window.addEventListener('resize', () => {
 
 // פונקציה לשמירת הנתונים למסד הנתונים (מבוסס localforage + Firebase RTDB לסנכרון)
 function saveToStorage() {
+  sanitizeToOnlyPhotosAndStories();
   localforage.setItem('mySitePages_v3', pages);
   localforage.setItem('myActivePage_v3', activePageId);
   localforage.setItem('mySiteTopNav_v3', topNavPages); // שמירת התפריט העליון
