@@ -5866,9 +5866,20 @@ window.copyEmailToClipboard = copyEmailToClipboard;
       </button>
     `;
 
+    const isSavedCard = photoIsSavedLocal(p.id);
+    const cardSaveBtnHTML = `
+      <button type="button" onclick="event.stopPropagation(); photoToggleSave('${artEsc(p.id)}')" class="art-telegram-btn" title="${isSavedCard ? 'הסר משמורים' : 'שמור לצפייה מאוחרת'}" style="display: inline-flex; align-items: center; background: #2f2f2f; color: #ffffff; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: bold; gap: 6px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: all 0.2s; ${isSavedCard ? 'background: #e11d48; border-color: #e11d48;' : ''}">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="${isSavedCard ? '#ffffff' : 'none'}" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+          <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+        </svg>
+        <span>${isSavedCard ? 'שמור' : 'שמירה'}</span>
+      </button>
+    `;
+
     const cardLinksHTML = `
       <div class="photo-card-links">
         ${cardLikeBtnHTML}
+        ${cardSaveBtnHTML}
         ${cardLink(p.telegramUrl, 'טלגרם', 'M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z')}
         ${cardLink(p.emailUrl, 'אימייל', 'M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z', '<polyline points="22,6 12,13 2,6"/>')}
       </div>
