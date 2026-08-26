@@ -5892,6 +5892,7 @@ window.copyEmailToClipboard = copyEmailToClipboard;
           <div class="art-row-img-wrap" style="--bg-img: url('${mainImg || ''}');">
             ${mainImg ? `<img src="${mainImg}" alt="">` : '<div class="art-row-img-placeholder"></div>'}
             ${mainImg ? `<button class="art-zoom-btn" onclick="event.stopPropagation();artGalleryById('photos','${artEsc(p.id)}', this.closest('.art-row-img-wrap').querySelector('img') && this.closest('.art-row-img-wrap').querySelector('img').getAttribute('src'))" title="מסך מלא">⛶</button>` : ''}
+            ${(isAdmin() || isEditMode) ? `<button class="art-edit-btn" onclick="event.stopPropagation(); openPhotoEditModal('${artEsc(p.id)}', event)" title="ערוך גלריה" style="position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.7); color: white; border: none; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 14px; z-index: 10;">✏️</button>` : ''}
             ${isEditMode ? `<button class="art-pin-btn" onclick="event.stopPropagation(); togglePinPhoto('${artEsc(p.id)}')" title="${p.pinned ? 'בטל נעץ' : 'נעץ בגריד'}" style="${p.pinned ? 'color:#ffd700;display:flex;' : ''}">${p.pinned ? '★' : '☆'}</button>` : ''}
             <button class="art-delete-btn" onclick="event.stopPropagation();photoDelete('${artEsc(p.id)}',this)">✕</button>
           </div>
@@ -6056,6 +6057,11 @@ function photoOpenDetail(id) {
                   <polyline points="22,6 12,13 2,6"/>
                 </svg>
                 <span>אימייל</span>
+              </button>
+            ` : ''}
+            ${(isAdmin() || isEditMode) ? `
+              <button type="button" onclick="openPhotoEditModal('${artEsc(a.id)}', event);" title="ערוך גלריה זו" style="display: inline-flex; align-items: center; background: #e11d48; color: #fff; padding: 6px 14px; border-radius: 6px; font-size: 13px; border: none; font-weight: bold; gap: 6px; cursor: pointer; transition: background 0.2s;">
+                ✏️ ערוך גלריה
               </button>
             ` : ''}
           </div>
@@ -6300,9 +6306,10 @@ function photoSearch(val) {
 }
 
 let photoImgDataList = ['', '', '', '', ''];
+let editingPhotoId = null;
 
 function openPhotoModal() {
-  // Everyone can open the modal to add a gallery
+  editingPhotoId = null;
   document.getElementById('photo-title').value = '';
   document.getElementById('photo-summary').value = '';
   document.getElementById('photo-category').value = '';
@@ -6323,8 +6330,57 @@ function openPhotoModal() {
     prev.style.display = 'none';
     prev.src = '';
   }
+  const modalTitle = document.querySelector('#photo-modal h3');
+  if (modalTitle) modalTitle.textContent = '🖼️ העלאת גלריית תמונות חדשה';
   document.getElementById('photo-modal').style.display = 'flex';
 }
+
+function openPhotoEditModal(id, e) {
+  if (e) {
+    if (typeof e.stopPropagation === 'function') e.stopPropagation();
+    if (typeof e.preventDefault === 'function') e.preventDefault();
+  }
+  const albums = photoGetAlbums();
+  const album = albums.find(x => x.id === id);
+  if (!album) return;
+  
+  editingPhotoId = id;
+  
+  document.getElementById('photo-title').value = album.title || '';
+  document.getElementById('photo-summary').value = album.summary || '';
+  document.getElementById('photo-category').value = album.category || '';
+  document.getElementById('photo-telegram').value = (album.telegramUrl || '').replace('https://t.me/', '@');
+  const ageInp = document.getElementById('photo-age');
+  if (ageInp) ageInp.value = album.ageRange || '';
+  const regionInp = document.getElementById('photo-region');
+  if (regionInp) regionInp.value = album.region || '';
+  const emailInp = document.getElementById('photo-email');
+  if (emailInp) emailInp.value = (album.emailUrl || '').replace('mailto:', '');
+
+  photoImgDataList = ['', '', '', '', ''];
+  const imgs = (album.images && album.images.length) ? album.images : (album.image ? [album.image] : []);
+  for (let i = 1; i <= 5; i++) {
+    const btn = document.getElementById('photo-img-pick-' + i);
+    const prev = document.getElementById('photo-img-preview-' + i);
+    const imgData = imgs[i - 1] || '';
+    photoImgDataList[i - 1] = imgData;
+    if (imgData) {
+      prev.src = imgData;
+      prev.style.display = 'block';
+      btn.style.display = 'none';
+    } else {
+      btn.style.display = 'block';
+      btn.textContent = i + '️⃣';
+      prev.style.display = 'none';
+      prev.src = '';
+    }
+  }
+  
+  const modalTitle = document.querySelector('#photo-modal h3');
+  if (modalTitle) modalTitle.textContent = '✏️ עריכת גלריית תמונות';
+  document.getElementById('photo-modal').style.display = 'flex';
+}
+window.openPhotoEditModal = openPhotoEditModal;
 
 for (let i = 1; i <= 5; i++) {
   const btn = document.getElementById('photo-img-pick-' + i);
@@ -6347,6 +6403,7 @@ for (let i = 1; i <= 5; i++) {
 }
 
 document.getElementById('photo-cancel').addEventListener('click', () => {
+  editingPhotoId = null;
   document.getElementById('photo-modal').style.display = 'none';
 });
 
@@ -6394,28 +6451,47 @@ document.getElementById('photo-save').addEventListener('click', () => {
     authorNickname = 'מנהל';
   }
 
-  albums.unshift({
-    id: 'ph' + Date.now(),
-    title,
-    summary: document.getElementById('photo-summary').value.trim(),
-    images: photoImgDataList,
-    author: authorNickname,
-    authorId: user ? user.uid : '',
-    category: document.getElementById('photo-category').value.trim() || 'כללי',
-    ageRange: (document.getElementById('photo-age') || {}).value || '',
-    region: (document.getElementById('photo-region') || {}).value || '',
-    categoryColor: '#10b981',
-    timestamp: new Date().toLocaleDateString('he-IL'),
-    createdAt: Date.now(),
-    telegramUrl: telegramInput,
-    emailUrl: emailInput,
-    approved: isEditMode
-  });
+  if (editingPhotoId) {
+    const existingIdx = albums.findIndex(x => x.id === editingPhotoId);
+    if (existingIdx > -1) {
+      albums[existingIdx] = {
+        ...albums[existingIdx],
+        title,
+        summary: document.getElementById('photo-summary').value.trim(),
+        images: photoImgDataList.filter(Boolean),
+        category: document.getElementById('photo-category').value.trim() || 'כללי',
+        ageRange: (document.getElementById('photo-age') || {}).value || '',
+        region: (document.getElementById('photo-region') || {}).value || '',
+        telegramUrl: telegramInput,
+        emailUrl: emailInput
+      };
+    }
+    editingPhotoId = null;
+  } else {
+    albums.unshift({
+      id: 'ph' + Date.now(),
+      title,
+      summary: document.getElementById('photo-summary').value.trim(),
+      images: photoImgDataList.filter(Boolean),
+      author: authorNickname,
+      authorId: user ? user.uid : '',
+      category: document.getElementById('photo-category').value.trim() || 'כללי',
+      ageRange: (document.getElementById('photo-age') || {}).value || '',
+      region: (document.getElementById('photo-region') || {}).value || '',
+      categoryColor: '#10b981',
+      timestamp: new Date().toLocaleDateString('he-IL'),
+      createdAt: Date.now(),
+      telegramUrl: telegramInput,
+      emailUrl: emailInput,
+      approved: isEditMode
+    });
+  }
+
   mainContent.innerHTML = buildPhotosPage(albums);
   saveCurrentPageContent();
   document.getElementById('photo-modal').style.display = 'none';
   
-  if (!isEditMode) {
+  if (!isEditMode && !editingPhotoId) {
     alert('הגלריה הועלה בהצלחה וממתינה לאישור מנהל!');
   }
 });
