@@ -5634,10 +5634,17 @@ function photoClearFilters() {
 window.photoClearFilters = photoClearFilters;
 
 function buildPhotosPage(albums) {
+  // דירוג ומיון גלריות: תמונות נעוצות קודם, ואז לפי לייקים (דירוג) מהגבוה לנמוך
+  albums = [...albums].sort((a, b) => {
+    if (a.pinned && !b.pinned) return -1;
+    if (!a.pinned && b.pinned) return 1;
+    return (b.likes || 0) - (a.likes || 0) || (b.createdAt || 0) - (a.createdAt || 0);
+  });
+
   const featured = albums.filter(p => p.pinned).slice(0, 3);
   const popular = [...albums]
     .filter(p => p.approved !== false)
-    .sort((a, b) => (b.likes || 0) - (a.likes || 0))
+    .sort((a, b) => (b.likes || 0) - (a.likes || 0) || (b.createdAt || 0) - (a.createdAt || 0))
     .slice(0, 5);
 
   let savedHTML = '';
@@ -5903,13 +5910,13 @@ window.copyEmailToClipboard = copyEmailToClipboard;
   }).join('');
 
   const popularHTML = popular.map((p, i) => `
-    <div class="art-popular-item" onclick="photoOpenDetail('${artEsc(p.id)}')" style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+    <div class="art-popular-item" onclick="photoOpenDetail('${artEsc(p.id)}')" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; cursor: pointer; padding: 6px 8px; border-radius: 8px; transition: background 0.2s;">
       <div style="display: flex; align-items: center; gap: 8px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-        <span class="art-popular-num">${String(i+1).padStart(2,'0')}</span>
+        <span class="art-popular-num" style="font-weight: 900; color: #ec4899;">${String(i+1).padStart(2,'0')}</span>
         <div style="font-size:13px;font-weight:600;line-height:1.4;color:#222; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${p.title}</div>
       </div>
-      <div style="font-size: 12px; color: #000; display: flex; align-items: center; gap: 4px; font-weight: bold; flex-shrink: 0;">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+      <div style="font-size: 12px; color: #e11d48; display: flex; align-items: center; gap: 4px; font-weight: bold; flex-shrink: 0; background: rgba(225,29,72,0.08); padding: 3px 8px; border-radius: 12px;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="#e11d48" stroke="#e11d48" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
           <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
         </svg>
         <span>${p.likes || 0}</span>
