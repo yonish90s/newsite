@@ -6603,7 +6603,7 @@ async function syncUserLikeBudget(user) {
 }
 window.syncUserLikeBudget = syncUserLikeBudget;
 
-async function photoToggleLike(id) {
+function photoToggleLike(id) {
   const container = mainContent.querySelector('.photos-page');
   if (!container) return;
   
@@ -6627,15 +6627,14 @@ async function photoToggleLike(id) {
   } catch (e) {}
 
   const isAddingLike = !liked[id];
-  let budget = await syncUserLikeBudget(user);
+  let budget = parseInt(localStorage.getItem(`like_budget_${user.uid}`) || '5', 10);
 
-  if (isAddingLike) {
-    if (budget <= 0) {
-      alert("אין לך לייקים פנויים ביתרה! הלייקים שלך מצטברים בקצב של 5 לייקים נוספים בכל יום.");
-      return;
-    }
+  if (isAddingLike && budget <= 0) {
+    alert("אין לך לייקים פנויים ביתרה! הלייקים שלך מצטברים בקצב של 5 לייקים נוספים בכל יום.");
+    return;
   }
 
+  // עדכון מיידי של יתרת הלייקים והסטטוס ב-0 מילי-שניות (ללא המתנה)
   if (liked[id]) {
     delete liked[id];
     album.likes = Math.max(0, (album.likes || 0) - 1);
@@ -6647,17 +6646,10 @@ async function photoToggleLike(id) {
   }
 
   localStorage.setItem(`like_budget_${user.uid}`, budget);
-  try {
-    const budgetRef = ref(db, `website/users/${user.uid}/likes_data`);
-    await update(budgetRef, { budget: budget });
-  } catch (e) {
-    console.error("שגיאה בעדכון יתרת הלייקים:", e);
-  }
-
   localStorage.setItem('liked_galleries', JSON.stringify(liked));
-  
+
+  // רינדור מיידי ב-0ms ללא שום השהיית רשת
   const newJson = encodeURIComponent(JSON.stringify(albums));
-  
   const isDetailView = mainContent.querySelector('.art-detail') !== null;
   if (isDetailView) {
     photoOpenDetail(id);
@@ -6668,6 +6660,14 @@ async function photoToggleLike(id) {
   }
   
   saveCurrentPageContent();
+
+  // סנכרון ברקע מול Firebase RTDB בלבד (ללא עיכוב)
+  setTimeout(async () => {
+    try {
+      const budgetRef = ref(db, `website/users/${user.uid}/likes_data`);
+      update(budgetRef, { budget: budget }).catch(() => {});
+    } catch (e) {}
+  }, 0);
 }
 window.photoToggleLike = photoToggleLike;
 
