@@ -5634,6 +5634,10 @@ function photoClearFilters() {
 window.photoClearFilters = photoClearFilters;
 
 function buildPhotosPage(albums) {
+  // סינון גלריות זמניות שתוקפן פג (חולפו 24 שעות)
+  const now = Date.now();
+  albums = albums.filter(p => !p.expiresAt || p.expiresAt > now);
+
   // דירוג ומיון גלריות: תמונות נעוצות קודם, ואז לפי לייקים (דירוג) מהגבוה לנמוך
   albums = [...albums].sort((a, b) => {
     if (a.pinned && !b.pinned) return -1;
@@ -5888,10 +5892,11 @@ window.copyEmailToClipboard = copyEmailToClipboard;
     const infoBlock = `
       <div class="art-row-text photo-card-info">
         <h3>${p.title}</h3>
-        <div class="art-row-meta">
+        <div class="art-row-meta" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
           <span class="photo-author-link" onclick="event.stopPropagation(); openUserProfile('${artEsc(p.authorId || '')}', '${artEsc(p.author)}')" style="cursor: pointer; color: #e11d48; text-decoration: underline; font-weight: 600;">${p.author}</span>
           <span class="art-row-sep">|</span>
           <span>${p.timestamp}</span>
+          ${p.expiresAt ? renderExpirationBadge(p.expiresAt) : ''}
         </div>
         ${cardLinksHTML}
       </div>
@@ -6059,6 +6064,7 @@ function photoOpenDetail(id) {
             <span>צילום: ${a.author}</span>
             <span>·</span>
             <span>${a.timestamp}</span>
+            ${a.expiresAt ? renderExpirationBadge(a.expiresAt) : ''}
             <button onclick="photoToggleLike('${artEsc(a.id)}')" class="photo-like-btn" style="background: rgba(0,0,0,0.05); border: 1px solid #ddd; cursor: pointer; color: #000; display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; transition: background 0.2s; font-weight: bold; font-size: 13px;">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="${photoIsLikedLocal(a.id) ? '#000' : 'none'}" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
                 <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
@@ -6334,6 +6340,23 @@ function photoSearch(val) {
   photoApplyFilters();
 }
 
+function renderExpirationBadge(expiresAt) {
+  if (!expiresAt) return '';
+  const diff = Number(expiresAt) - Date.now();
+  if (diff <= 0) return '';
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+  const formatted = `${String(hours).padStart(2,'0')}:${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}`;
+  return `
+    <div class="comic-countdown-timer" data-expires-at="${expiresAt}" style="color: #dc2626; font-weight: 800; font-size: 12px; display: inline-flex; align-items: center; gap: 4px; background: rgba(220,38,38,0.08); padding: 4px 8px; border-radius: 6px; border: 1px solid rgba(220,38,38,0.2); font-family: monospace, sans-serif;">
+      <span>⏳ פג תוקף בעוד:</span>
+      <span class="timer-countdown-text">${formatted}</span>
+    </div>
+  `;
+}
+window.renderExpirationBadge = renderExpirationBadge;
+
 let photoImgDataList = ['', '', '', '', ''];
 let editingPhotoId = null;
 
@@ -6349,6 +6372,8 @@ function openPhotoModal() {
   if (regionInp) regionInp.value = '';
   const emailInp = document.getElementById('photo-email');
   if (emailInp) emailInp.value = '';
+  const tempInp = document.getElementById('photo-is-temporary');
+  if (tempInp) tempInp.checked = false;
   
   photoImgDataList = ['', '', '', '', ''];
   for (let i = 1; i <= 5; i++) {
@@ -6385,6 +6410,8 @@ function openPhotoEditModal(id, e) {
   if (regionInp) regionInp.value = album.region || '';
   const emailInp = document.getElementById('photo-email');
   if (emailInp) emailInp.value = (album.emailUrl || '').replace('mailto:', '');
+  const tempInp = document.getElementById('photo-is-temporary');
+  if (tempInp) tempInp.checked = !!(album.expiresAt && album.expiresAt > Date.now());
 
   photoImgDataList = ['', '', '', '', ''];
   const imgs = (album.images && album.images.length) ? album.images : (album.image ? [album.image] : []);
@@ -6467,6 +6494,10 @@ document.getElementById('photo-save').addEventListener('click', () => {
     }
   }
 
+  const tempInp = document.getElementById('photo-is-temporary');
+  const isTemporary = tempInp ? tempInp.checked : false;
+  const newExpiresAt = isTemporary ? (Date.now() + 24 * 60 * 60 * 1000) : null;
+
   const user = auth.currentUser;
   let authorNickname = 'אורח';
   if (user) {
@@ -6492,7 +6523,8 @@ document.getElementById('photo-save').addEventListener('click', () => {
         ageRange: (document.getElementById('photo-age') || {}).value || '',
         region: (document.getElementById('photo-region') || {}).value || '',
         telegramUrl: telegramInput,
-        emailUrl: emailInput
+        emailUrl: emailInput,
+        expiresAt: isTemporary ? (albums[existingIdx].expiresAt && albums[existingIdx].expiresAt > Date.now() ? albums[existingIdx].expiresAt : newExpiresAt) : null
       };
     }
     editingPhotoId = null;
@@ -6512,6 +6544,7 @@ document.getElementById('photo-save').addEventListener('click', () => {
       createdAt: Date.now(),
       telegramUrl: telegramInput,
       emailUrl: emailInput,
+      expiresAt: newExpiresAt,
       approved: isEditMode
     });
   }
@@ -8433,4 +8466,33 @@ onValue(ref(db, 'website'), (snapshot) => {
     updateFABsVisibility();
   }
 });
+
+// עדכון חי שוטף של טיימר הספירה לאחור האדום (24 שעות לקומיקסים/גלריות זמניות)
+setInterval(() => {
+  const now = Date.now();
+  let needRefresh = false;
+  document.querySelectorAll('.comic-countdown-timer').forEach(el => {
+    const expiresAt = Number(el.dataset.expiresAt);
+    if (!expiresAt) return;
+    const diff = expiresAt - now;
+    if (diff <= 0) {
+      needRefresh = true;
+    } else {
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      const textSpan = el.querySelector('.timer-countdown-text');
+      if (textSpan) {
+        textSpan.textContent = `${String(hours).padStart(2,'0')}:${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}`;
+      }
+    }
+  });
+  if (needRefresh) {
+    const container = mainContent.querySelector('.photos-page');
+    if (container) {
+      let albums = photoGetAlbums();
+      mainContent.innerHTML = buildPhotosPage(albums);
+    }
+  }
+}, 1000);
 
