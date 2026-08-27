@@ -5110,10 +5110,11 @@ function buildStoriesPage(stories) {
       <div class="art-row-text">
         <h3>${s.title}</h3>
         <p>${s.summary}</p>
-        <div class="art-row-meta">
+        <div class="art-row-meta" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
           <span>${s.author}</span>
           <span class="art-row-sep">|</span>
           <span>${s.timestamp}</span>
+          ${renderExpirationBadge(s.expiresAt || (s.createdAt ? s.createdAt + 24*60*60*1000 : null))}
         </div>
       </div>
       <div class="art-row-img-wrap" style="--bg-img: url('${s.image || ''}');">
@@ -5988,7 +5989,7 @@ window.copyEmailToClipboard = copyEmailToClipboard;
           <span class="photo-author-link" onclick="event.stopPropagation(); openUserProfile('${artEsc(p.authorId || '')}', '${artEsc(p.author)}')" style="cursor: pointer; color: #e11d48; text-decoration: underline; font-weight: 600;">${p.author}</span>
           <span class="art-row-sep">|</span>
           <span>${p.timestamp}</span>
-          ${p.expiresAt ? renderExpirationBadge(p.expiresAt) : ''}
+          ${renderExpirationBadge(p.expiresAt || (p.createdAt ? p.createdAt + 24*60*60*1000 : null))}
         </div>
         ${cardLinksHTML}
       </div>
@@ -6441,9 +6442,9 @@ function renderExpirationBadge(expiresAt) {
   const seconds = Math.floor((diff % (1000 * 60)) / 1000);
   const formatted = `${String(hours).padStart(2,'0')}:${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}`;
   return `
-    <div class="comic-countdown-timer" data-expires-at="${expiresAt}" style="color: #dc2626; font-weight: 800; font-size: 12px; display: inline-flex; align-items: center; gap: 4px; background: rgba(220,38,38,0.08); padding: 4px 8px; border-radius: 6px; border: 1px solid rgba(220,38,38,0.2); font-family: monospace, sans-serif;">
-      <span>⏳ פג תוקף בעוד:</span>
-      <span class="timer-countdown-text">${formatted}</span>
+    <div class="comic-countdown-timer" data-expires-at="${expiresAt}" style="color: #dc2626; font-weight: 900; font-size: 13px; display: inline-flex; align-items: center; gap: 4px; background: rgba(220,38,38,0.1); padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(220,38,38,0.3); font-family: monospace, sans-serif;">
+      <span style="font-size: 13px;">⏳</span>
+      <span class="timer-countdown-text" style="color: #dc2626; font-weight: 900; letter-spacing: 0.5px;">${formatted}</span>
     </div>
   `;
 }
