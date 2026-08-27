@@ -5115,7 +5115,7 @@ function buildStoriesPage(stories) {
           <span class="art-row-sep">|</span>
           <span>${s.timestamp}</span>
           <span class="art-row-sep">|</span>
-          ${renderExpirationBadge(s.expiresAt, s.createdAt)}
+          ${renderExpirationBadge(s.expiresAt, s.createdAt, s.id)}
         </div>
       </div>
       <div class="art-row-img-wrap" style="--bg-img: url('${s.image || ''}');">
@@ -5991,7 +5991,7 @@ window.copyEmailToClipboard = copyEmailToClipboard;
           <span class="art-row-sep">|</span>
           <span>${p.timestamp}</span>
           <span class="art-row-sep">|</span>
-          ${renderExpirationBadge(p.expiresAt, p.createdAt)}
+          ${renderExpirationBadge(p.expiresAt, p.createdAt, p.id)}
         </div>
         ${cardLinksHTML}
       </div>
@@ -6435,18 +6435,27 @@ function photoSearch(val) {
   photoApplyFilters();
 }
 
-function renderExpirationBadge(expiresAt, createdAt) {
+function renderExpirationBadge(expiresAt, createdAt, id) {
   let targetExp = Number(expiresAt);
-  if (!targetExp || isNaN(targetExp)) {
-    if (createdAt && !isNaN(Number(createdAt))) {
+  if (!targetExp || isNaN(targetExp) || targetExp <= Date.now()) {
+    if (createdAt && !isNaN(Number(createdAt)) && (Number(createdAt) + 24 * 60 * 60 * 1000) > Date.now()) {
       targetExp = Number(createdAt) + 24 * 60 * 60 * 1000;
+    } else if (id && typeof id === 'string') {
+      const match = id.match(/\d+/);
+      if (match) {
+        const ts = Number(match[0]);
+        if (ts > 1000000000000 && (ts + 24 * 60 * 60 * 1000) > Date.now()) {
+          targetExp = ts + 24 * 60 * 60 * 1000;
+        }
+      }
     }
   }
-  if (!targetExp || isNaN(targetExp)) return '';
 
-  const diff = targetExp - Date.now();
-  if (diff <= 0) return '';
+  if (!targetExp || isNaN(targetExp) || targetExp <= Date.now()) {
+    targetExp = Date.now() + 24 * 60 * 60 * 1000;
+  }
 
+  const diff = Math.max(0, targetExp - Date.now());
   const hours = Math.floor(diff / (1000 * 60 * 60));
   const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
   const seconds = Math.floor((diff % (1000 * 60)) / 1000);
