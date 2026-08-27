@@ -335,6 +335,9 @@ const BOOT_FETCH_TIMEOUT_MS = 4000;
 function sanitizeToOnlyPhotosAndStories() {
   if (!Array.isArray(pages)) pages = [];
   
+  // מסננים עמודי מחשבונים ישנים בלבד (ריבית דריבית ו-Everything Money)
+  pages = pages.filter(p => p && p.id !== 'page-ci' && p.id !== 'page-em' && !p.title?.includes('ריבית') && !p.title?.includes('Everything'));
+
   let photoPage = pages.find(p => p && p.content && p.content.includes('photos-page'));
   if (!photoPage) {
     photoPage = pages.find(p => p && p.title && (p.title.includes('תמונות') || p.title.toLowerCase().includes('photo')));
@@ -342,6 +345,7 @@ function sanitizeToOnlyPhotosAndStories() {
   if (!photoPage) {
     const pId = 'page-photos-main';
     photoPage = { id: pId, title: 'תמונות 🖼️', content: typeof buildPhotosPage === 'function' ? buildPhotosPage(typeof PHOTOS_SAMPLES !== 'undefined' ? PHOTOS_SAMPLES : []) : '' };
+    pages.unshift(photoPage);
   } else {
     photoPage.title = 'תמונות 🖼️';
   }
@@ -353,15 +357,21 @@ function sanitizeToOnlyPhotosAndStories() {
   if (!storyPage) {
     const sId = 'page-stories-main';
     storyPage = { id: sId, title: 'סיפורים', content: typeof buildStoriesPage === 'function' ? buildStoriesPage(typeof STORIES_SAMPLES !== 'undefined' ? STORIES_SAMPLES : []) : '' };
+    pages.push(storyPage);
   } else {
     storyPage.title = 'סיפורים';
   }
 
-  // שמירה בלעדית אך ורק על 2 עמודים: תמונות וסיפורים
-  pages = [photoPage, storyPage];
-  topNavPages = [photoPage.id, storyPage.id];
+  // שומרים על כל העמודים הקיימים והחדשים שהמשתמש הוסיף
+  if (!Array.isArray(topNavPages) || topNavPages.length === 0) {
+    topNavPages = pages.map(p => p.id);
+  } else {
+    pages.forEach(p => {
+      if (p && p.id && !topNavPages.includes(p.id)) topNavPages.push(p.id);
+    });
+  }
   
-  if (!activePageId || (activePageId !== photoPage.id && activePageId !== storyPage.id)) {
+  if (!activePageId || !pages.some(p => p && p.id === activePageId)) {
     activePageId = photoPage.id;
   }
 }
