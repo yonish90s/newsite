@@ -5115,7 +5115,7 @@ function buildStoriesPage(stories) {
           <span class="art-row-sep">|</span>
           <span>${s.timestamp}</span>
           <span class="art-row-sep">|</span>
-          ${renderExpirationBadge(s.expiresAt)}
+          ${renderExpirationBadge(s.expiresAt, s.createdAt)}
         </div>
       </div>
       <div class="art-row-img-wrap" style="--bg-img: url('${s.image || ''}');">
@@ -5991,7 +5991,7 @@ window.copyEmailToClipboard = copyEmailToClipboard;
           <span class="art-row-sep">|</span>
           <span>${p.timestamp}</span>
           <span class="art-row-sep">|</span>
-          ${renderExpirationBadge(p.expiresAt)}
+          ${renderExpirationBadge(p.expiresAt, p.createdAt)}
         </div>
         ${cardLinksHTML}
       </div>
@@ -6435,20 +6435,25 @@ function photoSearch(val) {
   photoApplyFilters();
 }
 
-function renderExpirationBadge(expiresAt) {
+function renderExpirationBadge(expiresAt, createdAt) {
   let targetExp = Number(expiresAt);
-  if (!targetExp || isNaN(targetExp) || targetExp <= Date.now()) {
-    targetExp = Date.now() + 24 * 60 * 60 * 1000;
+  if (!targetExp || isNaN(targetExp)) {
+    if (createdAt && !isNaN(Number(createdAt))) {
+      targetExp = Number(createdAt) + 24 * 60 * 60 * 1000;
+    }
   }
-  const diff = Math.max(0, targetExp - Date.now());
+  if (!targetExp || isNaN(targetExp)) return '';
+
+  const diff = targetExp - Date.now();
+  if (diff <= 0) return '';
+
   const hours = Math.floor(diff / (1000 * 60 * 60));
   const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
   const seconds = Math.floor((diff % (1000 * 60)) / 1000);
   const formatted = `${String(hours).padStart(2,'0')}:${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}`;
   return `
-    <span class="comic-countdown-timer" data-expires-at="${targetExp}" style="color: #dc2626; font-weight: 900; font-size: 13px; display: inline-flex; align-items: center; gap: 4px; background: rgba(220,38,38,0.1); padding: 2px 8px; border-radius: 6px; border: 1px solid rgba(220,38,38,0.3); font-family: monospace, sans-serif; vertical-align: middle;">
-      <span>⏳</span>
-      <span class="timer-countdown-text" style="color: #dc2626; font-weight: 900; letter-spacing: 0.5px;">${formatted}</span>
+    <span class="comic-countdown-timer" data-expires-at="${targetExp}" style="color: #dc2626; font-weight: 800; font-size: 11px; display: inline-flex; align-items: center; background: rgba(220,38,38,0.08); padding: 1px 6px; border-radius: 4px; border: 1px solid rgba(220,38,38,0.2); font-family: monospace, sans-serif; vertical-align: middle;">
+      <span class="timer-countdown-text" style="color: #dc2626; font-weight: 800;">${formatted}</span>
     </span>
   `;
 }
