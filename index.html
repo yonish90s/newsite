@@ -374,6 +374,27 @@
   </div>
 </div>
 
+<!-- מודל ניהול קטגוריות סיפורים -->
+<div id="story-categories-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:99999; align-items:center; justify-content:center; direction:rtl;">
+  <div style="background:#fff; border-radius:16px; padding:24px; width:90%; max-width:420px; max-height:85vh; overflow-y:auto; display:flex; flex-direction:column; gap:16px;">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <h3 style="margin:0; font-size:18px; font-weight:800; color:#111;">🏷️ ניהול קטגוריות סיפורים</h3>
+      <button onclick="closeStoryCategoriesModal()" style="background:none; border:none; font-size:20px; cursor:pointer; color:#888;">✕</button>
+    </div>
+    
+    <div style="display:flex; gap:8px;">
+      <input id="new-story-cat-input" type="text" placeholder="שם קטגוריה חדשה..." style="flex:1; padding:10px 14px; border:1px solid #ddd; border-radius:8px; font-size:14px; box-sizing:border-box;">
+      <button onclick="addStoryCategory()" style="background:#8b5cf6; color:white; border:none; padding:10px 16px; border-radius:8px; font-weight:700; cursor:pointer; font-size:14px; flex-shrink:0;">➕ הוסף</button>
+    </div>
+
+    <div id="story-categories-list-container" style="display:flex; flex-direction:column; gap:8px; max-height:280px; overflow-y:auto;"></div>
+
+    <div style="display:flex; justify-content:flex-end; margin-top:8px;">
+      <button onclick="closeStoryCategoriesModal()" style="background:#f3f4f6; color:#333; border:none; padding:10px 20px; border-radius:8px; font-weight:700; cursor:pointer; font-size:14px;">סגור</button>
+    </div>
+  </div>
+</div>
+
 <!-- מודל הוספת תמונות (אלבום/גלריה) -->
 <div id="photo-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:99999; align-items:center; justify-content:center; direction:rtl;">
   <div style="background:#fff; border-radius:16px; padding:28px; width:90%; max-width:480px; max-height:85vh; overflow-y:auto; display:flex; flex-direction:column; gap:12px;">

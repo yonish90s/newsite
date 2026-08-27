@@ -520,7 +520,8 @@ function saveToStorage() {
       navHTML: navHTML,
       siteBackgrounds: siteBackgrounds,
       promotedSites: PROMOTED_SITES,
-      socialLinks: SOCIAL_LINKS
+      socialLinks: SOCIAL_LINKS,
+      storyCategories: STORY_CATEGORIES
     }).then(() => {
       console.log("סונכרן בהצלחה לענן Firebase!");
     }).catch(err => {
@@ -4915,8 +4916,93 @@ const STORIES_SAMPLES = [
   }
 ];
 
-// קטגוריות הסיפורים (ניתן להוסיף/לשנות כאן)
-const STORY_CATEGORIES = ['כללי', 'סטרייט', 'ביסקסואל', 'שחורים על לבנות'];
+// קטגוריות הסיפורים (ניתן לעריכה על ידי מנהל)
+let STORY_CATEGORIES = (function () {
+  try {
+    const saved = JSON.parse(localStorage.getItem('custom_story_categories'));
+    if (Array.isArray(saved) && saved.length > 0) return saved;
+  } catch (e) {}
+  return ['כללי', 'סטרייט', 'ביסקסואל', 'שחורים על לבנות'];
+})();
+
+function saveStoryCategories() {
+  localStorage.setItem('custom_story_categories', JSON.stringify(STORY_CATEGORIES));
+  try {
+    const dbRef = ref(db, 'website/storyCategories');
+    set(dbRef, STORY_CATEGORIES);
+  } catch (e) {}
+  syncStoryCategorySelect();
+}
+
+function syncStoryCategorySelect() {
+  const select = document.getElementById('story-category');
+  if (!select) return;
+  const currentVal = select.value;
+  select.innerHTML = STORY_CATEGORIES.map(cat => `<option value="${artEsc(cat)}">${cat}</option>`).join('');
+  if (STORY_CATEGORIES.includes(currentVal)) {
+    select.value = currentVal;
+  }
+}
+window.syncStoryCategorySelect = syncStoryCategorySelect;
+
+function openStoryCategoriesModal() {
+  if (!isAdmin() && !isEditMode) return;
+  const listContainer = document.getElementById('story-categories-list-container');
+  if (listContainer) {
+    listContainer.innerHTML = STORY_CATEGORIES.map((cat, idx) => `
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px;">
+        <span style="font-weight: 600; font-size: 14px; color: #1f2937;">${cat}</span>
+        <button onclick="deleteStoryCategory(${idx})" title="מחק קטגוריה" style="background: rgba(225,29,72,0.1); color: #e11d48; border: none; border-radius: 6px; width: 28px; height: 28px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center;">✕</button>
+      </div>
+    `).join('');
+  }
+  const modal = document.getElementById('story-categories-modal');
+  if (modal) modal.style.display = 'flex';
+}
+window.openStoryCategoriesModal = openStoryCategoriesModal;
+
+function closeStoryCategoriesModal() {
+  const modal = document.getElementById('story-categories-modal');
+  if (modal) modal.style.display = 'none';
+}
+window.closeStoryCategoriesModal = closeStoryCategoriesModal;
+
+function addStoryCategory() {
+  const inp = document.getElementById('new-story-cat-input');
+  if (!inp) return;
+  const val = inp.value.trim();
+  if (!val) { alert('אנא הזן שם קטגוריה'); return; }
+  if (STORY_CATEGORIES.includes(val)) { alert('קטגוריה זו כבר קיימת'); return; }
+  
+  STORY_CATEGORIES.push(val);
+  inp.value = '';
+  saveStoryCategories();
+  openStoryCategoriesModal();
+  renderStoryCategoryTabs();
+}
+window.addStoryCategory = addStoryCategory;
+
+function deleteStoryCategory(idx) {
+  if (STORY_CATEGORIES.length <= 1) {
+    alert('חובה להשאיר לפחות קטגוריה אחת');
+    return;
+  }
+  const cat = STORY_CATEGORIES[idx];
+  if (!confirm(`האם למחוק את הקטגוריה "${cat}"?`)) return;
+  STORY_CATEGORIES.splice(idx, 1);
+  if (selectedStoryCategories.has(cat)) selectedStoryCategories.delete(cat);
+  saveStoryCategories();
+  openStoryCategoriesModal();
+  renderStoryCategoryTabs();
+}
+window.deleteStoryCategory = deleteStoryCategory;
+
+function renderStoryCategoryTabs() {
+  const container = mainContent.querySelector('.story-category-tabs');
+  if (container) {
+    container.outerHTML = storyCategoryBarHTML();
+  }
+}
 
 // גודל הגריד בעמוד הסיפורים (מספר עמודות). נשמר בין ביקורים.
 let storyGridCols = (function () {
@@ -4956,9 +5042,13 @@ function storyCatIsActive(c) {
 }
 function storyCategoryBarHTML() {
   const cats = ['הכל', ...STORY_CATEGORIES];
+  const editBtn = (isAdmin() || isEditMode) ? `
+    <button type="button" class="story-cat-btn" onclick="openStoryCategoriesModal()" style="background: rgba(139,92,246,0.1); color: #8b5cf6; border: 1px dashed #8b5cf6; font-weight: 700;">✏️ ניהול קטגוריות</button>
+  ` : '';
   return `
-    <div class="story-category-tabs">
+    <div class="story-category-tabs" style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
       ${cats.map(c => `<button type="button" class="story-cat-btn${storyCatIsActive(c) ? ' active' : ''}" onclick="storyFilterCategory('${artEsc(c)}', this)">${c}</button>`).join('')}
+      ${editBtn}
     </div>
   `;
 }
@@ -5230,6 +5320,7 @@ window.storyRemoveImage = storyRemoveImage;
 
 function openStoryModal() {
   if (!isEditMode) return;
+  syncStoryCategorySelect();
   storyEditingId = null;
   const h = document.getElementById('story-modal-title');
   if (h) h.textContent = 'הוספת סיפור חדש';
@@ -5239,7 +5330,7 @@ function openStoryModal() {
   document.getElementById('story-summary').value = '';
   document.getElementById('story-body').value = '';
   document.getElementById('story-author').value = '';
-  document.getElementById('story-category').value = 'כללי';
+  if (document.getElementById('story-category')) document.getElementById('story-category').value = STORY_CATEGORIES[0] || 'כללי';
   document.getElementById('story-link').value = '';
   storyImageList = [];
   renderStoryImagesEditor();
@@ -5249,6 +5340,7 @@ function openStoryModal() {
 // פותח את חלון הסיפור עם הנתונים הקיימים לעריכה (מנהל בלבד)
 function openStoryEditModal(id) {
   if (!isEditMode) return;
+  syncStoryCategorySelect();
   const s = storyGetStories().find(x => x.id === id);
   if (!s) return;
   storyEditingId = id;
@@ -5262,7 +5354,7 @@ function openStoryEditModal(id) {
   document.getElementById('story-summary').value = s.summary || '';
   document.getElementById('story-body').value = s.body || '';
   document.getElementById('story-author').value = s.author || '';
-  document.getElementById('story-category').value = s.category || 'כללי';
+  if (document.getElementById('story-category')) document.getElementById('story-category').value = s.category || STORY_CATEGORIES[0] || 'כללי';
   document.getElementById('story-link').value = s.link || '';
 
   // טוענים את התמונות הקיימות לפי הסדר, כדי שאפשר יהיה לשנות אותו
