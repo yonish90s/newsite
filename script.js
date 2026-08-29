@@ -201,8 +201,8 @@ const defaultPages = [
 
 // הגדרות ברירת מחדל (יוחלפו אם יש שמירה)
 let pages = defaultPages;
-let activePageId = 'page-main';
-let topNavPages = ['page-main']; // העמודים שמופיעים בתפריט העליון
+let activePageId = 'page-photos-main';
+let topNavPages = ['page-photos-main']; // העמודים שמופיעים בתפריט העליון
 let isEditMode = false; // ברירת מחדל: אורח (ללא עריכה)
 let undoStack = []; // מערך לשמירת היסטוריית שינויים לצורך ביטול (Undo)
 let siteBackgrounds = { dashboard: null, topNav: null, main: null };
@@ -376,12 +376,9 @@ function sanitizeToOnlyPhotosAndStories() {
   }
 }
 
-// פונקציית אתחול מהירה (Instant 0ms First Paint) - לשמירה על 2 עמודים בלבד
+// פונקציית אתחול מהירה (Instant 0ms First Paint)
 async function initSite() {
   try {
-    const savedActive = await localforage.getItem('myActivePage_v3');
-    if (savedActive) activePageId = savedActive;
-
     const savedPages = await localforage.getItem('mySitePages_v3');
     if (savedPages && savedPages.length) pages = savedPages;
 
@@ -390,15 +387,20 @@ async function initSite() {
     applyBackgrounds();
   } catch (localErr) {}
 
-  // סינון קפדני ל-2 עמודים בלבד בלחיצה/טעינה
   sanitizeToOnlyPhotosAndStories();
+
+  // עמוד הבית הראשי בעת כניסה לאתר הוא תמיד עמוד התמונות!
+  let mainPhotoPage = pages.find(p => p && p.content && p.content.includes('photos-page')) || pages.find(p => p && p.title && p.title.includes('תמונות'));
+  if (mainPhotoPage) {
+    activePageId = mainPhotoPage.id;
+  }
 
   renderSideMenu();
   renderTopNav();
   renderPage();
   updateFABsVisibility();
 
-  // סנכרון ברקע מ-Firebase DB עם סינון קפדני
+  // סנכרון ברקע מ-Firebase DB
   try {
     const dbRef = ref(db);
     const snapshot = await Promise.race([
@@ -411,7 +413,6 @@ async function initSite() {
     if (snapshot.exists()) {
       const data = snapshot.val();
       if (data.pages && Array.isArray(data.pages)) pages = data.pages;
-      if (data.activePageId) activePageId = data.activePageId;
       if (data.siteBackgrounds) siteBackgrounds = data.siteBackgrounds;
       if (data.promotedSites) {
         PROMOTED_SITES = data.promotedSites;
@@ -419,6 +420,12 @@ async function initSite() {
       }
       
       sanitizeToOnlyPhotosAndStories();
+
+      // עמוד כניסת ברירת המחדל הראשי נשמר תמיד כעמוד התמונות!
+      let bootPhotoPage = pages.find(p => p && p.content && p.content.includes('photos-page')) || pages.find(p => p && p.title && p.title.includes('תמונות'));
+      if (bootPhotoPage) {
+        activePageId = bootPhotoPage.id;
+      }
       
       localforage.setItem('mySitePages_v3', pages);
       localforage.setItem('myActivePage_v3', activePageId);
