@@ -362,7 +362,7 @@ function sanitizeToOnlyPhotosAndStories() {
     storyPage.title = 'סיפורים';
   }
 
-  // שומרים על כל העמודים הקיימים והחדשים שהמשתמש הוסיף
+  // שומרים על כל העמודים הקיימים והחדשים, כאשר עמוד התמונות הוא הראשון בתפריט
   if (!Array.isArray(topNavPages) || topNavPages.length === 0) {
     topNavPages = pages.map(p => p.id);
   } else {
@@ -371,9 +371,11 @@ function sanitizeToOnlyPhotosAndStories() {
     });
   }
   
-  if (!activePageId || !pages.some(p => p && p.id === activePageId)) {
-    activePageId = photoPage.id;
-  }
+  // מוודאים שעמוד התמונות הוא הראשון בתפריט העליון
+  topNavPages = [photoPage.id, ...topNavPages.filter(id => id !== photoPage.id)];
+
+  // עמוד הבית הראשי בעת כניסה לאתר הוא תמיד עמוד התמונות!
+  activePageId = photoPage.id;
 }
 
 // פונקציית אתחול מהירה (Instant 0ms First Paint)
@@ -8555,7 +8557,8 @@ onValue(ref(db, 'website'), (snapshot) => {
 
   if (data.topNavPages) {
     let navs = Array.from(new Set(data.topNavPages)).filter(id => id !== 'page-ci' && id !== 'page-em');
-    if (!navs.includes('page-main')) navs.unshift('page-main');
+    let pPhoto = pages.find(p => p && p.content && p.content.includes('photos-page')) || pages.find(p => p && p.title && p.title.includes('תמונות'));
+    if (pPhoto && !navs.includes(pPhoto.id)) navs.unshift(pPhoto.id);
     if (JSON.stringify(topNavPages) !== JSON.stringify(navs)) {
       topNavPages = navs;
       changed = true;
