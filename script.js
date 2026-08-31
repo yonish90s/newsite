@@ -374,8 +374,9 @@ function sanitizeToOnlyPhotosAndStories() {
   // מוודאים שעמוד התמונות הוא הראשון בתפריט העליון
   topNavPages = [photoPage.id, ...topNavPages.filter(id => id !== photoPage.id)];
 
-  // עמוד הבית הראשי בעת כניסה לאתר הוא תמיד עמוד התמונות!
-  activePageId = photoPage.id;
+  if (!activePageId || !pages.some(p => p && p.id === activePageId)) {
+    activePageId = photoPage.id;
+  }
 }
 
 // פונקציית אתחול מהירה (Instant 0ms First Paint)
@@ -423,10 +424,11 @@ async function initSite() {
       
       sanitizeToOnlyPhotosAndStories();
 
-      // עמוד כניסת ברירת המחדל הראשי נשמר תמיד כעמוד התמונות!
-      let bootPhotoPage = pages.find(p => p && p.content && p.content.includes('photos-page')) || pages.find(p => p && p.title && p.title.includes('תמונות'));
-      if (bootPhotoPage) {
-        activePageId = bootPhotoPage.id;
+      if (!activePageId || !pages.some(p => p && p.id === activePageId)) {
+        let bootPhotoPage = pages.find(p => p && p.content && p.content.includes('photos-page')) || pages.find(p => p && p.title && p.title.includes('תמונות'));
+        if (bootPhotoPage) {
+          activePageId = bootPhotoPage.id;
+        }
       }
       
       localforage.setItem('mySitePages_v3', pages);
