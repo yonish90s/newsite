@@ -5133,8 +5133,6 @@ function buildStoriesPage(stories) {
           <span>${s.author}</span>
           <span class="art-row-sep">|</span>
           <span>${s.timestamp}</span>
-          <span class="art-row-sep">|</span>
-          ${renderExpirationBadge(s.expiresAt, s.createdAt, s.id)}
         </div>
       </div>
       <div class="art-row-img-wrap" style="--bg-img: url('${s.image || ''}');">
@@ -6009,8 +6007,6 @@ window.copyEmailToClipboard = copyEmailToClipboard;
           <span class="photo-author-link" onclick="event.stopPropagation(); openUserProfile('${artEsc(p.authorId || '')}', '${artEsc(p.author)}')" style="cursor: pointer; color: #e11d48; text-decoration: underline; font-weight: 600;">${p.author}</span>
           <span class="art-row-sep">|</span>
           <span>${p.timestamp}</span>
-          <span class="art-row-sep">|</span>
-          ${renderExpirationBadge(p.expiresAt, p.createdAt, p.id)}
         </div>
         ${cardLinksHTML}
       </div>
@@ -6455,35 +6451,7 @@ function photoSearch(val) {
 }
 
 function renderExpirationBadge(expiresAt, createdAt, id) {
-  let targetExp = Number(expiresAt);
-  if (!targetExp || isNaN(targetExp) || targetExp <= Date.now()) {
-    if (createdAt && !isNaN(Number(createdAt)) && (Number(createdAt) + 24 * 60 * 60 * 1000) > Date.now()) {
-      targetExp = Number(createdAt) + 24 * 60 * 60 * 1000;
-    } else if (id && typeof id === 'string') {
-      const match = id.match(/\d+/);
-      if (match) {
-        const ts = Number(match[0]);
-        if (ts > 1000000000000 && (ts + 24 * 60 * 60 * 1000) > Date.now()) {
-          targetExp = ts + 24 * 60 * 60 * 1000;
-        }
-      }
-    }
-  }
-
-  if (!targetExp || isNaN(targetExp) || targetExp <= Date.now()) {
-    targetExp = Date.now() + 24 * 60 * 60 * 1000;
-  }
-
-  const diff = Math.max(0, targetExp - Date.now());
-  const hours = Math.floor(diff / (1000 * 60 * 60));
-  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-  const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-  const formatted = `${String(hours).padStart(2,'0')}:${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}`;
-  return `
-    <span class="comic-countdown-timer" data-expires-at="${targetExp}" style="color: #dc2626; font-weight: 800; font-size: 11px; display: inline-flex; align-items: center; background: rgba(220,38,38,0.08); padding: 1px 6px; border-radius: 4px; border: 1px solid rgba(220,38,38,0.2); font-family: monospace, sans-serif; vertical-align: middle;">
-      <span class="timer-countdown-text" style="color: #dc2626; font-weight: 800;">${formatted}</span>
-    </span>
-  `;
+  return '';
 }
 window.renderExpirationBadge = renderExpirationBadge;
 
