@@ -5000,7 +5000,7 @@ let STORY_CATEGORIES = (function () {
     const saved = JSON.parse(localStorage.getItem('custom_story_categories'));
     if (Array.isArray(saved) && saved.length > 0) return saved;
   } catch (e) {}
-  return ['כללי', 'סטרייט', 'ביסקסואל', 'שחורים על לבנות'];
+  return ['כללי', 'עירום'];
 })();
 
 function saveStoryCategories() {
@@ -5152,6 +5152,7 @@ function storyApplyFilters() {
   const searchInput = mainContent.querySelector('.stories-page .art-search');
   const q = searchInput ? searchInput.value.toLowerCase().trim() : '';
   const rows = mainContent.querySelectorAll('.stories-page .art-row');
+  const isAgeVerified = typeof sessionStorage !== 'undefined' && sessionStorage.getItem('age_verified') === 'true';
   let visible = 0;
   rows.forEach(r => {
     const text = (r.dataset.search || r.textContent).toLowerCase();
@@ -5160,6 +5161,19 @@ function storyApplyFilters() {
     const match = catMatch && text.includes(q);
     r.dataset.artMatch = match ? '1' : '0';
     if (match) visible++;
+
+    // טשטוש דינמי לתכני 'עירום' בסיפורים כשאין אישור V מעל גיל 18
+    const isNude = (rowCat === 'עירום' || text.includes('עירום'));
+    const imgWrap = r.querySelector('.art-row-img-wrap');
+    if (imgWrap) {
+      if (isNude && !isAgeVerified) {
+        imgWrap.style.filter = 'blur(18px)';
+        imgWrap.style.transition = 'filter 0.3s ease';
+        imgWrap.title = 'תוכן עירום מטושטש - יש לאשר גיל 18+ בסרגל הצד';
+      } else {
+        imgWrap.style.filter = 'none';
+      }
+    }
   });
   artSyncPagination();
   const noResults = mainContent.querySelector('.stories-page .art-no-results');
