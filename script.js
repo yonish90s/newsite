@@ -3588,260 +3588,342 @@ function onHotspotMouseMove(e) {
   const w = Math.abs(curX - hotspotStartX);
   const h = Math.abs(curY - hotspotStartY);
   hotspotDrawRect.style.left = x + 'px';
-  hotspotDrawRect.style.top = y + 'px';
-  hotspotDrawRect.style.width = w + 'px';
-  hotspotDrawRect.style.height = h + 'px';
-}
+  hotspotDrawRect.style.top = y +function buildAgeFilterSidebarBox() {
+  const isVerified = typeof sessionStorage !== 'undefined' && sessionStorage.getItem('age_verified') === 'true';
+  
+  return `
+    <div class="art-sidebar-box art-age-filter-box" style="margin-bottom: 20px; border: 1.5px solid #b91c1c; border-radius: 12px; padding: 16px; background: rgba(185, 28, 28, 0.03); box-shadow: 0 2px 8px rgba(185, 28, 28, 0.05); text-align: right; direction: rtl;">
+      <h4 style="margin: 0 0 10px; font-size: 15px; font-weight: 800; color: #b91c1c; border-bottom: 2px solid rgba(185, 28, 28, 0.2); padding-bottom: 6px; display: flex; align-items: center; justify-content: space-between;">
+        <span>🔞 סינון תוכן מעל גיל 18</span>
+        <span style="font-size: 12px; background: #b91c1c; color: white; padding: 2px 6px; border-radius: 4px; font-weight: 900;">18+</span>
+      </h4>
+      
+      <p style="font-size: 12.5px; color: #4b5563; margin: 0 0 12px; line-height: 1.4; font-weight: 600;">
+        לצפייה בתכני עירום, תכנים למבוגרים בלבד וסינון מתקדם, יש לאשר הצהרת גיל.
+      </p>
 
-function onHotspotMouseUp(e) {
-  if (!isDrawingHotspot || !hotspotDrawingEl) return;
-  isDrawingHotspot = false;
-  hotspotDrawRect.style.display = 'none';
+      <label style="display: flex; align-items: center; justify-content: space-between; gap: 8px; cursor: pointer; background: #ffffff; padding: 10px 12px; border-radius: 8px; border: 1px solid #fca5a5; transition: all 0.2s; white-space: nowrap; box-sizing: border-box;">
+        <span style="font-size: 12px; font-weight: 800; color: #991b1b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; user-select: none;">
+          אני מאשר/ת שאני מעל גיל 18 ומאפשר/ת הצגת תוכן 🔞
+        </span>
+        <input type="checkbox" id="sidebar-age-checkbox" onchange="toggleSidebarAgeVerification(this.checked)" style="width: 18px; height: 18px; cursor: pointer; accent-color: #b91c1c; flex-shrink: 0; margin: 0;" ${isVerified ? 'checked' : ''}>
+      </label>
 
-  const rect = hotspotDrawingEl.getBoundingClientRect();
-  const curX = e.clientX - rect.left;
-  const curY = e.clientY - rect.top;
-  const x = Math.min(hotspotStartX, curX);
-  const y = Math.min(hotspotStartY, curY);
-  const w = Math.abs(curX - hotspotStartX);
-  const h = Math.abs(curY - hotspotStartY);
-
-  if (w < 10 || h < 10) return; // התעלם מלחיצות קטנות
-
-  // שמור כאחוזים מגודל האלמנט
-  const elW = hotspotDrawingEl.offsetWidth;
-  const elH = hotspotDrawingEl.offsetHeight;
-  const xPct = (x / elW) * 100;
-  const yPct = (y / elH) * 100;
-  const wPct = (w / elW) * 100;
-  const hPct = (h / elH) * 100;
-
-  // פתח את חלון "הגדרת קישור" הקיים עם callback לשמירת hotspot
-  openLinkModalForHotspot(hotspotDrawingEl, { x: xPct, y: yPct, w: wPct, h: hPct });
-}
-
-// רנדור hotspots על אלמנט
-function renderHotspotsOnEl(el) {
-  // הסר hotspots ישנים
-  el.querySelectorAll('.hotspot-overlay').forEach(h => h.remove());
-
-  let hotspots = [];
-  try { hotspots = JSON.parse(el.dataset.hotspots || '[]'); } catch(e) {}
-
-  hotspots.forEach((hs, index) => {
-    const div = document.createElement('div');
-    div.className = 'hotspot-overlay';
-    div.style.left = hs.x + '%';
-    div.style.top = hs.y + '%';
-    div.style.width = hs.w + '%';
-    div.style.height = hs.h + '%';
-    div.dataset.href = hs.href;
-    div.title = '';
-
-    // כפתור מחיקה (נראה רק במצב עריכה)
-    const delBtn = document.createElement('button');
-    delBtn.className = 'hotspot-delete-btn';
-    delBtn.innerHTML = '✕';
-    delBtn.title = 'מחק אזור';
-    delBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      hotspots.splice(index, 1);
-      el.dataset.hotspots = JSON.stringify(hotspots);
-      renderHotspotsOnEl(el);
-      saveToStorage();
-    });
-
-    // לחיצה במצב צפייה - פתח קישור
-    div.addEventListener('click', (e) => {
-      if (isEditMode) return;
-      e.stopPropagation();
-      const link = hs.href.startsWith('http') ? hs.href : 'https://' + hs.href;
-      window.open(link, '_blank');
-    });
-
-    div.appendChild(delBtn);
-    el.appendChild(div);
-  });
-}
-
-// רנדור hotspots על כל האלמנטים בעמוד
-function renderAllHotspots() {
-  mainContent.querySelectorAll('[data-hotspots]').forEach(el => {
-    if (el.dataset.hotspots && el.dataset.hotspots !== '[]') {
-      renderHotspotsOnEl(el);
-    }
-  });
-}
-
-// הנחיית hotspot
-function showHotspotHint(msg) {
-  let hint = document.getElementById('hotspot-hint');
-  if (!hint) {
-    hint = document.createElement('div');
-    hint.id = 'hotspot-hint';
-    hint.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 20px;border-radius:20px;z-index:99999;font-size:14px;pointer-events:none;';
-    document.body.appendChild(hint);
-  }
-  hint.textContent = msg;
-}
-
-function hideHotspotHint() {
-  const hint = document.getElementById('hotspot-hint');
-  if (hint) hint.remove();
-}
-
-
-// ============================================================
-// ניהול עמודים - מחיקה ושינוי שם
-// ============================================================
-
-const btnManagePages = document.getElementById('btn-manage-pages');
-const managePagesModal = document.getElementById('manage-pages-modal');
-const managePagesClose = document.getElementById('manage-pages-close');
-const managePagesList = document.getElementById('manage-pages-list');
-
-function openManagePagesModal() {
-  managePagesList.innerHTML = '';
-  pages.forEach(page => {
-    const row = document.createElement('div');
-    row.style.cssText = 'display:flex; align-items:center; gap:10px; padding:12px 14px; border:1px solid #eee; border-radius:10px; background:#fafafa;';
-
-    const name = document.createElement('span');
-    name.textContent = page.title;
-    name.style.cssText = 'flex:1; font-size:15px; font-weight:500;';
-
-    const renameBtn = document.createElement('button');
-    renameBtn.textContent = '✏️';
-    renameBtn.title = 'שנה שם';
-    renameBtn.style.cssText = 'background:none; border:1px solid #ddd; border-radius:8px; padding:5px 8px; cursor:pointer; font-size:14px;';
-    renameBtn.onclick = () => {
-      const newName = prompt('שם חדש לעמוד:', page.title);
-      if (newName && newName.trim()) {
-        page.title = newName.trim();
-        saveToStorage();
-        renderSideMenu();
-        renderTopNav();
-        openManagePagesModal();
-      }
-    };
-
-    const delBtn = document.createElement('button');
-    delBtn.textContent = '🗑️ מחק';
-    delBtn.title = 'מחק עמוד';
-    delBtn.style.cssText = 'background:#fee2e2; border:none; border-radius:8px; padding:5px 10px; cursor:pointer; font-size:13px; color:#b91c1c; font-weight:600;';
-    delBtn.onclick = () => {
-      if (pages.length === 1) { alert('אי אפשר למחוק את העמוד האחרון!'); return; }
-      if (!confirm(`למחוק את "${page.title}"?`)) return;
-      pages.splice(pages.findIndex(p => p.id === page.id), 1);
-      topNavPages.splice(topNavPages.indexOf(page.id), 1);
-      if (activePageId === page.id) activePageId = pages[0].id;
-      saveToStorage();
-      renderSideMenu();
-      renderTopNav();
-      renderPage();
-      openManagePagesModal();
-    };
-
-    row.appendChild(name);
-    row.appendChild(renameBtn);
-    row.appendChild(delBtn);
-    managePagesList.appendChild(row);
-  });
-
-  managePagesModal.style.display = 'flex';
-}
-
-if (btnManagePages) btnManagePages.addEventListener('click', openManagePagesModal);
-if (managePagesClose) managePagesClose.onclick = () => { managePagesModal.style.display = 'none'; };
-
-// ============================================================
-// קרא עוד / הקטן
-// ============================================================
-
-function applyReadMoreToEl(el) {
-  // מסמן את האלמנט
-  el.dataset.hasReadmore = 'true';
-  renderReadMore(el);
-  saveCurrentPageContent();
-}
-
-function removeReadMoreFromEl(el) {
-  delete el.dataset.hasReadmore;
-  const wrapper = el.querySelector('.readmore-wrapper');
-  if (wrapper) {
-    // מחלץ את התוכן המקורי
-    const content = wrapper.querySelector('.readmore-content');
-    if (content) el.innerHTML = content.innerHTML;
-  }
-  saveCurrentPageContent();
-}
-
-function renderReadMore(el) {
-  if (!el.dataset.hasReadmore) return;
-  // אל תרנדר שוב אם כבר יש wrapper
-  if (el.querySelector('.readmore-wrapper')) return;
-
-  const originalHTML = el.innerHTML;
-  el.innerHTML = `
-    <div class="readmore-wrapper readmore-collapsed">
-      <div class="readmore-content">${originalHTML}</div>
-      <div class="readmore-fade"></div>
-      <button class="readmore-btn" onclick="toggleReadMore(this)">קראו עוד</button>
+      <div id="sidebar-age-status-msg" style="margin-top: 10px; font-size: 12px; font-weight: 800; color: ${isVerified ? '#16a34a' : '#dc2626'}; text-align: center;">
+        ${isVerified ? '✓ תוכן למבוגרים (18+) פתוח לצפייה' : '🔒 תוכן עירום חסום לצפייה'}
+      </div>
     </div>
   `;
 }
 
-function toggleReadMore(btn) {
-  const wrapper = btn.closest('.readmore-wrapper');
-  if (!wrapper) return;
-  const collapsed = wrapper.classList.toggle('readmore-collapsed');
-  btn.textContent = collapsed ? 'קראו עוד' : 'הקטן';
+function updateAgeVerificationUIState(checked) {
+  if (typeof document === 'undefined') return;
+  const root = document.documentElement;
+  const body = document.body;
+
+  if (checked) {
+    root.classList.remove('age-not-verified');
+    if (body) body.classList.remove('age-not-verified');
+  } else {
+    root.classList.add('age-not-verified');
+    if (body) body.classList.add('age-not-verified');
+  }
+
+  const checkbox = document.getElementById('sidebar-age-checkbox');
+  if (checkbox) checkbox.checked = !!checked;
+
+  const statusMsg = document.getElementById('sidebar-age-status-msg');
+  if (statusMsg) {
+    statusMsg.style.color = checked ? '#16a34a' : '#dc2626';
+    statusMsg.textContent = checked ? '✓ תוכן למבוגרים (18+) פתוח לצפייה' : '🔒 תוכן עירום חסום לצפייה';
+  }
+
+  const overlay = document.getElementById('age-gate-overlay');
+  if (overlay && checked) {
+    overlay.style.setProperty('display', 'none', 'important');
+  }
+}
+window.updateAgeVerificationUIState = updateAgeVerificationUIState;
+
+function toggleSidebarAgeVerification(checked) {
+  if (checked) {
+    sessionStorage.setItem('age_verified', 'true');
+    showCopyToast('✓ אושר בהצלחה! תוכן 18+ פתוח לצפייה 🔞');
+  } else {
+    sessionStorage.setItem('age_verified', 'false');
+    showCopyToast('🔒 סינון תוכן 18+ הופעל - תמונות האתר מטושטשות');
+  }
+  
+  updateAgeVerificationUIState(checked);
+
+  if (typeof photoApplyFilters === 'function') photoApplyFilters();
+  if (typeof storyApplyFilters === 'function') storyApplyFilters();
 }
 
-// החלת קרא עוד על כל האלמנטים שמסומנים אחרי renderPage
-const _origRenderPage = renderPage;
-// הוספת הפעלת readmore לתוך applyEditModeToContent ו-removeEditModeFromContent
-const _origApplyEdit = applyEditModeToContent;
-applyEditModeToContent = function() {
-  _origApplyEdit.apply(this, arguments);
-  // במצב עריכה - מסיר את ה-wrapper כדי שניתן לערוך
-  mainContent.querySelectorAll('[data-has-readmore]').forEach(el => {
-    const wrapper = el.querySelector('.readmore-wrapper');
-    if (wrapper) {
-      const content = wrapper.querySelector('.readmore-content');
-      if (content) el.innerHTML = content.innerHTML;
+let eventRegistrations = [];
+
+let UPCOMING_EVENT = (function() {
+  try {
+    const saved = localStorage.getItem('upcoming_event_data');
+    if (saved) return JSON.parse(saved);
+  } catch (e) {}
+  return {
+    title: 'מפגש קהילה מרכזי',
+    date: '15.09.2026',
+    time: '20:00',
+    location: 'תל אביב / זום אונליין',
+    image: 'https://images.unsplash.com/photo-1511578314322-379afb476865?w=800&q=80',
+    description: 'מפגש חברים וקהילה מרתק! הצטרפו אלינו לערב בלתי נשכח.'
+  };
+})();
+
+function saveUpcomingEvent(data) {
+  UPCOMING_EVENT = data;
+  try { localStorage.setItem('upcoming_event_data', JSON.stringify(data)); } catch (e) {}
+  updateEventSidebarBoxRegistrants();
+}
+
+function updateEventSidebarBoxRegistrants() {
+  if (typeof mainContent === 'undefined' || !mainContent) return;
+  const boxes = mainContent.querySelectorAll('.art-event-box');
+  boxes.forEach(box => {
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = buildEventsSidebarBox();
+    if (tempDiv.firstElementChild) {
+      box.outerHTML = tempDiv.firstElementChild.outerHTML;
     }
   });
-};
+}
 
-const _origRemoveEdit = removeEditModeFromContent;
-removeEditModeFromContent = function() {
-  _origRemoveEdit.apply(this, arguments);
-  // ביציאה ממצב עריכה - מחיל מחדש את קרא עוד
-  mainContent.querySelectorAll('[data-has-readmore]').forEach(el => {
-    renderReadMore(el);
-  });
-};
+function buildEventsSidebarBox() {
+  const isEd = (typeof isAdmin === 'function' && isAdmin()) || (typeof isEditMode !== 'undefined' && isEditMode);
+  const ev = UPCOMING_EVENT;
+  const regCount = eventRegistrations.length;
 
-// כפתור קרא עוד בסרגל הכלים של האלמנט - מוסיף דרך applyEditModeToContent
-// לכן מאזינים ל-renderPage ומוסיפים את הכפתור לשם
+  return `
+    <div class="art-sidebar-box art-event-box" style="margin-bottom: 20px; border: 1.5px solid #3b82f6; border-radius: 12px; padding: 16px; background: #ffffff; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.08); text-align: right; direction: rtl;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #3b82f6; padding-bottom: 6px; margin-bottom: 12px;">
+        <h4 style="margin: 0; font-size: 15px; font-weight: 800; color: #1e3a8a; display: flex; align-items: center; gap: 6px;">
+          <span>🎉 מפגש ואירוע קרוב</span>
+        </h4>
+        ${isEd ? `<button onclick="openEditEventModal()" style="background: #3b82f6; color: white; border: none; border-radius: 6px; padding: 2px 8px; font-size: 11px; font-weight: bold; cursor: pointer;">✏️ ערוך אירוע</button>` : ''}
+      </div>
 
-// ===== דף כתבות =====
+      <div style="width: 100%; height: 130px; border-radius: 8px; overflow: hidden; margin-bottom: 10px; border: 1px solid #eee;">
+        <img src="${ev.image || 'https://images.unsplash.com/photo-1511578314322-379afb476865?w=800&q=80'}" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+      </div>
 
-const ARTICLES_SAMPLES = [
-  {
-    id: 'a1',
-    title: 'גוגל משדרגת את Chrome עם מילוי אוטומטי של מסמכי זיהוי, טיסות ועוד מ-Google Wallet',
-    summary: 'גוגל הודיעה על העמקת השילוב בין שירות הארנק שלה לדפדפן הכרום במובייל ובדסקטופ. הדפדפן יאפשר מילוי אוטומטי של מסמכי זיהוי, דרכונים ורישיונות נהיגה ישירות מהאפליקציה.',
-    body: 'גוגל הכריזה הבוקר על שדרוג משמעותי לדפדפן Chrome, שיאפשר למשתמשים למלא טפסים מקוונים אוטומטית תוך שימוש בנתוני זיהוי שמורים ב-Google Wallet.\n\nהשדרוג החדש יתמוך במסמכי זיהוי ממשלתיים, כולל תעודות זהות ודרכונים, כרטיסי טיסה ועוד. פיצ\'ר זה יהיה זמין תחילה בארצות הברית ויורחב לשאר המדינות בהמשך השנה.\n\nלדברי גוגל, כל המידע מוצפן ואינו נשלח לשרתי החברה - הוא נשאר בטוח במכשיר המשתמש בלבד.',
-    author: 'יאל לכברמן', category: 'חדשות', categoryColor: '#1565C0', timestamp: 'היום, 11:20',
-    image: 'https://images.unsplash.com/photo-1573804633927-bfcbcd909acd?w=800&q=80', link: ''
-  },
-  {
-    id: 'a2',
-    title: 'הוכרז: Honor X80 Pro Max עם סוללת 11,000mAh ו-Snapdragon 6 Gen 5-i',
-    summary: 'מותג הסמארטפונים הסיני מציג מכשיר חדש עם סוללה יוצאת דופן של 11,000 מיליאמפר-שעה לצד טעינה מהירה ומעבד עדכני.',
-    body: 'Honor השיקה היום רשמית את ה-X80 Pro Max, מכשיר פלאגשיפ חדש עם אחת הסוללות הגדולות ביותר שנראו בשוק הסמארטפונים.\n\nהמכשיר מגיע עם סוללת 11,000mAh וטעינה מהירה של 100W, שלפי החברה מסוגלת לטעון את הסוללה מ-0 ל-50% תוך 25 דקות בלבד.\n\nמבחינת ביצועים, ה-X80 Pro Max מופעל על ידי מעבד Snapdragon 6 Gen 5-i עם 12GB RAM ו-256GB אחסון. תצוגת ה-AMOLED בגודל 6.8 אינץ\' תומכת ב-120Hz רענון.',
+      <h5 style="margin: 0 0 6px; font-size: 14px; font-weight: 800; color: #111827;">${ev.title}</h5>
+      
+      <div style="display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: #4b5563; margin-bottom: 10px; font-weight: 700;">
+        <div style="display: flex; align-items: center; gap: 6px; color: #d97706;">
+          <span>📅 מפגש בתאריך:</span>
+          <span style="color: #111827; font-weight: 900;">${ev.date} בשעה ${ev.time}</span>
+        </div>
+        ${ev.location ? `
+          <div style="display: flex; align-items: center; gap: 6px; color: #6b7280;">
+            <span>📍 מיקום:</span>
+            <span>${ev.location}</span>
+          </div>
+        ` : ''}
+      </div>
+
+      <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(37, 99, 235, 0.06); padding: 6px 10px; border-radius: 8px; margin-bottom: 10px; font-size: 12px; font-weight: 800; color: #1d4ed8;">
+        <span>👥 נרשמו עד כה:</span>
+        <span style="background: #2563eb; color: white; padding: 2px 8px; border-radius: 12px; font-weight: 900;">${regCount} משתתפים</span>
+      </div>
+
+      <button onclick="openEventRegisterModal()" style="width: 100%; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; border: none; border-radius: 8px; padding: 10px; font-size: 13.5px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25); transition: transform 0.2s, background 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;">
+        <span>✍️ להרשמה לאירוע</span>
+      </button>
+
+      ${isEd ? `
+        <button onclick="openEventRegistrantsAdminModal()" style="width: 100%; margin-top: 8px; background: #059669; color: white; border: none; border-radius: 8px; padding: 8px; font-size: 12.5px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 2px 8px rgba(5, 150, 105, 0.2);">
+          <span>📋 ניהול נרשמים לאירוע (${regCount})</span>
+        </button>
+      ` : ''}
+    </div>
+  `;
+}
+
+function openEventRegisterModal() {
+  const user = auth.currentUser;
+  if (!user) {
+    alert("יש להתחבר לחשבון באתר כדי להירשם לאירוע.");
+    const authModal = document.getElementById('auth-modal');
+    if (authModal) authModal.style.display = 'flex';
+    return;
+  }
+
+  let modal = document.getElementById('event-register-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'event-register-modal';
+    modal.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:9999999; align-items:center; justify-content:center; direction:rtl; padding:20px; font-family:system-ui, sans-serif;';
+    modal.innerHTML = `
+      <div style="background:#ffffff; border-radius:20px; padding:28px; width:95%; max-width:440px; box-shadow:0 20px 50px rgba(0,0,0,0.2); border:1px solid #eee; display:flex; flex-direction:column; gap:14px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding-bottom:12px;">
+          <h3 style="margin:0; font-size:18px; font-weight:900; color:#1e3a8a;">✍️ הרשמה למפגש / אירוע</h3>
+          <button onclick="document.getElementById('event-register-modal').style.display='none'" style="background:none; border:none; font-size:20px; cursor:pointer; color:#888;">✕</button>
+        </div>
+
+        <div id="event-modal-details-card" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:12px; font-size:13px; color:#334155; line-height:1.5;">
+          <strong>אירוע:</strong> <span id="event-reg-title-text">${artEsc(UPCOMING_EVENT.title)}</span><br>
+          <strong>תאריך ושעה:</strong> <span id="event-reg-date-text">${artEsc(UPCOMING_EVENT.date)} בשעה ${artEsc(UPCOMING_EVENT.time)}</span>
+        </div>
+
+        <label style="font-size:13px; font-weight:700; color:#374151;">שם מלא <span style="color:red">*</span></label>
+        <input type="text" id="event-reg-name" placeholder="הכנס את שמך" style="padding:10px 14px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; outline:none;">
+
+        <label style="font-size:13px; font-weight:700; color:#374151;">מספר טלפון / וואטסאפ <span style="color:red">*</span></label>
+        <input type="tel" id="event-reg-phone" placeholder="050-0000000" style="padding:10px 14px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; outline:none;">
+
+        <label style="font-size:13px; font-weight:700; color:#374151;">כתובת אימייל</label>
+        <input type="email" id="event-reg-email" placeholder="example@mail.com" style="padding:10px 14px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; outline:none;">
+
+        <div style="display:flex; gap:10px; margin-top:10px;">
+          <button onclick="document.getElementById('event-register-modal').style.display='none'" style="flex:1; padding:11px; border:1px solid #cbd5e1; border-radius:8px; background:#fff; cursor:pointer; font-weight:700; font-size:14px;">ביטול</button>
+          <button onclick="submitEventRegistration()" style="flex:1.5; padding:11px; border:none; border-radius:8px; background:#2563eb; color:#fff; cursor:pointer; font-weight:800; font-size:14px;">אישור הרשמה ✓</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  }
+  document.getElementById('event-reg-title-text').textContent = UPCOMING_EVENT.title;
+  document.getElementById('event-reg-date-text').textContent = `${UPCOMING_EVENT.date} בשעה ${UPCOMING_EVENT.time}`;
+  if (user) {
+    if (user.displayName) document.getElementById('event-reg-name').value = user.displayName;
+    if (user.email) document.getElementById('event-reg-email').value = user.email;
+  }
+  modal.style.display = 'flex';
+}
+
+async function submitEventRegistration() {
+  const user = auth.currentUser;
+  if (!user) {
+    alert("יש להתחבר לחשבון באתר כדי להירשם לאירוע.");
+    const authModal = document.getElementById('auth-modal');
+    if (authModal) authModal.style.display = 'flex';
+    return;
+  }
+
+  const name = document.getElementById('event-reg-name').value.trim();
+  const phone = document.getElementById('event-reg-phone').value.trim();
+  const email = document.getElementById('event-reg-email').value.trim() || user.email || '';
+
+  if (!name || !phone) {
+    alert('נא למלא שם ומספר טלפון להרשמה');
+    return;
+  }
+
+  const regData = {
+    eventId: UPCOMING_EVENT.title || 'event',
+    eventTitle: UPCOMING_EVENT.title,
+    eventDate: UPCOMING_EVENT.date,
+    userId: user.uid,
+    userName: name,
+    userPhone: phone,
+    userEmail: email,
+    createdAt: new Date().toLocaleDateString('he-IL') + ' ' + new Date().toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }),
+    timestamp: Date.now()
+  };
+
+  try {
+    const newRef = push(ref(db, 'website/event_registrations'));
+    await set(newRef, regData);
+  } catch (err) {
+    console.error("Error saving event registration:", err);
+  }
+
+  document.getElementById('event-register-modal').style.display = 'none';
+  showCopyToast(`🎉 הרשמתך למפגש נקלטה בהצלחה! נשמח לראותך.`);
+  document.getElementById('event-reg-name').value = '';
+  document.getElementById('event-reg-phone').value = '';
+}
+window.openEventRegisterModal = openEventRegisterModal;
+window.submitEventRegistration = submitEventRegistration;
+
+function openEventRegistrantsAdminModal() {
+  if (!isAdmin() && !isEditMode) return;
+
+  let modal = document.getElementById('event-admin-registrants-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'event-admin-registrants-modal';
+    modal.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:9999999; align-items:center; justify-content:center; direction:rtl; padding:20px; font-family:system-ui, sans-serif;';
+    document.body.appendChild(modal);
+  }
+
+  const regList = eventRegistrations;
+  const rowsHTML = regList.length ? regList.map((r, i) => `
+    <tr style="border-bottom: 1px solid #f1f5f9; background: ${i % 2 === 0 ? '#ffffff' : '#f8fafc'};">
+      <td style="padding: 10px 12px; font-weight: 800; color: #64748b;">${i + 1}</td>
+      <td style="padding: 10px 12px; font-weight: 800; color: #0f172a;">${artEsc(r.userName || 'ללא שם')}</td>
+      <td style="padding: 10px 12px; color: #2563eb; font-weight: 700; direction: ltr; text-align: right;"><a href="tel:${artEsc(r.userPhone)}" style="color:#2563eb; text-decoration:none;">${artEsc(r.userPhone || '--')}</a></td>
+      <td style="padding: 10px 12px; color: #475569; direction: ltr; text-align: right;">${artEsc(r.userEmail || '--')}</td>
+      <td style="padding: 10px 12px; color: #64748b; font-size: 12px;">${artEsc(r.createdAt || '')}</td>
+      <td style="padding: 10px 12px; text-align: center;">
+        <button onclick="deleteEventRegistration('${artEsc(r.id)}')" style="background: #ef4444; color: white; border: none; border-radius: 6px; padding: 4px 8px; font-size: 12px; cursor: pointer; font-weight: bold;" title="מחק נרשם">✕</button>
+      </td>
+    </tr>
+  `).join('') : `
+    <tr>
+      <td colspan="6" style="text-align: center; padding: 30px; color: #94a3b8; font-weight: 700;">עדיין לא נרשמו משתמשים לאירוע זה.</td>
+    </tr>
+  `;
+
+  modal.innerHTML = `
+    <div style="background:#ffffff; border-radius:20px; padding:24px; width:95%; max-width:720px; max-height:85vh; display:flex; flex-direction:column; box-shadow:0 25px 50px rgba(0,0,0,0.25); border:1px solid #cbd5e1; direction:rtl;">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #059669; padding-bottom:12px; margin-bottom:16px;">
+        <div>
+          <h3 style="margin:0; font-size:19px; font-weight:900; color:#065f46; display:flex; align-items:center; gap:8px;">
+            <span>📋 רשימת נרשמים לאירוע</span>
+          </h3>
+          <div style="font-size:13px; color:#475569; margin-top:2px;">
+            סה"כ נרשמו: <strong style="color:#059669; font-size:14px;">${regList.length}</strong> משתתפים
+          </div>
+        </div>
+        <button onclick="document.getElementById('event-admin-registrants-modal').style.display='none'" style="background:#f1f5f9; border:none; width:32px; height:32px; border-radius:50%; font-size:18px; cursor:pointer; color:#64748b; font-weight:bold;">✕</button>
+      </div>
+
+      <div style="flex:1; overflow-y:auto; border:1px solid #e2e8f0; border-radius:12px; margin-bottom:16px;">
+        <table style="width:100%; border-collapse:collapse; text-align:right; font-size:13.5px;">
+          <thead>
+            <tr style="background:#f1f5f9; color:#334155; font-weight:800; border-bottom:2px solid #e2e8f0;">
+              <th style="padding:10px 12px;">#</th>
+              <th style="padding:10px 12px;">שם מלא</th>
+              <th style="padding:10px 12px;">טלפון / וואטסאפ</th>
+              <th style="padding:10px 12px;">אימייל</th>
+              <th style="padding:10px 12px;">תאריך הרשמה</th>
+              <th style="padding:10px 12px; text-align:center;">מחיקה</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rowsHTML}
+          </tbody>
+        </table>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+        <button onclick="document.getElementById('event-admin-registrants-modal').style.display='none'" style="padding:9px 20px; border:1px solid #cbd5e1; border-radius:8px; background:#fff; cursor:pointer; font-weight:700; font-size:13.5px;">סגור</button>
+      </div>
+    </div>
+  `;
+  modal.style.display = 'flex';
+}
+
+async function deleteEventRegistration(regId) {
+  if (!confirm('האם אתה בטוח שברצונך למחוק נרשם זה?')) return;
+  try {
+    await set(ref(db, `website/event_registrations/${regId}`), null);
+    showCopyToast('✓ הנרשם נמחק בהצלחה');
+    openEventRegistrantsAdminModal();
+  } catch (e) {
+    console.error(e);
+  }
+}
+window.openEventRegistrantsAdminModal = openEventRegistrantsAdminModal;
+window.deleteEventRegistration = deleteEventRegistration;ות בלבד.\n\nמבחינת ביצועים, ה-X80 Pro Max מופעל על ידי מעבד Snapdragon 6 Gen 5-i עם 12GB RAM ו-256GB אחסון. תצוגת ה-AMOLED בגודל 6.8 אינץ\' תומכת ב-120Hz רענון.',
     author: 'רנן מנדזיצקי', category: 'חדשות', categoryColor: '#1565C0', timestamp: 'היום, 09:30',
     image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=800&q=80', link: ''
   },
@@ -3908,11 +3990,11 @@ function buildAgeFilterSidebarBox() {
         לצפייה בתכני עירום, תכנים למבוגרים בלבד וסינון מתקדם, יש לאשר הצהרת גיל.
       </p>
 
-      <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; background: #ffffff; padding: 10px 12px; border-radius: 8px; border: 1px solid #fca5a5; transition: all 0.2s;">
-        <input type="checkbox" id="sidebar-age-checkbox" onchange="toggleSidebarAgeVerification(this.checked)" style="width: 18px; height: 18px; cursor: pointer; accent-color: #b91c1c; margin-top: 2px; flex-shrink: 0;" ${isVerified ? 'checked' : ''}>
-        <span style="font-size: 13px; font-weight: 800; color: #991b1b; line-height: 1.3; user-select: none;">
-          אני מאשר/ת שאני מעל גיל 18 ומאפשר/ת הצגת תוכן עירום למבוגרים 🔞
+      <label style="display: flex; align-items: center; justify-content: space-between; gap: 8px; cursor: pointer; background: #ffffff; padding: 10px 12px; border-radius: 8px; border: 1px solid #fca5a5; transition: all 0.2s; white-space: nowrap; box-sizing: border-box;">
+        <span style="font-size: 12px; font-weight: 800; color: #991b1b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; user-select: none;">
+          אני מאשר/ת שאני מעל גיל 18 ומאפשר/ת הצגת תוכן 🔞
         </span>
+        <input type="checkbox" id="sidebar-age-checkbox" onchange="toggleSidebarAgeVerification(this.checked)" style="width: 18px; height: 18px; cursor: pointer; accent-color: #b91c1c; flex-shrink: 0; margin: 0;" ${isVerified ? 'checked' : ''}>
       </label>
 
       <div id="sidebar-age-status-msg" style="margin-top: 10px; font-size: 12px; font-weight: 800; color: ${isVerified ? '#16a34a' : '#dc2626'}; text-align: center;">
@@ -3965,6 +4047,9 @@ function toggleSidebarAgeVerification(checked) {
   if (typeof photoApplyFilters === 'function') photoApplyFilters();
   if (typeof storyApplyFilters === 'function') storyApplyFilters();
 }
+
+let eventRegistrations = [];
+
 let UPCOMING_EVENT = (function() {
   try {
     const saved = localStorage.getItem('upcoming_event_data');
@@ -3983,15 +4068,25 @@ let UPCOMING_EVENT = (function() {
 function saveUpcomingEvent(data) {
   UPCOMING_EVENT = data;
   try { localStorage.setItem('upcoming_event_data', JSON.stringify(data)); } catch (e) {}
-  if (typeof mainContent !== 'undefined' && mainContent) {
-    const boxes = mainContent.querySelectorAll('.art-event-box');
-    boxes.forEach(box => { box.outerHTML = buildEventsSidebarBox(); });
-  }
+  updateEventSidebarBoxRegistrants();
+}
+
+function updateEventSidebarBoxRegistrants() {
+  if (typeof mainContent === 'undefined' || !mainContent) return;
+  const boxes = mainContent.querySelectorAll('.art-event-box');
+  boxes.forEach(box => {
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = buildEventsSidebarBox();
+    if (tempDiv.firstElementChild) {
+      box.outerHTML = tempDiv.firstElementChild.outerHTML;
+    }
+  });
 }
 
 function buildEventsSidebarBox() {
   const isEd = (typeof isAdmin === 'function' && isAdmin()) || (typeof isEditMode !== 'undefined' && isEditMode);
   const ev = UPCOMING_EVENT;
+  const regCount = eventRegistrations.length;
 
   return `
     <div class="art-sidebar-box art-event-box" style="margin-bottom: 20px; border: 1.5px solid #3b82f6; border-radius: 12px; padding: 16px; background: #ffffff; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.08); text-align: right; direction: rtl;">
@@ -4008,7 +4103,7 @@ function buildEventsSidebarBox() {
 
       <h5 style="margin: 0 0 6px; font-size: 14px; font-weight: 800; color: #111827;">${ev.title}</h5>
       
-      <div style="display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: #4b5563; margin-bottom: 12px; font-weight: 700;">
+      <div style="display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: #4b5563; margin-bottom: 10px; font-weight: 700;">
         <div style="display: flex; align-items: center; gap: 6px; color: #d97706;">
           <span>📅 מפגש בתאריך:</span>
           <span style="color: #111827; font-weight: 900;">${ev.date} בשעה ${ev.time}</span>
@@ -4021,14 +4116,33 @@ function buildEventsSidebarBox() {
         ` : ''}
       </div>
 
+      <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(37, 99, 235, 0.06); padding: 6px 10px; border-radius: 8px; margin-bottom: 10px; font-size: 12px; font-weight: 800; color: #1d4ed8;">
+        <span>👥 נרשמו עד כה:</span>
+        <span style="background: #2563eb; color: white; padding: 2px 8px; border-radius: 12px; font-weight: 900;">${regCount} משתתפים</span>
+      </div>
+
       <button onclick="openEventRegisterModal()" style="width: 100%; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; border: none; border-radius: 8px; padding: 10px; font-size: 13.5px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25); transition: transform 0.2s, background 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;">
         <span>✍️ להרשמה לאירוע</span>
       </button>
+
+      ${isEd ? `
+        <button onclick="openEventRegistrantsAdminModal()" style="width: 100%; margin-top: 8px; background: #059669; color: white; border: none; border-radius: 8px; padding: 8px; font-size: 12.5px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 2px 8px rgba(5, 150, 105, 0.2);">
+          <span>📋 ניהול נרשמים לאירוע (${regCount})</span>
+        </button>
+      ` : ''}
     </div>
   `;
 }
 
 function openEventRegisterModal() {
+  const user = auth.currentUser;
+  if (!user) {
+    alert("יש להתחבר לחשבון באתר כדי להירשם לאירוע.");
+    const authModal = document.getElementById('auth-modal');
+    if (authModal) authModal.style.display = 'flex';
+    return;
+  }
+
   let modal = document.getElementById('event-register-modal');
   if (!modal) {
     modal = document.createElement('div');
@@ -4052,7 +4166,7 @@ function openEventRegisterModal() {
         <label style="font-size:13px; font-weight:700; color:#374151;">מספר טלפון / וואטסאפ <span style="color:red">*</span></label>
         <input type="tel" id="event-reg-phone" placeholder="050-0000000" style="padding:10px 14px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; outline:none;">
 
-        <label style="font-size:13px; font-weight:700; color:#374151;">כתובת אימייל (אופציונלי)</label>
+        <label style="font-size:13px; font-weight:700; color:#374151;">כתובת אימייל</label>
         <input type="email" id="event-reg-email" placeholder="example@mail.com" style="padding:10px 14px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; outline:none;">
 
         <div style="display:flex; gap:10px; margin-top:10px;">
@@ -4065,21 +4179,139 @@ function openEventRegisterModal() {
   }
   document.getElementById('event-reg-title-text').textContent = UPCOMING_EVENT.title;
   document.getElementById('event-reg-date-text').textContent = `${UPCOMING_EVENT.date} בשעה ${UPCOMING_EVENT.time}`;
+  if (user) {
+    if (user.displayName) document.getElementById('event-reg-name').value = user.displayName;
+    if (user.email) document.getElementById('event-reg-email').value = user.email;
+  }
   modal.style.display = 'flex';
 }
 
-function submitEventRegistration() {
+async function submitEventRegistration() {
+  const user = auth.currentUser;
+  if (!user) {
+    alert("יש להתחבר לחשבון באתר כדי להירשם לאירוע.");
+    const authModal = document.getElementById('auth-modal');
+    if (authModal) authModal.style.display = 'flex';
+    return;
+  }
+
   const name = document.getElementById('event-reg-name').value.trim();
   const phone = document.getElementById('event-reg-phone').value.trim();
+  const email = document.getElementById('event-reg-email').value.trim() || user.email || '';
+
   if (!name || !phone) {
     alert('נא למלא שם ומספר טלפון להרשמה');
     return;
   }
+
+  const regData = {
+    eventId: UPCOMING_EVENT.title || 'event',
+    eventTitle: UPCOMING_EVENT.title,
+    eventDate: UPCOMING_EVENT.date,
+    userId: user.uid,
+    userName: name,
+    userPhone: phone,
+    userEmail: email,
+    createdAt: new Date().toLocaleDateString('he-IL') + ' ' + new Date().toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }),
+    timestamp: Date.now()
+  };
+
+  try {
+    const newRef = push(ref(db, 'website/event_registrations'));
+    await set(newRef, regData);
+  } catch (err) {
+    console.error("Error saving event registration:", err);
+  }
+
   document.getElementById('event-register-modal').style.display = 'none';
-  showCopyToast(`🎉 הרשמתך למפגש בתאריך ${UPCOMING_EVENT.date} נקלטה בהצלחה!`);
+  showCopyToast(`🎉 הרשמתך למפגש נקלטה בהצלחה! נשמח לראותך.`);
   document.getElementById('event-reg-name').value = '';
   document.getElementById('event-reg-phone').value = '';
 }
+window.openEventRegisterModal = openEventRegisterModal;
+window.submitEventRegistration = submitEventRegistration;
+
+function openEventRegistrantsAdminModal() {
+  if (!isAdmin() && !isEditMode) return;
+
+  let modal = document.getElementById('event-admin-registrants-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'event-admin-registrants-modal';
+    modal.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:9999999; align-items:center; justify-content:center; direction:rtl; padding:20px; font-family:system-ui, sans-serif;';
+    document.body.appendChild(modal);
+  }
+
+  const regList = eventRegistrations;
+  const rowsHTML = regList.length ? regList.map((r, i) => `
+    <tr style="border-bottom: 1px solid #f1f5f9; background: ${i % 2 === 0 ? '#ffffff' : '#f8fafc'};">
+      <td style="padding: 10px 12px; font-weight: 800; color: #64748b;">${i + 1}</td>
+      <td style="padding: 10px 12px; font-weight: 800; color: #0f172a;">${artEsc(r.userName || 'ללא שם')}</td>
+      <td style="padding: 10px 12px; color: #2563eb; font-weight: 700; direction: ltr; text-align: right;"><a href="tel:${artEsc(r.userPhone)}" style="color:#2563eb; text-decoration:none;">${artEsc(r.userPhone || '--')}</a></td>
+      <td style="padding: 10px 12px; color: #475569; direction: ltr; text-align: right;">${artEsc(r.userEmail || '--')}</td>
+      <td style="padding: 10px 12px; color: #64748b; font-size: 12px;">${artEsc(r.createdAt || '')}</td>
+      <td style="padding: 10px 12px; text-align: center;">
+        <button onclick="deleteEventRegistration('${artEsc(r.id)}')" style="background: #ef4444; color: white; border: none; border-radius: 6px; padding: 4px 8px; font-size: 12px; cursor: pointer; font-weight: bold;" title="מחק נרשם">✕</button>
+      </td>
+    </tr>
+  `).join('') : `
+    <tr>
+      <td colspan="6" style="text-align: center; padding: 30px; color: #94a3b8; font-weight: 700;">עדיין לא נרשמו משתמשים לאירוע זה.</td>
+    </tr>
+  `;
+
+  modal.innerHTML = `
+    <div style="background:#ffffff; border-radius:20px; padding:24px; width:95%; max-width:720px; max-height:85vh; display:flex; flex-direction:column; box-shadow:0 25px 50px rgba(0,0,0,0.25); border:1px solid #cbd5e1; direction:rtl;">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #059669; padding-bottom:12px; margin-bottom:16px;">
+        <div>
+          <h3 style="margin:0; font-size:19px; font-weight:900; color:#065f46; display:flex; align-items:center; gap:8px;">
+            <span>📋 רשימת נרשמים לאירוע</span>
+          </h3>
+          <div style="font-size:13px; color:#475569; margin-top:2px;">
+            סה"כ נרשמו: <strong style="color:#059669; font-size:14px;">${regList.length}</strong> משתתפים
+          </div>
+        </div>
+        <button onclick="document.getElementById('event-admin-registrants-modal').style.display='none'" style="background:#f1f5f9; border:none; width:32px; height:32px; border-radius:50%; font-size:18px; cursor:pointer; color:#64748b; font-weight:bold;">✕</button>
+      </div>
+
+      <div style="flex:1; overflow-y:auto; border:1px solid #e2e8f0; border-radius:12px; margin-bottom:16px;">
+        <table style="width:100%; border-collapse:collapse; text-align:right; font-size:13.5px;">
+          <thead>
+            <tr style="background:#f1f5f9; color:#334155; font-weight:800; border-bottom:2px solid #e2e8f0;">
+              <th style="padding:10px 12px;">#</th>
+              <th style="padding:10px 12px;">שם מלא</th>
+              <th style="padding:10px 12px;">טלפון / וואטסאפ</th>
+              <th style="padding:10px 12px;">אימייל</th>
+              <th style="padding:10px 12px;">תאריך הרשמה</th>
+              <th style="padding:10px 12px; text-align:center;">מחיקה</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rowsHTML}
+          </tbody>
+        </table>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+        <button onclick="document.getElementById('event-admin-registrants-modal').style.display='none'" style="padding:9px 20px; border:1px solid #cbd5e1; border-radius:8px; background:#fff; cursor:pointer; font-weight:700; font-size:13.5px;">סגור</button>
+      </div>
+    </div>
+  `;
+  modal.style.display = 'flex';
+}
+
+async function deleteEventRegistration(regId) {
+  if (!confirm('האם אתה בטוח שברצונך למחוק נרשם זה?')) return;
+  try {
+    await set(ref(db, `website/event_registrations/${regId}`), null);
+    showCopyToast('✓ הנרשם נמחק בהצלחה');
+    openEventRegistrantsAdminModal();
+  } catch (e) {
+    console.error(e);
+  }
+}
+window.openEventRegistrantsAdminModal = openEventRegistrantsAdminModal;
+window.deleteEventRegistration = deleteEventRegistration;
 window.openEventRegisterModal = openEventRegisterModal;
 window.submitEventRegistration = submitEventRegistration;
 

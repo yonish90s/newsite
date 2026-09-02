@@ -3584,8 +3584,9 @@ body:not(.edit-mode) .hidden-nav {
 }
 
 /* ============================================================
-   טשטוש תמונות באתר בלחיצה/ביטול V סינון גיל 18+
+   טשטוש תמונות ומודעות באתר בלחיצה/ביטול V סינון גיל 18+
    ============================================================ */
+html.age-not-verified img,
 html.age-not-verified .art-row-img-wrap,
 html.age-not-verified .art-row-img-wrap img,
 html.age-not-verified .art-featured-card img,
@@ -3606,6 +3607,11 @@ html.age-not-verified #lightbox-img,
 html.age-not-verified .art-lb-img,
 html.age-not-verified .art-popular-item img,
 html.age-not-verified .community-card img,
+html.age-not-verified .art-event-box img,
+html.age-not-verified .art-sidebar-box img,
+html.age-not-verified .art-ad img,
+html.age-not-verified .art-promoted-card img,
+body.age-not-verified img,
 body.age-not-verified .art-row-img-wrap,
 body.age-not-verified .art-row-img-wrap img,
 body.age-not-verified .art-featured-card img,
@@ -3625,10 +3631,25 @@ body.age-not-verified #art-gallery-img,
 body.age-not-verified #lightbox-img,
 body.age-not-verified .art-lb-img,
 body.age-not-verified .art-popular-item img,
-body.age-not-verified .community-card img {
+body.age-not-verified .community-card img,
+body.age-not-verified .art-event-box img,
+body.age-not-verified .art-sidebar-box img,
+body.age-not-verified .art-ad img,
+body.age-not-verified .art-promoted-card img {
   filter: blur(20px) !important;
   transition: filter 0.3s ease;
 }
+
+/* החרגה של לוגו האתר ואייקוני מערכת מרכזיים מכלל הטשטוש */
+html.age-not-verified #main-logo,
+html.age-not-verified #loader-img,
+html.age-not-verified .auth-modal-logo,
+body.age-not-verified #main-logo,
+body.age-not-verified #loader-img,
+body.age-not-verified .auth-modal-logo {
+  filter: none !important;
+}
+
 
 
 
