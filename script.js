@@ -6221,6 +6221,10 @@ function photoOpenDetail(id) {
     `).join('');
   }
 
+  const isAgeVerifiedDetail = typeof sessionStorage !== 'undefined' && sessionStorage.getItem('age_verified') === 'true';
+  const isNudeDetail = (a.category === 'עירום' || (a.summary || '').includes('עירום'));
+  const blurStyle = (isNudeDetail && !isAgeVerifiedDetail) ? 'filter: blur(18px); transition: filter 0.3s ease;' : '';
+
   const json = encodeURIComponent(JSON.stringify(albums));
   mainContent.innerHTML = `
     <div class="art-detail articles-page photos-page" data-photo-id="${id}" data-photos-json="${json}">
@@ -6275,8 +6279,8 @@ function photoOpenDetail(id) {
         </div>
 
         <!-- תמונה ראשית גדולה עם מזהה ספציפי (פרופורציונלית ולא ענקית) -->
-        <div class="photo-main-img-container">
-          <img id="photo-gallery-main-img" src="${mainImg}" style="width:100%; height:100%; object-fit:contain; display:block; border-radius:12px; cursor:zoom-in;" onclick="artGalleryById('photos','${artEsc(id)}', this.getAttribute('src'))">
+        <div class="photo-main-img-container" style="${blurStyle}">
+          <img id="photo-gallery-main-img" src="${mainImg}" style="width:100%; height:100%; object-fit:contain; display:block; border-radius:12px; cursor:zoom-in; ${blurStyle}" onclick="artGalleryById('photos','${artEsc(id)}', this.getAttribute('src'))">
         </div>
 
         <!-- ריבועי דפדוף (Thumbnails) -->
@@ -6939,7 +6943,7 @@ window.photoToggleSave = photoToggleSave;
 
 // ערכי הסינון של עמוד התמונות. הם חיים מחוץ ל-buildPhotosPage כדי
 // שהבחירה תישמר גם כשהעמוד נבנה מחדש (מחיקה, לייק, עדכון מהענן).
-const PHOTO_CATEGORIES = ['הכל', 'גברים', 'נשים', 'זוגות'];
+const PHOTO_CATEGORIES = ['הכל', 'כללי', 'עירום'];
 const PHOTO_AGE_RANGES = ['הכל', '18-25', '26-35', '36-45', '46+'];
 const PHOTO_REGIONS = ['הכל', 'צפון', 'מרכז', 'דרום'];
 const PHOTO_DATE_RANGES = ['הכל', 'השבוע', 'החודש', 'השנה'];
@@ -7009,6 +7013,7 @@ function photoApplyFilters() {
   
   const rows = mainContent.querySelectorAll('.photos-page .art-row');
   const dateThreshold = photoDateThreshold(currentPhotoDateFilter);
+  const isAgeVerified = typeof sessionStorage !== 'undefined' && sessionStorage.getItem('age_verified') === 'true';
   let visible = 0;
 
   rows.forEach(r => {
@@ -7028,6 +7033,19 @@ function photoApplyFilters() {
     // העימוד הוא זה שקובע display בפועל; כאן רק מסמנים מה תואם
     r.dataset.artMatch = show ? '1' : '0';
     if (show) visible++;
+
+    // טשטוש דינמי לתכני 'עירום' כשאין אישור V מעל גיל 18
+    const isNude = (rowCategory === 'עירום' || (r.dataset.search || '').includes('עירום'));
+    const imgWrap = r.querySelector('.art-row-img-wrap');
+    if (imgWrap) {
+      if (isNude && !isAgeVerified) {
+        imgWrap.style.filter = 'blur(18px)';
+        imgWrap.style.transition = 'filter 0.3s ease';
+        imgWrap.title = 'תוכן עירום מטושטש - יש לאשר גיל 18+ בסרגל הצד';
+      } else {
+        imgWrap.style.filter = 'none';
+      }
+    }
   });
 
   // כל שינוי בחיפוש או בקטגוריה מחזיר לעמוד הראשון של התוצאות
