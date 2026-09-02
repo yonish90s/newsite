@@ -6260,22 +6260,185 @@ function photoClearFilters() {
 }
 window.photoClearFilters = photoClearFilters;
 
+function photoGetViews(id) {
+  if (!id) return 0;
+  try {
+    return Number(localStorage.getItem(`photo_views_${id}`)) || 0;
+  } catch(e) { return 0; }
+}
+
+function photoIncrementViews(id) {
+  if (!id) return 0;
+  try {
+    const cur = photoGetViews(id);
+    const updated = cur + 1;
+    localStorage.setItem(`photo_views_${id}`, updated);
+    if (typeof db !== 'undefined') {
+      try { set(ref(db, `website/photo_albums/${id}/views`), updated); } catch(e){}
+    }
+    return updated;
+  } catch(e) { return 1; }
+}
+
+function renderPhotoCard(p, options = {}) {
+  const isPending = p.approved === false;
+  if (!isEditMode && isPending) return '';
+
+  const validImages = (p.images || []).filter(img => !!img);
+  const mainImg = validImages[0] || '';
+  const viewsCount = photoGetViews(p.id);
+  const likesCount = p.likes || 0;
+  const totalScore = likesCount + viewsCount;
+
+  let miniThumbnailsHTML = '';
+  if (validImages.length > 1) {
+    miniThumbnailsHTML = `
+      <div class="photo-mini-thumbs" style="display: flex; gap: 4px; justify-content: center; margin-top: 6px; width: 170px; flex-wrap: wrap;">
+        ${validImages.map((imgUrl, idx) => `
+          <div class="photo-mini-thumb" 
+               onclick="event.stopPropagation(); photoSelectRowImage('${artEsc(p.id)}', '${artEsc(imgUrl)}', this)" 
+               style="width: 24px; height: 24px; border-radius: 4px; overflow: hidden; cursor: pointer; border: 1.5px solid ${idx === 0 ? '#e11d48' : '#ddd'}; transition: all 0.2s; background: #eee; flex-shrink:0;">
+            <img src="${imgUrl}" style="width: 100%; height: 100%; object-fit: cover;">
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  const searchText = artEsc([p.title, p.summary, p.author, p.category].filter(Boolean).join(' '));
+
+  const cardLink = (url, label, iconPath, extraPath) => {
+    const svg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;"><path d="${iconPath}"/>${extraPath || ''}</svg>`;
+    if (url) {
+      if (label === 'אימייל') {
+        return `
+          <button type="button" onclick="copyEmailToClipboard('${artEsc(url)}', event);" class="art-telegram-btn" title="לחץ להעתקת אימייל">
+            ${svg}<span>${label}</span>
+          </button>
+        `;
+      }
+      return `
+        <a href="${url}" target="_blank" onclick="event.stopPropagation();" class="art-telegram-btn">
+          ${svg}<span>${label}</span>
+        </a>
+      `;
+    }
+    return `
+      <span class="art-telegram-btn is-disabled" onclick="event.stopPropagation();" aria-disabled="true">
+        ${svg}<span>${label}</span>
+      </span>
+    `;
+  };
+
+  const isLikedCard = photoIsLikedLocal(p.id);
+  const cardLikeBtnHTML = `
+    <button type="button" onclick="event.stopPropagation(); photoToggleLike('${artEsc(p.id)}')" class="art-telegram-btn" title="לייק לגלריה זו" style="display: inline-flex; align-items: center; background: #2f2f2f; color: #ffffff; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: bold; gap: 6px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: all 0.2s;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="${isLikedCard ? '#ffffff' : 'none'}" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+        <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
+      </svg>
+      <span>${likesCount}</span>
+    </button>
+  `;
+
+  const isSavedCard = photoIsSavedLocal(p.id);
+  const cardSaveBtnHTML = `
+    <button type="button" onclick="event.stopPropagation(); photoToggleSave('${artEsc(p.id)}')" class="art-telegram-btn" title="${isSavedCard ? 'הסר משמורים' : 'שמור לצפייה מאוחרת'}" style="display: inline-flex; align-items: center; background: #2f2f2f; color: #ffffff; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: bold; gap: 6px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: all 0.2s; ${isSavedCard ? 'background: #e11d48; border-color: #e11d48;' : ''}">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="${isSavedCard ? '#ffffff' : 'none'}" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+      </svg>
+      <span>${isSavedCard ? 'שמור' : 'שמירה'}</span>
+    </button>
+  `;
+
+  const cardLinksHTML = `
+    <div class="photo-card-links">
+      ${cardLikeBtnHTML}
+      ${cardSaveBtnHTML}
+      ${cardLink(p.telegramUrl, 'טלגרם', 'M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z')}
+      ${cardLink(p.emailUrl, 'אימייל', 'M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z', '<polyline points="22,6 12,13 2,6"/>')}
+    </div>
+  `;
+
+  const scoreBadgeHTML = options.showScoreBadge ? `
+    <div style="display:inline-flex; align-items:center; gap:8px; background:linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%); border:1px solid #fecdd3; padding:4px 10px; border-radius:20px; font-size:12px; font-weight:800; color:#e11d48; margin-top:6px; flex-wrap:wrap;">
+      <span>🔥 סה"כ ${totalScore} נקודות</span>
+      <span style="color:#9f1239; font-weight:700;">(👁️ ${viewsCount} צפיות | ❤️ ${likesCount} לייקים)</span>
+    </div>
+  ` : `
+    <div style="display:inline-flex; align-items:center; gap:8px; font-size:12px; color:#64748b; font-weight:700; margin-top:4px;">
+      <span>👁️ ${viewsCount} צפיות</span>
+      <span>·</span>
+      <span>❤️ ${likesCount} לייקים</span>
+    </div>
+  `;
+
+  const infoBlock = `
+    <div class="art-row-text photo-card-info">
+      <h3>${p.title}</h3>
+      <div class="art-row-meta" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+        <span class="photo-author-link" onclick="event.stopPropagation(); openUserProfile('${artEsc(p.authorId || '')}', '${artEsc(p.author)}')" style="cursor: pointer; color: #e11d48; text-decoration: underline; font-weight: 600;">${p.author}</span>
+        <span class="art-row-sep">|</span>
+        <span>${p.timestamp}</span>
+      </div>
+      ${scoreBadgeHTML}
+      ${cardLinksHTML}
+    </div>
+  `;
+
+  const pendingHTML = isPending ? `<div style="color: #d97706; font-weight: bold; font-size: 12px; display: flex; align-items: center; gap: 4px;">⚠️ ממתין לאישור מנהל</div>` : '';
+  const approveHTML = (isEditMode && isPending) ? `
+    <button onclick="event.stopPropagation(); photoApprove('${artEsc(p.id)}')" style="background: #10b981; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer; transition: background 0.2s;">
+      ✓ אשר גלריה לפרסום
+    </button>
+  ` : '';
+
+  const actionsBlock = (pendingHTML || approveHTML)
+    ? `<div class="art-row-text photo-card-actions">${pendingHTML}${approveHTML}</div>`
+    : '';
+  const textBlock = actionsBlock + infoBlock;
+
+  return `
+    <div class="art-row" data-category="${p.category || 'כללי'}" data-age="${artEsc(p.ageRange || '')}" data-region="${artEsc(p.region || '')}" data-time="${photoAlbumTime(p) ?? ''}" data-search="${searchText}" onclick="${isPending ? '' : `photoOpenDetail('${artEsc(p.id)}')`}" style="${isPending ? 'border: 2px dashed #f59e0b; background: #fffbeb; cursor: default;' : ''}">
+      ${textBlock}
+      <div class="art-row-img-container" style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0;">
+        <div class="art-row-img-wrap" style="--bg-img: url('${mainImg || ''}');">
+          ${mainImg ? `<img src="${mainImg}" alt="">` : '<div class="art-row-img-placeholder"></div>'}
+          ${mainImg ? `<button class="art-zoom-btn" onclick="event.stopPropagation();artGalleryById('photos','${artEsc(p.id)}', this.closest('.art-row-img-wrap').querySelector('img') && this.closest('.art-row-img-wrap').querySelector('img').getAttribute('src'))" title="מסך מלא">⛶</button>` : ''}
+          ${(isAdmin() || isEditMode) ? `<button class="art-edit-btn" onclick="event.stopPropagation(); openPhotoEditModal('${artEsc(p.id)}', event)" title="ערוך גלריה" style="position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.7); color: white; border: none; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 14px; z-index: 10;">✏️</button>` : ''}
+          ${isEditMode ? `<button class="art-pin-btn" onclick="event.stopPropagation(); togglePinPhoto('${artEsc(p.id)}')" title="${p.pinned ? 'בטל נעץ' : 'נעץ בגריד'}" style="${p.pinned ? 'color:#ffd700;display:flex;' : ''}">${p.pinned ? '★' : '☆'}</button>` : ''}
+          <button class="art-delete-btn" onclick="event.stopPropagation();photoDelete('${artEsc(p.id)}',this)">✕</button>
+        </div>
+        ${miniThumbnailsHTML}
+      </div>
+    </div>
+  `;
+}
+
 function buildPhotosPage(albums) {
   // סינון גלריות זמניות שתוקפן פג (חולפו 24 שעות)
   const now = Date.now();
   albums = albums.filter(p => !p.expiresAt || p.expiresAt > now);
 
-  // דירוג ומיון גלריות: תמונות נעוצות קודם, ואז לפי לייקים (דירוג) מהגבוה לנמוך
-  albums = [...albums].sort((a, b) => {
+  // 1. שורה ראשונה: מה חדש (מיון לפי תאריך / העלאה אחרונה)
+  const newestAlbums = [...albums].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+  // 2. שורה שנייה: בשבילך (נעוצים קודם, ואז המלצות)
+  const forYouAlbums = [...albums].sort((a, b) => {
     if (a.pinned && !b.pinned) return -1;
     if (!a.pinned && b.pinned) return 1;
-    return (b.likes || 0) - (a.likes || 0) || (b.createdAt || 0) - (a.createdAt || 0);
+    return (b.likes || 0) - (a.likes || 0);
+  });
+
+  // 3. שורה שלישית: הכי הרבה לייקים וצפיות (מיון משוקלל: צפייה 1 נקודה + לייק 1 נקודה)
+  const mostPopularAlbums = [...albums].sort((a, b) => {
+    const scoreA = (a.likes || 0) + photoGetViews(a.id);
+    const scoreB = (b.likes || 0) + photoGetViews(b.id);
+    return scoreB - scoreA;
   });
 
   const featured = albums.filter(p => p.pinned).slice(0, 3);
-  const popular = [...albums]
+  const popularSidebar = [...mostPopularAlbums]
     .filter(p => p.approved !== false)
-    .sort((a, b) => (b.likes || 0) - (a.likes || 0) || (b.createdAt || 0) - (a.createdAt || 0))
     .slice(0, 5);
 
   let savedHTML = '';
@@ -6379,203 +6542,24 @@ function buildPhotosPage(albums) {
     `;
   }).join('');
 
-  const listHTML = albums.map((p) => {
-    const isPending = p.approved === false;
-    if (!isEditMode && isPending) return '';
+  const row1HTML = newestAlbums.map(p => renderPhotoCard(p)).join('');
+  const row2HTML = forYouAlbums.map(p => renderPhotoCard(p)).join('');
+  const row3HTML = mostPopularAlbums.map(p => renderPhotoCard(p, { showScoreBadge: true })).join('');
 
-    const validImages = (p.images || []).filter(img => !!img);
-    const mainImg = validImages[0] || '';
-
-    let miniThumbnailsHTML = '';
-    if (validImages.length > 1) {
-      miniThumbnailsHTML = `
-        <div class="photo-mini-thumbs" style="display: flex; gap: 4px; justify-content: center; margin-top: 6px; width: 170px; flex-wrap: wrap;">
-          ${validImages.map((imgUrl, idx) => `
-            <div class="photo-mini-thumb" 
-                 onclick="event.stopPropagation(); photoSelectRowImage('${artEsc(p.id)}', '${artEsc(imgUrl)}', this)" 
-                 style="width: 24px; height: 24px; border-radius: 4px; overflow: hidden; cursor: pointer; border: 1.5px solid ${idx === 0 ? '#e11d48' : '#ddd'}; transition: all 0.2s; background: #eee; flex-shrink:0;">
-              <img src="${imgUrl}" style="width: 100%; height: 100%; object-fit: cover;">
-            </div>
-          `).join('')}
-        </div>
-      `;
-    }
-
-    // במחשב הכרטיס מציג כותרת, כותב, תאריך וכפתורי טלגרם/אימייל.
-    // בפלאפון הבלוק הזה מוסתר ב-CSS ונשארת רק התמונה.
-    // data-search מחזיק את הטקסט כדי שהחיפוש יעבוד גם כשהוא מוסתר.
-    const searchText = artEsc([p.title, p.summary, p.author, p.category].filter(Boolean).join(' '));
-
-// פונקציית העתקת אימייל ללוח העתקות בלחיצה אחת
-function copyEmailToClipboard(emailStr, e) {
-  if (e) {
-    if (typeof e.stopPropagation === 'function') e.stopPropagation();
-    if (typeof e.preventDefault === 'function') e.preventDefault();
-  }
-  if (!emailStr) return;
-  
-  let cleanEmail = emailStr.replace(/^mailto:/i, '').trim();
-  if (!cleanEmail) return;
-
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(cleanEmail).then(() => {
-      showCopyToast(`האימייל הועתק בהצלחה! 📋 (${cleanEmail})`);
-    }).catch(() => {
-      fallbackCopyText(cleanEmail);
-    });
-  } else {
-    fallbackCopyText(cleanEmail);
-  }
-}
-
-function fallbackCopyText(text) {
-  const textArea = document.createElement('textarea');
-  textArea.value = text;
-  textArea.style.position = 'fixed';
-  textArea.style.opacity = '0';
-  document.body.appendChild(textArea);
-  textArea.select();
-  try {
-    document.execCommand('copy');
-    showCopyToast(`האימייל הועתק בהצלחה! 📋 (${text})`);
-  } catch (err) {
-    alert(`כתובת אימייל: ${text}`);
-  }
-  document.body.removeChild(textArea);
-}
-
-function showCopyToast(msg) {
-  let toast = document.getElementById('global-copy-toast');
-  if (!toast) {
-    toast = document.createElement('div');
-    toast.id = 'global-copy-toast';
-    toast.style.cssText = 'position:fixed; bottom:30px; left:50%; transform:translateX(-50%); background:#111; color:#fff; padding:12px 24px; border-radius:30px; font-size:14px; font-weight:bold; z-index:9999999; box-shadow:0 10px 30px rgba(0,0,0,0.3); transition:all 0.3s ease; direction:rtl; opacity:0; pointer-events:none;';
-    document.body.appendChild(toast);
-  }
-  toast.textContent = msg;
-  toast.style.opacity = '1';
-  toast.style.transform = 'translateX(-50%) translateY(0)';
-  
-  clearTimeout(window.__copyToastTimer);
-  window.__copyToastTimer = setTimeout(() => {
-    toast.style.opacity = '0';
-    toast.style.transform = 'translateX(-50%) translateY(10px)';
-  }, 2200);
-}
-window.copyEmailToClipboard = copyEmailToClipboard;
-
-    const cardLink = (url, label, iconPath, extraPath) => {
-      const svg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;"><path d="${iconPath}"/>${extraPath || ''}</svg>`;
-      if (url) {
-        if (label === 'אימייל') {
-          return `
-            <button type="button" onclick="copyEmailToClipboard('${artEsc(url)}', event);" class="art-telegram-btn" title="לחץ להעתקת אימייל">
-              ${svg}<span>${label}</span>
-            </button>
-          `;
-        }
-        return `
-          <a href="${url}" target="_blank" onclick="event.stopPropagation();" class="art-telegram-btn">
-            ${svg}<span>${label}</span>
-          </a>
-        `;
-      }
-      return `
-        <span class="art-telegram-btn is-disabled" onclick="event.stopPropagation();" aria-disabled="true">
-          ${svg}<span>${label}</span>
-        </span>
-      `;
-    };
-
-    const isLikedCard = photoIsLikedLocal(p.id);
-    const cardLikeBtnHTML = `
-      <button type="button" onclick="event.stopPropagation(); photoToggleLike('${artEsc(p.id)}')" class="art-telegram-btn" title="לייק לגלריה זו" style="display: inline-flex; align-items: center; background: #2f2f2f; color: #ffffff; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: bold; gap: 6px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: all 0.2s;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="${isLikedCard ? '#ffffff' : 'none'}" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
-          <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
-        </svg>
-        <span>${p.likes || 0}</span>
-      </button>
-    `;
-
-    const isSavedCard = photoIsSavedLocal(p.id);
-    const cardSaveBtnHTML = `
-      <button type="button" onclick="event.stopPropagation(); photoToggleSave('${artEsc(p.id)}')" class="art-telegram-btn" title="${isSavedCard ? 'הסר משמורים' : 'שמור לצפייה מאוחרת'}" style="display: inline-flex; align-items: center; background: #2f2f2f; color: #ffffff; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: bold; gap: 6px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: all 0.2s; ${isSavedCard ? 'background: #e11d48; border-color: #e11d48;' : ''}">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="${isSavedCard ? '#ffffff' : 'none'}" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
-          <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
-        </svg>
-        <span>${isSavedCard ? 'שמור' : 'שמירה'}</span>
-      </button>
-    `;
-
-    const cardLinksHTML = `
-      <div class="photo-card-links">
-        ${cardLikeBtnHTML}
-        ${cardSaveBtnHTML}
-        ${cardLink(p.telegramUrl, 'טלגרם', 'M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z')}
-        ${cardLink(p.emailUrl, 'אימייל', 'M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z', '<polyline points="22,6 12,13 2,6"/>')}
-      </div>
-    `;
-
-    const infoBlock = `
-      <div class="art-row-text photo-card-info">
-        <h3>${p.title}</h3>
-        <div class="art-row-meta" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-          <span class="photo-author-link" onclick="event.stopPropagation(); openUserProfile('${artEsc(p.authorId || '')}', '${artEsc(p.author)}')" style="cursor: pointer; color: #e11d48; text-decoration: underline; font-weight: 600;">${p.author}</span>
-          <span class="art-row-sep">|</span>
-          <span>${p.timestamp}</span>
-        </div>
-        ${cardLinksHTML}
-      </div>
-    `;
-
-    // היוצא מן הכלל היחיד: גלריה שממתינה לאישור מוצגת למנהל עם סימון
-    // וכפתור אישור, אחרת אי אפשר לאשר אותה בכלל
-    const pendingHTML = isPending ? `<div style="color: #d97706; font-weight: bold; font-size: 12px; display: flex; align-items: center; gap: 4px;">⚠️ ממתין לאישור מנהל</div>` : '';
-    const approveHTML = (isEditMode && isPending) ? `
-      <button onclick="event.stopPropagation(); photoApprove('${artEsc(p.id)}')" style="background: #10b981; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer; transition: background 0.2s;">
-        ✓ אשר גלריה לפרסום
-      </button>
-    ` : '';
-
-    // בלי תוכן כלל לא מרנדרים את הבלוק, אחרת נשארת רצועה לבנה ריקה.
-    // הסדר כאן הפוך לסדר שנראה על המסך, כי הכרטיס הוא column-reverse:
-    // קודם הפעולות ואז המידע ב-DOM, ועל המסך תמונה, מידע, פעולות.
-    const actionsBlock = (pendingHTML || approveHTML)
-      ? `<div class="art-row-text photo-card-actions">${pendingHTML}${approveHTML}</div>`
-      : '';
-    const textBlock = actionsBlock + infoBlock;
-
+  const popularHTML = popularSidebar.map((p, i) => {
+    const score = (p.likes || 0) + photoGetViews(p.id);
     return `
-      <div class="art-row" data-category="${p.category || 'כללי'}" data-age="${artEsc(p.ageRange || '')}" data-region="${artEsc(p.region || '')}" data-time="${photoAlbumTime(p) ?? ''}" data-search="${searchText}" onclick="${isPending ? '' : `photoOpenDetail('${artEsc(p.id)}')`}" style="${isPending ? 'border: 2px dashed #f59e0b; background: #fffbeb; cursor: default;' : ''}">
-        ${textBlock}
-        <div class="art-row-img-container" style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0;">
-          <div class="art-row-img-wrap" style="--bg-img: url('${mainImg || ''}');">
-            ${mainImg ? `<img src="${mainImg}" alt="">` : '<div class="art-row-img-placeholder"></div>'}
-            ${mainImg ? `<button class="art-zoom-btn" onclick="event.stopPropagation();artGalleryById('photos','${artEsc(p.id)}', this.closest('.art-row-img-wrap').querySelector('img') && this.closest('.art-row-img-wrap').querySelector('img').getAttribute('src'))" title="מסך מלא">⛶</button>` : ''}
-            ${(isAdmin() || isEditMode) ? `<button class="art-edit-btn" onclick="event.stopPropagation(); openPhotoEditModal('${artEsc(p.id)}', event)" title="ערוך גלריה" style="position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.7); color: white; border: none; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 14px; z-index: 10;">✏️</button>` : ''}
-            ${isEditMode ? `<button class="art-pin-btn" onclick="event.stopPropagation(); togglePinPhoto('${artEsc(p.id)}')" title="${p.pinned ? 'בטל נעץ' : 'נעץ בגריד'}" style="${p.pinned ? 'color:#ffd700;display:flex;' : ''}">${p.pinned ? '★' : '☆'}</button>` : ''}
-            <button class="art-delete-btn" onclick="event.stopPropagation();photoDelete('${artEsc(p.id)}',this)">✕</button>
-          </div>
-          ${miniThumbnailsHTML}
+      <div class="art-popular-item" onclick="photoOpenDetail('${artEsc(p.id)}')" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; cursor: pointer; padding: 6px 8px; border-radius: 8px; transition: background 0.2s;">
+        <div style="display: flex; align-items: center; gap: 8px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+          <span class="art-popular-num" style="font-weight: 900; color: #ec4899;">${String(i+1).padStart(2,'0')}</span>
+          <div style="font-size:13px;font-weight:600;line-height:1.4;color:#222; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${p.title}</div>
+        </div>
+        <div style="font-size: 12px; color: #e11d48; display: flex; align-items: center; gap: 4px; font-weight: bold; flex-shrink: 0; background: rgba(225,29,72,0.08); padding: 3px 8px; border-radius: 12px;" title="${photoGetViews(p.id)} צפיות + ${p.likes||0} לייקים">
+          <span>🔥 ${score}</span>
         </div>
       </div>
     `;
   }).join('');
-
-  const popularHTML = popular.map((p, i) => `
-    <div class="art-popular-item" onclick="photoOpenDetail('${artEsc(p.id)}')" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; cursor: pointer; padding: 6px 8px; border-radius: 8px; transition: background 0.2s;">
-      <div style="display: flex; align-items: center; gap: 8px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-        <span class="art-popular-num" style="font-weight: 900; color: #ec4899;">${String(i+1).padStart(2,'0')}</span>
-        <div style="font-size:13px;font-weight:600;line-height:1.4;color:#222; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${p.title}</div>
-      </div>
-      <div style="font-size: 12px; color: #e11d48; display: flex; align-items: center; gap: 4px; font-weight: bold; flex-shrink: 0; background: rgba(225,29,72,0.08); padding: 3px 8px; border-radius: 12px;">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="#e11d48" stroke="#e11d48" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
-          <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
-        </svg>
-        <span>${p.likes || 0}</span>
-      </div>
-    </div>
-  `).join('');
 
   const json = encodeURIComponent(JSON.stringify(albums));
   return `<div class="articles-page photos-page" data-photos-json="${json}">
@@ -6586,9 +6570,50 @@ window.copyEmailToClipboard = copyEmailToClipboard;
           <div class="art-search-wrap">
             <input type="text" class="art-search" placeholder="🔍 חיפוש גלריות..." oninput="photoSearch(this.value)">
           </div>
-          <div class="art-section-title">גלריית התמונות</div>
           ${photoFilterSectionHTML()}
-          <div class="art-rows">${listHTML}</div>
+
+          <!-- שורה 1: מה חדש -->
+          <div class="photo-section-row" style="margin-bottom: 32px; background: #ffffff; padding: 18px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+            <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:2.5px solid #2563eb; padding-bottom:10px; margin-bottom:18px;">
+              <div>
+                <h3 style="margin:0; font-size:18px; font-weight:900; color:#1e3a8a; display:flex; align-items:center; gap:8px;">
+                  <span>🆕 שורה 1: מה חדש</span>
+                  <span style="font-size:12px; background:#2563eb; color:white; padding:3px 10px; border-radius:12px; font-weight:800;">החדשים ביותר</span>
+                </h3>
+                <div style="font-size:12.5px; color:#64748b; margin-top:3px; font-weight:600;">תמונות וגלריות שהועלו לאחרונה לאתר</div>
+              </div>
+            </div>
+            <div class="art-rows">${row1HTML}</div>
+          </div>
+
+          <!-- שורה 2: בשבילך -->
+          <div class="photo-section-row" style="margin-bottom: 32px; background: #ffffff; padding: 18px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+            <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:2.5px solid #7c3aed; padding-bottom:10px; margin-bottom:18px;">
+              <div>
+                <h3 style="margin:0; font-size:18px; font-weight:900; color:#5b21b6; display:flex; align-items:center; gap:8px;">
+                  <span>✨ שורה 2: בשבילך</span>
+                  <span style="font-size:12px; background:#7c3aed; color:white; padding:3px 10px; border-radius:12px; font-weight:800;">המלצות נבחרות</span>
+                </h3>
+                <div style="font-size:12.5px; color:#64748b; margin-top:3px; font-weight:600;">גלריות ותכנים שנבחרו במיוחד בשבילך</div>
+              </div>
+            </div>
+            <div class="art-rows">${row2HTML}</div>
+          </div>
+
+          <!-- שורה 3: הכי הרבה לייקים וצפיות -->
+          <div class="photo-section-row" style="margin-bottom: 32px; background: #ffffff; padding: 18px; border-radius: 16px; border: 1px solid #fecdd3; box-shadow: 0 4px 15px rgba(225,29,72,0.05);">
+            <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:2.5px solid #e11d48; padding-bottom:10px; margin-bottom:18px;">
+              <div>
+                <h3 style="margin:0; font-size:18px; font-weight:900; color:#9f1239; display:flex; align-items:center; gap:8px;">
+                  <span>🔥 שורה 3: הכי הרבה לייקים וצפיות</span>
+                  <span style="font-size:12px; background:#e11d48; color:white; padding:3px 10px; border-radius:12px; font-weight:800;">הכי פופולרי</span>
+                </h3>
+                <div style="font-size:12.5px; color:#64748b; margin-top:3px; font-weight:600;">דירוג משוקלל בזמן אמת: כל קליק לצפייה = 1 נקודה | כל לייק = 1 נקודה</div>
+              </div>
+            </div>
+            <div class="art-rows">${row3HTML}</div>
+          </div>
+
           <div class="art-pagination" style="display:none"></div>
           <div class="art-no-results" style="display:none">לא נמצאו עיצובים התואמים לחיפוש</div>
           ${(isAdmin() || isEditMode) ? `<button class="art-add-btn" onclick="openPhotoModal()" style="background:#e11d48">+ הוסף עיצוב אתר חדש</button>` : ''}
@@ -6619,6 +6644,7 @@ window.copyEmailToClipboard = copyEmailToClipboard;
 }
 
 function photoOpenDetail(id) {
+  photoIncrementViews(id);
   const container = mainContent.querySelector('.photos-page');
   if (!container) return;
   let albums = [];
