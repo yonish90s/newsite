@@ -3894,6 +3894,63 @@ try {
   ];
 }
 
+function buildAgeFilterSidebarBox() {
+  const isVerified = typeof sessionStorage !== 'undefined' && sessionStorage.getItem('age_verified') === 'true';
+  
+  return `
+    <div class="art-sidebar-box art-age-filter-box" style="margin-bottom: 20px; border: 1.5px solid #b91c1c; border-radius: 12px; padding: 16px; background: rgba(185, 28, 28, 0.03); box-shadow: 0 2px 8px rgba(185, 28, 28, 0.05); text-align: right; direction: rtl;">
+      <h4 style="margin: 0 0 10px; font-size: 15px; font-weight: 800; color: #b91c1c; border-bottom: 2px solid rgba(185, 28, 28, 0.2); padding-bottom: 6px; display: flex; align-items: center; justify-content: space-between;">
+        <span>🔞 סינון תוכן מעל גיל 18</span>
+        <span style="font-size: 12px; background: #b91c1c; color: white; padding: 2px 6px; border-radius: 4px; font-weight: 900;">18+</span>
+      </h4>
+      
+      <p style="font-size: 12.5px; color: #4b5563; margin: 0 0 12px; line-height: 1.4; font-weight: 600;">
+        לצפייה בתכני עירום, תכנים למבוגרים בלבד וסינון מתקדם, יש לאשר הצהרת גיל.
+      </p>
+
+      <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; background: #ffffff; padding: 10px 12px; border-radius: 8px; border: 1px solid #fca5a5; transition: all 0.2s;">
+        <input type="checkbox" id="sidebar-age-checkbox" onchange="toggleSidebarAgeVerification(this.checked)" style="width: 18px; height: 18px; cursor: pointer; accent-color: #b91c1c; margin-top: 2px; flex-shrink: 0;" ${isVerified ? 'checked' : ''}>
+        <span style="font-size: 13px; font-weight: 800; color: #991b1b; line-height: 1.3; user-select: none;">
+          אני מאשר/ת שאני מעל גיל 18 ומאפשר/ת הצגת תוכן עירום למבוגרים 🔞
+        </span>
+      </label>
+
+      <div id="sidebar-age-status-msg" style="margin-top: 10px; font-size: 12px; font-weight: 800; color: ${isVerified ? '#16a34a' : '#dc2626'}; text-align: center;">
+        ${isVerified ? '✓ תוכן למבוגרים (18+) פתוח לצפייה' : '🔒 תוכן עירום חסום לצפייה'}
+      </div>
+    </div>
+  `;
+}
+
+function toggleSidebarAgeVerification(checked) {
+  if (checked) {
+    sessionStorage.setItem('age_verified', 'true');
+    showCopyToast('✓ אושר בהצלחה! תוכן 18+ עירום פתוח לצפייה 🔞');
+  } else {
+    sessionStorage.setItem('age_verified', 'false');
+    showCopyToast('🔒 סינון תוכן 18+ הופעל - תוכן עירום חסום');
+  }
+  
+  const statusMsg = document.getElementById('sidebar-age-status-msg');
+  if (statusMsg) {
+    statusMsg.style.color = checked ? '#16a34a' : '#dc2626';
+    statusMsg.textContent = checked ? '✓ תוכן למבוגרים (18+) פתוח לצפייה' : '🔒 תוכן עירום חסום לצפייה';
+  }
+
+  // עדכון גלובלי של overlay אם קשר
+  const overlay = document.getElementById('age-gate-overlay');
+  if (overlay) {
+    if (checked) {
+      overlay.style.setProperty('display', 'none', 'important');
+    }
+  }
+
+  if (typeof photoApplyFilters === 'function') photoApplyFilters();
+  if (typeof storyApplyFilters === 'function') storyApplyFilters();
+}
+window.toggleSidebarAgeVerification = toggleSidebarAgeVerification;
+window.buildAgeFilterSidebarBox = buildAgeFilterSidebarBox;
+
 function buildPromotedSitesBox() {
   const sitesHTML = PROMOTED_SITES.map((site, index) => {
     let iconHTML = '';
@@ -5174,6 +5231,7 @@ function buildStoriesPage(stories) {
           <button class="art-add-btn" onclick="openStoryModal()" style="background:#8b5cf6">+ הוסף סיפור חדש</button>
         </div>
         <div class="art-sidebar">
+          ${buildAgeFilterSidebarBox()}
           ${buildPromotedSitesBox()}
           <div class="art-sidebar-box art-popular-box">
             <div class="art-sidebar-title">הסיפורים הנקראים ביותר</div>
@@ -6080,6 +6138,7 @@ window.copyEmailToClipboard = copyEmailToClipboard;
           ${(isAdmin() || isEditMode) ? `<button class="art-add-btn" onclick="openPhotoModal()" style="background:#e11d48">+ הוסף עיצוב אתר חדש</button>` : ''}
         </div>
         <div class="art-sidebar">
+          ${buildAgeFilterSidebarBox()}
           ${(isAdmin() || isEditMode) ? `
           <button onclick="openPhotoModal()" style="background:#e11d48; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: white; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.2s;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
