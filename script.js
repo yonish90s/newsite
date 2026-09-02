@@ -3948,6 +3948,184 @@ function toggleSidebarAgeVerification(checked) {
   if (typeof photoApplyFilters === 'function') photoApplyFilters();
   if (typeof storyApplyFilters === 'function') storyApplyFilters();
 }
+let UPCOMING_EVENT = (function() {
+  try {
+    const saved = localStorage.getItem('upcoming_event_data');
+    if (saved) return JSON.parse(saved);
+  } catch (e) {}
+  return {
+    title: 'מפגש קהילה מרכזי',
+    date: '15.09.2026',
+    time: '20:00',
+    location: 'תל אביב / זום אונליין',
+    image: 'https://images.unsplash.com/photo-1511578314322-379afb476865?w=800&q=80',
+    description: 'מפגש חברים וקהילה מרתק! הצטרפו אלינו לערב בלתי נשכח.'
+  };
+})();
+
+function saveUpcomingEvent(data) {
+  UPCOMING_EVENT = data;
+  try { localStorage.setItem('upcoming_event_data', JSON.stringify(data)); } catch (e) {}
+  if (typeof mainContent !== 'undefined' && mainContent) {
+    const boxes = mainContent.querySelectorAll('.art-event-box');
+    boxes.forEach(box => { box.outerHTML = buildEventsSidebarBox(); });
+  }
+}
+
+function buildEventsSidebarBox() {
+  const isEd = (typeof isAdmin === 'function' && isAdmin()) || (typeof isEditMode !== 'undefined' && isEditMode);
+  const ev = UPCOMING_EVENT;
+
+  return `
+    <div class="art-sidebar-box art-event-box" style="margin-bottom: 20px; border: 1.5px solid #3b82f6; border-radius: 12px; padding: 16px; background: #ffffff; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.08); text-align: right; direction: rtl;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #3b82f6; padding-bottom: 6px; margin-bottom: 12px;">
+        <h4 style="margin: 0; font-size: 15px; font-weight: 800; color: #1e3a8a; display: flex; align-items: center; gap: 6px;">
+          <span>🎉 מפגש ואירוע קרוב</span>
+        </h4>
+        ${isEd ? `<button onclick="openEditEventModal()" style="background: #3b82f6; color: white; border: none; border-radius: 6px; padding: 2px 8px; font-size: 11px; font-weight: bold; cursor: pointer;">✏️ ערוך אירוע</button>` : ''}
+      </div>
+
+      <div style="width: 100%; height: 130px; border-radius: 8px; overflow: hidden; margin-bottom: 10px; border: 1px solid #eee;">
+        <img src="${ev.image || 'https://images.unsplash.com/photo-1511578314322-379afb476865?w=800&q=80'}" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+      </div>
+
+      <h5 style="margin: 0 0 6px; font-size: 14px; font-weight: 800; color: #111827;">${ev.title}</h5>
+      
+      <div style="display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: #4b5563; margin-bottom: 12px; font-weight: 700;">
+        <div style="display: flex; align-items: center; gap: 6px; color: #d97706;">
+          <span>📅 מפגש בתאריך:</span>
+          <span style="color: #111827; font-weight: 900;">${ev.date} בשעה ${ev.time}</span>
+        </div>
+        ${ev.location ? `
+          <div style="display: flex; align-items: center; gap: 6px; color: #6b7280;">
+            <span>📍 מיקום:</span>
+            <span>${ev.location}</span>
+          </div>
+        ` : ''}
+      </div>
+
+      <button onclick="openEventRegisterModal()" style="width: 100%; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; border: none; border-radius: 8px; padding: 10px; font-size: 13.5px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25); transition: transform 0.2s, background 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;">
+        <span>✍️ להרשמה לאירוע</span>
+      </button>
+    </div>
+  `;
+}
+
+function openEventRegisterModal() {
+  let modal = document.getElementById('event-register-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'event-register-modal';
+    modal.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:9999999; align-items:center; justify-content:center; direction:rtl; padding:20px; font-family:system-ui, sans-serif;';
+    modal.innerHTML = `
+      <div style="background:#ffffff; border-radius:20px; padding:28px; width:95%; max-width:440px; box-shadow:0 20px 50px rgba(0,0,0,0.2); border:1px solid #eee; display:flex; flex-direction:column; gap:14px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding-bottom:12px;">
+          <h3 style="margin:0; font-size:18px; font-weight:900; color:#1e3a8a;">✍️ הרשמה למפגש / אירוע</h3>
+          <button onclick="document.getElementById('event-register-modal').style.display='none'" style="background:none; border:none; font-size:20px; cursor:pointer; color:#888;">✕</button>
+        </div>
+
+        <div id="event-modal-details-card" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:12px; font-size:13px; color:#334155; line-height:1.5;">
+          <strong>אירוע:</strong> <span id="event-reg-title-text">${artEsc(UPCOMING_EVENT.title)}</span><br>
+          <strong>תאריך ושעה:</strong> <span id="event-reg-date-text">${artEsc(UPCOMING_EVENT.date)} בשעה ${artEsc(UPCOMING_EVENT.time)}</span>
+        </div>
+
+        <label style="font-size:13px; font-weight:700; color:#374151;">שם מלא <span style="color:red">*</span></label>
+        <input type="text" id="event-reg-name" placeholder="הכנס את שמך" style="padding:10px 14px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; outline:none;">
+
+        <label style="font-size:13px; font-weight:700; color:#374151;">מספר טלפון / וואטסאפ <span style="color:red">*</span></label>
+        <input type="tel" id="event-reg-phone" placeholder="050-0000000" style="padding:10px 14px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; outline:none;">
+
+        <label style="font-size:13px; font-weight:700; color:#374151;">כתובת אימייל (אופציונלי)</label>
+        <input type="email" id="event-reg-email" placeholder="example@mail.com" style="padding:10px 14px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; outline:none;">
+
+        <div style="display:flex; gap:10px; margin-top:10px;">
+          <button onclick="document.getElementById('event-register-modal').style.display='none'" style="flex:1; padding:11px; border:1px solid #cbd5e1; border-radius:8px; background:#fff; cursor:pointer; font-weight:700; font-size:14px;">ביטול</button>
+          <button onclick="submitEventRegistration()" style="flex:1.5; padding:11px; border:none; border-radius:8px; background:#2563eb; color:#fff; cursor:pointer; font-weight:800; font-size:14px;">אישור הרשמה ✓</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  }
+  document.getElementById('event-reg-title-text').textContent = UPCOMING_EVENT.title;
+  document.getElementById('event-reg-date-text').textContent = `${UPCOMING_EVENT.date} בשעה ${UPCOMING_EVENT.time}`;
+  modal.style.display = 'flex';
+}
+
+function submitEventRegistration() {
+  const name = document.getElementById('event-reg-name').value.trim();
+  const phone = document.getElementById('event-reg-phone').value.trim();
+  if (!name || !phone) {
+    alert('נא למלא שם ומספר טלפון להרשמה');
+    return;
+  }
+  document.getElementById('event-register-modal').style.display = 'none';
+  showCopyToast(`🎉 הרשמתך למפגש בתאריך ${UPCOMING_EVENT.date} נקלטה בהצלחה!`);
+  document.getElementById('event-reg-name').value = '';
+  document.getElementById('event-reg-phone').value = '';
+}
+window.openEventRegisterModal = openEventRegisterModal;
+window.submitEventRegistration = submitEventRegistration;
+
+function openEditEventModal() {
+  let modal = document.getElementById('event-edit-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'event-edit-modal';
+    modal.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:9999999; align-items:center; justify-content:center; direction:rtl; padding:20px; font-family:system-ui, sans-serif;';
+    modal.innerHTML = `
+      <div style="background:#ffffff; border-radius:20px; padding:28px; width:95%; max-width:440px; box-shadow:0 20px 50px rgba(0,0,0,0.2); border:1px solid #eee; display:flex; flex-direction:column; gap:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding-bottom:12px;">
+          <h3 style="margin:0; font-size:18px; font-weight:900; color:#1e3a8a;">✏️ עריכת פרטי מפגש / אירוע</h3>
+          <button onclick="document.getElementById('event-edit-modal').style.display='none'" style="background:none; border:none; font-size:20px; cursor:pointer; color:#888;">✕</button>
+        </div>
+
+        <label style="font-size:13px; font-weight:700;">שם האירוע / המפגש</label>
+        <input type="text" id="event-edit-title" style="padding:9px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px;">
+
+        <label style="font-size:13px; font-weight:700;">תאריך המפגש (למשל 15.09.2026)</label>
+        <input type="text" id="event-edit-date" style="padding:9px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px;">
+
+        <label style="font-size:13px; font-weight:700;">שעה (למשל 20:00)</label>
+        <input type="text" id="event-edit-time" style="padding:9px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px;">
+
+        <label style="font-size:13px; font-weight:700;">מיקום המפגש</label>
+        <input type="text" id="event-edit-location" style="padding:9px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px;">
+
+        <label style="font-size:13px; font-weight:700;">קישור לתמונת שער (URL)</label>
+        <input type="text" id="event-edit-image" style="padding:9px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px;">
+
+        <div style="display:flex; gap:10px; margin-top:8px;">
+          <button onclick="document.getElementById('event-edit-modal').style.display='none'" style="flex:1; padding:10px; border:1px solid #cbd5e1; border-radius:8px; background:#fff; cursor:pointer; font-weight:700; font-size:14px;">ביטול</button>
+          <button onclick="saveEditedEvent()" style="flex:1.5; padding:10px; border:none; border-radius:8px; background:#3b82f6; color:#fff; cursor:pointer; font-weight:800; font-size:14px;">שמור שינויים ✓</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  }
+  document.getElementById('event-edit-title').value = UPCOMING_EVENT.title || '';
+  document.getElementById('event-edit-date').value = UPCOMING_EVENT.date || '';
+  document.getElementById('event-edit-time').value = UPCOMING_EVENT.time || '';
+  document.getElementById('event-edit-location').value = UPCOMING_EVENT.location || '';
+  document.getElementById('event-edit-image').value = UPCOMING_EVENT.image || '';
+  modal.style.display = 'flex';
+}
+
+function saveEditedEvent() {
+  const data = {
+    title: document.getElementById('event-edit-title').value.trim() || 'מפגש קהילה',
+    date: document.getElementById('event-edit-date').value.trim() || '15.09.2026',
+    time: document.getElementById('event-edit-time').value.trim() || '20:00',
+    location: document.getElementById('event-edit-location').value.trim() || '',
+    image: document.getElementById('event-edit-image').value.trim() || 'https://images.unsplash.com/photo-1511578314322-379afb476865?w=800&q=80'
+  };
+  saveUpcomingEvent(data);
+  document.getElementById('event-edit-modal').style.display = 'none';
+  showCopyToast('✓ פרטי המפגש עודכנו בהצלחה!');
+}
+window.openEditEventModal = openEditEventModal;
+window.saveEditedEvent = saveEditedEvent;
+window.buildEventsSidebarBox = buildEventsSidebarBox;
+
 window.toggleSidebarAgeVerification = toggleSidebarAgeVerification;
 window.buildAgeFilterSidebarBox = buildAgeFilterSidebarBox;
 
@@ -5246,6 +5424,7 @@ function buildStoriesPage(stories) {
         </div>
         <div class="art-sidebar">
           ${buildAgeFilterSidebarBox()}
+          ${buildEventsSidebarBox()}
           ${buildPromotedSitesBox()}
           <div class="art-sidebar-box art-popular-box">
             <div class="art-sidebar-title">הסיפורים הנקראים ביותר</div>
@@ -6153,6 +6332,7 @@ window.copyEmailToClipboard = copyEmailToClipboard;
         </div>
         <div class="art-sidebar">
           ${buildAgeFilterSidebarBox()}
+          ${buildEventsSidebarBox()}
           ${(isAdmin() || isEditMode) ? `
           <button onclick="openPhotoModal()" style="background:#e11d48; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: white; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.2s;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
