@@ -3584,19 +3584,23 @@ body:not(.edit-mode) .hidden-nav {
 }
 
 /* ============================================================
-   טשטוש תמונות ומודעות באתר בלחיצה/ביטול V סינון גיל 18+
+   טשטוש מוחלט לכל התמונות והגלריות באתר בחוץ (בגריד, ברשימות, בכרטיסיות ובסרגל הצד)
    ============================================================ */
-html.age-not-verified img,
 html.age-not-verified .art-row-img-wrap,
+html.age-not-verified .art-row-img-wrap::before,
 html.age-not-verified .art-row-img-wrap img,
+html.age-not-verified .art-featured-card,
 html.age-not-verified .art-featured-card img,
+html.age-not-verified .art-rec-img,
+html.age-not-verified .art-rec-card,
+html.age-not-verified .art-rec-card img,
 html.age-not-verified .photo-main-img-container,
 html.age-not-verified .photo-main-img-container img,
 html.age-not-verified .photo-mini-thumb,
+html.age-not-verified .photo-thumb-square,
 html.age-not-verified .photo-thumb-square img,
 html.age-not-verified .photo-story-row img,
 html.age-not-verified .art-rec-img img,
-html.age-not-verified .art-rec-card img,
 html.age-not-verified .art-detail-body img,
 html.age-not-verified .art-detail img,
 html.age-not-verified .art-zoom-img,
@@ -3611,17 +3615,23 @@ html.age-not-verified .art-event-box img,
 html.age-not-verified .art-sidebar-box img,
 html.age-not-verified .art-ad img,
 html.age-not-verified .art-promoted-card img,
-body.age-not-verified img,
+html.age-not-verified #mainContent img,
+html.age-not-verified .center-content img,
 body.age-not-verified .art-row-img-wrap,
+body.age-not-verified .art-row-img-wrap::before,
 body.age-not-verified .art-row-img-wrap img,
+body.age-not-verified .art-featured-card,
 body.age-not-verified .art-featured-card img,
+body.age-not-verified .art-rec-img,
+body.age-not-verified .art-rec-card,
+body.age-not-verified .art-rec-card img,
 body.age-not-verified .photo-main-img-container,
 body.age-not-verified .photo-main-img-container img,
 body.age-not-verified .photo-mini-thumb,
+body.age-not-verified .photo-thumb-square,
 body.age-not-verified .photo-thumb-square img,
 body.age-not-verified .photo-story-row img,
 body.age-not-verified .art-rec-img img,
-body.age-not-verified .art-rec-card img,
 body.age-not-verified .art-detail-body img,
 body.age-not-verified .art-detail img,
 body.age-not-verified .art-zoom-img,
@@ -3635,12 +3645,15 @@ body.age-not-verified .community-card img,
 body.age-not-verified .art-event-box img,
 body.age-not-verified .art-sidebar-box img,
 body.age-not-verified .art-ad img,
-body.age-not-verified .art-promoted-card img {
-  filter: blur(20px) !important;
-  transition: filter 0.3s ease;
+body.age-not-verified .art-promoted-card img,
+body.age-not-verified #mainContent img,
+body.age-not-verified .center-content img {
+  filter: blur(25px) !important;
+  -webkit-filter: blur(25px) !important;
+  transition: filter 0.3s ease, -webkit-filter 0.3s ease;
 }
 
-/* החרגה של לוגו האתר ואייקוני מערכת מרכזיים מכלל הטשטוש */
+/* החרגה של הלוגו הרשמי של האתר בלבד */
 html.age-not-verified #main-logo,
 html.age-not-verified #loader-img,
 html.age-not-verified .auth-modal-logo,
@@ -3648,6 +3661,7 @@ body.age-not-verified #main-logo,
 body.age-not-verified #loader-img,
 body.age-not-verified .auth-modal-logo {
   filter: none !important;
+  -webkit-filter: none !important;
 }
 
 

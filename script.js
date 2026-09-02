@@ -5589,19 +5589,33 @@ function storyApplyFilters() {
     r.dataset.artMatch = match ? '1' : '0';
     if (match) visible++;
 
-    // טשטוש דינמי לתמונות בסיפורים כשאין אישור V מעל גיל 18
+    // טשטוש דינמי לתמונות בסיפורים בחוץ ברשימות ובגריד כשאין אישור V מעל גיל 18
     const imgWrap = r.querySelector('.art-row-img-wrap');
     if (imgWrap) {
       if (!isAgeVerified) {
-        imgWrap.style.filter = 'blur(20px)';
-        imgWrap.style.transition = 'filter 0.3s ease';
+        imgWrap.style.filter = 'blur(25px)';
+        imgWrap.style.setProperty('-webkit-filter', 'blur(25px)');
+        imgWrap.style.transition = 'filter 0.3s ease, -webkit-filter 0.3s ease';
         imgWrap.title = 'תוכן מטושטש - יש לאשר גיל 18+ בסרגל הצד';
       } else {
         imgWrap.style.filter = 'none';
+        imgWrap.style.setProperty('-webkit-filter', 'none');
         imgWrap.title = '';
       }
     }
   });
+
+  const allOutsideStoryMedia = mainContent.querySelectorAll('.stories-page .art-featured-card img, .stories-page .art-rec-img img, .stories-page .art-popular-item img');
+  allOutsideStoryMedia.forEach(el => {
+    if (!isAgeVerified) {
+      el.style.filter = 'blur(25px)';
+      el.style.setProperty('-webkit-filter', 'blur(25px)');
+    } else {
+      el.style.filter = 'none';
+      el.style.setProperty('-webkit-filter', 'none');
+    }
+  });
+
   artSyncPagination();
   const noResults = mainContent.querySelector('.stories-page .art-no-results');
   if (noResults) noResults.style.display = visible === 0 ? 'block' : 'none';
@@ -7476,17 +7490,30 @@ function photoApplyFilters() {
     r.dataset.artMatch = show ? '1' : '0';
     if (show) visible++;
 
-    // טשטוש דינמי לתמונות בגלריות כשאין אישור V מעל גיל 18
+    // טשטוש דינמי לתמונות בגלריות בחוץ ברשימות ובגריד כשאין אישור V מעל גיל 18
     const imgWrap = r.querySelector('.art-row-img-wrap');
     if (imgWrap) {
       if (!isAgeVerified) {
-        imgWrap.style.filter = 'blur(20px)';
-        imgWrap.style.transition = 'filter 0.3s ease';
+        imgWrap.style.filter = 'blur(25px)';
+        imgWrap.style.setProperty('-webkit-filter', 'blur(25px)');
+        imgWrap.style.transition = 'filter 0.3s ease, -webkit-filter 0.3s ease';
         imgWrap.title = 'תוכן מטושטש - יש לאשר גיל 18+ בסרגל הצד';
       } else {
         imgWrap.style.filter = 'none';
+        imgWrap.style.setProperty('-webkit-filter', 'none');
         imgWrap.title = '';
       }
+    }
+  });
+
+  const allOutsidePhotoMedia = mainContent.querySelectorAll('.photos-page .art-featured-card img, .photos-page .art-rec-img img, .photos-page .art-popular-item img, .photos-page .photo-mini-thumb');
+  allOutsidePhotoMedia.forEach(el => {
+    if (!isAgeVerified) {
+      el.style.filter = 'blur(25px)';
+      el.style.setProperty('-webkit-filter', 'blur(25px)');
+    } else {
+      el.style.filter = 'none';
+      el.style.setProperty('-webkit-filter', 'none');
     }
   });
 
