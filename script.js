@@ -903,7 +903,8 @@ function renderPage() {
     if (photoPageEl && typeof buildPhotosPage === 'function') {
       let savedPhotos = [];
       try { savedPhotos = JSON.parse(decodeURIComponent(photoPageEl.dataset.photosJson)); } catch(e){}
-      if (savedPhotos.length) mainContent.innerHTML = buildPhotosPage(savedPhotos);
+      const photosToRender = (savedPhotos && savedPhotos.length) ? savedPhotos : (typeof PHOTOS_SAMPLES !== 'undefined' ? PHOTOS_SAMPLES : []);
+      mainContent.innerHTML = buildPhotosPage(photosToRender);
     }
 
     // עמוד קהילה: בונים מחדש
@@ -6041,6 +6042,17 @@ const artPageState = { photos: 1, stories: 1 };
 function artApplyPagination(container, key) {
   if (!container || !container.querySelector('.art-rows')) return;
 
+  if (key === 'photos') {
+    const rows = Array.from(container.querySelectorAll('.art-row'));
+    rows.forEach(r => {
+      const show = r.dataset.artMatch !== '0';
+      r.style.display = show ? '' : 'none';
+    });
+    const bar = container.querySelector('.art-pagination');
+    if (bar) { bar.innerHTML = ''; bar.style.display = 'none'; }
+    return;
+  }
+
   const rows = Array.from(container.querySelectorAll('.art-rows > .art-row'));
   // artMatch מסומן על ידי החיפוש והסינון; פריט בלי סימון נחשב תואם
   const matching = rows.filter(r => r.dataset.artMatch !== '0');
@@ -6981,8 +6993,13 @@ function photoGoBack() {
 
 function photoGetAlbums() {
   const container = mainContent.querySelector('.photos-page');
-  if (!container) return [];
-  try { return JSON.parse(decodeURIComponent(container.dataset.photosJson)); } catch(e){ return []; }
+  if (container && container.dataset.photosJson) {
+    try {
+      const parsed = JSON.parse(decodeURIComponent(container.dataset.photosJson));
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    } catch(e){}
+  }
+  return (typeof PHOTOS_SAMPLES !== 'undefined' && Array.isArray(PHOTOS_SAMPLES)) ? PHOTOS_SAMPLES : [];
 }
 
 function photoDelete(id, el) {
