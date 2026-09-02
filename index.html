@@ -84,11 +84,12 @@
         }
       })();
       function confirmAge() {
-        sessionStorage.setItem('age_verified', 'true');
-        document.documentElement.classList.remove('age-not-verified');
-        if (document.body) document.body.classList.remove('age-not-verified');
+        const isVerified = sessionStorage.getItem('age_verified') === 'true';
         if (typeof window.updateAgeVerificationUIState === 'function') {
-          window.updateAgeVerificationUIState(true);
+          window.updateAgeVerificationUIState(isVerified);
+        } else if (!isVerified) {
+          document.documentElement.classList.add('age-not-verified');
+          if (document.body) document.body.classList.add('age-not-verified');
         }
         const overlay = document.getElementById('age-gate-overlay');
         if (overlay) {
