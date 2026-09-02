@@ -3922,28 +3922,45 @@ function buildAgeFilterSidebarBox() {
   `;
 }
 
-function toggleSidebarAgeVerification(checked) {
+function updateAgeVerificationUIState(checked) {
+  if (typeof document === 'undefined') return;
+  const root = document.documentElement;
+  const body = document.body;
+
   if (checked) {
-    sessionStorage.setItem('age_verified', 'true');
-    showCopyToast('✓ אושר בהצלחה! תוכן 18+ עירום פתוח לצפייה 🔞');
+    root.classList.remove('age-not-verified');
+    if (body) body.classList.remove('age-not-verified');
   } else {
-    sessionStorage.setItem('age_verified', 'false');
-    showCopyToast('🔒 סינון תוכן 18+ הופעל - תוכן עירום חסום');
+    root.classList.add('age-not-verified');
+    if (body) body.classList.add('age-not-verified');
   }
-  
+
+  const checkbox = document.getElementById('sidebar-age-checkbox');
+  if (checkbox) checkbox.checked = !!checked;
+
   const statusMsg = document.getElementById('sidebar-age-status-msg');
   if (statusMsg) {
     statusMsg.style.color = checked ? '#16a34a' : '#dc2626';
     statusMsg.textContent = checked ? '✓ תוכן למבוגרים (18+) פתוח לצפייה' : '🔒 תוכן עירום חסום לצפייה';
   }
 
-  // עדכון גלובלי של overlay אם קשר
   const overlay = document.getElementById('age-gate-overlay');
-  if (overlay) {
-    if (checked) {
-      overlay.style.setProperty('display', 'none', 'important');
-    }
+  if (overlay && checked) {
+    overlay.style.setProperty('display', 'none', 'important');
   }
+}
+window.updateAgeVerificationUIState = updateAgeVerificationUIState;
+
+function toggleSidebarAgeVerification(checked) {
+  if (checked) {
+    sessionStorage.setItem('age_verified', 'true');
+    showCopyToast('✓ אושר בהצלחה! תוכן 18+ פתוח לצפייה 🔞');
+  } else {
+    sessionStorage.setItem('age_verified', 'false');
+    showCopyToast('🔒 סינון תוכן 18+ הופעל - תמונות האתר מטושטשות');
+  }
+  
+  updateAgeVerificationUIState(checked);
 
   if (typeof photoApplyFilters === 'function') photoApplyFilters();
   if (typeof storyApplyFilters === 'function') storyApplyFilters();
@@ -5340,16 +5357,16 @@ function storyApplyFilters() {
     r.dataset.artMatch = match ? '1' : '0';
     if (match) visible++;
 
-    // טשטוש דינמי לתכני 'עירום' בסיפורים כשאין אישור V מעל גיל 18
-    const isNude = (rowCat === 'עירום' || text.includes('עירום'));
+    // טשטוש דינמי לתמונות בסיפורים כשאין אישור V מעל גיל 18
     const imgWrap = r.querySelector('.art-row-img-wrap');
     if (imgWrap) {
-      if (isNude && !isAgeVerified) {
-        imgWrap.style.filter = 'blur(18px)';
+      if (!isAgeVerified) {
+        imgWrap.style.filter = 'blur(20px)';
         imgWrap.style.transition = 'filter 0.3s ease';
-        imgWrap.title = 'תוכן עירום מטושטש - יש לאשר גיל 18+ בסרגל הצד';
+        imgWrap.title = 'תוכן מטושטש - יש לאשר גיל 18+ בסרגל הצד';
       } else {
         imgWrap.style.filter = 'none';
+        imgWrap.title = '';
       }
     }
   });
@@ -6416,8 +6433,7 @@ function photoOpenDetail(id) {
   }
 
   const isAgeVerifiedDetail = typeof sessionStorage !== 'undefined' && sessionStorage.getItem('age_verified') === 'true';
-  const isNudeDetail = (a.category === 'עירום' || (a.summary || '').includes('עירום'));
-  const blurStyle = (isNudeDetail && !isAgeVerifiedDetail) ? 'filter: blur(18px); transition: filter 0.3s ease;' : '';
+  const blurStyle = (!isAgeVerifiedDetail) ? 'filter: blur(20px); transition: filter 0.3s ease;' : '';
 
   const json = encodeURIComponent(JSON.stringify(albums));
   mainContent.innerHTML = `
@@ -7228,16 +7244,16 @@ function photoApplyFilters() {
     r.dataset.artMatch = show ? '1' : '0';
     if (show) visible++;
 
-    // טשטוש דינמי לתכני 'עירום' כשאין אישור V מעל גיל 18
-    const isNude = (rowCategory === 'עירום' || (r.dataset.search || '').includes('עירום'));
+    // טשטוש דינמי לתמונות בגלריות כשאין אישור V מעל גיל 18
     const imgWrap = r.querySelector('.art-row-img-wrap');
     if (imgWrap) {
-      if (isNude && !isAgeVerified) {
-        imgWrap.style.filter = 'blur(18px)';
+      if (!isAgeVerified) {
+        imgWrap.style.filter = 'blur(20px)';
         imgWrap.style.transition = 'filter 0.3s ease';
-        imgWrap.title = 'תוכן עירום מטושטש - יש לאשר גיל 18+ בסרגל הצד';
+        imgWrap.title = 'תוכן מטושטש - יש לאשר גיל 18+ בסרגל הצד';
       } else {
         imgWrap.style.filter = 'none';
+        imgWrap.title = '';
       }
     }
   });

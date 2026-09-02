@@ -79,10 +79,17 @@
       (function() {
         if (sessionStorage.getItem('age_verified') === 'true') {
           document.write('<style>#age-gate-overlay { display: none !important; }</style>');
+        } else {
+          document.documentElement.classList.add('age-not-verified');
         }
       })();
       function confirmAge() {
         sessionStorage.setItem('age_verified', 'true');
+        document.documentElement.classList.remove('age-not-verified');
+        if (document.body) document.body.classList.remove('age-not-verified');
+        if (typeof window.updateAgeVerificationUIState === 'function') {
+          window.updateAgeVerificationUIState(true);
+        }
         const overlay = document.getElementById('age-gate-overlay');
         if (overlay) {
           overlay.style.opacity = '0';
@@ -94,7 +101,14 @@
         }
       }
       window.addEventListener('DOMContentLoaded', () => {
-        if (sessionStorage.getItem('age_verified') !== 'true') {
+        const isVerified = sessionStorage.getItem('age_verified') === 'true';
+        if (typeof window.updateAgeVerificationUIState === 'function') {
+          window.updateAgeVerificationUIState(isVerified);
+        } else if (!isVerified) {
+          document.documentElement.classList.add('age-not-verified');
+          if (document.body) document.body.classList.add('age-not-verified');
+        }
+        if (!isVerified) {
           setTimeout(function() {
             const btn = document.getElementById('gate-confirm-btn');
             if (btn) {

@@ -3583,5 +3583,53 @@ body:not(.edit-mode) .hidden-nav {
   border: 1px solid #fca5a5;
 }
 
+/* ============================================================
+   טשטוש תמונות באתר בלחיצה/ביטול V סינון גיל 18+
+   ============================================================ */
+html.age-not-verified .art-row-img-wrap,
+html.age-not-verified .art-row-img-wrap img,
+html.age-not-verified .art-featured-card img,
+html.age-not-verified .photo-main-img-container,
+html.age-not-verified .photo-main-img-container img,
+html.age-not-verified .photo-mini-thumb,
+html.age-not-verified .photo-thumb-square img,
+html.age-not-verified .photo-story-row img,
+html.age-not-verified .art-rec-img img,
+html.age-not-verified .art-rec-card img,
+html.age-not-verified .art-detail-body img,
+html.age-not-verified .art-detail img,
+html.age-not-verified .art-zoom-img,
+html.age-not-verified .draggable-resizable img,
+html.age-not-verified .shop-card-img img,
+html.age-not-verified #art-gallery-img,
+html.age-not-verified #lightbox-img,
+html.age-not-verified .art-lb-img,
+html.age-not-verified .art-popular-item img,
+html.age-not-verified .community-card img,
+body.age-not-verified .art-row-img-wrap,
+body.age-not-verified .art-row-img-wrap img,
+body.age-not-verified .art-featured-card img,
+body.age-not-verified .photo-main-img-container,
+body.age-not-verified .photo-main-img-container img,
+body.age-not-verified .photo-mini-thumb,
+body.age-not-verified .photo-thumb-square img,
+body.age-not-verified .photo-story-row img,
+body.age-not-verified .art-rec-img img,
+body.age-not-verified .art-rec-card img,
+body.age-not-verified .art-detail-body img,
+body.age-not-verified .art-detail img,
+body.age-not-verified .art-zoom-img,
+body.age-not-verified .draggable-resizable img,
+body.age-not-verified .shop-card-img img,
+body.age-not-verified #art-gallery-img,
+body.age-not-verified #lightbox-img,
+body.age-not-verified .art-lb-img,
+body.age-not-verified .art-popular-item img,
+body.age-not-verified .community-card img {
+  filter: blur(20px) !important;
+  transition: filter 0.3s ease;
+}
+
+
 
 
