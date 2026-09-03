@@ -898,13 +898,11 @@ function renderPage() {
       if (savedCourses.length) mainContent.innerHTML = buildCoursesPage(savedCourses);
     }
 
-    // עמוד תמונות: בונים מחדש מהנתונים השמורים
-    const photoPageEl = mainContent.querySelector('.photos-page');
-    if (photoPageEl && typeof buildPhotosPage === 'function') {
-      let savedPhotos = [];
-      try { savedPhotos = JSON.parse(decodeURIComponent(photoPageEl.dataset.photosJson)); } catch(e){}
-      const photosToRender = (savedPhotos && savedPhotos.length) ? savedPhotos : (typeof PHOTOS_SAMPLES !== 'undefined' ? PHOTOS_SAMPLES : []);
-      mainContent.innerHTML = buildPhotosPage(photosToRender);
+    // עמוד תמונות: בונים מחדש מנתוני הגלריות
+    const isPhotosPage = (currentPage && (currentPage.id === 'page-photos-main' || (currentPage.title && currentPage.title.includes('תמונות')))) || mainContent.querySelector('.photos-page');
+    if (isPhotosPage && typeof buildPhotosPage === 'function') {
+      const albums = photoGetAlbums();
+      mainContent.innerHTML = buildPhotosPage(albums);
     }
 
     // עמוד קהילה: בונים מחדש
