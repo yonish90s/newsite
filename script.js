@@ -6251,213 +6251,6 @@ function photoClearFilters() {
 }
 window.photoClearFilters = photoClearFilters;
 
-// ============================================================
-// סרגל משימות, התקדמות וסינון מתקדם בסגנון black1white00.com
-// ============================================================
-let bwFilterState = {
-  deal: 'הכל',
-  cat: 'הכל',
-  loc: 'הכל',
-  condition: 'הכל',
-  budget: 'הכל',
-  recommended: false,
-  available: false,
-  sort: 'relevance'
-};
-
-function getBWKindDefaultLabel(kind) {
-  if (kind === 'deal') return 'סוג עסקה';
-  if (kind === 'cat') return 'קטגוריה';
-  if (kind === 'loc') return 'מיקום';
-  if (kind === 'condition') return 'מצב המוצר';
-  if (kind === 'budget') return 'תקציב';
-  return '';
-}
-
-function toggleBWFilterDropdown(name) {
-  const menus = document.querySelectorAll('.bw-drop-menu');
-  menus.forEach(m => {
-    if (m.id !== `bw-drop-${name}`) m.style.display = 'none';
-  });
-  const target = document.getElementById(`bw-drop-${name}`);
-  if (target) {
-    target.style.display = target.style.display === 'none' ? 'block' : 'none';
-  }
-}
-
-function setBWFilter(kind, val) {
-  bwFilterState[kind] = val;
-  const labelEl = document.getElementById(`bw-label-${kind}`);
-  if (labelEl) {
-    labelEl.textContent = val === 'הכל' ? getBWKindDefaultLabel(kind) : `${getBWKindDefaultLabel(kind)}: ${val}`;
-  }
-  const target = document.getElementById(`bw-drop-${kind}`);
-  if (target) target.style.display = 'none';
-  applyBWFilterState();
-}
-
-function toggleBWSwitch(name, val) {
-  bwFilterState[name] = !!val;
-  applyBWFilterState();
-}
-
-function changeBWSort(val) {
-  bwFilterState.sort = val;
-  applyBWFilterState();
-}
-
-function applyBWFilterState() {
-  if (typeof photoApplyFilters === 'function') photoApplyFilters();
-}
-
-window.toggleBWFilterDropdown = toggleBWFilterDropdown;
-window.setBWFilter = setBWFilter;
-window.toggleBWSwitch = toggleBWSwitch;
-window.changeBWSort = changeBWSort;
-
-function buildBlackWhiteProgressHeader() {
-  return `
-    <div class="bw-progress-card" style="border: 2px solid #22c55e; border-radius: 40px; padding: 12px 24px; background: #ffffff; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(34, 197, 94, 0.06); direction: rtl; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <span style="font-weight: 900; font-size: 15px; color: #111827;">משימות והתקדמות באתר</span>
-        <span style="background: #22c55e; color: #ffffff; font-size: 12px; font-weight: 900; padding: 4px 12px; border-radius: 20px;" id="bw-progress-total-badge">0% הושלם</span>
-      </div>
-      <div style="display: flex; align-items: center; gap: 18px; font-size: 13px; font-weight: 800; color: #64748b; flex-wrap: wrap;">
-        <div style="display: flex; align-items: center; gap: 6px;">
-          <span style="background: #f1f5f9; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px;">💼</span>
-          <span>0% מודעות</span>
-        </div>
-        <div style="display: flex; align-items: center; gap: 6px;">
-          <span style="background: #f1f5f9; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px;">🤝</span>
-          <span>0% הצעות</span>
-        </div>
-        <div style="display: flex; align-items: center; gap: 6px;">
-          <span style="background: #f1f5f9; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px;">🚗</span>
-          <span>0% נסיעות</span>
-        </div>
-        <div style="display: flex; align-items: center; gap: 6px;">
-          <span style="background: #f1f5f9; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px;">💡</span>
-          <span>0% רעיונות</span>
-        </div>
-      </div>
-    </div>
-  `;
-}
-
-function buildBlackWhiteSiteHeaderAndFilters() {
-  return `
-    <div class="bw-filter-box" style="background: #ffffff; border-radius: 16px; padding: 20px; border: 1px solid #e2e8f0; margin-bottom: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); direction: rtl;">
-      ${buildBlackWhiteProgressHeader()}
-
-      <!-- סרגלי סינון נפתחים -->
-      <div style="display: flex; gap: 10px; justify-content: flex-start; align-items: center; flex-wrap: wrap; margin-bottom: 16px;">
-        
-        <!-- סוג עסקה -->
-        <div class="bw-dropdown-btn-wrap" style="position: relative;">
-          <button type="button" onclick="toggleBWFilterDropdown('deal')" class="bw-filter-btn" style="padding: 10px 18px; border: 1.5px solid #111827; border-radius: 10px; background: #ffffff; color: #111827; font-weight: 800; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s;">
-            <span id="bw-label-deal">סוג עסקה</span>
-            <span style="font-size: 11px;">˅</span>
-          </button>
-          <div id="bw-drop-deal" class="bw-drop-menu" style="display: none; position: absolute; top: 105%; right: 0; background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); z-index: 100; min-width: 150px;">
-            <div onclick="setBWFilter('deal', 'הכל')" style="padding: 8px 12px; cursor: pointer; font-weight: 700; font-size: 13px; border-radius: 6px;">הכל</div>
-            <div onclick="setBWFilter('deal', 'למכירה')" style="padding: 8px 12px; cursor: pointer; font-weight: 700; font-size: 13px; border-radius: 6px;">למכירה</div>
-            <div onclick="setBWFilter('deal', 'להשכרה')" style="padding: 8px 12px; cursor: pointer; font-weight: 700; font-size: 13px; border-radius: 6px;">להשכרה</div>
-            <div onclick="setBWFilter('deal', 'למסירה')" style="padding: 8px 12px; cursor: pointer; font-weight: 700; font-size: 13px; border-radius: 6px;">למסירה</div>
-          </div>
-        </div>
-
-        <!-- קטגוריה -->
-        <div class="bw-dropdown-btn-wrap" style="position: relative;">
-          <button type="button" onclick="toggleBWFilterDropdown('cat')" class="bw-filter-btn" style="padding: 10px 18px; border: 1px solid #cbd5e1; border-radius: 10px; background: #ffffff; color: #334155; font-weight: 800; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
-            <span id="bw-label-cat">קטגוריה</span>
-            <span style="font-size: 11px;">˅</span>
-          </button>
-          <div id="bw-drop-cat" class="bw-drop-menu" style="display: none; position: absolute; top: 105%; right: 0; background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); z-index: 100; min-width: 160px;">
-            <div onclick="setBWFilter('cat', 'הכל')" style="padding: 8px 12px; cursor: pointer; font-weight: 700; font-size: 13px; border-radius: 6px;">הכל</div>
-            <div onclick="setBWFilter('cat', 'אתר תדמית')" style="padding: 8px 12px; cursor: pointer; font-weight: 700; font-size: 13px; border-radius: 6px;">אתר תדמית</div>
-            <div onclick="setBWFilter('cat', 'חנות E-Commerce')" style="padding: 8px 12px; cursor: pointer; font-weight: 700; font-size: 13px; border-radius: 6px;">חנות E-Commerce</div>
-            <div onclick="setBWFilter('cat', 'דף נחיתה')" style="padding: 8px 12px; cursor: pointer; font-weight: 700; font-size: 13px; border-radius: 6px;">דף נחיתה</div>
-            <div onclick="setBWFilter('cat', 'פורטפוליו')" style="padding: 8px 12px; cursor: pointer; font-weight: 700; font-size: 13px; border-radius: 6px;">פורטפוליו</div>
-          </div>
-        </div>
-
-        <!-- מיקום -->
-        <div class="bw-dropdown-btn-wrap" style="position: relative;">
-          <button type="button" onclick="toggleBWFilterDropdown('loc')" class="bw-filter-btn" style="padding: 10px 18px; border: 1px solid #cbd5e1; border-radius: 10px; background: #ffffff; color: #334155; font-weight: 800; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
-            <span id="bw-label-loc">מיקום</span>
-            <span style="font-size: 11px;">˅</span>
-          </button>
-          <div id="bw-drop-loc" class="bw-drop-menu" style="display: none; position: absolute; top: 105%; right: 0; background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); z-index: 100; min-width: 150px;">
-            <div onclick="setBWFilter('loc', 'הכל')" style="padding: 8px 12px; cursor: pointer; font-weight: 700; font-size: 13px; border-radius: 6px;">הכל</div>
-            <div onclick="setBWFilter('loc', 'מרכז')" style="padding: 8px 12px; cursor: pointer; font-weight: 700; font-size: 13px; border-radius: 6px;">מרכז</div>
-            <div onclick="setBWFilter('loc', 'צפון')" style="padding: 8px 12px; cursor: pointer; font-weight: 700; font-size: 13px; border-radius: 6px;">צפון</div>
-            <div onclick="setBWFilter('loc', 'דרום')" style="padding: 8px 12px; cursor: pointer; font-weight: 700; font-size: 13px; border-radius: 6px;">דרום</div>
-            <div onclick="setBWFilter('loc', 'אונליין / זום')" style="padding: 8px 12px; cursor: pointer; font-weight: 700; font-size: 13px; border-radius: 6px;">אונליין / זום</div>
-          </div>
-        </div>
-
-        <!-- מצב המוצר -->
-        <div class="bw-dropdown-btn-wrap" style="position: relative;">
-          <button type="button" onclick="toggleBWFilterDropdown('condition')" class="bw-filter-btn" style="padding: 10px 18px; border: 1px solid #cbd5e1; border-radius: 10px; background: #ffffff; color: #334155; font-weight: 800; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
-            <span id="bw-label-condition">מצב המוצר</span>
-            <span style="font-size: 11px;">˅</span>
-          </button>
-          <div id="bw-drop-condition" class="bw-drop-menu" style="display: none; position: absolute; top: 105%; right: 0; background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); z-index: 100; min-width: 150px;">
-            <div onclick="setBWFilter('condition', 'הכל')" style="padding: 8px 12px; cursor: pointer; font-weight: 700; font-size: 13px; border-radius: 6px;">הכל</div>
-            <div onclick="setBWFilter('condition', 'חדש באריזה')" style="padding: 8px 12px; cursor: pointer; font-weight: 700; font-size: 13px; border-radius: 6px;">חדש באריזה</div>
-            <div onclick="setBWFilter('condition', 'כמו חדש')" style="padding: 8px 12px; cursor: pointer; font-weight: 700; font-size: 13px; border-radius: 6px;">כמו חדש</div>
-            <div onclick="setBWFilter('condition', 'משומש במצב טוב')" style="padding: 8px 12px; cursor: pointer; font-weight: 700; font-size: 13px; border-radius: 6px;">משומש במצב טוב</div>
-          </div>
-        </div>
-
-        <!-- תקציב -->
-        <div class="bw-dropdown-btn-wrap" style="position: relative;">
-          <button type="button" onclick="toggleBWFilterDropdown('budget')" class="bw-filter-btn" style="padding: 10px 18px; border: 1px solid #cbd5e1; border-radius: 10px; background: #ffffff; color: #334155; font-weight: 800; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
-            <span id="bw-label-budget">תקציב</span>
-            <span style="font-size: 11px;">˅</span>
-          </button>
-          <div id="bw-drop-budget" class="bw-drop-menu" style="display: none; position: absolute; top: 105%; right: 0; background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); z-index: 100; min-width: 150px;">
-            <div onclick="setBWFilter('budget', 'הכל')" style="padding: 8px 12px; cursor: pointer; font-weight: 700; font-size: 13px; border-radius: 6px;">הכל</div>
-            <div onclick="setBWFilter('budget', 'עד 500 ₪')" style="padding: 8px 12px; cursor: pointer; font-weight: 700; font-size: 13px; border-radius: 6px;">עד 500 ₪</div>
-            <div onclick="setBWFilter('budget', '500 - 2,000 ₪')" style="padding: 8px 12px; cursor: pointer; font-weight: 700; font-size: 13px; border-radius: 6px;">500 - 2,000 ₪</div>
-            <div onclick="setBWFilter('budget', 'מעל 2,000 ₪')" style="padding: 8px 12px; cursor: pointer; font-weight: 700; font-size: 13px; border-radius: 6px;">מעל 2,000 ₪</div>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- מתגי Switch -->
-      <div style="display: flex; align-items: center; justify-content: flex-end; gap: 24px; margin-bottom: 20px; flex-wrap: wrap;">
-        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; font-weight: 800; color: #111827; user-select: none;">
-          <span>כתבות מומלצות</span>
-          <input type="checkbox" id="bw-toggle-recommended" onchange="toggleBWSwitch('recommended', this.checked)" style="width: 38px; height: 22px; accent-color: #22c55e; cursor: pointer;">
-        </label>
-        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; font-weight: 800; color: #22c55e; user-select: none;">
-          <span style="display: flex; align-items: center; gap: 4px;"><span>🟢</span><span>זמין כעת</span></span>
-          <input type="checkbox" id="bw-toggle-available" onchange="toggleBWSwitch('available', this.checked)" style="width: 38px; height: 22px; accent-color: #22c55e; cursor: pointer;">
-        </label>
-      </div>
-
-      <!-- קו מפריד וסרגל מיון + תוצאות -->
-      <div style="border-top: 1px solid #f1f5f9; padding-top: 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
-        <div style="display: flex; align-items: center; gap: 8px; font-size: 14px; color: #475569; font-weight: 700;">
-          <span>מיון לפי:</span>
-          <select id="bw-sort-select" onchange="changeBWSort(this.value)" style="padding: 8px 14px; border: 1px solid #cbd5e1; border-radius: 10px; background: #ffffff; font-size: 13.5px; font-weight: 800; color: #0f172a; cursor: pointer; outline: none;">
-            <option value="relevance">רלוונטיות ˅</option>
-            <option value="newest">הכי חדש ˅</option>
-            <option value="popular">הכי פופולרי (לייקים + צפיות) ˅</option>
-            <option value="price_low">מחיר: מהנמוך לגבוה ˅</option>
-            <option value="price_high">מחיר: מהגבוה לנמוך ˅</option>
-          </select>
-        </div>
-        <div style="font-size: 15px; font-weight: 900; color: #0f172a;" id="bw-results-counter">
-          <span id="bw-results-count-num">6</span> תוצאות
-        </div>
-      </div>
-    </div>
-  `;
-}
-
 function photoGetViews(id) {
   if (!id) return 0;
   try {
@@ -6787,7 +6580,6 @@ function buildPhotosPage(albums) {
           <div class="art-search-wrap">
             <input type="text" class="art-search" placeholder="🔍 חיפוש גלריות..." oninput="photoSearch(this.value)">
           </div>
-          ${buildBlackWhiteSiteHeaderAndFilters()}
           ${photoFilterSectionHTML()}
 
           <!-- שורה 1: מה חדש -->
@@ -7717,27 +7509,20 @@ function photoApplyFilters() {
     // הכרטיס מציג רק תמונה, ולכן מחפשים בתכונת data-search ולא בטקסט הגלוי
     const text = (r.dataset.search || r.textContent).toLowerCase();
 
-    const categoryMatch = (currentPhotoCategoryFilter === 'הכל' || rowCategory === currentPhotoCategoryFilter) &&
-                          (bwFilterState.cat === 'הכל' || rowCategory === bwFilterState.cat);
+    const categoryMatch = (currentPhotoCategoryFilter === 'הכל' || rowCategory === currentPhotoCategoryFilter);
     const ageMatch = (currentPhotoAgeFilter === 'הכל' || (r.dataset.age || '') === currentPhotoAgeFilter);
-    const regionMatch = (currentPhotoRegionFilter === 'הכל' || (r.dataset.region || '') === currentPhotoRegionFilter) &&
-                        (bwFilterState.loc === 'הכל' || (r.dataset.region || '').includes(bwFilterState.loc));
-    const dealMatch = (bwFilterState.deal === 'הכל' || text.includes(bwFilterState.deal.toLowerCase()));
-    const conditionMatch = (bwFilterState.condition === 'הכל' || text.includes(bwFilterState.condition.toLowerCase()));
-    const budgetMatch = (bwFilterState.budget === 'הכל' || text.includes(bwFilterState.budget.toLowerCase()));
-    const recMatch = (!bwFilterState.recommended || r.dataset.recommended === 'true' || text.includes('מומלץ'));
-    const availMatch = (!bwFilterState.available || r.dataset.available === 'true' || true);
-
+    const regionMatch = (currentPhotoRegionFilter === 'הכל' || (r.dataset.region || '') === currentPhotoRegionFilter);
     // גלריה בלי תאריך שניתן לקרוא מוצגת רק תחת "הכל"
     const rowTime = r.dataset.time ? Number(r.dataset.time) : null;
     const dateMatch = (dateThreshold === null) || (rowTime !== null && rowTime >= dateThreshold);
     const textMatch = text.includes(q);
 
-    const show = categoryMatch && ageMatch && regionMatch && dealMatch && conditionMatch && budgetMatch && recMatch && availMatch && dateMatch && textMatch;
+    const show = categoryMatch && ageMatch && regionMatch && dateMatch && textMatch;
     // העימוד הוא זה שקובע display בפועל; כאן רק מסמנים מה תואם
     r.dataset.artMatch = show ? '1' : '0';
     if (show) visible++;
 
+    // טשטוש דינמי לתמונות בגלריות בחוץ ברשימות ובגריד כשאין אישור V מעל גיל 18
     const imgWrap = r.querySelector('.art-row-img-wrap');
     if (imgWrap) {
       if (!isAgeVerified) {
@@ -7752,9 +7537,6 @@ function photoApplyFilters() {
       }
     }
   });
-
-  const countEl = document.getElementById('bw-results-count-num');
-  if (countEl) countEl.textContent = visible;
 
   const allOutsidePhotoMedia = mainContent.querySelectorAll('.photos-page .art-featured-card img, .photos-page .art-rec-img img, .photos-page .art-popular-item img, .photos-page .photo-mini-thumb');
   allOutsidePhotoMedia.forEach(el => {
