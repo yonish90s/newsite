@@ -14,7 +14,7 @@
   <!-- ספריית localforage לשמירת תמונות -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
   <!-- קישור לקובץ העיצוב החיצוני (עם פרמטר למניעת שמירה במטמון) -->
-  <link rel="stylesheet" href="./style.css?v=1006">
+  <link rel="stylesheet" href="./style.css?v=1009">
 </head>
 <body class="light-mode">
   <!-- שער אישור גיל (Age Gate Overlay) -->
@@ -467,7 +467,21 @@
       </div>
     </div>
 
-    <div style="display:flex; align-items:center; gap:8px; background: rgba(225, 29, 72, 0.05); padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(225, 29, 72, 0.2); margin-top: 4px;">
+    <div style="display:flex; align-items:center; gap:8px; background: rgba(185, 28, 28, 0.05); padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(185, 28, 28, 0.25); margin-top: 4px;">
+      <input type="checkbox" id="photo-is-adult" style="width: 18px; height: 18px; cursor: pointer; accent-color: #b91c1c;">
+      <label for="photo-is-adult" style="font-size: 13px; font-weight: 700; color: #b91c1c; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+        🔞 תוכן מעל גיל 18 (יטושטש עד לאישור גיל)
+      </label>
+    </div>
+
+    <div style="display:flex; align-items:center; gap:8px; background: rgba(37, 99, 235, 0.05); padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(37, 99, 235, 0.25);">
+      <input type="checkbox" id="photo-admin-only" style="width: 18px; height: 18px; cursor: pointer; accent-color: #2563eb;">
+      <label for="photo-admin-only" style="font-size: 13px; font-weight: 700; color: #1d4ed8; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+        🔒 גלוי רק למנהל (מוסתר מכולם, נראה רק כשמחובר כמנהל)
+      </label>
+    </div>
+
+    <div style="display:flex; align-items:center; gap:8px; background: rgba(225, 29, 72, 0.05); padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(225, 29, 72, 0.2);">
       <input type="checkbox" id="photo-is-temporary" checked style="width: 18px; height: 18px; cursor: pointer; accent-color: #e11d48;">
       <label for="photo-is-temporary" style="font-size: 13px; font-weight: 700; color: #dc2626; cursor: pointer; display: flex; align-items: center; gap: 4px;">
         ⏳ פג תוקף תוך 24 שעות (קומיקס/גלריה זמנית)
@@ -728,6 +742,6 @@
   </div>
 </div>
 
-  <script type="module" src="./script.js?v=1006"></script>
+  <script type="module" src="./script.js?v=1009"></script>
 </body>
 </html>

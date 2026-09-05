@@ -6389,7 +6389,7 @@ function renderPhotoCard(p, options = {}) {
   const textBlock = actionsBlock + infoBlock;
 
   return `
-    <div class="art-row" data-category="${p.category || 'כללי'}" data-age="${artEsc(p.ageRange || '')}" data-region="${artEsc(p.region || '')}" data-time="${photoAlbumTime(p) ?? ''}" data-search="${searchText}" onclick="${isPending ? '' : `photoOpenDetail('${artEsc(p.id)}')`}" style="${isPending ? 'border: 2px dashed #f59e0b; background: #fffbeb; cursor: default;' : ''}">
+    <div class="art-row" data-category="${p.category || 'כללי'}" data-age="${artEsc(p.ageRange || '')}" data-region="${artEsc(p.region || '')}" data-time="${photoAlbumTime(p) ?? ''}" data-adult="${p.isAdult ? '1' : '0'}" data-search="${searchText}" onclick="${isPending ? '' : `photoOpenDetail('${artEsc(p.id)}')`}" style="${isPending ? 'border: 2px dashed #f59e0b; background: #fffbeb; cursor: default;' : ''}">
       ${textBlock}
       <div class="art-row-img-container" style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0;">
         <div class="art-row-img-wrap" style="--bg-img: url('${mainImg || ''}');">
@@ -6428,6 +6428,10 @@ function buildPhotosPage(albums) {
   // סינון גלריות זמניות שתוקפן פג (חולפו 24 שעות)
   const now = Date.now();
   albums = albums.filter(p => !p.expiresAt || p.expiresAt > now);
+
+  // גלריות שסומנו "גלוי רק למנהל" מוסתרות מכל מי שאינו מנהל מחובר / במצב עריכה
+  const _isAdminView = (typeof isAdmin === 'function' && isAdmin()) || (typeof isEditMode !== 'undefined' && isEditMode);
+  albums = albums.filter(p => !p.adminOnly || _isAdminView);
 
   // 1. שורה ראשונה: מה חדש (מיון לפי תאריך / העלאה אחרונה)
   const newestAlbums = [...albums].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
@@ -6546,7 +6550,7 @@ function buildPhotosPage(albums) {
   const featuredHTML = featured.map(p => {
     const mainImg = p.images && p.images[0] ? p.images[0] : 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80';
     return `
-      <div class="art-featured-card" onclick="photoOpenDetail('${artEsc(p.id)}')">
+      <div class="art-featured-card" data-adult="${p.isAdult ? '1' : '0'}" onclick="photoOpenDetail('${artEsc(p.id)}')">
         <img src="${mainImg}" alt="">
       </div>
     `;
@@ -6706,7 +6710,8 @@ function photoOpenDetail(id) {
   }
 
   const isAgeVerifiedDetail = typeof sessionStorage !== 'undefined' && sessionStorage.getItem('age_verified') === 'true';
-  const blurStyle = (!isAgeVerifiedDetail) ? 'filter: blur(20px); transition: filter 0.3s ease;' : '';
+  // מטשטש בתצוגת הפירוט רק אם הגלריה סומנה 18+ והגיל טרם אושר
+  const blurStyle = (a.isAdult && !isAgeVerifiedDetail) ? 'filter: blur(20px); transition: filter 0.3s ease;' : '';
 
   const json = encodeURIComponent(JSON.stringify(albums));
   mainContent.innerHTML = `
@@ -7025,7 +7030,11 @@ function openPhotoModal() {
   if (emailInp) emailInp.value = '';
   const tempInp = document.getElementById('photo-is-temporary');
   if (tempInp) tempInp.checked = false;
-  
+  const adultInp = document.getElementById('photo-is-adult');
+  if (adultInp) adultInp.checked = false;
+  const adminOnlyInp = document.getElementById('photo-admin-only');
+  if (adminOnlyInp) adminOnlyInp.checked = false;
+
   photoImgDataList = ['', '', '', '', ''];
   for (let i = 1; i <= 5; i++) {
     const btn = document.getElementById('photo-img-pick-' + i);
@@ -7063,6 +7072,10 @@ function openPhotoEditModal(id, e) {
   if (emailInp) emailInp.value = (album.emailUrl || '').replace('mailto:', '');
   const tempInp = document.getElementById('photo-is-temporary');
   if (tempInp) tempInp.checked = !!(album.expiresAt && album.expiresAt > Date.now());
+  const adultInp = document.getElementById('photo-is-adult');
+  if (adultInp) adultInp.checked = !!album.isAdult;
+  const adminOnlyInp = document.getElementById('photo-admin-only');
+  if (adminOnlyInp) adminOnlyInp.checked = !!album.adminOnly;
 
   photoImgDataList = ['', '', '', '', ''];
   const imgs = (album.images && album.images.length) ? album.images : (album.image ? [album.image] : []);
@@ -7149,6 +7162,12 @@ document.getElementById('photo-save').addEventListener('click', () => {
   const isTemporary = tempInp ? tempInp.checked : false;
   const newExpiresAt = isTemporary ? (Date.now() + 24 * 60 * 60 * 1000) : null;
 
+  const adultInp = document.getElementById('photo-is-adult');
+  const isAdult = adultInp ? adultInp.checked : false;
+
+  const adminOnlyInp = document.getElementById('photo-admin-only');
+  const adminOnly = adminOnlyInp ? adminOnlyInp.checked : false;
+
   const user = auth.currentUser;
   let authorNickname = 'אורח';
   if (user) {
@@ -7175,6 +7194,8 @@ document.getElementById('photo-save').addEventListener('click', () => {
         region: (document.getElementById('photo-region') || {}).value || '',
         telegramUrl: telegramInput,
         emailUrl: emailInput,
+        isAdult,
+        adminOnly,
         expiresAt: isTemporary ? (albums[existingIdx].expiresAt && albums[existingIdx].expiresAt > Date.now() ? albums[existingIdx].expiresAt : newExpiresAt) : null
       };
     }
@@ -7195,6 +7216,8 @@ document.getElementById('photo-save').addEventListener('click', () => {
       createdAt: Date.now(),
       telegramUrl: telegramInput,
       emailUrl: emailInput,
+      isAdult,
+      adminOnly,
       expiresAt: newExpiresAt,
       approved: isEditMode
     });
@@ -7522,30 +7545,14 @@ function photoApplyFilters() {
     r.dataset.artMatch = show ? '1' : '0';
     if (show) visible++;
 
-    // טשטוש דינמי לתמונות בגלריות בחוץ ברשימות ובגריד כשאין אישור V מעל גיל 18
+    // הטשטוש של תוכן 18+ מנוהל כולו ע"י CSS (html.age-not-verified + data-adult),
+    // ולכן כאן רק מנקים סגנון inline ישן כדי לא להתנגש.
     const imgWrap = r.querySelector('.art-row-img-wrap');
     if (imgWrap) {
-      if (!isAgeVerified) {
-        imgWrap.style.filter = 'blur(25px)';
-        imgWrap.style.setProperty('-webkit-filter', 'blur(25px)');
-        imgWrap.style.transition = 'filter 0.3s ease, -webkit-filter 0.3s ease';
-        imgWrap.title = 'תוכן מטושטש - יש לאשר גיל 18+ בסרגל הצד';
-      } else {
-        imgWrap.style.filter = 'none';
-        imgWrap.style.setProperty('-webkit-filter', 'none');
-        imgWrap.title = '';
-      }
-    }
-  });
-
-  const allOutsidePhotoMedia = mainContent.querySelectorAll('.photos-page .art-featured-card img, .photos-page .art-rec-img img, .photos-page .art-popular-item img, .photos-page .photo-mini-thumb');
-  allOutsidePhotoMedia.forEach(el => {
-    if (!isAgeVerified) {
-      el.style.filter = 'blur(25px)';
-      el.style.setProperty('-webkit-filter', 'blur(25px)');
-    } else {
-      el.style.filter = 'none';
-      el.style.setProperty('-webkit-filter', 'none');
+      imgWrap.style.filter = '';
+      imgWrap.style.removeProperty('-webkit-filter');
+      const adult = r.dataset.adult === '1';
+      imgWrap.title = (adult && !isAgeVerified) ? 'תוכן 18+ מטושטש - יש לאשר גיל בסרגל הצד' : '';
     }
   });
 

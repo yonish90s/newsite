@@ -3608,17 +3608,12 @@ body:not(.edit-mode) .hidden-nav {
    טשטוש תוכן כשלא אושר גיל 18+ (מבפנים ומבחוץ)
    מופעל ע"י class על <html> ולכן חל על כל תוכן שמרונדר מחדש
    ============================================================ */
-html.age-not-verified .photos-page .art-row-img-wrap,
-html.age-not-verified .stories-page .art-row-img-wrap,
-html.age-not-verified .photos-page .art-featured-card img,
-html.age-not-verified .stories-page .art-featured-card img,
-html.age-not-verified .photos-page .art-rec-img img,
-html.age-not-verified .stories-page .art-rec-img img,
-html.age-not-verified .photos-page .art-popular-item img,
-html.age-not-verified .stories-page .art-popular-item img,
-html.age-not-verified .photo-mini-thumb,
-html.age-not-verified .photo-main-img-container,
-html.age-not-verified .photo-main-img-container img {
+/* תמונות: מטשטש רק גלריות שסומנו 18+ */
+html.age-not-verified .photos-page .art-row[data-adult="1"] .art-row-img-wrap,
+html.age-not-verified .photos-page .art-featured-card[data-adult="1"] img,
+html.age-not-verified .photos-page .art-row[data-adult="1"] .photo-mini-thumb,
+html.age-not-verified .photo-main-img-container.is-adult,
+html.age-not-verified .photo-main-img-container.is-adult img {
   filter: blur(25px) !important;
   -webkit-filter: blur(25px) !important;
   transition: filter 0.3s ease, -webkit-filter 0.3s ease;
