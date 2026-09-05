@@ -6424,6 +6424,119 @@ function photoToggleRowMore(rowId, btn) {
 }
 window.photoToggleRowMore = photoToggleRowMore;
 
+// ============================================================
+// צ'אט חי בין משתמשי האתר (Firebase RTDB, סנכרון בזמן אמת)
+// ============================================================
+let liveChatMessages = [];
+let liveChatSubscribed = false;
+
+function subscribeLiveChat() {
+  if (liveChatSubscribed) return;
+  liveChatSubscribed = true;
+  onValue(ref(db, 'website/live_chat'), (snapshot) => {
+    const val = snapshot.val() || {};
+    liveChatMessages = Object.entries(val)
+      .map(([id, m]) => ({ id, ...m }))
+      .sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0))
+      .slice(-100);
+    renderLiveChatMessages();
+  });
+}
+
+function liveChatUserName() {
+  const user = auth.currentUser;
+  if (user) {
+    try {
+      const profile = JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}');
+      return profile.nickname || user.displayName || (user.email ? user.email.split('@')[0] : 'משתמש');
+    } catch (e) {
+      return user.displayName || 'משתמש';
+    }
+  }
+  return (typeof isEditMode !== 'undefined' && isEditMode) ? 'מנהל' : 'אורח';
+}
+
+function liveChatMessagesHTML() {
+  if (!liveChatMessages.length) {
+    return '<div style="text-align:center; color:#94a3b8; font-size:13px; padding:24px 8px; line-height:1.6;">עדיין אין הודעות.<br>היו הראשונים לכתוב! 👋</div>';
+  }
+  const myUid = auth.currentUser ? auth.currentUser.uid : '';
+  return liveChatMessages.map(m => {
+    const mine = !!myUid && m.uid === myUid;
+    const time = m.timestamp ? new Date(m.timestamp).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }) : '';
+    return `
+      <div style="display:flex; flex-direction:column; align-items:${mine ? 'flex-start' : 'flex-end'}; max-width:100%;">
+        <div style="max-width:85%; background:${mine ? '#e11d48' : '#f1f5f9'}; color:${mine ? '#fff' : '#0f172a'}; padding:7px 11px; border-radius:12px; ${mine ? 'border-bottom-right-radius:4px;' : 'border-bottom-left-radius:4px;'} font-size:13px; line-height:1.4; word-break:break-word;">
+          ${!mine ? `<div style="font-size:11px; font-weight:800; color:#e11d48; margin-bottom:2px;">${artEsc(m.name || 'אורח')}</div>` : ''}
+          <div>${artEsc(m.text || '')}</div>
+        </div>
+        <div style="font-size:10px; color:#94a3b8; margin-top:2px;">${time}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderLiveChatMessages() {
+  const box = document.getElementById('live-chat-messages');
+  if (!box) return;
+  box.innerHTML = liveChatMessagesHTML();
+  box.scrollTop = box.scrollHeight;
+}
+
+function buildLiveChatBox() {
+  subscribeLiveChat();
+  return `
+    <div class="art-sidebar-box" style="padding:0; overflow:hidden; display:flex; flex-direction:column;">
+      <div style="background:linear-gradient(135deg,#e11d48,#9f1239); color:#fff; padding:12px 14px; font-size:14px; font-weight:900; display:flex; align-items:center; gap:8px;">
+        <span>💬 צ'אט חי — דברו זה עם זה</span>
+      </div>
+      <div id="live-chat-messages" style="height:250px; overflow-y:auto; padding:12px; display:flex; flex-direction:column; gap:8px; background:#fafafa;">${liveChatMessagesHTML()}</div>
+      ${auth.currentUser ? `
+      <div style="display:flex; gap:6px; padding:10px; border-top:1px solid #eee; background:#fff;">
+        <input id="live-chat-input" type="text" maxlength="500" placeholder="כתוב הודעה..." onkeydown="if(event.key==='Enter'){event.preventDefault(); sendLiveChatMessage();}" style="flex:1; padding:9px 12px; border:1px solid #ddd; border-radius:20px; font-size:13px; outline:none; box-sizing:border-box;">
+        <button onclick="sendLiveChatMessage()" style="background:#e11d48; color:#fff; border:none; border-radius:20px; padding:9px 16px; font-size:13px; font-weight:800; cursor:pointer; flex-shrink:0;">שלח</button>
+      </div>
+      ` : `
+      <div style="padding:10px; border-top:1px solid #eee; background:#fff;">
+        <button onclick="openLiveChatLogin()" style="width:100%; background:#f1f5f9; color:#0f172a; border:1px solid #cbd5e1; border-radius:20px; padding:10px; font-size:13px; font-weight:800; cursor:pointer;">🔒 התחבר כדי לכתוב בצ'אט</button>
+      </div>
+      `}
+    </div>
+  `;
+}
+
+function openLiveChatLogin() {
+  const authModal = document.getElementById('auth-modal');
+  if (authModal) authModal.style.display = 'flex';
+}
+window.openLiveChatLogin = openLiveChatLogin;
+
+async function sendLiveChatMessage() {
+  // כתיבה לצ'אט מחייבת התחברות (כללי Firebase מתירים כתיבה למשתמשים מחוברים בלבד)
+  if (!auth.currentUser) {
+    openLiveChatLogin();
+    return;
+  }
+  const inp = document.getElementById('live-chat-input');
+  if (!inp) return;
+  const text = inp.value.trim();
+  if (!text) return;
+  inp.value = '';
+  try {
+    await push(ref(db, 'website/live_chat'), {
+      name: liveChatUserName(),
+      uid: auth.currentUser.uid,
+      text: text.slice(0, 500),
+      timestamp: Date.now()
+    });
+  } catch (e) {
+    console.error('live chat send failed', e);
+    inp.value = text;
+    if (typeof showCopyToast === 'function') showCopyToast('שגיאה בשליחת ההודעה');
+  }
+}
+window.sendLiveChatMessage = sendLiveChatMessage;
+
 function buildPhotosPage(albums) {
   // סינון גלריות זמניות שתוקפן פג (חולפו 24 שעות)
   const now = Date.now();
@@ -6597,18 +6710,7 @@ function buildPhotosPage(albums) {
             ${photoRowMoreBtn(newestAlbums.length, 'photo-row-1')}
           </div>
 
-          <!-- שורה 2: בשבילך -->
-          <div class="photo-section-row" style="margin-bottom: 32px; background: #ffffff; padding: 18px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
-            <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:2.5px solid #7c3aed; padding-bottom:10px; margin-bottom:18px;">
-              <div>
-                <h3 style="margin:0; font-size:18px; font-weight:900; color:#5b21b6;">רק בשבילך</h3>
-              </div>
-            </div>
-            <div class="art-rows photo-collapsible" id="photo-row-2">${row2HTML}</div>
-            ${photoRowMoreBtn(forYouAlbums.length, 'photo-row-2')}
-          </div>
-
-          <!-- שורה 3: הכי הרבה לייקים וצפיות -->
+          <!-- שורה 2: הכי הרבה לייקים וצפיות -->
           <div class="photo-section-row" style="margin-bottom: 32px; background: #ffffff; padding: 18px; border-radius: 16px; border: 1px solid #fecdd3; box-shadow: 0 4px 15px rgba(225,29,72,0.05);">
             <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:2.5px solid #e11d48; padding-bottom:10px; margin-bottom:18px;">
               <div>
@@ -6637,10 +6739,7 @@ function buildPhotosPage(albums) {
           ` : ''}
           ${buildPromotedSitesBox()}
           ${savedHTML}
-          <div class="art-sidebar-box art-popular-box">
-            <div class="art-sidebar-title">חמשת העיצובים המובילים</div>
-            ${popularHTML}
-          </div>
+          ${buildLiveChatBox()}
           ${buildSocialCommunityBox()}
         </div>
       </div>
