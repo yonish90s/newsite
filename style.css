@@ -3457,6 +3457,7 @@ body:not(.edit-mode) .hidden-nav {
   .em-results-grid {
     grid-template-columns: 1fr;
   }
+}
 .em-pill-btn {
   background: #f1f5f9;
   border: 1px solid #cbd5e1;
@@ -3584,16 +3585,43 @@ body:not(.edit-mode) .hidden-nav {
 }
 
 /* ============================================================
-   ביטול טשטוש תמונות - כל התמונות מוצגות בצורה גלויה ונקייה
+   כפתור "עוד" והרחבת שורות גלריה בעמוד התמונות
    ============================================================ */
-img,
-.art-row-img-wrap,
-.art-row-img-wrap img,
-.art-featured-card img,
-.photo-main-img-container img,
-.art-rec-img img {
-  filter: none !important;
-  -webkit-filter: none !important;
+.photos-page .art-rows.photo-collapsible:not(.expanded) > .art-row:nth-child(n+9) {
+  display: none !important;
+}
+.photo-more-btn {
+  background: #eef2ff;
+  color: #1e3a8a;
+  border: 1.5px solid #c7d2fe;
+  border-radius: 10px;
+  padding: 9px 32px;
+  font-size: 13.5px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, transform 0.15s;
+}
+.photo-more-btn:hover { background: #1e3a8a; color: #fff; }
+.photo-more-btn:active { transform: scale(0.97); }
+
+/* ============================================================
+   טשטוש תוכן כשלא אושר גיל 18+ (מבפנים ומבחוץ)
+   מופעל ע"י class על <html> ולכן חל על כל תוכן שמרונדר מחדש
+   ============================================================ */
+html.age-not-verified .photos-page .art-row-img-wrap,
+html.age-not-verified .stories-page .art-row-img-wrap,
+html.age-not-verified .photos-page .art-featured-card img,
+html.age-not-verified .stories-page .art-featured-card img,
+html.age-not-verified .photos-page .art-rec-img img,
+html.age-not-verified .stories-page .art-rec-img img,
+html.age-not-verified .photos-page .art-popular-item img,
+html.age-not-verified .stories-page .art-popular-item img,
+html.age-not-verified .photo-mini-thumb,
+html.age-not-verified .photo-main-img-container,
+html.age-not-verified .photo-main-img-container img {
+  filter: blur(25px) !important;
+  -webkit-filter: blur(25px) !important;
+  transition: filter 0.3s ease, -webkit-filter 0.3s ease;
 }
 
 

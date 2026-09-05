@@ -3926,8 +3926,13 @@ function updateAgeVerificationUIState(checked) {
   const root = document.documentElement;
   const body = document.body;
 
-  root.classList.remove('age-not-verified');
-  if (body) body.classList.remove('age-not-verified');
+  if (checked) {
+    root.classList.remove('age-not-verified');
+    if (body) body.classList.remove('age-not-verified');
+  } else {
+    root.classList.add('age-not-verified');
+    if (body) body.classList.add('age-not-verified');
+  }
 
   const checkbox = document.getElementById('sidebar-age-checkbox');
   if (checkbox) checkbox.checked = !!checked;
@@ -3944,6 +3949,74 @@ function updateAgeVerificationUIState(checked) {
   }
 }
 window.updateAgeVerificationUIState = updateAgeVerificationUIState;
+
+// החלת מצב אימות הגיל בטעינה הראשונית: אם המשתמש לא אישר גיל 18+,
+// מוסיפים class ל-<html> וכללי ה-CSS מטשטשים את כל תמונות התוכן (מבפנים ומבחוץ).
+(function applyInitialAgeState() {
+  try {
+    if (typeof document !== 'undefined' && sessionStorage.getItem('age_verified') !== 'true') {
+      document.documentElement.classList.add('age-not-verified');
+    }
+  } catch (e) {}
+})();
+
+// פונקציות עזר: הודעת "טוסט" קצרה והעתקת אימייל ללוח (שוחזרו לאחר שנמחקו בקלקול)
+function copyEmailToClipboard(emailStr, e) {
+  if (e) {
+    if (typeof e.stopPropagation === 'function') e.stopPropagation();
+    if (typeof e.preventDefault === 'function') e.preventDefault();
+  }
+  if (!emailStr) return;
+
+  let cleanEmail = emailStr.replace(/^mailto:/i, '').trim();
+  if (!cleanEmail) return;
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(cleanEmail).then(() => {
+      showCopyToast(`האימייל הועתק בהצלחה! 📋 (${cleanEmail})`);
+    }).catch(() => {
+      fallbackCopyText(cleanEmail);
+    });
+  } else {
+    fallbackCopyText(cleanEmail);
+  }
+}
+
+function fallbackCopyText(text) {
+  const textArea = document.createElement('textarea');
+  textArea.value = text;
+  textArea.style.position = 'fixed';
+  textArea.style.opacity = '0';
+  document.body.appendChild(textArea);
+  textArea.select();
+  try {
+    document.execCommand('copy');
+    showCopyToast(`האימייל הועתק בהצלחה! 📋 (${text})`);
+  } catch (err) {
+    alert(`כתובת אימייל: ${text}`);
+  }
+  document.body.removeChild(textArea);
+}
+
+function showCopyToast(msg) {
+  let toast = document.getElementById('global-copy-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'global-copy-toast';
+    toast.style.cssText = 'position:fixed; bottom:30px; left:50%; transform:translateX(-50%); background:#111; color:#fff; padding:12px 24px; border-radius:30px; font-size:14px; font-weight:bold; z-index:9999999; box-shadow:0 10px 30px rgba(0,0,0,0.3); transition:all 0.3s ease; direction:rtl; opacity:0; pointer-events:none;';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.style.opacity = '1';
+  toast.style.transform = 'translateX(-50%) translateY(0)';
+
+  clearTimeout(window.__copyToastTimer);
+  window.__copyToastTimer = setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(-50%) translateY(10px)';
+  }, 2200);
+}
+window.copyEmailToClipboard = copyEmailToClipboard;
 
 function toggleSidebarAgeVerification(checked) {
   if (checked) {
@@ -4001,21 +4074,17 @@ function buildEventsSidebarBox() {
   const regCount = eventRegistrations.length;
 
   return `
-    <div class="art-sidebar-box art-event-box" style="margin-bottom: 20px; border: 1.5px solid #3b82f6; border-radius: 12px; padding: 16px; background: #ffffff; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.08); text-align: right; direction: rtl;">
-      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #3b82f6; padding-bottom: 6px; margin-bottom: 12px;">
-        <h4 style="margin: 0; font-size: 15px; font-weight: 800; color: #1e3a8a; display: flex; align-items: center; gap: 6px;">
+    <div class="art-sidebar-box art-event-box" style="margin-bottom: 20px; border: 1.5px solid #3b82f6; border-radius: 12px; padding: 13px 16px; background: #ffffff; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.08); text-align: right; direction: rtl;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #3b82f6; padding-bottom: 5px; margin-bottom: 7px;">
+        <h4 style="margin: 0; font-size: 14px; font-weight: 800; color: #1e3a8a; display: flex; align-items: center; gap: 6px;">
           <span>🎉 מפגש ואירוע קרוב</span>
         </h4>
         ${isEd ? `<button onclick="openEditEventModal()" style="background: #3b82f6; color: white; border: none; border-radius: 6px; padding: 2px 8px; font-size: 11px; font-weight: bold; cursor: pointer;">✏️ ערוך אירוע</button>` : ''}
       </div>
 
-      <div style="width: 100%; height: 130px; border-radius: 8px; overflow: hidden; margin-bottom: 10px; border: 1px solid #eee;">
-        <img src="${ev.image || 'https://images.unsplash.com/photo-1511578314322-379afb476865?w=800&q=80'}" style="width: 100%; height: 100%; object-fit: cover; display: block;">
-      </div>
+      <h5 style="margin: 0 0 5px; font-size: 13.5px; font-weight: 800; color: #111827;">${ev.title}</h5>
 
-      <h5 style="margin: 0 0 6px; font-size: 14px; font-weight: 800; color: #111827;">${ev.title}</h5>
-      
-      <div style="display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: #4b5563; margin-bottom: 10px; font-weight: 700;">
+      <div style="display: flex; flex-direction: column; gap: 2px; font-size: 12px; color: #4b5563; margin-bottom: 6px; font-weight: 700;">
         <div style="display: flex; align-items: center; gap: 6px; color: #d97706;">
           <span>📅 מפגש בתאריך:</span>
           <span style="color: #111827; font-weight: 900;">${ev.date} בשעה ${ev.time}</span>
@@ -4028,12 +4097,12 @@ function buildEventsSidebarBox() {
         ` : ''}
       </div>
 
-      <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(37, 99, 235, 0.06); padding: 6px 10px; border-radius: 8px; margin-bottom: 10px; font-size: 12px; font-weight: 800; color: #1d4ed8;">
+      <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(37, 99, 235, 0.06); padding: 5px 10px; border-radius: 8px; margin-bottom: 6px; font-size: 12px; font-weight: 800; color: #1d4ed8;">
         <span>👥 נרשמו עד כה:</span>
         <span style="background: #2563eb; color: white; padding: 2px 8px; border-radius: 12px; font-weight: 900;">${regCount} משתתפים</span>
       </div>
 
-      <button onclick="openEventRegisterModal()" style="width: 100%; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; border: none; border-radius: 8px; padding: 10px; font-size: 13.5px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25); transition: transform 0.2s, background 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;">
+      <button onclick="openEventRegisterModal()" style="width: 100%; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; border: none; border-radius: 8px; padding: 8px; font-size: 13px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25); transition: transform 0.2s, background 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;">
         <span>✍️ להרשמה לאירוע</span>
       </button>
 
@@ -5503,16 +5572,28 @@ function storyApplyFilters() {
 
     const imgWrap = r.querySelector('.art-row-img-wrap');
     if (imgWrap) {
-      imgWrap.style.filter = 'none';
-      imgWrap.style.setProperty('-webkit-filter', 'none');
-      imgWrap.title = '';
+      if (!isAgeVerified) {
+        imgWrap.style.filter = 'blur(25px)';
+        imgWrap.style.setProperty('-webkit-filter', 'blur(25px)');
+        imgWrap.style.transition = 'filter 0.3s ease, -webkit-filter 0.3s ease';
+        imgWrap.title = 'תוכן מטושטש - יש לאשר גיל 18+ בסרגל הצד';
+      } else {
+        imgWrap.style.filter = 'none';
+        imgWrap.style.setProperty('-webkit-filter', 'none');
+        imgWrap.title = '';
+      }
     }
   });
 
   const allOutsideStoryMedia = mainContent.querySelectorAll('.stories-page .art-featured-card img, .stories-page .art-rec-img img, .stories-page .art-popular-item img');
   allOutsideStoryMedia.forEach(el => {
-    el.style.filter = 'none';
-    el.style.setProperty('-webkit-filter', 'none');
+    if (!isAgeVerified) {
+      el.style.filter = 'blur(25px)';
+      el.style.setProperty('-webkit-filter', 'blur(25px)');
+    } else {
+      el.style.filter = 'none';
+      el.style.setProperty('-webkit-filter', 'none');
+    }
   });
 
   artSyncPagination();
@@ -6324,6 +6405,25 @@ function renderPhotoCard(p, options = {}) {
   `;
 }
 
+// מספר הגלריות המוצגות בכל שורה לפני לחיצה על "עוד"
+const PHOTO_ROW_LIMIT = 8;
+
+function photoRowMoreBtn(count, rowId) {
+  if (count <= PHOTO_ROW_LIMIT) return '';
+  return `
+    <div class="photo-row-more-wrap" style="text-align:center; margin-top:16px;">
+      <button class="photo-more-btn" onclick="photoToggleRowMore('${rowId}', this)">עוד ▾</button>
+    </div>`;
+}
+
+function photoToggleRowMore(rowId, btn) {
+  const row = document.getElementById(rowId);
+  if (!row) return;
+  const expanded = row.classList.toggle('expanded');
+  btn.innerHTML = expanded ? 'פחות ▴' : 'עוד ▾';
+}
+window.photoToggleRowMore = photoToggleRowMore;
+
 function buildPhotosPage(albums) {
   // סינון גלריות זמניות שתוקפן פג (חולפו 24 שעות)
   const now = Date.now();
@@ -6486,42 +6586,33 @@ function buildPhotosPage(albums) {
           <div class="photo-section-row" style="margin-bottom: 32px; background: #ffffff; padding: 18px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
             <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:2.5px solid #2563eb; padding-bottom:10px; margin-bottom:18px;">
               <div>
-                <h3 style="margin:0; font-size:18px; font-weight:900; color:#1e3a8a; display:flex; align-items:center; gap:8px;">
-                  <span>🆕 שורה 1: מה חדש</span>
-                  <span style="font-size:12px; background:#2563eb; color:white; padding:3px 10px; border-radius:12px; font-weight:800;">החדשים ביותר</span>
-                </h3>
-                <div style="font-size:12.5px; color:#64748b; margin-top:3px; font-weight:600;">תמונות וגלריות שהועלו לאחרונה לאתר</div>
+                <h3 style="margin:0; font-size:18px; font-weight:900; color:#1e3a8a;">החדשים באתר</h3>
               </div>
             </div>
-            <div class="art-rows">${row1HTML}</div>
+            <div class="art-rows photo-collapsible" id="photo-row-1">${row1HTML}</div>
+            ${photoRowMoreBtn(newestAlbums.length, 'photo-row-1')}
           </div>
 
           <!-- שורה 2: בשבילך -->
           <div class="photo-section-row" style="margin-bottom: 32px; background: #ffffff; padding: 18px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
             <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:2.5px solid #7c3aed; padding-bottom:10px; margin-bottom:18px;">
               <div>
-                <h3 style="margin:0; font-size:18px; font-weight:900; color:#5b21b6; display:flex; align-items:center; gap:8px;">
-                  <span>✨ שורה 2: בשבילך</span>
-                  <span style="font-size:12px; background:#7c3aed; color:white; padding:3px 10px; border-radius:12px; font-weight:800;">המלצות נבחרות</span>
-                </h3>
-                <div style="font-size:12.5px; color:#64748b; margin-top:3px; font-weight:600;">גלריות ותכנים שנבחרו במיוחד בשבילך</div>
+                <h3 style="margin:0; font-size:18px; font-weight:900; color:#5b21b6;">רק בשבילך</h3>
               </div>
             </div>
-            <div class="art-rows">${row2HTML}</div>
+            <div class="art-rows photo-collapsible" id="photo-row-2">${row2HTML}</div>
+            ${photoRowMoreBtn(forYouAlbums.length, 'photo-row-2')}
           </div>
 
           <!-- שורה 3: הכי הרבה לייקים וצפיות -->
           <div class="photo-section-row" style="margin-bottom: 32px; background: #ffffff; padding: 18px; border-radius: 16px; border: 1px solid #fecdd3; box-shadow: 0 4px 15px rgba(225,29,72,0.05);">
             <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:2.5px solid #e11d48; padding-bottom:10px; margin-bottom:18px;">
               <div>
-                <h3 style="margin:0; font-size:18px; font-weight:900; color:#9f1239; display:flex; align-items:center; gap:8px;">
-                  <span>🔥 שורה 3: הכי הרבה לייקים וצפיות</span>
-                  <span style="font-size:12px; background:#e11d48; color:white; padding:3px 10px; border-radius:12px; font-weight:800;">הכי פופולרי</span>
-                </h3>
-                <div style="font-size:12.5px; color:#64748b; margin-top:3px; font-weight:600;">דירוג משוקלל בזמן אמת: כל קליק לצפייה = 1 נקודה | כל לייק = 1 נקודה</div>
+                <h3 style="margin:0; font-size:18px; font-weight:900; color:#9f1239;">הפופולארים</h3>
               </div>
             </div>
-            <div class="art-rows">${row3HTML}</div>
+            <div class="art-rows photo-collapsible" id="photo-row-3">${row3HTML}</div>
+            ${photoRowMoreBtn(mostPopularAlbums.length, 'photo-row-3')}
           </div>
 
           <div class="art-pagination" style="display:none"></div>
@@ -7434,16 +7525,28 @@ function photoApplyFilters() {
     // טשטוש דינמי לתמונות בגלריות בחוץ ברשימות ובגריד כשאין אישור V מעל גיל 18
     const imgWrap = r.querySelector('.art-row-img-wrap');
     if (imgWrap) {
-      imgWrap.style.filter = 'none';
-      imgWrap.style.setProperty('-webkit-filter', 'none');
-      imgWrap.title = '';
+      if (!isAgeVerified) {
+        imgWrap.style.filter = 'blur(25px)';
+        imgWrap.style.setProperty('-webkit-filter', 'blur(25px)');
+        imgWrap.style.transition = 'filter 0.3s ease, -webkit-filter 0.3s ease';
+        imgWrap.title = 'תוכן מטושטש - יש לאשר גיל 18+ בסרגל הצד';
+      } else {
+        imgWrap.style.filter = 'none';
+        imgWrap.style.setProperty('-webkit-filter', 'none');
+        imgWrap.title = '';
+      }
     }
   });
 
   const allOutsidePhotoMedia = mainContent.querySelectorAll('.photos-page .art-featured-card img, .photos-page .art-rec-img img, .photos-page .art-popular-item img, .photos-page .photo-mini-thumb');
   allOutsidePhotoMedia.forEach(el => {
-    el.style.filter = 'none';
-    el.style.setProperty('-webkit-filter', 'none');
+    if (!isAgeVerified) {
+      el.style.filter = 'blur(25px)';
+      el.style.setProperty('-webkit-filter', 'blur(25px)');
+    } else {
+      el.style.filter = 'none';
+      el.style.setProperty('-webkit-filter', 'none');
+    }
   });
 
   // כל שינוי בחיפוש או בקטגוריה מחזיר לעמוד הראשון של התוצאות
