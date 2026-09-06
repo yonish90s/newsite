@@ -6161,6 +6161,23 @@ function photoCurrentFilter(kind) {
 }
 
 function photoFilterBarHTML() {
+  // בורר גודל (מספר עמודות) — פתיחה באותו סגנון כמו שאר הפילטרים
+  if (photoOpenFilterGroup === 'size') {
+    return `
+      <div class="photo-filter-bar is-open" data-open="size">
+        <button type="button" class="photo-filter-back" onclick="photoToggleFilterGroup(null)" title="סגור">✕</button>
+        <span class="photo-filter-label">גודל</span>
+        <div class="photo-filter-group" data-kind="size">
+          ${[4, 3, 2].map(n => `
+            <button type="button"
+                    class="photo-tab-btn${photoGridCols === n ? ' active' : ''}"
+                    onclick="photoSetGridSize(${n})">${n}</button>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+
   const open = PHOTO_FILTER_GROUPS.find(g => g.kind === photoOpenFilterGroup);
 
   if (open) {
@@ -6195,6 +6212,11 @@ function photoFilterBarHTML() {
           </button>
         `;
       }).join('')}
+      <button type="button" class="photo-filter-trigger has-value" onclick="photoToggleFilterGroup('size')">
+        <span class="photo-filter-trigger-label">גודל</span>
+        <span class="photo-filter-trigger-value">${photoGridCols}</span>
+        <span class="photo-filter-caret" aria-hidden="true">▾</span>
+      </button>
       ${anySet ? `<button type="button" class="photo-filter-clear" onclick="photoClearFilters()">נקה הכל</button>` : ''}
     </div>
   `;
@@ -6739,7 +6761,7 @@ function buildPhotosPage(albums) {
   }).join('');
 
   const json = encodeURIComponent(JSON.stringify(albums));
-  return `<div class="articles-page photos-page" data-photos-json="${json}">
+  return `<div class="articles-page photos-page photo-cols-${photoGridCols}" data-photos-json="${json}">
     <div class="art-inner">
       <div class="art-featured-grid">${featuredHTML}</div>
       <div class="art-layout">
@@ -7695,6 +7717,26 @@ let currentPhotoAgeFilter = 'הכל';
 let currentPhotoRegionFilter = 'הכל';
 let currentPhotoDateFilter = 'הכל';
 let photoOpenFilterGroup = null;
+
+// גודל הגריד בעמוד התמונות (מספר עמודות: 2 / 3 / 4). נשמר בין ביקורים.
+let photoGridCols = (function () {
+  const v = parseInt(localStorage.getItem('photo_grid_cols') || '', 10);
+  return (v === 2 || v === 3 || v === 4) ? v : 4;
+})();
+
+function photoSetGridSize(n) {
+  if (![2, 3, 4].includes(n)) return;
+  photoGridCols = n;
+  try { localStorage.setItem('photo_grid_cols', String(n)); } catch (e) {}
+  const root = mainContent.querySelector('.photos-page');
+  if (root) {
+    root.classList.remove('photo-cols-2', 'photo-cols-3', 'photo-cols-4');
+    root.classList.add('photo-cols-' + n);
+  }
+  photoOpenFilterGroup = null;
+  photoRenderFilterBar();
+}
+window.photoSetGridSize = photoSetGridSize;
 
 // זמן היצירה של גלריה. גלריות חדשות שומרות createdAt מספרי; לישנות
 // נופלים לפרסור של התאריך המוצג (d.m.yyyy מ-toLocaleDateString בעברית).

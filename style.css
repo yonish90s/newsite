@@ -3631,6 +3631,11 @@ body:not(.edit-mode) .hidden-nav {
 .sidebar-tab-pill:hover { border-color: #e11d48; color: #e11d48; }
 .sidebar-tab-pill.active { background: #e11d48; color: #fff; border-color: #e11d48; }
 
+/* ===== בורר גודל גריד בעמוד התמונות (2 / 3 / 4 עמודות) ===== */
+.photos-page.photo-cols-2 .art-rows { grid-template-columns: repeat(2, 1fr) !important; }
+.photos-page.photo-cols-3 .art-rows { grid-template-columns: repeat(3, 1fr) !important; }
+.photos-page.photo-cols-4 .art-rows { grid-template-columns: repeat(4, 1fr) !important; }
+
 /* ============================================================
    טשטוש תוכן כשלא אושר גיל 18+ (מבפנים ומבחוץ)
    מופעל ע"י class על <html> ולכן חל על כל תוכן שמרונדר מחדש
