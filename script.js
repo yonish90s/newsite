@@ -6405,8 +6405,8 @@ function renderPhotoCard(p, options = {}) {
   `;
 }
 
-// מספר הגלריות המוצגות בכל שורה לפני לחיצה על "עוד"
-const PHOTO_ROW_LIMIT = 8;
+// מספר הגלריות המוצגות בכל שורה לפני לחיצה על "עוד" (שורת גריד אחת = 4 עמודות)
+const PHOTO_ROW_LIMIT = 4;
 
 function photoRowMoreBtn(count, rowId) {
   if (count <= PHOTO_ROW_LIMIT) return '';

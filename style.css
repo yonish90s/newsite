@@ -3587,7 +3587,7 @@ body:not(.edit-mode) .hidden-nav {
 /* ============================================================
    כפתור "עוד" והרחבת שורות גלריה בעמוד התמונות
    ============================================================ */
-.photos-page .art-rows.photo-collapsible:not(.expanded) > .art-row:nth-child(n+9) {
+.photos-page .art-rows.photo-collapsible:not(.expanded) > .art-row:nth-child(n+5) {
   display: none !important;
 }
 .photo-more-btn {
