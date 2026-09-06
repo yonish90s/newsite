@@ -6350,12 +6350,7 @@ function renderPhotoCard(p, options = {}) {
     </div>
   `;
 
-  const scoreBadgeHTML = options.showScoreBadge ? `
-    <div style="display:inline-flex; align-items:center; gap:8px; background:linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%); border:1px solid #fecdd3; padding:4px 10px; border-radius:20px; font-size:12px; font-weight:800; color:#e11d48; margin-top:6px; flex-wrap:wrap;">
-      <span>🔥 סה"כ ${totalScore} נקודות</span>
-      <span style="color:#9f1239; font-weight:700;">(👁️ ${viewsCount} צפיות | ❤️ ${likesCount} לייקים)</span>
-    </div>
-  ` : `
+  const scoreBadgeHTML = `
     <div style="display:inline-flex; align-items:center; gap:8px; font-size:12px; color:#64748b; font-weight:700; margin-top:4px;">
       <span>👁️ ${viewsCount} צפיות</span>
       <span>·</span>
