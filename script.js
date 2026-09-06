@@ -355,6 +355,12 @@ function sanitizeToOnlyPhotosAndStories() {
   // מסירים עמודי תמונות/סיפורים כפולים (משאירים את זה עם התוכן)
   pages = dedupePageList(pages);
 
+  // לפי בקשת המשתמש: משאירים רק עמודי תמונות וסיפורים (מוחקים כתבות/קהילה וכל עמוד אחר).
+  // מסננים רק כשקיים לפחות עמוד תמונות/סיפורים אחד, כדי לא לרוקן אתר תקין בטעות.
+  if (pages.some(p => p && ((p.content || '').includes('photos-page') || (p.content || '').includes('stories-page')))) {
+    pages = pages.filter(p => p && ((p.content || '').includes('photos-page') || (p.content || '').includes('stories-page')));
+  }
+
   // בוטסטראפ של עמודי ברירת המחדל (תמונות + סיפורים) רק כאשר אין אף עמוד באתר.
   // כך המנהל יכול למחוק עמודים לצמיתות מבלי שהם ייווצרו מחדש בכל שמירה.
   if (pages.length === 0) {
@@ -9551,6 +9557,10 @@ onValue(ref(db, 'website'), (snapshot) => {
     let pList = data.pages.filter(p => p && p.id !== 'page-ci' && p.id !== 'page-em' && !p.title?.includes('ריבית') && !p.title?.includes('Everything'));
     // מסירים עמודי תמונות/סיפורים כפולים (למשל עמוד סיפורים ריק) — משאירים את זה עם התוכן
     pList = dedupePageList(pList);
+    // משאירים רק עמודי תמונות וסיפורים (מוחקים כתבות/קהילה וכל עמוד אחר)
+    if (pList.some(p => p && ((p.content || '').includes('photos-page') || (p.content || '').includes('stories-page')))) {
+      pList = pList.filter(p => p && ((p.content || '').includes('photos-page') || (p.content || '').includes('stories-page')));
+    }
     if (JSON.stringify(pages) !== JSON.stringify(pList)) {
       pages = pList;
       changed = true;
