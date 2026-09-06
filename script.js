@@ -904,7 +904,7 @@ function renderPage() {
     }
 
     // עמוד תמונות: בונים מחדש מנתוני הגלריות
-    const isPhotosPage = (currentPage && (currentPage.id === 'page-photos-main' || (currentPage.title && currentPage.title.includes('תמונות')))) || mainContent.querySelector('.photos-page');
+    const isPhotosPage = (currentPage && (currentPage.id === 'page-photos-main' || (currentPage.title && currentPage.title.includes('תמונות')))) || mainContent.querySelector('.photos-page:not(.community-page):not(.user-page)');
     if (isPhotosPage && typeof buildPhotosPage === 'function') {
       const albums = photoGetAlbums();
       mainContent.innerHTML = buildPhotosPage(albums);
@@ -1428,6 +1428,11 @@ function artLightenContent(content) {
 
 // שומר את התוכן הערוך (בגרסה קלה) למערך ואז ל-localforage ול-Firebase
 function saveCurrentPageContent() {
+  // הגנה קריטית מפני אובדן מידע: כאשר מוצג עמוד זמני (קהילה/עמוד משתמש) — שאינו
+  // העמוד הפעיל האמיתי — אסור לשמור את תוכנו על העמוד הפעיל (למשל דריסת עמוד התמונות).
+  if (typeof mainContent !== 'undefined' && mainContent && mainContent.querySelector('.community-page, .user-page')) {
+    return;
+  }
   // קודם נוריד את מצב העריכה ואת סימוני הבחירה של הגרירה (כדי שהם לא יישמרו לקוד הסטטי!)
   removeEditModeFromContent();
   if (typeof removeSelection === 'function') removeSelection();
@@ -7140,7 +7145,8 @@ function buildPhotosPage(albums) {
 
 function photoOpenDetail(id) {
   photoIncrementViews(id);
-  const container = mainContent.querySelector('.photos-page');
+  // תומך גם בעמוד קהילה ובעמוד משתמש (שמכילים data-photos-json משלהם)
+  const container = mainContent.querySelector('.photos-page, .community-page, .user-page');
   if (!container) return;
   let albums = [];
   try { albums = JSON.parse(decodeURIComponent(container.dataset.photosJson)); } catch(e){ return; }
@@ -7484,7 +7490,7 @@ function buildUserPageHTML(authorId, authorName) {
   const json = encodeURIComponent(JSON.stringify(albums));
   const initial = artEsc(String(authorName || '?').charAt(0) || '?');
   return `
-  <div class="articles-page photos-page user-page" data-photos-json="${json}">
+  <div class="articles-page photos-page user-page photo-cols-${typeof photoGridCols !== 'undefined' ? photoGridCols : 4}" data-photos-json="${json}">
     <div class="art-inner">
       <button onclick="goBackFromUserPage()" style="background:#f1f5f9; border:1px solid #cbd5e1; border-radius:8px; padding:8px 16px; font-size:13px; font-weight:800; cursor:pointer; margin-bottom:16px; color:#334155;">← חזרה</button>
       <div style="background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:20px; margin-bottom:24px; display:flex; align-items:center; gap:16px; box-shadow:0 4px 15px rgba(0,0,0,0.03); direction:rtl;">
@@ -7558,7 +7564,8 @@ function photoGoBack() {
 }
 
 function photoGetAlbums() {
-  const container = mainContent.querySelector('.photos-page');
+  // חשוב: לא לקרוא מנתוני עמוד קהילה/משתמש (שגם מסומנים photos-page) כדי לא לדרוס את התמונות
+  const container = mainContent.querySelector('.photos-page:not(.community-page):not(.user-page)');
   if (container && container.dataset.photosJson) {
     try {
       const parsed = JSON.parse(decodeURIComponent(container.dataset.photosJson));

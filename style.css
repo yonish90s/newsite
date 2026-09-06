@@ -1996,7 +1996,9 @@ body:not(.edit-mode) .hotspot-delete-btn {
 /* ===== גריד כרטיסים בעמודי תמונות וסיפורים: 3 בשורה במקום שורה אחת לכל פריט ===== */
 /* מבנה ה-DOM הוא טקסט ואז תמונה, ולכן column-reverse מציב את התמונה בראש הכרטיס */
 .photos-page .art-rows,
-.stories-page .art-rows {
+.stories-page .art-rows,
+.community-page .art-rows,
+.user-page .art-rows {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 14px;
@@ -2005,7 +2007,9 @@ body:not(.edit-mode) .hotspot-delete-btn {
   padding: 0;
 }
 .photos-page .art-row,
-.stories-page .art-row {
+.stories-page .art-row,
+.community-page .art-row,
+.user-page .art-row {
   flex-direction: column-reverse;
   justify-content: flex-end;
   align-items: stretch;
