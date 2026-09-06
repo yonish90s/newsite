@@ -6565,6 +6565,161 @@ function buildQuickUploadBox() {
 }
 
 // ============================================================
+// צ'אט מהיר לפרסום מודעה — עוזר מונחה (זרימה מודרכת: כותרת → תמונות → תיאור → פרסום)
+// ============================================================
+let qpStep = 'title';
+let qpData = { title: '', images: [], summary: '' };
+
+function qpEnsureModal() {
+  let modal = document.getElementById('quick-publish-modal');
+  if (modal) return modal;
+  modal = document.createElement('div');
+  modal.id = 'quick-publish-modal';
+  modal.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999999; align-items:center; justify-content:center; direction:rtl; padding:16px; font-family:system-ui,sans-serif;';
+  modal.innerHTML = `
+    <div style="background:#fff; border-radius:18px; width:100%; max-width:460px; height:80vh; max-height:640px; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 25px 60px rgba(0,0,0,0.35);">
+      <div style="background:#1a1a1a; color:#fff; padding:16px 18px; display:flex; align-items:center; gap:12px;">
+        <div style="width:44px; height:44px; border-radius:50%; background:#22c55e; display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0;">🤖</div>
+        <div style="flex:1; min-width:0;">
+          <div style="font-size:16px; font-weight:900;">עוזר לפרסום מודעה מהיר</div>
+          <div style="font-size:12px; color:#9ca3af;">🟢 זמין כעת · פרסום ב-30 שניות</div>
+        </div>
+        <button onclick="document.getElementById('quick-publish-modal').style.display='none'" style="background:rgba(255,255,255,0.12); border:none; color:#fff; width:30px; height:30px; border-radius:50%; cursor:pointer; font-size:16px; flex-shrink:0;">✕</button>
+      </div>
+      <div id="qp-messages" style="flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:12px; background:#f7f7f8;"></div>
+      <div style="display:flex; gap:8px; padding:12px; border-top:1px solid #eee; background:#fff; align-items:center;">
+        <button onclick="qpAddImage()" title="הוסף תמונה" style="width:40px; height:40px; border-radius:50%; background:#f1f5f9; border:1px solid #e2e8f0; cursor:pointer; font-size:18px; flex-shrink:0;">📷</button>
+        <input id="qp-input" type="text" placeholder="הקלד תשובה לבוט..." onkeydown="if(event.key==='Enter'){event.preventDefault(); qpHandleSend();}" style="flex:1; padding:11px 14px; border:1px solid #ddd; border-radius:22px; font-size:14px; outline:none; box-sizing:border-box;">
+        <button onclick="qpHandleSend()" style="width:44px; height:44px; border-radius:50%; background:#22c55e; border:none; color:#fff; cursor:pointer; font-size:18px; flex-shrink:0;">➤</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  return modal;
+}
+
+function qpBubble(role, html) {
+  const box = document.getElementById('qp-messages');
+  if (!box) return;
+  const mine = role === 'user';
+  const wrap = document.createElement('div');
+  wrap.style.cssText = `display:flex; justify-content:${mine ? 'flex-start' : 'flex-end'};`;
+  wrap.innerHTML = `<div style="max-width:82%; background:${mine ? '#22c55e' : '#fff'}; color:${mine ? '#fff' : '#111'}; padding:10px 14px; border-radius:14px; font-size:14px; line-height:1.5; box-shadow:0 1px 3px rgba(0,0,0,0.08); ${mine ? 'border-bottom-right-radius:4px;' : 'border-bottom-left-radius:4px;'} word-break:break-word;">${html}</div>`;
+  box.appendChild(wrap);
+  box.scrollTop = box.scrollHeight;
+}
+
+function openQuickPublish() {
+  if (!auth.currentUser) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
+  qpEnsureModal();
+  qpStep = 'title';
+  qpData = { title: '', images: [], summary: '' };
+  document.getElementById('qp-messages').innerHTML = '';
+  document.getElementById('quick-publish-modal').style.display = 'flex';
+  qpBubble('bot', 'שלום! 🤖 אני העוזר לפרסום מהיר.<br>בוא נפרסם מודעה חדשה יחד ב-30 שניות! 🚀<br><br><b>מה שם המוצר או כותרת המודעה שברצונך לפרסם?</b>');
+  setTimeout(() => { const i = document.getElementById('qp-input'); if (i) i.focus(); }, 100);
+}
+window.openQuickPublish = openQuickPublish;
+
+function qpHandleSend() {
+  const inp = document.getElementById('qp-input');
+  if (!inp) return;
+  const text = inp.value.trim();
+
+  if (qpStep === 'title') {
+    if (!text) return;
+    inp.value = '';
+    qpData.title = text.slice(0, 120);
+    qpBubble('user', artEsc(qpData.title));
+    qpStep = 'images';
+    qpBubble('bot', 'מעולה! 📸 עכשיו הוסף תמונות למודעה (עד 5) בלחיצה על כפתור המצלמה 📷.<br>כשסיימת — כתוב <b>המשך</b>.');
+  } else if (qpStep === 'images') {
+    if (text === 'המשך' || text === 'סיום') {
+      inp.value = '';
+      if (qpData.images.length === 0) { qpBubble('bot', 'צריך לפחות תמונה אחת 🙂 לחץ על 📷 להוספה.'); return; }
+      qpStep = 'summary';
+      qpBubble('bot', 'רוצה להוסיף תיאור קצר? כתוב אותו עכשיו, או כתוב <b>דלג</b>.');
+    } else if (text) {
+      inp.value = '';
+      qpBubble('bot', 'הוסף תמונות עם 📷, וכשתסיים כתוב <b>המשך</b>.');
+    }
+  } else if (qpStep === 'summary') {
+    inp.value = '';
+    if (text && text !== 'דלג') { qpData.summary = text.slice(0, 300); qpBubble('user', artEsc(qpData.summary)); }
+    else qpBubble('user', 'דלג');
+    qpStep = 'done';
+    qpPublish();
+  }
+}
+window.qpHandleSend = qpHandleSend;
+
+function qpAddImage() {
+  if (qpData.images.length >= 5) { qpBubble('bot', 'הגעת למקסימום של 5 תמונות.'); return; }
+  const inp = document.createElement('input');
+  inp.type = 'file';
+  inp.accept = 'image/*';
+  inp.onchange = e => {
+    const f = e.target.files[0];
+    if (!f) return;
+    (typeof artCompressImage === 'function' ? artCompressImage(f) : Promise.resolve('')).then(data => {
+      if (!data) return;
+      qpData.images.push(data);
+      qpBubble('user', `<img src="${data}" style="width:130px; height:95px; object-fit:cover; border-radius:8px; display:block;">`);
+      qpBubble('bot', `נוספה תמונה (${qpData.images.length}/5). הוסף עוד, או כתוב <b>המשך</b> לפרסום.`);
+    });
+  };
+  inp.click();
+}
+window.qpAddImage = qpAddImage;
+
+async function qpPublish() {
+  qpBubble('bot', '⏳ מפרסם את המודעה...');
+  const user = auth.currentUser;
+  let nickname = 'משתמש', email = '', telegram = '';
+  if (user) {
+    try {
+      const p = JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}');
+      nickname = p.nickname || user.displayName || (user.email ? user.email.split('@')[0] : 'משתמש');
+      email = p.email || user.email || '';
+      telegram = p.telegram ? String(p.telegram).replace(/^@/, '') : '';
+    } catch (e) { nickname = user.displayName || 'משתמש'; }
+  }
+  const isAdminNow = (typeof isEditMode !== 'undefined' && isEditMode);
+  const album = {
+    id: 'ph' + Date.now(),
+    title: qpData.title,
+    summary: qpData.summary,
+    images: qpData.images.slice(0, 5),
+    author: nickname,
+    authorId: user ? user.uid : '',
+    category: 'כללי',
+    ageRange: '',
+    region: '',
+    categoryColor: '#10b981',
+    timestamp: new Date().toLocaleDateString('he-IL'),
+    createdAt: Date.now(),
+    telegramUrl: telegram ? ('https://t.me/' + telegram) : '',
+    emailUrl: email ? ('mailto:' + email) : '',
+    isAdult: false,
+    adminOnly: false,
+    expiresAt: null,
+    approved: isAdminNow
+  };
+  try {
+    const albums = photoGetAlbums();
+    albums.unshift(album);
+    mainContent.innerHTML = buildPhotosPage(albums);
+    if (typeof saveCurrentPageContent === 'function') saveCurrentPageContent();
+    qpBubble('bot', '✅ המודעה פורסמה בהצלחה!' + (isAdminNow ? '' : '<br>היא ממתינה לאישור מנהל ותופיע בקרוב.'));
+    setTimeout(() => { const m = document.getElementById('quick-publish-modal'); if (m) m.style.display = 'none'; }, 2000);
+  } catch (e) {
+    console.error('quick publish failed', e);
+    qpBubble('bot', '❌ שגיאה בפרסום. נסה שוב מאוחר יותר.');
+  }
+}
+window.qpPublish = qpPublish;
+
+// ============================================================
 // סרגל צד מאוחד עם טאבים (pills) — כל הקופסאות במקום אחד, מדפדפים ביניהן
 // ============================================================
 let activeSidebarTab = 'chat';
@@ -6573,6 +6728,13 @@ function buildSidebarTabs(savedHTML) {
   const uploadHtml = (buildQuickUploadBox() || '') + (savedHTML || '');
   const tabs = [
     { id: 'chat',      label: '💬 צ׳אט',   html: buildLiveChatBox() },
+    { id: 'publish',   label: '🤖 פרסום',  html: `
+      <div class="art-sidebar-box" style="text-align:center; padding:18px; border:1.5px solid #22c55e; background:rgba(34,197,94,0.04); border-radius:12px;">
+        <div style="font-size:15px; font-weight:900; color:#166534; margin-bottom:6px;">🤖 פרסום מודעה מהיר</div>
+        <div style="font-size:12px; color:#64748b; margin-bottom:12px; line-height:1.45;">עוזר מונחה שיפרסם עבורך מודעה חדשה בצ׳אט תוך 30 שניות</div>
+        <button onclick="openQuickPublish()" style="width:100%; background:linear-gradient(135deg,#22c55e,#16a34a); color:#fff; border:none; border-radius:10px; padding:12px; font-size:14px; font-weight:800; cursor:pointer; box-shadow:0 3px 10px rgba(34,197,94,0.3);">🤖 צ׳אט מהיר לפרסום מודעה</button>
+      </div>
+    ` },
     { id: 'event',     label: '🎉 אירוע',  html: buildEventsSidebarBox() },
     { id: 'age',       label: '🔞 18+',    html: buildAgeFilterSidebarBox() },
     { id: 'upload',    label: '⚡ העלאה',  html: uploadHtml || '<div style="text-align:center;color:#94a3b8;font-size:13px;padding:20px;">אין פעולות העלאה זמינות</div>' },
