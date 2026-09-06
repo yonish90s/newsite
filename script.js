@@ -5527,6 +5527,15 @@ function storySetGridSize(n) {
 }
 window.storySetGridSize = storySetGridSize;
 
+// כפתור "עוד" לסיפורים — מציג שורת גריד אחת, ובלחיצה חושף את הכל (כמו בתמונות)
+function storyRowMoreBtn(count, rowId) {
+  if (count <= storyGridCols) return '';
+  return `
+    <div class="photo-row-more-wrap" style="text-align:center; margin-top:16px;">
+      <button class="photo-more-btn" onclick="photoToggleRowMore('${rowId}', this)">עוד</button>
+    </div>`;
+}
+
 // שורת סינון קטגוריות לסיפורים (בחירה מרובה)
 function storyCatIsActive(c) {
   return c === 'הכל' ? selectedStoryCategories.size === 0 : selectedStoryCategories.has(c);
@@ -5665,20 +5674,17 @@ function buildStoriesPage(stories) {
             ${storySizeBarHTML()}
           </div>
           ${storyCategoryBarHTML()}
-          <div class="art-rows">${listHTML}</div>
+          <div class="art-rows photo-collapsible" id="story-row-main">${listHTML}</div>
+          ${storyRowMoreBtn(stories.length, 'story-row-main')}
           <div class="art-pagination" style="display:none"></div>
           <div class="art-no-results" style="display:none">לא נמצאו סיפורים התואמים לחיפוש</div>
           <button class="art-add-btn" onclick="openStoryModal()" style="background:#8b5cf6">+ הוסף סיפור חדש</button>
         </div>
         <div class="art-sidebar">
-          ${buildAgeFilterSidebarBox()}
-          ${buildEventsSidebarBox()}
-          ${buildPromotedSitesBox()}
-          <div class="art-sidebar-box art-popular-box">
-            <div class="art-sidebar-title">הסיפורים הנקראים ביותר</div>
-            ${popularHTML}
-          </div>
-          ${buildSocialCommunityBox()}
+          ${(isAdmin() || isEditMode) ? `
+          <button onclick="openStoryModal()" style="background:#8b5cf6; width:100%; padding:12px 16px; border-radius:8px; border:none; color:white; font-weight:bold; font-size:14px; cursor:pointer; margin-bottom:16px;">+ הוסף סיפור חדש</button>
+          ` : ''}
+          ${buildSidebarTabs('')}
         </div>
       </div>
     </div>

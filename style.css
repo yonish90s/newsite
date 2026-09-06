@@ -3590,6 +3590,10 @@ body:not(.edit-mode) .hidden-nav {
 .photos-page .art-rows.photo-collapsible:not(.expanded) > .art-row:nth-child(n+5) {
   display: none !important;
 }
+/* קיפול שורת סיפורים לפי מספר העמודות שנבחר (שורה אחת) */
+.stories-page.story-cols-2 .art-rows.photo-collapsible:not(.expanded) > .art-row:nth-child(n+3) { display: none !important; }
+.stories-page.story-cols-3 .art-rows.photo-collapsible:not(.expanded) > .art-row:nth-child(n+4) { display: none !important; }
+.stories-page.story-cols-4 .art-rows.photo-collapsible:not(.expanded) > .art-row:nth-child(n+5) { display: none !important; }
 .photo-more-btn {
   background: #eef2ff;
   color: #1e3a8a;
