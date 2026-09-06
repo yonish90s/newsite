@@ -6344,7 +6344,7 @@ function renderPhotoCard(p, options = {}) {
     <div class="art-row-text photo-card-info">
       <h3>${p.title}</h3>
       <div class="art-row-meta" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-        <span class="photo-author-link" onclick="event.stopPropagation(); openUserProfile('${artEsc(p.authorId || '')}', '${artEsc(p.author)}')" style="cursor: pointer; color: #e11d48; text-decoration: underline; font-weight: 600;">${p.author}</span>
+        <span class="photo-author-link" onclick="event.stopPropagation(); openUserPage('${artEsc(p.authorId || '')}', '${artEsc(p.author)}')" style="cursor: pointer; color: #e11d48; text-decoration: underline; font-weight: 600;">${p.author}</span>
         <span class="art-row-sep">|</span>
         <span>${p.timestamp}</span>
       </div>
@@ -7080,6 +7080,74 @@ async function openUserProfile(authorId, authorFallbackName) {
   }
 }
 window.openUserProfile = openUserProfile;
+
+// ============================================================
+// עמוד משתמש מלא (במקום מודל "עמוד בתוך עמוד") — כל הגלריות שהעלה, בגריד כמו בתמונות
+// ============================================================
+function buildUserPageHTML(authorId, authorName) {
+  const albums = photoGetAlbums();
+  const _isAdminView = (typeof isAdmin === 'function' && isAdmin()) || (typeof isEditMode !== 'undefined' && isEditMode);
+  const now = Date.now();
+  const authorAlbums = albums.filter(a => {
+    const matchesId = authorId && a.authorId === authorId;
+    const matchesName = a.author && authorName && a.author.toLowerCase() === String(authorName).toLowerCase();
+    const isAuthor = (a.authorId && authorId) ? matchesId : matchesName;
+    return isAuthor && a.approved !== false && (!a.adminOnly || _isAdminView) && (!a.expiresAt || a.expiresAt > now);
+  });
+  const cards = authorAlbums.map(p => renderPhotoCard(p)).join('');
+  const json = encodeURIComponent(JSON.stringify(albums));
+  const initial = artEsc(String(authorName || '?').charAt(0) || '?');
+  return `
+  <div class="articles-page photos-page user-page" data-photos-json="${json}">
+    <div class="art-inner">
+      <button onclick="goBackFromUserPage()" style="background:#f1f5f9; border:1px solid #cbd5e1; border-radius:8px; padding:8px 16px; font-size:13px; font-weight:800; cursor:pointer; margin-bottom:16px; color:#334155;">← חזרה</button>
+      <div style="background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:20px; margin-bottom:24px; display:flex; align-items:center; gap:16px; box-shadow:0 4px 15px rgba(0,0,0,0.03); direction:rtl;">
+        <div style="width:56px; height:56px; border-radius:50%; background:linear-gradient(135deg,#e11d48,#9f1239); color:#fff; display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:900; flex-shrink:0;">${initial}</div>
+        <div style="flex:1; min-width:0;">
+          <div id="user-page-name" style="font-size:20px; font-weight:900; color:#0f172a;">${artEsc(authorName || 'משתמש')}</div>
+          <div id="user-page-meta" style="font-size:13px; color:#64748b; margin-top:2px;">📷 ${authorAlbums.length} גלריות שהועלו</div>
+          <div id="user-page-contact" style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;"></div>
+        </div>
+      </div>
+      <div class="art-rows">${cards || '<div style="grid-column:1/-1; text-align:center; color:#94a3b8; padding:40px; font-weight:700;">אין גלריות להצגה עבור משתמש זה</div>'}</div>
+    </div>
+  </div>`;
+}
+
+async function openUserPage(authorId, authorName) {
+  if (typeof mainContent === 'undefined' || !mainContent) return;
+  mainContent.innerHTML = buildUserPageHTML(authorId, authorName);
+  try { window.scrollTo(0, 0); } catch (e) {}
+  if (typeof photoApplyFilters === 'function') photoApplyFilters();
+
+  if (!authorId) return;
+  try {
+    const snap = await get(ref(db, `website/users/${authorId}/profile`));
+    if (!snap.exists()) return;
+    const profile = snap.val();
+    const nameEl = document.getElementById('user-page-name');
+    if (nameEl && profile.nickname) nameEl.textContent = profile.nickname;
+    const contactEl = document.getElementById('user-page-contact');
+    if (contactEl) {
+      let html = '';
+      if (profile.telegram) {
+        const tg = String(profile.telegram).replace(/^@/, '');
+        html += `<a href="https://t.me/${artEsc(tg)}" target="_blank" style="display:inline-flex; align-items:center; gap:4px; background:#2f2f2f; color:#fff; padding:5px 10px; border-radius:6px; font-size:12px; font-weight:800; text-decoration:none;">✈️ טלגרם</a>`;
+      }
+      if (profile.email) {
+        html += `<button type="button" onclick="copyEmailToClipboard('${artEsc(profile.email)}', event)" style="display:inline-flex; align-items:center; gap:4px; background:#2f2f2f; color:#fff; padding:5px 10px; border-radius:6px; font-size:12px; font-weight:800; border:none; cursor:pointer;">✉️ אימייל</button>`;
+      }
+      contactEl.innerHTML = html;
+    }
+  } catch (e) { /* פרופיל לא זמין — משאירים את שם היוצר */ }
+}
+window.openUserPage = openUserPage;
+
+// חזרה מעמוד המשתמש אל העמוד הנוכחי (renderPage מודולרית, לכן חושפים עוטף גלובלי)
+function goBackFromUserPage() {
+  if (typeof renderPage === 'function') renderPage();
+}
+window.goBackFromUserPage = goBackFromUserPage;
 
 function photoGoBack() {
   const container = mainContent.querySelector('.photos-page');
@@ -8799,7 +8867,7 @@ function renderCommunityPostsList() {
             ${typeBadge}
             <h3 style="margin:0 0 4px 0; font-size:18px; font-weight:800; color:#111;">${p.title}</h3>
             <div style="font-size:12px; color:#6b7280; display:flex; align-items:center; gap:8px;">
-              <span class="photo-author-link" onclick="event.stopPropagation(); openUserProfile('${artEsc(p.authorId || '')}', '${artEsc(p.author)}')" style="cursor:pointer; color:#ec4899; text-decoration:underline; font-weight:700;">👤 ${p.author}</span>
+              <span class="photo-author-link" onclick="event.stopPropagation(); openUserPage('${artEsc(p.authorId || '')}', '${artEsc(p.author)}')" style="cursor:pointer; color:#ec4899; text-decoration:underline; font-weight:700;">👤 ${p.author}</span>
               <span>·</span>
               <span>🕒 ${formattedDate}</span>
             </div>
@@ -8842,7 +8910,7 @@ function renderCommunityPostsList() {
               return `
                 <div style="border-bottom:1px solid #f1f2f4; padding-bottom:8px; margin-bottom:8px; &:last-child { border:none; padding-bottom:0; margin-bottom:0; }">
                   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                    <span class="photo-author-link" onclick="openUserProfile('${artEsc(c.authorId || '')}', '${artEsc(c.author)}')" style="font-size:12px; font-weight:800; color:#ec4899; cursor:pointer; text-decoration:underline;">${c.author}</span>
+                    <span class="photo-author-link" onclick="openUserPage('${artEsc(c.authorId || '')}', '${artEsc(c.author)}')" style="font-size:12px; font-weight:800; color:#ec4899; cursor:pointer; text-decoration:underline;">${c.author}</span>
                     <span style="font-size:10px; color:#9ca3af;">${cDate}</span>
                   </div>
                   <p style="margin:0; font-size:13.5px; color:#4b5563; line-height:1.5;">${c.body}</p>
