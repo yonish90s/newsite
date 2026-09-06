@@ -6542,6 +6542,51 @@ function buildQuickUploadBox() {
   `;
 }
 
+// ============================================================
+// סרגל צד מאוחד עם טאבים (pills) — כל הקופסאות במקום אחד, מדפדפים ביניהן
+// ============================================================
+let activeSidebarTab = 'chat';
+
+function buildSidebarTabs(savedHTML) {
+  const uploadHtml = (buildQuickUploadBox() || '') + (savedHTML || '');
+  const tabs = [
+    { id: 'chat',      label: '💬 צ׳אט',   html: buildLiveChatBox() },
+    { id: 'event',     label: '🎉 אירוע',  html: buildEventsSidebarBox() },
+    { id: 'age',       label: '🔞 18+',    html: buildAgeFilterSidebarBox() },
+    { id: 'upload',    label: '⚡ העלאה',  html: uploadHtml || '<div style="text-align:center;color:#94a3b8;font-size:13px;padding:20px;">אין פעולות העלאה זמינות</div>' },
+    { id: 'sites',     label: '🌐 אתרים',  html: buildPromotedSitesBox() },
+    { id: 'community', label: '👥 קהילה',  html: (typeof buildSocialCommunityBox === 'function' ? buildSocialCommunityBox() : '') },
+  ];
+  if (!tabs.some(t => t.id === activeSidebarTab)) activeSidebarTab = 'chat';
+
+  const pills = tabs.map(t =>
+    `<button class="sidebar-tab-pill${t.id === activeSidebarTab ? ' active' : ''}" onclick="sidebarShowTab('${t.id}', this)">${t.label}</button>`
+  ).join('');
+  const panels = tabs.map(t =>
+    `<div class="sidebar-tab-panel" data-tab="${t.id}" style="display:${t.id === activeSidebarTab ? 'block' : 'none'};">${t.html}</div>`
+  ).join('');
+
+  return `
+    <div class="sidebar-tabs-wrap">
+      <div class="sidebar-tabs-pills">${pills}</div>
+      <div class="sidebar-tabs-panels">${panels}</div>
+    </div>
+  `;
+}
+
+function sidebarShowTab(id, btn) {
+  activeSidebarTab = id;
+  const wrap = btn.closest('.sidebar-tabs-wrap');
+  if (!wrap) return;
+  wrap.querySelectorAll('.sidebar-tab-pill').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  wrap.querySelectorAll('.sidebar-tab-panel').forEach(panel => {
+    panel.style.display = panel.dataset.tab === id ? 'block' : 'none';
+  });
+  if (id === 'chat' && typeof renderLiveChatMessages === 'function') renderLiveChatMessages();
+}
+window.sidebarShowTab = sidebarShowTab;
+
 function buildPhotosPage(albums) {
   // סינון גלריות זמניות שתוקפן פג (חולפו 24 שעות)
   const now = Date.now();
@@ -6731,9 +6776,6 @@ function buildPhotosPage(albums) {
           ${(isAdmin() || isEditMode) ? `<button class="art-add-btn" onclick="openPhotoModal()" style="background:#e11d48">+ הוסף עיצוב אתר חדש</button>` : ''}
         </div>
         <div class="art-sidebar">
-          ${buildAgeFilterSidebarBox()}
-          ${buildEventsSidebarBox()}
-          ${buildQuickUploadBox()}
           ${(isAdmin() || isEditMode) ? `
           <button onclick="openPhotoModal()" style="background:#e11d48; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: white; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.2s;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
@@ -6743,10 +6785,7 @@ function buildPhotosPage(albums) {
             העלאת אתר מעוצב לאתר
           </button>
           ` : ''}
-          ${buildPromotedSitesBox()}
-          ${savedHTML}
-          ${buildLiveChatBox()}
-          ${buildSocialCommunityBox()}
+          ${buildSidebarTabs(savedHTML)}
         </div>
       </div>
     </div>
