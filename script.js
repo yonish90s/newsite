@@ -334,35 +334,18 @@ const BOOT_FETCH_TIMEOUT_MS = 4000;
 
 function sanitizeToOnlyPhotosAndStories() {
   if (!Array.isArray(pages)) pages = [];
-  
+
   // מסננים עמודי מחשבונים ישנים בלבד (ריבית דריבית ו-Everything Money)
   pages = pages.filter(p => p && p.id !== 'page-ci' && p.id !== 'page-em' && !p.title?.includes('ריבית') && !p.title?.includes('Everything'));
 
-  let photoPage = pages.find(p => p && p.content && p.content.includes('photos-page'));
-  if (!photoPage) {
-    photoPage = pages.find(p => p && p.title && (p.title.includes('תמונות') || p.title.toLowerCase().includes('photo')));
-  }
-  if (!photoPage) {
-    const pId = 'page-photos-main';
-    photoPage = { id: pId, title: 'תמונות 🖼️', content: typeof buildPhotosPage === 'function' ? buildPhotosPage(typeof PHOTOS_SAMPLES !== 'undefined' ? PHOTOS_SAMPLES : []) : '' };
-    pages.unshift(photoPage);
-  } else {
-    photoPage.title = 'תמונות 🖼️';
+  // בוטסטראפ של עמודי ברירת המחדל (תמונות + סיפורים) רק כאשר אין אף עמוד באתר.
+  // כך המנהל יכול למחוק עמודים לצמיתות מבלי שהם ייווצרו מחדש בכל שמירה.
+  if (pages.length === 0) {
+    pages.push({ id: 'page-photos-main', title: 'תמונות 🖼️', content: typeof buildPhotosPage === 'function' ? buildPhotosPage(typeof PHOTOS_SAMPLES !== 'undefined' ? PHOTOS_SAMPLES : []) : '' });
+    pages.push({ id: 'page-stories-main', title: 'סיפורים', content: typeof buildStoriesPage === 'function' ? buildStoriesPage(typeof STORIES_SAMPLES !== 'undefined' ? STORIES_SAMPLES : []) : '' });
   }
 
-  let storyPage = pages.find(p => p && p.content && p.content.includes('stories-page'));
-  if (!storyPage) {
-    storyPage = pages.find(p => p && p.title && (p.title.includes('סיפורים') || p.title.toLowerCase().includes('story')));
-  }
-  if (!storyPage) {
-    const sId = 'page-stories-main';
-    storyPage = { id: sId, title: 'סיפורים', content: typeof buildStoriesPage === 'function' ? buildStoriesPage(typeof STORIES_SAMPLES !== 'undefined' ? STORIES_SAMPLES : []) : '' };
-    pages.push(storyPage);
-  } else {
-    storyPage.title = 'סיפורים';
-  }
-
-  // שומרים על כל העמודים הקיימים והחדשים, כאשר עמוד התמונות הוא הראשון בתפריט
+  // סנכרון התפריט העליון עם רשימת העמודים
   if (!Array.isArray(topNavPages) || topNavPages.length === 0) {
     topNavPages = pages.map(p => p.id);
   } else {
@@ -370,12 +353,11 @@ function sanitizeToOnlyPhotosAndStories() {
       if (p && p.id && !topNavPages.includes(p.id)) topNavPages.push(p.id);
     });
   }
-  
-  // מוודאים שעמוד התמונות הוא הראשון בתפריט העליון
-  topNavPages = [photoPage.id, ...topNavPages.filter(id => id !== photoPage.id)];
+  // מסירים מהתפריט העליון עמודים שכבר לא קיימים (נמחקו)
+  topNavPages = topNavPages.filter(id => pages.some(p => p && p.id === id));
 
   if (!activePageId || !pages.some(p => p && p.id === activePageId)) {
-    activePageId = photoPage.id;
+    activePageId = pages[0] ? pages[0].id : null;
   }
 }
 
