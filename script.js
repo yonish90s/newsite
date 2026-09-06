@@ -332,11 +332,28 @@ function updateFABsVisibility() {
 // initSite נתקע לנצח, והגולש נשאר מול שלד ריק של האתר.
 const BOOT_FETCH_TIMEOUT_MS = 4000;
 
+// מסיר עמודי תמונות/סיפורים כפולים: מכל סוג משאיר את העמוד עם התוכן העשיר ביותר
+// ומוחק את הכפולים/הריקים (למשל עמוד "סיפורים" ריק לצד עמוד סיפורים עם תוכן).
+function dedupePageList(list) {
+  if (!Array.isArray(list)) return list;
+  const removeIds = new Set();
+  ['stories-page', 'photos-page'].forEach(kind => {
+    const matches = list.filter(p => p && (p.content || '').includes(kind));
+    if (matches.length <= 1) return;
+    matches.sort((a, b) => (b.content || '').length - (a.content || '').length);
+    matches.slice(1).forEach(p => { if (p && p.id) removeIds.add(p.id); });
+  });
+  return removeIds.size ? list.filter(p => !p || !removeIds.has(p.id)) : list;
+}
+
 function sanitizeToOnlyPhotosAndStories() {
   if (!Array.isArray(pages)) pages = [];
 
   // מסננים עמודי מחשבונים ישנים בלבד (ריבית דריבית ו-Everything Money)
   pages = pages.filter(p => p && p.id !== 'page-ci' && p.id !== 'page-em' && !p.title?.includes('ריבית') && !p.title?.includes('Everything'));
+
+  // מסירים עמודי תמונות/סיפורים כפולים (משאירים את זה עם התוכן)
+  pages = dedupePageList(pages);
 
   // בוטסטראפ של עמודי ברירת המחדל (תמונות + סיפורים) רק כאשר אין אף עמוד באתר.
   // כך המנהל יכול למחוק עמודים לצמיתות מבלי שהם ייווצרו מחדש בכל שמירה.
@@ -9532,6 +9549,8 @@ onValue(ref(db, 'website'), (snapshot) => {
   
   if (data.pages) {
     let pList = data.pages.filter(p => p && p.id !== 'page-ci' && p.id !== 'page-em' && !p.title?.includes('ריבית') && !p.title?.includes('Everything'));
+    // מסירים עמודי תמונות/סיפורים כפולים (למשל עמוד סיפורים ריק) — משאירים את זה עם התוכן
+    pList = dedupePageList(pList);
     if (JSON.stringify(pages) !== JSON.stringify(pList)) {
       pages = pList;
       changed = true;
@@ -9540,6 +9559,8 @@ onValue(ref(db, 'website'), (snapshot) => {
 
   if (data.topNavPages) {
     let navs = Array.from(new Set(data.topNavPages)).filter(id => id !== 'page-ci' && id !== 'page-em');
+    // מסירים מהתפריט זהים של עמודים שכבר לא קיימים (נמחקו/כפולים)
+    navs = navs.filter(id => pages.some(p => p && p.id === id));
     let pPhoto = pages.find(p => p && p.content && p.content.includes('photos-page')) || pages.find(p => p && p.title && p.title.includes('תמונות'));
     if (pPhoto && !navs.includes(pPhoto.id)) navs.unshift(pPhoto.id);
     if (JSON.stringify(topNavPages) !== JSON.stringify(navs)) {
