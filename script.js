@@ -6537,6 +6537,34 @@ async function sendLiveChatMessage() {
 }
 window.sendLiveChatMessage = sendLiveChatMessage;
 
+// ============================================================
+// העלאה מהירה — נקודת כניסה נגישה לכל משתמש רשום (לא רק מנהל)
+// ============================================================
+function buildQuickUploadBox() {
+  // מנהל/מצב עריכה כבר מקבלים כפתור העלאה נפרד, אין צורך לשכפל
+  if ((typeof isAdmin === 'function' && isAdmin()) || (typeof isEditMode !== 'undefined' && isEditMode)) return '';
+
+  if (auth.currentUser) {
+    return `
+      <div class="art-sidebar-box" style="border:1.5px solid #e11d48; background:rgba(225,29,72,0.03); border-radius:12px; padding:16px; text-align:center;">
+        <div style="font-size:14px; font-weight:900; color:#9f1239; margin-bottom:4px;">⚡ העלאה מהירה</div>
+        <div style="font-size:12px; color:#64748b; margin-bottom:12px; line-height:1.4;">הפרטים שלך (מייל/טלגרם) כבר שמורים וימולאו אוטומטית</div>
+        <button onclick="openPhotoModal()" style="width:100%; background:#e11d48; color:#fff; border:none; border-radius:8px; padding:11px; font-size:14px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 2px 8px rgba(225,29,72,0.25);">
+          <span style="font-size:16px;">📷</span> העלאת גלריה חדשה
+        </button>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="art-sidebar-box" style="border:1.5px solid #cbd5e1; background:#f8fafc; border-radius:12px; padding:16px; text-align:center;">
+      <div style="font-size:14px; font-weight:900; color:#334155; margin-bottom:4px;">⚡ העלאה מהירה</div>
+      <div style="font-size:12px; color:#64748b; margin-bottom:12px; line-height:1.4;">התחבר פעם אחת — ומאז ההעלאות מהירות, עם הפרטים שלך שמורים</div>
+      <button onclick="openLiveChatLogin()" style="width:100%; background:#0f172a; color:#fff; border:none; border-radius:8px; padding:11px; font-size:14px; font-weight:800; cursor:pointer;">🔒 התחבר כדי להעלות</button>
+    </div>
+  `;
+}
+
 function buildPhotosPage(albums) {
   // סינון גלריות זמניות שתוקפן פג (חולפו 24 שעות)
   const now = Date.now();
@@ -6728,6 +6756,7 @@ function buildPhotosPage(albums) {
         <div class="art-sidebar">
           ${buildAgeFilterSidebarBox()}
           ${buildEventsSidebarBox()}
+          ${buildQuickUploadBox()}
           ${(isAdmin() || isEditMode) ? `
           <button onclick="openPhotoModal()" style="background:#e11d48; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: white; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.2s;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
@@ -7120,13 +7149,25 @@ function openPhotoModal() {
   document.getElementById('photo-title').value = '';
   document.getElementById('photo-summary').value = '';
   document.getElementById('photo-category').value = '';
-  document.getElementById('photo-telegram').value = '';
+
+  // העלאה מהירה: למשתמש רשום ממלאים מראש מייל וטלגרם מהפרופיל השמור
+  // (הפרטים נשמרים, אבל השדות ניתנים לעריכה אם רוצים לשנות)
+  let savedEmail = '', savedTelegram = '';
+  const _qu = auth.currentUser;
+  if (_qu) {
+    try {
+      const prof = JSON.parse(localStorage.getItem(`user_profile_${_qu.uid}`) || '{}');
+      savedEmail = prof.email || _qu.email || '';
+      savedTelegram = prof.telegram ? ('@' + String(prof.telegram).replace(/^@/, '')) : '';
+    } catch (e) { savedEmail = _qu.email || ''; }
+  }
+  document.getElementById('photo-telegram').value = savedTelegram;
   const ageInp = document.getElementById('photo-age');
   if (ageInp) ageInp.value = '';
   const regionInp = document.getElementById('photo-region');
   if (regionInp) regionInp.value = '';
   const emailInp = document.getElementById('photo-email');
-  if (emailInp) emailInp.value = '';
+  if (emailInp) emailInp.value = savedEmail;
   const tempInp = document.getElementById('photo-is-temporary');
   if (tempInp) tempInp.checked = false;
   const adultInp = document.getElementById('photo-is-adult');
