@@ -5503,7 +5503,7 @@ function renderStoryCategoryTabs() {
 // גודל הגריד בעמוד הסיפורים (מספר עמודות). נשמר בין ביקורים.
 let storyGridCols = (function () {
   const v = parseInt(localStorage.getItem('story_grid_cols') || '', 10);
-  return (v === 2 || v === 3 || v === 4) ? v : 4;
+  return (v === 2 || v === 3 || v === 4) ? v : 2;
 })();
 // קטגוריות נבחרות לסינון. סט ריק = "הכל" (כל הסיפורים). אפשר לבחור כמה
 // קטגוריות בו-זמנית, וסיפור מוצג אם הקטגוריה שלו נמצאת באחת מהן.
@@ -8260,7 +8260,7 @@ let photoOpenFilterGroup = null;
 // גודל הגריד בעמוד התמונות (מספר עמודות: 2 / 3 / 4). נשמר בין ביקורים.
 let photoGridCols = (function () {
   const v = parseInt(localStorage.getItem('photo_grid_cols') || '', 10);
-  return (v === 2 || v === 3 || v === 4) ? v : 4;
+  return (v === 2 || v === 3 || v === 4) ? v : 2;
 })();
 
 function photoSetGridSize(n) {
