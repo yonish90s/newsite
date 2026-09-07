@@ -3821,6 +3821,17 @@ body:not(.edit-mode) .hidden-nav {
 .photos-page.photo-cols-3 .art-rows { grid-template-columns: repeat(3, 1fr) !important; }
 .photos-page.photo-cols-4 .art-rows { grid-template-columns: repeat(4, 1fr) !important; }
 
+/* במובייל תמיד 2 עמודות (במחשב ברירת המחדל היא 3). הכלל אחרי כללי
+   ה-cols ובאותה ספציפיות כדי לגבור עליהם דרך סדר המקור. */
+@media (max-width: 768px) {
+  .photos-page.photo-cols-2 .art-rows,
+  .photos-page.photo-cols-3 .art-rows,
+  .photos-page.photo-cols-4 .art-rows,
+  .stories-page.story-cols-2 .art-rows,
+  .stories-page.story-cols-3 .art-rows,
+  .stories-page.story-cols-4 .art-rows { grid-template-columns: repeat(2, 1fr) !important; }
+}
+
 /* ============================================================
    טשטוש תוכן כשלא אושר גיל 18+ (מבפנים ומבחוץ)
    מופעל ע"י class על <html> ולכן חל על כל תוכן שמרונדר מחדש
