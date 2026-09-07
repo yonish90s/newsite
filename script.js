@@ -7010,14 +7010,17 @@ function communitiesRowHTML() {
   }
   return list.map(c => {
     const count = c.items ? Object.keys(c.items).length : 0;
-    const iconHTML = c.image
-      ? `<img class="comm-chip-img" src="${c.image}" alt="">`
-      : `<span class="comm-chip-icon">${artEsc(c.icon || '🏘️')}</span>`;
-    return `<button type="button" class="comm-chip" onclick="openCommunityPage('${artEsc(c.id)}')" title="${artEsc(c.name || 'קהילה')}">
-      ${iconHTML}
-      <span class="comm-chip-name">${artEsc(c.name || 'קהילה')}</span>
-      <span class="comm-chip-count">${count}</span>
-    </button>`;
+    const imgHTML = c.image
+      ? `<img src="${c.image}" alt="">`
+      : `<div class="comm-card-img-ph">${artEsc(c.icon || '🏘️')}</div>`;
+    return `<div class="comm-card" onclick="openCommunityPage('${artEsc(c.id)}')" title="${artEsc(c.name || 'קהילה')}">
+      <div class="comm-card-img">${imgHTML}</div>
+      <div class="comm-card-body">
+        <div class="comm-card-name">${artEsc(c.name || 'קהילה')}</div>
+        <div class="comm-card-meta">${count} תכנים${c.createdByName ? ' · ' + artEsc(c.createdByName) : ''}</div>
+        <div class="comm-card-enter">כניסה ←</div>
+      </div>
+    </div>`;
   }).join('');
 }
 window.communitiesRowHTML = communitiesRowHTML;
