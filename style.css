@@ -3797,6 +3797,23 @@ body:not(.edit-mode) .hidden-nav {
   .sidebar-tab-panel[data-tab="filter"] { display: none !important; }
 }
 
+/* טופס העלאת גלריה — שני שדות בשורה (הגלריה עצמה נשארת בשורה מלאה) */
+.photo-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.photo-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.photo-field label { margin: 0; }
+@media (max-width: 430px) {
+  .photo-form-grid { grid-template-columns: 1fr; }
+}
+
 /* ===== בורר גודל גריד בעמוד התמונות (2 / 3 / 4 עמודות) ===== */
 .photos-page.photo-cols-2 .art-rows { grid-template-columns: repeat(2, 1fr) !important; }
 .photos-page.photo-cols-3 .art-rows { grid-template-columns: repeat(3, 1fr) !important; }

@@ -14,7 +14,7 @@
   <!-- ספריית localforage לשמירת תמונות -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
   <!-- קישור לקובץ העיצוב החיצוני (עם פרמטר למניעת שמירה במטמון) -->
-  <link rel="stylesheet" href="./style.css?v=1036">
+  <link rel="stylesheet" href="./style.css?v=1037">
 </head>
 <body class="light-mode">
   <!-- שער אישור גיל (Age Gate Overlay) -->
@@ -468,38 +468,53 @@
 
 <!-- מודל הוספת תמונות (אלבום/גלריה) -->
 <div id="photo-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:99999; align-items:center; justify-content:center; direction:rtl;">
-  <div style="background:#fff; border-radius:16px; padding:28px; width:90%; max-width:480px; max-height:85vh; overflow-y:auto; display:flex; flex-direction:column; gap:12px;">
+  <div style="background:#fff; border-radius:16px; padding:28px; width:90%; max-width:600px; max-height:85vh; overflow-y:auto; display:flex; flex-direction:column; gap:12px;">
     <h3 style="margin:0 0 4px; font-size:18px;">הוספת גלריית תמונות חדשה</h3>
-    <label style="font-size:13px; font-weight:600;">כותרת <span style="color:red">*</span></label>
-    <input id="photo-title" type="text" placeholder="כותרת הגלריה" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
-    <label style="font-size:13px; font-weight:600;">תקציר</label>
-    <textarea id="photo-summary" rows="2" placeholder="תיאור קצר..." style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box; resize:vertical;"></textarea>
-    <label style="font-size:13px; font-weight:600;">קטגוריה <span style="color:red">*</span></label>
-    <select id="photo-category" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box; background: white;">
-      <option value="כללי">כללי</option>
-      <option value="עירום">עירום 🔞</option>
-    </select>
-    <label style="font-size:13px; font-weight:600;">טווח גיל</label>
-    <select id="photo-age" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box; background: white;">
-      <option value="">לא צוין</option>
-      <option value="18-25">18-25</option>
-      <option value="26-35">26-35</option>
-      <option value="36-45">36-45</option>
-      <option value="46+">46+</option>
-    </select>
-    <label style="font-size:13px; font-weight:600;">מיקום</label>
-    <select id="photo-region" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box; background: white;">
-      <option value="">לא צוין</option>
-      <option value="צפון">צפון</option>
-      <option value="מרכז">מרכז</option>
-      <option value="דרום">דרום</option>
-    </select>
-    <label style="font-size:13px; font-weight:600;">טלגרם (שם משתמש או קישור) — אופציונלי</label>
-    <input id="photo-telegram" type="text" placeholder="לדוגמה: @username" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
-    
-    <label style="font-size:13px; font-weight:600;">אימייל ליצירת קשר — אופציונלי</label>
-    <input id="photo-email" type="text" placeholder="לדוגמה: example@mail.com" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
-    
+    <div class="photo-form-grid">
+      <div class="photo-field">
+        <label style="font-size:13px; font-weight:600;">כותרת <span style="color:red">*</span></label>
+        <input id="photo-title" type="text" placeholder="כותרת הגלריה" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+      </div>
+      <div class="photo-field">
+        <label style="font-size:13px; font-weight:600;">תקציר</label>
+        <textarea id="photo-summary" rows="2" placeholder="תיאור קצר..." style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box; resize:vertical;"></textarea>
+      </div>
+      <div class="photo-field">
+        <label style="font-size:13px; font-weight:600;">קטגוריה <span style="color:red">*</span></label>
+        <select id="photo-category" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box; background: white;">
+          <option value="כללי">כללי</option>
+          <option value="עירום">עירום 🔞</option>
+        </select>
+      </div>
+      <div class="photo-field">
+        <label style="font-size:13px; font-weight:600;">טווח גיל</label>
+        <select id="photo-age" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box; background: white;">
+          <option value="">לא צוין</option>
+          <option value="18-25">18-25</option>
+          <option value="26-35">26-35</option>
+          <option value="36-45">36-45</option>
+          <option value="46+">46+</option>
+        </select>
+      </div>
+      <div class="photo-field">
+        <label style="font-size:13px; font-weight:600;">מיקום</label>
+        <select id="photo-region" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box; background: white;">
+          <option value="">לא צוין</option>
+          <option value="צפון">צפון</option>
+          <option value="מרכז">מרכז</option>
+          <option value="דרום">דרום</option>
+        </select>
+      </div>
+      <div class="photo-field">
+        <label style="font-size:13px; font-weight:600;">טלגרם (שם משתמש או קישור) — אופציונלי</label>
+        <input id="photo-telegram" type="text" placeholder="לדוגמה: @username" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+      </div>
+      <div class="photo-field">
+        <label style="font-size:13px; font-weight:600;">אימייל ליצירת קשר — אופציונלי</label>
+        <input id="photo-email" type="text" placeholder="לדוגמה: example@mail.com" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+      </div>
+    </div>
+
     <label style="font-size:13px; font-weight:600;">גלריית תמונות (עד 5 תמונות) <span style="color:red">*</span></label>
     <div style="display:grid; grid-template-columns:repeat(5, 1fr); gap:8px;">
       <div style="display:flex; flex-direction:column; align-items:center; gap:4px;">
@@ -799,6 +814,6 @@
   </div>
 </div>
 
-  <script type="module" src="./script.js?v=1036"></script>
+  <script type="module" src="./script.js?v=1037"></script>
 </body>
 </html>
