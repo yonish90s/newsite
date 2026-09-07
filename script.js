@@ -7092,12 +7092,19 @@ function buildCommunitiesPage() {
   return `
     <div class="communities-page" data-page-id="page-communities-main">
       <div class="comm-inner">
-        <div class="comm-head">
-          <h2 class="comm-title">🏘️ קהילות</h2>
-          <p class="comm-sub">בחרו קהילה או צרו חדשה — כל קהילה היא עמוד גלריות משלה.</p>
-          ${createBtn}
+        <div class="art-layout">
+          <div class="art-main">
+            <div class="comm-head">
+              <h2 class="comm-title">🏘️ קהילות</h2>
+              <p class="comm-sub">בחרו קהילה או צרו חדשה — כל קהילה היא עמוד גלריות משלה.</p>
+              ${createBtn}
+            </div>
+            <div class="comm-row" id="communities-page-list">${communitiesRowHTML()}</div>
+          </div>
+          <div class="art-sidebar">
+            ${buildSidebarTabs('')}
+          </div>
         </div>
-        <div class="comm-row" id="communities-page-list">${communitiesRowHTML()}</div>
       </div>
     </div>`;
 }
@@ -7296,6 +7303,8 @@ function buildSidebarTabs(savedHTML) {
   const uploadHtml = (buildQuickUploadBox() || '') + (savedHTML || '');
   const tabs = [
     { id: 'filter',    label: '🔎 סינונים', html: buildFiltersSidebarBox() },
+    { id: 'community', label: '👥 קהילה',  html: (typeof buildSocialCommunityBox === 'function' ? buildSocialCommunityBox() : '') },
+    { id: 'communities', label: '🏘️ קהילות', html: buildCommunitiesBox() },
     { id: 'chat',      label: '💬 צ׳אט',   html: buildLiveChatBox() },
     { id: 'publish',   label: '🤖 פרסום',  html: `
       <div class="art-sidebar-box" style="text-align:center; padding:18px; border:1.5px solid #22c55e; background:rgba(34,197,94,0.04); border-radius:12px;">
@@ -7304,19 +7313,17 @@ function buildSidebarTabs(savedHTML) {
         <button onclick="openQuickPublish()" style="width:100%; background:linear-gradient(135deg,#22c55e,#16a34a); color:#fff; border:none; border-radius:10px; padding:12px; font-size:14px; font-weight:800; cursor:pointer; box-shadow:0 3px 10px rgba(34,197,94,0.3);">🤖 צ׳אט מהיר לפרסום מודעה</button>
       </div>
     ` },
-    { id: 'communities', label: '🏘️ קהילות', html: buildCommunitiesBox() },
     { id: 'event',     label: '🎉 אירוע',  html: buildEventsSidebarBox() },
     { id: 'age',       label: '🔞 18+',    html: buildAgeFilterSidebarBox() },
     { id: 'upload',    label: '⚡ העלאה',  html: uploadHtml || '<div style="text-align:center;color:#94a3b8;font-size:13px;padding:20px;">אין פעולות העלאה זמינות</div>' },
     { id: 'sites',     label: '🌐 אתרים',  html: buildPromotedSitesBox() },
-    { id: 'community', label: '👥 קהילה',  html: (typeof buildSocialCommunityBox === 'function' ? buildSocialCommunityBox() : '') },
   ];
   if (!tabs.some(t => t.id === activeSidebarTab)) activeSidebarTab = 'chat';
 
-  // במובייל פאנל הסינונים מוסתר לגמרי — אם הוא הטאב הפעיל, נופלים חזרה לצ׳אט
+  // במובייל הטאבים מקופלים כברירת מחדל (אין פאנל פתוח) — לחיצה פותחת/סוגרת.
+  // במחשב הטאב הפעיל פתוח כרגיל.
   const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
-  let active = activeSidebarTab;
-  if (isMobile && active === 'filter') active = 'chat';
+  const active = isMobile ? null : activeSidebarTab;
 
   const pills = tabs.map(t =>
     `<button class="sidebar-tab-pill${t.id === active ? ' active' : ''}" data-tab="${t.id}" onclick="sidebarShowTab('${t.id}', this)">${t.label}</button>`
@@ -7334,14 +7341,17 @@ function buildSidebarTabs(savedHTML) {
 }
 
 function sidebarShowTab(id, btn) {
-  activeSidebarTab = id;
   const wrap = btn.closest('.sidebar-tabs-wrap');
   if (!wrap) return;
+  const panel = wrap.querySelector('.sidebar-tab-panel[data-tab="' + id + '"]');
+  const alreadyOpen = btn.classList.contains('active') && panel && panel.style.display !== 'none';
+  // סגירה בלחיצה חוזרת (בעיקר במובייל, שם הטאבים מקופלים)
   wrap.querySelectorAll('.sidebar-tab-pill').forEach(p => p.classList.remove('active'));
+  wrap.querySelectorAll('.sidebar-tab-panel').forEach(p => { p.style.display = 'none'; });
+  if (alreadyOpen) return; // היה פתוח → נסגר
   btn.classList.add('active');
-  wrap.querySelectorAll('.sidebar-tab-panel').forEach(panel => {
-    panel.style.display = panel.dataset.tab === id ? 'block' : 'none';
-  });
+  if (panel) panel.style.display = 'block';
+  activeSidebarTab = id;
   if (id === 'chat' && typeof renderLiveChatMessages === 'function') renderLiveChatMessages();
 }
 window.sidebarShowTab = sidebarShowTab;

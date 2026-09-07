@@ -3793,10 +3793,12 @@ body:not(.edit-mode) .hidden-nav {
 }
 .pf-clear-btn:hover { background: #e11d48; color: #fff; }
 
-/* במובייל: מסתירים לגמרי את סרגל הטאבים בסרגל הצד (כולל טאב הסינונים).
-   כפתור "העלה תמונה" נשאר כי הוא מחוץ ל-.sidebar-tabs-wrap */
+/* במובייל: הסרגל (כפתור העלאה + הטאבים) עולה מעל התוכן — כך שורת הטאבים
+   (סינונים/קהילה/קהילות...) מופיעה מעל שורת הצ׳יפים, מקופלת, ולחיצה פותחת. */
 @media (max-width: 768px) {
-  .sidebar-tabs-wrap { display: none !important; }
+  .art-layout .art-sidebar { order: -1; }
+  .sidebar-tabs-pills { flex-wrap: wrap; }
+  .sidebar-tab-panel { margin-top: 8px; }
 }
 
 /* טופס העלאת גלריה — שני שדות בשורה (הגלריה עצמה נשארת בשורה מלאה) */
