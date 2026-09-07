@@ -3791,10 +3791,10 @@ body:not(.edit-mode) .hidden-nav {
 }
 .pf-clear-btn:hover { background: #e11d48; color: #fff; }
 
-/* במובייל: מסתירים לגמרי את טאב הסינונים (הכפתור והתוכן) */
+/* במובייל: מסתירים לגמרי את סרגל הטאבים בסרגל הצד (כולל טאב הסינונים).
+   כפתור "העלה תמונה" נשאר כי הוא מחוץ ל-.sidebar-tabs-wrap */
 @media (max-width: 768px) {
-  .sidebar-tab-pill[data-tab="filter"],
-  .sidebar-tab-panel[data-tab="filter"] { display: none !important; }
+  .sidebar-tabs-wrap { display: none !important; }
 }
 
 /* טופס העלאת גלריה — שני שדות בשורה (הגלריה עצמה נשארת בשורה מלאה) */
