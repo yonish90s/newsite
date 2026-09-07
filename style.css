@@ -2166,10 +2166,10 @@ body:not(.edit-mode) .hotspot-delete-btn {
   .stories-page .art-row-meta { font-size: 10px; gap: 4px !important; }
   .photos-page .photo-mini-thumb { width: 13px !important; height: 13px !important; }
   .photos-page .photo-mini-thumbs { gap: 2px !important; padding: 4px 5px 0; }
-  /* בפלאפון כרטיס התמונות הוא תמונה בלבד — הכותרת, הכותב, התאריך
-     והטלגרם/אימייל מוסתרים לגמרי (ולא רק מוקטנים) כדי שלא תישאר
-     רצועה לבנה מתחת לתמונה. במחשב הם מוצגים. */
-  .photos-page .photo-card-info { display: none !important; }
+  /* בפלאפון מציגים את הכותרת מתחת לתמונה. כפתורי הפעולה
+     (לייק/שמירה/טלגרם/אימייל) מוסתרים כדי לא לגודש את הכרטיס הקטן. */
+  .photos-page .photo-card-info { display: block !important; }
+  .photos-page .photo-card-info .photo-card-links { display: none !important; }
 }
 @media (max-width: 460px) {
   .photos-page .art-rows,
