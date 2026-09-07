@@ -6614,16 +6614,11 @@ function buildLiveChatBox() {
         <span>💬 צ'אט חי — דברו זה עם זה</span>
       </div>
       <div id="live-chat-messages" style="height:250px; overflow-y:auto; padding:12px; display:flex; flex-direction:column; gap:8px; background:#fafafa;">${liveChatMessagesHTML()}</div>
-      ${auth.currentUser ? `
-      <div style="display:flex; gap:6px; padding:10px; border-top:1px solid #eee; background:#fff;">
-        <input id="live-chat-input" type="text" maxlength="500" placeholder="כתוב הודעה..." onkeydown="if(event.key==='Enter'){event.preventDefault(); sendLiveChatMessage();}" style="flex:1; padding:9px 12px; border:1px solid #ddd; border-radius:20px; font-size:13px; outline:none; box-sizing:border-box;">
+      <div style="display:flex; gap:6px; padding:10px 10px 4px; border-top:1px solid #eee; background:#fff;">
+        <input id="live-chat-input" type="text" maxlength="500" placeholder="כתוב הודעה... או / לפרסום לקהילה" onkeydown="if(event.key==='Enter'){event.preventDefault(); sendLiveChatMessage();}" style="flex:1; padding:9px 12px; border:1px solid #ddd; border-radius:20px; font-size:13px; outline:none; box-sizing:border-box;">
         <button onclick="sendLiveChatMessage()" style="background:#e11d48; color:#fff; border:none; border-radius:20px; padding:9px 16px; font-size:13px; font-weight:800; cursor:pointer; flex-shrink:0;">שלח</button>
       </div>
-      ` : `
-      <div style="padding:10px; border-top:1px solid #eee; background:#fff;">
-        <button onclick="openLiveChatLogin()" style="width:100%; background:#f1f5f9; color:#0f172a; border:1px solid #cbd5e1; border-radius:20px; padding:10px; font-size:13px; font-weight:800; cursor:pointer;">🔒 התחבר כדי לכתוב בצ'אט</button>
-      </div>
-      `}
+      <div style="padding:0 12px 10px; background:#fff; font-size:11px; color:#94a3b8;">💡 טיפ: הקלד <b>/</b> ואז שם קהילה כדי לפרסם מודעה מהירה לקהילה</div>
     </div>
   `;
 }
@@ -6635,15 +6630,23 @@ function openLiveChatLogin() {
 window.openLiveChatLogin = openLiveChatLogin;
 
 async function sendLiveChatMessage() {
-  // כתיבה לצ'אט מחייבת התחברות (כללי Firebase מתירים כתיבה למשתמשים מחוברים בלבד)
-  if (!auth.currentUser) {
-    openLiveChatLogin();
-    return;
-  }
   const inp = document.getElementById('live-chat-input');
   if (!inp) return;
   const text = inp.value.trim();
   if (!text) return;
+
+  // פקודת "/" — פרסום מהיר לקהילה. פתוחה לכולם (גם ללא התחברות) ואינה נשלחת לצ'אט.
+  if (text.startsWith('/')) {
+    inp.value = '';
+    handleChatSlashCommand(text);
+    return;
+  }
+
+  // הודעת צ'אט רגילה מחייבת התחברות (כללי Firebase מתירים כתיבה למשתמשים מחוברים בלבד)
+  if (!auth.currentUser) {
+    openLiveChatLogin();
+    return;
+  }
   inp.value = '';
   try {
     await push(ref(db, 'website/live_chat'), {
@@ -6659,6 +6662,32 @@ async function sendLiveChatMessage() {
   }
 }
 window.sendLiveChatMessage = sendLiveChatMessage;
+
+// פקודת "/" בצ'אט: פרסום מהיר לקהילה לפי שם. "/שם קהילה" פותח את הצ'אט
+// המהיר עם הקהילה מסומנת; "/" לבד מציג את רשימת הקהילות הזמינות.
+function handleChatSlashCommand(text) {
+  const q = text.replace(/^\//, '').trim();
+  const list = (typeof communitiesData !== 'undefined') ? Object.values(communitiesData || {}) : [];
+  if (!list.length) {
+    if (typeof showCopyToast === 'function') showCopyToast('אין קהילות עדיין — אפשר ליצור אחת בעמוד "קהילות"');
+    return;
+  }
+  if (!q) {
+    const names = list.map(c => c.name).filter(Boolean).join(', ');
+    if (typeof showCopyToast === 'function') showCopyToast('הקלד / ואז שם קהילה. זמינות: ' + names);
+    return;
+  }
+  const ql = q.toLowerCase();
+  const match = list.find(c => (c.name || '').toLowerCase() === ql)
+             || list.find(c => (c.name || '').toLowerCase().includes(ql));
+  if (match) {
+    if (typeof openQuickPublish === 'function') openQuickPublish(match.id);
+  } else {
+    const names = list.map(c => c.name).filter(Boolean).join(', ');
+    if (typeof showCopyToast === 'function') showCopyToast(`קהילה "${q}" לא נמצאה. זמינות: ${names}`);
+  }
+}
+window.handleChatSlashCommand = handleChatSlashCommand;
 
 // ============================================================
 // העלאה מהירה — נקודת כניסה נגישה לכל משתמש רשום (לא רק מנהל)
@@ -6734,7 +6763,7 @@ function qpBubble(role, html) {
 }
 
 function openQuickPublish(communityId) {
-  if (!auth.currentUser) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
+  // פרסום מהיר פתוח לכולם — גם למי שלא נרשם
   qpEnsureModal();
   qpStep = 'title';
   qpData = { title: '', images: [], summary: '', communityId: communityId || null };
