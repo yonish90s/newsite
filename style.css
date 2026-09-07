@@ -3818,7 +3818,9 @@ body:not(.edit-mode) .hidden-nav {
 
 /* ===== עמוד קהילות ===== */
 .communities-page { direction: rtl; }
-.comm-inner { max-width: 1100px; margin: 0 auto; padding: 8px 4px 40px; }
+/* אותו רוחב/ריפוד כמו עמוד התמונות כדי שהסרגל יגיע עד השמאל ויהיה אחיד */
+.comm-inner { max-width: 1560px; margin: 0 auto; padding: 34px 26px 40px; box-sizing: border-box; }
+@media (max-width: 768px) { .comm-inner { width: 100% !important; padding: 24px 16px 36px; box-sizing: border-box; } }
 .comm-head {
   background: #fff;
   border: 1px solid #e2e8f0;

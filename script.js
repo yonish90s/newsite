@@ -356,20 +356,8 @@ function dedupePageList(list) {
   return removeIds.size ? list.filter(p => !p || !removeIds.has(p.id)) : list;
 }
 
-// עמודי ברירת מחדל נוספים מסוג "תמונות" (סקשנים נפרדים): יד שניה + השוואת מחירים.
-// כל אחד שומר תוכן נפרד משלו דרך data-section, ותמיד קיים בתפריט.
-const EXTRA_PHOTO_PAGES = [
-  { id: 'page-yad2-main', title: 'יד שניה 🛒', section: 'yad2' },
-  { id: 'page-prices-main', title: 'השוואת מחירים 💰', section: 'prices' }
-];
-function ensureExtraPhotoPages(arr) {
-  if (!Array.isArray(arr)) return;
-  EXTRA_PHOTO_PAGES.forEach(d => {
-    if (!arr.some(p => p && p.id === d.id)) {
-      arr.push({ id: d.id, title: d.title, content: `<div class="articles-page photos-page" data-section="${d.section}" data-photos-json="%5B%5D"></div>` });
-    }
-  });
-}
+// עמודים שהוסרו — מנקים אותם מכל מקום (מהעמודים השמורים ומהתפריט)
+const REMOVED_PHOTO_PAGE_IDS = ['page-yad2-main', 'page-prices-main'];
 
 function sanitizeToOnlyPhotosAndStories() {
   if (!Array.isArray(pages)) pages = [];
@@ -404,8 +392,8 @@ function sanitizeToOnlyPhotosAndStories() {
     _commPage.content = _commContent;
   }
 
-  // עמודי "יד שניה" ו"השוואת מחירים" — תמיד קיימים
-  ensureExtraPhotoPages(pages);
+  // מסירים לצמיתות את העמודים "יד שניה" ו"השוואת מחירים"
+  pages = pages.filter(p => p && !REMOVED_PHOTO_PAGE_IDS.includes(p.id));
 
   // סנכרון התפריט העליון עם רשימת העמודים
   if (!Array.isArray(topNavPages) || topNavPages.length === 0) {
@@ -10204,8 +10192,8 @@ onValue(ref(db, 'website'), (snapshot) => {
       if (!_cp.title) _cp.title = 'קהילות 🏘️';
       _cp.content = _cpc;
     }
-    // מוודאים שעמודי "יד שניה" ו"השוואת מחירים" תמיד קיימים
-    ensureExtraPhotoPages(pList);
+    // מסירים את העמודים "יד שניה" ו"השוואת מחירים"
+    pList = pList.filter(p => p && !REMOVED_PHOTO_PAGE_IDS.includes(p.id));
     if (JSON.stringify(pages) !== JSON.stringify(pList)) {
       pages = pList;
       changed = true;
@@ -10220,8 +10208,8 @@ onValue(ref(db, 'website'), (snapshot) => {
     if (pPhoto && !navs.includes(pPhoto.id)) navs.unshift(pPhoto.id);
     // עמוד הקהילות תמיד מופיע בתפריט העליון
     if (pages.some(p => p && p.id === 'page-communities-main') && !navs.includes('page-communities-main')) navs.push('page-communities-main');
-    // עמודי יד שניה / השוואת מחירים תמיד בתפריט
-    EXTRA_PHOTO_PAGES.forEach(d => { if (pages.some(p => p && p.id === d.id) && !navs.includes(d.id)) navs.push(d.id); });
+    // מסירים מהתפריט את העמודים שהוסרו
+    navs = navs.filter(id => !REMOVED_PHOTO_PAGE_IDS.includes(id));
     if (JSON.stringify(topNavPages) !== JSON.stringify(navs)) {
       topNavPages = navs;
       changed = true;
