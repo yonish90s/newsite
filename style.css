@@ -2166,10 +2166,12 @@ body:not(.edit-mode) .hotspot-delete-btn {
   .stories-page .art-row-meta { font-size: 10px; gap: 4px !important; }
   .photos-page .photo-mini-thumb { width: 13px !important; height: 13px !important; }
   .photos-page .photo-mini-thumbs { gap: 2px !important; padding: 4px 5px 0; }
-  /* בפלאפון מציגים מתחת לתמונה רק את הכותרת — הכותב, התאריך,
+  /* בפלאפון מציגים מתחת לתמונה רק את הכותרת והתאריך — הכותב,
      הצפיות/לייקים וכפתורי הפעולה מוסתרים כדי לשמור על כרטיס נקי. */
   .photos-page .photo-card-info { display: block !important; }
-  .photos-page .photo-card-info > *:not(h3) { display: none !important; }
+  .photos-page .photo-card-info > *:not(h3):not(.art-row-meta) { display: none !important; }
+  .photos-page .photo-card-info .art-row-meta .photo-author-link,
+  .photos-page .photo-card-info .art-row-meta .art-row-sep { display: none !important; }
 }
 @media (max-width: 460px) {
   .photos-page .art-rows,
