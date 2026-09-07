@@ -337,13 +337,38 @@ const BOOT_FETCH_TIMEOUT_MS = 4000;
 function dedupePageList(list) {
   if (!Array.isArray(list)) return list;
   const removeIds = new Set();
+  // עמודי תמונות מחולקים ל"סקשנים" (photos / yad2 / prices) — לא ממזגים בין סקשנים שונים
+  const sectionOf = c => { const m = (c || '').match(/data-section="([^"]+)"/); return m ? m[1] : 'photos'; };
   ['stories-page', 'photos-page'].forEach(kind => {
     const matches = list.filter(p => p && (p.content || '').includes(kind));
     if (matches.length <= 1) return;
-    matches.sort((a, b) => (b.content || '').length - (a.content || '').length);
-    matches.slice(1).forEach(p => { if (p && p.id) removeIds.add(p.id); });
+    const groups = {};
+    matches.forEach(p => {
+      const key = kind === 'photos-page' ? sectionOf(p.content) : 'all';
+      (groups[key] = groups[key] || []).push(p);
+    });
+    Object.values(groups).forEach(grp => {
+      if (grp.length <= 1) return;
+      grp.sort((a, b) => (b.content || '').length - (a.content || '').length);
+      grp.slice(1).forEach(p => { if (p && p.id) removeIds.add(p.id); });
+    });
   });
   return removeIds.size ? list.filter(p => !p || !removeIds.has(p.id)) : list;
+}
+
+// עמודי ברירת מחדל נוספים מסוג "תמונות" (סקשנים נפרדים): יד שניה + השוואת מחירים.
+// כל אחד שומר תוכן נפרד משלו דרך data-section, ותמיד קיים בתפריט.
+const EXTRA_PHOTO_PAGES = [
+  { id: 'page-yad2-main', title: 'יד שניה 🛒', section: 'yad2' },
+  { id: 'page-prices-main', title: 'השוואת מחירים 💰', section: 'prices' }
+];
+function ensureExtraPhotoPages(arr) {
+  if (!Array.isArray(arr)) return;
+  EXTRA_PHOTO_PAGES.forEach(d => {
+    if (!arr.some(p => p && p.id === d.id)) {
+      arr.push({ id: d.id, title: d.title, content: `<div class="articles-page photos-page" data-section="${d.section}" data-photos-json="%5B%5D"></div>` });
+    }
+  });
 }
 
 function sanitizeToOnlyPhotosAndStories() {
@@ -378,6 +403,9 @@ function sanitizeToOnlyPhotosAndStories() {
     if (!_commPage.title) _commPage.title = 'קהילות 🏘️';
     _commPage.content = _commContent;
   }
+
+  // עמודי "יד שניה" ו"השוואת מחירים" — תמיד קיימים
+  ensureExtraPhotoPages(pages);
 
   // סנכרון התפריט העליון עם רשימת העמודים
   if (!Array.isArray(topNavPages) || topNavPages.length === 0) {
@@ -926,8 +954,10 @@ function renderPage() {
     // עמוד תמונות: בונים מחדש מנתוני הגלריות
     const isPhotosPage = (currentPage && (currentPage.id === 'page-photos-main' || (currentPage.title && currentPage.title.includes('תמונות')))) || mainContent.querySelector('.photos-page:not(.community-page):not(.user-page)');
     if (isPhotosPage && typeof buildPhotosPage === 'function') {
+      const _pel = mainContent.querySelector('.photos-page:not(.community-page):not(.user-page)');
+      const _psection = (_pel && _pel.dataset.section) ? _pel.dataset.section : 'photos';
       const albums = photoGetAlbums();
-      mainContent.innerHTML = buildPhotosPage(albums);
+      mainContent.innerHTML = buildPhotosPage(albums, _psection);
     }
 
     // עמוד קהילה: בונים מחדש
@@ -1409,7 +1439,7 @@ function makeImagesEditable() {
 function artSerializePageContent() {
   const photos = mainContent.querySelector('.photos-page');
   if (photos && photos.dataset.photosJson) {
-    return `<div class="articles-page photos-page" data-photos-json="${photos.dataset.photosJson}"></div>`;
+    return `<div class="articles-page photos-page" data-section="${photos.dataset.section || 'photos'}" data-photos-json="${photos.dataset.photosJson}"></div>`;
   }
   const stories = mainContent.querySelector('.stories-page');
   if (stories && stories.dataset.storiesJson) {
@@ -1444,7 +1474,7 @@ function artLightenContent(content) {
   let doc;
   try { doc = new DOMParser().parseFromString(content, 'text/html'); } catch (e) { return content; }
   const ph = doc.querySelector('.photos-page');
-  if (ph && ph.dataset.photosJson) return `<div class="articles-page photos-page" data-photos-json="${ph.dataset.photosJson}"></div>`;
+  if (ph && ph.dataset.photosJson) return `<div class="articles-page photos-page" data-section="${ph.dataset.section || 'photos'}" data-photos-json="${ph.dataset.photosJson}"></div>`;
   const st = doc.querySelector('.stories-page');
   if (st && st.dataset.storiesJson) return `<div class="articles-page stories-page" data-stories-json="${st.dataset.storiesJson}"></div>`;
   const co = doc.querySelector('.courses-page');
@@ -7287,7 +7317,8 @@ function sidebarShowTab(id, btn) {
 }
 window.sidebarShowTab = sidebarShowTab;
 
-function buildPhotosPage(albums) {
+function buildPhotosPage(albums, section) {
+  section = section || 'photos';
   // סינון גלריות זמניות שתוקפן פג (חולפו 24 שעות)
   const now = Date.now();
   albums = albums.filter(p => !p.expiresAt || p.expiresAt > now);
@@ -7439,7 +7470,7 @@ function buildPhotosPage(albums) {
   }).join('');
 
   const json = encodeURIComponent(JSON.stringify(albums));
-  return `<div class="articles-page photos-page photo-cols-${photoGridCols}" data-photos-json="${json}">
+  return `<div class="articles-page photos-page photo-cols-${photoGridCols}" data-section="${section}" data-photos-json="${json}">
     <div class="art-inner">
       <div class="art-featured-grid">${featuredHTML}</div>
       <div class="art-layout">
@@ -7899,6 +7930,13 @@ function photoGoBack() {
   if (isEditMode) applyEditModeToContent();
 }
 
+// הסקשן (עמוד) הנוכחי מסוג "תמונות": photos / yad2 / prices. כל עמוד שומר
+// את התוכן שלו בנפרד בתוך data-photos-json שלו.
+function photoCurrentSection() {
+  const el = mainContent.querySelector('.photos-page:not(.community-page):not(.user-page)');
+  return (el && el.dataset.section) ? el.dataset.section : 'photos';
+}
+
 function photoGetAlbums() {
   // חשוב: לא לקרוא מנתוני עמוד קהילה/משתמש (שגם מסומנים photos-page) כדי לא לדרוס את התמונות
   const container = mainContent.querySelector('.photos-page:not(.community-page):not(.user-page)');
@@ -7906,6 +7944,9 @@ function photoGetAlbums() {
     try {
       const parsed = JSON.parse(decodeURIComponent(container.dataset.photosJson));
       if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      // עמוד ריק: רק עמוד התמונות הראשי נופל לדוגמאות; יד שניה/מחירים מתחילים ריקים
+      const section = container.dataset.section || 'photos';
+      if (Array.isArray(parsed) && section !== 'photos') return [];
     } catch(e){}
   }
   return (typeof PHOTOS_SAMPLES !== 'undefined' && Array.isArray(PHOTOS_SAMPLES)) ? PHOTOS_SAMPLES : [];
@@ -7915,7 +7956,7 @@ function photoDelete(id, el) {
   if (!isEditMode) return;
   if (!confirm('האם למחוק גלריה זו?')) return;
   const albums = photoGetAlbums().filter(a => a.id !== id);
-  mainContent.innerHTML = buildPhotosPage(albums);
+  mainContent.innerHTML = buildPhotosPage(albums, photoCurrentSection());
   saveCurrentPageContent();
 }
 
@@ -8061,7 +8102,8 @@ document.getElementById('photo-save').addEventListener('click', () => {
   if (validImages.length === 0) { alert('חובה להעלות לפחות תמונה אחת'); return; }
 
   const albums = photoGetAlbums();
-  
+  const _saveSection = photoCurrentSection();
+
   let telegramInput = document.getElementById('photo-telegram').value.trim();
   if (telegramInput) {
     if (telegramInput.startsWith('@')) {
@@ -8150,10 +8192,10 @@ document.getElementById('photo-save').addEventListener('click', () => {
     });
   }
 
-  mainContent.innerHTML = buildPhotosPage(albums);
+  mainContent.innerHTML = buildPhotosPage(albums, _saveSection);
   saveCurrentPageContent();
   document.getElementById('photo-modal').style.display = 'none';
-  
+
   if (!isEditMode && !editingPhotoId) {
     alert('הגלריה הועלה בהצלחה וממתינה לאישור מנהל!');
   }
@@ -10123,6 +10165,8 @@ onValue(ref(db, 'website'), (snapshot) => {
       if (!_cp.title) _cp.title = 'קהילות 🏘️';
       _cp.content = _cpc;
     }
+    // מוודאים שעמודי "יד שניה" ו"השוואת מחירים" תמיד קיימים
+    ensureExtraPhotoPages(pList);
     if (JSON.stringify(pages) !== JSON.stringify(pList)) {
       pages = pList;
       changed = true;
@@ -10137,6 +10181,8 @@ onValue(ref(db, 'website'), (snapshot) => {
     if (pPhoto && !navs.includes(pPhoto.id)) navs.unshift(pPhoto.id);
     // עמוד הקהילות תמיד מופיע בתפריט העליון
     if (pages.some(p => p && p.id === 'page-communities-main') && !navs.includes('page-communities-main')) navs.push('page-communities-main');
+    // עמודי יד שניה / השוואת מחירים תמיד בתפריט
+    EXTRA_PHOTO_PAGES.forEach(d => { if (pages.some(p => p && p.id === d.id) && !navs.includes(d.id)) navs.push(d.id); });
     if (JSON.stringify(topNavPages) !== JSON.stringify(navs)) {
       topNavPages = navs;
       changed = true;
