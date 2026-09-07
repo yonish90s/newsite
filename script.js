@@ -4008,6 +4008,23 @@ function fallbackCopyText(text) {
   document.body.removeChild(textArea);
 }
 
+// לחיצה על כפתור האימייל: מעתיק ללוח (עם הודעה קופצת) וגם חושף את
+// הכתובת כטקסט גלוי על הכפתור עצמו במקום המילה "אימייל".
+function revealAndCopyEmail(emailStr, btn, e) {
+  const clean = (emailStr || '').replace(/^mailto:/i, '').trim();
+  copyEmailToClipboard(emailStr, e); // מעתיק + מציג הודעה (וגם עוצר את הבועה)
+  if (btn && clean) {
+    const span = document.createElement('span');
+    span.textContent = clean;
+    span.style.cssText = 'direction:ltr; unicode-bidi:embed; font-weight:700; white-space:normal; word-break:break-all;';
+    btn.innerHTML = '';
+    btn.appendChild(span);
+    btn.title = clean;
+    btn.setAttribute('data-revealed', '1');
+  }
+}
+window.revealAndCopyEmail = revealAndCopyEmail;
+
 function showCopyToast(msg) {
   let toast = document.getElementById('global-copy-toast');
   if (!toast) {
@@ -6354,7 +6371,7 @@ function renderPhotoCard(p, options = {}) {
     if (url) {
       if (label === 'אימייל') {
         return `
-          <button type="button" onclick="copyEmailToClipboard('${artEsc(url)}', event);" class="art-telegram-btn" title="לחץ להעתקת אימייל">
+          <button type="button" onclick="revealAndCopyEmail('${artEsc(url)}', this, event);" class="art-telegram-btn" title="לחץ לחשיפת והעתקת אימייל">
             ${svg}<span>${label}</span>
           </button>
         `;
@@ -7436,7 +7453,7 @@ function photoOpenDetail(id) {
               </a>
             ` : ''}
             ${a.emailUrl ? `
-              <button type="button" onclick="copyEmailToClipboard('${artEsc(a.emailUrl)}', event);" title="לחץ להעתקת אימייל" class="art-telegram-btn" style="display: inline-flex; align-items: center; background: #2f2f2f; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 13px; text-decoration: none; font-weight: bold; gap: 6px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer;">
+              <button type="button" onclick="revealAndCopyEmail('${artEsc(a.emailUrl)}', this, event);" title="לחץ לחשיפת והעתקת אימייל" class="art-telegram-btn" style="display: inline-flex; align-items: center; background: #2f2f2f; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 13px; text-decoration: none; font-weight: bold; gap: 6px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
                   <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
                   <polyline points="22,6 12,13 2,6"/>
@@ -7616,7 +7633,7 @@ async function openUserProfile(authorId, authorFallbackName) {
         }
         if (profile.email) {
           contactHTML += `
-            <button type="button" onclick="copyEmailToClipboard('${artEsc(profile.email)}', event);" title="לחץ להעתקת אימייל (${artEsc(profile.email)})" style="display:inline-flex; align-items:center; background:#2f2f2f; color:white; padding:4px 8px; border-radius:6px; font-size:11px; text-decoration:none; font-weight:bold; gap:4px; border:1px solid rgba(255,255,255,0.1); cursor:pointer;">
+            <button type="button" onclick="revealAndCopyEmail('${artEsc(profile.email)}', this, event);" title="לחץ לחשיפת והעתקת אימייל (${artEsc(profile.email)})" style="display:inline-flex; align-items:center; background:#2f2f2f; color:white; padding:4px 8px; border-radius:6px; font-size:11px; text-decoration:none; font-weight:bold; gap:4px; border:1px solid rgba(255,255,255,0.1); cursor:pointer;">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:block;">
                 <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
                 <polyline points="22,6 12,13 2,6"/>

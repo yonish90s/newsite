@@ -14,7 +14,7 @@
   <!-- ספריית localforage לשמירת תמונות -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
   <!-- קישור לקובץ העיצוב החיצוני (עם פרמטר למניעת שמירה במטמון) -->
-  <link rel="stylesheet" href="./style.css?v=1044">
+  <link rel="stylesheet" href="./style.css?v=1045">
 </head>
 <body class="light-mode">
   <!-- שער אישור גיל (Age Gate Overlay) -->
@@ -513,6 +513,10 @@
         <label style="font-size:13px; font-weight:600;">אימייל ליצירת קשר — אופציונלי</label>
         <input id="photo-email" type="text" placeholder="לדוגמה: example@mail.com" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
       </div>
+      <div class="photo-field">
+        <label style="font-size:13px; font-weight:600;">מודעה מהירה</label>
+        <button type="button" onclick="document.getElementById('photo-modal').style.display='none'; openQuickPublish();" style="padding:9px 12px; border:none; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box; background:linear-gradient(135deg,#22c55e,#16a34a); color:#fff; font-weight:800; cursor:pointer; box-shadow:0 2px 8px rgba(34,197,94,0.3); display:flex; align-items:center; justify-content:center; gap:6px;">🤖 פרסום מהיר בצ׳אט</button>
+      </div>
     </div>
 
     <label style="font-size:13px; font-weight:600;">גלריית תמונות (עד 5 תמונות) <span style="color:red">*</span></label>
@@ -800,6 +804,6 @@
   </div>
 </div>
 
-  <script type="module" src="./script.js?v=1044"></script>
+  <script type="module" src="./script.js?v=1045"></script>
 </body>
 </html>

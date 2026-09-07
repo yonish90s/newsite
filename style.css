@@ -3812,9 +3812,7 @@ body:not(.edit-mode) .hidden-nav {
   min-width: 0;
 }
 .photo-field label { margin: 0; }
-@media (max-width: 430px) {
-  .photo-form-grid { grid-template-columns: 1fr; }
-}
+/* גם בפלאפון הטופס נשאר 2 שדות בשורה כמו במחשב */
 
 /* ===== בורר גודל גריד בעמוד התמונות (2 / 3 / 4 עמודות) ===== */
 .photos-page.photo-cols-2 .art-rows { grid-template-columns: repeat(2, 1fr) !important; }
