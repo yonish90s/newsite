@@ -6883,23 +6883,48 @@ function buildCommunitiesBox() {
   `;
 }
 
-async function createCommunity() {
+// תמונת הקהילה הנבחרת (base64) בזמן יצירה
+let communityImgData = '';
+
+// פותח את מודל יצירת הקהילה (עם אפשרות לצרף תמונה)
+function createCommunity() {
   if (!auth.currentUser) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
-  const name = prompt('שם הקהילה:');
-  if (!name || !name.trim()) return;
-  const desc = (prompt('תיאור קצר (אופציונלי):') || '').trim();
+  communityImgData = '';
+  const nameEl = document.getElementById('community-name');
+  const descEl = document.getElementById('community-desc');
+  const prev = document.getElementById('community-img-preview');
+  const pick = document.getElementById('community-img-pick');
+  if (nameEl) nameEl.value = '';
+  if (descEl) descEl.value = '';
+  if (prev) { prev.style.display = 'none'; prev.src = ''; }
+  if (pick) pick.style.display = '';
+  const modal = document.getElementById('community-modal');
+  if (modal) modal.style.display = 'flex';
+  setTimeout(() => { if (nameEl) nameEl.focus(); }, 100);
+}
+window.createCommunity = createCommunity;
+
+async function saveCommunity() {
+  if (!auth.currentUser) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
+  const name = (document.getElementById('community-name').value || '').trim();
+  if (!name) { alert('חובה לתת שם לקהילה'); return; }
+  const desc = (document.getElementById('community-desc').value || '').trim();
   const id = 'comm' + Date.now();
   const community = {
     id,
-    name: name.trim().slice(0, 60),
+    name: name.slice(0, 60),
     desc: desc.slice(0, 200),
     icon: '🏘️',
+    image: communityImgData || '',
     createdBy: auth.currentUser.uid,
     createdByName: (typeof liveChatUserName === 'function' ? liveChatUserName() : 'משתמש'),
     createdAt: Date.now()
   };
   try {
     await set(ref(db, `website/communities/${id}`), community);
+    const modal = document.getElementById('community-modal');
+    if (modal) modal.style.display = 'none';
+    communityImgData = '';
     if (typeof showCopyToast === 'function') showCopyToast('✅ הקהילה נוצרה בהצלחה!');
     openCommunityPage(id);
   } catch (e) {
@@ -6907,7 +6932,34 @@ async function createCommunity() {
     if (typeof showCopyToast === 'function') showCopyToast('שגיאה ביצירת הקהילה');
   }
 }
-window.createCommunity = createCommunity;
+window.saveCommunity = saveCommunity;
+
+// מאזינים למודל יצירת הקהילה (בחירת תמונה / ביטול / שמירה)
+(function initCommunityModal() {
+  const pick = document.getElementById('community-img-pick');
+  if (pick) pick.addEventListener('click', () => {
+    const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
+    inp.onchange = e => {
+      const f = e.target.files[0]; if (!f) return;
+      const done = data => {
+        communityImgData = data;
+        const p = document.getElementById('community-img-preview');
+        if (p) { p.src = data; p.style.display = 'block'; }
+      };
+      if (typeof artCompressImage === 'function') artCompressImage(f).then(done);
+      else { const r = new FileReader(); r.onload = () => done(r.result); r.readAsDataURL(f); }
+    };
+    inp.click();
+  });
+  const cancel = document.getElementById('community-cancel');
+  if (cancel) cancel.addEventListener('click', () => {
+    const modal = document.getElementById('community-modal');
+    if (modal) modal.style.display = 'none';
+    communityImgData = '';
+  });
+  const save = document.getElementById('community-save');
+  if (save) save.addEventListener('click', saveCommunity);
+})();
 
 function buildCommunityPageHTML(community) {
   const items = community.items ? Object.values(community.items) : [];
@@ -6921,7 +6973,9 @@ function buildCommunityPageHTML(community) {
     <div class="art-inner">
       <button onclick="goBackFromUserPage()" style="background:#f1f5f9; border:1px solid #cbd5e1; border-radius:8px; padding:8px 16px; font-size:13px; font-weight:800; cursor:pointer; margin-bottom:16px; color:#334155;">← חזרה</button>
       <div style="background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:20px; margin-bottom:20px; display:flex; align-items:center; gap:16px; box-shadow:0 4px 15px rgba(0,0,0,0.03); direction:rtl;">
-        <div style="width:56px; height:56px; border-radius:14px; background:linear-gradient(135deg,#e11d48,#9f1239); color:#fff; display:flex; align-items:center; justify-content:center; font-size:26px; flex-shrink:0;">${artEsc(community.icon || '🏘️')}</div>
+        ${community.image
+          ? `<img src="${community.image}" alt="" style="width:56px; height:56px; border-radius:14px; object-fit:cover; flex-shrink:0;">`
+          : `<div style="width:56px; height:56px; border-radius:14px; background:linear-gradient(135deg,#e11d48,#9f1239); color:#fff; display:flex; align-items:center; justify-content:center; font-size:26px; flex-shrink:0;">${artEsc(community.icon || '🏘️')}</div>`}
         <div style="flex:1; min-width:0;">
           <div style="font-size:20px; font-weight:900; color:#0f172a;">${artEsc(community.name || 'קהילה')}</div>
           <div style="font-size:13px; color:#64748b; margin-top:2px;">${artEsc(community.desc || '')}</div>
@@ -6956,8 +7010,11 @@ function communitiesRowHTML() {
   }
   return list.map(c => {
     const count = c.items ? Object.keys(c.items).length : 0;
+    const iconHTML = c.image
+      ? `<img class="comm-chip-img" src="${c.image}" alt="">`
+      : `<span class="comm-chip-icon">${artEsc(c.icon || '🏘️')}</span>`;
     return `<button type="button" class="comm-chip" onclick="openCommunityPage('${artEsc(c.id)}')" title="${artEsc(c.name || 'קהילה')}">
-      <span class="comm-chip-icon">${artEsc(c.icon || '🏘️')}</span>
+      ${iconHTML}
       <span class="comm-chip-name">${artEsc(c.name || 'קהילה')}</span>
       <span class="comm-chip-count">${count}</span>
     </button>`;

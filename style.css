@@ -3868,6 +3868,7 @@ body:not(.edit-mode) .hidden-nav {
   transform: translateY(-2px);
 }
 .comm-chip-icon { font-size: 22px; line-height: 1; flex-shrink: 0; }
+.comm-chip-img { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; flex-shrink: 0; border: 1px solid #e2e8f0; }
 .comm-chip-name { font-size: 15px; font-weight: 800; color: #0f172a; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .comm-chip-count {
   font-size: 12px;

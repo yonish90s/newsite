@@ -14,7 +14,7 @@
   <!-- ספריית localforage לשמירת תמונות -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
   <!-- קישור לקובץ העיצוב החיצוני (עם פרמטר למניעת שמירה במטמון) -->
-  <link rel="stylesheet" href="./style.css?v=1049">
+  <link rel="stylesheet" href="./style.css?v=1050">
 </head>
 <body class="light-mode">
   <!-- שער אישור גיל (Age Gate Overlay) -->
@@ -557,6 +557,26 @@
   </div>
 </div>
 
+<!-- מודל יצירת קהילה -->
+<div id="community-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:99999; align-items:center; justify-content:center; direction:rtl;">
+  <div style="background:#fff; border-radius:16px; padding:28px; width:90%; max-width:440px; max-height:85vh; overflow-y:auto; display:flex; flex-direction:column; gap:12px;">
+    <h3 style="margin:0 0 4px; font-size:18px;">🏘️ יצירת קהילה חדשה</h3>
+    <label style="font-size:13px; font-weight:600;">שם הקהילה <span style="color:red">*</span></label>
+    <input id="community-name" type="text" placeholder="לדוגמה: אספני רכב" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+    <label style="font-size:13px; font-weight:600;">תיאור קצר (אופציונלי)</label>
+    <textarea id="community-desc" rows="2" placeholder="על מה הקהילה?" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box; resize:vertical;"></textarea>
+    <label style="font-size:13px; font-weight:600;">תמונת קהילה (אופציונלי)</label>
+    <div style="display:flex; align-items:center; gap:12px;">
+      <button type="button" id="community-img-pick" style="padding:10px 16px; border:1px dashed #bbb; border-radius:10px; background:#f9f9f9; cursor:pointer; font-size:14px; font-weight:700; color:#334155;">📷 בחר תמונה</button>
+      <img id="community-img-preview" style="display:none; width:64px; height:64px; border-radius:12px; object-fit:cover; border:1px solid #e2e8f0;">
+    </div>
+    <div style="display:flex; gap:10px; margin-top:8px;">
+      <button id="community-cancel" style="flex:1; padding:10px; border:1px solid #ddd; border-radius:8px; background:#fff; cursor:pointer; font-size:14px;">ביטול</button>
+      <button id="community-save" style="flex:1; padding:10px; border:none; border-radius:8px; background:#e11d48; color:#fff; cursor:pointer; font-size:14px; font-weight:700;">צור קהילה</button>
+    </div>
+  </div>
+</div>
+
 <!-- מודל הוספת קורס -->
 <div id="course-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:99999; align-items:center; justify-content:center; direction:rtl;">
   <div style="background:#fff; border-radius:16px; padding:28px; width:90%; max-width:460px; max-height:85vh; overflow-y:auto; display:flex; flex-direction:column; gap:12px;">
@@ -804,6 +824,6 @@
   </div>
 </div>
 
-  <script type="module" src="./script.js?v=1049"></script>
+  <script type="module" src="./script.js?v=1050"></script>
 </body>
 </html>
