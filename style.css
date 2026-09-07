@@ -3639,6 +3639,164 @@ body:not(.edit-mode) .hidden-nav {
 .sidebar-tab-pill:hover { border-color: #e11d48; color: #e11d48; }
 .sidebar-tab-pill.active { background: #e11d48; color: #fff; border-color: #e11d48; }
 
+/* ===== קופסת סינונים (Filters) ===== */
+.pf-section-title {
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  color: #64748b;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.pf-divider {
+  height: 1px;
+  background: #e2e8f0;
+  margin: 18px 0;
+}
+.pf-check {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 0;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 700;
+  color: #1e293b;
+}
+.pf-check input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: #5b21b6;
+  flex-shrink: 0;
+  margin: 0;
+}
+.pf-avail { margin-top: -2px; }
+.pf-range-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 17px;
+  font-weight: 900;
+  color: #0f172a;
+  margin-bottom: 8px;
+}
+.pf-range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 6px;
+  background: #5b21b6;
+  outline: none;
+  margin: 6px 0 14px;
+  cursor: pointer;
+}
+.pf-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #5b21b6;
+  border: 3px solid #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+  cursor: pointer;
+}
+.pf-range::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #5b21b6;
+  border: 3px solid #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+  cursor: pointer;
+}
+
+/* טווח גילאים — סליידר שתי־ידיות (מינימום/מקסימום) */
+.pf-age-dual { margin: 6px 0 6px; }
+.pf-dual-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 17px;
+  font-weight: 900;
+  color: #0f172a;
+  margin-bottom: 10px;
+}
+.pf-dual-slider { position: relative; height: 24px; }
+.pf-dual-rail {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  left: 0; right: 0; height: 6px; border-radius: 6px; background: #e2e8f0;
+}
+.pf-dual-fill {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  height: 6px; border-radius: 6px; background: #5b21b6;
+}
+.pf-dual-input {
+  position: absolute; top: 0; left: 0; width: 100%; height: 24px;
+  margin: 0; background: none; pointer-events: none;
+  -webkit-appearance: none; appearance: none;
+}
+.pf-dual-input::-webkit-slider-runnable-track { background: transparent; border: none; }
+.pf-dual-input::-moz-range-track { background: transparent; border: none; }
+.pf-dual-input::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: #5b21b6; border: 3px solid #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3); cursor: pointer;
+  pointer-events: auto; position: relative; z-index: 2;
+}
+.pf-dual-input::-moz-range-thumb {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: #5b21b6; border: 3px solid #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3); cursor: pointer;
+  pointer-events: auto;
+}
+.pf-price-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-start;
+}
+.pf-price-pill {
+  border: 1.5px solid #e2e8f0;
+  background: #fff;
+  color: #475569;
+  border-radius: 999px;
+  padding: 9px 16px;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.pf-price-pill:hover { border-color: #5b21b6; color: #4c1d95; }
+.pf-price-pill.active {
+  background: #5b21b6;
+  color: #fff;
+  border-color: #5b21b6;
+  box-shadow: 0 3px 8px rgba(91,33,182,0.3);
+}
+.pf-clear-btn {
+  width: 100%;
+  margin-top: 20px;
+  border: 1.5px solid #e11d48;
+  background: #fff;
+  color: #e11d48;
+  border-radius: 10px;
+  padding: 11px;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.pf-clear-btn:hover { background: #e11d48; color: #fff; }
+
+/* במובייל: מסתירים לגמרי את טאב הסינונים (הכפתור והתוכן) */
+@media (max-width: 768px) {
+  .sidebar-tab-pill[data-tab="filter"],
+  .sidebar-tab-panel[data-tab="filter"] { display: none !important; }
+}
+
 /* ===== בורר גודל גריד בעמוד התמונות (2 / 3 / 4 עמודות) ===== */
 .photos-page.photo-cols-2 .art-rows { grid-template-columns: repeat(2, 1fr) !important; }
 .photos-page.photo-cols-3 .art-rows { grid-template-columns: repeat(3, 1fr) !important; }

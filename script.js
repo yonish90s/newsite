@@ -6188,6 +6188,7 @@ const PHOTOS_SAMPLES = [
 // ובחירה מחזירה אותם עם הערך שנבחר מוצג על הכפתור.
 // המצב חי מחוץ ל-buildPhotosPage ולכן שורד בנייה מחדש של העמוד.
 function photoCurrentFilter(kind) {
+  if (kind === 'general') return currentPhotoGeneralFilter;
   if (kind === 'category') return currentPhotoCategoryFilter;
   if (kind === 'age') return currentPhotoAgeFilter;
   if (kind === 'date') return currentPhotoDateFilter;
@@ -6279,12 +6280,24 @@ function photoToggleFilterGroup(kind) {
 window.photoToggleFilterGroup = photoToggleFilterGroup;
 
 function photoClearFilters() {
+  // פאנל הצד (בחירה מרובה + טווח)
+  photoSel.category = [];
+  photoSel.region = [];
+  photoSel.date = [];
+  photoAgeMin = 18;
+  photoAgeMax = 99;
+  // שורת הצ׳יפים העליונה (בחירה יחידה)
   currentPhotoCategoryFilter = 'הכל';
   currentPhotoAgeFilter = 'הכל';
   currentPhotoRegionFilter = 'הכל';
   currentPhotoDateFilter = 'הכל';
+  currentPhotoGeneralFilter = 'הכל';
   photoOpenFilterGroup = null;
-  photoRenderFilterBar();
+  // מרעננים את פאנל הסינונים כדי לאפס את כל תיבות הסימון והסליידר
+  const box = mainContent.querySelector('.photos-page .pf-box');
+  if (box) box.outerHTML = buildFiltersSidebarBox();
+  // מרעננים את שורת הצ׳יפים
+  if (typeof photoRenderFilterBar === 'function') photoRenderFilterBar();
   photoApplyFilters();
 }
 window.photoClearFilters = photoClearFilters;
@@ -6422,7 +6435,7 @@ function renderPhotoCard(p, options = {}) {
   const textBlock = actionsBlock + infoBlock;
 
   return `
-    <div class="art-row" data-category="${p.category || 'כללי'}" data-age="${artEsc(p.ageRange || '')}" data-region="${artEsc(p.region || '')}" data-time="${photoAlbumTime(p) ?? ''}" data-adult="${p.isAdult ? '1' : '0'}" data-search="${searchText}" onclick="${isPending ? '' : `photoOpenDetail('${artEsc(p.id)}')`}" style="${isPending ? 'border: 2px dashed #f59e0b; background: #fffbeb; cursor: default;' : ''}">
+    <div class="art-row" data-category="${p.category || 'כללי'}" data-age="${artEsc(p.ageRange || '')}" data-region="${artEsc(p.region || '')}" data-time="${photoAlbumTime(p) ?? ''}" data-score="${totalScore}" data-adult="${p.isAdult ? '1' : '0'}" data-search="${searchText}" onclick="${isPending ? '' : `photoOpenDetail('${artEsc(p.id)}')`}" style="${isPending ? 'border: 2px dashed #f59e0b; background: #fffbeb; cursor: default;' : ''}">
       ${textBlock}
       <div class="art-row-img-container" style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0;">
         <div class="art-row-img-wrap" style="--bg-img: url('${mainImg || ''}');">
@@ -6886,13 +6899,198 @@ function openCommunityPage(communityId) {
 window.openCommunityPage = openCommunityPage;
 
 // ============================================================
+// קופסת סינונים (Filters) — זמינות, טווח מחיר, סוג עסקה, מצב המוצר
+// ============================================================
+const productFilters = {
+  inStock: true,
+  price: 'all',       // 'all' | 'u500' | '500-3k' | '3k+'
+  deal: { buy: false, borrow: false, swap: false },
+  grade: { sealed: false, likenew: false, used: false },
+};
+
+function buildFiltersSidebarBox() {
+  const f = productFilters;
+  const priceBtn = (id, label) =>
+    `<button type="button" class="pf-price-pill${f.price === id ? ' active' : ''}" onclick="setPriceFilter('${id}', this)">${label}</button>`;
+  const check = (group, key, label) =>
+    `<label class="pf-check">
+      <span class="pf-check-label">${label}</span>
+      <input type="checkbox" ${f[group][key] ? 'checked' : ''} onchange="toggleFilterCheck('${group}','${key}',this.checked)">
+    </label>`;
+  // קבוצת בחירה-מרובה (multi) לפילטרים אמיתיים של הגלריות
+  const multiCheck = (kind, value, label) =>
+    `<label class="pf-check">
+      <span class="pf-check-label">${label}</span>
+      <input type="checkbox" ${photoSel[kind].includes(value) ? 'checked' : ''} onchange="photoToggleMulti('${kind}','${artEsc(value)}',this.checked)">
+    </label>`;
+  // בחירה יחידה של מיון (מתנהג כמו רדיו למרות הלסמן)
+  const sortCheck = (value, label) =>
+    `<label class="pf-check">
+      <span class="pf-check-label">${label}</span>
+      <input type="checkbox" ${currentPhotoGeneralFilter === value ? 'checked' : ''} onchange="photoSetSort('${value}',this)">
+    </label>`;
+
+  return `
+    <div class="art-sidebar-box pf-box" style="border:1.5px solid #e2e8f0; border-radius:14px; padding:18px; background:#fff; box-shadow:0 4px 15px rgba(15,23,42,0.05); text-align:right; direction:rtl;">
+
+      <!-- טווח גילאים — שתי ידיות: מינימום ומקסימום, עד גיל 99 -->
+      <div class="pf-section-title">טווח גילאים (AGE)</div>
+      <div class="pf-age-dual" style="direction:ltr;">
+        <div class="pf-dual-labels">
+          <span id="pf-age-lbl-min">${photoAgeMin}</span>
+          <span id="pf-age-lbl-max">${photoAgeMax}</span>
+        </div>
+        <div class="pf-dual-slider">
+          <div class="pf-dual-rail"></div>
+          <div class="pf-dual-fill" id="pf-age-fill" style="left:${((photoAgeMin - 18) / 81) * 100}%; width:${((photoAgeMax - photoAgeMin) / 81) * 100}%;"></div>
+          <input type="range" class="pf-dual-input" id="pf-age-min" min="18" max="99" step="1" value="${photoAgeMin}" oninput="photoSetAgeDual('min', this.value)">
+          <input type="range" class="pf-dual-input" id="pf-age-max" min="18" max="99" step="1" value="${photoAgeMax}" oninput="photoSetAgeDual('max', this.value)">
+        </div>
+      </div>
+
+      <div class="pf-divider"></div>
+
+      <!-- כללי (מיון) — בחירה יחידה -->
+      <div class="pf-section-title">כללי (SORT)</div>
+      <div class="pf-check-group">
+        ${sortCheck('האחרונים', 'האחרונים ⬆️')}
+        ${sortCheck('הפופולארים', 'הפופולארים 🔥')}
+        ${sortCheck('הישנים', 'הישנים ⬇️')}
+      </div>
+
+      <div class="pf-divider"></div>
+
+      <!-- מין -->
+      <div class="pf-section-title">מין (CATEGORY)</div>
+      ${PHOTO_CATEGORIES.filter(v => v !== 'הכל').map(v => multiCheck('category', v, v)).join('')}
+
+      <div class="pf-divider"></div>
+
+      <!-- מיקום -->
+      <div class="pf-section-title">מיקום (REGION)</div>
+      ${PHOTO_REGIONS.filter(v => v !== 'הכל').map(v => multiCheck('region', v, v)).join('')}
+
+      <div class="pf-divider"></div>
+
+      <!-- תאריך -->
+      <div class="pf-section-title">תאריך (DATE)</div>
+      ${PHOTO_DATE_RANGES.filter(v => v !== 'הכל').map(v => multiCheck('date', v, v)).join('')}
+
+      <div class="pf-divider"></div>
+
+      <!-- גודל (מספר עמודות) — בחירה יחידה -->
+      <div class="pf-section-title">גודל (SIZE)</div>
+      <div class="pf-check-group">
+        ${[4, 3, 2].map(n => `
+          <label class="pf-check">
+            <span class="pf-check-label">${n} עמודות</span>
+            <input type="checkbox" ${photoGridCols === n ? 'checked' : ''} onchange="photoSetSizeCheck(${n}, this)">
+          </label>
+        `).join('')}
+      </div>
+
+      <button type="button" class="pf-clear-btn" onclick="photoClearFilters()">נקה סינון ✕</button>
+    </div>
+  `;
+}
+
+function setPriceFilter(id, btn) {
+  productFilters.price = id;
+  const box = btn.closest('.pf-box');
+  if (box) box.querySelectorAll('.pf-price-pill').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+}
+window.setPriceFilter = setPriceFilter;
+
+function onPriceRange(val) {
+  // ערך הסליידר נשמר עבור סינון עתידי לפי מחיר
+  productFilters.priceMax = Number(val);
+}
+window.onPriceRange = onPriceRange;
+
+function toggleFilterCheck(group, key, checked) {
+  if (key === null) productFilters[group] = checked;
+  else productFilters[group][key] = checked;
+}
+window.toggleFilterCheck = toggleFilterCheck;
+window.buildFiltersSidebarBox = buildFiltersSidebarBox;
+
+// ---- מצב הפילטרים האמיתיים של הגלריות (בפאנל הצד) ----
+const photoSel = { category: [], region: [], date: [] }; // בחירה מרובה
+let photoAgeMin = 18;
+let photoAgeMax = 99; // 18–99 = טווח מלא (ללא סינון)
+
+function photoAgeBucket(s) {
+  if (s === '18-25') return [18, 25];
+  if (s === '26-35') return [26, 35];
+  if (s === '36-45') return [36, 45];
+  if (s === '46+')   return [46, 99];
+  return null;
+}
+
+function photoToggleMulti(kind, value, checked) {
+  const arr = photoSel[kind];
+  if (!arr) return;
+  const i = arr.indexOf(value);
+  if (checked && i < 0) arr.push(value);
+  else if (!checked && i >= 0) arr.splice(i, 1);
+  photoApplyFilters();
+}
+window.photoToggleMulti = photoToggleMulti;
+
+function photoSetSort(value, cb) {
+  currentPhotoGeneralFilter = value;
+  const grp = cb.closest('.pf-check-group');
+  if (grp) grp.querySelectorAll('input[type="checkbox"]').forEach(x => { if (x !== cb) x.checked = false; });
+  cb.checked = true;
+  photoApplyFilters();
+}
+window.photoSetSort = photoSetSort;
+
+function photoSetSizeCheck(n, cb) {
+  const grp = cb.closest('.pf-check-group');
+  if (grp) grp.querySelectorAll('input[type="checkbox"]').forEach(x => { if (x !== cb) x.checked = false; });
+  cb.checked = true;
+  photoSetGridSize(n);
+}
+window.photoSetSizeCheck = photoSetSizeCheck;
+
+function photoUpdateAgeDual() {
+  const fill = document.getElementById('pf-age-fill');
+  const lblMin = document.getElementById('pf-age-lbl-min');
+  const lblMax = document.getElementById('pf-age-lbl-max');
+  const pMin = ((photoAgeMin - 18) / 81) * 100;
+  const pMax = ((photoAgeMax - 18) / 81) * 100;
+  if (fill) { fill.style.left = pMin + '%'; fill.style.width = (pMax - pMin) + '%'; }
+  if (lblMin) lblMin.textContent = photoAgeMin;
+  if (lblMax) lblMax.textContent = photoAgeMax;
+}
+
+function photoSetAgeDual(which, val) {
+  val = Number(val);
+  const minEl = document.getElementById('pf-age-min');
+  const maxEl = document.getElementById('pf-age-max');
+  let mn = minEl ? Number(minEl.value) : photoAgeMin;
+  let mx = maxEl ? Number(maxEl.value) : photoAgeMax;
+  // מונעים חצייה של הידיות
+  if (which === 'min') { mn = Math.min(val, mx); if (minEl) minEl.value = mn; }
+  else { mx = Math.max(val, mn); if (maxEl) maxEl.value = mx; }
+  photoAgeMin = mn;
+  photoAgeMax = mx;
+  photoUpdateAgeDual();
+  photoApplyFilters();
+}
+window.photoSetAgeDual = photoSetAgeDual;
+
+// ============================================================
 // סרגל צד מאוחד עם טאבים (pills) — כל הקופסאות במקום אחד, מדפדפים ביניהן
 // ============================================================
-let activeSidebarTab = 'chat';
+let activeSidebarTab = 'filter';
 
 function buildSidebarTabs(savedHTML) {
   const uploadHtml = (buildQuickUploadBox() || '') + (savedHTML || '');
   const tabs = [
+    { id: 'filter',    label: '🔎 סינונים', html: buildFiltersSidebarBox() },
     { id: 'chat',      label: '💬 צ׳אט',   html: buildLiveChatBox() },
     { id: 'publish',   label: '🤖 פרסום',  html: `
       <div class="art-sidebar-box" style="text-align:center; padding:18px; border:1.5px solid #22c55e; background:rgba(34,197,94,0.04); border-radius:12px;">
@@ -6910,11 +7108,16 @@ function buildSidebarTabs(savedHTML) {
   ];
   if (!tabs.some(t => t.id === activeSidebarTab)) activeSidebarTab = 'chat';
 
+  // במובייל פאנל הסינונים מוסתר לגמרי — אם הוא הטאב הפעיל, נופלים חזרה לצ׳אט
+  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+  let active = activeSidebarTab;
+  if (isMobile && active === 'filter') active = 'chat';
+
   const pills = tabs.map(t =>
-    `<button class="sidebar-tab-pill${t.id === activeSidebarTab ? ' active' : ''}" onclick="sidebarShowTab('${t.id}', this)">${t.label}</button>`
+    `<button class="sidebar-tab-pill${t.id === active ? ' active' : ''}" data-tab="${t.id}" onclick="sidebarShowTab('${t.id}', this)">${t.label}</button>`
   ).join('');
   const panels = tabs.map(t =>
-    `<div class="sidebar-tab-panel" data-tab="${t.id}" style="display:${t.id === activeSidebarTab ? 'block' : 'none'};">${t.html}</div>`
+    `<div class="sidebar-tab-panel" data-tab="${t.id}" style="display:${t.id === active ? 'block' : 'none'};">${t.html}</div>`
   ).join('');
 
   return `
@@ -7100,26 +7303,15 @@ function buildPhotosPage(albums) {
           </div>
           ${photoFilterSectionHTML()}
 
-          <!-- שורה 1: מה חדש -->
+          <!-- מקטע מאוחד: כל הגלריות, החדשים למעלה והישנים למטה (ניתן למיון דרך "כללי") -->
           <div class="photo-section-row" style="margin-bottom: 32px; background: #ffffff; padding: 18px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
             <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:2.5px solid #2563eb; padding-bottom:10px; margin-bottom:18px;">
               <div>
-                <h3 style="margin:0; font-size:18px; font-weight:900; color:#1e3a8a;">החדשים באתר</h3>
+                <h3 style="margin:0; font-size:18px; font-weight:900; color:#1e3a8a;">כל הגלריות</h3>
               </div>
             </div>
             <div class="art-rows photo-collapsible" id="photo-row-1">${row1HTML}</div>
             ${photoRowMoreBtn(newestAlbums.length, 'photo-row-1')}
-          </div>
-
-          <!-- שורה 2: הכי הרבה לייקים וצפיות -->
-          <div class="photo-section-row" style="margin-bottom: 32px; background: #ffffff; padding: 18px; border-radius: 16px; border: 1px solid #fecdd3; box-shadow: 0 4px 15px rgba(225,29,72,0.05);">
-            <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:2.5px solid #e11d48; padding-bottom:10px; margin-bottom:18px;">
-              <div>
-                <h3 style="margin:0; font-size:18px; font-weight:900; color:#9f1239;">הפופולארים</h3>
-              </div>
-            </div>
-            <div class="art-rows photo-collapsible" id="photo-row-3">${row3HTML}</div>
-            ${photoRowMoreBtn(mostPopularAlbums.length, 'photo-row-3')}
           </div>
 
           <div class="art-pagination" style="display:none"></div>
@@ -7127,15 +7319,13 @@ function buildPhotosPage(albums) {
           ${(isAdmin() || isEditMode) ? `<button class="art-add-btn" onclick="openPhotoModal()" style="background:#e11d48">+ הוסף עיצוב אתר חדש</button>` : ''}
         </div>
         <div class="art-sidebar">
-          ${(isAdmin() || isEditMode) ? `
           <button onclick="openPhotoModal()" style="background:#e11d48; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: white; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.2s;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
               <line x1="12" y1="5" x2="12" y2="19"></line>
               <line x1="5" y1="12" x2="19" y2="12"></line>
             </svg>
-            העלאת אתר מעוצב לאתר
+            העלה תמונה
           </button>
-          ` : ''}
           ${buildSidebarTabs(savedHTML)}
         </div>
       </div>
@@ -8050,7 +8240,10 @@ const PHOTO_AGE_RANGES = ['הכל', '18-25', '26-35', '36-45', '46+'];
 const PHOTO_REGIONS = ['הכל', 'צפון', 'מרכז', 'דרום'];
 const PHOTO_DATE_RANGES = ['הכל', 'השבוע', 'החודש', 'השנה'];
 
+const PHOTO_GENERAL_SORTS = ['הכל', 'האחרונים', 'הפופולארים', 'הישנים'];
+
 const PHOTO_FILTER_GROUPS = [
+  { kind: 'general',  label: 'כללי',   values: PHOTO_GENERAL_SORTS },
   { kind: 'category', label: 'מין',    values: PHOTO_CATEGORIES },
   { kind: 'age',      label: 'גיל',    values: PHOTO_AGE_RANGES },
   { kind: 'region',   label: 'מיקום',  values: PHOTO_REGIONS },
@@ -8061,6 +8254,7 @@ let currentPhotoCategoryFilter = 'הכל';
 let currentPhotoAgeFilter = 'הכל';
 let currentPhotoRegionFilter = 'הכל';
 let currentPhotoDateFilter = 'הכל';
+let currentPhotoGeneralFilter = 'הכל';
 let photoOpenFilterGroup = null;
 
 // גודל הגריד בעמוד התמונות (מספר עמודות: 2 / 3 / 4). נשמר בין ביקורים.
@@ -8110,7 +8304,8 @@ function photoDateThreshold(range) {
 }
 
 function photoSetFilter(kind, value) {
-  if (kind === 'category') currentPhotoCategoryFilter = value;
+  if (kind === 'general') currentPhotoGeneralFilter = value;
+  else if (kind === 'category') currentPhotoCategoryFilter = value;
   else if (kind === 'age') currentPhotoAgeFilter = value;
   else if (kind === 'region') currentPhotoRegionFilter = value;
   else if (kind === 'date') currentPhotoDateFilter = value;
@@ -8129,13 +8324,39 @@ function photoFilterCategory(category) {
 }
 window.photoFilterCategory = photoFilterCategory;
 
+// מיון "כללי": האחרונים / הפופולארים / הישנים. משנה את סדר הכרטיסים
+// בכל מקטע (.art-rows) בעמוד התמונות. "הכל" מחזיר לסדר המקורי של הבנייה.
+function photoApplySort() {
+  const mode = currentPhotoGeneralFilter;
+  const containers = mainContent.querySelectorAll('.photos-page .art-rows');
+  containers.forEach(container => {
+    const rows = Array.from(container.children).filter(el => el.classList && el.classList.contains('art-row'));
+    if (!rows.length) return;
+    // חותמים את הסדר המקורי פעם אחת כדי שנוכל לשחזר אותו ב"הכל"
+    rows.forEach((r, i) => { if (r.dataset.origIndex === undefined) r.dataset.origIndex = String(i); });
+
+    const num = (r, attr) => Number(r.dataset[attr]) || 0;
+    let sorted;
+    if (mode === 'האחרונים')       sorted = rows.slice().sort((a, b) => num(b, 'time') - num(a, 'time'));
+    else if (mode === 'הישנים')    sorted = rows.slice().sort((a, b) => num(a, 'time') - num(b, 'time'));
+    else if (mode === 'הפופולארים') sorted = rows.slice().sort((a, b) => num(b, 'score') - num(a, 'score'));
+    else                            sorted = rows.slice().sort((a, b) => num(a, 'origIndex') - num(b, 'origIndex'));
+
+    sorted.forEach(r => container.appendChild(r));
+  });
+}
+
 function photoApplyFilters() {
+  photoApplySort();
   const searchInput = mainContent.querySelector('.photos-page .art-search');
   const q = searchInput ? searchInput.value.toLowerCase().trim() : '';
   
   const rows = mainContent.querySelectorAll('.photos-page .art-row');
-  const dateThreshold = photoDateThreshold(currentPhotoDateFilter);
   const isAgeVerified = typeof sessionStorage !== 'undefined' && sessionStorage.getItem('age_verified') === 'true';
+  const ageActive = (photoAgeMin > 18 || photoAgeMax < 99);
+  // אילוצי שורת-הצ׳יפים העליונה (בחירה יחידה). התוצאה היא חיתוך (AND)
+  // של שורת הצ׳יפים עם פאנל הצד — שתי מערכות הסינון פועלות יחד.
+  const topDateThreshold = photoDateThreshold(currentPhotoDateFilter);
   let visible = 0;
 
   rows.forEach(r => {
@@ -8143,12 +8364,38 @@ function photoApplyFilters() {
     // הכרטיס מציג רק תמונה, ולכן מחפשים בתכונת data-search ולא בטקסט הגלוי
     const text = (r.dataset.search || r.textContent).toLowerCase();
 
-    const categoryMatch = (currentPhotoCategoryFilter === 'הכל' || rowCategory === currentPhotoCategoryFilter);
-    const ageMatch = (currentPhotoAgeFilter === 'הכל' || (r.dataset.age || '') === currentPhotoAgeFilter);
-    const regionMatch = (currentPhotoRegionFilter === 'הכל' || (r.dataset.region || '') === currentPhotoRegionFilter);
-    // גלריה בלי תאריך שניתן לקרוא מוצגת רק תחת "הכל"
+    const rowRegion = r.dataset.region || '';
+    const rowAge = r.dataset.age || '';
     const rowTime = r.dataset.time ? Number(r.dataset.time) : null;
-    const dateMatch = (dateThreshold === null) || (rowTime !== null && rowTime >= dateThreshold);
+
+    // מין — פאנל הצד (בחירה מרובה) AND שורת הצ׳יפים (בחירה יחידה)
+    const categoryMatch =
+      (!photoSel.category.length || photoSel.category.includes(rowCategory)) &&
+      (currentPhotoCategoryFilter === 'הכל' || rowCategory === currentPhotoCategoryFilter);
+
+    // מיקום — פאנל הצד AND שורת הצ׳יפים
+    const regionMatch =
+      (!photoSel.region.length || photoSel.region.includes(rowRegion)) &&
+      (currentPhotoRegionFilter === 'הכל' || rowRegion === currentPhotoRegionFilter);
+
+    // תאריך — פאנל הצד (OR על הטווחים שנבחרו) AND שורת הצ׳יפים
+    const dateMatchSide = (!photoSel.date.length) || photoSel.date.some(dr => {
+      const th = photoDateThreshold(dr);
+      return th === null ? true : (rowTime !== null && rowTime >= th);
+    });
+    const dateMatchTop = (topDateThreshold === null) || (rowTime !== null && rowTime >= topDateThreshold);
+    const dateMatch = dateMatchSide && dateMatchTop;
+
+    // גיל — טווח שתי-הידיות בפאנל הצד AND בורר הגיל בשורת הצ׳יפים
+    let ageMatch = true;
+    if (ageActive) {
+      const b = photoAgeBucket(rowAge);
+      ageMatch = b ? (b[1] >= photoAgeMin && b[0] <= photoAgeMax) : false;
+    }
+    if (currentPhotoAgeFilter !== 'הכל') {
+      ageMatch = ageMatch && (rowAge === currentPhotoAgeFilter);
+    }
+
     const textMatch = text.includes(q);
 
     const show = categoryMatch && ageMatch && regionMatch && dateMatch && textMatch;
