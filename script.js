@@ -358,7 +358,7 @@ function sanitizeToOnlyPhotosAndStories() {
   // לפי בקשת המשתמש: משאירים רק עמודי תמונות וסיפורים (מוחקים כתבות/קהילה וכל עמוד אחר).
   // מסננים רק כשקיים לפחות עמוד תמונות/סיפורים אחד, כדי לא לרוקן אתר תקין בטעות.
   if (pages.some(p => p && ((p.content || '').includes('photos-page') || (p.content || '').includes('stories-page')))) {
-    pages = pages.filter(p => p && ((p.content || '').includes('photos-page') || (p.content || '').includes('stories-page')));
+    pages = pages.filter(p => p && ((p.content || '').includes('photos-page') || (p.content || '').includes('stories-page') || (p.content || '').includes('communities-page')));
   }
 
   // בוטסטראפ של עמודי ברירת המחדל (תמונות + סיפורים) רק כאשר אין אף עמוד באתר.
@@ -366,6 +366,17 @@ function sanitizeToOnlyPhotosAndStories() {
   if (pages.length === 0) {
     pages.push({ id: 'page-photos-main', title: 'תמונות 🖼️', content: typeof buildPhotosPage === 'function' ? buildPhotosPage(typeof PHOTOS_SAMPLES !== 'undefined' ? PHOTOS_SAMPLES : []) : '' });
     pages.push({ id: 'page-stories-main', title: 'סיפורים', content: typeof buildStoriesPage === 'function' ? buildStoriesPage(typeof STORIES_SAMPLES !== 'undefined' ? STORIES_SAMPLES : []) : '' });
+  }
+
+  // עמוד "קהילות": מוודאים שהוא קיים תמיד (נוסף גם לאתרים קיימים), ומרפאים
+  // את תוכנו לפלייסהולדר קבוע כדי שלא ייפגע בטעות משמירות קודמות.
+  const _commPage = pages.find(p => p && p.id === 'page-communities-main');
+  const _commContent = '<div class="communities-page" data-page-id="page-communities-main"></div>';
+  if (!_commPage) {
+    pages.push({ id: 'page-communities-main', title: 'קהילות 🏘️', content: _commContent });
+  } else {
+    if (!_commPage.title) _commPage.title = 'קהילות 🏘️';
+    _commPage.content = _commContent;
   }
 
   // סנכרון התפריט העליון עם רשימת העמודים
@@ -877,6 +888,15 @@ function renderPage() {
       return;
     }
 
+    // עמוד "קהילות": מזוהה לפי מזהה/כותרת (לא לפי תוכן) כדי שיהיה עמיד לחלוטין
+    if (currentPage.id === 'page-communities-main' || (currentPage.title && currentPage.title.includes('קהילות'))) {
+      if (typeof buildCommunitiesPage === 'function') {
+        mainContent.innerHTML = buildCommunitiesPage();
+        try { window.scrollTo(0, 0); } catch (e) {}
+        return;
+      }
+    }
+
     mainContent.innerHTML = currentPage.content; // מזריקים את ה-HTML של העמוד פנימה
 
     // עמוד כתבות: בונים מחדש מהנתונים השמורים כדי ששינויי מבנה (חיפוש, עיצוב) תמיד ייכנסו
@@ -914,6 +934,12 @@ function renderPage() {
     const commPageEl = mainContent.querySelector('.community-page');
     if (commPageEl && typeof buildCommunityPage === 'function') {
       mainContent.innerHTML = buildCommunityPage();
+    }
+
+    // עמוד "קהילות" (רשימת הקהילות): בונים מחדש מהנתונים החיים
+    const commListEl = mainContent.querySelector('.communities-page');
+    if (commListEl && typeof buildCommunitiesPage === 'function') {
+      mainContent.innerHTML = buildCommunitiesPage();
     }
 
     // עמוד חנות: בונים מחדש מהנתונים השמורים
@@ -1396,6 +1422,10 @@ function artSerializePageContent() {
   const community = mainContent.querySelector('.community-page');
   if (community) {
     return `<div class="articles-page community-page" data-page-id="${community.dataset.pageId || activePageId}"></div>`;
+  }
+  const communitiesList = mainContent.querySelector('.communities-page');
+  if (communitiesList) {
+    return '<div class="communities-page" data-page-id="page-communities-main"></div>';
   }
   const articles = mainContent.querySelector('.articles-page:not(.stories-page):not(.photos-page):not(.courses-page):not(.community-page)');
   if (articles && articles.dataset.articlesJson) {
@@ -6810,6 +6840,8 @@ function subscribeCommunities() {
     // רענון הטאב אם הוא פתוח, ורענון עמוד הקהילה אם צופים בו
     const listEl = document.getElementById('communities-list');
     if (listEl) listEl.innerHTML = communitiesListHTML();
+    const rowEl = document.getElementById('communities-page-list');
+    if (rowEl) rowEl.innerHTML = communitiesRowHTML();
     const cp = mainContent && mainContent.querySelector('.community-page');
     if (cp && cp.dataset.communityId && communitiesData[cp.dataset.communityId]) {
       openCommunityPage(cp.dataset.communityId);
@@ -6914,6 +6946,43 @@ function openCommunityPage(communityId) {
   if (typeof photoApplyFilters === 'function') photoApplyFilters();
 }
 window.openCommunityPage = openCommunityPage;
+
+// ---- עמוד "קהילות": מרכז שמציג את כל הקהילות כשורת צ׳יפים; כל קהילה
+// היא עמוד גלריות משלה. יצירת קהילה מוסיפה צ׳יפ ועוברת לעמוד שלה. ----
+function communitiesRowHTML() {
+  const list = Object.values(communitiesData).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  if (!list.length) {
+    return '<div class="comm-empty">אין קהילות עדיין — צרו את הראשונה! 🚀</div>';
+  }
+  return list.map(c => {
+    const count = c.items ? Object.keys(c.items).length : 0;
+    return `<button type="button" class="comm-chip" onclick="openCommunityPage('${artEsc(c.id)}')" title="${artEsc(c.name || 'קהילה')}">
+      <span class="comm-chip-icon">${artEsc(c.icon || '🏘️')}</span>
+      <span class="comm-chip-name">${artEsc(c.name || 'קהילה')}</span>
+      <span class="comm-chip-count">${count}</span>
+    </button>`;
+  }).join('');
+}
+window.communitiesRowHTML = communitiesRowHTML;
+
+function buildCommunitiesPage() {
+  subscribeCommunities();
+  const createBtn = auth.currentUser
+    ? `<button onclick="createCommunity()" class="comm-create-btn">➕ צור קהילה חדשה</button>`
+    : `<button onclick="openLiveChatLogin()" class="comm-create-btn comm-create-btn-login">🔒 התחבר כדי ליצור קהילה</button>`;
+  return `
+    <div class="communities-page" data-page-id="page-communities-main">
+      <div class="comm-inner">
+        <div class="comm-head">
+          <h2 class="comm-title">🏘️ קהילות</h2>
+          <p class="comm-sub">בחרו קהילה או צרו חדשה — כל קהילה היא עמוד גלריות משלה.</p>
+          ${createBtn}
+        </div>
+        <div class="comm-row" id="communities-page-list">${communitiesRowHTML()}</div>
+      </div>
+    </div>`;
+}
+window.buildCommunitiesPage = buildCommunitiesPage;
 
 // ============================================================
 // קופסת סינונים (Filters) — זמינות, טווח מחיר, סוג עסקה, מצב המוצר
@@ -9981,9 +10050,18 @@ onValue(ref(db, 'website'), (snapshot) => {
     let pList = data.pages.filter(p => p && p.id !== 'page-ci' && p.id !== 'page-em' && !p.title?.includes('ריבית') && !p.title?.includes('Everything'));
     // מסירים עמודי תמונות/סיפורים כפולים (למשל עמוד סיפורים ריק) — משאירים את זה עם התוכן
     pList = dedupePageList(pList);
-    // משאירים רק עמודי תמונות וסיפורים (מוחקים כתבות/קהילה וכל עמוד אחר)
+    // משאירים רק עמודי תמונות/סיפורים/קהילות (מוחקים כתבות וכל עמוד אחר)
     if (pList.some(p => p && ((p.content || '').includes('photos-page') || (p.content || '').includes('stories-page')))) {
-      pList = pList.filter(p => p && ((p.content || '').includes('photos-page') || (p.content || '').includes('stories-page')));
+      pList = pList.filter(p => p && ((p.content || '').includes('photos-page') || (p.content || '').includes('stories-page') || (p.content || '').includes('communities-page')));
+    }
+    // מוודאים שעמוד "קהילות" תמיד קיים (עם תוכן פלייסהולדר תקין)
+    const _cp = pList.find(p => p && p.id === 'page-communities-main');
+    const _cpc = '<div class="communities-page" data-page-id="page-communities-main"></div>';
+    if (!_cp) {
+      pList.push({ id: 'page-communities-main', title: 'קהילות 🏘️', content: _cpc });
+    } else {
+      if (!_cp.title) _cp.title = 'קהילות 🏘️';
+      _cp.content = _cpc;
     }
     if (JSON.stringify(pages) !== JSON.stringify(pList)) {
       pages = pList;
@@ -9997,6 +10075,8 @@ onValue(ref(db, 'website'), (snapshot) => {
     navs = navs.filter(id => pages.some(p => p && p.id === id));
     let pPhoto = pages.find(p => p && p.content && p.content.includes('photos-page')) || pages.find(p => p && p.title && p.title.includes('תמונות'));
     if (pPhoto && !navs.includes(pPhoto.id)) navs.unshift(pPhoto.id);
+    // עמוד הקהילות תמיד מופיע בתפריט העליון
+    if (pages.some(p => p && p.id === 'page-communities-main') && !navs.includes('page-communities-main')) navs.push('page-communities-main');
     if (JSON.stringify(topNavPages) !== JSON.stringify(navs)) {
       topNavPages = navs;
       changed = true;

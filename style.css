@@ -3814,6 +3814,84 @@ body:not(.edit-mode) .hidden-nav {
 .photo-field label { margin: 0; }
 /* גם בפלאפון הטופס נשאר 2 שדות בשורה כמו במחשב */
 
+/* ===== עמוד קהילות ===== */
+.communities-page { direction: rtl; }
+.comm-inner { max-width: 1100px; margin: 0 auto; padding: 8px 4px 40px; }
+.comm-head {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 22px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+  text-align: right;
+}
+.comm-title { margin: 0 0 4px; font-size: 24px; font-weight: 900; color: #0f172a; }
+.comm-sub { margin: 0 0 14px; font-size: 14px; color: #64748b; line-height: 1.5; }
+.comm-create-btn {
+  background: #e11d48;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 20px;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(225,29,72,0.25);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.comm-create-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(225,29,72,0.3); }
+.comm-create-btn-login { background: #0f172a; box-shadow: 0 3px 10px rgba(15,23,42,0.2); }
+
+/* שורת הקהילות — צ׳יפים בשורה שנשברת, כמו שורת הסינון בעמוד התמונות */
+.comm-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: stretch;
+}
+.comm-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 999px;
+  padding: 10px 16px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+.comm-chip:hover {
+  border-color: #e11d48;
+  box-shadow: 0 6px 16px rgba(225,29,72,0.12);
+  transform: translateY(-2px);
+}
+.comm-chip-icon { font-size: 22px; line-height: 1; flex-shrink: 0; }
+.comm-chip-name { font-size: 15px; font-weight: 800; color: #0f172a; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.comm-chip-count {
+  font-size: 12px;
+  font-weight: 800;
+  color: #fff;
+  background: #e11d48;
+  border-radius: 999px;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 7px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.comm-empty {
+  width: 100%;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 40px 12px;
+}
+
 /* ===== בורר גודל גריד בעמוד התמונות (2 / 3 / 4 עמודות) ===== */
 .photos-page.photo-cols-2 .art-rows { grid-template-columns: repeat(2, 1fr) !important; }
 .photos-page.photo-cols-3 .art-rows { grid-template-columns: repeat(3, 1fr) !important; }
