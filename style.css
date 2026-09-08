@@ -3799,6 +3799,8 @@ body:not(.edit-mode) .hidden-nav {
   .art-layout .art-sidebar { order: -1; }
   .sidebar-tabs-pills { flex-wrap: wrap; }
   .sidebar-tab-panel { margin-top: 8px; }
+  /* במובייל משאירים רק 3 טאבים: סינונים, קהילה, קהילות */
+  .sidebar-tab-pill:not([data-tab="filter"]):not([data-tab="community"]):not([data-tab="communities"]) { display: none !important; }
 }
 
 /* כפתור מזעור/הרחבה של פאנל הסרגל (בסגנון רדיט) */
