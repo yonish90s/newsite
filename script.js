@@ -6508,9 +6508,11 @@ function renderPhotoCard(p, options = {}) {
     </div>
   `;
 
+  const priceBadgeHTML = p.price ? `<div class="art-price-badge">💰 ${artEsc(String(p.price))}</div>` : '';
   const infoBlock = `
     <div class="art-row-text photo-card-info">
       <h3>${p.title}</h3>
+      ${priceBadgeHTML}
       <div class="art-row-meta" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
         <span class="photo-author-link" onclick="event.stopPropagation(); openUserPage('${artEsc(p.authorId || '')}', '${artEsc(p.author)}')" style="cursor: pointer; color: #e11d48; text-decoration: underline; font-weight: 600;">${p.author}</span>
         <span class="art-row-sep">|</span>
@@ -6788,7 +6790,7 @@ function openQuickPublish(communityId) {
   // פרסום מהיר פתוח לכולם — גם למי שלא נרשם
   qpEnsureModal();
   qpStep = 'title';
-  qpData = { title: '', images: [], summary: '', communityId: communityId || null, tags: {}, tagIndex: 0 };
+  qpData = { title: '', images: [], summary: '', communityId: communityId || null, tags: {}, tagIndex: 0, price: '' };
   document.getElementById('qp-messages').innerHTML = '';
   document.getElementById('quick-publish-modal').style.display = 'flex';
   const where = communityId ? 'בקהילה' : '';
@@ -6826,7 +6828,16 @@ function qpHandleSend() {
     // אם הקהילה מגדירה סינונים מותאמים — שואלים ערך לכל סינון לפני הפרסום
     qpData.tags = {};
     if (qpCommunityFilters().length) { qpStep = 'tags'; qpData.tagIndex = 0; qpAskNextTag(); }
-    else { qpStep = 'done'; qpPublish(); }
+    else { qpMaybeAskPrice(); }
+  } else if (qpStep === 'price') {
+    inp.value = '';
+    if (text && text !== 'דלג') {
+      const n = String(text).replace(/[^\d.]/g, '');
+      qpData.price = n ? (n + ' ₪') : '';
+      qpBubble('user', qpData.price || artEsc(text));
+    } else { qpBubble('user', 'דלג'); }
+    qpStep = 'done';
+    qpPublish();
   }
 }
 
@@ -6835,9 +6846,21 @@ function qpCommunityFilters() {
   return (c && Array.isArray(c.filters)) ? c.filters : [];
 }
 
+function qpHasPrice() {
+  const c = (qpData.communityId && typeof communitiesData !== 'undefined') ? communitiesData[qpData.communityId] : null;
+  return !!(c && c.hasPrice);
+}
+
+// אחרי הסינונים: אם הקהילה כוללת מחיר — שואלים מחיר, אחרת מפרסמים
+function qpMaybeAskPrice() {
+  if (qpHasPrice()) { qpStep = 'price'; qpBubble('bot', '💰 מה המחיר? כתוב מספר בש״ח, או <b>דלג</b>.'); }
+  else { qpStep = 'done'; qpPublish(); }
+}
+window.qpMaybeAskPrice = qpMaybeAskPrice;
+
 function qpAskNextTag() {
   const filters = qpCommunityFilters();
-  if (qpData.tagIndex >= filters.length) { qpStep = 'done'; qpPublish(); return; }
+  if (qpData.tagIndex >= filters.length) { qpMaybeAskPrice(); return; }
   const g = filters[qpData.tagIndex];
   const btns = g.options.map(o =>
     `<button onclick="qpPickTag('${artEsc(g.name)}','${artEsc(o)}')" style="background:#eef2ff; color:#3730a3; border:1px solid #c7d2fe; border-radius:999px; padding:6px 14px; font-size:13px; font-weight:800; cursor:pointer; margin:3px;">${artEsc(o)}</button>`
@@ -6906,6 +6929,7 @@ async function qpPublish() {
     adminOnly: false,
     expiresAt: null,
     tags: qpData.tags || {},
+    price: qpData.price || '',
     approved: isAdminNow
   };
   try {
@@ -7003,9 +7027,11 @@ function createCommunity() {
   const prev = document.getElementById('community-img-preview');
   const pick = document.getElementById('community-img-pick');
   const filtersEl = document.getElementById('community-filters');
+  const priceEl = document.getElementById('community-has-price');
   if (nameEl) nameEl.value = '';
   if (descEl) descEl.value = '';
   if (filtersEl) filtersEl.value = '';
+  if (priceEl) priceEl.checked = false;
   if (prev) { prev.style.display = 'none'; prev.src = ''; }
   if (pick) pick.style.display = '';
   const modal = document.getElementById('community-modal');
@@ -7020,6 +7046,7 @@ async function saveCommunity() {
   if (!name) { alert('חובה לתת שם לקהילה'); return; }
   const desc = (document.getElementById('community-desc').value || '').trim();
   const filters = parseCommunityFilters((document.getElementById('community-filters') || {}).value || '');
+  const hasPrice = !!(document.getElementById('community-has-price') && document.getElementById('community-has-price').checked);
   const id = 'comm' + Date.now();
   const community = {
     id,
@@ -7028,6 +7055,7 @@ async function saveCommunity() {
     icon: '🏘️',
     image: communityImgData || '',
     filters: filters,
+    hasPrice: hasPrice,
     createdBy: auth.currentUser.uid,
     createdByName: (typeof liveChatUserName === 'function' ? liveChatUserName() : 'משתמש'),
     createdAt: Date.now()

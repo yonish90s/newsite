@@ -4014,6 +4014,18 @@ body:not(.edit-mode) .hidden-nav {
 .cf-opt { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: #334155; cursor: pointer; }
 .cf-opt input { width: 16px; height: 16px; accent-color: #e11d48; cursor: pointer; }
 
+/* תג מחיר על כרטיס מודעה (בקהילות שכוללות מחיר) */
+.art-price-badge {
+  display: inline-block;
+  background: #16a34a;
+  color: #fff;
+  font-weight: 900;
+  font-size: 13px;
+  padding: 3px 10px;
+  border-radius: 8px;
+  margin: 2px 0 4px;
+}
+
 /* חלון "שמורים" בסגנון יוניטי — חלון כהה עם רשת ריבועים */
 #saved-modal {
   display: none;
