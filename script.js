@@ -5665,16 +5665,24 @@ window.storyFilterCategory = storyFilterCategory;
 
 // מסמן אילו סיפורים תואמים לחיפוש ולקטגוריות שנבחרו; העימוד מציג את התוצאות
 function storyApplyFilters() {
+  if (typeof photoApplySort === 'function') photoApplySort(); // מיון העמוד (כללי)
   const searchInput = mainContent.querySelector('.stories-page .art-search');
   const q = searchInput ? searchInput.value.toLowerCase().trim() : '';
   const rows = mainContent.querySelectorAll('.stories-page .art-row');
   const isAgeVerified = typeof sessionStorage !== 'undefined' && sessionStorage.getItem('age_verified') === 'true';
+  const dateSel = (typeof photoSel !== 'undefined' && photoSel.date) ? photoSel.date : [];
   let visible = 0;
   rows.forEach(r => {
     const text = (r.dataset.search || r.textContent).toLowerCase();
     const rowCat = r.dataset.category || 'כללי';
     const catMatch = (selectedStoryCategories.size === 0 || selectedStoryCategories.has(rowCat));
-    const match = catMatch && text.includes(q);
+    // סינון תאריך מפאנל הסינונים (OR על הטווחים שנבחרו)
+    let dateMatch = true;
+    if (dateSel.length) {
+      const rowTime = r.dataset.time ? Number(r.dataset.time) : null;
+      dateMatch = dateSel.some(dr => { const th = photoDateThreshold(dr); return th === null ? true : (rowTime !== null && rowTime >= th); });
+    }
+    const match = catMatch && dateMatch && text.includes(q);
     r.dataset.artMatch = match ? '1' : '0';
     if (match) visible++;
 
@@ -5727,7 +5735,7 @@ function buildStoriesPage(stories) {
   `).join('');
 
   const listHTML = stories.map((s) => `
-    <div class="art-row" data-category="${artEsc(s.category || 'כללי')}" data-search="${artEsc([s.title, s.summary, s.author, s.category].filter(Boolean).join(' '))}" onclick="storyOpenDetail('${artEsc(s.id)}')">
+    <div class="art-row" data-category="${artEsc(s.category || 'כללי')}" data-time="${s.createdAt || (parseInt(String(s.id).replace(/\D/g,''), 10) || 0)}" data-score="${s.likes || 0}" data-search="${artEsc([s.title, s.summary, s.author, s.category].filter(Boolean).join(' '))}" onclick="storyOpenDetail('${artEsc(s.id)}')">
       <div class="art-row-text">
         <h3>${s.title}</h3>
         <p>${s.summary}</p>
@@ -5778,7 +5786,7 @@ function buildStoriesPage(stories) {
           ${(isAdmin() || isEditMode) ? `
           <button onclick="openStoryModal()" style="background:#8b5cf6; width:100%; padding:12px 16px; border-radius:8px; border:none; color:white; font-weight:bold; font-size:14px; cursor:pointer; margin-bottom:16px;">+ הוסף סיפור חדש</button>
           ` : ''}
-          ${buildSidebarTabs('')}
+          ${buildSidebarTabs('', 'stories')}
         </div>
       </div>
     </div>
@@ -6381,13 +6389,16 @@ function photoClearFilters() {
   currentPhotoRegionFilter = 'הכל';
   currentPhotoDateFilter = 'הכל';
   currentPhotoGeneralFilter = 'הכל';
+  currentStoryGeneralFilter = 'הכל';
   photoOpenFilterGroup = null;
-  // מרעננים את פאנל הסינונים כדי לאפס את כל תיבות הסימון והסליידר
-  const box = mainContent.querySelector('.photos-page .pf-box');
-  if (box) box.outerHTML = buildFiltersSidebarBox();
-  // מרעננים את שורת הצ׳יפים
+  // מרעננים את פאנל הסינונים של העמוד הפעיל כדי לאפס את כל תיבות הסימון
+  const page = (typeof pfActivePage === 'function') ? pfActivePage() : 'photos';
+  const box = mainContent.querySelector('.pf-box');
+  if (box) box.outerHTML = buildFiltersSidebarBox(page);
+  // מרעננים את שורת הצ׳יפים (בעמוד התמונות)
   if (typeof photoRenderFilterBar === 'function') photoRenderFilterBar();
-  photoApplyFilters();
+  if (typeof pfApplyActive === 'function') pfApplyActive();
+  else photoApplyFilters();
 }
 window.photoClearFilters = photoClearFilters;
 
@@ -7218,7 +7229,7 @@ function buildCommunitiesPage() {
             <div class="comm-row" id="communities-page-list">${communitiesRowHTML()}</div>
           </div>
           <div class="art-sidebar">
-            ${buildSidebarTabs('')}
+            ${buildSidebarTabs('', 'community')}
           </div>
         </div>
       </div>
@@ -7370,7 +7381,8 @@ const productFilters = {
   grade: { sealed: false, likenew: false, used: false },
 };
 
-function buildFiltersSidebarBox() {
+function buildFiltersSidebarBox(pageType) {
+  pageType = pageType || 'photos';
   const f = productFilters;
   const priceBtn = (id, label) =>
     `<button type="button" class="pf-price-pill${f.price === id ? ' active' : ''}" onclick="setPriceFilter('${id}', this)">${label}</button>`;
@@ -7385,11 +7397,12 @@ function buildFiltersSidebarBox() {
       <span class="pf-check-label">${label}</span>
       <input type="checkbox" ${photoSel[kind].includes(value) ? 'checked' : ''} onchange="photoToggleMulti('${kind}','${artEsc(value)}',this.checked)">
     </label>`;
-  // בחירה יחידה של מיון (מתנהג כמו רדיו למרות הלסמן)
+  // בחירה יחידה של מיון (מתנהג כמו רדיו למרות הלסמן) — משקף את המיון של העמוד הנוכחי
+  const curSort = (pageType === 'stories') ? currentStoryGeneralFilter : currentPhotoGeneralFilter;
   const sortCheck = (value, label) =>
     `<label class="pf-check">
       <span class="pf-check-label">${label}</span>
-      <input type="checkbox" ${currentPhotoGeneralFilter === value ? 'checked' : ''} onchange="photoSetSort('${value}',this)">
+      <input type="checkbox" ${curSort === value ? 'checked' : ''} onchange="photoSetSort('${value}',this)">
     </label>`;
 
   // מקטע מתקפל: כותרת עם חץ מזעור + גוף שמקופל כברירת מחדל
@@ -7425,23 +7438,30 @@ function buildFiltersSidebarBox() {
   const catBody = PHOTO_CATEGORIES.filter(v => v !== 'הכל').map(v => multiCheck('category', v, v)).join('');
   const regBody = PHOTO_REGIONS.filter(v => v !== 'הכל').map(v => multiCheck('region', v, v)).join('');
   const dateBody = PHOTO_DATE_RANGES.filter(v => v !== 'הכל').map(v => multiCheck('date', v, v)).join('');
+  const curCols = (pageType === 'stories') ? (typeof storyGridCols !== 'undefined' ? storyGridCols : 3) : photoGridCols;
   const sizeBody = `<div class="pf-check-group">
         ${[4, 3, 2].map(n => `
           <label class="pf-check">
             <span class="pf-check-label">${n} עמודות</span>
-            <input type="checkbox" ${photoGridCols === n ? 'checked' : ''} onchange="photoSetSizeCheck(${n}, this)">
+            <input type="checkbox" ${curCols === n ? 'checked' : ''} onchange="photoSetSizeCheck(${n}, this)">
           </label>
         `).join('')}
       </div>`;
 
+  const sections = {
+    age: sec('טווח גילאים (AGE)', ageBody),
+    sort: sec('כללי (SORT)', sortBody),
+    category: sec('מין (CATEGORY)', catBody),
+    region: sec('מיקום (REGION)', regBody),
+    date: sec('תאריך (DATE)', dateBody),
+    size: sec('גודל (SIZE)', sizeBody)
+  };
+  // סינונים שונים מעמוד לעמוד: בסיפורים רק כללי/תאריך/גודל
+  const allowed = (pageType === 'stories') ? ['sort', 'date', 'size'] : ['age', 'sort', 'category', 'region', 'date', 'size'];
+
   return `
     <div class="art-sidebar-box pf-box" style="border:1.5px solid #e2e8f0; border-radius:14px; padding:18px; background:#fff; box-shadow:0 4px 15px rgba(15,23,42,0.05); text-align:right; direction:rtl;">
-      ${sec('טווח גילאים (AGE)', ageBody)}
-      ${sec('כללי (SORT)', sortBody)}
-      ${sec('מין (CATEGORY)', catBody)}
-      ${sec('מיקום (REGION)', regBody)}
-      ${sec('תאריך (DATE)', dateBody)}
-      ${sec('גודל (SIZE)', sizeBody)}
+      ${allowed.map(k => sections[k]).join('')}
       <button type="button" class="pf-clear-btn" onclick="photoClearFilters()">נקה סינון ✕</button>
     </div>
   `;
@@ -7475,6 +7495,18 @@ function toggleFilterCheck(group, key, checked) {
 window.toggleFilterCheck = toggleFilterCheck;
 window.buildFiltersSidebarBox = buildFiltersSidebarBox;
 
+// מצב מיון נפרד לעמוד הסיפורים (כדי שהסינון ישפיע על אותו עמוד בלבד)
+let currentStoryGeneralFilter = 'הכל';
+// זיהוי העמוד הפעיל והחלת הסינון עליו בלבד
+function pfActivePage() {
+  return (typeof mainContent !== 'undefined' && mainContent && mainContent.querySelector('.stories-page')) ? 'stories' : 'photos';
+}
+function pfApplyActive() {
+  if (pfActivePage() === 'stories') { if (typeof storyApplyFilters === 'function') storyApplyFilters(); }
+  else { if (typeof photoApplyFilters === 'function') photoApplyFilters(); }
+}
+window.pfApplyActive = pfApplyActive;
+
 // ---- מצב הפילטרים האמיתיים של הגלריות (בפאנל הצד) ----
 const photoSel = { category: [], region: [], date: [] }; // בחירה מרובה
 let photoAgeMin = 18;
@@ -7494,16 +7526,18 @@ function photoToggleMulti(kind, value, checked) {
   const i = arr.indexOf(value);
   if (checked && i < 0) arr.push(value);
   else if (!checked && i >= 0) arr.splice(i, 1);
-  photoApplyFilters();
+  pfApplyActive(); // משפיע על העמוד הנוכחי בלבד
 }
 window.photoToggleMulti = photoToggleMulti;
 
 function photoSetSort(value, cb) {
-  currentPhotoGeneralFilter = value;
+  // מיון של העמוד הנוכחי בלבד (סיפורים / תמונות בנפרד)
+  if (pfActivePage() === 'stories') currentStoryGeneralFilter = value;
+  else currentPhotoGeneralFilter = value;
   const grp = cb.closest('.pf-check-group');
   if (grp) grp.querySelectorAll('input[type="checkbox"]').forEach(x => { if (x !== cb) x.checked = false; });
   cb.checked = true;
-  photoApplyFilters();
+  pfApplyActive();
 }
 window.photoSetSort = photoSetSort;
 
@@ -7511,7 +7545,9 @@ function photoSetSizeCheck(n, cb) {
   const grp = cb.closest('.pf-check-group');
   if (grp) grp.querySelectorAll('input[type="checkbox"]').forEach(x => { if (x !== cb) x.checked = false; });
   cb.checked = true;
-  photoSetGridSize(n);
+  // גודל של העמוד הנוכחי בלבד
+  if (pfActivePage() === 'stories') { if (typeof storySetGridSize === 'function') storySetGridSize(n); }
+  else photoSetGridSize(n);
 }
 window.photoSetSizeCheck = photoSetSizeCheck;
 
@@ -7547,10 +7583,11 @@ window.photoSetAgeDual = photoSetAgeDual;
 // ============================================================
 let activeSidebarTab = 'filter';
 
-function buildSidebarTabs(savedHTML) {
+function buildSidebarTabs(savedHTML, pageType) {
+  pageType = pageType || 'photos';
   const uploadHtml = (buildQuickUploadBox() || '') + (savedHTML || '');
   const tabs = [
-    { id: 'filter',    label: '🔎 סינונים', html: buildFiltersSidebarBox() },
+    { id: 'filter',    label: '🔎 סינונים', html: buildFiltersSidebarBox(pageType) },
     { id: 'community', label: '👥 קהילה',  html: (typeof buildSocialCommunityBox === 'function' ? buildSocialCommunityBox() : '') },
     { id: 'communities', label: '🏘️ קהילות', html: buildCommunitiesBox() },
     { id: 'chat',      label: '💬 צ׳אט',   html: buildLiveChatBox() },
@@ -7809,7 +7846,7 @@ function buildPhotosPage(albums, section) {
             </svg>
             העלה תמונה
           </button>
-          ${buildSidebarTabs(savedHTML)}
+          ${buildSidebarTabs(savedHTML, 'photos')}
         </div>
       </div>
     </div>
@@ -8870,8 +8907,10 @@ window.photoFilterCategory = photoFilterCategory;
 // מיון "כללי": האחרונים / הפופולארים / הישנים. משנה את סדר הכרטיסים
 // בכל מקטע (.art-rows) בעמוד התמונות. "הכל" מחזיר לסדר המקורי של הבנייה.
 function photoApplySort() {
-  const mode = currentPhotoGeneralFilter;
-  const containers = mainContent.querySelectorAll('.photos-page .art-rows');
+  // ממיין את העמוד הפעיל בלבד, לפי מצב המיון שלו
+  const stories = (typeof pfActivePage === 'function' && pfActivePage() === 'stories');
+  const mode = stories ? currentStoryGeneralFilter : currentPhotoGeneralFilter;
+  const containers = mainContent.querySelectorAll(stories ? '.stories-page .art-rows' : '.photos-page .art-rows');
   containers.forEach(container => {
     const rows = Array.from(container.children).filter(el => el.classList && el.classList.contains('art-row'));
     if (!rows.length) return;

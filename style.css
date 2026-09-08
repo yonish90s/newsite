@@ -2301,6 +2301,10 @@ body:not(.edit-mode) .hotspot-delete-btn {
 /* ============================================================
    מערכת צ'אט תמיכה מול מנהל האתר (Support Chat System)
    ============================================================ */
+/* במובייל מסתירים את כפתור הצ'אט הצף */
+@media (max-width: 768px) {
+  .chat-fab, #global-chat-fab, #chat-admin-controls { display: none !important; }
+}
 .chat-fab {
   position: fixed;
   bottom: 26px;
