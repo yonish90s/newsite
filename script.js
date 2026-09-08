@@ -7323,10 +7323,25 @@ function buildSidebarTabs(savedHTML) {
   return `
     <div class="sidebar-tabs-wrap">
       <div class="sidebar-tabs-pills">${pills}</div>
+      <button type="button" class="sidebar-min-toggle" onclick="sidebarToggleMinimize(this)" title="מזער / הרחב">
+        <span class="sidebar-min-chevron">▾</span> <span class="sidebar-min-label">מזער</span>
+      </button>
       <div class="sidebar-tabs-panels">${panels}</div>
     </div>
   `;
 }
+
+// מזעור/הרחבה של פאנל הסרגל (בסגנון רדיט)
+function sidebarToggleMinimize(btn) {
+  const wrap = btn.closest('.sidebar-tabs-wrap');
+  if (!wrap) return;
+  const min = wrap.classList.toggle('minimized');
+  const chev = btn.querySelector('.sidebar-min-chevron');
+  const lbl = btn.querySelector('.sidebar-min-label');
+  if (chev) chev.textContent = min ? '▸' : '▾';
+  if (lbl) lbl.textContent = min ? 'הרחב' : 'מזער';
+}
+window.sidebarToggleMinimize = sidebarToggleMinimize;
 
 function sidebarShowTab(id, btn) {
   const wrap = btn.closest('.sidebar-tabs-wrap');

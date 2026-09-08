@@ -3801,6 +3801,26 @@ body:not(.edit-mode) .hidden-nav {
   .sidebar-tab-panel { margin-top: 8px; }
 }
 
+/* כפתור מזעור/הרחבה של פאנל הסרגל (בסגנון רדיט) */
+.sidebar-min-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0 6px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #475569;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+.sidebar-min-toggle:hover { border-color: #e11d48; color: #e11d48; }
+.sidebar-tabs-wrap.minimized .sidebar-tabs-panels { display: none; }
+
 /* טופס העלאת גלריה — שני שדות בשורה (הגלריה עצמה נשארת בשורה מלאה) */
 .photo-form-grid {
   display: grid;
