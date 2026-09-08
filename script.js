@@ -6341,9 +6341,6 @@ function photoFilterBarHTML() {
         <span class="photo-filter-trigger-value">${photoGridCols}</span>
         <span class="photo-filter-caret" aria-hidden="true">▾</span>
       </button>
-      <button type="button" class="photo-filter-trigger" onclick="openSavedModal()" title="הגלריות השמורות שלי">
-        <span class="photo-filter-trigger-label">🔖 שמורים</span>
-      </button>
       ${anySet ? `<button type="button" class="photo-filter-clear" onclick="photoClearFilters()">נקה הכל</button>` : ''}
     </div>
   `;
@@ -7589,9 +7586,12 @@ function buildSidebarTabs(savedHTML) {
   return `
     <div class="sidebar-tabs-wrap">
       <div class="sidebar-tabs-pills">${pills}</div>
-      <button type="button" class="sidebar-min-toggle" onclick="sidebarToggleMinimize(this)" title="מזער / הרחב">
-        <span class="sidebar-min-chevron">▾</span> <span class="sidebar-min-label">מזער</span>
-      </button>
+      <div class="sidebar-tools-row">
+        <button type="button" class="sidebar-min-toggle" onclick="sidebarToggleMinimize(this)" title="מזער / הרחב">
+          <span class="sidebar-min-chevron">▾</span> <span class="sidebar-min-label">מזער</span>
+        </button>
+        <button type="button" class="sidebar-saved-btn" onclick="openSavedModal()" title="הגלריות השמורות שלי">🔖 שמורים</button>
+      </div>
       <div class="sidebar-tabs-panels">${panels}</div>
     </div>
   `;
