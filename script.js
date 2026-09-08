@@ -7636,6 +7636,9 @@ function sidebarToggleMinimize(btn) {
   const wrap = btn.closest('.sidebar-tabs-wrap');
   if (!wrap) return;
   const min = wrap.classList.toggle('minimized');
+  // במובייל: מזעור מקפל את כל אזור הסרגל (כולל כפתור ההעלאה והטאבים)
+  const sidebar = btn.closest('.art-sidebar');
+  if (sidebar) sidebar.classList.toggle('sidebar-collapsed', min);
   const chev = btn.querySelector('.sidebar-min-chevron');
   const lbl = btn.querySelector('.sidebar-min-label');
   if (chev) chev.textContent = min ? '▸' : '▾';

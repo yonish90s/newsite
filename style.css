@@ -3825,6 +3825,11 @@ body:not(.edit-mode) .hidden-nav {
   .sidebar-tab-panel { margin-top: 8px; }
   /* במובייל משאירים רק 3 טאבים: סינונים, קהילה, קהילות */
   .sidebar-tab-pill:not([data-tab="filter"]):not([data-tab="community"]):not([data-tab="communities"]) { display: none !important; }
+  /* מזעור במובייל: כל אזור הסרגל נעלם (כולל "העלה תמונה" והטאבים) — נשאר רק כפתור "הרחב" */
+  .art-sidebar.sidebar-collapsed > button { display: none !important; }
+  .art-sidebar.sidebar-collapsed .sidebar-tabs-pills,
+  .art-sidebar.sidebar-collapsed .sidebar-tabs-panels,
+  .art-sidebar.sidebar-collapsed .sidebar-saved-btn { display: none !important; }
 }
 
 /* כפתור מזעור/הרחבה של פאנל הסרגל (בסגנון רדיט) */
