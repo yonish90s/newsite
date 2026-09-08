@@ -3972,24 +3972,28 @@ body:not(.edit-mode) .hidden-nav {
   position: fixed;
   inset: 0;
   z-index: 100000;
-  align-items: center;
+  align-items: flex-end;   /* עגון לתחתית המסך */
   justify-content: center;
   direction: rtl;
 }
-.saved-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.6); }
+.saved-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.15); }
+/* מגירה תחתונה בגובה ~רבע מסך, ברוחב מלא, בסגנון פאנל של יוניטי */
 .saved-window {
   position: relative;
-  width: 92%;
-  max-width: 920px;
-  max-height: 82vh;
+  width: 100%;
+  max-width: none;
+  height: 28vh;
+  min-height: 190px;
   background: #232323;
-  border: 1px solid #3a3a3a;
-  border-radius: 10px;
+  border-top: 1px solid #3a3a3a;
+  border-radius: 12px 12px 0 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: 0 24px 70px rgba(0,0,0,0.55);
+  box-shadow: 0 -12px 40px rgba(0,0,0,0.45);
+  animation: savedSlideUp 0.2s ease;
 }
+@keyframes savedSlideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 .saved-titlebar {
   display: flex; align-items: center; justify-content: space-between;
   background: #2d2d2d; border-bottom: 1px solid #3a3a3a; padding: 10px 14px;
