@@ -7429,9 +7429,9 @@ function buildFiltersSidebarBox(pageType) {
       </div>`;
 
   const sortBody = `<div class="pf-check-group">
-        ${sortCheck('האחרונים', 'האחרונים ⬆️')}
-        ${sortCheck('הפופולארים', 'הפופולארים 🔥')}
-        ${sortCheck('הישנים', 'הישנים ⬇️')}
+        ${sortCheck('האחרונים', 'האחרונים')}
+        ${sortCheck('הפופולארים', 'הפופולארים')}
+        ${sortCheck('הישנים', 'הישנים')}
       </div>`;
 
   const catBody = PHOTO_CATEGORIES.filter(v => v !== 'הכל').map(v => multiCheck('category', v, v)).join('');
@@ -8817,7 +8817,7 @@ window.photoToggleSave = photoToggleSave;
 
 // ערכי הסינון של עמוד התמונות. הם חיים מחוץ ל-buildPhotosPage כדי
 // שהבחירה תישמר גם כשהעמוד נבנה מחדש (מחיקה, לייק, עדכון מהענן).
-const PHOTO_CATEGORIES = ['הכל', 'כללי', 'עירום'];
+const PHOTO_CATEGORIES = ['הכל', 'גבר', 'אישה', 'זוג'];
 const PHOTO_AGE_RANGES = ['הכל', '18-25', '26-35', '36-45', '46+'];
 const PHOTO_REGIONS = ['הכל', 'צפון', 'מרכז', 'דרום'];
 const PHOTO_DATE_RANGES = ['הכל', 'השבוע', 'החודש', 'השנה'];
