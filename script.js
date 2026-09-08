@@ -6341,6 +6341,9 @@ function photoFilterBarHTML() {
         <span class="photo-filter-trigger-value">${photoGridCols}</span>
         <span class="photo-filter-caret" aria-hidden="true">▾</span>
       </button>
+      <button type="button" class="photo-filter-trigger" onclick="openSavedModal()" title="הגלריות השמורות שלי">
+        <span class="photo-filter-trigger-label">🔖 שמורים</span>
+      </button>
       ${anySet ? `<button type="button" class="photo-filter-clear" onclick="photoClearFilters()">נקה הכל</button>` : ''}
     </div>
   `;
@@ -8675,6 +8678,55 @@ function photoIsSavedLocal(id) {
   }
 }
 window.photoIsSavedLocal = photoIsSavedLocal;
+
+// ---- "שמורים": חלון בסגנון יוניטי עם הגלריות השמורות כריבועים ----
+function photoGetSavedAlbums() {
+  const user = auth.currentUser;
+  if (!user) return [];
+  let map = {};
+  try { map = JSON.parse(localStorage.getItem(`saved_galleries_${user.uid}`) || '{}'); } catch (e) {}
+  const albums = (typeof photoGetAlbums === 'function') ? photoGetAlbums() : [];
+  return albums.filter(a => map[a.id]);
+}
+
+function openSavedModal() {
+  let modal = document.getElementById('saved-modal');
+  if (!modal) { modal = document.createElement('div'); modal.id = 'saved-modal'; document.body.appendChild(modal); }
+  let inner;
+  if (!auth.currentUser) {
+    inner = `<div class="saved-empty">🔒 התחבר כדי לראות את הגלריות השמורות שלך</div>`;
+  } else {
+    const saved = photoGetSavedAlbums();
+    if (!saved.length) {
+      inner = `<div class="saved-empty">אין גלריות שמורות עדיין.<br>לחצו על "שמירה" בכרטיס כדי לשמור.</div>`;
+    } else {
+      inner = `<div class="saved-grid">${saved.map(a => {
+        const img = (a.images && a.images[0]) ? a.images[0] : '';
+        return `<div class="saved-cell" onclick="closeSavedModal(); photoOpenDetail('${artEsc(a.id)}')" title="${artEsc(a.title || '')}">
+          <div class="saved-thumb">${img ? `<img src="${img}" alt="">` : '🖼️'}</div>
+          <div class="saved-name">${artEsc(a.title || 'ללא שם')}</div>
+        </div>`;
+      }).join('')}</div>`;
+    }
+  }
+  modal.innerHTML = `
+    <div class="saved-backdrop" onclick="closeSavedModal()"></div>
+    <div class="saved-window">
+      <div class="saved-titlebar">
+        <span class="saved-title">🔖 שמורים</span>
+        <button class="saved-close" onclick="closeSavedModal()" title="סגור">✕</button>
+      </div>
+      <div class="saved-body">${inner}</div>
+    </div>`;
+  modal.style.display = 'flex';
+}
+window.openSavedModal = openSavedModal;
+
+function closeSavedModal() {
+  const m = document.getElementById('saved-modal');
+  if (m) m.style.display = 'none';
+}
+window.closeSavedModal = closeSavedModal;
 
 function photoToggleSave(id) {
   const user = auth.currentUser;
