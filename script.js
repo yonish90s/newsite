@@ -3229,6 +3229,11 @@ document.addEventListener('DOMContentLoaded', () => {
       updateUserActivity(user);
       userActivityInterval = setInterval(() => updateUserActivity(user), 45000);
 
+      // שמירת ה-uid של המנהל כדי שמשתמשים יוכלו לפתוח שיחה נעוצה עם מנהל האתר
+      if (user.email === ADMIN_EMAIL) {
+        try { set(ref(db, 'website/admin_uid'), user.uid); } catch (e) {}
+      }
+
       // סנכרון יתרת הלייקים היומית
       await syncUserLikeBudget(user);
       
@@ -8815,6 +8820,7 @@ let dmConvSubscribed = false;
 let dmActiveConv = null;
 let dmThreadUnsub = null;
 let dmThreadMessages = [];
+let dmAdminUid = '';
 
 function dmConvId(a, b) { return [a, b].sort().join('__'); }
 function dmName() { return (typeof liveChatUserName === 'function') ? liveChatUserName() : 'משתמש'; }
@@ -8824,6 +8830,8 @@ function subscribeMyDMs() {
   const u = auth.currentUser;
   if (!u || dmConvSubscribed) return;
   dmConvSubscribed = true;
+  // מביאים את ה-uid של המנהל לשיחה הנעוצה
+  try { get(ref(db, 'website/admin_uid')).then(s => { dmAdminUid = s.val() || ''; const el = document.getElementById('dm-conv-list'); if (el) el.innerHTML = dmConvListHTML(); }); } catch (e) {}
   onValue(ref(db, `website/user_dms/${u.uid}`), snap => {
     dmConversations = snap.val() || {};
     const el = document.getElementById('dm-conv-list');
@@ -8831,6 +8839,18 @@ function subscribeMyDMs() {
     dmUpdateBadge();
   });
 }
+
+function dmOpenAdmin() {
+  const u = auth.currentUser;
+  if (!u) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
+  const go = (adminUid) => {
+    if (!adminUid || adminUid === u.uid) { if (typeof showCopyToast === 'function') showCopyToast('שיחת מנהל אינה זמינה כרגע'); return; }
+    dmOpenConv(dmConvId(u.uid, adminUid), adminUid, 'מנהל האתר 👑');
+  };
+  if (dmAdminUid) go(dmAdminUid);
+  else { try { get(ref(db, 'website/admin_uid')).then(s => { dmAdminUid = s.val() || ''; go(dmAdminUid); }); } catch (e) { go(''); } }
+}
+window.dmOpenAdmin = dmOpenAdmin;
 
 function dmUnreadCount() {
   let n = 0;
@@ -8847,9 +8867,21 @@ function dmUpdateBadge() {
 
 // חלון חיצוני — רשימת שיחות (טלגרם, בלי תמונות פרופיל)
 function dmConvListHTML() {
-  const list = Object.entries(dmConversations).sort((a, b) => (b[1].lastTime || 0) - (a[1].lastTime || 0));
-  if (!list.length) return '<div class="dm-empty">אין שיחות עדיין.<br>אפשר לשלוח הודעה מדף של גלריה.</div>';
-  return list.map(([cid, c]) => `
+  const isAdminUser = (typeof isAdmin === 'function' && isAdmin());
+  // שיחה נעוצה עם מנהל האתר בראש הרשימה (לכל מי שאינו המנהל)
+  const pinned = isAdminUser ? '' : `
+    <div class="dm-conv dm-conv-pinned" onclick="dmOpenAdmin()">
+      <div class="dm-conv-main">
+        <div class="dm-conv-name">📌 מנהל האתר 👑</div>
+        <div class="dm-conv-last">שלחו הודעה לצוות האתר</div>
+      </div>
+    </div>`;
+  const adminUid = dmAdminUid;
+  const list = Object.entries(dmConversations)
+    .filter(([cid, c]) => !(adminUid && c && c.otherUid === adminUid)) // לא לשכפל את שיחת המנהל
+    .sort((a, b) => (b[1].lastTime || 0) - (a[1].lastTime || 0));
+  if (!list.length) return pinned + '<div class="dm-empty">אין עוד שיחות.<br>אפשר לשלוח הודעה מדף של גלריה.</div>';
+  return pinned + list.map(([cid, c]) => `
     <div class="dm-conv" onclick="dmOpenConv('${artEsc(cid)}','${artEsc(c.otherUid || '')}','${artEsc(c.otherName || 'משתמש')}')">
       <div class="dm-conv-main">
         <div class="dm-conv-name">${artEsc(c.otherName || 'משתמש')}${c.unread ? ' <span class="dm-dot"></span>' : ''}</div>

@@ -14,7 +14,7 @@
   <!-- ספריית localforage לשמירת תמונות -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
   <!-- קישור לקובץ העיצוב החיצוני (עם פרמטר למניעת שמירה במטמון) -->
-  <link rel="stylesheet" href="./style.css?v=1073">
+  <link rel="stylesheet" href="./style.css?v=1074">
 </head>
 <body class="light-mode">
   <!-- שער אישור גיל (Age Gate Overlay) -->
@@ -724,7 +724,7 @@
   <span class="fab-control-btn hide-btn" id="chat-hide-icon" onclick="event.stopPropagation();adminToggleChatHide()" title="הסתר/הצג" style="cursor:pointer; font-size:16px;">🙈</span>
   <span class="fab-control-btn delete-btn" onclick="event.stopPropagation();adminDeleteChat()" title="מחק לגמרי" style="cursor:pointer; font-size:16px; margin-right:6px;">🗑️</span>
 </div>
-<button id="global-chat-fab" class="chat-fab" onclick="chatTogglePanel()" title="צ'אט תמיכה">
+<button id="global-chat-fab" class="chat-fab" onclick="openMessages()" title="הודעות">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
   <span id="global-chat-badge" class="chat-badge" style="display:none">0</span>
 </button>
@@ -832,6 +832,6 @@
   </div>
 </div>
 
-  <script type="module" src="./script.js?v=1073"></script>
+  <script type="module" src="./script.js?v=1074"></script>
 </body>
 </html>
