@@ -371,7 +371,7 @@ function sanitizeToOnlyPhotosAndStories() {
   // לפי בקשת המשתמש: משאירים רק עמודי תמונות וסיפורים (מוחקים כתבות/קהילה וכל עמוד אחר).
   // מסננים רק כשקיים לפחות עמוד תמונות/סיפורים אחד, כדי לא לרוקן אתר תקין בטעות.
   if (pages.some(p => p && ((p.content || '').includes('photos-page') || (p.content || '').includes('stories-page')))) {
-    pages = pages.filter(p => p && ((p.content || '').includes('photos-page') || (p.content || '').includes('stories-page') || (p.content || '').includes('communities-page')));
+    pages = pages.filter(p => p && ((p.content || '').includes('photos-page') || (p.content || '').includes('stories-page') || (p.content || '').includes('communities-page') || (p.content || '').includes('info-page')));
   }
 
   // בוטסטראפ של עמודי ברירת המחדל (תמונות + סיפורים) רק כאשר אין אף עמוד באתר.
@@ -394,6 +394,17 @@ function sanitizeToOnlyPhotosAndStories() {
 
   // מסירים לצמיתות את העמודים "יד שניה" ו"השוואת מחירים"
   pages = pages.filter(p => p && !REMOVED_PHOTO_PAGE_IDS.includes(p.id));
+
+  // עמוד "מידע" — תמיד קיים אך מוסתר (מופיע בתפריט רק למנהל)
+  const _infoContent = '<div class="info-page" data-page-id="page-info-main"></div>';
+  const _infoPage = pages.find(p => p && p.id === 'page-info-main');
+  if (!_infoPage) {
+    pages.push({ id: 'page-info-main', title: 'מידע 🔒', isHidden: true, content: _infoContent });
+  } else {
+    _infoPage.isHidden = true;
+    _infoPage.content = _infoContent;
+    if (!_infoPage.title) _infoPage.title = 'מידע 🔒';
+  }
 
   // סנכרון התפריט העליון עם רשימת העמודים
   if (!Array.isArray(topNavPages) || topNavPages.length === 0) {
@@ -908,6 +919,15 @@ function renderPage() {
     if (currentPage.id === 'page-communities-main' || (currentPage.title && currentPage.title.includes('קהילות'))) {
       if (typeof buildCommunitiesPage === 'function') {
         mainContent.innerHTML = buildCommunitiesPage();
+        try { window.scrollTo(0, 0); } catch (e) {}
+        return;
+      }
+    }
+
+    // עמוד "מידע" (למנהל בלבד) — מזוהה לפי מזהה
+    if (currentPage.id === 'page-info-main') {
+      if (typeof buildInfoPage === 'function') {
+        mainContent.innerHTML = buildInfoPage();
         try { window.scrollTo(0, 0); } catch (e) {}
         return;
       }
@@ -1444,6 +1464,10 @@ function artSerializePageContent() {
   const communitiesList = mainContent.querySelector('.communities-page');
   if (communitiesList) {
     return '<div class="communities-page" data-page-id="page-communities-main"></div>';
+  }
+  const infoList = mainContent.querySelector('.info-page');
+  if (infoList) {
+    return '<div class="info-page" data-page-id="page-info-main"></div>';
   }
   const articles = mainContent.querySelector('.articles-page:not(.stories-page):not(.photos-page):not(.courses-page):not(.community-page)');
   if (articles && articles.dataset.articlesJson) {
@@ -7099,6 +7123,140 @@ function buildCommunitiesPage() {
 window.buildCommunitiesPage = buildCommunitiesPage;
 
 // ============================================================
+// עמוד "מידע" — לוח בקרה למנהל בלבד. משתמשים (רשומים ואורחים) שולחים
+// מידע דרך טופס ציבורי; המנהל כותב הערות משלו ורואה את כל ההגשות.
+// ============================================================
+let userSubmissionsData = {};
+let userSubmissionsSubscribed = false;
+let adminInfoText = '';
+let adminInfoSubscribed = false;
+
+function subscribeUserSubmissions() {
+  if (userSubmissionsSubscribed) return;
+  userSubmissionsSubscribed = true;
+  onValue(ref(db, 'website/user_submissions'), (snap) => {
+    userSubmissionsData = snap.val() || {};
+    const listEl = document.getElementById('info-submissions-list');
+    if (listEl) listEl.innerHTML = infoSubmissionsListHTML();
+  });
+}
+
+function subscribeAdminInfo() {
+  if (adminInfoSubscribed) return;
+  adminInfoSubscribed = true;
+  onValue(ref(db, 'website/admin_info/notes'), (snap) => {
+    adminInfoText = snap.val() || '';
+    const ta = document.getElementById('admin-info-notes');
+    if (ta && document.activeElement !== ta) ta.value = adminInfoText;
+  });
+}
+
+// טופס ציבורי להשארת מידע — פתוח לכולם (רשומים ואורחים)
+function buildInfoSubmitBox() {
+  const prefill = (auth.currentUser && typeof liveChatUserName === 'function') ? artEsc(liveChatUserName()) : '';
+  return `
+    <div class="art-sidebar-box" style="border:1.5px solid #e2e8f0; border-radius:12px; padding:16px; text-align:right; direction:rtl;">
+      <div style="font-size:14px; font-weight:900; color:#0f172a; margin-bottom:4px;">📩 השאירו לנו מידע</div>
+      <div style="font-size:12px; color:#64748b; margin-bottom:10px; line-height:1.4;">כל אחד יכול לכתוב לנו — גם בלי הרשמה.</div>
+      <input id="info-submit-name" type="text" placeholder="שם (אופציונלי)" value="${prefill}" style="width:100%; box-sizing:border-box; padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:13px; margin-bottom:8px;">
+      <textarea id="info-submit-text" rows="3" placeholder="כתבו כאן את המידע/ההודעה..." style="width:100%; box-sizing:border-box; padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:13px; resize:vertical; margin-bottom:8px;"></textarea>
+      <button onclick="submitUserInfo()" style="width:100%; background:#e11d48; color:#fff; border:none; border-radius:8px; padding:10px; font-size:13.5px; font-weight:800; cursor:pointer;">שליחה</button>
+    </div>
+  `;
+}
+window.buildInfoSubmitBox = buildInfoSubmitBox;
+
+async function submitUserInfo() {
+  const nameEl = document.getElementById('info-submit-name');
+  const textEl = document.getElementById('info-submit-text');
+  const text = textEl ? textEl.value.trim() : '';
+  if (!text) { alert('נא לכתוב הודעה'); return; }
+  const name = (nameEl && nameEl.value.trim()) || (auth.currentUser && typeof liveChatUserName === 'function' ? liveChatUserName() : 'אורח');
+  try {
+    await push(ref(db, 'website/user_submissions'), {
+      name: name.slice(0, 60),
+      uid: auth.currentUser ? auth.currentUser.uid : '',
+      registered: !!auth.currentUser,
+      text: text.slice(0, 1000),
+      timestamp: Date.now()
+    });
+    if (textEl) textEl.value = '';
+    if (typeof showCopyToast === 'function') showCopyToast('✅ המידע נשלח, תודה!');
+  } catch (e) {
+    console.error('submit info failed', e);
+    if (typeof showCopyToast === 'function') showCopyToast('שגיאה בשליחה, נסו שוב');
+  }
+}
+window.submitUserInfo = submitUserInfo;
+
+function infoSubmissionsListHTML() {
+  const entries = Object.entries(userSubmissionsData || {}).sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
+  if (!entries.length) {
+    return '<div style="text-align:center; color:#94a3b8; font-size:13px; padding:24px;">עדיין לא התקבלו הגשות.</div>';
+  }
+  return entries.map(([key, s]) => {
+    const time = s.timestamp ? new Date(s.timestamp).toLocaleString('he-IL') : '';
+    const badge = s.registered ? '<span style="background:#dcfce7; color:#166534; font-size:10px; font-weight:800; padding:2px 6px; border-radius:6px;">רשום</span>' : '<span style="background:#f1f5f9; color:#64748b; font-size:10px; font-weight:800; padding:2px 6px; border-radius:6px;">אורח</span>';
+    return `
+      <div style="border:1px solid #e2e8f0; border-radius:10px; padding:12px; background:#fff; margin-bottom:10px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:14px; font-weight:900; color:#0f172a;">${artEsc(s.name || 'אורח')}</span>
+            ${badge}
+          </div>
+          <button onclick="deleteUserSubmission('${artEsc(key)}')" title="מחק" style="background:none; border:none; color:#e11d48; font-size:16px; cursor:pointer;">🗑️</button>
+        </div>
+        <div style="font-size:13.5px; color:#1e293b; line-height:1.5; white-space:pre-wrap; word-break:break-word;">${artEsc(s.text || '')}</div>
+        <div style="font-size:11px; color:#94a3b8; margin-top:6px;">${time}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+async function deleteUserSubmission(key) {
+  if (!confirm('למחוק הגשה זו?')) return;
+  try { await set(ref(db, `website/user_submissions/${key}`), null); } catch (e) { console.error(e); }
+}
+window.deleteUserSubmission = deleteUserSubmission;
+
+async function saveAdminInfo() {
+  const ta = document.getElementById('admin-info-notes');
+  if (!ta) return;
+  try {
+    await set(ref(db, 'website/admin_info/notes'), ta.value.slice(0, 20000));
+    if (typeof showCopyToast === 'function') showCopyToast('✅ המידע נשמר');
+  } catch (e) { console.error(e); if (typeof showCopyToast === 'function') showCopyToast('שגיאה בשמירה'); }
+}
+window.saveAdminInfo = saveAdminInfo;
+
+function buildInfoPage() {
+  subscribeUserSubmissions();
+  subscribeAdminInfo();
+  const allowed = (typeof isAdmin === 'function' && isAdmin()) || (typeof isEditMode !== 'undefined' && isEditMode);
+  if (!allowed) {
+    return `<div class="info-page" data-page-id="page-info-main"><div class="comm-inner"><div style="text-align:center; padding:60px 20px; color:#64748b; font-size:16px; font-weight:700;">🔒 עמוד זה גלוי למנהל בלבד.</div></div></div>`;
+  }
+  return `
+    <div class="info-page" data-page-id="page-info-main">
+      <div class="comm-inner">
+        <div style="max-width:900px; margin:0 auto; direction:rtl; text-align:right;">
+          <h2 style="font-size:24px; font-weight:900; color:#0f172a; margin:0 0 16px;">🔒 מידע (למנהל בלבד)</h2>
+
+          <div style="background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:18px; margin-bottom:24px; box-shadow:0 4px 15px rgba(0,0,0,0.03);">
+            <div style="font-size:16px; font-weight:900; color:#0f172a; margin-bottom:8px;">📝 המידע שלי</div>
+            <textarea id="admin-info-notes" rows="8" placeholder="כתוב כאן מידע פרטי שרק אתה רואה..." style="width:100%; box-sizing:border-box; padding:12px; border:1px solid #ddd; border-radius:10px; font-size:14px; line-height:1.6; resize:vertical;">${artEsc(adminInfoText)}</textarea>
+            <button onclick="saveAdminInfo()" style="margin-top:10px; background:#e11d48; color:#fff; border:none; border-radius:8px; padding:10px 20px; font-size:14px; font-weight:800; cursor:pointer;">שמור מידע</button>
+          </div>
+
+          <div style="font-size:16px; font-weight:900; color:#0f172a; margin-bottom:12px;">📥 מידע שהתקבל ממשתמשים</div>
+          <div id="info-submissions-list">${infoSubmissionsListHTML()}</div>
+        </div>
+      </div>
+    </div>`;
+}
+window.buildInfoPage = buildInfoPage;
+
+// ============================================================
 // קופסת סינונים (Filters) — זמינות, טווח מחיר, סוג עסקה, מצב המוצר
 // ============================================================
 const productFilters = {
@@ -7305,6 +7463,7 @@ function buildSidebarTabs(savedHTML) {
     { id: 'age',       label: '🔞 18+',    html: buildAgeFilterSidebarBox() },
     { id: 'upload',    label: '⚡ העלאה',  html: uploadHtml || '<div style="text-align:center;color:#94a3b8;font-size:13px;padding:20px;">אין פעולות העלאה זמינות</div>' },
     { id: 'sites',     label: '🌐 אתרים',  html: buildPromotedSitesBox() },
+    { id: 'info',      label: '📩 מידע',   html: (typeof buildInfoSubmitBox === 'function' ? buildInfoSubmitBox() : '') },
   ];
   if (!tabs.some(t => t.id === activeSidebarTab)) activeSidebarTab = 'chat';
 
@@ -10196,7 +10355,7 @@ onValue(ref(db, 'website'), (snapshot) => {
     pList = dedupePageList(pList);
     // משאירים רק עמודי תמונות/סיפורים/קהילות (מוחקים כתבות וכל עמוד אחר)
     if (pList.some(p => p && ((p.content || '').includes('photos-page') || (p.content || '').includes('stories-page')))) {
-      pList = pList.filter(p => p && ((p.content || '').includes('photos-page') || (p.content || '').includes('stories-page') || (p.content || '').includes('communities-page')));
+      pList = pList.filter(p => p && ((p.content || '').includes('photos-page') || (p.content || '').includes('stories-page') || (p.content || '').includes('communities-page') || (p.content || '').includes('info-page')));
     }
     // מוודאים שעמוד "קהילות" תמיד קיים (עם תוכן פלייסהולדר תקין)
     const _cp = pList.find(p => p && p.id === 'page-communities-main');
@@ -10206,6 +10365,14 @@ onValue(ref(db, 'website'), (snapshot) => {
     } else {
       if (!_cp.title) _cp.title = 'קהילות 🏘️';
       _cp.content = _cpc;
+    }
+    // עמוד "מידע" — קיים תמיד אך מוסתר
+    const _ip = pList.find(p => p && p.id === 'page-info-main');
+    const _ipc = '<div class="info-page" data-page-id="page-info-main"></div>';
+    if (!_ip) {
+      pList.push({ id: 'page-info-main', title: 'מידע 🔒', isHidden: true, content: _ipc });
+    } else {
+      _ip.isHidden = true; _ip.content = _ipc; if (!_ip.title) _ip.title = 'מידע 🔒';
     }
     // מסירים את העמודים "יד שניה" ו"השוואת מחירים"
     pList = pList.filter(p => p && !REMOVED_PHOTO_PAGE_IDS.includes(p.id));
