@@ -5763,11 +5763,11 @@ function buildStoriesPage(stories) {
           <div class="art-search-wrap">
             <input type="text" class="art-search" placeholder="🔍 חיפוש סיפורים..." oninput="storySearch(this.value)">
           </div>
+          ${storyCategoryBarHTML()}
           <div class="art-section-title-row">
             <div class="art-section-title">כל הסיפורים</div>
             ${storySizeBarHTML()}
           </div>
-          ${storyCategoryBarHTML()}
           <div class="art-rows photo-collapsible" id="story-row-main">${listHTML}</div>
           ${storyRowMoreBtn(stories.length, 'story-row-main')}
           <div class="art-pagination" style="display:none"></div>
