@@ -5736,11 +5736,10 @@ function buildStoriesPage(stories) {
 
   const listHTML = stories.map((s) => `
     <div class="art-row" data-category="${artEsc(s.category || 'כללי')}" data-time="${s.createdAt || (parseInt(String(s.id).replace(/\D/g,''), 10) || 0)}" data-score="${s.likes || 0}" data-search="${artEsc([s.title, s.summary, s.author, s.category].filter(Boolean).join(' '))}" onclick="storyOpenDetail('${artEsc(s.id)}')">
-      <div class="art-row-text">
+      <div class="art-row-text photo-card-info">
         <h3>${s.title}</h3>
-        <p>${s.summary}</p>
         <div class="art-row-meta" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-          <span>${s.author}</span>
+          <span class="art-row-author">${s.author}</span>
           <span class="art-row-sep">|</span>
           <span>${s.timestamp}</span>
         </div>

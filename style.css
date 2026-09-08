@@ -2172,6 +2172,9 @@ body:not(.edit-mode) .hotspot-delete-btn {
   .photos-page .photo-card-info > *:not(h3):not(.art-row-meta) { display: none !important; }
   .photos-page .photo-card-info .art-row-meta .photo-author-link,
   .photos-page .photo-card-info .art-row-meta .art-row-sep { display: none !important; }
+  /* בסיפורים אותו הדבר — במובייל רק כותרת + תאריך (מסתירים את הכותב) */
+  .stories-page .photo-card-info .art-row-meta .art-row-author,
+  .stories-page .photo-card-info .art-row-meta .art-row-sep { display: none !important; }
 }
 @media (max-width: 460px) {
   .photos-page .art-rows,
