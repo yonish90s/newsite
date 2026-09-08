@@ -7663,6 +7663,7 @@ function buildSidebarTabs(savedHTML, pageType) {
           <span class="sidebar-min-chevron">▾</span> <span class="sidebar-min-label">מזער</span>
         </button>
         <button type="button" class="sidebar-saved-btn" onclick="openSavedModal()" title="הגלריות השמורות שלי">🔖 שמורים</button>
+        <button type="button" class="sidebar-saved-btn" onclick="openMessages()" title="הודעות פרטיות">📨 הודעות <span class="dm-open-badge" style="display:none"></span></button>
       </div>
       <div class="sidebar-tabs-panels">${panels}</div>
     </div>
@@ -7986,6 +7987,9 @@ function photoOpenDetail(id) {
                 <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
               </svg>
               <span>שמור</span>
+            </button>
+            <button onclick="dmStartWith('${artEsc(a.authorId || '')}', '${artEsc(a.author || '')}')" class="photo-dm-btn" style="background:#e11d48; border:none; cursor:pointer; color:#fff; display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border-radius:6px; font-weight:bold; font-size:13px;" title="שלח הודעה פרטית ליוצר">
+              💬 <span>שלח הודעה</span>
             </button>
             ${a.telegramUrl ? `
               <a href="${a.telegramUrl}" target="_blank" title="${artEsc(a.telegramUrl.replace('https://t.me/', '@'))}" class="art-telegram-btn" style="display: inline-flex; align-items: center; background: #2f2f2f; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 13px; text-decoration: none; font-weight: bold; gap: 6px; border: 1px solid rgba(255,255,255,0.1);">
@@ -8802,6 +8806,168 @@ function closeSavedModal() {
   if (m) m.style.display = 'none';
 }
 window.closeSavedModal = closeSavedModal;
+
+// ============================================================
+// הודעות פרטיות בין משתמשים (DM) — תיבת דואר בסגנון טלגרם/וואטסאפ
+// ============================================================
+let dmConversations = {};
+let dmConvSubscribed = false;
+let dmActiveConv = null;
+let dmThreadUnsub = null;
+let dmThreadMessages = [];
+
+function dmConvId(a, b) { return [a, b].sort().join('__'); }
+function dmName() { return (typeof liveChatUserName === 'function') ? liveChatUserName() : 'משתמש'; }
+function dmTime(ts) { return ts ? new Date(ts).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }) : ''; }
+
+function subscribeMyDMs() {
+  const u = auth.currentUser;
+  if (!u || dmConvSubscribed) return;
+  dmConvSubscribed = true;
+  onValue(ref(db, `website/user_dms/${u.uid}`), snap => {
+    dmConversations = snap.val() || {};
+    const el = document.getElementById('dm-conv-list');
+    if (el) el.innerHTML = dmConvListHTML();
+    dmUpdateBadge();
+  });
+}
+
+function dmUnreadCount() {
+  let n = 0;
+  Object.values(dmConversations || {}).forEach(c => { if (c && c.unread) n++; });
+  return n;
+}
+function dmUpdateBadge() {
+  document.querySelectorAll('.dm-open-badge').forEach(b => {
+    const n = dmUnreadCount();
+    b.textContent = n > 0 ? n : '';
+    b.style.display = n > 0 ? 'inline-flex' : 'none';
+  });
+}
+
+// חלון חיצוני — רשימת שיחות (טלגרם, בלי תמונות פרופיל)
+function dmConvListHTML() {
+  const list = Object.entries(dmConversations).sort((a, b) => (b[1].lastTime || 0) - (a[1].lastTime || 0));
+  if (!list.length) return '<div class="dm-empty">אין שיחות עדיין.<br>אפשר לשלוח הודעה מדף של גלריה.</div>';
+  return list.map(([cid, c]) => `
+    <div class="dm-conv" onclick="dmOpenConv('${artEsc(cid)}','${artEsc(c.otherUid || '')}','${artEsc(c.otherName || 'משתמש')}')">
+      <div class="dm-conv-main">
+        <div class="dm-conv-name">${artEsc(c.otherName || 'משתמש')}${c.unread ? ' <span class="dm-dot"></span>' : ''}</div>
+        <div class="dm-conv-last">${artEsc((c.lastText || '').slice(0, 42))}</div>
+      </div>
+      <div class="dm-conv-time">${dmTime(c.lastTime)}</div>
+    </div>`).join('');
+}
+
+function openMessages() {
+  if (!auth.currentUser) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
+  subscribeMyDMs();
+  let modal = document.getElementById('messages-modal');
+  if (!modal) { modal = document.createElement('div'); modal.id = 'messages-modal'; document.body.appendChild(modal); }
+  modal.innerHTML = `
+    <div class="dm-backdrop" onclick="closeMessages()"></div>
+    <div class="dm-window">
+      <div class="dm-screen" id="dm-screen"></div>
+    </div>`;
+  modal.style.display = 'flex';
+  dmShowList();
+}
+window.openMessages = openMessages;
+
+function closeMessages() {
+  const m = document.getElementById('messages-modal');
+  if (m) m.style.display = 'none';
+  if (dmThreadUnsub) { dmThreadUnsub(); dmThreadUnsub = null; }
+  dmActiveConv = null;
+}
+window.closeMessages = closeMessages;
+
+function dmShowList() {
+  const s = document.getElementById('dm-screen');
+  if (!s) return;
+  if (dmThreadUnsub) { dmThreadUnsub(); dmThreadUnsub = null; }
+  dmActiveConv = null;
+  s.innerHTML = `
+    <div class="dm-titlebar">
+      <span class="dm-title">📨 הודעות</span>
+      <button class="dm-close" onclick="closeMessages()" title="סגור">✕</button>
+    </div>
+    <div class="dm-conv-list" id="dm-conv-list">${dmConvListHTML()}</div>`;
+}
+window.dmShowList = dmShowList;
+
+// חלון פנימי — שרשור שיחה (וואטסאפ)
+function dmOpenConv(convId, otherUid, otherName) {
+  dmActiveConv = { convId, otherUid, otherName };
+  if (dmThreadUnsub) { dmThreadUnsub(); dmThreadUnsub = null; }
+  const s = document.getElementById('dm-screen');
+  if (s) s.innerHTML = `
+    <div class="dm-titlebar dm-thread-head">
+      <button class="dm-back" onclick="dmShowList()" title="חזרה">→</button>
+      <span class="dm-title">${artEsc(otherName || 'משתמש')}</span>
+      <button class="dm-close" onclick="closeMessages()" title="סגור">✕</button>
+    </div>
+    <div class="dm-messages" id="dm-messages"><div class="dm-empty">טוען…</div></div>
+    <div class="dm-input-row">
+      <input id="dm-input" type="text" maxlength="1000" placeholder="הודעה" onkeydown="if(event.key==='Enter'){event.preventDefault(); dmSendCurrent();}">
+      <button class="dm-send" onclick="dmSendCurrent()" title="שלח">➤</button>
+    </div>`;
+  // מסמנים כנקרא
+  const u = auth.currentUser;
+  if (u) { try { update(ref(db, `website/user_dms/${u.uid}/${convId}`), { unread: false }); } catch (e) {} }
+  dmThreadUnsub = onValue(ref(db, `website/dms/${convId}/messages`), snap => {
+    const val = snap.val() || {};
+    dmThreadMessages = Object.values(val).sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+    const box = document.getElementById('dm-messages');
+    if (box) { box.innerHTML = dmMessagesHTML(); box.scrollTop = box.scrollHeight; }
+  });
+  setTimeout(() => { const i = document.getElementById('dm-input'); if (i) i.focus(); }, 80);
+}
+window.dmOpenConv = dmOpenConv;
+
+function dmMessagesHTML() {
+  const myUid = auth.currentUser ? auth.currentUser.uid : '';
+  if (!dmThreadMessages.length) return '<div class="dm-empty">אין הודעות עדיין — כתבו את הראשונה!</div>';
+  return dmThreadMessages.map(m => {
+    const mine = m.from === myUid;
+    return `<div class="dm-msg ${mine ? 'mine' : 'theirs'}">
+      <div class="dm-bubble"><span class="dm-text">${artEsc(m.text || '')}</span><span class="dm-msg-time">${dmTime(m.timestamp)}</span></div>
+    </div>`;
+  }).join('');
+}
+
+async function dmSendCurrent() {
+  const u = auth.currentUser;
+  if (!u || !dmActiveConv) return;
+  const inp = document.getElementById('dm-input');
+  if (!inp) return;
+  const text = inp.value.trim();
+  if (!text) return;
+  inp.value = '';
+  const { convId, otherUid, otherName } = dmActiveConv;
+  const now = Date.now();
+  const myName = dmName();
+  try {
+    await push(ref(db, `website/dms/${convId}/messages`), { from: u.uid, fromName: myName, text: text.slice(0, 1000), timestamp: now });
+    await update(ref(db, `website/user_dms/${u.uid}/${convId}`), { otherUid, otherName, lastText: text.slice(0, 60), lastTime: now, unread: false });
+    await update(ref(db, `website/user_dms/${otherUid}/${convId}`), { otherUid: u.uid, otherName: myName, lastText: text.slice(0, 60), lastTime: now, unread: true });
+  } catch (e) {
+    console.error('dm send failed', e);
+    if (typeof showCopyToast === 'function') showCopyToast('שגיאה בשליחת ההודעה');
+  }
+}
+window.dmSendCurrent = dmSendCurrent;
+
+// התחלת שיחה עם משתמש (למשל מדף גלריה)
+function dmStartWith(otherUid, otherName) {
+  const u = auth.currentUser;
+  if (!u) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
+  if (!otherUid) { if (typeof showCopyToast === 'function') showCopyToast('לא ניתן לשלוח הודעה למשתמש זה'); return; }
+  if (otherUid === u.uid) { if (typeof showCopyToast === 'function') showCopyToast('זו המודעה שלך 🙂'); return; }
+  openMessages();
+  setTimeout(() => dmOpenConv(dmConvId(u.uid, otherUid), otherUid, otherName || 'משתמש'), 60);
+}
+window.dmStartWith = dmStartWith;
 
 function photoToggleSave(id) {
   const user = auth.currentUser;
