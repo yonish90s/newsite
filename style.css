@@ -3945,6 +3945,25 @@ body:not(.edit-mode) .hidden-nav {
   padding: 40px 12px;
 }
 
+/* סרגל סינונים מותאמים בעמוד קהילה */
+.cf-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 16px 18px;
+  margin-bottom: 20px;
+  direction: rtl;
+  text-align: right;
+}
+.cf-group { min-width: 140px; }
+.cf-group-name { font-size: 13px; font-weight: 900; color: #0f172a; margin-bottom: 8px; }
+.cf-opts { display: flex; flex-wrap: wrap; gap: 6px 14px; }
+.cf-opt { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: #334155; cursor: pointer; }
+.cf-opt input { width: 16px; height: 16px; accent-color: #e11d48; cursor: pointer; }
+
 /* ===== בורר גודל גריד בעמוד התמונות (2 / 3 / 4 עמודות) ===== */
 .photos-page.photo-cols-2 .art-rows { grid-template-columns: repeat(2, 1fr) !important; }
 .photos-page.photo-cols-3 .art-rows { grid-template-columns: repeat(3, 1fr) !important; }
