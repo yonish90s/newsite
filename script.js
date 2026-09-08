@@ -7392,11 +7392,17 @@ function buildFiltersSidebarBox() {
       <input type="checkbox" ${currentPhotoGeneralFilter === value ? 'checked' : ''} onchange="photoSetSort('${value}',this)">
     </label>`;
 
-  return `
-    <div class="art-sidebar-box pf-box" style="border:1.5px solid #e2e8f0; border-radius:14px; padding:18px; background:#fff; box-shadow:0 4px 15px rgba(15,23,42,0.05); text-align:right; direction:rtl;">
+  // מקטע מתקפל: כותרת עם חץ מזעור + גוף שמקופל כברירת מחדל
+  const sec = (title, body) => `
+    <div class="pf-sec pf-collapsed">
+      <div class="pf-section-title pf-sec-head" onclick="pfToggleSection(this)">
+        <span class="pf-sec-title-text">${title}</span>
+        <span class="pf-sec-chev" aria-hidden="true">▾</span>
+      </div>
+      <div class="pf-sec-body">${body}</div>
+    </div>`;
 
-      <!-- טווח גילאים — שתי ידיות: מינימום ומקסימום, עד גיל 99 -->
-      <div class="pf-section-title">טווח גילאים (AGE)</div>
+  const ageBody = `
       <div class="pf-age-dual" style="direction:ltr;">
         <div class="pf-dual-labels">
           <span id="pf-age-lbl-min">${photoAgeMin}</span>
@@ -7408,53 +7414,45 @@ function buildFiltersSidebarBox() {
           <input type="range" class="pf-dual-input" id="pf-age-min" min="18" max="99" step="1" value="${photoAgeMin}" oninput="photoSetAgeDual('min', this.value)">
           <input type="range" class="pf-dual-input" id="pf-age-max" min="18" max="99" step="1" value="${photoAgeMax}" oninput="photoSetAgeDual('max', this.value)">
         </div>
-      </div>
+      </div>`;
 
-      <div class="pf-divider"></div>
-
-      <!-- כללי (מיון) — בחירה יחידה -->
-      <div class="pf-section-title">כללי (SORT)</div>
-      <div class="pf-check-group">
+  const sortBody = `<div class="pf-check-group">
         ${sortCheck('האחרונים', 'האחרונים ⬆️')}
         ${sortCheck('הפופולארים', 'הפופולארים 🔥')}
         ${sortCheck('הישנים', 'הישנים ⬇️')}
-      </div>
+      </div>`;
 
-      <div class="pf-divider"></div>
-
-      <!-- מין -->
-      <div class="pf-section-title">מין (CATEGORY)</div>
-      ${PHOTO_CATEGORIES.filter(v => v !== 'הכל').map(v => multiCheck('category', v, v)).join('')}
-
-      <div class="pf-divider"></div>
-
-      <!-- מיקום -->
-      <div class="pf-section-title">מיקום (REGION)</div>
-      ${PHOTO_REGIONS.filter(v => v !== 'הכל').map(v => multiCheck('region', v, v)).join('')}
-
-      <div class="pf-divider"></div>
-
-      <!-- תאריך -->
-      <div class="pf-section-title">תאריך (DATE)</div>
-      ${PHOTO_DATE_RANGES.filter(v => v !== 'הכל').map(v => multiCheck('date', v, v)).join('')}
-
-      <div class="pf-divider"></div>
-
-      <!-- גודל (מספר עמודות) — בחירה יחידה -->
-      <div class="pf-section-title">גודל (SIZE)</div>
-      <div class="pf-check-group">
+  const catBody = PHOTO_CATEGORIES.filter(v => v !== 'הכל').map(v => multiCheck('category', v, v)).join('');
+  const regBody = PHOTO_REGIONS.filter(v => v !== 'הכל').map(v => multiCheck('region', v, v)).join('');
+  const dateBody = PHOTO_DATE_RANGES.filter(v => v !== 'הכל').map(v => multiCheck('date', v, v)).join('');
+  const sizeBody = `<div class="pf-check-group">
         ${[4, 3, 2].map(n => `
           <label class="pf-check">
             <span class="pf-check-label">${n} עמודות</span>
             <input type="checkbox" ${photoGridCols === n ? 'checked' : ''} onchange="photoSetSizeCheck(${n}, this)">
           </label>
         `).join('')}
-      </div>
+      </div>`;
 
+  return `
+    <div class="art-sidebar-box pf-box" style="border:1.5px solid #e2e8f0; border-radius:14px; padding:18px; background:#fff; box-shadow:0 4px 15px rgba(15,23,42,0.05); text-align:right; direction:rtl;">
+      ${sec('טווח גילאים (AGE)', ageBody)}
+      ${sec('כללי (SORT)', sortBody)}
+      ${sec('מין (CATEGORY)', catBody)}
+      ${sec('מיקום (REGION)', regBody)}
+      ${sec('תאריך (DATE)', dateBody)}
+      ${sec('גודל (SIZE)', sizeBody)}
       <button type="button" class="pf-clear-btn" onclick="photoClearFilters()">נקה סינון ✕</button>
     </div>
   `;
 }
+
+// מזעור/הרחבה של מקטע סינון בודד
+function pfToggleSection(head) {
+  const sec = head.closest('.pf-sec');
+  if (sec) sec.classList.toggle('pf-collapsed');
+}
+window.pfToggleSection = pfToggleSection;
 
 function setPriceFilter(id, btn) {
   productFilters.price = id;
