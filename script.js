@@ -7188,10 +7188,21 @@ window.openCommunityPage = openCommunityPage;
 
 // ---- עמוד "קהילות": מרכז שמציג את כל הקהילות כשורת צ׳יפים; כל קהילה
 // היא עמוד גלריות משלה. יצירת קהילה מוסיפה צ׳יפ ועוברת לעמוד שלה. ----
+let communitiesSearchQuery = '';
+function communitiesSearch(val) {
+  communitiesSearchQuery = (val || '').toLowerCase().trim();
+  const rowEl = document.getElementById('communities-page-list');
+  if (rowEl) rowEl.innerHTML = communitiesRowHTML();
+}
+window.communitiesSearch = communitiesSearch;
+
 function communitiesRowHTML() {
-  const list = Object.values(communitiesData).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  let list = Object.values(communitiesData).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  if (communitiesSearchQuery) {
+    list = list.filter(c => (c.name || '').toLowerCase().includes(communitiesSearchQuery));
+  }
   if (!list.length) {
-    return '<div class="comm-empty">אין קהילות עדיין — צרו את הראשונה! 🚀</div>';
+    return `<div class="comm-empty">${communitiesSearchQuery ? 'לא נמצאו קהילות התואמות לחיפוש.' : 'אין קהילות עדיין — צרו את הראשונה! 🚀'}</div>`;
   }
   return list.map(c => {
     const count = c.items ? Object.keys(c.items).length : 0;
@@ -7220,11 +7231,10 @@ function buildCommunitiesPage() {
       <div class="comm-inner">
         <div class="art-layout">
           <div class="art-main">
-            <div class="comm-head">
-              <h2 class="comm-title">🏘️ קהילות</h2>
-              <p class="comm-sub">בחרו קהילה או צרו חדשה — כל קהילה היא עמוד גלריות משלה.</p>
-              ${createBtn}
+            <div class="art-search-wrap">
+              <input type="text" class="art-search" placeholder="🔍 חיפוש קהילות..." value="${artEsc(communitiesSearchQuery)}" oninput="communitiesSearch(this.value)">
             </div>
+            <div style="margin-bottom:16px;">${createBtn}</div>
             <div class="comm-row" id="communities-page-list">${communitiesRowHTML()}</div>
           </div>
           <div class="art-sidebar">
