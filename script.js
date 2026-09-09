@@ -3257,6 +3257,9 @@ document.addEventListener('DOMContentLoaded', () => {
         try { set(ref(db, 'website/admin_uid'), user.uid); } catch (e) {}
       }
 
+      // מנוי להודעות פרטיות כדי שהתראות/מונה יתעדכנו חי
+      if (typeof subscribeMyDMs === 'function') { try { subscribeMyDMs(); } catch (e) {} }
+
       // סנכרון יתרת הלייקים היומית
       await syncUserLikeBudget(user);
       
@@ -9050,10 +9053,48 @@ function dmUnreadCount() {
   return n;
 }
 function dmUpdateBadge() {
+  const n = dmUnreadCount();
   document.querySelectorAll('.dm-open-badge').forEach(b => {
-    const n = dmUnreadCount();
     b.textContent = n > 0 ? n : '';
     b.style.display = n > 0 ? 'inline-flex' : 'none';
+  });
+  const nb = document.getElementById('notif-badge');
+  if (nb) { nb.textContent = n > 0 ? n : ''; nb.style.display = n > 0 ? 'inline-flex' : 'none'; }
+  const panel = document.getElementById('notif-panel');
+  if (panel && panel.style.display === 'block') { const list = panel.querySelector('.notif-list'); if (list) list.innerHTML = notificationsHTML(); }
+}
+
+// ---- פעמון התראות (בהדר ליד "אורח") — מציג הודעות שלא נקראו ----
+function notificationsHTML() {
+  if (!auth.currentUser) return '<div class="notif-empty">התחבר כדי לראות התראות</div>';
+  const unread = Object.entries(dmConversations || {}).filter(([id, c]) => c && c.unread).sort((a, b) => (b[1].lastTime || 0) - (a[1].lastTime || 0));
+  if (!unread.length) return '<div class="notif-empty">אין התראות חדשות 🔔</div>';
+  return unread.map(([cid, c]) => `
+    <div class="notif-item" onclick="notifOpen('${artEsc(cid)}','${artEsc(c.otherUid || '')}','${artEsc(c.otherName || '')}')">
+      <div class="notif-item-title">💬 הודעה מ${artEsc(c.otherName || 'משתמש')}</div>
+      <div class="notif-item-sub">${artEsc((c.lastText || '').slice(0, 42))}</div>
+    </div>`).join('');
+}
+function toggleNotifications(e) {
+  if (e) e.stopPropagation();
+  const panel = document.getElementById('notif-panel');
+  if (!panel) return;
+  if (panel.style.display === 'block') { panel.style.display = 'none'; return; }
+  if (auth.currentUser && typeof subscribeMyDMs === 'function') subscribeMyDMs();
+  panel.innerHTML = `<div class="notif-head">🔔 התראות</div><div class="notif-list">${notificationsHTML()}</div>`;
+  panel.style.display = 'block';
+}
+window.toggleNotifications = toggleNotifications;
+function notifOpen(cid, uid, name) {
+  const p = document.getElementById('notif-panel'); if (p) p.style.display = 'none';
+  if (typeof openMessages === 'function') { openMessages(); setTimeout(() => dmOpenConv(cid, uid, name || 'משתמש'), 60); }
+}
+window.notifOpen = notifOpen;
+if (typeof document !== 'undefined') {
+  document.addEventListener('click', (e) => {
+    const p = document.getElementById('notif-panel');
+    const b = document.getElementById('notif-bell');
+    if (p && p.style.display === 'block' && !p.contains(e.target) && b && !b.contains(e.target)) p.style.display = 'none';
   });
 }
 
