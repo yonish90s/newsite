@@ -8040,7 +8040,8 @@ function buildPhotosPage(albums, section) {
   }).join('');
 
   const json = encodeURIComponent(JSON.stringify(albums));
-  return `<div class="articles-page photos-page photo-cols-${photoGridCols}" data-section="${section}" data-photos-json="${json}">
+  const _adultOn = (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('age_verified') === 'true');
+  return `<div class="articles-page photos-page photo-cols-${photoGridCols}${photoImagesMode ? '' : ' text-mode'}" data-section="${section}" data-photos-json="${json}">
     <div class="art-inner">
       <div class="art-featured-grid">${featuredHTML}</div>
       <div class="art-layout">
@@ -8049,6 +8050,16 @@ function buildPhotosPage(albums, section) {
             <input type="text" class="art-search" placeholder="🔍 חיפוש גלריות..." oninput="photoSearch(this.value)">
           </div>
           ${photoFilterSectionHTML()}
+          <div class="view-toggles">
+            <label class="tgl">
+              <span class="tgl-label">🖼️ הצג תמונות</span>
+              <span class="tgl-switch"><input type="checkbox" ${photoImagesMode ? 'checked' : ''} onchange="photoToggleImages(this.checked)"><span class="tgl-slider"></span></span>
+            </label>
+            <label class="tgl">
+              <span class="tgl-label">🔞 תוכן למבוגרים</span>
+              <span class="tgl-switch"><input type="checkbox" ${_adultOn ? 'checked' : ''} onchange="toggleSidebarAgeVerification(this.checked)"><span class="tgl-slider"></span></span>
+            </label>
+          </div>
 
           <!-- מקטע מאוחד: כל הגלריות, החדשים למעלה והישנים למטה (ניתן למיון דרך "כללי") -->
           <div class="photo-section-row" style="margin-bottom: 32px; background: #ffffff; padding: 18px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
@@ -9275,6 +9286,18 @@ function photoSetGridSize(n) {
   photoRenderFilterBar();
 }
 window.photoSetGridSize = photoSetGridSize;
+
+// מצב תצוגה: תמונות (כרטיסים) או רשימת טקסט (רואים יותר). נשמר בין ביקורים.
+let photoImagesMode = (function () {
+  try { return localStorage.getItem('photo_images_mode') !== '0'; } catch (e) { return true; }
+})();
+function photoToggleImages(on) {
+  photoImagesMode = !!on;
+  try { localStorage.setItem('photo_images_mode', on ? '1' : '0'); } catch (e) {}
+  const root = mainContent.querySelector('.photos-page:not(.community-page):not(.user-page)');
+  if (root) root.classList.toggle('text-mode', !on);
+}
+window.photoToggleImages = photoToggleImages;
 
 // זמן היצירה של גלריה. גלריות חדשות שומרות createdAt מספרי; לישנות
 // נופלים לפרסור של התאריך המוצג (d.m.yyyy מ-toLocaleDateString בעברית).

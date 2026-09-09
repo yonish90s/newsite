@@ -4188,6 +4188,38 @@ body:not(.edit-mode) .hidden-nav {
 .q-answer-form { background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:14px; margin-top:14px; }
 .q-answer-form textarea { width:100%; box-sizing:border-box; border:1px solid #ddd; border-radius:10px; padding:10px 12px; font-size:14px; resize:vertical; }
 .q-answer-send { margin-top:10px; background:#e11d48; color:#fff; border:none; border-radius:8px; padding:10px 20px; font-size:14px; font-weight:800; cursor:pointer; }
+
+/* ===== מתגי תצוגה (ירוקים) ===== */
+.view-toggles { display:flex; flex-wrap:wrap; gap:14px 24px; align-items:center; margin:0 0 18px; padding:12px 16px; background:#fff; border:1px solid #e2e8f0; border-radius:12px; direction:rtl; }
+.tgl { display:inline-flex; align-items:center; gap:10px; cursor:pointer; font-size:14px; font-weight:800; color:#334155; }
+.tgl-switch { position:relative; display:inline-block; width:46px; height:26px; flex-shrink:0; }
+.tgl-switch input { position:absolute; opacity:0; width:0; height:0; }
+.tgl-slider { position:absolute; inset:0; background:#cbd5e1; border-radius:999px; transition:background .18s ease; }
+.tgl-slider::before { content:""; position:absolute; top:3px; right:3px; width:20px; height:20px; background:#fff; border-radius:50%; box-shadow:0 1px 3px rgba(0,0,0,0.3); transition:transform .18s ease; }
+.tgl-switch input:checked + .tgl-slider { background:#22c55e; }
+.tgl-switch input:checked + .tgl-slider::before { transform:translateX(-20px); }
+
+/* ===== מצב רשימת טקסט (בלי תמונות) — שני טורים, יותר פריטים ===== */
+.photos-page.text-mode .art-rows { grid-template-columns: repeat(2, 1fr) !important; gap: 0 26px !important; }
+.photos-page.text-mode .art-row {
+  background: transparent !important; box-shadow: none !important; border-radius: 0 !important;
+  border-bottom: 1px dotted #cbd5e1 !important; padding: 9px 4px !important;
+  flex-direction: row !important; align-items: center !important; overflow: visible !important;
+}
+.photos-page.text-mode .art-row:hover { transform: none !important; box-shadow: none !important; background: rgba(0,0,0,0.02) !important; }
+.photos-page.text-mode .art-row-img-container,
+.photos-page.text-mode .photo-card-links,
+.photos-page.text-mode .photo-card-actions,
+.photos-page.text-mode .photo-card-info .art-row-meta,
+.photos-page.text-mode .art-row-text > *:not(h3) { display: none !important; }
+.photos-page.text-mode .art-row-text { padding: 0 !important; }
+.photos-page.text-mode .art-row h3 {
+  font-size: 15px !important; font-weight: 800 !important; color: #9f1239 !important;
+  text-decoration: underline !important; margin: 0 !important; -webkit-line-clamp: 1 !important;
+}
+@media (max-width: 600px) {
+  .photos-page.text-mode .art-rows { grid-template-columns: 1fr !important; }
+}
 .dm-open-badge {
   background: #22c55e; color: #fff; font-size: 10px; font-weight: 900;
   min-width: 16px; height: 16px; border-radius: 999px; padding: 0 5px;
