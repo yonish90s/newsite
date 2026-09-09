@@ -4220,6 +4220,15 @@ body:not(.edit-mode) .hidden-nav {
 @media (max-width: 600px) {
   .photos-page.text-mode .art-rows { grid-template-columns: 1fr !important; }
 }
+/* במובייל שני המתגים בשורה אחת */
+@media (max-width: 768px) {
+  .view-toggles { flex-wrap: nowrap; gap: 8px; justify-content: space-between; padding: 10px 12px; }
+  .view-toggles .tgl { font-size: 12.5px; gap: 6px; }
+  .view-toggles .tgl-label { white-space: nowrap; }
+  .view-toggles .tgl-switch { width: 40px; height: 23px; }
+  .view-toggles .tgl-slider::before { width: 17px; height: 17px; }
+  .view-toggles .tgl-switch input:checked + .tgl-slider::before { transform: translateX(-17px); }
+}
 .dm-open-badge {
   background: #22c55e; color: #fff; font-size: 10px; font-weight: 900;
   min-width: 16px; height: 16px; border-radius: 999px; padding: 0 5px;
