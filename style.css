@@ -4155,6 +4155,39 @@ body:not(.edit-mode) .hidden-nav {
   cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
 }
 .dm-empty { color: #8696a0; text-align: center; padding: 40px 20px; font-size: 14px; line-height: 1.6; }
+
+/* ===== עמוד שאלות גולשים ===== */
+.questions-page { direction: rtl; }
+.q-head { background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:20px; margin-bottom:18px; box-shadow:0 4px 15px rgba(0,0,0,0.03); text-align:right; }
+.q-title { margin:0 0 4px; font-size:24px; font-weight:900; color:#0f172a; }
+.q-sub { margin:0 0 14px; font-size:14px; color:#64748b; }
+.q-ask-btn { background:#e11d48; color:#fff; border:none; border-radius:10px; padding:11px 20px; font-size:14px; font-weight:800; cursor:pointer; box-shadow:0 3px 10px rgba(225,29,72,0.25); }
+.q-ask-btn:hover { transform:translateY(-1px); }
+.q-list { display:flex; flex-direction:column; gap:2px; background:#fff; border:1px solid #e2e8f0; border-radius:14px; overflow:hidden; }
+.q-row { display:flex; align-items:center; gap:14px; padding:14px 16px; cursor:pointer; border-bottom:1px solid #eef1f5; transition:background 0.12s; }
+.q-row:last-child { border-bottom:none; }
+.q-row:hover { background:#f8fafc; }
+.q-count { flex-shrink:0; width:52px; text-align:center; color:#9f1239; }
+.q-count-num { display:block; font-size:20px; font-weight:900; line-height:1; }
+.q-count-lbl { font-size:11px; color:#94a3b8; }
+.q-row-main { flex:1; min-width:0; }
+.q-row-title { font-size:16px; font-weight:800; color:#9f1239; }
+.q-row-title:hover { text-decoration:underline; }
+.q-row-meta { font-size:12.5px; color:#94a3b8; margin-top:3px; }
+.q-empty { text-align:center; color:#94a3b8; font-size:15px; font-weight:700; padding:40px 16px; }
+/* פרטי שאלה */
+.q-back { background:#f1f5f9; border:1px solid #cbd5e1; border-radius:8px; padding:8px 16px; font-size:13px; font-weight:800; cursor:pointer; margin-bottom:16px; color:#334155; }
+.q-detail-card { background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:20px; margin-bottom:20px; box-shadow:0 4px 15px rgba(0,0,0,0.03); }
+.q-detail-title { font-size:20px; font-weight:900; color:#0f172a; }
+.q-detail-meta { font-size:13px; color:#94a3b8; margin-top:4px; }
+.q-detail-text { font-size:15px; color:#1e293b; line-height:1.6; margin-top:12px; white-space:pre-wrap; }
+.q-answers-title { font-size:16px; font-weight:900; color:#0f172a; margin-bottom:12px; }
+.q-answer { background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:14px; margin-bottom:10px; }
+.q-answer-head { font-size:12.5px; font-weight:800; color:#e11d48; margin-bottom:5px; }
+.q-answer-text { font-size:14px; color:#1e293b; line-height:1.5; white-space:pre-wrap; word-break:break-word; }
+.q-answer-form { background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:14px; margin-top:14px; }
+.q-answer-form textarea { width:100%; box-sizing:border-box; border:1px solid #ddd; border-radius:10px; padding:10px 12px; font-size:14px; resize:vertical; }
+.q-answer-send { margin-top:10px; background:#e11d48; color:#fff; border:none; border-radius:8px; padding:10px 20px; font-size:14px; font-weight:800; cursor:pointer; }
 .dm-open-badge {
   background: #22c55e; color: #fff; font-size: 10px; font-weight: 900;
   min-width: 16px; height: 16px; border-radius: 999px; padding: 0 5px;

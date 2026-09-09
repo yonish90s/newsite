@@ -14,7 +14,7 @@
   <!-- ספריית localforage לשמירת תמונות -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
   <!-- קישור לקובץ העיצוב החיצוני (עם פרמטר למניעת שמירה במטמון) -->
-  <link rel="stylesheet" href="./style.css?v=1074">
+  <link rel="stylesheet" href="./style.css?v=1075">
 </head>
 <body class="light-mode">
   <!-- שער אישור גיל (Age Gate Overlay) -->
@@ -585,6 +585,45 @@
   </div>
 </div>
 
+<!-- מודל שאלת גולשים -->
+<div id="question-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:99999; align-items:center; justify-content:center; direction:rtl;">
+  <div style="background:#fff; border-radius:16px; padding:28px; width:90%; max-width:460px; max-height:85vh; overflow-y:auto; display:flex; flex-direction:column; gap:12px;">
+    <h3 style="margin:0 0 4px; font-size:18px;">❓ שאל שאלה חדשה</h3>
+    <label style="font-size:13px; font-weight:600;">השאלה <span style="color:red">*</span></label>
+    <input id="question-title" type="text" placeholder="לדוגמה: איך יודעים שזה אהבה?" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+    <label style="font-size:13px; font-weight:600;">פירוט (אופציונלי)</label>
+    <textarea id="question-text" rows="3" placeholder="ספרו עוד על הסיטואציה..." style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box; resize:vertical;"></textarea>
+    <label style="font-size:13px; font-weight:600;">קטגוריה</label>
+    <select id="question-category" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box; background:white;">
+      <option value="כללי">כללי</option>
+      <option value="זוגיות">זוגיות</option>
+      <option value="עבודה וקריירה">עבודה וקריירה</option>
+      <option value="הורות ומשפחה">הורות ומשפחה</option>
+      <option value="בריאות ונפש">בריאות ונפש</option>
+      <option value="בין הסדינים">בין הסדינים</option>
+      <option value="מצבים ואנשים">מצבים ואנשים</option>
+    </select>
+    <div style="display:flex; gap:10px;">
+      <div style="flex:1;">
+        <label style="font-size:13px; font-weight:600;">גיל (אופציונלי)</label>
+        <input id="question-age" type="number" min="0" placeholder="גיל" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+      </div>
+      <div style="flex:1;">
+        <label style="font-size:13px; font-weight:600;">שם (אופציונלי)</label>
+        <input id="question-name" type="text" placeholder="שם או כינוי" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+      </div>
+    </div>
+    <label style="display:flex; align-items:center; gap:8px; font-size:13.5px; font-weight:700; color:#334155; cursor:pointer;">
+      <input type="checkbox" id="question-anon" style="width:18px; height:18px; accent-color:#e11d48; cursor:pointer;">
+      🕶️ לשאול בעילום שם (אנונימי)
+    </label>
+    <div style="display:flex; gap:10px; margin-top:8px;">
+      <button onclick="document.getElementById('question-modal').style.display='none'" style="flex:1; padding:10px; border:1px solid #ddd; border-radius:8px; background:#fff; cursor:pointer; font-size:14px;">ביטול</button>
+      <button onclick="saveQuestion()" style="flex:1; padding:10px; border:none; border-radius:8px; background:#e11d48; color:#fff; cursor:pointer; font-size:14px; font-weight:700;">פרסם שאלה</button>
+    </div>
+  </div>
+</div>
+
 <!-- מודל הוספת קורס -->
 <div id="course-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:99999; align-items:center; justify-content:center; direction:rtl;">
   <div style="background:#fff; border-radius:16px; padding:28px; width:90%; max-width:460px; max-height:85vh; overflow-y:auto; display:flex; flex-direction:column; gap:12px;">
@@ -832,6 +871,6 @@
   </div>
 </div>
 
-  <script type="module" src="./script.js?v=1074"></script>
+  <script type="module" src="./script.js?v=1075"></script>
 </body>
 </html>

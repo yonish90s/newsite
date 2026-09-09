@@ -371,7 +371,7 @@ function sanitizeToOnlyPhotosAndStories() {
   // לפי בקשת המשתמש: משאירים רק עמודי תמונות וסיפורים (מוחקים כתבות/קהילה וכל עמוד אחר).
   // מסננים רק כשקיים לפחות עמוד תמונות/סיפורים אחד, כדי לא לרוקן אתר תקין בטעות.
   if (pages.some(p => p && ((p.content || '').includes('photos-page') || (p.content || '').includes('stories-page')))) {
-    pages = pages.filter(p => p && ((p.content || '').includes('photos-page') || (p.content || '').includes('stories-page') || (p.content || '').includes('communities-page') || (p.content || '').includes('info-page')));
+    pages = pages.filter(p => p && ((p.content || '').includes('photos-page') || (p.content || '').includes('stories-page') || (p.content || '').includes('communities-page') || (p.content || '').includes('info-page') || (p.content || '').includes('questions-page')));
   }
 
   // בוטסטראפ של עמודי ברירת המחדל (תמונות + סיפורים) רק כאשר אין אף עמוד באתר.
@@ -404,6 +404,16 @@ function sanitizeToOnlyPhotosAndStories() {
     _infoPage.isHidden = true;
     _infoPage.content = _infoContent;
     if (!_infoPage.title) _infoPage.title = 'מידע 🔒';
+  }
+
+  // עמוד "שאלות גולשים" — תמיד קיים
+  const _qContent = '<div class="questions-page" data-page-id="page-questions-main"></div>';
+  const _qPage = pages.find(p => p && p.id === 'page-questions-main');
+  if (!_qPage) {
+    pages.push({ id: 'page-questions-main', title: 'שאלות גולשים ❓', content: _qContent });
+  } else {
+    _qPage.content = _qContent;
+    if (!_qPage.title) _qPage.title = 'שאלות גולשים ❓';
   }
 
   // סנכרון התפריט העליון עם רשימת העמודים
@@ -928,6 +938,15 @@ function renderPage() {
     if (currentPage.id === 'page-info-main') {
       if (typeof buildInfoPage === 'function') {
         mainContent.innerHTML = buildInfoPage();
+        try { window.scrollTo(0, 0); } catch (e) {}
+        return;
+      }
+    }
+
+    // עמוד "שאלות גולשים"
+    if (currentPage.id === 'page-questions-main' || (currentPage.title && currentPage.title.includes('שאלות גולשים'))) {
+      if (typeof buildQuestionsPage === 'function') {
+        mainContent.innerHTML = buildQuestionsPage();
         try { window.scrollTo(0, 0); } catch (e) {}
         return;
       }
@@ -1468,6 +1487,10 @@ function artSerializePageContent() {
   const infoList = mainContent.querySelector('.info-page');
   if (infoList) {
     return '<div class="info-page" data-page-id="page-info-main"></div>';
+  }
+  const questionsList = mainContent.querySelector('.questions-page');
+  if (questionsList) {
+    return '<div class="questions-page" data-page-id="page-questions-main"></div>';
   }
   const articles = mainContent.querySelector('.articles-page:not(.stories-page):not(.photos-page):not(.courses-page):not(.community-page)');
   if (articles && articles.dataset.articlesJson) {
@@ -7414,6 +7437,164 @@ function buildInfoPage() {
 window.buildInfoPage = buildInfoPage;
 
 // ============================================================
+// עמוד "שאלות גולשים" — לוח שאלות ועצות (Q&A) מבוסס Firebase
+// ============================================================
+let questionsData = {};
+let questionsSubscribed = false;
+let questionsSearchQuery = '';
+let activeQuestionId = null;
+const QUESTION_CATEGORIES = ['כללי', 'זוגיות', 'עבודה וקריירה', 'הורות ומשפחה', 'בריאות ונפש', 'בין הסדינים', 'מצבים ואנשים'];
+
+function subscribeQuestions() {
+  if (questionsSubscribed) return;
+  questionsSubscribed = true;
+  onValue(ref(db, 'website/questions'), snap => {
+    questionsData = snap.val() || {};
+    const listEl = document.getElementById('questions-list');
+    if (listEl) listEl.innerHTML = questionsListHTML();
+    if (activeQuestionId && mainContent.querySelector('.question-detail')) openQuestion(activeQuestionId);
+  });
+}
+
+function questionAnswerCount(q) { return q.answers ? Object.keys(q.answers).length : 0; }
+
+function questionMetaLine(q) {
+  const who = q.anonymous ? 'אנונימי' : (q.authorName || 'אנונימי');
+  return [artEsc(who), q.age ? ('גיל ' + artEsc(String(q.age))) : '', 'מתוך: ' + artEsc(q.category || 'כללי')].filter(Boolean).join(', ');
+}
+
+function questionsListHTML() {
+  let list = Object.values(questionsData).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  if (questionsSearchQuery) {
+    list = list.filter(q => (q.title || '').toLowerCase().includes(questionsSearchQuery) || (q.category || '').toLowerCase().includes(questionsSearchQuery));
+  }
+  if (!list.length) return `<div class="q-empty">${questionsSearchQuery ? 'לא נמצאו שאלות התואמות לחיפוש.' : 'עדיין אין שאלות — היו הראשונים לשאול!'}</div>`;
+  return list.map(q => {
+    const n = questionAnswerCount(q);
+    return `<div class="q-row" onclick="openQuestion('${artEsc(q.id)}')">
+      <div class="q-count"><span class="q-count-num">${n}</span><span class="q-count-lbl">עצות</span></div>
+      <div class="q-row-main">
+        <div class="q-row-title">${artEsc(q.title || '')}</div>
+        <div class="q-row-meta">(${questionMetaLine(q)})</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+window.questionsListHTML = questionsListHTML;
+
+function questionsSearch(val) {
+  questionsSearchQuery = (val || '').toLowerCase().trim();
+  const el = document.getElementById('questions-list');
+  if (el) el.innerHTML = questionsListHTML();
+}
+window.questionsSearch = questionsSearch;
+
+function buildQuestionsPage() {
+  subscribeQuestions();
+  return `
+    <div class="questions-page" data-page-id="page-questions-main">
+      <div class="comm-inner">
+        <div class="q-head">
+          <h2 class="q-title">❓ שאלות גולשים</h2>
+          <p class="q-sub">שאלו את הקהילה — או תנו עצה למי שצריך.</p>
+          <button onclick="openQuestionModal()" class="q-ask-btn">➕ שאל שאלה</button>
+        </div>
+        <div class="art-search-wrap">
+          <input type="text" class="art-search" placeholder="🔍 חיפוש שאלות..." value="${artEsc(questionsSearchQuery)}" oninput="questionsSearch(this.value)">
+        </div>
+        <div class="q-list" id="questions-list">${questionsListHTML()}</div>
+      </div>
+    </div>`;
+}
+window.buildQuestionsPage = buildQuestionsPage;
+
+function openQuestion(id) {
+  subscribeQuestions();
+  const q = questionsData[id];
+  if (!q) { if (typeof showCopyToast === 'function') showCopyToast('השאלה לא נמצאה'); return; }
+  activeQuestionId = id;
+  const answers = q.answers ? Object.values(q.answers).sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0)) : [];
+  const answersHTML = answers.length ? answers.map(a => `
+    <div class="q-answer">
+      <div class="q-answer-head">${artEsc(a.name || 'אנונימי')} · ${a.createdAt ? new Date(a.createdAt).toLocaleDateString('he-IL') : ''}</div>
+      <div class="q-answer-text">${artEsc(a.text || '')}</div>
+    </div>`).join('') : '<div class="q-empty">עדיין אין עצות. היו הראשונים לענות!</div>';
+  mainContent.innerHTML = `
+    <div class="questions-page question-detail" data-page-id="page-questions-main">
+      <div class="comm-inner">
+        <button onclick="backToQuestions()" class="q-back">← חזרה לשאלות</button>
+        <div class="q-detail-card">
+          <div class="q-detail-title">${artEsc(q.title || '')}</div>
+          <div class="q-detail-meta">(${questionMetaLine(q)})</div>
+          ${q.text ? `<div class="q-detail-text">${artEsc(q.text)}</div>` : ''}
+        </div>
+        <div class="q-answers-title">💬 עצות (${answers.length})</div>
+        <div id="q-answers-list">${answersHTML}</div>
+        <div class="q-answer-form">
+          <textarea id="q-answer-input" rows="3" placeholder="כתבו עצה או תגובה..."></textarea>
+          <button onclick="submitAnswer('${artEsc(id)}')" class="q-answer-send">שלח עצה</button>
+        </div>
+      </div>
+    </div>`;
+  try { window.scrollTo(0, 0); } catch (e) {}
+}
+window.openQuestion = openQuestion;
+
+function backToQuestions() {
+  activeQuestionId = null;
+  mainContent.innerHTML = buildQuestionsPage();
+}
+window.backToQuestions = backToQuestions;
+
+async function submitAnswer(qid) {
+  const inp = document.getElementById('q-answer-input');
+  const text = inp ? inp.value.trim() : '';
+  if (!text) { alert('נא לכתוב עצה'); return; }
+  const name = (auth.currentUser && typeof liveChatUserName === 'function') ? liveChatUserName() : 'אנונימי';
+  try {
+    await push(ref(db, `website/questions/${qid}/answers`), { text: text.slice(0, 2000), name, uid: auth.currentUser ? auth.currentUser.uid : '', createdAt: Date.now() });
+    if (inp) inp.value = '';
+  } catch (e) { console.error('answer failed', e); if (typeof showCopyToast === 'function') showCopyToast('שגיאה בשליחה'); }
+}
+window.submitAnswer = submitAnswer;
+
+function openQuestionModal() {
+  ['question-title', 'question-text', 'question-age', 'question-name'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  const anon = document.getElementById('question-anon'); if (anon) anon.checked = false;
+  const nameEl = document.getElementById('question-name');
+  if (nameEl && auth.currentUser && typeof liveChatUserName === 'function') nameEl.value = liveChatUserName();
+  const m = document.getElementById('question-modal'); if (m) m.style.display = 'flex';
+}
+window.openQuestionModal = openQuestionModal;
+
+async function saveQuestion() {
+  const titleEl = document.getElementById('question-title');
+  const title = titleEl ? titleEl.value.trim() : '';
+  if (!title) { alert('נא לכתוב את השאלה'); return; }
+  const anon = !!(document.getElementById('question-anon') && document.getElementById('question-anon').checked);
+  const id = 'q' + Date.now();
+  const q = {
+    id,
+    title: title.slice(0, 200),
+    text: ((document.getElementById('question-text') || {}).value || '').trim().slice(0, 3000),
+    category: (document.getElementById('question-category') || {}).value || 'כללי',
+    age: ((document.getElementById('question-age') || {}).value || '').trim().slice(0, 10),
+    anonymous: anon,
+    authorName: anon ? '' : (((document.getElementById('question-name') || {}).value || '').trim() || (auth.currentUser && typeof liveChatUserName === 'function' ? liveChatUserName() : 'אנונימי')),
+    authorUid: auth.currentUser ? auth.currentUser.uid : '',
+    createdAt: Date.now()
+  };
+  try {
+    await set(ref(db, `website/questions/${id}`), q);
+    const m = document.getElementById('question-modal'); if (m) m.style.display = 'none';
+    if (typeof showCopyToast === 'function') showCopyToast('✅ השאלה פורסמה!');
+    activeQuestionId = null;
+    if (mainContent.querySelector('.questions-page')) mainContent.innerHTML = buildQuestionsPage();
+  } catch (e) { console.error('save question failed', e); if (typeof showCopyToast === 'function') showCopyToast('שגיאה בפרסום'); }
+}
+window.saveQuestion = saveQuestion;
+
+// ============================================================
 // קופסת סינונים (Filters) — זמינות, טווח מחיר, סוג עסקה, מצב המוצר
 // ============================================================
 const productFilters = {
@@ -10786,7 +10967,7 @@ onValue(ref(db, 'website'), (snapshot) => {
     pList = dedupePageList(pList);
     // משאירים רק עמודי תמונות/סיפורים/קהילות (מוחקים כתבות וכל עמוד אחר)
     if (pList.some(p => p && ((p.content || '').includes('photos-page') || (p.content || '').includes('stories-page')))) {
-      pList = pList.filter(p => p && ((p.content || '').includes('photos-page') || (p.content || '').includes('stories-page') || (p.content || '').includes('communities-page') || (p.content || '').includes('info-page')));
+      pList = pList.filter(p => p && ((p.content || '').includes('photos-page') || (p.content || '').includes('stories-page') || (p.content || '').includes('communities-page') || (p.content || '').includes('info-page') || (p.content || '').includes('questions-page')));
     }
     // מוודאים שעמוד "קהילות" תמיד קיים (עם תוכן פלייסהולדר תקין)
     const _cp = pList.find(p => p && p.id === 'page-communities-main');
@@ -10805,6 +10986,14 @@ onValue(ref(db, 'website'), (snapshot) => {
     } else {
       _ip.isHidden = true; _ip.content = _ipc; if (!_ip.title) _ip.title = 'מידע 🔒';
     }
+    // עמוד "שאלות גולשים" — קיים תמיד
+    const _qp = pList.find(p => p && p.id === 'page-questions-main');
+    const _qpc = '<div class="questions-page" data-page-id="page-questions-main"></div>';
+    if (!_qp) {
+      pList.push({ id: 'page-questions-main', title: 'שאלות גולשים ❓', content: _qpc });
+    } else {
+      _qp.content = _qpc; if (!_qp.title) _qp.title = 'שאלות גולשים ❓';
+    }
     // מסירים את העמודים "יד שניה" ו"השוואת מחירים"
     pList = pList.filter(p => p && !REMOVED_PHOTO_PAGE_IDS.includes(p.id));
     if (JSON.stringify(pages) !== JSON.stringify(pList)) {
@@ -10821,6 +11010,8 @@ onValue(ref(db, 'website'), (snapshot) => {
     if (pPhoto && !navs.includes(pPhoto.id)) navs.unshift(pPhoto.id);
     // עמוד הקהילות תמיד מופיע בתפריט העליון
     if (pages.some(p => p && p.id === 'page-communities-main') && !navs.includes('page-communities-main')) navs.push('page-communities-main');
+    // עמוד "שאלות גולשים" תמיד בתפריט
+    if (pages.some(p => p && p.id === 'page-questions-main') && !navs.includes('page-questions-main')) navs.push('page-questions-main');
     // מסירים מהתפריט את העמודים שהוסרו
     navs = navs.filter(id => !REMOVED_PHOTO_PAGE_IDS.includes(id));
     if (JSON.stringify(topNavPages) !== JSON.stringify(navs)) {
