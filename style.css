@@ -4298,7 +4298,15 @@ body:not(.edit-mode) .hidden-nav {
 .of-btn-pending { background:#f59e0b !important; color:#fff !important; cursor:default; opacity:0.9; }
 .of-btn-approved { background:#16a34a !important; color:#fff !important; cursor:pointer; }
 .of-btn-approved:hover { background:#15803d !important; }
+.of-btn-full { background:#94a3b8 !important; color:#fff !important; cursor:not-allowed; opacity:0.9; }
 .of-mine { font-size:12px; font-weight:800; color:#64748b; background:#f1f5f9; padding:4px 10px; border-radius:6px; }
+
+/* פס פירוט פרטי ההצעה */
+.of-details-grid { display:flex; flex-wrap:wrap; gap:6px 14px; margin-top:8px; padding:8px 12px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; }
+.of-detail-pill { font-size:13px; color:#334155; display:inline-flex; align-items:center; gap:4px; }
+.of-detail-pill strong { color:#0f172a; font-weight:800; }
+.of-pill-full { color:#ef4444; font-weight:800; margin-right:2px; }
+.of-pill-left { color:#16a34a; font-weight:700; margin-right:2px; }
 
 /* ריבוע משתתפים */
 .of-participants-box { background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px; text-align:right; }

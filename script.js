@@ -7752,10 +7752,23 @@ function offersListHTML() {
     const menList = allParticipants.filter(p => (p.gender || 'גבר') === 'גבר');
     const womenList = allParticipants.filter(p => p.gender === 'אישה');
 
+    const maxCount = o.maxCount || 4;
+    const currentCount = allParticipants.length;
+    const spotsLeft = Math.max(0, maxCount - currentCount);
+    const isFull = currentCount >= maxCount;
+
+    const structuredBadgesHTML = `
+      <div class="of-details-grid">
+        <div class="of-detail-pill">📍 <strong>איפה:</strong> ${artEsc(o.location || 'לא צוין')}</div>
+        <div class="of-detail-pill">⏰ <strong>מתי:</strong> ${artEsc(o.whenTime || 'הערב')}</div>
+        <div class="of-detail-pill">🎯 <strong>כמה לצרף:</strong> ${maxCount} משתתפים ${isFull ? '<span class="of-pill-full">(🔒 מלא)</span>' : `<span class="of-pill-left">(נשארו עוד ${spotsLeft})</span>`}</div>
+      </div>
+    `;
+
     const participantsHTML = `
       <div class="of-participants-box">
         <div class="of-participants-header">
-          <div class="of-participants-title">👥 משתתפים בהצעה (${allParticipants.length})</div>
+          <div class="of-participants-title">👥 משתתפים בהצעה (${currentCount} / ${maxCount})</div>
           <div class="of-gender-counts">
             <span class="of-count-chip men">♂️ ${menList.length} גברים</span>
             <span class="of-count-chip women">♀️ ${womenList.length} נשים</span>
@@ -7818,6 +7831,8 @@ function offersListHTML() {
       actionBtnHTML = `<button class="of-confirm of-btn-pending" disabled>⏳ בקשה נשלחה</button>`;
     } else if (myReq && myReq.status === 'approved') {
       actionBtnHTML = `<button class="of-confirm of-btn-approved" onclick="dmStartWith('${artEsc(o.authorUid || '')}','${artEsc(o.authorName || '')}')">💬 בצ'אט (אושרת)</button>`;
+    } else if (isFull) {
+      actionBtnHTML = `<button class="of-confirm of-btn-full" disabled>🔒 מלא (${currentCount}/${maxCount})</button>`;
     } else {
       actionBtnHTML = `<button class="of-confirm of-btn-join" onclick="requestJoinOffer('${artEsc(o.id)}')">✋ בקש להצטרף</button>`;
     }
@@ -7827,6 +7842,7 @@ function offersListHTML() {
         <div class="of-main">
           <div class="of-text">${artEsc(o.text || '')}</div>
           <div class="of-meta">מאת ${artEsc(o.authorName || 'אנונימי')} (${hostGender === 'אישה' ? '♀️ אישה' : '♂️ גבר'})</div>
+          ${structuredBadgesHTML}
         </div>
         <div class="of-side">
           <div class="of-timer" data-expires="${o.expiresAt || 0}">${offerFmt((o.expiresAt || 0) - now)}</div>
@@ -7862,7 +7878,7 @@ function buildOffersPage() {
       <div class="comm-inner">
         <div class="of-head">
           <h2 class="of-title">🔥 הצעות להערב</h2>
-          <p class="of-sub">הצעות עם זמן מוגבל — לחצו "בקש להצטרף" כדי להגיש בקשה למארח. המשתתפים מחולקים בין גברים לנשים!</p>
+          <p class="of-sub">הצעות מפורטות ומאורגנות עם זמן, מיקום ומכסת משתתפים — לחצו "בקש להצטרף" כדי להגיש בקשה למארח!</p>
           <button onclick="openOfferModal()" class="of-add-btn">➕ הוסף הצעה</button>
         </div>
         <div class="of-list" id="offers-list">${offersListHTML()}</div>
@@ -7949,6 +7965,9 @@ window.declineJoinRequest = declineJoinRequest;
 function openOfferModal() {
   if (!auth.currentUser) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
   const t = document.getElementById('offer-text'); if (t) t.value = '';
+  const loc = document.getElementById('offer-location'); if (loc) loc.value = '';
+  const w = document.getElementById('offer-when'); if (w) w.value = '';
+  const max = document.getElementById('offer-max-participants'); if (max) max.value = '4';
   const h = document.getElementById('offer-hours'); if (h) h.value = '8';
   const m = document.getElementById('offer-modal'); if (m) m.style.display = 'flex';
 }
@@ -7957,7 +7976,10 @@ window.openOfferModal = openOfferModal;
 async function saveOffer() {
   if (!auth.currentUser) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
   const text = ((document.getElementById('offer-text') || {}).value || '').trim();
-  if (!text) { alert('נא לכתוב את ההצעה'); return; }
+  if (!text) { alert('נא לכתוב מה ההצעה'); return; }
+  const location = ((document.getElementById('offer-location') || {}).value || '').trim() || 'אזור המרכז';
+  const whenTime = ((document.getElementById('offer-when') || {}).value || '').trim() || 'הערב';
+  const maxCount = parseInt((document.getElementById('offer-max-participants') || {}).value) || 4;
   const gender = ((document.getElementById('offer-gender') || {}).value) || 'גבר';
   let hours = parseFloat((document.getElementById('offer-hours') || {}).value) || 8;
   hours = Math.min(Math.max(hours, 0.5), 72);
@@ -7965,7 +7987,12 @@ async function saveOffer() {
   const now = Date.now();
   if (auth.currentUser) localStorage.setItem('user_gender_' + auth.currentUser.uid, gender);
   const offer = {
-    id, text: text.slice(0, 300), hours,
+    id,
+    text: text.slice(0, 300),
+    location: location.slice(0, 100),
+    whenTime: whenTime.slice(0, 100),
+    maxCount: Math.min(Math.max(maxCount, 1), 50),
+    hours,
     authorUid: auth.currentUser.uid,
     authorName: (typeof liveChatUserName === 'function' ? liveChatUserName() : 'אנונימי'),
     authorGender: gender,
