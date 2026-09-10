@@ -14,7 +14,7 @@
   <!-- ספריית localforage לשמירת תמונות -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
   <!-- קישור לקובץ העיצוב החיצוני (עם פרמטר למניעת שמירה במטמון) -->
-  <link rel="stylesheet" href="./style.css?v=1084">
+  <link rel="stylesheet" href="./style.css?v=1085">
 </head>
 <body class="light-mode">
   <!-- שער אישור גיל (Age Gate Overlay) -->
@@ -316,25 +316,44 @@
     </div>
   </div>
 </div>
-<!-- WEBSITE PRELOADER -->
-<div id="website-preloader" style="position: fixed; inset: 0; background: #121212; z-index: 9999999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.4s ease, visibility 0.4s ease;">
-  <div style="display: flex; flex-direction: column; align-items: center; gap: 24px;">
-    <div style="position: relative; display: flex; align-items: center; justify-content: center; animation: pulse-logo 1.4s infinite ease-in-out;">
-      <img id="loader-img" src="./logo.png" alt="Loading..." style="width: 120px; height: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.3); border-radius: 24px;">
-    </div>
+<!-- WEBSITE PRELOADER — ANIMATED TEXT -->
+<div id="website-preloader" style="position: fixed; inset: 0; background: #0f0f0f; z-index: 9999999; display: flex; align-items: center; justify-content: center; transition: opacity 0.4s ease, visibility 0.4s ease; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
+  <div id="loader-text" style="font-size: 48px; font-weight: 900; letter-spacing: 3px; color: #fff; text-align: center; direction: rtl;">
+    <span id="loader-chars"></span>
   </div>
 </div>
 
 <style>
-@keyframes pulse-logo {
-  0% { transform: scale(0.96); opacity: 0.85; }
-  50% { transform: scale(1.04); opacity: 1; }
-  100% { transform: scale(0.96); opacity: 0.85; }
+@keyframes char-appear {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.loader-char {
+  display: inline-block;
+  animation: char-appear 0.4s ease forwards;
+  margin: 0 2px;
 }
 </style>
 
 <script>
   window.__siteReady = false;
+
+  // אנימציית טעינה עם אותיות
+  (function animateLoader() {
+    const text = 'בניית קהילות';
+    const charsContainer = document.getElementById('loader-chars');
+    if (!charsContainer) return;
+
+    let delay = 0;
+    for (let i = 0; i < text.length; i++) {
+      const span = document.createElement('span');
+      span.className = 'loader-char';
+      span.textContent = text[i];
+      span.style.animationDelay = (delay * 0.1) + 's';
+      charsContainer.appendChild(span);
+      delay++;
+    }
+  })();
 
   function hidePreloader() {
     window.__siteReady = true;
@@ -944,6 +963,6 @@
   </div>
 </div>
 
-  <script type="module" src="./script.js?v=1084"></script>
+  <script type="module" src="./script.js?v=1085"></script>
 </body>
 </html>
