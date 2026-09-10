@@ -4031,29 +4031,100 @@ try {
   ];
 }
 
-function buildAgeFilterSidebarBox() {
-  const isVerified = typeof sessionStorage !== 'undefined' && sessionStorage.getItem('age_verified') === 'true';
-  
-  return `
-    <div class="art-sidebar-box art-age-filter-box" style="margin-bottom: 20px; border: 1.5px solid #b91c1c; border-radius: 12px; padding: 16px; background: rgba(185, 28, 28, 0.03); box-shadow: 0 2px 8px rgba(185, 28, 28, 0.05); text-align: right; direction: rtl;">
-      <h4 style="margin: 0 0 10px; font-size: 15px; font-weight: 800; color: #b91c1c; border-bottom: 2px solid rgba(185, 28, 28, 0.2); padding-bottom: 6px; display: flex; align-items: center; justify-content: space-between;">
-        <span>🔞 סינון תוכן מעל גיל 18</span>
-        <span style="font-size: 12px; background: #b91c1c; color: white; padding: 2px 6px; border-radius: 4px; font-weight: 900;">18+</span>
-      </h4>
-      
-      <p style="font-size: 12.5px; color: #4b5563; margin: 0 0 12px; line-height: 1.4; font-weight: 600;">
-        לצפייה בתכני עירום, תכנים למבוגרים בלבד וסינון מתקדם, יש לאשר הצהרת גיל.
-      </p>
+function toggleShowImages(checked) {
+  try {
+    sessionStorage.setItem('show_images', checked ? 'true' : 'false');
+  } catch(e){}
 
-      <label style="display: flex; align-items: center; justify-content: space-between; gap: 8px; cursor: pointer; background: #ffffff; padding: 10px 12px; border-radius: 8px; border: 1px solid #fca5a5; transition: all 0.2s; white-space: nowrap; box-sizing: border-box;">
-        <span style="font-size: 12px; font-weight: 800; color: #991b1b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; user-select: none;">
-          אני מאשר/ת שאני מעל גיל 18 ומאפשר/ת הצגת תוכן 🔞
+  const root = document.documentElement;
+  if (!checked) {
+    root.classList.add('hide-site-images');
+    if (typeof showCopyToast === 'function') showCopyToast('🚫 הצגת תמונות הופסקה');
+  } else {
+    root.classList.remove('hide-site-images');
+    if (typeof showCopyToast === 'function') showCopyToast('🖼️ הצגת תמונות הופעלה');
+  }
+
+  const boxes = document.querySelectorAll('#toggle-show-images, #toggle-show-images-top, #toggle-show-images-sidebar');
+  boxes.forEach(b => { if (b) b.checked = !!checked; });
+}
+window.toggleShowImages = toggleShowImages;
+
+function buildSiteDefaultTogglesBar() {
+  const isVerified = typeof sessionStorage !== 'undefined' && sessionStorage.getItem('age_verified') === 'true';
+  const isShowImages = typeof sessionStorage === 'undefined' || sessionStorage.getItem('show_images') !== 'false';
+
+  return `
+    <div class="site-default-toggles-bar" style="background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 40px; padding: 8px 20px; display: inline-flex; align-items: center; justify-content: space-between; gap: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 20px; direction: rtl; flex-wrap: wrap;">
+      
+      <!-- toggle 2: תוכן למבוגרים (ברירת מחדל: כבוי - אפור / OFF) -->
+      <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; margin: 0;">
+        <span style="font-size: 14px; font-weight: 800; color: #1e293b; display: flex; align-items: center; gap: 6px;">
+          <span>תוכן למבוגרים</span>
+          <span style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; background: #dc2626; color: #ffffff; font-size: 10.5px; font-weight: 900; border-radius: 50%;">18</span>
         </span>
-        <input type="checkbox" id="sidebar-age-checkbox" onchange="toggleSidebarAgeVerification(this.checked)" style="width: 18px; height: 18px; cursor: pointer; accent-color: #b91c1c; flex-shrink: 0; margin: 0;" ${isVerified ? 'checked' : ''}>
+        <div class="ios-switch">
+          <input type="checkbox" id="toggle-adult-content-top" ${isVerified ? 'checked' : ''} onchange="toggleSidebarAgeVerification(this.checked)">
+          <span class="ios-slider"></span>
+        </div>
       </label>
 
-      <div id="sidebar-age-status-msg" style="margin-top: 10px; font-size: 12px; font-weight: 800; color: ${isVerified ? '#16a34a' : '#dc2626'}; text-align: center;">
-        ${isVerified ? '✓ תוכן למבוגרים (18+) פתוח לצפייה' : '🔒 תוכן עירום חסום לצפייה'}
+      <!-- toggle 1: הצג תמונות (ברירת מחדל: מופעל - ירוק / ON) -->
+      <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; margin: 0;">
+        <span style="font-size: 14px; font-weight: 800; color: #1e293b; display: flex; align-items: center; gap: 6px;">
+          <span>הצג תמונות</span>
+          <span style="font-size: 16px;">🖼️</span>
+        </span>
+        <div class="ios-switch">
+          <input type="checkbox" id="toggle-show-images-top" ${isShowImages ? 'checked' : ''} onchange="toggleShowImages(this.checked)">
+          <span class="ios-slider"></span>
+        </div>
+      </label>
+
+    </div>
+  `;
+}
+window.buildSiteDefaultTogglesBar = buildSiteDefaultTogglesBar;
+
+function buildAgeFilterSidebarBox() {
+  const isVerified = typeof sessionStorage !== 'undefined' && sessionStorage.getItem('age_verified') === 'true';
+  const isShowImages = typeof sessionStorage === 'undefined' || sessionStorage.getItem('show_images') !== 'false';
+  
+  return `
+    <div class="art-sidebar-box art-age-filter-box" style="margin-bottom: 20px; border: 1.5px solid #e2e8f0; border-radius: 16px; padding: 16px; background: #ffffff; box-shadow: 0 4px 15px rgba(0,0,0,0.03); text-align: right; direction: rtl;">
+      <h4 style="margin: 0 0 12px; font-size: 15px; font-weight: 800; color: #1e293b; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
+        <span>🎛️ הגדרות תצוגה וסינון</span>
+      </h4>
+      
+      <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 12px;">
+
+        <!-- toggle 1: הצג תמונות (ברירת מחדל: מופעל - ירוק) -->
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">
+          <span style="font-size: 13.5px; font-weight: 800; color: #1e293b; display: flex; align-items: center; gap: 6px;">
+            <span>🖼️</span> <span>הצג תמונות</span>
+          </span>
+          <div class="ios-switch">
+            <input type="checkbox" id="toggle-show-images-sidebar" ${isShowImages ? 'checked' : ''} onchange="toggleShowImages(this.checked)">
+            <span class="ios-slider"></span>
+          </div>
+        </div>
+
+        <!-- toggle 2: תוכן למבוגרים (ברירת מחדל: כבוי - אפור) -->
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">
+          <span style="font-size: 13.5px; font-weight: 800; color: #1e293b; display: flex; align-items: center; gap: 6px;">
+            <span style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; background: #dc2626; color: #ffffff; font-size: 10.5px; font-weight: 900; border-radius: 50%;">18</span>
+            <span>תוכן למבוגרים</span>
+          </span>
+          <div class="ios-switch">
+            <input type="checkbox" id="sidebar-age-checkbox" ${isVerified ? 'checked' : ''} onchange="toggleSidebarAgeVerification(this.checked)">
+            <span class="ios-slider"></span>
+          </div>
+        </div>
+
+      </div>
+
+      <div id="sidebar-age-status-msg" style="font-size: 12px; font-weight: 800; color: ${isVerified ? '#16a34a' : '#dc2626'}; text-align: center; background: ${isVerified ? 'rgba(22,163,74,0.08)' : 'rgba(220,38,38,0.08)'}; padding: 6px; border-radius: 8px;">
+        ${isVerified ? '✓ תוכן למבוגרים (18+) פתוח לצפייה' : '🔒 תוכן למבוגרים (18+) חסום לצפייה'}
       </div>
     </div>
   `;
@@ -4072,13 +4143,14 @@ function updateAgeVerificationUIState(checked) {
     if (body) body.classList.add('age-not-verified');
   }
 
-  const checkbox = document.getElementById('sidebar-age-checkbox');
-  if (checkbox) checkbox.checked = !!checked;
+  const checkboxes = document.querySelectorAll('#sidebar-age-checkbox, #toggle-adult-content, #toggle-adult-content-top');
+  checkboxes.forEach(cb => { if (cb) cb.checked = !!checked; });
 
   const statusMsg = document.getElementById('sidebar-age-status-msg');
   if (statusMsg) {
     statusMsg.style.color = checked ? '#16a34a' : '#dc2626';
-    statusMsg.textContent = checked ? '✓ תוכן למבוגרים (18+) פתוח לצפייה' : '🔒 תוכן עירום חסום לצפייה';
+    statusMsg.style.background = checked ? 'rgba(22,163,74,0.08)' : 'rgba(220,38,38,0.08)';
+    statusMsg.textContent = checked ? '✓ תוכן למבוגרים (18+) פתוח לצפייה' : '🔒 תוכן למבוגרים (18+) חסום לצפייה';
   }
 
   const overlay = document.getElementById('age-gate-overlay');
@@ -4088,12 +4160,19 @@ function updateAgeVerificationUIState(checked) {
 }
 window.updateAgeVerificationUIState = updateAgeVerificationUIState;
 
-// החלת מצב אימות הגיל בטעינה הראשונית: אם המשתמש לא אישר גיל 18+,
-// מוסיפים class ל-<html> וכללי ה-CSS מטשטשים את כל תמונות התוכן (מבפנים ומבחוץ).
 (function applyInitialAgeState() {
   try {
-    if (typeof document !== 'undefined' && sessionStorage.getItem('age_verified') !== 'true') {
-      document.documentElement.classList.add('age-not-verified');
+    if (typeof document !== 'undefined') {
+      if (sessionStorage.getItem('show_images') === 'false') {
+        document.documentElement.classList.add('hide-site-images');
+      } else {
+        document.documentElement.classList.remove('hide-site-images');
+      }
+      if (sessionStorage.getItem('age_verified') !== 'true') {
+        document.documentElement.classList.add('age-not-verified');
+      } else {
+        document.documentElement.classList.remove('age-not-verified');
+      }
     }
   } catch (e) {}
 })();
