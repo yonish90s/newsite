@@ -4301,11 +4301,28 @@ body:not(.edit-mode) .hidden-nav {
 .of-mine { font-size:12px; font-weight:800; color:#64748b; background:#f1f5f9; padding:4px 10px; border-radius:6px; }
 
 /* ריבוע משתתפים */
-.of-participants-box { background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px 14px; text-align:right; }
-.of-participants-title { font-size:13.5px; font-weight:800; color:#334155; margin-bottom:8px; }
-.of-participants-grid { display:flex; flex-wrap:wrap; gap:8px; }
+.of-participants-box { background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px; text-align:right; }
+.of-participants-header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid #e2e8f0; }
+.of-participants-title { font-size:14px; font-weight:800; color:#0f172a; }
+.of-gender-counts { display:flex; gap:8px; }
+.of-count-chip { font-size:12px; font-weight:800; padding:3px 10px; border-radius:12px; }
+.of-count-chip.men { background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; }
+.of-count-chip.women { background:#fdf2f8; color:#be185d; border:1px solid #fbcfe8; }
+
+.of-gender-groups { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+@media (max-width: 600px) { .of-gender-groups { grid-template-columns:1fr; } }
+
+.of-gender-group { background:#ffffff; border-radius:10px; padding:10px 12px; border:1px solid #e2e8f0; }
+.of-gender-group.men-group { border-top:3px solid #3b82f6; }
+.of-gender-group.women-group { border-top:3px solid #ec4899; }
+
+.of-group-title { font-size:12.5px; font-weight:800; color:#475569; margin-bottom:8px; }
+.of-participants-grid { display:flex; flex-wrap:wrap; gap:6px; }
 .of-part-chip { background:#ffffff; border:1px solid #cbd5e1; color:#334155; padding:5px 12px; font-size:13px; font-weight:700; border-radius:20px; display:inline-flex; align-items:center; gap:4px; box-shadow:0 1px 3px rgba(0,0,0,0.03); }
-.of-part-chip.host { background:#fef3c7; border-color:#f59e0b; color:#92400e; font-weight:800; }
+.of-part-chip.man { background:#eff6ff; border-color:#93c5fd; color:#1e40af; }
+.of-part-chip.woman { background:#fdf2f8; border-color:#f9a8d4; color:#9d174d; }
+.of-part-chip.host { background:#fef3c7 !important; border-color:#f59e0b !important; color:#92400e !important; font-weight:800; }
+.of-no-part { font-size:12px; color:#94a3b8; font-style:italic; }
 
 /* קופסת בקשות ממתינות למארח */
 .of-pending-box { background:#fffbeb; border:1px solid #fde68a; border-radius:10px; padding:12px 14px; text-align:right; }
@@ -4313,6 +4330,7 @@ body:not(.edit-mode) .hidden-nav {
 .of-pending-list { display:flex; flex-direction:column; gap:8px; }
 .of-pending-item { display:flex; align-items:center; justify-content:space-between; background:#fff; border:1px solid #fef08a; padding:8px 12px; border-radius:8px; }
 .of-pending-name { font-size:13.5px; font-weight:700; color:#1e293b; }
+.of-pending-gender { font-size:12px; color:#64748b; font-weight:600; margin-right:4px; }
 .of-pending-actions { display:flex; gap:6px; }
 .of-appr-btn { background:#16a34a; color:#fff; border:none; border-radius:6px; padding:4px 10px; font-size:12.5px; font-weight:800; cursor:pointer; }
 .of-appr-btn:hover { background:#15803d; }

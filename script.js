@@ -7738,15 +7738,52 @@ function offersListHTML() {
     const participants = o.participants || {};
     const myReq = myUid ? requests[myUid] : null;
 
+    const hostGender = o.authorGender || 'גבר';
+    const hostParticipant = {
+      uid: o.authorUid,
+      name: o.authorName || 'אנונימי',
+      gender: hostGender,
+      isHost: true
+    };
+
     const participantList = Object.values(participants);
-    const totalCount = participantList.length + 1; // including host
+    const allParticipants = [hostParticipant, ...participantList];
+
+    const menList = allParticipants.filter(p => (p.gender || 'גבר') === 'גבר');
+    const womenList = allParticipants.filter(p => p.gender === 'אישה');
 
     const participantsHTML = `
       <div class="of-participants-box">
-        <div class="of-participants-title">👥 משתתפים בהצעה (${totalCount})</div>
-        <div class="of-participants-grid">
-          <span class="of-part-chip host">👑 ${artEsc(o.authorName || 'אנונימי')} (מארח)</span>
-          ${participantList.map(p => `<span class="of-part-chip">👤 ${artEsc(p.name || 'משתתף')}</span>`).join('')}
+        <div class="of-participants-header">
+          <div class="of-participants-title">👥 משתתפים בהצעה (${allParticipants.length})</div>
+          <div class="of-gender-counts">
+            <span class="of-count-chip men">♂️ ${menList.length} גברים</span>
+            <span class="of-count-chip women">♀️ ${womenList.length} נשים</span>
+          </div>
+        </div>
+
+        <div class="of-gender-groups">
+          <div class="of-gender-group men-group">
+            <div class="of-group-title">♂️ גברים (${menList.length}):</div>
+            <div class="of-participants-grid">
+              ${menList.length ? menList.map(p => `
+                <span class="of-part-chip man ${p.isHost ? 'host' : ''}">
+                  ${p.isHost ? '👑' : '👨'} ${artEsc(p.name)} ${p.isHost ? '(מארח)' : ''}
+                </span>
+              `).join('') : '<span class="of-no-part">אין גברים עדיין</span>'}
+            </div>
+          </div>
+
+          <div class="of-gender-group women-group">
+            <div class="of-group-title">♀️ נשים (${womenList.length}):</div>
+            <div class="of-participants-grid">
+              ${womenList.length ? womenList.map(p => `
+                <span class="of-part-chip woman ${p.isHost ? 'host' : ''}">
+                  ${p.isHost ? '👑' : '👩'} ${artEsc(p.name)} ${p.isHost ? '(מארחת)' : ''}
+                </span>
+              `).join('') : '<span class="of-no-part">אין נשים עדיין</span>'}
+            </div>
+          </div>
         </div>
       </div>
     `;
@@ -7761,9 +7798,9 @@ function offersListHTML() {
             <div class="of-pending-list">
               ${pendingList.map(r => `
                 <div class="of-pending-item">
-                  <span class="of-pending-name">👤 ${artEsc(r.name || 'משתמש')}</span>
+                  <span class="of-pending-name">👤 ${artEsc(r.name || 'משתמש')} <span class="of-pending-gender">(${r.gender === 'אישה' ? '♀️ אישה' : '♂️ גבר'})</span></span>
                   <div class="of-pending-actions">
-                    <button class="of-appr-btn" onclick="approveJoinRequest('${artEsc(o.id)}','${artEsc(r.uid)}','${artEsc(r.name)}')">✓ אשר</button>
+                    <button class="of-appr-btn" onclick="approveJoinRequest('${artEsc(o.id)}','${artEsc(r.uid)}','${artEsc(r.name)}','${artEsc(r.gender || 'גבר')}')">✓ אשר</button>
                     <button class="of-decl-btn" onclick="declineJoinRequest('${artEsc(o.id)}','${artEsc(r.uid)}')">✕ דחה</button>
                   </div>
                 </div>
@@ -7789,7 +7826,7 @@ function offersListHTML() {
       <div class="of-top-row">
         <div class="of-main">
           <div class="of-text">${artEsc(o.text || '')}</div>
-          <div class="of-meta">מאת ${artEsc(o.authorName || 'אנונימי')}</div>
+          <div class="of-meta">מאת ${artEsc(o.authorName || 'אנונימי')} (${hostGender === 'אישה' ? '♀️ אישה' : '♂️ גבר'})</div>
         </div>
         <div class="of-side">
           <div class="of-timer" data-expires="${o.expiresAt || 0}">${offerFmt((o.expiresAt || 0) - now)}</div>
@@ -7825,7 +7862,7 @@ function buildOffersPage() {
       <div class="comm-inner">
         <div class="of-head">
           <h2 class="of-title">🔥 הצעות להערב</h2>
-          <p class="of-sub">הצעות עם זמן מוגבל — לחצו "בקש להצטרף" כדי להגיש בקשה למארח. ברגע שמאשרים אתכם, תופיעו בריבוע המשתתפים בהצעה!</p>
+          <p class="of-sub">הצעות עם זמן מוגבל — לחצו "בקש להצטרף" כדי להגיש בקשה למארח. המשתתפים מחולקים בין גברים לנשים!</p>
           <button onclick="openOfferModal()" class="of-add-btn">➕ הוסף הצעה</button>
         </div>
         <div class="of-list" id="offers-list">${offersListHTML()}</div>
@@ -7834,17 +7871,40 @@ function buildOffersPage() {
 }
 window.buildOffersPage = buildOffersPage;
 
+let pendingOfferJoinId = null;
+
 async function requestJoinOffer(offerId) {
   if (!auth.currentUser) {
     if (typeof openLiveChatLogin === 'function') openLiveChatLogin();
     return;
   }
   const myUid = auth.currentUser.uid;
+  const savedGender = localStorage.getItem('user_gender_' + myUid);
+  if (!savedGender) {
+    pendingOfferJoinId = offerId;
+    const modal = document.getElementById('join-gender-modal');
+    if (modal) modal.style.display = 'flex';
+    return;
+  }
+  await submitJoinWithGender(savedGender, offerId);
+}
+window.requestJoinOffer = requestJoinOffer;
+
+async function submitJoinWithGender(gender, offerId) {
+  offerId = offerId || pendingOfferJoinId;
+  const m = document.getElementById('join-gender-modal');
+  if (m) m.style.display = 'none';
+  if (!auth.currentUser || !offerId) return;
+
+  const myUid = auth.currentUser.uid;
   const myName = (typeof liveChatUserName === 'function' ? liveChatUserName() : 'משתמש');
+  localStorage.setItem('user_gender_' + myUid, gender);
+
   try {
     await set(ref(db, `website/offers/${offerId}/requests/${myUid}`), {
       uid: myUid,
       name: myName,
+      gender: gender,
       status: 'pending',
       requestedAt: Date.now()
     });
@@ -7854,15 +7914,16 @@ async function requestJoinOffer(offerId) {
     if (typeof showCopyToast === 'function') showCopyToast('שגיאה בשליחת הבקשה');
   }
 }
-window.requestJoinOffer = requestJoinOffer;
+window.submitJoinWithGender = submitJoinWithGender;
 
-async function approveJoinRequest(offerId, requesterUid, requesterName) {
+async function approveJoinRequest(offerId, requesterUid, requesterName, requesterGender) {
   if (!auth.currentUser) return;
   try {
     await update(ref(db, `website/offers/${offerId}/requests/${requesterUid}`), { status: 'approved' });
     await set(ref(db, `website/offers/${offerId}/participants/${requesterUid}`), {
       uid: requesterUid,
       name: requesterName || 'משתתף',
+      gender: requesterGender || 'גבר',
       joinedAt: Date.now()
     });
     if (typeof showCopyToast === 'function') showCopyToast('✅ הבקשה אושרה!');
@@ -7897,14 +7958,17 @@ async function saveOffer() {
   if (!auth.currentUser) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
   const text = ((document.getElementById('offer-text') || {}).value || '').trim();
   if (!text) { alert('נא לכתוב את ההצעה'); return; }
+  const gender = ((document.getElementById('offer-gender') || {}).value) || 'גבר';
   let hours = parseFloat((document.getElementById('offer-hours') || {}).value) || 8;
   hours = Math.min(Math.max(hours, 0.5), 72);
   const id = 'of' + Date.now();
   const now = Date.now();
+  if (auth.currentUser) localStorage.setItem('user_gender_' + auth.currentUser.uid, gender);
   const offer = {
     id, text: text.slice(0, 300), hours,
     authorUid: auth.currentUser.uid,
     authorName: (typeof liveChatUserName === 'function' ? liveChatUserName() : 'אנונימי'),
+    authorGender: gender,
     createdAt: now, expiresAt: now + hours * 3600000
   };
   try {
