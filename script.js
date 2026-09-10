@@ -7731,17 +7731,73 @@ function offersListHTML() {
   const list = Object.values(offersData).filter(o => o && (!o.expiresAt || o.expiresAt > now)).sort((a, b) => (a.expiresAt || 0) - (b.expiresAt || 0));
   if (!list.length) return '<div class="of-empty">אין הצעות פעילות כרגע.<br>היו הראשונים להוסיף הצעה! 🔥</div>';
   const myUid = auth.currentUser ? auth.currentUser.uid : '';
+
   return list.map(o => {
     const mine = myUid && o.authorUid === myUid;
+    const requests = o.requests || {};
+    const participants = o.participants || {};
+    const myReq = myUid ? requests[myUid] : null;
+
+    const participantList = Object.values(participants);
+    const totalCount = participantList.length + 1; // including host
+
+    const participantsHTML = `
+      <div class="of-participants-box">
+        <div class="of-participants-title">👥 משתתפים בהצעה (${totalCount})</div>
+        <div class="of-participants-grid">
+          <span class="of-part-chip host">👑 ${artEsc(o.authorName || 'אנונימי')} (מארח)</span>
+          ${participantList.map(p => `<span class="of-part-chip">👤 ${artEsc(p.name || 'משתתף')}</span>`).join('')}
+        </div>
+      </div>
+    `;
+
+    let pendingBoxHTML = '';
+    if (mine) {
+      const pendingList = Object.values(requests).filter(r => r && r.status === 'pending');
+      if (pendingList.length > 0) {
+        pendingBoxHTML = `
+          <div class="of-pending-box">
+            <div class="of-pending-title">📥 בקשות הצטרפות ממתינות (${pendingList.length}):</div>
+            <div class="of-pending-list">
+              ${pendingList.map(r => `
+                <div class="of-pending-item">
+                  <span class="of-pending-name">👤 ${artEsc(r.name || 'משתמש')}</span>
+                  <div class="of-pending-actions">
+                    <button class="of-appr-btn" onclick="approveJoinRequest('${artEsc(o.id)}','${artEsc(r.uid)}','${artEsc(r.name)}')">✓ אשר</button>
+                    <button class="of-decl-btn" onclick="declineJoinRequest('${artEsc(o.id)}','${artEsc(r.uid)}')">✕ דחה</button>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    let actionBtnHTML = '';
+    if (mine) {
+      actionBtnHTML = `<span class="of-mine">ההצעה שלך</span>`;
+    } else if (myReq && myReq.status === 'pending') {
+      actionBtnHTML = `<button class="of-confirm of-btn-pending" disabled>⏳ בקשה נשלחה</button>`;
+    } else if (myReq && myReq.status === 'approved') {
+      actionBtnHTML = `<button class="of-confirm of-btn-approved" onclick="dmStartWith('${artEsc(o.authorUid || '')}','${artEsc(o.authorName || '')}')">💬 בצ'אט (אושרת)</button>`;
+    } else {
+      actionBtnHTML = `<button class="of-confirm of-btn-join" onclick="requestJoinOffer('${artEsc(o.id)}')">✋ בקש להצטרף</button>`;
+    }
+
     return `<div class="of-card">
-      <div class="of-main">
-        <div class="of-text">${artEsc(o.text || '')}</div>
-        <div class="of-meta">מאת ${artEsc(o.authorName || 'אנונימי')}</div>
+      <div class="of-top-row">
+        <div class="of-main">
+          <div class="of-text">${artEsc(o.text || '')}</div>
+          <div class="of-meta">מאת ${artEsc(o.authorName || 'אנונימי')}</div>
+        </div>
+        <div class="of-side">
+          <div class="of-timer" data-expires="${o.expiresAt || 0}">${offerFmt((o.expiresAt || 0) - now)}</div>
+          ${actionBtnHTML}
+        </div>
       </div>
-      <div class="of-side">
-        <div class="of-timer" data-expires="${o.expiresAt || 0}">${offerFmt((o.expiresAt || 0) - now)}</div>
-        ${mine ? '<span class="of-mine">ההצעה שלך</span>' : `<button class="of-confirm" onclick="confirmOffer('${artEsc(o.authorUid || '')}','${artEsc(o.authorName || '')}')">✓ אשר</button>`}
-      </div>
+      ${participantsHTML}
+      ${pendingBoxHTML}
     </div>`;
   }).join('');
 }
@@ -7769,7 +7825,7 @@ function buildOffersPage() {
       <div class="comm-inner">
         <div class="of-head">
           <h2 class="of-title">🔥 הצעות להערב</h2>
-          <p class="of-sub">הצעות עם זמן מוגבל — כשהטיימר מסתיים ההצעה נעלמת. לחצו "אשר" כדי לפתוח שיחה עם המציע.</p>
+          <p class="of-sub">הצעות עם זמן מוגבל — לחצו "בקש להצטרף" כדי להגיש בקשה למארח. ברגע שמאשרים אתכם, תופיעו בריבוע המשתתפים בהצעה!</p>
           <button onclick="openOfferModal()" class="of-add-btn">➕ הוסף הצעה</button>
         </div>
         <div class="of-list" id="offers-list">${offersListHTML()}</div>
@@ -7778,11 +7834,56 @@ function buildOffersPage() {
 }
 window.buildOffersPage = buildOffersPage;
 
-function confirmOffer(uid, name) {
-  if (!uid) { if (typeof showCopyToast === 'function') showCopyToast('אין איש קשר להצעה זו'); return; }
-  if (typeof dmStartWith === 'function') dmStartWith(uid, name || 'איש קשר');
+async function requestJoinOffer(offerId) {
+  if (!auth.currentUser) {
+    if (typeof openLiveChatLogin === 'function') openLiveChatLogin();
+    return;
+  }
+  const myUid = auth.currentUser.uid;
+  const myName = (typeof liveChatUserName === 'function' ? liveChatUserName() : 'משתמש');
+  try {
+    await set(ref(db, `website/offers/${offerId}/requests/${myUid}`), {
+      uid: myUid,
+      name: myName,
+      status: 'pending',
+      requestedAt: Date.now()
+    });
+    if (typeof showCopyToast === 'function') showCopyToast('✋ בקשת הצטרפות נשלחה!');
+  } catch (e) {
+    console.error('requestJoinOffer failed', e);
+    if (typeof showCopyToast === 'function') showCopyToast('שגיאה בשליחת הבקשה');
+  }
 }
-window.confirmOffer = confirmOffer;
+window.requestJoinOffer = requestJoinOffer;
+
+async function approveJoinRequest(offerId, requesterUid, requesterName) {
+  if (!auth.currentUser) return;
+  try {
+    await update(ref(db, `website/offers/${offerId}/requests/${requesterUid}`), { status: 'approved' });
+    await set(ref(db, `website/offers/${offerId}/participants/${requesterUid}`), {
+      uid: requesterUid,
+      name: requesterName || 'משתתף',
+      joinedAt: Date.now()
+    });
+    if (typeof showCopyToast === 'function') showCopyToast('✅ הבקשה אושרה!');
+  } catch (e) {
+    console.error('approveJoinRequest failed', e);
+    if (typeof showCopyToast === 'function') showCopyToast('שגיאה באישור הבקשה');
+  }
+}
+window.approveJoinRequest = approveJoinRequest;
+
+async function declineJoinRequest(offerId, requesterUid) {
+  if (!auth.currentUser) return;
+  try {
+    await update(ref(db, `website/offers/${offerId}/requests/${requesterUid}`), { status: 'declined' });
+    if (typeof showCopyToast === 'function') showCopyToast('✕ הבקשה נדחתה');
+  } catch (e) {
+    console.error('declineJoinRequest failed', e);
+    if (typeof showCopyToast === 'function') showCopyToast('שגיאה בדחיית הבקשה');
+  }
+}
+window.declineJoinRequest = declineJoinRequest;
 
 function openOfferModal() {
   if (!auth.currentUser) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
