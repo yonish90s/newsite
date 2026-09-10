@@ -233,14 +233,20 @@
           <a href="#" data-page-id="page-stories-main">סיפורים</a>
         </nav>
         
-        <!-- כפתור אורח/מנהל + פעמון התראות + סמל בטריה -->
-        <div class="right-icons" style="display: flex; gap: 12px; align-items: center;">
-          <button id="battery-task-btn" class="feed-btn" onclick="openBatteryTasksModal()" title="משימות והתקדמות באתר 🔋" style="position:relative; background:#1e293b; border:1px solid #334155; color:#22c55e; padding:5px 12px; border-radius:20px; font-weight:900; font-size:12.5px; display:inline-flex; align-items:center; gap:5px; cursor:pointer; transition:all 0.2s;">
-            <span id="battery-icon-symbol" style="font-size:15px;">🔋</span>
-            <span id="battery-percent-badge">0%</span>
+        <!-- כפתור אורח/מנהל + סמל בטריה + כפתור הבית + פעמון התראות -->
+        <div class="right-icons" style="display: flex; gap: 10px; align-items: center;">
+          <button id="battery-task-btn" class="notif-bell" onclick="openBatteryTasksModal()" title="משימות והתקדמות באתר">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="6" width="16" height="12" rx="2.5" ry="2.5"></rect>
+              <line x1="21" y1="11" x2="21" y2="13"></line>
+              <rect id="battery-fill-rect" x="4.5" y="8.5" width="11" height="7" rx="1" fill="#ffffff" stroke="none"></rect>
+            </svg>
           </button>
-          <button id="feed-btn" class="feed-btn" onclick="openFeed()" title="הפיד שלי — מי שאני עוקב">
-            <svg viewBox="0 0 24 24" fill="#3b82f6" stroke="none"><path d="M12 3.2 3 11h2.4v9.8h4.3v-5.8h4.6v5.8h4.3V11H21z"/></svg>
+          <button id="feed-btn" class="notif-bell" onclick="openFeed()" title="הפיד שלי — מי שאני עוקב">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+              <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>
           </button>
           <button id="notif-bell" class="notif-bell" onclick="toggleNotifications(event)" title="התראות">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>

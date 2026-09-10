@@ -8859,18 +8859,14 @@ function getBatteryTaskStatus() {
 
 function updateBatteryBadgeUI() {
   const { percent } = getBatteryTaskStatus();
+  const fillRect = document.getElementById('battery-fill-rect');
   const badge = document.getElementById('battery-percent-badge');
-  const icon = document.getElementById('battery-icon-symbol');
-  const btn = document.getElementById('battery-task-btn');
-  if (badge) badge.textContent = `${percent}%`;
-  if (icon) {
-    if (percent === 100) icon.textContent = '🔋';
-    else if (percent >= 50) icon.textContent = '🔋';
-    else icon.textContent = '🪫';
-  }
-  if (btn) {
-    btn.style.color = percent === 100 ? '#22c55e' : (percent >= 50 ? '#eab308' : '#ef4444');
-    btn.style.borderColor = percent === 100 ? '#22c55e' : (percent >= 50 ? '#eab308' : '#ef4444');
+  if (badge) badge.style.display = 'none';
+  if (fillRect) {
+    const w = Math.round((11 * percent) / 100);
+    fillRect.setAttribute('width', Math.max(percent > 0 ? 2 : 0, w));
+    if (percent === 100) fillRect.setAttribute('fill', '#22c55e');
+    else fillRect.setAttribute('fill', '#ffffff');
   }
 }
 window.updateBatteryBadgeUI = updateBatteryBadgeUI;
