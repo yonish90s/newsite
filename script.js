@@ -371,7 +371,7 @@ function sanitizeToOnlyPhotosAndStories() {
   // לפי בקשת המשתמש: משאירים רק עמודי תמונות וסיפורים (מוחקים כתבות/קהילה וכל עמוד אחר).
   // מסננים רק כשקיים לפחות עמוד תמונות/סיפורים אחד, כדי לא לרוקן אתר תקין בטעות.
   if (pages.some(p => p && ((p.content || '').includes('photos-page') || (p.content || '').includes('stories-page')))) {
-    pages = pages.filter(p => p && ((p.content || '').includes('photos-page') || (p.content || '').includes('stories-page') || (p.content || '').includes('communities-page') || (p.content || '').includes('info-page') || (p.content || '').includes('questions-page')));
+    pages = pages.filter(p => p && ((p.content || '').includes('photos-page') || (p.content || '').includes('stories-page') || (p.content || '').includes('communities-page') || (p.content || '').includes('info-page') || (p.content || '').includes('questions-page') || (p.content || '').includes('offers-page')));
   }
 
   // בוטסטראפ של עמודי ברירת המחדל (תמונות + סיפורים) רק כאשר אין אף עמוד באתר.
@@ -414,6 +414,16 @@ function sanitizeToOnlyPhotosAndStories() {
   } else {
     _qPage.content = _qContent;
     if (!_qPage.title) _qPage.title = 'שאלות גולשים ❓';
+  }
+
+  // עמוד "הצעות" — תמיד קיים
+  const _ofContent = '<div class="offers-page" data-page-id="page-offers-main"></div>';
+  const _ofPage = pages.find(p => p && p.id === 'page-offers-main');
+  if (!_ofPage) {
+    pages.push({ id: 'page-offers-main', title: 'הצעות 🔥', content: _ofContent });
+  } else {
+    _ofPage.content = _ofContent;
+    if (!_ofPage.title) _ofPage.title = 'הצעות 🔥';
   }
 
   // סנכרון התפריט העליון עם רשימת העמודים
@@ -947,6 +957,15 @@ function renderPage() {
     if (currentPage.id === 'page-questions-main' || (currentPage.title && currentPage.title.includes('שאלות גולשים'))) {
       if (typeof buildQuestionsPage === 'function') {
         mainContent.innerHTML = buildQuestionsPage();
+        try { window.scrollTo(0, 0); } catch (e) {}
+        return;
+      }
+    }
+
+    // עמוד "הצעות"
+    if (currentPage.id === 'page-offers-main' || (currentPage.title && currentPage.title.includes('הצעות'))) {
+      if (typeof buildOffersPage === 'function') {
+        mainContent.innerHTML = buildOffersPage();
         try { window.scrollTo(0, 0); } catch (e) {}
         return;
       }
@@ -1491,6 +1510,10 @@ function artSerializePageContent() {
   const questionsList = mainContent.querySelector('.questions-page');
   if (questionsList) {
     return '<div class="questions-page" data-page-id="page-questions-main"></div>';
+  }
+  const offersList = mainContent.querySelector('.offers-page');
+  if (offersList) {
+    return '<div class="offers-page" data-page-id="page-offers-main"></div>';
   }
   const articles = mainContent.querySelector('.articles-page:not(.stories-page):not(.photos-page):not(.courses-page):not(.community-page)');
   if (articles && articles.dataset.articlesJson) {
@@ -7600,6 +7623,118 @@ async function saveQuestion() {
 window.saveQuestion = saveQuestion;
 
 // ============================================================
+// עמוד "הצעות" — הצעות עם זמן מוגבל (טיימר ספירה לאחור). "אשר" פותח שיחה.
+// ============================================================
+let offersData = {};
+let offersSubscribed = false;
+
+function subscribeOffers() {
+  if (offersSubscribed) return;
+  offersSubscribed = true;
+  onValue(ref(db, 'website/offers'), snap => {
+    offersData = snap.val() || {};
+    const el = document.getElementById('offers-list');
+    if (el) el.innerHTML = offersListHTML();
+  });
+}
+
+function offerFmt(ms) {
+  if (ms <= 0) return '00:00:00';
+  const s = Math.floor(ms / 1000);
+  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+  return [h, m, sec].map(x => String(x).padStart(2, '0')).join(':');
+}
+
+function offersListHTML() {
+  const now = Date.now();
+  const list = Object.values(offersData).filter(o => o && (!o.expiresAt || o.expiresAt > now)).sort((a, b) => (a.expiresAt || 0) - (b.expiresAt || 0));
+  if (!list.length) return '<div class="of-empty">אין הצעות פעילות כרגע.<br>היו הראשונים להוסיף הצעה! 🔥</div>';
+  const myUid = auth.currentUser ? auth.currentUser.uid : '';
+  return list.map(o => {
+    const mine = myUid && o.authorUid === myUid;
+    return `<div class="of-card">
+      <div class="of-main">
+        <div class="of-text">${artEsc(o.text || '')}</div>
+        <div class="of-meta">מאת ${artEsc(o.authorName || 'אנונימי')}</div>
+      </div>
+      <div class="of-side">
+        <div class="of-timer" data-expires="${o.expiresAt || 0}">${offerFmt((o.expiresAt || 0) - now)}</div>
+        ${mine ? '<span class="of-mine">ההצעה שלך</span>' : `<button class="of-confirm" onclick="confirmOffer('${artEsc(o.authorUid || '')}','${artEsc(o.authorName || '')}')">✓ אשר</button>`}
+      </div>
+    </div>`;
+  }).join('');
+}
+window.offersListHTML = offersListHTML;
+
+function updateOfferTimers() {
+  const timers = document.querySelectorAll('.of-timer');
+  if (!timers.length) return;
+  const now = Date.now();
+  let expired = false;
+  timers.forEach(el => {
+    const exp = Number(el.dataset.expires) || 0;
+    const left = exp - now;
+    if (left <= 0) { el.textContent = 'הסתיים'; el.classList.add('ended'); expired = true; }
+    else el.textContent = offerFmt(left);
+  });
+  if (expired) { const el = document.getElementById('offers-list'); if (el) el.innerHTML = offersListHTML(); }
+}
+if (typeof window !== 'undefined') setInterval(updateOfferTimers, 1000);
+
+function buildOffersPage() {
+  subscribeOffers();
+  return `
+    <div class="offers-page" data-page-id="page-offers-main">
+      <div class="comm-inner">
+        <div class="of-head">
+          <h2 class="of-title">🔥 הצעות להערב</h2>
+          <p class="of-sub">הצעות עם זמן מוגבל — כשהטיימר מסתיים ההצעה נעלמת. לחצו "אשר" כדי לפתוח שיחה עם המציע.</p>
+          <button onclick="openOfferModal()" class="of-add-btn">➕ הוסף הצעה</button>
+        </div>
+        <div class="of-list" id="offers-list">${offersListHTML()}</div>
+      </div>
+    </div>`;
+}
+window.buildOffersPage = buildOffersPage;
+
+function confirmOffer(uid, name) {
+  if (!uid) { if (typeof showCopyToast === 'function') showCopyToast('אין איש קשר להצעה זו'); return; }
+  if (typeof dmStartWith === 'function') dmStartWith(uid, name || 'איש קשר');
+}
+window.confirmOffer = confirmOffer;
+
+function openOfferModal() {
+  if (!auth.currentUser) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
+  const t = document.getElementById('offer-text'); if (t) t.value = '';
+  const h = document.getElementById('offer-hours'); if (h) h.value = '8';
+  const m = document.getElementById('offer-modal'); if (m) m.style.display = 'flex';
+}
+window.openOfferModal = openOfferModal;
+
+async function saveOffer() {
+  if (!auth.currentUser) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
+  const text = ((document.getElementById('offer-text') || {}).value || '').trim();
+  if (!text) { alert('נא לכתוב את ההצעה'); return; }
+  let hours = parseFloat((document.getElementById('offer-hours') || {}).value) || 8;
+  hours = Math.min(Math.max(hours, 0.5), 72);
+  const id = 'of' + Date.now();
+  const now = Date.now();
+  const offer = {
+    id, text: text.slice(0, 300), hours,
+    authorUid: auth.currentUser.uid,
+    authorName: (typeof liveChatUserName === 'function' ? liveChatUserName() : 'אנונימי'),
+    createdAt: now, expiresAt: now + hours * 3600000
+  };
+  try {
+    await set(ref(db, `website/offers/${id}`), offer);
+    const m = document.getElementById('offer-modal'); if (m) m.style.display = 'none';
+    if (typeof showCopyToast === 'function') showCopyToast('✅ ההצעה פורסמה!');
+    if (mainContent.querySelector('.offers-page')) mainContent.innerHTML = buildOffersPage();
+  } catch (e) { console.error('save offer failed', e); if (typeof showCopyToast === 'function') showCopyToast('שגיאה בפרסום'); }
+}
+window.saveOffer = saveOffer;
+
+// ============================================================
 // קופסת סינונים (Filters) — זמינות, טווח מחיר, סוג עסקה, מצב המוצר
 // ============================================================
 const productFilters = {
@@ -11121,7 +11256,7 @@ onValue(ref(db, 'website'), (snapshot) => {
     pList = dedupePageList(pList);
     // משאירים רק עמודי תמונות/סיפורים/קהילות (מוחקים כתבות וכל עמוד אחר)
     if (pList.some(p => p && ((p.content || '').includes('photos-page') || (p.content || '').includes('stories-page')))) {
-      pList = pList.filter(p => p && ((p.content || '').includes('photos-page') || (p.content || '').includes('stories-page') || (p.content || '').includes('communities-page') || (p.content || '').includes('info-page') || (p.content || '').includes('questions-page')));
+      pList = pList.filter(p => p && ((p.content || '').includes('photos-page') || (p.content || '').includes('stories-page') || (p.content || '').includes('communities-page') || (p.content || '').includes('info-page') || (p.content || '').includes('questions-page') || (p.content || '').includes('offers-page')));
     }
     // מוודאים שעמוד "קהילות" תמיד קיים (עם תוכן פלייסהולדר תקין)
     const _cp = pList.find(p => p && p.id === 'page-communities-main');
@@ -11148,6 +11283,14 @@ onValue(ref(db, 'website'), (snapshot) => {
     } else {
       _qp.content = _qpc; if (!_qp.title) _qp.title = 'שאלות גולשים ❓';
     }
+    // עמוד "הצעות" — קיים תמיד
+    const _ofp = pList.find(p => p && p.id === 'page-offers-main');
+    const _ofpc = '<div class="offers-page" data-page-id="page-offers-main"></div>';
+    if (!_ofp) {
+      pList.push({ id: 'page-offers-main', title: 'הצעות 🔥', content: _ofpc });
+    } else {
+      _ofp.content = _ofpc; if (!_ofp.title) _ofp.title = 'הצעות 🔥';
+    }
     // מסירים את העמודים "יד שניה" ו"השוואת מחירים"
     pList = pList.filter(p => p && !REMOVED_PHOTO_PAGE_IDS.includes(p.id));
     if (JSON.stringify(pages) !== JSON.stringify(pList)) {
@@ -11166,6 +11309,8 @@ onValue(ref(db, 'website'), (snapshot) => {
     if (pages.some(p => p && p.id === 'page-communities-main') && !navs.includes('page-communities-main')) navs.push('page-communities-main');
     // עמוד "שאלות גולשים" תמיד בתפריט
     if (pages.some(p => p && p.id === 'page-questions-main') && !navs.includes('page-questions-main')) navs.push('page-questions-main');
+    // עמוד "הצעות" תמיד בתפריט
+    if (pages.some(p => p && p.id === 'page-offers-main') && !navs.includes('page-offers-main')) navs.push('page-offers-main');
     // מסירים מהתפריט את העמודים שהוסרו
     navs = navs.filter(id => !REMOVED_PHOTO_PAGE_IDS.includes(id));
     if (JSON.stringify(topNavPages) !== JSON.stringify(navs)) {

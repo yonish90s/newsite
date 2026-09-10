@@ -14,7 +14,7 @@
   <!-- ספריית localforage לשמירת תמונות -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
   <!-- קישור לקובץ העיצוב החיצוני (עם פרמטר למניעת שמירה במטמון) -->
-  <link rel="stylesheet" href="./style.css?v=1080">
+  <link rel="stylesheet" href="./style.css?v=1081">
 </head>
 <body class="light-mode">
   <!-- שער אישור גיל (Age Gate Overlay) -->
@@ -590,6 +590,22 @@
   </div>
 </div>
 
+<!-- מודל הוספת הצעה -->
+<div id="offer-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:99999; align-items:center; justify-content:center; direction:rtl;">
+  <div style="background:#fff; border-radius:16px; padding:28px; width:90%; max-width:440px; max-height:85vh; overflow-y:auto; display:flex; flex-direction:column; gap:12px;">
+    <h3 style="margin:0 0 4px; font-size:18px;">🔥 הוספת הצעה</h3>
+    <label style="font-size:13px; font-weight:600;">מה ההצעה? <span style="color:red">*</span></label>
+    <textarea id="offer-text" rows="3" placeholder="לדוגמה: מחפש/ת חברה להערב באזור המרכז..." style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box; resize:vertical;"></textarea>
+    <label style="font-size:13px; font-weight:600;">תוקף ההצעה (שעות)</label>
+    <input id="offer-hours" type="number" min="0.5" max="72" step="0.5" value="8" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+    <div style="font-size:11.5px; color:#64748b;">כשהטיימר יסתיים ההצעה תיעלם אוטומטית.</div>
+    <div style="display:flex; gap:10px; margin-top:8px;">
+      <button onclick="document.getElementById('offer-modal').style.display='none'" style="flex:1; padding:10px; border:1px solid #ddd; border-radius:8px; background:#fff; cursor:pointer; font-size:14px;">ביטול</button>
+      <button onclick="saveOffer()" style="flex:1; padding:10px; border:none; border-radius:8px; background:#e11d48; color:#fff; cursor:pointer; font-size:14px; font-weight:700;">פרסם הצעה</button>
+    </div>
+  </div>
+</div>
+
 <!-- מודל שאלת גולשים -->
 <div id="question-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:99999; align-items:center; justify-content:center; direction:rtl;">
   <div style="background:#fff; border-radius:16px; padding:28px; width:90%; max-width:460px; max-height:85vh; overflow-y:auto; display:flex; flex-direction:column; gap:12px;">
@@ -876,6 +892,6 @@
   </div>
 </div>
 
-  <script type="module" src="./script.js?v=1080"></script>
+  <script type="module" src="./script.js?v=1081"></script>
 </body>
 </html>
