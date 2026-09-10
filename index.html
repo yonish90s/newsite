@@ -14,7 +14,7 @@
   <!-- ספריית localforage לשמירת תמונות -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
   <!-- קישור לקובץ העיצוב החיצוני (עם פרמטר למניעת שמירה במטמון) -->
-  <link rel="stylesheet" href="./style.css?v=1089">
+  <link rel="stylesheet" href="./style.css?v=1090">
 </head>
 <body class="light-mode">
   <!-- שער אישור גיל (Age Gate Overlay) -->
@@ -316,34 +316,23 @@
     </div>
   </div>
 </div>
-<!-- WEBSITE PRELOADER — BLACK1WHITE00 LOGO STYLE -->
+<!-- WEBSITE PRELOADER — BLACK1WHITE00 LOGO -->
 <div id="website-preloader" style="position: fixed; inset: 0; background: #f5f5f5; z-index: 9999999; display: flex; align-items: center; justify-content: center; transition: opacity 0.4s ease, visibility 0.4s ease;">
-  <div id="loader-text" style="font-family: 'Comic Sans MS', 'Comic Sans', cursive, sans-serif; font-size: 96px; font-weight: 900; letter-spacing: -2px; text-align: center; direction: ltr; text-transform: capitalize; filter: drop-shadow(-6px 6px 0px #6b3fb8) drop-shadow(-3px 3px 0px #8b5fbf); line-height: 1.2;">
-    <span id="loader-chars" style="background: linear-gradient(135deg, #ffd700 0%, #ffed4e 40%, #4169e1 70%, #6b3fb8 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; display: inline-block;"></span>
-  </div>
+  <img id="loader-logo" src="./logo-black-white.png" alt="Loading..." style="max-width: 90%; max-height: 90%; object-fit: contain; filter: drop-shadow(0 8px 16px rgba(0,0,0,0.15));">
 </div>
 
 <style>
-@keyframes text-fade {
-  from { opacity: 0; transform: scale(0.95); }
+@keyframes logo-fade {
+  from { opacity: 0; transform: scale(0.9); }
   to { opacity: 1; transform: scale(1); }
 }
-#loader-text {
-  animation: text-fade 0.7s ease-out forwards;
+#loader-logo {
+  animation: logo-fade 0.7s ease-out forwards;
 }
 </style>
 
 <script>
   window.__siteReady = false;
-
-  // אנימציית טעינה — הטקסט מופיע בלי אנימציה לאותיות
-  (function animateLoader() {
-    const text = 'BLACK·WHITE·00'; // שנה לטקסט של בחירתך
-    const charsContainer = document.getElementById('loader-chars');
-    if (!charsContainer) return;
-
-    charsContainer.textContent = text;
-  })();
 
   function hidePreloader() {
     window.__siteReady = true;
@@ -953,6 +942,6 @@
   </div>
 </div>
 
-  <script type="module" src="./script.js?v=1089"></script>
+  <script type="module" src="./script.js?v=1090"></script>
 </body>
 </html>
