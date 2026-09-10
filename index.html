@@ -233,8 +233,12 @@
           <a href="#" data-page-id="page-stories-main">סיפורים</a>
         </nav>
         
-        <!-- כפתור אורח/מנהל + פעמון התראות -->
-        <div class="right-icons" style="display: flex; gap: 16px; align-items: center;">
+        <!-- כפתור אורח/מנהל + פעמון התראות + סמל בטריה -->
+        <div class="right-icons" style="display: flex; gap: 12px; align-items: center;">
+          <button id="battery-task-btn" class="feed-btn" onclick="openBatteryTasksModal()" title="משימות והתקדמות באתר 🔋" style="position:relative; background:#1e293b; border:1px solid #334155; color:#22c55e; padding:5px 12px; border-radius:20px; font-weight:900; font-size:12.5px; display:inline-flex; align-items:center; gap:5px; cursor:pointer; transition:all 0.2s;">
+            <span id="battery-icon-symbol" style="font-size:15px;">🔋</span>
+            <span id="battery-percent-badge">0%</span>
+          </button>
           <button id="feed-btn" class="feed-btn" onclick="openFeed()" title="הפיד שלי — מי שאני עוקב">
             <svg viewBox="0 0 24 24" fill="#3b82f6" stroke="none"><path d="M12 3.2 3 11h2.4v9.8h4.3v-5.8h4.6v5.8h4.3V11H21z"/></svg>
           </button>

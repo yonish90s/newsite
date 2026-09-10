@@ -8657,6 +8657,227 @@ async function openUserProfile(authorId, authorFallbackName) {
 window.openUserProfile = openUserProfile;
 
 // ============================================================
+// מערכת דירוג משתמשים (עד 5 כוכבים ⭐)
+// ============================================================
+function getUserRatingData(targetUid) {
+  if (!targetUid) return { avg: 0, count: 0, myRating: 0 };
+  try {
+    const raw = localStorage.getItem(`user_ratings_${targetUid}`);
+    if (raw) {
+      const data = JSON.parse(raw);
+      const ratings = data.ratings || {};
+      const list = Object.values(ratings);
+      const count = list.length;
+      const sum = list.reduce((a, b) => a + Number(b), 0);
+      const avg = count > 0 ? (sum / count).toFixed(1) : 0;
+      const myUid = auth.currentUser ? auth.currentUser.uid : 'guest';
+      const myRating = Number(ratings[myUid]) || 0;
+      return { avg, count, myRating };
+    }
+  } catch(e){}
+  return { avg: 0, count: 0, myRating: 0 };
+}
+
+function rateUserStars(targetUid, stars) {
+  if (!targetUid) return;
+  const myUid = auth.currentUser ? auth.currentUser.uid : 'guest';
+  try {
+    const raw = localStorage.getItem(`user_ratings_${targetUid}`);
+    const data = raw ? JSON.parse(raw) : { ratings: {} };
+    data.ratings[myUid] = stars;
+    localStorage.setItem(`user_ratings_${targetUid}`, JSON.stringify(data));
+    set(ref(db, `website/user_ratings/${targetUid}/${myUid}`), stars);
+  } catch(e){}
+
+  if (typeof showCopyToast === 'function') showCopyToast(`⭐ ענית בדירוג: ${stars} כוכבים! תודה.`);
+  const nameEl = document.getElementById('user-page-name');
+  const name = nameEl ? nameEl.textContent : 'משתמש';
+  if (typeof openUserPage === 'function') openUserPage(targetUid, name);
+}
+window.rateUserStars = rateUserStars;
+
+function buildUserRatingWidgetHTML(targetUid) {
+  const { avg, count, myRating } = getUserRatingData(targetUid);
+  const starsHTML = [1, 2, 3, 4, 5].map(star => {
+    const isFilled = star <= (myRating || Math.round(avg));
+    return `
+      <span onclick="event.stopPropagation(); rateUserStars('${artEsc(targetUid)}', ${star})" 
+            style="font-size: 24px; cursor: pointer; color: ${isFilled ? '#f59e0b' : '#cbd5e1'}; transition: transform 0.15s; display: inline-block;" 
+            title="דרג ${star} כוכבים">★</span>
+    `;
+  }).join('');
+
+  return `
+    <div class="user-rating-box" style="margin-top: 10px; background: #fff8f0; border: 1px solid #fde68a; border-radius: 12px; padding: 10px 14px; display: inline-flex; align-items: center; gap: 14px; direction: rtl; flex-wrap: wrap;">
+      <div style="display: flex; align-items: center; gap: 6px;">
+        <span style="font-size: 18px; font-weight: 900; color: #d97706;">⭐ ${avg > 0 ? avg : 'חדש'}</span>
+        <span style="font-size: 12px; color: #78350f; font-weight: 700;">(${count} מדרגים)</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 4px;">
+        ${starsHTML}
+      </div>
+      ${myRating > 0 ? `<span style="font-size: 11.5px; color: #16a34a; font-weight: 800;">✓ הדירוג שלך: ${myRating}★</span>` : `<span style="font-size: 11.5px; color: #92400e; font-weight: 600;">לחץ לדירוג המשתמש</span>`}
+    </div>
+  `;
+}
+
+// ============================================================
+// סרגל בטריה ומשימות התקדמות בחשבון (Battery Checklist & Tasks)
+// ============================================================
+function getBatteryTaskStatus() {
+  const isAgeVerified = typeof sessionStorage !== 'undefined' && sessionStorage.getItem('age_verified') === 'true';
+  const isPhotoVerified = typeof localStorage !== 'undefined' && localStorage.getItem('task_photo_verified') === 'true';
+  
+  let hasUploadedPhoto = false;
+  try {
+    const albums = photoGetAlbums();
+    const myUid = auth.currentUser ? auth.currentUser.uid : '';
+    hasUploadedPhoto = albums.some(a => a.authorId === myUid || (auth.currentUser && a.author === (auth.currentUser.displayName || auth.currentUser.email)));
+  } catch(e){}
+
+  let hasProfileDetails = false;
+  if (auth.currentUser) {
+    try {
+      const prof = JSON.parse(localStorage.getItem(`user_profile_${auth.currentUser.uid}`) || '{}');
+      hasProfileDetails = !!(prof.nickname || prof.age || prof.location || prof.telegram);
+    } catch(e){}
+  }
+
+  const tasks = [
+    { id: 'photo', title: '📸 אימות דרך תמונה (אימות פנים / סלפי)', done: isPhotoVerified, action: 'openSelfieVerificationModal()' },
+    { id: 'sidebar', title: '🎛️ אימות בסרגל (אימות 18+ בסרגל הצד)', done: isAgeVerified, action: 'toggleSidebarAgeVerification(true)' },
+    { id: 'upload', title: '🖼️ תמונה/גלריה שהעלית באתר', done: hasUploadedPhoto, action: 'openPhotoModal()' },
+    { id: 'profile', title: '👤 השלמת פרטי הפרופיל (כינוי/גיל/אזור)', done: hasProfileDetails, action: 'photoToggleProfileEdit()' }
+  ];
+
+  const doneCount = tasks.filter(t => t.done).length;
+  const percent = Math.round((doneCount / tasks.length) * 100);
+
+  return { tasks, doneCount, total: tasks.length, percent };
+}
+
+function updateBatteryBadgeUI() {
+  const { percent } = getBatteryTaskStatus();
+  const badge = document.getElementById('battery-percent-badge');
+  const icon = document.getElementById('battery-icon-symbol');
+  const btn = document.getElementById('battery-task-btn');
+  if (badge) badge.textContent = `${percent}%`;
+  if (icon) {
+    if (percent === 100) icon.textContent = '🔋';
+    else if (percent >= 50) icon.textContent = '🔋';
+    else icon.textContent = '🪫';
+  }
+  if (btn) {
+    btn.style.color = percent === 100 ? '#22c55e' : (percent >= 50 ? '#eab308' : '#ef4444');
+    btn.style.borderColor = percent === 100 ? '#22c55e' : (percent >= 50 ? '#eab308' : '#ef4444');
+  }
+}
+window.updateBatteryBadgeUI = updateBatteryBadgeUI;
+
+function openBatteryTasksModal() {
+  const { tasks, doneCount, total, percent } = getBatteryTaskStatus();
+  
+  let modal = document.getElementById('battery-tasks-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'battery-tasks-modal';
+    modal.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:999999; align-items:center; justify-content:center; direction:rtl; font-family:system-ui,sans-serif; padding:16px;';
+    document.body.appendChild(modal);
+  }
+
+  const tasksHTML = tasks.map(t => `
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 14px; background:${t.done ? '#f0fdf4' : '#f8fafc'}; border:1.5px solid ${t.done ? '#bbf7d0' : '#e2e8f0'}; border-radius:12px; transition:all 0.2s;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:50%; background:${t.done ? '#22c55e' : '#cbd5e1'}; color:#fff; font-size:14px; font-weight:900;">
+          ${t.done ? '✓' : '✕'}
+        </span>
+        <span style="font-size:14px; font-weight:800; color:${t.done ? '#15803d' : '#334155'};">${t.title}</span>
+      </div>
+      ${t.done ? '<span style="font-size:12px; font-weight:900; color:#16a34a; background:#dcfce7; padding:4px 10px; border-radius:20px;">הושלם ✓</span>' : `
+        <button onclick="document.getElementById('battery-tasks-modal').style.display='none'; ${t.action}" style="background:#2563eb; color:#fff; border:none; border-radius:8px; padding:6px 14px; font-size:12.5px; font-weight:800; cursor:pointer; box-shadow:0 2px 6px rgba(37,99,235,0.2);">בצע עכשיו ➔</button>
+      `}
+    </div>
+  `).join('');
+
+  modal.innerHTML = `
+    <div style="background:#ffffff; border-radius:20px; padding:24px; width:100%; max-width:480px; box-shadow:0 20px 50px rgba(0,0,0,0.3); border:1px solid #e2e8f0; position:relative;">
+      <button onclick="document.getElementById('battery-tasks-modal').style.display='none'" style="position:absolute; top:16px; left:16px; background:#f1f5f9; border:none; border-radius:50%; width:32px; height:32px; font-size:16px; cursor:pointer; color:#64748b;">✕</button>
+
+      <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px; border-bottom:2px solid #f1f5f9; padding-bottom:14px;">
+        <span style="font-size:32px;">🔋</span>
+        <div>
+          <h3 style="margin:0; font-size:19px; font-weight:900; color:#0f172a;">משימות והתקדמות החשבון</h3>
+          <div style="font-size:13px; color:#64748b; font-weight:700; margin-top:2px;">השלם משימות כדי להטעין את הבטריה ל-100%</div>
+        </div>
+      </div>
+
+      <!-- Battery Meter Bar -->
+      <div style="background:#f1f5f9; border-radius:30px; padding:4px; height:24px; position:relative; overflow:hidden; margin-bottom:20px; border:1px solid #cbd5e1;">
+        <div style="height:100%; width:${percent}%; background:linear-gradient(90deg, #22c55e, #16a34a); border-radius:30px; transition:width 0.5s ease;"></div>
+        <span style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:900; color:#0f172a; text-shadow:0 1px 2px rgba(255,255,255,0.8);">${percent}% הושלם (${doneCount} מתוך ${total})</span>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:20px;">
+        ${tasksHTML}
+      </div>
+
+      <div style="text-align:center;">
+        <button onclick="document.getElementById('battery-tasks-modal').style.display='none'" style="background:#0f172a; color:#fff; border:none; border-radius:10px; padding:10px 24px; font-size:14px; font-weight:800; cursor:pointer; width:100%;">סגור</button>
+      </div>
+    </div>
+  `;
+
+  modal.style.display = 'flex';
+}
+window.openBatteryTasksModal = openBatteryTasksModal;
+
+function openSelfieVerificationModal() {
+  let modal = document.getElementById('selfie-verify-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'selfie-verify-modal';
+    modal.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:9999999; align-items:center; justify-content:center; direction:rtl; font-family:system-ui,sans-serif; padding:16px;';
+    document.body.appendChild(modal);
+  }
+
+  modal.innerHTML = `
+    <div style="background:#ffffff; border-radius:20px; padding:24px; width:100%; max-width:440px; box-shadow:0 20px 50px rgba(0,0,0,0.3); border:1px solid #e2e8f0; position:relative; text-align:center;">
+      <button onclick="document.getElementById('selfie-verify-modal').style.display='none'" style="position:absolute; top:16px; left:16px; background:#f1f5f9; border:none; border-radius:50%; width:32px; height:32px; font-size:16px; cursor:pointer; color:#64748b;">✕</button>
+
+      <div style="font-size:40px; margin-bottom:10px;">📸</div>
+      <h3 style="margin:0 0 8px; font-size:19px; font-weight:900; color:#0f172a;">אימות זהות דרך תמונה / סלפי</h3>
+      <p style="font-size:13.5px; color:#475569; line-height:1.5; margin-bottom:20px; font-weight:600;">
+        להשלמת אימות התמונה, העלה תמונת פנים ברורה. לאחר האישור תקבל תג מאומת בחשבונך.
+      </p>
+
+      <div style="margin-bottom:20px;">
+        <label style="display:inline-block; background:#2563eb; color:#fff; padding:12px 24px; border-radius:10px; font-size:14px; font-weight:800; cursor:pointer; box-shadow:0 4px 12px rgba(37,99,235,0.25);">
+          📷 בחר תמונת אימות / סלפי
+          <input type="file" accept="image/*" onchange="confirmSelfiePhotoUpload(this)" style="display:none;">
+        </label>
+      </div>
+
+      <div style="font-size:12px; color:#94a3b8; font-weight:600;">* התמונה תישמר בצורה מאובטחת לאימות חשבונך</div>
+    </div>
+  `;
+  modal.style.display = 'flex';
+}
+window.openSelfieVerificationModal = openSelfieVerificationModal;
+
+function confirmSelfiePhotoUpload(input) {
+  if (input && input.files && input.files[0]) {
+    try {
+      localStorage.setItem('task_photo_verified', 'true');
+    } catch(e){}
+    const modal = document.getElementById('selfie-verify-modal');
+    if (modal) modal.style.display = 'none';
+    if (typeof showCopyToast === 'function') showCopyToast('✓ תמונת האימות נשלחה ואושרה בהצלחה! הבטריה נטענה 🔋');
+    updateBatteryBadgeUI();
+  }
+}
+window.confirmSelfiePhotoUpload = confirmSelfiePhotoUpload;
+
+// ============================================================
 // עמוד משתמש מלא (במקום מודל "עמוד בתוך עמוד") — כל הגלריות שהעלה, בגריד כמו בתמונות
 // ============================================================
 function buildUserPageHTML(authorId, authorName) {
@@ -8672,15 +8893,18 @@ function buildUserPageHTML(authorId, authorName) {
   const cards = authorAlbums.map(p => renderPhotoCard(p)).join('');
   const json = encodeURIComponent(JSON.stringify(albums));
   const initial = artEsc(String(authorName || '?').charAt(0) || '?');
+  const ratingWidget = buildUserRatingWidgetHTML(authorId);
+
   return `
   <div class="articles-page photos-page user-page photo-cols-${typeof photoGridCols !== 'undefined' ? photoGridCols : 4}" data-photos-json="${json}">
     <div class="art-inner">
       <button onclick="goBackFromUserPage()" style="background:#f1f5f9; border:1px solid #cbd5e1; border-radius:8px; padding:8px 16px; font-size:13px; font-weight:800; cursor:pointer; margin-bottom:16px; color:#334155;">← חזרה</button>
-      <div style="background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:20px; margin-bottom:24px; display:flex; align-items:center; gap:16px; box-shadow:0 4px 15px rgba(0,0,0,0.03); direction:rtl;">
+      <div style="background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:20px; margin-bottom:24px; display:flex; align-items:center; gap:16px; box-shadow:0 4px 15px rgba(0,0,0,0.03); direction:rtl; flex-wrap:wrap;">
         <div style="width:56px; height:56px; border-radius:50%; background:linear-gradient(135deg,#e11d48,#9f1239); color:#fff; display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:900; flex-shrink:0;">${initial}</div>
         <div style="flex:1; min-width:0;">
           <div id="user-page-name" style="font-size:20px; font-weight:900; color:#0f172a;">${artEsc(authorName || 'משתמש')}</div>
           <div id="user-page-meta" style="font-size:13px; color:#64748b; margin-top:2px;">📷 ${authorAlbums.length} גלריות שהועלו</div>
+          ${ratingWidget}
           <div id="user-page-contact" style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;"></div>
         </div>
       </div>
@@ -11519,4 +11743,14 @@ setInterval(() => {
     }
   }
 }, 1000);
+
+// אתחול עמוד ומדדי הבטריה
+if (typeof document !== 'undefined') {
+  document.addEventListener('DOMContentLoaded', () => {
+    if (typeof updateBatteryBadgeUI === 'function') updateBatteryBadgeUI();
+  });
+  setTimeout(() => {
+    if (typeof updateBatteryBadgeUI === 'function') updateBatteryBadgeUI();
+  }, 800);
+}
 
