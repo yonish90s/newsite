@@ -5906,6 +5906,7 @@ function buildStoriesPage(stories) {
             <input type="text" class="art-search" placeholder="🔍 חיפוש סיפורים..." oninput="storySearch(this.value)">
           </div>
           ${storyCategoryBarHTML()}
+          ${photoFilterSectionHTML()}
           <div class="art-section-title-row">
             <div class="art-section-title">כל הסיפורים</div>
             ${storySizeBarHTML()}
@@ -6500,7 +6501,7 @@ function photoFilterSectionHTML() {
 }
 
 function photoRenderFilterBar() {
-  const bar = mainContent.querySelector('.photos-page .photo-filter-bar');
+  const bar = mainContent.querySelector('.photo-filter-bar');
   if (bar) bar.outerHTML = photoFilterBarHTML();
 }
 
