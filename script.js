@@ -9459,6 +9459,63 @@ function photoCommentsSectionHTML(albumId) {
 }
 window.photoCommentsSectionHTML = photoCommentsSectionHTML;
 
+// ---- פיד: גלריות של מי שאני עוקב אחריו ----
+function getFeedAlbums() {
+  let albums = [];
+  const el = mainContent.querySelector('.photos-page:not(.community-page):not(.user-page)');
+  if (el && el.dataset.photosJson) { try { albums = JSON.parse(decodeURIComponent(el.dataset.photosJson)); } catch (e) {} }
+  if ((!albums || !albums.length) && typeof pages !== 'undefined') {
+    const pp = pages.find(p => p && (p.content || '').includes('data-photos-json') && (p.content || '').includes('photos-page') && !(p.content || '').includes('community') && !(p.content || '').includes('user-page'));
+    if (pp) { const m = pp.content.match(/data-photos-json="([^"]*)"/); if (m) { try { albums = JSON.parse(decodeURIComponent(m[1])); } catch (e) {} } }
+  }
+  return albums || [];
+}
+
+function feedCardHTML(a) {
+  const img = (a.images && a.images[0]) ? a.images[0] : '';
+  return `<div class="feed-card" onclick="feedOpenGallery('${artEsc(a.id)}')" title="${artEsc(a.title || '')}">
+    <div class="feed-card-img">${img ? `<img src="${img}" alt="">` : '🖼️'}</div>
+    <div class="feed-card-body">
+      <div class="feed-card-title">${artEsc(a.title || '')}</div>
+      <div class="feed-card-author">${artEsc(a.author || '')}${a.timestamp ? ' · ' + artEsc(a.timestamp) : ''}</div>
+    </div>
+  </div>`;
+}
+
+function openFeed() {
+  if (!auth.currentUser) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
+  if (typeof subscribeMyFollows === 'function') subscribeMyFollows();
+  let albums = getFeedAlbums().filter(a => a && a.authorId && followedUids[a.authorId]);
+  albums.sort((x, y) => (y.createdAt || 0) - (x.createdAt || 0));
+  let modal = document.getElementById('feed-modal');
+  if (!modal) { modal = document.createElement('div'); modal.id = 'feed-modal'; document.body.appendChild(modal); }
+  const body = albums.length
+    ? `<div class="feed-grid">${albums.map(feedCardHTML).join('')}</div>`
+    : '<div class="feed-empty">עדיין אין תוכן ממי שאתה עוקב אחריו.<br>עקבו אחרי משתמשים (בכפתור "עקוב" בגלריה) כדי לראות כאן מה הם מעלים.</div>';
+  modal.innerHTML = `
+    <div class="feed-backdrop" onclick="closeFeed()"></div>
+    <div class="feed-window">
+      <div class="feed-titlebar"><span>🏠 הפיד שלי — מי שאני עוקב</span><button class="feed-close" onclick="closeFeed()" title="סגור">✕</button></div>
+      <div class="feed-body">${body}</div>
+    </div>`;
+  modal.style.display = 'flex';
+}
+window.openFeed = openFeed;
+
+function closeFeed() { const m = document.getElementById('feed-modal'); if (m) m.style.display = 'none'; }
+window.closeFeed = closeFeed;
+
+function feedOpenGallery(id) {
+  closeFeed();
+  // ודא שעמוד התמונות מוצג כדי ש-photoOpenDetail ימצא את הגלריה
+  if (!mainContent.querySelector('.photos-page:not(.community-page):not(.user-page)') && typeof pages !== 'undefined') {
+    const pp = pages.find(p => p && (p.content || '').includes('photos-page') && !(p.content || '').includes('community') && !(p.content || '').includes('user-page'));
+    if (pp && typeof renderPage === 'function') { activePageId = pp.id; renderPage(); }
+  }
+  setTimeout(() => { if (typeof photoOpenDetail === 'function') photoOpenDetail(id); }, 60);
+}
+window.feedOpenGallery = feedOpenGallery;
+
 function photoToggleSave(id) {
   const user = auth.currentUser;
   if (!user) {
