@@ -3259,6 +3259,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // מנוי להודעות פרטיות כדי שהתראות/מונה יתעדכנו חי
       if (typeof subscribeMyDMs === 'function') { try { subscribeMyDMs(); } catch (e) {} }
+      // מנוי לרשימת המעקב כדי שהפיד יציג קודם את מי שעוקבים אחריו
+      if (typeof subscribeMyFollows === 'function') { try { subscribeMyFollows(); } catch (e) {} }
 
       // סנכרון יתרת הלייקים היומית
       await syncUserLikeBudget(user);
@@ -7901,7 +7903,13 @@ function buildPhotosPage(albums, section) {
   albums = albums.filter(p => !p.adminOnly || _isAdminView);
 
   // 1. שורה ראשונה: מה חדש (מיון לפי תאריך / העלאה אחרונה)
-  const newestAlbums = [...albums].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  // הפיד הראשי: קודם גלריות של מי שאתה עוקב אחריו, ואז לפי הזמן (החדש קודם)
+  const newestAlbums = [...albums].sort((a, b) => {
+    const fa = (typeof isFollowing === 'function' && isFollowing(a.authorId)) ? 1 : 0;
+    const fb = (typeof isFollowing === 'function' && isFollowing(b.authorId)) ? 1 : 0;
+    if (fa !== fb) return fb - fa;
+    return (b.createdAt || 0) - (a.createdAt || 0);
+  });
 
   // 2. שורה שנייה: בשבילך (נעוצים קודם, ואז המלצות)
   const forYouAlbums = [...albums].sort((a, b) => {
@@ -8173,6 +8181,7 @@ function photoOpenDetail(id) {
           <div class="art-meta" style="margin-bottom:12px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
             <span class="art-category-badge" style="background:${a.categoryColor||'#10b981'}">${a.category}</span>
             <span>צילום: ${a.author}</span>
+            ${a.authorId ? `<button onclick="toggleFollow('${artEsc(a.authorId)}','${artEsc(a.author || '')}', this)" class="follow-btn${isFollowing(a.authorId) ? ' following' : ''}">${isFollowing(a.authorId) ? '✓ עוקב' : '➕ עקוב'}</button>` : ''}
             <span>·</span>
             <span>${a.timestamp}</span>
             ${a.expiresAt ? renderExpirationBadge(a.expiresAt) : ''}
@@ -8227,6 +8236,8 @@ function photoOpenDetail(id) {
           ${thumbnailsHTML}
         </div>
 
+        ${photoCommentsSectionHTML(id)}
+
         <div class="art-rec-section">
           <h3 style="margin:0 0 16px;font-size:18px;font-weight:800">גלריות נוספות שיעניינו אותך</h3>
           <div class="art-rec-grid">${recHTML}</div>
@@ -8234,6 +8245,7 @@ function photoOpenDetail(id) {
       </div>
     </div>
   `;
+  if (typeof subscribePhotoComments === 'function') subscribePhotoComments(id);
 }
 
 function photoSelectImage(imgUrl, el) {
@@ -9233,6 +9245,84 @@ function dmStartWith(otherUid, otherName) {
   setTimeout(() => dmOpenConv(dmConvId(u.uid, otherUid), otherUid, otherName || 'משתמש'), 60);
 }
 window.dmStartWith = dmStartWith;
+
+// ============================================================
+// מעקב אחרי משתמשים + תגובות על גלריה
+// ============================================================
+let followedUids = {};
+let followsSubscribed = false;
+function subscribeMyFollows() {
+  const u = auth.currentUser;
+  if (!u || followsSubscribed) return;
+  followsSubscribed = true;
+  onValue(ref(db, `website/user_follows/${u.uid}`), snap => { followedUids = snap.val() || {}; });
+}
+function isFollowing(uid) { return !!(uid && followedUids[uid]); }
+window.isFollowing = isFollowing;
+
+async function toggleFollow(uid, name, btn) {
+  const u = auth.currentUser;
+  if (!u) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
+  if (!uid || uid === u.uid) { if (typeof showCopyToast === 'function') showCopyToast('אי אפשר לעקוב אחרי עצמך 🙂'); return; }
+  const path = `website/user_follows/${u.uid}/${uid}`;
+  const willFollow = !followedUids[uid];
+  try {
+    if (willFollow) { await set(ref(db, path), { name: name || '', since: Date.now() }); followedUids[uid] = { name: name || '', since: Date.now() }; }
+    else { await set(ref(db, path), null); delete followedUids[uid]; }
+    if (btn) { btn.textContent = willFollow ? '✓ עוקב' : '➕ עקוב'; btn.classList.toggle('following', willFollow); }
+    if (typeof showCopyToast === 'function') showCopyToast(willFollow ? '👤 עוקב אחריו!' : 'הפסקת לעקוב');
+  } catch (e) { console.error('follow failed', e); }
+}
+window.toggleFollow = toggleFollow;
+
+let photoCommentsUnsub = null;
+let photoCommentsData = {};
+function subscribePhotoComments(albumId) {
+  if (photoCommentsUnsub) { photoCommentsUnsub(); photoCommentsUnsub = null; }
+  photoCommentsUnsub = onValue(ref(db, `website/photo_comments/${albumId}`), snap => {
+    photoCommentsData = snap.val() || {};
+    const box = document.getElementById('photo-comments-list');
+    if (box) box.innerHTML = photoCommentsListHTML();
+    const cnt = document.getElementById('photo-comments-count');
+    if (cnt) cnt.textContent = Object.keys(photoCommentsData).length;
+  });
+}
+window.subscribePhotoComments = subscribePhotoComments;
+
+function photoCommentsListHTML() {
+  const list = Object.values(photoCommentsData).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  if (!list.length) return '<div class="pc-empty">אין תגובות עדיין. היו הראשונים להגיב!</div>';
+  return list.map(c => `
+    <div class="pc-comment">
+      <div class="pc-head">${artEsc(c.name || 'אורח')} · ${c.createdAt ? new Date(c.createdAt).toLocaleDateString('he-IL') : ''}</div>
+      <div class="pc-text">${artEsc(c.text || '')}</div>
+    </div>`).join('');
+}
+
+async function submitPhotoComment(albumId) {
+  const inp = document.getElementById('photo-comment-input');
+  const text = inp ? inp.value.trim() : '';
+  if (!text) return;
+  const name = (auth.currentUser && typeof liveChatUserName === 'function') ? liveChatUserName() : 'אורח';
+  try {
+    await push(ref(db, `website/photo_comments/${albumId}`), { text: text.slice(0, 1000), name, uid: auth.currentUser ? auth.currentUser.uid : '', createdAt: Date.now() });
+    if (inp) inp.value = '';
+  } catch (e) { console.error('comment failed', e); if (typeof showCopyToast === 'function') showCopyToast('שגיאה בשליחת התגובה'); }
+}
+window.submitPhotoComment = submitPhotoComment;
+
+function photoCommentsSectionHTML(albumId) {
+  return `
+    <div class="pc-section">
+      <div class="pc-title">💬 תגובות (<span id="photo-comments-count">0</span>)</div>
+      <div class="pc-form">
+        <textarea id="photo-comment-input" rows="2" placeholder="כתבו תגובה, שתפו מה דעתכם..."></textarea>
+        <button onclick="submitPhotoComment('${artEsc(albumId)}')" class="pc-send">שלח תגובה</button>
+      </div>
+      <div id="photo-comments-list">${photoCommentsListHTML()}</div>
+    </div>`;
+}
+window.photoCommentsSectionHTML = photoCommentsSectionHTML;
 
 function photoToggleSave(id) {
   const user = auth.currentUser;
