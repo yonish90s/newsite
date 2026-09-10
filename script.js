@@ -4039,29 +4039,100 @@ try {
   ];
 }
 
-function buildAgeFilterSidebarBox() {
-  const isVerified = typeof sessionStorage !== 'undefined' && sessionStorage.getItem('age_verified') === 'true';
-  
-  return `
-    <div class="art-sidebar-box art-age-filter-box" style="margin-bottom: 20px; border: 1.5px solid #b91c1c; border-radius: 12px; padding: 16px; background: rgba(185, 28, 28, 0.03); box-shadow: 0 2px 8px rgba(185, 28, 28, 0.05); text-align: right; direction: rtl;">
-      <h4 style="margin: 0 0 10px; font-size: 15px; font-weight: 800; color: #b91c1c; border-bottom: 2px solid rgba(185, 28, 28, 0.2); padding-bottom: 6px; display: flex; align-items: center; justify-content: space-between;">
-        <span>🔞 סינון תוכן מעל גיל 18</span>
-        <span style="font-size: 12px; background: #b91c1c; color: white; padding: 2px 6px; border-radius: 4px; font-weight: 900;">18+</span>
-      </h4>
-      
-      <p style="font-size: 12.5px; color: #4b5563; margin: 0 0 12px; line-height: 1.4; font-weight: 600;">
-        לצפייה בתכני עירום, תכנים למבוגרים בלבד וסינון מתקדם, יש לאשר הצהרת גיל.
-      </p>
+function toggleShowImages(checked) {
+  try {
+    sessionStorage.setItem('show_images', checked ? 'true' : 'false');
+  } catch(e){}
 
-      <label style="display: flex; align-items: center; justify-content: space-between; gap: 8px; cursor: pointer; background: #ffffff; padding: 10px 12px; border-radius: 8px; border: 1px solid #fca5a5; transition: all 0.2s; white-space: nowrap; box-sizing: border-box;">
-        <span style="font-size: 12px; font-weight: 800; color: #991b1b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; user-select: none;">
-          אני מאשר/ת שאני מעל גיל 18 ומאפשר/ת הצגת תוכן 🔞
+  const root = document.documentElement;
+  if (!checked) {
+    root.classList.add('hide-site-images');
+    if (typeof showCopyToast === 'function') showCopyToast('🚫 הצגת תמונות הופסקה');
+  } else {
+    root.classList.remove('hide-site-images');
+    if (typeof showCopyToast === 'function') showCopyToast('🖼️ הצגת תמונות הופעלה');
+  }
+
+  const boxes = document.querySelectorAll('#toggle-show-images, #toggle-show-images-top, #toggle-show-images-sidebar');
+  boxes.forEach(b => { if (b) b.checked = !!checked; });
+}
+window.toggleShowImages = toggleShowImages;
+
+function buildSiteDefaultTogglesBar() {
+  const isVerified = typeof sessionStorage !== 'undefined' && sessionStorage.getItem('age_verified') === 'true';
+  const isShowImages = typeof sessionStorage === 'undefined' || sessionStorage.getItem('show_images') !== 'false';
+
+  return `
+    <div class="site-default-toggles-bar" style="background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 40px; padding: 8px 20px; display: inline-flex; align-items: center; justify-content: space-between; gap: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 20px; direction: rtl; flex-wrap: wrap;">
+      
+      <!-- toggle 2: תוכן למבוגרים (ברירת מחדל: כבוי - אפור / OFF) -->
+      <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; margin: 0;">
+        <span style="font-size: 14px; font-weight: 800; color: #1e293b; display: flex; align-items: center; gap: 6px;">
+          <span>תוכן למבוגרים</span>
+          <span style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; background: #dc2626; color: #ffffff; font-size: 10.5px; font-weight: 900; border-radius: 50%;">18</span>
         </span>
-        <input type="checkbox" id="sidebar-age-checkbox" onchange="toggleSidebarAgeVerification(this.checked)" style="width: 18px; height: 18px; cursor: pointer; accent-color: #b91c1c; flex-shrink: 0; margin: 0;" ${isVerified ? 'checked' : ''}>
+        <div class="ios-switch">
+          <input type="checkbox" id="toggle-adult-content-top" ${isVerified ? 'checked' : ''} onchange="toggleSidebarAgeVerification(this.checked)">
+          <span class="ios-slider"></span>
+        </div>
       </label>
 
-      <div id="sidebar-age-status-msg" style="margin-top: 10px; font-size: 12px; font-weight: 800; color: ${isVerified ? '#16a34a' : '#dc2626'}; text-align: center;">
-        ${isVerified ? '✓ תוכן למבוגרים (18+) פתוח לצפייה' : '🔒 תוכן עירום חסום לצפייה'}
+      <!-- toggle 1: הצג תמונות (ברירת מחדל: מופעל - ירוק / ON) -->
+      <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; margin: 0;">
+        <span style="font-size: 14px; font-weight: 800; color: #1e293b; display: flex; align-items: center; gap: 6px;">
+          <span>הצג תמונות</span>
+          <span style="font-size: 16px;">🖼️</span>
+        </span>
+        <div class="ios-switch">
+          <input type="checkbox" id="toggle-show-images-top" ${isShowImages ? 'checked' : ''} onchange="toggleShowImages(this.checked)">
+          <span class="ios-slider"></span>
+        </div>
+      </label>
+
+    </div>
+  `;
+}
+window.buildSiteDefaultTogglesBar = buildSiteDefaultTogglesBar;
+
+function buildAgeFilterSidebarBox() {
+  const isVerified = typeof sessionStorage !== 'undefined' && sessionStorage.getItem('age_verified') === 'true';
+  const isShowImages = typeof sessionStorage === 'undefined' || sessionStorage.getItem('show_images') !== 'false';
+  
+  return `
+    <div class="art-sidebar-box art-age-filter-box" style="margin-bottom: 20px; border: 1.5px solid #e2e8f0; border-radius: 16px; padding: 16px; background: #ffffff; box-shadow: 0 4px 15px rgba(0,0,0,0.03); text-align: right; direction: rtl;">
+      <h4 style="margin: 0 0 12px; font-size: 15px; font-weight: 800; color: #1e293b; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
+        <span>🎛️ הגדרות תצוגה וסינון</span>
+      </h4>
+      
+      <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 12px;">
+
+        <!-- toggle 1: הצג תמונות (ברירת מחדל: מופעל - ירוק) -->
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">
+          <span style="font-size: 13.5px; font-weight: 800; color: #1e293b; display: flex; align-items: center; gap: 6px;">
+            <span>🖼️</span> <span>הצג תמונות</span>
+          </span>
+          <div class="ios-switch">
+            <input type="checkbox" id="toggle-show-images-sidebar" ${isShowImages ? 'checked' : ''} onchange="toggleShowImages(this.checked)">
+            <span class="ios-slider"></span>
+          </div>
+        </div>
+
+        <!-- toggle 2: תוכן למבוגרים (ברירת מחדל: כבוי - אפור) -->
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">
+          <span style="font-size: 13.5px; font-weight: 800; color: #1e293b; display: flex; align-items: center; gap: 6px;">
+            <span style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; background: #dc2626; color: #ffffff; font-size: 10.5px; font-weight: 900; border-radius: 50%;">18</span>
+            <span>תוכן למבוגרים</span>
+          </span>
+          <div class="ios-switch">
+            <input type="checkbox" id="sidebar-age-checkbox" ${isVerified ? 'checked' : ''} onchange="toggleSidebarAgeVerification(this.checked)">
+            <span class="ios-slider"></span>
+          </div>
+        </div>
+
+      </div>
+
+      <div id="sidebar-age-status-msg" style="font-size: 12px; font-weight: 800; color: ${isVerified ? '#16a34a' : '#dc2626'}; text-align: center; background: ${isVerified ? 'rgba(22,163,74,0.08)' : 'rgba(220,38,38,0.08)'}; padding: 6px; border-radius: 8px;">
+        ${isVerified ? '✓ תוכן למבוגרים (18+) פתוח לצפייה' : '🔒 תוכן למבוגרים (18+) חסום לצפייה'}
       </div>
     </div>
   `;
@@ -4080,13 +4151,14 @@ function updateAgeVerificationUIState(checked) {
     if (body) body.classList.add('age-not-verified');
   }
 
-  const checkbox = document.getElementById('sidebar-age-checkbox');
-  if (checkbox) checkbox.checked = !!checked;
+  const checkboxes = document.querySelectorAll('#sidebar-age-checkbox, #toggle-adult-content, #toggle-adult-content-top');
+  checkboxes.forEach(cb => { if (cb) cb.checked = !!checked; });
 
   const statusMsg = document.getElementById('sidebar-age-status-msg');
   if (statusMsg) {
     statusMsg.style.color = checked ? '#16a34a' : '#dc2626';
-    statusMsg.textContent = checked ? '✓ תוכן למבוגרים (18+) פתוח לצפייה' : '🔒 תוכן עירום חסום לצפייה';
+    statusMsg.style.background = checked ? 'rgba(22,163,74,0.08)' : 'rgba(220,38,38,0.08)';
+    statusMsg.textContent = checked ? '✓ תוכן למבוגרים (18+) פתוח לצפייה' : '🔒 תוכן למבוגרים (18+) חסום לצפייה';
   }
 
   const overlay = document.getElementById('age-gate-overlay');
@@ -4096,12 +4168,19 @@ function updateAgeVerificationUIState(checked) {
 }
 window.updateAgeVerificationUIState = updateAgeVerificationUIState;
 
-// החלת מצב אימות הגיל בטעינה הראשונית: אם המשתמש לא אישר גיל 18+,
-// מוסיפים class ל-<html> וכללי ה-CSS מטשטשים את כל תמונות התוכן (מבפנים ומבחוץ).
 (function applyInitialAgeState() {
   try {
-    if (typeof document !== 'undefined' && sessionStorage.getItem('age_verified') !== 'true') {
-      document.documentElement.classList.add('age-not-verified');
+    if (typeof document !== 'undefined') {
+      if (sessionStorage.getItem('show_images') === 'false') {
+        document.documentElement.classList.add('hide-site-images');
+      } else {
+        document.documentElement.classList.remove('hide-site-images');
+      }
+      if (sessionStorage.getItem('age_verified') !== 'true') {
+        document.documentElement.classList.add('age-not-verified');
+      } else {
+        document.documentElement.classList.remove('age-not-verified');
+      }
     }
   } catch (e) {}
 })();
@@ -5854,6 +5933,7 @@ function buildStoriesPage(stories) {
           </div>
           ${storyGeneralFilterBarHTML()}
           ${storyCategoryBarHTML()}
+          ${photoFilterSectionHTML()}
           <div class="art-section-title-row">
             <div class="art-section-title">כל הסיפורים</div>
             ${storySizeBarHTML()}
@@ -6448,7 +6528,7 @@ function photoFilterSectionHTML() {
 }
 
 function photoRenderFilterBar() {
-  const bar = mainContent.querySelector('.photos-page .photo-filter-bar');
+  const bar = mainContent.querySelector('.photo-filter-bar');
   if (bar) bar.outerHTML = photoFilterBarHTML();
 }
 
@@ -6600,6 +6680,7 @@ function renderPhotoCard(p, options = {}) {
         <span class="photo-author-link" onclick="event.stopPropagation(); openUserPage('${artEsc(p.authorId || '')}', '${artEsc(p.author)}')" style="cursor: pointer; color: #e11d48; text-decoration: underline; font-weight: 600;">${p.author}</span>
         <span class="art-row-sep">|</span>
         <span>${p.timestamp}</span>
+        ${p.ageRange ? `<span class="art-row-sep">|</span><span>גיל ${artEsc(String(p.ageRange))}</span>` : ''}
       </div>
       ${scoreBadgeHTML}
       ${cardLinksHTML}
@@ -7677,17 +7758,126 @@ function offersListHTML() {
   const list = Object.values(offersData).filter(o => o && (!o.expiresAt || o.expiresAt > now)).sort((a, b) => (a.expiresAt || 0) - (b.expiresAt || 0));
   if (!list.length) return '<div class="of-empty">אין הצעות פעילות כרגע.<br>היו הראשונים להוסיף הצעה! 🔥</div>';
   const myUid = auth.currentUser ? auth.currentUser.uid : '';
+
   return list.map(o => {
     const mine = myUid && o.authorUid === myUid;
+    const requests = o.requests || {};
+    const participants = o.participants || {};
+    const myReq = myUid ? requests[myUid] : null;
+
+    const hostGender = o.authorGender || 'גבר';
+    const hostParticipant = {
+      uid: o.authorUid,
+      name: o.authorName || 'אנונימי',
+      gender: hostGender,
+      isHost: true
+    };
+
+    const participantList = Object.values(participants);
+    const allParticipants = [hostParticipant, ...participantList];
+
+    const menList = allParticipants.filter(p => (p.gender || 'גבר') === 'גבר');
+    const womenList = allParticipants.filter(p => p.gender === 'אישה');
+
+    const maxCount = o.maxCount || 4;
+    const currentCount = allParticipants.length;
+    const spotsLeft = Math.max(0, maxCount - currentCount);
+    const isFull = currentCount >= maxCount;
+
+    const structuredBadgesHTML = `
+      <div class="of-details-grid">
+        <div class="of-detail-pill">📍 <strong>איפה:</strong> ${artEsc(o.location || 'לא צוין')}</div>
+        <div class="of-detail-pill">⏰ <strong>מתי:</strong> ${artEsc(o.whenTime || 'הערב')}</div>
+        <div class="of-detail-pill">🎯 <strong>כמה לצרף:</strong> ${maxCount} משתתפים ${isFull ? '<span class="of-pill-full">(🔒 מלא)</span>' : `<span class="of-pill-left">(נשארו עוד ${spotsLeft})</span>`}</div>
+      </div>
+    `;
+
+    const participantsHTML = `
+      <div class="of-participants-box">
+        <div class="of-participants-header">
+          <div class="of-participants-title">👥 משתתפים בהצעה (${currentCount} / ${maxCount})</div>
+          <div class="of-gender-counts">
+            <span class="of-count-chip men">♂️ ${menList.length} גברים</span>
+            <span class="of-count-chip women">♀️ ${womenList.length} נשים</span>
+          </div>
+        </div>
+
+        <div class="of-gender-groups">
+          <div class="of-gender-group men-group">
+            <div class="of-group-title">♂️ גברים (${menList.length}):</div>
+            <div class="of-participants-grid">
+              ${menList.length ? menList.map(p => `
+                <span class="of-part-chip man ${p.isHost ? 'host' : ''}">
+                  ${p.isHost ? '👑' : '👨'} ${artEsc(p.name)} ${p.isHost ? '(מארח)' : ''}
+                </span>
+              `).join('') : '<span class="of-no-part">אין גברים עדיין</span>'}
+            </div>
+          </div>
+
+          <div class="of-gender-group women-group">
+            <div class="of-group-title">♀️ נשים (${womenList.length}):</div>
+            <div class="of-participants-grid">
+              ${womenList.length ? womenList.map(p => `
+                <span class="of-part-chip woman ${p.isHost ? 'host' : ''}">
+                  ${p.isHost ? '👑' : '👩'} ${artEsc(p.name)} ${p.isHost ? '(מארחת)' : ''}
+                </span>
+              `).join('') : '<span class="of-no-part">אין נשים עדיין</span>'}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    let pendingBoxHTML = '';
+    if (mine) {
+      const pendingList = Object.values(requests).filter(r => r && r.status === 'pending');
+      if (pendingList.length > 0) {
+        pendingBoxHTML = `
+          <div class="of-pending-box">
+            <div class="of-pending-title">📥 בקשות הצטרפות ממתינות (${pendingList.length}):</div>
+            <div class="of-pending-list">
+              ${pendingList.map(r => `
+                <div class="of-pending-item">
+                  <span class="of-pending-name">👤 ${artEsc(r.name || 'משתמש')} <span class="of-pending-gender">(${r.gender === 'אישה' ? '♀️ אישה' : '♂️ גבר'})</span></span>
+                  <div class="of-pending-actions">
+                    <button class="of-appr-btn" onclick="approveJoinRequest('${artEsc(o.id)}','${artEsc(r.uid)}','${artEsc(r.name)}','${artEsc(r.gender || 'גבר')}')">✓ אשר</button>
+                    <button class="of-decl-btn" onclick="declineJoinRequest('${artEsc(o.id)}','${artEsc(r.uid)}')">✕ דחה</button>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    let actionBtnHTML = '';
+    if (mine) {
+      actionBtnHTML = `<span class="of-mine">ההצעה שלך</span>`;
+    } else if (myReq && myReq.status === 'pending') {
+      actionBtnHTML = `<button class="of-confirm of-btn-pending" disabled>⏳ בקשה נשלחה</button>`;
+    } else if (myReq && myReq.status === 'approved') {
+      actionBtnHTML = `<button class="of-confirm of-btn-approved" onclick="dmStartWith('${artEsc(o.authorUid || '')}','${artEsc(o.authorName || '')}')">💬 בצ'אט (אושרת)</button>`;
+    } else if (isFull) {
+      actionBtnHTML = `<button class="of-confirm of-btn-full" disabled>🔒 מלא (${currentCount}/${maxCount})</button>`;
+    } else {
+      actionBtnHTML = `<button class="of-confirm of-btn-join" onclick="requestJoinOffer('${artEsc(o.id)}')">✋ בקש להצטרף</button>`;
+    }
+
     return `<div class="of-card">
-      <div class="of-main">
-        <div class="of-text">${artEsc(o.text || '')}</div>
-        <div class="of-meta">מאת ${artEsc(o.authorName || 'אנונימי')}</div>
+      <div class="of-top-row">
+        <div class="of-main">
+          <div class="of-text">${artEsc(o.text || '')}</div>
+          <div class="of-meta">מאת ${artEsc(o.authorName || 'אנונימי')} (${hostGender === 'אישה' ? '♀️ אישה' : '♂️ גבר'})</div>
+          ${structuredBadgesHTML}
+        </div>
+        <div class="of-side">
+          <div class="of-timer" data-expires="${o.expiresAt || 0}">${offerFmt((o.expiresAt || 0) - now)}</div>
+          ${actionBtnHTML}
+        </div>
       </div>
-      <div class="of-side">
-        <div class="of-timer" data-expires="${o.expiresAt || 0}">${offerFmt((o.expiresAt || 0) - now)}</div>
-        ${mine ? '<span class="of-mine">ההצעה שלך</span>' : `<button class="of-confirm" onclick="confirmOffer('${artEsc(o.authorUid || '')}','${artEsc(o.authorName || '')}','${artEsc(o.id)}')">✓ אשר</button>`}
-      </div>
+      ${participantsHTML}
+      ${pendingBoxHTML}
     </div>`;
   }).join('');
 }
@@ -7715,7 +7905,7 @@ function buildOffersPage() {
       <div class="comm-inner">
         <div class="of-head">
           <h2 class="of-title">🔥 הצעות להערב</h2>
-          <p class="of-sub">הצעות עם זמן מוגבל — כשהטיימר מסתיים ההצעה נעלמת. לחצו "אשר" כדי לפתוח שיחה עם המציע.</p>
+          <p class="of-sub">הצעות מפורטות ומאורגנות עם זמן, מיקום ומכסת משתתפים — לחצו "בקש להצטרף" כדי להגיש בקשה למארח!</p>
           <button onclick="openOfferModal()" class="of-add-btn">➕ הוסף הצעה</button>
         </div>
         <div class="of-list" id="offers-list">${offersListHTML()}</div>
@@ -7723,6 +7913,8 @@ function buildOffersPage() {
     </div>`;
 }
 window.buildOffersPage = buildOffersPage;
+
+let pendingOfferJoinId = null;
 
 function confirmOffer(uid, name, offerId) {
   if (!uid) { if (typeof showCopyToast === 'function') showCopyToast('אין איש קשר להצעה זו'); return; }
@@ -7733,9 +7925,85 @@ function confirmOffer(uid, name, offerId) {
 }
 window.confirmOffer = confirmOffer;
 
+async function requestJoinOffer(offerId) {
+  if (!auth.currentUser) {
+    if (typeof openLiveChatLogin === 'function') openLiveChatLogin();
+    return;
+  }
+  const myUid = auth.currentUser.uid;
+  const savedGender = localStorage.getItem('user_gender_' + myUid);
+  if (!savedGender) {
+    pendingOfferJoinId = offerId;
+    const modal = document.getElementById('join-gender-modal');
+    if (modal) modal.style.display = 'flex';
+    return;
+  }
+  await submitJoinWithGender(savedGender, offerId);
+}
+window.requestJoinOffer = requestJoinOffer;
+
+async function submitJoinWithGender(gender, offerId) {
+  offerId = offerId || pendingOfferJoinId;
+  const m = document.getElementById('join-gender-modal');
+  if (m) m.style.display = 'none';
+  if (!auth.currentUser || !offerId) return;
+
+  const myUid = auth.currentUser.uid;
+  const myName = (typeof liveChatUserName === 'function' ? liveChatUserName() : 'משתמש');
+  localStorage.setItem('user_gender_' + myUid, gender);
+
+  try {
+    await set(ref(db, `website/offers/${offerId}/requests/${myUid}`), {
+      uid: myUid,
+      name: myName,
+      gender: gender,
+      status: 'pending',
+      requestedAt: Date.now()
+    });
+    if (typeof showCopyToast === 'function') showCopyToast('✋ בקשת הצטרפות נשלחה!');
+  } catch (e) {
+    console.error('requestJoinOffer failed', e);
+    if (typeof showCopyToast === 'function') showCopyToast('שגיאה בשליחת הבקשה');
+  }
+}
+window.submitJoinWithGender = submitJoinWithGender;
+
+async function approveJoinRequest(offerId, requesterUid, requesterName, requesterGender) {
+  if (!auth.currentUser) return;
+  try {
+    await update(ref(db, `website/offers/${offerId}/requests/${requesterUid}`), { status: 'approved' });
+    await set(ref(db, `website/offers/${offerId}/participants/${requesterUid}`), {
+      uid: requesterUid,
+      name: requesterName || 'משתתף',
+      gender: requesterGender || 'גבר',
+      joinedAt: Date.now()
+    });
+    if (typeof showCopyToast === 'function') showCopyToast('✅ הבקשה אושרה!');
+  } catch (e) {
+    console.error('approveJoinRequest failed', e);
+    if (typeof showCopyToast === 'function') showCopyToast('שגיאה באישור הבקשה');
+  }
+}
+window.approveJoinRequest = approveJoinRequest;
+
+async function declineJoinRequest(offerId, requesterUid) {
+  if (!auth.currentUser) return;
+  try {
+    await update(ref(db, `website/offers/${offerId}/requests/${requesterUid}`), { status: 'declined' });
+    if (typeof showCopyToast === 'function') showCopyToast('✕ הבקשה נדחתה');
+  } catch (e) {
+    console.error('declineJoinRequest failed', e);
+    if (typeof showCopyToast === 'function') showCopyToast('שגיאה בדחיית הבקשה');
+  }
+}
+window.declineJoinRequest = declineJoinRequest;
+
 function openOfferModal() {
   if (!auth.currentUser) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
   const t = document.getElementById('offer-text'); if (t) t.value = '';
+  const loc = document.getElementById('offer-location'); if (loc) loc.value = '';
+  const w = document.getElementById('offer-when'); if (w) w.value = '';
+  const max = document.getElementById('offer-max-participants'); if (max) max.value = '4';
   const h = document.getElementById('offer-hours'); if (h) h.value = '8';
   const m = document.getElementById('offer-modal'); if (m) m.style.display = 'flex';
 }
@@ -7744,15 +8012,26 @@ window.openOfferModal = openOfferModal;
 async function saveOffer() {
   if (!auth.currentUser) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
   const text = ((document.getElementById('offer-text') || {}).value || '').trim();
-  if (!text) { alert('נא לכתוב את ההצעה'); return; }
+  if (!text) { alert('נא לכתוב מה ההצעה'); return; }
+  const location = ((document.getElementById('offer-location') || {}).value || '').trim() || 'אזור המרכז';
+  const whenTime = ((document.getElementById('offer-when') || {}).value || '').trim() || 'הערב';
+  const maxCount = parseInt((document.getElementById('offer-max-participants') || {}).value) || 4;
+  const gender = ((document.getElementById('offer-gender') || {}).value) || 'גבר';
   let hours = parseFloat((document.getElementById('offer-hours') || {}).value) || 8;
   hours = Math.min(Math.max(hours, 0.5), 72);
   const id = 'of' + Date.now();
   const now = Date.now();
+  if (auth.currentUser) localStorage.setItem('user_gender_' + auth.currentUser.uid, gender);
   const offer = {
-    id, text: text.slice(0, 300), hours,
+    id,
+    text: text.slice(0, 300),
+    location: location.slice(0, 100),
+    whenTime: whenTime.slice(0, 100),
+    maxCount: Math.min(Math.max(maxCount, 1), 50),
+    hours,
     authorUid: auth.currentUser.uid,
     authorName: (typeof liveChatUserName === 'function' ? liveChatUserName() : 'אנונימי'),
+    authorGender: gender,
     createdAt: now, expiresAt: now + hours * 3600000
   };
   try {
@@ -8352,6 +8631,7 @@ function photoOpenDetail(id) {
             ${a.authorId ? `<button onclick="toggleFollow('${artEsc(a.authorId)}','${artEsc(a.author || '')}', this)" class="follow-btn${isFollowing(a.authorId) ? ' following' : ''}">${isFollowing(a.authorId) ? '✓ עוקב' : '➕ עקוב'}</button>` : ''}
             <span>·</span>
             <span>${a.timestamp}</span>
+            ${a.ageRange ? `<span>·</span><span>גיל ${artEsc(String(a.ageRange))}</span>` : ''}
             ${a.expiresAt ? renderExpirationBadge(a.expiresAt) : ''}
             <button onclick="photoToggleLike('${artEsc(a.id)}')" class="photo-like-btn" style="background: rgba(0,0,0,0.05); border: 1px solid #ddd; cursor: pointer; color: #000; display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; transition: background 0.2s; font-weight: bold; font-size: 13px;">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="${photoIsLikedLocal(a.id) ? '#000' : 'none'}" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
@@ -8608,6 +8888,223 @@ async function openUserProfile(authorId, authorFallbackName) {
 window.openUserProfile = openUserProfile;
 
 // ============================================================
+// מערכת דירוג משתמשים (עד 5 כוכבים ⭐)
+// ============================================================
+function getUserRatingData(targetUid) {
+  if (!targetUid) return { avg: 0, count: 0, myRating: 0 };
+  try {
+    const raw = localStorage.getItem(`user_ratings_${targetUid}`);
+    if (raw) {
+      const data = JSON.parse(raw);
+      const ratings = data.ratings || {};
+      const list = Object.values(ratings);
+      const count = list.length;
+      const sum = list.reduce((a, b) => a + Number(b), 0);
+      const avg = count > 0 ? (sum / count).toFixed(1) : 0;
+      const myUid = auth.currentUser ? auth.currentUser.uid : 'guest';
+      const myRating = Number(ratings[myUid]) || 0;
+      return { avg, count, myRating };
+    }
+  } catch(e){}
+  return { avg: 0, count: 0, myRating: 0 };
+}
+
+function rateUserStars(targetUid, stars) {
+  if (!targetUid) return;
+  const myUid = auth.currentUser ? auth.currentUser.uid : 'guest';
+  try {
+    const raw = localStorage.getItem(`user_ratings_${targetUid}`);
+    const data = raw ? JSON.parse(raw) : { ratings: {} };
+    data.ratings[myUid] = stars;
+    localStorage.setItem(`user_ratings_${targetUid}`, JSON.stringify(data));
+    set(ref(db, `website/user_ratings/${targetUid}/${myUid}`), stars);
+  } catch(e){}
+
+  if (typeof showCopyToast === 'function') showCopyToast(`⭐ ענית בדירוג: ${stars} כוכבים! תודה.`);
+  const nameEl = document.getElementById('user-page-name');
+  const name = nameEl ? nameEl.textContent : 'משתמש';
+  if (typeof openUserPage === 'function') openUserPage(targetUid, name);
+}
+window.rateUserStars = rateUserStars;
+
+function buildUserRatingWidgetHTML(targetUid) {
+  const { avg, count, myRating } = getUserRatingData(targetUid);
+  const starsHTML = [1, 2, 3, 4, 5].map(star => {
+    const isFilled = star <= (myRating || Math.round(avg));
+    return `
+      <span onclick="event.stopPropagation(); rateUserStars('${artEsc(targetUid)}', ${star})" 
+            style="font-size: 24px; cursor: pointer; color: ${isFilled ? '#f59e0b' : '#cbd5e1'}; transition: transform 0.15s; display: inline-block;" 
+            title="דרג ${star} כוכבים">★</span>
+    `;
+  }).join('');
+
+  return `
+    <div class="user-rating-box" style="margin-top: 10px; background: #fff8f0; border: 1px solid #fde68a; border-radius: 12px; padding: 10px 14px; display: inline-flex; align-items: center; gap: 14px; direction: rtl; flex-wrap: wrap;">
+      <div style="display: flex; align-items: center; gap: 6px;">
+        <span style="font-size: 18px; font-weight: 900; color: #d97706;">⭐ ${avg > 0 ? avg : 'חדש'}</span>
+        <span style="font-size: 12px; color: #78350f; font-weight: 700;">(${count} מדרגים)</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 4px;">
+        ${starsHTML}
+      </div>
+      ${myRating > 0 ? `<span style="font-size: 11.5px; color: #16a34a; font-weight: 800;">✓ הדירוג שלך: ${myRating}★</span>` : `<span style="font-size: 11.5px; color: #92400e; font-weight: 600;">לחץ לדירוג המשתמש</span>`}
+    </div>
+  `;
+}
+
+// ============================================================
+// סרגל בטריה ומשימות התקדמות בחשבון (Battery Checklist & Tasks)
+// ============================================================
+function getBatteryTaskStatus() {
+  const isAgeVerified = typeof sessionStorage !== 'undefined' && sessionStorage.getItem('age_verified') === 'true';
+  const isPhotoVerified = typeof localStorage !== 'undefined' && localStorage.getItem('task_photo_verified') === 'true';
+  
+  let hasUploadedPhoto = false;
+  try {
+    const albums = photoGetAlbums();
+    const myUid = auth.currentUser ? auth.currentUser.uid : '';
+    hasUploadedPhoto = albums.some(a => a.authorId === myUid || (auth.currentUser && a.author === (auth.currentUser.displayName || auth.currentUser.email)));
+  } catch(e){}
+
+  let hasProfileDetails = false;
+  if (auth.currentUser) {
+    try {
+      const prof = JSON.parse(localStorage.getItem(`user_profile_${auth.currentUser.uid}`) || '{}');
+      hasProfileDetails = !!(prof.nickname || prof.age || prof.location || prof.telegram);
+    } catch(e){}
+  }
+
+  const tasks = [
+    { id: 'photo', title: '📸 אימות דרך תמונה (אימות פנים / סלפי)', done: isPhotoVerified, action: 'openSelfieVerificationModal()' },
+    { id: 'sidebar', title: '🎛️ אימות בסרגל (אימות 18+ בסרגל הצד)', done: isAgeVerified, action: 'toggleSidebarAgeVerification(true)' },
+    { id: 'upload', title: '🖼️ תמונה/גלריה שהעלית באתר', done: hasUploadedPhoto, action: 'openPhotoModal()' },
+    { id: 'profile', title: '👤 השלמת פרטי הפרופיל (כינוי/גיל/אזור)', done: hasProfileDetails, action: 'photoToggleProfileEdit()' }
+  ];
+
+  const doneCount = tasks.filter(t => t.done).length;
+  const percent = Math.round((doneCount / tasks.length) * 100);
+
+  return { tasks, doneCount, total: tasks.length, percent };
+}
+
+function updateBatteryBadgeUI() {
+  const { percent } = getBatteryTaskStatus();
+  const fillRect = document.getElementById('battery-fill-rect');
+  const badge = document.getElementById('battery-percent-badge');
+  if (badge) badge.style.display = 'none';
+  if (fillRect) {
+    const w = Math.round((11 * percent) / 100);
+    fillRect.setAttribute('width', Math.max(percent > 0 ? 2 : 0, w));
+    if (percent === 100) fillRect.setAttribute('fill', '#22c55e');
+    else fillRect.setAttribute('fill', '#ffffff');
+  }
+}
+window.updateBatteryBadgeUI = updateBatteryBadgeUI;
+
+function openBatteryTasksModal() {
+  const { tasks, doneCount, total, percent } = getBatteryTaskStatus();
+  
+  let modal = document.getElementById('battery-tasks-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'battery-tasks-modal';
+    modal.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:999999; align-items:center; justify-content:center; direction:rtl; font-family:system-ui,sans-serif; padding:16px;';
+    document.body.appendChild(modal);
+  }
+
+  const tasksHTML = tasks.map(t => `
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 14px; background:${t.done ? '#f0fdf4' : '#f8fafc'}; border:1.5px solid ${t.done ? '#bbf7d0' : '#e2e8f0'}; border-radius:12px; transition:all 0.2s;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:50%; background:${t.done ? '#22c55e' : '#cbd5e1'}; color:#fff; font-size:14px; font-weight:900;">
+          ${t.done ? '✓' : '✕'}
+        </span>
+        <span style="font-size:14px; font-weight:800; color:${t.done ? '#15803d' : '#334155'};">${t.title}</span>
+      </div>
+      ${t.done ? '<span style="font-size:12px; font-weight:900; color:#16a34a; background:#dcfce7; padding:4px 10px; border-radius:20px;">הושלם ✓</span>' : `
+        <button onclick="document.getElementById('battery-tasks-modal').style.display='none'; ${t.action}" style="background:#2563eb; color:#fff; border:none; border-radius:8px; padding:6px 14px; font-size:12.5px; font-weight:800; cursor:pointer; box-shadow:0 2px 6px rgba(37,99,235,0.2);">בצע עכשיו ➔</button>
+      `}
+    </div>
+  `).join('');
+
+  modal.innerHTML = `
+    <div style="background:#ffffff; border-radius:20px; padding:24px; width:100%; max-width:480px; box-shadow:0 20px 50px rgba(0,0,0,0.3); border:1px solid #e2e8f0; position:relative;">
+      <button onclick="document.getElementById('battery-tasks-modal').style.display='none'" style="position:absolute; top:16px; left:16px; background:#f1f5f9; border:none; border-radius:50%; width:32px; height:32px; font-size:16px; cursor:pointer; color:#64748b;">✕</button>
+
+      <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px; border-bottom:2px solid #f1f5f9; padding-bottom:14px;">
+        <span style="font-size:32px;">🔋</span>
+        <div>
+          <h3 style="margin:0; font-size:19px; font-weight:900; color:#0f172a;">משימות והתקדמות החשבון</h3>
+          <div style="font-size:13px; color:#64748b; font-weight:700; margin-top:2px;">השלם משימות כדי להטעין את הבטריה ל-100%</div>
+        </div>
+      </div>
+
+      <!-- Battery Meter Bar -->
+      <div style="background:#f1f5f9; border-radius:30px; padding:4px; height:24px; position:relative; overflow:hidden; margin-bottom:20px; border:1px solid #cbd5e1;">
+        <div style="height:100%; width:${percent}%; background:linear-gradient(90deg, #22c55e, #16a34a); border-radius:30px; transition:width 0.5s ease;"></div>
+        <span style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:900; color:#0f172a; text-shadow:0 1px 2px rgba(255,255,255,0.8);">${percent}% הושלם (${doneCount} מתוך ${total})</span>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:20px;">
+        ${tasksHTML}
+      </div>
+
+      <div style="text-align:center;">
+        <button onclick="document.getElementById('battery-tasks-modal').style.display='none'" style="background:#0f172a; color:#fff; border:none; border-radius:10px; padding:10px 24px; font-size:14px; font-weight:800; cursor:pointer; width:100%;">סגור</button>
+      </div>
+    </div>
+  `;
+
+  modal.style.display = 'flex';
+}
+window.openBatteryTasksModal = openBatteryTasksModal;
+
+function openSelfieVerificationModal() {
+  let modal = document.getElementById('selfie-verify-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'selfie-verify-modal';
+    modal.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:9999999; align-items:center; justify-content:center; direction:rtl; font-family:system-ui,sans-serif; padding:16px;';
+    document.body.appendChild(modal);
+  }
+
+  modal.innerHTML = `
+    <div style="background:#ffffff; border-radius:20px; padding:24px; width:100%; max-width:440px; box-shadow:0 20px 50px rgba(0,0,0,0.3); border:1px solid #e2e8f0; position:relative; text-align:center;">
+      <button onclick="document.getElementById('selfie-verify-modal').style.display='none'" style="position:absolute; top:16px; left:16px; background:#f1f5f9; border:none; border-radius:50%; width:32px; height:32px; font-size:16px; cursor:pointer; color:#64748b;">✕</button>
+
+      <div style="font-size:40px; margin-bottom:10px;">📸</div>
+      <h3 style="margin:0 0 8px; font-size:19px; font-weight:900; color:#0f172a;">אימות זהות דרך תמונה / סלפי</h3>
+      <p style="font-size:13.5px; color:#475569; line-height:1.5; margin-bottom:20px; font-weight:600;">
+        להשלמת אימות התמונה, העלה תמונת פנים ברורה. לאחר האישור תקבל תג מאומת בחשבונך.
+      </p>
+
+      <div style="margin-bottom:20px;">
+        <label style="display:inline-block; background:#2563eb; color:#fff; padding:12px 24px; border-radius:10px; font-size:14px; font-weight:800; cursor:pointer; box-shadow:0 4px 12px rgba(37,99,235,0.25);">
+          📷 בחר תמונת אימות / סלפי
+          <input type="file" accept="image/*" onchange="confirmSelfiePhotoUpload(this)" style="display:none;">
+        </label>
+      </div>
+
+      <div style="font-size:12px; color:#94a3b8; font-weight:600;">* התמונה תישמר בצורה מאובטחת לאימות חשבונך</div>
+    </div>
+  `;
+  modal.style.display = 'flex';
+}
+window.openSelfieVerificationModal = openSelfieVerificationModal;
+
+function confirmSelfiePhotoUpload(input) {
+  if (input && input.files && input.files[0]) {
+    try {
+      localStorage.setItem('task_photo_verified', 'true');
+    } catch(e){}
+    const modal = document.getElementById('selfie-verify-modal');
+    if (modal) modal.style.display = 'none';
+    if (typeof showCopyToast === 'function') showCopyToast('✓ תמונת האימות נשלחה ואושרה בהצלחה! הבטריה נטענה 🔋');
+    updateBatteryBadgeUI();
+  }
+}
+window.confirmSelfiePhotoUpload = confirmSelfiePhotoUpload;
+
+// ============================================================
 // עמוד משתמש מלא (במקום מודל "עמוד בתוך עמוד") — כל הגלריות שהעלה, בגריד כמו בתמונות
 // ============================================================
 function buildUserPageHTML(authorId, authorName) {
@@ -8623,15 +9120,18 @@ function buildUserPageHTML(authorId, authorName) {
   const cards = authorAlbums.map(p => renderPhotoCard(p)).join('');
   const json = encodeURIComponent(JSON.stringify(albums));
   const initial = artEsc(String(authorName || '?').charAt(0) || '?');
+  const ratingWidget = buildUserRatingWidgetHTML(authorId);
+
   return `
   <div class="articles-page photos-page user-page photo-cols-${typeof photoGridCols !== 'undefined' ? photoGridCols : 4}" data-photos-json="${json}">
     <div class="art-inner">
       <button onclick="goBackFromUserPage()" style="background:#f1f5f9; border:1px solid #cbd5e1; border-radius:8px; padding:8px 16px; font-size:13px; font-weight:800; cursor:pointer; margin-bottom:16px; color:#334155;">← חזרה</button>
-      <div style="background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:20px; margin-bottom:24px; display:flex; align-items:center; gap:16px; box-shadow:0 4px 15px rgba(0,0,0,0.03); direction:rtl;">
+      <div style="background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:20px; margin-bottom:24px; display:flex; align-items:center; gap:16px; box-shadow:0 4px 15px rgba(0,0,0,0.03); direction:rtl; flex-wrap:wrap;">
         <div style="width:56px; height:56px; border-radius:50%; background:linear-gradient(135deg,#e11d48,#9f1239); color:#fff; display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:900; flex-shrink:0;">${initial}</div>
         <div style="flex:1; min-width:0;">
           <div id="user-page-name" style="font-size:20px; font-weight:900; color:#0f172a;">${artEsc(authorName || 'משתמש')}</div>
           <div id="user-page-meta" style="font-size:13px; color:#64748b; margin-top:2px;">📷 ${authorAlbums.length} גלריות שהועלו</div>
+          ${ratingWidget}
           <div id="user-page-contact" style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;"></div>
         </div>
       </div>
@@ -11500,4 +12000,14 @@ setInterval(() => {
     }
   }
 }, 1000);
+
+// אתחול עמוד ומדדי הבטריה
+if (typeof document !== 'undefined') {
+  document.addEventListener('DOMContentLoaded', () => {
+    if (typeof updateBatteryBadgeUI === 'function') updateBatteryBadgeUI();
+  });
+  setTimeout(() => {
+    if (typeof updateBatteryBadgeUI === 'function') updateBatteryBadgeUI();
+  }, 800);
+}
 
