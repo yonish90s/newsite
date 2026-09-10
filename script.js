@@ -905,6 +905,14 @@ function adjustImgAspectRatio(img) {
 
 // פונקציה שמציגה את התוכן של העמוד הנוכחי במרכז המסך
 function renderPage() {
+  // עמוד "הפיד שלי" — עמוד דינמי בפני עצמו (לא נשמר ברשימת העמודים)
+  if (activePageId === 'page-feed-main') {
+    if (typeof buildFeedPage === 'function') {
+      mainContent.innerHTML = buildFeedPage();
+      try { window.scrollTo(0, 0); } catch (e) {}
+      return;
+    }
+  }
   const currentPage = pages.find(p => p.id === activePageId); // מחפשים את העמוד ברשימה
   
   // הגנה: אם העמוד מוסתר והמשתמש הוא לא מנהל/עורך, מפנים אותו לעמוד גלוי.
@@ -5686,6 +5694,24 @@ function storyRowMoreBtn(count, rowId) {
     </div>`;
 }
 
+// שורת סינון כללי לסיפורים (בחירה יחידה: הכל/כללי/עירום)
+function storyGeneralFilterBarHTML() {
+  const opts = ['הכל', ...STORY_CATEGORIES];
+  return `
+    <div class="story-general-filter-bar" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;">
+      ${opts.map(o => `<button type="button" class="story-general-filter-btn${currentStoryGeneralFilter === o ? ' active' : ''}" onclick="storySetGeneralFilter('${artEsc(o)}', this)">${o}</button>`).join('')}
+    </div>
+  `;
+}
+
+function storySetGeneralFilter(opt, btn) {
+  currentStoryGeneralFilter = opt;
+  const bar = btn.closest('.story-general-filter-bar');
+  if (bar) bar.querySelectorAll('.story-general-filter-btn').forEach(b => b.classList.toggle('active', b.textContent.trim() === opt));
+  if (typeof storyApplyFilters === 'function') storyApplyFilters();
+}
+window.storySetGeneralFilter = storySetGeneralFilter;
+
 // שורת סינון קטגוריות לסיפורים (בחירה מרובה)
 function storyCatIsActive(c) {
   return c === 'הכל' ? selectedStoryCategories.size === 0 : selectedStoryCategories.has(c);
@@ -5826,6 +5852,7 @@ function buildStoriesPage(stories) {
           <div class="art-search-wrap">
             <input type="text" class="art-search" placeholder="🔍 חיפוש סיפורים..." oninput="storySearch(this.value)">
           </div>
+          ${storyGeneralFilterBarHTML()}
           ${storyCategoryBarHTML()}
           <div class="art-section-title-row">
             <div class="art-section-title">כל הסיפורים</div>
@@ -7659,7 +7686,7 @@ function offersListHTML() {
       </div>
       <div class="of-side">
         <div class="of-timer" data-expires="${o.expiresAt || 0}">${offerFmt((o.expiresAt || 0) - now)}</div>
-        ${mine ? '<span class="of-mine">ההצעה שלך</span>' : `<button class="of-confirm" onclick="confirmOffer('${artEsc(o.authorUid || '')}','${artEsc(o.authorName || '')}')">✓ אשר</button>`}
+        ${mine ? '<span class="of-mine">ההצעה שלך</span>' : `<button class="of-confirm" onclick="confirmOffer('${artEsc(o.authorUid || '')}','${artEsc(o.authorName || '')}','${artEsc(o.id)}')">✓ אשר</button>`}
       </div>
     </div>`;
   }).join('');
@@ -7697,9 +7724,12 @@ function buildOffersPage() {
 }
 window.buildOffersPage = buildOffersPage;
 
-function confirmOffer(uid, name) {
+function confirmOffer(uid, name, offerId) {
   if (!uid) { if (typeof showCopyToast === 'function') showCopyToast('אין איש קשר להצעה זו'); return; }
-  if (typeof dmStartWith === 'function') dmStartWith(uid, name || 'איש קשר');
+  let prefill = '';
+  const o = (offerId && typeof offersData === 'object' && offersData) ? offersData[offerId] : null;
+  if (o && o.text) prefill = `שלום! אני מעוניין/ת בהצעה: "${String(o.text).slice(0, 120)}"`;
+  if (typeof dmStartWith === 'function') dmStartWith(uid, name || 'איש קשר', prefill);
 }
 window.confirmOffer = confirmOffer;
 
@@ -7880,6 +7910,9 @@ function photoAgeBucket(s) {
   if (s === '26-35') return [26, 35];
   if (s === '36-45') return [36, 45];
   if (s === '46+')   return [46, 99];
+  // גיל בודד שהוקלד (למשל "24") — טווח נקודתי
+  const n = parseInt(String(s), 10);
+  if (!isNaN(n)) return [n, n];
   return null;
 }
 
@@ -8332,7 +8365,7 @@ function photoOpenDetail(id) {
               </svg>
               <span>שמור</span>
             </button>
-            <button onclick="dmStartWith('${artEsc(a.authorId || '')}', '${artEsc(a.author || '')}')" class="photo-dm-btn" style="background:#e11d48; border:none; cursor:pointer; color:#fff; display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border-radius:6px; font-weight:bold; font-size:13px;" title="שלח הודעה פרטית ליוצר">
+            <button onclick="dmStartAboutGallery('${artEsc(a.authorId || '')}', '${artEsc(a.author || '')}', '${artEsc(a.id)}')" class="photo-dm-btn" style="background:#e11d48; border:none; cursor:pointer; color:#fff; display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border-radius:6px; font-weight:bold; font-size:13px;" title="שלח הודעה פרטית ליוצר">
               💬 <span>שלח הודעה</span>
             </button>
             ${a.telegramUrl ? `
@@ -9309,7 +9342,7 @@ function dmShowList() {
 window.dmShowList = dmShowList;
 
 // חלון פנימי — שרשור שיחה (וואטסאפ)
-function dmOpenConv(convId, otherUid, otherName) {
+function dmOpenConv(convId, otherUid, otherName, prefill) {
   dmActiveConv = { convId, otherUid, otherName };
   if (dmThreadUnsub) { dmThreadUnsub(); dmThreadUnsub = null; }
   const s = document.getElementById('dm-screen');
@@ -9333,7 +9366,10 @@ function dmOpenConv(convId, otherUid, otherName) {
     const box = document.getElementById('dm-messages');
     if (box) { box.innerHTML = dmMessagesHTML(); box.scrollTop = box.scrollHeight; }
   });
-  setTimeout(() => { const i = document.getElementById('dm-input'); if (i) i.focus(); }, 80);
+  setTimeout(() => {
+    const i = document.getElementById('dm-input');
+    if (i) { if (prefill) i.value = prefill; i.focus(); }
+  }, 80);
 }
 window.dmOpenConv = dmOpenConv;
 
@@ -9371,15 +9407,27 @@ async function dmSendCurrent() {
 window.dmSendCurrent = dmSendCurrent;
 
 // התחלת שיחה עם משתמש (למשל מדף גלריה)
-function dmStartWith(otherUid, otherName) {
+function dmStartWith(otherUid, otherName, prefill) {
   const u = auth.currentUser;
   if (!u) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
   if (!otherUid) { if (typeof showCopyToast === 'function') showCopyToast('לא ניתן לשלוח הודעה למשתמש זה'); return; }
   if (otherUid === u.uid) { if (typeof showCopyToast === 'function') showCopyToast('זו המודעה שלך 🙂'); return; }
   openMessages();
-  setTimeout(() => dmOpenConv(dmConvId(u.uid, otherUid), otherUid, otherName || 'משתמש'), 60);
+  setTimeout(() => dmOpenConv(dmConvId(u.uid, otherUid), otherUid, otherName || 'משתמש', prefill), 60);
 }
 window.dmStartWith = dmStartWith;
+
+// התחלת שיחה עם התייחסות לגלריה מסוימת (מדף התמונה)
+function dmStartAboutGallery(otherUid, otherName, albumId) {
+  let prefill = '';
+  try {
+    const albums = (typeof photoGetAlbums === 'function') ? photoGetAlbums() : [];
+    const a = albums.find(x => String(x.id) === String(albumId));
+    if (a && a.title) prefill = `שלום! פנייה לגבי הגלריה: "${String(a.title).slice(0, 120)}"`;
+  } catch (e) {}
+  dmStartWith(otherUid, otherName || 'משתמש', prefill);
+}
+window.dmStartAboutGallery = dmStartAboutGallery;
 
 // ============================================================
 // מעקב אחרי משתמשים + תגובות על גלריה
@@ -9390,7 +9438,10 @@ function subscribeMyFollows() {
   const u = auth.currentUser;
   if (!u || followsSubscribed) return;
   followsSubscribed = true;
-  onValue(ref(db, `website/user_follows/${u.uid}`), snap => { followedUids = snap.val() || {}; });
+  onValue(ref(db, `website/user_follows/${u.uid}`), snap => {
+    followedUids = snap.val() || {};
+    if (activePageId === 'page-feed-main' && typeof renderPage === 'function') renderPage();
+  });
 }
 function isFollowing(uid) { return !!(uid && followedUids[uid]); }
 window.isFollowing = isFollowing;
@@ -9482,35 +9533,45 @@ function feedCardHTML(a) {
   </div>`;
 }
 
-function openFeed() {
-  if (!auth.currentUser) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
+// בונה את עמוד "הפיד שלי" — גלריות של מי שאני עוקב אחריו
+function buildFeedPage() {
+  if (!auth.currentUser) {
+    return `<div class="feed-page">
+      <div class="feed-page-head"><h1>🏠 הפיד שלי</h1><p>הגלריות האחרונות ממי שאתה עוקב אחריו</p></div>
+      <div class="feed-empty">כדי לראות את הפיד צריך להתחבר.<br><button class="feed-login-btn" onclick="openLiveChatLogin()">התחברות</button></div>
+    </div>`;
+  }
   if (typeof subscribeMyFollows === 'function') subscribeMyFollows();
   let albums = getFeedAlbums().filter(a => a && a.authorId && followedUids[a.authorId]);
   albums.sort((x, y) => (y.createdAt || 0) - (x.createdAt || 0));
-  let modal = document.getElementById('feed-modal');
-  if (!modal) { modal = document.createElement('div'); modal.id = 'feed-modal'; document.body.appendChild(modal); }
   const body = albums.length
     ? `<div class="feed-grid">${albums.map(feedCardHTML).join('')}</div>`
     : '<div class="feed-empty">עדיין אין תוכן ממי שאתה עוקב אחריו.<br>עקבו אחרי משתמשים (בכפתור "עקוב" בגלריה) כדי לראות כאן מה הם מעלים.</div>';
-  modal.innerHTML = `
-    <div class="feed-backdrop" onclick="closeFeed()"></div>
-    <div class="feed-window">
-      <div class="feed-titlebar"><span>🏠 הפיד שלי — מי שאני עוקב</span><button class="feed-close" onclick="closeFeed()" title="סגור">✕</button></div>
-      <div class="feed-body">${body}</div>
-    </div>`;
-  modal.style.display = 'flex';
+  return `<div class="feed-page">
+    <div class="feed-page-head"><h1>🏠 הפיד שלי</h1><p>הגלריות האחרונות ממי שאתה עוקב אחריו</p></div>
+    ${body}
+  </div>`;
+}
+window.buildFeedPage = buildFeedPage;
+
+// פותח את עמוד הפיד (מכפתור הבית בכותרת)
+function openFeed() {
+  if (!auth.currentUser) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
+  if (typeof subscribeMyFollows === 'function') subscribeMyFollows();
+  if (isEditMode && typeof saveCurrentPageContent === 'function') saveCurrentPageContent();
+  activePageId = 'page-feed-main';
+  if (typeof renderSideMenu === 'function') renderSideMenu();
+  if (typeof renderTopNav === 'function') renderTopNav();
+  renderPage();
+  try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) {}
 }
 window.openFeed = openFeed;
 
-function closeFeed() { const m = document.getElementById('feed-modal'); if (m) m.style.display = 'none'; }
-window.closeFeed = closeFeed;
-
 function feedOpenGallery(id) {
-  closeFeed();
-  // ודא שעמוד התמונות מוצג כדי ש-photoOpenDetail ימצא את הגלריה
-  if (!mainContent.querySelector('.photos-page:not(.community-page):not(.user-page)') && typeof pages !== 'undefined') {
+  // מעבר לעמוד התמונות כדי ש-photoOpenDetail ימצא את הגלריה
+  if (typeof pages !== 'undefined') {
     const pp = pages.find(p => p && (p.content || '').includes('photos-page') && !(p.content || '').includes('community') && !(p.content || '').includes('user-page'));
-    if (pp && typeof renderPage === 'function') { activePageId = pp.id; renderPage(); }
+    if (pp) { activePageId = pp.id; if (typeof renderTopNav === 'function') renderTopNav(); if (typeof renderPage === 'function') renderPage(); }
   }
   setTimeout(() => { if (typeof photoOpenDetail === 'function') photoOpenDetail(id); }, 60);
 }
@@ -9740,7 +9801,9 @@ function photoApplyFilters() {
       ageMatch = b ? (b[1] >= photoAgeMin && b[0] <= photoAgeMax) : false;
     }
     if (currentPhotoAgeFilter !== 'הכל') {
-      ageMatch = ageMatch && (rowAge === currentPhotoAgeFilter);
+      const tb = photoAgeBucket(currentPhotoAgeFilter);
+      const rb = photoAgeBucket(rowAge);
+      ageMatch = ageMatch && !!(tb && rb && rb[1] >= tb[0] && rb[0] <= tb[1]);
     }
 
     const textMatch = text.includes(q);
