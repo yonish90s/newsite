@@ -14,7 +14,7 @@
   <!-- ספריית localforage לשמירת תמונות -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
   <!-- קישור לקובץ העיצוב החיצוני (עם פרמטר למניעת שמירה במטמון) -->
-  <link rel="stylesheet" href="./style.css?v=1086">
+  <link rel="stylesheet" href="./style.css?v=1087">
 </head>
 <body class="light-mode">
   <!-- שער אישור גיל (Age Gate Overlay) -->
@@ -324,14 +324,15 @@
 </div>
 
 <style>
-@keyframes char-burst {
-  0% { opacity: 0; transform: scale(0.3) rotateX(90deg); }
-  60% { opacity: 1; transform: scale(1.15) rotateX(0deg); }
-  100% { opacity: 1; transform: scale(1) rotateX(0deg); }
+@keyframes text-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+#loader-text {
+  animation: text-fade 0.6s ease-in-out forwards;
 }
 .loader-char {
   display: inline-block;
-  animation: char-burst 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
   margin: 0 3px;
   text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
 }
@@ -340,21 +341,13 @@
 <script>
   window.__siteReady = false;
 
-  // אנימציית טעינה עם אותיות — כל אות משתחררת מימין לשמאל
+  // אנימציית טעינה — הטקסט מופיע בלי אנימציה לאותיות
   (function animateLoader() {
     const text = 'BLACK·WHITE·00'; // שנה לטקסט של בחירתך
     const charsContainer = document.getElementById('loader-chars');
     if (!charsContainer) return;
 
-    let delay = 0;
-    for (let i = 0; i < text.length; i++) {
-      const span = document.createElement('span');
-      span.className = 'loader-char';
-      span.textContent = text[i];
-      span.style.animationDelay = (delay * 0.08) + 's';
-      charsContainer.appendChild(span);
-      delay++;
-    }
+    charsContainer.textContent = text;
   })();
 
   function hidePreloader() {
@@ -965,6 +958,6 @@
   </div>
 </div>
 
-  <script type="module" src="./script.js?v=1086"></script>
+  <script type="module" src="./script.js?v=1087"></script>
 </body>
 </html>
