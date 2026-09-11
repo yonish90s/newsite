@@ -5931,7 +5931,6 @@ function buildStoriesPage(stories) {
           <div class="art-search-wrap">
             <input type="text" class="art-search" placeholder="🔍 חיפוש סיפורים..." oninput="storySearch(this.value)">
           </div>
-          ${storyGeneralFilterBarHTML()}
           ${storyCategoryBarHTML()}
           ${photoFilterSectionHTML()}
           <div class="art-section-title-row">
