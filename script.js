@@ -5896,21 +5896,20 @@ function buildStoriesPage(stories) {
   `).join('');
 
   const listHTML = stories.map((s) => `
-    <div class="art-row" data-category="${artEsc(s.category || 'כללי')}" data-time="${s.createdAt || (parseInt(String(s.id).replace(/\D/g,''), 10) || 0)}" data-score="${s.likes || 0}" data-search="${artEsc([s.title, s.summary, s.author, s.category].filter(Boolean).join(' '))}" onclick="storyOpenDetail('${artEsc(s.id)}')">
-      <div class="art-row-text photo-card-info">
-        <h3>${s.title}</h3>
-        <div class="art-row-meta" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-          <span class="art-row-author">${s.author}</span>
-          <span class="art-row-sep">|</span>
-          <span>${s.timestamp}</span>
-        </div>
-      </div>
-      <div class="art-row-img-wrap" style="--bg-img: url('${s.image || ''}');">
-        ${s.image ? `<img src="${s.image}" alt="">` : '<div class="art-row-img-placeholder"></div>'}
-        ${s.image ? `<button class="art-zoom-btn" onclick="event.stopPropagation();artGalleryById('stories','${artEsc(s.id)}', this.closest('.art-row-img-wrap').querySelector('img') && this.closest('.art-row-img-wrap').querySelector('img').getAttribute('src'))" title="מסך מלא">⛶</button>` : ''}
+    <div class="photo-card" data-category="${artEsc(s.category || 'כללי')}" data-time="${s.createdAt || (parseInt(String(s.id).replace(/\D/g,''), 10) || 0)}" data-score="${s.likes || 0}" data-search="${artEsc([s.title, s.summary, s.author, s.category].filter(Boolean).join(' '))}" onclick="storyOpenDetail('${artEsc(s.id)}')">
+      <div class="photo-card-img" style="background-image: url('${s.image || ''}');">
+        ${s.image ? `<img src="${s.image}" alt="">` : '<div class="photo-card-placeholder">📖</div>'}
+        <div class="photo-card-overlay"></div>
         ${isEditMode ? `<button class="art-pin-btn" onclick="event.stopPropagation(); togglePinStory('${artEsc(s.id)}')" title="${s.pinned ? 'בטל נעץ' : 'נעץ בגריד'}" style="${s.pinned ? 'color:#ffd700;display:flex;' : ''}">${s.pinned ? '★' : '☆'}</button>` : ''}
         ${isEditMode ? `<button class="art-edit-btn" onclick="event.stopPropagation(); openStoryEditModal('${artEsc(s.id)}')" title="ערוך סיפור">✎</button>` : ''}
         <button class="art-delete-btn" onclick="event.stopPropagation();storyDelete('${artEsc(s.id)}',this)">✕</button>
+      </div>
+      <div class="photo-card-info">
+        <h3>${s.title}</h3>
+        <div class="photo-card-meta">
+          <span class="photo-card-author">${s.author}</span>
+          ${s.timestamp ? `<span class="photo-card-date">${s.timestamp}</span>` : ''}
+        </div>
       </div>
     </div>
   `).join('');
@@ -5933,7 +5932,6 @@ function buildStoriesPage(stories) {
           </div>
           ${storyGeneralFilterBarHTML()}
           ${storyCategoryBarHTML()}
-          ${photoFilterSectionHTML()}
           <div class="art-section-title-row">
             <div class="art-section-title">כל הסיפורים</div>
             ${storySizeBarHTML()}
