@@ -5975,14 +5975,18 @@ function storyOpenDetail(id) {
 
   // Thumbnails של כל התמונות
   const thumbnailsHTML = validImages.length > 1 ? `
-    <div class="story-gallery-thumbnails">
-      ${validImages.map((img, idx) => `
-        <img src="${img}" class="story-thumbnail ${idx === 0 ? 'active' : ''}"
-             onclick="document.getElementById('story-main-img').src='${img}';
-                      document.querySelectorAll('.story-thumbnail').forEach(t => t.classList.remove('active'));
-                      this.classList.add('active');"
-             title="תמונה ${idx + 1}">
-      `).join('')}
+    <div class="story-gallery-container">
+      <button class="story-thumb-nav story-thumb-prev" onclick="document.querySelector('.story-gallery-thumbnails').scrollBy({left: -80, behavior: 'smooth'})" title="קודם">◀</button>
+      <div class="story-gallery-thumbnails">
+        ${validImages.map((img, idx) => `
+          <img src="${img}" class="story-thumbnail ${idx === 0 ? 'active' : ''}"
+               onclick="document.getElementById('story-main-img').src='${img}';
+                        document.querySelectorAll('.story-thumbnail').forEach(t => t.classList.remove('active'));
+                        this.classList.add('active');"
+               title="תמונה ${idx + 1}">
+        `).join('')}
+      </div>
+      <button class="story-thumb-nav story-thumb-next" onclick="document.querySelector('.story-gallery-thumbnails').scrollBy({left: 80, behavior: 'smooth'})" title="הבא">▶</button>
     </div>
   ` : '';
 
