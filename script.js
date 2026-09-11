@@ -6623,14 +6623,30 @@ function renderPhotoCard(p, options = {}) {
   let miniThumbnailsHTML = '';
   if (validImages.length > 1) {
     miniThumbnailsHTML = `
-      <div class="photo-mini-thumbs" style="display: flex; gap: 4px; justify-content: center; margin-top: 6px; width: 170px; flex-wrap: wrap;">
-        ${validImages.map((imgUrl, idx) => `
-          <div class="photo-mini-thumb" 
-               onclick="event.stopPropagation(); photoSelectRowImage('${artEsc(p.id)}', '${artEsc(imgUrl)}', this)" 
-               style="width: 24px; height: 24px; border-radius: 4px; overflow: hidden; cursor: pointer; border: 1.5px solid ${idx === 0 ? '#e11d48' : '#ddd'}; transition: all 0.2s; background: #eee; flex-shrink:0;">
-            <img src="${imgUrl}" style="width: 100%; height: 100%; object-fit: cover;">
-          </div>
-        `).join('')}
+      <div class="photo-mini-thumbs" style="display: flex; align-items: center; justify-content: center; gap: 4px; margin-top: 6px; width: 100%; direction: ltr;">
+        <button type="button" 
+                onclick="event.stopPropagation(); photoStepRowImage('${artEsc(p.id)}', -1, this)" 
+                title="תמונה קודמת" 
+                style="width: 22px; height: 22px; border-radius: 50%; background: #3b82f6; color: #fff; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.15s ease;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+
+        <div class="photo-mini-thumbs-list" style="display: flex; gap: 4px; justify-content: center; flex-wrap: wrap; flex: 1; min-width: 0;">
+          ${validImages.map((imgUrl, idx) => `
+            <div class="photo-mini-thumb" 
+                 onclick="event.stopPropagation(); photoSelectRowImage('${artEsc(p.id)}', '${artEsc(imgUrl)}', this)" 
+                 style="width: 22px; height: 22px; border-radius: 4px; overflow: hidden; cursor: pointer; border: 1.5px solid ${idx === 0 ? '#e11d48' : '#ddd'}; transition: all 0.2s; background: #eee; flex-shrink:0;">
+              <img src="${imgUrl}" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
+          `).join('')}
+        </div>
+
+        <button type="button" 
+                onclick="event.stopPropagation(); photoStepRowImage('${artEsc(p.id)}', 1, this)" 
+                title="תמונה הבאה" 
+                style="width: 22px; height: 22px; border-radius: 50%; background: #3b82f6; color: #fff; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.15s ease;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
       </div>
     `;
   }
@@ -8705,9 +8721,21 @@ function photoOpenDetail(id) {
           <img id="photo-gallery-main-img" src="${mainImg}" style="width:100%; height:100%; object-fit:contain; display:block; border-radius:12px; cursor:zoom-in; ${blurStyle}" onclick="artGalleryById('photos','${artEsc(id)}', this.getAttribute('src'))">
         </div>
 
-        <!-- ריבועי דפדוף (Thumbnails) -->
-        <div style="display:flex; justify-content:center; gap:10px; margin-bottom:24px; flex-wrap:wrap; padding:5px;">
-          ${thumbnailsHTML}
+        <!-- ריבועי דפדוף (Thumbnails) עם חצי ניווט -->
+        <div style="display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:24px; direction:ltr; flex-wrap:wrap; padding:5px;">
+          ${validImages.length > 1 ? `
+            <button type="button" onclick="event.stopPropagation(); photoStepDetailImage(-1, this)" title="תמונה קודמת" style="width:32px; height:32px; border-radius:50%; background:#3b82f6; color:#fff; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 2px 8px rgba(59,130,246,0.3); transition:background 0.15s ease;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+          ` : ''}
+          <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">
+            ${thumbnailsHTML}
+          </div>
+          ${validImages.length > 1 ? `
+            <button type="button" onclick="event.stopPropagation(); photoStepDetailImage(1, this)" title="תמונה הבאה" style="width:32px; height:32px; border-radius:50%; background:#3b82f6; color:#fff; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 2px 8px rgba(59,130,246,0.3); transition:background 0.15s ease;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          ` : ''}
         </div>
 
         ${photoCommentsSectionHTML(id)}
@@ -8753,6 +8781,29 @@ function photoSelectRowImage(albumId, imgUrl, thumbEl) {
   }
 }
 window.photoSelectRowImage = photoSelectRowImage;
+
+function photoStepRowImage(albumId, dir, btnEl) {
+  const container = btnEl.closest('.art-row-img-container');
+  if (!container) return;
+  const thumbs = Array.from(container.querySelectorAll('.photo-mini-thumb'));
+  if (!thumbs.length) return;
+  let currentIndex = thumbs.findIndex(t => t.style.borderColor === 'rgb(225, 29, 72)' || t.style.borderColor === '#e11d48');
+  if (currentIndex === -1) currentIndex = 0;
+  let newIndex = (currentIndex + dir + thumbs.length) % thumbs.length;
+  thumbs[newIndex].click();
+}
+window.photoStepRowImage = photoStepRowImage;
+
+function photoStepDetailImage(dir, btnEl) {
+  const container = btnEl.closest('.art-detail') || document;
+  const thumbs = Array.from(container.querySelectorAll('.photo-thumb-square'));
+  if (!thumbs.length) return;
+  let currentIndex = thumbs.findIndex(t => t.style.borderColor === 'rgb(225, 29, 72)' || t.style.borderColor === '#e11d48');
+  if (currentIndex === -1) currentIndex = 0;
+  let newIndex = (currentIndex + dir + thumbs.length) % thumbs.length;
+  thumbs[newIndex].click();
+}
+window.photoStepDetailImage = photoStepDetailImage;
 
 function photoToggleProfileEdit() {
   const view = document.getElementById('profile-view-state');
@@ -10180,8 +10231,7 @@ let photoOpenFilterGroup = null;
 // גודל הגריד בעמוד התמונות (מספר עמודות: 2 / 3 / 4). נשמר בין ביקורים.
 let photoGridCols = (function () {
   const v = parseInt(localStorage.getItem('photo_grid_cols') || '', 10);
-  if (v === 2 || v === 3 || v === 4) return v;
-  return window.innerWidth <= 768 ? 4 : 3;
+  return (v === 2 || v === 3 || v === 4) ? v : 4;
 })();
 
 function photoSetGridSize(n) {
@@ -10710,9 +10760,9 @@ function artBuildLightbox() {
   lb.className = 'art-lightbox';
   lb.innerHTML = `
     <button class="art-lb-close" type="button" aria-label="סגור">✕</button>
-    <button class="art-lb-nav art-lb-prev" type="button" aria-label="הקודם">›</button>
+    <button class="art-lb-nav art-lb-prev" type="button" aria-label="הקודם"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
     <img class="art-lb-img" id="lightbox-img" alt="">
-    <button class="art-lb-nav art-lb-next" type="button" aria-label="הבא">‹</button>
+    <button class="art-lb-nav art-lb-next" type="button" aria-label="הבא"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
     <div class="art-lb-counter" id="lightbox-counter"></div>
   `;
   document.body.appendChild(lb);

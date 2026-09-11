@@ -2201,6 +2201,8 @@ body:not(.edit-mode) .hotspot-delete-btn {
   .stories-page .art-row-meta { font-size: 10px; gap: 4px !important; }
   .photos-page .photo-mini-thumb { width: 13px !important; height: 13px !important; }
   .photos-page .photo-mini-thumbs { gap: 2px !important; padding: 4px 5px 0; }
+  .photos-page .photo-mini-thumbs button { width: 16px !important; height: 16px !important; }
+  .photos-page .photo-mini-thumbs button svg { width: 9px !important; height: 9px !important; }
   /* בפלאפון מציגים מתחת לתמונה רק את הכותרת והתאריך — הכותב,
      הצפיות/לייקים וכפתורי הפעולה מוסתרים כדי לשמור על כרטיס נקי. */
   .photos-page .photo-card-info { display: block !important; }
@@ -2614,6 +2616,16 @@ body:not(.edit-mode) .hotspot-delete-btn {
 @media (max-width: 768px) {
   .photo-main-img-container {
     height: 320px;
+  }
+}
+
+/* בסיפורים: תמונה ועמוד רחבים פי 2 במחשב בלבד (מובייל נשאר ללא שינוי) */
+@media (min-width: 769px) {
+  .stories-page .art-detail-inner {
+    max-width: 1560px !important;
+  }
+  .stories-page .photo-main-img-container {
+    height: 750px !important;
   }
 }
 
@@ -3067,6 +3079,7 @@ body:not(.edit-mode) .hidden-nav {
   transition: background 0.18s ease;
   -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
+  direction: ltr;
 }
 .art-lb-nav:hover { background: rgba(255, 255, 255, 0.25); }
 /* אתר RTL: הקודם מימין, הבא משמאל */
