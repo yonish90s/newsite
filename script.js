@@ -5896,25 +5896,62 @@ function buildStoriesPage(stories) {
     </div>
   `).join('');
 
-  const listHTML = stories.map((s) => `
-    <div class="art-row" data-category="${artEsc(s.category || 'כללי')}" data-time="${s.createdAt || (parseInt(String(s.id).replace(/\D/g,''), 10) || 0)}" data-score="${s.likes || 0}" data-search="${artEsc([s.title, s.summary, s.author, s.category].filter(Boolean).join(' '))}" onclick="storyOpenDetail('${artEsc(s.id)}')">
-      <div class="art-row-text photo-card-info">
-        <h3>${s.title}</h3>
-        <div class="art-row-meta" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-          <span class="art-row-author">${s.author}</span>
-          <span class="art-row-sep">|</span>
-          <span>${s.timestamp}</span>
+  const listHTML = stories.map((s) => {
+    const validImages = (s.images && s.images.length) ? s.images.filter(Boolean) : (s.image ? [s.image] : []);
+    const mainImg = validImages[0] || s.image || '';
+    let miniThumbnailsHTML = '';
+    if (validImages.length > 1) {
+      miniThumbnailsHTML = `
+        <div class="photo-mini-thumbs" style="display: flex; align-items: center; justify-content: center; gap: 4px; margin-top: 6px; width: 100%; direction: ltr;">
+          <button type="button" 
+                  onclick="event.stopPropagation(); photoStepRowImage('${artEsc(s.id)}', -1, this)" 
+                  title="תמונה קודמת" 
+                  style="width: 22px; height: 22px; border-radius: 50%; background: #3b82f6; color: #fff; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.15s ease;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+
+          <div class="photo-mini-thumbs-list" style="display: flex; gap: 4px; justify-content: center; flex-wrap: wrap; flex: 1; min-width: 0;">
+            ${validImages.map((imgUrl, idx) => `
+              <div class="photo-mini-thumb" 
+                   onclick="event.stopPropagation(); photoSelectRowImage('${artEsc(s.id)}', '${artEsc(imgUrl)}', this)" 
+                   style="width: 22px; height: 22px; border-radius: 4px; overflow: hidden; cursor: pointer; border: 1.5px solid ${idx === 0 ? '#e11d48' : '#ddd'}; transition: all 0.2s; background: #eee; flex-shrink:0;">
+                <img src="${imgUrl}" style="width: 100%; height: 100%; object-fit: cover;">
+              </div>
+            `).join('')}
+          </div>
+
+          <button type="button" 
+                  onclick="event.stopPropagation(); photoStepRowImage('${artEsc(s.id)}', 1, this)" 
+                  title="תמונה הבאה" 
+                  style="width: 22px; height: 22px; border-radius: 50%; background: #3b82f6; color: #fff; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.15s ease;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      `;
+    }
+    return `
+      <div class="art-row" data-category="${artEsc(s.category || 'כללי')}" data-time="${s.createdAt || (parseInt(String(s.id).replace(/\D/g,''), 10) || 0)}" data-score="${s.likes || 0}" data-search="${artEsc([s.title, s.summary, s.author, s.category].filter(Boolean).join(' '))}" onclick="storyOpenDetail('${artEsc(s.id)}')">
+        <div class="art-row-text photo-card-info">
+          <h3>${s.title}</h3>
+          <div class="art-row-meta" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <span class="art-row-author">${s.author}</span>
+            <span class="art-row-sep">|</span>
+            <span>${s.timestamp}</span>
+          </div>
+        </div>
+        <div class="art-row-img-container" style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0;">
+          <div class="art-row-img-wrap" style="--bg-img: url('${mainImg || ''}');">
+            ${mainImg ? `<img src="${mainImg}" alt="">` : '<div class="art-row-img-placeholder"></div>'}
+            ${mainImg ? `<button class="art-zoom-btn" onclick="event.stopPropagation();artGalleryById('stories','${artEsc(s.id)}', this.closest('.art-row-img-wrap').querySelector('img') && this.closest('.art-row-img-wrap').querySelector('img').getAttribute('src'))" title="מסך מלא">⛶</button>` : ''}
+            ${isEditMode ? `<button class="art-pin-btn" onclick="event.stopPropagation(); togglePinStory('${artEsc(s.id)}')" title="${s.pinned ? 'בטל נעץ' : 'נעץ בגריד'}" style="${s.pinned ? 'color:#ffd700;display:flex;' : ''}">${s.pinned ? '★' : '☆'}</button>` : ''}
+            ${isEditMode ? `<button class="art-edit-btn" onclick="event.stopPropagation(); openStoryEditModal('${artEsc(s.id)}')" title="ערוך סיפור">✎</button>` : ''}
+            <button class="art-delete-btn" onclick="event.stopPropagation();storyDelete('${artEsc(s.id)}',this)">✕</button>
+          </div>
+          ${miniThumbnailsHTML}
         </div>
       </div>
-      <div class="art-row-img-wrap" style="--bg-img: url('${s.image || ''}');">
-        ${s.image ? `<img src="${s.image}" alt="">` : '<div class="art-row-img-placeholder"></div>'}
-        ${s.image ? `<button class="art-zoom-btn" onclick="event.stopPropagation();artGalleryById('stories','${artEsc(s.id)}', this.closest('.art-row-img-wrap').querySelector('img') && this.closest('.art-row-img-wrap').querySelector('img').getAttribute('src'))" title="מסך מלא">⛶</button>` : ''}
-        ${isEditMode ? `<button class="art-pin-btn" onclick="event.stopPropagation(); togglePinStory('${artEsc(s.id)}')" title="${s.pinned ? 'בטל נעץ' : 'נעץ בגריד'}" style="${s.pinned ? 'color:#ffd700;display:flex;' : ''}">${s.pinned ? '★' : '☆'}</button>` : ''}
-        ${isEditMode ? `<button class="art-edit-btn" onclick="event.stopPropagation(); openStoryEditModal('${artEsc(s.id)}')" title="ערוך סיפור">✎</button>` : ''}
-        <button class="art-delete-btn" onclick="event.stopPropagation();storyDelete('${artEsc(s.id)}',this)">✕</button>
-      </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 
   const popularHTML = popular.map((s, i) => `
     <div class="art-popular-item" onclick="storyOpenDetail('${artEsc(s.id)}')">
@@ -5967,26 +6004,30 @@ function storyOpenDetail(id) {
   const mainImg = validImages[0] || '';
 
   // גלריה: תמונה גדולה + thumbnails למטה
-  const mainImageHTML = `
-    <div class="story-gallery-main">
-      <img id="story-main-img" src="${mainImg}" onclick="artGalleryById('stories','${artEsc(id)}', this.getAttribute('src'))">
+  const mainImageHTML = mainImg ? `
+    <div class="photo-main-img-container" style="margin-bottom: 20px; background: #fafafa; border: 1px solid #f0f0f0;">
+      <img id="story-gallery-main-img" src="${mainImg}" style="width:100%; height:100%; object-fit:contain; display:block; border-radius:12px; cursor:zoom-in;" onclick="artGalleryById('stories','${artEsc(id)}', this.getAttribute('src'))">
     </div>
-  `;
+  ` : '';
 
   // Thumbnails של כל התמונות
-  const thumbnailsHTML = validImages.length > 1 ? `
-    <div class="story-gallery-container">
-      <button class="story-thumb-nav story-thumb-prev" onclick="document.querySelector('.story-gallery-thumbnails').scrollBy({left: -80, behavior: 'smooth'})" title="קודם">◀</button>
-      <div class="story-gallery-thumbnails">
-        ${validImages.map((img, idx) => `
-          <img src="${img}" class="story-thumbnail ${idx === 0 ? 'active' : ''}"
-               onclick="document.getElementById('story-main-img').src='${img}';
-                        document.querySelectorAll('.story-thumbnail').forEach(t => t.classList.remove('active'));
-                        this.classList.add('active');"
-               title="תמונה ${idx + 1}">
-        `).join('')}
+  const detailThumbnailsHTML = validImages.map((imgUrl, idx) => `
+    <div class="photo-thumb-square" onclick="photoSelectImage('${artEsc(imgUrl)}', this)" style="width:60px; height:60px; border-radius:8px; overflow:hidden; cursor:pointer; border:2.5px solid ${idx === 0 ? '#e11d48' : '#ddd'}; transition:all 0.2s; flex-shrink:0;">
+      <img src="${imgUrl}" style="width:100%; height:100%; object-fit:cover;">
+    </div>
+  `).join('');
+
+  const thumbnailsStripHTML = validImages.length > 1 ? `
+    <div style="display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:24px; direction:ltr; flex-wrap:wrap; padding:5px;">
+      <button type="button" onclick="event.stopPropagation(); photoStepDetailImage(-1, this)" title="תמונה קודמת" style="width:32px; height:32px; border-radius:50%; background:#3b82f6; color:#fff; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 2px 8px rgba(59,130,246,0.3); transition:background 0.15s ease;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">
+        ${detailThumbnailsHTML}
       </div>
-      <button class="story-thumb-nav story-thumb-next" onclick="document.querySelector('.story-gallery-thumbnails').scrollBy({left: 80, behavior: 'smooth'})" title="הבא">▶</button>
+      <button type="button" onclick="event.stopPropagation(); photoStepDetailImage(1, this)" title="תמונה הבאה" style="width:32px; height:32px; border-radius:50%; background:#3b82f6; color:#fff; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 2px 8px rgba(59,130,246,0.3); transition:background 0.15s ease;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
     </div>
   ` : '';
 
@@ -6026,7 +6067,7 @@ function storyOpenDetail(id) {
         </div>
 
         ${mainImageHTML}
-        ${thumbnailsHTML}
+        ${thumbnailsStripHTML}
 
         <div class="art-rec-section" style="margin-top:40px;">
           <h3 style="margin:0 0 16px;font-size:18px;font-weight:800">סיפורים נוספים שיעניינו אותך</h3>
@@ -8751,7 +8792,7 @@ function photoOpenDetail(id) {
 }
 
 function photoSelectImage(imgUrl, el) {
-  const mainImg = document.getElementById('photo-gallery-main-img');
+  const mainImg = document.getElementById('photo-gallery-main-img') || document.getElementById('story-gallery-main-img') || (el.closest('.art-detail') ? el.closest('.art-detail').querySelector('.photo-main-img-container img') : null);
   if (mainImg) {
     mainImg.src = imgUrl;
   }
