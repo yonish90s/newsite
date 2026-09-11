@@ -5967,31 +5967,65 @@ function storyOpenDetail(id) {
   const mainImg = validImages[0] || '';
   const extraImages = validImages.slice(1);
 
-  const lines = (s.body || s.summary || '').split('\n').map(l => l.trim()).filter(Boolean);
-  const chunks = [];
-  for (let i = 0; i < lines.length; i += 5) {
-    chunks.push(lines.slice(i, i + 5).join('<br>'));
-  }
+  // חלוקת הטקסט לעמודים (כל עמוד ~150 מילים)
+  const fullText = s.body || s.summary || '';
+  const paragraphs = fullText.split('\n').map(l => l.trim()).filter(Boolean);
+  const pages = [];
+  let currentPage = [];
+  let wordCount = 0;
 
-  let bodyHTML = '';
-  if (extraImages.length > 0) {
-    bodyHTML = chunks.map((chunkText, idx) => {
-      const imgUrl = extraImages[idx % extraImages.length];
-      const isEven = idx % 2 === 0;
-      return `
-        <div class="photo-story-row" style="display:flex; flex-direction:${isEven ? 'row' : 'row-reverse'}; gap:24px; align-items:center; margin-bottom:32px; flex-wrap:wrap;">
-          <div style="flex:1; min-width:280px; height:240px; border-radius:12px; overflow:hidden; border:1px solid #f0f0f0; background:#fafafa; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
-            <img src="${imgUrl}" style="width:100%; height:100%; object-fit:contain; display:block; cursor:zoom-in;" onclick="artGalleryById('stories','${artEsc(id)}', this.getAttribute('src'))">
+  paragraphs.forEach(para => {
+    const paraWords = para.split(' ').length;
+    if (wordCount + paraWords > 150 && currentPage.length > 0) {
+      pages.push(currentPage.join('<br><br>'));
+      currentPage = [para];
+      wordCount = paraWords;
+    } else {
+      currentPage.push(para);
+      wordCount += paraWords;
+    }
+  });
+  if (currentPage.length > 0) pages.push(currentPage.join('<br><br>'));
+
+  // בנייה של עמודים - ספר דו-עמודי
+  const pagesHTML = pages.map((pageText, idx) => {
+    const imgIdx = idx < extraImages.length ? idx : idx % (extraImages.length || 1);
+    const imgUrl = extraImages.length > 0 ? extraImages[imgIdx] : mainImg;
+    const isOddPage = idx % 2 === 1; // עמוד אי-זוגי = תמונה משמאל
+
+    return `
+      <div class="story-spread" data-page="${idx}" style="display:${idx === 0 ? 'flex' : 'none'}; gap:40px; align-items:stretch; height:calc(100vh - 120px); margin: 20px 0;">
+        ${isOddPage ? `
+          <div class="story-page-img" style="flex:1; border-radius:12px; overflow:hidden; background:#fafafa; border:1px solid #e5e7eb;">
+            <img src="${imgUrl}" style="width:100%; height:100%; object-fit:cover; cursor:zoom-in;" onclick="artGalleryById('stories','${artEsc(id)}', this.getAttribute('src'))">
           </div>
-          <div style="flex:1.5; min-width:280px; font-size:16px; line-height:1.8; color:#374151; text-align:justify;">
-            ${chunkText}
+          <div class="story-page-text" style="flex:1; overflow-y:auto; padding:20px; font-size:16px; line-height:1.9; color:#1f2937; text-align:right; direction:rtl;">
+            ${pageText}
           </div>
-        </div>
-      `;
-    }).join('');
-  } else {
-    bodyHTML = chunks.map(chunkText => `<p style="font-size:16px; line-height:1.8; color:#374151; margin-bottom:16px; text-align:justify;">${chunkText}</p>`).join('');
-  }
+        ` : `
+          <div class="story-page-text" style="flex:1; overflow-y:auto; padding:20px; font-size:16px; line-height:1.9; color:#1f2937; text-align:right; direction:rtl;">
+            ${pageText}
+          </div>
+          <div class="story-page-img" style="flex:1; border-radius:12px; overflow:hidden; background:#fafafa; border:1px solid #e5e7eb;">
+            <img src="${imgUrl}" style="width:100%; height:100%; object-fit:cover; cursor:zoom-in;" onclick="artGalleryById('stories','${artEsc(id)}', this.getAttribute('src'))">
+          </div>
+        `}
+      </div>
+    `;
+  }).join('');
+
+  // ניווט בין עמודים
+  const pageCount = pages.length;
+  const navHTML = pageCount > 1 ? `
+    <div class="story-nav" style="display:flex; justify-content:space-between; align-items:center; gap:16px; margin-top:20px;">
+      <button id="story-prev-btn" onclick="storyPrevPage()" style="background:#3b82f6; color:#fff; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; font-weight:bold;">← עמוד קודם</button>
+      <span style="font-size:14px; color:#6b7280; font-weight:600;">עמוד <span id="story-page-counter">1</span> מתוך ${pageCount}</span>
+      <button id="story-next-btn" onclick="storyNextPage()" style="background:#3b82f6; color:#fff; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; font-weight:bold;">עמוד הבא →</button>
+    </div>
+  ` : '';
+
+  window.storyPages = pages;
+  window.currentStoryPage = 0;
 
   const recommended = stories.filter(x => x.id !== id).slice(0, 3);
   const recHTML = recommended.map(r => `
@@ -6011,29 +6045,35 @@ function storyOpenDetail(id) {
   mainContent.innerHTML = `
     <div class="art-detail articles-page stories-page" data-story-id="${id}" data-stories-json="${json}">
       <div class="art-detail-inner">
-        <button class="art-back-btn" onclick="storyGoBack()">← חזרה לסיפורים</button>
-        ${mainImg ? `
-        <div class="photo-main-img-container" style="margin-bottom: 20px; background: #fafafa; border: 1px solid #f0f0f0;">
-          <img src="${mainImg}" style="width:100%; height:100%; object-fit:contain; display:block; border-radius:12px; cursor:zoom-in;" onclick="artGalleryById('stories','${artEsc(id)}', this.getAttribute('src'))">
-        </div>` : ''}
-        <div class="art-detail-body">
-          <div class="art-meta" style="margin-bottom:12px">
-            <span class="art-category-badge" style="background:${s.categoryColor||'#8b5cf6'}">${s.category}</span>
-            <span>${s.author}</span>
-            <span>·</span>
-            <span>${s.timestamp}</span>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+          <button class="art-back-btn" onclick="storyGoBack()">← חזרה לסיפורים</button>
+          <div style="text-align:center;">
+            <h1 class="art-detail-title" style="margin:0; font-size:24px;">${s.title}</h1>
+            <div class="art-meta" style="margin-top:8px; font-size:14px; color:#6b7280;">
+              <span class="art-category-badge" style="background:${s.categoryColor||'#8b5cf6'}; padding:4px 12px; border-radius:6px; color:#fff; margin-left:8px;">${s.category}</span>
+              <span>${s.author}</span>
+              <span>·</span>
+              <span>${s.timestamp}</span>
+            </div>
           </div>
-          <h1 class="art-detail-title">${s.title}</h1>
-          <div class="art-detail-content">${bodyHTML}</div>
-          ${s.link ? `<a href="${s.link}" target="_blank" class="art-detail-link">קרא באתר המקור ↗</a>` : ''}
+          <div style="width:100px;"></div>
         </div>
-        <div class="art-rec-section">
+
+        <div class="story-pages-container" id="story-pages">
+          ${pagesHTML}
+        </div>
+
+        ${navHTML}
+
+        <div class="art-rec-section" style="margin-top:40px;">
           <h3 style="margin:0 0 16px;font-size:18px;font-weight:800">סיפורים נוספים שיעניינו אותך</h3>
           <div class="art-rec-grid">${recHTML}</div>
         </div>
       </div>
     </div>
   `;
+
+  setTimeout(() => updateStoryPageDisplay(), 0);
 }
 
 function storyGoBack() {
@@ -6063,6 +6103,31 @@ function storySearch(val) {
   // מאחד חיפוש + סינון קטגוריה; העימוד מציג את התוצאות
   artPageState.stories = 1;
   storyApplyFilters();
+}
+
+function storyNextPage() {
+  if (!window.storyPages || !window.storyPages.length) return;
+  window.currentStoryPage = Math.min(window.currentStoryPage + 1, window.storyPages.length - 1);
+  updateStoryPageDisplay();
+}
+
+function storyPrevPage() {
+  if (!window.storyPages || !window.storyPages.length) return;
+  window.currentStoryPage = Math.max(window.currentStoryPage - 1, 0);
+  updateStoryPageDisplay();
+}
+
+function updateStoryPageDisplay() {
+  const pages = document.querySelectorAll('.story-page');
+  pages.forEach((p, i) => {
+    p.style.display = i === window.currentStoryPage ? 'block' : 'none';
+  });
+  const counter = document.getElementById('story-page-counter');
+  if (counter) counter.textContent = `${window.currentStoryPage + 1} / ${window.storyPages.length}`;
+  const prevBtn = document.getElementById('story-prev-btn');
+  const nextBtn = document.getElementById('story-next-btn');
+  if (prevBtn) prevBtn.disabled = window.currentStoryPage === 0;
+  if (nextBtn) nextBtn.disabled = window.currentStoryPage === window.storyPages.length - 1;
 }
 
 // רשימת תמונות הסיפור לפי סדר. הראשונה (אינדקס 0) היא התמונה הראשית.
