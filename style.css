@@ -2619,13 +2619,14 @@ body:not(.edit-mode) .hotspot-delete-btn {
   }
 }
 
-/* בסיפורים: תמונה ועמוד רחבים פי 2 במחשב בלבד (מובייל נשאר ללא שינוי) */
+/* בסיפורים: תמונת התצוגה הראשית בלבד רחבה במחשב (העמוד וסיפורים מומלצים נשארים ברוחב הרגיל) */
 @media (min-width: 769px) {
-  .stories-page .art-detail-inner {
-    max-width: 1560px !important;
-  }
   .stories-page .photo-main-img-container {
-    height: 750px !important;
+    width: 1300px !important;
+    max-width: calc(100vw - 80px) !important;
+    margin-left: 50% !important;
+    transform: translateX(-50%) !important;
+    height: 650px !important;
   }
 }
 
