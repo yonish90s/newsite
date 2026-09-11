@@ -1963,6 +1963,7 @@ body:not(.edit-mode) .hotspot-delete-btn {
   .story-gallery-thumbnails { gap: 8px; padding: 10px; }
   .story-thumbnail { width: 55px; height: 70px; }
   .story-thumb-nav { display: none; }
+  .notif-bell, .manager-btn { display: none !important; }
 }
 .story-nav-container { display: flex; justify-content: space-between; align-items: center; gap: 30px; margin: 40px 0 20px; padding: 30px 20px; background: #f9fafb; border-radius: 12px; border: 1px solid #e5e7eb; }
 .story-nav-arrow { background: #3b82f6; color: white; border: none; padding: 12px 16px; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 20px; transition: background 0.2s, transform 0.15s; min-width: 50px; }
