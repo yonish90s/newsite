@@ -5994,20 +5994,20 @@ function storyOpenDetail(id) {
     const isOddPage = idx % 2 === 1; // עמוד אי-זוגי = תמונה משמאל
 
     return `
-      <div class="story-spread" data-page="${idx}" style="display:${idx === 0 ? 'flex' : 'none'}; gap:40px; align-items:stretch; height:calc(100vh - 120px); margin: 20px 0;">
+      <div class="story-spread" data-page="${idx}">
         ${isOddPage ? `
-          <div class="story-page-img" style="flex:1; border-radius:12px; overflow:hidden; background:#fafafa; border:1px solid #e5e7eb;">
-            <img src="${imgUrl}" style="width:100%; height:100%; object-fit:cover; cursor:zoom-in;" onclick="artGalleryById('stories','${artEsc(id)}', this.getAttribute('src'))">
+          <div class="story-page-img">
+            <img src="${imgUrl}" onclick="artGalleryById('stories','${artEsc(id)}', this.getAttribute('src'))">
           </div>
-          <div class="story-page-text" style="flex:1; overflow-y:auto; padding:20px; font-size:16px; line-height:1.9; color:#1f2937; text-align:right; direction:rtl;">
+          <div class="story-page-text">
             ${pageText}
           </div>
         ` : `
-          <div class="story-page-text" style="flex:1; overflow-y:auto; padding:20px; font-size:16px; line-height:1.9; color:#1f2937; text-align:right; direction:rtl;">
+          <div class="story-page-text">
             ${pageText}
           </div>
-          <div class="story-page-img" style="flex:1; border-radius:12px; overflow:hidden; background:#fafafa; border:1px solid #e5e7eb;">
-            <img src="${imgUrl}" style="width:100%; height:100%; object-fit:cover; cursor:zoom-in;" onclick="artGalleryById('stories','${artEsc(id)}', this.getAttribute('src'))">
+          <div class="story-page-img">
+            <img src="${imgUrl}" onclick="artGalleryById('stories','${artEsc(id)}', this.getAttribute('src'))">
           </div>
         `}
       </div>
@@ -6118,9 +6118,9 @@ function storyPrevPage() {
 }
 
 function updateStoryPageDisplay() {
-  const pages = document.querySelectorAll('.story-page');
-  pages.forEach((p, i) => {
-    p.style.display = i === window.currentStoryPage ? 'block' : 'none';
+  const spreads = document.querySelectorAll('.story-spread');
+  spreads.forEach((spread, i) => {
+    spread.style.display = i === window.currentStoryPage ? 'flex' : 'none';
   });
   const counter = document.getElementById('story-page-counter');
   if (counter) counter.textContent = `${window.currentStoryPage + 1} / ${window.storyPages.length}`;
