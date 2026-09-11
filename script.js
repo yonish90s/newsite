@@ -5735,7 +5735,8 @@ function renderStoryCategoryTabs() {
 // גודל הגריד בעמוד הסיפורים (מספר עמודות). נשמר בין ביקורים.
 let storyGridCols = (function () {
   const v = parseInt(localStorage.getItem('story_grid_cols') || '', 10);
-  return (v === 2 || v === 3 || v === 4) ? v : 3;
+  if (v === 2 || v === 3 || v === 4) return v;
+  return window.innerWidth <= 768 ? 4 : 3;
 })();
 // קטגוריות נבחרות לסינון. סט ריק = "הכל" (כל הסיפורים). אפשר לבחור כמה
 // קטגוריות בו-זמנית, וסיפור מוצג אם הקטגוריה שלו נמצאת באחת מהן.
