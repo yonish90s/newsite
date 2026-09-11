@@ -5987,24 +5987,29 @@ function storyOpenDetail(id) {
   });
   if (currentPage.length > 0) pages.push(currentPage.join('<br><br>'));
 
-  // בנייה של עמודים - תצוגת ספר גדולה עם תמונה כרקע וטקסט בשתי עמודות
+  // בנייה של עמודים - ספר דו-עמודי
   const pagesHTML = pages.map((pageText, idx) => {
     const imgIdx = idx < extraImages.length ? idx : idx % (extraImages.length || 1);
     const imgUrl = extraImages.length > 0 ? extraImages[imgIdx] : mainImg;
-
-    // חלוקת הטקסט לשתי עמודות
-    const words = pageText.split(' ');
-    const mid = Math.ceil(words.length / 2);
-    const col1 = words.slice(0, mid).join(' ');
-    const col2 = words.slice(mid).join(' ');
+    const isOddPage = idx % 2 === 1; // עמוד אי-זוגי = תמונה משמאל
 
     return `
-      <div class="story-spread-fullscreen" data-page="${idx}" style="background-image: url('${imgUrl}');">
-        <div class="story-spread-content">
-          <div class="story-text-left">${col1}</div>
-          <div class="story-text-right">${col2}</div>
-        </div>
-        <div class="story-bg-overlay"></div>
+      <div class="story-spread" data-page="${idx}">
+        ${isOddPage ? `
+          <div class="story-page-img">
+            <img src="${imgUrl}" onclick="artGalleryById('stories','${artEsc(id)}', this.getAttribute('src'))">
+          </div>
+          <div class="story-page-text">
+            ${pageText}
+          </div>
+        ` : `
+          <div class="story-page-text">
+            ${pageText}
+          </div>
+          <div class="story-page-img">
+            <img src="${imgUrl}" onclick="artGalleryById('stories','${artEsc(id)}', this.getAttribute('src'))">
+          </div>
+        `}
       </div>
     `;
   }).join('');
@@ -6113,7 +6118,7 @@ function storyPrevPage() {
 }
 
 function updateStoryPageDisplay() {
-  const spreads = document.querySelectorAll('.story-spread-fullscreen');
+  const spreads = document.querySelectorAll('.story-spread');
   spreads.forEach((spread, i) => {
     spread.style.display = i === window.currentStoryPage ? 'flex' : 'none';
   });
