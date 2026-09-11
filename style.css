@@ -2619,16 +2619,7 @@ body:not(.edit-mode) .hotspot-delete-btn {
   }
 }
 
-/* בסיפורים: תמונת התצוגה הראשית בלבד רחבה במחשב (העמוד וסיפורים מומלצים נשארים ברוחב הרגיל) */
-@media (min-width: 769px) {
-  .stories-page .photo-main-img-container {
-    width: 1300px !important;
-    max-width: calc(100vw - 80px) !important;
-    margin-left: 50% !important;
-    transform: translateX(-50%) !important;
-    height: 650px !important;
-  }
-}
+
 
 /* מנגנון הסתרת קישורים בתפריט הניווט העליון */
 body:not(.edit-mode) .hidden-nav {
