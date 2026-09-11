@@ -5961,7 +5961,8 @@ function buildStoriesPage(stories) {
   `).join('');
 
   const json = encodeURIComponent(JSON.stringify(stories));
-  return `<div class="articles-page stories-page story-cols-${storyGridCols}" data-stories-json="${json}">
+  const _adultOn = (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('age_verified') === 'true');
+  return `<div class="articles-page stories-page story-cols-${storyGridCols}${photoImagesMode ? '' : ' text-mode'}" data-stories-json="${json}">
     <div class="art-inner">
       <div class="art-featured-grid">${featuredHTML}</div>
       <div class="art-layout">
@@ -5971,8 +5972,15 @@ function buildStoriesPage(stories) {
           </div>
           ${storyCategoryBarHTML()}
           ${photoFilterSectionHTML()}
-          <div style="display:flex; justify-content:center; margin: 12px 0 16px;">
-            ${buildSiteDefaultTogglesBar()}
+          <div class="view-toggles">
+            <label class="tgl">
+              <span class="tgl-label">🖼️ הצג תמונות</span>
+              <span class="tgl-switch"><input type="checkbox" ${photoImagesMode ? 'checked' : ''} onchange="photoToggleImages(this.checked)"><span class="tgl-slider"></span></span>
+            </label>
+            <label class="tgl">
+              <span class="tgl-label">🔞 תוכן למבוגרים</span>
+              <span class="tgl-switch"><input type="checkbox" ${_adultOn ? 'checked' : ''} onchange="toggleSidebarAgeVerification(this.checked)"><span class="tgl-slider"></span></span>
+            </label>
           </div>
           <div class="art-section-title-row">
             <div class="art-section-title">כל הסיפורים</div>
