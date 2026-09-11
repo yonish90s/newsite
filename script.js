@@ -6018,12 +6018,12 @@ function storyOpenDetail(id) {
   const pageCount = pages.length;
   const navHTML = pageCount > 1 ? `
     <div class="story-nav-container">
-      <button id="story-prev-btn" class="story-nav-arrow story-nav-prev" onclick="storyPrevPage()" title="עמוד קודם">◀</button>
+      <button id="story-prev-btn" class="story-nav-arrow story-nav-prev" onclick="storyNextPage()" title="עמוד הבא">▶</button>
       <div class="story-page-info">
         <span id="story-page-counter" class="story-page-number">1</span>
         <span class="story-page-total"> / ${pageCount}</span>
       </div>
-      <button id="story-next-btn" class="story-nav-arrow story-nav-next" onclick="storyNextPage()" title="עמוד הבא">▶</button>
+      <button id="story-next-btn" class="story-nav-arrow story-nav-next" onclick="storyPrevPage()" title="עמוד קודם">◀</button>
     </div>
   ` : '';
 
