@@ -10180,7 +10180,8 @@ let photoOpenFilterGroup = null;
 // גודל הגריד בעמוד התמונות (מספר עמודות: 2 / 3 / 4). נשמר בין ביקורים.
 let photoGridCols = (function () {
   const v = parseInt(localStorage.getItem('photo_grid_cols') || '', 10);
-  return (v === 2 || v === 3 || v === 4) ? v : 3;
+  if (v === 2 || v === 3 || v === 4) return v;
+  return window.innerWidth <= 768 ? 4 : 3;
 })();
 
 function photoSetGridSize(n) {
