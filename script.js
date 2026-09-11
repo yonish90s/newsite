@@ -5965,69 +5965,28 @@ function storyOpenDetail(id) {
 
   const validImages = s.images ? s.images.filter(img => !!img) : (s.image ? [s.image] : []);
   const mainImg = validImages[0] || '';
-  const extraImages = validImages.slice(1);
 
-  // חלוקת הטקסט לעמודים (כל עמוד ~150 מילים)
-  const fullText = s.body || s.summary || '';
-  const paragraphs = fullText.split('\n').map(l => l.trim()).filter(Boolean);
-  const pages = [];
-  let currentPage = [];
-  let wordCount = 0;
+  // גלריה: תמונה גדולה + thumbnails למטה
+  const mainImageHTML = `
+    <div class="story-gallery-main">
+      <img id="story-main-img" src="${mainImg}" onclick="artGalleryById('stories','${artEsc(id)}', this.getAttribute('src'))">
+    </div>
+  `;
 
-  paragraphs.forEach(para => {
-    const paraWords = para.split(' ').length;
-    if (wordCount + paraWords > 150 && currentPage.length > 0) {
-      pages.push(currentPage.join('<br><br>'));
-      currentPage = [para];
-      wordCount = paraWords;
-    } else {
-      currentPage.push(para);
-      wordCount += paraWords;
-    }
-  });
-  if (currentPage.length > 0) pages.push(currentPage.join('<br><br>'));
-
-  // בנייה של עמודים - ספר דו-עמודי
-  const pagesHTML = pages.map((pageText, idx) => {
-    const imgIdx = idx < extraImages.length ? idx : idx % (extraImages.length || 1);
-    const imgUrl = extraImages.length > 0 ? extraImages[imgIdx] : mainImg;
-    const isOddPage = idx % 2 === 1; // עמוד אי-זוגי = תמונה משמאל
-
-    return `
-      <div class="story-spread" data-page="${idx}">
-        ${isOddPage ? `
-          <div class="story-page-img">
-            <img src="${imgUrl}" onclick="artGalleryById('stories','${artEsc(id)}', this.getAttribute('src'))">
-          </div>
-          <div class="story-page-text">
-            ${pageText}
-          </div>
-        ` : `
-          <div class="story-page-text">
-            ${pageText}
-          </div>
-          <div class="story-page-img">
-            <img src="${imgUrl}" onclick="artGalleryById('stories','${artEsc(id)}', this.getAttribute('src'))">
-          </div>
-        `}
-      </div>
-    `;
-  }).join('');
-
-  // ניווט בין עמודים
-  const pageCount = pages.length;
-  const navHTML = pageCount > 1 ? `
-    <div class="story-nav-container">
-      <button id="story-prev-btn" class="story-nav-arrow story-nav-prev" onclick="storyNextPage()" title="עמוד הבא">▶</button>
-      <div class="story-page-info">
-        <span id="story-page-counter" class="story-page-number">1</span>
-        <span class="story-page-total"> / ${pageCount}</span>
-      </div>
-      <button id="story-next-btn" class="story-nav-arrow story-nav-next" onclick="storyPrevPage()" title="עמוד קודם">◀</button>
+  // Thumbnails של כל התמונות
+  const thumbnailsHTML = validImages.length > 1 ? `
+    <div class="story-gallery-thumbnails">
+      ${validImages.map((img, idx) => `
+        <img src="${img}" class="story-thumbnail ${idx === 0 ? 'active' : ''}"
+             onclick="document.getElementById('story-main-img').src='${img}';
+                      document.querySelectorAll('.story-thumbnail').forEach(t => t.classList.remove('active'));
+                      this.classList.add('active');"
+             title="תמונה ${idx + 1}">
+      `).join('')}
     </div>
   ` : '';
 
-  window.storyPages = pages;
+  window.storyPages = [mainImg];
   window.currentStoryPage = 0;
 
   const recommended = stories.filter(x => x.id !== id).slice(0, 3);
@@ -6062,11 +6021,8 @@ function storyOpenDetail(id) {
           <div style="width:100px;"></div>
         </div>
 
-        <div class="story-pages-container" id="story-pages">
-          ${pagesHTML}
-        </div>
-
-        ${navHTML}
+        ${mainImageHTML}
+        ${thumbnailsHTML}
 
         <div class="art-rec-section" style="margin-top:40px;">
           <h3 style="margin:0 0 16px;font-size:18px;font-weight:800">סיפורים נוספים שיעניינו אותך</h3>
@@ -6075,8 +6031,6 @@ function storyOpenDetail(id) {
       </div>
     </div>
   `;
-
-  setTimeout(() => updateStoryPageDisplay(), 0);
 }
 
 function storyGoBack() {
