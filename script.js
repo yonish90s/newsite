@@ -5971,6 +5971,9 @@ function buildStoriesPage(stories) {
           </div>
           ${storyCategoryBarHTML()}
           ${photoFilterSectionHTML()}
+          <div style="display:flex; justify-content:center; margin: 12px 0 16px;">
+            ${buildSiteDefaultTogglesBar()}
+          </div>
           <div class="art-section-title-row">
             <div class="art-section-title">כל הסיפורים</div>
             ${storySizeBarHTML()}
