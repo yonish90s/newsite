@@ -6017,10 +6017,13 @@ function storyOpenDetail(id) {
   // ניווט בין עמודים
   const pageCount = pages.length;
   const navHTML = pageCount > 1 ? `
-    <div class="story-nav" style="display:flex; justify-content:space-between; align-items:center; gap:16px; margin-top:20px;">
-      <button id="story-prev-btn" onclick="storyPrevPage()" style="background:#3b82f6; color:#fff; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; font-weight:bold;">← עמוד קודם</button>
-      <span style="font-size:14px; color:#6b7280; font-weight:600;">עמוד <span id="story-page-counter">1</span> מתוך ${pageCount}</span>
-      <button id="story-next-btn" onclick="storyNextPage()" style="background:#3b82f6; color:#fff; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; font-weight:bold;">עמוד הבא →</button>
+    <div class="story-nav-container">
+      <button id="story-prev-btn" class="story-nav-arrow story-nav-prev" onclick="storyPrevPage()" title="עמוד קודם">◀</button>
+      <div class="story-page-info">
+        <span id="story-page-counter" class="story-page-number">1</span>
+        <span class="story-page-total"> / ${pageCount}</span>
+      </div>
+      <button id="story-next-btn" class="story-nav-arrow story-nav-next" onclick="storyNextPage()" title="עמוד הבא">▶</button>
     </div>
   ` : '';
 

@@ -1951,11 +1951,13 @@ body:not(.edit-mode) .hotspot-delete-btn {
 .story-page-text::-webkit-scrollbar-track { background: transparent; }
 .story-page-text::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
 .story-page-text::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
-.story-nav { display: flex; justify-content: center; align-items: center; gap: 24px; margin: 30px 0 20px; padding: 20px; background: #f9fafb; border-radius: 12px; border: 1px solid #e5e7eb; }
-.story-nav button { background: #3b82f6; color: white; border: none; padding: 10px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; transition: background 0.2s, transform 0.15s; }
-.story-nav button:hover:not(:disabled) { background: #2563eb; transform: translateY(-1px); }
-.story-nav button:disabled { background: #d1d5db; cursor: not-allowed; opacity: 0.5; }
-.story-nav span { font-size: 14px; color: #6b7280; font-weight: 600; min-width: 80px; text-align: center; }
+.story-nav-container { display: flex; justify-content: space-between; align-items: center; gap: 30px; margin: 40px 0 20px; padding: 30px 20px; background: #f9fafb; border-radius: 12px; border: 1px solid #e5e7eb; }
+.story-nav-arrow { background: #3b82f6; color: white; border: none; padding: 12px 16px; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 20px; transition: background 0.2s, transform 0.15s; min-width: 50px; }
+.story-nav-arrow:hover:not(:disabled) { background: #2563eb; transform: scale(1.1); }
+.story-nav-arrow:disabled { background: #d1d5db; cursor: not-allowed; opacity: 0.4; transform: scale(0.9); }
+.story-page-info { text-align: center; flex: 1; }
+.story-page-number { font-size: 36px; font-weight: 900; color: #111; line-height: 1; }
+.story-page-total { font-size: 24px; color: #6b7280; font-weight: 600; }
 
 /* Recommended articles */
 .art-rec-section { margin-top: 40px; padding-top: 28px; border-top: 1px solid #eee; }
