@@ -6080,6 +6080,8 @@ function storyOpenDetail(id) {
         ${mainImageHTML}
         ${thumbnailsStripHTML}
 
+        ${(typeof storyCommentsSectionHTML === 'function') ? storyCommentsSectionHTML(id) : ''}
+
         <div class="art-rec-section" style="margin-top:40px;">
           <h3 style="margin:0 0 16px;font-size:18px;font-weight:800">סיפורים נוספים שיעניינו אותך</h3>
           <div class="art-rec-grid">${recHTML}</div>
@@ -6087,6 +6089,7 @@ function storyOpenDetail(id) {
       </div>
     </div>
   `;
+  if (typeof subscribeStoryComments === 'function') subscribeStoryComments(id);
 }
 
 function storyGoBack() {
@@ -10256,6 +10259,57 @@ function photoCommentsSectionHTML(albumId) {
     </div>`;
 }
 window.photoCommentsSectionHTML = photoCommentsSectionHTML;
+
+// ---- תגובות לסיפורים ----
+let storyCommentsUnsub = null;
+let storyCommentsData = {};
+
+function subscribeStoryComments(storyId) {
+  if (storyCommentsUnsub) { storyCommentsUnsub(); storyCommentsUnsub = null; }
+  storyCommentsUnsub = onValue(ref(db, `website/story_comments/${storyId}`), snap => {
+    storyCommentsData = snap.val() || {};
+    const box = document.getElementById('story-comments-list');
+    if (box) box.innerHTML = storyCommentsListHTML();
+    const cnt = document.getElementById('story-comments-count');
+    if (cnt) cnt.textContent = Object.keys(storyCommentsData).length;
+  });
+}
+window.subscribeStoryComments = subscribeStoryComments;
+
+function storyCommentsListHTML() {
+  const list = Object.values(storyCommentsData).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  if (!list.length) return '<div class="pc-empty">אין תגובות עדיין. היו הראשונים להגיב!</div>';
+  return list.map(c => `
+    <div class="pc-comment">
+      <div class="pc-head">${artEsc(c.name || 'אורח')} · ${c.createdAt ? new Date(c.createdAt).toLocaleDateString('he-IL') : ''}</div>
+      <div class="pc-text">${artEsc(c.text || '')}</div>
+    </div>`).join('');
+}
+
+async function submitStoryComment(storyId) {
+  const inp = document.getElementById('story-comment-input');
+  const text = inp ? inp.value.trim() : '';
+  if (!text) return;
+  const name = (auth.currentUser && typeof liveChatUserName === 'function') ? liveChatUserName() : 'אורח';
+  try {
+    await push(ref(db, `website/story_comments/${storyId}`), { text: text.slice(0, 1000), name, uid: auth.currentUser ? auth.currentUser.uid : '', createdAt: Date.now() });
+    if (inp) inp.value = '';
+  } catch (e) { console.error('story comment failed', e); if (typeof showCopyToast === 'function') showCopyToast('שגיאה בשליחת התגובה'); }
+}
+window.submitStoryComment = submitStoryComment;
+
+function storyCommentsSectionHTML(storyId) {
+  return `
+    <div class="pc-section">
+      <div class="pc-title">💬 תגובות (<span id="story-comments-count">0</span>)</div>
+      <div class="pc-form">
+        <textarea id="story-comment-input" rows="2" placeholder="כתבו תגובה, שתפו מה דעתכם..."></textarea>
+        <button onclick="submitStoryComment('${artEsc(storyId)}')" class="pc-send">שלח תגובה</button>
+      </div>
+      <div id="story-comments-list">${storyCommentsListHTML()}</div>
+    </div>`;
+}
+window.storyCommentsSectionHTML = storyCommentsSectionHTML;
 
 // ---- פיד: גלריות של מי שאני עוקב אחריו ----
 function getFeedAlbums() {
