@@ -1912,6 +1912,75 @@ body:not(.edit-mode) .hotspot-delete-btn {
 .art-popular-item:hover { background: #fafafa; }
 .art-popular-num { font-size: 24px; font-weight: 900; color: #ebebeb; line-height: 1; min-width: 34px; text-align: center; }
 
+/* Site Page Nav Items in Left Sidebar */
+.site-page-nav-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #334155;
+  text-decoration: none;
+  user-select: none;
+}
+.site-page-nav-item:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  transform: translateX(-3px);
+  color: #0f172a;
+}
+.site-page-nav-item.active {
+  background: linear-gradient(135deg, #e11d48, #be123c);
+  color: #ffffff !important;
+  border-color: transparent;
+  box-shadow: 0 4px 12px rgba(225, 29, 72, 0.25);
+}
+.site-page-nav-item.active .site-page-nav-title {
+  color: #ffffff !important;
+  font-weight: 800;
+}
+.site-page-nav-item.active .site-page-nav-icon {
+  transform: scale(1.15);
+}
+.site-page-nav-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.site-page-nav-icon {
+  font-size: 18px;
+  line-height: 1;
+  transition: transform 0.2s ease;
+}
+.site-page-nav-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #1e293b;
+}
+.site-page-nav-badge {
+  font-size: 10px;
+  background: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+.site-page-nav-arrow {
+  font-size: 14px;
+  color: #94a3b8;
+  font-weight: 800;
+  transition: transform 0.2s ease;
+}
+.site-page-nav-item:hover .site-page-nav-arrow {
+  color: #e11d48;
+  transform: translateX(-2px);
+}
+
 /* Add/Delete buttons */
 .art-add-btn { display: none; width: 100%; border: 2px dashed #333; background: #f7f7f7; color: #333; padding: 14px; cursor: pointer; margin-top: 4px; font-size: 15px; font-weight: 700; border-radius: 10px; box-sizing: border-box; transition: background 0.15s; }
 .art-add-btn:hover { background: #efefef; }

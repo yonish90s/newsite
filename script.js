@@ -9112,27 +9112,79 @@ function buildSidebarTabs(savedHTML, pageType) {
   `;
 }
 
+function navigateToPage(pageId) {
+  const page = (typeof pages !== 'undefined' && Array.isArray(pages)) ? pages.find(p => p && p.id === pageId) : null;
+  if (!page) return;
+  if (typeof isEditMode !== 'undefined' && isEditMode && typeof saveCurrentPageContent === 'function') {
+    try { saveCurrentPageContent(); } catch (e) {}
+  }
+  activePageId = page.id;
+  if (typeof saveToStorage === 'function') { try { saveToStorage(); } catch (e) {} }
+  if (typeof renderSideMenu === 'function') { try { renderSideMenu(); } catch (e) {} }
+  if (typeof renderTopNav === 'function') { try { renderTopNav(); } catch (e) {} }
+  if (typeof renderPage === 'function') { try { renderPage(); } catch (e) {} }
+  try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) {}
+}
+window.navigateToPage = navigateToPage;
+
 function buildLeftSidebarBox(popularHTML, section) {
-  const popHTML = popularHTML || '';
+  const defaultNavItems = [
+    { id: 'page-photos-main', title: 'תמונות 🖼️' },
+    { id: 'page-stories-main', title: 'סיפורים 📖' },
+    { id: 'page-ideas-main', title: 'רעיונות 💡' },
+    { id: 'page-communities-main', title: 'קהילות 👥' },
+    { id: 'page-questions-main', title: 'שאלות גולשים ❓' },
+    { id: 'page-offers-main', title: 'הצעות 🔥' }
+  ];
+
+  let pagesToDisplay = [];
+  if (typeof pages !== 'undefined' && Array.isArray(pages) && pages.length > 0) {
+    pagesToDisplay = pages.filter(p => p && (!p.isHidden || (typeof isEditMode !== 'undefined' && isEditMode) || (typeof isAdmin === 'function' && isAdmin())));
+  }
+  if (pagesToDisplay.length === 0) {
+    pagesToDisplay = defaultNavItems;
+  }
+
+  const pagesNavHTML = pagesToDisplay.map(page => {
+    const isActive = page.id === activePageId;
+    let title = page.title || '';
+    let icon = '📄';
+    if (page.id === 'page-photos-main') icon = '🖼️';
+    else if (page.id === 'page-stories-main') icon = '📖';
+    else if (page.id === 'page-ideas-main') icon = '💡';
+    else if (page.id === 'page-communities-main') icon = '👥';
+    else if (page.id === 'page-questions-main') icon = '❓';
+    else if (page.id === 'page-offers-main') icon = '🔥';
+    else {
+      const match = title.match(/([\u1F300-\u1F9FF\u2600-\u26FF\u2700-\u27BF])/);
+      if (match) {
+        icon = match[1];
+        title = title.replace(match[1], '').trim();
+      }
+    }
+    const cleanTitle = title.replace(/🖼️|📖|💡|🏘️|👥|❓|🔥|🔒/g, '').trim();
+
+    return `
+      <div class="site-page-nav-item ${isActive ? 'active' : ''}" onclick="navigateToPage('${page.id}')" role="button" tabindex="0">
+        <div class="site-page-nav-left">
+          <span class="site-page-nav-icon">${icon}</span>
+          <span class="site-page-nav-title">${cleanTitle || title}</span>
+        </div>
+        ${isActive ? `<span class="site-page-nav-badge">פעיל</span>` : `<span class="site-page-nav-arrow">‹</span>`}
+      </div>
+    `;
+  }).join('');
+
   return `
     <div class="art-sidebar art-sidebar-left">
-      ${popHTML ? `
-      <div class="art-sidebar-box" style="border: 1.5px solid #e2e8f0; border-radius: 14px; padding: 18px;">
+      <div class="art-sidebar-box site-pages-widget-box" style="border: 1.5px solid #e2e8f0; border-radius: 14px; padding: 16px; background: #ffffff;">
         <div class="art-sidebar-title" style="font-size: 15px; font-weight: 900; color: #0f172a; margin-bottom: 12px; border-bottom: 2.5px solid #e11d48; padding-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
-          <span>🔥 הכי פופולריים</span>
-          <span style="font-size: 11px; background: rgba(225,29,72,0.1); color: #e11d48; padding: 2px 8px; border-radius: 12px; font-weight: 800;">TOP 5</span>
+          <span>📌 עמודי האתר</span>
+          <span style="font-size: 11px; background: rgba(225,29,72,0.1); color: #e11d48; padding: 2px 8px; border-radius: 12px; font-weight: 800;">ניווט מהיר</span>
         </div>
         <div style="display: flex; flex-direction: column; gap: 8px;">
-          ${popHTML}
+          ${pagesNavHTML}
         </div>
-      </div>
-      ` : ''}
-
-      <div class="art-sidebar-box" style="border: 1.5px solid #e2e8f0; border-radius: 14px; padding: 18px;">
-        <div class="art-sidebar-title" style="font-size: 15px; font-weight: 900; color: #0f172a; margin-bottom: 12px; border-bottom: 2.5px solid #2563eb; padding-bottom: 8px;">
-          🌐 אתרים מומלצים
-        </div>
-        ${typeof buildPromotedSitesBox === 'function' ? buildPromotedSitesBox() : ''}
       </div>
 
       <div class="art-sidebar-box" style="border: 1.5px solid #22c55e; background: rgba(34,197,94,0.04); border-radius: 14px; padding: 16px; text-align: center;">
