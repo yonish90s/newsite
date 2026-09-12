@@ -5632,7 +5632,7 @@ const STORIES_SAMPLES = [
     summary: 'סיפור הרפתקאות מרתק על קבוצת חוקרים צעירים שיצאה למצוא את העיר האבודה בצפון הרחוק.',
     body: 'הרוח נשבה בעוצמה כאשר עמדנו בפתח המערה הגדולה...\n\nזה היה המסע שהתכוננו אליו במשך שנים. ידענו שהדרך תהיה קשה ומאתגרת, אך איש מאיתנו לא תיאר לעצמו מה באמת מחכה לנו שם.\n\nלאחר שבועיים של טיפוס מפרך, מצאנו את עצמנו מול חומות אבן עתיקות שאיש לא ראה מזה אלפי שנים.',
     author: 'יואב דרור', category: 'הרפתקאות', categoryColor: '#8b5cf6', timestamp: 'היום, 14:00',
-    image: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&q=80', link: ''
+    image: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&q=80', link: '', verified: true
   },
   {
     id: 's2',
@@ -5844,7 +5844,9 @@ function storyApplyFilters() {
       const rowTime = r.dataset.time ? Number(r.dataset.time) : null;
       dateMatch = dateSel.some(dr => { const th = photoDateThreshold(dr); return th === null ? true : (rowTime !== null && rowTime >= th); });
     }
-    const match = catMatch && dateMatch && text.includes(q);
+    const isVerifiedRow = (r.dataset.verified === '1' || r.dataset.verified === 'true');
+    const verifiedMatch = !photoVerifiedOnly || isVerifiedRow;
+    const match = catMatch && dateMatch && text.includes(q) && verifiedMatch;
     r.dataset.artMatch = match ? '1' : '0';
     if (match) visible++;
 
@@ -5929,12 +5931,14 @@ function buildStoriesPage(stories) {
         </div>
       `;
     }
+    const isVerifiedStory = !!(s.verified || s.verifiedUser);
+    const verifiedBadgeHTML = isVerifiedStory ? ` <span title="משתמש מאומת" style="color:#2563eb; font-weight:900; background:#dbeafe; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:10px; margin-right:3px;">✓</span>` : '';
     return `
-      <div class="art-row" data-category="${artEsc(s.category || 'כללי')}" data-time="${s.createdAt || (parseInt(String(s.id).replace(/\D/g,''), 10) || 0)}" data-score="${s.likes || 0}" data-search="${artEsc([s.title, s.summary, s.author, s.category].filter(Boolean).join(' '))}" onclick="storyOpenDetail('${artEsc(s.id)}')">
+      <div class="art-row" data-category="${artEsc(s.category || 'כללי')}" data-verified="${isVerifiedStory ? '1' : '0'}" data-time="${s.createdAt || (parseInt(String(s.id).replace(/\D/g,''), 10) || 0)}" data-score="${s.likes || 0}" data-search="${artEsc([s.title, s.summary, s.author, s.category].filter(Boolean).join(' '))}" onclick="storyOpenDetail('${artEsc(s.id)}')">
         <div class="art-row-text photo-card-info">
           <h3>${s.title}</h3>
           <div class="art-row-meta" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-            <span class="art-row-author">${s.author}</span>
+            <span class="art-row-author">${s.author}${verifiedBadgeHTML}</span>
             <span class="art-row-sep">|</span>
             <span>${s.timestamp}</span>
           </div>
@@ -5980,6 +5984,10 @@ function buildStoriesPage(stories) {
             <label class="tgl">
               <span class="tgl-label">🔞 תוכן למבוגרים</span>
               <span class="tgl-switch"><input type="checkbox" ${_adultOn ? 'checked' : ''} onchange="toggleSidebarAgeVerification(this.checked)"><span class="tgl-slider"></span></span>
+            </label>
+            <label class="tgl">
+              <span class="tgl-label">✔️ משתמשים מאומתים</span>
+              <span class="tgl-switch"><input type="checkbox" ${photoVerifiedOnly ? 'checked' : ''} onchange="photoToggleVerified(this.checked)"><span class="tgl-slider"></span></span>
             </label>
           </div>
           <div class="art-section-title-row">
@@ -6478,7 +6486,7 @@ const PHOTOS_SAMPLES = [
       'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=800&q=80',
       'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80'
     ],
-    author: 'סטודיו אופק', category: 'אתר תדמית', categoryColor: '#8b5cf6', timestamp: 'עודכן היום'
+    author: 'סטודיו אופק', category: 'אתר תדמית', categoryColor: '#8b5cf6', timestamp: 'עודכן היום', verified: true
   },
   {
     id: 'ph2',
@@ -6499,7 +6507,7 @@ const PHOTOS_SAMPLES = [
       'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=800&q=80',
       'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=800&q=80'
     ],
-    author: 'נקסט טק', category: 'דף נחיתה', categoryColor: '#10b981', timestamp: 'חדש'
+    author: 'נקסט טק', category: 'דף נחיתה', categoryColor: '#10b981', timestamp: 'חדש', verified: true
   },
   {
     id: 'ph4',
@@ -6777,13 +6785,15 @@ function renderPhotoCard(p, options = {}) {
     </div>
   `;
 
+  const isVerifiedAlbum = !!(p.verified || p.verifiedUser);
+  const verifiedBadgeHTML = isVerifiedAlbum ? ` <span title="משתמש מאומת" style="color:#2563eb; font-weight:900; background:#dbeafe; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:10px; margin-right:3px;">✓</span>` : '';
   const priceBadgeHTML = p.price ? `<div class="art-price-badge">💰 ${artEsc(String(p.price))}</div>` : '';
   const infoBlock = `
     <div class="art-row-text photo-card-info">
       <h3>${p.title}</h3>
       ${priceBadgeHTML}
       <div class="art-row-meta" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-        <span class="photo-author-link" onclick="event.stopPropagation(); openUserPage('${artEsc(p.authorId || '')}', '${artEsc(p.author)}')" style="cursor: pointer; color: #e11d48; text-decoration: underline; font-weight: 600;">${p.author}</span>
+        <span class="photo-author-link" onclick="event.stopPropagation(); openUserPage('${artEsc(p.authorId || '')}', '${artEsc(p.author)}')" style="cursor: pointer; color: #e11d48; text-decoration: underline; font-weight: 600;">${p.author}${verifiedBadgeHTML}</span>
         <span class="art-row-sep">|</span>
         <span>${p.timestamp}</span>
         ${p.ageRange ? `<span class="art-row-sep">|</span><span>גיל ${artEsc(String(p.ageRange))}</span>` : ''}
@@ -6806,7 +6816,7 @@ function renderPhotoCard(p, options = {}) {
   const textBlock = actionsBlock + infoBlock;
 
   return `
-    <div class="art-row" data-category="${p.category || 'כללי'}" data-age="${artEsc(p.ageRange || '')}" data-region="${artEsc(p.region || '')}" data-time="${photoAlbumTime(p) ?? ''}" data-score="${totalScore}" data-adult="${p.isAdult ? '1' : '0'}" data-search="${searchText}" onclick="${isPending ? '' : `photoOpenDetail('${artEsc(p.id)}')`}" style="${isPending ? 'border: 2px dashed #f59e0b; background: #fffbeb; cursor: default;' : ''}">
+    <div class="art-row" data-category="${p.category || 'כללי'}" data-verified="${isVerifiedAlbum ? '1' : '0'}" data-age="${artEsc(p.ageRange || '')}" data-region="${artEsc(p.region || '')}" data-time="${photoAlbumTime(p) ?? ''}" data-score="${totalScore}" data-adult="${p.isAdult ? '1' : '0'}" data-search="${searchText}" onclick="${isPending ? '' : `photoOpenDetail('${artEsc(p.id)}')`}" style="${isPending ? 'border: 2px dashed #f59e0b; background: #fffbeb; cursor: default;' : ''}">
       ${textBlock}
       <div class="art-row-img-container" style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0;">
         <div class="art-row-img-wrap" style="--bg-img: url('${mainImg || ''}');">
@@ -8732,6 +8742,10 @@ function buildPhotosPage(albums, section) {
               <span class="tgl-label">🔞 תוכן למבוגרים</span>
               <span class="tgl-switch"><input type="checkbox" ${_adultOn ? 'checked' : ''} onchange="toggleSidebarAgeVerification(this.checked)"><span class="tgl-slider"></span></span>
             </label>
+            <label class="tgl">
+              <span class="tgl-label">✔️ משתמשים מאומתים</span>
+              <span class="tgl-switch"><input type="checkbox" ${photoVerifiedOnly ? 'checked' : ''} onchange="photoToggleVerified(this.checked)"><span class="tgl-slider"></span></span>
+            </label>
           </div>
 
           <!-- מקטע מאוחד: כל הגלריות, החדשים למעלה והישנים למטה (ניתן למיון דרך "כללי") -->
@@ -10486,6 +10500,23 @@ function photoToggleImages(on) {
 }
 window.photoToggleImages = photoToggleImages;
 
+// סינון משתמשים מאומתים בלבד. נשמר בין ביקורים.
+let photoVerifiedOnly = (function () {
+  try { return localStorage.getItem('photo_verified_only') === '1'; } catch (e) { return false; }
+})();
+function photoToggleVerified(on) {
+  photoVerifiedOnly = !!on;
+  try { localStorage.setItem('photo_verified_only', on ? '1' : '0'); } catch (e) {}
+  const boxes = document.querySelectorAll('.view-toggles input[onchange*="photoToggleVerified"]');
+  boxes.forEach(b => { if (b) b.checked = !!on; });
+  if (typeof pfApplyActive === 'function') pfApplyActive();
+  else {
+    if (typeof photoApplyFilters === 'function') photoApplyFilters();
+    if (typeof storyApplyFilters === 'function') storyApplyFilters();
+  }
+}
+window.photoToggleVerified = photoToggleVerified;
+
 // זמן היצירה של גלריה. גלריות חדשות שומרות createdAt מספרי; לישנות
 // נופלים לפרסור של התאריך המוצג (d.m.yyyy מ-toLocaleDateString בעברית).
 function photoAlbumTime(p) {
@@ -10617,8 +10648,10 @@ function photoApplyFilters() {
     }
 
     const textMatch = text.includes(q);
+    const isVerifiedRow = (r.dataset.verified === '1' || r.dataset.verified === 'true');
+    const verifiedMatch = !photoVerifiedOnly || isVerifiedRow;
 
-    const show = categoryMatch && ageMatch && regionMatch && dateMatch && textMatch;
+    const show = categoryMatch && ageMatch && regionMatch && dateMatch && textMatch && verifiedMatch;
     // העימוד הוא זה שקובע display בפועל; כאן רק מסמנים מה תואם
     r.dataset.artMatch = show ? '1' : '0';
     if (show) visible++;
