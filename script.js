@@ -7682,28 +7682,98 @@ function communitiesRowHTML() {
 }
 window.communitiesRowHTML = communitiesRowHTML;
 
+const COMMUNITIES_SAMPLES = [
+  {
+    id: 'comm_sample_1',
+    name: 'קהילת עיצוב ופיתוח אתרים',
+    title: 'קהילת עיצוב ופיתוח אתרים',
+    desc: 'קהילה לחובבי ומקצועני עיצוב אתרים, UI/UX ופיתוח פרונטאנד.',
+    summary: 'קהילה לחובבי ומקצועני עיצוב אתרים, UI/UX ופיתוח פרונטאנד.',
+    createdByName: 'מנהל האתר',
+    author: 'מנהל האתר',
+    authorId: 'admin_yoni',
+    verified: true,
+    verifiedUser: true,
+    images: ['https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&q=80'],
+    image: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&q=80',
+    icon: '💻',
+    likes: 38,
+    views: 120,
+    timestamp: '13.9.2026',
+    createdAt: Date.now() - 86400000 * 4,
+    approved: true
+  },
+  {
+    id: 'comm_sample_2',
+    name: 'קהילת צילום ואמנות דיגיטלית',
+    title: 'קהילת צילום ואמנות דיגיטלית',
+    desc: 'מקום לשיתוף עבודות אמנות, צילומים מרהיבים ועיצובים גרפיים.',
+    summary: 'מקום לשיתוף עבודות אמנות, צילומים מרהיבים ועיצובים גרפיים.',
+    createdByName: 'xd xd',
+    author: 'xd xd',
+    authorId: 'user_xd',
+    verified: true,
+    verifiedUser: true,
+    images: ['https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=800&q=80'],
+    image: 'https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=800&q=80',
+    icon: '📸',
+    likes: 29,
+    views: 95,
+    timestamp: '11.9.2026',
+    createdAt: Date.now() - 86400000 * 2,
+    approved: true
+  },
+  {
+    id: 'comm_sample_3',
+    name: 'קהילת יזמות וסטארטאפים',
+    title: 'קהילת יזמות וסטארטאפים',
+    desc: 'דיונים, רעיונות לשיתוף פעולה ומידע שימושי ליזמים ובעלי עסקים.',
+    summary: 'דיונים, רעיונות לשיתוף פעולה ומידע שימושי ליזמים ובעלי עסקים.',
+    createdByName: 'דניאל מ.',
+    author: 'דניאל מ.',
+    authorId: 'sample3',
+    verified: false,
+    images: ['https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=800&q=80'],
+    image: 'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=800&q=80',
+    icon: '🚀',
+    likes: 18,
+    views: 64,
+    timestamp: '12.9.2026',
+    createdAt: Date.now() - 86400000 * 1,
+    approved: true
+  }
+];
+
+function communityGetAlbums() {
+  const list = Object.values(communitiesData || {});
+  if (!list.length) return COMMUNITIES_SAMPLES;
+  return list.map(c => {
+    const validImages = (c.images && c.images.length) ? c.images.filter(Boolean) : (c.image ? [c.image] : ['https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&q=80']);
+    return {
+      id: c.id,
+      title: c.name || c.title || 'קהילה',
+      name: c.name || c.title || 'קהילה',
+      summary: c.desc || c.summary || '',
+      desc: c.desc || c.summary || '',
+      author: c.createdByName || c.author || 'משתמש',
+      authorId: c.authorId || c.createdBy || '',
+      verified: c.verified !== false,
+      verifiedUser: c.verifiedUser !== false,
+      images: validImages,
+      image: validImages[0],
+      likes: c.likes || (c.items ? Object.keys(c.items).length : 0),
+      views: c.views || photoGetViews(c.id) || 12,
+      timestamp: c.timestamp || '13.9.2026',
+      createdAt: c.createdAt || Date.now(),
+      approved: c.approved !== false
+    };
+  });
+}
+
 function buildCommunitiesPage() {
   subscribeCommunities();
-  const createBtn = auth.currentUser
-    ? `<button onclick="createCommunity()" class="comm-create-btn">➕ צור קהילה חדשה</button>`
-    : `<button onclick="openLiveChatLogin()" class="comm-create-btn comm-create-btn-login">🔒 התחבר כדי ליצור קהילה</button>`;
-  return `
-    <div class="communities-page" data-page-id="page-communities-main">
-      <div class="comm-inner">
-        <div class="art-layout">
-          <div class="art-main">
-            <div class="art-search-wrap">
-              <input type="text" class="art-search" placeholder="🔍 חיפוש קהילות..." value="${artEsc(communitiesSearchQuery)}" oninput="communitiesSearch(this.value)">
-            </div>
-            <div style="margin-bottom:16px;">${createBtn}</div>
-            <div class="comm-row" id="communities-page-list">${communitiesRowHTML()}</div>
-          </div>
-          <div class="art-sidebar">
-            ${buildSidebarTabs('', 'community')}
-          </div>
-        </div>
-      </div>
-    </div>`;
+  const albums = communityGetAlbums();
+  return buildPhotosPage(albums, 'communities');
 }
 window.buildCommunitiesPage = buildCommunitiesPage;
 
@@ -9232,15 +9302,10 @@ function buildPhotosPage(albums, section) {
 
   const json = encodeURIComponent(JSON.stringify(albums));
   const _adultOn = (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('age_verified') === 'true');
-  const sectionTitle = section === 'ideas' ? 'כל הרעיונות' : 'כל הגלריות';
-  const searchPlaceholder = section === 'ideas' ? '🔍 חיפוש רעיונות...' : '🔍 חיפוש גלריות...';
-  const noResultsText = section === 'ideas' ? 'לא נמצאו רעיונות התואמים לחיפוש' : 'לא נמצאו עיצובים התואמים לחיפוש';
-
-  const addBtnHTML = section === 'ideas'
-    ? `<button onclick="openIdeaModal()" style="background:#3b82f6; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: white; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.2s;">
-        💡 הוסף רעיון חדש
-       </button>`
-    : `<button onclick="openPhotoModal()" style="background:#e11d48; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: white; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.2s;">
+  let sectionTitle = 'כל הגלריות';
+  let searchPlaceholder = '🔍 חיפוש גלריות...';
+  let noResultsText = 'לא נמצאו עיצובים התואמים לחיפוש';
+  let addBtnHTML = `<button onclick="openPhotoModal()" style="background:#e11d48; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: white; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.2s;">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
           <line x1="12" y1="5" x2="12" y2="19"></line>
           <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -9248,7 +9313,23 @@ function buildPhotosPage(albums, section) {
         העלה תמונה
        </button>`;
 
-  return `<div class="articles-page photos-page ${section === 'ideas' ? 'ideas-page' : ''} photo-cols-${photoGridCols}${photoImagesMode ? '' : ' text-mode'}" data-section="${section}" data-photos-json="${json}">
+  if (section === 'ideas') {
+    sectionTitle = 'כל הרעיונות';
+    searchPlaceholder = '🔍 חיפוש רעיונות...';
+    noResultsText = 'לא נמצאו רעיונות התואמים לחיפוש';
+    addBtnHTML = `<button onclick="openIdeaModal()" style="background:#3b82f6; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: white; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.2s;">
+        💡 הוסף רעיון חדש
+       </button>`;
+  } else if (section === 'communities') {
+    sectionTitle = 'כל הקהילות';
+    searchPlaceholder = '🔍 חיפוש קהילות...';
+    noResultsText = 'לא נמצאו קהילות התואמות לחיפוש';
+    addBtnHTML = `<button onclick="createCommunity()" style="background:#e11d48; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: white; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.2s;">
+        ➕ צור קהילה חדשה
+       </button>`;
+  }
+
+  return `<div class="articles-page photos-page ${section === 'ideas' ? 'ideas-page' : ''} ${section === 'communities' ? 'communities-page' : ''} photo-cols-${photoGridCols}${photoImagesMode ? '' : ' text-mode'}" data-section="${section}" data-photos-json="${json}">
     <div class="art-inner">
       <div class="art-featured-grid">${featuredHTML}</div>
       <div class="art-layout">

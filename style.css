@@ -4461,11 +4461,14 @@ body:not(.edit-mode) .hidden-nav {
 
 /* ===== בורר גודל גריד בעמוד התמונות (2 / 3 / 4 עמודות) ===== */
 .photos-page.photo-cols-2 .art-rows,
-.ideas-page.photo-cols-2 .art-rows { grid-template-columns: repeat(2, 1fr) !important; }
+.ideas-page.photo-cols-2 .art-rows,
+.communities-page.photo-cols-2 .art-rows { grid-template-columns: repeat(2, 1fr) !important; }
 .photos-page.photo-cols-3 .art-rows,
-.ideas-page.photo-cols-3 .art-rows { grid-template-columns: repeat(3, 1fr) !important; }
+.ideas-page.photo-cols-3 .art-rows,
+.communities-page.photo-cols-3 .art-rows { grid-template-columns: repeat(3, 1fr) !important; }
 .photos-page.photo-cols-4 .art-rows,
-.ideas-page.photo-cols-4 .art-rows { grid-template-columns: repeat(4, 1fr) !important; }
+.ideas-page.photo-cols-4 .art-rows,
+.communities-page.photo-cols-4 .art-rows { grid-template-columns: repeat(4, 1fr) !important; }
 
 /* במובייל תמיד 2 עמודות (במחשב ברירת המחדל היא 3). הכלל אחרי כללי
    ה-cols ובאותה ספציפיות כדי לגבור עליהם דרך סדר המקור. */
@@ -4476,6 +4479,9 @@ body:not(.edit-mode) .hidden-nav {
   .ideas-page.photo-cols-2 .art-rows,
   .ideas-page.photo-cols-3 .art-rows,
   .ideas-page.photo-cols-4 .art-rows,
+  .communities-page.photo-cols-2 .art-rows,
+  .communities-page.photo-cols-3 .art-rows,
+  .communities-page.photo-cols-4 .art-rows,
   .stories-page.story-cols-2 .art-rows,
   .stories-page.story-cols-3 .art-rows,
   .stories-page.story-cols-4 .art-rows { grid-template-columns: repeat(2, 1fr) !important; }
