@@ -496,6 +496,7 @@ async function initSite() {
     if (snapshot.exists()) {
       const data = snapshot.val();
       if (data.pages && Array.isArray(data.pages)) pages = data.pages;
+      if (data.topNavPages && Array.isArray(data.topNavPages)) topNavPages = data.topNavPages;
       if (data.siteBackgrounds) siteBackgrounds = data.siteBackgrounds;
       if (data.promotedSites) {
         PROMOTED_SITES = data.promotedSites;
@@ -757,6 +758,12 @@ function renderSideMenu() {
 
 // פונקציה שמייצרת את התפריט העליון ומוסיפה לו מגה-תפריט
 function renderTopNav() {
+  if (!Array.isArray(topNavPages)) topNavPages = [];
+  if (pages.some(p => p && p.id === 'page-ideas-main') && !topNavPages.includes('page-ideas-main')) {
+    const stIdx = topNavPages.indexOf('page-stories-main');
+    if (stIdx >= 0) topNavPages.splice(stIdx + 1, 0, 'page-ideas-main');
+    else topNavPages.push('page-ideas-main');
+  }
   navLinksContainer.innerHTML = ''; // מנקה את התפריט הסטטי מה-HTML
   
   topNavPages.forEach(pageId => {
