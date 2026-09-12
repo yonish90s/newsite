@@ -3292,6 +3292,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (typeof subscribeMyDMs === 'function') { try { subscribeMyDMs(); } catch (e) {} }
       // מנוי לרשימת המעקב כדי שהפיד יציג קודם את מי שעוקבים אחריו
       if (typeof subscribeMyFollows === 'function') { try { subscribeMyFollows(); } catch (e) {} }
+      // מנוי לאימותי חשבונות בזמן אמת
+      if (typeof initVerificationRealtimeListener === 'function') { try { initVerificationRealtimeListener(); } catch (e) {} }
 
       // סנכרון יתרת הלייקים היומית
       await syncUserLikeBudget(user);
@@ -5936,7 +5938,7 @@ function buildStoriesPage(stories) {
         </div>
       `;
     }
-    const isVerifiedStory = !!(s.verified || s.verifiedUser);
+    const isVerifiedStory = isUserVerified(s.authorId, s.author, s.verified || s.verifiedUser);
     const verifiedBadgeHTML = isVerifiedStory ? ` <span title="משתמש מאומת" style="color:#2563eb; font-weight:900; background:#dbeafe; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:10px; margin-right:3px;">✓</span>` : '';
     const storyTime = photoAlbumTime(s);
     const storyScore = (s.likes || 0) + (s.views || 0);
@@ -6088,7 +6090,7 @@ function storyOpenDetail(id) {
               <span>${s.author}</span>
               <span>·</span>
               <span>${s.timestamp}</span>
-              ${s.verified ? `<span>·</span><span style="color:#2563eb; font-weight:700; display:inline-flex; align-items:center; gap:4px;">חשבון זה מאומת <span style="background:#dbeafe; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:10px;">✓</span></span>` : ''}
+              ${isUserVerified(s.authorId, s.author, s.verified || s.verifiedUser) ? `<span>·</span><span style="color:#2563eb; font-weight:700; display:inline-flex; align-items:center; gap:4px;">חשבון זה מאומת <span style="background:#dbeafe; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:10px;">✓</span></span>` : ''}
             </div>
           </div>
           <div style="width:100px;"></div>
@@ -6794,7 +6796,7 @@ function renderPhotoCard(p, options = {}) {
     </div>
   `;
 
-  const isVerifiedAlbum = !!(p.verified || p.verifiedUser);
+  const isVerifiedAlbum = isUserVerified(p.authorId, p.author, p.verified || p.verifiedUser);
   const verifiedBadgeHTML = isVerifiedAlbum ? ` <span title="משתמש מאומת" style="color:#2563eb; font-weight:900; background:#dbeafe; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:10px; margin-right:3px;">✓</span>` : '';
   const priceBadgeHTML = p.price ? `<div class="art-price-badge">💰 ${artEsc(String(p.price))}</div>` : '';
   const infoBlock = `
@@ -8287,6 +8289,359 @@ async function saveUserNickname() {
 }
 window.saveUserNickname = saveUserNickname;
 
+function isUserVerified(authorId, authorName, itemVerified) {
+  if (itemVerified === true || itemVerified === 'true' || itemVerified === 1) return true;
+  const user = auth.currentUser;
+  if (user) {
+    if ((authorId && authorId === user.uid) || (authorName && (user.displayName === authorName || (user.email && user.email.split('@')[0] === authorName)))) {
+      try {
+        const p = JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}');
+        if (p.verified || p.verificationStatus === 'approved') return true;
+      } catch (e) {}
+    }
+  }
+  if (window.verifiedUsersMap) {
+    if (authorId && window.verifiedUsersMap[authorId]) return true;
+    if (authorName && window.verifiedUsersMap[String(authorName).toLowerCase()]) return true;
+  }
+  return false;
+}
+window.isUserVerified = isUserVerified;
+
+function buildSidebarVerificationSectionHTML() {
+  const user = auth.currentUser;
+  if (!user) return '';
+
+  let profile = {};
+  try {
+    profile = JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}');
+  } catch (e) {}
+
+  const isApproved = profile.verified || profile.verificationStatus === 'approved';
+  const isPending = profile.verificationStatus === 'pending';
+  const isRejected = profile.verificationStatus === 'rejected';
+  const isAdminUser = (typeof isAdmin === 'function' && isAdmin()) || (typeof isEditMode !== 'undefined' && isEditMode);
+
+  let bodyContent = '';
+  if (isApproved) {
+    bodyContent = `
+      <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 10px; margin-top: 6px; font-size: 12.5px; color: #166534; text-align: center;">
+        <span style="font-weight: 800; font-size: 13px; color: #15803d; display: inline-flex; align-items: center; gap: 4px;">
+          <span style="background:#22c55e; color:#fff; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:10px;">✓</span> החשבון שלך מאומת
+        </span>
+        <div style="font-size: 11.5px; color: #166534; margin-top: 4px;">תג אימות כחול (✓) מופיע בצד השם שלך באתר.</div>
+      </div>
+    `;
+  } else if (isPending) {
+    bodyContent = `
+      <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 10px; margin-top: 6px; font-size: 12px; color: #92400e; text-align: center;">
+        <span style="font-weight: 800; font-size: 13px; color: #b45309; display: inline-flex; align-items: center; gap: 4px;">
+          ⏳ בקשת אימות בבדיקת מנהל
+        </span>
+        <div style="font-size: 11.5px; color: #78350f; margin-top: 4px;">התמונה נשלחה ותיבדק על ידי המנהל בהקדם.</div>
+        ${profile.verificationPhoto ? `<img src="${profile.verificationPhoto}" style="width: 54px; height: 54px; border-radius: 50%; object-fit: cover; margin-top: 8px; border: 2px solid #f59e0b;">` : ''}
+      </div>
+    `;
+  } else {
+    bodyContent = `
+      <div style="font-size: 12px; color: #475569; margin-bottom: 8px; line-height: 1.4;">
+        להעלאת תמונת פנים לאימות החשבון וקבלת תג אימות (✓) בצד השם שלך:
+      </div>
+      ${isRejected ? `
+        <div style="font-size: 11.5px; color: #e11d48; background: #fff1f2; padding: 6px 8px; border-radius: 6px; margin-bottom: 8px; border: 1px solid #fecdd3;">
+          ⚠️ בקשת האימות הקודמת נדחתה. נא להעלות תמונת פנים ברורה.
+        </div>
+      ` : ''}
+      <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 6px;">
+        <label style="background: #f8fafc; border: 1.5px dashed #cbd5e1; border-radius: 8px; padding: 10px; text-align: center; cursor: pointer; font-size: 12.5px; color: #334155; font-weight: 600; transition: all 0.2s;"
+               onmouseover="this.style.borderColor='#2563eb'" onmouseout="this.style.borderColor='#cbd5e1'">
+          📷 בחר תמונת פנים
+          <input type="file" id="pf-verification-file" accept="image/*" style="display: none;" onchange="previewVerificationPhoto(this)">
+        </label>
+        <div id="pf-verification-preview-wrap" style="display: none; text-align: center;">
+          <img id="pf-verification-preview-img" style="width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 2px solid #2563eb; margin: 0 auto;">
+        </div>
+        <button type="button" onclick="submitAccountVerification()" 
+                style="background: #2563eb; color: #fff; border: none; border-radius: 8px; padding: 8px 14px; font-size: 13px; font-weight: 700; cursor: pointer; transition: background 0.15s ease;">
+          שלח תמונת פנים למנהל
+        </button>
+      </div>
+    `;
+  }
+
+  const adminBtn = isAdminUser ? `
+    <button type="button" onclick="openAdminVerificationsModal()" 
+            style="margin-top: 10px; width: 100%; background: #0f172a; color: #fff; border: none; border-radius: 8px; padding: 8px 12px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+      <span>🛡️ ניהול בקשות אימות (מנהל)</span>
+    </button>
+  ` : '';
+
+  return `
+    <div class="pf-verification-sec" style="margin-top: 16px; padding-top: 14px; border-top: 1px dashed #cbd5e1; text-align: right; direction: rtl;">
+      <div style="font-size: 13.5px; font-weight: 800; color: #1e293b; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+        <span>🛡️ אימות חשבון</span>
+      </div>
+      ${bodyContent}
+      ${adminBtn}
+    </div>
+  `;
+}
+window.buildSidebarVerificationSectionHTML = buildSidebarVerificationSectionHTML;
+
+function previewVerificationPhoto(input) {
+  if (!input || !input.files || !input.files[0]) return;
+  const file = input.files[0];
+  if (!file.type.startsWith('image/')) {
+    if (typeof showCopyToast === 'function') showCopyToast('נא לבחור קובץ תמונה בלבד');
+    return;
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    if (typeof showCopyToast === 'function') showCopyToast('גודל התמונה עולה על 5MB');
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    window._tempVerificationPhoto = e.target.result;
+    const wrap = document.getElementById('pf-verification-preview-wrap');
+    const img = document.getElementById('pf-verification-preview-img');
+    if (img) img.src = e.target.result;
+    if (wrap) wrap.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+window.previewVerificationPhoto = previewVerificationPhoto;
+
+async function submitAccountVerification() {
+  const user = auth.currentUser;
+  if (!user) {
+    if (typeof showCopyToast === 'function') showCopyToast('יש להתחבר כדי לשלוח בקשת אימות');
+    return;
+  }
+  if (!window._tempVerificationPhoto) {
+    if (typeof showCopyToast === 'function') showCopyToast('נא לבחור תמונת פנים תחילה');
+    return;
+  }
+
+  let profile = {};
+  try {
+    profile = JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}');
+  } catch (e) {}
+
+  const currentName = profile.nickname || user.displayName || (user.email ? user.email.split('@')[0] : 'משתמש');
+  const now = Date.now();
+  const photoData = window._tempVerificationPhoto;
+
+  profile.verificationStatus = 'pending';
+  profile.verificationPhoto = photoData;
+  profile.verificationSubmittedAt = now;
+
+  try {
+    localStorage.setItem(`user_profile_${user.uid}`, JSON.stringify(profile));
+  } catch (e) {}
+
+  if (typeof db !== 'undefined') {
+    try {
+      await set(ref(db, `website/verification_requests/${user.uid}`), {
+        uid: user.uid,
+        displayName: currentName,
+        email: user.email || '',
+        photo: photoData,
+        status: 'pending',
+        timestamp: now
+      });
+    } catch (e) {
+      console.error('Failed saving verification request to Firebase:', e);
+    }
+  }
+
+  delete window._tempVerificationPhoto;
+  if (typeof showCopyToast === 'function') {
+    showCopyToast('✓ תמונת הפנים נשלחה לאימות מנהל בהצלחה!');
+  }
+
+  const page = (typeof pfActivePage === 'function') ? pfActivePage() : 'photos';
+  const box = document.querySelector('.pf-box');
+  if (box) box.outerHTML = buildFiltersSidebarBox(page);
+}
+window.submitAccountVerification = submitAccountVerification;
+
+function openAdminVerificationsModal() {
+  let modal = document.getElementById('admin-verifications-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'admin-verifications-modal';
+    document.body.appendChild(modal);
+  }
+  modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.65); z-index:99999; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(4px); direction:rtl; text-align:right; font-family:inherit;';
+
+  modal.innerHTML = `
+    <div style="background:#fff; border-radius:16px; width:90%; max-width:650px; max-height:85vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);">
+      <div style="padding:16px 20px; background:#0f172a; color:#fff; display:flex; justify-content:space-between; align-items:center;">
+        <h3 style="margin:0; font-size:17px; font-weight:800; display:flex; align-items:center; gap:8px;">🛡️ בקשות אימות חשבון ממתינות</h3>
+        <button onclick="document.getElementById('admin-verifications-modal').remove()" style="background:none; border:none; color:#cbd5e1; font-size:20px; cursor:pointer; padding:0 4px; line-height:1;">✕</button>
+      </div>
+      <div id="admin-verifications-list" style="padding:20px; overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:16px;">
+        <div style="text-align:center; color:#64748b; padding:20px;">טוען בקשות אימות...</div>
+      </div>
+    </div>
+  `;
+
+  loadAdminVerificationsList();
+}
+window.openAdminVerificationsModal = openAdminVerificationsModal;
+
+async function loadAdminVerificationsList() {
+  const container = document.getElementById('admin-verifications-list');
+  if (!container) return;
+
+  let requests = {};
+  if (typeof db !== 'undefined') {
+    try {
+      const snap = await get(ref(db, 'website/verification_requests'));
+      if (snap.exists()) requests = snap.val();
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  const keys = Object.keys(requests);
+  if (keys.length === 0) {
+    container.innerHTML = `<div style="text-align:center; color:#64748b; padding:30px; font-size:14px;">אין בקשות אימות חשבון במערכת.</div>`;
+    return;
+  }
+
+  const list = keys.map(k => requests[k]).sort((a, b) => {
+    if (a.status === 'pending' && b.status !== 'pending') return -1;
+    if (a.status !== 'pending' && b.status === 'pending') return 1;
+    return (b.timestamp || 0) - (a.timestamp || 0);
+  });
+
+  container.innerHTML = list.map(req => {
+    const isApproved = req.status === 'approved';
+    const isRejected = req.status === 'rejected';
+    const statusBadge = isApproved
+      ? `<span style="background:#dcfce7; color:#15803d; border-radius:6px; padding:2px 8px; font-size:11.5px; font-weight:700;">מאומת ✓</span>`
+      : (isRejected
+        ? `<span style="background:#ffe4e6; color:#be123c; border-radius:6px; padding:2px 8px; font-size:11.5px; font-weight:700;">נדחה ✕</span>`
+        : `<span style="background:#fef3c7; color:#b45309; border-radius:6px; padding:2px 8px; font-size:11.5px; font-weight:700;">ממתין לבדיקה ⏳</span>`);
+
+    const dateStr = req.timestamp ? new Date(req.timestamp).toLocaleString('he-IL') : '';
+
+    return `
+      <div style="border:1.5px solid #e2e8f0; border-radius:12px; padding:14px; background:#f8fafc; display:flex; gap:14px; align-items:center; flex-wrap:wrap;">
+        <div style="flex-shrink:0;">
+          ${req.photo ? `<img src="${req.photo}" onclick="if (typeof openImageModal==='function') openImageModal('${artEsc(req.photo)}')" style="width:70px; height:70px; border-radius:50%; object-fit:cover; border:2px solid #2563eb; cursor:pointer;" title="לחץ להגדלה">` : `<div style="width:70px; height:70px; border-radius:50%; background:#cbd5e1; display:flex; align-items:center; justify-content:center; font-size:24px;">👤</div>`}
+        </div>
+        <div style="flex:1; min-width:180px;">
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:4px;">
+            <strong style="font-size:15px; color:#0f172a;">${artEsc(req.displayName || 'משתמש')}</strong>
+            ${statusBadge}
+          </div>
+          <div style="font-size:12px; color:#64748b; margin-bottom:2px;">דוא"ל: ${artEsc(req.email || 'לא מצוין')}</div>
+          <div style="font-size:11.5px; color:#94a3b8;">מזהה: ${artEsc(req.uid)} | ${dateStr}</div>
+        </div>
+        <div style="display:flex; gap:6px; flex-shrink:0;">
+          ${!isApproved ? `
+            <button onclick="processVerificationRequest('${artEsc(req.uid)}', 'approved')" style="background:#16a34a; color:#fff; border:none; border-radius:8px; padding:8px 12px; font-size:12px; font-weight:700; cursor:pointer;">
+              אשר ✓
+            </button>
+          ` : ''}
+          ${!isRejected ? `
+            <button onclick="processVerificationRequest('${artEsc(req.uid)}', 'rejected')" style="background:#dc2626; color:#fff; border:none; border-radius:8px; padding:8px 12px; font-size:12px; font-weight:700; cursor:pointer;">
+              דחה ✕
+            </button>
+          ` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+window.loadAdminVerificationsList = loadAdminVerificationsList;
+
+async function processVerificationRequest(targetUid, action) {
+  if (!targetUid) return;
+  if (typeof db !== 'undefined') {
+    try {
+      await update(ref(db, `website/verification_requests/${targetUid}`), {
+        status: action
+      });
+      if (action === 'approved') {
+        await set(ref(db, `website/verified_users/${targetUid}`), true);
+      } else {
+        await set(ref(db, `website/verified_users/${targetUid}`), null);
+      }
+    } catch (e) {
+      console.error('Failed processing verification:', e);
+    }
+  }
+
+  const currentUser = auth.currentUser;
+  if (currentUser && currentUser.uid === targetUid) {
+    let profile = {};
+    try { profile = JSON.parse(localStorage.getItem(`user_profile_${targetUid}`) || '{}'); } catch(e){}
+    profile.verificationStatus = action;
+    profile.verified = (action === 'approved');
+    try { localStorage.setItem(`user_profile_${targetUid}`, JSON.stringify(profile)); } catch(e){}
+  }
+
+  window.verifiedUsersMap = window.verifiedUsersMap || {};
+  if (action === 'approved') {
+    window.verifiedUsersMap[targetUid] = true;
+  } else {
+    delete window.verifiedUsersMap[targetUid];
+  }
+
+  if (typeof showCopyToast === 'function') {
+    showCopyToast(action === 'approved' ? '✓ המשתמש אושר בהצלחה כמאומת!' : '✕ בקשת האימות נדחתה.');
+  }
+
+  loadAdminVerificationsList();
+
+  const page = (typeof pfActivePage === 'function') ? pfActivePage() : 'photos';
+  const box = document.querySelector('.pf-box');
+  if (box) box.outerHTML = buildFiltersSidebarBox(page);
+  if (typeof pfApplyActive === 'function') pfApplyActive();
+}
+window.processVerificationRequest = processVerificationRequest;
+
+function initVerificationRealtimeListener() {
+  if (typeof db === 'undefined') return;
+  try {
+    onValue(ref(db, 'website/verification_requests'), (snap) => {
+      const data = snap.val() || {};
+      window.verificationRequestsData = data;
+      window.verifiedUsersMap = window.verifiedUsersMap || {};
+      
+      const currentUser = auth.currentUser;
+      Object.keys(data).forEach(uid => {
+        const req = data[uid];
+        if (req && req.status === 'approved') {
+          window.verifiedUsersMap[uid] = true;
+          if (req.displayName) {
+            window.verifiedUsersMap[req.displayName.toLowerCase()] = true;
+          }
+        } else {
+          delete window.verifiedUsersMap[uid];
+        }
+
+        if (currentUser && currentUser.uid === uid && req) {
+          let profile = {};
+          try { profile = JSON.parse(localStorage.getItem(`user_profile_${uid}`) || '{}'); } catch(e){}
+          if (profile.verificationStatus !== req.status || profile.verified !== (req.status === 'approved')) {
+            profile.verificationStatus = req.status;
+            profile.verified = (req.status === 'approved');
+            try { localStorage.setItem(`user_profile_${uid}`, JSON.stringify(profile)); } catch(e){}
+          }
+        }
+      });
+    });
+  } catch (e) {
+    console.error('Error initializing verification listener:', e);
+  }
+}
+window.initVerificationRealtimeListener = initVerificationRealtimeListener;
+
 function buildFiltersSidebarBox(pageType) {
   pageType = pageType || 'photos';
   const f = productFilters;
@@ -8370,6 +8725,7 @@ function buildFiltersSidebarBox(pageType) {
       ${allowed.map(k => sections[k]).join('')}
       <button type="button" class="pf-clear-btn" onclick="photoClearFilters()">נקה סינון ✕</button>
       ${buildSidebarNameChangeSectionHTML()}
+      ${buildSidebarVerificationSectionHTML()}
     </div>
   `;
 }
@@ -8872,7 +9228,7 @@ function photoOpenDetail(id) {
             <span>·</span>
             <span>${a.timestamp}</span>
             ${a.ageRange ? `<span>·</span><span>גיל ${artEsc(String(a.ageRange))}</span>` : ''}
-            ${(a.verified || a.verifiedUser) ? `<span>·</span><span style="color:#2563eb; font-weight:700; display:inline-flex; align-items:center; gap:4px;">חשבון זה מאומת <span style="background:#dbeafe; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:10px;">✓</span></span>` : ''}
+            ${isUserVerified(a.authorId, a.author, a.verified || a.verifiedUser) ? `<span>·</span><span style="color:#2563eb; font-weight:700; display:inline-flex; align-items:center; gap:4px;">חשבון זה מאומת <span style="background:#dbeafe; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:10px;">✓</span></span>` : ''}
             ${a.expiresAt ? renderExpirationBadge(a.expiresAt) : ''}
             <button onclick="photoToggleLike('${artEsc(a.id)}')" class="photo-like-btn" style="background: rgba(0,0,0,0.05); border: 1px solid #ddd; cursor: pointer; color: #000; display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; transition: background 0.2s; font-weight: bold; font-size: 13px;">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="${photoIsLikedLocal(a.id) ? '#000' : 'none'}" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
