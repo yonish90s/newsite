@@ -2031,6 +2031,7 @@ body:not(.edit-mode) .hotspot-delete-btn {
 /* ===== גריד כרטיסים בעמודי תמונות וסיפורים: 3 בשורה במקום שורה אחת לכל פריט ===== */
 /* מבנה ה-DOM הוא טקסט ואז תמונה, ולכן column-reverse מציב את התמונה בראש הכרטיס */
 .photos-page .art-rows,
+.ideas-page .art-rows,
 .stories-page .art-rows,
 .community-page .art-rows,
 .user-page .art-rows {
@@ -2042,6 +2043,7 @@ body:not(.edit-mode) .hotspot-delete-btn {
   padding: 0;
 }
 .photos-page .art-row,
+.ideas-page .art-row,
 .stories-page .art-row,
 .community-page .art-row,
 .user-page .art-row {
@@ -2058,6 +2060,7 @@ body:not(.edit-mode) .hotspot-delete-btn {
   transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 .photos-page .art-row:hover,
+.ideas-page .art-row:hover,
 .stories-page .art-row:hover {
   transform: translateY(-3px);
   box-shadow: 0 10px 28px rgba(0,0,0,0.14);
@@ -2065,8 +2068,10 @@ body:not(.edit-mode) .hotspot-delete-btn {
 /* הטקסט תופס רק את הגובה שהוא צריך; העודף בשורה נבלע בתמונה
    ולא נשאר כשטח לבן ריק בתחתית הכרטיס */
 .photos-page .art-row-text,
+.ideas-page .art-row-text,
 .stories-page .art-row-text { flex: 0 0 auto; min-width: 0; padding: 8px 10px 9px; }
 .photos-page .art-row-text h3,
+.ideas-page .art-row-text h3,
 .stories-page .art-row-text h3 {
   font-size: 13px;
   line-height: 1.35;
@@ -2078,9 +2083,11 @@ body:not(.edit-mode) .hotspot-delete-btn {
 }
 /* בכרטיס מוקטן התקציר רק מייצר רעש — הוא נשאר בעמוד הפריט המלא */
 .photos-page .art-row-text p,
+.ideas-page .art-row-text p,
 .stories-page .art-row-text p { display: none; }
 /* בלוק "ממתין לאישור" וכפתור האישור שרואה המנהל */
-.photos-page .photo-card-actions {
+.photos-page .photo-card-actions,
+.ideas-page .photo-card-actions {
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -2088,7 +2095,8 @@ body:not(.edit-mode) .hotspot-delete-btn {
   padding: 8px;
 }
 /* מידע הכרטיס — מוצג במחשב בלבד */
-.photos-page .photo-card-links {
+.photos-page .photo-card-links,
+.ideas-page .photo-card-links {
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
@@ -2097,7 +2105,8 @@ body:not(.edit-mode) .hotspot-delete-btn {
 /* כפתורי הכרטיס — הבסיס עבר מ-inline לכאן כדי לתמוך במצב מושבת.
    שני הכפתורים תמיד קיימים; המושבת מעומעם ולא לחיץ, וכך המבנה זהה
    בכל הכרטיסים גם כשאין טלגרם או אימייל. */
-.photos-page .photo-card-links .art-telegram-btn {
+.photos-page .photo-card-links .art-telegram-btn,
+.ideas-page .photo-card-links .art-telegram-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -2110,7 +2119,8 @@ body:not(.edit-mode) .hotspot-delete-btn {
   text-decoration: none;
   border: 1px solid rgba(255,255,255,0.1);
 }
-.photos-page .photo-card-links .art-telegram-btn.is-disabled {
+.photos-page .photo-card-links .art-telegram-btn.is-disabled,
+.ideas-page .photo-card-links .art-telegram-btn.is-disabled {
   background: #e5e7eb;
   color: #9ca3af;
   border-color: #e5e7eb;
@@ -2118,12 +2128,17 @@ body:not(.edit-mode) .hotspot-delete-btn {
   pointer-events: none;
 }
 .photos-page .art-row-meta,
+.ideas-page .art-row-meta,
 .stories-page .art-row-meta { font-size: 11px; gap: 5px !important; row-gap: 3px !important; }
 .photos-page .art-row-meta svg,
+.ideas-page .art-row-meta svg,
 .stories-page .art-row-meta svg { width: 12px; height: 12px; }
-.photos-page .art-row-meta button { padding: 1px 3px !important; font-size: 11px !important; }
-.photos-page .art-telegram-btn { padding: 3px 8px !important; font-size: 11px !important; }
-.photos-page .art-row-img-container {
+.photos-page .art-row-meta button,
+.ideas-page .art-row-meta button { padding: 1px 3px !important; font-size: 11px !important; }
+.photos-page .art-telegram-btn,
+.ideas-page .art-telegram-btn { padding: 3px 8px !important; font-size: 11px !important; }
+.photos-page .art-row-img-container,
+.ideas-page .art-row-img-container {
   width: 100%;
   flex-grow: 1;
   align-items: stretch !important;
@@ -2132,6 +2147,7 @@ body:not(.edit-mode) .hotspot-delete-btn {
 /* יחס קבוע במקום הגובה הטבעי של התמונה — כך גובה הכרטיס צפוי
    ואחיד בכל הגריד. flex-grow נשאר כדי שהתמונה תבלע עודף גובה בשורה */
 .photos-page .art-row-img-wrap,
+.ideas-page .art-row-img-wrap,
 .stories-page .art-row-img-wrap {
   width: 100%;
   flex-grow: 1;
@@ -2140,7 +2156,8 @@ body:not(.edit-mode) .hotspot-delete-btn {
   min-height: 0;
   border-radius: 0;
 }
-.photos-page .photo-mini-thumb { width: 16px !important; height: 16px !important; }
+.photos-page .photo-mini-thumb,
+.ideas-page .photo-mini-thumb { width: 16px !important; height: 16px !important; }
 
 /* --- סרגל העימוד --- */
 .art-pagination {
@@ -4443,9 +4460,12 @@ body:not(.edit-mode) .hidden-nav {
 }
 
 /* ===== בורר גודל גריד בעמוד התמונות (2 / 3 / 4 עמודות) ===== */
-.photos-page.photo-cols-2 .art-rows { grid-template-columns: repeat(2, 1fr) !important; }
-.photos-page.photo-cols-3 .art-rows { grid-template-columns: repeat(3, 1fr) !important; }
-.photos-page.photo-cols-4 .art-rows { grid-template-columns: repeat(4, 1fr) !important; }
+.photos-page.photo-cols-2 .art-rows,
+.ideas-page.photo-cols-2 .art-rows { grid-template-columns: repeat(2, 1fr) !important; }
+.photos-page.photo-cols-3 .art-rows,
+.ideas-page.photo-cols-3 .art-rows { grid-template-columns: repeat(3, 1fr) !important; }
+.photos-page.photo-cols-4 .art-rows,
+.ideas-page.photo-cols-4 .art-rows { grid-template-columns: repeat(4, 1fr) !important; }
 
 /* במובייל תמיד 2 עמודות (במחשב ברירת המחדל היא 3). הכלל אחרי כללי
    ה-cols ובאותה ספציפיות כדי לגבור עליהם דרך סדר המקור. */
@@ -4453,6 +4473,9 @@ body:not(.edit-mode) .hidden-nav {
   .photos-page.photo-cols-2 .art-rows,
   .photos-page.photo-cols-3 .art-rows,
   .photos-page.photo-cols-4 .art-rows,
+  .ideas-page.photo-cols-2 .art-rows,
+  .ideas-page.photo-cols-3 .art-rows,
+  .ideas-page.photo-cols-4 .art-rows,
   .stories-page.story-cols-2 .art-rows,
   .stories-page.story-cols-3 .art-rows,
   .stories-page.story-cols-4 .art-rows { grid-template-columns: repeat(2, 1fr) !important; }
