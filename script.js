@@ -9320,13 +9320,14 @@ function buildPhotosPage(albums, section) {
 
   const popularHTML = popularSidebar.map((p, i) => {
     const score = (p.likes || 0) + photoGetViews(p.id);
+    const mainImg = p.images && p.images[0] ? p.images[0] : (p.image || '');
     return `
-      <div class="art-popular-item" onclick="photoOpenDetail('${artEsc(p.id)}')" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; cursor: pointer; padding: 6px 8px; border-radius: 8px; transition: background 0.2s;">
+      <div class="art-popular-item" onclick="photoOpenDetail('${artEsc(p.id)}')" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; cursor: pointer; padding: 6px 8px; border-radius: 8px; transition: background 0.2s; border-bottom: 1px solid #f1f5f9;">
         <div style="display: flex; align-items: center; gap: 8px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-          <span class="art-popular-num" style="font-weight: 900; color: #ec4899;">${String(i+1).padStart(2,'0')}</span>
-          <div style="font-size:13px;font-weight:600;line-height:1.4;color:#222; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${p.title}</div>
+          ${mainImg ? `<img src="${mainImg}" style="width: 36px; height: 36px; border-radius: 8px; object-fit: cover; flex-shrink: 0;">` : `<span class="art-popular-num" style="font-weight: 900; color: #ec4899;">${String(i+1).padStart(2,'0')}</span>`}
+          <div style="font-size:13px;font-weight:700;line-height:1.4;color:#1e293b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${p.title}</div>
         </div>
-        <div style="font-size: 12px; color: #e11d48; display: flex; align-items: center; gap: 4px; font-weight: bold; flex-shrink: 0; background: rgba(225,29,72,0.08); padding: 3px 8px; border-radius: 12px;" title="${photoGetViews(p.id)} צפיות + ${p.likes||0} לייקים">
+        <div style="font-size: 11px; color: #e11d48; display: flex; align-items: center; gap: 4px; font-weight: bold; flex-shrink: 0; background: rgba(225,29,72,0.08); padding: 2px 7px; border-radius: 12px;" title="${photoGetViews(p.id)} צפיות + ${p.likes||0} לייקים">
           <span>🔥 ${score}</span>
         </div>
       </div>
