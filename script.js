@@ -5792,7 +5792,7 @@ function storySetGeneralFilter(opt, btn) {
 }
 window.storySetGeneralFilter = storySetGeneralFilter;
 
-// שורת סינון קטגוריות לסיפורים (בחירה מרובה)
+// שורת סינון קטגוריות לסיפורים (בחירה יחידה)
 function storyCatIsActive(c) {
   return c === 'הכל' ? selectedStoryCategories.size === 0 : selectedStoryCategories.has(c);
 }
@@ -5810,12 +5810,12 @@ function storyCategoryBarHTML() {
 }
 
 function storyFilterCategory(cat, btn) {
-  // "הכל" מנקה את הבחירה; קטגוריה רגילה מתחלפת (מצטרפת/יורדת) — כך אפשר לבחור כמה
-  if (cat === 'הכל') {
+  // בחירה יחידה: "הכל" או לחיצה שוב על הקטגוריה האקטיבית — מחזיר ל"הכל" (ללא סינון).
+  // לחיצה על קטגוריה אחרת — בוחרת אותה בלבד.
+  if (cat === 'הכל' || selectedStoryCategories.has(cat)) {
     selectedStoryCategories.clear();
-  } else if (selectedStoryCategories.has(cat)) {
-    selectedStoryCategories.delete(cat);
   } else {
+    selectedStoryCategories.clear();
     selectedStoryCategories.add(cat);
   }
   const bar = btn.closest('.story-category-tabs');
