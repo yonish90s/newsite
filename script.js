@@ -202,7 +202,7 @@ const defaultPages = [
 // הגדרות ברירת מחדל (יוחלפו אם יש שמירה)
 let pages = defaultPages;
 let activePageId = 'page-photos-main';
-let topNavPages = ['page-photos-main']; // העמודים שמופיעים בתפריט העליון
+let topNavPages = ['page-photos-main', 'page-stories-main', 'page-ideas-main']; // העמודים שמופיעים בתפריט העליון
 let isEditMode = false; // ברירת מחדל: אורח (ללא עריכה)
 let undoStack = []; // מערך לשמירת היסטוריית שינויים לצורך ביטול (Undo)
 let siteBackgrounds = { dashboard: null, topNav: null, main: null };
@@ -379,6 +379,17 @@ function sanitizeToOnlyPhotosAndStories() {
   if (pages.length === 0) {
     pages.push({ id: 'page-photos-main', title: 'תמונות 🖼️', content: typeof buildPhotosPage === 'function' ? buildPhotosPage(typeof PHOTOS_SAMPLES !== 'undefined' ? PHOTOS_SAMPLES : []) : '' });
     pages.push({ id: 'page-stories-main', title: 'סיפורים', content: typeof buildStoriesPage === 'function' ? buildStoriesPage(typeof STORIES_SAMPLES !== 'undefined' ? STORIES_SAMPLES : []) : '' });
+    pages.push({ id: 'page-ideas-main', title: 'רעיונות 💡', content: '<div class="ideas-page" data-page-id="page-ideas-main"></div>' });
+  }
+
+  // עמוד "רעיונות": מוודאים שהוא קיים תמיד
+  const _ideasPage = pages.find(p => p && p.id === 'page-ideas-main');
+  const _ideasContent = '<div class="ideas-page" data-page-id="page-ideas-main"></div>';
+  if (!_ideasPage) {
+    pages.push({ id: 'page-ideas-main', title: 'רעיונות 💡', content: _ideasContent });
+  } else {
+    if (!_ideasPage.title) _ideasPage.title = 'רעיונות 💡';
+    _ideasPage.content = _ideasContent;
   }
 
   // עמוד "קהילות": מוודאים שהוא קיים תמיד (נוסף גם לאתרים קיימים), ומרפאים
@@ -947,6 +958,15 @@ function renderPage() {
     if (currentPage.id === 'page-communities-main' || (currentPage.title && currentPage.title.includes('קהילות'))) {
       if (typeof buildCommunitiesPage === 'function') {
         mainContent.innerHTML = buildCommunitiesPage();
+        try { window.scrollTo(0, 0); } catch (e) {}
+        return;
+      }
+    }
+
+    // עמוד "רעיונות"
+    if (currentPage.id === 'page-ideas-main' || (currentPage.title && currentPage.title.includes('רעיונות'))) {
+      if (typeof buildIdeasPage === 'function') {
+        mainContent.innerHTML = buildIdeasPage();
         try { window.scrollTo(0, 0); } catch (e) {}
         return;
       }
@@ -12862,4 +12882,395 @@ if (typeof document !== 'undefined') {
     if (typeof updateBatteryBadgeUI === 'function') updateBatteryBadgeUI();
   }, 800);
 }
+
+// ============================================================
+// עמוד "רעיונות" — הצבעה, שיתוף והצעת רעיונות חדשים באתר
+// ============================================================
+let ideasData = {};
+let ideasSubscribed = false;
+let ideasSearchQuery = '';
+let ideasSelectedCategory = 'all';
+let ideasSortOrder = 'popular'; // 'popular' | 'newest'
+
+const IDEAS_SAMPLES = [
+  {
+    id: 'idea_sample_1',
+    title: 'הוספת מצב לילה (Dark Mode) מלא לכל עמודי האתר',
+    summary: 'אפשרות להחלפה בלחיצת כפתור למצב כהה ונעים לעיניים בשעות הלילה.',
+    desc: 'הצעה להוסיף מתג בסרגל העליון שמשנה את צבעי הרקע לכהים ואת הטקסטים לבהירים לחיסכון בסוללה ונוחות צפייה בחשיכה.',
+    category: 'עיצוב',
+    categoryColor: '#8b5cf6',
+    author: 'יונתן ת.',
+    authorId: 'sample1',
+    votes: { sample1: true, sample2: true, sample3: true, sample4: true, sample5: true },
+    voteCount: 14,
+    createdAt: Date.now() - 86400000 * 3
+  },
+  {
+    id: 'idea_sample_2',
+    title: 'התראות בזמן אמת על תגובות ולייקים חדשים',
+    summary: 'פעמון התראות שיקפוץ בכל פעם שמישהו מגיב לתוכן או לסיפור שהעלית.',
+    desc: 'מערכת התראות חכמה בסרגל העליון שמתעדכנת בלייב ומאפשרת לקפוץ ישר לתגובה או לסיפור.',
+    category: 'פיתוח',
+    categoryColor: '#3b82f6',
+    author: 'אמילי ר.',
+    authorId: 'sample2',
+    votes: { sample1: true, sample2: true, sample3: true },
+    voteCount: 9,
+    createdAt: Date.now() - 86400000 * 2
+  },
+  {
+    id: 'idea_sample_3',
+    title: 'פינת שאלות ותשובות (Q&A) לכל קהילה',
+    summary: 'אזור ייעודי בתוך כל קהילה שבו חברים יכולים לשאול שאלות ולקבל תשובות מהקהילה.',
+    desc: 'מתן אפשרות לחברי הקהילה להעלות שאלות, להצביע לתשובות הטובות ביותר ולסמן תשובה נבחרת כפתרון.',
+    category: 'קהילה',
+    categoryColor: '#e11d48',
+    author: 'דניאל מ.',
+    authorId: 'sample3',
+    votes: { sample1: true, sample2: true, sample3: true, sample4: true, sample5: true, sample6: true, sample7: true },
+    voteCount: 22,
+    createdAt: Date.now() - 86400000 * 1
+  }
+];
+
+function subscribeIdeas() {
+  if (ideasSubscribed) return;
+  ideasSubscribed = true;
+  onValue(ref(db, 'website/ideas'), (snap) => {
+    const val = snap.val();
+    if (!val || !Object.keys(val).length) {
+      IDEAS_SAMPLES.forEach(item => {
+        set(ref(db, `website/ideas/${item.id}`), item);
+      });
+      ideasData = {};
+      IDEAS_SAMPLES.forEach(i => ideasData[i.id] = i);
+    } else {
+      ideasData = val;
+    }
+    const gridEl = document.getElementById('ideas-grid');
+    if (gridEl) gridEl.innerHTML = ideasCardsHTML();
+  });
+}
+
+function ideasCardsHTML() {
+  let list = Object.values(ideasData || {});
+  if (!list.length) list = IDEAS_SAMPLES;
+
+  if (ideasSearchQuery) {
+    list = list.filter(i => 
+      (i.title || '').toLowerCase().includes(ideasSearchQuery) || 
+      (i.summary || '').toLowerCase().includes(ideasSearchQuery) ||
+      (i.category || '').toLowerCase().includes(ideasSearchQuery)
+    );
+  }
+
+  if (ideasSelectedCategory !== 'all') {
+    list = list.filter(i => i.category === ideasSelectedCategory);
+  }
+
+  if (ideasSortOrder === 'popular') {
+    list.sort((a, b) => (b.voteCount || 0) - (a.voteCount || 0));
+  } else {
+    list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  }
+
+  if (!list.length) {
+    return `<div style="grid-column:1/-1; text-align:center; color:#94a3b8; padding:40px; font-weight:700;">לא נמצאו רעיונות התואמים את החיפוש.</div>`;
+  }
+
+  const isEd = (typeof isAdmin === 'function' && isAdmin()) || (typeof isEditMode !== 'undefined' && isEditMode);
+  const currentUid = auth.currentUser ? auth.currentUser.uid : null;
+
+  return list.map(item => {
+    const votes = item.votes || {};
+    const count = item.voteCount || Object.keys(votes).length;
+    const hasVoted = currentUid && !!votes[currentUid];
+    const catColor = item.categoryColor || '#3b82f6';
+    const isVerified = (typeof isUserVerified === 'function') ? isUserVerified(item.authorId, item.author, item.verified) : false;
+    const verifiedBadge = isVerified ? ` <span title="משתמש מאומת" style="color:#2563eb; font-weight:900; background:#dbeafe; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:10px;">✓</span>` : '';
+
+    const deleteBtn = isEd
+      ? `<button onclick="event.stopPropagation(); deleteIdea('${artEsc(item.id)}')" title="מחק רעיון" style="background:rgba(239,68,68,0.9); color:#fff; border:none; border-radius:6px; padding:4px 8px; font-size:12px; font-weight:bold; cursor:pointer;">🗑️ מחק</button>`
+      : '';
+
+    return `
+      <div class="art-card idea-card" onclick="openIdeaDetailModal('${artEsc(item.id)}')" style="background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:18px; display:flex; flex-direction:column; gap:10px; cursor:pointer; transition:transform 0.15s, box-shadow 0.15s; position:relative; direction:rtl; text-align:right;" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 10px 25px rgba(0,0,0,0.08)';" onmouseout="this.style.transform='none'; this.style.boxShadow='none';">
+        <div style="display:flex; align-items:center; justify-content:space-between; width:100%;">
+          <span style="background:${catColor}; color:#fff; font-size:11.5px; font-weight:800; padding:4px 12px; border-radius:999px;">💡 ${artEsc(item.category || 'רעיון')}</span>
+          ${deleteBtn}
+        </div>
+        
+        <div style="font-size:16.5px; font-weight:900; color:#0f172a; line-height:1.35; margin-top:2px;">
+          ${artEsc(item.title || 'רעיון ללא כותרת')}
+        </div>
+        
+        <div style="font-size:13px; color:#64748b; line-height:1.45; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;">
+          ${artEsc(item.summary || item.desc || '')}
+        </div>
+
+        <div style="margin-top:auto; padding-top:12px; border-top:1px solid #f1f5f9; display:flex; align-items:center; justify-content:space-between;">
+          <div style="font-size:12px; color:#94a3b8; font-weight:600;">
+            ✍️ ${artEsc(item.author || 'משתמש')}${verifiedBadge}
+          </div>
+          <button onclick="event.stopPropagation(); toggleIdeaVote('${artEsc(item.id)}')" 
+                  style="display:flex; align-items:center; gap:6px; padding:6px 14px; border-radius:999px; border:${hasVoted ? 'none' : '1px solid #cbd5e1'}; background:${hasVoted ? '#3b82f6' : '#f8fafc'}; color:${hasVoted ? '#fff' : '#334155'}; font-size:13px; font-weight:800; cursor:pointer; transition:all 0.15s;" 
+                  title="${hasVoted ? 'הסר הצבעה' : 'הצב בעד רעיון זה'}">
+            <span>▲</span>
+            <span>${count}</span>
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function buildIdeasPage() {
+  subscribeIdeas();
+  const canUpload = !!auth.currentUser;
+  
+  const categories = ['all', 'עיצוב', 'פיתוח', 'קהילה', 'פיצ\'רים', 'כללי'];
+  const catPillsHTML = categories.map(cat => {
+    const label = cat === 'all' ? '🌐 הכל' : cat;
+    const active = ideasSelectedCategory === cat;
+    return `<button onclick="ideasSelectCategory('${artEsc(cat)}')" style="padding:6px 14px; border-radius:999px; border:none; font-size:13px; font-weight:800; cursor:pointer; background:${active ? '#3b82f6' : '#f1f5f9'}; color:${active ? '#fff' : '#475569'}; transition:all 0.15s;">${label}</button>`;
+  }).join('');
+
+  return `
+    <div class="ideas-page" data-page-id="page-ideas-main">
+      <div class="art-inner">
+        <div class="art-layout">
+          <div class="art-main">
+            <!-- כותרת ראשית לעמוד רעיונות -->
+            <div style="background:linear-gradient(135deg,#1e293b,#0f172a); color:#fff; border-radius:18px; padding:24px; margin-bottom:20px; text-align:right; direction:rtl; box-shadow:0 10px 30px rgba(0,0,0,0.15);">
+              <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+                <div>
+                  <h1 style="margin:0; font-size:24px; font-weight:900; color:#fff;">💡 בנק הרעיונות וההצעות</h1>
+                  <p style="margin:6px 0 0; font-size:13.5px; opacity:0.85;">יש לכם רעיון חדש לאתר? הציעו רעיון, הצביעו והשפיעו על הפיתוח!</p>
+                </div>
+                ${canUpload
+                  ? `<button onclick="openIdeaModal()" style="background:#3b82f6; color:#fff; border:none; border-radius:10px; padding:12px 20px; font-size:14px; font-weight:800; cursor:pointer; box-shadow:0 4px 14px rgba(59,130,246,0.4); display:flex; align-items:center; gap:6px;">💡 הוסף רעיון חדש</button>`
+                  : `<button onclick="openLiveChatLogin()" style="background:rgba(255,255,255,0.15); color:#fff; border:1px solid rgba(255,255,255,0.25); border-radius:10px; padding:12px 18px; font-size:13.5px; font-weight:800; cursor:pointer;">🔒 התחבר להצעת רעיון</button>`}
+              </div>
+            </div>
+
+            <!-- שורת חיפוש וקטגוריות -->
+            <div class="art-search-wrap" style="margin-bottom:14px;">
+              <input type="text" class="art-search" placeholder="🔍 חיפוש רעיונות והצעות..." value="${artEsc(ideasSearchQuery)}" oninput="ideasSearch(this.value)">
+            </div>
+
+            <!-- צ'יפים של קטגוריות + סדר תצוגה -->
+            <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:20px; direction:rtl;">
+              <div style="display:flex; gap:6px; flex-wrap:wrap;">${catPillsHTML}</div>
+              <div style="display:flex; gap:6px; align-items:center; font-size:13px; font-weight:700; color:#64748b;">
+                <span>מיון:</span>
+                <button onclick="ideasSetSort('popular')" style="background:${ideasSortOrder==='popular'?'#0f172a':'#f1f5f9'}; color:${ideasSortOrder==='popular'?'#fff':'#475569'}; border:none; border-radius:6px; padding:4px 10px; font-weight:800; cursor:pointer;">🔥 פופולרי</button>
+                <button onclick="ideasSetSort('newest')" style="background:${ideasSortOrder==='newest'?'#0f172a':'#f1f5f9'}; color:${ideasSortOrder==='newest'?'#fff':'#475569'}; border:none; border-radius:6px; padding:4px 10px; font-weight:800; cursor:pointer;">🆕 חדש</button>
+              </div>
+            </div>
+
+            <!-- גריד כרטיסי רעיונות -->
+            <div id="ideas-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:16px;">
+              ${ideasCardsHTML()}
+            </div>
+          </div>
+
+          <div class="art-sidebar">
+            ${buildSidebarTabs('', 'ideas')}
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+window.buildIdeasPage = buildIdeasPage;
+
+function ideasSearch(val) {
+  ideasSearchQuery = (val || '').toLowerCase().trim();
+  const gridEl = document.getElementById('ideas-grid');
+  if (gridEl) gridEl.innerHTML = ideasCardsHTML();
+}
+window.ideasSearch = ideasSearch;
+
+function ideasSelectCategory(cat) {
+  ideasSelectedCategory = cat;
+  const pageEl = mainContent.querySelector('.ideas-page');
+  if (pageEl) mainContent.innerHTML = buildIdeasPage();
+}
+window.ideasSelectCategory = ideasSelectCategory;
+
+function ideasSetSort(sort) {
+  ideasSortOrder = sort;
+  const gridEl = document.getElementById('ideas-grid');
+  if (gridEl) gridEl.innerHTML = ideasCardsHTML();
+}
+window.ideasSetSort = ideasSetSort;
+
+async function toggleIdeaVote(ideaId) {
+  if (!auth.currentUser) {
+    if (typeof openLiveChatLogin === 'function') openLiveChatLogin();
+    return;
+  }
+  const uid = auth.currentUser.uid;
+  const ideaRef = ref(db, `website/ideas/${ideaId}`);
+  try {
+    const snap = await get(ideaRef);
+    let idea = snap.exists() ? snap.val() : (ideasData[ideaId] || null);
+    if (!idea) return;
+    const votes = idea.votes || {};
+    if (votes[uid]) {
+      delete votes[uid];
+    } else {
+      votes[uid] = true;
+    }
+    const voteCount = Object.keys(votes).length;
+    await update(ideaRef, { votes, voteCount });
+    ideasData[ideaId] = { ...idea, votes, voteCount };
+    const gridEl = document.getElementById('ideas-grid');
+    if (gridEl) gridEl.innerHTML = ideasCardsHTML();
+    if (typeof showCopyToast === 'function') showCopyToast(votes[uid] ? '▲ הצבעת בעד הרעיון!' : 'הסרת את הצבעתך');
+  } catch (e) {
+    console.error('Vote failed', e);
+  }
+}
+window.toggleIdeaVote = toggleIdeaVote;
+
+function openIdeaModal() {
+  if (!auth.currentUser) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
+  const t = document.getElementById('idea-title');
+  const s = document.getElementById('idea-summary');
+  const d = document.getElementById('idea-desc');
+  if (t) t.value = '';
+  if (s) s.value = '';
+  if (d) d.value = '';
+  const m = document.getElementById('idea-modal');
+  if (m) m.style.display = 'flex';
+  setTimeout(() => { if (t) t.focus(); }, 100);
+}
+window.openIdeaModal = openIdeaModal;
+
+(function initIdeaModalEvents() {
+  if (typeof document === 'undefined') return;
+  document.addEventListener('DOMContentLoaded', () => {
+    const c = document.getElementById('idea-cancel');
+    if (c) c.addEventListener('click', () => {
+      const m = document.getElementById('idea-modal');
+      if (m) m.style.display = 'none';
+    });
+    const s = document.getElementById('idea-save');
+    if (s) s.addEventListener('click', saveIdea);
+  });
+})();
+
+async function saveIdea() {
+  if (!auth.currentUser) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
+  const title = (document.getElementById('idea-title').value || '').trim();
+  if (!title) { alert('חובה להזין כותרת לרעיון'); return; }
+  const summary = (document.getElementById('idea-summary').value || '').trim();
+  if (!summary) { alert('חובה להזין תקציר קצר'); return; }
+  const desc = (document.getElementById('idea-desc').value || '').trim();
+  const category = (document.getElementById('idea-category').value || 'כללי');
+
+  const catColors = {
+    'עיצוב': '#8b5cf6',
+    'פיתוח': '#3b82f6',
+    'קהילה': '#e11d48',
+    'פיצ\'רים': '#eab308',
+    'כללי': '#10b981'
+  };
+
+  let nickname = 'משתמש';
+  try {
+    const p = JSON.parse(localStorage.getItem(`user_profile_${auth.currentUser.uid}`) || '{}');
+    nickname = p.nickname || auth.currentUser.displayName || (auth.currentUser.email ? auth.currentUser.email.split('@')[0] : 'משתמש');
+  } catch (e) { nickname = auth.currentUser.displayName || 'משתמש'; }
+
+  const id = 'idea_' + Date.now();
+  const idea = {
+    id,
+    title: title.slice(0, 100),
+    summary: summary.slice(0, 200),
+    desc: desc.slice(0, 1000),
+    category,
+    categoryColor: catColors[category] || '#3b82f6',
+    author: nickname,
+    authorId: auth.currentUser.uid,
+    votes: { [auth.currentUser.uid]: true },
+    voteCount: 1,
+    createdAt: Date.now()
+  };
+
+  try {
+    await set(ref(db, `website/ideas/${id}`), idea);
+    const m = document.getElementById('idea-modal');
+    if (m) m.style.display = 'none';
+    if (typeof showCopyToast === 'function') showCopyToast('💡 הרעיון שלך פורסם בהצלחה!');
+  } catch (e) {
+    console.error('Save idea failed', e);
+    alert('שגיאה בשמירת הרעיון');
+  }
+}
+window.saveIdea = saveIdea;
+
+async function deleteIdea(ideaId) {
+  const isEd = (typeof isAdmin === 'function' && isAdmin()) || (typeof isEditMode !== 'undefined' && isEditMode);
+  if (!isEd) { alert('רק מנהל רשאי למחוק רעיונות'); return; }
+  const item = ideasData[ideaId];
+  if (!confirm(`האם למחוק את הרעיון "${item ? item.title : 'זה'}"?`)) return;
+  try {
+    await remove(ref(db, `website/ideas/${ideaId}`));
+    delete ideasData[ideaId];
+    if (typeof showCopyToast === 'function') showCopyToast('🗑️ הרעיון נמחק');
+    const gridEl = document.getElementById('ideas-grid');
+    if (gridEl) gridEl.innerHTML = ideasCardsHTML();
+  } catch (e) {
+    console.error('Delete idea failed', e);
+  }
+}
+window.deleteIdea = deleteIdea;
+
+function openIdeaDetailModal(ideaId) {
+  const item = ideasData[ideaId] || IDEAS_SAMPLES.find(x => x.id === ideaId);
+  if (!item) return;
+  const currentUid = auth.currentUser ? auth.currentUser.uid : null;
+  const votes = item.votes || {};
+  const hasVoted = currentUid && !!votes[currentUid];
+  const count = item.voteCount || Object.keys(votes).length;
+
+  let modal = document.getElementById('idea-detail-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'idea-detail-modal';
+    modal.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:999999; align-items:center; justify-content:center; direction:rtl; padding:20px;';
+    document.body.appendChild(modal);
+  }
+  modal.innerHTML = `
+    <div style="background:#fff; border-radius:18px; padding:28px; width:100%; max-width:550px; max-height:85vh; overflow-y:auto; display:flex; flex-direction:column; gap:16px; box-shadow:0 20px 60px rgba(0,0,0,0.3); direction:rtl; text-align:right;">
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <span style="background:${item.categoryColor || '#3b82f6'}; color:#fff; font-size:12px; font-weight:800; padding:4px 14px; border-radius:999px;">💡 ${artEsc(item.category || 'רעיון')}</span>
+        <button onclick="document.getElementById('idea-detail-modal').style.display='none'" style="background:#f1f5f9; border:none; border-radius:50%; width:32px; height:32px; font-size:16px; font-weight:bold; cursor:pointer; color:#64748b;">✕</button>
+      </div>
+
+      <h2 style="margin:0; font-size:20px; font-weight:900; color:#0f172a; line-height:1.35;">${artEsc(item.title || '')}</h2>
+      
+      <div style="font-size:14px; color:#334155; line-height:1.6; white-space:pre-wrap; background:#f8fafc; padding:14px; border-radius:12px; border:1px solid #e2e8f0;">
+        ${artEsc(item.desc || item.summary || '')}
+      </div>
+
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-top:8px; border-top:1px solid #f1f5f9; padding-top:14px;">
+        <div style="font-size:13px; color:#64748b; font-weight:700;">
+          ✍️ מוצע על ידי: <b>${artEsc(item.author || 'אנונימי')}</b>
+        </div>
+        <button onclick="toggleIdeaVote('${artEsc(item.id)}'); document.getElementById('idea-detail-modal').style.display='none';" 
+                style="display:flex; align-items:center; gap:8px; padding:8px 18px; border-radius:999px; border:${hasVoted ? 'none' : '1px solid #cbd5e1'}; background:${hasVoted ? '#3b82f6' : '#f8fafc'}; color:${hasVoted ? '#fff' : '#334155'}; font-size:14px; font-weight:800; cursor:pointer;">
+          <span>▲</span>
+          <span>${count} הצבעות</span>
+        </button>
+      </div>
+    </div>
+  `;
+  modal.style.display = 'flex';
+}
+window.openIdeaDetailModal = openIdeaDetailModal;
+
 

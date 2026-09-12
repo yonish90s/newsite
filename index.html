@@ -231,6 +231,7 @@
         <nav class="nav-links" dir="ltr" style="display: flex; gap: 32px; align-items: center;">
           <a href="#" class="active-top-nav" data-page-id="page-photos-main">תמונות 🖼️</a>
           <a href="#" data-page-id="page-stories-main">סיפורים</a>
+          <a href="#" data-page-id="page-ideas-main">רעיונות 💡</a>
         </nav>
         
         <!-- כפתור אורח/מנהל + סמל בטריה + כפתור הבית + פעמון התראות -->
@@ -942,6 +943,44 @@
   </div>
 </div>
 
-  <script type="module" src="./script.js?v=1111"></script>
+<!-- מודל הוספת רעיון חדש -->
+<div id="idea-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:999999; align-items:center; justify-content:center; direction:rtl; padding:20px;">
+  <div style="background:#fff; border-radius:16px; padding:24px; width:100%; max-width:500px; max-height:85vh; overflow-y:auto; display:flex; flex-direction:column; gap:14px; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+    <h3 style="margin:0; font-size:18px; font-weight:800; color:#0f172a; border-bottom:2px solid #3b82f6; padding-bottom:8px;">💡 הוספת רעיון חדש</h3>
+    
+    <label style="display:flex; flex-direction:column; gap:4px; font-size:13px; font-weight:700;">
+      <span>כותרת הרעיון <span style="color:red">*</span></span>
+      <input type="text" id="idea-title" placeholder="מה הרעיון שלך?" style="padding:10px 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:14px;">
+    </label>
+
+    <label style="display:flex; flex-direction:column; gap:4px; font-size:13px; font-weight:700;">
+      <span>קטגוריה</span>
+      <select id="idea-category" style="padding:10px 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:14px; background:#fff;">
+        <option value="עיצוב">🎨 עיצוב</option>
+        <option value="פיתוח">💻 פיתוח</option>
+        <option value="קהילה">👥 קהילה</option>
+        <option value="פיצ'רים">⚡ פיצ'רים</option>
+        <option value="כללי">🌐 כללי</option>
+      </select>
+    </label>
+
+    <label style="display:flex; flex-direction:column; gap:4px; font-size:13px; font-weight:700;">
+      <span>תקציר קצר <span style="color:red">*</span></span>
+      <textarea id="idea-summary" rows="2" placeholder="תיאור קצר במשפט או שניים..." style="padding:10px 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:14px; resize:vertical;"></textarea>
+    </label>
+
+    <label style="display:flex; flex-direction:column; gap:4px; font-size:13px; font-weight:700;">
+      <span>פירוט מורחב (אופציונלי)</span>
+      <textarea id="idea-desc" rows="4" placeholder="הסבר מורחב על הרעיון והיתרונות שלו..." style="padding:10px 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:14px; resize:vertical;"></textarea>
+    </label>
+
+    <div style="display:flex; gap:10px; margin-top:10px;">
+      <button id="idea-cancel" style="flex:1; padding:12px; border:1px solid #cbd5e1; border-radius:10px; background:#fff; cursor:pointer; font-size:14px; font-weight:800; color:#475569;">ביטול</button>
+      <button id="idea-save" style="flex:1; padding:12px; border:none; border-radius:10px; background:#3b82f6; color:#fff; cursor:pointer; font-size:14px; font-weight:800; box-shadow:0 4px 12px rgba(59,130,246,0.3);">שמור רעיון 🚀</button>
+    </div>
+  </div>
+</div>
+
+  <script type="module" src="./script.js?v=1112"></script>
 </body>
 </html>
