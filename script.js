@@ -7050,17 +7050,35 @@ function qpBubble(role, html) {
   box.scrollTop = box.scrollHeight;
 }
 
-function openQuickPublish(communityId) {
+function openQuickPublish(communityId, itemType) {
   // פרסום מהיר פתוח לכולם — גם למי שלא נרשם
   qpEnsureModal();
-  qpStep = 'title';
-  qpData = { title: '', images: [], summary: '', communityId: communityId || null, tags: {}, tagIndex: 0, price: '' };
+  qpData = { title: '', images: [], summary: '', communityId: communityId || null, type: itemType || 'photo', tags: {}, tagIndex: 0, price: '' };
   document.getElementById('qp-messages').innerHTML = '';
   document.getElementById('quick-publish-modal').style.display = 'flex';
   const where = communityId ? 'בקהילה' : '';
-  qpBubble('bot', `שלום! 🤖 אני העוזר לפרסום מהיר.<br>בוא נפרסם ${where} מודעה חדשה יחד ב-30 שניות! 🚀<br><br><b>מה שם המוצר או כותרת המודעה שברצונך לפרסם?</b>`);
+
+  if (!itemType && communityId) {
+    qpStep = 'type_choice';
+    qpBubble('bot', `שלום! 🤖 ברוך הבא לפרסום ${where}.<br>בחר איזה סוג תוכן ברצונך להעלות:<br><br>
+      <div style="display:flex; gap:8px; margin-top:6px;">
+        <button type="button" onclick="qpSelectType('photo')" style="flex:1; background:#e11d48; color:#fff; border:none; border-radius:8px; padding:10px; font-weight:800; cursor:pointer;">📸 תמונה / גלריה</button>
+        <button type="button" onclick="qpSelectType('story')" style="flex:1; background:#8b5cf6; color:#fff; border:none; border-radius:8px; padding:10px; font-weight:800; cursor:pointer;">📖 סיפור / כתבה</button>
+      </div>
+    `);
+  } else {
+    qpSelectType(itemType || 'photo');
+  }
+}
+
+function qpSelectType(type) {
+  qpData.type = type;
+  qpStep = 'title';
+  const label = type === 'story' ? 'הסיפור' : 'המודעה / התמונה';
+  qpBubble('bot', `מצוין! ✍️ מה כותרת ${label} שברצונך לפרסם?`);
   setTimeout(() => { const i = document.getElementById('qp-input'); if (i) i.focus(); }, 100);
 }
+window.qpSelectType = qpSelectType;
 window.openQuickPublish = openQuickPublish;
 
 function qpHandleSend() {
@@ -7162,7 +7180,7 @@ function qpAddImage() {
 window.qpAddImage = qpAddImage;
 
 async function qpPublish() {
-  qpBubble('bot', '⏳ מפרסם את המודעה...');
+  qpBubble('bot', '⏳ מפרסם את התוכן...');
   const user = auth.currentUser;
   let nickname = 'משתמש', email = '', telegram = '';
   if (user) {
@@ -7174,17 +7192,22 @@ async function qpPublish() {
     } catch (e) { nickname = user.displayName || 'משתמש'; }
   }
   const isAdminNow = (typeof isEditMode !== 'undefined' && isEditMode);
+  const isStory = qpData.type === 'story';
   const album = {
-    id: 'ph' + Date.now(),
+    id: (isStory ? 'st' : 'ph') + Date.now(),
+    type: qpData.type || 'photo',
+    isStory: isStory,
     title: qpData.title,
     summary: qpData.summary,
+    body: qpData.summary,
+    image: qpData.images[0] || '',
     images: qpData.images.slice(0, 5),
     author: nickname,
     authorId: user ? user.uid : '',
-    category: 'כללי',
+    category: isStory ? 'סיפורים' : 'כללי',
     ageRange: '',
     region: '',
-    categoryColor: '#10b981',
+    categoryColor: isStory ? '#8b5cf6' : '#10b981',
     timestamp: new Date().toLocaleDateString('he-IL'),
     createdAt: Date.now(),
     telegramUrl: telegram ? ('https://t.me/' + telegram) : '',
@@ -7201,7 +7224,7 @@ async function qpPublish() {
       // פרסום לתוך קהילה: נשמר תחת website/communities/{id}/items
       album.approved = true;
       await set(ref(db, `website/communities/${qpData.communityId}/items/${album.id}`), album);
-      qpBubble('bot', '✅ פורסם בקהילה בהצלחה!');
+      qpBubble('bot', `✅ ${isStory ? 'הסיפור' : 'התוכן'} פורסם/ה בקהילה בהצלחה!`);
       const cid = qpData.communityId;
       setTimeout(() => {
         const m = document.getElementById('quick-publish-modal'); if (m) m.style.display = 'none';
@@ -7251,16 +7274,22 @@ function communitiesListHTML() {
     return '<div style="grid-column:1 / -1; text-align:center; color:#94a3b8; font-size:13px; padding:16px 8px;">אין קהילות עדיין.<br>צרו את הראשונה!</div>';
   }
   const colors = ['#000000', '#ea580c', '#7c3aed', '#000000'];
+  const isEd = (typeof isAdmin === 'function' && isAdmin()) || (typeof isEditMode !== 'undefined' && isEditMode);
+
   return list.map((c, index) => {
     const count = c.items ? Object.keys(c.items).length : 0;
     const bg = colors[index % colors.length];
     const iconStr = (c.icon && c.icon !== '🏘️') ? artEsc(c.icon) + ' ' : '';
+    const deleteBtn = isEd
+      ? `<button onclick="event.stopPropagation(); deleteCommunity('${artEsc(c.id)}');" title="מחק קהילה (מנהל)" style="position:absolute; top:4px; left:4px; background:rgba(239,68,68,0.9); color:#fff; border:none; border-radius:50%; width:20px; height:20px; font-size:10px; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:5;">✕</button>`
+      : '';
     return `
       <div onclick="openCommunityPage('${artEsc(c.id)}')" 
-           style="background:${bg}; color:#ffffff; border-radius:10px; padding:10px 6px; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; min-height:54px; box-sizing:border-box; transition:transform 0.15s, opacity 0.15s; text-decoration:none;" 
+           style="position:relative; background:${bg}; color:#ffffff; border-radius:10px; padding:10px 6px; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; min-height:54px; box-sizing:border-box; transition:transform 0.15s, opacity 0.15s; text-decoration:none;" 
            onmouseover="this.style.opacity='0.9'; this.style.transform='translateY(-2px)';" 
            onmouseout="this.style.opacity='1'; this.style.transform='translateY(0)';"
            title="${artEsc(c.name || 'קהילה')}">
+        ${deleteBtn}
         <div style="font-size:13px; font-weight:800; color:#ffffff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; width:100%;">
           ${iconStr}${artEsc(c.name || 'קהילה')}
         </div>
@@ -7285,6 +7314,32 @@ function buildCommunitiesBox() {
     </div>
   `;
 }
+
+async function deleteCommunity(communityId) {
+  const isEd = (typeof isAdmin === 'function' && isAdmin()) || (typeof isEditMode !== 'undefined' && isEditMode);
+  if (!isEd) { alert('רק מנהל רשאי למחוק קהילות'); return; }
+  const comm = communitiesData[communityId];
+  if (!comm) return;
+  if (!confirm(`האם אתה בטוח שברצונך למחוק את הקהילה "${comm.name || 'זו'}"?`)) return;
+  try {
+    await remove(ref(db, `website/communities/${communityId}`));
+    delete communitiesData[communityId];
+    if (typeof showCopyToast === 'function') showCopyToast('🗑️ הקהילה נמחקה בהצלחה');
+    const listEl = document.getElementById('communities-list');
+    if (listEl) listEl.innerHTML = communitiesListHTML();
+    const rowEl = document.getElementById('communities-page-list');
+    if (rowEl) rowEl.innerHTML = communitiesRowHTML();
+    const cp = mainContent && mainContent.querySelector('.community-page');
+    if (cp && cp.dataset.communityId === communityId) {
+      if (typeof goBackFromUserPage === 'function') goBackFromUserPage();
+      else if (typeof navigateToPage === 'function') navigateToPage('page-communities-main');
+    }
+  } catch (e) {
+    console.error('Delete community failed', e);
+    alert('שגיאה במחיקת הקהילה');
+  }
+}
+window.deleteCommunity = deleteCommunity;
 
 // תמונת הקהילה הנבחרת (base64) בזמן יצירה
 let communityImgData = '';
@@ -7346,7 +7401,6 @@ async function saveCommunity() {
 window.saveCommunity = saveCommunity;
 
 // ---- סינונים מותאמים אישית לקהילה ----
-// פירוק טקסט "שם: אופ1, אופ2" (שורה לכל סינון) למערך קבוצות
 function parseCommunityFilters(text) {
   const out = [];
   (text || '').split('\n').forEach(line => {
@@ -7362,8 +7416,46 @@ function parseCommunityFilters(text) {
 }
 window.parseCommunityFilters = parseCommunityFilters;
 
-// מצב הסינון הפעיל בעמוד הקהילה (groupName -> [ערכים נבחרים])
 let communityFilterSel = {};
+let communityActiveTab = 'all';
+
+function communitySetTab(tab) {
+  communityActiveTab = tab;
+  communityRerenderItems();
+}
+window.communitySetTab = communitySetTab;
+
+function renderCommunityItemCard(p) {
+  if (p.type === 'story' || p.isStory) {
+    return renderStoryCommunityCard(p);
+  }
+  return renderPhotoCard(p);
+}
+window.renderCommunityItemCard = renderCommunityItemCard;
+
+function renderStoryCommunityCard(s) {
+  const isVerifiedStory = (typeof isUserVerified === 'function') ? isUserVerified(s.authorId, s.author, s.verified || s.verifiedUser) : false;
+  const verifiedBadgeHTML = isVerifiedStory ? ` <span title="משתמש מאומת" style="color:#2563eb; font-weight:900; background:#dbeafe; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:10px; margin-right:3px;">✓</span>` : '';
+  const validImages = (s.images && s.images.length) ? s.images.filter(Boolean) : (s.image ? [s.image] : []);
+  const mainImg = validImages[0] || s.image || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80';
+  return `
+    <div class="art-card story-card" onclick="storyOpenDetail('${artEsc(s.id)}')" style="border-radius:14px; overflow:hidden; background:#fff; border:1px solid #e2e8f0; display:flex; flex-direction:column; cursor:pointer; transition:transform 0.15s, box-shadow 0.15s;" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 10px 25px rgba(0,0,0,0.1)';" onmouseout="this.style.transform='none'; this.style.boxShadow='none';">
+      <div style="position:relative; height:170px; width:100%; overflow:hidden; background:#0f172a;">
+        <img src="${mainImg}" style="width:100%; height:100%; object-fit:cover;">
+        <span style="position:absolute; top:10px; right:10px; background:#8b5cf6; color:#fff; font-size:11px; font-weight:800; padding:4px 10px; border-radius:999px; box-shadow:0 2px 6px rgba(0,0,0,0.2);">📖 סיפור</span>
+      </div>
+      <div style="padding:14px; display:flex; flex-direction:column; gap:6px; flex:1; text-align:right; direction:rtl;">
+        <div style="font-size:15px; font-weight:900; color:#0f172a; line-height:1.3; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${artEsc(s.title || 'סיפור')}</div>
+        <div style="font-size:12px; color:#64748b; line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; min-height:34px;">${artEsc(s.summary || s.body || 'לחץ לקריאת הסיפור המלא')}</div>
+        <div style="margin-top:auto; padding-top:8px; display:flex; align-items:center; justify-content:space-between; font-size:11.5px; color:#94a3b8; border-top:1px solid #f1f5f9;">
+          <span>✍️ ${artEsc(s.author || 'אנונימי')}${verifiedBadgeHTML}</span>
+          <span style="color:#8b5cf6; font-weight:800;">קרא עוד ←</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+window.renderStoryCommunityCard = renderStoryCommunityCard;
 
 function communityItemMatches(item) {
   for (const g in communityFilterSel) {
@@ -7407,12 +7499,16 @@ function communityRerenderItems() {
   if (!grid) return;
   let items = community.items ? Object.values(community.items) : [];
   items = items.filter(communityItemMatches).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-  grid.innerHTML = items.map(p => renderPhotoCard(p)).join('') || '<div style="grid-column:1/-1; text-align:center; color:#94a3b8; padding:40px; font-weight:700;">אין תוצאות לסינון הזה.</div>';
+  if (communityActiveTab === 'photos') {
+    items = items.filter(p => p.type !== 'story' && !p.isStory);
+  } else if (communityActiveTab === 'stories') {
+    items = items.filter(p => p.type === 'story' || p.isStory);
+  }
+  grid.innerHTML = items.map(p => renderCommunityItemCard(p)).join('') || '<div style="grid-column:1/-1; text-align:center; color:#94a3b8; padding:40px; font-weight:700;">אין תוצאות לסינון הזה.</div>';
   if (typeof photoApplyFilters === 'function') photoApplyFilters();
 }
 window.communityRerenderItems = communityRerenderItems;
 
-// מאזינים למודל יצירת הקהילה (בחירת תמונה / ביטול / שמירה)
 (function initCommunityModal() {
   const pick = document.getElementById('community-img-pick');
   if (pick) pick.addEventListener('click', () => {
@@ -7443,28 +7539,58 @@ function buildCommunityPageHTML(community) {
   let items = community.items ? Object.values(community.items) : [];
   items.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
   const filtered = items.filter(communityItemMatches);
-  const cards = filtered.map(p => renderPhotoCard(p)).join('');
+
+  const photos = filtered.filter(p => p.type !== 'story' && !p.isStory);
+  const stories = filtered.filter(p => p.type === 'story' || p.isStory);
+
+  let displayItems = filtered;
+  if (communityActiveTab === 'photos') displayItems = photos;
+  else if (communityActiveTab === 'stories') displayItems = stories;
+
+  const cards = displayItems.map(p => renderCommunityItemCard(p)).join('');
   const json = encodeURIComponent(JSON.stringify(items));
   const filterBar = communityFilterBarHTML(community);
-  const initial = artEsc(String(community.name || '?').charAt(0) || '?');
   const canUpload = !!auth.currentUser;
+  const isEd = (typeof isAdmin === 'function' && isAdmin()) || (typeof isEditMode !== 'undefined' && isEditMode);
+
+  const adminDeleteBtn = isEd
+    ? `<button onclick="deleteCommunity('${artEsc(community.id)}')" style="background:#ef4444; color:#fff; border:none; border-radius:8px; padding:6px 14px; font-size:12.5px; font-weight:800; cursor:pointer; margin-top:8px; transition:opacity 0.2s;">🗑️ מחק קהילה זו (מנהל)</button>`
+    : '';
+
+  const tabBtnsHTML = `
+    <div style="display:flex; gap:8px; margin-bottom:16px; border-bottom:1.5px solid #e2e8f0; padding-bottom:10px; direction:rtl;">
+      <button onclick="communitySetTab('all')" style="padding:6px 14px; border-radius:8px; border:none; font-size:13px; font-weight:800; cursor:pointer; background:${communityActiveTab === 'all' ? '#0f172a' : '#f1f5f9'}; color:${communityActiveTab === 'all' ? '#fff' : '#475569'};">🌐 הכל (${filtered.length})</button>
+      <button onclick="communitySetTab('photos')" style="padding:6px 14px; border-radius:8px; border:none; font-size:13px; font-weight:800; cursor:pointer; background:${communityActiveTab === 'photos' ? '#e11d48' : '#f1f5f9'}; color:${communityActiveTab === 'photos' ? '#fff' : '#475569'};">📸 תמונות (${photos.length})</button>
+      <button onclick="communitySetTab('stories')" style="padding:6px 14px; border-radius:8px; border:none; font-size:13px; font-weight:800; cursor:pointer; background:${communityActiveTab === 'stories' ? '#8b5cf6' : '#f1f5f9'}; color:${communityActiveTab === 'stories' ? '#fff' : '#475569'};">📖 סיפורים (${stories.length})</button>
+    </div>
+  `;
+
+  const uploadBtnsHTML = canUpload
+    ? `
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px;">
+        <button onclick="openQuickPublish('${artEsc(community.id)}', 'photo')" style="background:linear-gradient(135deg,#e11d48,#be123c); color:#fff; border:none; border-radius:10px; padding:12px; font-size:13.5px; font-weight:800; cursor:pointer; box-shadow:0 3px 10px rgba(225,29,72,0.25);">📸 העלה תמונה לקהילה</button>
+        <button onclick="openQuickPublish('${artEsc(community.id)}', 'story')" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9); color:#fff; border:none; border-radius:10px; padding:12px; font-size:13.5px; font-weight:800; cursor:pointer; box-shadow:0 3px 10px rgba(139,92,246,0.25);">📖 כתוב סיפור לקהילה</button>
+      </div>
+    `
+    : `<button onclick="openLiveChatLogin()" style="width:100%; background:#f1f5f9; color:#0f172a; border:1px solid #cbd5e1; border-radius:10px; padding:12px; font-size:14px; font-weight:800; cursor:pointer; margin-bottom:20px;">🔒 התחבר כדי להעלות לקהילה</button>`;
+
   return `
   <div class="articles-page photos-page community-page photo-cols-${typeof photoGridCols !== 'undefined' ? photoGridCols : 4}" data-photos-json="${json}" data-community-id="${artEsc(community.id)}">
     <div class="art-inner">
       <button onclick="goBackFromUserPage()" style="background:#f1f5f9; border:1px solid #cbd5e1; border-radius:8px; padding:8px 16px; font-size:13px; font-weight:800; cursor:pointer; margin-bottom:16px; color:#334155;">← חזרה</button>
-      <div style="background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:20px; margin-bottom:20px; display:flex; align-items:center; gap:16px; box-shadow:0 4px 15px rgba(0,0,0,0.03); direction:rtl;">
+      <div style="background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:20px; margin-bottom:20px; display:flex; align-items:center; gap:16px; box-shadow:0 4px 15px rgba(0,0,0,0.03); direction:rtl; flex-wrap:wrap;">
         ${community.image
           ? `<img src="${community.image}" alt="" style="width:56px; height:56px; border-radius:14px; object-fit:cover; flex-shrink:0;">`
           : `<div style="width:56px; height:56px; border-radius:14px; background:linear-gradient(135deg,#e11d48,#9f1239); color:#fff; display:flex; align-items:center; justify-content:center; font-size:26px; flex-shrink:0;">${artEsc(community.icon || '🏘️')}</div>`}
-        <div style="flex:1; min-width:0;">
+        <div style="flex:1; min-width:200px;">
           <div style="font-size:20px; font-weight:900; color:#0f172a;">${artEsc(community.name || 'קהילה')}</div>
           <div style="font-size:13px; color:#64748b; margin-top:2px;">${artEsc(community.desc || '')}</div>
           <div style="font-size:12px; color:#94a3b8; margin-top:4px;">👥 נוצרה ע"י ${artEsc(community.createdByName || '')} · ${items.length} תכנים</div>
+          ${adminDeleteBtn}
         </div>
       </div>
-      ${canUpload
-        ? `<button onclick="openQuickPublish('${artEsc(community.id)}')" style="width:100%; background:linear-gradient(135deg,#22c55e,#16a34a); color:#fff; border:none; border-radius:10px; padding:12px; font-size:14px; font-weight:800; cursor:pointer; margin-bottom:20px;">➕ העלה תוכן לקהילה</button>`
-        : `<button onclick="openLiveChatLogin()" style="width:100%; background:#f1f5f9; color:#0f172a; border:1px solid #cbd5e1; border-radius:10px; padding:12px; font-size:14px; font-weight:800; cursor:pointer; margin-bottom:20px;">🔒 התחבר כדי להעלות לקהילה</button>`}
+      ${uploadBtnsHTML}
+      ${tabBtnsHTML}
       ${filterBar}
       <div class="art-rows" id="community-items-grid">${cards || '<div style="grid-column:1/-1; text-align:center; color:#94a3b8; padding:40px; font-weight:700;">עדיין אין תכנים בקהילה זו. היו הראשונים להעלות!</div>'}</div>
     </div>
@@ -7477,7 +7603,6 @@ function openCommunityPage(communityId) {
   const community = communitiesData[communityId];
   if (!community) { if (typeof showCopyToast === 'function') showCopyToast('הקהילה לא נמצאה'); return; }
   if (typeof mainContent === 'undefined' || !mainContent) return;
-  // איפוס בחירת הסינון כשעוברים לקהילה אחרת
   if (_lastCommunityId !== communityId) { communityFilterSel = {}; _lastCommunityId = communityId; }
   mainContent.innerHTML = buildCommunityPageHTML(community);
   try { window.scrollTo(0, 0); } catch (e) {}
@@ -7485,8 +7610,6 @@ function openCommunityPage(communityId) {
 }
 window.openCommunityPage = openCommunityPage;
 
-// ---- עמוד "קהילות": מרכז שמציג את כל הקהילות כשורת צ׳יפים; כל קהילה
-// היא עמוד גלריות משלה. יצירת קהילה מוסיפה צ׳יפ ועוברת לעמוד שלה. ----
 let communitiesSearchQuery = '';
 function communitiesSearch(val) {
   communitiesSearchQuery = (val || '').toLowerCase().trim();
@@ -7503,12 +7626,18 @@ function communitiesRowHTML() {
   if (!list.length) {
     return `<div class="comm-empty">${communitiesSearchQuery ? 'לא נמצאו קהילות התואמות לחיפוש.' : 'אין קהילות עדיין — צרו את הראשונה! 🚀'}</div>`;
   }
+  const isEd = (typeof isAdmin === 'function' && isAdmin()) || (typeof isEditMode !== 'undefined' && isEditMode);
+
   return list.map(c => {
     const count = c.items ? Object.keys(c.items).length : 0;
     const imgHTML = c.image
       ? `<img src="${c.image}" alt="">`
       : `<div class="comm-card-img-ph">${artEsc(c.icon || '🏘️')}</div>`;
-    return `<div class="comm-card" onclick="openCommunityPage('${artEsc(c.id)}')" title="${artEsc(c.name || 'קהילה')}">
+    const deleteBtn = isEd
+      ? `<button onclick="event.stopPropagation(); deleteCommunity('${artEsc(c.id)}');" title="מחק קהילה" style="position:absolute; top:8px; left:8px; background:rgba(239,68,68,0.9); color:#fff; border:none; border-radius:6px; padding:4px 8px; font-size:12px; font-weight:bold; cursor:pointer; z-index:10;">🗑️ מחק</button>`
+      : '';
+    return `<div class="comm-card" onclick="openCommunityPage('${artEsc(c.id)}')" title="${artEsc(c.name || 'קהילה')}" style="position:relative;">
+      ${deleteBtn}
       <div class="comm-card-img">${imgHTML}</div>
       <div class="comm-card-body">
         <div class="comm-card-name">${artEsc(c.name || 'קהילה')}</div>
