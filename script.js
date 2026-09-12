@@ -6015,12 +6015,13 @@ function buildStoriesPage(stories) {
           <div class="art-no-results" style="display:none">לא נמצאו סיפורים התואמים לחיפוש</div>
           <button class="art-add-btn" onclick="openStoryModal()" style="background:#8b5cf6">+ הוסף סיפור חדש</button>
         </div>
-        <div class="art-sidebar">
+        <div class="art-sidebar art-sidebar-right">
           ${(isAdmin() || isEditMode) ? `
           <button onclick="openStoryModal()" style="background:#8b5cf6; width:100%; padding:12px 16px; border-radius:8px; border:none; color:white; font-weight:bold; font-size:14px; cursor:pointer; margin-bottom:16px;">+ הוסף סיפור חדש</button>
           ` : ''}
           ${buildSidebarTabs('', 'stories')}
         </div>
+        ${buildLeftSidebarBox(popularHTML, 'stories')}
       </div>
     </div>
   </div>`;
@@ -9111,6 +9112,38 @@ function buildSidebarTabs(savedHTML, pageType) {
   `;
 }
 
+function buildLeftSidebarBox(popularHTML, section) {
+  const popHTML = popularHTML || '';
+  return `
+    <div class="art-sidebar art-sidebar-left">
+      ${popHTML ? `
+      <div class="art-sidebar-box" style="border: 1.5px solid #e2e8f0; border-radius: 14px; padding: 18px;">
+        <div class="art-sidebar-title" style="font-size: 15px; font-weight: 900; color: #0f172a; margin-bottom: 12px; border-bottom: 2.5px solid #e11d48; padding-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
+          <span>🔥 הכי פופולריים</span>
+          <span style="font-size: 11px; background: rgba(225,29,72,0.1); color: #e11d48; padding: 2px 8px; border-radius: 12px; font-weight: 800;">TOP 5</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          ${popHTML}
+        </div>
+      </div>
+      ` : ''}
+
+      <div class="art-sidebar-box" style="border: 1.5px solid #e2e8f0; border-radius: 14px; padding: 18px;">
+        <div class="art-sidebar-title" style="font-size: 15px; font-weight: 900; color: #0f172a; margin-bottom: 12px; border-bottom: 2.5px solid #2563eb; padding-bottom: 8px;">
+          🌐 אתרים מומלצים
+        </div>
+        ${typeof buildPromotedSitesBox === 'function' ? buildPromotedSitesBox() : ''}
+      </div>
+
+      <div class="art-sidebar-box" style="border: 1.5px solid #22c55e; background: rgba(34,197,94,0.04); border-radius: 14px; padding: 16px; text-align: center;">
+        <div style="font-size: 14px; font-weight: 900; color: #166534; margin-bottom: 4px;">🤖 פרסום מודעה מהיר</div>
+        <div style="font-size: 11.5px; color: #64748b; margin-bottom: 10px; line-height: 1.4;">עוזר מונחה שיפרסם עבורך מודעה חדשה בצ׳אט תוך 30 שניות</div>
+        <button onclick="openQuickPublish()" style="width: 100%; background: linear-gradient(135deg,#22c55e,#16a34a); color: #fff; border: none; border-radius: 10px; padding: 10px; font-size: 13px; font-weight: 800; cursor: pointer; box-shadow: 0 3px 10px rgba(34,197,94,0.25);">🤖 צ׳אט לפרסום מהיר</button>
+      </div>
+    </div>
+  `;
+}
+
 // מזעור/הרחבה של פאנל הסרגל (בסגנון רדיט)
 function sidebarToggleMinimize(btn) {
   const wrap = btn.closest('.sidebar-tabs-wrap');
@@ -9364,10 +9397,11 @@ function buildPhotosPage(albums, section) {
           <div class="art-no-results" style="display:none">${noResultsText}</div>
           ${(isAdmin() || isEditMode) ? (section === 'ideas' ? `<button class="art-add-btn" onclick="openIdeaModal()" style="background:#3b82f6">💡 הוסף רעיון חדש</button>` : `<button class="art-add-btn" onclick="openPhotoModal()" style="background:#e11d48">+ הוסף עיצוב אתר חדש</button>`) : ''}
         </div>
-        <div class="art-sidebar">
+        <div class="art-sidebar art-sidebar-right">
           ${addBtnHTML}
-          ${buildSidebarTabs(savedHTML, section === 'ideas' ? 'ideas' : 'photos')}
+          ${buildSidebarTabs(savedHTML, section === 'ideas' ? 'ideas' : (section === 'communities' ? 'communities' : 'photos'))}
         </div>
+        ${buildLeftSidebarBox(popularHTML, section)}
       </div>
     </div>
   </div>`;
