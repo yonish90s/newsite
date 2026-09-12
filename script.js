@@ -6525,7 +6525,9 @@ const PHOTOS_SAMPLES = [
 // ובחירה מחזירה אותם עם הערך שנבחר מוצג על הכפתור.
 // המצב חי מחוץ ל-buildPhotosPage ולכן שורד בנייה מחדש של העמוד.
 function photoCurrentFilter(kind) {
-  if (kind === 'general') return currentPhotoGeneralFilter;
+  if (kind === 'general') {
+    return (typeof pfActivePage === 'function' && pfActivePage() === 'stories') ? currentStoryGeneralFilter : currentPhotoGeneralFilter;
+  }
   if (kind === 'category') return currentPhotoCategoryFilter;
   if (kind === 'age') return currentPhotoAgeFilter;
   if (kind === 'date') return currentPhotoDateFilter;
@@ -6533,6 +6535,13 @@ function photoCurrentFilter(kind) {
 }
 
 function photoFilterBarHTML() {
+  const isStories = (typeof pfActivePage === 'function' && pfActivePage() === 'stories');
+  const availableGroups = isStories
+    ? PHOTO_FILTER_GROUPS.filter(g => g.kind === 'general' || g.kind === 'date')
+    : PHOTO_FILTER_GROUPS;
+
+  const curCols = isStories ? (typeof storyGridCols !== 'undefined' ? storyGridCols : 3) : photoGridCols;
+
   // בורר גודל (מספר עמודות) — פתיחה באותו סגנון כמו שאר הפילטרים
   if (photoOpenFilterGroup === 'size') {
     return `
@@ -6542,15 +6551,15 @@ function photoFilterBarHTML() {
         <div class="photo-filter-group" data-kind="size">
           ${[4, 3, 2].map(n => `
             <button type="button"
-                    class="photo-tab-btn${photoGridCols === n ? ' active' : ''}"
-                    onclick="photoSetGridSize(${n})">${n}</button>
+                    class="photo-tab-btn${curCols === n ? ' active' : ''}"
+                    onclick="${isStories ? `storySetGridSize(${n})` : `photoSetGridSize(${n})`}">${n}</button>
           `).join('')}
         </div>
       </div>
     `;
   }
 
-  const open = PHOTO_FILTER_GROUPS.find(g => g.kind === photoOpenFilterGroup);
+  const open = availableGroups.find(g => g.kind === photoOpenFilterGroup);
 
   if (open) {
     const current = photoCurrentFilter(open.kind);
@@ -6569,10 +6578,10 @@ function photoFilterBarHTML() {
     `;
   }
 
-  const anySet = PHOTO_FILTER_GROUPS.some(g => photoCurrentFilter(g.kind) !== 'הכל');
+  const anySet = availableGroups.some(g => photoCurrentFilter(g.kind) !== 'הכל');
   return `
     <div class="photo-filter-bar">
-      ${PHOTO_FILTER_GROUPS.map(g => {
+      ${availableGroups.map(g => {
         const cur = photoCurrentFilter(g.kind);
         const isSet = cur !== 'הכל';
         return `
@@ -6586,7 +6595,7 @@ function photoFilterBarHTML() {
       }).join('')}
       <button type="button" class="photo-filter-trigger has-value" onclick="photoToggleFilterGroup('size')">
         <span class="photo-filter-trigger-label">גודל</span>
-        <span class="photo-filter-trigger-value">${photoGridCols}</span>
+        <span class="photo-filter-trigger-value">${curCols}</span>
         <span class="photo-filter-caret" aria-hidden="true">▾</span>
       </button>
       ${anySet ? `<button type="button" class="photo-filter-clear" onclick="photoClearFilters()">נקה הכל</button>` : ''}
@@ -10339,17 +10348,24 @@ function photoDateThreshold(range) {
 }
 
 function photoSetFilter(kind, value) {
-  if (kind === 'general') currentPhotoGeneralFilter = value;
-  else if (kind === 'category') currentPhotoCategoryFilter = value;
-  else if (kind === 'age') currentPhotoAgeFilter = value;
-  else if (kind === 'region') currentPhotoRegionFilter = value;
-  else if (kind === 'date') currentPhotoDateFilter = value;
+  const isStories = (typeof pfActivePage === 'function' && pfActivePage() === 'stories');
+  if (isStories) {
+    if (kind === 'general') currentStoryGeneralFilter = value;
+    else if (kind === 'date') currentPhotoDateFilter = value;
+  } else {
+    if (kind === 'general') currentPhotoGeneralFilter = value;
+    else if (kind === 'category') currentPhotoCategoryFilter = value;
+    else if (kind === 'age') currentPhotoAgeFilter = value;
+    else if (kind === 'region') currentPhotoRegionFilter = value;
+    else if (kind === 'date') currentPhotoDateFilter = value;
+  }
 
   // אחרי בחירה סוגרים וחוזרים לשלושת הכפתורים. הרינדור מחליף את
   // הסרגל כולו, ולכן אין טעם לגעת ב-classList של הכפתור שנלחץ.
   photoOpenFilterGroup = null;
   photoRenderFilterBar();
-  photoApplyFilters();
+  if (typeof pfApplyActive === 'function') pfApplyActive();
+  else photoApplyFilters();
 }
 window.photoSetFilter = photoSetFilter;
 
