@@ -4079,18 +4079,6 @@ function buildSiteDefaultTogglesBar() {
         </div>
       </label>
 
-      <!-- toggle 1: הצג תמונות (ברירת מחדל: מופעל - ירוק / ON) -->
-      <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; margin: 0;">
-        <span style="font-size: 14px; font-weight: 800; color: #1e293b; display: flex; align-items: center; gap: 6px;">
-          <span>הצג תמונות</span>
-          <span style="font-size: 16px;">🖼️</span>
-        </span>
-        <div class="ios-switch">
-          <input type="checkbox" id="toggle-show-images-top" ${isShowImages ? 'checked' : ''} onchange="toggleShowImages(this.checked)">
-          <span class="ios-slider"></span>
-        </div>
-      </label>
-
     </div>
   `;
 }
@@ -4098,7 +4086,6 @@ window.buildSiteDefaultTogglesBar = buildSiteDefaultTogglesBar;
 
 function buildAgeFilterSidebarBox() {
   const isVerified = typeof sessionStorage !== 'undefined' && sessionStorage.getItem('age_verified') === 'true';
-  const isShowImages = typeof sessionStorage === 'undefined' || sessionStorage.getItem('show_images') !== 'false';
   
   return `
     <div class="art-sidebar-box art-age-filter-box" style="margin-bottom: 20px; border: 1.5px solid #e2e8f0; border-radius: 16px; padding: 16px; background: #ffffff; box-shadow: 0 4px 15px rgba(0,0,0,0.03); text-align: right; direction: rtl;">
@@ -4107,17 +4094,6 @@ function buildAgeFilterSidebarBox() {
       </h4>
       
       <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 12px;">
-
-        <!-- toggle 1: הצג תמונות (ברירת מחדל: מופעל - ירוק) -->
-        <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">
-          <span style="font-size: 13.5px; font-weight: 800; color: #1e293b; display: flex; align-items: center; gap: 6px;">
-            <span>🖼️</span> <span>הצג תמונות</span>
-          </span>
-          <div class="ios-switch">
-            <input type="checkbox" id="toggle-show-images-sidebar" ${isShowImages ? 'checked' : ''} onchange="toggleShowImages(this.checked)">
-            <span class="ios-slider"></span>
-          </div>
-        </div>
 
         <!-- toggle 2: תוכן למבוגרים (ברירת מחדל: כבוי - אפור) -->
         <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">
@@ -5987,10 +5963,6 @@ function buildStoriesPage(stories) {
           ${storyCategoryBarHTML()}
           ${photoFilterSectionHTML()}
           <div class="view-toggles">
-            <label class="tgl">
-              <span class="tgl-label">🖼️ הצג תמונות</span>
-              <span class="tgl-switch"><input type="checkbox" ${photoImagesMode ? 'checked' : ''} onchange="photoToggleImages(this.checked)"><span class="tgl-slider"></span></span>
-            </label>
             <label class="tgl">
               <span class="tgl-label">🔞 תוכן למבוגרים</span>
               <span class="tgl-switch"><input type="checkbox" ${_adultOn ? 'checked' : ''} onchange="toggleSidebarAgeVerification(this.checked)"><span class="tgl-slider"></span></span>
@@ -9101,10 +9073,6 @@ function buildPhotosPage(albums, section) {
           </div>
           ${photoFilterSectionHTML()}
           <div class="view-toggles">
-            <label class="tgl">
-              <span class="tgl-label">🖼️ הצג תמונות</span>
-              <span class="tgl-switch"><input type="checkbox" ${photoImagesMode ? 'checked' : ''} onchange="photoToggleImages(this.checked)"><span class="tgl-slider"></span></span>
-            </label>
             <label class="tgl">
               <span class="tgl-label">🔞 תוכן למבוגרים</span>
               <span class="tgl-switch"><input type="checkbox" ${_adultOn ? 'checked' : ''} onchange="toggleSidebarAgeVerification(this.checked)"><span class="tgl-slider"></span></span>
