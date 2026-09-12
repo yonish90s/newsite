@@ -5948,6 +5948,7 @@ function buildStoriesPage(stories) {
             <span class="art-row-author">${s.author}${verifiedBadgeHTML}</span>
             <span class="art-row-sep">|</span>
             <span>${s.timestamp}</span>
+            ${isVerifiedStory ? `<span class="art-row-sep">|</span><span style="color:#2563eb; font-weight:700; display:inline-flex; align-items:center; gap:4px;">חשבון זה מאומת <span style="background:#dbeafe; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:10px;">✓</span></span>` : ''}
           </div>
         </div>
         <div class="art-row-img-container" style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0;">
@@ -6082,11 +6083,12 @@ function storyOpenDetail(id) {
           <button class="art-back-btn" onclick="storyGoBack()">← חזרה לסיפורים</button>
           <div style="text-align:center;">
             <h1 class="art-detail-title" style="margin:0; font-size:24px;">${s.title}</h1>
-            <div class="art-meta" style="margin-top:8px; font-size:14px; color:#6b7280;">
-              <span class="art-category-badge" style="background:${s.categoryColor||'#8b5cf6'}; padding:4px 12px; border-radius:6px; color:#fff; margin-left:8px;">${s.category}</span>
+            <div class="art-meta" style="margin-top:8px; font-size:14px; color:#6b7280; display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;">
+              <span class="art-category-badge" style="background:${s.categoryColor||'#8b5cf6'}; padding:4px 12px; border-radius:6px; color:#fff;">${s.category}</span>
               <span>${s.author}</span>
               <span>·</span>
               <span>${s.timestamp}</span>
+              ${s.verified ? `<span>·</span><span style="color:#2563eb; font-weight:700; display:inline-flex; align-items:center; gap:4px;">חשבון זה מאומת <span style="background:#dbeafe; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:10px;">✓</span></span>` : ''}
             </div>
           </div>
           <div style="width:100px;"></div>
@@ -6804,6 +6806,7 @@ function renderPhotoCard(p, options = {}) {
         <span class="art-row-sep">|</span>
         <span>${p.timestamp}</span>
         ${p.ageRange ? `<span class="art-row-sep">|</span><span>גיל ${artEsc(String(p.ageRange))}</span>` : ''}
+        ${isVerifiedAlbum ? `<span class="art-row-sep">|</span><span style="color:#2563eb; font-weight:700; display:inline-flex; align-items:center; gap:4px;">חשבון זה מאומת <span style="background:#dbeafe; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:10px;">✓</span></span>` : ''}
       </div>
       ${scoreBadgeHTML}
       ${cardLinksHTML}
@@ -8869,6 +8872,7 @@ function photoOpenDetail(id) {
             <span>·</span>
             <span>${a.timestamp}</span>
             ${a.ageRange ? `<span>·</span><span>גיל ${artEsc(String(a.ageRange))}</span>` : ''}
+            ${(a.verified || a.verifiedUser) ? `<span>·</span><span style="color:#2563eb; font-weight:700; display:inline-flex; align-items:center; gap:4px;">חשבון זה מאומת <span style="background:#dbeafe; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:10px;">✓</span></span>` : ''}
             ${a.expiresAt ? renderExpirationBadge(a.expiresAt) : ''}
             <button onclick="photoToggleLike('${artEsc(a.id)}')" class="photo-like-btn" style="background: rgba(0,0,0,0.05); border: 1px solid #ddd; cursor: pointer; color: #000; display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; transition: background 0.2s; font-weight: bold; font-size: 13px;">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="${photoIsLikedLocal(a.id) ? '#000' : 'none'}" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
