@@ -5833,17 +5833,22 @@ function storyApplyFilters() {
   const rows = mainContent.querySelectorAll('.stories-page .art-row');
   const isAgeVerified = typeof sessionStorage !== 'undefined' && sessionStorage.getItem('age_verified') === 'true';
   const dateSel = (typeof photoSel !== 'undefined' && photoSel.date) ? photoSel.date : [];
+  const topDateThreshold = photoDateThreshold(currentPhotoDateFilter);
   let visible = 0;
   rows.forEach(r => {
     const text = (r.dataset.search || r.textContent).toLowerCase();
     const rowCat = r.dataset.category || 'כללי';
+    const rowTime = r.dataset.time ? Number(r.dataset.time) : null;
     const catMatch = (selectedStoryCategories.size === 0 || selectedStoryCategories.has(rowCat));
-    // סינון תאריך מפאנל הסינונים (OR על הטווחים שנבחרו)
-    let dateMatch = true;
+    
+    // סינון תאריך: פאנל הצד (OR) AND שורת הצ׳יפים העליונה (currentPhotoDateFilter)
+    let dateMatchSide = true;
     if (dateSel.length) {
-      const rowTime = r.dataset.time ? Number(r.dataset.time) : null;
-      dateMatch = dateSel.some(dr => { const th = photoDateThreshold(dr); return th === null ? true : (rowTime !== null && rowTime >= th); });
+      dateMatchSide = dateSel.some(dr => { const th = photoDateThreshold(dr); return th === null ? true : (rowTime !== null && rowTime >= th); });
     }
+    const dateMatchTop = (topDateThreshold === null) || (rowTime !== null && rowTime >= topDateThreshold);
+    const dateMatch = dateMatchSide && dateMatchTop;
+
     const isVerifiedRow = (r.dataset.verified === '1' || r.dataset.verified === 'true');
     const verifiedMatch = !photoVerifiedOnly || isVerifiedRow;
     const match = catMatch && dateMatch && text.includes(q) && verifiedMatch;
@@ -5933,8 +5938,10 @@ function buildStoriesPage(stories) {
     }
     const isVerifiedStory = !!(s.verified || s.verifiedUser);
     const verifiedBadgeHTML = isVerifiedStory ? ` <span title="משתמש מאומת" style="color:#2563eb; font-weight:900; background:#dbeafe; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:10px; margin-right:3px;">✓</span>` : '';
+    const storyTime = photoAlbumTime(s);
+    const storyScore = (s.likes || 0) + (s.views || 0);
     return `
-      <div class="art-row" data-category="${artEsc(s.category || 'כללי')}" data-verified="${isVerifiedStory ? '1' : '0'}" data-time="${s.createdAt || (parseInt(String(s.id).replace(/\D/g,''), 10) || 0)}" data-score="${s.likes || 0}" data-search="${artEsc([s.title, s.summary, s.author, s.category].filter(Boolean).join(' '))}" onclick="storyOpenDetail('${artEsc(s.id)}')">
+      <div class="art-row" data-category="${artEsc(s.category || 'כללי')}" data-verified="${isVerifiedStory ? '1' : '0'}" data-time="${storyTime}" data-score="${storyScore}" data-search="${artEsc([s.title, s.summary, s.author, s.category].filter(Boolean).join(' '))}" onclick="storyOpenDetail('${artEsc(s.id)}')">
         <div class="art-row-text photo-card-info">
           <h3>${s.title}</h3>
           <div class="art-row-meta" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
@@ -8437,6 +8444,7 @@ function photoSetSort(value, cb) {
   const grp = cb.closest('.pf-check-group');
   if (grp) grp.querySelectorAll('input[type="checkbox"]').forEach(x => { if (x !== cb) x.checked = false; });
   cb.checked = true;
+  if (typeof photoRenderFilterBar === 'function') photoRenderFilterBar();
   pfApplyActive();
 }
 window.photoSetSort = photoSetSort;
@@ -10520,13 +10528,50 @@ window.photoToggleVerified = photoToggleVerified;
 // זמן היצירה של גלריה. גלריות חדשות שומרות createdAt מספרי; לישנות
 // נופלים לפרסור של התאריך המוצג (d.m.yyyy מ-toLocaleDateString בעברית).
 function photoAlbumTime(p) {
-  if (typeof p.createdAt === 'number' && isFinite(p.createdAt)) return p.createdAt;
-  const m = String(p.timestamp || '').match(/(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})/);
+  if (!p) return 0;
+  if (typeof p.createdAt === 'number' && isFinite(p.createdAt) && p.createdAt > 0) return p.createdAt;
+  
+  const idStr = String(p.id || '');
+  const idDigits = idStr.replace(/\D/g, '');
+  if (idDigits.length >= 10) {
+    const parsedIdTime = parseInt(idDigits, 10);
+    if (parsedIdTime && isFinite(parsedIdTime)) return parsedIdTime;
+  }
+
+  const str = String(p.timestamp || '').trim();
+  const now = Date.now();
+  const dayMs = 86400000;
+
+  if (str.includes('היום')) {
+    const timeMatch = str.match(/(\d{1,2}):(\d{2})/);
+    if (timeMatch) {
+      const d = new Date();
+      d.setHours(Number(timeMatch[1]), Number(timeMatch[2]), 0, 0);
+      return d.getTime();
+    }
+    return now;
+  }
+  if (str.includes('אתמול')) {
+    const timeMatch = str.match(/(\d{1,2}):(\d{2})/);
+    const d = new Date(now - dayMs);
+    if (timeMatch) d.setHours(Number(timeMatch[1]), Number(timeMatch[2]), 0, 0);
+    return d.getTime();
+  }
+  if (str.includes('לפני יומיים')) return now - 2 * dayMs;
+  if (str.includes('לפני 3 ימים')) return now - 3 * dayMs;
+  if (str.includes('השבוע') || str.includes('לפני שבוע') || str.includes('עודכן השבוע')) return now - 5 * dayMs;
+  if (str.includes('לפני שבועיים')) return now - 14 * dayMs;
+  if (str.includes('החודש') || str.includes('לפני חודש')) return now - 25 * dayMs;
+  if (str.includes('השנה')) return now - 120 * dayMs;
+
+  const m = str.match(/(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})/);
   if (m) {
     const t = new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1])).getTime();
     if (isFinite(t)) return t;
   }
-  return null;
+
+  const fallbackIdNum = parseInt(idDigits, 10);
+  return fallbackIdNum || 0;
 }
 
 // גבול תחתון לפי לוח השנה, כדי שהתוויות יהיו נכונות מילולית:
