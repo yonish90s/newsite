@@ -8156,6 +8156,114 @@ const productFilters = {
   grade: { sealed: false, likenew: false, used: false },
 };
 
+function buildSidebarNameChangeSectionHTML() {
+  const user = auth.currentUser;
+  if (!user) return '';
+
+  let profile = {};
+  try {
+    profile = JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}');
+  } catch (e) {}
+
+  const currentName = profile.nickname || user.displayName || (user.email ? user.email.split('@')[0] : 'משתמש');
+  const lastChange = Number(profile.lastNameChange || 0);
+  const now = Date.now();
+  const sixtyDaysMs = 60 * 24 * 60 * 60 * 1000;
+  const timePassed = now - lastChange;
+  const canChange = !lastChange || timePassed >= sixtyDaysMs;
+  const daysRemaining = Math.ceil((sixtyDaysMs - timePassed) / (1000 * 60 * 60 * 24));
+
+  return `
+    <div class="pf-name-change-sec" style="margin-top: 16px; padding-top: 14px; border-top: 1px dashed #cbd5e1; text-align: right; direction: rtl;">
+      <div style="font-size: 13.5px; font-weight: 800; color: #1e293b; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+        <span>✏️ שינוי שם תצוגה</span>
+      </div>
+      
+      <div style="font-size: 12px; color: #475569; margin-bottom: 8px;">
+        שם נוכחי: <strong style="color: #2563eb;">${artEsc(currentName)}</strong>
+      </div>
+
+      ${canChange ? `
+        <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px;">
+          <input type="text" id="pf-new-name-input" value="${artEsc(currentName)}" placeholder="הכנס שם חדש..." 
+                 style="flex: 1; min-width: 120px; padding: 7px 10px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13px; outline: none; transition: border-color 0.2s;"
+                 onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#cbd5e1'">
+          <button type="button" onclick="saveUserNickname()" 
+                  style="background: #2563eb; color: #fff; border: none; border-radius: 8px; padding: 7px 14px; font-size: 13px; font-weight: 700; cursor: pointer; transition: background 0.15s ease;">
+            שמור
+          </button>
+        </div>
+        <div style="font-size: 11px; color: #94a3b8; margin-top: 6px;">
+          * ניתן לשנות שם פעם אחת בלבד בכל 60 יום.
+        </div>
+      ` : `
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px; margin-top: 6px; font-size: 12px; color: #475569; text-align: center;">
+          <span style="display: inline-block; margin-bottom: 2px;">🔒 <strong>שינוי שם ננעל</strong></span><br>
+          תוכל לשנות שם שוב בעוד <strong style="color: #e11d48;">${daysRemaining} ימים</strong>.
+        </div>
+      `}
+    </div>
+  `;
+}
+window.buildSidebarNameChangeSectionHTML = buildSidebarNameChangeSectionHTML;
+
+async function saveUserNickname() {
+  const user = auth.currentUser;
+  if (!user) {
+    if (typeof showCopyToast === 'function') showCopyToast('יש להתחבר כדי לשנות שם');
+    return;
+  }
+
+  const inp = document.getElementById('pf-new-name-input');
+  const newName = inp ? inp.value.trim() : '';
+
+  if (!newName) {
+    if (typeof showCopyToast === 'function') showCopyToast('נא להזין שם תצוגה תקין');
+    return;
+  }
+  if (newName.length < 2 || newName.length > 30) {
+    if (typeof showCopyToast === 'function') showCopyToast('השם חייב להיות בין 2 ל-30 תווים');
+    return;
+  }
+
+  let profile = {};
+  try {
+    profile = JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}');
+  } catch (e) {}
+
+  const now = Date.now();
+  const sixtyDaysMs = 60 * 24 * 60 * 60 * 1000;
+  const lastChange = Number(profile.lastNameChange || 0);
+
+  if (lastChange && (now - lastChange) < sixtyDaysMs) {
+    const daysRemaining = Math.ceil((sixtyDaysMs - (now - lastChange)) / (1000 * 60 * 60 * 24));
+    if (typeof showCopyToast === 'function') showCopyToast(`לא ניתן לשנות שם. נותרו עוד ${daysRemaining} ימים.`);
+    return;
+  }
+
+  profile.nickname = newName;
+  profile.lastNameChange = now;
+
+  try {
+    localStorage.setItem(`user_profile_${user.uid}`, JSON.stringify(profile));
+  } catch (e) {}
+
+  if (user.updateProfile) {
+    try { await user.updateProfile({ displayName: newName }); } catch (e) {}
+  }
+
+  if (typeof showCopyToast === 'function') {
+    showCopyToast('✓ השם עודכן בהצלחה! תוכל לשנות שם שוב בעוד 60 יום.');
+  }
+
+  const page = (typeof pfActivePage === 'function') ? pfActivePage() : 'photos';
+  const box = mainContent.querySelector('.pf-box');
+  if (box) box.outerHTML = buildFiltersSidebarBox(page);
+
+  if (typeof pfApplyActive === 'function') pfApplyActive();
+}
+window.saveUserNickname = saveUserNickname;
+
 function buildFiltersSidebarBox(pageType) {
   pageType = pageType || 'photos';
   const f = productFilters;
@@ -8238,6 +8346,7 @@ function buildFiltersSidebarBox(pageType) {
     <div class="art-sidebar-box pf-box" style="border:1.5px solid #e2e8f0; border-radius:14px; padding:18px; background:#fff; box-shadow:0 4px 15px rgba(15,23,42,0.05); text-align:right; direction:rtl;">
       ${allowed.map(k => sections[k]).join('')}
       <button type="button" class="pf-clear-btn" onclick="photoClearFilters()">נקה סינון ✕</button>
+      ${buildSidebarNameChangeSectionHTML()}
     </div>
   `;
 }
