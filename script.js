@@ -7248,18 +7248,25 @@ function subscribeCommunities() {
 function communitiesListHTML() {
   const list = Object.values(communitiesData).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
   if (!list.length) {
-    return '<div style="text-align:center; color:#94a3b8; font-size:13px; padding:16px 8px;">אין קהילות עדיין.<br>צרו את הראשונה!</div>';
+    return '<div style="grid-column:1 / -1; text-align:center; color:#94a3b8; font-size:13px; padding:16px 8px;">אין קהילות עדיין.<br>צרו את הראשונה!</div>';
   }
-  return list.map(c => {
+  const colors = ['#000000', '#ea580c', '#7c3aed', '#000000'];
+  return list.map((c, index) => {
     const count = c.items ? Object.keys(c.items).length : 0;
+    const bg = colors[index % colors.length];
+    const iconStr = (c.icon && c.icon !== '🏘️') ? artEsc(c.icon) + ' ' : '';
     return `
-      <div onclick="openCommunityPage('${artEsc(c.id)}')" style="display:flex; align-items:center; gap:10px; padding:10px; border:1px solid #e2e8f0; border-radius:10px; cursor:pointer; margin-bottom:8px; background:#fff; transition:background .15s;">
-        <span style="font-size:22px; flex-shrink:0;">${artEsc(c.icon || '🏘️')}</span>
-        <div style="flex:1; min-width:0;">
-          <div style="font-size:13.5px; font-weight:800; color:#0f172a; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${artEsc(c.name || 'קהילה')}</div>
-          <div style="font-size:11.5px; color:#64748b; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${count} תכנים · ${artEsc(c.createdByName || '')}</div>
+      <div onclick="openCommunityPage('${artEsc(c.id)}')" 
+           style="background:${bg}; color:#ffffff; border-radius:10px; padding:10px 6px; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; min-height:54px; box-sizing:border-box; transition:transform 0.15s, opacity 0.15s; text-decoration:none;" 
+           onmouseover="this.style.opacity='0.9'; this.style.transform='translateY(-2px)';" 
+           onmouseout="this.style.opacity='1'; this.style.transform='translateY(0)';"
+           title="${artEsc(c.name || 'קהילה')}">
+        <div style="font-size:13px; font-weight:800; color:#ffffff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; width:100%;">
+          ${iconStr}${artEsc(c.name || 'קהילה')}
         </div>
-        <span style="color:#e11d48; font-size:12px; font-weight:800; flex-shrink:0;">כניסה ←</span>
+        <div style="font-size:11px; opacity:0.85; margin-top:2px; font-weight:600; color:#ffffff;">
+          ${count} תכנים
+        </div>
       </div>
     `;
   }).join('');
@@ -7268,13 +7275,13 @@ function communitiesListHTML() {
 function buildCommunitiesBox() {
   subscribeCommunities();
   const createBtn = auth.currentUser
-    ? `<button onclick="createCommunity()" style="width:100%; background:#e11d48; color:#fff; border:none; border-radius:8px; padding:10px; font-size:13.5px; font-weight:800; cursor:pointer; margin-bottom:12px;">➕ צור קהילה חדשה</button>`
-    : `<button onclick="openLiveChatLogin()" style="width:100%; background:#0f172a; color:#fff; border:none; border-radius:8px; padding:10px; font-size:13.5px; font-weight:800; cursor:pointer; margin-bottom:12px;">🔒 התחבר כדי ליצור קהילה</button>`;
+    ? `<button onclick="createCommunity()" style="width:100%; background:#e11d48; color:#fff; border:none; border-radius:10px; padding:10px; font-size:13.5px; font-weight:800; cursor:pointer; margin-bottom:12px;">➕ צור קהילה חדשה</button>`
+    : `<button onclick="openLiveChatLogin()" style="width:100%; background:#0f172a; color:#fff; border:none; border-radius:10px; padding:10px; font-size:13.5px; font-weight:800; cursor:pointer; margin-bottom:12px;">🔒 התחבר כדי ליצור קהילה</button>`;
   return `
     <div class="art-sidebar-box" style="border:1.5px solid #e2e8f0; border-radius:12px; padding:14px;">
       <div style="font-size:14px; font-weight:900; color:#0f172a; margin-bottom:10px;">🏘️ קהילות</div>
       ${createBtn}
-      <div id="communities-list">${communitiesListHTML()}</div>
+      <div id="communities-list" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; width:100%; box-sizing:border-box;">${communitiesListHTML()}</div>
     </div>
   `;
 }
