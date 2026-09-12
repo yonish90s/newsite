@@ -4151,7 +4151,7 @@ function updateAgeVerificationUIState(checked) {
     if (body) body.classList.add('age-not-verified');
   }
 
-  const checkboxes = document.querySelectorAll('#sidebar-age-checkbox, #toggle-adult-content, #toggle-adult-content-top');
+  const checkboxes = document.querySelectorAll('#sidebar-age-checkbox, #toggle-adult-content, #toggle-adult-content-top, .view-toggles input[onchange*="toggleSidebarAgeVerification"]');
   checkboxes.forEach(cb => { if (cb) cb.checked = !!checked; });
 
   const statusMsg = document.getElementById('sidebar-age-status-msg');
@@ -10316,8 +10316,10 @@ let photoImagesMode = (function () {
 function photoToggleImages(on) {
   photoImagesMode = !!on;
   try { localStorage.setItem('photo_images_mode', on ? '1' : '0'); } catch (e) {}
-  const root = mainContent.querySelector('.photos-page:not(.community-page):not(.user-page)');
+  const root = mainContent.querySelector('.articles-page');
   if (root) root.classList.toggle('text-mode', !on);
+  const boxes = document.querySelectorAll('.view-toggles input[onchange*="photoToggleImages"]');
+  boxes.forEach(b => { if (b) b.checked = !!on; });
 }
 window.photoToggleImages = photoToggleImages;
 
