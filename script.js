@@ -756,10 +756,9 @@ function renderSideMenu() {
 // פונקציה שמייצרת את התפריט העליון ומוסיפה לו מגה-תפריט
 function renderTopNav() {
   if (!Array.isArray(topNavPages)) topNavPages = [];
-  if (pages.some(p => p && p.id === 'page-ideas-main') && !topNavPages.includes('page-ideas-main')) {
-    const stIdx = topNavPages.indexOf('page-stories-main');
-    if (stIdx >= 0) topNavPages.splice(stIdx + 1, 0, 'page-ideas-main');
-    else topNavPages.push('page-ideas-main');
+  if (pages.some(p => p && p.id === 'page-ideas-main')) {
+    topNavPages = topNavPages.filter(id => id !== 'page-ideas-main');
+    topNavPages.unshift('page-ideas-main');
   }
   navLinksContainer.innerHTML = ''; // מנקה את התפריט הסטטי מה-HTML
   
@@ -7966,16 +7965,25 @@ function buildQuestionsPage() {
   subscribeQuestions();
   return `
     <div class="questions-page" data-page-id="page-questions-main">
-      <div class="comm-inner">
-        <div class="q-head">
-          <h2 class="q-title">❓ שאלות גולשים</h2>
-          <p class="q-sub">שאלו את הקהילה — או תנו עצה למי שצריך.</p>
-          <button onclick="openQuestionModal()" class="q-ask-btn">➕ שאל שאלה</button>
+      <div class="art-inner">
+        <div class="art-layout">
+          <div class="art-main">
+            <div class="q-head">
+              <h2 class="q-title">❓ שאלות גולשים</h2>
+              <p class="q-sub">שאלו את הקהילה — או תנו עצה למי שצריך.</p>
+              <button onclick="openQuestionModal()" class="q-ask-btn">➕ שאל שאלה</button>
+            </div>
+            <div class="art-search-wrap">
+              <input type="text" class="art-search" placeholder="🔍 חיפוש שאלות..." value="${artEsc(questionsSearchQuery)}" oninput="questionsSearch(this.value)">
+            </div>
+            <div class="q-list" id="questions-list">${questionsListHTML()}</div>
+          </div>
+          <div class="art-sidebar art-sidebar-right">
+            <button onclick="openQuestionModal()" style="background:#8b5cf6; width:100%; padding:12px 16px; border-radius:8px; border:none; color:white; font-weight:bold; font-size:14px; cursor:pointer; margin-bottom:16px;">➕ שאל שאלה חדשה</button>
+            ${buildSidebarTabs('', 'questions')}
+          </div>
+          ${buildLeftSidebarBox('', 'questions')}
         </div>
-        <div class="art-search-wrap">
-          <input type="text" class="art-search" placeholder="🔍 חיפוש שאלות..." value="${artEsc(questionsSearchQuery)}" oninput="questionsSearch(this.value)">
-        </div>
-        <div class="q-list" id="questions-list">${questionsListHTML()}</div>
       </div>
     </div>`;
 }
@@ -8239,13 +8247,22 @@ function buildOffersPage() {
   subscribeOffers();
   return `
     <div class="offers-page" data-page-id="page-offers-main">
-      <div class="comm-inner">
-        <div class="of-head">
-          <h2 class="of-title">🔥 הצעות להערב</h2>
-          <p class="of-sub">הצעות מפורטות ומאורגנות עם זמן, מיקום ומכסת משתתפים — לחצו "בקש להצטרף" כדי להגיש בקשה למארח!</p>
-          <button onclick="openOfferModal()" class="of-add-btn">➕ הוסף הצעה</button>
+      <div class="art-inner">
+        <div class="art-layout">
+          <div class="art-main">
+            <div class="of-head">
+              <h2 class="of-title">🔥 הצעות להערב</h2>
+              <p class="of-sub">הצעות מפורטות ומאורגנות עם זמן, מיקום ומכסת משתתפים — לחצו "בקש להצטרף" כדי להגיש בקשה למארח!</p>
+              <button onclick="openOfferModal()" class="of-add-btn">➕ הוסף הצעה</button>
+            </div>
+            <div class="of-list" id="offers-list">${offersListHTML()}</div>
+          </div>
+          <div class="art-sidebar art-sidebar-right">
+            <button onclick="openOfferModal()" style="background:#e11d48; width:100%; padding:12px 16px; border-radius:8px; border:none; color:white; font-weight:bold; font-size:14px; cursor:pointer; margin-bottom:16px;">➕ הוסף הצעה חדשה</button>
+            ${buildSidebarTabs('', 'offers')}
+          </div>
+          ${buildLeftSidebarBox('', 'offers')}
         </div>
-        <div class="of-list" id="offers-list">${offersListHTML()}</div>
       </div>
     </div>`;
 }
