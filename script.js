@@ -201,8 +201,8 @@ const defaultPages = [
 
 // הגדרות ברירת מחדל (יוחלפו אם יש שמירה)
 let pages = defaultPages;
-let activePageId = 'page-photos-main';
-let topNavPages = ['page-photos-main', 'page-stories-main', 'page-ideas-main']; // העמודים שמופיעים בתפריט העליון
+let activePageId = 'page-ideas-main';
+let topNavPages = ['page-ideas-main', 'page-photos-main', 'page-stories-main']; // העמודים שמופיעים בתפריט העליון
 let isEditMode = false; // ברירת מחדל: אורח (ללא עריכה)
 let undoStack = []; // מערך לשמירת היסטוריית שינויים לצורך ביטול (Undo)
 let siteBackgrounds = { dashboard: null, topNav: null, main: null };
@@ -445,11 +445,10 @@ function sanitizeToOnlyPhotosAndStories() {
       if (p && p.id && !topNavPages.includes(p.id)) topNavPages.push(p.id);
     });
   }
-  // מוודאים ש-page-ideas-main מופיע בתפריט העליון מיד אחרי page-stories-main
-  if (pages.some(p => p && p.id === 'page-ideas-main') && !topNavPages.includes('page-ideas-main')) {
-    const stIdx = topNavPages.indexOf('page-stories-main');
-    if (stIdx >= 0) topNavPages.splice(stIdx + 1, 0, 'page-ideas-main');
-    else topNavPages.push('page-ideas-main');
+  // מוודאים ש-page-ideas-main מופיע ראשון בתפריט העליון
+  if (pages.some(p => p && p.id === 'page-ideas-main')) {
+    topNavPages = topNavPages.filter(id => id !== 'page-ideas-main');
+    topNavPages.unshift('page-ideas-main');
   }
   // מסירים מהתפריט העליון עמודים שכבר לא קיימים (נמחקו)
   topNavPages = topNavPages.filter(id => pages.some(p => p && p.id === id));
@@ -472,10 +471,10 @@ async function initSite() {
 
   sanitizeToOnlyPhotosAndStories();
 
-  // עמוד הבית הראשי בעת כניסה לאתר הוא תמיד עמוד התמונות!
-  let mainPhotoPage = pages.find(p => p && p.content && p.content.includes('photos-page')) || pages.find(p => p && p.title && p.title.includes('תמונות'));
-  if (mainPhotoPage) {
-    activePageId = mainPhotoPage.id;
+  // עמוד הבית הראשי בעת כניסה לאתר הוא עמוד רעיונות!
+  let mainIdeasPage = pages.find(p => p && p.id === 'page-ideas-main') || pages.find(p => p && p.content && p.content.includes('ideas-page')) || pages.find(p => p && p.title && p.title.includes('רעיונות'));
+  if (mainIdeasPage) {
+    activePageId = mainIdeasPage.id;
   }
 
   renderSideMenu();
@@ -505,11 +504,9 @@ async function initSite() {
       
       sanitizeToOnlyPhotosAndStories();
 
-      if (!activePageId || !pages.some(p => p && p.id === activePageId)) {
-        let bootPhotoPage = pages.find(p => p && p.content && p.content.includes('photos-page')) || pages.find(p => p && p.title && p.title.includes('תמונות'));
-        if (bootPhotoPage) {
-          activePageId = bootPhotoPage.id;
-        }
+      let bootIdeasPage = pages.find(p => p && p.id === 'page-ideas-main') || pages.find(p => p && p.content && p.content.includes('ideas-page')) || pages.find(p => p && p.title && p.title.includes('רעיונות'));
+      if (bootIdeasPage) {
+        activePageId = bootIdeasPage.id;
       }
       
       localforage.setItem('mySitePages_v3', pages);
@@ -12986,20 +12983,19 @@ onValue(ref(db, 'website'), (snapshot) => {
     let navs = Array.from(new Set(data.topNavPages)).filter(id => id !== 'page-ci' && id !== 'page-em');
     // מסירים מהתפריט זהים של עמודים שכבר לא קיימים (נמחקו/כפולים)
     navs = navs.filter(id => pages.some(p => p && p.id === id));
+    let pIdeas = pages.find(p => p && p.id === 'page-ideas-main') || pages.find(p => p && p.title && p.title.includes('רעיונות'));
+    if (pIdeas) {
+      navs = navs.filter(id => id !== pIdeas.id);
+      navs.unshift(pIdeas.id);
+    }
     let pPhoto = pages.find(p => p && p.content && p.content.includes('photos-page')) || pages.find(p => p && p.title && p.title.includes('תמונות'));
-    if (pPhoto && !navs.includes(pPhoto.id)) navs.unshift(pPhoto.id);
+    if (pPhoto && !navs.includes(pPhoto.id)) navs.push(pPhoto.id);
     // עמוד הקהילות תמיד מופיע בתפריט העליון
     if (pages.some(p => p && p.id === 'page-communities-main') && !navs.includes('page-communities-main')) navs.push('page-communities-main');
     // עמוד "שאלות גולשים" תמיד בתפריט
     if (pages.some(p => p && p.id === 'page-questions-main') && !navs.includes('page-questions-main')) navs.push('page-questions-main');
     // עמוד "הצעות" תמיד בתפריט
     if (pages.some(p => p && p.id === 'page-offers-main') && !navs.includes('page-offers-main')) navs.push('page-offers-main');
-    // עמוד "רעיונות" תמיד בתפריט העליון
-    if (pages.some(p => p && p.id === 'page-ideas-main') && !navs.includes('page-ideas-main')) {
-      const stIdx = navs.indexOf('page-stories-main');
-      if (stIdx >= 0) navs.splice(stIdx + 1, 0, 'page-ideas-main');
-      else navs.push('page-ideas-main');
-    }
     // מסירים מהתפריט את העמודים שהוסרו
     navs = navs.filter(id => !REMOVED_PHOTO_PAGE_IDS.includes(id));
     if (JSON.stringify(topNavPages) !== JSON.stringify(navs)) {
