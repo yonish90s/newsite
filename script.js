@@ -412,7 +412,7 @@ function sanitizeToOnlyPhotosAndStories() {
   if (!_infoPage) {
     pages.push({ id: 'page-info-main', title: 'מידע 🔒', isHidden: true, content: _infoContent });
   } else {
-    _infoPage.isHidden = true;
+    if (_infoPage.isHidden === undefined) _infoPage.isHidden = true;
     _infoPage.content = _infoContent;
     if (!_infoPage.title) _infoPage.title = 'מידע 🔒';
   }
@@ -12956,7 +12956,7 @@ onValue(ref(db, 'website'), (snapshot) => {
     if (!_ip) {
       pList.push({ id: 'page-info-main', title: 'מידע 🔒', isHidden: true, content: _ipc });
     } else {
-      _ip.isHidden = true; _ip.content = _ipc; if (!_ip.title) _ip.title = 'מידע 🔒';
+      if (_ip.isHidden === undefined) _ip.isHidden = true; _ip.content = _ipc; if (!_ip.title) _ip.title = 'מידע 🔒';
     }
     // עמוד "שאלות גולשים" — קיים תמיד
     const _qp = pList.find(p => p && p.id === 'page-questions-main');
