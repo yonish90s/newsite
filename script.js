@@ -208,6 +208,8 @@ const SIDE_ONLY_PAGE_IDS = ['page-questions-main', 'page-offers-main', 'page-pho
 // זיהוי עמוד צד לפי מזהה, תוכן או כותרת (העמודים עשויים להיווצר עם מזהים דינמיים)
 function isSideOnlyPage(p) {
   if (!p) return false;
+  // "מוצרי יד שניה" הוא עמוד ראשי בתפריט העליון (למרות שתוכנו מסוג photos-page)
+  if (p.id === 'page-secondhand-main' || (p.content || '').includes('secondhand-page') || (p.title || '').includes('יד שניה')) return false;
   if (SIDE_ONLY_PAGE_IDS.includes(p.id)) return true;
   const t = p.title || '', c = p.content || '';
   if (c.includes('photos-page') || c.includes('stories-page') || c.includes('questions-page') || c.includes('offers-page')) return true;
@@ -418,6 +420,17 @@ function sanitizeToOnlyPhotosAndStories() {
   } else {
     if (!_commPage.title) _commPage.title = 'קהילות 🏘️';
     _commPage.content = _commContent;
+  }
+
+  // עמוד "מוצרי יד שניה" — עמוד מסוג תמונות (גריד + חיפוש + סינון), הנתונים נשמרים בתוכן העמוד
+  const _shPage = pages.find(p => p && p.id === 'page-secondhand-main');
+  if (!_shPage) {
+    const _shContent = (typeof buildPhotosPage === 'function')
+      ? buildPhotosPage([], 'secondhand')
+      : '<div class="photos-page secondhand-page" data-page-id="page-secondhand-main" data-section="secondhand" data-photos-json="%5B%5D"></div>';
+    pages.push({ id: 'page-secondhand-main', title: 'מוצרי יד שניה 🛒', content: _shContent });
+  } else {
+    if (!_shPage.title) _shPage.title = 'מוצרי יד שניה 🛒';
   }
 
   // מסירים לצמיתות את העמודים "יד שניה" ו"השוואת מחירים"
@@ -7936,6 +7949,13 @@ function buildCommunitiesPage() {
 }
 window.buildCommunitiesPage = buildCommunitiesPage;
 
+// עמוד "מוצרי יד שניה" — גריד מוצרים בקונספט של עמוד התמונות/רעיונות
+function buildSecondhandPage() {
+  const albums = (typeof photoGetAlbums === 'function') ? photoGetAlbums() : [];
+  return buildPhotosPage(albums, 'secondhand');
+}
+window.buildSecondhandPage = buildSecondhandPage;
+
 // ============================================================
 // עמוד "מידע" — לוח בקרה למנהל בלבד. משתמשים (רשומים ואורחים) שולחים
 // מידע דרך טופס ציבורי; המנהל כותב הערות משלו ורואה את כל ההגשות.
@@ -9359,12 +9379,14 @@ function buildLeftSidebarBox(popularHTML, section) {
   };
   // קבוצה "קהילות" = תמונות, סיפורים
   const isPhotosOrStories = (p) => {
+    // "מוצרי יד שניה" אינו חלק מקבוצת קהילות (למרות שתוכנו photos-page)
+    if (p.id === 'page-secondhand-main' || (p.content || '').includes('secondhand-page') || (p.title || '').includes('יד שניה')) return false;
     const t = p.title || '', c = p.content || '';
     return p.id === 'page-photos-main' || p.id === 'page-stories-main'
       || t.includes('תמונות') || t.includes('סיפורים')
       || c.includes('photos-page') || c.includes('stories-page');
   };
-  const mainPagesHTML = pagesToDisplay.filter(p => !isSideOnlyPage(p)).map(renderNavItem).join('');
+  const mainPagesHTML = pagesToDisplay.filter(p => !isSideOnlyPage(p) && !isPhotosOrStories(p) && !isQuestionsOrOffers(p)).map(renderNavItem).join('');
   // "עמודי צד": שאלות גולשים קודם, ואז הצעות
   const qFirst = (p) => (p.id === 'page-questions-main' || (p.title || '').includes('שאלות גולשים') || (p.content || '').includes('questions-page')) ? 0 : 1;
   // "קהילות": תמונות קודם, ואז סיפורים
@@ -9457,7 +9479,7 @@ function buildPhotosPage(albums, section) {
   albums = albums.filter(p => !p.adminOnly || _isAdminView);
 
   // סינון לפי סרגל הקטגוריות (תמונות / קהילות) — "הכל · כללי · לעסקים"
-  if ((section === 'photos' || section === 'communities') && typeof filterAlbumsByCategory === 'function') {
+  if ((section === 'photos' || section === 'communities' || section === 'secondhand') && typeof filterAlbumsByCategory === 'function') {
     albums = filterAlbumsByCategory(albums, section);
   }
 
@@ -9646,9 +9668,16 @@ function buildPhotosPage(albums, section) {
     addBtnHTML = `<button onclick="createCommunity()" style="background:#e11d48; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: white; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.2s;">
         ➕ צור קהילה חדשה
        </button>`;
+  } else if (section === 'secondhand') {
+    sectionTitle = 'כל המוצרים';
+    searchPlaceholder = '🔍 חיפוש מוצרים...';
+    noResultsText = 'לא נמצאו מוצרים התואמים לחיפוש';
+    addBtnHTML = `<button onclick="openPhotoModal()" style="background:#e11d48; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: white; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.2s;">
+        ➕ הוסף מוצר יד שניה
+       </button>`;
   }
 
-  return `<div class="articles-page photos-page ${section === 'ideas' ? 'ideas-page' : ''} ${section === 'communities' ? 'communities-page' : ''} photo-cols-${photoGridCols}${photoImagesMode ? '' : ' text-mode'}" data-section="${section}" data-photos-json="${json}">
+  return `<div class="articles-page photos-page ${section === 'ideas' ? 'ideas-page' : ''} ${section === 'communities' ? 'communities-page' : ''} ${section === 'secondhand' ? 'secondhand-page' : ''} photo-cols-${photoGridCols}${photoImagesMode ? '' : ' text-mode'}" data-section="${section}" data-photos-json="${json}">
     <div class="art-inner">
       <div class="art-featured-grid">${featuredHTML}</div>
       <div class="art-layout">
@@ -11021,7 +11050,7 @@ function openHistoryDrawer() {
   let history = [];
   try { history = JSON.parse(localStorage.getItem('watch_history') || '[]'); } catch (e) {}
   const inner = history.length
-    ? `<div class="saved-grid">${history.map(item => _drawerCell(item.id, item.img, item.title)).join('')}</div>`
+    ? `<div class="saved-grid">${history.map(item => _historyCell(item)).join('')}</div>`
     : `<div class="saved-empty">היסטוריית הצפייה שלך ריקה.<br>כל תמונה, סיפור או רעיון שתיכנס אליהם יופיעו כאן.</div>`;
   const clearBtn = history.length
     ? `<button onclick="clearHistoryDrawer()" title="נקה את כל ההיסטוריה" style="background:transparent; color:#f87171; border:1px solid rgba(248,113,113,0.5); border-radius:8px; padding:6px 14px; font-size:13px; font-weight:800; cursor:pointer;">🗑️ נקה היסטוריה</button>`
@@ -11029,6 +11058,39 @@ function openHistoryDrawer() {
   openSideDrawer('🕒 היסטוריית צפייה', inner, clearBtn);
 }
 window.openHistoryDrawer = openHistoryDrawer;
+
+// תא בהיסטוריה — לחיצה מנתבת לסיפור/תמונה/רעיון המתאים
+function _historyCell(item) {
+  const t = item.type || '';
+  return `<div class="saved-cell" onclick="openHistoryItem('${artEsc(item.id)}','${artEsc(t)}')" title="${artEsc(item.title || '')}">
+    <div class="saved-thumb">${item.img ? `<img src="${item.img}" alt="">` : '🖼️'}</div>
+    <div class="saved-name">${artEsc(item.title || 'ללא שם')}</div>
+  </div>`;
+}
+
+// פותח פריט מההיסטוריה לפי סוגו (עם ניחוש לפי קידומת המזהה לפריטים ישנים ללא type)
+function openHistoryItem(id, type) {
+  closeSavedModal();
+  let kind = (type && type !== 'photo') ? type : '';
+  if (!kind) {
+    if (/^idea/i.test(id)) kind = 'idea';
+    else if (/^ph/i.test(id)) kind = 'photo';
+    else if (/^s/i.test(id)) kind = 'story';
+    else kind = type || 'photo';
+  }
+  const findPage = (pred) => (typeof pages !== 'undefined' && Array.isArray(pages)) ? pages.find(pred) : null;
+  if (kind === 'story') {
+    const sp = findPage(p => p && ((p.content || '').includes('stories-page') || (p.title || '').includes('סיפורים')));
+    if (sp) { activePageId = sp.id; if (typeof renderTopNav === 'function') renderTopNav(); if (typeof renderPage === 'function') renderPage(); }
+    setTimeout(() => { if (typeof storyOpenDetail === 'function') storyOpenDetail(id); }, 90);
+  } else if (kind === 'idea') {
+    const ip = findPage(p => p && (p.id === 'page-ideas-main' || (p.content || '').includes('ideas-page') || (p.title || '').includes('רעיונות')));
+    if (ip) { activePageId = ip.id; if (typeof renderTopNav === 'function') renderTopNav(); if (typeof renderPage === 'function') renderPage(); }
+  } else {
+    if (typeof feedOpenGallery === 'function') feedOpenGallery(id);
+  }
+}
+window.openHistoryItem = openHistoryItem;
 
 // ניקוי היסטוריית הצפייה מתוך ה-drawer (מרענן את ה-drawer עצמו)
 function clearHistoryDrawer() {
@@ -13521,6 +13583,14 @@ onValue(ref(db, 'website'), (snapshot) => {
       if (!_cp.title) _cp.title = 'קהילות 🏘️';
       _cp.content = _cpc;
     }
+    // עמוד "מוצרי יד שניה" — קיים תמיד (נתונים נשמרים בתוכן העמוד)
+    const _shp = pList.find(p => p && p.id === 'page-secondhand-main');
+    if (!_shp) {
+      const _shpc = (typeof buildPhotosPage === 'function') ? buildPhotosPage([], 'secondhand') : '<div class="photos-page secondhand-page" data-page-id="page-secondhand-main" data-section="secondhand" data-photos-json="%5B%5D"></div>';
+      pList.push({ id: 'page-secondhand-main', title: 'מוצרי יד שניה 🛒', content: _shpc });
+    } else if (!_shp.title) {
+      _shp.title = 'מוצרי יד שניה 🛒';
+    }
     // עמוד "מידע" — קיים תמיד אך מוסתר
     const _ip = pList.find(p => p && p.id === 'page-info-main');
     const _ipc = '<div class="info-page" data-page-id="page-info-main"></div>';
@@ -13572,6 +13642,8 @@ onValue(ref(db, 'website'), (snapshot) => {
     }
     // עמוד הקהילות תמיד מופיע בתפריט העליון
     if (pages.some(p => p && p.id === 'page-communities-main') && !navs.includes('page-communities-main')) navs.push('page-communities-main');
+    // עמוד "מוצרי יד שניה" תמיד מופיע בתפריט העליון
+    if (pages.some(p => p && p.id === 'page-secondhand-main') && !navs.includes('page-secondhand-main')) navs.push('page-secondhand-main');
     // עמודים כמו "שאלות גולשים", "הצעות", "תמונות" ו"סיפורים" הם עמודי צד בלבד (מוסרים מהתפריט העליון)
     navs = navs.filter(id => !isSideOnlyId(id));
     // מסירים מהתפריט את העמודים שהוסרו
@@ -13792,24 +13864,21 @@ window.ideasCategoryBarHTML = ideasCategoryBarHTML;
 // ============================================================
 // סרגל קטגוריות גנרי לעמודי "תמונות" ו"קהילות" ("הכל · כללי · לעסקים")
 // ============================================================
-let photoCatBarFilter = 'הכל';
-let communityCatBarFilter = 'הכל';
+let sectionCatFilters = {};
 
 function getSectionCategoryFilter(section) {
-  return section === 'communities' ? communityCatBarFilter : photoCatBarFilter;
+  return sectionCatFilters[section] || 'הכל';
 }
 
 function setSectionCategoryFilter(section, cat) {
-  if (section === 'communities') {
-    communityCatBarFilter = cat;
-    if (typeof buildCommunitiesPage === 'function' && typeof mainContent !== 'undefined' && mainContent) {
-      mainContent.innerHTML = buildCommunitiesPage();
-    }
-  } else {
-    photoCatBarFilter = cat;
-    if (typeof buildPhotosPage === 'function' && typeof photoGetAlbums === 'function' && typeof mainContent !== 'undefined' && mainContent) {
-      mainContent.innerHTML = buildPhotosPage(photoGetAlbums(), 'photos');
-    }
+  sectionCatFilters[section] = cat;
+  if (typeof mainContent === 'undefined' || !mainContent) return;
+  if (section === 'communities' && typeof buildCommunitiesPage === 'function') {
+    mainContent.innerHTML = buildCommunitiesPage();
+  } else if (section === 'secondhand' && typeof buildSecondhandPage === 'function') {
+    mainContent.innerHTML = buildSecondhandPage();
+  } else if (typeof buildPhotosPage === 'function' && typeof photoGetAlbums === 'function') {
+    mainContent.innerHTML = buildPhotosPage(photoGetAlbums(), 'photos');
   }
 }
 window.setSectionCategoryFilter = setSectionCategoryFilter;
@@ -14081,6 +14150,7 @@ function addToWatchHistory(item) {
       category: item.category || 'גלריה',
       author: item.author || '',
       img: validImg,
+      type: item.type || 'photo',
       time: new Date().toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }),
       date: new Date().toLocaleDateString('he-IL')
     });
