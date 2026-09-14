@@ -13768,7 +13768,9 @@ function ideasCategoryBarHTML() {
   const cats = [
     { id: 'הכל', label: 'הכל' },
     { id: 'רעיונות לעסקים', label: '💼 רעיונות לעסקים' },
-    { id: 'רעיונות כללי', label: '💡 רעיונות כללי' }
+    { id: 'רעיונות כללי', label: '💡 רעיונות כללי' },
+    { id: 'מחקר פרטי', label: '🔬 מחקר פרטי' },
+    { id: 'חוקים', label: '⚖️ חוקים' }
   ];
 
   return `
@@ -13910,7 +13912,13 @@ function buildIdeasPage() {
         return cat === 'רעיונות לעסקים' || title.includes('עסק') || summary.includes('עסק') || desc.includes('עסק');
       }
       if (currentIdeaCategoryFilter === 'רעיונות כללי') {
-        return cat === 'רעיונות כללי' || cat === 'כללי' || (!cat.includes('עסק') && !title.includes('עסק') && !summary.includes('עסק'));
+        return cat === 'רעיונות כללי' || cat === 'כללי' || (!cat.includes('עסק') && !cat.includes('מחקר') && !cat.includes('חוק') && !title.includes('עסק') && !title.includes('מחקר') && !title.includes('חוק'));
+      }
+      if (currentIdeaCategoryFilter === 'מחקר פרטי') {
+        return cat === 'מחקר פרטי' || title.includes('מחקר') || summary.includes('מחקר') || desc.includes('מחקר');
+      }
+      if (currentIdeaCategoryFilter === 'חוקים') {
+        return cat === 'חוקים' || title.includes('חוק') || summary.includes('חוק') || desc.includes('חוק');
       }
       return cat === currentIdeaCategoryFilter;
     });
