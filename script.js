@@ -544,30 +544,65 @@ const navLinksContainer = document.querySelector('.nav-links'); // התפריט 
 // מגה-מנו הוסר לחלוטין
 const megaMenuContainer = { classList: { add: ()=>{}, remove: ()=>{} }, style: {}, innerHTML: '' };
 
+function goToHomePage() {
+  if (typeof pages === 'undefined') return;
+  const photoPage = pages.find(p => p && (p.id === 'page-photos-main' || (p.title && p.title.includes('תמונות')) || (p.content && p.content.includes('photos-page'))));
+  if (photoPage) {
+    activePageId = photoPage.id;
+  } else if (pages.length > 0) {
+    activePageId = pages[0].id;
+  }
+  if (typeof renderTopNav === 'function') renderTopNav();
+  if (typeof renderPage === 'function') renderPage();
+  try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) {}
+}
+window.goToHomePage = goToHomePage;
+
 // טיפול בלוגו ובטקסט הלוגו
 const mainLogo = document.getElementById('main-logo');
 const mainLogoText = document.getElementById('main-logo-text');
 
 if (mainLogo) {
-  mainLogo.addEventListener('click', function() {
-    if (!isEditMode) return;
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.onchange = e => {
-      const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = event => {
-          const dataUrl = event.target.result;
-          this.src = dataUrl;
-          
-          const loaderImg = document.getElementById('loader-img');
-          const favicon = document.getElementById('favicon');
-          if (loaderImg) loaderImg.src = dataUrl;
-          if (favicon) favicon.href = dataUrl;
-          
-          localforage.setItem('mySiteLogo_v3', dataUrl);
+  mainLogo.addEventListener('click', function(e) {
+    if (isEditMode) {
+      e.stopPropagation();
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.onchange = ev => {
+        const file = ev.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = event => {
+            const dataUrl = event.target.result;
+            this.src = dataUrl;
+            
+            const loaderImg = document.getElementById('loader-img');
+            const favicon = document.getElementById('favicon');
+            if (loaderImg) loaderImg.src = dataUrl;
+            if (favicon) favicon.href = dataUrl;
+            
+            localforage.setItem('mySiteLogo_v3', dataUrl);
+            saveCurrentPageContent();
+          };
+          reader.readAsDataURL(file);
+        }
+      };
+      input.click();
+    } else {
+      goToHomePage();
+    }
+  });
+}
+
+const logoAreaEl = document.querySelector('.logo-area');
+if (logoAreaEl) {
+  logoAreaEl.addEventListener('click', function(e) {
+    if (!isEditMode) {
+      goToHomePage();
+    }
+  });
+}
         };
         reader.readAsDataURL(file);
       }
