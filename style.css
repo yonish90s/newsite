@@ -4633,6 +4633,78 @@ html.hide-site-images .photo-mini-thumb {
   opacity: 0 !important;
 }
 
+/* ===== מצב כהה מודרני (Dark Theme) בסגנון הרפרנס ===== */
+body.dark-mode {
+  background-color: #0f0f12 !important;
+  color: #f3f4f6 !important;
+}
+
+body.dark-mode .apple-nav {
+  background: rgba(20, 20, 25, 0.85) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+body.dark-mode .center-content {
+  background-color: #0f0f12 !important;
+}
+
+body.dark-mode .art-row,
+body.dark-mode .art-card,
+body.dark-mode .art-rec-card,
+body.dark-mode .art-detail {
+  background: #18181c !important;
+  border: 1px solid #282832 !important;
+  color: #f3f4f6 !important;
+}
+
+body.dark-mode .art-row-text h3,
+body.dark-mode .art-detail-title,
+body.dark-mode h1, body.dark-mode h2, body.dark-mode h3, body.dark-mode h4 {
+  color: #ffffff !important;
+}
+
+body.dark-mode .art-row-text p,
+body.dark-mode .art-row-meta,
+body.dark-mode .art-rec-meta {
+  color: #9ca3af !important;
+}
+
+body.dark-mode .notif-bell {
+  background: #24242c !important;
+  color: #f3f4f6 !important;
+  border: 1px solid #333340 !important;
+}
+
+body.dark-mode .notif-bell:hover {
+  background: #32323e !important;
+}
+
+body.dark-mode .manager-btn {
+  background: #24242c !important;
+  color: #f3f4f6 !important;
+  border: 1px solid #333340 !important;
+}
+
+body.dark-mode .photo-like-btn,
+body.dark-mode .photo-save-btn {
+  background: #24242c !important;
+  border: 1px solid #333340 !important;
+  color: #ffffff !important;
+}
+
+body.dark-mode .photo-like-btn:hover,
+body.dark-mode .photo-save-btn:hover {
+  background: #32323e !important;
+}
+
+body.dark-mode .custom-modal-content,
+body.dark-mode .modal-content,
+body.dark-mode .auth-modal-card {
+  background-color: #18181c !important;
+  color: #f3f4f6 !important;
+  border: 1px solid #2e2e38 !important;
+}
+
 
 
 

@@ -6764,9 +6764,9 @@ function renderPhotoCard(p, options = {}) {
 
   const isLikedCard = photoIsLikedLocal(p.id);
   const cardLikeBtnHTML = `
-    <button type="button" onclick="event.stopPropagation(); photoToggleLike('${artEsc(p.id)}')" class="art-telegram-btn" title="לייק לגלריה זו" style="display: inline-flex; align-items: center; background: #2f2f2f; color: #ffffff; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: bold; gap: 6px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: all 0.2s;">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="${isLikedCard ? '#ffffff' : 'none'}" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
-        <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
+    <button type="button" onclick="event.stopPropagation(); photoToggleLike('${artEsc(p.id)}')" class="art-telegram-btn" title="לייק לגלריה זו" style="display: inline-flex; align-items: center; background: #2f2f2f; color: ${isLikedCard ? '#ff2e4d' : '#ffffff'}; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: bold; gap: 6px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: all 0.2s;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="${isLikedCard ? '#ff2e4d' : 'none'}" stroke="${isLikedCard ? '#ff2e4d' : 'currentColor'}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
       </svg>
       <span>${likesCount}</span>
     </button>
@@ -9484,6 +9484,7 @@ function photoOpenDetail(id) {
   try { albums = JSON.parse(decodeURIComponent(container.dataset.photosJson)); } catch(e){ return; }
   const a = albums.find(x => x.id === id);
   if (!a) return;
+  if (typeof addToWatchHistory === 'function') addToWatchHistory(a);
 
   const validImages = (a.images || []).filter(img => !!img);
   const mainImg = validImages[0] || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80';
@@ -9560,9 +9561,9 @@ function photoOpenDetail(id) {
             ${a.ageRange ? `<span>·</span><span>גיל ${artEsc(String(a.ageRange))}</span>` : ''}
             ${isUserVerified(a.authorId, a.author, a.verified || a.verifiedUser) ? `<span>·</span><span style="color:#2563eb; font-weight:700; display:inline-flex; align-items:center; gap:4px;">חשבון זה מאומת <span style="background:#dbeafe; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:10px;">✓</span></span>` : ''}
             ${a.expiresAt ? renderExpirationBadge(a.expiresAt) : ''}
-            <button onclick="photoToggleLike('${artEsc(a.id)}')" class="photo-like-btn" style="background: rgba(0,0,0,0.05); border: 1px solid #ddd; cursor: pointer; color: #000; display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; transition: background 0.2s; font-weight: bold; font-size: 13px;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="${photoIsLikedLocal(a.id) ? '#000' : 'none'}" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
-                <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
+            <button onclick="photoToggleLike('${artEsc(a.id)}')" class="photo-like-btn" style="background: rgba(255,255,255,0.08); border: 1px solid #333; cursor: pointer; color: ${photoIsLikedLocal(a.id) ? '#ff2e4d' : '#fff'}; display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; transition: background 0.2s; font-weight: bold; font-size: 13px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="${photoIsLikedLocal(a.id) ? '#ff2e4d' : 'none'}" stroke="${photoIsLikedLocal(a.id) ? '#ff2e4d' : 'currentColor'}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
               </svg>
               <span>${a.likes || 0} לייקים</span>
             </button>
@@ -10475,7 +10476,9 @@ window.photoApprove = photoApprove;
 
 function photoIsLikedLocal(id) {
   try {
-    const liked = JSON.parse(localStorage.getItem('liked_galleries') || '{}');
+    const user = auth.currentUser;
+    const localKey = user ? `liked_galleries_${user.uid}` : 'guest_liked_galleries';
+    const liked = JSON.parse(localStorage.getItem(localKey) || localStorage.getItem('liked_galleries') || '{}');
     return !!liked[id];
   } catch (e) {
     return false;
@@ -10520,16 +10523,11 @@ async function syncUserLikeBudget(user) {
 window.syncUserLikeBudget = syncUserLikeBudget;
 
 function photoToggleLike(id) {
-  const container = mainContent.querySelector('.photos-page');
+  const container = mainContent.querySelector('.photos-page, .community-page, .user-page');
   if (!container) return;
   
   const user = auth.currentUser;
-  if (!user) {
-    alert("עליך להתחבר כדי לתת לייק!");
-    const authModal = document.getElementById('auth-modal');
-    if (authModal) authModal.style.display = 'flex';
-    return;
-  }
+  const localKey = user ? `liked_galleries_${user.uid}` : 'guest_liked_galleries';
   
   let albums = [];
   try { albums = JSON.parse(decodeURIComponent(container.dataset.photosJson)); } catch(e){ return; }
@@ -10539,37 +10537,40 @@ function photoToggleLike(id) {
 
   let liked = {};
   try {
-    liked = JSON.parse(localStorage.getItem('liked_galleries') || '{}');
+    liked = JSON.parse(localStorage.getItem(localKey) || localStorage.getItem('liked_galleries') || '{}');
   } catch (e) {}
 
   const isAddingLike = !liked[id];
-  let budget = parseInt(localStorage.getItem(`like_budget_${user.uid}`) || '5', 10);
-
-  if (isAddingLike && budget <= 0) {
-    alert("אין לך לייקים פנויים ביתרה! הלייקים שלך מצטברים בקצב של 5 לייקים נוספים בכל יום.");
-    return;
+  let budget = 999;
+  if (user) {
+    budget = parseInt(localStorage.getItem(`like_budget_${user.uid}`) || '5', 10);
+    if (isAddingLike && budget <= 0) {
+      alert("אין לך לייקים פנויים ביתרה! הלייקים שלך מצטברים בקצב של 5 לייקים נוספים בכל יום.");
+      return;
+    }
   }
 
-  // עדכון מיידי של יתרת הלייקים והסטטוס ב-0 מילי-שניות (ללא המתנה)
   if (liked[id]) {
     delete liked[id];
     album.likes = Math.max(0, (album.likes || 0) - 1);
-    budget += 1;
+    if (user) budget += 1;
   } else {
     liked[id] = true;
     album.likes = (album.likes || 0) + 1;
-    budget = Math.max(0, budget - 1);
+    if (user) budget = Math.max(0, budget - 1);
   }
 
-  localStorage.setItem(`like_budget_${user.uid}`, budget);
+  if (user) {
+    localStorage.setItem(`like_budget_${user.uid}`, budget);
+  }
+  localStorage.setItem(localKey, JSON.stringify(liked));
   localStorage.setItem('liked_galleries', JSON.stringify(liked));
 
-  // רינדור מיידי ב-0ms ללא שום השהיית רשת
   const newJson = encodeURIComponent(JSON.stringify(albums));
   const isDetailView = mainContent.querySelector('.art-detail') !== null;
   if (isDetailView) {
     photoOpenDetail(id);
-    const newContainer = mainContent.querySelector('.photos-page');
+    const newContainer = mainContent.querySelector('.photos-page, .community-page, .user-page');
     if (newContainer) newContainer.dataset.photosJson = newJson;
   } else {
     mainContent.innerHTML = buildPhotosPage(albums);
@@ -10577,21 +10578,21 @@ function photoToggleLike(id) {
   
   saveCurrentPageContent();
 
-  // סנכרון ברקע מול Firebase RTDB בלבד (ללא עיכוב)
-  setTimeout(async () => {
-    try {
-      const budgetRef = ref(db, `website/users/${user.uid}/likes_data`);
-      update(budgetRef, { budget: budget }).catch(() => {});
-    } catch (e) {}
-  }, 0);
+  if (user) {
+    setTimeout(async () => {
+      try {
+        const budgetRef = ref(db, `website/users/${user.uid}/likes_data`);
+        update(budgetRef, { budget: budget }).catch(() => {});
+      } catch (e) {}
+    }, 0);
+  }
 }
 window.photoToggleLike = photoToggleLike;
 
 function photoIsSavedLocal(id) {
   try {
     const user = auth.currentUser;
-    if (!user) return false;
-    const localKey = `saved_galleries_${user.uid}`;
+    const localKey = user ? `saved_galleries_${user.uid}` : 'guest_saved_galleries';
     const saved = JSON.parse(localStorage.getItem(localKey) || '{}');
     return !!saved[id];
   } catch (e) {
@@ -10599,6 +10600,49 @@ function photoIsSavedLocal(id) {
   }
 }
 window.photoIsSavedLocal = photoIsSavedLocal;
+
+function photoToggleSave(id) {
+  const user = auth.currentUser;
+  const localKey = user ? `saved_galleries_${user.uid}` : 'guest_saved_galleries';
+
+  let saved = {};
+  try {
+    saved = JSON.parse(localStorage.getItem(localKey) || '{}');
+  } catch (e) {}
+
+  if (saved[id]) {
+    delete saved[id];
+  } else {
+    saved[id] = true;
+  }
+
+  localStorage.setItem(localKey, JSON.stringify(saved));
+  
+  if (user) {
+    try {
+      const userSavedRef = ref(db, `website/users/${user.uid}/saved_galleries`);
+      set(userSavedRef, saved);
+    } catch (e) {}
+  }
+  
+  const container = mainContent.querySelector('.photos-page, .community-page, .user-page');
+  if (container) {
+    let albums = [];
+    try { albums = JSON.parse(decodeURIComponent(container.dataset.photosJson)); } catch(e){ return; }
+    
+    const isDetailView = mainContent.querySelector('.art-detail') !== null;
+    const activeDetailId = isDetailView ? mainContent.querySelector('.art-detail').dataset.photoId : null;
+    
+    if (isDetailView && activeDetailId) {
+      photoOpenDetail(activeDetailId);
+      const newContainer = mainContent.querySelector('.photos-page, .community-page, .user-page');
+      if (newContainer) newContainer.dataset.photosJson = encodeURIComponent(JSON.stringify(albums));
+    } else {
+      mainContent.innerHTML = buildPhotosPage(albums);
+    }
+  }
+}
+window.photoToggleSave = photoToggleSave;
 
 // ---- "שמורים": חלון בסגנון יוניטי עם הגלריות השמורות כריבועים ----
 function photoGetSavedAlbums() {
@@ -11090,55 +11134,7 @@ function feedOpenGallery(id) {
 }
 window.feedOpenGallery = feedOpenGallery;
 
-function photoToggleSave(id) {
-  const user = auth.currentUser;
-  if (!user) {
-    alert("עליך להתחבר כדי לשמור גלריות!");
-    const authModal = document.getElementById('auth-modal');
-    if (authModal) authModal.style.display = 'flex';
-    return;
-  }
 
-  let saved = {};
-  const localKey = `saved_galleries_${user.uid}`;
-  try {
-    saved = JSON.parse(localStorage.getItem(localKey) || '{}');
-  } catch (e) {}
-
-  if (saved[id]) {
-    delete saved[id];
-  } else {
-    saved[id] = true;
-  }
-
-  localStorage.setItem(localKey, JSON.stringify(saved));
-  
-  // סנכרון ל-Firebase
-  try {
-    const userSavedRef = ref(db, `website/users/${user.uid}/saved_galleries`);
-    set(userSavedRef, saved);
-  } catch (e) {
-    console.error("שגיאה בסנכרון השמורים לענן:", e);
-  }
-  
-  const container = mainContent.querySelector('.photos-page');
-  if (container) {
-    let albums = [];
-    try { albums = JSON.parse(decodeURIComponent(container.dataset.photosJson)); } catch(e){ return; }
-    
-    const isDetailView = mainContent.querySelector('.art-detail') !== null;
-    const activeDetailId = isDetailView ? mainContent.querySelector('.art-detail').dataset.photoId : null;
-    
-    if (isDetailView && activeDetailId) {
-      photoOpenDetail(activeDetailId);
-      const newContainer = mainContent.querySelector('.photos-page');
-      if (newContainer) newContainer.dataset.photosJson = encodeURIComponent(JSON.stringify(albums));
-    } else {
-      mainContent.innerHTML = buildPhotosPage(albums);
-    }
-  }
-}
-window.photoToggleSave = photoToggleSave;
 
 // ערכי הסינון של עמוד התמונות. הם חיים מחוץ ל-buildPhotosPage כדי
 // שהבחירה תישמר גם כשהעמוד נבנה מחדש (מחיקה, לייק, עדכון מהענן).
@@ -13350,5 +13346,174 @@ function openIdeaDetailModal(ideaId) {
   modal.style.display = 'flex';
 }
 window.openIdeaDetailModal = openIdeaDetailModal;
+
+// ===== היסטוריית צפייה, מועדפים/לייקים ושפה =====
+function addToWatchHistory(item) {
+  if (!item || !item.id) return;
+  try {
+    let history = JSON.parse(localStorage.getItem('watch_history') || '[]');
+    history = history.filter(h => h.id !== item.id);
+    const validImg = (item.images && item.images[0]) || item.img || '';
+    history.unshift({
+      id: item.id,
+      title: item.title || 'ללא כותרת',
+      category: item.category || 'גלריה',
+      author: item.author || '',
+      img: validImg,
+      time: new Date().toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }),
+      date: new Date().toLocaleDateString('he-IL')
+    });
+    if (history.length > 50) history = history.slice(0, 50);
+    localStorage.setItem('watch_history', JSON.stringify(history));
+  } catch (e) {}
+}
+window.addToWatchHistory = addToWatchHistory;
+
+function openWatchHistoryModal() {
+  const modal = document.getElementById('watch-history-modal');
+  const container = document.getElementById('watch-history-list');
+  if (!modal || !container) return;
+
+  let history = [];
+  try { history = JSON.parse(localStorage.getItem('watch_history') || '[]'); } catch (e) {}
+
+  if (history.length === 0) {
+    container.innerHTML = `
+      <div style="text-align:center; padding:30px; color:#a1a1aa;">
+        <div style="font-size:36px; margin-bottom:8px;">🕒</div>
+        <p style="margin:0; font-size:14px;">אין פריטים בהיסטוריית הצפייה עדיין.</p>
+      </div>
+    `;
+  } else {
+    container.innerHTML = history.map(item => `
+      <div style="display:flex; align-items:center; gap:12px; background:#202028; border:1px solid #2e2e38; border-radius:10px; padding:10px; cursor:pointer;" onclick="document.getElementById('watch-history-modal').style.display='none'; photoOpenDetail('${artEsc(item.id)}')">
+        <div style="width:50px; height:50px; border-radius:8px; overflow:hidden; background:#2a2a34; flex-shrink:0;">
+          ${item.img ? `<img src="${item.img}" style="width:100%; height:100%; object-fit:cover;">` : '<div style="display:flex; align-items:center; justify-content:center; height:100%;">🖼️</div>'}
+        </div>
+        <div style="flex:1; min-width:0;">
+          <h4 style="margin:0 0 4px; font-size:14px; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${artEsc(item.title)}</h4>
+          <div style="font-size:11px; color:#a1a1aa;">${artEsc(item.category)} ${item.author ? '· ' + artEsc(item.author) : ''} · ${item.date} ${item.time}</div>
+        </div>
+        <button onclick="event.stopPropagation(); removeFromWatchHistory('${artEsc(item.id)}')" style="background:none; border:none; color:#ef4444; font-size:16px; cursor:pointer; padding:4px;" title="הסר מההיסטוריה">🗑️</button>
+      </div>
+    `).join('');
+  }
+
+  modal.style.display = 'flex';
+}
+window.openWatchHistoryModal = openWatchHistoryModal;
+
+function clearWatchHistory() {
+  if (confirm("האם ברצונך למחוק את כל היסטוריית הצפייה?")) {
+    localStorage.removeItem('watch_history');
+    openWatchHistoryModal();
+  }
+}
+window.clearWatchHistory = clearWatchHistory;
+
+function removeFromWatchHistory(id) {
+  try {
+    let history = JSON.parse(localStorage.getItem('watch_history') || '[]');
+    history = history.filter(h => h.id !== id);
+    localStorage.setItem('watch_history', JSON.stringify(history));
+    openWatchHistoryModal();
+  } catch (e) {}
+}
+window.removeFromWatchHistory = removeFromWatchHistory;
+
+let activeLikesTab = 'likes';
+function openLikesModal() {
+  const modal = document.getElementById('user-likes-saves-modal');
+  if (!modal) return;
+  modal.style.display = 'flex';
+  switchLikesTab(activeLikesTab);
+}
+window.openLikesModal = openLikesModal;
+
+function switchLikesTab(tab) {
+  activeLikesTab = tab;
+  const likesBtn = document.getElementById('tab-likes-btn');
+  const savesBtn = document.getElementById('tab-saves-btn');
+  const list = document.getElementById('user-likes-saves-list');
+  if (!list) return;
+
+  if (tab === 'likes') {
+    if (likesBtn) { likesBtn.style.background = '#e11d48'; likesBtn.style.color = '#fff'; }
+    if (savesBtn) { savesBtn.style.background = '#2a2a34'; savesBtn.style.color = '#a1a1aa'; }
+    
+    const user = auth.currentUser;
+    const localKey = user ? `liked_galleries_${user.uid}` : 'guest_liked_galleries';
+    let likedObj = {};
+    try { likedObj = JSON.parse(localStorage.getItem(localKey) || localStorage.getItem('liked_galleries') || '{}'); } catch(e){}
+    
+    const likedIds = Object.keys(likedObj).filter(k => likedObj[k]);
+    renderLikesSavesList(likedIds, '❤️ עדיין לא סימנת בלייק שום גלריה.');
+  } else {
+    if (likesBtn) { likesBtn.style.background = '#2a2a34'; likesBtn.style.color = '#a1a1aa'; }
+    if (savesBtn) { savesBtn.style.background = '#e11d48'; savesBtn.style.color = '#fff'; }
+
+    const user = auth.currentUser;
+    const localKey = user ? `saved_galleries_${user.uid}` : 'guest_saved_galleries';
+    let savedObj = {};
+    try { savedObj = JSON.parse(localStorage.getItem(localKey) || '{}'); } catch(e){}
+
+    const savedIds = Object.keys(savedObj).filter(k => savedObj[k]);
+    renderLikesSavesList(savedIds, '🔖 עדיין לא שמרת שום גלריה.');
+  }
+}
+window.switchLikesTab = switchLikesTab;
+
+function renderLikesSavesList(ids, emptyMsg) {
+  const list = document.getElementById('user-likes-saves-list');
+  if (!list) return;
+
+  const container = mainContent.querySelector('.photos-page, .community-page, .user-page');
+  let albums = [];
+  if (container && container.dataset.photosJson) {
+    try { albums = JSON.parse(decodeURIComponent(container.dataset.photosJson)); } catch(e){}
+  }
+
+  const items = albums.filter(a => ids.includes(a.id));
+
+  if (items.length === 0 && ids.length === 0) {
+    list.innerHTML = `
+      <div style="text-align:center; padding:30px; color:#a1a1aa;">
+        <p style="margin:0; font-size:14px;">${emptyMsg}</p>
+      </div>
+    `;
+    return;
+  }
+
+  list.innerHTML = (items.length > 0 ? items : ids.map(id => ({ id, title: `גלריה #${id}`, category: 'גלריה' }))).map(item => {
+    const img = (item.images && item.images[0]) || item.img || '';
+    return `
+      <div style="display:flex; align-items:center; gap:12px; background:#202028; border:1px solid #2e2e38; border-radius:10px; padding:10px; cursor:pointer;" onclick="document.getElementById('user-likes-saves-modal').style.display='none'; photoOpenDetail('${artEsc(item.id)}')">
+        <div style="width:50px; height:50px; border-radius:8px; overflow:hidden; background:#2a2a34; flex-shrink:0;">
+          ${img ? `<img src="${img}" style="width:100%; height:100%; object-fit:cover;">` : '<div style="display:flex; align-items:center; justify-content:center; height:100%;">🖼️</div>'}
+        </div>
+        <div style="flex:1; min-width:0;">
+          <h4 style="margin:0 0 4px; font-size:14px; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${artEsc(item.title || '')}</h4>
+          <div style="font-size:11px; color:#a1a1aa;">${artEsc(item.category || 'גלריה')} ${item.author ? '· ' + artEsc(item.author) : ''}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+window.renderLikesSavesList = renderLikesSavesList;
+
+function openLanguageModal() {
+  const modal = document.getElementById('language-modal');
+  if (modal) modal.style.display = 'flex';
+}
+window.openLanguageModal = openLanguageModal;
+
+function selectLanguage(lang) {
+  localStorage.setItem('user_language', lang);
+  const names = { he: 'עברית', en: 'English', es: 'Español', ar: 'العربية' };
+  alert(`השפה שונתה ל-${names[lang] || lang}`);
+  const modal = document.getElementById('language-modal');
+  if (modal) modal.style.display = 'none';
+}
+window.selectLanguage = selectLanguage;
 
 

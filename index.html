@@ -16,7 +16,7 @@
   <!-- קישור לקובץ העיצוב החיצוני (עם פרמטר למניעת שמירה במטמון) -->
   <link rel="stylesheet" href="./style.css?v=1108">
 </head>
-<body class="light-mode">
+<body class="dark-mode">
   <!-- שער אישור גיל (Age Gate Overlay) -->
   <div id="age-gate-overlay" style="display: flex; position: fixed; inset: 0; z-index: 1000000; background-color: #f7f4eb; font-family: system-ui, -apple-system, sans-serif; align-items: center; justify-content: center; overflow-y: auto; direction: rtl; padding: 20px;">
     <style>
@@ -235,8 +235,26 @@
           <a href="#" data-page-id="page-communities-main">קהילה 👥</a>
         </nav>
         
-        <!-- כפתור אורח/מנהל + סמל בטריה + כפתור הבית + פעמון התראות -->
+        <!-- כפתור אורח/מנהל + 3 אייקונים (לב, שעון, כדור הארץ) + סמל בטריה + כפתור הבית + פעמון התראות -->
         <div class="right-icons" style="display: flex; gap: 10px; align-items: center;">
+          <button id="header-likes-btn" class="notif-bell" onclick="openLikesModal()" title="הלייקים והשמורים שלי">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+            </svg>
+          </button>
+          <button id="header-history-btn" class="notif-bell" onclick="openWatchHistoryModal()" title="היסטוריית צפייה">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+          </button>
+          <button id="header-lang-btn" class="notif-bell" onclick="openLanguageModal()" title="שפה / Language">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="2" y1="12" x2="22" y2="12"/>
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+            </svg>
+          </button>
           <button id="battery-task-btn" class="notif-bell" onclick="openBatteryTasksModal()" title="משימות והתקדמות באתר">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <rect x="2" y="6" width="16" height="12" rx="2.5" ry="2.5"></rect>
@@ -978,6 +996,67 @@
     <div style="display:flex; gap:10px; margin-top:10px;">
       <button id="idea-cancel" style="flex:1; padding:12px; border:1px solid #cbd5e1; border-radius:10px; background:#fff; cursor:pointer; font-size:14px; font-weight:800; color:#475569;">ביטול</button>
       <button id="idea-save" style="flex:1; padding:12px; border:none; border-radius:10px; background:#3b82f6; color:#fff; cursor:pointer; font-size:14px; font-weight:800; box-shadow:0 4px 12px rgba(59,130,246,0.3);">שמור רעיון 🚀</button>
+    </div>
+  </div>
+</div>
+
+<!-- מודאל היסטוריית צפייה -->
+<div id="watch-history-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:99999; align-items:center; justify-content:center; direction:rtl; padding:20px; backdrop-filter:blur(8px);">
+  <div class="custom-modal-content" style="max-width:550px; width:100%; background:#18181c; border:1px solid #2e2e38; border-radius:16px; padding:24px; color:#fff; box-shadow:0 20px 40px rgba(0,0,0,0.5);">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; border-bottom:1px solid #2e2e38; padding-bottom:12px;">
+      <h3 style="margin:0; font-size:18px; font-weight:800; display:flex; align-items:center; gap:8px;">🕒 היסטוריית צפייה</h3>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <button onclick="clearWatchHistory()" style="background:#2a2a34; color:#ef4444; border:none; padding:6px 12px; border-radius:8px; font-size:12px; font-weight:bold; cursor:pointer;">🗑️ ניקוי היסטוריה</button>
+        <button onclick="document.getElementById('watch-history-modal').style.display='none'" style="background:none; border:none; color:#a1a1aa; font-size:20px; cursor:pointer;">✕</button>
+      </div>
+    </div>
+    <div id="watch-history-list" style="max-height:360px; overflow-y:auto; display:flex; flex-direction:column; gap:10px;">
+      <!-- היסטוריה נטענת דינמית -->
+    </div>
+  </div>
+</div>
+
+<!-- מודאל לייקים ושמורים -->
+<div id="user-likes-saves-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:99999; align-items:center; justify-content:center; direction:rtl; padding:20px; backdrop-filter:blur(8px);">
+  <div class="custom-modal-content" style="max-width:550px; width:100%; background:#18181c; border:1px solid #2e2e38; border-radius:16px; padding:24px; color:#fff; box-shadow:0 20px 40px rgba(0,0,0,0.5);">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; border-bottom:1px solid #2e2e38; padding-bottom:12px;">
+      <h3 style="margin:0; font-size:18px; font-weight:800; display:flex; align-items:center; gap:8px;">❤️ הכללים והשמורים שלי</h3>
+      <button onclick="document.getElementById('user-likes-saves-modal').style.display='none'" style="background:none; border:none; color:#a1a1aa; font-size:20px; cursor:pointer;">✕</button>
+    </div>
+    <div style="display:flex; gap:10px; margin-bottom:14px;">
+      <button id="tab-likes-btn" onclick="switchLikesTab('likes')" style="flex:1; padding:8px; background:#e11d48; color:#fff; border:none; border-radius:8px; font-weight:bold; cursor:pointer; font-size:13px;">❤️ בלייקים שלי</button>
+      <button id="tab-saves-btn" onclick="switchLikesTab('saves')" style="flex:1; padding:8px; background:#2a2a34; color:#a1a1aa; border:none; border-radius:8px; font-weight:bold; cursor:pointer; font-size:13px;">🔖 בשמורים שלי</button>
+    </div>
+    <div id="user-likes-saves-list" style="max-height:360px; overflow-y:auto; display:flex; flex-direction:column; gap:10px;">
+      <!-- פריטים נטענים דינמית -->
+    </div>
+  </div>
+</div>
+
+<!-- מודאל בחירת שפה -->
+<div id="language-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:99999; align-items:center; justify-content:center; direction:rtl; padding:20px; backdrop-filter:blur(8px);">
+  <div class="custom-modal-content" style="max-width:400px; width:100%; background:#18181c; border:1px solid #2e2e38; border-radius:16px; padding:24px; color:#fff; box-shadow:0 20px 40px rgba(0,0,0,0.5);">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; border-bottom:1px solid #2e2e38; padding-bottom:12px;">
+      <h3 style="margin:0; font-size:18px; font-weight:800; display:flex; align-items:center; gap:8px;">🌐 בחירת שפה / Language</h3>
+      <button onclick="document.getElementById('language-modal').style.display='none'" style="background:none; border:none; color:#a1a1aa; font-size:20px; cursor:pointer;">✕</button>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:10px;">
+      <button onclick="selectLanguage('he')" style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:#2a2a34; color:#fff; border:1px solid #3f3f4e; border-radius:10px; font-size:14px; font-weight:bold; cursor:pointer; text-align:right;">
+        <span>🇮🇱 עברית (Hebrew)</span>
+        <span style="color:#22c55e;">✓ פעיל</span>
+      </button>
+      <button onclick="selectLanguage('en')" style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:#202028; color:#a1a1aa; border:1px solid #2e2e38; border-radius:10px; font-size:14px; font-weight:bold; cursor:pointer; text-align:right;">
+        <span>🇺🇸 English</span>
+        <span></span>
+      </button>
+      <button onclick="selectLanguage('es')" style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:#202028; color:#a1a1aa; border:1px solid #2e2e38; border-radius:10px; font-size:14px; font-weight:bold; cursor:pointer; text-align:right;">
+        <span>🇪🇸 Español</span>
+        <span></span>
+      </button>
+      <button onclick="selectLanguage('ar')" style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:#202028; color:#a1a1aa; border:1px solid #2e2e38; border-radius:10px; font-size:14px; font-weight:bold; cursor:pointer; text-align:right;">
+        <span>🇸🇦 العربية</span>
+        <span></span>
+      </button>
     </div>
   </div>
 </div>
