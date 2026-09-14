@@ -679,7 +679,8 @@ function renderSideMenu() {
   sideMenuContainer.innerHTML = ''; // מנקים את התפריט הישן
   
   pages.forEach(page => {
-    // העמוד מוצג בתפריט הצד גם אם הוא מוסתר מהסרגל העליון
+    // אם אנחנו לא במצב עריכה והעמוד מוסתר - לא נציג אותו (אלא אם המשתמש הוא מנהל)
+    if (!isEditMode && page.isHidden && !isAdmin()) return;
 
     const li = document.createElement('li'); // יוצרים אלמנט רשימה חדש
     li.id = page.id;
@@ -970,8 +971,19 @@ function renderPage() {
   }
   const currentPage = pages.find(p => p.id === activePageId); // מחפשים את העמוד ברשימה
   
-
-
+  // הגנה: אם העמוד מוסתר והמשתמש הוא לא מנהל/עורך, מפנים אותו לעמוד גלוי.
+  if (currentPage && currentPage.isHidden && !isEditMode && !isAdmin()) {
+    const isVisible = p => p && !p.isHidden;
+    const articlesPage = pages.find(p => isVisible(p) && p.content && p.content.includes('articles-page') && !p.content.includes('stories-page') && !p.content.includes('photos-page') && !p.content.includes('courses-page'));
+    const fallback = articlesPage || pages.find(isVisible);
+    if (!fallback || fallback.id === activePageId) {
+      mainContent.innerHTML = '';
+      return;
+    }
+    activePageId = fallback.id;
+    renderPage();
+    return;
+  }
   if (currentPage) {
     if (currentPage.id === 'page-ci' || (currentPage.title && currentPage.title.includes('ריבית'))) {
       mainContent.innerHTML = buildCompoundInterestPage();
