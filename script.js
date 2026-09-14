@@ -6115,6 +6115,11 @@ function storyOpenDetail(id) {
   const storyPagesArr = (s.pages && s.pages.length)
     ? s.pages.map(p => (p && typeof p === 'object') ? p : { type: 'image', url: p })
     : validImages.map(u => ({ type: 'image', url: u }));
+  // סיפור ישן עם טקסט ב-body/summary וללא עמוד טקסט — מציגים אותו כעמוד טקסט מעוצב
+  const _bodyText = (s.body || s.summary || '').trim();
+  if (_bodyText && !storyPagesArr.some(p => p.type === 'text')) {
+    storyPagesArr.unshift({ type: 'text', text: _bodyText });
+  }
   window.storyPagesData = storyPagesArr;
   window.currentStoryId = id;
   // המשך מהמקום שהקורא סימן (אם קיים)
@@ -6209,10 +6214,11 @@ function storyRenderPage() {
   window.currentStoryPage = idx;
   const pg = pagesArr[idx];
   if (pg.type === 'text') {
-    view.innerHTML = `<div class="story-text-page">${artEsc(pg.text || '').replace(/\n/g, '<br>')}</div>`;
+    view.innerHTML = `<div class="story-page-inner"><div class="story-text-page">${artEsc(pg.text || '').replace(/\n/g, '<br>')}</div></div>`;
   } else {
-    view.innerHTML = `<img src="${pg.url}" class="story-img-page" onclick="artGalleryById('stories', window.currentStoryId, this.getAttribute('src'))">`;
+    view.innerHTML = `<div class="story-page-inner"><img src="${pg.url}" class="story-img-page" onclick="artGalleryById('stories', window.currentStoryId, this.getAttribute('src'))"></div>`;
   }
+  view.scrollTop = 0;
   document.querySelectorAll('.story-page-thumb').forEach(t => t.classList.toggle('active', Number(t.dataset.idx) === idx));
   const counter = document.getElementById('story-page-counter');
   if (counter) counter.textContent = `${idx + 1} / ${pagesArr.length}`;
