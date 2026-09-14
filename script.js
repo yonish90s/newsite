@@ -7255,10 +7255,22 @@ function qpBubble(role, html) {
   box.scrollTop = box.scrollHeight;
 }
 
+// מזהה את סוג העמוד הנוכחי כדי שהפרסום המהיר יתאים אליו
+function qpCurrentSection() {
+  if (typeof mainContent === 'undefined' || !mainContent) return 'photos';
+  if (mainContent.querySelector('.secondhand-page')) return 'secondhand';
+  if (mainContent.querySelector('.stories-page')) return 'stories';
+  return 'photos';
+}
+
 function openQuickPublish(communityId, itemType) {
   // פרסום מהיר פתוח לכולם — גם למי שלא נרשם
   qpEnsureModal();
-  qpData = { title: '', images: [], summary: '', communityId: communityId || null, type: itemType || 'photo', tags: {}, tagIndex: 0, price: '' };
+  // מתאימים את הפרסום לעמוד הנוכחי (יד 2 / תמונות / סיפורים) כשלא מדובר בקהילה
+  const pageSection = communityId ? 'photos' : qpCurrentSection();
+  const isProduct = pageSection === 'secondhand';
+  const autoType = itemType || (pageSection === 'stories' ? 'story' : 'photo');
+  qpData = { title: '', images: [], summary: '', communityId: communityId || null, type: autoType, pageSection, isProduct, tags: {}, tagIndex: 0, price: '', offerType: '', region: '' };
   document.getElementById('qp-messages').innerHTML = '';
   document.getElementById('quick-publish-modal').style.display = 'flex';
   const where = communityId ? 'בקהילה' : '';
@@ -7272,15 +7284,16 @@ function openQuickPublish(communityId, itemType) {
       </div>
     `);
   } else {
-    qpSelectType(itemType || 'photo');
+    qpSelectType(qpData.type);
   }
 }
 
 function qpSelectType(type) {
   qpData.type = type;
   qpStep = 'title';
-  const label = type === 'story' ? 'הסיפור' : 'המודעה / התמונה';
-  qpBubble('bot', `מצוין! ✍️ מה כותרת ${label} שברצונך לפרסם?`);
+  const label = qpData.isProduct ? 'המוצר' : (type === 'story' ? 'הסיפור' : 'המודעה / התמונה');
+  const intro = qpData.isProduct ? 'שלום! 🛒 בוא נפרסם מוצר יד שניה.<br>' : '';
+  qpBubble('bot', `${intro}מצוין! ✍️ מה כותרת ${label} שברצונך לפרסם?`);
   setTimeout(() => { const i = document.getElementById('qp-input'); if (i) i.focus(); }, 100);
 }
 window.qpSelectType = qpSelectType;
@@ -7312,9 +7325,11 @@ function qpHandleSend() {
     inp.value = '';
     if (text && text !== 'דלג') { qpData.summary = text.slice(0, 300); qpBubble('user', artEsc(qpData.summary)); }
     else qpBubble('user', 'דלג');
-    // אם הקהילה מגדירה סינונים מותאמים — שואלים ערך לכל סינון לפני הפרסום
     qpData.tags = {};
-    if (qpCommunityFilters().length) { qpStep = 'tags'; qpData.tagIndex = 0; qpAskNextTag(); }
+    // מוצר יד שניה: שואלים סוג הצעה → מיקום → מחיר
+    if (qpData.isProduct) { qpStep = 'sh_offer'; qpAskShOffer(); }
+    // אם הקהילה מגדירה סינונים מותאמים — שואלים ערך לכל סינון לפני הפרסום
+    else if (qpCommunityFilters().length) { qpStep = 'tags'; qpData.tagIndex = 0; qpAskNextTag(); }
     else { qpMaybeAskPrice(); }
   } else if (qpStep === 'price') {
     inp.value = '';
@@ -7363,6 +7378,34 @@ function qpPickTag(group, value) {
   qpAskNextTag();
 }
 window.qpPickTag = qpPickTag;
+
+// --- שאלות ייעודיות למוצר יד שניה ---
+function qpAskShOffer() {
+  const opts = ['מכירה', 'השאלה', 'החלפה'];
+  const btns = opts.map(o => `<button onclick="qpPickSh('offer','${artEsc(o)}')" style="background:#fee2e2; color:#991b1b; border:1px solid #fecaca; border-radius:999px; padding:6px 16px; font-size:13px; font-weight:800; cursor:pointer; margin:3px;">${artEsc(o)}</button>`).join('');
+  qpBubble('bot', `🏷️ מה <b>סוג ההצעה</b>?<br><div style="margin-top:6px;">${btns}</div>`);
+}
+function qpAskShRegion() {
+  const opts = ['צפון', 'מרכז', 'דרום', 'ירושלים', 'שרון', 'שפלה'];
+  const btns = opts.map(o => `<button onclick="qpPickSh('region','${artEsc(o)}')" style="background:#dbeafe; color:#1e40af; border:1px solid #bfdbfe; border-radius:999px; padding:6px 16px; font-size:13px; font-weight:800; cursor:pointer; margin:3px;">${artEsc(o)}</button>`).join('');
+  qpBubble('bot', `📍 מה <b>המיקום</b>?<br><div style="margin-top:6px;">${btns}</div>`);
+}
+function qpPickSh(kind, value) {
+  if (kind === 'offer') {
+    qpData.offerType = value;
+    qpBubble('user', 'סוג הצעה: ' + artEsc(value));
+    qpStep = 'sh_region';
+    qpAskShRegion();
+  } else if (kind === 'region') {
+    qpData.region = value;
+    qpBubble('user', 'מיקום: ' + artEsc(value));
+    if (qpData.offerType === 'החלפה') { qpStep = 'done'; qpPublish(); }
+    else { qpStep = 'price'; qpBubble('bot', '💰 מה המחיר המבוקש? כתוב מספר בש״ח, או <b>דלג</b>.'); }
+  }
+}
+window.qpAskShOffer = qpAskShOffer;
+window.qpAskShRegion = qpAskShRegion;
+window.qpPickSh = qpPickSh;
 window.qpHandleSend = qpHandleSend;
 
 function qpAddImage() {
@@ -7409,10 +7452,11 @@ async function qpPublish() {
     images: qpData.images.slice(0, 5),
     author: nickname,
     authorId: user ? user.uid : '',
-    category: isStory ? 'סיפורים' : 'כללי',
+    category: isStory ? 'סיפורים' : (qpData.isProduct ? (qpData.offerType || 'מכירה') : 'כללי'),
     ageRange: '',
-    region: '',
-    categoryColor: isStory ? '#8b5cf6' : '#10b981',
+    region: qpData.region || '',
+    offerType: qpData.offerType || '',
+    categoryColor: isStory ? '#8b5cf6' : (qpData.isProduct ? '#e11d48' : '#10b981'),
     timestamp: new Date().toLocaleDateString('he-IL'),
     createdAt: Date.now(),
     telegramUrl: telegram ? ('https://t.me/' + telegram) : '',
@@ -7435,12 +7479,24 @@ async function qpPublish() {
         const m = document.getElementById('quick-publish-modal'); if (m) m.style.display = 'none';
         if (typeof openCommunityPage === 'function') openCommunityPage(cid);
       }, 1500);
+    } else if (qpData.pageSection === 'stories') {
+      // פרסום סיפור לעמוד הסיפורים
+      const stories = (typeof storyGetStories === 'function') ? storyGetStories() : [];
+      const st = Object.assign({}, album, { pages: album.images.map(u => ({ type: 'image', url: u })) });
+      stories.unshift(st);
+      if (typeof buildStoriesPage === 'function') mainContent.innerHTML = buildStoriesPage(stories);
+      if (typeof saveCurrentPageContent === 'function') saveCurrentPageContent();
+      qpBubble('bot', '✅ הסיפור פורסם!' + (isAdminNow ? '' : '<br>הוא ממתין לאישור מנהל ויופיע בקרוב.'));
+      setTimeout(() => { const m = document.getElementById('quick-publish-modal'); if (m) m.style.display = 'none'; }, 2000);
     } else {
+      // תמונות או מוצרי יד שניה — מתפרסם לעמוד הנוכחי לפי הסקשן
+      const sec = (qpData.pageSection === 'secondhand') ? 'secondhand' : 'photos';
       const albums = photoGetAlbums();
       albums.unshift(album);
-      mainContent.innerHTML = buildPhotosPage(albums);
+      mainContent.innerHTML = buildPhotosPage(albums, sec);
       if (typeof saveCurrentPageContent === 'function') saveCurrentPageContent();
-      qpBubble('bot', '✅ המודעה פורסמה בהצלחה!' + (isAdminNow ? '' : '<br>היא ממתינה לאישור מנהל ותופיע בקרוב.'));
+      const what = sec === 'secondhand' ? 'המוצר פורסם' : 'המודעה פורסמה';
+      qpBubble('bot', `✅ ${what} בהצלחה!` + (isAdminNow ? '' : '<br>ממתין לאישור מנהל ויופיע בקרוב.'));
       setTimeout(() => { const m = document.getElementById('quick-publish-modal'); if (m) m.style.display = 'none'; }, 2000);
     }
   } catch (e) {
@@ -9828,13 +9884,71 @@ function ideaTechnicalBoxHTML(a) {
           <div style="font-size:13.5px; font-weight:800; color:#1e293b;">${artEsc(audience)}</div>
         </div>
 
-        <button onclick="dmStartAboutGallery('${artEsc(a.authorId || '')}', '${artEsc(a.author || '')}', '${artEsc(a.id)}')" 
+        <button onclick="dmStartAboutGallery('${artEsc(a.authorId || '')}', '${artEsc(a.author || '')}', '${artEsc(a.id)}')"
                 style="width:100%; background:linear-gradient(135deg,#10b981,#059669); color:#fff; border:none; padding:12px; border-radius:12px; font-weight:800; font-size:14px; cursor:pointer; box-shadow:0 4px 14px rgba(16,185,129,0.3); margin-top:6px; transition:all 0.2s ease;">
           💬 צור קשר / הגש הצעת מחיר
         </button>
       </div>
     </div>
   `;
+}
+
+// צד ימין במודעת יד שניה: איך רוכשים (שלבים)
+function secondhandBuyBoxHTML(a) {
+  const steps = [
+    { n: 1, t: '💬 יצירת קשר', d: 'שלחו הודעה למוכר עם שאלות על המוצר.' },
+    { n: 2, t: '🤝 תיאום פרטים ומחיר', d: 'סכמו על המחיר הסופי, מצב המוצר וזמן.' },
+    { n: 3, t: '📍 מפגש או משלוח', d: 'קבעו נקודת מפגש נוחה או תיאמו משלוח.' },
+    { n: 4, t: '✅ תשלום וקבלה', d: 'בצעו תשלום בטוח וקבלו את המוצר.' }
+  ];
+  const stepsHTML = steps.map(s => `
+      <div style="display:flex; gap:12px; align-items:flex-start; margin-bottom:14px; background:#f8fafc; padding:10px 12px; border-radius:10px; border:1px solid #e2e8f0;">
+        <span style="background:linear-gradient(135deg,#3b82f6,#2563eb); color:#fff; font-weight:900; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0; box-shadow:0 2px 6px rgba(59,130,246,0.3);">${s.n}</span>
+        <div><div style="font-size:13.5px; font-weight:800; color:#0f172a;">${s.t}</div><div style="font-size:12px; color:#64748b; line-height:1.4; margin-top:2px;">${s.d}</div></div>
+      </div>`).join('');
+  return `
+    <div class="idea-exec-box">
+      <div style="font-size:16px; font-weight:900; color:#0f172a; border-bottom:2.5px solid #3b82f6; padding-bottom:10px; margin-bottom:16px; display:flex; align-items:center; gap:8px;">
+        <span>🤝 איך רוכשים</span>
+      </div>
+      <div style="display:flex; flex-direction:column;">${stepsHTML}</div>
+      <div style="background:#eff6ff; border-right:4px solid #3b82f6; padding:12px 14px; border-radius:10px; font-size:12.5px; color:#1e40af; line-height:1.5; margin-top:12px; font-weight:600;">
+        💡 <b>טיפ לרכישה בטוחה:</b> בדקו את המוצר לפני התשלום ותאמו מפגש במקום ציבורי ומואר.
+      </div>
+    </div>`;
+}
+
+// צד שמאל במודעת יד שניה: מחיר ופרטי המוצר
+function secondhandDetailsBoxHTML(a) {
+  let price = (a.price != null && String(a.price).trim()) ? String(a.price).trim() : '';
+  if (price && !/[₪$]/.test(price) && /\d/.test(price)) price = '₪' + price;
+  if (!price) price = 'לפי סיכום';
+  const offer = a.offerType || 'מכירה';
+  const region = a.region || '—';
+  const cat = a.category || '—';
+  const row = (label, val) => `
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:12px 14px;">
+          <div style="font-size:11.5px; color:#64748b; font-weight:800; margin-bottom:4px;">${label}</div>
+          <div style="font-size:13.5px; font-weight:800; color:#1e293b;">${artEsc(val)}</div>
+        </div>`;
+  return `
+    <div class="idea-tech-box">
+      <div style="font-size:16px; font-weight:900; color:#0f172a; border-bottom:2.5px solid #10b981; padding-bottom:10px; margin-bottom:16px; display:flex; align-items:center; gap:8px;">
+        <span>💰 מחיר ופרטים</span>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:12px; padding:12px 14px;">
+          <div style="font-size:11.5px; color:#166534; font-weight:800; margin-bottom:4px;">💰 מחיר</div>
+          <div style="font-size:18px; font-weight:900; color:#15803d;">${artEsc(price)}</div>
+        </div>
+        ${row('🏷️ סוג ההצעה', offer)}
+        ${row('📍 מיקום', region)}
+        ${row('📂 קטגוריה', cat)}
+        <button onclick="dmStartAboutGallery('${artEsc(a.authorId || '')}', '${artEsc(a.author || '')}', '${artEsc(a.id)}')" style="width:100%; background:linear-gradient(135deg,#10b981,#059669); color:#fff; border:none; padding:12px; border-radius:12px; font-weight:800; font-size:14px; cursor:pointer; box-shadow:0 4px 14px rgba(16,185,129,0.3); margin-top:6px;">
+          💬 צור קשר עם המוכר
+        </button>
+      </div>
+    </div>`;
 }
 
 function photoOpenDetail(id) {
@@ -9903,21 +10017,37 @@ function photoOpenDetail(id) {
   const isAgeVerifiedDetail = typeof sessionStorage !== 'undefined' && sessionStorage.getItem('age_verified') === 'true';
   const blurStyle = (a.isAdult && !isAgeVerifiedDetail) ? 'filter: blur(20px); transition: filter 0.3s ease;' : '';
 
-  const isIdea = (container && container.classList.contains('ideas-page')) || (a.id && (a.id.includes('idea') || a.id.includes('sample'))) || (a.category && (a.category.includes('רעיונות') || a.category.includes('עסקים') || a.category.includes('מחקר') || a.category.includes('חוקים')));
+  const isSecondhand = (container && container.classList.contains('secondhand-page'));
+  const isIdea = !isSecondhand && ((container && container.classList.contains('ideas-page')) || (a.id && (a.id.includes('idea') || a.id.includes('sample'))) || (a.category && (a.category.includes('רעיונות') || a.category.includes('עסקים') || a.category.includes('מחקר') || a.category.includes('חוקים'))));
+
+  // פאנלי צד — לרעיונות ולמוצרי יד שניה (אותו קונספט, תוכן מותאם)
+  const _sp = isSecondhand ? {
+    back: '← חזרה למוצרים',
+    right: (typeof secondhandBuyBoxHTML === 'function' ? secondhandBuyBoxHTML(a) : ''),
+    left: (typeof secondhandDetailsBoxHTML === 'function' ? secondhandDetailsBoxHTML(a) : ''),
+    creator: 'מוכר',
+    recTitle: 'מוצרים נוספים שיעניינו אותך'
+  } : {
+    back: '← חזרה לרעיונות',
+    right: ideaExecutionBoxHTML(a),
+    left: ideaTechnicalBoxHTML(a),
+    creator: 'יוצר הרעיון',
+    recTitle: 'רעיונות נוספים שיעניינו אותך'
+  };
 
   const json = encodeURIComponent(JSON.stringify(albums));
 
-  if (isIdea) {
+  if (isIdea || isSecondhand) {
     mainContent.innerHTML = `
       <div class="art-detail articles-page photos-page ideas-detail-page" data-photo-id="${id}" data-photos-json="${json}">
         <div class="art-detail-inner" style="max-width: 1350px; margin: 0 auto;">
-          <button class="art-back-btn" onclick="photoGoBack()">← חזרה לרעיונות</button>
+          <button class="art-back-btn" onclick="photoGoBack()">${_sp.back}</button>
 
           <div class="idea-detail-grid-layout" style="display: flex; gap: 24px; align-items: flex-start; margin-top: 16px; flex-wrap: wrap;">
-            
-            <!-- בצד ימין: איך לבצע את הרעיון -->
+
+            <!-- בצד ימין: איך לבצע / איך רוכשים -->
             <div class="idea-detail-sidebar-right" style="flex: 1.1; min-width: 280px; background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 16px; padding: 20px; box-shadow: 0 4px 14px rgba(0,0,0,0.03);">
-              ${ideaExecutionBoxHTML(a)}
+              ${_sp.right}
             </div>
 
             <!-- במרכז: תוכן הרעיון המלא -->
@@ -9925,7 +10055,7 @@ function photoOpenDetail(id) {
               <h1 class="art-detail-title" style="margin-top:0;">${a.title}</h1>
               <div class="art-meta" style="margin-bottom:14px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
                 <span class="art-category-badge" style="background:${a.categoryColor||'#3b82f6'}">${a.category}</span>
-                <span>יוצר הרעיון: <b>${a.author}</b></span>
+                <span>${_sp.creator}: <b>${a.author}</b></span>
                 ${a.authorId ? `<button onclick="toggleFollow('${artEsc(a.authorId)}','${artEsc(a.author || '')}', this)" class="follow-btn${isFollowing(a.authorId) ? ' following' : ''}">${isFollowing(a.authorId) ? '✓ עוקב' : '➕ עקוב'}</button>` : ''}
                 <span>·</span>
                 <span>${a.timestamp}</span>
@@ -9954,14 +10084,14 @@ function photoOpenDetail(id) {
               ${photoCommentsSectionHTML(id)}
 
               <div class="art-rec-section" style="margin-top:28px;">
-                <h3 style="margin:0 0 16px;font-size:18px;font-weight:800">רעיונות נוספים שיעניינו אותך</h3>
+                <h3 style="margin:0 0 16px;font-size:18px;font-weight:800">${_sp.recTitle}</h3>
                 <div class="art-rec-grid">${recHTML}</div>
               </div>
             </div>
 
-            <!-- בצד שמאל: מחיר מבוקש ופרטים טכניים -->
+            <!-- בצד שמאל: מחיר ופרטים -->
             <div class="idea-detail-sidebar-left" style="flex: 1.1; min-width: 280px; background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 16px; padding: 20px; box-shadow: 0 4px 14px rgba(0,0,0,0.03);">
-              ${ideaTechnicalBoxHTML(a)}
+              ${_sp.left}
             </div>
 
           </div>
