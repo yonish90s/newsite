@@ -4940,3 +4940,13 @@ html.hide-site-images .photo-mini-thumb {
   }
 }
 
+
+/* ============================================================
+   סרגל סינון "מוצרי יד שניה" (סוג הצעה / מחיר / מיקום)
+   ============================================================ */
+.sh-filter-bar { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+.sh-filter { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 150px; }
+.sh-filter-label { font-size: 12px; font-weight: 800; color: #64748b; }
+.sh-filter-select { padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 14px; font-weight: 700; background: #fff; color: #334155; cursor: pointer; width: 100%; box-sizing: border-box; }
+.sh-filter-select:focus { outline: none; border-color: #e11d48; box-shadow: 0 0 0 3px rgba(225,29,72,0.12); }
+@media (max-width: 600px) { .sh-filter { min-width: 100%; } }

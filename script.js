@@ -9482,6 +9482,10 @@ function buildPhotosPage(albums, section) {
   if ((section === 'photos' || section === 'communities' || section === 'secondhand') && typeof filterAlbumsByCategory === 'function') {
     albums = filterAlbumsByCategory(albums, section);
   }
+  // סינון ייעודי למוצרי יד שניה (סוג הצעה / מחיר / מיקום)
+  if (section === 'secondhand' && typeof secondhandApplyFilters === 'function') {
+    albums = secondhandApplyFilters(albums);
+  }
 
   // 1. שורה ראשונה: מה חדש (מיון לפי תאריך / העלאה אחרונה)
   // הפיד הראשי: קודם גלריות של מי שאתה עוקב אחריו, ואז לפי הזמן (החדש קודם)
@@ -9687,9 +9691,11 @@ function buildPhotosPage(albums, section) {
           </div>
           ${section === 'ideas'
             ? (typeof ideasCategoryBarHTML === 'function' ? ideasCategoryBarHTML() : '')
-            : (typeof sectionCategoryBarHTML === 'function' ? sectionCategoryBarHTML(section) : '')}
-          ${photoFilterSectionHTML()}
-          <div class="view-toggles">
+            : (section === 'secondhand' ? '' : (typeof sectionCategoryBarHTML === 'function' ? sectionCategoryBarHTML(section) : ''))}
+          ${section === 'secondhand' && typeof secondhandFilterBarHTML === 'function' ? secondhandFilterBarHTML() : photoFilterSectionHTML()}
+          ${section === 'secondhand'
+            ? (typeof secondhandTogglesHTML === 'function' ? secondhandTogglesHTML() : '')
+            : `<div class="view-toggles">
             <label class="tgl">
               <span class="tgl-label">🔞 תוכן למבוגרים</span>
               <span class="tgl-switch"><input type="checkbox" ${_adultOn ? 'checked' : ''} onchange="toggleSidebarAgeVerification(this.checked)"><span class="tgl-slider"></span></span>
@@ -9698,7 +9704,7 @@ function buildPhotosPage(albums, section) {
               <span class="tgl-label">✔️ משתמשים מאומתים</span>
               <span class="tgl-switch"><input type="checkbox" ${photoVerifiedOnly ? 'checked' : ''} onchange="photoToggleVerified(this.checked)"><span class="tgl-slider"></span></span>
             </label>
-          </div>
+          </div>`}
 
           <!-- מקטע מאוחד: כל הרעיונות / כל הגלריות -->
           <div class="photo-section-row" style="margin-bottom: 32px; background: #ffffff; padding: 18px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
@@ -10053,8 +10059,6 @@ function photoOpenDetail(id) {
       </div>
     `;
   }
-  if (typeof subscribePhotoComments === 'function') subscribePhotoComments(id);
-}
   if (typeof subscribePhotoComments === 'function') subscribePhotoComments(id);
 }
 
@@ -14090,6 +14094,100 @@ function filterAlbumsByCategory(albums, section) {
   });
 }
 window.filterAlbumsByCategory = filterAlbumsByCategory;
+
+// ============================================================
+// סינון ייעודי לעמוד "מוצרי יד שניה": סוג ההצעה, טווח מחירים, מיקום
+// ============================================================
+const SH_OFFER_TYPES = ['הכל', 'מכירה', 'השאלה', 'החלפה'];
+const SH_PRICE_RANGES = ['הכל', 'עד ₪100', '₪100–500', '₪500–1000', '₪1000+'];
+const SH_REGIONS = ['הכל', 'צפון', 'מרכז', 'דרום', 'ירושלים', 'שרון', 'שפלה'];
+let shOfferFilter = 'הכל';
+let shPriceFilter = 'הכל';
+let shRegionFilter = 'הכל';
+let shLocationEnabled = false;
+
+function setShFilter(kind, val) {
+  if (kind === 'offer') shOfferFilter = val;
+  else if (kind === 'price') shPriceFilter = val;
+  else if (kind === 'region') shRegionFilter = val;
+  if (typeof buildSecondhandPage === 'function' && typeof mainContent !== 'undefined' && mainContent) {
+    mainContent.innerHTML = buildSecondhandPage();
+  }
+}
+window.setShFilter = setShFilter;
+
+function _shPriceNum(p) {
+  const m = String(p && p.price != null ? p.price : '').match(/\d+/g);
+  return m ? parseInt(m.join(''), 10) : NaN;
+}
+
+function secondhandApplyFilters(albums) {
+  return albums.filter(a => {
+    if (shOfferFilter !== 'הכל' && (a.offerType || '') !== shOfferFilter) return false;
+    if (shRegionFilter !== 'הכל' && (a.region || '') !== shRegionFilter) return false;
+    if (shPriceFilter !== 'הכל') {
+      const n = _shPriceNum(a);
+      if (isNaN(n)) return false;
+      if (shPriceFilter === 'עד ₪100' && !(n <= 100)) return false;
+      if (shPriceFilter === '₪100–500' && !(n > 100 && n <= 500)) return false;
+      if (shPriceFilter === '₪500–1000' && !(n > 500 && n <= 1000)) return false;
+      if (shPriceFilter === '₪1000+' && !(n > 1000)) return false;
+    }
+    return true;
+  });
+}
+window.secondhandApplyFilters = secondhandApplyFilters;
+
+function secondhandFilterBarHTML() {
+  const sel = (kind, cur, opts) => `
+    <div class="sh-filter">
+      <label class="sh-filter-label">${kind === 'offer' ? 'סוג ההצעה' : kind === 'price' ? 'טווח מחירים' : 'מיקום'}</label>
+      <select class="sh-filter-select" onchange="setShFilter('${kind}', this.value)">
+        ${opts.map(o => `<option value="${artEsc(o)}"${o === cur ? ' selected' : ''}>${artEsc(o)}</option>`).join('')}
+      </select>
+    </div>`;
+  return `
+    <div class="sh-filter-bar">
+      ${sel('offer', shOfferFilter, SH_OFFER_TYPES)}
+      ${sel('price', shPriceFilter, SH_PRICE_RANGES)}
+      ${sel('region', shRegionFilter, SH_REGIONS)}
+    </div>`;
+}
+window.secondhandFilterBarHTML = secondhandFilterBarHTML;
+
+function secondhandTogglesHTML() {
+  return `
+    <div class="view-toggles">
+      <label class="tgl">
+        <span class="tgl-label">📍 הפעלת מיקום</span>
+        <span class="tgl-switch"><input type="checkbox" ${shLocationEnabled ? 'checked' : ''} onchange="toggleShLocation(this.checked)"><span class="tgl-slider"></span></span>
+      </label>
+    </div>`;
+}
+window.secondhandTogglesHTML = secondhandTogglesHTML;
+
+function toggleShLocation(on) {
+  if (!on) { shLocationEnabled = false; window.shUserLocation = null; return; }
+  if (typeof navigator === 'undefined' || !navigator.geolocation) {
+    if (typeof showCopyToast === 'function') showCopyToast('הדפדפן אינו תומך במיקום');
+    shLocationEnabled = false;
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      shLocationEnabled = true;
+      window.shUserLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      if (typeof showCopyToast === 'function') showCopyToast('📍 המיקום הופעל בהצלחה');
+    },
+    () => {
+      shLocationEnabled = false;
+      if (typeof showCopyToast === 'function') showCopyToast('לא ניתן לקבל מיקום — בדקו הרשאות');
+      const cb = document.querySelector('.view-toggles input[onchange*="toggleShLocation"]');
+      if (cb) cb.checked = false;
+    }
+  );
+}
+window.toggleShLocation = toggleShLocation;
 
 // ריבועי כניסה ל"תמונות" ו"סיפורים" בראש רשת הקהילות
 // כרטיס קהילה אחיד ומסודר (בסגנון "חברים מוצעים"): תמונה, שם מלא, שורת מידע, כפתור כניסה
