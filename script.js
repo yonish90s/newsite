@@ -440,12 +440,13 @@ function sanitizeToOnlyPhotosAndStories() {
 
   // סנכרון התפריט העליון עם רשימת העמודים
   if (!Array.isArray(topNavPages) || topNavPages.length === 0) {
-    topNavPages = pages.map(p => p.id);
+    topNavPages = pages.map(p => p.id).filter(id => id !== 'page-questions-main' && id !== 'page-offers-main');
   } else {
     pages.forEach(p => {
-      if (p && p.id && !topNavPages.includes(p.id)) topNavPages.push(p.id);
+      if (p && p.id && !topNavPages.includes(p.id) && p.id !== 'page-questions-main' && p.id !== 'page-offers-main') topNavPages.push(p.id);
     });
   }
+  topNavPages = topNavPages.filter(id => id !== 'page-questions-main' && id !== 'page-offers-main');
   // מוודאים ש-page-ideas-main מופיע ראשון בתפריט העליון
   if (pages.some(p => p && p.id === 'page-ideas-main')) {
     topNavPages = topNavPages.filter(id => id !== 'page-ideas-main');
@@ -801,7 +802,7 @@ function renderTopNav() {
   topNavPages.forEach(pageId => {
     const page = pages.find(p => p.id === pageId);
     if (!page) return; // במקרה שהעמוד נמחק
-    if (pageId === 'page-ci' || pageId === 'page-em' || page.title?.includes('ריבית') || page.title?.includes('Everything')) return;
+    if (pageId === 'page-ci' || pageId === 'page-em' || pageId === 'page-questions-main' || pageId === 'page-offers-main' || page.title?.includes('ריבית') || page.title?.includes('Everything')) return;
     if (!isEditMode && page.isHidden && !isAdmin()) return; // מסתיר עמודים מוסתרים גם למעלה
     
     const a = document.createElement('a');
@@ -13050,10 +13051,8 @@ onValue(ref(db, 'website'), (snapshot) => {
     if (pPhoto && !navs.includes(pPhoto.id)) navs.push(pPhoto.id);
     // עמוד הקהילות תמיד מופיע בתפריט העליון
     if (pages.some(p => p && p.id === 'page-communities-main') && !navs.includes('page-communities-main')) navs.push('page-communities-main');
-    // עמוד "שאלות גולשים" תמיד בתפריט
-    if (pages.some(p => p && p.id === 'page-questions-main') && !navs.includes('page-questions-main')) navs.push('page-questions-main');
-    // עמוד "הצעות" תמיד בתפריט
-    if (pages.some(p => p && p.id === 'page-offers-main') && !navs.includes('page-offers-main')) navs.push('page-offers-main');
+    // עמודים כמו "שאלות גולשים" ו"הצעות" הם עמודי צד בלבד (מוסרים מהתפריט העליון)
+    navs = navs.filter(id => id !== 'page-questions-main' && id !== 'page-offers-main');
     // מסירים מהתפריט את העמודים שהוסרו
     navs = navs.filter(id => !REMOVED_PHOTO_PAGE_IDS.includes(id));
     if (JSON.stringify(topNavPages) !== JSON.stringify(navs)) {
