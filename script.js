@@ -6031,6 +6031,7 @@ function storyOpenDetail(id) {
   try { stories = JSON.parse(decodeURIComponent(container.dataset.storiesJson)); } catch(e){ return; }
   const s = stories.find(x => x.id === id);
   if (!s) return;
+  if (typeof addToWatchHistory === 'function') addToWatchHistory({ ...s, type: 'story' });
 
   const validImages = s.images ? s.images.filter(img => !!img) : (s.image ? [s.image] : []);
   const mainImg = validImages[0] || '';
@@ -13306,6 +13307,7 @@ window.deleteIdea = deleteIdea;
 function openIdeaDetailModal(ideaId) {
   const item = ideasData[ideaId] || IDEAS_SAMPLES.find(x => x.id === ideaId);
   if (!item) return;
+  if (typeof addToWatchHistory === 'function') addToWatchHistory({ ...item, type: 'idea', category: item.category || 'רעיון' });
   const currentUid = auth.currentUser ? auth.currentUser.uid : null;
   const votes = item.votes || {};
   const hasVoted = currentUid && !!votes[currentUid];
@@ -13369,44 +13371,67 @@ function addToWatchHistory(item) {
 }
 window.addToWatchHistory = addToWatchHistory;
 
-function openWatchHistoryModal() {
-  const modal = document.getElementById('watch-history-modal');
-  const container = document.getElementById('watch-history-list');
-  if (!modal || !container) return;
-
+function openWatchHistoryPage() {
   let history = [];
   try { history = JSON.parse(localStorage.getItem('watch_history') || '[]'); } catch (e) {}
 
+  let contentHTML = '';
   if (history.length === 0) {
-    container.innerHTML = `
-      <div style="text-align:center; padding:30px; color:#a1a1aa;">
-        <div style="font-size:36px; margin-bottom:8px;">🕒</div>
-        <p style="margin:0; font-size:14px;">אין פריטים בהיסטוריית הצפייה עדיין.</p>
+    contentHTML = `
+      <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:80px 20px; text-align:center;">
+        <div style="font-size:48px; margin-bottom:16px; opacity:0.6;">🕒</div>
+        <h3 style="margin:0 0 8px; font-size:20px; font-weight:800;">היסטוריית הצפייה שלך ריקה</h3>
+        <p style="margin:0 0 20px; color:#64748b; font-size:14px; max-width:400px;">כל תמונה, סיפור או רעיון שתיכנס אליהם יופיעו כאן באופן אוטומטי.</p>
+        <button onclick="if(typeof renderPhotosPage==='function'){renderPhotosPage();}else{location.reload();}" style="background:#e11d48; color:#fff; border:none; padding:10px 24px; border-radius:10px; font-weight:bold; font-size:14px; cursor:pointer; box-shadow:0 4px 12px rgba(225,29,72,0.3);">גלה פריטים באתר</button>
       </div>
     `;
   } else {
-    container.innerHTML = history.map(item => `
-      <div style="display:flex; align-items:center; gap:12px; background:#202028; border:1px solid #2e2e38; border-radius:10px; padding:10px; cursor:pointer;" onclick="document.getElementById('watch-history-modal').style.display='none'; photoOpenDetail('${artEsc(item.id)}')">
-        <div style="width:50px; height:50px; border-radius:8px; overflow:hidden; background:#2a2a34; flex-shrink:0;">
-          ${item.img ? `<img src="${item.img}" style="width:100%; height:100%; object-fit:cover;">` : '<div style="display:flex; align-items:center; justify-content:center; height:100%;">🖼️</div>'}
+    const cardsHTML = history.map(item => {
+      const img = item.img || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80';
+      return `
+        <div class="art-row" style="background:#fff; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; display:flex; flex-direction:column; cursor:pointer; position:relative;" onclick="photoOpenDetail('${artEsc(item.id)}')">
+          <div style="aspect-ratio:16/9; width:100%; overflow:hidden; background:#f1f5f9; position:relative;">
+            <img src="${img}" style="width:100%; height:100%; object-fit:cover; display:block;">
+            <button onclick="event.stopPropagation(); removeFromWatchHistory('${artEsc(item.id)}'); openWatchHistoryPage();" style="position:absolute; top:8px; left:8px; background:rgba(0,0,0,0.6); color:#fff; border:none; border-radius:50%; width:28px; height:28px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:12px;" title="הסר מההיסטוריה">✕</button>
+          </div>
+          <div style="padding:10px 12px;">
+            <h3 style="margin:0 0 6px; font-size:14px; font-weight:800; line-height:1.3; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;">${artEsc(item.title)}</h3>
+            <div style="font-size:11px; color:#64748b; display:flex; justify-content:space-between; align-items:center;">
+              <span>${artEsc(item.category || 'גלריה')} ${item.author ? '· ' + artEsc(item.author) : ''}</span>
+              <span>${artEsc(item.date || '')}</span>
+            </div>
+          </div>
         </div>
-        <div style="flex:1; min-width:0;">
-          <h4 style="margin:0 0 4px; font-size:14px; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${artEsc(item.title)}</h4>
-          <div style="font-size:11px; color:#a1a1aa;">${artEsc(item.category)} ${item.author ? '· ' + artEsc(item.author) : ''} · ${item.date} ${item.time}</div>
-        </div>
-        <button onclick="event.stopPropagation(); removeFromWatchHistory('${artEsc(item.id)}')" style="background:none; border:none; color:#ef4444; font-size:16px; cursor:pointer; padding:4px;" title="הסר מההיסטוריה">🗑️</button>
+      `;
+    }).join('');
+
+    contentHTML = `
+      <div class="art-rows" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:16px;">
+        ${cardsHTML}
       </div>
-    `).join('');
+    `;
   }
 
-  modal.style.display = 'flex';
+  mainContent.innerHTML = `
+    <div class="history-page-wrapper" style="padding:24px 30px; direction:rtl; max-width:1400px; margin:0 auto;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; border-bottom:2px solid #f1f5f9; padding-bottom:14px;">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <h1 style="margin:0; font-size:24px; font-weight:900; letter-spacing:-0.5px;">HISTORY / היסטוריית צפייה</h1>
+          <span style="background:#e2e8f0; color:#334155; padding:3px 10px; border-radius:12px; font-size:12px; font-weight:800;">${history.length} פריטים</span>
+        </div>
+        ${history.length > 0 ? `<button onclick="clearWatchHistory(); openWatchHistoryPage();" style="background:#fef2f2; color:#ef4444; border:1px solid #fecaca; padding:8px 16px; border-radius:10px; font-weight:bold; font-size:13px; cursor:pointer;">🗑️ ניקוי היסטוריה</button>` : ''}
+      </div>
+      ${contentHTML}
+    </div>
+  `;
 }
-window.openWatchHistoryModal = openWatchHistoryModal;
+window.openWatchHistoryPage = openWatchHistoryPage;
+window.openWatchHistoryModal = openWatchHistoryPage;
 
 function clearWatchHistory() {
   if (confirm("האם ברצונך למחוק את כל היסטוריית הצפייה?")) {
     localStorage.removeItem('watch_history');
-    openWatchHistoryModal();
+    openWatchHistoryPage();
   }
 }
 window.clearWatchHistory = clearWatchHistory;
@@ -13416,90 +13441,100 @@ function removeFromWatchHistory(id) {
     let history = JSON.parse(localStorage.getItem('watch_history') || '[]');
     history = history.filter(h => h.id !== id);
     localStorage.setItem('watch_history', JSON.stringify(history));
-    openWatchHistoryModal();
   } catch (e) {}
 }
 window.removeFromWatchHistory = removeFromWatchHistory;
 
-let activeLikesTab = 'likes';
-function openLikesModal() {
-  const modal = document.getElementById('user-likes-saves-modal');
-  if (!modal) return;
-  modal.style.display = 'flex';
-  switchLikesTab(activeLikesTab);
-}
-window.openLikesModal = openLikesModal;
+let currentFavTab = 'likes';
+function openFavoritesPage(tab) {
+  if (tab) currentFavTab = tab;
+  
+  const user = auth.currentUser;
+  const likedKey = user ? `liked_galleries_${user.uid}` : 'guest_liked_galleries';
+  const savedKey = user ? `saved_galleries_${user.uid}` : 'guest_saved_galleries';
 
-function switchLikesTab(tab) {
-  activeLikesTab = tab;
-  const likesBtn = document.getElementById('tab-likes-btn');
-  const savesBtn = document.getElementById('tab-saves-btn');
-  const list = document.getElementById('user-likes-saves-list');
-  if (!list) return;
+  let likedObj = {};
+  let savedObj = {};
+  try { likedObj = JSON.parse(localStorage.getItem(likedKey) || localStorage.getItem('liked_galleries') || '{}'); } catch(e){}
+  try { savedObj = JSON.parse(localStorage.getItem(savedKey) || '{}'); } catch(e){}
 
-  if (tab === 'likes') {
-    if (likesBtn) { likesBtn.style.background = '#e11d48'; likesBtn.style.color = '#fff'; }
-    if (savesBtn) { savesBtn.style.background = '#2a2a34'; savesBtn.style.color = '#a1a1aa'; }
-    
-    const user = auth.currentUser;
-    const localKey = user ? `liked_galleries_${user.uid}` : 'guest_liked_galleries';
-    let likedObj = {};
-    try { likedObj = JSON.parse(localStorage.getItem(localKey) || localStorage.getItem('liked_galleries') || '{}'); } catch(e){}
-    
-    const likedIds = Object.keys(likedObj).filter(k => likedObj[k]);
-    renderLikesSavesList(likedIds, '❤️ עדיין לא סימנת בלייק שום גלריה.');
+  const likedIds = Object.keys(likedObj).filter(k => likedObj[k]);
+  const savedIds = Object.keys(savedObj).filter(k => savedObj[k]);
+
+  const targetIds = currentFavTab === 'likes' ? likedIds : savedIds;
+  const targetCount = targetIds.length;
+
+  let allGalleries = [];
+  const container = mainContent.querySelector('.photos-page, .community-page, .user-page, .stories-page');
+  if (container) {
+    if (container.dataset.photosJson) {
+      try { allGalleries = allGalleries.concat(JSON.parse(decodeURIComponent(container.dataset.photosJson))); } catch(e){}
+    }
+    if (container.dataset.storiesJson) {
+      try { allGalleries = allGalleries.concat(JSON.parse(decodeURIComponent(container.dataset.storiesJson))); } catch(e){}
+    }
+  }
+
+  const matchedItems = allGalleries.filter(a => targetIds.includes(a.id));
+
+  let contentHTML = '';
+
+  if (targetCount === 0) {
+    contentHTML = `
+      <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:80px 20px; text-align:center;">
+        <div style="font-size:64px; margin-bottom:16px; opacity:0.8;">${currentFavTab === 'likes' ? '❤️' : '🔖'}</div>
+        <h3 style="margin:0 0 8px; font-size:22px; font-weight:800;">${currentFavTab === 'likes' ? 'No liked items / אין פריטים בלייקים' : 'No saved items / אין פריטים שמורים'}</h3>
+        <p style="margin:0 0 24px; color:#64748b; font-size:14px; max-width:420px;">
+          ${currentFavTab === 'likes' ? 'לחץ ❤️ על גלריה, תמונה או סיפור כדי להוסיף אותם למועדפים שלך.' : 'לחץ על שמירה בגלריה כדי לשמור אותה לצפייה מאוחרת בדפדפן זה.'}
+        </p>
+        <button onclick="if(typeof renderPhotosPage==='function'){renderPhotosPage();}else{location.reload();}" style="background:#e11d48; color:#fff; border:none; padding:12px 28px; border-radius:10px; font-weight:800; font-size:15px; cursor:pointer; box-shadow:0 4px 14px rgba(225,29,72,0.35);">Browse items / גלה פריטים 🚀</button>
+      </div>
+    `;
   } else {
-    if (likesBtn) { likesBtn.style.background = '#2a2a34'; likesBtn.style.color = '#a1a1aa'; }
-    if (savesBtn) { savesBtn.style.background = '#e11d48'; savesBtn.style.color = '#fff'; }
+    const displayList = matchedItems.length > 0 ? matchedItems : targetIds.map(id => ({ id, title: `פריט #${id}`, category: 'מועדף' }));
+    const cardsHTML = displayList.map(item => {
+      const img = (item.images && item.images[0]) || item.img || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80';
+      return `
+        <div class="art-row" style="background:#fff; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; display:flex; flex-direction:column; cursor:pointer; position:relative;" onclick="photoOpenDetail('${artEsc(item.id)}')">
+          <div style="aspect-ratio:16/9; width:100%; overflow:hidden; background:#f1f5f9; position:relative;">
+            <img src="${img}" style="width:100%; height:100%; object-fit:cover; display:block;">
+          </div>
+          <div style="padding:10px 12px;">
+            <h3 style="margin:0 0 6px; font-size:14px; font-weight:800; line-height:1.3; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;">${artEsc(item.title || '')}</h3>
+            <div style="font-size:11px; color:#64748b; display:flex; justify-content:space-between; align-items:center;">
+              <span>${artEsc(item.category || 'גלריה')} ${item.author ? '· ' + artEsc(item.author) : ''}</span>
+              <span style="color:#e11d48; font-weight:bold;">${currentFavTab === 'likes' ? '❤️ בלייק' : '🔖 שמור'}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
 
-    const user = auth.currentUser;
-    const localKey = user ? `saved_galleries_${user.uid}` : 'guest_saved_galleries';
-    let savedObj = {};
-    try { savedObj = JSON.parse(localStorage.getItem(localKey) || '{}'); } catch(e){}
-
-    const savedIds = Object.keys(savedObj).filter(k => savedObj[k]);
-    renderLikesSavesList(savedIds, '🔖 עדיין לא שמרת שום גלריה.');
-  }
-}
-window.switchLikesTab = switchLikesTab;
-
-function renderLikesSavesList(ids, emptyMsg) {
-  const list = document.getElementById('user-likes-saves-list');
-  if (!list) return;
-
-  const container = mainContent.querySelector('.photos-page, .community-page, .user-page');
-  let albums = [];
-  if (container && container.dataset.photosJson) {
-    try { albums = JSON.parse(decodeURIComponent(container.dataset.photosJson)); } catch(e){}
-  }
-
-  const items = albums.filter(a => ids.includes(a.id));
-
-  if (items.length === 0 && ids.length === 0) {
-    list.innerHTML = `
-      <div style="text-align:center; padding:30px; color:#a1a1aa;">
-        <p style="margin:0; font-size:14px;">${emptyMsg}</p>
+    contentHTML = `
+      <div class="art-rows" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:16px;">
+        ${cardsHTML}
       </div>
     `;
-    return;
   }
 
-  list.innerHTML = (items.length > 0 ? items : ids.map(id => ({ id, title: `גלריה #${id}`, category: 'גלריה' }))).map(item => {
-    const img = (item.images && item.images[0]) || item.img || '';
-    return `
-      <div style="display:flex; align-items:center; gap:12px; background:#202028; border:1px solid #2e2e38; border-radius:10px; padding:10px; cursor:pointer;" onclick="document.getElementById('user-likes-saves-modal').style.display='none'; photoOpenDetail('${artEsc(item.id)}')">
-        <div style="width:50px; height:50px; border-radius:8px; overflow:hidden; background:#2a2a34; flex-shrink:0;">
-          ${img ? `<img src="${img}" style="width:100%; height:100%; object-fit:cover;">` : '<div style="display:flex; align-items:center; justify-content:center; height:100%;">🖼️</div>'}
+  mainContent.innerHTML = `
+    <div class="favorites-page-wrapper" style="padding:24px 30px; direction:rtl; max-width:1400px; margin:0 auto;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:2px solid #f1f5f9; padding-bottom:14px; flex-wrap:wrap; gap:12px;">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <h1 style="margin:0; font-size:24px; font-weight:900; letter-spacing:-0.5px;">FAVORITES / מועדפים ושמורים</h1>
+          <span style="background:#e11d48; color:#fff; padding:3px 10px; border-radius:12px; font-size:12px; font-weight:800;">${targetCount} פריטים</span>
         </div>
-        <div style="flex:1; min-width:0;">
-          <h4 style="margin:0 0 4px; font-size:14px; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${artEsc(item.title || '')}</h4>
-          <div style="font-size:11px; color:#a1a1aa;">${artEsc(item.category || 'גלריה')} ${item.author ? '· ' + artEsc(item.author) : ''}</div>
+        <div style="display:flex; gap:8px;">
+          <button onclick="openFavoritesPage('likes')" style="padding:8px 18px; border-radius:10px; border:none; font-weight:800; font-size:13px; cursor:pointer; transition:all 0.2s; ${currentFavTab === 'likes' ? 'background:#e11d48; color:#fff; box-shadow:0 3px 10px rgba(225,29,72,0.3);' : 'background:#f1f5f9; color:#475569;'}">❤️ בלייקים שלי (${likedIds.length})</button>
+          <button onclick="openFavoritesPage('saves')" style="padding:8px 18px; border-radius:10px; border:none; font-weight:800; font-size:13px; cursor:pointer; transition:all 0.2s; ${currentFavTab === 'saves' ? 'background:#e11d48; color:#fff; box-shadow:0 3px 10px rgba(225,29,72,0.3);' : 'background:#f1f5f9; color:#475569;'}">🔖 בשמורים שלי (${savedIds.length})</button>
         </div>
       </div>
-    `;
-  }).join('');
+      ${contentHTML}
+    </div>
+  `;
 }
-window.renderLikesSavesList = renderLikesSavesList;
+window.openFavoritesPage = openFavoritesPage;
+window.openLikesModal = openFavoritesPage;
 
 function openLanguageModal() {
   const modal = document.getElementById('language-modal');
