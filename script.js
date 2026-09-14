@@ -202,7 +202,23 @@ const defaultPages = [
 // הגדרות ברירת מחדל (יוחלפו אם יש שמירה)
 let pages = defaultPages;
 let activePageId = 'page-ideas-main';
-let topNavPages = ['page-ideas-main', 'page-photos-main', 'page-stories-main']; // העמודים שמופיעים בתפריט העליון
+let topNavPages = ['page-ideas-main']; // העמודים שמופיעים בתפריט העליון
+// עמודים שמופיעים רק בסרגל הצד ("עמודי צד") ולא בתפריט העליון
+const SIDE_ONLY_PAGE_IDS = ['page-questions-main', 'page-offers-main', 'page-photos-main', 'page-stories-main'];
+// זיהוי עמוד צד לפי מזהה, תוכן או כותרת (העמודים עשויים להיווצר עם מזהים דינמיים)
+function isSideOnlyPage(p) {
+  if (!p) return false;
+  if (SIDE_ONLY_PAGE_IDS.includes(p.id)) return true;
+  const t = p.title || '', c = p.content || '';
+  if (c.includes('photos-page') || c.includes('stories-page') || c.includes('questions-page') || c.includes('offers-page')) return true;
+  if (t.includes('תמונות') || t.includes('סיפורים') || t.includes('שאלות גולשים') || t.includes('הצעות')) return true;
+  return false;
+}
+function isSideOnlyId(id) {
+  if (SIDE_ONLY_PAGE_IDS.includes(id)) return true;
+  const p = (typeof pages !== 'undefined' && Array.isArray(pages)) ? pages.find(x => x && x.id === id) : null;
+  return isSideOnlyPage(p);
+}
 let isEditMode = false; // ברירת מחדל: אורח (ללא עריכה)
 let undoStack = []; // מערך לשמירת היסטוריית שינויים לצורך ביטול (Undo)
 let siteBackgrounds = { dashboard: null, topNav: null, main: null };
@@ -371,7 +387,7 @@ function sanitizeToOnlyPhotosAndStories() {
   // לפי בקשת המשתמש: משאירים רק עמודי תמונות וסיפורים (מוחקים כתבות/קהילה וכל עמוד אחר).
   // מסננים רק כשקיים לפחות עמוד תמונות/סיפורים אחד, כדי לא לרוקן אתר תקין בטעות.
   if (pages.some(p => p && ((p.content || '').includes('photos-page') || (p.content || '').includes('stories-page')))) {
-    pages = pages.filter(p => p && ((p.content || '').includes('photos-page') || (p.content || '').includes('stories-page') || (p.content || '').includes('ideas-page') || (p.content || '').includes('communities-page') || (p.content || '').includes('info-page') || (p.content || '').includes('questions-page') || (p.content || '').includes('offers-page')));
+    pages = pages.filter(p => p && ((p.content || '').includes('photos-page') || (p.content || '').includes('stories-page') || (p.content || '').includes('ideas-page') || (p.content || '').includes('communities-page') || (p.content || '').includes('info-page') || (p.content || '').includes('requests-page') || (p.content || '').includes('questions-page') || (p.content || '').includes('offers-page')));
   }
 
   // בוטסטראפ של עמודי ברירת המחדל (תמונות + סיפורים) רק כאשר אין אף עמוד באתר.
@@ -418,6 +434,17 @@ function sanitizeToOnlyPhotosAndStories() {
     if (!_infoPage.title) _infoPage.title = 'מידע 🔒';
   }
 
+  // עמוד "בקשות" — תמיד קיים אך מוסתר (מופיע בתפריט רק למנהל, לאישור העלאות)
+  const _reqContent = '<div class="requests-page" data-page-id="page-requests-main"></div>';
+  const _reqPage = pages.find(p => p && p.id === 'page-requests-main');
+  if (!_reqPage) {
+    pages.push({ id: 'page-requests-main', title: 'בקשות 🔒', isHidden: true, content: _reqContent });
+  } else {
+    if (_reqPage.isHidden === undefined) _reqPage.isHidden = true;
+    _reqPage.content = _reqContent;
+    if (!_reqPage.title) _reqPage.title = 'בקשות 🔒';
+  }
+
   // עמוד "שאלות גולשים" — תמיד קיים
   const _qContent = '<div class="questions-page" data-page-id="page-questions-main"></div>';
   const _qPage = pages.find(p => p && p.id === 'page-questions-main');
@@ -440,13 +467,13 @@ function sanitizeToOnlyPhotosAndStories() {
 
   // סנכרון התפריט העליון עם רשימת העמודים
   if (!Array.isArray(topNavPages) || topNavPages.length === 0) {
-    topNavPages = pages.map(p => p.id).filter(id => id !== 'page-questions-main' && id !== 'page-offers-main');
+    topNavPages = pages.filter(p => !isSideOnlyPage(p)).map(p => p.id);
   } else {
     pages.forEach(p => {
-      if (p && p.id && !topNavPages.includes(p.id) && p.id !== 'page-questions-main' && p.id !== 'page-offers-main') topNavPages.push(p.id);
+      if (p && p.id && !topNavPages.includes(p.id) && !isSideOnlyPage(p)) topNavPages.push(p.id);
     });
   }
-  topNavPages = topNavPages.filter(id => id !== 'page-questions-main' && id !== 'page-offers-main');
+  topNavPages = topNavPages.filter(id => !isSideOnlyId(id));
   // מוודאים ש-page-ideas-main מופיע ראשון בתפריט העליון
   if (pages.some(p => p && p.id === 'page-ideas-main')) {
     topNavPages = topNavPages.filter(id => id !== 'page-ideas-main');
@@ -602,13 +629,6 @@ if (logoAreaEl) {
     if (!isEditMode) {
       goToHomePage();
     }
-  });
-}
-        };
-        reader.readAsDataURL(file);
-      }
-    };
-    input.click();
   });
 }
 
@@ -802,7 +822,7 @@ function renderTopNav() {
   topNavPages.forEach(pageId => {
     const page = pages.find(p => p.id === pageId);
     if (!page) return; // במקרה שהעמוד נמחק
-    if (pageId === 'page-ci' || pageId === 'page-em' || pageId === 'page-questions-main' || pageId === 'page-offers-main' || page.title?.includes('ריבית') || page.title?.includes('Everything')) return;
+    if (pageId === 'page-ci' || pageId === 'page-em' || isSideOnlyPage(page) || page.title?.includes('ריבית') || page.title?.includes('Everything')) return;
     if (!isEditMode && page.isHidden && !isAdmin()) return; // מסתיר עמודים מוסתרים גם למעלה
     
     const a = document.createElement('a');
@@ -1019,6 +1039,15 @@ function renderPage() {
     if (currentPage.id === 'page-info-main') {
       if (typeof buildInfoPage === 'function') {
         mainContent.innerHTML = buildInfoPage();
+        try { window.scrollTo(0, 0); } catch (e) {}
+        return;
+      }
+    }
+
+    // עמוד "בקשות" (אישור העלאות — למנהל בלבד)
+    if (currentPage.id === 'page-requests-main') {
+      if (typeof buildRequestsPage === 'function') {
+        mainContent.innerHTML = buildRequestsPage();
         try { window.scrollTo(0, 0); } catch (e) {}
         return;
       }
@@ -6039,7 +6068,7 @@ function buildStoriesPage(stories) {
             <div class="art-section-title">כל הסיפורים</div>
             ${storySizeBarHTML()}
           </div>
-          <div class="art-rows photo-collapsible" id="story-row-main">${listHTML}</div>
+          <div class="art-rows photo-collapsible expanded" id="story-row-main">${listHTML}</div>
           ${storyRowMoreBtn(stories.length, 'story-row-main')}
           <div class="art-pagination" style="display:none"></div>
           <div class="art-no-results" style="display:none">לא נמצאו סיפורים התואמים לחיפוש</div>
@@ -6069,36 +6098,39 @@ function storyOpenDetail(id) {
   const validImages = s.images ? s.images.filter(img => !!img) : (s.image ? [s.image] : []);
   const mainImg = validImages[0] || '';
 
-  // גלריה: תמונה גדולה + thumbnails למטה
-  const mainImageHTML = mainImg ? `
-    <div class="photo-main-img-container" style="margin-bottom: 20px; background: #fafafa; border: 1px solid #f0f0f0;">
-      <img id="story-gallery-main-img" src="${mainImg}" style="width:100%; height:100%; object-fit:contain; display:block; border-radius:12px; cursor:zoom-in;" onclick="artGalleryById('stories','${artEsc(id)}', this.getAttribute('src'))">
-    </div>
-  ` : '';
-
-  // Thumbnails של כל התמונות
-  const detailThumbnailsHTML = validImages.map((imgUrl, idx) => `
-    <div class="photo-thumb-square" onclick="photoSelectImage('${artEsc(imgUrl)}', this)" style="width:60px; height:60px; border-radius:8px; overflow:hidden; cursor:pointer; border:2.5px solid ${idx === 0 ? '#e11d48' : '#ddd'}; transition:all 0.2s; flex-shrink:0;">
-      <img src="${imgUrl}" style="width:100%; height:100%; object-fit:cover;">
-    </div>
-  `).join('');
-
-  const thumbnailsStripHTML = validImages.length > 1 ? `
-    <div style="display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:24px; direction:ltr; flex-wrap:wrap; padding:5px;">
-      <button type="button" onclick="event.stopPropagation(); photoStepDetailImage(-1, this)" title="תמונה קודמת" style="width:32px; height:32px; border-radius:50%; background:#3b82f6; color:#fff; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 2px 8px rgba(59,130,246,0.3); transition:background 0.15s ease;">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-      </button>
-      <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">
-        ${detailThumbnailsHTML}
-      </div>
-      <button type="button" onclick="event.stopPropagation(); photoStepDetailImage(1, this)" title="תמונה הבאה" style="width:32px; height:32px; border-radius:50%; background:#3b82f6; color:#fff; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 2px 8px rgba(59,130,246,0.3); transition:background 0.15s ease;">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-      </button>
-    </div>
-  ` : '';
-
-  window.storyPages = [mainImg];
+  // עמודי הסיפור: תמונה או טקסט. אם אין pages — ממירים מהתמונות הישנות
+  const storyPagesArr = (s.pages && s.pages.length)
+    ? s.pages.map(p => (p && typeof p === 'object') ? p : { type: 'image', url: p })
+    : validImages.map(u => ({ type: 'image', url: u }));
+  window.storyPagesData = storyPagesArr;
   window.currentStoryPage = 0;
+  window.currentStoryId = id;
+
+  // תמונות ממוזערות לכל עמוד (תמונה או כרטיס טקסט)
+  const thumbsHTML = storyPagesArr.map((pg, idx) => {
+    const inner = pg.type === 'text'
+      ? `<div class="story-thumb-text">${artEsc((pg.text || '').slice(0, 60))}</div>`
+      : `<img src="${pg.url}" style="width:100%; height:100%; object-fit:cover;">`;
+    return `<div class="story-page-thumb${idx === 0 ? ' active' : ''}" data-idx="${idx}" onclick="storyGoToPage(${idx})">${inner}</div>`;
+  }).join('');
+
+  const viewerHTML = storyPagesArr.length ? `
+    <div class="story-viewer">
+      <div class="story-page-view" id="story-page-view"></div>
+      ${storyPagesArr.length > 1 ? `
+      <div class="story-viewer-nav">
+        <button type="button" class="story-nav-btn" id="story-prev-btn" onclick="storyPrevPage()" title="הקודם">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="story-page-thumbs">${thumbsHTML}</div>
+        <button type="button" class="story-nav-btn" id="story-next-btn" onclick="storyNextPage()" title="הבא">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+      <div class="story-page-counter" id="story-page-counter">1 / ${storyPagesArr.length}</div>
+      ` : ''}
+    </div>
+  ` : '';
 
   const recommended = stories.filter(x => x.id !== id).slice(0, 3);
   const recHTML = recommended.map(r => `
@@ -6133,8 +6165,7 @@ function storyOpenDetail(id) {
           <div style="width:100px;"></div>
         </div>
 
-        ${mainImageHTML}
-        ${thumbnailsStripHTML}
+        ${viewerHTML}
 
         ${(typeof storyCommentsSectionHTML === 'function') ? storyCommentsSectionHTML(id) : ''}
 
@@ -6145,8 +6176,40 @@ function storyOpenDetail(id) {
       </div>
     </div>
   `;
+  if (typeof storyRenderPage === 'function') storyRenderPage();
   if (typeof subscribeStoryComments === 'function') subscribeStoryComments(id);
 }
+
+// מציג את העמוד הנוכחי של הסיפור (תמונה או טקסט מודגש)
+function storyRenderPage() {
+  const view = document.getElementById('story-page-view');
+  const pagesArr = window.storyPagesData || [];
+  if (!view || !pagesArr.length) return;
+  const idx = Math.max(0, Math.min(window.currentStoryPage || 0, pagesArr.length - 1));
+  window.currentStoryPage = idx;
+  const pg = pagesArr[idx];
+  if (pg.type === 'text') {
+    view.innerHTML = `<div class="story-text-page">${artEsc(pg.text || '').replace(/\n/g, '<br>')}</div>`;
+  } else {
+    view.innerHTML = `<img src="${pg.url}" class="story-img-page" onclick="artGalleryById('stories', window.currentStoryId, this.getAttribute('src'))">`;
+  }
+  document.querySelectorAll('.story-page-thumb').forEach(t => t.classList.toggle('active', Number(t.dataset.idx) === idx));
+  const counter = document.getElementById('story-page-counter');
+  if (counter) counter.textContent = `${idx + 1} / ${pagesArr.length}`;
+  const prevBtn = document.getElementById('story-prev-btn');
+  const nextBtn = document.getElementById('story-next-btn');
+  if (prevBtn) prevBtn.disabled = idx === 0;
+  if (nextBtn) nextBtn.disabled = idx === pagesArr.length - 1;
+  const active = document.querySelector('.story-page-thumb.active');
+  if (active && active.scrollIntoView) { try { active.scrollIntoView({ inline: 'center', block: 'nearest' }); } catch (e) {} }
+}
+window.storyRenderPage = storyRenderPage;
+
+function storyGoToPage(i) {
+  window.currentStoryPage = i;
+  storyRenderPage();
+}
+window.storyGoToPage = storyGoToPage;
 
 function storyGoBack() {
   const container = mainContent.querySelector('.stories-page');
@@ -6178,16 +6241,20 @@ function storySearch(val) {
 }
 
 function storyNextPage() {
-  if (!window.storyPages || !window.storyPages.length) return;
-  window.currentStoryPage = Math.min(window.currentStoryPage + 1, window.storyPages.length - 1);
-  updateStoryPageDisplay();
+  const arr = window.storyPagesData || [];
+  if (!arr.length) return;
+  window.currentStoryPage = Math.min((window.currentStoryPage || 0) + 1, arr.length - 1);
+  storyRenderPage();
 }
+window.storyNextPage = storyNextPage;
 
 function storyPrevPage() {
-  if (!window.storyPages || !window.storyPages.length) return;
-  window.currentStoryPage = Math.max(window.currentStoryPage - 1, 0);
-  updateStoryPageDisplay();
+  const arr = window.storyPagesData || [];
+  if (!arr.length) return;
+  window.currentStoryPage = Math.max((window.currentStoryPage || 0) - 1, 0);
+  storyRenderPage();
 }
+window.storyPrevPage = storyPrevPage;
 
 function updateStoryPageDisplay() {
   const spreads = document.querySelectorAll('.story-spread');
@@ -6210,26 +6277,47 @@ let storyEditingId = null;
 
 // מצייר את עורך התמונות: תצוגה מקדימה לכל תמונה עם כפתורי הזזה והסרה.
 // המיכל הוא LTR, ולכן אינדקס 0 בשמאל: ◀ מקדים (לכיוון הראשית), ▶ מאחר.
+// ממיר פריט ישן (מחרוזת URL) לאובייקט עמוד; שומר על תאימות לאחור
+function _storyNormalizePage(p) {
+  if (p && typeof p === 'object') return p;
+  return { type: 'image', url: p };
+}
+
 function renderStoryImagesEditor() {
   const box = document.getElementById('story-images-editor');
   if (!box) return;
+  storyImageList = storyImageList.map(_storyNormalizePage);
   if (!storyImageList.length) {
-    box.innerHTML = '<div style="font-size:12px; color:#999; direction:rtl;">אין תמונות עדיין — הוסף תמונה למטה.</div>';
+    box.innerHTML = '<div style="font-size:12px; color:#999;">אין עמודים עדיין — הוסיפו עמוד תמונה או עמוד טקסט למטה.</div>';
     return;
   }
   const last = storyImageList.length - 1;
-  box.innerHTML = storyImageList.map((src, i) => `
-    <div style="position:relative; width:74px;">
-      <img src="${src}" style="width:74px; height:74px; object-fit:cover; border-radius:8px; border:1px solid #ddd; display:block;">
-      ${i === 0 ? '<span style="position:absolute; top:2px; left:2px; background:#8b5cf6; color:#fff; font-size:9px; font-weight:800; padding:1px 5px; border-radius:6px;">ראשית</span>' : ''}
-      <div style="display:flex; justify-content:center; gap:3px; margin-top:3px;">
-        <button type="button" onclick="storyMoveImage(${i}, -1)" title="הזז קדימה" ${i === 0 ? 'disabled' : ''} style="border:1px solid #ddd; background:#fff; border-radius:5px; width:22px; height:22px; cursor:pointer; font-size:12px;${i === 0 ? 'opacity:0.35; cursor:default;' : ''}">◀</button>
-        <button type="button" onclick="storyMoveImage(${i}, 1)" title="הזז אחורה" ${i === last ? 'disabled' : ''} style="border:1px solid #ddd; background:#fff; border-radius:5px; width:22px; height:22px; cursor:pointer; font-size:12px;${i === last ? 'opacity:0.35; cursor:default;' : ''}">▶</button>
-        <button type="button" onclick="storyRemoveImage(${i})" title="הסר" style="border:1px solid #fca5a5; color:#dc2626; background:#fff; border-radius:5px; width:22px; height:22px; cursor:pointer; font-size:12px;">✕</button>
-      </div>
-    </div>
-  `).join('');
+  box.innerHTML = storyImageList.map((pg, i) => {
+    const moveBtns = `
+      <div style="display:flex; gap:3px; flex-shrink:0;">
+        <button type="button" onclick="storyMoveImage(${i}, -1)" title="העבר למעלה" ${i === 0 ? 'disabled' : ''} style="border:1px solid #ddd; background:#fff; border-radius:5px; width:26px; height:26px; cursor:pointer; font-size:12px;${i === 0 ? 'opacity:0.35; cursor:default;' : ''}">▲</button>
+        <button type="button" onclick="storyMoveImage(${i}, 1)" title="העבר למטה" ${i === last ? 'disabled' : ''} style="border:1px solid #ddd; background:#fff; border-radius:5px; width:26px; height:26px; cursor:pointer; font-size:12px;${i === last ? 'opacity:0.35; cursor:default;' : ''}">▼</button>
+        <button type="button" onclick="storyRemoveImage(${i})" title="הסר עמוד" style="border:1px solid #fca5a5; color:#dc2626; background:#fff; border-radius:5px; width:26px; height:26px; cursor:pointer; font-size:12px;">✕</button>
+      </div>`;
+    const badge = `<span style="background:${pg.type === 'text' ? '#8b5cf6' : '#3b82f6'}; color:#fff; font-size:10px; font-weight:800; padding:2px 8px; border-radius:6px;">עמוד ${i + 1} · ${pg.type === 'text' ? 'טקסט 📝' : 'תמונה 🖼️'}</span>`;
+    const inner = pg.type === 'text'
+      ? `<textarea oninput="storySetPageText(${i}, this.value)" placeholder="כתבו את הטקסט של העמוד הזה..." style="width:100%; min-height:70px; padding:8px 10px; border:1px solid #ddd; border-radius:8px; font-size:14px; font-weight:700; resize:vertical; box-sizing:border-box;">${artEsc(pg.text || '')}</textarea>`
+      : `<img src="${pg.url}" style="width:70px; height:70px; object-fit:cover; border-radius:8px; border:1px solid #ddd; display:block;">`;
+    return `
+      <div style="border:1px solid #eee; border-radius:10px; padding:8px; background:#fafafa;">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px;">
+          ${badge}
+          ${moveBtns}
+        </div>
+        ${inner}
+      </div>`;
+  }).join('');
 }
+
+function storySetPageText(i, val) {
+  if (storyImageList[i]) storyImageList[i] = { type: 'text', text: val };
+}
+window.storySetPageText = storySetPageText;
 
 function storyMoveImage(i, dir) {
   const j = i + dir;
@@ -6284,8 +6372,12 @@ function openStoryEditModal(id) {
   if (document.getElementById('story-category')) document.getElementById('story-category').value = s.category || STORY_CATEGORIES[0] || 'כללי';
   document.getElementById('story-link').value = s.link || '';
 
-  // טוענים את התמונות הקיימות לפי הסדר, כדי שאפשר יהיה לשנות אותו
-  storyImageList = (s.images && s.images.length) ? s.images.filter(Boolean) : (s.image ? [s.image] : []);
+  // טוענים את העמודים הקיימים (תמונה/טקסט). אם אין pages — ממירים מהתמונות הישנות
+  if (s.pages && s.pages.length) {
+    storyImageList = s.pages.map(_storyNormalizePage);
+  } else {
+    storyImageList = ((s.images && s.images.length) ? s.images.filter(Boolean) : (s.image ? [s.image] : [])).map(u => ({ type: 'image', url: u }));
+  }
   renderStoryImagesEditor();
 
   document.getElementById('story-modal').style.display = 'flex';
@@ -6300,10 +6392,25 @@ if (storyAddImageBtn) {
     inp.onchange = e => {
       const f = e.target.files[0]; if (!f) return;
       artCompressImage(f).then(data => {
-        if (data) { storyImageList.push(data); renderStoryImagesEditor(); }
+        if (data) { storyImageList.push({ type: 'image', url: data }); renderStoryImagesEditor(); }
       });
     };
     inp.click();
+  });
+}
+
+// הוספת עמוד טקסט
+const storyAddTextBtn = document.getElementById('story-add-text');
+if (storyAddTextBtn) {
+  storyAddTextBtn.addEventListener('click', () => {
+    storyImageList.push({ type: 'text', text: '' });
+    renderStoryImagesEditor();
+    // מיקוד על ה-textarea החדש
+    setTimeout(() => {
+      const box = document.getElementById('story-images-editor');
+      const areas = box ? box.querySelectorAll('textarea') : [];
+      if (areas.length) areas[areas.length - 1].focus();
+    }, 30);
   });
 }
 
@@ -6316,8 +6423,12 @@ document.getElementById('story-save').addEventListener('click', () => {
   const title = document.getElementById('story-title').value.trim();
   if (!title) { alert('חובה כותרת'); return; }
 
-  // התמונות לפי הסדר שנקבע בעורך; הראשונה היא התמונה הראשית
-  const storyImages = storyImageList.filter(Boolean);
+  // עמודי הסיפור לפי הסדר בעורך (תמונה/טקסט). שומרים גם images/image לתאימות לאחור ולתצוגה בכרטיסים
+  const storyPages = storyImageList
+    .map(_storyNormalizePage)
+    .filter(p => p && ((p.type === 'image' && p.url) || (p.type === 'text' && (p.text || '').trim())));
+  const storyImages = storyPages.filter(p => p.type === 'image').map(p => p.url);
+  const firstImage = storyImages[0] || '';
 
   const data = {
     title,
@@ -6326,8 +6437,9 @@ document.getElementById('story-save').addEventListener('click', () => {
     author: document.getElementById('story-author').value.trim(),
     category: document.getElementById('story-category').value.trim(),
     categoryColor: '#8b5cf6',
-    image: storyImages[0] || '',
+    image: firstImage,
     images: storyImages,
+    pages: storyPages,
     link: document.getElementById('story-link').value.trim()
   };
 
@@ -6836,10 +6948,8 @@ function renderPhotoCard(p, options = {}) {
   const isVerifiedAlbum = isUserVerified(p.authorId, p.author, p.verified || p.verifiedUser);
   const verifiedBadgeHTML = isVerifiedAlbum ? ` <span title="משתמש מאומת" style="color:#2563eb; font-weight:900; background:#dbeafe; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:10px; margin-right:3px;">✓</span>` : '';
   const priceBadgeHTML = p.price ? `<div class="art-price-badge">💰 ${artEsc(String(p.price))}</div>` : '';
-  const infoBlock = `
-    <div class="art-row-text photo-card-info">
-      <h3>${p.title}</h3>
-      ${priceBadgeHTML}
+  // בעמוד הקהילות מציגים כרטיס "ריבוע" נקי — ללא תאריך/מאומת/צפיות/לייקים וכפתורים
+  const metaHTML = options.hideMeta ? '' : `
       <div class="art-row-meta" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
         <span class="photo-author-link" onclick="event.stopPropagation(); openUserPage('${artEsc(p.authorId || '')}', '${artEsc(p.author)}')" style="cursor: pointer; color: #e11d48; text-decoration: underline; font-weight: 600;">${p.author}${verifiedBadgeHTML}</span>
         <span class="art-row-sep">|</span>
@@ -6849,6 +6959,12 @@ function renderPhotoCard(p, options = {}) {
       </div>
       ${scoreBadgeHTML}
       ${cardLinksHTML}
+  `;
+  const infoBlock = `
+    <div class="art-row-text photo-card-info">
+      <h3>${p.title}</h3>
+      ${priceBadgeHTML}
+      ${metaHTML}
     </div>
   `;
 
@@ -6885,11 +7001,8 @@ function renderPhotoCard(p, options = {}) {
 const PHOTO_ROW_LIMIT = 4;
 
 function photoRowMoreBtn(count, rowId) {
-  if (count <= PHOTO_ROW_LIMIT) return '';
-  return `
-    <div class="photo-row-more-wrap" style="text-align:center; margin-top:16px;">
-      <button class="photo-more-btn" onclick="photoToggleRowMore('${rowId}', this)">עוד</button>
-    </div>`;
+  // כפתורי "עוד"/"פחות" הוסרו — כל הפריטים מוצגים תמיד
+  return '';
 }
 
 function photoToggleRowMore(rowId, btn) {
@@ -7494,7 +7607,7 @@ function renderCommunityItemCard(p) {
   if (p.type === 'story' || p.isStory) {
     return renderStoryCommunityCard(p);
   }
-  return renderPhotoCard(p);
+  return renderPhotoCard(p, { hideMeta: true });
 }
 window.renderCommunityItemCard = renderCommunityItemCard;
 
@@ -9194,7 +9307,7 @@ function buildLeftSidebarBox(popularHTML, section) {
     pagesToDisplay = defaultNavItems;
   }
 
-  const pagesNavHTML = pagesToDisplay.map(page => {
+  const renderNavItem = (page) => {
     const isActive = page.id === activePageId;
     let title = page.title || '';
     let icon = '📄';
@@ -9208,7 +9321,7 @@ function buildLeftSidebarBox(popularHTML, section) {
       const match = title.match(/([\u1F300-\u1F9FF\u2600-\u26FF\u2700-\u27BF])/);
       if (match) {
         icon = match[1];
-        title = title.replace(match[1], '').trim();
+        // לא מסירים תווים מהכותרת — מציגים טקסט מלא
       }
     }
     const cleanTitle = title.replace(/🖼️|📖|💡|🏘️|👥|❓|🔥|🔒/g, '').trim();
@@ -9216,13 +9329,36 @@ function buildLeftSidebarBox(popularHTML, section) {
     return `
       <div class="site-page-nav-item ${isActive ? 'active' : ''}" onclick="navigateToPage('${page.id}')" role="button" tabindex="0">
         <div class="site-page-nav-left">
-          <span class="site-page-nav-icon">${icon}</span>
-          <span class="site-page-nav-title">${cleanTitle || title}</span>
+          <span class="site-page-nav-title">${cleanTitle}</span>
         </div>
         ${isActive ? `<span class="site-page-nav-badge">פעיל</span>` : `<span class="site-page-nav-arrow">‹</span>`}
       </div>
     `;
-  }).join('');
+  };
+
+  // קבוצה "עמודי צד" = שאלות גולשים, הצעות
+  const isQuestionsOrOffers = (p) => {
+    const t = p.title || '', c = p.content || '';
+    return p.id === 'page-questions-main' || p.id === 'page-offers-main'
+      || t.includes('שאלות גולשים') || t.includes('הצעות')
+      || c.includes('questions-page') || c.includes('offers-page');
+  };
+  // קבוצה "קהילות" = תמונות, סיפורים
+  const isPhotosOrStories = (p) => {
+    const t = p.title || '', c = p.content || '';
+    return p.id === 'page-photos-main' || p.id === 'page-stories-main'
+      || t.includes('תמונות') || t.includes('סיפורים')
+      || c.includes('photos-page') || c.includes('stories-page');
+  };
+  const mainPagesHTML = pagesToDisplay.filter(p => !isSideOnlyPage(p)).map(renderNavItem).join('');
+  // "עמודי צד": שאלות גולשים קודם, ואז הצעות
+  const qFirst = (p) => (p.id === 'page-questions-main' || (p.title || '').includes('שאלות גולשים') || (p.content || '').includes('questions-page')) ? 0 : 1;
+  // "קהילות": תמונות קודם, ואז סיפורים
+  const photoFirst = (p) => (p.id === 'page-photos-main' || (p.title || '').includes('תמונות') || (p.content || '').includes('photos-page')) ? 0 : 1;
+  const sidePagesList = pagesToDisplay.filter(isQuestionsOrOffers).sort((a, b) => qFirst(a) - qFirst(b));
+  const commPagesList = pagesToDisplay.filter(isPhotosOrStories).sort((a, b) => photoFirst(a) - photoFirst(b));
+  const sidePagesHTML = sidePagesList.map(renderNavItem).join('');
+  const commPagesHTML = commPagesList.map(renderNavItem).join('');
 
   return `
     <div class="art-sidebar art-sidebar-left">
@@ -9232,8 +9368,28 @@ function buildLeftSidebarBox(popularHTML, section) {
           <span style="font-size: 11px; background: rgba(225,29,72,0.1); color: #e11d48; padding: 2px 8px; border-radius: 12px; font-weight: 800;">ניווט מהיר</span>
         </div>
         <div style="display: flex; flex-direction: column; gap: 8px;">
-          ${pagesNavHTML}
+          ${mainPagesHTML}
         </div>
+        ${sidePagesList.length ? `
+          <div style="margin-top: 14px; margin-bottom: 10px; font-size: 12px; font-weight: 900; color: #64748b; letter-spacing: 0.3px; display: flex; align-items: center; gap: 8px;">
+            <span style="flex: 1; height: 1.5px; background: #e2e8f0; border-radius: 2px;"></span>
+            <span style="white-space: nowrap;">עמודי צד</span>
+            <span style="flex: 1; height: 1.5px; background: #e2e8f0; border-radius: 2px;"></span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            ${sidePagesHTML}
+          </div>
+        ` : ''}
+        ${commPagesList.length ? `
+          <div style="margin-top: 14px; margin-bottom: 10px; font-size: 12px; font-weight: 900; color: #64748b; letter-spacing: 0.3px; display: flex; align-items: center; gap: 8px;">
+            <span style="flex: 1; height: 1.5px; background: #e2e8f0; border-radius: 2px;"></span>
+            <span style="white-space: nowrap;">קהילות</span>
+            <span style="flex: 1; height: 1.5px; background: #e2e8f0; border-radius: 2px;"></span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            ${commPagesHTML}
+          </div>
+        ` : ''}
       </div>
 
       <div class="art-sidebar-box" style="border: 1.5px solid #22c55e; background: rgba(34,197,94,0.04); border-radius: 14px; padding: 16px; text-align: center;">
@@ -9285,6 +9441,11 @@ function buildPhotosPage(albums, section) {
   // גלריות שסומנו "גלוי רק למנהל" מוסתרות מכל מי שאינו מנהל מחובר / במצב עריכה
   const _isAdminView = (typeof isAdmin === 'function' && isAdmin()) || (typeof isEditMode !== 'undefined' && isEditMode);
   albums = albums.filter(p => !p.adminOnly || _isAdminView);
+
+  // סינון לפי סרגל הקטגוריות (תמונות / קהילות) — "הכל · כללי · לעסקים"
+  if ((section === 'photos' || section === 'communities') && typeof filterAlbumsByCategory === 'function') {
+    albums = filterAlbumsByCategory(albums, section);
+  }
 
   // 1. שורה ראשונה: מה חדש (מיון לפי תאריך / העלאה אחרונה)
   // הפיד הראשי: קודם גלריות של מי שאתה עוקב אחריו, ואז לפי הזמן (החדש קודם)
@@ -9415,9 +9576,18 @@ function buildPhotosPage(albums, section) {
     `;
   }).join('');
 
-  const row1HTML = newestAlbums.map(p => renderPhotoCard(p)).join('');
-  const row2HTML = forYouAlbums.map(p => renderPhotoCard(p)).join('');
-  const row3HTML = mostPopularAlbums.map(p => renderPhotoCard(p, { showScoreBadge: true })).join('');
+  // בעמוד הקהילות: כרטיס קהילה אחיד ומסודר (תמונה + שם + מידע + כפתור) + ריבועי כניסה לתמונות/סיפורים
+  let row1HTML, row2HTML, row3HTML;
+  if (section === 'communities' && typeof renderCommunityGridCard === 'function') {
+    const _commShortcuts = typeof communityShortcutsHTML === 'function' ? communityShortcutsHTML() : '';
+    row1HTML = _commShortcuts + newestAlbums.map(renderCommunityGridCard).join('');
+    row2HTML = forYouAlbums.map(renderCommunityGridCard).join('');
+    row3HTML = mostPopularAlbums.map(renderCommunityGridCard).join('');
+  } else {
+    row1HTML = newestAlbums.map(p => renderPhotoCard(p)).join('');
+    row2HTML = forYouAlbums.map(p => renderPhotoCard(p)).join('');
+    row3HTML = mostPopularAlbums.map(p => renderPhotoCard(p, { showScoreBadge: true })).join('');
+  }
 
   const popularHTML = popularSidebar.map((p, i) => {
     const score = (p.likes || 0) + photoGetViews(p.id);
@@ -9472,7 +9642,9 @@ function buildPhotosPage(albums, section) {
           <div class="art-search-wrap">
             <input type="text" class="art-search" placeholder="${searchPlaceholder}" oninput="photoSearch(this.value)">
           </div>
-          ${section === 'ideas' && typeof ideasCategoryBarHTML === 'function' ? ideasCategoryBarHTML() : ''}
+          ${section === 'ideas'
+            ? (typeof ideasCategoryBarHTML === 'function' ? ideasCategoryBarHTML() : '')
+            : (typeof sectionCategoryBarHTML === 'function' ? sectionCategoryBarHTML(section) : '')}
           ${photoFilterSectionHTML()}
           <div class="view-toggles">
             <label class="tgl">
@@ -9492,7 +9664,7 @@ function buildPhotosPage(albums, section) {
                 <h3 style="margin:0; font-size:18px; font-weight:900; color:#1e3a8a;">${sectionTitle}</h3>
               </div>
             </div>
-            <div class="art-rows photo-collapsible" id="photo-row-1">${row1HTML}</div>
+            <div class="art-rows photo-collapsible expanded" id="photo-row-1">${row1HTML}</div>
             ${photoRowMoreBtn(newestAlbums.length, 'photo-row-1')}
           </div>
 
@@ -10509,6 +10681,88 @@ function photoApprove(id) {
 }
 window.photoApprove = photoApprove;
 
+// ============================================================
+// עמוד "בקשות" — אישור העלאות משתמשים (למנהל בלבד)
+// ============================================================
+// מאתר את עמוד התמונות הראשי מתוך רשימת העמודים השמורים
+function _reqPhotosPageObj() {
+  if (typeof pages === 'undefined' || !Array.isArray(pages)) return null;
+  return pages.find(p => p && (p.content || '').includes('photos-page') && (p.content || '').includes('data-photos-json') && !(p.content || '').includes('community') && !(p.content || '').includes('user-page'));
+}
+// קורא את האלבומים מהאחסון (לא מה-DOM) — עובד גם כשלא נמצאים בעמוד התמונות
+function _reqGetStoredAlbums() {
+  const pp = _reqPhotosPageObj();
+  if (!pp) return [];
+  const m = (pp.content || '').match(/data-photos-json="([^"]*)"/);
+  if (!m) return [];
+  try { return JSON.parse(decodeURIComponent(m[1])) || []; } catch (e) { return []; }
+}
+
+function buildRequestsPage() {
+  const allowed = (typeof isAdmin === 'function' && isAdmin()) || (typeof isEditMode !== 'undefined' && isEditMode);
+  if (!allowed) {
+    return `<div class="requests-page" data-page-id="page-requests-main"><div class="comm-inner"><div style="text-align:center; padding:60px 20px; color:#64748b; font-size:16px; font-weight:700;">🔒 עמוד זה גלוי למנהל בלבד.</div></div></div>`;
+  }
+  const albums = _reqGetStoredAlbums();
+  const pending = albums.filter(p => p && p.approved === false).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  const cards = pending.map(p => {
+    const img = (p.images && p.images[0]) ? p.images[0] : (p.image || '');
+    return `
+      <div class="req-card">
+        <div class="req-thumb">${img ? `<img src="${img}" alt="">` : '🖼️'}</div>
+        <div class="req-body">
+          <div class="req-title">${artEsc(p.title || 'ללא כותרת')}</div>
+          <div class="req-meta">${artEsc(p.author || 'משתמש')}${p.timestamp ? ' · ' + artEsc(p.timestamp) : ''}</div>
+          ${p.summary ? `<div class="req-sub">${artEsc(p.summary)}</div>` : ''}
+        </div>
+        <div class="req-actions">
+          <button class="req-approve" onclick="reqApprove('${artEsc(p.id)}')">✓ אשר</button>
+          <button class="req-reject" onclick="reqReject('${artEsc(p.id)}')">✕ דחה</button>
+        </div>
+      </div>`;
+  }).join('');
+  const body = pending.length
+    ? `<div class="req-list">${cards}</div>`
+    : `<div style="text-align:center; padding:50px 20px; color:#64748b; font-weight:700; font-size:15px;">אין בקשות ממתינות לאישור 🎉</div>`;
+  return `
+    <div class="requests-page" data-page-id="page-requests-main">
+      <div class="comm-inner">
+        <div style="max-width:820px; margin:0 auto; direction:rtl; text-align:right;">
+          <h2 style="font-size:24px; font-weight:900; color:#0f172a; margin:0 0 6px;">📥 בקשות לאישור <span style="font-size:14px; color:#e11d48;">(למנהל בלבד)</span></h2>
+          <p style="color:#64748b; font-size:14px; margin:0 0 20px; line-height:1.5;">כל תוכן שמשתמש מעלה מופיע כאן וממתין לאישורך לפני שיפורסם באתר.${pending.length ? ' · <b>' + pending.length + '</b> ממתינות' : ''}</p>
+          ${body}
+        </div>
+      </div>
+    </div>`;
+}
+window.buildRequestsPage = buildRequestsPage;
+
+// אישור/דחייה: עוברים לעמוד התמונות (כדי לשמור נכון), משנים, וחוזרים לעמוד הבקשות
+function _reqMutate(id, action) {
+  const allowed = (typeof isAdmin === 'function' && isAdmin()) || (typeof isEditMode !== 'undefined' && isEditMode);
+  if (!allowed) return;
+  const pp = _reqPhotosPageObj();
+  if (!pp) { alert('לא נמצא עמוד התמונות'); return; }
+  activePageId = pp.id;
+  if (typeof renderPage === 'function') renderPage();
+  let albums = (typeof photoGetAlbums === 'function') ? photoGetAlbums() : [];
+  if (action === 'approve') {
+    const a = albums.find(x => x.id === id);
+    if (a) a.approved = true;
+  } else if (action === 'reject') {
+    albums = albums.filter(x => x.id !== id);
+  }
+  if (typeof mainContent !== 'undefined' && mainContent) mainContent.innerHTML = buildPhotosPage(albums, 'photos');
+  if (typeof saveCurrentPageContent === 'function') { try { saveCurrentPageContent(); } catch (e) {} }
+  activePageId = 'page-requests-main';
+  if (typeof renderSideMenu === 'function') { try { renderSideMenu(); } catch (e) {} }
+  if (typeof renderPage === 'function') renderPage();
+}
+function reqApprove(id) { _reqMutate(id, 'approve'); }
+function reqReject(id) { if (confirm('לדחות ולמחוק בקשה זו?')) _reqMutate(id, 'reject'); }
+window.reqApprove = reqApprove;
+window.reqReject = reqReject;
+
 function photoIsLikedLocal(id) {
   try {
     const user = auth.currentUser;
@@ -10689,38 +10943,86 @@ function photoGetSavedAlbums() {
   return albums.filter(a => map[a.id]);
 }
 
-function openSavedModal() {
+// drawer גנרי בסגנון "שמורים" — משמש גם להיסטוריה וללייקים
+function _drawerCell(id, img, title) {
+  return `<div class="saved-cell" onclick="closeSavedModal(); photoOpenDetail('${artEsc(id)}')" title="${artEsc(title || '')}">
+    <div class="saved-thumb">${img ? `<img src="${img}" alt="">` : '🖼️'}</div>
+    <div class="saved-name">${artEsc(title || 'ללא שם')}</div>
+  </div>`;
+}
+
+function openSideDrawer(title, inner, headerExtra) {
   let modal = document.getElementById('saved-modal');
   if (!modal) { modal = document.createElement('div'); modal.id = 'saved-modal'; document.body.appendChild(modal); }
-  let inner;
-  if (!auth.currentUser) {
-    inner = `<div class="saved-empty">🔒 התחבר כדי לראות את הגלריות השמורות שלך</div>`;
-  } else {
-    const saved = photoGetSavedAlbums();
-    if (!saved.length) {
-      inner = `<div class="saved-empty">אין גלריות שמורות עדיין.<br>לחצו על "שמירה" בכרטיס כדי לשמור.</div>`;
-    } else {
-      inner = `<div class="saved-grid">${saved.map(a => {
-        const img = (a.images && a.images[0]) ? a.images[0] : '';
-        return `<div class="saved-cell" onclick="closeSavedModal(); photoOpenDetail('${artEsc(a.id)}')" title="${artEsc(a.title || '')}">
-          <div class="saved-thumb">${img ? `<img src="${img}" alt="">` : '🖼️'}</div>
-          <div class="saved-name">${artEsc(a.title || 'ללא שם')}</div>
-        </div>`;
-      }).join('')}</div>`;
-    }
-  }
   modal.innerHTML = `
     <div class="saved-backdrop" onclick="closeSavedModal()"></div>
     <div class="saved-window">
       <div class="saved-titlebar">
-        <span class="saved-title">🔖 שמורים</span>
-        <button class="saved-close" onclick="closeSavedModal()" title="סגור">✕</button>
+        <span class="saved-title">${title}</span>
+        <div style="display:flex; align-items:center; gap:10px;">
+          ${headerExtra || ''}
+          <button class="saved-close" onclick="closeSavedModal()" title="סגור">✕</button>
+        </div>
       </div>
       <div class="saved-body">${inner}</div>
     </div>`;
   modal.style.display = 'flex';
 }
+window.openSideDrawer = openSideDrawer;
+
+function openSavedModal() {
+  let inner;
+  if (!auth.currentUser) {
+    inner = `<div class="saved-empty">🔒 התחבר כדי לראות את הגלריות השמורות שלך</div>`;
+  } else {
+    const saved = photoGetSavedAlbums();
+    inner = saved.length
+      ? `<div class="saved-grid">${saved.map(a => _drawerCell(a.id, (a.images && a.images[0]) ? a.images[0] : a.image, a.title)).join('')}</div>`
+      : `<div class="saved-empty">אין גלריות שמורות עדיין.<br>לחצו על "שמירה" בכרטיס כדי לשמור.</div>`;
+  }
+  openSideDrawer('🔖 שמורים', inner);
+}
 window.openSavedModal = openSavedModal;
+
+// drawer "לייקים" — נפתח מאייקון הלב בסרגל העליון
+function photoGetLikedAlbums() {
+  const user = auth.currentUser;
+  const localKey = user ? `liked_galleries_${user.uid}` : 'guest_liked_galleries';
+  let map = {};
+  try { map = JSON.parse(localStorage.getItem(localKey) || localStorage.getItem('liked_galleries') || '{}'); } catch (e) {}
+  const albums = (typeof photoGetAlbums === 'function') ? photoGetAlbums() : [];
+  return albums.filter(a => map[a.id]);
+}
+function openLikesDrawer() {
+  const liked = photoGetLikedAlbums();
+  const inner = liked.length
+    ? `<div class="saved-grid">${liked.map(a => _drawerCell(a.id, (a.images && a.images[0]) ? a.images[0] : a.image, a.title)).join('')}</div>`
+    : `<div class="saved-empty">אין פריטים בלייקים עדיין.<br>לחצו על הלב בכרטיס כדי לסמן לייק.</div>`;
+  openSideDrawer('❤️ הלייקים שלי', inner);
+}
+window.openLikesDrawer = openLikesDrawer;
+
+// drawer "היסטוריית צפייה" — נפתח מאייקון השעון בסרגל העליון
+function openHistoryDrawer() {
+  let history = [];
+  try { history = JSON.parse(localStorage.getItem('watch_history') || '[]'); } catch (e) {}
+  const inner = history.length
+    ? `<div class="saved-grid">${history.map(item => _drawerCell(item.id, item.img, item.title)).join('')}</div>`
+    : `<div class="saved-empty">היסטוריית הצפייה שלך ריקה.<br>כל תמונה, סיפור או רעיון שתיכנס אליהם יופיעו כאן.</div>`;
+  const clearBtn = history.length
+    ? `<button onclick="clearHistoryDrawer()" title="נקה את כל ההיסטוריה" style="background:transparent; color:#f87171; border:1px solid rgba(248,113,113,0.5); border-radius:8px; padding:6px 14px; font-size:13px; font-weight:800; cursor:pointer;">🗑️ נקה היסטוריה</button>`
+    : '';
+  openSideDrawer('🕒 היסטוריית צפייה', inner, clearBtn);
+}
+window.openHistoryDrawer = openHistoryDrawer;
+
+// ניקוי היסטוריית הצפייה מתוך ה-drawer (מרענן את ה-drawer עצמו)
+function clearHistoryDrawer() {
+  if (!confirm('האם ברצונך למחוק את כל היסטוריית הצפייה?')) return;
+  try { localStorage.removeItem('watch_history'); } catch (e) {}
+  openHistoryDrawer();
+}
+window.clearHistoryDrawer = clearHistoryDrawer;
 
 function closeSavedModal() {
   const m = document.getElementById('saved-modal');
@@ -10823,10 +11125,12 @@ if (typeof document !== 'undefined') {
 function dmConvListHTML() {
   const isAdminUser = (typeof isAdmin === 'function' && isAdmin());
   // שיחה נעוצה עם מנהל האתר בראש הרשימה (לכל מי שאינו המנהל)
+  const _act = (typeof dmActiveConv === 'object' && dmActiveConv) ? dmActiveConv.convId : '';
   const pinned = isAdminUser ? '' : `
     <div class="dm-conv dm-conv-pinned" onclick="dmOpenAdmin()">
+      <div class="dm-conv-avatar dm-conv-avatar-admin">👑</div>
       <div class="dm-conv-main">
-        <div class="dm-conv-name">📌 מנהל האתר 👑</div>
+        <div class="dm-conv-name">מנהל האתר</div>
         <div class="dm-conv-last">שלחו הודעה לצוות האתר</div>
       </div>
     </div>`;
@@ -10835,14 +11139,18 @@ function dmConvListHTML() {
     .filter(([cid, c]) => !(adminUid && c && c.otherUid === adminUid)) // לא לשכפל את שיחת המנהל
     .sort((a, b) => (b[1].lastTime || 0) - (a[1].lastTime || 0));
   if (!list.length) return pinned + '<div class="dm-empty">אין עוד שיחות.<br>אפשר לשלוח הודעה מדף של גלריה.</div>';
-  return pinned + list.map(([cid, c]) => `
-    <div class="dm-conv" onclick="dmOpenConv('${artEsc(cid)}','${artEsc(c.otherUid || '')}','${artEsc(c.otherName || 'משתמש')}')">
+  return pinned + list.map(([cid, c]) => {
+    const nm = c.otherName || 'משתמש';
+    return `
+    <div class="dm-conv${cid === _act ? ' active' : ''}" data-cid="${artEsc(cid)}" onclick="dmOpenConv('${artEsc(cid)}','${artEsc(c.otherUid || '')}','${artEsc(nm)}')">
+      <div class="dm-conv-avatar">${artEsc(nm.trim().charAt(0))}</div>
       <div class="dm-conv-main">
-        <div class="dm-conv-name">${artEsc(c.otherName || 'משתמש')}${c.unread ? ' <span class="dm-dot"></span>' : ''}</div>
+        <div class="dm-conv-name">${artEsc(nm)}${c.unread ? ' <span class="dm-dot"></span>' : ''}</div>
         <div class="dm-conv-last">${artEsc((c.lastText || '').slice(0, 42))}</div>
       </div>
       <div class="dm-conv-time">${dmTime(c.lastTime)}</div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 function openMessages() {
@@ -10850,13 +11158,23 @@ function openMessages() {
   subscribeMyDMs();
   let modal = document.getElementById('messages-modal');
   if (!modal) { modal = document.createElement('div'); modal.id = 'messages-modal'; document.body.appendChild(modal); }
+  // פריסת שני פאנלים בסגנון iMessage: רשימת שיחות + חלון צ'אט
   modal.innerHTML = `
     <div class="dm-backdrop" onclick="closeMessages()"></div>
-    <div class="dm-window">
-      <div class="dm-screen" id="dm-screen"></div>
+    <div class="dm-window dm-imessage">
+      <div class="dm-sidebar">
+        <div class="dm-titlebar">
+          <span class="dm-title">הודעות</span>
+          <button class="dm-close" onclick="closeMessages()" title="סגור">✕</button>
+        </div>
+        <div class="dm-conv-list" id="dm-conv-list">${dmConvListHTML()}</div>
+      </div>
+      <div class="dm-main" id="dm-main">
+        <div class="dm-placeholder"><div class="dm-placeholder-icon">💬</div><div>בחרו שיחה כדי להתחיל</div></div>
+      </div>
     </div>`;
   modal.style.display = 'flex';
-  dmShowList();
+  dmActiveConv = null;
 }
 window.openMessages = openMessages;
 
@@ -10868,34 +11186,39 @@ function closeMessages() {
 }
 window.closeMessages = closeMessages;
 
+// רענון רשימת השיחות (הפאנל תמיד גלוי). במובייל — חזרה מהצ'אט לרשימה.
 function dmShowList() {
-  const s = document.getElementById('dm-screen');
-  if (!s) return;
-  if (dmThreadUnsub) { dmThreadUnsub(); dmThreadUnsub = null; }
-  dmActiveConv = null;
-  s.innerHTML = `
-    <div class="dm-titlebar">
-      <span class="dm-title">📨 הודעות</span>
-      <button class="dm-close" onclick="closeMessages()" title="סגור">✕</button>
-    </div>
-    <div class="dm-conv-list" id="dm-conv-list">${dmConvListHTML()}</div>`;
+  const el = document.getElementById('dm-conv-list');
+  if (el) el.innerHTML = dmConvListHTML();
+  const win = document.querySelector('.dm-window');
+  if (win) win.classList.remove('dm-show-thread');
+  const main = document.getElementById('dm-main');
+  if (main && !dmActiveConv) main.innerHTML = `<div class="dm-placeholder"><div class="dm-placeholder-icon">💬</div><div>בחרו שיחה כדי להתחיל</div></div>`;
 }
 window.dmShowList = dmShowList;
 
-// חלון פנימי — שרשור שיחה (וואטסאפ)
+// טעינת שיחה לפאנל הצ'אט (הרשימה נשארת גלויה) — סגנון iMessage
 function dmOpenConv(convId, otherUid, otherName, prefill) {
   dmActiveConv = { convId, otherUid, otherName };
   if (dmThreadUnsub) { dmThreadUnsub(); dmThreadUnsub = null; }
-  const s = document.getElementById('dm-screen');
+  // אם חלון ההודעות לא פתוח — פותחים אותו קודם
+  if (!document.getElementById('dm-main')) { openMessages(); dmActiveConv = { convId, otherUid, otherName }; }
+  // סימון השיחה הפעילה ברשימה
+  document.querySelectorAll('.dm-conv').forEach(c => c.classList.toggle('active', c.getAttribute('data-cid') === convId));
+  const win = document.querySelector('.dm-window');
+  if (win) win.classList.add('dm-show-thread');
+  const initial = (otherName || 'מ').trim().charAt(0);
+  const s = document.getElementById('dm-main');
   if (s) s.innerHTML = `
-    <div class="dm-titlebar dm-thread-head">
-      <button class="dm-back" onclick="dmShowList()" title="חזרה">→</button>
+    <div class="dm-thread-head">
+      <button class="dm-back" onclick="dmShowList()" title="חזרה">›</button>
+      <div class="dm-thread-avatar">${initial}</div>
       <span class="dm-title">${artEsc(otherName || 'משתמש')}</span>
       <button class="dm-close" onclick="closeMessages()" title="סגור">✕</button>
     </div>
     <div class="dm-messages" id="dm-messages"><div class="dm-empty">טוען…</div></div>
     <div class="dm-input-row">
-      <input id="dm-input" type="text" maxlength="1000" placeholder="הודעה" onkeydown="if(event.key==='Enter'){event.preventDefault(); dmSendCurrent();}">
+      <input id="dm-input" type="text" maxlength="1000" placeholder="iMessage" onkeydown="if(event.key==='Enter'){event.preventDefault(); dmSendCurrent();}">
       <button class="dm-send" onclick="dmSendCurrent()" title="שלח">➤</button>
     </div>`;
   // מסמנים כנקרא
@@ -11125,31 +11448,209 @@ function feedCardHTML(a) {
   </div>`;
 }
 
-// בונה את עמוד "הפיד שלי" — גלריות של מי שאני עוקב אחריו
-function buildFeedPage() {
-  if (!auth.currentUser) {
-    return `<div class="feed-page">
-      <div class="feed-page-head"><h1>🏠 הפיד שלי</h1><p>הגלריות האחרונות ממי שאתה עוקב אחריו</p></div>
-      <div class="feed-empty">כדי לראות את הפיד צריך להתחבר.<br><button class="feed-login-btn" onclick="openLiveChatLogin()">התחברות</button></div>
+// ============================================================
+// פיד בסגנון פייסבוק: סטוריז למעלה, פוסטים עם גלילה אינסופית,
+// וקיר הרשמה לאורחים אחרי כמה גלילות (מצב אורח)
+// ============================================================
+let fbFeedPosts = [];
+let fbFeedIndex = 0;
+const FB_FEED_BATCH = 4;          // כמה פוסטים בכל טעינה
+let fbFeedBatchesLoaded = 0;
+const FB_GUEST_MAX_BATCHES = 3;   // אחרי כמה טעינות אורח נתקל בקיר ההרשמה
+let fbFeedObserver = null;
+
+function fbFeedGetPosts() {
+  let posts = [];
+  try { if (typeof photoGetAlbums === 'function') posts = posts.concat((photoGetAlbums() || []).map(a => Object.assign({ _kind: 'photo' }, a))); } catch (e) {}
+  try { if (typeof ideaGetAlbums === 'function') posts = posts.concat((ideaGetAlbums() || []).map(a => Object.assign({ _kind: 'idea' }, a))); } catch (e) {}
+  const _isAdminView = (typeof isAdmin === 'function' && isAdmin()) || (typeof isEditMode !== 'undefined' && isEditMode);
+  posts = posts.filter(p => p && p.approved !== false && (!p.adminOnly || _isAdminView) && (!p.expiresAt || p.expiresAt > Date.now()));
+  // קודם מי שאני עוקב אחריו, ואז לפי זמן (החדש קודם)
+  posts.sort((a, b) => {
+    const fa = (typeof isFollowing === 'function' && isFollowing(a.authorId)) ? 1 : 0;
+    const fb = (typeof isFollowing === 'function' && isFollowing(b.authorId)) ? 1 : 0;
+    if (fa !== fb) return fb - fa;
+    return (b.createdAt || 0) - (a.createdAt || 0);
+  });
+  return posts;
+}
+
+function fbFeedStoriesHTML(posts) {
+  const seen = {}; const authors = [];
+  posts.forEach(p => { const id = p.authorId || p.author; if (id && !seen[id]) { seen[id] = 1; authors.push(p); } });
+  const create = `
+    <div class="fb-story fb-story-create" onclick="fbFeedCompose()" role="button" tabindex="0">
+      <div class="fb-story-create-top">+</div>
+      <div class="fb-story-name">יצירת סטורי</div>
     </div>`;
+  const items = authors.slice(0, 15).map(p => {
+    const img = (p.images && p.images[0]) ? p.images[0] : (p.image || '');
+    return `
+      <div class="fb-story" onclick="openUserPage('${artEsc(p.authorId || '')}','${artEsc(p.author || '')}')" role="button" tabindex="0" title="${artEsc(p.author || '')}">
+        <div class="fb-story-bg">${img ? `<img src="${img}" alt="" loading="lazy">` : ''}</div>
+        <div class="fb-story-avatar">${img ? `<img src="${img}" alt="" loading="lazy">` : '👤'}</div>
+        <div class="fb-story-name">${artEsc(p.author || 'משתמש')}</div>
+      </div>`;
+  }).join('');
+  return `<div class="fb-stories">${create}${items}</div>`;
+}
+
+function fbFeedPostCard(p) {
+  const img = (p.images && p.images[0]) ? p.images[0] : (p.image || '');
+  const verified = (typeof isUserVerified === 'function') ? isUserVerified(p.authorId, p.author, p.verified || p.verifiedUser) : false;
+  const vBadge = verified ? ` <span class="fb-verified" title="מאומת">✓</span>` : '';
+  const likes = p.likes || 0;
+  const kindTag = p._kind === 'idea' ? '💡 רעיון' : '';
+  return `
+    <div class="fb-post">
+      <div class="fb-post-head">
+        <div class="fb-post-avatar" onclick="openUserPage('${artEsc(p.authorId || '')}','${artEsc(p.author || '')}')">${img ? `<img src="${img}" alt="">` : '<span>👤</span>'}</div>
+        <div class="fb-post-meta">
+          <div class="fb-post-author" onclick="openUserPage('${artEsc(p.authorId || '')}','${artEsc(p.author || '')}')">${artEsc(p.author || 'משתמש')}${vBadge}</div>
+          <div class="fb-post-time">${artEsc(p.timestamp || '')}${kindTag ? ' · ' + kindTag : ''}</div>
+        </div>
+      </div>
+      ${p.title ? `<div class="fb-post-text">${artEsc(p.title)}</div>` : ''}
+      ${p.summary ? `<div class="fb-post-sub">${artEsc(p.summary)}</div>` : ''}
+      ${img ? `<div class="fb-post-img" onclick="fbFeedOpen('${artEsc(p.id)}','${p._kind}')"><img src="${img}" alt="" loading="lazy"></div>` : ''}
+      <div class="fb-post-stats"><span>❤️ ${likes}</span><span>👁️ ${(typeof photoGetViews === 'function' ? photoGetViews(p.id) : 0)}</span></div>
+      <div class="fb-post-actions">
+        <button onclick="fbFeedLike('${artEsc(p.id)}', this)">👍 אהבתי</button>
+        <button onclick="fbFeedOpen('${artEsc(p.id)}','${p._kind}')">💬 תגובה</button>
+        <button onclick="fbFeedOpen('${artEsc(p.id)}','${p._kind}')">↗️ שיתוף</button>
+      </div>
+    </div>`;
+}
+
+function fbFeedRenderBatch() {
+  const list = document.getElementById('fb-feed-list');
+  if (!list) return;
+  const isGuest = !auth.currentUser;
+  if (isGuest && fbFeedBatchesLoaded >= FB_GUEST_MAX_BATCHES) { fbFeedShowWall(); return; }
+  if (!fbFeedPosts.length) {
+    if (fbFeedObserver) { try { fbFeedObserver.disconnect(); } catch (e) {} }
+    if (!document.getElementById('fb-feed-end')) {
+      list.insertAdjacentHTML('beforeend', `<div id="fb-feed-end" class="fb-feed-end">אין תוכן להצגה עדיין.</div>`);
+    }
+    return;
   }
-  if (typeof subscribeMyFollows === 'function') subscribeMyFollows();
-  let albums = getFeedAlbums().filter(a => a && a.authorId && followedUids[a.authorId]);
-  albums.sort((x, y) => (y.createdAt || 0) - (x.createdAt || 0));
-  const body = albums.length
-    ? `<div class="feed-grid">${albums.map(feedCardHTML).join('')}</div>`
-    : '<div class="feed-empty">עדיין אין תוכן ממי שאתה עוקב אחריו.<br>עקבו אחרי משתמשים (בכפתור "עקוב" בגלריה) כדי לראות כאן מה הם מעלים.</div>';
-  return `<div class="feed-page">
-    <div class="feed-page-head"><h1>🏠 הפיד שלי</h1><p>הגלריות האחרונות ממי שאתה עוקב אחריו</p></div>
-    ${body}
-  </div>`;
+  // גלילה אינסופית: כשנגמר התוכן מתחילים מחדש עם ערבוב (כמו פיד חברתי)
+  if (fbFeedIndex >= fbFeedPosts.length) {
+    fbFeedIndex = 0;
+    for (let i = fbFeedPosts.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const t = fbFeedPosts[i]; fbFeedPosts[i] = fbFeedPosts[j]; fbFeedPosts[j] = t; }
+  }
+  const slice = fbFeedPosts.slice(fbFeedIndex, fbFeedIndex + FB_FEED_BATCH);
+  list.insertAdjacentHTML('beforeend', slice.map(fbFeedPostCard).join(''));
+  fbFeedIndex += FB_FEED_BATCH;
+  fbFeedBatchesLoaded++;
+}
+
+function fbFeedShowWall() {
+  if (fbFeedObserver) { try { fbFeedObserver.disconnect(); } catch (e) {} }
+  const list = document.getElementById('fb-feed-list');
+  if (!list || document.getElementById('fb-feed-wall')) return;
+  list.insertAdjacentHTML('beforeend', `
+    <div id="fb-feed-wall" class="fb-feed-wall">
+      <div class="fb-wall-icon">🔒</div>
+      <div class="fb-wall-title">רוצה לראות עוד?</div>
+      <div class="fb-wall-sub">הצטרפו בחינם כדי להמשיך לגלול, לראות את כל התוכן, לעקוב אחרי משתמשים ולפרסם בעצמכם.</div>
+      <button class="fb-wall-btn" onclick="openLiveChatLogin()">הרשמה / התחברות</button>
+    </div>`);
+}
+
+function fbFeedStopped() {
+  // נעצרנו? (קיר הרשמה הוצג, אין תוכן, או הגענו לסוף)
+  return !!document.getElementById('fb-feed-wall') || !!document.getElementById('fb-feed-end') || !fbFeedPosts.length;
+}
+
+function fbFeedMaybeLoad() {
+  const list = document.getElementById('fb-feed-list');
+  if (!list) { window.removeEventListener('scroll', fbFeedOnScroll); return; }
+  if (fbFeedStopped()) return;
+  const se = document.scrollingElement || document.documentElement;
+  if (se.scrollTop + se.clientHeight >= se.scrollHeight - 600) fbFeedRenderBatch();
+}
+
+let _fbScrollTick = false;
+function fbFeedOnScroll() {
+  if (_fbScrollTick) return;
+  _fbScrollTick = true;
+  requestAnimationFrame(() => { _fbScrollTick = false; fbFeedMaybeLoad(); });
+}
+window.fbFeedOnScroll = fbFeedOnScroll;
+
+function fbFeedInit() {
+  const list = document.getElementById('fb-feed-list');
+  if (!list) return;
+  window.removeEventListener('scroll', fbFeedOnScroll);
+  // מילוי ראשוני: טוענים עד שהעמוד ארוך מספיק לגלילה (או עד שנעצרנו)
+  let guard = 0;
+  const se = document.scrollingElement || document.documentElement;
+  do {
+    fbFeedRenderBatch();
+    guard++;
+  } while (!fbFeedStopped() && se.scrollHeight <= se.clientHeight + 200 && guard < 10);
+  window.addEventListener('scroll', fbFeedOnScroll, { passive: true });
+}
+
+function fbFeedCompose() {
+  if (!auth.currentUser) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
+  if (typeof openQuickPublish === 'function') openQuickPublish();
+}
+window.fbFeedCompose = fbFeedCompose;
+
+function fbFeedLike(id, btn) {
+  if (!auth.currentUser) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
+  if (typeof photoToggleLike === 'function') { try { photoToggleLike(id); } catch (e) {} }
+  if (btn) btn.classList.toggle('liked');
+}
+window.fbFeedLike = fbFeedLike;
+
+function fbFeedOpen(id, kind) {
+  if (kind === 'idea') {
+    if (typeof pages !== 'undefined') {
+      const ip = pages.find(p => p && (p.content || '').includes('ideas-page'));
+      if (ip) { activePageId = ip.id; if (typeof renderTopNav === 'function') renderTopNav(); if (typeof renderPage === 'function') renderPage(); }
+    }
+    return;
+  }
+  if (typeof feedOpenGallery === 'function') feedOpenGallery(id);
+}
+window.fbFeedOpen = fbFeedOpen;
+
+// בונה את הפיד (בסגנון פייסבוק) — זמין גם לאורחים
+function buildFeedPage() {
+  if (typeof subscribeMyFollows === 'function') { try { subscribeMyFollows(); } catch (e) {} }
+  fbFeedPosts = fbFeedGetPosts();
+  fbFeedIndex = 0;
+  fbFeedBatchesLoaded = 0;
+  let name = 'אורח';
+  try {
+    const u = auth.currentUser;
+    if (u) {
+      const prof = JSON.parse(localStorage.getItem(`user_profile_${u.uid}`) || '{}');
+      name = prof.name || (typeof liveChatUserName === 'function' ? liveChatUserName() : '') || (u.email ? u.email.split('@')[0] : 'משתמש');
+    }
+  } catch (e) {}
+  setTimeout(fbFeedInit, 30);
+  return `
+    <div class="fb-feed">
+      ${fbFeedStoriesHTML(fbFeedPosts)}
+      <div class="fb-composer" onclick="fbFeedCompose()" role="button" tabindex="0">
+        <div class="fb-composer-avatar">👤</div>
+        <div class="fb-composer-input">מה בא לך לשתף, ${artEsc(name)}?</div>
+        <div class="fb-composer-icons"><span title="תמונה">🖼️</span><span title="וידאו">🎥</span></div>
+      </div>
+      <div class="fb-feed-list" id="fb-feed-list"></div>
+      <div id="fb-feed-sentinel" style="height:1px;"></div>
+    </div>`;
 }
 window.buildFeedPage = buildFeedPage;
 
 // פותח את עמוד הפיד (מכפתור הבית בכותרת)
 function openFeed() {
-  if (!auth.currentUser) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
-  if (typeof subscribeMyFollows === 'function') subscribeMyFollows();
+  // הפיד זמין גם לאורחים (מצב אורח) — אחרי כמה גלילות מוצג קיר הרשמה
+  if (auth.currentUser && typeof subscribeMyFollows === 'function') subscribeMyFollows();
   if (isEditMode && typeof saveCurrentPageContent === 'function') saveCurrentPageContent();
   activePageId = 'page-feed-main';
   if (typeof renderSideMenu === 'function') renderSideMenu();
@@ -12985,7 +13486,7 @@ onValue(ref(db, 'website'), (snapshot) => {
     pList = dedupePageList(pList);
     // משאירים רק עמודי תמונות/סיפורים/קהילות (מוחקים כתבות וכל עמוד אחר)
     if (pList.some(p => p && ((p.content || '').includes('photos-page') || (p.content || '').includes('stories-page')))) {
-      pList = pList.filter(p => p && ((p.content || '').includes('photos-page') || (p.content || '').includes('stories-page') || (p.content || '').includes('ideas-page') || (p.content || '').includes('communities-page') || (p.content || '').includes('info-page') || (p.content || '').includes('questions-page') || (p.content || '').includes('offers-page') || p.id === 'page-ideas-main'));
+      pList = pList.filter(p => p && ((p.content || '').includes('photos-page') || (p.content || '').includes('stories-page') || (p.content || '').includes('ideas-page') || (p.content || '').includes('communities-page') || (p.content || '').includes('info-page') || (p.content || '').includes('requests-page') || (p.content || '').includes('questions-page') || (p.content || '').includes('offers-page') || p.id === 'page-ideas-main'));
     }
     // מוודאים שעמוד "רעיונות" תמיד קיים ואינו מוסתר
     const _ipd = pList.find(p => p && p.id === 'page-ideas-main');
@@ -13013,6 +13514,14 @@ onValue(ref(db, 'website'), (snapshot) => {
       pList.push({ id: 'page-info-main', title: 'מידע 🔒', isHidden: true, content: _ipc });
     } else {
       if (_ip.isHidden === undefined) _ip.isHidden = true; _ip.content = _ipc; if (!_ip.title) _ip.title = 'מידע 🔒';
+    }
+    // עמוד "בקשות" — קיים תמיד אך מוסתר (למנהל בלבד)
+    const _rp = pList.find(p => p && p.id === 'page-requests-main');
+    const _rpc = '<div class="requests-page" data-page-id="page-requests-main"></div>';
+    if (!_rp) {
+      pList.push({ id: 'page-requests-main', title: 'בקשות 🔒', isHidden: true, content: _rpc });
+    } else {
+      if (_rp.isHidden === undefined) _rp.isHidden = true; _rp.content = _rpc; if (!_rp.title) _rp.title = 'בקשות 🔒';
     }
     // עמוד "שאלות גולשים" — קיים תמיד
     const _qp = pList.find(p => p && p.id === 'page-questions-main');
@@ -13047,12 +13556,10 @@ onValue(ref(db, 'website'), (snapshot) => {
       navs = navs.filter(id => id !== pIdeas.id);
       navs.unshift(pIdeas.id);
     }
-    let pPhoto = pages.find(p => p && p.content && p.content.includes('photos-page')) || pages.find(p => p && p.title && p.title.includes('תמונות'));
-    if (pPhoto && !navs.includes(pPhoto.id)) navs.push(pPhoto.id);
     // עמוד הקהילות תמיד מופיע בתפריט העליון
     if (pages.some(p => p && p.id === 'page-communities-main') && !navs.includes('page-communities-main')) navs.push('page-communities-main');
-    // עמודים כמו "שאלות גולשים" ו"הצעות" הם עמודי צד בלבד (מוסרים מהתפריט העליון)
-    navs = navs.filter(id => id !== 'page-questions-main' && id !== 'page-offers-main');
+    // עמודים כמו "שאלות גולשים", "הצעות", "תמונות" ו"סיפורים" הם עמודי צד בלבד (מוסרים מהתפריט העליון)
+    navs = navs.filter(id => !isSideOnlyId(id));
     // מסירים מהתפריט את העמודים שהוסרו
     navs = navs.filter(id => !REMOVED_PHOTO_PAGE_IDS.includes(id));
     if (JSON.stringify(topNavPages) !== JSON.stringify(navs)) {
@@ -13265,6 +13772,115 @@ function ideasCategoryBarHTML() {
   `;
 }
 window.ideasCategoryBarHTML = ideasCategoryBarHTML;
+
+// ============================================================
+// סרגל קטגוריות גנרי לעמודי "תמונות" ו"קהילות" ("הכל · כללי · לעסקים")
+// ============================================================
+let photoCatBarFilter = 'הכל';
+let communityCatBarFilter = 'הכל';
+
+function getSectionCategoryFilter(section) {
+  return section === 'communities' ? communityCatBarFilter : photoCatBarFilter;
+}
+
+function setSectionCategoryFilter(section, cat) {
+  if (section === 'communities') {
+    communityCatBarFilter = cat;
+    if (typeof buildCommunitiesPage === 'function' && typeof mainContent !== 'undefined' && mainContent) {
+      mainContent.innerHTML = buildCommunitiesPage();
+    }
+  } else {
+    photoCatBarFilter = cat;
+    if (typeof buildPhotosPage === 'function' && typeof photoGetAlbums === 'function' && typeof mainContent !== 'undefined' && mainContent) {
+      mainContent.innerHTML = buildPhotosPage(photoGetAlbums(), 'photos');
+    }
+  }
+}
+window.setSectionCategoryFilter = setSectionCategoryFilter;
+
+function sectionCategoryBarHTML(section) {
+  const cats = [
+    { id: 'הכל', label: 'הכל' },
+    { id: 'לעסקים', label: '💼 לעסקים' },
+    { id: 'כללי', label: '💡 כללי' }
+  ];
+  const active = getSectionCategoryFilter(section);
+  return `
+    <div class="section-category-bar" style="display:flex; gap:10px; align-items:center; margin-bottom:16px; flex-wrap:wrap; padding:6px 0;">
+      ${cats.map(c => {
+        const isActive = active === c.id;
+        return `
+          <button type="button" onclick="setSectionCategoryFilter('${section}','${c.id}')"
+                  style="padding:8px 20px; border-radius:999px; border:${isActive ? 'none' : '1px solid #cbd5e1'}; background:${isActive ? '#3b82f6' : '#fff'}; color:${isActive ? '#fff' : '#334155'}; font-size:14px; font-weight:800; cursor:pointer; box-shadow:${isActive ? '0 4px 14px rgba(59,130,246,0.35)' : '0 1px 3px rgba(0,0,0,0.05)'}; transition:all 0.2s;">
+            ${c.label}
+          </button>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+window.sectionCategoryBarHTML = sectionCategoryBarHTML;
+
+function filterAlbumsByCategory(albums, section) {
+  const active = getSectionCategoryFilter(section);
+  if (active === 'הכל') return albums;
+  return albums.filter(a => {
+    const cat = (a.category || '');
+    const hay = `${a.title || ''} ${a.summary || ''} ${a.desc || ''} ${cat}`;
+    if (active === 'לעסקים') return cat.includes('עסק') || hay.includes('עסק');
+    if (active === 'כללי') return !(cat.includes('עסק') || hay.includes('עסק'));
+    return cat === active;
+  });
+}
+window.filterAlbumsByCategory = filterAlbumsByCategory;
+
+// ריבועי כניסה ל"תמונות" ו"סיפורים" בראש רשת הקהילות
+// כרטיס קהילה אחיד ומסודר (בסגנון "חברים מוצעים"): תמונה, שם מלא, שורת מידע, כפתור כניסה
+function renderCommunityGridCard(c) {
+  const img = (c.images && c.images[0]) ? c.images[0] : (c.image || '');
+  const name = c.title || c.name || 'קהילה';
+  const count = (typeof c.likes === 'number') ? c.likes : 0;
+  const sub = (c.summary || c.desc || '').trim() || (count ? (count + ' תכנים') : 'קהילה חדשה');
+  return `
+    <div class="comm-grid-card" onclick="openCommunityPage('${artEsc(c.id)}')" role="button" tabindex="0">
+      <div class="comm-grid-thumb">${img ? `<img src="${img}" alt="" loading="lazy">` : '<span class="comm-grid-ph">🏘️</span>'}</div>
+      <div class="comm-grid-info">
+        <div class="comm-grid-name" title="${artEsc(name)}">${artEsc(name)}</div>
+        <div class="comm-grid-sub">${artEsc(sub)}</div>
+        <button class="comm-grid-btn" onclick="event.stopPropagation(); openCommunityPage('${artEsc(c.id)}')">כניסה לקהילה</button>
+      </div>
+    </div>
+  `;
+}
+window.renderCommunityGridCard = renderCommunityGridCard;
+
+// ריבועי כניסה ל"תמונות" ו"סיפורים" — באותו סגנון כרטיס אחיד
+function communityShortcutsHTML() {
+  const findPage = (kind) => {
+    if (typeof pages === 'undefined' || !Array.isArray(pages)) return null;
+    const marker = kind === 'photos' ? 'photos-page' : 'stories-page';
+    const titleWord = kind === 'photos' ? 'תמונות' : 'סיפורים';
+    return pages.find(p => p && ((p.content || '').includes(marker) || (p.title || '').includes(titleWord)));
+  };
+  const card = (title, emoji, page, grad) => {
+    const oc = page ? `navigateToPage('${page.id}')` : '';
+    return `
+      <div class="comm-grid-card comm-grid-shortcut" onclick="${oc}" role="button" tabindex="0">
+        <div class="comm-grid-thumb" style="background:${grad};">
+          <span style="font-size:56px; line-height:1;">${emoji}</span>
+        </div>
+        <div class="comm-grid-info">
+          <div class="comm-grid-name">${title}</div>
+          <div class="comm-grid-sub">לצפייה בכל ה${title}</div>
+          <button class="comm-grid-btn" onclick="event.stopPropagation(); ${oc}">כניסה</button>
+        </div>
+      </div>
+    `;
+  };
+  return card('תמונות', '🖼️', findPage('photos'), 'linear-gradient(135deg,#e11d48,#9f1239)')
+       + card('סיפורים', '📖', findPage('stories'), 'linear-gradient(135deg,#8b5cf6,#6d28d9)');
+}
+window.communityShortcutsHTML = communityShortcutsHTML;
 
 function buildIdeasPage() {
   subscribeIdeas();

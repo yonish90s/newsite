@@ -2753,10 +2753,17 @@ body:not(.edit-mode) .hidden-nav {
 .courses-page { --acc: #2563eb; --acc-soft: rgba(37, 99, 235, 0.10); }
 
 /* --- ניצול רוחב המסך: פחות שוליים ריקים בצדדים --- */
-.articles-page .art-inner { max-width: 1560px; padding: 34px 26px 40px; }
-.articles-page .art-layout { gap: 30px; }
+/* פרופורציות אחידות בכל העמודים — כמו בעמוד התמונות (עמודי צד זהים ורוחב זהה) */
+.articles-page .art-inner,
+.offers-page .art-inner,
+.questions-page .art-inner { max-width: 1560px; padding: 34px 26px 40px; }
+.articles-page .art-layout,
+.offers-page .art-layout,
+.questions-page .art-layout { gap: 30px; }
 @media (max-width: 1100px) {
-  .articles-page .art-inner { padding: 24px 16px 36px; }
+  .articles-page .art-inner,
+  .offers-page .art-inner,
+  .questions-page .art-inner { padding: 24px 16px 36px; }
 }
 
 /* --- כותרות מקטע: פס אקסנט קצר במקום קו שחור עבה --- */
@@ -4632,6 +4639,234 @@ html.hide-site-images .photo-mini-thumb {
   visibility: hidden !important;
   opacity: 0 !important;
 }
+
+/* ============================================================
+   כרטיסי קהילה מסודרים בגריד אחיד (בסגנון "חברים מוצעים")
+   ============================================================ */
+.communities-page.photo-cols-2 .art-rows,
+.communities-page.photo-cols-3 .art-rows,
+.communities-page.photo-cols-4 .art-rows,
+.communities-page.photo-cols-5 .art-rows,
+.communities-page .art-rows {
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)) !important;
+  gap: 16px !important;
+  align-items: stretch;
+}
+.comm-grid-card {
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+}
+.comm-grid-card:hover { transform: translateY(-3px); box-shadow: 0 10px 26px rgba(0,0,0,0.13); }
+.comm-grid-thumb {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: #0f172a;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+  color: #fff;
+}
+.comm-grid-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.comm-grid-ph { font-size: 46px; }
+.comm-grid-info { padding: 12px 12px 14px; display: flex; flex-direction: column; gap: 6px; flex: 1; text-align: center; }
+.comm-grid-name {
+  font-size: 15px; font-weight: 800; color: #0f172a; line-height: 1.3;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  min-height: 2.6em;
+}
+.comm-grid-sub {
+  font-size: 12px; color: #64748b; line-height: 1.4;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  flex: 1; margin-bottom: 2px;
+}
+.comm-grid-btn {
+  margin-top: auto; width: 100%;
+  background: #e11d48; color: #fff; border: none; border-radius: 8px;
+  padding: 9px 10px; font-size: 13px; font-weight: 800; cursor: pointer;
+  transition: background 0.18s ease;
+}
+.comm-grid-btn:hover { background: #be123c; }
+@media (max-width: 768px) {
+  .communities-page.photo-cols-2 .art-rows,
+  .communities-page.photo-cols-3 .art-rows,
+  .communities-page.photo-cols-4 .art-rows,
+  .communities-page.photo-cols-5 .art-rows,
+  .communities-page .art-rows {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important;
+  }
+}
+
+/* ============================================================
+   פיד בסגנון פייסבוק (עמוד הבית / הפיד) + סטוריז + קיר הרשמה
+   ============================================================ */
+.fb-feed { max-width: 640px; margin: 0 auto; padding: 18px 12px 80px; direction: rtl; }
+
+/* --- סטוריז --- */
+.fb-stories { display: flex; gap: 8px; overflow-x: auto; padding: 4px 2px 14px; scrollbar-width: thin; }
+.fb-stories::-webkit-scrollbar { height: 6px; }
+.fb-stories::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 6px; }
+.fb-story { position: relative; flex: 0 0 auto; width: 108px; height: 190px; border-radius: 14px; overflow: hidden; cursor: pointer; background: #e2e8f0; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+.fb-story-bg { position: absolute; inset: 0; }
+.fb-story-bg img { width: 100%; height: 100%; object-fit: cover; }
+.fb-story::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.55), rgba(0,0,0,0) 45%); }
+.fb-story-avatar { position: absolute; top: 10px; right: 10px; width: 40px; height: 40px; border-radius: 50%; border: 3px solid #2563eb; overflow: hidden; background: #fff; z-index: 2; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+.fb-story-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.fb-story-name { position: absolute; bottom: 8px; right: 8px; left: 8px; z-index: 2; color: #fff; font-size: 12px; font-weight: 800; line-height: 1.2; text-shadow: 0 1px 3px rgba(0,0,0,0.6); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.fb-story-create { background: #fff; border: 1px solid #e2e8f0; display: flex; flex-direction: column; }
+.fb-story-create::after { display: none; }
+.fb-story-create-top { flex: 1; background: #eef2ff; display: flex; align-items: center; justify-content: center; font-size: 40px; font-weight: 300; color: #2563eb; }
+.fb-story-create .fb-story-name { position: static; color: #0f172a; text-shadow: none; text-align: center; padding: 8px 4px; }
+
+/* --- שורת פרסום --- */
+.fb-composer { display: flex; align-items: center; gap: 10px; background: #fff; border: 1px solid #e2e8f0; border-radius: 999px; padding: 10px 16px; margin-bottom: 16px; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+.fb-composer-avatar { width: 40px; height: 40px; border-radius: 50%; background: #e2e8f0; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+.fb-composer-input { flex: 1; color: #64748b; font-size: 15px; font-weight: 600; text-align: right; }
+.fb-composer-icons { display: flex; gap: 10px; font-size: 18px; }
+
+/* --- פוסט --- */
+.fb-post { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; margin-bottom: 16px; overflow: hidden; box-shadow: 0 1px 5px rgba(0,0,0,0.05); }
+.fb-post-head { display: flex; align-items: center; gap: 10px; padding: 12px 14px 8px; }
+.fb-post-avatar { width: 42px; height: 42px; border-radius: 50%; overflow: hidden; background: #e2e8f0; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; flex-shrink: 0; }
+.fb-post-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.fb-post-meta { flex: 1; min-width: 0; }
+.fb-post-author { font-size: 15px; font-weight: 800; color: #0f172a; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+.fb-verified { background: #2563eb; color: #fff; border-radius: 50%; width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; }
+.fb-post-time { font-size: 12px; color: #64748b; }
+.fb-post-text { padding: 4px 14px 10px; font-size: 15px; font-weight: 600; color: #0f172a; line-height: 1.5; }
+.fb-post-sub { padding: 0 14px 10px; font-size: 13.5px; color: #475569; line-height: 1.5; }
+.fb-post-img { width: 100%; background: #000; cursor: pointer; max-height: 620px; overflow: hidden; }
+.fb-post-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.fb-post-stats { display: flex; gap: 14px; padding: 8px 14px; font-size: 13px; color: #64748b; border-bottom: 1px solid #f1f5f9; }
+.fb-post-actions { display: flex; }
+.fb-post-actions button { flex: 1; background: none; border: none; padding: 10px; font-size: 14px; font-weight: 700; color: #475569; cursor: pointer; transition: background 0.15s; }
+.fb-post-actions button:hover { background: #f1f5f9; }
+.fb-post-actions button.liked { color: #2563eb; }
+
+/* --- קיר הרשמה (מצב אורח) --- */
+.fb-feed-wall { text-align: center; background: linear-gradient(180deg, rgba(255,255,255,0) 0%, #ffffff 30%); border-radius: 14px; padding: 40px 24px; margin-top: -80px; position: relative; }
+.fb-feed-wall .fb-wall-icon { font-size: 40px; margin-bottom: 10px; }
+.fb-feed-wall .fb-wall-title { font-size: 22px; font-weight: 900; color: #0f172a; margin-bottom: 8px; }
+.fb-feed-wall .fb-wall-sub { font-size: 14px; color: #64748b; line-height: 1.5; max-width: 420px; margin: 0 auto 18px; }
+.fb-wall-btn { background: #e11d48; color: #fff; border: none; border-radius: 10px; padding: 12px 32px; font-size: 15px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 14px rgba(225,29,72,0.3); }
+.fb-wall-btn:hover { background: #be123c; }
+.fb-feed-end { text-align: center; color: #94a3b8; font-weight: 700; padding: 24px; font-size: 14px; }
+
+/* ============================================================
+   עמוד "בקשות" — אישור העלאות (למנהל בלבד)
+   ============================================================ */
+.requests-page .comm-inner { padding: 24px 20px 60px; }
+.req-list { display: flex; flex-direction: column; gap: 12px; }
+.req-card { display: flex; align-items: center; gap: 14px; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+.req-thumb { width: 72px; height: 72px; border-radius: 10px; overflow: hidden; background: #0f172a; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 26px; color: #fff; }
+.req-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.req-body { flex: 1; min-width: 0; }
+.req-title { font-size: 15px; font-weight: 800; color: #0f172a; }
+.req-meta { font-size: 12px; color: #64748b; margin-top: 2px; }
+.req-sub { font-size: 12.5px; color: #475569; margin-top: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.req-actions { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
+.req-approve, .req-reject { border: none; border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 800; cursor: pointer; white-space: nowrap; }
+.req-approve { background: #16a34a; color: #fff; }
+.req-reject { background: #fef2f2; color: #ef4444; border: 1px solid #fecaca; }
+@media (max-width: 600px) {
+  .req-card { flex-wrap: wrap; }
+  .req-actions { flex-direction: row; width: 100%; }
+  .req-approve, .req-reject { flex: 1; }
+}
+
+/* ============================================================
+   חלון הודעות (DM) בסגנון iMessage — שני פאנלים
+   ============================================================ */
+#messages-modal { align-items: center; justify-content: center; }
+.dm-window.dm-imessage {
+  flex-direction: row;
+  width: min(940px, 94vw);
+  height: min(680px, 88vh);
+  max-height: 88vh;
+  border-radius: 16px;
+  border: 1px solid #38383a;
+  overflow: hidden;
+  background: #1c1c1e;
+  box-shadow: 0 24px 70px rgba(0,0,0,0.55);
+  animation: dmPop 0.16s ease;
+}
+@keyframes dmPop { from { transform: scale(0.97); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.dm-imessage .dm-sidebar { width: 300px; flex-shrink: 0; display: flex; flex-direction: column; background: #252527; border-left: 1px solid #38383a; }
+.dm-imessage .dm-main { flex: 1; min-width: 0; display: flex; flex-direction: column; background: #1a1a1c; }
+.dm-imessage .dm-titlebar { background: #252527; border-bottom: 1px solid #38383a; }
+.dm-imessage .dm-conv-list { background: #252527; padding: 6px; }
+.dm-imessage .dm-conv { border-bottom: none; border-radius: 10px; padding: 8px 10px; margin-bottom: 2px; }
+.dm-imessage .dm-conv:hover { background: #333335; }
+.dm-imessage .dm-conv.active { background: #0a84ff; }
+.dm-imessage .dm-conv.active .dm-conv-name,
+.dm-imessage .dm-conv.active .dm-conv-last,
+.dm-imessage .dm-conv.active .dm-conv-time { color: #fff; }
+.dm-imessage .dm-conv-pinned { background: transparent; }
+.dm-imessage .dm-conv-pinned:hover { background: #333335; }
+.dm-imessage .dm-conv-pinned .dm-conv-name { color: #e9edef; }
+.dm-conv-avatar { width: 40px; height: 40px; border-radius: 50%; background: #3a3a3c; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px; flex-shrink: 0; text-transform: uppercase; }
+.dm-conv-avatar-admin { background: linear-gradient(135deg,#f59e0b,#d97706); }
+.dm-thread-head { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: #252527; border-bottom: 1px solid #38383a; flex-shrink: 0; }
+.dm-thread-head .dm-title { flex: 1; }
+.dm-thread-avatar { width: 32px; height: 32px; border-radius: 50%; background: #0a84ff; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; text-transform: uppercase; flex-shrink: 0; }
+.dm-imessage .dm-messages { background: #1a1a1c; }
+.dm-imessage .dm-bubble { border-radius: 18px; padding: 8px 13px 6px; max-width: 70%; }
+.dm-imessage .dm-msg.mine .dm-bubble { background: #0a84ff; color: #fff; border-bottom-left-radius: 5px; }
+.dm-imessage .dm-msg.theirs .dm-bubble { background: #3a3a3c; color: #fff; border-bottom-right-radius: 5px; }
+.dm-imessage .dm-input-row { background: #252527; border-top: 1px solid #38383a; }
+.dm-imessage .dm-input-row input { background: #3a3a3c; border-radius: 18px; color: #fff; }
+.dm-imessage .dm-send { background: #0a84ff; color: #fff; border: none; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; flex-shrink: 0; }
+.dm-placeholder { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; color: #8e8e93; font-size: 15px; font-weight: 600; }
+.dm-placeholder-icon { font-size: 46px; }
+.dm-imessage .dm-back { display: none; }
+@media (max-width: 760px) {
+  .dm-window.dm-imessage { width: 100%; height: 100%; max-height: 100%; border-radius: 0; border: none; }
+  .dm-imessage .dm-sidebar { width: 100%; border-left: none; }
+  .dm-imessage .dm-main { display: none; }
+  .dm-imessage.dm-show-thread .dm-sidebar { display: none; }
+  .dm-imessage.dm-show-thread .dm-main { display: flex; }
+  .dm-imessage .dm-back { display: inline; font-size: 22px; }
+}
+
+/* ============================================================
+   צופה סיפור עם עמודים (תמונה / טקסט מודגש)
+   ============================================================ */
+.story-viewer { margin-bottom: 24px; }
+.story-page-view {
+  min-height: 320px;
+  background: #fafafa;
+  border: 1px solid #f0f0f0;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 34px 26px;
+  box-sizing: border-box;
+}
+.story-img-page { max-width: 100%; max-height: 70vh; object-fit: contain; border-radius: 10px; cursor: zoom-in; display: block; }
+.story-text-page {
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.9;
+  color: #0f172a;
+  text-align: center;
+  width: 100%;
+  word-break: break-word;
+}
+.story-viewer-nav { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 16px; direction: ltr; }
+.story-nav-btn { width: 40px; height: 40px; border-radius: 50%; background: #3b82f6; color: #fff; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 2px 8px rgba(59,130,246,0.3); transition: background 0.15s; }
+.story-nav-btn:hover { background: #2563eb; }
+.story-nav-btn:disabled { opacity: 0.4; cursor: default; }
+.story-page-thumbs { display: flex; gap: 8px; overflow-x: auto; padding: 4px; max-width: 100%; }
+.story-page-thumb { width: 58px; height: 58px; border-radius: 8px; overflow: hidden; cursor: pointer; border: 2.5px solid #ddd; flex-shrink: 0; background: #fff; transition: border-color 0.15s; }
+.story-page-thumb.active { border-color: #e11d48; }
+.story-thumb-text { width: 100%; height: 100%; font-size: 7px; font-weight: 700; color: #334155; padding: 4px; overflow: hidden; line-height: 1.25; direction: rtl; text-align: right; }
+.story-page-counter { text-align: center; color: #94a3b8; font-size: 13px; font-weight: 700; margin-top: 8px; }
 
 
 
