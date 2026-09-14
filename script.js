@@ -6256,6 +6256,20 @@ function storyPrevPage() {
 }
 window.storyPrevPage = storyPrevPage;
 
+// ניווט בעמודי הסיפור עם מקשי החצים במקלדת (שמאלה=הבא, ימינה=הקודם — תואם RTL)
+if (typeof document !== 'undefined' && !window._storyKeyNavAttached) {
+  window._storyKeyNavAttached = true;
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    if (!document.getElementById('story-page-view')) return;            // רק כשצופה הסיפור פתוח
+    const t = e.target;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return; // לא להפריע להקלדה
+    if (!window.storyPagesData || window.storyPagesData.length < 2) return;
+    e.preventDefault();
+    if (e.key === 'ArrowLeft') storyNextPage(); else storyPrevPage();
+  });
+}
+
 function updateStoryPageDisplay() {
   const spreads = document.querySelectorAll('.story-spread');
   spreads.forEach((spread, i) => {
