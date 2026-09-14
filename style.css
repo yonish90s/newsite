@@ -4886,6 +4886,57 @@ html.hide-site-images .photo-mini-thumb {
   .story-head-spacer { display: none; }
   .story-detail-head .art-back-btn { align-self: flex-start; }
   .story-detail-titlewrap { text-align: center; }
-  .story-detail-head .art-detail-title { font-size: 20px !important; line-height: 1.25; }
+.story-detail-head .art-detail-title { font-size: 20px !important; line-height: 1.25; }
   .story-detail-titlewrap .art-meta { justify-content: center; margin-top: 6px !important; }
 }
+
+/* ============================================================
+   תצוגת רעיון מורחבת (3 עמודות: סרגל ימין - איך לבצע | מרכז | סרגל שמאל - מחיר ופרטים)
+   ============================================================ */
+.ideas-detail-page .art-detail-inner {
+  max-width: 1350px !important;
+}
+
+.idea-detail-grid-layout {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  margin-top: 16px;
+  direction: rtl;
+}
+
+.idea-detail-sidebar-right,
+.idea-detail-sidebar-left {
+  flex: 1.1;
+  min-width: 280px;
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.03);
+}
+
+.idea-detail-main-center {
+  flex: 2;
+  min-width: 320px;
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 22px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.03);
+}
+
+@media (max-width: 992px) {
+  .idea-detail-grid-layout {
+    flex-direction: column !important;
+  }
+  .idea-detail-sidebar-right,
+  .idea-detail-main-center,
+  .idea-detail-sidebar-left {
+    max-width: 100% !important;
+    width: 100% !important;
+    min-width: 100% !important;
+    box-sizing: border-box;
+  }
+}
+

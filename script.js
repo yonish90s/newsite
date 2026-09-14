@@ -9725,10 +9725,116 @@ function buildPhotosPage(albums, section) {
   </div>`;
 }
 
+function ideaExecutionBoxHTML(a) {
+  let stepsHTML = '';
+  if (a.executionStepsText) {
+    const lines = a.executionStepsText.split(/\n+/).map(l => l.trim()).filter(Boolean);
+    stepsHTML = lines.map((line, idx) => `
+      <div style="display:flex; gap:12px; align-items:flex-start; margin-bottom:14px; background:#f8fafc; padding:10px 12px; border-radius:10px; border:1px solid #e2e8f0;">
+        <span style="background:linear-gradient(135deg,#3b82f6,#2563eb); color:#fff; font-weight:900; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0; box-shadow:0 2px 6px rgba(59,130,246,0.3);">${idx + 1}</span>
+        <div style="font-size:13.5px; color:#334155; line-height:1.5; font-weight:700;">${artEsc(line)}</div>
+      </div>
+    `).join('');
+  } else {
+    stepsHTML = `
+      <div style="display:flex; gap:12px; align-items:flex-start; margin-bottom:14px; background:#f8fafc; padding:10px 12px; border-radius:10px; border:1px solid #e2e8f0;">
+        <span style="background:linear-gradient(135deg,#3b82f6,#2563eb); color:#fff; font-weight:900; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0; box-shadow:0 2px 6px rgba(59,130,246,0.3);">1</span>
+        <div>
+          <div style="font-size:13.5px; font-weight:800; color:#0f172a;">📌 אפיון ומחקר שוק</div>
+          <div style="font-size:12px; color:#64748b; line-height:1.4; margin-top:2px;">הגדרת דרישות המערכת, אפיון הפיצ'רים ובדיקת כדאיות טכנית.</div>
+        </div>
+      </div>
+      <div style="display:flex; gap:12px; align-items:flex-start; margin-bottom:14px; background:#f8fafc; padding:10px 12px; border-radius:10px; border:1px solid #e2e8f0;">
+        <span style="background:linear-gradient(135deg,#3b82f6,#2563eb); color:#fff; font-weight:900; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0; box-shadow:0 2px 6px rgba(59,130,246,0.3);">2</span>
+        <div>
+          <div style="font-size:13.5px; font-weight:800; color:#0f172a;">🛠️ עיצוב חווית משתמש (UI/UX)</div>
+          <div style="font-size:12px; color:#64748b; line-height:1.4; margin-top:2px;">יצירת Wireframes ועיצוב ממשק משתמש מודרני, פשוט ונגיש.</div>
+        </div>
+      </div>
+      <div style="display:flex; gap:12px; align-items:flex-start; margin-bottom:14px; background:#f8fafc; padding:10px 12px; border-radius:10px; border:1px solid #e2e8f0;">
+        <span style="background:linear-gradient(135deg,#3b82f6,#2563eb); color:#fff; font-weight:900; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0; box-shadow:0 2px 6px rgba(59,130,246,0.3);">3</span>
+        <div>
+          <div style="font-size:13.5px; font-weight:800; color:#0f172a;">💻 פיתוח גרסת MVP</div>
+          <div style="font-size:12px; color:#64748b; line-height:1.4; margin-top:2px;">כתיבת הקוד בטכנולוגיות המתקדמות ביותר וסנכרון מלא עם מסד הנתונים.</div>
+        </div>
+      </div>
+      <div style="display:flex; gap:12px; align-items:flex-start; margin-bottom:14px; background:#f8fafc; padding:10px 12px; border-radius:10px; border:1px solid #e2e8f0;">
+        <span style="background:linear-gradient(135deg,#3b82f6,#2563eb); color:#fff; font-weight:900; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0; box-shadow:0 2px 6px rgba(59,130,246,0.3);">4</span>
+        <div>
+          <div style="font-size:13.5px; font-weight:800; color:#0f172a;">🚀 בדיקות והשקה</div>
+          <div style="font-size:12px; color:#64748b; line-height:1.4; margin-top:2px;">הרצת טסטים, בדיקות עומסים ואבטחה, והשקה הדרגתית לקהילת המשתמשים.</div>
+        </div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="idea-exec-box">
+      <div style="font-size:16px; font-weight:900; color:#0f172a; border-bottom:2.5px solid #3b82f6; padding-bottom:10px; margin-bottom:16px; display:flex; align-items:center; gap:8px;">
+        <span>🛠️ איך לבצע את הרעיון</span>
+      </div>
+      <div style="display:flex; flex-direction:column;">
+        ${stepsHTML}
+      </div>
+      <div style="background:#eff6ff; border-right:4px solid #3b82f6; padding:12px 14px; border-radius:10px; font-size:12.5px; color:#1e40af; line-height:1.5; margin-top:12px; font-weight:600;">
+        💡 <b>טיפ זהב לביצוע:</b> מומלץ להתחיל בבניית אב-טיפוס (Prototype) ולקבל משוב מהיר מהגולשים בקהילה לפני פיתוח מלא.
+      </div>
+    </div>
+  `;
+}
+
+function ideaTechnicalBoxHTML(a) {
+  const price = a.priceRequested || '₪5,000 - ₪12,000 (הערכה)';
+  const tech = a.techStack || 'JavaScript, HTML5, CSS3, Firebase';
+  const devTime = a.devTime || '1-3 שבועות';
+  const complexity = a.complexity || 'בינונית (Medium)';
+  const audience = a.targetAudience || 'משתמשי האתר ויזמים';
+
+  return `
+    <div class="idea-tech-box">
+      <div style="font-size:16px; font-weight:900; color:#0f172a; border-bottom:2.5px solid #10b981; padding-bottom:10px; margin-bottom:16px; display:flex; align-items:center; gap:8px;">
+        <span>💰 מחיר מבוקש ופרטים</span>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:12px; padding:12px 14px;">
+          <div style="font-size:11.5px; color:#166534; font-weight:800; margin-bottom:4px;">💰 מחיר מבוקש / הערכת עלות</div>
+          <div style="font-size:16px; font-weight:900; color:#15803d;">${artEsc(price)}</div>
+        </div>
+
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:12px 14px;">
+          <div style="font-size:11.5px; color:#64748b; font-weight:800; margin-bottom:4px;">⚙️ טכנולוגיות מומלצות</div>
+          <div style="font-size:13.5px; font-weight:800; color:#1e293b;">${artEsc(tech)}</div>
+        </div>
+
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:12px 14px;">
+          <div style="font-size:11.5px; color:#64748b; font-weight:800; margin-bottom:4px;">⏱️ זמן פיתוח משוער</div>
+          <div style="font-size:13.5px; font-weight:800; color:#1e293b;">${artEsc(devTime)}</div>
+        </div>
+
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:12px 14px;">
+          <div style="font-size:11.5px; color:#64748b; font-weight:800; margin-bottom:4px;">📊 רמת מורכבות</div>
+          <div style="font-size:13.5px; font-weight:800; color:#1e293b;">${artEsc(complexity)}</div>
+        </div>
+
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:12px 14px;">
+          <div style="font-size:11.5px; color:#64748b; font-weight:800; margin-bottom:4px;">🎯 קהל יעד</div>
+          <div style="font-size:13.5px; font-weight:800; color:#1e293b;">${artEsc(audience)}</div>
+        </div>
+
+        <button onclick="dmStartAboutGallery('${artEsc(a.authorId || '')}', '${artEsc(a.author || '')}', '${artEsc(a.id)}')" 
+                style="width:100%; background:linear-gradient(135deg,#10b981,#059669); color:#fff; border:none; padding:12px; border-radius:12px; font-weight:800; font-size:14px; cursor:pointer; box-shadow:0 4px 14px rgba(16,185,129,0.3); margin-top:6px; transition:all 0.2s ease;">
+          💬 צור קשר / הגש הצעת מחיר
+        </button>
+      </div>
+    </div>
+  `;
+}
+
 function photoOpenDetail(id) {
   photoIncrementViews(id);
   // תומך גם בעמוד קהילה ובעמוד משתמש (שמכילים data-photos-json משלהם)
-  const container = mainContent.querySelector('.photos-page, .community-page, .user-page');
+  const container = mainContent.querySelector('.photos-page, .community-page, .user-page, .ideas-page');
   if (!container) return;
   let albums = [];
   try { albums = JSON.parse(decodeURIComponent(container.dataset.photosJson)); } catch(e){ return; }
@@ -9764,7 +9870,6 @@ function photoOpenDetail(id) {
   }).join('');
 
   const paragraphs = (a.summary || '').split(/\n+/).map(p => p.trim()).filter(Boolean);
-  // מציגים רק את התמונה הראשית (עם מעבר בין תמונות דרך ה-thumbnails), לא את כל התמונות בבת אחת
   const showRowImages = false;
   let contentHTML = '';
   
@@ -9790,99 +9895,166 @@ function photoOpenDetail(id) {
   }
 
   const isAgeVerifiedDetail = typeof sessionStorage !== 'undefined' && sessionStorage.getItem('age_verified') === 'true';
-  // מטשטש בתצוגת הפירוט רק אם הגלריה סומנה 18+ והגיל טרם אושר
   const blurStyle = (a.isAdult && !isAgeVerifiedDetail) ? 'filter: blur(20px); transition: filter 0.3s ease;' : '';
 
+  const isIdea = (container && container.classList.contains('ideas-page')) || (a.id && (a.id.includes('idea') || a.id.includes('sample'))) || (a.category && (a.category.includes('רעיונות') || a.category.includes('עסקים') || a.category.includes('מחקר') || a.category.includes('חוקים')));
+
   const json = encodeURIComponent(JSON.stringify(albums));
-  mainContent.innerHTML = `
-    <div class="art-detail articles-page photos-page" data-photo-id="${id}" data-photos-json="${json}">
-      <div class="art-detail-inner">
-        <button class="art-back-btn" onclick="photoGoBack()">← חזרה לגלריות</button>
 
-        <!-- בעמוד גלריה המלל בא לפני התמונה -->
-        <div class="art-detail-body">
-          <h1 class="art-detail-title">${a.title}</h1>
-          <div class="art-meta" style="margin-bottom:12px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-            <span class="art-category-badge" style="background:${a.categoryColor||'#10b981'}">${a.category}</span>
-            <span>צילום: ${a.author}</span>
-            ${a.authorId ? `<button onclick="toggleFollow('${artEsc(a.authorId)}','${artEsc(a.author || '')}', this)" class="follow-btn${isFollowing(a.authorId) ? ' following' : ''}">${isFollowing(a.authorId) ? '✓ עוקב' : '➕ עקוב'}</button>` : ''}
-            <span>·</span>
-            <span>${a.timestamp}</span>
-            ${a.ageRange ? `<span>·</span><span>גיל ${artEsc(String(a.ageRange))}</span>` : ''}
-            ${isUserVerified(a.authorId, a.author, a.verified || a.verifiedUser) ? `<span>·</span><span style="color:#2563eb; font-weight:700; display:inline-flex; align-items:center; gap:4px;">חשבון זה מאומת <span style="background:#dbeafe; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:10px;">✓</span></span>` : ''}
-            ${a.expiresAt ? renderExpirationBadge(a.expiresAt) : ''}
-            <button onclick="photoToggleLike('${artEsc(a.id)}')" class="photo-like-btn" style="background: rgba(255,255,255,0.08); border: 1px solid #333; cursor: pointer; color: ${photoIsLikedLocal(a.id) ? '#ff2e4d' : '#fff'}; display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; transition: background 0.2s; font-weight: bold; font-size: 13px;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="${photoIsLikedLocal(a.id) ? '#ff2e4d' : 'none'}" stroke="${photoIsLikedLocal(a.id) ? '#ff2e4d' : 'currentColor'}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
-                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-              </svg>
-              <span>${a.likes || 0} לייקים</span>
-            </button>
-            <button onclick="photoToggleSave('${artEsc(a.id)}')" class="photo-save-btn" style="background: rgba(0,0,0,0.05); border: 1px solid #ddd; cursor: pointer; color: #000; display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; transition: background 0.2s; font-weight: bold; font-size: 13px;" title="${photoIsSavedLocal(a.id) ? 'הסר משמורים' : 'שמור גלריה'}">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="${photoIsSavedLocal(a.id) ? '#000' : 'none'}" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
-                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
-              </svg>
-              <span>שמור</span>
-            </button>
-            <button onclick="dmStartAboutGallery('${artEsc(a.authorId || '')}', '${artEsc(a.author || '')}', '${artEsc(a.id)}')" class="photo-dm-btn" style="background:#e11d48; border:none; cursor:pointer; color:#fff; display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border-radius:6px; font-weight:bold; font-size:13px;" title="שלח הודעה פרטית ליוצר">
-              💬 <span>שלח הודעה</span>
-            </button>
-            ${a.telegramUrl ? `
-              <a href="${a.telegramUrl}" target="_blank" title="${artEsc(a.telegramUrl.replace('https://t.me/', '@'))}" class="art-telegram-btn" style="display: inline-flex; align-items: center; background: #2f2f2f; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 13px; text-decoration: none; font-weight: bold; gap: 6px; border: 1px solid rgba(255,255,255,0.1);">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
-                  <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
-                </svg>
-                <span>טלגרם</span>
-              </a>
-            ` : ''}
-            ${a.emailUrl ? `
-              <button type="button" onclick="revealAndCopyEmail('${artEsc(a.emailUrl)}', this, event);" title="לחץ לחשיפת והעתקת אימייל" class="art-telegram-btn" style="display: inline-flex; align-items: center; background: #2f2f2f; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 13px; text-decoration: none; font-weight: bold; gap: 6px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
-                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                  <polyline points="22,6 12,13 2,6"/>
-                </svg>
-                <span>אימייל</span>
-              </button>
-            ` : ''}
-            ${(isAdmin() || isEditMode) ? `
-              <button type="button" onclick="openPhotoEditModal('${artEsc(a.id)}', event);" title="ערוך גלריה זו" style="display: inline-flex; align-items: center; background: #e11d48; color: #fff; padding: 6px 14px; border-radius: 6px; font-size: 13px; border: none; font-weight: bold; gap: 6px; cursor: pointer; transition: background 0.2s;">
-                ✏️ ערוך גלריה
-              </button>
-            ` : ''}
+  if (isIdea) {
+    mainContent.innerHTML = `
+      <div class="art-detail articles-page photos-page ideas-detail-page" data-photo-id="${id}" data-photos-json="${json}">
+        <div class="art-detail-inner" style="max-width: 1350px; margin: 0 auto;">
+          <button class="art-back-btn" onclick="photoGoBack()">← חזרה לרעיונות</button>
+
+          <div class="idea-detail-grid-layout" style="display: flex; gap: 24px; align-items: flex-start; margin-top: 16px; flex-wrap: wrap;">
+            
+            <!-- בצד ימין: איך לבצע את הרעיון -->
+            <div class="idea-detail-sidebar-right" style="flex: 1.1; min-width: 280px; background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 16px; padding: 20px; box-shadow: 0 4px 14px rgba(0,0,0,0.03);">
+              ${ideaExecutionBoxHTML(a)}
+            </div>
+
+            <!-- במרכז: תוכן הרעיון המלא -->
+            <div class="idea-detail-main-center" style="flex: 2; min-width: 320px; background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 16px; padding: 22px; box-shadow: 0 4px 14px rgba(0,0,0,0.03);">
+              <h1 class="art-detail-title" style="margin-top:0;">${a.title}</h1>
+              <div class="art-meta" style="margin-bottom:14px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <span class="art-category-badge" style="background:${a.categoryColor||'#3b82f6'}">${a.category}</span>
+                <span>יוצר הרעיון: <b>${a.author}</b></span>
+                ${a.authorId ? `<button onclick="toggleFollow('${artEsc(a.authorId)}','${artEsc(a.author || '')}', this)" class="follow-btn${isFollowing(a.authorId) ? ' following' : ''}">${isFollowing(a.authorId) ? '✓ עוקב' : '➕ עקוב'}</button>` : ''}
+                <span>·</span>
+                <span>${a.timestamp}</span>
+                <button onclick="photoToggleLike('${artEsc(a.id)}')" class="photo-like-btn" style="background: rgba(255,255,255,0.08); border: 1px solid #333; cursor: pointer; color: ${photoIsLikedLocal(a.id) ? '#ff2e4d' : '#fff'}; display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; font-weight: bold; font-size: 13px;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="${photoIsLikedLocal(a.id) ? '#ff2e4d' : 'none'}" stroke="${photoIsLikedLocal(a.id) ? '#ff2e4d' : 'currentColor'}" stroke-width="2.5"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                  <span>${a.likes || 0} לייקים</span>
+                </button>
+                <button onclick="photoToggleSave('${artEsc(a.id)}')" class="photo-save-btn" style="background: rgba(0,0,0,0.05); border: 1px solid #ddd; cursor: pointer; color: #000; display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; font-weight: bold; font-size: 13px;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="${photoIsSavedLocal(a.id) ? '#000' : 'none'}" stroke="#000" stroke-width="2.5"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+                  <span>שמור</span>
+                </button>
+              </div>
+
+              <div class="art-detail-content" style="margin-bottom:20px;">${contentHTML}</div>
+
+              <div class="photo-main-img-container" style="margin-bottom:20px; ${blurStyle}">
+                <img id="photo-gallery-main-img" src="${mainImg}" style="width:100%; height:100%; object-fit:contain; display:block; border-radius:12px; cursor:zoom-in; ${blurStyle}" onclick="artGalleryById('photos','${artEsc(id)}', this.getAttribute('src'))">
+              </div>
+
+              ${validImages.length > 1 ? `
+                <div style="display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:24px; direction:ltr; flex-wrap:wrap;">
+                  <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">${thumbnailsHTML}</div>
+                </div>
+              ` : ''}
+
+              ${photoCommentsSectionHTML(id)}
+
+              <div class="art-rec-section" style="margin-top:28px;">
+                <h3 style="margin:0 0 16px;font-size:18px;font-weight:800">רעיונות נוספים שיעניינו אותך</h3>
+                <div class="art-rec-grid">${recHTML}</div>
+              </div>
+            </div>
+
+            <!-- בצד שמאל: מחיר מבוקש ופרטים טכניים -->
+            <div class="idea-detail-sidebar-left" style="flex: 1.1; min-width: 280px; background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 16px; padding: 20px; box-shadow: 0 4px 14px rgba(0,0,0,0.03);">
+              ${ideaTechnicalBoxHTML(a)}
+            </div>
+
           </div>
-          <div class="art-detail-content">${contentHTML}</div>
-        </div>
-
-        <!-- תמונה ראשית גדולה עם מזהה ספציפי (פרופורציונלית ולא ענקית) -->
-        <div class="photo-main-img-container" style="${blurStyle}">
-          <img id="photo-gallery-main-img" src="${mainImg}" style="width:100%; height:100%; object-fit:contain; display:block; border-radius:12px; cursor:zoom-in; ${blurStyle}" onclick="artGalleryById('photos','${artEsc(id)}', this.getAttribute('src'))">
-        </div>
-
-        <!-- ריבועי דפדוף (Thumbnails) עם חצי ניווט -->
-        <div style="display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:24px; direction:ltr; flex-wrap:wrap; padding:5px;">
-          ${validImages.length > 1 ? `
-            <button type="button" onclick="event.stopPropagation(); photoStepDetailImage(-1, this)" title="תמונה קודמת" style="width:32px; height:32px; border-radius:50%; background:#3b82f6; color:#fff; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 2px 8px rgba(59,130,246,0.3); transition:background 0.15s ease;">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-            </button>
-          ` : ''}
-          <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">
-            ${thumbnailsHTML}
-          </div>
-          ${validImages.length > 1 ? `
-            <button type="button" onclick="event.stopPropagation(); photoStepDetailImage(1, this)" title="תמונה הבאה" style="width:32px; height:32px; border-radius:50%; background:#3b82f6; color:#fff; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 2px 8px rgba(59,130,246,0.3); transition:background 0.15s ease;">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-            </button>
-          ` : ''}
-        </div>
-
-        ${photoCommentsSectionHTML(id)}
-
-        <div class="art-rec-section">
-          <h3 style="margin:0 0 16px;font-size:18px;font-weight:800">גלריות נוספות שיעניינו אותך</h3>
-          <div class="art-rec-grid">${recHTML}</div>
         </div>
       </div>
-    </div>
-  `;
+    `;
+  } else {
+    mainContent.innerHTML = `
+      <div class="art-detail articles-page photos-page" data-photo-id="${id}" data-photos-json="${json}">
+        <div class="art-detail-inner">
+          <button class="art-back-btn" onclick="photoGoBack()">← חזרה לגלריות</button>
+
+          <!-- בעמוד גלריה המלל בא לפני התמונה -->
+          <div class="art-detail-body">
+            <h1 class="art-detail-title">${a.title}</h1>
+            <div class="art-meta" style="margin-bottom:12px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+              <span class="art-category-badge" style="background:${a.categoryColor||'#10b981'}">${a.category}</span>
+              <span>צילום: ${a.author}</span>
+              ${a.authorId ? `<button onclick="toggleFollow('${artEsc(a.authorId)}','${artEsc(a.author || '')}', this)" class="follow-btn${isFollowing(a.authorId) ? ' following' : ''}">${isFollowing(a.authorId) ? '✓ עוקב' : '➕ עקוב'}</button>` : ''}
+              <span>·</span>
+              <span>${a.timestamp}</span>
+              ${a.ageRange ? `<span>·</span><span>גיל ${artEsc(String(a.ageRange))}</span>` : ''}
+              ${isUserVerified(a.authorId, a.author, a.verified || a.verifiedUser) ? `<span>·</span><span style="color:#2563eb; font-weight:700; display:inline-flex; align-items:center; gap:4px;">חשבון זה מאומת <span style="background:#dbeafe; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:10px;">✓</span></span>` : ''}
+              ${a.expiresAt ? renderExpirationBadge(a.expiresAt) : ''}
+              <button onclick="photoToggleLike('${artEsc(a.id)}')" class="photo-like-btn" style="background: rgba(255,255,255,0.08); border: 1px solid #333; cursor: pointer; color: ${photoIsLikedLocal(a.id) ? '#ff2e4d' : '#fff'}; display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; transition: background 0.2s; font-weight: bold; font-size: 13px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="${photoIsLikedLocal(a.id) ? '#ff2e4d' : 'none'}" stroke="${photoIsLikedLocal(a.id) ? '#ff2e4d' : 'currentColor'}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                </svg>
+                <span>${a.likes || 0} לייקים</span>
+              </button>
+              <button onclick="photoToggleSave('${artEsc(a.id)}')" class="photo-save-btn" style="background: rgba(0,0,0,0.05); border: 1px solid #ddd; cursor: pointer; color: #000; display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; transition: background 0.2s; font-weight: bold; font-size: 13px;" title="${photoIsSavedLocal(a.id) ? 'הסר משמורים' : 'שמור גלריה'}">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="${photoIsSavedLocal(a.id) ? '#000' : 'none'}" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+                  <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                </svg>
+                <span>שמור</span>
+              </button>
+              <button onclick="dmStartAboutGallery('${artEsc(a.authorId || '')}', '${artEsc(a.author || '')}', '${artEsc(a.id)}')" class="photo-dm-btn" style="background:#e11d48; border:none; cursor:pointer; color:#fff; display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border-radius:6px; font-weight:bold; font-size:13px;" title="שלח הודעה פרטית ליוצר">
+                💬 <span>שלח הודעה</span>
+              </button>
+              ${a.telegramUrl ? `
+                <a href="${a.telegramUrl}" target="_blank" title="${artEsc(a.telegramUrl.replace('https://t.me/', '@'))}" class="art-telegram-btn" style="display: inline-flex; align-items: center; background: #2f2f2f; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 13px; text-decoration: none; font-weight: bold; gap: 6px; border: 1px solid rgba(255,255,255,0.1);">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+                    <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+                  </svg>
+                  <span>טלגרם</span>
+                </a>
+              ` : ''}
+              ${a.emailUrl ? `
+                <button type="button" onclick="revealAndCopyEmail('${artEsc(a.emailUrl)}', this, event);" title="לחץ לחשיפת והעתקת אימייל" class="art-telegram-btn" style="display: inline-flex; align-items: center; background: #2f2f2f; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 13px; text-decoration: none; font-weight: bold; gap: 6px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                    <polyline points="22,6 12,13 2,6"/>
+                  </svg>
+                  <span>אימייל</span>
+                </button>
+              ` : ''}
+              ${(isAdmin() || isEditMode) ? `
+                <button type="button" onclick="openPhotoEditModal('${artEsc(a.id)}', event);" title="ערוך גלריה זו" style="display: inline-flex; align-items: center; background: #e11d48; color: #fff; padding: 6px 14px; border-radius: 6px; font-size: 13px; border: none; font-weight: bold; gap: 6px; cursor: pointer; transition: background 0.2s;">
+                  ✏️ ערוך גלריה
+                </button>
+              ` : ''}
+            </div>
+            <div class="art-detail-content">${contentHTML}</div>
+          </div>
+
+          <!-- תמונה ראשית גדולה עם מזהה ספציפי (פרופורציונלית ולא ענקית) -->
+          <div class="photo-main-img-container" style="${blurStyle}">
+            <img id="photo-gallery-main-img" src="${mainImg}" style="width:100%; height:100%; object-fit:contain; display:block; border-radius:12px; cursor:zoom-in; ${blurStyle}" onclick="artGalleryById('photos','${artEsc(id)}', this.getAttribute('src'))">
+          </div>
+
+          <!-- ריבועי דפדוף (Thumbnails) עם חצי ניווט -->
+          <div style="display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:24px; direction:ltr; flex-wrap:wrap; padding:5px;">
+            ${validImages.length > 1 ? `
+              <button type="button" onclick="event.stopPropagation(); photoStepDetailImage(-1, this)" title="תמונה קודמת" style="width:32px; height:32px; border-radius:50%; background:#3b82f6; color:#fff; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 2px 8px rgba(59,130,246,0.3); transition:background 0.15s ease;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+              </button>
+            ` : ''}
+            <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">
+              ${thumbnailsHTML}
+            </div>
+            ${validImages.length > 1 ? `
+              <button type="button" onclick="event.stopPropagation(); photoStepDetailImage(1, this)" title="תמונה הבאה" style="width:32px; height:32px; border-radius:50%; background:#3b82f6; color:#fff; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 2px 8px rgba(59,130,246,0.3); transition:background 0.15s ease;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
+            ` : ''}
+          </div>
+
+          ${photoCommentsSectionHTML(id)}
+
+          <div class="art-rec-section">
+            <h3 style="margin:0 0 16px;font-size:18px;font-weight:800">גלריות נוספות שיעניינו אותך</h3>
+            <div class="art-rec-grid">${recHTML}</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+  if (typeof subscribePhotoComments === 'function') subscribePhotoComments(id);
+}
   if (typeof subscribePhotoComments === 'function') subscribePhotoComments(id);
 }
 
@@ -14001,9 +14173,17 @@ function openIdeaModal() {
   const t = document.getElementById('idea-title');
   const s = document.getElementById('idea-summary');
   const d = document.getElementById('idea-desc');
+  const ex = document.getElementById('idea-execution');
+  const pr = document.getElementById('idea-price');
+  const tm = document.getElementById('idea-time');
+  const tc = document.getElementById('idea-tech');
   if (t) t.value = '';
   if (s) s.value = '';
   if (d) d.value = '';
+  if (ex) ex.value = '';
+  if (pr) pr.value = '';
+  if (tm) tm.value = '';
+  if (tc) tc.value = '';
   const m = document.getElementById('idea-modal');
   if (m) m.style.display = 'flex';
   setTimeout(() => { if (t) t.focus(); }, 100);
@@ -14031,6 +14211,10 @@ async function saveIdea() {
   if (!summary) { alert('חובה להזין תקציר קצר'); return; }
   const desc = (document.getElementById('idea-desc').value || '').trim();
   const category = (document.getElementById('idea-category').value || 'כללי');
+  const executionStepsText = (document.getElementById('idea-execution')?.value || '').trim();
+  const priceRequested = (document.getElementById('idea-price')?.value || '').trim();
+  const devTime = (document.getElementById('idea-time')?.value || '').trim();
+  const techStack = (document.getElementById('idea-tech')?.value || '').trim();
 
   let nickname = 'משתמש';
   try {
@@ -14045,7 +14229,11 @@ async function saveIdea() {
     title: title.slice(0, 100),
     summary: summary.slice(0, 200),
     desc: desc.slice(0, 1000),
-    category: 'כללי',
+    category: category,
+    executionStepsText: executionStepsText.slice(0, 1500),
+    priceRequested: priceRequested.slice(0, 100),
+    devTime: devTime.slice(0, 100),
+    techStack: techStack.slice(0, 200),
     author: nickname,
     authorId: auth.currentUser.uid,
     verified: true,
