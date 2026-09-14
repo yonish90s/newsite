@@ -9459,6 +9459,7 @@ function buildPhotosPage(albums, section) {
           <div class="art-search-wrap">
             <input type="text" class="art-search" placeholder="${searchPlaceholder}" oninput="photoSearch(this.value)">
           </div>
+          ${section === 'ideas' && typeof ideasCategoryBarHTML === 'function' ? ideasCategoryBarHTML() : ''}
           ${photoFilterSectionHTML()}
           <div class="view-toggles">
             <label class="tgl">
@@ -13221,9 +13222,58 @@ function ideaGetAlbums() {
   });
 }
 
+let currentIdeaCategoryFilter = 'הכל';
+
+function setIdeaCategoryFilter(cat) {
+  currentIdeaCategoryFilter = cat;
+  if (typeof buildIdeasPage === 'function' && typeof mainContent !== 'undefined' && mainContent) {
+    mainContent.innerHTML = buildIdeasPage();
+  }
+}
+window.setIdeaCategoryFilter = setIdeaCategoryFilter;
+
+function ideasCategoryBarHTML() {
+  const cats = [
+    { id: 'הכל', label: 'הכל' },
+    { id: 'רעיונות לעסקים', label: '💼 רעיונות לעסקים' },
+    { id: 'רעיונות כללי', label: '💡 רעיונות כללי' }
+  ];
+
+  return `
+    <div class="ideas-category-bar" style="display:flex; gap:10px; align-items:center; margin-bottom:16px; flex-wrap:wrap; padding:6px 0;">
+      ${cats.map(c => {
+        const isActive = currentIdeaCategoryFilter === c.id;
+        return `
+          <button type="button" onclick="setIdeaCategoryFilter('${c.id}')"
+                  style="padding:8px 20px; border-radius:999px; border:${isActive ? 'none' : '1px solid #cbd5e1'}; background:${isActive ? '#3b82f6' : '#fff'}; color:${isActive ? '#fff' : '#334155'}; font-size:14px; font-weight:800; cursor:pointer; box-shadow:${isActive ? '0 4px 14px rgba(59,130,246,0.35)' : '0 1px 3px rgba(0,0,0,0.05)'}; transition:all 0.2s;">
+            ${c.label}
+          </button>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+window.ideasCategoryBarHTML = ideasCategoryBarHTML;
+
 function buildIdeasPage() {
   subscribeIdeas();
-  const albums = ideaGetAlbums();
+  let albums = ideaGetAlbums();
+  if (currentIdeaCategoryFilter !== 'הכל') {
+    albums = albums.filter(a => {
+      const cat = a.category || '';
+      const title = a.title || '';
+      const summary = a.summary || '';
+      const desc = a.desc || '';
+
+      if (currentIdeaCategoryFilter === 'רעיונות לעסקים') {
+        return cat === 'רעיונות לעסקים' || title.includes('עסק') || summary.includes('עסק') || desc.includes('עסק');
+      }
+      if (currentIdeaCategoryFilter === 'רעיונות כללי') {
+        return cat === 'רעיונות כללי' || cat === 'כללי' || (!cat.includes('עסק') && !title.includes('עסק') && !summary.includes('עסק'));
+      }
+      return cat === currentIdeaCategoryFilter;
+    });
+  }
   return buildPhotosPage(albums, 'ideas');
 }
 window.buildIdeasPage = buildIdeasPage;
