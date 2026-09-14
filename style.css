@@ -4850,14 +4850,18 @@ html.hide-site-images .photo-mini-thumb {
 }
 .story-img-page { max-width: 100%; max-height: 70vh; object-fit: contain; border-radius: 10px; cursor: zoom-in; display: block; }
 .story-text-page {
-  font-size: 22px;
-  font-weight: 800;
-  line-height: 1.9;
-  color: #0f172a;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 2;
+  color: #1e293b;
   text-align: center;
   width: 100%;
+  max-width: 680px;
+  margin: 0 auto;
   word-break: break-word;
+  letter-spacing: 0.1px;
 }
+@media (max-width: 640px) { .story-text-page { font-size: 17px; line-height: 1.9; } }
 .story-viewer-nav { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 16px; direction: ltr; }
 .story-nav-btn { width: 40px; height: 40px; border-radius: 50%; background: #3b82f6; color: #fff; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 2px 8px rgba(59,130,246,0.3); transition: background 0.15s; }
 .story-nav-btn:hover { background: #2563eb; }

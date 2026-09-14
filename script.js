@@ -6116,8 +6116,11 @@ function storyOpenDetail(id) {
     ? s.pages.map(p => (p && typeof p === 'object') ? p : { type: 'image', url: p })
     : validImages.map(u => ({ type: 'image', url: u }));
   window.storyPagesData = storyPagesArr;
-  window.currentStoryPage = 0;
   window.currentStoryId = id;
+  // המשך מהמקום שהקורא סימן (אם קיים)
+  let _bmPage = 0;
+  try { const _bms = JSON.parse(localStorage.getItem('story_bookmarks_v1') || '{}'); if (_bms[id] != null) _bmPage = Math.max(0, Math.min(parseInt(_bms[id], 10) || 0, storyPagesArr.length - 1)); } catch (e) {}
+  window.currentStoryPage = _bmPage;
 
   // תמונות ממוזערות לכל עמוד (תמונה או כרטיס טקסט)
   const thumbsHTML = storyPagesArr.map((pg, idx) => {
@@ -6142,6 +6145,10 @@ function storyOpenDetail(id) {
       </div>
       <div class="story-page-counter" id="story-page-counter">1 / ${storyPagesArr.length}</div>
       ` : ''}
+      <div style="text-align:center; margin-top:12px;">
+        <button type="button" onclick="storyBookmarkHere()" title="שמור את הנקודה שעצרת בה" style="background:#fff; border:1.5px solid #e11d48; color:#e11d48; border-radius:999px; padding:7px 18px; font-size:13px; font-weight:800; cursor:pointer;">🔖 סמן איפה שעצרתי</button>
+        ${_bmPage > 0 ? `<div style="font-size:12px; color:#64748b; margin-top:6px; font-weight:700;">↩︎ המשכת מהמקום שסימנת (עמוד ${_bmPage + 1})</div>` : ''}
+      </div>
     </div>
   ` : '';
 
@@ -6224,6 +6231,18 @@ function storyGoToPage(i) {
 }
 window.storyGoToPage = storyGoToPage;
 
+// סימון הנקודה (העמוד) שהקורא עצר בה — יישמר וימשיך משם בפעם הבאה
+function storyBookmarkHere() {
+  const id = window.currentStoryId;
+  if (!id) return;
+  let bms = {};
+  try { bms = JSON.parse(localStorage.getItem('story_bookmarks_v1') || '{}'); } catch (e) {}
+  bms[id] = window.currentStoryPage || 0;
+  try { localStorage.setItem('story_bookmarks_v1', JSON.stringify(bms)); } catch (e) {}
+  if (typeof showCopyToast === 'function') showCopyToast('🔖 סומן! בפעם הבאה תמשיך מכאן');
+}
+window.storyBookmarkHere = storyBookmarkHere;
+
 function storyGoBack() {
   const container = mainContent.querySelector('.stories-page');
   if (!container) return;
@@ -6298,6 +6317,8 @@ function updateStoryPageDisplay() {
 
 // רשימת תמונות הסיפור לפי סדר. הראשונה (אינדקס 0) היא התמונה הראשית.
 let storyImageList = [];
+// מספר השורות המרבי בעמוד טקסט של סיפור (כדי שלא יהיה מגושם)
+const STORY_MAX_LINES = 20;
 
 // מזהה הסיפור שנמצא כרגע בעריכה; null = יצירת סיפור חדש
 let storyEditingId = null;
@@ -6327,8 +6348,10 @@ function renderStoryImagesEditor() {
         <button type="button" onclick="storyRemoveImage(${i})" title="הסר עמוד" style="border:1px solid #fca5a5; color:#dc2626; background:#fff; border-radius:5px; width:26px; height:26px; cursor:pointer; font-size:12px;">✕</button>
       </div>`;
     const badge = `<span style="background:${pg.type === 'text' ? '#8b5cf6' : '#3b82f6'}; color:#fff; font-size:10px; font-weight:800; padding:2px 8px; border-radius:6px;">עמוד ${i + 1} · ${pg.type === 'text' ? 'טקסט 📝' : 'תמונה 🖼️'}</span>`;
+    const _ln = (pg.type === 'text') ? (pg.text || '').split('\n').length : 0;
     const inner = pg.type === 'text'
-      ? `<textarea oninput="storySetPageText(${i}, this.value)" placeholder="כתבו את הטקסט של העמוד הזה..." style="width:100%; min-height:70px; padding:8px 10px; border:1px solid #ddd; border-radius:8px; font-size:14px; font-weight:700; resize:vertical; box-sizing:border-box;">${artEsc(pg.text || '')}</textarea>`
+      ? `<textarea id="story-txt-${i}" oninput="storySetPageText(${i}, this.value)" placeholder="כתבו את הטקסט של העמוד הזה... (עד ${STORY_MAX_LINES} שורות)" style="width:100%; min-height:120px; padding:8px 10px; border:1px solid #ddd; border-radius:8px; font-size:14px; font-weight:700; line-height:1.7; resize:vertical; box-sizing:border-box;">${artEsc(pg.text || '')}</textarea>
+         <div id="story-txt-count-${i}" style="font-size:11px; font-weight:800; text-align:left; margin-top:3px; color:${_ln >= STORY_MAX_LINES ? '#dc2626' : '#64748b'};">${_ln} / ${STORY_MAX_LINES} שורות</div>`
       : `<img src="${pg.url}" style="width:70px; height:70px; object-fit:cover; border-radius:8px; border:1px solid #ddd; display:block;">`;
     return `
       <div style="border:1px solid #eee; border-radius:10px; padding:8px; background:#fafafa;">
@@ -6342,7 +6365,25 @@ function renderStoryImagesEditor() {
 }
 
 function storySetPageText(i, val) {
+  // הגבלה למספר השורות כדי שהעמוד לא יהיה מגושם
+  let lines = String(val).split('\n');
+  if (lines.length > STORY_MAX_LINES) {
+    lines = lines.slice(0, STORY_MAX_LINES);
+    val = lines.join('\n');
+    const ta = document.getElementById('story-txt-' + i);
+    if (ta && ta.value !== val) {
+      const pos = val.length;
+      ta.value = val;
+      try { ta.setSelectionRange(pos, pos); } catch (e) {}
+    }
+  }
   if (storyImageList[i]) storyImageList[i] = { type: 'text', text: val };
+  const c = document.getElementById('story-txt-count-' + i);
+  if (c) {
+    const n = lines.length;
+    c.textContent = n + ' / ' + STORY_MAX_LINES + ' שורות';
+    c.style.color = n >= STORY_MAX_LINES ? '#dc2626' : '#64748b';
+  }
 }
 window.storySetPageText = storySetPageText;
 
