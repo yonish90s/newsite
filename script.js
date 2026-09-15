@@ -233,6 +233,7 @@ function isSideOnlyPage(p) {
   // "מוצרי יד שניה" ו"שותפויות" הם עמודים ראשיים בתפריט העליון (למרות תוכן photos-page)
   if (p.id === 'page-secondhand-main' || (p.content || '').includes('secondhand-page') || (p.title || '').includes('יד שניה')) return false;
   if (p.id === 'page-partnerships-main' || (p.content || '').includes('partnerships-page') || (p.title || '').includes('שותפויות')) return false;
+  if (p.id === 'page-reviews-main' || (p.content || '').includes('reviews-page') || (p.title || '').includes('ביקורת')) return false;
   if (SIDE_ONLY_PAGE_IDS.includes(p.id)) return true;
   const t = p.title || '', c = p.content || '';
   if (c.includes('photos-page') || c.includes('stories-page') || c.includes('questions-page') || c.includes('offers-page')) return true;
@@ -465,6 +466,17 @@ function sanitizeToOnlyPhotosAndStories() {
     pages.push({ id: 'page-partnerships-main', title: 'שותפויות 🤝', content: _ptContent });
   } else {
     if (!_ptPage.title) _ptPage.title = 'שותפויות 🤝';
+  }
+
+  // עמוד "ביקורת" — עמוד גריד (כמו שותפויות)
+  const _rvPage = pages.find(p => p && p.id === 'page-reviews-main');
+  if (!_rvPage) {
+    const _rvContent = (typeof buildPhotosPage === 'function')
+      ? buildPhotosPage([], 'reviews')
+      : '<div class="photos-page reviews-page" data-page-id="page-reviews-main" data-section="reviews" data-photos-json="%5B%5D"></div>';
+    pages.push({ id: 'page-reviews-main', title: 'ביקורת ⭐', content: _rvContent });
+  } else {
+    if (!_rvPage.title) _rvPage.title = 'ביקורת ⭐';
   }
 
   // מסירים לצמיתות את העמודים "יד שניה" ו"השוואת מחירים"
@@ -7138,8 +7150,10 @@ function renderPhotoCard(p, options = {}) {
       ${scoreBadgeHTML}
       ${cardLinksHTML}
   `;
+  const classActionHTML = p.isClassAction ? `<div style="display:inline-block; background:#0f172a; color:#fff; font-size:11px; font-weight:800; padding:2px 8px; border-radius:6px; margin-bottom:4px;">⚖️ תביעה ייצוגית${p.businessName ? ' · ' + artEsc(p.businessName) : ''}</div>` : '';
   const infoBlock = `
     <div class="art-row-text photo-card-info">
+      ${classActionHTML}
       <h3>${p.title}</h3>
       ${priceBadgeHTML}
       ${metaHTML}
@@ -8175,6 +8189,13 @@ function buildPartnershipsPage() {
   return buildPhotosPage(albums, 'partnerships');
 }
 window.buildPartnershipsPage = buildPartnershipsPage;
+
+// עמוד "ביקורת" — ביקורות על מוצרים/שירותים + תביעות ייצוגיות
+function buildReviewsPage() {
+  const albums = (typeof photoGetAlbums === 'function') ? photoGetAlbums() : [];
+  return buildPhotosPage(albums, 'reviews');
+}
+window.buildReviewsPage = buildReviewsPage;
 
 // ============================================================
 // עמוד "מידע" — לוח בקרה למנהל בלבד. משתמשים (רשומים ואורחים) שולחים
@@ -9707,6 +9728,7 @@ function buildLeftSidebarBox(popularHTML, section) {
     // "מוצרי יד שניה"/"שותפויות" אינם חלק מקבוצת קהילות (למרות תוכן photos-page)
     if (p.id === 'page-secondhand-main' || (p.content || '').includes('secondhand-page') || (p.title || '').includes('יד שניה')) return false;
     if (p.id === 'page-partnerships-main' || (p.content || '').includes('partnerships-page') || (p.title || '').includes('שותפויות')) return false;
+    if (p.id === 'page-reviews-main' || (p.content || '').includes('reviews-page') || (p.title || '').includes('ביקורת')) return false;
     const t = p.title || '', c = p.content || '';
     return p.id === 'page-photos-main' || p.id === 'page-stories-main'
       || t.includes('תמונות') || t.includes('סיפורים')
@@ -9805,7 +9827,7 @@ function buildPhotosPage(albums, section) {
   albums = albums.filter(p => !p.adminOnly || _isAdminView);
 
   // סינון לפי סרגל הקטגוריות (תמונות / קהילות) — "הכל · כללי · לעסקים"
-  if ((section === 'photos' || section === 'communities' || section === 'secondhand' || section === 'partnerships') && typeof filterAlbumsByCategory === 'function') {
+  if ((section === 'photos' || section === 'communities' || section === 'secondhand' || section === 'partnerships' || section === 'reviews') && typeof filterAlbumsByCategory === 'function') {
     albums = filterAlbumsByCategory(albums, section);
   }
   // סינון ייעודי למוצרי יד שניה (סוג הצעה / מחיר / מיקום)
@@ -10012,9 +10034,19 @@ function buildPhotosPage(albums, section) {
     addBtnHTML = `<button onclick="openPhotoModal()" style="background:#e11d48; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: white; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.2s;">
         ➕ פרסום שותפות חדשה
        </button>`;
+  } else if (section === 'reviews') {
+    sectionTitle = 'כל הביקורות';
+    searchPlaceholder = '🔍 חיפוש ביקורות...';
+    noResultsText = 'לא נמצאו ביקורות התואמות לחיפוש';
+    addBtnHTML = `<button onclick="openPhotoModal()" style="background:#e11d48; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: white; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.2s;">
+        ✍️ כתוב ביקורת
+       </button>
+       <button onclick="openClassActionModal()" style="background:#0f172a; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: white; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        ⚖️ פתח תביעה ייצוגית
+       </button>`;
   }
 
-  return `<div class="articles-page photos-page ${section === 'ideas' ? 'ideas-page' : ''} ${section === 'communities' ? 'communities-page' : ''} ${section === 'secondhand' ? 'secondhand-page' : ''} ${section === 'partnerships' ? 'partnerships-page' : ''} photo-cols-${photoGridCols}${photoImagesMode ? '' : ' text-mode'}" data-section="${section}" data-photos-json="${json}">
+  return `<div class="articles-page photos-page ${section === 'ideas' ? 'ideas-page' : ''} ${section === 'communities' ? 'communities-page' : ''} ${section === 'secondhand' ? 'secondhand-page' : ''} ${section === 'partnerships' ? 'partnerships-page' : ''} ${section === 'reviews' ? 'reviews-page' : ''} photo-cols-${photoGridCols}${photoImagesMode ? '' : ' text-mode'}" data-section="${section}" data-photos-json="${json}">
     <div class="art-inner">
       <div class="art-featured-grid">${featuredHTML}</div>
       <div class="art-layout">
@@ -11159,6 +11191,62 @@ function photoOfferTypeChanged() {
   }
 }
 window.photoOfferTypeChanged = photoOfferTypeChanged;
+
+// --- תביעה ייצוגית נגד עסק (בעמוד "ביקורת") ---
+function openClassActionModal() {
+  let m = document.getElementById('classaction-modal');
+  if (!m) { m = document.createElement('div'); m.id = 'classaction-modal'; document.body.appendChild(m); }
+  m.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999999; display:flex; align-items:center; justify-content:center; direction:rtl; padding:16px;';
+  m.innerHTML = `
+    <div style="background:#fff; border-radius:16px; padding:24px; width:100%; max-width:460px; max-height:88vh; overflow-y:auto; display:flex; flex-direction:column; gap:12px; box-shadow:0 20px 60px rgba(0,0,0,0.35);">
+      <h3 style="margin:0; font-size:18px; font-weight:900; color:#0f172a;">⚖️ פתיחת תביעה ייצוגית נגד עסק</h3>
+      <p style="margin:0; font-size:13px; color:#64748b; line-height:1.5;">תארו את העסק והבעיה. גולשים שנפגעו גם הם יוכלו להצטרף לתביעה.</p>
+      <label style="font-size:13px; font-weight:700;">שם העסק <span style="color:red">*</span></label>
+      <input id="ca-business" type="text" placeholder="לדוגמה: חברת סלולר XYZ" style="padding:10px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; box-sizing:border-box;">
+      <label style="font-size:13px; font-weight:700;">נושא התביעה <span style="color:red">*</span></label>
+      <input id="ca-title" type="text" placeholder="לדוגמה: חיובים כפולים" style="padding:10px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; box-sizing:border-box;">
+      <label style="font-size:13px; font-weight:700;">פירוט</label>
+      <textarea id="ca-desc" rows="4" placeholder="מה קרה, מתי, ומה הנזק..." style="padding:10px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; box-sizing:border-box; resize:vertical;"></textarea>
+      <div style="display:flex; gap:10px; margin-top:4px;">
+        <button onclick="submitClassAction()" style="flex:2; background:#0f172a; color:#fff; border:none; border-radius:8px; padding:11px; font-size:14px; font-weight:800; cursor:pointer;">⚖️ פרסם תביעה</button>
+        <button onclick="document.getElementById('classaction-modal').remove()" style="flex:1; background:#fff; color:#334155; border:1px solid #ddd; border-radius:8px; padding:11px; font-size:14px; cursor:pointer;">ביטול</button>
+      </div>
+    </div>`;
+}
+window.openClassActionModal = openClassActionModal;
+
+function submitClassAction() {
+  const business = (document.getElementById('ca-business') || {}).value ? document.getElementById('ca-business').value.trim() : '';
+  const title = (document.getElementById('ca-title') || {}).value ? document.getElementById('ca-title').value.trim() : '';
+  const desc = (document.getElementById('ca-desc') || {}).value ? document.getElementById('ca-desc').value.trim() : '';
+  if (!business || !title) { alert('נא למלא שם עסק ונושא תביעה'); return; }
+  const user = auth.currentUser;
+  let nick = 'אנונימי';
+  if (user) { try { const p = JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}'); nick = p.nickname || user.displayName || (user.email ? user.email.split('@')[0] : 'משתמש'); } catch (e) { nick = user.displayName || 'משתמש'; } }
+  const albums = (typeof photoGetAlbums === 'function') ? photoGetAlbums() : [];
+  albums.unshift({
+    id: 'ph' + Date.now(),
+    title: '⚖️ ' + title,
+    summary: desc,
+    images: [],
+    author: nick,
+    authorId: user ? user.uid : '',
+    category: 'תביעה ייצוגית',
+    isClassAction: true,
+    businessName: business,
+    region: '',
+    categoryColor: '#0f172a',
+    timestamp: new Date().toLocaleDateString('he-IL'),
+    createdAt: Date.now(),
+    likes: 0,
+    approved: (typeof isEditMode !== 'undefined' && isEditMode)
+  });
+  if (typeof mainContent !== 'undefined' && mainContent) mainContent.innerHTML = buildPhotosPage(albums, 'reviews');
+  if (typeof saveCurrentPageContent === 'function') saveCurrentPageContent();
+  const m = document.getElementById('classaction-modal'); if (m) m.remove();
+  alert((typeof isEditMode !== 'undefined' && isEditMode) ? 'התביעה פורסמה!' : 'התביעה נשלחה לאישור מנהל ותופיע בקרוב.');
+}
+window.submitClassAction = submitClassAction;
 
 function openPhotoEditModal(id, e) {
   if (e) {
@@ -14285,6 +14373,14 @@ onValue(ref(db, 'website'), (snapshot) => {
     } else if (!_ptp.title) {
       _ptp.title = 'שותפויות 🤝';
     }
+    // עמוד "ביקורת"
+    const _rvp = pList.find(p => p && p.id === 'page-reviews-main');
+    if (!_rvp) {
+      const _rvpc = (typeof buildPhotosPage === 'function') ? buildPhotosPage([], 'reviews') : '<div class="photos-page reviews-page" data-page-id="page-reviews-main" data-section="reviews" data-photos-json="%5B%5D"></div>';
+      pList.push({ id: 'page-reviews-main', title: 'ביקורת ⭐', content: _rvpc });
+    } else if (!_rvp.title) {
+      _rvp.title = 'ביקורת ⭐';
+    }
     // עמוד "מידע" — קיים תמיד אך מוסתר
     const _ip = pList.find(p => p && p.id === 'page-info-main');
     const _ipc = '<div class="info-page" data-page-id="page-info-main"></div>';
@@ -14340,6 +14436,8 @@ onValue(ref(db, 'website'), (snapshot) => {
     if (pages.some(p => p && p.id === 'page-secondhand-main') && !navs.includes('page-secondhand-main')) navs.push('page-secondhand-main');
     // עמוד "שותפויות" תמיד מופיע בתפריט העליון
     if (pages.some(p => p && p.id === 'page-partnerships-main') && !navs.includes('page-partnerships-main')) navs.push('page-partnerships-main');
+    // עמוד "ביקורת" תמיד מופיע בתפריט העליון
+    if (pages.some(p => p && p.id === 'page-reviews-main') && !navs.includes('page-reviews-main')) navs.push('page-reviews-main');
     // עמודים כמו "שאלות גולשים", "הצעות", "תמונות" ו"סיפורים" הם עמודי צד בלבד (מוסרים מהתפריט העליון)
     navs = navs.filter(id => !isSideOnlyId(id));
     // מסירים מהתפריט את העמודים שהוסרו
@@ -14575,6 +14673,8 @@ function setSectionCategoryFilter(section, cat) {
     mainContent.innerHTML = buildSecondhandPage();
   } else if (section === 'partnerships' && typeof buildPartnershipsPage === 'function') {
     mainContent.innerHTML = buildPartnershipsPage();
+  } else if (section === 'reviews' && typeof buildReviewsPage === 'function') {
+    mainContent.innerHTML = buildReviewsPage();
   } else if (typeof buildPhotosPage === 'function' && typeof photoGetAlbums === 'function') {
     mainContent.innerHTML = buildPhotosPage(photoGetAlbums(), 'photos');
   }
