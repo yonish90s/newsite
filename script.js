@@ -6247,13 +6247,22 @@ function storyRenderPage() {
   const idx = Math.max(0, Math.min(window.currentStoryPage || 0, pagesArr.length - 1));
   window.currentStoryPage = idx;
   const pg = pagesArr[idx];
-  if (pg.type === 'text') {
+  const isText = pg.type === 'text';
+  view.classList.toggle('story-view-text', isText);
+  view.classList.toggle('story-view-image', !isText);
+  if (isText) {
     view.innerHTML = `<div class="story-page-inner"><div class="story-text-page">${artEsc(pg.text || '').replace(/\n/g, '<br>')}</div></div>`;
   } else {
     view.innerHTML = `<div class="story-page-inner"><img src="${pg.url}" class="story-img-page" onclick="artGalleryById('stories', window.currentStoryId, this.getAttribute('src'))"></div>`;
   }
   view.scrollTop = 0;
-  setTimeout(storyUpdateScrollHint, 60);
+  // רמז "גללו לעוד" — רק בעמוד טקסט
+  if (isText) {
+    setTimeout(storyUpdateScrollHint, 60);
+  } else {
+    const hint = document.getElementById('story-scroll-hint');
+    if (hint) hint.hidden = true;
+  }
   document.querySelectorAll('.story-page-thumb').forEach(t => t.classList.toggle('active', Number(t.dataset.idx) === idx));
   const counter = document.getElementById('story-page-counter');
   if (counter) counter.textContent = `${idx + 1} / ${pagesArr.length}`;
@@ -6470,17 +6479,7 @@ function renderStoryImagesEditor() {
 function storySetPageText(i, val) {
   if (storyImageList[i]) storyImageList[i] = { type: 'text', text: val };
   const c = document.getElementById('story-txt-count-' + i);
-  if (c) {
-    const n = String(val).split('\n').length;
-    if (n > STORY_MAX_LINES) {
-      const pagesN = Math.ceil(n / STORY_MAX_LINES);
-      c.textContent = n + ' שורות · יתחלק אוטומטית ל-' + pagesN + ' עמודים';
-      c.style.color = '#2563eb';
-    } else {
-      c.textContent = n + ' / ' + STORY_MAX_LINES + ' שורות';
-      c.style.color = n >= STORY_MAX_LINES ? '#dc2626' : '#64748b';
-    }
-  }
+  if (c) { c.textContent = String(val).split('\n').length + ' שורות'; c.style.color = '#64748b'; }
 }
 window.storySetPageText = storySetPageText;
 
@@ -7395,26 +7394,9 @@ function qpBubble(role, html) {
   box.scrollTop = box.scrollHeight;
 }
 
-// חלוקה אוטומטית של עמוד טקסט ארוך לכמה עמודים (עד STORY_MAX_LINES שורות בכל עמוד)
-// לדוגמה: 100 שורות → 5 עמודים של 20
+// עמוד טקסט מכיל את כל הסיפור (ללא חלוקה) — הטקסט הארוך פשוט נגלל בתוך המסגרת
 function splitStoryTextPages(arr) {
-  const max = (typeof STORY_MAX_LINES !== 'undefined') ? STORY_MAX_LINES : 20;
-  const out = [];
-  (arr || []).forEach(pg => {
-    if (pg && pg.type === 'text') {
-      const lines = String(pg.text || '').split('\n');
-      if (lines.length > max) {
-        for (let i = 0; i < lines.length; i += max) {
-          out.push({ type: 'text', text: lines.slice(i, i + max).join('\n') });
-        }
-      } else {
-        out.push(pg);
-      }
-    } else {
-      out.push(pg);
-    }
-  });
-  return out;
+  return arr || [];
 }
 window.splitStoryTextPages = splitStoryTextPages;
 

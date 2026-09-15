@@ -4844,12 +4844,14 @@ html.hide-site-images .photo-mini-thumb {
   background: #fafafa;
   border: 1px solid #f0f0f0;
   border-radius: 14px;
-  overflow-y: scroll;
   overflow-x: hidden;
+  overflow-y: hidden;
   box-sizing: border-box;
   scrollbar-width: thin;
   scrollbar-color: #e11d48 #eef0f3;
 }
+/* פס גלילה קבוע — רק בעמוד טקסט (לא בתמונות) */
+.story-page-view.story-view-text { overflow-y: scroll; }
 /* פס גלילה קבוע וגלוי תמיד — כדי שהמשתמש ידע שאפשר לגלול */
 .story-page-view::-webkit-scrollbar { width: 10px; }
 .story-page-view::-webkit-scrollbar-track { background: #eef0f3; border-radius: 0 14px 14px 0; }
