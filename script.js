@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getDatabase, ref, set, get, child, onValue, push, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getDatabase, ref, set, get, child, onValue, push, update, increment } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 // הגדרות הפרויקט של Firebase
 const firebaseConfig = {
@@ -161,6 +161,28 @@ function updateUserActivity(user) {
   }
 }
 window.updateUserActivity = updateUserActivity;
+
+// --- מעקב ביקורים לאנליטיקת האתר (למנהל) ---
+function _analyticsDayKey(d) { d = d || new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function _analyticsMonthKey(d) { d = d || new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); }
+function trackVisit() {
+  try {
+    const today = _analyticsDayKey();
+    // צפיית עמוד בכל טעינה
+    update(ref(db, 'website/analytics'), { pageviews: increment(1) }).catch(function () {});
+    // ביקור ייחודי — נספר פעם אחת ביום לכל דפדפן
+    const last = localStorage.getItem('last_visit_day');
+    if (last !== today) {
+      localStorage.setItem('last_visit_day', today);
+      update(ref(db, 'website/analytics'), {
+        visits: increment(1),
+        ['daily/' + today]: increment(1),
+        ['monthly/' + _analyticsMonthKey()]: increment(1)
+      }).catch(function () {});
+    }
+  } catch (e) {}
+}
+window.trackVisit = trackVisit;
 
 /**
  * ============================================================================
@@ -523,6 +545,7 @@ async function initSite() {
   renderTopNav();
   renderPage();
   updateFABsVisibility();
+  if (typeof trackVisit === 'function') { try { trackVisit(); } catch (e) {} }
 
   // סנכרון ברקע מ-Firebase DB
   try {
@@ -8266,11 +8289,43 @@ function buildInfoPage() {
   if (!allowed) {
     return `<div class="info-page" data-page-id="page-info-main"><div class="comm-inner"><div style="text-align:center; padding:60px 20px; color:#64748b; font-size:16px; font-weight:700;">🔒 עמוד זה גלוי למנהל בלבד.</div></div></div>`;
   }
+  const kpi = (id, label, icon, color) => `
+    <div style="background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:16px; box-shadow:0 2px 8px rgba(0,0,0,0.03);">
+      <div style="font-size:12px; color:#64748b; font-weight:800; display:flex; align-items:center; gap:6px;">${icon} ${label}</div>
+      <div id="${id}" style="font-size:26px; font-weight:900; color:${color}; margin-top:6px;">…</div>
+    </div>`;
+  const analyticsHTML = `
+    <div style="margin-bottom:24px;">
+      <div style="font-size:16px; font-weight:900; color:#0f172a; margin-bottom:12px;">📊 נתוני האתר <span style="font-size:12px; color:#94a3b8; font-weight:700;">(מתעדכן בזמן אמת)</span></div>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:12px; margin-bottom:14px;">
+        ${kpi('an-today', 'כניסות היום', '👥', '#e11d48')}
+        ${kpi('an-month', 'כניסות החודש', '📅', '#e11d48')}
+        ${kpi('an-total', 'סה״כ כניסות', '🚪', '#0f172a')}
+        ${kpi('an-pageviews', 'צפיות בעמודים', '👁️', '#0f172a')}
+        ${kpi('an-users', 'משתמשים רשומים', '🧑‍🤝‍🧑', '#2563eb')}
+        ${kpi('an-active24', 'פעילים ב-24 שעות', '🟢', '#16a34a')}
+        ${kpi('an-active30', 'פעילים ב-30 יום', '📈', '#16a34a')}
+        ${kpi('an-galleries', 'גלריות', '🖼️', '#8b5cf6')}
+        ${kpi('an-stories', 'סיפורים', '📖', '#8b5cf6')}
+        ${kpi('an-products', 'מוצרי יד שניה', '🛒', '#8b5cf6')}
+        ${kpi('an-communities', 'קהילות', '👥', '#f59e0b')}
+        ${kpi('an-questions', 'שאלות גולשים', '❓', '#f59e0b')}
+        ${kpi('an-likes', 'סה״כ לייקים', '❤️', '#ef4444')}
+        ${kpi('an-views', 'סה״כ צפיות בתכנים', '🔥', '#ef4444')}
+      </div>
+      <div style="background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:16px; box-shadow:0 2px 8px rgba(0,0,0,0.03);">
+        <div style="font-size:13px; font-weight:900; color:#0f172a; margin-bottom:12px;">כניסות ב-7 הימים האחרונים</div>
+        <div id="an-chart" style="display:flex; align-items:flex-end; justify-content:space-between; gap:8px; height:130px;"></div>
+      </div>
+    </div>`;
+  setTimeout(function () { if (typeof loadAnalytics === 'function') loadAnalytics(); }, 60);
   return `
     <div class="info-page" data-page-id="page-info-main">
       <div class="comm-inner">
         <div style="max-width:900px; margin:0 auto; direction:rtl; text-align:right;">
           <h2 style="font-size:24px; font-weight:900; color:#0f172a; margin:0 0 16px;">🔒 מידע (למנהל בלבד)</h2>
+
+          ${analyticsHTML}
 
           <div style="background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:18px; margin-bottom:24px; box-shadow:0 4px 15px rgba(0,0,0,0.03);">
             <div style="font-size:16px; font-weight:900; color:#0f172a; margin-bottom:8px;">📝 המידע שלי</div>
@@ -8285,6 +8340,79 @@ function buildInfoPage() {
     </div>`;
 }
 window.buildInfoPage = buildInfoPage;
+
+// שולף מערך פריטים מתוך תוכן עמוד (data-photos-json / data-stories-json)
+function _analyticsPageItems(matchStr, excludeStr) {
+  if (typeof pages === 'undefined' || !Array.isArray(pages)) return [];
+  const p = pages.find(pg => pg && (pg.content || '').includes(matchStr) && (!excludeStr || !(pg.content || '').includes(excludeStr)));
+  if (!p) return [];
+  const m = (p.content || '').match(/data-(?:photos|stories)-json="([^"]*)"/);
+  if (!m) return [];
+  try { return JSON.parse(decodeURIComponent(m[1])) || []; } catch (e) { return []; }
+}
+
+function renderAnalyticsChart(daily) {
+  const el = document.getElementById('an-chart');
+  if (!el) return;
+  const days = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    days.push({ key: _analyticsDayKey(d), label: ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'][d.getDay()], val: (daily && daily[_analyticsDayKey(d)]) || 0 });
+  }
+  const max = Math.max(1, ...days.map(d => d.val));
+  el.innerHTML = days.map(d => {
+    const h = Math.round((d.val / max) * 100);
+    return `<div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; height:100%;">
+      <div style="font-size:11px; font-weight:800; color:#334155;">${d.val}</div>
+      <div style="width:100%; flex:1; display:flex; align-items:flex-end;"><div style="width:100%; height:${h}%; min-height:3px; background:linear-gradient(180deg,#f43f5e,#e11d48); border-radius:6px 6px 0 0;"></div></div>
+      <div style="font-size:11px; color:#94a3b8; font-weight:700;">${d.label}</div>
+    </div>`;
+  }).join('');
+}
+window.renderAnalyticsChart = renderAnalyticsChart;
+
+async function loadAnalytics() {
+  const setTxt = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  const num = n => (Number(n) || 0).toLocaleString('he-IL');
+  // נתונים מ-Firebase
+  try {
+    const [an, us, comm, q] = await Promise.all([
+      get(ref(db, 'website/analytics')).then(s => s.val() || {}).catch(() => ({})),
+      get(ref(db, 'website/users')).then(s => s.val() || {}).catch(() => ({})),
+      get(ref(db, 'website/communities')).then(s => s.val() || {}).catch(() => ({})),
+      get(ref(db, 'website/questions')).then(s => s.val() || {}).catch(() => ({}))
+    ]);
+    const today = _analyticsDayKey(), month = _analyticsMonthKey();
+    setTxt('an-today', num((an.daily && an.daily[today]) || 0));
+    setTxt('an-month', num((an.monthly && an.monthly[month]) || 0));
+    setTxt('an-total', num(an.visits || 0));
+    setTxt('an-pageviews', num(an.pageviews || 0));
+    const uids = Object.keys(us || {});
+    setTxt('an-users', num(uids.length));
+    const now = Date.now();
+    let a24 = 0, a30 = 0;
+    uids.forEach(u => { const ls = us[u] && us[u].last_seen; if (ls) { if (now - ls <= 86400000) a24++; if (now - ls <= 2592000000) a30++; } });
+    setTxt('an-active24', num(a24));
+    setTxt('an-active30', num(a30));
+    setTxt('an-communities', num(Object.keys(comm || {}).length));
+    setTxt('an-questions', num(Object.keys(q || {}).length));
+    renderAnalyticsChart(an.daily || {});
+  } catch (e) {}
+  // נתוני תוכן מהעמודים המקומיים
+  try {
+    const galleries = _analyticsPageItems('photos-page', 'secondhand-page').filter(a => a && a.id);
+    const stories = _analyticsPageItems('stories-page');
+    const products = _analyticsPageItems('secondhand-page');
+    setTxt('an-galleries', num(galleries.length));
+    setTxt('an-stories', num(stories.length));
+    setTxt('an-products', num(products.length));
+    let likes = 0, views = 0;
+    galleries.concat(products).forEach(a => { likes += (a.likes || 0); views += (typeof photoGetViews === 'function' ? photoGetViews(a.id) : (a.views || 0)); });
+    setTxt('an-likes', num(likes));
+    setTxt('an-views', num(views));
+  } catch (e) {}
+}
+window.loadAnalytics = loadAnalytics;
 
 // ============================================================
 // עמוד "שאלות גולשים" — לוח שאלות ועצות (Q&A) מבוסס Firebase
