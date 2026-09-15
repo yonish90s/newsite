@@ -526,9 +526,29 @@
           <option value="זוג">זוג</option>
         </select>
       </div>
-      <div class="photo-field">
+      <div class="photo-field" id="photo-field-age">
         <label style="font-size:13px; font-weight:600;">גיל</label>
         <input id="photo-age" type="number" min="18" max="99" inputmode="numeric" placeholder="לדוגמה: 24" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box; background: white;">
+      </div>
+      <div class="photo-field" id="photo-field-offer" style="display:none;">
+        <label style="font-size:13px; font-weight:600;">סוג ההצעה <span style="color:red">*</span></label>
+        <select id="photo-offer-type" onchange="photoOfferTypeChanged()" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box; background:white;">
+          <option value="מכירה">מכירה</option>
+          <option value="השאלה">השאלה</option>
+          <option value="החלפה">החלפה</option>
+        </select>
+      </div>
+      <div class="photo-field" id="photo-field-offerval" style="display:none;">
+        <label id="photo-offerval-label" style="font-size:13px; font-weight:600;">מחיר (₪)</label>
+        <input id="photo-offer-value" type="text" placeholder="לדוגמה: 250" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+      </div>
+      <div class="photo-field" id="photo-field-contract" style="display:none; grid-column:1 / -1;">
+        <label style="font-size:13px; font-weight:600;">📜 תנאי חוזה ההשאלה — הוסיפו/הסירו סעיפים</label>
+        <div id="photo-contract-list" style="display:flex; flex-direction:column; gap:6px; margin:6px 0;"></div>
+        <div style="display:flex; gap:6px;">
+          <input id="photo-contract-input" type="text" placeholder="הוספת סעיף חדש..." onkeydown="if(event.key==='Enter'){event.preventDefault(); photoContractAdd();}" style="flex:1; padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; box-sizing:border-box;">
+          <button type="button" onclick="photoContractAdd()" style="background:#0f172a; color:#fff; border:none; border-radius:8px; padding:0 16px; font-weight:800; cursor:pointer;">➕ הוסף</button>
+        </div>
       </div>
       <div class="photo-field">
         <label style="font-size:13px; font-weight:600;">מיקום</label>
@@ -1088,6 +1108,6 @@
   </div>
 </div>
 
-  <script type="module" src="./script.js?v=1147"></script>
+  <script type="module" src="./script.js?v=1149"></script>
 </body>
 </html>

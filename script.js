@@ -230,8 +230,9 @@ const SIDE_ONLY_PAGE_IDS = ['page-questions-main', 'page-offers-main', 'page-pho
 // זיהוי עמוד צד לפי מזהה, תוכן או כותרת (העמודים עשויים להיווצר עם מזהים דינמיים)
 function isSideOnlyPage(p) {
   if (!p) return false;
-  // "מוצרי יד שניה" הוא עמוד ראשי בתפריט העליון (למרות שתוכנו מסוג photos-page)
+  // "מוצרי יד שניה" ו"שותפויות" הם עמודים ראשיים בתפריט העליון (למרות תוכן photos-page)
   if (p.id === 'page-secondhand-main' || (p.content || '').includes('secondhand-page') || (p.title || '').includes('יד שניה')) return false;
+  if (p.id === 'page-partnerships-main' || (p.content || '').includes('partnerships-page') || (p.title || '').includes('שותפויות')) return false;
   if (SIDE_ONLY_PAGE_IDS.includes(p.id)) return true;
   const t = p.title || '', c = p.content || '';
   if (c.includes('photos-page') || c.includes('stories-page') || c.includes('questions-page') || c.includes('offers-page')) return true;
@@ -453,6 +454,17 @@ function sanitizeToOnlyPhotosAndStories() {
     pages.push({ id: 'page-secondhand-main', title: 'מוצרי יד שניה 🛒', content: _shContent });
   } else {
     if (!_shPage.title) _shPage.title = 'מוצרי יד שניה 🛒';
+  }
+
+  // עמוד "שותפויות" — עמוד גריד (כמו יד 2)
+  const _ptPage = pages.find(p => p && p.id === 'page-partnerships-main');
+  if (!_ptPage) {
+    const _ptContent = (typeof buildPhotosPage === 'function')
+      ? buildPhotosPage([], 'partnerships')
+      : '<div class="photos-page partnerships-page" data-page-id="page-partnerships-main" data-section="partnerships" data-photos-json="%5B%5D"></div>';
+    pages.push({ id: 'page-partnerships-main', title: 'שותפויות 🤝', content: _ptContent });
+  } else {
+    if (!_ptPage.title) _ptPage.title = 'שותפויות 🤝';
   }
 
   // מסירים לצמיתות את העמודים "יד שניה" ו"השוואת מחירים"
@@ -8157,6 +8169,13 @@ function buildSecondhandPage() {
 }
 window.buildSecondhandPage = buildSecondhandPage;
 
+// עמוד "שותפויות" — גריד באותו קונספט
+function buildPartnershipsPage() {
+  const albums = (typeof photoGetAlbums === 'function') ? photoGetAlbums() : [];
+  return buildPhotosPage(albums, 'partnerships');
+}
+window.buildPartnershipsPage = buildPartnershipsPage;
+
 // ============================================================
 // עמוד "מידע" — לוח בקרה למנהל בלבד. משתמשים (רשומים ואורחים) שולחים
 // מידע דרך טופס ציבורי; המנהל כותב הערות משלו ורואה את כל ההגשות.
@@ -9685,8 +9704,9 @@ function buildLeftSidebarBox(popularHTML, section) {
   };
   // קבוצה "קהילות" = תמונות, סיפורים
   const isPhotosOrStories = (p) => {
-    // "מוצרי יד שניה" אינו חלק מקבוצת קהילות (למרות שתוכנו photos-page)
+    // "מוצרי יד שניה"/"שותפויות" אינם חלק מקבוצת קהילות (למרות תוכן photos-page)
     if (p.id === 'page-secondhand-main' || (p.content || '').includes('secondhand-page') || (p.title || '').includes('יד שניה')) return false;
+    if (p.id === 'page-partnerships-main' || (p.content || '').includes('partnerships-page') || (p.title || '').includes('שותפויות')) return false;
     const t = p.title || '', c = p.content || '';
     return p.id === 'page-photos-main' || p.id === 'page-stories-main'
       || t.includes('תמונות') || t.includes('סיפורים')
@@ -9785,7 +9805,7 @@ function buildPhotosPage(albums, section) {
   albums = albums.filter(p => !p.adminOnly || _isAdminView);
 
   // סינון לפי סרגל הקטגוריות (תמונות / קהילות) — "הכל · כללי · לעסקים"
-  if ((section === 'photos' || section === 'communities' || section === 'secondhand') && typeof filterAlbumsByCategory === 'function') {
+  if ((section === 'photos' || section === 'communities' || section === 'secondhand' || section === 'partnerships') && typeof filterAlbumsByCategory === 'function') {
     albums = filterAlbumsByCategory(albums, section);
   }
   // סינון ייעודי למוצרי יד שניה (סוג הצעה / מחיר / מיקום)
@@ -9985,9 +10005,16 @@ function buildPhotosPage(albums, section) {
     addBtnHTML = `<button onclick="openPhotoModal()" style="background:#e11d48; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: white; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.2s;">
         ➕ הוסף מוצר יד שניה
        </button>`;
+  } else if (section === 'partnerships') {
+    sectionTitle = 'כל השותפויות';
+    searchPlaceholder = '🔍 חיפוש שותפויות...';
+    noResultsText = 'לא נמצאו שותפויות התואמות לחיפוש';
+    addBtnHTML = `<button onclick="openPhotoModal()" style="background:#e11d48; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: white; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.2s;">
+        ➕ פרסום שותפות חדשה
+       </button>`;
   }
 
-  return `<div class="articles-page photos-page ${section === 'ideas' ? 'ideas-page' : ''} ${section === 'communities' ? 'communities-page' : ''} ${section === 'secondhand' ? 'secondhand-page' : ''} photo-cols-${photoGridCols}${photoImagesMode ? '' : ' text-mode'}" data-section="${section}" data-photos-json="${json}">
+  return `<div class="articles-page photos-page ${section === 'ideas' ? 'ideas-page' : ''} ${section === 'communities' ? 'communities-page' : ''} ${section === 'secondhand' ? 'secondhand-page' : ''} ${section === 'partnerships' ? 'partnerships-page' : ''} photo-cols-${photoGridCols}${photoImagesMode ? '' : ' text-mode'}" data-section="${section}" data-photos-json="${json}">
     <div class="art-inner">
       <div class="art-featured-grid">${featuredHTML}</div>
       <div class="art-layout">
@@ -10165,35 +10192,48 @@ function secondhandBuyBoxHTML(a) {
       <div style="background:#eff6ff; border-right:4px solid #3b82f6; padding:12px 14px; border-radius:10px; font-size:12.5px; color:#1e40af; line-height:1.5; margin-top:12px; font-weight:600;">
         💡 <b>טיפ לרכישה בטוחה:</b> בדקו את המוצר לפני התשלום ותאמו מפגש במקום ציבורי ומואר.
       </div>
+      ${(a.offerType === 'השאלה' && Array.isArray(a.loanTerms) && a.loanTerms.length) ? `
+      <div style="margin-top:16px; background:#fff; border:1.5px solid #cbd5e1; border-radius:12px; padding:14px;">
+        <div style="font-size:14px; font-weight:900; color:#0f172a; margin-bottom:10px; display:flex; align-items:center; gap:6px;">📜 תנאי חוזה ההשאלה</div>
+        <div style="display:flex; flex-direction:column; gap:6px;">
+          ${a.loanTerms.map((t, i) => `<div style="font-size:12.5px; color:#334155; line-height:1.5; display:flex; gap:6px;"><span style="color:#2563eb; font-weight:800;">${i + 1}.</span><span>${artEsc(t)}</span></div>`).join('')}
+        </div>
+        <div style="font-size:11px; color:#94a3b8; margin-top:10px;">* התנאים מוצגים כהסכמה בין המשאיל לשואל.</div>
+      </div>` : ''}
     </div>`;
 }
 
 // צד שמאל במודעת יד שניה: מחיר ופרטי המוצר
 function secondhandDetailsBoxHTML(a) {
-  let price = (a.price != null && String(a.price).trim()) ? String(a.price).trim() : '';
-  if (price && !/[₪$]/.test(price) && /\d/.test(price)) price = '₪' + price;
-  if (!price) price = 'לפי סיכום';
   const offer = a.offerType || 'מכירה';
   const region = a.region || '—';
-  const cat = a.category || '—';
+  const detail = (a.offerDetail || '').trim();
   const row = (label, val) => `
         <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:12px 14px;">
           <div style="font-size:11.5px; color:#64748b; font-weight:800; margin-bottom:4px;">${label}</div>
           <div style="font-size:13.5px; font-weight:800; color:#1e293b;">${artEsc(val)}</div>
         </div>`;
+  // תיבה ראשית לפי סוג ההצעה
+  let mainBox;
+  if (offer === 'השאלה') {
+    mainBox = `<div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:12px; padding:12px 14px;"><div style="font-size:11.5px; color:#1e40af; font-weight:800; margin-bottom:4px;">🔄 להשאלה · לתקופה</div><div style="font-size:18px; font-weight:900; color:#1d4ed8;">${artEsc(detail || 'לפי סיכום')}</div></div>`;
+  } else if (offer === 'החלפה') {
+    mainBox = `<div style="background:#fef3c7; border:1px solid #fde68a; border-radius:12px; padding:12px 14px;"><div style="font-size:11.5px; color:#92400e; font-weight:800; margin-bottom:4px;">🔁 להחלפה תמורת</div><div style="font-size:18px; font-weight:900; color:#b45309;">${artEsc(detail || 'לפי סיכום')}</div></div>`;
+  } else {
+    let price = (a.price != null && String(a.price).trim()) ? String(a.price).trim() : '';
+    if (price && !/[₪$]/.test(price) && /\d/.test(price)) price = '₪' + price;
+    if (!price) price = 'לפי סיכום';
+    mainBox = `<div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:12px; padding:12px 14px;"><div style="font-size:11.5px; color:#166534; font-weight:800; margin-bottom:4px;">💰 מחיר</div><div style="font-size:18px; font-weight:900; color:#15803d;">${artEsc(price)}</div></div>`;
+  }
   return `
     <div class="idea-tech-box">
       <div style="font-size:16px; font-weight:900; color:#0f172a; border-bottom:2.5px solid #10b981; padding-bottom:10px; margin-bottom:16px; display:flex; align-items:center; gap:8px;">
         <span>💰 מחיר ופרטים</span>
       </div>
       <div style="display:flex; flex-direction:column; gap:12px;">
-        <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:12px; padding:12px 14px;">
-          <div style="font-size:11.5px; color:#166534; font-weight:800; margin-bottom:4px;">💰 מחיר</div>
-          <div style="font-size:18px; font-weight:900; color:#15803d;">${artEsc(price)}</div>
-        </div>
+        ${mainBox}
         ${row('🏷️ סוג ההצעה', offer)}
         ${row('📍 מיקום', region)}
-        ${row('📂 קטגוריה', cat)}
         <button onclick="dmStartAboutGallery('${artEsc(a.authorId || '')}', '${artEsc(a.author || '')}', '${artEsc(a.id)}')" style="width:100%; background:linear-gradient(135deg,#10b981,#059669); color:#fff; border:none; padding:12px; border-radius:12px; font-weight:800; font-size:14px; cursor:pointer; box-shadow:0 4px 14px rgba(16,185,129,0.3); margin-top:6px;">
           💬 צור קשר עם המוכר
         </button>
@@ -11048,10 +11088,77 @@ function openPhotoModal() {
     prev.style.display = 'none';
     prev.src = '';
   }
+  // התאמת המודל לעמוד יד 2: הצגת "סוג הצעה" + שדה מותנה, הסתרת גיל
+  const _isSh = (typeof photoCurrentSection === 'function') && photoCurrentSection() === 'secondhand';
+  const _fAge = document.getElementById('photo-field-age');
+  const _fOffer = document.getElementById('photo-field-offer');
+  const _fOfferVal = document.getElementById('photo-field-offerval');
+  if (_fAge) _fAge.style.display = _isSh ? 'none' : '';
+  if (_fOffer) _fOffer.style.display = _isSh ? '' : 'none';
+  if (_fOfferVal) _fOfferVal.style.display = _isSh ? '' : 'none';
+  if (_isSh) {
+    const ot = document.getElementById('photo-offer-type'); if (ot) ot.value = 'מכירה';
+    const ov = document.getElementById('photo-offer-value'); if (ov) ov.value = '';
+    photoLoanTerms = [];
+    if (typeof photoOfferTypeChanged === 'function') photoOfferTypeChanged();
+  }
   const modalTitle = document.querySelector('#photo-modal h3');
-  if (modalTitle) modalTitle.textContent = '🖼️ העלאת גלריית תמונות חדשה';
+  if (modalTitle) modalTitle.textContent = _isSh ? '🛒 הוספת מוצר יד שניה' : '🖼️ העלאת גלריית תמונות חדשה';
   document.getElementById('photo-modal').style.display = 'flex';
 }
+
+// --- מנסח חוזה השאלה: סעיפים מובנים שאפשר להוסיף/להסיר ---
+const PHOTO_LOAN_DEFAULT_TERMS = [
+  'המוצר יוחזר במצב שבו התקבל',
+  'תקופת ההשאלה מוסכמת מראש בין הצדדים',
+  'נזק, אובדן או גניבה — באחריות השואל',
+  'איסוף והחזרה בתיאום מראש',
+  'אין להעביר את המוצר לצד שלישי ללא אישור'
+];
+let photoLoanTerms = [];
+function renderPhotoContract() {
+  const box = document.getElementById('photo-contract-list');
+  if (!box) return;
+  if (!photoLoanTerms.length) { box.innerHTML = '<div style="font-size:12px; color:#94a3b8;">אין סעיפים — הוסיפו למטה.</div>'; return; }
+  box.innerHTML = photoLoanTerms.map((t, i) => `
+    <div style="display:flex; align-items:center; gap:8px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:8px 10px;">
+      <span style="flex:1; font-size:13px; font-weight:600; color:#1e293b;">${i + 1}. ${artEsc(t)}</span>
+      <button type="button" onclick="photoContractRemove(${i})" title="הסר סעיף" style="background:#fef2f2; color:#ef4444; border:1px solid #fecaca; border-radius:6px; width:24px; height:24px; cursor:pointer; font-size:12px; flex-shrink:0;">✕</button>
+    </div>`).join('');
+}
+function photoContractAdd() {
+  const inp = document.getElementById('photo-contract-input');
+  if (!inp) return;
+  const v = inp.value.trim();
+  if (!v) return;
+  photoLoanTerms.push(v.slice(0, 160));
+  inp.value = '';
+  renderPhotoContract();
+}
+function photoContractRemove(i) { photoLoanTerms.splice(i, 1); renderPhotoContract(); }
+window.photoContractAdd = photoContractAdd;
+window.photoContractRemove = photoContractRemove;
+
+// מעדכן את השדה המותנה לפי סוג ההצעה: מכירה→מחיר, השאלה→תקופה+חוזה, החלפה→מוצר
+function photoOfferTypeChanged() {
+  const ot = document.getElementById('photo-offer-type');
+  const lbl = document.getElementById('photo-offerval-label');
+  const val = document.getElementById('photo-offer-value');
+  if (!ot || !lbl || !val) return;
+  const t = ot.value;
+  const contractField = document.getElementById('photo-field-contract');
+  if (t === 'השאלה') {
+    lbl.textContent = 'לכמה זמן? (תקופת ההשאלה)'; val.placeholder = 'לדוגמה: שבוע / חודש';
+    if (contractField) contractField.style.display = '';
+    if (!photoLoanTerms.length) photoLoanTerms = PHOTO_LOAN_DEFAULT_TERMS.slice();
+    renderPhotoContract();
+  } else {
+    if (contractField) contractField.style.display = 'none';
+    if (t === 'החלפה') { lbl.textContent = 'להחלפה תמורת מה?'; val.placeholder = 'לדוגמה: טלפון / אופניים'; }
+    else { lbl.textContent = 'מחיר (₪)'; val.placeholder = 'לדוגמה: 250'; }
+  }
+}
+window.photoOfferTypeChanged = photoOfferTypeChanged;
 
 function openPhotoEditModal(id, e) {
   if (e) {
@@ -11100,8 +11207,22 @@ function openPhotoEditModal(id, e) {
     }
   }
   
+  // התאמת המודל לעריכת מוצר יד 2
+  const _isShEdit = (typeof photoCurrentSection === 'function') && photoCurrentSection() === 'secondhand';
+  const _fAge = document.getElementById('photo-field-age');
+  const _fOffer = document.getElementById('photo-field-offer');
+  const _fOfferVal = document.getElementById('photo-field-offerval');
+  if (_fAge) _fAge.style.display = _isShEdit ? 'none' : '';
+  if (_fOffer) _fOffer.style.display = _isShEdit ? '' : 'none';
+  if (_fOfferVal) _fOfferVal.style.display = _isShEdit ? '' : 'none';
+  if (_isShEdit) {
+    const ot = document.getElementById('photo-offer-type'); if (ot) ot.value = album.offerType || 'מכירה';
+    photoLoanTerms = Array.isArray(album.loanTerms) ? album.loanTerms.slice() : [];
+    if (typeof photoOfferTypeChanged === 'function') photoOfferTypeChanged();
+    const ov = document.getElementById('photo-offer-value'); if (ov) ov.value = (album.offerType === 'מכירה' ? (album.price || '') : (album.offerDetail || ''));
+  }
   const modalTitle = document.querySelector('#photo-modal h3');
-  if (modalTitle) modalTitle.textContent = '✏️ עריכת גלריית תמונות';
+  if (modalTitle) modalTitle.textContent = _isShEdit ? '✏️ עריכת מוצר יד שניה' : '✏️ עריכת גלריית תמונות';
   document.getElementById('photo-modal').style.display = 'flex';
 }
 window.openPhotoEditModal = openPhotoEditModal;
@@ -11186,6 +11307,12 @@ document.getElementById('photo-save').addEventListener('click', () => {
     authorNickname = 'מנהל';
   }
 
+  // שדות מוצר יד שניה (אם מפרסמים בעמוד יד 2)
+  const _isShSave = _saveSection === 'secondhand';
+  const _offerType = _isShSave ? ((document.getElementById('photo-offer-type') || {}).value || 'מכירה') : '';
+  const _offerVal = _isShSave ? (((document.getElementById('photo-offer-value') || {}).value || '').trim()) : '';
+  const _shFields = _isShSave ? { offerType: _offerType, price: (_offerType === 'מכירה' ? _offerVal : ''), offerDetail: (_offerType !== 'מכירה' ? _offerVal : ''), loanTerms: (_offerType === 'השאלה' ? (photoLoanTerms || []).slice() : []) } : {};
+
   if (editingPhotoId) {
     const existingIdx = albums.findIndex(x => x.id === editingPhotoId);
     if (existingIdx > -1) {
@@ -11194,9 +11321,10 @@ document.getElementById('photo-save').addEventListener('click', () => {
         title,
         summary: document.getElementById('photo-summary').value.trim(),
         images: photoImgDataList.filter(Boolean),
-        category: document.getElementById('photo-category').value.trim() || 'כללי',
+        category: _isShSave ? _offerType : (document.getElementById('photo-category').value.trim() || 'כללי'),
         ageRange: (document.getElementById('photo-age') || {}).value || '',
         region: (document.getElementById('photo-region') || {}).value || '',
+        ..._shFields,
         telegramUrl: telegramInput,
         emailUrl: emailInput,
         isAdult,
@@ -11213,10 +11341,11 @@ document.getElementById('photo-save').addEventListener('click', () => {
       images: photoImgDataList.filter(Boolean),
       author: authorNickname,
       authorId: user ? user.uid : '',
-      category: document.getElementById('photo-category').value.trim() || 'כללי',
+      category: _isShSave ? _offerType : (document.getElementById('photo-category').value.trim() || 'כללי'),
       ageRange: (document.getElementById('photo-age') || {}).value || '',
       region: (document.getElementById('photo-region') || {}).value || '',
-      categoryColor: '#10b981',
+      ..._shFields,
+      categoryColor: _isShSave ? '#e11d48' : '#10b981',
       timestamp: new Date().toLocaleDateString('he-IL'),
       createdAt: Date.now(),
       telegramUrl: telegramInput,
@@ -14148,6 +14277,14 @@ onValue(ref(db, 'website'), (snapshot) => {
     } else if (!_shp.title) {
       _shp.title = 'מוצרי יד שניה 🛒';
     }
+    // עמוד "שותפויות"
+    const _ptp = pList.find(p => p && p.id === 'page-partnerships-main');
+    if (!_ptp) {
+      const _ptpc = (typeof buildPhotosPage === 'function') ? buildPhotosPage([], 'partnerships') : '<div class="photos-page partnerships-page" data-page-id="page-partnerships-main" data-section="partnerships" data-photos-json="%5B%5D"></div>';
+      pList.push({ id: 'page-partnerships-main', title: 'שותפויות 🤝', content: _ptpc });
+    } else if (!_ptp.title) {
+      _ptp.title = 'שותפויות 🤝';
+    }
     // עמוד "מידע" — קיים תמיד אך מוסתר
     const _ip = pList.find(p => p && p.id === 'page-info-main');
     const _ipc = '<div class="info-page" data-page-id="page-info-main"></div>';
@@ -14201,6 +14338,8 @@ onValue(ref(db, 'website'), (snapshot) => {
     if (pages.some(p => p && p.id === 'page-communities-main') && !navs.includes('page-communities-main')) navs.push('page-communities-main');
     // עמוד "מוצרי יד שניה" תמיד מופיע בתפריט העליון
     if (pages.some(p => p && p.id === 'page-secondhand-main') && !navs.includes('page-secondhand-main')) navs.push('page-secondhand-main');
+    // עמוד "שותפויות" תמיד מופיע בתפריט העליון
+    if (pages.some(p => p && p.id === 'page-partnerships-main') && !navs.includes('page-partnerships-main')) navs.push('page-partnerships-main');
     // עמודים כמו "שאלות גולשים", "הצעות", "תמונות" ו"סיפורים" הם עמודי צד בלבד (מוסרים מהתפריט העליון)
     navs = navs.filter(id => !isSideOnlyId(id));
     // מסירים מהתפריט את העמודים שהוסרו
@@ -14434,6 +14573,8 @@ function setSectionCategoryFilter(section, cat) {
     mainContent.innerHTML = buildCommunitiesPage();
   } else if (section === 'secondhand' && typeof buildSecondhandPage === 'function') {
     mainContent.innerHTML = buildSecondhandPage();
+  } else if (section === 'partnerships' && typeof buildPartnershipsPage === 'function') {
+    mainContent.innerHTML = buildPartnershipsPage();
   } else if (typeof buildPhotosPage === 'function' && typeof photoGetAlbums === 'function') {
     mainContent.innerHTML = buildPhotosPage(photoGetAlbums(), 'photos');
   }
