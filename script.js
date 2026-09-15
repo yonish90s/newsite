@@ -7150,7 +7150,9 @@ function renderPhotoCard(p, options = {}) {
       ${scoreBadgeHTML}
       ${cardLinksHTML}
   `;
-  const classActionHTML = p.isClassAction ? `<div style="display:inline-block; background:#0f172a; color:#fff; font-size:11px; font-weight:800; padding:2px 8px; border-radius:6px; margin-bottom:4px;">⚖️ תביעה ייצוגית${p.businessName ? ' · ' + artEsc(p.businessName) : ''}</div>` : '';
+  const classActionHTML = p.isClassAction ? `<div style="display:inline-block; background:#0f172a; color:#fff; font-size:11px; font-weight:800; padding:2px 8px; border-radius:6px; margin-bottom:4px;">⚖️ תביעה ייצוגית${p.businessName ? ' · ' + artEsc(p.businessName) : ''}</div>`
+    : (p.isProblem ? `<div style="display:inline-block; background:#f59e0b; color:#fff; font-size:11px; font-weight:800; padding:2px 8px; border-radius:6px; margin-bottom:4px;">🎯 בעיה לפתרון · ${(p.bids ? Object.keys(p.bids).length : 0)} הצעות</div>`
+    : (p.isWanted ? `<div style="display:inline-block; background:#2563eb; color:#fff; font-size:11px; font-weight:800; padding:2px 8px; border-radius:6px; margin-bottom:4px;">🔎 מחפש/ת · ${(p.offers ? Object.keys(p.offers).length : 0)} הצעות</div>` : ''));
   const infoBlock = `
     <div class="art-row-text photo-card-info">
       ${classActionHTML}
@@ -10010,8 +10012,11 @@ function buildPhotosPage(albums, section) {
     sectionTitle = 'כל הרעיונות';
     searchPlaceholder = '🔍 חיפוש רעיונות...';
     noResultsText = 'לא נמצאו רעיונות התואמים לחיפוש';
-    addBtnHTML = `<button onclick="openIdeaModal()" style="background:#3b82f6; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: white; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.2s;">
+    addBtnHTML = `<button onclick="openIdeaModal()" style="background:#3b82f6; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: white; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.2s;">
         💡 הוסף רעיון חדש
+       </button>
+       <button onclick="openProblemModal()" style="background:#f59e0b; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: white; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        🎯 פרסם בעיה לפתרון (מכרז)
        </button>`;
   } else if (section === 'communities') {
     sectionTitle = 'כל הקהילות';
@@ -10024,8 +10029,11 @@ function buildPhotosPage(albums, section) {
     sectionTitle = 'כל המוצרים';
     searchPlaceholder = '🔍 חיפוש מוצרים...';
     noResultsText = 'לא נמצאו מוצרים התואמים לחיפוש';
-    addBtnHTML = `<button onclick="openPhotoModal()" style="background:#e11d48; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: white; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.2s;">
+    addBtnHTML = `<button onclick="openPhotoModal()" style="background:#e11d48; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: white; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.2s;">
         ➕ הוסף מוצר יד שניה
+       </button>
+       <button onclick="openWantedModal()" style="background:#2563eb; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: white; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        🔎 מחפש מוצר (קבל הצעות)
        </button>`;
   } else if (section === 'partnerships') {
     sectionTitle = 'כל השותפויות';
@@ -10343,19 +10351,31 @@ function photoOpenDetail(id) {
   const isIdea = !isSecondhand && ((container && container.classList.contains('ideas-page')) || (a.id && (a.id.includes('idea') || a.id.includes('sample'))) || (a.category && (a.category.includes('רעיונות') || a.category.includes('עסקים') || a.category.includes('מחקר') || a.category.includes('חוקים'))));
 
   // פאנלי צד — לרעיונות ולמוצרי יד שניה (אותו קונספט, תוכן מותאם)
-  const _sp = isSecondhand ? {
+  const _sp = isSecondhand ? (a.isWanted ? {
+    back: '← חזרה למוצרים',
+    right: (typeof secondhandWantedHowBoxHTML === 'function' ? secondhandWantedHowBoxHTML() : ''),
+    left: (typeof secondhandOffersBoxHTML === 'function' ? secondhandOffersBoxHTML(a) : ''),
+    creator: 'מחפש/ת',
+    recTitle: 'עוד ביד שניה'
+  } : {
     back: '← חזרה למוצרים',
     right: (typeof secondhandBuyBoxHTML === 'function' ? secondhandBuyBoxHTML(a) : ''),
     left: (typeof secondhandDetailsBoxHTML === 'function' ? secondhandDetailsBoxHTML(a) : ''),
     creator: 'מוכר',
     recTitle: 'מוצרים נוספים שיעניינו אותך'
+  }) : (a.isProblem ? {
+    back: '← חזרה לרעיונות',
+    right: (typeof ideaTenderHowBoxHTML === 'function' ? ideaTenderHowBoxHTML() : ''),
+    left: (typeof ideaBidsBoxHTML === 'function' ? ideaBidsBoxHTML(a) : ''),
+    creator: 'פרסם/ה',
+    recTitle: 'עוד בעיות ורעיונות'
   } : {
     back: '← חזרה לרעיונות',
     right: ideaExecutionBoxHTML(a),
     left: ideaTechnicalBoxHTML(a),
     creator: 'יוצר הרעיון',
     recTitle: 'רעיונות נוספים שיעניינו אותך'
-  };
+  });
 
   const json = encodeURIComponent(JSON.stringify(albums));
 
@@ -11247,6 +11267,130 @@ function submitClassAction() {
   alert((typeof isEditMode !== 'undefined' && isEditMode) ? 'התביעה פורסמה!' : 'התביעה נשלחה לאישור מנהל ותופיע בקרוב.');
 }
 window.submitClassAction = submitClassAction;
+
+// --- "מחפש מוצר" ביד 2 (מכרז הפוך): מפרסמים בקשה, אחרים מגישים הצעות (דגם+מחיר), בוחרים ---
+function openWantedModal() {
+  let m = document.getElementById('wanted-modal');
+  if (!m) { m = document.createElement('div'); m.id = 'wanted-modal'; document.body.appendChild(m); }
+  m.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999999; display:flex; align-items:center; justify-content:center; direction:rtl; padding:16px;';
+  m.innerHTML = `
+    <div style="background:#fff; border-radius:16px; padding:24px; width:100%; max-width:460px; max-height:88vh; overflow-y:auto; display:flex; flex-direction:column; gap:12px; box-shadow:0 20px 60px rgba(0,0,0,0.35);">
+      <h3 style="margin:0; font-size:18px; font-weight:900; color:#0f172a;">🔎 מחפש/ת מוצר</h3>
+      <p style="margin:0; font-size:13px; color:#64748b; line-height:1.5;">תארו מה אתם מחפשים. מי שיש לו מוצר כזה (או דומה) יגיש הצעה עם הדגם והמחיר — ותבחרו את העסקה הכי טובה.</p>
+      <label style="font-size:13px; font-weight:700;">מה אתם מחפשים? <span style="color:red">*</span></label>
+      <input id="wt-title" type="text" placeholder="לדוגמה: אופניים חשמליים" style="padding:10px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; box-sizing:border-box;">
+      <label style="font-size:13px; font-weight:700;">פירוט / דרישות</label>
+      <textarea id="wt-desc" rows="3" placeholder="מצב, דגם מועדף, אזור..." style="padding:10px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; box-sizing:border-box; resize:vertical;"></textarea>
+      <label style="font-size:13px; font-weight:700;">תקציב מקסימלי (אופציונלי)</label>
+      <input id="wt-budget" type="text" placeholder="לדוגמה: עד 2000 ₪" style="padding:10px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; box-sizing:border-box;">
+      <div style="display:flex; gap:10px; margin-top:4px;">
+        <button onclick="submitWanted()" style="flex:2; background:#2563eb; color:#fff; border:none; border-radius:8px; padding:11px; font-size:14px; font-weight:800; cursor:pointer;">🔎 פרסם בקשה</button>
+        <button onclick="document.getElementById('wanted-modal').remove()" style="flex:1; background:#fff; color:#334155; border:1px solid #ddd; border-radius:8px; padding:11px; font-size:14px; cursor:pointer;">ביטול</button>
+      </div>
+    </div>`;
+}
+window.openWantedModal = openWantedModal;
+
+function submitWanted() {
+  const title = ((document.getElementById('wt-title') || {}).value || '').trim();
+  if (!title) { alert('נא לתאר מה מחפשים'); return; }
+  const desc = ((document.getElementById('wt-desc') || {}).value || '').trim();
+  const budget = ((document.getElementById('wt-budget') || {}).value || '').trim();
+  const user = auth.currentUser;
+  let nick = 'משתמש';
+  if (user) { try { const p = JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}'); nick = p.nickname || user.displayName || (user.email ? user.email.split('@')[0] : 'משתמש'); } catch (e) {} }
+  const albums = (typeof photoGetAlbums === 'function') ? photoGetAlbums() : [];
+  albums.unshift({
+    id: 'ph' + Date.now(), title: '🔎 ' + title, summary: desc, images: [],
+    author: nick, authorId: user ? user.uid : '', category: 'מחפש מוצר',
+    isWanted: true, budget: budget, offers: {}, region: '', categoryColor: '#2563eb',
+    timestamp: new Date().toLocaleDateString('he-IL'), createdAt: Date.now(), likes: 0,
+    approved: (typeof isEditMode !== 'undefined' && isEditMode)
+  });
+  if (typeof mainContent !== 'undefined' && mainContent) mainContent.innerHTML = buildPhotosPage(albums, 'secondhand');
+  if (typeof saveCurrentPageContent === 'function') saveCurrentPageContent();
+  const m = document.getElementById('wanted-modal'); if (m) m.remove();
+  alert((typeof isEditMode !== 'undefined' && isEditMode) ? 'הבקשה פורסמה!' : 'הבקשה נשלחה לאישור מנהל ותופיע בקרוב.');
+}
+window.submitWanted = submitWanted;
+
+function secondhandWantedHowBoxHTML() {
+  const steps = [
+    { n: 1, t: '🔎 פורסמה בקשה', d: 'מישהו מחפש מוצר מסוים.' },
+    { n: 2, t: '💰 מגישים הצעות', d: 'מי שיש לו כותב דגם ומחיר.' },
+    { n: 3, t: '🏆 בוחרים עסקה', d: 'המחפש בוחר את ההצעה הכי טובה.' },
+    { n: 4, t: '🤝 סוגרים', d: 'הצדדים יוצרים קשר ומשלימים עסקה.' }
+  ];
+  const stepsHTML = steps.map(s => `
+      <div style="display:flex; gap:12px; align-items:flex-start; margin-bottom:14px; background:#f8fafc; padding:10px 12px; border-radius:10px; border:1px solid #e2e8f0;">
+        <span style="background:linear-gradient(135deg,#3b82f6,#2563eb); color:#fff; font-weight:900; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0;">${s.n}</span>
+        <div><div style="font-size:13.5px; font-weight:800; color:#0f172a;">${s.t}</div><div style="font-size:12px; color:#64748b; line-height:1.4; margin-top:2px;">${s.d}</div></div>
+      </div>`).join('');
+  return `<div class="idea-exec-box"><div style="font-size:16px; font-weight:900; color:#0f172a; border-bottom:2.5px solid #2563eb; padding-bottom:10px; margin-bottom:16px;">🔎 איך זה עובד</div><div style="display:flex; flex-direction:column;">${stepsHTML}</div></div>`;
+}
+window.secondhandWantedHowBoxHTML = secondhandWantedHowBoxHTML;
+
+function secondhandOffersBoxHTML(a) {
+  const offers = a.offers ? Object.entries(a.offers).map(([oid, o]) => ({ oid, ...o })).filter(o => o && o.price != null) : [];
+  offers.sort((x, y) => (Number(x.price) || 0) - (Number(y.price) || 0));
+  const isOwner = auth.currentUser && a.authorId === auth.currentUser.uid;
+  const isEd = (typeof isAdmin === 'function' && isAdmin()) || (typeof isEditMode !== 'undefined' && isEditMode);
+  const canChoose = isOwner || isEd;
+  const rows = offers.length ? offers.map((o, i) => {
+    const chosen = a.chosenOffer === o.oid;
+    return `
+      <div style="display:flex; align-items:center; gap:10px; background:${chosen ? '#eff6ff' : '#f8fafc'}; border:1px solid ${chosen ? '#93c5fd' : '#e2e8f0'}; border-radius:10px; padding:10px 12px;">
+        <div style="flex:1; min-width:0;">
+          <div style="font-size:14px; font-weight:900; color:#1d4ed8;">₪${artEsc(String(o.price))}${i === 0 ? ' <span style="font-size:11px; color:#f59e0b;">🏆 הכי זול</span>' : ''}${chosen ? ' <span style="font-size:11px; color:#2563eb;">✓ נבחר</span>' : ''}</div>
+          <div style="font-size:12px; color:#334155; font-weight:700;">${artEsc(o.model || '')}</div>
+          <div style="font-size:11.5px; color:#64748b;">${artEsc(o.name || 'משתמש')}</div>
+        </div>
+        ${canChoose && !a.chosenOffer ? `<button onclick="chooseWantedOffer('${artEsc(a.id)}','${artEsc(o.oid)}')" style="background:#2563eb; color:#fff; border:none; border-radius:8px; padding:6px 12px; font-size:12px; font-weight:800; cursor:pointer;">בחר</button>` : ''}
+      </div>`;
+  }).join('') : '<div style="font-size:13px; color:#94a3b8; text-align:center; padding:12px;">אין הצעות עדיין — היו הראשונים להציע!</div>';
+  return `
+    <div class="idea-tech-box">
+      <div style="font-size:16px; font-weight:900; color:#0f172a; border-bottom:2.5px solid #2563eb; padding-bottom:10px; margin-bottom:16px;">💰 הצעות (${offers.length})</div>
+      ${a.budget ? `<div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:12px; padding:12px 14px; margin-bottom:12px;"><div style="font-size:11.5px; color:#1e40af; font-weight:800; margin-bottom:4px;">🎯 תקציב</div><div style="font-size:15px; font-weight:900; color:#1d4ed8;">${artEsc(a.budget)}</div></div>` : ''}
+      <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;">${rows}</div>
+      ${!a.chosenOffer ? `<button onclick="submitWantedOffer('${artEsc(a.id)}')" style="width:100%; background:linear-gradient(135deg,#3b82f6,#2563eb); color:#fff; border:none; padding:12px; border-radius:12px; font-weight:800; font-size:14px; cursor:pointer; box-shadow:0 4px 14px rgba(37,99,235,0.3);">💰 הגש הצעה</button>` : '<div style="text-align:center; font-size:13px; font-weight:800; color:#2563eb; padding:8px;">✓ נבחרה הצעה — הבקשה נסגרה</div>'}
+    </div>`;
+}
+window.secondhandOffersBoxHTML = secondhandOffersBoxHTML;
+
+function submitWantedOffer(id) {
+  if (!auth.currentUser) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
+  const model = prompt('איזה דגם/מוצר יש לך להציע?');
+  if (model === null) return;
+  const raw = prompt('מה המחיר שאתה מבקש (₪)?');
+  if (raw === null) return;
+  const price = parseInt(String(raw).replace(/[^\d]/g, ''), 10);
+  if (!price) { alert('נא להזין מחיר תקין'); return; }
+  let nick = 'משתמש';
+  try { const p = JSON.parse(localStorage.getItem(`user_profile_${auth.currentUser.uid}`) || '{}'); nick = p.nickname || auth.currentUser.displayName || (auth.currentUser.email ? auth.currentUser.email.split('@')[0] : 'משתמש'); } catch (e) {}
+  const albums = (typeof photoGetAlbums === 'function') ? photoGetAlbums() : [];
+  const item = albums.find(x => x.id === id);
+  if (!item) return;
+  if (!item.offers) item.offers = {};
+  item.offers['o' + Date.now()] = { model: (model || '').slice(0, 80), price, name: nick, uid: auth.currentUser.uid, at: Date.now() };
+  if (typeof mainContent !== 'undefined' && mainContent) mainContent.innerHTML = buildPhotosPage(albums, 'secondhand');
+  if (typeof saveCurrentPageContent === 'function') saveCurrentPageContent();
+  setTimeout(() => { if (typeof photoOpenDetail === 'function') photoOpenDetail(id); }, 60);
+}
+window.submitWantedOffer = submitWantedOffer;
+
+function chooseWantedOffer(id, offerId) {
+  const albums = (typeof photoGetAlbums === 'function') ? photoGetAlbums() : [];
+  const item = albums.find(x => x.id === id);
+  const isEd = (typeof isAdmin === 'function' && isAdmin()) || (typeof isEditMode !== 'undefined' && isEditMode);
+  if (!item || !(isEd || (auth.currentUser && item.authorId === auth.currentUser.uid))) { alert('רק מי שפרסם את הבקשה יכול לבחור הצעה'); return; }
+  if (!confirm('לבחור בהצעה זו ולסגור את הבקשה?')) return;
+  item.chosenOffer = offerId;
+  if (typeof mainContent !== 'undefined' && mainContent) mainContent.innerHTML = buildPhotosPage(albums, 'secondhand');
+  if (typeof saveCurrentPageContent === 'function') saveCurrentPageContent();
+  setTimeout(() => { if (typeof photoOpenDetail === 'function') photoOpenDetail(id); }, 60);
+}
+window.chooseWantedOffer = chooseWantedOffer;
 
 function openPhotoEditModal(id, e) {
   if (e) {
@@ -14981,6 +15125,143 @@ async function saveIdea() {
   }
 }
 window.saveIdea = saveIdea;
+
+// ============================================================
+// "בעיה לפתרון" (מכרז הפוך) — מפרסמים בעיה, מגישים הצעות מחיר, בוחרים את הזולה
+// ============================================================
+function openProblemModal() {
+  if (!auth.currentUser) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
+  let m = document.getElementById('problem-modal');
+  if (!m) { m = document.createElement('div'); m.id = 'problem-modal'; document.body.appendChild(m); }
+  m.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999999; display:flex; align-items:center; justify-content:center; direction:rtl; padding:16px;';
+  m.innerHTML = `
+    <div style="background:#fff; border-radius:16px; padding:24px; width:100%; max-width:460px; max-height:88vh; overflow-y:auto; display:flex; flex-direction:column; gap:12px; box-shadow:0 20px 60px rgba(0,0,0,0.35);">
+      <h3 style="margin:0; font-size:18px; font-weight:900; color:#0f172a;">🎯 פרסום בעיה לפתרון</h3>
+      <p style="margin:0; font-size:13px; color:#64748b; line-height:1.5;">תארו בעיה שאתם צריכים לפתור או יעד שתרצו להשיג. פותרים יגישו הצעות מחיר — ותוכלו לבחור את הזולה ביותר.</p>
+      <label style="font-size:13px; font-weight:700;">מה צריך לפתור? <span style="color:red">*</span></label>
+      <input id="pr-title" type="text" placeholder="לדוגמה: בניית אתר תדמית" style="padding:10px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; box-sizing:border-box;">
+      <label style="font-size:13px; font-weight:700;">פירוט הבעיה / היעד</label>
+      <textarea id="pr-desc" rows="4" placeholder="פרטו מה נדרש, לוחות זמנים, דרישות..." style="padding:10px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; box-sizing:border-box; resize:vertical;"></textarea>
+      <label style="font-size:13px; font-weight:700;">תקציב מקסימלי (אופציונלי)</label>
+      <input id="pr-budget" type="text" placeholder="לדוגמה: עד 3000 ₪" style="padding:10px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; box-sizing:border-box;">
+      <div style="display:flex; gap:10px; margin-top:4px;">
+        <button onclick="submitProblem()" style="flex:2; background:#f59e0b; color:#fff; border:none; border-radius:8px; padding:11px; font-size:14px; font-weight:800; cursor:pointer;">🎯 פרסם בעיה</button>
+        <button onclick="document.getElementById('problem-modal').remove()" style="flex:1; background:#fff; color:#334155; border:1px solid #ddd; border-radius:8px; padding:11px; font-size:14px; cursor:pointer;">ביטול</button>
+      </div>
+    </div>`;
+}
+window.openProblemModal = openProblemModal;
+
+async function submitProblem() {
+  if (!auth.currentUser) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
+  const title = ((document.getElementById('pr-title') || {}).value || '').trim();
+  if (!title) { alert('נא לתאר מה צריך לפתור'); return; }
+  const desc = ((document.getElementById('pr-desc') || {}).value || '').trim();
+  const budget = ((document.getElementById('pr-budget') || {}).value || '').trim();
+  let nickname = 'משתמש';
+  try { const p = JSON.parse(localStorage.getItem(`user_profile_${auth.currentUser.uid}`) || '{}'); nickname = p.nickname || auth.currentUser.displayName || (auth.currentUser.email ? auth.currentUser.email.split('@')[0] : 'משתמש'); } catch (e) {}
+  const defaultImg = 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&q=80';
+  const id = 'idea_prob_' + Date.now();
+  const idea = {
+    id, title: '🎯 ' + title.slice(0, 100), summary: desc.slice(0, 200), desc: desc.slice(0, 1000),
+    category: 'בעיה לפתרון', isProblem: true, budget: budget.slice(0, 60), bids: {},
+    author: nickname, authorId: auth.currentUser.uid, verified: true, verifiedUser: true,
+    image: defaultImg, images: [defaultImg], likes: 0, views: 1,
+    timestamp: new Date().toLocaleDateString('he-IL'), createdAt: Date.now(), approved: true
+  };
+  try {
+    await set(ref(db, `website/ideas/${id}`), idea);
+    const m = document.getElementById('problem-modal'); if (m) m.remove();
+    if (typeof showCopyToast === 'function') showCopyToast('🎯 הבעיה פורסמה! ממתין להצעות');
+    if (typeof mainContent !== 'undefined' && mainContent) mainContent.innerHTML = buildIdeasPage();
+  } catch (e) { console.error('submit problem failed', e); alert('שגיאה בפרסום הבעיה'); }
+}
+window.submitProblem = submitProblem;
+
+// תיבת ההצעות בעמוד הבעיה (מכרז): הגשת הצעה + רשימת הצעות ממוינת + בחירת הזולה
+function ideaBidsBoxHTML(a) {
+  const bids = a.bids ? Object.entries(a.bids).map(([bid, b]) => ({ bid, ...b })).filter(b => b && b.price != null) : [];
+  bids.sort((x, y) => (Number(x.price) || 0) - (Number(y.price) || 0));
+  const isOwner = auth.currentUser && a.authorId === auth.currentUser.uid;
+  const isEd = (typeof isAdmin === 'function' && isAdmin()) || (typeof isEditMode !== 'undefined' && isEditMode);
+  const canChoose = isOwner || isEd;
+  const rowsHTML = bids.length ? bids.map((b, i) => {
+    const chosen = a.chosenBid === b.bid;
+    const lowest = i === 0;
+    return `
+      <div style="display:flex; align-items:center; gap:10px; background:${chosen ? '#f0fdf4' : '#f8fafc'}; border:1px solid ${chosen ? '#86efac' : '#e2e8f0'}; border-radius:10px; padding:10px 12px;">
+        <div style="flex:1; min-width:0;">
+          <div style="font-size:14px; font-weight:900; color:#15803d;">₪${artEsc(String(b.price))}${lowest ? ' <span style="font-size:11px; color:#f59e0b;">🏆 הזול ביותר</span>' : ''}${chosen ? ' <span style="font-size:11px; color:#16a34a;">✓ נבחר</span>' : ''}</div>
+          <div style="font-size:12px; color:#64748b;">${artEsc(b.name || 'משתמש')}</div>
+        </div>
+        ${canChoose && !a.chosenBid ? `<button onclick="chooseBid('${artEsc(a.id)}','${artEsc(b.bid)}')" style="background:#16a34a; color:#fff; border:none; border-radius:8px; padding:6px 12px; font-size:12px; font-weight:800; cursor:pointer;">בחר</button>` : ''}
+      </div>`;
+  }).join('') : '<div style="font-size:13px; color:#94a3b8; text-align:center; padding:12px;">אין הצעות עדיין — היו הראשונים להגיש!</div>';
+  return `
+    <div class="idea-tech-box">
+      <div style="font-size:16px; font-weight:900; color:#0f172a; border-bottom:2.5px solid #f59e0b; padding-bottom:10px; margin-bottom:16px; display:flex; align-items:center; gap:8px;">
+        <span>💰 הצעות מחיר (${bids.length})</span>
+      </div>
+      ${a.budget ? `<div style="background:#fffbeb; border:1px solid #fde68a; border-radius:12px; padding:12px 14px; margin-bottom:12px;"><div style="font-size:11.5px; color:#92400e; font-weight:800; margin-bottom:4px;">🎯 תקציב מבוקש</div><div style="font-size:15px; font-weight:900; color:#b45309;">${artEsc(a.budget)}</div></div>` : ''}
+      <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;">${rowsHTML}</div>
+      ${!a.chosenBid ? `<button onclick="submitBid('${artEsc(a.id)}')" style="width:100%; background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff; border:none; padding:12px; border-radius:12px; font-weight:800; font-size:14px; cursor:pointer; box-shadow:0 4px 14px rgba(245,158,11,0.3);">💰 הגש הצעת מחיר</button>` : '<div style="text-align:center; font-size:13px; font-weight:800; color:#16a34a; padding:8px;">✓ נבחרה הצעה — המכרז נסגר</div>'}
+    </div>`;
+}
+window.ideaBidsBoxHTML = ideaBidsBoxHTML;
+
+function ideaTenderHowBoxHTML() {
+  const steps = [
+    { n: 1, t: '📝 פורסמה בעיה', d: 'מישהו תיאר בעיה או יעד שצריך לפתור.' },
+    { n: 2, t: '💰 מגישים הצעות', d: 'פותרים מגישים הצעות מחיר לביצוע.' },
+    { n: 3, t: '🏆 בוחרים את הזולה', d: 'המפרסם בוחר את ההצעה הטובה/זולה ביותר.' },
+    { n: 4, t: '🤝 יוצרים קשר', d: 'הצדדים סוגרים את הפרטים ומתחילים.' }
+  ];
+  const stepsHTML = steps.map(s => `
+      <div style="display:flex; gap:12px; align-items:flex-start; margin-bottom:14px; background:#f8fafc; padding:10px 12px; border-radius:10px; border:1px solid #e2e8f0;">
+        <span style="background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff; font-weight:900; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0;">${s.n}</span>
+        <div><div style="font-size:13.5px; font-weight:800; color:#0f172a;">${s.t}</div><div style="font-size:12px; color:#64748b; line-height:1.4; margin-top:2px;">${s.d}</div></div>
+      </div>`).join('');
+  return `
+    <div class="idea-exec-box">
+      <div style="font-size:16px; font-weight:900; color:#0f172a; border-bottom:2.5px solid #f59e0b; padding-bottom:10px; margin-bottom:16px; display:flex; align-items:center; gap:8px;">
+        <span>🎯 איך המכרז עובד</span>
+      </div>
+      <div style="display:flex; flex-direction:column;">${stepsHTML}</div>
+    </div>`;
+}
+window.ideaTenderHowBoxHTML = ideaTenderHowBoxHTML;
+
+async function submitBid(ideaId) {
+  if (!auth.currentUser) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
+  const raw = prompt('הזן/י את הצעת המחיר שלך (₪):');
+  if (raw === null) return;
+  const price = parseInt(String(raw).replace(/[^\d]/g, ''), 10);
+  if (!price) { alert('נא להזין מספר תקין'); return; }
+  let nickname = 'משתמש';
+  try { const p = JSON.parse(localStorage.getItem(`user_profile_${auth.currentUser.uid}`) || '{}'); nickname = p.nickname || auth.currentUser.displayName || (auth.currentUser.email ? auth.currentUser.email.split('@')[0] : 'משתמש'); } catch (e) {}
+  try {
+    const bidRef = push(ref(db, `website/ideas/${ideaId}/bids`));
+    await set(bidRef, { price, name: nickname, uid: auth.currentUser.uid, at: Date.now() });
+    if (ideasData[ideaId]) { if (!ideasData[ideaId].bids) ideasData[ideaId].bids = {}; ideasData[ideaId].bids[bidRef.key] = { price, name: nickname, uid: auth.currentUser.uid, at: Date.now() }; }
+    if (typeof showCopyToast === 'function') showCopyToast('💰 ההצעה שלך הוגשה!');
+    if (typeof mainContent !== 'undefined' && mainContent) { mainContent.innerHTML = buildIdeasPage(); setTimeout(() => { if (typeof photoOpenDetail === 'function') photoOpenDetail(ideaId); }, 60); }
+  } catch (e) { console.error('submit bid failed', e); alert('שגיאה בהגשת ההצעה'); }
+}
+window.submitBid = submitBid;
+
+async function chooseBid(ideaId, bidId) {
+  const item = ideasData[ideaId];
+  const isEd = (typeof isAdmin === 'function' && isAdmin()) || (typeof isEditMode !== 'undefined' && isEditMode);
+  if (!item || !(isEd || (auth.currentUser && item.authorId === auth.currentUser.uid))) { alert('רק מי שפרסם את הבעיה יכול לבחור הצעה'); return; }
+  if (!confirm('לבחור בהצעה זו ולסגור את המכרז?')) return;
+  try {
+    await set(ref(db, `website/ideas/${ideaId}/chosenBid`), bidId);
+    if (ideasData[ideaId]) ideasData[ideaId].chosenBid = bidId;
+    if (typeof showCopyToast === 'function') showCopyToast('✓ ההצעה נבחרה!');
+    if (typeof mainContent !== 'undefined' && mainContent) { mainContent.innerHTML = buildIdeasPage(); setTimeout(() => { if (typeof photoOpenDetail === 'function') photoOpenDetail(ideaId); }, 60); }
+  } catch (e) { console.error('choose bid failed', e); alert('שגיאה בבחירת ההצעה'); }
+}
+window.chooseBid = chooseBid;
 
 async function deleteIdea(ideaId) {
   const isEd = (typeof isAdmin === 'function' && isAdmin()) || (typeof isEditMode !== 'undefined' && isEditMode);
