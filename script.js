@@ -381,12 +381,14 @@ function dedupePageList(list) {
   const removeIds = new Set();
   // עמודי תמונות מחולקים ל"סקשנים" (photos / yad2 / prices) — לא ממזגים בין סקשנים שונים
   const sectionOf = c => { const m = (c || '').match(/data-section="([^"]+)"/); return m ? m[1] : 'photos'; };
+  // עמודי סיפורים מחולקים לפי "סוג" (קומיקס / סיפורים) כדי שלא ימוזגו לאחד
+  const storyKindOf = c => { const m = (c || '').match(/data-story-kind="([^"]+)"/); return m ? m[1] : 'comics'; };
   ['stories-page', 'photos-page'].forEach(kind => {
-    const matches = list.filter(p => p && (p.content || '').includes(kind));
+    const matches = list.filter(p => p && (p.content || '').includes(kind) && !(p.content || '').includes('photos-stories-feed'));
     if (matches.length <= 1) return;
     const groups = {};
     matches.forEach(p => {
-      const key = kind === 'photos-page' ? sectionOf(p.content) : 'all';
+      const key = kind === 'photos-page' ? sectionOf(p.content) : storyKindOf(p.content);
       (groups[key] = groups[key] || []).push(p);
     });
     Object.values(groups).forEach(grp => {
@@ -400,6 +402,22 @@ function dedupePageList(list) {
 
 // עמודים שהוסרו — מנקים אותם מכל מקום (מהעמודים השמורים ומהתפריט)
 const REMOVED_PHOTO_PAGE_IDS = ['page-yad2-main', 'page-prices-main'];
+
+// משנה את עמוד הסיפורים הקיים (התוכן הקומיקסי) ל"קומיקס", ומוסיף עמוד "סיפורים" חדש
+// לסיפורי טקסט. אידמפוטנטי — רץ בכל טעינה בלי ליצור כפולים.
+function setupComicsStoriesPages() {
+  if (!Array.isArray(pages)) return;
+  // 1. העמוד הישן (קומיקס) = עמוד stories שאינו עמוד הסיפורים החדש ואינו עמוד התמונות/פיד
+  const comics = pages.find(p => p && p.id !== 'page-stories-text'
+    && (p.content || '').includes('stories-page')
+    && !(p.content || '').includes('photos-page')
+    && !(p.content || '').includes('photos-stories-feed'));
+  if (comics && comics.title !== 'קומיקס') comics.title = 'קומיקס';
+  // 2. עמוד "סיפורים" חדש (טקסט) — יוצרים אם עדיין אין
+  if (!pages.some(p => p && p.id === 'page-stories-text') && typeof buildStoriesPage === 'function') {
+    pages.push({ id: 'page-stories-text', title: 'סיפורים', content: buildStoriesPage([], 'stories') });
+  }
+}
 
 function sanitizeToOnlyPhotosAndStories() {
   if (!Array.isArray(pages)) pages = [];
@@ -420,9 +438,12 @@ function sanitizeToOnlyPhotosAndStories() {
   // כך המנהל יכול למחוק עמודים לצמיתות מבלי שהם ייווצרו מחדש בכל שמירה.
   if (pages.length === 0) {
     pages.push({ id: 'page-photos-main', title: 'תמונות 🖼️', content: typeof buildPhotosPage === 'function' ? buildPhotosPage(typeof PHOTOS_SAMPLES !== 'undefined' ? PHOTOS_SAMPLES : []) : '' });
-    pages.push({ id: 'page-stories-main', title: 'סיפורים', content: typeof buildStoriesPage === 'function' ? buildStoriesPage(typeof STORIES_SAMPLES !== 'undefined' ? STORIES_SAMPLES : []) : '' });
+    pages.push({ id: 'page-stories-main', title: 'קומיקס', content: typeof buildStoriesPage === 'function' ? buildStoriesPage(typeof STORIES_SAMPLES !== 'undefined' ? STORIES_SAMPLES : [], 'comics') : '' });
     pages.push({ id: 'page-ideas-main', title: 'רעיונות 💡', content: '<div class="ideas-page" data-page-id="page-ideas-main"></div>' });
   }
+
+  // קומיקס + סיפורים: משנים את עמוד הסיפורים הישן ל"קומיקס" ומוסיפים עמוד "סיפורים" חדש (טקסט)
+  setupComicsStoriesPages();
 
   // עמוד "רעיונות": מוודאים שהוא קיים תמיד
   const _ideasPage = pages.find(p => p && p.id === 'page-ideas-main');
@@ -430,7 +451,7 @@ function sanitizeToOnlyPhotosAndStories() {
   if (!_ideasPage) {
     pages.push({ id: 'page-ideas-main', title: 'רעיונות 💡', isHidden: false, content: _ideasContent });
   } else {
-    _ideasPage.isHidden = false;
+    // לא מאלצים isHidden=false — מכבדים אם המנהל הסתיר את העמוד
     if (!_ideasPage.title) _ideasPage.title = 'רעיונות 💡';
     _ideasPage.content = _ideasContent;
   }
@@ -1147,7 +1168,9 @@ function renderPage() {
     if (storyPageEl && typeof buildStoriesPage === 'function') {
       let savedStories = [];
       try { savedStories = JSON.parse(decodeURIComponent(storyPageEl.dataset.storiesJson)); } catch(e){}
-      if (savedStories.length) mainContent.innerHTML = buildStoriesPage(savedStories);
+      const _sk = storyPageEl.getAttribute('data-story-kind') || 'comics';
+      // תמיד בונים מחדש (גם כשריק) כדי לשמור על הסוג (קומיקס/סיפורים) והתוויות
+      mainContent.innerHTML = buildStoriesPage(savedStories, _sk);
     }
 
     // עמוד קורסים: בונים מחדש מהנתונים השמורים
@@ -6087,7 +6110,10 @@ function storyCardHTML(s) {
     `;
 }
 
-function buildStoriesPage(stories) {
+function buildStoriesPage(stories, storyKind) {
+  // storyKind: 'comics' (העמוד הישן, קומיקס/תמונות-סיפור) או 'stories' (סיפורי טקסט חדשים)
+  storyKind = (storyKind === 'stories') ? 'stories' : 'comics';
+  const kindLabel = storyKind === 'stories' ? 'סיפורים' : 'קומיקס';
   const featured = stories.filter(s => s.pinned).slice(0, 3);
   const popular = stories.slice(0, 5);
 
@@ -6114,13 +6140,13 @@ function buildStoriesPage(stories) {
 
   const json = encodeURIComponent(JSON.stringify(stories));
   const _adultOn = (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('age_verified') === 'true');
-  return `<div class="articles-page stories-page story-cols-${storyGridCols}${photoImagesMode ? '' : ' text-mode'}" data-stories-json="${json}">
+  return `<div class="articles-page stories-page story-cols-${storyGridCols}${photoImagesMode ? '' : ' text-mode'}" data-story-kind="${storyKind}" data-stories-json="${json}">
     <div class="art-inner">
       <div class="art-featured-grid">${featuredHTML}</div>
       <div class="art-layout">
         <div class="art-main">
           <div class="art-search-wrap">
-            <input type="text" class="art-search" placeholder="🔍 חיפוש סיפורים..." oninput="storySearch(this.value)">
+            <input type="text" class="art-search" placeholder="🔍 חיפוש ${kindLabel}..." oninput="storySearch(this.value)">
           </div>
           ${storyCategoryBarHTML()}
           ${photoFilterSectionHTML()}
@@ -6135,14 +6161,14 @@ function buildStoriesPage(stories) {
             </label>
           </div>
           <div class="art-section-title-row">
-            <div class="art-section-title">כל הסיפורים</div>
+            <div class="art-section-title">כל ה${kindLabel}</div>
             ${storySizeBarHTML()}
           </div>
           <div class="art-rows photo-collapsible expanded" id="story-row-main">${listHTML}</div>
           ${storyRowMoreBtn(stories.length, 'story-row-main')}
           <div class="art-pagination" style="display:none"></div>
-          <div class="art-no-results" style="display:none">לא נמצאו סיפורים התואמים לחיפוש</div>
-          <button class="art-add-btn" onclick="openStoryModal()" style="background:#8b5cf6">+ הוסף סיפור חדש</button>
+          <div class="art-no-results" style="display:none">לא נמצאו ${kindLabel} התואמים לחיפוש</div>
+          <button class="art-add-btn" onclick="openStoryModal()" style="background:#8b5cf6">+ הוסף ${storyKind === 'stories' ? 'סיפור' : 'קומיקס'} חדש</button>
         </div>
         <div class="art-sidebar art-sidebar-right">
           ${(isAdmin() || isEditMode) ? `
@@ -9719,7 +9745,8 @@ window.navigateToPage = navigateToPage;
 function buildLeftSidebarBox(popularHTML, section) {
   const defaultNavItems = [
     { id: 'page-photos-main', title: 'תמונות 🖼️' },
-    { id: 'page-stories-main', title: 'סיפורים 📖' },
+    { id: 'page-stories-main', title: 'קומיקס 💥' },
+    { id: 'page-stories-text', title: 'סיפורים 📖' },
     { id: 'page-ideas-main', title: 'רעיונות 💡' },
     { id: 'page-communities-main', title: 'קהילות 👥' },
     { id: 'page-questions-main', title: 'שאלות גולשים ❓' },
@@ -9777,8 +9804,8 @@ function buildLeftSidebarBox(popularHTML, section) {
     if (p.id === 'page-partnerships-main' || (p.content || '').includes('partnerships-page') || (p.title || '').includes('שותפויות')) return false;
     if (p.id === 'page-reviews-main' || (p.content || '').includes('reviews-page') || (p.title || '').includes('ביקורת')) return false;
     const t = p.title || '', c = p.content || '';
-    return p.id === 'page-photos-main' || p.id === 'page-stories-main'
-      || t.includes('תמונות') || t.includes('סיפורים')
+    return p.id === 'page-photos-main' || p.id === 'page-stories-main' || p.id === 'page-stories-text'
+      || t.includes('תמונות') || t.includes('סיפורים') || t.includes('קומיקס')
       || c.includes('photos-page') || c.includes('stories-page');
   };
   const mainPagesHTML = pagesToDisplay.filter(p => !isSideOnlyPage(p) && !isPhotosOrStories(p) && !isQuestionsOrOffers(p)).map(renderNavItem).join('');
@@ -9872,9 +9899,12 @@ function getStoriesFeedData() {
     if (typeof pages !== 'undefined' && Array.isArray(pages)) {
       // מזהה עמוד הסיפורים דינמי באתר החי — מזהים לפי כותרת/תוכן, לא רק לפי id קבוע.
       // חשוב: לא לתפוס את עמוד התמונות שמכיל את פיד הסיפורים (photos-page).
-      const sp = pages.find(p => p && p.title && p.title.includes('סיפורים'))
-        || pages.find(p => p && p.id === 'page-stories-main')
-        || pages.find(p => p && p.content && p.content.includes('stories-page') && !p.content.includes('photos-page'));
+      // פיד ה"קומיקס" בתחתית עמוד התמונות — מציג את עמוד הקומיקס (התוכן הוויזואלי),
+      // לא את עמוד הסיפורים החדש (page-stories-text) ולא את עמוד התמונות.
+      const sp = pages.find(p => p && p.id === 'page-stories-main')
+        || pages.find(p => p && p.title === 'קומיקס')
+        || pages.find(p => p && p.id !== 'page-stories-text' && p.content && p.content.includes('stories-page') && !p.content.includes('photos-page') && !p.content.includes('photos-stories-feed'))
+        || pages.find(p => p && p.title && p.title.includes('סיפורים'));
       if (sp && sp.content) {
         const m = sp.content.match(/data-stories-json="([^"]*)"/);
         if (m) { const arr = JSON.parse(decodeURIComponent(m[1])); if (Array.isArray(arr) && arr.length) return arr; }
@@ -9895,7 +9925,7 @@ function photosStoriesFeedHTML() {
       <div class="art-inner" style="padding-top:0;">
         <div class="photo-section-row" style="margin: 0 0 24px; background:#ffffff; padding:18px; border-radius:16px; border:1px solid #e2e8f0; box-shadow:0 4px 15px rgba(0,0,0,0.03);">
           <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:2.5px solid #8b5cf6; padding-bottom:10px; margin-bottom:18px;">
-            <h3 style="margin:0; font-size:18px; font-weight:900; color:#6b21a8;">📖 סיפורים</h3>
+            <h3 style="margin:0; font-size:18px; font-weight:900; color:#6b21a8;">📖 קומיקס</h3>
           </div>
           <div class="art-rows photo-collapsible expanded">${cards}</div>
         </div>
@@ -15235,9 +15265,12 @@ window.renderCommunityGridCard = renderCommunityGridCard;
 function communityShortcutsHTML() {
   const findPage = (kind) => {
     if (typeof pages === 'undefined' || !Array.isArray(pages)) return null;
-    const marker = kind === 'photos' ? 'photos-page' : 'stories-page';
-    const titleWord = kind === 'photos' ? 'תמונות' : 'סיפורים';
-    return pages.find(p => p && ((p.content || '').includes(marker) || (p.title || '').includes(titleWord)));
+    if (kind === 'photos') return pages.find(p => p && ((p.content || '').includes('data-section="photos"') || (p.title || '').includes('תמונות')));
+    if (kind === 'stories') return pages.find(p => p && (p.id === 'page-stories-text' || (p.title || '') === 'סיפורים'));
+    // comics
+    return pages.find(p => p && p.id === 'page-stories-main')
+      || pages.find(p => p && (p.title || '') === 'קומיקס')
+      || pages.find(p => p && p.id !== 'page-stories-text' && (p.content || '').includes('stories-page') && !(p.content || '').includes('photos-page') && !(p.content || '').includes('photos-stories-feed'));
   };
   const card = (title, emoji, page, grad) => {
     const oc = page ? `navigateToPage('${page.id}')` : '';
@@ -15255,7 +15288,8 @@ function communityShortcutsHTML() {
     `;
   };
   return card('תמונות', '🖼️', findPage('photos'), 'linear-gradient(135deg,#e11d48,#9f1239)')
-       + card('סיפורים', '📖', findPage('stories'), 'linear-gradient(135deg,#8b5cf6,#6d28d9)');
+       + card('קומיקס', '💥', findPage('comics'), 'linear-gradient(135deg,#8b5cf6,#6d28d9)')
+       + card('סיפורים', '📖', findPage('stories'), 'linear-gradient(135deg,#0ea5e9,#0369a1)');
 }
 window.communityShortcutsHTML = communityShortcutsHTML;
 
