@@ -4302,6 +4302,11 @@ window.updateAgeVerificationUIState = updateAgeVerificationUIState;
 (function applyInitialAgeState() {
   try {
     if (typeof document !== 'undefined') {
+      // ברירת מחדל: "תוכן למבוגרים" דלוק — התוכן מוצג ישר (אחרי שער הגיל בכניסה),
+      // אלא אם המשתמש כיבה אותו ידנית בסשן הזה.
+      if (sessionStorage.getItem('age_verified') !== 'false') {
+        sessionStorage.setItem('age_verified', 'true');
+      }
       if (sessionStorage.getItem('show_images') === 'false') {
         document.documentElement.classList.add('hide-site-images');
       } else {
@@ -6311,8 +6316,11 @@ function storyUpdateScrollHint() {
   const view = document.getElementById('story-page-view');
   const hint = document.getElementById('story-scroll-hint');
   if (!view || !hint) return;
-  const more = view.scrollHeight - view.clientHeight - view.scrollTop;
-  hint.hidden = !(view.scrollHeight > view.clientHeight + 8 && more > 24);
+  const hasMore = view.scrollHeight > view.clientHeight + 8;
+  const atTop = view.scrollTop <= 4;
+  // מציג את חץ הגלילה רק בראש העמוד (כשעדיין לא גללו) ויש תוכן להמשך;
+  // ברגע שגוללים מטה — נעלם.
+  hint.hidden = !(hasMore && atTop);
 }
 window.storyUpdateScrollHint = storyUpdateScrollHint;
 
@@ -11035,8 +11043,8 @@ function buildUserRatingWidgetHTML(targetUid) {
   const starsHTML = [1, 2, 3, 4, 5].map(star => {
     const isFilled = star <= (myRating || Math.round(avg));
     return `
-      <span onclick="event.stopPropagation(); rateUserStars('${artEsc(targetUid)}', ${star})" 
-            style="font-size: 24px; cursor: pointer; color: ${isFilled ? '#f59e0b' : '#cbd5e1'}; transition: transform 0.15s; display: inline-block;" 
+      <span class="urb-star" onclick="event.stopPropagation(); rateUserStars('${artEsc(targetUid)}', ${star})"
+            style="font-size: 24px; cursor: pointer; color: ${isFilled ? '#f59e0b' : '#cbd5e1'}; transition: transform 0.15s; display: inline-block;"
             title="דרג ${star} כוכבים">★</span>
     `;
   }).join('');
@@ -11044,13 +11052,13 @@ function buildUserRatingWidgetHTML(targetUid) {
   return `
     <div class="user-rating-box" style="margin-top: 10px; background: #fff8f0; border: 1px solid #fde68a; border-radius: 12px; padding: 10px 14px; display: inline-flex; align-items: center; gap: 14px; direction: rtl; flex-wrap: wrap;">
       <div style="display: flex; align-items: center; gap: 6px;">
-        <span style="font-size: 18px; font-weight: 900; color: #d97706;">⭐ ${avg > 0 ? avg : 'חדש'}</span>
-        <span style="font-size: 12px; color: #78350f; font-weight: 700;">(${count} מדרגים)</span>
+        <span class="urb-avg" style="font-size: 18px; font-weight: 900; color: #d97706;">⭐ ${avg > 0 ? avg : 'חדש'}</span>
+        <span class="urb-count" style="font-size: 12px; color: #78350f; font-weight: 700;">(${count} מדרגים)</span>
       </div>
-      <div style="display: flex; align-items: center; gap: 4px;">
+      <div class="urb-stars" style="display: flex; align-items: center; gap: 4px;">
         ${starsHTML}
       </div>
-      ${myRating > 0 ? `<span style="font-size: 11.5px; color: #16a34a; font-weight: 800;">✓ הדירוג שלך: ${myRating}★</span>` : `<span style="font-size: 11.5px; color: #92400e; font-weight: 600;">לחץ לדירוג המשתמש</span>`}
+      ${myRating > 0 ? `<span class="urb-mine" style="font-size: 11.5px; color: #16a34a; font-weight: 800;">✓ הדירוג שלך: ${myRating}★</span>` : `<span class="urb-mine" style="font-size: 11.5px; color: #92400e; font-weight: 600;">לחץ לדירוג המשתמש</span>`}
     </div>
   `;
 }

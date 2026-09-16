@@ -5282,3 +5282,19 @@ html.hide-site-images .photo-mini-thumb {
     display: none !important;
   }
 }
+
+/* ===== תיבת דירוג משתמש — מוקטנת (במיוחד במובייל, בערך רבע) ===== */
+.user-rating-box { padding: 6px 10px !important; gap: 8px !important; border-radius: 9px !important; }
+.user-rating-box .urb-star { font-size: 14px !important; }
+.user-rating-box .urb-avg { font-size: 13px !important; }
+.user-rating-box .urb-count { font-size: 10px !important; }
+.user-rating-box .urb-mine { font-size: 10px !important; }
+.user-rating-box .urb-stars { gap: 2px !important; }
+@media (max-width: 768px) {
+  .user-rating-box { padding: 3px 7px !important; gap: 5px !important; border-radius: 7px !important; margin-top: 6px !important; }
+  .user-rating-box .urb-star { font-size: 9px !important; }
+  .user-rating-box .urb-avg { font-size: 11px !important; }
+  .user-rating-box .urb-count { font-size: 8.5px !important; }
+  .user-rating-box .urb-mine { font-size: 8.5px !important; }
+  .user-rating-box .urb-stars { gap: 1px !important; }
+}
