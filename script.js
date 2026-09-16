@@ -7734,17 +7734,29 @@ function communitiesListHTML() {
 
 function buildCommunitiesBox() {
   subscribeCommunities();
-  const createBtn = auth.currentUser
-    ? `<button onclick="createCommunity()" style="width:100%; background:#e11d48; color:#fff; border:none; border-radius:10px; padding:10px; font-size:13.5px; font-weight:800; cursor:pointer; margin-bottom:12px;">➕ צור קהילה חדשה</button>`
-    : `<button onclick="openLiveChatLogin()" style="width:100%; background:#0f172a; color:#fff; border:none; border-radius:10px; padding:10px; font-size:13.5px; font-weight:800; cursor:pointer; margin-bottom:12px;">🔒 התחבר כדי ליצור קהילה</button>`;
   return `
     <div class="art-sidebar-box" style="border:1.5px solid #e2e8f0; border-radius:12px; padding:14px;">
       <div style="font-size:14px; font-weight:900; color:#0f172a; margin-bottom:10px;">🏘️ קהילות</div>
-      ${createBtn}
       <div id="communities-list" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; width:100%; box-sizing:border-box;">${communitiesListHTML()}</div>
     </div>
   `;
 }
+
+async function clearAllCustomCommunities() {
+  const isEd = (typeof isAdmin === 'function' && isAdmin()) || (typeof isEditMode !== 'undefined' && isEditMode);
+  if (!isEd) { alert('רק מנהל רשאי למחוק את כל הקהילות'); return; }
+  if (!confirm('האם למחוק את כל הקהילות שקיימות בבסיס הנתונים ולשמור רק את "תמונות" ו"סיפורים"?')) return;
+  try {
+    await remove(ref(db, 'website/communities'));
+    communitiesData = {};
+    if (typeof showCopyToast === 'function') showCopyToast('🗑️ כל הקהילות נמחקו בהצלחה!');
+    if (typeof navigateToPage === 'function') navigateToPage('page-communities-main');
+  } catch (e) {
+    console.error('Clear communities failed', e);
+    alert('שגיאה במחיקת הקהילות');
+  }
+}
+window.clearAllCustomCommunities = clearAllCustomCommunities;
 
 async function deleteCommunity(communityId) {
   const isEd = (typeof isAdmin === 'function' && isAdmin()) || (typeof isEditMode !== 'undefined' && isEditMode);
@@ -7775,25 +7787,11 @@ window.deleteCommunity = deleteCommunity;
 // תמונת הקהילה הנבחרת (base64) בזמן יצירה
 let communityImgData = '';
 
-// פותח את מודל יצירת הקהילה (עם אפשרות לצרף תמונה)
+// יצירת קהילות חדשות מבוטלת לבקשת המשתמש
 function createCommunity() {
-  if (!auth.currentUser) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
-  communityImgData = '';
-  const nameEl = document.getElementById('community-name');
-  const descEl = document.getElementById('community-desc');
-  const prev = document.getElementById('community-img-preview');
-  const pick = document.getElementById('community-img-pick');
-  const filtersEl = document.getElementById('community-filters');
-  const priceEl = document.getElementById('community-has-price');
-  if (nameEl) nameEl.value = '';
-  if (descEl) descEl.value = '';
-  if (filtersEl) filtersEl.value = '';
-  if (priceEl) priceEl.checked = false;
-  if (prev) { prev.style.display = 'none'; prev.src = ''; }
-  if (pick) pick.style.display = '';
-  const modal = document.getElementById('community-modal');
-  if (modal) modal.style.display = 'flex';
-  setTimeout(() => { if (nameEl) nameEl.focus(); }, 100);
+  if (typeof showCopyToast === 'function') showCopyToast('יצירת קהילות חדשות מבוטלת באתר');
+  alert('יצירת קהילות חדשות מבוטלת באתר.');
+  return;
 }
 window.createCommunity = createCommunity;
 
@@ -8080,92 +8078,11 @@ function communitiesRowHTML() {
 }
 window.communitiesRowHTML = communitiesRowHTML;
 
-const COMMUNITIES_SAMPLES = [
-  {
-    id: 'comm_sample_1',
-    name: 'קהילת עיצוב ופיתוח אתרים',
-    title: 'קהילת עיצוב ופיתוח אתרים',
-    desc: 'קהילה לחובבי ומקצועני עיצוב אתרים, UI/UX ופיתוח פרונטאנד.',
-    summary: 'קהילה לחובבי ומקצועני עיצוב אתרים, UI/UX ופיתוח פרונטאנד.',
-    createdByName: 'מנהל האתר',
-    author: 'מנהל האתר',
-    authorId: 'admin_yoni',
-    verified: true,
-    verifiedUser: true,
-    images: ['https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&q=80'],
-    image: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&q=80',
-    icon: '💻',
-    likes: 38,
-    views: 120,
-    timestamp: '13.9.2026',
-    createdAt: Date.now() - 86400000 * 4,
-    approved: true
-  },
-  {
-    id: 'comm_sample_2',
-    name: 'קהילת צילום ואמנות דיגיטלית',
-    title: 'קהילת צילום ואמנות דיגיטלית',
-    desc: 'מקום לשיתוף עבודות אמנות, צילומים מרהיבים ועיצובים גרפיים.',
-    summary: 'מקום לשיתוף עבודות אמנות, צילומים מרהיבים ועיצובים גרפיים.',
-    createdByName: 'xd xd',
-    author: 'xd xd',
-    authorId: 'user_xd',
-    verified: true,
-    verifiedUser: true,
-    images: ['https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=800&q=80'],
-    image: 'https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=800&q=80',
-    icon: '📸',
-    likes: 29,
-    views: 95,
-    timestamp: '11.9.2026',
-    createdAt: Date.now() - 86400000 * 2,
-    approved: true
-  },
-  {
-    id: 'comm_sample_3',
-    name: 'קהילת יזמות וסטארטאפים',
-    title: 'קהילת יזמות וסטארטאפים',
-    desc: 'דיונים, רעיונות לשיתוף פעולה ומידע שימושי ליזמים ובעלי עסקים.',
-    summary: 'דיונים, רעיונות לשיתוף פעולה ומידע שימושי ליזמים ובעלי עסקים.',
-    createdByName: 'דניאל מ.',
-    author: 'דניאל מ.',
-    authorId: 'sample3',
-    verified: false,
-    images: ['https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=800&q=80'],
-    image: 'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=800&q=80',
-    icon: '🚀',
-    likes: 18,
-    views: 64,
-    timestamp: '12.9.2026',
-    createdAt: Date.now() - 86400000 * 1,
-    approved: true
-  }
-];
+const COMMUNITIES_SAMPLES = [];
 
 function communityGetAlbums() {
-  const list = Object.values(communitiesData || {});
-  if (!list.length) return COMMUNITIES_SAMPLES;
-  return list.map(c => {
-    const validImages = (c.images && c.images.length) ? c.images.filter(Boolean) : (c.image ? [c.image] : ['https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&q=80']);
-    return {
-      id: c.id,
-      title: c.name || c.title || 'קהילה',
-      name: c.name || c.title || 'קהילה',
-      summary: c.desc || c.summary || '',
-      desc: c.desc || c.summary || '',
-      author: c.createdByName || c.author || 'משתמש',
-      authorId: c.authorId || c.createdBy || '',
-      verified: c.verified !== false,
-      verifiedUser: c.verifiedUser !== false,
-      images: validImages,
-      image: validImages[0],
-      likes: c.likes || (c.items ? Object.keys(c.items).length : 0),
-      views: c.views || photoGetViews(c.id) || 12,
-      timestamp: c.timestamp || '13.9.2026',
-      createdAt: c.createdAt || Date.now(),
-      approved: c.approved !== false
-    };
-  });
+  // קהילות מותאמות אישית בוטלו לבקשת המשתמש — העמוד מציג בלעדית את "תמונות" ו"סיפורים"
+  return [];
 }
 
 function buildCommunitiesPage() {
@@ -10016,12 +9933,10 @@ function buildPhotosPage(albums, section) {
         🎯 פרסם בעיה לפתרון (מכרז)
        </button>`;
   } else if (section === 'communities') {
-    sectionTitle = 'כל הקהילות';
+    sectionTitle = 'קהילות';
     searchPlaceholder = '🔍 חיפוש קהילות...';
     noResultsText = 'לא נמצאו קהילות התואמות לחיפוש';
-    addBtnHTML = `<button onclick="createCommunity()" style="background:#e11d48; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: white; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.2s;">
-        ➕ צור קהילה חדשה
-       </button>`;
+    addBtnHTML = '';
   } else if (section === 'secondhand') {
     sectionTitle = 'כל המוצרים';
     searchPlaceholder = '🔍 חיפוש מוצרים...';
