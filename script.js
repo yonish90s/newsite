@@ -6274,6 +6274,48 @@ function storyOpenDetail(id) {
   `).join('');
 
   const json = encodeURIComponent(JSON.stringify(stories));
+
+  // סיפור טקסט (עמוד "סיפורים") — מוצג ככתבה חופשית: טקסט זורם, בלי מסגרת/ריבוע ובלי חץ גלילה
+  const isTextStory = storyPagesArr.length > 0 && storyPagesArr.every(p => p.type === 'text');
+  if (isTextStory) {
+    const _fullText = storyPagesArr.map(p => p.text || '').join('\n\n');
+    const _paras = _fullText.split(/\n+/).map(t => t.trim()).filter(Boolean);
+    const _words = _fullText.split(/\s+/).filter(Boolean).length;
+    const _readMin = Math.max(1, Math.round(_words / 180));
+    const _tags = (Array.isArray(s.tags) && s.tags.length) ? s.tags : (s.category ? [s.category] : []);
+    const _tagChips = _tags.map(t => `<span class="story-article-tag">${artEsc(t)}</span>`).join('');
+    mainContent.innerHTML = `
+      <div class="art-detail articles-page stories-page story-article-page" data-story-id="${id}" data-stories-json="${json}">
+        <div class="art-detail-inner">
+          <button class="art-back-btn" onclick="storyGoBack()">← חזרה לסיפורים</button>
+          <article class="story-article">
+            <div class="story-article-fontsize" role="group" aria-label="גודל טקסט">
+              <button type="button" onclick="storyArticleFont(0)" title="קטן">א</button>
+              <button type="button" onclick="storyArticleFont(1)" class="active" title="בינוני">א</button>
+              <button type="button" onclick="storyArticleFont(2)" title="גדול">א</button>
+            </div>
+            <h1 class="story-article-title">${s.title}</h1>
+            <div class="story-article-rule"></div>
+            <div class="story-article-meta">
+              <span>🗓️ ${s.timestamp}</span>
+              <span>⏱️ זמן קריאה: ${_readMin} דקות</span>
+              <span>✍️ מאת <b>${s.author}</b></span>
+            </div>
+            ${_tagChips ? `<div class="story-article-tags">${_tagChips}</div>` : ''}
+            <div class="story-article-body" id="story-article-body">${_paras.map(p => `<p>${artEsc(p).replace(/\n/g, '<br>')}</p>`).join('')}</div>
+          </article>
+          ${(typeof storyCommentsSectionHTML === 'function') ? storyCommentsSectionHTML(id) : ''}
+          <div class="art-rec-section" style="margin-top:40px;">
+            <h3 style="margin:0 0 16px;font-size:18px;font-weight:800">סיפורים נוספים שיעניינו אותך</h3>
+            <div class="art-rec-grid">${recHTML}</div>
+          </div>
+        </div>
+      </div>
+    `;
+    if (typeof subscribeStoryComments === 'function') subscribeStoryComments(id);
+    return;
+  }
+
   mainContent.innerHTML = `
     <div class="art-detail articles-page stories-page" data-story-id="${id}" data-stories-json="${json}">
       <div class="art-detail-inner">
@@ -6308,6 +6350,17 @@ function storyOpenDetail(id) {
 }
 
 // מציג את העמוד הנוכחי של הסיפור (תמונה או טקסט מודגש)
+// בקרת גודל טקסט בכתבת סיפור (קטן/בינוני/גדול)
+function storyArticleFont(level) {
+  const body = document.getElementById('story-article-body');
+  if (!body) return;
+  const sizes = ['17px', '20px', '24px'];
+  body.style.fontSize = sizes[level] || sizes[1];
+  const wrap = body.closest('.story-article');
+  if (wrap) wrap.querySelectorAll('.story-article-fontsize button').forEach((b, i) => b.classList.toggle('active', i === level));
+}
+window.storyArticleFont = storyArticleFont;
+
 function storyRenderPage() {
   const view = document.getElementById('story-page-view');
   const pagesArr = window.storyPagesData || [];
