@@ -5146,9 +5146,39 @@ html.hide-site-images .photo-mini-thumb {
   box-sizing: border-box;
 }
 .story-img-page { max-width: 100%; max-height: 420px; object-fit: contain; border-radius: 10px; cursor: zoom-in; display: block; }
+/* עמוד תמונה בקורא הסיפורים — נפתח בגודל מלא, ברור וללא שוליים לבנים ענקיים */
+.story-page-view.story-view-image {
+  height: auto;
+  min-height: auto;
+  background: transparent;
+  border: none;
+}
+.story-page-view.story-view-image .story-page-inner {
+  padding: 0;
+  width: 100%;
+}
+.story-page-view.story-view-image .story-img-page {
+  width: 100%;
+  max-width: 100%;
+  max-height: 80vh;
+  object-fit: contain;
+  border-radius: 14px;
+  display: block;
+  margin: 0 auto;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+}
 @media (max-width: 640px) {
   .story-page-view { height: 62vh; min-height: 320px; }
   .story-img-page { max-height: 56vh; }
+  .story-page-view.story-view-image {
+    height: auto;
+    min-height: auto;
+  }
+  .story-page-view.story-view-image .story-img-page {
+    width: 100%;
+    max-height: 75vh;
+    border-radius: 12px;
+  }
 }
 .story-text-page {
   font-size: 15.5px;

@@ -445,7 +445,7 @@ function sanitizeToOnlyPhotosAndStories() {
   // קומיקס + סיפורים: משנים את עמוד הסיפורים הישן ל"קומיקס" ומוסיפים עמוד "סיפורים" חדש (טקסט)
   setupComicsStoriesPages();
 
-  // עמוד "רעיונות": מוודאים שהוא קיים תמיד
+  // עמוד "רעיונות": מוודאים שהוא קיים
   const _ideasPage = pages.find(p => p && p.id === 'page-ideas-main');
   const _ideasContent = '<div class="ideas-page" data-page-id="page-ideas-main"></div>';
   if (!_ideasPage) {
@@ -554,10 +554,13 @@ function sanitizeToOnlyPhotosAndStories() {
     });
   }
   topNavPages = topNavPages.filter(id => !isSideOnlyId(id));
-  // מוודאים ש-page-ideas-main מופיע ראשון בתפריט העליון
-  if (pages.some(p => p && p.id === 'page-ideas-main')) {
+  // מוודאים ש-page-ideas-main מופיע בתפריט העליון רק אם אינו מוסתר
+  const _ideasPInit = pages.find(p => p && p.id === 'page-ideas-main');
+  if (_ideasPInit && !_ideasPInit.isHidden) {
     topNavPages = topNavPages.filter(id => id !== 'page-ideas-main');
     topNavPages.unshift('page-ideas-main');
+  } else {
+    topNavPages = topNavPages.filter(id => id !== 'page-ideas-main');
   }
   // מסירים מהתפריט העליון עמודים שכבר לא קיימים (נמחקו)
   topNavPages = topNavPages.filter(id => pages.some(p => p && p.id === id));
@@ -894,9 +897,12 @@ function renderSideMenu() {
 // פונקציה שמייצרת את התפריט העליון ומוסיפה לו מגה-תפריט
 function renderTopNav() {
   if (!Array.isArray(topNavPages)) topNavPages = [];
-  if (pages.some(p => p && p.id === 'page-ideas-main')) {
+  const _ideasPTop = pages.find(p => p && p.id === 'page-ideas-main');
+  if (_ideasPTop && !_ideasPTop.isHidden) {
     topNavPages = topNavPages.filter(id => id !== 'page-ideas-main');
     topNavPages.unshift('page-ideas-main');
+  } else {
+    topNavPages = topNavPages.filter(id => id !== 'page-ideas-main');
   }
   navLinksContainer.innerHTML = ''; // מנקה את התפריט הסטטי מה-HTML
   
@@ -7717,6 +7723,7 @@ async function qpPublish() {
       stories.unshift(st);
       if (typeof buildStoriesPage === 'function') mainContent.innerHTML = buildStoriesPage(stories);
       if (typeof saveCurrentPageContent === 'function') saveCurrentPageContent();
+      if (!isAdminNow && typeof pushPendingSubmission === 'function') pushPendingSubmission(st);
       qpBubble('bot', '✅ הסיפור פורסם!' + (isAdminNow ? '' : '<br>הוא ממתין לאישור מנהל ויופיע בקרוב.'));
       setTimeout(() => { const m = document.getElementById('quick-publish-modal'); if (m) m.style.display = 'none'; }, 2000);
     } else {
@@ -7726,6 +7733,7 @@ async function qpPublish() {
       albums.unshift(album);
       mainContent.innerHTML = buildPhotosPage(albums, sec);
       if (typeof saveCurrentPageContent === 'function') saveCurrentPageContent();
+      if (!isAdminNow && typeof pushPendingSubmission === 'function') pushPendingSubmission(album);
       const what = sec === 'secondhand' ? 'המוצר פורסם' : 'המודעה פורסמה';
       qpBubble('bot', `✅ ${what} בהצלחה!` + (isAdminNow ? '' : '<br>ממתין לאישור מנהל ויופיע בקרוב.'));
       setTimeout(() => { const m = document.getElementById('quick-publish-modal'); if (m) m.style.display = 'none'; }, 2000);
@@ -11535,19 +11543,20 @@ function submitClassAction() {
     author: nick,
     authorId: user ? user.uid : '',
     category: 'תביעה ייצוגית',
-    isClassAction: true,
-    businessName: business,
-    region: '',
-    categoryColor: '#0f172a',
-    timestamp: new Date().toLocaleDateString('he-IL'),
-    createdAt: Date.now(),
-    likes: 0,
-    approved: (typeof isEditMode !== 'undefined' && isEditMode)
-  });
+  const isApproved = (typeof isEditMode !== 'undefined' && isEditMode);
+  const newAlbum = {
+    id: 'ph' + Date.now(), title: '⚖️ ' + business, summary: desc, images: [],
+    author: nick, authorId: user ? user.uid : '', category: 'תביעה ייצוגית',
+    isClassAction: true, businessName: business, region: '', categoryColor: '#0f172a',
+    timestamp: new Date().toLocaleDateString('he-IL'), createdAt: Date.now(), likes: 0,
+    approved: isApproved
+  };
+  albums.unshift(newAlbum);
+  if (!isApproved && typeof pushPendingSubmission === 'function') pushPendingSubmission(newAlbum);
   if (typeof mainContent !== 'undefined' && mainContent) mainContent.innerHTML = buildPhotosPage(albums, 'reviews');
   if (typeof saveCurrentPageContent === 'function') saveCurrentPageContent();
   const m = document.getElementById('classaction-modal'); if (m) m.remove();
-  alert((typeof isEditMode !== 'undefined' && isEditMode) ? 'התביעה פורסמה!' : 'התביעה נשלחה לאישור מנהל ותופיע בקרוב.');
+  alert(isApproved ? 'התביעה פורסמה!' : 'התביעה נשלחה לאישור מנהל ותופיע בקרוב.');
 }
 window.submitClassAction = submitClassAction;
 
@@ -11583,17 +11592,20 @@ function submitWanted() {
   let nick = 'משתמש';
   if (user) { try { const p = JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}'); nick = p.nickname || user.displayName || (user.email ? user.email.split('@')[0] : 'משתמש'); } catch (e) {} }
   const albums = (typeof photoGetAlbums === 'function') ? photoGetAlbums() : [];
-  albums.unshift({
+  const isApproved = (typeof isEditMode !== 'undefined' && isEditMode);
+  const newAlbum = {
     id: 'ph' + Date.now(), title: '🔎 ' + title, summary: desc, images: [],
     author: nick, authorId: user ? user.uid : '', category: 'מחפש מוצר',
     isWanted: true, budget: budget, offers: {}, region: '', categoryColor: '#2563eb',
     timestamp: new Date().toLocaleDateString('he-IL'), createdAt: Date.now(), likes: 0,
-    approved: (typeof isEditMode !== 'undefined' && isEditMode)
-  });
+    approved: isApproved
+  };
+  albums.unshift(newAlbum);
+  if (!isApproved && typeof pushPendingSubmission === 'function') pushPendingSubmission(newAlbum);
   if (typeof mainContent !== 'undefined' && mainContent) mainContent.innerHTML = buildPhotosPage(albums, 'secondhand');
   if (typeof saveCurrentPageContent === 'function') saveCurrentPageContent();
   const m = document.getElementById('wanted-modal'); if (m) m.remove();
-  alert((typeof isEditMode !== 'undefined' && isEditMode) ? 'הבקשה פורסמה!' : 'הבקשה נשלחה לאישור מנהל ותופיע בקרוב.');
+  alert(isApproved ? 'הבקשה פורסמה!' : 'הבקשה נשלחה לאישור מנהל ותופיע בקרוב.');
 }
 window.submitWanted = submitWanted;
 
@@ -11869,7 +11881,9 @@ document.getElementById('photo-save').addEventListener('click', () => {
       adminOnly,
       expiresAt: newExpiresAt,
       approved: isEditMode
-    });
+    };
+    albums.unshift(newAlbumObj);
+    if (!isEditMode && typeof pushPendingSubmission === 'function') pushPendingSubmission(newAlbumObj);
   }
 
   mainContent.innerHTML = buildPhotosPage(albums, _saveSection);
@@ -11925,14 +11939,36 @@ function photoApprove(id) {
 window.photoApprove = photoApprove;
 
 // ============================================================
-// עמוד "בקשות" — אישור העלאות משתמשים (למנהל בלבד)
+// עמוד "בקשות" — אישור העלאות משתמשים (למנהל בלבד + סנכרון Firebase בזמן אמת)
 // ============================================================
-// מאתר את עמוד התמונות הראשי מתוך רשימת העמודים השמורים
+let pendingSubmissionsData = {};
+let pendingSubmissionsSubscribed = false;
+
+async function pushPendingSubmission(album) {
+  if (!album || !album.id) return;
+  try {
+    await set(ref(db, `website/pending_submissions/${album.id}`), album);
+  } catch (e) {
+    console.error('Failed to save pending submission to Firebase:', e);
+  }
+}
+window.pushPendingSubmission = pushPendingSubmission;
+
+function subscribePendingSubmissions() {
+  if (pendingSubmissionsSubscribed) return;
+  pendingSubmissionsSubscribed = true;
+  onValue(ref(db, 'website/pending_submissions'), (snap) => {
+    pendingSubmissionsData = snap.val() || {};
+    const el = document.getElementById('pending-requests-list');
+    if (el) el.innerHTML = pendingRequestsListHTML();
+  });
+}
+
 function _reqPhotosPageObj() {
   if (typeof pages === 'undefined' || !Array.isArray(pages)) return null;
   return pages.find(p => p && (p.content || '').includes('photos-page') && (p.content || '').includes('data-photos-json') && !(p.content || '').includes('community') && !(p.content || '').includes('user-page'));
 }
-// קורא את האלבומים מהאחסון (לא מה-DOM) — עובד גם כשלא נמצאים בעמוד התמונות
+
 function _reqGetStoredAlbums() {
   const pp = _reqPhotosPageObj();
   if (!pp) return [];
@@ -11941,63 +11977,120 @@ function _reqGetStoredAlbums() {
   try { return JSON.parse(decodeURIComponent(m[1])) || []; } catch (e) { return []; }
 }
 
+function pendingRequestsListHTML() {
+  const fbPending = Object.values(pendingSubmissionsData || {});
+  const localAlbums = _reqGetStoredAlbums();
+  const localPending = localAlbums.filter(p => p && p.approved === false);
+
+  const map = new Map();
+  fbPending.forEach(p => { if (p && p.id) map.set(p.id, p); });
+  localPending.forEach(p => { if (p && p.id && !map.has(p.id)) map.set(p.id, p); });
+
+  const pending = Array.from(map.values()).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+  if (!pending.length) {
+    return `<div style="text-align:center; padding:50px 20px; color:#64748b; font-weight:700; font-size:15px;">אין בקשות ממתינות לאישור 🎉</div>`;
+  }
+
+  const cards = pending.map(p => {
+    const img = (p.images && p.images[0]) ? p.images[0] : (p.image || '');
+    const isStory = p.isStory || p.type === 'story';
+    const typeBadge = isStory ? '📖 סיפור' : (p.isWanted ? '🔎 מחפש מוצר' : (p.isClassAction ? '⚖️ תביעה' : '🖼️ תמונה/מוצר'));
+    return `
+      <div class="req-card" style="display:flex; align-items:center; justify-content:space-between; gap:16px; padding:14px; border:1px solid #e2e8f0; border-radius:12px; background:#fff; margin-bottom:12px; box-shadow:0 2px 6px rgba(0,0,0,0.03);">
+        <div style="display:flex; align-items:center; gap:14px; flex:1; min-width:0;">
+          <div class="req-thumb" style="width:60px; height:60px; border-radius:8px; overflow:hidden; background:#f1f5f9; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+            ${img ? `<img src="${img}" alt="" style="width:100%; height:100%; object-fit:cover;">` : '<span style="font-size:24px;">🖼️</span>'}
+          </div>
+          <div class="req-body" style="display:flex; flex-direction:column; gap:4px; flex:1; min-width:0;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="font-size:15px; font-weight:900; color:#0f172a;">${artEsc(p.title || 'ללא כותרת')}</span>
+              <span style="background:#f1f5f9; color:#475569; font-size:10.5px; font-weight:700; padding:2px 7px; border-radius:6px;">${typeBadge}</span>
+            </div>
+            <div style="font-size:12px; color:#64748b;">
+              <span>מאת: <strong>${artEsc(p.author || 'משתמש')}</strong></span> ${p.timestamp ? ' · ' + artEsc(p.timestamp) : ''}
+            </div>
+            ${p.summary ? `<div style="font-size:12.5px; color:#475569; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${artEsc(p.summary)}</div>` : ''}
+          </div>
+        </div>
+        <div class="req-actions" style="display:flex; gap:8px; flex-shrink:0;">
+          <button class="req-approve" onclick="reqApprove('${artEsc(p.id)}')" style="background:#16a34a; color:#fff; border:none; border-radius:8px; padding:8px 16px; font-size:13px; font-weight:800; cursor:pointer;">✓ אשר</button>
+          <button class="req-reject" onclick="reqReject('${artEsc(p.id)}')" style="background:#ef4444; color:#fff; border:none; border-radius:8px; padding:8px 16px; font-size:13px; font-weight:800; cursor:pointer;">✕ דחה</button>
+        </div>
+      </div>`;
+  }).join('');
+
+  return `<div class="req-list">${cards}</div>`;
+}
+
 function buildRequestsPage() {
+  subscribePendingSubmissions();
   const allowed = (typeof isAdmin === 'function' && isAdmin()) || (typeof isEditMode !== 'undefined' && isEditMode);
   if (!allowed) {
     return `<div class="requests-page" data-page-id="page-requests-main"><div class="comm-inner"><div style="text-align:center; padding:60px 20px; color:#64748b; font-size:16px; font-weight:700;">🔒 עמוד זה גלוי למנהל בלבד.</div></div></div>`;
   }
-  const albums = _reqGetStoredAlbums();
-  const pending = albums.filter(p => p && p.approved === false).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-  const cards = pending.map(p => {
-    const img = (p.images && p.images[0]) ? p.images[0] : (p.image || '');
-    return `
-      <div class="req-card">
-        <div class="req-thumb">${img ? `<img src="${img}" alt="">` : '🖼️'}</div>
-        <div class="req-body">
-          <div class="req-title">${artEsc(p.title || 'ללא כותרת')}</div>
-          <div class="req-meta">${artEsc(p.author || 'משתמש')}${p.timestamp ? ' · ' + artEsc(p.timestamp) : ''}</div>
-          ${p.summary ? `<div class="req-sub">${artEsc(p.summary)}</div>` : ''}
-        </div>
-        <div class="req-actions">
-          <button class="req-approve" onclick="reqApprove('${artEsc(p.id)}')">✓ אשר</button>
-          <button class="req-reject" onclick="reqReject('${artEsc(p.id)}')">✕ דחה</button>
-        </div>
-      </div>`;
-  }).join('');
-  const body = pending.length
-    ? `<div class="req-list">${cards}</div>`
-    : `<div style="text-align:center; padding:50px 20px; color:#64748b; font-weight:700; font-size:15px;">אין בקשות ממתינות לאישור 🎉</div>`;
   return `
     <div class="requests-page" data-page-id="page-requests-main">
       <div class="comm-inner">
         <div style="max-width:820px; margin:0 auto; direction:rtl; text-align:right;">
           <h2 style="font-size:24px; font-weight:900; color:#0f172a; margin:0 0 6px;">📥 בקשות לאישור <span style="font-size:14px; color:#e11d48;">(למנהל בלבד)</span></h2>
-          <p style="color:#64748b; font-size:14px; margin:0 0 20px; line-height:1.5;">כל תוכן שמשתמש מעלה מופיע כאן וממתין לאישורך לפני שיפורסם באתר.${pending.length ? ' · <b>' + pending.length + '</b> ממתינות' : ''}</p>
-          ${body}
+          <p style="color:#64748b; font-size:14px; margin:0 0 20px; line-height:1.5;">כל תוכן שמשתמש מעלה מופיע כאן וממתין לאישורך לפני שיפורסם באתר.</p>
+          <div id="pending-requests-list">${pendingRequestsListHTML()}</div>
         </div>
       </div>
     </div>`;
 }
 window.buildRequestsPage = buildRequestsPage;
 
-// אישור/דחייה: עוברים לעמוד התמונות (כדי לשמור נכון), משנים, וחוזרים לעמוד הבקשות
-function _reqMutate(id, action) {
+async function _reqMutate(id, action) {
   const allowed = (typeof isAdmin === 'function' && isAdmin()) || (typeof isEditMode !== 'undefined' && isEditMode);
   if (!allowed) return;
-  const pp = _reqPhotosPageObj();
-  if (!pp) { alert('לא נמצא עמוד התמונות'); return; }
-  activePageId = pp.id;
-  if (typeof renderPage === 'function') renderPage();
+
+  let targetItem = pendingSubmissionsData[id];
   let albums = (typeof photoGetAlbums === 'function') ? photoGetAlbums() : [];
+
+  if (!targetItem) {
+    targetItem = albums.find(x => x.id === id);
+  }
+
   if (action === 'approve') {
-    const a = albums.find(x => x.id === id);
-    if (a) a.approved = true;
+    if (targetItem) {
+      targetItem.approved = true;
+      if (targetItem.isStory || targetItem.type === 'story') {
+        const stories = (typeof storyGetStories === 'function') ? storyGetStories() : [];
+        const existingIdx = stories.findIndex(s => s.id === id);
+        if (existingIdx >= 0) {
+          stories[existingIdx].approved = true;
+        } else {
+          stories.unshift(targetItem);
+        }
+        if (typeof buildStoriesPage === 'function') {
+          const spObj = pages.find(p => p && (p.id === 'page-stories-main' || (p.title || '').includes('סיפורים')));
+          if (spObj) spObj.content = buildStoriesPage(stories);
+        }
+      } else {
+        const existingIdx = albums.findIndex(a => a.id === id);
+        if (existingIdx >= 0) {
+          albums[existingIdx].approved = true;
+        } else {
+          albums.unshift(targetItem);
+        }
+        const ppObj = _reqPhotosPageObj();
+        if (ppObj) ppObj.content = buildPhotosPage(albums, targetItem.isWanted ? 'secondhand' : 'photos');
+      }
+    }
+    if (typeof saveCurrentPageContent === 'function') { try { saveCurrentPageContent(); } catch (e) {} }
+    try { await set(ref(db, `website/pending_submissions/${id}`), null); } catch (e) {}
+    if (typeof showCopyToast === 'function') showCopyToast('✓ התוכן אושר ופורסם בהצלחה!');
   } else if (action === 'reject') {
     albums = albums.filter(x => x.id !== id);
+    const ppObj = _reqPhotosPageObj();
+    if (ppObj) ppObj.content = buildPhotosPage(albums, 'photos');
+    if (typeof saveCurrentPageContent === 'function') { try { saveCurrentPageContent(); } catch (e) {} }
+    try { await set(ref(db, `website/pending_submissions/${id}`), null); } catch (e) {}
+    if (typeof showCopyToast === 'function') showCopyToast('✕ התוכן נדחה ונמחק.');
   }
-  if (typeof mainContent !== 'undefined' && mainContent) mainContent.innerHTML = buildPhotosPage(albums, 'photos');
-  if (typeof saveCurrentPageContent === 'function') { try { saveCurrentPageContent(); } catch (e) {} }
-  activePageId = 'page-requests-main';
+
   if (typeof renderSideMenu === 'function') { try { renderSideMenu(); } catch (e) {} }
   if (typeof renderPage === 'function') renderPage();
 }
@@ -14768,13 +14861,12 @@ onValue(ref(db, 'website'), (snapshot) => {
     if (pList.some(p => p && ((p.content || '').includes('photos-page') || (p.content || '').includes('stories-page')))) {
       pList = pList.filter(p => p && ((p.content || '').includes('photos-page') || (p.content || '').includes('stories-page') || (p.content || '').includes('ideas-page') || (p.content || '').includes('communities-page') || (p.content || '').includes('info-page') || (p.content || '').includes('requests-page') || (p.content || '').includes('questions-page') || (p.content || '').includes('offers-page') || p.id === 'page-ideas-main'));
     }
-    // מוודאים שעמוד "רעיונות" תמיד קיים ואינו מוסתר
+    // מוודאים שעמוד "רעיונות" קיים
     const _ipd = pList.find(p => p && p.id === 'page-ideas-main');
     const _ipdc = '<div class="ideas-page" data-page-id="page-ideas-main"></div>';
     if (!_ipd) {
       pList.push({ id: 'page-ideas-main', title: 'רעיונות 💡', isHidden: false, content: _ipdc });
     } else {
-      _ipd.isHidden = false;
       if (!_ipd.title) _ipd.title = 'רעיונות 💡';
       _ipd.content = _ipdc;
     }
