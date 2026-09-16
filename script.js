@@ -11535,14 +11535,6 @@ function submitClassAction() {
   let nick = 'אנונימי';
   if (user) { try { const p = JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}'); nick = p.nickname || user.displayName || (user.email ? user.email.split('@')[0] : 'משתמש'); } catch (e) { nick = user.displayName || 'משתמש'; } }
   const albums = (typeof photoGetAlbums === 'function') ? photoGetAlbums() : [];
-  albums.unshift({
-    id: 'ph' + Date.now(),
-    title: '⚖️ ' + title,
-    summary: desc,
-    images: [],
-    author: nick,
-    authorId: user ? user.uid : '',
-    category: 'תביעה ייצוגית',
   const isApproved = (typeof isEditMode !== 'undefined' && isEditMode);
   const newAlbum = {
     id: 'ph' + Date.now(), title: '⚖️ ' + business, summary: desc, images: [],
@@ -11861,7 +11853,7 @@ document.getElementById('photo-save').addEventListener('click', () => {
     }
     editingPhotoId = null;
   } else {
-    albums.unshift({
+    const newAlbumObj = {
       id: 'ph' + Date.now(),
       title,
       summary: document.getElementById('photo-summary').value.trim(),
