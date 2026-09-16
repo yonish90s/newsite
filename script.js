@@ -4918,6 +4918,9 @@ function artGoBack() {
 }
 
 function artSearch(query) {
+  if (typeof logSearchQuery === 'function' && query) {
+    logSearchQuery(query, 'כתבות');
+  }
   const q = (query || '').trim().toLowerCase();
   const rows = mainContent.querySelectorAll('.art-row');
   let visible = 0;
@@ -6397,6 +6400,9 @@ function storyDelete(id, el) {
 }
 
 function storySearch(val) {
+  if (typeof logSearchQuery === 'function' && val) {
+    logSearchQuery(val, 'סיפורים');
+  }
   // מאחד חיפוש + סינון קטגוריה; העימוד מציג את התוצאות
   artPageState.stories = 1;
   storyApplyFilters();
@@ -8041,6 +8047,9 @@ window.openCommunityPage = openCommunityPage;
 
 let communitiesSearchQuery = '';
 function communitiesSearch(val) {
+  if (typeof logSearchQuery === 'function' && val) {
+    logSearchQuery(val, 'קהילות');
+  }
   communitiesSearchQuery = (val || '').toLowerCase().trim();
   const rowEl = document.getElementById('communities-page-list');
   if (rowEl) rowEl.innerHTML = communitiesRowHTML();
@@ -8121,6 +8130,88 @@ let userSubmissionsData = {};
 let userSubmissionsSubscribed = false;
 let adminInfoText = '';
 let adminInfoSubscribed = false;
+
+// ============================================================
+// תיעוד היסטוריית חיפושים ושיחות מגולשים (כולל אורחים) למנהל
+// ============================================================
+let searchHistoryData = {};
+let searchHistorySubscribed = false;
+let searchLogDebounceTimer = null;
+
+function logSearchQuery(query, pageName) {
+  const trimmed = (query || '').trim();
+  if (!trimmed || trimmed.length < 2) return;
+
+  clearTimeout(searchLogDebounceTimer);
+  searchLogDebounceTimer = setTimeout(async () => {
+    try {
+      const userObj = auth.currentUser;
+      const userName = (userObj && typeof liveChatUserName === 'function') ? liveChatUserName() : 'אורח';
+      const isRegistered = !!userObj;
+
+      await push(ref(db, 'website/search_history'), {
+        query: trimmed.slice(0, 300),
+        page: pageName || 'כללי',
+        user: userName,
+        registered: isRegistered,
+        timestamp: Date.now()
+      });
+    } catch (e) {
+      console.error('Failed to log search query:', e);
+    }
+  }, 1200);
+}
+window.logSearchQuery = logSearchQuery;
+
+function subscribeSearchHistory() {
+  if (searchHistorySubscribed) return;
+  searchHistorySubscribed = true;
+  onValue(ref(db, 'website/search_history'), (snap) => {
+    searchHistoryData = snap.val() || {};
+    const listEl = document.getElementById('search-history-list');
+    if (listEl) listEl.innerHTML = searchHistoryListHTML();
+  });
+}
+
+function searchHistoryListHTML() {
+  const entries = Object.entries(searchHistoryData || {}).sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
+  if (!entries.length) {
+    return '<div style="text-align:center; color:#94a3b8; font-size:13px; padding:20px; background:#fff; border:1px solid #e2e8f0; border-radius:10px;">עדיין לא נרשמו חיפושים מגולשים.</div>';
+  }
+  return entries.map(([key, s]) => {
+    const time = s.timestamp ? new Date(s.timestamp).toLocaleString('he-IL') : '';
+    const badge = s.registered 
+      ? '<span style="background:#dcfce7; color:#166534; font-size:10px; font-weight:800; padding:2px 6px; border-radius:6px;">רשום</span>' 
+      : '<span style="background:#fee2e2; color:#991b1b; font-size:10px; font-weight:800; padding:2px 6px; border-radius:6px;">אורח 👤</span>';
+    const pageBadge = `<span style="background:#f1f5f9; color:#475569; font-size:10.5px; font-weight:700; padding:2px 6px; border-radius:6px;">📍 ${artEsc(s.page || 'כללי')}</span>`;
+    return `
+      <div style="border:1px solid #e2e8f0; border-radius:10px; padding:12px; background:#fff; margin-bottom:8px; display:flex; align-items:center; justify-content:space-between; gap:12px; box-shadow:0 1px 3px rgba(0,0,0,0.02);">
+        <div style="display:flex; flex-direction:column; gap:4px; flex:1; min-width:0;">
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <span style="font-size:14px; font-weight:900; color:#0f172a;">🔍 "${artEsc(s.query || '')}"</span>
+            ${badge}
+            ${pageBadge}
+          </div>
+          <div style="font-size:11.5px; color:#64748b;">
+            <span>מאת: <strong>${artEsc(s.user || 'אורח')}</strong></span> &bull; <span>${time}</span>
+          </div>
+        </div>
+        <button onclick="deleteSearchHistoryItem('${artEsc(key)}')" title="מחק חיפוש" style="background:none; border:none; color:#e11d48; font-size:16px; cursor:pointer; flex-shrink:0;">🗑️</button>
+      </div>
+    `;
+  }).join('');
+}
+
+async function deleteSearchHistoryItem(key) {
+  try { await set(ref(db, `website/search_history/${key}`), null); } catch (e) { console.error(e); }
+}
+window.deleteSearchHistoryItem = deleteSearchHistoryItem;
+
+async function clearAllSearchHistory() {
+  if (!confirm('האם למחוק את כל היסטוריית החיפושים?')) return;
+  try { await set(ref(db, 'website/search_history'), null); } catch (e) { console.error(e); }
+}
+window.clearAllSearchHistory = clearAllSearchHistory;
 
 function subscribeUserSubmissions() {
   if (userSubmissionsSubscribed) return;
@@ -8221,6 +8312,7 @@ async function saveAdminInfo() {
 window.saveAdminInfo = saveAdminInfo;
 
 function buildInfoPage() {
+  subscribeSearchHistory();
   subscribeUserSubmissions();
   subscribeAdminInfo();
   const allowed = (typeof isAdmin === 'function' && isAdmin()) || (typeof isEditMode !== 'undefined' && isEditMode);
@@ -8266,12 +8358,20 @@ function buildInfoPage() {
           ${analyticsHTML}
 
           <div style="background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:18px; margin-bottom:24px; box-shadow:0 4px 15px rgba(0,0,0,0.03);">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+              <div style="font-size:16px; font-weight:900; color:#0f172a;">🔍 היסטוריית חיפושים ושיחות מכל הגולשים (כולל אורחים)</div>
+              <button onclick="clearAllSearchHistory()" style="background:#f1f5f9; border:1px solid #cbd5e1; border-radius:6px; padding:4px 10px; font-size:12px; font-weight:700; color:#475569; cursor:pointer;">🗑️ ניקוי היסטוריית חיפושים</button>
+            </div>
+            <div id="search-history-list">${searchHistoryListHTML()}</div>
+          </div>
+
+          <div style="background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:18px; margin-bottom:24px; box-shadow:0 4px 15px rgba(0,0,0,0.03);">
             <div style="font-size:16px; font-weight:900; color:#0f172a; margin-bottom:8px;">📝 המידע שלי</div>
             <textarea id="admin-info-notes" rows="8" placeholder="כתוב כאן מידע פרטי שרק אתה רואה..." style="width:100%; box-sizing:border-box; padding:12px; border:1px solid #ddd; border-radius:10px; font-size:14px; line-height:1.6; resize:vertical;">${artEsc(adminInfoText)}</textarea>
             <button onclick="saveAdminInfo()" style="margin-top:10px; background:#e11d48; color:#fff; border:none; border-radius:8px; padding:10px 20px; font-size:14px; font-weight:800; cursor:pointer;">שמור מידע</button>
           </div>
 
-          <div style="font-size:16px; font-weight:900; color:#0f172a; margin-bottom:12px;">📥 מידע שהתקבל ממשתמשים</div>
+          <div style="font-size:16px; font-weight:900; color:#0f172a; margin-bottom:12px;">📥 מידע שהתקבל ממשתמשים (טופס ציבורי)</div>
           <div id="info-submissions-list">${infoSubmissionsListHTML()}</div>
         </div>
       </div>
@@ -8399,6 +8499,9 @@ function questionsListHTML() {
 window.questionsListHTML = questionsListHTML;
 
 function questionsSearch(val) {
+  if (typeof logSearchQuery === 'function' && val) {
+    logSearchQuery(val, 'שאלות');
+  }
   questionsSearchQuery = (val || '').toLowerCase().trim();
   const el = document.getElementById('questions-list');
   if (el) el.innerHTML = questionsListHTML();
@@ -11002,6 +11105,10 @@ function photoDelete(id, el) {
 }
 
 function photoSearch(val) {
+  if (typeof logSearchQuery === 'function' && val) {
+    const sectionName = (typeof photoCurrentSection === 'function' && photoCurrentSection() === 'ideas') ? 'רעיונות' : ((typeof photoCurrentSection === 'function' && photoCurrentSection() === 'communities') ? 'קהילות' : 'תמונות');
+    logSearchQuery(val, sectionName);
+  }
   photoApplyFilters();
 }
 
@@ -13053,6 +13160,9 @@ function courseDelete(id, el) {
 }
 
 function courseSearch(val) {
+  if (typeof logSearchQuery === 'function' && val) {
+    logSearchQuery(val, 'קורסים');
+  }
   const q = (val || '').toLowerCase().trim();
   const rows = mainContent.querySelectorAll('.courses-page .art-row');
   let visible = 0;
