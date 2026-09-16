@@ -424,13 +424,12 @@ function sanitizeToOnlyPhotosAndStories() {
     pages.push({ id: 'page-ideas-main', title: 'רעיונות 💡', content: '<div class="ideas-page" data-page-id="page-ideas-main"></div>' });
   }
 
-  // עמוד "רעיונות": מוודאים שהוא קיים תמיד
+  // עמוד "רעיונות": מוודאים שהוא קיים
   const _ideasPage = pages.find(p => p && p.id === 'page-ideas-main');
   const _ideasContent = '<div class="ideas-page" data-page-id="page-ideas-main"></div>';
   if (!_ideasPage) {
     pages.push({ id: 'page-ideas-main', title: 'רעיונות 💡', isHidden: false, content: _ideasContent });
   } else {
-    _ideasPage.isHidden = false;
     if (!_ideasPage.title) _ideasPage.title = 'רעיונות 💡';
     _ideasPage.content = _ideasContent;
   }
@@ -533,10 +532,13 @@ function sanitizeToOnlyPhotosAndStories() {
     });
   }
   topNavPages = topNavPages.filter(id => !isSideOnlyId(id));
-  // מוודאים ש-page-ideas-main מופיע ראשון בתפריט העליון
-  if (pages.some(p => p && p.id === 'page-ideas-main')) {
+  // מוודאים ש-page-ideas-main מופיע בתפריט העליון רק אם אינו מוסתר
+  const _ideasPInit = pages.find(p => p && p.id === 'page-ideas-main');
+  if (_ideasPInit && !_ideasPInit.isHidden) {
     topNavPages = topNavPages.filter(id => id !== 'page-ideas-main');
     topNavPages.unshift('page-ideas-main');
+  } else {
+    topNavPages = topNavPages.filter(id => id !== 'page-ideas-main');
   }
   // מסירים מהתפריט העליון עמודים שכבר לא קיימים (נמחקו)
   topNavPages = topNavPages.filter(id => pages.some(p => p && p.id === id));
@@ -873,9 +875,12 @@ function renderSideMenu() {
 // פונקציה שמייצרת את התפריט העליון ומוסיפה לו מגה-תפריט
 function renderTopNav() {
   if (!Array.isArray(topNavPages)) topNavPages = [];
-  if (pages.some(p => p && p.id === 'page-ideas-main')) {
+  const _ideasPTop = pages.find(p => p && p.id === 'page-ideas-main');
+  if (_ideasPTop && !_ideasPTop.isHidden) {
     topNavPages = topNavPages.filter(id => id !== 'page-ideas-main');
     topNavPages.unshift('page-ideas-main');
+  } else {
+    topNavPages = topNavPages.filter(id => id !== 'page-ideas-main');
   }
   navLinksContainer.innerHTML = ''; // מנקה את התפריט הסטטי מה-HTML
   
@@ -14738,13 +14743,12 @@ onValue(ref(db, 'website'), (snapshot) => {
     if (pList.some(p => p && ((p.content || '').includes('photos-page') || (p.content || '').includes('stories-page')))) {
       pList = pList.filter(p => p && ((p.content || '').includes('photos-page') || (p.content || '').includes('stories-page') || (p.content || '').includes('ideas-page') || (p.content || '').includes('communities-page') || (p.content || '').includes('info-page') || (p.content || '').includes('requests-page') || (p.content || '').includes('questions-page') || (p.content || '').includes('offers-page') || p.id === 'page-ideas-main'));
     }
-    // מוודאים שעמוד "רעיונות" תמיד קיים ואינו מוסתר
+    // מוודאים שעמוד "רעיונות" קיים
     const _ipd = pList.find(p => p && p.id === 'page-ideas-main');
     const _ipdc = '<div class="ideas-page" data-page-id="page-ideas-main"></div>';
     if (!_ipd) {
       pList.push({ id: 'page-ideas-main', title: 'רעיונות 💡', isHidden: false, content: _ipdc });
     } else {
-      _ipd.isHidden = false;
       if (!_ipd.title) _ipd.title = 'רעיונות 💡';
       _ipd.content = _ipdc;
     }
