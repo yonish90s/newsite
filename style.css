@@ -4010,28 +4010,18 @@ body:not(.edit-mode) .hidden-nav {
 }
 
 /* ============================================================
-   כפתור "עוד" והרחבת שורות גלריה בעמוד התמונות
+   ביטול כפתור "עוד" והצגת כל הפריטים והסיפורים תמיד
    ============================================================ */
-.photos-page .art-rows.photo-collapsible:not(.expanded) > .art-row:nth-child(n+5) {
+.photos-page .art-rows.photo-collapsible > .art-row,
+.stories-page .art-rows.photo-collapsible > .art-row,
+.art-rows.photo-collapsible > .art-row {
+  display: flex !important;
+}
+
+.photo-more-btn,
+.photo-row-more-wrap {
   display: none !important;
 }
-/* קיפול שורת סיפורים לפי מספר העמודות שנבחר (שורה אחת) */
-.stories-page.story-cols-2 .art-rows.photo-collapsible:not(.expanded) > .art-row:nth-child(n+3) { display: none !important; }
-.stories-page.story-cols-3 .art-rows.photo-collapsible:not(.expanded) > .art-row:nth-child(n+4) { display: none !important; }
-.stories-page.story-cols-4 .art-rows.photo-collapsible:not(.expanded) > .art-row:nth-child(n+5) { display: none !important; }
-.photo-more-btn {
-  background: #eef2ff;
-  color: #1e3a8a;
-  border: 1.5px solid #c7d2fe;
-  border-radius: 10px;
-  padding: 9px 32px;
-  font-size: 13.5px;
-  font-weight: 800;
-  cursor: pointer;
-  transition: background 0.2s, color 0.2s, transform 0.15s;
-}
-.photo-more-btn:hover { background: #1e3a8a; color: #fff; }
-.photo-more-btn:active { transform: scale(0.97); }
 
 /* ===== סרגל צד מאוחד עם טאבים (pills) ===== */
 .sidebar-tabs-pills {
@@ -5278,3 +5268,17 @@ html.hide-site-images .photo-mini-thumb {
 .story-bm-title { font-size: 13.5px; font-weight: 800; color: #fff; }
 .story-bm-snippet { font-size: 12px; color: #9ca3af; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .story-bm-del { background: rgba(255,255,255,0.1); border: none; color: #f87171; width: 26px; height: 26px; border-radius: 50%; cursor: pointer; flex-shrink: 0; font-size: 13px; }
+
+/* ============================================================
+   הסתרת כפתור יצירה, תיבת הקהילות ברשת ומתגי תצוגה במובייל בעמוד קהילות
+   ============================================================ */
+@media (max-width: 768px) {
+  .communities-page .art-social-box,
+  .communities-page .view-toggles,
+  .communities-page .art-add-btn,
+  .communities-page [onclick*="openCommunityModal"],
+  .communities-page [onclick*="createCommunity"],
+  .communities-page #btn-create-community {
+    display: none !important;
+  }
+}
