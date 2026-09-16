@@ -5328,3 +5328,13 @@ html.hide-site-images .photo-mini-thumb {
   .user-rating-box .urb-mine { font-size: 8.5px !important; }
   .user-rating-box .urb-stars { gap: 1px !important; }
 }
+
+/* ===== מתג "תמונות בגודל מלא (ללא שוליים)" — מצב מחשב בלבד ===== */
+@media (max-width: 768px) {
+  .tgl-desktop-only { display: none !important; }
+}
+/* כשמופעל: התמונות ממלאות את הכרטיס (cover) ומבטלים את רקע ה-blur/letterbox */
+@media (min-width: 769px) {
+  .photos-page.no-img-margins .art-row-img-wrap img { object-fit: cover !important; }
+  .photos-page.no-img-margins .art-row-img-wrap::before { display: none !important; }
+}

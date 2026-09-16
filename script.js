@@ -10177,7 +10177,7 @@ function buildPhotosPage(albums, section) {
        </button>`;
   }
 
-  return `<div class="articles-page photos-page ${section === 'ideas' ? 'ideas-page' : ''} ${section === 'communities' ? 'communities-page' : ''} ${section === 'secondhand' ? 'secondhand-page' : ''} ${section === 'partnerships' ? 'partnerships-page' : ''} ${section === 'reviews' ? 'reviews-page' : ''} photo-cols-${photoGridCols}${photoImagesMode ? '' : ' text-mode'}" data-section="${section}" data-photos-json="${json}">
+  return `<div class="articles-page photos-page ${section === 'ideas' ? 'ideas-page' : ''} ${section === 'communities' ? 'communities-page' : ''} ${section === 'secondhand' ? 'secondhand-page' : ''} ${section === 'partnerships' ? 'partnerships-page' : ''} ${section === 'reviews' ? 'reviews-page' : ''} photo-cols-${photoGridCols}${photoImagesMode ? '' : ' text-mode'}${photoNoImgMargins ? ' no-img-margins' : ''}" data-section="${section}" data-photos-json="${json}">
     <div class="art-inner">
       <div class="art-featured-grid">${featuredHTML}</div>
       <div class="art-layout">
@@ -10199,6 +10199,10 @@ function buildPhotosPage(albums, section) {
             <label class="tgl">
               <span class="tgl-label">✔️ משתמשים מאומתים</span>
               <span class="tgl-switch"><input type="checkbox" ${photoVerifiedOnly ? 'checked' : ''} onchange="photoToggleVerified(this.checked)"><span class="tgl-slider"></span></span>
+            </label>
+            <label class="tgl tgl-desktop-only">
+              <span class="tgl-label">🖼️ תמונות בגודל מלא (ללא שוליים)</span>
+              <span class="tgl-switch"><input type="checkbox" ${photoNoImgMargins ? 'checked' : ''} onchange="photoToggleImageMargins(this.checked)"><span class="tgl-slider"></span></span>
             </label>
           </div>`}
 
@@ -13108,6 +13112,19 @@ function photoToggleVerified(on) {
   }
 }
 window.photoToggleVerified = photoToggleVerified;
+
+// הסתרת שוליים בתמונות (מצב מחשב) — התמונות בגודל מלא, ממלאות את הכרטיס בלי letterbox. נשמר.
+let photoNoImgMargins = (function () {
+  try { return localStorage.getItem('photo_no_img_margins') === '1'; } catch (e) { return false; }
+})();
+function photoToggleImageMargins(on) {
+  photoNoImgMargins = !!on;
+  try { localStorage.setItem('photo_no_img_margins', on ? '1' : '0'); } catch (e) {}
+  document.querySelectorAll('.photos-page').forEach(el => el.classList.toggle('no-img-margins', !!on));
+  const boxes = document.querySelectorAll('.view-toggles input[onchange*="photoToggleImageMargins"]');
+  boxes.forEach(b => { if (b) b.checked = !!on; });
+}
+window.photoToggleImageMargins = photoToggleImageMargins;
 
 // זמן היצירה של גלריה. גלריות חדשות שומרות createdAt מספרי; לישנות
 // נופלים לפרסור של התאריך המוצג (d.m.yyyy מ-toLocaleDateString בעברית).
