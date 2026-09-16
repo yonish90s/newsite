@@ -4990,3 +4990,17 @@ html.hide-site-images .photo-mini-thumb {
 .story-bm-title { font-size: 13.5px; font-weight: 800; color: #fff; }
 .story-bm-snippet { font-size: 12px; color: #9ca3af; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .story-bm-del { background: rgba(255,255,255,0.1); border: none; color: #f87171; width: 26px; height: 26px; border-radius: 50%; cursor: pointer; flex-shrink: 0; font-size: 13px; }
+
+/* ============================================================
+   הסתרת כפתור יצירה, תיבת הקהילות ברשת ומתגי תצוגה במובייל בעמוד קהילות
+   ============================================================ */
+@media (max-width: 768px) {
+  .communities-page .art-social-box,
+  .communities-page .view-toggles,
+  .communities-page .art-add-btn,
+  .communities-page [onclick*="openCommunityModal"],
+  .communities-page [onclick*="createCommunity"],
+  .communities-page #btn-create-community {
+    display: none !important;
+  }
+}
