@@ -5897,11 +5897,8 @@ window.storySetGridSize = storySetGridSize;
 
 // כפתור "עוד" לסיפורים — מציג שורת גריד אחת, ובלחיצה חושף את הכל (כמו בתמונות)
 function storyRowMoreBtn(count, rowId) {
-  if (count <= storyGridCols) return '';
-  return `
-    <div class="photo-row-more-wrap" style="text-align:center; margin-top:16px;">
-      <button class="photo-more-btn" onclick="photoToggleRowMore('${rowId}', this)">עוד</button>
-    </div>`;
+  // כפתור "עוד" הוסר לבקשת המשתמש — כל הסיפורים מוצגים תמיד למטה
+  return '';
 }
 
 // שורת סינון כללי לסיפורים (בחירה יחידה: הכל/כללי/עירום)
