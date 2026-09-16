@@ -9658,7 +9658,6 @@ function buildSidebarTabs(savedHTML, pageType) {
   const tabs = [
     { id: 'filter',    label: '🔎 סינונים', html: buildFiltersSidebarBox(pageType) },
     { id: 'community', label: '👥 קהילה',  html: (typeof buildSocialCommunityBox === 'function' ? buildSocialCommunityBox() : '') },
-    { id: 'communities', label: '🏘️ קהילות', html: buildCommunitiesBox() },
     { id: 'chat',      label: '💬 צ׳אט',   html: buildLiveChatBox() },
     { id: 'publish',   label: '🤖 פרסום',  html: `
       <div class="art-sidebar-box" style="text-align:center; padding:18px; border:1.5px solid #22c55e; background:rgba(34,197,94,0.04); border-radius:12px;">
