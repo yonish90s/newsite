@@ -1142,7 +1142,8 @@ function renderPage() {
     }
 
     // עמוד סיפורים: בונים מחדש מהנתונים השמורים
-    const storyPageEl = mainContent.querySelector('.stories-page');
+    // (מתעלמים מפיד הסיפורים שמוטמע בתחתית עמוד התמונות — .photos-stories-feed)
+    const storyPageEl = mainContent.querySelector('.stories-page:not(.photos-stories-feed)');
     if (storyPageEl && typeof buildStoriesPage === 'function') {
       let savedStories = [];
       try { savedStories = JSON.parse(decodeURIComponent(storyPageEl.dataset.storiesJson)); } catch(e){}
@@ -6017,23 +6018,9 @@ function storyApplyFilters() {
 }
 window.storyApplyFilters = storyApplyFilters;
 
-function buildStoriesPage(stories) {
-  const featured = stories.filter(s => s.pinned).slice(0, 3);
-  const popular = stories.slice(0, 5);
-
-  const featuredHTML = featured.map(s => `
-    <div class="art-featured-card" onclick="storyOpenDetail('${artEsc(s.id)}')">
-      <img src="${s.image || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80'}" alt="">
-      <div class="art-featured-overlay"></div>
-      <div class="art-featured-info">
-        <span class="art-category-badge" style="background:${s.categoryColor||'#8b5cf6'}">${s.category}</span>
-        <h3>${s.title}</h3>
-        <div class="art-featured-meta">${s.author} · ${s.timestamp}</div>
-      </div>
-    </div>
-  `).join('');
-
-  const listHTML = stories.map((s) => {
+// כרטיס סיפור בודד — חולץ לפונקציה נפרדת כדי לשמש גם בעמוד הסיפורים
+// וגם כפיד "סיפורים" שנוסף בתחתית עמוד התמונות.
+function storyCardHTML(s) {
     const validImages = (s.images && s.images.length) ? s.images.filter(Boolean) : (s.image ? [s.image] : []);
     const mainImg = validImages[0] || s.image || '';
     let miniThumbnailsHTML = '';
@@ -6093,7 +6080,25 @@ function buildStoriesPage(stories) {
         </div>
       </div>
     `;
-  }).join('');
+}
+
+function buildStoriesPage(stories) {
+  const featured = stories.filter(s => s.pinned).slice(0, 3);
+  const popular = stories.slice(0, 5);
+
+  const featuredHTML = featured.map(s => `
+    <div class="art-featured-card" onclick="storyOpenDetail('${artEsc(s.id)}')">
+      <img src="${s.image || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80'}" alt="">
+      <div class="art-featured-overlay"></div>
+      <div class="art-featured-info">
+        <span class="art-category-badge" style="background:${s.categoryColor||'#8b5cf6'}">${s.category}</span>
+        <h3>${s.title}</h3>
+        <div class="art-featured-meta">${s.author} · ${s.timestamp}</div>
+      </div>
+    </div>
+  `).join('');
+
+  const listHTML = stories.map(storyCardHTML).join('');
 
   const popularHTML = popular.map((s, i) => `
     <div class="art-popular-item" onclick="storyOpenDetail('${artEsc(s.id)}')">
@@ -7043,29 +7048,34 @@ function renderPhotoCard(p, options = {}) {
   const totalScore = likesCount + viewsCount;
 
   let miniThumbnailsHTML = '';
+  if (validImages.length <= 1) {
+    // העלאה עם תמונה בודדת — שומרים מקום (לבן) בגובה פס הריבועים כדי שהכפתורים
+    // יתיישרו לאותו גובה כמו בהעלאה עם כמה תמונות (בקרוסלה האופקית).
+    miniThumbnailsHTML = '<div class="photo-mini-thumbs-spacer" aria-hidden="true"></div>';
+  }
   if (validImages.length > 1) {
     miniThumbnailsHTML = `
       <div class="photo-mini-thumbs" style="display: flex; align-items: center; justify-content: center; gap: 4px; margin-top: 6px; width: 100%; direction: ltr;">
-        <button type="button" 
-                onclick="event.stopPropagation(); photoStepRowImage('${artEsc(p.id)}', -1, this)" 
-                title="תמונה קודמת" 
+        <button type="button"
+                onclick="event.stopPropagation(); photoStepRowImage('${artEsc(p.id)}', -1, this)"
+                title="תמונה קודמת"
                 style="width: 22px; height: 22px; border-radius: 50%; background: #3b82f6; color: #fff; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.15s ease;">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
 
         <div class="photo-mini-thumbs-list" style="display: flex; gap: 4px; justify-content: center; flex-wrap: wrap; flex: 1; min-width: 0;">
           ${validImages.map((imgUrl, idx) => `
-            <div class="photo-mini-thumb" 
-                 onclick="event.stopPropagation(); photoSelectRowImage('${artEsc(p.id)}', '${artEsc(imgUrl)}', this)" 
+            <div class="photo-mini-thumb"
+                 onclick="event.stopPropagation(); photoSelectRowImage('${artEsc(p.id)}', '${artEsc(imgUrl)}', this)"
                  style="width: 22px; height: 22px; border-radius: 4px; overflow: hidden; cursor: pointer; border: 1.5px solid ${idx === 0 ? '#e11d48' : '#ddd'}; transition: all 0.2s; background: #eee; flex-shrink:0;">
               <img src="${imgUrl}" style="width: 100%; height: 100%; object-fit: cover;">
             </div>
           `).join('')}
         </div>
 
-        <button type="button" 
-                onclick="event.stopPropagation(); photoStepRowImage('${artEsc(p.id)}', 1, this)" 
-                title="תמונה הבאה" 
+        <button type="button"
+                onclick="event.stopPropagation(); photoStepRowImage('${artEsc(p.id)}', 1, this)"
+                title="תמונה הבאה"
                 style="width: 22px; height: 22px; border-radius: 50%; background: #3b82f6; color: #fff; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.15s ease;">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
         </button>
@@ -7099,6 +7109,14 @@ function renderPhotoCard(p, options = {}) {
   };
 
   const isLikedCard = photoIsLikedLocal(p.id);
+  // לב מוטבע בפינת התמונה (כמו בהפניה) — מחליף את כפתור הלייק בשורת הכפתורים
+  const cardHeartOverlay = `
+    <button type="button" class="art-heart-overlay${isLikedCard ? ' liked' : ''}" onclick="event.stopPropagation(); photoToggleLike('${artEsc(p.id)}')" title="לייק לגלריה זו" aria-label="לייק">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="${isLikedCard ? '#ff2e4d' : 'none'}" stroke="${isLikedCard ? '#ff2e4d' : '#ffffff'}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+      </svg>
+    </button>
+  `;
   const cardLikeBtnHTML = `
     <button type="button" onclick="event.stopPropagation(); photoToggleLike('${artEsc(p.id)}')" class="art-telegram-btn" title="לייק לגלריה זו" style="display: inline-flex; align-items: center; background: #2f2f2f; color: ${isLikedCard ? '#ff2e4d' : '#ffffff'}; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: bold; gap: 6px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: all 0.2s;">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="${isLikedCard ? '#ff2e4d' : 'none'}" stroke="${isLikedCard ? '#ff2e4d' : 'currentColor'}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
@@ -7120,7 +7138,6 @@ function renderPhotoCard(p, options = {}) {
 
   const cardLinksHTML = `
     <div class="photo-card-links">
-      ${cardLikeBtnHTML}
       ${cardSaveBtnHTML}
       ${cardLink(p.telegramUrl, 'טלגרם', 'M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z')}
       ${cardLink(p.emailUrl, 'אימייל', 'M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z', '<polyline points="22,6 12,13 2,6"/>')}
@@ -7180,7 +7197,15 @@ function renderPhotoCard(p, options = {}) {
       <div class="art-row-img-container" style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0;">
         <div class="art-row-img-wrap" style="--bg-img: url('${mainImg || ''}');">
           ${mainImg ? `<img src="${mainImg}" alt="">` : '<div class="art-row-img-placeholder"></div>'}
+          <button type="button" class="photo-nav-overlay prev" onclick="event.stopPropagation(); photoUploadScroll(this, -1)" title="ההעלאה הקודמת" aria-label="ההעלאה הקודמת">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <button type="button" class="photo-nav-overlay next" onclick="event.stopPropagation(); photoUploadScroll(this, 1)" title="ההעלאה הבאה" aria-label="ההעלאה הבאה">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+          ${validImages.length > 1 ? `<div class="photo-count-badge">1 / ${validImages.length}</div>` : ''}
           ${mainImg ? `<button class="art-zoom-btn" onclick="event.stopPropagation();artGalleryById('photos','${artEsc(p.id)}', this.closest('.art-row-img-wrap').querySelector('img') && this.closest('.art-row-img-wrap').querySelector('img').getAttribute('src'))" title="מסך מלא">⛶</button>` : ''}
+          ${cardHeartOverlay}
           ${(isAdmin() || isEditMode) ? `<button class="art-edit-btn" onclick="event.stopPropagation(); openPhotoEditModal('${artEsc(p.id)}', event)" title="ערוך גלריה" style="position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.7); color: white; border: none; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 14px; z-index: 10;">✏️</button>` : ''}
           ${isEditMode ? `<button class="art-pin-btn" onclick="event.stopPropagation(); togglePinPhoto('${artEsc(p.id)}')" title="${p.pinned ? 'בטל נעץ' : 'נעץ בגריד'}" style="${p.pinned ? 'color:#ffd700;display:flex;' : ''}">${p.pinned ? '★' : '☆'}</button>` : ''}
           <button class="art-delete-btn" onclick="event.stopPropagation();photoDelete('${artEsc(p.id)}',this)">✕</button>
@@ -9818,6 +9843,43 @@ function sidebarShowTab(id, btn) {
 }
 window.sidebarShowTab = sidebarShowTab;
 
+// פיד "סיפורים" שנוסף בתחתית עמוד התמונות — כשגוללים מטה מעבר לגלריות
+// מגיעים לסיפורים (למרות שזה מקטע נפרד). מוצג רק בעמוד התמונות.
+// שולף את נתוני הסיפורים מתוך עמוד הסיפורים השמור (page-stories-main),
+// כי בעמוד התמונות אין .stories-page ב-DOM לקרוא ממנו.
+function getStoriesFeedData() {
+  try {
+    if (typeof pages !== 'undefined' && Array.isArray(pages)) {
+      const sp = pages.find(p => p && p.id === 'page-stories-main');
+      if (sp && sp.content) {
+        const m = sp.content.match(/data-stories-json="([^"]*)"/);
+        if (m) { const arr = JSON.parse(decodeURIComponent(m[1])); if (Array.isArray(arr) && arr.length) return arr; }
+      }
+    }
+  } catch (e) {}
+  return (typeof STORIES_SAMPLES !== 'undefined') ? STORIES_SAMPLES : [];
+}
+
+function photosStoriesFeedHTML() {
+  try {
+    const stories = getStoriesFeedData();
+    if (!stories || !stories.length) return '';
+    const json = encodeURIComponent(JSON.stringify(stories));
+    const cols = (typeof storyGridCols !== 'undefined') ? storyGridCols : 3;
+    const cards = stories.map(storyCardHTML).join('');
+    return `<div class="articles-page stories-page photos-stories-feed story-cols-${cols}${photoImagesMode ? '' : ' text-mode'}" data-stories-json="${json}">
+      <div class="art-inner" style="padding-top:0;">
+        <div class="photo-section-row" style="margin: 0 0 24px; background:#ffffff; padding:18px; border-radius:16px; border:1px solid #e2e8f0; box-shadow:0 4px 15px rgba(0,0,0,0.03);">
+          <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:2.5px solid #8b5cf6; padding-bottom:10px; margin-bottom:18px;">
+            <h3 style="margin:0; font-size:18px; font-weight:900; color:#6b21a8;">📖 סיפורים</h3>
+          </div>
+          <div class="art-rows photo-collapsible expanded">${cards}</div>
+        </div>
+      </div>
+    </div>`;
+  } catch (e) { return ''; }
+}
+
 function buildPhotosPage(albums, section) {
   section = section || 'photos';
   // סינון גלריות זמניות שתוקפן פג (חולפו 24 שעות)
@@ -9969,10 +10031,11 @@ function buildPhotosPage(albums, section) {
   // בעמוד הקהילות: כרטיס קהילה אחיד ומסודר (תמונה + שם + מידע + כפתור) + ריבועי כניסה לתמונות/סיפורים
   let row1HTML, row2HTML, row3HTML;
   if (section === 'communities' && typeof renderCommunityGridCard === 'function') {
+    // מסתירים את כל הקהילות — מציגים רק את הכניסה ל"תמונות" ו"סיפורים"
     const _commShortcuts = typeof communityShortcutsHTML === 'function' ? communityShortcutsHTML() : '';
-    row1HTML = _commShortcuts + newestAlbums.map(renderCommunityGridCard).join('');
-    row2HTML = forYouAlbums.map(renderCommunityGridCard).join('');
-    row3HTML = mostPopularAlbums.map(renderCommunityGridCard).join('');
+    row1HTML = _commShortcuts;
+    row2HTML = '';
+    row3HTML = '';
   } else {
     row1HTML = newestAlbums.map(p => renderPhotoCard(p)).join('');
     row2HTML = forYouAlbums.map(p => renderPhotoCard(p)).join('');
@@ -10102,7 +10165,7 @@ function buildPhotosPage(albums, section) {
         ${buildLeftSidebarBox(popularHTML, section)}
       </div>
     </div>
-  </div>`;
+  </div>${section === 'photos' ? photosStoriesFeedHTML() : ''}`;
 }
 
 function ideaExecutionBoxHTML(a) {
@@ -10378,6 +10441,30 @@ function photoOpenDetail(id) {
     recTitle: 'רעיונות נוספים שיעניינו אותך'
   });
 
+  // קרוסלת "הצצה" למובייל: מציגה תמונה אחת כמעט מלאה + הצצה לתמונה הבאה,
+  // וניתן לדפדף בהחלקת אצבע (גלילה אופקית עם scroll-snap). מוצגת בראש עמוד
+  // הגלריה כך שרואים את התמונה מיד בלי לגלול.
+  const carouselImgs = validImages.length ? validImages : [mainImg];
+  const detailCarouselHTML = `
+    <div class="photo-detail-carousel-wrap">
+      <div class="photo-detail-carousel">
+        ${carouselImgs.map(u => `
+          <div class="pd-slide" style="--bg-img:url('${u}');">
+            <img src="${u}" style="${blurStyle}" onclick="artGalleryById('photos','${artEsc(id)}', this.getAttribute('src'))">
+          </div>
+        `).join('')}
+      </div>
+      ${carouselImgs.length > 1 ? `
+        <button type="button" class="pd-arrow prev" onclick="photoCarouselScroll(this, -1)" aria-label="תמונה קודמת">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <button type="button" class="pd-arrow next" onclick="photoCarouselScroll(this, 1)" aria-label="תמונה הבאה">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      ` : ''}
+    </div>
+  `;
+
   const json = encodeURIComponent(JSON.stringify(albums));
 
   if (isIdea || isSecondhand) {
@@ -10506,7 +10593,7 @@ function photoOpenDetail(id) {
           </div>
 
           <!-- ריבועי דפדוף (Thumbnails) עם חצי ניווט -->
-          <div style="display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:24px; direction:ltr; flex-wrap:wrap; padding:5px;">
+          <div class="photo-detail-thumbs-row" style="display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:24px; direction:ltr; flex-wrap:wrap; padding:5px;">
             ${validImages.length > 1 ? `
               <button type="button" onclick="event.stopPropagation(); photoStepDetailImage(-1, this)" title="תמונה קודמת" style="width:32px; height:32px; border-radius:50%; background:#3b82f6; color:#fff; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 2px 8px rgba(59,130,246,0.3); transition:background 0.15s ease;">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
@@ -10558,26 +10645,165 @@ function photoSelectRowImage(albumId, imgUrl, thumbEl) {
         zoomBtn.setAttribute('onclick', `event.stopPropagation();artZoomImage('${artEsc(imgUrl)}')`);
       }
     }
-    const thumbs = container.querySelectorAll('.photo-mini-thumb');
+    const thumbs = Array.from(container.querySelectorAll('.photo-mini-thumb'));
     thumbs.forEach(t => {
       t.style.borderColor = '#ddd';
     });
     thumbEl.style.borderColor = '#e11d48';
+    // עדכון מונה התמונות שעל גבי התמונה (למשל "2 / 5")
+    const badge = container.querySelector('.photo-count-badge');
+    if (badge && thumbs.length) {
+      const idx = thumbs.indexOf(thumbEl);
+      if (idx >= 0) badge.textContent = `${idx + 1} / ${thumbs.length}`;
+    }
   }
 }
 window.photoSelectRowImage = photoSelectRowImage;
 
-function photoStepRowImage(albumId, dir, btnEl) {
-  const container = btnEl.closest('.art-row-img-container');
+// מדלג לתמונה הבאה/הקודמת בתוך מכל תמונת הכרטיס (משמש חיצים על התמונה והחלקת אצבע)
+function photoStepImageInContainer(container, dir) {
   if (!container) return;
   const thumbs = Array.from(container.querySelectorAll('.photo-mini-thumb'));
-  if (!thumbs.length) return;
+  if (thumbs.length < 2) return;
   let currentIndex = thumbs.findIndex(t => t.style.borderColor === 'rgb(225, 29, 72)' || t.style.borderColor === '#e11d48');
   if (currentIndex === -1) currentIndex = 0;
-  let newIndex = (currentIndex + dir + thumbs.length) % thumbs.length;
+  const newIndex = (currentIndex + dir + thumbs.length) % thumbs.length;
   thumbs[newIndex].click();
 }
+window.photoStepImageInContainer = photoStepImageInContainer;
+
+function photoStepRowImage(albumId, dir, btnEl) {
+  photoStepImageInContainer(btnEl.closest('.art-row-img-container'), dir);
+}
 window.photoStepRowImage = photoStepRowImage;
+
+// החלקת אצבע (swipe) על תמונת כרטיס גלריה — מדפדף בין תמונות הגלריה כמו קרוסלה.
+// מאזין יחיד בהאצלה (delegation) שמכסה את כל הכרטיסים, גם אלה שנוצרים דינמית.
+function photoInitCardSwipe() {
+  if (window.__photoSwipeInit) return;
+  window.__photoSwipeInit = true;
+  let startX = 0, startY = 0, active = false, moved = false, wrap = null;
+  // רק בעמוד התמונות (data-section="photos") — לא ברעיונות/קהילות/משתמש שחולקים photos-page
+  const SWIPE_PAGES = '.photos-page[data-section="photos"]';
+
+  document.addEventListener('touchstart', function (e) {
+    active = false; moved = false; wrap = null;
+    if (!e.target.closest) return;
+    const w = e.target.closest('.art-row-img-wrap');
+    if (!w || !w.closest(SWIPE_PAGES)) return;
+    // בכרטיסים עם קרוסלה מקורית (pc-carousel) הגלילה מטופלת ע"י הדפדפן — לא מפעילים swipe ידני
+    if (w.querySelector('.pc-carousel')) return;
+    const container = w.closest('.art-row-img-container');
+    if (!container || container.querySelectorAll('.photo-mini-thumb').length < 2) return;
+    wrap = w; active = true;
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+  }, { passive: true });
+
+  document.addEventListener('touchmove', function (e) {
+    if (!active) return;
+    const dx = e.touches[0].clientX - startX;
+    const dy = e.touches[0].clientY - startY;
+    if (!moved && Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(dy)) moved = true;
+    if (moved) {
+      const img = wrap.querySelector('img');
+      if (img) img.style.transform = 'translateX(' + Math.max(-45, Math.min(45, dx * 0.35)) + 'px)';
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchend', function (e) {
+    if (!active) return;
+    active = false;
+    const img = wrap && wrap.querySelector('img');
+    if (img) img.style.transform = '';
+    if (!moved) return;
+    const dx = e.changedTouches[0].clientX - startX;
+    if (Math.abs(dx) < 35) return;
+    // החלקה שמאלה = התמונה הבאה, ימינה = הקודמת
+    photoStepImageInContainer(wrap.closest('.art-row-img-container'), dx < 0 ? 1 : -1);
+    // מונע שהלחיצה שאחרי ההחלקה תפתח את עמוד הגלריה
+    const swallow = function (ev) { ev.stopPropagation(); ev.preventDefault(); document.removeEventListener('click', swallow, true); };
+    document.addEventListener('click', swallow, true);
+    setTimeout(function () { document.removeEventListener('click', swallow, true); }, 400);
+  }, { passive: true });
+}
+// הוחלף: ההחלקה במובייל מדפדפת בין ההעלאות (קרוסלת .art-rows), לא בין תמונות הגלריה.
+// photoInitCardSwipe();
+
+// דפדוף עם החצים בקרוסלת ההצצה של עמוד הגלריה (מגלגל תמונה אחת קדימה/אחורה)
+function photoCarouselScroll(btn, dir) {
+  const wrap = btn.closest('.photo-detail-carousel-wrap');
+  const sc = wrap && wrap.querySelector('.photo-detail-carousel');
+  if (!sc) return;
+  const slide = sc.querySelector('.pd-slide');
+  const step = slide ? slide.getBoundingClientRect().width + 10 : sc.clientWidth * 0.86;
+  const rtl = getComputedStyle(sc).direction === 'rtl';
+  sc.scrollBy({ left: (rtl ? -1 : 1) * dir * step, behavior: 'smooth' });
+}
+window.photoCarouselScroll = photoCarouselScroll;
+
+// דפדוף בין ההעלאות בקרוסלה האופקית של עמוד התמונות (מובייל) — החצים על הכרטיס
+function photoUploadScroll(btn, dir) {
+  const card = btn.closest('.art-row');
+  const rows = card && card.closest('.art-rows');
+  if (!rows) return;
+  const step = card ? (card.getBoundingClientRect().width + 12) : rows.clientWidth;
+  // הקרוסלה ב-LTR: החץ "הבא" (›) מגלגל ימינה אל ההעלאה הבאה
+  rows.scrollBy({ left: dir * step, behavior: 'smooth' });
+}
+window.photoUploadScroll = photoUploadScroll;
+
+// ===== קרוסלת הצצה בכרטיס הגלריה (סגנון אינסטגרם: תמונה + הצצה לבאה, החלקה) =====
+// הקרוסלה ב-LTR כך שתמונה 1 בשמאל והבאה מציצה מימין (כמו בהפניה של המשתמש).
+function photoCardCarouselScroll(btn, dir) {
+  const host = btn.closest('.art-row-img-wrap') || btn.closest('.art-row-img-container');
+  const sc = host && host.querySelector('.pc-carousel');
+  if (!sc) return;
+  const slide = sc.querySelector('.pc-slide');
+  const step = slide ? slide.getBoundingClientRect().width : sc.clientWidth * 0.9;
+  sc.scrollBy({ left: dir * step, behavior: 'smooth' });
+}
+window.photoCardCarouselScroll = photoCardCarouselScroll;
+
+function photoCardGoToSlide(thumbEl, idx) {
+  const container = thumbEl.closest('.art-row-img-container');
+  const sc = container && container.querySelector('.pc-carousel');
+  if (!sc) return;
+  const slides = sc.querySelectorAll('.pc-slide');
+  if (slides[idx]) sc.scrollTo({ left: slides[idx].offsetLeft, behavior: 'smooth' });
+}
+window.photoCardGoToSlide = photoCardGoToSlide;
+
+// עדכון מונה התמונות והדגשת הריבוע הפעיל בזמן החלקה/גלילה של הקרוסלה
+function photoCardCarouselSync(sc) {
+  const slide = sc.querySelector('.pc-slide');
+  if (!slide) return;
+  const w = slide.getBoundingClientRect().width || 1;
+  const total = sc.querySelectorAll('.pc-slide').length;
+  const idx = Math.max(0, Math.min(total - 1, Math.round(sc.scrollLeft / w)));
+  const container = sc.closest('.art-row-img-container');
+  if (!container) return;
+  const badge = container.querySelector('.photo-count-badge');
+  if (badge) badge.textContent = (idx + 1) + ' / ' + total;
+  container.querySelectorAll('.photo-mini-thumb').forEach((t, i) => {
+    t.style.borderColor = (i === idx) ? '#e11d48' : '#ddd';
+  });
+}
+window.photoCardCarouselSync = photoCardCarouselSync;
+
+// זום/מסך-מלא לתמונה הנוכחית בקרוסלת הכרטיס
+function photoCardZoomCurrent(btn, albumId) {
+  const host = btn.closest('.art-row-img-wrap');
+  const sc = host && host.querySelector('.pc-carousel');
+  if (!sc) return;
+  const slide = sc.querySelector('.pc-slide');
+  const w = slide ? (slide.getBoundingClientRect().width || 1) : 1;
+  const idx = Math.max(0, Math.round(sc.scrollLeft / w));
+  const imgs = sc.querySelectorAll('.pc-slide img');
+  const img = imgs[idx] || imgs[0];
+  if (img && typeof artGalleryById === 'function') artGalleryById('photos', albumId, img.getAttribute('src'));
+}
+window.photoCardZoomCurrent = photoCardZoomCurrent;
 
 function photoStepDetailImage(dir, btnEl) {
   const container = btnEl.closest('.art-detail') || document;
