@@ -9863,7 +9863,11 @@ window.sidebarShowTab = sidebarShowTab;
 function getStoriesFeedData() {
   try {
     if (typeof pages !== 'undefined' && Array.isArray(pages)) {
-      const sp = pages.find(p => p && p.id === 'page-stories-main');
+      // מזהה עמוד הסיפורים דינמי באתר החי — מזהים לפי כותרת/תוכן, לא רק לפי id קבוע.
+      // חשוב: לא לתפוס את עמוד התמונות שמכיל את פיד הסיפורים (photos-page).
+      const sp = pages.find(p => p && p.title && p.title.includes('סיפורים'))
+        || pages.find(p => p && p.id === 'page-stories-main')
+        || pages.find(p => p && p.content && p.content.includes('stories-page') && !p.content.includes('photos-page'));
       if (sp && sp.content) {
         const m = sp.content.match(/data-stories-json="([^"]*)"/);
         if (m) { const arr = JSON.parse(decodeURIComponent(m[1])); if (Array.isArray(arr) && arr.length) return arr; }
