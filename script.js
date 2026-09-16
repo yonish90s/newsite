@@ -1682,9 +1682,12 @@ function artSerializePageContent() {
   if (photos && photos.dataset.photosJson) {
     return `<div class="articles-page photos-page" data-section="${photos.dataset.section || 'photos'}" data-photos-json="${photos.dataset.photosJson}"></div>`;
   }
-  const stories = mainContent.querySelector('.stories-page');
+  const stories = mainContent.querySelector('.stories-page:not(.photos-stories-feed):not(.art-detail)');
   if (stories && stories.dataset.storiesJson) {
-    return `<div class="articles-page stories-page" data-stories-json="${stories.dataset.storiesJson}"></div>`;
+    // חובה לשמור את data-story-kind (קומיקס/סיפורים) — אחרת התוכן נחשב "קומיקס",
+    // מתנגש בעמוד הקומיקס, ומחיקת-הכפולים מוחקת אותו (הסיפור "נעלם").
+    const _sk = stories.getAttribute('data-story-kind') || 'comics';
+    return `<div class="articles-page stories-page" data-story-kind="${_sk}" data-stories-json="${stories.dataset.storiesJson}"></div>`;
   }
   const courses = mainContent.querySelector('.courses-page');
   if (courses && courses.dataset.coursesJson) {
@@ -6241,8 +6244,7 @@ function storyOpenDetail(id) {
   const viewerHTML = storyPagesArr.length ? `
     <div class="story-viewer">
       <div class="story-frame">
-        <div class="story-page-view" id="story-page-view" onscroll="storyUpdateScrollHint()"></div>
-        <div class="story-scroll-hint" id="story-scroll-hint" hidden><span>▼</span></div>
+        <div class="story-page-view" id="story-page-view"></div>
       </div>
       ${storyPagesArr.length > 1 ? `
       <div class="story-viewer-nav">
@@ -6482,7 +6484,7 @@ function storyGoBack() {
   if (!container) return;
   let stories = [];
   try { stories = JSON.parse(decodeURIComponent(container.dataset.storiesJson)); } catch(e){}
-  mainContent.innerHTML = buildStoriesPage(stories);
+  mainContent.innerHTML = buildStoriesPage(stories, storyGetCurrentKind());
   if (isEditMode) applyEditModeToContent();
 }
 
@@ -6492,11 +6494,20 @@ function storyGetStories() {
   try { return JSON.parse(decodeURIComponent(container.dataset.storiesJson)); } catch(e){ return []; }
 }
 
+// הסוג של עמוד הסיפורים הנוכחי (קומיקס/סיפורים). קריטי לשמור בבנייה-מחדש,
+// אחרת התוכן הופך ל"קומיקס" כברירת מחדל, מתנגש בעמוד הקומיקס, ומחיקת-הכפולים מוחקת אותו.
+function storyGetCurrentKind() {
+  try {
+    const el = mainContent.querySelector('.stories-page:not(.photos-stories-feed)');
+    return (el && el.getAttribute('data-story-kind')) || 'comics';
+  } catch (e) { return 'comics'; }
+}
+
 function storyDelete(id, el) {
   if (!isEditMode) return;
   if (!confirm('האם למחוק סיפור זה?')) return;
   const stories = storyGetStories().filter(s => s.id !== id);
-  mainContent.innerHTML = buildStoriesPage(stories);
+  mainContent.innerHTML = buildStoriesPage(stories, storyGetCurrentKind());
   saveCurrentPageContent();
 }
 
@@ -6746,7 +6757,7 @@ document.getElementById('story-save').addEventListener('click', () => {
   } else {
     stories.unshift({ id: 's' + Date.now(), ...data, timestamp: new Date().toLocaleDateString('he-IL') });
   }
-  mainContent.innerHTML = buildStoriesPage(stories);
+  mainContent.innerHTML = buildStoriesPage(stories, storyGetCurrentKind());
   saveCurrentPageContent();
   document.getElementById('story-modal').style.display = 'none';
 });
@@ -7781,7 +7792,7 @@ async function qpPublish() {
       const stories = (typeof storyGetStories === 'function') ? storyGetStories() : [];
       const st = Object.assign({}, album, { pages: album.images.map(u => ({ type: 'image', url: u })) });
       stories.unshift(st);
-      if (typeof buildStoriesPage === 'function') mainContent.innerHTML = buildStoriesPage(stories);
+      if (typeof buildStoriesPage === 'function') mainContent.innerHTML = buildStoriesPage(stories, storyGetCurrentKind());
       if (typeof saveCurrentPageContent === 'function') saveCurrentPageContent();
       if (!isAdminNow && typeof pushPendingSubmission === 'function') pushPendingSubmission(st);
       qpBubble('bot', '✅ הסיפור פורסם!' + (isAdminNow ? '' : '<br>הוא ממתין לאישור מנהל ויופיע בקרוב.'));
@@ -12124,8 +12135,11 @@ async function _reqMutate(id, action) {
           stories.unshift(targetItem);
         }
         if (typeof buildStoriesPage === 'function') {
-          const spObj = pages.find(p => p && (p.id === 'page-stories-main' || (p.title || '').includes('סיפורים')));
-          if (spObj) spObj.content = buildStoriesPage(stories);
+          const spObj = pages.find(p => p && (p.id === 'page-stories-main' || (p.title || '').includes('סיפורים') || (p.title || '') === 'קומיקס'));
+          if (spObj) {
+            const _k = ((spObj.content || '').match(/data-story-kind="([^"]+)"/) || [])[1] || 'comics';
+            spObj.content = buildStoriesPage(stories, _k);
+          }
         }
       } else {
         const existingIdx = albums.findIndex(a => a.id === id);
@@ -14340,7 +14354,7 @@ function togglePinStory(id) {
   const story = stories.find(s => s.id === id);
   if (story) {
     story.pinned = !story.pinned;
-    mainContent.innerHTML = buildStoriesPage(stories);
+    mainContent.innerHTML = buildStoriesPage(stories, storyGetCurrentKind());
     saveCurrentPageContent();
   }
 }
