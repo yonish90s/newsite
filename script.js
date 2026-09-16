@@ -223,7 +223,7 @@ const defaultPages = [
 
 // הגדרות ברירת מחדל (יוחלפו אם יש שמירה)
 let pages = defaultPages;
-let activePageId = 'page-ideas-main';
+let activePageId = 'page-communities-main';
 let topNavPages = ['page-ideas-main']; // העמודים שמופיעים בתפריט העליון
 // עמודים שמופיעים רק בסרגל הצד ("עמודי צד") ולא בתפריט העליון
 const SIDE_ONLY_PAGE_IDS = ['page-questions-main', 'page-offers-main', 'page-photos-main', 'page-stories-main'];
@@ -559,10 +559,10 @@ async function initSite() {
 
   sanitizeToOnlyPhotosAndStories();
 
-  // עמוד הבית הראשי בעת כניסה לאתר הוא עמוד רעיונות!
-  let mainIdeasPage = pages.find(p => p && p.id === 'page-ideas-main') || pages.find(p => p && p.content && p.content.includes('ideas-page')) || pages.find(p => p && p.title && p.title.includes('רעיונות'));
-  if (mainIdeasPage) {
-    activePageId = mainIdeasPage.id;
+  // עמוד הבית הראשי בעת כניסה לאתר הוא עמוד קהילות!
+  let mainCommPage = pages.find(p => p && p.id === 'page-communities-main') || pages.find(p => p && p.content && p.content.includes('communities-page')) || pages.find(p => p && p.title && p.title.includes('קהילות'));
+  if (mainCommPage) {
+    activePageId = mainCommPage.id;
   }
 
   renderSideMenu();
@@ -593,9 +593,9 @@ async function initSite() {
       
       sanitizeToOnlyPhotosAndStories();
 
-      let bootIdeasPage = pages.find(p => p && p.id === 'page-ideas-main') || pages.find(p => p && p.content && p.content.includes('ideas-page')) || pages.find(p => p && p.title && p.title.includes('רעיונות'));
-      if (bootIdeasPage) {
-        activePageId = bootIdeasPage.id;
+      let bootCommPage = pages.find(p => p && p.id === 'page-communities-main') || pages.find(p => p && p.content && p.content.includes('communities-page')) || pages.find(p => p && p.title && p.title.includes('קהילות'));
+      if (bootCommPage) {
+        activePageId = bootCommPage.id;
       }
       
       localforage.setItem('mySitePages_v3', pages);
@@ -634,9 +634,9 @@ const megaMenuContainer = { classList: { add: ()=>{}, remove: ()=>{} }, style: {
 
 function goToHomePage() {
   if (typeof pages === 'undefined') return;
-  const photoPage = pages.find(p => p && (p.id === 'page-photos-main' || (p.title && p.title.includes('תמונות')) || (p.content && p.content.includes('photos-page'))));
-  if (photoPage) {
-    activePageId = photoPage.id;
+  const commPage = pages.find(p => p && (p.id === 'page-communities-main' || (p.title && p.title.includes('קהילות')) || (p.content && p.content.includes('communities-page'))));
+  if (commPage) {
+    activePageId = commPage.id;
   } else if (pages.length > 0) {
     activePageId = pages[0].id;
   }
