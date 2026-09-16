@@ -8406,7 +8406,8 @@ async function submitUserInfo() {
 window.submitUserInfo = submitUserInfo;
 
 function infoSubmissionsListHTML() {
-  const entries = Object.entries(userSubmissionsData || {}).sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
+  // בקשות-תוכן (submissionType==='content') שייכות לעמוד "בקשות לאישור", לא כאן
+  const entries = Object.entries(userSubmissionsData || {}).filter(([k, v]) => !(v && v.submissionType === 'content')).sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
   if (!entries.length) {
     return '<div style="text-align:center; color:#94a3b8; font-size:13px; padding:24px;">עדיין לא התקבלו הגשות.</div>';
   }
@@ -12019,18 +12020,51 @@ async function pushPendingSubmission(album) {
   try {
     await set(ref(db, `website/pending_submissions/${album.id}`), album);
   } catch (e) {
-    console.error('Failed to save pending submission to Firebase:', e);
+    // אורח לרוב חסום מכתיבה ל-pending_submissions ע"י כללי Firebase. עוקפים דרך
+    // user_submissions — נתיב שאורחים כבר יכולים לכתוב אליו (טופס "מידע") — ומסמנים
+    // כ-content כדי שיופיע בעמוד הבקשות לאישור.
+    try {
+      await push(ref(db, 'website/user_submissions'), {
+        submissionType: 'content',
+        album: album,
+        name: album.author || 'אורח',
+        text: 'בקשת פרסום תוכן: ' + (album.title || ''),
+        uid: (typeof auth !== 'undefined' && auth.currentUser) ? auth.currentUser.uid : '',
+        registered: !!(typeof auth !== 'undefined' && auth.currentUser),
+        timestamp: Date.now()
+      });
+    } catch (e2) {
+      console.error('Failed to save pending submission (both paths):', e2);
+    }
   }
 }
 window.pushPendingSubmission = pushPendingSubmission;
 
+// אוסף בקשות-תוכן שהגיעו דרך user_submissions (מסלול העקיפה של אורחים)
+function _pendingFromUserSubs() {
+  const out = [];
+  try {
+    Object.entries(userSubmissionsData || {}).forEach(([k, v]) => {
+      if (v && v.submissionType === 'content' && v.album && v.album.id) {
+        out.push({ ...v.album, approved: false, __userSubKey: k });
+      }
+    });
+  } catch (e) {}
+  return out;
+}
+
 function subscribePendingSubmissions() {
   if (pendingSubmissionsSubscribed) return;
   pendingSubmissionsSubscribed = true;
+  const rebuild = () => { const el = document.getElementById('pending-requests-list'); if (el) el.innerHTML = pendingRequestsListHTML(); };
   onValue(ref(db, 'website/pending_submissions'), (snap) => {
     pendingSubmissionsData = snap.val() || {};
-    const el = document.getElementById('pending-requests-list');
-    if (el) el.innerHTML = pendingRequestsListHTML();
+    rebuild();
+  });
+  // גם בקשות-תוכן שהגיעו דרך user_submissions (עקיפה לאורחים)
+  onValue(ref(db, 'website/user_submissions'), (snap) => {
+    userSubmissionsData = snap.val() || {};
+    rebuild();
   });
 }
 
@@ -12054,6 +12088,8 @@ function pendingRequestsListHTML() {
 
   const map = new Map();
   fbPending.forEach(p => { if (p && p.id) map.set(p.id, p); });
+  // בקשות-תוכן של אורחים שהגיעו דרך user_submissions (מסלול העקיפה)
+  _pendingFromUserSubs().forEach(p => { if (p && p.id && !map.has(p.id)) map.set(p.id, p); });
   localPending.forEach(p => { if (p && p.id && !map.has(p.id)) map.set(p.id, p); });
 
   const pending = Array.from(map.values()).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
@@ -12120,12 +12156,19 @@ async function _reqMutate(id, action) {
   let albums = (typeof photoGetAlbums === 'function') ? photoGetAlbums() : [];
 
   if (!targetItem) {
+    targetItem = _pendingFromUserSubs().find(x => x.id === id);
+  }
+  if (!targetItem) {
     targetItem = albums.find(x => x.id === id);
   }
+  // אם הבקשה הגיעה דרך user_submissions (עקיפת אורח) — נמחק אותה משם בסיום
+  const _userSubKey = targetItem && targetItem.__userSubKey;
+  const _cleanupUserSub = async () => { if (_userSubKey) { try { await set(ref(db, `website/user_submissions/${_userSubKey}`), null); } catch (e) {} } };
 
   if (action === 'approve') {
     if (targetItem) {
       targetItem.approved = true;
+      if (targetItem.__userSubKey) delete targetItem.__userSubKey;
       if (targetItem.isStory || targetItem.type === 'story') {
         const stories = (typeof storyGetStories === 'function') ? storyGetStories() : [];
         const existingIdx = stories.findIndex(s => s.id === id);
@@ -12154,6 +12197,7 @@ async function _reqMutate(id, action) {
     }
     if (typeof saveCurrentPageContent === 'function') { try { saveCurrentPageContent(); } catch (e) {} }
     try { await set(ref(db, `website/pending_submissions/${id}`), null); } catch (e) {}
+    await _cleanupUserSub();
     if (typeof showCopyToast === 'function') showCopyToast('✓ התוכן אושר ופורסם בהצלחה!');
   } else if (action === 'reject') {
     albums = albums.filter(x => x.id !== id);
@@ -12161,6 +12205,7 @@ async function _reqMutate(id, action) {
     if (ppObj) ppObj.content = buildPhotosPage(albums, 'photos');
     if (typeof saveCurrentPageContent === 'function') { try { saveCurrentPageContent(); } catch (e) {} }
     try { await set(ref(db, `website/pending_submissions/${id}`), null); } catch (e) {}
+    await _cleanupUserSub();
     if (typeof showCopyToast === 'function') showCopyToast('✕ התוכן נדחה ונמחק.');
   }
 
