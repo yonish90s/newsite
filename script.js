@@ -6199,7 +6199,7 @@ function storyOpenDetail(id) {
     <div class="story-viewer">
       <div class="story-frame">
         <div class="story-page-view" id="story-page-view" onscroll="storyUpdateScrollHint()"></div>
-        <div class="story-scroll-hint" id="story-scroll-hint" hidden><span>▼ גללו לעוד</span></div>
+        <div class="story-scroll-hint" id="story-scroll-hint" hidden><span>▼</span></div>
       </div>
       ${storyPagesArr.length > 1 ? `
       <div class="story-viewer-nav">
@@ -6213,10 +6213,6 @@ function storyOpenDetail(id) {
       </div>
       <div class="story-page-counter" id="story-page-counter">1 / ${storyPagesArr.length}</div>
       ` : ''}
-      <div style="text-align:center; margin-top:12px;">
-        <button type="button" onclick="storyBookmarkHere()" title="שמור את הנקודה שעצרת בה" style="background:#fff; border:1.5px solid #e11d48; color:#e11d48; border-radius:999px; padding:7px 18px; font-size:13px; font-weight:800; cursor:pointer;">🔖 סמן איפה שעצרתי</button>
-        ${_bmPage > 0 ? `<div style="font-size:12px; color:#64748b; margin-top:6px; font-weight:700;">↩︎ המשכת מהמקום שסימנת (עמוד ${_bmPage + 1})</div>` : ''}
-      </div>
     </div>
   ` : '';
 
