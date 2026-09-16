@@ -1069,6 +1069,11 @@ function adjustImgAspectRatio(img) {
 
 // פונקציה שמציגה את התוכן של העמוד הנוכחי במרכז המסך
 function renderPage() {
+  // באג "יוצא מהדף": כשצופים בעמוד פנימי (גלריה/סיפור), רענון ברקע (סנכרון Firebase)
+  // לא ירנדר מחדש את הרשימה ו"יבעט" את המשתמש החוצה. ניווט/חזרה מנקים את הדגל.
+  if (window.__detailOpen && typeof mainContent !== 'undefined' && mainContent && mainContent.querySelector('.art-detail')) {
+    return;
+  }
   // עמוד "הפיד שלי" — עמוד דינמי בפני עצמו (לא נשמר ברשימת העמודים)
   if (activePageId === 'page-feed-main') {
     if (typeof buildFeedPage === 'function') {
@@ -6191,6 +6196,7 @@ function buildStoriesPage(stories, storyKind) {
 function storyOpenDetail(id) {
   const container = mainContent.querySelector('.stories-page');
   if (!container) return;
+  window.__detailOpen = true; // מגן מפני רענון-רקע שיבעט מהעמוד הפנימי
   let stories = [];
   try { stories = JSON.parse(decodeURIComponent(container.dataset.storiesJson)); } catch(e){ return; }
   const s = stories.find(x => x.id === id);
@@ -6418,6 +6424,7 @@ function storyRemoveBookmark(id) {
 window.storyRemoveBookmark = storyRemoveBookmark;
 
 function storyGoBack() {
+  window.__detailOpen = false;
   const container = mainContent.querySelector('.stories-page');
   if (!container) return;
   let stories = [];
@@ -9738,6 +9745,7 @@ function buildSidebarTabs(savedHTML, pageType) {
 function navigateToPage(pageId) {
   const page = (typeof pages !== 'undefined' && Array.isArray(pages)) ? pages.find(p => p && p.id === pageId) : null;
   if (!page) return;
+  window.__detailOpen = false; // ניווט מפורש — מותר לרנדר מחדש
   if (typeof isEditMode !== 'undefined' && isEditMode && typeof saveCurrentPageContent === 'function') {
     try { saveCurrentPageContent(); } catch (e) {}
   }
@@ -10410,6 +10418,7 @@ function secondhandDetailsBoxHTML(a) {
 }
 
 function photoOpenDetail(id) {
+  window.__detailOpen = true; // מגן מפני רענון-רקע שיבעט מהעמוד הפנימי
   photoIncrementViews(id);
   // תומך גם בעמוד קהילה ובעמוד משתמש (שמכילים data-photos-json משלהם)
   const container = mainContent.querySelector('.photos-page, .community-page, .user-page, .ideas-page');
@@ -11341,6 +11350,7 @@ function goToPhotosPage() {
 window.goToPhotosPage = goToPhotosPage;
 
 function photoGoBack() {
+  window.__detailOpen = false;
   const container = mainContent.querySelector('.photos-page');
   if (!container) return;
   let albums = [];
