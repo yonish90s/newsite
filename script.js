@@ -436,6 +436,11 @@ function setupComicsStoriesPages() {
   if (!pages.some(p => p && p.id === 'page-stories-text') && typeof buildStoriesPage === 'function') {
     pages.push({ id: 'page-stories-text', title: 'סיפורים', content: buildStoriesPage([], 'stories') });
   }
+  // 3. עמוד "קומיקס" — אם אין אף עמוד קומיקס (העמוד הקודם אבד), יוצרים חדש ריק,
+  //    בנוי בדיוק כמו העמוד המקורי: id=page-stories-main, סוג 'comics', שלד buildStoriesPage.
+  if (!comics && !pages.some(p => p && p.id === 'page-stories-main') && typeof buildStoriesPage === 'function') {
+    pages.push({ id: 'page-stories-main', title: 'קומיקס', content: buildStoriesPage([], 'comics') });
+  }
 }
 
 function sanitizeToOnlyPhotosAndStories() {
