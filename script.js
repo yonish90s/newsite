@@ -485,20 +485,13 @@ function sanitizeToOnlyPhotosAndStories() {
   const _commPage = pages.find(p => p && p.id === 'page-communities-main');
   const _commContent = '<div class="communities-page" data-page-id="page-communities-main"></div>';
   if (!_commPage) {
-    pages.push({ id: 'page-communities-main', title: 'קהילות 🏘️', isHidden: false, content: _commContent });
+    pages.push({ id: 'page-communities-main', title: 'קהילות 🏘️', content: _commContent });
   } else {
-    // תיקון: גרסאות קודמות שינו בטעות את שם עמוד הקהילות ל"קומיקס" — מחזירים ל"קהילות"
+    // תיקון שם בלבד: גרסאות קודמות שינו בטעות את שם עמוד הקהילות ל"קומיקס" — מחזירים ל"קהילות".
+    // לא נוגעים ב-isHidden כאן כדי לכבד הסתרה/הצגה של המנהל (ראה repairCommunitiesAccessOnce).
     if (!_commPage.title || _commPage.title === 'קומיקס') _commPage.title = 'קהילות 🏘️';
-    _commPage.isHidden = false;
     _commPage.content = _commContent;
   }
-
-  // תיקון גישה לקהילות: מבטלים הסתרה שנעשתה בגרסאות קודמות על עמודי הקהילה
-  // (יד שניה / שותפויות / ביקורת) כך שהם יופיעו שוב בתפריט וניתן להיכנס אליהם.
-  ['page-secondhand-main', 'page-partnerships-main', 'page-reviews-main'].forEach(function (id) {
-    const pg = pages.find(p => p && p.id === id);
-    if (pg) pg.isHidden = false;
-  });
 
   // עמוד "מוצרי יד שניה" — עמוד מסוג תמונות (גריד + חיפוש + סינון), הנתונים נשמרים בתוכן העמוד
   const _shPage = pages.find(p => p && p.id === 'page-secondhand-main');
@@ -810,6 +803,46 @@ function saveToStorage() {
     undoStack.shift(); // מוחק את הישן ביותר כדי לא לפוצץ את זיכרון הראם
   }
 }
+
+// תיקון חד-פעמי (מנהל בלבד): גרסאות קודמות הסתירו את עמודי הקהילה ושינו את שם
+// עמוד הקהילות ל"קומיקס". מתקנים את הנתונים השמורים ב-Firebase פעם אחת ומסמנים דגל,
+// כדי שמכאן והלאה הסתרה/הצגה של המנהל תישמר כרגיל (בלי שנכפה מצב בכל טעינה).
+let _communitiesRepairDone = false;
+async function repairCommunitiesAccessOnce() {
+  try {
+    if (_communitiesRepairDone) return;
+    if (typeof isAdmin !== 'function' || !isAdmin()) return;
+    if (!Array.isArray(pages)) return;
+    // בטיחות: לא לרוץ על נתונים חלקיים/דוגמה (מונע דריסת Firebase). דורשים סט עמודים תקין.
+    const hasReal = pages.length >= 6
+      && pages.some(p => p && p.id === 'page-communities-main')
+      && pages.some(p => p && ((p.content || '').includes('data-section="photos"') || (p.title || '').includes('תמונות')));
+    if (!hasReal) return;
+    const flagRef = ref(db, 'website/_repairs/communitiesAccess_v1');
+    const snap = await get(flagRef);
+    if (snap.exists() && snap.val()) { _communitiesRepairDone = true; return; }
+
+    let changed = false;
+    const comm = pages.find(p => p && p.id === 'page-communities-main');
+    if (comm) {
+      if (comm.title === 'קומיקס') { comm.title = 'קהילות 🏘️'; changed = true; }
+      if (comm.isHidden) { comm.isHidden = false; changed = true; }
+    }
+    ['page-secondhand-main', 'page-partnerships-main', 'page-reviews-main'].forEach(function (id) {
+      const pg = pages.find(p => p && p.id === id);
+      if (pg && pg.isHidden) { pg.isHidden = false; changed = true; }
+    });
+
+    _communitiesRepairDone = true;
+    await set(flagRef, true);
+    if (changed) {
+      renderSideMenu();
+      renderTopNav();
+      saveToStorage(); // מסנכרן את התיקון ל-Firebase פעם אחת
+    }
+  } catch (e) { /* אם אין הרשאה/רשת — נשאיר כמו שהוא */ }
+}
+window.repairCommunitiesAccessOnce = repairCommunitiesAccessOnce;
 
 // פונקציה שמייצרת את תפריט הצד (מייצרת את שורות ה-HTML של הלינקים לפי מערך העמודים)
 function renderSideMenu() {
@@ -3476,6 +3509,8 @@ document.addEventListener('DOMContentLoaded', () => {
           renderSideMenu();
           renderTopNav();
         }
+        // תיקון חד-פעמי של גישת הקהילות (רץ פעם אחת בלבד, מכבד הסתרות עתידיות)
+        if (typeof repairCommunitiesAccessOnce === 'function') repairCommunitiesAccessOnce();
       } else {
         managerBtn.textContent = 'התנתק';
         managerBtn.classList.remove('is-admin');
