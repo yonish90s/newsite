@@ -2459,6 +2459,43 @@ body:not(.edit-mode) .hotspot-delete-btn {
   .photos-page[data-section="photos"] .photo-card-links .art-telegram-btn { padding: 7px 12px !important; font-size: 13px !important; }
 }
 
+/* ===== עמוד הבית במובייל: כל השורות (תמונות/קומיקס/סיפורים) כקרוסלה אופקית, בלי חצים ===== */
+@media (max-width: 768px) {
+  /* כל שורת פריטים הופכת לקרוסלה אופקית עם הצצה לכרטיס הבא (כמו התמונות) */
+  .home-feed-page .art-rows {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    grid-template-columns: none !important;
+    overflow-x: auto;
+    overflow-y: hidden;
+    gap: 12px;
+    padding: 4px 2px;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    direction: ltr; /* הכרטיס הראשון בשמאל, הבא מציץ מימין */
+    background: transparent;
+    box-shadow: none;
+  }
+  .home-feed-page .art-rows::-webkit-scrollbar { display: none; }
+  .home-feed-page .art-row {
+    flex: 0 0 86% !important;
+    max-width: 86% !important;
+    scroll-snap-align: start;
+    direction: rtl; /* התוכן חוזר ל-RTL */
+    flex-direction: column-reverse;
+    background: #fff;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+  }
+  .home-feed-page .art-row-img-container { padding: 10px 10px 0 !important; box-sizing: border-box; width: 100%; }
+  .home-feed-page .art-row-img-wrap { width: 100% !important; height: auto !important; aspect-ratio: 4 / 5; border-radius: 16px !important; }
+  /* הסרת חצי הניווט ‹ › בעמוד הבית במובייל — הגולשים יבינו לבד להחליק */
+  .home-feed-page .photo-nav-overlay { display: none !important; }
+  .home-feed-page .photo-mini-thumbs > button { display: none !important; }
+}
+
 /* ===== קרוסלת הצצה בכרטיס הגלריה (סגנון אינסטגרם) + לב על התמונה ===== */
 .pc-carousel {
   display: flex;
