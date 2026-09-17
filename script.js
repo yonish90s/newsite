@@ -3483,6 +3483,11 @@ document.addEventListener('DOMContentLoaded', () => {
       clearInterval(userActivityInterval);
       userActivityInterval = null;
     }
+    // אורח אנונימי (guest) — לא מריצים עבודה כבדה ולא מרנדרים מחדש. זה מונע
+    // תקיעה/באגים כשנחתמים כאורח תוך כדי שמירת העלאה.
+    if (user && user.isAnonymous) {
+      return;
+    }
     if (user) {
       updateUserActivity(user);
       userActivityInterval = setInterval(() => updateUserActivity(user), 45000);
@@ -11980,11 +11985,13 @@ document.getElementById('photo-save').addEventListener('click', async () => {
   }
 
   mainContent.innerHTML = buildPhotosPage(albums, _saveSection);
-  saveCurrentPageContent();
+  // רק מנהל שומר את תוכן העמוד הציבורי. אורח — הבקשה נשמרה כבר ל-pending_submissions,
+  // ואין לו הרשאה (ואין צורך) לכתוב את כל העמודים ל-Firebase (מונע תקיעה).
+  if (isEditMode) saveCurrentPageContent();
   document.getElementById('photo-modal').style.display = 'none';
 
   if (!isEditMode && !editingPhotoId) {
-    alert('הגלריה הועלה בהצלחה וממתינה לאישור מנהל!');
+    alert('✅ הבקשה נשלחה בהצלחה וממתינה לאישור מנהל! היא תופיע באתר לאחר אישור.');
   }
 });
 
