@@ -455,7 +455,7 @@ function sanitizeToOnlyPhotosAndStories() {
   // לפי בקשת המשתמש: משאירים רק עמודי תמונות וסיפורים (מוחקים כתבות/קהילה וכל עמוד אחר).
   // מסננים רק כשקיים לפחות עמוד תמונות/סיפורים אחד, כדי לא לרוקן אתר תקין בטעות.
   if (pages.some(p => p && ((p.content || '').includes('photos-page') || (p.content || '').includes('stories-page')))) {
-    pages = pages.filter(p => p && ((p.content || '').includes('photos-page') || (p.content || '').includes('stories-page') || (p.content || '').includes('ideas-page') || (p.content || '').includes('communities-page') || (p.content || '').includes('info-page') || (p.content || '').includes('requests-page') || (p.content || '').includes('questions-page') || (p.content || '').includes('offers-page')));
+    pages = pages.filter(p => p && (p.id === 'page-home-feed' || (p.content || '').includes('home-feed-page') || (p.content || '').includes('photos-page') || (p.content || '').includes('stories-page') || (p.content || '').includes('ideas-page') || (p.content || '').includes('communities-page') || (p.content || '').includes('info-page') || (p.content || '').includes('requests-page') || (p.content || '').includes('questions-page') || (p.content || '').includes('offers-page')));
   }
 
   // בוטסטראפ של עמודי ברירת המחדל (תמונות + סיפורים) רק כאשר אין אף עמוד באתר.
@@ -491,6 +491,17 @@ function sanitizeToOnlyPhotosAndStories() {
     // לא נוגעים ב-isHidden כאן כדי לכבד הסתרה/הצגה של המנהל (ראה repairCommunitiesAccessOnce).
     if (!_commPage.title || _commPage.title === 'קומיקס') _commPage.title = 'קהילות 🏘️';
     _commPage.content = _commContent;
+  }
+
+  // עמוד הבית: שורות מתחלפות קומיקס/סיפורים. מוודאים שהוא קיים תמיד (התוכן נבנה דינמית ברינדור).
+  const _homePage = pages.find(p => p && p.id === 'page-home-feed');
+  const _homeContent = '<div class="home-feed-page" data-page-id="page-home-feed"></div>';
+  if (!_homePage) {
+    // נוסף בראש הרשימה כדי להיות עמוד הבית הראשי
+    pages.unshift({ id: 'page-home-feed', title: 'בית 🏠', content: _homeContent });
+  } else {
+    if (!_homePage.title) _homePage.title = 'בית 🏠';
+    _homePage.content = _homeContent;
   }
 
   // עמוד "מוצרי יד שניה" — עמוד מסוג תמונות (גריד + חיפוש + סינון), הנתונים נשמרים בתוכן העמוד
@@ -591,6 +602,14 @@ function sanitizeToOnlyPhotosAndStories() {
   // מסירים מהתפריט העליון עמודים שכבר לא קיימים (נמחקו)
   topNavPages = topNavPages.filter(id => pages.some(p => p && p.id === id));
 
+  // עמוד הבית מוצג בתפריט העליון צמוד ל"קהילות" (לפי בקשת המשתמש: "תוסיף ליד קהילות")
+  if (pages.some(p => p && p.id === 'page-home-feed')) {
+    topNavPages = topNavPages.filter(id => id !== 'page-home-feed');
+    const _ci = topNavPages.indexOf('page-communities-main');
+    if (_ci >= 0) topNavPages.splice(_ci + 1, 0, 'page-home-feed');
+    else topNavPages.push('page-home-feed');
+  }
+
   if (!activePageId || !pages.some(p => p && p.id === activePageId)) {
     activePageId = pages[0] ? pages[0].id : null;
   }
@@ -609,8 +628,11 @@ async function initSite() {
 
   sanitizeToOnlyPhotosAndStories();
 
-  // עמוד הבית הראשי בעת כניסה לאתר הוא עמוד תמונות!
-  let mainHomePage = pages.find(p => p && p.id === 'page-photos-main') || pages.find(p => p && p.content && p.content.includes('data-section="photos"')) || pages.find(p => p && p.title && p.title.includes('תמונות'));
+  // עמוד הבית הראשי בעת כניסה לאתר הוא עמוד הבית (שורות מתחלפות קומיקס/סיפורים)
+  let mainHomePage = pages.find(p => p && p.id === 'page-home-feed')
+    || pages.find(p => p && p.id === 'page-photos-main')
+    || pages.find(p => p && p.content && p.content.includes('data-section="photos"'))
+    || pages.find(p => p && p.title && p.title.includes('תמונות'));
   if (mainHomePage) {
     activePageId = mainHomePage.id;
   }
@@ -643,7 +665,10 @@ async function initSite() {
       
       sanitizeToOnlyPhotosAndStories();
 
-      let bootHomePage = pages.find(p => p && p.id === 'page-photos-main') || pages.find(p => p && p.content && p.content.includes('data-section="photos"')) || pages.find(p => p && p.title && p.title.includes('תמונות'));
+      let bootHomePage = pages.find(p => p && p.id === 'page-home-feed')
+        || pages.find(p => p && p.id === 'page-photos-main')
+        || pages.find(p => p && p.content && p.content.includes('data-section="photos"'))
+        || pages.find(p => p && p.title && p.title.includes('תמונות'));
       if (bootHomePage) {
         activePageId = bootHomePage.id;
       }
@@ -684,7 +709,10 @@ const megaMenuContainer = { classList: { add: ()=>{}, remove: ()=>{} }, style: {
 
 function goToHomePage() {
   if (typeof pages === 'undefined') return;
-  const homePage = pages.find(p => p && p.id === 'page-photos-main') || pages.find(p => p && p.content && p.content.includes('data-section="photos"')) || pages.find(p => p && p.title && p.title.includes('תמונות'));
+  const homePage = pages.find(p => p && p.id === 'page-home-feed')
+    || pages.find(p => p && p.id === 'page-photos-main')
+    || pages.find(p => p && p.content && p.content.includes('data-section="photos"'))
+    || pages.find(p => p && p.title && p.title.includes('תמונות'));
   if (homePage) {
     activePageId = homePage.id;
   } else if (pages.length > 0) {
@@ -1173,6 +1201,16 @@ function renderPage() {
       mainContent.innerHTML = buildEverythingMoneyPage();
       calculateEMValuation();
       return;
+    }
+
+    // עמוד הבית: שורות מתחלפות קומיקס/סיפורים — נבנה דינמית בכל רינדור
+    if (currentPage.id === 'page-home-feed') {
+      if (typeof buildHomeFeedPage === 'function') {
+        mainContent.innerHTML = buildHomeFeedPage();
+        if (isEditMode) applyEditModeToContent();
+        try { window.scrollTo(0, 0); } catch (e) {}
+        return;
+      }
     }
 
     // עמוד "קהילות": מזוהה לפי מזהה/כותרת (לא לפי תוכן) כדי שיהיה עמיד לחלוטין
@@ -6562,6 +6600,12 @@ window.storyRemoveBookmark = storyRemoveBookmark;
 
 function storyGoBack() {
   window.__detailOpen = false;
+  // אם הגענו לפריט מעמוד הבית (שורות מתחלפות) — חוזרים לעמוד הבית ולא לעמוד סיפורים
+  if (activePageId === 'page-home-feed' && typeof renderPage === 'function') {
+    renderPage();
+    if (isEditMode) applyEditModeToContent();
+    return;
+  }
   const container = mainContent.querySelector('.stories-page');
   if (!container) return;
   let stories = [];
@@ -10163,6 +10207,59 @@ function getStoriesFeedData() {
   } catch (e) {}
   return (typeof STORIES_SAMPLES !== 'undefined') ? STORIES_SAMPLES : [];
 }
+
+// עמוד הבית: שורות מתחלפות — פעם קומיקס, פעם סיפורים.
+// כל השורות עטופות ב-.stories-page אחד עם data-stories-json מאוחד, כך ש-storyOpenDetail
+// מוצא כל פריט (קומיקס או סיפור) לפי id ופותח אותו נכון.
+function buildHomeFeedPage() {
+  const all = (typeof getAllStoriesFromPages === 'function') ? getAllStoriesFromPages() : [];
+  const comics = all.filter(s => s && s.__kind !== 'stories');
+  const stories = all.filter(s => s && s.__kind === 'stories');
+  const combined = comics.concat(stories);
+  const json = encodeURIComponent(JSON.stringify(combined));
+  const cols = (typeof storyGridCols !== 'undefined') ? storyGridCols : 3;
+
+  // חלוקה לשורות והשזרה: קומיקס, סיפורים, קומיקס, סיפורים ...
+  const rowSize = 6;
+  const chunk = (arr) => { const out = []; for (let i = 0; i < arr.length; i += rowSize) out.push(arr.slice(i, i + rowSize)); return out; };
+  const cChunks = chunk(comics), sChunks = chunk(stories);
+  const rows = [];
+  const maxLen = Math.max(cChunks.length, sChunks.length);
+  for (let i = 0; i < maxLen; i++) {
+    if (cChunks[i]) rows.push({ kind: 'comics', items: cChunks[i] });
+    if (sChunks[i]) rows.push({ kind: 'stories', items: sChunks[i] });
+  }
+
+  const rowHTML = rows.map(r => {
+    const isC = r.kind === 'comics';
+    const title = isC ? '📖 קומיקס' : '✍️ סיפורים';
+    const color = isC ? '#6b21a8' : '#0369a1';
+    const border = isC ? '#8b5cf6' : '#0ea5e9';
+    const targetId = isC ? 'page-stories-main' : 'page-stories-text';
+    const cards = r.items.map(storyCardHTML).join('');
+    return `<div class="photo-section-row home-feed-section" style="margin:0 0 24px; background:#fff; padding:18px; border-radius:16px; border:1px solid #e2e8f0; box-shadow:0 4px 15px rgba(0,0,0,0.03);">
+      <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:2.5px solid ${border}; padding-bottom:10px; margin-bottom:18px;">
+        <h3 style="margin:0; font-size:18px; font-weight:900; color:${color};">${title}</h3>
+        <button class="home-feed-open" onclick="event.stopPropagation(); navigateToPage('${targetId}')" style="background:${border}; color:#fff; border:none; border-radius:8px; padding:7px 14px; font-size:13px; font-weight:700; cursor:pointer;">פתח הכל ←</button>
+      </div>
+      <div class="art-rows photo-collapsible expanded">${cards}</div>
+    </div>`;
+  }).join('');
+
+  const empty = !combined.length ? `<div style="text-align:center; padding:60px 20px; color:#6b7280; background:#fff; border-radius:16px; border:1px solid #e2e8f0;">
+      <div style="font-size:44px; margin-bottom:12px;">📚</div>
+      <div style="font-size:17px; font-weight:800; margin-bottom:6px; color:#374151;">עדיין אין תוכן</div>
+      <div style="font-size:14px;">הקומיקסים והסיפורים יופיעו כאן ברגע שיועלו לעמוד הקומיקס או הסיפורים.</div>
+    </div>` : '';
+
+  return `<div class="articles-page stories-page home-feed-page story-cols-${cols}${photoImagesMode ? '' : ' text-mode'}" data-page-id="page-home-feed" data-stories-json="${json}">
+    <div class="art-inner">
+      ${rowHTML}
+      ${empty}
+    </div>
+  </div>`;
+}
+window.buildHomeFeedPage = buildHomeFeedPage;
 
 function photosStoriesFeedHTML() {
   try {
@@ -15173,7 +15270,7 @@ onValue(ref(db, 'website'), (snapshot) => {
     pList = dedupePageList(pList);
     // משאירים רק עמודי תמונות/סיפורים/קהילות (מוחקים כתבות וכל עמוד אחר)
     if (pList.some(p => p && ((p.content || '').includes('photos-page') || (p.content || '').includes('stories-page')))) {
-      pList = pList.filter(p => p && ((p.content || '').includes('photos-page') || (p.content || '').includes('stories-page') || (p.content || '').includes('ideas-page') || (p.content || '').includes('communities-page') || (p.content || '').includes('info-page') || (p.content || '').includes('requests-page') || (p.content || '').includes('questions-page') || (p.content || '').includes('offers-page') || p.id === 'page-ideas-main'));
+      pList = pList.filter(p => p && (p.id === 'page-home-feed' || (p.content || '').includes('home-feed-page') || (p.content || '').includes('photos-page') || (p.content || '').includes('stories-page') || (p.content || '').includes('ideas-page') || (p.content || '').includes('communities-page') || (p.content || '').includes('info-page') || (p.content || '').includes('requests-page') || (p.content || '').includes('questions-page') || (p.content || '').includes('offers-page') || p.id === 'page-ideas-main'));
     }
     // מוודאים שעמוד "רעיונות" קיים
     const _ipd = pList.find(p => p && p.id === 'page-ideas-main');
@@ -15249,6 +15346,15 @@ onValue(ref(db, 'website'), (snapshot) => {
     } else {
       _ofp.content = _ofpc; if (!_ofp.title) _ofp.title = 'הצעות 🔥';
     }
+    // עמוד הבית (שורות מתחלפות קומיקס/סיפורים) — קיים תמיד; התוכן נבנה דינמית ברינדור
+    const _hpl = pList.find(p => p && p.id === 'page-home-feed');
+    const _hplc = '<div class="home-feed-page" data-page-id="page-home-feed"></div>';
+    if (!_hpl) {
+      pList.unshift({ id: 'page-home-feed', title: 'בית 🏠', content: _hplc });
+    } else {
+      if (!_hpl.title) _hpl.title = 'בית 🏠';
+      _hpl.content = _hplc;
+    }
     // מסירים את העמודים "יד שניה" ו"השוואת מחירים"
     pList = pList.filter(p => p && !REMOVED_PHOTO_PAGE_IDS.includes(p.id));
     if (JSON.stringify(pages) !== JSON.stringify(pList)) {
@@ -15278,6 +15384,12 @@ onValue(ref(db, 'website'), (snapshot) => {
     navs = navs.filter(id => !isSideOnlyId(id));
     // מסירים מהתפריט את העמודים שהוסרו
     navs = navs.filter(id => !REMOVED_PHOTO_PAGE_IDS.includes(id));
+    // עמוד הבית מוצג בתפריט העליון צמוד ל"קהילות"
+    if (pages.some(p => p && p.id === 'page-home-feed')) {
+      navs = navs.filter(id => id !== 'page-home-feed');
+      const _hci = navs.indexOf('page-communities-main');
+      if (_hci >= 0) navs.splice(_hci + 1, 0, 'page-home-feed'); else navs.push('page-home-feed');
+    }
     if (JSON.stringify(topNavPages) !== JSON.stringify(navs)) {
       topNavPages = navs;
       changed = true;
