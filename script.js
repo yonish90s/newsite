@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getDatabase, ref, set, get, child, onValue, push, update, increment } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 // הגדרות הפרויקט של Firebase
@@ -255,6 +255,20 @@ let deleteChat = false;
 
 // פונקציית עזר לבדיקה האם המשתמש המחובר כרגע הוא המנהל המורשה
 const isAdmin = () => auth.currentUser && auth.currentUser.email === "yoni98321@gmail.com";
+
+// מוודא שיש משתמש מחובר. אם אין — מתחבר אנונימית (כאורח) כדי שכתיבות ל-Firebase
+// (למשל בקשת פרסום) יעברו את כללי האבטחה. מחזיר true אם יש/נוצר משתמש.
+async function ensureGuestSignedIn() {
+  try {
+    if (auth.currentUser) return true;
+    await signInAnonymously(auth);
+    return !!auth.currentUser;
+  } catch (e) {
+    console.error('anonymous (guest) sign-in failed:', e);
+    return false;
+  }
+}
+window.ensureGuestSignedIn = ensureGuestSignedIn;
 
 // --- מערכות דינמיות ---
 // פונקציה ליישום הרקעים למסך
@@ -11850,11 +11864,17 @@ document.getElementById('photo-cancel').addEventListener('click', () => {
   document.getElementById('photo-modal').style.display = 'none';
 });
 
-document.getElementById('photo-save').addEventListener('click', () => {
+document.getElementById('photo-save').addEventListener('click', async () => {
   const title = document.getElementById('photo-title').value.trim();
   if (!title) { alert('חובה כותרת'); return; }
   const validImages = photoImgDataList.filter(img => !!img);
   if (validImages.length === 0) { alert('חובה להעלות לפחות תמונה אחת'); return; }
+  // מי שאינו מחובר ואינו מנהל — מחייבים אותו להיכנס כאורח (אנונימי) לפני השמירה,
+  // כדי שהבקשה תיכתב ל-Firebase ותגיע לאישור המנהל.
+  if (!auth.currentUser && !(typeof isEditMode !== 'undefined' && isEditMode)) {
+    const _ok = await ensureGuestSignedIn();
+    if (!_ok) { alert('לא ניתן להתחבר כרגע — נסו שוב בעוד רגע.'); return; }
+  }
 
   const albums = photoGetAlbums();
   const _saveSection = photoCurrentSection();
@@ -11894,12 +11914,14 @@ document.getElementById('photo-save').addEventListener('click', () => {
 
   const user = auth.currentUser;
   let authorNickname = 'אורח';
-  if (user) {
+  if (user && user.isAnonymous) {
+    authorNickname = 'אורח'; // משתמש אנונימי — אין אימייל/שם תצוגה
+  } else if (user) {
     try {
       const profile = JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}');
-      authorNickname = profile.nickname || user.displayName || user.email.split('@')[0];
+      authorNickname = profile.nickname || user.displayName || (user.email ? user.email.split('@')[0] : 'אורח');
     } catch(e) {
-      authorNickname = user.displayName || user.email.split('@')[0];
+      authorNickname = user.displayName || (user.email ? user.email.split('@')[0] : 'אורח');
     }
   } else if (isEditMode) {
     authorNickname = 'מנהל';
@@ -12017,6 +12039,8 @@ let pendingSubmissionsSubscribed = false;
 
 async function pushPendingSubmission(album) {
   if (!album || !album.id) return;
+  // מוודאים משתמש (אורח אנונימי אם צריך) כדי שהכתיבה תעבור את כללי Firebase
+  if (typeof ensureGuestSignedIn === 'function') { try { await ensureGuestSignedIn(); } catch (e) {} }
   try {
     await set(ref(db, `website/pending_submissions/${album.id}`), album);
   } catch (e) {
