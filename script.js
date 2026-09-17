@@ -10102,7 +10102,7 @@ function buildPhotosPage(albums, section) {
         return JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}');
       } catch (e) { return {}; }
     })();
-    const nick = profile.nickname || user.displayName || user.email.split('@')[0];
+    const nick = profile.nickname || user.displayName || (user.email ? user.email.split('@')[0] : 'אורח');
     const age = profile.age || '--';
     const location = profile.location || '--';
     const tg = profile.telegram || '';
@@ -14769,7 +14769,7 @@ async function submitCommunityPost() {
   const localProfile = (() => {
     try { return JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}'); } catch(e) { return {}; }
   })();
-  const authorName = localProfile.nickname || user.displayName || user.email.split('@')[0];
+  const authorName = localProfile.nickname || user.displayName || (user.email ? user.email.split('@')[0] : 'אורח');
 
   const postData = {
     type,
@@ -14840,7 +14840,7 @@ async function submitCommunityComment(postId) {
   const localProfile = (() => {
     try { return JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}'); } catch(e) { return {}; }
   })();
-  const authorName = localProfile.nickname || user.displayName || user.email.split('@')[0];
+  const authorName = localProfile.nickname || user.displayName || (user.email ? user.email.split('@')[0] : 'אורח');
 
   const commentData = {
     author: authorName,
