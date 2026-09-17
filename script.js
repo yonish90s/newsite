@@ -6225,6 +6225,10 @@ function buildStoriesPage(stories, storyKind) {
 function storyOpenDetail(id) {
   const container = mainContent.querySelector('.stories-page');
   if (!container) return;
+  // חובה לשמור את סוג העמוד (קומיקס/סיפורים) גם בתצוגת הפריט, אחרת בחזרה
+  // buildStoriesPage נבנה עם 'comics' כברירת מחדל, מתנגש בעמוד הקומיקס, ומחיקת-הכפולים
+  // מוחקת את עמוד הסיפורים — "כל הסיפורים נעלמו".
+  const _srcKind = container.getAttribute('data-story-kind') || 'comics';
   window.__detailOpen = true; // מגן מפני רענון-רקע שיבעט מהעמוד הפנימי
   let stories = [];
   try { stories = JSON.parse(decodeURIComponent(container.dataset.storiesJson)); } catch(e){ return; }
@@ -6313,7 +6317,7 @@ function storyOpenDetail(id) {
     const _tags = (Array.isArray(s.tags) && s.tags.length) ? s.tags : (s.category ? [s.category] : []);
     const _tagChips = _tags.map(t => `<span class="story-article-tag">${artEsc(t)}</span>`).join('');
     mainContent.innerHTML = `
-      <div class="art-detail articles-page stories-page story-article-page" data-story-id="${id}" data-stories-json="${json}">
+      <div class="art-detail articles-page stories-page story-article-page" data-story-kind="${_srcKind}" data-story-id="${id}" data-stories-json="${json}">
         <div class="art-detail-inner">
           <button class="art-back-btn" onclick="storyGoBack()">← חזרה לסיפורים</button>
           <article class="story-article">
@@ -6346,7 +6350,7 @@ function storyOpenDetail(id) {
   }
 
   mainContent.innerHTML = `
-    <div class="art-detail articles-page stories-page" data-story-id="${id}" data-stories-json="${json}">
+    <div class="art-detail articles-page stories-page" data-story-kind="${_srcKind}" data-story-id="${id}" data-stories-json="${json}">
       <div class="art-detail-inner">
         <div class="story-detail-head">
           <button class="art-back-btn" onclick="storyGoBack()">← חזרה לסיפורים</button>
