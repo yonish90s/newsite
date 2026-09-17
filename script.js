@@ -256,6 +256,11 @@ let deleteChat = false;
 // פונקציית עזר לבדיקה האם המשתמש המחובר כרגע הוא המנהל המורשה
 const isAdmin = () => auth.currentUser && auth.currentUser.email === "yoni98321@gmail.com";
 
+// משתמש "רשום" אמיתי = מחובר ואינו אנונימי. אורח אנונימי אינו נחשב משתמש רשום
+// (אם יתנתק ויתחבר שוב הוא משתמש אחר), ולכן אין לו פרופיל/אימות/משימות.
+const isRegisteredUser = () => auth.currentUser && !auth.currentUser.isAnonymous;
+window.isRegisteredUser = isRegisteredUser;
+
 // מוודא שיש משתמש מחובר. אם אין — מתחבר אנונימית (כאורח) כדי שכתיבות ל-Firebase
 // (למשל בקשת פרסום) יעברו את כללי האבטחה. מחזיר true אם יש/נוצר משתמש.
 async function ensureGuestSignedIn() {
@@ -3420,7 +3425,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function updateManagerUI(user = null) {
     if (!managerBtn) return;
-    
+    // אורח אנונימי מטופל כמו לא-מחובר בממשק (בלי פרופיל/אימות/משימות/עריכה)
+    if (user && user.isAnonymous) user = null;
+
     if (!user) {
       const chatPanel = document.getElementById('global-chat-panel');
       if (chatPanel) chatPanel.style.display = 'none';
@@ -9110,7 +9117,8 @@ const productFilters = {
 
 function buildSidebarNameChangeSectionHTML() {
   const user = auth.currentUser;
-  if (!user) return '';
+  // רק משתמש רשום — לא אורח אנונימי (שם תצוגה/אימות אינם רלוונטיים לאורח)
+  if (!isRegisteredUser()) return '';
 
   let profile = {};
   try {
@@ -9237,7 +9245,8 @@ window.isUserVerified = isUserVerified;
 
 function buildSidebarVerificationSectionHTML() {
   const user = auth.currentUser;
-  if (!user) return '';
+  // רק משתמש רשום — אורח אנונימי אינו יכול לאמת חשבון
+  if (!isRegisteredUser()) return '';
 
   let profile = {};
   try {
@@ -10084,7 +10093,7 @@ function buildPhotosPage(albums, section) {
   let savedHTML = '';
   let budgetHTML = '';
   let myProfileHTML = '';
-  if (auth.currentUser) {
+  if (isRegisteredUser()) {
     const user = auth.currentUser;
     const budget = localStorage.getItem(`like_budget_${user.uid}`) || '5';
     budgetHTML = `
@@ -11247,8 +11256,10 @@ function updateBatteryBadgeUI() {
 window.updateBatteryBadgeUI = updateBatteryBadgeUI;
 
 function openBatteryTasksModal() {
+  // משימות/התקדמות רק למשתמשים רשומים (לא לאורח אנונימי)
+  if (!isRegisteredUser()) return;
   const { tasks, doneCount, total, percent } = getBatteryTaskStatus();
-  
+
   let modal = document.getElementById('battery-tasks-modal');
   if (!modal) {
     modal = document.createElement('div');
