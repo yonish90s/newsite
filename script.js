@@ -427,8 +427,9 @@ const REMOVED_PHOTO_PAGE_IDS = ['page-yad2-main', 'page-prices-main'];
 function setupComicsStoriesPages() {
   if (!Array.isArray(pages)) return;
   // 1. העמוד הישן (קומיקס) = עמוד stories שאינו עמוד הסיפורים החדש ואינו עמוד התמונות/פיד
-  const comics = pages.find(p => p && p.id !== 'page-stories-text'
+  const comics = pages.find(p => p && p.id !== 'page-stories-text' && p.id !== 'page-home-feed'
     && (p.content || '').includes('stories-page')
+    && !(p.content || '').includes('home-feed-page')
     && !(p.content || '').includes('photos-page')
     && !(p.content || '').includes('photos-stories-feed'));
   if (comics && comics.title !== 'קומיקס') comics.title = 'קומיקס';
@@ -500,7 +501,8 @@ function sanitizeToOnlyPhotosAndStories() {
     // נוסף בראש הרשימה כדי להיות עמוד הבית הראשי
     pages.unshift({ id: 'page-home-feed', title: 'בית 🏠', content: _homeContent });
   } else {
-    if (!_homePage.title) _homePage.title = 'בית 🏠';
+    // מתקנים שם שגוי (למשל אם גרסה קודמת שינתה אותו ל"קומיקס") ומאפסים תוכן לפלייסהולדר
+    if (!_homePage.title || _homePage.title === 'קומיקס') _homePage.title = 'בית 🏠';
     _homePage.content = _homeContent;
   }
 
@@ -1782,6 +1784,11 @@ function makeImagesEditable() {
 // רבות (תמונה ראשית + תצוגות מקדימות + data-json) ומנפח את הבלוב
 // שמסונכרן ל-Firebase עד כדי קריסה. שומרים רק את המעטפת עם ה-data.
 function artSerializePageContent() {
+  // עמוד הבית (שורות מתחלפות) — התוכן נבנה דינמית ברינדור; שומרים רק פלייסהולדר
+  // כדי שהעמודים הפנימיים (photos-page/stories-page) לא ייחשבו לעמוד קומיקס/תמונות בעצמם.
+  if (activePageId === 'page-home-feed' || mainContent.querySelector('.home-feed-page')) {
+    return '<div class="home-feed-page" data-page-id="page-home-feed"></div>';
+  }
   const photos = mainContent.querySelector('.photos-page');
   if (photos && photos.dataset.photosJson) {
     return `<div class="articles-page photos-page" data-section="${photos.dataset.section || 'photos'}" data-photos-json="${photos.dataset.photosJson}"></div>`;
@@ -10208,58 +10215,102 @@ function getStoriesFeedData() {
   return (typeof STORIES_SAMPLES !== 'undefined') ? STORIES_SAMPLES : [];
 }
 
-// עמוד הבית: שורות מתחלפות — פעם קומיקס, פעם סיפורים.
-// כל השורות עטופות ב-.stories-page אחד עם data-stories-json מאוחד, כך ש-storyOpenDetail
-// מוצא כל פריט (קומיקס או סיפור) לפי id ופותח אותו נכון.
+// שולף את גלריות התמונות לעמוד הבית (מתוך עמוד התמונות), עם נפילה לדוגמאות אם ריק.
+function getPhotosForHome() {
+  try {
+    if (typeof pages !== 'undefined' && Array.isArray(pages)) {
+      const pp = pages.find(p => p && (p.content || '').includes('data-section="photos"'))
+        || pages.find(p => p && (p.title || '').includes('תמונות'));
+      if (pp && pp.content) {
+        const m = pp.content.match(/data-photos-json="([^"]*)"/);
+        if (m) { const arr = JSON.parse(decodeURIComponent(m[1])); if (Array.isArray(arr) && arr.length) return arr; }
+      }
+    }
+  } catch (e) {}
+  return (typeof PHOTOS_SAMPLES !== 'undefined' && Array.isArray(PHOTOS_SAMPLES)) ? PHOTOS_SAMPLES : [];
+}
+
+// דוגמאות תצוגה לעמוד הבית — מוצגות רק כשאין עדיין קומיקס/סיפורים אמיתיים,
+// כדי שהמבנה (שורה של כל סוג) ייראה. ברגע שמעלים תוכן אמיתי, הן נעלמות.
+function _homeDemoComics() {
+  return [
+    { id: 'demo-c1', title: 'קומיקס לדוגמה', author: 'הצוות', category: 'דוגמה', timestamp: 'עכשיו', images: ['https://picsum.photos/seed/comic1/400/300'], pages: [{ type: 'image', url: 'https://picsum.photos/seed/comic1/400/300' }] },
+    { id: 'demo-c2', title: 'עוד קומיקס לדוגמה', author: 'הצוות', category: 'דוגמה', timestamp: 'עכשיו', images: ['https://picsum.photos/seed/comic2/400/300'], pages: [{ type: 'image', url: 'https://picsum.photos/seed/comic2/400/300' }] }
+  ];
+}
+function _homeDemoStories() {
+  return [
+    { id: 'demo-t1', title: 'סיפור לדוגמה', author: 'הצוות', category: 'דוגמה', timestamp: 'עכשיו', pages: [{ type: 'text', text: 'זהו סיפור טקסט לדוגמה שמוצג בעמוד הבית עד שתעלה סיפורים אמיתיים.' }] },
+    { id: 'demo-t2', title: 'עוד סיפור לדוגמה', author: 'הצוות', category: 'דוגמה', timestamp: 'עכשיו', pages: [{ type: 'text', text: 'סיפור נוסף לדוגמה. אפשר להחליף אותו בתוכן אמיתי מעמוד הסיפורים.' }] }
+  ];
+}
+
+// עמוד הבית: שורה מכל סוג — תמונות, קומיקס, סיפורים.
+// התמונות בעטיפת .photos-page (photoOpenDetail), הקומיקס+סיפורים בעטיפת .stories-page
+// אחת עם data-stories-json מאוחד (storyOpenDetail מוצא כל פריט לפי id).
 function buildHomeFeedPage() {
   const all = (typeof getAllStoriesFromPages === 'function') ? getAllStoriesFromPages() : [];
-  const comics = all.filter(s => s && s.__kind !== 'stories');
-  const stories = all.filter(s => s && s.__kind === 'stories');
-  const combined = comics.concat(stories);
-  const json = encodeURIComponent(JSON.stringify(combined));
+  let comics = all.filter(s => s && s.__kind !== 'stories');
+  let stories = all.filter(s => s && s.__kind === 'stories');
+  const photos = getPhotosForHome();
+  // דוגמאות תצוגה כשאין תוכן אמיתי (כדי שכל שלוש השורות ייראו)
+  if (!comics.length) comics = _homeDemoComics();
+  if (!stories.length) stories = _homeDemoStories();
+
   const cols = (typeof storyGridCols !== 'undefined') ? storyGridCols : 3;
+  const pcols = (typeof photoGridCols !== 'undefined') ? photoGridCols : 4;
+  const maxPerRow = 8;
 
-  // חלוקה לשורות והשזרה: קומיקס, סיפורים, קומיקס, סיפורים ...
-  const rowSize = 6;
-  const chunk = (arr) => { const out = []; for (let i = 0; i < arr.length; i += rowSize) out.push(arr.slice(i, i + rowSize)); return out; };
-  const cChunks = chunk(comics), sChunks = chunk(stories);
-  const rows = [];
-  const maxLen = Math.max(cChunks.length, sChunks.length);
-  for (let i = 0; i < maxLen; i++) {
-    if (cChunks[i]) rows.push({ kind: 'comics', items: cChunks[i] });
-    if (sChunks[i]) rows.push({ kind: 'stories', items: sChunks[i] });
-  }
+  // --- שורת תמונות ---
+  const photosJson = encodeURIComponent(JSON.stringify(photos));
+  const photoCards = photos.slice(0, maxPerRow).map(p => (typeof renderPhotoCard === 'function') ? renderPhotoCard(p) : '').join('');
+  const photosSection = photos.length ? `
+    <div class="photos-page photo-cols-${pcols}${photoImagesMode ? '' : ' text-mode'}${photoNoImgMargins ? ' no-img-margins' : ''} home-feed-photos" data-section="photos" data-photos-json="${photosJson}">
+      <div class="photo-section-row home-feed-section" style="margin:0 0 24px; background:#fff; padding:18px; border-radius:16px; border:1px solid #e2e8f0; box-shadow:0 4px 15px rgba(0,0,0,0.03);">
+        <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:2.5px solid #e11d48; padding-bottom:10px; margin-bottom:18px;">
+          <h3 style="margin:0; font-size:18px; font-weight:900; color:#be123c;">🖼️ תמונות</h3>
+          <button class="home-feed-open" onclick="event.stopPropagation(); homeOpenPhotos()" style="background:#e11d48; color:#fff; border:none; border-radius:8px; padding:7px 14px; font-size:13px; font-weight:700; cursor:pointer;">פתח הכל ←</button>
+        </div>
+        <div class="art-rows photo-collapsible expanded">${photoCards}</div>
+      </div>
+    </div>` : '';
 
-  const rowHTML = rows.map(r => {
-    const isC = r.kind === 'comics';
-    const title = isC ? '📖 קומיקס' : '✍️ סיפורים';
-    const color = isC ? '#6b21a8' : '#0369a1';
-    const border = isC ? '#8b5cf6' : '#0ea5e9';
-    const targetId = isC ? 'page-stories-main' : 'page-stories-text';
-    const cards = r.items.map(storyCardHTML).join('');
-    return `<div class="photo-section-row home-feed-section" style="margin:0 0 24px; background:#fff; padding:18px; border-radius:16px; border:1px solid #e2e8f0; box-shadow:0 4px 15px rgba(0,0,0,0.03);">
+  // --- שורות קומיקס + סיפורים (עטיפה אחת) ---
+  const combined = comics.concat(stories);
+  const storiesJson = encodeURIComponent(JSON.stringify(combined));
+  const storyRow = (items, title, color, border, targetId) => `
+    <div class="photo-section-row home-feed-section" style="margin:0 0 24px; background:#fff; padding:18px; border-radius:16px; border:1px solid #e2e8f0; box-shadow:0 4px 15px rgba(0,0,0,0.03);">
       <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:2.5px solid ${border}; padding-bottom:10px; margin-bottom:18px;">
         <h3 style="margin:0; font-size:18px; font-weight:900; color:${color};">${title}</h3>
         <button class="home-feed-open" onclick="event.stopPropagation(); navigateToPage('${targetId}')" style="background:${border}; color:#fff; border:none; border-radius:8px; padding:7px 14px; font-size:13px; font-weight:700; cursor:pointer;">פתח הכל ←</button>
       </div>
-      <div class="art-rows photo-collapsible expanded">${cards}</div>
+      <div class="art-rows photo-collapsible expanded">${items.slice(0, maxPerRow).map(storyCardHTML).join('')}</div>
     </div>`;
-  }).join('');
+  const storiesSection = `
+    <div class="stories-page home-feed-stories story-cols-${cols}${photoImagesMode ? '' : ' text-mode'}" data-stories-json="${storiesJson}">
+      ${comics.length ? storyRow(comics, '📖 קומיקס', '#6b21a8', '#8b5cf6', 'page-stories-main') : ''}
+      ${stories.length ? storyRow(stories, '✍️ סיפורים', '#0369a1', '#0ea5e9', 'page-stories-text') : ''}
+    </div>`;
 
-  const empty = !combined.length ? `<div style="text-align:center; padding:60px 20px; color:#6b7280; background:#fff; border-radius:16px; border:1px solid #e2e8f0;">
-      <div style="font-size:44px; margin-bottom:12px;">📚</div>
-      <div style="font-size:17px; font-weight:800; margin-bottom:6px; color:#374151;">עדיין אין תוכן</div>
-      <div style="font-size:14px;">הקומיקסים והסיפורים יופיעו כאן ברגע שיועלו לעמוד הקומיקס או הסיפורים.</div>
-    </div>` : '';
-
-  return `<div class="articles-page stories-page home-feed-page story-cols-${cols}${photoImagesMode ? '' : ' text-mode'}" data-page-id="page-home-feed" data-stories-json="${json}">
+  return `<div class="articles-page home-feed-page" data-page-id="page-home-feed">
     <div class="art-inner">
-      ${rowHTML}
-      ${empty}
+      ${photosSection}
+      ${storiesSection}
     </div>
   </div>`;
 }
 window.buildHomeFeedPage = buildHomeFeedPage;
+
+// "פתח הכל" של שורת התמונות — מנווט לעמוד התמונות
+function homeOpenPhotos() {
+  try {
+    const pp = (typeof pages !== 'undefined' && Array.isArray(pages))
+      ? (pages.find(p => p && (p.content || '').includes('data-section="photos"')) || pages.find(p => p && (p.title || '').includes('תמונות')))
+      : null;
+    if (pp && typeof navigateToPage === 'function') navigateToPage(pp.id);
+  } catch (e) {}
+}
+window.homeOpenPhotos = homeOpenPhotos;
 
 function photosStoriesFeedHTML() {
   try {
@@ -11684,6 +11735,12 @@ window.goToPhotosPage = goToPhotosPage;
 
 function photoGoBack() {
   window.__detailOpen = false;
+  // אם הגענו לתמונה מעמוד הבית (שורות מתחלפות) — חוזרים לעמוד הבית
+  if (activePageId === 'page-home-feed' && typeof renderPage === 'function') {
+    renderPage();
+    if (isEditMode) applyEditModeToContent();
+    return;
+  }
   const container = mainContent.querySelector('.photos-page');
   if (!container) return;
   let albums = [];
@@ -15352,7 +15409,7 @@ onValue(ref(db, 'website'), (snapshot) => {
     if (!_hpl) {
       pList.unshift({ id: 'page-home-feed', title: 'בית 🏠', content: _hplc });
     } else {
-      if (!_hpl.title) _hpl.title = 'בית 🏠';
+      if (!_hpl.title || _hpl.title === 'קומיקס') _hpl.title = 'בית 🏠';
       _hpl.content = _hplc;
     }
     // מסירים את העמודים "יד שניה" ו"השוואת מחירים"
