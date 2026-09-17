@@ -6386,10 +6386,16 @@ function storyOpenDetail(id) {
   ` : '';
 
   const recommended = stories.filter(x => x.id !== id).slice(0, 3);
-  const recHTML = recommended.map(r => `
+  const recHTML = recommended.map(r => {
+    // תמונת ההמלצה: תומך גם ב-image וגם ב-images[] (כמו בתמונות), וגם בעמוד תמונה ראשון
+    const _recImg = r.image
+      || (Array.isArray(r.images) && r.images.find(Boolean))
+      || (Array.isArray(r.pages) && (r.pages.find(p => p && p.type === 'image' && p.url) || {}).url)
+      || '';
+    return `
     <div class="art-rec-card" onclick="storyOpenDetail('${artEsc(r.id)}')">
       <div class="art-rec-img">
-        ${r.image ? `<img src="${r.image}" alt="">` : '<div class="art-card-img-placeholder"></div>'}
+        ${_recImg ? `<img src="${_recImg}" alt="">` : '<div class="art-card-img-placeholder"></div>'}
         <span class="art-rec-badge art-category-badge" style="background:${r.categoryColor||'#8b5cf6'}">${r.category}</span>
       </div>
       <div class="art-rec-text">
@@ -6397,7 +6403,8 @@ function storyOpenDetail(id) {
         <div class="art-rec-meta">${r.author} · ${r.timestamp}</div>
       </div>
     </div>
-  `).join('');
+  `;
+  }).join('');
 
   const json = encodeURIComponent(JSON.stringify(stories));
 
