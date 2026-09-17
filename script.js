@@ -6330,6 +6330,7 @@ function storyOpenDetail(id) {
               <span>✍️ מאת <b>${s.author}</b></span>
             </div>
             ${_tagChips ? `<div class="story-article-tags">${_tagChips}</div>` : ''}
+            ${storyLinkedChipHTML(s)}
             <div class="story-article-body" id="story-article-body">${_paras.map(p => `<p>${artEsc(p).replace(/\n/g, '<br>')}</p>`).join('')}</div>
           </article>
           ${(typeof storyCommentsSectionHTML === 'function') ? storyCommentsSectionHTML(id) : ''}
@@ -6361,6 +6362,8 @@ function storyOpenDetail(id) {
           </div>
           <div class="story-head-spacer"></div>
         </div>
+
+        ${storyLinkedChipHTML(s)}
 
         ${viewerHTML}
 
@@ -6676,6 +6679,7 @@ function openStoryModal() {
   document.getElementById('story-author').value = '';
   if (document.getElementById('story-category')) document.getElementById('story-category').value = STORY_CATEGORIES[0] || 'כללי';
   document.getElementById('story-link').value = '';
+  populateStoryLinkedSelect(null, '');
   storyImageList = [];
   renderStoryImagesEditor();
   document.getElementById('story-modal').style.display = 'flex';
@@ -6700,6 +6704,7 @@ function openStoryEditModal(id) {
   document.getElementById('story-author').value = s.author || '';
   if (document.getElementById('story-category')) document.getElementById('story-category').value = s.category || STORY_CATEGORIES[0] || 'כללי';
   document.getElementById('story-link').value = s.link || '';
+  populateStoryLinkedSelect(id, s.linkedId || '');
 
   // טוענים את העמודים הקיימים (תמונה/טקסט). אם אין pages — ממירים מהתמונות הישנות
   if (s.pages && s.pages.length) {
@@ -6771,7 +6776,8 @@ document.getElementById('story-save').addEventListener('click', () => {
     image: firstImage,
     images: storyImages,
     pages: storyPages,
-    link: document.getElementById('story-link').value.trim()
+    link: document.getElementById('story-link').value.trim(),
+    linkedId: (document.getElementById('story-linked') ? document.getElementById('story-linked').value.trim() : '')
   };
 
   const stories = storyGetStories();
@@ -10003,6 +10009,88 @@ window.sidebarShowTab = sidebarShowTab;
 // מגיעים לסיפורים (למרות שזה מקטע נפרד). מוצג רק בעמוד התמונות.
 // שולף את נתוני הסיפורים מתוך עמוד הסיפורים השמור (page-stories-main),
 // כי בעמוד התמונות אין .stories-page ב-DOM לקרוא ממנו.
+// אוסף את כל הסיפורים/קומיקסים מכל עמודי הסיפורים (קומיקס + סיפורים) עם תיוג העמוד שלהם.
+// משמש לשיוך הדדי בין קומיקס לסיפור — הפריט המשויך יכול להיות בעמוד אחר.
+function getAllStoriesFromPages() {
+  const out = [];
+  try {
+    if (typeof pages !== 'undefined' && Array.isArray(pages)) {
+      pages.forEach(p => {
+        if (!p || !p.content) return;
+        if (!p.content.includes('stories-page')) return;
+        if (p.content.includes('photos-page') || p.content.includes('photos-stories-feed')) return;
+        const m = p.content.match(/data-stories-json="([^"]*)"/);
+        if (!m) return;
+        let arr = [];
+        try { arr = JSON.parse(decodeURIComponent(m[1])); } catch (e) { return; }
+        if (!Array.isArray(arr)) return;
+        const km = p.content.match(/data-story-kind="([^"]*)"/);
+        const kind = (km && km[1]) ? km[1] : 'comics';
+        arr.forEach(s => { if (s && s.id) out.push({ ...s, __pageId: p.id, __pageTitle: p.title || '', __kind: kind }); });
+      });
+    }
+  } catch (e) {}
+  return out;
+}
+window.getAllStoriesFromPages = getAllStoriesFromPages;
+
+// ממלא את תפריט השיוך במודל הסיפור עם כל הסיפורים/הקומיקסים האחרים
+function populateStoryLinkedSelect(currentId, selectedId) {
+  const sel = document.getElementById('story-linked');
+  if (!sel) return;
+  const all = getAllStoriesFromPages().filter(s => s.id !== currentId);
+  let html = '<option value="">— ללא שיוך —</option>';
+  all.forEach(s => {
+    const kindLbl = s.__kind === 'stories' ? 'סיפור' : 'קומיקס';
+    const label = (s.title || 'ללא שם') + ' (' + kindLbl + ')';
+    html += `<option value="${artEsc(s.id)}"${s.id === selectedId ? ' selected' : ''}>${artEsc(label)}</option>`;
+  });
+  sel.innerHTML = html;
+  if (selectedId) sel.value = selectedId;
+}
+window.populateStoryLinkedSelect = populateStoryLinkedSelect;
+
+// פותח סיפור/קומיקס לפי id — גם אם הוא בעמוד אחר (מנווט לעמוד ואז פותח)
+function storyOpenLinked(id) {
+  try {
+    const all = getAllStoriesFromPages();
+    const target = all.find(s => s.id === id);
+    if (!target) { alert('הפריט המשויך לא נמצא'); return; }
+    // אם הפריט בעמוד הנוכחי — פשוט פותחים
+    const container = mainContent.querySelector('.stories-page');
+    let onSamePage = false;
+    if (container) {
+      try {
+        const cur = JSON.parse(decodeURIComponent(container.dataset.storiesJson || '%5B%5D'));
+        onSamePage = Array.isArray(cur) && cur.some(x => x && x.id === id);
+      } catch (e) {}
+    }
+    if (onSamePage) { window.__detailOpen = false; storyOpenDetail(id); return; }
+    // אחרת — מנווטים לעמוד היעד ואז פותחים
+    window.__detailOpen = false;
+    if (typeof navigateToPage === 'function') navigateToPage(target.__pageId);
+    setTimeout(() => { if (typeof storyOpenDetail === 'function') storyOpenDetail(id); }, 120);
+  } catch (e) {}
+}
+window.storyOpenLinked = storyOpenLinked;
+
+// בונה שבב-קישור לפריט המשויך (כולל reverse-lookup לדו-כיווניות)
+function storyLinkedChipHTML(s) {
+  try {
+    const all = getAllStoriesFromPages();
+    let linked = null;
+    if (s.linkedId) linked = all.find(x => x.id === s.linkedId);
+    // reverse: פריט אחר שמשויך לפריט הנוכחי
+    if (!linked) linked = all.find(x => x.linkedId === s.id);
+    if (!linked || linked.id === s.id) return '';
+    const kindLbl = linked.__kind === 'stories' ? 'הסיפור' : 'הקומיקס';
+    return `<div class="story-linked-chip" onclick="storyOpenLinked('${artEsc(linked.id)}')">
+      🔗 לקריאת ${kindLbl}: <b>${artEsc(linked.title || '')}</b> ←
+    </div>`;
+  } catch (e) { return ''; }
+}
+window.storyLinkedChipHTML = storyLinkedChipHTML;
+
 function getStoriesFeedData() {
   try {
     if (typeof pages !== 'undefined' && Array.isArray(pages)) {

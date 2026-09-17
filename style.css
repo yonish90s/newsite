@@ -5353,6 +5353,10 @@ html.hide-site-images .photo-mini-thumb {
 .story-article-meta { display: flex; flex-direction: column; gap: 7px; font-size: 15px; color: #6b7280; margin-bottom: 18px; }
 .story-article-tags { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 30px; }
 .story-article-tag { background: #f3f4f6; color: #374151; border-radius: 8px; padding: 8px 16px; font-size: 14px; font-weight: 600; }
+.story-linked-chip { display: inline-flex; align-items: center; gap: 6px; background: linear-gradient(135deg,#f5f3ff,#ede9fe); color: #6d28d9; border: 1px solid #ddd6fe; border-radius: 10px; padding: 10px 16px; font-size: 15px; font-weight: 700; cursor: pointer; margin: 4px auto 24px; transition: transform .15s, box-shadow .15s; }
+.story-linked-chip:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(109,40,217,.18); }
+.story-linked-chip b { font-weight: 800; }
+.story-article .story-linked-chip { margin-bottom: 26px; }
 .story-article-body { font-size: 20px; line-height: 1.9; color: #1f2937; text-align: right; }
 .story-article-body p { margin: 0 0 22px; }
 @media (max-width: 768px) {

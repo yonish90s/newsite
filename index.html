@@ -14,7 +14,7 @@
   <!-- ספריית localforage לשמירת תמונות -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
   <!-- קישור לקובץ העיצוב החיצוני (עם פרמטר למניעת שמירה במטמון) -->
-  <link rel="stylesheet" href="./style.css?v=1132">
+  <link rel="stylesheet" href="./style.css?v=1133">
 </head>
 <body class="light-mode">
   <!-- שער אישור גיל (Age Gate Overlay) -->
@@ -462,6 +462,10 @@
     </select>
     <label style="font-size:13px; font-weight:600;">תוכן הסיפור</label>
     <textarea id="story-body" rows="6" placeholder="כתוב את תוכן הסיפור המלא כאן..." style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box; resize:vertical;"></textarea>
+    <label style="font-size:13px; font-weight:600;">🔗 שיוך לקומיקס/סיפור אחר — אופציונלי</label>
+    <select id="story-linked" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box; background:white;">
+      <option value="">— ללא שיוך —</option>
+    </select>
     <label style="font-size:13px; font-weight:600;">קישור חיצוני (URL) — אופציונלי</label>
     <input id="story-link" type="url" placeholder="https://..." style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
     <label style="font-size:13px; font-weight:600;">עמודי הסיפור — כל עמוד יכול להיות תמונה או טקסט. אפשר לשנות סדר ולהסיר. (הראשון הוא הראשי)</label>
@@ -1108,6 +1112,6 @@
   </div>
 </div>
 
-  <script type="module" src="./script.js?v=1177"></script>
+  <script type="module" src="./script.js?v=1178"></script>
 </body>
 </html>
