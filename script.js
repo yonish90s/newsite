@@ -1194,7 +1194,19 @@ function renderPage() {
 
     // עמוד סיפורים: בונים מחדש מהנתונים השמורים
     // (מתעלמים מפיד הסיפורים שמוטמע בתחתית עמוד התמונות — .photos-stories-feed)
-    const storyPageEl = mainContent.querySelector('.stories-page:not(.photos-stories-feed)');
+    let storyPageEl = mainContent.querySelector('.stories-page:not(.photos-stories-feed)');
+    // ריפוי-עצמי: אם זהו עמוד קומיקס/סיפורים (לפי הכותרת) אך התוכן נפגם/רוקן
+    // (מחיקת-כפולים ישנה) — בונים עמוד ריק תקין במקום מסך לבן, כדי שהמנהל יוכל להוסיף שוב.
+    if (!storyPageEl && typeof buildStoriesPage === 'function' && currentPage && currentPage.title) {
+      const _t = currentPage.title;
+      const _looksStory = _t.includes('קומיקס') || _t.includes('סיפור') || currentPage.id === 'page-stories-text' || currentPage.id === 'page-stories-main';
+      const _hasReal = (currentPage.content || '').includes('stories-page');
+      if (_looksStory && !_hasReal) {
+        const _healKind = _t.includes('סיפור') || currentPage.id === 'page-stories-text' ? 'stories' : 'comics';
+        mainContent.innerHTML = buildStoriesPage([], _healKind);
+        storyPageEl = mainContent.querySelector('.stories-page:not(.photos-stories-feed)');
+      }
+    }
     if (storyPageEl && typeof buildStoriesPage === 'function') {
       let savedStories = [];
       try { savedStories = JSON.parse(decodeURIComponent(storyPageEl.dataset.storiesJson)); } catch(e){}
