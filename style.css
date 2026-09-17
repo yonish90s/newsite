@@ -2155,6 +2155,21 @@ body:not(.edit-mode) .hotspot-delete-btn {
   box-shadow: none;
   padding: 0;
 }
+/* ===== עמוד הבית: כל סוג בשורה אחת אופקית (גם במחשב), כמו קומיקס/סיפורים ===== */
+.home-feed-page .art-rows {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, calc(25% - 11px));
+  grid-template-columns: none;
+  grid-template-rows: auto;
+  gap: 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 8px;
+}
+.home-feed-page .art-rows::-webkit-scrollbar { height: 8px; }
+.home-feed-page .art-rows::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
+
 .photos-page .art-row,
 .ideas-page .art-row,
 .stories-page .art-row,
