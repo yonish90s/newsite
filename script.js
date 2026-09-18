@@ -6318,77 +6318,75 @@ function buildStoriesPage(stories, storyKind) {
 }
 
 function storyOpenDetail(id) {
-  const container = mainContent.querySelector('.stories-page');
-  if (!container) return;
-  // חובה לשמור את סוג העמוד (קומיקס/סיפורים) גם בתצוגת הפריט, אחרת בחזרה
-  // buildStoriesPage נבנה עם 'comics' כברירת מחדל, מתנגש בעמוד הקומיקס, ומחיקת-הכפולים
-  // מוחקת את עמוד הסיפורים — "כל הסיפורים נעלמו".
-  const _srcKind = container.getAttribute('data-story-kind') || 'comics';
   window.__detailOpen = true; // מגן מפני רענון-רקע שיבעט מהעמוד הפנימי
+  const container = mainContent.querySelector('.stories-page');
+  const _srcKind = (container && container.getAttribute('data-story-kind')) || 'comics';
+  
   let stories = [];
-  try { stories = JSON.parse(decodeURIComponent(container.dataset.storiesJson)); } catch(e){ return; }
-  const s = stories.find(x => x.id === id);
+  try {
+    if (container && container.dataset && container.dataset.storiesJson) {
+      stories = JSON.parse(decodeURIComponent(container.dataset.storiesJson));
+    }
+  } catch(e) {}
+  
+  let s = Array.isArray(stories) ? stories.find(x => x && x.id === id) : null;
+  if (!s) {
+    const all = (typeof getAllStoriesFromPages === 'function') ? getAllStoriesFromPages() : [];
+    s = all.find(x => x && x.id === id);
+    if (all && all.length) stories = all;
+  }
+  if (!s) {
+    const demos = (typeof _homeDemoComics === 'function' && typeof _homeDemoStories === 'function') 
+      ? _homeDemoComics().concat(_homeDemoStories()) : [];
+    s = demos.find(x => x && x.id === id);
+    if (s && !stories.length) stories = demos;
+  }
   if (!s) return;
   if (typeof addToWatchHistory === 'function') addToWatchHistory({ ...s, type: 'story' });
 
   const validImages = s.images ? s.images.filter(img => !!img) : (s.image ? [s.image] : []);
-  const mainImg = validImages[0] || '';
 
   // עמודי הסיפור: תמונה או טקסט. אם אין pages — ממירים מהתמונות הישנות
   let storyPagesArr = (s.pages && s.pages.length)
     ? s.pages.map(p => (p && typeof p === 'object') ? p : { type: 'image', url: p })
     : validImages.map(u => ({ type: 'image', url: u }));
-  // סיפור ישן עם טקסט ב-body/summary וללא עמוד טקסט — מציגים אותו כעמוד טקסט מעוצב
+
   const _bodyText = (s.body || s.summary || '').trim();
   if (_bodyText && !storyPagesArr.some(p => p.type === 'text')) {
     storyPagesArr.unshift({ type: 'text', text: _bodyText });
   }
-  // חלוקה אוטומטית: עמוד טקסט ארוך (מעל 20 שורות) מתפצל לכמה עמודים
   if (typeof splitStoryTextPages === 'function') storyPagesArr = splitStoryTextPages(storyPagesArr);
+  if (!storyPagesArr.length) {
+    storyPagesArr = [{ type: 'text', text: s.summary || s.title || 'סיפור' }];
+  }
+
   window.storyPagesData = storyPagesArr;
   window.currentStoryId = id;
   window.currentStoryTitle = s.title || 'סיפור';
-  // המשך מהמקום שהקורא סימן (אם קיים) — תומך גם בפורמט ישן (מספר) וגם בחדש (אובייקט עם page)
+
   let _bmPage = 0;
   try {
     const _bms = JSON.parse(localStorage.getItem('story_bookmarks_v1') || '{}');
     const _b = _bms[id];
     const _p = (_b && typeof _b === 'object') ? _b.page : _b;
-    if (_p != null) _bmPage = Math.max(0, Math.min(parseInt(_p, 10) || 0, storyPagesArr.length - 1));
+    if (_p != null) {
+      const parsed = parseInt(_p, 10);
+      if (!isNaN(parsed) && parsed >= 0 && parsed < storyPagesArr.length) _bmPage = parsed;
+    }
   } catch (e) {}
   window.currentStoryPage = _bmPage;
 
-  // תמונות ממוזערות לכל עמוד (תמונה או כרטיס טקסט)
+  // תמונות ממוזערות לכל עמוד
   const thumbsHTML = storyPagesArr.map((pg, idx) => {
     const inner = pg.type === 'text'
-      ? `<div class="story-thumb-text">${artEsc((pg.text || '').slice(0, 60))}</div>`
-      : `<img src="${pg.url}" style="width:100%; height:100%; object-fit:cover;">`;
-    return `<div class="story-page-thumb${idx === 0 ? ' active' : ''}" data-idx="${idx}" onclick="storyGoToPage(${idx})">${inner}</div>`;
+      ? `<div class="story-thumb-text" style="width:100%; height:100%; font-size:9px; font-weight:700; padding:3px; overflow:hidden; box-sizing:border-box; background:#fff; color:#333; text-align:center;">${artEsc((pg.text || '').slice(0, 40))}</div>`
+      : `<img src="${pg.url}" style="width:100%; height:100%; object-fit:cover; display:block;">`;
+    return `<div class="story-page-thumb${idx === _bmPage ? ' active' : ''}" data-idx="${idx}" onclick="event.stopPropagation(); storyGoToPage(${idx})" style="width:54px; height:54px; border-radius:8px; overflow:hidden; cursor:pointer; border:2px solid ${idx === _bmPage ? '#e11d48' : '#cbd5e1'}; flex-shrink:0; background:#fff;">${inner}</div>`;
   }).join('');
 
-  const viewerHTML = storyPagesArr.length ? `
-    <div class="story-viewer">
-      <div class="story-frame">
-        <div class="story-page-view" id="story-page-view"></div>
-      </div>
-      ${storyPagesArr.length > 1 ? `
-      <div class="story-viewer-nav">
-        <button type="button" class="story-nav-btn" id="story-prev-btn" onclick="storyPrevPage()" title="הקודם">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-        </button>
-        <div class="story-page-thumbs">${thumbsHTML}</div>
-        <button type="button" class="story-nav-btn" id="story-next-btn" onclick="storyNextPage()" title="הבא">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-        </button>
-      </div>
-      <div class="story-page-counter" id="story-page-counter">1 / ${storyPagesArr.length}</div>
-      ` : ''}
-    </div>
-  ` : '';
-
-  const recommended = stories.filter(x => x.id !== id).slice(0, 3);
+  const recommended = stories.filter(x => x && x.id !== id).slice(0, 3);
   const recHTML = recommended.map(r => `
-    <div class="art-rec-card" onclick="storyOpenDetail('${artEsc(r.id)}')">
+    <div class="art-rec-card" onclick="event.stopPropagation(); storyOpenDetail('${artEsc(r.id)}')">
       <div class="art-rec-img">
         ${r.image ? `<img src="${r.image}" alt="">` : '<div class="art-card-img-placeholder"></div>'}
         <span class="art-rec-badge art-category-badge" style="background:${r.categoryColor||'#8b5cf6'}">${r.category}</span>
@@ -6402,9 +6400,9 @@ function storyOpenDetail(id) {
 
   const json = encodeURIComponent(JSON.stringify(stories));
 
-  // סיפור טקסט (עמוד "סיפורים") — מוצג ככתבה חופשית: טקסט זורם, בלי מסגרת/ריבוע ובלי חץ גלילה
+  // סיפור טקסט בלבד בעל עמוד יחיד
   const isTextStory = storyPagesArr.length > 0 && storyPagesArr.every(p => p.type === 'text');
-  if (isTextStory) {
+  if (isTextStory && storyPagesArr.length === 1) {
     const _fullText = storyPagesArr.map(p => p.text || '').join('\n\n');
     const _paras = _fullText.split(/\n+/).map(t => t.trim()).filter(Boolean);
     const _words = _fullText.split(/\s+/).filter(Boolean).length;
@@ -6414,27 +6412,22 @@ function storyOpenDetail(id) {
     mainContent.innerHTML = `
       <div class="art-detail articles-page stories-page story-article-page" data-story-kind="${_srcKind}" data-story-id="${id}" data-stories-json="${json}">
         <div class="art-detail-inner">
-          <button class="art-back-btn" onclick="storyGoBack()">← חזרה לסיפורים</button>
-          <article class="story-article">
-            <div class="story-article-fontsize" role="group" aria-label="גודל טקסט">
-              <button type="button" onclick="storyArticleFont(0)" title="קטן">א</button>
-              <button type="button" onclick="storyArticleFont(1)" class="active" title="בינוני">א</button>
-              <button type="button" onclick="storyArticleFont(2)" title="גדול">א</button>
-            </div>
-            <h1 class="story-article-title">${s.title}</h1>
+          <button class="art-back-btn" onclick="storyGoBack()" style="background:#f1f5f9; border:1px solid #cbd5e1; border-radius:8px; padding:6px 14px; font-weight:700; cursor:pointer;">← חזרה לסיפורים</button>
+          <article class="story-article" style="margin-top:16px;">
+            <h1 class="story-article-title">${artEsc(s.title || '')}</h1>
             <div class="story-article-rule"></div>
-            <div class="story-article-meta">
-              <span>🗓️ ${s.timestamp}</span>
+            <div class="story-article-meta" style="margin-bottom:14px; color:#64748b;">
+              <span>🗓️ ${artEsc(s.timestamp || '')}</span>
               <span>⏱️ זמן קריאה: ${_readMin} דקות</span>
-              <span>✍️ מאת <b>${s.author}</b></span>
+              <span>✍️ מאת <b>${artEsc(s.author || '')}</b></span>
             </div>
             ${_tagChips ? `<div class="story-article-tags">${_tagChips}</div>` : ''}
             ${storyLinkedChipHTML(s)}
-            <div class="story-article-body" id="story-article-body">${_paras.map(p => `<p>${artEsc(p).replace(/\n/g, '<br>')}</p>`).join('')}</div>
+            <div class="story-article-body" id="story-article-body" style="font-size:17px; line-height:1.75; color:#1e293b;">${_paras.map(p => `<p>${artEsc(p).replace(/\n/g, '<br>')}</p>`).join('')}</div>
           </article>
           ${(typeof storyCommentsSectionHTML === 'function') ? storyCommentsSectionHTML(id) : ''}
-          <div class="art-rec-section" style="margin-top:40px;">
-            <h3 style="margin:0 0 16px;font-size:18px;font-weight:800">סיפורים נוספים שיעניינו אותך</h3>
+          <div class="art-rec-section" style="margin-top:36px;">
+            <h3 style="margin:0 0 16px; font-size:17px; font-weight:800;">סיפורים נוספים שיעניינו אותך</h3>
             <div class="art-rec-grid">${recHTML}</div>
           </div>
         </div>
@@ -6444,22 +6437,43 @@ function storyOpenDetail(id) {
     return;
   }
 
+  const viewerHTML = `
+    <div class="story-viewer" style="background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:20px; margin-bottom:24px; box-shadow:0 4px 20px rgba(0,0,0,0.04); position:relative;">
+      <div class="story-frame">
+        <div class="story-page-view" id="story-page-view" style="min-height:360px; background:#fafafa; border:1px solid #f0f0f0; border-radius:12px; display:flex; align-items:center; justify-content:center; overflow:hidden;"></div>
+      </div>
+      
+      ${storyPagesArr.length > 1 ? `
+      <div class="story-viewer-nav" style="display:flex; align-items:center; justify-content:center; gap:16px; margin-top:16px; direction:ltr;">
+        <button type="button" class="story-nav-btn" id="story-prev-btn" onclick="event.stopPropagation(); storyPrevPage()" title="הקודם" style="width:38px; height:38px; border-radius:50%; background:#3b82f6; color:#fff; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        
+        <div class="story-page-thumbs" style="display:flex; gap:8px; overflow-x:auto; padding:4px; max-width:80%;">${thumbsHTML}</div>
+        
+        <button type="button" class="story-nav-btn" id="story-next-btn" onclick="event.stopPropagation(); storyNextPage()" title="הבא" style="width:38px; height:38px; border-radius:50%; background:#3b82f6; color:#fff; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+      <div class="story-page-counter" id="story-page-counter" style="text-align:center; color:#64748b; font-size:13px; font-weight:700; margin-top:8px;">${_bmPage + 1} / ${storyPagesArr.length}</div>
+      ` : ''}
+    </div>`;
+
   mainContent.innerHTML = `
     <div class="art-detail articles-page stories-page" data-story-kind="${_srcKind}" data-story-id="${id}" data-stories-json="${json}">
       <div class="art-detail-inner">
-        <div class="story-detail-head">
-          <button class="art-back-btn" onclick="storyGoBack()">← חזרה לסיפורים</button>
-          <div class="story-detail-titlewrap">
-            <h1 class="art-detail-title" style="margin:0; font-size:24px;">${s.title}</h1>
-            <div class="art-meta" style="margin-top:8px; font-size:14px; color:#6b7280; display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;">
-              <span class="art-category-badge" style="background:${s.categoryColor||'#8b5cf6'}; padding:4px 12px; border-radius:6px; color:#fff;">${s.category}</span>
-              <span>${s.author}</span>
+        <div class="story-detail-head" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+          <button class="art-back-btn" onclick="storyGoBack()" style="background:#f1f5f9; border:1px solid #cbd5e1; border-radius:8px; padding:6px 14px; font-weight:700; cursor:pointer;">← חזרה לסיפורים</button>
+          <div class="story-detail-titlewrap" style="text-align:center;">
+            <h1 class="art-detail-title" style="margin:0; font-size:22px; font-weight:900;">${artEsc(s.title || '')}</h1>
+            <div class="art-meta" style="margin-top:4px; font-size:13px; color:#64748b; display:flex; align-items:center; justify-content:center; gap:8px;">
+              <span class="art-category-badge" style="background:${s.categoryColor||'#8b5cf6'}; padding:2px 8px; border-radius:4px; color:#fff; font-size:11px; font-weight:700;">${artEsc(s.category || 'כללי')}</span>
+              <span>${artEsc(s.author || '')}</span>
               <span>·</span>
-              <span>${s.timestamp}</span>
-              ${isUserVerified(s.authorId, s.author, s.verified || s.verifiedUser) ? `<span>·</span><span style="color:#2563eb; font-weight:700; display:inline-flex; align-items:center; gap:4px;">חשבון זה מאומת <span style="background:#dbeafe; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:10px;">✓</span></span>` : ''}
+              <span>${artEsc(s.timestamp || '')}</span>
             </div>
           </div>
-          <div class="story-head-spacer"></div>
+          <div style="width:100px;"></div>
         </div>
 
         ${storyLinkedChipHTML(s)}
@@ -6468,15 +6482,16 @@ function storyOpenDetail(id) {
 
         ${(typeof storyCommentsSectionHTML === 'function') ? storyCommentsSectionHTML(id) : ''}
 
-        <div class="art-rec-section" style="margin-top:40px;">
-          <h3 style="margin:0 0 16px;font-size:18px;font-weight:800">סיפורים נוספים שיעניינו אותך</h3>
+        <div class="art-rec-section" style="margin-top:36px;">
+          <h3 style="margin:0 0 16px; font-size:17px; font-weight:800;">סיפורים נוספים שיעניינו אותך</h3>
           <div class="art-rec-grid">${recHTML}</div>
         </div>
       </div>
     </div>
   `;
-  if (typeof storyRenderPage === 'function') storyRenderPage();
+
   if (typeof subscribeStoryComments === 'function') subscribeStoryComments(id);
+  storyRenderPage();
 }
 
 // מציג את העמוד הנוכחי של הסיפור (תמונה או טקסט מודגש)
@@ -6495,39 +6510,59 @@ function storyRenderPage() {
   const view = document.getElementById('story-page-view');
   const pagesArr = window.storyPagesData || [];
   if (!view || !pagesArr.length) return;
+
   const idx = Math.max(0, Math.min(window.currentStoryPage || 0, pagesArr.length - 1));
   window.currentStoryPage = idx;
+
   const pg = pagesArr[idx];
+  if (!pg) return;
+
   const isText = pg.type === 'text';
   view.classList.toggle('story-view-text', isText);
   view.classList.toggle('story-view-image', !isText);
+
   if (isText) {
-    view.innerHTML = `<div class="story-page-inner"><div class="story-text-page">${artEsc(pg.text || '').replace(/\n/g, '<br>')}</div></div>`;
+    view.innerHTML = `
+      <div class="story-page-inner" style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px; width:100%; box-sizing:border-box;">
+        <div class="story-text-page" style="font-size:17px; font-weight:700; line-height:1.75; color:#1e293b; max-width:640px; text-align:center; word-break:break-word;">
+          ${artEsc(pg.text || '').replace(/\n/g, '<br>')}
+        </div>
+      </div>`;
   } else {
-    view.innerHTML = `<div class="story-page-inner"><img src="${pg.url}" class="story-img-page" onclick="artGalleryById('stories', window.currentStoryId, this.getAttribute('src'))"></div>`;
+    view.innerHTML = `
+      <div class="story-page-inner" style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:12px; width:100%; box-sizing:border-box; gap:10px;">
+        <img src="${pg.url}" class="story-img-page" style="max-width:100%; max-height:60vh; object-fit:contain; border-radius:10px; display:block; margin:0 auto; cursor:pointer;" onclick="artGalleryById('stories', window.currentStoryId, this.getAttribute('src'))">
+        ${pg.caption ? `<div style="font-size:14px; font-weight:700; color:#475569; text-align:center; max-width:600px;">${artEsc(pg.caption)}</div>` : ''}
+      </div>`;
   }
   view.scrollTop = 0;
-  // רמז "גללו לעוד" — רק בעמוד טקסט
-  if (isText) {
-    setTimeout(storyUpdateScrollHint, 60);
-  } else {
-    const hint = document.getElementById('story-scroll-hint');
-    if (hint) hint.hidden = true;
-  }
-  document.querySelectorAll('.story-page-thumb').forEach(t => t.classList.toggle('active', Number(t.dataset.idx) === idx));
+
+  document.querySelectorAll('.story-page-thumb').forEach(t => {
+    const tIdx = Number(t.dataset.idx);
+    const isActive = (tIdx === idx);
+    t.classList.toggle('active', isActive);
+    t.style.borderColor = isActive ? '#e11d48' : '#cbd5e1';
+  });
+
   const counter = document.getElementById('story-page-counter');
   if (counter) counter.textContent = `${idx + 1} / ${pagesArr.length}`;
+
   const prevBtn = document.getElementById('story-prev-btn');
   const nextBtn = document.getElementById('story-next-btn');
-  if (prevBtn) prevBtn.disabled = idx === 0;
-  if (nextBtn) nextBtn.disabled = idx === pagesArr.length - 1;
-  const active = document.querySelector('.story-page-thumb.active');
-  if (active && active.scrollIntoView) { try { active.scrollIntoView({ inline: 'center', block: 'nearest' }); } catch (e) {} }
+  if (prevBtn) prevBtn.disabled = (idx === 0);
+  if (nextBtn) nextBtn.disabled = (idx === pagesArr.length - 1);
+
+  const activeThumb = document.querySelector('.story-page-thumb.active');
+  if (activeThumb && activeThumb.scrollIntoView) {
+    try { activeThumb.scrollIntoView({ inline: 'center', block: 'nearest' }); } catch (e) {}
+  }
 }
-window.storyRenderPage = storyRenderPage;
 
 function storyGoToPage(i) {
-  window.currentStoryPage = i;
+  const pagesArr = window.storyPagesData || [];
+  if (!pagesArr.length) return;
+  const validIdx = Math.max(0, Math.min(i, pagesArr.length - 1));
+  window.currentStoryPage = validIdx;
   storyRenderPage();
 }
 window.storyGoToPage = storyGoToPage;
