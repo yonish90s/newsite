@@ -979,6 +979,7 @@ function renderSideMenu() {
     li.addEventListener('click', (e) => {
       e.stopPropagation();
       if (isEditMode) saveCurrentPageContent();
+      window.__detailOpen = false; // סוגר כל תצוגה פנימית (סיפור/גלריה) כדי לאפשר ניווט
       activePageId = page.id;
       saveToStorage();
       renderPage();
@@ -1024,6 +1025,7 @@ function renderTopNav() {
     a.addEventListener('click', (e) => {
       e.preventDefault();
       if (isEditMode) saveCurrentPageContent();
+      window.__detailOpen = false; // סוגר כל תצוגה פנימית (סיפור/גלריה) כדי לאפשר ניווט
       activePageId = page.id;
       saveToStorage();
       renderSideMenu();
