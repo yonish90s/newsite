@@ -2510,7 +2510,45 @@ body:not(.edit-mode) .hotspot-delete-btn {
   .stories-page .photo-card-info > *:not(h3):not(.art-row-meta) { display: block !important; }
   .photos-page[data-section="photos"] .photo-card-info .photo-card-links,
   .photos-page.home-feed-photos .photo-card-info .photo-card-links,
-  .stories-page .photo-card-info .photo-card-links { display: flex !important; flex-wrap: wrap; }
+  .stories-page .photo-card-info .photo-card-links {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    gap: 8px !important;
+    margin-top: 10px !important;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .photos-page[data-section="photos"] .photo-card-links .art-telegram-btn,
+  .photos-page.home-feed-photos .photo-card-links .art-telegram-btn,
+  .stories-page .photo-card-links .art-telegram-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    padding: 7px 14px !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    border-radius: 8px !important;
+    background: #f1f5f9 !important;
+    color: #475569 !important;
+    border: 1px solid #e2e8f0 !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+  }
+  .photos-page[data-section="photos"] .photo-card-links button:first-child,
+  .photos-page.home-feed-photos .photo-card-links button:first-child,
+  .stories-page .photo-card-links button:first-child {
+    background: #1e293b !important;
+    color: #ffffff !important;
+    border: none !important;
+  }
+  .photos-page[data-section="photos"] .photo-card-links button:first-child svg,
+  .photos-page.home-feed-photos .photo-card-links button:first-child svg,
+  .stories-page .photo-card-links button:first-child svg {
+    stroke: #ffffff !important;
+  }
   .photos-page[data-section="photos"] .photo-card-info .art-row-meta,
   .photos-page.home-feed-photos .photo-card-info .art-row-meta,
   .stories-page .photo-card-info .art-row-meta { display: flex !important; }
@@ -2532,9 +2570,6 @@ body:not(.edit-mode) .hotspot-delete-btn {
   .photos-page[data-section="photos"] .art-zoom-btn,
   .photos-page.home-feed-photos .art-zoom-btn,
   .stories-page .art-zoom-btn { display: flex !important; }
-  .photos-page[data-section="photos"] .photo-card-links .art-telegram-btn,
-  .photos-page.home-feed-photos .photo-card-links .art-telegram-btn,
-  .stories-page .photo-card-links .art-telegram-btn { padding: 7px 12px !important; font-size: 13px !important; }
 }
 
 /* ===== קרוסלת הצצה בכרטיס הגלריה (סגנון אינסטגרם) + לב על התמונה ===== */
