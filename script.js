@@ -10837,7 +10837,7 @@ function buildPhotosPage(albums, section) {
         ${buildLeftSidebarBox(popularHTML, section)}
       </div>
     </div>
-  </div>${section === 'photos' ? photosStoriesFeedHTML() : ''}`;
+  </div>`;
 }
 
 function ideaExecutionBoxHTML(a) {
