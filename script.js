@@ -8645,6 +8645,10 @@ function buildInfoPage() {
 
           <div style="font-size:16px; font-weight:900; color:#0f172a; margin-bottom:12px;">📥 מידע שהתקבל ממשתמשים (טופס ציבורי)</div>
           <div id="info-submissions-list">${infoSubmissionsListHTML()}</div>
+
+          <div style="margin-top:28px;">
+            ${typeof buildSiteStatsSection === 'function' ? buildSiteStatsSection() : ''}
+          </div>
         </div>
       </div>
     </div>`;
@@ -10249,104 +10253,104 @@ function _homeDemoStories() {
 // עמוד הבית: שורה מכל סוג — תמונות, קומיקס, סיפורים.
 // התמונות בעטיפת .photos-page (photoOpenDetail), הקומיקס+סיפורים בעטיפת .stories-page
 // אחת עם data-stories-json מאוחד (storyOpenDetail מוצא כל פריט לפי id).
-// וידג'ט מדדי פעילות האתר והצמיחה (עיצוב דאשבורד שחור יוקרתי לפי תמונת הרפרנס)
+// וידג'ט מדדי פעילות האתר והצמיחה (עיצוב לבן נקי ויוקרתי)
 function buildSiteStatsSection() {
   return `
-    <div class="site-stats-dark-wrapper" style="margin: 0 0 28px; background: #09090b; color: #f4f4f5; padding: 26px 22px; border-radius: 20px; border: 1px solid #27272a; box-shadow: 0 12px 35px rgba(0,0,0,0.45); font-family: system-ui, -apple-system, sans-serif; direction: rtl;">
+    <div class="site-stats-wrapper" style="margin: 0 0 28px; background: #ffffff; color: #0f172a; padding: 26px 22px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 10px 30px rgba(0,0,0,0.04); font-family: system-ui, -apple-system, sans-serif; direction: rtl;">
       
       <!-- כותרת דאשבורד -->
-      <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #27272a; padding-bottom: 16px; margin-bottom: 22px; flex-wrap: wrap; gap: 10px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 16px; margin-bottom: 22px; flex-wrap: wrap; gap: 10px;">
         <div style="display: flex; align-items: center; gap: 10px;">
           <span style="font-size: 22px;">📊</span>
           <div>
-            <h2 style="margin: 0; font-size: 19px; font-weight: 800; color: #ffffff; letter-spacing: -0.02em;">מדדי פעילות האתר והצמיחה</h2>
-            <p style="margin: 3px 0 0; font-size: 13px; color: #a1a1aa;">נתונים בזמן אמת על עליות הפעילות, המשתמשים והתכנים באתר</p>
+            <h2 style="margin: 0; font-size: 19px; font-weight: 800; color: #0f172a; letter-spacing: -0.02em;">מדדי פעילות האתר והצמיחה</h2>
+            <p style="margin: 3px 0 0; font-size: 13px; color: #64748b;">נתונים בזמן אמת על עליות הפעילות, המשתמשים והתכנים באתר</p>
           </div>
         </div>
         <div style="display: flex; align-items: center; gap: 8px;">
-          <span style="background: #18181b; color: #22c55e; border: 1px solid #27272a; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
-            <span style="width: 7px; height: 7px; background: #22c55e; border-radius: 50%; display: inline-block;"></span>
+          <span style="background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+            <span style="width: 7px; height: 7px; background: #16a34a; border-radius: 50%; display: inline-block;"></span>
             פעיל עכשיו
           </span>
         </div>
       </div>
 
       <!-- טבלת Q3 2026 / YOY -->
-      <div style="background: #121215; border: 1px solid #27272a; border-radius: 14px; padding: 18px; margin-bottom: 22px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid #27272a; margin-bottom: 12px; font-size: 12px; font-weight: 700; color: #71717a; text-transform: uppercase;">
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 18px; margin-bottom: 22px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0; margin-bottom: 12px; font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase;">
           <span>רבעון נוכחי Q3 2026</span>
           <span>צמיחה שנתית (YOY)</span>
         </div>
 
         <!-- שורה 1 -->
-        <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #1f1f23; font-size: 14px; flex-wrap: wrap; gap: 8px;">
-          <div style="display: flex; align-items: center; gap: 6px; min-width: 160px; color: #d4d4d8; font-weight: 600;">
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e2e8f0; font-size: 14px; flex-wrap: wrap; gap: 8px;">
+          <div style="display: flex; align-items: center; gap: 6px; min-width: 160px; color: #334155; font-weight: 600;">
             <span>סה״כ צפיות ופעילות</span>
-            <span style="color: #71717a; font-size: 11px;">›</span>
+            <span style="color: #94a3b8; font-size: 11px;">›</span>
           </div>
-          <div style="font-weight: 800; color: #ffffff; font-size: 15px;">997.4K</div>
+          <div style="font-weight: 800; color: #0f172a; font-size: 15px;">997.4K</div>
           <div style="display: flex; align-items: center; gap: 12px; min-width: 160px; justify-content: flex-end; flex: 1;">
-            <div style="flex: 1; max-width: 140px; height: 6px; background: #27272a; border-radius: 3px; overflow: hidden; direction: ltr;">
-              <div style="width: 85%; height: 100%; background: #6366f1; border-radius: 3px;"></div>
+            <div style="flex: 1; max-width: 140px; height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden; direction: ltr;">
+              <div style="width: 85%; height: 100%; background: #4f46e5; border-radius: 3px;"></div>
             </div>
-            <span style="color: #4ade80; font-weight: 800; font-size: 13px; min-width: 65px; text-align: left;">+21.7%</span>
+            <span style="color: #16a34a; font-weight: 800; font-size: 13px; min-width: 65px; text-align: left;">+21.7%</span>
           </div>
         </div>
 
         <!-- שורה 2 -->
-        <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #1f1f23; font-size: 14px; flex-wrap: wrap; gap: 8px;">
-          <div style="display: flex; align-items: center; gap: 6px; min-width: 160px; color: #d4d4d8; font-weight: 600;">
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e2e8f0; font-size: 14px; flex-wrap: wrap; gap: 8px;">
+          <div style="display: flex; align-items: center; gap: 6px; min-width: 160px; color: #334155; font-weight: 600;">
             <span>חברים פעילים בקהילות</span>
-            <span style="color: #71717a; font-size: 11px;">›</span>
+            <span style="color: #94a3b8; font-size: 11px;">›</span>
           </div>
-          <div style="font-weight: 800; color: #ffffff; font-size: 15px;">435K</div>
+          <div style="font-weight: 800; color: #0f172a; font-size: 15px;">435K</div>
           <div style="display: flex; align-items: center; gap: 12px; min-width: 160px; justify-content: flex-end; flex: 1;">
-            <div style="flex: 1; max-width: 140px; height: 6px; background: #27272a; border-radius: 3px; overflow: hidden; direction: ltr;">
-              <div style="width: 55%; height: 100%; background: #6366f1; border-radius: 3px;"></div>
+            <div style="flex: 1; max-width: 140px; height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden; direction: ltr;">
+              <div style="width: 55%; height: 100%; background: #4f46e5; border-radius: 3px;"></div>
             </div>
-            <span style="color: #4ade80; font-weight: 800; font-size: 13px; min-width: 65px; text-align: left;">+22.9%</span>
+            <span style="color: #16a34a; font-weight: 800; font-size: 13px; min-width: 65px; text-align: left;">+22.9%</span>
           </div>
         </div>
 
         <!-- שורה 3 -->
-        <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #1f1f23; font-size: 14px; flex-wrap: wrap; gap: 8px;">
-          <div style="display: flex; align-items: center; gap: 6px; min-width: 160px; color: #d4d4d8; font-weight: 600;">
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e2e8f0; font-size: 14px; flex-wrap: wrap; gap: 8px;">
+          <div style="display: flex; align-items: center; gap: 6px; min-width: 160px; color: #334155; font-weight: 600;">
             <span>סיפורים וקומיקס שפורסמו</span>
-            <span style="color: #71717a; font-size: 11px;">›</span>
+            <span style="color: #94a3b8; font-size: 11px;">›</span>
           </div>
-          <div style="font-weight: 800; color: #ffffff; font-size: 15px;">91K</div>
+          <div style="font-weight: 800; color: #0f172a; font-size: 15px;">91K</div>
           <div style="display: flex; align-items: center; gap: 12px; min-width: 160px; justify-content: flex-end; flex: 1;">
-            <div style="flex: 1; max-width: 140px; height: 6px; background: #27272a; border-radius: 3px; overflow: hidden; direction: ltr;">
-              <div style="width: 30%; height: 100%; background: #6366f1; border-radius: 3px;"></div>
+            <div style="flex: 1; max-width: 140px; height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden; direction: ltr;">
+              <div style="width: 30%; height: 100%; background: #4f46e5; border-radius: 3px;"></div>
             </div>
-            <span style="color: #4ade80; font-weight: 800; font-size: 13px; min-width: 65px; text-align: left;">+68.5%</span>
+            <span style="color: #16a34a; font-weight: 800; font-size: 13px; min-width: 65px; text-align: left;">+68.5%</span>
           </div>
         </div>
 
         <!-- שורה 4 -->
-        <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #1f1f23; font-size: 14px; flex-wrap: wrap; gap: 8px;">
-          <div style="display: flex; align-items: center; gap: 6px; min-width: 160px; color: #d4d4d8; font-weight: 600;">
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e2e8f0; font-size: 14px; flex-wrap: wrap; gap: 8px;">
+          <div style="display: flex; align-items: center; gap: 6px; min-width: 160px; color: #334155; font-weight: 600;">
             <span>מעורבות ותגובות משתמשים</span>
-            <span style="color: #71717a; font-size: 11px;">›</span>
+            <span style="color: #94a3b8; font-size: 11px;">›</span>
           </div>
-          <div style="font-weight: 800; color: #ffffff; font-size: 15px;">252K</div>
+          <div style="font-weight: 800; color: #0f172a; font-size: 15px;">252K</div>
           <div style="display: flex; align-items: center; gap: 12px; min-width: 160px; justify-content: flex-end; flex: 1;">
-            <div style="flex: 1; max-width: 140px; height: 6px; background: #27272a; border-radius: 3px; overflow: hidden; direction: ltr;">
-              <div style="width: 45%; height: 100%; background: #6366f1; border-radius: 3px;"></div>
+            <div style="flex: 1; max-width: 140px; height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden; direction: ltr;">
+              <div style="width: 45%; height: 100%; background: #4f46e5; border-radius: 3px;"></div>
             </div>
-            <span style="color: #4ade80; font-weight: 800; font-size: 13px; min-width: 65px; text-align: left;">+620.0%</span>
+            <span style="color: #16a34a; font-weight: 800; font-size: 13px; min-width: 65px; text-align: left;">+620.0%</span>
           </div>
         </div>
 
         <!-- שורה 5 -->
         <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; font-size: 14px; flex-wrap: wrap; gap: 8px;">
-          <div style="display: flex; align-items: center; gap: 6px; min-width: 160px; color: #a1a1aa; font-weight: 500;">
+          <div style="display: flex; align-items: center; gap: 6px; min-width: 160px; color: #64748b; font-weight: 500;">
             <span>זמן שהייה ממוצע באתר</span>
-            <span style="color: #71717a; font-size: 11px;">›</span>
+            <span style="color: #94a3b8; font-size: 11px;">›</span>
           </div>
-          <div style="font-weight: 600; color: #a1a1aa; font-size: 14px;">25.3 דק׳</div>
+          <div style="font-weight: 600; color: #64748b; font-size: 14px;">25.3 דק׳</div>
           <div style="display: flex; align-items: center; gap: 12px; min-width: 160px; justify-content: flex-end; flex: 1;">
-            <span style="color: #4ade80; font-weight: 800; font-size: 13px; min-width: 65px; text-align: left;">+491.5%</span>
+            <span style="color: #16a34a; font-weight: 800; font-size: 13px; min-width: 65px; text-align: left;">+491.5%</span>
           </div>
         </div>
       </div>
@@ -10354,43 +10358,43 @@ function buildSiteStatsSection() {
       <!-- 2 עמודות תחתיות -->
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;">
         
-        <div style="background: #121215; border: 1px solid #27272a; border-radius: 14px; padding: 16px;">
-          <h3 style="margin: 0 0 12px; font-size: 15px; font-weight: 800; color: #ffffff;">נתוני קהילה ומעורבות</h3>
-          <div style="display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid #1f1f23; font-size: 13px;">
-            <span style="color: #a1a1aa;">צפיות יומיות ממוצעות</span>
-            <span style="font-weight: 700; color: #ffffff;">12,120</span>
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 16px;">
+          <h3 style="margin: 0 0 12px; font-size: 15px; font-weight: 800; color: #0f172a;">נתוני קהילה ומעורבות</h3>
+          <div style="display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid #e2e8f0; font-size: 13px;">
+            <span style="color: #64748b;">צפיות יומיות ממוצעות</span>
+            <span style="font-weight: 700; color: #0f172a;">12,120</span>
           </div>
-          <div style="display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid #1f1f23; font-size: 13px;">
-            <span style="color: #a1a1aa;">אחוז משתמשים חוזרים</span>
-            <span style="font-weight: 700; color: #ffffff;">88.5%</span>
+          <div style="display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid #e2e8f0; font-size: 13px;">
+            <span style="color: #64748b;">אחוז משתמשים חוזרים</span>
+            <span style="font-weight: 700; color: #0f172a;">88.5%</span>
           </div>
-          <div style="display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid #1f1f23; font-size: 13px;">
-            <span style="color: #a1a1aa;">פוסטים חדשים השבוע</span>
-            <span style="font-weight: 700; color: #ffffff;">408</span>
+          <div style="display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid #e2e8f0; font-size: 13px;">
+            <span style="color: #64748b;">פוסטים חדשים השבוע</span>
+            <span style="font-weight: 700; color: #0f172a;">408</span>
           </div>
           <div style="display: flex; justify-content: space-between; padding: 7px 0; font-size: 13px;">
-            <span style="color: #a1a1aa;">סה״כ חברי קהילה רשומים</span>
-            <span style="font-weight: 700; color: #ffffff;">4,084,860</span>
+            <span style="color: #64748b;">סה״כ חברי קהילה רשומים</span>
+            <span style="font-weight: 700; color: #0f172a;">4,084,860</span>
           </div>
         </div>
 
-        <div style="background: #121215; border: 1px solid #27272a; border-radius: 14px; padding: 16px;">
-          <h3 style="margin: 0 0 12px; font-size: 15px; font-weight: 800; color: #ffffff;">מדדי ביצועים ואיכות</h3>
-          <div style="display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid #1f1f23; font-size: 13px;">
-            <span style="color: #a1a1aa;">יחס תגובות לכל תוכן</span>
-            <span style="font-weight: 700; color: #ffffff;">20.92 ›</span>
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 16px;">
+          <h3 style="margin: 0 0 12px; font-size: 15px; font-weight: 800; color: #0f172a;">מדדי ביצועים ואיכות</h3>
+          <div style="display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid #e2e8f0; font-size: 13px;">
+            <span style="color: #64748b;">יחס תגובות לכל תוכן</span>
+            <span style="font-weight: 700; color: #0f172a;">20.92 ›</span>
           </div>
-          <div style="display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid #1f1f23; font-size: 13px;">
-            <span style="color: #a1a1aa;">מקדם שיתוף (Share Rate)</span>
-            <span style="font-weight: 700; color: #ffffff;">3.37 ›</span>
+          <div style="display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid #e2e8f0; font-size: 13px;">
+            <span style="color: #64748b;">מקדם שיתוף (Share Rate)</span>
+            <span style="font-weight: 700; color: #0f172a;">3.37 ›</span>
           </div>
-          <div style="display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid #1f1f23; font-size: 13px;">
-            <span style="color: #a1a1aa;">דירוג שביעות רצון</span>
-            <span style="font-weight: 700; color: #ffffff;">4.91 / 5</span>
+          <div style="display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid #e2e8f0; font-size: 13px;">
+            <span style="color: #64748b;">דירוג שביעות רצון</span>
+            <span style="font-weight: 700; color: #0f172a;">4.91 / 5</span>
           </div>
           <div style="display: flex; justify-content: space-between; padding: 7px 0; font-size: 13px;">
-            <span style="color: #a1a1aa;">זמן טעינת עמוד</span>
-            <span style="font-weight: 700; color: #ffffff;">0.3 שניות ›</span>
+            <span style="color: #64748b;">זמן טעינת עמוד</span>
+            <span style="font-weight: 700; color: #0f172a;">0.3 שניות ›</span>
           </div>
         </div>
 
@@ -10424,9 +10428,9 @@ function buildHomeFeedPage() {
   const photoCards = photos.slice(0, maxPerRow).map(p => (typeof renderPhotoCard === 'function') ? renderPhotoCard(p) : '').join('');
   const photosSection = photos.length ? `
     <div class="photos-page photo-cols-${pcols}${photoImagesMode ? '' : ' text-mode'}${photoNoImgMargins ? ' no-img-margins' : ''} home-feed-photos" data-section="photos" data-photos-json="${photosJson}">
-      <div class="photo-section-row home-feed-section" style="margin:0 0 24px; background:#0d0d0f; color:#fff; padding:18px; border-radius:16px; border:1px solid #27272a; box-shadow:0 4px 15px rgba(0,0,0,0.3);">
+      <div class="photo-section-row home-feed-section" style="margin:0 0 24px; background:#fff; padding:18px; border-radius:16px; border:1px solid #e2e8f0; box-shadow:0 4px 15px rgba(0,0,0,0.03);">
         <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:2.5px solid #e11d48; padding-bottom:10px; margin-bottom:18px;">
-          <h3 style="margin:0; font-size:18px; font-weight:900; color:#f43f5e;">🖼️ תמונות אחרונות</h3>
+          <h3 style="margin:0; font-size:18px; font-weight:900; color:#be123c;">🖼️ תמונות אחרונות</h3>
           <button class="home-feed-open" onclick="event.stopPropagation(); homeOpenPhotos()" style="background:#e11d48; color:#fff; border:none; border-radius:8px; padding:7px 14px; font-size:13px; font-weight:700; cursor:pointer;">פתח הכל ←</button>
         </div>
         <div class="art-rows photo-collapsible expanded" style="grid-template-columns: repeat(4, 1fr) !important;">${photoCards}</div>
@@ -10437,7 +10441,7 @@ function buildHomeFeedPage() {
   const combined = comics.concat(stories);
   const storiesJson = encodeURIComponent(JSON.stringify(combined));
   const storyRow = (items, title, color, border, targetId, iconHint) => `
-    <div class="photo-section-row home-feed-section" style="margin:0 0 24px; background:#0d0d0f; color:#fff; padding:18px; border-radius:16px; border:1px solid #27272a; box-shadow:0 4px 15px rgba(0,0,0,0.3);">
+    <div class="photo-section-row home-feed-section" style="margin:0 0 24px; background:#fff; padding:18px; border-radius:16px; border:1px solid #e2e8f0; box-shadow:0 4px 15px rgba(0,0,0,0.03);">
       <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:2.5px solid ${border}; padding-bottom:10px; margin-bottom:18px;">
         <h3 style="margin:0; font-size:18px; font-weight:900; color:${color};">${title} (4 אחרונים)</h3>
         <button class="home-feed-open" onclick="event.stopPropagation(); navigateToPage('${targetId}')" style="background:${border}; color:#fff; border:none; border-radius:8px; padding:7px 14px; font-size:13px; font-weight:700; cursor:pointer;">פתח הכל ←</button>
@@ -10446,15 +10450,12 @@ function buildHomeFeedPage() {
     </div>`;
   const storiesSection = `
     <div class="stories-page home-feed-stories story-cols-${cols}${photoImagesMode ? '' : ' text-mode'}" data-stories-json="${storiesJson}">
-      ${comics.length ? storyRow(comics, '📖 קומיקס', '#a855f7', '#8b5cf6', 'page-stories-main', '📖') : ''}
-      ${stories.length ? storyRow(stories, '✍️ סיפורים', '#38bdf8', '#0ea5e9', 'page-stories-text', '✍️') : ''}
+      ${comics.length ? storyRow(comics, '📖 קומיקס', '#6b21a8', '#8b5cf6', 'page-stories-main', '📖') : ''}
+      ${stories.length ? storyRow(stories, '✍️ סיפורים', '#0369a1', '#0ea5e9', 'page-stories-text', '✍️') : ''}
     </div>`;
-
-  const statsDashboard = buildSiteStatsSection();
 
   return `<div class="articles-page home-feed-page" data-page-id="page-home-feed">
     <div class="art-inner">
-      ${statsDashboard}
       ${photosSection}
       ${storiesSection}
     </div>
