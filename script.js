@@ -1168,9 +1168,18 @@ function adjustImgAspectRatio(img) {
 // פונקציה שמציגה את התוכן של העמוד הנוכחי במרכז המסך
 function renderPage() {
   // באג "יוצא מהדף": כשצופים בעמוד פנימי (גלריה/סיפור), רענון ברקע (סנכרון Firebase)
-  // לא ירנדר מחדש את הרשימה ו"יבעט" את המשתמש החוצה. ניווט/חזרה מנקים את הדגל.
-  if (window.__detailOpen && typeof mainContent !== 'undefined' && mainContent && mainContent.querySelector('.art-detail')) {
+  // לא ירנדר מחדש את הרשימה ו"יבעט" את המשתמש החוצה.
+  // חוסמים רק אם: (1) הדגל פעיל, (2) יש .art-detail במסך, (3) הנמצאים באותו עמוד שנפתחה התצוגה הפנימית בו.
+  // אם המשתמש ניווט לעמוד אחר — מאפשרים תמיד.
+  if (window.__detailOpen
+      && typeof mainContent !== 'undefined' && mainContent && mainContent.querySelector('.art-detail')
+      && window.__detailOpenPageId === activePageId) {
     return;
+  }
+  // ניווט לעמוד חדש — מנקים את הדגל
+  if (window.__detailOpenPageId && window.__detailOpenPageId !== activePageId) {
+    window.__detailOpen = false;
+    window.__detailOpenPageId = null;
   }
   // עמוד "הפיד שלי" — עמוד דינמי בפני עצמו (לא נשמר ברשימת העמודים)
   if (activePageId === 'page-feed-main') {
@@ -6330,6 +6339,7 @@ function buildStoriesPage(stories, storyKind) {
 
 function storyOpenDetail(id) {
   window.__detailOpen = true; // מגן מפני רענון-רקע שיבעט מהעמוד הפנימי
+  window.__detailOpenPageId = activePageId; // שומר איזה עמוד פעיל כשנפתחה התצוגה הפנימית
   const container = mainContent.querySelector('.stories-page');
   const _srcKind = (container && container.getAttribute('data-story-kind')) || 'comics';
   
@@ -11009,6 +11019,7 @@ function secondhandDetailsBoxHTML(a) {
 
 function photoOpenDetail(id) {
   window.__detailOpen = true; // מגן מפני רענון-רקע שיבעט מהעמוד הפנימי
+  window.__detailOpenPageId = activePageId; // שומר איזה עמוד פעיל כשנפתחה התצוגה הפנימית
   photoIncrementViews(id);
   // תומך גם בעמוד קהילה ובעמוד משתמש (שמכילים data-photos-json משלהם)
   const container = mainContent.querySelector('.photos-page, .community-page, .user-page, .ideas-page');
