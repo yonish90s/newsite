@@ -6206,7 +6206,9 @@ function storyCardHTML(s, iconHint) {
     const validImages = (s.images && s.images.length) ? s.images.filter(Boolean) : (s.image ? [s.image] : []);
     const mainImg = validImages[0] || s.image || '';
     let miniThumbnailsHTML = '';
-    if (validImages.length > 1) {
+    if (validImages.length <= 1) {
+      miniThumbnailsHTML = '<div class="photo-mini-thumbs-spacer" aria-hidden="true"></div>';
+    } else {
       miniThumbnailsHTML = `
         <div class="photo-mini-thumbs" style="display: flex; align-items: center; justify-content: center; gap: 4px; margin-top: 6px; width: 100%; direction: ltr;">
           <button type="button" 
@@ -6238,23 +6240,83 @@ function storyCardHTML(s, iconHint) {
     const isVerifiedStory = isUserVerified(s.authorId, s.author, s.verified || s.verifiedUser);
     const verifiedBadgeHTML = isVerifiedStory ? ` <span title="משתמש מאומת" style="color:#2563eb; font-weight:900; background:#dbeafe; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:10px; margin-right:3px;">✓</span>` : '';
     const storyTime = photoAlbumTime(s);
-    const storyScore = (s.likes || 0) + (s.views || 0);
+    const viewsCount = photoGetViews(s.id);
+    const likesCount = s.likes || 0;
+    const storyScore = likesCount + viewsCount;
     const defaultIcon = iconHint || (s.id && s.id.includes('comic') ? '📖' : '✍️');
+
+    const cardLink = (url, label, iconPath, extraPath) => {
+      const svg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;"><path d="${iconPath}"/>${extraPath || ''}</svg>`;
+      if (url) {
+        if (label === 'אימייל') {
+          return `<button type="button" onclick="revealAndCopyEmail('${artEsc(url)}', this, event);" class="art-telegram-btn" title="לחץ לחשיפת והעתקת אימייל">${svg}<span>${label}</span></button>`;
+        }
+        return `<a href="${url}" target="_blank" onclick="event.stopPropagation();" class="art-telegram-btn">${svg}<span>${label}</span></a>`;
+      }
+      return `<span class="art-telegram-btn is-disabled" onclick="event.stopPropagation();" aria-disabled="true">${svg}<span>${label}</span></span>`;
+    };
+
+    const isLikedCard = typeof photoIsLikedLocal === 'function' ? photoIsLikedLocal(s.id) : false;
+    const cardHeartOverlay = `
+      <button type="button" class="art-heart-overlay${isLikedCard ? ' liked' : ''}" onclick="event.stopPropagation(); photoToggleLike('${artEsc(s.id)}')" title="לייק" aria-label="לייק">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="${isLikedCard ? '#ff2e4d' : 'none'}" stroke="${isLikedCard ? '#ff2e4d' : '#ffffff'}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+        </svg>
+      </button>
+    `;
+
+    const isSavedCard = typeof photoIsSavedLocal === 'function' ? photoIsSavedLocal(s.id) : false;
+    const cardSaveBtnHTML = `
+      <button type="button" onclick="event.stopPropagation(); photoToggleSave('${artEsc(s.id)}')" class="art-telegram-btn" title="${isSavedCard ? 'הסר משמורים' : 'שמור לצפייה מאוחרת'}" style="display: inline-flex; align-items: center; background: #2f2f2f; color: #ffffff; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: bold; gap: 6px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: all 0.2s; ${isSavedCard ? 'background: #e11d48; border-color: #e11d48;' : ''}">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="${isSavedCard ? '#ffffff' : 'none'}" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+          <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+        </svg>
+        <span>${isSavedCard ? 'שמור' : 'שמירה'}</span>
+      </button>
+    `;
+
+    const cardLinksHTML = `
+      <div class="photo-card-links">
+        ${cardSaveBtnHTML}
+        ${cardLink(s.telegramUrl, 'טלגרם', 'M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z')}
+        ${cardLink(s.emailUrl, 'אימייל', 'M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z', '<polyline points="22,6 12,13 2,6"/>')}
+      </div>
+    `;
+
+    const scoreBadgeHTML = `
+      <div style="display:inline-flex; align-items:center; gap:8px; font-size:12px; color:#64748b; font-weight:700; margin-top:4px;">
+        <span>👁️ ${viewsCount} צפיות</span>
+        <span>·</span>
+        <span>❤️ ${likesCount} לייקים</span>
+      </div>
+    `;
+
     return `
       <div class="art-row" data-category="${artEsc(s.category || 'כללי')}" data-verified="${isVerifiedStory ? '1' : '0'}" data-time="${storyTime}" data-score="${storyScore}" data-search="${artEsc([s.title, s.summary, s.author, s.category].filter(Boolean).join(' '))}" onclick="storyOpenDetail('${artEsc(s.id)}')">
         <div class="art-row-text photo-card-info">
           <h3>${s.title}</h3>
           <div class="art-row-meta" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-            <span class="art-row-author">${s.author}${verifiedBadgeHTML}</span>
+            <span class="photo-author-link art-row-author" onclick="event.stopPropagation(); if(typeof openUserPage==='function') openUserPage('${artEsc(s.authorId || '')}', '${artEsc(s.author || '')}')" style="cursor: pointer; color: #e11d48; text-decoration: underline; font-weight: 600;">${s.author}${verifiedBadgeHTML}</span>
             <span class="art-row-sep">|</span>
             <span>${s.timestamp}</span>
+            ${s.ageRange ? `<span class="art-row-sep">|</span><span>גיל ${artEsc(String(s.ageRange))}</span>` : ''}
             ${isVerifiedStory ? `<span class="art-row-sep">|</span><span style="color:#2563eb; font-weight:700; display:inline-flex; align-items:center; gap:4px;">חשבון זה מאומת <span style="background:#dbeafe; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:10px;">✓</span></span>` : ''}
           </div>
+          ${scoreBadgeHTML}
+          ${cardLinksHTML}
         </div>
         <div class="art-row-img-container" style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0;">
           <div class="art-row-img-wrap" style="--bg-img: url('${mainImg || ''}');">
             ${mainImg ? `<img src="${mainImg}" alt="">` : `<div class="art-row-img-placeholder" data-icon="${defaultIcon}"></div>`}
+            <button type="button" class="photo-nav-overlay prev" onclick="event.stopPropagation(); photoUploadScroll(this, -1)" title="ההעלאה הקודמת" aria-label="ההעלאה הקודמת">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+            <button type="button" class="photo-nav-overlay next" onclick="event.stopPropagation(); photoUploadScroll(this, 1)" title="ההעלאה הבאה" aria-label="ההעלאה הבאה">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+            ${validImages.length > 1 ? `<div class="photo-count-badge">1 / ${validImages.length}</div>` : ''}
             ${mainImg ? `<button class="art-zoom-btn" onclick="event.stopPropagation();artGalleryById('stories','${artEsc(s.id)}', this.closest('.art-row-img-wrap').querySelector('img') && this.closest('.art-row-img-wrap').querySelector('img').getAttribute('src'))" title="מסך מלא">⛶</button>` : ''}
+            ${cardHeartOverlay}
             ${isEditMode ? `<button class="art-pin-btn" onclick="event.stopPropagation(); togglePinStory('${artEsc(s.id)}')" title="${s.pinned ? 'בטל נעץ' : 'נעץ בגריד'}" style="${s.pinned ? 'color:#ffd700;display:flex;' : ''}">${s.pinned ? '★' : '☆'}</button>` : ''}
             ${isEditMode ? `<button class="art-edit-btn" onclick="event.stopPropagation(); openStoryEditModal('${artEsc(s.id)}')" title="ערוך סיפור">✎</button>` : ''}
             <button class="art-delete-btn" onclick="event.stopPropagation();storyDelete('${artEsc(s.id)}',this)">✕</button>
