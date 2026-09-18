@@ -2023,6 +2023,7 @@ navLinksContainer.addEventListener('click', (e) => {
     const targetPage = pages.find(p => p.id === targetPageId);
     if (targetPage) {
       if (isEditMode) saveCurrentPageContent();
+      window.__detailOpen = false;
       activePageId = targetPageId;
       saveToStorage();
       renderSideMenu();
@@ -2277,6 +2278,7 @@ interact('.draggable-resizable')
       if (pageLink) {
         const targetPage = pages.find(p => p.id === pageLink);
         if (targetPage) {
+          window.__detailOpen = false;
           activePageId = pageLink;
           saveToStorage();
           renderSideMenu();
@@ -2289,6 +2291,7 @@ interact('.draggable-resizable')
       } else if (href) {
         const internalPage = pages.find(p => p.title.trim() === href.trim() || p.id === href.trim());
         if (internalPage) {
+          window.__detailOpen = false;
           activePageId = internalPage.id;
           saveToStorage();
           renderSideMenu();
@@ -3486,6 +3489,7 @@ document.addEventListener('click', (event) => {
       
       if (internalPage) {
         // נווט לעמוד הפנימי
+        window.__detailOpen = false;
         activePageId = internalPage.id;
         saveToStorage();
         renderSideMenu();
@@ -3768,6 +3772,7 @@ mainContent.addEventListener('click', (e) => {
     if (href) {
       const internalPage = pages.find(p => p.title.trim() === href.trim() || p.id === href.trim());
       if (internalPage) {
+        window.__detailOpen = false;
         activePageId = internalPage.id;
         saveToStorage();
         renderSideMenu();
@@ -3788,6 +3793,7 @@ mainContent.addEventListener('click', (e) => {
     const targetPageId = pageLinkEl.dataset.pageLink;
     const targetPage = pages.find(p => p.id === targetPageId);
     if (targetPage) {
+      window.__detailOpen = false;
       activePageId = targetPageId;
       saveToStorage();
       renderSideMenu();
@@ -3933,6 +3939,7 @@ document.addEventListener('click', (e) => {
     if (targetPage) {
       e.preventDefault();
       e.stopPropagation();
+      window.__detailOpen = false;
       activePageId = linked.dataset.pageLink;
       renderPage();
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -5079,6 +5086,7 @@ function artOpenDetail(id) {
 }
 
 function artGoBack() {
+  window.__detailOpen = false;
   renderPage();
 }
 
@@ -5359,6 +5367,7 @@ function shopDelete(id) {
 
 window.openCalculatorPage = function(pageId) {
   if (isEditMode) saveCurrentPageContent();
+  window.__detailOpen = false;
   activePageId = pageId;
   saveToStorage();
   renderSideMenu();
@@ -6609,7 +6618,7 @@ window.storyBookmarkHere = storyBookmarkHere;
 function openStoryBookmark(id) {
   if (typeof closeSavedModal === 'function') closeSavedModal();
   const sp = (typeof pages !== 'undefined' && Array.isArray(pages)) ? pages.find(p => p && ((p.content || '').includes('stories-page') || (p.title || '').includes('סיפורים'))) : null;
-  if (sp) { activePageId = sp.id; if (typeof renderTopNav === 'function') renderTopNav(); if (typeof renderPage === 'function') renderPage(); }
+  if (sp) { window.__detailOpen = false; activePageId = sp.id; if (typeof renderTopNav === 'function') renderTopNav(); if (typeof renderPage === 'function') renderPage(); }
   setTimeout(() => { if (typeof storyOpenDetail === 'function') storyOpenDetail(id); }, 90);
 }
 window.openStoryBookmark = openStoryBookmark;
@@ -11915,6 +11924,7 @@ window.openUserPage = openUserPage;
 
 // חזרה מעמוד המשתמש אל העמוד הנוכחי (renderPage מודולרית, לכן חושפים עוטף גלובלי)
 function goBackFromUserPage() {
+  window.__detailOpen = false;
   if (typeof renderPage === 'function') renderPage();
 }
 window.goBackFromUserPage = goBackFromUserPage;
@@ -11928,6 +11938,7 @@ function goToPhotosPage() {
       if (typeof saveToStorage === 'function') { try { localforage.setItem('myActivePage_v3', activePageId); } catch (e) {} }
     }
   } catch (e) {}
+  window.__detailOpen = false;
   if (typeof renderPage === 'function') renderPage();
 }
 window.goToPhotosPage = goToPhotosPage;
@@ -13029,11 +13040,11 @@ function openHistoryItem(id, type) {
   const findPage = (pred) => (typeof pages !== 'undefined' && Array.isArray(pages)) ? pages.find(pred) : null;
   if (kind === 'story') {
     const sp = findPage(p => p && ((p.content || '').includes('stories-page') || (p.title || '').includes('סיפורים')));
-    if (sp) { activePageId = sp.id; if (typeof renderTopNav === 'function') renderTopNav(); if (typeof renderPage === 'function') renderPage(); }
+    if (sp) { window.__detailOpen = false; activePageId = sp.id; if (typeof renderTopNav === 'function') renderTopNav(); if (typeof renderPage === 'function') renderPage(); }
     setTimeout(() => { if (typeof storyOpenDetail === 'function') storyOpenDetail(id); }, 90);
   } else if (kind === 'idea') {
     const ip = findPage(p => p && (p.id === 'page-ideas-main' || (p.content || '').includes('ideas-page') || (p.title || '').includes('רעיונות')));
-    if (ip) { activePageId = ip.id; if (typeof renderTopNav === 'function') renderTopNav(); if (typeof renderPage === 'function') renderPage(); }
+    if (ip) { window.__detailOpen = false; activePageId = ip.id; if (typeof renderTopNav === 'function') renderTopNav(); if (typeof renderPage === 'function') renderPage(); }
   } else {
     if (typeof feedOpenGallery === 'function') feedOpenGallery(id);
   }
@@ -13634,7 +13645,7 @@ function fbFeedOpen(id, kind) {
   if (kind === 'idea') {
     if (typeof pages !== 'undefined') {
       const ip = pages.find(p => p && (p.content || '').includes('ideas-page'));
-      if (ip) { activePageId = ip.id; if (typeof renderTopNav === 'function') renderTopNav(); if (typeof renderPage === 'function') renderPage(); }
+      if (ip) { window.__detailOpen = false; activePageId = ip.id; if (typeof renderTopNav === 'function') renderTopNav(); if (typeof renderPage === 'function') renderPage(); }
     }
     return;
   }
@@ -13676,6 +13687,7 @@ function openFeed() {
   // הפיד זמין גם לאורחים (מצב אורח) — אחרי כמה גלילות מוצג קיר הרשמה
   if (auth.currentUser && typeof subscribeMyFollows === 'function') subscribeMyFollows();
   if (isEditMode && typeof saveCurrentPageContent === 'function') saveCurrentPageContent();
+  window.__detailOpen = false;
   activePageId = 'page-feed-main';
   if (typeof renderSideMenu === 'function') renderSideMenu();
   if (typeof renderTopNav === 'function') renderTopNav();
@@ -13688,7 +13700,7 @@ function feedOpenGallery(id) {
   // מעבר לעמוד התמונות כדי ש-photoOpenDetail ימצא את הגלריה
   if (typeof pages !== 'undefined') {
     const pp = pages.find(p => p && (p.content || '').includes('photos-page') && !(p.content || '').includes('community') && !(p.content || '').includes('user-page'));
-    if (pp) { activePageId = pp.id; if (typeof renderTopNav === 'function') renderTopNav(); if (typeof renderPage === 'function') renderPage(); }
+    if (pp) { window.__detailOpen = false; activePageId = pp.id; if (typeof renderTopNav === 'function') renderTopNav(); if (typeof renderPage === 'function') renderPage(); }
   }
   setTimeout(() => { if (typeof photoOpenDetail === 'function') photoOpenDetail(id); }, 60);
 }
