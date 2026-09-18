@@ -6182,7 +6182,7 @@ window.storyApplyFilters = storyApplyFilters;
 
 // כרטיס סיפור בודד — חולץ לפונקציה נפרדת כדי לשמש גם בעמוד הסיפורים
 // וגם כפיד "סיפורים" שנוסף בתחתית עמוד התמונות.
-function storyCardHTML(s) {
+function storyCardHTML(s, iconHint) {
     const validImages = (s.images && s.images.length) ? s.images.filter(Boolean) : (s.image ? [s.image] : []);
     const mainImg = validImages[0] || s.image || '';
     let miniThumbnailsHTML = '';
@@ -6219,6 +6219,7 @@ function storyCardHTML(s) {
     const verifiedBadgeHTML = isVerifiedStory ? ` <span title="משתמש מאומת" style="color:#2563eb; font-weight:900; background:#dbeafe; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:10px; margin-right:3px;">✓</span>` : '';
     const storyTime = photoAlbumTime(s);
     const storyScore = (s.likes || 0) + (s.views || 0);
+    const defaultIcon = iconHint || (s.id && s.id.includes('comic') ? '📖' : '✍️');
     return `
       <div class="art-row" data-category="${artEsc(s.category || 'כללי')}" data-verified="${isVerifiedStory ? '1' : '0'}" data-time="${storyTime}" data-score="${storyScore}" data-search="${artEsc([s.title, s.summary, s.author, s.category].filter(Boolean).join(' '))}" onclick="storyOpenDetail('${artEsc(s.id)}')">
         <div class="art-row-text photo-card-info">
@@ -6232,7 +6233,7 @@ function storyCardHTML(s) {
         </div>
         <div class="art-row-img-container" style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0;">
           <div class="art-row-img-wrap" style="--bg-img: url('${mainImg || ''}');">
-            ${mainImg ? `<img src="${mainImg}" alt="">` : '<div class="art-row-img-placeholder"></div>'}
+            ${mainImg ? `<img src="${mainImg}" alt="">` : `<div class="art-row-img-placeholder" data-icon="${defaultIcon}"></div>`}
             ${mainImg ? `<button class="art-zoom-btn" onclick="event.stopPropagation();artGalleryById('stories','${artEsc(s.id)}', this.closest('.art-row-img-wrap').querySelector('img') && this.closest('.art-row-img-wrap').querySelector('img').getAttribute('src'))" title="מסך מלא">⛶</button>` : ''}
             ${isEditMode ? `<button class="art-pin-btn" onclick="event.stopPropagation(); togglePinStory('${artEsc(s.id)}')" title="${s.pinned ? 'בטל נעץ' : 'נעץ בגריד'}" style="${s.pinned ? 'color:#ffd700;display:flex;' : ''}">${s.pinned ? '★' : '☆'}</button>` : ''}
             ${isEditMode ? `<button class="art-edit-btn" onclick="event.stopPropagation(); openStoryEditModal('${artEsc(s.id)}')" title="ערוך סיפור">✎</button>` : ''}
@@ -10278,18 +10279,18 @@ function buildHomeFeedPage() {
   // --- שורות קומיקס + סיפורים (עטיפה אחת) ---
   const combined = comics.concat(stories);
   const storiesJson = encodeURIComponent(JSON.stringify(combined));
-  const storyRow = (items, title, color, border, targetId) => `
+  const storyRow = (items, title, color, border, targetId, iconHint) => `
     <div class="photo-section-row home-feed-section" style="margin:0 0 24px; background:#fff; padding:18px; border-radius:16px; border:1px solid #e2e8f0; box-shadow:0 4px 15px rgba(0,0,0,0.03);">
       <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:2.5px solid ${border}; padding-bottom:10px; margin-bottom:18px;">
         <h3 style="margin:0; font-size:18px; font-weight:900; color:${color};">${title}</h3>
         <button class="home-feed-open" onclick="event.stopPropagation(); navigateToPage('${targetId}')" style="background:${border}; color:#fff; border:none; border-radius:8px; padding:7px 14px; font-size:13px; font-weight:700; cursor:pointer;">פתח הכל ←</button>
       </div>
-      <div class="art-rows photo-collapsible expanded">${items.slice(0, maxPerRow).map(storyCardHTML).join('')}</div>
+      <div class="art-rows photo-collapsible expanded">${items.slice(0, maxPerRow).map(s => storyCardHTML(s, iconHint)).join('')}</div>
     </div>`;
   const storiesSection = `
     <div class="stories-page home-feed-stories story-cols-${cols}${photoImagesMode ? '' : ' text-mode'}" data-stories-json="${storiesJson}">
-      ${comics.length ? storyRow(comics, '📖 קומיקס', '#6b21a8', '#8b5cf6', 'page-stories-main') : ''}
-      ${stories.length ? storyRow(stories, '✍️ סיפורים', '#0369a1', '#0ea5e9', 'page-stories-text') : ''}
+      ${comics.length ? storyRow(comics, '📖 קומיקס', '#6b21a8', '#8b5cf6', 'page-stories-main', '📖') : ''}
+      ${stories.length ? storyRow(stories, '✍️ סיפורים', '#0369a1', '#0ea5e9', 'page-stories-text', '✍️') : ''}
     </div>`;
 
   return `<div class="articles-page home-feed-page" data-page-id="page-home-feed">

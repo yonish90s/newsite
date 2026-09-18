@@ -1898,7 +1898,23 @@ body:not(.edit-mode) .hotspot-delete-btn {
 .art-row-img-wrap { position: relative; width: 170px; height: 110px; flex-shrink: 0; border-radius: 8px; overflow: hidden; background: #000; }
 .art-row-img-wrap::before { content: ""; position: absolute; inset: 0; background-image: var(--bg-img); background-size: cover; background-position: center; filter: blur(10px) brightness(0.6); transform: scale(1.15); pointer-events: none; }
 .art-row-img-wrap img { position: relative; width: 100%; height: 100%; object-fit: contain; display: block; border-radius: 8px; z-index: 1; }
-.art-row-img-placeholder { width: 100%; height: 100%; background: #fafafa; border: 1px solid #f0f0f0; box-sizing: border-box; position: relative; z-index: 1; }
+.art-row-img-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  border: 1px solid #e2e8f0;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.art-row-img-placeholder::after {
+  content: attr(data-icon);
+  font-size: 32px;
+  opacity: 0.35;
+}
 
 /* ===== קרוסלת תמונות בכרטיס גלריה: חיצי ניווט על התמונה + מונה + החלקת אצבע ===== */
 .art-row-img-wrap img { transition: transform 0.2s ease; }
