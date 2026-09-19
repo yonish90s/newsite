@@ -457,7 +457,7 @@ function sanitizeToOnlyPhotosAndStories() {
   // לפי בקשת המשתמש: משאירים רק עמודי תמונות וסיפורים (מוחקים כתבות/קהילה וכל עמוד אחר).
   // מסננים רק כשקיים לפחות עמוד תמונות/סיפורים אחד, כדי לא לרוקן אתר תקין בטעות.
   if (pages.some(p => p && ((p.content || '').includes('photos-page') || (p.content || '').includes('stories-page')))) {
-    pages = pages.filter(p => p && (p.id === 'page-home-feed' || (p.content || '').includes('home-feed-page') || (p.content || '').includes('photos-page') || (p.content || '').includes('stories-page') || (p.content || '').includes('ideas-page') || (p.content || '').includes('communities-page') || (p.content || '').includes('info-page') || (p.content || '').includes('requests-page') || (p.content || '').includes('questions-page') || (p.content || '').includes('offers-page')));
+    pages = pages.filter(p => p && (p.id === 'page-home-feed' || p.id === 'page-subscription-main' || (p.content || '').includes('home-feed-page') || (p.content || '').includes('subscription-page') || (p.content || '').includes('photos-page') || (p.content || '').includes('stories-page') || (p.content || '').includes('ideas-page') || (p.content || '').includes('communities-page') || (p.content || '').includes('info-page') || (p.content || '').includes('requests-page') || (p.content || '').includes('questions-page') || (p.content || '').includes('offers-page')));
   }
 
   // בוטסטראפ של עמודי ברירת המחדל (תמונות + סיפורים) רק כאשר אין אף עמוד באתר.
@@ -16127,7 +16127,7 @@ onValue(ref(db, 'website'), (snapshot) => {
     pList = dedupePageList(pList);
     // משאירים רק עמודי תמונות/סיפורים/קהילות (מוחקים כתבות וכל עמוד אחר)
     if (pList.some(p => p && ((p.content || '').includes('photos-page') || (p.content || '').includes('stories-page')))) {
-      pList = pList.filter(p => p && (p.id === 'page-home-feed' || (p.content || '').includes('home-feed-page') || (p.content || '').includes('photos-page') || (p.content || '').includes('stories-page') || (p.content || '').includes('ideas-page') || (p.content || '').includes('communities-page') || (p.content || '').includes('info-page') || (p.content || '').includes('requests-page') || (p.content || '').includes('questions-page') || (p.content || '').includes('offers-page') || p.id === 'page-ideas-main'));
+      pList = pList.filter(p => p && (p.id === 'page-home-feed' || p.id === 'page-subscription-main' || (p.content || '').includes('home-feed-page') || (p.content || '').includes('subscription-page') || (p.content || '').includes('photos-page') || (p.content || '').includes('stories-page') || (p.content || '').includes('ideas-page') || (p.content || '').includes('communities-page') || (p.content || '').includes('info-page') || (p.content || '').includes('requests-page') || (p.content || '').includes('questions-page') || (p.content || '').includes('offers-page') || p.id === 'page-ideas-main'));
     }
     // מוודאים שעמוד "רעיונות" קיים
     const _ipd = pList.find(p => p && p.id === 'page-ideas-main');
@@ -16212,6 +16212,14 @@ onValue(ref(db, 'website'), (snapshot) => {
       if (!_hpl.title || _hpl.title === 'קומיקס') _hpl.title = 'בית 🏠';
       _hpl.content = _hplc;
     }
+    // עמוד "מנוי" — קיים תמיד
+    const _subp = pList.find(p => p && p.id === 'page-subscription-main');
+    const _subpc = '<div class="subscription-page" data-page-id="page-subscription-main"></div>';
+    if (!_subp) {
+      pList.push({ id: 'page-subscription-main', title: 'מנוי 💎', content: _subpc });
+    } else {
+      _subp.content = _subpc; if (!_subp.title) _subp.title = 'מנוי 💎';
+    }
     // מסירים את העמודים "יד שניה" ו"השוואת מחירים"
     pList = pList.filter(p => p && !REMOVED_PHOTO_PAGE_IDS.includes(p.id));
     if (JSON.stringify(pages) !== JSON.stringify(pList)) {
@@ -16246,6 +16254,10 @@ onValue(ref(db, 'website'), (snapshot) => {
       navs = navs.filter(id => id !== 'page-home-feed');
       const _hci = navs.indexOf('page-communities-main');
       if (_hci >= 0) navs.splice(_hci + 1, 0, 'page-home-feed'); else navs.push('page-home-feed');
+    }
+    // עמוד "מנוי" תמיד מופיע בתפריט העליון
+    if (pages.some(p => p && p.id === 'page-subscription-main') && !navs.includes('page-subscription-main')) {
+      navs.push('page-subscription-main');
     }
     if (JSON.stringify(topNavPages) !== JSON.stringify(navs)) {
       topNavPages = navs;
