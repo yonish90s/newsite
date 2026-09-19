@@ -13374,17 +13374,26 @@ async function syncUserLikeBudget(user) {
 window.syncUserLikeBudget = syncUserLikeBudget;
 
 function photoToggleLike(id) {
-  const container = mainContent.querySelector('.photos-page, .community-page, .user-page');
-  if (!container) return;
-  
-  const user = auth.currentUser;
-  const localKey = user ? `liked_galleries_${user.uid}` : 'guest_liked_galleries';
-  
+  // מחפשים container — גם בעמוד תמונות וגם בעמוד הבית (stories-page)
+  let container = mainContent.querySelector('.photos-page, .community-page, .user-page');
+  let isHomeFeed = false;
   let albums = [];
-  try { albums = JSON.parse(decodeURIComponent(container.dataset.photosJson)); } catch(e){ return; }
+
+  if (container) {
+    try { albums = JSON.parse(decodeURIComponent(container.dataset.photosJson)); } catch(e){ return; }
+  } else {
+    // עמוד הבית — סיפורים/קומיקס
+    container = mainContent.querySelector('.stories-page, .home-feed-page');
+    if (!container) return;
+    isHomeFeed = true;
+    try { albums = JSON.parse(decodeURIComponent(container.dataset.storiesJson)); } catch(e){ return; }
+  }
   
   const album = albums.find(a => a.id === id);
   if (!album) return;
+
+  const user = auth.currentUser;
+  const localKey = user ? `liked_galleries_${user.uid}` : 'guest_liked_galleries';
 
   let liked = {};
   try {
@@ -13417,14 +13426,50 @@ function photoToggleLike(id) {
   localStorage.setItem(localKey, JSON.stringify(liked));
   localStorage.setItem('liked_galleries', JSON.stringify(liked));
 
-  const newJson = encodeURIComponent(JSON.stringify(albums));
-  const isDetailView = mainContent.querySelector('.art-detail') !== null;
-  if (isDetailView) {
-    photoOpenDetail(id);
-    const newContainer = mainContent.querySelector('.photos-page, .community-page, .user-page');
-    if (newContainer) newContainer.dataset.photosJson = newJson;
+  if (isHomeFeed) {
+    // בעמוד הבית: עדכון ויזואלי של כפתור הלב במקום ללא בנייה מחדש של כל העמוד
+    const newJson = encodeURIComponent(JSON.stringify(albums));
+    container.dataset.storiesJson = newJson;
+    // מחפשים את כרטיס הסיפור הספציפי ומעדכנים את הלב
+    const allHearts = mainContent.querySelectorAll('.art-heart-overlay');
+    allHearts.forEach(btn => {
+      const card = btn.closest('.art-row, .art-card, .story-card');
+      if (!card) return;
+      const onclick = card.getAttribute('onclick') || '';
+      if (onclick.includes(id)) {
+        const isNowLiked = !!liked[id];
+        btn.classList.toggle('liked', isNowLiked);
+        const svg = btn.querySelector('svg');
+        if (svg) {
+          svg.setAttribute('fill', isNowLiked ? '#ff2e4d' : 'none');
+          svg.setAttribute('stroke', isNowLiked ? '#ff2e4d' : '#ffffff');
+        }
+      }
+    });
+    // מעדכנים את מספר הלייקים בטקסט
+    const allRows = mainContent.querySelectorAll('.art-row, .art-card');
+    allRows.forEach(row => {
+      const onclick = row.getAttribute('onclick') || '';
+      if (onclick.includes(id)) {
+        const likesSpan = row.querySelector('.art-row-text span, .photo-card-info span');
+        // מחפשים ❤️ + מספר לייקים
+        row.querySelectorAll('span').forEach(sp => {
+          if (sp.textContent.includes('לייקים')) {
+            sp.textContent = `❤️ ${album.likes || 0} לייקים`;
+          }
+        });
+      }
+    });
   } else {
-    mainContent.innerHTML = buildPhotosPage(albums);
+    const newJson = encodeURIComponent(JSON.stringify(albums));
+    const isDetailView = mainContent.querySelector('.art-detail') !== null;
+    if (isDetailView) {
+      photoOpenDetail(id);
+      const newContainer = mainContent.querySelector('.photos-page, .community-page, .user-page');
+      if (newContainer) newContainer.dataset.photosJson = newJson;
+    } else {
+      mainContent.innerHTML = buildPhotosPage(albums);
+    }
   }
   
   saveCurrentPageContent();
