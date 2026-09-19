@@ -13415,7 +13415,7 @@ function photoIsSavedLocal(id) {
 }
 window.photoIsSavedLocal = photoIsSavedLocal;
 
-function photoToggleSave(id) {
+function photoToggleSave(id, btnEl) {
   const user = auth.currentUser;
   const localKey = user ? `saved_galleries_${user.uid}` : 'guest_saved_galleries';
 
@@ -13424,10 +13424,11 @@ function photoToggleSave(id) {
     saved = JSON.parse(localStorage.getItem(localKey) || '{}');
   } catch (e) {}
 
-  if (saved[id]) {
-    delete saved[id];
-  } else {
+  const isNowSaved = !saved[id];
+  if (isNowSaved) {
     saved[id] = true;
+  } else {
+    delete saved[id];
   }
 
   localStorage.setItem(localKey, JSON.stringify(saved));
@@ -13438,21 +13439,43 @@ function photoToggleSave(id) {
       set(userSavedRef, saved);
     } catch (e) {}
   }
-  
-  const container = mainContent.querySelector('.photos-page, .community-page, .user-page');
-  if (container) {
-    let albums = [];
-    try { albums = JSON.parse(decodeURIComponent(container.dataset.photosJson)); } catch(e){ return; }
-    
-    const isDetailView = mainContent.querySelector('.art-detail') !== null;
-    const activeDetailId = isDetailView ? mainContent.querySelector('.art-detail').dataset.photoId : null;
-    
-    if (isDetailView && activeDetailId) {
-      photoOpenDetail(activeDetailId);
-      const newContainer = mainContent.querySelector('.photos-page, .community-page, .user-page');
-      if (newContainer) newContainer.dataset.photosJson = encodeURIComponent(JSON.stringify(albums));
-    } else {
-      mainContent.innerHTML = buildPhotosPage(albums);
+
+  // עדכון מיידי ומקומי של כפתורי שמירה של פריט זה בכל מקום בעמוד
+  const allSaveButtons = document.querySelectorAll(`button[onclick*="photoToggleSave('${id}')"], button[onclick*='photoToggleSave("${id}")']`);
+  allSaveButtons.forEach(btn => {
+    btn.classList.toggle('is-saved', isNowSaved);
+    btn.title = isNowSaved ? 'הסר משמורים' : 'שמור לצפייה מאוחרת';
+    const span = btn.querySelector('span');
+    if (span) span.textContent = isNowSaved ? 'שמור' : 'שמירה';
+    const svg = btn.querySelector('svg');
+    if (svg) svg.setAttribute('fill', isNowSaved ? '#ffffff' : 'none');
+  });
+
+  // אם זה כפתור ספציפי שהועבר
+  if (btnEl) {
+    btnEl.classList.toggle('is-saved', isNowSaved);
+    btnEl.title = isNowSaved ? 'הסר משמורים' : 'שמור לצפייה מאוחרת';
+    const span = btnEl.querySelector('span');
+    if (span) span.textContent = isNowSaved ? 'שמור' : 'שמירה';
+    const svg = btnEl.querySelector('svg');
+    if (svg) svg.setAttribute('fill', isNowSaved ? '#ffffff' : 'none');
+  }
+
+  if (typeof showCopyToast === 'function') {
+    showCopyToast(isNowSaved ? 'הפריט נשמר בהצלחה! 🔖' : 'הפריט הוסר מהשמורים');
+  }
+
+  // אם אנחנו בתוך עמוד תצוגת פריט מפורט בלבד
+  const isDetailView = mainContent.querySelector('.art-detail') !== null;
+  const activeDetailId = isDetailView ? mainContent.querySelector('.art-detail').dataset.photoId : null;
+  if (isDetailView && activeDetailId && activeDetailId === id) {
+    // שומרים נתון מבלי להעיף את המשתמש
+    const container = mainContent.querySelector('.photos-page, .community-page, .user-page');
+    if (container && container.dataset && container.dataset.photosJson) {
+      try {
+        let albums = JSON.parse(decodeURIComponent(container.dataset.photosJson));
+        container.dataset.photosJson = encodeURIComponent(JSON.stringify(albums));
+      } catch(e) {}
     }
   }
 }
