@@ -13334,23 +13334,89 @@ async function syncUserLikeBudget(user) {
 window.syncUserLikeBudget = syncUserLikeBudget;
 
 function photoToggleLike(id) {
-  // מחפשים container — גם בעמוד תמונות וגם בעמוד הבית (stories-page)
-  let container = mainContent.querySelector('.photos-page, .community-page, .user-page');
-  let isHomeFeed = false;
-  let albums = [];
+  const isHomeFeed = (typeof activePageId !== 'undefined' && activePageId === 'page-home-feed') ||
+                     (mainContent && !!mainContent.querySelector('.home-feed-page'));
 
-  if (container) {
-    try { albums = JSON.parse(decodeURIComponent(container.dataset.photosJson)); } catch(e){ return; }
+  let item = null;
+  let itemKind = 'photo'; // 'photo' | 'story'
+  let storiesContainer = null;
+  let photosContainer = null;
+  let storiesList = [];
+  let photosList = [];
+
+  if (isHomeFeed) {
+    // בעמוד הבית מחפשים תחילה בקונטיינר הסיפורים/קומיקס, ואז בקונטיינר התמונות
+    storiesContainer = mainContent.querySelector('.home-feed-stories, .stories-page');
+    if (storiesContainer && storiesContainer.dataset && storiesContainer.dataset.storiesJson) {
+      try {
+        storiesList = JSON.parse(decodeURIComponent(storiesContainer.dataset.storiesJson));
+        if (Array.isArray(storiesList)) {
+          item = storiesList.find(s => s && s.id === id);
+          if (item) itemKind = 'story';
+        }
+      } catch (e) {}
+    }
+
+    if (!item) {
+      photosContainer = mainContent.querySelector('.home-feed-photos, .photos-page');
+      if (photosContainer && photosContainer.dataset && photosContainer.dataset.photosJson) {
+        try {
+          photosList = JSON.parse(decodeURIComponent(photosContainer.dataset.photosJson));
+          if (Array.isArray(photosList)) {
+            item = photosList.find(p => p && p.id === id);
+            if (item) itemKind = 'photo';
+          }
+        } catch (e) {}
+      }
+    }
   } else {
-    // עמוד הבית — סיפורים/קומיקס
-    container = mainContent.querySelector('.stories-page, .home-feed-page');
-    if (!container) return;
-    isHomeFeed = true;
-    try { albums = JSON.parse(decodeURIComponent(container.dataset.storiesJson)); } catch(e){ return; }
+    // עמוד שאינו עמוד הבית — בדיקה האם זה עמוד סיפורים או עמוד תמונות/קהילה
+    const sContainer = mainContent.querySelector('.stories-page');
+    const pContainer = mainContent.querySelector('.photos-page, .community-page, .user-page');
+
+    if (sContainer && sContainer.dataset && sContainer.dataset.storiesJson) {
+      try {
+        storiesList = JSON.parse(decodeURIComponent(sContainer.dataset.storiesJson));
+        if (Array.isArray(storiesList)) {
+          item = storiesList.find(s => s && s.id === id);
+          if (item) {
+            itemKind = 'story';
+            storiesContainer = sContainer;
+          }
+        }
+      } catch (e) {}
+    }
+
+    if (!item && pContainer && pContainer.dataset && pContainer.dataset.photosJson) {
+      try {
+        photosList = JSON.parse(decodeURIComponent(pContainer.dataset.photosJson));
+        if (Array.isArray(photosList)) {
+          item = photosList.find(p => p && p.id === id);
+          if (item) {
+            itemKind = 'photo';
+            photosContainer = pContainer;
+          }
+        }
+      } catch (e) {}
+    }
   }
-  
-  const album = albums.find(a => a.id === id);
-  if (!album) return;
+
+  // אם הפריט לא נמצא בקונטיינר ה-DOM המקומי, מחפשים אותו במאגר הכללי של העמודים
+  if (!item) {
+    if (typeof getAllStoriesFromPages === 'function') {
+      const allStories = getAllStoriesFromPages();
+      item = allStories.find(s => s && s.id === id);
+      if (item) itemKind = 'story';
+    }
+    if (!item && typeof getPhotosForHome === 'function') {
+      const allPhotos = getPhotosForHome();
+      item = allPhotos.find(p => p && p.id === id);
+      if (item) itemKind = 'photo';
+    }
+  }
+
+  // אם עדיין לא נמצא, יוצאים
+  if (!item) return;
 
   const user = auth.currentUser;
   const localKey = user ? `liked_galleries_${user.uid}` : 'guest_liked_galleries';
@@ -13372,11 +13438,11 @@ function photoToggleLike(id) {
 
   if (liked[id]) {
     delete liked[id];
-    album.likes = Math.max(0, (album.likes || 0) - 1);
+    item.likes = Math.max(0, (item.likes || 0) - 1);
     if (user) budget += 1;
   } else {
     liked[id] = true;
-    album.likes = (album.likes || 0) + 1;
+    item.likes = (item.likes || 0) + 1;
     if (user) budget = Math.max(0, budget - 1);
   }
 
@@ -13386,54 +13452,135 @@ function photoToggleLike(id) {
   localStorage.setItem(localKey, JSON.stringify(liked));
   localStorage.setItem('liked_galleries', JSON.stringify(liked));
 
-  if (isHomeFeed) {
-    // בעמוד הבית: עדכון ויזואלי של כפתור הלב במקום ללא בנייה מחדש של כל העמוד
-    const newJson = encodeURIComponent(JSON.stringify(albums));
-    container.dataset.storiesJson = newJson;
-    // מחפשים את כרטיס הסיפור הספציפי ומעדכנים את הלב
-    const allHearts = mainContent.querySelectorAll('.art-heart-overlay');
-    allHearts.forEach(btn => {
-      const card = btn.closest('.art-row, .art-card, .story-card');
-      if (!card) return;
-      const onclick = card.getAttribute('onclick') || '';
-      if (onclick.includes(id)) {
-        const isNowLiked = !!liked[id];
-        btn.classList.toggle('liked', isNowLiked);
-        const svg = btn.querySelector('svg');
-        if (svg) {
-          svg.setAttribute('fill', isNowLiked ? '#ff2e4d' : 'none');
-          svg.setAttribute('stroke', isNowLiked ? '#ff2e4d' : '#ffffff');
+  const isNowLiked = !!liked[id];
+
+  // 1. עדכון ויזואלי מיידי של כל כפתורי הלב של פריט זה בכל מקום ב-DOM (בעמוד הבית או בכל עמוד אחר)
+  const allHearts = document.querySelectorAll('.art-heart-overlay');
+  allHearts.forEach(btn => {
+    const card = btn.closest('.art-row, .art-card, .story-card');
+    const onclickAttr = (btn.getAttribute('onclick') || '') + ' ' + (card ? (card.getAttribute('onclick') || '') : '');
+    if (onclickAttr.includes(id)) {
+      btn.classList.toggle('liked', isNowLiked);
+      const svg = btn.querySelector('svg');
+      if (svg) {
+        svg.setAttribute('fill', isNowLiked ? '#ff2e4d' : 'none');
+        svg.setAttribute('stroke', isNowLiked ? '#ff2e4d' : '#ffffff');
+      }
+    }
+  });
+
+  // 2. עדכון כפתורי לייק תחת photo-like-btn (כגון בעמודי פרטים)
+  const allPhotoLikeBtns = document.querySelectorAll('.photo-like-btn');
+  allPhotoLikeBtns.forEach(btn => {
+    const onclickAttr = btn.getAttribute('onclick') || '';
+    if (onclickAttr.includes(id)) {
+      btn.style.background = isNowLiked ? '#ffe4e6' : '#ffffff';
+      btn.style.borderColor = isNowLiked ? '#e11d48' : '#e2e8f0';
+      btn.style.color = isNowLiked ? '#e11d48' : '#1e293b';
+      const svg = btn.querySelector('svg');
+      if (svg) {
+        svg.setAttribute('fill', isNowLiked ? '#e11d48' : 'none');
+        svg.setAttribute('stroke', '#e11d48');
+      }
+      const span = btn.querySelector('span');
+      if (span) {
+        span.textContent = `${item.likes || 0} לייקים`;
+      }
+    }
+  });
+
+  // 3. עדכון כפתורי art-telegram-btn של לייק
+  const allTgLikeBtns = document.querySelectorAll('.art-telegram-btn');
+  allTgLikeBtns.forEach(btn => {
+    const onclickAttr = btn.getAttribute('onclick') || '';
+    if (onclickAttr.includes(id) && onclickAttr.includes('photoToggleLike')) {
+      btn.style.color = isNowLiked ? '#ff2e4d' : '#ffffff';
+      const svg = btn.querySelector('svg');
+      if (svg) {
+        svg.setAttribute('fill', isNowLiked ? '#ff2e4d' : 'none');
+        svg.setAttribute('stroke', isNowLiked ? '#ff2e4d' : 'currentColor');
+      }
+      const span = btn.querySelector('span');
+      if (span && !isNaN(parseInt(span.textContent, 10))) {
+        span.textContent = item.likes || 0;
+      }
+    }
+  });
+
+  // 4. עדכון מונה הלייקים בכרטיסים ובשורות (❤️ X לייקים)
+  const allCardsAndRows = document.querySelectorAll('.art-row, .art-card, .story-card');
+  allCardsAndRows.forEach(row => {
+    const onclickAttr = row.getAttribute('onclick') || '';
+    if (onclickAttr.includes(id)) {
+      row.querySelectorAll('span').forEach(sp => {
+        if (sp.textContent.includes('לייקים')) {
+          sp.textContent = `❤️ ${item.likes || 0} לייקים`;
         }
-      }
-    });
-    // מעדכנים את מספר הלייקים בטקסט
-    const allRows = mainContent.querySelectorAll('.art-row, .art-card');
-    allRows.forEach(row => {
-      const onclick = row.getAttribute('onclick') || '';
-      if (onclick.includes(id)) {
-        const likesSpan = row.querySelector('.art-row-text span, .photo-card-info span');
-        // מחפשים ❤️ + מספר לייקים
-        row.querySelectorAll('span').forEach(sp => {
-          if (sp.textContent.includes('לייקים')) {
-            sp.textContent = `❤️ ${album.likes || 0} לייקים`;
-          }
-        });
-      }
-    });
-  } else {
-    const newJson = encodeURIComponent(JSON.stringify(albums));
-    const isDetailView = mainContent.querySelector('.art-detail') !== null;
-    if (isDetailView) {
-      photoOpenDetail(id);
-      const newContainer = mainContent.querySelector('.photos-page, .community-page, .user-page');
-      if (newContainer) newContainer.dataset.photosJson = newJson;
-    } else {
-      mainContent.innerHTML = buildPhotosPage(albums);
+      });
+    }
+  });
+
+  // 5. שמירת הנתונים המעודכנים ב-DOM של עמוד הבית (dataset)
+  if (isHomeFeed) {
+    if (itemKind === 'story' && storiesContainer && storiesList.length) {
+      storiesContainer.dataset.storiesJson = encodeURIComponent(JSON.stringify(storiesList));
+    } else if (itemKind === 'photo' && photosContainer && photosList.length) {
+      photosContainer.dataset.photosJson = encodeURIComponent(JSON.stringify(photosList));
     }
   }
-  
-  saveCurrentPageContent();
 
+  // 6. סנכרון ושמירה במאגר הראשי (pages) וב-localStorage / Firebase
+  try {
+    if (typeof pages !== 'undefined' && Array.isArray(pages)) {
+      let pageModified = false;
+      pages.forEach(p => {
+        if (!p || !p.content) return;
+        if (itemKind === 'story' && p.content.includes('data-stories-json=')) {
+          const m = p.content.match(/data-stories-json="([^"]*)"/);
+          if (m) {
+            try {
+              let arr = JSON.parse(decodeURIComponent(m[1]));
+              if (Array.isArray(arr)) {
+                const target = arr.find(x => x && x.id === id);
+                if (target) {
+                  target.likes = item.likes;
+                  p.content = p.content.replace(/data-stories-json="[^"]*"/, `data-stories-json="${encodeURIComponent(JSON.stringify(arr))}"`);
+                  pageModified = true;
+                }
+              }
+            } catch (e) {}
+          }
+        } else if (itemKind === 'photo' && p.content.includes('data-photos-json=')) {
+          const m = p.content.match(/data-photos-json="([^"]*)"/);
+          if (m) {
+            try {
+              let arr = JSON.parse(decodeURIComponent(m[1]));
+              if (Array.isArray(arr)) {
+                const target = arr.find(x => x && x.id === id);
+                if (target) {
+                  target.likes = item.likes;
+                  p.content = p.content.replace(/data-photos-json="[^"]*"/, `data-photos-json="${encodeURIComponent(JSON.stringify(arr))}"`);
+                  pageModified = true;
+                }
+              }
+            } catch (e) {}
+          }
+        }
+      });
+      if (pageModified && typeof saveToStorage === 'function') {
+        saveToStorage();
+      }
+    }
+  } catch (e) {
+    console.error('Error saving updated likes to pages:', e);
+  }
+
+  // 7. אם אנחנו בעמוד תמונות רגיל (לא עמוד הבית) ואיננו בתצוגת פיד, נשמור את תוכן העמוד הנוכחי
+  if (!isHomeFeed) {
+    saveCurrentPageContent();
+  }
+
+  // 8. סנכרון תקציב הלייקים ל-Firebase
   if (user) {
     setTimeout(async () => {
       try {
