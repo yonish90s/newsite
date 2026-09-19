@@ -6241,13 +6241,6 @@ function storyCardHTML(s, iconHint) {
     } else {
       miniThumbnailsHTML = `
         <div class="photo-mini-thumbs" style="display: flex; align-items: center; justify-content: center; gap: 4px; margin-top: 6px; width: 100%; direction: ltr;">
-          <button type="button" 
-                  onclick="event.stopPropagation(); photoStepRowImage('${artEsc(s.id)}', -1, this)" 
-                  title="תמונה קודמת" 
-                  style="width: 22px; height: 22px; border-radius: 50%; background: #3b82f6; color: #fff; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.15s ease;">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-          </button>
-
           <div class="photo-mini-thumbs-list" style="display: flex; gap: 4px; justify-content: center; flex-wrap: wrap; flex: 1; min-width: 0;">
             ${validImages.map((imgUrl, idx) => `
               <div class="photo-mini-thumb" 
@@ -6257,13 +6250,6 @@ function storyCardHTML(s, iconHint) {
               </div>
             `).join('')}
           </div>
-
-          <button type="button" 
-                  onclick="event.stopPropagation(); photoStepRowImage('${artEsc(s.id)}', 1, this)" 
-                  title="תמונה הבאה" 
-                  style="width: 22px; height: 22px; border-radius: 50%; background: #3b82f6; color: #fff; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.15s ease;">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-          </button>
         </div>
       `;
     }
@@ -6338,12 +6324,6 @@ function storyCardHTML(s, iconHint) {
         <div class="art-row-img-container" style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0;">
           <div class="art-row-img-wrap" style="--bg-img: url('${mainImg || ''}');">
             ${mainImg ? `<img src="${mainImg}" alt="">` : `<div class="art-row-img-placeholder" data-icon="${defaultIcon}"></div>`}
-            <button type="button" class="photo-nav-overlay prev" onclick="event.stopPropagation(); photoUploadScroll(this, -1)" title="ההעלאה הקודמת" aria-label="ההעלאה הקודמת">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-            </button>
-            <button type="button" class="photo-nav-overlay next" onclick="event.stopPropagation(); photoUploadScroll(this, 1)" title="ההעלאה הבאה" aria-label="ההעלאה הבאה">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-            </button>
             ${validImages.length > 1 ? `<div class="photo-count-badge">1 / ${validImages.length}</div>` : ''}
             ${mainImg ? `<button class="art-zoom-btn" onclick="event.stopPropagation();artGalleryById('stories','${artEsc(s.id)}', this.closest('.art-row-img-wrap').querySelector('img') && this.closest('.art-row-img-wrap').querySelector('img').getAttribute('src'))" title="מסך מלא">⛶</button>` : ''}
             ${cardHeartOverlay}
@@ -7456,13 +7436,6 @@ function renderPhotoCard(p, options = {}) {
   if (validImages.length > 1) {
     miniThumbnailsHTML = `
       <div class="photo-mini-thumbs" style="display: flex; align-items: center; justify-content: center; gap: 4px; margin-top: 6px; width: 100%; direction: ltr;">
-        <button type="button"
-                onclick="event.stopPropagation(); photoStepRowImage('${artEsc(p.id)}', -1, this)"
-                title="תמונה קודמת"
-                style="width: 22px; height: 22px; border-radius: 50%; background: #3b82f6; color: #fff; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.15s ease;">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-        </button>
-
         <div class="photo-mini-thumbs-list" style="display: flex; gap: 4px; justify-content: center; flex-wrap: wrap; flex: 1; min-width: 0;">
           ${validImages.map((imgUrl, idx) => `
             <div class="photo-mini-thumb"
@@ -7472,13 +7445,6 @@ function renderPhotoCard(p, options = {}) {
             </div>
           `).join('')}
         </div>
-
-        <button type="button"
-                onclick="event.stopPropagation(); photoStepRowImage('${artEsc(p.id)}', 1, this)"
-                title="תמונה הבאה"
-                style="width: 22px; height: 22px; border-radius: 50%; background: #3b82f6; color: #fff; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.15s ease;">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-        </button>
       </div>
     `;
   }
@@ -7597,12 +7563,6 @@ function renderPhotoCard(p, options = {}) {
       <div class="art-row-img-container" style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0;">
         <div class="art-row-img-wrap" style="--bg-img: url('${mainImg || ''}');">
           ${mainImg ? `<img src="${mainImg}" alt="">` : '<div class="art-row-img-placeholder"></div>'}
-          <button type="button" class="photo-nav-overlay prev" onclick="event.stopPropagation(); photoUploadScroll(this, -1)" title="ההעלאה הקודמת" aria-label="ההעלאה הקודמת">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-          </button>
-          <button type="button" class="photo-nav-overlay next" onclick="event.stopPropagation(); photoUploadScroll(this, 1)" title="ההעלאה הבאה" aria-label="ההעלאה הבאה">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-          </button>
           ${validImages.length > 1 ? `<div class="photo-count-badge">1 / ${validImages.length}</div>` : ''}
           ${mainImg ? `<button class="art-zoom-btn" onclick="event.stopPropagation();artGalleryById('photos','${artEsc(p.id)}', this.closest('.art-row-img-wrap').querySelector('img') && this.closest('.art-row-img-wrap').querySelector('img').getAttribute('src'))" title="מסך מלא">⛶</button>` : ''}
           ${cardHeartOverlay}
