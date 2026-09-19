@@ -11009,7 +11009,7 @@ function buildHomeFeedPage() {
     <div class="photo-section-row home-feed-section" style="margin:0 0 24px; background:#fff; padding:18px; border-radius:16px; border:1px solid #e2e8f0; box-shadow:0 4px 15px rgba(0,0,0,0.03);">
       <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:2.5px solid ${border}; padding-bottom:10px; margin-bottom:18px;">
         <h3 style="margin:0; font-size:18px; font-weight:900; color:${color};">${title} (4 אחרונים)</h3>
-        <button class="home-feed-open" onclick="event.stopPropagation(); navigateToPage('${targetId}')" style="background:${border}; color:#fff; border:none; border-radius:8px; padding:7px 14px; font-size:13px; font-weight:700; cursor:pointer;">פתח הכל ←</button>
+        <button class="home-feed-open" onclick="event.stopPropagation(); homeOpenSection('${targetId}')" style="background:${border}; color:#fff; border:none; border-radius:8px; padding:7px 14px; font-size:13px; font-weight:700; cursor:pointer;">פתח הכל ←</button>
       </div>
       <div class="art-rows photo-collapsible expanded" style="grid-template-columns: repeat(4, 1fr) !important;">${items.slice(0, maxPerRow).map(s => storyCardHTML(s, iconHint)).join('')}</div>
     </div>`;
@@ -11029,14 +11029,73 @@ function buildHomeFeedPage() {
 }
 window.buildHomeFeedPage = buildHomeFeedPage;
 
+function homeOpenSection(targetId) {
+  try {
+    if (targetId === 'page-photos-main') {
+      homeOpenPhotos();
+      return;
+    }
+    let targetPage = (typeof pages !== 'undefined' && Array.isArray(pages)) ? pages.find(p => p && p.id === targetId) : null;
+    if (!targetPage && Array.isArray(pages)) {
+      if (targetId === 'page-stories-main') {
+        targetPage = pages.find(p => p && (p.title === 'קומיקס' || (p.content || '').includes('data-story-kind="comics"')));
+        if (!targetPage) {
+          targetPage = { id: 'page-stories-main', title: 'קומיקס', content: typeof buildStoriesPage === 'function' ? buildStoriesPage([], 'comics') : '' };
+          pages.push(targetPage);
+        }
+      } else if (targetId === 'page-stories-text') {
+        targetPage = pages.find(p => p && (p.title === 'סיפורים' || (p.content || '').includes('data-story-kind="stories"')));
+        if (!targetPage) {
+          targetPage = { id: 'page-stories-text', title: 'סיפורים', content: typeof buildStoriesPage === 'function' ? buildStoriesPage([], 'stories') : '' };
+          pages.push(targetPage);
+        }
+      }
+    }
+    const finalId = targetPage ? targetPage.id : targetId;
+    if (typeof navigateToPage === 'function') {
+      navigateToPage(finalId);
+    } else {
+      window.__detailOpen = false;
+      activePageId = finalId;
+      if (typeof renderPage === 'function') renderPage();
+    }
+  } catch (e) {
+    console.error('homeOpenSection error:', e);
+  }
+}
+window.homeOpenSection = homeOpenSection;
+
 // "פתח הכל" של שורת התמונות — מנווט לעמוד התמונות
 function homeOpenPhotos() {
   try {
-    const pp = (typeof pages !== 'undefined' && Array.isArray(pages))
-      ? (pages.find(p => p && (p.content || '').includes('data-section="photos"')) || pages.find(p => p && (p.title || '').includes('תמונות')))
+    let pp = (typeof pages !== 'undefined' && Array.isArray(pages))
+      ? (pages.find(p => p && p.id === 'page-photos-main')
+         || pages.find(p => p && (p.content || '').includes('data-section="photos"'))
+         || pages.find(p => p && (p.title || '').includes('תמונות'))
+         || pages.find(p => p && (p.content || '').includes('photos-page')))
       : null;
-    if (pp && typeof navigateToPage === 'function') navigateToPage(pp.id);
-  } catch (e) {}
+
+    if (!pp && Array.isArray(pages)) {
+      pp = {
+        id: 'page-photos-main',
+        title: 'תמונות 🖼️',
+        content: (typeof buildPhotosPage === 'function') ? buildPhotosPage(typeof PHOTOS_SAMPLES !== 'undefined' ? PHOTOS_SAMPLES : []) : ''
+      };
+      pages.push(pp);
+    }
+
+    if (pp) {
+      if (typeof navigateToPage === 'function') {
+        navigateToPage(pp.id);
+      } else {
+        window.__detailOpen = false;
+        activePageId = pp.id;
+        if (typeof renderPage === 'function') renderPage();
+      }
+    }
+  } catch (e) {
+    console.error('homeOpenPhotos error:', e);
+  }
 }
 window.homeOpenPhotos = homeOpenPhotos;
 
