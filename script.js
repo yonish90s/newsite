@@ -6547,6 +6547,8 @@ function storyOpenDetail(id) {
       </div>
     `;
     if (typeof subscribeStoryComments === 'function') subscribeStoryComments(id);
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    if (mainContent) mainContent.scrollTop = 0;
     return;
   }
 
@@ -6605,6 +6607,8 @@ function storyOpenDetail(id) {
 
   if (typeof subscribeStoryComments === 'function') subscribeStoryComments(id);
   storyRenderPage();
+  window.scrollTo({ top: 0, behavior: 'instant' });
+  if (mainContent) mainContent.scrollTop = 0;
 }
 
 // מציג את העמוד הנוכחי של הסיפור (תמונה או טקסט מודגש)
@@ -6768,6 +6772,7 @@ function storyGoBack() {
   try { stories = JSON.parse(decodeURIComponent(container.dataset.storiesJson)); } catch(e){}
   mainContent.innerHTML = buildStoriesPage(stories, storyGetCurrentKind());
   if (isEditMode) applyEditModeToContent();
+  window.scrollTo({ top: 0, behavior: 'instant' });
 }
 
 function storyGetStories() {
