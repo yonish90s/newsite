@@ -5513,3 +5513,432 @@ html.hide-site-images .photo-mini-thumb {
   .story-article-meta { font-size: 14px; }
   .story-article-fontsize { position: static; justify-content: flex-start; margin-bottom: 10px; }
 }
+
+/* ============================================================
+   וידג'ט העלאה מהירה לעמוד הבית (Quick Upload Hero Widget)
+   ============================================================ */
+.quick-upload-hero-container {
+  margin: 0 0 28px;
+  width: 100%;
+  direction: rtl;
+}
+
+.qu-hero-card {
+  position: relative;
+  background: #ffffff;
+  border-radius: 24px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
+  padding: 36px 32px 32px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.qu-back-btn {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s;
+}
+
+.qu-back-btn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.qu-progress-dots {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 22px;
+}
+
+.qu-step-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  transition: all 0.3s ease;
+}
+
+.qu-step-dot.active {
+  width: 26px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #e11d48, #8b5cf6);
+}
+
+.qu-step-dot.done {
+  background: #cbd5e1;
+}
+
+.qu-hero-title {
+  font-size: 34px;
+  font-weight: 900;
+  color: #0f172a;
+  letter-spacing: -0.03em;
+  line-height: 1.25;
+  margin-bottom: 8px;
+}
+
+.qu-gradient-text {
+  background: linear-gradient(135deg, #e11d48, #8b5cf6, #3b82f6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+}
+
+.qu-hero-subtitle {
+  font-size: 15px;
+  color: #64748b;
+  font-weight: 600;
+  margin-bottom: 28px;
+}
+
+.qu-input-area {
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+/* אפשרויות בחירה (שלב 1) */
+.qu-options-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.qu-dest-pill {
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 18px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.qu-dest-pill:hover {
+  transform: translateY(-2px);
+  border-color: #cbd5e1;
+  background: #ffffff;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.04);
+}
+
+.qu-dest-pill.active {
+  background: #ffffff;
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15), 0 8px 20px rgba(139, 92, 246, 0.08);
+}
+
+.qu-dest-pill .qu-pill-icon {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.qu-dest-pill .qu-pill-text strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.qu-dest-pill .qu-pill-text small {
+  display: block;
+  font-size: 11.5px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+/* שורת קלט עם כפתור חץ למעלה */
+.qu-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 16px;
+  padding: 6px 8px 6px 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+  transition: all 0.25s ease;
+}
+
+.qu-input-wrapper:focus-within {
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.12), 0 8px 25px rgba(0, 0, 0, 0.05);
+}
+
+.qu-text-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 16px;
+  font-weight: 600;
+  color: #0f172a;
+  background: transparent;
+  font-family: inherit;
+  padding: 10px 4px;
+  direction: rtl;
+}
+
+.qu-text-input::placeholder {
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+.qu-input-wrapper.is-textarea {
+  flex-direction: column;
+  align-items: stretch;
+  padding: 14px;
+}
+
+.qu-textarea-input {
+  width: 100%;
+  border: none;
+  outline: none;
+  font-size: 15px;
+  color: #0f172a;
+  background: transparent;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 80px;
+  direction: rtl;
+}
+
+.qu-textarea-input::placeholder {
+  color: #94a3b8;
+}
+
+.qu-input-wrapper.is-textarea .qu-arrow-btn {
+  align-self: flex-end;
+  margin-top: 8px;
+}
+
+.qu-arrow-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #e11d48, #9333ea);
+  color: #ffffff;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(147, 51, 234, 0.3);
+  transition: all 0.2s ease;
+}
+
+.qu-arrow-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 18px rgba(147, 51, 234, 0.4);
+}
+
+.qu-arrow-btn:active {
+  transform: scale(0.96);
+}
+
+.qu-input-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* שבבי קטגוריה */
+.qu-chips-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.qu-cat-chip {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.qu-cat-chip:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.qu-cat-chip.active {
+  background: linear-gradient(135deg, #e11d48, #8b5cf6);
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 3px 10px rgba(139, 92, 246, 0.25);
+}
+
+/* שלב 6: העלאת תמונות וסיום */
+.qu-upload-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.qu-thumbs-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  align-items: center;
+}
+
+.qu-thumb-item {
+  position: relative;
+  width: 90px;
+  height: 90px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 2px solid #e2e8f0;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+}
+
+.qu-thumb-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.qu-thumb-remove {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  background: rgba(0, 0, 0, 0.65);
+  color: #ffffff;
+  border: none;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  font-size: 11px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.qu-thumb-remove:hover {
+  background: #e11d48;
+}
+
+.qu-add-photo-btn {
+  width: 90px;
+  height: 90px;
+  border-radius: 12px;
+  border: 2px dashed #cbd5e1;
+  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.qu-add-photo-btn:hover {
+  border-color: #8b5cf6;
+  color: #8b5cf6;
+  background: #f5f3ff;
+}
+
+.qu-final-actions {
+  width: 100%;
+  max-width: 320px;
+}
+
+.qu-publish-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #e11d48, #9333ea);
+  color: #ffffff;
+  border: none;
+  border-radius: 14px;
+  padding: 14px 24px;
+  font-size: 16px;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(225, 29, 72, 0.25);
+  transition: all 0.2s ease;
+}
+
+.qu-publish-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(225, 29, 72, 0.35);
+}
+
+.qu-publish-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.qu-publish-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* התאמות למובייל */
+@media (max-width: 768px) {
+  .qu-hero-card {
+    padding: 24px 16px 20px;
+    border-radius: 18px;
+  }
+  .qu-back-btn {
+    top: 16px;
+    right: 16px;
+    font-size: 12px;
+    padding: 4px 10px;
+  }
+  .qu-hero-title {
+    font-size: 24px;
+  }
+  .qu-hero-subtitle {
+    font-size: 13px;
+    margin-bottom: 20px;
+  }
+  .qu-options-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .qu-dest-pill {
+    flex-direction: row;
+    justify-content: flex-start;
+    padding: 12px 16px;
+    gap: 12px;
+    text-align: right;
+  }
+  .qu-dest-pill .qu-pill-icon {
+    font-size: 24px;
+  }
+  .qu-text-input {
+    font-size: 15px;
+  }
+}

@@ -10523,6 +10523,453 @@ function buildSiteStatsSection() {
 }
 window.buildSiteStatsSection = buildSiteStatsSection;
 
+// ============================================================
+// וידג'ט העלאה מהירה לעמוד הבית (5 שאלות + העלאת תמונה)
+// ============================================================
+window.quickUploadState = window.quickUploadState || {
+  step: 1, // 1 to 6
+  target: 'photos', // 'photos', 'comics', 'stories'
+  title: '',
+  category: 'כללי',
+  desc: '',
+  author: '',
+  images: [], // array of base64 strings
+  isSubmitting: false
+};
+
+function renderQuickUploadHero() {
+  const st = window.quickUploadState;
+  const currentStep = st.step || 1;
+
+  // כותרת עליונה בסגנון התמונה הרפרנסית עם גרדיאנט
+  let questionHeader = '';
+  let inputContent = '';
+
+  if (currentStep === 1) {
+    questionHeader = `
+      <div class="qu-hero-title">בואו להעלות תוכן <span class="qu-gradient-text">לויראלי</span></div>
+      <div class="qu-hero-subtitle">✨ שלב 1 מתוך 5: לאיזה אזור תרצו להעלות את התוכן שלכם?</div>
+    `;
+    inputContent = `
+      <div class="qu-options-grid">
+        <button type="button" class="qu-dest-pill ${st.target === 'photos' ? 'active' : ''}" onclick="quickUploadSetTarget('photos')">
+          <span class="qu-pill-icon">🖼️</span>
+          <div class="qu-pill-text">
+            <strong>תמונות</strong>
+            <small>אלבומים וגלריות תמונות</small>
+          </div>
+        </button>
+        <button type="button" class="qu-dest-pill ${st.target === 'comics' ? 'active' : ''}" onclick="quickUploadSetTarget('comics')">
+          <span class="qu-pill-icon">📖</span>
+          <div class="qu-pill-text">
+            <strong>קומיקס</strong>
+            <small>רצועות קומיקס ואיורים</small>
+          </div>
+        </button>
+        <button type="button" class="qu-dest-pill ${st.target === 'stories' ? 'active' : ''}" onclick="quickUploadSetTarget('stories')">
+          <span class="qu-pill-icon">✍️</span>
+          <div class="qu-pill-text">
+            <strong>סיפורים</strong>
+            <small>סיפורים קצרים ומאמרים</small>
+          </div>
+        </button>
+      </div>
+      <div class="qu-input-row" style="margin-top:16px;">
+        <div style="flex:1; font-size:13px; color:#64748b; text-align:right;">נבחר: <b>${st.target === 'photos' ? '🖼️ תמונות' : (st.target === 'comics' ? '📖 קומיקס' : '✍️ סיפורים')}</b></div>
+        <button type="button" class="qu-arrow-btn" onclick="quickUploadNext()" title="המשך לשלב הבא">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+        </button>
+      </div>
+    `;
+  } else if (currentStep === 2) {
+    const targetHebrew = st.target === 'photos' ? 'לתמונות' : (st.target === 'comics' ? 'לקומיקס' : 'לסיפור');
+    questionHeader = `
+      <div class="qu-hero-title">מה הכותרת <span class="qu-gradient-text">של התוכן?</span></div>
+      <div class="qu-hero-subtitle">✨ שלב 2 מתוך 5: כותרת קליטה שתמשוך קוראים וצופים</div>
+    `;
+    inputContent = `
+      <div class="qu-input-wrapper">
+        <input type="text" id="qu-input-field" class="qu-text-input" placeholder="לדוגמה: יום טיול מדהים בצפון / הרפתקה בחלל..." value="${artEsc(st.title || '')}" onkeydown="if(event.key==='Enter') quickUploadNext()" autofocus>
+        <button type="button" class="qu-arrow-btn" onclick="quickUploadNext()" title="המשך">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+        </button>
+      </div>
+    `;
+  } else if (currentStep === 3) {
+    const cats = ['כללי', 'הרפתקאות', 'הומור', 'מד״ב ופנטזיה', 'רומנטיקה', 'טבע ונופים', 'אמנות', 'חדשות וטכנולוגיה'];
+    questionHeader = `
+      <div class="qu-hero-title">באיזו קטגוריה <span class="qu-gradient-text">זה מתאים?</span></div>
+      <div class="qu-hero-subtitle">✨ שלב 3 מתוך 5: בחרו קטגוריה או הקלידו קטגוריה מותאמת אישית</div>
+    `;
+    const catChips = cats.map(c => `
+      <button type="button" class="qu-cat-chip ${st.category === c ? 'active' : ''}" onclick="quickUploadSetCat('${artEsc(c)}')">${artEsc(c)}</button>
+    `).join('');
+    inputContent = `
+      <div class="qu-chips-container">${catChips}</div>
+      <div class="qu-input-wrapper" style="margin-top:14px;">
+        <input type="text" id="qu-input-field" class="qu-text-input" placeholder="או הקלידו קטגוריה אחרת..." value="${artEsc(st.category || '')}" onkeydown="if(event.key==='Enter') quickUploadNext()">
+        <button type="button" class="qu-arrow-btn" onclick="quickUploadNext()" title="המשך">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+        </button>
+      </div>
+    `;
+  } else if (currentStep === 4) {
+    questionHeader = `
+      <div class="qu-hero-title">ספרו בקצרה <span class="qu-gradient-text">על התוכן</span></div>
+      <div class="qu-hero-subtitle">✨ שלב 4 מתוך 5: תיאור קצר, תקציר או הטקסט המלא שילווה את היצירה</div>
+    `;
+    inputContent = `
+      <div class="qu-input-wrapper is-textarea">
+        <textarea id="qu-input-field" class="qu-textarea-input" rows="3" placeholder="כתבו כאן כמה מילים או תיאור מפורט...">${artEsc(st.desc || '')}</textarea>
+        <button type="button" class="qu-arrow-btn" onclick="quickUploadNext()" title="המשך">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+        </button>
+      </div>
+    `;
+  } else if (currentStep === 5) {
+    questionHeader = `
+      <div class="qu-hero-title">מי היוצר / <span class="qu-gradient-text">פרטי קשר?</span></div>
+      <div class="qu-hero-subtitle">✨ שלב 5 מתוך 5: שם יוצר, טלגרם או אימייל שיופיע בכרטיס התוכן</div>
+    `;
+    inputContent = `
+      <div class="qu-input-wrapper">
+        <input type="text" id="qu-input-field" class="qu-text-input" placeholder="שם היוצר / כינוי / טלגרם (@username)..." value="${artEsc(st.author || '')}" onkeydown="if(event.key==='Enter') quickUploadNext()" autofocus>
+        <button type="button" class="qu-arrow-btn" onclick="quickUploadNext()" title="המשך להעלאת תמונות">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+        </button>
+      </div>
+    `;
+  } else if (currentStep === 6) {
+    // שלב העלאת תמונות ואישור סופי
+    questionHeader = `
+      <div class="qu-hero-title">העלאת תמונות <span class="qu-gradient-text">ופרסום</span></div>
+      <div class="qu-hero-subtitle">✨ שלב אחרון: בחרו תמונה אחת או יותר ליצירה שלכם ולחצו על פרסום</div>
+    `;
+    const thumbs = (st.images || []).map((img, i) => `
+      <div class="qu-thumb-item">
+        <img src="${img}" alt="thumb">
+        <button type="button" class="qu-thumb-remove" onclick="quickUploadRemoveImage(${i})" title="הסר תמונה">✕</button>
+      </div>
+    `).join('');
+
+    inputContent = `
+      <div class="qu-upload-box">
+        <div class="qu-thumbs-row">
+          ${thumbs}
+          ${(st.images || []).length < 6 ? `
+            <button type="button" class="qu-add-photo-btn" onclick="quickUploadPickFiles()">
+              <span style="font-size:24px;">📷</span>
+              <span>הוסף תמונה</span>
+            </button>
+          ` : ''}
+        </div>
+        <div class="qu-final-actions">
+          <button type="button" class="qu-publish-btn ${st.isSubmitting ? 'loading' : ''}" onclick="quickUploadFinalSubmit()" ${st.isSubmitting ? 'disabled' : ''}>
+            ${st.isSubmitting ? '⏳ מפרסם תוכן...' : '🚀 פרסם תוכן עכשיו'}
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  // פסי התקדמות שלבים (1 עד 6)
+  const stepsDots = [1, 2, 3, 4, 5, 6].map(s => {
+    const isDone = s < currentStep;
+    const isCurrent = s === currentStep;
+    return `<div class="qu-step-dot ${isDone ? 'done' : ''} ${isCurrent ? 'active' : ''}"></div>`;
+  }).join('');
+
+  return `
+    <div class="quick-upload-hero-container">
+      <div class="qu-hero-card">
+        ${currentStep > 1 ? `
+          <button type="button" class="qu-back-btn" onclick="quickUploadPrev()" title="חזור לשלב הקודם">
+            ← חזרה
+          </button>
+        ` : ''}
+        <div class="qu-progress-dots">
+          ${stepsDots}
+        </div>
+        ${questionHeader}
+        <div class="qu-input-area">
+          ${inputContent}
+        </div>
+      </div>
+    </div>
+  `;
+}
+window.renderQuickUploadHero = renderQuickUploadHero;
+
+function quickUploadSetTarget(target) {
+  window.quickUploadState.target = target;
+  quickUploadRefreshUI();
+}
+window.quickUploadSetTarget = quickUploadSetTarget;
+
+function quickUploadSetCat(cat) {
+  window.quickUploadState.category = cat;
+  const f = document.getElementById('qu-input-field');
+  if (f) f.value = cat;
+  quickUploadRefreshUI();
+}
+window.quickUploadSetCat = quickUploadSetCat;
+
+function quickUploadNext() {
+  const st = window.quickUploadState;
+  const f = document.getElementById('qu-input-field');
+  const val = f ? f.value.trim() : '';
+
+  if (st.step === 2) {
+    if (!val) {
+      alert('נא להזין כותרת');
+      if (f) f.focus();
+      return;
+    }
+    st.title = val;
+  } else if (st.step === 3) {
+    if (val) st.category = val;
+    if (!st.category) st.category = 'כללי';
+  } else if (st.step === 4) {
+    st.desc = val;
+  } else if (st.step === 5) {
+    st.author = val;
+  }
+
+  if (st.step < 6) {
+    st.step++;
+    quickUploadRefreshUI();
+    setTimeout(() => {
+      const nextF = document.getElementById('qu-input-field');
+      if (nextF) nextF.focus();
+    }, 60);
+  }
+}
+window.quickUploadNext = quickUploadNext;
+
+function quickUploadPrev() {
+  const st = window.quickUploadState;
+  const f = document.getElementById('qu-input-field');
+  if (f) {
+    const val = f.value.trim();
+    if (st.step === 2 && val) st.title = val;
+    if (st.step === 3 && val) st.category = val;
+    if (st.step === 4 && val) st.desc = val;
+    if (st.step === 5 && val) st.author = val;
+  }
+  if (st.step > 1) {
+    st.step--;
+    quickUploadRefreshUI();
+  }
+}
+window.quickUploadPrev = quickUploadPrev;
+
+function quickUploadPickFiles() {
+  const inp = document.createElement('input');
+  inp.type = 'file';
+  inp.accept = 'image/*';
+  inp.multiple = true;
+  inp.onchange = async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    for (const file of files) {
+      if ((window.quickUploadState.images || []).length >= 6) break;
+      try {
+        const compressed = (typeof artCompressImage === 'function') 
+          ? await artCompressImage(file) 
+          : await new Promise(res => {
+              const r = new FileReader();
+              r.onload = ev => res(ev.target.result);
+              r.readAsDataURL(file);
+            });
+        if (compressed) {
+          window.quickUploadState.images.push(compressed);
+        }
+      } catch (err) {
+        console.error('Image compression error', err);
+      }
+    }
+    quickUploadRefreshUI();
+  };
+  inp.click();
+}
+window.quickUploadPickFiles = quickUploadPickFiles;
+
+function quickUploadRemoveImage(index) {
+  if (window.quickUploadState.images) {
+    window.quickUploadState.images.splice(index, 1);
+    quickUploadRefreshUI();
+  }
+}
+window.quickUploadRemoveImage = quickUploadRemoveImage;
+
+function quickUploadRefreshUI() {
+  const homeFeed = document.querySelector('.home-feed-page');
+  if (homeFeed && typeof buildHomeFeedPage === 'function') {
+    const inner = homeFeed.querySelector('.art-inner');
+    const existingHero = document.querySelector('.quick-upload-hero-container');
+    if (existingHero) {
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = renderQuickUploadHero();
+      const newHero = tempDiv.firstElementChild;
+      existingHero.replaceWith(newHero);
+    } else {
+      homeFeed.parentElement.innerHTML = buildHomeFeedPage();
+    }
+  }
+}
+window.quickUploadRefreshUI = quickUploadRefreshUI;
+
+async function quickUploadFinalSubmit() {
+  const st = window.quickUploadState;
+  if (st.isSubmitting) return;
+
+  if (st.target !== 'stories' && (!st.images || !st.images.length)) {
+    alert('נא להעלות לפחות תמונה אחת.');
+    return;
+  }
+
+  st.isSubmitting = true;
+  quickUploadRefreshUI();
+
+  try {
+    const user = (typeof auth !== 'undefined' && auth.currentUser) ? auth.currentUser : null;
+    let authorName = st.author || '';
+    let authorEmail = '';
+    let authorTelegram = '';
+
+    if (user) {
+      try {
+        const p = JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}');
+        if (!authorName) authorName = p.nickname || user.displayName || (user.email ? user.email.split('@')[0] : 'משתמש');
+        authorEmail = p.email || user.email || '';
+        authorTelegram = p.telegram ? String(p.telegram).replace(/^@/, '') : '';
+      } catch (e) {
+        if (!authorName) authorName = user.displayName || 'משתמש';
+      }
+    }
+    if (!authorName) authorName = 'יוצר עצמאי';
+
+    const isAdminNow = (typeof isEditMode !== 'undefined' && isEditMode);
+    const firstImg = (st.images && st.images[0]) ? st.images[0] : '';
+    const nowStamp = new Date().toLocaleDateString('he-IL');
+
+    if (st.target === 'photos') {
+      // יצירת גלריית תמונות
+      const newAlbum = {
+        id: 'ph' + Date.now(),
+        type: 'photo',
+        isStory: false,
+        title: st.title || 'גלריה חדשה',
+        summary: st.desc || '',
+        desc: st.desc || '',
+        image: firstImg,
+        images: (st.images && st.images.length) ? st.images : [firstImg],
+        author: authorName,
+        authorId: user ? user.uid : '',
+        category: st.category || 'כללי',
+        categoryColor: '#e11d48',
+        timestamp: nowStamp,
+        createdAt: Date.now(),
+        telegramUrl: authorTelegram ? ('https://t.me/' + authorTelegram) : '',
+        emailUrl: authorEmail ? ('mailto:' + authorEmail) : '',
+        likes: 0,
+        views: 1,
+        approved: isAdminNow
+      };
+
+      // שמירה לעמוד התמונות ב-pages
+      if (typeof pages !== 'undefined' && Array.isArray(pages)) {
+        let photoPage = pages.find(p => p && (p.content || '').includes('data-section="photos"')) 
+                     || pages.find(p => p && (p.title || '').includes('תמונות'));
+        if (photoPage) {
+          let currentList = [];
+          const m = (photoPage.content || '').match(/data-photos-json="([^"]*)"/);
+          if (m) {
+            try { currentList = JSON.parse(decodeURIComponent(m[1])); } catch (e) {}
+          }
+          if (!Array.isArray(currentList)) currentList = [];
+          currentList.unshift(newAlbum);
+          photoPage.content = photoPage.content.replace(/data-photos-json="[^"]*"/, `data-photos-json="${encodeURIComponent(JSON.stringify(currentList))}"`);
+        }
+      }
+      if (typeof saveToStorage === 'function') saveToStorage();
+      if (!isAdminNow && typeof pushPendingSubmission === 'function') pushPendingSubmission(newAlbum);
+
+    } else {
+      // קומיקס או סיפורים
+      const isComics = st.target === 'comics';
+      const storyPages = (st.images && st.images.length)
+        ? st.images.map(u => ({ type: 'image', url: u }))
+        : [{ type: 'text', text: st.desc || st.title }];
+
+      const newStory = {
+        id: (isComics ? 'cm' : 'st') + Date.now(),
+        title: st.title || (isComics ? 'קומיקס חדש' : 'סיפור חדש'),
+        summary: st.desc || '',
+        body: st.desc || '',
+        author: authorName,
+        authorId: user ? user.uid : '',
+        category: st.category || (isComics ? 'קומיקס' : 'סיפורים'),
+        categoryColor: isComics ? '#8b5cf6' : '#0ea5e9',
+        image: firstImg,
+        images: st.images || [],
+        pages: storyPages,
+        timestamp: nowStamp,
+        createdAt: Date.now(),
+        telegramUrl: authorTelegram ? ('https://t.me/' + authorTelegram) : '',
+        emailUrl: authorEmail ? ('mailto:' + authorEmail) : '',
+        approved: isAdminNow
+      };
+
+      if (typeof pages !== 'undefined' && Array.isArray(pages)) {
+        const targetKind = isComics ? 'comics' : 'stories';
+        let targetPage = pages.find(p => p && p.content && p.content.includes(`data-story-kind="${targetKind}"`))
+          || pages.find(p => p && (p.title || '').includes(isComics ? 'קומיקס' : 'סיפורים'));
+
+        if (!targetPage) {
+          targetPage = pages.find(p => p && p.content && p.content.includes('stories-page') && !p.content.includes('photos-page'));
+        }
+
+        if (targetPage) {
+          let currentStories = [];
+          const m = (targetPage.content || '').match(/data-stories-json="([^"]*)"/);
+          if (m) {
+            try { currentStories = JSON.parse(decodeURIComponent(m[1])); } catch (e) {}
+          }
+          if (!Array.isArray(currentStories)) currentStories = [];
+          currentStories.unshift(newStory);
+          targetPage.content = targetPage.content.replace(/data-stories-json="[^"]*"/, `data-stories-json="${encodeURIComponent(JSON.stringify(currentStories))}"`);
+        }
+      }
+      if (typeof saveToStorage === 'function') saveToStorage();
+      if (!isAdminNow && typeof pushPendingSubmission === 'function') pushPendingSubmission(newStory);
+    }
+
+    // איפוס המצב והצגת הודעת הצלחה
+    window.quickUploadState = {
+      step: 1,
+      target: 'photos',
+      title: '',
+      category: 'כללי',
+      desc: '',
+      author: '',
+      images: [],
+      isSubmitting: false
+    };
+
+    alert('🎉 התוכן הועלה בהצלחה!');
+    // רענון עמוד הבית להצגת התוכן החדש מיד בפיד
+    if (typeof renderPage === 'function') renderPage();
+
+  } catch (err) {
+    console.error('Quick upload error:', err);
+    alert('חלה שגיאה בהעלאת התוכן, אנא נסו שוב.');
+    st.isSubmitting = false;
+    quickUploadRefreshUI();
+  }
+}
+window.quickUploadFinalSubmit = quickUploadFinalSubmit;
+
 function buildHomeFeedPage() {
   const all = (typeof getAllStoriesFromPages === 'function') ? getAllStoriesFromPages() : [];
   let comics = all.filter(s => s && s.__kind !== 'stories');
@@ -10540,6 +10987,9 @@ function buildHomeFeedPage() {
   const cols = 4; // שורה של 4 עמודות מדויקות
   const pcols = 4;
   const maxPerRow = 4; // 4 האחרונים בלבד בבית
+
+  // --- וידג'ט העלאה מהירה (Hero) בראש עמוד הבית ---
+  const quickUploadHero = renderQuickUploadHero();
 
   // --- שורת תמונות ---
   const photosJson = encodeURIComponent(JSON.stringify(photos));
@@ -10574,6 +11024,7 @@ function buildHomeFeedPage() {
 
   return `<div class="articles-page home-feed-page" data-page-id="page-home-feed">
     <div class="art-inner">
+      ${quickUploadHero}
       ${photosSection}
       ${storiesSection}
     </div>
