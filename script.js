@@ -584,6 +584,16 @@ function sanitizeToOnlyPhotosAndStories() {
     if (!_ofPage.title) _ofPage.title = 'הצעות 🔥';
   }
 
+  // עמוד "מנוי" — תמיד קיים
+  const _subContent = '<div class="subscription-page" data-page-id="page-subscription-main"></div>';
+  const _subPage = pages.find(p => p && p.id === 'page-subscription-main');
+  if (!_subPage) {
+    pages.push({ id: 'page-subscription-main', title: 'מנוי 💎', content: _subContent });
+  } else {
+    _subPage.content = _subContent;
+    if (!_subPage.title) _subPage.title = 'מנוי 💎';
+  }
+
   // סנכרון התפריט העליון עם רשימת העמודים
   if (!Array.isArray(topNavPages) || topNavPages.length === 0) {
     topNavPages = pages.filter(p => !isSideOnlyPage(p)).map(p => p.id);
@@ -1275,6 +1285,15 @@ function renderPage() {
     if (currentPage.id === 'page-offers-main' || (currentPage.title && currentPage.title.includes('הצעות'))) {
       if (typeof buildOffersPage === 'function') {
         mainContent.innerHTML = buildOffersPage();
+        try { window.scrollTo(0, 0); } catch (e) {}
+        return;
+      }
+    }
+
+    // עמוד "מנוי"
+    if (currentPage.id === 'page-subscription-main' || (currentPage.title && currentPage.title.includes('מנוי'))) {
+      if (typeof buildSubscriptionPage === 'function') {
+        mainContent.innerHTML = buildSubscriptionPage();
         try { window.scrollTo(0, 0); } catch (e) {}
         return;
       }
@@ -10091,6 +10110,7 @@ function buildLeftSidebarBox(popularHTML, section) {
     { id: 'page-stories-text', title: 'סיפורים 📖' },
     { id: 'page-ideas-main', title: 'רעיונות 💡' },
     { id: 'page-communities-main', title: 'קהילות 👥' },
+    { id: 'page-subscription-main', title: 'מנוי 💎' },
     { id: 'page-questions-main', title: 'שאלות גולשים ❓' },
     { id: 'page-offers-main', title: 'הצעות 🔥' }
   ];
@@ -10111,6 +10131,7 @@ function buildLeftSidebarBox(popularHTML, section) {
     else if (page.id === 'page-stories-main') icon = '📖';
     else if (page.id === 'page-ideas-main') icon = '💡';
     else if (page.id === 'page-communities-main') icon = '👥';
+    else if (page.id === 'page-subscription-main') icon = '💎';
     else if (page.id === 'page-questions-main') icon = '❓';
     else if (page.id === 'page-offers-main') icon = '🔥';
     else {
@@ -10120,7 +10141,7 @@ function buildLeftSidebarBox(popularHTML, section) {
         // לא מסירים תווים מהכותרת — מציגים טקסט מלא
       }
     }
-    const cleanTitle = title.replace(/🖼️|📖|💡|🏘️|👥|❓|🔥|🔒/g, '').trim();
+    const cleanTitle = title.replace(/🖼️|📖|💡|🏘️|👥|❓|🔥|🔒|💎/g, '').trim();
 
     return `
       <div class="site-page-nav-item ${isActive ? 'active' : ''}" onclick="navigateToPage('${page.id}')" role="button" tabindex="0">
@@ -17151,5 +17172,338 @@ function selectLanguage(lang) {
   if (modal) modal.style.display = 'none';
 }
 window.selectLanguage = selectLanguage;
+
+// ==========================================
+// עמוד מנויים (Subscription Plans Page)
+// ==========================================
+let currentSubscriptionBilling = 'yearly'; // 'yearly' | 'monthly'
+
+const subscriptionPlansData = [
+  {
+    id: 'starter',
+    title: 'התחלה',
+    subtitle: 'להתחיל בקטן עם הפוסט הראשון שלך ב-AI.',
+    monthlyOriginal: 99,
+    monthlyPrice: 99,
+    yearlyOriginal: 99,
+    yearlyPrice: 49,
+    credits: '200 קרדיטים / חודש',
+    usage: '2 סרטונים / 20 תמונות',
+    subtext: 'הקרדיטים מתחדשים חודשית',
+    isFeatured: false,
+    features: [
+      'יצירת תוכן חכם עם AI',
+      'חיבור לרשתות החברתיות'
+    ]
+  },
+  {
+    id: 'premium',
+    title: 'פרימיום',
+    subtitle: 'לקחת את הפרופיל צעד קדימה עם תוכן ברמה אחרת.',
+    monthlyOriginal: 249,
+    monthlyPrice: 249,
+    yearlyOriginal: 249,
+    yearlyPrice: 125,
+    credits: '600 קרדיטים / חודש',
+    usage: '6 סרטונים / 60 תמונות',
+    subtext: 'הקרדיטים מתחדשים חודשית',
+    isFeatured: false,
+    features: [
+      'יצירת תוכן חכם עם AI',
+      'חיבור לרשתות החברתיות',
+      'מסלול מהיר ליצירת תוכן'
+    ]
+  },
+  {
+    id: 'business',
+    title: 'עסקים',
+    subtitle: 'לעסקים שרוצים נוכחות חזקה ופוסטים שנראים מיליון דולר.',
+    badge: 'מומלץ',
+    monthlyOriginal: 499,
+    monthlyPrice: 499,
+    yearlyOriginal: 499,
+    yearlyPrice: 249,
+    credits: '1,600 קרדיטים / חודש',
+    usage: '16 סרטונים / 160 תמונות',
+    subtext: 'הקרדיטים מתחדשים חודשית',
+    isFeatured: true,
+    features: [
+      'יצירת תוכן חכם עם AI',
+      'חיבור לרשתות החברתיות',
+      'מסלול מהיר ליצירת תוכן',
+      'גישה ראשונה לפיצ׳רים חדשים'
+    ]
+  },
+  {
+    id: 'influencer',
+    title: 'משפיענים',
+    subtitle: 'החבילה הכי שווה שלנו. מהירות שיא, תמיכה VIP והכל כלול.',
+    monthlyOriginal: 999,
+    monthlyPrice: 999,
+    yearlyOriginal: 999,
+    yearlyPrice: 499,
+    credits: '3,200 קרדיטים / חודש',
+    usage: '32 סרטונים / 320 תמונות',
+    subtext: 'הקרדיטים מתחדשים חודשית',
+    isFeatured: false,
+    features: [
+      'יצירת תוכן חכם עם AI',
+      'חיבור לרשתות החברתיות',
+      'מסלול מהיר ליצירת תוכן',
+      'גישה ראשונה לפיצ׳רים חדשים',
+      'תמיכה VIP'
+    ]
+  },
+  {
+    id: 'agency',
+    title: 'סוכנות',
+    subtitle: 'לסוכנויות ועסקים גדולים. ריבוי חשבונות תחת אותו מנוי.',
+    monthlyOriginal: 4999,
+    monthlyPrice: 4999,
+    yearlyOriginal: 4999,
+    yearlyPrice: 2499,
+    credits: '16,000 קרדיטים / חודש',
+    usage: '160 סרטונים / 1600 תמונות',
+    subtext: 'הקרדיטים מתחדשים חודשית',
+    isFeatured: false,
+    features: [
+      'יצירת תוכן חכם עם AI',
+      'חיבור לרשתות החברתיות',
+      'מסלול מהיר ליצירת תוכן',
+      'גישה ראשונה לפיצ׳רים חדשים',
+      'תמיכה VIP',
+      'ריבוי חשבונות תחת מנוי אחד'
+    ]
+  }
+];
+
+function setSubscriptionBilling(period) {
+  currentSubscriptionBilling = period;
+  const container = document.querySelector('.subscription-page-wrapper');
+  if (container) {
+    const parent = container.parentElement;
+    if (parent) {
+      parent.innerHTML = buildSubscriptionPage();
+    }
+  }
+}
+window.setSubscriptionBilling = setSubscriptionBilling;
+
+function handleSubscriptionPlanSelect(planId) {
+  const plan = subscriptionPlansData.find(p => p.id === planId);
+  const planName = plan ? plan.title : planId;
+  const periodText = currentSubscriptionBilling === 'yearly' ? 'שנתי' : 'חודשי';
+  alert(`בחרת במסלול ${planName} במסלול ${periodText}! תהליך התשלום יתחבר בקרוב.`);
+}
+window.handleSubscriptionPlanSelect = handleSubscriptionPlanSelect;
+
+function handleApplePay(planId) {
+  const plan = subscriptionPlansData.find(p => p.id === planId);
+  const planName = plan ? plan.title : planId;
+  alert(`חיבור מהיר ל-Apple Pay עבור מסלול ${planName}...`);
+}
+window.handleApplePay = handleApplePay;
+
+function buildSubscriptionPage() {
+  const isYearly = currentSubscriptionBilling === 'yearly';
+
+  const cardsHtml = subscriptionPlansData.map(plan => {
+    const origPrice = isYearly ? plan.yearlyOriginal : null;
+    const price = isYearly ? plan.yearlyPrice : plan.monthlyPrice;
+    const formattedPrice = price.toLocaleString('he-IL');
+    const formattedOrigPrice = origPrice ? origPrice.toLocaleString('he-IL') : '';
+    const paymentPeriodLabel = isYearly ? 'בתשלום שנתי' : 'בתשלום חודשי';
+
+    const cardBorder = plan.isFeatured ? '2px solid #8b5cf6' : '1px solid #e2e8f0';
+    const cardShadow = plan.isFeatured ? '0 12px 30px rgba(139, 92, 246, 0.15)' : '0 4px 16px rgba(0,0,0,0.04)';
+    const btnStyle = plan.isFeatured
+      ? 'background: #7c3aed; color: #ffffff; border: none;'
+      : 'background: #ffffff; color: #6366f1; border: 1.5px solid #a5b4fc;';
+
+    const featuresListHtml = plan.features.map(f => `
+      <li style="display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: #475569; line-height: 1.4;">
+        <span style="display: inline-block; width: 4px; height: 4px; background: #6366f1; border-radius: 50%; flex-shrink: 0;"></span>
+        <span>${f}</span>
+      </li>
+    `).join('');
+
+    return `
+      <div class="sub-pricing-card ${plan.isFeatured ? 'featured' : ''}" style="
+        position: relative;
+        background: #ffffff;
+        border-radius: 18px;
+        border: ${cardBorder};
+        box-shadow: ${cardShadow};
+        padding: 24px 20px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        text-align: center;
+        flex: 1 1 200px;
+        min-width: 200px;
+        max-width: 250px;
+        transition: transform 0.2s, box-shadow 0.2s;
+      ">
+        ${plan.badge ? `
+          <div style="
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #a855f7;
+            color: #ffffff;
+            font-size: 11.5px;
+            font-weight: 800;
+            padding: 2px 14px;
+            border-radius: 12px;
+            box-shadow: 0 2px 6px rgba(168,85,247,0.3);
+            white-space: nowrap;
+          ">${plan.badge}</div>
+        ` : ''}
+
+        <div>
+          <!-- Title & Subtitle -->
+          <h3 style="margin: 0 0 6px 0; font-size: 20px; font-weight: 800; color: #0f172a;">${plan.title}</h3>
+          <p style="margin: 0 0 20px 0; font-size: 11.5px; color: #64748b; line-height: 1.35; min-height: 32px;">${plan.subtitle}</p>
+
+          <!-- Price section -->
+          <div style="margin-bottom: 16px; min-height: 80px; display: flex; flex-direction: column; justify-content: flex-end; align-items: center;">
+            ${isYearly ? `
+              <div style="font-size: 15px; color: #94a3b8; text-decoration: line-through; font-weight: 600; margin-bottom: 2px;">
+                ₪${formattedOrigPrice}
+              </div>
+            ` : '<div style="height: 22px;"></div>'}
+            
+            <div style="display: flex; align-items: baseline; justify-content: center; gap: 4px; direction: rtl;">
+              <span style="font-size: 38px; font-weight: 900; color: #0f172a; line-height: 1; letter-spacing: -1px;">₪${formattedPrice}</span>
+              <div style="display: flex; flex-direction: column; align-items: flex-start; text-align: right; line-height: 1.1;">
+                <span style="font-size: 11.5px; color: #64748b; font-weight: 700;">/ חודש</span>
+                <span style="font-size: 9.5px; color: #94a3b8;">${paymentPeriodLabel}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Credits & Usage details -->
+          <div style="background: #f8fafc; border-radius: 10px; padding: 10px 8px; margin-bottom: 18px; border: 1px solid #f1f5f9;">
+            <div style="font-size: 12.5px; font-weight: 800; color: #1e293b; margin-bottom: 2px;">${plan.credits}</div>
+            <div style="font-size: 11.5px; font-weight: 700; color: #334155; margin-bottom: 2px;">${plan.usage}</div>
+            <div style="font-size: 10px; color: #94a3b8;">${plan.subtext}</div>
+          </div>
+
+          <!-- Action Button -->
+          <button onclick="handleSubscriptionPlanSelect('${plan.id}')" style="
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            ${btnStyle}
+          ">בואו נתחיל</button>
+
+          <!-- Apple Pay Option -->
+          <div style="margin-top: 12px; margin-bottom: 6px; font-size: 10.5px; color: #94a3b8;">
+            או תשלום מהיר עם
+          </div>
+          <button onclick="handleApplePay('${plan.id}')" style="
+            width: 100%;
+            background: #000000;
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            padding: 7px 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            transition: opacity 0.2s;
+          ">
+            <svg width="14" height="17" viewBox="0 0 170 170" fill="#ffffff" style="margin-top:-2px;">
+              <path d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.19-2.12-9.97-3.17-14.34-3.17-4.58 0-9.49 1.05-14.75 3.17-5.26 2.13-9.5 3.24-12.74 3.35-4.35.13-9.16-1.9-14.42-6.08-3.69-3.04-7.69-7.85-12-14.43-6-9.15-10.82-19.66-14.48-31.52-3.65-11.87-5.49-23.27-5.49-34.22 0-14.57 3.73-26.43 11.2-35.58 7.46-9.16 16.73-13.84 27.8-14.05 4.89 0 10.13 1.25 15.72 3.75 5.59 2.5 9.47 3.86 11.64 4.08 1.95-.22 5.94-1.63 11.96-4.22 6.02-2.6 11.28-3.79 15.78-3.58 11.95.65 21.6 4.94 28.94 12.87-10.43 6.31-15.54 15.11-15.33 26.4.22 8.92 3.63 16.3 10.23 22.14 6.6 5.84 14.3 9.1 23.11 9.78-2.39 7.18-5.54 14.7-9.45 22.56zM119.22 31.02c0-7.39 2.66-14.35 7.98-20.87 5.32-6.53 11.95-10.15 19.89-10.87.22 1.09.33 2.18.33 3.26 0 7.39-2.77 14.46-8.31 21.2-5.54 6.74-12.28 10.43-20.21 11.08-.11-1.09-.16-2.06-.16-2.91l.48-.89z"/>
+            </svg>
+            Pay
+          </button>
+        </div>
+
+        <!-- Features Divider & List -->
+        <div style="border-top: 1px solid #f1f5f9; padding-top: 16px; margin-top: 18px; text-align: right;">
+          <div style="font-size: 11.5px; font-weight: 800; color: #1e293b; margin-bottom: 10px;">מה מקבלים:</div>
+          <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px;">
+            ${featuresListHtml}
+          </ul>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  return `
+    <div class="subscription-page-wrapper" style="
+      max-width: 1350px;
+      margin: 0 auto;
+      padding: 30px 16px 60px 16px;
+      direction: rtl;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans Hebrew', sans-serif;
+    ">
+      <!-- Billing Period Toggle (חודשי / שנתי) -->
+      <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 36px;">
+        <div style="
+          display: inline-flex;
+          align-items: center;
+          background: #ffffff;
+          border: 1px solid #e2e8f0;
+          border-radius: 999px;
+          padding: 4px;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+          gap: 4px;
+        ">
+          <button onclick="setSubscriptionBilling('yearly')" style="
+            border: none;
+            outline: none;
+            padding: 8px 22px;
+            border-radius: 999px;
+            font-size: 13.5px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            ${isYearly ? 'background: #3b82f6; color: #ffffff; box-shadow: 0 2px 8px rgba(59,130,246,0.3);' : 'background: transparent; color: #64748b;'}
+          ">
+            שנתי (50% הנחה)
+          </button>
+          <button onclick="setSubscriptionBilling('monthly')" style="
+            border: none;
+            outline: none;
+            padding: 8px 22px;
+            border-radius: 999px;
+            font-size: 13.5px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            ${!isYearly ? 'background: #3b82f6; color: #ffffff; box-shadow: 0 2px 8px rgba(59,130,246,0.3);' : 'background: transparent; color: #64748b;'}
+          ">
+            חודשי
+          </button>
+        </div>
+      </div>
+
+      <!-- Pricing Cards Grid -->
+      <div style="
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        justify-content: center;
+        align-items: stretch;
+      ">
+        ${cardsHtml}
+      </div>
+    </div>
+  `;
+}
+window.buildSubscriptionPage = buildSubscriptionPage;
+
 
 
