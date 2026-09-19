@@ -6267,7 +6267,7 @@ function storyCardHTML(s, iconHint) {
 
     const isSavedCard = typeof photoIsSavedLocal === 'function' ? photoIsSavedLocal(s.id) : false;
     const cardSaveBtnHTML = `
-      <button type="button" onclick="event.stopPropagation(); photoToggleSave('${artEsc(s.id)}')" class="art-telegram-btn" title="${isSavedCard ? 'הסר משמורים' : 'שמור לצפייה מאוחרת'}" style="display: inline-flex; align-items: center; background: #2f2f2f; color: #ffffff; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: bold; gap: 6px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: all 0.2s; ${isSavedCard ? 'background: #e11d48; border-color: #e11d48;' : ''}">
+      <button type="button" onclick="event.stopPropagation(); photoToggleSave('${artEsc(s.id)}')" class="art-telegram-btn art-save-btn${isSavedCard ? ' is-saved' : ''}" title="${isSavedCard ? 'הסר משמורים' : 'שמור לצפייה מאוחרת'}">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="${isSavedCard ? '#ffffff' : 'none'}" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
           <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
         </svg>
@@ -7493,7 +7493,7 @@ function renderPhotoCard(p, options = {}) {
 
   const isSavedCard = photoIsSavedLocal(p.id);
   const cardSaveBtnHTML = `
-    <button type="button" onclick="event.stopPropagation(); photoToggleSave('${artEsc(p.id)}')" class="art-telegram-btn" title="${isSavedCard ? 'הסר משמורים' : 'שמור לצפייה מאוחרת'}" style="display: inline-flex; align-items: center; background: #2f2f2f; color: #ffffff; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: bold; gap: 6px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: all 0.2s; ${isSavedCard ? 'background: #e11d48; border-color: #e11d48;' : ''}">
+    <button type="button" onclick="event.stopPropagation(); photoToggleSave('${artEsc(p.id)}')" class="art-telegram-btn art-save-btn${isSavedCard ? ' is-saved' : ''}" title="${isSavedCard ? 'הסר משמורים' : 'שמור לצפייה מאוחרת'}">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="${isSavedCard ? '#ffffff' : 'none'}" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
         <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
       </svg>
