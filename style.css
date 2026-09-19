@@ -5593,7 +5593,7 @@ html.hide-site-images .photo-mini-thumb {
 .qu-step-dot.active {
   width: 26px;
   border-radius: 12px;
-  background: linear-gradient(135deg, #e11d48, #8b5cf6);
+  background: #0f0a26;
 }
 
 .qu-step-dot.done {
@@ -5610,7 +5610,7 @@ html.hide-site-images .photo-mini-thumb {
 }
 
 .qu-gradient-text {
-  background: linear-gradient(135deg, #e11d48, #8b5cf6, #3b82f6);
+  background: linear-gradient(135deg, #0f0a26, #3b1d60);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   display: inline-block;
@@ -5628,11 +5628,12 @@ html.hide-site-images .photo-mini-thumb {
   margin: 0 auto;
 }
 
-/* אפשרויות בחירה (שלב 1) */
+/* שלב 1: כפתורי בחירת יעד */
 .qu-options-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 14px;
+  margin-bottom: 12px;
 }
 
 .qu-dest-pill {
@@ -5659,8 +5660,8 @@ html.hide-site-images .photo-mini-thumb {
 
 .qu-dest-pill.active {
   background: #ffffff;
-  border-color: #8b5cf6;
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15), 0 8px 20px rgba(139, 92, 246, 0.08);
+  border-color: #0f0a26;
+  box-shadow: 0 0 0 3px rgba(15, 10, 38, 0.15), 0 8px 20px rgba(15, 10, 38, 0.08);
 }
 
 .qu-dest-pill .qu-pill-icon {
@@ -5676,7 +5677,6 @@ html.hide-site-images .photo-mini-thumb {
 }
 
 .qu-dest-pill .qu-pill-text small {
-  display: block;
   font-size: 11.5px;
   color: #64748b;
   margin-top: 2px;
@@ -5696,8 +5696,8 @@ html.hide-site-images .photo-mini-thumb {
 }
 
 .qu-input-wrapper:focus-within {
-  border-color: #8b5cf6;
-  box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.12), 0 8px 25px rgba(0, 0, 0, 0.05);
+  border-color: #0f0a26;
+  box-shadow: 0 0 0 4px rgba(15, 10, 38, 0.12), 0 8px 25px rgba(0, 0, 0, 0.05);
 }
 
 .qu-text-input {
@@ -5750,7 +5750,7 @@ html.hide-site-images .photo-mini-thumb {
   width: 44px;
   height: 44px;
   border-radius: 12px;
-  background: linear-gradient(135deg, #e11d48, #9333ea);
+  background: #0f0a26;
   color: #ffffff;
   border: none;
   cursor: pointer;
@@ -5758,13 +5758,14 @@ html.hide-site-images .photo-mini-thumb {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(147, 51, 234, 0.3);
+  box-shadow: 0 4px 12px rgba(15, 10, 38, 0.35);
   transition: all 0.2s ease;
 }
 
 .qu-arrow-btn:hover {
   transform: scale(1.05);
-  box-shadow: 0 6px 18px rgba(147, 51, 234, 0.4);
+  background: #181236;
+  box-shadow: 0 6px 18px rgba(15, 10, 38, 0.45);
 }
 
 .qu-arrow-btn:active {
@@ -5804,10 +5805,10 @@ html.hide-site-images .photo-mini-thumb {
 }
 
 .qu-cat-chip.active {
-  background: linear-gradient(135deg, #e11d48, #8b5cf6);
+  background: #0f0a26;
   color: #ffffff;
   border-color: transparent;
-  box-shadow: 0 3px 10px rgba(139, 92, 246, 0.25);
+  box-shadow: 0 3px 10px rgba(15, 10, 38, 0.3);
 }
 
 /* שלב 6: העלאת תמונות וסיום */
@@ -5884,8 +5885,8 @@ html.hide-site-images .photo-mini-thumb {
 }
 
 .qu-add-photo-btn:hover {
-  border-color: #8b5cf6;
-  color: #8b5cf6;
+  border-color: #0f0a26;
+  color: #0f0a26;
   background: #f5f3ff;
 }
 
@@ -5896,7 +5897,7 @@ html.hide-site-images .photo-mini-thumb {
 
 .qu-publish-btn {
   width: 100%;
-  background: linear-gradient(135deg, #e11d48, #9333ea);
+  background: #0f0a26;
   color: #ffffff;
   border: none;
   border-radius: 14px;
@@ -5904,13 +5905,14 @@ html.hide-site-images .photo-mini-thumb {
   font-size: 16px;
   font-weight: 900;
   cursor: pointer;
-  box-shadow: 0 6px 20px rgba(225, 29, 72, 0.25);
+  box-shadow: 0 6px 20px rgba(15, 10, 38, 0.3);
   transition: all 0.2s ease;
 }
 
 .qu-publish-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(225, 29, 72, 0.35);
+  background: #181236;
+  box-shadow: 0 8px 25px rgba(15, 10, 38, 0.4);
 }
 
 .qu-publish-btn:active:not(:disabled) {
