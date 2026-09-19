@@ -234,6 +234,7 @@ function isSideOnlyPage(p) {
   if (p.id === 'page-secondhand-main' || (p.content || '').includes('secondhand-page') || (p.title || '').includes('יד שניה')) return false;
   if (p.id === 'page-partnerships-main' || (p.content || '').includes('partnerships-page') || (p.title || '').includes('שותפויות')) return false;
   if (p.id === 'page-reviews-main' || (p.content || '').includes('reviews-page') || (p.title || '').includes('ביקורת')) return false;
+  if (p.id === 'page-subscription-main' || (p.content || '').includes('subscription-page') || (p.title || '').includes('מנוי')) return false;
   if (SIDE_ONLY_PAGE_IDS.includes(p.id)) return true;
   const t = p.title || '', c = p.content || '';
   if (c.includes('photos-page') || c.includes('stories-page') || c.includes('questions-page') || c.includes('offers-page')) return true;
@@ -620,6 +621,13 @@ function sanitizeToOnlyPhotosAndStories() {
     const _ci = topNavPages.indexOf('page-communities-main');
     if (_ci >= 0) topNavPages.splice(_ci + 1, 0, 'page-home-feed');
     else topNavPages.push('page-home-feed');
+  }
+
+  // עמוד "מנוי" מוצג בתפריט העליון
+  if (pages.some(p => p && p.id === 'page-subscription-main')) {
+    if (!topNavPages.includes('page-subscription-main')) {
+      topNavPages.push('page-subscription-main');
+    }
   }
 
   if (!activePageId || !pages.some(p => p && p.id === activePageId)) {
@@ -1010,6 +1018,9 @@ function renderTopNav() {
     topNavPages.unshift('page-ideas-main');
   } else {
     topNavPages = topNavPages.filter(id => id !== 'page-ideas-main');
+  }
+  if (!topNavPages.includes('page-subscription-main') && pages.some(p => p && p.id === 'page-subscription-main')) {
+    topNavPages.push('page-subscription-main');
   }
   navLinksContainer.innerHTML = ''; // מנקה את התפריט הסטטי מה-HTML
   
