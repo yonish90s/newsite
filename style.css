@@ -2233,7 +2233,7 @@ body:not(.edit-mode) .hotspot-delete-btn {
   gap: 8px !important;
   margin-top: 10px !important;
 }
-/* כפתורי הכרטיס — עיצוב אחיד ונקי במחשב ובמובייל */
+/* כפתורי הכרטיס (שמירה, אימייל, טלגרם) — רקע גרדיאנט ורוד-סגול מעוצב ואחיד */
 .photos-page .photo-card-links .art-telegram-btn,
 .ideas-page .photo-card-links .art-telegram-btn,
 .stories-page .photo-card-links .art-telegram-btn {
@@ -2241,34 +2241,50 @@ body:not(.edit-mode) .hotspot-delete-btn {
   align-items: center !important;
   justify-content: center !important;
   gap: 6px !important;
-  padding: 6px 13px !important;
+  padding: 6px 14px !important;
   font-size: 13px !important;
-  font-weight: 700 !important;
-  border-radius: 8px !important;
-  background: #f1f5f9 !important;
-  color: #334155 !important;
-  border: 1px solid #e2e8f0 !important;
+  font-weight: 800 !important;
+  border-radius: 10px !important;
+  background: linear-gradient(135deg, #e11d48, #9333ea) !important;
+  color: #ffffff !important;
+  border: none !important;
   text-decoration: none !important;
   white-space: nowrap !important;
   cursor: pointer !important;
+  box-shadow: 0 3px 10px rgba(147, 51, 234, 0.25) !important;
   transition: all 0.2s ease !important;
+}
+.photos-page .photo-card-links .art-telegram-btn svg,
+.ideas-page .photo-card-links .art-telegram-btn svg,
+.stories-page .photo-card-links .art-telegram-btn svg {
+  stroke: #ffffff !important;
+  display: block !important;
 }
 .photos-page .photo-card-links .art-telegram-btn:hover,
 .ideas-page .photo-card-links .art-telegram-btn:hover,
 .stories-page .photo-card-links .art-telegram-btn:hover {
-  background: #e2e8f0 !important;
-  color: #0f172a !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 5px 14px rgba(147, 51, 234, 0.35) !important;
+  opacity: 0.96 !important;
+  color: #ffffff !important;
 }
-/* כפתור שמירה כהה כברירת מחדל */
+.photos-page .photo-card-links .art-telegram-btn:active,
+.ideas-page .photo-card-links .art-telegram-btn:active,
+.stories-page .photo-card-links .art-telegram-btn:active {
+  transform: scale(0.97) !important;
+}
+
+/* כפתור שמירה — שומר על הגרדיאנט, ומשתנה במצב שמור */
 .photos-page .photo-card-links .art-save-btn,
 .ideas-page .photo-card-links .art-save-btn,
 .stories-page .photo-card-links .art-save-btn,
 .photos-page .photo-card-links button:first-child,
 .ideas-page .photo-card-links button:first-child,
 .stories-page .photo-card-links button:first-child {
-  background: #1e293b !important;
+  background: linear-gradient(135deg, #e11d48, #9333ea) !important;
   color: #ffffff !important;
   border: none !important;
+  box-shadow: 0 3px 10px rgba(147, 51, 234, 0.25) !important;
 }
 .photos-page .photo-card-links .art-save-btn svg,
 .ideas-page .photo-card-links .art-save-btn svg,
@@ -2281,8 +2297,9 @@ body:not(.edit-mode) .hotspot-delete-btn {
 .photos-page .photo-card-links .art-save-btn.is-saved,
 .ideas-page .photo-card-links .art-save-btn.is-saved,
 .stories-page .photo-card-links .art-save-btn.is-saved {
-  background: #e11d48 !important;
+  background: linear-gradient(135deg, #10b981, #059669) !important;
   color: #ffffff !important;
+  box-shadow: 0 3px 10px rgba(16, 185, 129, 0.3) !important;
 }
 .photos-page .photo-card-links .art-telegram-btn.is-disabled,
 .ideas-page .photo-card-links .art-telegram-btn.is-disabled,
