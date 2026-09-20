@@ -17530,28 +17530,134 @@ const UI_EN = {
   // placeholders
   'כתוב הודעה... או / לפרסום לקהילה': 'Write a message... or / to post to a community',
   'שם (אופציונלי)': 'Name (optional)',
-  'חיפוש קהילות...': 'Search communities...'
+  'חיפוש קהילות...': 'Search communities...',
+  'הקלד תשובה לבוט...': 'Type your reply to the bot...',
+
+  // ---- עמוד מנוי ----
+  'מקצוען': 'Pro', 'מתקדם': 'Advanced', 'בסיס': 'Basic', 'מומלץ': 'Recommended',
+  'לעסקים ומקצוענים שרוצים נוכחות חזקה ותוכן שנראה מיליון דולר.': 'For businesses and pros who want a strong presence and content that looks like a million bucks.',
+  'לקחת את הפרופיל צעד קדימה עם תוכן ברמה אחרת.': 'Take your profile a step further with next-level content.',
+  'להתחיל בקטן עם הפוסט הראשון שלך ב-AI.': 'Start small with your first AI post.',
+  '/ חודש': '/ month',
+  'בתשלום שנתי': 'billed annually', 'בתשלום חודשי': 'billed monthly',
+  'הקרדיטים מתחדשים חודשית': 'Credits renew monthly',
+  'בואו נתחיל': 'Get Started',
+  'או תשלום מהיר עם': 'Or quick payment with',
+  'מה מקבלים:': "What's included:",
+  'יצירת תוכן חכם עם AI': 'Smart content creation with AI',
+  'חיבור לרשתות החברתיות': 'Connect to social networks',
+  'מסלול מהיר ליצירת תוכן': 'Fast track content creation',
+  'גישה ראשונה לפיצ׳רים חדשים': 'Early access to new features',
+  'תמיכה VIP': 'VIP support',
+
+  // ---- כותרות מקטעים בעמוד הבית ----
+  'תמונות אחרונות': 'Latest Photos',
+  'סיפורים אחרונים': 'Latest Stories',
+  'קומיקס אחרונים': 'Latest Comics',
+  'פתח הכל ←': 'Open all ←', 'פתח הכל': 'Open all',
+  'בואו להעלות תוכן לויראלי': 'Come upload viral content',
+  'לאיזה אזור תרצו להעלות את התוכן שלכם?': 'Which area would you like to upload your content to?',
+  'סיפורים קצרים ומאמרים': 'Short stories and articles',
+  'רצועות קומיקס ואיורים': 'Comic strips and illustrations',
+  'אלבומים וגלריות תמונות': 'Photo albums and galleries',
+
+  // ---- פילטרים מרכזיים ----
+  'הכל': 'All', 'לעסקים': 'Business', 'כללי': 'General',
+  'מין': 'Gender', 'גיל': 'Age', 'מיקום': 'Location', 'תאריך': 'Date', 'גודל': 'Size',
+  'משתמשים מאומתים': 'Verified users',
+  '✓ משתמשים מאומתים': '✓ Verified users',
+  'תמונות בגודל מלא (ללא שוליים)': 'Full-size images (no margins)',
+
+  // ---- כרטיסים: מטא ופעולות ----
+  'שמירה': 'Save', 'אימייל': 'Email', 'מנהל האתר': 'Site Admin',
+
+  // ---- בוט פרסום מהיר ----
+  'עוזר לפרסום מודעה מהיר': 'Quick Ad Posting Assistant',
+  'זמין כעת · פרסום ב-30 שניות': 'Available now · Post in 30 seconds',
+  'מצוין! מה כותרת המודעה / התמונה שברצונך לפרסם?': "Great! What's the title of the ad / image you'd like to post?",
+  'נבחר: 🖼️ תמונות': 'Selected: 🖼️ Photos',
+  'נבחר: 📖 קומיקס': 'Selected: 📖 Comics',
+  'נבחר: ✍️ סיפורים': 'Selected: ✍️ Stories'
 };
 
+// תבניות למחרוזות עם מספרים דינמיים (החלפת תת-מחרוזת בתוך צומת טקסט)
+const UI_EN_PATTERNS = [
+  [/([\d,]+)\s*קרדיטים\s*\/\s*חודש/g, '$1 credits / month'],
+  [/([\d,]+)\s*קרדיטים/g, '$1 credits'],
+  [/([\d,]+)\s*סרטונים/g, '$1 videos'],
+  [/([\d,]+)\s*תמונות/g, '$1 images'],
+  [/([\d,]+)\s*צפיות/g, '$1 views'],
+  [/([\d,]+)\s*לייקים/g, '$1 likes'],
+  [/([\d,]+)\s*משתתפים/g, '$1 participants'],
+  [/גיל\s+(\d+)/g, 'Age $1'],
+  [/שלב\s+(\d+)\s+מתוך\s+(\d+)/g, 'Step $1 of $2'],
+  [/קומיקס\s*\((\d+)\s*אחרונים\)/g, 'Comics ($1 latest)'],
+  [/סיפורים\s*\((\d+)\s*אחרונים\)/g, 'Stories ($1 latest)'],
+  // כותרות מקטעים / כותרת ראשית שמפוצלות ל-spans — החלפת תת-מחרוזת
+  [/תמונות אחרונות/g, 'Latest Photos'],
+  [/סיפורים אחרונים/g, 'Latest Stories'],
+  [/קומיקס אחרונים/g, 'Latest Comics'],
+  [/בואו להעלות תוכן/g, 'Come upload viral'],
+  [/לויראלי/g, 'content'],
+  [/לאיזה אזור תרצו להעלות את התוכן שלכם\?/g, 'Which area would you like to upload your content to?'],
+  [/נבחר:\s*🖼️\s*תמונות/g, 'Selected: 🖼️ Photos'],
+  [/נבחר:\s*📖\s*קומיקס/g, 'Selected: 📖 Comics'],
+  [/נבחר:\s*✍️\s*סיפורים/g, 'Selected: ✍️ Stories'],
+  [/נבחר:/g, 'Selected:'],
+  // מתגים / פילטרים עליונים / חיפוש (אימוג'י צמוד לטקסט)
+  [/תמונות בגודל מלא \(ללא שוליים\)/g, 'Full-size images (no margins)'],
+  [/תוכן למבוגרים \(18\+\) פתוח לצפייה/g, 'Adult content (18+) is visible'],
+  [/תוכן למבוגרים/g, 'Adult Content'],
+  [/משתמשים מאומתים/g, 'Verified users'],
+  [/לעסקים/g, 'Business'],
+  [/כללי/g, 'General'],
+  [/חיפוש קהילות\.\.\./g, 'Search communities...'],
+  // בוט פרסום מהיר
+  [/זמין כעת/g, 'Available now'],
+  [/פרסום ב-30 שניות/g, 'Post in 30 seconds'],
+  [/מצוין!/g, 'Great!'],
+  [/מה כותרת המודעה \/ התמונה שברצונך לפרסם\?/g, "What's the title of the ad / image you'd like to post?"]
+];
+
 let __uiTranslating = false;
+// לא נוגעים בקוד עצמו. הודעות משתמשים/תוכן מוגנים ממילא כי המילון מתרגם
+// רק מחרוזות מוכרות של הממשק — תוכן חופשי שהמשתמשים כתבו לא מופיע במילון.
+const UI_SKIP_SEL = 'script, style';
 function translateChromeToEnglish() {
   if (getUiLang() !== 'en') return;
   __uiTranslating = true;
   try {
-    document.querySelectorAll('.apple-nav, .art-sidebar').forEach(scope => {
-      const walker = document.createTreeWalker(scope, NodeFilter.SHOW_TEXT, null);
-      const nodes = [];
-      while (walker.nextNode()) nodes.push(walker.currentNode);
-      nodes.forEach(n => {
-        const key = (n.nodeValue || '').trim();
-        if (key && Object.prototype.hasOwnProperty.call(UI_EN, key)) {
-          n.nodeValue = n.nodeValue.replace(key, UI_EN[key]);
-        }
-      });
-      scope.querySelectorAll('input[placeholder], textarea[placeholder]').forEach(inp => {
-        const k = (inp.placeholder || '').trim();
-        if (k && UI_EN[k]) inp.placeholder = UI_EN[k];
-      });
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+      acceptNode(node) {
+        if (!node.nodeValue || !node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+        if (node.parentElement && node.parentElement.closest(UI_SKIP_SEL)) return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    const nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+    nodes.forEach(n => {
+      const key = n.nodeValue.trim();
+      if (Object.prototype.hasOwnProperty.call(UI_EN, key)) {
+        n.nodeValue = n.nodeValue.replace(key, UI_EN[key]);
+        return;
+      }
+      // תבניות (מספרים דינמיים)
+      let v = n.nodeValue, changed = false;
+      for (const [re, rep] of UI_EN_PATTERNS) {
+        if (re.test(v)) { v = v.replace(re, rep); changed = true; }
+      }
+      if (changed) n.nodeValue = v;
+    });
+    document.querySelectorAll('input[placeholder], textarea[placeholder]').forEach(inp => {
+      const raw = inp.placeholder || '';
+      const k = raw.trim();
+      if (k && Object.prototype.hasOwnProperty.call(UI_EN, k)) { inp.placeholder = UI_EN[k]; return; }
+      let v = raw, changed = false;
+      for (const [re, rep] of UI_EN_PATTERNS) {
+        if (re.test(v)) { v = v.replace(re, rep); changed = true; }
+      }
+      if (changed) inp.placeholder = v;
     });
   } catch (e) {}
   __uiTranslating = false;
@@ -17559,14 +17665,20 @@ function translateChromeToEnglish() {
 window.translateChromeToEnglish = translateChromeToEnglish;
 
 // מפעיל את התרגום מחדש בכל רינדור/שינוי DOM (כשהשפה אנגלית).
+// כשהתרגום עצמו משנה DOM זה יגרום לסבב נוסף, אך מכיוון שהמחרוזות כבר
+// באנגלית (לא מתאימות למילון) הסבב הנוסף לא משנה דבר — ומתכנס מיד.
 (function initUiLangObserver() {
   let scheduled = false;
-  const run = () => { scheduled = false; if (getUiLang() === 'en') translateChromeToEnglish(); };
-  const obs = new MutationObserver(() => {
-    if (__uiTranslating || scheduled) return;
+  const run = () => {
+    scheduled = false;
+    if (getUiLang() === 'en' && !__uiTranslating) translateChromeToEnglish();
+  };
+  const schedule = () => {
+    if (scheduled) return;
     scheduled = true;
     (window.requestAnimationFrame || setTimeout)(run);
-  });
+  };
+  const obs = new MutationObserver(schedule);
   const start = () => {
     if (!document.body) { setTimeout(start, 50); return; }
     obs.observe(document.body, { subtree: true, childList: true, characterData: true });
