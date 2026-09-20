@@ -507,6 +507,26 @@ function sanitizeToOnlyPhotosAndStories() {
     _homePage.content = _homeContent;
   }
 
+  // עמוד "תמונות" — מוודאים שהוא קיים תמיד. בעבר קרו התנגשויות שמירה שבהן תוכן עמוד
+  // התמונות (data-section="photos") נדבק לעמוד אחר (למשל "שותפויות"/"מוצרי יד שניה"),
+  // וכך עמוד התמונות "נעלם" והכניסה אליו הובילה לעמוד הלא נכון. כאן מרפאים זאת:
+  // אם אין עמוד תמונות תקין אך קיים עמוד אחר שמכיל את חתך התמונות — מחזירים לו את
+  // הזהות הנכונה (id=page-photos-main, כותרת "תמונות"), והעמוד הזר ייווצר מחדש ריק בהמשך.
+  if (!pages.some(p => p && p.id === 'page-photos-main')) {
+    const _mislabeledPhotos = pages.find(p => p && p.id !== 'page-photos-main'
+      && (p.content || '').includes('data-section="photos"'));
+    if (_mislabeledPhotos) {
+      _mislabeledPhotos.id = 'page-photos-main';
+      _mislabeledPhotos.title = 'תמונות 🖼️';
+      _mislabeledPhotos.isHidden = false;
+      _mislabeledPhotos.content = (_mislabeledPhotos.content || '').replace(/data-page-id="[^"]*"/, 'data-page-id="page-photos-main"');
+    } else if (typeof buildPhotosPage === 'function') {
+      pages.push({ id: 'page-photos-main', title: 'תמונות 🖼️', content: buildPhotosPage([], 'photos') });
+    }
+  }
+  // עמוד התמונות חייב להיות גלוי לכולם (גם אם בעבר סומן מוסתר בטעות)
+  { const _pm = pages.find(p => p && p.id === 'page-photos-main'); if (_pm && _pm.isHidden) _pm.isHidden = false; }
+
   // עמוד "מוצרי יד שניה" — עמוד מסוג תמונות (גריד + חיפוש + סינון), הנתונים נשמרים בתוכן העמוד
   const _shPage = pages.find(p => p && p.id === 'page-secondhand-main');
   if (!_shPage) {
@@ -1211,7 +1231,7 @@ function renderPage() {
     }
   }
   const currentPage = pages.find(p => p.id === activePageId); // מחפשים את העמוד ברשימה
-  
+
   // הגנה: אם העמוד מוסתר והמשתמש הוא לא מנהל/עורך, מפנים אותו לעמוד גלוי.
   if (currentPage && currentPage.isHidden && !isEditMode && !isAdmin()) {
     const isVisible = p => p && !p.isHidden;
@@ -16858,7 +16878,8 @@ window.renderCommunityGridCard = renderCommunityGridCard;
 function communityShortcutsHTML() {
   const findPage = (kind) => {
     if (typeof pages === 'undefined' || !Array.isArray(pages)) return null;
-    if (kind === 'photos') return pages.find(p => p && ((p.content || '').includes('data-section="photos"') || (p.title || '').includes('תמונות')));
+    if (kind === 'photos') return pages.find(p => p && p.id === 'page-photos-main')
+      || pages.find(p => p && ((p.content || '').includes('data-section="photos"') || (p.title || '').includes('תמונות')));
     if (kind === 'stories') return pages.find(p => p && (p.id === 'page-stories-text' || (p.title || '') === 'סיפורים'));
     // comics
     return pages.find(p => p && p.id === 'page-stories-main')
@@ -17419,13 +17440,13 @@ let currentSubscriptionBilling = 'yearly'; // 'yearly' | 'monthly'
 
 const subscriptionPlansData = [
   {
-    id: 'starter',
-    title: 'התחלה',
+    id: 'basic',
+    title: 'בסיס',
     subtitle: 'להתחיל בקטן עם הפוסט הראשון שלך ב-AI.',
-    monthlyOriginal: 99,
-    monthlyPrice: 99,
-    yearlyOriginal: 99,
-    yearlyPrice: 49,
+    monthlyOriginal: 20,
+    monthlyPrice: 20,
+    yearlyOriginal: 20,
+    yearlyPrice: 20,
     credits: '200 קרדיטים / חודש',
     usage: '2 סרטונים / 20 תמונות',
     subtext: 'הקרדיטים מתחדשים חודשית',
@@ -17436,17 +17457,18 @@ const subscriptionPlansData = [
     ]
   },
   {
-    id: 'premium',
-    title: 'פרימיום',
+    id: 'advanced',
+    title: 'מתקדם',
     subtitle: 'לקחת את הפרופיל צעד קדימה עם תוכן ברמה אחרת.',
-    monthlyOriginal: 249,
-    monthlyPrice: 249,
-    yearlyOriginal: 249,
-    yearlyPrice: 125,
+    badge: 'מומלץ',
+    monthlyOriginal: 40,
+    monthlyPrice: 40,
+    yearlyOriginal: 40,
+    yearlyPrice: 40,
     credits: '600 קרדיטים / חודש',
     usage: '6 סרטונים / 60 תמונות',
     subtext: 'הקרדיטים מתחדשים חודשית',
-    isFeatured: false,
+    isFeatured: true,
     features: [
       'יצירת תוכן חכם עם AI',
       'חיבור לרשתות החברתיות',
@@ -17454,35 +17476,15 @@ const subscriptionPlansData = [
     ]
   },
   {
-    id: 'business',
-    title: 'עסקים',
-    subtitle: 'לעסקים שרוצים נוכחות חזקה ופוסטים שנראים מיליון דולר.',
-    badge: 'מומלץ',
-    monthlyOriginal: 499,
-    monthlyPrice: 499,
-    yearlyOriginal: 499,
-    yearlyPrice: 249,
+    id: 'pro',
+    title: 'מקצוען',
+    subtitle: 'לעסקים ומקצוענים שרוצים נוכחות חזקה ותוכן שנראה מיליון דולר.',
+    monthlyOriginal: 60,
+    monthlyPrice: 60,
+    yearlyOriginal: 60,
+    yearlyPrice: 60,
     credits: '1,600 קרדיטים / חודש',
     usage: '16 סרטונים / 160 תמונות',
-    subtext: 'הקרדיטים מתחדשים חודשית',
-    isFeatured: true,
-    features: [
-      'יצירת תוכן חכם עם AI',
-      'חיבור לרשתות החברתיות',
-      'מסלול מהיר ליצירת תוכן',
-      'גישה ראשונה לפיצ׳רים חדשים'
-    ]
-  },
-  {
-    id: 'influencer',
-    title: 'משפיענים',
-    subtitle: 'החבילה הכי שווה שלנו. מהירות שיא, תמיכה VIP והכל כלול.',
-    monthlyOriginal: 999,
-    monthlyPrice: 999,
-    yearlyOriginal: 999,
-    yearlyPrice: 499,
-    credits: '3,200 קרדיטים / חודש',
-    usage: '32 סרטונים / 320 תמונות',
     subtext: 'הקרדיטים מתחדשים חודשית',
     isFeatured: false,
     features: [
@@ -17491,27 +17493,6 @@ const subscriptionPlansData = [
       'מסלול מהיר ליצירת תוכן',
       'גישה ראשונה לפיצ׳רים חדשים',
       'תמיכה VIP'
-    ]
-  },
-  {
-    id: 'agency',
-    title: 'סוכנות',
-    subtitle: 'לסוכנויות ועסקים גדולים. ריבוי חשבונות תחת אותו מנוי.',
-    monthlyOriginal: 4999,
-    monthlyPrice: 4999,
-    yearlyOriginal: 4999,
-    yearlyPrice: 2499,
-    credits: '16,000 קרדיטים / חודש',
-    usage: '160 סרטונים / 1600 תמונות',
-    subtext: 'הקרדיטים מתחדשים חודשית',
-    isFeatured: false,
-    features: [
-      'יצירת תוכן חכם עם AI',
-      'חיבור לרשתות החברתיות',
-      'מסלול מהיר ליצירת תוכן',
-      'גישה ראשונה לפיצ׳רים חדשים',
-      'תמיכה VIP',
-      'ריבוי חשבונות תחת מנוי אחד'
     ]
   }
 ];
@@ -17607,7 +17588,7 @@ function buildSubscriptionPage() {
 
           <!-- Price section -->
           <div style="margin-bottom: 16px; min-height: 80px; display: flex; flex-direction: column; justify-content: flex-end; align-items: center;">
-            ${isYearly ? `
+            ${isYearly && origPrice && origPrice > price ? `
               <div style="font-size: 15px; color: #94a3b8; text-decoration: line-through; font-weight: 600; margin-bottom: 2px;">
                 ₪${formattedOrigPrice}
               </div>
@@ -17688,46 +17669,7 @@ function buildSubscriptionPage() {
       direction: rtl;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans Hebrew', sans-serif;
     ">
-      <!-- Billing Period Toggle (חודשי / שנתי) -->
-      <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 36px;">
-        <div style="
-          display: inline-flex;
-          align-items: center;
-          background: #ffffff;
-          border: 1px solid #e2e8f0;
-          border-radius: 999px;
-          padding: 4px;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-          gap: 4px;
-        ">
-          <button onclick="setSubscriptionBilling('yearly')" style="
-            border: none;
-            outline: none;
-            padding: 8px 22px;
-            border-radius: 999px;
-            font-size: 13.5px;
-            font-weight: 800;
-            cursor: pointer;
-            transition: all 0.25s ease;
-            ${isYearly ? 'background: #3b82f6; color: #ffffff; box-shadow: 0 2px 8px rgba(59,130,246,0.3);' : 'background: transparent; color: #64748b;'}
-          ">
-            שנתי (50% הנחה)
-          </button>
-          <button onclick="setSubscriptionBilling('monthly')" style="
-            border: none;
-            outline: none;
-            padding: 8px 22px;
-            border-radius: 999px;
-            font-size: 13.5px;
-            font-weight: 800;
-            cursor: pointer;
-            transition: all 0.25s ease;
-            ${!isYearly ? 'background: #3b82f6; color: #ffffff; box-shadow: 0 2px 8px rgba(59,130,246,0.3);' : 'background: transparent; color: #64748b;'}
-          ">
-            חודשי
-          </button>
-        </div>
-      </div>
+      <div style="margin-bottom: 24px;"></div>
 
       <!-- Pricing Cards Grid -->
       <div style="
