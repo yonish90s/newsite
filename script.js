@@ -17429,7 +17429,8 @@ function selectLanguage(lang) {
   const modal = document.getElementById('language-modal');
   if (modal) modal.style.display = 'none';
   if (lang === 'en') {
-    // מעבר לאנגלית — מתרגמים את הממשק מיד (סרגל עליון + צדדים)
+    // מעבר לאנגלית — מרנדרים מחדש (כדי לעדכן מטבע $ בעמוד המנוי) ומתרגמים מיד
+    try { if (typeof renderPage === 'function') renderPage(); } catch (e) {}
     translateChromeToEnglish();
   } else {
     // חזרה לעברית — טוענים מחדש כדי לשחזר את הטקסט המקורי
@@ -17701,6 +17702,7 @@ const subscriptionPlansData = [
     monthlyPrice: 20,
     yearlyOriginal: 20,
     yearlyPrice: 20,
+    usd: 6,
     credits: '200 קרדיטים / חודש',
     usage: '2 סרטונים / 20 תמונות',
     subtext: 'הקרדיטים מתחדשים חודשית',
@@ -17719,6 +17721,7 @@ const subscriptionPlansData = [
     monthlyPrice: 40,
     yearlyOriginal: 40,
     yearlyPrice: 40,
+    usd: 12,
     credits: '600 קרדיטים / חודש',
     usage: '6 סרטונים / 60 תמונות',
     subtext: 'הקרדיטים מתחדשים חודשית',
@@ -17737,6 +17740,7 @@ const subscriptionPlansData = [
     monthlyPrice: 60,
     yearlyOriginal: 60,
     yearlyPrice: 60,
+    usd: 18,
     credits: '1,600 קרדיטים / חודש',
     usage: '16 סרטונים / 160 תמונות',
     subtext: 'הקרדיטים מתחדשים חודשית',
@@ -17781,9 +17785,13 @@ window.handleApplePay = handleApplePay;
 function buildSubscriptionPage() {
   const isYearly = currentSubscriptionBilling === 'yearly';
 
+  // מטבע לפי שפה: אנגלית -> דולר ($), עברית -> שקל (₪)
+  const isEnglish = (typeof getUiLang === 'function') && getUiLang() === 'en';
+  const currencySym = isEnglish ? '$' : '₪';
   const cardsHtml = subscriptionPlansData.map(plan => {
-    const origPrice = isYearly ? plan.yearlyOriginal : null;
-    const price = isYearly ? plan.yearlyPrice : plan.monthlyPrice;
+    const shekelPrice = isYearly ? plan.yearlyPrice : plan.monthlyPrice;
+    const price = isEnglish ? (plan.usd != null ? plan.usd : shekelPrice) : shekelPrice;
+    const origPrice = (!isEnglish && isYearly) ? plan.yearlyOriginal : null;
     const formattedPrice = price.toLocaleString('he-IL');
     const formattedOrigPrice = origPrice ? origPrice.toLocaleString('he-IL') : '';
     const paymentPeriodLabel = isYearly ? 'בתשלום שנתי' : 'בתשלום חודשי';
@@ -17844,12 +17852,12 @@ function buildSubscriptionPage() {
           <div style="margin-bottom: 16px; min-height: 80px; display: flex; flex-direction: column; justify-content: flex-end; align-items: center;">
             ${isYearly && origPrice && origPrice > price ? `
               <div style="font-size: 15px; color: #94a3b8; text-decoration: line-through; font-weight: 600; margin-bottom: 2px;">
-                ₪${formattedOrigPrice}
+${currencySym}${formattedOrigPrice}
               </div>
             ` : '<div style="height: 22px;"></div>'}
             
             <div style="display: flex; align-items: baseline; justify-content: center; gap: 4px; direction: rtl;">
-              <span style="font-size: 38px; font-weight: 900; color: #0f172a; line-height: 1; letter-spacing: -1px;">₪${formattedPrice}</span>
+              <span style="font-size: 38px; font-weight: 900; color: #0f172a; line-height: 1; letter-spacing: -1px;">${currencySym}${formattedPrice}</span>
               <div style="display: flex; flex-direction: column; align-items: flex-start; text-align: right; line-height: 1.1;">
                 <span style="font-size: 11.5px; color: #64748b; font-weight: 700;">/ חודש</span>
                 <span style="font-size: 9.5px; color: #94a3b8;">${paymentPeriodLabel}</span>
