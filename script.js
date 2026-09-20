@@ -17426,12 +17426,154 @@ window.openLanguageModal = openLanguageModal;
 
 function selectLanguage(lang) {
   localStorage.setItem('user_language', lang);
-  const names = { he: 'עברית', en: 'English', es: 'Español', ar: 'العربية' };
-  alert(`השפה שונתה ל-${names[lang] || lang}`);
   const modal = document.getElementById('language-modal');
   if (modal) modal.style.display = 'none';
+  if (lang === 'en') {
+    // מעבר לאנגלית — מתרגמים את הממשק מיד (סרגל עליון + צדדים)
+    translateChromeToEnglish();
+  } else {
+    // חזרה לעברית — טוענים מחדש כדי לשחזר את הטקסט המקורי
+    try { location.reload(); } catch (e) {}
+  }
 }
 window.selectLanguage = selectLanguage;
+
+// ==========================================
+// תרגום ממשק לאנגלית (רק סרגל עליון + סרגלי צד — לא תוכן משתמשים)
+// ==========================================
+function getUiLang() {
+  try { return localStorage.getItem('user_language') || 'he'; } catch (e) { return 'he'; }
+}
+
+// מילון: מחרוזת עברית מדויקת -> אנגלית. רק מחרוזות שמופיעות כאן מתורגמות,
+// כך שתוכן שהמשתמשים העלו (שאינו במילון) לעולם לא נוגעים בו.
+const UI_EN = {
+  // סרגל עליון + פריטי ניווט (עם וללא אימוג'י)
+  'בית 🏠': 'Home 🏠', 'בית': 'Home',
+  'קהילות 🏘️': 'Communities 🏘️', 'קהילות': 'Communities',
+  'מנוי 💎': 'Subscription 💎', 'מנוי': 'Subscription',
+  'שותפויות 🤝': 'Partnerships 🤝', 'שותפויות': 'Partnerships',
+  'מוצרי יד שניה 🛒': 'Second Hand 🛒', 'מוצרי יד שניה': 'Second Hand',
+  'ביקורת ⭐': 'Reviews ⭐', 'ביקורת': 'Reviews',
+  'רעיונות 💡': 'Ideas 💡', 'רעיונות': 'Ideas',
+  'מידע 🔒': 'Info 🔒', 'בקשות 🔒': 'Requests 🔒',
+  'אורח': 'Guest',
+  'תמונות 🖼️': 'Photos 🖼️', 'תמונות': 'Photos',
+  'סיפורים 📖': 'Stories 📖', 'סיפורים': 'Stories',
+  'קומיקס 💥': 'Comics 💥', 'קומיקס': 'Comics',
+  'שאלות גולשים ❓': 'User Questions ❓', 'שאלות גולשים': 'User Questions',
+  'הצעות 🔥': 'Offers 🔥', 'הצעות': 'Offers',
+  // תיבת עמודי האתר (סרגל שמאל)
+  '📌 עמודי האתר': '📌 Site Pages',
+  'ניווט מהיר': 'Quick Nav',
+  'עמודי צד': 'Side Pages',
+  'פעיל': 'Active',
+  // תיבת פרסום מודעה מהיר
+  '🤖 פרסום מודעה מהיר': '🤖 Quick Ad Posting',
+  'עוזר מונחה שיפרסם עבורך מודעה חדשה בצ׳אט תוך 30 שניות': 'A guided assistant that posts a new ad for you in chat within 30 seconds',
+  '🤖 צ׳אט לפרסום מהיר': '🤖 Quick Post Chat',
+  '🤖 צ׳אט מהיר לפרסום מודעה': '🤖 Quick Ad Chat',
+  // סרגל ימין — סינונים וקישורים
+  '👥 הקהילות שלנו ברשת': '👥 Our Communities Online',
+  '🔎 סינונים': '🔎 Filters',
+  '👥 קהילה': '👥 Community',
+  '💬 צ׳אט': '💬 Chat',
+  '🤖 פרסום': '🤖 Promote',
+  '🎉 אירוע': '🎉 Event',
+  '⚡ העלאה': '⚡ Upload',
+  '🌐 אתרים': '🌐 Sites',
+  '📩 מידע': '📩 Info',
+  'מזער': 'Minimize',
+  '🔖 שמורים': '🔖 Saved',
+  '📨 הודעות': '📨 Messages',
+  'טווח גילאים (AGE)': 'Age Range (AGE)',
+  'כללי (SORT)': 'Sort (SORT)',
+  'האחרונים': 'Newest', 'הפופולארים': 'Popular', 'הישנים': 'Oldest',
+  'מין (CATEGORY)': 'Gender (CATEGORY)',
+  'גבר': 'Male', 'אישה': 'Female', 'זוג': 'Couple',
+  'מיקום (REGION)': 'Region (REGION)',
+  'צפון': 'North', 'מרכז': 'Center', 'דרום': 'South',
+  'תאריך (DATE)': 'Date (DATE)',
+  'השבוע': 'This Week', 'החודש': 'This Month', 'השנה': 'This Year',
+  'גודל (SIZE)': 'Size (SIZE)',
+  '4 עמודות': '4 Columns', '3 עמודות': '3 Columns', '2 עמודות': '2 Columns',
+  'נקה סינון ✕': 'Clear Filters ✕',
+  // אירוע קרוב
+  '🎉 מפגש ואירוע קרוב': '🎉 Upcoming Event',
+  'מפגש קהילה מרכזי': 'Main Community Meetup',
+  '📅 מפגש בתאריך:': '📅 Event date:',
+  '📍 מיקום:': '📍 Location:',
+  'תל אביב / זום אונליין': 'Tel Aviv / Zoom Online',
+  '👥 נרשמו עד כה:': '👥 Registered so far:',
+  '✍️ להרשמה לאירוע': '✍️ Register for event',
+  // הגדרות תצוגה
+  '🎛️ הגדרות תצוגה וסינון': '🎛️ Display & Filter Settings',
+  'תוכן למבוגרים': 'Adult Content',
+  '✓ תוכן למבוגרים (18+) פתוח לצפייה': '✓ Adult content (18+) is visible',
+  // העלאה מהירה
+  '⚡ העלאה מהירה': '⚡ Quick Upload',
+  'הפרטים שלך (מייל/טלגרם) כבר שמורים וימולאו אוטומטית': 'Your details (email/Telegram) are saved and filled automatically',
+  'העלאת גלריה חדשה': 'Upload New Gallery',
+  'גלריות שמורות': 'Saved Galleries',
+  'אין גלריות שמורות עדיין': 'No saved galleries yet',
+  // אתרים מומלצים
+  'אתרים מומלצים': 'Recommended Sites',
+  'גוגל (Google)': 'Google', 'וואלה! (Walla)': 'Walla!',
+  'ויינט (Ynet)': 'Ynet', 'יוטיוב (YouTube)': 'YouTube',
+  // השאירו מידע / צ'אט
+  '📩 השאירו לנו מידע': '📩 Leave us a message',
+  'כל אחד יכול לכתוב לנו — גם בלי הרשמה.': 'Anyone can write to us — even without signing up.',
+  'שליחה': 'Send', 'שלח': 'Send',
+  '💬 צ\'אט חי — דברו זה עם זה': '💬 Live chat — talk to each other',
+  '💡 טיפ: הקלד': '💡 Tip: type',
+  'ואז שם קהילה כדי לפרסם מודעה מהירה לקהילה': 'then a community name to quickly post an ad',
+  // placeholders
+  'כתוב הודעה... או / לפרסום לקהילה': 'Write a message... or / to post to a community',
+  'שם (אופציונלי)': 'Name (optional)',
+  'חיפוש קהילות...': 'Search communities...'
+};
+
+let __uiTranslating = false;
+function translateChromeToEnglish() {
+  if (getUiLang() !== 'en') return;
+  __uiTranslating = true;
+  try {
+    document.querySelectorAll('.apple-nav, .art-sidebar').forEach(scope => {
+      const walker = document.createTreeWalker(scope, NodeFilter.SHOW_TEXT, null);
+      const nodes = [];
+      while (walker.nextNode()) nodes.push(walker.currentNode);
+      nodes.forEach(n => {
+        const key = (n.nodeValue || '').trim();
+        if (key && Object.prototype.hasOwnProperty.call(UI_EN, key)) {
+          n.nodeValue = n.nodeValue.replace(key, UI_EN[key]);
+        }
+      });
+      scope.querySelectorAll('input[placeholder], textarea[placeholder]').forEach(inp => {
+        const k = (inp.placeholder || '').trim();
+        if (k && UI_EN[k]) inp.placeholder = UI_EN[k];
+      });
+    });
+  } catch (e) {}
+  __uiTranslating = false;
+}
+window.translateChromeToEnglish = translateChromeToEnglish;
+
+// מפעיל את התרגום מחדש בכל רינדור/שינוי DOM (כשהשפה אנגלית).
+(function initUiLangObserver() {
+  let scheduled = false;
+  const run = () => { scheduled = false; if (getUiLang() === 'en') translateChromeToEnglish(); };
+  const obs = new MutationObserver(() => {
+    if (__uiTranslating || scheduled) return;
+    scheduled = true;
+    (window.requestAnimationFrame || setTimeout)(run);
+  });
+  const start = () => {
+    if (!document.body) { setTimeout(start, 50); return; }
+    obs.observe(document.body, { subtree: true, childList: true, characterData: true });
+    if (getUiLang() === 'en') translateChromeToEnglish();
+  };
+  start();
+})();
 
 // ==========================================
 // עמוד מנויים (Subscription Plans Page)
