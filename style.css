@@ -5970,14 +5970,14 @@ html.hide-site-images .photo-mini-thumb {
 /* הערה: ה-zoom מכפיל גם את גובה 100vh של הפריסה, לכן מפצים על גובה
    .main-layout ב-calc(100vh / zoom) כדי שהגלילה הפנימית תמשיך לעבוד תקין. */
 @media (min-width: 1500px) {
-  body { zoom: 1.52; }
-  .main-layout { height: calc(100vh / 1.52); }
+  body { zoom: 1.15; }
+  .main-layout { height: calc(100vh / 1.15); }
 }
 @media (min-width: 2000px) {
-  body { zoom: 1.75; }
-  .main-layout { height: calc(100vh / 1.75); }
+  body { zoom: 1.25; }
+  .main-layout { height: calc(100vh / 1.25); }
 }
 @media (min-width: 2560px) {
-  body { zoom: 1.95; }
-  .main-layout { height: calc(100vh / 1.95); }
+  body { zoom: 1.35; }
+  .main-layout { height: calc(100vh / 1.35); }
 }
