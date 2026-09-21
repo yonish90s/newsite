@@ -5083,7 +5083,6 @@ function buildArticlesPage(articles) {
             <div class="art-sidebar-title">הכי נקראות השבוע</div>
             ${popularHTML}
           </div>
-          ${buildSocialCommunityBox()}
         </div>
       </div>
     </div>
@@ -14893,7 +14892,6 @@ function buildCoursesPage(courses) {
             <div class="art-sidebar-title">הנצפים ביותר השבוע</div>
             ${popularHTML}
           </div>
-          ${buildSocialCommunityBox()}
         </div>
       </div>
     </div>
