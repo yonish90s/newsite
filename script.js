@@ -6402,16 +6402,6 @@ function buildStoriesPage(stories, storyKind) {
           </div>
           ${storyCategoryBarHTML()}
           ${photoFilterSectionHTML()}
-          <div class="view-toggles">
-            <label class="tgl">
-              <span class="tgl-label">🔞 תוכן למבוגרים</span>
-              <span class="tgl-switch"><input type="checkbox" ${_adultOn ? 'checked' : ''} onchange="toggleSidebarAgeVerification(this.checked)"><span class="tgl-slider"></span></span>
-            </label>
-            <label class="tgl">
-              <span class="tgl-label">✔️ משתמשים מאומתים</span>
-              <span class="tgl-switch"><input type="checkbox" ${photoVerifiedOnly ? 'checked' : ''} onchange="photoToggleVerified(this.checked)"><span class="tgl-slider"></span></span>
-            </label>
-          </div>
           <div class="art-section-title-row">
             <div class="art-section-title">כל ה${kindLabel}</div>
             ${storySizeBarHTML()}
@@ -16738,19 +16728,24 @@ function setSectionCategoryFilter(section, cat) {
 window.setSectionCategoryFilter = setSectionCategoryFilter;
 
 function sectionCategoryBarHTML(section) {
+  // עמוד התמונות — צבע סגול; שאר העמודים נשארים כחול
+  const isPhotos = section === 'photos';
   const cats = [
     { id: 'הכל', label: 'הכל' },
+    ...(isPhotos ? [{ id: 'תמונות גולשים', label: 'תמונות גולשים' }] : []),
     { id: 'לעסקים', label: '💼 לעסקים' },
     { id: 'כללי', label: '💡 כללי' }
   ];
   const active = getSectionCategoryFilter(section);
+  const activeBg = isPhotos ? '#8b5cf6' : '#3b82f6';
+  const activeShadow = isPhotos ? '0 4px 14px rgba(139,92,246,0.35)' : '0 4px 14px rgba(59,130,246,0.35)';
   return `
     <div class="section-category-bar" style="display:flex; gap:10px; align-items:center; margin-bottom:16px; flex-wrap:wrap; padding:6px 0;">
       ${cats.map(c => {
         const isActive = active === c.id;
         return `
           <button type="button" onclick="setSectionCategoryFilter('${section}','${c.id}')"
-                  style="padding:8px 20px; border-radius:999px; border:${isActive ? 'none' : '1px solid #cbd5e1'}; background:${isActive ? '#3b82f6' : '#fff'}; color:${isActive ? '#fff' : '#334155'}; font-size:14px; font-weight:800; cursor:pointer; box-shadow:${isActive ? '0 4px 14px rgba(59,130,246,0.35)' : '0 1px 3px rgba(0,0,0,0.05)'}; transition:all 0.2s;">
+                  style="padding:8px 20px; border-radius:999px; border:${isActive ? 'none' : '1px solid #cbd5e1'}; background:${isActive ? activeBg : '#fff'}; color:${isActive ? '#fff' : '#334155'}; font-size:14px; font-weight:800; cursor:pointer; box-shadow:${isActive ? activeShadow : '0 1px 3px rgba(0,0,0,0.05)'}; transition:all 0.2s;">
             ${c.label}
           </button>
         `;
@@ -17603,7 +17598,41 @@ const UI_EN = {
   'מצוין! מה כותרת המודעה / התמונה שברצונך לפרסם?': "Great! What's the title of the ad / image you'd like to post?",
   'נבחר: 🖼️ תמונות': 'Selected: 🖼️ Photos',
   'נבחר: 📖 קומיקס': 'Selected: 📖 Comics',
-  'נבחר: ✍️ סיפורים': 'Selected: ✍️ Stories'
+  'נבחר: ✍️ סיפורים': 'Selected: ✍️ Stories',
+
+  // ---- מודל התחברות ----
+  'התחבר כדי להמשיך': 'Log in to continue',
+  'המשך עם גוגל': 'Continue with Google',
+  'המשך עם פייסבוק': 'Continue with Facebook',
+  'המשך עם אפל': 'Continue with Apple',
+  'המשך עם טלפון': 'Continue with Phone',
+  'המשך עם כתובת המייל שלך': 'Continue with your email address',
+  'שליחת קוד': 'Send code',
+  'תנאי השימוש': 'Terms of Service',
+
+  // ---- כרטיסי כניסה לקהילות ----
+  'לצפייה בכל התמונות': 'View all photos',
+  'לצפייה בכל הקומיקס': 'View all comics',
+  'לצפייה בכל הסיפורים': 'View all stories',
+  'כניסה': 'Enter',
+  'כניסה לקהילה': 'Enter community',
+
+  // ---- קטגוריות ----
+  'תמונות גולשים': 'User Photos',
+
+  // ---- אשף העלאה מהירה (5 שלבים) ----
+  // קטגוריות שלב 3
+  'הרפתקאות': 'Adventure', 'הומור': 'Humor', 'מד״ב ופנטזיה': 'Sci-Fi & Fantasy',
+  'רומנטיקה': 'Romance', 'טבע ונופים': 'Nature & Landscapes', 'אמנות': 'Art',
+  'חדשות וטכנולוגיה': 'News & Tech',
+  // placeholders
+  'לדוגמה: יום טיול מדהים בצפון / הרפתקה בחלל...': 'e.g. An amazing trip up north / a space adventure...',
+  'או הקלידו קטגוריה אחרת...': 'Or type another category...',
+  'כתבו כאן כמה מילים או תיאור מפורט...': 'Write a few words or a detailed description here...',
+  'שם היוצר / כינוי / טלגרם (@username)...': 'Creator name / nickname / Telegram (@username)...',
+  // תוויות / כפתורים
+  'הוסף תמונה': 'Add photo',
+  'פרסום': 'Publish'
 };
 
 // תבניות למחרוזות עם מספרים דינמיים (החלפת תת-מחרוזת בתוך צומת טקסט)
@@ -17623,8 +17652,26 @@ const UI_EN_PATTERNS = [
   [/תמונות אחרונות/g, 'Latest Photos'],
   [/סיפורים אחרונים/g, 'Latest Stories'],
   [/קומיקס אחרונים/g, 'Latest Comics'],
-  [/בואו להעלות תוכן/g, 'Come upload viral'],
-  [/לויראלי/g, 'content'],
+  [/בואו להעלות תוכן/g, 'Come upload viral content'],
+  [/לויראלי/g, ''],
+  // אשף העלאה — כותרות מפוצלות (מרכזים את כל הכותרת בחלק הראשון)
+  [/מה הכותרת/g, "What's the content title?"],
+  [/של התוכן\?/g, ''],
+  [/באיזו קטגוריה/g, 'Which category does it fit?'],
+  [/זה מתאים\?/g, ''],
+  [/ספרו בקצרה/g, 'Tell us briefly about the content'],
+  [/על התוכן/g, ''],
+  [/מי היוצר \//g, "Who's the creator / contact?"],
+  [/פרטי קשר\?/g, ''],
+  [/העלאת תמונות/g, 'Upload images & publish'],
+  [/ופרסום/g, ''],
+  // אשף העלאה — כותרות משנה
+  [/כותרת קליטה שתמשוך קוראים וצופים/g, 'A catchy title that attracts readers and viewers'],
+  [/בחרו קטגוריה או הקלידו קטגוריה מותאמת אישית/g, 'Choose a category or type a custom one'],
+  [/תיאור קצר, תקציר או הטקסט המלא שילווה את היצירה/g, 'A short description, summary or the full text for your creation'],
+  [/שם יוצר, טלגרם או אימייל שיופיע בכרטיס התוכן/g, 'Creator name, Telegram or email shown on the content card'],
+  [/בחרו תמונה אחת או יותר ליצירה שלכם ולחצו על פרסום/g, 'Choose one or more images and click publish'],
+  [/שלב אחרון:/g, 'Last step:'],
   [/לאיזה אזור תרצו להעלות את התוכן שלכם\?/g, 'Which area would you like to upload your content to?'],
   [/נבחר:\s*🖼️\s*תמונות/g, 'Selected: 🖼️ Photos'],
   [/נבחר:\s*📖\s*קומיקס/g, 'Selected: 📖 Comics'],
@@ -17642,7 +17689,10 @@ const UI_EN_PATTERNS = [
   [/זמין כעת/g, 'Available now'],
   [/פרסום ב-30 שניות/g, 'Post in 30 seconds'],
   [/מצוין!/g, 'Great!'],
-  [/מה כותרת המודעה \/ התמונה שברצונך לפרסם\?/g, "What's the title of the ad / image you'd like to post?"]
+  [/מה כותרת המודעה \/ התמונה שברצונך לפרסם\?/g, "What's the title of the ad / image you'd like to post?"],
+  // מודל התחברות — משפט תנאי שימוש (מפוצל)
+  [/בהרשמה, אתם מסכימים ל/g, 'By signing up, you agree to our '],
+  [/ ?שלנו\./g, '.']
 ];
 
 let __uiTranslating = false;
