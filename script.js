@@ -16211,7 +16211,9 @@ let SOCIAL_LINKS = {
   telegram: 'https://t.me',
   discord: 'https://discord.gg',
   reddit: 'https://reddit.com',
-  twitter: 'https://twitter.com'
+  twitter: 'https://twitter.com',
+  youtube: 'https://youtube.com',
+  linkedin: 'https://linkedin.com'
 };
 
 try {
@@ -16222,31 +16224,29 @@ try {
 function buildSocialCommunityBox() {
   const isEd = (typeof isAdmin === 'function' && isAdmin()) || (typeof isEditMode !== 'undefined' && isEditMode);
 
+  const ic = {
+    facebook: '<svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.96.93-1.96 1.89v2.25h3.33l-.53 3.49h-2.8V24C19.61 23.1 24 18.1 24 12.07z"/></svg>',
+    instagram: '<svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><path d="M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.8.25 2.23.41.56.22.96.48 1.38.9.42.42.68.82.9 1.38.16.42.36 1.06.41 2.23.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.8-.41 2.23-.22.56-.48.96-.9 1.38-.42.42-.82.68-1.38.9-.42.16-1.06.36-2.23.41-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.8-.25-2.23-.41-.56-.22-.96-.48-1.38-.9-.42-.42-.68-.82-.9-1.38-.16-.42-.36-1.06-.41-2.23C2.17 15.58 2.16 15.2 2.16 12s.01-3.58.07-4.85c.05-1.17.25-1.8.41-2.23.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.42-.16 1.06-.36 2.23-.41C8.42 2.17 8.8 2.16 12 2.16zM12 0C8.74 0 8.33.01 7.05.07 5.78.13 4.9.33 4.14.63c-.79.31-1.46.72-2.12 1.38C1.35 2.67.94 3.34.63 4.14.33 4.9.13 5.78.07 7.05.01 8.33 0 8.74 0 12s.01 3.67.07 4.95c.06 1.27.26 2.15.56 2.91.31.8.72 1.47 1.38 2.13.66.66 1.33 1.07 2.12 1.38.76.3 1.64.5 2.91.56C8.33 23.99 8.74 24 12 24s3.67-.01 4.95-.07c1.27-.06 2.15-.26 2.91-.56.8-.31 1.47-.72 2.13-1.38.66-.66 1.07-1.33 1.38-2.13.3-.76.5-1.64.56-2.91.06-1.28.07-1.69.07-4.95s-.01-3.67-.07-4.95c-.06-1.27-.26-2.15-.56-2.91-.31-.8-.72-1.47-1.38-2.13-.66-.66-1.33-1.07-2.13-1.38-.76-.3-1.64-.5-2.91-.56C15.67.01 15.26 0 12 0zm0 5.84A6.16 6.16 0 1018.16 12 6.16 6.16 0 0012 5.84zm0 10.16A4 4 0 1116 12a4 4 0 01-4 4zm6.41-10.4a1.44 1.44 0 11-1.44-1.44 1.44 1.44 0 011.44 1.44z"/></svg>',
+    discord: '<svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><path d="M20.32 4.37A19.79 19.79 0 0015.45 2.9a.07.07 0 00-.08.04c-.21.38-.44.87-.6 1.25a18.27 18.27 0 00-5.48 0 12.6 12.6 0 00-.61-1.25.08.08 0 00-.08-.04A19.74 19.74 0 003.68 4.37a.07.07 0 00-.03.03C.53 9.05-.32 13.58.1 18.06a.08.08 0 00.03.05 19.9 19.9 0 005.99 3.03.08.08 0 00.08-.03c.46-.63.87-1.29 1.23-1.99a.08.08 0 00-.04-.11c-.65-.25-1.27-.55-1.87-.89a.08.08 0 01-.01-.13c.13-.09.25-.19.37-.29a.07.07 0 01.08-.01c3.93 1.79 8.18 1.79 12.06 0a.07.07 0 01.08.01c.12.1.24.2.37.29a.08.08 0 01-.01.13c-.6.35-1.22.64-1.87.89a.08.08 0 00-.04.11c.36.7.78 1.36 1.23 1.99a.08.08 0 00.08.03 19.84 19.84 0 006-3.03.08.08 0 00.03-.05c.5-5.18-.84-9.67-3.55-13.66a.06.06 0 00-.03-.03zM8.02 15.33c-1.18 0-2.15-1.08-2.15-2.42s.95-2.42 2.15-2.42c1.21 0 2.17 1.09 2.15 2.42 0 1.34-.95 2.42-2.15 2.42zm7.96 0c-1.18 0-2.15-1.08-2.15-2.42s.95-2.42 2.15-2.42c1.21 0 2.17 1.09 2.15 2.42 0 1.34-.94 2.42-2.15 2.42z"/></svg>',
+    twitter: '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M18.9 1.15h3.68l-8.04 9.19L24 22.85h-7.41l-5.8-7.58-6.64 7.58H.47l8.6-9.83L0 1.15h7.59l5.24 6.93zm-1.29 19.5h2.04L6.48 3.24H4.29z"/></svg>',
+    youtube: '<svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><path d="M23.5 6.19a3.02 3.02 0 00-2.12-2.14C19.5 3.55 12 3.55 12 3.55s-7.5 0-9.38.5A3.02 3.02 0 00.5 6.19C0 8.08 0 12 0 12s0 3.92.5 5.81a3.02 3.02 0 002.12 2.14c1.88.5 9.38.5 9.38.5s7.5 0 9.38-.5a3.02 3.02 0 002.12-2.14C24 15.92 24 12 24 12s0-3.92-.5-5.81zM9.55 15.57V8.43L15.82 12z"/></svg>',
+    linkedin: '<svg viewBox="0 0 24 24" width="25" height="25" fill="currentColor"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.63-1.85 3.36-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.07 2.07 0 110-4.14 2.07 2.07 0 010 4.14zM7.12 20.45H3.55V9h3.57v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.22.79 24 1.77 24h20.45c.98 0 1.78-.78 1.78-1.73V1.73C24 .77 23.2 0 22.22 0z"/></svg>'
+  };
+  const link = (key, def) => {
+    const url = SOCIAL_LINKS[key] || def;
+    return `<a href="${url}" target="_blank" rel="noopener" aria-label="${key}" style="display:flex; align-items:center; justify-content:center; width:44px; height:44px; color:#fff; text-decoration:none; opacity:0.92; transition:opacity 0.2s, transform 0.2s;" onmouseover="this.style.opacity='1'; this.style.transform='translateY(-2px)'" onmouseout="this.style.opacity='0.92'; this.style.transform='none'">${ic[key]}</a>`;
+  };
+
   return `
-    <div class="art-sidebar-box art-social-box" style="text-align: right; display: flex; flex-direction: column; gap: 12px; padding: 16px; border-radius: 12px; border: 1px solid rgba(236, 72, 153, 0.15); background: rgba(236, 72, 153, 0.02); box-sizing: border-box; width: 100%;">
-      <div class="art-sidebar-title" style="margin-bottom: 8px; border-bottom: 2px solid #ec4899; padding-bottom: 6px; font-size: 14px; font-weight: 800; color: #ec4899; width: 100%; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center;">
-        <span>👥 הקהילות שלנו ברשת</span>
-        ${isEd ? `<button type="button" onclick="openSocialLinksModal()" style="background: #ec4899; color: #fff; border: none; border-radius: 6px; padding: 3px 8px; font-size: 11px; font-weight: bold; cursor: pointer; transition: opacity 0.2s;">✏️ ערוך קישורים</button>` : ''}
-      </div>
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; box-sizing: border-box;">
-        <a href="${SOCIAL_LINKS.instagram || 'https://instagram.com'}" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); color: white; text-decoration: none; border-radius: 8px; font-size: 12px; font-weight: bold; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
-          <span>Instagram</span>
-        </a>
-        <a href="${SOCIAL_LINKS.facebook || 'https://facebook.com'}" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; background: #1877f2; color: white; text-decoration: none; border-radius: 8px; font-size: 12px; font-weight: bold; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
-          <span>Facebook</span>
-        </a>
-        <a href="${SOCIAL_LINKS.telegram || 'https://t.me'}" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; background: #229ED9; color: white; text-decoration: none; border-radius: 8px; font-size: 12px; font-weight: bold; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
-          <span>Telegram ✈️</span>
-        </a>
-        <a href="${SOCIAL_LINKS.discord || 'https://discord.gg'}" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; background: #5865F2; color: white; text-decoration: none; border-radius: 8px; font-size: 12px; font-weight: bold; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
-          <span>Discord 👾</span>
-        </a>
-        <a href="${SOCIAL_LINKS.reddit || 'https://reddit.com'}" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; background: #ff4500; color: white; text-decoration: none; border-radius: 8px; font-size: 12px; font-weight: bold; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
-          <span>Reddit</span>
-        </a>
-        <a href="${SOCIAL_LINKS.twitter || 'https://twitter.com'}" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; background: #000000; color: white; text-decoration: none; border-radius: 8px; font-size: 12px; font-weight: bold; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
-          <span>Twitter / X</span>
-        </a>
+    <div class="art-sidebar-box art-social-box" style="display:flex; flex-direction:column; gap:10px; padding:18px 14px; border-radius:14px; background:#0b0b0f; box-sizing:border-box; width:100%;">
+      ${isEd ? `<div style="display:flex; justify-content:flex-end;"><button type="button" onclick="openSocialLinksModal()" style="background:rgba(255,255,255,0.1); color:#fff; border:none; border-radius:6px; padding:3px 8px; font-size:11px; font-weight:bold; cursor:pointer;">✏️ ערוך קישורים</button></div>` : ''}
+      <div style="display:flex; align-items:center; justify-content:space-around; flex-wrap:wrap; gap:8px; width:100%; box-sizing:border-box;">
+        ${link('facebook', 'https://facebook.com')}
+        ${link('instagram', 'https://instagram.com')}
+        ${link('discord', 'https://discord.gg')}
+        ${link('twitter', 'https://twitter.com')}
+        ${link('youtube', 'https://youtube.com')}
+        ${link('linkedin', 'https://linkedin.com')}
       </div>
     </div>
   `;
@@ -16274,23 +16274,23 @@ function openSocialLinksModal() {
           </label>
           
           <label style="display:flex; flex-direction:column; gap:4px;">
-            <span>✈️ Telegram:</span>
-            <input type="url" id="social-inp-telegram" placeholder="https://t.me/your-channel" style="padding:8px 12px; border:1px solid #ddd; border-radius:8px; font-size:13px;">
-          </label>
-          
-          <label style="display:flex; flex-direction:column; gap:4px;">
             <span>👾 Discord:</span>
             <input type="url" id="social-inp-discord" placeholder="https://discord.gg/your-server" style="padding:8px 12px; border:1px solid #ddd; border-radius:8px; font-size:13px;">
           </label>
 
           <label style="display:flex; flex-direction:column; gap:4px;">
-            <span>🍊 Reddit:</span>
-            <input type="url" id="social-inp-reddit" placeholder="https://reddit.com/r/your-community" style="padding:8px 12px; border:1px solid #ddd; border-radius:8px; font-size:13px;">
+            <span>✖️ Twitter / X:</span>
+            <input type="url" id="social-inp-twitter" placeholder="https://x.com/your-profile" style="padding:8px 12px; border:1px solid #ddd; border-radius:8px; font-size:13px;">
           </label>
 
           <label style="display:flex; flex-direction:column; gap:4px;">
-            <span>🐦 Twitter / X:</span>
-            <input type="url" id="social-inp-twitter" placeholder="https://x.com/your-profile" style="padding:8px 12px; border:1px solid #ddd; border-radius:8px; font-size:13px;">
+            <span>▶️ YouTube:</span>
+            <input type="url" id="social-inp-youtube" placeholder="https://youtube.com/@your-channel" style="padding:8px 12px; border:1px solid #ddd; border-radius:8px; font-size:13px;">
+          </label>
+
+          <label style="display:flex; flex-direction:column; gap:4px;">
+            <span>💼 LinkedIn:</span>
+            <input type="url" id="social-inp-linkedin" placeholder="https://linkedin.com/in/your-profile" style="padding:8px 12px; border:1px solid #ddd; border-radius:8px; font-size:13px;">
           </label>
         </div>
 
@@ -16305,10 +16305,10 @@ function openSocialLinksModal() {
 
   document.getElementById('social-inp-instagram').value = SOCIAL_LINKS.instagram || '';
   document.getElementById('social-inp-facebook').value = SOCIAL_LINKS.facebook || '';
-  document.getElementById('social-inp-telegram').value = SOCIAL_LINKS.telegram || '';
   document.getElementById('social-inp-discord').value = SOCIAL_LINKS.discord || '';
-  document.getElementById('social-inp-reddit').value = SOCIAL_LINKS.reddit || '';
   document.getElementById('social-inp-twitter').value = SOCIAL_LINKS.twitter || '';
+  document.getElementById('social-inp-youtube').value = SOCIAL_LINKS.youtube || '';
+  document.getElementById('social-inp-linkedin').value = SOCIAL_LINKS.linkedin || '';
 
   modal.style.display = 'flex';
 }
@@ -16321,10 +16321,10 @@ function closeSocialLinksModal() {
 function saveSocialLinksModal() {
   SOCIAL_LINKS.instagram = document.getElementById('social-inp-instagram').value.trim() || 'https://instagram.com';
   SOCIAL_LINKS.facebook = document.getElementById('social-inp-facebook').value.trim() || 'https://facebook.com';
-  SOCIAL_LINKS.telegram = document.getElementById('social-inp-telegram').value.trim() || 'https://t.me';
   SOCIAL_LINKS.discord = document.getElementById('social-inp-discord').value.trim() || 'https://discord.gg';
-  SOCIAL_LINKS.reddit = document.getElementById('social-inp-reddit').value.trim() || 'https://reddit.com';
   SOCIAL_LINKS.twitter = document.getElementById('social-inp-twitter').value.trim() || 'https://twitter.com';
+  SOCIAL_LINKS.youtube = document.getElementById('social-inp-youtube').value.trim() || 'https://youtube.com';
+  SOCIAL_LINKS.linkedin = document.getElementById('social-inp-linkedin').value.trim() || 'https://linkedin.com';
 
   localStorage.setItem('social_community_links_v1', JSON.stringify(SOCIAL_LINKS));
   closeSocialLinksModal();
