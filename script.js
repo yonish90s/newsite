@@ -11419,7 +11419,6 @@ function buildPhotosPage(albums, section) {
         </div>
         <div class="art-sidebar art-sidebar-right">
           ${addBtnHTML}
-          ${section === 'communities' && typeof buildSocialCommunityBox === 'function' ? buildSocialCommunityBox() : ''}
           ${buildSidebarTabs(savedHTML, section === 'ideas' ? 'ideas' : (section === 'communities' ? 'communities' : 'photos'))}
         </div>
         ${buildLeftSidebarBox(popularHTML, section)}
