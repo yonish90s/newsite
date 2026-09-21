@@ -702,6 +702,11 @@ async function initSite() {
         PROMOTED_SITES = data.promotedSites;
         localStorage.setItem('promoted_sites', JSON.stringify(PROMOTED_SITES));
       }
+      if (data.socialLinks && typeof SOCIAL_LINKS !== 'undefined') SOCIAL_LINKS = { ...SOCIAL_LINKS, ...data.socialLinks };
+      if (data.onboardingVideos && typeof ONBOARDING_VIDEOS !== 'undefined') {
+        ONBOARDING_VIDEOS = { ...ONBOARDING_VIDEOS, ...data.onboardingVideos };
+        try { if (typeof maybeShowOnboarding === 'function') maybeShowOnboarding(); } catch (e) {}
+      }
       
       sanitizeToOnlyPhotosAndStories();
 
@@ -855,6 +860,7 @@ function saveToStorage() {
       siteBackgrounds: siteBackgrounds,
       promotedSites: PROMOTED_SITES,
       socialLinks: SOCIAL_LINKS,
+      onboardingVideos: (typeof ONBOARDING_VIDEOS !== 'undefined' ? ONBOARDING_VIDEOS : { desktop: ['', '', ''], mobile: ['', '', ''] }),
       storyCategories: STORY_CATEGORIES
     }).then(() => {
       console.log("סונכרן בהצלחה לענן Firebase!");
@@ -8729,6 +8735,9 @@ function buildInfoPage() {
       <div id="${id}" style="font-size:26px; font-weight:900; color:${color}; margin-top:6px;">…</div>
     </div>`;
   const analyticsHTML = `
+    <div style="margin-bottom:20px; display:flex; gap:10px; flex-wrap:wrap;">
+      <button type="button" onclick="openOnboardingAdmin()" style="background:#3b6ef5; color:#fff; border:none; border-radius:10px; padding:10px 18px; font-weight:800; font-size:14px; cursor:pointer;">🎬 הגדרות מדריך (אונבורדינג)</button>
+    </div>
     <div style="margin-bottom:24px;">
       <div style="font-size:16px; font-weight:900; color:#0f172a; margin-bottom:12px;">📊 נתוני האתר <span style="font-size:12px; color:#94a3b8; font-weight:700;">(מתעדכן בזמן אמת)</span></div>
       <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:12px; margin-bottom:14px;">
@@ -10208,11 +10217,11 @@ function buildLeftSidebarBox(popularHTML, section) {
         ` : ''}
       </div>
 
-      <div class="art-sidebar-box" style="border: 1.5px solid #22c55e; background: rgba(34,197,94,0.04); border-radius: 14px; padding: 16px; text-align: center;">
+      ${section === 'communities' ? '' : `<div class="art-sidebar-box" style="border: 1.5px solid #22c55e; background: rgba(34,197,94,0.04); border-radius: 14px; padding: 16px; text-align: center;">
         <div style="font-size: 14px; font-weight: 900; color: #166534; margin-bottom: 4px;">🤖 פרסום מודעה מהיר</div>
         <div style="font-size: 11.5px; color: #64748b; margin-bottom: 10px; line-height: 1.4;">עוזר מונחה שיפרסם עבורך מודעה חדשה בצ׳אט תוך 30 שניות</div>
         <button onclick="openQuickPublish()" style="width: 100%; background: linear-gradient(135deg,#22c55e,#16a34a); color: #fff; border: none; border-radius: 10px; padding: 10px; font-size: 13px; font-weight: 800; cursor: pointer; box-shadow: 0 3px 10px rgba(34,197,94,0.25);">🤖 צ׳אט לפרסום מהיר</button>
-      </div>
+      </div>`}
     </div>
   `;
 }
@@ -11383,9 +11392,9 @@ function buildPhotosPage(albums, section) {
           </div>
           ${section === 'ideas'
             ? (typeof ideasCategoryBarHTML === 'function' ? ideasCategoryBarHTML() : '')
-            : (section === 'secondhand' ? '' : (typeof sectionCategoryBarHTML === 'function' ? sectionCategoryBarHTML(section) : ''))}
-          ${section === 'secondhand' && typeof secondhandFilterBarHTML === 'function' ? secondhandFilterBarHTML() : photoFilterSectionHTML()}
-          ${section === 'secondhand'
+            : (section === 'secondhand' || section === 'communities' ? '' : (typeof sectionCategoryBarHTML === 'function' ? sectionCategoryBarHTML(section) : ''))}
+          ${section === 'communities' ? '' : (section === 'secondhand' && typeof secondhandFilterBarHTML === 'function' ? secondhandFilterBarHTML() : photoFilterSectionHTML())}
+          ${section === 'communities' ? '' : (section === 'secondhand'
             ? (typeof secondhandTogglesHTML === 'function' ? secondhandTogglesHTML() : '')
             : `<div class="view-toggles">
             <label class="tgl">
@@ -11400,7 +11409,7 @@ function buildPhotosPage(albums, section) {
               <span class="tgl-label">🖼️ תמונות בגודל מלא (ללא שוליים)</span>
               <span class="tgl-switch"><input type="checkbox" ${photoNoImgMargins ? 'checked' : ''} onchange="photoToggleImageMargins(this.checked)"><span class="tgl-slider"></span></span>
             </label>
-          </div>`}
+          </div>`)}
 
           <!-- מקטע מאוחד: כל הרעיונות / כל הגלריות -->
           <div class="photo-section-row" style="margin-bottom: 32px; background: #ffffff; padding: 18px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
@@ -11419,7 +11428,7 @@ function buildPhotosPage(albums, section) {
         </div>
         <div class="art-sidebar art-sidebar-right">
           ${addBtnHTML}
-          ${buildSidebarTabs(savedHTML, section === 'ideas' ? 'ideas' : (section === 'communities' ? 'communities' : 'photos'))}
+          ${section === 'communities' ? '' : buildSidebarTabs(savedHTML, section === 'ideas' ? 'ideas' : 'photos')}
         </div>
         ${buildLeftSidebarBox(popularHTML, section)}
       </div>
@@ -16218,6 +16227,13 @@ try {
   if (savedSocial) SOCIAL_LINKS = { ...SOCIAL_LINKS, ...JSON.parse(savedSocial) };
 } catch(e) {}
 
+// סרטוני האונבורדינג (מדריך) — נשמרים גלובלית ב-Firebase. כל טאב = URL של סרטון.
+let ONBOARDING_VIDEOS = { desktop: ['', '', ''], mobile: ['', '', ''] };
+try {
+  const savedOnb = localStorage.getItem('onboarding_videos_v1');
+  if (savedOnb) ONBOARDING_VIDEOS = { ...ONBOARDING_VIDEOS, ...JSON.parse(savedOnb) };
+} catch(e) {}
+
 function buildSocialCommunityBox() {
   const isEd = (typeof isAdmin === 'function' && isAdmin()) || (typeof isEditMode !== 'undefined' && isEditMode);
 
@@ -17417,7 +17433,19 @@ window.openLikesModal = openFavoritesPage;
 
 function openLanguageModal() {
   const modal = document.getElementById('language-modal');
-  if (modal) modal.style.display = 'flex';
+  if (!modal) return;
+  // סימון "פעיל" דינמי לפי השפה הנוכחית
+  const lang = (typeof getUiLang === 'function') ? getUiLang() : (localStorage.getItem('user_language') || 'he');
+  const heActive = document.getElementById('lang-active-he');
+  const enActive = document.getElementById('lang-active-en');
+  const heBtn = document.getElementById('lang-btn-he');
+  const enBtn = document.getElementById('lang-btn-en');
+  if (heActive) heActive.textContent = lang === 'he' ? '✓ פעיל' : '';
+  if (enActive) enActive.textContent = lang === 'en' ? '✓ Active' : '';
+  // הדגשת הכפתור הפעיל
+  if (heBtn) { heBtn.style.background = lang === 'he' ? '#2a2a34' : '#202028'; heBtn.style.color = lang === 'he' ? '#fff' : '#a1a1aa'; heBtn.style.borderColor = lang === 'he' ? '#3f3f4e' : '#2e2e38'; }
+  if (enBtn) { enBtn.style.background = lang === 'en' ? '#2a2a34' : '#202028'; enBtn.style.color = lang === 'en' ? '#fff' : '#a1a1aa'; enBtn.style.borderColor = lang === 'en' ? '#3f3f4e' : '#2e2e38'; }
+  modal.style.display = 'flex';
 }
 window.openLanguageModal = openLanguageModal;
 
@@ -17662,6 +17690,46 @@ function translateChromeToEnglish() {
 }
 window.translateChromeToEnglish = translateChromeToEnglish;
 
+// ==========================================
+// הסרת כל האימוג'ים מהממשק (בשתי השפות). לא נוגע בחצים/סימנים פונקציונליים
+// (‹ › ← ▾ ✓), רק באימוג'י ציוריים, דגלים, גווני עור, ומחברי ZWJ/סימני וריאציה.
+// פועל בזמן תצוגה בלבד — לא משנה נתונים שמורים.
+// ==========================================
+function stripEmojisFromNode(str) {
+  return str
+    // אימוג'י ציוריים ודגלים — משאירים ✓✔✕✖ (2713–2716), חצים (2190–21FF) וצורות (25xx) שהם פונקציונליים
+    .replace(/[\u{1F000}-\u{1FAFF}\u{1F1E6}-\u{1F1FF}\u{2600}-\u{2712}\u{2717}-\u{27BF}\u{2B00}-\u{2BFF}\u{2300}-\u{23FF}]/gu, '')
+    .replace(/[\u{1F3FB}-\u{1F3FF}️‍⃣]/gu, '')
+    .replace(/[ \t]{2,}/g, ' ')
+    .replace(/[ \t]+([:!?.,)])/g, '$1')
+    .replace(/[ \t]+$/g, '')
+    .replace(/^[ \t]+/g, '');
+}
+function stripUiEmojis() {
+  __uiTranslating = true;
+  try {
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+      acceptNode(node) {
+        if (!node.nodeValue) return NodeFilter.FILTER_REJECT;
+        if (node.parentElement && node.parentElement.closest(UI_SKIP_SEL)) return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    const nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+    nodes.forEach(n => {
+      const stripped = stripEmojisFromNode(n.nodeValue);
+      if (stripped !== n.nodeValue) n.nodeValue = stripped;
+    });
+    document.querySelectorAll('input[placeholder], textarea[placeholder]').forEach(inp => {
+      const s = stripEmojisFromNode(inp.placeholder || '');
+      if (s !== inp.placeholder) inp.placeholder = s;
+    });
+  } catch (e) {}
+  __uiTranslating = false;
+}
+window.stripUiEmojis = stripUiEmojis;
+
 // מפעיל את התרגום מחדש בכל רינדור/שינוי DOM (כשהשפה אנגלית).
 // כשהתרגום עצמו משנה DOM זה יגרום לסבב נוסף, אך מכיוון שהמחרוזות כבר
 // באנגלית (לא מתאימות למילון) הסבב הנוסף לא משנה דבר — ומתכנס מיד.
@@ -17669,7 +17737,9 @@ window.translateChromeToEnglish = translateChromeToEnglish;
   let scheduled = false;
   const run = () => {
     scheduled = false;
-    if (getUiLang() === 'en' && !__uiTranslating) translateChromeToEnglish();
+    if (__uiTranslating) return;
+    if (getUiLang() === 'en') translateChromeToEnglish();
+    stripUiEmojis();
   };
   const schedule = () => {
     if (scheduled) return;
@@ -17681,8 +17751,234 @@ window.translateChromeToEnglish = translateChromeToEnglish;
     if (!document.body) { setTimeout(start, 50); return; }
     obs.observe(document.body, { subtree: true, childList: true, characterData: true });
     if (getUiLang() === 'en') translateChromeToEnglish();
+    stripUiEmojis();
   };
   start();
+})();
+
+// ==========================================
+// אונבורדינג — פופ-אפ הדרכה בסגנון Shapr3D (טאבים + פס התקדמות + מעבר אוטומטי)
+// גרסה למחשב וגרסה למובייל. סרטונים משובצים ב-ONBOARDING_STEPS (video: נתיב/URL).
+// ==========================================
+const ONBOARDING_STEPS = {
+  desktop: [
+    { he: 'ניווט וגלישה', en: 'Browse & Navigate',
+      capHe: 'עברו בין תמונות, קומיקס וסיפורים, וסננו לפי קטגוריה, גיל ומיקום מהסרגל.',
+      capEn: 'Move between photos, comics and stories, and filter by category, age and location.',
+      video: '', poster: '' },
+    { he: 'העלאת תוכן', en: 'Upload Content',
+      capHe: 'העלו גלריה או סיפור תוך שניות עם כלי ההעלאה המהירה.',
+      capEn: 'Upload a gallery or story in seconds with the quick-upload tool.',
+      video: '', poster: '' },
+    { he: 'קהילות וצ׳אט', en: 'Communities & Chat',
+      capHe: 'הצטרפו לקהילות, שוחחו בצ׳אט החי ופרסמו מודעה מהירה.',
+      capEn: 'Join communities, use live chat and post a quick ad.',
+      video: '', poster: '' }
+  ],
+  mobile: [
+    { he: 'החלקה בין תכנים', en: 'Swipe Through Content',
+      capHe: 'החליקו ימינה/שמאלה כדי לעבור בין תמונות, קומיקס וסיפורים.',
+      capEn: 'Swipe left/right to move between photos, comics and stories.',
+      video: '', poster: '' },
+    { he: 'העלאה מהירה', en: 'Quick Upload',
+      capHe: 'הקישו על כפתור ההעלאה כדי לפרסם גלריה או סיפור מהנייד.',
+      capEn: 'Tap the upload button to post a gallery or story from your phone.',
+      video: '', poster: '' },
+    { he: 'קהילות וצ׳אט', en: 'Communities & Chat',
+      capHe: 'הצטרפו לקהילות ושוחחו בצ׳אט — הכל מותאם למסך הנייד.',
+      capEn: 'Join communities and chat — all optimized for mobile.',
+      video: '', poster: '' }
+  ]
+};
+let __onboardingTimer = null;
+let __onboardingIdx = 0;
+
+function onboardingPlatform() {
+  return (window.innerWidth <= 768) ? 'mobile' : 'desktop';
+}
+function onboardingSteps() {
+  return ONBOARDING_STEPS[onboardingPlatform()] || ONBOARDING_STEPS.desktop;
+}
+function getOnboardingVideo(plat, idx) {
+  try { return (ONBOARDING_VIDEOS[plat] && ONBOARDING_VIDEOS[plat][idx]) || ''; } catch (e) { return ''; }
+}
+// יש סרטונים למכשיר הנוכחי?
+function hasOnboardingVideos(plat) {
+  plat = plat || onboardingPlatform();
+  try { return (ONBOARDING_VIDEOS[plat] || []).some(v => v && v.trim()); } catch (e) { return false; }
+}
+
+function buildOnboardingModal() {
+  const en = (typeof getUiLang === 'function') && getUiLang() === 'en';
+  const steps = onboardingSteps();
+  const platLabelHe = onboardingPlatform() === 'mobile' ? 'מדריך למובייל' : 'מדריך למחשב';
+  const platLabelEn = onboardingPlatform() === 'mobile' ? 'Mobile guide' : 'Desktop guide';
+  const tabs = steps.map((s, i) => `
+    <button type="button" class="onb-tab ${i === __onboardingIdx ? 'active' : ''}" onclick="onboardingGoTo(${i})" style="flex:1; position:relative; background:${i === __onboardingIdx ? '#1c1c22' : '#111116'}; color:${i === __onboardingIdx ? '#fff' : '#8b8b96'}; border:none; border-left:1px solid #26262e; padding:14px 10px; font-size:13px; font-weight:800; letter-spacing:0.3px; cursor:pointer; overflow:hidden; text-transform:uppercase;">
+      ${en ? s.en : s.he}
+      <span class="onb-progress" style="position:absolute; bottom:0; right:0; height:3px; background:#3b6ef5; width:${i < __onboardingIdx ? '100%' : '0'};"></span>
+    </button>`).join('');
+
+  const cur = steps[__onboardingIdx] || steps[0];
+  const vurl = getOnboardingVideo(onboardingPlatform(), __onboardingIdx);
+  const media = vurl
+    ? `<video src="${vurl}" autoplay muted loop playsinline style="width:100%; height:100%; object-fit:cover; display:block;"></video>`
+    : `<div style="width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; color:#5a5a66; background:radial-gradient(circle at 50% 40%, #1a1a20, #0c0c10);">
+         <div style="width:64px; height:64px; border-radius:50%; border:2px solid #3b6ef5; display:flex; align-items:center; justify-content:center;"><div style="width:0;height:0;border-top:12px solid transparent;border-bottom:12px solid transparent;border-right:18px solid #3b6ef5;margin-right:-3px;"></div></div>
+         <div style="font-size:13px; font-weight:700;">${en ? 'No video yet' : 'אין עדיין סרטון'}</div>
+       </div>`;
+
+  return `
+    <div style="width:100%; max-width:1000px; background:#0a0a0d; border-radius:16px; overflow:hidden; box-shadow:0 30px 80px rgba(0,0,0,0.6); direction:rtl; display:flex; flex-direction:column;">
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:#0a0a0d; border-bottom:1px solid #1e1e26;">
+        <span style="color:#8b8b96; font-size:12px; font-weight:700;">${en ? platLabelEn : platLabelHe}</span>
+        <button type="button" onclick="closeOnboarding()" style="background:none; border:none; color:#9a9aa6; font-size:22px; line-height:1; cursor:pointer;">✕</button>
+      </div>
+      <div style="display:flex; width:100%;">${tabs}</div>
+      <div style="position:relative; width:100%; aspect-ratio:16/9; background:#000;">${media}</div>
+      <div style="padding:18px 20px 22px; text-align:${en ? 'left' : 'right'}; direction:${en ? 'ltr' : 'rtl'};">
+        <div style="color:#fff; font-size:18px; font-weight:800; margin-bottom:6px;">${en ? cur.en : cur.he}</div>
+        <div style="color:#9a9aa6; font-size:14px; line-height:1.5;">${en ? cur.capEn : cur.capHe}</div>
+        <div style="display:flex; justify-content:${en ? 'flex-start' : 'flex-end'}; gap:10px; margin-top:16px;">
+          <button type="button" onclick="closeOnboarding()" style="background:#1c1c22; color:#cfcfd6; border:none; border-radius:10px; padding:9px 18px; font-weight:700; cursor:pointer;">${en ? 'Skip' : 'דלג'}</button>
+          <button type="button" onclick="onboardingNext()" style="background:#3b6ef5; color:#fff; border:none; border-radius:10px; padding:9px 22px; font-weight:800; cursor:pointer;">${__onboardingIdx >= steps.length - 1 ? (en ? 'Done' : 'סיום') : (en ? 'Next' : 'הבא')}</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderOnboarding() {
+  const host = document.getElementById('onboarding-modal');
+  if (!host) return;
+  host.innerHTML = buildOnboardingModal();
+  // אנימציית מילוי פס ההתקדמות של הטאב הפעיל
+  const bar = host.querySelector('.onb-tab.active .onb-progress');
+  if (bar) {
+    bar.style.transition = 'none'; bar.style.width = '0';
+    requestAnimationFrame(() => { bar.style.transition = 'width 7s linear'; bar.style.width = '100%'; });
+  }
+}
+
+function onboardingGoTo(i) {
+  const steps = onboardingSteps();
+  __onboardingIdx = Math.max(0, Math.min(i, steps.length - 1));
+  renderOnboarding();
+  scheduleOnboardingAdvance();
+}
+function onboardingNext() {
+  const steps = onboardingSteps();
+  if (__onboardingIdx >= steps.length - 1) { closeOnboarding(); return; }
+  onboardingGoTo(__onboardingIdx + 1);
+}
+function scheduleOnboardingAdvance() {
+  if (__onboardingTimer) clearTimeout(__onboardingTimer);
+  __onboardingTimer = setTimeout(() => {
+    const steps = onboardingSteps();
+    if (__onboardingIdx >= steps.length - 1) { closeOnboarding(); }
+    else { onboardingGoTo(__onboardingIdx + 1); }
+  }, 7000);
+}
+// הצגה אוטומטית לגולש חדש — רק אם קיימים סרטונים למכשיר הנוכחי
+function maybeShowOnboarding() {
+  if (!hasOnboardingVideos()) return;
+  try { if (localStorage.getItem('onboarding_seen_v1')) return; } catch (e) {}
+  openOnboarding(false);
+}
+window.maybeShowOnboarding = maybeShowOnboarding;
+
+function openOnboarding(force) {
+  try { if (!force && localStorage.getItem('onboarding_seen_v1')) return; } catch (e) {}
+  // בלי סרטונים — לא מציגים כלום (אלא אם המנהל פותח בכפייה לתצוגה מקדימה)
+  if (!hasOnboardingVideos() && !force) return;
+  let host = document.getElementById('onboarding-modal');
+  if (!host) {
+    host = document.createElement('div');
+    host.id = 'onboarding-modal';
+    host.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.8); backdrop-filter:blur(6px); z-index:9999999; display:flex; align-items:center; justify-content:center; padding:20px; box-sizing:border-box;';
+    document.body.appendChild(host);
+  }
+  host.style.display = 'flex';
+  __onboardingIdx = 0;
+  renderOnboarding();
+  scheduleOnboardingAdvance();
+}
+function closeOnboarding() {
+  if (__onboardingTimer) clearTimeout(__onboardingTimer);
+  const host = document.getElementById('onboarding-modal');
+  if (host) host.style.display = 'none';
+  try { localStorage.setItem('onboarding_seen_v1', '1'); } catch (e) {}
+}
+window.openOnboarding = openOnboarding;
+window.closeOnboarding = closeOnboarding;
+window.onboardingGoTo = onboardingGoTo;
+window.onboardingNext = onboardingNext;
+
+// ==========================================
+// ניהול (מנהל בלבד) — הוספת/עריכת סרטוני המדריך
+// ==========================================
+function openOnboardingAdmin() {
+  let modal = document.getElementById('onboarding-admin-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'onboarding-admin-modal';
+    modal.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:99999999; display:flex; align-items:center; justify-content:center; padding:20px; direction:rtl;';
+    document.body.appendChild(modal);
+  }
+  const row = (plat, idx, label) => {
+    const v = getOnboardingVideo(plat, idx);
+    return `<label style="display:flex; flex-direction:column; gap:4px; font-size:13px; color:#333;">
+      <span>${label} — סרטון ${idx + 1}:</span>
+      <input type="url" data-onb-plat="${plat}" data-onb-idx="${idx}" value="${v.replace(/"/g, '&quot;')}" placeholder="הדביקו קישור לסרטון (mp4/webm)" style="padding:8px 12px; border:1px solid #ddd; border-radius:8px; font-size:13px;">
+    </label>`;
+  };
+  modal.innerHTML = `
+    <div style="background:#fff; border-radius:16px; padding:22px; width:100%; max-width:520px; max-height:88vh; overflow:auto; box-shadow:0 20px 60px rgba(0,0,0,0.3); display:flex; flex-direction:column; gap:14px;">
+      <h3 style="margin:0; font-size:18px; font-weight:800; color:#3b6ef5; border-bottom:2px solid #3b6ef5; padding-bottom:8px;">הגדרות מדריך (אונבורדינג)</h3>
+      <p style="margin:0; font-size:12px; color:#777;">הדביקו קישור לכל סרטון. השאירו ריק כדי לא להציג. כשיש לפחות סרטון אחד — המדריך יופיע לגולשים חדשים בעמוד הראשי.</p>
+      <div style="font-weight:800; color:#111; margin-top:4px;">מחשב</div>
+      ${row('desktop', 0, 'מחשב')}${row('desktop', 1, 'מחשב')}${row('desktop', 2, 'מחשב')}
+      <div style="font-weight:800; color:#111; margin-top:8px;">מובייל</div>
+      ${row('mobile', 0, 'מובייל')}${row('mobile', 1, 'מובייל')}${row('mobile', 2, 'מובייל')}
+      <div style="display:flex; gap:10px; justify-content:space-between; margin-top:8px; flex-wrap:wrap;">
+        <button type="button" onclick="openOnboarding(true)" style="background:#f3f4f6; border:none; border-radius:8px; padding:8px 14px; font-weight:bold; cursor:pointer;">תצוגה מקדימה 👁</button>
+        <div style="display:flex; gap:10px;">
+          <button type="button" onclick="closeOnboardingAdmin()" style="background:#f3f4f6; border:none; border-radius:8px; padding:8px 16px; font-weight:bold; cursor:pointer;">ביטול</button>
+          <button type="button" onclick="saveOnboardingAdmin()" style="background:#3b6ef5; color:#fff; border:none; border-radius:8px; padding:8px 20px; font-weight:bold; cursor:pointer;">שמור</button>
+        </div>
+      </div>
+    </div>`;
+  modal.style.display = 'flex';
+}
+function closeOnboardingAdmin() {
+  const m = document.getElementById('onboarding-admin-modal');
+  if (m) m.style.display = 'none';
+}
+function saveOnboardingAdmin() {
+  const modal = document.getElementById('onboarding-admin-modal');
+  if (!modal) return;
+  const next = { desktop: ['', '', ''], mobile: ['', '', ''] };
+  modal.querySelectorAll('input[data-onb-plat]').forEach(inp => {
+    const p = inp.getAttribute('data-onb-plat');
+    const i = parseInt(inp.getAttribute('data-onb-idx'), 10);
+    if (next[p]) next[p][i] = inp.value.trim();
+  });
+  ONBOARDING_VIDEOS = next;
+  try { localStorage.setItem('onboarding_videos_v1', JSON.stringify(ONBOARDING_VIDEOS)); } catch (e) {}
+  // מאפשר לגולשים לראות שוב את המדריך המעודכן
+  try { localStorage.removeItem('onboarding_seen_v1'); } catch (e) {}
+  if (typeof saveToStorage === 'function') { try { saveToStorage(); } catch (e) {} }
+  closeOnboardingAdmin();
+  alert('נשמר! המדריך יופיע לגולשים חדשים (וגלובלית לכל המכשירים).');
+}
+window.openOnboardingAdmin = openOnboardingAdmin;
+window.closeOnboardingAdmin = closeOnboardingAdmin;
+window.saveOnboardingAdmin = saveOnboardingAdmin;
+
+// הצגה אוטומטית בכניסה ראשונה (רק אם יש סרטונים)
+(function initOnboarding() {
+  const boot = () => { try { maybeShowOnboarding(); } catch (e) {} };
+  if (document.readyState === 'complete') setTimeout(boot, 1400);
+  else window.addEventListener('load', () => setTimeout(boot, 1400));
 })();
 
 // ==========================================
