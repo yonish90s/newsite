@@ -10542,15 +10542,29 @@ window.buildSiteStatsSection = buildSiteStatsSection;
 // וידג'ט העלאה מהירה לעמוד הבית (5 שאלות + העלאת תמונה)
 // ============================================================
 window.quickUploadState = window.quickUploadState || {
-  step: 1, // 1 to 6
+  step: 1,
   target: 'photos', // 'photos', 'comics', 'stories'
   title: '',
+  summary: '',
   category: 'כללי',
+  age: '',
+  location: '',
+  telegram: '',
+  email: '',
   desc: '',
   author: '',
   images: [], // array of base64 strings
   isSubmitting: false
 };
+
+// רצף השלבים לפי היעד. לתמונות שואלים את כל השדות; קומיקס/סיפורים נשארים מקוצרים.
+function quickUploadStepKeys() {
+  const t = (window.quickUploadState && window.quickUploadState.target) || 'photos';
+  if (t === 'photos') {
+    return ['target', 'title', 'summary', 'category', 'age', 'location', 'telegram', 'email', 'images'];
+  }
+  return ['target', 'title', 'category', 'desc', 'author', 'images'];
+}
 
 function renderQuickUploadHero() {
   const st = window.quickUploadState;
@@ -10560,102 +10574,103 @@ function renderQuickUploadHero() {
   let questionHeader = '';
   let inputContent = '';
 
-  if (currentStep === 1) {
+  const _stepKeys = quickUploadStepKeys();
+  const _totalQ = _stepKeys.length - 1; // כל השלבים למעט "שלב אחרון" (העלאת תמונות)
+  const _key = _stepKeys[currentStep - 1] || 'target';
+  const _ARROW = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>`;
+  const _arrow = (t) => `<button type="button" class="qu-arrow-btn" onclick="quickUploadNext()" title="${t || 'המשך'}">${_ARROW}</button>`;
+  const _hdr = (a, b, sub) => `
+      <div class="qu-hero-title">${a} <span class="qu-gradient-text">${b}</span></div>
+      <div class="qu-hero-subtitle">✨ שלב ${currentStep} מתוך ${_totalQ}: ${sub}</div>`;
+  const _textStep = (ph, val, type) => `
+      <div class="qu-input-wrapper">
+        <input type="${type || 'text'}" id="qu-input-field" class="qu-text-input" placeholder="${ph}" value="${artEsc(val || '')}" onkeydown="if(event.key==='Enter') quickUploadNext()" autofocus>
+        ${_arrow()}
+      </div>`;
+
+  if (_key === 'target') {
     questionHeader = `
       <div class="qu-hero-title">בואו להעלות תוכן <span class="qu-gradient-text">לויראלי</span></div>
-      <div class="qu-hero-subtitle">✨ שלב 1 מתוך 5: לאיזה אזור תרצו להעלות את התוכן שלכם?</div>
+      <div class="qu-hero-subtitle">✨ שלב 1 מתוך ${_totalQ}: לאיזה אזור תרצו להעלות את התוכן שלכם?</div>
     `;
     inputContent = `
       <div class="qu-options-grid">
         <button type="button" class="qu-dest-pill ${st.target === 'photos' ? 'active' : ''}" onclick="quickUploadSetTarget('photos')">
           <span class="qu-pill-icon">🖼️</span>
-          <div class="qu-pill-text">
-            <strong>תמונות</strong>
-            <small>אלבומים וגלריות תמונות</small>
-          </div>
+          <div class="qu-pill-text"><strong>תמונות</strong><small>אלבומים וגלריות תמונות</small></div>
         </button>
         <button type="button" class="qu-dest-pill ${st.target === 'comics' ? 'active' : ''}" onclick="quickUploadSetTarget('comics')">
           <span class="qu-pill-icon">📖</span>
-          <div class="qu-pill-text">
-            <strong>קומיקס</strong>
-            <small>רצועות קומיקס ואיורים</small>
-          </div>
+          <div class="qu-pill-text"><strong>קומיקס</strong><small>רצועות קומיקס ואיורים</small></div>
         </button>
         <button type="button" class="qu-dest-pill ${st.target === 'stories' ? 'active' : ''}" onclick="quickUploadSetTarget('stories')">
           <span class="qu-pill-icon">✍️</span>
-          <div class="qu-pill-text">
-            <strong>סיפורים</strong>
-            <small>סיפורים קצרים ומאמרים</small>
-          </div>
+          <div class="qu-pill-text"><strong>סיפורים</strong><small>סיפורים קצרים ומאמרים</small></div>
         </button>
       </div>
       <div class="qu-input-row" style="margin-top:16px;">
         <div style="flex:1; font-size:13px; color:#64748b; text-align:right;">נבחר: <b>${st.target === 'photos' ? '🖼️ תמונות' : (st.target === 'comics' ? '📖 קומיקס' : '✍️ סיפורים')}</b></div>
-        <button type="button" class="qu-arrow-btn" onclick="quickUploadNext()" title="המשך לשלב הבא">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
-        </button>
+        ${_arrow('המשך לשלב הבא')}
       </div>
     `;
-  } else if (currentStep === 2) {
-    const targetHebrew = st.target === 'photos' ? 'לתמונות' : (st.target === 'comics' ? 'לקומיקס' : 'לסיפור');
-    questionHeader = `
-      <div class="qu-hero-title">מה הכותרת <span class="qu-gradient-text">של התוכן?</span></div>
-      <div class="qu-hero-subtitle">✨ שלב 2 מתוך 5: כותרת קליטה שתמשוך קוראים וצופים</div>
-    `;
+  } else if (_key === 'title') {
+    questionHeader = (st.target === 'photos')
+      ? _hdr('מה הכותרת', 'שלך?', 'כותרת קליטה שתמשוך צופים')
+      : _hdr('מה הכותרת', 'של התוכן?', 'כותרת קליטה שתמשוך קוראים וצופים');
+    inputContent = _textStep('לדוגמה: יום טיול מדהים בצפון / הרפתקה בחלל...', st.title);
+  } else if (_key === 'summary') {
+    questionHeader = _hdr('מה התקציר', 'של הגלריה?', 'תיאור קצר או תקציר שילווה את הגלריה');
     inputContent = `
-      <div class="qu-input-wrapper">
-        <input type="text" id="qu-input-field" class="qu-text-input" placeholder="לדוגמה: יום טיול מדהים בצפון / הרפתקה בחלל..." value="${artEsc(st.title || '')}" onkeydown="if(event.key==='Enter') quickUploadNext()" autofocus>
-        <button type="button" class="qu-arrow-btn" onclick="quickUploadNext()" title="המשך">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
-        </button>
-      </div>
-    `;
-  } else if (currentStep === 3) {
-    const cats = ['כללי', 'הרפתקאות', 'הומור', 'מד״ב ופנטזיה', 'רומנטיקה', 'טבע ונופים', 'אמנות', 'חדשות וטכנולוגיה'];
-    questionHeader = `
-      <div class="qu-hero-title">באיזו קטגוריה <span class="qu-gradient-text">זה מתאים?</span></div>
-      <div class="qu-hero-subtitle">✨ שלב 3 מתוך 5: בחרו קטגוריה או הקלידו קטגוריה מותאמת אישית</div>
-    `;
-    const catChips = cats.map(c => `
-      <button type="button" class="qu-cat-chip ${st.category === c ? 'active' : ''}" onclick="quickUploadSetCat('${artEsc(c)}')">${artEsc(c)}</button>
-    `).join('');
-    inputContent = `
-      <div class="qu-chips-container">${catChips}</div>
-      <div class="qu-input-wrapper" style="margin-top:14px;">
-        <input type="text" id="qu-input-field" class="qu-text-input" placeholder="או הקלידו קטגוריה אחרת..." value="${artEsc(st.category || '')}" onkeydown="if(event.key==='Enter') quickUploadNext()">
-        <button type="button" class="qu-arrow-btn" onclick="quickUploadNext()" title="המשך">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
-        </button>
-      </div>
-    `;
-  } else if (currentStep === 4) {
-    questionHeader = `
-      <div class="qu-hero-title">ספרו בקצרה <span class="qu-gradient-text">על התוכן</span></div>
-      <div class="qu-hero-subtitle">✨ שלב 4 מתוך 5: תיאור קצר, תקציר או הטקסט המלא שילווה את היצירה</div>
-    `;
+      <div class="qu-input-wrapper is-textarea">
+        <textarea id="qu-input-field" class="qu-textarea-input" rows="3" placeholder="תיאור קצר...">${artEsc(st.summary || '')}</textarea>
+        ${_arrow()}
+      </div>`;
+  } else if (_key === 'category') {
+    if (st.target === 'photos') {
+      // תמונות: קטגוריית מגדר — גבר / אישה / זוג
+      const cats = ['גבר', 'אישה', 'זוג'];
+      questionHeader = _hdr('מה הקטגוריה', 'שלך?', 'גבר, אישה או זוג');
+      const catChips = cats.map(c => `<button type="button" class="qu-cat-chip ${st.category === c ? 'active' : ''}" onclick="quickUploadSetCat('${artEsc(c)}')">${artEsc(c)}</button>`).join('');
+      inputContent = `
+        <div class="qu-chips-container">${catChips}</div>
+        <div class="qu-input-row" style="margin-top:16px; justify-content:flex-end;">
+          ${_arrow()}
+        </div>`;
+    } else {
+      // קומיקס/סיפורים: אותן קטגוריות כמו בעמוד (כללי / עירום ...)
+      const cats = (typeof STORY_CATEGORIES !== 'undefined' && Array.isArray(STORY_CATEGORIES) && STORY_CATEGORIES.length)
+        ? STORY_CATEGORIES : ['כללי', 'עירום'];
+      questionHeader = _hdr('מה הקטגוריה', 'שלך?', 'בחרו קטגוריה');
+      const catChips = cats.map(c => `<button type="button" class="qu-cat-chip ${st.category === c ? 'active' : ''}" onclick="quickUploadSetCat('${artEsc(c)}')">${artEsc(c)}</button>`).join('');
+      inputContent = `
+        <div class="qu-chips-container">${catChips}</div>
+        <div class="qu-input-row" style="margin-top:16px; justify-content:flex-end;">
+          ${_arrow()}
+        </div>`;
+    }
+  } else if (_key === 'age') {
+    questionHeader = _hdr('מה הגיל', 'שלך?', 'הגיל שיוצג בכרטיס');
+    inputContent = _textStep('לדוגמה: 24', st.age, 'number');
+  } else if (_key === 'location') {
+    questionHeader = _hdr('מה המיקום?', '(אופציונלי)', 'אזור או מיקום שיוצג בכרטיס');
+    inputContent = _textStep('לדוגמה: מרכז / תל אביב', st.location);
+  } else if (_key === 'telegram') {
+    questionHeader = _hdr('מה שם משתמש', 'הטלגרם שלך?', 'שם משתמש או קישור טלגרם ליצירת קשר');
+    inputContent = _textStep('לדוגמה: @username', st.telegram);
+  } else if (_key === 'email') {
+    questionHeader = _hdr('מה לגבי', 'המייל שלך?', 'אימייל ליצירת קשר שיוצג בכרטיס');
+    inputContent = _textStep('לדוגמה: example@mail.com', st.email, 'email');
+  } else if (_key === 'desc') {
+    questionHeader = _hdr('ספרו בקצרה', 'על התוכן', 'תיאור קצר, תקציר או הטקסט המלא שילווה את היצירה');
     inputContent = `
       <div class="qu-input-wrapper is-textarea">
         <textarea id="qu-input-field" class="qu-textarea-input" rows="3" placeholder="כתבו כאן כמה מילים או תיאור מפורט...">${artEsc(st.desc || '')}</textarea>
-        <button type="button" class="qu-arrow-btn" onclick="quickUploadNext()" title="המשך">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
-        </button>
-      </div>
-    `;
-  } else if (currentStep === 5) {
-    questionHeader = `
-      <div class="qu-hero-title">מי היוצר / <span class="qu-gradient-text">פרטי קשר?</span></div>
-      <div class="qu-hero-subtitle">✨ שלב 5 מתוך 5: שם יוצר, טלגרם או אימייל שיופיע בכרטיס התוכן</div>
-    `;
-    inputContent = `
-      <div class="qu-input-wrapper">
-        <input type="text" id="qu-input-field" class="qu-text-input" placeholder="שם היוצר / כינוי / טלגרם (@username)..." value="${artEsc(st.author || '')}" onkeydown="if(event.key==='Enter') quickUploadNext()" autofocus>
-        <button type="button" class="qu-arrow-btn" onclick="quickUploadNext()" title="המשך להעלאת תמונות">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
-        </button>
-      </div>
-    `;
-  } else if (currentStep === 6) {
-    // שלב העלאת תמונות ואישור סופי
+        ${_arrow()}
+      </div>`;
+  } else if (_key === 'author') {
+    questionHeader = _hdr('מי היוצר /', 'פרטי קשר?', 'שם יוצר, טלגרם או אימייל שיופיע בכרטיס התוכן');
+    inputContent = _textStep('שם היוצר / כינוי / טלגרם (@username)...', st.author);
+  } else if (_key === 'images') {
     questionHeader = `
       <div class="qu-hero-title">העלאת תמונות <span class="qu-gradient-text">ופרסום</span></div>
       <div class="qu-hero-subtitle">✨ שלב אחרון: בחרו תמונה אחת או יותר ליצירה שלכם ולחצו על פרסום</div>
@@ -10666,7 +10681,6 @@ function renderQuickUploadHero() {
         <button type="button" class="qu-thumb-remove" onclick="quickUploadRemoveImage(${i})" title="הסר תמונה">✕</button>
       </div>
     `).join('');
-
     inputContent = `
       <div class="qu-upload-box">
         <div class="qu-thumbs-row">
@@ -10687,8 +10701,9 @@ function renderQuickUploadHero() {
     `;
   }
 
-  // פסי התקדמות שלבים (1 עד 6)
-  const stepsDots = [1, 2, 3, 4, 5, 6].map(s => {
+  // פסי התקדמות שלבים (דינמי לפי מספר השלבים)
+  const stepsDots = _stepKeys.map((k, i) => {
+    const s = i + 1;
     const isDone = s < currentStep;
     const isCurrent = s === currentStep;
     return `<div class="qu-step-dot ${isDone ? 'done' : ''} ${isCurrent ? 'active' : ''}"></div>`;
@@ -10729,28 +10744,36 @@ function quickUploadSetCat(cat) {
 }
 window.quickUploadSetCat = quickUploadSetCat;
 
+// שומר את הערך של השלב הנוכחי לתוך ה-state לפי מפתח השלב
+function quickUploadSaveCurrent(key, val) {
+  const st = window.quickUploadState;
+  if (key === 'title') st.title = val;
+  else if (key === 'summary') st.summary = val;
+  else if (key === 'category') { if (val) st.category = val; if (!st.category) st.category = 'כללי'; }
+  else if (key === 'age') st.age = val;
+  else if (key === 'location') st.location = val;
+  else if (key === 'telegram') st.telegram = val;
+  else if (key === 'email') st.email = val;
+  else if (key === 'desc') st.desc = val;
+  else if (key === 'author') st.author = val;
+}
+
 function quickUploadNext() {
   const st = window.quickUploadState;
+  const keys = quickUploadStepKeys();
+  const key = keys[(st.step || 1) - 1];
   const f = document.getElementById('qu-input-field');
   const val = f ? f.value.trim() : '';
 
-  if (st.step === 2) {
-    if (!val) {
-      alert('נא להזין כותרת');
-      if (f) f.focus();
-      return;
-    }
-    st.title = val;
-  } else if (st.step === 3) {
-    if (val) st.category = val;
-    if (!st.category) st.category = 'כללי';
-  } else if (st.step === 4) {
-    st.desc = val;
-  } else if (st.step === 5) {
-    st.author = val;
+  // כותרת חובה
+  if (key === 'title' && !val) {
+    alert('נא להזין כותרת');
+    if (f) f.focus();
+    return;
   }
+  quickUploadSaveCurrent(key, val);
 
-  if (st.step < 6) {
+  if (st.step < keys.length) {
     st.step++;
     quickUploadRefreshUI();
     setTimeout(() => {
@@ -10763,14 +10786,10 @@ window.quickUploadNext = quickUploadNext;
 
 function quickUploadPrev() {
   const st = window.quickUploadState;
+  const keys = quickUploadStepKeys();
+  const key = keys[(st.step || 1) - 1];
   const f = document.getElementById('qu-input-field');
-  if (f) {
-    const val = f.value.trim();
-    if (st.step === 2 && val) st.title = val;
-    if (st.step === 3 && val) st.category = val;
-    if (st.step === 4 && val) st.desc = val;
-    if (st.step === 5 && val) st.author = val;
-  }
+  if (f) quickUploadSaveCurrent(key, f.value.trim());
   if (st.step > 1) {
     st.step--;
     quickUploadRefreshUI();
@@ -10868,15 +10887,21 @@ async function quickUploadFinalSubmit() {
     const firstImg = (st.images && st.images[0]) ? st.images[0] : '';
     const nowStamp = new Date().toLocaleDateString('he-IL');
 
+    // תמונות: מעדיפים את מה שהוזן באשף (טלגרם/אימייל) על פני הפרופיל השמור
+    const quTelegram = (st.telegram || '').trim() ? String(st.telegram).replace(/^@/, '').replace(/^https?:\/\/(t\.me|telegram\.me)\//i, '') : authorTelegram;
+    const quEmail = (st.email || '').trim() ? String(st.email).trim() : authorEmail;
+
     if (st.target === 'photos') {
-      // יצירת גלריית תמונות
+      // יצירת גלריית תמונות (עם כל שדות האשף)
       const newAlbum = {
         id: 'ph' + Date.now(),
         type: 'photo',
         isStory: false,
         title: st.title || 'גלריה חדשה',
-        summary: st.desc || '',
-        desc: st.desc || '',
+        summary: st.summary || st.desc || '',
+        desc: st.summary || st.desc || '',
+        ageRange: st.age || '',
+        region: st.location || '',
         image: firstImg,
         images: (st.images && st.images.length) ? st.images : [firstImg],
         author: authorName,
@@ -10885,8 +10910,8 @@ async function quickUploadFinalSubmit() {
         categoryColor: '#e11d48',
         timestamp: nowStamp,
         createdAt: Date.now(),
-        telegramUrl: authorTelegram ? ('https://t.me/' + authorTelegram) : '',
-        emailUrl: authorEmail ? ('mailto:' + authorEmail) : '',
+        telegramUrl: quTelegram ? ('https://t.me/' + quTelegram) : '',
+        emailUrl: quEmail ? ('mailto:' + quEmail) : '',
         likes: 0,
         views: 1,
         approved: isAdminNow
@@ -17620,6 +17645,16 @@ const UI_EN = {
   // ---- קטגוריות ----
   'תמונות גולשים': 'User Photos',
 
+  // ---- אשף תמונות: כותרות טלגרם/אימייל (התאמה מדויקת בלבד) + placeholders ----
+  'טלגרם': 'Telegram (optional)',
+  'אימייל': 'Email (optional)',
+  'עירום': 'Nude',
+  'תיאור קצר...': 'Short description...',
+  'לדוגמה: 24': 'e.g. 24',
+  'לדוגמה: מרכז / תל אביב': 'e.g. Center / Tel Aviv',
+  'לדוגמה: @username': 'e.g. @username',
+  'לדוגמה: example@mail.com': 'e.g. example@mail.com',
+
   // ---- אשף העלאה מהירה (5 שלבים) ----
   // קטגוריות שלב 3
   'הרפתקאות': 'Adventure', 'הומור': 'Humor', 'מד״ב ופנטזיה': 'Sci-Fi & Fantasy',
@@ -17655,8 +17690,18 @@ const UI_EN_PATTERNS = [
   [/בואו להעלות תוכן/g, 'Come upload viral content'],
   [/לויראלי/g, ''],
   // אשף העלאה — כותרות מפוצלות (מרכזים את כל הכותרת בחלק הראשון)
-  [/מה הכותרת/g, "What's the content title?"],
+  [/מה הכותרת/g, "What's your title?"],
   [/של התוכן\?/g, ''],
+  [/שלך\?/g, ''],
+  [/מה הקטגוריה/g, "What's your category?"],
+  [/גבר, אישה או זוג/g, 'Male, female or couple'],
+  [/מה שם משתמש/g, "What's your Telegram username?"],
+  [/הטלגרם שלך\?/g, ''],
+  [/מה לגבי/g, 'What about your email?'],
+  [/המייל שלך\?/g, ''],
+  [/כותרת קליטה שתמשוך צופים/g, 'A catchy title that attracts viewers'],
+  [/הגיל שיוצג בכרטיס/g, 'Your age shown on the card'],
+  [/בחרו קטגוריה$/g, 'Choose a category'],
   [/באיזו קטגוריה/g, 'Which category does it fit?'],
   [/זה מתאים\?/g, ''],
   [/ספרו בקצרה/g, 'Tell us briefly about the content'],
@@ -17665,6 +17710,17 @@ const UI_EN_PATTERNS = [
   [/פרטי קשר\?/g, ''],
   [/העלאת תמונות/g, 'Upload images & publish'],
   [/ופרסום/g, ''],
+  // אשף תמונות — שלבים נוספים
+  [/מה התקציר/g, "What's the gallery summary?"],
+  [/של הגלריה\?/g, ''],
+  [/מה הגיל/g, "What's your age?"],
+  [/מה המיקום\?/g, "What's the location? (optional)"],
+  [/\(אופציונלי\)/g, ''],
+  [/תיאור קצר או תקציר שילווה את הגלריה/g, 'A short description or summary for the gallery'],
+  [/גיל שיוצג בכרטיס התוכן/g, 'Age shown on the content card'],
+  [/אזור או מיקום שיוצג בכרטיס/g, 'Region or location shown on the card'],
+  [/שם משתמש או קישור טלגרם ליצירת קשר/g, 'Telegram username or link for contact'],
+  [/אימייל ליצירת קשר שיוצג בכרטיס/g, 'Contact email shown on the card'],
   // אשף העלאה — כותרות משנה
   [/כותרת קליטה שתמשוך קוראים וצופים/g, 'A catchy title that attracts readers and viewers'],
   [/בחרו קטגוריה או הקלידו קטגוריה מותאמת אישית/g, 'Choose a category or type a custom one'],
