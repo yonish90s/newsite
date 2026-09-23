@@ -18185,7 +18185,14 @@ function stripUiEmojis() {
     while (walker.nextNode()) nodes.push(walker.currentNode);
     nodes.forEach(n => {
       const stripped = stripEmojisFromNode(n.nodeValue);
-      if (stripped !== n.nodeValue) n.nodeValue = stripped;
+      if (stripped === n.nodeValue) return;
+      // כפתור שכל התוכן שלו הוא אייקון (הסתרה 👁️, עריכה ✏️, מחיקה 🗑️ וכו') — לא נוגעים,
+      // אחרת הכפתור נשאר ריק ונעלם (כך נעלמו כפתורי הסתרת העמודים במצב עריכה)
+      if (!stripped.trim()) {
+        const p = n.parentElement;
+        if (p && p.matches('button, a, [onclick], [role="button"], [title], .top-nav-controls > *')) return;
+      }
+      n.nodeValue = stripped;
     });
     document.querySelectorAll('input[placeholder], textarea[placeholder]').forEach(inp => {
       const s = stripEmojisFromNode(inp.placeholder || '');

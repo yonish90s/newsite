@@ -2600,6 +2600,12 @@ body:not(.edit-mode) .hotspot-delete-btn {
   .stories-page .photo-card-links .art-telegram-btn svg {
     stroke: #ffffff !important;
   }
+  /* כפתור בלי כתובת (אין אימייל/טלגרם) — מוסתר גם במובייל, כמו במחשב */
+  .photos-page[data-section="photos"] .photo-card-links .art-telegram-btn.is-disabled,
+  .photos-page.home-feed-photos .photo-card-links .art-telegram-btn.is-disabled,
+  .stories-page .photo-card-links .art-telegram-btn.is-disabled {
+    display: none !important;
+  }
   .photos-page[data-section="photos"] .photo-card-links button:first-child,
   .photos-page.home-feed-photos .photo-card-links button:first-child,
   .stories-page .photo-card-links button:first-child {
