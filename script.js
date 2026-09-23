@@ -154,7 +154,7 @@ window.alert = function(message) {
 function updateUserActivity(user) {
   if (!user) return;
   try {
-    const userRef = ref(db, `website/users/${escHtml(user.uid)}/last_seen`);
+    const userRef = ref(db, `website/users/${user.uid}/last_seen`);
     set(userRef, Date.now());
   } catch (e) {
     console.error("Error updating user activity:", e);
@@ -3731,10 +3731,10 @@ document.addEventListener('DOMContentLoaded', () => {
       
       // טעינת גלריות שמורות מהענן
       try {
-        const userSavedRef = ref(db, `website/users/${escHtml(user.uid)}/saved_galleries`);
+        const userSavedRef = ref(db, `website/users/${user.uid}/saved_galleries`);
         const snapshot = await get(userSavedRef);
         if (snapshot.exists()) {
-          localStorage.setItem(`saved_galleries_${escHtml(user.uid)}`, JSON.stringify(snapshot.val()));
+          localStorage.setItem(`saved_galleries_${user.uid}`, JSON.stringify(snapshot.val()));
         }
       } catch (e) {
         console.error("שגיאה בטעינת שמורים מפיירבייס:", e);
@@ -4603,7 +4603,7 @@ window.updateAgeVerificationUIState = updateAgeVerificationUIState;
 })();
 
 // פונקציות עזר: הודעת "טוסט" קצרה והעתקת אימייל ללוח (שוחזרו לאחר שנמחקו בקלקול)
-function copyEmailToClipboard(emailStr, e) {
+function copyEmailToClipboard(emailStr, e, hint) {
   if (e) {
     if (typeof e.stopPropagation === 'function') e.stopPropagation();
     if (typeof e.preventDefault === 'function') e.preventDefault();
@@ -4615,16 +4615,16 @@ function copyEmailToClipboard(emailStr, e) {
 
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(cleanEmail).then(() => {
-      showCopyToast(`האימייל הועתק בהצלחה! 📋 (${cleanEmail})`);
+      showCopyToast(`האימייל הועתק בהצלחה! 📋 (${cleanEmail})${hint || ''}`);
     }).catch(() => {
-      fallbackCopyText(cleanEmail);
+      fallbackCopyText(cleanEmail, hint);
     });
   } else {
-    fallbackCopyText(cleanEmail);
+    fallbackCopyText(cleanEmail, hint);
   }
 }
 
-function fallbackCopyText(text) {
+function fallbackCopyText(text, hint) {
   const textArea = document.createElement('textarea');
   textArea.value = text;
   textArea.style.position = 'fixed';
@@ -4633,7 +4633,7 @@ function fallbackCopyText(text) {
   textArea.select();
   try {
     document.execCommand('copy');
-    showCopyToast(`האימייל הועתק בהצלחה! 📋 (${text})`);
+    showCopyToast(`האימייל הועתק בהצלחה! 📋 (${text})${hint || ''}`);
   } catch (err) {
     alert(`כתובת אימייל: ${text}`);
   }
@@ -4644,14 +4644,20 @@ function fallbackCopyText(text) {
 // הכתובת כטקסט גלוי על הכפתור עצמו במקום המילה "אימייל".
 function revealAndCopyEmail(emailStr, btn, e) {
   const clean = (emailStr || '').replace(/^mailto:/i, '').trim();
-  copyEmailToClipboard(emailStr, e); // מעתיק + מציג הודעה (וגם עוצר את הבועה)
+  // לחיצה שנייה (אחרי שהכתובת נחשפה) — פותחת את אפליקציית המייל
+  if (btn && btn.getAttribute('data-revealed') === '1' && /^[^\s@<>"']+@[^\s@<>"']+\.[^\s@<>"']+$/.test(clean)) {
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    window.location.href = 'mailto:' + encodeURIComponent(clean).replace(/%40/g, '@');
+    return;
+  }
+  copyEmailToClipboard(emailStr, e, ' — לחצו שוב כדי לשלוח מייל'); // מעתיק + מציג הודעה (וגם עוצר את הבועה)
   if (btn && clean) {
     const span = document.createElement('span');
     span.textContent = clean;
     span.style.cssText = 'direction:ltr; unicode-bidi:embed; font-weight:700; white-space:normal; word-break:break-all;';
     btn.innerHTML = '';
     btn.appendChild(span);
-    btn.title = clean;
+    btn.title = 'לחצו שוב כדי לשלוח מייל';
     btn.setAttribute('data-revealed', '1');
   }
 }
@@ -7708,7 +7714,7 @@ function liveChatUserName() {
   const user = auth.currentUser;
   if (user) {
     try {
-      const profile = JSON.parse(localStorage.getItem(`user_profile_${escHtml(user.uid)}`) || '{}');
+      const profile = JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}');
       return profile.nickname || user.displayName || (user.email ? user.email.split('@')[0] : 'משתמש');
     } catch (e) {
       return user.displayName || 'משתמש';
@@ -8084,7 +8090,7 @@ async function qpPublish() {
   let nickname = 'משתמש', email = '', telegram = '';
   if (user) {
     try {
-      const p = JSON.parse(localStorage.getItem(`user_profile_${escHtml(user.uid)}`) || '{}');
+      const p = JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}');
       nickname = p.nickname || user.displayName || (user.email ? user.email.split('@')[0] : 'משתמש');
       email = p.email || user.email || '';
       telegram = p.telegram ? String(p.telegram).replace(/^@/, '') : '';
@@ -8123,7 +8129,7 @@ async function qpPublish() {
     if (qpData.communityId) {
       // פרסום לתוך קהילה: נשמר תחת website/communities/{id}/items
       album.approved = true;
-      await set(ref(db, `website/communities/${escHtml(qpData.communityId)}/items/${escHtml(album.id)}`), album);
+      await set(ref(db, `website/communities/${qpData.communityId}/items/${album.id}`), album);
       qpBubble('bot', `✅ ${isStory ? 'הסיפור' : 'התוכן'} פורסם/ה בקהילה בהצלחה!`);
       const cid = qpData.communityId;
       setTimeout(() => {
@@ -9447,7 +9453,7 @@ function buildSidebarNameChangeSectionHTML() {
 
   let profile = {};
   try {
-    profile = JSON.parse(localStorage.getItem(`user_profile_${escHtml(user.uid)}`) || '{}');
+    profile = JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}');
   } catch (e) {}
 
   const currentName = profile.nickname || user.displayName || (user.email ? user.email.split('@')[0] : 'משתמש');
@@ -9513,7 +9519,7 @@ async function saveUserNickname() {
 
   let profile = {};
   try {
-    profile = JSON.parse(localStorage.getItem(`user_profile_${escHtml(user.uid)}`) || '{}');
+    profile = JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}');
   } catch (e) {}
 
   const now = Date.now();
@@ -9530,7 +9536,7 @@ async function saveUserNickname() {
   profile.lastNameChange = now;
 
   try {
-    localStorage.setItem(`user_profile_${escHtml(user.uid)}`, JSON.stringify(profile));
+    localStorage.setItem(`user_profile_${user.uid}`, JSON.stringify(profile));
   } catch (e) {}
 
   if (user.updateProfile) {
@@ -9555,7 +9561,7 @@ function isUserVerified(authorId, authorName, itemVerified) {
   if (user) {
     if ((authorId && authorId === user.uid) || (authorName && (user.displayName === authorName || (user.email && user.email.split('@')[0] === authorName)))) {
       try {
-        const p = JSON.parse(localStorage.getItem(`user_profile_${escHtml(user.uid)}`) || '{}');
+        const p = JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}');
         if (p.verified || p.verificationStatus === 'approved') return true;
       } catch (e) {}
     }
@@ -9575,7 +9581,7 @@ function buildSidebarVerificationSectionHTML() {
 
   let profile = {};
   try {
-    profile = JSON.parse(localStorage.getItem(`user_profile_${escHtml(user.uid)}`) || '{}');
+    profile = JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}');
   } catch (e) {}
 
   const isApproved = profile.verified || profile.verificationStatus === 'approved';
@@ -9686,7 +9692,7 @@ async function submitAccountVerification() {
 
   let profile = {};
   try {
-    profile = JSON.parse(localStorage.getItem(`user_profile_${escHtml(user.uid)}`) || '{}');
+    profile = JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}');
   } catch (e) {}
 
   const currentName = profile.nickname || user.displayName || (user.email ? user.email.split('@')[0] : 'משתמש');
@@ -9698,12 +9704,12 @@ async function submitAccountVerification() {
   profile.verificationSubmittedAt = now;
 
   try {
-    localStorage.setItem(`user_profile_${escHtml(user.uid)}`, JSON.stringify(profile));
+    localStorage.setItem(`user_profile_${user.uid}`, JSON.stringify(profile));
   } catch (e) {}
 
   if (typeof db !== 'undefined') {
     try {
-      await set(ref(db, `website/verification_requests/${escHtml(user.uid)}`), {
+      await set(ref(db, `website/verification_requests/${user.uid}`), {
         uid: user.uid,
         displayName: currentName,
         email: user.email || '',
@@ -11014,7 +11020,7 @@ async function quickUploadFinalSubmit() {
 
     if (user) {
       try {
-        const p = JSON.parse(localStorage.getItem(`user_profile_${escHtml(user.uid)}`) || '{}');
+        const p = JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}');
         if (!authorName) authorName = p.nickname || user.displayName || (user.email ? user.email.split('@')[0] : 'משתמש');
         authorEmail = p.email || user.email || '';
         authorTelegram = p.telegram ? String(p.telegram).replace(/^@/, '') : '';
@@ -11358,7 +11364,7 @@ function buildPhotosPage(albums, section) {
   let myProfileHTML = '';
   if (isRegisteredUser()) {
     const user = auth.currentUser;
-    const budget = localStorage.getItem(`like_budget_${escHtml(user.uid)}`) || '5';
+    const budget = localStorage.getItem(`like_budget_${user.uid}`) || '5';
     budgetHTML = `
       <div class="art-sidebar-box" style="border: 1px solid rgba(225,29,72,0.15); background: rgba(225,29,72,0.02); display: flex; align-items: center; gap: 12px; padding: 16px; border-radius: 12px;">
         <span style="font-size: 24px; filter: drop-shadow(0 2px 4px rgba(225,29,72,0.2));">❤️</span>
@@ -11371,7 +11377,7 @@ function buildPhotosPage(albums, section) {
 
     const profile = (() => {
       try {
-        return JSON.parse(localStorage.getItem(`user_profile_${escHtml(user.uid)}`) || '{}');
+        return JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}');
       } catch (e) { return {}; }
     })();
     const nick = profile.nickname || user.displayName || (user.email ? user.email.split('@')[0] : 'אורח');
@@ -12280,10 +12286,10 @@ async function photoSaveProfile() {
     telegram: telegram || '',
     email: email || ''
   };
-  localStorage.setItem(`user_profile_${escHtml(user.uid)}`, JSON.stringify(profile));
+  localStorage.setItem(`user_profile_${user.uid}`, JSON.stringify(profile));
 
   try {
-    const profileRef = ref(db, `website/users/${escHtml(user.uid)}/profile`);
+    const profileRef = ref(db, `website/users/${user.uid}/profile`);
     await set(profileRef, profile);
     alert("הפרופיל עודכן בהצלחה! ✨");
     renderPage();
@@ -12783,7 +12789,7 @@ function openPhotoModal() {
   const _qu = auth.currentUser;
   if (_qu) {
     try {
-      const prof = JSON.parse(localStorage.getItem(`user_profile_${escHtml(_qu.uid)}`) || '{}');
+      const prof = JSON.parse(localStorage.getItem(`user_profile_${_qu.uid}`) || '{}');
       savedEmail = prof.email || _qu.email || '';
       savedTelegram = prof.telegram ? ('@' + String(prof.telegram).replace(/^@/, '')) : '';
     } catch (e) { savedEmail = _qu.email || ''; }
@@ -12913,7 +12919,7 @@ function submitClassAction() {
   if (!business || !title) { alert('נא למלא שם עסק ונושא תביעה'); return; }
   const user = auth.currentUser;
   let nick = 'אנונימי';
-  if (user) { try { const p = JSON.parse(localStorage.getItem(`user_profile_${escHtml(user.uid)}`) || '{}'); nick = p.nickname || user.displayName || (user.email ? user.email.split('@')[0] : 'משתמש'); } catch (e) { nick = user.displayName || 'משתמש'; } }
+  if (user) { try { const p = JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}'); nick = p.nickname || user.displayName || (user.email ? user.email.split('@')[0] : 'משתמש'); } catch (e) { nick = user.displayName || 'משתמש'; } }
   const albums = (typeof photoGetAlbums === 'function') ? photoGetAlbums() : [];
   const isApproved = (typeof isEditMode !== 'undefined' && isEditMode);
   const newAlbum = {
@@ -12962,7 +12968,7 @@ function submitWanted() {
   const budget = ((document.getElementById('wt-budget') || {}).value || '').trim();
   const user = auth.currentUser;
   let nick = 'משתמש';
-  if (user) { try { const p = JSON.parse(localStorage.getItem(`user_profile_${escHtml(user.uid)}`) || '{}'); nick = p.nickname || user.displayName || (user.email ? user.email.split('@')[0] : 'משתמש'); } catch (e) {} }
+  if (user) { try { const p = JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}'); nick = p.nickname || user.displayName || (user.email ? user.email.split('@')[0] : 'משתמש'); } catch (e) {} }
   const albums = (typeof photoGetAlbums === 'function') ? photoGetAlbums() : [];
   const isApproved = (typeof isEditMode !== 'undefined' && isEditMode);
   const newAlbum = {
@@ -13205,7 +13211,7 @@ document.getElementById('photo-save').addEventListener('click', async () => {
     authorNickname = 'אורח'; // משתמש אנונימי — אין אימייל/שם תצוגה
   } else if (user) {
     try {
-      const profile = JSON.parse(localStorage.getItem(`user_profile_${escHtml(user.uid)}`) || '{}');
+      const profile = JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}');
       authorNickname = profile.nickname || user.displayName || (user.email ? user.email.split('@')[0] : 'אורח');
     } catch(e) {
       authorNickname = user.displayName || (user.email ? user.email.split('@')[0] : 'אורח');
@@ -13308,15 +13314,9 @@ window.photoGoBack = photoGoBack;
 window.photoSelectImage = photoSelectImage;
 
 function photoApprove(id) {
-  if (!isEditMode) return;
-  const albums = photoGetAlbums();
-  const album = albums.find(a => a.id === id);
-  if (album) {
-    album.approved = true;
-    mainContent.innerHTML = buildPhotosPage(albums);
-    saveCurrentPageContent();
-    alert('הגלריה אושרה ופורסמה בהצלחה!');
-  }
+  // האישור מתבצע על עמוד התמונות השמור (לא על מה שמוצג כרגע — למשל עמוד הבית)
+  if (!isEditMode && !(typeof isAdmin === 'function' && isAdmin())) return;
+  _reqMutate(id, 'approve');
 }
 window.photoApprove = photoApprove;
 
@@ -13331,7 +13331,7 @@ async function pushPendingSubmission(album) {
   // מוודאים משתמש (אורח אנונימי אם צריך) כדי שהכתיבה תעבור את כללי Firebase
   if (typeof ensureGuestSignedIn === 'function') { try { await ensureGuestSignedIn(); } catch (e) {} }
   try {
-    await set(ref(db, `website/pending_submissions/${escHtml(album.id)}`), album);
+    await set(ref(db, `website/pending_submissions/${album.id}`), album);
   } catch (e) {
     // אורח לרוב חסום מכתיבה ל-pending_submissions ע"י כללי Firebase. עוקפים דרך
     // user_submissions — נתיב שאורחים כבר יכולים לכתוב אליו (טופס "מידע") — ומסמנים
@@ -13383,7 +13383,21 @@ function subscribePendingSubmissions() {
 
 function _reqPhotosPageObj() {
   if (typeof pages === 'undefined' || !Array.isArray(pages)) return null;
-  return pages.find(p => p && (p.content || '').includes('photos-page') && (p.content || '').includes('data-photos-json') && !(p.content || '').includes('community') && !(p.content || '').includes('user-page'));
+  const isPhotosPage = p => p && (p.content || '').includes('photos-page') && (p.content || '').includes('data-photos-json') && !(p.content || '').includes('community') && !(p.content || '').includes('user-page');
+  // עדיפות לעמוד התמונות האמיתי (data-section="photos") ולא ליד שניה/שותפויות וכו'
+  return pages.find(p => isPhotosPage(p) && (p.content || '').includes('data-section="photos"'))
+    || pages.find(isPhotosPage);
+}
+
+function _reqStoriesPageObj() {
+  if (typeof pages === 'undefined' || !Array.isArray(pages)) return null;
+  return pages.find(p => p && (p.id === 'page-stories-main' || (p.title || '').includes('סיפורים') || (p.title || '') === 'קומיקס'));
+}
+
+function _reqGetStoredStories(spObj) {
+  const m = ((spObj && spObj.content) || '').match(/data-stories-json="([^"]*)"/);
+  if (!m) return [];
+  try { return JSON.parse(decodeURIComponent(m[1])) || []; } catch (e) { return []; }
 }
 
 function _reqGetStoredAlbums() {
@@ -13466,13 +13480,22 @@ async function _reqMutate(id, action) {
   if (!allowed) return;
 
   let targetItem = pendingSubmissionsData[id];
-  let albums = (typeof photoGetAlbums === 'function') ? photoGetAlbums() : [];
+  // תמיד עובדים על הגלריות השמורות בעמוד התמונות (ולא על מה שמוצג כרגע במסך,
+  // שעלול להיות עמוד הבית או עמוד הבקשות — ואז האישור היה נשמר למקום הלא נכון)
+  let albums = _reqGetStoredAlbums();
 
   if (!targetItem) {
     targetItem = _pendingFromUserSubs().find(x => x.id === id);
   }
   if (!targetItem) {
     targetItem = albums.find(x => x.id === id);
+  }
+  // הבקשה אולי עוד לא נטענה (לא נכנסו לעמוד הבקשות) — מביאים אותה ישירות
+  if (!targetItem) {
+    try {
+      const snap = await get(ref(db, `website/pending_submissions/${id}`));
+      if (snap.exists()) targetItem = snap.val();
+    } catch (e) {}
   }
   // אם הבקשה הגיעה דרך user_submissions (עקיפת אורח) — נמחק אותה משם בסיום
   const _userSubKey = targetItem && targetItem.__userSubKey;
@@ -13483,7 +13506,8 @@ async function _reqMutate(id, action) {
       targetItem.approved = true;
       if (targetItem.__userSubKey) delete targetItem.__userSubKey;
       if (targetItem.isStory || targetItem.type === 'story') {
-        const stories = (typeof storyGetStories === 'function') ? storyGetStories() : [];
+        const spObj = _reqStoriesPageObj();
+        const stories = _reqGetStoredStories(spObj);
         const existingIdx = stories.findIndex(s => s.id === id);
         if (existingIdx >= 0) {
           stories[existingIdx].approved = true;
@@ -13491,7 +13515,6 @@ async function _reqMutate(id, action) {
           stories.unshift(targetItem);
         }
         if (typeof buildStoriesPage === 'function') {
-          const spObj = pages.find(p => p && (p.id === 'page-stories-main' || (p.title || '').includes('סיפורים') || (p.title || '') === 'קומיקס'));
           if (spObj) {
             const _k = ((spObj.content || '').match(/data-story-kind="([^"]+)"/) || [])[1] || 'comics';
             spObj.content = buildStoriesPage(stories, _k);
@@ -13508,7 +13531,7 @@ async function _reqMutate(id, action) {
         if (ppObj) ppObj.content = buildPhotosPage(albums, targetItem.isWanted ? 'secondhand' : 'photos');
       }
     }
-    if (typeof saveCurrentPageContent === 'function') { try { saveCurrentPageContent(); } catch (e) {} }
+    saveToStorage(); // שומרים את עמוד התמונות/הסיפורים המעודכן
     try { await set(ref(db, `website/pending_submissions/${id}`), null); } catch (e) {}
     await _cleanupUserSub();
     if (typeof showCopyToast === 'function') showCopyToast('✓ התוכן אושר ופורסם בהצלחה!');
@@ -13516,7 +13539,7 @@ async function _reqMutate(id, action) {
     albums = albums.filter(x => x.id !== id);
     const ppObj = _reqPhotosPageObj();
     if (ppObj) ppObj.content = buildPhotosPage(albums, 'photos');
-    if (typeof saveCurrentPageContent === 'function') { try { saveCurrentPageContent(); } catch (e) {} }
+    saveToStorage(); // שומרים את עמוד התמונות/הסיפורים המעודכן
     try { await set(ref(db, `website/pending_submissions/${id}`), null); } catch (e) {}
     await _cleanupUserSub();
     if (typeof showCopyToast === 'function') showCopyToast('✕ התוכן נדחה ונמחק.');
@@ -13533,7 +13556,7 @@ window.reqReject = reqReject;
 function photoIsLikedLocal(id) {
   try {
     const user = auth.currentUser;
-    const localKey = user ? `liked_galleries_${escHtml(user.uid)}` : 'guest_liked_galleries';
+    const localKey = user ? `liked_galleries_${user.uid}` : 'guest_liked_galleries';
     const liked = JSON.parse(localStorage.getItem(localKey) || localStorage.getItem('liked_galleries') || '{}');
     return !!liked[id];
   } catch (e) {
@@ -13545,7 +13568,7 @@ window.photoIsLikedLocal = photoIsLikedLocal;
 async function syncUserLikeBudget(user) {
   if (!user) return 0;
   try {
-    const budgetRef = ref(db, `website/users/${escHtml(user.uid)}/likes_data`);
+    const budgetRef = ref(db, `website/users/${user.uid}/likes_data`);
     const snapshot = await get(budgetRef);
     let budget = 5;
     let lastUpdate = Date.now();
@@ -13568,12 +13591,12 @@ async function syncUserLikeBudget(user) {
       await set(budgetRef, { budget, lastUpdate });
     }
     
-    localStorage.setItem(`like_budget_${escHtml(user.uid)}`, budget);
-    localStorage.setItem(`like_budget_update_${escHtml(user.uid)}`, lastUpdate);
+    localStorage.setItem(`like_budget_${user.uid}`, budget);
+    localStorage.setItem(`like_budget_update_${user.uid}`, lastUpdate);
     return budget;
   } catch (e) {
     console.error("שגיאה בסנכרון יתרת הלייקים:", e);
-    return parseInt(localStorage.getItem(`like_budget_${escHtml(user.uid)}`) || '5', 10);
+    return parseInt(localStorage.getItem(`like_budget_${user.uid}`) || '5', 10);
   }
 }
 window.syncUserLikeBudget = syncUserLikeBudget;
@@ -13664,7 +13687,7 @@ function photoToggleLike(id) {
   if (!item) return;
 
   const user = auth.currentUser;
-  const localKey = user ? `liked_galleries_${escHtml(user.uid)}` : 'guest_liked_galleries';
+  const localKey = user ? `liked_galleries_${user.uid}` : 'guest_liked_galleries';
 
   let liked = {};
   try {
@@ -13674,7 +13697,7 @@ function photoToggleLike(id) {
   const isAddingLike = !liked[id];
   let budget = 999;
   if (user) {
-    budget = parseInt(localStorage.getItem(`like_budget_${escHtml(user.uid)}`) || '5', 10);
+    budget = parseInt(localStorage.getItem(`like_budget_${user.uid}`) || '5', 10);
     if (isAddingLike && budget <= 0) {
       alert("אין לך לייקים פנויים ביתרה! הלייקים שלך מצטברים בקצב של 5 לייקים נוספים בכל יום.");
       return;
@@ -13692,7 +13715,7 @@ function photoToggleLike(id) {
   }
 
   if (user) {
-    localStorage.setItem(`like_budget_${escHtml(user.uid)}`, budget);
+    localStorage.setItem(`like_budget_${user.uid}`, budget);
   }
   localStorage.setItem(localKey, JSON.stringify(liked));
   localStorage.setItem('liked_galleries', JSON.stringify(liked));
@@ -13838,7 +13861,7 @@ function photoToggleLike(id) {
   if (user) {
     setTimeout(async () => {
       try {
-        const budgetRef = ref(db, `website/users/${escHtml(user.uid)}/likes_data`);
+        const budgetRef = ref(db, `website/users/${user.uid}/likes_data`);
         update(budgetRef, { budget: budget }).catch(() => {});
       } catch (e) {}
     }, 0);
@@ -13849,7 +13872,7 @@ window.photoToggleLike = photoToggleLike;
 function photoIsSavedLocal(id) {
   try {
     const user = auth.currentUser;
-    const localKey = user ? `saved_galleries_${escHtml(user.uid)}` : 'guest_saved_galleries';
+    const localKey = user ? `saved_galleries_${user.uid}` : 'guest_saved_galleries';
     const saved = JSON.parse(localStorage.getItem(localKey) || '{}');
     return !!saved[id];
   } catch (e) {
@@ -13860,7 +13883,7 @@ window.photoIsSavedLocal = photoIsSavedLocal;
 
 function photoToggleSave(id, btnEl) {
   const user = auth.currentUser;
-  const localKey = user ? `saved_galleries_${escHtml(user.uid)}` : 'guest_saved_galleries';
+  const localKey = user ? `saved_galleries_${user.uid}` : 'guest_saved_galleries';
 
   let saved = {};
   try {
@@ -13878,7 +13901,7 @@ function photoToggleSave(id, btnEl) {
   
   if (user) {
     try {
-      const userSavedRef = ref(db, `website/users/${escHtml(user.uid)}/saved_galleries`);
+      const userSavedRef = ref(db, `website/users/${user.uid}/saved_galleries`);
       set(userSavedRef, saved);
     } catch (e) {}
   }
@@ -13929,7 +13952,7 @@ function photoGetSavedAlbums() {
   const user = auth.currentUser;
   if (!user) return [];
   let map = {};
-  try { map = JSON.parse(localStorage.getItem(`saved_galleries_${escHtml(user.uid)}`) || '{}'); } catch (e) {}
+  try { map = JSON.parse(localStorage.getItem(`saved_galleries_${user.uid}`) || '{}'); } catch (e) {}
   const albums = (typeof photoGetAlbums === 'function') ? photoGetAlbums() : [];
   return albums.filter(a => map[a.id]);
 }
@@ -13979,7 +14002,7 @@ window.openSavedModal = openSavedModal;
 // drawer "לייקים" — נפתח מאייקון הלב בסרגל העליון
 function photoGetLikedAlbums() {
   const user = auth.currentUser;
-  const localKey = user ? `liked_galleries_${escHtml(user.uid)}` : 'guest_liked_galleries';
+  const localKey = user ? `liked_galleries_${user.uid}` : 'guest_liked_galleries';
   let map = {};
   try { map = JSON.parse(localStorage.getItem(localKey) || localStorage.getItem('liked_galleries') || '{}'); } catch (e) {}
   const albums = (typeof photoGetAlbums === 'function') ? photoGetAlbums() : [];
@@ -14075,7 +14098,7 @@ function subscribeMyDMs() {
   dmConvSubscribed = true;
   // מביאים את ה-uid של המנהל לשיחה הנעוצה
   try { get(ref(db, 'website/admin_uid')).then(s => { dmAdminUid = s.val() || ''; const el = document.getElementById('dm-conv-list'); if (el) el.innerHTML = dmConvListHTML(); }); } catch (e) {}
-  onValue(ref(db, `website/user_dms/${escHtml(u.uid)}`), snap => {
+  onValue(ref(db, `website/user_dms/${u.uid}`), snap => {
     dmConversations = snap.val() || {};
     const el = document.getElementById('dm-conv-list');
     if (el) el.innerHTML = dmConvListHTML();
@@ -14248,7 +14271,7 @@ function dmOpenConv(convId, otherUid, otherName, prefill) {
     </div>`;
   // מסמנים כנקרא
   const u = auth.currentUser;
-  if (u) { try { update(ref(db, `website/user_dms/${escHtml(u.uid)}/${convId}`), { unread: false }); } catch (e) {} }
+  if (u) { try { update(ref(db, `website/user_dms/${u.uid}/${convId}`), { unread: false }); } catch (e) {} }
   dmThreadUnsub = onValue(ref(db, `website/dms/${convId}/messages`), snap => {
     const val = snap.val() || {};
     dmThreadMessages = Object.values(val).sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
@@ -14286,7 +14309,7 @@ async function dmSendCurrent() {
   const myName = dmName();
   try {
     await push(ref(db, `website/dms/${convId}/messages`), { from: u.uid, fromName: myName, text: text.slice(0, 1000), timestamp: now });
-    await update(ref(db, `website/user_dms/${escHtml(u.uid)}/${convId}`), { otherUid, otherName, lastText: text.slice(0, 60), lastTime: now, unread: false });
+    await update(ref(db, `website/user_dms/${u.uid}/${convId}`), { otherUid, otherName, lastText: text.slice(0, 60), lastTime: now, unread: false });
     await update(ref(db, `website/user_dms/${otherUid}/${convId}`), { otherUid: u.uid, otherName: myName, lastText: text.slice(0, 60), lastTime: now, unread: true });
   } catch (e) {
     console.error('dm send failed', e);
@@ -14327,7 +14350,7 @@ function subscribeMyFollows() {
   const u = auth.currentUser;
   if (!u || followsSubscribed) return;
   followsSubscribed = true;
-  onValue(ref(db, `website/user_follows/${escHtml(u.uid)}`), snap => {
+  onValue(ref(db, `website/user_follows/${u.uid}`), snap => {
     followedUids = snap.val() || {};
     if (activePageId === 'page-feed-main' && typeof renderPage === 'function') renderPage();
   });
@@ -14339,7 +14362,7 @@ async function toggleFollow(uid, name, btn) {
   const u = auth.currentUser;
   if (!u) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
   if (!uid || uid === u.uid) { if (typeof showCopyToast === 'function') showCopyToast('אי אפשר לעקוב אחרי עצמך 🙂'); return; }
-  const path = `website/user_follows/${escHtml(u.uid)}/${uid}`;
+  const path = `website/user_follows/${u.uid}/${uid}`;
   const willFollow = !followedUids[uid];
   try {
     if (willFollow) { await set(ref(db, path), { name: name || '', since: Date.now() }); followedUids[uid] = { name: name || '', since: Date.now() }; }
@@ -14653,7 +14676,7 @@ function buildFeedPage() {
   try {
     const u = auth.currentUser;
     if (u) {
-      const prof = JSON.parse(localStorage.getItem(`user_profile_${escHtml(u.uid)}`) || '{}');
+      const prof = JSON.parse(localStorage.getItem(`user_profile_${u.uid}`) || '{}');
       name = prof.name || (typeof liveChatUserName === 'function' ? liveChatUserName() : '') || (u.email ? u.email.split('@')[0] : 'משתמש');
     }
   } catch (e) {}
@@ -16273,7 +16296,7 @@ async function submitCommunityPost() {
 
   // שליפת פרופיל מקומי לכינוי עדכני
   const localProfile = (() => {
-    try { return JSON.parse(localStorage.getItem(`user_profile_${escHtml(user.uid)}`) || '{}'); } catch(e) { return {}; }
+    try { return JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}'); } catch(e) { return {}; }
   })();
   const authorName = localProfile.nickname || user.displayName || (user.email ? user.email.split('@')[0] : 'אורח');
 
@@ -16322,7 +16345,7 @@ async function submitCommunityVote(postId, optionIndex) {
     return;
   }
   try {
-    await set(ref(db, `website/community_posts/${postId}/votes/${escHtml(user.uid)}`), optionIndex);
+    await set(ref(db, `website/community_posts/${postId}/votes/${user.uid}`), optionIndex);
   } catch (e) {
     console.error(e);
     alert("שגיאה בשליחת ההצבעה.");
@@ -16344,7 +16367,7 @@ async function submitCommunityComment(postId) {
   if (!body) return;
 
   const localProfile = (() => {
-    try { return JSON.parse(localStorage.getItem(`user_profile_${escHtml(user.uid)}`) || '{}'); } catch(e) { return {}; }
+    try { return JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}'); } catch(e) { return {}; }
   })();
   const authorName = localProfile.nickname || user.displayName || (user.email ? user.email.split('@')[0] : 'אורח');
 
@@ -16816,7 +16839,7 @@ function subscribeIdeas() {
     const val = snap.val();
     if (!val || !Object.keys(val).length) {
       IDEAS_SAMPLES.forEach(item => {
-        set(ref(db, `website/ideas/${escHtml(item.id)}`), item);
+        set(ref(db, `website/ideas/${item.id}`), item);
       });
       ideasData = {};
       IDEAS_SAMPLES.forEach(i => ideasData[i.id] = i);
@@ -17518,8 +17541,8 @@ function openFavoritesPage(tab) {
   if (tab) currentFavTab = tab;
   
   const user = auth.currentUser;
-  const likedKey = user ? `liked_galleries_${escHtml(user.uid)}` : 'guest_liked_galleries';
-  const savedKey = user ? `saved_galleries_${escHtml(user.uid)}` : 'guest_saved_galleries';
+  const likedKey = user ? `liked_galleries_${user.uid}` : 'guest_liked_galleries';
+  const savedKey = user ? `saved_galleries_${user.uid}` : 'guest_saved_galleries';
 
   let likedObj = {};
   let savedObj = {};

@@ -2581,20 +2581,32 @@ body:not(.edit-mode) .hotspot-delete-btn {
     gap: 6px !important;
     padding: 7px 14px !important;
     font-size: 13px !important;
-    font-weight: 700 !important;
-    border-radius: 8px !important;
-    background: #f1f5f9 !important;
-    color: #475569 !important;
-    border: 1px solid #e2e8f0 !important;
+    font-weight: 800 !important;
+    border-radius: 10px !important;
+    background: linear-gradient(135deg, #e11d48, #9333ea) !important;
+    color: #ffffff !important;
+    border: none !important;
+    box-shadow: 0 3px 10px rgba(147, 51, 234, 0.25) !important;
     white-space: nowrap !important;
     flex-shrink: 0 !important;
+  }
+  .photos-page[data-section="photos"] .photo-card-links .art-telegram-btn svg,
+  .photos-page.home-feed-photos .photo-card-links .art-telegram-btn svg,
+  .stories-page .photo-card-links .art-telegram-btn svg {
+    stroke: #ffffff !important;
   }
   .photos-page[data-section="photos"] .photo-card-links button:first-child,
   .photos-page.home-feed-photos .photo-card-links button:first-child,
   .stories-page .photo-card-links button:first-child {
-    background: #1e293b !important;
+    background: linear-gradient(135deg, #e11d48, #9333ea) !important;
     color: #ffffff !important;
     border: none !important;
+  }
+  .photos-page[data-section="photos"] .photo-card-links .art-save-btn.is-saved,
+  .photos-page.home-feed-photos .photo-card-links .art-save-btn.is-saved,
+  .stories-page .photo-card-links .art-save-btn.is-saved {
+    background: linear-gradient(135deg, #10b981, #059669) !important;
+    box-shadow: 0 3px 10px rgba(16, 185, 129, 0.3) !important;
   }
   .photos-page[data-section="photos"] .photo-card-links button:first-child svg,
   .photos-page.home-feed-photos .photo-card-links button:first-child svg,
