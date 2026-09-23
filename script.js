@@ -6626,8 +6626,7 @@ function storyOpenDetail(id) {
       </div>
     `;
     if (typeof subscribeStoryComments === 'function') subscribeStoryComments(id);
-    window.scrollTo({ top: 0, behavior: 'instant' });
-    if (mainContent) mainContent.scrollTop = 0;
+    detailScrollTop();
     return;
   }
 
@@ -6686,8 +6685,7 @@ function storyOpenDetail(id) {
 
   if (typeof subscribeStoryComments === 'function') subscribeStoryComments(id);
   storyRenderPage();
-  window.scrollTo({ top: 0, behavior: 'instant' });
-  if (mainContent) mainContent.scrollTop = 0;
+  detailScrollTop();
 }
 
 // מציג את העמוד הנוכחי של הסיפור (תמונה או טקסט מודגש)
@@ -6748,9 +6746,15 @@ function storyRenderPage() {
   if (prevBtn) prevBtn.disabled = (idx === 0);
   if (nextBtn) nextBtn.disabled = (idx === pagesArr.length - 1);
 
+  // ממרכזים את התמונה הממוזערת הפעילה בתוך הפס בלבד — בלי לגלול את כל העמוד אליה
   const activeThumb = document.querySelector('.story-page-thumb.active');
-  if (activeThumb && activeThumb.scrollIntoView) {
-    try { activeThumb.scrollIntoView({ inline: 'center', block: 'nearest' }); } catch (e) {}
+  const strip = activeThumb && activeThumb.parentElement;
+  if (strip && strip.scrollWidth > strip.clientWidth) {
+    try {
+      const sr = strip.getBoundingClientRect();
+      const tr = activeThumb.getBoundingClientRect();
+      strip.scrollLeft += (tr.left + tr.width / 2) - (sr.left + sr.width / 2);
+    } catch (e) {}
   }
 }
 
@@ -11778,6 +11782,20 @@ function secondhandDetailsBoxHTML(a) {
     </div>`;
 }
 
+// פתיחת תצוגה פנימית (גלריה/סיפור/קומיקס) — תמיד מההתחלה, לא מהמקום שבו היה הגלילה בפיד.
+// חוזרים על הגלילה גם בפריים הבא ואחרי רגע, כי טעינת תמונות/תגובות משנה את גובה העמוד.
+function detailScrollTop() {
+  const go = () => {
+    try { window.scrollTo(0, 0); } catch (e) {}
+    try { if (document.scrollingElement) document.scrollingElement.scrollTop = 0; } catch (e) {}
+    try { if (mainContent) mainContent.scrollTop = 0; } catch (e) {}
+  };
+  go();
+  try { requestAnimationFrame(go); } catch (e) {}
+  setTimeout(go, 150);
+}
+window.detailScrollTop = detailScrollTop;
+
 function photoOpenDetail(id) {
   window.__detailOpen = true; // מגן מפני רענון-רקע שיבעט מהעמוד הפנימי
   window.__detailOpenPageId = activePageId; // שומר איזה עמוד פעיל כשנפתחה התצוגה הפנימית
@@ -12055,6 +12073,7 @@ function photoOpenDetail(id) {
     `;
   }
   if (typeof subscribePhotoComments === 'function') subscribePhotoComments(id);
+  detailScrollTop();
 }
 
 function photoSelectImage(imgUrl, el) {
@@ -15180,7 +15199,7 @@ function courseOpenDetail(id) {
         </div>
       </div>
     </div>
-  `;
+  `;  detailScrollTop();
 }
 
 function courseGoBack() {
