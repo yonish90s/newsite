@@ -8805,6 +8805,7 @@ function buildInfoPage() {
   const analyticsHTML = `
     <div style="margin-bottom:20px; display:flex; gap:10px; flex-wrap:wrap;">
       <button type="button" onclick="openOnboardingAdmin()" style="background:#3b6ef5; color:#fff; border:none; border-radius:10px; padding:10px 18px; font-weight:800; font-size:14px; cursor:pointer;">🎬 הגדרות מדריך (אונבורדינג)</button>
+      <button type="button" onclick="openSiteTourEditor()" style="background:#4a7fd4; color:#fff; border:none; border-radius:10px; padding:10px 18px; font-weight:800; font-size:14px; cursor:pointer;">🧭 כיוון סיור ההדרכה</button>
     </div>
     <div style="margin-bottom:24px;">
       <div style="font-size:16px; font-weight:900; color:#0f172a; margin-bottom:12px;">📊 נתוני האתר <span style="font-size:12px; color:#94a3b8; font-weight:700;">(מתעדכן בזמן אמת)</span></div>
@@ -10808,6 +10809,68 @@ function renderQuickUploadHero() {
 }
 window.renderQuickUploadHero = renderQuickUploadHero;
 
+// ==========================================
+// ריבוע "הסבר שימוש" — סרטון יוטיוב ליד וידג'ט ההעלאה (המנהל קובע את הקישור)
+// ==========================================
+let UPLOAD_GUIDE_URL = '';
+try {
+  onValue(ref(db, 'website/uploadGuideVideo'), snap => {
+    UPLOAD_GUIDE_URL = snap.val() || '';
+    const box = document.getElementById('upload-guide-box');
+    if (box) box.outerHTML = uploadGuideBoxHTML();
+  }, () => {});
+} catch (e) {}
+
+function youtubeVideoId(url) {
+  const m = String(url || '').match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/))([\w-]{11})/);
+  return m ? m[1] : '';
+}
+
+function uploadGuideBoxHTML() {
+  const url = UPLOAD_GUIDE_URL;
+  const vid = youtubeVideoId(url);
+  const isAdminNow = typeof isAdmin === 'function' && isAdmin();
+  let media;
+  if (vid) {
+    media = `<iframe class="qu-guide-frame" src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(vid)}?rel=0" title="הסבר שימוש — איך מעלים תוכן" loading="lazy" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
+  } else if (url) {
+    // קישור לערוץ (לא לסרטון) — מציגים כפתור מעבר לערוץ
+    media = `<a class="qu-guide-frame qu-guide-placeholder" href="${escHtml(safeUrl(url))}" target="_blank" rel="noopener">
+      <span class="qu-guide-play" aria-hidden="true"></span><span>לערוץ היוטיוב שלנו</span></a>`;
+  } else {
+    media = `<div class="qu-guide-frame qu-guide-placeholder"><span class="qu-guide-play" aria-hidden="true"></span><span>סרטון ההסבר יעלה בקרוב</span></div>`;
+  }
+  return `
+    <aside class="qu-guide" id="upload-guide-box">
+      <div class="qu-guide-head">
+        <div class="qu-guide-title">הסבר שימוש</div>
+        ${isAdminNow ? `<button type="button" class="qu-guide-edit" onclick="editUploadGuideVideo()" title="הגדרת סרטון">✎</button>` : ''}
+      </div>
+      <div class="qu-guide-sub">איך מעלים תוכן לאתר — צפו בסרטון הקצר</div>
+      ${media}
+    </aside>`;
+}
+window.uploadGuideBoxHTML = uploadGuideBoxHTML;
+
+async function editUploadGuideVideo() {
+  if (!isAdmin()) return;
+  const val = prompt('הדביקו קישור לסרטון יוטיוב (או לערוץ). השאירו ריק כדי להסיר:', UPLOAD_GUIDE_URL || '');
+  if (val === null) return;
+  const clean = val.trim();
+  if (clean && !/^https:\/\/(www\.|m\.)?(youtube\.com|youtu\.be)\//i.test(clean)) {
+    alert('נא להדביק קישור של יוטיוב (youtube.com או youtu.be)');
+    return;
+  }
+  try {
+    await set(ref(db, 'website/uploadGuideVideo'), clean || null);
+    if (typeof showCopyToast === 'function') showCopyToast('✅ סרטון ההסבר עודכן');
+  } catch (e) {
+    console.error('upload guide save failed', e);
+    alert('שגיאה בשמירת הקישור');
+  }
+}
+window.editUploadGuideVideo = editUploadGuideVideo;
+
 function quickUploadSetTarget(target) {
   window.quickUploadState.target = target;
   quickUploadRefreshUI();
@@ -11142,7 +11205,10 @@ function buildHomeFeedPage() {
 
   return `<div class="articles-page home-feed-page" data-page-id="page-home-feed">
     <div class="art-inner">
-      ${quickUploadHero}
+      <div class="qu-hero-row">
+        ${uploadGuideBoxHTML()}
+        ${quickUploadHero}
+      </div>
       ${photosSection}
       ${storiesSection}
     </div>
@@ -17538,21 +17604,41 @@ function openFavoritesPage(tab) {
 window.openFavoritesPage = openFavoritesPage;
 window.openLikesModal = openFavoritesPage;
 
-function openLanguageModal() {
-  const modal = document.getElementById('language-modal');
-  if (!modal) return;
-  // סימון "פעיל" דינמי לפי השפה הנוכחית
+function openLanguageModal(e) {
+  if (e) e.stopPropagation();
+  const panel = document.getElementById('language-modal');
+  if (!panel) return;
+  if (panel.style.display === 'block') { panel.style.display = 'none'; return; }
+  // סימון השפה הפעילה
   const lang = (typeof getUiLang === 'function') ? getUiLang() : (localStorage.getItem('user_language') || 'he');
   const heActive = document.getElementById('lang-active-he');
   const enActive = document.getElementById('lang-active-en');
+  if (heActive) heActive.textContent = lang === 'he' ? '✓' : '';
+  if (enActive) enActive.textContent = lang === 'en' ? '✓' : '';
   const heBtn = document.getElementById('lang-btn-he');
   const enBtn = document.getElementById('lang-btn-en');
-  if (heActive) heActive.textContent = lang === 'he' ? '✓ פעיל' : '';
-  if (enActive) enActive.textContent = lang === 'en' ? '✓ Active' : '';
-  // הדגשת הכפתור הפעיל
-  if (heBtn) { heBtn.style.background = lang === 'he' ? '#2a2a34' : '#202028'; heBtn.style.color = lang === 'he' ? '#fff' : '#a1a1aa'; heBtn.style.borderColor = lang === 'he' ? '#3f3f4e' : '#2e2e38'; }
-  if (enBtn) { enBtn.style.background = lang === 'en' ? '#2a2a34' : '#202028'; enBtn.style.color = lang === 'en' ? '#fff' : '#a1a1aa'; enBtn.style.borderColor = lang === 'en' ? '#3f3f4e' : '#2e2e38'; }
-  modal.style.display = 'flex';
+  if (heBtn) heBtn.classList.toggle('is-active', lang === 'he');
+  if (enBtn) enBtn.classList.toggle('is-active', lang === 'en');
+  // סוגרים את חלונית ההתראות אם פתוחה
+  const np = document.getElementById('notif-panel');
+  if (np) np.style.display = 'none';
+  // ממקמים מתחת לכפתור הגלובוס
+  const btn = document.getElementById('header-lang-btn');
+  panel.style.display = 'block';
+  if (btn) {
+    const r = btn.getBoundingClientRect();
+    const w = panel.offsetWidth;
+    const left = Math.max(12, Math.min(window.innerWidth - w - 12, r.left + r.width / 2 - w / 2));
+    panel.style.left = Math.round(left) + 'px';
+    panel.style.top = Math.round(r.bottom + 10) + 'px';
+  }
+}
+if (typeof document !== 'undefined') {
+  document.addEventListener('click', (e) => {
+    const p = document.getElementById('language-modal');
+    const b = document.getElementById('header-lang-btn');
+    if (p && p.style.display === 'block' && !p.contains(e.target) && b && !b.contains(e.target)) p.style.display = 'none';
+  });
 }
 window.openLanguageModal = openLanguageModal;
 
@@ -17671,6 +17757,23 @@ const UI_EN = {
   'לעסקים ומקצוענים שרוצים נוכחות חזקה ותוכן שנראה מיליון דולר.': 'For businesses and pros who want a strong presence and content that looks like a million bucks.',
   'לקחת את הפרופיל צעד קדימה עם תוכן ברמה אחרת.': 'Take your profile a step further with next-level content.',
   'להתחיל בקטן עם הפוסט הראשון שלך ב-AI.': 'Start small with your first AI post.',
+  'להתחיל לגלות את הקהילה — בלי הגבלות צפייה.': 'Start exploring the community — no viewing limits.',
+  'יותר לייקים, יותר חשיפה ויותר חיבורים.': 'More likes, more exposure, more connections.',
+  'חשיפה מקסימלית — הפרופיל והתכנים שלך בראש.': 'Maximum exposure — your profile and content on top.',
+  '15 לייקים ביום': '15 likes per day', '50 לייקים ביום': '50 likes per day', 'לייקים ללא הגבלה': 'Unlimited likes',
+  '10 העלאות בחודש': '10 uploads per month', 'העלאות ללא הגבלה': 'Unlimited uploads',
+  'העלאות ללא הגבלה + קידום': 'Unlimited uploads + promotion',
+  'הלייקים מתחדשים כל יום': 'Likes renew every day', 'בלי מגבלות בכלל': 'No limits at all',
+  'צפייה בתוכן פרימיום': 'Premium content access',
+  'הודעות פרטיות ללא הגבלה': 'Unlimited private messages',
+  'בלי פרסומות': 'No ads',
+  'כל מה שיש בבסיס': 'Everything in Basic',
+  'אישור מהיר לתכנים שהעלית': 'Fast approval for your uploads',
+  'לראות מי צפה בפרופיל שלך': 'See who viewed your profile',
+  'צפייה בתמונות באיכות מלאה': 'Full-quality photo viewing',
+  'כל מה שיש במתקדם': 'Everything in Advanced',
+  'התכנים שלך מקודמים בראש הקהילות': 'Your content promoted at the top of communities',
+  'תג פרופיל פרימיום': 'Premium profile badge',
   '/ חודש': '/ month',
   'בתשלום שנתי': 'billed annually', 'בתשלום חודשי': 'billed monthly',
   'הקרדיטים מתחדשים חודשית': 'Credits renew monthly',
@@ -18183,58 +18286,60 @@ const subscriptionPlansData = [
   {
     id: 'basic',
     title: 'בסיס',
-    subtitle: 'להתחיל בקטן עם הפוסט הראשון שלך ב-AI.',
+    subtitle: 'להתחיל לגלות את הקהילה — בלי הגבלות צפייה.',
     monthlyOriginal: 20,
     monthlyPrice: 20,
     yearlyOriginal: 20,
     yearlyPrice: 20,
     usd: 6,
-    credits: '200 קרדיטים / חודש',
-    usage: '2 סרטונים / 20 תמונות',
-    subtext: 'הקרדיטים מתחדשים חודשית',
+    credits: '15 לייקים ביום',
+    usage: '10 העלאות בחודש',
+    subtext: 'הלייקים מתחדשים כל יום',
     isFeatured: false,
     features: [
-      'יצירת תוכן חכם עם AI',
-      'חיבור לרשתות החברתיות'
+      'צפייה בתוכן פרימיום',
+      'הודעות פרטיות ללא הגבלה',
+      'בלי פרסומות'
     ]
   },
   {
     id: 'advanced',
     title: 'מתקדם',
-    subtitle: 'לקחת את הפרופיל צעד קדימה עם תוכן ברמה אחרת.',
+    subtitle: 'יותר לייקים, יותר חשיפה ויותר חיבורים.',
     badge: 'מומלץ',
     monthlyOriginal: 40,
     monthlyPrice: 40,
     yearlyOriginal: 40,
     yearlyPrice: 40,
     usd: 12,
-    credits: '600 קרדיטים / חודש',
-    usage: '6 סרטונים / 60 תמונות',
-    subtext: 'הקרדיטים מתחדשים חודשית',
+    credits: '50 לייקים ביום',
+    usage: 'העלאות ללא הגבלה',
+    subtext: 'הלייקים מתחדשים כל יום',
     isFeatured: true,
     features: [
-      'יצירת תוכן חכם עם AI',
-      'חיבור לרשתות החברתיות',
-      'מסלול מהיר ליצירת תוכן'
+      'כל מה שיש בבסיס',
+      'אישור מהיר לתכנים שהעלית',
+      'לראות מי צפה בפרופיל שלך',
+      'צפייה בתמונות באיכות מלאה'
     ]
   },
   {
     id: 'pro',
     title: 'מקצוען',
-    subtitle: 'לעסקים ומקצוענים שרוצים נוכחות חזקה ותוכן שנראה מיליון דולר.',
+    subtitle: 'חשיפה מקסימלית — הפרופיל והתכנים שלך בראש.',
     monthlyOriginal: 60,
     monthlyPrice: 60,
     yearlyOriginal: 60,
     yearlyPrice: 60,
     usd: 18,
-    credits: '1,600 קרדיטים / חודש',
-    usage: '16 סרטונים / 160 תמונות',
-    subtext: 'הקרדיטים מתחדשים חודשית',
+    credits: 'לייקים ללא הגבלה',
+    usage: 'העלאות ללא הגבלה + קידום',
+    subtext: 'בלי מגבלות בכלל',
     isFeatured: false,
     features: [
-      'יצירת תוכן חכם עם AI',
-      'חיבור לרשתות החברתיות',
-      'מסלול מהיר ליצירת תוכן',
+      'כל מה שיש במתקדם',
+      'התכנים שלך מקודמים בראש הקהילות',
+      'תג פרופיל פרימיום',
       'גישה ראשונה לפיצ׳רים חדשים',
       'תמיכה VIP'
     ]
@@ -18313,7 +18418,7 @@ function buildSubscriptionPage() {
         transition: transform 0.2s, box-shadow 0.2s;
       ">
         ${plan.badge ? `
-          <div style="
+          <div class="sub-badge" style="
             position: absolute;
             top: -12px;
             left: 50%;
@@ -18331,19 +18436,19 @@ function buildSubscriptionPage() {
 
         <div>
           <!-- Title & Subtitle -->
-          <h3 style="margin: 0 0 6px 0; font-size: 20px; font-weight: 800; color: #0f172a;">${escHtml(plan.title)}</h3>
-          <p style="margin: 0 0 20px 0; font-size: 11.5px; color: #64748b; line-height: 1.35; min-height: 32px;">${escHtml(plan.subtitle)}</p>
+          <h3 class="sub-title" style="margin: 0 0 6px 0; font-size: 20px; font-weight: 800; color: #0f172a;">${escHtml(plan.title)}</h3>
+          <p class="sub-subtitle" style="margin: 0 0 20px 0; font-size: 11.5px; color: #64748b; line-height: 1.35; min-height: 32px;">${escHtml(plan.subtitle)}</p>
 
           <!-- Price section -->
-          <div style="margin-bottom: 16px; min-height: 80px; display: flex; flex-direction: column; justify-content: flex-end; align-items: center;">
+          <div class="sub-price-box" style="margin-bottom: 16px; min-height: 80px; display: flex; flex-direction: column; justify-content: flex-end; align-items: center;">
             ${isYearly && origPrice && origPrice > price ? `
               <div style="font-size: 15px; color: #94a3b8; text-decoration: line-through; font-weight: 600; margin-bottom: 2px;">
 ${currencySym}${formattedOrigPrice}
               </div>
             ` : '<div style="height: 22px;"></div>'}
             
-            <div style="display: flex; align-items: baseline; justify-content: center; gap: 4px; direction: rtl;">
-              <span style="font-size: 38px; font-weight: 900; color: #0f172a; line-height: 1; letter-spacing: -1px;">${currencySym}${formattedPrice}</span>
+            <div class="sub-price-row" style="display: flex; align-items: baseline; justify-content: center; gap: 4px; direction: rtl;">
+              <span class="sub-price" style="font-size: 38px; font-weight: 900; color: #0f172a; line-height: 1; letter-spacing: -1px;">${currencySym}${formattedPrice}</span>
               <div style="display: flex; flex-direction: column; align-items: flex-start; text-align: right; line-height: 1.1;">
                 <span style="font-size: 11.5px; color: #64748b; font-weight: 700;">/ חודש</span>
                 <span style="font-size: 9.5px; color: #94a3b8;">${paymentPeriodLabel}</span>
@@ -18352,14 +18457,14 @@ ${currencySym}${formattedOrigPrice}
           </div>
 
           <!-- Credits & Usage details -->
-          <div style="background: #f8fafc; border-radius: 10px; padding: 10px 8px; margin-bottom: 18px; border: 1px solid #f1f5f9;">
+          <div class="sub-credits" style="background: #f8fafc; border-radius: 10px; padding: 10px 8px; margin-bottom: 18px; border: 1px solid #f1f5f9;">
             <div style="font-size: 12.5px; font-weight: 800; color: #1e293b; margin-bottom: 2px;">${plan.credits}</div>
             <div style="font-size: 11.5px; font-weight: 700; color: #334155; margin-bottom: 2px;">${plan.usage}</div>
             <div style="font-size: 10px; color: #94a3b8;">${escHtml(plan.subtext)}</div>
           </div>
 
           <!-- Action Button -->
-          <button onclick="handleSubscriptionPlanSelect('${artEsc(plan.id)}')" style="
+          <button class="sub-start-btn" onclick="handleSubscriptionPlanSelect('${artEsc(plan.id)}')" style="
             width: 100%;
             padding: 10px 14px;
             border-radius: 10px;
@@ -18371,10 +18476,10 @@ ${currencySym}${formattedOrigPrice}
           ">בואו נתחיל</button>
 
           <!-- Apple Pay Option -->
-          <div style="margin-top: 12px; margin-bottom: 6px; font-size: 10.5px; color: #94a3b8;">
+          <div class="sub-pay-label" style="margin-top: 12px; margin-bottom: 6px; font-size: 10.5px; color: #94a3b8;">
             או תשלום מהיר עם
           </div>
-          <button onclick="handleApplePay('${artEsc(plan.id)}')" style="
+          <button class="sub-pay-btn" onclick="handleApplePay('${artEsc(plan.id)}')" style="
             width: 100%;
             background: #000000;
             color: #ffffff;
@@ -18399,8 +18504,8 @@ ${currencySym}${formattedOrigPrice}
         </div>
 
         <!-- Features Divider & List -->
-        <div style="border-top: 1px solid #f1f5f9; padding-top: 16px; margin-top: 18px; text-align: right;">
-          <div style="font-size: 11.5px; font-weight: 800; color: #1e293b; margin-bottom: 10px;">מה מקבלים:</div>
+        <div class="sub-features" style="border-top: 1px solid #f1f5f9; padding-top: 16px; margin-top: 18px; text-align: right;">
+          <div class="sub-features-title" style="font-size: 11.5px; font-weight: 800; color: #1e293b; margin-bottom: 10px;">מה מקבלים:</div>
           <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px;">
             ${featuresListHtml}
           </ul>
@@ -18420,7 +18525,7 @@ ${currencySym}${formattedOrigPrice}
       <div style="margin-bottom: 24px;"></div>
 
       <!-- Pricing Cards Grid -->
-      <div style="
+      <div class="sub-plans-grid" style="
         display: flex;
         flex-wrap: wrap;
         gap: 16px;
@@ -18454,6 +18559,7 @@ const SITE_TOUR_STEPS = [
   },
   {
     target: '.qu-arrow-btn',
+    mobile: true, // במובייל מוצג רק השלב הזה
     he: { title: 'העלאת תוכן', text: 'בוחרים אזור ולוחצים על החץ למעלה כדי להעלות תמונות, קומיקס או סיפורים.' },
     en: { title: 'Upload content', text: 'Pick a section and tap the up arrow to upload photos, comics or stories.' }
   },
@@ -18464,9 +18570,43 @@ const SITE_TOUR_STEPS = [
   }
 ];
 
-let __tourIdx = 0;
+let __tourIdx = 0;   // אינדקס השלב ב-SITE_TOUR_STEPS (גם המפתח ב-tourConfig)
+let __tourPos = 0;   // המיקום ברשימת השלבים הפעילים
+let __tourList = []; // השלבים הפעילים: במחשב — כולם, במובייל — רק העלאה
+
+function siteTourIsMobile() {
+  try { return window.matchMedia('(max-width: 768px)').matches; } catch (e) { return window.innerWidth <= 768; }
+}
+function siteTourActiveList() {
+  const all = SITE_TOUR_STEPS.map((_, i) => i);
+  if (!siteTourIsMobile()) return all;
+  const mob = all.filter(i => SITE_TOUR_STEPS[i].mobile);
+  return mob.length ? mob : all;
+}
 let __tourEls = null;
 let __tourRaf = 0;
+
+// הגדרות מיקום לכל שלב שהמנהל קבע (website/tourConfig): { selector, dx, dy, dw, dh }
+let __tourConfig = {};
+let __tourEdit = false;   // מצב עריכה של המנהל
+let __tourDraft = null;   // טיוטה בזמן עריכה (לפני שמירה)
+let __tourPicking = false;
+try {
+  onValue(ref(db, 'website/tourConfig'), snap => { __tourConfig = Object.assign({}, snap.val() || {}); }, () => {});
+} catch (e) {}
+
+// הכיוון נשמר בנפרד למחשב (מפתחות 0..3) ולמובייל (תחת m), כי המיקומים שונים בין המסכים
+function siteTourConfBucket(src, create) {
+  if (!src) return null;
+  if (!siteTourIsMobile()) return src;
+  if (!src.m && create) src.m = {};
+  return src.m || null;
+}
+function siteTourStepConf(idx) {
+  const src = __tourEdit && __tourDraft ? __tourDraft : __tourConfig;
+  const bucket = siteTourConfBucket(src, false);
+  return (bucket && bucket[idx]) || {};
+}
 
 // העמוד יכול לזוז אחרי פתיחת הסיור (טעינת תמונות, רינדור מחדש) — מעדכנים מיקום בכל פריים
 function siteTourTick() {
@@ -18474,7 +18614,21 @@ function siteTourTick() {
   __tourRaf = requestAnimationFrame(siteTourTick);
 }
 
-function siteTourFindTarget(step) {
+function siteTourIsVisible(el) {
+  if (!el) return false;
+  const r = el.getBoundingClientRect();
+  return r.width > 0 && r.height > 0;
+}
+
+function siteTourFindTarget(step, idx) {
+  // קודם — האלמנט שהמנהל בחר לשלב הזה (אם קיים וגלוי)
+  const conf = siteTourStepConf(idx === undefined ? __tourIdx : idx);
+  if (conf.selector) {
+    try {
+      const custom = document.querySelector(conf.selector);
+      if (siteTourIsVisible(custom)) return custom;
+    } catch (e) {}
+  }
   const els = Array.from(document.querySelectorAll(step.target));
   const visible = els.filter(el => {
     if (step.match && !step.match.test(el.textContent || '')) return false;
@@ -18506,8 +18660,8 @@ function siteTourRender() {
   const step = SITE_TOUR_STEPS[__tourIdx];
   const lang = (typeof getUiLang === 'function') ? getUiLang() : 'he';
   const isEn = lang === 'en';
-  const total = SITE_TOUR_STEPS.length;
-  const last = __tourIdx === total - 1;
+  const total = __tourList.length;
+  const last = __tourPos === total - 1;
   const t = isEn ? step.en : step.he;
   // בשלב השפה מציגים שורה בעברית ושורה באנגלית
   const titleHTML = step.bilingual
@@ -18529,12 +18683,13 @@ function siteTourRender() {
     </div>
     <div class="site-tour-text${step.bilingual ? ' is-bilingual' : ''}">${textHTML}</div>
     <div class="site-tour-foot">
-      <span class="site-tour-count">${__tourIdx + 1} ${L.of} ${total}</span>
+      ${total > 1 ? `<span class="site-tour-count">${__tourPos + 1} ${L.of} ${total}</span>` : '<span></span>'}
       <div class="site-tour-actions">
-        ${__tourIdx > 0 ? `<button type="button" class="site-tour-back" onclick="siteTourGo(-1)">${L.back}</button>` : ''}
+        ${__tourPos > 0 ? `<button type="button" class="site-tour-back" onclick="siteTourGo(-1)">${L.back}</button>` : ''}
         <button type="button" class="site-tour-next" onclick="${last ? 'endSiteTour()' : 'siteTourGo(1)'}">${last ? L.done : L.next}</button>
       </div>
-    </div>`;
+    </div>
+    ${__tourEdit ? siteTourEditorHTML() : ''}`;
   const target = siteTourFindTarget(step);
   if (target && target.scrollIntoView) {
     const r = target.getBoundingClientRect();
@@ -18570,7 +18725,15 @@ function siteTourPosition() {
     return;
   }
 
-  const r = target.getBoundingClientRect();
+  const raw = target.getBoundingClientRect();
+  const conf = siteTourStepConf(__tourIdx);
+  const dx = +conf.dx || 0, dy = +conf.dy || 0, dw = +conf.dw || 0, dh = +conf.dh || 0;
+  const r = {
+    left: raw.left + dx, top: raw.top + dy,
+    width: Math.max(8, raw.width + dw), height: Math.max(8, raw.height + dh)
+  };
+  r.right = r.left + r.width;
+  r.bottom = r.top + r.height;
   const pad = 6;
   spot.style.display = 'block';
   spot.style.left = (r.left - pad) + 'px';
@@ -18592,13 +18755,16 @@ function siteTourPosition() {
 }
 
 function siteTourGo(delta) {
-  __tourIdx = Math.max(0, Math.min(SITE_TOUR_STEPS.length - 1, __tourIdx + delta));
+  __tourPos = Math.max(0, Math.min(__tourList.length - 1, __tourPos + delta));
+  __tourIdx = __tourList[__tourPos];
   siteTourRender();
 }
 window.siteTourGo = siteTourGo;
 
-function startSiteTour(force) {
+function startSiteTour(force, edit) {
   try { if (!force && localStorage.getItem(SITE_TOUR_KEY)) return; } catch (e) {}
+  __tourEdit = !!edit && isAdmin();
+  __tourDraft = __tourEdit ? JSON.parse(JSON.stringify(Object.assign({}, __tourConfig || {}))) : null;
   // אם סרטוני ההדרכה פתוחים — מחכים שייסגרו
   const ob = document.getElementById('onboarding-modal');
   if (ob && ob.style.display !== 'none') { setTimeout(() => startSiteTour(force), 800); return; }
@@ -18609,7 +18775,9 @@ function startSiteTour(force) {
   const els = siteTourEnsureEls();
   els.bubble.style.display = 'block';
   els.blocker.style.display = 'block';
-  __tourIdx = 0;
+  __tourList = siteTourActiveList();
+  __tourPos = 0;
+  __tourIdx = __tourList[0];
   siteTourRender();
   cancelAnimationFrame(__tourRaf);
   __tourRaf = requestAnimationFrame(siteTourTick);
@@ -18618,7 +18786,10 @@ function startSiteTour(force) {
 window.startSiteTour = startSiteTour;
 
 function endSiteTour() {
-  try { localStorage.setItem(SITE_TOUR_KEY, '1'); } catch (e) {}
+  if (!__tourEdit) { try { localStorage.setItem(SITE_TOUR_KEY, '1'); } catch (e) {} }
+  if (__tourPicking) siteTourStopPick();
+  __tourEdit = false;
+  __tourDraft = null;
   cancelAnimationFrame(__tourRaf);
   if (__tourEls) {
     __tourEls.bubble.style.display = 'none';
@@ -18630,8 +18801,180 @@ function endSiteTour() {
 window.endSiteTour = endSiteTour;
 
 function siteTourKeys(e) {
-  if (e.key === 'Escape') endSiteTour();
+  if (e.key === 'Escape') { if (__tourPicking) siteTourStopPick(); else endSiteTour(); }
 }
+
+// ==========================================
+// עורך הסיור (מנהל בלבד): בחירת האלמנט שכל שלב מצביע עליו + כיוונון עדין
+// ==========================================
+function siteTourEditorHTML() {
+  const conf = siteTourStepConf(__tourIdx);
+  const info = (siteTourIsMobile() ? '📱 מובייל · ' : '💻 מחשב · ') + (conf.selector ? 'אלמנט שנבחר ידנית' : 'ברירת מחדל');
+  const off = `הזזה ${conf.dx || 0},${conf.dy || 0} · גודל ${conf.dw || 0},${conf.dh || 0}`;
+  const b = (label, fn, title) => `<button type="button" class="site-tour-ed-btn" onclick="${fn}" title="${title || ''}">${label}</button>`;
+  return `
+    <div class="site-tour-editor" dir="rtl">
+      <div class="site-tour-ed-row">
+        ${b('🎯 בחירת אלמנט', 'siteTourStartPick()', 'לחצו ואז לחצו על האלמנט באתר')}
+        <span class="site-tour-ed-info">${info}<br>${off}</span>
+      </div>
+      <div class="site-tour-ed-row">
+        <span class="site-tour-ed-label">הזזה</span>
+        ${b('↑', 'siteTourNudge(0,-4,0,0)', 'למעלה')}
+        ${b('↓', 'siteTourNudge(0,4,0,0)', 'למטה')}
+        ${b('→', 'siteTourNudge(4,0,0,0)', 'ימינה')}
+        ${b('←', 'siteTourNudge(-4,0,0,0)', 'שמאלה')}
+      </div>
+      <div class="site-tour-ed-row">
+        <span class="site-tour-ed-label">גודל</span>
+        ${b('רחב +', 'siteTourNudge(0,0,4,0)')}
+        ${b('רחב −', 'siteTourNudge(0,0,-4,0)')}
+        ${b('גבוה +', 'siteTourNudge(0,0,0,4)')}
+        ${b('גבוה −', 'siteTourNudge(0,0,0,-4)')}
+      </div>
+      <div class="site-tour-ed-row">
+        ${b('↺ איפוס שלב', 'siteTourResetStep()')}
+        <button type="button" class="site-tour-ed-save" onclick="siteTourSaveConfig()">💾 שמירה לכל השלבים</button>
+      </div>
+    </div>`;
+}
+
+function siteTourUpdateDraft(idx, patch) {
+  if (!__tourDraft) __tourDraft = {};
+  const bucket = siteTourConfBucket(__tourDraft, true);
+  const cur = Object.assign({}, bucket[idx] || {}, patch);
+  Object.keys(cur).forEach(k => { if (cur[k] === 0 || cur[k] === '' || cur[k] == null) delete cur[k]; });
+  if (Object.keys(cur).length) bucket[idx] = cur; else delete bucket[idx];
+}
+function siteTourClearDraftStep(idx) {
+  const bucket = siteTourConfBucket(__tourDraft, false);
+  if (bucket) delete bucket[idx];
+}
+
+function siteTourNudge(dx, dy, dw, dh) {
+  const c = siteTourStepConf(__tourIdx);
+  // בממשק מימין לשמאל, "ימינה" = x חיובי
+  siteTourUpdateDraft(__tourIdx, {
+    dx: (+c.dx || 0) + dx, dy: (+c.dy || 0) + dy,
+    dw: (+c.dw || 0) + dw, dh: (+c.dh || 0) + dh
+  });
+  siteTourRender();
+}
+window.siteTourNudge = siteTourNudge;
+
+function siteTourResetStep() {
+  siteTourClearDraftStep(__tourIdx);
+  siteTourRender();
+}
+window.siteTourResetStep = siteTourResetStep;
+
+async function siteTourSaveConfig() {
+  if (!isAdmin()) { alert('רק מנהל יכול לשמור את הגדרות הסיור'); return; }
+  try {
+    await set(ref(db, 'website/tourConfig'), __tourDraft && Object.keys(__tourDraft).length ? __tourDraft : null);
+    __tourConfig = JSON.parse(JSON.stringify(__tourDraft || {}));
+    if (typeof showCopyToast === 'function') showCopyToast('✅ מיקומי הסיור נשמרו');
+  } catch (e) {
+    console.error('tour config save failed', e);
+    alert('שגיאה בשמירת הגדרות הסיור');
+  }
+}
+window.siteTourSaveConfig = siteTourSaveConfig;
+
+// בונה סלקטור יציב ככל האפשר לאלמנט שנבחר
+function siteTourCssPath(el) {
+  const esc = (v) => (window.CSS && CSS.escape) ? CSS.escape(v) : v;
+  if (el.id) return '#' + esc(el.id);
+  const parts = [];
+  while (el && el.nodeType === 1 && el !== document.body) {
+    if (el.id) { parts.unshift('#' + esc(el.id)); break; }
+    let part = el.tagName.toLowerCase();
+    const cls = Array.from(el.classList)
+      .filter(c => !/^(active|liked|is-|show|open|selected|hover|focus)/.test(c))
+      .slice(0, 2);
+    if (cls.length) part += '.' + cls.map(esc).join('.');
+    const parent = el.parentElement;
+    if (parent) {
+      const same = Array.from(parent.children).filter(c => c.tagName === el.tagName);
+      if (same.length > 1) part += `:nth-of-type(${same.indexOf(el) + 1})`;
+    }
+    parts.unshift(part);
+    el = parent;
+  }
+  return parts.join(' > ');
+}
+
+let __tourPickHover = null;
+function siteTourPickMove(e) {
+  const el = document.elementFromPoint(e.clientX, e.clientY);
+  if (!el || !__tourPickHover) return;
+  const r = el.getBoundingClientRect();
+  Object.assign(__tourPickHover.style, {
+    display: 'block', left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px'
+  });
+}
+function siteTourPickClick(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  const el = document.elementFromPoint(e.clientX, e.clientY);
+  if (el) {
+    const sel = siteTourCssPath(el);
+    // מאפסים הזזות קודמות כשבוחרים אלמנט חדש
+    siteTourClearDraftStep(__tourIdx);
+    siteTourUpdateDraft(__tourIdx, { selector: sel });
+  }
+  siteTourStopPick();
+}
+function siteTourBlock(e) { e.preventDefault(); e.stopPropagation(); }
+
+function siteTourStartPick() {
+  if (!__tourEls) return;
+  __tourPicking = true;
+  __tourEls.bubble.style.display = 'none';
+  __tourEls.spot.style.display = 'none';
+  __tourEls.blocker.style.display = 'none';
+  if (!__tourPickHover) {
+    __tourPickHover = document.createElement('div');
+    __tourPickHover.className = 'site-tour-pick-hover';
+    document.body.appendChild(__tourPickHover);
+  }
+  let hint = document.getElementById('site-tour-pick-hint');
+  if (!hint) {
+    hint = document.createElement('div');
+    hint.id = 'site-tour-pick-hint';
+    hint.className = 'site-tour-pick-hint';
+    hint.textContent = 'לחצו על האלמנט שהשלב יצביע עליו (Esc לביטול)';
+    document.body.appendChild(hint);
+  }
+  hint.style.display = 'block';
+  document.body.classList.add('site-tour-picking');
+  document.addEventListener('mousemove', siteTourPickMove, true);
+  document.addEventListener('click', siteTourPickClick, true);
+  ['mousedown', 'mouseup', 'pointerdown', 'pointerup', 'touchstart'].forEach(t => document.addEventListener(t, siteTourBlock, true));
+}
+window.siteTourStartPick = siteTourStartPick;
+
+function siteTourStopPick() {
+  __tourPicking = false;
+  document.removeEventListener('mousemove', siteTourPickMove, true);
+  document.removeEventListener('click', siteTourPickClick, true);
+  ['mousedown', 'mouseup', 'pointerdown', 'pointerup', 'touchstart'].forEach(t => document.removeEventListener(t, siteTourBlock, true));
+  document.body.classList.remove('site-tour-picking');
+  if (__tourPickHover) __tourPickHover.style.display = 'none';
+  const hint = document.getElementById('site-tour-pick-hint');
+  if (hint) hint.style.display = 'none';
+  if (__tourEls) {
+    __tourEls.bubble.style.display = 'block';
+    __tourEls.blocker.style.display = 'block';
+    siteTourRender();
+  }
+}
+
+function openSiteTourEditor() {
+  if (!isAdmin()) { alert('רק מנהל יכול לערוך את סיור ההדרכה'); return; }
+  startSiteTour(true, true);
+}
+window.openSiteTourEditor = openSiteTourEditor;
 
 // מתחילים אחרי אישור שער הגיל (או מיד אם כבר אושר בעבר)
 function maybeStartSiteTour() {
