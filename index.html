@@ -14,7 +14,7 @@
   <!-- ספריית localforage לשמירת תמונות -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
   <!-- קישור לקובץ העיצוב החיצוני (עם פרמטר למניעת שמירה במטמון) -->
-  <link rel="stylesheet" href="./style.css?v=1246">
+  <link rel="stylesheet" href="./style.css?v=1304">
 </head>
 <body class="light-mode">
   <!-- שער אישור גיל (Age Gate Overlay) -->
@@ -121,6 +121,10 @@
         if (typeof window.maybeShowCookieBanner === 'function') {
           setTimeout(window.maybeShowCookieBanner, 400);
         }
+        // ואז סיור ההדרכה (פעם אחת)
+        if (typeof window.maybeStartSiteTour === 'function') {
+          window.maybeStartSiteTour();
+        }
       }
       window.addEventListener('DOMContentLoaded', () => {
         const isVerified = sessionStorage.getItem('age_verified') === 'true';
@@ -185,14 +189,14 @@
     <button onclick="cookieConsent('decline')" aria-label="סגור" style="position:absolute; top:12px; left:14px; background:none; border:none; color:#9ca3af; font-size:20px; cursor:pointer; line-height:1;">✕</button>
     <h3 style="margin:0 0 8px; font-size:19px; font-weight:900;">האתר משתמש בעוגיות 🍪</h3>
     <p style="margin:0 0 16px; font-size:13.5px; line-height:1.6; color:#d1d5db;">
-      אתר זה משתמש בעוגיות כדי לשפר את חוויית המשתמש. ייתכן שנעשה שימוש בנתונים אישיים/עוגיות להתאמה אישית של מודעות. השימוש באתר מהווה הסכמה לכל העוגיות בהתאם ל<a href="#" style="color:#f0abfc; font-weight:700;">מדיניות העוגיות</a> שלנו.
+      אתר זה משתמש בעוגיות הכרחיות לתפעול האתר. באפשרותך לאשר או לדחות עוגיות נוספות לשיפור חוויית המשתמש. פרטים ב<a href="#" style="color:#f0abfc; font-weight:700;">מדיניות העוגיות</a> שלנו.
     </p>
     <div style="display:flex; gap:10px; flex-wrap:wrap;">
       <button onclick="cookieConsent('accept')" style="flex:1; min-width:140px; background:linear-gradient(135deg,#ec4899 0%,#8b5cf6 100%); color:#fff; border:none; border-radius:10px; padding:12px 16px; font-size:14px; font-weight:800; cursor:pointer; box-shadow:0 4px 14px rgba(139,92,246,0.35);">אשר הכל</button>
       <button onclick="cookieConsent('decline')" style="flex:1; min-width:140px; background:transparent; color:#fff; border:1.5px solid #4b5563; border-radius:10px; padding:12px 16px; font-size:14px; font-weight:800; cursor:pointer;">דחה הכל</button>
     </div>
     <div style="text-align:center; margin-top:12px;">
-      <a href="#" onclick="cookieConsent('accept'); return false;" style="color:#9ca3af; font-size:13px; font-weight:700; text-decoration:none;">⚙️ פרטים נוספים</a>
+      <a href="#" onclick="return false;" style="color:#9ca3af; font-size:13px; font-weight:700; text-decoration:none;">⚙️ פרטים נוספים</a>
     </div>
   </div>
   <script>
@@ -1124,6 +1128,6 @@
   </div>
 </div>
 
-  <script type="module" src="./script.js?v=1276"></script>
+  <script type="module" src="./script.js?v=1304"></script>
 </body>
 </html>

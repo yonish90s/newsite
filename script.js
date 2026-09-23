@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getDatabase, ref, set, get, child, onValue, push, update, increment } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getDatabase, ref, set, get, child, onValue, push, update, increment, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 // הגדרות הפרויקט של Firebase
 const firebaseConfig = {
@@ -154,7 +154,7 @@ window.alert = function(message) {
 function updateUserActivity(user) {
   if (!user) return;
   try {
-    const userRef = ref(db, `website/users/${user.uid}/last_seen`);
+    const userRef = ref(db, `website/users/${escHtml(user.uid)}/last_seen`);
     set(userRef, Date.now());
   } catch (e) {
     console.error("Error updating user activity:", e);
@@ -256,6 +256,57 @@ let deleteChat = false;
 
 // פונקציית עזר לבדיקה האם המשתמש המחובר כרגע הוא המנהל המורשה
 const isAdmin = () => auth.currentUser && auth.currentUser.email === "yoni98321@gmail.com";
+
+// מפתחות ציבוריים של האתר. כללי האבטחה חוסמים קריאה של כל website (הודעות, משתמשים וכו'),
+// ולכן קוראים רק את המפתחות האלה, כל אחד בנפרד.
+const PUBLIC_SITE_KEYS = ['pages', 'topNavPages', 'siteBackgrounds', 'promotedSites', 'socialLinks',
+  'onboardingVideos', 'hideCart', 'hideChat', 'deleteCart', 'deleteChat', 'item_likes'];
+
+async function fetchPublicSiteData() {
+  const snaps = await Promise.all(PUBLIC_SITE_KEYS.map(k => get(ref(db, 'website/' + k)).catch(() => null)));
+  const data = {};
+  snaps.forEach((s, i) => { if (s && s.exists()) data[PUBLIC_SITE_KEYS[i]] = s.val(); });
+  return data;
+}
+
+// מאזין לכל המפתחות הציבוריים ומפעיל את cb עם אובייקט מאוחד (באיחוד קצר של עדכונים סמוכים)
+function onPublicSiteValue(cb) {
+  const data = {};
+  let timer = null;
+  PUBLIC_SITE_KEYS.forEach(k => {
+    onValue(ref(db, 'website/' + k), (snap) => {
+      if (snap.exists()) data[k] = snap.val(); else delete data[k];
+      clearTimeout(timer);
+      timer = setTimeout(() => cb({ ...data }), 60);
+    }, () => {});
+  });
+}
+
+// לייקים נשמרים בנפרד (website/item_likes/{id}) כי גולשים לא כותבים ל-pages.
+// מעדכנים את מוני הלייקים בתוך נתוני העמודים לפי הערכים האלה.
+function applyItemLikesToPages(pageList, likes) {
+  if (!likes || !Array.isArray(pageList)) return false;
+  let changed = false;
+  pageList.forEach(p => {
+    if (!p || !p.content) return;
+    p.content = p.content.replace(/data-(photos|stories)-json="([^"]*)"/g, (full, kind, enc) => {
+      let arr;
+      try { arr = JSON.parse(decodeURIComponent(enc)); } catch (e) { return full; }
+      if (!Array.isArray(arr)) return full;
+      let touched = false;
+      arr.forEach(item => {
+        if (item && item.id && typeof likes[item.id] === 'number' && item.likes !== likes[item.id]) {
+          item.likes = likes[item.id];
+          touched = true;
+        }
+      });
+      if (!touched) return full;
+      changed = true;
+      return `data-${kind}-json="${encodeURIComponent(JSON.stringify(arr))}"`;
+    });
+  });
+  return changed;
+}
 
 // משתמש "רשום" אמיתי = מחובר ואינו אנונימי. אורח אנונימי אינו נחשב משתמש רשום
 // (אם יתנתק ויתחבר שוב הוא משתמש אחר), ולכן אין לו פרופיל/אימות/משימות.
@@ -685,17 +736,15 @@ async function initSite() {
 
   // סנכרון ברקע מ-Firebase DB
   try {
-    const dbRef = ref(db);
-    const snapshot = await Promise.race([
-      get(child(dbRef, 'website')),
+    const data = await Promise.race([
+      fetchPublicSiteData(),
       new Promise((_, reject) => setTimeout(
         () => reject(new Error('Firebase boot fetch timed out')), 1500
       ))
     ]);
 
-    if (snapshot.exists()) {
-      const data = snapshot.val();
-      if (data.pages && Array.isArray(data.pages)) pages = data.pages;
+    if (Object.keys(data).length) {
+      if (data.pages && Array.isArray(data.pages)) { pages = data.pages; applyItemLikesToPages(pages, data.item_likes); }
       if (data.topNavPages && Array.isArray(data.topNavPages)) topNavPages = data.topNavPages;
       if (data.siteBackgrounds) siteBackgrounds = data.siteBackgrounds;
       if (data.promotedSites) {
@@ -849,8 +898,9 @@ function saveToStorage() {
   const navHTML = tempNav.innerHTML;
   localforage.setItem('mySiteTopNavHTML_v3', navHTML); 
   
-  // שמירה ל-Firebase Database
-  try {
+  // שמירה ל-Firebase Database — רק המנהל כותב את תוכן האתר (גם כללי האבטחה אוכפים זאת).
+  // אצל שאר הגולשים השינויים נשמרים מקומית בלבד.
+  if (isAdmin()) try {
     const dbRef = ref(db, 'website');
     update(dbRef, {
       pages: pages,
@@ -2690,7 +2740,7 @@ if (btnAddVideo) {
           el.setAttribute('data-y', '150');
           
           el.innerHTML = `
-            <video src="${event.target.result}" controls style="width: 100%; height: 100%; object-fit: contain; border-radius: 8px;"></video>
+            <video src="${escHtml(event.target.result)}" controls style="width: 100%; height: 100%; object-fit: contain; border-radius: 8px;"></video>
           `;
           
           mainContent.appendChild(el);
@@ -2727,7 +2777,7 @@ if (btnAddLoopVideo) {
           
           // סרטון לופ: ללא כפתורי שליטה (controls), מתנגן אוטומטית (autoplay), בלולאה (loop), מושתק (muted) ומותאם לניידים (playsinline)
           el.innerHTML = `
-            <video src="${event.target.result}" autoplay loop muted playsinline style="width: 100%; height: 100%; object-fit: contain; border-radius: 8px;"></video>
+            <video src="${escHtml(event.target.result)}" autoplay loop muted playsinline style="width: 100%; height: 100%; object-fit: contain; border-radius: 8px;"></video>
           `;
           
           mainContent.appendChild(el);
@@ -2780,7 +2830,7 @@ if (btnMakeDownload) {
             el.innerHTML = `
               <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; cursor:pointer; height:100%; box-sizing:border-box; padding:10px;">
                 <img src="${iconDataUrl}" style="width:100%; height:auto; object-fit:contain; border-radius:8px; display:block;" draggable="false" />
-                <span contenteditable="plaintext-only" style="font-size:13px; color:#333; text-align:center; font-weight:600;">${dlFile.name}</span>
+                <span contenteditable="plaintext-only" style="font-size:13px; color:#333; text-align:center; font-weight:600;">${escHtml(dlFile.name)}</span>
               </div>
             `;
 
@@ -3681,10 +3731,10 @@ document.addEventListener('DOMContentLoaded', () => {
       
       // טעינת גלריות שמורות מהענן
       try {
-        const userSavedRef = ref(db, `website/users/${user.uid}/saved_galleries`);
+        const userSavedRef = ref(db, `website/users/${escHtml(user.uid)}/saved_galleries`);
         const snapshot = await get(userSavedRef);
         if (snapshot.exists()) {
-          localStorage.setItem(`saved_galleries_${user.uid}`, JSON.stringify(snapshot.val()));
+          localStorage.setItem(`saved_galleries_${escHtml(user.uid)}`, JSON.stringify(snapshot.val()));
         }
       } catch (e) {
         console.error("שגיאה בטעינת שמורים מפיירבייס:", e);
@@ -3795,7 +3845,7 @@ document.addEventListener('DOMContentLoaded', () => {
       msgDiv.innerHTML = `
         <div class="msg-content">
           ${senderHtml}
-          ${text}
+          ${isUser ? escHtml(text) : text}
           <div class="msg-time" style="${timeAlign}">${timeStr}</div>
         </div>
       `;
@@ -4691,17 +4741,17 @@ function buildEventsSidebarBox() {
         ${isEd ? `<button onclick="openEditEventModal()" style="background: #3b82f6; color: white; border: none; border-radius: 6px; padding: 2px 8px; font-size: 11px; font-weight: bold; cursor: pointer;">✏️ ערוך אירוע</button>` : ''}
       </div>
 
-      <h5 style="margin: 0 0 5px; font-size: 13.5px; font-weight: 800; color: #111827;">${ev.title}</h5>
+      <h5 style="margin: 0 0 5px; font-size: 13.5px; font-weight: 800; color: #111827;">${escHtml(ev.title)}</h5>
 
       <div style="display: flex; flex-direction: column; gap: 2px; font-size: 12px; color: #4b5563; margin-bottom: 6px; font-weight: 700;">
         <div style="display: flex; align-items: center; gap: 6px; color: #d97706;">
           <span>📅 מפגש בתאריך:</span>
-          <span style="color: #111827; font-weight: 900;">${ev.date} בשעה ${ev.time}</span>
+          <span style="color: #111827; font-weight: 900;">${escHtml(ev.date)} בשעה ${escHtml(ev.time)}</span>
         </div>
         ${ev.location ? `
           <div style="display: flex; align-items: center; gap: 6px; color: #6b7280;">
             <span>📍 מיקום:</span>
-            <span>${ev.location}</span>
+            <span>${escHtml(ev.location)}</span>
           </div>
         ` : ''}
       </div>
@@ -4746,8 +4796,8 @@ function openEventRegisterModal() {
         </div>
 
         <div id="event-modal-details-card" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:12px; font-size:13px; color:#334155; line-height:1.5;">
-          <strong>אירוע:</strong> <span id="event-reg-title-text">${artEsc(UPCOMING_EVENT.title)}</span><br>
-          <strong>תאריך ושעה:</strong> <span id="event-reg-date-text">${artEsc(UPCOMING_EVENT.date)} בשעה ${artEsc(UPCOMING_EVENT.time)}</span>
+          <strong>אירוע:</strong> <span id="event-reg-title-text">${escHtml(UPCOMING_EVENT.title)}</span><br>
+          <strong>תאריך ושעה:</strong> <span id="event-reg-date-text">${escHtml(UPCOMING_EVENT.date)} בשעה ${escHtml(UPCOMING_EVENT.time)}</span>
         </div>
 
         <label style="font-size:13px; font-weight:700; color:#374151;">שם מלא <span style="color:red">*</span></label>
@@ -4836,10 +4886,10 @@ function openEventRegistrantsAdminModal() {
   const rowsHTML = regList.length ? regList.map((r, i) => `
     <tr style="border-bottom: 1px solid #f1f5f9; background: ${i % 2 === 0 ? '#ffffff' : '#f8fafc'};">
       <td style="padding: 10px 12px; font-weight: 800; color: #64748b;">${i + 1}</td>
-      <td style="padding: 10px 12px; font-weight: 800; color: #0f172a;">${artEsc(r.userName || 'ללא שם')}</td>
-      <td style="padding: 10px 12px; color: #2563eb; font-weight: 700; direction: ltr; text-align: right;"><a href="tel:${artEsc(r.userPhone)}" style="color:#2563eb; text-decoration:none;">${artEsc(r.userPhone || '--')}</a></td>
-      <td style="padding: 10px 12px; color: #475569; direction: ltr; text-align: right;">${artEsc(r.userEmail || '--')}</td>
-      <td style="padding: 10px 12px; color: #64748b; font-size: 12px;">${artEsc(r.createdAt || '')}</td>
+      <td style="padding: 10px 12px; font-weight: 800; color: #0f172a;">${escHtml(r.userName || 'ללא שם')}</td>
+      <td style="padding: 10px 12px; color: #2563eb; font-weight: 700; direction: ltr; text-align: right;"><a href="tel:${escHtml(r.userPhone)}" style="color:#2563eb; text-decoration:none;">${escHtml(r.userPhone || '--')}</a></td>
+      <td style="padding: 10px 12px; color: #475569; direction: ltr; text-align: right;">${escHtml(r.userEmail || '--')}</td>
+      <td style="padding: 10px 12px; color: #64748b; font-size: 12px;">${escHtml(r.createdAt || '')}</td>
       <td style="padding: 10px 12px; text-align: center;">
         <button onclick="deleteEventRegistration('${artEsc(r.id)}')" style="background: #ef4444; color: white; border: none; border-radius: 6px; padding: 4px 8px; font-size: 12px; cursor: pointer; font-weight: bold;" title="מחק נרשם">✕</button>
       </td>
@@ -4972,7 +5022,7 @@ function buildPromotedSitesBox() {
   const sitesHTML = PROMOTED_SITES.map((site, index) => {
     let iconHTML = '';
     if (site.icon && (site.icon.startsWith('data:image') || site.icon.startsWith('http'))) {
-      iconHTML = `<img src="${site.icon}" alt="" style="width:24px;height:24px;border-radius:4px;object-fit:cover;flex-shrink:0;">`;
+      iconHTML = `<img src="${escHtml(site.icon)}" alt="" style="width:24px;height:24px;border-radius:4px;object-fit:cover;flex-shrink:0;">`;
     } else {
       iconHTML = `<span style="font-size:18px;width:24px;height:24px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${site.icon || '🌐'}</span>`;
     }
@@ -4983,9 +5033,9 @@ function buildPromotedSitesBox() {
 
     return `
       <li style="display:flex;align-items:center;gap:10px;padding:8px;border-radius:8px;background:#f9f9f9;border:1px solid #f0f0f0;transition:all 0.2s ease-in-out;">
-        <a href="${site.url}" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;gap:8px;color:#000;text-decoration:none;font-weight:bold;font-size:14px;flex:1;min-width:0;">
+        <a href="${escHtml(safeUrl(site.url))}" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;gap:8px;color:#000;text-decoration:none;font-weight:bold;font-size:14px;flex:1;min-width:0;">
           ${iconHTML}
-          <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${site.name}</span>
+          <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(site.name)}</span>
         </a>
         ${deleteBtn}
       </li>
@@ -5009,8 +5059,36 @@ function buildPromotedSitesBox() {
   `;
 }
 
+// escHtml — לטקסט ולערכי מאפיינים ב-HTML (מונע הזרקת קוד/XSS)
+function escHtml(str) {
+  return String(str == null ? '' : str)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+window.escHtml = escHtml;
+
+// safeUrl — חוסם קישורי javascript:/vbscript: וכו' (מאפשר http/https/mailto/tel ונתיבים יחסיים)
+function safeUrl(url) {
+  const s = String(url == null ? '' : url).trim();
+  if (!s) return '';
+  if (/^(https?:|mailto:|tel:|blob:|data:image\/)/i.test(s)) return s;
+  if (/^[a-z][a-z0-9+.-]*:/i.test(s.replace(/[\s\u0000-\u001f]/g, ''))) return '#';
+  return s;
+}
+window.safeUrl = safeUrl;
+
+// jsStrEsc — למחרוזת JS בלבד (למשל setAttribute, שם אין פענוח של ישויות HTML)
+function jsStrEsc(str) {
+  return String(str == null ? '' : str)
+    .replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"')
+    .replace(/</g, '\\x3c').replace(/\r/g, '\\r').replace(/\n/g, '\\n');
+}
+
+// artEsc — למחרוזת JS בתוך מאפיין HTML, למשל onclick="fn('${artEsc(id)}')"
 function artEsc(str) {
-  return String(str||'').replace(/\\/g,'\\\\').replace(/'/g,'&#39;').replace(/"/g,'&quot;');
+  return escHtml(String(str == null ? '' : str)
+    .replace(/\\/g, '\\\\').replace(/'/g, "\\'")
+    .replace(/\r/g, '\\r').replace(/\n/g, '\\n'));
 }
 
 function buildArticlesPage(articles) {
@@ -5019,12 +5097,12 @@ function buildArticlesPage(articles) {
 
   const featuredHTML = featured.map(a => `
     <div class="art-featured-card" onclick="artOpenDetail('${artEsc(a.id)}')">
-      <img src="${a.image || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80'}" alt="">
+      <img src="${escHtml(a.image || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80')}" alt="">
       <div class="art-featured-overlay"></div>
       <div class="art-featured-info">
-        <span class="art-category-badge" style="background:${a.categoryColor||'#e65100'}">${a.category}</span>
-        <h3>${a.title}</h3>
-        <div class="art-featured-meta">${a.author} · ${a.timestamp}</div>
+        <span class="art-category-badge" style="background:${escHtml(a.categoryColor || '#e65100')}">${escHtml(a.category)}</span>
+        <h3>${escHtml(a.title)}</h3>
+        <div class="art-featured-meta">${escHtml(a.author)} · ${escHtml(a.timestamp)}</div>
       </div>
     </div>
   `).join('');
@@ -5032,16 +5110,16 @@ function buildArticlesPage(articles) {
   const listHTML = articles.map((a) => `
     <div class="art-row" onclick="artOpenDetail('${artEsc(a.id)}')">
       <div class="art-row-text">
-        <h3>${a.title}</h3>
-        <p>${a.summary}</p>
+        <h3>${escHtml(a.title)}</h3>
+        <p>${escHtml(a.summary)}</p>
         <div class="art-row-meta">
-          <span>${a.author}</span>
+          <span>${escHtml(a.author)}</span>
           <span class="art-row-sep">|</span>
-          <span>${a.timestamp}</span>
+          <span>${escHtml(a.timestamp)}</span>
         </div>
       </div>
-      <div class="art-row-img-wrap" style="--bg-img: url('${a.image || ''}');">
-        ${a.image ? `<img src="${a.image}" alt="">` : '<div class="art-row-img-placeholder"></div>'}
+      <div class="art-row-img-wrap" style="--bg-img: url('${artEsc(a.image || '')}');">
+        ${a.image ? `<img src="${escHtml(a.image)}" alt="">` : '<div class="art-row-img-placeholder"></div>'}
         ${a.image ? `<button class="art-zoom-btn" onclick="event.stopPropagation();artZoomImage('${artEsc(a.image)}')" title="מסך מלא">⛶</button>` : ''}
         ${isEditMode ? `<button class="art-pin-btn" onclick="event.stopPropagation(); togglePinArticle('${artEsc(a.id)}')" title="${a.pinned ? 'בטל נעץ' : 'נעץ בגריד'}" style="${a.pinned ? 'color:#ffd700;display:flex;' : ''}">${a.pinned ? '★' : '☆'}</button>` : ''}
         <button class="art-delete-btn" onclick="event.stopPropagation();artDelete('${artEsc(a.id)}',this)">✕</button>
@@ -5052,7 +5130,7 @@ function buildArticlesPage(articles) {
   const popularHTML = popular.map((a, i) => `
     <div class="art-popular-item" onclick="artOpenDetail('${artEsc(a.id)}')">
       <span class="art-popular-num">${String(i+1).padStart(2,'0')}</span>
-      <div style="flex:1;font-size:13px;font-weight:600;line-height:1.4;color:#222">${a.title}</div>
+      <div style="flex:1;font-size:13px;font-weight:600;line-height:1.4;color:#222">${escHtml(a.title)}</div>
     </div>
   `).join('');
 
@@ -5110,12 +5188,12 @@ function artOpenDetail(id) {
   const recHTML = recommended.map(r => `
     <div class="art-rec-card" onclick="artOpenDetail('${artEsc(r.id)}')">
       <div class="art-rec-img">
-        ${r.image ? `<img src="${r.image}" alt="">` : '<div class="art-card-img-placeholder"></div>'}
-        <span class="art-rec-badge art-category-badge" style="background:${r.categoryColor||'#e65100'}">${r.category}</span>
+        ${r.image ? `<img src="${escHtml(r.image)}" alt="">` : '<div class="art-card-img-placeholder"></div>'}
+        <span class="art-rec-badge art-category-badge" style="background:${escHtml(r.categoryColor || '#e65100')}">${escHtml(r.category)}</span>
       </div>
       <div class="art-rec-text">
-        <h4>${r.title}</h4>
-        <div class="art-rec-meta">${r.author} · ${r.timestamp}</div>
+        <h4>${escHtml(r.title)}</h4>
+        <div class="art-rec-meta">${escHtml(r.author)} · ${escHtml(r.timestamp)}</div>
       </div>
     </div>
   `).join('');
@@ -5125,17 +5203,17 @@ function artOpenDetail(id) {
     <div class="art-detail articles-page" data-article-id="${id}" data-articles-json="${json}">
       <div class="art-detail-inner">
         <button class="art-back-btn" onclick="artGoBack()">← חזרה לכתבות</button>
-        ${a.image ? `<img class="art-detail-hero" src="${a.image}" alt="">` : ''}
+        ${a.image ? `<img class="art-detail-hero" src="${escHtml(a.image)}" alt="">` : ''}
         <div class="art-detail-body">
           <div class="art-meta" style="margin-bottom:12px">
-            <span class="art-category-badge" style="background:${a.categoryColor||'#e65100'}">${a.category}</span>
-            <span>${a.author}</span>
+            <span class="art-category-badge" style="background:${escHtml(a.categoryColor || '#e65100')}">${escHtml(a.category)}</span>
+            <span>${escHtml(a.author)}</span>
             <span>·</span>
-            <span>${a.timestamp}</span>
+            <span>${escHtml(a.timestamp)}</span>
           </div>
-          <h1 class="art-detail-title">${a.title}</h1>
+          <h1 class="art-detail-title">${escHtml(a.title)}</h1>
           <div class="art-detail-content">${bodyHTML}</div>
-          ${a.link ? `<a href="${a.link}" target="_blank" class="art-detail-link">קרא באתר המקור ↗</a>` : ''}
+          ${a.link ? `<a href="${escHtml(safeUrl(a.link))}" target="_blank" class="art-detail-link">קרא באתר המקור ↗</a>` : ''}
         </div>
         ${recommended.length ? `
         <div class="art-rec-section">
@@ -5276,28 +5354,28 @@ const SHOP_SAMPLES = [
 function buildShopPage(products) {
   const cartSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>';
   const cardsHTML = products.map(p => `
-    <div class="shop-card" ${p.link ? `onclick="window.open('${p.link}','_blank')"` : ''} style="${p.link ? 'cursor:pointer' : ''}">
+    <div class="shop-card" ${p.link ? `onclick="window.open('${artEsc(p.link)}','_blank')"` : ''} style="${p.link ? 'cursor:pointer' : ''}">
       <button class="shop-delete-btn" onclick="event.stopPropagation();shopDelete('${artEsc(p.id)}')">✕</button>
       <div class="shop-card-img">
-        ${p.image ? `<img src="${p.image}" alt="">` : '<div class="shop-img-placeholder"></div>'}
+        ${p.image ? `<img src="${escHtml(p.image)}" alt="">` : '<div class="shop-img-placeholder"></div>'}
         <button class="shop-cart-btn" title="הוסף לסל" onclick="event.stopPropagation();shopAddToCart('${artEsc(p.id)}')">${cartSvg}<span class="shop-cart-plus">+</span></button>
       </div>
       <div class="shop-card-info">
-        ${p.label ? `<div class="shop-label">${p.label}</div>` : ''}
-        <h3 class="shop-name">${p.name}</h3>
-        <div class="shop-price">${p.price || ''}</div>
+        ${p.label ? `<div class="shop-label">${escHtml(p.label)}</div>` : ''}
+        <h3 class="shop-name">${escHtml(p.name)}</h3>
+        <div class="shop-price">${escHtml(p.price || '')}</div>
       </div>
     </div>
   `).join('');
 
   const bestSellers = products.slice(0, 5);
   const bestHTML = bestSellers.map((p, i) => `
-    <div class="shop-best-item" ${p.link ? `onclick="window.open('${p.link}','_blank')"` : ''} style="${p.link ? 'cursor:pointer' : ''}">
+    <div class="shop-best-item" ${p.link ? `onclick="window.open('${artEsc(p.link)}','_blank')"` : ''} style="${p.link ? 'cursor:pointer' : ''}">
       <span class="shop-best-num">${String(i+1).padStart(2,'0')}</span>
-      ${p.image ? `<img class="shop-best-img" src="${p.image}" alt="">` : ''}
+      ${p.image ? `<img class="shop-best-img" src="${escHtml(p.image)}" alt="">` : ''}
       <div class="shop-best-text">
-        <div class="shop-best-name">${p.name}</div>
-        <div class="shop-best-price">${p.price || ''}</div>
+        <div class="shop-best-name">${escHtml(p.name)}</div>
+        <div class="shop-best-price">${escHtml(p.price || '')}</div>
       </div>
     </div>
   `).join('');
@@ -5378,10 +5456,10 @@ function shopRenderCart() {
     } else {
       itemsEl.innerHTML = shopCart.map(x => `
         <div class="shop-cart-row">
-          ${x.image ? `<img src="${x.image}" alt="">` : ''}
+          ${x.image ? `<img src="${escHtml(x.image)}" alt="">` : ''}
           <div class="shop-cart-row-text">
-            <div class="shop-cart-row-name">${x.name}</div>
-            <div class="shop-cart-row-price">${x.price || ''} ${x.qty > 1 ? '× ' + x.qty : ''}</div>
+            <div class="shop-cart-row-name">${escHtml(x.name)}</div>
+            <div class="shop-cart-row-price">${escHtml(x.price || '')} ${x.qty > 1 ? '× ' + x.qty : ''}</div>
           </div>
           <button class="shop-cart-remove" onclick="shopRemoveFromCart('${artEsc(x.id)}')">✕</button>
         </div>
@@ -6037,7 +6115,7 @@ function syncStoryCategorySelect() {
   const select = document.getElementById('story-category');
   if (!select) return;
   const currentVal = select.value;
-  select.innerHTML = STORY_CATEGORIES.map(cat => `<option value="${artEsc(cat)}">${cat}</option>`).join('');
+  select.innerHTML = STORY_CATEGORIES.map(cat => `<option value="${escHtml(cat)}">${cat}</option>`).join('');
   if (STORY_CATEGORIES.includes(currentVal)) {
     select.value = currentVal;
   }
@@ -6271,7 +6349,7 @@ function storyCardHTML(s, iconHint) {
               <div class="photo-mini-thumb" 
                    onclick="event.stopPropagation(); photoSelectRowImage('${artEsc(s.id)}', '${artEsc(imgUrl)}', this)" 
                    style="width: 22px; height: 22px; border-radius: 4px; overflow: hidden; cursor: pointer; border: 1.5px solid ${idx === 0 ? '#e11d48' : '#ddd'}; transition: all 0.2s; background: #eee; flex-shrink:0;">
-                <img src="${imgUrl}" style="width: 100%; height: 100%; object-fit: cover;">
+                <img src="${escHtml(imgUrl)}" style="width: 100%; height: 100%; object-fit: cover;">
               </div>
             `).join('')}
           </div>
@@ -6292,7 +6370,7 @@ function storyCardHTML(s, iconHint) {
         if (label === 'אימייל') {
           return `<button type="button" onclick="revealAndCopyEmail('${artEsc(url)}', this, event);" class="art-telegram-btn" title="לחץ לחשיפת והעתקת אימייל">${svg}<span>${label}</span></button>`;
         }
-        return `<a href="${url}" target="_blank" onclick="event.stopPropagation();" class="art-telegram-btn">${svg}<span>${label}</span></a>`;
+        return `<a href="${escHtml(safeUrl(url))}" target="_blank" onclick="event.stopPropagation();" class="art-telegram-btn">${svg}<span>${label}</span></a>`;
       }
       return `<span class="art-telegram-btn is-disabled" onclick="event.stopPropagation();" aria-disabled="true">${svg}<span>${label}</span></span>`;
     };
@@ -6333,14 +6411,14 @@ function storyCardHTML(s, iconHint) {
     `;
 
     return `
-      <div class="art-row" data-category="${artEsc(s.category || 'כללי')}" data-verified="${isVerifiedStory ? '1' : '0'}" data-time="${storyTime}" data-score="${storyScore}" data-search="${artEsc([s.title, s.summary, s.author, s.category].filter(Boolean).join(' '))}" onclick="storyOpenDetail('${artEsc(s.id)}')">
+      <div class="art-row" data-category="${escHtml(s.category || 'כללי')}" data-verified="${isVerifiedStory ? '1' : '0'}" data-time="${storyTime}" data-score="${storyScore}" data-search="${escHtml([s.title, s.summary, s.author, s.category].filter(Boolean).join(' '))}" onclick="storyOpenDetail('${artEsc(s.id)}')">
         <div class="art-row-text photo-card-info">
-          <h3>${s.title}</h3>
+          <h3>${escHtml(s.title)}</h3>
           <div class="art-row-meta" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-            <span class="photo-author-link art-row-author" onclick="event.stopPropagation(); if(typeof openUserPage==='function') openUserPage('${artEsc(s.authorId || '')}', '${artEsc(s.author || '')}')" style="cursor: pointer; color: #e11d48; text-decoration: underline; font-weight: 600;">${s.author}${verifiedBadgeHTML}</span>
+            <span class="photo-author-link art-row-author" onclick="event.stopPropagation(); if(typeof openUserPage==='function') openUserPage('${artEsc(s.authorId || '')}', '${artEsc(s.author || '')}')" style="cursor: pointer; color: #e11d48; text-decoration: underline; font-weight: 600;">${escHtml(s.author)}${verifiedBadgeHTML}</span>
             <span class="art-row-sep">|</span>
-            <span>${s.timestamp}</span>
-            ${s.ageRange ? `<span class="art-row-sep">|</span><span>גיל ${artEsc(String(s.ageRange))}</span>` : ''}
+            <span>${escHtml(s.timestamp)}</span>
+            ${s.ageRange ? `<span class="art-row-sep">|</span><span>גיל ${escHtml(String(s.ageRange))}</span>` : ''}
             ${isVerifiedStory ? `<span class="art-row-sep">|</span><span style="color:#2563eb; font-weight:700; display:inline-flex; align-items:center; gap:4px;">חשבון זה מאומת <span style="background:#dbeafe; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:10px;">✓</span></span>` : ''}
           </div>
           ${scoreBadgeHTML}
@@ -6348,7 +6426,7 @@ function storyCardHTML(s, iconHint) {
         </div>
         <div class="art-row-img-container" style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0;">
           <div class="art-row-img-wrap" style="--bg-img: url('${mainImg || ''}');">
-            ${mainImg ? `<img src="${mainImg}" alt="">` : `<div class="art-row-img-placeholder" data-icon="${defaultIcon}"></div>`}
+            ${mainImg ? `<img src="${escHtml(mainImg)}" alt="">` : `<div class="art-row-img-placeholder" data-icon="${defaultIcon}"></div>`}
             ${validImages.length > 1 ? `<div class="photo-count-badge">1 / ${validImages.length}</div>` : ''}
             ${mainImg ? `<button class="art-zoom-btn" onclick="event.stopPropagation();artGalleryById('stories','${artEsc(s.id)}', this.closest('.art-row-img-wrap').querySelector('img') && this.closest('.art-row-img-wrap').querySelector('img').getAttribute('src'))" title="מסך מלא">⛶</button>` : ''}
             ${cardHeartOverlay}
@@ -6371,12 +6449,12 @@ function buildStoriesPage(stories, storyKind) {
 
   const featuredHTML = featured.map(s => `
     <div class="art-featured-card" onclick="storyOpenDetail('${artEsc(s.id)}')">
-      <img src="${s.image || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80'}" alt="">
+      <img src="${escHtml(s.image || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80')}" alt="">
       <div class="art-featured-overlay"></div>
       <div class="art-featured-info">
-        <span class="art-category-badge" style="background:${s.categoryColor||'#8b5cf6'}">${s.category}</span>
-        <h3>${s.title}</h3>
-        <div class="art-featured-meta">${s.author} · ${s.timestamp}</div>
+        <span class="art-category-badge" style="background:${escHtml(s.categoryColor || '#8b5cf6')}">${escHtml(s.category)}</span>
+        <h3>${escHtml(s.title)}</h3>
+        <div class="art-featured-meta">${escHtml(s.author)} · ${escHtml(s.timestamp)}</div>
       </div>
     </div>
   `).join('');
@@ -6386,7 +6464,7 @@ function buildStoriesPage(stories, storyKind) {
   const popularHTML = popular.map((s, i) => `
     <div class="art-popular-item" onclick="storyOpenDetail('${artEsc(s.id)}')">
       <span class="art-popular-num">${String(i+1).padStart(2,'0')}</span>
-      <div style="flex:1;font-size:13px;font-weight:600;line-height:1.4;color:#222">${s.title}</div>
+      <div style="flex:1;font-size:13px;font-weight:600;line-height:1.4;color:#222">${escHtml(s.title)}</div>
     </div>
   `).join('');
 
@@ -6487,8 +6565,8 @@ function storyOpenDetail(id) {
   // תמונות ממוזערות לכל עמוד
   const thumbsHTML = storyPagesArr.map((pg, idx) => {
     const inner = pg.type === 'text'
-      ? `<div class="story-thumb-text" style="width:100%; height:100%; font-size:9px; font-weight:700; padding:3px; overflow:hidden; box-sizing:border-box; background:#fff; color:#333; text-align:center;">${artEsc((pg.text || '').slice(0, 40))}</div>`
-      : `<img src="${pg.url}" style="width:100%; height:100%; object-fit:cover; display:block;">`;
+      ? `<div class="story-thumb-text" style="width:100%; height:100%; font-size:9px; font-weight:700; padding:3px; overflow:hidden; box-sizing:border-box; background:#fff; color:#333; text-align:center;">${escHtml((pg.text || '').slice(0, 40))}</div>`
+      : `<img src="${escHtml(pg.url)}" style="width:100%; height:100%; object-fit:cover; display:block;">`;
     return `<div class="story-page-thumb${idx === _bmPage ? ' active' : ''}" data-idx="${idx}" onclick="event.stopPropagation(); storyGoToPage(${idx})" style="width:54px; height:54px; border-radius:8px; overflow:hidden; cursor:pointer; border:2px solid ${idx === _bmPage ? '#e11d48' : '#cbd5e1'}; flex-shrink:0; background:#fff;">${inner}</div>`;
   }).join('');
 
@@ -6496,12 +6574,12 @@ function storyOpenDetail(id) {
   const recHTML = recommended.map(r => `
     <div class="art-rec-card" onclick="event.stopPropagation(); storyOpenDetail('${artEsc(r.id)}')">
       <div class="art-rec-img">
-        ${r.image ? `<img src="${r.image}" alt="">` : '<div class="art-card-img-placeholder"></div>'}
-        <span class="art-rec-badge art-category-badge" style="background:${r.categoryColor||'#8b5cf6'}">${r.category}</span>
+        ${r.image ? `<img src="${escHtml(r.image)}" alt="">` : '<div class="art-card-img-placeholder"></div>'}
+        <span class="art-rec-badge art-category-badge" style="background:${escHtml(r.categoryColor || '#8b5cf6')}">${escHtml(r.category)}</span>
       </div>
       <div class="art-rec-text">
-        <h4>${r.title}</h4>
-        <div class="art-rec-meta">${r.author} · ${r.timestamp}</div>
+        <h4>${escHtml(r.title)}</h4>
+        <div class="art-rec-meta">${escHtml(r.author)} · ${escHtml(r.timestamp)}</div>
       </div>
     </div>
   `).join('');
@@ -6516,22 +6594,22 @@ function storyOpenDetail(id) {
     const _words = _fullText.split(/\s+/).filter(Boolean).length;
     const _readMin = Math.max(1, Math.round(_words / 180));
     const _tags = (Array.isArray(s.tags) && s.tags.length) ? s.tags : (s.category ? [s.category] : []);
-    const _tagChips = _tags.map(t => `<span class="story-article-tag">${artEsc(t)}</span>`).join('');
+    const _tagChips = _tags.map(t => `<span class="story-article-tag">${escHtml(t)}</span>`).join('');
     mainContent.innerHTML = `
       <div class="art-detail articles-page stories-page story-article-page" data-story-kind="${_srcKind}" data-story-id="${id}" data-stories-json="${json}">
         <div class="art-detail-inner">
           <button class="art-back-btn" onclick="storyGoBack()" style="background:#f1f5f9; border:1px solid #cbd5e1; border-radius:8px; padding:6px 14px; font-weight:700; cursor:pointer;">← חזרה לסיפורים</button>
           <article class="story-article" style="margin-top:16px;">
-            <h1 class="story-article-title">${artEsc(s.title || '')}</h1>
+            <h1 class="story-article-title">${escHtml(s.title || '')}</h1>
             <div class="story-article-rule"></div>
             <div class="story-article-meta" style="margin-bottom:14px; color:#64748b;">
-              <span>🗓️ ${artEsc(s.timestamp || '')}</span>
+              <span>🗓️ ${escHtml(s.timestamp || '')}</span>
               <span>⏱️ זמן קריאה: ${_readMin} דקות</span>
-              <span>✍️ מאת <b>${artEsc(s.author || '')}</b></span>
+              <span>✍️ מאת <b>${escHtml(s.author || '')}</b></span>
             </div>
             ${_tagChips ? `<div class="story-article-tags">${_tagChips}</div>` : ''}
             ${storyLinkedChipHTML(s)}
-            <div class="story-article-body" id="story-article-body" style="font-size:17px; line-height:1.75; color:#1e293b;">${_paras.map(p => `<p>${artEsc(p).replace(/\n/g, '<br>')}</p>`).join('')}</div>
+            <div class="story-article-body" id="story-article-body" style="font-size:17px; line-height:1.75; color:#1e293b;">${_paras.map(p => `<p>${escHtml(p).replace(/\n/g, '<br>')}</p>`).join('')}</div>
           </article>
           ${(typeof storyCommentsSectionHTML === 'function') ? storyCommentsSectionHTML(id) : ''}
           <div class="art-rec-section" style="margin-top:36px;">
@@ -6575,12 +6653,12 @@ function storyOpenDetail(id) {
         <div class="story-detail-head" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
           <button class="art-back-btn" onclick="storyGoBack()" style="background:#f1f5f9; border:1px solid #cbd5e1; border-radius:8px; padding:6px 14px; font-weight:700; cursor:pointer;">← חזרה לסיפורים</button>
           <div class="story-detail-titlewrap" style="text-align:center;">
-            <h1 class="art-detail-title" style="margin:0; font-size:22px; font-weight:900;">${artEsc(s.title || '')}</h1>
+            <h1 class="art-detail-title" style="margin:0; font-size:22px; font-weight:900;">${escHtml(s.title || '')}</h1>
             <div class="art-meta" style="margin-top:4px; font-size:13px; color:#64748b; display:flex; align-items:center; justify-content:center; gap:8px;">
-              <span class="art-category-badge" style="background:${s.categoryColor||'#8b5cf6'}; padding:2px 8px; border-radius:4px; color:#fff; font-size:11px; font-weight:700;">${artEsc(s.category || 'כללי')}</span>
-              <span>${artEsc(s.author || '')}</span>
+              <span class="art-category-badge" style="background:${escHtml(s.categoryColor || '#8b5cf6')}; padding:2px 8px; border-radius:4px; color:#fff; font-size:11px; font-weight:700;">${escHtml(s.category || 'כללי')}</span>
+              <span>${escHtml(s.author || '')}</span>
               <span>·</span>
-              <span>${artEsc(s.timestamp || '')}</span>
+              <span>${escHtml(s.timestamp || '')}</span>
             </div>
           </div>
           <div style="width:100px;"></div>
@@ -6637,14 +6715,14 @@ function storyRenderPage() {
     view.innerHTML = `
       <div class="story-page-inner" style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px; width:100%; box-sizing:border-box;">
         <div class="story-text-page" style="font-size:17px; font-weight:700; line-height:1.75; color:#1e293b; max-width:640px; text-align:center; word-break:break-word;">
-          ${artEsc(pg.text || '').replace(/\n/g, '<br>')}
+          ${escHtml(pg.text || '').replace(/\n/g, '<br>')}
         </div>
       </div>`;
   } else {
     view.innerHTML = `
       <div class="story-page-inner" style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:12px; width:100%; box-sizing:border-box; gap:10px;">
-        <img src="${pg.url}" class="story-img-page" style="max-width:100%; max-height:60vh; object-fit:contain; border-radius:10px; display:block; margin:0 auto; cursor:pointer;" onclick="artGalleryById('stories', window.currentStoryId, this.getAttribute('src'))">
-        ${pg.caption ? `<div style="font-size:14px; font-weight:700; color:#475569; text-align:center; max-width:600px;">${artEsc(pg.caption)}</div>` : ''}
+        <img src="${escHtml(pg.url)}" class="story-img-page" style="max-width:100%; max-height:60vh; object-fit:contain; border-radius:10px; display:block; margin:0 auto; cursor:pointer;" onclick="artGalleryById('stories', window.currentStoryId, this.getAttribute('src'))">
+        ${pg.caption ? `<div style="font-size:14px; font-weight:700; color:#475569; text-align:center; max-width:600px;">${escHtml(pg.caption)}</div>` : ''}
       </div>`;
   }
   view.scrollTop = 0;
@@ -6735,8 +6813,8 @@ function storyBookmarksHTML() {
     <div class="story-bm-cell" onclick="openStoryBookmark('${artEsc(id)}')" title="חזרה לסיפור">
       <div class="story-bm-icon">🔖</div>
       <div class="story-bm-main">
-        <div class="story-bm-title">${artEsc(b.title || 'סיפור')} · עמוד ${(b.page || 0) + 1}</div>
-        <div class="story-bm-snippet">${b.snippet ? '"' + artEsc(b.snippet) + '"' : 'המשך מהמקום שסימנת'}</div>
+        <div class="story-bm-title">${escHtml(b.title || 'סיפור')} · עמוד ${(b.page || 0) + 1}</div>
+        <div class="story-bm-snippet">${b.snippet ? '"' + escHtml(b.snippet) + '"' : 'המשך מהמקום שסימנת'}</div>
       </div>
       <button class="story-bm-del" onclick="event.stopPropagation(); storyRemoveBookmark('${artEsc(id)}')" title="הסר סימנייה">✕</button>
     </div>`).join('');
@@ -6883,9 +6961,9 @@ function renderStoryImagesEditor() {
     const _cntTxt = _over ? (_ln + ' שורות · יתחלק אוטומטית ל-' + Math.ceil(_ln / STORY_MAX_LINES) + ' עמודים') : (_ln + ' / ' + STORY_MAX_LINES + ' שורות');
     const _cntColor = _over ? '#2563eb' : (_ln >= STORY_MAX_LINES ? '#dc2626' : '#64748b');
     const inner = pg.type === 'text'
-      ? `<textarea id="story-txt-${i}" oninput="storySetPageText(${i}, this.value)" placeholder="כתבו את הטקסט... (מעל ${STORY_MAX_LINES} שורות יתחלק אוטומטית לעמודים)" style="width:100%; min-height:120px; padding:8px 10px; border:1px solid #ddd; border-radius:8px; font-size:14px; font-weight:700; line-height:1.7; resize:vertical; box-sizing:border-box;">${artEsc(pg.text || '')}</textarea>
+      ? `<textarea id="story-txt-${i}" oninput="storySetPageText(${i}, this.value)" placeholder="כתבו את הטקסט... (מעל ${STORY_MAX_LINES} שורות יתחלק אוטומטית לעמודים)" style="width:100%; min-height:120px; padding:8px 10px; border:1px solid #ddd; border-radius:8px; font-size:14px; font-weight:700; line-height:1.7; resize:vertical; box-sizing:border-box;">${escHtml(pg.text || '')}</textarea>
          <div id="story-txt-count-${i}" style="font-size:11px; font-weight:800; text-align:left; margin-top:3px; color:${_cntColor};">${_cntTxt}</div>`
-      : `<img src="${pg.url}" style="width:70px; height:70px; object-fit:cover; border-radius:8px; border:1px solid #ddd; display:block;">`;
+      : `<img src="${escHtml(pg.url)}" style="width:70px; height:70px; object-fit:cover; border-radius:8px; border:1px solid #ddd; display:block;">`;
     return `
       <div style="border:1px solid #eee; border-radius:10px; padding:8px; background:#fafafa;">
         <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px;">
@@ -7327,7 +7405,7 @@ function photoFilterBarHTML() {
     return `
       <div class="photo-filter-bar is-open" data-open="${open.kind}">
         <button type="button" class="photo-filter-back" onclick="photoToggleFilterGroup(null)" title="סגור">✕</button>
-        <span class="photo-filter-label">${open.label}</span>
+        <span class="photo-filter-label">${escHtml(open.label)}</span>
         <div class="photo-filter-group" data-kind="${open.kind}">
           ${open.values.map(v => `
             <button type="button"
@@ -7348,7 +7426,7 @@ function photoFilterBarHTML() {
         return `
           <button type="button" class="photo-filter-trigger${isSet ? ' has-value' : ''}"
                   onclick="photoToggleFilterGroup('${g.kind}')">
-            <span class="photo-filter-trigger-label">${g.label}</span>
+            <span class="photo-filter-trigger-label">${escHtml(g.label)}</span>
             ${isSet ? `<span class="photo-filter-trigger-value">${cur}</span>` : ''}
             <span class="photo-filter-caret" aria-hidden="true">▾</span>
           </button>
@@ -7456,7 +7534,7 @@ function renderPhotoCard(p, options = {}) {
             <div class="photo-mini-thumb"
                  onclick="event.stopPropagation(); photoSelectRowImage('${artEsc(p.id)}', '${artEsc(imgUrl)}', this)"
                  style="width: 22px; height: 22px; border-radius: 4px; overflow: hidden; cursor: pointer; border: 1.5px solid ${idx === 0 ? '#e11d48' : '#ddd'}; transition: all 0.2s; background: #eee; flex-shrink:0;">
-              <img src="${imgUrl}" style="width: 100%; height: 100%; object-fit: cover;">
+              <img src="${escHtml(imgUrl)}" style="width: 100%; height: 100%; object-fit: cover;">
             </div>
           `).join('')}
         </div>
@@ -7464,7 +7542,7 @@ function renderPhotoCard(p, options = {}) {
     `;
   }
 
-  const searchText = artEsc([p.title, p.summary, p.author, p.category].filter(Boolean).join(' '));
+  const searchText = escHtml([p.title, p.summary, p.author, p.category].filter(Boolean).join(' '));
 
   const cardLink = (url, label, iconPath, extraPath) => {
     const svg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;"><path d="${iconPath}"/>${extraPath || ''}</svg>`;
@@ -7477,7 +7555,7 @@ function renderPhotoCard(p, options = {}) {
         `;
       }
       return `
-        <a href="${url}" target="_blank" onclick="event.stopPropagation();" class="art-telegram-btn">
+        <a href="${escHtml(safeUrl(url))}" target="_blank" onclick="event.stopPropagation();" class="art-telegram-btn">
           ${svg}<span>${label}</span>
         </a>
       `;
@@ -7535,26 +7613,26 @@ function renderPhotoCard(p, options = {}) {
 
   const isVerifiedAlbum = isUserVerified(p.authorId, p.author, p.verified || p.verifiedUser);
   const verifiedBadgeHTML = isVerifiedAlbum ? ` <span title="משתמש מאומת" style="color:#2563eb; font-weight:900; background:#dbeafe; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:10px; margin-right:3px;">✓</span>` : '';
-  const priceBadgeHTML = p.price ? `<div class="art-price-badge">💰 ${artEsc(String(p.price))}</div>` : '';
+  const priceBadgeHTML = p.price ? `<div class="art-price-badge">💰 ${escHtml(String(p.price))}</div>` : '';
   // בעמוד הקהילות מציגים כרטיס "ריבוע" נקי — ללא תאריך/מאומת/צפיות/לייקים וכפתורים
   const metaHTML = options.hideMeta ? '' : `
       <div class="art-row-meta" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-        <span class="photo-author-link" onclick="event.stopPropagation(); openUserPage('${artEsc(p.authorId || '')}', '${artEsc(p.author)}')" style="cursor: pointer; color: #e11d48; text-decoration: underline; font-weight: 600;">${p.author}${verifiedBadgeHTML}</span>
+        <span class="photo-author-link" onclick="event.stopPropagation(); openUserPage('${artEsc(p.authorId || '')}', '${artEsc(p.author)}')" style="cursor: pointer; color: #e11d48; text-decoration: underline; font-weight: 600;">${escHtml(p.author)}${verifiedBadgeHTML}</span>
         <span class="art-row-sep">|</span>
-        <span>${p.timestamp}</span>
-        ${p.ageRange ? `<span class="art-row-sep">|</span><span>גיל ${artEsc(String(p.ageRange))}</span>` : ''}
+        <span>${escHtml(p.timestamp)}</span>
+        ${p.ageRange ? `<span class="art-row-sep">|</span><span>גיל ${escHtml(String(p.ageRange))}</span>` : ''}
         ${isVerifiedAlbum ? `<span class="art-row-sep">|</span><span style="color:#2563eb; font-weight:700; display:inline-flex; align-items:center; gap:4px;">חשבון זה מאומת <span style="background:#dbeafe; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:10px;">✓</span></span>` : ''}
       </div>
       ${scoreBadgeHTML}
       ${cardLinksHTML}
   `;
-  const classActionHTML = p.isClassAction ? `<div style="display:inline-block; background:#0f172a; color:#fff; font-size:11px; font-weight:800; padding:2px 8px; border-radius:6px; margin-bottom:4px;">⚖️ תביעה ייצוגית${p.businessName ? ' · ' + artEsc(p.businessName) : ''}</div>`
+  const classActionHTML = p.isClassAction ? `<div style="display:inline-block; background:#0f172a; color:#fff; font-size:11px; font-weight:800; padding:2px 8px; border-radius:6px; margin-bottom:4px;">⚖️ תביעה ייצוגית${p.businessName ? ' · ' + escHtml(p.businessName) : ''}</div>`
     : (p.isProblem ? `<div style="display:inline-block; background:#f59e0b; color:#fff; font-size:11px; font-weight:800; padding:2px 8px; border-radius:6px; margin-bottom:4px;">🎯 בעיה לפתרון · ${(p.bids ? Object.keys(p.bids).length : 0)} הצעות</div>`
     : (p.isWanted ? `<div style="display:inline-block; background:#2563eb; color:#fff; font-size:11px; font-weight:800; padding:2px 8px; border-radius:6px; margin-bottom:4px;">🔎 מחפש/ת · ${(p.offers ? Object.keys(p.offers).length : 0)} הצעות</div>` : ''));
   const infoBlock = `
     <div class="art-row-text photo-card-info">
       ${classActionHTML}
-      <h3>${p.title}</h3>
+      <h3>${escHtml(p.title)}</h3>
       ${priceBadgeHTML}
       ${metaHTML}
     </div>
@@ -7573,11 +7651,11 @@ function renderPhotoCard(p, options = {}) {
   const textBlock = actionsBlock + infoBlock;
 
   return `
-    <div class="art-row" data-category="${p.category || 'כללי'}" data-verified="${isVerifiedAlbum ? '1' : '0'}" data-age="${artEsc(p.ageRange || '')}" data-region="${artEsc(p.region || '')}" data-time="${photoAlbumTime(p) ?? ''}" data-score="${totalScore}" data-adult="${p.isAdult ? '1' : '0'}" data-search="${searchText}" onclick="${isPending ? '' : `photoOpenDetail('${artEsc(p.id)}')`}" style="${isPending ? 'border: 2px dashed #f59e0b; background: #fffbeb; cursor: default;' : ''}">
+    <div class="art-row" data-category="${escHtml(p.category || 'כללי')}" data-verified="${isVerifiedAlbum ? '1' : '0'}" data-age="${escHtml(p.ageRange || '')}" data-region="${escHtml(p.region || '')}" data-time="${photoAlbumTime(p) ?? ''}" data-score="${totalScore}" data-adult="${p.isAdult ? '1' : '0'}" data-search="${searchText}" onclick="${isPending ? '' : `photoOpenDetail('${artEsc(p.id)}')`}" style="${isPending ? 'border: 2px dashed #f59e0b; background: #fffbeb; cursor: default;' : ''}">
       ${textBlock}
       <div class="art-row-img-container" style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0;">
         <div class="art-row-img-wrap" style="--bg-img: url('${mainImg || ''}');">
-          ${mainImg ? `<img src="${mainImg}" alt="">` : '<div class="art-row-img-placeholder"></div>'}
+          ${mainImg ? `<img src="${escHtml(mainImg)}" alt="">` : '<div class="art-row-img-placeholder"></div>'}
           ${validImages.length > 1 ? `<div class="photo-count-badge">1 / ${validImages.length}</div>` : ''}
           ${mainImg ? `<button class="art-zoom-btn" onclick="event.stopPropagation();artGalleryById('photos','${artEsc(p.id)}', this.closest('.art-row-img-wrap').querySelector('img') && this.closest('.art-row-img-wrap').querySelector('img').getAttribute('src'))" title="מסך מלא">⛶</button>` : ''}
           ${cardHeartOverlay}
@@ -7630,7 +7708,7 @@ function liveChatUserName() {
   const user = auth.currentUser;
   if (user) {
     try {
-      const profile = JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}');
+      const profile = JSON.parse(localStorage.getItem(`user_profile_${escHtml(user.uid)}`) || '{}');
       return profile.nickname || user.displayName || (user.email ? user.email.split('@')[0] : 'משתמש');
     } catch (e) {
       return user.displayName || 'משתמש';
@@ -7650,8 +7728,8 @@ function liveChatMessagesHTML() {
     return `
       <div style="display:flex; flex-direction:column; align-items:${mine ? 'flex-start' : 'flex-end'}; max-width:100%;">
         <div style="max-width:85%; background:${mine ? '#e11d48' : '#f1f5f9'}; color:${mine ? '#fff' : '#0f172a'}; padding:7px 11px; border-radius:12px; ${mine ? 'border-bottom-right-radius:4px;' : 'border-bottom-left-radius:4px;'} font-size:13px; line-height:1.4; word-break:break-word;">
-          ${!mine ? `<div style="font-size:11px; font-weight:800; color:#e11d48; margin-bottom:2px;">${artEsc(m.name || 'אורח')}</div>` : ''}
-          <div>${artEsc(m.text || '')}</div>
+          ${!mine ? `<div style="font-size:11px; font-weight:800; color:#e11d48; margin-bottom:2px;">${escHtml(m.name || 'אורח')}</div>` : ''}
+          <div>${escHtml(m.text || '')}</div>
         </div>
         <div style="font-size:10px; color:#94a3b8; margin-top:2px;">${time}</div>
       </div>
@@ -7881,7 +7959,7 @@ function qpHandleSend() {
     if (!text) return;
     inp.value = '';
     qpData.title = text.slice(0, 120);
-    qpBubble('user', artEsc(qpData.title));
+    qpBubble('user', escHtml(qpData.title));
     qpStep = 'images';
     qpBubble('bot', 'מעולה! 📸 עכשיו הוסף תמונות למודעה (עד 5) בלחיצה על כפתור המצלמה 📷.<br>כשסיימת — כתוב <b>המשך</b>.');
   } else if (qpStep === 'images') {
@@ -7896,7 +7974,7 @@ function qpHandleSend() {
     }
   } else if (qpStep === 'summary') {
     inp.value = '';
-    if (text && text !== 'דלג') { qpData.summary = text.slice(0, 300); qpBubble('user', artEsc(qpData.summary)); }
+    if (text && text !== 'דלג') { qpData.summary = text.slice(0, 300); qpBubble('user', escHtml(qpData.summary)); }
     else qpBubble('user', 'דלג');
     qpData.tags = {};
     // מוצר יד שניה: שואלים סוג הצעה → מיקום → מחיר
@@ -7909,7 +7987,7 @@ function qpHandleSend() {
     if (text && text !== 'דלג') {
       const n = String(text).replace(/[^\d.]/g, '');
       qpData.price = n ? (n + ' ₪') : '';
-      qpBubble('user', qpData.price || artEsc(text));
+      qpBubble('user', qpData.price || escHtml(text));
     } else { qpBubble('user', 'דלג'); }
     qpStep = 'done';
     qpPublish();
@@ -7938,15 +8016,15 @@ function qpAskNextTag() {
   if (qpData.tagIndex >= filters.length) { qpMaybeAskPrice(); return; }
   const g = filters[qpData.tagIndex];
   const btns = g.options.map(o =>
-    `<button onclick="qpPickTag('${artEsc(g.name)}','${artEsc(o)}')" style="background:#eef2ff; color:#3730a3; border:1px solid #c7d2fe; border-radius:999px; padding:6px 14px; font-size:13px; font-weight:800; cursor:pointer; margin:3px;">${artEsc(o)}</button>`
+    `<button onclick="qpPickTag('${artEsc(g.name)}','${artEsc(o)}')" style="background:#eef2ff; color:#3730a3; border:1px solid #c7d2fe; border-radius:999px; padding:6px 14px; font-size:13px; font-weight:800; cursor:pointer; margin:3px;">${escHtml(o)}</button>`
   ).join('');
-  qpBubble('bot', `בחר <b>${artEsc(g.name)}</b>:<br><div style="margin-top:6px;">${btns}</div>`);
+  qpBubble('bot', `בחר <b>${escHtml(g.name)}</b>:<br><div style="margin-top:6px;">${btns}</div>`);
 }
 
 function qpPickTag(group, value) {
   if (!qpData.tags) qpData.tags = {};
   qpData.tags[group] = value;
-  qpBubble('user', artEsc(group) + ': ' + artEsc(value));
+  qpBubble('user', escHtml(group) + ': ' + escHtml(value));
   qpData.tagIndex = (qpData.tagIndex || 0) + 1;
   qpAskNextTag();
 }
@@ -7955,23 +8033,23 @@ window.qpPickTag = qpPickTag;
 // --- שאלות ייעודיות למוצר יד שניה ---
 function qpAskShOffer() {
   const opts = ['מכירה', 'השאלה', 'החלפה'];
-  const btns = opts.map(o => `<button onclick="qpPickSh('offer','${artEsc(o)}')" style="background:#fee2e2; color:#991b1b; border:1px solid #fecaca; border-radius:999px; padding:6px 16px; font-size:13px; font-weight:800; cursor:pointer; margin:3px;">${artEsc(o)}</button>`).join('');
+  const btns = opts.map(o => `<button onclick="qpPickSh('offer','${artEsc(o)}')" style="background:#fee2e2; color:#991b1b; border:1px solid #fecaca; border-radius:999px; padding:6px 16px; font-size:13px; font-weight:800; cursor:pointer; margin:3px;">${escHtml(o)}</button>`).join('');
   qpBubble('bot', `🏷️ מה <b>סוג ההצעה</b>?<br><div style="margin-top:6px;">${btns}</div>`);
 }
 function qpAskShRegion() {
   const opts = ['צפון', 'מרכז', 'דרום', 'ירושלים', 'שרון', 'שפלה'];
-  const btns = opts.map(o => `<button onclick="qpPickSh('region','${artEsc(o)}')" style="background:#dbeafe; color:#1e40af; border:1px solid #bfdbfe; border-radius:999px; padding:6px 16px; font-size:13px; font-weight:800; cursor:pointer; margin:3px;">${artEsc(o)}</button>`).join('');
+  const btns = opts.map(o => `<button onclick="qpPickSh('region','${artEsc(o)}')" style="background:#dbeafe; color:#1e40af; border:1px solid #bfdbfe; border-radius:999px; padding:6px 16px; font-size:13px; font-weight:800; cursor:pointer; margin:3px;">${escHtml(o)}</button>`).join('');
   qpBubble('bot', `📍 מה <b>המיקום</b>?<br><div style="margin-top:6px;">${btns}</div>`);
 }
 function qpPickSh(kind, value) {
   if (kind === 'offer') {
     qpData.offerType = value;
-    qpBubble('user', 'סוג הצעה: ' + artEsc(value));
+    qpBubble('user', 'סוג הצעה: ' + escHtml(value));
     qpStep = 'sh_region';
     qpAskShRegion();
   } else if (kind === 'region') {
     qpData.region = value;
-    qpBubble('user', 'מיקום: ' + artEsc(value));
+    qpBubble('user', 'מיקום: ' + escHtml(value));
     if (qpData.offerType === 'החלפה') { qpStep = 'done'; qpPublish(); }
     else { qpStep = 'price'; qpBubble('bot', '💰 מה המחיר המבוקש? כתוב מספר בש״ח, או <b>דלג</b>.'); }
   }
@@ -7992,7 +8070,7 @@ function qpAddImage() {
     (typeof artCompressImage === 'function' ? artCompressImage(f) : Promise.resolve('')).then(data => {
       if (!data) return;
       qpData.images.push(data);
-      qpBubble('user', `<img src="${data}" style="width:130px; height:95px; object-fit:cover; border-radius:8px; display:block;">`);
+      qpBubble('user', `<img src="${escHtml(data)}" style="width:130px; height:95px; object-fit:cover; border-radius:8px; display:block;">`);
       qpBubble('bot', `נוספה תמונה (${qpData.images.length}/5). הוסף עוד, או כתוב <b>המשך</b> לפרסום.`);
     });
   };
@@ -8006,7 +8084,7 @@ async function qpPublish() {
   let nickname = 'משתמש', email = '', telegram = '';
   if (user) {
     try {
-      const p = JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}');
+      const p = JSON.parse(localStorage.getItem(`user_profile_${escHtml(user.uid)}`) || '{}');
       nickname = p.nickname || user.displayName || (user.email ? user.email.split('@')[0] : 'משתמש');
       email = p.email || user.email || '';
       telegram = p.telegram ? String(p.telegram).replace(/^@/, '') : '';
@@ -8045,7 +8123,7 @@ async function qpPublish() {
     if (qpData.communityId) {
       // פרסום לתוך קהילה: נשמר תחת website/communities/{id}/items
       album.approved = true;
-      await set(ref(db, `website/communities/${qpData.communityId}/items/${album.id}`), album);
+      await set(ref(db, `website/communities/${escHtml(qpData.communityId)}/items/${escHtml(album.id)}`), album);
       qpBubble('bot', `✅ ${isStory ? 'הסיפור' : 'התוכן'} פורסם/ה בקהילה בהצלחה!`);
       const cid = qpData.communityId;
       setTimeout(() => {
@@ -8115,7 +8193,7 @@ function communitiesListHTML() {
   return list.map((c, index) => {
     const count = c.items ? Object.keys(c.items).length : 0;
     const bg = colors[index % colors.length];
-    const iconStr = (c.icon && c.icon !== '🏘️') ? artEsc(c.icon) + ' ' : '';
+    const iconStr = (c.icon && c.icon !== '🏘️') ? escHtml(c.icon) + ' ' : '';
     const deleteBtn = isEd
       ? `<button onclick="event.stopPropagation(); deleteCommunity('${artEsc(c.id)}');" title="מחק קהילה (מנהל)" style="position:absolute; top:4px; left:4px; background:rgba(239,68,68,0.9); color:#fff; border:none; border-radius:50%; width:20px; height:20px; font-size:10px; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:5;">✕</button>`
       : '';
@@ -8124,10 +8202,10 @@ function communitiesListHTML() {
            style="position:relative; background:${bg}; color:#ffffff; border-radius:10px; padding:10px 6px; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; min-height:54px; box-sizing:border-box; transition:transform 0.15s, opacity 0.15s; text-decoration:none;" 
            onmouseover="this.style.opacity='0.9'; this.style.transform='translateY(-2px)';" 
            onmouseout="this.style.opacity='1'; this.style.transform='translateY(0)';"
-           title="${artEsc(c.name || 'קהילה')}">
+           title="${escHtml(c.name || 'קהילה')}">
         ${deleteBtn}
         <div style="font-size:13px; font-weight:800; color:#ffffff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; width:100%;">
-          ${iconStr}${artEsc(c.name || 'קהילה')}
+          ${iconStr}${escHtml(c.name || 'קהילה')}
         </div>
         <div style="font-size:11px; opacity:0.85; margin-top:2px; font-weight:600; color:#ffffff;">
           ${count} תכנים
@@ -8275,14 +8353,14 @@ function renderStoryCommunityCard(s) {
   return `
     <div class="art-card story-card" onclick="storyOpenDetail('${artEsc(s.id)}')" style="border-radius:14px; overflow:hidden; background:#fff; border:1px solid #e2e8f0; display:flex; flex-direction:column; cursor:pointer; transition:transform 0.15s, box-shadow 0.15s;" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 10px 25px rgba(0,0,0,0.1)';" onmouseout="this.style.transform='none'; this.style.boxShadow='none';">
       <div style="position:relative; height:170px; width:100%; overflow:hidden; background:#0f172a;">
-        <img src="${mainImg}" style="width:100%; height:100%; object-fit:cover;">
+        <img src="${escHtml(mainImg)}" style="width:100%; height:100%; object-fit:cover;">
         <span style="position:absolute; top:10px; right:10px; background:#8b5cf6; color:#fff; font-size:11px; font-weight:800; padding:4px 10px; border-radius:999px; box-shadow:0 2px 6px rgba(0,0,0,0.2);">📖 סיפור</span>
       </div>
       <div style="padding:14px; display:flex; flex-direction:column; gap:6px; flex:1; text-align:right; direction:rtl;">
-        <div style="font-size:15px; font-weight:900; color:#0f172a; line-height:1.3; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${artEsc(s.title || 'סיפור')}</div>
-        <div style="font-size:12px; color:#64748b; line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; min-height:34px;">${artEsc(s.summary || s.body || 'לחץ לקריאת הסיפור המלא')}</div>
+        <div style="font-size:15px; font-weight:900; color:#0f172a; line-height:1.3; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escHtml(s.title || 'סיפור')}</div>
+        <div style="font-size:12px; color:#64748b; line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; min-height:34px;">${escHtml(s.summary || s.body || 'לחץ לקריאת הסיפור המלא')}</div>
         <div style="margin-top:auto; padding-top:8px; display:flex; align-items:center; justify-content:space-between; font-size:11.5px; color:#94a3b8; border-top:1px solid #f1f5f9;">
-          <span>✍️ ${artEsc(s.author || 'אנונימי')}${verifiedBadgeHTML}</span>
+          <span>✍️ ${escHtml(s.author || 'אנונימי')}${verifiedBadgeHTML}</span>
           <span style="color:#8b5cf6; font-weight:800;">קרא עוד ←</span>
         </div>
       </div>
@@ -8307,9 +8385,9 @@ function communityFilterBarHTML(community) {
   const groups = filters.map(g => {
     const opts = g.options.map(o => {
       const checked = (communityFilterSel[g.name] || []).includes(o) ? ' checked' : '';
-      return `<label class="cf-opt"><input type="checkbox"${checked} onchange="communityToggleFilter('${artEsc(g.name)}','${artEsc(o)}',this.checked)"> <span>${artEsc(o)}</span></label>`;
+      return `<label class="cf-opt"><input type="checkbox"${checked} onchange="communityToggleFilter('${artEsc(g.name)}','${artEsc(o)}',this.checked)"> <span>${escHtml(o)}</span></label>`;
     }).join('');
-    return `<div class="cf-group"><div class="cf-group-name">${artEsc(g.name)}</div><div class="cf-opts">${opts}</div></div>`;
+    return `<div class="cf-group"><div class="cf-group-name">${escHtml(g.name)}</div><div class="cf-opts">${opts}</div></div>`;
   }).join('');
   return `<div class="cf-bar">${groups}</div>`;
 }
@@ -8409,17 +8487,17 @@ function buildCommunityPageHTML(community) {
     : `<button onclick="openLiveChatLogin()" style="width:100%; background:#f1f5f9; color:#0f172a; border:1px solid #cbd5e1; border-radius:10px; padding:12px; font-size:14px; font-weight:800; cursor:pointer; margin-bottom:20px;">🔒 התחבר כדי להעלות לקהילה</button>`;
 
   return `
-  <div class="articles-page photos-page community-page photo-cols-${typeof photoGridCols !== 'undefined' ? photoGridCols : 4}" data-photos-json="${json}" data-community-id="${artEsc(community.id)}">
+  <div class="articles-page photos-page community-page photo-cols-${typeof photoGridCols !== 'undefined' ? photoGridCols : 4}" data-photos-json="${json}" data-community-id="${escHtml(community.id)}">
     <div class="art-inner">
       <button onclick="goBackFromUserPage()" style="background:#f1f5f9; border:1px solid #cbd5e1; border-radius:8px; padding:8px 16px; font-size:13px; font-weight:800; cursor:pointer; margin-bottom:16px; color:#334155;">← חזרה</button>
       <div style="background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:20px; margin-bottom:20px; display:flex; align-items:center; gap:16px; box-shadow:0 4px 15px rgba(0,0,0,0.03); direction:rtl; flex-wrap:wrap;">
         ${community.image
-          ? `<img src="${community.image}" alt="" style="width:56px; height:56px; border-radius:14px; object-fit:cover; flex-shrink:0;">`
-          : `<div style="width:56px; height:56px; border-radius:14px; background:linear-gradient(135deg,#e11d48,#9f1239); color:#fff; display:flex; align-items:center; justify-content:center; font-size:26px; flex-shrink:0;">${artEsc(community.icon || '🏘️')}</div>`}
+          ? `<img src="${escHtml(community.image)}" alt="" style="width:56px; height:56px; border-radius:14px; object-fit:cover; flex-shrink:0;">`
+          : `<div style="width:56px; height:56px; border-radius:14px; background:linear-gradient(135deg,#e11d48,#9f1239); color:#fff; display:flex; align-items:center; justify-content:center; font-size:26px; flex-shrink:0;">${escHtml(community.icon || '🏘️')}</div>`}
         <div style="flex:1; min-width:200px;">
-          <div style="font-size:20px; font-weight:900; color:#0f172a;">${artEsc(community.name || 'קהילה')}</div>
-          <div style="font-size:13px; color:#64748b; margin-top:2px;">${artEsc(community.desc || '')}</div>
-          <div style="font-size:12px; color:#94a3b8; margin-top:4px;">👥 נוצרה ע"י ${artEsc(community.createdByName || '')} · ${items.length} תכנים</div>
+          <div style="font-size:20px; font-weight:900; color:#0f172a;">${escHtml(community.name || 'קהילה')}</div>
+          <div style="font-size:13px; color:#64748b; margin-top:2px;">${escHtml(community.desc || '')}</div>
+          <div style="font-size:12px; color:#94a3b8; margin-top:4px;">👥 נוצרה ע"י ${escHtml(community.createdByName || '')} · ${items.length} תכנים</div>
           ${adminDeleteBtn}
         </div>
       </div>
@@ -8468,17 +8546,17 @@ function communitiesRowHTML() {
   return list.map(c => {
     const count = c.items ? Object.keys(c.items).length : 0;
     const imgHTML = c.image
-      ? `<img src="${c.image}" alt="">`
-      : `<div class="comm-card-img-ph">${artEsc(c.icon || '🏘️')}</div>`;
+      ? `<img src="${escHtml(c.image)}" alt="">`
+      : `<div class="comm-card-img-ph">${escHtml(c.icon || '🏘️')}</div>`;
     const deleteBtn = isEd
       ? `<button onclick="event.stopPropagation(); deleteCommunity('${artEsc(c.id)}');" title="מחק קהילה" style="position:absolute; top:8px; left:8px; background:rgba(239,68,68,0.9); color:#fff; border:none; border-radius:6px; padding:4px 8px; font-size:12px; font-weight:bold; cursor:pointer; z-index:10;">🗑️ מחק</button>`
       : '';
-    return `<div class="comm-card" onclick="openCommunityPage('${artEsc(c.id)}')" title="${artEsc(c.name || 'קהילה')}" style="position:relative;">
+    return `<div class="comm-card" onclick="openCommunityPage('${artEsc(c.id)}')" title="${escHtml(c.name || 'קהילה')}" style="position:relative;">
       ${deleteBtn}
       <div class="comm-card-img">${imgHTML}</div>
       <div class="comm-card-body">
-        <div class="comm-card-name">${artEsc(c.name || 'קהילה')}</div>
-        <div class="comm-card-meta">${count} תכנים${c.createdByName ? ' · ' + artEsc(c.createdByName) : ''}</div>
+        <div class="comm-card-name">${escHtml(c.name || 'קהילה')}</div>
+        <div class="comm-card-meta">${count} תכנים${c.createdByName ? ' · ' + escHtml(c.createdByName) : ''}</div>
         <div class="comm-card-enter">כניסה ←</div>
       </div>
     </div>`;
@@ -8582,17 +8660,17 @@ function searchHistoryListHTML() {
     const badge = s.registered 
       ? '<span style="background:#dcfce7; color:#166534; font-size:10px; font-weight:800; padding:2px 6px; border-radius:6px;">רשום</span>' 
       : '<span style="background:#fee2e2; color:#991b1b; font-size:10px; font-weight:800; padding:2px 6px; border-radius:6px;">אורח 👤</span>';
-    const pageBadge = `<span style="background:#f1f5f9; color:#475569; font-size:10.5px; font-weight:700; padding:2px 6px; border-radius:6px;">📍 ${artEsc(s.page || 'כללי')}</span>`;
+    const pageBadge = `<span style="background:#f1f5f9; color:#475569; font-size:10.5px; font-weight:700; padding:2px 6px; border-radius:6px;">📍 ${escHtml(s.page || 'כללי')}</span>`;
     return `
       <div style="border:1px solid #e2e8f0; border-radius:10px; padding:12px; background:#fff; margin-bottom:8px; display:flex; align-items:center; justify-content:space-between; gap:12px; box-shadow:0 1px 3px rgba(0,0,0,0.02);">
         <div style="display:flex; flex-direction:column; gap:4px; flex:1; min-width:0;">
           <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-            <span style="font-size:14px; font-weight:900; color:#0f172a;">🔍 "${artEsc(s.query || '')}"</span>
+            <span style="font-size:14px; font-weight:900; color:#0f172a;">🔍 "${escHtml(s.query || '')}"</span>
             ${badge}
             ${pageBadge}
           </div>
           <div style="font-size:11.5px; color:#64748b;">
-            <span>מאת: <strong>${artEsc(s.user || 'אורח')}</strong></span> &bull; <span>${time}</span>
+            <span>מאת: <strong>${escHtml(s.user || 'אורח')}</strong></span> &bull; <span>${time}</span>
           </div>
         </div>
         <button onclick="deleteSearchHistoryItem('${artEsc(key)}')" title="מחק חיפוש" style="background:none; border:none; color:#e11d48; font-size:16px; cursor:pointer; flex-shrink:0;">🗑️</button>
@@ -8634,7 +8712,7 @@ function subscribeAdminInfo() {
 
 // טופס ציבורי להשארת מידע — פתוח לכולם (רשומים ואורחים)
 function buildInfoSubmitBox() {
-  const prefill = (auth.currentUser && typeof liveChatUserName === 'function') ? artEsc(liveChatUserName()) : '';
+  const prefill = (auth.currentUser && typeof liveChatUserName === 'function') ? escHtml(liveChatUserName()) : '';
   return `
     <div class="art-sidebar-box" style="border:1.5px solid #e2e8f0; border-radius:12px; padding:16px; text-align:right; direction:rtl;">
       <div style="font-size:14px; font-weight:900; color:#0f172a; margin-bottom:4px;">📩 השאירו לנו מידע</div>
@@ -8683,12 +8761,12 @@ function infoSubmissionsListHTML() {
       <div style="border:1px solid #e2e8f0; border-radius:10px; padding:12px; background:#fff; margin-bottom:10px;">
         <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px;">
           <div style="display:flex; align-items:center; gap:8px;">
-            <span style="font-size:14px; font-weight:900; color:#0f172a;">${artEsc(s.name || 'אורח')}</span>
+            <span style="font-size:14px; font-weight:900; color:#0f172a;">${escHtml(s.name || 'אורח')}</span>
             ${badge}
           </div>
           <button onclick="deleteUserSubmission('${artEsc(key)}')" title="מחק" style="background:none; border:none; color:#e11d48; font-size:16px; cursor:pointer;">🗑️</button>
         </div>
-        <div style="font-size:13.5px; color:#1e293b; line-height:1.5; white-space:pre-wrap; word-break:break-word;">${artEsc(s.text || '')}</div>
+        <div style="font-size:13.5px; color:#1e293b; line-height:1.5; white-space:pre-wrap; word-break:break-word;">${escHtml(s.text || '')}</div>
         <div style="font-size:11px; color:#94a3b8; margin-top:6px;">${time}</div>
       </div>
     `;
@@ -8770,7 +8848,7 @@ function buildInfoPage() {
 
           <div style="background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:18px; margin-bottom:24px; box-shadow:0 4px 15px rgba(0,0,0,0.03);">
             <div style="font-size:16px; font-weight:900; color:#0f172a; margin-bottom:8px;">📝 המידע שלי</div>
-            <textarea id="admin-info-notes" rows="8" placeholder="כתוב כאן מידע פרטי שרק אתה רואה..." style="width:100%; box-sizing:border-box; padding:12px; border:1px solid #ddd; border-radius:10px; font-size:14px; line-height:1.6; resize:vertical;">${artEsc(adminInfoText)}</textarea>
+            <textarea id="admin-info-notes" rows="8" placeholder="כתוב כאן מידע פרטי שרק אתה רואה..." style="width:100%; box-sizing:border-box; padding:12px; border:1px solid #ddd; border-radius:10px; font-size:14px; line-height:1.6; resize:vertical;">${escHtml(adminInfoText)}</textarea>
             <button onclick="saveAdminInfo()" style="margin-top:10px; background:#e11d48; color:#fff; border:none; border-radius:8px; padding:10px 20px; font-size:14px; font-weight:800; cursor:pointer;">שמור מידע</button>
           </div>
 
@@ -8808,9 +8886,9 @@ function renderAnalyticsChart(daily) {
   el.innerHTML = days.map(d => {
     const h = Math.round((d.val / max) * 100);
     return `<div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; height:100%;">
-      <div style="font-size:11px; font-weight:800; color:#334155;">${d.val}</div>
+      <div style="font-size:11px; font-weight:800; color:#334155;">${escHtml(d.val)}</div>
       <div style="width:100%; flex:1; display:flex; align-items:flex-end;"><div style="width:100%; height:${h}%; min-height:3px; background:linear-gradient(180deg,#f43f5e,#e11d48); border-radius:6px 6px 0 0;"></div></div>
-      <div style="font-size:11px; color:#94a3b8; font-weight:700;">${d.label}</div>
+      <div style="font-size:11px; color:#94a3b8; font-weight:700;">${escHtml(d.label)}</div>
     </div>`;
   }).join('');
 }
@@ -8883,7 +8961,7 @@ function questionAnswerCount(q) { return q.answers ? Object.keys(q.answers).leng
 
 function questionMetaLine(q) {
   const who = q.anonymous ? 'אנונימי' : (q.authorName || 'אנונימי');
-  return [artEsc(who), q.age ? ('גיל ' + artEsc(String(q.age))) : '', 'מתוך: ' + artEsc(q.category || 'כללי')].filter(Boolean).join(', ');
+  return [escHtml(who), q.age ? ('גיל ' + escHtml(String(q.age))) : '', 'מתוך: ' + escHtml(q.category || 'כללי')].filter(Boolean).join(', ');
 }
 
 function questionsListHTML() {
@@ -8897,7 +8975,7 @@ function questionsListHTML() {
     return `<div class="q-row" onclick="openQuestion('${artEsc(q.id)}')">
       <div class="q-count"><span class="q-count-num">${n}</span><span class="q-count-lbl">עצות</span></div>
       <div class="q-row-main">
-        <div class="q-row-title">${artEsc(q.title || '')}</div>
+        <div class="q-row-title">${escHtml(q.title || '')}</div>
         <div class="q-row-meta">(${questionMetaLine(q)})</div>
       </div>
     </div>`;
@@ -8928,7 +9006,7 @@ function buildQuestionsPage() {
               <button onclick="openQuestionModal()" class="q-ask-btn">➕ שאל שאלה</button>
             </div>
             <div class="art-search-wrap">
-              <input type="text" class="art-search" placeholder="🔍 חיפוש שאלות..." value="${artEsc(questionsSearchQuery)}" oninput="questionsSearch(this.value)">
+              <input type="text" class="art-search" placeholder="🔍 חיפוש שאלות..." value="${escHtml(questionsSearchQuery)}" oninput="questionsSearch(this.value)">
             </div>
             <div class="q-list" id="questions-list">${questionsListHTML()}</div>
           </div>
@@ -8951,17 +9029,17 @@ function openQuestion(id) {
   const answers = q.answers ? Object.values(q.answers).sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0)) : [];
   const answersHTML = answers.length ? answers.map(a => `
     <div class="q-answer">
-      <div class="q-answer-head">${artEsc(a.name || 'אנונימי')} · ${a.createdAt ? new Date(a.createdAt).toLocaleDateString('he-IL') : ''}</div>
-      <div class="q-answer-text">${artEsc(a.text || '')}</div>
+      <div class="q-answer-head">${escHtml(a.name || 'אנונימי')} · ${a.createdAt ? new Date(a.createdAt).toLocaleDateString('he-IL') : ''}</div>
+      <div class="q-answer-text">${escHtml(a.text || '')}</div>
     </div>`).join('') : '<div class="q-empty">עדיין אין עצות. היו הראשונים לענות!</div>';
   mainContent.innerHTML = `
     <div class="questions-page question-detail" data-page-id="page-questions-main">
       <div class="comm-inner">
         <button onclick="backToQuestions()" class="q-back">← חזרה לשאלות</button>
         <div class="q-detail-card">
-          <div class="q-detail-title">${artEsc(q.title || '')}</div>
+          <div class="q-detail-title">${escHtml(q.title || '')}</div>
           <div class="q-detail-meta">(${questionMetaLine(q)})</div>
-          ${q.text ? `<div class="q-detail-text">${artEsc(q.text)}</div>` : ''}
+          ${q.text ? `<div class="q-detail-text">${escHtml(q.text)}</div>` : ''}
         </div>
         <div class="q-answers-title">💬 עצות (${answers.length})</div>
         <div id="q-answers-list">${answersHTML}</div>
@@ -9085,8 +9163,8 @@ function offersListHTML() {
 
     const structuredBadgesHTML = `
       <div class="of-details-grid">
-        <div class="of-detail-pill">📍 <strong>איפה:</strong> ${artEsc(o.location || 'לא צוין')}</div>
-        <div class="of-detail-pill">⏰ <strong>מתי:</strong> ${artEsc(o.whenTime || 'הערב')}</div>
+        <div class="of-detail-pill">📍 <strong>איפה:</strong> ${escHtml(o.location || 'לא צוין')}</div>
+        <div class="of-detail-pill">⏰ <strong>מתי:</strong> ${escHtml(o.whenTime || 'הערב')}</div>
         <div class="of-detail-pill">🎯 <strong>כמה לצרף:</strong> ${maxCount} משתתפים ${isFull ? '<span class="of-pill-full">(🔒 מלא)</span>' : `<span class="of-pill-left">(נשארו עוד ${spotsLeft})</span>`}</div>
       </div>
     `;
@@ -9107,7 +9185,7 @@ function offersListHTML() {
             <div class="of-participants-grid">
               ${menList.length ? menList.map(p => `
                 <span class="of-part-chip man ${p.isHost ? 'host' : ''}">
-                  ${p.isHost ? '👑' : '👨'} ${artEsc(p.name)} ${p.isHost ? '(מארח)' : ''}
+                  ${p.isHost ? '👑' : '👨'} ${escHtml(p.name)} ${p.isHost ? '(מארח)' : ''}
                 </span>
               `).join('') : '<span class="of-no-part">אין גברים עדיין</span>'}
             </div>
@@ -9118,7 +9196,7 @@ function offersListHTML() {
             <div class="of-participants-grid">
               ${womenList.length ? womenList.map(p => `
                 <span class="of-part-chip woman ${p.isHost ? 'host' : ''}">
-                  ${p.isHost ? '👑' : '👩'} ${artEsc(p.name)} ${p.isHost ? '(מארחת)' : ''}
+                  ${p.isHost ? '👑' : '👩'} ${escHtml(p.name)} ${p.isHost ? '(מארחת)' : ''}
                 </span>
               `).join('') : '<span class="of-no-part">אין נשים עדיין</span>'}
             </div>
@@ -9137,7 +9215,7 @@ function offersListHTML() {
             <div class="of-pending-list">
               ${pendingList.map(r => `
                 <div class="of-pending-item">
-                  <span class="of-pending-name">👤 ${artEsc(r.name || 'משתמש')} <span class="of-pending-gender">(${r.gender === 'אישה' ? '♀️ אישה' : '♂️ גבר'})</span></span>
+                  <span class="of-pending-name">👤 ${escHtml(r.name || 'משתמש')} <span class="of-pending-gender">(${r.gender === 'אישה' ? '♀️ אישה' : '♂️ גבר'})</span></span>
                   <div class="of-pending-actions">
                     <button class="of-appr-btn" onclick="approveJoinRequest('${artEsc(o.id)}','${artEsc(r.uid)}','${artEsc(r.name)}','${artEsc(r.gender || 'גבר')}')">✓ אשר</button>
                     <button class="of-decl-btn" onclick="declineJoinRequest('${artEsc(o.id)}','${artEsc(r.uid)}')">✕ דחה</button>
@@ -9166,8 +9244,8 @@ function offersListHTML() {
     return `<div class="of-card">
       <div class="of-top-row">
         <div class="of-main">
-          <div class="of-text">${artEsc(o.text || '')}</div>
-          <div class="of-meta">מאת ${artEsc(o.authorName || 'אנונימי')} (${hostGender === 'אישה' ? '♀️ אישה' : '♂️ גבר'})</div>
+          <div class="of-text">${escHtml(o.text || '')}</div>
+          <div class="of-meta">מאת ${escHtml(o.authorName || 'אנונימי')} (${hostGender === 'אישה' ? '♀️ אישה' : '♂️ גבר'})</div>
           ${structuredBadgesHTML}
         </div>
         <div class="of-side">
@@ -9368,7 +9446,7 @@ function buildSidebarNameChangeSectionHTML() {
 
   let profile = {};
   try {
-    profile = JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}');
+    profile = JSON.parse(localStorage.getItem(`user_profile_${escHtml(user.uid)}`) || '{}');
   } catch (e) {}
 
   const currentName = profile.nickname || user.displayName || (user.email ? user.email.split('@')[0] : 'משתמש');
@@ -9386,12 +9464,12 @@ function buildSidebarNameChangeSectionHTML() {
       </div>
       
       <div style="font-size: 12px; color: #475569; margin-bottom: 8px;">
-        שם נוכחי: <strong style="color: #2563eb;">${artEsc(currentName)}</strong>
+        שם נוכחי: <strong style="color: #2563eb;">${escHtml(currentName)}</strong>
       </div>
 
       ${canChange ? `
         <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px;">
-          <input type="text" id="pf-new-name-input" value="${artEsc(currentName)}" placeholder="הכנס שם חדש..." 
+          <input type="text" id="pf-new-name-input" value="${escHtml(currentName)}" placeholder="הכנס שם חדש..." 
                  style="flex: 1; min-width: 120px; padding: 7px 10px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13px; outline: none; transition: border-color 0.2s;"
                  onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#cbd5e1'">
           <button type="button" onclick="saveUserNickname()" 
@@ -9434,7 +9512,7 @@ async function saveUserNickname() {
 
   let profile = {};
   try {
-    profile = JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}');
+    profile = JSON.parse(localStorage.getItem(`user_profile_${escHtml(user.uid)}`) || '{}');
   } catch (e) {}
 
   const now = Date.now();
@@ -9451,7 +9529,7 @@ async function saveUserNickname() {
   profile.lastNameChange = now;
 
   try {
-    localStorage.setItem(`user_profile_${user.uid}`, JSON.stringify(profile));
+    localStorage.setItem(`user_profile_${escHtml(user.uid)}`, JSON.stringify(profile));
   } catch (e) {}
 
   if (user.updateProfile) {
@@ -9476,7 +9554,7 @@ function isUserVerified(authorId, authorName, itemVerified) {
   if (user) {
     if ((authorId && authorId === user.uid) || (authorName && (user.displayName === authorName || (user.email && user.email.split('@')[0] === authorName)))) {
       try {
-        const p = JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}');
+        const p = JSON.parse(localStorage.getItem(`user_profile_${escHtml(user.uid)}`) || '{}');
         if (p.verified || p.verificationStatus === 'approved') return true;
       } catch (e) {}
     }
@@ -9496,7 +9574,7 @@ function buildSidebarVerificationSectionHTML() {
 
   let profile = {};
   try {
-    profile = JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}');
+    profile = JSON.parse(localStorage.getItem(`user_profile_${escHtml(user.uid)}`) || '{}');
   } catch (e) {}
 
   const isApproved = profile.verified || profile.verificationStatus === 'approved';
@@ -9521,7 +9599,7 @@ function buildSidebarVerificationSectionHTML() {
           ⏳ בקשת אימות בבדיקת מנהל
         </span>
         <div style="font-size: 11.5px; color: #78350f; margin-top: 4px;">התמונה נשלחה ותיבדק על ידי המנהל בהקדם.</div>
-        ${profile.verificationPhoto ? `<img src="${profile.verificationPhoto}" style="width: 54px; height: 54px; border-radius: 50%; object-fit: cover; margin-top: 8px; border: 2px solid #f59e0b;">` : ''}
+        ${profile.verificationPhoto ? `<img src="${escHtml(profile.verificationPhoto)}" style="width: 54px; height: 54px; border-radius: 50%; object-fit: cover; margin-top: 8px; border: 2px solid #f59e0b;">` : ''}
       </div>
     `;
   } else {
@@ -9607,7 +9685,7 @@ async function submitAccountVerification() {
 
   let profile = {};
   try {
-    profile = JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}');
+    profile = JSON.parse(localStorage.getItem(`user_profile_${escHtml(user.uid)}`) || '{}');
   } catch (e) {}
 
   const currentName = profile.nickname || user.displayName || (user.email ? user.email.split('@')[0] : 'משתמש');
@@ -9619,12 +9697,12 @@ async function submitAccountVerification() {
   profile.verificationSubmittedAt = now;
 
   try {
-    localStorage.setItem(`user_profile_${user.uid}`, JSON.stringify(profile));
+    localStorage.setItem(`user_profile_${escHtml(user.uid)}`, JSON.stringify(profile));
   } catch (e) {}
 
   if (typeof db !== 'undefined') {
     try {
-      await set(ref(db, `website/verification_requests/${user.uid}`), {
+      await set(ref(db, `website/verification_requests/${escHtml(user.uid)}`), {
         uid: user.uid,
         displayName: currentName,
         email: user.email || '',
@@ -9713,15 +9791,15 @@ async function loadAdminVerificationsList() {
     return `
       <div style="border:1.5px solid #e2e8f0; border-radius:12px; padding:14px; background:#f8fafc; display:flex; gap:14px; align-items:center; flex-wrap:wrap;">
         <div style="flex-shrink:0;">
-          ${req.photo ? `<img src="${req.photo}" onclick="if (typeof openImageModal==='function') openImageModal('${artEsc(req.photo)}')" style="width:70px; height:70px; border-radius:50%; object-fit:cover; border:2px solid #2563eb; cursor:pointer;" title="לחץ להגדלה">` : `<div style="width:70px; height:70px; border-radius:50%; background:#cbd5e1; display:flex; align-items:center; justify-content:center; font-size:24px;">👤</div>`}
+          ${req.photo ? `<img src="${escHtml(req.photo)}" onclick="if (typeof openImageModal==='function') openImageModal('${artEsc(req.photo)}')" style="width:70px; height:70px; border-radius:50%; object-fit:cover; border:2px solid #2563eb; cursor:pointer;" title="לחץ להגדלה">` : `<div style="width:70px; height:70px; border-radius:50%; background:#cbd5e1; display:flex; align-items:center; justify-content:center; font-size:24px;">👤</div>`}
         </div>
         <div style="flex:1; min-width:180px;">
           <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:4px;">
-            <strong style="font-size:15px; color:#0f172a;">${artEsc(req.displayName || 'משתמש')}</strong>
+            <strong style="font-size:15px; color:#0f172a;">${escHtml(req.displayName || 'משתמש')}</strong>
             ${statusBadge}
           </div>
-          <div style="font-size:12px; color:#64748b; margin-bottom:2px;">דוא"ל: ${artEsc(req.email || 'לא מצוין')}</div>
-          <div style="font-size:11.5px; color:#94a3b8;">מזהה: ${artEsc(req.uid)} | ${dateStr}</div>
+          <div style="font-size:12px; color:#64748b; margin-bottom:2px;">דוא"ל: ${escHtml(req.email || 'לא מצוין')}</div>
+          <div style="font-size:11.5px; color:#94a3b8;">מזהה: ${escHtml(req.uid)} | ${dateStr}</div>
         </div>
         <div style="display:flex; gap:6px; flex-shrink:0;">
           ${!isApproved ? `
@@ -10060,10 +10138,10 @@ function buildSidebarTabs(savedHTML, pageType) {
   const active = isMobile ? null : activeSidebarTab;
 
   const pills = tabs.map(t =>
-    `<button class="sidebar-tab-pill${t.id === active ? ' active' : ''}" data-tab="${t.id}" onclick="sidebarShowTab('${t.id}', this)">${t.label}</button>`
+    `<button class="sidebar-tab-pill${t.id === active ? ' active' : ''}" data-tab="${escHtml(t.id)}" onclick="sidebarShowTab('${artEsc(t.id)}', this)">${escHtml(t.label)}</button>`
   ).join('');
   const panels = tabs.map(t =>
-    `<div class="sidebar-tab-panel" data-tab="${t.id}" style="display:${t.id === active ? 'block' : 'none'};">${t.html}</div>`
+    `<div class="sidebar-tab-panel" data-tab="${escHtml(t.id)}" style="display:${t.id === active ? 'block' : 'none'};">${t.html}</div>`
   ).join('');
 
   return `
@@ -10138,7 +10216,7 @@ function buildLeftSidebarBox(popularHTML, section) {
     const cleanTitle = title.replace(/🖼️|📖|💡|🏘️|👥|❓|🔥|🔒|💎/g, '').trim();
 
     return `
-      <div class="site-page-nav-item ${isActive ? 'active' : ''}" onclick="navigateToPage('${page.id}')" role="button" tabindex="0">
+      <div class="site-page-nav-item ${isActive ? 'active' : ''}" onclick="navigateToPage('${artEsc(page.id)}')" role="button" tabindex="0">
         <div class="site-page-nav-left">
           <span class="site-page-nav-title">${cleanTitle}</span>
         </div>
@@ -10285,7 +10363,7 @@ function populateStoryLinkedSelect(currentId, selectedId) {
   all.forEach(s => {
     const kindLbl = s.__kind === 'stories' ? 'סיפור' : 'קומיקס';
     const label = (s.title || 'ללא שם') + ' (' + kindLbl + ')';
-    html += `<option value="${artEsc(s.id)}"${s.id === selectedId ? ' selected' : ''}>${artEsc(label)}</option>`;
+    html += `<option value="${escHtml(s.id)}"${s.id === selectedId ? ' selected' : ''}>${escHtml(label)}</option>`;
   });
   sel.innerHTML = html;
   if (selectedId) sel.value = selectedId;
@@ -10327,7 +10405,7 @@ function storyLinkedChipHTML(s) {
     if (!linked || linked.id === s.id) return '';
     const kindLbl = linked.__kind === 'stories' ? 'הסיפור' : 'הקומיקס';
     return `<div class="story-linked-chip" onclick="storyOpenLinked('${artEsc(linked.id)}')">
-      🔗 לקריאת ${kindLbl}: <b>${artEsc(linked.title || '')}</b> ←
+      🔗 לקריאת ${kindLbl}: <b>${escHtml(linked.title || '')}</b> ←
     </div>`;
   } catch (e) { return ''; }
 }
@@ -10584,7 +10662,7 @@ function renderQuickUploadHero() {
       <div class="qu-hero-subtitle">✨ שלב ${currentStep} מתוך ${_totalQ}: ${sub}</div>`;
   const _textStep = (ph, val, type) => `
       <div class="qu-input-wrapper">
-        <input type="${type || 'text'}" id="qu-input-field" class="qu-text-input" placeholder="${ph}" value="${artEsc(val || '')}" onkeydown="if(event.key==='Enter') quickUploadNext()" autofocus>
+        <input type="${type || 'text'}" id="qu-input-field" class="qu-text-input" placeholder="${ph}" value="${escHtml(val || '')}" onkeydown="if(event.key==='Enter') quickUploadNext()" autofocus>
         ${_arrow()}
       </div>`;
 
@@ -10622,7 +10700,7 @@ function renderQuickUploadHero() {
     questionHeader = _hdr('מה התקציר', 'של הגלריה?', 'תיאור קצר או תקציר שילווה את הגלריה');
     inputContent = `
       <div class="qu-input-wrapper is-textarea">
-        <textarea id="qu-input-field" class="qu-textarea-input" rows="3" placeholder="תיאור קצר...">${artEsc(st.summary || '')}</textarea>
+        <textarea id="qu-input-field" class="qu-textarea-input" rows="3" placeholder="תיאור קצר...">${escHtml(st.summary || '')}</textarea>
         ${_arrow()}
       </div>`;
   } else if (_key === 'category') {
@@ -10630,7 +10708,7 @@ function renderQuickUploadHero() {
       // תמונות: קטגוריית מגדר — גבר / אישה / זוג
       const cats = ['גבר', 'אישה', 'זוג'];
       questionHeader = _hdr('מה הקטגוריה', 'שלך?', 'גבר, אישה או זוג');
-      const catChips = cats.map(c => `<button type="button" class="qu-cat-chip ${st.category === c ? 'active' : ''}" onclick="quickUploadSetCat('${artEsc(c)}')">${artEsc(c)}</button>`).join('');
+      const catChips = cats.map(c => `<button type="button" class="qu-cat-chip ${st.category === c ? 'active' : ''}" onclick="quickUploadSetCat('${artEsc(c)}')">${escHtml(c)}</button>`).join('');
       inputContent = `
         <div class="qu-chips-container">${catChips}</div>
         <div class="qu-input-row" style="margin-top:16px; justify-content:flex-end;">
@@ -10641,7 +10719,7 @@ function renderQuickUploadHero() {
       const cats = (typeof STORY_CATEGORIES !== 'undefined' && Array.isArray(STORY_CATEGORIES) && STORY_CATEGORIES.length)
         ? STORY_CATEGORIES : ['כללי', 'עירום'];
       questionHeader = _hdr('מה הקטגוריה', 'שלך?', 'בחרו קטגוריה');
-      const catChips = cats.map(c => `<button type="button" class="qu-cat-chip ${st.category === c ? 'active' : ''}" onclick="quickUploadSetCat('${artEsc(c)}')">${artEsc(c)}</button>`).join('');
+      const catChips = cats.map(c => `<button type="button" class="qu-cat-chip ${st.category === c ? 'active' : ''}" onclick="quickUploadSetCat('${artEsc(c)}')">${escHtml(c)}</button>`).join('');
       inputContent = `
         <div class="qu-chips-container">${catChips}</div>
         <div class="qu-input-row" style="margin-top:16px; justify-content:flex-end;">
@@ -10664,7 +10742,7 @@ function renderQuickUploadHero() {
     questionHeader = _hdr('ספרו בקצרה', 'על התוכן', 'תיאור קצר, תקציר או הטקסט המלא שילווה את היצירה');
     inputContent = `
       <div class="qu-input-wrapper is-textarea">
-        <textarea id="qu-input-field" class="qu-textarea-input" rows="3" placeholder="כתבו כאן כמה מילים או תיאור מפורט...">${artEsc(st.desc || '')}</textarea>
+        <textarea id="qu-input-field" class="qu-textarea-input" rows="3" placeholder="כתבו כאן כמה מילים או תיאור מפורט...">${escHtml(st.desc || '')}</textarea>
         ${_arrow()}
       </div>`;
   } else if (_key === 'author') {
@@ -10677,7 +10755,7 @@ function renderQuickUploadHero() {
     `;
     const thumbs = (st.images || []).map((img, i) => `
       <div class="qu-thumb-item">
-        <img src="${img}" alt="thumb">
+        <img src="${escHtml(img)}" alt="thumb">
         <button type="button" class="qu-thumb-remove" onclick="quickUploadRemoveImage(${i})" title="הסר תמונה">✕</button>
       </div>
     `).join('');
@@ -10873,7 +10951,7 @@ async function quickUploadFinalSubmit() {
 
     if (user) {
       try {
-        const p = JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}');
+        const p = JSON.parse(localStorage.getItem(`user_profile_${escHtml(user.uid)}`) || '{}');
         if (!authorName) authorName = p.nickname || user.displayName || (user.email ? user.email.split('@')[0] : 'משתמש');
         authorEmail = p.email || user.email || '';
         authorTelegram = p.telegram ? String(p.telegram).replace(/^@/, '') : '';
@@ -11214,7 +11292,7 @@ function buildPhotosPage(albums, section) {
   let myProfileHTML = '';
   if (isRegisteredUser()) {
     const user = auth.currentUser;
-    const budget = localStorage.getItem(`like_budget_${user.uid}`) || '5';
+    const budget = localStorage.getItem(`like_budget_${escHtml(user.uid)}`) || '5';
     budgetHTML = `
       <div class="art-sidebar-box" style="border: 1px solid rgba(225,29,72,0.15); background: rgba(225,29,72,0.02); display: flex; align-items: center; gap: 12px; padding: 16px; border-radius: 12px;">
         <span style="font-size: 24px; filter: drop-shadow(0 2px 4px rgba(225,29,72,0.2));">❤️</span>
@@ -11227,7 +11305,7 @@ function buildPhotosPage(albums, section) {
 
     const profile = (() => {
       try {
-        return JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}');
+        return JSON.parse(localStorage.getItem(`user_profile_${escHtml(user.uid)}`) || '{}');
       } catch (e) { return {}; }
     })();
     const nick = profile.nickname || user.displayName || (user.email ? user.email.split('@')[0] : 'אורח');
@@ -11244,19 +11322,19 @@ function buildPhotosPage(albums, section) {
         </div>
         
         <div id="profile-view-state" style="display: block;">
-          <div style="font-size: 13px; font-weight: 800; color: #111; margin-bottom: 6px;">כינוי: <span style="font-weight: 500; color: #4b5563;">${nick}</span></div>
-          <div style="font-size: 13px; font-weight: 800; color: #111; margin-bottom: 6px;">גיל: <span style="font-weight: 500; color: #4b5563;">${age}</span></div>
-          <div style="font-size: 13px; font-weight: 800; color: #111; margin-bottom: 6px;">מגורים: <span style="font-weight: 500; color: #4b5563;">${location}</span></div>
-          ${tg ? `<div style="font-size: 13px; font-weight: 800; color: #111; margin-bottom: 6px;">טלגרם: <span style="font-weight: 500; color: #4b5563;">@${tg}</span></div>` : ''}
-          ${email ? `<div style="font-size: 13px; font-weight: 800; color: #111;">אימייל: <span style="font-weight: 500; color: #4b5563;">${email}</span></div>` : ''}
+          <div style="font-size: 13px; font-weight: 800; color: #111; margin-bottom: 6px;">כינוי: <span style="font-weight: 500; color: #4b5563;">${escHtml(nick)}</span></div>
+          <div style="font-size: 13px; font-weight: 800; color: #111; margin-bottom: 6px;">גיל: <span style="font-weight: 500; color: #4b5563;">${escHtml(age)}</span></div>
+          <div style="font-size: 13px; font-weight: 800; color: #111; margin-bottom: 6px;">מגורים: <span style="font-weight: 500; color: #4b5563;">${escHtml(location)}</span></div>
+          ${tg ? `<div style="font-size: 13px; font-weight: 800; color: #111; margin-bottom: 6px;">טלגרם: <span style="font-weight: 500; color: #4b5563;">@${escHtml(tg)}</span></div>` : ''}
+          ${email ? `<div style="font-size: 13px; font-weight: 800; color: #111;">אימייל: <span style="font-weight: 500; color: #4b5563;">${escHtml(email)}</span></div>` : ''}
         </div>
 
         <div id="profile-edit-state" style="display:none; flex-direction:column; gap:8px;">
-          <input id="profile-edit-nickname" type="text" placeholder="כינוי" value="${artEsc(nick)}" style="padding:8px 12px; border:1px solid #ddd; border-radius:8px; font-size:13px; width:100%; box-sizing:border-box;">
+          <input id="profile-edit-nickname" type="text" placeholder="כינוי" value="${escHtml(nick)}" style="padding:8px 12px; border:1px solid #ddd; border-radius:8px; font-size:13px; width:100%; box-sizing:border-box;">
           <input id="profile-edit-age" type="number" placeholder="גיל" value="${age !== '--' ? age : ''}" style="padding:8px 12px; border:1px solid #ddd; border-radius:8px; font-size:13px; width:100%; box-sizing:border-box;">
           <input id="profile-edit-location" type="text" placeholder="אזור מגורים" value="${location !== '--' ? location : ''}" style="padding:8px 12px; border:1px solid #ddd; border-radius:8px; font-size:13px; width:100%; box-sizing:border-box;">
-          <input id="profile-edit-telegram" type="text" placeholder="שם משתמש בטלגרם (ללא @)" value="${artEsc(tg)}" style="padding:8px 12px; border:1px solid #ddd; border-radius:8px; font-size:13px; width:100%; box-sizing:border-box;">
-          <input id="profile-edit-email" type="email" placeholder="אימייל" value="${artEsc(email)}" style="padding:8px 12px; border:1px solid #ddd; border-radius:8px; font-size:13px; width:100%; box-sizing:border-box;">
+          <input id="profile-edit-telegram" type="text" placeholder="שם משתמש בטלגרם (ללא @)" value="${escHtml(tg)}" style="padding:8px 12px; border:1px solid #ddd; border-radius:8px; font-size:13px; width:100%; box-sizing:border-box;">
+          <input id="profile-edit-email" type="email" placeholder="אימייל" value="${escHtml(email)}" style="padding:8px 12px; border:1px solid #ddd; border-radius:8px; font-size:13px; width:100%; box-sizing:border-box;">
           <div style="display:flex; gap:6px; margin-top: 4px;">
             <button onclick="photoSaveProfile()" style="background:#e11d48; color:white; border:none; padding:8px 12px; border-radius:8px; font-size:12px; font-weight:800; cursor:pointer; flex:1;">שמור</button>
             <button onclick="photoToggleProfileEdit()" style="background:#f3f4f6; color:#555; border:none; padding:8px 12px; border-radius:8px; font-size:12px; font-weight:800; cursor:pointer;">ביטול</button>
@@ -11279,7 +11357,7 @@ function buildPhotosPage(albums, section) {
             ${savedAlbums.map(p => `
               <div class="art-popular-item" onclick="photoOpenDetail('${artEsc(p.id)}')" style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
                 <div style="display: flex; align-items: center; gap: 8px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                  <div style="font-size:13px;font-weight:600;line-height:1.4;color:#222; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer;">${p.title}</div>
+                  <div style="font-size:13px;font-weight:600;line-height:1.4;color:#222; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer;">${escHtml(p.title)}</div>
                 </div>
                 <button onclick="event.stopPropagation(); photoToggleSave('${artEsc(p.id)}')" style="background:none; border:none; cursor:pointer; color:#e11d48; padding:4px; display: flex; align-items: center;">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
@@ -11305,7 +11383,7 @@ function buildPhotosPage(albums, section) {
     const mainImg = p.images && p.images[0] ? p.images[0] : 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80';
     return `
       <div class="art-featured-card" data-adult="${p.isAdult ? '1' : '0'}" onclick="photoOpenDetail('${artEsc(p.id)}')">
-        <img src="${mainImg}" alt="">
+        <img src="${escHtml(mainImg)}" alt="">
       </div>
     `;
   }).join('');
@@ -11330,8 +11408,8 @@ function buildPhotosPage(albums, section) {
     return `
       <div class="art-popular-item" onclick="photoOpenDetail('${artEsc(p.id)}')" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; cursor: pointer; padding: 6px 8px; border-radius: 8px; transition: background 0.2s; border-bottom: 1px solid #f1f5f9;">
         <div style="display: flex; align-items: center; gap: 8px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-          ${mainImg ? `<img src="${mainImg}" style="width: 36px; height: 36px; border-radius: 8px; object-fit: cover; flex-shrink: 0;">` : `<span class="art-popular-num" style="font-weight: 900; color: #ec4899;">${String(i+1).padStart(2,'0')}</span>`}
-          <div style="font-size:13px;font-weight:700;line-height:1.4;color:#1e293b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${p.title}</div>
+          ${mainImg ? `<img src="${escHtml(mainImg)}" style="width: 36px; height: 36px; border-radius: 8px; object-fit: cover; flex-shrink: 0;">` : `<span class="art-popular-num" style="font-weight: 900; color: #ec4899;">${String(i+1).padStart(2,'0')}</span>`}
+          <div style="font-size:13px;font-weight:700;line-height:1.4;color:#1e293b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escHtml(p.title)}</div>
         </div>
         <div style="font-size: 11px; color: #e11d48; display: flex; align-items: center; gap: 4px; font-weight: bold; flex-shrink: 0; background: rgba(225,29,72,0.08); padding: 2px 7px; border-radius: 12px;" title="${photoGetViews(p.id)} צפיות + ${p.likes||0} לייקים">
           <span>🔥 ${score}</span>
@@ -11458,7 +11536,7 @@ function ideaExecutionBoxHTML(a) {
     stepsHTML = lines.map((line, idx) => `
       <div style="display:flex; gap:12px; align-items:flex-start; margin-bottom:14px; background:#f8fafc; padding:10px 12px; border-radius:10px; border:1px solid #e2e8f0;">
         <span style="background:linear-gradient(135deg,#3b82f6,#2563eb); color:#fff; font-weight:900; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0; box-shadow:0 2px 6px rgba(59,130,246,0.3);">${idx + 1}</span>
-        <div style="font-size:13.5px; color:#334155; line-height:1.5; font-weight:700;">${artEsc(line)}</div>
+        <div style="font-size:13.5px; color:#334155; line-height:1.5; font-weight:700;">${escHtml(line)}</div>
       </div>
     `).join('');
   } else {
@@ -11525,27 +11603,27 @@ function ideaTechnicalBoxHTML(a) {
       <div style="display:flex; flex-direction:column; gap:12px;">
         <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:12px; padding:12px 14px;">
           <div style="font-size:11.5px; color:#166534; font-weight:800; margin-bottom:4px;">💰 מחיר מבוקש / הערכת עלות</div>
-          <div style="font-size:16px; font-weight:900; color:#15803d;">${artEsc(price)}</div>
+          <div style="font-size:16px; font-weight:900; color:#15803d;">${escHtml(price)}</div>
         </div>
 
         <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:12px 14px;">
           <div style="font-size:11.5px; color:#64748b; font-weight:800; margin-bottom:4px;">⚙️ טכנולוגיות מומלצות</div>
-          <div style="font-size:13.5px; font-weight:800; color:#1e293b;">${artEsc(tech)}</div>
+          <div style="font-size:13.5px; font-weight:800; color:#1e293b;">${escHtml(tech)}</div>
         </div>
 
         <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:12px 14px;">
           <div style="font-size:11.5px; color:#64748b; font-weight:800; margin-bottom:4px;">⏱️ זמן פיתוח משוער</div>
-          <div style="font-size:13.5px; font-weight:800; color:#1e293b;">${artEsc(devTime)}</div>
+          <div style="font-size:13.5px; font-weight:800; color:#1e293b;">${escHtml(devTime)}</div>
         </div>
 
         <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:12px 14px;">
           <div style="font-size:11.5px; color:#64748b; font-weight:800; margin-bottom:4px;">📊 רמת מורכבות</div>
-          <div style="font-size:13.5px; font-weight:800; color:#1e293b;">${artEsc(complexity)}</div>
+          <div style="font-size:13.5px; font-weight:800; color:#1e293b;">${escHtml(complexity)}</div>
         </div>
 
         <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:12px 14px;">
           <div style="font-size:11.5px; color:#64748b; font-weight:800; margin-bottom:4px;">🎯 קהל יעד</div>
-          <div style="font-size:13.5px; font-weight:800; color:#1e293b;">${artEsc(audience)}</div>
+          <div style="font-size:13.5px; font-weight:800; color:#1e293b;">${escHtml(audience)}</div>
         </div>
 
         <button onclick="dmStartAboutGallery('${artEsc(a.authorId || '')}', '${artEsc(a.author || '')}', '${artEsc(a.id)}')"
@@ -11583,7 +11661,7 @@ function secondhandBuyBoxHTML(a) {
       <div style="margin-top:16px; background:#fff; border:1.5px solid #cbd5e1; border-radius:12px; padding:14px;">
         <div style="font-size:14px; font-weight:900; color:#0f172a; margin-bottom:10px; display:flex; align-items:center; gap:6px;">📜 תנאי חוזה ההשאלה</div>
         <div style="display:flex; flex-direction:column; gap:6px;">
-          ${a.loanTerms.map((t, i) => `<div style="font-size:12.5px; color:#334155; line-height:1.5; display:flex; gap:6px;"><span style="color:#2563eb; font-weight:800;">${i + 1}.</span><span>${artEsc(t)}</span></div>`).join('')}
+          ${a.loanTerms.map((t, i) => `<div style="font-size:12.5px; color:#334155; line-height:1.5; display:flex; gap:6px;"><span style="color:#2563eb; font-weight:800;">${i + 1}.</span><span>${escHtml(t)}</span></div>`).join('')}
         </div>
         <div style="font-size:11px; color:#94a3b8; margin-top:10px;">* התנאים מוצגים כהסכמה בין המשאיל לשואל.</div>
       </div>` : ''}
@@ -11598,19 +11676,19 @@ function secondhandDetailsBoxHTML(a) {
   const row = (label, val) => `
         <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:12px 14px;">
           <div style="font-size:11.5px; color:#64748b; font-weight:800; margin-bottom:4px;">${label}</div>
-          <div style="font-size:13.5px; font-weight:800; color:#1e293b;">${artEsc(val)}</div>
+          <div style="font-size:13.5px; font-weight:800; color:#1e293b;">${escHtml(val)}</div>
         </div>`;
   // תיבה ראשית לפי סוג ההצעה
   let mainBox;
   if (offer === 'השאלה') {
-    mainBox = `<div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:12px; padding:12px 14px;"><div style="font-size:11.5px; color:#1e40af; font-weight:800; margin-bottom:4px;">🔄 להשאלה · לתקופה</div><div style="font-size:18px; font-weight:900; color:#1d4ed8;">${artEsc(detail || 'לפי סיכום')}</div></div>`;
+    mainBox = `<div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:12px; padding:12px 14px;"><div style="font-size:11.5px; color:#1e40af; font-weight:800; margin-bottom:4px;">🔄 להשאלה · לתקופה</div><div style="font-size:18px; font-weight:900; color:#1d4ed8;">${escHtml(detail || 'לפי סיכום')}</div></div>`;
   } else if (offer === 'החלפה') {
-    mainBox = `<div style="background:#fef3c7; border:1px solid #fde68a; border-radius:12px; padding:12px 14px;"><div style="font-size:11.5px; color:#92400e; font-weight:800; margin-bottom:4px;">🔁 להחלפה תמורת</div><div style="font-size:18px; font-weight:900; color:#b45309;">${artEsc(detail || 'לפי סיכום')}</div></div>`;
+    mainBox = `<div style="background:#fef3c7; border:1px solid #fde68a; border-radius:12px; padding:12px 14px;"><div style="font-size:11.5px; color:#92400e; font-weight:800; margin-bottom:4px;">🔁 להחלפה תמורת</div><div style="font-size:18px; font-weight:900; color:#b45309;">${escHtml(detail || 'לפי סיכום')}</div></div>`;
   } else {
     let price = (a.price != null && String(a.price).trim()) ? String(a.price).trim() : '';
     if (price && !/[₪$]/.test(price) && /\d/.test(price)) price = '₪' + price;
     if (!price) price = 'לפי סיכום';
-    mainBox = `<div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:12px; padding:12px 14px;"><div style="font-size:11.5px; color:#166534; font-weight:800; margin-bottom:4px;">💰 מחיר</div><div style="font-size:18px; font-weight:900; color:#15803d;">${artEsc(price)}</div></div>`;
+    mainBox = `<div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:12px; padding:12px 14px;"><div style="font-size:11.5px; color:#166534; font-weight:800; margin-bottom:4px;">💰 מחיר</div><div style="font-size:18px; font-weight:900; color:#15803d;">${escHtml(price)}</div></div>`;
   }
   return `
     <div class="idea-tech-box">
@@ -11647,7 +11725,7 @@ function photoOpenDetail(id) {
   // יצירת ריבועי דפדוף (Thumbnails)
   const thumbnailsHTML = validImages.map((imgUrl, idx) => `
     <div class="photo-thumb-square" onclick="photoSelectImage('${artEsc(imgUrl)}', this)" style="width:60px; height:60px; border-radius:8px; overflow:hidden; cursor:pointer; border:2.5px solid ${idx === 0 ? '#e11d48' : '#ddd'}; transition:all 0.2s; flex-shrink:0;">
-      <img src="${imgUrl}" style="width:100%; height:100%; object-fit:cover;">
+      <img src="${escHtml(imgUrl)}" style="width:100%; height:100%; object-fit:cover;">
     </div>
   `).join('');
 
@@ -11657,12 +11735,12 @@ function photoOpenDetail(id) {
     return `
       <div class="art-rec-card" onclick="photoOpenDetail('${artEsc(r.id)}')">
         <div class="art-rec-img">
-          ${rImg ? `<img src="${rImg}" alt="">` : '<div class="art-card-img-placeholder"></div>'}
-          <span class="art-rec-badge art-category-badge" style="background:${r.categoryColor||'#10b981'}">${r.category}</span>
+          ${rImg ? `<img src="${escHtml(rImg)}" alt="">` : '<div class="art-card-img-placeholder"></div>'}
+          <span class="art-rec-badge art-category-badge" style="background:${escHtml(r.categoryColor || '#10b981')}">${escHtml(r.category)}</span>
         </div>
         <div class="art-rec-text">
-          <h4>${r.title}</h4>
-          <div class="art-rec-meta">${r.author} · ${r.timestamp}</div>
+          <h4>${escHtml(r.title)}</h4>
+          <div class="art-rec-meta">${escHtml(r.author)} · ${escHtml(r.timestamp)}</div>
         </div>
       </div>
     `;
@@ -11679,7 +11757,7 @@ function photoOpenDetail(id) {
       return `
         <div class="photo-story-row" style="display:flex; flex-direction:${isEven ? 'row' : 'row-reverse'}; gap:24px; align-items:center; margin-bottom:32px; flex-wrap:wrap;">
           <div style="flex:1; min-width:280px; height:240px; border-radius:12px; overflow:hidden; border:1px solid #f0f0f0; background:#fafafa; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
-            <img src="${imgUrl}" style="width:100%; height:100%; object-fit:contain; display:block; cursor:zoom-in;" onclick="artGalleryById('photos','${artEsc(id)}', this.getAttribute('src'))">
+            <img src="${escHtml(imgUrl)}" style="width:100%; height:100%; object-fit:contain; display:block; cursor:zoom-in;" onclick="artGalleryById('photos','${artEsc(id)}', this.getAttribute('src'))">
           </div>
           <div style="flex:1.5; min-width:280px; font-size:16px; line-height:1.8; color:#374151; text-align:justify;">
             ${pText}
@@ -11735,7 +11813,7 @@ function photoOpenDetail(id) {
       <div class="photo-detail-carousel">
         ${carouselImgs.map(u => `
           <div class="pd-slide" style="--bg-img:url('${u}');">
-            <img src="${u}" style="${blurStyle}" onclick="artGalleryById('photos','${artEsc(id)}', this.getAttribute('src'))">
+            <img src="${escHtml(u)}" style="${blurStyle}" onclick="artGalleryById('photos','${artEsc(id)}', this.getAttribute('src'))">
           </div>
         `).join('')}
       </div>
@@ -11767,13 +11845,13 @@ function photoOpenDetail(id) {
 
             <!-- במרכז: תוכן הרעיון המלא -->
             <div class="idea-detail-main-center" style="flex: 2; min-width: 320px; background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 16px; padding: 22px; box-shadow: 0 4px 14px rgba(0,0,0,0.03);">
-              <h1 class="art-detail-title" style="margin-top:0;">${a.title}</h1>
+              <h1 class="art-detail-title" style="margin-top:0;">${escHtml(a.title)}</h1>
               <div class="art-meta" style="margin-bottom:14px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                <span class="art-category-badge" style="background:${a.categoryColor||'#3b82f6'}">${a.category}</span>
-                <span>${_sp.creator}: <b>${a.author}</b></span>
+                <span class="art-category-badge" style="background:${escHtml(a.categoryColor || '#3b82f6')}">${escHtml(a.category)}</span>
+                <span>${escHtml(_sp.creator)}: <b>${escHtml(a.author)}</b></span>
                 ${a.authorId ? `<button onclick="toggleFollow('${artEsc(a.authorId)}','${artEsc(a.author || '')}', this)" class="follow-btn${isFollowing(a.authorId) ? ' following' : ''}">${isFollowing(a.authorId) ? '✓ עוקב' : '➕ עקוב'}</button>` : ''}
                 <span>·</span>
-                <span>${a.timestamp}</span>
+                <span>${escHtml(a.timestamp)}</span>
                 <button onclick="photoToggleLike('${artEsc(a.id)}')" class="photo-like-btn" style="background: ${photoIsLikedLocal(a.id) ? '#ffe4e6' : '#ffffff'}; border: 1.5px solid ${photoIsLikedLocal(a.id) ? '#e11d48' : '#e2e8f0'}; cursor: pointer; color: ${photoIsLikedLocal(a.id) ? '#e11d48' : '#1e293b'}; display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 8px; transition: all 0.2s; font-weight: 700; font-size: 13px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="${photoIsLikedLocal(a.id) ? '#e11d48' : 'none'}" stroke="${photoIsLikedLocal(a.id) ? '#e11d48' : '#e11d48'}" stroke-width="2.5"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
                   <span>${a.likes || 0} לייקים</span>
@@ -11787,7 +11865,7 @@ function photoOpenDetail(id) {
               <div class="art-detail-content" style="margin-bottom:20px;">${contentHTML}</div>
 
               <div class="photo-main-img-container" style="margin-bottom:20px; ${blurStyle}">
-                <img id="photo-gallery-main-img" src="${mainImg}" style="width:100%; height:100%; object-fit:contain; display:block; border-radius:12px; cursor:zoom-in; ${blurStyle}" onclick="artGalleryById('photos','${artEsc(id)}', this.getAttribute('src'))">
+                <img id="photo-gallery-main-img" src="${escHtml(mainImg)}" style="width:100%; height:100%; object-fit:contain; display:block; border-radius:12px; cursor:zoom-in; ${blurStyle}" onclick="artGalleryById('photos','${artEsc(id)}', this.getAttribute('src'))">
               </div>
 
               ${validImages.length > 1 ? `
@@ -11799,7 +11877,7 @@ function photoOpenDetail(id) {
               ${photoCommentsSectionHTML(id)}
 
               <div class="art-rec-section" style="margin-top:28px;">
-                <h3 style="margin:0 0 16px;font-size:18px;font-weight:800">${_sp.recTitle}</h3>
+                <h3 style="margin:0 0 16px;font-size:18px;font-weight:800">${escHtml(_sp.recTitle)}</h3>
                 <div class="art-rec-grid">${recHTML}</div>
               </div>
             </div>
@@ -11821,14 +11899,14 @@ function photoOpenDetail(id) {
 
           <!-- בעמוד גלריה המלל בא לפני התמונה -->
           <div class="art-detail-body">
-            <h1 class="art-detail-title">${a.title}</h1>
+            <h1 class="art-detail-title">${escHtml(a.title)}</h1>
             <div class="art-meta" style="margin-bottom:12px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-              <span class="art-category-badge" style="background:${a.categoryColor||'#10b981'}">${a.category}</span>
-              <span>צילום: ${a.author}</span>
+              <span class="art-category-badge" style="background:${escHtml(a.categoryColor || '#10b981')}">${escHtml(a.category)}</span>
+              <span>צילום: ${escHtml(a.author)}</span>
               ${a.authorId ? `<button onclick="toggleFollow('${artEsc(a.authorId)}','${artEsc(a.author || '')}', this)" class="follow-btn${isFollowing(a.authorId) ? ' following' : ''}">${isFollowing(a.authorId) ? '✓ עוקב' : '➕ עקוב'}</button>` : ''}
               <span>·</span>
-              <span>${a.timestamp}</span>
-              ${a.ageRange ? `<span>·</span><span>גיל ${artEsc(String(a.ageRange))}</span>` : ''}
+              <span>${escHtml(a.timestamp)}</span>
+              ${a.ageRange ? `<span>·</span><span>גיל ${escHtml(String(a.ageRange))}</span>` : ''}
               ${isUserVerified(a.authorId, a.author, a.verified || a.verifiedUser) ? `<span>·</span><span style="color:#2563eb; font-weight:700; display:inline-flex; align-items:center; gap:4px;">חשבון זה מאומת <span style="background:#dbeafe; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:10px;">✓</span></span>` : ''}
               ${a.expiresAt ? renderExpirationBadge(a.expiresAt) : ''}
               <button onclick="photoToggleLike('${artEsc(a.id)}')" class="photo-like-btn" style="background: ${photoIsLikedLocal(a.id) ? '#ffe4e6' : '#ffffff'}; border: 1.5px solid ${photoIsLikedLocal(a.id) ? '#e11d48' : '#e2e8f0'}; cursor: pointer; color: ${photoIsLikedLocal(a.id) ? '#e11d48' : '#1e293b'}; display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 8px; transition: all 0.2s; font-weight: 700; font-size: 13px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
@@ -11847,7 +11925,7 @@ function photoOpenDetail(id) {
                 💬 <span>שלח הודעה</span>
               </button>
               ${a.telegramUrl ? `
-                <a href="${a.telegramUrl}" target="_blank" title="${artEsc(a.telegramUrl.replace('https://t.me/', '@'))}" class="art-telegram-btn" style="display: inline-flex; align-items: center; background: #2f2f2f; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 13px; text-decoration: none; font-weight: bold; gap: 6px; border: 1px solid rgba(255,255,255,0.1);">
+                <a href="${escHtml(safeUrl(a.telegramUrl))}" target="_blank" title="${escHtml(a.telegramUrl.replace('https://t.me/', '@'))}" class="art-telegram-btn" style="display: inline-flex; align-items: center; background: #2f2f2f; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 13px; text-decoration: none; font-weight: bold; gap: 6px; border: 1px solid rgba(255,255,255,0.1);">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
                     <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
                   </svg>
@@ -11874,7 +11952,7 @@ function photoOpenDetail(id) {
 
           <!-- תמונה ראשית גדולה עם מזהה ספציפי (פרופורציונלית ולא ענקית) -->
           <div class="photo-main-img-container" style="${blurStyle}">
-            <img id="photo-gallery-main-img" src="${mainImg}" style="width:100%; height:100%; object-fit:contain; display:block; border-radius:12px; cursor:zoom-in; ${blurStyle}" onclick="artGalleryById('photos','${artEsc(id)}', this.getAttribute('src'))">
+            <img id="photo-gallery-main-img" src="${escHtml(mainImg)}" style="width:100%; height:100%; object-fit:contain; display:block; border-radius:12px; cursor:zoom-in; ${blurStyle}" onclick="artGalleryById('photos','${artEsc(id)}', this.getAttribute('src'))">
           </div>
 
           <!-- ריבועי דפדוף (Thumbnails) עם חצי ניווט -->
@@ -11927,7 +12005,7 @@ function photoSelectRowImage(albumId, imgUrl, thumbEl) {
       mainImg.src = imgUrl;
       const zoomBtn = container.querySelector('.art-zoom-btn');
       if (zoomBtn) {
-        zoomBtn.setAttribute('onclick', `event.stopPropagation();artZoomImage('${artEsc(imgUrl)}')`);
+        zoomBtn.setAttribute('onclick', `event.stopPropagation();artZoomImage('${jsStrEsc(imgUrl)}')`);
       }
     }
     const thumbs = Array.from(container.querySelectorAll('.photo-mini-thumb'));
@@ -12136,10 +12214,10 @@ async function photoSaveProfile() {
     telegram: telegram || '',
     email: email || ''
   };
-  localStorage.setItem(`user_profile_${user.uid}`, JSON.stringify(profile));
+  localStorage.setItem(`user_profile_${escHtml(user.uid)}`, JSON.stringify(profile));
 
   try {
-    const profileRef = ref(db, `website/users/${user.uid}/profile`);
+    const profileRef = ref(db, `website/users/${escHtml(user.uid)}/profile`);
     await set(profileRef, profile);
     alert("הפרופיל עודכן בהצלחה! ✨");
     renderPage();
@@ -12203,7 +12281,7 @@ async function openUserProfile(authorId, authorFallbackName) {
         if (profile.telegram) {
           const cleanTg = profile.telegram.startsWith('@') ? profile.telegram.substring(1) : profile.telegram;
           contactHTML += `
-            <a href="https://t.me/${cleanTg}" target="_blank" title="@${cleanTg}" style="display:inline-flex; align-items:center; background:#2f2f2f; color:white; padding:4px 8px; border-radius:6px; font-size:11px; text-decoration:none; font-weight:bold; gap:4px; border:1px solid rgba(255,255,255,0.1);">
+            <a href="https://t.me/${encodeURIComponent(cleanTg)}" target="_blank" rel="noopener" title="@${escHtml(cleanTg)}" style="display:inline-flex; align-items:center; background:#2f2f2f; color:white; padding:4px 8px; border-radius:6px; font-size:11px; text-decoration:none; font-weight:bold; gap:4px; border:1px solid rgba(255,255,255,0.1);">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:block;">
                 <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
               </svg>
@@ -12213,7 +12291,7 @@ async function openUserProfile(authorId, authorFallbackName) {
         }
         if (profile.email) {
           contactHTML += `
-            <button type="button" onclick="revealAndCopyEmail('${artEsc(profile.email)}', this, event);" title="לחץ לחשיפת והעתקת אימייל (${artEsc(profile.email)})" style="display:inline-flex; align-items:center; background:#2f2f2f; color:white; padding:4px 8px; border-radius:6px; font-size:11px; text-decoration:none; font-weight:bold; gap:4px; border:1px solid rgba(255,255,255,0.1); cursor:pointer;">
+            <button type="button" onclick="revealAndCopyEmail('${artEsc(profile.email)}', this, event);" title="לחץ לחשיפת והעתקת אימייל (${escHtml(profile.email)})" style="display:inline-flex; align-items:center; background:#2f2f2f; color:white; padding:4px 8px; border-radius:6px; font-size:11px; text-decoration:none; font-weight:bold; gap:4px; border:1px solid rgba(255,255,255,0.1); cursor:pointer;">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:block;">
                 <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
                 <polyline points="22,6 12,13 2,6"/>
@@ -12247,8 +12325,8 @@ async function openUserProfile(authorId, authorFallbackName) {
       return `
         <div class="art-popular-item" onclick="document.getElementById('user-profile-modal').style.display='none'; photoOpenDetail('${artEsc(p.id)}')" style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px; background:#f9f9f9; border-radius:12px; border:1px solid #eee; cursor:pointer; transition:background 0.2s;">
           <div style="display:flex; align-items:center; gap:10px; overflow:hidden;">
-            ${img ? `<img src="${img}" style="width:40px; height:40px; border-radius:6px; object-fit:cover;">` : '<div style="width:40px; height:40px; border-radius:6px; background:#eee;"></div>'}
-            <div style="font-size:13px; font-weight:bold; color:#222; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${p.title}</div>
+            ${img ? `<img src="${escHtml(img)}" style="width:40px; height:40px; border-radius:6px; object-fit:cover;">` : '<div style="width:40px; height:40px; border-radius:6px; background:#eee;"></div>'}
+            <div style="font-size:13px; font-weight:bold; color:#222; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escHtml(p.title)}</div>
           </div>
           <span style="font-size:11px; color:#e11d48; font-weight:bold; white-space:nowrap;">צפייה ➔</span>
         </div>
@@ -12393,7 +12471,7 @@ function openBatteryTasksModal() {
         <span style="display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:50%; background:${t.done ? '#22c55e' : '#cbd5e1'}; color:#fff; font-size:14px; font-weight:900;">
           ${t.done ? '✓' : '✕'}
         </span>
-        <span style="font-size:14px; font-weight:800; color:${t.done ? '#15803d' : '#334155'};">${t.title}</span>
+        <span style="font-size:14px; font-weight:800; color:${t.done ? '#15803d' : '#334155'};">${escHtml(t.title)}</span>
       </div>
       ${t.done ? '<span style="font-size:12px; font-weight:900; color:#16a34a; background:#dcfce7; padding:4px 10px; border-radius:20px;">הושלם ✓</span>' : `
         <button onclick="document.getElementById('battery-tasks-modal').style.display='none'; ${t.action}" style="background:#2563eb; color:#fff; border:none; border-radius:8px; padding:6px 14px; font-size:12.5px; font-weight:800; cursor:pointer; box-shadow:0 2px 6px rgba(37,99,235,0.2);">בצע עכשיו ➔</button>
@@ -12494,7 +12572,7 @@ function buildUserPageHTML(authorId, authorName) {
   });
   const cards = authorAlbums.map(p => renderPhotoCard(p)).join('');
   const json = encodeURIComponent(JSON.stringify(albums));
-  const initial = artEsc(String(authorName || '?').charAt(0) || '?');
+  const initial = escHtml(String(authorName || '?').charAt(0) || '?');
   const ratingWidget = buildUserRatingWidgetHTML(authorId);
 
   return `
@@ -12504,7 +12582,7 @@ function buildUserPageHTML(authorId, authorName) {
       <div style="background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:20px; margin-bottom:24px; display:flex; align-items:center; gap:16px; box-shadow:0 4px 15px rgba(0,0,0,0.03); direction:rtl; flex-wrap:wrap;">
         <div style="width:56px; height:56px; border-radius:50%; background:linear-gradient(135deg,#e11d48,#9f1239); color:#fff; display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:900; flex-shrink:0;">${initial}</div>
         <div style="flex:1; min-width:0;">
-          <div id="user-page-name" style="font-size:20px; font-weight:900; color:#0f172a;">${artEsc(authorName || 'משתמש')}</div>
+          <div id="user-page-name" style="font-size:20px; font-weight:900; color:#0f172a;">${escHtml(authorName || 'משתמש')}</div>
           <div id="user-page-meta" style="font-size:13px; color:#64748b; margin-top:2px;">📷 ${authorAlbums.length} גלריות שהועלו</div>
           ${ratingWidget}
           <div id="user-page-contact" style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;"></div>
@@ -12533,7 +12611,7 @@ async function openUserPage(authorId, authorName) {
       let html = '';
       if (profile.telegram) {
         const tg = String(profile.telegram).replace(/^@/, '');
-        html += `<a href="https://t.me/${artEsc(tg)}" target="_blank" style="display:inline-flex; align-items:center; gap:4px; background:#2f2f2f; color:#fff; padding:5px 10px; border-radius:6px; font-size:12px; font-weight:800; text-decoration:none;">✈️ טלגרם</a>`;
+        html += `<a href="https://t.me/${escHtml(tg)}" target="_blank" style="display:inline-flex; align-items:center; gap:4px; background:#2f2f2f; color:#fff; padding:5px 10px; border-radius:6px; font-size:12px; font-weight:800; text-decoration:none;">✈️ טלגרם</a>`;
       }
       if (profile.email) {
         html += `<button type="button" onclick="copyEmailToClipboard('${artEsc(profile.email)}', event)" style="display:inline-flex; align-items:center; gap:4px; background:#2f2f2f; color:#fff; padding:5px 10px; border-radius:6px; font-size:12px; font-weight:800; border:none; cursor:pointer;">✉️ אימייל</button>`;
@@ -12639,7 +12717,7 @@ function openPhotoModal() {
   const _qu = auth.currentUser;
   if (_qu) {
     try {
-      const prof = JSON.parse(localStorage.getItem(`user_profile_${_qu.uid}`) || '{}');
+      const prof = JSON.parse(localStorage.getItem(`user_profile_${escHtml(_qu.uid)}`) || '{}');
       savedEmail = prof.email || _qu.email || '';
       savedTelegram = prof.telegram ? ('@' + String(prof.telegram).replace(/^@/, '')) : '';
     } catch (e) { savedEmail = _qu.email || ''; }
@@ -12701,7 +12779,7 @@ function renderPhotoContract() {
   if (!photoLoanTerms.length) { box.innerHTML = '<div style="font-size:12px; color:#94a3b8;">אין סעיפים — הוסיפו למטה.</div>'; return; }
   box.innerHTML = photoLoanTerms.map((t, i) => `
     <div style="display:flex; align-items:center; gap:8px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:8px 10px;">
-      <span style="flex:1; font-size:13px; font-weight:600; color:#1e293b;">${i + 1}. ${artEsc(t)}</span>
+      <span style="flex:1; font-size:13px; font-weight:600; color:#1e293b;">${i + 1}. ${escHtml(t)}</span>
       <button type="button" onclick="photoContractRemove(${i})" title="הסר סעיף" style="background:#fef2f2; color:#ef4444; border:1px solid #fecaca; border-radius:6px; width:24px; height:24px; cursor:pointer; font-size:12px; flex-shrink:0;">✕</button>
     </div>`).join('');
 }
@@ -12769,7 +12847,7 @@ function submitClassAction() {
   if (!business || !title) { alert('נא למלא שם עסק ונושא תביעה'); return; }
   const user = auth.currentUser;
   let nick = 'אנונימי';
-  if (user) { try { const p = JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}'); nick = p.nickname || user.displayName || (user.email ? user.email.split('@')[0] : 'משתמש'); } catch (e) { nick = user.displayName || 'משתמש'; } }
+  if (user) { try { const p = JSON.parse(localStorage.getItem(`user_profile_${escHtml(user.uid)}`) || '{}'); nick = p.nickname || user.displayName || (user.email ? user.email.split('@')[0] : 'משתמש'); } catch (e) { nick = user.displayName || 'משתמש'; } }
   const albums = (typeof photoGetAlbums === 'function') ? photoGetAlbums() : [];
   const isApproved = (typeof isEditMode !== 'undefined' && isEditMode);
   const newAlbum = {
@@ -12818,7 +12896,7 @@ function submitWanted() {
   const budget = ((document.getElementById('wt-budget') || {}).value || '').trim();
   const user = auth.currentUser;
   let nick = 'משתמש';
-  if (user) { try { const p = JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}'); nick = p.nickname || user.displayName || (user.email ? user.email.split('@')[0] : 'משתמש'); } catch (e) {} }
+  if (user) { try { const p = JSON.parse(localStorage.getItem(`user_profile_${escHtml(user.uid)}`) || '{}'); nick = p.nickname || user.displayName || (user.email ? user.email.split('@')[0] : 'משתמש'); } catch (e) {} }
   const albums = (typeof photoGetAlbums === 'function') ? photoGetAlbums() : [];
   const isApproved = (typeof isEditMode !== 'undefined' && isEditMode);
   const newAlbum = {
@@ -12864,9 +12942,9 @@ function secondhandOffersBoxHTML(a) {
     return `
       <div style="display:flex; align-items:center; gap:10px; background:${chosen ? '#eff6ff' : '#f8fafc'}; border:1px solid ${chosen ? '#93c5fd' : '#e2e8f0'}; border-radius:10px; padding:10px 12px;">
         <div style="flex:1; min-width:0;">
-          <div style="font-size:14px; font-weight:900; color:#1d4ed8;">₪${artEsc(String(o.price))}${i === 0 ? ' <span style="font-size:11px; color:#f59e0b;">🏆 הכי זול</span>' : ''}${chosen ? ' <span style="font-size:11px; color:#2563eb;">✓ נבחר</span>' : ''}</div>
-          <div style="font-size:12px; color:#334155; font-weight:700;">${artEsc(o.model || '')}</div>
-          <div style="font-size:11.5px; color:#64748b;">${artEsc(o.name || 'משתמש')}</div>
+          <div style="font-size:14px; font-weight:900; color:#1d4ed8;">₪${escHtml(String(o.price))}${i === 0 ? ' <span style="font-size:11px; color:#f59e0b;">🏆 הכי זול</span>' : ''}${chosen ? ' <span style="font-size:11px; color:#2563eb;">✓ נבחר</span>' : ''}</div>
+          <div style="font-size:12px; color:#334155; font-weight:700;">${escHtml(o.model || '')}</div>
+          <div style="font-size:11.5px; color:#64748b;">${escHtml(o.name || 'משתמש')}</div>
         </div>
         ${canChoose && !a.chosenOffer ? `<button onclick="chooseWantedOffer('${artEsc(a.id)}','${artEsc(o.oid)}')" style="background:#2563eb; color:#fff; border:none; border-radius:8px; padding:6px 12px; font-size:12px; font-weight:800; cursor:pointer;">בחר</button>` : ''}
       </div>`;
@@ -12874,7 +12952,7 @@ function secondhandOffersBoxHTML(a) {
   return `
     <div class="idea-tech-box">
       <div style="font-size:16px; font-weight:900; color:#0f172a; border-bottom:2.5px solid #2563eb; padding-bottom:10px; margin-bottom:16px;">💰 הצעות (${offers.length})</div>
-      ${a.budget ? `<div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:12px; padding:12px 14px; margin-bottom:12px;"><div style="font-size:11.5px; color:#1e40af; font-weight:800; margin-bottom:4px;">🎯 תקציב</div><div style="font-size:15px; font-weight:900; color:#1d4ed8;">${artEsc(a.budget)}</div></div>` : ''}
+      ${a.budget ? `<div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:12px; padding:12px 14px; margin-bottom:12px;"><div style="font-size:11.5px; color:#1e40af; font-weight:800; margin-bottom:4px;">🎯 תקציב</div><div style="font-size:15px; font-weight:900; color:#1d4ed8;">${escHtml(a.budget)}</div></div>` : ''}
       <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;">${rows}</div>
       ${!a.chosenOffer ? `<button onclick="submitWantedOffer('${artEsc(a.id)}')" style="width:100%; background:linear-gradient(135deg,#3b82f6,#2563eb); color:#fff; border:none; padding:12px; border-radius:12px; font-weight:800; font-size:14px; cursor:pointer; box-shadow:0 4px 14px rgba(37,99,235,0.3);">💰 הגש הצעה</button>` : '<div style="text-align:center; font-size:13px; font-weight:800; color:#2563eb; padding:8px;">✓ נבחרה הצעה — הבקשה נסגרה</div>'}
     </div>`;
@@ -13061,7 +13139,7 @@ document.getElementById('photo-save').addEventListener('click', async () => {
     authorNickname = 'אורח'; // משתמש אנונימי — אין אימייל/שם תצוגה
   } else if (user) {
     try {
-      const profile = JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}');
+      const profile = JSON.parse(localStorage.getItem(`user_profile_${escHtml(user.uid)}`) || '{}');
       authorNickname = profile.nickname || user.displayName || (user.email ? user.email.split('@')[0] : 'אורח');
     } catch(e) {
       authorNickname = user.displayName || (user.email ? user.email.split('@')[0] : 'אורח');
@@ -13187,7 +13265,7 @@ async function pushPendingSubmission(album) {
   // מוודאים משתמש (אורח אנונימי אם צריך) כדי שהכתיבה תעבור את כללי Firebase
   if (typeof ensureGuestSignedIn === 'function') { try { await ensureGuestSignedIn(); } catch (e) {} }
   try {
-    await set(ref(db, `website/pending_submissions/${album.id}`), album);
+    await set(ref(db, `website/pending_submissions/${escHtml(album.id)}`), album);
   } catch (e) {
     // אורח לרוב חסום מכתיבה ל-pending_submissions ע"י כללי Firebase. עוקפים דרך
     // user_submissions — נתיב שאורחים כבר יכולים לכתוב אליו (טופס "מידע") — ומסמנים
@@ -13275,17 +13353,17 @@ function pendingRequestsListHTML() {
       <div class="req-card" style="display:flex; align-items:center; justify-content:space-between; gap:16px; padding:14px; border:1px solid #e2e8f0; border-radius:12px; background:#fff; margin-bottom:12px; box-shadow:0 2px 6px rgba(0,0,0,0.03);">
         <div style="display:flex; align-items:center; gap:14px; flex:1; min-width:0;">
           <div class="req-thumb" style="width:60px; height:60px; border-radius:8px; overflow:hidden; background:#f1f5f9; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-            ${img ? `<img src="${img}" alt="" style="width:100%; height:100%; object-fit:cover;">` : '<span style="font-size:24px;">🖼️</span>'}
+            ${img ? `<img src="${escHtml(img)}" alt="" style="width:100%; height:100%; object-fit:cover;">` : '<span style="font-size:24px;">🖼️</span>'}
           </div>
           <div class="req-body" style="display:flex; flex-direction:column; gap:4px; flex:1; min-width:0;">
             <div style="display:flex; align-items:center; gap:8px;">
-              <span style="font-size:15px; font-weight:900; color:#0f172a;">${artEsc(p.title || 'ללא כותרת')}</span>
+              <span style="font-size:15px; font-weight:900; color:#0f172a;">${escHtml(p.title || 'ללא כותרת')}</span>
               <span style="background:#f1f5f9; color:#475569; font-size:10.5px; font-weight:700; padding:2px 7px; border-radius:6px;">${typeBadge}</span>
             </div>
             <div style="font-size:12px; color:#64748b;">
-              <span>מאת: <strong>${artEsc(p.author || 'משתמש')}</strong></span> ${p.timestamp ? ' · ' + artEsc(p.timestamp) : ''}
+              <span>מאת: <strong>${escHtml(p.author || 'משתמש')}</strong></span> ${p.timestamp ? ' · ' + escHtml(p.timestamp) : ''}
             </div>
-            ${p.summary ? `<div style="font-size:12.5px; color:#475569; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${artEsc(p.summary)}</div>` : ''}
+            ${p.summary ? `<div style="font-size:12.5px; color:#475569; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escHtml(p.summary)}</div>` : ''}
           </div>
         </div>
         <div class="req-actions" style="display:flex; gap:8px; flex-shrink:0;">
@@ -13389,7 +13467,7 @@ window.reqReject = reqReject;
 function photoIsLikedLocal(id) {
   try {
     const user = auth.currentUser;
-    const localKey = user ? `liked_galleries_${user.uid}` : 'guest_liked_galleries';
+    const localKey = user ? `liked_galleries_${escHtml(user.uid)}` : 'guest_liked_galleries';
     const liked = JSON.parse(localStorage.getItem(localKey) || localStorage.getItem('liked_galleries') || '{}');
     return !!liked[id];
   } catch (e) {
@@ -13401,7 +13479,7 @@ window.photoIsLikedLocal = photoIsLikedLocal;
 async function syncUserLikeBudget(user) {
   if (!user) return 0;
   try {
-    const budgetRef = ref(db, `website/users/${user.uid}/likes_data`);
+    const budgetRef = ref(db, `website/users/${escHtml(user.uid)}/likes_data`);
     const snapshot = await get(budgetRef);
     let budget = 5;
     let lastUpdate = Date.now();
@@ -13424,12 +13502,12 @@ async function syncUserLikeBudget(user) {
       await set(budgetRef, { budget, lastUpdate });
     }
     
-    localStorage.setItem(`like_budget_${user.uid}`, budget);
-    localStorage.setItem(`like_budget_update_${user.uid}`, lastUpdate);
+    localStorage.setItem(`like_budget_${escHtml(user.uid)}`, budget);
+    localStorage.setItem(`like_budget_update_${escHtml(user.uid)}`, lastUpdate);
     return budget;
   } catch (e) {
     console.error("שגיאה בסנכרון יתרת הלייקים:", e);
-    return parseInt(localStorage.getItem(`like_budget_${user.uid}`) || '5', 10);
+    return parseInt(localStorage.getItem(`like_budget_${escHtml(user.uid)}`) || '5', 10);
   }
 }
 window.syncUserLikeBudget = syncUserLikeBudget;
@@ -13520,7 +13598,7 @@ function photoToggleLike(id) {
   if (!item) return;
 
   const user = auth.currentUser;
-  const localKey = user ? `liked_galleries_${user.uid}` : 'guest_liked_galleries';
+  const localKey = user ? `liked_galleries_${escHtml(user.uid)}` : 'guest_liked_galleries';
 
   let liked = {};
   try {
@@ -13530,7 +13608,7 @@ function photoToggleLike(id) {
   const isAddingLike = !liked[id];
   let budget = 999;
   if (user) {
-    budget = parseInt(localStorage.getItem(`like_budget_${user.uid}`) || '5', 10);
+    budget = parseInt(localStorage.getItem(`like_budget_${escHtml(user.uid)}`) || '5', 10);
     if (isAddingLike && budget <= 0) {
       alert("אין לך לייקים פנויים ביתרה! הלייקים שלך מצטברים בקצב של 5 לייקים נוספים בכל יום.");
       return;
@@ -13548,12 +13626,21 @@ function photoToggleLike(id) {
   }
 
   if (user) {
-    localStorage.setItem(`like_budget_${user.uid}`, budget);
+    localStorage.setItem(`like_budget_${escHtml(user.uid)}`, budget);
   }
   localStorage.setItem(localKey, JSON.stringify(liked));
   localStorage.setItem('liked_galleries', JSON.stringify(liked));
 
   const isNowLiked = !!liked[id];
+
+  // מונה הלייקים נשמר ב-Firebase בנתיב נפרד (גולשים לא כותבים ל-pages)
+  const likeDelta = isNowLiked ? 1 : -1;
+  const likeBase = Math.max(0, (item.likes || 0) - likeDelta);
+  try {
+    runTransaction(ref(db, `website/item_likes/${id}`), cur =>
+      Math.max(0, (typeof cur === 'number' ? cur : likeBase) + likeDelta)
+    ).catch(() => {});
+  } catch (e) {}
 
   // 1. עדכון ויזואלי מיידי של כל כפתורי הלב של פריט זה בכל מקום ב-DOM (בעמוד הבית או בכל עמוד אחר)
   const allHearts = document.querySelectorAll('.art-heart-overlay');
@@ -13685,7 +13772,7 @@ function photoToggleLike(id) {
   if (user) {
     setTimeout(async () => {
       try {
-        const budgetRef = ref(db, `website/users/${user.uid}/likes_data`);
+        const budgetRef = ref(db, `website/users/${escHtml(user.uid)}/likes_data`);
         update(budgetRef, { budget: budget }).catch(() => {});
       } catch (e) {}
     }, 0);
@@ -13696,7 +13783,7 @@ window.photoToggleLike = photoToggleLike;
 function photoIsSavedLocal(id) {
   try {
     const user = auth.currentUser;
-    const localKey = user ? `saved_galleries_${user.uid}` : 'guest_saved_galleries';
+    const localKey = user ? `saved_galleries_${escHtml(user.uid)}` : 'guest_saved_galleries';
     const saved = JSON.parse(localStorage.getItem(localKey) || '{}');
     return !!saved[id];
   } catch (e) {
@@ -13707,7 +13794,7 @@ window.photoIsSavedLocal = photoIsSavedLocal;
 
 function photoToggleSave(id, btnEl) {
   const user = auth.currentUser;
-  const localKey = user ? `saved_galleries_${user.uid}` : 'guest_saved_galleries';
+  const localKey = user ? `saved_galleries_${escHtml(user.uid)}` : 'guest_saved_galleries';
 
   let saved = {};
   try {
@@ -13725,7 +13812,7 @@ function photoToggleSave(id, btnEl) {
   
   if (user) {
     try {
-      const userSavedRef = ref(db, `website/users/${user.uid}/saved_galleries`);
+      const userSavedRef = ref(db, `website/users/${escHtml(user.uid)}/saved_galleries`);
       set(userSavedRef, saved);
     } catch (e) {}
   }
@@ -13776,16 +13863,16 @@ function photoGetSavedAlbums() {
   const user = auth.currentUser;
   if (!user) return [];
   let map = {};
-  try { map = JSON.parse(localStorage.getItem(`saved_galleries_${user.uid}`) || '{}'); } catch (e) {}
+  try { map = JSON.parse(localStorage.getItem(`saved_galleries_${escHtml(user.uid)}`) || '{}'); } catch (e) {}
   const albums = (typeof photoGetAlbums === 'function') ? photoGetAlbums() : [];
   return albums.filter(a => map[a.id]);
 }
 
 // drawer גנרי בסגנון "שמורים" — משמש גם להיסטוריה וללייקים
 function _drawerCell(id, img, title) {
-  return `<div class="saved-cell" onclick="closeSavedModal(); photoOpenDetail('${artEsc(id)}')" title="${artEsc(title || '')}">
-    <div class="saved-thumb">${img ? `<img src="${img}" alt="">` : '🖼️'}</div>
-    <div class="saved-name">${artEsc(title || 'ללא שם')}</div>
+  return `<div class="saved-cell" onclick="closeSavedModal(); photoOpenDetail('${artEsc(id)}')" title="${escHtml(title || '')}">
+    <div class="saved-thumb">${img ? `<img src="${escHtml(img)}" alt="">` : '🖼️'}</div>
+    <div class="saved-name">${escHtml(title || 'ללא שם')}</div>
   </div>`;
 }
 
@@ -13826,7 +13913,7 @@ window.openSavedModal = openSavedModal;
 // drawer "לייקים" — נפתח מאייקון הלב בסרגל העליון
 function photoGetLikedAlbums() {
   const user = auth.currentUser;
-  const localKey = user ? `liked_galleries_${user.uid}` : 'guest_liked_galleries';
+  const localKey = user ? `liked_galleries_${escHtml(user.uid)}` : 'guest_liked_galleries';
   let map = {};
   try { map = JSON.parse(localStorage.getItem(localKey) || localStorage.getItem('liked_galleries') || '{}'); } catch (e) {}
   const albums = (typeof photoGetAlbums === 'function') ? photoGetAlbums() : [];
@@ -13858,9 +13945,9 @@ window.openHistoryDrawer = openHistoryDrawer;
 // תא בהיסטוריה — לחיצה מנתבת לסיפור/תמונה/רעיון המתאים
 function _historyCell(item) {
   const t = item.type || '';
-  return `<div class="saved-cell" onclick="openHistoryItem('${artEsc(item.id)}','${artEsc(t)}')" title="${artEsc(item.title || '')}">
-    <div class="saved-thumb">${item.img ? `<img src="${item.img}" alt="">` : '🖼️'}</div>
-    <div class="saved-name">${artEsc(item.title || 'ללא שם')}</div>
+  return `<div class="saved-cell" onclick="openHistoryItem('${artEsc(item.id)}','${artEsc(t)}')" title="${escHtml(item.title || '')}">
+    <div class="saved-thumb">${item.img ? `<img src="${escHtml(item.img)}" alt="">` : '🖼️'}</div>
+    <div class="saved-name">${escHtml(item.title || 'ללא שם')}</div>
   </div>`;
 }
 
@@ -13922,7 +14009,7 @@ function subscribeMyDMs() {
   dmConvSubscribed = true;
   // מביאים את ה-uid של המנהל לשיחה הנעוצה
   try { get(ref(db, 'website/admin_uid')).then(s => { dmAdminUid = s.val() || ''; const el = document.getElementById('dm-conv-list'); if (el) el.innerHTML = dmConvListHTML(); }); } catch (e) {}
-  onValue(ref(db, `website/user_dms/${u.uid}`), snap => {
+  onValue(ref(db, `website/user_dms/${escHtml(u.uid)}`), snap => {
     dmConversations = snap.val() || {};
     const el = document.getElementById('dm-conv-list');
     if (el) el.innerHTML = dmConvListHTML();
@@ -13966,8 +14053,8 @@ function notificationsHTML() {
   if (!unread.length) return '<div class="notif-empty">אין התראות חדשות 🔔</div>';
   return unread.map(([cid, c]) => `
     <div class="notif-item" onclick="notifOpen('${artEsc(cid)}','${artEsc(c.otherUid || '')}','${artEsc(c.otherName || '')}')">
-      <div class="notif-item-title">💬 הודעה מ${artEsc(c.otherName || 'משתמש')}</div>
-      <div class="notif-item-sub">${artEsc((c.lastText || '').slice(0, 42))}</div>
+      <div class="notif-item-title">💬 הודעה מ${escHtml(c.otherName || 'משתמש')}</div>
+      <div class="notif-item-sub">${escHtml((c.lastText || '').slice(0, 42))}</div>
     </div>`).join('');
 }
 function toggleNotifications(e) {
@@ -14014,11 +14101,11 @@ function dmConvListHTML() {
   return pinned + list.map(([cid, c]) => {
     const nm = c.otherName || 'משתמש';
     return `
-    <div class="dm-conv${cid === _act ? ' active' : ''}" data-cid="${artEsc(cid)}" onclick="dmOpenConv('${artEsc(cid)}','${artEsc(c.otherUid || '')}','${artEsc(nm)}')">
-      <div class="dm-conv-avatar">${artEsc(nm.trim().charAt(0))}</div>
+    <div class="dm-conv${cid === _act ? ' active' : ''}" data-cid="${escHtml(cid)}" onclick="dmOpenConv('${artEsc(cid)}','${artEsc(c.otherUid || '')}','${artEsc(nm)}')">
+      <div class="dm-conv-avatar">${escHtml(nm.trim().charAt(0))}</div>
       <div class="dm-conv-main">
-        <div class="dm-conv-name">${artEsc(nm)}${c.unread ? ' <span class="dm-dot"></span>' : ''}</div>
-        <div class="dm-conv-last">${artEsc((c.lastText || '').slice(0, 42))}</div>
+        <div class="dm-conv-name">${escHtml(nm)}${c.unread ? ' <span class="dm-dot"></span>' : ''}</div>
+        <div class="dm-conv-last">${escHtml((c.lastText || '').slice(0, 42))}</div>
       </div>
       <div class="dm-conv-time">${dmTime(c.lastTime)}</div>
     </div>`;
@@ -14085,7 +14172,7 @@ function dmOpenConv(convId, otherUid, otherName, prefill) {
     <div class="dm-thread-head">
       <button class="dm-back" onclick="dmShowList()" title="חזרה">›</button>
       <div class="dm-thread-avatar">${initial}</div>
-      <span class="dm-title">${artEsc(otherName || 'משתמש')}</span>
+      <span class="dm-title">${escHtml(otherName || 'משתמש')}</span>
       <button class="dm-close" onclick="closeMessages()" title="סגור">✕</button>
     </div>
     <div class="dm-messages" id="dm-messages"><div class="dm-empty">טוען…</div></div>
@@ -14095,7 +14182,7 @@ function dmOpenConv(convId, otherUid, otherName, prefill) {
     </div>`;
   // מסמנים כנקרא
   const u = auth.currentUser;
-  if (u) { try { update(ref(db, `website/user_dms/${u.uid}/${convId}`), { unread: false }); } catch (e) {} }
+  if (u) { try { update(ref(db, `website/user_dms/${escHtml(u.uid)}/${convId}`), { unread: false }); } catch (e) {} }
   dmThreadUnsub = onValue(ref(db, `website/dms/${convId}/messages`), snap => {
     const val = snap.val() || {};
     dmThreadMessages = Object.values(val).sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
@@ -14115,7 +14202,7 @@ function dmMessagesHTML() {
   return dmThreadMessages.map(m => {
     const mine = m.from === myUid;
     return `<div class="dm-msg ${mine ? 'mine' : 'theirs'}">
-      <div class="dm-bubble"><span class="dm-text">${artEsc(m.text || '')}</span><span class="dm-msg-time">${dmTime(m.timestamp)}</span></div>
+      <div class="dm-bubble"><span class="dm-text">${escHtml(m.text || '')}</span><span class="dm-msg-time">${dmTime(m.timestamp)}</span></div>
     </div>`;
   }).join('');
 }
@@ -14133,7 +14220,7 @@ async function dmSendCurrent() {
   const myName = dmName();
   try {
     await push(ref(db, `website/dms/${convId}/messages`), { from: u.uid, fromName: myName, text: text.slice(0, 1000), timestamp: now });
-    await update(ref(db, `website/user_dms/${u.uid}/${convId}`), { otherUid, otherName, lastText: text.slice(0, 60), lastTime: now, unread: false });
+    await update(ref(db, `website/user_dms/${escHtml(u.uid)}/${convId}`), { otherUid, otherName, lastText: text.slice(0, 60), lastTime: now, unread: false });
     await update(ref(db, `website/user_dms/${otherUid}/${convId}`), { otherUid: u.uid, otherName: myName, lastText: text.slice(0, 60), lastTime: now, unread: true });
   } catch (e) {
     console.error('dm send failed', e);
@@ -14174,7 +14261,7 @@ function subscribeMyFollows() {
   const u = auth.currentUser;
   if (!u || followsSubscribed) return;
   followsSubscribed = true;
-  onValue(ref(db, `website/user_follows/${u.uid}`), snap => {
+  onValue(ref(db, `website/user_follows/${escHtml(u.uid)}`), snap => {
     followedUids = snap.val() || {};
     if (activePageId === 'page-feed-main' && typeof renderPage === 'function') renderPage();
   });
@@ -14186,7 +14273,7 @@ async function toggleFollow(uid, name, btn) {
   const u = auth.currentUser;
   if (!u) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
   if (!uid || uid === u.uid) { if (typeof showCopyToast === 'function') showCopyToast('אי אפשר לעקוב אחרי עצמך 🙂'); return; }
-  const path = `website/user_follows/${u.uid}/${uid}`;
+  const path = `website/user_follows/${escHtml(u.uid)}/${uid}`;
   const willFollow = !followedUids[uid];
   try {
     if (willFollow) { await set(ref(db, path), { name: name || '', since: Date.now() }); followedUids[uid] = { name: name || '', since: Date.now() }; }
@@ -14216,8 +14303,8 @@ function photoCommentsListHTML() {
   if (!list.length) return '<div class="pc-empty">אין תגובות עדיין. היו הראשונים להגיב!</div>';
   return list.map(c => `
     <div class="pc-comment">
-      <div class="pc-head">${artEsc(c.name || 'אורח')} · ${c.createdAt ? new Date(c.createdAt).toLocaleDateString('he-IL') : ''}</div>
-      <div class="pc-text">${artEsc(c.text || '')}</div>
+      <div class="pc-head">${escHtml(c.name || 'אורח')} · ${c.createdAt ? new Date(c.createdAt).toLocaleDateString('he-IL') : ''}</div>
+      <div class="pc-text">${escHtml(c.text || '')}</div>
     </div>`).join('');
 }
 
@@ -14267,8 +14354,8 @@ function storyCommentsListHTML() {
   if (!list.length) return '<div class="pc-empty">אין תגובות עדיין. היו הראשונים להגיב!</div>';
   return list.map(c => `
     <div class="pc-comment">
-      <div class="pc-head">${artEsc(c.name || 'אורח')} · ${c.createdAt ? new Date(c.createdAt).toLocaleDateString('he-IL') : ''}</div>
-      <div class="pc-text">${artEsc(c.text || '')}</div>
+      <div class="pc-head">${escHtml(c.name || 'אורח')} · ${c.createdAt ? new Date(c.createdAt).toLocaleDateString('he-IL') : ''}</div>
+      <div class="pc-text">${escHtml(c.text || '')}</div>
     </div>`).join('');
 }
 
@@ -14311,11 +14398,11 @@ function getFeedAlbums() {
 
 function feedCardHTML(a) {
   const img = (a.images && a.images[0]) ? a.images[0] : '';
-  return `<div class="feed-card" onclick="feedOpenGallery('${artEsc(a.id)}')" title="${artEsc(a.title || '')}">
-    <div class="feed-card-img">${img ? `<img src="${img}" alt="">` : '🖼️'}</div>
+  return `<div class="feed-card" onclick="feedOpenGallery('${artEsc(a.id)}')" title="${escHtml(a.title || '')}">
+    <div class="feed-card-img">${img ? `<img src="${escHtml(img)}" alt="">` : '🖼️'}</div>
     <div class="feed-card-body">
-      <div class="feed-card-title">${artEsc(a.title || '')}</div>
-      <div class="feed-card-author">${artEsc(a.author || '')}${a.timestamp ? ' · ' + artEsc(a.timestamp) : ''}</div>
+      <div class="feed-card-title">${escHtml(a.title || '')}</div>
+      <div class="feed-card-author">${escHtml(a.author || '')}${a.timestamp ? ' · ' + escHtml(a.timestamp) : ''}</div>
     </div>
   </div>`;
 }
@@ -14358,10 +14445,10 @@ function fbFeedStoriesHTML(posts) {
   const items = authors.slice(0, 15).map(p => {
     const img = (p.images && p.images[0]) ? p.images[0] : (p.image || '');
     return `
-      <div class="fb-story" onclick="openUserPage('${artEsc(p.authorId || '')}','${artEsc(p.author || '')}')" role="button" tabindex="0" title="${artEsc(p.author || '')}">
-        <div class="fb-story-bg">${img ? `<img src="${img}" alt="" loading="lazy">` : ''}</div>
-        <div class="fb-story-avatar">${img ? `<img src="${img}" alt="" loading="lazy">` : '👤'}</div>
-        <div class="fb-story-name">${artEsc(p.author || 'משתמש')}</div>
+      <div class="fb-story" onclick="openUserPage('${artEsc(p.authorId || '')}','${artEsc(p.author || '')}')" role="button" tabindex="0" title="${escHtml(p.author || '')}">
+        <div class="fb-story-bg">${img ? `<img src="${escHtml(img)}" alt="" loading="lazy">` : ''}</div>
+        <div class="fb-story-avatar">${img ? `<img src="${escHtml(img)}" alt="" loading="lazy">` : '👤'}</div>
+        <div class="fb-story-name">${escHtml(p.author || 'משתמש')}</div>
       </div>`;
   }).join('');
   return `<div class="fb-stories">${create}${items}</div>`;
@@ -14376,15 +14463,15 @@ function fbFeedPostCard(p) {
   return `
     <div class="fb-post">
       <div class="fb-post-head">
-        <div class="fb-post-avatar" onclick="openUserPage('${artEsc(p.authorId || '')}','${artEsc(p.author || '')}')">${img ? `<img src="${img}" alt="">` : '<span>👤</span>'}</div>
+        <div class="fb-post-avatar" onclick="openUserPage('${artEsc(p.authorId || '')}','${artEsc(p.author || '')}')">${img ? `<img src="${escHtml(img)}" alt="">` : '<span>👤</span>'}</div>
         <div class="fb-post-meta">
-          <div class="fb-post-author" onclick="openUserPage('${artEsc(p.authorId || '')}','${artEsc(p.author || '')}')">${artEsc(p.author || 'משתמש')}${vBadge}</div>
-          <div class="fb-post-time">${artEsc(p.timestamp || '')}${kindTag ? ' · ' + kindTag : ''}</div>
+          <div class="fb-post-author" onclick="openUserPage('${artEsc(p.authorId || '')}','${artEsc(p.author || '')}')">${escHtml(p.author || 'משתמש')}${vBadge}</div>
+          <div class="fb-post-time">${escHtml(p.timestamp || '')}${kindTag ? ' · ' + kindTag : ''}</div>
         </div>
       </div>
-      ${p.title ? `<div class="fb-post-text">${artEsc(p.title)}</div>` : ''}
-      ${p.summary ? `<div class="fb-post-sub">${artEsc(p.summary)}</div>` : ''}
-      ${img ? `<div class="fb-post-img" onclick="fbFeedOpen('${artEsc(p.id)}','${p._kind}')"><img src="${img}" alt="" loading="lazy"></div>` : ''}
+      ${p.title ? `<div class="fb-post-text">${escHtml(p.title)}</div>` : ''}
+      ${p.summary ? `<div class="fb-post-sub">${escHtml(p.summary)}</div>` : ''}
+      ${img ? `<div class="fb-post-img" onclick="fbFeedOpen('${artEsc(p.id)}','${p._kind}')"><img src="${escHtml(img)}" alt="" loading="lazy"></div>` : ''}
       <div class="fb-post-stats"><span>❤️ ${likes}</span><span>👁️ ${(typeof photoGetViews === 'function' ? photoGetViews(p.id) : 0)}</span></div>
       <div class="fb-post-actions">
         <button onclick="fbFeedLike('${artEsc(p.id)}', this)">👍 אהבתי</button>
@@ -14500,7 +14587,7 @@ function buildFeedPage() {
   try {
     const u = auth.currentUser;
     if (u) {
-      const prof = JSON.parse(localStorage.getItem(`user_profile_${u.uid}`) || '{}');
+      const prof = JSON.parse(localStorage.getItem(`user_profile_${escHtml(u.uid)}`) || '{}');
       name = prof.name || (typeof liveChatUserName === 'function' ? liveChatUserName() : '') || (u.email ? u.email.split('@')[0] : 'משתמש');
     }
   } catch (e) {}
@@ -14510,7 +14597,7 @@ function buildFeedPage() {
       ${fbFeedStoriesHTML(fbFeedPosts)}
       <div class="fb-composer" onclick="fbFeedCompose()" role="button" tabindex="0">
         <div class="fb-composer-avatar">👤</div>
-        <div class="fb-composer-input">מה בא לך לשתף, ${artEsc(name)}?</div>
+        <div class="fb-composer-input">מה בא לך לשתף, ${escHtml(name)}?</div>
         <div class="fb-composer-icons"><span title="תמונה">🖼️</span><span title="וידאו">🎥</span></div>
       </div>
       <div class="fb-feed-list" id="fb-feed-list"></div>
@@ -14858,12 +14945,12 @@ function buildCoursesPage(courses) {
 
   const featuredHTML = featured.map(c => `
     <div class="art-featured-card" onclick="courseOpenDetail('${artEsc(c.id)}')">
-      <img src="${c.image || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80'}" alt="">
+      <img src="${escHtml(c.image || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80')}" alt="">
       <div class="art-featured-overlay"></div>
       <div class="art-featured-info">
-        <span class="art-category-badge" style="background:${c.categoryColor||'#2196F3'}">${c.category}</span>
-        <h3>${c.title}</h3>
-        <div class="art-featured-meta">${c.author} · ${c.timestamp}</div>
+        <span class="art-category-badge" style="background:${escHtml(c.categoryColor || '#2196F3')}">${escHtml(c.category)}</span>
+        <h3>${escHtml(c.title)}</h3>
+        <div class="art-featured-meta">${escHtml(c.author)} · ${escHtml(c.timestamp)}</div>
       </div>
     </div>
   `).join('');
@@ -14871,16 +14958,16 @@ function buildCoursesPage(courses) {
   const listHTML = courses.map((c) => `
     <div class="art-row" onclick="courseOpenDetail('${artEsc(c.id)}')">
       <div class="art-row-text">
-        <h3>${c.title}</h3>
-        <p>${c.summary}</p>
+        <h3>${escHtml(c.title)}</h3>
+        <p>${escHtml(c.summary)}</p>
         <div class="art-row-meta">
-          <span>${c.author}</span>
+          <span>${escHtml(c.author)}</span>
           <span class="art-row-sep">|</span>
-          <span>${c.timestamp}</span>
+          <span>${escHtml(c.timestamp)}</span>
         </div>
       </div>
-      <div class="art-row-img-wrap" style="--bg-img: url('${c.image || ''}');">
-        ${c.image ? `<img src="${c.image}" alt="">` : '<div class="art-row-img-placeholder"></div>'}
+      <div class="art-row-img-wrap" style="--bg-img: url('${artEsc(c.image || '')}');">
+        ${c.image ? `<img src="${escHtml(c.image)}" alt="">` : '<div class="art-row-img-placeholder"></div>'}
         ${c.image ? `<button class="art-zoom-btn" onclick="event.stopPropagation();artZoomImage('${artEsc(c.image)}')" title="מסך מלא">⛶</button>` : ''}
         ${isEditMode ? `<button class="art-pin-btn" onclick="event.stopPropagation(); togglePinCourse('${artEsc(c.id)}')" title="${c.pinned ? 'בטל נעץ' : 'נעץ בגריד'}" style="${c.pinned ? 'color:#ffd700;display:flex;' : ''}">${c.pinned ? '★' : '☆'}</button>` : ''}
         <button class="art-delete-btn" onclick="event.stopPropagation();courseDelete('${artEsc(c.id)}',this)">✕</button>
@@ -14891,7 +14978,7 @@ function buildCoursesPage(courses) {
   const popularHTML = popular.map((c, i) => `
     <div class="art-popular-item" onclick="courseOpenDetail('${artEsc(c.id)}')">
       <span class="art-popular-num">${String(i+1).padStart(2,'0')}</span>
-      <div style="flex:1;font-size:13px;font-weight:600;line-height:1.4;color:#222">${c.title}</div>
+      <div style="flex:1;font-size:13px;font-weight:600;line-height:1.4;color:#222">${escHtml(c.title)}</div>
     </div>
   `).join('');
 
@@ -14951,7 +15038,7 @@ function getCourseVideoPlayerHTML(videoUrl) {
   // HTML5 Local video preview or direct MP4 URL
   return `
     <div style="position:relative; width:100%; max-height:450px; overflow:hidden; border-radius:12px; margin-bottom:20px; background:#000;">
-      <video src="${videoUrl}" controls autoplay muted playsinline style="width:100%; height:100%; display:block; max-height:450px; object-fit:contain;"></video>
+      <video src="${escHtml(videoUrl)}" controls autoplay muted playsinline style="width:100%; height:100%; display:block; max-height:450px; object-fit:contain;"></video>
     </div>
   `;
 }
@@ -14968,12 +15055,12 @@ function courseOpenDetail(id) {
   const recHTML = recommended.map(r => `
     <div class="art-rec-card" onclick="courseOpenDetail('${artEsc(r.id)}')">
       <div class="art-rec-img">
-        ${r.image ? `<img src="${r.image}" alt="">` : '<div class="art-card-img-placeholder"></div>'}
-        <span class="art-rec-badge art-category-badge" style="background:${r.categoryColor||'#2196F3'}">${r.category}</span>
+        ${r.image ? `<img src="${escHtml(r.image)}" alt="">` : '<div class="art-card-img-placeholder"></div>'}
+        <span class="art-rec-badge art-category-badge" style="background:${escHtml(r.categoryColor || '#2196F3')}">${escHtml(r.category)}</span>
       </div>
       <div class="art-rec-text">
-        <h4>${r.title}</h4>
-        <div class="art-rec-meta">${r.author} · ${r.timestamp}</div>
+        <h4>${escHtml(r.title)}</h4>
+        <div class="art-rec-meta">${escHtml(r.author)} · ${escHtml(r.timestamp)}</div>
       </div>
     </div>
   `).join('');
@@ -14989,13 +15076,13 @@ function courseOpenDetail(id) {
 
         <div class="art-detail-body">
           <div class="art-meta" style="margin-bottom:12px">
-            <span class="art-category-badge" style="background:${c.categoryColor||'#2196F3'}">${c.category}</span>
-            <span>מרצה: ${c.author}</span>
+            <span class="art-category-badge" style="background:${escHtml(c.categoryColor || '#2196F3')}">${escHtml(c.category)}</span>
+            <span>מרצה: ${escHtml(c.author)}</span>
             <span>·</span>
-            <span>${c.timestamp}</span>
+            <span>${escHtml(c.timestamp)}</span>
           </div>
-          <h1 class="art-detail-title">${c.title}</h1>
-          <div class="art-detail-content"><p>${c.summary}</p></div>
+          <h1 class="art-detail-title">${escHtml(c.title)}</h1>
+          <div class="art-detail-content"><p>${escHtml(c.summary)}</p></div>
         </div>
 
         <div class="art-rec-section">
@@ -15429,12 +15516,12 @@ function renderAdminChatList(chats) {
     return `
       <div class="chat-user-item" onclick="loadSingleChat('${uid}')">
         <div style="display:flex; justify-content:space-between; align-items:center;">
-          <span class="user-name">${chat.userName || 'משתמש'}</span>
+          <span class="user-name">${escHtml(chat.userName || 'משתמש')}</span>
           ${hasUnread ? '<span class="unread-dot"></span>' : ''}
         </div>
-        <span class="user-email">${chat.userEmail || ''}</span>
+        <span class="user-email">${escHtml(chat.userEmail || '')}</span>
         <div style="font-size:12px;color:#888;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-          ${chat.lastMessage || 'אין הודעות'}
+          ${escHtml(chat.lastMessage || 'אין הודעות')}
         </div>
       </div>
     `;
@@ -15543,7 +15630,7 @@ function renderUserChatMessages(chatData) {
     const timeString = m.timestamp ? new Date(m.timestamp).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }) : '';
     return `
       <div class="chat-message ${bubbleClass}">
-        <div class="chat-msg-text">${m.text}</div>
+        <div class="chat-msg-text">${escHtml(m.text)}</div>
         <span class="chat-msg-time">${timeString}</span>
       </div>
     `;
@@ -15860,7 +15947,7 @@ function buildCommunityPage() {
       
       <!-- חיפוש וסינון -->
       <div style="margin-bottom:24px; position:relative;">
-        <input type="text" id="community-search" placeholder="חפש כותרת, תוכן או יוצר..." oninput="filterCommunityPosts(this.value)" value="${artEsc(communitySearchQuery)}" style="width:100%; padding:12px 16px; border:1.5px solid #e5e7eb; border-radius:14px; font-size:14px; box-sizing:border-box; outline:none; transition:border-color 0.2s;" onfocus="this.style.borderColor='#ec4899'">
+        <input type="text" id="community-search" placeholder="חפש כותרת, תוכן או יוצר..." oninput="filterCommunityPosts(this.value)" value="${escHtml(communitySearchQuery)}" style="width:100%; padding:12px 16px; border:1.5px solid #e5e7eb; border-radius:14px; font-size:14px; box-sizing:border-box; outline:none; transition:border-color 0.2s;" onfocus="this.style.borderColor='#ec4899'">
       </div>
 
       <!-- רשימת הפוסטים -->
@@ -15898,10 +15985,10 @@ function communityPollHTML(p) {
         const pct = total ? Math.round((c / total) * 100) : 0;
         const chosen = myVote === i;
         return `
-          <button onclick="submitCommunityVote('${p.id}', ${i})" style="position:relative; overflow:hidden; text-align:right; border:1.5px solid ${chosen ? '#ec4899' : '#e5e7eb'}; background:#fff; border-radius:12px; padding:11px 14px; cursor:pointer; font-family:inherit; transition:border-color 0.2s;">
+          <button onclick="submitCommunityVote('${artEsc(p.id)}', ${i})" style="position:relative; overflow:hidden; text-align:right; border:1.5px solid ${chosen ? '#ec4899' : '#e5e7eb'}; background:#fff; border-radius:12px; padding:11px 14px; cursor:pointer; font-family:inherit; transition:border-color 0.2s;">
             <span style="position:absolute; top:0; bottom:0; right:0; width:${pct}%; background:${chosen ? 'rgba(236,72,153,0.16)' : 'rgba(0,0,0,0.05)'}; z-index:0; transition:width 0.3s ease;"></span>
             <span style="position:relative; z-index:1; display:flex; justify-content:space-between; align-items:center; gap:10px; font-size:14px; font-weight:600; color:#374151;">
-              <span>${chosen ? '✓ ' : ''}${opt}</span>
+              <span>${chosen ? '✓ ' : ''}${escHtml(opt)}</span>
               <span style="font-size:12px; color:#6b7280; font-weight:700; white-space:nowrap;">${pct}% · ${c}</span>
             </span>
           </button>
@@ -15946,20 +16033,20 @@ function renderCommunityPostsList() {
         <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px;">
           <div>
             ${typeBadge}
-            <h3 style="margin:0 0 4px 0; font-size:18px; font-weight:800; color:#111;">${p.title}</h3>
+            <h3 style="margin:0 0 4px 0; font-size:18px; font-weight:800; color:#111;">${escHtml(p.title)}</h3>
             <div style="font-size:12px; color:#6b7280; display:flex; align-items:center; gap:8px;">
-              <span class="photo-author-link" onclick="event.stopPropagation(); openUserPage('${artEsc(p.authorId || '')}', '${artEsc(p.author)}')" style="cursor:pointer; color:#ec4899; text-decoration:underline; font-weight:700;">👤 ${p.author}</span>
+              <span class="photo-author-link" onclick="event.stopPropagation(); openUserPage('${artEsc(p.authorId || '')}', '${artEsc(p.author)}')" style="cursor:pointer; color:#ec4899; text-decoration:underline; font-weight:700;">👤 ${escHtml(p.author)}</span>
               <span>·</span>
               <span>🕒 ${formattedDate}</span>
             </div>
           </div>
           ${isEditMode ? `
-            <button onclick="deleteCommunityPost('${p.id}')" style="background:#fef2f2; color:#ef4444; border:none; padding:6px 12px; border-radius:8px; font-size:12px; cursor:pointer; font-weight:bold;">הסר פוסט 🗑️</button>
+            <button onclick="deleteCommunityPost('${artEsc(p.id)}')" style="background:#fef2f2; color:#ef4444; border:none; padding:6px 12px; border-radius:8px; font-size:12px; cursor:pointer; font-weight:bold;">הסר פוסט 🗑️</button>
           ` : ''}
         </div>
 
         <!-- תוכן הפוסט (מוסתר אם ריק, למשל בסקר בלי הסבר) -->
-        ${p.body ? `<p style="margin:0; font-size:15px; line-height:1.7; color:#374151; white-space:pre-wrap; text-align:justify;">${p.body}</p>` : ''}
+        ${p.body ? `<p style="margin:0; font-size:15px; line-height:1.7; color:#374151; white-space:pre-wrap; text-align:justify;">${escHtml(p.body)}</p>` : ''}
 
         <!-- אפשרויות הסקר -->
         ${communityPollHTML(p)}
@@ -15967,13 +16054,13 @@ function renderCommunityPostsList() {
         <!-- תמונה מצורפת אם קיימת -->
         ${p.image ? `
           <div style="width:100%; max-height:350px; border-radius:12px; overflow:hidden; border:1px solid #f0f0f0; background:#f9f9f9; margin-top:4px;">
-            <img src="${p.image}" style="width:100%; height:100%; max-height:350px; object-fit:contain; display:block; cursor:zoom-in;" onclick="artZoomImage('${artEsc(p.image)}')">
+            <img src="${escHtml(p.image)}" style="width:100%; height:100%; max-height:350px; object-fit:contain; display:block; cursor:zoom-in;" onclick="artZoomImage('${artEsc(p.image)}')">
           </div>
         ` : ''}
 
         <!-- שורת פעולות (לייקים ותגובות) -->
         <div style="display:flex; align-items:center; gap:16px; border-top:1px solid #f3f4f6; border-bottom:1px solid #f3f4f6; padding:10px 0; margin-top:6px;">
-          <button onclick="toggleCommunityLike('${p.id}')" style="background:none; border:none; cursor:pointer; display:flex; align-items:center; gap:6px; font-weight:bold; font-size:13px; color:#4b5563; padding:4px 8px; border-radius:6px; transition:background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='none'">
+          <button onclick="toggleCommunityLike('${artEsc(p.id)}')" style="background:none; border:none; cursor:pointer; display:flex; align-items:center; gap:6px; font-weight:bold; font-size:13px; color:#4b5563; padding:4px 8px; border-radius:6px; transition:background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='none'">
             <span style="font-size:16px;">❤️</span>
             <span>${p.likes || 0} לייקים</span>
           </button>
@@ -15991,10 +16078,10 @@ function renderCommunityPostsList() {
               return `
                 <div style="border-bottom:1px solid #f1f2f4; padding-bottom:8px; margin-bottom:8px; &:last-child { border:none; padding-bottom:0; margin-bottom:0; }">
                   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                    <span class="photo-author-link" onclick="openUserPage('${artEsc(c.authorId || '')}', '${artEsc(c.author)}')" style="font-size:12px; font-weight:800; color:#ec4899; cursor:pointer; text-decoration:underline;">${c.author}</span>
+                    <span class="photo-author-link" onclick="openUserPage('${artEsc(c.authorId || '')}', '${artEsc(c.author)}')" style="font-size:12px; font-weight:800; color:#ec4899; cursor:pointer; text-decoration:underline;">${escHtml(c.author)}</span>
                     <span style="font-size:10px; color:#9ca3af;">${cDate}</span>
                   </div>
-                  <p style="margin:0; font-size:13.5px; color:#4b5563; line-height:1.5;">${c.body}</p>
+                  <p style="margin:0; font-size:13.5px; color:#4b5563; line-height:1.5;">${escHtml(c.body)}</p>
                 </div>
               `;
             }).join('')}
@@ -16003,8 +16090,8 @@ function renderCommunityPostsList() {
 
         <!-- כתיבת תגובה חדשה -->
         <div style="display:flex; gap:8px; align-items:center;">
-          <input type="text" id="comment-input-${p.id}" placeholder="${commentPlaceholder}" style="flex:1; padding:8px 12px; border:1px solid #ddd; border-radius:10px; font-size:13px; outline:none;" onkeydown="if(event.key==='Enter')submitCommunityComment('${p.id}')">
-          <button onclick="submitCommunityComment('${p.id}')" style="background:#ec4899; color:white; border:none; padding:8px 16px; border-radius:10px; font-size:13px; font-weight:bold; cursor:pointer; transition:background 0.2s;">שלח 🚀</button>
+          <input type="text" id="comment-input-${escHtml(p.id)}" placeholder="${commentPlaceholder}" style="flex:1; padding:8px 12px; border:1px solid #ddd; border-radius:10px; font-size:13px; outline:none;" onkeydown="if(event.key==='Enter')submitCommunityComment('${artEsc(p.id)}')">
+          <button onclick="submitCommunityComment('${artEsc(p.id)}')" style="background:#ec4899; color:white; border:none; padding:8px 16px; border-radius:10px; font-size:13px; font-weight:bold; cursor:pointer; transition:background 0.2s;">שלח 🚀</button>
         </div>
       </div>
     `;
@@ -16120,7 +16207,7 @@ async function submitCommunityPost() {
 
   // שליפת פרופיל מקומי לכינוי עדכני
   const localProfile = (() => {
-    try { return JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}'); } catch(e) { return {}; }
+    try { return JSON.parse(localStorage.getItem(`user_profile_${escHtml(user.uid)}`) || '{}'); } catch(e) { return {}; }
   })();
   const authorName = localProfile.nickname || user.displayName || (user.email ? user.email.split('@')[0] : 'אורח');
 
@@ -16169,7 +16256,7 @@ async function submitCommunityVote(postId, optionIndex) {
     return;
   }
   try {
-    await set(ref(db, `website/community_posts/${postId}/votes/${user.uid}`), optionIndex);
+    await set(ref(db, `website/community_posts/${postId}/votes/${escHtml(user.uid)}`), optionIndex);
   } catch (e) {
     console.error(e);
     alert("שגיאה בשליחת ההצבעה.");
@@ -16191,7 +16278,7 @@ async function submitCommunityComment(postId) {
   if (!body) return;
 
   const localProfile = (() => {
-    try { return JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}'); } catch(e) { return {}; }
+    try { return JSON.parse(localStorage.getItem(`user_profile_${escHtml(user.uid)}`) || '{}'); } catch(e) { return {}; }
   })();
   const authorName = localProfile.nickname || user.displayName || (user.email ? user.email.split('@')[0] : 'אורח');
 
@@ -16262,7 +16349,7 @@ function buildSocialCommunityBox() {
   };
   const link = (key, def) => {
     const url = SOCIAL_LINKS[key] || def;
-    return `<a href="${url}" target="_blank" rel="noopener" aria-label="${key}" style="display:flex; align-items:center; justify-content:center; width:44px; height:44px; color:#fff; text-decoration:none; opacity:0.92; transition:opacity 0.2s, transform 0.2s;" onmouseover="this.style.opacity='1'; this.style.transform='translateY(-2px)'" onmouseout="this.style.opacity='0.92'; this.style.transform='none'">${ic[key]}</a>`;
+    return `<a href="${escHtml(safeUrl(url))}" target="_blank" rel="noopener" aria-label="${key}" style="display:flex; align-items:center; justify-content:center; width:44px; height:44px; color:#fff; text-decoration:none; opacity:0.92; transition:opacity 0.2s, transform 0.2s;" onmouseover="this.style.opacity='1'; this.style.transform='translateY(-2px)'" onmouseout="this.style.opacity='0.92'; this.style.transform='none'">${ic[key]}</a>`;
   };
 
   return `
@@ -16366,13 +16453,12 @@ window.closeSocialLinksModal = closeSocialLinksModal;
 window.saveSocialLinksModal = saveSocialLinksModal;
 
 // האזנה לשינויים בזמן אמת במסד הנתונים מכל מכשיר (למשל מהמחשב לנייד)
-onValue(ref(db, 'website'), (snapshot) => {
-  if (!snapshot.exists()) return;
+onPublicSiteValue((data) => {
+  if (!Object.keys(data).length) return;
   
   // אם המכשיר הנוכחי נמצא במצב עריכה פעיל, לא נדרוס את השינויים המקומיים שלו באמצע עבודה
   if (isEditMode) return;
   
-  const data = snapshot.val();
   let changed = false;
   
   if (data.pages) {
@@ -16476,6 +16562,7 @@ onValue(ref(db, 'website'), (snapshot) => {
     }
     // מסירים את העמודים "יד שניה" ו"השוואת מחירים"
     pList = pList.filter(p => p && !REMOVED_PHOTO_PAGE_IDS.includes(p.id));
+    applyItemLikesToPages(pList, data.item_likes);
     if (JSON.stringify(pages) !== JSON.stringify(pList)) {
       pages = pList;
       changed = true;
@@ -16663,7 +16750,7 @@ function subscribeIdeas() {
     const val = snap.val();
     if (!val || !Object.keys(val).length) {
       IDEAS_SAMPLES.forEach(item => {
-        set(ref(db, `website/ideas/${item.id}`), item);
+        set(ref(db, `website/ideas/${escHtml(item.id)}`), item);
       });
       ideasData = {};
       IDEAS_SAMPLES.forEach(i => ideasData[i.id] = i);
@@ -16715,9 +16802,9 @@ function ideasCategoryBarHTML() {
       ${cats.map(c => {
         const isActive = currentIdeaCategoryFilter === c.id;
         return `
-          <button type="button" onclick="setIdeaCategoryFilter('${c.id}')"
+          <button type="button" onclick="setIdeaCategoryFilter('${artEsc(c.id)}')"
                   style="padding:8px 20px; border-radius:999px; border:${isActive ? 'none' : '1px solid #cbd5e1'}; background:${isActive ? '#3b82f6' : '#fff'}; color:${isActive ? '#fff' : '#334155'}; font-size:14px; font-weight:800; cursor:pointer; box-shadow:${isActive ? '0 4px 14px rgba(59,130,246,0.35)' : '0 1px 3px rgba(0,0,0,0.05)'}; transition:all 0.2s;">
-            ${c.label}
+            ${escHtml(c.label)}
           </button>
         `;
       }).join('')}
@@ -16769,9 +16856,9 @@ function sectionCategoryBarHTML(section) {
       ${cats.map(c => {
         const isActive = active === c.id;
         return `
-          <button type="button" onclick="setSectionCategoryFilter('${section}','${c.id}')"
+          <button type="button" onclick="setSectionCategoryFilter('${section}','${artEsc(c.id)}')"
                   style="padding:8px 20px; border-radius:999px; border:${isActive ? 'none' : '1px solid #cbd5e1'}; background:${isActive ? activeBg : '#fff'}; color:${isActive ? '#fff' : '#334155'}; font-size:14px; font-weight:800; cursor:pointer; box-shadow:${isActive ? activeShadow : '0 1px 3px rgba(0,0,0,0.05)'}; transition:all 0.2s;">
-            ${c.label}
+            ${escHtml(c.label)}
           </button>
         `;
       }).join('')}
@@ -16841,7 +16928,7 @@ function secondhandFilterBarHTML() {
     <div class="sh-filter">
       <label class="sh-filter-label">${kind === 'offer' ? 'סוג ההצעה' : kind === 'price' ? 'טווח מחירים' : 'מיקום'}</label>
       <select class="sh-filter-select" onchange="setShFilter('${kind}', this.value)">
-        ${opts.map(o => `<option value="${artEsc(o)}"${o === cur ? ' selected' : ''}>${artEsc(o)}</option>`).join('')}
+        ${opts.map(o => `<option value="${escHtml(o)}"${o === cur ? ' selected' : ''}>${escHtml(o)}</option>`).join('')}
       </select>
     </div>`;
   return `
@@ -16896,10 +16983,10 @@ function renderCommunityGridCard(c) {
   const sub = (c.summary || c.desc || '').trim() || (count ? (count + ' תכנים') : 'קהילה חדשה');
   return `
     <div class="comm-grid-card" onclick="openCommunityPage('${artEsc(c.id)}')" role="button" tabindex="0">
-      <div class="comm-grid-thumb">${img ? `<img src="${img}" alt="" loading="lazy">` : '<span class="comm-grid-ph">🏘️</span>'}</div>
+      <div class="comm-grid-thumb">${img ? `<img src="${escHtml(img)}" alt="" loading="lazy">` : '<span class="comm-grid-ph">🏘️</span>'}</div>
       <div class="comm-grid-info">
-        <div class="comm-grid-name" title="${artEsc(name)}">${artEsc(name)}</div>
-        <div class="comm-grid-sub">${artEsc(sub)}</div>
+        <div class="comm-grid-name" title="${escHtml(name)}">${escHtml(name)}</div>
+        <div class="comm-grid-sub">${escHtml(sub)}</div>
         <button class="comm-grid-btn" onclick="event.stopPropagation(); openCommunityPage('${artEsc(c.id)}')">כניסה לקהילה</button>
       </div>
     </div>
@@ -16920,7 +17007,7 @@ function communityShortcutsHTML() {
       || pages.find(p => p && p.id !== 'page-stories-text' && (p.content || '').includes('stories-page') && !(p.content || '').includes('photos-page') && !(p.content || '').includes('photos-stories-feed'));
   };
   const card = (title, emoji, page, grad) => {
-    const oc = page ? `navigateToPage('${page.id}')` : '';
+    const oc = page ? `navigateToPage('${artEsc(page.id)}')` : '';
     return `
       <div class="comm-grid-card comm-grid-shortcut" onclick="${oc}" role="button" tabindex="0">
         <div class="comm-grid-thumb" style="background:${grad};">
@@ -17128,8 +17215,8 @@ function ideaBidsBoxHTML(a) {
     return `
       <div style="display:flex; align-items:center; gap:10px; background:${chosen ? '#f0fdf4' : '#f8fafc'}; border:1px solid ${chosen ? '#86efac' : '#e2e8f0'}; border-radius:10px; padding:10px 12px;">
         <div style="flex:1; min-width:0;">
-          <div style="font-size:14px; font-weight:900; color:#15803d;">₪${artEsc(String(b.price))}${lowest ? ' <span style="font-size:11px; color:#f59e0b;">🏆 הזול ביותר</span>' : ''}${chosen ? ' <span style="font-size:11px; color:#16a34a;">✓ נבחר</span>' : ''}</div>
-          <div style="font-size:12px; color:#64748b;">${artEsc(b.name || 'משתמש')}</div>
+          <div style="font-size:14px; font-weight:900; color:#15803d;">₪${escHtml(String(b.price))}${lowest ? ' <span style="font-size:11px; color:#f59e0b;">🏆 הזול ביותר</span>' : ''}${chosen ? ' <span style="font-size:11px; color:#16a34a;">✓ נבחר</span>' : ''}</div>
+          <div style="font-size:12px; color:#64748b;">${escHtml(b.name || 'משתמש')}</div>
         </div>
         ${canChoose && !a.chosenBid ? `<button onclick="chooseBid('${artEsc(a.id)}','${artEsc(b.bid)}')" style="background:#16a34a; color:#fff; border:none; border-radius:8px; padding:6px 12px; font-size:12px; font-weight:800; cursor:pointer;">בחר</button>` : ''}
       </div>`;
@@ -17139,7 +17226,7 @@ function ideaBidsBoxHTML(a) {
       <div style="font-size:16px; font-weight:900; color:#0f172a; border-bottom:2.5px solid #f59e0b; padding-bottom:10px; margin-bottom:16px; display:flex; align-items:center; gap:8px;">
         <span>💰 הצעות מחיר (${bids.length})</span>
       </div>
-      ${a.budget ? `<div style="background:#fffbeb; border:1px solid #fde68a; border-radius:12px; padding:12px 14px; margin-bottom:12px;"><div style="font-size:11.5px; color:#92400e; font-weight:800; margin-bottom:4px;">🎯 תקציב מבוקש</div><div style="font-size:15px; font-weight:900; color:#b45309;">${artEsc(a.budget)}</div></div>` : ''}
+      ${a.budget ? `<div style="background:#fffbeb; border:1px solid #fde68a; border-radius:12px; padding:12px 14px; margin-bottom:12px;"><div style="font-size:11.5px; color:#92400e; font-weight:800; margin-bottom:4px;">🎯 תקציב מבוקש</div><div style="font-size:15px; font-weight:900; color:#b45309;">${escHtml(a.budget)}</div></div>` : ''}
       <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;">${rowsHTML}</div>
       ${!a.chosenBid ? `<button onclick="submitBid('${artEsc(a.id)}')" style="width:100%; background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff; border:none; padding:12px; border-radius:12px; font-weight:800; font-size:14px; cursor:pointer; box-shadow:0 4px 14px rgba(245,158,11,0.3);">💰 הגש הצעת מחיר</button>` : '<div style="text-align:center; font-size:13px; font-weight:800; color:#16a34a; padding:8px;">✓ נבחרה הצעה — המכרז נסגר</div>'}
     </div>`;
@@ -17237,19 +17324,19 @@ function openIdeaDetailModal(ideaId) {
   modal.innerHTML = `
     <div style="background:#fff; border-radius:18px; padding:28px; width:100%; max-width:550px; max-height:85vh; overflow-y:auto; display:flex; flex-direction:column; gap:16px; box-shadow:0 20px 60px rgba(0,0,0,0.3); direction:rtl; text-align:right;">
       <div style="display:flex; align-items:center; justify-content:space-between;">
-        <span style="background:${item.categoryColor || '#3b82f6'}; color:#fff; font-size:12px; font-weight:800; padding:4px 14px; border-radius:999px;">💡 ${artEsc(item.category || 'רעיון')}</span>
+        <span style="background:${escHtml(item.categoryColor || '#3b82f6')}; color:#fff; font-size:12px; font-weight:800; padding:4px 14px; border-radius:999px;">💡 ${escHtml(item.category || 'רעיון')}</span>
         <button onclick="document.getElementById('idea-detail-modal').style.display='none'" style="background:#f1f5f9; border:none; border-radius:50%; width:32px; height:32px; font-size:16px; font-weight:bold; cursor:pointer; color:#64748b;">✕</button>
       </div>
 
-      <h2 style="margin:0; font-size:20px; font-weight:900; color:#0f172a; line-height:1.35;">${artEsc(item.title || '')}</h2>
+      <h2 style="margin:0; font-size:20px; font-weight:900; color:#0f172a; line-height:1.35;">${escHtml(item.title || '')}</h2>
       
       <div style="font-size:14px; color:#334155; line-height:1.6; white-space:pre-wrap; background:#f8fafc; padding:14px; border-radius:12px; border:1px solid #e2e8f0;">
-        ${artEsc(item.desc || item.summary || '')}
+        ${escHtml(item.desc || item.summary || '')}
       </div>
 
       <div style="display:flex; align-items:center; justify-content:space-between; margin-top:8px; border-top:1px solid #f1f5f9; padding-top:14px;">
         <div style="font-size:13px; color:#64748b; font-weight:700;">
-          ✍️ מוצע על ידי: <b>${artEsc(item.author || 'אנונימי')}</b>
+          ✍️ מוצע על ידי: <b>${escHtml(item.author || 'אנונימי')}</b>
         </div>
         <button onclick="toggleIdeaVote('${artEsc(item.id)}'); document.getElementById('idea-detail-modal').style.display='none';" 
                 style="display:flex; align-items:center; gap:8px; padding:8px 18px; border-radius:999px; border:${hasVoted ? 'none' : '1px solid #cbd5e1'}; background:${hasVoted ? '#3b82f6' : '#f8fafc'}; color:${hasVoted ? '#fff' : '#334155'}; font-size:14px; font-weight:800; cursor:pointer;">
@@ -17306,14 +17393,14 @@ function openWatchHistoryPage() {
       return `
         <div class="art-row" style="background:#fff; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; display:flex; flex-direction:column; cursor:pointer; position:relative;" onclick="photoOpenDetail('${artEsc(item.id)}')">
           <div style="aspect-ratio:16/9; width:100%; overflow:hidden; background:#f1f5f9; position:relative;">
-            <img src="${img}" style="width:100%; height:100%; object-fit:cover; display:block;">
+            <img src="${escHtml(img)}" style="width:100%; height:100%; object-fit:cover; display:block;">
             <button onclick="event.stopPropagation(); removeFromWatchHistory('${artEsc(item.id)}'); openWatchHistoryPage();" style="position:absolute; top:8px; left:8px; background:rgba(0,0,0,0.6); color:#fff; border:none; border-radius:50%; width:28px; height:28px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:12px;" title="הסר מההיסטוריה">✕</button>
           </div>
           <div style="padding:10px 12px;">
-            <h3 style="margin:0 0 6px; font-size:14px; font-weight:800; line-height:1.3; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;">${artEsc(item.title)}</h3>
+            <h3 style="margin:0 0 6px; font-size:14px; font-weight:800; line-height:1.3; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;">${escHtml(item.title)}</h3>
             <div style="font-size:11px; color:#64748b; display:flex; justify-content:space-between; align-items:center;">
-              <span>${artEsc(item.category || 'גלריה')} ${item.author ? '· ' + artEsc(item.author) : ''}</span>
-              <span>${artEsc(item.date || '')}</span>
+              <span>${escHtml(item.category || 'גלריה')} ${item.author ? '· ' + escHtml(item.author) : ''}</span>
+              <span>${escHtml(item.date || '')}</span>
             </div>
           </div>
         </div>
@@ -17365,8 +17452,8 @@ function openFavoritesPage(tab) {
   if (tab) currentFavTab = tab;
   
   const user = auth.currentUser;
-  const likedKey = user ? `liked_galleries_${user.uid}` : 'guest_liked_galleries';
-  const savedKey = user ? `saved_galleries_${user.uid}` : 'guest_saved_galleries';
+  const likedKey = user ? `liked_galleries_${escHtml(user.uid)}` : 'guest_liked_galleries';
+  const savedKey = user ? `saved_galleries_${escHtml(user.uid)}` : 'guest_saved_galleries';
 
   let likedObj = {};
   let savedObj = {};
@@ -17412,12 +17499,12 @@ function openFavoritesPage(tab) {
       return `
         <div class="art-row" style="background:#fff; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; display:flex; flex-direction:column; cursor:pointer; position:relative;" onclick="photoOpenDetail('${artEsc(item.id)}')">
           <div style="aspect-ratio:16/9; width:100%; overflow:hidden; background:#f1f5f9; position:relative;">
-            <img src="${img}" style="width:100%; height:100%; object-fit:cover; display:block;">
+            <img src="${escHtml(img)}" style="width:100%; height:100%; object-fit:cover; display:block;">
           </div>
           <div style="padding:10px 12px;">
-            <h3 style="margin:0 0 6px; font-size:14px; font-weight:800; line-height:1.3; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;">${artEsc(item.title || '')}</h3>
+            <h3 style="margin:0 0 6px; font-size:14px; font-weight:800; line-height:1.3; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;">${escHtml(item.title || '')}</h3>
             <div style="font-size:11px; color:#64748b; display:flex; justify-content:space-between; align-items:center;">
-              <span>${artEsc(item.category || 'גלריה')} ${item.author ? '· ' + artEsc(item.author) : ''}</span>
+              <span>${escHtml(item.category || 'גלריה')} ${item.author ? '· ' + escHtml(item.author) : ''}</span>
               <span style="color:#e11d48; font-weight:bold;">${currentFavTab === 'likes' ? '❤️ בלייק' : '🔖 שמור'}</span>
             </div>
           </div>
@@ -17928,7 +18015,7 @@ function buildOnboardingModal() {
   const cur = steps[__onboardingIdx] || steps[0];
   const vurl = getOnboardingVideo(onboardingPlatform(), __onboardingIdx);
   const media = vurl
-    ? `<video src="${vurl}" autoplay muted loop playsinline style="width:100%; height:100%; object-fit:cover; display:block;"></video>`
+    ? `<video src="${escHtml(vurl)}" autoplay muted loop playsinline style="width:100%; height:100%; object-fit:cover; display:block;"></video>`
     : `<div style="width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; color:#5a5a66; background:radial-gradient(circle at 50% 40%, #1a1a20, #0c0c10);">
          <div style="width:64px; height:64px; border-radius:50%; border:2px solid #3b6ef5; display:flex; align-items:center; justify-content:center;"><div style="width:0;height:0;border-top:12px solid transparent;border-bottom:12px solid transparent;border-right:18px solid #3b6ef5;margin-right:-3px;"></div></div>
          <div style="font-size:13px; font-weight:700;">${en ? 'No video yet' : 'אין עדיין סרטון'}</div>
@@ -18244,8 +18331,8 @@ function buildSubscriptionPage() {
 
         <div>
           <!-- Title & Subtitle -->
-          <h3 style="margin: 0 0 6px 0; font-size: 20px; font-weight: 800; color: #0f172a;">${plan.title}</h3>
-          <p style="margin: 0 0 20px 0; font-size: 11.5px; color: #64748b; line-height: 1.35; min-height: 32px;">${plan.subtitle}</p>
+          <h3 style="margin: 0 0 6px 0; font-size: 20px; font-weight: 800; color: #0f172a;">${escHtml(plan.title)}</h3>
+          <p style="margin: 0 0 20px 0; font-size: 11.5px; color: #64748b; line-height: 1.35; min-height: 32px;">${escHtml(plan.subtitle)}</p>
 
           <!-- Price section -->
           <div style="margin-bottom: 16px; min-height: 80px; display: flex; flex-direction: column; justify-content: flex-end; align-items: center;">
@@ -18268,11 +18355,11 @@ ${currencySym}${formattedOrigPrice}
           <div style="background: #f8fafc; border-radius: 10px; padding: 10px 8px; margin-bottom: 18px; border: 1px solid #f1f5f9;">
             <div style="font-size: 12.5px; font-weight: 800; color: #1e293b; margin-bottom: 2px;">${plan.credits}</div>
             <div style="font-size: 11.5px; font-weight: 700; color: #334155; margin-bottom: 2px;">${plan.usage}</div>
-            <div style="font-size: 10px; color: #94a3b8;">${plan.subtext}</div>
+            <div style="font-size: 10px; color: #94a3b8;">${escHtml(plan.subtext)}</div>
           </div>
 
           <!-- Action Button -->
-          <button onclick="handleSubscriptionPlanSelect('${plan.id}')" style="
+          <button onclick="handleSubscriptionPlanSelect('${artEsc(plan.id)}')" style="
             width: 100%;
             padding: 10px 14px;
             border-radius: 10px;
@@ -18287,7 +18374,7 @@ ${currencySym}${formattedOrigPrice}
           <div style="margin-top: 12px; margin-bottom: 6px; font-size: 10.5px; color: #94a3b8;">
             או תשלום מהיר עם
           </div>
-          <button onclick="handleApplePay('${plan.id}')" style="
+          <button onclick="handleApplePay('${artEsc(plan.id)}')" style="
             width: 100%;
             background: #000000;
             color: #ffffff;
@@ -18349,3 +18436,209 @@ window.buildSubscriptionPage = buildSubscriptionPage;
 
 
 
+// ==========================================
+// סיור הדרכה (4 שלבים) — מוצג פעם אחת לגולש חדש, עם "הבא" / "הקודם"
+// ==========================================
+const SITE_TOUR_KEY = 'site_tour_done_v1';
+const SITE_TOUR_STEPS = [
+  {
+    target: '#header-lang-btn',
+    he: { title: 'שינוי שפה', text: 'כאן אפשר להחליף את שפת האתר בין עברית לאנגלית.' },
+    en: { title: 'Change language', text: 'Switch the site between Hebrew and English here.' },
+    bilingual: true
+  },
+  {
+    target: '#header-history-btn',
+    he: { title: 'היסטוריית צפייה', text: 'כל מה שצפיתם בו נשמר כאן, כדי שתוכלו לחזור אליו בקלות.' },
+    en: { title: 'Watch history', text: 'Everything you viewed is saved here so you can easily go back to it.' }
+  },
+  {
+    target: '.qu-arrow-btn',
+    he: { title: 'העלאת תוכן', text: 'בוחרים אזור ולוחצים על החץ למעלה כדי להעלות תמונות, קומיקס או סיפורים.' },
+    en: { title: 'Upload content', text: 'Pick a section and tap the up arrow to upload photos, comics or stories.' }
+  },
+  {
+    target: '#manager-btn',
+    he: { title: 'פתיחת משתמש', text: 'לחצו כאן כדי להתחבר או לפתוח משתמש — וכך לשמור לייקים, לעקוב ולשלוח הודעות.' },
+    en: { title: 'Create an account', text: 'Tap here to sign in or create an account to save likes, follow and send messages.' }
+  }
+];
+
+let __tourIdx = 0;
+let __tourEls = null;
+let __tourRaf = 0;
+
+// העמוד יכול לזוז אחרי פתיחת הסיור (טעינת תמונות, רינדור מחדש) — מעדכנים מיקום בכל פריים
+function siteTourTick() {
+  siteTourPosition();
+  __tourRaf = requestAnimationFrame(siteTourTick);
+}
+
+function siteTourFindTarget(step) {
+  const els = Array.from(document.querySelectorAll(step.target));
+  const visible = els.filter(el => {
+    if (step.match && !step.match.test(el.textContent || '')) return false;
+    const r = el.getBoundingClientRect();
+    return r.width > 0 && r.height > 0;
+  });
+  return visible[0] || null;
+}
+
+function siteTourEnsureEls() {
+  if (__tourEls) return __tourEls;
+  const spot = document.createElement('div');
+  spot.className = 'site-tour-spot';
+  const bubble = document.createElement('div');
+  bubble.className = 'site-tour-bubble';
+  bubble.setAttribute('role', 'dialog');
+  bubble.setAttribute('aria-live', 'polite');
+  const blocker = document.createElement('div');
+  blocker.className = 'site-tour-blocker';
+  document.body.append(blocker, spot, bubble);
+  __tourEls = { spot, bubble, blocker };
+  window.addEventListener('resize', siteTourPosition);
+  window.addEventListener('scroll', siteTourPosition, true);
+  return __tourEls;
+}
+
+function siteTourRender() {
+  const { bubble } = siteTourEnsureEls();
+  const step = SITE_TOUR_STEPS[__tourIdx];
+  const lang = (typeof getUiLang === 'function') ? getUiLang() : 'he';
+  const isEn = lang === 'en';
+  const total = SITE_TOUR_STEPS.length;
+  const last = __tourIdx === total - 1;
+  const t = isEn ? step.en : step.he;
+  // בשלב השפה מציגים שורה בעברית ושורה באנגלית
+  const titleHTML = step.bilingual
+    ? `<span dir="rtl">${escHtml(step.he.title)}</span><span dir="ltr">${escHtml(step.en.title)}</span>`
+    : escHtml(t.title);
+  const textHTML = step.bilingual
+    ? `<span dir="rtl">${escHtml(step.he.text)}</span><span dir="ltr">${escHtml(step.en.text)}</span>`
+    : escHtml(t.text);
+  const L = isEn
+    ? { next: 'Next', back: 'Back', done: 'Done', of: 'of', close: 'Close' }
+    : { next: 'הבא', back: 'הקודם', done: 'סיום', of: 'מתוך', close: 'סגירה' };
+
+  bubble.setAttribute('dir', isEn ? 'ltr' : 'rtl');
+  bubble.innerHTML = `
+    <span class="site-tour-arrow"></span>
+    <div class="site-tour-head">
+      <div class="site-tour-title${step.bilingual ? ' is-bilingual' : ''}">${titleHTML}</div>
+      <button type="button" class="site-tour-close" onclick="endSiteTour()" aria-label="${L.close}">✕</button>
+    </div>
+    <div class="site-tour-text${step.bilingual ? ' is-bilingual' : ''}">${textHTML}</div>
+    <div class="site-tour-foot">
+      <span class="site-tour-count">${__tourIdx + 1} ${L.of} ${total}</span>
+      <div class="site-tour-actions">
+        ${__tourIdx > 0 ? `<button type="button" class="site-tour-back" onclick="siteTourGo(-1)">${L.back}</button>` : ''}
+        <button type="button" class="site-tour-next" onclick="${last ? 'endSiteTour()' : 'siteTourGo(1)'}">${last ? L.done : L.next}</button>
+      </div>
+    </div>`;
+  const target = siteTourFindTarget(step);
+  if (target && target.scrollIntoView) {
+    const r = target.getBoundingClientRect();
+    if (r.top < 0 || r.bottom > window.innerHeight) target.scrollIntoView({ block: 'center' });
+  }
+  siteTourPosition();
+  const nextBtn = bubble.querySelector('.site-tour-next');
+  if (nextBtn) nextBtn.focus({ preventScroll: true });
+}
+
+function siteTourPosition() {
+  if (!__tourEls || __tourEls.bubble.style.display === 'none') return;
+  const { spot, bubble, blocker } = __tourEls;
+  const step = SITE_TOUR_STEPS[__tourIdx];
+  if (!step) return;
+  const target = siteTourFindTarget(step);
+  const gutter = 16;
+  const gap = 14;
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const bw = Math.min(360, vw - gutter * 2);
+  bubble.style.width = bw + 'px';
+  const bh = bubble.offsetHeight;
+  const arrow = bubble.querySelector('.site-tour-arrow');
+
+  // אין יעד גלוי (למשל במובייל) — מציגים את הבועה במרכז המסך
+  blocker.classList.toggle('is-dim', !target);
+  if (!target) {
+    spot.style.display = 'none';
+    bubble.style.left = Math.round((vw - bw) / 2) + 'px';
+    bubble.style.top = Math.round((vh - bh) / 2) + 'px';
+    if (arrow) arrow.style.display = 'none';
+    return;
+  }
+
+  const r = target.getBoundingClientRect();
+  const pad = 6;
+  spot.style.display = 'block';
+  spot.style.left = (r.left - pad) + 'px';
+  spot.style.top = (r.top - pad) + 'px';
+  spot.style.width = (r.width + pad * 2) + 'px';
+  spot.style.height = (r.height + pad * 2) + 'px';
+
+  const below = r.bottom + gap + bh <= vh - gutter || r.top - gap - bh < gutter;
+  const top = below ? r.bottom + gap : r.top - gap - bh;
+  const cx = r.left + r.width / 2;
+  const left = Math.max(gutter, Math.min(vw - gutter - bw, cx - bw / 2));
+  bubble.style.left = Math.round(left) + 'px';
+  bubble.style.top = Math.round(Math.max(gutter, top)) + 'px';
+  if (arrow) {
+    arrow.style.display = 'block';
+    arrow.classList.toggle('is-below', below);
+    arrow.style.left = Math.round(Math.max(18, Math.min(bw - 18, cx - left))) + 'px';
+  }
+}
+
+function siteTourGo(delta) {
+  __tourIdx = Math.max(0, Math.min(SITE_TOUR_STEPS.length - 1, __tourIdx + delta));
+  siteTourRender();
+}
+window.siteTourGo = siteTourGo;
+
+function startSiteTour(force) {
+  try { if (!force && localStorage.getItem(SITE_TOUR_KEY)) return; } catch (e) {}
+  // אם סרטוני ההדרכה פתוחים — מחכים שייסגרו
+  const ob = document.getElementById('onboarding-modal');
+  if (ob && ob.style.display !== 'none') { setTimeout(() => startSiteTour(force), 800); return; }
+  // השלב של ההעלאה נמצא בעמוד הבית
+  if (!document.querySelector('.qu-arrow-btn') && typeof goToHomePage === 'function') {
+    try { goToHomePage(); } catch (e) {}
+  }
+  const els = siteTourEnsureEls();
+  els.bubble.style.display = 'block';
+  els.blocker.style.display = 'block';
+  __tourIdx = 0;
+  siteTourRender();
+  cancelAnimationFrame(__tourRaf);
+  __tourRaf = requestAnimationFrame(siteTourTick);
+  document.addEventListener('keydown', siteTourKeys);
+}
+window.startSiteTour = startSiteTour;
+
+function endSiteTour() {
+  try { localStorage.setItem(SITE_TOUR_KEY, '1'); } catch (e) {}
+  cancelAnimationFrame(__tourRaf);
+  if (__tourEls) {
+    __tourEls.bubble.style.display = 'none';
+    __tourEls.spot.style.display = 'none';
+    __tourEls.blocker.style.display = 'none';
+  }
+  document.removeEventListener('keydown', siteTourKeys);
+}
+window.endSiteTour = endSiteTour;
+
+function siteTourKeys(e) {
+  if (e.key === 'Escape') endSiteTour();
+}
+
+// מתחילים אחרי אישור שער הגיל (או מיד אם כבר אושר בעבר)
+function maybeStartSiteTour() {
+  try { if (localStorage.getItem(SITE_TOUR_KEY)) return; } catch (e) {}
+  setTimeout(() => startSiteTour(false), 1200);
+}
+window.maybeStartSiteTour = maybeStartSiteTour;
+try {
+  if (sessionStorage.getItem('age_verified') === 'true') maybeStartSiteTour();
+} catch (e) {}

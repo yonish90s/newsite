@@ -1,0 +1,231 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+
+    "website": {
+      ".read": "auth != null && auth.token.email === 'yoni98321@gmail.com' && auth.token.email_verified === true",
+      ".write": "auth != null && auth.token.email === 'yoni98321@gmail.com' && auth.token.email_verified === true",
+
+      "pages": { ".read": true },
+      "activePageId": { ".read": true },
+      "topNavPages": { ".read": true },
+      "navHTML": { ".read": true },
+      "siteBackgrounds": { ".read": true },
+      "promotedSites": { ".read": true },
+      "socialLinks": { ".read": true },
+      "onboardingVideos": { ".read": true },
+      "storyCategories": { ".read": true },
+      "hideCart": { ".read": true },
+      "hideChat": { ".read": true },
+      "deleteCart": { ".read": true },
+      "deleteChat": { ".read": true },
+      "verified_users": { ".read": true },
+      "admin_uid": { ".read": "auth != null" },
+
+      "item_likes": {
+        ".read": true,
+        "$itemId": {
+          ".write": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000000 && (!data.exists() || newData.val() === data.val() + 1 || newData.val() === data.val() - 1)"
+        }
+      },
+
+      "analytics": {
+        "pageviews": { ".write": "newData.isNumber() && newData.val() === (data.exists() ? data.val() : 0) + 1" },
+        "visits": { ".write": "newData.isNumber() && newData.val() === (data.exists() ? data.val() : 0) + 1" },
+        "daily": { "$day": { ".write": "newData.isNumber() && newData.val() === (data.exists() ? data.val() : 0) + 1" } },
+        "monthly": { "$month": { ".write": "newData.isNumber() && newData.val() === (data.exists() ? data.val() : 0) + 1" } }
+      },
+
+      "users": {
+        "$uid": {
+          ".read": "auth != null && auth.uid === $uid",
+          ".write": "auth != null && auth.uid === $uid",
+          "profile": { ".read": true },
+          "last_seen": { ".read": true }
+        }
+      },
+
+      "user_follows": {
+        "$uid": {
+          ".read": "auth != null && auth.uid === $uid",
+          ".write": "auth != null && auth.uid === $uid"
+        }
+      },
+
+      "user_ratings": {
+        ".read": true,
+        "$targetUid": {
+          "$raterUid": {
+            ".write": "auth != null && auth.uid === $raterUid && $raterUid !== $targetUid",
+            ".validate": "!newData.exists() || (newData.isNumber() && newData.val() >= 1 && newData.val() <= 5)"
+          }
+        }
+      },
+
+      "dms": {
+        "$convId": {
+          ".read": "auth != null && ($convId.beginsWith(auth.uid + '__') || $convId.endsWith('__' + auth.uid))",
+          "messages": {
+            "$msgId": {
+              ".write": "auth != null && !data.exists() && ($convId.beginsWith(auth.uid + '__') || $convId.endsWith('__' + auth.uid))",
+              ".validate": "newData.child('from').val() === auth.uid && newData.child('text').isString() && newData.child('text').val().length <= 1000"
+            }
+          }
+        }
+      },
+
+      "user_dms": {
+        "$uid": {
+          ".read": "auth != null && auth.uid === $uid",
+          "$convId": {
+            ".write": "auth != null && ($convId.beginsWith(auth.uid + '__') || $convId.endsWith('__' + auth.uid)) && ($convId.beginsWith($uid + '__') || $convId.endsWith('__' + $uid))"
+          }
+        }
+      },
+
+      "chats": {
+        "$uid": {
+          ".read": "auth != null && auth.uid === $uid",
+          ".write": "auth != null && auth.uid === $uid",
+          "messages": {
+            "$msgId": {
+              ".validate": "newData.child('sender').val() === 'user' || (auth.token.email === 'yoni98321@gmail.com' && auth.token.email_verified === true)"
+            }
+          }
+        }
+      },
+
+      "live_chat": {
+        ".read": true,
+        "$msgId": {
+          ".write": "auth != null && !data.exists()",
+          ".validate": "newData.child('uid').val() === auth.uid && newData.child('text').isString() && newData.child('text').val().length <= 500"
+        }
+      },
+
+      "photo_comments": {
+        ".read": true,
+        "$albumId": {
+          "$commentId": {
+            ".write": "!data.exists()",
+            ".validate": "newData.child('text').isString() && newData.child('text').val().length <= 1000 && (newData.child('uid').val() === '' || (auth != null && newData.child('uid').val() === auth.uid))"
+          }
+        }
+      },
+
+      "story_comments": {
+        ".read": true,
+        "$storyId": {
+          "$commentId": {
+            ".write": "!data.exists()",
+            ".validate": "newData.child('text').isString() && newData.child('text').val().length <= 1000 && (newData.child('uid').val() === '' || (auth != null && newData.child('uid').val() === auth.uid))"
+          }
+        }
+      },
+
+      "photo_albums": {
+        ".read": true,
+        "$albumId": {
+          "views": { ".write": "newData.isNumber() && newData.val() >= 0" }
+        }
+      },
+
+      "community_posts": {
+        ".read": true,
+        "$postId": {
+          ".write": "auth != null && ((!data.exists() && newData.child('authorId').val() === auth.uid) || (data.exists() && data.child('authorId').val() === auth.uid))",
+          "likes": { ".write": "auth != null && newData.isNumber() && newData.val() >= 0" },
+          "votes": {
+            "$voterUid": { ".write": "auth != null && auth.uid === $voterUid" }
+          },
+          "comments": {
+            "$commentId": {
+              ".write": "auth != null && !data.exists()",
+              ".validate": "newData.child('authorId').val() === auth.uid"
+            }
+          }
+        }
+      },
+
+      "communities": {
+        ".read": true,
+        "$communityId": {
+          ".write": "auth != null && !data.exists() && newData.child('createdBy').val() === auth.uid",
+          "items": {
+            "$itemId": { ".write": "auth != null && !data.exists()" }
+          }
+        }
+      },
+
+      "ideas": {
+        ".read": true,
+        "$ideaId": {
+          ".write": "auth != null && !data.exists() && newData.child('authorId').val() === auth.uid",
+          "bids": {
+            "$bidId": {
+              ".write": "auth != null && !data.exists()",
+              ".validate": "newData.child('uid').val() === auth.uid"
+            }
+          },
+          "chosenBid": {
+            ".write": "auth != null && root.child('website/ideas').child($ideaId).child('authorId').val() === auth.uid"
+          }
+        }
+      },
+
+      "offers": {
+        ".read": true,
+        "$offerId": {
+          ".write": "auth != null && ((!data.exists() && newData.child('authorUid').val() === auth.uid) || (data.exists() && data.child('authorUid').val() === auth.uid))",
+          "requests": {
+            "$requesterUid": {
+              ".write": "auth != null && (auth.uid === $requesterUid || root.child('website/offers').child($offerId).child('authorUid').val() === auth.uid)"
+            }
+          },
+          "participants": {
+            "$participantUid": {
+              ".write": "auth != null && root.child('website/offers').child($offerId).child('authorUid').val() === auth.uid"
+            }
+          }
+        }
+      },
+
+      "questions": {
+        ".read": true,
+        "$questionId": {
+          ".write": "!data.exists()",
+          "answers": {
+            "$answerId": {
+              ".write": "!data.exists()",
+              ".validate": "newData.child('text').isString() && newData.child('text').val().length <= 2000"
+            }
+          }
+        }
+      },
+
+      "verification_requests": {
+        "$uid": {
+          ".read": "auth != null && auth.uid === $uid",
+          ".write": "auth != null && auth.uid === $uid && newData.child('status').val() === 'pending'"
+        }
+      },
+
+      "pending_submissions": {
+        "$submissionId": { ".write": "auth != null && !data.exists()" }
+      },
+
+      "user_submissions": {
+        "$submissionId": { ".write": "!data.exists()" }
+      },
+
+      "search_history": {
+        "$entryId": { ".write": "!data.exists()" }
+      },
+
+      "event_registrations": {
+        "$registrationId": { ".write": "!data.exists()" }
+      }
+    }
+  }
+}
