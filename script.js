@@ -17649,11 +17649,12 @@ function openLanguageModal(e) {
   const btn = document.getElementById('header-lang-btn');
   panel.style.display = 'block';
   if (btn) {
+    const z = siteBodyZoom();
     const r = btn.getBoundingClientRect();
     const w = panel.offsetWidth;
-    const left = Math.max(12, Math.min(window.innerWidth - w - 12, r.left + r.width / 2 - w / 2));
+    const left = Math.max(12, Math.min(window.innerWidth / z - w - 12, (r.left + r.width / 2) / z - w / 2));
     panel.style.left = Math.round(left) + 'px';
-    panel.style.top = Math.round(r.bottom + 10) + 'px';
+    panel.style.top = Math.round(r.bottom / z + 10) + 'px';
   }
 }
 if (typeof document !== 'undefined') {
@@ -18593,6 +18594,20 @@ const SITE_TOUR_STEPS = [
   }
 ];
 
+// ה-body מוגדל ב-zoom במסכים רחבים, והדפדפנים מתנהגים שונה: חלק מחזירים ב-getBoundingClientRect
+// ערכים מוגדלים וחלק לא. מודדים בפועל: אלמנט fixed ב-left:100px — איפה הוא נמדד?
+// היחס בין השניים הוא מה שצריך לחלק בו כדי שאלמנט fixed יונח בדיוק על היעד.
+function siteBodyZoom() {
+  try {
+    const probe = document.createElement('div');
+    probe.style.cssText = 'position:fixed;left:100px;top:0;width:1px;height:1px;visibility:hidden;pointer-events:none;';
+    document.body.appendChild(probe);
+    const ratio = probe.getBoundingClientRect().left / 100;
+    probe.remove();
+    return ratio > 0.2 && ratio < 5 ? ratio : 1;
+  } catch (e) { return 1; }
+}
+
 let __tourIdx = 0;   // אינדקס השלב ב-SITE_TOUR_STEPS (גם המפתח ב-tourConfig)
 let __tourPos = 0;   // המיקום ברשימת השלבים הפעילים
 let __tourList = []; // השלבים הפעילים: במחשב — כולם, במובייל — רק העלאה
@@ -18729,10 +18744,11 @@ function siteTourPosition() {
   const step = SITE_TOUR_STEPS[__tourIdx];
   if (!step) return;
   const target = siteTourFindTarget(step);
+  const z = siteBodyZoom();
   const gutter = 16;
   const gap = 14;
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
+  const vw = window.innerWidth / z;
+  const vh = window.innerHeight / z;
   const bw = Math.min(360, vw - gutter * 2);
   bubble.style.width = bw + 'px';
   const bh = bubble.offsetHeight;
@@ -18748,7 +18764,8 @@ function siteTourPosition() {
     return;
   }
 
-  const raw = target.getBoundingClientRect();
+  const rawZ = target.getBoundingClientRect();
+  const raw = { left: rawZ.left / z, top: rawZ.top / z, width: rawZ.width / z, height: rawZ.height / z };
   const conf = siteTourStepConf(__tourIdx);
   const dx = +conf.dx || 0, dy = +conf.dy || 0, dw = +conf.dw || 0, dh = +conf.dh || 0;
   const r = {
@@ -18932,8 +18949,9 @@ function siteTourPickMove(e) {
   const el = document.elementFromPoint(e.clientX, e.clientY);
   if (!el || !__tourPickHover) return;
   const r = el.getBoundingClientRect();
+  const z = siteBodyZoom();
   Object.assign(__tourPickHover.style, {
-    display: 'block', left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px'
+    display: 'block', left: r.left / z + 'px', top: r.top / z + 'px', width: r.width / z + 'px', height: r.height / z + 'px'
   });
 }
 function siteTourPickClick(e) {
