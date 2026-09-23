@@ -184,6 +184,34 @@ function trackVisit() {
 }
 window.trackVisit = trackVisit;
 
+// מעקב פעולות אנונימי (בלי מידע אישי) — מונים לפי סוג פעולה ויום, לחישוב הקלקות ואחוז נטישה ב-CRM.
+// "ביקור מעורב" = ביקור שבו הגולש עשה לפחות פעולה אחת (אחרת הוא נחשב נטישה).
+const TRACK_EVENTS = ['gallery_open', 'story_open', 'like', 'save', 'upload_submit', 'subscribe_click', 'search', 'dm_send', 'comment'];
+function trackEvent(name) {
+  if (TRACK_EVENTS.indexOf(name) === -1) return;
+  try {
+    const day = _analyticsDayKey();
+    const upd = { ['events/' + name]: increment(1), ['events_daily/' + day + '/' + name]: increment(1) };
+    let engagedNow = false;
+    try { engagedNow = sessionStorage.getItem('crm_engaged') !== '1'; if (engagedNow) sessionStorage.setItem('crm_engaged', '1'); } catch (e) {}
+    if (engagedNow) {
+      upd['events/engaged_visit'] = increment(1);
+      upd['events_daily/' + day + '/engaged_visit'] = increment(1);
+    }
+    update(ref(db, 'website/analytics'), upd).catch(function () {});
+  } catch (e) {}
+}
+window.trackEvent = trackEvent;
+function trackSessionStart() {
+  try {
+    if (sessionStorage.getItem('crm_session') === '1') return;
+    sessionStorage.setItem('crm_session', '1');
+    const day = _analyticsDayKey();
+    update(ref(db, 'website/analytics'), { 'events/visit_session': increment(1), ['events_daily/' + day + '/visit_session']: increment(1) }).catch(function () {});
+  } catch (e) {}
+}
+try { trackSessionStart(); } catch (e) {}
+
 /**
  * ============================================================================
  * YHSH Website Builder - מנוע האתר המרכזי
@@ -3713,6 +3741,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (user) {
       updateUserActivity(user);
       userActivityInterval = setInterval(() => updateUserActivity(user), 45000);
+      if (typeof crmRecordUserMeta === 'function') { try { crmRecordUserMeta(user); } catch (e) {} }
 
       // שמירת ה-uid של המנהל כדי שמשתמשים יוכלו לפתוח שיחה נעוצה עם מנהל האתר
       if (user.email === ADMIN_EMAIL) {
@@ -6509,6 +6538,7 @@ function buildStoriesPage(stories, storyKind) {
 }
 
 function storyOpenDetail(id) {
+  if (typeof trackEvent === 'function') trackEvent('story_open');
   window.__detailOpen = true; // מגן מפני רענון-רקע שיבעט מהעמוד הפנימי
   window.__detailOpenPageId = activePageId; // שומר איזה עמוד פעיל כשנפתחה התצוגה הפנימית
   const container = mainContent.querySelector('.stories-page');
@@ -6544,7 +6574,14 @@ function storyOpenDetail(id) {
     : validImages.map(u => ({ type: 'image', url: u }));
 
   const _bodyText = (s.body || s.summary || '').trim();
-  if (_bodyText && !storyPagesArr.some(p => p.type === 'text')) {
+  // קומיקס (יש עמודי תמונה) — נפתח ישר בתמונה הראשונה. הטקסט מוצג כתיאור קצר מתחת לכותרת
+  // ולא כ"עמוד" נפרד לפני התמונות.
+  let _comicDesc = '';
+  if (storyPagesArr.some(p => p && p.type === 'image' && p.url)) {
+    const _texts = storyPagesArr.filter(p => p && p.type === 'text').map(p => (p.text || '').trim()).filter(Boolean);
+    _comicDesc = _texts.length ? _texts.join('\n') : _bodyText;
+    storyPagesArr = storyPagesArr.filter(p => p && p.type !== 'text');
+  } else if (_bodyText && !storyPagesArr.some(p => p.type === 'text')) {
     storyPagesArr.unshift({ type: 'text', text: _bodyText });
   }
   if (typeof splitStoryTextPages === 'function') storyPagesArr = splitStoryTextPages(storyPagesArr);
@@ -6653,7 +6690,7 @@ function storyOpenDetail(id) {
     </div>`;
 
   mainContent.innerHTML = `
-    <div class="art-detail articles-page stories-page" data-story-kind="${_srcKind}" data-story-id="${id}" data-stories-json="${json}">
+    <div class="art-detail articles-page stories-page" data-story-kind="${escHtml(_srcKind)}" data-story-id="${escHtml(id)}" data-stories-json="${json}">
       <div class="art-detail-inner">
         <div class="story-detail-head" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
           <button class="art-back-btn" onclick="storyGoBack()" style="background:#f1f5f9; border:1px solid #cbd5e1; border-radius:8px; padding:6px 14px; font-weight:700; cursor:pointer;">← חזרה לסיפורים</button>
@@ -6670,6 +6707,8 @@ function storyOpenDetail(id) {
         </div>
 
         ${storyLinkedChipHTML(s)}
+
+        ${_comicDesc ? `<div class="story-comic-desc" style="margin:0 0 16px; font-size:15px; line-height:1.6; color:#334155; text-align:right; white-space:pre-wrap; word-break:break-word;">${escHtml(_comicDesc)}</div>` : ''}
 
         ${viewerHTML}
 
@@ -6876,6 +6915,9 @@ function storyGetCurrentKind() {
 function storyDelete(id, el) {
   if (!isEditMode) return;
   if (!confirm('האם למחוק סיפור זה?')) return;
+  removeItemFromStoredPages(id);
+  const onHome = !!mainContent.querySelector('.home-feed-page');
+  if (onHome) { if (typeof renderPage === 'function') renderPage(); return; }
   const stories = storyGetStories().filter(s => s.id !== id);
   mainContent.innerHTML = buildStoriesPage(stories, storyGetCurrentKind());
   saveCurrentPageContent();
@@ -8636,6 +8678,7 @@ function logSearchQuery(query, pageName) {
       const userName = (userObj && typeof liveChatUserName === 'function') ? liveChatUserName() : 'אורח';
       const isRegistered = !!userObj;
 
+      if (typeof trackEvent === 'function') trackEvent('search');
       await push(ref(db, 'website/search_history'), {
         query: trimmed.slice(0, 300),
         page: pageName || 'כללי',
@@ -8870,6 +8913,7 @@ function buildInfoPage() {
             ${typeof buildSiteStatsSection === 'function' ? buildSiteStatsSection() : ''}
           </div>
         </div>
+        ${typeof crmSectionHTML === 'function' ? crmSectionHTML() : ''}
       </div>
     </div>`;
 }
@@ -10435,7 +10479,7 @@ function getStoriesFeedData() {
         || pages.find(p => p && p.title && p.title.includes('סיפורים'));
       if (sp && sp.content) {
         const m = sp.content.match(/data-stories-json="([^"]*)"/);
-        if (m) { const arr = JSON.parse(decodeURIComponent(m[1])); if (Array.isArray(arr) && arr.length) return arr; }
+        if (m) { const arr = JSON.parse(decodeURIComponent(m[1])); if (Array.isArray(arr)) return arr; }
       }
     }
   } catch (e) {}
@@ -10450,7 +10494,7 @@ function getPhotosForHome() {
         || pages.find(p => p && (p.title || '').includes('תמונות'));
       if (pp && pp.content) {
         const m = pp.content.match(/data-photos-json="([^"]*)"/);
-        if (m) { const arr = JSON.parse(decodeURIComponent(m[1])); if (Array.isArray(arr) && arr.length) return arr; }
+        if (m) { const arr = JSON.parse(decodeURIComponent(m[1])); if (Array.isArray(arr)) return arr; }
       }
     }
   } catch (e) {}
@@ -11005,6 +11049,7 @@ function quickUploadRefreshUI() {
 window.quickUploadRefreshUI = quickUploadRefreshUI;
 
 async function quickUploadFinalSubmit() {
+  if (typeof trackEvent === 'function') trackEvent('upload_submit');
   const st = window.quickUploadState;
   if (st.isSubmitting) return;
 
@@ -11167,8 +11212,7 @@ function buildHomeFeedPage() {
   let stories = all.filter(s => s && s.__kind === 'stories');
   let photos = getPhotosForHome();
   
-  if (!comics.length) comics = _homeDemoComics();
-  if (!stories.length) stories = _homeDemoStories();
+  // בלי דוגמאות בעמוד הבית — אם המנהל מחק הכל, השורה פשוט לא מוצגת
 
   // מיון הפריטים כך שה-4 האחרונים והחדשים ביותר יעלו ראשונים
   const sortByLatest = (arr) => arr.slice().sort((a, b) => (b.id || '').localeCompare(a.id || ''));
@@ -11797,6 +11841,7 @@ function detailScrollTop() {
 window.detailScrollTop = detailScrollTop;
 
 function photoOpenDetail(id) {
+  if (typeof trackEvent === 'function') trackEvent('gallery_open');
   window.__detailOpen = true; // מגן מפני רענון-רקע שיבעט מהעמוד הפנימי
   window.__detailOpenPageId = activePageId; // שומר איזה עמוד פעיל כשנפתחה התצוגה הפנימית
   photoIncrementViews(id);
@@ -12763,19 +12808,55 @@ function photoGetAlbums() {
   if (container && container.dataset.photosJson) {
     try {
       const parsed = JSON.parse(decodeURIComponent(container.dataset.photosJson));
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-      // עמוד ריק: רק עמוד התמונות הראשי נופל לדוגמאות; יד שניה/מחירים מתחילים ריקים
-      const section = container.dataset.section || 'photos';
-      if (Array.isArray(parsed) && section !== 'photos') return [];
+      // רשימה קיימת (גם ריקה) — מכבדים אותה. דוגמאות רק כשאין בכלל נתונים,
+      // אחרת גלריות שהמנהל מחק "חוזרות".
+      if (Array.isArray(parsed)) return parsed;
     } catch(e){}
   }
   return (typeof PHOTOS_SAMPLES !== 'undefined' && Array.isArray(PHOTOS_SAMPLES)) ? PHOTOS_SAMPLES : [];
 }
 
+// מוחק פריט (גלריה/סיפור/קומיקס) מכל עמוד שמור שמכיל אותו — לא רק מהעמוד שמוצג כרגע,
+// ושומר ל-Firebase. אחרת מחיקה מעמוד הבית/תצוגה אחרת לא נשמרת והפריט "חוזר".
+function removeItemFromStoredPages(id) {
+  if (!id || typeof pages === 'undefined' || !Array.isArray(pages)) return false;
+  let changed = false;
+  pages.forEach(p => {
+    if (!p || !p.content || p.content.indexOf(id) === -1) return;
+    p.content = p.content.replace(/data-(photos|stories)-json="([^"]*)"/g, (full, kind, enc) => {
+      let arr;
+      try { arr = JSON.parse(decodeURIComponent(enc)); } catch (e) { return full; }
+      if (!Array.isArray(arr)) return full;
+      const next = arr.filter(x => !(x && x.id === id));
+      if (next.length === arr.length) return full;
+      changed = true;
+      return `data-${kind}-json="${encodeURIComponent(JSON.stringify(next))}"`;
+    });
+  });
+  if (changed) saveToStorage();
+  // אם זו הייתה בקשה ממתינה — מוחקים גם אותה
+  try { set(ref(db, `website/pending_submissions/${id}`), null).catch(() => {}); } catch (e) {}
+  return changed;
+}
+window.removeItemFromStoredPages = removeItemFromStoredPages;
+
 function photoDelete(id, el) {
   if (!isEditMode) return;
   if (!confirm('האם למחוק גלריה זו?')) return;
+  removeItemFromStoredPages(id);
+  // פריט בתוך קהילה נשמר ב-website/communities/{id}/items — מוחקים משם
+  const comm = mainContent.querySelector('.community-page[data-community-id]');
+  if (comm) {
+    const cid = comm.getAttribute('data-community-id');
+    try { set(ref(db, `website/communities/${cid}/items/${id}`), null).catch(() => {}); } catch (e) {}
+    try { if (communitiesData[cid] && communitiesData[cid].items) delete communitiesData[cid].items[id]; } catch (e) {}
+    const el = [...mainContent.querySelectorAll('.art-row')].find(r => (r.getAttribute('onclick') || '').includes(id));
+    if (el) el.remove();
+    return;
+  }
   const albums = photoGetAlbums().filter(a => a.id !== id);
+  const onHome = !!mainContent.querySelector('.home-feed-page');
+  if (onHome) { if (typeof renderPage === 'function') renderPage(); return; }
   mainContent.innerHTML = buildPhotosPage(albums, photoCurrentSection());
   saveCurrentPageContent();
 }
@@ -13740,6 +13821,7 @@ function photoToggleLike(id) {
   localStorage.setItem('liked_galleries', JSON.stringify(liked));
 
   const isNowLiked = !!liked[id];
+  if (isNowLiked && typeof trackEvent === 'function') trackEvent('like');
 
   // מונה הלייקים נשמר ב-Firebase בנתיב נפרד (גולשים לא כותבים ל-pages)
   const likeDelta = isNowLiked ? 1 : -1;
@@ -13901,6 +13983,7 @@ function photoIsSavedLocal(id) {
 window.photoIsSavedLocal = photoIsSavedLocal;
 
 function photoToggleSave(id, btnEl) {
+  if (typeof trackEvent === 'function') trackEvent('save');
   const user = auth.currentUser;
   const localKey = user ? `saved_galleries_${user.uid}` : 'guest_saved_galleries';
 
@@ -14037,7 +14120,12 @@ function openLikesDrawer() {
 window.openLikesDrawer = openLikesDrawer;
 
 // drawer "היסטוריית צפייה" — נפתח מאייקון השעון בסרגל העליון
-function openHistoryDrawer() {
+function openHistoryDrawer(skipPull) {
+  // מציגים מיד את המקומית, ואז מסנכרנים מהחשבון ומרעננים אם השתנה
+  if (!skipPull) _historyPull().then(changed => {
+    const m = document.getElementById('saved-modal');
+    if (changed && m && m.style.display !== 'none') openHistoryDrawer(true);
+  });
   let history = [];
   try { history = JSON.parse(localStorage.getItem('watch_history') || '[]'); } catch (e) {}
   const inner = history.length
@@ -14087,7 +14175,8 @@ window.openHistoryItem = openHistoryItem;
 function clearHistoryDrawer() {
   if (!confirm('האם ברצונך למחוק את כל היסטוריית הצפייה?')) return;
   try { localStorage.removeItem('watch_history'); } catch (e) {}
-  openHistoryDrawer();
+  _historyPush([]);
+  openHistoryDrawer(true);
 }
 window.clearHistoryDrawer = clearHistoryDrawer;
 
@@ -14328,6 +14417,7 @@ async function dmSendCurrent() {
   const myName = dmName();
   try {
     await push(ref(db, `website/dms/${convId}/messages`), { from: u.uid, fromName: myName, text: text.slice(0, 1000), timestamp: now });
+    if (typeof trackEvent === 'function') trackEvent('dm_send');
     await update(ref(db, `website/user_dms/${u.uid}/${convId}`), { otherUid, otherName, lastText: text.slice(0, 60), lastTime: now, unread: false });
     await update(ref(db, `website/user_dms/${otherUid}/${convId}`), { otherUid: u.uid, otherName: myName, lastText: text.slice(0, 60), lastTime: now, unread: true });
   } catch (e) {
@@ -14422,6 +14512,7 @@ async function submitPhotoComment(albumId) {
   if (!text) return;
   const name = (auth.currentUser && typeof liveChatUserName === 'function') ? liveChatUserName() : 'אורח';
   try {
+    if (typeof trackEvent === 'function') trackEvent('comment');
     await push(ref(db, `website/photo_comments/${albumId}`), { text: text.slice(0, 1000), name, uid: auth.currentUser ? auth.currentUser.uid : '', createdAt: Date.now() });
     if (inp) inp.value = '';
   } catch (e) { console.error('comment failed', e); if (typeof showCopyToast === 'function') showCopyToast('שגיאה בשליחת התגובה'); }
@@ -14473,6 +14564,7 @@ async function submitStoryComment(storyId) {
   if (!text) return;
   const name = (auth.currentUser && typeof liveChatUserName === 'function') ? liveChatUserName() : 'אורח';
   try {
+    if (typeof trackEvent === 'function') trackEvent('comment');
     await push(ref(db, `website/story_comments/${storyId}`), { text: text.slice(0, 1000), name, uid: auth.currentUser ? auth.currentUser.uid : '', createdAt: Date.now() });
     if (inp) inp.value = '';
   } catch (e) { console.error('story comment failed', e); if (typeof showCopyToast === 'function') showCopyToast('שגיאה בשליחת התגובה'); }
@@ -17459,6 +17551,37 @@ function openIdeaDetailModal(ideaId) {
 window.openIdeaDetailModal = openIdeaDetailModal;
 
 // ===== היסטוריית צפייה, מועדפים/לייקים ושפה =====
+// היסטוריית צפייה — נשמרת בדפדפן, ולמשתמש מחובר גם בחשבון (website/users/{uid}/watch_history)
+// כדי שניקוי/מחיקה יחולו בכל המכשירים ולא רק במכשיר שבו ניקו.
+function _historyRemoteRef() {
+  const u = auth.currentUser;
+  return (u && !u.isAnonymous) ? ref(db, `website/users/${u.uid}/watch_history`) : null;
+}
+function _historyPush(list) {
+  const r = _historyRemoteRef();
+  if (!r) return;
+  try { set(r, { items: (list && list.length) ? list : null, updatedAt: Date.now() }).catch(() => {}); } catch (e) {}
+}
+// מושך את ההיסטוריה מהחשבון (המקור הקובע למשתמש מחובר). אם אין עדיין — מעלה את המקומית.
+async function _historyPull() {
+  const r = _historyRemoteRef();
+  if (!r) return false;
+  try {
+    const snap = await get(r);
+    const local = localStorage.getItem('watch_history') || '[]';
+    if (!snap.exists()) {
+      _historyPush(JSON.parse(local));
+      return false;
+    }
+    const v = snap.val() || {};
+    const items = Array.isArray(v.items) ? v.items : (v.items ? Object.values(v.items) : []);
+    const next = JSON.stringify(items);
+    if (next === local) return false;
+    if (items.length) localStorage.setItem('watch_history', next); else localStorage.removeItem('watch_history');
+    return true;
+  } catch (e) { return false; }
+}
+
 function addToWatchHistory(item) {
   if (!item || !item.id) return;
   try {
@@ -17477,11 +17600,13 @@ function addToWatchHistory(item) {
     });
     if (history.length > 50) history = history.slice(0, 50);
     localStorage.setItem('watch_history', JSON.stringify(history));
+    _historyPush(history);
   } catch (e) {}
 }
 window.addToWatchHistory = addToWatchHistory;
 
-function openWatchHistoryPage() {
+function openWatchHistoryPage(skipPull) {
+  if (!skipPull) _historyPull().then(changed => { if (changed) openWatchHistoryPage(true); });
   let history = [];
   try { history = JSON.parse(localStorage.getItem('watch_history') || '[]'); } catch (e) {}
 
@@ -17502,7 +17627,7 @@ function openWatchHistoryPage() {
         <div class="art-row" style="background:#fff; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; display:flex; flex-direction:column; cursor:pointer; position:relative;" onclick="photoOpenDetail('${artEsc(item.id)}')">
           <div style="aspect-ratio:16/9; width:100%; overflow:hidden; background:#f1f5f9; position:relative;">
             <img src="${escHtml(img)}" style="width:100%; height:100%; object-fit:cover; display:block;">
-            <button onclick="event.stopPropagation(); removeFromWatchHistory('${artEsc(item.id)}'); openWatchHistoryPage();" style="position:absolute; top:8px; left:8px; background:rgba(0,0,0,0.6); color:#fff; border:none; border-radius:50%; width:28px; height:28px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:12px;" title="הסר מההיסטוריה">✕</button>
+            <button onclick="event.stopPropagation(); removeFromWatchHistory('${artEsc(item.id)}'); openWatchHistoryPage(true);" style="position:absolute; top:8px; left:8px; background:rgba(0,0,0,0.6); color:#fff; border:none; border-radius:50%; width:28px; height:28px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:12px;" title="הסר מההיסטוריה">✕</button>
           </div>
           <div style="padding:10px 12px;">
             <h3 style="margin:0 0 6px; font-size:14px; font-weight:800; line-height:1.3; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;">${escHtml(item.title)}</h3>
@@ -17529,7 +17654,7 @@ function openWatchHistoryPage() {
           <h1 style="margin:0; font-size:24px; font-weight:900; letter-spacing:-0.5px;">HISTORY / היסטוריית צפייה</h1>
           <span style="background:#e2e8f0; color:#334155; padding:3px 10px; border-radius:12px; font-size:12px; font-weight:800;">${history.length} פריטים</span>
         </div>
-        ${history.length > 0 ? `<button onclick="clearWatchHistory(); openWatchHistoryPage();" style="background:#fef2f2; color:#ef4444; border:1px solid #fecaca; padding:8px 16px; border-radius:10px; font-weight:bold; font-size:13px; cursor:pointer;">🗑️ ניקוי היסטוריה</button>` : ''}
+        ${history.length > 0 ? `<button onclick="clearWatchHistory();" style="background:#fef2f2; color:#ef4444; border:1px solid #fecaca; padding:8px 16px; border-radius:10px; font-weight:bold; font-size:13px; cursor:pointer;">🗑️ ניקוי היסטוריה</button>` : ''}
       </div>
       ${contentHTML}
     </div>
@@ -17541,7 +17666,8 @@ window.openWatchHistoryModal = openWatchHistoryPage;
 function clearWatchHistory() {
   if (confirm("האם ברצונך למחוק את כל היסטוריית הצפייה?")) {
     localStorage.removeItem('watch_history');
-    openWatchHistoryPage();
+    _historyPush([]);
+    openWatchHistoryPage(true);
   }
 }
 window.clearWatchHistory = clearWatchHistory;
@@ -17551,6 +17677,7 @@ function removeFromWatchHistory(id) {
     let history = JSON.parse(localStorage.getItem('watch_history') || '[]');
     history = history.filter(h => h.id !== id);
     localStorage.setItem('watch_history', JSON.stringify(history));
+    _historyPush(history);
   } catch (e) {}
 }
 window.removeFromWatchHistory = removeFromWatchHistory;
@@ -18402,6 +18529,7 @@ function setSubscriptionBilling(period) {
 window.setSubscriptionBilling = setSubscriptionBilling;
 
 function handleSubscriptionPlanSelect(planId) {
+  if (typeof trackEvent === 'function') trackEvent('subscribe_click');
   const plan = subscriptionPlansData.find(p => p.id === planId);
   const planName = plan ? plan.title : planId;
   const periodText = currentSubscriptionBilling === 'yearly' ? 'שנתי' : 'חודשי';
@@ -19045,3 +19173,840 @@ window.maybeStartSiteTour = maybeStartSiteTour;
 try {
   if (sessionStorage.getItem('age_verified') === 'true') maybeStartSiteTour();
 } catch (e) {}
+
+// ==========================================
+// CRM (למנהל בלבד) — בתחתית עמוד המידע
+// ריכוז נתוני לקוחות, כרטיס לקוח עם ציר זמן, משפך ושלבי מכירה, משימות ואוטומציות,
+// מדדים (נטישה/הקלקות), דוחות וחיזוי מגמות מול יעדים. כל נתוני ה-CRM נשמרים ב-website/crm
+// (קריאה/כתיבה למנהל בלבד לפי כללי האבטחה).
+// ==========================================
+const CRM_DAY = 86400000;
+const CRM_STAGES = [
+  { id: 'lead', label: 'ליד' },
+  { id: 'contact', label: 'בקשר' },
+  { id: 'active', label: 'לקוח פעיל' },
+  { id: 'vip', label: 'VIP' },
+  { id: 'lost', label: 'לא רלוונטי' }
+];
+const CRM_SEGMENTS = {
+  new: { label: 'חדש', color: '#2563eb', bg: '#eff6ff' },
+  active: { label: 'פעיל', color: '#15803d', bg: '#f0fdf4' },
+  risk: { label: 'בסיכון נטישה', color: '#b45309', bg: '#fffbeb' },
+  churned: { label: 'נטש', color: '#b91c1c', bg: '#fef2f2' }
+};
+const CRM_AUTOMATIONS = [
+  { id: 'support', label: 'פנייה בצ׳אט שלא נענתה ← משימה "לענות לפנייה"' },
+  { id: 'verification', label: 'בקשת אימות ממתינה ← משימה "לבדוק ולאשר אימות"' },
+  { id: 'welcome', label: 'לקוח חדש (3 ימים ראשונים) ← משימה "הודעת ברוכים הבאים"' },
+  { id: 'risk', label: 'לקוח בסיכון נטישה ← משימה "פנייה לשימור"' }
+];
+let CRM_TAB = 'customers';
+let CRM = { loaded: false, customers: [], data: {}, filter: { q: '', segment: '', stage: '', tag: '' }, sort: 'lastSeen' };
+
+// נרשם בכל התחברות: שם, אימייל ותאריך הצטרפות (לכרטיס הלקוח). נשמר תחת users/{uid}/meta —
+// נגיש רק למשתמש עצמו ולמנהל.
+async function crmRecordUserMeta(user) {
+  if (!user || user.isAnonymous) return;
+  const metaRef = ref(db, `website/users/${user.uid}/meta`);
+  const now = Date.now();
+  try {
+    const snap = await get(metaRef);
+    const cur = snap.val() || {};
+    const upd = {
+      name: (user.displayName || '').slice(0, 80),
+      email: (user.email || '').slice(0, 120),
+      provider: ((user.providerData && user.providerData[0] && user.providerData[0].providerId) || '').slice(0, 40),
+      lastLogin: now,
+      logins: (Number(cur.logins) || 0) + 1
+    };
+    if (!cur.firstSeen) upd.firstSeen = now;
+    await update(metaRef, upd);
+  } catch (e) {}
+}
+window.crmRecordUserMeta = crmRecordUserMeta;
+
+function crmFmtDate(ts) {
+  if (!ts) return '—';
+  const d = new Date(ts);
+  return d.toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric', year: '2-digit' });
+}
+function crmAgo(ts) {
+  if (!ts) return 'אף פעם';
+  const days = Math.floor((Date.now() - ts) / CRM_DAY);
+  if (days <= 0) return 'היום';
+  if (days === 1) return 'אתמול';
+  if (days < 30) return `לפני ${days} ימים`;
+  const m = Math.floor(days / 30);
+  return m === 1 ? 'לפני חודש' : `לפני ${m} חודשים`;
+}
+function crmNum(n) { return (Number(n) || 0).toLocaleString('he-IL'); }
+function crmPct(a, b) { return b ? Math.round((a / b) * 1000) / 10 : 0; }
+function crmMonthKey(ts) { return _analyticsMonthKey(new Date(ts)); }
+function crmTs(v) {
+  if (typeof v === 'number') return v;
+  if (typeof v === 'string' && /^\d{10,13}$/.test(v)) return Number(v);
+  return 0;
+}
+
+// ---------- טעינה ובניית רשימת הלקוחות ----------
+async function crmLoadAll() {
+  const g = p => get(ref(db, 'website/' + p)).then(s => s.val() || {}).catch(() => ({}));
+  const keys = ['users', 'chats', 'user_submissions', 'verification_requests', 'verified_users', 'event_registrations',
+    'search_history', 'analytics', 'crm', 'photo_comments', 'story_comments', 'user_follows', 'community_posts',
+    'questions', 'offers', 'pending_submissions'];
+  const vals = await Promise.all(keys.map(g));
+  const d = {};
+  keys.forEach((k, i) => { d[k] = vals[i] || {}; });
+  d.crm.customers = d.crm.customers || {};
+  d.crm.tasks = d.crm.tasks || {};
+  d.crm.automation = d.crm.automation || {};
+  d.crm.goals = d.crm.goals || {};
+  // תכנים מתוך העמודים (גלריות, קומיקס, סיפורים, יד שניה)
+  const items = [];
+  (Array.isArray(pages) ? pages : []).forEach(p => {
+    if (!p || !p.content) return;
+    const re = /data-(photos|stories)-json="([^"]*)"/g;
+    let m;
+    while ((m = re.exec(p.content))) {
+      try {
+        const arr = JSON.parse(decodeURIComponent(m[2]));
+        if (Array.isArray(arr)) arr.forEach(it => { if (it && it.id) items.push(Object.assign({ __kind: m[1] }, it)); });
+      } catch (e) {}
+    }
+  });
+  const seen = new Set();
+  d.items = items.filter(it => { if (seen.has(it.id)) return false; seen.add(it.id); return true; });
+  CRM.data = d;
+  CRM.customers = crmBuildCustomers(d);
+  CRM.loaded = true;
+  await crmRunAutomations();
+}
+
+function crmBuildCustomers(d) {
+  const map = {};
+  const get1 = uid => {
+    if (!uid) return null;
+    if (!map[uid]) map[uid] = { uid, name: '', email: '', events: [], uploads: 0, comments: 0, supportMsgs: 0, submissions: 0, registrations: 0, searches: 0, follows: 0, followers: 0, likesReceived: 0, viewsReceived: 0, firstSeen: 0, lastSeen: 0 };
+    return map[uid];
+  };
+  const ev = (c, ts, type, text) => { if (c) c.events.push({ ts: crmTs(ts), type, text }); };
+
+  Object.entries(d.users).forEach(([uid, u]) => {
+    const c = get1(uid);
+    const meta = (u && u.meta) || {};
+    const prof = (u && u.profile) || {};
+    c.name = meta.name || prof.nickname || '';
+    c.email = meta.email || prof.email || '';
+    c.telegram = prof.telegram || '';
+    c.age = prof.age && prof.age !== '--' ? prof.age : '';
+    c.location = prof.location && prof.location !== '--' ? prof.location : '';
+    c.lastSeen = crmTs(u && u.last_seen) || crmTs(meta.lastLogin);
+    c.firstSeen = crmTs(meta.firstSeen);
+    c.logins = meta.logins || 0;
+    if (meta.firstSeen) ev(c, meta.firstSeen, 'join', 'הצטרף/ה לאתר');
+  });
+  Object.entries(d.chats).forEach(([uid, ch]) => {
+    const c = get1(uid);
+    if (!c.name && ch.userName) c.name = ch.userName;
+    if (!c.email && ch.userEmail) c.email = ch.userEmail;
+    c.unansweredChat = ch.adminRead === false;
+    Object.values(ch.messages || {}).forEach(m => {
+      if (m.sender === 'user') c.supportMsgs++;
+      ev(c, m.timestamp, 'chat', (m.sender === 'admin' ? 'תשובת מנהל: ' : 'פנייה בצ׳אט: ') + String(m.text || '').slice(0, 140));
+    });
+  });
+  Object.entries(d.verification_requests).forEach(([uid, v]) => {
+    const c = get1(uid);
+    if (!c.name && v.displayName) c.name = v.displayName;
+    if (!c.email && v.email) c.email = v.email;
+    c.verificationStatus = v.status || 'pending';
+    ev(c, v.timestamp, 'verify', 'בקשת אימות חשבון — ' + ({ pending: 'ממתינה', approved: 'אושרה', rejected: 'נדחתה' }[v.status] || v.status || ''));
+  });
+  Object.keys(d.verified_users).forEach(uid => { const c = map[uid]; if (c) c.verified = true; });
+  Object.values(d.user_submissions).forEach(s => {
+    const c = map[s.uid];
+    if (!c) return;
+    c.submissions++;
+    ev(c, s.timestamp, 'submit', 'פנייה בטופס: ' + String(s.text || '').slice(0, 140));
+  });
+  Object.values(d.event_registrations).forEach(r => {
+    const c = map[r.userId];
+    if (!c) return;
+    c.registrations++;
+    c.phone = c.phone || r.userPhone || '';
+    ev(c, r.timestamp, 'event', 'נרשם/ה לאירוע: ' + (r.eventTitle || ''));
+  });
+  const commentLists = [d.photo_comments, d.story_comments];
+  commentLists.forEach(src => Object.values(src).forEach(list => Object.values(list || {}).forEach(cm => {
+    const c = map[cm.uid];
+    if (!c) return;
+    c.comments++;
+    ev(c, cm.createdAt, 'comment', 'תגובה: ' + String(cm.text || '').slice(0, 120));
+  })));
+  Object.values(d.community_posts).forEach(p => {
+    const c = map[p.authorId];
+    if (c) { c.uploads++; ev(c, p.timestamp, 'upload', 'פוסט בקהילה: ' + String(p.title || p.body || '').slice(0, 100)); }
+    Object.values(p.comments || {}).forEach(cm => { const cc = map[cm.authorId]; if (cc) { cc.comments++; ev(cc, cm.timestamp, 'comment', 'תגובה בקהילה: ' + String(cm.body || '').slice(0, 120)); } });
+  });
+  Object.values(d.questions).forEach(q => {
+    const c = map[q.authorUid];
+    if (c) ev(c, q.createdAt, 'question', 'שאלה: ' + String(q.title || q.text || '').slice(0, 120));
+    Object.values(q.answers || {}).forEach(a => { const cc = map[a.uid]; if (cc) { cc.comments++; ev(cc, a.createdAt, 'comment', 'עצה לשאלה: ' + String(a.text || '').slice(0, 120)); } });
+  });
+  Object.values(d.offers).forEach(o => {
+    const c = map[o.authorUid];
+    if (c) ev(c, o.createdAt, 'offer', 'פרסם/ה הצעה');
+    Object.entries(o.requests || {}).forEach(([ruid, r]) => { const cc = map[ruid]; if (cc) ev(cc, r.createdAt || r.timestamp, 'offer', 'ביקש/ה להצטרף להצעה'); });
+  });
+  Object.entries(d.user_follows).forEach(([uid, list]) => {
+    const c = map[uid];
+    const n = Object.keys(list || {}).length;
+    if (c) c.follows = n;
+    Object.keys(list || {}).forEach(t => { if (map[t]) map[t].followers++; });
+  });
+  Object.values(d.search_history).forEach(s => {
+    // חיפושים נשמרים לפי שם תצוגה בלבד — משייכים לפי שם תואם
+    if (!s.registered || !s.user) return;
+    const c = Object.values(map).find(x => x.name && x.name === s.user);
+    if (c) { c.searches++; ev(c, s.timestamp, 'search', 'חיפש/ה: ' + String(s.query || '').slice(0, 80)); }
+  });
+  (d.items || []).forEach(it => {
+    const c = map[it.authorId];
+    if (!c) return;
+    c.uploads++;
+    c.likesReceived += Number(it.likes) || 0;
+    c.viewsReceived += Number(it.views) || 0;
+    const kind = it.__kind === 'stories' ? (it.id && /^cm/.test(it.id) ? 'קומיקס' : 'סיפור') : 'גלריה';
+    ev(c, it.createdAt || crmTs((it.id || '').replace(/^\D+/, '')), 'upload', `העלה/תה ${kind}: ${String(it.title || '').slice(0, 80)}${it.approved === false ? ' (ממתין לאישור)' : ''}`);
+  });
+  Object.values(d.pending_submissions).forEach(p => { const c = map[p.authorId]; if (c) c.pendingUploads = (c.pendingUploads || 0) + 1; });
+
+  const now = Date.now();
+  return Object.values(map).map(c => {
+    c.events.sort((a, b) => (b.ts || 0) - (a.ts || 0));
+    const evTs = c.events.map(e => e.ts).filter(Boolean);
+    if (!c.firstSeen && evTs.length) c.firstSeen = Math.min(...evTs);
+    if (!c.lastSeen && evTs.length) c.lastSeen = Math.max(...evTs);
+    if (!c.name) c.name = 'משתמש ' + c.uid.slice(0, 6);
+    const idle = c.lastSeen ? (now - c.lastSeen) / CRM_DAY : 999;
+    c.segment = (c.firstSeen && now - c.firstSeen <= 7 * CRM_DAY) ? 'new' : idle <= 14 ? 'active' : idle <= 30 ? 'risk' : 'churned';
+    c.interactions = c.uploads + c.comments + c.supportMsgs + c.submissions + c.registrations;
+    // ציון מעורבות 0–100: פעילות אחרונה + כמות אינטראקציות
+    const recency = Math.max(0, 50 - Math.min(50, idle * 1.7));
+    c.score = Math.round(Math.min(100, recency + Math.min(50, c.interactions * 5 + c.follows * 2 + c.followers * 2)));
+    const cr = (CRM.data.crm && CRM.data.crm.customers[c.uid]) || {};
+    c.stage = cr.stage || (c.interactions > 0 ? 'active' : 'lead');
+    c.tags = Object.keys(cr.tags || {});
+    c.notes = Object.entries(cr.notes || {}).map(([id, n]) => Object.assign({ id }, n)).sort((a, b) => (b.at || 0) - (a.at || 0));
+    return c;
+  });
+}
+
+// ---------- אוטומציות (רצות בכל פתיחה של ה-CRM; משימות עם מזהה קבוע כדי לא לשכפל) ----------
+async function crmRunAutomations() {
+  const auto = CRM.data.crm.automation || {};
+  const tasks = CRM.data.crm.tasks;
+  const now = Date.now();
+  const updates = {};
+  const add = (id, c, title, dueDays) => {
+    if (tasks[id]) return;
+    const t = { uid: c.uid, name: c.name, title, due: now + dueDays * CRM_DAY, done: false, createdAt: now, auto: true };
+    tasks[id] = t;
+    updates[id] = t;
+  };
+  CRM.customers.forEach(c => {
+    if (auto.support && c.unansweredChat) add('auto_chat_' + c.uid, c, 'לענות לפנייה בצ׳אט', 0);
+    if (auto.verification && c.verificationStatus === 'pending') add('auto_verif_' + c.uid, c, 'לבדוק ולאשר בקשת אימות', 1);
+    if (auto.welcome && c.firstSeen && now - c.firstSeen <= 3 * CRM_DAY) add('auto_welcome_' + c.uid, c, 'לשלוח הודעת ברוכים הבאים', 1);
+    if (auto.risk && c.segment === 'risk') add('auto_risk_' + c.uid + '_' + crmMonthKey(now), c, `פנייה לשימור — לא נכנס/ה ${Math.floor((now - c.lastSeen) / CRM_DAY)} ימים`, 2);
+  });
+  if (Object.keys(updates).length) {
+    try { await update(ref(db, 'website/crm/tasks'), updates); } catch (e) { console.error('crm automation', e); }
+  }
+}
+
+// ---------- רינדור ----------
+function crmSectionHTML() {
+  // לא טוענים מחדש בכל רינדור של העמוד — רק אם עברה דקה (או בלחיצה על "רענון")
+  setTimeout(() => { crmRefresh(!CRM.loaded || Date.now() - (CRM.loadedAt || 0) > 60000); }, 80);
+  const tabBtn = (id, label) => `<button type="button" class="crm-tab${CRM_TAB === id ? ' active' : ''}" data-tab="${id}" onclick="crmTab('${id}')">${label}</button>`;
+  return `<section class="crm" id="crm-root" dir="rtl">
+    <div class="crm-head">
+      <div>
+        <h2 class="crm-title">CRM — ניהול לקוחות</h2>
+        <div class="crm-sub">כל נתוני הלקוחות, הפניות והפעילות במקום אחד</div>
+      </div>
+      <div class="crm-head-actions">
+        <button type="button" class="crm-btn" onclick="crmRefresh(true)">רענון</button>
+        <button type="button" class="crm-btn" onclick="crmExportCSV()">ייצוא ל-Excel (CSV)</button>
+      </div>
+    </div>
+    <nav class="crm-tabs" role="tablist">
+      ${tabBtn('customers', 'לקוחות')}
+      ${tabBtn('pipeline', 'משפך ומכירות')}
+      ${tabBtn('tasks', 'משימות ואוטומציות')}
+      ${tabBtn('analytics', 'מדדים ודוחות')}
+    </nav>
+    <div id="crm-body" class="crm-body"><div class="crm-empty">טוען נתוני לקוחות…</div></div>
+  </section>`;
+}
+window.crmSectionHTML = crmSectionHTML;
+
+async function crmRefresh(force) {
+  const body = document.getElementById('crm-body');
+  if (!body) return;
+  if (!(typeof isAdmin === 'function' && isAdmin())) {
+    body.innerHTML = '<div class="crm-empty">ה-CRM זמין רק למנהל מחובר.</div>';
+    return;
+  }
+  if (force || !CRM.loaded) {
+    body.innerHTML = '<div class="crm-empty">טוען נתוני לקוחות…</div>';
+    try { await crmLoadAll(); CRM.loadedAt = Date.now(); } catch (e) { console.error(e); body.innerHTML = '<div class="crm-empty">שגיאה בטעינת הנתונים.</div>'; return; }
+  }
+  crmRender();
+}
+window.crmRefresh = crmRefresh;
+
+function crmTab(tab) {
+  CRM_TAB = tab;
+  document.querySelectorAll('.crm-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  crmRender();
+}
+window.crmTab = crmTab;
+
+function crmRender() {
+  const body = document.getElementById('crm-body');
+  if (!body || !CRM.loaded) return;
+  if (CRM_TAB === 'pipeline') body.innerHTML = crmPipelineHTML();
+  else if (CRM_TAB === 'tasks') body.innerHTML = crmTasksHTML();
+  else if (CRM_TAB === 'analytics') { body.innerHTML = crmAnalyticsHTML(); }
+  else body.innerHTML = crmCustomersHTML();
+}
+
+function crmSegBadge(seg) {
+  const s = CRM_SEGMENTS[seg] || CRM_SEGMENTS.active;
+  return `<span class="crm-badge" style="color:${s.color}; background:${s.bg};">${s.label}</span>`;
+}
+function crmStageLabel(id) { const s = CRM_STAGES.find(x => x.id === id); return s ? s.label : id; }
+
+function crmFilteredCustomers() {
+  const f = CRM.filter;
+  const q = (f.q || '').trim().toLowerCase();
+  let list = CRM.customers.filter(c =>
+    (!q || [c.name, c.email, c.telegram, c.location, c.phone].some(v => String(v || '').toLowerCase().includes(q))) &&
+    (!f.segment || c.segment === f.segment) &&
+    (!f.stage || c.stage === f.stage) &&
+    (!f.tag || c.tags.indexOf(f.tag) !== -1));
+  const by = CRM.sort;
+  list.sort((a, b) => by === 'score' ? b.score - a.score : by === 'joined' ? (b.firstSeen || 0) - (a.firstSeen || 0) : by === 'name' ? a.name.localeCompare(b.name, 'he') : (b.lastSeen || 0) - (a.lastSeen || 0));
+  return list;
+}
+
+function crmKpiTile(label, value, sub) {
+  return `<div class="crm-kpi"><div class="crm-kpi-label">${escHtml(label)}</div><div class="crm-kpi-value">${escHtml(value)}</div>${sub ? `<div class="crm-kpi-sub">${escHtml(sub)}</div>` : ''}</div>`;
+}
+
+function crmCustomersHTML() {
+  const all = CRM.customers;
+  const now = Date.now();
+  const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0);
+  const newThisMonth = all.filter(c => c.firstSeen >= monthStart.getTime()).length;
+  const active7 = all.filter(c => c.lastSeen && now - c.lastSeen <= 7 * CRM_DAY).length;
+  const risk = all.filter(c => c.segment === 'risk').length;
+  const churned = all.filter(c => c.segment === 'churned').length;
+  const openTasks = Object.values(CRM.data.crm.tasks).filter(t => !t.done).length;
+  const allTags = [...new Set(all.flatMap(c => c.tags))].sort();
+  const list = crmFilteredCustomers();
+  const f = CRM.filter;
+  const opt = (v, l, cur) => `<option value="${escHtml(v)}"${cur === v ? ' selected' : ''}>${escHtml(l)}</option>`;
+  const rows = list.map(c => `
+    <tr onclick="crmOpenCustomer('${artEsc(c.uid)}')" tabindex="0" onkeydown="if(event.key==='Enter')crmOpenCustomer('${artEsc(c.uid)}')">
+      <td><div class="crm-name">${escHtml(c.name)}${c.verified ? ' <span class="crm-verified" title="מאומת">✓</span>' : ''}</div><div class="crm-muted">${escHtml(c.email || c.telegram || '')}</div></td>
+      <td>${crmSegBadge(c.segment)}</td>
+      <td>${escHtml(crmStageLabel(c.stage))}</td>
+      <td title="${escHtml(crmFmtDate(c.lastSeen))}">${escHtml(crmAgo(c.lastSeen))}</td>
+      <td class="crm-hide-sm">${escHtml(crmFmtDate(c.firstSeen))}</td>
+      <td class="crm-num">${crmNum(c.uploads)}</td>
+      <td class="crm-num crm-hide-sm">${crmNum(c.interactions)}</td>
+      <td class="crm-num"><span class="crm-score" style="--s:${c.score}">${c.score}</span></td>
+      <td class="crm-hide-sm">${c.tags.map(t => `<span class="crm-tag">${escHtml(t)}</span>`).join('')}</td>
+    </tr>`).join('');
+  return `
+    <div class="crm-kpis">
+      ${crmKpiTile('לקוחות רשומים', crmNum(all.length))}
+      ${crmKpiTile('חדשים החודש', crmNum(newThisMonth))}
+      ${crmKpiTile('פעילים ב-7 ימים', crmNum(active7), crmPct(active7, all.length) + '% מהלקוחות')}
+      ${crmKpiTile('בסיכון נטישה', crmNum(risk), 'לא נכנסו 14–30 ימים')}
+      ${crmKpiTile('נטשו', crmNum(churned), crmPct(churned, all.length) + '% · מעל 30 ימים')}
+      ${crmKpiTile('משימות פתוחות', crmNum(openTasks))}
+    </div>
+    <div class="crm-filters">
+      <input type="search" class="crm-input" placeholder="חיפוש לפי שם, אימייל, טלגרם, טלפון…" value="${escHtml(f.q)}" oninput="CRM.filter.q=this.value; crmUpdateTable()" aria-label="חיפוש לקוחות">
+      <select class="crm-input" onchange="CRM.filter.segment=this.value; crmUpdateTable()" aria-label="סגמנט">${opt('', 'כל הסגמנטים', f.segment)}${Object.entries(CRM_SEGMENTS).map(([k, s]) => opt(k, s.label, f.segment)).join('')}</select>
+      <select class="crm-input" onchange="CRM.filter.stage=this.value; crmUpdateTable()" aria-label="שלב">${opt('', 'כל השלבים', f.stage)}${CRM_STAGES.map(s => opt(s.id, s.label, f.stage)).join('')}</select>
+      <select class="crm-input" onchange="CRM.filter.tag=this.value; crmUpdateTable()" aria-label="תגית">${opt('', 'כל התגיות', f.tag)}${allTags.map(t => opt(t, t, f.tag)).join('')}</select>
+      <select class="crm-input" onchange="CRM.sort=this.value; crmUpdateTable()" aria-label="מיון">${opt('lastSeen', 'מיון: פעילות אחרונה', CRM.sort)}${opt('joined', 'מיון: הצטרפות', CRM.sort)}${opt('score', 'מיון: מעורבות', CRM.sort)}${opt('name', 'מיון: שם', CRM.sort)}</select>
+    </div>
+    <div class="crm-count">${crmNum(list.length)} לקוחות</div>
+    <div class="crm-table-wrap" id="crm-table-wrap">
+      <table class="crm-table">
+        <thead><tr><th>לקוח</th><th>סגמנט</th><th>שלב</th><th>פעילות אחרונה</th><th class="crm-hide-sm">הצטרפות</th><th>העלאות</th><th class="crm-hide-sm">אינטראקציות</th><th>מעורבות</th><th class="crm-hide-sm">תגיות</th></tr></thead>
+        <tbody>${rows || '<tr><td colspan="9" class="crm-empty">אין לקוחות שתואמים לסינון</td></tr>'}</tbody>
+      </table>
+    </div>`;
+}
+
+let _crmTableTimer = null;
+function crmUpdateTable() {
+  clearTimeout(_crmTableTimer);
+  _crmTableTimer = setTimeout(() => {
+    const body = document.getElementById('crm-body');
+    if (!body) return;
+    const active = document.activeElement;
+    const isSearch = active && active.type === 'search';
+    const pos = isSearch ? active.selectionStart : null;
+    body.innerHTML = crmCustomersHTML();
+    if (isSearch) { const inp = body.querySelector('input[type="search"]'); if (inp) { inp.focus(); try { inp.setSelectionRange(pos, pos); } catch (e) {} } }
+  }, 120);
+}
+window.crmUpdateTable = crmUpdateTable;
+
+// ---------- כרטיס לקוח ----------
+function crmOpenCustomer(uid) {
+  const c = CRM.customers.find(x => x.uid === uid);
+  if (!c) return;
+  let m = document.getElementById('crm-modal');
+  if (!m) {
+    m = document.createElement('div');
+    m.id = 'crm-modal';
+    m.className = 'crm-modal';
+    m.addEventListener('click', e => { if (e.target === m) crmCloseCustomer(); });
+    document.body.appendChild(m);
+  }
+  const tasks = Object.entries(CRM.data.crm.tasks).filter(([, t]) => t.uid === uid).map(([id, t]) => Object.assign({ id }, t)).sort((a, b) => (a.done - b.done) || ((a.due || 0) - (b.due || 0)));
+  const evColor = { join: '#2563eb', chat: '#7c3aed', verify: '#0891b2', submit: '#7c3aed', event: '#d97706', comment: '#16a34a', upload: '#e11d48', question: '#d97706', offer: '#e11d48', search: '#64748b' };
+  const info = [
+    ['אימייל', c.email], ['טלגרם', c.telegram ? '@' + c.telegram.replace(/^@/, '') : ''], ['טלפון', c.phone], ['גיל', c.age], ['מיקום', c.location],
+    ['הצטרפות', crmFmtDate(c.firstSeen)], ['פעילות אחרונה', crmAgo(c.lastSeen)], ['כניסות', c.logins ? crmNum(c.logins) : ''],
+    ['אימות', c.verified ? 'מאומת ✓' : (c.verificationStatus === 'pending' ? 'ממתין לאישור' : '')]
+  ].filter(([, v]) => v);
+  const stats = [['העלאות', c.uploads], ['תגובות', c.comments], ['פניות לתמיכה', c.supportMsgs + c.submissions], ['לייקים שקיבל/ה', c.likesReceived], ['עוקבים', c.followers], ['עוקב/ת אחרי', c.follows]];
+  m.innerHTML = `
+    <div class="crm-card" role="dialog" aria-modal="true" aria-label="כרטיס לקוח" dir="rtl">
+      <div class="crm-card-head">
+        <div>
+          <div class="crm-card-name">${escHtml(c.name)}${c.verified ? ' <span class="crm-verified">✓</span>' : ''}</div>
+          <div class="crm-card-badges">${crmSegBadge(c.segment)} <span class="crm-muted">ציון מעורבות ${c.score}/100</span></div>
+        </div>
+        <button type="button" class="crm-x" onclick="crmCloseCustomer()" aria-label="סגירה">✕</button>
+      </div>
+      <div class="crm-card-actions">
+        <label class="crm-inline">שלב:
+          <select class="crm-input" onchange="crmSetStage('${artEsc(uid)}', this.value)">${CRM_STAGES.map(s => `<option value="${s.id}"${c.stage === s.id ? ' selected' : ''}>${s.label}</option>`).join('')}</select>
+        </label>
+        <button type="button" class="crm-btn" onclick="crmCloseCustomer(); if (typeof dmStartWith==='function') dmStartWith('${artEsc(uid)}','${artEsc(c.name)}')">שליחת הודעה</button>
+        ${c.email ? `<a class="crm-btn" href="mailto:${escHtml(encodeURIComponent(c.email).replace(/%40/g, '@'))}">מייל</a>` : ''}
+      </div>
+      <div class="crm-card-grid">
+        <div>
+          <h4 class="crm-h4">פרטים</h4>
+          <dl class="crm-dl">${info.map(([k, v]) => `<dt>${escHtml(k)}</dt><dd>${escHtml(v)}</dd>`).join('') || '<dd class="crm-muted">אין פרטים</dd>'}</dl>
+          <h4 class="crm-h4">פעילות</h4>
+          <div class="crm-mini-stats">${stats.map(([k, v]) => `<div><b>${crmNum(v)}</b><span>${escHtml(k)}</span></div>`).join('')}</div>
+          <h4 class="crm-h4">תגיות</h4>
+          <div class="crm-tags-edit">${c.tags.map(t => `<span class="crm-tag">${escHtml(t)} <button type="button" onclick="crmRemoveTag('${artEsc(uid)}','${artEsc(t)}')" aria-label="הסרת תגית">✕</button></span>`).join('')}
+            <input class="crm-input crm-input-sm" placeholder="תגית חדשה + Enter" onkeydown="if(event.key==='Enter'){crmAddTag('${artEsc(uid)}', this.value); this.value='';}">
+          </div>
+          <h4 class="crm-h4">משימות</h4>
+          <div class="crm-task-list">${tasks.map(crmTaskRowHTML).join('') || '<div class="crm-muted">אין משימות</div>'}</div>
+          <div class="crm-task-add">
+            <input class="crm-input" id="crm-new-task-title" placeholder="משימה חדשה…">
+            <input class="crm-input crm-input-sm" id="crm-new-task-due" type="date" aria-label="תאריך יעד">
+            <button type="button" class="crm-btn crm-btn-primary" onclick="crmAddTask('${artEsc(uid)}')">הוספה</button>
+          </div>
+          <h4 class="crm-h4">הערות</h4>
+          <div class="crm-note-add">
+            <textarea class="crm-input" id="crm-new-note" rows="2" placeholder="הערה פנימית על הלקוח…"></textarea>
+            <button type="button" class="crm-btn crm-btn-primary" onclick="crmAddNote('${artEsc(uid)}')">שמירת הערה</button>
+          </div>
+          <div class="crm-notes">${c.notes.map(n => `<div class="crm-note"><div>${escHtml(n.text)}</div><div class="crm-muted">${escHtml(crmFmtDate(n.at))} <button type="button" class="crm-link" onclick="crmDeleteNote('${artEsc(uid)}','${artEsc(n.id)}')">מחיקה</button></div></div>`).join('')}</div>
+        </div>
+        <div>
+          <h4 class="crm-h4">ציר זמן (${crmNum(c.events.length)})</h4>
+          <ol class="crm-timeline">${c.events.slice(0, 80).map(e => `<li><span class="crm-tl-dot" aria-hidden="true" style="background:${evColor[e.type] || '#94a3b8'}"></span><div><div>${escHtml(e.text)}</div><div class="crm-muted">${escHtml(e.ts ? crmFmtDate(e.ts) + ' · ' + crmAgo(e.ts) : '')}</div></div></li>`).join('') || '<li class="crm-muted">אין פעילות מתועדת</li>'}</ol>
+        </div>
+      </div>
+    </div>`;
+  m.style.display = 'flex';
+  document.addEventListener('keydown', crmModalKeys);
+}
+window.crmOpenCustomer = crmOpenCustomer;
+function crmModalKeys(e) { if (e.key === 'Escape') crmCloseCustomer(); }
+function crmCloseCustomer() {
+  const m = document.getElementById('crm-modal');
+  if (m) m.style.display = 'none';
+  document.removeEventListener('keydown', crmModalKeys);
+}
+window.crmCloseCustomer = crmCloseCustomer;
+
+function crmTaskRowHTML(t) {
+  const overdue = !t.done && t.due && t.due < Date.now();
+  return `<div class="crm-task${t.done ? ' done' : ''}${overdue ? ' overdue' : ''}">
+    <label><input type="checkbox"${t.done ? ' checked' : ''} onchange="crmToggleTask('${artEsc(t.id)}', this.checked)"> <span>${escHtml(t.title)}</span></label>
+    <span class="crm-muted">${t.name ? escHtml(t.name) + ' · ' : ''}${t.due ? (overdue ? 'באיחור · ' : 'יעד ') + escHtml(crmFmtDate(t.due)) : ''}${t.auto ? ' · אוטומטי' : ''}</span>
+  </div>`;
+}
+
+// ---------- פעולות (נשמרות ב-website/crm) ----------
+async function crmSave(path, value) {
+  try { await set(ref(db, 'website/crm/' + path), value); return true; }
+  catch (e) { console.error('crm save', e); alert('שגיאה בשמירה'); return false; }
+}
+async function crmSetStage(uid, stage) {
+  if (await crmSave(`customers/${uid}/stage`, stage)) {
+    const cr = CRM.data.crm.customers[uid] = CRM.data.crm.customers[uid] || {};
+    cr.stage = stage;
+    const c = CRM.customers.find(x => x.uid === uid); if (c) c.stage = stage;
+    if (typeof showCopyToast === 'function') showCopyToast('✓ השלב עודכן');
+  }
+}
+async function crmAddTag(uid, tag) {
+  tag = String(tag || '').trim().replace(/[.#$\[\]\/]/g, '').slice(0, 30);
+  if (!tag) return;
+  if (await crmSave(`customers/${uid}/tags/${tag}`, true)) {
+    const cr = CRM.data.crm.customers[uid] = CRM.data.crm.customers[uid] || {};
+    cr.tags = Object.assign({}, cr.tags, { [tag]: true });
+    const c = CRM.customers.find(x => x.uid === uid); if (c && c.tags.indexOf(tag) === -1) c.tags.push(tag);
+    crmOpenCustomer(uid);
+  }
+}
+async function crmRemoveTag(uid, tag) {
+  if (await crmSave(`customers/${uid}/tags/${tag}`, null)) {
+    const cr = CRM.data.crm.customers[uid]; if (cr && cr.tags) delete cr.tags[tag];
+    const c = CRM.customers.find(x => x.uid === uid); if (c) c.tags = c.tags.filter(t => t !== tag);
+    crmOpenCustomer(uid);
+  }
+}
+async function crmAddNote(uid) {
+  const el = document.getElementById('crm-new-note');
+  const text = el ? el.value.trim().slice(0, 2000) : '';
+  if (!text) return;
+  const r = push(ref(db, `website/crm/customers/${uid}/notes`));
+  const note = { text, at: Date.now() };
+  try { await set(r, note); } catch (e) { alert('שגיאה בשמירת ההערה'); return; }
+  const c = CRM.customers.find(x => x.uid === uid); if (c) c.notes.unshift(Object.assign({ id: r.key }, note));
+  crmOpenCustomer(uid);
+}
+async function crmDeleteNote(uid, noteId) {
+  if (!confirm('למחוק את ההערה?')) return;
+  if (await crmSave(`customers/${uid}/notes/${noteId}`, null)) {
+    const c = CRM.customers.find(x => x.uid === uid); if (c) c.notes = c.notes.filter(n => n.id !== noteId);
+    crmOpenCustomer(uid);
+  }
+}
+async function crmAddTask(uid) {
+  const titleEl = document.getElementById('crm-new-task-title');
+  const dueEl = document.getElementById('crm-new-task-due');
+  const title = titleEl ? titleEl.value.trim().slice(0, 200) : '';
+  if (!title) return;
+  const c = CRM.customers.find(x => x.uid === uid);
+  const due = dueEl && dueEl.value ? new Date(dueEl.value + 'T18:00').getTime() : 0;
+  const r = push(ref(db, 'website/crm/tasks'));
+  const t = { uid, name: c ? c.name : '', title, due, done: false, createdAt: Date.now() };
+  try { await set(r, t); } catch (e) { alert('שגיאה בשמירת המשימה'); return; }
+  CRM.data.crm.tasks[r.key] = t;
+  crmOpenCustomer(uid);
+}
+async function crmToggleTask(id, done) {
+  if (await crmSave(`tasks/${id}/done`, !!done)) {
+    if (CRM.data.crm.tasks[id]) CRM.data.crm.tasks[id].done = !!done;
+    const m = document.getElementById('crm-modal');
+    if (m && m.style.display !== 'none') { const t = CRM.data.crm.tasks[id]; if (t) crmOpenCustomer(t.uid); }
+    if (CRM_TAB === 'tasks') crmRender();
+  }
+}
+async function crmSetAutomation(id, on) {
+  if (await crmSave(`automation/${id}`, !!on)) {
+    CRM.data.crm.automation[id] = !!on;
+    if (on) { await crmRunAutomations(); }
+    crmRender();
+  }
+}
+async function crmSetGoal(key, val) {
+  const n = Math.max(0, parseInt(val, 10) || 0);
+  if (await crmSave(`goals/${key}`, n || null)) {
+    CRM.data.crm.goals[key] = n;
+    crmRender();
+  }
+}
+Object.assign(window, { crmSetStage, crmAddTag, crmRemoveTag, crmAddNote, crmDeleteNote, crmAddTask, crmToggleTask, crmSetAutomation, crmSetGoal });
+
+// ---------- משפך ושלבי מכירה ----------
+function crmHBar(label, value, max, sub) {
+  const w = max ? Math.max(value ? 2 : 0, Math.round((value / max) * 100)) : 0;
+  return `<div class="crm-hbar" title="${escHtml(label)}: ${crmNum(value)}${sub ? ' · ' + escHtml(sub) : ''}">
+    <div class="crm-hbar-label">${escHtml(label)}</div>
+    <div class="crm-hbar-track"><div class="crm-hbar-fill" style="width:${w}%"></div></div>
+    <div class="crm-hbar-val"><bdi>${crmNum(value)}</bdi>${sub ? `<span class="crm-hbar-sub">${escHtml(sub)}</span>` : ''}</div>
+  </div>`;
+}
+function crmPipelineHTML() {
+  const cs = CRM.customers;
+  const ev = (CRM.data.analytics && CRM.data.analytics.events) || {};
+  const visitors = Number(ev.visit_session) || Number(CRM.data.analytics && CRM.data.analytics.visits) || 0;
+  const registered = cs.length;
+  const engaged = cs.filter(c => c.interactions > 0 || c.follows > 0).length;
+  const creators = cs.filter(c => c.uploads > 0).length;
+  const verified = cs.filter(c => c.verified).length;
+  const steps = [['מבקרים באתר', visitors], ['נרשמו', registered], ['פעילים (אינטראקציה)', engaged], ['יוצרי תוכן', creators], ['מאומתים', verified]];
+  const max = Math.max(1, ...steps.map(s => s[1]));
+  const funnel = steps.map((s, i) => crmHBar(s[0], s[1], max, i ? `(${crmPct(s[1], steps[i - 1][1])}% מהשלב הקודם)` : '')).join('');
+  const stageCounts = CRM_STAGES.map(s => [s, cs.filter(c => c.stage === s.id)]);
+  const board = stageCounts.map(([s, list]) => `
+    <div class="crm-col">
+      <div class="crm-col-head"><span>${escHtml(s.label)}</span><span class="crm-col-count">${crmNum(list.length)}</span></div>
+      ${list.slice().sort((a, b) => b.score - a.score).slice(0, 12).map(c => `<button type="button" class="crm-col-card" onclick="crmOpenCustomer('${artEsc(c.uid)}')"><b>${escHtml(c.name)}</b><span class="crm-muted">${escHtml(crmAgo(c.lastSeen))} · ${c.score}</span></button>`).join('') || '<div class="crm-muted crm-col-empty">—</div>'}
+      ${list.length > 12 ? `<button type="button" class="crm-link" onclick="CRM.filter.stage='${s.id}'; crmTab('customers')">עוד ${list.length - 12}…</button>` : ''}
+    </div>`).join('');
+  return `
+    <div class="crm-panel">
+      <h3 class="crm-h3">משפך המרה</h3>
+      <div class="crm-muted crm-note-line">מבקר ← נרשם ← פעיל ← יוצר תוכן ← מאומת</div>
+      ${funnel}
+    </div>
+    <div class="crm-panel">
+      <h3 class="crm-h3">שלבי מכירה</h3>
+      <div class="crm-muted crm-note-line">משנים שלב מתוך כרטיס הלקוח. לקוח בלי שלב שנקבע ידנית מסווג אוטומטית ("ליד" או "לקוח פעיל").</div>
+      <div class="crm-board">${board}</div>
+    </div>`;
+}
+
+// ---------- משימות ואוטומציות ----------
+function crmTasksHTML() {
+  const all = Object.entries(CRM.data.crm.tasks).map(([id, t]) => Object.assign({ id }, t));
+  const open = all.filter(t => !t.done).sort((a, b) => (a.due || 9e15) - (b.due || 9e15));
+  const done = all.filter(t => t.done).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)).slice(0, 20);
+  const overdue = open.filter(t => t.due && t.due < Date.now()).length;
+  const auto = CRM.data.crm.automation || {};
+  return `
+    <div class="crm-panel">
+      <h3 class="crm-h3">אוטומציות</h3>
+      <div class="crm-muted crm-note-line">כשאוטומציה פעילה, בכל פתיחה של ה-CRM נוצרות משימות אוטומטיות ללקוחות המתאימים (בלי כפילויות).</div>
+      ${CRM_AUTOMATIONS.map(a => `<label class="crm-switch"><input type="checkbox"${auto[a.id] ? ' checked' : ''} onchange="crmSetAutomation('${a.id}', this.checked)"> <span>${escHtml(a.label)}</span></label>`).join('')}
+    </div>
+    <div class="crm-panel">
+      <h3 class="crm-h3">משימות פתוחות (${crmNum(open.length)}${overdue ? ` · ${crmNum(overdue)} באיחור` : ''})</h3>
+      <div class="crm-task-list">${open.map(t => `<div class="crm-task-wrap">${crmTaskRowHTML(t)}${t.uid ? `<button type="button" class="crm-link" onclick="crmOpenCustomer('${artEsc(t.uid)}')">לכרטיס</button>` : ''}</div>`).join('') || '<div class="crm-muted">אין משימות פתוחות 🎉</div>'}</div>
+    </div>
+    ${done.length ? `<div class="crm-panel"><h3 class="crm-h3">הושלמו לאחרונה</h3><div class="crm-task-list">${done.map(crmTaskRowHTML).join('')}</div></div>` : ''}`;
+}
+
+// ---------- מדדים, דוחות וחיזוי ----------
+function crmLastDays(n) {
+  const out = [];
+  for (let i = n - 1; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); out.push(_analyticsDayKey(d)); }
+  return out;
+}
+function crmLastMonths(n) {
+  const out = [];
+  const d = new Date(); d.setDate(1);
+  for (let i = n - 1; i >= 0; i--) { const x = new Date(d.getFullYear(), d.getMonth() - i, 1); out.push(_analyticsMonthKey(x)); }
+  return out;
+}
+// רגרסיה ליניארית פשוטה לחיזוי הערך הבא
+function crmForecastNext(values) {
+  const pts = values.map((v, i) => [i, Number(v) || 0]);
+  const n = pts.length;
+  if (n < 2) return values[0] || 0;
+  const sx = pts.reduce((s, p) => s + p[0], 0), sy = pts.reduce((s, p) => s + p[1], 0);
+  const sxx = pts.reduce((s, p) => s + p[0] * p[0], 0), sxy = pts.reduce((s, p) => s + p[0] * p[1], 0);
+  const den = n * sxx - sx * sx;
+  const slope = den ? (n * sxy - sx * sy) / den : 0;
+  const icpt = (sy - slope * sx) / n;
+  return Math.max(0, Math.round(icpt + slope * n));
+}
+// גרף עמודות (סדרה אחת): עמודה אחרונה יכולה להיות "חיזוי" (מקווקו)
+function crmBarChart(points, opts) {
+  opts = opts || {};
+  const max = Math.max(1, ...points.map(p => p.value));
+  const maxIdx = points.reduce((bi, p, i) => (p.value > points[bi].value ? i : bi), 0);
+  const labelEvery = points.length > 14 ? Math.ceil(points.length / 7) : 1;
+  return `<div class="crm-chart" role="img" aria-label="${escHtml(opts.title || '')}">
+    <div class="crm-chart-bars">
+      ${points.map((p, i) => {
+        const h = Math.round((p.value / max) * 100);
+        const showVal = i === maxIdx || i === points.length - 1;
+        return `<div class="crm-bar-col" tabindex="0" data-tip="${escHtml(p.tip || (p.label + ': ' + crmNum(p.value)))}">
+          <div class="crm-bar-val">${showVal ? crmNum(p.value) : ''}</div>
+          <div class="crm-bar-area"><div class="crm-bar${p.forecast ? ' is-forecast' : ''}" style="height:${h}%"></div></div>
+          <div class="crm-bar-label">${i % labelEvery === 0 || i === points.length - 1 ? escHtml(p.short || p.label) : ''}</div>
+        </div>`;
+      }).join('')}
+    </div>
+    ${opts.legend ? `<div class="crm-legend"><span><i class="crm-sw"></i> בפועל</span><span><i class="crm-sw is-forecast"></i> חיזוי</span></div>` : ''}
+  </div>`;
+}
+function crmAnalyticsHTML() {
+  const an = CRM.data.analytics || {};
+  const daily = an.daily || {}, monthly = an.monthly || {};
+  const evDaily = an.events_daily || {};
+  const cs = CRM.customers;
+  const heMonth = k => { const [y, m] = k.split('-'); return new Date(+y, +m - 1, 1).toLocaleDateString('he-IL', { month: 'short' }); };
+
+  // ביקורים — 30 ימים
+  const days = crmLastDays(30);
+  const visitsPts = days.map(k => ({ label: k, short: k.slice(8), value: Number(daily[k]) || 0, tip: `${k.split('-').reverse().join('.')}: ${crmNum(daily[k] || 0)} כניסות` }));
+
+  // חודשים — כניסות + חיזוי לחודש הבא
+  const months = crmLastMonths(6);
+  const mVals = months.map(k => Number(monthly[k]) || 0);
+  const nowD = new Date();
+  const daysInMonth = new Date(nowD.getFullYear(), nowD.getMonth() + 1, 0).getDate();
+  const thisMonth = mVals[mVals.length - 1];
+  const paceThisMonth = Math.round(thisMonth / Math.max(1, nowD.getDate()) * daysInMonth);
+  const fcVisits = crmForecastNext(mVals.slice(0, -1).concat([paceThisMonth]));
+  const nextKey = _analyticsMonthKey(new Date(nowD.getFullYear(), nowD.getMonth() + 1, 1));
+  const monthPts = months.map((k, i) => ({ label: heMonth(k), value: mVals[i], tip: `${heMonth(k)}: ${crmNum(mVals[i])} כניסות${i === months.length - 1 ? ` (קצב צפוי לסוף החודש: ${crmNum(paceThisMonth)})` : ''}` }))
+    .concat([{ label: heMonth(nextKey), value: fcVisits, forecast: true, tip: `חיזוי ${heMonth(nextKey)}: כ-${crmNum(fcVisits)} כניסות` }]);
+
+  // לקוחות חדשים לפי חודש + חיזוי
+  const newBy = {};
+  cs.forEach(c => { if (c.firstSeen) { const k = crmMonthKey(c.firstSeen); newBy[k] = (newBy[k] || 0) + 1; } });
+  const nVals = months.map(k => newBy[k] || 0);
+  const paceNew = Math.round(nVals[nVals.length - 1] / Math.max(1, nowD.getDate()) * daysInMonth);
+  const fcNew = crmForecastNext(nVals.slice(0, -1).concat([paceNew]));
+  const newPts = months.map((k, i) => ({ label: heMonth(k), value: nVals[i], tip: `${heMonth(k)}: ${crmNum(nVals[i])} לקוחות חדשים` }))
+    .concat([{ label: heMonth(nextKey), value: fcNew, forecast: true, tip: `חיזוי ${heMonth(nextKey)}: כ-${crmNum(fcNew)} לקוחות חדשים` }]);
+
+  // העלאות תוכן לפי חודש
+  const upBy = {};
+  (CRM.data.items || []).forEach(it => { const ts = it.createdAt || crmTs((it.id || '').replace(/^\D+/, '')); if (ts) { const k = crmMonthKey(ts); upBy[k] = (upBy[k] || 0) + 1; } });
+  const uVals = months.map(k => upBy[k] || 0);
+  const paceUp = Math.round(uVals[uVals.length - 1] / Math.max(1, nowD.getDate()) * daysInMonth);
+
+  // נטישה והקלקות (30 ימים)
+  let sessions = 0, engagedV = 0;
+  const clicksBy = {};
+  days.forEach(k => {
+    const e = evDaily[k] || {};
+    sessions += Number(e.visit_session) || 0;
+    engagedV += Number(e.engaged_visit) || 0;
+    TRACK_EVENTS.forEach(n => { clicksBy[n] = (clicksBy[n] || 0) + (Number(e[n]) || 0); });
+  });
+  const bounce = sessions ? Math.max(0, 100 - crmPct(engagedV, sessions)) : null;
+  const totalClicks = Object.values(clicksBy).reduce((a, b) => a + b, 0);
+  const evLabels = { gallery_open: 'פתיחת גלריה', story_open: 'פתיחת סיפור/קומיקס', like: 'לייק', save: 'שמירה', comment: 'תגובה', search: 'חיפוש', dm_send: 'הודעה פרטית', upload_submit: 'העלאת תוכן', subscribe_click: 'לחיצה על מנוי' };
+  const clickRows = Object.entries(clicksBy).sort((a, b) => b[1] - a[1]);
+  const clickMax = Math.max(1, ...clickRows.map(r => r[1]));
+
+  // נטישת לקוחות (churn)
+  const churned = cs.filter(c => c.segment === 'churned').length;
+  const churnRate = crmPct(churned, cs.length);
+  const conv = crmPct(cs.length, Number((an.events || {}).visit_session) || Number(an.visits) || 0);
+
+  // חיפושים מובילים
+  const qCount = {};
+  Object.values(CRM.data.search_history || {}).forEach(s => { const q = String(s.query || '').trim().toLowerCase(); if (q) qCount[q] = (qCount[q] || 0) + 1; });
+  const topQ = Object.entries(qCount).sort((a, b) => b[1] - a[1]).slice(0, 8);
+  // תכנים מובילים
+  const topItems = (CRM.data.items || []).slice().sort((a, b) => ((b.views || 0) + (b.likes || 0) * 3) - ((a.views || 0) + (a.likes || 0) * 3)).slice(0, 6);
+
+  // יעדים
+  const goals = CRM.data.crm.goals || {};
+  const goalRow = (key, label, current, forecast) => {
+    const goal = Number(goals[key]) || 0;
+    const pct = goal ? Math.min(100, Math.round((current / goal) * 100)) : 0;
+    const willHit = goal ? forecast >= goal : null;
+    return `<div class="crm-goal">
+      <div class="crm-goal-top"><b>${escHtml(label)}</b>
+        <label class="crm-inline">יעד חודשי: <input type="number" min="0" class="crm-input crm-input-sm" value="${goal || ''}" placeholder="—" onchange="crmSetGoal('${key}', this.value)"></label></div>
+      <div class="crm-hbar-track" title="${crmNum(current)} מתוך ${goal ? crmNum(goal) : '—'}"><div class="crm-hbar-fill" style="width:${pct}%"></div></div>
+      <div class="crm-muted">עד עכשיו החודש: ${crmNum(current)} · צפי לסוף החודש: ${crmNum(forecast)}${goal ? ` · ${willHit ? '✓ צפוי לעמוד ביעד' : '⚠ צפוי לא לעמוד ביעד'}` : ''}</div>
+    </div>`;
+  };
+
+  return `
+    <div class="crm-kpis">
+      ${crmKpiTile('כניסות החודש', crmNum(thisMonth), `צפי לסוף החודש: ${crmNum(paceThisMonth)}`)}
+      ${crmKpiTile('אחוז נטישה (ביקורים)', bounce === null ? '—' : bounce + '%', bounce === null ? 'יימדד מעכשיו' : 'ביקורים בלי אף פעולה · 30 ימים')}
+      ${crmKpiTile('הקלקות ב-30 ימים', crmNum(totalClicks), sessions ? `${(totalClicks / sessions).toFixed(1)} לביקור` : '')}
+      ${crmKpiTile('נטישת לקוחות', churnRate + '%', 'לא נכנסו מעל 30 ימים')}
+      ${crmKpiTile('המרה מבקר ← נרשם', conv + '%')}
+      ${crmKpiTile('חיזוי כניסות לחודש הבא', crmNum(fcVisits))}
+    </div>
+    <div class="crm-panel">
+      <h3 class="crm-h3">כניסות — 30 הימים האחרונים</h3>
+      ${crmBarChart(visitsPts, { title: 'כניסות ב-30 הימים האחרונים' })}
+    </div>
+    <div class="crm-grid-2">
+      <div class="crm-panel">
+        <h3 class="crm-h3">כניסות לפי חודש + חיזוי</h3>
+        ${crmBarChart(monthPts, { title: 'כניסות לפי חודש', legend: true })}
+      </div>
+      <div class="crm-panel">
+        <h3 class="crm-h3">לקוחות חדשים לפי חודש + חיזוי</h3>
+        ${crmBarChart(newPts, { title: 'לקוחות חדשים לפי חודש', legend: true })}
+      </div>
+    </div>
+    <div class="crm-panel">
+      <h3 class="crm-h3">יעדים וצפי</h3>
+      ${goalRow('visits', 'כניסות', thisMonth, paceThisMonth)}
+      ${goalRow('newCustomers', 'לקוחות חדשים', nVals[nVals.length - 1], paceNew)}
+      ${goalRow('uploads', 'העלאות תוכן', uVals[uVals.length - 1], paceUp)}
+    </div>
+    <div class="crm-grid-2">
+      <div class="crm-panel">
+        <h3 class="crm-h3">הקלקות לפי פעולה (30 ימים)</h3>
+        ${clickRows.some(r => r[1]) ? clickRows.map(([k, v]) => crmHBar(evLabels[k] || k, v, clickMax, '')).join('') : '<div class="crm-muted">הנתונים נאספים מעכשיו — יופיעו כאן אחרי שגולשים ישתמשו באתר.</div>'}
+      </div>
+      <div class="crm-panel">
+        <h3 class="crm-h3">חיפושים מובילים</h3>
+        ${topQ.length ? `<table class="crm-table crm-table-sm"><tbody>${topQ.map(([q, n]) => `<tr><td>${escHtml(q)}</td><td class="crm-num">${crmNum(n)}</td></tr>`).join('')}</tbody></table>` : '<div class="crm-muted">אין חיפושים עדיין</div>'}
+      </div>
+    </div>
+    <div class="crm-panel">
+      <h3 class="crm-h3">תכנים מובילים</h3>
+      ${topItems.length ? `<table class="crm-table crm-table-sm"><thead><tr><th>תוכן</th><th>מאת</th><th>צפיות</th><th>לייקים</th></tr></thead><tbody>${topItems.map(it => `<tr><td>${escHtml(it.title || '—')}</td><td>${escHtml(it.author || '')}</td><td class="crm-num">${crmNum(it.views)}</td><td class="crm-num">${crmNum(it.likes)}</td></tr>`).join('')}</tbody></table>` : '<div class="crm-muted">אין תכנים</div>'}
+    </div>`;
+}
+
+// טולטיפ לגרפים (ריחוף/פוקוס)
+(function () {
+  let tip = null;
+  const show = (el) => {
+    const text = el.getAttribute('data-tip');
+    if (!text) return;
+    if (!tip) { tip = document.createElement('div'); tip.className = 'crm-tip'; document.body.appendChild(tip); }
+    tip.textContent = text;
+    tip.style.display = 'block';
+    const r = el.getBoundingClientRect();
+    const z = (typeof siteBodyZoom === 'function') ? siteBodyZoom() : 1;
+    const w = tip.offsetWidth;
+    tip.style.left = Math.max(8, Math.min(window.innerWidth / z - w - 8, (r.left + r.width / 2) / z - w / 2)) + 'px';
+    tip.style.top = Math.max(8, r.top / z - tip.offsetHeight - 8) + 'px';
+  };
+  const hide = () => { if (tip) tip.style.display = 'none'; };
+  document.addEventListener('mouseover', e => { const el = e.target.closest && e.target.closest('.crm-bar-col'); if (el) show(el); else hide(); });
+  document.addEventListener('focusin', e => { const el = e.target.closest && e.target.closest('.crm-bar-col'); if (el) show(el); });
+  document.addEventListener('focusout', hide);
+  document.addEventListener('scroll', hide, true);
+})();
+
+// ייצוא לקוחות ל-CSV (נפתח ב-Excel)
+function crmExportCSV() {
+  if (!CRM.loaded) return;
+  const head = ['שם', 'אימייל', 'טלגרם', 'טלפון', 'גיל', 'מיקום', 'סגמנט', 'שלב', 'הצטרפות', 'פעילות אחרונה', 'העלאות', 'תגובות', 'פניות', 'עוקבים', 'ציון מעורבות', 'תגיות'];
+  const cell = v => { const s = String(v == null ? '' : v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+  const rows = crmFilteredCustomers().map(c => [c.name, c.email, c.telegram, c.phone, c.age, c.location, (CRM_SEGMENTS[c.segment] || {}).label, crmStageLabel(c.stage),
+    crmFmtDate(c.firstSeen), crmFmtDate(c.lastSeen), c.uploads, c.comments, c.supportMsgs + c.submissions, c.followers, c.score, c.tags.join(' | ')].map(cell).join(','));
+  const csv = '﻿' + [head.join(',')].concat(rows).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+  a.download = 'crm-customers-' + _analyticsDayKey() + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+window.crmExportCSV = crmExportCSV;
+window.CRM = CRM;
+window.crmBuildCustomers = crmBuildCustomers; // לבדיקה/דיבוג — בונה רשימה מנתונים שמועברים אליה בלבד

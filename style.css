@@ -2112,9 +2112,22 @@ body:not(.edit-mode) .hotspot-delete-btn {
 .art-rec-text { padding: 12px 14px; }
 .art-rec-text h4 { font-size: 14px; font-weight: 800; margin: 0 0 8px; line-height: 1.4; color: #111; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .art-rec-meta { font-size: 11px; color: #999; }
+/* המלצות ("נוספות שיעניינו אותך") במובייל — 3 בשורה, באותו מראה כמו במחשב בגודל מוקטן,
+   בתמונות, בסיפורים ובקומיקס */
 @media (max-width: 768px) {
-  .art-rec-grid { grid-template-columns: 1fr; }
-  .art-rec-img { height: 160px; }
+  .art-rec-section { margin-top: 28px; padding-top: 20px; }
+  .art-rec-section > h3 { font-size: 16px !important; margin-bottom: 12px !important; }
+  .art-rec-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 8px !important; margin-top: 10px; }
+  .art-rec-card { border-radius: 10px; box-shadow: 0 1px 6px rgba(0,0,0,0.08); }
+  .art-rec-img { height: auto !important; aspect-ratio: 4 / 3; }
+  .art-rec-badge.art-category-badge {
+    top: 5px; right: 5px; padding: 1px 5px; border-radius: 3px;
+    font-size: 8.5px; letter-spacing: 0; max-width: calc(100% - 10px);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .art-rec-text { padding: 7px 7px 9px !important; }
+  .art-rec-text h4 { font-size: 11.5px !important; line-height: 1.35 !important; margin: 0 0 4px !important; -webkit-line-clamp: 3 !important; word-break: break-word; }
+  .art-rec-meta { font-size: 9.5px !important; line-height: 1.35; word-break: break-word; }
 }
 /* בפלאפון מוסתרות בסרגל הצד רק "אתרים מומלצים" ותיבת המובילים,
    בעמוד התמונות ובעמוד הסיפורים. תיבת הקהילות נשארת, וכך גם כפתור
@@ -2126,14 +2139,6 @@ body:not(.edit-mode) .hotspot-delete-btn {
   .stories-page .art-popular-box { display: none !important; }
 }
 
-/* בעמוד גלריה ההמלצות נשארות שלושה ריבועים קטנים גם בפלאפון */
-@media (max-width: 768px) {
-  .photos-page .art-rec-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
-  .photos-page .art-rec-img { height: auto; aspect-ratio: 1 / 1; }
-  .photos-page .art-rec-text { padding: 6px 7px 8px; }
-  .photos-page .art-rec-text h4 { font-size: 11px; line-height: 1.3; margin: 0 0 4px; }
-  .photos-page .art-rec-meta { font-size: 9px; }
-}
 
 /* Responsive */
 @media (max-width: 900px) {
@@ -6308,4 +6313,134 @@ body.site-tour-picking, body.site-tour-picking * { cursor: crosshair !important;
 @media (max-width: 900px) {
   .qu-hero-row { flex-direction: column; gap: 16px; }
   .qu-guide { flex-basis: auto; order: 2; border-radius: 18px; padding: 16px; width: 100%; max-width: 460px; align-self: center; }
+}
+
+/* ===================== CRM (עמוד המידע, למנהל) ===================== */
+.crm {
+  --crm-ink: #0f172a; --crm-ink2: #334155; --crm-muted: #64748b; --crm-line: #e2e8f0;
+  --crm-surface: #ffffff; --crm-bg: #f8fafc; --crm-accent: #6d28d9; --crm-accent-soft: #ede9fe;
+  --crm-bar: #7c3aed;
+  max-width: 1100px; margin: 36px auto 0; padding: 0 0 40px; text-align: right; color: var(--crm-ink);
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+.crm-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; padding-top: 24px; border-top: 2px solid var(--crm-line); }
+.crm-title { margin: 0; font-size: 24px; font-weight: 900; }
+.crm-sub { color: var(--crm-muted); font-size: 13.5px; margin-top: 2px; }
+.crm-head-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.crm-btn { background: var(--crm-surface); border: 1px solid var(--crm-line); color: var(--crm-ink2); border-radius: 9px; padding: 8px 14px; font-size: 13px; font-weight: 800; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; font-family: inherit; }
+.crm-btn:hover { background: var(--crm-bg); }
+.crm-btn-primary { background: var(--crm-accent); border-color: var(--crm-accent); color: #fff; }
+.crm-btn-primary:hover { background: #5b21b6; }
+.crm-link { background: none; border: none; color: var(--crm-accent); font-weight: 700; cursor: pointer; padding: 0 4px; font-size: 12.5px; font-family: inherit; }
+.crm-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--crm-line); margin-bottom: 16px; overflow-x: auto; }
+.crm-tab { background: none; border: none; border-bottom: 3px solid transparent; padding: 10px 14px; font-size: 14px; font-weight: 800; color: var(--crm-muted); cursor: pointer; white-space: nowrap; font-family: inherit; }
+.crm-tab.active { color: var(--crm-accent); border-bottom-color: var(--crm-accent); }
+.crm-empty { padding: 32px 16px; text-align: center; color: var(--crm-muted); font-size: 14px; }
+.crm-muted { color: var(--crm-muted); font-size: 12.5px; }
+.crm-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 16px; }
+.crm-kpi { background: var(--crm-surface); border: 1px solid var(--crm-line); border-radius: 12px; padding: 12px 14px; }
+.crm-kpi-label { font-size: 12px; font-weight: 800; color: var(--crm-muted); }
+.crm-kpi-value { font-size: 26px; font-weight: 900; color: var(--crm-ink); margin-top: 4px; font-variant-numeric: tabular-nums; }
+.crm-kpi-sub { font-size: 11.5px; color: var(--crm-muted); margin-top: 2px; }
+.crm-filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.crm-input { border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 10px; font-size: 13.5px; background: #fff; color: var(--crm-ink); font-family: inherit; box-sizing: border-box; }
+.crm-filters input[type="search"] { flex: 1 1 220px; }
+.crm-input-sm { width: 130px; padding: 6px 8px; font-size: 12.5px; }
+.crm-count { font-size: 12.5px; color: var(--crm-muted); margin: 4px 0 8px; }
+.crm-table-wrap { overflow-x: auto; border: 1px solid var(--crm-line); border-radius: 12px; background: var(--crm-surface); }
+.crm-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.crm-table th { text-align: right; font-size: 12px; color: var(--crm-muted); font-weight: 800; padding: 10px 12px; border-bottom: 1px solid var(--crm-line); background: var(--crm-bg); white-space: nowrap; }
+.crm-table td { padding: 10px 12px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+.crm-table tbody tr { cursor: pointer; }
+.crm-table tbody tr:hover, .crm-table tbody tr:focus { background: #faf5ff; outline: none; }
+.crm-table-sm td, .crm-table-sm th { padding: 7px 10px; }
+.crm-table-sm tbody tr { cursor: default; }
+.crm-num { font-variant-numeric: tabular-nums; text-align: center !important; }
+.crm-name { font-weight: 800; }
+.crm-verified { color: #2563eb; font-weight: 900; }
+.crm-badge { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 11.5px; font-weight: 800; white-space: nowrap; }
+.crm-tag { display: inline-flex; align-items: center; gap: 3px; background: var(--crm-accent-soft); color: #5b21b6; border-radius: 6px; padding: 1px 7px; font-size: 11.5px; font-weight: 700; margin: 1px 0 1px 4px; }
+.crm-tag button { background: none; border: none; color: inherit; cursor: pointer; font-size: 10px; padding: 0; }
+.crm-score { display: inline-block; min-width: 34px; padding: 2px 6px; border-radius: 6px; font-weight: 800; font-size: 12px; background: #f1f5f9; color: var(--crm-ink2); }
+.crm-panel { background: var(--crm-surface); border: 1px solid var(--crm-line); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
+.crm-h3 { margin: 0 0 10px; font-size: 16px; font-weight: 900; }
+.crm-h4 { margin: 16px 0 8px; font-size: 13.5px; font-weight: 900; color: var(--crm-ink2); }
+.crm-note-line { margin: -4px 0 12px; }
+.crm-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.crm-grid-2 > .crm-panel { margin-bottom: 14px; }
+/* פסים אופקיים (משפך / הקלקות / יעדים) */
+.crm-hbar { display: grid; grid-template-columns: 150px 1fr auto; align-items: center; gap: 10px; margin: 8px 0; font-size: 13px; }
+.crm-hbar-label { font-weight: 700; color: var(--crm-ink2); }
+.crm-hbar-track { height: 12px; background: #f1f5f9; border-radius: 4px; overflow: hidden; }
+.crm-hbar-fill { height: 100%; background: var(--crm-bar); border-radius: 4px; }
+.crm-hbar-val { font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; display: flex; align-items: baseline; gap: 6px; }
+.crm-hbar-sub { font-weight: 600; font-size: 11.5px; color: var(--crm-muted); }
+/* גרף עמודות */
+.crm-chart-bars { display: flex; align-items: stretch; gap: 2px; height: 170px; direction: ltr; }
+.crm-bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; min-width: 0; outline: none; cursor: default; }
+.crm-bar-val { font-size: 10.5px; font-weight: 800; color: var(--crm-ink2); height: 15px; white-space: nowrap; }
+.crm-bar-area { flex: 1; width: 100%; display: flex; align-items: flex-end; justify-content: center; border-bottom: 1px solid var(--crm-line); }
+.crm-bar { width: 72%; max-width: 38px; min-height: 2px; background: var(--crm-bar); border-radius: 4px 4px 0 0; }
+.crm-bar-col:hover .crm-bar, .crm-bar-col:focus .crm-bar { background: #5b21b6; }
+.crm-bar.is-forecast { background: repeating-linear-gradient(45deg, #c4b5fd 0 4px, #ede9fe 4px 8px); border: 1.5px dashed var(--crm-bar); border-bottom: none; box-sizing: border-box; }
+.crm-bar-label { font-size: 10.5px; color: var(--crm-muted); height: 16px; margin-top: 4px; white-space: nowrap; }
+.crm-legend { display: flex; gap: 14px; justify-content: flex-start; margin-top: 8px; font-size: 12px; color: var(--crm-ink2); }
+.crm-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.crm-sw { display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: var(--crm-bar); }
+.crm-sw.is-forecast { background: repeating-linear-gradient(45deg, #c4b5fd 0 3px, #ede9fe 3px 6px); border: 1px dashed var(--crm-bar); box-sizing: border-box; }
+.crm-tip { position: fixed; z-index: 2147482000; background: #0f172a; color: #fff; font-size: 12.5px; font-weight: 700; padding: 6px 10px; border-radius: 8px; pointer-events: none; display: none; white-space: nowrap; direction: rtl; box-shadow: 0 6px 18px rgba(0,0,0,0.25); }
+/* לוח שלבים */
+.crm-board { display: grid; grid-template-columns: repeat(5, minmax(150px, 1fr)); gap: 10px; overflow-x: auto; }
+.crm-col { background: var(--crm-bg); border: 1px solid var(--crm-line); border-radius: 12px; padding: 10px; min-height: 120px; display: flex; flex-direction: column; gap: 6px; }
+.crm-col-head { font-weight: 900; font-size: 13.5px; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+.crm-col-count { background: #fff; border: 1px solid var(--crm-line); border-radius: 999px; padding: 0 8px; font-size: 12px; color: var(--crm-ink2); }
+.crm-col-card { background: #fff; border: 1px solid var(--crm-line); border-radius: 9px; padding: 8px 10px; text-align: right; cursor: pointer; display: flex; flex-direction: column; gap: 2px; font-family: inherit; font-size: 13px; }
+.crm-col-card:hover { border-color: var(--crm-accent); }
+.crm-col-empty { text-align: center; padding: 10px 0; }
+/* משימות ואוטומציות */
+.crm-switch { display: flex; align-items: center; gap: 8px; padding: 8px 0; font-size: 13.5px; cursor: pointer; border-bottom: 1px solid #f1f5f9; }
+.crm-switch:last-child { border-bottom: none; }
+.crm-switch input { width: 18px; height: 18px; accent-color: var(--crm-accent); }
+.crm-task-list { display: flex; flex-direction: column; gap: 6px; }
+.crm-task-wrap { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.crm-task { display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; border: 1px solid var(--crm-line); border-radius: 9px; background: #fff; flex: 1; }
+.crm-task label { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 13.5px; cursor: pointer; }
+.crm-task input { accent-color: var(--crm-accent); width: 16px; height: 16px; }
+.crm-task.done label span { text-decoration: line-through; color: var(--crm-muted); }
+.crm-task.overdue { border-color: #fca5a5; background: #fef2f2; }
+.crm-task-add, .crm-note-add { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.crm-task-add .crm-input:first-child, .crm-note-add textarea { flex: 1 1 160px; }
+.crm-notes { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+.crm-note { background: #fffbeb; border: 1px solid #fde68a; border-radius: 9px; padding: 8px 10px; font-size: 13.5px; white-space: pre-wrap; word-break: break-word; }
+.crm-goal { margin: 10px 0 16px; }
+.crm-goal-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
+.crm-inline { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 700; color: var(--crm-ink2); }
+/* כרטיס לקוח */
+.crm-modal { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.55); z-index: 100010; display: none; align-items: flex-start; justify-content: center; padding: 24px 16px; overflow-y: auto; }
+.crm-card { background: #fff; border-radius: 16px; width: 100%; max-width: 920px; padding: 20px; box-shadow: 0 24px 60px rgba(0,0,0,0.3); text-align: right; color: var(--crm-ink, #0f172a); font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; --crm-ink: #0f172a; --crm-ink2: #334155; --crm-muted: #64748b; --crm-line: #e2e8f0; --crm-bg: #f8fafc; --crm-accent: #6d28d9; --crm-accent-soft: #ede9fe; }
+.crm-card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.crm-card-name { font-size: 22px; font-weight: 900; }
+.crm-card-badges { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+.crm-x { background: #f1f5f9; border: none; border-radius: 50%; width: 34px; height: 34px; font-size: 15px; cursor: pointer; flex-shrink: 0; }
+.crm-card-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 12px 0 4px; padding-bottom: 12px; border-bottom: 1px solid var(--crm-line); }
+.crm-card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.crm-dl { display: grid; grid-template-columns: auto 1fr; gap: 5px 12px; margin: 0; font-size: 13.5px; }
+.crm-dl dt { color: var(--crm-muted); font-weight: 700; }
+.crm-dl dd { margin: 0; word-break: break-word; }
+.crm-mini-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.crm-mini-stats div { background: var(--crm-bg); border: 1px solid var(--crm-line); border-radius: 9px; padding: 7px; text-align: center; display: flex; flex-direction: column; }
+.crm-mini-stats b { font-size: 17px; font-variant-numeric: tabular-nums; }
+.crm-mini-stats span { font-size: 11px; color: var(--crm-muted); }
+.crm-tags-edit { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.crm-timeline { list-style: none; margin: 0; padding: 0; max-height: 620px; overflow-y: auto; }
+.crm-timeline li { display: flex; gap: 10px; padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-size: 13.5px; }
+.crm-tl-dot { flex-shrink: 0; width: 10px; height: 10px; border-radius: 50%; margin-top: 5px; box-shadow: 0 0 0 3px #fff, 0 0 0 4px var(--crm-line); }
+@media (max-width: 768px) {
+  .crm-grid-2, .crm-card-grid { grid-template-columns: 1fr; }
+  .crm-hide-sm { display: none; }
+  .crm-hbar { grid-template-columns: 105px 1fr auto; font-size: 12px; }
+  .crm-kpi-value { font-size: 22px; }
+  .crm-card { padding: 16px; }
+  .crm-chart-bars { height: 140px; }
+  .crm-board { grid-template-columns: repeat(5, 160px); }
 }
