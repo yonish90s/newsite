@@ -12840,6 +12840,26 @@ function removeItemFromStoredPages(id) {
 }
 window.removeItemFromStoredPages = removeItemFromStoredPages;
 
+// מסמן פריט כמאושר בכל עמוד שמור שמכיל אותו. מחזיר כמה עמודים עודכנו.
+function _setApprovedInStoredPages(id) {
+  if (!id || typeof pages === 'undefined' || !Array.isArray(pages)) return 0;
+  let count = 0;
+  pages.forEach(p => {
+    if (!p || !p.content || p.content.indexOf(id) === -1) return;
+    p.content = p.content.replace(/data-(photos|stories)-json="([^"]*)"/g, (full, kind, enc) => {
+      let arr;
+      try { arr = JSON.parse(decodeURIComponent(enc)); } catch (e) { return full; }
+      if (!Array.isArray(arr)) return full;
+      let touched = false;
+      arr.forEach(x => { if (x && x.id === id) { x.approved = true; delete x.__userSubKey; touched = true; } });
+      if (!touched) return full;
+      count++;
+      return `data-${kind}-json="${encodeURIComponent(JSON.stringify(arr))}"`;
+    });
+  });
+  return count;
+}
+
 function photoDelete(id, el) {
   if (!isEditMode) return;
   if (!confirm('האם למחוק גלריה זו?')) return;
@@ -13601,8 +13621,16 @@ async function _reqMutate(id, action) {
   const _userSubKey = targetItem && targetItem.__userSubKey;
   const _cleanupUserSub = async () => { if (_userSubKey) { try { await set(ref(db, `website/user_submissions/${_userSubKey}`), null); } catch (e) {} } };
 
+  // גם מהגלריות שמוצגות כרגע על המסך (אם הפריט לא נמצא באף מקור אחר)
+  if (!targetItem && typeof photoGetAlbums === 'function') {
+    try { targetItem = photoGetAlbums().find(x => x && x.id === id); } catch (e) {}
+  }
+
   if (action === 'approve') {
-    if (targetItem) {
+    // מסמנים "מאושר" בכל עמוד שמור שמכיל את הפריט (ייתכנו כמה עמודי תמונות/סיפורים) —
+    // ורק אם הוא לא קיים באף עמוד, מוסיפים אותו לעמוד התמונות/הסיפורים
+    const updatedInPages = _setApprovedInStoredPages(id);
+    if (targetItem && !updatedInPages) {
       targetItem.approved = true;
       if (targetItem.__userSubKey) delete targetItem.__userSubKey;
       if (targetItem.isStory || targetItem.type === 'story') {
