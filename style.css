@@ -6579,3 +6579,9 @@ body.site-tour-picking, body.site-tour-picking * { cursor: crosshair !important;
   .up-about-card { padding:14px; }
   .up-about-label { width:78px; font-size:13px; }
 }
+
+/* "עמודי צד" בעמוד הקהילות — מובייל בלבד (במחשב הם בסרגל הצד) */
+.side-pages-mobile-row { display: none !important; }
+@media (max-width: 768px) {
+  .side-pages-mobile-row { display: block !important; }
+}

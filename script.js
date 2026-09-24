@@ -11931,6 +11931,7 @@ function buildPhotosPage(albums, section) {
             <div class="art-rows photo-collapsible expanded" id="photo-row-1">${row1HTML}</div>
             ${photoRowMoreBtn(newestAlbums.length, 'photo-row-1')}
           </div>
+          ${section === 'communities' && typeof sidePagesShortcutsHTML === 'function' ? sidePagesShortcutsHTML() : ''}
 
           <div class="art-pagination" style="display:none"></div>
           <div class="art-no-results" style="display:none">${noResultsText}</div>
@@ -17574,6 +17575,41 @@ function communityShortcutsHTML() {
 }
 window.communityShortcutsHTML = communityShortcutsHTML;
 
+// מובייל: ריבועי כניסה ל"עמודי צד" (שאלות גולשים / הצעות) מתחת לקהילות — באותו סגנון
+function sidePagesShortcutsHTML() {
+  if (typeof pages === 'undefined' || !Array.isArray(pages)) return '';
+  const _canSeeHidden = (typeof isEditMode !== 'undefined' && isEditMode) || (typeof isAdmin === 'function' && isAdmin());
+  const find = (id, cls, title) => pages.find(p => p && (!p.isHidden || _canSeeHidden)
+    && (p.id === id || (p.content || '').includes(cls) || (p.title || '').includes(title)));
+  const items = [
+    { page: find('page-questions-main', 'questions-page', 'שאלות גולשים'), title: 'שאלות גולשים', sub: 'שאלות ותשובות מהגולשים', emoji: '❓', grad: 'linear-gradient(135deg,#f59e0b,#b45309)' },
+    { page: find('page-offers-main', 'offers-page', 'הצעות'), title: 'הצעות', sub: 'הצעות פעילות להערב', emoji: '🔥', grad: 'linear-gradient(135deg,#10b981,#047857)' }
+  ].filter(x => x.page);
+  if (!items.length) return '';
+  const cards = items.map(x => {
+    const oc = `navigateToPage('${artEsc(x.page.id)}')`;
+    return `
+      <div class="comm-grid-card comm-grid-shortcut" onclick="${oc}" role="button" tabindex="0">
+        <div class="comm-grid-thumb" style="background:${x.grad};">
+          <span style="font-size:56px; line-height:1;">${x.emoji}</span>
+        </div>
+        <div class="comm-grid-info">
+          <div class="comm-grid-name">${x.title}</div>
+          <div class="comm-grid-sub">${x.sub}</div>
+          <button class="comm-grid-btn" onclick="event.stopPropagation(); ${oc}">כניסה</button>
+        </div>
+      </div>`;
+  }).join('');
+  return `
+    <div class="photo-section-row side-pages-mobile-row" style="margin-bottom: 32px; background: #ffffff; padding: 18px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+      <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:2.5px solid #2563eb; padding-bottom:10px; margin-bottom:18px;">
+        <h3 style="margin:0; font-size:18px; font-weight:900; color:#1e3a8a;">עמודי צד</h3>
+      </div>
+      <div class="art-rows">${cards}</div>
+    </div>`;
+}
+window.sidePagesShortcutsHTML = sidePagesShortcutsHTML;
+
 function buildIdeasPage() {
   subscribeIdeas();
   let albums = ideaGetAlbums();
@@ -18282,6 +18318,11 @@ const UI_EN = {
   'העלאות ללא הגבלה + קידום': 'Unlimited uploads + promotion',
   'הלייקים מתחדשים כל יום': 'Likes renew every day', 'בלי מגבלות בכלל': 'No limits at all',
   'צפייה בתוכן פרימיום': 'Premium content access',
+  'גישה לתוכן פרימיום — בלי פרסומות.': 'Premium content access — no ads.',
+  'יותר תוכן, יותר חשיפה ויותר חיבורים.': 'More content, more exposure, more connections.',
+  'גישה לתוכן פרימיום': 'Premium content access', 'צפייה בתוכן נסתר': 'View hidden content',
+  '🎁 שבוע ניסיון חינם': '🎁 Free trial week', '7 ימים בלי לשלם': '7 days free',
+  'ביטול בכל עת, בלי התחייבות': 'Cancel anytime, no commitment', 'התחילו שבוע חינם': 'Start free week',
   'הודעות פרטיות ללא הגבלה': 'Unlimited private messages',
   'בלי פרסומות': 'No ads',
   'כל מה שיש בבסיס': 'Everything in Basic',
@@ -18808,45 +18849,44 @@ window.saveOnboardingAdmin = saveOnboardingAdmin;
 // ==========================================
 let currentSubscriptionBilling = 'yearly'; // 'yearly' | 'monthly'
 
+// כל המסלולים: שבוע ניסיון חינם. כל מסלול מוסיף פיצ'רים שאין במסלולים שמתחתיו (exclusive).
+const SUBSCRIPTION_TRIAL_DAYS = 7;
 const subscriptionPlansData = [
   {
     id: 'basic',
     title: 'בסיס',
-    subtitle: 'להתחיל לגלות את הקהילה — בלי הגבלות צפייה.',
+    subtitle: 'גישה לתוכן פרימיום — בלי פרסומות.',
     monthlyOriginal: 20,
     monthlyPrice: 20,
     yearlyOriginal: 20,
     yearlyPrice: 20,
     usd: 6,
-    credits: '15 לייקים ביום',
-    usage: '10 העלאות בחודש',
-    subtext: 'הלייקים מתחדשים כל יום',
     isFeatured: false,
     features: [
-      'צפייה בתוכן פרימיום',
-      'הודעות פרטיות ללא הגבלה',
-      'בלי פרסומות'
-    ]
+      'גישה לתוכן פרימיום',
+      'בלי פרסומות',
+      'צפייה בתוכן נסתר'
+    ],
+    exclusive: []
   },
   {
     id: 'advanced',
     title: 'מתקדם',
-    subtitle: 'יותר לייקים, יותר חשיפה ויותר חיבורים.',
+    subtitle: 'יותר תוכן, יותר חשיפה ויותר חיבורים.',
     badge: 'מומלץ',
     monthlyOriginal: 40,
     monthlyPrice: 40,
     yearlyOriginal: 40,
     yearlyPrice: 40,
     usd: 12,
-    credits: '50 לייקים ביום',
-    usage: 'העלאות ללא הגבלה',
-    subtext: 'הלייקים מתחדשים כל יום',
     isFeatured: true,
     features: [
-      'כל מה שיש בבסיס',
-      'אישור מהיר לתכנים שהעלית',
+      'כל מה שיש בבסיס'
+    ],
+    exclusive: [
       'לראות מי צפה בפרופיל שלך',
-      'צפייה בתמונות באיכות מלאה'
+      'צפייה בתמונות באיכות מלאה',
+      'הודעות פרטיות ללא הגבלה'
     ]
   },
   {
@@ -18858,12 +18898,11 @@ const subscriptionPlansData = [
     yearlyOriginal: 60,
     yearlyPrice: 60,
     usd: 18,
-    credits: 'לייקים ללא הגבלה',
-    usage: 'העלאות ללא הגבלה + קידום',
-    subtext: 'בלי מגבלות בכלל',
     isFeatured: false,
     features: [
-      'כל מה שיש במתקדם',
+      'כל מה שיש במתקדם'
+    ],
+    exclusive: [
       'התכנים שלך מקודמים בראש הקהילות',
       'תג פרופיל פרימיום',
       'גישה ראשונה לפיצ׳רים חדשים',
@@ -18871,6 +18910,16 @@ const subscriptionPlansData = [
     ]
   }
 ];
+
+// המסלול המסומן (סגול) — עובר למסלול שנלחץ
+let selectedSubscriptionPlan = 'advanced';
+function selectSubscriptionPlan(planId) {
+  if (!subscriptionPlansData.some(p => p.id === planId) || selectedSubscriptionPlan === planId) return;
+  selectedSubscriptionPlan = planId;
+  const container = document.querySelector('.subscription-page-wrapper');
+  if (container && container.parentElement) container.parentElement.innerHTML = buildSubscriptionPage();
+}
+window.selectSubscriptionPlan = selectSubscriptionPlan;
 
 function setSubscriptionBilling(period) {
   currentSubscriptionBilling = period;
@@ -18885,20 +18934,15 @@ function setSubscriptionBilling(period) {
 window.setSubscriptionBilling = setSubscriptionBilling;
 
 function handleSubscriptionPlanSelect(planId) {
+  selectSubscriptionPlan(planId);
   if (typeof trackEvent === 'function') trackEvent('subscribe_click');
   const plan = subscriptionPlansData.find(p => p.id === planId);
   const planName = plan ? plan.title : planId;
   const periodText = currentSubscriptionBilling === 'yearly' ? 'שנתי' : 'חודשי';
-  alert(`בחרת במסלול ${planName} במסלול ${periodText}! תהליך התשלום יתחבר בקרוב.`);
+  alert(`בחרת במסלול ${planName} (${periodText}) — כולל ${SUBSCRIPTION_TRIAL_DAYS} ימי ניסיון חינם! תהליך ההרשמה יתחבר בקרוב.`);
 }
 window.handleSubscriptionPlanSelect = handleSubscriptionPlanSelect;
 
-function handleApplePay(planId) {
-  const plan = subscriptionPlansData.find(p => p.id === planId);
-  const planName = plan ? plan.title : planId;
-  alert(`חיבור מהיר ל-Apple Pay עבור מסלול ${planName}...`);
-}
-window.handleApplePay = handleApplePay;
 
 function buildSubscriptionPage() {
   const isYearly = currentSubscriptionBilling === 'yearly';
@@ -18914,9 +18958,10 @@ function buildSubscriptionPage() {
     const formattedOrigPrice = origPrice ? origPrice.toLocaleString('he-IL') : '';
     const paymentPeriodLabel = isYearly ? 'בתשלום שנתי' : 'בתשלום חודשי';
 
-    const cardBorder = plan.isFeatured ? '2px solid #8b5cf6' : '1px solid #e2e8f0';
-    const cardShadow = plan.isFeatured ? '0 12px 30px rgba(139, 92, 246, 0.15)' : '0 4px 16px rgba(0,0,0,0.04)';
-    const btnStyle = plan.isFeatured
+    const isSelected = plan.id === selectedSubscriptionPlan;
+    const cardBorder = isSelected ? '2px solid #8b5cf6' : '1px solid #e2e8f0';
+    const cardShadow = isSelected ? '0 12px 30px rgba(139, 92, 246, 0.15)' : '0 4px 16px rgba(0,0,0,0.04)';
+    const btnStyle = isSelected
       ? 'background: #7c3aed; color: #ffffff; border: none;'
       : 'background: #ffffff; color: #6366f1; border: 1.5px solid #a5b4fc;';
 
@@ -18925,11 +18970,17 @@ function buildSubscriptionPage() {
         <span style="display: inline-block; width: 4px; height: 4px; background: #6366f1; border-radius: 50%; flex-shrink: 0;"></span>
         <span>${f}</span>
       </li>
+    `).join('') + (plan.exclusive || []).map(f => `
+      <li class="sub-exclusive" style="display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: #5b21b6; font-weight: 700; line-height: 1.4;">
+        <span style="flex-shrink: 0; font-size: 11px;">✨</span>
+        <span>${f}</span>
+      </li>
     `).join('');
 
     return `
-      <div class="sub-pricing-card ${plan.isFeatured ? 'featured' : ''}" style="
+      <div class="sub-pricing-card ${isSelected ? 'featured' : ''}" onclick="selectSubscriptionPlan('${artEsc(plan.id)}')" style="
         position: relative;
+        cursor: pointer;
         background: #ffffff;
         border-radius: 18px;
         border: ${cardBorder};
@@ -18984,14 +19035,14 @@ ${currencySym}${formattedOrigPrice}
           </div>
 
           <!-- Credits & Usage details -->
-          <div class="sub-credits" style="background: #f8fafc; border-radius: 10px; padding: 10px 8px; margin-bottom: 18px; border: 1px solid #f1f5f9;">
-            <div style="font-size: 12.5px; font-weight: 800; color: #1e293b; margin-bottom: 2px;">${plan.credits}</div>
-            <div style="font-size: 11.5px; font-weight: 700; color: #334155; margin-bottom: 2px;">${plan.usage}</div>
-            <div style="font-size: 10px; color: #94a3b8;">${escHtml(plan.subtext)}</div>
+          <div class="sub-credits" style="background: #f5f3ff; border-radius: 10px; padding: 10px 8px; margin-bottom: 18px; border: 1px solid #ede9fe;">
+            <div style="font-size: 12.5px; font-weight: 800; color: #5b21b6; margin-bottom: 2px;">🎁 שבוע ניסיון חינם</div>
+            <div style="font-size: 11.5px; font-weight: 700; color: #334155; margin-bottom: 2px;">${SUBSCRIPTION_TRIAL_DAYS} ימים בלי לשלם</div>
+            <div style="font-size: 10px; color: #94a3b8;">ביטול בכל עת, בלי התחייבות</div>
           </div>
 
           <!-- Action Button -->
-          <button class="sub-start-btn" onclick="handleSubscriptionPlanSelect('${artEsc(plan.id)}')" style="
+          <button class="sub-start-btn" onclick="event.stopPropagation(); handleSubscriptionPlanSelect('${artEsc(plan.id)}')" style="
             width: 100%;
             padding: 10px 14px;
             border-radius: 10px;
@@ -19000,34 +19051,8 @@ ${currencySym}${formattedOrigPrice}
             cursor: pointer;
             transition: all 0.2s ease;
             ${btnStyle}
-          ">בואו נתחיל</button>
+          ">התחילו שבוע חינם</button>
 
-          <!-- Apple Pay Option -->
-          <div class="sub-pay-label" style="margin-top: 12px; margin-bottom: 6px; font-size: 10.5px; color: #94a3b8;">
-            או תשלום מהיר עם
-          </div>
-          <button class="sub-pay-btn" onclick="handleApplePay('${artEsc(plan.id)}')" style="
-            width: 100%;
-            background: #000000;
-            color: #ffffff;
-            border: none;
-            border-radius: 8px;
-            padding: 7px 12px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 4px;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            font-size: 13px;
-            font-weight: 700;
-            transition: opacity 0.2s;
-          ">
-            <svg width="14" height="17" viewBox="0 0 170 170" fill="#ffffff" style="margin-top:-2px;">
-              <path d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.19-2.12-9.97-3.17-14.34-3.17-4.58 0-9.49 1.05-14.75 3.17-5.26 2.13-9.5 3.24-12.74 3.35-4.35.13-9.16-1.9-14.42-6.08-3.69-3.04-7.69-7.85-12-14.43-6-9.15-10.82-19.66-14.48-31.52-3.65-11.87-5.49-23.27-5.49-34.22 0-14.57 3.73-26.43 11.2-35.58 7.46-9.16 16.73-13.84 27.8-14.05 4.89 0 10.13 1.25 15.72 3.75 5.59 2.5 9.47 3.86 11.64 4.08 1.95-.22 5.94-1.63 11.96-4.22 6.02-2.6 11.28-3.79 15.78-3.58 11.95.65 21.6 4.94 28.94 12.87-10.43 6.31-15.54 15.11-15.33 26.4.22 8.92 3.63 16.3 10.23 22.14 6.6 5.84 14.3 9.1 23.11 9.78-2.39 7.18-5.54 14.7-9.45 22.56zM119.22 31.02c0-7.39 2.66-14.35 7.98-20.87 5.32-6.53 11.95-10.15 19.89-10.87.22 1.09.33 2.18.33 3.26 0 7.39-2.77 14.46-8.31 21.2-5.54 6.74-12.28 10.43-20.21 11.08-.11-1.09-.16-2.06-.16-2.91l.48-.89z"/>
-            </svg>
-            Pay
-          </button>
         </div>
 
         <!-- Features Divider & List -->
