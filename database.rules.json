@@ -16,6 +16,7 @@
       "socialLinks": { ".read": true },
       "onboardingVideos": { ".read": true },
       "storyCategories": { ".read": true },
+      "photoBarCategories": { ".read": true },
       "tourConfig": { ".read": true },
       "uploadGuideVideo": { ".read": true },
       "hideCart": { ".read": true },

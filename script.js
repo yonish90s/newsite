@@ -294,7 +294,8 @@ const isAdmin = () => auth.currentUser && auth.currentUser.email === "yoni98321@
 // מפתחות ציבוריים של האתר. כללי האבטחה חוסמים קריאה של כל website (הודעות, משתמשים וכו'),
 // ולכן קוראים רק את המפתחות האלה, כל אחד בנפרד.
 const PUBLIC_SITE_KEYS = ['pages', 'topNavPages', 'siteBackgrounds', 'promotedSites', 'socialLinks',
-  'onboardingVideos', 'hideCart', 'hideChat', 'deleteCart', 'deleteChat', 'item_likes'];
+  'onboardingVideos', 'hideCart', 'hideChat', 'deleteCart', 'deleteChat', 'item_likes',
+  'storyCategories', 'photoBarCategories'];
 
 async function fetchPublicSiteData() {
   const snaps = await Promise.all(PUBLIC_SITE_KEYS.map(k => get(ref(db, 'website/' + k)).catch(() => null)));
@@ -786,6 +787,7 @@ async function initSite() {
         localStorage.setItem('promoted_sites', JSON.stringify(PROMOTED_SITES));
       }
       if (data.socialLinks && typeof SOCIAL_LINKS !== 'undefined') SOCIAL_LINKS = { ...SOCIAL_LINKS, ...data.socialLinks };
+      if (typeof applyRemoteCategoryBars === 'function') applyRemoteCategoryBars(data, false);
       if (data.onboardingVideos && typeof ONBOARDING_VIDEOS !== 'undefined') {
         ONBOARDING_VIDEOS = { ...ONBOARDING_VIDEOS, ...data.onboardingVideos };
         try { if (typeof maybeShowOnboarding === 'function') maybeShowOnboarding(); } catch (e) {}
@@ -945,7 +947,8 @@ function saveToStorage() {
       promotedSites: PROMOTED_SITES,
       socialLinks: SOCIAL_LINKS,
       onboardingVideos: (typeof ONBOARDING_VIDEOS !== 'undefined' ? ONBOARDING_VIDEOS : { desktop: ['', '', ''], mobile: ['', '', ''] }),
-      storyCategories: STORY_CATEGORIES
+      storyCategories: STORY_CATEGORIES,
+      photoBarCategories: PHOTO_BAR_CATEGORIES
     }).then(() => {
       console.log("סונכרן בהצלחה לענן Firebase!");
     }).catch(err => {
@@ -6163,20 +6166,78 @@ function syncStoryCategorySelect() {
 }
 window.syncStoryCategorySelect = syncStoryCategorySelect;
 
-function openStoryCategoriesModal() {
+// ============================================================
+// עריכת סרגלי הקטגוריות (מנהל): 'stories' = קומיקס+סיפורים, 'photos' = עמוד התמונות
+// ============================================================
+let PHOTO_BAR_CATEGORIES = (function () {
+  try {
+    const saved = JSON.parse(localStorage.getItem('custom_photo_bar_categories'));
+    if (Array.isArray(saved) && saved.length > 0) return saved;
+  } catch (e) {}
+  return ['תמונות גולשים', 'לעסקים', 'כללי'];
+})();
+
+function savePhotoBarCategories() {
+  try { localStorage.setItem('custom_photo_bar_categories', JSON.stringify(PHOTO_BAR_CATEGORIES)); } catch (e) {}
+  try { set(ref(db, 'website/photoBarCategories'), PHOTO_BAR_CATEGORIES); } catch (e) {}
+}
+
+let catModalKind = 'stories';
+function _catList(kind) { return kind === 'photos' ? PHOTO_BAR_CATEGORIES : STORY_CATEGORIES; }
+function _catSave(kind) { if (kind === 'photos') savePhotoBarCategories(); else saveStoryCategories(); }
+function _catRerender(kind) {
+  if (kind === 'photos') {
+    const bar = mainContent && mainContent.querySelector('.photos-page[data-section="photos"] .section-category-bar');
+    if (bar) bar.outerHTML = sectionCategoryBarHTML('photos');
+  } else {
+    renderStoryCategoryTabs();
+  }
+}
+
+// מחיל קטגוריות שהגיעו מ-Firebase (לכל הגולשים ולכל המכשירים)
+function applyRemoteCategoryBars(data, rerender) {
+  if (!data) return;
+  if (Array.isArray(data.storyCategories) && data.storyCategories.length
+      && JSON.stringify(data.storyCategories) !== JSON.stringify(STORY_CATEGORIES)) {
+    STORY_CATEGORIES = data.storyCategories.filter(Boolean);
+    try { localStorage.setItem('custom_story_categories', JSON.stringify(STORY_CATEGORIES)); } catch (e) {}
+    syncStoryCategorySelect();
+    if (rerender) _catRerender('stories');
+  }
+  if (Array.isArray(data.photoBarCategories) && data.photoBarCategories.length
+      && JSON.stringify(data.photoBarCategories) !== JSON.stringify(PHOTO_BAR_CATEGORIES)) {
+    PHOTO_BAR_CATEGORIES = data.photoBarCategories.filter(Boolean);
+    try { localStorage.setItem('custom_photo_bar_categories', JSON.stringify(PHOTO_BAR_CATEGORIES)); } catch (e) {}
+    if (rerender) _catRerender('photos');
+  }
+}
+window.applyRemoteCategoryBars = applyRemoteCategoryBars;
+
+function openCategoriesModal(kind) {
   if (!isAdmin() && !isEditMode) return;
+  catModalKind = kind === 'photos' ? 'photos' : 'stories';
+  const list = _catList(catModalKind);
+  const title = document.getElementById('story-categories-modal-title');
+  if (title) title.textContent = catModalKind === 'photos' ? '🏷️ ניהול קטגוריות — תמונות' : '🏷️ ניהול קטגוריות — קומיקס וסיפורים';
   const listContainer = document.getElementById('story-categories-list-container');
   if (listContainer) {
-    listContainer.innerHTML = STORY_CATEGORIES.map((cat, idx) => `
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px;">
-        <span style="font-weight: 600; font-size: 14px; color: #1f2937;">${cat}</span>
-        <button onclick="deleteStoryCategory(${idx})" title="מחק קטגוריה" style="background: rgba(225,29,72,0.1); color: #e11d48; border: none; border-radius: 6px; width: 28px; height: 28px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center;">✕</button>
+    const iconBtn = 'border:none; border-radius:6px; width:28px; height:28px; cursor:pointer; font-weight:bold; display:flex; align-items:center; justify-content:center;';
+    listContainer.innerHTML = list.map((cat, idx) => `
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 10px 14px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px;">
+        <span style="font-weight: 600; font-size: 14px; color: #1f2937; flex: 1;">${escHtml(cat)}</span>
+        <button onclick="moveCategory(${idx}, -1)" title="הזז למעלה" ${idx === 0 ? 'disabled' : ''} style="${iconBtn} background:#eef2ff; color:#4f46e5; opacity:${idx === 0 ? 0.35 : 1};">▲</button>
+        <button onclick="moveCategory(${idx}, 1)" title="הזז למטה" ${idx === list.length - 1 ? 'disabled' : ''} style="${iconBtn} background:#eef2ff; color:#4f46e5; opacity:${idx === list.length - 1 ? 0.35 : 1};">▼</button>
+        <button onclick="renameCategory(${idx})" title="שנה שם" style="${iconBtn} background:rgba(139,92,246,0.1); color:#8b5cf6;">✏️</button>
+        <button onclick="deleteStoryCategory(${idx})" title="מחק קטגוריה" style="${iconBtn} background:rgba(225,29,72,0.1); color:#e11d48;">✕</button>
       </div>
     `).join('');
   }
   const modal = document.getElementById('story-categories-modal');
   if (modal) modal.style.display = 'flex';
 }
+window.openCategoriesModal = openCategoriesModal;
+
+function openStoryCategoriesModal() { openCategoriesModal('stories'); }
 window.openStoryCategoriesModal = openStoryCategoriesModal;
 
 function closeStoryCategoriesModal() {
@@ -6185,33 +6246,66 @@ function closeStoryCategoriesModal() {
 }
 window.closeStoryCategoriesModal = closeStoryCategoriesModal;
 
+function _catChanged() {
+  _catSave(catModalKind);
+  openCategoriesModal(catModalKind);
+  _catRerender(catModalKind);
+}
+
 function addStoryCategory() {
   const inp = document.getElementById('new-story-cat-input');
   if (!inp) return;
   const val = inp.value.trim();
   if (!val) { alert('אנא הזן שם קטגוריה'); return; }
-  if (STORY_CATEGORIES.includes(val)) { alert('קטגוריה זו כבר קיימת'); return; }
-  
-  STORY_CATEGORIES.push(val);
+  const list = _catList(catModalKind);
+  if (val === 'הכל' || list.includes(val)) { alert('קטגוריה זו כבר קיימת'); return; }
+  list.push(val);
   inp.value = '';
-  saveStoryCategories();
-  openStoryCategoriesModal();
-  renderStoryCategoryTabs();
+  _catChanged();
 }
 window.addStoryCategory = addStoryCategory;
 
+function renameCategory(idx) {
+  const list = _catList(catModalKind);
+  const old = list[idx];
+  if (old === undefined) return;
+  const val = (prompt('שם חדש לקטגוריה:', old) || '').trim();
+  if (!val || val === old) return;
+  if (val === 'הכל' || list.includes(val)) { alert('קטגוריה זו כבר קיימת'); return; }
+  list[idx] = val;
+  if (catModalKind === 'photos') {
+    if (typeof sectionCatFilters !== 'undefined' && sectionCatFilters.photos === old) sectionCatFilters.photos = val;
+  } else if (selectedStoryCategories.has(old)) {
+    selectedStoryCategories.delete(old); selectedStoryCategories.add(val);
+  }
+  _catChanged();
+}
+window.renameCategory = renameCategory;
+
+function moveCategory(idx, dir) {
+  const list = _catList(catModalKind);
+  const j = idx + dir;
+  if (j < 0 || j >= list.length) return;
+  [list[idx], list[j]] = [list[j], list[idx]];
+  _catChanged();
+}
+window.moveCategory = moveCategory;
+
 function deleteStoryCategory(idx) {
-  if (STORY_CATEGORIES.length <= 1) {
+  const list = _catList(catModalKind);
+  if (list.length <= 1) {
     alert('חובה להשאיר לפחות קטגוריה אחת');
     return;
   }
-  const cat = STORY_CATEGORIES[idx];
+  const cat = list[idx];
   if (!confirm(`האם למחוק את הקטגוריה "${cat}"?`)) return;
-  STORY_CATEGORIES.splice(idx, 1);
-  if (selectedStoryCategories.has(cat)) selectedStoryCategories.delete(cat);
-  saveStoryCategories();
-  openStoryCategoriesModal();
-  renderStoryCategoryTabs();
+  list.splice(idx, 1);
+  if (catModalKind === 'photos') {
+    if (typeof sectionCatFilters !== 'undefined' && sectionCatFilters.photos === cat) sectionCatFilters.photos = 'הכל';
+  } else if (selectedStoryCategories.has(cat)) {
+    selectedStoryCategories.delete(cat);
+  }
+  _catChanged();
 }
 window.deleteStoryCategory = deleteStoryCategory;
 
@@ -10706,7 +10800,7 @@ window.quickUploadState = window.quickUploadState || {
 function quickUploadStepKeys() {
   const t = (window.quickUploadState && window.quickUploadState.target) || 'photos';
   if (t === 'photos') {
-    return ['target', 'title', 'summary', 'category', 'age', 'location', 'telegram', 'email', 'images'];
+    return ['target', 'titlesum', 'details', 'contact', 'images'];
   }
   return ['target', 'title', 'category', 'desc', 'author', 'images'];
 }
@@ -10793,6 +10887,64 @@ function renderQuickUploadHero() {
           ${_arrow()}
         </div>`;
     }
+  } else if (_key === 'titlesum') {
+    // תמונות: כותרת + תקציר — שלב אחד
+    questionHeader = _hdr('מה הכותרת', 'והתקציר?', 'כותרת קליטה ותיאור קצר שילווה את הגלריה');
+    inputContent = `
+      <div class="qu-details-card">
+        <div class="qu-detail-row">
+          <div class="qu-detail-label">כותרת</div>
+          <input type="text" id="qu-input-field" class="qu-field" placeholder="לדוגמה: יום טיול מדהים בצפון..." value="${escHtml(st.title || '')}" onkeydown="if(event.key==='Enter'){event.preventDefault(); const n=document.getElementById('qu-input-field-2'); if(n) n.focus();}" autofocus>
+        </div>
+        <div class="qu-detail-row">
+          <div class="qu-detail-label">תקציר</div>
+          <textarea id="qu-input-field-2" class="qu-field" rows="2" placeholder="תיאור קצר... (אופציונלי)">${escHtml(st.summary || '')}</textarea>
+        </div>
+      </div>
+      <div class="qu-input-row" style="margin-top:16px; justify-content:flex-end;">
+        ${_arrow()}
+      </div>`;
+  } else if (_key === 'contact') {
+    // תמונות: טלגרם + מייל — שלב אחד
+    questionHeader = _hdr('איך אפשר', 'ליצור קשר?', 'טלגרם ומייל שיוצגו בכרטיס (אופציונלי)');
+    inputContent = `
+      <div class="qu-details-card">
+        <div class="qu-detail-row">
+          <div class="qu-detail-label">טלגרם</div>
+          <input type="text" id="qu-input-field" class="qu-field" dir="ltr" placeholder="@username" value="${escHtml(st.telegram || '')}" onkeydown="if(event.key==='Enter'){event.preventDefault(); const n=document.getElementById('qu-input-field-2'); if(n) n.focus();}" autofocus>
+        </div>
+        <div class="qu-detail-row">
+          <div class="qu-detail-label">מייל</div>
+          <input type="email" id="qu-input-field-2" class="qu-field" dir="ltr" placeholder="example@mail.com" value="${escHtml(st.email || '')}" onkeydown="if(event.key==='Enter') quickUploadNext()">
+        </div>
+      </div>
+      <div class="qu-input-row" style="margin-top:16px; justify-content:flex-end;">
+        ${_arrow()}
+      </div>`;
+  } else if (_key === 'details') {
+    // תמונות: מין + גיל + אזור — שלב אחד מרוכז
+    questionHeader = _hdr('מה הפרטים', 'שלך?', 'מין, גיל ואזור שיוצגו בכרטיס');
+    const _chips = (field, opts, cur) => opts.map(o => `<button type="button" class="qu-cat-chip ${cur === o ? 'active' : ''}" onclick="quickUploadSetDetail('${field}', '${artEsc(o)}')">${escHtml(o)}</button>`).join('');
+    let ageOpts = '<option value="">בחרו גיל</option>';
+    for (let a = 18; a <= 99; a++) ageOpts += `<option value="${a}" ${String(st.age) === String(a) ? 'selected' : ''}>${a}</option>`;
+    inputContent = `
+      <div class="qu-details-card">
+        <div class="qu-detail-row">
+          <div class="qu-detail-label">מין</div>
+          <div class="qu-detail-chips">${_chips('gender', ['גבר', 'אישה', 'זוג'], st.category)}</div>
+        </div>
+        <div class="qu-detail-row">
+          <div class="qu-detail-label">גיל</div>
+          <div class="qu-select-wrap"><select class="qu-select" onchange="quickUploadSetDetail('age', this.value)">${ageOpts}</select></div>
+        </div>
+        <div class="qu-detail-row">
+          <div class="qu-detail-label">אזור</div>
+          <div class="qu-detail-chips">${_chips('region', ['מרכז', 'דרום', 'צפון'], st.location)}</div>
+        </div>
+      </div>
+      <div class="qu-input-row" style="margin-top:16px; justify-content:flex-end;">
+        ${_arrow()}
+      </div>`;
   } else if (_key === 'age') {
     questionHeader = _hdr('מה הגיל', 'שלך?', 'הגיל שיוצג בכרטיס');
     inputContent = _textStep('לדוגמה: 24', st.age, 'number');
@@ -10951,6 +11103,16 @@ function quickUploadSetCat(cat) {
 }
 window.quickUploadSetCat = quickUploadSetCat;
 
+// שלב "הפרטים" בתמונות: מין (נשמר כקטגוריה), גיל ואזור. לחיצה חוזרת על אזור מבטלת אותו.
+function quickUploadSetDetail(field, val) {
+  const st = window.quickUploadState;
+  if (field === 'gender') st.category = val;
+  else if (field === 'age') { st.age = val; return; }
+  else if (field === 'region') st.location = (st.location === val) ? '' : val;
+  quickUploadRefreshUI();
+}
+window.quickUploadSetDetail = quickUploadSetDetail;
+
 // שומר את הערך של השלב הנוכחי לתוך ה-state לפי מפתח השלב
 function quickUploadSaveCurrent(key, val) {
   const st = window.quickUploadState;
@@ -10963,6 +11125,12 @@ function quickUploadSaveCurrent(key, val) {
   else if (key === 'email') st.email = val;
   else if (key === 'desc') st.desc = val;
   else if (key === 'author') st.author = val;
+  else if (key === 'titlesum' || key === 'contact') {
+    const f2 = document.getElementById('qu-input-field-2');
+    const val2 = f2 ? f2.value.trim() : '';
+    if (key === 'titlesum') { st.title = val; st.summary = val2; }
+    else { st.telegram = val; st.email = val2; }
+  }
 }
 
 function quickUploadNext() {
@@ -10973,7 +11141,7 @@ function quickUploadNext() {
   const val = f ? f.value.trim() : '';
 
   // כותרת חובה
-  if (key === 'title' && !val) {
+  if ((key === 'title' || key === 'titlesum') && !val) {
     alert('נא להזין כותרת');
     if (f) f.focus();
     return;
@@ -16699,6 +16867,8 @@ window.saveSocialLinksModal = saveSocialLinksModal;
 // האזנה לשינויים בזמן אמת במסד הנתונים מכל מכשיר (למשל מהמחשב לנייד)
 onPublicSiteValue((data) => {
   if (!Object.keys(data).length) return;
+  // קטגוריות סרגלי הסינון (תמונות / קומיקס+סיפורים) — מתעדכנות גם במצב עריכה
+  if (typeof applyRemoteCategoryBars === 'function') applyRemoteCategoryBars(data, true);
   
   // אם המכשיר הנוכחי נמצא במצב עריכה פעיל, לא נדרוס את השינויים המקומיים שלו באמצע עבודה
   if (isEditMode) return;
@@ -17086,12 +17256,16 @@ window.setSectionCategoryFilter = setSectionCategoryFilter;
 function sectionCategoryBarHTML(section) {
   // עמוד התמונות — צבע סגול; שאר העמודים נשארים כחול
   const isPhotos = section === 'photos';
-  const cats = [
-    { id: 'הכל', label: 'הכל' },
-    ...(isPhotos ? [{ id: 'תמונות גולשים', label: 'תמונות גולשים' }] : []),
-    { id: 'לעסקים', label: '💼 לעסקים' },
-    { id: 'כללי', label: '💡 כללי' }
-  ];
+  const cats = isPhotos
+    ? [{ id: 'הכל', label: 'הכל' }, ...PHOTO_BAR_CATEGORIES.map(c => ({ id: c, label: c }))]
+    : [
+      { id: 'הכל', label: 'הכל' },
+      { id: 'לעסקים', label: '💼 לעסקים' },
+      { id: 'כללי', label: '💡 כללי' }
+    ];
+  const editBtn = (isPhotos && (isAdmin() || isEditMode))
+    ? `<button type="button" onclick="openCategoriesModal('photos')" style="padding:8px 16px; border-radius:999px; border:1px dashed #8b5cf6; background:rgba(139,92,246,0.1); color:#8b5cf6; font-size:14px; font-weight:700; cursor:pointer;">✏️ ניהול קטגוריות</button>`
+    : '';
   const active = getSectionCategoryFilter(section);
   const activeBg = isPhotos ? '#8b5cf6' : '#3b82f6';
   const activeShadow = isPhotos ? '0 4px 14px rgba(139,92,246,0.35)' : '0 4px 14px rgba(59,130,246,0.35)';
@@ -17106,6 +17280,7 @@ function sectionCategoryBarHTML(section) {
           </button>
         `;
       }).join('')}
+      ${editBtn}
     </div>
   `;
 }
@@ -17119,7 +17294,8 @@ function filterAlbumsByCategory(albums, section) {
     const hay = `${a.title || ''} ${a.summary || ''} ${a.desc || ''} ${cat}`;
     if (active === 'לעסקים') return cat.includes('עסק') || hay.includes('עסק');
     if (active === 'כללי') return !(cat.includes('עסק') || hay.includes('עסק'));
-    return cat === active;
+    // קטגוריה שהמנהל הוסיף: התאמה לקטגוריה של הפריט, או מופיעה בכותרת/תיאור
+    return cat === active || hay.includes(active);
   });
 }
 window.filterAlbumsByCategory = filterAlbumsByCategory;

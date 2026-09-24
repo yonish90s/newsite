@@ -14,7 +14,7 @@
   <!-- ספריית localforage לשמירת תמונות -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
   <!-- קישור לקובץ העיצוב החיצוני (עם פרמטר למניעת שמירה במטמון) -->
-  <link rel="stylesheet" href="./style.css?v=1335">
+  <link rel="stylesheet" href="./style.css?v=1339">
 </head>
 <body class="light-mode">
   <!-- שער אישור גיל (Age Gate Overlay) -->
@@ -267,7 +267,7 @@
               <rect id="battery-fill-rect" x="4.5" y="8.5" width="11" height="7" rx="1" fill="#ffffff" stroke="none"></rect>
             </svg>
           </button>
-          <button id="feed-btn" class="notif-bell" onclick="openFeed()" title="הפיד שלי — מי שאני עוקב">
+          <button id="feed-btn" class="notif-bell" style="display:none" onclick="openFeed()" title="הפיד שלי — מי שאני עוקב">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
               <polyline points="9 22 9 12 15 12 15 22"></polyline>
@@ -497,7 +497,7 @@
 <div id="story-categories-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:99999; align-items:center; justify-content:center; direction:rtl;">
   <div style="background:#fff; border-radius:16px; padding:24px; width:90%; max-width:420px; max-height:85vh; overflow-y:auto; display:flex; flex-direction:column; gap:16px;">
     <div style="display:flex; justify-content:space-between; align-items:center;">
-      <h3 style="margin:0; font-size:18px; font-weight:800; color:#111;">🏷️ ניהול קטגוריות סיפורים</h3>
+      <h3 id="story-categories-modal-title" style="margin:0; font-size:18px; font-weight:800; color:#111;">🏷️ ניהול קטגוריות</h3>
       <button onclick="closeStoryCategoriesModal()" style="background:none; border:none; font-size:20px; cursor:pointer; color:#888;">✕</button>
     </div>
     
@@ -1121,6 +1121,6 @@
   </button>
 </div>
 
-  <script type="module" src="./script.js?v=1339"></script>
+  <script type="module" src="./script.js?v=1342"></script>
 </body>
 </html>
