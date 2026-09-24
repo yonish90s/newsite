@@ -5521,10 +5521,12 @@ html.hide-site-images .photo-mini-thumb {
 @media (max-width: 768px) {
   .tgl-desktop-only { display: none !important; }
 }
-/* כשמופעל: התמונות ממלאות את הכרטיס (cover) ומבטלים את רקע ה-blur/letterbox */
+/* מתג "מסך מלא" — מצב מחשב בלבד: מסתיר את שני סרגלי הצד בתמונות/קומיקס/סיפורים והתוכן מתפרס לכל הרוחב */
 @media (min-width: 769px) {
-  .photos-page.no-img-margins .art-row-img-wrap img { object-fit: cover !important; }
-  .photos-page.no-img-margins .art-row-img-wrap::before { display: none !important; }
+  .page-full-width .photos-page:not(.home-feed-photos) > .art-inner > .art-layout > .art-sidebar,
+  .page-full-width .stories-page:not(.photos-stories-feed) > .art-inner > .art-layout > .art-sidebar { display: none !important; }
+  .page-full-width .photos-page:not(.home-feed-photos) > .art-inner,
+  .page-full-width .stories-page:not(.photos-stories-feed) > .art-inner { max-width: none; }
 }
 
 /* ===== כתבת סיפור (טקסט חופשי, סגנון מגזין) — בלי מסגרת/ריבוע ובלי חץ גלילה ===== */

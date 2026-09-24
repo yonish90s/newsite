@@ -2,6 +2,12 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/fireba
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getDatabase, ref, set, get, child, onValue, push, update, increment, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
+// מסך מלא (מצב מחשב) — מוגדר מוקדם כדי שבוני העמודים יוכלו לקרוא אותו
+let pageFullWidth = (function () {
+  try { return localStorage.getItem('page_full_width') === '1'; } catch (e) { return false; }
+})();
+document.documentElement.classList.toggle('page-full-width', pageFullWidth);
+
 // הגדרות הפרויקט של Firebase
 const firebaseConfig = {
     apiKey: "AIzaSyCpVZS9qEnpPz-gyu12yD3FLiu3Lf-Tg04",
@@ -6515,6 +6521,12 @@ function buildStoriesPage(stories, storyKind) {
           </div>
           ${storyCategoryBarHTML()}
           ${photoFilterSectionHTML()}
+          <div class="view-toggles">
+            <label class="tgl tgl-desktop-only">
+              <span class="tgl-label">⛶ מסך מלא (הסתרת סרגלי הצד)</span>
+              <span class="tgl-switch"><input type="checkbox" ${pageFullWidth ? 'checked' : ''} onchange="togglePageFullWidth(this.checked)"><span class="tgl-slider"></span></span>
+            </label>
+          </div>
           <div class="art-section-title-row">
             <div class="art-section-title">כל ה${kindLabel}</div>
             ${storySizeBarHTML()}
@@ -11611,16 +11623,12 @@ function buildPhotosPage(albums, section) {
             ? (typeof secondhandTogglesHTML === 'function' ? secondhandTogglesHTML() : '')
             : `<div class="view-toggles">
             <label class="tgl">
-              <span class="tgl-label">🔞 תוכן למבוגרים</span>
-              <span class="tgl-switch"><input type="checkbox" ${_adultOn ? 'checked' : ''} onchange="toggleSidebarAgeVerification(this.checked)"><span class="tgl-slider"></span></span>
-            </label>
-            <label class="tgl">
               <span class="tgl-label">✔️ משתמשים מאומתים</span>
               <span class="tgl-switch"><input type="checkbox" ${photoVerifiedOnly ? 'checked' : ''} onchange="photoToggleVerified(this.checked)"><span class="tgl-slider"></span></span>
             </label>
             <label class="tgl tgl-desktop-only">
-              <span class="tgl-label">🖼️ תמונות בגודל מלא (ללא שוליים)</span>
-              <span class="tgl-switch"><input type="checkbox" ${photoNoImgMargins ? 'checked' : ''} onchange="photoToggleImageMargins(this.checked)"><span class="tgl-slider"></span></span>
+              <span class="tgl-label">⛶ מסך מלא (הסתרת סרגלי הצד)</span>
+              <span class="tgl-switch"><input type="checkbox" ${pageFullWidth ? 'checked' : ''} onchange="togglePageFullWidth(this.checked)"><span class="tgl-slider"></span></span>
             </label>
           </div>`)}
 
@@ -14936,9 +14944,8 @@ function photoToggleVerified(on) {
 window.photoToggleVerified = photoToggleVerified;
 
 // הסתרת שוליים בתמונות (מצב מחשב) — התמונות בגודל מלא, ממלאות את הכרטיס בלי letterbox. נשמר.
-let photoNoImgMargins = (function () {
-  try { return localStorage.getItem('photo_no_img_margins') === '1'; } catch (e) { return false; }
-})();
+// המתג הוסר מהממשק — תמיד כבוי (גם למי ששמר אותו בעבר)
+let photoNoImgMargins = false;
 function photoToggleImageMargins(on) {
   photoNoImgMargins = !!on;
   try { localStorage.setItem('photo_no_img_margins', on ? '1' : '0'); } catch (e) {}
@@ -14947,6 +14954,15 @@ function photoToggleImageMargins(on) {
   boxes.forEach(b => { if (b) b.checked = !!on; });
 }
 window.photoToggleImageMargins = photoToggleImageMargins;
+
+// מסך מלא (מצב מחשב) — מסתיר את שני סרגלי הצד בתמונות, בקומיקס ובסיפורים. נשמר.
+function togglePageFullWidth(on) {
+  pageFullWidth = !!on;
+  try { localStorage.setItem('page_full_width', on ? '1' : '0'); } catch (e) {}
+  document.documentElement.classList.toggle('page-full-width', pageFullWidth);
+  document.querySelectorAll('.view-toggles input[onchange*="togglePageFullWidth"]').forEach(b => { b.checked = pageFullWidth; });
+}
+window.togglePageFullWidth = togglePageFullWidth;
 
 // זמן היצירה של גלריה. גלריות חדשות שומרות createdAt מספרי; לישנות
 // נופלים לפרסור של התאריך המוצג (d.m.yyyy מ-toLocaleDateString בעברית).
@@ -18001,6 +18017,7 @@ const UI_EN = {
   'משתמשים מאומתים': 'Verified users',
   '✓ משתמשים מאומתים': '✓ Verified users',
   'תמונות בגודל מלא (ללא שוליים)': 'Full-size images (no margins)',
+  'מסך מלא (הסתרת סרגלי הצד)': 'Full screen (hide sidebars)',
 
   // ---- כרטיסים: מטא ופעולות ----
   'שמירה': 'Save', 'אימייל': 'Email', 'מנהל האתר': 'Site Admin',
@@ -18123,6 +18140,7 @@ const UI_EN_PATTERNS = [
   [/נבחר:/g, 'Selected:'],
   // מתגים / פילטרים עליונים / חיפוש (אימוג'י צמוד לטקסט)
   [/תמונות בגודל מלא \(ללא שוליים\)/g, 'Full-size images (no margins)'],
+  [/מסך מלא \(הסתרת סרגלי הצד\)/g, 'Full screen (hide sidebars)'],
   [/תוכן למבוגרים \(18\+\) פתוח לצפייה/g, 'Adult content (18+) is visible'],
   [/תוכן למבוגרים/g, 'Adult Content'],
   [/משתמשים מאומתים/g, 'Verified users'],
