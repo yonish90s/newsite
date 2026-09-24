@@ -4917,6 +4917,21 @@ body:not(.edit-mode) .hidden-nav {
 .of-part-chip.man { background:#eff6ff; border-color:#93c5fd; color:#1e40af; }
 .of-part-chip.woman { background:#fdf2f8; border-color:#f9a8d4; color:#9d174d; }
 .of-part-chip.host { background:#fef3c7 !important; border-color:#f59e0b !important; color:#92400e !important; font-weight:800; }
+.of-part-tile { width:112px; aspect-ratio:1 / 1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; padding:10px 8px; background:#fff; border:1.5px solid #cbd5e1; border-radius:14px; cursor:pointer; font-family:inherit; box-shadow:0 2px 6px rgba(0,0,0,0.04); transition:transform .15s, box-shadow .15s, border-color .15s; box-sizing:border-box; }
+.of-part-tile:hover { transform:translateY(-2px); box-shadow:0 8px 18px rgba(0,0,0,0.08); }
+.of-part-avatar { width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-size:18px; font-weight:900; flex-shrink:0; }
+.of-part-name { max-width:100%; font-size:13px; font-weight:800; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.of-part-role { font-size:11px; font-weight:700; padding:2px 8px; border-radius:999px; }
+.of-part-tile.man { border-color:#bfdbfe; }
+.of-part-tile.man .of-part-avatar { background:linear-gradient(135deg,#3b82f6,#1d4ed8); }
+.of-part-tile.man .of-part-role { background:#eff6ff; color:#1e40af; }
+.of-part-tile.woman { border-color:#fbcfe8; }
+.of-part-tile.woman .of-part-avatar { background:linear-gradient(135deg,#ec4899,#be185d); }
+.of-part-tile.woman .of-part-role { background:#fdf2f8; color:#9d174d; }
+.of-part-tile.host { border-color:#f59e0b; background:#fffbeb; }
+.of-part-tile.host .of-part-role { background:#fef3c7; color:#92400e; }
+.of-participants-grid:has(.of-part-tile) { gap:10px; }
+@media (max-width: 768px) { .of-part-tile { width:96px; } }
 .of-no-part { font-size:12px; color:#94a3b8; font-style:italic; }
 
 /* קופסת בקשות ממתינות למארח */
@@ -6542,4 +6557,25 @@ body.site-tour-picking, body.site-tour-picking * { cursor: crosshair !important;
   .crm-card { padding: 16px; }
   .crm-chart-bars { height: 140px; }
   .crm-board { grid-template-columns: repeat(5, 160px); }
+}
+
+/* ===== עמוד משתמש — כרטיס "פרטים" ===== */
+.up-about-card { background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:18px 20px; margin-bottom:24px; box-shadow:0 4px 15px rgba(0,0,0,0.03); direction:rtl; text-align:right; }
+.up-about-title { font-size:16px; font-weight:900; color:#0f172a; margin-bottom:6px; }
+.up-about-row { display:flex; align-items:flex-start; gap:14px; padding:10px 0; }
+.up-about-row + .up-about-row { border-top:1px solid #f1f5f9; }
+.up-about-label { width:96px; flex-shrink:0; font-size:13.5px; font-weight:800; color:#334155; padding-top:3px; }
+.up-about-chips { display:flex; flex-wrap:wrap; gap:6px; }
+.up-about-chip { padding:4px 12px; border-radius:999px; font-size:13px; font-weight:700; }
+.up-about-chip.like { background:#ecfdf5; color:#047857; border:1px solid #a7f3d0; }
+.up-about-chip.dislike { background:#fff1f2; color:#be123c; border:1px solid #fecdd3; }
+.up-about-text { font-size:14px; font-weight:700; color:#0f172a; }
+.up-about-empty { font-size:13px; color:#94a3b8; font-style:italic; }
+.up-about-verified { display:inline-block; background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; border-radius:999px; padding:3px 12px; font-size:13px; font-weight:800; }
+.up-about-unverified { display:inline-block; background:#f1f5f9; color:#64748b; border-radius:999px; padding:3px 12px; font-size:13px; font-weight:700; }
+.up-about-link { background:none; border:none; padding:0; font-family:inherit; font-size:14px; font-weight:700; color:#2563eb; text-decoration:none; cursor:pointer; }
+.up-about-link:hover { text-decoration:underline; }
+@media (max-width: 768px) {
+  .up-about-card { padding:14px; }
+  .up-about-label { width:78px; font-size:13px; }
 }

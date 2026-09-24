@@ -9291,6 +9291,19 @@ function offerFmt(ms) {
   return [h, m, sec].map(x => String(x).padStart(2, '0')).join(':');
 }
 
+// ריבוע משתתף בהצעה — לחיצה פותחת את פרופיל המשתמש
+function offerParticipantTileHTML(p, kind) {
+  const name = p.name || 'משתתף';
+  const initial = escHtml(String(name).trim().charAt(0) || '?');
+  const role = p.isHost ? (kind === 'woman' ? '👑 מארחת' : '👑 מארח') : (kind === 'woman' ? 'משתתפת' : 'משתתף');
+  return `
+    <button type="button" class="of-part-tile ${kind} ${p.isHost ? 'host' : ''}" onclick="event.stopPropagation(); if(typeof openUserPage==='function') openUserPage('${artEsc(p.uid || '')}', '${artEsc(name)}')" title="צפייה בפרופיל של ${escHtml(name)}">
+      <span class="of-part-avatar">${initial}</span>
+      <span class="of-part-name">${escHtml(name)}</span>
+      <span class="of-part-role">${role}</span>
+    </button>`;
+}
+
 function offersListHTML() {
   const now = Date.now();
   const list = Object.values(offersData).filter(o => o && (!o.expiresAt || o.expiresAt > now)).sort((a, b) => (a.expiresAt || 0) - (b.expiresAt || 0));
@@ -9344,22 +9357,14 @@ function offersListHTML() {
           <div class="of-gender-group men-group">
             <div class="of-group-title">♂️ גברים (${menList.length}):</div>
             <div class="of-participants-grid">
-              ${menList.length ? menList.map(p => `
-                <span class="of-part-chip man ${p.isHost ? 'host' : ''}">
-                  ${p.isHost ? '👑' : '👨'} ${escHtml(p.name)} ${p.isHost ? '(מארח)' : ''}
-                </span>
-              `).join('') : '<span class="of-no-part">אין גברים עדיין</span>'}
+              ${menList.length ? menList.map(p => offerParticipantTileHTML(p, 'man')).join('') : '<span class="of-no-part">אין גברים עדיין</span>'}
             </div>
           </div>
 
           <div class="of-gender-group women-group">
             <div class="of-group-title">♀️ נשים (${womenList.length}):</div>
             <div class="of-participants-grid">
-              ${womenList.length ? womenList.map(p => `
-                <span class="of-part-chip woman ${p.isHost ? 'host' : ''}">
-                  ${p.isHost ? '👑' : '👩'} ${escHtml(p.name)} ${p.isHost ? '(מארחת)' : ''}
-                </span>
-              `).join('') : '<span class="of-no-part">אין נשים עדיין</span>'}
+              ${womenList.length ? womenList.map(p => offerParticipantTileHTML(p, 'woman')).join('') : '<span class="of-no-part">אין נשים עדיין</span>'}
             </div>
           </div>
         </div>
@@ -9727,6 +9732,121 @@ function isUserVerified(authorId, authorName, itemVerified) {
   return false;
 }
 window.isUserVerified = isUserVerified;
+
+// ============================================================
+// "פרטים עליי" — המשתמש מגדיר מאיפה הוא, מה הוא אוהב ומה לא. מוצג בעמוד המשתמש.
+// ============================================================
+const ABOUT_REGIONS = ['צפון', 'מרכז', 'דרום', 'ירושלים', 'שרון', 'שפלה'];
+
+function aboutSplitTags(v) {
+  return String(v || '').split(/[,،\n]+/).map(t => t.trim()).filter(Boolean).slice(0, 25).map(t => t.slice(0, 40));
+}
+
+function buildSidebarAboutMeSectionHTML() {
+  if (!isRegisteredUser()) return '';
+  const user = auth.currentUser;
+  let p = {};
+  try { p = JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}'); } catch (e) {}
+  // מכשיר חדש — טוענים את הפרטים השמורים מהענן וממלאים את השדות
+  if (p.aboutRegion === undefined && p.aboutLikes === undefined) {
+    get(ref(db, `website/users/${user.uid}/profile`)).then(snap => {
+      if (!snap.exists()) return;
+      const v = snap.val() || {};
+      try { localStorage.setItem(`user_profile_${user.uid}`, JSON.stringify({ ...p, ...v })); } catch (e) {}
+      const set_ = (id, val) => { const el = document.getElementById(id); if (el && !el.value && val) el.value = val; };
+      set_('pf-about-region', v.aboutRegion); set_('pf-about-city', v.aboutCity);
+      set_('pf-about-likes', v.aboutLikes); set_('pf-about-dislikes', v.aboutDislikes);
+      set_('pf-about-telegram', v.telegram); set_('pf-about-email', v.email);
+    }).catch(() => {});
+  }
+  const fld = 'width:100%; box-sizing:border-box; padding:7px 10px; border:1.5px solid #cbd5e1; border-radius:8px; font-size:13px; font-family:inherit; outline:none; background:#fff;';
+  const lbl = 'font-size:12px; font-weight:700; color:#334155; margin:8px 0 4px;';
+  return `
+    <div class="pf-about-sec" style="margin-top: 16px; padding-top: 14px; border-top: 1px dashed #cbd5e1; text-align: right; direction: rtl;">
+      <div style="font-size: 13.5px; font-weight: 800; color: #1e293b; margin-bottom: 4px;">🙋 פרטים עליי</div>
+      <div style="font-size: 11.5px; color: #64748b; margin-bottom: 4px;">יוצג למי שנכנס לפרופיל שלך</div>
+      <div style="${lbl}">📍 מאיפה אני</div>
+      <div style="display:flex; gap:6px;">
+        <select id="pf-about-region" style="${fld} flex:1;">
+          <option value="">אזור</option>
+          ${ABOUT_REGIONS.map(r => `<option value="${r}" ${p.aboutRegion === r ? 'selected' : ''}>${r}</option>`).join('')}
+        </select>
+        <input id="pf-about-city" type="text" maxlength="30" placeholder="עיר (אופציונלי)" value="${escHtml(p.aboutCity || '')}" style="${fld} flex:1;">
+      </div>
+      <div style="${lbl}">✈️ טלגרם</div>
+      <input id="pf-about-telegram" type="text" dir="ltr" maxlength="40" placeholder="@username" value="${escHtml(p.telegram || '')}" style="${fld} text-align:left;">
+      <div style="${lbl}">✉️ מייל</div>
+      <input id="pf-about-email" type="email" dir="ltr" maxlength="80" placeholder="example@mail.com" value="${escHtml(p.email || '')}" style="${fld} text-align:left;">
+      <div style="${lbl}">💚 מה אני אוהב/ת</div>
+      <textarea id="pf-about-likes" rows="2" maxlength="500" placeholder="מופרד בפסיקים, לדוגמה: ..., ..." style="${fld} resize:vertical;">${escHtml(p.aboutLikes || '')}</textarea>
+      <div style="${lbl}">🚫 מה אני לא אוהב/ת</div>
+      <textarea id="pf-about-dislikes" rows="2" maxlength="500" placeholder="מופרד בפסיקים" style="${fld} resize:vertical;">${escHtml(p.aboutDislikes || '')}</textarea>
+      <button type="button" onclick="saveAboutMe()" style="margin-top:10px; width:100%; background:#2563eb; color:#fff; border:none; border-radius:8px; padding:8px 14px; font-size:13px; font-weight:700; cursor:pointer;">שמור פרטים</button>
+    </div>
+  `;
+}
+window.buildSidebarAboutMeSectionHTML = buildSidebarAboutMeSectionHTML;
+
+async function saveAboutMe() {
+  const user = auth.currentUser;
+  if (!user || !isRegisteredUser()) { if (typeof showCopyToast === 'function') showCopyToast('יש להתחבר כדי לשמור פרטים'); return; }
+  const val = id => ((document.getElementById(id) || {}).value || '').trim();
+  const region = ABOUT_REGIONS.includes(val('pf-about-region')) ? val('pf-about-region') : '';
+  const data = {
+    aboutRegion: region,
+    aboutCity: val('pf-about-city').slice(0, 30),
+    aboutLikes: aboutSplitTags(val('pf-about-likes')).join(', '),
+    aboutDislikes: aboutSplitTags(val('pf-about-dislikes')).join(', '),
+    telegram: val('pf-about-telegram').slice(0, 40),
+    email: val('pf-about-email').slice(0, 80)
+  };
+  if (data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+    if (typeof showCopyToast === 'function') showCopyToast('כתובת המייל לא תקינה');
+    return;
+  }
+  let p = {};
+  try { p = JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}'); } catch (e) {}
+  try { localStorage.setItem(`user_profile_${user.uid}`, JSON.stringify({ ...p, ...data })); } catch (e) {}
+  try {
+    const upd = { ...data };
+    if (!p.nickname && user.displayName) upd.nickname = user.displayName;
+    await update(ref(db, `website/users/${user.uid}/profile`), upd);
+    if (typeof showCopyToast === 'function') showCopyToast('✓ הפרטים נשמרו');
+  } catch (e) {
+    console.error('saveAboutMe failed', e);
+    if (typeof showCopyToast === 'function') showCopyToast('שגיאה בשמירת הפרטים');
+  }
+}
+window.saveAboutMe = saveAboutMe;
+
+// כרטיס "פרטים" בעמוד המשתמש
+function userAboutCardHTML(profile, verified) {
+  profile = profile || {};
+  const where = [profile.aboutCity, profile.aboutRegion].filter(Boolean).join(', ');
+  const likes = aboutSplitTags(profile.aboutLikes);
+  const dislikes = aboutSplitTags(profile.aboutDislikes);
+  const tg = String(profile.telegram || '').trim().replace(/^https?:\/\/t\.me\//i, '').replace(/^@/, '');
+  const chips = (arr, cls) => arr.length
+    ? arr.map(t => `<span class="up-about-chip ${cls}">${escHtml(t)}</span>`).join('')
+    : '<span class="up-about-empty">לא צוין</span>';
+  return `
+    <div class="up-about-card">
+      <div class="up-about-title">פרטים</div>
+      <div class="up-about-row"><div class="up-about-label">🛡️ אימות</div><div>${verified
+        ? '<span class="up-about-verified">✓ משתמש מאומת</span>'
+        : '<span class="up-about-unverified">לא מאומת</span>'}</div></div>
+      <div class="up-about-row"><div class="up-about-label">📍 מאיפה</div><div>${where ? `<span class="up-about-text">${escHtml(where)}</span>` : '<span class="up-about-empty">לא צוין</span>'}</div></div>
+      <div class="up-about-row"><div class="up-about-label">✈️ טלגרם</div><div>${tg
+        ? `<a class="up-about-link" href="https://t.me/${encodeURIComponent(tg)}" target="_blank" rel="noopener" dir="ltr">@${escHtml(tg)}</a>`
+        : '<span class="up-about-empty">לא צוין</span>'}</div></div>
+      <div class="up-about-row"><div class="up-about-label">✉️ מייל</div><div>${profile.email
+        ? `<button type="button" class="up-about-link" dir="ltr" onclick="copyEmailToClipboard('${artEsc(profile.email)}', event)" title="העתקת המייל">${escHtml(profile.email)}</button>`
+        : '<span class="up-about-empty">לא צוין</span>'}</div></div>
+      <div class="up-about-row"><div class="up-about-label">💚 אוהב/ת</div><div class="up-about-chips">${chips(likes, 'like')}</div></div>
+      <div class="up-about-row"><div class="up-about-label">🚫 לא אוהב/ת</div><div class="up-about-chips">${chips(dislikes, 'dislike')}</div></div>
+    </div>`;
+}
+window.userAboutCardHTML = userAboutCardHTML;
 
 function buildSidebarVerificationSectionHTML() {
   const user = auth.currentUser;
@@ -10147,6 +10267,7 @@ function buildFiltersSidebarBox(pageType) {
       <button type="button" class="pf-clear-btn" onclick="photoClearFilters()">נקה סינון ✕</button>
       ${buildSidebarNameChangeSectionHTML()}
       ${buildSidebarVerificationSectionHTML()}
+      ${buildSidebarAboutMeSectionHTML()}
     </div>
   `;
 }
@@ -12526,11 +12647,14 @@ async function photoSaveProfile() {
     telegram: telegram || '',
     email: email || ''
   };
-  localStorage.setItem(`user_profile_${user.uid}`, JSON.stringify(profile));
+  let _prev = {};
+  try { _prev = JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}'); } catch (e) {}
+  localStorage.setItem(`user_profile_${user.uid}`, JSON.stringify({ ..._prev, ...profile }));
 
   try {
     const profileRef = ref(db, `website/users/${user.uid}/profile`);
-    await set(profileRef, profile);
+    await update(profileRef, profile); // update — לא מוחקים את "פרטים עליי"
+
     alert("הפרופיל עודכן בהצלחה! ✨");
     renderPage();
   } catch (e) {
@@ -12900,6 +13024,7 @@ function buildUserPageHTML(authorId, authorName) {
           <div id="user-page-contact" style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;"></div>
         </div>
       </div>
+      <div id="user-page-about">${userAboutCardHTML(null, isUserVerified(authorId, authorName))}</div>
       <div class="art-rows">${cards || '<div style="grid-column:1/-1; text-align:center; color:#94a3b8; padding:40px; font-weight:700;">אין גלריות להצגה עבור משתמש זה</div>'}</div>
     </div>
   </div>`;
@@ -12930,6 +13055,8 @@ async function openUserPage(authorId, authorName) {
       }
       contactEl.innerHTML = html;
     }
+    const aboutEl = document.getElementById('user-page-about');
+    if (aboutEl) aboutEl.innerHTML = userAboutCardHTML(profile, isUserVerified(authorId, profile.nickname || authorName));
   } catch (e) { /* פרופיל לא זמין — משאירים את שם היוצר */ }
 }
 window.openUserPage = openUserPage;
