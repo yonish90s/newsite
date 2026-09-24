@@ -6585,3 +6585,11 @@ body.site-tour-picking, body.site-tour-picking * { cursor: crosshair !important;
 @media (max-width: 768px) {
   .side-pages-mobile-row { display: block !important; }
 }
+
+/* מובייל: בשורה העליונה מציגים שפה, היסטוריה, לייקים וכפתור אורח/מנהל (קומפקטי) */
+@media (max-width: 768px) {
+  #header-likes-btn, #header-history-btn, #header-lang-btn { display: inline-flex !important; width: 30px !important; height: 30px !important; min-width: 30px !important; padding: 0 !important; align-items: center; justify-content: center; }
+  #header-likes-btn svg, #header-history-btn svg, #header-lang-btn svg { width: 15px !important; height: 15px !important; }
+  #manager-btn { display: inline-flex !important; align-items: center; padding: 4px 10px !important; font-size: 12px !important; height: 30px; box-sizing: border-box; }
+  .right-icons { gap: 6px !important; }
+}
