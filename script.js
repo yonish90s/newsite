@@ -3737,6 +3737,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // מאזין לשינויי מצב התחברות
   let userActivityInterval = null;
   onAuthStateChanged(auth, async (user) => {
+    setTimeout(() => { try { refreshUserMaps(); } catch (e) {} }, 0);
     updateManagerUI(user);
     if (userActivityInterval) {
       clearInterval(userActivityInterval);
@@ -10567,6 +10568,8 @@ function buildLeftSidebarBox(popularHTML, section) {
         ` : ''}
       </div>
 
+      ${buildUserMapBox()}
+
       ${section === 'communities' ? '' : `<div class="art-sidebar-box" style="border: 1.5px solid #22c55e; background: rgba(34,197,94,0.04); border-radius: 14px; padding: 16px; text-align: center;">
         <div style="font-size: 14px; font-weight: 900; color: #166534; margin-bottom: 4px;">🤖 פרסום מודעה מהיר</div>
         <div style="font-size: 11.5px; color: #64748b; margin-bottom: 10px; line-height: 1.4;">עוזר מונחה שיפרסם עבורך מודעה חדשה בצ׳אט תוך 30 שניות</div>
@@ -10575,6 +10578,188 @@ function buildLeftSidebarBox(popularHTML, section) {
     </div>
   `;
 }
+
+// ===== מפת גולשים (ישראל) — משתמש רשום ממקם את עצמו, כולם רואים =====
+// מיקום נשמר מעוגל (~1 ק"מ) ב-website/user_map/{uid}
+let userMapOpen = false;
+let userMapData = {};
+let userMapUnsub = null;
+let userMapPicking = false;
+const USER_MAP_BOUNDS = { minLat: 29.3, maxLat: 33.5, minLng: 34.2, maxLng: 35.95 };
+
+function buildUserMapBox() {
+  if (userMapOpen) setTimeout(initUserMaps, 0);
+  const count = Object.keys(userMapData).length;
+  return `
+    <div class="art-sidebar-box umap-box${userMapOpen ? ' open' : ''}">
+      <button type="button" class="umap-head" onclick="toggleUserMap()">
+        <span>🗺️ מפת גולשים</span>
+        <span class="umap-head-meta"><span class="umap-count">${count ? count + ' על המפה' : ''}</span> <span class="umap-chevron">▾</span></span>
+      </button>
+      <div class="umap-body" style="display:${userMapOpen ? 'block' : 'none'};">
+        <div class="umap-canvas"></div>
+        <div class="umap-actions"></div>
+      </div>
+    </div>`;
+}
+
+function loadLeaflet() {
+  if (window.L && window.L.map) return Promise.resolve(window.L);
+  if (window.__leafletLoading) return window.__leafletLoading;
+  window.__leafletLoading = new Promise((resolve, reject) => {
+    const css = document.createElement('link');
+    css.rel = 'stylesheet';
+    css.href = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css';
+    document.head.appendChild(css);
+    const js = document.createElement('script');
+    js.src = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';
+    js.onload = () => resolve(window.L);
+    js.onerror = () => { window.__leafletLoading = null; reject(new Error('leaflet load failed')); };
+    document.head.appendChild(js);
+  });
+  return window.__leafletLoading;
+}
+
+function subscribeUserMap() {
+  if (userMapUnsub) return;
+  userMapUnsub = onValue(ref(db, 'website/user_map'), (snap) => {
+    userMapData = snap.exists() ? (snap.val() || {}) : {};
+    document.querySelectorAll('.umap-count').forEach(el => {
+      const n = Object.keys(userMapData).length;
+      el.textContent = n ? n + ' על המפה' : '';
+    });
+    refreshUserMaps();
+  }, () => {});
+}
+
+function toggleUserMap() {
+  userMapOpen = !userMapOpen;
+  document.querySelectorAll('.umap-box').forEach(box => {
+    box.classList.toggle('open', userMapOpen);
+    const body = box.querySelector('.umap-body');
+    if (body) body.style.display = userMapOpen ? 'block' : 'none';
+  });
+  if (userMapOpen) initUserMaps();
+  else userMapPicking = false;
+}
+window.toggleUserMap = toggleUserMap;
+
+async function initUserMaps() {
+  subscribeUserMap();
+  let L;
+  try { L = await loadLeaflet(); } catch (e) {
+    document.querySelectorAll('.umap-canvas').forEach(c => { c.innerHTML = '<div class="umap-err">לא ניתן לטעון את המפה כרגע</div>'; });
+    return;
+  }
+  document.querySelectorAll('.umap-canvas').forEach(el => {
+    if (el._umap || !el.isConnected || el.offsetParent === null) return;
+    const map = L.map(el, {
+      center: [31.45, 35.0], zoom: 7, minZoom: 6, maxZoom: 13,
+      maxBounds: [[28.8, 33.2], [34.2, 36.8]], attributionControl: true
+    });
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19, attribution: '&copy; OpenStreetMap'
+    }).addTo(map);
+    map.on('click', (ev) => { if (userMapPicking) saveMyMapLocation(ev.latlng.lat, ev.latlng.lng); });
+    el._umap = map;
+    el._umapLayer = L.layerGroup().addTo(map);
+    setTimeout(() => map.invalidateSize(), 50);
+  });
+  refreshUserMaps();
+}
+
+function refreshUserMaps() {
+  const L = window.L;
+  const myUid = (auth.currentUser && !auth.currentUser.isAnonymous) ? auth.currentUser.uid : '';
+  document.querySelectorAll('.umap-canvas').forEach(el => {
+    if (!el._umap || !L) return;
+    el._umapLayer.clearLayers();
+    Object.entries(userMapData).forEach(([uid, v]) => {
+      if (!v || typeof v.lat !== 'number' || typeof v.lng !== 'number') return;
+      const mine = uid === myUid;
+      const initial = escHtml(String(v.name || '?').trim().charAt(0) || '?');
+      const icon = L.divIcon({
+        className: 'umap-pin-wrap',
+        html: `<div class="umap-pin${mine ? ' mine' : ''}">${initial}</div>`,
+        iconSize: [28, 28], iconAnchor: [14, 14]
+      });
+      const m = L.marker([v.lat, v.lng], { icon }).addTo(el._umapLayer);
+      m.bindPopup(`<div class="umap-pop"><b>${escHtml(v.name || 'משתמש')}</b>${mine ? ' (אני)' : ''}<br>
+        <a href="#" onclick="event.preventDefault();openUserPage('${artEsc(uid)}','${artEsc(v.name || '')}')">לפרופיל ›</a></div>`);
+    });
+    el.classList.toggle('picking', userMapPicking);
+  });
+  renderUserMapActions();
+}
+
+function renderUserMapActions() {
+  const user = auth.currentUser;
+  const registered = user && !user.isAnonymous;
+  const mine = registered && userMapData[user.uid];
+  let html;
+  if (!registered) {
+    html = `<div class="umap-hint">התחברו כדי למקם את עצמכם על המפה</div>
+      <button type="button" class="umap-btn" onclick="openLiveChatLogin()">🔑 התחברות</button>`;
+  } else if (userMapPicking) {
+    html = `<div class="umap-hint picking">👆 לחצו על המפה במקום שלכם</div>
+      <div class="umap-row">
+        <button type="button" class="umap-btn" onclick="userMapUseGps()">📍 מיקום נוכחי</button>
+        <button type="button" class="umap-btn ghost" onclick="userMapSetPicking(false)">ביטול</button>
+      </div>`;
+  } else {
+    html = `<div class="umap-row">
+        <button type="button" class="umap-btn" onclick="userMapSetPicking(true)">📍 ${mine ? 'שינוי המיקום שלי' : 'מקם אותי במפה'}</button>
+        ${mine ? `<button type="button" class="umap-btn ghost" onclick="removeMyMapLocation()">הסרה</button>` : ''}
+      </div>
+      <div class="umap-hint small">המיקום מוצג בקירוב (כ-1 ק"מ) לכל הגולשים</div>`;
+  }
+  document.querySelectorAll('.umap-actions').forEach(el => { el.innerHTML = html; });
+}
+
+function userMapSetPicking(on) {
+  userMapPicking = !!on;
+  refreshUserMaps();
+}
+window.userMapSetPicking = userMapSetPicking;
+
+function userMapUseGps() {
+  if (!navigator.geolocation) { alert('הדפדפן לא תומך באיתור מיקום'); return; }
+  navigator.geolocation.getCurrentPosition(
+    (pos) => saveMyMapLocation(pos.coords.latitude, pos.coords.longitude),
+    () => alert('לא הצלחנו לאתר את המיקום — אפשר ללחוץ על המפה במקום זאת'),
+    { enableHighAccuracy: false, timeout: 10000 }
+  );
+}
+window.userMapUseGps = userMapUseGps;
+
+async function saveMyMapLocation(lat, lng) {
+  const user = auth.currentUser;
+  if (!user || user.isAnonymous) { openLiveChatLogin(); return; }
+  const b = USER_MAP_BOUNDS;
+  if (lat < b.minLat || lat > b.maxLat || lng < b.minLng || lng > b.maxLng) {
+    alert('אפשר למקם רק בתחומי ישראל');
+    return;
+  }
+  const round = (n) => Math.round(n * 100) / 100;
+  try {
+    await set(ref(db, `website/user_map/${user.uid}`), {
+      lat: round(lat), lng: round(lng),
+      name: String(liveChatUserName() || 'משתמש').slice(0, 40),
+      t: Date.now()
+    });
+    userMapPicking = false;
+    refreshUserMaps();
+  } catch (e) {
+    alert('שמירת המיקום נכשלה');
+  }
+}
+
+async function removeMyMapLocation() {
+  const user = auth.currentUser;
+  if (!user) return;
+  try { await set(ref(db, `website/user_map/${user.uid}`), null); } catch (e) { alert('ההסרה נכשלה'); }
+}
+window.removeMyMapLocation = removeMyMapLocation;
 
 // מזעור/הרחבה של פאנל הסרגל (בסגנון רדיט)
 function sidebarToggleMinimize(btn) {

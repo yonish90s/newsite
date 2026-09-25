@@ -58,6 +58,15 @@
         }
       },
 
+      "user_map": {
+        ".read": true,
+        "$uid": {
+          ".write": "auth != null && auth.uid === $uid && auth.token.firebase.sign_in_provider !== 'anonymous'",
+          ".validate": "!newData.exists() || (newData.hasChildren(['lat', 'lng', 'name', 't']) && newData.child('lat').isNumber() && newData.child('lat').val() >= 29.3 && newData.child('lat').val() <= 33.5 && newData.child('lng').isNumber() && newData.child('lng').val() >= 34.2 && newData.child('lng').val() <= 35.95 && newData.child('name').isString() && newData.child('name').val().length <= 40 && newData.child('t').isNumber())",
+          "$other": { ".validate": "$other === 'lat' || $other === 'lng' || $other === 'name' || $other === 't'" }
+        }
+      },
+
       "user_ratings": {
         ".read": true,
         "$targetUid": {
