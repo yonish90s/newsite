@@ -6602,7 +6602,34 @@ body.site-tour-picking, body.site-tour-picking * { cursor: crosshair !important;
 .umap-chevron { font-size: 14px; color: #64748b; transition: transform .2s; }
 .umap-box.open .umap-chevron { transform: rotate(180deg); }
 .umap-body { padding: 0 12px 12px; }
-.umap-canvas { height: 360px; border-radius: 10px; border: 1px solid #e2e8f0; overflow: hidden; background: #e8eef3; direction: ltr; z-index: 0; position: relative; }
+.umap-canvas-wrap { position: relative; }
+.umap-canvas { height: 470px; border-radius: 14px; border: 3px solid #1e293b; overflow: hidden; direction: ltr; z-index: 0; position: relative;
+  background-color: #7cc8f0;
+  background-image: radial-gradient(circle at 20% 30%, rgba(255,255,255,.35) 0 2px, transparent 3px), radial-gradient(circle at 70% 80%, rgba(255,255,255,.3) 0 2px, transparent 3px);
+  background-size: 38px 38px, 52px 52px; box-shadow: 0 4px 0 #1e293b; }
+.umap-canvas .leaflet-container, .umap-canvas.leaflet-container { background-color: #7cc8f0; font-family: inherit; }
+.umap-land { fill: url(#umapLandGrad); fill-opacity: 1; stroke: #1e293b; stroke-width: 3; stroke-linejoin: round; filter: drop-shadow(4px 5px 0 rgba(30,41,59,.28)); }
+.umap-lake { fill: #4fb3e8; fill-opacity: 1; stroke: #1e293b; stroke-width: 2.2; stroke-linejoin: round; }
+.umap-lake.salt { fill: #6fd0e0; }
+.umap-decor { font-size: 17px; line-height: 22px; text-align: center; opacity: .9; pointer-events: none; }
+.umap-sea-label { color: #0c4a6e; font-size: 11px; font-weight: 900; font-style: italic; text-align: center; white-space: nowrap; opacity: .75; direction: rtl; pointer-events: none; }
+.umap-city { pointer-events: none; }
+.umap-city-dot { position: absolute; left: -5px; top: -5px; width: 10px; height: 10px; border-radius: 50%; background: #fff; border: 2.5px solid #1e293b; box-sizing: border-box; }
+.umap-city.t1 .umap-city-dot { left: -6px; top: -6px; width: 12px; height: 12px; background: #f43f5e; }
+.umap-city-name { position: absolute; top: 6px; left: 0; transform: translateX(-50%); white-space: nowrap; direction: rtl;
+  font-size: 11px; font-weight: 900; color: #1e293b; line-height: 1;
+  text-shadow: -2px 0 #fff, 2px 0 #fff, 0 -2px #fff, 0 2px #fff, -1.5px -1.5px #fff, 1.5px 1.5px #fff, -1.5px 1.5px #fff, 1.5px -1.5px #fff; }
+.umap-city.t1 .umap-city-name { font-size: 12.5px; top: 7px; }
+.umap-canvas.zoomed .umap-city-name { font-size: 12px; }
+.umap-canvas.zoomed .umap-city.t1 .umap-city-name { font-size: 14px; }
+.umap-canvas .leaflet-control-zoom a { border-radius: 8px !important; border: 2px solid #1e293b !important; font-weight: 900; color: #1e293b; }
+.umap-canvas .leaflet-control-zoom { border: none !important; box-shadow: none !important; display: flex; flex-direction: column; gap: 4px; }
+.umap-expand { position: absolute; bottom: 10px; right: 10px; z-index: 800; background: #fff; border: 2px solid #1e293b; border-radius: 9px; padding: 5px 9px; font-family: inherit; font-size: 12px; font-weight: 900; color: #1e293b; cursor: pointer; box-shadow: 0 2px 0 #1e293b; }
+.umap-box.expanded { position: fixed; top: 3vh; bottom: 3vh; left: 50%; right: auto; transform: translateX(-50%); width: min(560px, 94vw); height: auto; z-index: 99999; box-shadow: 0 0 0 100vmax rgba(15,23,42,.55); display: flex; flex-direction: column; }
+.umap-box.expanded .umap-body { display: flex !important; flex-direction: column; flex: 1; min-height: 0; }
+.umap-box.expanded .umap-canvas-wrap { flex: 1; min-height: 0; }
+.umap-box.expanded .umap-canvas { height: 100%; }
+body.umap-expanded .art-sidebar-left { position: static !important; }
 .umap-canvas.picking { cursor: crosshair; outline: 2.5px solid #e11d48; outline-offset: -2px; }
 .umap-canvas.picking .leaflet-grab { cursor: crosshair; }
 .umap-err { padding: 40px 12px; text-align: center; color: #94a3b8; font-size: 13px; direction: rtl; }
@@ -6617,4 +6644,4 @@ body.site-tour-picking, body.site-tour-picking * { cursor: crosshair !important;
 .umap-pin { width: 28px; height: 28px; border-radius: 50%; background: #3b82f6; color: #fff; border: 2.5px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,.3); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 900; font-family: inherit; }
 .umap-pin.mine { background: #e11d48; }
 .umap-pop { direction: rtl; text-align: right; font-size: 13px; }
-@media (max-width: 768px) { .umap-canvas { height: 300px; } }
+@media (max-width: 768px) { .umap-canvas { height: 420px; } }
