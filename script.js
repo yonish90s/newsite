@@ -6699,6 +6699,7 @@ function storyOpenDetail(id) {
   }
 
   window.storyPagesData = storyPagesArr;
+  window.storyInlineImgs = { ...((s.inlineImages && typeof s.inlineImages === 'object') ? s.inlineImages : {}) };
   window.currentStoryId = id;
   window.currentStoryTitle = s.title || 'סיפור';
 
@@ -6717,7 +6718,7 @@ function storyOpenDetail(id) {
   // תמונות ממוזערות לכל עמוד
   const thumbsHTML = storyPagesArr.map((pg, idx) => {
     const inner = pg.type === 'text'
-      ? `<div class="story-thumb-text" style="width:100%; height:100%; font-size:9px; font-weight:700; padding:3px; overflow:hidden; box-sizing:border-box; background:#fff; color:#333; text-align:center;">${escHtml((pg.text || '').slice(0, 40))}</div>`
+      ? `<div class="story-thumb-text" style="width:100%; height:100%; font-size:9px; font-weight:700; padding:3px; overflow:hidden; box-sizing:border-box; background:#fff; color:#333; text-align:center;">${escHtml(storyStripImgMarkers(pg.text).slice(0, 40))}</div>`
       : `<img src="${escHtml(pg.url)}" style="width:100%; height:100%; object-fit:cover; display:block;">`;
     return `<div class="story-page-thumb${idx === _bmPage ? ' active' : ''}" data-idx="${idx}" onclick="event.stopPropagation(); storyGoToPage(${idx})" style="width:54px; height:54px; border-radius:8px; overflow:hidden; cursor:pointer; border:2px solid ${idx === _bmPage ? '#e11d48' : '#cbd5e1'}; flex-shrink:0; background:#fff;">${inner}</div>`;
   }).join('');
@@ -6754,7 +6755,6 @@ function storyOpenDetail(id) {
   if (isTextStory && storyPagesArr.length === 1) {
     const _fullText = storyPagesArr.map(p => p.text || '').join('\n\n');
     // כל שורה היא פסקה, ושורה ריקה נשמרת כרווח — כמו שנכתב בעריכה
-    const _paras = _fullText.replace(/^\s*\n|\n\s*$/g, '').split('\n').map(t => t.trim());
     const _words = _fullText.split(/\s+/).filter(Boolean).length;
     const _readMin = Math.max(1, Math.round(_words / 180));
     const _tags = (Array.isArray(s.tags) && s.tags.length) ? s.tags : (s.category ? [s.category] : []);
@@ -6776,7 +6776,7 @@ function storyOpenDetail(id) {
             </div>
             ${_tagChips ? `<div class="story-article-tags">${_tagChips}</div>` : ''}
             ${storyLinkedChipHTML(s)}
-            <div class="story-article-body" id="story-article-body" style="font-size:17px; line-height:1.75; color:#1e293b;">${_paras.map(p => p ? `<p>${escHtml(p)}</p>` : '<p class="story-blank-line"></p>').join('')}</div>
+            <div class="story-article-body" id="story-article-body" style="font-size:17px; line-height:1.75; color:#1e293b;">${storyRichHTML(_fullText, window.storyInlineImgs, true)}</div>
           </article>
           ${(typeof storyCommentsSectionHTML === 'function') ? storyCommentsSectionHTML(id) : ''}
           <div class="art-rec-section" style="margin-top:36px;">
@@ -6832,7 +6832,7 @@ function storyOpenDetail(id) {
 
         ${storyLinkedChipHTML(s)}
 
-        ${_comicDesc ? `<div class="story-comic-desc" style="margin:0 0 16px; font-size:15px; line-height:1.6; color:#334155; text-align:right; white-space:pre-wrap; word-break:break-word;">${escHtml(_comicDesc)}</div>` : ''}
+        ${_comicDesc ? `<div class="story-comic-desc" style="margin:0 0 16px; font-size:15px; line-height:1.6; color:#334155; text-align:right; white-space:pre-wrap; word-break:break-word;">${storyRichHTML(_comicDesc, window.storyInlineImgs, false)}</div>` : ''}
 
         ${viewerHTML}
 
@@ -6879,19 +6879,13 @@ function storyRenderPage() {
   view.classList.toggle('story-view-image', !isText);
 
   if (isText && window.__storyInlineEdit) {
-    view.innerHTML = `
-      <div class="story-page-inner" style="padding:16px; width:100%; box-sizing:border-box;">
-        <textarea class="story-inline-ta story-inline-ta-page" dir="auto" placeholder="טקסט העמוד..."></textarea>
-      </div>`;
-    const ta = view.querySelector('textarea');
-    ta.value = pg.text || '';
-    ta.addEventListener('input', () => { pg.text = ta.value; pg._edited = true; storyInlineAutosize(ta); });
-    storyInlineAutosize(ta);
+    view.innerHTML = `<div class="story-page-inner story-inline-page-wrap" style="padding:16px; width:100%; box-sizing:border-box;"></div>`;
+    storyInlineBlockEditor(view.firstElementChild, pg.text || '', txt => { pg.text = txt; pg._edited = true; }, 'story-inline-ta-page');
   } else if (isText) {
     view.innerHTML = `
       <div class="story-page-inner" style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px; width:100%; box-sizing:border-box;">
         <div class="story-text-page" style="font-size:17px; font-weight:700; line-height:1.75; color:#1e293b; max-width:640px; text-align:center; word-break:break-word;">
-          ${escHtml(pg.text || '').replace(/\n/g, '<br>')}
+          ${storyRichHTML(pg.text || '', window.storyInlineImgs, false)}
         </div>
       </div>`;
   } else {
@@ -7248,6 +7242,192 @@ window.storyEditFromDetail = storyEditFromDetail;
 // הטקסט הופך לשדה עריכה באותו מקום בדף: משנים שורות, מוסיפים שורות ריקות לרווח,
 // מוחקים שורות — ושומרים. תמונות/קטגוריה נשארות בחלון העריכה המלא.
 // ============================================================
+// תמונה בתוך טקסט של סיפור נשמרת כשורה [[img:מפתח]], והתמונה עצמה ב-story.inlineImages[מפתח]
+const STORY_IMG_RE = /^\s*\[\[img:([\w-]+)\]\]\s*$/;
+
+function storyStripImgMarkers(text) {
+  return String(text || '').split('\n').filter(l => !STORY_IMG_RE.test(l)).join('\n').trim();
+}
+window.storyStripImgMarkers = storyStripImgMarkers;
+
+// טקסט + תמונות ל-HTML. asParas — כל שורה פסקה (כתבה), אחרת שורות עם <br>
+function storyRichHTML(text, imgs, asParas) {
+  const lines = String(text || '').replace(/^\s*\n|\n\s*$/g, '').split('\n');
+  const out = [];
+  let buf = [];
+  const flush = () => {
+    if (!buf.length) return;
+    out.push(`<div class="story-rich-text">${buf.map(l => escHtml(l)).join('<br>')}</div>`);
+    buf = [];
+  };
+  lines.forEach(l => {
+    const m = l.match(STORY_IMG_RE);
+    if (m) {
+      flush();
+      const src = imgs && imgs[m[1]];
+      if (src) out.push(`<figure class="story-inline-img"><img src="${escHtml(src)}" alt="" loading="lazy"></figure>`);
+      return;
+    }
+    if (asParas) out.push(l.trim() ? `<p>${escHtml(l.trim())}</p>` : '<p class="story-blank-line"></p>');
+    else buf.push(l);
+  });
+  flush();
+  return out.join('');
+}
+window.storyRichHTML = storyRichHTML;
+
+// עורך בלוקים: קטעי טקסט (textarea) ותמונות ביניהם. onChange מקבל את הטקסט המלא עם שורות התמונה
+function storyInlineBlockEditor(host, text, onChange, taClass) {
+  const ed = { host, blocks: [], onChange, taClass };
+  _storyEdLoad(ed, text);
+  host.__storyEd = ed;
+  host.classList.add('story-inline-blocks');
+  _storyEdRender(ed);
+  return ed;
+}
+
+function _storyEdLoad(ed, text) {
+  const blocks = [];
+  let buf = [];
+  const flushText = () => { blocks.push({ type: 'text', text: buf.join('\n') }); buf = []; };
+  String(text || '').split('\n').forEach(l => {
+    const m = l.match(STORY_IMG_RE);
+    if (m) { flushText(); blocks.push({ type: 'img', key: m[1] }); }
+    else buf.push(l);
+  });
+  flushText();
+  ed.blocks = blocks;
+}
+
+function _storyEdSerialize(ed) {
+  const parts = [];
+  ed.blocks.forEach(b => {
+    if (b.type === 'img') parts.push('[[img:' + b.key + ']]');
+    else if (b.text !== '' || ed.blocks.length === 1) parts.push(b.text);
+  });
+  return parts.join('\n');
+}
+
+function _storyEdChanged(ed) { ed.onChange(_storyEdSerialize(ed)); }
+
+// ממזגים קטעי טקסט צמודים (אחרי מחיקת תמונה) ודואגים שיהיה קטע טקסט בין/אחרי תמונות
+function _storyEdNormalize(ed) {
+  const out = [];
+  ed.blocks.forEach(b => {
+    const last = out[out.length - 1];
+    if (b.type === 'text' && last && last.type === 'text') {
+      last.text = [last.text, b.text].filter(t => t !== '').join('\n');
+    } else out.push(b);
+  });
+  if (!out.length || out[0].type !== 'text') out.unshift({ type: 'text', text: '' });
+  if (out[out.length - 1].type !== 'text') out.push({ type: 'text', text: '' });
+  ed.blocks = out;
+}
+
+function _storyEdRender(ed) {
+  _storyEdNormalize(ed);
+  const imgs = window.storyInlineImgs || {};
+  ed.host.innerHTML = '';
+  ed.blocks.forEach((b, i) => {
+    if (b.type === 'text') {
+      const ta = document.createElement('textarea');
+      ta.className = 'story-inline-ta ' + (ed.blocks.length === 1 ? (ed.taClass || '') : 'story-inline-ta-small');
+      ta.dir = 'auto';
+      ta.placeholder = ed.blocks.length === 1 ? 'כתוב כאן...' : 'המשך לכתוב כאן...';
+      ta.value = b.text;
+      ta.__storyEd = ed; ta.__storyBlock = b;
+      ta.addEventListener('input', () => { b.text = ta.value; storyInlineAutosize(ta); _storyEdChanged(ed); });
+      ta.addEventListener('focus', () => { window.__storyInlineLastTa = ta; });
+      ed.host.appendChild(ta);
+      storyInlineAutosize(ta);
+    } else {
+      const fig = document.createElement('div');
+      fig.className = 'story-inline-imgblock';
+      const src = imgs[b.key];
+      fig.innerHTML = `${src ? `<img src="${escHtml(src)}" alt="">` : '<div class="story-inline-imgmissing">תמונה חסרה</div>'}
+        <div class="story-inline-imgtools">
+          <button type="button" title="הזז למעלה" data-act="up">⬆</button>
+          <button type="button" title="הזז למטה" data-act="down">⬇</button>
+          <button type="button" title="החלף תמונה" data-act="swap">🔄</button>
+          <button type="button" title="מחק תמונה" data-act="del" class="del">✕</button>
+        </div>`;
+      fig.querySelectorAll('button').forEach(btn => btn.addEventListener('click', e => {
+        e.preventDefault(); e.stopPropagation();
+        _storyEdImgAction(ed, b, btn.dataset.act);
+      }));
+      ed.host.appendChild(fig);
+    }
+  });
+}
+
+function _storyEdImgAction(ed, b, act) {
+  if (act === 'swap') {
+    storyInlinePickImage(key => { b.key = key; _storyEdRender(ed); _storyEdChanged(ed); });
+    return;
+  }
+  // עובדים על שורות: תמונה היא שורה אחת, ולמעלה/למטה מחליף אותה עם השורה הסמוכה
+  const lines = [];
+  let at = -1;
+  ed.blocks.forEach(x => {
+    if (x.type === 'img') { if (x === b) at = lines.length; lines.push('[[img:' + x.key + ']]'); }
+    else if (x.text !== '') lines.push(...x.text.split('\n'));
+  });
+  if (at < 0) return;
+  if (act === 'del') {
+    lines.splice(at, 1);
+  } else {
+    const j = at + (act === 'up' ? -1 : 1);
+    if (j < 0 || j >= lines.length) return;
+    [lines[at], lines[j]] = [lines[j], lines[at]];
+  }
+  _storyEdLoad(ed, lines.join('\n'));
+  _storyEdRender(ed);
+  _storyEdChanged(ed);
+}
+
+function storyInlinePickImage(cb) {
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = 'image/*';
+  inp.onchange = e => {
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    artCompressImage(f).then(data => {
+      if (!data) return;
+      const key = 'i' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+      window.storyInlineImgs = window.storyInlineImgs || {};
+      window.storyInlineImgs[key] = data;
+      const ctx = window.storyInlineCtx;
+      if (ctx) { ctx.newImgs = ctx.newImgs || {}; ctx.newImgs[key] = data; }
+      cb(key);
+    });
+  };
+  inp.click();
+}
+
+// מוסיף תמונה במקום הסמן (או בסוף הטקסט אם לא נבחר מקום)
+function storyInlineAddImage() {
+  if (!window.__storyInlineEdit) return;
+  let ta = window.__storyInlineLastTa;
+  if (!ta || !document.body.contains(ta) || !ta.__storyEd) {
+    const all = mainContent.querySelectorAll('.story-inline-blocks textarea');
+    ta = all[all.length - 1];
+  }
+  if (!ta || !ta.__storyEd) return;
+  const ed = ta.__storyEd, b = ta.__storyBlock;
+  // textarea זוכר את מיקום הסמן גם אחרי שהמיקוד עבר לכפתור
+  const pos = (window.__storyInlineLastTa === ta && typeof ta.selectionStart === 'number') ? ta.selectionStart : ta.value.length;
+  storyInlinePickImage(key => {
+    const i = ed.blocks.indexOf(b);
+    if (i < 0) return;
+    const before = b.text.slice(0, pos).replace(/\n$/, '');
+    const after = b.text.slice(pos).replace(/^\n/, '');
+    ed.blocks.splice(i, 1, { type: 'text', text: before }, { type: 'img', key }, { type: 'text', text: after });
+    _storyEdRender(ed);
+    _storyEdChanged(ed);
+  });
+}
+window.storyInlineAddImage = storyInlineAddImage;
+
 function storyInlineAutosize(ta) {
   if (!ta) return;
   ta.style.height = 'auto';
@@ -7261,6 +7441,8 @@ function storyInlineEditStart() {
   const root = mainContent.querySelector('.art-detail');
   if (!root) return;
   window.__storyInlineEdit = true;
+  window.__storyInlineLastTa = null;
+  ctx.newImgs = {};
   root.classList.add('story-inline-editing');
   root.querySelectorAll('.story-detail-edit-btn').forEach(b => { b.style.display = 'none'; });
 
@@ -7278,11 +7460,9 @@ function storyInlineEditStart() {
   let focusTa = null;
   if (body) {
     const pg = (window.storyPagesData || [])[0];
-    body.innerHTML = '<textarea class="story-inline-ta story-inline-ta-article" dir="auto" placeholder="כתוב כאן את הסיפור..."></textarea>';
-    const ta = body.querySelector('textarea');
-    ta.value = (pg && pg.text) || '';
-    ta.addEventListener('input', () => { if (pg) { pg.text = ta.value; pg._edited = true; } storyInlineAutosize(ta); });
-    focusTa = ta;
+    body.innerHTML = '';
+    storyInlineBlockEditor(body, (pg && pg.text) || '', txt => { if (pg) { pg.text = txt; pg._edited = true; } }, 'story-inline-ta-article');
+    focusTa = body.querySelector('textarea');
   }
 
   // קומיקס — תיאור/טקסט מעל התמונות
@@ -7296,11 +7476,9 @@ function storyInlineEditStart() {
       if (v) v.parentNode.insertBefore(d, v);
     }
     d.style.whiteSpace = 'normal';
-    d.innerHTML = '<textarea class="story-inline-ta" dir="auto" placeholder="טקסט / תיאור לקומיקס..."></textarea>';
-    const ta = d.querySelector('textarea');
-    ta.value = ctx.comicDesc || '';
-    ta.addEventListener('input', () => { ctx.comicDesc = ta.value; ctx.descEdited = true; storyInlineAutosize(ta); });
-    focusTa = focusTa || ta;
+    d.innerHTML = '';
+    storyInlineBlockEditor(d, ctx.comicDesc || '', txt => { ctx.comicDesc = txt; ctx.descEdited = true; }, '');
+    focusTa = focusTa || d.querySelector('textarea');
   }
 
   // סיפור בכמה עמודים — העמוד הנוכחי הופך לשדה עריכה (גם במעבר בין עמודים)
@@ -7310,7 +7488,8 @@ function storyInlineEditStart() {
   bar.id = 'story-inline-bar';
   bar.className = 'story-inline-bar';
   bar.innerHTML = `
-    <span class="story-inline-hint">✎ עורכים ישירות בדף · Enter = שורה חדשה · שורה ריקה = רווח</span>
+    <span class="story-inline-hint">✎ Enter = שורה חדשה · שורה ריקה = רווח · התמונה נכנסת במקום הסמן</span>
+    <button type="button" class="sib-img" onclick="storyInlineAddImage()">🖼️ הוסף תמונה</button>
     <button type="button" class="sib-save" onclick="storyInlineEditSave()">💾 שמור</button>
     <button type="button" class="sib-cancel" onclick="storyInlineEditCancel()">ביטול</button>
     <button type="button" class="sib-full" onclick="storyInlineOpenFull()">⚙️ תמונות והגדרות</button>`;
@@ -7384,6 +7563,13 @@ function storyInlineEditSave() {
   }
 
   if (pagesArr) s.pages = pagesArr.filter(p => !(isTextPage(p) && !(p.text || '').trim()));
+
+  // תמונות בתוך הטקסט: מוסיפים חדשות ומנקים כאלה שנמחקו מהטקסט
+  const allImgs = { ...((s.inlineImages && typeof s.inlineImages === 'object') ? s.inlineImages : {}), ...(ctx.newImgs || {}) };
+  const allText = [s.body, s.summary].concat((s.pages || []).filter(isTextPage).map(p => p.text)).join('\n');
+  const used = {};
+  Object.keys(allImgs).forEach(k => { if (allText.includes('[[img:' + k + ']]')) used[k] = allImgs[k]; });
+  if (Object.keys(used).length) s.inlineImages = used; else delete s.inlineImages;
 
   stories[idx] = s;
   const kind = storyGetCurrentKind();
@@ -8717,7 +8903,7 @@ function renderStoryCommunityCard(s) {
       </div>
       <div style="padding:14px; display:flex; flex-direction:column; gap:6px; flex:1; text-align:right; direction:rtl;">
         <div style="font-size:15px; font-weight:900; color:#0f172a; line-height:1.3; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escHtml(s.title || 'סיפור')}</div>
-        <div style="font-size:12px; color:#64748b; line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; min-height:34px;">${escHtml(s.summary || s.body || 'לחץ לקריאת הסיפור המלא')}</div>
+        <div style="font-size:12px; color:#64748b; line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; min-height:34px;">${escHtml(s.summary || storyStripImgMarkers(s.body) || 'לחץ לקריאת הסיפור המלא')}</div>
         <div style="margin-top:auto; padding-top:8px; display:flex; align-items:center; justify-content:space-between; font-size:11.5px; color:#94a3b8; border-top:1px solid #f1f5f9;">
           <span>✍️ ${escHtml(s.author || 'אנונימי')}${verifiedBadgeHTML}</span>
           <span style="color:#8b5cf6; font-weight:800;">קרא עוד ←</span>

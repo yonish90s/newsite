@@ -6722,3 +6722,17 @@ body.umap-expanded .art-sidebar-left { position: static !important; }
   .story-inline-bar { left: 12px; right: 12px; transform: none; justify-content: center; bottom: 12px; }
   .story-inline-bar button { padding: 8px 10px; font-size: 13px; }
 }
+
+/* תמונות בתוך טקסט של סיפור */
+.story-inline-img { margin: 18px 0 22px; text-align: center; }
+.story-inline-img img { max-width: 100%; max-height: 70vh; border-radius: 12px; display: inline-block; box-shadow: 0 4px 18px rgba(0,0,0,.08); }
+.story-text-page .story-inline-img img { max-height: 50vh; }
+.story-inline-blocks { display: flex; flex-direction: column; gap: 10px; }
+.story-inline-ta-small { min-height: 48px; }
+.story-inline-imgblock { position: relative; text-align: center; border: 2px dashed #c4b5fd; border-radius: 12px; padding: 10px; background: #faf8ff; }
+.story-inline-imgblock img { max-width: 100%; max-height: 50vh; border-radius: 10px; display: inline-block; }
+.story-inline-imgmissing { padding: 30px; color: #94a3b8; font-weight: 700; }
+.story-inline-imgtools { position: absolute; top: 14px; left: 14px; display: flex; gap: 6px; }
+.story-inline-imgtools button { width: 34px; height: 34px; border-radius: 9px; border: none; background: rgba(17,24,39,.8); color: #fff; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.story-inline-imgtools button.del { background: #e11d48; }
+.story-inline-bar .sib-img { background: #0ea5e9; color: #fff; }
