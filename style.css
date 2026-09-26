@@ -6676,3 +6676,17 @@ body.umap-expanded .art-sidebar-left { position: static !important; }
 .pc-audio audio { height: 34px; max-width: 280px; width: 100%; }
 .pc-audio-ico { font-size: 16px; }
 .pc-audio-len { font-size: 12px; color: #94a3b8; font-weight: 700; }
+
+/* ===== מובייל: שורת הריבועים (הסבר / העלאה / פודקאסט) מוקטנת ולא נערמת ===== */
+@media (max-width: 900px) {
+  .qu-hero-row.qu-scaled { flex-direction: row; width: 900px; gap: 14px; align-items: stretch; }
+  .qu-hero-row.qu-scaled .qu-guide { order: 0; flex: 0 0 230px; width: auto; max-width: none; align-self: stretch; padding: 18px; border-radius: 22px; }
+  .qu-hero-row.qu-scaled .pod-box { flex-basis: 250px; }
+  .qu-hero-row.qu-scaled .qu-hero-card { padding: 34px 22px 26px; border-radius: 22px; }
+  .qu-hero-row.qu-scaled .qu-back-btn { top: 20px; right: 20px; font-size: 13px; padding: 6px 14px; }
+  .qu-hero-row.qu-scaled .qu-hero-title { font-size: 30px; }
+  .qu-hero-row.qu-scaled .qu-hero-subtitle { font-size: 15px; margin-bottom: 24px; }
+  .qu-hero-row.qu-scaled .qu-options-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .qu-hero-row.qu-scaled .qu-dest-pill { flex-direction: column; justify-content: center; padding: 18px 10px; gap: 6px; text-align: center; }
+  .qu-hero-row.qu-scaled .qu-dest-pill .qu-pill-icon { font-size: 28px; }
+}

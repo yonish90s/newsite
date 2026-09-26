@@ -11507,6 +11507,35 @@ async function editUploadGuideVideo() {
 window.editUploadGuideVideo = editUploadGuideVideo;
 
 // ==========================================
+// במובייל: שלושת הריבועים (הסבר / העלאה / פודקאסט) נשארים בשורה אחת
+// כמו במחשב — השורה נבנית ברוחב קבוע ומוקטנת (zoom) לרוחב המסך
+// ==========================================
+const QU_ROW_BASE_WIDTH = 900;
+function fitQuHeroRows() {
+  document.querySelectorAll('.qu-hero-row').forEach(row => {
+    if (window.innerWidth <= 900) {
+      row.classList.add('qu-scaled');
+      const par = row.parentElement;
+      let avail = window.innerWidth;
+      if (par) {
+        const cs = getComputedStyle(par);
+        avail = par.clientWidth - (parseFloat(cs.paddingLeft) || 0) - (parseFloat(cs.paddingRight) || 0);
+      }
+      row.style.zoom = String(Math.min(1, avail / QU_ROW_BASE_WIDTH));
+    } else {
+      row.classList.remove('qu-scaled');
+      row.style.zoom = '';
+    }
+  });
+}
+window.fitQuHeroRows = fitQuHeroRows;
+window.addEventListener('resize', fitQuHeroRows);
+try {
+  if (mainContent) new MutationObserver(fitQuHeroRows).observe(mainContent, { childList: true });
+} catch (e) {}
+setTimeout(fitQuHeroRows, 0);
+
+// ==========================================
 // ריבוע פודקאסט (ספוטיפיי) משמאל לווידג'ט ההעלאה (המנהל קובע את הקישור)
 // ==========================================
 let PODCAST_URL = '';
