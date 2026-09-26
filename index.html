@@ -14,7 +14,7 @@
   <!-- ספריית localforage לשמירת תמונות -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
   <!-- קישור לקובץ העיצוב החיצוני (עם פרמטר למניעת שמירה במטמון) -->
-  <link rel="stylesheet" href="./style.css?v=1364">
+  <link rel="stylesheet" href="./style.css?v=1365">
 </head>
 <body class="light-mode">
   <!-- שער אישור גיל (Age Gate Overlay) -->
@@ -473,6 +473,8 @@
     </select>
     <label style="font-size:13px; font-weight:600;">קישור חיצוני (URL) — אופציונלי</label>
     <input id="story-link" type="url" placeholder="https://..." style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+    <label style="font-size:13px; font-weight:600;">⭐ תמונת פרופיל (כריכה) — מופיעה על כרטיס הסיפור בלבד, לא בתוך הסיפור</label>
+    <div id="story-cover-box"></div>
     <label style="font-size:13px; font-weight:600;">עמודי הסיפור — כל עמוד יכול להיות תמונה או טקסט. אפשר לשנות סדר ולהסיר. (הראשון הוא הראשי)</label>
     <div id="story-images-editor" style="display:flex; flex-direction:column; gap:8px;"></div>
     <div style="display:flex; gap:8px;">
@@ -1121,6 +1123,6 @@
   </button>
 </div>
 
-  <script type="module" src="./script.js?v=1363"></script>
+  <script type="module" src="./script.js?v=1364"></script>
 </body>
 </html>

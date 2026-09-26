@@ -6473,7 +6473,7 @@ window.storyApplyFilters = storyApplyFilters;
 // וגם כפיד "סיפורים" שנוסף בתחתית עמוד התמונות.
 function storyCardHTML(s, iconHint) {
     const validImages = (s.images && s.images.length) ? s.images.filter(Boolean) : (s.image ? [s.image] : []);
-    const mainImg = validImages[0] || s.image || '';
+    const mainImg = s.cover || validImages[0] || s.image || '';
     let miniThumbnailsHTML = '';
     if (validImages.length <= 1) {
       miniThumbnailsHTML = '<div class="photo-mini-thumbs-spacer" aria-hidden="true"></div>';
@@ -7132,6 +7132,7 @@ function renderStoryImagesEditor() {
       <div style="display:flex; gap:3px; flex-shrink:0;">
         <button type="button" onclick="storyMoveImage(${i}, -1)" title="העבר למעלה" ${i === 0 ? 'disabled' : ''} style="border:1px solid #ddd; background:#fff; border-radius:5px; width:26px; height:26px; cursor:pointer; font-size:12px;${i === 0 ? 'opacity:0.35; cursor:default;' : ''}">▲</button>
         <button type="button" onclick="storyMoveImage(${i}, 1)" title="העבר למטה" ${i === last ? 'disabled' : ''} style="border:1px solid #ddd; background:#fff; border-radius:5px; width:26px; height:26px; cursor:pointer; font-size:12px;${i === last ? 'opacity:0.35; cursor:default;' : ''}">▼</button>
+        ${pg.type === 'image' ? `<button type="button" onclick="storyMakeCover(${i})" title="הפוך לתמונת פרופיל של הסיפור (תוסר מתוך הסיפור)" style="border:1px solid #fcd34d; color:#b45309; background:#fffbeb; border-radius:5px; height:26px; padding:0 6px; cursor:pointer; font-size:11px; font-weight:800; white-space:nowrap;">⭐ לכריכה</button>` : ''}
         <button type="button" onclick="storyRemoveImage(${i})" title="הסר עמוד" style="border:1px solid #fca5a5; color:#dc2626; background:#fff; border-radius:5px; width:26px; height:26px; cursor:pointer; font-size:12px;">✕</button>
       </div>`;
     const badge = `<span style="background:${pg.type === 'text' ? '#8b5cf6' : '#3b82f6'}; color:#fff; font-size:10px; font-weight:800; padding:2px 8px; border-radius:6px;">עמוד ${i + 1} · ${pg.type === 'text' ? 'טקסט 📝' : 'תמונה 🖼️'}</span>`;
@@ -7153,6 +7154,48 @@ function renderStoryImagesEditor() {
       </div>`;
   }).join('');
 }
+
+// תמונת הפרופיל (כריכה) של הסיפור — מוצגת בכרטיס בלבד, לא כעמוד בתוך הסיפור
+let storyCoverImg = '';
+
+function renderStoryCoverBox() {
+  const box = document.getElementById('story-cover-box');
+  if (!box) return;
+  const btn = 'padding:8px 12px; border-radius:8px; cursor:pointer; font-size:13px; font-weight:700;';
+  box.innerHTML = storyCoverImg
+    ? `<div style="display:flex; align-items:center; gap:10px; border:1px solid #fcd34d; background:#fffbeb; border-radius:10px; padding:8px;">
+         <img src="${escHtml(storyCoverImg)}" style="width:96px; height:64px; object-fit:cover; border-radius:8px; display:block;">
+         <div style="display:flex; gap:6px; flex-wrap:wrap;">
+           <button type="button" onclick="storyPickCover()" style="${btn} border:1px solid #ddd; background:#fff;">🔄 החלף</button>
+           <button type="button" onclick="storyRemoveCover()" style="${btn} border:1px solid #fca5a5; background:#fff; color:#dc2626;">✕ הסר</button>
+         </div>
+       </div>`
+    : `<button type="button" onclick="storyPickCover()" style="${btn} width:100%; border:1px dashed #f59e0b; background:#fffbeb; color:#b45309;">⭐ בחר תמונת פרופיל לסיפור</button>`;
+}
+
+function storyPickCover() {
+  const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
+  inp.onchange = e => {
+    const f = e.target.files[0]; if (!f) return;
+    artCompressImage(f).then(data => { if (data) { storyCoverImg = data; renderStoryCoverBox(); } });
+  };
+  inp.click();
+}
+window.storyPickCover = storyPickCover;
+
+function storyRemoveCover() { storyCoverImg = ''; renderStoryCoverBox(); }
+window.storyRemoveCover = storyRemoveCover;
+
+// מעביר עמוד תמונה להיות הכריכה — ומוציא אותו מתוך הסיפור
+function storyMakeCover(i) {
+  const pg = storyImageList[i];
+  if (!pg || pg.type !== 'image' || !pg.url) return;
+  storyCoverImg = pg.url;
+  storyImageList.splice(i, 1);
+  renderStoryImagesEditor();
+  renderStoryCoverBox();
+}
+window.storyMakeCover = storyMakeCover;
 
 function storySetPageText(i, val) {
   if (storyImageList[i]) storyImageList[i] = { type: 'text', text: val };
@@ -7193,6 +7236,8 @@ function openStoryModal() {
   populateStoryLinkedSelect(null, '');
   storyImageList = [];
   renderStoryImagesEditor();
+  storyCoverImg = '';
+  renderStoryCoverBox();
   document.getElementById('story-modal').style.display = 'flex';
 }
 
@@ -7224,6 +7269,8 @@ function openStoryEditModal(id) {
     storyImageList = ((s.images && s.images.length) ? s.images.filter(Boolean) : (s.image ? [s.image] : [])).map(u => ({ type: 'image', url: u }));
   }
   renderStoryImagesEditor();
+  storyCoverImg = s.cover || '';
+  renderStoryCoverBox();
 
   document.getElementById('story-modal').style.display = 'flex';
 }
@@ -7646,7 +7693,8 @@ document.getElementById('story-save').addEventListener('click', () => {
     author: document.getElementById('story-author').value.trim(),
     category: document.getElementById('story-category').value.trim(),
     categoryColor: '#8b5cf6',
-    image: firstImage,
+    image: storyCoverImg || firstImage,
+    cover: storyCoverImg,
     images: storyImages,
     pages: storyPages,
     link: document.getElementById('story-link').value.trim(),
@@ -8894,7 +8942,7 @@ function renderStoryCommunityCard(s) {
   const isVerifiedStory = (typeof isUserVerified === 'function') ? isUserVerified(s.authorId, s.author, s.verified || s.verifiedUser) : false;
   const verifiedBadgeHTML = isVerifiedStory ? ` <span title="משתמש מאומת" style="color:#2563eb; font-weight:900; background:#dbeafe; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:10px; margin-right:3px;">✓</span>` : '';
   const validImages = (s.images && s.images.length) ? s.images.filter(Boolean) : (s.image ? [s.image] : []);
-  const mainImg = validImages[0] || s.image || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80';
+  const mainImg = s.cover || validImages[0] || s.image || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80';
   return `
     <div class="art-card story-card" onclick="storyOpenDetail('${artEsc(s.id)}')" style="border-radius:14px; overflow:hidden; background:#fff; border:1px solid #e2e8f0; display:flex; flex-direction:column; cursor:pointer; transition:transform 0.15s, box-shadow 0.15s;" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 10px 25px rgba(0,0,0,0.1)';" onmouseout="this.style.transform='none'; this.style.boxShadow='none';">
       <div style="position:relative; height:170px; width:100%; overflow:hidden; background:#0f172a;">
