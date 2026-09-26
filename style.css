@@ -6424,8 +6424,20 @@ body.site-tour-picking, body.site-tour-picking * { cursor: crosshair !important;
   border-width: 9px 0 9px 15px;
   border-color: transparent transparent transparent #fff;
 }
+/* ריבוע פודקאסט (ספוטיפיי) */
+.pod-box { flex-basis: 340px; }
+.pod-frame { display: block; width: 100%; height: 152px; border: 0; border-radius: 12px; background: #1f1f1f; }
+.pod-placeholder { display: flex; align-items: center; gap: 12px; padding: 14px; box-sizing: border-box; color: #fff; direction: rtl; }
+.pod-art { flex: 0 0 auto; width: 96px; height: 96px; border-radius: 8px; background: linear-gradient(135deg, #1db954, #0f5132); display: flex; align-items: center; justify-content: center; font-size: 40px; }
+.pod-ph-text { flex: 1; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.pod-ph-text b { font-size: 15px; font-weight: 800; }
+.pod-ph-text span { font-size: 12.5px; color: #a3a3a3; }
+.pod-play { flex: 0 0 auto; position: relative; width: 44px; height: 44px; border-radius: 50%; background: #fff; }
+.pod-play::after { content: ''; position: absolute; top: 50%; left: 53%; transform: translate(-50%, -50%); border-style: solid; border-width: 8px 0 8px 13px; border-color: transparent transparent transparent #111; }
+@media (max-width: 1200px) { .pod-box { flex-basis: 280px; } .qu-hero-row .qu-guide { flex-basis: 280px; } }
 @media (max-width: 900px) {
   .qu-hero-row { flex-direction: column; gap: 16px; }
+  .pod-box { order: 3; }
   .qu-guide { flex-basis: auto; order: 2; border-radius: 18px; padding: 16px; width: 100%; max-width: 460px; align-self: center; }
 }
 

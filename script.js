@@ -11506,6 +11506,65 @@ async function editUploadGuideVideo() {
 }
 window.editUploadGuideVideo = editUploadGuideVideo;
 
+// ==========================================
+// ריבוע פודקאסט (ספוטיפיי) משמאל לווידג'ט ההעלאה (המנהל קובע את הקישור)
+// ==========================================
+let PODCAST_URL = '';
+try {
+  onValue(ref(db, 'website/podcastEmbed'), snap => {
+    PODCAST_URL = snap.val() || '';
+    const box = document.getElementById('podcast-box');
+    if (box) box.outerHTML = podcastBoxHTML();
+  }, () => {});
+} catch (e) {}
+
+// open.spotify.com/(intl-xx/)episode|show|playlist|album|track/ID → {type, id}
+function spotifyEmbedParts(url) {
+  const m = String(url || '').match(/^https:\/\/open\.spotify\.com\/(?:intl-[a-z-]+\/)?(episode|show|playlist|album|track)\/([A-Za-z0-9]{10,40})/);
+  return m ? { type: m[1], id: m[2] } : null;
+}
+
+function podcastBoxHTML() {
+  const sp = spotifyEmbedParts(PODCAST_URL);
+  const isAdminNow = typeof isAdmin === 'function' && isAdmin();
+  const media = sp
+    ? `<iframe class="pod-frame" src="https://open.spotify.com/embed/${sp.type}/${encodeURIComponent(sp.id)}?utm_source=generator&theme=0" title="פודקאסט" loading="lazy" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>`
+    : `<div class="pod-frame pod-placeholder">
+        <span class="pod-art">🎧</span>
+        <span class="pod-ph-text"><b>הפודקאסט שלנו</b><span>הפרק הראשון יעלה בקרוב</span></span>
+        <span class="pod-play" aria-hidden="true"></span>
+      </div>`;
+  return `
+    <aside class="qu-guide pod-box" id="podcast-box">
+      <div class="qu-guide-head">
+        <div class="qu-guide-title">🎙️ פודקאסט</div>
+        ${isAdminNow ? `<button type="button" class="qu-guide-edit" onclick="editPodcastEmbed()" title="הגדרת פודקאסט">✎</button>` : ''}
+      </div>
+      <div class="qu-guide-sub">האזינו לפרק האחרון בספוטיפיי</div>
+      ${media}
+    </aside>`;
+}
+window.podcastBoxHTML = podcastBoxHTML;
+
+async function editPodcastEmbed() {
+  if (!isAdmin()) return;
+  const val = prompt('הדביקו קישור ספוטיפיי לפרק / פודקאסט / פלייליסט. השאירו ריק כדי להסיר:', PODCAST_URL || '');
+  if (val === null) return;
+  const clean = val.trim().split('?')[0];
+  if (clean && !spotifyEmbedParts(clean)) {
+    alert('נא להדביק קישור של open.spotify.com (episode / show / playlist)');
+    return;
+  }
+  try {
+    await set(ref(db, 'website/podcastEmbed'), clean || null);
+    if (typeof showCopyToast === 'function') showCopyToast('✅ הפודקאסט עודכן');
+  } catch (e) {
+    console.error('podcast save failed', e);
+    alert('שגיאה בשמירת הקישור');
+  }
+}
+window.editPodcastEmbed = editPodcastEmbed;
+
 function quickUploadSetTarget(target) {
   window.quickUploadState.target = target;
   quickUploadRefreshUI();
@@ -11859,6 +11918,7 @@ function buildHomeFeedPage() {
       <div class="qu-hero-row">
         ${uploadGuideBoxHTML()}
         ${quickUploadHero}
+        ${podcastBoxHTML()}
       </div>
       ${photosSection}
       ${storiesSection}

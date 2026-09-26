@@ -19,6 +19,7 @@
       "photoBarCategories": { ".read": true },
       "tourConfig": { ".read": true },
       "uploadGuideVideo": { ".read": true },
+      "podcastEmbed": { ".read": true },
       "hideCart": { ".read": true },
       "hideChat": { ".read": true },
       "deleteCart": { ".read": true },
