@@ -11507,31 +11507,43 @@ async function editUploadGuideVideo() {
 window.editUploadGuideVideo = editUploadGuideVideo;
 
 // ==========================================
-// במובייל: שלושת הריבועים (הסבר / העלאה / פודקאסט) נשארים בשורה אחת
-// כמו במחשב — השורה נבנית ברוחב קבוע ומוקטנת (zoom) לרוחב המסך
+// במובייל: שלושת הריבועים בקרוסלה שמזפזפים בה (כמו שורת הקומיקס)
+// פודקאסט משמאל, העלאה באמצע, יוטיוב מימין — נפתח על ההעלאה
 // ==========================================
-const QU_ROW_BASE_WIDTH = 900;
+function quHeroCarouselCards(row) {
+  return [row.querySelector('.pod-box'), row.querySelector('.quick-upload-hero-container'), row.querySelector('#upload-guide-box')].filter(Boolean);
+}
+function quHeroUpdateDots(row) {
+  const dots = row.parentElement && row.parentElement.querySelector('.qu-hero-dots');
+  if (!dots) return;
+  const cards = quHeroCarouselCards(row);
+  const mid = row.scrollLeft + row.clientWidth / 2;
+  let best = 0, bestD = Infinity;
+  cards.forEach((c, i) => { const d = Math.abs(c.offsetLeft + c.offsetWidth / 2 - mid); if (d < bestD) { bestD = d; best = i; } });
+  dots.querySelectorAll('.qu-hero-dot').forEach((d, i) => d.classList.toggle('active', i === best));
+}
+function quHeroGoTo(btn, i) {
+  const row = btn.closest('.qu-hero-wrap') && btn.closest('.qu-hero-wrap').querySelector('.qu-hero-row');
+  const card = row && quHeroCarouselCards(row)[i];
+  if (card) row.scrollTo({ left: card.offsetLeft - (row.clientWidth - card.offsetWidth) / 2, behavior: 'smooth' });
+}
+window.quHeroGoTo = quHeroGoTo;
 function fitQuHeroRows() {
+  if (window.innerWidth > 900) return;
   document.querySelectorAll('.qu-hero-row').forEach(row => {
-    if (window.innerWidth <= 900) {
-      row.classList.add('qu-scaled');
-      const par = row.parentElement;
-      let avail = window.innerWidth;
-      if (par) {
-        const cs = getComputedStyle(par);
-        avail = par.clientWidth - (parseFloat(cs.paddingLeft) || 0) - (parseFloat(cs.paddingRight) || 0);
-      }
-      row.style.zoom = String(Math.min(1, avail / QU_ROW_BASE_WIDTH));
-    } else {
-      row.classList.remove('qu-scaled');
-      row.style.zoom = '';
+    if (!row.dataset.carouselInit) {
+      row.dataset.carouselInit = '1';
+      row.addEventListener('scroll', () => quHeroUpdateDots(row), { passive: true });
+      const hero = row.querySelector('.quick-upload-hero-container');
+      if (hero) row.scrollLeft = hero.offsetLeft - (row.clientWidth - hero.offsetWidth) / 2;
     }
+    quHeroUpdateDots(row);
   });
 }
 window.fitQuHeroRows = fitQuHeroRows;
 window.addEventListener('resize', fitQuHeroRows);
 try {
-  if (mainContent) new MutationObserver(fitQuHeroRows).observe(mainContent, { childList: true });
+  if (mainContent) new MutationObserver(() => setTimeout(fitQuHeroRows, 0)).observe(mainContent, { childList: true });
 } catch (e) {}
 setTimeout(fitQuHeroRows, 0);
 
@@ -11944,10 +11956,17 @@ function buildHomeFeedPage() {
 
   return `<div class="articles-page home-feed-page" data-page-id="page-home-feed">
     <div class="art-inner">
-      <div class="qu-hero-row">
-        ${uploadGuideBoxHTML()}
-        ${quickUploadHero}
-        ${podcastBoxHTML()}
+      <div class="qu-hero-wrap">
+        <div class="qu-hero-row">
+          ${uploadGuideBoxHTML()}
+          ${quickUploadHero}
+          ${podcastBoxHTML()}
+        </div>
+        <div class="qu-hero-dots">
+          <button type="button" class="qu-hero-dot" onclick="quHeroGoTo(this, 0)" aria-label="פודקאסט"></button>
+          <button type="button" class="qu-hero-dot active" onclick="quHeroGoTo(this, 1)" aria-label="העלאת תוכן"></button>
+          <button type="button" class="qu-hero-dot" onclick="quHeroGoTo(this, 2)" aria-label="הסבר שימוש"></button>
+        </div>
       </div>
       ${photosSection}
       ${storiesSection}
