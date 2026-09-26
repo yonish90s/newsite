@@ -6702,3 +6702,23 @@ body.umap-expanded .art-sidebar-left { position: static !important; }
 /* כפתור עריכה בתוך תצוגת סיפור (בעלים במצב עריכה) */
 .story-detail-edit-btn { background: #8b5cf6; color: #fff; border: none; border-radius: 8px; padding: 7px 14px; font-weight: 700; font-size: 14px; cursor: pointer; white-space: nowrap; font-family: inherit; }
 .story-detail-edit-btn:hover { background: #7c3aed; }
+
+/* עריכה ישירה מתוך דף הסיפור */
+.story-article-body p.story-blank-line { margin: 0; height: 0.9em; }
+.story-inline-ta { display: block; width: 100%; box-sizing: border-box; font: inherit; line-height: inherit; color: inherit; text-align: right; background: #fffdf5; border: 2px dashed #c4b5fd; border-radius: 10px; padding: 12px 14px; min-height: 90px; resize: none; overflow: hidden; outline: none; }
+.story-inline-ta:focus { border-color: #8b5cf6; background: #fff; }
+.story-inline-ta-article { min-height: 320px; }
+.story-inline-ta-page { font-size: 16px; font-weight: 600; line-height: 1.75; min-height: 300px; }
+.story-inline-editing .story-inline-field { outline: 2px dashed #c4b5fd; outline-offset: 4px; border-radius: 6px; cursor: text; }
+.story-inline-editing .story-inline-field:focus { outline-color: #8b5cf6; }
+.story-inline-bar { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; align-items: center; gap: 8px; background: #111827; color: #fff; padding: 10px 12px; border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.25); direction: rtl; max-width: calc(100vw - 32px); box-sizing: border-box; }
+.story-inline-hint { font-size: 13px; opacity: .8; white-space: nowrap; padding: 0 4px; }
+.story-inline-bar button { border: none; border-radius: 9px; padding: 8px 14px; font-weight: 800; font-size: 14px; cursor: pointer; font-family: inherit; white-space: nowrap; }
+.story-inline-bar .sib-save { background: #22c55e; color: #fff; }
+.story-inline-bar .sib-cancel { background: #374151; color: #fff; }
+.story-inline-bar .sib-full { background: #8b5cf6; color: #fff; }
+@media (max-width: 640px) {
+  .story-inline-hint { display: none; }
+  .story-inline-bar { left: 12px; right: 12px; transform: none; justify-content: center; bottom: 12px; }
+  .story-inline-bar button { padding: 8px 10px; font-size: 13px; }
+}

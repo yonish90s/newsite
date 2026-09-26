@@ -6676,24 +6676,26 @@ function storyOpenDetail(id) {
   const validImages = s.images ? s.images.filter(img => !!img) : (s.image ? [s.image] : []);
 
   // עמודי הסיפור: תמונה או טקסט. אם אין pages — ממירים מהתמונות הישנות
+  // _src — מאיפה הגיע כל עמוד בנתונים, כדי שעריכה מתוך הדף תשמר למקום הנכון
   let storyPagesArr = (s.pages && s.pages.length)
-    ? s.pages.map(p => (p && typeof p === 'object') ? p : { type: 'image', url: p })
+    ? s.pages.map((p, i) => ({ ...((p && typeof p === 'object') ? p : { type: 'image', url: p }), _src: i }))
     : validImages.map(u => ({ type: 'image', url: u }));
 
   const _bodyText = (s.body || s.summary || '').trim();
   // קומיקס (יש עמודי תמונה) — נפתח ישר בתמונה הראשונה. הטקסט מוצג כתיאור קצר מתחת לכותרת
   // ולא כ"עמוד" נפרד לפני התמונות.
   let _comicDesc = '';
-  if (storyPagesArr.some(p => p && p.type === 'image' && p.url)) {
+  const _isComic = storyPagesArr.some(p => p && p.type === 'image' && p.url);
+  if (_isComic) {
     const _texts = storyPagesArr.filter(p => p && p.type === 'text').map(p => (p.text || '').trim()).filter(Boolean);
     _comicDesc = _texts.length ? _texts.join('\n') : _bodyText;
     storyPagesArr = storyPagesArr.filter(p => p && p.type !== 'text');
   } else if (_bodyText && !storyPagesArr.some(p => p.type === 'text')) {
-    storyPagesArr.unshift({ type: 'text', text: _bodyText });
+    storyPagesArr.unshift({ type: 'text', text: _bodyText, _src: 'body' });
   }
   if (typeof splitStoryTextPages === 'function') storyPagesArr = splitStoryTextPages(storyPagesArr);
   if (!storyPagesArr.length) {
-    storyPagesArr = [{ type: 'text', text: s.summary || s.title || 'סיפור' }];
+    storyPagesArr = [{ type: 'text', text: s.summary || s.title || 'סיפור', _src: 'body' }];
   }
 
   window.storyPagesData = storyPagesArr;
@@ -6740,14 +6742,19 @@ function storyOpenDetail(id) {
   // (מעמוד הבית / מפיד התמונות השמירה הייתה דורסת את העמוד הלא-נכון)
   const _canEditHere = isEditMode && activePageId !== 'page-home-feed' && container && !container.classList.contains('photos-stories-feed') && Array.isArray(stories) && stories.some(x => x && x.id === id);
   const _editBtn = _canEditHere
-    ? `<button class="story-detail-edit-btn" onclick="event.stopPropagation(); storyEditFromDetail('${artEsc(id)}')">✎ עריכת הסיפור</button>`
+    ? `<button class="story-detail-edit-btn" onclick="event.stopPropagation(); storyInlineEditStart()">✎ עריכת הסיפור</button>`
     : '';
+  window.storyInlineCtx = _canEditHere ? { id, isComic: _isComic, comicDesc: _comicDesc } : null;
+  window.__storyInlineEdit = false;
+  const _oldBar = document.getElementById('story-inline-bar');
+  if (_oldBar) _oldBar.remove();
 
   // סיפור טקסט בלבד בעל עמוד יחיד
   const isTextStory = storyPagesArr.length > 0 && storyPagesArr.every(p => p.type === 'text');
   if (isTextStory && storyPagesArr.length === 1) {
     const _fullText = storyPagesArr.map(p => p.text || '').join('\n\n');
-    const _paras = _fullText.split(/\n+/).map(t => t.trim()).filter(Boolean);
+    // כל שורה היא פסקה, ושורה ריקה נשמרת כרווח — כמו שנכתב בעריכה
+    const _paras = _fullText.replace(/^\s*\n|\n\s*$/g, '').split('\n').map(t => t.trim());
     const _words = _fullText.split(/\s+/).filter(Boolean).length;
     const _readMin = Math.max(1, Math.round(_words / 180));
     const _tags = (Array.isArray(s.tags) && s.tags.length) ? s.tags : (s.category ? [s.category] : []);
@@ -6769,7 +6776,7 @@ function storyOpenDetail(id) {
             </div>
             ${_tagChips ? `<div class="story-article-tags">${_tagChips}</div>` : ''}
             ${storyLinkedChipHTML(s)}
-            <div class="story-article-body" id="story-article-body" style="font-size:17px; line-height:1.75; color:#1e293b;">${_paras.map(p => `<p>${escHtml(p).replace(/\n/g, '<br>')}</p>`).join('')}</div>
+            <div class="story-article-body" id="story-article-body" style="font-size:17px; line-height:1.75; color:#1e293b;">${_paras.map(p => p ? `<p>${escHtml(p)}</p>` : '<p class="story-blank-line"></p>').join('')}</div>
           </article>
           ${(typeof storyCommentsSectionHTML === 'function') ? storyCommentsSectionHTML(id) : ''}
           <div class="art-rec-section" style="margin-top:36px;">
@@ -6871,7 +6878,16 @@ function storyRenderPage() {
   view.classList.toggle('story-view-text', isText);
   view.classList.toggle('story-view-image', !isText);
 
-  if (isText) {
+  if (isText && window.__storyInlineEdit) {
+    view.innerHTML = `
+      <div class="story-page-inner" style="padding:16px; width:100%; box-sizing:border-box;">
+        <textarea class="story-inline-ta story-inline-ta-page" dir="auto" placeholder="טקסט העמוד..."></textarea>
+      </div>`;
+    const ta = view.querySelector('textarea');
+    ta.value = pg.text || '';
+    ta.addEventListener('input', () => { pg.text = ta.value; pg._edited = true; storyInlineAutosize(ta); });
+    storyInlineAutosize(ta);
+  } else if (isText) {
     view.innerHTML = `
       <div class="story-page-inner" style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px; width:100%; box-sizing:border-box;">
         <div class="story-text-page" style="font-size:17px; font-weight:700; line-height:1.75; color:#1e293b; max-width:640px; text-align:center; word-break:break-word;">
@@ -7226,6 +7242,167 @@ function storyEditFromDetail(id) {
   openStoryEditModal(id);
 }
 window.storyEditFromDetail = storyEditFromDetail;
+
+// ============================================================
+// עריכה ישירה מתוך דף הסיפור (בעלים במצב עריכה)
+// הטקסט הופך לשדה עריכה באותו מקום בדף: משנים שורות, מוסיפים שורות ריקות לרווח,
+// מוחקים שורות — ושומרים. תמונות/קטגוריה נשארות בחלון העריכה המלא.
+// ============================================================
+function storyInlineAutosize(ta) {
+  if (!ta) return;
+  ta.style.height = 'auto';
+  ta.style.height = (ta.scrollHeight + 4) + 'px';
+}
+window.storyInlineAutosize = storyInlineAutosize;
+
+function storyInlineEditStart() {
+  const ctx = window.storyInlineCtx;
+  if (!ctx || !isEditMode) return;
+  const root = mainContent.querySelector('.art-detail');
+  if (!root) return;
+  window.__storyInlineEdit = true;
+  root.classList.add('story-inline-editing');
+  root.querySelectorAll('.story-detail-edit-btn').forEach(b => { b.style.display = 'none'; });
+
+  // כותרת — עריכה ישירה בשורה אחת
+  const h = root.querySelector('.story-article-title, .art-detail-title');
+  if (h) {
+    h.setAttribute('contenteditable', 'plaintext-only');
+    if (!h.isContentEditable) h.setAttribute('contenteditable', 'true');
+    h.classList.add('story-inline-field');
+    h.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); h.blur(); } });
+  }
+
+  // סיפור-כתבה (עמוד טקסט יחיד)
+  const body = root.querySelector('#story-article-body');
+  let focusTa = null;
+  if (body) {
+    const pg = (window.storyPagesData || [])[0];
+    body.innerHTML = '<textarea class="story-inline-ta story-inline-ta-article" dir="auto" placeholder="כתוב כאן את הסיפור..."></textarea>';
+    const ta = body.querySelector('textarea');
+    ta.value = (pg && pg.text) || '';
+    ta.addEventListener('input', () => { if (pg) { pg.text = ta.value; pg._edited = true; } storyInlineAutosize(ta); });
+    focusTa = ta;
+  }
+
+  // קומיקס — תיאור/טקסט מעל התמונות
+  if (ctx.isComic) {
+    let d = root.querySelector('.story-comic-desc');
+    if (!d) {
+      d = document.createElement('div');
+      d.className = 'story-comic-desc';
+      d.style.margin = '0 0 16px';
+      const v = root.querySelector('.story-viewer');
+      if (v) v.parentNode.insertBefore(d, v);
+    }
+    d.style.whiteSpace = 'normal';
+    d.innerHTML = '<textarea class="story-inline-ta" dir="auto" placeholder="טקסט / תיאור לקומיקס..."></textarea>';
+    const ta = d.querySelector('textarea');
+    ta.value = ctx.comicDesc || '';
+    ta.addEventListener('input', () => { ctx.comicDesc = ta.value; ctx.descEdited = true; storyInlineAutosize(ta); });
+    focusTa = focusTa || ta;
+  }
+
+  // סיפור בכמה עמודים — העמוד הנוכחי הופך לשדה עריכה (גם במעבר בין עמודים)
+  storyRenderPage();
+
+  const bar = document.createElement('div');
+  bar.id = 'story-inline-bar';
+  bar.className = 'story-inline-bar';
+  bar.innerHTML = `
+    <span class="story-inline-hint">✎ עורכים ישירות בדף · Enter = שורה חדשה · שורה ריקה = רווח</span>
+    <button type="button" class="sib-save" onclick="storyInlineEditSave()">💾 שמור</button>
+    <button type="button" class="sib-cancel" onclick="storyInlineEditCancel()">ביטול</button>
+    <button type="button" class="sib-full" onclick="storyInlineOpenFull()">⚙️ תמונות והגדרות</button>`;
+  root.appendChild(bar);
+
+  root.querySelectorAll('.story-inline-ta').forEach(storyInlineAutosize);
+  if (focusTa) { try { focusTa.focus({ preventScroll: true }); } catch (e) {} }
+}
+window.storyInlineEditStart = storyInlineEditStart;
+
+// פותח מחדש את הסיפור ושומר על העמוד והגלילה הנוכחיים
+function _storyInlineReopen(id) {
+  const keepPage = window.currentStoryPage || 0;
+  const y = window.scrollY;
+  storyOpenDetail(id);
+  if (window.storyPagesData && keepPage < window.storyPagesData.length) {
+    window.currentStoryPage = keepPage;
+    storyRenderPage();
+  }
+  setTimeout(() => { try { window.scrollTo(0, y); } catch (e) {} }, 200);
+}
+
+function storyInlineEditCancel() {
+  const ctx = window.storyInlineCtx;
+  if (!ctx) return;
+  _storyInlineReopen(ctx.id);
+}
+window.storyInlineEditCancel = storyInlineEditCancel;
+
+function storyInlineEditSave() {
+  const ctx = window.storyInlineCtx;
+  if (!ctx || !isEditMode) return false;
+  const root = mainContent.querySelector('.art-detail');
+  const stories = storyGetStories();
+  const idx = stories.findIndex(x => x && x.id === ctx.id);
+  if (idx < 0) return false;
+  const s = { ...stories[idx] };
+  const isTextPage = p => p && typeof p === 'object' && p.type === 'text';
+  const clean = t => String(t || '').replace(/\s+$/, '');
+
+  const h = root && root.querySelector('.story-article-title, .art-detail-title');
+  if (h) {
+    const t = (h.textContent || '').replace(/\s+/g, ' ').trim();
+    if (t) s.title = t;
+  }
+
+  let pagesArr = Array.isArray(s.pages) ? s.pages.slice() : null;
+  (window.storyPagesData || []).forEach(pg => {
+    if (!pg || pg.type !== 'text' || !pg._edited) return;
+    const txt = clean(pg.text);
+    if (typeof pg._src === 'number' && pagesArr) {
+      const orig = pagesArr[pg._src];
+      pagesArr[pg._src] = { ...(isTextPage(orig) ? orig : {}), type: 'text', text: txt };
+    } else if (pg._src === 'body') {
+      s.body = txt;
+    }
+  });
+
+  if (ctx.isComic && ctx.descEdited) {
+    const txt = clean(ctx.comicDesc);
+    if (pagesArr && pagesArr.some(isTextPage)) {
+      // התיאור מוצג כחיבור של כל עמודי הטקסט — שומרים אותו כעמוד טקסט אחד
+      let placed = false;
+      pagesArr = pagesArr
+        .filter(p => !isTextPage(p) || (!placed && (placed = true)))
+        .map(p => isTextPage(p) ? { ...p, text: txt } : p);
+      if (!txt.trim()) s.body = '';
+    } else {
+      s.body = txt;
+    }
+  }
+
+  if (pagesArr) s.pages = pagesArr.filter(p => !(isTextPage(p) && !(p.text || '').trim()));
+
+  stories[idx] = s;
+  const kind = storyGetCurrentKind();
+  mainContent.innerHTML = buildStoriesPage(stories, kind);
+  saveCurrentPageContent();
+  _storyInlineReopen(ctx.id);
+  return true;
+}
+window.storyInlineEditSave = storyInlineEditSave;
+
+// מעבר לחלון העריכה המלא (תמונות, קטגוריה, קישורים) — קודם שומרים את מה שנערך בדף
+function storyInlineOpenFull() {
+  const ctx = window.storyInlineCtx;
+  if (!ctx) return;
+  const id = ctx.id;
+  if (storyInlineEditSave() === false) return;
+  storyEditFromDetail(id);
+}
+window.storyInlineOpenFull = storyInlineOpenFull;
 
 // הוספת תמונה חדשה לרשימה (בסוף)
 const storyAddImageBtn = document.getElementById('story-add-image');
