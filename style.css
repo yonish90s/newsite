@@ -6657,3 +6657,22 @@ body.umap-expanded .art-sidebar-left { position: static !important; }
 .umap-pin.mine { background: #e11d48; }
 .umap-pop { direction: rtl; text-align: right; font-size: 13px; }
 @media (max-width: 768px) { .umap-canvas { height: 420px; } }
+
+/* ===== תגובות קוליות ===== */
+.pc-actions { display: flex; gap: 8px; align-items: center; }
+.pc-mic { background: #fff; color: #334155; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 8px 14px; font-size: 13.5px; font-weight: 800; cursor: pointer; font-family: inherit; }
+.pc-mic:hover { border-color: #e11d48; color: #e11d48; }
+.pc-voice:empty { display: none; }
+.pc-voice { margin: -8px 0 16px; }
+.pc-voice-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; background: #fff1f2; border: 1.5px solid #fecdd3; border-radius: 12px; padding: 10px 12px; }
+.pc-voice-bar audio { height: 36px; flex: 1 1 200px; min-width: 0; }
+.pc-rec-dot { width: 12px; height: 12px; border-radius: 50%; background: #e11d48; animation: pcRecPulse 1s ease-in-out infinite; }
+@keyframes pcRecPulse { 50% { opacity: .3; transform: scale(.8); } }
+.pc-rec-time { flex: 1; direction: ltr; text-align: right; font-weight: 900; color: #9f1239; font-variant-numeric: tabular-nums; }
+.pc-voice-btn { border: none; border-radius: 8px; padding: 8px 14px; font-size: 13px; font-weight: 800; cursor: pointer; font-family: inherit; background: #e11d48; color: #fff; }
+.pc-voice-btn.ghost { background: #fff; color: #475569; border: 1px solid #e2e8f0; }
+.pc-voice-btn:disabled { opacity: .6; cursor: default; }
+.pc-audio { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.pc-audio audio { height: 34px; max-width: 280px; width: 100%; }
+.pc-audio-ico { font-size: 16px; }
+.pc-audio-len { font-size: 12px; color: #94a3b8; font-weight: 700; }

@@ -124,7 +124,7 @@
         "$albumId": {
           "$commentId": {
             ".write": "!data.exists()",
-            ".validate": "newData.child('text').isString() && newData.child('text').val().length <= 1000 && (newData.child('uid').val() === '' || (auth != null && newData.child('uid').val() === auth.uid))"
+            ".validate": "newData.child('text').isString() && newData.child('text').val().length <= 1000 && (!newData.child('voice').exists() || (newData.child('voice').isString() && newData.child('voice').val().beginsWith('data:audio/') && newData.child('voice').val().length <= 450000 && newData.child('voiceSec').isNumber() && newData.child('voiceSec').val() <= 70)) && (newData.child('uid').val() === '' || (auth != null && newData.child('uid').val() === auth.uid))"
           }
         }
       },
@@ -134,7 +134,7 @@
         "$storyId": {
           "$commentId": {
             ".write": "!data.exists()",
-            ".validate": "newData.child('text').isString() && newData.child('text').val().length <= 1000 && (newData.child('uid').val() === '' || (auth != null && newData.child('uid').val() === auth.uid))"
+            ".validate": "newData.child('text').isString() && newData.child('text').val().length <= 1000 && (!newData.child('voice').exists() || (newData.child('voice').isString() && newData.child('voice').val().beginsWith('data:audio/') && newData.child('voice').val().length <= 450000 && newData.child('voiceSec').isNumber() && newData.child('voiceSec').val() <= 70)) && (newData.child('uid').val() === '' || (auth != null && newData.child('uid').val() === auth.uid))"
           }
         }
       },

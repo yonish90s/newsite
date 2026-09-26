@@ -15190,7 +15190,8 @@ function photoCommentsListHTML() {
   return list.map(c => `
     <div class="pc-comment">
       <div class="pc-head">${escHtml(c.name || 'אורח')} · ${c.createdAt ? new Date(c.createdAt).toLocaleDateString('he-IL') : ''}</div>
-      <div class="pc-text">${escHtml(c.text || '')}</div>
+      ${c.text ? `<div class="pc-text">${escHtml(c.text)}</div>` : ''}
+      ${voiceCommentAudioHTML(c)}
     </div>`).join('');
 }
 
@@ -15213,8 +15214,12 @@ function photoCommentsSectionHTML(albumId) {
       <div class="pc-title">💬 תגובות (<span id="photo-comments-count">0</span>)</div>
       <div class="pc-form">
         <textarea id="photo-comment-input" rows="2" placeholder="כתבו תגובה, שתפו מה דעתכם..."></textarea>
-        <button onclick="submitPhotoComment('${artEsc(albumId)}')" class="pc-send">שלח תגובה</button>
+        <div class="pc-actions">
+          <button type="button" class="pc-mic" onclick="voiceRecToggle('photo', '${artEsc(albumId)}')" title="תגובה קולית">🎤 הקלטה</button>
+          <button onclick="submitPhotoComment('${artEsc(albumId)}')" class="pc-send">שלח תגובה</button>
+        </div>
       </div>
+      <div class="pc-voice" id="photo-voice-rec"></div>
       <div id="photo-comments-list">${photoCommentsListHTML()}</div>
     </div>`;
 }
@@ -15242,7 +15247,8 @@ function storyCommentsListHTML() {
   return list.map(c => `
     <div class="pc-comment">
       <div class="pc-head">${escHtml(c.name || 'אורח')} · ${c.createdAt ? new Date(c.createdAt).toLocaleDateString('he-IL') : ''}</div>
-      <div class="pc-text">${escHtml(c.text || '')}</div>
+      ${c.text ? `<div class="pc-text">${escHtml(c.text)}</div>` : ''}
+      ${voiceCommentAudioHTML(c)}
     </div>`).join('');
 }
 
@@ -15265,12 +15271,136 @@ function storyCommentsSectionHTML(storyId) {
       <div class="pc-title">💬 תגובות (<span id="story-comments-count">0</span>)</div>
       <div class="pc-form">
         <textarea id="story-comment-input" rows="2" placeholder="כתבו תגובה, שתפו מה דעתכם..."></textarea>
-        <button onclick="submitStoryComment('${artEsc(storyId)}')" class="pc-send">שלח תגובה</button>
+        <div class="pc-actions">
+          <button type="button" class="pc-mic" onclick="voiceRecToggle('story', '${artEsc(storyId)}')" title="תגובה קולית">🎤 הקלטה</button>
+          <button onclick="submitStoryComment('${artEsc(storyId)}')" class="pc-send">שלח תגובה</button>
+        </div>
       </div>
+      <div class="pc-voice" id="story-voice-rec"></div>
       <div id="story-comments-list">${storyCommentsListHTML()}</div>
     </div>`;
 }
 window.storyCommentsSectionHTML = storyCommentsSectionHTML;
+
+// ---- תגובות קוליות (לתמונות ולסיפורים) ----
+// ההקלטה נשמרת כ-data URL בתוך התגובה עצמה (עד 60 שניות, ביטרייט נמוך)
+const VOICE_MAX_SEC = 60;
+const VOICE_DATA_RE = /^data:audio\/[a-z0-9.+-]+(;codecs=[a-z0-9.,"'-]+)?;base64,[A-Za-z0-9+/=]+$/i;
+let voiceRec = null; // { kind, id, recorder, stream, chunks, start, timer, dataUrl }
+
+function voiceCommentAudioHTML(c) {
+  if (!c || typeof c.voice !== 'string' || !VOICE_DATA_RE.test(c.voice)) return '';
+  const sec = Number(c.voiceSec) || 0;
+  return `<div class="pc-audio"><span class="pc-audio-ico">🎤</span><audio controls preload="none" src="${escHtml(c.voice)}"></audio>${sec ? `<span class="pc-audio-len">${sec}″</span>` : ''}</div>`;
+}
+
+function voiceRecBox(kind) { return document.getElementById(`${kind}-voice-rec`); }
+
+function voiceRecRender() {
+  if (!voiceRec) return;
+  const box = voiceRecBox(voiceRec.kind);
+  if (!box) return;
+  if (voiceRec.recorder && voiceRec.recorder.state === 'recording') {
+    const sec = Math.floor((Date.now() - voiceRec.start) / 1000);
+    box.innerHTML = `<div class="pc-voice-bar recording">
+      <span class="pc-rec-dot"></span><span class="pc-rec-time">${sec}″ / ${VOICE_MAX_SEC}″</span>
+      <button type="button" class="pc-voice-btn stop" onclick="voiceRecStop()">⏹ עצירה</button>
+      <button type="button" class="pc-voice-btn ghost" onclick="voiceRecCancel()">ביטול</button>
+    </div>`;
+  } else if (voiceRec.dataUrl) {
+    box.innerHTML = `<div class="pc-voice-bar">
+      <audio controls src="${escHtml(voiceRec.dataUrl)}"></audio>
+      <button type="button" class="pc-voice-btn send" onclick="voiceRecSend()">📤 שליחת תגובה קולית</button>
+      <button type="button" class="pc-voice-btn ghost" onclick="voiceRecCancel()">מחיקה</button>
+    </div>`;
+  }
+}
+
+function voiceRecCleanup() {
+  if (!voiceRec) return;
+  clearInterval(voiceRec.timer);
+  if (voiceRec.stream) voiceRec.stream.getTracks().forEach(t => t.stop());
+}
+
+async function voiceRecToggle(kind, id) {
+  if (voiceRec && voiceRec.recorder && voiceRec.recorder.state === 'recording') { voiceRecStop(); return; }
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || typeof MediaRecorder === 'undefined') {
+    alert('הדפדפן לא תומך בהקלטה קולית');
+    return;
+  }
+  voiceRecCancel();
+  let stream;
+  try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+  catch (e) { alert('אין גישה למיקרופון — אשרו הרשאה בדפדפן'); return; }
+  const types = ['audio/webm;codecs=opus', 'audio/ogg;codecs=opus', 'audio/mp4', 'audio/webm'];
+  const mimeType = types.find(t => MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t)) || '';
+  let recorder;
+  try { recorder = new MediaRecorder(stream, mimeType ? { mimeType, audioBitsPerSecond: 24000 } : { audioBitsPerSecond: 24000 }); }
+  catch (e) { recorder = new MediaRecorder(stream); }
+  voiceRec = { kind, id, recorder, stream, chunks: [], start: Date.now(), timer: null, dataUrl: '', sec: 0 };
+  const rec = voiceRec;
+  recorder.ondataavailable = (ev) => { if (ev.data && ev.data.size) rec.chunks.push(ev.data); };
+  recorder.onstop = () => {
+    rec.sec = Math.max(1, Math.round((Date.now() - rec.start) / 1000));
+    clearInterval(rec.timer);
+    rec.stream.getTracks().forEach(t => t.stop());
+    if (rec.cancelled || voiceRec !== rec) return;
+    const blob = new Blob(rec.chunks, { type: recorder.mimeType || mimeType || 'audio/webm' });
+    const fr = new FileReader();
+    fr.onload = () => { if (voiceRec === rec) { rec.dataUrl = String(fr.result || ''); voiceRecRender(); } };
+    fr.readAsDataURL(blob);
+  };
+  recorder.start();
+  rec.timer = setInterval(() => {
+    if ((Date.now() - rec.start) / 1000 >= VOICE_MAX_SEC) voiceRecStop();
+    else voiceRecRender();
+  }, 500);
+  voiceRecRender();
+}
+window.voiceRecToggle = voiceRecToggle;
+
+function voiceRecStop() {
+  if (voiceRec && voiceRec.recorder && voiceRec.recorder.state === 'recording') voiceRec.recorder.stop();
+}
+window.voiceRecStop = voiceRecStop;
+
+function voiceRecCancel() {
+  if (!voiceRec) return;
+  const rec = voiceRec;
+  rec.cancelled = true;
+  if (rec.recorder && rec.recorder.state === 'recording') rec.recorder.stop();
+  voiceRecCleanup();
+  const box = voiceRecBox(rec.kind);
+  if (box) box.innerHTML = '';
+  voiceRec = null;
+}
+window.voiceRecCancel = voiceRecCancel;
+
+async function voiceRecSend() {
+  const rec = voiceRec;
+  if (!rec || !rec.dataUrl) return;
+  const dataUrl = rec.dataUrl.replace(/;codecs=[^;,]*/i, ''); // פשטות לאימות
+  if (!VOICE_DATA_RE.test(dataUrl) || dataUrl.length > 450000) {
+    alert('ההקלטה ארוכה מדי — נסו הקלטה קצרה יותר');
+    return;
+  }
+  const path = rec.kind === 'story' ? `website/story_comments/${rec.id}` : `website/photo_comments/${rec.id}`;
+  const name = (auth.currentUser && typeof liveChatUserName === 'function') ? liveChatUserName() : 'אורח';
+  const box = voiceRecBox(rec.kind);
+  const btn = box && box.querySelector('.pc-voice-btn.send');
+  if (btn) { btn.disabled = true; btn.textContent = 'שולח...'; }
+  try {
+    if (typeof trackEvent === 'function') trackEvent('voice_comment');
+    await push(ref(db, path), { text: '', voice: dataUrl, voiceSec: rec.sec || 0, name, uid: auth.currentUser ? auth.currentUser.uid : '', createdAt: Date.now() });
+    voiceRecCancel();
+    if (typeof showCopyToast === 'function') showCopyToast('🎤 התגובה הקולית נשלחה');
+  } catch (e) {
+    console.error('voice comment failed', e);
+    if (btn) { btn.disabled = false; btn.textContent = '📤 שליחת תגובה קולית'; }
+    if (typeof showCopyToast === 'function') showCopyToast('שגיאה בשליחת התגובה הקולית');
+  }
+}
+window.voiceRecSend = voiceRecSend;
 
 // ---- פיד: גלריות של מי שאני עוקב אחריו ----
 function getFeedAlbums() {
