@@ -6736,6 +6736,13 @@ function storyOpenDetail(id) {
 
   const json = encodeURIComponent(JSON.stringify(stories));
 
+  // כפתור עריכה מתוך הסיפור — לבעלים במצב עריכה בלבד, ורק כשנפתח מעמוד סיפורים אמיתי
+  // (מעמוד הבית / מפיד התמונות השמירה הייתה דורסת את העמוד הלא-נכון)
+  const _canEditHere = isEditMode && activePageId !== 'page-home-feed' && container && !container.classList.contains('photos-stories-feed') && Array.isArray(stories) && stories.some(x => x && x.id === id);
+  const _editBtn = _canEditHere
+    ? `<button class="story-detail-edit-btn" onclick="event.stopPropagation(); storyEditFromDetail('${artEsc(id)}')">✎ עריכת הסיפור</button>`
+    : '';
+
   // סיפור טקסט בלבד בעל עמוד יחיד
   const isTextStory = storyPagesArr.length > 0 && storyPagesArr.every(p => p.type === 'text');
   if (isTextStory && storyPagesArr.length === 1) {
@@ -6748,7 +6755,10 @@ function storyOpenDetail(id) {
     mainContent.innerHTML = `
       <div class="art-detail articles-page stories-page story-article-page" data-story-kind="${_srcKind}" data-story-id="${id}" data-stories-json="${json}">
         <div class="art-detail-inner">
-          <button class="art-back-btn" onclick="storyGoBack()" style="background:#f1f5f9; border:1px solid #cbd5e1; border-radius:8px; padding:6px 14px; font-weight:700; cursor:pointer;">← חזרה לסיפורים</button>
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+            <button class="art-back-btn" onclick="storyGoBack()" style="background:#f1f5f9; border:1px solid #cbd5e1; border-radius:8px; padding:6px 14px; font-weight:700; cursor:pointer;">← חזרה לסיפורים</button>
+            ${_editBtn}
+          </div>
           <article class="story-article" style="margin-top:16px;">
             <h1 class="story-article-title">${escHtml(s.title || '')}</h1>
             <div class="story-article-rule"></div>
@@ -6810,7 +6820,7 @@ function storyOpenDetail(id) {
               <span>${escHtml(s.timestamp || '')}</span>
             </div>
           </div>
-          <div style="width:100px;"></div>
+          <div style="min-width:100px; display:flex; justify-content:flex-end;">${_editBtn}</div>
         </div>
 
         ${storyLinkedChipHTML(s)}
@@ -7159,6 +7169,7 @@ function openStoryModal() {
   if (!isEditMode) return;
   syncStoryCategorySelect();
   storyEditingId = null;
+  storyEditReturnToDetail = null;
   const h = document.getElementById('story-modal-title');
   if (h) h.textContent = 'הוספת סיפור חדש';
   const saveBtn = document.getElementById('story-save');
@@ -7208,6 +7219,14 @@ function openStoryEditModal(id) {
 }
 window.openStoryEditModal = openStoryEditModal;
 
+// עריכה מתוך תצוגת הסיפור: אחרי השמירה חוזרים לאותו סיפור ולא לרשימה
+let storyEditReturnToDetail = null;
+function storyEditFromDetail(id) {
+  storyEditReturnToDetail = id;
+  openStoryEditModal(id);
+}
+window.storyEditFromDetail = storyEditFromDetail;
+
 // הוספת תמונה חדשה לרשימה (בסוף)
 const storyAddImageBtn = document.getElementById('story-add-image');
 if (storyAddImageBtn) {
@@ -7240,6 +7259,7 @@ if (storyAddTextBtn) {
 
 document.getElementById('story-cancel').addEventListener('click', () => {
   storyEditingId = null;
+  storyEditReturnToDetail = null;
   document.getElementById('story-modal').style.display = 'none';
 });
 
@@ -7282,6 +7302,9 @@ document.getElementById('story-save').addEventListener('click', () => {
   mainContent.innerHTML = buildStoriesPage(stories, storyGetCurrentKind());
   saveCurrentPageContent();
   document.getElementById('story-modal').style.display = 'none';
+  const _backTo = storyEditReturnToDetail;
+  storyEditReturnToDetail = null;
+  if (_backTo && stories.some(x => x.id === _backTo)) storyOpenDetail(_backTo);
 });
 
 const btnAddStoriesPage = document.getElementById('btn-add-stories-page');

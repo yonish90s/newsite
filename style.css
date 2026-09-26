@@ -6698,3 +6698,7 @@ body.umap-expanded .art-sidebar-left { position: static !important; }
   .qu-hero-dot { width: 8px; height: 8px; padding: 0; border: none; border-radius: 99px; background: #cbd5e1; cursor: pointer; transition: all .2s; }
   .qu-hero-dot.active { width: 22px; background: #361763; }
 }
+
+/* כפתור עריכה בתוך תצוגת סיפור (בעלים במצב עריכה) */
+.story-detail-edit-btn { background: #8b5cf6; color: #fff; border: none; border-radius: 8px; padding: 7px 14px; font-weight: 700; font-size: 14px; cursor: pointer; white-space: nowrap; font-family: inherit; }
+.story-detail-edit-btn:hover { background: #7c3aed; }
