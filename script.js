@@ -10639,15 +10639,15 @@ function buildFiltersSidebarBox(pageType) {
   const sortCheck = (value, label) =>
     `<label class="pf-check">
       <span class="pf-check-label">${label}</span>
-      <input type="checkbox" ${curSort === value ? 'checked' : ''} onchange="photoSetSort('${value}',this)">
+      <input type="radio" name="pf-sort" ${curSort === value ? 'checked' : ''} onchange="photoSetSort('${value}',this)">
     </label>`;
 
   // מקטע מתקפל: כותרת עם חץ מזעור + גוף שמקופל כברירת מחדל
-  const sec = (title, body) => `
-    <div class="pf-sec pf-collapsed">
+  const sec = (title, body, open) => `
+    <div class="pf-sec${open ? '' : ' pf-collapsed'}">
       <div class="pf-section-title pf-sec-head" onclick="pfToggleSection(this)">
         <span class="pf-sec-title-text">${title}</span>
-        <span class="pf-sec-chev" aria-hidden="true">▾</span>
+        <svg class="pf-sec-chev" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </div>
       <div class="pf-sec-body">${body}</div>
     </div>`;
@@ -10680,21 +10680,21 @@ function buildFiltersSidebarBox(pageType) {
         ${[4, 3, 2].map(n => `
           <label class="pf-check">
             <span class="pf-check-label">${n} עמודות</span>
-            <input type="checkbox" ${curCols === n ? 'checked' : ''} onchange="photoSetSizeCheck(${n}, this)">
+            <input type="radio" name="pf-size" ${curCols === n ? 'checked' : ''} onchange="photoSetSizeCheck(${n}, this)">
           </label>
         `).join('')}
       </div>`;
 
   const sections = {
-    age: sec('טווח גילאים (AGE)', ageBody),
-    sort: sec('כללי (SORT)', sortBody),
-    category: sec('מין (CATEGORY)', catBody),
-    region: sec('מיקום (REGION)', regBody),
-    date: sec('תאריך (DATE)', dateBody),
-    size: sec('גודל (SIZE)', sizeBody)
+    age: sec('טווח גילאים', ageBody),
+    sort: sec('מיון תוצאות לפי', sortBody, true),
+    category: sec('מין', catBody),
+    region: sec('מיקום', regBody),
+    date: sec('תאריך', dateBody),
+    size: sec('גודל', sizeBody)
   };
   // סינונים שונים מעמוד לעמוד: בסיפורים רק כללי/תאריך/גודל
-  const allowed = (pageType === 'stories') ? ['sort', 'date', 'size'] : ['age', 'sort', 'category', 'region', 'date', 'size'];
+  const allowed = (pageType === 'stories') ? ['sort', 'date', 'size'] : ['sort', 'age', 'category', 'region', 'date', 'size'];
 
   return `
     <div class="art-sidebar-box pf-box" style="border:1.5px solid #e2e8f0; border-radius:14px; padding:18px; background:#fff; box-shadow:0 4px 15px rgba(15,23,42,0.05); text-align:right; direction:rtl;">
@@ -10778,7 +10778,7 @@ function photoSetSort(value, cb) {
   if (pfActivePage() === 'stories') currentStoryGeneralFilter = value;
   else currentPhotoGeneralFilter = value;
   const grp = cb.closest('.pf-check-group');
-  if (grp) grp.querySelectorAll('input[type="checkbox"]').forEach(x => { if (x !== cb) x.checked = false; });
+  if (grp) grp.querySelectorAll('input').forEach(x => { if (x !== cb) x.checked = false; });
   cb.checked = true;
   if (typeof photoRenderFilterBar === 'function') photoRenderFilterBar();
   pfApplyActive();
@@ -10787,7 +10787,7 @@ window.photoSetSort = photoSetSort;
 
 function photoSetSizeCheck(n, cb) {
   const grp = cb.closest('.pf-check-group');
-  if (grp) grp.querySelectorAll('input[type="checkbox"]').forEach(x => { if (x !== cb) x.checked = false; });
+  if (grp) grp.querySelectorAll('input').forEach(x => { if (x !== cb) x.checked = false; });
   cb.checked = true;
   // גודל של העמוד הנוכחי בלבד
   if (pfActivePage() === 'stories') { if (typeof storySetGridSize === 'function') storySetGridSize(n); }
