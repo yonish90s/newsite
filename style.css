@@ -7470,3 +7470,306 @@ html.age-not-verified .pshow-frame.photo-main-img-container.is-adult { filter: n
 .home-feed-page .qu-hero-wrap .qu-step-dot.active { background: #ffd166 !important; }
 .home-feed-page .qu-hero-wrap .qu-arrow-btn { background: linear-gradient(135deg, #ffd166, #ff9f1c) !important; color: #190c35 !important; }
 .home-feed-page .qu-hero-wrap .qu-arrow-btn svg { stroke: #190c35 !important; }
+
+/* ===================================================================
+   ערכת כהה לכל האתר — בלי משטחים לבנים
+   רקע #190c35, משטחים #241347, טקסט בהיר, הדגשות צהובות.
+   הקידומת html body גוברת על החוקים הבהירים הקודמים.
+   =================================================================== */
+:root {
+  --dk-bg: #190c35;
+  --dk-surface: #241347;
+  --dk-surface-2: #2e1b59;
+  --dk-line: rgba(255, 255, 255, 0.10);
+  --dk-text: #f1ecff;
+  --dk-muted: rgba(241, 236, 255, 0.68);
+}
+
+/* --- משטחים: כרטיסים, תיבות צד, טבלאות --- */
+html body .art-row,
+html body .art-row-img-wrap,
+html body .art-sidebar-box,
+html body .photo-section-row,
+html body .view-toggles,
+html body .art-rec-card,
+html body .site-stats-wrapper,
+html body .subscription-page-wrapper [class*="card"],
+html body .home-feed-section .art-row {
+  background: var(--dk-surface) !important;
+  border-color: var(--dk-line) !important;
+  color: var(--dk-text) !important;
+}
+
+/* --- רקע כהה לעמודים --- */
+html body .art-detail,
+html body .art-detail.photos-page,
+html body .art-detail.stories-page,
+html body .home-welcome,
+html body .home-feed-section,
+html body .home-feed-section.photo-section-row,
+html body .home-feed-stories .home-feed-section:first-child {
+  background: var(--dk-bg) !important;
+  color: var(--dk-text) !important;
+}
+
+/* --- רצועות הבית מתחלפות --- */
+html body .home-feed-photos .home-feed-section,
+html body .home-feed-stories .home-feed-section:nth-child(even) {
+  background: var(--dk-surface) !important;
+}
+html body .home-feed-photos .art-row,
+html body .home-feed-stories .home-feed-section:nth-child(even) .art-row {
+  background: var(--dk-surface-2) !important;
+}
+
+/* --- טקסט ראשי בהיר --- */
+html body .art-row h3,
+html body .art-row-text h3,
+html body .home-feed-section .art-row-text h3,
+html body .photo-author-link,
+html body .art-sidebar-box h4,
+html body .art-sidebar-box h5,
+html body .art-sidebar-box span,
+html body .pf-check-label,
+html body .pf-sec-title-text,
+html body .pf-sec-chev,
+html body .tgl-label,
+html body .site-page-nav-title,
+html body .site-page-nav-item,
+html body .home-feed-section > div:first-child h3,
+html body .home-feed-head-text h3,
+html body .art-rec-text h4,
+html body .art-section-title,
+html body .art-sidebar-title,
+html body .photo-section-row h3,
+html body .art-detail-title,
+html body .art-back-btn,
+html body .art-meta,
+html body .art-meta span,
+html body .art-detail-content p,
+html body .pshow-title,
+html body .pshow-desc,
+html body .pshow-desc p,
+html body .pd-show-meta,
+html body .pd-show-meta b,
+html body .comic-show .story-comic-desc,
+html body .story-article-title,
+html body .story-article-body,
+html body .story-article-meta,
+html body .story-page-number,
+html body .site-footer,
+html body .site-footer-col h4,
+html body .subscription-page-wrapper h1,
+html body .subscription-page-wrapper h2,
+html body .subscription-page-wrapper h3,
+html body .subscription-page-wrapper li,
+html body .subscription-page-wrapper p {
+  color: var(--dk-text) !important;
+}
+
+/* --- טקסט משני --- */
+html body .home-feed-sub,
+html body .home-feed-stories .home-feed-section:first-child .home-feed-sub,
+html body .art-rec-meta,
+html body .art-row-meta,
+html body .art-row-meta span,
+html body .art-row b,
+html body .art-row div,
+html body .art-row span:not(.art-category-badge),
+html body .art-sidebar-box div,
+html body .art-sidebar-box b,
+html body .art-row-sep,
+html body .site-page-nav-arrow,
+html body .umap-chevron,
+html body .site-footer-col a,
+html body .site-footer-bottom,
+html body .site-footer span {
+  color: var(--dk-muted) !important;
+}
+html body .art-row h3,
+html body .art-row-text h3,
+html body .art-row .photo-author-link {
+  color: var(--dk-text) !important;
+}
+html body .site-footer-col a:hover {
+  color: #ffd166 !important;
+}
+
+/* --- פוטר --- */
+html body .site-footer {
+  background: #120826 !important;
+  border-top: 1px solid var(--dk-line) !important;
+}
+html body .site-footer-bottom {
+  border-top-color: var(--dk-line) !important;
+}
+
+/* --- תצוגת גלריה/קומיקס על כהה --- */
+html body .pshow-line {
+  background: var(--dk-line) !important;
+}
+html body .pshow-dot {
+  border-color: var(--dk-text) !important;
+}
+html body .pshow-dot.active {
+  background: #ffd166 !important;
+  border-color: #ffd166 !important;
+}
+html body .pshow-tile.active,
+html body .comic-show .pshow-tile.story-page-thumb.active {
+  border-color: #ffd166 !important;
+}
+
+/* --- רכיבים בהירים בתוך המשטחים --- */
+html body .site-page-nav-item,
+html body .art-sidebar-box li,
+html body .pf-clear-btn,
+html body .umap-expand,
+html body .art-sidebar-box input,
+html body .art-sidebar-box select,
+html body .art-search,
+html body .shop-search,
+html body .photos-page input[type="text"],
+html body .photos-page input[type="search"],
+html body .stories-page input[type="text"],
+html body .stories-page input[type="search"],
+html body .photo-section-row input,
+html body .communities-page input,
+html body .photo-filter-trigger,
+html body .sidebar-min-toggle,
+html body .sidebar-saved-btn,
+html body .sidebar-tab-pill,
+html body .story-cat-btn,
+html body .home-feed-page .home-feed-section .photo-card-links .art-telegram-btn,
+html body .home-feed-page .home-feed-section .photo-card-links button:first-child,
+html body .home-feed-section .photo-card-links .art-telegram-btn,
+html body .home-feed-section .photo-card-links .art-save-btn,
+html body .photo-card-links .art-telegram-btn,
+html body .photo-card-links .art-save-btn,
+html body .art-telegram-btn,
+html body .art-save-btn,
+html body .photo-like-btn,
+html body .photo-save-btn,
+html body .follow-btn,
+html body .art-detail textarea,
+html body .art-detail input,
+html body .art-detail .art-back-btn {
+  background: rgba(255, 255, 255, 0.07) !important;
+  border-color: var(--dk-line) !important;
+  color: var(--dk-text) !important;
+}
+html body .photo-card-links svg,
+html body .art-telegram-btn svg,
+html body .art-save-btn svg,
+html body .photo-like-btn svg,
+html body .photo-save-btn svg,
+html body .home-feed-section .photo-card-links .art-telegram-btn svg,
+html body .home-feed-section .photo-card-links .art-save-btn svg,
+html body .home-feed-page .home-feed-section .photo-card-links button:first-child svg {
+  stroke: currentColor !important;
+}
+html body .art-save-btn.is-saved,
+html body .home-feed-section .photo-card-links .art-save-btn.is-saved {
+  background: rgba(255, 209, 102, 0.16) !important;
+  color: #ffd166 !important;
+}
+html body .art-detail textarea::placeholder,
+html body .art-detail input::placeholder,
+html body .photos-page input::placeholder,
+html body .stories-page input::placeholder,
+html body .art-search::placeholder {
+  color: var(--dk-muted) !important;
+}
+html body .site-page-nav-item.active {
+  background: #7c3aed !important;
+}
+
+/* --- באנר הפתיחה --- */
+html body .hw-card-top {
+  background: var(--dk-bg) !important;
+}
+html body .hw-card-brand {
+  color: #ffffff !important;
+}
+html body .story-thumb-text,
+html body .art-card-img-placeholder {
+  background: var(--dk-surface-2) !important;
+  color: var(--dk-muted) !important;
+}
+
+/* --- תגובות, מנוי, קהילות --- */
+html body .pc-form,
+html body .pc-comment,
+html body .comm-grid-card,
+html body .comm-grid-card.comm-grid-shortcut,
+html body .sub-credits {
+  background: var(--dk-surface) !important;
+  border-color: var(--dk-line) !important;
+  color: var(--dk-text) !important;
+}
+html body .pc-mic,
+html body .sub-start-btn,
+html body .story-article-tag,
+html body .pc-form textarea,
+html body .pc-form input {
+  background: rgba(255, 255, 255, 0.07) !important;
+  border-color: var(--dk-line) !important;
+  color: var(--dk-text) !important;
+}
+html body .pc-title,
+html body .pc-title span,
+html body .pc-head,
+html body .pc-text,
+html body .pc-empty,
+html body .sub-price,
+html body .sub-features-title,
+html body .subscription-page-wrapper span,
+html body .subscription-page-wrapper div,
+html body .comm-grid-card h3,
+html body .comm-grid-card h4,
+html body .comm-grid-card span,
+html body .comm-grid-card div {
+  color: var(--dk-text) !important;
+}
+html body .home-feed-page .qu-hero-wrap .qu-hero-card div,
+html body .home-feed-page .qu-hero-wrap .qu-hero-card b {
+  color: rgba(241, 236, 255, 0.72) !important;
+}
+
+/* --- מנוי: הדגשות צהובות --- */
+html body .sub-price { color: #ffd166 !important; }
+html body .sub-badge {
+  background: var(--warm-grad) !important;
+  color: #190c35 !important;
+  font-weight: 800 !important;
+}
+html body .sub-pricing-card.featured {
+  border: 2px solid #ffd166 !important;
+  box-shadow: 0 0 0 4px rgba(255, 209, 102, 0.12), 0 24px 50px -24px rgba(255, 159, 28, 0.45) !important;
+}
+html body .sub-credits {
+  background: rgba(255, 209, 102, 0.08) !important;
+  border: 1px solid rgba(255, 209, 102, 0.28) !important;
+}
+html body .sub-credits,
+html body .sub-credits * { color: #ffe3a3 !important; }
+html body .sub-start-btn {
+  background: transparent !important;
+  border: 1.5px solid #ffd166 !important;
+  color: #ffd166 !important;
+}
+html body .sub-pricing-card.featured .sub-start-btn,
+html body .sub-start-btn:hover {
+  background: var(--warm-grad) !important;
+  border-color: transparent !important;
+  color: #190c35 !important;
+}
+html body .sub-features li::marker { color: #ffd166 !important; }
+html body .sub-features-title { color: #ffd166 !important; }
+
+/* --- קהילות: כרטיסים ורודים --- */
+html body .comm-grid-shortcut .comm-grid-thumb { background: linear-gradient(135deg, #ff8cc6 0%, #ec4899 100%) !important; }
+html body .comm-grid-shortcut:nth-child(3n+2) .comm-grid-thumb { background: linear-gradient(135deg, #f9a8d4 0%, #db2777 100%) !important; }
+html body .comm-grid-shortcut:nth-child(3n) .comm-grid-thumb { background: linear-gradient(135deg, #f472b6 0%, #be185d 100%) !important; }
+html body .comm-grid-btn { background: #ec4899 !important; color: #fff !important; }
+html body .comm-grid-btn:hover { background: #db2777 !important; }
