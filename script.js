@@ -12345,6 +12345,49 @@ async function quickUploadFinalSubmit() {
 }
 window.quickUploadFinalSubmit = quickUploadFinalSubmit;
 
+// באנר פתיחה בראש עמוד הבית: רקע צהוב "נוזל", כותרת גדולה וכפתור,
+// ושלושה כרטיסים מוטים (תמונות / קומיקס / סיפורים) עם התוכן האחרון מכל סוג.
+function homeWelcomeHeroHTML() {
+  // בכוונה בלי תמונות משתמשים — באנר הפתיחה הוא הדבר הראשון שכל מבקר רואה
+  const ico = (d) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+  const icons = {
+    photos: ico('<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 9"/>'),
+    comics: ico('<path d="M4 5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H10l-5 4v-4a2 2 0 0 1-1-2z"/><path d="M8 8h8M8 11h5"/>'),
+    stories: ico('<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>')
+  };
+  const card = (label, sub, icon, onclick, tint, cls) => `
+    <button type="button" class="hw-card ${cls}" style="--tint:${tint}" onclick="${onclick}">
+      <span class="hw-card-top"><span class="hw-card-brand">${label}</span></span>
+      <span class="hw-card-img"><span class="hw-card-icon">${icon}</span></span>
+      <span class="hw-card-foot">${sub}</span>
+    </button>`;
+  return `
+    <section class="home-welcome">
+      <svg class="hw-drips" viewBox="0 0 1440 560" preserveAspectRatio="xMidYMin slice" aria-hidden="true">
+        <path d="M0 0H1440V250C1440 290 1410 310 1380 300C1340 288 1330 330 1300 340C1262 352 1250 300 1215 300C1180 300 1180 380 1140 390C1100 400 1095 330 1060 320C1025 310 1020 420 970 430C925 438 925 360 890 345C850 330 845 300 810 300C770 300 770 470 720 470C670 470 680 330 640 320C600 310 600 360 560 370C520 380 515 300 470 300C430 300 430 410 385 415C340 420 345 330 300 320C255 310 250 380 210 385C165 390 170 300 120 295C80 290 70 330 40 330C15 330 0 310 0 290Z"/>
+        <path d="M1130 470C1130 445 1145 425 1152 400C1159 425 1174 445 1174 470C1174 488 1164 500 1152 500C1140 500 1130 488 1130 470Z"/>
+      </svg>
+      <div class="hw-inner">
+        <div class="hw-text">
+          <h1 class="hw-title">יוצרים, משתפים,<br>מתחברים.</h1>
+          <p class="hw-sub">תמונות, קומיקס וסיפורים מהקהילה — כל מה שאתם יוצרים, במקום אחד.</p>
+          <button type="button" class="hw-cta" onclick="homeWelcomeToUpload()">העלו תוכן</button>
+        </div>
+        <div class="hw-cards">
+          ${card('תמונות', 'גלריות מהקהילה', icons.photos, 'homeOpenPhotos()', '#c9bdf0', 'hw-c1')}
+          ${card('קומיקס', 'רצועות ואיורים', icons.comics, "homeOpenSection('page-stories-main')", '#f6a7a0', 'hw-c2')}
+          ${card('סיפורים', 'קצרים ומאמרים', icons.stories, "homeOpenSection('page-stories-text')", '#5b2a4e', 'hw-c3')}
+        </div>
+      </div>
+    </section>`;
+}
+
+function homeWelcomeToUpload() {
+  const target = document.querySelector('.home-feed-page .qu-hero-wrap');
+  if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+window.homeWelcomeToUpload = homeWelcomeToUpload;
+
 function buildHomeFeedPage() {
   const all = (typeof getAllStoriesFromPages === 'function') ? getAllStoriesFromPages() : [];
   let comics = all.filter(s => s && s.__kind !== 'stories');
@@ -12398,6 +12441,7 @@ function buildHomeFeedPage() {
 
   return `<div class="articles-page home-feed-page" data-page-id="page-home-feed">
     <div class="art-inner">
+      ${homeWelcomeHeroHTML()}
       <div class="qu-hero-wrap">
         <div class="qu-hero-row">
           ${uploadGuideBoxHTML()}
@@ -12984,6 +13028,37 @@ function detailScrollTop() {
 }
 window.detailScrollTop = detailScrollTop;
 
+// צבעי הרקע של מסגרת התמונה והריבועים בעמוד הגלריה (מתחלפים לפי התמונה)
+const PSHOW_TINTS = ['#b9b0e0', '#fbb07f', '#f9d986', '#f6e4b8', '#f4a5a5', '#d97c8c', '#c3a6d6'];
+
+// עמוד גלריה: מעבר לתמונה idx (מהריבועים, מהנקודות או מהחצים)
+function pdShowGo(el, idx) {
+  const root = el && el.closest('.pd-show');
+  if (!root) return;
+  const tiles = Array.from(root.querySelectorAll('.pshow-tile'));
+  const tile = tiles[idx];
+  if (!tile) return;
+  const src = tile.querySelector('img').getAttribute('src');
+  const img = root.querySelector('.pshow-main');
+  img.classList.remove('pshow-in');
+  void img.offsetWidth;
+  img.src = src;
+  img.classList.add('pshow-in');
+  root.querySelector('.pshow-frame').style.setProperty('--tint', tile.style.getPropertyValue('--tint'));
+  tiles.forEach((t, i) => t.classList.toggle('active', i === idx));
+  root.querySelectorAll('.pshow-dot').forEach((d, i) => d.classList.toggle('active', i === idx));
+}
+
+function pdShowStep(el, dir) {
+  const root = el && el.closest('.pd-show');
+  if (!root) return;
+  const tiles = Array.from(root.querySelectorAll('.pshow-tile'));
+  if (tiles.length < 2) return;
+  const cur = Math.max(0, tiles.findIndex(t => t.classList.contains('active')));
+  pdShowGo(el, (cur + dir + tiles.length) % tiles.length);
+}
+Object.assign(window, { pdShowGo, pdShowStep });
+
 function photoOpenDetail(id) {
   if (typeof trackEvent === 'function') trackEvent('gallery_open');
   window.__detailOpen = true; // מגן מפני רענון-רקע שיבעט מהעמוד הפנימי
@@ -13176,79 +13251,77 @@ function photoOpenDetail(id) {
         <div class="art-detail-inner">
           <button class="art-back-btn" onclick="photoGoBack()">← חזרה לגלריות</button>
 
-          <!-- בעמוד גלריה המלל בא לפני התמונה -->
-          <div class="art-detail-body">
-            <h1 class="art-detail-title">${escHtml(a.title)}</h1>
-            <div class="art-meta" style="margin-bottom:12px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-              <span class="art-category-badge" style="background:${escHtml(a.categoryColor || '#10b981')}">${escHtml(a.category)}</span>
-              <span>צילום: ${escHtml(a.author)}</span>
-              ${a.authorId ? `<button onclick="toggleFollow('${artEsc(a.authorId)}','${artEsc(a.author || '')}', this)" class="follow-btn${isFollowing(a.authorId) ? ' following' : ''}">${isFollowing(a.authorId) ? '✓ עוקב' : '➕ עקוב'}</button>` : ''}
-              <span>·</span>
-              <span>${escHtml(a.timestamp)}</span>
-              ${a.ageRange ? `<span>·</span><span>גיל ${escHtml(String(a.ageRange))}</span>` : ''}
-              ${isUserVerified(a.authorId, a.author, a.verified || a.verifiedUser) ? `<span>·</span><span style="color:#2563eb; font-weight:700; display:inline-flex; align-items:center; gap:4px;">חשבון זה מאומת <span style="background:#dbeafe; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:10px;">✓</span></span>` : ''}
-              ${a.expiresAt ? renderExpirationBadge(a.expiresAt) : ''}
-              <button onclick="photoToggleLike('${artEsc(a.id)}')" class="photo-like-btn" style="background: ${photoIsLikedLocal(a.id) ? '#ede9fe' : '#ffffff'}; border: 1.5px solid ${photoIsLikedLocal(a.id) ? '#7c3aed' : '#e2e8f0'}; cursor: pointer; color: ${photoIsLikedLocal(a.id) ? '#7c3aed' : '#1e293b'}; display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 8px; transition: all 0.2s; font-weight: 700; font-size: 13px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="${photoIsLikedLocal(a.id) ? '#7c3aed' : 'none'}" stroke="${photoIsLikedLocal(a.id) ? '#7c3aed' : '#7c3aed'}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
-                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                </svg>
-                <span>${a.likes || 0} לייקים</span>
-              </button>
-              <button onclick="photoToggleSave('${artEsc(a.id)}')" class="photo-save-btn" style="background: rgba(0,0,0,0.05); border: 1px solid #ddd; cursor: pointer; color: #000; display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; transition: background 0.2s; font-weight: bold; font-size: 13px;" title="${photoIsSavedLocal(a.id) ? 'הסר משמורים' : 'שמור גלריה'}">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="${photoIsSavedLocal(a.id) ? '#000' : 'none'}" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
-                  <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
-                </svg>
-                <span>שמור</span>
-              </button>
-              <button onclick="dmStartAboutGallery('${artEsc(a.authorId || '')}', '${artEsc(a.author || '')}', '${artEsc(a.id)}')" class="photo-dm-btn" style="background:#7c3aed; border:none; cursor:pointer; color:#fff; display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border-radius:6px; font-weight:bold; font-size:13px;" title="שלח הודעה פרטית ליוצר">
-                💬 <span>שלח הודעה</span>
-              </button>
-              ${a.telegramUrl ? `
-                <a href="${escHtml(safeUrl(a.telegramUrl))}" target="_blank" title="${escHtml(a.telegramUrl.replace('https://t.me/', '@'))}" class="art-telegram-btn" style="display: inline-flex; align-items: center; background: #2f2f2f; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 13px; text-decoration: none; font-weight: bold; gap: 6px; border: 1px solid rgba(255,255,255,0.1);">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
-                    <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
-                  </svg>
-                  <span>טלגרם</span>
-                </a>
-              ` : ''}
-              ${a.emailUrl ? `
-                <button type="button" onclick="revealAndCopyEmail('${artEsc(a.emailUrl)}', this, event);" title="לחץ לחשיפת והעתקת אימייל" class="art-telegram-btn" style="display: inline-flex; align-items: center; background: #2f2f2f; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 13px; text-decoration: none; font-weight: bold; gap: 6px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer;">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
-                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                    <polyline points="22,6 12,13 2,6"/>
-                  </svg>
-                  <span>אימייל</span>
-                </button>
-              ` : ''}
-              ${(isAdmin() || isEditMode) ? `
-                <button type="button" onclick="openPhotoEditModal('${artEsc(a.id)}', event);" title="ערוך גלריה זו" style="display: inline-flex; align-items: center; background: #7c3aed; color: #fff; padding: 6px 14px; border-radius: 6px; font-size: 13px; border: none; font-weight: bold; gap: 6px; cursor: pointer; transition: background 0.2s;">
-                  ✏️ ערוך גלריה
-                </button>
-              ` : ''}
+          <!-- תצוגת "מוצר": תמונה גדולה במסגרת צבעונית + כותרת, תיאור וריבועי בחירה -->
+          <div class="pshow pd-show${a.isAdult ? ' is-adult-album' : ''}">
+            <div class="pshow-stage">
+              <div class="pshow-frame photo-main-img-container${a.isAdult ? ' is-adult' : ''}" style="--tint:${PSHOW_TINTS[0]}; ${blurStyle}">
+                <img id="photo-gallery-main-img" class="pshow-main" src="${escHtml(mainImg)}" alt="" style="${blurStyle}" onclick="artGalleryById('photos','${artEsc(id)}', this.getAttribute('src'))">
+                ${validImages.length > 1 ? `
+                  <button type="button" class="pshow-arrow prev" onclick="event.stopPropagation(); pdShowStep(this, 1)" aria-label="תמונה הבאה"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+                  <button type="button" class="pshow-arrow next" onclick="event.stopPropagation(); pdShowStep(this, -1)" aria-label="תמונה קודמת"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+                ` : ''}
+              </div>
+              ${validImages.length > 1 ? `<div class="pshow-dots">${validImages.map((_, i) => `<button type="button" class="pshow-dot${i === 0 ? ' active' : ''}" onclick="pdShowGo(this, ${i})" aria-label="תמונה ${i + 1}"></button>`).join('')}</div>` : ''}
             </div>
-            <div class="art-detail-content">${contentHTML}</div>
-          </div>
 
-          <!-- תמונה ראשית גדולה עם מזהה ספציפי (פרופורציונלית ולא ענקית) -->
-          <div class="photo-main-img-container" style="${blurStyle}">
-            <img id="photo-gallery-main-img" src="${escHtml(mainImg)}" style="width:100%; height:100%; object-fit:contain; display:block; border-radius:12px; cursor:zoom-in; ${blurStyle}" onclick="artGalleryById('photos','${artEsc(id)}', this.getAttribute('src'))">
-          </div>
-
-          <!-- ריבועי דפדוף (Thumbnails) עם חצי ניווט -->
-          <div class="photo-detail-thumbs-row" style="display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:24px; direction:ltr; flex-wrap:wrap; padding:5px;">
-            ${validImages.length > 1 ? `
-              <button type="button" onclick="event.stopPropagation(); photoStepDetailImage(-1, this)" title="תמונה קודמת" style="width:32px; height:32px; border-radius:50%; background:#3b82f6; color:#fff; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 2px 8px rgba(59,130,246,0.3); transition:background 0.15s ease;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-              </button>
-            ` : ''}
-            <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">
-              ${thumbnailsHTML}
+            <div class="pshow-info">
+              <span class="pshow-star" aria-hidden="true">✱</span>
+              <h1 class="pshow-title">${escHtml(a.title)}</h1>
+              <div class="pshow-desc">${contentHTML}</div>
+                <div class="art-meta pd-show-meta">
+                  <span class="art-category-badge" style="background:${escHtml(a.categoryColor || '#10b981')}">${escHtml(a.category)}</span>
+                  <span>צילום: ${escHtml(a.author)}</span>
+                  ${a.authorId ? `<button onclick="toggleFollow('${artEsc(a.authorId)}','${artEsc(a.author || '')}', this)" class="follow-btn${isFollowing(a.authorId) ? ' following' : ''}">${isFollowing(a.authorId) ? '✓ עוקב' : '➕ עקוב'}</button>` : ''}
+                  <span>·</span>
+                  <span>${escHtml(a.timestamp)}</span>
+                  ${a.ageRange ? `<span>·</span><span>גיל ${escHtml(String(a.ageRange))}</span>` : ''}
+                  ${isUserVerified(a.authorId, a.author, a.verified || a.verifiedUser) ? `<span>·</span><span style="color:#2563eb; font-weight:700; display:inline-flex; align-items:center; gap:4px;">חשבון זה מאומת <span style="background:#dbeafe; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:10px;">✓</span></span>` : ''}
+                  ${a.expiresAt ? renderExpirationBadge(a.expiresAt) : ''}
+                  <button onclick="photoToggleLike('${artEsc(a.id)}')" class="photo-like-btn" style="background: ${photoIsLikedLocal(a.id) ? '#ede9fe' : '#ffffff'}; border: 1.5px solid ${photoIsLikedLocal(a.id) ? '#7c3aed' : '#e2e8f0'}; cursor: pointer; color: ${photoIsLikedLocal(a.id) ? '#7c3aed' : '#1e293b'}; display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 8px; transition: all 0.2s; font-weight: 700; font-size: 13px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="${photoIsLikedLocal(a.id) ? '#7c3aed' : 'none'}" stroke="${photoIsLikedLocal(a.id) ? '#7c3aed' : '#7c3aed'}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+                      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                    </svg>
+                    <span>${a.likes || 0} לייקים</span>
+                  </button>
+                  <button onclick="photoToggleSave('${artEsc(a.id)}')" class="photo-save-btn" style="background: rgba(0,0,0,0.05); border: 1px solid #ddd; cursor: pointer; color: #000; display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; transition: background 0.2s; font-weight: bold; font-size: 13px;" title="${photoIsSavedLocal(a.id) ? 'הסר משמורים' : 'שמור גלריה'}">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="${photoIsSavedLocal(a.id) ? '#000' : 'none'}" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+                      <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    <span>שמור</span>
+                  </button>
+                  ${a.telegramUrl ? `
+                    <a href="${escHtml(safeUrl(a.telegramUrl))}" target="_blank" title="${escHtml(a.telegramUrl.replace('https://t.me/', '@'))}" class="art-telegram-btn" style="display: inline-flex; align-items: center; background: #2f2f2f; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 13px; text-decoration: none; font-weight: bold; gap: 6px; border: 1px solid rgba(255,255,255,0.1);">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+                        <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+                      </svg>
+                      <span>טלגרם</span>
+                    </a>
+                  ` : ''}
+                  ${a.emailUrl ? `
+                    <button type="button" onclick="revealAndCopyEmail('${artEsc(a.emailUrl)}', this, event);" title="לחץ לחשיפת והעתקת אימייל" class="art-telegram-btn" style="display: inline-flex; align-items: center; background: #2f2f2f; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 13px; text-decoration: none; font-weight: bold; gap: 6px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer;">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                        <polyline points="22,6 12,13 2,6"/>
+                      </svg>
+                      <span>אימייל</span>
+                    </button>
+                  ` : ''}
+                  ${(isAdmin() || isEditMode) ? `
+                    <button type="button" onclick="openPhotoEditModal('${artEsc(a.id)}', event);" title="ערוך גלריה זו" style="display: inline-flex; align-items: center; background: #7c3aed; color: #fff; padding: 6px 14px; border-radius: 6px; font-size: 13px; border: none; font-weight: bold; gap: 6px; cursor: pointer; transition: background 0.2s;">
+                      ✏️ ערוך גלריה
+                    </button>
+                  ` : ''}
+                </div>
+              ${validImages.length > 1 ? `
+                <div class="pshow-tiles">
+                  ${validImages.map((imgUrl, i) => `
+                    <button type="button" class="pshow-tile${i === 0 ? ' active' : ''}" style="--tint:${PSHOW_TINTS[i % PSHOW_TINTS.length]}" onclick="pdShowGo(this, ${i})" aria-label="תמונה ${i + 1}">
+                      <img src="${escHtml(imgUrl)}" alt="" loading="lazy" style="${blurStyle}">
+                    </button>`).join('')}
+                </div>` : ''}
+              <div class="pshow-line"></div>
+              <button type="button" class="pshow-cta" onclick="dmStartAboutGallery('${artEsc(a.authorId || '')}', '${artEsc(a.author || '')}', '${artEsc(a.id)}')">שלחו הודעה ליוצר</button>
             </div>
-            ${validImages.length > 1 ? `
-              <button type="button" onclick="event.stopPropagation(); photoStepDetailImage(1, this)" title="תמונה הבאה" style="width:32px; height:32px; border-radius:50%; background:#3b82f6; color:#fff; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 2px 8px rgba(59,130,246,0.3); transition:background 0.15s ease;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-              </button>
-            ` : ''}
           </div>
 
           ${photoCommentsSectionHTML(id)}
