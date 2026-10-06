@@ -6799,6 +6799,67 @@ function storyOpenDetail(id) {
     return;
   }
 
+  // קומיקס: תצוגת "מוצר" כמו בעמוד הגלריה — העמוד הנוכחי במסגרת צבעונית גדולה,
+  // ובצד כותרת, תיאור, ריבועי עמודים וכפתור. הניווט ממשיך לעבור דרך storyRenderPage.
+  if (_isComic) {
+    const _n = storyPagesArr.length;
+    const _tiles = storyPagesArr.map((pg, idx) => `
+      <button type="button" class="pshow-tile story-page-thumb${idx === _bmPage ? ' active' : ''}" data-idx="${idx}" style="--tint:${PSHOW_TINTS[idx % PSHOW_TINTS.length]}" onclick="event.stopPropagation(); storyGoToPage(${idx})" aria-label="עמוד ${idx + 1}">
+        <img src="${escHtml(pg.url)}" alt="" loading="lazy">
+      </button>`).join('');
+    mainContent.innerHTML = `
+      <div class="art-detail articles-page stories-page" data-story-kind="${escHtml(_srcKind)}" data-story-id="${escHtml(id)}" data-stories-json="${json}">
+        <div class="art-detail-inner">
+          <div class="story-detail-head" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+            <button class="art-back-btn" onclick="storyGoBack()">← חזרה לקומיקס</button>
+            <div style="display:flex; justify-content:flex-end;">${_editBtn}</div>
+          </div>
+
+          <div class="pshow pd-show comic-show">
+            <div class="pshow-stage">
+              <div class="pshow-frame" style="--tint:${PSHOW_TINTS[_bmPage % PSHOW_TINTS.length]}">
+                <div class="story-page-view" id="story-page-view"></div>
+                ${_n > 1 ? `
+                  <button type="button" class="pshow-arrow prev" onclick="event.stopPropagation(); storyNextPage()" aria-label="העמוד הבא"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+                  <button type="button" class="pshow-arrow next" onclick="event.stopPropagation(); storyPrevPage()" aria-label="העמוד הקודם"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+                ` : ''}
+              </div>
+              ${_n > 1 ? `<div class="pshow-dots">${storyPagesArr.map((_, i) => `<button type="button" class="pshow-dot${i === _bmPage ? ' active' : ''}" data-idx="${i}" onclick="storyGoToPage(${i})" aria-label="עמוד ${i + 1}"></button>`).join('')}</div>` : ''}
+            </div>
+
+            <div class="pshow-info">
+              <span class="pshow-star" aria-hidden="true">✱</span>
+              <h1 class="pshow-title">${escHtml(s.title || '')}</h1>
+              ${_comicDesc ? `<div class="pshow-desc story-comic-desc">${storyRichHTML(_comicDesc, window.storyInlineImgs, false)}</div>` : ''}
+              <div class="art-meta pd-show-meta">
+                <span class="art-category-badge" style="background:${escHtml(s.categoryColor || '#8b5cf6')}">${escHtml(s.category || 'כללי')}</span>
+                <span>מאת <b>${escHtml(s.author || '')}</b></span>
+                <span>·</span>
+                <span>${escHtml(s.timestamp || '')}</span>
+                ${_n > 1 ? `<span>·</span><span id="story-page-counter">${_bmPage + 1} / ${_n}</span>` : ''}
+              </div>
+              ${storyLinkedChipHTML(s)}
+              ${_n > 1 ? `<div class="pshow-tiles">${_tiles}</div>` : ''}
+              <div class="pshow-line"></div>
+              <button type="button" class="pshow-cta" onclick="artGalleryById('stories', window.currentStoryId, document.querySelector('#story-page-view img') ? document.querySelector('#story-page-view img').getAttribute('src') : '')">קריאה במסך מלא</button>
+            </div>
+          </div>
+
+          ${(typeof storyCommentsSectionHTML === 'function') ? storyCommentsSectionHTML(id) : ''}
+
+          <div class="art-rec-section" style="margin-top:36px;">
+            <h3 style="margin:0 0 16px; font-size:17px; font-weight:800;">קומיקס נוסף שיעניין אותך</h3>
+            <div class="art-rec-grid">${recHTML}</div>
+          </div>
+        </div>
+      </div>
+    `;
+    if (typeof subscribeStoryComments === 'function') subscribeStoryComments(id);
+    storyRenderPage();
+    detailScrollTop();
+    return;
+  }
+
   const viewerHTML = `
     <div class="story-viewer" style="background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:20px; margin-bottom:24px; box-shadow:0 4px 20px rgba(0,0,0,0.04); position:relative;">
       <div class="story-frame">
@@ -6911,6 +6972,11 @@ function storyRenderPage() {
     t.classList.toggle('active', isActive);
     t.style.borderColor = isActive ? '#7c3aed' : '#cbd5e1';
   });
+
+  // תצוגת קומיקס: נקודות + צבע המסגרת לפי העמוד
+  document.querySelectorAll('.comic-show .pshow-dot').forEach(d => d.classList.toggle('active', Number(d.dataset.idx) === idx));
+  const _showFrame = view.closest('.pshow-frame');
+  if (_showFrame && typeof PSHOW_TINTS !== 'undefined') _showFrame.style.setProperty('--tint', PSHOW_TINTS[idx % PSHOW_TINTS.length]);
 
   const counter = document.getElementById('story-page-counter');
   if (counter) counter.textContent = `${idx + 1} / ${pagesArr.length}`;
