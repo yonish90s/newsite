@@ -2258,7 +2258,7 @@ body:not(.edit-mode) .hotspot-delete-btn {
   font-size: 13px !important;
   font-weight: 800 !important;
   border-radius: 10px !important;
-  background: linear-gradient(135deg, #7c3aed, #9333ea) !important;
+  background: linear-gradient(135deg, #f472b6, #db2777) !important;
   color: #ffffff !important;
   border: none !important;
   text-decoration: none !important;
@@ -2294,7 +2294,7 @@ body:not(.edit-mode) .hotspot-delete-btn {
 .photos-page .photo-card-links button:first-child,
 .ideas-page .photo-card-links button:first-child,
 .stories-page .photo-card-links button:first-child {
-  background: linear-gradient(135deg, #7c3aed, #9333ea) !important;
+  background: linear-gradient(135deg, #f472b6, #db2777) !important;
   color: #ffffff !important;
   border: none !important;
   box-shadow: 0 3px 10px rgba(147, 51, 234, 0.25) !important;
@@ -2596,7 +2596,7 @@ body:not(.edit-mode) .hotspot-delete-btn {
     font-size: 13px !important;
     font-weight: 800 !important;
     border-radius: 10px !important;
-    background: linear-gradient(135deg, #7c3aed, #9333ea) !important;
+    background: linear-gradient(135deg, #f472b6, #db2777) !important;
     color: #ffffff !important;
     border: none !important;
     box-shadow: 0 3px 10px rgba(147, 51, 234, 0.25) !important;
@@ -2617,7 +2617,7 @@ body:not(.edit-mode) .hotspot-delete-btn {
   .photos-page[data-section="photos"] .photo-card-links button:first-child,
   .photos-page.home-feed-photos .photo-card-links button:first-child,
   .stories-page .photo-card-links button:first-child {
-    background: linear-gradient(135deg, #7c3aed, #9333ea) !important;
+    background: linear-gradient(135deg, #f472b6, #db2777) !important;
     color: #ffffff !important;
     border: none !important;
   }
@@ -7773,3 +7773,84 @@ html body .comm-grid-shortcut:nth-child(3n+2) .comm-grid-thumb { background: lin
 html body .comm-grid-shortcut:nth-child(3n) .comm-grid-thumb { background: linear-gradient(135deg, #f472b6 0%, #be185d 100%) !important; }
 html body .comm-grid-btn { background: #ec4899 !important; color: #fff !important; }
 html body .comm-grid-btn:hover { background: #db2777 !important; }
+
+/* ===================================================================
+   הדגשות ורודות במקום סגול: תפריט צד, סינונים, כפתורי שמירה, גודל תצוגה
+   =================================================================== */
+:root {
+  --pink: #ec4899;
+  --pink-deep: #db2777;
+  --pink-grad: linear-gradient(135deg, #f472b6 0%, #db2777 100%);
+}
+/* עמודי האתר (תפריט צד) */
+html body .site-page-nav-item.active,
+html body .site-page-nav-item[class*="active"] {
+  background: var(--pink-grad) !important;
+  border-color: transparent !important;
+  box-shadow: 0 10px 22px -12px rgba(236, 72, 153, 0.8) !important;
+}
+html body .art-sidebar-title,
+html body .art-sidebar-box > div[style*="border-bottom"] { border-bottom-color: var(--pink) !important; }
+html body .art-sidebar-title span[style*="124, 58, 237"] {
+  background: rgba(236, 72, 153, 0.16) !important;
+  color: #f9a8d4 !important;
+}
+html body .art-section-title::after { background: var(--pink) !important; }
+html body .art-section-title { border-bottom-color: var(--pink) !important; }
+/* כפתורים סגולים בתוך תיבות הצד (צ'אט לפרסום מהיר, שליחה וכו') */
+html body .art-sidebar-box button[style*="#7c3aed"],
+html body .art-sidebar-box button[style*="#8b5cf6"] {
+  background: var(--pink-grad) !important;
+  color: #fff !important;
+}
+/* לשוניות הצד (סינונים / קהילה / צ'אט / פרסום) */
+html body .sidebar-tab-pill.active {
+  background: var(--pink-grad) !important;
+  border-color: transparent !important;
+  color: #fff !important;
+  box-shadow: 0 8px 18px -10px rgba(236, 72, 153, 0.9) !important;
+}
+html body .comm-type-btn.active {
+  background: var(--pink) !important;
+  border-color: var(--pink) !important;
+  color: #fff !important;
+}
+/* סינון: כפתורי רדיו */
+html body .pf-check input[type="radio"],
+html body .pf-check input[type="checkbox"] {
+  accent-color: var(--pink) !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
+  background-color: rgba(255, 255, 255, 0.06) !important;
+}
+html body .pf-check input[type="radio"]:checked {
+  border: 6px solid var(--pink) !important;
+  background-color: #fff !important;
+}
+/* כפתור "שמירה" בכרטיסים */
+html body .art-telegram-btn.art-save-btn,
+html body .photo-card-links .art-save-btn,
+html body .home-feed-section .photo-card-links .art-save-btn {
+  background: var(--pink-grad) !important;
+  border-color: transparent !important;
+  color: #fff !important;
+}
+html body .art-save-btn svg { stroke: #fff !important; }
+/* תגית המספר בסינון (גודל 4) */
+html body .photo-filter-trigger-value { background: var(--pink) !important; color: #fff !important; }
+/* בוחר גודל תצוגה 2 / 3 / 4 */
+html body .story-size-btn,
+html body .photo-size-btn {
+  background: rgba(255, 255, 255, 0.07) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  color: var(--dk-text) !important;
+}
+html body .story-size-btn.active,
+html body .photo-size-btn.active {
+  background: var(--pink) !important;
+  border-color: var(--pink) !important;
+  color: #fff !important;
+}
+/* מתג (מסך מלא) */
+html body .tgl-slider { background: rgba(255, 255, 255, 0.18) !important; }
+html body input:checked + .tgl-slider { background: var(--pink) !important; }
+html body .articles-page .art-sidebar-title::after { background: var(--pink) !important; }
