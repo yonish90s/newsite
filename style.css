@@ -6943,7 +6943,7 @@ html.a11y-images body *:not(.a11y-root, .a11y-root *) { background-image: none !
   box-shadow: 0 1px 0 rgba(255,255,255,0.6) inset, 0 18px 40px -18px rgba(0, 0, 0, 0.55) !important;
 }
 .home-feed-section > div:first-child { border-bottom: 2px solid #ede9fe !important; padding-bottom: 14px !important; }
-.home-feed-section h3 { color: var(--brand-ink) !important; letter-spacing: -0.2px; }
+.home-feed-section > div:first-child h3 { color: var(--brand-ink) !important; letter-spacing: -0.2px; }
 
 /* --- כפתור ראשי אחיד: "פתח הכל" וכפתורי פעולה --- */
 .home-feed-open,
@@ -7059,4 +7059,90 @@ body {
     radial-gradient(ellipse 80% 45% at 50% 0%, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0) 70%),
     radial-gradient(ellipse 50% 35% at 100% 100%, rgba(255, 159, 28, 0.12) 0%, rgba(255, 159, 28, 0) 70%),
     linear-gradient(180deg, #ab9ac5 0%, #9c89b8 50%, #8c78aa 100%);
+}
+
+/* ===================================================================
+   סגנון "אפל": שכבות שחור / אפור-בהיר ברוחב מלא, עם רווח לבן ביניהן
+   =================================================================== */
+body {
+  background: #ffffff !important;
+}
+.apple-nav {
+  background: rgba(22, 22, 23, 0.86) !important;
+  border-bottom: none !important;
+}
+.apple-nav .notif-bell { background: rgba(255, 255, 255, 0.10) !important; border-color: rgba(255, 255, 255, 0.12) !important; }
+.apple-nav .notif-bell:hover { background: rgba(255, 255, 255, 0.2) !important; }
+
+/* עמוד הבית: רצועות ברוחב מלא, מופרדות ברווח לבן דק */
+.home-feed-page .art-inner {
+  max-width: none !important;
+  padding: 8px 0 0 !important;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.home-feed-page .art-inner > * { margin: 0 !important; }
+
+/* רצועה 1 — Hero: שחור */
+.home-feed-page .qu-hero-wrap {
+  background: #000;
+  padding: 44px 0 26px;
+}
+.home-feed-page .qu-hero-dot { background: #48484a !important; }
+.home-feed-page .qu-hero-dot.active { background: #f5f5f7 !important; }
+
+/* כל מקטע = רצועה */
+.home-feed-section {
+  margin: 0 !important;
+  border-radius: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 56px max(20px, calc((100% - 1140px) / 2)) 60px !important;
+  background: #f5f5f7 !important;
+}
+.home-feed-stories .home-feed-section + .home-feed-section { margin-top: 8px !important; }
+/* סדר הרצועות: Hero שחור → תמונות בהיר → קומיקס שחור → סיפורים בהיר */
+.home-feed-stories .home-feed-section:first-child { background: #000 !important; }
+.home-feed-stories .home-feed-section:first-child > div:first-child h3 { color: #f5f5f7 !important; }
+
+/* כותרת המקטע: גדולה וממורכזת, הכפתור מתחתיה */
+.home-feed-section > div:first-child {
+  flex-direction: column !important;
+  justify-content: center !important;
+  gap: 16px;
+  border: none !important;
+  border-image: none !important;
+  padding: 0 !important;
+  margin: 0 0 36px !important;
+  text-align: center;
+}
+.home-feed-section > div:first-child h3 {
+  font-size: clamp(28px, 4vw, 44px) !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.5px !important;
+  color: #1d1d1f !important;
+  margin: 0 !important;
+}
+.home-feed-open { padding: 10px 22px !important; font-size: 15px !important; }
+
+/* הכרטיסים בתוך רצועה כהה: בלי מסגרת אפורה */
+.home-feed-stories .home-feed-section:first-child .photo-card,
+.home-feed-stories .home-feed-section:first-child .art-row { border-color: transparent !important; }
+
+/* פוטר בהיר כמו של אפל */
+.site-footer {
+  background: #f5f5f7 !important;
+  border-top: none !important;
+  margin-top: 8px !important;
+  color: #424245 !important;
+  backdrop-filter: none !important;
+}
+.site-footer-col h4 { color: #1d1d1f !important; font-size: 14px !important; }
+.site-footer-col a { color: #6e6e73 !important; font-size: 13.5px !important; }
+.site-footer-col a:hover { color: #1d1d1f !important; text-decoration-color: currentColor !important; }
+.site-footer-bottom { border-top-color: #d2d2d7 !important; color: #6e6e73 !important; }
+
+@media (max-width: 768px) {
+  .home-feed-page .qu-hero-wrap { padding: 28px 0 18px; }
+  .home-feed-section { padding: 36px 14px 40px !important; }
+  .home-feed-section > div:first-child { margin-bottom: 24px !important; gap: 12px; }
 }
