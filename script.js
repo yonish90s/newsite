@@ -1678,6 +1678,7 @@ function applyEditModeToContent() {
   // בוחרים את כל סוגי הטקסטים בתוך אזור התוכן המרכזי
   const textElements = mainContent.querySelectorAll('h1, h2, h3, p, span');
   textElements.forEach(el => {
+    if (el.closest('.site-footer')) return; // הפוטר אינו חלק מתוכן העמוד
     // התכונה הזו אומרת לדפדפן לאפשר עריכה אך לחסום עיצובים מודבקים מבחוץ
     el.setAttribute('contenteditable', 'plaintext-only');
   });
@@ -1904,6 +1905,7 @@ function removeEditModeFromContent() {
 // פונקציית עזר לפתיחת דיאלוג בחירת תמונה והחלפתה
 function makeImagesEditable() {
   mainContent.querySelectorAll('img').forEach(img => {
+    if (img.closest('.site-footer')) return;
     img.style.cursor = 'pointer';
     img.title = 'לחץ פעמיים להחלפת התמונה';
     
@@ -1983,7 +1985,13 @@ function artSerializePageContent() {
     return `<div class="articles-page" data-articles-json="${articles.dataset.articlesJson}"></div>`;
   }
   // עמוד רגיל (בלוקים חופשיים, טקסט, תמונות שנגררו) — נשמר כרגיל
-  return mainContent.innerHTML;
+  return mainContentHTMLWithoutFooter();
+}
+// תוכן העמוד בלי פוטר האתר (הפוטר מתווסף ברינדור ואסור שיישמר לתוך העמוד)
+function mainContentHTMLWithoutFooter() {
+  const clone = mainContent.cloneNode(true);
+  clone.querySelectorAll(':scope > .site-footer').forEach(f => f.remove());
+  return clone.innerHTML;
 }
 
 // מכווץ מחרוזת תוכן עמוד שמורה לגרסה קלה (רק המעטפת עם ה-JSON).
@@ -17301,7 +17309,7 @@ function refreshCurrentPage() {
   renderPage();
   const currentPage = pages.find(p => p.id === activePageId);
   if (currentPage) {
-    currentPage.content = mainContent.innerHTML;
+    currentPage.content = mainContentHTMLWithoutFooter();
     saveToStorage();
   }
 }
@@ -21359,3 +21367,94 @@ function crmExportCSV() {
 window.crmExportCSV = crmExportCSV;
 window.CRM = CRM;
 window.crmBuildCustomers = crmBuildCustomers; // לבדיקה/דיבוג — בונה רשימה מנתונים שמועברים אליה בלבד
+
+// ============================================================
+// פוטר האתר — מוצמד לתחתית כל עמוד (בתוך אזור הגלילה mainContent)
+// ============================================================
+// קישורי רשתות חברתיות: כתובת ריקה = האייקון לא מוצג
+const SITE_FOOTER_SOCIAL = {
+  facebook: '',
+  instagram: '',
+  tiktok: '',
+  whatsapp: '',
+  email: ''
+};
+const SITE_FOOTER_ICONS = {
+  facebook: '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M13.5 22v-8h2.7l.4-3.2h-3.1V8.8c0-.9.3-1.6 1.6-1.6h1.7V4.4c-.3 0-1.3-.1-2.5-.1-2.4 0-4.1 1.5-4.1 4.2v2.3H7.5V14h2.7v8z"/></svg>',
+  instagram: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.3" cy="6.7" r="1" fill="currentColor" stroke="none"/></svg>',
+  tiktok: '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M16.6 3c.4 2.1 1.7 3.5 3.9 3.7v3.1c-1.4.1-2.7-.3-3.9-1.1v6.1c0 3.9-3.3 6.4-6.8 5.6-4.2-1-5.3-6.6-1.9-9 1-.7 2.3-1.1 3.6-1v3.2c-.5-.1-1-.1-1.5.1-1.7.6-1.6 3.1.2 3.5 1.4.3 2.6-.7 2.6-2.2V3z"/></svg>',
+  whatsapp: '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12 2.5a9.5 9.5 0 0 0-8.2 14.3L2.5 21.5l4.8-1.3A9.5 9.5 0 1 0 12 2.5zm5.3 13.4c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.5-3.9-4.7-4.1-.1-.2-1.1-1.5-1.1-2.9s.7-2.1 1-2.4c.3-.3.6-.3.8-.3h.6c.2 0 .4 0 .6.5l.9 2.1c.1.2.1.3 0 .5l-.3.5-.4.4c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1l.9-1.1c.2-.3.4-.2.6-.1l2 .9c.3.1.5.2.5.3.1.2.1.7-.1 1.2z"/></svg>',
+  email: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6l8.5 7 8.5-7"/></svg>'
+};
+
+function buildSiteFooterHTML() {
+  const cleanTitle = t => String(t || '').replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{1F000}-\u{1F2FF}]/gu, '').trim();
+  const link = (pageId, fallback) => {
+    const p = pages.find(x => x && x.id === pageId);
+    if (!p) return '';
+    return `<li><a href="#" onclick="event.preventDefault(); navigateToPage('${pageId}')">${escHtml(cleanTitle(p.title) || fallback)}</a></li>`;
+  };
+  const contentLinks = [
+    link('page-photos-main', 'תמונות'), link('page-stories-main', 'סיפורים'),
+    link('page-ideas-main', 'רעיונות'), link('page-questions-main', 'שאלות גולשים'),
+    link('page-reviews-main', 'ביקורת')
+  ].join('');
+  const communityLinks = [
+    link('page-communities-main', 'קהילה'), link('page-offers-main', 'הצעות'),
+    link('page-partnerships-main', 'שותפויות'), link('page-secondhand-main', 'מוצרי יד שניה'),
+    link('page-subscription-main', 'מנוי')
+  ].join('');
+  const social = Object.keys(SITE_FOOTER_SOCIAL).filter(k => SITE_FOOTER_SOCIAL[k]).map(k => {
+    const raw = SITE_FOOTER_SOCIAL[k];
+    const href = k === 'email' ? 'mailto:' + raw : raw;
+    return `<a class="site-footer-social" href="${escHtml(href)}" target="_blank" rel="noopener" aria-label="${k}">${SITE_FOOTER_ICONS[k]}</a>`;
+  }).join('');
+  const year = new Date().getFullYear();
+  return `
+    <footer class="site-footer" role="contentinfo">
+      <div class="site-footer-inner">
+        <div class="site-footer-cols">
+          <div class="site-footer-col">
+            <h4>על האתר</h4>
+            <ul>
+              <li><a href="#" onclick="event.preventDefault(); goToHomePage()">דף הבית</a></li>
+              <li><a href="#" onclick="event.preventDefault(); document.querySelector('.a11y-launcher')?.click()">הגדרות נגישות</a></li>
+            </ul>
+          </div>
+          ${contentLinks ? `<div class="site-footer-col"><h4>תוכן</h4><ul>${contentLinks}</ul></div>` : ''}
+          ${communityLinks ? `<div class="site-footer-col"><h4>קהילה</h4><ul>${communityLinks}</ul></div>` : ''}
+          <div class="site-footer-col">
+            <h4>צרו קשר</h4>
+            <ul>
+              <li><a href="#" onclick="event.preventDefault(); openMessages()">שלחו לנו הודעה</a></li>
+              ${SITE_FOOTER_SOCIAL.email ? `<li><a href="mailto:${escHtml(SITE_FOOTER_SOCIAL.email)}">${escHtml(SITE_FOOTER_SOCIAL.email)}</a></li>` : ''}
+            </ul>
+            ${social ? `<div class="site-footer-socials">${social}</div>` : ''}
+          </div>
+        </div>
+        <div class="site-footer-bottom">
+          <img src="./logo.png" alt="" class="site-footer-logo">
+          <span>© ${year} כל הזכויות שמורות.</span>
+        </div>
+      </div>
+    </footer>`;
+}
+
+// מוסיף את הפוטר בסוף התוכן אחרי כל רינדור של עמוד (renderPage מחליף את innerHTML)
+function ensureSiteFooter() {
+  if (!mainContent) return;
+  const last = mainContent.lastElementChild;
+  if (last && last.classList.contains('site-footer')) return;
+  mainContent.querySelectorAll(':scope > .site-footer').forEach(f => f.remove());
+  if (!mainContent.children.length) return;
+  mainContent.insertAdjacentHTML('beforeend', buildSiteFooterHTML());
+}
+if (mainContent) {
+  let footerQueued = false;
+  new MutationObserver(() => {
+    if (footerQueued) return;
+    footerQueued = true;
+    requestAnimationFrame(() => { footerQueued = false; ensureSiteFooter(); });
+  }).observe(mainContent, { childList: true });
+  ensureSiteFooter();
+}
