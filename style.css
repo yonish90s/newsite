@@ -7409,3 +7409,64 @@ html.age-not-verified .pshow-frame.photo-main-img-container.is-adult { filter: n
   .pshow-arrow { opacity: 1; width: 38px; height: 38px; }
   .pshow-desc p { font-size: 16px !important; }
 }
+
+/* ===================================================================
+   רצועת ההעלאה בבית — כרטיסים בסגול כהה במקום לבן
+   =================================================================== */
+.home-feed-page .qu-hero-wrap .qu-hero-card,
+.home-feed-page .qu-hero-wrap .qu-guide {
+  background: #241347 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 24px 50px -24px rgba(0, 0, 0, 0.6) !important;
+  color: #f1ecff !important;
+}
+.home-feed-page .qu-hero-wrap .qu-hero-title,
+.home-feed-page .qu-hero-wrap .qu-guide-title,
+.home-feed-page .qu-hero-wrap .qu-pill-text,
+.home-feed-page .qu-hero-wrap .qu-pill-text *,
+.home-feed-page .qu-hero-wrap .qu-detail-label,
+.home-feed-page .qu-hero-wrap h1,
+.home-feed-page .qu-hero-wrap h2,
+.home-feed-page .qu-hero-wrap h3,
+.home-feed-page .qu-hero-wrap h4,
+.home-feed-page .qu-hero-wrap label { color: #ffffff !important; }
+.home-feed-page .qu-hero-wrap .qu-gradient-text {
+  background: linear-gradient(90deg, #ffd166, #ff9f1c) !important;
+  -webkit-background-clip: text !important; background-clip: text !important;
+  -webkit-text-fill-color: transparent !important; color: transparent !important;
+}
+.home-feed-page .qu-hero-wrap .qu-hero-subtitle,
+.home-feed-page .qu-hero-wrap .qu-guide-sub,
+.home-feed-page .qu-hero-wrap .qu-pill-text small,
+.home-feed-page .qu-hero-wrap p,
+.home-feed-page .qu-hero-wrap .qu-hero-card span:not(.qu-gradient-text):not(.qu-pill-icon) { color: rgba(241, 236, 255, 0.72) !important; }
+.home-feed-page .qu-hero-wrap .qu-dest-pill,
+.home-feed-page .qu-hero-wrap .qu-cat-chip,
+.home-feed-page .qu-hero-wrap .qu-upload-box,
+.home-feed-page .qu-hero-wrap .qu-details-card,
+.home-feed-page .qu-hero-wrap .qu-input-wrapper,
+.home-feed-page .qu-hero-wrap .qu-select,
+.home-feed-page .qu-hero-wrap .qu-text-input,
+.home-feed-page .qu-hero-wrap .qu-textarea-input,
+.home-feed-page .qu-hero-wrap .qu-field,
+.home-feed-page .qu-hero-wrap .qu-back-btn,
+.home-feed-page .qu-hero-wrap .qu-add-photo-btn,
+.home-feed-page .qu-hero-wrap .qu-thumb-item {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+}
+.home-feed-page .qu-hero-wrap .qu-text-input::placeholder,
+.home-feed-page .qu-hero-wrap .qu-textarea-input::placeholder,
+.home-feed-page .qu-hero-wrap .qu-field::placeholder { color: rgba(241, 236, 255, 0.45) !important; }
+.home-feed-page .qu-hero-wrap .qu-dest-pill.active,
+.home-feed-page .qu-hero-wrap .qu-cat-chip.active {
+  background: rgba(255, 209, 102, 0.12) !important;
+  border-color: #ffd166 !important;
+}
+.home-feed-page .qu-hero-wrap .qu-select option { color: #190c35; }
+.home-feed-page .qu-hero-wrap .qu-step-dot { background: rgba(255, 255, 255, 0.2) !important; }
+.home-feed-page .qu-hero-wrap .qu-step-dot.active { background: #ffd166 !important; }
+.home-feed-page .qu-hero-wrap .qu-arrow-btn { background: linear-gradient(135deg, #ffd166, #ff9f1c) !important; color: #190c35 !important; }
+.home-feed-page .qu-hero-wrap .qu-arrow-btn svg { stroke: #190c35 !important; }
