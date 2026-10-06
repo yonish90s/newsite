@@ -12372,28 +12372,28 @@ function buildHomeFeedPage() {
     <div class="photos-page photo-cols-${pcols}${photoImagesMode ? '' : ' text-mode'}${photoNoImgMargins ? ' no-img-margins' : ''} home-feed-photos" data-section="photos" data-photos-json="${photosJson}">
       <div class="photo-section-row home-feed-section" style="margin:0 0 24px; background:#fff; padding:18px; border-radius:16px; border:1px solid #e2e8f0; box-shadow:0 4px 15px rgba(0,0,0,0.03);">
         <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:2.5px solid #7c3aed; padding-bottom:10px; margin-bottom:18px;">
-          <h3 style="margin:0; font-size:18px; font-weight:900; color:#5b21b6;">🖼️ תמונות אחרונות</h3>
+          <div class="home-feed-head-text"><h3 style="margin:0; font-size:18px; font-weight:900; color:#5b21b6;">תמונות אחרונות</h3><p class="home-feed-sub">הגלריות החדשות ביותר מהקהילה.</p></div>
           <button class="home-feed-open" onclick="event.stopPropagation(); homeOpenPhotos()" style="background:#7c3aed; color:#fff; border:none; border-radius:8px; padding:7px 14px; font-size:13px; font-weight:700; cursor:pointer;">פתח הכל ←</button>
         </div>
-        <div class="art-rows photo-collapsible expanded" style="grid-template-columns: repeat(4, 1fr) !important;">${photoCards}</div>
+        <div class="art-rows photo-collapsible expanded home-feed-grid">${photoCards}</div>
       </div>
     </div>` : '';
 
   // --- שורות קומיקס + סיפורים (עטיפה אחת) ---
   const combined = comics.concat(stories);
   const storiesJson = encodeURIComponent(JSON.stringify(combined));
-  const storyRow = (items, title, color, border, targetId, iconHint) => `
+  const storyRow = (items, title, color, border, targetId, iconHint, sub) => `
     <div class="photo-section-row home-feed-section" style="margin:0 0 24px; background:#fff; padding:18px; border-radius:16px; border:1px solid #e2e8f0; box-shadow:0 4px 15px rgba(0,0,0,0.03);">
       <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:2.5px solid ${border}; padding-bottom:10px; margin-bottom:18px;">
-        <h3 style="margin:0; font-size:18px; font-weight:900; color:${color};">${title} (4 אחרונים)</h3>
+        <div class="home-feed-head-text"><h3 style="margin:0; font-size:18px; font-weight:900; color:${color};">${title}</h3><p class="home-feed-sub">${sub}</p></div>
         <button class="home-feed-open" onclick="event.stopPropagation(); homeOpenSection('${targetId}')" style="background:${border}; color:#fff; border:none; border-radius:8px; padding:7px 14px; font-size:13px; font-weight:700; cursor:pointer;">פתח הכל ←</button>
       </div>
-      <div class="art-rows photo-collapsible expanded" style="grid-template-columns: repeat(4, 1fr) !important;">${items.slice(0, maxPerRow).map(s => storyCardHTML(s, iconHint)).join('')}</div>
+      <div class="art-rows photo-collapsible expanded home-feed-grid">${items.slice(0, maxPerRow).map(s => storyCardHTML(s, iconHint)).join('')}</div>
     </div>`;
   const storiesSection = `
     <div class="stories-page home-feed-stories story-cols-${cols}${photoImagesMode ? '' : ' text-mode'}" data-stories-json="${storiesJson}">
-      ${comics.length ? storyRow(comics, '📖 קומיקס', '#6b21a8', '#8b5cf6', 'page-stories-main', '📖') : ''}
-      ${stories.length ? storyRow(stories, '✍️ סיפורים', '#0369a1', '#0ea5e9', 'page-stories-text', '✍️') : ''}
+      ${comics.length ? storyRow(comics, 'קומיקס', '#6b21a8', '#8b5cf6', 'page-stories-main', '📖', 'ציורים ורצועות קומיקס חדשים.') : ''}
+      ${stories.length ? storyRow(stories, 'סיפורים', '#0369a1', '#0ea5e9', 'page-stories-text', '✍️', 'סיפורים קצרים ומאמרים שכדאי לקרוא.') : ''}
     </div>`;
 
   return `<div class="articles-page home-feed-page" data-page-id="page-home-feed">
