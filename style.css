@@ -7068,7 +7068,7 @@ body {
   background: #ffffff !important;
 }
 .apple-nav {
-  background: rgba(55, 55, 56, 0.92) !important;
+  background: rgba(25, 12, 53, 0.92) !important;
   border-bottom: none !important;
 }
 .apple-nav .notif-bell { background: rgba(255, 255, 255, 0.10) !important; border-color: rgba(255, 255, 255, 0.12) !important; }
@@ -7084,10 +7084,10 @@ body {
 
 /* רצועה 1 — Hero: שחור */
 .home-feed-page .qu-hero-wrap {
-  background: #373738;
+  background: #190c35;
   padding: 44px 0 26px;
 }
-.home-feed-page .qu-hero-dot { background: #6e6e73 !important; }
+.home-feed-page .qu-hero-dot { background: #5b4a85 !important; }
 .home-feed-page .qu-hero-dot.active { background: #f5f5f7 !important; }
 
 /* כל מקטע = רצועה */
@@ -7101,7 +7101,7 @@ body {
 }
 .home-feed-stories .home-feed-section + .home-feed-section { margin-top: 8px !important; }
 /* סדר הרצועות: Hero שחור → תמונות בהיר → קומיקס שחור → סיפורים בהיר */
-.home-feed-stories .home-feed-section:first-child { background: #373738 !important; }
+.home-feed-stories .home-feed-section:first-child { background: #190c35 !important; }
 .home-feed-stories .home-feed-section:first-child > div:first-child h3 { color: #f5f5f7 !important; }
 
 /* כותרת המקטע: גדולה וממורכזת, הכפתור מתחתיה */
