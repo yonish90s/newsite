@@ -3,14 +3,14 @@ body {
   margin: 0; /* ביטול שוליים ברירת מחדל של הדפדפן כדי שהאתר יתפרס עד הקצה */
   font-family: system-ui, sans-serif; /* בחירת פונט מערכת מודרני שקורא עברית יפה */
   direction: rtl; /* כיוון האתר: מימין לשמאל (מותאם לעברית) */
-  /* רקע האתר: סגול כהה (כמו מסך הטעינה), עם הילה סגולה בהירה יותר למעלה */
-  --site-purple-glow: #3b1d73;
-  --site-purple: #190d37;
-  --site-purple-dark: #0d0720;
-  background-color: var(--site-purple-dark);
+  /* רקע האתר: סגול-לבנדר #9c89b8, מעט בהיר יותר למעלה וכהה יותר למטה */
+  --site-bg: #9c89b8;
+  --site-bg-light: #ab9ac5;
+  --site-bg-dark: #8c78aa;
+  background-color: var(--site-bg);
   background-image:
-    radial-gradient(ellipse 80% 45% at 50% 0%, rgba(59, 29, 115, 0.55) 0%, rgba(59, 29, 115, 0) 70%),
-    linear-gradient(180deg, var(--site-purple) 0%, var(--site-purple-dark) 100%);
+    radial-gradient(ellipse 80% 45% at 50% 0%, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0) 70%),
+    linear-gradient(180deg, var(--site-bg-light) 0%, var(--site-bg) 50%, var(--site-bg-dark) 100%);
   background-attachment: fixed;
   overflow: hidden; /* חוסם גלילה של כל המסך כדי שהסרגל יישאר קבוע */
 }
@@ -7056,7 +7056,7 @@ html.a11y-images body *:not(.a11y-root, .a11y-root *) { background-image: none !
 /* הילה כתומה עדינה ברקע, בנוסף לסגולה */
 body {
   background-image:
-    radial-gradient(ellipse 80% 45% at 50% 0%, rgba(59, 29, 115, 0.55) 0%, rgba(59, 29, 115, 0) 70%),
-    radial-gradient(ellipse 50% 35% at 100% 100%, rgba(255, 159, 28, 0.10) 0%, rgba(255, 159, 28, 0) 70%),
-    linear-gradient(180deg, #190d37 0%, #0d0720 100%);
+    radial-gradient(ellipse 80% 45% at 50% 0%, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0) 70%),
+    radial-gradient(ellipse 50% 35% at 100% 100%, rgba(255, 159, 28, 0.12) 0%, rgba(255, 159, 28, 0) 70%),
+    linear-gradient(180deg, #ab9ac5 0%, #9c89b8 50%, #8c78aa 100%);
 }
