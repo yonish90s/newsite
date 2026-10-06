@@ -54,7 +54,7 @@ window.alert = function(message) {
       .custom-alert-card {
         background: rgba(255, 255, 255, 0.95);
         border: 1px solid rgba(255, 255, 255, 0.25);
-        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15), 0 0 120px rgba(225, 29, 72, 0.05);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15), 0 0 120px rgba(124, 58, 237, 0.05);
         border-radius: 28px;
         width: 100%;
         max-width: 360px;
@@ -74,13 +74,13 @@ window.alert = function(message) {
         width: 72px;
         height: 72px;
         border-radius: 50%;
-        background: rgba(225, 29, 72, 0.08);
+        background: rgba(124, 58, 237, 0.08);
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #e11d48;
+        color: #7c3aed;
         font-size: 34px;
-        box-shadow: inset 0 2px 10px rgba(225, 29, 72, 0.1), 0 8px 20px rgba(225, 29, 72, 0.05);
+        box-shadow: inset 0 2px 10px rgba(124, 58, 237, 0.1), 0 8px 20px rgba(124, 58, 237, 0.05);
         margin-bottom: 4px;
       }
       .custom-alert-message {
@@ -92,7 +92,7 @@ window.alert = function(message) {
         white-space: pre-line;
       }
       .custom-alert-btn {
-        background: #e11d48;
+        background: #7c3aed;
         color: white;
         border: none;
         border-radius: 50px;
@@ -102,11 +102,11 @@ window.alert = function(message) {
         cursor: pointer;
         width: 100%;
         transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
-        box-shadow: 0 4px 15px rgba(225, 29, 72, 0.3);
+        box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
       }
       .custom-alert-btn:hover {
-        background: #be123c;
-        box-shadow: 0 6px 20px rgba(225, 29, 72, 0.45);
+        background: #5b21b6;
+        box-shadow: 0 6px 20px rgba(124, 58, 237, 0.45);
       }
       .custom-alert-btn:active {
         transform: scale(0.98);
@@ -4786,9 +4786,9 @@ function buildEventsSidebarBox() {
   const regCount = eventRegistrations.length;
 
   return `
-    <div class="art-sidebar-box art-event-box" style="margin-bottom: 20px; border: 1.5px solid #3b82f6; border-radius: 12px; padding: 13px 16px; background: #ffffff; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.08); text-align: right; direction: rtl;">
-      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #3b82f6; padding-bottom: 5px; margin-bottom: 7px;">
-        <h4 style="margin: 0; font-size: 14px; font-weight: 800; color: #1e3a8a; display: flex; align-items: center; gap: 6px;">
+    <div class="art-sidebar-box art-event-box" style="margin-bottom: 20px; border: 1.5px solid #7c3aed; border-radius: 12px; padding: 13px 16px; background: #ffffff; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.08); text-align: right; direction: rtl;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #7c3aed; padding-bottom: 5px; margin-bottom: 7px;">
+        <h4 style="margin: 0; font-size: 14px; font-weight: 800; color:#2e1065; display: flex; align-items: center; gap: 6px;">
           <span>🎉 מפגש ואירוע קרוב</span>
         </h4>
         ${isEd ? `<button onclick="openEditEventModal()" style="background: #3b82f6; color: white; border: none; border-radius: 6px; padding: 2px 8px; font-size: 11px; font-weight: bold; cursor: pointer;">✏️ ערוך אירוע</button>` : ''}
@@ -4844,7 +4844,7 @@ function openEventRegisterModal() {
     modal.innerHTML = `
       <div style="background:#ffffff; border-radius:20px; padding:28px; width:95%; max-width:440px; box-shadow:0 20px 50px rgba(0,0,0,0.2); border:1px solid #eee; display:flex; flex-direction:column; gap:14px;">
         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding-bottom:12px;">
-          <h3 style="margin:0; font-size:18px; font-weight:900; color:#1e3a8a;">✍️ הרשמה למפגש / אירוע</h3>
+          <h3 style="margin:0; font-size:18px; font-weight:900; color:#2e1065;">✍️ הרשמה למפגש / אירוע</h3>
           <button onclick="document.getElementById('event-register-modal').style.display='none'" style="background:none; border:none; font-size:20px; cursor:pointer; color:#888;">✕</button>
         </div>
 
@@ -5017,7 +5017,7 @@ function openEditEventModal() {
     modal.innerHTML = `
       <div style="background:#ffffff; border-radius:20px; padding:28px; width:95%; max-width:440px; box-shadow:0 20px 50px rgba(0,0,0,0.2); border:1px solid #eee; display:flex; flex-direction:column; gap:12px;">
         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding-bottom:12px;">
-          <h3 style="margin:0; font-size:18px; font-weight:900; color:#1e3a8a;">✏️ עריכת פרטי מפגש / אירוע</h3>
+          <h3 style="margin:0; font-size:18px; font-weight:900; color:#2e1065;">✏️ עריכת פרטי מפגש / אירוע</h3>
           <button onclick="document.getElementById('event-edit-modal').style.display='none'" style="background:none; border:none; font-size:20px; cursor:pointer; color:#888;">✕</button>
         </div>
 
@@ -6237,7 +6237,7 @@ function openCategoriesModal(kind) {
         <button onclick="moveCategory(${idx}, -1)" title="הזז למעלה" ${idx === 0 ? 'disabled' : ''} style="${iconBtn} background:#eef2ff; color:#4f46e5; opacity:${idx === 0 ? 0.35 : 1};">▲</button>
         <button onclick="moveCategory(${idx}, 1)" title="הזז למטה" ${idx === list.length - 1 ? 'disabled' : ''} style="${iconBtn} background:#eef2ff; color:#4f46e5; opacity:${idx === list.length - 1 ? 0.35 : 1};">▼</button>
         <button onclick="renameCategory(${idx})" title="שנה שם" style="${iconBtn} background:rgba(139,92,246,0.1); color:#8b5cf6;">✏️</button>
-        <button onclick="deleteStoryCategory(${idx})" title="מחק קטגוריה" style="${iconBtn} background:rgba(225,29,72,0.1); color:#e11d48;">✕</button>
+        <button onclick="deleteStoryCategory(${idx})" title="מחק קטגוריה" style="${iconBtn} background:rgba(124, 58, 237,0.1); color:#7c3aed;">✕</button>
       </div>
     `).join('');
   }
@@ -6492,7 +6492,7 @@ function storyCardHTML(s, iconHint) {
             ${validImages.map((imgUrl, idx) => `
               <div class="photo-mini-thumb" 
                    onclick="event.stopPropagation(); photoSelectRowImage('${artEsc(s.id)}', '${artEsc(imgUrl)}', this)" 
-                   style="width: 22px; height: 22px; border-radius: 4px; overflow: hidden; cursor: pointer; border: 1.5px solid ${idx === 0 ? '#e11d48' : '#ddd'}; transition: all 0.2s; background: #eee; flex-shrink:0;">
+                   style="width: 22px; height: 22px; border-radius: 4px; overflow: hidden; cursor: pointer; border: 1.5px solid ${idx === 0 ? '#7c3aed' : '#ddd'}; transition: all 0.2s; background: #eee; flex-shrink:0;">
                 <img src="${escHtml(imgUrl)}" style="width: 100%; height: 100%; object-fit: cover;">
               </div>
             `).join('')}
@@ -6522,7 +6522,7 @@ function storyCardHTML(s, iconHint) {
     const isLikedCard = typeof photoIsLikedLocal === 'function' ? photoIsLikedLocal(s.id) : false;
     const cardHeartOverlay = `
       <button type="button" class="art-heart-overlay${isLikedCard ? ' liked' : ''}" onclick="event.stopPropagation(); photoToggleLike('${artEsc(s.id)}')" title="לייק" aria-label="לייק">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="${isLikedCard ? '#ff2e4d' : 'none'}" stroke="${isLikedCard ? '#ff2e4d' : '#ffffff'}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="${isLikedCard ? '#8b5cf6' : 'none'}" stroke="${isLikedCard ? '#8b5cf6' : '#ffffff'}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
         </svg>
       </button>
@@ -6559,7 +6559,7 @@ function storyCardHTML(s, iconHint) {
         <div class="art-row-text photo-card-info">
           <h3>${escHtml(s.title)}</h3>
           <div class="art-row-meta" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-            <span class="photo-author-link art-row-author" onclick="event.stopPropagation(); if(typeof openUserPage==='function') openUserPage('${artEsc(s.authorId || '')}', '${artEsc(s.author || '')}')" style="cursor: pointer; color: #e11d48; text-decoration: underline; font-weight: 600;">${escHtml(s.author)}${verifiedBadgeHTML}</span>
+            <span class="photo-author-link art-row-author" onclick="event.stopPropagation(); if(typeof openUserPage==='function') openUserPage('${artEsc(s.authorId || '')}', '${artEsc(s.author || '')}')" style="cursor: pointer; color: #7c3aed; text-decoration: underline; font-weight: 600;">${escHtml(s.author)}${verifiedBadgeHTML}</span>
             <span class="art-row-sep">|</span>
             <span>${escHtml(s.timestamp)}</span>
             ${s.ageRange ? `<span class="art-row-sep">|</span><span>גיל ${escHtml(String(s.ageRange))}</span>` : ''}
@@ -6728,7 +6728,7 @@ function storyOpenDetail(id) {
     const inner = pg.type === 'text'
       ? `<div class="story-thumb-text" style="width:100%; height:100%; font-size:9px; font-weight:700; padding:3px; overflow:hidden; box-sizing:border-box; background:#fff; color:#333; text-align:center;">${escHtml(storyStripImgMarkers(pg.text).slice(0, 40))}</div>`
       : `<img src="${escHtml(pg.url)}" style="width:100%; height:100%; object-fit:cover; display:block;">`;
-    return `<div class="story-page-thumb${idx === _bmPage ? ' active' : ''}" data-idx="${idx}" onclick="event.stopPropagation(); storyGoToPage(${idx})" style="width:54px; height:54px; border-radius:8px; overflow:hidden; cursor:pointer; border:2px solid ${idx === _bmPage ? '#e11d48' : '#cbd5e1'}; flex-shrink:0; background:#fff;">${inner}</div>`;
+    return `<div class="story-page-thumb${idx === _bmPage ? ' active' : ''}" data-idx="${idx}" onclick="event.stopPropagation(); storyGoToPage(${idx})" style="width:54px; height:54px; border-radius:8px; overflow:hidden; cursor:pointer; border:2px solid ${idx === _bmPage ? '#7c3aed' : '#cbd5e1'}; flex-shrink:0; background:#fff;">${inner}</div>`;
   }).join('');
 
   const recommended = stories.filter(x => x && x.id !== id).slice(0, 3);
@@ -6909,7 +6909,7 @@ function storyRenderPage() {
     const tIdx = Number(t.dataset.idx);
     const isActive = (tIdx === idx);
     t.classList.toggle('active', isActive);
-    t.style.borderColor = isActive ? '#e11d48' : '#cbd5e1';
+    t.style.borderColor = isActive ? '#7c3aed' : '#cbd5e1';
   });
 
   const counter = document.getElementById('story-page-counter');
@@ -8134,7 +8134,7 @@ function renderPhotoCard(p, options = {}) {
           ${validImages.map((imgUrl, idx) => `
             <div class="photo-mini-thumb"
                  onclick="event.stopPropagation(); photoSelectRowImage('${artEsc(p.id)}', '${artEsc(imgUrl)}', this)"
-                 style="width: 22px; height: 22px; border-radius: 4px; overflow: hidden; cursor: pointer; border: 1.5px solid ${idx === 0 ? '#e11d48' : '#ddd'}; transition: all 0.2s; background: #eee; flex-shrink:0;">
+                 style="width: 22px; height: 22px; border-radius: 4px; overflow: hidden; cursor: pointer; border: 1.5px solid ${idx === 0 ? '#7c3aed' : '#ddd'}; transition: all 0.2s; background: #eee; flex-shrink:0;">
               <img src="${escHtml(imgUrl)}" style="width: 100%; height: 100%; object-fit: cover;">
             </div>
           `).join('')}
@@ -8172,14 +8172,14 @@ function renderPhotoCard(p, options = {}) {
   // לב מוטבע בפינת התמונה (כמו בהפניה) — מחליף את כפתור הלייק בשורת הכפתורים
   const cardHeartOverlay = `
     <button type="button" class="art-heart-overlay${isLikedCard ? ' liked' : ''}" onclick="event.stopPropagation(); photoToggleLike('${artEsc(p.id)}')" title="לייק לגלריה זו" aria-label="לייק">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="${isLikedCard ? '#ff2e4d' : 'none'}" stroke="${isLikedCard ? '#ff2e4d' : '#ffffff'}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="${isLikedCard ? '#8b5cf6' : 'none'}" stroke="${isLikedCard ? '#8b5cf6' : '#ffffff'}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
       </svg>
     </button>
   `;
   const cardLikeBtnHTML = `
-    <button type="button" onclick="event.stopPropagation(); photoToggleLike('${artEsc(p.id)}')" class="art-telegram-btn" title="לייק לגלריה זו" style="display: inline-flex; align-items: center; background: #2f2f2f; color: ${isLikedCard ? '#ff2e4d' : '#ffffff'}; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: bold; gap: 6px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: all 0.2s;">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="${isLikedCard ? '#ff2e4d' : 'none'}" stroke="${isLikedCard ? '#ff2e4d' : 'currentColor'}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+    <button type="button" onclick="event.stopPropagation(); photoToggleLike('${artEsc(p.id)}')" class="art-telegram-btn" title="לייק לגלריה זו" style="display: inline-flex; align-items: center; background: #2f2f2f; color: ${isLikedCard ? '#8b5cf6' : '#ffffff'}; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: bold; gap: 6px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: all 0.2s;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="${isLikedCard ? '#8b5cf6' : 'none'}" stroke="${isLikedCard ? '#8b5cf6' : 'currentColor'}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
         <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
       </svg>
       <span>${likesCount}</span>
@@ -8218,7 +8218,7 @@ function renderPhotoCard(p, options = {}) {
   // בעמוד הקהילות מציגים כרטיס "ריבוע" נקי — ללא תאריך/מאומת/צפיות/לייקים וכפתורים
   const metaHTML = options.hideMeta ? '' : `
       <div class="art-row-meta" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-        <span class="photo-author-link" onclick="event.stopPropagation(); openUserPage('${artEsc(p.authorId || '')}', '${artEsc(p.author)}')" style="cursor: pointer; color: #e11d48; text-decoration: underline; font-weight: 600;">${escHtml(p.author)}${verifiedBadgeHTML}</span>
+        <span class="photo-author-link" onclick="event.stopPropagation(); openUserPage('${artEsc(p.authorId || '')}', '${artEsc(p.author)}')" style="cursor: pointer; color: #7c3aed; text-decoration: underline; font-weight: 600;">${escHtml(p.author)}${verifiedBadgeHTML}</span>
         <span class="art-row-sep">|</span>
         <span>${escHtml(p.timestamp)}</span>
         ${p.ageRange ? `<span class="art-row-sep">|</span><span>גיל ${escHtml(String(p.ageRange))}</span>` : ''}
@@ -8328,8 +8328,8 @@ function liveChatMessagesHTML() {
     const time = m.timestamp ? new Date(m.timestamp).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }) : '';
     return `
       <div style="display:flex; flex-direction:column; align-items:${mine ? 'flex-start' : 'flex-end'}; max-width:100%;">
-        <div style="max-width:85%; background:${mine ? '#e11d48' : '#f1f5f9'}; color:${mine ? '#fff' : '#0f172a'}; padding:7px 11px; border-radius:12px; ${mine ? 'border-bottom-right-radius:4px;' : 'border-bottom-left-radius:4px;'} font-size:13px; line-height:1.4; word-break:break-word;">
-          ${!mine ? `<div style="font-size:11px; font-weight:800; color:#e11d48; margin-bottom:2px;">${escHtml(m.name || 'אורח')}</div>` : ''}
+        <div style="max-width:85%; background:${mine ? '#7c3aed' : '#f1f5f9'}; color:${mine ? '#fff' : '#0f172a'}; padding:7px 11px; border-radius:12px; ${mine ? 'border-bottom-right-radius:4px;' : 'border-bottom-left-radius:4px;'} font-size:13px; line-height:1.4; word-break:break-word;">
+          ${!mine ? `<div style="font-size:11px; font-weight:800; color:#7c3aed; margin-bottom:2px;">${escHtml(m.name || 'אורח')}</div>` : ''}
           <div>${escHtml(m.text || '')}</div>
         </div>
         <div style="font-size:10px; color:#94a3b8; margin-top:2px;">${time}</div>
@@ -8349,13 +8349,13 @@ function buildLiveChatBox() {
   subscribeLiveChat();
   return `
     <div class="art-sidebar-box" style="padding:0; overflow:hidden; display:flex; flex-direction:column;">
-      <div style="background:linear-gradient(135deg,#e11d48,#9f1239); color:#fff; padding:12px 14px; font-size:14px; font-weight:900; display:flex; align-items:center; gap:8px;">
+      <div style="background:linear-gradient(135deg,#7c3aed,#4c1d95); color:#fff; padding:12px 14px; font-size:14px; font-weight:900; display:flex; align-items:center; gap:8px;">
         <span>💬 צ'אט חי — דברו זה עם זה</span>
       </div>
       <div id="live-chat-messages" style="height:250px; overflow-y:auto; padding:12px; display:flex; flex-direction:column; gap:8px; background:#fafafa;">${liveChatMessagesHTML()}</div>
       <div style="display:flex; gap:6px; padding:10px 10px 4px; border-top:1px solid #eee; background:#fff;">
         <input id="live-chat-input" type="text" maxlength="500" placeholder="כתוב הודעה... או / לפרסום לקהילה" onkeydown="if(event.key==='Enter'){event.preventDefault(); sendLiveChatMessage();}" style="flex:1; padding:9px 12px; border:1px solid #ddd; border-radius:20px; font-size:13px; outline:none; box-sizing:border-box;">
-        <button onclick="sendLiveChatMessage()" style="background:#e11d48; color:#fff; border:none; border-radius:20px; padding:9px 16px; font-size:13px; font-weight:800; cursor:pointer; flex-shrink:0;">שלח</button>
+        <button onclick="sendLiveChatMessage()" style="background:#7c3aed; color:#fff; border:none; border-radius:20px; padding:9px 16px; font-size:13px; font-weight:800; cursor:pointer; flex-shrink:0;">שלח</button>
       </div>
       <div style="padding:0 12px 10px; background:#fff; font-size:11px; color:#94a3b8;">💡 טיפ: הקלד <b>/</b> ואז שם קהילה כדי לפרסם מודעה מהירה לקהילה</div>
     </div>
@@ -8437,10 +8437,10 @@ function buildQuickUploadBox() {
 
   if (auth.currentUser) {
     return `
-      <div class="art-sidebar-box" style="border:1.5px solid #e11d48; background:rgba(225,29,72,0.03); border-radius:12px; padding:16px; text-align:center;">
-        <div style="font-size:14px; font-weight:900; color:#9f1239; margin-bottom:4px;">⚡ העלאה מהירה</div>
+      <div class="art-sidebar-box" style="border:1.5px solid #7c3aed; background:rgba(124, 58, 237,0.03); border-radius:12px; padding:16px; text-align:center;">
+        <div style="font-size:14px; font-weight:900; color:#4c1d95; margin-bottom:4px;">⚡ העלאה מהירה</div>
         <div style="font-size:12px; color:#64748b; margin-bottom:12px; line-height:1.4;">הפרטים שלך (מייל/טלגרם) כבר שמורים וימולאו אוטומטית</div>
-        <button onclick="openPhotoModal()" style="width:100%; background:#e11d48; color:#fff; border:none; border-radius:8px; padding:11px; font-size:14px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 2px 8px rgba(225,29,72,0.25);">
+        <button onclick="openPhotoModal()" style="width:100%; background:#7c3aed; color:#fff; border:none; border-radius:8px; padding:11px; font-size:14px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 2px 8px rgba(124, 58, 237,0.25);">
           <span style="font-size:16px;">📷</span> העלאת גלריה חדשה
         </button>
       </div>
@@ -8531,7 +8531,7 @@ function openQuickPublish(communityId, itemType) {
     qpStep = 'type_choice';
     qpBubble('bot', `שלום! 🤖 ברוך הבא לפרסום ${where}.<br>בחר איזה סוג תוכן ברצונך להעלות:<br><br>
       <div style="display:flex; gap:8px; margin-top:6px;">
-        <button type="button" onclick="qpSelectType('photo')" style="flex:1; background:#e11d48; color:#fff; border:none; border-radius:8px; padding:10px; font-weight:800; cursor:pointer;">📸 תמונה / גלריה</button>
+        <button type="button" onclick="qpSelectType('photo')" style="flex:1; background:#7c3aed; color:#fff; border:none; border-radius:8px; padding:10px; font-weight:800; cursor:pointer;">📸 תמונה / גלריה</button>
         <button type="button" onclick="qpSelectType('story')" style="flex:1; background:#8b5cf6; color:#fff; border:none; border-radius:8px; padding:10px; font-weight:800; cursor:pointer;">📖 סיפור / כתבה</button>
       </div>
     `);
@@ -8708,7 +8708,7 @@ async function qpPublish() {
     ageRange: '',
     region: qpData.region || '',
     offerType: qpData.offerType || '',
-    categoryColor: isStory ? '#8b5cf6' : (qpData.isProduct ? '#e11d48' : '#10b981'),
+    categoryColor: isStory ? '#8b5cf6' : (qpData.isProduct ? '#7c3aed' : '#10b981'),
     timestamp: new Date().toLocaleDateString('he-IL'),
     createdAt: Date.now(),
     telegramUrl: telegram ? ('https://t.me/' + telegram) : '',
@@ -9073,7 +9073,7 @@ function buildCommunityPageHTML(community) {
   const tabBtnsHTML = `
     <div style="display:flex; gap:8px; margin-bottom:16px; border-bottom:1.5px solid #e2e8f0; padding-bottom:10px; direction:rtl;">
       <button onclick="communitySetTab('all')" style="padding:6px 14px; border-radius:8px; border:none; font-size:13px; font-weight:800; cursor:pointer; background:${communityActiveTab === 'all' ? '#0f172a' : '#f1f5f9'}; color:${communityActiveTab === 'all' ? '#fff' : '#475569'};">🌐 הכל (${filtered.length})</button>
-      <button onclick="communitySetTab('photos')" style="padding:6px 14px; border-radius:8px; border:none; font-size:13px; font-weight:800; cursor:pointer; background:${communityActiveTab === 'photos' ? '#e11d48' : '#f1f5f9'}; color:${communityActiveTab === 'photos' ? '#fff' : '#475569'};">📸 תמונות (${photos.length})</button>
+      <button onclick="communitySetTab('photos')" style="padding:6px 14px; border-radius:8px; border:none; font-size:13px; font-weight:800; cursor:pointer; background:${communityActiveTab === 'photos' ? '#7c3aed' : '#f1f5f9'}; color:${communityActiveTab === 'photos' ? '#fff' : '#475569'};">📸 תמונות (${photos.length})</button>
       <button onclick="communitySetTab('stories')" style="padding:6px 14px; border-radius:8px; border:none; font-size:13px; font-weight:800; cursor:pointer; background:${communityActiveTab === 'stories' ? '#8b5cf6' : '#f1f5f9'}; color:${communityActiveTab === 'stories' ? '#fff' : '#475569'};">📖 סיפורים (${stories.length})</button>
     </div>
   `;
@@ -9081,7 +9081,7 @@ function buildCommunityPageHTML(community) {
   const uploadBtnsHTML = canUpload
     ? `
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px;">
-        <button onclick="openQuickPublish('${artEsc(community.id)}', 'photo')" style="background:linear-gradient(135deg,#e11d48,#be123c); color:#fff; border:none; border-radius:10px; padding:12px; font-size:13.5px; font-weight:800; cursor:pointer; box-shadow:0 3px 10px rgba(225,29,72,0.25);">📸 העלה תמונה לקהילה</button>
+        <button onclick="openQuickPublish('${artEsc(community.id)}', 'photo')" style="background:linear-gradient(135deg,#7c3aed,#5b21b6); color:#fff; border:none; border-radius:10px; padding:12px; font-size:13.5px; font-weight:800; cursor:pointer; box-shadow:0 3px 10px rgba(124, 58, 237,0.25);">📸 העלה תמונה לקהילה</button>
         <button onclick="openQuickPublish('${artEsc(community.id)}', 'story')" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9); color:#fff; border:none; border-radius:10px; padding:12px; font-size:13.5px; font-weight:800; cursor:pointer; box-shadow:0 3px 10px rgba(139,92,246,0.25);">📖 כתוב סיפור לקהילה</button>
       </div>
     `
@@ -9094,7 +9094,7 @@ function buildCommunityPageHTML(community) {
       <div style="background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:20px; margin-bottom:20px; display:flex; align-items:center; gap:16px; box-shadow:0 4px 15px rgba(0,0,0,0.03); direction:rtl; flex-wrap:wrap;">
         ${community.image
           ? `<img src="${escHtml(community.image)}" alt="" style="width:56px; height:56px; border-radius:14px; object-fit:cover; flex-shrink:0;">`
-          : `<div style="width:56px; height:56px; border-radius:14px; background:linear-gradient(135deg,#e11d48,#9f1239); color:#fff; display:flex; align-items:center; justify-content:center; font-size:26px; flex-shrink:0;">${escHtml(community.icon || '🏘️')}</div>`}
+          : `<div style="width:56px; height:56px; border-radius:14px; background:linear-gradient(135deg,#7c3aed,#4c1d95); color:#fff; display:flex; align-items:center; justify-content:center; font-size:26px; flex-shrink:0;">${escHtml(community.icon || '🏘️')}</div>`}
         <div style="flex:1; min-width:200px;">
           <div style="font-size:20px; font-weight:900; color:#0f172a;">${escHtml(community.name || 'קהילה')}</div>
           <div style="font-size:13px; color:#64748b; margin-top:2px;">${escHtml(community.desc || '')}</div>
@@ -9275,7 +9275,7 @@ function searchHistoryListHTML() {
             <span>מאת: <strong>${escHtml(s.user || 'אורח')}</strong></span> &bull; <span>${time}</span>
           </div>
         </div>
-        <button onclick="deleteSearchHistoryItem('${artEsc(key)}')" title="מחק חיפוש" style="background:none; border:none; color:#e11d48; font-size:16px; cursor:pointer; flex-shrink:0;">🗑️</button>
+        <button onclick="deleteSearchHistoryItem('${artEsc(key)}')" title="מחק חיפוש" style="background:none; border:none; color:#7c3aed; font-size:16px; cursor:pointer; flex-shrink:0;">🗑️</button>
       </div>
     `;
   }).join('');
@@ -9321,7 +9321,7 @@ function buildInfoSubmitBox() {
       <div style="font-size:12px; color:#64748b; margin-bottom:10px; line-height:1.4;">כל אחד יכול לכתוב לנו — גם בלי הרשמה.</div>
       <input id="info-submit-name" type="text" placeholder="שם (אופציונלי)" value="${prefill}" style="width:100%; box-sizing:border-box; padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:13px; margin-bottom:8px;">
       <textarea id="info-submit-text" rows="3" placeholder="כתבו כאן את המידע/ההודעה..." style="width:100%; box-sizing:border-box; padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:13px; resize:vertical; margin-bottom:8px;"></textarea>
-      <button onclick="submitUserInfo()" style="width:100%; background:#e11d48; color:#fff; border:none; border-radius:8px; padding:10px; font-size:13.5px; font-weight:800; cursor:pointer;">שליחה</button>
+      <button onclick="submitUserInfo()" style="width:100%; background:#7c3aed; color:#fff; border:none; border-radius:8px; padding:10px; font-size:13.5px; font-weight:800; cursor:pointer;">שליחה</button>
     </div>
   `;
 }
@@ -9366,7 +9366,7 @@ function infoSubmissionsListHTML() {
             <span style="font-size:14px; font-weight:900; color:#0f172a;">${escHtml(s.name || 'אורח')}</span>
             ${badge}
           </div>
-          <button onclick="deleteUserSubmission('${artEsc(key)}')" title="מחק" style="background:none; border:none; color:#e11d48; font-size:16px; cursor:pointer;">🗑️</button>
+          <button onclick="deleteUserSubmission('${artEsc(key)}')" title="מחק" style="background:none; border:none; color:#7c3aed; font-size:16px; cursor:pointer;">🗑️</button>
         </div>
         <div style="font-size:13.5px; color:#1e293b; line-height:1.5; white-space:pre-wrap; word-break:break-word;">${escHtml(s.text || '')}</div>
         <div style="font-size:11px; color:#94a3b8; margin-top:6px;">${time}</div>
@@ -9412,8 +9412,8 @@ function buildInfoPage() {
     <div style="margin-bottom:24px;">
       <div style="font-size:16px; font-weight:900; color:#0f172a; margin-bottom:12px;">📊 נתוני האתר <span style="font-size:12px; color:#94a3b8; font-weight:700;">(מתעדכן בזמן אמת)</span></div>
       <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:12px; margin-bottom:14px;">
-        ${kpi('an-today', 'כניסות היום', '👥', '#e11d48')}
-        ${kpi('an-month', 'כניסות החודש', '📅', '#e11d48')}
+        ${kpi('an-today', 'כניסות היום', '👥', '#7c3aed')}
+        ${kpi('an-month', 'כניסות החודש', '📅', '#7c3aed')}
         ${kpi('an-total', 'סה״כ כניסות', '🚪', '#0f172a')}
         ${kpi('an-pageviews', 'צפיות בעמודים', '👁️', '#0f172a')}
         ${kpi('an-users', 'משתמשים רשומים', '🧑‍🤝‍🧑', '#2563eb')}
@@ -9452,7 +9452,7 @@ function buildInfoPage() {
           <div style="background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:18px; margin-bottom:24px; box-shadow:0 4px 15px rgba(0,0,0,0.03);">
             <div style="font-size:16px; font-weight:900; color:#0f172a; margin-bottom:8px;">📝 המידע שלי</div>
             <textarea id="admin-info-notes" rows="8" placeholder="כתוב כאן מידע פרטי שרק אתה רואה..." style="width:100%; box-sizing:border-box; padding:12px; border:1px solid #ddd; border-radius:10px; font-size:14px; line-height:1.6; resize:vertical;">${escHtml(adminInfoText)}</textarea>
-            <button onclick="saveAdminInfo()" style="margin-top:10px; background:#e11d48; color:#fff; border:none; border-radius:8px; padding:10px 20px; font-size:14px; font-weight:800; cursor:pointer;">שמור מידע</button>
+            <button onclick="saveAdminInfo()" style="margin-top:10px; background:#7c3aed; color:#fff; border:none; border-radius:8px; padding:10px 20px; font-size:14px; font-weight:800; cursor:pointer;">שמור מידע</button>
           </div>
 
           <div style="font-size:16px; font-weight:900; color:#0f172a; margin-bottom:12px;">📥 מידע שהתקבל ממשתמשים (טופס ציבורי)</div>
@@ -9491,7 +9491,7 @@ function renderAnalyticsChart(daily) {
     const h = Math.round((d.val / max) * 100);
     return `<div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; height:100%;">
       <div style="font-size:11px; font-weight:800; color:#334155;">${escHtml(d.val)}</div>
-      <div style="width:100%; flex:1; display:flex; align-items:flex-end;"><div style="width:100%; height:${h}%; min-height:3px; background:linear-gradient(180deg,#f43f5e,#e11d48); border-radius:6px 6px 0 0;"></div></div>
+      <div style="width:100%; flex:1; display:flex; align-items:flex-end;"><div style="width:100%; height:${h}%; min-height:3px; background:linear-gradient(180deg,#8b5cf6,#7c3aed); border-radius:6px 6px 0 0;"></div></div>
       <div style="font-size:11px; color:#94a3b8; font-weight:700;">${escHtml(d.label)}</div>
     </div>`;
   }).join('');
@@ -9899,7 +9899,7 @@ function buildOffersPage() {
             <div class="of-list" id="offers-list">${offersListHTML()}</div>
           </div>
           <div class="art-sidebar art-sidebar-right">
-            <button onclick="openOfferModal()" style="background:#e11d48; width:100%; padding:12px 16px; border-radius:8px; border:none; color:white; font-weight:bold; font-size:14px; cursor:pointer; margin-bottom:16px;">➕ הוסף הצעה חדשה</button>
+            <button onclick="openOfferModal()" style="background:#7c3aed; width:100%; padding:12px 16px; border-radius:8px; border:none; color:white; font-weight:bold; font-size:14px; cursor:pointer; margin-bottom:16px;">➕ הוסף הצעה חדשה</button>
             ${buildSidebarTabs('', 'offers')}
           </div>
           ${buildLeftSidebarBox('', 'offers')}
@@ -10092,7 +10092,7 @@ function buildSidebarNameChangeSectionHTML() {
       ` : `
         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px; margin-top: 6px; font-size: 12px; color: #475569; text-align: center;">
           <span style="display: inline-block; margin-bottom: 2px;">🔒 <strong>שינוי שם ננעל</strong></span><br>
-          תוכל לשנות שם שוב בעוד <strong style="color: #e11d48;">${daysRemaining} ימים</strong>.
+          תוכל לשנות שם שוב בעוד <strong style="color: #7c3aed;">${daysRemaining} ימים</strong>.
         </div>
       `}
     </div>
@@ -10332,7 +10332,7 @@ function buildSidebarVerificationSectionHTML() {
         להעלאת תמונת פנים לאימות החשבון וקבלת תג אימות (✓) בצד השם שלך:
       </div>
       ${isRejected ? `
-        <div style="font-size: 11.5px; color: #e11d48; background: #fff1f2; padding: 6px 8px; border-radius: 6px; margin-bottom: 8px; border: 1px solid #fecdd3;">
+        <div style="font-size: 11.5px; color: #7c3aed; background: #f5f3ff; padding: 6px 8px; border-radius: 6px; margin-bottom: 8px; border: 1px solid #ddd6fe;">
           ⚠️ בקשת האימות הקודמת נדחתה. נא להעלות תמונת פנים ברורה.
         </div>
       ` : ''}
@@ -10343,7 +10343,7 @@ function buildSidebarVerificationSectionHTML() {
           <input type="file" id="pf-verification-file" accept="image/*" style="display: none;" onchange="previewVerificationPhoto(this)">
         </label>
         <div id="pf-verification-preview-wrap" style="display: none; text-align: center;">
-          <img id="pf-verification-preview-img" style="width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 2px solid #2563eb; margin: 0 auto;">
+          <img id="pf-verification-preview-img" style="width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 2px solid #7c3aed; margin: 0 auto;">
         </div>
         <button type="button" onclick="submitAccountVerification()" 
                 style="background: #2563eb; color: #fff; border: none; border-radius: 8px; padding: 8px 14px; font-size: 13px; font-weight: 700; cursor: pointer; transition: background 0.15s ease;">
@@ -10507,7 +10507,7 @@ async function loadAdminVerificationsList() {
     const statusBadge = isApproved
       ? `<span style="background:#dcfce7; color:#15803d; border-radius:6px; padding:2px 8px; font-size:11.5px; font-weight:700;">מאומת ✓</span>`
       : (isRejected
-        ? `<span style="background:#ffe4e6; color:#be123c; border-radius:6px; padding:2px 8px; font-size:11.5px; font-weight:700;">נדחה ✕</span>`
+        ? `<span style="background:#ede9fe; color:#5b21b6; border-radius:6px; padding:2px 8px; font-size:11.5px; font-weight:700;">נדחה ✕</span>`
         : `<span style="background:#fef3c7; color:#b45309; border-radius:6px; padding:2px 8px; font-size:11.5px; font-weight:700;">ממתין לבדיקה ⏳</span>`);
 
     const dateStr = req.timestamp ? new Date(req.timestamp).toLocaleString('he-IL') : '';
@@ -10515,7 +10515,7 @@ async function loadAdminVerificationsList() {
     return `
       <div style="border:1.5px solid #e2e8f0; border-radius:12px; padding:14px; background:#f8fafc; display:flex; gap:14px; align-items:center; flex-wrap:wrap;">
         <div style="flex-shrink:0;">
-          ${req.photo ? `<img src="${escHtml(req.photo)}" onclick="if (typeof openImageModal==='function') openImageModal('${artEsc(req.photo)}')" style="width:70px; height:70px; border-radius:50%; object-fit:cover; border:2px solid #2563eb; cursor:pointer;" title="לחץ להגדלה">` : `<div style="width:70px; height:70px; border-radius:50%; background:#cbd5e1; display:flex; align-items:center; justify-content:center; font-size:24px;">👤</div>`}
+          ${req.photo ? `<img src="${escHtml(req.photo)}" onclick="if (typeof openImageModal==='function') openImageModal('${artEsc(req.photo)}')" style="width:70px; height:70px; border-radius:50%; object-fit:cover; border:2px solid #7c3aed; cursor:pointer;" title="לחץ להגדלה">` : `<div style="width:70px; height:70px; border-radius:50%; background:#cbd5e1; display:flex; align-items:center; justify-content:center; font-size:24px;">👤</div>`}
         </div>
         <div style="flex:1; min-width:180px;">
           <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:4px;">
@@ -10843,10 +10843,10 @@ function buildSidebarTabs(savedHTML, pageType) {
     { id: 'community', label: '👥 קהילה',  html: (typeof buildSocialCommunityBox === 'function' ? buildSocialCommunityBox() : '') },
     { id: 'chat',      label: '💬 צ׳אט',   html: buildLiveChatBox() },
     { id: 'publish',   label: '🤖 פרסום',  html: `
-      <div class="art-sidebar-box" style="text-align:center; padding:18px; border:1.5px solid #22c55e; background:rgba(34,197,94,0.04); border-radius:12px;">
-        <div style="font-size:15px; font-weight:900; color:#166534; margin-bottom:6px;">🤖 פרסום מודעה מהיר</div>
+      <div class="art-sidebar-box" style="text-align:center; padding:18px; border:1.5px solid #c4b5fd; background:#faf8ff; border-radius:12px;">
+        <div style="font-size:15px; font-weight:900; color:#5b21b6; margin-bottom:6px;">🤖 פרסום מודעה מהיר</div>
         <div style="font-size:12px; color:#64748b; margin-bottom:12px; line-height:1.45;">עוזר מונחה שיפרסם עבורך מודעה חדשה בצ׳אט תוך 30 שניות</div>
-        <button onclick="openQuickPublish()" style="width:100%; background:linear-gradient(135deg,#22c55e,#16a34a); color:#fff; border:none; border-radius:10px; padding:12px; font-size:14px; font-weight:800; cursor:pointer; box-shadow:0 3px 10px rgba(34,197,94,0.3);">🤖 צ׳אט מהיר לפרסום מודעה</button>
+        <button onclick="openQuickPublish()" style="width:100%; background:linear-gradient(135deg,#7c3aed,#a855f7); color:#fff; border:none; border-radius:10px; padding:12px; font-size:14px; font-weight:800; cursor:pointer; box-shadow:0 3px 10px rgba(124,58,237,0.3);">🤖 צ׳אט מהיר לפרסום מודעה</button>
       </div>
     ` },
     { id: 'event',     label: '🎉 אירוע',  html: buildEventsSidebarBox() },
@@ -10981,9 +10981,9 @@ function buildLeftSidebarBox(popularHTML, section) {
   return `
     <div class="art-sidebar art-sidebar-left">
       <div class="art-sidebar-box site-pages-widget-box" style="border: 1.5px solid #e2e8f0; border-radius: 14px; padding: 16px; background: #ffffff;">
-        <div class="art-sidebar-title" style="font-size: 15px; font-weight: 900; color: #0f172a; margin-bottom: 12px; border-bottom: 2.5px solid #e11d48; padding-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
+        <div class="art-sidebar-title" style="font-size: 15px; font-weight: 900; color: #0f172a; margin-bottom: 12px; border-bottom: 2.5px solid #7c3aed; padding-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
           <span>📌 עמודי האתר</span>
-          <span style="font-size: 11px; background: rgba(225,29,72,0.1); color: #e11d48; padding: 2px 8px; border-radius: 12px; font-weight: 800;">ניווט מהיר</span>
+          <span style="font-size: 11px; background: rgba(124, 58, 237,0.1); color: #7c3aed; padding: 2px 8px; border-radius: 12px; font-weight: 800;">ניווט מהיר</span>
         </div>
         <div style="display: flex; flex-direction: column; gap: 8px;">
           ${mainPagesHTML}
@@ -11012,10 +11012,10 @@ function buildLeftSidebarBox(popularHTML, section) {
 
       ${buildUserMapBox()}
 
-      ${section === 'communities' ? '' : `<div class="art-sidebar-box" style="border: 1.5px solid #22c55e; background: rgba(34,197,94,0.04); border-radius: 14px; padding: 16px; text-align: center;">
-        <div style="font-size: 14px; font-weight: 900; color: #166534; margin-bottom: 4px;">🤖 פרסום מודעה מהיר</div>
+      ${section === 'communities' ? '' : `<div class="art-sidebar-box" style="border:1.5px solid #c4b5fd; background:#faf8ff; border-radius: 14px; padding: 16px; text-align: center;">
+        <div style="font-size: 14px; font-weight: 900; color:#5b21b6; margin-bottom: 4px;">🤖 פרסום מודעה מהיר</div>
         <div style="font-size: 11.5px; color: #64748b; margin-bottom: 10px; line-height: 1.4;">עוזר מונחה שיפרסם עבורך מודעה חדשה בצ׳אט תוך 30 שניות</div>
-        <button onclick="openQuickPublish()" style="width: 100%; background: linear-gradient(135deg,#22c55e,#16a34a); color: #fff; border: none; border-radius: 10px; padding: 10px; font-size: 13px; font-weight: 800; cursor: pointer; box-shadow: 0 3px 10px rgba(34,197,94,0.25);">🤖 צ׳אט לפרסום מהיר</button>
+        <button onclick="openQuickPublish()" style="width: 100%; background:linear-gradient(135deg,#7c3aed,#a855f7); color: #fff; border: none; border-radius: 10px; padding: 10px; font-size: 13px; font-weight: 800; cursor: pointer; box-shadow:0 3px 10px rgba(124,58,237,0.3);">🤖 צ׳אט לפרסום מהיר</button>
       </div>`}
     </div>
   `;
@@ -12242,7 +12242,7 @@ async function quickUploadFinalSubmit() {
         author: authorName,
         authorId: user ? user.uid : '',
         category: st.category || 'כללי',
-        categoryColor: '#e11d48',
+        categoryColor: '#7c3aed',
         timestamp: nowStamp,
         createdAt: Date.now(),
         telegramUrl: quTelegram ? ('https://t.me/' + quTelegram) : '',
@@ -12371,9 +12371,9 @@ function buildHomeFeedPage() {
   const photosSection = photos.length ? `
     <div class="photos-page photo-cols-${pcols}${photoImagesMode ? '' : ' text-mode'}${photoNoImgMargins ? ' no-img-margins' : ''} home-feed-photos" data-section="photos" data-photos-json="${photosJson}">
       <div class="photo-section-row home-feed-section" style="margin:0 0 24px; background:#fff; padding:18px; border-radius:16px; border:1px solid #e2e8f0; box-shadow:0 4px 15px rgba(0,0,0,0.03);">
-        <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:2.5px solid #e11d48; padding-bottom:10px; margin-bottom:18px;">
-          <h3 style="margin:0; font-size:18px; font-weight:900; color:#be123c;">🖼️ תמונות אחרונות</h3>
-          <button class="home-feed-open" onclick="event.stopPropagation(); homeOpenPhotos()" style="background:#e11d48; color:#fff; border:none; border-radius:8px; padding:7px 14px; font-size:13px; font-weight:700; cursor:pointer;">פתח הכל ←</button>
+        <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:2.5px solid #7c3aed; padding-bottom:10px; margin-bottom:18px;">
+          <h3 style="margin:0; font-size:18px; font-weight:900; color:#5b21b6;">🖼️ תמונות אחרונות</h3>
+          <button class="home-feed-open" onclick="event.stopPropagation(); homeOpenPhotos()" style="background:#7c3aed; color:#fff; border:none; border-radius:8px; padding:7px 14px; font-size:13px; font-weight:700; cursor:pointer;">פתח הכל ←</button>
         </div>
         <div class="art-rows photo-collapsible expanded" style="grid-template-columns: repeat(4, 1fr) !important;">${photoCards}</div>
       </div>
@@ -12561,10 +12561,10 @@ function buildPhotosPage(albums, section) {
     const user = auth.currentUser;
     const budget = localStorage.getItem(`like_budget_${user.uid}`) || '5';
     budgetHTML = `
-      <div class="art-sidebar-box" style="border: 1px solid rgba(225,29,72,0.15); background: rgba(225,29,72,0.02); display: flex; align-items: center; gap: 12px; padding: 16px; border-radius: 12px;">
-        <span style="font-size: 24px; filter: drop-shadow(0 2px 4px rgba(225,29,72,0.2));">❤️</span>
+      <div class="art-sidebar-box" style="border: 1px solid rgba(124, 58, 237,0.15); background: rgba(124, 58, 237,0.02); display: flex; align-items: center; gap: 12px; padding: 16px; border-radius: 12px;">
+        <span style="font-size: 24px; filter: drop-shadow(0 2px 4px rgba(124, 58, 237,0.2));">❤️</span>
         <div style="text-align: right;">
-          <div style="font-size: 13px; font-weight: 800; color: #e11d48; margin-bottom: 2px;">יתרת הלייקים שלך: ${budget}</div>
+          <div style="font-size: 13px; font-weight: 800; color: #7c3aed; margin-bottom: 2px;">יתרת הלייקים שלך: ${budget}</div>
           <div style="font-size: 11px; color: #777; font-weight: 500;">מצטברים 5 לייקים נוספים בכל יום!</div>
         </div>
       </div>
@@ -12585,7 +12585,7 @@ function buildPhotosPage(albums, section) {
       <div class="art-sidebar-box" id="my-profile-sidebar-box" style="border: 1px solid rgba(0,0,0,0.15); padding: 16px; border-radius: 12px; display: flex; flex-direction: column; gap: 10px;">
         <div class="art-sidebar-title" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0;">
           <span style="font-size: 14px; font-weight: 800;">👤 הפרופיל שלי</span>
-          <button onclick="photoToggleProfileEdit()" style="background:none; border:none; color:#e11d48; font-size:12px; font-weight:800; cursor:pointer; padding: 0;">עריכה ✏️</button>
+          <button onclick="photoToggleProfileEdit()" style="background:none; border:none; color:#7c3aed; font-size:12px; font-weight:800; cursor:pointer; padding: 0;">עריכה ✏️</button>
         </div>
         
         <div id="profile-view-state" style="display: block;">
@@ -12603,7 +12603,7 @@ function buildPhotosPage(albums, section) {
           <input id="profile-edit-telegram" type="text" placeholder="שם משתמש בטלגרם (ללא @)" value="${escHtml(tg)}" style="padding:8px 12px; border:1px solid #ddd; border-radius:8px; font-size:13px; width:100%; box-sizing:border-box;">
           <input id="profile-edit-email" type="email" placeholder="אימייל" value="${escHtml(email)}" style="padding:8px 12px; border:1px solid #ddd; border-radius:8px; font-size:13px; width:100%; box-sizing:border-box;">
           <div style="display:flex; gap:6px; margin-top: 4px;">
-            <button onclick="photoSaveProfile()" style="background:#e11d48; color:white; border:none; padding:8px 12px; border-radius:8px; font-size:12px; font-weight:800; cursor:pointer; flex:1;">שמור</button>
+            <button onclick="photoSaveProfile()" style="background:#7c3aed; color:white; border:none; padding:8px 12px; border-radius:8px; font-size:12px; font-weight:800; cursor:pointer; flex:1;">שמור</button>
             <button onclick="photoToggleProfileEdit()" style="background:#f3f4f6; color:#555; border:none; padding:8px 12px; border-radius:8px; font-size:12px; font-weight:800; cursor:pointer;">ביטול</button>
           </div>
         </div>
@@ -12626,7 +12626,7 @@ function buildPhotosPage(albums, section) {
                 <div style="display: flex; align-items: center; gap: 8px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                   <div style="font-size:13px;font-weight:600;line-height:1.4;color:#222; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer;">${escHtml(p.title)}</div>
                 </div>
-                <button onclick="event.stopPropagation(); photoToggleSave('${artEsc(p.id)}')" style="background:none; border:none; cursor:pointer; color:#e11d48; padding:4px; display: flex; align-items: center;">
+                <button onclick="event.stopPropagation(); photoToggleSave('${artEsc(p.id)}')" style="background:none; border:none; cursor:pointer; color:#7c3aed; padding:4px; display: flex; align-items: center;">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
                     <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
                   </svg>
@@ -12678,7 +12678,7 @@ function buildPhotosPage(albums, section) {
           ${mainImg ? `<img src="${escHtml(mainImg)}" style="width: 36px; height: 36px; border-radius: 8px; object-fit: cover; flex-shrink: 0;">` : `<span class="art-popular-num" style="font-weight: 900; color: #ec4899;">${String(i+1).padStart(2,'0')}</span>`}
           <div style="font-size:13px;font-weight:700;line-height:1.4;color:#1e293b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escHtml(p.title)}</div>
         </div>
-        <div style="font-size: 11px; color: #e11d48; display: flex; align-items: center; gap: 4px; font-weight: bold; flex-shrink: 0; background: rgba(225,29,72,0.08); padding: 2px 7px; border-radius: 12px;" title="${photoGetViews(p.id)} צפיות + ${p.likes||0} לייקים">
+        <div style="font-size: 11px; color: #7c3aed; display: flex; align-items: center; gap: 4px; font-weight: bold; flex-shrink: 0; background: rgba(124, 58, 237,0.08); padding: 2px 7px; border-radius: 12px;" title="${photoGetViews(p.id)} צפיות + ${p.likes||0} לייקים">
           <span>🔥 ${score}</span>
         </div>
       </div>
@@ -12690,7 +12690,7 @@ function buildPhotosPage(albums, section) {
   let sectionTitle = 'כל הגלריות';
   let searchPlaceholder = '🔍 חיפוש גלריות...';
   let noResultsText = 'לא נמצאו עיצובים התואמים לחיפוש';
-  let addBtnHTML = `<button onclick="openPhotoModal()" style="background:#e11d48; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: white; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.2s;">
+  let addBtnHTML = `<button class="cta-add-btn" onclick="openPhotoModal()" style="background:#7c3aed; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: white; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.2s;">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
           <line x1="12" y1="5" x2="12" y2="19"></line>
           <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -12702,7 +12702,7 @@ function buildPhotosPage(albums, section) {
     sectionTitle = 'כל הרעיונות';
     searchPlaceholder = '🔍 חיפוש רעיונות...';
     noResultsText = 'לא נמצאו רעיונות התואמים לחיפוש';
-    addBtnHTML = `<button onclick="openIdeaModal()" style="background:#3b82f6; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: white; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.2s;">
+    addBtnHTML = `<button class="cta-add-btn" onclick="openIdeaModal()" style="background:#3b82f6; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: white; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.2s;">
         💡 הוסף רעיון חדש
        </button>
        <button onclick="openProblemModal()" style="background:#f59e0b; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: white; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
@@ -12717,7 +12717,7 @@ function buildPhotosPage(albums, section) {
     sectionTitle = 'כל המוצרים';
     searchPlaceholder = '🔍 חיפוש מוצרים...';
     noResultsText = 'לא נמצאו מוצרים התואמים לחיפוש';
-    addBtnHTML = `<button onclick="openPhotoModal()" style="background:#e11d48; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: white; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.2s;">
+    addBtnHTML = `<button class="cta-add-btn" onclick="openPhotoModal()" style="background:#7c3aed; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: white; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.2s;">
         ➕ הוסף מוצר יד שניה
        </button>
        <button onclick="openWantedModal()" style="background:#2563eb; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: white; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
@@ -12727,14 +12727,14 @@ function buildPhotosPage(albums, section) {
     sectionTitle = 'כל השותפויות';
     searchPlaceholder = '🔍 חיפוש שותפויות...';
     noResultsText = 'לא נמצאו שותפויות התואמות לחיפוש';
-    addBtnHTML = `<button onclick="openPhotoModal()" style="background:#e11d48; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: white; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.2s;">
+    addBtnHTML = `<button class="cta-add-btn" onclick="openPhotoModal()" style="background:#7c3aed; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: white; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.2s;">
         ➕ פרסום שותפות חדשה
        </button>`;
   } else if (section === 'reviews') {
     sectionTitle = 'כל הביקורות';
     searchPlaceholder = '🔍 חיפוש ביקורות...';
     noResultsText = 'לא נמצאו ביקורות התואמות לחיפוש';
-    addBtnHTML = `<button onclick="openPhotoModal()" style="background:#e11d48; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: white; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.2s;">
+    addBtnHTML = `<button class="cta-add-btn" onclick="openPhotoModal()" style="background:#7c3aed; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: white; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.2s;">
         ✍️ כתוב ביקורת
        </button>
        <button onclick="openClassActionModal()" style="background:#0f172a; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: white; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
@@ -12769,9 +12769,9 @@ function buildPhotosPage(albums, section) {
 
           <!-- מקטע מאוחד: כל הרעיונות / כל הגלריות -->
           <div class="photo-section-row" style="margin-bottom: 32px; background: #ffffff; padding: 18px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
-            <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:2.5px solid #2563eb; padding-bottom:10px; margin-bottom:18px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:2.5px solid #7c3aed; padding-bottom:10px; margin-bottom:18px;">
               <div>
-                <h3 style="margin:0; font-size:18px; font-weight:900; color:#1e3a8a;">${sectionTitle}</h3>
+                <h3 style="margin:0; font-size:18px; font-weight:900; color:#2e1065;">${sectionTitle}</h3>
               </div>
             </div>
             <div class="art-rows photo-collapsible expanded" id="photo-row-1">${row1HTML}</div>
@@ -12781,7 +12781,7 @@ function buildPhotosPage(albums, section) {
 
           <div class="art-pagination" style="display:none"></div>
           <div class="art-no-results" style="display:none">${noResultsText}</div>
-          ${(isAdmin() || isEditMode) ? (section === 'ideas' ? `<button class="art-add-btn" onclick="openIdeaModal()" style="background:#3b82f6">💡 הוסף רעיון חדש</button>` : `<button class="art-add-btn" onclick="openPhotoModal()" style="background:#e11d48">+ הוסף עיצוב אתר חדש</button>`) : ''}
+          ${(isAdmin() || isEditMode) ? (section === 'ideas' ? `<button class="art-add-btn" onclick="openIdeaModal()" style="background:#3b82f6">💡 הוסף רעיון חדש</button>` : `<button class="art-add-btn" onclick="openPhotoModal()" style="background:#7c3aed">+ הוסף עיצוב אתר חדש</button>`) : ''}
         </div>
         <div class="art-sidebar art-sidebar-right">
           ${addBtnHTML}
@@ -12838,13 +12838,13 @@ function ideaExecutionBoxHTML(a) {
 
   return `
     <div class="idea-exec-box">
-      <div style="font-size:16px; font-weight:900; color:#0f172a; border-bottom:2.5px solid #3b82f6; padding-bottom:10px; margin-bottom:16px; display:flex; align-items:center; gap:8px;">
+      <div style="font-size:16px; font-weight:900; color:#0f172a; border-bottom:2.5px solid #7c3aed; padding-bottom:10px; margin-bottom:16px; display:flex; align-items:center; gap:8px;">
         <span>🛠️ איך לבצע את הרעיון</span>
       </div>
       <div style="display:flex; flex-direction:column;">
         ${stepsHTML}
       </div>
-      <div style="background:#eff6ff; border-right:4px solid #3b82f6; padding:12px 14px; border-radius:10px; font-size:12.5px; color:#1e40af; line-height:1.5; margin-top:12px; font-weight:600;">
+      <div style="background:#eff6ff; border-right:4px solid #7c3aed; padding:12px 14px; border-radius:10px; font-size:12.5px; color:#1e40af; line-height:1.5; margin-top:12px; font-weight:600;">
         💡 <b>טיפ זהב לביצוע:</b> מומלץ להתחיל בבניית אב-טיפוס (Prototype) ולקבל משוב מהיר מהגולשים בקהילה לפני פיתוח מלא.
       </div>
     </div>
@@ -12914,11 +12914,11 @@ function secondhandBuyBoxHTML(a) {
       </div>`).join('');
   return `
     <div class="idea-exec-box">
-      <div style="font-size:16px; font-weight:900; color:#0f172a; border-bottom:2.5px solid #3b82f6; padding-bottom:10px; margin-bottom:16px; display:flex; align-items:center; gap:8px;">
+      <div style="font-size:16px; font-weight:900; color:#0f172a; border-bottom:2.5px solid #7c3aed; padding-bottom:10px; margin-bottom:16px; display:flex; align-items:center; gap:8px;">
         <span>🤝 איך רוכשים</span>
       </div>
       <div style="display:flex; flex-direction:column;">${stepsHTML}</div>
-      <div style="background:#eff6ff; border-right:4px solid #3b82f6; padding:12px 14px; border-radius:10px; font-size:12.5px; color:#1e40af; line-height:1.5; margin-top:12px; font-weight:600;">
+      <div style="background:#eff6ff; border-right:4px solid #7c3aed; padding:12px 14px; border-radius:10px; font-size:12.5px; color:#1e40af; line-height:1.5; margin-top:12px; font-weight:600;">
         💡 <b>טיפ לרכישה בטוחה:</b> בדקו את המוצר לפני התשלום ותאמו מפגש במקום ציבורי ומואר.
       </div>
       ${(a.offerType === 'השאלה' && Array.isArray(a.loanTerms) && a.loanTerms.length) ? `
@@ -13003,7 +13003,7 @@ function photoOpenDetail(id) {
 
   // יצירת ריבועי דפדוף (Thumbnails)
   const thumbnailsHTML = validImages.map((imgUrl, idx) => `
-    <div class="photo-thumb-square" onclick="photoSelectImage('${artEsc(imgUrl)}', this)" style="width:60px; height:60px; border-radius:8px; overflow:hidden; cursor:pointer; border:2.5px solid ${idx === 0 ? '#e11d48' : '#ddd'}; transition:all 0.2s; flex-shrink:0;">
+    <div class="photo-thumb-square" onclick="photoSelectImage('${artEsc(imgUrl)}', this)" style="width:60px; height:60px; border-radius:8px; overflow:hidden; cursor:pointer; border:2.5px solid ${idx === 0 ? '#7c3aed' : '#ddd'}; transition:all 0.2s; flex-shrink:0;">
       <img src="${escHtml(imgUrl)}" style="width:100%; height:100%; object-fit:cover;">
     </div>
   `).join('');
@@ -13131,8 +13131,8 @@ function photoOpenDetail(id) {
                 ${a.authorId ? `<button onclick="toggleFollow('${artEsc(a.authorId)}','${artEsc(a.author || '')}', this)" class="follow-btn${isFollowing(a.authorId) ? ' following' : ''}">${isFollowing(a.authorId) ? '✓ עוקב' : '➕ עקוב'}</button>` : ''}
                 <span>·</span>
                 <span>${escHtml(a.timestamp)}</span>
-                <button onclick="photoToggleLike('${artEsc(a.id)}')" class="photo-like-btn" style="background: ${photoIsLikedLocal(a.id) ? '#ffe4e6' : '#ffffff'}; border: 1.5px solid ${photoIsLikedLocal(a.id) ? '#e11d48' : '#e2e8f0'}; cursor: pointer; color: ${photoIsLikedLocal(a.id) ? '#e11d48' : '#1e293b'}; display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 8px; transition: all 0.2s; font-weight: 700; font-size: 13px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="${photoIsLikedLocal(a.id) ? '#e11d48' : 'none'}" stroke="${photoIsLikedLocal(a.id) ? '#e11d48' : '#e11d48'}" stroke-width="2.5"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                <button onclick="photoToggleLike('${artEsc(a.id)}')" class="photo-like-btn" style="background: ${photoIsLikedLocal(a.id) ? '#ede9fe' : '#ffffff'}; border: 1.5px solid ${photoIsLikedLocal(a.id) ? '#7c3aed' : '#e2e8f0'}; cursor: pointer; color: ${photoIsLikedLocal(a.id) ? '#7c3aed' : '#1e293b'}; display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 8px; transition: all 0.2s; font-weight: 700; font-size: 13px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="${photoIsLikedLocal(a.id) ? '#7c3aed' : 'none'}" stroke="${photoIsLikedLocal(a.id) ? '#7c3aed' : '#7c3aed'}" stroke-width="2.5"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
                   <span>${a.likes || 0} לייקים</span>
                 </button>
                 <button onclick="photoToggleSave('${artEsc(a.id)}')" class="photo-save-btn" style="background: rgba(0,0,0,0.05); border: 1px solid #ddd; cursor: pointer; color: #000; display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; font-weight: bold; font-size: 13px;">
@@ -13188,8 +13188,8 @@ function photoOpenDetail(id) {
               ${a.ageRange ? `<span>·</span><span>גיל ${escHtml(String(a.ageRange))}</span>` : ''}
               ${isUserVerified(a.authorId, a.author, a.verified || a.verifiedUser) ? `<span>·</span><span style="color:#2563eb; font-weight:700; display:inline-flex; align-items:center; gap:4px;">חשבון זה מאומת <span style="background:#dbeafe; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:10px;">✓</span></span>` : ''}
               ${a.expiresAt ? renderExpirationBadge(a.expiresAt) : ''}
-              <button onclick="photoToggleLike('${artEsc(a.id)}')" class="photo-like-btn" style="background: ${photoIsLikedLocal(a.id) ? '#ffe4e6' : '#ffffff'}; border: 1.5px solid ${photoIsLikedLocal(a.id) ? '#e11d48' : '#e2e8f0'}; cursor: pointer; color: ${photoIsLikedLocal(a.id) ? '#e11d48' : '#1e293b'}; display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 8px; transition: all 0.2s; font-weight: 700; font-size: 13px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="${photoIsLikedLocal(a.id) ? '#e11d48' : 'none'}" stroke="${photoIsLikedLocal(a.id) ? '#e11d48' : '#e11d48'}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+              <button onclick="photoToggleLike('${artEsc(a.id)}')" class="photo-like-btn" style="background: ${photoIsLikedLocal(a.id) ? '#ede9fe' : '#ffffff'}; border: 1.5px solid ${photoIsLikedLocal(a.id) ? '#7c3aed' : '#e2e8f0'}; cursor: pointer; color: ${photoIsLikedLocal(a.id) ? '#7c3aed' : '#1e293b'}; display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 8px; transition: all 0.2s; font-weight: 700; font-size: 13px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="${photoIsLikedLocal(a.id) ? '#7c3aed' : 'none'}" stroke="${photoIsLikedLocal(a.id) ? '#7c3aed' : '#7c3aed'}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
                   <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
                 </svg>
                 <span>${a.likes || 0} לייקים</span>
@@ -13200,7 +13200,7 @@ function photoOpenDetail(id) {
                 </svg>
                 <span>שמור</span>
               </button>
-              <button onclick="dmStartAboutGallery('${artEsc(a.authorId || '')}', '${artEsc(a.author || '')}', '${artEsc(a.id)}')" class="photo-dm-btn" style="background:#e11d48; border:none; cursor:pointer; color:#fff; display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border-radius:6px; font-weight:bold; font-size:13px;" title="שלח הודעה פרטית ליוצר">
+              <button onclick="dmStartAboutGallery('${artEsc(a.authorId || '')}', '${artEsc(a.author || '')}', '${artEsc(a.id)}')" class="photo-dm-btn" style="background:#7c3aed; border:none; cursor:pointer; color:#fff; display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border-radius:6px; font-weight:bold; font-size:13px;" title="שלח הודעה פרטית ליוצר">
                 💬 <span>שלח הודעה</span>
               </button>
               ${a.telegramUrl ? `
@@ -13221,7 +13221,7 @@ function photoOpenDetail(id) {
                 </button>
               ` : ''}
               ${(isAdmin() || isEditMode) ? `
-                <button type="button" onclick="openPhotoEditModal('${artEsc(a.id)}', event);" title="ערוך גלריה זו" style="display: inline-flex; align-items: center; background: #e11d48; color: #fff; padding: 6px 14px; border-radius: 6px; font-size: 13px; border: none; font-weight: bold; gap: 6px; cursor: pointer; transition: background 0.2s;">
+                <button type="button" onclick="openPhotoEditModal('${artEsc(a.id)}', event);" title="ערוך גלריה זו" style="display: inline-flex; align-items: center; background: #7c3aed; color: #fff; padding: 6px 14px; border-radius: 6px; font-size: 13px; border: none; font-weight: bold; gap: 6px; cursor: pointer; transition: background 0.2s;">
                   ✏️ ערוך גלריה
                 </button>
               ` : ''}
@@ -13274,7 +13274,7 @@ function photoSelectImage(imgUrl, el) {
   squares.forEach(sq => {
     sq.style.borderColor = '#ddd';
   });
-  el.style.borderColor = '#e11d48';
+  el.style.borderColor = '#7c3aed';
 }
 
 function photoSelectRowImage(albumId, imgUrl, thumbEl) {
@@ -13292,7 +13292,7 @@ function photoSelectRowImage(albumId, imgUrl, thumbEl) {
     thumbs.forEach(t => {
       t.style.borderColor = '#ddd';
     });
-    thumbEl.style.borderColor = '#e11d48';
+    thumbEl.style.borderColor = '#7c3aed';
     // עדכון מונה התמונות שעל גבי התמונה (למשל "2 / 5")
     const badge = container.querySelector('.photo-count-badge');
     if (badge && thumbs.length) {
@@ -13308,7 +13308,7 @@ function photoStepImageInContainer(container, dir) {
   if (!container) return;
   const thumbs = Array.from(container.querySelectorAll('.photo-mini-thumb'));
   if (thumbs.length < 2) return;
-  let currentIndex = thumbs.findIndex(t => t.style.borderColor === 'rgb(225, 29, 72)' || t.style.borderColor === '#e11d48');
+  let currentIndex = thumbs.findIndex(t => t.style.borderColor === 'rgb(225, 29, 72)' || t.style.borderColor === '#7c3aed');
   if (currentIndex === -1) currentIndex = 0;
   const newIndex = (currentIndex + dir + thumbs.length) % thumbs.length;
   thumbs[newIndex].click();
@@ -13429,7 +13429,7 @@ function photoCardCarouselSync(sc) {
   const badge = container.querySelector('.photo-count-badge');
   if (badge) badge.textContent = (idx + 1) + ' / ' + total;
   container.querySelectorAll('.photo-mini-thumb').forEach((t, i) => {
-    t.style.borderColor = (i === idx) ? '#e11d48' : '#ddd';
+    t.style.borderColor = (i === idx) ? '#7c3aed' : '#ddd';
   });
 }
 window.photoCardCarouselSync = photoCardCarouselSync;
@@ -13452,7 +13452,7 @@ function photoStepDetailImage(dir, btnEl) {
   const container = btnEl.closest('.art-detail') || document;
   const thumbs = Array.from(container.querySelectorAll('.photo-thumb-square'));
   if (!thumbs.length) return;
-  let currentIndex = thumbs.findIndex(t => t.style.borderColor === 'rgb(225, 29, 72)' || t.style.borderColor === '#e11d48');
+  let currentIndex = thumbs.findIndex(t => t.style.borderColor === 'rgb(225, 29, 72)' || t.style.borderColor === '#7c3aed');
   if (currentIndex === -1) currentIndex = 0;
   let newIndex = (currentIndex + dir + thumbs.length) % thumbs.length;
   thumbs[newIndex].click();
@@ -13611,7 +13611,7 @@ async function openUserProfile(authorId, authorFallbackName) {
             ${img ? `<img src="${escHtml(img)}" style="width:40px; height:40px; border-radius:6px; object-fit:cover;">` : '<div style="width:40px; height:40px; border-radius:6px; background:#eee;"></div>'}
             <div style="font-size:13px; font-weight:bold; color:#222; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escHtml(p.title)}</div>
           </div>
-          <span style="font-size:11px; color:#e11d48; font-weight:bold; white-space:nowrap;">צפייה ➔</span>
+          <span style="font-size:11px; color:#7c3aed; font-weight:bold; white-space:nowrap;">צפייה ➔</span>
         </div>
       `;
     }).join('');
@@ -13863,7 +13863,7 @@ function buildUserPageHTML(authorId, authorName) {
     <div class="art-inner">
       <button onclick="goBackFromUserPage()" style="background:#f1f5f9; border:1px solid #cbd5e1; border-radius:8px; padding:8px 16px; font-size:13px; font-weight:800; cursor:pointer; margin-bottom:16px; color:#334155;">← חזרה</button>
       <div style="background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:20px; margin-bottom:24px; display:flex; align-items:center; gap:16px; box-shadow:0 4px 15px rgba(0,0,0,0.03); direction:rtl; flex-wrap:wrap;">
-        <div style="width:56px; height:56px; border-radius:50%; background:linear-gradient(135deg,#e11d48,#9f1239); color:#fff; display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:900; flex-shrink:0;">${initial}</div>
+        <div style="width:56px; height:56px; border-radius:50%; background:linear-gradient(135deg,#7c3aed,#4c1d95); color:#fff; display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:900; flex-shrink:0;">${initial}</div>
         <div style="flex:1; min-width:0;">
           <div id="user-page-name" style="font-size:20px; font-weight:900; color:#0f172a;">${escHtml(authorName || 'משתמש')}</div>
           <div id="user-page-meta" style="font-size:13px; color:#64748b; margin-top:2px;">📷 ${authorAlbums.length} גלריות שהועלו</div>
@@ -14269,7 +14269,7 @@ function secondhandWantedHowBoxHTML() {
         <span style="background:linear-gradient(135deg,#3b82f6,#2563eb); color:#fff; font-weight:900; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0;">${s.n}</span>
         <div><div style="font-size:13.5px; font-weight:800; color:#0f172a;">${s.t}</div><div style="font-size:12px; color:#64748b; line-height:1.4; margin-top:2px;">${s.d}</div></div>
       </div>`).join('');
-  return `<div class="idea-exec-box"><div style="font-size:16px; font-weight:900; color:#0f172a; border-bottom:2.5px solid #2563eb; padding-bottom:10px; margin-bottom:16px;">🔎 איך זה עובד</div><div style="display:flex; flex-direction:column;">${stepsHTML}</div></div>`;
+  return `<div class="idea-exec-box"><div style="font-size:16px; font-weight:900; color:#0f172a; border-bottom:2.5px solid #7c3aed; padding-bottom:10px; margin-bottom:16px;">🔎 איך זה עובד</div><div style="display:flex; flex-direction:column;">${stepsHTML}</div></div>`;
 }
 window.secondhandWantedHowBoxHTML = secondhandWantedHowBoxHTML;
 
@@ -14293,7 +14293,7 @@ function secondhandOffersBoxHTML(a) {
   }).join('') : '<div style="font-size:13px; color:#94a3b8; text-align:center; padding:12px;">אין הצעות עדיין — היו הראשונים להציע!</div>';
   return `
     <div class="idea-tech-box">
-      <div style="font-size:16px; font-weight:900; color:#0f172a; border-bottom:2.5px solid #2563eb; padding-bottom:10px; margin-bottom:16px;">💰 הצעות (${offers.length})</div>
+      <div style="font-size:16px; font-weight:900; color:#0f172a; border-bottom:2.5px solid #7c3aed; padding-bottom:10px; margin-bottom:16px;">💰 הצעות (${offers.length})</div>
       ${a.budget ? `<div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:12px; padding:12px 14px; margin-bottom:12px;"><div style="font-size:11.5px; color:#1e40af; font-weight:800; margin-bottom:4px;">🎯 תקציב</div><div style="font-size:15px; font-weight:900; color:#1d4ed8;">${escHtml(a.budget)}</div></div>` : ''}
       <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;">${rows}</div>
       ${!a.chosenOffer ? `<button onclick="submitWantedOffer('${artEsc(a.id)}')" style="width:100%; background:linear-gradient(135deg,#3b82f6,#2563eb); color:#fff; border:none; padding:12px; border-radius:12px; font-weight:800; font-size:14px; cursor:pointer; box-shadow:0 4px 14px rgba(37,99,235,0.3);">💰 הגש הצעה</button>` : '<div style="text-align:center; font-size:13px; font-weight:800; color:#2563eb; padding:8px;">✓ נבחרה הצעה — הבקשה נסגרה</div>'}
@@ -14528,7 +14528,7 @@ document.getElementById('photo-save').addEventListener('click', async () => {
       ageRange: (document.getElementById('photo-age') || {}).value || '',
       region: (document.getElementById('photo-region') || {}).value || '',
       ..._shFields,
-      categoryColor: _isShSave ? '#e11d48' : '#10b981',
+      categoryColor: _isShSave ? '#7c3aed' : '#10b981',
       timestamp: new Date().toLocaleDateString('he-IL'),
       createdAt: Date.now(),
       telegramUrl: telegramInput,
@@ -14736,7 +14736,7 @@ function buildRequestsPage() {
     <div class="requests-page" data-page-id="page-requests-main">
       <div class="comm-inner">
         <div style="max-width:820px; margin:0 auto; direction:rtl; text-align:right;">
-          <h2 style="font-size:24px; font-weight:900; color:#0f172a; margin:0 0 6px;">📥 בקשות לאישור <span style="font-size:14px; color:#e11d48;">(למנהל בלבד)</span></h2>
+          <h2 style="font-size:24px; font-weight:900; color:#0f172a; margin:0 0 6px;">📥 בקשות לאישור <span style="font-size:14px; color:#7c3aed;">(למנהל בלבד)</span></h2>
           <p style="color:#64748b; font-size:14px; margin:0 0 20px; line-height:1.5;">כל תוכן שמשתמש מעלה מופיע כאן וממתין לאישורך לפני שיפורסם באתר.</p>
           <div id="pending-requests-list">${pendingRequestsListHTML()}</div>
         </div>
@@ -15019,8 +15019,8 @@ function photoToggleLike(id) {
       btn.classList.toggle('liked', isNowLiked);
       const svg = btn.querySelector('svg');
       if (svg) {
-        svg.setAttribute('fill', isNowLiked ? '#ff2e4d' : 'none');
-        svg.setAttribute('stroke', isNowLiked ? '#ff2e4d' : '#ffffff');
+        svg.setAttribute('fill', isNowLiked ? '#8b5cf6' : 'none');
+        svg.setAttribute('stroke', isNowLiked ? '#8b5cf6' : '#ffffff');
       }
     }
   });
@@ -15030,13 +15030,13 @@ function photoToggleLike(id) {
   allPhotoLikeBtns.forEach(btn => {
     const onclickAttr = btn.getAttribute('onclick') || '';
     if (onclickAttr.includes(id)) {
-      btn.style.background = isNowLiked ? '#ffe4e6' : '#ffffff';
-      btn.style.borderColor = isNowLiked ? '#e11d48' : '#e2e8f0';
-      btn.style.color = isNowLiked ? '#e11d48' : '#1e293b';
+      btn.style.background = isNowLiked ? '#ede9fe' : '#ffffff';
+      btn.style.borderColor = isNowLiked ? '#7c3aed' : '#e2e8f0';
+      btn.style.color = isNowLiked ? '#7c3aed' : '#1e293b';
       const svg = btn.querySelector('svg');
       if (svg) {
-        svg.setAttribute('fill', isNowLiked ? '#e11d48' : 'none');
-        svg.setAttribute('stroke', '#e11d48');
+        svg.setAttribute('fill', isNowLiked ? '#7c3aed' : 'none');
+        svg.setAttribute('stroke', '#7c3aed');
       }
       const span = btn.querySelector('span');
       if (span) {
@@ -15050,11 +15050,11 @@ function photoToggleLike(id) {
   allTgLikeBtns.forEach(btn => {
     const onclickAttr = btn.getAttribute('onclick') || '';
     if (onclickAttr.includes(id) && onclickAttr.includes('photoToggleLike')) {
-      btn.style.color = isNowLiked ? '#ff2e4d' : '#ffffff';
+      btn.style.color = isNowLiked ? '#8b5cf6' : '#ffffff';
       const svg = btn.querySelector('svg');
       if (svg) {
-        svg.setAttribute('fill', isNowLiked ? '#ff2e4d' : 'none');
-        svg.setAttribute('stroke', isNowLiked ? '#ff2e4d' : 'currentColor');
+        svg.setAttribute('fill', isNowLiked ? '#8b5cf6' : 'none');
+        svg.setAttribute('stroke', isNowLiked ? '#8b5cf6' : 'currentColor');
       }
       const span = btn.querySelector('span');
       if (span && !isNaN(parseInt(span.textContent, 10))) {
@@ -18247,7 +18247,7 @@ const IDEAS_SAMPLES = [
     summary: 'אזור ייעודי בתוך כל קהילה שבו חברים יכולים לשאול שאלות ולקבל תשובות מהקהילה.',
     desc: 'מתן אפשרות לחברי הקהילה להעלות שאלות, להצביע לתשובות הטובות ביותר ולסמן תשובה נבחרת כפתרון.',
     category: 'כללי',
-    categoryColor: '#e11d48',
+    categoryColor: '#7c3aed',
     author: 'דניאל מ.',
     authorId: 'sample3',
     verified: false,
@@ -18545,7 +18545,7 @@ function communityShortcutsHTML() {
       </div>
     `;
   };
-  return card('תמונות', '🖼️', findPage('photos'), 'linear-gradient(135deg,#e11d48,#9f1239)')
+  return card('תמונות', '🖼️', findPage('photos'), 'linear-gradient(135deg,#7c3aed,#4c1d95)')
        + card('קומיקס', '💥', findPage('comics'), 'linear-gradient(135deg,#8b5cf6,#6d28d9)')
        + card('סיפורים', '📖', findPage('stories'), 'linear-gradient(135deg,#0ea5e9,#0369a1)');
 }
@@ -18578,8 +18578,8 @@ function sidePagesShortcutsHTML() {
   }).join('');
   return `
     <div class="photo-section-row side-pages-mobile-row" style="margin-bottom: 32px; background: #ffffff; padding: 18px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
-      <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:2.5px solid #2563eb; padding-bottom:10px; margin-bottom:18px;">
-        <h3 style="margin:0; font-size:18px; font-weight:900; color:#1e3a8a;">עמודי צד</h3>
+      <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:2.5px solid #7c3aed; padding-bottom:10px; margin-bottom:18px;">
+        <h3 style="margin:0; font-size:18px; font-weight:900; color:#2e1065;">עמודי צד</h3>
       </div>
       <div class="art-rows">${cards}</div>
     </div>`;
@@ -18976,7 +18976,7 @@ function openWatchHistoryPage(skipPull) {
         <div style="font-size:48px; margin-bottom:16px; opacity:0.6;">🕒</div>
         <h3 style="margin:0 0 8px; font-size:20px; font-weight:800;">היסטוריית הצפייה שלך ריקה</h3>
         <p style="margin:0 0 20px; color:#64748b; font-size:14px; max-width:400px;">כל תמונה, סיפור או רעיון שתיכנס אליהם יופיעו כאן באופן אוטומטי.</p>
-        <button onclick="if(typeof renderPhotosPage==='function'){renderPhotosPage();}else{location.reload();}" style="background:#e11d48; color:#fff; border:none; padding:10px 24px; border-radius:10px; font-weight:bold; font-size:14px; cursor:pointer; box-shadow:0 4px 12px rgba(225,29,72,0.3);">גלה פריטים באתר</button>
+        <button onclick="if(typeof renderPhotosPage==='function'){renderPhotosPage();}else{location.reload();}" style="background:#7c3aed; color:#fff; border:none; padding:10px 24px; border-radius:10px; font-weight:bold; font-size:14px; cursor:pointer; box-shadow:0 4px 12px rgba(124, 58, 237,0.3);">גלה פריטים באתר</button>
       </div>
     `;
   } else {
@@ -19083,7 +19083,7 @@ function openFavoritesPage(tab) {
         <p style="margin:0 0 24px; color:#64748b; font-size:14px; max-width:420px;">
           ${currentFavTab === 'likes' ? 'לחץ ❤️ על גלריה, תמונה או סיפור כדי להוסיף אותם למועדפים שלך.' : 'לחץ על שמירה בגלריה כדי לשמור אותה לצפייה מאוחרת בדפדפן זה.'}
         </p>
-        <button onclick="if(typeof renderPhotosPage==='function'){renderPhotosPage();}else{location.reload();}" style="background:#e11d48; color:#fff; border:none; padding:12px 28px; border-radius:10px; font-weight:800; font-size:15px; cursor:pointer; box-shadow:0 4px 14px rgba(225,29,72,0.35);">Browse items / גלה פריטים 🚀</button>
+        <button onclick="if(typeof renderPhotosPage==='function'){renderPhotosPage();}else{location.reload();}" style="background:#7c3aed; color:#fff; border:none; padding:12px 28px; border-radius:10px; font-weight:800; font-size:15px; cursor:pointer; box-shadow:0 4px 14px rgba(124, 58, 237,0.35);">Browse items / גלה פריטים 🚀</button>
       </div>
     `;
   } else {
@@ -19099,7 +19099,7 @@ function openFavoritesPage(tab) {
             <h3 style="margin:0 0 6px; font-size:14px; font-weight:800; line-height:1.3; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;">${escHtml(item.title || '')}</h3>
             <div style="font-size:11px; color:#64748b; display:flex; justify-content:space-between; align-items:center;">
               <span>${escHtml(item.category || 'גלריה')} ${item.author ? '· ' + escHtml(item.author) : ''}</span>
-              <span style="color:#e11d48; font-weight:bold;">${currentFavTab === 'likes' ? '❤️ בלייק' : '🔖 שמור'}</span>
+              <span style="color:#7c3aed; font-weight:bold;">${currentFavTab === 'likes' ? '❤️ בלייק' : '🔖 שמור'}</span>
             </div>
           </div>
         </div>
@@ -19118,11 +19118,11 @@ function openFavoritesPage(tab) {
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:2px solid #f1f5f9; padding-bottom:14px; flex-wrap:wrap; gap:12px;">
         <div style="display:flex; align-items:center; gap:12px;">
           <h1 style="margin:0; font-size:24px; font-weight:900; letter-spacing:-0.5px;">FAVORITES / מועדפים ושמורים</h1>
-          <span style="background:#e11d48; color:#fff; padding:3px 10px; border-radius:12px; font-size:12px; font-weight:800;">${targetCount} פריטים</span>
+          <span style="background:#7c3aed; color:#fff; padding:3px 10px; border-radius:12px; font-size:12px; font-weight:800;">${targetCount} פריטים</span>
         </div>
         <div style="display:flex; gap:8px;">
-          <button onclick="openFavoritesPage('likes')" style="padding:8px 18px; border-radius:10px; border:none; font-weight:800; font-size:13px; cursor:pointer; transition:all 0.2s; ${currentFavTab === 'likes' ? 'background:#e11d48; color:#fff; box-shadow:0 3px 10px rgba(225,29,72,0.3);' : 'background:#f1f5f9; color:#475569;'}">❤️ בלייקים שלי (${likedIds.length})</button>
-          <button onclick="openFavoritesPage('saves')" style="padding:8px 18px; border-radius:10px; border:none; font-weight:800; font-size:13px; cursor:pointer; transition:all 0.2s; ${currentFavTab === 'saves' ? 'background:#e11d48; color:#fff; box-shadow:0 3px 10px rgba(225,29,72,0.3);' : 'background:#f1f5f9; color:#475569;'}">🔖 בשמורים שלי (${savedIds.length})</button>
+          <button onclick="openFavoritesPage('likes')" style="padding:8px 18px; border-radius:10px; border:none; font-weight:800; font-size:13px; cursor:pointer; transition:all 0.2s; ${currentFavTab === 'likes' ? 'background:#7c3aed; color:#fff; box-shadow:0 3px 10px rgba(124, 58, 237,0.3);' : 'background:#f1f5f9; color:#475569;'}">❤️ בלייקים שלי (${likedIds.length})</button>
+          <button onclick="openFavoritesPage('saves')" style="padding:8px 18px; border-radius:10px; border:none; font-weight:800; font-size:13px; cursor:pointer; transition:all 0.2s; ${currentFavTab === 'saves' ? 'background:#7c3aed; color:#fff; box-shadow:0 3px 10px rgba(124, 58, 237,0.3);' : 'background:#f1f5f9; color:#475569;'}">🔖 בשמורים שלי (${savedIds.length})</button>
         </div>
       </div>
       ${contentHTML}
@@ -20941,7 +20941,7 @@ function crmOpenCustomer(uid) {
     document.body.appendChild(m);
   }
   const tasks = Object.entries(CRM.data.crm.tasks).filter(([, t]) => t.uid === uid).map(([id, t]) => Object.assign({ id }, t)).sort((a, b) => (a.done - b.done) || ((a.due || 0) - (b.due || 0)));
-  const evColor = { join: '#2563eb', chat: '#7c3aed', verify: '#0891b2', submit: '#7c3aed', event: '#d97706', comment: '#16a34a', upload: '#e11d48', question: '#d97706', offer: '#e11d48', search: '#64748b' };
+  const evColor = { join: '#2563eb', chat: '#7c3aed', verify: '#0891b2', submit: '#7c3aed', event: '#d97706', comment: '#16a34a', upload: '#7c3aed', question: '#d97706', offer: '#7c3aed', search: '#64748b' };
   const info = [
     ['אימייל', c.email], ['טלגרם', c.telegram ? '@' + c.telegram.replace(/^@/, '') : ''], ['טלפון', c.phone], ['גיל', c.age], ['מיקום', c.location],
     ['הצטרפות', crmFmtDate(c.firstSeen)], ['פעילות אחרונה', crmAgo(c.lastSeen)], ['כניסות', c.logins ? crmNum(c.logins) : ''],

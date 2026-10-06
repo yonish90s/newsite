@@ -14,7 +14,7 @@
   <!-- ספריית localforage לשמירת תמונות -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
   <!-- קישור לקובץ העיצוב החיצוני (עם פרמטר למניעת שמירה במטמון) -->
-  <link rel="stylesheet" href="./style.css?v=1373">
+  <link rel="stylesheet" href="./style.css?v=1376">
 </head>
 <body class="light-mode">
   <!-- שער אישור גיל (Age Gate Overlay) -->
@@ -152,7 +152,7 @@
       <!-- דף הנייר המרכזי -->
       <div class="gate-paper-card">
         <!-- כותרת ראשית של השער -->
-        <div style="background: rgba(225, 29, 72, 0.05); border: 2px dashed #e11d48; padding: 10px 30px; border-radius: 8px; margin-bottom: 30px;">
+        <div style="background: rgba(124, 58, 237, 0.05); border: 2px dashed #7c3aed; padding: 10px 30px; border-radius: 8px; margin-bottom: 30px;">
           <h1 style="margin: 0; font-size: 32px; font-weight: 900; color: #b91c1c; letter-spacing: 1px; font-family: system-ui;">הכרויות דרך המיטה</h1>
         </div>
 
@@ -651,7 +651,7 @@
 
     <div style="display:flex; gap:10px; margin-top:8px;">
       <button id="photo-cancel" style="flex:1; padding:10px; border:1px solid #ddd; border-radius:8px; background:#fff; cursor:pointer; font-size:14px;">ביטול</button>
-      <button id="photo-save" style="flex:1; padding:10px; border:none; border-radius:8px; background:#e11d48; color:#fff; cursor:pointer; font-size:14px; font-weight:700;">שמור גלריה</button>
+      <button id="photo-save" style="flex:1; padding:10px; border:none; border-radius:8px; background:#7c3aed; color:#fff; cursor:pointer; font-size:14px; font-weight:700;">שמור גלריה</button>
     </div>
   </div>
 </div>
@@ -678,7 +678,7 @@
     </label>
     <div style="display:flex; gap:10px; margin-top:8px;">
       <button id="community-cancel" style="flex:1; padding:10px; border:1px solid #ddd; border-radius:8px; background:#fff; cursor:pointer; font-size:14px;">ביטול</button>
-      <button id="community-save" style="flex:1; padding:10px; border:none; border-radius:8px; background:#e11d48; color:#fff; cursor:pointer; font-size:14px; font-weight:700;">צור קהילה</button>
+      <button id="community-save" style="flex:1; padding:10px; border:none; border-radius:8px; background:#7c3aed; color:#fff; cursor:pointer; font-size:14px; font-weight:700;">צור קהילה</button>
     </div>
   </div>
 </div>
@@ -722,7 +722,7 @@
 
     <div style="display:flex; gap:10px; margin-top:8px;">
       <button onclick="document.getElementById('offer-modal').style.display='none'" style="flex:1; padding:10px; border:1px solid #ddd; border-radius:8px; background:#fff; cursor:pointer; font-size:14px;">ביטול</button>
-      <button onclick="saveOffer()" style="flex:1; padding:10px; border:none; border-radius:8px; background:#e11d48; color:#fff; cursor:pointer; font-size:14px; font-weight:700;">פרסם הצעה</button>
+      <button onclick="saveOffer()" style="flex:1; padding:10px; border:none; border-radius:8px; background:#7c3aed; color:#fff; cursor:pointer; font-size:14px; font-weight:700;">פרסם הצעה</button>
     </div>
   </div>
 </div>
@@ -773,12 +773,12 @@
       </div>
     </div>
     <label style="display:flex; align-items:center; gap:8px; font-size:13.5px; font-weight:700; color:#334155; cursor:pointer;">
-      <input type="checkbox" id="question-anon" style="width:18px; height:18px; accent-color:#e11d48; cursor:pointer;">
+      <input type="checkbox" id="question-anon" style="width:18px; height:18px; accent-color:#7c3aed; cursor:pointer;">
       🕶️ לשאול בעילום שם (אנונימי)
     </label>
     <div style="display:flex; gap:10px; margin-top:8px;">
       <button onclick="document.getElementById('question-modal').style.display='none'" style="flex:1; padding:10px; border:1px solid #ddd; border-radius:8px; background:#fff; cursor:pointer; font-size:14px;">ביטול</button>
-      <button onclick="saveQuestion()" style="flex:1; padding:10px; border:none; border-radius:8px; background:#e11d48; color:#fff; cursor:pointer; font-size:14px; font-weight:700;">פרסם שאלה</button>
+      <button onclick="saveQuestion()" style="flex:1; padding:10px; border:none; border-radius:8px; background:#7c3aed; color:#fff; cursor:pointer; font-size:14px; font-weight:700;">פרסם שאלה</button>
     </div>
   </div>
 </div>
@@ -947,7 +947,7 @@
     
     <!-- פרטי הפרופיל -->
     <div style="display:flex; align-items:center; gap:16px; margin-bottom:24px; background:#f9fafb; padding:16px; border-radius:16px; border:1px solid #f3f4f6;">
-      <div style="width:64px; height:64px; border-radius:50%; background:#e11d48; display:flex; align-items:center; justify-content:center; color:white; font-size:28px; font-weight:bold; box-shadow:0 4px 10px rgba(225,29,72,0.2);">
+      <div style="width:64px; height:64px; border-radius:50%; background:#7c3aed; display:flex; align-items:center; justify-content:center; color:white; font-size:28px; font-weight:bold; box-shadow:0 4px 10px rgba(124, 58, 237,0.2);">
         👤
       </div>
       <div>
@@ -1106,7 +1106,7 @@
       <button onclick="document.getElementById('user-likes-saves-modal').style.display='none'" style="background:none; border:none; color:#a1a1aa; font-size:20px; cursor:pointer;">✕</button>
     </div>
     <div style="display:flex; gap:10px; margin-bottom:14px;">
-      <button id="tab-likes-btn" onclick="switchLikesTab('likes')" style="flex:1; padding:8px; background:#e11d48; color:#fff; border:none; border-radius:8px; font-weight:bold; cursor:pointer; font-size:13px;">❤️ בלייקים שלי</button>
+      <button id="tab-likes-btn" onclick="switchLikesTab('likes')" style="flex:1; padding:8px; background:#7c3aed; color:#fff; border:none; border-radius:8px; font-weight:bold; cursor:pointer; font-size:13px;">❤️ בלייקים שלי</button>
       <button id="tab-saves-btn" onclick="switchLikesTab('saves')" style="flex:1; padding:8px; background:#2a2a34; color:#a1a1aa; border:none; border-radius:8px; font-weight:bold; cursor:pointer; font-size:13px;">🔖 בשמורים שלי</button>
     </div>
     <div id="user-likes-saves-list" style="max-height:360px; overflow-y:auto; display:flex; flex-direction:column; gap:10px;">
@@ -1128,7 +1128,7 @@
   </button>
 </div>
 
-  <script type="module" src="./script.js?v=1366"></script>
+  <script type="module" src="./script.js?v=1370"></script>
   <script defer src="./a11y.js?v=1"></script>
 </body>
 </html>
