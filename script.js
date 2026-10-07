@@ -12439,7 +12439,10 @@ function homeWelcomeHeroHTML() {
         <div class="hw-text">
           <h1 class="hw-title">יוצרים, משתפים,<br>מתחברים.</h1>
           <p class="hw-sub">תמונות, קומיקס וסיפורים מהקהילה — כל מה שאתם יוצרים, במקום אחד.</p>
-          <button type="button" class="hw-cta" onclick="homeWelcomeToUpload()">העלו תוכן</button>
+          <div class="hw-actions">
+            <button type="button" class="hw-cta" onclick="homeWelcomeToUpload()">העלו תוכן</button>
+            ${homeTodayStatsHTML()}
+          </div>
         </div>
         <div class="hw-cards">
           ${card('תמונות', 'גלריות מהקהילה', icons.photos, 'homeOpenPhotos()', '#c9bdf0', 'hw-c1')}
@@ -12448,6 +12451,48 @@ function homeWelcomeHeroHTML() {
         </div>
       </div>
     </section>`;
+}
+
+// נתוני היום בבאנר: גולשים שנכנסו היום (מונה ביקורים יומי) ופוסטים שעלו היום (מהתוכן שפורסם)
+window._homeTodayVisitors = window._homeTodayVisitors ?? null;
+function homePostsTodayCount() {
+  const start = new Date(); start.setHours(0, 0, 0, 0);
+  const t0 = start.getTime();
+  const ts = (it) => {
+    if (!it) return 0;
+    if (typeof it.createdAt === 'number') return it.createdAt;
+    const m = String(it.id || '').match(/(\d{13})/);
+    return m ? Number(m[1]) : 0;
+  };
+  const items = [].concat(
+    (typeof getPhotosForHome === 'function') ? getPhotosForHome() : [],
+    (typeof getAllStoriesFromPages === 'function') ? getAllStoriesFromPages() : []
+  );
+  return items.filter(it => ts(it) >= t0).length;
+}
+function homeTodayStatsHTML() {
+  setTimeout(homeLoadTodayVisitors, 0);
+  const v = window._homeTodayVisitors;
+  const ico = (d) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+  return `
+    <div class="hw-stats">
+      <div class="hw-stat">
+        <span class="hw-stat-ico live">${ico('<circle cx="9" cy="8" r="3.2"/><path d="M3 19.5v-.8A5 5 0 0 1 8 13.7h2a5 5 0 0 1 5 5v.8"/><path d="M16 4.6a3.2 3.2 0 0 1 0 6.3M18.5 13.9a5 5 0 0 1 2.5 4.3v1.3"/>')}</span>
+        <span class="hw-stat-text"><b class="hw-stat-visitors">${v === null ? '—' : v.toLocaleString('he-IL')}</b><small>גולשים היום</small></span>
+      </div>
+      <div class="hw-stat">
+        <span class="hw-stat-ico">${ico('<path d="M12 19V6M6 11l6-6 6 6"/><path d="M5 20h14"/>')}</span>
+        <span class="hw-stat-text"><b>${homePostsTodayCount().toLocaleString('he-IL')}</b><small>פוסטים עלו היום</small></span>
+      </div>
+    </div>`;
+}
+async function homeLoadTodayVisitors() {
+  try {
+    const snap = await get(ref(db, 'website/analytics/daily/' + _analyticsDayKey()));
+    const n = snap.exists() ? Number(snap.val()) || 0 : 0;
+    window._homeTodayVisitors = n;
+    document.querySelectorAll('.hw-stat-visitors').forEach(el => { el.textContent = n.toLocaleString('he-IL'); });
+  } catch (e) {}
 }
 
 function homeWelcomeToUpload() {
