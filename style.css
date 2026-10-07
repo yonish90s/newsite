@@ -8376,3 +8376,9 @@ html body .auth-modal-footer a { color: var(--pink, #ec4899) !important; font-we
 @media (max-width: 860px) {
   .hw-actions, .hw-stats { justify-content: center; }
 }
+
+/* סיפורים: טקסט הסיפור מודגש יותר */
+html body .story-article-body,
+html body .story-article-body p,
+html body .story-text-page,
+html body .story-text-page p { font-weight: 800 !important; }
