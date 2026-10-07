@@ -8382,3 +8382,6 @@ html body .story-article-body,
 html body .story-article-body p,
 html body .story-text-page,
 html body .story-text-page p { font-weight: 800 !important; }
+
+/* סינונים: אפשרויות הבחירה מודגשות */
+html body .pf-check-label { font-weight: 800 !important; }
