@@ -7980,6 +7980,7 @@ let artPagObserver = null;
 // לקרוא לעימוד בכל אתר קריאה בנפרד מסנכרנים אותו אחרי כל שינוי ב-DOM
 function artSyncPagination() {
   if (typeof mainContent === 'undefined' || !mainContent) return;
+  if (typeof avatarHydrate === 'function') avatarHydrate(mainContent);
   // סרגל הטאבים במובייל: "תמונות" מסומן כשעמוד התמונות פתוח
   const _mtp = document.getElementById('mtab-photos');
   if (_mtp) _mtp.classList.toggle('active', !!mainContent.querySelector('.photos-page[data-section="photos"]:not(.home-feed-photos)'));
@@ -12691,6 +12692,226 @@ function homeWelcomeToUpload() {
 window.homeWelcomeToUpload = homeWelcomeToUpload;
 
 // ============================================================
+// דמות אישית (אווטאר מצויר) — המשתמש מעצב פרצוף: עור, שיער, כובע, עיניים, פה, זקן, אביזרים, רקע
+// נשמר ב-website/users/{uid}/profile/avatar כאובייקט מספרים קטן, ומצויר כ-SVG בכל מקום שמופיע משתמש
+// ============================================================
+const AV_SKIN = ['#ffd8b8', '#f1c27d', '#c68642', '#8d5524', '#b794f6', '#ffa45c', '#7ee0a6'];
+const AV_HAIR_C = ['#2b1b0e', '#6b3e1f', '#e8b04a', '#d9480f', '#7c3aed', '#ec4899', '#f1f5f9', '#1e40af'];
+const AV_COLORS = ['#7c3aed', '#f97316', '#ec4899', '#facc15', '#14b8a6', '#1e1033', '#0ea5e9', '#ef4444'];
+const AV_COUNTS = { h: 7, hat: 6, e: 5, m: 5, f: 3, a: 4 };
+const AV_DEFAULT = { s: 5, h: 1, hc: 0, hat: 0, tc: 1, e: 1, m: 0, a: 0, f: 0, b: 0, c: 1 };
+const AV_INK = '#1e1033';
+
+function avNormalize(cfg) {
+  const out = Object.assign({}, AV_DEFAULT);
+  const lim = { s: AV_SKIN.length, hc: AV_HAIR_C.length, tc: AV_COLORS.length, b: AV_COLORS.length, c: AV_COLORS.length, ...AV_COUNTS };
+  Object.keys(out).forEach(k => {
+    const v = cfg && Number(cfg[k]);
+    if (Number.isInteger(v) && v >= 0 && v < lim[k]) out[k] = v;
+  });
+  return out;
+}
+
+function avatarSVG(cfg) {
+  const c = avNormalize(cfg);
+  const skin = AV_SKIN[c.s], hair = AV_HAIR_C[c.hc], hatC = AV_COLORS[c.tc], bg = AV_COLORS[c.b], shirt = AV_COLORS[c.c];
+  const P = [];
+  P.push(`<circle cx="50" cy="50" r="50" fill="${bg}"/>`);
+  // שיער ארוך — מאחורי הראש
+  if (c.h === 5) P.push(`<path d="M24 50 C22 22 36 15 50 15 C64 15 78 22 76 50 L79 80 C70 83 64 74 65 60 L35 60 C36 74 30 83 21 80Z" fill="${hair}"/>`);
+  P.push(`<path d="M13 100 C15 80 31 73 50 73 C69 73 85 80 87 100Z" fill="${shirt}"/>`);
+  P.push(`<path d="M40 80 Q50 88 60 80" fill="none" stroke="rgba(0,0,0,.18)" stroke-width="3" stroke-linecap="round"/>`);
+  P.push(`<rect x="43" y="64" width="14" height="13" rx="5" fill="${skin}"/><rect x="43" y="64" width="14" height="6" fill="rgba(0,0,0,.12)"/>`);
+  P.push(`<circle cx="26" cy="54" r="6.5" fill="${skin}"/><circle cx="74" cy="54" r="6.5" fill="${skin}"/>`);
+  P.push(`<ellipse cx="50" cy="50" rx="24.5" ry="27" fill="${skin}"/>`);
+  // זקן (בצבע השיער)
+  if (c.f === 2) P.push(`<path d="M25.5 50 C25 75 37 81 50 81 C63 81 75 75 74.5 50 C71 64 62 69 50 69 C38 69 29 64 25.5 50Z" fill="${hair}"/>`);
+  // שיער מקדימה
+  const front = {
+    1: `<path d="M25.5 47 C25 25 38 19 50 19 C62 19 75 25 74.5 47 C68 37 60 33 50 33 C40 33 32 37 25.5 47Z" fill="${hair}"/>`,
+    2: `<path d="M25.5 47 L27 30 L34 33 L36 18 L43 28 L49 14 L55 28 L62 17 L65 31 L73 28 L74.5 47 C67 38 59 34 50 34 C41 34 33 38 25.5 47Z" fill="${hair}"/>`,
+    3: [[29, 40], [34, 29], [44, 23], [56, 23], [66, 29], [71, 40], [40, 30], [60, 30]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="9" fill="${hair}"/>`).join(''),
+    4: `<path d="M25.5 47 C25 25 38 19 50 19 C62 19 75 25 74.5 47 C68 37 60 33 50 33 C40 33 32 37 25.5 47Z" fill="${hair}"/><circle cx="50" cy="15" r="9.5" fill="${hair}"/>`,
+    5: `<path d="M25.5 49 C25 25 38 19 50 19 C62 19 75 25 74.5 49 C70 39 62 33 50 36 C38 33 30 39 25.5 49Z" fill="${hair}"/>`,
+    6: `<path d="M44 38 L43 12 C45 7 55 7 57 12 L56 38Z" fill="${hair}"/>`
+  }[c.h];
+  if (front) P.push(front);
+  // לחיים
+  P.push(`<circle cx="35" cy="61" r="4.2" fill="#ff6b9a" opacity=".35"/><circle cx="65" cy="61" r="4.2" fill="#ff6b9a" opacity=".35"/>`);
+  // עיניים
+  const eyes = {
+    0: `<circle cx="40" cy="52" r="3.6" fill="${AV_INK}"/><circle cx="60" cy="52" r="3.6" fill="${AV_INK}"/>`,
+    1: `<circle cx="40" cy="51" r="6.2" fill="#fff"/><circle cx="60" cy="51" r="6.2" fill="#fff"/><circle cx="41" cy="52" r="3.6" fill="${AV_INK}"/><circle cx="61" cy="52" r="3.6" fill="${AV_INK}"/><circle cx="42.3" cy="50.5" r="1.3" fill="#fff"/><circle cx="62.3" cy="50.5" r="1.3" fill="#fff"/>`,
+    2: `<path d="M35 53 Q40 46.5 45 53 M55 53 Q60 46.5 65 53" fill="none" stroke="${AV_INK}" stroke-width="2.8" stroke-linecap="round"/>`,
+    3: `<circle cx="40" cy="52" r="3.6" fill="${AV_INK}"/><path d="M55 52 Q60 47 65 52" fill="none" stroke="${AV_INK}" stroke-width="2.8" stroke-linecap="round"/>`,
+    4: `<path d="M35 52 L45 52 M55 52 L65 52" stroke="${AV_INK}" stroke-width="2.8" stroke-linecap="round"/>`
+  }[c.e];
+  P.push(eyes);
+  // שפם
+  if (c.f === 1) P.push(`<path d="M39 62 Q44.5 57 50 60.5 Q55.5 57 61 62 Q55.5 64.5 50 62.2 Q44.5 64.5 39 62Z" fill="${hair}"/>`);
+  // פה
+  const mouth = {
+    0: `<path d="M42 65 Q50 72 58 65" fill="none" stroke="${AV_INK}" stroke-width="2.8" stroke-linecap="round"/>`,
+    1: `<path d="M40 63.5 Q50 76 60 63.5Z" fill="${AV_INK}"/><path d="M42.5 64 L57.5 64 L56.5 66.5 L43.5 66.5Z" fill="#fff"/>`,
+    2: `<ellipse cx="50" cy="67" rx="5" ry="4.3" fill="${AV_INK}"/>`,
+    3: `<path d="M43 67 Q52 70 58 63" fill="none" stroke="${AV_INK}" stroke-width="2.8" stroke-linecap="round"/>`,
+    4: `<path d="M41 64 Q50 75 59 64Z" fill="${AV_INK}"/><ellipse cx="50" cy="70" rx="4.5" ry="3" fill="#ff6b9a"/>`
+  }[c.m];
+  P.push(mouth);
+  // אביזרים
+  if (c.a === 1) P.push(`<g fill="none" stroke="${AV_INK}" stroke-width="2.4"><circle cx="40" cy="52" r="7.5"/><circle cx="60" cy="52" r="7.5"/><path d="M47.5 52 Q50 49.5 52.5 52 M32.5 51 L26 49 M67.5 51 L74 49"/></g>`);
+  if (c.a === 2) P.push(`<g fill="${AV_INK}"><rect x="31" y="46" width="17" height="11" rx="4"/><rect x="52" y="46" width="17" height="11" rx="4"/></g><path d="M48 50 L52 50 M31 49 L26 47 M69 49 L74 47" stroke="${AV_INK}" stroke-width="2.4"/><path d="M34 48.5 L39 48.5" stroke="#fff" stroke-opacity=".5" stroke-width="1.6" stroke-linecap="round"/>`);
+  if (c.a === 3) P.push(`<circle cx="25" cy="62" r="2.6" fill="#facc15" stroke="${AV_INK}" stroke-width="1"/><circle cx="75" cy="62" r="2.6" fill="#facc15" stroke="${AV_INK}" stroke-width="1"/>`);
+  // כובעים
+  const hat = {
+    1: `<path d="M24.5 43 C24 21 76 21 75.5 43Z" fill="${hatC}"/><path d="M47 42 C60 39.5 80 40 92 46.5 C81 49.5 60 48 47 46.5Z" fill="${hatC}"/><path d="M24.5 43 L75.5 43" stroke="rgba(0,0,0,.2)" stroke-width="2"/><circle cx="50" cy="22.5" r="2.2" fill="rgba(0,0,0,.25)"/>`,
+    2: `<path d="M25 44 C25 17 75 17 75 44Z" fill="${hatC}"/><rect x="23.5" y="38" width="53" height="9" rx="4.5" fill="${hatC}"/><rect x="23.5" y="38" width="53" height="9" rx="4.5" fill="rgba(255,255,255,.18)"/><circle cx="50" cy="16" r="6" fill="#fff"/>`,
+    3: `<path d="M27 41 L28.5 19 L39 30 L50 13 L61 30 L71.5 19 L73 41Z" fill="#facc15" stroke="${AV_INK}" stroke-width="1.6" stroke-linejoin="round"/><circle cx="50" cy="31" r="2.6" fill="#ef4444"/><circle cx="37" cy="35" r="2" fill="#0ea5e9"/><circle cx="63" cy="35" r="2" fill="#0ea5e9"/>`,
+    4: `<path d="M36 36 L50 3 L64 36Z" fill="${hatC}"/><path d="M40 27 L60 27 M44 17 L56 17" stroke="#fff" stroke-opacity=".55" stroke-width="3"/><circle cx="50" cy="4" r="4.5" fill="#facc15"/>`,
+    5: `<rect x="33" y="7" width="34" height="31" rx="3" fill="${hatC}"/><rect x="33" y="29" width="34" height="5" fill="rgba(255,255,255,.3)"/><rect x="23" y="35" width="54" height="7" rx="3.5" fill="${hatC}"/>`
+  }[c.hat];
+  if (hat) P.push(hat);
+  return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs><clipPath id="avc"><circle cx="50" cy="50" r="50"/></clipPath></defs><g clip-path="url(#avc)">${P.join('')}</g></svg>`;
+}
+window.avatarSVG = avatarSVG;
+
+// --- מטמון דמויות לפי משתמש + "הידרציה" של עיגולי שם ---
+const avatarCache = {};      // uid → config | null (אין דמות)
+const avatarPending = new Set();
+function avatarHydrate(root) {
+  root = root || document;
+  const slots = root.querySelectorAll('[data-av-uid]:not([data-av-done])');
+  const need = new Set();
+  slots.forEach(el => {
+    const uid = el.getAttribute('data-av-uid');
+    if (!uid) return;
+    if (uid in avatarCache) {
+      el.setAttribute('data-av-done', '1');
+      if (avatarCache[uid]) { el.innerHTML = avatarSVG(avatarCache[uid]); el.classList.add('has-av'); }
+    } else need.add(uid);
+  });
+  need.forEach(uid => {
+    if (avatarPending.has(uid)) return;
+    avatarPending.add(uid);
+    get(ref(db, `website/users/${uid}/profile/avatar`)).then(snap => {
+      avatarCache[uid] = snap.exists() ? avNormalize(snap.val()) : null;
+    }).catch(() => { avatarCache[uid] = null; }).finally(() => {
+      avatarPending.delete(uid);
+      avatarHydrate(document);
+    });
+  });
+}
+window.avatarHydrate = avatarHydrate;
+function avatarRefresh(uid) {
+  document.querySelectorAll(`[data-av-uid="${CSS.escape(uid)}"]`).forEach(el => el.removeAttribute('data-av-done'));
+  avatarHydrate(document);
+}
+
+// --- עורך הדמות ---
+let avEdit = null;
+let avTab = 'face';
+const AV_TABS = [
+  ['face', 'פנים'], ['hair', 'שיער'], ['hat', 'כובע'], ['eyes', 'עיניים'],
+  ['mouth', 'פה'], ['beard', 'זקן'], ['acc', 'אביזרים'], ['bg', 'רקע וחולצה']
+];
+function avOptionsHTML() {
+  const swatches = (key, colors, label) => `
+    <div class="av-group"><div class="av-group-title">${label}</div><div class="av-swatches">
+      ${colors.map((col, i) => `<button type="button" class="av-sw${avEdit[key] === i ? ' on' : ''}" style="--sw:${col}" onclick="avSet('${key}',${i})" aria-label="${label} ${i + 1}"></button>`).join('')}
+    </div></div>`;
+  const shapes = (key, count, label) => `
+    <div class="av-group"><div class="av-group-title">${label}</div><div class="av-shapes">
+      ${Array.from({ length: count }, (_, i) => `<button type="button" class="av-shape${avEdit[key] === i ? ' on' : ''}" onclick="avSet('${key}',${i})">${avatarSVG(Object.assign({}, avEdit, { [key]: i }))}</button>`).join('')}
+    </div></div>`;
+  switch (avTab) {
+    case 'face': return swatches('s', AV_SKIN, 'צבע עור');
+    case 'hair': return shapes('h', AV_COUNTS.h, 'תסרוקת') + swatches('hc', AV_HAIR_C, 'צבע שיער');
+    case 'hat': return shapes('hat', AV_COUNTS.hat, 'כובע') + swatches('tc', AV_COLORS, 'צבע כובע');
+    case 'eyes': return shapes('e', AV_COUNTS.e, 'עיניים');
+    case 'mouth': return shapes('m', AV_COUNTS.m, 'פה');
+    case 'beard': return shapes('f', AV_COUNTS.f, 'זקן ושפם') + swatches('hc', AV_HAIR_C, 'צבע (כמו השיער)');
+    case 'acc': return shapes('a', AV_COUNTS.a, 'אביזרים');
+    case 'bg': return swatches('b', AV_COLORS, 'צבע רקע') + swatches('c', AV_COLORS, 'צבע חולצה');
+  }
+  return '';
+}
+function avRenderEditor() {
+  const m = document.getElementById('av-editor');
+  if (!m) return;
+  m.querySelector('.av-preview').innerHTML = avatarSVG(avEdit);
+  m.querySelector('.av-tabs').innerHTML = AV_TABS.map(([k, l]) => `<button type="button" class="av-tab${avTab === k ? ' on' : ''}" onclick="avSetTab('${k}')">${l}</button>`).join('');
+  m.querySelector('.av-options').innerHTML = avOptionsHTML();
+}
+function openAvatarEditor() {
+  const user = auth.currentUser;
+  if (!user || user.isAnonymous) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
+  avEdit = avNormalize(avatarCache[user.uid] || AV_DEFAULT);
+  avTab = 'face';
+  let m = document.getElementById('av-editor');
+  if (!m) {
+    m = document.createElement('div');
+    m.id = 'av-editor';
+    m.className = 'av-overlay';
+    m.innerHTML = `
+      <div class="av-modal" role="dialog" aria-label="עיצוב הדמות שלי">
+        <button type="button" class="av-close" onclick="closeAvatarEditor()" aria-label="סגירה">✕</button>
+        <h2>עיצוב הדמות שלי</h2>
+        <div class="av-body">
+          <div class="av-left">
+            <div class="av-preview"></div>
+            <button type="button" class="av-random" onclick="avRandom()">אקראי</button>
+          </div>
+          <div class="av-right">
+            <div class="av-tabs"></div>
+            <div class="av-options"></div>
+          </div>
+        </div>
+        <div class="av-actions">
+          <button type="button" class="av-save" onclick="saveAvatar()">שמירת הדמות</button>
+          <button type="button" class="av-cancel" onclick="closeAvatarEditor()">ביטול</button>
+        </div>
+      </div>`;
+    m.addEventListener('click', (e) => { if (e.target === m) closeAvatarEditor(); });
+    document.body.appendChild(m);
+  }
+  m.style.display = 'flex';
+  avRenderEditor();
+}
+window.openAvatarEditor = openAvatarEditor;
+function closeAvatarEditor() { const m = document.getElementById('av-editor'); if (m) m.style.display = 'none'; }
+window.closeAvatarEditor = closeAvatarEditor;
+function avSet(key, i) { avEdit[key] = i; avRenderEditor(); }
+window.avSet = avSet;
+function avSetTab(k) { avTab = k; avRenderEditor(); }
+window.avSetTab = avSetTab;
+function avRandom() {
+  const r = (n) => Math.floor(Math.random() * n);
+  avEdit = { s: r(AV_SKIN.length), h: r(AV_COUNTS.h), hc: r(AV_HAIR_C.length), hat: r(AV_COUNTS.hat), tc: r(AV_COLORS.length),
+    e: r(AV_COUNTS.e), m: r(AV_COUNTS.m), a: r(AV_COUNTS.a), f: r(AV_COUNTS.f), b: r(AV_COLORS.length), c: r(AV_COLORS.length) };
+  avRenderEditor();
+}
+window.avRandom = avRandom;
+async function saveAvatar() {
+  const user = auth.currentUser;
+  if (!user || user.isAnonymous || !avEdit) return;
+  const cfg = avNormalize(avEdit);
+  try {
+    await update(ref(db, `website/users/${user.uid}/profile`), { avatar: cfg });
+    try {
+      const prev = JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}');
+      localStorage.setItem(`user_profile_${user.uid}`, JSON.stringify(Object.assign(prev, { avatar: cfg })));
+    } catch (e) {}
+    avatarCache[user.uid] = cfg;
+    avatarRefresh(user.uid);
+    closeAvatarEditor();
+    if (typeof showCopyToast === 'function') showCopyToast('הדמות נשמרה!');
+  } catch (e) {
+    alert('שמירת הדמות נכשלה. נסו שוב.');
+  }
+}
+window.saveAvatar = saveAvatar;
+
+// ============================================================
 // עמוד "חברים" — טבלת תחרות: הכי הרבה פוסטים, הדירוג הגבוה, הכי הרבה נקודות
 // ============================================================
 const FRIENDS_POINTS = { post: 10, like: 3, rating: 5 };
@@ -12746,7 +12967,7 @@ const FRIENDS_AVATAR_COLORS = ['#ec4899', '#8b5cf6', '#f59e0b', '#10b981', '#3b8
 function friendsAvatar(u) {
   const s = String(u.name || '?');
   let h = 0; for (const ch of String(u.key)) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
-  return `<span class="fr-avatar" style="--av:${FRIENDS_AVATAR_COLORS[h % FRIENDS_AVATAR_COLORS.length]}">${escHtml(s.trim().charAt(0) || '?')}</span>`;
+  return `<span class="fr-avatar" ${u.uid ? `data-av-uid="${escHtml(u.uid)}"` : ''} style="--av:${FRIENDS_AVATAR_COLORS[h % FRIENDS_AVATAR_COLORS.length]}">${escHtml(s.trim().charAt(0) || '?')}</span>`;
 }
 
 function friendsBoardHTML(id, title, sub, list, valueOf) {
@@ -12797,6 +13018,7 @@ function buildFriendsPage() {
           <span><b>+${P.like}</b> על כל לייק שקיבלתם</span>
           <span><b>+${P.rating}</b> על כל דירוג שקיבלתם</span>
         </div>
+        <button type="button" class="uw-edit-av fr-av-btn" onclick="openAvatarEditor()">עצבו את הדמות שלכם</button>
       </div>
       <div class="fr-boards">${friendsBoardsHTML()}</div>
     </div>`;
@@ -12879,7 +13101,8 @@ function forumTimeAgo(t) {
 function forumAvatar(name, key) {
   let h = 0; for (const ch of String(key || name || '')) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
   const color = FRIENDS_AVATAR_COLORS[h % FRIENDS_AVATAR_COLORS.length];
-  return `<span class="fo-avatar" style="--av:${color}">${escHtml(String(name || '?').trim().charAt(0) || '?')}</span>`;
+  const uidAttr = (key && !String(key).startsWith('n:') && /^[A-Za-z0-9]{20,}$/.test(String(key))) ? `data-av-uid="${escHtml(key)}"` : '';
+  return `<span class="fo-avatar" ${uidAttr} style="--av:${color}">${escHtml(String(name || '?').trim().charAt(0) || '?')}</span>`;
 }
 const FORUM_ICON = '<svg viewBox="0 0 32 28" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><path d="M3 4.5A3.5 3.5 0 0 1 6.5 1h12A3.5 3.5 0 0 1 22 4.5v7a3.5 3.5 0 0 1-3.5 3.5H11l-5 4v-4h0A3 3 0 0 1 3 12z"/><path d="M22 8h3.5A3.5 3.5 0 0 1 29 11.5v7a3 3 0 0 1-3 3v4l-5-4h-6.5A3.5 3.5 0 0 1 11 18v-3"/></svg>';
 
@@ -13049,7 +13272,7 @@ function forumTopicHTML() {
     return `
       <article class="fo-post${idx === 0 ? ' first' : ''}">
         <aside class="fo-author">
-          <span class="fo-author-av" style="--av:${FRIENDS_AVATAR_COLORS[[...String(p.uid || p.name || '')].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 0) % FRIENDS_AVATAR_COLORS.length]}">${escHtml(String(p.name || '?').trim().charAt(0) || '?')}</span>
+          <span class="fo-author-av" ${p.uid ? `data-av-uid="${escHtml(p.uid)}"` : ''} style="--av:${FRIENDS_AVATAR_COLORS[[...String(p.uid || p.name || '')].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 0) % FRIENDS_AVATAR_COLORS.length]}">${escHtml(String(p.name || '?').trim().charAt(0) || '?')}</span>
           <b class="fo-author-name" ${nameClick}>${escHtml(p.name || 'משתמש')}</b>
           <span class="fo-role ${role.cls}">${role.label}</span>
           <dl class="fo-author-stats">
@@ -14861,9 +15084,11 @@ function userWatchHTML(st) {
           <span class="uw-clock">${hh}:${mm}</span>
         </div>
         <div class="uw-head">
-          <span class="uw-avatar">${escHtml(String(st.name || '?').trim().charAt(0) || '?')}</span>
+          <span class="uw-avatar" ${st.uid ? `data-av-uid="${escHtml(st.uid)}"` : ''}>${escHtml(String(st.name || '?').trim().charAt(0) || '?')}</span>
           <h1 id="user-page-name" class="uw-name">${escHtml(st.name || 'משתמש')}</h1>
         </div>
+        ${(st.uid && auth.currentUser && !auth.currentUser.isAnonymous && auth.currentUser.uid === st.uid)
+          ? `<button type="button" class="uw-edit-av" onclick="openAvatarEditor()">עיצוב הדמות שלי</button>` : ''}
         <div class="uw-mid">
           <svg class="uw-rings" viewBox="0 0 100 100">
             ${homeWatchRing(42, '#ff375f', st.galleries / 10)}
