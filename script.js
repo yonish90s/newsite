@@ -14652,23 +14652,15 @@ function buildUserPageHTML(authorId, authorName) {
   });
   const cards = authorAlbums.map(p => renderPhotoCard(p)).join('');
   const json = encodeURIComponent(JSON.stringify(albums));
-  const initial = escHtml(String(authorName || '?').charAt(0) || '?');
-  const ratingWidget = buildUserRatingWidgetHTML(authorId);
+  // מצב השעון של עמוד המשתמש — מתעדכן אחרי טעינת הפרופיל והדירוגים
+  window._upState = { uid: authorId || '', name: authorName || 'משתמש', galleries: authorAlbums.length,
+    verified: isUserVerified(authorId, authorName), profile: null, rating: getUserRatingData(authorId) };
 
   return `
   <div class="articles-page photos-page user-page photo-cols-${typeof photoGridCols !== 'undefined' ? photoGridCols : 4}" data-photos-json="${json}">
     <div class="art-inner">
       <button onclick="goBackFromUserPage()" style="background:#f1f5f9; border:1px solid #cbd5e1; border-radius:8px; padding:8px 16px; font-size:13px; font-weight:800; cursor:pointer; margin-bottom:16px; color:#334155;">← חזרה</button>
-      <div style="background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:20px; margin-bottom:24px; display:flex; align-items:center; gap:16px; box-shadow:0 4px 15px rgba(0,0,0,0.03); direction:rtl; flex-wrap:wrap;">
-        <div style="width:56px; height:56px; border-radius:50%; background:linear-gradient(135deg,#7c3aed,#4c1d95); color:#fff; display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:900; flex-shrink:0;">${initial}</div>
-        <div style="flex:1; min-width:0;">
-          <div id="user-page-name" style="font-size:20px; font-weight:900; color:#0f172a;">${escHtml(authorName || 'משתמש')}</div>
-          <div id="user-page-meta" style="font-size:13px; color:#64748b; margin-top:2px;">📷 ${authorAlbums.length} גלריות שהועלו</div>
-          ${ratingWidget}
-          <div id="user-page-contact" style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;"></div>
-        </div>
-      </div>
-      <div id="user-page-about">${userAboutCardHTML(null, isUserVerified(authorId, authorName))}</div>
+      <div id="user-page-watch">${userWatchHTML(window._upState)}</div>
       <div class="art-rows">${cards || '<div style="grid-column:1/-1; text-align:center; color:#94a3b8; padding:40px; font-weight:700;">אין גלריות להצגה עבור משתמש זה</div>'}</div>
     </div>
   </div>`;
@@ -14681,29 +14673,100 @@ async function openUserPage(authorId, authorName) {
   if (typeof photoApplyFilters === 'function') photoApplyFilters();
 
   if (!authorId) return;
+  userWatchLoadRatings(authorId);
   try {
     const snap = await get(ref(db, `website/users/${authorId}/profile`));
     if (!snap.exists()) return;
     const profile = snap.val();
-    const nameEl = document.getElementById('user-page-name');
-    if (nameEl && profile.nickname) nameEl.textContent = profile.nickname;
-    const contactEl = document.getElementById('user-page-contact');
-    if (contactEl) {
-      let html = '';
-      if (profile.telegram) {
-        const tg = String(profile.telegram).replace(/^@/, '');
-        html += `<a href="https://t.me/${escHtml(tg)}" target="_blank" style="display:inline-flex; align-items:center; gap:4px; background:#2f2f2f; color:#fff; padding:5px 10px; border-radius:6px; font-size:12px; font-weight:800; text-decoration:none;">✈️ טלגרם</a>`;
-      }
-      if (profile.email) {
-        html += `<button type="button" onclick="copyEmailToClipboard('${artEsc(profile.email)}', event)" style="display:inline-flex; align-items:center; gap:4px; background:#2f2f2f; color:#fff; padding:5px 10px; border-radius:6px; font-size:12px; font-weight:800; border:none; cursor:pointer;">✉️ אימייל</button>`;
-      }
-      contactEl.innerHTML = html;
+    const st = window._upState;
+    if (st && st.uid === authorId) {
+      st.profile = profile;
+      if (profile.nickname) st.name = profile.nickname;
+      st.verified = isUserVerified(authorId, profile.nickname || authorName);
+      userWatchRender();
     }
-    const aboutEl = document.getElementById('user-page-about');
-    if (aboutEl) aboutEl.innerHTML = userAboutCardHTML(profile, isUserVerified(authorId, profile.nickname || authorName));
   } catch (e) { /* פרופיל לא זמין — משאירים את שם היוצר */ }
 }
 window.openUserPage = openUserPage;
+
+// דירוגים מהענן (כולם רואים את אותו ממוצע), ולא רק מהדפדפן המקומי
+async function userWatchLoadRatings(uid) {
+  try {
+    const snap = await get(ref(db, `website/user_ratings/${uid}`));
+    const vals = Object.values(snap.exists() ? (snap.val() || {}) : {}).map(Number).filter(n => n >= 1 && n <= 5);
+    const myUid = auth.currentUser ? auth.currentUser.uid : 'guest';
+    const mine = snap.exists() ? Number((snap.val() || {})[myUid]) || 0 : 0;
+    const st = window._upState;
+    if (!st || st.uid !== uid) return;
+    st.rating = {
+      avg: vals.length ? (vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1) : 0,
+      count: vals.length,
+      myRating: mine || (st.rating && st.rating.myRating) || 0
+    };
+    userWatchRender();
+  } catch (e) {}
+}
+
+function userWatchRender() {
+  const el = document.getElementById('user-page-watch');
+  if (el && window._upState) el.innerHTML = userWatchHTML(window._upState);
+}
+
+// עמוד משתמש בעיצוב שעון חכם: שם, טבעות נתונים, דירוג בכוכבים וכל הפרטים
+function userWatchHTML(st) {
+  st = st || { name: 'משתמש', galleries: 0, rating: { avg: 0, count: 0, myRating: 0 } };
+  const profile = st.profile || {};
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2, '0'), mm = String(now.getMinutes()).padStart(2, '0');
+  const r = st.rating || { avg: 0, count: 0, myRating: 0 };
+  const avg = Number(r.avg) || 0;
+  const where = [profile.aboutCity, profile.aboutRegion].filter(Boolean).join(', ');
+  const likes = aboutSplitTags(profile.aboutLikes);
+  const dislikes = aboutSplitTags(profile.aboutDislikes);
+  const tg = String(profile.telegram || '').trim().replace(/^https?:\/\/t\.me\//i, '').replace(/^@/, '');
+  const none = '<span class="uw-none">לא צוין</span>';
+  const chips = (arr, cls) => arr.length ? arr.map(t => `<span class="uw-chip ${cls}">${escHtml(t)}</span>`).join('') : none;
+  const filled = r.myRating || Math.round(avg);
+  const stars = [1, 2, 3, 4, 5].map(n =>
+    `<button type="button" class="uw-star${n <= filled ? ' on' : ''}" onclick="rateUserStars('${artEsc(st.uid || '')}', ${n})" title="דרג ${n} כוכבים">★</button>`).join('');
+  const row = (color, label, value) => `<div class="uw-row"><span class="uw-label" style="color:${color}">${label}</span><div class="uw-val">${value}</div></div>`;
+  return `
+    <div class="up-watch">
+      <div class="up-watch-screen">
+        <div class="uw-top">
+          <span class="uw-badge ${st.verified ? 'ok' : ''}">${st.verified ? '✓ מאומת' : 'לא מאומת'}</span>
+          <span class="uw-clock">${hh}:${mm}</span>
+        </div>
+        <div class="uw-head">
+          <span class="uw-avatar">${escHtml(String(st.name || '?').trim().charAt(0) || '?')}</span>
+          <h1 id="user-page-name" class="uw-name">${escHtml(st.name || 'משתמש')}</h1>
+        </div>
+        <div class="uw-mid">
+          <svg class="uw-rings" viewBox="0 0 100 100">
+            ${homeWatchRing(42, '#ff375f', st.galleries / 10)}
+            ${homeWatchRing(30, '#a3f93a', avg / 5)}
+            ${homeWatchRing(18, '#2ee6f5', r.count / 20)}
+          </svg>
+          <div class="uw-lines">
+            <span style="color:#ff375f">${st.galleries}<small>גלריות שהועלו</small></span>
+            <span style="color:#a3f93a">${avg ? avg : '—'}<small>${avg ? 'דירוג ממוצע' : 'עדיין בלי דירוג'}</small></span>
+            <span style="color:#2ee6f5">${r.count}<small>מדרגים</small></span>
+          </div>
+        </div>
+        <div class="uw-rate">
+          <div class="uw-stars">${stars}</div>
+          <small>${r.myRating ? `הדירוג שלך: ${r.myRating}★` : 'לחצו לדירוג המשתמש'}</small>
+        </div>
+        <div class="uw-details">
+          ${row('#ffd60a', 'מאיפה', where ? `<span class="uw-text">${escHtml(where)}</span>` : none)}
+          ${row('#64d2ff', 'טלגרם', tg ? `<a class="uw-link" href="https://t.me/${encodeURIComponent(tg)}" target="_blank" rel="noopener" dir="ltr">@${escHtml(tg)}</a>` : none)}
+          ${row('#bf5af2', 'מייל', profile.email ? `<button type="button" class="uw-link" dir="ltr" onclick="copyEmailToClipboard('${artEsc(profile.email)}', event)" title="העתקת המייל">${escHtml(profile.email)}</button>` : none)}
+          ${row('#30d158', 'אוהב/ת', `<div class="uw-chips">${chips(likes, 'like')}</div>`)}
+          ${row('#ff453a', 'לא אוהב/ת', `<div class="uw-chips">${chips(dislikes, 'dislike')}</div>`)}
+        </div>
+      </div>
+    </div>`;
+}
 
 // חזרה מעמוד המשתמש אל העמוד הנוכחי (renderPage מודולרית, לכן חושפים עוטף גלובלי)
 function goBackFromUserPage() {

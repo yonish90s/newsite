@@ -8711,3 +8711,57 @@ html body:not(#_) .art-rows > .art-row[data-art-match="0"] { display: none !impo
 .hw-cmp b { position: relative; font-size: 15px; font-weight: 800; font-variant-numeric: tabular-nums; }
 .hw-watch-cmp-labels { display: flex; justify-content: space-between; margin-top: 4px; direction: ltr; }
 .hw-watch-cmp-labels span { width: 50px; text-align: center; font-size: 9.5px; font-weight: 700; color: rgba(255, 255, 255, 0.55); }
+
+/* ===================================================================
+   עמוד משתמש — שעון חכם גדול עם נתוני המשתמש וכל הפרטים
+   =================================================================== */
+.up-watch {
+  width: min(470px, 100%); margin: 6px auto 30px;
+  padding: 12px; border-radius: 72px; box-sizing: border-box;
+  background: linear-gradient(145deg, #3d3d44, #121216 60%, #2a2a30);
+  box-shadow: 0 40px 70px -30px rgba(0, 0, 0, 0.9), inset 0 1px 1px rgba(255, 255, 255, 0.25);
+  position: relative;
+}
+.up-watch::after { content: ""; position: absolute; left: -9px; top: 22%; width: 10px; height: 58px; border-radius: 5px 0 0 5px; background: linear-gradient(90deg, #555, #2a2a2e); }
+.up-watch-screen {
+  border-radius: 62px; background: #000; color: #fff;
+  padding: 28px 28px 30px; direction: rtl;
+  font-family: -apple-system, "SF Pro Rounded", "Segoe UI", system-ui, sans-serif;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+.uw-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.uw-badge { font-size: 13px; font-weight: 800; padding: 4px 11px; border-radius: 999px; background: #1c1c1e; color: #8e8e93; }
+.uw-badge.ok { background: rgba(48, 209, 88, 0.16); color: #30d158; }
+.uw-clock { font-size: 22px; font-weight: 300; color: #6ad4ff; font-variant-numeric: tabular-nums; direction: ltr; }
+.uw-head { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
+.uw-avatar { width: 58px; height: 58px; border-radius: 50%; flex-shrink: 0; display: grid; place-items: center; background: linear-gradient(135deg, #ff375f, #bf5af2); font-size: 26px; font-weight: 900; color: #fff; }
+.uw-name { margin: 0; font-size: 36px; font-weight: 700; line-height: 1.05; color: #fff; letter-spacing: -0.5px; word-break: break-word; }
+.uw-mid { display: flex; align-items: center; gap: 18px; margin-bottom: 16px; }
+.uw-rings { width: 112px; height: 112px; flex-shrink: 0; }
+.uw-lines { display: flex; flex-direction: column; gap: 6px; font-size: 24px; font-weight: 800; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.uw-lines small { font-size: 12.5px; font-weight: 700; margin-inline-start: 7px; opacity: .85; }
+.uw-rate { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 10px 14px; border-radius: 20px; background: #1c1c1e; margin-bottom: 16px; }
+.uw-stars { display: flex; gap: 2px; direction: ltr; }
+.uw-star { background: none; border: none; padding: 0 2px; cursor: pointer; font-size: 27px; line-height: 1; color: #3a3a3c; transition: transform .12s ease, color .12s ease; }
+.uw-star.on { color: #ffd60a; }
+.uw-star:hover { transform: scale(1.18); color: #ffd60a; }
+.uw-rate small { font-size: 12.5px; font-weight: 700; color: #8e8e93; }
+.uw-details { display: flex; flex-direction: column; }
+.uw-row { display: flex; align-items: flex-start; gap: 12px; padding: 11px 2px; border-top: 1px solid #1f1f22; }
+.uw-label { width: 82px; flex-shrink: 0; font-size: 14px; font-weight: 800; padding-top: 2px; }
+.uw-val { flex: 1; min-width: 0; font-size: 15px; font-weight: 600; color: #f2f2f7; }
+.uw-none { color: #636366; font-weight: 600; }
+.uw-text { color: #f2f2f7; }
+.uw-link { background: none; border: none; padding: 0; font: inherit; color: #64d2ff; font-weight: 700; cursor: pointer; text-decoration: none; word-break: break-all; }
+.uw-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.uw-chip { padding: 4px 11px; border-radius: 999px; font-size: 13px; font-weight: 700; }
+.uw-chip.like { background: rgba(48, 209, 88, 0.16); color: #30d158; }
+.uw-chip.dislike { background: rgba(255, 69, 58, 0.16); color: #ff6961; }
+@media (max-width: 520px) {
+  .up-watch { border-radius: 52px; padding: 9px; }
+  .up-watch-screen { border-radius: 44px; padding: 22px 18px 22px; }
+  .uw-name { font-size: 28px; }
+  .uw-rings { width: 88px; height: 88px; }
+  .uw-lines { font-size: 20px; }
+  .uw-label { width: 70px; font-size: 13px; }
+}
