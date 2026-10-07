@@ -260,7 +260,7 @@ let pages = defaultPages;
 let activePageId = 'page-photos-main';
 let topNavPages = ['page-ideas-main']; // העמודים שמופיעים בתפריט העליון
 // עמודים שמופיעים רק בסרגל הצד ("עמודי צד") ולא בתפריט העליון
-const SIDE_ONLY_PAGE_IDS = ['page-questions-main', 'page-offers-main', 'page-photos-main', 'page-stories-main'];
+const SIDE_ONLY_PAGE_IDS = ['page-questions-main', 'page-offers-main', 'page-photos-main', 'page-stories-main', 'page-friends-main'];
 // זיהוי עמוד צד לפי מזהה, תוכן או כותרת (העמודים עשויים להיווצר עם מזהים דינמיים)
 function isSideOnlyPage(p) {
   if (!p) return false;
@@ -271,7 +271,7 @@ function isSideOnlyPage(p) {
   if (p.id === 'page-subscription-main' || (p.content || '').includes('subscription-page') || (p.title || '').includes('מנוי')) return false;
   if (SIDE_ONLY_PAGE_IDS.includes(p.id)) return true;
   const t = p.title || '', c = p.content || '';
-  if (c.includes('photos-page') || c.includes('stories-page') || c.includes('questions-page') || c.includes('offers-page')) return true;
+  if (c.includes('photos-page') || c.includes('stories-page') || c.includes('questions-page') || c.includes('offers-page') || c.includes('friends-page')) return true;
   if (t.includes('תמונות') || t.includes('סיפורים') || t.includes('שאלות גולשים') || t.includes('הצעות')) return true;
   return false;
 }
@@ -543,7 +543,7 @@ function sanitizeToOnlyPhotosAndStories() {
   // לפי בקשת המשתמש: משאירים רק עמודי תמונות וסיפורים (מוחקים כתבות/קהילה וכל עמוד אחר).
   // מסננים רק כשקיים לפחות עמוד תמונות/סיפורים אחד, כדי לא לרוקן אתר תקין בטעות.
   if (pages.some(p => p && ((p.content || '').includes('photos-page') || (p.content || '').includes('stories-page')))) {
-    pages = pages.filter(p => p && (p.id === 'page-home-feed' || p.id === 'page-subscription-main' || (p.content || '').includes('home-feed-page') || (p.content || '').includes('subscription-page') || (p.content || '').includes('photos-page') || (p.content || '').includes('stories-page') || (p.content || '').includes('ideas-page') || (p.content || '').includes('communities-page') || (p.content || '').includes('info-page') || (p.content || '').includes('requests-page') || (p.content || '').includes('questions-page') || (p.content || '').includes('offers-page')));
+    pages = pages.filter(p => p && (p.id === 'page-home-feed' || p.id === 'page-subscription-main' || (p.content || '').includes('home-feed-page') || (p.content || '').includes('subscription-page') || (p.content || '').includes('photos-page') || (p.content || '').includes('stories-page') || (p.content || '').includes('ideas-page') || (p.content || '').includes('communities-page') || (p.content || '').includes('info-page') || (p.content || '').includes('requests-page') || (p.content || '').includes('questions-page') || (p.content || '').includes('offers-page') || (p.content || '').includes('friends-page')));
   }
 
   // בוטסטראפ של עמודי ברירת המחדל (תמונות + סיפורים) רק כאשר אין אף עמוד באתר.
@@ -690,6 +690,12 @@ function sanitizeToOnlyPhotosAndStories() {
     _ofPage.content = _ofContent;
     if (!_ofPage.title) _ofPage.title = 'הצעות 🔥';
   }
+
+  // עמוד "חברים" (טבלת תחרות) — תמיד קיים, נבנה דינמית
+  const _frContent = '<div class="friends-page" data-page-id="page-friends-main"></div>';
+  const _frPage = pages.find(p => p && p.id === 'page-friends-main');
+  if (!_frPage) pages.push({ id: 'page-friends-main', title: 'חברים', content: _frContent });
+  else { _frPage.content = _frContent; if (!_frPage.title) _frPage.title = 'חברים'; }
 
   // עמוד "מנוי" — תמיד קיים
   const _subContent = '<div class="subscription-page" data-page-id="page-subscription-main"></div>';
@@ -1355,6 +1361,15 @@ function renderPage() {
       if (typeof buildHomeFeedPage === 'function') {
         mainContent.innerHTML = buildHomeFeedPage();
         if (isEditMode) applyEditModeToContent();
+        try { window.scrollTo(0, 0); } catch (e) {}
+        return;
+      }
+    }
+
+    // עמוד "חברים": טבלת תחרות בין המשתמשים — נבנה דינמית
+    if (currentPage.id === 'page-friends-main' || (currentPage.content || '').includes('friends-page')) {
+      if (typeof buildFriendsPage === 'function') {
+        mainContent.innerHTML = buildFriendsPage();
         try { window.scrollTo(0, 0); } catch (e) {}
         return;
       }
@@ -11081,6 +11096,7 @@ function buildLeftSidebarBox(popularHTML, section) {
     if (p.id === 'page-reviews-main' || (p.content || '').includes('reviews-page') || (p.title || '').includes('ביקורת')) return false;
     const t = p.title || '', c = p.content || '';
     return p.id === 'page-photos-main' || p.id === 'page-stories-main' || p.id === 'page-stories-text'
+      || p.id === 'page-friends-main' || c.includes('friends-page')
       || t.includes('תמונות') || t.includes('סיפורים') || t.includes('קומיקס')
       || c.includes('photos-page') || c.includes('stories-page');
   };
@@ -12528,6 +12544,147 @@ function homeWelcomeToUpload() {
   if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 window.homeWelcomeToUpload = homeWelcomeToUpload;
+
+// ============================================================
+// עמוד "חברים" — טבלת תחרות: הכי הרבה פוסטים, הדירוג הגבוה, הכי הרבה נקודות
+// ============================================================
+const FRIENDS_POINTS = { post: 10, like: 3, rating: 5 };
+let friendsRatings = null;      // website/user_ratings: {targetUid: {raterUid: 1-5}}
+const friendsNames = {};        // uid → כינוי מהפרופיל (לדירוגים של מי שלא פרסם)
+const friendsExpanded = {};     // איזו טבלה פתוחה ב"ראה עוד"
+
+// כל הפריטים שפורסמו באתר (תמונות, קומיקס, סיפורים, יד שניה...) מכל העמודים
+function friendsAllItems() {
+  const seen = new Set(), out = [];
+  (Array.isArray(pages) ? pages : []).forEach(p => {
+    (String(p && p.content || '').match(/data-(?:photos|stories)-json="[^"]*"/g) || []).forEach(m => {
+      let arr = [];
+      try { arr = JSON.parse(decodeURIComponent(m.replace(/^[^"]*"|"$/g, ''))); } catch (e) {}
+      (Array.isArray(arr) ? arr : []).forEach(it => {
+        if (!it || !it.id || seen.has(it.id)) return;
+        seen.add(it.id); out.push(it);
+      });
+    });
+  });
+  return out;
+}
+
+function friendsStats() {
+  const users = {};
+  const ensure = (key, uid, name) => {
+    if (!users[key]) users[key] = { key, uid: uid || '', name: name || '', posts: 0, likes: 0, rSum: 0, rCount: 0 };
+    if (!users[key].name && name) users[key].name = name;
+    return users[key];
+  };
+  friendsAllItems().forEach(it => {
+    const name = String(it.author || '').trim();
+    if (!it.authorId && !name) return;
+    const u = ensure(it.authorId ? it.authorId : 'n:' + name, it.authorId, name);
+    u.posts++;
+    u.likes += Math.max(0, Number(it.likes) || 0);
+  });
+  Object.entries(friendsRatings || {}).forEach(([uid, raters]) => {
+    const vals = Object.values(raters || {}).filter(v => typeof v === 'number' && v >= 1 && v <= 5);
+    if (!vals.length) return;
+    const u = ensure(uid, uid, friendsNames[uid] || '');
+    u.rSum += vals.reduce((a, b) => a + b, 0);
+    u.rCount += vals.length;
+  });
+  return Object.values(users).map(u => Object.assign(u, {
+    name: u.name || friendsNames[u.uid] || 'משתמש',
+    avg: u.rCount ? u.rSum / u.rCount : 0,
+    points: u.posts * FRIENDS_POINTS.post + u.likes * FRIENDS_POINTS.like + u.rCount * FRIENDS_POINTS.rating
+  }));
+}
+
+const FRIENDS_AVATAR_COLORS = ['#ec4899', '#8b5cf6', '#f59e0b', '#10b981', '#3b82f6', '#ef4444', '#14b8a6', '#f97316'];
+function friendsAvatar(u) {
+  const s = String(u.name || '?');
+  let h = 0; for (const ch of String(u.key)) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return `<span class="fr-avatar" style="--av:${FRIENDS_AVATAR_COLORS[h % FRIENDS_AVATAR_COLORS.length]}">${escHtml(s.trim().charAt(0) || '?')}</span>`;
+}
+
+function friendsBoardHTML(id, title, sub, list, valueOf) {
+  const open = !!friendsExpanded[id];
+  const rows = list.slice(0, open ? 20 : 5);
+  const myUid = (auth.currentUser && !auth.currentUser.isAnonymous) ? auth.currentUser.uid : '';
+  const body = rows.length ? rows.map((u, i) => {
+    const click = u.uid ? `onclick="openUserPage('${artEsc(u.uid)}','${artEsc(u.name)}')"` : '';
+    return `
+      <div class="fr-row${i < 3 ? ' top top' + (i + 1) : ''}${u.uid && u.uid === myUid ? ' me' : ''}" ${click}>
+        <span class="fr-rank">${i + 1}</span>
+        ${friendsAvatar(u)}
+        <span class="fr-name">${escHtml(u.name)}</span>
+        <span class="fr-val">${valueOf(u)}</span>
+      </div>`;
+  }).join('') : `<div class="fr-empty">עדיין אין כאן אף אחד — היו הראשונים!</div>`;
+  return `
+    <div class="fr-board">
+      <div class="fr-board-head"><h3>${title}</h3><small>${sub}</small></div>
+      <div class="fr-rows">${body}</div>
+      ${list.length > 5 ? `<button type="button" class="fr-more" onclick="friendsToggleMore('${id}')">${open ? 'פחות' : 'ראה עוד...'}</button>` : ''}
+    </div>`;
+}
+
+function friendsBoardsHTML() {
+  const all = friendsStats();
+  const n = (x) => Number(x).toLocaleString('he-IL');
+  const byPosts = all.filter(u => u.posts > 0).sort((a, b) => b.posts - a.posts || b.likes - a.likes);
+  const byRating = all.filter(u => u.rCount > 0).sort((a, b) => b.avg - a.avg || b.rCount - a.rCount);
+  const byPoints = all.filter(u => u.points > 0).sort((a, b) => b.points - a.points);
+  const loading = friendsRatings === null;
+  return `
+    ${friendsBoardHTML('posts', 'הכי הרבה פוסטים', 'תמונות, קומיקס וסיפורים שפורסמו', byPosts, u => n(u.posts))}
+    ${friendsBoardHTML('rating', 'הדירוג הגבוה ביותר', loading ? 'טוען דירוגים...' : 'ממוצע הכוכבים מהגולשים', byRating, u => `<span class="fr-stars">★</span> ${u.avg.toFixed(1)} <small>(${n(u.rCount)})</small>`)}
+    ${friendsBoardHTML('points', 'הכי הרבה נקודות', 'הטבלה הראשית של התחרות', byPoints, u => n(u.points))}`;
+}
+
+function buildFriendsPage() {
+  setTimeout(friendsLoad, 0);
+  const P = FRIENDS_POINTS;
+  return `
+    <div class="friends-page" data-page-id="page-friends-main">
+      <div class="fr-hero">
+        <h1>חברים</h1>
+        <p>התחרות של הקהילה — מי מפרסם הכי הרבה, מי מקבל את הדירוג הכי גבוה, ומי צובר הכי הרבה נקודות.</p>
+        <div class="fr-rules">
+          <span><b>+${P.post}</b> על כל פוסט</span>
+          <span><b>+${P.like}</b> על כל לייק שקיבלתם</span>
+          <span><b>+${P.rating}</b> על כל דירוג שקיבלתם</span>
+        </div>
+      </div>
+      <div class="fr-boards">${friendsBoardsHTML()}</div>
+    </div>`;
+}
+
+function friendsRefresh() {
+  const el = mainContent && mainContent.querySelector('.friends-page .fr-boards');
+  if (el) el.innerHTML = friendsBoardsHTML();
+}
+
+function friendsToggleMore(id) {
+  friendsExpanded[id] = !friendsExpanded[id];
+  friendsRefresh();
+}
+window.friendsToggleMore = friendsToggleMore;
+
+async function friendsLoad() {
+  try {
+    const snap = await get(ref(db, 'website/user_ratings'));
+    friendsRatings = snap.exists() ? (snap.val() || {}) : {};
+  } catch (e) { friendsRatings = {}; }
+  friendsRefresh();
+  // כינויים למי שמופיע בדירוגים בלי שפרסם (אין לנו את השם מהפוסטים)
+  const missing = friendsStats().filter(u => u.uid && u.rCount && !friendsNames[u.uid] && u.name === 'משתמש').slice(0, 20);
+  if (!missing.length) return;
+  await Promise.all(missing.map(async u => {
+    try {
+      const s = await get(ref(db, `website/users/${u.uid}/profile/nickname`));
+      if (s.exists()) friendsNames[u.uid] = String(s.val()).slice(0, 40);
+    } catch (e) {}
+  }));
+  friendsRefresh();
+}
 
 function buildHomeFeedPage() {
   const all = (typeof getAllStoriesFromPages === 'function') ? getAllStoriesFromPages() : [];
@@ -18225,7 +18382,7 @@ onPublicSiteValue((data) => {
     pList = dedupePageList(pList);
     // משאירים רק עמודי תמונות/סיפורים/קהילות (מוחקים כתבות וכל עמוד אחר)
     if (pList.some(p => p && ((p.content || '').includes('photos-page') || (p.content || '').includes('stories-page')))) {
-      pList = pList.filter(p => p && (p.id === 'page-home-feed' || p.id === 'page-subscription-main' || (p.content || '').includes('home-feed-page') || (p.content || '').includes('subscription-page') || (p.content || '').includes('photos-page') || (p.content || '').includes('stories-page') || (p.content || '').includes('ideas-page') || (p.content || '').includes('communities-page') || (p.content || '').includes('info-page') || (p.content || '').includes('requests-page') || (p.content || '').includes('questions-page') || (p.content || '').includes('offers-page') || p.id === 'page-ideas-main'));
+      pList = pList.filter(p => p && (p.id === 'page-home-feed' || p.id === 'page-subscription-main' || (p.content || '').includes('home-feed-page') || (p.content || '').includes('subscription-page') || (p.content || '').includes('photos-page') || (p.content || '').includes('stories-page') || (p.content || '').includes('ideas-page') || (p.content || '').includes('communities-page') || (p.content || '').includes('info-page') || (p.content || '').includes('requests-page') || (p.content || '').includes('questions-page') || (p.content || '').includes('offers-page') || (p.content || '').includes('friends-page') || p.id === 'page-ideas-main'));
     }
     // מוודאים שעמוד "רעיונות" קיים
     const _ipd = pList.find(p => p && p.id === 'page-ideas-main');
@@ -18237,6 +18394,8 @@ onPublicSiteValue((data) => {
       _ipd.content = _ipdc;
     }
     // מוודאים שעמוד "קהילות" תמיד קיים (עם תוכן פלייסהולדר תקין)
+    const _frp = pList.find(p => p && p.id === 'page-friends-main');
+    if (!_frp) pList.push({ id: 'page-friends-main', title: 'חברים', content: '<div class="friends-page" data-page-id="page-friends-main"></div>' });
     const _cp = pList.find(p => p && p.id === 'page-communities-main');
     const _cpc = '<div class="communities-page" data-page-id="page-communities-main"></div>';
     if (!_cp) {
