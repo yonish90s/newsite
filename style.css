@@ -8641,3 +8641,25 @@ html body:not(#_) .art-rows > .art-row[data-art-match="0"] { display: none !impo
     justify-content: center; text-align: center; font-size: 12.5px !important;
   }
 }
+
+/* ---- סרגל תחתון במובייל: "תמונות" במקום "מנוי" ---- */
+.mtab-photos { display: none; }
+@media (max-width: 768px) {
+  html body .apple-nav .nav-links a[data-page-id="page-subscription-main"] { display: none !important; }
+  html body .apple-nav .nav-links { padding-right: 74px !important; }
+  html body .mtab-photos {
+    position: fixed; z-index: 9501;
+    right: max(20px, calc(50% - 214px));
+    bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+    width: 64px; height: 54px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    border: none; border-radius: 999px; background: transparent;
+    color: rgba(241, 236, 255, 0.72);
+    font: inherit; font-size: 12px; font-weight: 600; line-height: 1.1;
+    cursor: pointer; -webkit-tap-highlight-color: transparent;
+  }
+  html body .mtab-photos svg { width: 26px; height: 26px; }
+  html body .mtab-photos.active { background: rgba(255, 255, 255, 0.12); color: #fff; }
+  html body .mtab-photos.active svg { color: var(--pink, #ec4899); }
+  html.mtab-hidden body .mtab-photos { display: none !important; }
+}

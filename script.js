@@ -7980,6 +7980,9 @@ let artPagObserver = null;
 // לקרוא לעימוד בכל אתר קריאה בנפרד מסנכרנים אותו אחרי כל שינוי ב-DOM
 function artSyncPagination() {
   if (typeof mainContent === 'undefined' || !mainContent) return;
+  // סרגל הטאבים במובייל: "תמונות" מסומן כשעמוד התמונות פתוח
+  const _mtp = document.getElementById('mtab-photos');
+  if (_mtp) _mtp.classList.toggle('active', !!mainContent.querySelector('.photos-page[data-section="photos"]:not(.home-feed-photos)'));
   if (artPagObserver) artPagObserver.disconnect();
   try {
     artApplyPagination(mainContent.querySelector('.photos-page'), 'photos');
