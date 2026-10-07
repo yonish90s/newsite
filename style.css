@@ -6354,38 +6354,27 @@ body.site-tour-picking, body.site-tour-picking * { cursor: crosshair !important;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
 }
 
-/* מנוי במובייל — שלושת המסלולים זה לצד זה */
+/* מנוי במובייל — מסלול אחד בכל פעם, מחליקים הצידה (המומלץ מוצג ראשון) */
 @media (max-width: 768px) {
-  .subscription-page-wrapper { padding: 20px 8px 40px !important; }
-  .sub-plans-grid { flex-wrap: nowrap !important; gap: 6px !important; align-items: stretch !important; }
-  .sub-plans-grid .sub-pricing-card {
-    flex: 1 1 0 !important;
-    min-width: 0 !important;
-    max-width: none !important;
-    padding: 16px 6px 12px !important;
-    border-radius: 12px !important;
+  .subscription-page-wrapper { padding: 20px 0 40px !important; }
+  html body .sub-plans-grid {
+    display: flex !important; flex-wrap: nowrap !important; gap: 14px !important;
+    align-items: stretch !important; justify-content: flex-start !important;
+    overflow-x: auto !important; scroll-snap-type: x mandatory;
+    padding: 18px 8% 10px !important; scroll-padding: 0 8%;
+    scrollbar-width: none;
   }
-  .sub-pricing-card .sub-badge { font-size: 9.5px !important; padding: 1px 8px !important; top: -9px !important; }
-  .sub-pricing-card .sub-title { font-size: 14px !important; margin-bottom: 4px !important; }
-  .sub-pricing-card .sub-subtitle { font-size: 9px !important; min-height: 0 !important; margin-bottom: 8px !important; line-height: 1.3 !important; }
-  .sub-pricing-card .sub-price-box { min-height: 0 !important; margin-bottom: 8px !important; }
-  .sub-pricing-card .sub-price-box > div:first-child[style*="height: 22px"] { display: none !important; }
-  .sub-pricing-card .sub-price-row { flex-direction: column !important; align-items: center !important; gap: 0 !important; }
-  .sub-pricing-card .sub-price { font-size: 22px !important; letter-spacing: 0 !important; }
-  .sub-pricing-card .sub-price-row > div { align-items: center !important; text-align: center !important; }
-  .sub-pricing-card .sub-price-row > div span { font-size: 9px !important; }
-  .sub-pricing-card .sub-credits { padding: 6px 3px !important; margin-bottom: 10px !important; }
-  .sub-pricing-card .sub-credits > div:nth-child(1) { font-size: 10px !important; }
-  .sub-pricing-card .sub-credits > div:nth-child(2) { font-size: 9px !important; }
-  .sub-pricing-card .sub-credits > div:nth-child(3) { font-size: 8.5px !important; }
-  .sub-pricing-card .sub-start-btn { padding: 7px 4px !important; font-size: 11.5px !important; border-radius: 8px !important; }
-  .sub-pricing-card .sub-pay-label { font-size: 8.5px !important; margin: 8px 0 4px !important; }
-  .sub-pricing-card .sub-pay-btn { padding: 5px 4px !important; font-size: 11px !important; }
-  .sub-pricing-card .sub-pay-btn svg { width: 10px !important; height: 12px !important; }
-  .sub-pricing-card .sub-features { padding-top: 10px !important; margin-top: 10px !important; }
-  .sub-pricing-card .sub-features-title { font-size: 9.5px !important; margin-bottom: 6px !important; }
-  .sub-pricing-card .sub-features ul { gap: 5px !important; }
-  .sub-pricing-card .sub-features li { font-size: 9px !important; gap: 4px !important; line-height: 1.3 !important; }
+  html body .sub-plans-grid::-webkit-scrollbar { display: none; }
+  html body .sub-plans-grid .sub-pricing-card {
+    flex: 0 0 84% !important; max-width: none !important; min-width: 0 !important;
+    scroll-snap-align: center;
+  }
+}
+.sub-dots { display: none; }
+@media (max-width: 768px) {
+  .sub-dots { display: flex; justify-content: center; gap: 8px; margin-top: 12px; }
+  .sub-dot { width: 9px; height: 9px; border-radius: 999px; border: none; padding: 0; background: rgba(255, 255, 255, 0.25); cursor: pointer; transition: width .25s ease, background .25s ease; }
+  .sub-dot.on { width: 26px; background: #ffd166; }
 }
 
 /* ===== בחירת שפה — חלונית קטנה מתחת לגלובוס (בסגנון ההתראות) ===== */
@@ -8970,4 +8959,11 @@ button.hw-watch { border: none; cursor: pointer; font: inherit; text-align: init
   .cookie-btn { flex: 1; padding: 10px 8px; font-size: 14px; }
   .cookie-btn.ghost { flex-basis: 100%; }
   html.mtab-hidden .cookie-bar { bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
+}
+
+/* "חדש בקהילה": כפתור צהוב מלא בכל שלוש הכרטיסיות */
+html body .home-trio .trio-cta {
+  background: var(--warm-grad);
+  border-color: transparent;
+  color: #190c35;
 }

@@ -21140,7 +21140,42 @@ function handleSubscriptionPlanSelect(planId) {
 window.handleSubscriptionPlanSelect = handleSubscriptionPlanSelect;
 
 
+// מנוי במובייל: קרוסלה — מתחילים מהמסלול המומלץ, נקודות מתחת מסמנות איפה נמצאים
+function subCarouselInit() {
+  const grid = document.querySelector('.sub-plans-grid');
+  if (!grid || grid._subCarousel) return;
+  // הכרטיסים עשויים להיבנות מחדש בתוך הגריד — תמיד מחפשים אותם מחדש
+  const cards = () => [...grid.querySelectorAll('.sub-pricing-card')];
+  const n = cards().length;
+  if (n < 2) return;
+  grid._subCarousel = true;
+  const dots = document.createElement('div');
+  dots.className = 'sub-dots';
+  dots.innerHTML = Array.from({ length: n }, (_, i) => `<button type="button" class="sub-dot" aria-label="מסלול ${i + 1}"></button>`).join('');
+  grid.after(dots);
+  // מימין לשמאל: מחשבים את ההזזה לפי המיקום על המסך ולא לפי offsetLeft
+  const goTo = (i, smooth) => {
+    const c = cards()[i];
+    if (!c) return;
+    const gr = grid.getBoundingClientRect(), cr = c.getBoundingClientRect();
+    grid.scrollBy({ left: (cr.left + cr.width / 2) - (gr.left + gr.width / 2), behavior: smooth ? 'smooth' : 'auto' });
+  };
+  const mark = () => {
+    const mid = grid.getBoundingClientRect().left + grid.clientWidth / 2;
+    let best = 0, bestD = Infinity;
+    cards().forEach((c, i) => { const r = c.getBoundingClientRect(); const dd = Math.abs(r.left + r.width / 2 - mid); if (dd < bestD) { bestD = dd; best = i; } });
+    [...dots.children].forEach((d, i) => d.classList.toggle('on', i === best));
+  };
+  [...dots.children].forEach((d, i) => d.addEventListener('click', () => goTo(i, true)));
+  grid.addEventListener('scroll', () => requestAnimationFrame(mark), { passive: true });
+  const featured = cards().findIndex(c => c.classList.contains('featured'));
+  if (window.matchMedia('(max-width: 768px)').matches) goTo(featured >= 0 ? featured : 0, false);
+  mark();
+}
+window.subCarouselInit = subCarouselInit;
+
 function buildSubscriptionPage() {
+  setTimeout(subCarouselInit, 60);
   const isYearly = currentSubscriptionBilling === 'yearly';
 
   // מטבע לפי שפה: אנגלית -> דולר ($), עברית -> שקל (₪)
