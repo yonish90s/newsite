@@ -6356,6 +6356,8 @@ function storySetGridSize(n) {
     root.classList.add('story-cols-' + n);
   }
   mainContent.querySelectorAll('.story-size-btn').forEach(b => b.classList.toggle('active', b.textContent.trim() === String(n)));
+  photoOpenFilterGroup = null;
+  photoRenderFilterBar();
 }
 window.storySetGridSize = storySetGridSize;
 
@@ -8035,10 +8037,15 @@ function photoCurrentFilter(kind) {
   if (kind === 'general') {
     return (typeof pfActivePage === 'function' && pfActivePage() === 'stories') ? currentStoryGeneralFilter : currentPhotoGeneralFilter;
   }
-  if (kind === 'category') return currentPhotoCategoryFilter;
-  if (kind === 'age') return currentPhotoAgeFilter;
-  if (kind === 'date') return currentPhotoDateFilter;
-  return currentPhotoRegionFilter;
+  // מין / מיקום / תאריך / גיל — נגזרים מפאנל הצד, כך ששני המקומות מציגים את אותה בחירה
+  if (kind === 'age') {
+    if (photoAgeMin <= 18 && photoAgeMax >= 99) return 'הכל';
+    const hit = PHOTO_AGE_RANGES.find(r => { const b = photoAgeBucket(r); return b && b[0] === photoAgeMin && b[1] === photoAgeMax; });
+    return hit || (photoAgeMin + '-' + photoAgeMax);
+  }
+  const arr = photoSel[kind] || [];
+  if (!arr.length) return 'הכל';
+  return arr.length === 1 ? arr[0] : arr.length + ' נבחרו';
 }
 
 function photoFilterBarHTML() {
@@ -8121,9 +8128,28 @@ function photoFilterSectionHTML() {
   `;
 }
 
-function photoRenderFilterBar() {
+function photoRenderFilterBar(skipSidebar) {
   const bar = mainContent.querySelector('.photo-filter-bar');
   if (bar) bar.outerHTML = photoFilterBarHTML();
+  if (!skipSidebar) pfRefreshSidebar();
+}
+
+// בונה מחדש את פאנל הסינונים בצד לפי המצב הנוכחי, ושומר אילו מקטעים היו פתוחים
+function pfRefreshSidebar() {
+  const box = mainContent.querySelector('.pf-box');
+  if (!box || typeof buildFiltersSidebarBox !== 'function') return;
+  const openTitles = [...box.querySelectorAll('.pf-sec')]
+    .filter(sec => !sec.classList.contains('pf-collapsed'))
+    .map(sec => (sec.querySelector('.pf-sec-title-text') || {}).textContent);
+  const tmp = document.createElement('div');
+  tmp.innerHTML = buildFiltersSidebarBox(pfActivePage());
+  const fresh = tmp.firstElementChild;
+  if (!fresh) return;
+  fresh.querySelectorAll('.pf-sec').forEach(sec => {
+    const t = (sec.querySelector('.pf-sec-title-text') || {}).textContent;
+    sec.classList.toggle('pf-collapsed', !openTitles.includes(t));
+  });
+  box.replaceWith(fresh);
 }
 
 function photoToggleFilterGroup(kind) {
@@ -10865,6 +10891,7 @@ function photoToggleMulti(kind, value, checked) {
   const i = arr.indexOf(value);
   if (checked && i < 0) arr.push(value);
   else if (!checked && i >= 0) arr.splice(i, 1);
+  photoRenderFilterBar(true);
   pfApplyActive(); // משפיע על העמוד הנוכחי בלבד
 }
 window.photoToggleMulti = photoToggleMulti;
@@ -10876,7 +10903,7 @@ function photoSetSort(value, cb) {
   const grp = cb.closest('.pf-check-group');
   if (grp) grp.querySelectorAll('input').forEach(x => { if (x !== cb) x.checked = false; });
   cb.checked = true;
-  if (typeof photoRenderFilterBar === 'function') photoRenderFilterBar();
+  if (typeof photoRenderFilterBar === 'function') photoRenderFilterBar(true);
   pfApplyActive();
 }
 window.photoSetSort = photoSetSort;
@@ -10914,6 +10941,7 @@ function photoSetAgeDual(which, val) {
   photoAgeMin = mn;
   photoAgeMax = mx;
   photoUpdateAgeDual();
+  photoRenderFilterBar(true);
   photoApplyFilters();
 }
 window.photoSetAgeDual = photoSetAgeDual;
@@ -16512,13 +16540,16 @@ function photoSetFilter(kind, value) {
   const isStories = (typeof pfActivePage === 'function' && pfActivePage() === 'stories');
   if (isStories) {
     if (kind === 'general') currentStoryGeneralFilter = value;
-    else if (kind === 'date') currentPhotoDateFilter = value;
   } else {
     if (kind === 'general') currentPhotoGeneralFilter = value;
-    else if (kind === 'category') currentPhotoCategoryFilter = value;
-    else if (kind === 'age') currentPhotoAgeFilter = value;
-    else if (kind === 'region') currentPhotoRegionFilter = value;
-    else if (kind === 'date') currentPhotoDateFilter = value;
+  }
+  // מין / מיקום / תאריך / גיל: מצב אחד משותף לשורה העליונה ולפאנל הצד
+  if (kind === 'category' || kind === 'region' || kind === 'date') {
+    photoSel[kind] = (value === 'הכל') ? [] : [value];
+  } else if (kind === 'age') {
+    const b = (value === 'הכל') ? null : photoAgeBucket(value);
+    photoAgeMin = b ? b[0] : 18;
+    photoAgeMax = b ? b[1] : 99;
   }
 
   // אחרי בחירה סוגרים וחוזרים לשלושת הכפתורים. הרינדור מחליף את
