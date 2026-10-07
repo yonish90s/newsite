@@ -7980,8 +7980,6 @@ let artPagObserver = null;
 // לקרוא לעימוד בכל אתר קריאה בנפרד מסנכרנים אותו אחרי כל שינוי ב-DOM
 function artSyncPagination() {
   if (typeof mainContent === 'undefined' || !mainContent) return;
-  // עיצוב: רק עמוד הבית בצהוב-סגול כהה; שאר העמודים בהירים
-  document.documentElement.classList.toggle('page-home', !!mainContent.querySelector('.home-feed-page'));
   if (artPagObserver) artPagObserver.disconnect();
   try {
     artApplyPagination(mainContent.querySelector('.photos-page'), 'photos');
