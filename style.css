@@ -8780,3 +8780,83 @@ button.hw-watch { border: none; cursor: pointer; font: inherit; text-align: init
   html body .sidebar-saved-btn[onclick*="openSavedModal"],
   html body .sidebar-saved-btn[onclick*="openMessages"] { display: none !important; }
 }
+
+/* ---- פורום: הודעה בסגנון קלאסי — כרטיס מחבר מימין, תוכן משמאל ---- */
+.fo-post { padding: 0 !important; gap: 0 !important; overflow: hidden; align-items: stretch; }
+.fo-author {
+  width: 190px; flex-shrink: 0;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding: 20px 14px 18px;
+  background: rgba(255, 255, 255, 0.03);
+  border-inline-end: 1px solid rgba(255, 255, 255, 0.08);
+  position: relative;
+}
+/* החץ הקטן שמצביע לתוכן */
+.fo-author::after {
+  content: ""; position: absolute; top: 24px; left: -8px;
+  width: 14px; height: 14px; transform: rotate(45deg);
+  background: #241347; border-left: 1px solid rgba(255, 255, 255, 0.08); border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.fo-author-av {
+  width: 96px; height: 96px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--av); color: #fff; font-size: 40px; font-weight: 900;
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.06);
+}
+.fo-author-name { font-size: 18px; font-weight: 900; color: var(--pink, #ec4899); text-align: center; word-break: break-word; }
+.fo-author-name[onclick] { cursor: pointer; }
+.fo-author-name[onclick]:hover { text-decoration: underline; }
+.fo-role {
+  width: 100%; text-align: center; box-sizing: border-box;
+  padding: 5px 8px; border-radius: 10px;
+  font-size: 13px; font-weight: 800;
+  background: rgba(255, 255, 255, 0.06); color: #d8cff5;
+}
+.fo-role.admin { background: linear-gradient(135deg, #ef4444, #b91c1c); color: #fff; }
+.fo-author-stats { width: 100%; margin: 6px 0 0; display: flex; flex-direction: column; gap: 5px; }
+.fo-author-stats > div { display: flex; justify-content: space-between; gap: 8px; font-size: 14px; }
+.fo-author-stats dt { color: rgba(241, 236, 255, 0.5); font-weight: 700; }
+.fo-author-stats dd { margin: 0; color: #fff; font-weight: 800; font-variant-numeric: tabular-nums; }
+.fo-post-main { flex: 1; min-width: 0; display: flex; flex-direction: column; padding: 16px 20px 16px; }
+.fo-post-head {
+  display: flex; justify-content: space-between; align-items: center;
+  padding-bottom: 12px; margin-bottom: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 14px; font-weight: 700; color: rgba(241, 236, 255, 0.55);
+}
+.fo-post-num { display: flex; align-items: center; gap: 12px; direction: ltr; }
+.fo-post-main .fo-post-text { flex: 1; font-size: 17px; line-height: 1.75; }
+.fo-likes {
+  margin-top: 16px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  padding: 9px 12px; border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border-inline-start: 3px solid transparent;
+}
+.fo-likes.has { border-inline-start-color: var(--pink, #ec4899); }
+.fo-like-btn {
+  border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06); color: #f1ecff;
+  padding: 5px 13px; font: inherit; font-size: 13.5px; font-weight: 800; cursor: pointer;
+}
+.fo-like-btn.on { background: var(--pink, #ec4899); border-color: transparent; color: #fff; }
+.fo-like-names { font-size: 14px; font-weight: 700; color: var(--pink, #ec4899); }
+.fo-pager { display: flex; justify-content: flex-start; gap: 6px; margin: 0 0 14px; flex-wrap: wrap; }
+.fo-pg {
+  min-width: 40px; height: 40px; padding: 0 12px; border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12); background: #241347; color: #f1ecff;
+  font: inherit; font-size: 15px; font-weight: 800; cursor: pointer;
+}
+.fo-pg.on { background: var(--pink, #ec4899); border-color: transparent; color: #fff; }
+.fo-pg-gap { align-self: center; color: rgba(241, 236, 255, 0.5); padding: 0 4px; }
+@media (max-width: 640px) {
+  .fo-post { flex-direction: column; }
+  .fo-author { width: auto; flex-direction: row; flex-wrap: wrap; justify-content: flex-start; align-items: center; gap: 10px; padding: 12px 14px; border-inline-end: none; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
+  .fo-author::after { display: none; }
+  .fo-author-av { width: 46px; height: 46px; font-size: 20px; }
+  .fo-role { width: auto; }
+  .fo-author-stats { width: 100%; flex-direction: row; gap: 14px; margin: 0; }
+  .fo-author-stats > div { gap: 4px; font-size: 13px; }
+  .fo-post-main { padding: 12px 14px; }
+}
+.fo-like-btn { display: inline-flex; align-items: center; gap: 6px; }
+.fo-like-btn svg { width: 16px; height: 16px; }

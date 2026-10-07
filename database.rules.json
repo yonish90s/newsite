@@ -247,7 +247,14 @@
           "$postId": {
             ".write": "auth != null && auth.token.firebase.sign_in_provider !== 'anonymous' && !data.exists() && newData.child('uid').val() === auth.uid",
             ".validate": "!newData.exists() || (newData.hasChildren(['uid', 'name', 'text', 't']) && newData.child('text').isString() && newData.child('text').val().length >= 1 && newData.child('text').val().length <= 5000 && newData.child('name').isString() && newData.child('name').val().length <= 40 && newData.child('t').isNumber() && newData.child('t').val() <= now + 60000)",
-            "$other": { ".validate": "$other === 'uid' || $other === 'name' || $other === 'text' || $other === 't'" }
+            "admin": { ".validate": "newData.val() === true && auth.token.email === 'yoni98321@gmail.com' && auth.token.email_verified === true" },
+            "likes": {
+              "$likerUid": {
+                ".write": "auth != null && auth.token.firebase.sign_in_provider !== 'anonymous' && auth.uid === $likerUid && data.parent().parent().exists()",
+                ".validate": "!newData.exists() || (newData.isString() && newData.val().length >= 1 && newData.val().length <= 40)"
+              }
+            },
+            "$other": { ".validate": "$other === 'uid' || $other === 'name' || $other === 'text' || $other === 't' || $other === 'admin' || $other === 'likes'" }
           }
         }
       },

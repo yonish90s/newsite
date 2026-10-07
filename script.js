@@ -12975,31 +12975,112 @@ function forumListHTML() {
     </section>`;
 }
 
-// --- נושא: הודעות + תגובה ---
+// --- נושא: הודעות + תגובה (בסגנון פורום קלאסי: כרטיס מחבר מימין, תוכן משמאל, לייקים בתחתית) ---
+const FORUM_PAGE_SIZE = 15;
+let forumPage = 1;
+let forumRatingsLoading = false;
+function forumAuthorStats(uid) {
+  if (friendsRatings === null && !forumRatingsLoading) {
+    forumRatingsLoading = true;
+    get(ref(db, 'website/user_ratings')).then(snap => {
+      friendsRatings = snap.exists() ? (snap.val() || {}) : {};
+      forumRender();
+    }).catch(() => { friendsRatings = {}; }).finally(() => { forumRatingsLoading = false; });
+  }
+  if (!forumAuthorStats._cache || forumAuthorStats._cacheAt !== friendsRatings) {
+    forumAuthorStats._cache = {};
+    friendsStats().forEach(u => { if (u.uid) forumAuthorStats._cache[u.uid] = u; });
+    forumAuthorStats._cacheAt = friendsRatings;
+  }
+  return (uid && forumAuthorStats._cache[uid]) || { posts: 0, points: 0, avg: 0, rCount: 0 };
+}
+function forumRole(p, st) {
+  if (p.admin) return { label: 'מנהל', cls: 'admin' };
+  if (st.points >= 200) return { label: 'משתמש בכיר', cls: '' };
+  if (st.points >= 50) return { label: 'משתמש פעיל', cls: '' };
+  return { label: 'משתמש חדש', cls: '' };
+}
+function forumDateShort(t) {
+  if (!t) return '';
+  const d = new Date(t);
+  return d.toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric', year: '2-digit' });
+}
+function forumPagerHTML(total) {
+  const pages = Math.max(1, Math.ceil(total / FORUM_PAGE_SIZE));
+  if (pages <= 1) return '';
+  const nums = [];
+  for (let i = 1; i <= pages; i++) {
+    if (i === 1 || i === pages || Math.abs(i - forumPage) <= 1) nums.push(i);
+    else if (nums[nums.length - 1] !== '…') nums.push('…');
+  }
+  return `<div class="fo-pager">
+    ${nums.map(n => n === '…' ? '<span class="fo-pg-gap">…</span>'
+      : `<button type="button" class="fo-pg${n === forumPage ? ' on' : ''}" onclick="forumGoPage(${n})">${n}</button>`).join('')}
+    ${forumPage < pages ? `<button type="button" class="fo-pg next" onclick="forumGoPage(${forumPage + 1})">הבא ‹</button>` : ''}
+  </div>`;
+}
+function forumGoPage(n) {
+  forumPage = n;
+  forumRender();
+  const el = mainContent && mainContent.querySelector('.fo-posts');
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+window.forumGoPage = forumGoPage;
+
 function forumTopicHTML() {
   const f = FORUM_BY_ID[forumView.forumId];
   const t = forumTopics && forumTopics[forumView.forumId] && forumTopics[forumView.forumId][forumView.topicId];
   if (!f || (forumTopics !== null && !t)) { forumView.topicId = null; return forumListHTML(); }
   const admin = typeof isAdmin === 'function' && isAdmin();
+  const myUid = forumRegistered() ? auth.currentUser.uid : '';
   const posts = forumPosts ? Object.entries(forumPosts).map(([id, p]) => Object.assign({ id }, p)).sort((a, b) => (a.t || 0) - (b.t || 0)) : null;
+  const total = posts ? posts.length : 0;
+  forumPage = Math.min(Math.max(1, forumPage), Math.max(1, Math.ceil(total / FORUM_PAGE_SIZE)));
+  const start = (forumPage - 1) * FORUM_PAGE_SIZE;
+  const pager = forumPagerHTML(total);
+  const postHTML = (p, idx) => {
+    const st = forumAuthorStats(p.uid);
+    const role = forumRole(p, st);
+    const likes = Object.entries(p.likes || {}).filter(([, n]) => typeof n === 'string');
+    const iLiked = !!(myUid && p.likes && p.likes[myUid]);
+    const names = likes.map(([, n]) => n);
+    const likeText = names.length <= 3 ? names.join(', ') : `${names.slice(0, 3).join(', ')} ועוד ${names.length - 3}`;
+    const nameClick = p.uid ? `onclick="openUserPage('${artEsc(p.uid)}','${artEsc(p.name || '')}')"` : '';
+    return `
+      <article class="fo-post${idx === 0 ? ' first' : ''}">
+        <aside class="fo-author">
+          <span class="fo-author-av" style="--av:${FRIENDS_AVATAR_COLORS[[...String(p.uid || p.name || '')].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 0) % FRIENDS_AVATAR_COLORS.length]}">${escHtml(String(p.name || '?').trim().charAt(0) || '?')}</span>
+          <b class="fo-author-name" ${nameClick}>${escHtml(p.name || 'משתמש')}</b>
+          <span class="fo-role ${role.cls}">${role.label}</span>
+          <dl class="fo-author-stats">
+            <div><dt>פוסטים:</dt><dd>${Number(st.posts || 0).toLocaleString('he-IL')}</dd></div>
+            <div><dt>נקודות:</dt><dd>${Number(st.points || 0).toLocaleString('he-IL')}</dd></div>
+            <div><dt>דירוג:</dt><dd>${st.rCount ? '★ ' + Number(st.avg).toFixed(1) : '—'}</dd></div>
+          </dl>
+        </aside>
+        <div class="fo-post-main">
+          <div class="fo-post-head">
+            <span>${escHtml(forumDateShort(p.t))}</span>
+            <span class="fo-post-num">${admin && idx > 0 ? `<button type="button" class="fo-del" onclick="forumDeletePost('${artEsc(p.id)}')">מחיקה</button>` : ''}#${idx + 1}</span>
+          </div>
+          <div class="fo-post-text">${escHtml(p.text || '').replace(/\n/g, '<br>')}</div>
+          <div class="fo-likes${names.length ? ' has' : ''}">
+            <button type="button" class="fo-like-btn${iLiked ? ' on' : ''}" onclick="forumToggleLike('${artEsc(p.id)}')" title="${iLiked ? 'ביטול לייק' : 'לייק'}"><svg viewBox="0 0 24 24" fill="${iLiked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M7 11v9H4a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1zM7 11l4-8a2.5 2.5 0 0 1 2.5 2.5V9h5.2a2 2 0 0 1 2 2.3l-1.2 7A2 2 0 0 1 17.5 20H7"/></svg>${iLiked ? 'אהבת' : 'לייק'}</button>
+            ${names.length ? `<span class="fo-like-names">${escHtml(likeText)}</span>` : ''}
+          </div>
+        </div>
+      </article>`;
+  };
   return `
     <div class="fo-crumbs"><a href="#" onclick="event.preventDefault(); forumOpen(null)">פורומים</a> › <a href="#" onclick="event.preventDefault(); forumOpen('${f.id}')">${escHtml(f.title)}</a></div>
     <div class="fo-head"><div><h1>${escHtml(t ? t.title : '')}</h1></div>
       ${admin ? `<button type="button" class="fo-btn ghost danger" onclick="forumDeleteTopic()">מחיקת הנושא</button>` : ''}
     </div>
+    ${pager}
     <div class="fo-posts">
-      ${posts === null ? '<div class="fo-empty">טוען...</div>' : posts.map((p, i) => `
-        <article class="fo-post${i === 0 ? ' first' : ''}">
-          <div class="fo-post-side">${forumAvatar(p.name, p.uid)}</div>
-          <div class="fo-post-body">
-            <div class="fo-post-meta"><b class="fo-name" ${p.uid ? `onclick="openUserPage('${artEsc(p.uid)}','${artEsc(p.name || '')}')"` : ''}>${escHtml(p.name || 'משתמש')}</b>
-              <small>${escHtml(forumTimeAgo(p.t))}</small>
-              ${admin && i > 0 ? `<button type="button" class="fo-del" onclick="forumDeletePost('${artEsc(p.id)}')">מחיקה</button>` : ''}
-            </div>
-            <div class="fo-post-text">${escHtml(p.text || '').replace(/\n/g, '<br>')}</div>
-          </div>
-        </article>`).join('')}
+      ${posts === null ? '<div class="fo-empty">טוען...</div>' : posts.slice(start, start + FORUM_PAGE_SIZE).map((p, i) => postHTML(p, start + i)).join('')}
     </div>
+    ${pager}
     <div class="fo-reply">
       ${forumRegistered() ? `
         <textarea id="fo-reply-text" class="fo-input" rows="4" maxlength="5000" placeholder="כתבו תגובה..."></textarea>
@@ -13007,6 +13088,18 @@ function forumTopicHTML() {
       : `<div class="fo-login"><span>כדי להגיב צריך להתחבר</span><button type="button" class="fo-btn" onclick="openLiveChatLogin()">התחברות</button></div>`}
     </div>`;
 }
+
+async function forumToggleLike(postId) {
+  if (!forumRegistered()) { openLiveChatLogin(); return; }
+  const uid = auth.currentUser.uid;
+  const p = forumPosts && forumPosts[postId];
+  const on = !!(p && p.likes && p.likes[uid]);
+  try {
+    await set(ref(db, `website/forum_posts/${forumView.topicId}/${postId}/likes/${uid}`),
+      on ? null : String(liveChatUserName() || 'משתמש').slice(0, 40));
+  } catch (e) { alert('הלייק לא נשמר. נסו שוב.'); }
+}
+window.forumToggleLike = forumToggleLike;
 
 function forumOpen(forumId) {
   if (forumPostsUnsub) { forumPostsUnsub(); forumPostsUnsub = null; }
@@ -13020,6 +13113,7 @@ window.forumOpen = forumOpen;
 function forumOpenTopic(forumId, topicId) {
   if (forumPostsUnsub) { forumPostsUnsub(); forumPostsUnsub = null; }
   forumPosts = null;
+  forumPage = 1;
   forumView = { forumId, topicId, composing: false };
   forumRender();
   try { window.scrollTo(0, 0); } catch (e) {}
@@ -13060,7 +13154,9 @@ async function forumCreateTopic() {
   try {
     const tRef = push(ref(db, `website/forum_topics/${forumId}`));
     await set(tRef, { title: title.slice(0, 120), uid: user.uid, name, t: now, lastT: now, lastName: name, lastUid: user.uid, replies: 0 });
-    await set(push(ref(db, `website/forum_posts/${tRef.key}`)), { uid: user.uid, name, text: text.slice(0, 5000), t: now });
+    const first = { uid: user.uid, name, text: text.slice(0, 5000), t: now };
+    if (typeof isAdmin === 'function' && isAdmin()) first.admin = true;
+    await set(push(ref(db, `website/forum_posts/${tRef.key}`)), first);
     forumOpenTopic(forumId, tRef.key);
   } catch (e) {
     console.error('forum topic failed', e);
@@ -13081,8 +13177,12 @@ async function forumReply() {
   const { forumId, topicId } = forumView;
   forumBusy = true;
   try {
-    await set(push(ref(db, `website/forum_posts/${topicId}`)), { uid: user.uid, name, text: text.slice(0, 5000), t: now });
+    const msg = { uid: user.uid, name, text: text.slice(0, 5000), t: now };
+    if (typeof isAdmin === 'function' && isAdmin()) msg.admin = true;
+    await set(push(ref(db, `website/forum_posts/${topicId}`)), msg);
     if (box) box.value = '';
+    forumPage = 9999; // העמוד האחרון — שם התגובה החדשה
+    forumRender();
     await update(ref(db, `website/forum_topics/${forumId}/${topicId}`), { replies: increment(1), lastT: now, lastName: name, lastUid: user.uid });
   } catch (e) {
     console.error('forum reply failed', e);
