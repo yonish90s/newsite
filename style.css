@@ -8403,3 +8403,8 @@ html body .pshow-tile img { border-radius: 12px; }
   html body .pshow-tiles { grid-template-columns: repeat(auto-fill, minmax(82px, 1fr)); gap: 10px; }
 }
 html body .pshow-tile.story-page-thumb { width: auto !important; height: auto !important; aspect-ratio: 1 / 1; }
+
+/* כרטיס שהסינון/העימוד הסתיר (display:none בקוד) נשאר מוסתר —
+   גובר על הכלל הישן שמכריח את כל הכרטיסים להופיע (ביטול כפתור "עוד") */
+html body:not(#_) .art-rows > .art-row[style*="display: none"],
+html body:not(#_) .art-rows > .art-row[data-art-match="0"] { display: none !important; }
