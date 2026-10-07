@@ -5718,6 +5718,10 @@ html.hide-site-images .photo-mini-thumb {
   gap: 14px;
   margin-bottom: 12px;
 }
+.qu-options-grid.is-single {
+  grid-template-columns: minmax(0, 390px);
+  justify-content: center;
+}
 
 .qu-dest-pill {
   background: #f8fafc;

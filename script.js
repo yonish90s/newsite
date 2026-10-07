@@ -11707,7 +11707,7 @@ window.buildSiteStatsSection = buildSiteStatsSection;
 // ============================================================
 window.quickUploadState = window.quickUploadState || {
   step: 1,
-  target: 'photos', // 'photos', 'comics', 'stories'
+  target: 'photos', // רק תמונות
   title: '',
   summary: '',
   category: 'כללי',
@@ -11758,22 +11758,14 @@ function renderQuickUploadHero() {
       <div class="qu-hero-subtitle">✨ שלב 1 מתוך ${_totalQ}: לאיזה אזור תרצו להעלות את התוכן שלכם?</div>
     `;
     inputContent = `
-      <div class="qu-options-grid">
+      <div class="qu-options-grid is-single">
         <button type="button" class="qu-dest-pill ${st.target === 'photos' ? 'active' : ''}" onclick="quickUploadSetTarget('photos')">
           <span class="qu-pill-icon">🖼️</span>
           <div class="qu-pill-text"><strong>תמונות</strong><small>אלבומים וגלריות תמונות</small></div>
         </button>
-        <button type="button" class="qu-dest-pill ${st.target === 'comics' ? 'active' : ''}" onclick="quickUploadSetTarget('comics')">
-          <span class="qu-pill-icon">📖</span>
-          <div class="qu-pill-text"><strong>קומיקס</strong><small>רצועות קומיקס ואיורים</small></div>
-        </button>
-        <button type="button" class="qu-dest-pill ${st.target === 'stories' ? 'active' : ''}" onclick="quickUploadSetTarget('stories')">
-          <span class="qu-pill-icon">✍️</span>
-          <div class="qu-pill-text"><strong>סיפורים</strong><small>סיפורים קצרים ומאמרים</small></div>
-        </button>
       </div>
       <div class="qu-input-row" style="margin-top:16px;">
-        <div style="flex:1; font-size:13px; color:#64748b; text-align:right;">נבחר: <b>${st.target === 'photos' ? '🖼️ תמונות' : (st.target === 'comics' ? '📖 קומיקס' : '✍️ סיפורים')}</b></div>
+        <div style="flex:1; font-size:13px; color:#64748b; text-align:right;">נבחר: <b>🖼️ תמונות</b></div>
         ${_arrow('המשך לשלב הבא')}
       </div>
     `;
@@ -12115,7 +12107,8 @@ async function editPodcastEmbed() {
 window.editPodcastEmbed = editPodcastEmbed;
 
 function quickUploadSetTarget(target) {
-  window.quickUploadState.target = target;
+  // רק תמונות — אי אפשר להעלות סיפורים או קומיקס
+  window.quickUploadState.target = 'photos';
   quickUploadRefreshUI();
 }
 window.quickUploadSetTarget = quickUploadSetTarget;
