@@ -7492,9 +7492,9 @@ html.age-not-verified .pshow-frame.photo-main-img-container.is-adult { filter: n
 .home-feed-page .qu-hero-wrap .qu-arrow-btn svg { stroke: #190c35 !important; }
 
 /* ===================================================================
-   ערכת כהה לכל האתר — בלי משטחים לבנים
+   ערכה כהה — רק בעמוד הבית (html.page-home). שאר העמודים בהירים
    רקע #190c35, משטחים #241347, טקסט בהיר, הדגשות צהובות.
-   הקידומת html body גוברת על החוקים הבהירים הקודמים.
+   הקידומת html.page-home body גוברת על החוקים הבהירים הקודמים.
    =================================================================== */
 :root {
   --dk-bg: #190c35;
@@ -7506,291 +7506,291 @@ html.age-not-verified .pshow-frame.photo-main-img-container.is-adult { filter: n
 }
 
 /* --- משטחים: כרטיסים, תיבות צד, טבלאות --- */
-html body .art-row,
-html body .art-row-img-wrap,
-html body .art-sidebar-box,
-html body .photo-section-row,
-html body .view-toggles,
-html body .art-rec-card,
-html body .site-stats-wrapper,
-html body .subscription-page-wrapper [class*="card"],
-html body .home-feed-section .art-row {
+html.page-home body .art-row,
+html.page-home body .art-row-img-wrap,
+html.page-home body .art-sidebar-box,
+html.page-home body .photo-section-row,
+html.page-home body .view-toggles,
+html.page-home body .art-rec-card,
+html.page-home body .site-stats-wrapper,
+html.page-home body .subscription-page-wrapper [class*="card"],
+html.page-home body .home-feed-section .art-row {
   background: var(--dk-surface) !important;
   border-color: var(--dk-line) !important;
   color: var(--dk-text) !important;
 }
 
 /* --- רקע כהה לעמודים --- */
-html body .art-detail,
-html body .art-detail.photos-page,
-html body .art-detail.stories-page,
-html body .home-welcome,
-html body .home-feed-section,
-html body .home-feed-section.photo-section-row,
-html body .home-feed-stories .home-feed-section:first-child {
+html.page-home body .art-detail,
+html.page-home body .art-detail.photos-page,
+html.page-home body .art-detail.stories-page,
+html.page-home body .home-welcome,
+html.page-home body .home-feed-section,
+html.page-home body .home-feed-section.photo-section-row,
+html.page-home body .home-feed-stories .home-feed-section:first-child {
   background: var(--dk-bg) !important;
   color: var(--dk-text) !important;
 }
 
 /* --- רצועות הבית מתחלפות --- */
-html body .home-feed-photos .home-feed-section,
-html body .home-feed-stories .home-feed-section:nth-child(even) {
+html.page-home body .home-feed-photos .home-feed-section,
+html.page-home body .home-feed-stories .home-feed-section:nth-child(even) {
   background: var(--dk-surface) !important;
 }
-html body .home-feed-photos .art-row,
-html body .home-feed-stories .home-feed-section:nth-child(even) .art-row {
+html.page-home body .home-feed-photos .art-row,
+html.page-home body .home-feed-stories .home-feed-section:nth-child(even) .art-row {
   background: var(--dk-surface-2) !important;
 }
 
 /* --- טקסט ראשי בהיר --- */
-html body .art-row h3,
-html body .art-row-text h3,
-html body .home-feed-section .art-row-text h3,
-html body .photo-author-link,
-html body .art-sidebar-box h4,
-html body .art-sidebar-box h5,
-html body .art-sidebar-box span,
-html body .pf-check-label,
-html body .pf-sec-title-text,
-html body .pf-sec-chev,
-html body .tgl-label,
-html body .site-page-nav-title,
-html body .site-page-nav-item,
-html body .home-feed-section > div:first-child h3,
-html body .home-feed-head-text h3,
-html body .art-rec-text h4,
-html body .art-section-title,
-html body .art-sidebar-title,
-html body .photo-section-row h3,
-html body .art-detail-title,
-html body .art-back-btn,
-html body .art-meta,
-html body .art-meta span,
-html body .art-detail-content p,
-html body .pshow-title,
-html body .pshow-desc,
-html body .pshow-desc p,
-html body .pd-show-meta,
-html body .pd-show-meta b,
-html body .comic-show .story-comic-desc,
-html body .story-article-title,
-html body .story-article-body,
-html body .story-article-meta,
-html body .story-page-number,
-html body .site-footer,
-html body .site-footer-col h4,
-html body .subscription-page-wrapper h1,
-html body .subscription-page-wrapper h2,
-html body .subscription-page-wrapper h3,
-html body .subscription-page-wrapper li,
-html body .subscription-page-wrapper p {
+html.page-home body .art-row h3,
+html.page-home body .art-row-text h3,
+html.page-home body .home-feed-section .art-row-text h3,
+html.page-home body .photo-author-link,
+html.page-home body .art-sidebar-box h4,
+html.page-home body .art-sidebar-box h5,
+html.page-home body .art-sidebar-box span,
+html.page-home body .pf-check-label,
+html.page-home body .pf-sec-title-text,
+html.page-home body .pf-sec-chev,
+html.page-home body .tgl-label,
+html.page-home body .site-page-nav-title,
+html.page-home body .site-page-nav-item,
+html.page-home body .home-feed-section > div:first-child h3,
+html.page-home body .home-feed-head-text h3,
+html.page-home body .art-rec-text h4,
+html.page-home body .art-section-title,
+html.page-home body .art-sidebar-title,
+html.page-home body .photo-section-row h3,
+html.page-home body .art-detail-title,
+html.page-home body .art-back-btn,
+html.page-home body .art-meta,
+html.page-home body .art-meta span,
+html.page-home body .art-detail-content p,
+html.page-home body .pshow-title,
+html.page-home body .pshow-desc,
+html.page-home body .pshow-desc p,
+html.page-home body .pd-show-meta,
+html.page-home body .pd-show-meta b,
+html.page-home body .comic-show .story-comic-desc,
+html.page-home body .story-article-title,
+html.page-home body .story-article-body,
+html.page-home body .story-article-meta,
+html.page-home body .story-page-number,
+html.page-home body .site-footer,
+html.page-home body .site-footer-col h4,
+html.page-home body .subscription-page-wrapper h1,
+html.page-home body .subscription-page-wrapper h2,
+html.page-home body .subscription-page-wrapper h3,
+html.page-home body .subscription-page-wrapper li,
+html.page-home body .subscription-page-wrapper p {
   color: var(--dk-text) !important;
 }
 
 /* --- טקסט משני --- */
-html body .home-feed-sub,
-html body .home-feed-stories .home-feed-section:first-child .home-feed-sub,
-html body .art-rec-meta,
-html body .art-row-meta,
-html body .art-row-meta span,
-html body .art-row b,
-html body .art-row div,
-html body .art-row span:not(.art-category-badge),
-html body .art-sidebar-box div,
-html body .art-sidebar-box b,
-html body .art-row-sep,
-html body .site-page-nav-arrow,
-html body .site-footer-col a,
-html body .site-footer-bottom,
-html body .site-footer span {
+html.page-home body .home-feed-sub,
+html.page-home body .home-feed-stories .home-feed-section:first-child .home-feed-sub,
+html.page-home body .art-rec-meta,
+html.page-home body .art-row-meta,
+html.page-home body .art-row-meta span,
+html.page-home body .art-row b,
+html.page-home body .art-row div,
+html.page-home body .art-row span:not(.art-category-badge),
+html.page-home body .art-sidebar-box div,
+html.page-home body .art-sidebar-box b,
+html.page-home body .art-row-sep,
+html.page-home body .site-page-nav-arrow,
+html.page-home body .site-footer-col a,
+html.page-home body .site-footer-bottom,
+html.page-home body .site-footer span {
   color: var(--dk-muted) !important;
 }
-html body .art-row h3,
-html body .art-row-text h3,
-html body .art-row .photo-author-link {
+html.page-home body .art-row h3,
+html.page-home body .art-row-text h3,
+html.page-home body .art-row .photo-author-link {
   color: var(--dk-text) !important;
 }
-html body .site-footer-col a:hover {
+html.page-home body .site-footer-col a:hover {
   color: #ffd166 !important;
 }
 
 /* --- פוטר --- */
-html body .site-footer {
+html.page-home body .site-footer {
   background: #120826 !important;
   border-top: 1px solid var(--dk-line) !important;
 }
-html body .site-footer-bottom {
+html.page-home body .site-footer-bottom {
   border-top-color: var(--dk-line) !important;
 }
 
 /* --- תצוגת גלריה/קומיקס על כהה --- */
-html body .pshow-line {
+html.page-home body .pshow-line {
   background: var(--dk-line) !important;
 }
-html body .pshow-dot {
+html.page-home body .pshow-dot {
   border-color: var(--dk-text) !important;
 }
-html body .pshow-dot.active {
+html.page-home body .pshow-dot.active {
   background: #ffd166 !important;
   border-color: #ffd166 !important;
 }
-html body .pshow-tile.active,
-html body .comic-show .pshow-tile.story-page-thumb.active {
+html.page-home body .pshow-tile.active,
+html.page-home body .comic-show .pshow-tile.story-page-thumb.active {
   border-color: #ffd166 !important;
 }
 
 /* --- רכיבים בהירים בתוך המשטחים --- */
-html body .site-page-nav-item,
-html body .art-sidebar-box li,
-html body .pf-clear-btn,
-html body .art-sidebar-box input,
-html body .art-sidebar-box select,
-html body .art-search,
-html body .shop-search,
-html body .photos-page input[type="text"],
-html body .photos-page input[type="search"],
-html body .stories-page input[type="text"],
-html body .stories-page input[type="search"],
-html body .photo-section-row input,
-html body .communities-page input,
-html body .photo-filter-trigger,
-html body .sidebar-min-toggle,
-html body .sidebar-saved-btn,
-html body .sidebar-tab-pill,
-html body .story-cat-btn,
-html body .home-feed-page .home-feed-section .photo-card-links .art-telegram-btn,
-html body .home-feed-page .home-feed-section .photo-card-links button:first-child,
-html body .home-feed-section .photo-card-links .art-telegram-btn,
-html body .home-feed-section .photo-card-links .art-save-btn,
-html body .photo-card-links .art-telegram-btn,
-html body .photo-card-links .art-save-btn,
-html body .art-telegram-btn,
-html body .art-save-btn,
-html body .photo-like-btn,
-html body .photo-save-btn,
-html body .follow-btn,
-html body .art-detail textarea,
-html body .art-detail input,
-html body .art-detail .art-back-btn {
+html.page-home body .site-page-nav-item,
+html.page-home body .art-sidebar-box li,
+html.page-home body .pf-clear-btn,
+html.page-home body .art-sidebar-box input,
+html.page-home body .art-sidebar-box select,
+html.page-home body .art-search,
+html.page-home body .shop-search,
+html.page-home body .photos-page input[type="text"],
+html.page-home body .photos-page input[type="search"],
+html.page-home body .stories-page input[type="text"],
+html.page-home body .stories-page input[type="search"],
+html.page-home body .photo-section-row input,
+html.page-home body .communities-page input,
+html.page-home body .photo-filter-trigger,
+html.page-home body .sidebar-min-toggle,
+html.page-home body .sidebar-saved-btn,
+html.page-home body .sidebar-tab-pill,
+html.page-home body .story-cat-btn,
+html.page-home body .home-feed-page .home-feed-section .photo-card-links .art-telegram-btn,
+html.page-home body .home-feed-page .home-feed-section .photo-card-links button:first-child,
+html.page-home body .home-feed-section .photo-card-links .art-telegram-btn,
+html.page-home body .home-feed-section .photo-card-links .art-save-btn,
+html.page-home body .photo-card-links .art-telegram-btn,
+html.page-home body .photo-card-links .art-save-btn,
+html.page-home body .art-telegram-btn,
+html.page-home body .art-save-btn,
+html.page-home body .photo-like-btn,
+html.page-home body .photo-save-btn,
+html.page-home body .follow-btn,
+html.page-home body .art-detail textarea,
+html.page-home body .art-detail input,
+html.page-home body .art-detail .art-back-btn {
   background: rgba(255, 255, 255, 0.07) !important;
   border-color: var(--dk-line) !important;
   color: var(--dk-text) !important;
 }
-html body .photo-card-links svg,
-html body .art-telegram-btn svg,
-html body .art-save-btn svg,
-html body .photo-like-btn svg,
-html body .photo-save-btn svg,
-html body .home-feed-section .photo-card-links .art-telegram-btn svg,
-html body .home-feed-section .photo-card-links .art-save-btn svg,
-html body .home-feed-page .home-feed-section .photo-card-links button:first-child svg {
+html.page-home body .photo-card-links svg,
+html.page-home body .art-telegram-btn svg,
+html.page-home body .art-save-btn svg,
+html.page-home body .photo-like-btn svg,
+html.page-home body .photo-save-btn svg,
+html.page-home body .home-feed-section .photo-card-links .art-telegram-btn svg,
+html.page-home body .home-feed-section .photo-card-links .art-save-btn svg,
+html.page-home body .home-feed-page .home-feed-section .photo-card-links button:first-child svg {
   stroke: currentColor !important;
 }
-html body .art-save-btn.is-saved,
-html body .home-feed-section .photo-card-links .art-save-btn.is-saved {
+html.page-home body .art-save-btn.is-saved,
+html.page-home body .home-feed-section .photo-card-links .art-save-btn.is-saved {
   background: rgba(255, 209, 102, 0.16) !important;
   color: #ffd166 !important;
 }
-html body .art-detail textarea::placeholder,
-html body .art-detail input::placeholder,
-html body .photos-page input::placeholder,
-html body .stories-page input::placeholder,
-html body .art-search::placeholder {
+html.page-home body .art-detail textarea::placeholder,
+html.page-home body .art-detail input::placeholder,
+html.page-home body .photos-page input::placeholder,
+html.page-home body .stories-page input::placeholder,
+html.page-home body .art-search::placeholder {
   color: var(--dk-muted) !important;
 }
-html body .site-page-nav-item.active {
+html.page-home body .site-page-nav-item.active {
   background: #7c3aed !important;
 }
 
 /* --- באנר הפתיחה --- */
-html body .hw-card-top {
+html.page-home body .hw-card-top {
   background: var(--dk-bg) !important;
 }
-html body .hw-card-brand {
+html.page-home body .hw-card-brand {
   color: #ffffff !important;
 }
-html body .story-thumb-text,
-html body .art-card-img-placeholder {
+html.page-home body .story-thumb-text,
+html.page-home body .art-card-img-placeholder {
   background: var(--dk-surface-2) !important;
   color: var(--dk-muted) !important;
 }
 
 /* --- תגובות, מנוי, קהילות --- */
-html body .pc-form,
-html body .pc-comment,
-html body .comm-grid-card,
-html body .comm-grid-card.comm-grid-shortcut,
-html body .sub-credits {
+html.page-home body .pc-form,
+html.page-home body .pc-comment,
+html.page-home body .comm-grid-card,
+html.page-home body .comm-grid-card.comm-grid-shortcut,
+html.page-home body .sub-credits {
   background: var(--dk-surface) !important;
   border-color: var(--dk-line) !important;
   color: var(--dk-text) !important;
 }
-html body .pc-mic,
-html body .sub-start-btn,
-html body .story-article-tag,
-html body .pc-form textarea,
-html body .pc-form input {
+html.page-home body .pc-mic,
+html.page-home body .sub-start-btn,
+html.page-home body .story-article-tag,
+html.page-home body .pc-form textarea,
+html.page-home body .pc-form input {
   background: rgba(255, 255, 255, 0.07) !important;
   border-color: var(--dk-line) !important;
   color: var(--dk-text) !important;
 }
-html body .pc-title,
-html body .pc-title span,
-html body .pc-head,
-html body .pc-text,
-html body .pc-empty,
-html body .sub-price,
-html body .sub-features-title,
-html body .subscription-page-wrapper span,
-html body .subscription-page-wrapper div,
-html body .comm-grid-card h3,
-html body .comm-grid-card h4,
-html body .comm-grid-card span,
-html body .comm-grid-card div {
+html.page-home body .pc-title,
+html.page-home body .pc-title span,
+html.page-home body .pc-head,
+html.page-home body .pc-text,
+html.page-home body .pc-empty,
+html.page-home body .sub-price,
+html.page-home body .sub-features-title,
+html.page-home body .subscription-page-wrapper span,
+html.page-home body .subscription-page-wrapper div,
+html.page-home body .comm-grid-card h3,
+html.page-home body .comm-grid-card h4,
+html.page-home body .comm-grid-card span,
+html.page-home body .comm-grid-card div {
   color: var(--dk-text) !important;
 }
-html body .home-feed-page .qu-hero-wrap .qu-hero-card div,
-html body .home-feed-page .qu-hero-wrap .qu-hero-card b {
+html.page-home body .home-feed-page .qu-hero-wrap .qu-hero-card div,
+html.page-home body .home-feed-page .qu-hero-wrap .qu-hero-card b {
   color: rgba(241, 236, 255, 0.72) !important;
 }
 
 /* --- מנוי: הדגשות צהובות --- */
-html body .sub-price { color: #ffd166 !important; }
-html body .sub-badge {
+html.page-home body .sub-price { color: #ffd166 !important; }
+html.page-home body .sub-badge {
   background: var(--warm-grad) !important;
   color: #190c35 !important;
   font-weight: 800 !important;
 }
-html body .sub-pricing-card.featured {
+html.page-home body .sub-pricing-card.featured {
   border: 2px solid #ffd166 !important;
   box-shadow: 0 0 0 4px rgba(255, 209, 102, 0.12), 0 24px 50px -24px rgba(255, 159, 28, 0.45) !important;
 }
-html body .sub-credits {
+html.page-home body .sub-credits {
   background: rgba(255, 209, 102, 0.08) !important;
   border: 1px solid rgba(255, 209, 102, 0.28) !important;
 }
-html body .sub-credits,
-html body .sub-credits * { color: #ffe3a3 !important; }
-html body .sub-start-btn {
+html.page-home body .sub-credits,
+html.page-home body .sub-credits * { color: #ffe3a3 !important; }
+html.page-home body .sub-start-btn {
   background: transparent !important;
   border: 1.5px solid #ffd166 !important;
   color: #ffd166 !important;
 }
-html body .sub-pricing-card.featured .sub-start-btn,
-html body .sub-start-btn:hover {
+html.page-home body .sub-pricing-card.featured .sub-start-btn,
+html.page-home body .sub-start-btn:hover {
   background: var(--warm-grad) !important;
   border-color: transparent !important;
   color: #190c35 !important;
 }
-html body .sub-features li::marker { color: #ffd166 !important; }
-html body .sub-features-title { color: #ffd166 !important; }
+html.page-home body .sub-features li::marker { color: #ffd166 !important; }
+html.page-home body .sub-features-title { color: #ffd166 !important; }
 
 /* --- קהילות: כרטיסים ורודים --- */
-html body .comm-grid-shortcut .comm-grid-thumb { background: linear-gradient(135deg, #ff8cc6 0%, #ec4899 100%) !important; }
-html body .comm-grid-shortcut:nth-child(3n+2) .comm-grid-thumb { background: linear-gradient(135deg, #f9a8d4 0%, #db2777 100%) !important; }
-html body .comm-grid-shortcut:nth-child(3n) .comm-grid-thumb { background: linear-gradient(135deg, #f472b6 0%, #be185d 100%) !important; }
-html body .comm-grid-btn { background: #ec4899 !important; color: #fff !important; }
-html body .comm-grid-btn:hover { background: #db2777 !important; }
+html.page-home body .comm-grid-shortcut .comm-grid-thumb { background: linear-gradient(135deg, #ff8cc6 0%, #ec4899 100%) !important; }
+html.page-home body .comm-grid-shortcut:nth-child(3n+2) .comm-grid-thumb { background: linear-gradient(135deg, #f9a8d4 0%, #db2777 100%) !important; }
+html.page-home body .comm-grid-shortcut:nth-child(3n) .comm-grid-thumb { background: linear-gradient(135deg, #f472b6 0%, #be185d 100%) !important; }
+html.page-home body .comm-grid-btn { background: #ec4899 !important; color: #fff !important; }
+html.page-home body .comm-grid-btn:hover { background: #db2777 !important; }
 
 /* ===================================================================
    הדגשות ורודות במקום סגול: תפריט צד, סינונים, כפתורי שמירה, גודל תצוגה
@@ -7809,7 +7809,7 @@ html body .site-page-nav-item[class*="active"] {
 }
 html body .art-sidebar-title,
 html body .art-sidebar-box > div[style*="border-bottom"] { border-bottom-color: var(--pink) !important; }
-html body .art-sidebar-title span[style*="124, 58, 237"] {
+html.page-home body .art-sidebar-title span[style*="124, 58, 237"] {
   background: rgba(236, 72, 153, 0.16) !important;
   color: #f9a8d4 !important;
 }
@@ -7834,8 +7834,8 @@ html body .comm-type-btn.active {
   color: #fff !important;
 }
 /* סינון: כפתורי רדיו */
-html body .pf-check input[type="radio"],
-html body .pf-check input[type="checkbox"] {
+html.page-home body .pf-check input[type="radio"],
+html.page-home body .pf-check input[type="checkbox"] {
   accent-color: var(--pink) !important;
   border-color: rgba(255, 255, 255, 0.25) !important;
   background-color: rgba(255, 255, 255, 0.06) !important;
@@ -7856,8 +7856,8 @@ html body .art-save-btn svg { stroke: #fff !important; }
 /* תגית המספר בסינון (גודל 4) */
 html body .photo-filter-trigger-value { background: var(--pink) !important; color: #fff !important; }
 /* בוחר גודל תצוגה 2 / 3 / 4 */
-html body .story-size-btn,
-html body .photo-size-btn {
+html.page-home body .story-size-btn,
+html.page-home body .photo-size-btn {
   background: rgba(255, 255, 255, 0.07) !important;
   border-color: rgba(255, 255, 255, 0.14) !important;
   color: var(--dk-text) !important;
@@ -7869,7 +7869,7 @@ html body .photo-size-btn.active {
   color: #fff !important;
 }
 /* מתג (מסך מלא) */
-html body .tgl-slider { background: rgba(255, 255, 255, 0.18) !important; }
+html.page-home body .tgl-slider { background: rgba(255, 255, 255, 0.18) !important; }
 html body input:checked + .tgl-slider { background: var(--pink) !important; }
 html body .articles-page .art-sidebar-title::after { background: var(--pink) !important; }
 
@@ -8576,3 +8576,98 @@ html body:not(#_) .art-rows > .art-row[data-art-match="0"] { display: none !impo
   .fo-row > .fo-stat:nth-of-type(2) { display: none; }
   .fo-icon { width: 40px; height: 40px; }
 }
+
+/* באנר: חמשת המונים כפס נתונים אחד מתחת לכפתור */
+.hw-actions .hw-stats {
+  flex-basis: 100%;
+  display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0; padding: 12px 6px;
+  background: #190c35; border-radius: 20px;
+  box-shadow: 0 6px 0 rgba(25, 12, 53, 0.25);
+  max-width: 560px;
+}
+.hw-actions .hw-stat {
+  flex-direction: column; justify-content: flex-start; gap: 6px;
+  padding: 2px 4px; background: none; box-shadow: none; border-radius: 0;
+  text-align: center;
+}
+.hw-actions .hw-stat + .hw-stat { border-inline-start: 1px solid rgba(255, 255, 255, 0.10); }
+.hw-actions .hw-stat-ico { width: 30px; height: 30px; border-radius: 10px; }
+.hw-actions .hw-stat-ico svg { width: 17px; height: 17px; }
+.hw-actions .hw-stat-text { align-items: center; text-align: center; }
+.hw-actions .hw-stat-text b { font-size: 21px; }
+.hw-actions .hw-stat-text small { font-size: 11.5px; line-height: 1.25; margin-top: 3px; }
+@media (max-width: 860px) {
+  .hw-actions .hw-stats { margin: 0 auto; }
+}
+@media (max-width: 420px) {
+  .hw-actions .hw-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 12px; }
+  .hw-actions .hw-stat:nth-child(4) { border-inline-start: none; }
+}
+
+/* ===================================================================
+   כל העמודים חוץ מהבית: רקע לבן (הבית נשאר צהוב-סגול, ראו html.page-home)
+   =================================================================== */
+html:not(.page-home) body { background: #ffffff !important; }
+
+/* --- מכ"ם גולשים על לבן --- */
+html:not(.page-home) .radar-title { color: #1e1033 !important; }
+html:not(.page-home) .umap-count { color: #059669 !important; }
+html:not(.page-home) .umap-hint { color: #64748b !important; }
+html:not(.page-home) .umap-btn.ghost { background: #f1f5f9 !important; color: #334155 !important; border-color: #e2e8f0 !important; }
+html:not(.page-home) .radar-scale { color: #b45309; }
+
+/* --- עמוד "חברים" על לבן --- */
+html:not(.page-home) .fr-hero h1 { color: #1e1033; }
+html:not(.page-home) .fr-hero p { color: #64748b; }
+html:not(.page-home) .fr-rules span { background: #faf5ff; border-color: #ede9fe; color: #3b0764; }
+html:not(.page-home) .fr-rules b { color: #db2777; }
+html:not(.page-home) .fr-board { background: #fff; border-color: #ede9fe; box-shadow: 0 14px 36px -22px rgba(76, 29, 149, 0.35); }
+html:not(.page-home) .fr-board-head small { color: #64748b; }
+html:not(.page-home) .fr-row:hover { background: #faf5ff; }
+html:not(.page-home) .fr-row.me { background: #fdf2f8; }
+html:not(.page-home) .fr-rank { color: #94a3b8; }
+html:not(.page-home) .fr-row.top1 .fr-rank { color: #d97706; }
+html:not(.page-home) .fr-row.top2 .fr-rank { color: #64748b; }
+html:not(.page-home) .fr-row.top3 .fr-rank { color: #c2410c; }
+html:not(.page-home) .fr-row.top1 .fr-avatar { box-shadow: 0 0 0 3px #fbbf24; }
+html:not(.page-home) .fr-row.top2 .fr-avatar { box-shadow: 0 0 0 3px #cbd5e1; }
+html:not(.page-home) .fr-row.top3 .fr-avatar { box-shadow: 0 0 0 3px #fdba74; }
+html:not(.page-home) .fr-name { color: #1e1033; }
+html:not(.page-home) .fr-val { color: #475569; }
+html:not(.page-home) .fr-val small { color: #94a3b8; }
+html:not(.page-home) .fr-stars { color: #f59e0b; }
+html:not(.page-home) .fr-empty { color: #64748b; }
+html:not(.page-home) .fr-more { background: #faf5ff; border-color: #ede9fe; color: #5b21b6; }
+html:not(.page-home) .fr-more:hover { background: #f3e8ff; }
+
+/* --- עמוד "פורומים" על לבן --- */
+html:not(.page-home) .fo-hero h1, html:not(.page-home) .fo-head h1 { color: #1e1033; }
+html:not(.page-home) .fo-hero p, html:not(.page-home) .fo-head p { color: #64748b; }
+html:not(.page-home) .fo-cat,
+html:not(.page-home) .fo-compose,
+html:not(.page-home) .fo-reply,
+html:not(.page-home) .fo-post { background: #fff; border-color: #ece7f6; box-shadow: 0 12px 32px -24px rgba(76, 29, 149, 0.35); }
+html:not(.page-home) .fo-cat-title { background: #faf7ff; color: #1e1033; border-bottom-color: #ece7f6; }
+html:not(.page-home) .fo-row { border-bottom-color: #f1edf8; }
+html:not(.page-home) .fo-row:hover { background: #fbf9ff; }
+html:not(.page-home) .fo-icon { background: #fdf2f8; }
+html:not(.page-home) .fo-row.topic .fo-title { color: #1e1033; }
+html:not(.page-home) .fo-main small { color: #64748b; }
+html:not(.page-home) .fo-stat small { color: #94a3b8; }
+html:not(.page-home) .fo-stat b { color: #1e1033; }
+html:not(.page-home) .fo-last-title { color: #6d28d9; }
+html:not(.page-home) .fo-last-text small, html:not(.page-home) .fo-none { color: #94a3b8; }
+html:not(.page-home) .fo-empty { color: #64748b; }
+html:not(.page-home) .fo-crumbs { color: #94a3b8; }
+html:not(.page-home) .fo-crumbs a { color: #db2777; }
+html:not(.page-home) .fo-btn.ghost { background: #f5f3ff; color: #3b0764; border-color: #ede9fe; }
+html:not(.page-home) .fo-btn.danger { color: #dc2626; }
+html:not(.page-home) .fo-input { background: #faf9fd !important; color: #1e1033 !important; border-color: #e5e0f0 !important; }
+html:not(.page-home) .fo-input::placeholder { color: #94a3b8; }
+html:not(.page-home) .fo-input:focus { border-color: #ec4899 !important; }
+html:not(.page-home) .fo-post.first { border-color: #fbcfe8; }
+html:not(.page-home) .fo-post-meta small { color: #94a3b8; }
+html:not(.page-home) .fo-post-text { color: #1e293b; }
+html:not(.page-home) .fo-del { color: #dc2626; }
+html:not(.page-home) .fo-login { color: #1e1033; }

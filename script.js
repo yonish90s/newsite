@@ -7980,6 +7980,8 @@ let artPagObserver = null;
 // לקרוא לעימוד בכל אתר קריאה בנפרד מסנכרנים אותו אחרי כל שינוי ב-DOM
 function artSyncPagination() {
   if (typeof mainContent === 'undefined' || !mainContent) return;
+  // עיצוב: רק עמוד הבית בצהוב-סגול כהה; שאר העמודים בהירים
+  document.documentElement.classList.toggle('page-home', !!mainContent.querySelector('.home-feed-page'));
   if (artPagObserver) artPagObserver.disconnect();
   try {
     artApplyPagination(mainContent.querySelector('.photos-page'), 'photos');
@@ -12529,29 +12531,68 @@ function homePostsTodayCount() {
   );
   return items.filter(it => ts(it) >= t0).length;
 }
+// נתוני היום הנוספים (נטענים מ-Firebase): דיונים בפורומים, שאלות, נפח פעילות
+window._homeTodayExtra = window._homeTodayExtra || null;
 function homeTodayStatsHTML() {
   setTimeout(homeLoadTodayVisitors, 0);
   const v = window._homeTodayVisitors;
+  const x = window._homeTodayExtra;
+  const posts = homePostsTodayCount();
+  const fmt = (n) => (n === null || n === undefined) ? '—' : Number(n).toLocaleString('he-IL');
   const ico = (d) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+  const stat = (cls, icon, val, label, live) => `
+      <div class="hw-stat">
+        <span class="hw-stat-ico${live ? ' live' : ''}">${ico(icon)}</span>
+        <span class="hw-stat-text"><b class="${cls}">${val}</b><small>${label}</small></span>
+      </div>`;
   return `
     <div class="hw-stats">
-      <div class="hw-stat">
-        <span class="hw-stat-ico live">${ico('<circle cx="9" cy="8" r="3.2"/><path d="M3 19.5v-.8A5 5 0 0 1 8 13.7h2a5 5 0 0 1 5 5v.8"/><path d="M16 4.6a3.2 3.2 0 0 1 0 6.3M18.5 13.9a5 5 0 0 1 2.5 4.3v1.3"/>')}</span>
-        <span class="hw-stat-text"><b class="hw-stat-visitors">${v === null ? '—' : v.toLocaleString('he-IL')}</b><small>גולשים היום</small></span>
-      </div>
-      <div class="hw-stat">
-        <span class="hw-stat-ico">${ico('<path d="M12 19V6M6 11l6-6 6 6"/><path d="M5 20h14"/>')}</span>
-        <span class="hw-stat-text"><b>${homePostsTodayCount().toLocaleString('he-IL')}</b><small>פוסטים עלו היום</small></span>
-      </div>
+      ${stat('hw-stat-visitors', '<circle cx="9" cy="8" r="3.2"/><path d="M3 19.5v-.8A5 5 0 0 1 8 13.7h2a5 5 0 0 1 5 5v.8"/><path d="M16 4.6a3.2 3.2 0 0 1 0 6.3M18.5 13.9a5 5 0 0 1 2.5 4.3v1.3"/>', fmt(v), 'גולשים היום', true)}
+      ${stat('hw-stat-posts', '<path d="M12 19V6M6 11l6-6 6 6"/><path d="M5 20h14"/>', fmt(posts), 'פוסטים עלו היום')}
+      ${stat('hw-stat-discussions', '<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h9A2.5 2.5 0 0 1 18 5.5v5a2.5 2.5 0 0 1-2.5 2.5H10l-4 3.5V13a2.5 2.5 0 0 1-2-2.5z"/><path d="M18 8.5h.5A2.5 2.5 0 0 1 21 11v5a2.5 2.5 0 0 1-2 2.5V21l-3.5-2.5H12"/>', fmt(x && x.discussions), 'דיונים פעילים היום')}
+      ${stat('hw-stat-questions', '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.2a2.6 2.6 0 0 1 5 .9c0 1.7-2.5 2.2-2.5 3.9"/><path d="M12 17h.01"/>', fmt(x && x.questions), 'שאלות היום')}
+      ${stat('hw-stat-activity', '<path d="M3 12h4l2.5-6 4 12 2.5-6H21"/>', fmt(x && x.activity), 'נפח פעילות היום')}
     </div>`;
 }
 async function homeLoadTodayVisitors() {
-  try {
-    const snap = await get(ref(db, 'website/analytics/daily/' + _analyticsDayKey()));
-    const n = snap.exists() ? Number(snap.val()) || 0 : 0;
-    window._homeTodayVisitors = n;
-    document.querySelectorAll('.hw-stat-visitors').forEach(el => { el.textContent = n.toLocaleString('he-IL'); });
-  } catch (e) {}
+  const day = _analyticsDayKey();
+  const start = new Date(); start.setHours(0, 0, 0, 0);
+  const t0 = start.getTime();
+  const val = async (path) => { try { const s = await get(ref(db, path)); return s.exists() ? s.val() : null; } catch (e) { return null; } };
+  const [visits, events, questions, topics] = await Promise.all([
+    val('website/analytics/daily/' + day),
+    val('website/analytics/events_daily/' + day),
+    val('website/questions'),
+    val('website/forum_topics')
+  ]);
+  const v = Number(visits) || 0;
+  window._homeTodayVisitors = v;
+
+  // דיונים פעילים היום = נושאים בפורומים שנפתחו או קיבלו תגובה היום
+  let discussions = 0, forumNew = 0;
+  Object.values(topics || {}).forEach(forum => Object.values(forum || {}).forEach(t => {
+    if (!t) return;
+    if ((t.lastT || t.t || 0) >= t0) discussions++;
+    if ((t.t || 0) >= t0) forumNew++;
+  }));
+  // שאלות שנשאלו היום + תשובות שניתנו היום
+  let qToday = 0, aToday = 0;
+  Object.values(questions || {}).forEach(q => {
+    if (!q) return;
+    if ((q.createdAt || 0) >= t0) qToday++;
+    Object.values(q.answers || {}).forEach(a => { if (a && (a.createdAt || 0) >= t0) aToday++; });
+  });
+  // נפח פעילות = כל הפעולות היום: לייקים, שמירות, צפיות בגלריות, חיפושים, תגובות...
+  // ועוד פוסטים, שאלות, תשובות ונושאים חדשים
+  const eventsSum = Object.values(events || {}).reduce((a, n) => a + (Number(n) || 0), 0);
+  const activity = eventsSum + homePostsTodayCount() + qToday + aToday + forumNew;
+
+  window._homeTodayExtra = { discussions, questions: qToday, activity };
+  const set_ = (cls, n) => document.querySelectorAll('.' + cls).forEach(el => { el.textContent = Number(n).toLocaleString('he-IL'); });
+  set_('hw-stat-visitors', v);
+  set_('hw-stat-discussions', discussions);
+  set_('hw-stat-questions', qToday);
+  set_('hw-stat-activity', activity);
 }
 
 function homeWelcomeToUpload() {

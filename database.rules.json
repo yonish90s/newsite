@@ -40,7 +40,7 @@
         "daily": { ".read": true, "$day": { ".write": "newData.isNumber() && newData.val() === (data.exists() ? data.val() : 0) + 1" } },
         "monthly": { "$month": { ".write": "newData.isNumber() && newData.val() === (data.exists() ? data.val() : 0) + 1" } },
         "events": { "$event": { ".write": "$event.length <= 40 && newData.isNumber() && newData.val() === (data.exists() ? data.val() : 0) + 1" } },
-        "events_daily": { "$day": { "$event": { ".write": "$day.length <= 12 && $event.length <= 40 && newData.isNumber() && newData.val() === (data.exists() ? data.val() : 0) + 1" } } }
+        "events_daily": { ".read": true, "$day": { "$event": { ".write": "$day.length <= 12 && $event.length <= 40 && newData.isNumber() && newData.val() === (data.exists() ? data.val() : 0) + 1" } } }
       },
 
       "users": {
