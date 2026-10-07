@@ -11767,7 +11767,7 @@ function renderQuickUploadHero() {
       </div>
       <div class="qu-input-row" style="margin-top:16px;">
         <div style="flex:1; font-size:13px; color:#64748b; text-align:right;">נבחר: <b>🖼️ תמונות</b></div>
-        ${_arrow('המשך לשלב הבא')}
+        <button type="button" class="qu-arrow-btn" onclick="quickUploadOpenChat()" title="פתיחת הצ'אט המהיר">${_ARROW}</button>
       </div>
     `;
   } else if (_key === 'title') {
@@ -12106,6 +12106,14 @@ async function editPodcastEmbed() {
   }
 }
 window.editPodcastEmbed = editPodcastEmbed;
+
+// החץ בשלב הראשון פותח את הצ'אט המהיר לפרסום. עוברים קודם לעמוד התמונות,
+// כי הפרסום מהצ'אט נשמר לעמוד הנוכחי (מעמוד הבית הוא היה דורס אותו).
+function quickUploadOpenChat() {
+  if (typeof homeOpenPhotos === 'function') homeOpenPhotos();
+  setTimeout(() => { if (typeof openQuickPublish === 'function') openQuickPublish(null, 'photo'); }, 80);
+}
+window.quickUploadOpenChat = quickUploadOpenChat;
 
 function quickUploadSetTarget(target) {
   // רק תמונות — אי אפשר להעלות סיפורים או קומיקס
