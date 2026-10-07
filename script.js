@@ -11121,6 +11121,22 @@ const USER_MAP_BOUNDS = { minLat: 29.3, maxLat: 33.5, minLng: 34.2, maxLng: 35.9
 const RADAR_KM = 10;
 const RADAR_FRESH_MS = 24 * 60 * 60 * 1000;
 const RADAR_DEFAULT_CENTER = [32.0853, 34.7818];
+// ערים לתוויות הקרטון במכ"ם [שם, lat, lng, דרגת חשיבות]
+const ISRAEL_CITIES = [
+  ['ירושלים',31.778,35.235,1],['תל אביב',32.085,34.781,1],['חיפה',32.794,34.99,1],['באר שבע',31.252,34.791,1],
+  ['אילת',29.557,34.952,1],['טבריה',32.795,35.531,1],['צפת',32.965,35.496,2],['קריית שמונה',33.207,35.57,1],
+  ['נתניה',32.33,34.857,1],['אשדוד',31.8,34.65,1],['דימונה',31.069,35.033,2],['מצפה רמון',30.61,34.8,1],
+  ['נצרת',32.702,35.297,2],['עפולה',32.607,35.289,2],['נהריה',33.006,35.098,2],['עכו',32.927,35.084,2],
+  ['כרמיאל',32.919,35.296,2],['חדרה',32.434,34.919,2],['אשקלון',31.669,34.571,2],['ערד',31.259,35.212,2],
+  ['בית שאן',32.497,35.497,2],['קצרין',32.99,35.69,2],['מודיעין',31.899,35.007,2],['שדרות',31.525,34.596,2],
+  ['קריית גת',31.61,34.764,2],['בית שמש',31.747,34.988,2],['אריאל',32.105,35.17,2],['עין בוקק',31.2,35.36,2],
+  ['הרצליה',32.166,34.843,3],['כפר סבא',32.175,34.907,3],['רעננה',32.184,34.871,4],['פתח תקווה',32.087,34.887,3],
+  ['ראשון לציון',31.964,34.804,3],['רחובות',31.894,34.811,3],['חולון',32.011,34.775,4],['רמת גן',32.068,34.824,4],
+  ['בני ברק',32.083,34.833,4],['יבנה',31.878,34.739,4],['לוד',31.951,34.895,3],['רמלה',31.93,34.866,4],
+  ['יקנעם',32.66,35.11,3],['זכרון יעקב',32.57,34.95,3],['מעלה אדומים',31.777,35.3,4],['נתיבות',31.42,34.59,3],
+  ['אופקים',31.31,34.62,3],['קריית אתא',32.81,35.11,3],['מגדל העמק',32.676,35.24,3],['ראש פינה',32.97,35.54,3]
+];
+
 
 function buildUserMapBox() {
   setTimeout(initUserMaps, 0);
@@ -11133,7 +11149,6 @@ function buildUserMapBox() {
       <div class="radar-wrap">
         <div class="radar-dial">
           <div class="umap-canvas"></div>
-          <div class="radar-sweep" aria-hidden="true"></div>
           <span class="radar-north" aria-hidden="true">N</span>
         </div>
         <div class="radar-scale">${RADAR_KM} KM</div>
@@ -11182,13 +11197,20 @@ async function initUserMaps() {
       touchZoom: false, boxZoom: false, keyboard: false, zoomSnap: 0, attributionControl: true
     });
     map.attributionControl.setPrefix(false);
-    // תצלום אוויר (ים כהה, שטח טופוגרפי) + שכבת שמות מקומות
-    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-      maxZoom: 16, attribution: 'Tiles © Esri'
+    // מפה נקייה בלי שמות (נצבעת בסגנון קרטון ב-CSS) + שמות ערים מצוירים משלנו
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 16, className: 'radar-tiles',
+      attribution: '© OpenStreetMap'
     }).addTo(map);
-    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
-      maxZoom: 16, className: 'radar-labels'
-    }).addTo(map);
+    map.createPane('radarCities').style.zIndex = 450;
+    ISRAEL_CITIES.forEach(([name, lat, lng, tier]) => L.marker([lat, lng], {
+      pane: 'radarCities', interactive: false, keyboard: false,
+      icon: L.divIcon({
+        className: 'radar-city t' + tier,
+        html: `<span class="radar-city-dot"></span><span class="radar-city-name">${escHtml(name)}</span>`,
+        iconSize: [0, 0], iconAnchor: [0, 0]
+      })
+    }).addTo(map));
     el._umap = map;
     el._umapRings = L.layerGroup().addTo(map);
     el._umapLayer = L.layerGroup().addTo(map);

@@ -6662,55 +6662,58 @@ html body .umap-count { font-size: 12px; font-weight: 700; color: #7ee0a6 !impor
 .radar-dial {
   position: relative; width: 100%; max-width: 236px; aspect-ratio: 1 / 1;
   border-radius: 50%;
-  padding: 7px;
-  background: linear-gradient(145deg, #3a2a63, #120822);
-  box-shadow: 0 18px 36px -16px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  padding: 6px;
+  background: #ffd166;
+  border: 3px solid #1e1033;
+  box-shadow: 0 6px 0 #1e1033;
 }
 .radar-dial .umap-canvas {
   width: 100%; height: 100%;
   border-radius: 50%; overflow: hidden; position: relative; z-index: 0;
   direction: ltr;
-  background: #1d3b66;
-  border: 2px solid #8ff0b4;
-  box-shadow: 0 0 0 1px rgba(143, 240, 180, 0.25), inset 0 0 24px rgba(0, 0, 0, 0.45);
+  background: #7cc8f0;
+  border: 3px solid #1e1033;
 }
-.radar-dial .umap-canvas:not(.located) .leaflet-tile-pane { filter: saturate(.55) brightness(.75); }
-.radar-dial .leaflet-container { background: #1d3b66; font-family: inherit; }
+/* צבעים רוויים ובהירים בסגנון קרטון */
+.radar-dial .radar-tiles { filter: saturate(2.1) contrast(1.15) brightness(1.04) hue-rotate(-6deg); }
+.radar-dial .umap-canvas:not(.located) .radar-tiles { filter: saturate(1.2) brightness(.9); }
+.radar-dial .leaflet-container { background: #7cc8f0; font-family: inherit; }
+/* שמות ערים מצוירים */
+.radar-city { pointer-events: none; }
+.radar-city-dot { position: absolute; left: -5px; top: -5px; width: 10px; height: 10px; border-radius: 50%; background: #fff; border: 2.5px solid #1e1033; box-sizing: border-box; }
+.radar-city.t1 .radar-city-dot { left: -6px; top: -6px; width: 12px; height: 12px; background: #ec4899; }
+.radar-city-name {
+  position: absolute; top: 6px; left: 0; transform: translateX(-50%);
+  white-space: nowrap; direction: rtl;
+  font-size: 12px; font-weight: 900; color: #1e1033; line-height: 1;
+  text-shadow: -2px 0 #fff, 2px 0 #fff, 0 -2px #fff, 0 2px #fff, -1.5px -1.5px #fff, 1.5px 1.5px #fff, -1.5px 1.5px #fff, 1.5px -1.5px #fff;
+}
 .radar-dial .leaflet-control-attribution {
-  background: rgba(0, 0, 0, 0.35) !important; color: rgba(255, 255, 255, 0.7) !important;
+  background: rgba(255, 255, 255, 0.75) !important; color: #1e1033 !important;
   font-size: 8px !important; padding: 0 6px !important; border-radius: 6px;
   position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); margin: 0 !important; white-space: nowrap;
 }
 .radar-dial .leaflet-control-attribution a { color: inherit !important; }
-.radar-ring-inner { stroke: rgba(255, 255, 255, 0.35); stroke-width: 1.2; }
-/* קרן סריקה עדינה */
-.radar-sweep {
-  position: absolute; inset: 9px; border-radius: 50%; pointer-events: none; z-index: 2;
-  background: conic-gradient(from 0deg, rgba(143, 240, 180, 0.22), rgba(143, 240, 180, 0) 70deg);
-  animation: radarSweep 4s linear infinite;
-  mix-blend-mode: screen;
-}
-@keyframes radarSweep { to { transform: rotate(360deg); } }
-@media (prefers-reduced-motion: reduce) { .radar-sweep { animation: none; opacity: 0; } }
+.radar-ring-inner { stroke: #1e1033; stroke-opacity: .45; stroke-width: 2; stroke-dasharray: 6 6; }
 .radar-north {
-  position: absolute; z-index: 3; right: 9%; bottom: 9%;
-  width: 26px; height: 26px; border-radius: 50%;
+  position: absolute; z-index: 3; right: 6%; bottom: 6%;
+  width: 30px; height: 30px; border-radius: 50%;
   display: grid; place-items: center;
-  background: #8ff0b4; color: #0d2a1a; font-size: 13px; font-weight: 900;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  background: #8ff0b4; color: #1e1033; font-size: 14px; font-weight: 900;
+  border: 3px solid #1e1033;
+  box-shadow: 0 3px 0 #1e1033;
 }
-.radar-scale { font-size: 13px; font-weight: 800; letter-spacing: 2px; color: #8ff0b4; direction: ltr; }
+.radar-scale { font-size: 13px; font-weight: 900; letter-spacing: 2px; color: #ffd166; direction: ltr; }
 /* אני — חץ לבן במרכז */
 .radar-me { background: none; border: none; }
-.radar-me svg { position: absolute; inset: 4px; width: 22px; height: 22px; fill: #fff; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)); }
-.radar-me-pulse { position: absolute; inset: 0; border-radius: 50%; background: rgba(143, 240, 180, 0.35); animation: radarPulse 2s ease-out infinite; }
-@keyframes radarPulse { from { transform: scale(.4); opacity: 1; } to { transform: scale(1.6); opacity: 0; } }
+.radar-me svg { position: absolute; inset: 3px; width: 24px; height: 24px; fill: #fff; stroke: #1e1033; stroke-width: 2.4; stroke-linejoin: round; filter: drop-shadow(0 2px 0 #1e1033); }
+.radar-me-pulse { display: none; }
 /* גולשים בסביבה */
 .umap-pin-wrap { background: none; border: none; }
 .umap-pin {
   width: 26px; height: 26px; border-radius: 50%;
-  background: var(--pink, #ec4899); color: #fff; border: 2px solid #fff;
-  box-shadow: 0 0 0 4px rgba(236, 72, 153, 0.3), 0 2px 6px rgba(0, 0, 0, 0.4);
+  background: var(--pink, #ec4899); color: #fff; border: 2.5px solid #1e1033;
+  box-shadow: 0 3px 0 #1e1033;
   display: flex; align-items: center; justify-content: center;
   font-size: 12px; font-weight: 900; font-family: inherit;
 }
@@ -8297,3 +8300,59 @@ html body .home-feed-page .qu-hero-wrap .qu-chat-input:focus { border-color: #ff
   .qu-chat-head { padding: 12px 14px; }
   html body .qu-chat-messages { padding: 14px; }
 }
+
+/* ===================================================================
+   חלון ההתחברות — בצבעי האתר (סגול כהה, ורוד וצהוב)
+   =================================================================== */
+html body .auth-modal-overlay {
+  background: rgba(14, 6, 32, 0.72) !important;
+  font-family: inherit !important;
+}
+html body .auth-modal-card {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(180deg, #2e1b59 0%, #241347 55%, #1d0f3c 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.10) !important;
+  border-radius: 28px !important;
+  padding: 44px 30px 30px !important;
+  box-shadow: 0 0 0 1px rgba(236, 72, 153, 0.12), 0 30px 80px -20px rgba(0, 0, 0, 0.8) !important;
+  animation: authIn .35s cubic-bezier(.2,.8,.2,1);
+}
+@keyframes authIn { from { opacity: 0; transform: translateY(14px) scale(.97); } to { opacity: 1; transform: none; } }
+/* הילה ורודה-צהובה עדינה בראש הכרטיס */
+html body .auth-modal-card::before {
+  content: ""; position: absolute; inset: -40% -20% auto; height: 70%;
+  background: radial-gradient(ellipse at 50% 100%, rgba(236, 72, 153, 0.28), rgba(255, 209, 102, 0.10) 45%, transparent 70%);
+  pointer-events: none;
+}
+html body .auth-modal-card > * { position: relative; }
+html body .auth-modal-card h3 {
+  color: #fff !important;
+  font-size: 30px !important;
+  letter-spacing: -0.4px;
+  margin: 0 0 28px !important;
+}
+html body .auth-modal-close-btn {
+  position: absolute !important;
+  width: 36px; height: 36px; border-radius: 50%;
+  display: grid !important; place-items: center;
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: rgba(241, 236, 255, 0.8) !important;
+  transition: background .2s ease;
+}
+html body .auth-modal-close-btn:hover { background: rgba(255, 255, 255, 0.16) !important; color: #fff !important; }
+html body .auth-provider-btn {
+  background: #fff !important;
+  border: none !important;
+  border-radius: 16px !important;
+  color: #1e1033 !important;
+  font-family: inherit;
+  box-shadow: 0 10px 24px -10px rgba(0, 0, 0, 0.6) !important;
+  transition: transform .15s ease, box-shadow .2s ease;
+}
+html body .auth-provider-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.45), 0 14px 30px -10px rgba(0, 0, 0, 0.7) !important;
+}
+html body .auth-modal-footer { color: rgba(241, 236, 255, 0.6) !important; }
+html body .auth-modal-footer a { color: var(--pink, #ec4899) !important; font-weight: 700; }
