@@ -226,6 +226,32 @@
         }
       },
 
+      "forum_topics": {
+        ".read": true,
+        "$forumId": {
+          "$topicId": {
+            ".write": "auth != null && auth.token.firebase.sign_in_provider !== 'anonymous' && !data.exists() && newData.child('uid').val() === auth.uid && newData.child('lastUid').val() === auth.uid && newData.child('replies').val() === 0",
+            ".validate": "!newData.exists() || ($forumId.length <= 30 && newData.hasChildren(['title', 'uid', 'name', 't', 'lastT', 'lastName', 'lastUid', 'replies']) && newData.child('title').isString() && newData.child('title').val().length >= 2 && newData.child('title').val().length <= 120 && newData.child('name').isString() && newData.child('name').val().length <= 40 && newData.child('t').isNumber() && newData.child('t').val() <= now + 60000)",
+            "replies": { ".write": "auth != null && auth.token.firebase.sign_in_provider !== 'anonymous' && data.exists() && newData.isNumber() && newData.val() === data.val() + 1" },
+            "lastT": { ".write": "auth != null && auth.token.firebase.sign_in_provider !== 'anonymous' && data.exists() && newData.isNumber() && newData.val() >= data.val() && newData.val() <= now + 60000" },
+            "lastName": { ".write": "auth != null && auth.token.firebase.sign_in_provider !== 'anonymous' && data.exists() && newData.isString() && newData.val().length <= 40" },
+            "lastUid": { ".write": "auth != null && auth.token.firebase.sign_in_provider !== 'anonymous' && data.exists() && newData.val() === auth.uid" },
+            "$other": { ".validate": "$other === 'title' || $other === 'uid' || $other === 'name' || $other === 't' || $other === 'lastT' || $other === 'lastName' || $other === 'lastUid' || $other === 'replies'" }
+          }
+        }
+      },
+
+      "forum_posts": {
+        ".read": true,
+        "$topicId": {
+          "$postId": {
+            ".write": "auth != null && auth.token.firebase.sign_in_provider !== 'anonymous' && !data.exists() && newData.child('uid').val() === auth.uid",
+            ".validate": "!newData.exists() || (newData.hasChildren(['uid', 'name', 'text', 't']) && newData.child('text').isString() && newData.child('text').val().length >= 1 && newData.child('text').val().length <= 5000 && newData.child('name').isString() && newData.child('name').val().length <= 40 && newData.child('t').isNumber() && newData.child('t').val() <= now + 60000)",
+            "$other": { ".validate": "$other === 'uid' || $other === 'name' || $other === 'text' || $other === 't'" }
+          }
+        }
+      },
+
       "pending_submissions": {
         "$submissionId": { ".write": "auth != null && !data.exists()" }
       },

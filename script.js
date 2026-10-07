@@ -260,7 +260,7 @@ let pages = defaultPages;
 let activePageId = 'page-photos-main';
 let topNavPages = ['page-ideas-main']; // העמודים שמופיעים בתפריט העליון
 // עמודים שמופיעים רק בסרגל הצד ("עמודי צד") ולא בתפריט העליון
-const SIDE_ONLY_PAGE_IDS = ['page-questions-main', 'page-offers-main', 'page-photos-main', 'page-stories-main', 'page-friends-main'];
+const SIDE_ONLY_PAGE_IDS = ['page-questions-main', 'page-offers-main', 'page-photos-main', 'page-stories-main', 'page-friends-main', 'page-forums-main'];
 // זיהוי עמוד צד לפי מזהה, תוכן או כותרת (העמודים עשויים להיווצר עם מזהים דינמיים)
 function isSideOnlyPage(p) {
   if (!p) return false;
@@ -271,7 +271,7 @@ function isSideOnlyPage(p) {
   if (p.id === 'page-subscription-main' || (p.content || '').includes('subscription-page') || (p.title || '').includes('מנוי')) return false;
   if (SIDE_ONLY_PAGE_IDS.includes(p.id)) return true;
   const t = p.title || '', c = p.content || '';
-  if (c.includes('photos-page') || c.includes('stories-page') || c.includes('questions-page') || c.includes('offers-page') || c.includes('friends-page')) return true;
+  if (c.includes('photos-page') || c.includes('stories-page') || c.includes('questions-page') || c.includes('offers-page') || c.includes('friends-page') || c.includes('forums-page')) return true;
   if (t.includes('תמונות') || t.includes('סיפורים') || t.includes('שאלות גולשים') || t.includes('הצעות')) return true;
   return false;
 }
@@ -543,7 +543,7 @@ function sanitizeToOnlyPhotosAndStories() {
   // לפי בקשת המשתמש: משאירים רק עמודי תמונות וסיפורים (מוחקים כתבות/קהילה וכל עמוד אחר).
   // מסננים רק כשקיים לפחות עמוד תמונות/סיפורים אחד, כדי לא לרוקן אתר תקין בטעות.
   if (pages.some(p => p && ((p.content || '').includes('photos-page') || (p.content || '').includes('stories-page')))) {
-    pages = pages.filter(p => p && (p.id === 'page-home-feed' || p.id === 'page-subscription-main' || (p.content || '').includes('home-feed-page') || (p.content || '').includes('subscription-page') || (p.content || '').includes('photos-page') || (p.content || '').includes('stories-page') || (p.content || '').includes('ideas-page') || (p.content || '').includes('communities-page') || (p.content || '').includes('info-page') || (p.content || '').includes('requests-page') || (p.content || '').includes('questions-page') || (p.content || '').includes('offers-page') || (p.content || '').includes('friends-page')));
+    pages = pages.filter(p => p && (p.id === 'page-home-feed' || p.id === 'page-subscription-main' || (p.content || '').includes('home-feed-page') || (p.content || '').includes('subscription-page') || (p.content || '').includes('photos-page') || (p.content || '').includes('stories-page') || (p.content || '').includes('ideas-page') || (p.content || '').includes('communities-page') || (p.content || '').includes('info-page') || (p.content || '').includes('requests-page') || (p.content || '').includes('questions-page') || (p.content || '').includes('offers-page') || (p.content || '').includes('friends-page') || (p.content || '').includes('forums-page')));
   }
 
   // בוטסטראפ של עמודי ברירת המחדל (תמונות + סיפורים) רק כאשר אין אף עמוד באתר.
@@ -696,6 +696,11 @@ function sanitizeToOnlyPhotosAndStories() {
   const _frPage = pages.find(p => p && p.id === 'page-friends-main');
   if (!_frPage) pages.push({ id: 'page-friends-main', title: 'חברים', content: _frContent });
   else { _frPage.content = _frContent; if (!_frPage.title) _frPage.title = 'חברים'; }
+  // עמוד "פורומים" — תמיד קיים, נבנה דינמית
+  const _foContent = '<div class="forums-page" data-page-id="page-forums-main"></div>';
+  const _foPage = pages.find(p => p && p.id === 'page-forums-main');
+  if (!_foPage) pages.push({ id: 'page-forums-main', title: 'פורומים', content: _foContent });
+  else { _foPage.content = _foContent; if (!_foPage.title) _foPage.title = 'פורומים'; }
 
   // עמוד "מנוי" — תמיד קיים
   const _subContent = '<div class="subscription-page" data-page-id="page-subscription-main"></div>';
@@ -1361,6 +1366,15 @@ function renderPage() {
       if (typeof buildHomeFeedPage === 'function') {
         mainContent.innerHTML = buildHomeFeedPage();
         if (isEditMode) applyEditModeToContent();
+        try { window.scrollTo(0, 0); } catch (e) {}
+        return;
+      }
+    }
+
+    // עמוד "פורומים" — נבנה דינמית (רשימת פורומים / נושאים / שרשור)
+    if (currentPage.id === 'page-forums-main' || (currentPage.content || '').includes('forums-page')) {
+      if (typeof buildForumsPage === 'function') {
+        mainContent.innerHTML = buildForumsPage();
         try { window.scrollTo(0, 0); } catch (e) {}
         return;
       }
@@ -11097,6 +11111,7 @@ function buildLeftSidebarBox(popularHTML, section) {
     const t = p.title || '', c = p.content || '';
     return p.id === 'page-photos-main' || p.id === 'page-stories-main' || p.id === 'page-stories-text'
       || p.id === 'page-friends-main' || c.includes('friends-page')
+      || p.id === 'page-forums-main' || c.includes('forums-page')
       || t.includes('תמונות') || t.includes('סיפורים') || t.includes('קומיקס')
       || c.includes('photos-page') || c.includes('stories-page');
   };
@@ -12685,6 +12700,288 @@ async function friendsLoad() {
   }));
   friendsRefresh();
 }
+
+// ============================================================
+// עמוד "פורומים" — קטגוריות → פורום (רשימת נושאים) → נושא (הודעות ותגובות)
+// נתונים: website/forum_topics/{forumId}/{topicId}, website/forum_posts/{topicId}/{postId}
+// ============================================================
+const FORUM_CATEGORIES = [
+  { title: 'הקהילה', forums: [
+    { id: 'gate', title: 'שער הקהילה', sub: 'היכרות, ברכות והודעות לכולם' },
+    { id: 'suggestions', title: 'הצעות לשיפור האתר', sub: 'רעיונות, באגים ובקשות' },
+    { id: 'qa', title: 'שאלות ותשובות', sub: 'שאלו את הקהילה כל דבר' }
+  ]},
+  { title: 'יצירה ותוכן', forums: [
+    { id: 'photos', title: 'תמונות וצילום', sub: 'טיפים, ציוד ופידבק על תמונות' },
+    { id: 'comics', title: 'קומיקס ואיור', sub: 'ציור, סגנונות וכלים' },
+    { id: 'stories', title: 'סיפורים וכתיבה', sub: 'כתיבה, רעיונות וביקורת על סיפורים' }
+  ]},
+  { title: 'כללי', forums: [
+    { id: 'offtopic', title: 'אוף טופיק', sub: 'כל מה שלא מתאים במקום אחר' }
+  ]}
+];
+const FORUM_BY_ID = {};
+FORUM_CATEGORIES.forEach(c => c.forums.forEach(f => { FORUM_BY_ID[f.id] = f; }));
+
+let forumTopics = null;          // {forumId: {topicId: topic}}
+let forumTopicsUnsub = null;
+let forumPosts = null;           // הודעות הנושא הפתוח
+let forumPostsUnsub = null;
+let forumView = { forumId: null, topicId: null, composing: false };
+
+function forumFmtCount(n) {
+  n = Number(n) || 0;
+  if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+  if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+  return String(n);
+}
+function forumTimeAgo(t) {
+  if (!t) return '';
+  const d = Date.now() - t, m = Math.floor(d / 60000);
+  if (m < 1) return 'עכשיו';
+  if (m < 60) return `לפני ${m} דקות`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `לפני ${h} שעות`;
+  const dt = new Date(t);
+  return dt.toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric', year: '2-digit' }) + ' ' +
+    dt.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+}
+function forumAvatar(name, key) {
+  let h = 0; for (const ch of String(key || name || '')) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  const color = FRIENDS_AVATAR_COLORS[h % FRIENDS_AVATAR_COLORS.length];
+  return `<span class="fo-avatar" style="--av:${color}">${escHtml(String(name || '?').trim().charAt(0) || '?')}</span>`;
+}
+const FORUM_ICON = '<svg viewBox="0 0 32 28" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><path d="M3 4.5A3.5 3.5 0 0 1 6.5 1h12A3.5 3.5 0 0 1 22 4.5v7a3.5 3.5 0 0 1-3.5 3.5H11l-5 4v-4h0A3 3 0 0 1 3 12z"/><path d="M22 8h3.5A3.5 3.5 0 0 1 29 11.5v7a3 3 0 0 1-3 3v4l-5-4h-6.5A3.5 3.5 0 0 1 11 18v-3"/></svg>';
+
+function forumRegistered() { return auth.currentUser && !auth.currentUser.isAnonymous; }
+function forumTopicsOf(forumId) {
+  const map = (forumTopics && forumTopics[forumId]) || {};
+  return Object.entries(map).map(([id, t]) => Object.assign({ id }, t)).filter(t => t && t.title)
+    .sort((a, b) => (b.lastT || b.t || 0) - (a.lastT || a.t || 0));
+}
+
+function forumSubscribe() {
+  if (forumTopicsUnsub) return;
+  forumTopicsUnsub = onValue(ref(db, 'website/forum_topics'), (snap) => {
+    forumTopics = snap.exists() ? (snap.val() || {}) : {};
+    forumRender();
+  }, () => { forumTopics = {}; forumRender(); });
+}
+
+function buildForumsPage() {
+  setTimeout(forumSubscribe, 0);
+  return `<div class="forums-page" data-page-id="page-forums-main"><div class="fo-inner">${forumViewHTML()}</div></div>`;
+}
+function forumRender() {
+  const el = mainContent && mainContent.querySelector('.forums-page .fo-inner');
+  if (el) el.innerHTML = forumViewHTML();
+}
+
+function forumViewHTML() {
+  if (forumView.topicId && forumView.forumId) return forumTopicHTML();
+  if (forumView.forumId) return forumListHTML();
+  return forumIndexHTML();
+}
+
+// --- רשימת הפורומים (כמו בצילום: נושאים / הודעות / הודעה אחרונה) ---
+function forumIndexHTML() {
+  const loading = forumTopics === null;
+  return `
+    <div class="fo-hero"><h1>פורומים</h1><p>מקום לדבר, לשאול ולשתף עם כל הקהילה</p></div>
+    ${FORUM_CATEGORIES.map(cat => `
+      <section class="fo-cat">
+        <h2 class="fo-cat-title">${escHtml(cat.title)}</h2>
+        ${cat.forums.map(f => {
+          const topics = forumTopicsOf(f.id);
+          const msgs = topics.reduce((a, t) => a + 1 + (Number(t.replies) || 0), 0);
+          const last = topics[0];
+          return `
+          <div class="fo-row" onclick="forumOpen('${f.id}')" role="button" tabindex="0">
+            <span class="fo-icon">${FORUM_ICON}</span>
+            <div class="fo-main"><b class="fo-title">${escHtml(f.title)}</b><small>${escHtml(f.sub)}</small></div>
+            <div class="fo-stat"><small>נושאים</small><b>${loading ? '—' : forumFmtCount(topics.length)}</b></div>
+            <div class="fo-stat"><small>הודעות</small><b>${loading ? '—' : forumFmtCount(msgs)}</b></div>
+            <div class="fo-last">${last ? `
+              ${forumAvatar(last.lastName || last.name, last.lastUid || last.uid)}
+              <div class="fo-last-text">
+                <span class="fo-last-title" onclick="event.stopPropagation(); forumOpenTopic('${f.id}','${artEsc(last.id)}')">${escHtml(last.title)}</span>
+                <small>${escHtml(forumTimeAgo(last.lastT || last.t))} · <span class="fo-name">${escHtml(last.lastName || last.name || '')}</span></small>
+              </div>` : `<small class="fo-none">${loading ? '' : 'עדיין אין נושאים'}</small>`}
+            </div>
+          </div>`;
+        }).join('')}
+      </section>`).join('')}`;
+}
+
+// --- פורום: רשימת נושאים ---
+function forumListHTML() {
+  const f = FORUM_BY_ID[forumView.forumId];
+  if (!f) { forumView = { forumId: null, topicId: null, composing: false }; return forumIndexHTML(); }
+  const topics = forumTopicsOf(f.id);
+  const compose = forumView.composing ? `
+    <div class="fo-compose">
+      <input id="fo-new-title" class="fo-input" maxlength="120" placeholder="כותרת הנושא">
+      <textarea id="fo-new-text" class="fo-input" rows="5" maxlength="5000" placeholder="מה רצית לכתוב?"></textarea>
+      <div class="fo-compose-actions">
+        <button type="button" class="fo-btn" onclick="forumCreateTopic()">פרסום הנושא</button>
+        <button type="button" class="fo-btn ghost" onclick="forumSetComposing(false)">ביטול</button>
+      </div>
+    </div>` : '';
+  return `
+    <div class="fo-crumbs"><a href="#" onclick="event.preventDefault(); forumOpen(null)">פורומים</a> › <span>${escHtml(f.title)}</span></div>
+    <div class="fo-head">
+      <div><h1>${escHtml(f.title)}</h1><p>${escHtml(f.sub)}</p></div>
+      ${forumView.composing ? '' : `<button type="button" class="fo-btn" onclick="forumSetComposing(true)">+ נושא חדש</button>`}
+    </div>
+    ${compose}
+    <section class="fo-cat">
+      ${topics.length ? topics.map(t => `
+        <div class="fo-row topic" onclick="forumOpenTopic('${f.id}','${artEsc(t.id)}')" role="button" tabindex="0">
+          ${forumAvatar(t.name, t.uid)}
+          <div class="fo-main"><b class="fo-title">${escHtml(t.title)}</b><small>${escHtml(t.name || '')} · ${escHtml(forumTimeAgo(t.t))}</small></div>
+          <div class="fo-stat"><small>תגובות</small><b>${forumFmtCount(t.replies || 0)}</b></div>
+          <div class="fo-last"><div class="fo-last-text"><small>תגובה אחרונה</small><small>${escHtml(forumTimeAgo(t.lastT || t.t))} · <span class="fo-name">${escHtml(t.lastName || t.name || '')}</span></small></div></div>
+        </div>`).join('') : `<div class="fo-empty">${forumTopics === null ? 'טוען...' : 'עדיין אין נושאים בפורום הזה — פתחו את הראשון!'}</div>`}
+    </section>`;
+}
+
+// --- נושא: הודעות + תגובה ---
+function forumTopicHTML() {
+  const f = FORUM_BY_ID[forumView.forumId];
+  const t = forumTopics && forumTopics[forumView.forumId] && forumTopics[forumView.forumId][forumView.topicId];
+  if (!f || (forumTopics !== null && !t)) { forumView.topicId = null; return forumListHTML(); }
+  const admin = typeof isAdmin === 'function' && isAdmin();
+  const posts = forumPosts ? Object.entries(forumPosts).map(([id, p]) => Object.assign({ id }, p)).sort((a, b) => (a.t || 0) - (b.t || 0)) : null;
+  return `
+    <div class="fo-crumbs"><a href="#" onclick="event.preventDefault(); forumOpen(null)">פורומים</a> › <a href="#" onclick="event.preventDefault(); forumOpen('${f.id}')">${escHtml(f.title)}</a></div>
+    <div class="fo-head"><div><h1>${escHtml(t ? t.title : '')}</h1></div>
+      ${admin ? `<button type="button" class="fo-btn ghost danger" onclick="forumDeleteTopic()">מחיקת הנושא</button>` : ''}
+    </div>
+    <div class="fo-posts">
+      ${posts === null ? '<div class="fo-empty">טוען...</div>' : posts.map((p, i) => `
+        <article class="fo-post${i === 0 ? ' first' : ''}">
+          <div class="fo-post-side">${forumAvatar(p.name, p.uid)}</div>
+          <div class="fo-post-body">
+            <div class="fo-post-meta"><b class="fo-name" ${p.uid ? `onclick="openUserPage('${artEsc(p.uid)}','${artEsc(p.name || '')}')"` : ''}>${escHtml(p.name || 'משתמש')}</b>
+              <small>${escHtml(forumTimeAgo(p.t))}</small>
+              ${admin && i > 0 ? `<button type="button" class="fo-del" onclick="forumDeletePost('${artEsc(p.id)}')">מחיקה</button>` : ''}
+            </div>
+            <div class="fo-post-text">${escHtml(p.text || '').replace(/\n/g, '<br>')}</div>
+          </div>
+        </article>`).join('')}
+    </div>
+    <div class="fo-reply">
+      ${forumRegistered() ? `
+        <textarea id="fo-reply-text" class="fo-input" rows="4" maxlength="5000" placeholder="כתבו תגובה..."></textarea>
+        <div class="fo-compose-actions"><button type="button" class="fo-btn" onclick="forumReply()">שליחת תגובה</button></div>`
+      : `<div class="fo-login"><span>כדי להגיב צריך להתחבר</span><button type="button" class="fo-btn" onclick="openLiveChatLogin()">התחברות</button></div>`}
+    </div>`;
+}
+
+function forumOpen(forumId) {
+  if (forumPostsUnsub) { forumPostsUnsub(); forumPostsUnsub = null; }
+  forumPosts = null;
+  forumView = { forumId: forumId || null, topicId: null, composing: false };
+  forumRender();
+  try { window.scrollTo(0, 0); } catch (e) {}
+}
+window.forumOpen = forumOpen;
+
+function forumOpenTopic(forumId, topicId) {
+  if (forumPostsUnsub) { forumPostsUnsub(); forumPostsUnsub = null; }
+  forumPosts = null;
+  forumView = { forumId, topicId, composing: false };
+  forumRender();
+  try { window.scrollTo(0, 0); } catch (e) {}
+  forumPostsUnsub = onValue(ref(db, `website/forum_posts/${topicId}`), (snap) => {
+    if (forumView.topicId !== topicId) return;
+    forumPosts = snap.exists() ? (snap.val() || {}) : {};
+    // שומרים טיוטת תגובה בזמן רענון
+    const draft = document.getElementById('fo-reply-text');
+    const val = draft ? draft.value : '';
+    forumRender();
+    const d2 = document.getElementById('fo-reply-text');
+    if (d2 && val) d2.value = val;
+  }, () => { forumPosts = {}; forumRender(); });
+}
+window.forumOpenTopic = forumOpenTopic;
+
+function forumSetComposing(on) {
+  if (on && !forumRegistered()) { openLiveChatLogin(); return; }
+  forumView.composing = !!on;
+  forumRender();
+  if (on) setTimeout(() => { const i = document.getElementById('fo-new-title'); if (i) i.focus(); }, 30);
+}
+window.forumSetComposing = forumSetComposing;
+
+let forumBusy = false;
+async function forumCreateTopic() {
+  if (forumBusy) return;
+  if (!forumRegistered()) { openLiveChatLogin(); return; }
+  const title = (document.getElementById('fo-new-title') || {}).value?.trim() || '';
+  const text = (document.getElementById('fo-new-text') || {}).value?.trim() || '';
+  if (title.length < 2) { alert('נא לכתוב כותרת'); return; }
+  if (!text) { alert('נא לכתוב תוכן לנושא'); return; }
+  const user = auth.currentUser;
+  const name = String(liveChatUserName() || 'משתמש').slice(0, 40);
+  const now = Date.now();
+  const forumId = forumView.forumId;
+  forumBusy = true;
+  try {
+    const tRef = push(ref(db, `website/forum_topics/${forumId}`));
+    await set(tRef, { title: title.slice(0, 120), uid: user.uid, name, t: now, lastT: now, lastName: name, lastUid: user.uid, replies: 0 });
+    await set(push(ref(db, `website/forum_posts/${tRef.key}`)), { uid: user.uid, name, text: text.slice(0, 5000), t: now });
+    forumOpenTopic(forumId, tRef.key);
+  } catch (e) {
+    console.error('forum topic failed', e);
+    alert('פרסום הנושא נכשל. נסו שוב.');
+  } finally { forumBusy = false; }
+}
+window.forumCreateTopic = forumCreateTopic;
+
+async function forumReply() {
+  if (forumBusy) return;
+  if (!forumRegistered()) { openLiveChatLogin(); return; }
+  const box = document.getElementById('fo-reply-text');
+  const text = box ? box.value.trim() : '';
+  if (!text) return;
+  const user = auth.currentUser;
+  const name = String(liveChatUserName() || 'משתמש').slice(0, 40);
+  const now = Date.now();
+  const { forumId, topicId } = forumView;
+  forumBusy = true;
+  try {
+    await set(push(ref(db, `website/forum_posts/${topicId}`)), { uid: user.uid, name, text: text.slice(0, 5000), t: now });
+    if (box) box.value = '';
+    await update(ref(db, `website/forum_topics/${forumId}/${topicId}`), { replies: increment(1), lastT: now, lastName: name, lastUid: user.uid });
+  } catch (e) {
+    console.error('forum reply failed', e);
+    alert('שליחת התגובה נכשלה. נסו שוב.');
+  } finally { forumBusy = false; }
+}
+window.forumReply = forumReply;
+
+async function forumDeleteTopic() {
+  const { forumId, topicId } = forumView;
+  if (!(typeof isAdmin === 'function' && isAdmin()) || !confirm('למחוק את הנושא וכל התגובות שלו?')) return;
+  try {
+    await set(ref(db, `website/forum_posts/${topicId}`), null);
+    await set(ref(db, `website/forum_topics/${forumId}/${topicId}`), null);
+    forumOpen(forumId);
+  } catch (e) { alert('המחיקה נכשלה'); }
+}
+window.forumDeleteTopic = forumDeleteTopic;
+
+async function forumDeletePost(postId) {
+  const { forumId, topicId } = forumView;
+  if (!(typeof isAdmin === 'function' && isAdmin()) || !confirm('למחוק את התגובה?')) return;
+  try {
+    await set(ref(db, `website/forum_posts/${topicId}/${postId}`), null);
+    const t = forumTopics && forumTopics[forumId] && forumTopics[forumId][topicId];
+    if (t && t.replies > 0) await set(ref(db, `website/forum_topics/${forumId}/${topicId}/replies`), t.replies - 1);
+  } catch (e) { alert('המחיקה נכשלה'); }
+}
+window.forumDeletePost = forumDeletePost;
 
 function buildHomeFeedPage() {
   const all = (typeof getAllStoriesFromPages === 'function') ? getAllStoriesFromPages() : [];
@@ -18382,7 +18679,7 @@ onPublicSiteValue((data) => {
     pList = dedupePageList(pList);
     // משאירים רק עמודי תמונות/סיפורים/קהילות (מוחקים כתבות וכל עמוד אחר)
     if (pList.some(p => p && ((p.content || '').includes('photos-page') || (p.content || '').includes('stories-page')))) {
-      pList = pList.filter(p => p && (p.id === 'page-home-feed' || p.id === 'page-subscription-main' || (p.content || '').includes('home-feed-page') || (p.content || '').includes('subscription-page') || (p.content || '').includes('photos-page') || (p.content || '').includes('stories-page') || (p.content || '').includes('ideas-page') || (p.content || '').includes('communities-page') || (p.content || '').includes('info-page') || (p.content || '').includes('requests-page') || (p.content || '').includes('questions-page') || (p.content || '').includes('offers-page') || (p.content || '').includes('friends-page') || p.id === 'page-ideas-main'));
+      pList = pList.filter(p => p && (p.id === 'page-home-feed' || p.id === 'page-subscription-main' || (p.content || '').includes('home-feed-page') || (p.content || '').includes('subscription-page') || (p.content || '').includes('photos-page') || (p.content || '').includes('stories-page') || (p.content || '').includes('ideas-page') || (p.content || '').includes('communities-page') || (p.content || '').includes('info-page') || (p.content || '').includes('requests-page') || (p.content || '').includes('questions-page') || (p.content || '').includes('offers-page') || (p.content || '').includes('friends-page') || (p.content || '').includes('forums-page') || p.id === 'page-ideas-main'));
     }
     // מוודאים שעמוד "רעיונות" קיים
     const _ipd = pList.find(p => p && p.id === 'page-ideas-main');
@@ -18396,6 +18693,7 @@ onPublicSiteValue((data) => {
     // מוודאים שעמוד "קהילות" תמיד קיים (עם תוכן פלייסהולדר תקין)
     const _frp = pList.find(p => p && p.id === 'page-friends-main');
     if (!_frp) pList.push({ id: 'page-friends-main', title: 'חברים', content: '<div class="friends-page" data-page-id="page-friends-main"></div>' });
+    if (!pList.find(p => p && p.id === 'page-forums-main')) pList.push({ id: 'page-forums-main', title: 'פורומים', content: '<div class="forums-page" data-page-id="page-forums-main"></div>' });
     const _cp = pList.find(p => p && p.id === 'page-communities-main');
     const _cpc = '<div class="communities-page" data-page-id="page-communities-main"></div>';
     if (!_cp) {
