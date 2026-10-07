@@ -8134,3 +8134,57 @@ html body:not(#_) .art-save-btn.is-saved svg { stroke: #fff !important; fill: #f
   html body .a11y-launcher { bottom: calc(94px + env(safe-area-inset-bottom, 0px)) !important; }
   html body .a11y-panel { bottom: calc(154px + env(safe-area-inset-bottom, 0px)) !important; max-height: calc(100vh - 180px) !important; }
 }
+
+/* ---- סרגל תחתון: 5 כפתורים — סגירה (X), נגישות, ואז שלושת קישורי התפריט ---- */
+.mtab-close, .mtab-a11y, .mtab-open { display: none; }
+@media (max-width: 768px) {
+  /* מקום בצד שמאל של הגלולה לשני הכפתורים שיושבים מעליה */
+  html body .apple-nav .nav-links { padding-left: 140px !important; }
+  html body .mtab-close,
+  html body .mtab-a11y {
+    position: fixed; z-index: 9501;
+    bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+    width: 64px; height: 54px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    border: none; border-radius: 999px;
+    background: transparent;
+    color: rgba(241, 236, 255, 0.72);
+    font: inherit; font-size: 12px; font-weight: 600; line-height: 1.1;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  html body .mtab-close { left: max(20px, calc(50% - 214px)); }
+  html body .mtab-a11y { left: calc(max(20px, calc(50% - 214px)) + 66px); }
+  html body .mtab-close svg,
+  html body .mtab-a11y svg { width: 24px; height: 24px; }
+  html body .mtab-close:active,
+  html body .mtab-a11y:active { background: rgba(255, 255, 255, 0.10); }
+  /* קו מפריד עדין בין הכפתורים האלה לקישורי העמודים */
+  html body .mtab-a11y::after {
+    content: ""; position: absolute; right: -5px; top: 12px; bottom: 12px;
+    width: 1px; background: rgba(255, 255, 255, 0.12);
+  }
+  /* כפתור הנגישות הצף מוסתר — פותחים אותו מהסרגל */
+  html body .a11y-launcher { opacity: 0 !important; pointer-events: none !important; }
+
+  /* מצב מוסתר: הסרגל נעלם, כפתור הנגישות הצף חוזר, ומופיע כפתור לפתיחה מחדש */
+  html.mtab-hidden body .apple-nav .nav-links,
+  html.mtab-hidden body .mtab-close,
+  html.mtab-hidden body .mtab-a11y { display: none !important; }
+  html.mtab-hidden body { padding-bottom: 0 !important; }
+  html.mtab-hidden body .a11y-launcher { opacity: 1 !important; pointer-events: auto !important; bottom: 80px !important; }
+  html.mtab-hidden body .a11y-panel { bottom: 140px !important; }
+  html.mtab-hidden body .mtab-open {
+    position: fixed; z-index: 9501;
+    right: 14px; bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+    width: 50px; height: 50px;
+    display: grid; place-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 50%;
+    background: rgba(36, 19, 71, 0.9);
+    -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+    color: #fff;
+    box-shadow: 0 10px 26px -8px rgba(0, 0, 0, 0.7);
+    cursor: pointer;
+  }
+  html.mtab-hidden body .mtab-open svg { width: 24px; height: 24px; }
+}
