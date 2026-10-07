@@ -6327,9 +6327,10 @@ function renderStoryCategoryTabs() {
 
 // גודל הגריד בעמוד הסיפורים (מספר עמודות). נשמר בין ביקורים.
 let storyGridCols = (function () {
-  const v = parseInt(localStorage.getItem('story_grid_cols') || '4', 10);
+  let v = 2;
+  try { v = parseInt(localStorage.getItem('story_grid_cols') || '2', 10); } catch (e) {}
   if (v === 2 || v === 3 || v === 4) return v;
-  return 4;
+  return 2;
 })();
 // קטגוריות נבחרות לסינון. סט ריק = "הכל" (כל הסיפורים). אפשר לבחור כמה
 // קטגוריות בו-זמנית, וסיפור מוצג אם הקטגוריה שלו נמצאת באחת מהן.
@@ -16318,10 +16319,11 @@ let currentPhotoDateFilter = 'הכל';
 let currentPhotoGeneralFilter = 'הכל';
 let photoOpenFilterGroup = null;
 
-// גודל הגריד בעמוד התמונות (מספר עמודות: 2 / 3 / 4). ברירת מחדל: 4 עמודות למחשב/לפטופ.
+// גודל הגריד בעמוד התמונות (מספר עמודות: 2 / 3 / 4). ברירת מחדל: 2 עמודות.
 let photoGridCols = (function () {
-  const v = parseInt(localStorage.getItem('photo_grid_cols') || '4', 10);
-  return (v === 2 || v === 3 || v === 4) ? v : 4;
+  let v = 2;
+  try { v = parseInt(localStorage.getItem('photo_grid_cols') || '2', 10); } catch (e) {}
+  return (v === 2 || v === 3 || v === 4) ? v : 2;
 })();
 
 function photoSetGridSize(n) {
