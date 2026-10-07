@@ -12467,35 +12467,49 @@ function buildHomeFeedPage() {
   // --- וידג'ט העלאה מהירה (Hero) בראש עמוד הבית ---
   const quickUploadHero = renderQuickUploadHero();
 
-  // --- שורת תמונות ---
-  const photosJson = encodeURIComponent(JSON.stringify(photos));
-  const photoCards = photos.slice(0, maxPerRow).map(p => (typeof renderPhotoCard === 'function') ? renderPhotoCard(p) : '').join('');
-  const photosSection = photos.length ? `
-    <div class="photos-page photo-cols-${pcols}${photoImagesMode ? '' : ' text-mode'}${photoNoImgMargins ? ' no-img-margins' : ''} home-feed-photos" data-section="photos" data-photos-json="${photosJson}">
-      <div class="photo-section-row home-feed-section" style="margin:0 0 24px; background:#fff; padding:18px; border-radius:16px; border:1px solid #e2e8f0; box-shadow:0 4px 15px rgba(0,0,0,0.03);">
-        <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:2.5px solid #7c3aed; padding-bottom:10px; margin-bottom:18px;">
-          <div class="home-feed-head-text"><h3 style="margin:0; font-size:18px; font-weight:900; color:#5b21b6;">תמונות אחרונות</h3><p class="home-feed-sub">הגלריות החדשות ביותר מהקהילה.</p></div>
-          <button class="home-feed-open" onclick="event.stopPropagation(); homeOpenPhotos()" style="background:#7c3aed; color:#fff; border:none; border-radius:8px; padding:7px 14px; font-size:13px; font-weight:700; cursor:pointer;">פתח הכל ←</button>
-        </div>
-        <div class="art-rows photo-collapsible expanded home-feed-grid">${photoCards}</div>
-      </div>
-    </div>` : '';
+  // אייקוני עמודות "חדש בקהילה" (אותם קווים כמו בבאנר הפתיחה)
+  const _ico = (d) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+  const _trioIcon = {
+    'trio-photos': _ico('<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 9"/>'),
+    'trio-comics': _ico('<path d="M4 5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H10l-5 4v-4a2 2 0 0 1-1-2z"/><path d="M8 8h8M8 11h5"/>'),
+    'trio-stories': _ico('<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>')
+  };
 
-  // --- שורות קומיקס + סיפורים (עטיפה אחת) ---
+  // --- כרטיס עמודה ("חדש בקהילה"): כותרת ממורכזת, 4 אריחים, כפתור בתחתית ---
+  const trioCard = (cls, title, sub, tiles, onclick, cta, featured) => {
+    const ph = Math.max(0, maxPerRow - tiles.length);
+    const grid = tiles.length
+      ? `<div class="art-rows photo-collapsible expanded home-feed-grid">${tiles.join('')}${'<div class="trio-ph"></div>'.repeat(ph)}</div>`
+      : `<div class="trio-empty">עדיין אין כאן תוכן — היו הראשונים להעלות!</div>`;
+    return `
+    <div class="photo-section-row home-feed-section trio-card ${cls}${featured ? ' featured' : ''}">
+      <div class="trio-card-head">
+        ${featured ? `<span class="trio-badge">${featured}</span>` : ''}
+        <span class="trio-icon">${_trioIcon[cls] || ''}</span>
+        <h3>${title}</h3>
+        <p class="trio-sub">${sub}</p>
+      </div>
+      ${grid}
+      <button type="button" class="trio-cta" onclick="event.stopPropagation(); ${onclick}">${cta}</button>
+    </div>`;
+  };
+
+  // --- תמונות ---
+  const photosJson = encodeURIComponent(JSON.stringify(photos));
+  const photoCards = photos.slice(0, maxPerRow).map(p => (typeof renderPhotoCard === 'function') ? renderPhotoCard(p) : '');
+  const photosSection = `
+    <div class="photos-page photo-cols-${pcols}${photoImagesMode ? '' : ' text-mode'}${photoNoImgMargins ? ' no-img-margins' : ''} home-feed-photos" data-section="photos" data-photos-json="${photosJson}">
+      ${trioCard('trio-photos', 'תמונות', 'הגלריות החדשות ביותר מהקהילה.', photoCards, 'homeOpenPhotos()', 'לכל התמונות')}
+    </div>`;
+
+  // --- קומיקס + סיפורים (עטיפה אחת) ---
   const combined = comics.concat(stories);
   const storiesJson = encodeURIComponent(JSON.stringify(combined));
-  const storyRow = (items, title, color, border, targetId, iconHint, sub) => `
-    <div class="photo-section-row home-feed-section" style="margin:0 0 24px; background:#fff; padding:18px; border-radius:16px; border:1px solid #e2e8f0; box-shadow:0 4px 15px rgba(0,0,0,0.03);">
-      <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:2.5px solid ${border}; padding-bottom:10px; margin-bottom:18px;">
-        <div class="home-feed-head-text"><h3 style="margin:0; font-size:18px; font-weight:900; color:${color};">${title}</h3><p class="home-feed-sub">${sub}</p></div>
-        <button class="home-feed-open" onclick="event.stopPropagation(); homeOpenSection('${targetId}')" style="background:${border}; color:#fff; border:none; border-radius:8px; padding:7px 14px; font-size:13px; font-weight:700; cursor:pointer;">פתח הכל ←</button>
-      </div>
-      <div class="art-rows photo-collapsible expanded home-feed-grid">${items.slice(0, maxPerRow).map(s => storyCardHTML(s, iconHint)).join('')}</div>
-    </div>`;
+  const storyTiles = (items, iconHint) => items.slice(0, maxPerRow).map(s => storyCardHTML(s, iconHint));
   const storiesSection = `
     <div class="stories-page home-feed-stories story-cols-${cols}${photoImagesMode ? '' : ' text-mode'}" data-stories-json="${storiesJson}">
-      ${comics.length ? storyRow(comics, 'קומיקס', '#6b21a8', '#8b5cf6', 'page-stories-main', '📖', 'ציורים ורצועות קומיקס חדשים.') : ''}
-      ${stories.length ? storyRow(stories, 'סיפורים', '#0369a1', '#0ea5e9', 'page-stories-text', '✍️', 'סיפורים קצרים ומאמרים שכדאי לקרוא.') : ''}
+      ${trioCard('trio-comics', 'קומיקס', 'ציורים ורצועות קומיקס חדשים.', storyTiles(comics, '📖'), "homeOpenSection('page-stories-main')", 'לכל הקומיקס', 'מומלץ')}
+      ${trioCard('trio-stories', 'סיפורים', 'סיפורים קצרים ומאמרים שכדאי לקרוא.', storyTiles(stories, '✍️'), "homeOpenSection('page-stories-text')", 'לכל הסיפורים')}
     </div>`;
 
   return `<div class="articles-page home-feed-page" data-page-id="page-home-feed">
@@ -12513,8 +12527,16 @@ function buildHomeFeedPage() {
           <button type="button" class="qu-hero-dot" onclick="quHeroGoTo(this, 2)" aria-label="הסבר שימוש"></button>
         </div>
       </div>
-      ${photosSection}
-      ${storiesSection}
+      <section class="home-trio">
+        <div class="home-trio-head">
+          <h2>חדש בקהילה</h2>
+          <p>תמונות, קומיקס וסיפורים — האחרונים מכל סוג, במקום אחד.</p>
+        </div>
+        <div class="home-trio-grid">
+          ${photosSection}
+          ${storiesSection}
+        </div>
+      </section>
     </div>
   </div>`;
 }
