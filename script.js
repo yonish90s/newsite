@@ -3774,7 +3774,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // מאזין לשינויי מצב התחברות
   let userActivityInterval = null;
   onAuthStateChanged(auth, async (user) => {
-    setTimeout(() => { try { refreshUserMaps(); } catch (e) {} }, 0);
+    setTimeout(() => { try { refreshUserMaps(); } catch (e) {} try { homeWatchUpdate(); } catch (e) {} }, 0);
     updateManagerUI(user);
     if (userActivityInterval) {
       clearInterval(userActivityInterval);
@@ -12598,9 +12598,7 @@ async function homeLoadTodayVisitors() {
   homeWatchUpdate();
 }
 
-// ---- שעון חכם בבאנר: תאריך ושעה חיים + טבעות נתוני היום ----
-// יעדים יומיים לטבעות (טבעת מלאה = הגעה ליעד)
-const HOME_WATCH_GOALS = { visitors: 50, posts: 10, activity: 100 };
+// ---- שעון חכם בבאנר ("מידע אישי"): תאריך ושעה חיים + טבעות הנתונים של המשתמש ----
 const HOME_WATCH_DAYS = ['יום א׳', 'יום ב׳', 'יום ג׳', 'יום ד׳', 'יום ה׳', 'יום ו׳', 'שבת'];
 function homeWatchRing(r, color, pct) {
   const c = 2 * Math.PI * r;
@@ -12618,48 +12616,73 @@ function homeWatchGauge(color, pct, inner) {
       <b style="color:${color}">${inner}</b>
     </span>`;
 }
+// "מידע אישי": משתמש מחובר רואה את הנתונים שלו; אורח רואה דוגמה ונדרש להתחבר בלחיצה
+const HOME_WATCH_DEMO = { posts: 6, likes: 34, avg: 4.6, rCount: 12, points: 248, rank: 3 };
+let homeWatchRatingsLoading = false;
+function homeWatchMyStats() {
+  const user = auth.currentUser;
+  if (!user || user.isAnonymous) return null;
+  // דירוגים מכל המשתמשים — לחישוב הנקודות והמקום בטבלת "חברים"
+  if (friendsRatings === null && !homeWatchRatingsLoading) {
+    homeWatchRatingsLoading = true;
+    get(ref(db, 'website/user_ratings')).then(snap => {
+      friendsRatings = snap.exists() ? (snap.val() || {}) : {};
+      homeWatchUpdate();
+    }).catch(() => { friendsRatings = {}; }).finally(() => { homeWatchRatingsLoading = false; });
+  }
+  const all = friendsStats().sort((x, y) => y.points - x.points);
+  const i = all.findIndex(u => u.uid === user.uid);
+  const me = i >= 0 ? all[i] : { posts: 0, likes: 0, avg: 0, rCount: 0, points: 0 };
+  return { posts: me.posts, likes: me.likes, avg: me.avg, rCount: me.rCount, points: me.points, rank: (i >= 0 && me.points > 0) ? i + 1 : 0 };
+}
 function homeWatchBodyHTML() {
   const now = new Date();
   const hh = String(now.getHours()).padStart(2, '0'), mm = String(now.getMinutes()).padStart(2, '0');
-  const v = Number(window._homeTodayVisitors) || 0;
-  const x = window._homeTodayExtra || {};
-  const posts = homePostsTodayCount();
-  const act = Number(x.activity) || 0;
-  const G = HOME_WATCH_GOALS;
+  const mine = homeWatchMyStats();
+  const d = mine || HOME_WATCH_DEMO;
+  const avg = Number(d.avg) || 0;
   return `
     <div class="hw-watch-top">
-      <span class="hw-watch-dot"></span>
+      <span class="hw-watch-tag${mine ? '' : ' demo'}">${mine ? 'מידע אישי' : 'דוגמה'}</span>
       <span class="hw-watch-date">${HOME_WATCH_DAYS[now.getDay()]} <b>${now.getDate()}</b></span>
     </div>
     <div class="hw-watch-time">${hh}:${mm}</div>
     <div class="hw-watch-mid">
       <svg class="hw-watch-rings" viewBox="0 0 100 100">
-        ${homeWatchRing(42, '#ff375f', v / G.visitors)}
-        ${homeWatchRing(30, '#a3f93a', posts / G.posts)}
-        ${homeWatchRing(18, '#2ee6f5', act / G.activity)}
+        ${homeWatchRing(42, '#ff375f', d.posts / 10)}
+        ${homeWatchRing(30, '#a3f93a', d.likes / 50)}
+        ${homeWatchRing(18, '#2ee6f5', avg / 5)}
       </svg>
       <div class="hw-watch-lines">
-        <span style="color:#ff375f">${v}/${G.visitors}<small>גולשים</small></span>
-        <span style="color:#a3f93a">${posts}/${G.posts}<small>פוסטים</small></span>
-        <span style="color:#2ee6f5">${act}/${G.activity}<small>פעולות</small></span>
+        <span style="color:#ff375f">${d.posts}<small>פוסטים</small></span>
+        <span style="color:#a3f93a">${d.likes}<small>לייקים</small></span>
+        <span style="color:#2ee6f5">${avg ? avg.toFixed(1) : '—'}<small>דירוג</small></span>
       </div>
     </div>
     <div class="hw-watch-cmps">
-      ${homeWatchGauge('#ffb340', Math.min(1, (Number(x.discussions) || 0) / 5), Number(x.discussions) || 0)}
-      ${homeWatchGauge('#e8ff3a', act / G.activity, act)}
-      ${homeWatchGauge('#ff9f0a', Math.min(1, (Number(x.questions) || 0) / 5), Number(x.questions) || 0)}
+      ${homeWatchGauge('#ffb340', Math.min(1, d.points / 500), d.points)}
+      ${homeWatchGauge('#e8ff3a', d.rank ? Math.max(0.08, 1 - (d.rank - 1) / 10) : 0, d.rank ? '#' + d.rank : '—')}
+      ${homeWatchGauge('#ff9f0a', Math.min(1, d.rCount / 20), d.rCount)}
     </div>
-    <div class="hw-watch-cmp-labels"><span>דיונים</span><span>פעילות</span><span>שאלות</span></div>`;
+    <div class="hw-watch-cmp-labels"><span>נקודות</span><span>מקום</span><span>מדרגים</span></div>
+    ${mine ? '' : '<div class="hw-watch-cta">התחברו כדי לראות את שלכם</div>'}`;
 }
 function homeWatchHTML() {
   if (!window._homeWatchTimer) {
     window._homeWatchTimer = setInterval(() => { if (document.querySelector('.hw-watch')) homeWatchUpdate(); }, 15000);
   }
-  return `<div class="hw-watch" aria-label="נתוני היום"><div class="hw-watch-screen">${homeWatchBodyHTML()}</div></div>`;
+  return `<button type="button" class="hw-watch" onclick="homeWatchClick()" aria-label="מידע אישי — סטטיסטיקות שלך"><div class="hw-watch-screen">${homeWatchBodyHTML()}</div></button>`;
 }
 function homeWatchUpdate() {
   document.querySelectorAll('.hw-watch-screen').forEach(el => { el.innerHTML = homeWatchBodyHTML(); });
 }
+window.homeWatchUpdate = homeWatchUpdate;
+function homeWatchClick() {
+  const user = auth.currentUser;
+  if (!user || user.isAnonymous) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
+  if (typeof openUserPage === 'function') openUserPage(user.uid, liveChatUserName());
+}
+window.homeWatchClick = homeWatchClick;
 
 function homeWelcomeToUpload() {
   const target = document.querySelector('.home-feed-page .qu-hero-wrap');
