@@ -6678,16 +6678,6 @@ html body .umap-count { font-size: 12px; font-weight: 700; color: #7ee0a6 !impor
 .radar-dial .radar-tiles { filter: saturate(2.1) contrast(1.15) brightness(1.04) hue-rotate(-6deg); }
 .radar-dial .umap-canvas:not(.located) .radar-tiles { filter: saturate(1.2) brightness(.9); }
 .radar-dial .leaflet-container { background: #7cc8f0; font-family: inherit; }
-/* שמות ערים מצוירים */
-.radar-city { pointer-events: none; }
-.radar-city-dot { position: absolute; left: -5px; top: -5px; width: 10px; height: 10px; border-radius: 50%; background: #fff; border: 2.5px solid #1e1033; box-sizing: border-box; }
-.radar-city.t1 .radar-city-dot { left: -6px; top: -6px; width: 12px; height: 12px; background: #ec4899; }
-.radar-city-name {
-  position: absolute; top: 6px; left: 0; transform: translateX(-50%);
-  white-space: nowrap; direction: rtl;
-  font-size: 12px; font-weight: 900; color: #1e1033; line-height: 1;
-  text-shadow: -2px 0 #fff, 2px 0 #fff, 0 -2px #fff, 0 2px #fff, -1.5px -1.5px #fff, 1.5px 1.5px #fff, -1.5px 1.5px #fff, 1.5px -1.5px #fff;
-}
 .radar-dial .leaflet-control-attribution {
   background: rgba(255, 255, 255, 0.75) !important; color: #1e1033 !important;
   font-size: 8px !important; padding: 0 6px !important; border-radius: 6px;
