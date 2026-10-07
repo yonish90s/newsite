@@ -8584,6 +8584,8 @@ function qpCurrentSection() {
 
 function openQuickPublish(communityId, itemType) {
   // פרסום מהיר פתוח לכולם — גם למי שלא נרשם
+  // הצ'אט בכרטיס של עמוד הבית משתמש באותם מזהים — סוגרים אותו לפני פתיחת החלון
+  if (document.querySelector('.qu-chat-mode') && typeof quickUploadCloseChat === 'function') quickUploadCloseChat();
   qpEnsureModal();
   // מתאימים את הפרסום לעמוד הנוכחי (יד 2 / תמונות / סיפורים) כשלא מדובר בקהילה
   const pageSection = communityId ? 'photos' : qpCurrentSection();
@@ -8798,6 +8800,25 @@ async function qpPublish() {
         const m = document.getElementById('quick-publish-modal'); if (m) m.style.display = 'none';
         if (typeof openCommunityPage === 'function') openCommunityPage(cid);
       }, 1500);
+    } else if (qpData.inline) {
+      // צ'אט בכרטיס של עמוד הבית: שומרים לעמוד התמונות ברשימת העמודים,
+      // בלי לגעת בתוכן המוצג (אחרת עמוד הבית היה נדרס)
+      if (typeof pages !== 'undefined' && Array.isArray(pages)) {
+        const photoPage = pages.find(p => p && (p.content || '').includes('data-section="photos"'))
+                       || pages.find(p => p && (p.title || '').includes('תמונות'));
+        if (photoPage) {
+          let list = [];
+          const m = (photoPage.content || '').match(/data-photos-json="([^"]*)"/);
+          if (m) { try { list = JSON.parse(decodeURIComponent(m[1])); } catch (e) {} }
+          if (!Array.isArray(list)) list = [];
+          list.unshift(album);
+          photoPage.content = photoPage.content.replace(/data-photos-json="[^"]*"/, `data-photos-json="${encodeURIComponent(JSON.stringify(list))}"`);
+        }
+      }
+      if (typeof saveToStorage === 'function') saveToStorage();
+      if (!isAdminNow && typeof pushPendingSubmission === 'function') pushPendingSubmission(album);
+      qpBubble('bot', '✅ המודעה פורסמה בהצלחה!' + (isAdminNow ? '' : '<br>ממתינה לאישור מנהל ותופיע בקרוב.'));
+      setTimeout(() => { if (typeof renderPage === 'function') renderPage(); }, 2200);
     } else if (qpData.pageSection === 'stories') {
       // פרסום סיפור לעמוד הסיפורים
       const stories = (typeof storyGetStories === 'function') ? storyGetStories() : [];
@@ -12107,13 +12128,51 @@ async function editPodcastEmbed() {
 }
 window.editPodcastEmbed = editPodcastEmbed;
 
-// החץ בשלב הראשון פותח את הצ'אט המהיר לפרסום. עוברים קודם לעמוד התמונות,
-// כי הפרסום מהצ'אט נשמר לעמוד הנוכחי (מעמוד הבית הוא היה דורס אותו).
+// החץ בשלב הראשון פותח את הצ'אט המהיר לפרסום — בתוך הכרטיס עצמו, במקום שלבי האשף.
+const _QU_CHAT_ICO = {
+  bot: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="8" width="16" height="12" rx="4"/><path d="M12 4v4M9 13h.01M15 13h.01M9.5 16.5h5"/></svg>',
+  close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>',
+  camera: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/></svg>',
+  send: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>'
+};
 function quickUploadOpenChat() {
-  if (typeof homeOpenPhotos === 'function') homeOpenPhotos();
-  setTimeout(() => { if (typeof openQuickPublish === 'function') openQuickPublish(null, 'photo'); }, 80);
+  const card = document.querySelector('.home-feed-page .quick-upload-hero-container .qu-hero-card');
+  if (!card) {
+    // לא בעמוד הבית — הצ'אט הרגיל בחלון
+    if (typeof openQuickPublish === 'function') openQuickPublish(null, 'photo');
+    return;
+  }
+  // אותם מזהים כמו בחלון הצ'אט — מסירים את החלון כדי שלא יהיו כפולים
+  const modal = document.getElementById('quick-publish-modal');
+  if (modal) modal.remove();
+  card.classList.add('qu-chat-mode');
+  card.innerHTML = `
+    <div class="qu-chat">
+      <div class="qu-chat-head">
+        <span class="qu-chat-avatar">${_QU_CHAT_ICO.bot}</span>
+        <div class="qu-chat-head-text">
+          <strong>עוזר לפרסום מהיר</strong>
+          <small><span class="qu-chat-online"></span>זמין כעת · פרסום ב-30 שניות</small>
+        </div>
+        <button type="button" class="qu-chat-close" onclick="quickUploadCloseChat()" title="סגירה">${_QU_CHAT_ICO.close}</button>
+      </div>
+      <div id="qp-messages" class="qu-chat-messages"></div>
+      <div class="qu-chat-bar">
+        <button type="button" class="qu-chat-cam" onclick="qpAddImage()" title="הוסף תמונה">${_QU_CHAT_ICO.camera}</button>
+        <input id="qp-input" class="qu-chat-input" type="text" placeholder="כתבו תשובה..." onkeydown="if(event.key==='Enter'){event.preventDefault(); qpHandleSend();}">
+        <button type="button" class="qu-chat-send" onclick="qpHandleSend()" title="שליחה">${_QU_CHAT_ICO.send}</button>
+      </div>
+    </div>`;
+  qpData = { title: '', images: [], summary: '', communityId: null, type: 'photo', pageSection: 'photos', isProduct: false, inline: true, tags: {}, tagIndex: 0, price: '', offerType: '', region: '' };
+  qpSelectType('photo');
 }
 window.quickUploadOpenChat = quickUploadOpenChat;
+
+function quickUploadCloseChat() {
+  window.quickUploadState.step = 1;
+  quickUploadRefreshUI();
+}
+window.quickUploadCloseChat = quickUploadCloseChat;
 
 function quickUploadSetTarget(target) {
   // רק תמונות — אי אפשר להעלות סיפורים או קומיקס
