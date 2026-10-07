@@ -12497,6 +12497,7 @@ function homeWelcomeHeroHTML() {
         <path d="M0 0H1440V250C1440 290 1410 310 1380 300C1340 288 1330 330 1300 340C1262 352 1250 300 1215 300C1180 300 1180 380 1140 390C1100 400 1095 330 1060 320C1025 310 1020 420 970 430C925 438 925 360 890 345C850 330 845 300 810 300C770 300 770 470 720 470C670 470 680 330 640 320C600 310 600 360 560 370C520 380 515 300 470 300C430 300 430 410 385 415C340 420 345 330 300 320C255 310 250 380 210 385C165 390 170 300 120 295C80 290 70 330 40 330C15 330 0 310 0 290Z"/>
         <path d="M1130 470C1130 445 1145 425 1152 400C1159 425 1174 445 1174 470C1174 488 1164 500 1152 500C1140 500 1130 488 1130 470Z"/>
       </svg>
+      ${homeWatchHTML()}
       <div class="hw-inner">
         <div class="hw-text">
           <h1 class="hw-title">יוצרים, משתפים,<br>מתחברים.</h1>
@@ -12594,6 +12595,70 @@ async function homeLoadTodayVisitors() {
   set_('hw-stat-discussions', discussions);
   set_('hw-stat-questions', qToday);
   set_('hw-stat-activity', activity);
+  homeWatchUpdate();
+}
+
+// ---- שעון חכם בבאנר: תאריך ושעה חיים + טבעות נתוני היום ----
+// יעדים יומיים לטבעות (טבעת מלאה = הגעה ליעד)
+const HOME_WATCH_GOALS = { visitors: 50, posts: 10, activity: 100 };
+const HOME_WATCH_DAYS = ['יום א׳', 'יום ב׳', 'יום ג׳', 'יום ד׳', 'יום ה׳', 'יום ו׳', 'שבת'];
+function homeWatchRing(r, color, pct) {
+  const c = 2 * Math.PI * r;
+  const p = Math.max(0, Math.min(1, pct || 0));
+  return `<circle cx="50" cy="50" r="${r}" fill="none" stroke="${color}" stroke-opacity=".22" stroke-width="9"/>
+    <circle class="hw-ring" cx="50" cy="50" r="${r}" fill="none" stroke="${color}" stroke-width="9" stroke-linecap="round"
+      stroke-dasharray="${(c * p).toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 50 50)"/>`;
+}
+function homeWatchGauge(color, pct, inner) {
+  const r = 20, c = 2 * Math.PI * r, p = Math.max(0, Math.min(1, pct || 0));
+  return `<span class="hw-cmp">
+      <svg viewBox="0 0 50 50"><circle cx="25" cy="25" r="${r}" fill="none" stroke="${color}" stroke-opacity=".25" stroke-width="5"/>
+        <circle cx="25" cy="25" r="${r}" fill="none" stroke="${color}" stroke-width="5" stroke-linecap="round"
+          stroke-dasharray="${(c * p).toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 25 25)"/></svg>
+      <b style="color:${color}">${inner}</b>
+    </span>`;
+}
+function homeWatchBodyHTML() {
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2, '0'), mm = String(now.getMinutes()).padStart(2, '0');
+  const v = Number(window._homeTodayVisitors) || 0;
+  const x = window._homeTodayExtra || {};
+  const posts = homePostsTodayCount();
+  const act = Number(x.activity) || 0;
+  const G = HOME_WATCH_GOALS;
+  return `
+    <div class="hw-watch-top">
+      <span class="hw-watch-dot"></span>
+      <span class="hw-watch-date">${HOME_WATCH_DAYS[now.getDay()]} <b>${now.getDate()}</b></span>
+    </div>
+    <div class="hw-watch-time">${hh}:${mm}</div>
+    <div class="hw-watch-mid">
+      <svg class="hw-watch-rings" viewBox="0 0 100 100">
+        ${homeWatchRing(42, '#ff375f', v / G.visitors)}
+        ${homeWatchRing(30, '#a3f93a', posts / G.posts)}
+        ${homeWatchRing(18, '#2ee6f5', act / G.activity)}
+      </svg>
+      <div class="hw-watch-lines">
+        <span style="color:#ff375f">${v}/${G.visitors}<small>גולשים</small></span>
+        <span style="color:#a3f93a">${posts}/${G.posts}<small>פוסטים</small></span>
+        <span style="color:#2ee6f5">${act}/${G.activity}<small>פעולות</small></span>
+      </div>
+    </div>
+    <div class="hw-watch-cmps">
+      ${homeWatchGauge('#ffb340', Math.min(1, (Number(x.discussions) || 0) / 5), Number(x.discussions) || 0)}
+      ${homeWatchGauge('#e8ff3a', act / G.activity, act)}
+      ${homeWatchGauge('#ff9f0a', Math.min(1, (Number(x.questions) || 0) / 5), Number(x.questions) || 0)}
+    </div>
+    <div class="hw-watch-cmp-labels"><span>דיונים</span><span>פעילות</span><span>שאלות</span></div>`;
+}
+function homeWatchHTML() {
+  if (!window._homeWatchTimer) {
+    window._homeWatchTimer = setInterval(() => { if (document.querySelector('.hw-watch')) homeWatchUpdate(); }, 15000);
+  }
+  return `<div class="hw-watch" aria-label="נתוני היום"><div class="hw-watch-screen">${homeWatchBodyHTML()}</div></div>`;
+}
+function homeWatchUpdate() {
+  document.querySelectorAll('.hw-watch-screen').forEach(el => { el.innerHTML = homeWatchBodyHTML(); });
 }
 
 function homeWelcomeToUpload() {
