@@ -8605,3 +8605,39 @@ html body:not(#_) .art-rows > .art-row[data-art-match="0"] { display: none !impo
   .hw-actions .hw-stat:nth-child(4) { border-inline-start: none; }
 }
 
+
+/* ===================================================================
+   פוטר במובייל: כל קבוצה בכרטיס, הקישורים כגלולות, זכויות ממורכזות
+   =================================================================== */
+@media (max-width: 768px) {
+  html body .site-footer { margin-top: 24px !important; }
+  html body .site-footer-inner { padding: 26px 14px 22px !important; }
+  html body .site-footer-cols { display: flex !important; flex-direction: column; gap: 12px !important; }
+  html body .site-footer-col {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 18px;
+    padding: 14px 14px 16px;
+  }
+  html body .site-footer-col h4 {
+    margin: 0 0 12px !important;
+    font-size: 13px !important; font-weight: 900 !important;
+    color: #ffd166 !important; letter-spacing: .3px;
+  }
+  html body .site-footer-col ul { flex-direction: row !important; flex-wrap: wrap; gap: 8px !important; }
+  html body .site-footer-col a {
+    display: inline-flex; align-items: center;
+    padding: 9px 15px; border-radius: 999px;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    color: #f1ecff !important; font-size: 14px !important; font-weight: 700;
+    text-decoration: none !important;
+    -webkit-tap-highlight-color: transparent;
+  }
+  html body .site-footer-col a:active { background: var(--pink, #ec4899); border-color: transparent; }
+  html body .site-footer-socials { margin-top: 12px; }
+  html body .site-footer-bottom {
+    margin-top: 18px !important; padding-top: 0 !important; border-top: none !important;
+    justify-content: center; text-align: center; font-size: 12.5px !important;
+  }
+}
