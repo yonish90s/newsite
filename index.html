@@ -14,7 +14,7 @@
   <!-- ספריית localforage לשמירת תמונות -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
   <!-- קישור לקובץ העיצוב החיצוני (עם פרמטר למניעת שמירה במטמון) -->
-  <link rel="stylesheet" href="./style.css?v=1441">
+  <link rel="stylesheet" href="./style.css?v=1443">
 </head>
 <body class="light-mode">
   <!-- שער אישור גיל (Age Gate Overlay) -->
@@ -184,41 +184,7 @@
   </div>
 
 
-  <!-- באנר הסכמת עוגיות (Cookies) -->
-  <div id="cookie-banner" style="display:none; position:fixed; left:50%; bottom:20px; transform:translateX(-50%); z-index:999998; width:calc(100% - 32px); max-width:520px; background:#1a1a1a; color:#fff; border-radius:16px; padding:20px 22px; box-shadow:0 15px 45px rgba(0,0,0,0.4); direction:rtl; font-family:system-ui,sans-serif; border:1px solid rgba(236,72,153,0.35);">
-    <button onclick="cookieConsent('decline')" aria-label="סגור" style="position:absolute; top:12px; left:14px; background:none; border:none; color:#9ca3af; font-size:20px; cursor:pointer; line-height:1;">✕</button>
-    <h3 style="margin:0 0 8px; font-size:19px; font-weight:900;">האתר משתמש בעוגיות 🍪</h3>
-    <p style="margin:0 0 16px; font-size:13.5px; line-height:1.6; color:#d1d5db;">
-      אתר זה משתמש בעוגיות הכרחיות לתפעול האתר. באפשרותך לאשר או לדחות עוגיות נוספות לשיפור חוויית המשתמש. פרטים ב<a href="#" style="color:#f0abfc; font-weight:700;">מדיניות העוגיות</a> שלנו.
-    </p>
-    <div style="display:flex; gap:10px; flex-wrap:wrap;">
-      <button onclick="cookieConsent('accept')" style="flex:1; min-width:140px; background:linear-gradient(135deg,#ec4899 0%,#8b5cf6 100%); color:#fff; border:none; border-radius:10px; padding:12px 16px; font-size:14px; font-weight:800; cursor:pointer; box-shadow:0 4px 14px rgba(139,92,246,0.35);">אשר הכל</button>
-      <button onclick="cookieConsent('decline')" style="flex:1; min-width:140px; background:transparent; color:#fff; border:1.5px solid #4b5563; border-radius:10px; padding:12px 16px; font-size:14px; font-weight:800; cursor:pointer;">דחה הכל</button>
-    </div>
-    <div style="text-align:center; margin-top:12px;">
-      <a href="#" onclick="return false;" style="color:#9ca3af; font-size:13px; font-weight:700; text-decoration:none;">⚙️ פרטים נוספים</a>
-    </div>
-  </div>
-  <script>
-    function cookieConsent(choice) {
-      try { localStorage.setItem('cookie_consent', choice); } catch (e) {}
-      const b = document.getElementById('cookie-banner');
-      if (b) { b.style.transition = 'opacity .3s ease, transform .3s ease'; b.style.opacity = '0'; b.style.transform = 'translateX(-50%) translateY(20px)'; setTimeout(() => b.style.display = 'none', 300); }
-    }
-    window.cookieConsent = cookieConsent;
-    function maybeShowCookieBanner() {
-      let decided = null;
-      try { decided = localStorage.getItem('cookie_consent'); } catch (e) {}
-      if (decided) return;
-      const b = document.getElementById('cookie-banner');
-      if (b) b.style.display = 'block';
-    }
-    window.maybeShowCookieBanner = maybeShowCookieBanner;
-    // אם הגיל כבר אושר — מציגים את באנר העוגיות מיד; אחרת הוא יוצג אחרי אישור ההסכמה
-    window.addEventListener('DOMContentLoaded', () => {
-      try { if (sessionStorage.getItem('age_verified') === 'true') maybeShowCookieBanner(); } catch (e) {}
-    });
-  </script>
+  <!-- באנר העוגיות נמצא בתחתית הדף (cookie-bar) -->
 
   <!-- המעטפת הראשית של כל האתר, מסדרת את הכל בעמודה אחת -->
   <div class="main-layout">
@@ -1128,6 +1094,47 @@
   </button>
 </div>
 
+  <!-- באנר עוגיות — קופץ בכל כניסה לאתר -->
+  <div id="cookie-bar" class="cookie-bar" role="dialog" aria-live="polite" aria-label="הסכמה לעוגיות">
+    <span class="cookie-bar-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-4.5-4A4 4 0 0 1 13 3.1 10 10 0 0 0 12 2zm-3.5 7a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm6 6a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm-7 2a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm4-4.5a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg></span>
+    <p class="cookie-bar-text">אנו משתמשים בעוגיות לצורכי תפעול, אנליטיקה ושיווק. לפרטים ראו את מדיניות הפרטיות.</p>
+    <div class="cookie-bar-btns">
+      <button type="button" class="cookie-btn yes" onclick="cookieChoose('yes')">מאשר/ת</button>
+      <button type="button" class="cookie-btn" onclick="cookieChoose('no')">לא מאשר/ת</button>
+      <button type="button" class="cookie-btn ghost" onclick="cookieOpenPolicy()">מדיניות פרטיות</button>
+    </div>
+  </div>
+  <div id="cookie-policy" class="cookie-policy" onclick="if(event.target===this) this.style.display='none'">
+    <div class="cookie-policy-card" role="dialog" aria-label="מדיניות פרטיות">
+      <button type="button" class="cookie-policy-x" onclick="document.getElementById('cookie-policy').style.display='none'" aria-label="סגירה">✕</button>
+      <h2>מדיניות פרטיות</h2>
+      <p><b>מה נשמר בדפדפן שלכם:</b> העדפות תצוגה (גודל הגריד, סינונים, שפה, נגישות), פריטים שמורים והיסטוריית צפייה — כדי שהאתר יזכור אתכם.</p>
+      <p><b>סטטיסטיקות:</b> אנחנו סופרים ביקורים ופעולות (לייקים, שמירות, חיפושים) באופן אנונימי — רק מספרים, בלי פרטים אישיים. מי שבוחר "לא מאשר/ת" לא נספר.</p>
+      <p><b>חשבון:</b> בהתחברות עם גוגל נשמרים השם והמייל שלכם, והפרטים שתבחרו להוסיף לפרופיל (טלגרם, מאיפה, דמות).</p>
+      <p><b>מיקום:</b> רק אם תפעילו מיקום במכ"ם — נשמר בקירוב של כ-1 ק"מ, ואפשר להסתיר בכל רגע.</p>
+      <p><b>שיווק:</b> איננו מוכרים מידע אישי לצד שלישי.</p>
+      <p class="cookie-policy-note">לשאלות או בקשה למחיקת מידע — שלחו לנו הודעה דרך האתר.</p>
+    </div>
+  </div>
+  <script>
+    // מוצג בכל טעינה של האתר; הבחירה נשמרת כדי לכבד "לא מאשר/ת" בסטטיסטיקות
+    function cookieChoose(v) {
+      try { localStorage.setItem('cookie_consent', v); } catch (e) {}
+      var b = document.getElementById('cookie-bar');
+      if (b) { b.classList.remove('show'); setTimeout(function () { b.style.display = 'none'; }, 400); }
+    }
+    function cookieOpenPolicy() { var p = document.getElementById('cookie-policy'); if (p) p.style.display = 'flex'; }
+    function maybeShowCookieBanner() {
+      setTimeout(function () { var b = document.getElementById('cookie-bar'); if (b) { b.style.display = ''; b.classList.add('show'); } }, 900);
+    }
+    window.maybeShowCookieBanner = maybeShowCookieBanner;
+    window.cookieConsent = function (c) { cookieChoose(c === 'accept' ? 'yes' : 'no'); };
+    // בכל כניסה: אם אין מסך אישור גיל מוצג — מציגים מיד; אחרת מסך הגיל קורא ל-maybeShowCookieBanner אחרי האישור
+    window.addEventListener('load', function () {
+      var o = document.getElementById('age-gate-overlay');
+      if (!o || getComputedStyle(o).display === 'none') maybeShowCookieBanner();
+    });
+  </script>
   <!-- מובייל: כפתורי X (סגירה) ונגישות בסרגל הטאבים התחתון + כפתור לפתיחתו מחדש -->
   <button type="button" id="mtab-close" class="mtab-close" onclick="mobileTabsSetHidden(true)" aria-label="הסתר תפריט תחתון">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
@@ -1152,7 +1159,7 @@
     }
     try { if (localStorage.getItem('mtab_hidden') === '1') document.documentElement.classList.add('mtab-hidden'); } catch (e) {}
   </script>
-  <script type="module" src="./script.js?v=1408"></script>
+  <script type="module" src="./script.js?v=1410"></script>
   <script defer src="./a11y.js?v=1"></script>
 </body>
 </html>

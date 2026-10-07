@@ -171,7 +171,12 @@ window.updateUserActivity = updateUserActivity;
 // --- מעקב ביקורים לאנליטיקת האתר (למנהל) ---
 function _analyticsDayKey(d) { d = d || new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
 function _analyticsMonthKey(d) { d = d || new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); }
+// מי שלחץ "לא מאשר/ת" בבאנר העוגיות — לא נספר בסטטיסטיקות האנונימיות
+function analyticsAllowed() {
+  try { const c = localStorage.getItem('cookie_consent'); return c !== 'no' && c !== 'decline'; } catch (e) { return true; }
+}
 function trackVisit() {
+  if (!analyticsAllowed()) return;
   try {
     const today = _analyticsDayKey();
     // צפיית עמוד בכל טעינה
@@ -194,7 +199,7 @@ window.trackVisit = trackVisit;
 // "ביקור מעורב" = ביקור שבו הגולש עשה לפחות פעולה אחת (אחרת הוא נחשב נטישה).
 const TRACK_EVENTS = ['gallery_open', 'story_open', 'like', 'save', 'upload_submit', 'subscribe_click', 'search', 'dm_send', 'comment'];
 function trackEvent(name) {
-  if (TRACK_EVENTS.indexOf(name) === -1) return;
+  if (TRACK_EVENTS.indexOf(name) === -1 || !analyticsAllowed()) return;
   try {
     const day = _analyticsDayKey();
     const upd = { ['events/' + name]: increment(1), ['events_daily/' + day + '/' + name]: increment(1) };
