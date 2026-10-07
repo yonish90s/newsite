@@ -11109,31 +11109,36 @@ function buildLeftSidebarBox(popularHTML, section) {
   `;
 }
 
-// ===== מפת גולשים (ישראל) — משתמש רשום ממקם את עצמו, כולם רואים =====
-// מיקום נשמר מעוגל (~1 ק"מ) ב-website/user_map/{uid}
-let userMapOpen = false;
+// ===== מכ"ם גולשים — מפה עגולה סביבי ברדיוס 10 ק"מ =====
+// משתמש רשום שמפעיל מיקום נשמר מעוגל (~1 ק"מ) ב-website/user_map/{uid}.
+// במכ"ם מוצגים רק מי שנמצאים עד 10 ק"מ ממני ועדכנו מיקום ב-24 השעות האחרונות.
+// המיקום המדויק שלי נשאר רק בדפדפן (למרכז המפה).
 let userMapData = {};
 let userMapUnsub = null;
-let userMapPicking = false;
-let userMapExpanded = false;
+let userMapMe = null;
+let userMapLocating = false;
 const USER_MAP_BOUNDS = { minLat: 29.3, maxLat: 33.5, minLng: 34.2, maxLng: 35.95 };
+const RADAR_KM = 10;
+const RADAR_FRESH_MS = 24 * 60 * 60 * 1000;
+const RADAR_DEFAULT_CENTER = [32.0853, 34.7818];
 
 function buildUserMapBox() {
-  if (userMapOpen) setTimeout(initUserMaps, 0);
-  const count = Object.keys(userMapData).length;
+  setTimeout(initUserMaps, 0);
   return `
-    <div class="art-sidebar-box umap-box${userMapOpen ? ' open' : ''}${userMapOpen && userMapExpanded ? ' expanded' : ''}">
-      <button type="button" class="umap-head" onclick="toggleUserMap()">
-        <span>🗺️ מפת גולשים</span>
-        <span class="umap-head-meta"><span class="umap-count">${count ? count + ' על המפה' : ''}</span> <span class="umap-chevron">▾</span></span>
-      </button>
-      <div class="umap-body" style="display:${userMapOpen ? 'block' : 'none'};">
-        <div class="umap-canvas-wrap">
-          <div class="umap-canvas"></div>
-          <button type="button" class="umap-expand" onclick="toggleUserMapExpand()">${userMapOpen && userMapExpanded ? '✕ סגירה' : '⛶ הגדלה'}</button>
-        </div>
-        <div class="umap-actions"></div>
+    <div class="art-sidebar-box umap-box radar-box">
+      <div class="radar-head">
+        <span class="radar-title">גולשים בסביבה</span>
+        <span class="umap-count"></span>
       </div>
+      <div class="radar-wrap">
+        <div class="radar-dial">
+          <div class="umap-canvas"></div>
+          <div class="radar-sweep" aria-hidden="true"></div>
+          <span class="radar-north" aria-hidden="true">N</span>
+        </div>
+        <div class="radar-scale">${RADAR_KM} KM</div>
+      </div>
+      <div class="umap-actions"></div>
     </div>`;
 }
 
@@ -11158,25 +11163,9 @@ function subscribeUserMap() {
   if (userMapUnsub) return;
   userMapUnsub = onValue(ref(db, 'website/user_map'), (snap) => {
     userMapData = snap.exists() ? (snap.val() || {}) : {};
-    document.querySelectorAll('.umap-count').forEach(el => {
-      const n = Object.keys(userMapData).length;
-      el.textContent = n ? n + ' על המפה' : '';
-    });
     refreshUserMaps();
   }, () => {});
 }
-
-function toggleUserMap() {
-  userMapOpen = !userMapOpen;
-  document.querySelectorAll('.umap-box').forEach(box => {
-    box.classList.toggle('open', userMapOpen);
-    const body = box.querySelector('.umap-body');
-    if (body) body.style.display = userMapOpen ? 'block' : 'none';
-  });
-  if (userMapOpen) initUserMaps();
-  else { userMapPicking = false; toggleUserMapExpand(false); }
-}
-window.toggleUserMap = toggleUserMap;
 
 async function initUserMaps() {
   subscribeUserMap();
@@ -11187,148 +11176,92 @@ async function initUserMaps() {
   }
   document.querySelectorAll('.umap-canvas').forEach(el => {
     if (el._umap || !el.isConnected || el.offsetParent === null) return;
+    // מכ"ם קבוע סביבי — בלי גרירה וזום
     const map = L.map(el, {
-      zoomSnap: 0.25, minZoom: 6.5, maxZoom: 11,
-      maxBounds: [[28.9, 33.3], [33.8, 36.6]], maxBoundsViscosity: 0.8,
-      attributionControl: false
+      zoomControl: false, dragging: false, scrollWheelZoom: false, doubleClickZoom: false,
+      touchZoom: false, boxZoom: false, keyboard: false, zoomSnap: 0, attributionControl: true
     });
-    map.fitBounds([[29.45, 34.25], [33.35, 35.9]], { padding: [6, 6] });
-    drawCartoonIsrael(L, map, el);
-    map.on('click', (ev) => { if (userMapPicking) saveMyMapLocation(ev.latlng.lat, ev.latlng.lng); });
+    map.attributionControl.setPrefix(false);
+    // תצלום אוויר (ים כהה, שטח טופוגרפי) + שכבת שמות מקומות
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 16, attribution: 'Tiles © Esri'
+    }).addTo(map);
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 16, className: 'radar-labels'
+    }).addTo(map);
     el._umap = map;
+    el._umapRings = L.layerGroup().addTo(map);
     el._umapLayer = L.layerGroup().addTo(map);
-    // התאמה מחדש בכל שינוי גודל (פתיחה, הגדלה, סגירה)
     const refit = () => requestAnimationFrame(() => {
-      if (!el.offsetWidth || !el.offsetHeight) return;
+      if (!el.offsetWidth) return;
       map.invalidateSize({ pan: false });
-      map.fitBounds([[29.45, 34.25], [33.35, 35.9]], { padding: [6, 6], animate: false });
-      el._umapBaseZoom = map.getZoom();
-      updateCityTiers(el);
+      radarCenter(el);
     });
     el._umapRefit = refit;
     if (window.ResizeObserver) new ResizeObserver(refit).observe(el);
-    setTimeout(refit, 50);
+    refit();
   });
   refreshUserMaps();
-}
-
-// קו מתאר מצויר של ישראל [lat, lng]
-const ISRAEL_OUTLINE = [
-  [33.093,35.105],[33.09,35.2],[33.06,35.37],[33.09,35.5],[33.277,35.573],[33.25,35.62],[33.33,35.82],[33.2,35.9],
-  [33.05,35.87],[32.9,35.83],[32.75,35.78],[32.69,35.65],[32.64,35.57],[32.4,35.55],[32.1,35.52],[31.75,35.53],
-  [31.5,35.56],[31.1,35.45],[30.8,35.33],[30.5,35.2],[30.2,35.15],[29.9,35.05],[29.55,34.98],[29.49,34.9],
-  [29.6,34.87],[30.0,34.7],[30.4,34.55],[30.8,34.4],[31.22,34.27],[31.3,34.37],[31.45,34.5],[31.59,34.49],
-  [31.68,34.57],[31.8,34.65],[32.05,34.75],[32.2,34.8],[32.33,34.85],[32.5,34.9],[32.7,34.95],[32.83,34.96],
-  [32.8,35.03],[32.92,35.07],[33.0,35.09]
-];
-const KINNERET = [[32.89,35.53],[32.87,35.59],[32.82,35.65],[32.76,35.64],[32.71,35.59],[32.75,35.54],[32.82,35.52]];
-const DEAD_SEA = [[31.76,35.46],[31.76,35.54],[31.55,35.56],[31.35,35.5],[31.1,35.44],[31.15,35.39],[31.4,35.42],[31.6,35.45]];
-// tier: 1 תמיד, 2 בזום +1, 3 בזום +2, 4 בזום +3 (גוש דן הצפוף)
-const ISRAEL_CITIES = [
-  ['ירושלים',31.778,35.235,1],['תל אביב',32.085,34.781,1],['חיפה',32.794,34.99,1],['באר שבע',31.252,34.791,1],
-  ['אילת',29.557,34.952,1],['טבריה',32.795,35.531,1],['צפת',32.965,35.496,2],['קריית שמונה',33.207,35.57,1],
-  ['נתניה',32.33,34.857,1],['אשדוד',31.8,34.65,1],['דימונה',31.069,35.033,2],['מצפה רמון',30.61,34.8,1],
-  ['נצרת',32.702,35.297,2],['עפולה',32.607,35.289,2],['נהריה',33.006,35.098,2],['עכו',32.927,35.084,2],
-  ['כרמיאל',32.919,35.296,2],['חדרה',32.434,34.919,2],['אשקלון',31.669,34.571,2],['ערד',31.259,35.212,2],
-  ['בית שאן',32.497,35.497,2],['קצרין',32.99,35.69,2],['מודיעין',31.899,35.007,2],['שדרות',31.525,34.596,2],
-  ['קריית גת',31.61,34.764,2],['בית שמש',31.747,34.988,2],['אריאל',32.105,35.17,2],['עין בוקק',31.2,35.36,2],
-  ['הרצליה',32.166,34.843,3],['כפר סבא',32.175,34.907,3],['רעננה',32.184,34.871,4],['פתח תקווה',32.087,34.887,3],
-  ['ראשון לציון',31.964,34.804,3],['רחובות',31.894,34.811,3],['חולון',32.011,34.775,4],['רמת גן',32.068,34.824,4],
-  ['בני ברק',32.083,34.833,4],['יבנה',31.878,34.739,4],['לוד',31.951,34.895,3],['רמלה',31.93,34.866,4],
-  ['יקנעם',32.66,35.11,3],['זכרון יעקב',32.57,34.95,3],['מעלה אדומים',31.777,35.3,4],['נתיבות',31.42,34.59,3],
-  ['אופקים',31.31,34.62,3],['קריית אתא',32.81,35.11,3],['מגדל העמק',32.676,35.24,3],['ראש פינה',32.97,35.54,3]
-];
-const ISRAEL_DECOR = [
-  ['🌊',32.3,34.45],['🌊',31.4,34.1],['⛵',32.75,34.7],['⛰️',33.3,35.76],['🐟',32.8,35.585],
-  ['🌴',29.72,34.95],['🐪',30.35,34.9],['🌵',30.95,34.95],['🌲',33.02,35.3],['🍇',32.55,35.02]
-];
-
-function drawCartoonIsrael(L, map, el) {
-  const pane = (name, z) => { map.createPane(name).style.zIndex = z; return name; };
-  pane('umapLand', 300); pane('umapCities', 620);
-  const land = L.polygon(ISRAEL_OUTLINE, { pane: 'umapLand', className: 'umap-land', interactive: false, smoothFactor: 0 }).addTo(map);
-  // מעבר צבעים צפון ירוק → נגב חולי
-  const svg = land._renderer && land._renderer._container;
-  if (svg && !svg.querySelector('#umapLandGrad')) {
-    const NS = 'http://www.w3.org/2000/svg';
-    const defs = document.createElementNS(NS, 'defs');
-    defs.innerHTML = '<linearGradient id="umapLandGrad" x1="0" y1="0" x2="0" y2="1">' +
-      '<stop offset="0" stop-color="#9be38b"/><stop offset="0.38" stop-color="#c9ec8f"/>' +
-      '<stop offset="0.55" stop-color="#fbe49a"/><stop offset="1" stop-color="#f8c878"/></linearGradient>';
-    svg.insertBefore(defs, svg.firstChild);
+  // מי שכבר אישר מיקום בעבר — מאתרים אוטומטית בלי לשאול שוב
+  if (!userMapMe && !userMapLocating && navigator.permissions && navigator.permissions.query) {
+    try {
+      const st = await navigator.permissions.query({ name: 'geolocation' });
+      if (st.state === 'granted') userMapUseGps(true);
+    } catch (e) {}
   }
-  L.polygon(KINNERET, { pane: 'umapLand', className: 'umap-lake', interactive: false }).addTo(map);
-  L.polygon(DEAD_SEA, { pane: 'umapLand', className: 'umap-lake salt', interactive: false }).addTo(map);
-
-  ISRAEL_DECOR.forEach(([e, lat, lng]) => L.marker([lat, lng], {
-    pane: 'umapLand', interactive: false, keyboard: false,
-    icon: L.divIcon({ className: 'umap-decor', html: e, iconSize: [22, 22], iconAnchor: [11, 11] })
-  }).addTo(map));
-  const seaLabel = (txt, lat, lng) => L.marker([lat, lng], { pane: 'umapLand', interactive: false,
-    icon: L.divIcon({ className: 'umap-sea-label', html: txt, iconSize: [90, 20], iconAnchor: [45, 10] }) }).addTo(map);
-  seaLabel('הים התיכון', 31.95, 34.3);
-  seaLabel('ים המלח', 31.45, 35.72);
-  
-  seaLabel('ים סוף', 29.5, 35.12);
-
-  el._umapCities = ISRAEL_CITIES.map(([name, lat, lng, tier]) => {
-    const m = L.marker([lat, lng], {
-      pane: 'umapCities', interactive: false, keyboard: false,
-      icon: L.divIcon({
-        className: 'umap-city t' + tier,
-        html: `<span class="umap-city-dot"></span><span class="umap-city-name">${escHtml(name)}</span>`,
-        iconSize: [0, 0], iconAnchor: [0, 0]
-      })
-    }).addTo(map);
-    m._tier = tier;
-    return m;
-  });
-  map.on('zoomend', () => updateCityTiers(el));
 }
 
-function updateCityTiers(el) {
-  const map = el._umap;
-  if (!map || !el._umapCities) return;
-  // לפי זום מוחלט — במפה המוגדלת רואים יותר ערים כבר מההתחלה
-  const z = map.getZoom();
-  const maxTier = z >= 9.5 ? 4 : z >= 8.5 ? 3 : z >= 7.25 ? 2 : 1;
-  const diff = z - 7;
-  el._umapCities.forEach(m => {
-    const n = m.getElement && m.getElement();
-    if (n) n.style.display = m._tier <= maxTier ? '' : 'none';
-  });
-  el.classList.toggle('zoomed', diff >= 0.75);
+// ממרכז את המכ"ם עליי (או על ברירת מחדל עד שמפעילים מיקום) ומצייר טבעות 5/10 ק"מ
+function radarCenter(el) {
+  const L = window.L, map = el._umap;
+  if (!L || !map) return;
+  const c = userMapMe ? [userMapMe.lat, userMapMe.lng] : RADAR_DEFAULT_CENTER;
+  // קודם קובעים את התצוגה (ריבוע של 20 ק"מ), ורק אז מציירים — עיגול צריך מפה עם תצוגה
+  map.fitBounds(L.latLng(c).toBounds(RADAR_KM * 2000), { padding: [0, 0], animate: false });
+  el._umapRings.clearLayers();
+  L.circle(c, { radius: RADAR_KM * 500, className: 'radar-ring-inner', interactive: false, fill: false }).addTo(el._umapRings);
+  el.classList.toggle('located', !!userMapMe);
 }
 
-function toggleUserMapExpand(force) {
-  userMapExpanded = typeof force === 'boolean' ? force : !userMapExpanded;
-  document.querySelectorAll('.umap-box').forEach(box => box.classList.toggle('expanded', userMapExpanded));
-  document.querySelectorAll('.umap-expand').forEach(b => { b.textContent = userMapExpanded ? '✕ סגירה' : '⛶ הגדלה'; });
-  document.body.classList.toggle('umap-expanded', userMapExpanded);
-  setTimeout(() => document.querySelectorAll('.umap-canvas').forEach(el => el._umapRefit && el._umapRefit()), 250);
+function radarDistanceKm(a, b) {
+  const R = 6371, toRad = (d) => d * Math.PI / 180;
+  const dLat = toRad(b.lat - a.lat), dLng = toRad(b.lng - a.lng);
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
 }
-window.toggleUserMapExpand = toggleUserMapExpand;
 
 function refreshUserMaps() {
   const L = window.L;
   const myUid = (auth.currentUser && !auth.currentUser.isAnonymous) ? auth.currentUser.uid : '';
+  const now = Date.now();
+  // מי בטווח: מעודכן ב-24 שעות ועד 10 ק"מ ממני
+  const near = !userMapMe ? [] : Object.entries(userMapData).filter(([uid, v]) =>
+    uid !== myUid && v && typeof v.lat === 'number' && typeof v.lng === 'number' &&
+    typeof v.t === 'number' && now - v.t <= RADAR_FRESH_MS
+  ).map(([uid, v]) => ({ uid, v, km: radarDistanceKm(userMapMe, v) }))
+   .filter(x => x.km <= RADAR_KM);
+
+  document.querySelectorAll('.umap-count').forEach(el => {
+    el.textContent = userMapMe ? (near.length ? `${near.length} בטווח` : 'אין אף אחד בטווח') : '';
+  });
   document.querySelectorAll('.umap-canvas').forEach(el => {
     if (!el._umap || !L) return;
     el._umapLayer.clearLayers();
-    Object.entries(userMapData).forEach(([uid, v]) => {
-      if (!v || typeof v.lat !== 'number' || typeof v.lng !== 'number') return;
-      const mine = uid === myUid;
+    if (userMapMe) {
+      L.marker([userMapMe.lat, userMapMe.lng], {
+        interactive: false, keyboard: false,
+        icon: L.divIcon({ className: 'radar-me', html: '<span class="radar-me-pulse"></span><svg viewBox="0 0 24 24"><path d="M12 2 20 21 12 16.5 4 21z"/></svg>', iconSize: [30, 30], iconAnchor: [15, 15] })
+      }).addTo(el._umapLayer);
+    }
+    near.forEach(({ uid, v, km }) => {
       const initial = escHtml(String(v.name || '?').trim().charAt(0) || '?');
-      const icon = L.divIcon({
-        className: 'umap-pin-wrap',
-        html: `<div class="umap-pin${mine ? ' mine' : ''}">${initial}</div>`,
-        iconSize: [28, 28], iconAnchor: [14, 14]
-      });
-      const m = L.marker([v.lat, v.lng], { icon }).addTo(el._umapLayer);
-      m.bindPopup(`<div class="umap-pop"><b>${escHtml(v.name || 'משתמש')}</b>${mine ? ' (אני)' : ''}<br>
+      const m = L.marker([v.lat, v.lng], {
+        icon: L.divIcon({ className: 'umap-pin-wrap', html: `<div class="umap-pin">${initial}</div>`, iconSize: [26, 26], iconAnchor: [13, 13] })
+      }).addTo(el._umapLayer);
+      const dist = km < 1 ? 'פחות מ-1 ק"מ' : `כ-${Math.round(km)} ק"מ`;
+      m.bindPopup(`<div class="umap-pop"><b>${escHtml(v.name || 'משתמש')}</b><br><span>${dist} ממך</span><br>
         <a href="#" onclick="event.preventDefault();openUserPage('${artEsc(uid)}','${artEsc(v.name || '')}')">לפרופיל ›</a></div>`);
     });
-    el.classList.toggle('picking', userMapPicking);
   });
   renderUserMapActions();
 }
@@ -11336,49 +11269,61 @@ function refreshUserMaps() {
 function renderUserMapActions() {
   const user = auth.currentUser;
   const registered = user && !user.isAnonymous;
-  const mine = registered && userMapData[user.uid];
+  const shared = registered && userMapData[user.uid];
   let html;
-  if (!registered) {
-    html = `<div class="umap-hint">התחברו כדי למקם את עצמכם על המפה</div>
-      <button type="button" class="umap-btn" onclick="openLiveChatLogin()">🔑 התחברות</button>`;
-  } else if (userMapPicking) {
-    html = `<div class="umap-hint picking">👆 לחצו על המפה במקום שלכם</div>
-      <div class="umap-row">
-        <button type="button" class="umap-btn" onclick="userMapUseGps()">📍 מיקום נוכחי</button>
-        <button type="button" class="umap-btn ghost" onclick="userMapSetPicking(false)">ביטול</button>
-      </div>`;
-  } else {
+  if (!userMapMe) {
+    html = `<button type="button" class="umap-btn" onclick="userMapUseGps()" ${userMapLocating ? 'disabled' : ''}>${userMapLocating ? 'מאתר מיקום...' : 'הפעלת מיקום'}</button>
+      <div class="umap-hint small">${registered
+        ? 'רואים מי בסביבה עד 10 ק"מ, ואתם מוצגים להם בקירוב של כ-1 ק"מ'
+        : 'רואים מי בסביבה עד 10 ק"מ. כדי שגם יראו אתכם — התחברו'}</div>`;
+  } else if (!registered) {
+    html = `<div class="umap-hint">כדי שגולשים בסביבה יראו גם אתכם</div>
+      <button type="button" class="umap-btn" onclick="openLiveChatLogin()">התחברות</button>`;
+  } else if (shared) {
     html = `<div class="umap-row">
-        <button type="button" class="umap-btn" onclick="userMapSetPicking(true)">📍 ${mine ? 'שינוי המיקום שלי' : 'מקם אותי במפה'}</button>
-        ${mine ? `<button type="button" class="umap-btn ghost" onclick="removeMyMapLocation()">הסרה</button>` : ''}
+        <button type="button" class="umap-btn" onclick="userMapUseGps()">עדכון מיקום</button>
+        <button type="button" class="umap-btn ghost" onclick="removeMyMapLocation()">הסתרה</button>
       </div>
-      <div class="umap-hint small">המיקום מוצג בקירוב (כ-1 ק"מ) לכל הגולשים</div>`;
+      <div class="umap-hint small">אתם מוצגים לגולשים בסביבה בקירוב של כ-1 ק"מ</div>`;
+  } else {
+    html = `<button type="button" class="umap-btn" onclick="userMapUseGps()">הצג אותי לגולשים בסביבה</button>
+      <div class="umap-hint small">המיקום מוצג בקירוב של כ-1 ק"מ בלבד</div>`;
   }
   document.querySelectorAll('.umap-actions').forEach(el => { el.innerHTML = html; });
 }
 
-function userMapSetPicking(on) {
-  userMapPicking = !!on;
-  refreshUserMaps();
-}
-window.userMapSetPicking = userMapSetPicking;
-
-function userMapUseGps() {
-  if (!navigator.geolocation) { alert('הדפדפן לא תומך באיתור מיקום'); return; }
+// silent = איתור אוטומטי כשההרשאה כבר ניתנה; לא שומרים/משתפים בלי לחיצה
+function userMapUseGps(silent) {
+  if (!navigator.geolocation) { if (!silent) alert('הדפדפן לא תומך באיתור מיקום'); return; }
+  userMapLocating = true;
+  renderUserMapActions();
   navigator.geolocation.getCurrentPosition(
-    (pos) => saveMyMapLocation(pos.coords.latitude, pos.coords.longitude),
-    () => alert('לא הצלחנו לאתר את המיקום — אפשר ללחוץ על המפה במקום זאת'),
-    { enableHighAccuracy: false, timeout: 10000 }
+    (pos) => {
+      userMapLocating = false;
+      userMapMe = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      document.querySelectorAll('.umap-canvas').forEach(el => radarCenter(el));
+      const user = auth.currentUser;
+      const shared = user && !user.isAnonymous && userMapData[user.uid];
+      // שיתוף רק בלחיצה, או רענון של מי שכבר משתף
+      if (!silent || shared) saveMyMapLocation(userMapMe.lat, userMapMe.lng, true);
+      refreshUserMaps();
+    },
+    () => {
+      userMapLocating = false;
+      renderUserMapActions();
+      if (!silent) alert('לא הצלחנו לאתר את המיקום. בדקו שהרשאת המיקום לאתר מופעלת בדפדפן.');
+    },
+    { enableHighAccuracy: false, timeout: 12000, maximumAge: 5 * 60 * 1000 }
   );
 }
 window.userMapUseGps = userMapUseGps;
 
-async function saveMyMapLocation(lat, lng) {
+async function saveMyMapLocation(lat, lng, quiet) {
   const user = auth.currentUser;
-  if (!user || user.isAnonymous) { openLiveChatLogin(); return; }
+  if (!user || user.isAnonymous) return;
   const b = USER_MAP_BOUNDS;
   if (lat < b.minLat || lat > b.maxLat || lng < b.minLng || lng > b.maxLng) {
-    alert('אפשר למקם רק בתחומי ישראל');
+    if (!quiet) alert('אפשר להופיע במכ"ם רק בתחומי ישראל');
     return;
   }
   const round = (n) => Math.round(n * 100) / 100;
@@ -11388,17 +11333,15 @@ async function saveMyMapLocation(lat, lng) {
       name: String(liveChatUserName() || 'משתמש').slice(0, 40),
       t: Date.now()
     });
-    userMapPicking = false;
-    refreshUserMaps();
   } catch (e) {
-    alert('שמירת המיקום נכשלה');
+    if (!quiet) alert('שמירת המיקום נכשלה');
   }
 }
 
 async function removeMyMapLocation() {
   const user = auth.currentUser;
   if (!user) return;
-  try { await set(ref(db, `website/user_map/${user.uid}`), null); } catch (e) { alert('ההסרה נכשלה'); }
+  try { await set(ref(db, `website/user_map/${user.uid}`), null); } catch (e) { alert('ההסתרה נכשלה'); }
 }
 window.removeMyMapLocation = removeMyMapLocation;
 
