@@ -8041,3 +8041,12 @@ html body .home-trio .trio-cta:active { transform: scale(0.98); }
   html body .home-trio .home-feed-section.trio-card:hover { transform: none; }
   html body .home-trio .trio-card-head h3 { font-size: 24px !important; }
 }
+
+/* כפתור "שמור" (אחרי שמירה): ורוד בכל מקום — גובר על הירוק/הכהה הישנים */
+html body:not(#_) .art-save-btn.is-saved {
+  background: var(--pink-grad) !important;
+  border-color: transparent !important;
+  color: #fff !important;
+  box-shadow: 0 0 0 2px rgba(236, 72, 153, 0.35), 0 6px 16px -6px rgba(236, 72, 153, 0.7) !important;
+}
+html body:not(#_) .art-save-btn.is-saved svg { stroke: #fff !important; fill: #fff !important; }
