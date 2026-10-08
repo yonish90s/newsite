@@ -14335,6 +14335,7 @@ function photoOpenDetail(id) {
                   <button type="button" class="pshow-arrow prev" onclick="event.stopPropagation(); pdShowStep(this, 1)" aria-label="תמונה הבאה"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
                   <button type="button" class="pshow-arrow next" onclick="event.stopPropagation(); pdShowStep(this, -1)" aria-label="תמונה קודמת"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
                 ` : ''}
+                ${photoSizeBadgesHTML(a)}
               </div>
               ${validImages.length > 1 ? `<div class="pshow-dots">${validImages.map((_, i) => `<button type="button" class="pshow-dot${i === 0 ? ' active' : ''}" onclick="pdShowGo(this, ${i})" aria-label="תמונה ${i + 1}"></button>`).join('')}</div>` : ''}
             </div>
@@ -15260,6 +15261,24 @@ window.renderExpirationBadge = renderExpirationBadge;
 let photoImgDataList = ['', '', '', '', ''];
 let editingPhotoId = null;
 
+// אורך / היקף (ס״מ) מטופס ההעלאה — רק ערכים סבירים נשמרים
+function photoSizeFields() {
+  const num = (id) => {
+    const v = parseFloat(((document.getElementById(id) || {}).value || '').replace(',', '.'));
+    return (isFinite(v) && v > 0 && v <= 60) ? String(Math.round(v * 10) / 10) : '';
+  };
+  return { length: num('photo-length'), girth: num('photo-girth') };
+}
+
+// שני הפרמטרים בתחתית מסגרת התמונה בעמוד הגלריה
+function photoSizeBadgesHTML(a) {
+  const val = (v) => v ? `${escHtml(String(v))}<small>ס״מ</small>` : '<span class="pshow-size-none">לא צוין</span>';
+  return `<div class="pshow-size">
+      <div class="pshow-size-item"><span>אורך</span><b>${val(a.length)}</b></div>
+      <div class="pshow-size-item"><span>היקף</span><b>${val(a.girth)}</b></div>
+    </div>`;
+}
+
 function openPhotoModal() {
   editingPhotoId = null;
   document.getElementById('photo-title').value = '';
@@ -15280,6 +15299,7 @@ function openPhotoModal() {
   document.getElementById('photo-telegram').value = savedTelegram;
   const ageInp = document.getElementById('photo-age');
   if (ageInp) ageInp.value = '';
+  ['photo-length', 'photo-girth'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   const regionInp = document.getElementById('photo-region');
   if (regionInp) regionInp.value = '';
   const emailInp = document.getElementById('photo-email');
@@ -15306,6 +15326,7 @@ function openPhotoModal() {
   const _fOffer = document.getElementById('photo-field-offer');
   const _fOfferVal = document.getElementById('photo-field-offerval');
   if (_fAge) _fAge.style.display = _isSh ? 'none' : '';
+  const _fSize = document.getElementById('photo-field-size'); if (_fSize) _fSize.style.display = _isSh ? 'none' : '';
   if (_fOffer) _fOffer.style.display = _isSh ? '' : 'none';
   if (_fOfferVal) _fOfferVal.style.display = _isSh ? '' : 'none';
   if (_isSh) {
@@ -15565,6 +15586,8 @@ function openPhotoEditModal(id, e) {
   document.getElementById('photo-telegram').value = (album.telegramUrl || '').replace('https://t.me/', '@');
   const ageInp = document.getElementById('photo-age');
   if (ageInp) ageInp.value = album.ageRange || '';
+  const lenInp = document.getElementById('photo-length'); if (lenInp) lenInp.value = album.length || '';
+  const girInp = document.getElementById('photo-girth'); if (girInp) girInp.value = album.girth || '';
   const regionInp = document.getElementById('photo-region');
   if (regionInp) regionInp.value = album.region || '';
   const emailInp = document.getElementById('photo-email');
@@ -15601,6 +15624,7 @@ function openPhotoEditModal(id, e) {
   const _fOffer = document.getElementById('photo-field-offer');
   const _fOfferVal = document.getElementById('photo-field-offerval');
   if (_fAge) _fAge.style.display = _isShEdit ? 'none' : '';
+  const _fSize = document.getElementById('photo-field-size'); if (_fSize) _fSize.style.display = _isShEdit ? 'none' : '';
   if (_fOffer) _fOffer.style.display = _isShEdit ? '' : 'none';
   if (_fOfferVal) _fOfferVal.style.display = _isShEdit ? '' : 'none';
   if (_isShEdit) {
@@ -15719,6 +15743,7 @@ document.getElementById('photo-save').addEventListener('click', async () => {
         images: photoImgDataList.filter(Boolean),
         category: _isShSave ? _offerType : (document.getElementById('photo-category').value.trim() || 'כללי'),
         ageRange: (document.getElementById('photo-age') || {}).value || '',
+        ...photoSizeFields(),
         region: (document.getElementById('photo-region') || {}).value || '',
         ..._shFields,
         telegramUrl: telegramInput,
@@ -15739,6 +15764,7 @@ document.getElementById('photo-save').addEventListener('click', async () => {
       authorId: user ? user.uid : '',
       category: _isShSave ? _offerType : (document.getElementById('photo-category').value.trim() || 'כללי'),
       ageRange: (document.getElementById('photo-age') || {}).value || '',
+      ...photoSizeFields(),
       region: (document.getElementById('photo-region') || {}).value || '',
       ..._shFields,
       categoryColor: _isShSave ? '#7c3aed' : '#10b981',

@@ -14,7 +14,7 @@
   <!-- ספריית localforage לשמירת תמונות -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
   <!-- קישור לקובץ העיצוב החיצוני (עם פרמטר למניעת שמירה במטמון) -->
-  <link rel="stylesheet" href="./style.css?v=1445">
+  <link rel="stylesheet" href="./style.css?v=1447">
 </head>
 <body class="light-mode">
   <!-- שער אישור גיל (Age Gate Overlay) -->
@@ -540,6 +540,13 @@
       <div class="photo-field" id="photo-field-age">
         <label style="font-size:13px; font-weight:600;">גיל</label>
         <input id="photo-age" type="number" min="18" max="99" inputmode="numeric" placeholder="לדוגמה: 24" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box; background: white;">
+      </div>
+      <div class="photo-field" id="photo-field-size">
+        <label style="font-size:13px; font-weight:600;">אורך / היקף (ס״מ) — אופציונלי</label>
+        <div style="display:flex; gap:8px;">
+          <input id="photo-length" type="number" min="1" max="60" step="0.5" inputmode="decimal" placeholder="אורך" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box; background: white;">
+          <input id="photo-girth" type="number" min="1" max="60" step="0.5" inputmode="decimal" placeholder="היקף" style="padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box; background: white;">
+        </div>
       </div>
       <div class="photo-field" id="photo-field-offer" style="display:none;">
         <label style="font-size:13px; font-weight:600;">סוג ההצעה <span style="color:red">*</span></label>
@@ -1159,7 +1166,7 @@
     }
     try { if (localStorage.getItem('mtab_hidden') === '1') document.documentElement.classList.add('mtab-hidden'); } catch (e) {}
   </script>
-  <script type="module" src="./script.js?v=1413"></script>
+  <script type="module" src="./script.js?v=1415"></script>
   <script defer src="./a11y.js?v=1"></script>
 </body>
 </html>
