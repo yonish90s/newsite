@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getDatabase, ref, set, get, child, onValue, push, update, increment, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getDatabase, ref, set, get, child, onValue, push, update, increment, runTransaction, onDisconnect } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 // מסך מלא (מצב מחשב) — מוגדר מוקדם כדי שבוני העמודים יוכלו לקרוא אותו
 let pageFullWidth = (function () {
@@ -265,7 +265,7 @@ let pages = defaultPages;
 let activePageId = 'page-photos-main';
 let topNavPages = ['page-ideas-main']; // העמודים שמופיעים בתפריט העליון
 // עמודים שמופיעים רק בסרגל הצד ("עמודי צד") ולא בתפריט העליון
-const SIDE_ONLY_PAGE_IDS = ['page-questions-main', 'page-offers-main', 'page-photos-main', 'page-stories-main', 'page-friends-main', 'page-forums-main'];
+const SIDE_ONLY_PAGE_IDS = ['page-questions-main', 'page-offers-main', 'page-photos-main', 'page-stories-main', 'page-friends-main', 'page-forums-main', 'page-blinddate-main'];
 // זיהוי עמוד צד לפי מזהה, תוכן או כותרת (העמודים עשויים להיווצר עם מזהים דינמיים)
 function isSideOnlyPage(p) {
   if (!p) return false;
@@ -276,7 +276,7 @@ function isSideOnlyPage(p) {
   if (p.id === 'page-subscription-main' || (p.content || '').includes('subscription-page') || (p.title || '').includes('מנוי')) return false;
   if (SIDE_ONLY_PAGE_IDS.includes(p.id)) return true;
   const t = p.title || '', c = p.content || '';
-  if (c.includes('photos-page') || c.includes('stories-page') || c.includes('questions-page') || c.includes('offers-page') || c.includes('friends-page') || c.includes('forums-page')) return true;
+  if (c.includes('photos-page') || c.includes('stories-page') || c.includes('questions-page') || c.includes('offers-page') || c.includes('friends-page') || c.includes('forums-page') || c.includes('blinddate-page')) return true;
   if (t.includes('תמונות') || t.includes('סיפורים') || t.includes('שאלות גולשים') || t.includes('הצעות')) return true;
   return false;
 }
@@ -548,7 +548,7 @@ function sanitizeToOnlyPhotosAndStories() {
   // לפי בקשת המשתמש: משאירים רק עמודי תמונות וסיפורים (מוחקים כתבות/קהילה וכל עמוד אחר).
   // מסננים רק כשקיים לפחות עמוד תמונות/סיפורים אחד, כדי לא לרוקן אתר תקין בטעות.
   if (pages.some(p => p && ((p.content || '').includes('photos-page') || (p.content || '').includes('stories-page')))) {
-    pages = pages.filter(p => p && (p.id === 'page-home-feed' || p.id === 'page-subscription-main' || (p.content || '').includes('home-feed-page') || (p.content || '').includes('subscription-page') || (p.content || '').includes('photos-page') || (p.content || '').includes('stories-page') || (p.content || '').includes('ideas-page') || (p.content || '').includes('communities-page') || (p.content || '').includes('info-page') || (p.content || '').includes('requests-page') || (p.content || '').includes('questions-page') || (p.content || '').includes('offers-page') || (p.content || '').includes('friends-page') || (p.content || '').includes('forums-page')));
+    pages = pages.filter(p => p && (p.id === 'page-home-feed' || p.id === 'page-subscription-main' || (p.content || '').includes('home-feed-page') || (p.content || '').includes('subscription-page') || (p.content || '').includes('photos-page') || (p.content || '').includes('stories-page') || (p.content || '').includes('ideas-page') || (p.content || '').includes('communities-page') || (p.content || '').includes('info-page') || (p.content || '').includes('requests-page') || (p.content || '').includes('questions-page') || (p.content || '').includes('offers-page') || (p.content || '').includes('friends-page') || (p.content || '').includes('forums-page') || (p.content || '').includes('blinddate-page')));
   }
 
   // בוטסטראפ של עמודי ברירת המחדל (תמונות + סיפורים) רק כאשר אין אף עמוד באתר.
@@ -701,6 +701,11 @@ function sanitizeToOnlyPhotosAndStories() {
   const _frPage = pages.find(p => p && p.id === 'page-friends-main');
   if (!_frPage) pages.push({ id: 'page-friends-main', title: 'חברים', content: _frContent });
   else { _frPage.content = _frContent; if (!_frPage.title) _frPage.title = 'חברים'; }
+  // עמוד "Blind Date" — תמיד קיים, נבנה דינמית
+  const _bdContent = '<div class="blinddate-page" data-page-id="page-blinddate-main"></div>';
+  const _bdPage = pages.find(p => p && p.id === 'page-blinddate-main');
+  if (!_bdPage) pages.push({ id: 'page-blinddate-main', title: 'Blind Date', content: _bdContent });
+  else { _bdPage.content = _bdContent; if (!_bdPage.title) _bdPage.title = 'Blind Date'; }
   // עמוד "פורומים" — תמיד קיים, נבנה דינמית
   const _foContent = '<div class="forums-page" data-page-id="page-forums-main"></div>';
   const _foPage = pages.find(p => p && p.id === 'page-forums-main');
@@ -1371,6 +1376,15 @@ function renderPage() {
       if (typeof buildHomeFeedPage === 'function') {
         mainContent.innerHTML = buildHomeFeedPage();
         if (isEditMode) applyEditModeToContent();
+        try { window.scrollTo(0, 0); } catch (e) {}
+        return;
+      }
+    }
+
+    // עמוד "Blind Date" — נבנה דינמית
+    if (currentPage.id === 'page-blinddate-main' || (currentPage.content || '').includes('blinddate-page')) {
+      if (typeof buildBlindDatePage === 'function') {
+        mainContent.innerHTML = buildBlindDatePage();
         try { window.scrollTo(0, 0); } catch (e) {}
         return;
       }
@@ -11129,6 +11143,7 @@ function buildLeftSidebarBox(popularHTML, section) {
     return p.id === 'page-photos-main' || p.id === 'page-stories-main' || p.id === 'page-stories-text'
       || p.id === 'page-friends-main' || c.includes('friends-page')
       || p.id === 'page-forums-main' || c.includes('forums-page')
+      || p.id === 'page-blinddate-main' || c.includes('blinddate-page')
       || t.includes('תמונות') || t.includes('סיפורים') || t.includes('קומיקס')
       || c.includes('photos-page') || c.includes('stories-page');
   };
@@ -12923,6 +12938,188 @@ async function saveAvatar() {
   }
 }
 window.saveAvatar = saveAvatar;
+
+// ============================================================
+// עמוד "Blind Date" — נכנסים לתור, ומה שיוצא יוצא: שיחה פרטית 1 על 1 עם גולש/ת אקראי/ת
+// תור: website/blind_queue/{uid}   חדר: website/blind_rooms/{roomId} (a, b, msgs, ended)
+// ============================================================
+const BD_STALE_MS = 10 * 60 * 1000;
+let bd = { state: 'intro', me: { g: '', want: 'all' }, roomId: null, partner: null, msgs: {}, ended: false, unsubQ: null, unsubR: null, error: '' };
+
+function bdRegistered() { return auth.currentUser && !auth.currentUser.isAnonymous; }
+function bdMatches(meG, meWant, other) {
+  if (!other || other.status !== 'waiting' || other.room) return false;
+  if (!other.t || Date.now() - other.t > BD_STALE_MS) return false;
+  const iLikeThem = meWant === 'all' || meWant === other.g;
+  const theyLikeMe = other.want === 'all' || other.want === meG;
+  return iLikeThem && theyLikeMe;
+}
+
+function buildBlindDatePage() {
+  return `<div class="blinddate-page" data-page-id="page-blinddate-main"><div class="bd-inner">${bdViewHTML()}</div></div>`;
+}
+function bdRender() {
+  const el = mainContent && mainContent.querySelector('.blinddate-page .bd-inner');
+  if (!el) return;
+  const draft = document.getElementById('bd-input');
+  const val = draft ? draft.value : '';
+  el.innerHTML = bdViewHTML();
+  const d2 = document.getElementById('bd-input');
+  if (d2 && val) d2.value = val;
+  const box = el.querySelector('.bd-msgs');
+  if (box) box.scrollTop = box.scrollHeight;
+}
+
+function bdViewHTML() {
+  const heart = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.6 2.8 4.5 6.7 4.5c2.2 0 3.6 1.2 5.3 3 1.7-1.8 3.1-3 5.3-3 3.9 0 5.8 4.1 4.3 7.3C19.5 16.4 12 21 12 21z"/></svg>';
+  if (bd.state === 'intro') {
+    const chip = (key, val, label) => `<button type="button" class="bd-chip${bd.me[key] === val ? ' on' : ''}" onclick="bdPick('${key}','${val}')">${label}</button>`;
+    return `
+      <div class="bd-card bd-intro">
+        <div class="bd-logo">${heart}</div>
+        <h1>Blind Date</h1>
+        <p>נכנסים, מחכים — ומה שיוצא יוצא. שיחה פרטית ואקראית עם גולש/ת אחר/ת שמחכה בדיוק עכשיו.</p>
+        <div class="bd-row"><span>אני</span><div>${chip('g', 'm', 'גבר')}${chip('g', 'f', 'אישה')}</div></div>
+        <div class="bd-row"><span>מחפש/ת</span><div>${chip('want', 'f', 'אישה')}${chip('want', 'm', 'גבר')}${chip('want', 'all', 'כולם')}</div></div>
+        ${bd.error ? `<div class="bd-error">${escHtml(bd.error)}</div>` : ''}
+        <button type="button" class="bd-go" onclick="bdStart()">${bdRegistered() ? 'התחילו' : 'התחברו כדי להתחיל'}</button>
+        <small class="bd-note">השיחה פרטית לשניכם בלבד. אפשר לסיים בכל רגע.</small>
+      </div>`;
+  }
+  if (bd.state === 'waiting') {
+    return `
+      <div class="bd-card bd-wait">
+        <div class="bd-radar"><span></span><span></span><span></span><div class="bd-logo">${heart}</div></div>
+        <h2>מחפשים לך התאמה...</h2>
+        <p>ברגע שמישהו/י מתאים/ה נכנס/ת — השיחה נפתחת. אפשר להשאיר את העמוד פתוח.</p>
+        <button type="button" class="bd-ghost" onclick="bdCancel()">ביטול</button>
+      </div>`;
+  }
+  // chat / ended
+  const myUid = auth.currentUser ? auth.currentUser.uid : '';
+  const msgs = Object.values(bd.msgs || {}).filter(m => m && m.text).sort((a, b) => (a.t || 0) - (b.t || 0));
+  return `
+    <div class="bd-card bd-chat">
+      <div class="bd-chat-head">
+        <span class="bd-avatar">${escHtml(String((bd.partner && bd.partner.name) || '?').charAt(0))}</span>
+        <div><b>${escHtml((bd.partner && bd.partner.name) || 'גולש/ת')}</b><small>${bd.ended ? 'השיחה הסתיימה' : 'Blind Date · מחוברים עכשיו'}</small></div>
+        <button type="button" class="bd-ghost small" onclick="bdNext()">${bd.ended ? 'חיפוש חדש' : 'הבא ›'}</button>
+      </div>
+      <div class="bd-msgs">
+        <div class="bd-sys">נוצרה התאמה! תגידו שלום 👋</div>
+        ${msgs.map(m => `<div class="bd-msg${m.from === myUid ? ' mine' : ''}"><span>${escHtml(m.text)}</span></div>`).join('')}
+        ${bd.ended ? '<div class="bd-sys">השיחה הסתיימה.</div>' : ''}
+      </div>
+      ${bd.ended ? `<button type="button" class="bd-go" onclick="bdNext()">חפשו התאמה חדשה</button>` : `
+      <div class="bd-bar">
+        <input id="bd-input" maxlength="500" placeholder="כתבו הודעה..." onkeydown="if(event.key==='Enter'){event.preventDefault(); bdSend();}">
+        <button type="button" onclick="bdSend()" aria-label="שליחה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+      </div>`}
+    </div>`;
+}
+
+function bdPick(key, val) { bd.me[key] = val; bd.error = ''; bdRender(); }
+window.bdPick = bdPick;
+
+function bdStopListeners() {
+  if (bd.unsubQ) { bd.unsubQ(); bd.unsubQ = null; }
+  if (bd.unsubR) { bd.unsubR(); bd.unsubR = null; }
+}
+
+async function bdStart() {
+  if (!bdRegistered()) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
+  if (!bd.me.g) { bd.error = 'בחרו קודם "אני: גבר / אישה"'; bdRender(); return; }
+  const user = auth.currentUser;
+  const name = String(liveChatUserName() || 'משתמש').slice(0, 40);
+  bd.state = 'waiting'; bd.error = ''; bdRender();
+  try {
+    // 1. מחפשים מישהו שכבר מחכה ומתאים (הוותיק ביותר)
+    const snap = await get(ref(db, 'website/blind_queue'));
+    const all = snap.exists() ? (snap.val() || {}) : {};
+    const candidates = Object.entries(all)
+      .filter(([uid, q]) => uid !== user.uid && bdMatches(bd.me.g, bd.me.want, q))
+      .sort((a, b) => (a[1].t || 0) - (b[1].t || 0));
+    for (const [otherUid, q] of candidates) {
+      const roomId = `r${Date.now()}_${user.uid.slice(0, 8)}`;
+      let claimed = false;
+      // "תופסים" את המחכה בטרנזקציה — כדי ששניים לא יתאימו לאותו אדם
+      await runTransaction(ref(db, `website/blind_queue/${otherUid}`), cur => {
+        if (!cur || cur.status !== 'waiting' || cur.room) return; // ביטול
+        claimed = true;
+        return Object.assign({}, cur, { status: 'matched', room: roomId, partner: user.uid, partnerName: name });
+      });
+      if (!claimed) continue;
+      await set(ref(db, `website/blind_rooms/${roomId}`), { a: otherUid, b: user.uid, aName: q.name || 'גולש/ת', bName: name, t: Date.now() });
+      bdJoinRoom(roomId, { uid: otherUid, name: q.name || 'גולש/ת' });
+      return;
+    }
+    // 2. אין אף אחד — נכנסים לתור ומחכים שמישהו יתפוס אותנו
+    const myRef = ref(db, `website/blind_queue/${user.uid}`);
+    await set(myRef, { name, g: bd.me.g, want: bd.me.want, t: Date.now(), status: 'waiting' });
+    try { onDisconnect(myRef).remove(); } catch (e) {}
+    bd.unsubQ = onValue(myRef, s => {
+      const q = s.val();
+      if (q && q.status === 'matched' && q.room && bd.state === 'waiting') {
+        bdJoinRoom(q.room, { uid: q.partner, name: q.partnerName || 'גולש/ת' }, myRef);
+      }
+    });
+  } catch (e) {
+    console.error('blind date failed', e);
+    bd.state = 'intro'; bd.error = 'משהו השתבש. נסו שוב.'; bdRender();
+  }
+}
+window.bdStart = bdStart;
+
+// queueRef: אצל מי שחיכה — החדר נוצר רגע אחרי ה"תפיסה", אז מחכים שיהיה קריא,
+// ורק אז מוחקים את הרשומה בתור (היא נדרשת לכללים בזמן יצירת החדר)
+async function bdJoinRoom(roomId, partner, queueRef) {
+  bdStopListeners();
+  bd.state = 'chat'; bd.roomId = roomId; bd.partner = partner; bd.msgs = {}; bd.ended = false;
+  bdRender();
+  const roomRef = ref(db, `website/blind_rooms/${roomId}`);
+  if (queueRef) {
+    for (let i = 0; i < 20; i++) {
+      try { const s = await get(roomRef); if (s.exists()) break; } catch (e) {}
+      await new Promise(r => setTimeout(r, 500));
+    }
+    set(queueRef, null).catch(() => {});
+  }
+  if (bd.roomId !== roomId) return;
+  bd.unsubR = onValue(roomRef, s => {
+    const r = s.val() || {};
+    bd.msgs = r.msgs || {};
+    bd.ended = !!r.ended;
+    bdRender();
+  }, () => {});
+}
+
+async function bdSend() {
+  const inp = document.getElementById('bd-input');
+  const text = inp ? inp.value.trim() : '';
+  if (!text || !bd.roomId || bd.ended || !bdRegistered()) return;
+  inp.value = '';
+  try {
+    await set(push(ref(db, `website/blind_rooms/${bd.roomId}/msgs`)), { from: auth.currentUser.uid, text: text.slice(0, 500), t: Date.now() });
+  } catch (e) { inp.value = text; alert('ההודעה לא נשלחה'); }
+}
+window.bdSend = bdSend;
+
+async function bdLeaveRoom() {
+  if (bd.roomId && !bd.ended) { try { await set(ref(db, `website/blind_rooms/${bd.roomId}/ended`), true); } catch (e) {} }
+}
+async function bdCancel() {
+  bdStopListeners();
+  if (bdRegistered()) { try { await set(ref(db, `website/blind_queue/${auth.currentUser.uid}`), null); } catch (e) {} }
+  bd.state = 'intro'; bdRender();
+}
+window.bdCancel = bdCancel;
+async function bdNext() {
+  await bdLeaveRoom();
+  bdStopListeners();
+  bd.roomId = null; bd.partner = null; bd.msgs = {}; bd.ended = false;
+  bdStart();
+}
+window.bdNext = bdNext;
 
 // ============================================================
 // עמוד "חברים" — טבלת תחרות: הכי הרבה פוסטים, הדירוג הגבוה, הכי הרבה נקודות
@@ -19254,7 +19451,7 @@ onPublicSiteValue((data) => {
     pList = dedupePageList(pList);
     // משאירים רק עמודי תמונות/סיפורים/קהילות (מוחקים כתבות וכל עמוד אחר)
     if (pList.some(p => p && ((p.content || '').includes('photos-page') || (p.content || '').includes('stories-page')))) {
-      pList = pList.filter(p => p && (p.id === 'page-home-feed' || p.id === 'page-subscription-main' || (p.content || '').includes('home-feed-page') || (p.content || '').includes('subscription-page') || (p.content || '').includes('photos-page') || (p.content || '').includes('stories-page') || (p.content || '').includes('ideas-page') || (p.content || '').includes('communities-page') || (p.content || '').includes('info-page') || (p.content || '').includes('requests-page') || (p.content || '').includes('questions-page') || (p.content || '').includes('offers-page') || (p.content || '').includes('friends-page') || (p.content || '').includes('forums-page') || p.id === 'page-ideas-main'));
+      pList = pList.filter(p => p && (p.id === 'page-home-feed' || p.id === 'page-subscription-main' || (p.content || '').includes('home-feed-page') || (p.content || '').includes('subscription-page') || (p.content || '').includes('photos-page') || (p.content || '').includes('stories-page') || (p.content || '').includes('ideas-page') || (p.content || '').includes('communities-page') || (p.content || '').includes('info-page') || (p.content || '').includes('requests-page') || (p.content || '').includes('questions-page') || (p.content || '').includes('offers-page') || (p.content || '').includes('friends-page') || (p.content || '').includes('forums-page') || (p.content || '').includes('blinddate-page') || p.id === 'page-ideas-main'));
     }
     // מוודאים שעמוד "רעיונות" קיים
     const _ipd = pList.find(p => p && p.id === 'page-ideas-main');
@@ -19268,6 +19465,7 @@ onPublicSiteValue((data) => {
     // מוודאים שעמוד "קהילות" תמיד קיים (עם תוכן פלייסהולדר תקין)
     const _frp = pList.find(p => p && p.id === 'page-friends-main');
     if (!_frp) pList.push({ id: 'page-friends-main', title: 'חברים', content: '<div class="friends-page" data-page-id="page-friends-main"></div>' });
+    if (!pList.find(p => p && p.id === 'page-blinddate-main')) pList.push({ id: 'page-blinddate-main', title: 'Blind Date', content: '<div class="blinddate-page" data-page-id="page-blinddate-main"></div>' });
     if (!pList.find(p => p && p.id === 'page-forums-main')) pList.push({ id: 'page-forums-main', title: 'פורומים', content: '<div class="forums-page" data-page-id="page-forums-main"></div>' });
     const _cp = pList.find(p => p && p.id === 'page-communities-main');
     const _cpc = '<div class="communities-page" data-page-id="page-communities-main"></div>';

@@ -259,6 +259,30 @@
         }
       },
 
+      "blind_queue": {
+        ".read": "auth != null && auth.token.firebase.sign_in_provider !== 'anonymous'",
+        "$uid": {
+          ".write": "auth != null && auth.token.firebase.sign_in_provider !== 'anonymous' && (auth.uid === $uid || (data.child('status').val() === 'waiting' && !data.child('room').exists() && newData.child('status').val() === 'matched' && newData.child('partner').val() === auth.uid && newData.child('room').isString() && newData.child('g').val() === data.child('g').val() && newData.child('want').val() === data.child('want').val() && newData.child('name').val() === data.child('name').val()))",
+          ".validate": "!newData.exists() || (newData.hasChildren(['name', 'g', 'want', 't', 'status']) && newData.child('name').isString() && newData.child('name').val().length <= 40 && (newData.child('g').val() === 'm' || newData.child('g').val() === 'f') && (newData.child('want').val() === 'm' || newData.child('want').val() === 'f' || newData.child('want').val() === 'all') && newData.child('t').isNumber() && newData.child('t').val() <= now + 60000 && (newData.child('status').val() === 'waiting' || newData.child('status').val() === 'matched'))",
+          "$other": { ".validate": "$other === 'name' || $other === 'g' || $other === 'want' || $other === 't' || $other === 'status' || $other === 'room' || $other === 'partner' || ($other === 'partnerName' && newData.isString() && newData.val().length <= 40)" }
+        }
+      },
+
+      "blind_rooms": {
+        "$roomId": {
+          ".read": "auth != null && (data.child('a').val() === auth.uid || data.child('b').val() === auth.uid)",
+          ".write": "auth != null && auth.token.firebase.sign_in_provider !== 'anonymous' && !data.exists() && newData.child('b').val() === auth.uid && root.child('website/blind_queue').child(newData.child('a').val()).child('room').val() === $roomId && root.child('website/blind_queue').child(newData.child('a').val()).child('partner').val() === auth.uid",
+          ".validate": "!newData.exists() || (newData.hasChildren(['a', 'b', 't']) && newData.child('aName').isString() && newData.child('aName').val().length <= 40 && newData.child('bName').isString() && newData.child('bName').val().length <= 40)",
+          "ended": { ".write": "auth != null && (data.parent().child('a').val() === auth.uid || data.parent().child('b').val() === auth.uid)", ".validate": "newData.val() === true" },
+          "msgs": {
+            "$msgId": {
+              ".write": "auth != null && !data.exists() && (data.parent().parent().child('a').val() === auth.uid || data.parent().parent().child('b').val() === auth.uid) && data.parent().parent().child('ended').val() !== true",
+              ".validate": "newData.child('from').val() === auth.uid && newData.child('text').isString() && newData.child('text').val().length >= 1 && newData.child('text').val().length <= 500 && newData.child('t').isNumber()"
+            }
+          }
+        }
+      },
+
       "pending_submissions": {
         "$submissionId": { ".write": "auth != null && !data.exists()" }
       },
