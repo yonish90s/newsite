@@ -6538,7 +6538,7 @@ function storyCardHTML(s, iconHint) {
       `;
     }
     const isVerifiedStory = isUserVerified(s.authorId, s.author, s.verified || s.verifiedUser);
-    const verifiedBadgeHTML = isVerifiedStory ? ` <span title="משתמש מאומת" style="color:#2563eb; font-weight:900; background:#dbeafe; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:10px; margin-right:3px;">✓</span>` : '';
+    const verifiedBadgeHTML = isVerifiedStory ? verifiedSealHTML() : '';
     const storyTime = photoAlbumTime(s);
     const viewsCount = photoGetViews(s.id);
     const likesCount = s.likes || 0;
@@ -8344,7 +8344,7 @@ function renderPhotoCard(p, options = {}) {
   `;
 
   const isVerifiedAlbum = isUserVerified(p.authorId, p.author, p.verified || p.verifiedUser);
-  const verifiedBadgeHTML = isVerifiedAlbum ? ` <span title="משתמש מאומת" style="color:#2563eb; font-weight:900; background:#dbeafe; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:10px; margin-right:3px;">✓</span>` : '';
+  const verifiedBadgeHTML = isVerifiedAlbum ? verifiedSealHTML() : '';
   const priceBadgeHTML = p.price ? `<div class="art-price-badge">💰 ${escHtml(String(p.price))}</div>` : '';
   // בעמוד הקהילות מציגים כרטיס "ריבוע" נקי — ללא תאריך/מאומת/צפיות/לייקים וכפתורים
   const metaHTML = options.hideMeta ? '' : `
@@ -9100,7 +9100,7 @@ window.renderCommunityItemCard = renderCommunityItemCard;
 
 function renderStoryCommunityCard(s) {
   const isVerifiedStory = (typeof isUserVerified === 'function') ? isUserVerified(s.authorId, s.author, s.verified || s.verifiedUser) : false;
-  const verifiedBadgeHTML = isVerifiedStory ? ` <span title="משתמש מאומת" style="color:#2563eb; font-weight:900; background:#dbeafe; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:10px; margin-right:3px;">✓</span>` : '';
+  const verifiedBadgeHTML = isVerifiedStory ? verifiedSealHTML() : '';
   const validImages = (s.images && s.images.length) ? s.images.filter(Boolean) : (s.image ? [s.image] : []);
   const mainImg = s.cover || validImages[0] || s.image || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80';
   return `
@@ -10308,6 +10308,14 @@ async function saveUserNickname() {
   if (typeof pfApplyActive === 'function') pfApplyActive();
 }
 window.saveUserNickname = saveUserNickname;
+
+// תג "משתמש מאומת" — חותם כחול עם וי לבן, אחיד בכל האתר
+const VERIFIED_SEAL_PATH = 'M12.00 0.80 L14.48 2.73 L17.60 2.30 L18.79 5.21 L21.70 6.40 L21.27 9.52 L23.20 12.00 L21.27 14.48 L21.70 17.60 L18.79 18.79 L17.60 21.70 L14.48 21.27 L12.00 23.20 L9.52 21.27 L6.40 21.70 L5.21 18.79 L2.30 17.60 L2.73 14.48 L0.80 12.00 L2.73 9.52 L2.30 6.40 L5.21 5.21 L6.40 2.30 L9.52 2.73Z';
+function verifiedSealHTML(size) {
+  const px = size || 19;
+  return ` <span class="verified-seal" title="משתמש מאומת" aria-label="משתמש מאומת" style="width:${px}px;height:${px}px"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="${VERIFIED_SEAL_PATH}" fill="#1d9bf0"/><path d="M7.4 12.3l3.1 3.1 6.1-6.3" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
+}
+window.verifiedSealHTML = verifiedSealHTML;
 
 function isUserVerified(authorId, authorName, itemVerified) {
   if (itemVerified === true || itemVerified === 'true' || itemVerified === 1) return true;
@@ -12985,7 +12993,7 @@ function friendsBoardHTML(id, title, sub, list, valueOf) {
       <div class="fr-row${i < 3 ? ' top top' + (i + 1) : ''}${u.uid && u.uid === myUid ? ' me' : ''}" ${click}>
         <span class="fr-rank">${i + 1}</span>
         ${friendsAvatar(u)}
-        <span class="fr-name">${escHtml(u.name)}</span>
+        <span class="fr-name">${escHtml(u.name)}${u.uid && isUserVerified(u.uid, u.name) ? verifiedSealHTML(17) : ''}</span>
         <span class="fr-val">${valueOf(u)}</span>
       </div>`;
   }).join('') : `<div class="fr-empty">עדיין אין כאן אף אחד — היו הראשונים!</div>`;
@@ -13278,7 +13286,7 @@ function forumTopicHTML() {
       <article class="fo-post${idx === 0 ? ' first' : ''}">
         <aside class="fo-author">
           <span class="fo-author-av" ${p.uid ? `data-av-uid="${escHtml(p.uid)}"` : ''} style="--av:${FRIENDS_AVATAR_COLORS[[...String(p.uid || p.name || '')].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 0) % FRIENDS_AVATAR_COLORS.length]}">${escHtml(String(p.name || '?').trim().charAt(0) || '?')}</span>
-          <b class="fo-author-name" ${nameClick}>${escHtml(p.name || 'משתמש')}</b>
+          <b class="fo-author-name" ${nameClick}>${escHtml(p.name || 'משתמש')}${p.uid && isUserVerified(p.uid, p.name) ? verifiedSealHTML(18) : ''}</b>
           <span class="fo-role ${role.cls}">${role.label}</span>
           <dl class="fo-author-stats">
             <div><dt>פוסטים:</dt><dd>${Number(st.posts || 0).toLocaleString('he-IL')}</dd></div>
@@ -14347,7 +14355,7 @@ function photoOpenDetail(id) {
               <div class="pshow-desc">${contentHTML}</div>
                 <div class="art-meta pd-show-meta">
                   <span class="art-category-badge" style="background:${escHtml(a.categoryColor || '#10b981')}">${escHtml(a.category)}</span>
-                  <span>צילום: ${escHtml(a.author)}</span>
+                  <span>צילום: ${escHtml(a.author)}${isUserVerified(a.authorId, a.author, a.verified) ? verifiedSealHTML(18) : ''}</span>
                   ${a.authorId ? `<button onclick="toggleFollow('${artEsc(a.authorId)}','${artEsc(a.author || '')}', this)" class="follow-btn${isFollowing(a.authorId) ? ' following' : ''}">${isFollowing(a.authorId) ? '✓ עוקב' : '➕ עקוב'}</button>` : ''}
                   <span>·</span>
                   <span>${escHtml(a.timestamp)}</span>
@@ -15092,7 +15100,7 @@ function userWatchHTML(st) {
         </div>
         <div class="uw-head">
           <span class="uw-avatar" ${st.uid ? `data-av-uid="${escHtml(st.uid)}"` : ''}>${escHtml(String(st.name || '?').trim().charAt(0) || '?')}</span>
-          <h1 id="user-page-name" class="uw-name">${escHtml(st.name || 'משתמש')}</h1>
+          <h1 id="user-page-name" class="uw-name">${escHtml(st.name || 'משתמש')}${st.verified ? verifiedSealHTML(28) : ''}</h1>
         </div>
         ${(st.uid && auth.currentUser && !auth.currentUser.isAnonymous && auth.currentUser.uid === st.uid)
           ? `<button type="button" class="uw-edit-av" onclick="openAvatarEditor()">עיצוב הדמות שלי</button>` : ''}
