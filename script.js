@@ -6230,8 +6230,8 @@ function _catList(kind) { return kind === 'photos' ? PHOTO_BAR_CATEGORIES : STOR
 function _catSave(kind) { if (kind === 'photos') savePhotoBarCategories(); else saveStoryCategories(); }
 function _catRerender(kind) {
   if (kind === 'photos') {
-    const bar = mainContent && mainContent.querySelector('.photos-page[data-section="photos"] .section-category-bar');
-    if (bar) bar.outerHTML = sectionCategoryBarHTML('photos');
+    const tiles = mainContent && mainContent.querySelector('.photos-page[data-section="photos"] .pcat-tiles');
+    if (tiles && typeof buildPhotosPage === 'function') mainContent.innerHTML = buildPhotosPage(photoGetAlbums(), 'photos');
   } else {
     renderStoryCategoryTabs();
   }
@@ -13644,6 +13644,7 @@ function buildPhotosPage(albums, section) {
   const _isAdminView = (typeof isAdmin === 'function' && isAdmin()) || (typeof isEditMode !== 'undefined' && isEditMode);
   albums = albums.filter(p => !p.adminOnly || _isAdminView);
 
+  const _tileAlbums = albums; // לפני סינון הקטגוריה — לתמונות של ריבועי הקטגוריות
   // סינון לפי סרגל הקטגוריות (תמונות / קהילות) — "הכל · כללי · לעסקים"
   if ((section === 'photos' || section === 'communities' || section === 'secondhand' || section === 'partnerships' || section === 'reviews') && typeof filterAlbumsByCategory === 'function') {
     albums = filterAlbumsByCategory(albums, section);
@@ -13879,8 +13880,9 @@ function buildPhotosPage(albums, section) {
           </div>
           ${section === 'ideas'
             ? (typeof ideasCategoryBarHTML === 'function' ? ideasCategoryBarHTML() : '')
-            : (section === 'secondhand' || section === 'communities' ? '' : (typeof sectionCategoryBarHTML === 'function' ? sectionCategoryBarHTML(section) : ''))}
+            : (section === 'secondhand' || section === 'communities' || section === 'photos' ? '' : (typeof sectionCategoryBarHTML === 'function' ? sectionCategoryBarHTML(section) : ''))}
           ${section === 'communities' ? '' : (section === 'secondhand' && typeof secondhandFilterBarHTML === 'function' ? secondhandFilterBarHTML() : photoFilterSectionHTML())}
+          ${section === 'photos' ? photoCategoryTilesHTML(_tileAlbums) : ''}
           ${section === 'communities' ? '' : (section === 'secondhand'
             ? (typeof secondhandTogglesHTML === 'function' ? secondhandTogglesHTML() : '')
             : `<div class="view-toggles">
@@ -19626,6 +19628,40 @@ function setSectionCategoryFilter(section, cat) {
   }
 }
 window.setSectionCategoryFilter = setSectionCategoryFilter;
+
+// עמוד התמונות: הקטגוריות כריבועים (תמונה + שם), בסגנון קטלוג. לחיצה מסננת לפי הקטגוריה.
+function photoCategoryTilesHTML(allAlbums) {
+  const active = getSectionCategoryFilter('photos');
+  const list = Array.isArray(allAlbums) ? allAlbums : [];
+  const newest = (arr) => arr.slice().sort((a, b) => (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0));
+  const coverOf = (cat) => {
+    const items = cat === 'הכל' ? list : list.filter(a => {
+      const c = a.category || '';
+      const hay = `${a.title || ''} ${a.summary || ''} ${a.desc || ''} ${c}`;
+      if (cat === 'לעסקים') return c.includes('עסק') || hay.includes('עסק');
+      if (cat === 'כללי') return !(c.includes('עסק') || hay.includes('עסק'));
+      return c === cat || hay.includes(cat);
+    });
+    const withImg = newest(items).find(a => (a.images && a.images[0]) || a.image);
+    return { img: withImg ? ((withImg.images && withImg.images[0]) || withImg.image) : '', adult: !!(withImg && withImg.isAdult), n: items.length };
+  };
+  const cats = ['הכל', ...PHOTO_BAR_CATEGORIES];
+  const tile = (cat) => {
+    const c = coverOf(cat);
+    return `
+      <button type="button" class="pcat-tile${active === cat ? ' active' : ''}" onclick="setSectionCategoryFilter('photos','${artEsc(cat)}')">
+        <span class="pcat-img${c.adult ? ' is-adult' : ''}">${c.img
+          ? `<img src="${escHtml(c.img)}" alt="" loading="lazy">`
+          : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 9"/></svg>`}</span>
+        <span class="pcat-name">${escHtml(cat)}</span>
+        <span class="pcat-count">${c.n} גלריות</span>
+      </button>`;
+  };
+  const editTile = (isAdmin() || isEditMode)
+    ? `<button type="button" class="pcat-tile edit" onclick="openCategoriesModal('photos')"><span class="pcat-img"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span><span class="pcat-name">ניהול קטגוריות</span></button>`
+    : '';
+  return `<div class="pcat-tiles">${cats.map(tile).join('')}${editTile}</div>`;
+}
 
 function sectionCategoryBarHTML(section) {
   // עמוד התמונות — צבע סגול; שאר העמודים נשארים כחול

@@ -9016,3 +9016,41 @@ html body .home-trio .trio-cta {
 }
 .verified-seal svg { width: 100%; height: 100%; display: block; }
 .photo-author-link .verified-seal { text-decoration: none; }
+
+/* ===================================================================
+   עמוד התמונות: ריבועי קטגוריות (תמונה + שם) מתחת לסרגל הסינון
+   =================================================================== */
+.pcat-tiles {
+  display: grid; grid-auto-flow: column; grid-auto-columns: minmax(148px, 1fr);
+  gap: 12px; margin: 4px 0 22px; padding: 2px 2px 8px;
+  overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: thin;
+  direction: rtl;
+}
+.pcat-tile {
+  scroll-snap-align: start;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding: 12px 10px 14px; border-radius: 18px; cursor: pointer;
+  background: #241347; border: 1.5px solid rgba(255, 255, 255, 0.08);
+  font: inherit; color: #f1ecff; text-align: center;
+  transition: transform .18s ease, border-color .18s ease, background .18s ease;
+}
+.pcat-tile:hover { transform: translateY(-3px); background: #2b1856; }
+.pcat-tile.active { border-color: #ec4899; background: linear-gradient(180deg, rgba(236, 72, 153, 0.18), #241347); box-shadow: 0 10px 24px -14px rgba(236, 72, 153, 0.8); }
+.pcat-img {
+  width: 100%; aspect-ratio: 4 / 3; border-radius: 12px; overflow: hidden;
+  display: grid; place-items: center;
+  background: rgba(255, 255, 255, 0.05); color: rgba(241, 236, 255, 0.55);
+}
+.pcat-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pcat-img svg { width: 38px; height: 38px; }
+html.age-not-verified .pcat-img.is-adult img { filter: blur(14px); }
+.pcat-name { font-size: 15px; font-weight: 800; line-height: 1.25; }
+.pcat-count { font-size: 12px; font-weight: 700; color: rgba(241, 236, 255, 0.5); margin-top: -4px; }
+.pcat-tile.edit { border-style: dashed; border-color: rgba(139, 92, 246, 0.6); }
+.pcat-tile.edit .pcat-img { color: #a78bfa; }
+@media (max-width: 640px) {
+  .pcat-tiles { grid-auto-columns: 42%; gap: 10px; }
+  .pcat-name { font-size: 14px; }
+}
+.pcat-tiles { grid-auto-columns: 158px; justify-content: start; }
+@media (max-width: 640px) { .pcat-tiles { grid-auto-columns: 42%; } }
