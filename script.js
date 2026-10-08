@@ -19303,7 +19303,8 @@ let SOCIAL_LINKS = {
   reddit: 'https://reddit.com',
   twitter: 'https://twitter.com',
   youtube: 'https://youtube.com',
-  linkedin: 'https://linkedin.com'
+  linkedin: 'https://linkedin.com',
+  tiktok: 'https://tiktok.com'
 };
 
 try {
@@ -19327,7 +19328,9 @@ function buildSocialCommunityBox() {
     discord: '<svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><path d="M20.32 4.37A19.79 19.79 0 0015.45 2.9a.07.07 0 00-.08.04c-.21.38-.44.87-.6 1.25a18.27 18.27 0 00-5.48 0 12.6 12.6 0 00-.61-1.25.08.08 0 00-.08-.04A19.74 19.74 0 003.68 4.37a.07.07 0 00-.03.03C.53 9.05-.32 13.58.1 18.06a.08.08 0 00.03.05 19.9 19.9 0 005.99 3.03.08.08 0 00.08-.03c.46-.63.87-1.29 1.23-1.99a.08.08 0 00-.04-.11c-.65-.25-1.27-.55-1.87-.89a.08.08 0 01-.01-.13c.13-.09.25-.19.37-.29a.07.07 0 01.08-.01c3.93 1.79 8.18 1.79 12.06 0a.07.07 0 01.08.01c.12.1.24.2.37.29a.08.08 0 01-.01.13c-.6.35-1.22.64-1.87.89a.08.08 0 00-.04.11c.36.7.78 1.36 1.23 1.99a.08.08 0 00.08.03 19.84 19.84 0 006-3.03.08.08 0 00.03-.05c.5-5.18-.84-9.67-3.55-13.66a.06.06 0 00-.03-.03zM8.02 15.33c-1.18 0-2.15-1.08-2.15-2.42s.95-2.42 2.15-2.42c1.21 0 2.17 1.09 2.15 2.42 0 1.34-.95 2.42-2.15 2.42zm7.96 0c-1.18 0-2.15-1.08-2.15-2.42s.95-2.42 2.15-2.42c1.21 0 2.17 1.09 2.15 2.42 0 1.34-.94 2.42-2.15 2.42z"/></svg>',
     twitter: '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M18.9 1.15h3.68l-8.04 9.19L24 22.85h-7.41l-5.8-7.58-6.64 7.58H.47l8.6-9.83L0 1.15h7.59l5.24 6.93zm-1.29 19.5h2.04L6.48 3.24H4.29z"/></svg>',
     youtube: '<svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><path d="M23.5 6.19a3.02 3.02 0 00-2.12-2.14C19.5 3.55 12 3.55 12 3.55s-7.5 0-9.38.5A3.02 3.02 0 00.5 6.19C0 8.08 0 12 0 12s0 3.92.5 5.81a3.02 3.02 0 002.12 2.14c1.88.5 9.38.5 9.38.5s7.5 0 9.38-.5a3.02 3.02 0 002.12-2.14C24 15.92 24 12 24 12s0-3.92-.5-5.81zM9.55 15.57V8.43L15.82 12z"/></svg>',
-    linkedin: '<svg viewBox="0 0 24 24" width="25" height="25" fill="currentColor"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.63-1.85 3.36-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.07 2.07 0 110-4.14 2.07 2.07 0 010 4.14zM7.12 20.45H3.55V9h3.57v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.22.79 24 1.77 24h20.45c.98 0 1.78-.78 1.78-1.73V1.73C24 .77 23.2 0 22.22 0z"/></svg>'
+    linkedin: '<svg viewBox="0 0 24 24" width="25" height="25" fill="currentColor"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.63-1.85 3.36-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.07 2.07 0 110-4.14 2.07 2.07 0 010 4.14zM7.12 20.45H3.55V9h3.57v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.22.79 24 1.77 24h20.45c.98 0 1.78-.78 1.78-1.73V1.73C24 .77 23.2 0 22.22 0z"/></svg>',
+    telegram: '<svg viewBox="0 0 24 24" width="25" height="25" fill="currentColor"><path d="M23.4 2.6 1.1 11.2c-1.5.6-1.5 1.5-.3 1.9l5.7 1.8 2.2 6.8c.3.8.5 1.1 1 1.1.5 0 .7-.2 1-.5l2.6-2.5 5.4 4c1 .5 1.7.3 2-1L24.3 4c.4-1.6-.6-2.3-1.9-1.4zM8.8 14.3l9.9-6.2c.5-.3.9-.1.5.2l-8.3 7.5-.3 3.6z"/></svg>',
+    tiktok: '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M16.6 1c.5 2.6 2.1 4.3 4.9 4.6v3.8c-1.7.1-3.3-.4-4.9-1.4v7.5c0 4.8-4.1 7.9-8.4 6.9-5.2-1.2-6.5-8.1-2.3-11.1 1.2-.9 2.8-1.3 4.4-1.2v3.9c-.6-.1-1.2-.1-1.8.1-2.1.7-2 3.8.2 4.3 1.7.4 3.2-.9 3.2-2.7V1z"/></svg>'
   };
   const link = (key, def) => {
     const url = SOCIAL_LINKS[key] || def;
@@ -19344,6 +19347,8 @@ function buildSocialCommunityBox() {
         ${link('twitter', 'https://twitter.com')}
         ${link('youtube', 'https://youtube.com')}
         ${link('linkedin', 'https://linkedin.com')}
+        ${link('telegram', 'https://t.me')}
+        ${link('tiktok', 'https://tiktok.com')}
       </div>
     </div>
   `;
@@ -19389,6 +19394,16 @@ function openSocialLinksModal() {
             <span>💼 LinkedIn:</span>
             <input type="url" id="social-inp-linkedin" placeholder="https://linkedin.com/in/your-profile" style="padding:8px 12px; border:1px solid #ddd; border-radius:8px; font-size:13px;">
           </label>
+
+          <label style="display:flex; flex-direction:column; gap:4px;">
+            <span>✈️ Telegram:</span>
+            <input type="url" id="social-inp-telegram" placeholder="https://t.me/your-channel" style="padding:8px 12px; border:1px solid #ddd; border-radius:8px; font-size:13px;">
+          </label>
+
+          <label style="display:flex; flex-direction:column; gap:4px;">
+            <span>🎵 TikTok:</span>
+            <input type="url" id="social-inp-tiktok" placeholder="https://tiktok.com/@your-profile" style="padding:8px 12px; border:1px solid #ddd; border-radius:8px; font-size:13px;">
+          </label>
         </div>
 
         <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:8px;">
@@ -19406,6 +19421,8 @@ function openSocialLinksModal() {
   document.getElementById('social-inp-twitter').value = SOCIAL_LINKS.twitter || '';
   document.getElementById('social-inp-youtube').value = SOCIAL_LINKS.youtube || '';
   document.getElementById('social-inp-linkedin').value = SOCIAL_LINKS.linkedin || '';
+  document.getElementById('social-inp-telegram').value = SOCIAL_LINKS.telegram || '';
+  document.getElementById('social-inp-tiktok').value = SOCIAL_LINKS.tiktok || '';
 
   modal.style.display = 'flex';
 }
@@ -19422,6 +19439,8 @@ function saveSocialLinksModal() {
   SOCIAL_LINKS.twitter = document.getElementById('social-inp-twitter').value.trim() || 'https://twitter.com';
   SOCIAL_LINKS.youtube = document.getElementById('social-inp-youtube').value.trim() || 'https://youtube.com';
   SOCIAL_LINKS.linkedin = document.getElementById('social-inp-linkedin').value.trim() || 'https://linkedin.com';
+  SOCIAL_LINKS.telegram = document.getElementById('social-inp-telegram').value.trim() || 'https://t.me';
+  SOCIAL_LINKS.tiktok = document.getElementById('social-inp-tiktok').value.trim() || 'https://tiktok.com';
 
   localStorage.setItem('social_community_links_v1', JSON.stringify(SOCIAL_LINKS));
   closeSocialLinksModal();
@@ -22926,6 +22945,26 @@ const SITE_FOOTER_ICONS = {
   email: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6l8.5 7 8.5-7"/></svg>'
 };
 
+// שורת הרשתות החברתיות בתחתית הפוטר (הקישורים מנוהלים בחלון "קישורי רשתות" של המנהל)
+const FOOTER_SOCIAL_NETS = [
+  ['twitter', 'X (טוויטר)', '<path d="M18.9 1.15h3.68l-8.04 9.19L24 22.85h-7.41l-5.8-7.58-6.64 7.58H.47l8.6-9.83L0 1.15h7.59l5.24 6.93zm-1.29 19.5h2.04L6.48 3.24H4.29z"/>'],
+  ['facebook', 'פייסבוק', '<path d="M13.5 23v-9.4h3.2l.5-3.7h-3.7V7.5c0-1.1.3-1.8 1.8-1.8h2V2.4c-.3 0-1.5-.2-2.9-.2-2.9 0-4.9 1.8-4.9 5v2.8H6.3v3.7h3.2V23z"/>'],
+  ['youtube', 'יוטיוב', '<path d="M23.5 6.19a3.02 3.02 0 00-2.12-2.14C19.5 3.55 12 3.55 12 3.55s-7.5 0-9.38.5A3.02 3.02 0 00.5 6.19C0 8.08 0 12 0 12s0 3.92.5 5.81a3.02 3.02 0 002.12 2.14c1.88.5 9.38.5 9.38.5s7.5 0 9.38-.5a3.02 3.02 0 002.12-2.14C24 15.92 24 12 24 12s0-3.92-.5-5.81zM9.55 15.57V8.43L15.82 12z"/>'],
+  ['telegram', 'טלגרם', '<path d="M23.4 2.6 1.1 11.2c-1.5.6-1.5 1.5-.3 1.9l5.7 1.8 2.2 6.8c.3.8.5 1.1 1 1.1.5 0 .7-.2 1-.5l2.6-2.5 5.4 4c1 .5 1.7.3 2-1L24.3 4c.4-1.6-.6-2.3-1.9-1.4zM8.8 14.3l9.9-6.2c.5-.3.9-.1.5.2l-8.3 7.5-.3 3.6z"/>'],
+  ['instagram', 'אינסטגרם', '<path d="M7 1.5h10A5.5 5.5 0 0 1 22.5 7v10a5.5 5.5 0 0 1-5.5 5.5H7A5.5 5.5 0 0 1 1.5 17V7A5.5 5.5 0 0 1 7 1.5zm0 2.2A3.3 3.3 0 0 0 3.7 7v10A3.3 3.3 0 0 0 7 20.3h10a3.3 3.3 0 0 0 3.3-3.3V7A3.3 3.3 0 0 0 17 3.7zm5 3.6a4.7 4.7 0 1 1 0 9.4 4.7 4.7 0 0 1 0-9.4zm0 2.2a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zm5.1-3.9a1.2 1.2 0 1 1 0 2.4 1.2 1.2 0 0 1 0-2.4z"/>'],
+  ['tiktok', 'טיקטוק', '<path d="M16.6 1c.5 2.6 2.1 4.3 4.9 4.6v3.8c-1.7.1-3.3-.4-4.9-1.4v7.5c0 4.8-4.1 7.9-8.4 6.9-5.2-1.2-6.5-8.1-2.3-11.1 1.2-.9 2.8-1.3 4.4-1.2v3.9c-.6-.1-1.2-.1-1.8.1-2.1.7-2 3.8.2 4.3 1.7.4 3.2-.9 3.2-2.7V1z"/>'],
+  ['discord', 'דיסקורד', '<path d="M20.32 4.37A19.79 19.79 0 0015.45 2.9a.07.07 0 00-.08.04c-.21.38-.44.87-.6 1.25a18.27 18.27 0 00-5.48 0 12.6 12.6 0 00-.61-1.25.08.08 0 00-.08-.04A19.74 19.74 0 003.68 4.37a.07.07 0 00-.03.03C.53 9.05-.32 13.58.1 18.06a.08.08 0 00.03.05 19.9 19.9 0 005.99 3.03.08.08 0 00.08-.03c.46-.63.87-1.29 1.23-1.99a.08.08 0 00-.04-.11c-.65-.25-1.27-.55-1.87-.89a.08.08 0 01-.01-.13c.13-.09.25-.19.37-.29a.07.07 0 01.08-.01c3.93 1.79 8.18 1.79 12.06 0a.07.07 0 01.08.01c.12.1.24.2.37.29a.08.08 0 01-.01.13c-.6.35-1.22.64-1.87.89a.08.08 0 00-.04.11c.36.7.78 1.36 1.23 1.99a.08.08 0 00.08.03 19.84 19.84 0 006-3.03.08.08 0 00.03-.05c.5-5.18-.84-9.67-3.55-13.66a.06.06 0 00-.03-.03zM8.02 15.33c-1.18 0-2.15-1.08-2.15-2.42s.95-2.42 2.15-2.42c1.21 0 2.17 1.09 2.15 2.42 0 1.34-.95 2.42-2.15 2.42zm7.96 0c-1.18 0-2.15-1.08-2.15-2.42s.95-2.42 2.15-2.42c1.21 0 2.17 1.09 2.15 2.42 0 1.34-.94 2.42-2.15 2.42z"/>'],
+  ['linkedin', 'לינקדאין', '<path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.63-1.85 3.36-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.07 2.07 0 110-4.14 2.07 2.07 0 010 4.14zM7.12 20.45H3.55V9h3.57v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.22.79 24 1.77 24h20.45c.98 0 1.78-.78 1.78-1.73V1.73C24 .77 23.2 0 22.22 0z"/>']
+];
+function footerSocialRowHTML() {
+  const links = (typeof SOCIAL_LINKS !== 'undefined' && SOCIAL_LINKS) || {};
+  return `<div class="footer-social">${FOOTER_SOCIAL_NETS.map(([k, label, path]) => {
+    const href = typeof safeUrl === 'function' ? safeUrl(links[k] || '') : (links[k] || '');
+    if (!href) return '';
+    return `<a class="footer-social-btn" href="${escHtml(href)}" target="_blank" rel="noopener" aria-label="${label}" title="${label}"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">${path}</svg></a>`;
+  }).join('')}</div>`;
+}
+
 function buildSiteFooterHTML() {
   const cleanTitle = t => String(t || '').replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{1F000}-\u{1F2FF}]/gu, '').trim();
   const link = (pageId, fallback) => {
@@ -22974,6 +23013,7 @@ function buildSiteFooterHTML() {
         <div class="site-footer-bottom">
           <img src="./logo.png" alt="" class="site-footer-logo">
           <span>© ${year} כל הזכויות שמורות.</span>
+          ${footerSocialRowHTML()}
         </div>
       </div>
     </footer>`;
