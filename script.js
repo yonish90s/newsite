@@ -19297,7 +19297,7 @@ window.deleteCommunityPost = deleteCommunityPost;
 
 let SOCIAL_LINKS = {
   instagram: 'https://instagram.com',
-  facebook: 'https://facebook.com',
+  facebook: 'https://www.facebook.com/groups/28554082394188199',
   telegram: 'https://t.me',
   discord: 'https://discord.gg',
   reddit: 'https://reddit.com',
