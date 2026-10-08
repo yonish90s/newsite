@@ -8989,3 +8989,22 @@ html body .home-trio .trio-cta {
   .pshow-size-item { padding: 9px 12px; }
   .pshow-size-item b { font-size: 18px; }
 }
+
+/* שורת "כל הגלריות": ממוצע אורך / היקף באתר */
+.photo-size-avg { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; direction: rtl; }
+.psa-label { font-size: 13px; font-weight: 800; color: #ffd166; }
+.psa-item {
+  display: inline-flex; align-items: baseline; gap: 6px;
+  padding: 5px 12px; border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 13px; font-weight: 700; color: rgba(241, 236, 255, 0.75);
+}
+.psa-item b { font-size: 16px; font-weight: 900; color: #fff; font-variant-numeric: tabular-nums; }
+.psa-item b small { font-size: 11px; font-weight: 700; color: rgba(241, 236, 255, 0.6); margin-inline-start: 3px; }
+.psa-none { color: rgba(241, 236, 255, 0.5); }
+.psa-count { font-size: 12px; font-weight: 700; color: rgba(241, 236, 255, 0.5); }
+@media (max-width: 640px) { .psa-label, .psa-count { display: none; } .psa-item { padding: 4px 9px; } }
+.photo-section-row > div:first-child:has(.photo-size-avg) { gap: 12px; }
+.photo-section-row > div:first-child:has(.photo-size-avg) h3 { white-space: nowrap; }
+.photo-size-avg { flex-wrap: nowrap; gap: 6px; }
+.psa-item { white-space: nowrap; padding: 4px 10px; }

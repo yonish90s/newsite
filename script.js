@@ -13892,6 +13892,7 @@ function buildPhotosPage(albums, section) {
               <div>
                 <h3 style="margin:0; font-size:18px; font-weight:900; color:#2e1065;">${sectionTitle}</h3>
               </div>
+              ${(!section || section === 'photos') ? photoSizeAveragesHTML(albums) : ''}
             </div>
             <div class="art-rows photo-collapsible expanded" id="photo-row-1">${row1HTML}</div>
             ${photoRowMoreBtn(newestAlbums.length, 'photo-row-1')}
@@ -15268,6 +15269,21 @@ function photoSizeFields() {
     return (isFinite(v) && v > 0 && v <= 60) ? String(Math.round(v * 10) / 10) : '';
   };
   return { length: num('photo-length'), girth: num('photo-girth') };
+}
+
+// ממוצע אורך / היקף של כל הגלריות באתר שהוזנו בהן ערכים — בשורת "כל הגלריות"
+function photoSizeAveragesHTML(albums) {
+  const avg = (key) => {
+    const vals = (albums || []).map(a => parseFloat(a && a[key])).filter(v => isFinite(v) && v > 0 && v <= 60);
+    return { n: vals.length, v: vals.length ? vals.reduce((x, y) => x + y, 0) / vals.length : 0 };
+  };
+  const L = avg('length'), G = avg('girth');
+  const val = (o) => o.n ? `${o.v.toFixed(1)}<small>ס״מ</small>` : '<span class="psa-none">—</span>';
+  return `<div class="photo-size-avg" title="ממוצע באתר — מתוך ${Math.max(L.n, G.n)} גלריות שהוזנו בהן ערכים">
+      <span class="psa-label">ממוצע:</span>
+      <span class="psa-item">אורך <b>${val(L)}</b></span>
+      <span class="psa-item">היקף <b>${val(G)}</b></span>
+    </div>`;
 }
 
 // שני הפרמטרים בתחתית מסגרת התמונה בעמוד הגלריה
