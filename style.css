@@ -9240,3 +9240,35 @@ html.age-not-verified .td-photo.is-adult { filter: blur(22px); transform: scale(
 /* ריבוע קטגוריה עם סמל קבוע (למשל "כלובון") */
 .pcat-img.is-icon { background: #fff; }
 .pcat-img.is-icon img { object-fit: contain; padding: 6px; box-sizing: border-box; }
+
+/* ===== עמוד חדשות 📰 וכרטיסי X (טוויטר) ===== */
+.news-page-container {
+  width: 100%;
+  box-sizing: border-box;
+}
+.news-feed-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.news-feed-card:hover {
+  border-color: #3f3f4e !important;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45) !important;
+}
+.news-tweet-embed-wrap {
+  width: 100%;
+  box-sizing: border-box;
+}
+.news-tweet-embed-wrap twitter-widget,
+.news-tweet-embed-wrap .twitter-tweet {
+  margin: 0 auto !important;
+  max-width: 100% !important;
+}
+@media (max-width: 640px) {
+  .news-page-container {
+    padding: 16px 10px 80px 10px !important;
+  }
+  .news-feed-card {
+    padding: 14px !important;
+    border-radius: 12px !important;
+  }
+}
+

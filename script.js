@@ -274,6 +274,7 @@ function isSideOnlyPage(p) {
   if (p.id === 'page-partnerships-main' || (p.content || '').includes('partnerships-page') || (p.title || '').includes('שותפויות')) return false;
   if (p.id === 'page-reviews-main' || (p.content || '').includes('reviews-page') || (p.title || '').includes('ביקורת')) return false;
   if (p.id === 'page-subscription-main' || (p.content || '').includes('subscription-page') || (p.title || '').includes('מנוי')) return false;
+  if (p.id === 'page-news-main' || (p.content || '').includes('news-page') || (p.title || '').includes('חדשות')) return false;
   if (SIDE_ONLY_PAGE_IDS.includes(p.id)) return true;
   const t = p.title || '', c = p.content || '';
   if (c.includes('photos-page') || c.includes('stories-page') || c.includes('questions-page') || c.includes('offers-page') || c.includes('friends-page') || c.includes('forums-page') || c.includes('blinddate-page') || c.includes('tinder-page')) return true;
@@ -755,10 +756,29 @@ function sanitizeToOnlyPhotosAndStories() {
     else topNavPages.push('page-home-feed');
   }
 
+  // עמוד "חדשות" (X / טוויטר) — תמיד קיים
+  const _newsContent = '<div class="news-page" data-page-id="page-news-main"></div>';
+  const _newsPage = pages.find(p => p && p.id === 'page-news-main');
+  if (!_newsPage) {
+    pages.push({ id: 'page-news-main', title: 'חדשות 📰', content: _newsContent });
+  } else {
+    _newsPage.content = _newsContent;
+    if (!_newsPage.title) _newsPage.title = 'חדשות 📰';
+  }
+
   // עמוד "מנוי" מוצג בתפריט העליון
   if (pages.some(p => p && p.id === 'page-subscription-main')) {
     if (!topNavPages.includes('page-subscription-main')) {
       topNavPages.push('page-subscription-main');
+    }
+  }
+
+  // עמוד "חדשות" מוצג בתפריט העליון ליד רעיונות / קהילות
+  if (pages.some(p => p && p.id === 'page-news-main')) {
+    if (!topNavPages.includes('page-news-main')) {
+      const _ideaIdx = topNavPages.indexOf('page-ideas-main');
+      if (_ideaIdx >= 0) topNavPages.splice(_ideaIdx + 1, 0, 'page-news-main');
+      else topNavPages.push('page-news-main');
     }
   }
 
@@ -1161,6 +1181,11 @@ function renderTopNav() {
   if (!topNavPages.includes('page-subscription-main') && pages.some(p => p && p.id === 'page-subscription-main')) {
     topNavPages.push('page-subscription-main');
   }
+  if (!topNavPages.includes('page-news-main') && pages.some(p => p && p.id === 'page-news-main')) {
+    const _ideaIdx = topNavPages.indexOf('page-ideas-main');
+    if (_ideaIdx >= 0) topNavPages.splice(_ideaIdx + 1, 0, 'page-news-main');
+    else topNavPages.push('page-news-main');
+  }
   navLinksContainer.innerHTML = ''; // מנקה את התפריט הסטטי מה-HTML
   
   topNavPages.forEach(pageId => {
@@ -1480,6 +1505,15 @@ function renderPage() {
     if (currentPage.id === 'page-subscription-main' || (currentPage.title && currentPage.title.includes('מנוי'))) {
       if (typeof buildSubscriptionPage === 'function') {
         mainContent.innerHTML = buildSubscriptionPage();
+        try { window.scrollTo(0, 0); } catch (e) {}
+        return;
+      }
+    }
+
+    // עמוד "חדשות" (X / טוויטר)
+    if (currentPage.id === 'page-news-main' || (currentPage.title && currentPage.title.includes('חדשות')) || (currentPage.content || '').includes('news-page')) {
+      if (typeof buildNewsPage === 'function') {
+        mainContent.innerHTML = buildNewsPage();
         try { window.scrollTo(0, 0); } catch (e) {}
         return;
       }
@@ -3822,6 +3856,8 @@ document.addEventListener('DOMContentLoaded', () => {
       updateUserActivity(user);
       userActivityInterval = setInterval(() => updateUserActivity(user), 45000);
       if (typeof crmRecordUserMeta === 'function') { try { crmRecordUserMeta(user); } catch (e) {} }
+      // סיור הדרכה בכל התחברות
+      setTimeout(() => { if (typeof startSiteTour === 'function') startSiteTour(true); }, 1400);
 
       // שמירת ה-uid של המנהל כדי שמשתמשים יוכלו לפתוח שיחה נעוצה עם מנהל האתר
       if (user.email === ADMIN_EMAIL) {
@@ -11128,6 +11164,7 @@ function buildLeftSidebarBox(popularHTML, section) {
     { id: 'page-stories-main', title: 'קומיקס 💥' },
     { id: 'page-stories-text', title: 'סיפורים 📖' },
     { id: 'page-ideas-main', title: 'רעיונות 💡' },
+    { id: 'page-news-main', title: 'חדשות 📰' },
     { id: 'page-communities-main', title: 'קהילות 👥' },
     { id: 'page-subscription-main', title: 'מנוי 💎' },
     { id: 'page-questions-main', title: 'שאלות גולשים ❓' },
@@ -11149,6 +11186,7 @@ function buildLeftSidebarBox(popularHTML, section) {
     if (page.id === 'page-photos-main') icon = '🖼️';
     else if (page.id === 'page-stories-main') icon = '📖';
     else if (page.id === 'page-ideas-main') icon = '💡';
+    else if (page.id === 'page-news-main') icon = '📰';
     else if (page.id === 'page-communities-main') icon = '👥';
     else if (page.id === 'page-subscription-main') icon = '💎';
     else if (page.id === 'page-questions-main') icon = '❓';
@@ -20008,6 +20046,14 @@ onPublicSiteValue((data) => {
     } else {
       _subp.content = _subpc; if (!_subp.title) _subp.title = 'מנוי 💎';
     }
+    // עמוד "חדשות" (X / טוויטר) — קיים תמיד
+    const _newsp = pList.find(p => p && p.id === 'page-news-main');
+    const _newspc = '<div class="news-page" data-page-id="page-news-main"></div>';
+    if (!_newsp) {
+      pList.push({ id: 'page-news-main', title: 'חדשות 📰', content: _newspc });
+    } else {
+      _newsp.content = _newspc; if (!_newsp.title) _newsp.title = 'חדשות 📰';
+    }
     // מסירים את העמודים "יד שניה" ו"השוואת מחירים"
     pList = pList.filter(p => p && !REMOVED_PHOTO_PAGE_IDS.includes(p.id));
     applyItemLikesToPages(pList, data.item_likes);
@@ -20028,6 +20074,12 @@ onPublicSiteValue((data) => {
     }
     // עמוד הקהילות תמיד מופיע בתפריט העליון
     if (pages.some(p => p && p.id === 'page-communities-main') && !navs.includes('page-communities-main')) navs.push('page-communities-main');
+    // עמוד "חדשות" תמיד מופיע בתפריט העליון
+    if (pages.some(p => p && p.id === 'page-news-main') && !navs.includes('page-news-main')) {
+      const _iIdx = navs.indexOf('page-ideas-main');
+      if (_iIdx >= 0) navs.splice(_iIdx + 1, 0, 'page-news-main');
+      else navs.push('page-news-main');
+    }
     // עמוד "מוצרי יד שניה" תמיד מופיע בתפריט העליון
     if (pages.some(p => p && p.id === 'page-secondhand-main') && !navs.includes('page-secondhand-main')) navs.push('page-secondhand-main');
     // עמוד "שותפויות" תמיד מופיע בתפריט העליון
@@ -22074,6 +22126,437 @@ ${currencySym}${formattedOrigPrice}
 }
 window.buildSubscriptionPage = buildSubscriptionPage;
 
+// ==========================================
+// עמוד חדשות 📰 — עדכונים וציוצים מ-X (טוויטר)
+// ==========================================
+
+const NEWS_DEFAULT_POSTS = [
+  {
+    id: 'news-haiku-55',
+    title: 'הכרזה רשמית: Claude Haiku 5.5 זמין כעת!',
+    category: 'AI וטכנולוגיה',
+    desc: 'המודל הקטן, המהיר והמשתלם ביותר של Anthropic עד כה. חסכון של כ-75% בעלויות ביחס לגרסה הקודמת עם חלון הקשר של 1 מיליון טוקנים.',
+    tweetUrl: 'https://x.com/claudeai/status/1843339304724213960',
+    createdAt: Date.now() - 3600 * 1000 * 24,
+    author: 'מערכת האתר'
+  }
+];
+
+let newsPostsData = [];
+let newsCategoryFilter = 'הכל';
+let isNewsSubscribed = false;
+
+function loadStoredNewsPosts() {
+  try {
+    const raw = localStorage.getItem('news_posts_cache_v1');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch (e) {}
+  return NEWS_DEFAULT_POSTS;
+}
+
+function saveStoredNewsPosts(posts) {
+  try {
+    localStorage.setItem('news_posts_cache_v1', JSON.stringify(posts));
+  } catch (e) {}
+}
+
+function subscribeNewsPosts() {
+  if (isNewsSubscribed) return;
+  isNewsSubscribed = true;
+  newsPostsData = loadStoredNewsPosts();
+
+  try {
+    const newsRef = ref(db, 'website/news_posts');
+    onValue(newsRef, (snapshot) => {
+      const val = snapshot.val();
+      if (val && typeof val === 'object') {
+        const arr = Object.keys(val).map(k => ({ id: k, ...val[k] }));
+        arr.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+        newsPostsData = arr;
+        saveStoredNewsPosts(newsPostsData);
+      } else {
+        if (!newsPostsData || newsPostsData.length === 0) {
+          newsPostsData = NEWS_DEFAULT_POSTS;
+          saveStoredNewsPosts(newsPostsData);
+        }
+      }
+      if (activePageId === 'page-news-main' && typeof mainContent !== 'undefined' && mainContent) {
+        mainContent.innerHTML = buildNewsPage();
+      }
+    });
+  } catch (e) {
+    console.warn('News realtime sync warning:', e);
+  }
+}
+
+function setNewsCategory(cat) {
+  newsCategoryFilter = cat;
+  if (typeof mainContent !== 'undefined' && mainContent) {
+    mainContent.innerHTML = buildNewsPage();
+  }
+}
+window.setNewsCategory = setNewsCategory;
+
+function openNewsAddModal() {
+  const modal = document.getElementById('news-add-modal');
+  if (modal) {
+    modal.style.display = 'flex';
+    const input = document.getElementById('news-tweet-url');
+    if (input) input.focus();
+  }
+}
+window.openNewsAddModal = openNewsAddModal;
+
+function closeNewsAddModal() {
+  const modal = document.getElementById('news-add-modal');
+  if (modal) modal.style.display = 'none';
+  const u = document.getElementById('news-tweet-url');
+  const t = document.getElementById('news-post-title');
+  const d = document.getElementById('news-post-desc');
+  if (u) u.value = '';
+  if (t) t.value = '';
+  if (d) d.value = '';
+}
+window.closeNewsAddModal = closeNewsAddModal;
+
+function cleanTweetUrl(url) {
+  if (!url) return '';
+  url = url.trim();
+  // אם הוזן מזהה בלבד
+  if (/^\d+$/.test(url)) {
+    return `https://twitter.com/x/status/${url}`;
+  }
+  // מסיר פרמטרים מיותרים כמו ?s=20 וכו'
+  url = url.split('?')[0];
+  // וידוא פורמט
+  if (url.includes('x.com')) {
+    url = url.replace('https://x.com', 'https://twitter.com').replace('http://x.com', 'https://twitter.com');
+  }
+  return url;
+}
+
+async function submitNewsPost() {
+  const urlInput = document.getElementById('news-tweet-url');
+  const titleInput = document.getElementById('news-post-title');
+  const catInput = document.getElementById('news-post-category');
+  const descInput = document.getElementById('news-post-desc');
+
+  const rawUrl = urlInput ? urlInput.value.trim() : '';
+  const title = titleInput ? titleInput.value.trim() : '';
+  const category = catInput ? catInput.value : 'AI וטכנולוגיה';
+  const desc = descInput ? descInput.value.trim() : '';
+
+  if (!rawUrl) {
+    alert('נא להזין קישור לפוסט ב-X (טוויטר)');
+    if (urlInput) urlInput.focus();
+    return;
+  }
+  if (!title) {
+    alert('נא להזין כותרת למבזק');
+    if (titleInput) titleInput.focus();
+    return;
+  }
+
+  const tweetUrl = cleanTweetUrl(rawUrl);
+  const isAuthUser = typeof auth !== 'undefined' && auth.currentUser;
+  const authorName = isAuthUser ? (auth.currentUser.displayName || auth.currentUser.email || 'משתמש רשום') : 'עורך חדשות';
+
+  const newPost = {
+    title,
+    category,
+    desc,
+    tweetUrl,
+    author: authorName,
+    createdAt: Date.now()
+  };
+
+  try {
+    const postRef = push(ref(db, 'website/news_posts'));
+    await set(postRef, newPost);
+    newPost.id = postRef.key;
+    newsPostsData.unshift(newPost);
+    saveStoredNewsPosts(newsPostsData);
+  } catch (err) {
+    console.warn('Firebase news save fallback:', err);
+    newPost.id = 'local_' + Date.now();
+    newsPostsData.unshift(newPost);
+    saveStoredNewsPosts(newsPostsData);
+  }
+
+  closeNewsAddModal();
+  if (typeof showCopyToast === 'function') showCopyToast('📰 המבזק פורסם בהצלחה!');
+  if (typeof mainContent !== 'undefined' && mainContent) {
+    mainContent.innerHTML = buildNewsPage();
+  }
+}
+window.submitNewsPost = submitNewsPost;
+
+async function deleteNewsPost(postId) {
+  const isEd = (typeof isAdmin === 'function' && isAdmin()) || (typeof isEditMode !== 'undefined' && isEditMode);
+  if (!confirm('האם אתה בטוח שברצונך למחוק מבזק זה?')) return;
+
+  try {
+    await remove(ref(db, `website/news_posts/${postId}`));
+  } catch (e) {
+    console.warn('Firebase news delete:', e);
+  }
+
+  newsPostsData = newsPostsData.filter(p => p.id !== postId);
+  saveStoredNewsPosts(newsPostsData);
+
+  if (typeof showCopyToast === 'function') showCopyToast('🗑️ המבזק נמחק');
+  if (typeof mainContent !== 'undefined' && mainContent) {
+    mainContent.innerHTML = buildNewsPage();
+  }
+}
+window.deleteNewsPost = deleteNewsPost;
+
+function triggerTwitterWidgetsRender() {
+  setTimeout(() => {
+    try {
+      if (window.twttr && window.twttr.widgets && typeof window.twttr.widgets.load === 'function') {
+        window.twttr.widgets.load();
+      }
+    } catch (e) {
+      console.warn('twttr.widgets.load error:', e);
+    }
+  }, 50);
+}
+
+function buildNewsCard(post) {
+  const isEd = (typeof isAdmin === 'function' && isAdmin()) || (typeof isEditMode !== 'undefined' && isEditMode);
+  const deleteBtn = isEd ? `
+    <button onclick="deleteNewsPost('${artEsc(post.id)}')" title="מחיקת מבזק" style="
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #f87171;
+      padding: 5px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      cursor: pointer;
+      font-weight: 700;
+      transition: all 0.2s;
+    ">🗑️ מחיקה</button>
+  ` : '';
+
+  const dateStr = post.createdAt ? new Date(post.createdAt).toLocaleDateString('he-IL', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+
+  return `
+    <article class="news-feed-card" style="
+      background: #121216;
+      border: 1px solid #272730;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 24px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+      direction: rtl;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    ">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="
+            background: linear-gradient(135deg, rgba(29, 155, 240, 0.2), rgba(2, 132, 199, 0.2));
+            color: #38bdf8;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            font-size: 12px;
+            font-weight: 800;
+            padding: 4px 10px;
+            border-radius: 999px;
+          ">${artEsc(post.category || 'מבזק')}</span>
+          ${dateStr ? `<span style="font-size: 12px; color: #71717a;">${dateStr}</span>` : ''}
+        </div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          ${deleteBtn}
+          <a href="${artEsc(post.tweetUrl)}" target="_blank" rel="noopener noreferrer" style="
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.12);
+            color: #e4e4e7;
+            padding: 5px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 700;
+          ">
+            <span>צפייה ב-X</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <h3 style="
+        margin: 0;
+        font-size: 19px;
+        font-weight: 800;
+        color: #ffffff;
+        line-height: 1.4;
+      ">${artEsc(post.title || '')}</h3>
+
+      ${post.desc ? `
+        <p style="
+          margin: 0;
+          font-size: 14px;
+          color: #a1a1aa;
+          line-height: 1.6;
+        ">${artEsc(post.desc)}</p>
+      ` : ''}
+
+      <!-- תיבת ה-Embed של טוויטר / X -->
+      <div class="news-tweet-embed-wrap" style="
+        display: flex;
+        justify-content: center;
+        background: #09090b;
+        border-radius: 14px;
+        padding: 12px;
+        border: 1px solid #1f1f23;
+        min-height: 180px;
+        overflow: hidden;
+      ">
+        <blockquote class="twitter-tweet" data-theme="dark" data-conversation="none" data-align="center" style="margin: 0 auto;">
+          <a href="${artEsc(post.tweetUrl)}">טוען ציוץ מ-X...</a>
+        </blockquote>
+      </div>
+    </article>
+  `;
+}
+
+function buildNewsPage() {
+  subscribeNewsPosts();
+  triggerTwitterWidgetsRender();
+
+  const categories = ['הכל', 'AI וטכנולוגיה', 'מבזקים שוטפים', 'כללי', 'פיתוח וקוד', 'עדכוני רשת'];
+
+  const filterTabs = categories.map(cat => {
+    const isAct = cat === newsCategoryFilter;
+    const bg = isAct ? 'background: #1d9bf0; color: #fff; border-color: #1d9bf0;' : 'background: #18181c; color: #a1a1aa; border-color: #2e2e38;';
+    return `
+      <button onclick="setNewsCategory('${artEsc(cat)}')" style="
+        ${bg}
+        border: 1px solid;
+        padding: 8px 16px;
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s;
+        white-space: nowrap;
+      ">${artEsc(cat)}</button>
+    `;
+  }).join('');
+
+  let filtered = (newsPostsData && newsPostsData.length > 0) ? newsPostsData : NEWS_DEFAULT_POSTS;
+  if (newsCategoryFilter !== 'הכל') {
+    filtered = filtered.filter(p => (p.category || 'כללי') === newsCategoryFilter);
+  }
+
+  const postsListHtml = filtered.length > 0
+    ? filtered.map(buildNewsCard).join('')
+    : `
+      <div style="text-align: center; padding: 60px 20px; color: #71717a; background: #121216; border-radius: 16px; border: 1px dashed #272730;">
+        <span style="font-size: 42px; display: block; margin-bottom: 12px;">📰</span>
+        <div style="font-size: 16px; font-weight: 700; color: #e4e4e7;">אין מבזקים בקטגוריה זו</div>
+        <div style="font-size: 13px; margin-top: 6px;">היה הראשון להעלות פוסט מעניין מ-X!</div>
+      </div>
+    `;
+
+  return `
+    <div class="news-page-container" style="
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 24px 16px 80px 16px;
+      direction: rtl;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans Hebrew', sans-serif;
+    ">
+      <!-- כותרת עמוד וכפתור הוספה -->
+      <div style="
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-bottom: 24px;
+        border-bottom: 2px solid #272730;
+        padding-bottom: 18px;
+      ">
+        <div>
+          <h1 style="
+            margin: 0;
+            font-size: 26px;
+            font-weight: 900;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+          ">
+            <span>חדשות ומבזקים</span>
+            <span style="
+              display: inline-flex;
+              align-items: center;
+              background: #000;
+              border: 1px solid #333;
+              border-radius: 8px;
+              padding: 2px 8px;
+              font-size: 14px;
+              font-weight: bold;
+              color: #fff;
+            ">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="margin-left:4px;"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+              Live
+            </span>
+          </h1>
+          <p style="margin: 6px 0 0 0; font-size: 13.5px; color: #a1a1aa;">
+            עדכונים בזמן אמת, ציוצים נבחרים וחדשות טכנולוגיה ישירות מ-X
+          </p>
+        </div>
+
+        <button onclick="openNewsAddModal()" style="
+          background: linear-gradient(135deg, #1d9bf0, #0284c7);
+          color: #ffffff;
+          border: none;
+          padding: 11px 20px;
+          border-radius: 12px;
+          font-size: 14px;
+          font-weight: 800;
+          cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          box-shadow: 0 4px 16px rgba(29, 155, 240, 0.35);
+          transition: transform 0.15s ease;
+        ">
+          <span style="font-size: 16px;">➕</span>
+          <span>הוספת עדכון מ-X</span>
+        </button>
+      </div>
+
+      <!-- סרגל סינון קטגוריות -->
+      <div style="
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        padding-bottom: 14px;
+        margin-bottom: 20px;
+        scrollbar-width: thin;
+      ">
+        ${filterTabs}
+      </div>
+
+      <!-- פיד הפוסטים -->
+      <div class="news-feed-list">
+        ${postsListHtml}
+      </div>
+    </div>
+  `;
+}
+window.buildNewsPage = buildNewsPage;
+
 
 
 // ==========================================
@@ -22313,7 +22796,6 @@ function siteTourGo(delta) {
 window.siteTourGo = siteTourGo;
 
 function startSiteTour(force, edit) {
-  try { if (!force && localStorage.getItem(SITE_TOUR_KEY)) return; } catch (e) {}
   __tourEdit = !!edit && isAdmin();
   __tourDraft = __tourEdit ? JSON.parse(JSON.stringify(Object.assign({}, __tourConfig || {}))) : null;
   // אם סרטוני ההדרכה פתוחים — מחכים שייסגרו
@@ -22337,7 +22819,6 @@ function startSiteTour(force, edit) {
 window.startSiteTour = startSiteTour;
 
 function endSiteTour() {
-  if (!__tourEdit) { try { localStorage.setItem(SITE_TOUR_KEY, '1'); } catch (e) {} }
   if (__tourPicking) siteTourStopPick();
   __tourEdit = false;
   __tourDraft = null;
@@ -22528,13 +23009,14 @@ function openSiteTourEditor() {
 }
 window.openSiteTourEditor = openSiteTourEditor;
 
-// מתחילים אחרי אישור שער הגיל (או מיד אם כבר אושר בעבר)
+// מתחילים אחרי אישור שער הגיל (או מיד בכל כניסה לאתר)
 function maybeStartSiteTour() {
-  try { if (localStorage.getItem(SITE_TOUR_KEY)) return; } catch (e) {}
-  setTimeout(() => startSiteTour(false), 1200);
+  try { localStorage.removeItem(SITE_TOUR_KEY); } catch (e) {}
+  setTimeout(() => startSiteTour(true), 1200);
 }
 window.maybeStartSiteTour = maybeStartSiteTour;
 try {
+  localStorage.removeItem(SITE_TOUR_KEY);
   if (sessionStorage.getItem('age_verified') === 'true') maybeStartSiteTour();
 } catch (e) {}
 
@@ -23423,7 +23905,7 @@ function buildSiteFooterHTML() {
   };
   const contentLinks = [
     link('page-photos-main', 'תמונות'), link('page-stories-main', 'סיפורים'),
-    link('page-ideas-main', 'רעיונות'), link('page-questions-main', 'שאלות גולשים'),
+    link('page-ideas-main', 'רעיונות'), link('page-news-main', 'חדשות'), link('page-questions-main', 'שאלות גולשים'),
     link('page-reviews-main', 'ביקורת')
   ].join('');
   const communityLinks = [
