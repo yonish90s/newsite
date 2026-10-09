@@ -8095,21 +8095,6 @@ artInitPaginationObserver();
 
 const PHOTOS_SAMPLES = [
   {
-    id: 'ph-kloovon',
-    title: 'כלובון',
-    summary: 'תמונות כלובון',
-    desc: 'תמונות כלובון',
-    images: ['./kloovon.png', './VeniceAI_4HW7DykOczKD6F_0 (1).png'],
-    author: 'מערכת',
-    category: 'כלובון',
-    categoryColor: '#ec4899',
-    timestamp: 'עודכן היום',
-    createdAt: Date.now(),
-    likes: 12,
-    views: 45,
-    verified: true
-  },
-  {
     id: 'ph1',
     title: 'Apex Luxury - אתר תדמית ויוקרה כהה',
     summary: 'עיצוב פרימיום כהה בגימור יוקרתי, מתאים לעסקים, יועצים, מותגי יוקרה וסוכנויות.',
@@ -15823,47 +15808,20 @@ function photoCurrentSection() {
   return (el && el.dataset.section) ? el.dataset.section : 'photos';
 }
 
-let MASTER_PHOTO_ALBUMS = null;
 
 function photoGetAlbums() {
   // חשוב: לא לקרוא מנתוני עמוד קהילה/משתמש (שגם מסומנים photos-page) כדי לא לדרוס את התמונות
   const container = mainContent && mainContent.querySelector('.photos-page:not(.community-page):not(.user-page)');
-  let list = null;
   if (container && container.dataset.photosJson) {
     try {
       const parsed = JSON.parse(decodeURIComponent(container.dataset.photosJson));
-      if (Array.isArray(parsed) && parsed.length > 0) list = parsed;
+      // מה שנשמר הוא האמת — גם רשימה ריקה. בלי גלריות דוגמה ובלי פריטים מוזרקים,
+      // אחרת גלריות שנמחקו "חוזרות".
+      if (Array.isArray(parsed)) return parsed;
     } catch(e){}
   }
-  if (!list) {
-    list = (typeof PHOTOS_SAMPLES !== 'undefined' && Array.isArray(PHOTOS_SAMPLES)) ? [...PHOTOS_SAMPLES] : [];
-  }
-  if (!MASTER_PHOTO_ALBUMS || list.length > MASTER_PHOTO_ALBUMS.length) {
-    MASTER_PHOTO_ALBUMS = [...list];
-  } else if (list.length < MASTER_PHOTO_ALBUMS.length) {
-    // אם הרשימה הוקטנה עקב סינון קטגוריה קודם, משחזרים מהמאסטר
-    list = [...MASTER_PHOTO_ALBUMS];
-  }
-  if (!list.some(a => a && (a.id === 'ph-kloovon' || a.category === 'כלובון' || a.title === 'כלובון'))) {
-    const kloovonItem = (typeof PHOTOS_SAMPLES !== 'undefined' && PHOTOS_SAMPLES.find(a => a && a.id === 'ph-kloovon')) || {
-      id: 'ph-kloovon',
-      title: 'כלובון',
-      summary: 'תמונות כלובון',
-      desc: 'תמונות כלובון',
-      images: ['./kloovon.png', './VeniceAI_4HW7DykOczKD6F_0 (1).png'],
-      author: 'מערכת',
-      category: 'כלובון',
-      categoryColor: '#ec4899',
-      timestamp: 'עודכן היום',
-      createdAt: Date.now(),
-      likes: 12,
-      views: 45,
-      verified: true
-    };
-    list.unshift(kloovonItem);
-    MASTER_PHOTO_ALBUMS = [...list];
-  }
-  return list;
+  // אין עמוד תמונות פתוח — לוקחים את הגלריות השמורות של עמוד התמונות
+  return (typeof getPhotosForHome === 'function') ? getPhotosForHome() : [];
 }
 
 // מוחק פריט (גלריה/סיפור/קומיקס) מכל עמוד שמור שמכיל אותו — לא רק מהעמוד שמוצג כרגע,
