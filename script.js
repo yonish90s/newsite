@@ -22393,14 +22393,14 @@ function buildNewsCard(post) {
       <div class="news-tweet-embed-wrap" style="
         display: flex;
         justify-content: center;
-        background: #09090b;
+        background: #ffffff;
         border-radius: 14px;
         padding: 12px;
-        border: 1px solid #1f1f23;
+        border: 1px solid #e5e7eb;
         min-height: 180px;
         overflow: hidden;
       ">
-        <blockquote class="twitter-tweet" data-theme="dark" data-conversation="none" data-align="center" style="margin: 0 auto;">
+        <blockquote class="twitter-tweet" data-theme="light" data-conversation="none" data-align="center" style="margin: 0 auto;">
           <a href="${artEsc(post.tweetUrl)}">טוען ציוץ מ-X...</a>
         </blockquote>
       </div>
