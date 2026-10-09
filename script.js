@@ -8059,6 +8059,21 @@ artInitPaginationObserver();
 
 const PHOTOS_SAMPLES = [
   {
+    id: 'ph-kloovon',
+    title: 'כלובון',
+    summary: 'תמונות כלובון',
+    desc: 'תמונות כלובון',
+    images: ['./kloovon.png', './VeniceAI_4HW7DykOczKD6F_0 (1).png'],
+    author: 'מערכת',
+    category: 'כלובון',
+    categoryColor: '#ec4899',
+    timestamp: 'עודכן היום',
+    createdAt: Date.now(),
+    likes: 12,
+    views: 45,
+    verified: true
+  },
+  {
     id: 'ph1',
     title: 'Apex Luxury - אתר תדמית ויוקרה כהה',
     summary: 'עיצוב פרימיום כהה בגימור יוקרתי, מתאים לעסקים, יועצים, מותגי יוקרה וסוכנויות.',
@@ -15772,16 +15787,36 @@ function photoCurrentSection() {
 
 function photoGetAlbums() {
   // חשוב: לא לקרוא מנתוני עמוד קהילה/משתמש (שגם מסומנים photos-page) כדי לא לדרוס את התמונות
-  const container = mainContent.querySelector('.photos-page:not(.community-page):not(.user-page)');
+  const container = mainContent && mainContent.querySelector('.photos-page:not(.community-page):not(.user-page)');
+  let list = null;
   if (container && container.dataset.photosJson) {
     try {
       const parsed = JSON.parse(decodeURIComponent(container.dataset.photosJson));
-      // רשימה קיימת (גם ריקה) — מכבדים אותה. דוגמאות רק כשאין בכלל נתונים,
-      // אחרת גלריות שהמנהל מחק "חוזרות".
-      if (Array.isArray(parsed)) return parsed;
+      if (Array.isArray(parsed) && parsed.length > 0) list = parsed;
     } catch(e){}
   }
-  return (typeof PHOTOS_SAMPLES !== 'undefined' && Array.isArray(PHOTOS_SAMPLES)) ? PHOTOS_SAMPLES : [];
+  if (!list) {
+    list = (typeof PHOTOS_SAMPLES !== 'undefined' && Array.isArray(PHOTOS_SAMPLES)) ? [...PHOTOS_SAMPLES] : [];
+  }
+  if (!list.some(a => a && (a.id === 'ph-kloovon' || a.category === 'כלובון' || a.title === 'כלובון'))) {
+    const kloovonItem = (typeof PHOTOS_SAMPLES !== 'undefined' && PHOTOS_SAMPLES.find(a => a && a.id === 'ph-kloovon')) || {
+      id: 'ph-kloovon',
+      title: 'כלובון',
+      summary: 'תמונות כלובון',
+      desc: 'תמונות כלובון',
+      images: ['./kloovon.png', './VeniceAI_4HW7DykOczKD6F_0 (1).png'],
+      author: 'מערכת',
+      category: 'כלובון',
+      categoryColor: '#ec4899',
+      timestamp: 'עודכן היום',
+      createdAt: Date.now(),
+      likes: 12,
+      views: 45,
+      verified: true
+    };
+    list.unshift(kloovonItem);
+  }
+  return list;
 }
 
 // מוחק פריט (גלריה/סיפור/קומיקס) מכל עמוד שמור שמכיל אותו — לא רק מהעמוד שמוצג כרגע,
@@ -20245,7 +20280,10 @@ window.setSectionCategoryFilter = setSectionCategoryFilter;
 
 // עמוד התמונות: הקטגוריות כריבועים (תמונה + שם), בסגנון קטלוג. לחיצה מסננת לפי הקטגוריה.
 // תמונה קבועה לריבוע של קטגוריה (במקום התמונה מהגלריה האחרונה)
-const PHOTO_CAT_ICONS = { 'כלובון': './VeniceAI_4HW7DykOczKD6F_0 (1).png' };
+const PHOTO_CAT_ICONS = {
+  'כלובון': './kloovon.png',
+  'תמונות גולשים': './kloovon.png'
+};
 
 function photoCategoryTilesHTML(allAlbums) {
   const active = getSectionCategoryFilter('photos');
@@ -20265,11 +20303,12 @@ function photoCategoryTilesHTML(allAlbums) {
   const cats = ['הכל', ...PHOTO_BAR_CATEGORIES];
   const tile = (cat) => {
     const c = coverOf(cat);
-    if (PHOTO_CAT_ICONS[cat]) { c.img = PHOTO_CAT_ICONS[cat]; c.adult = false; c.icon = true; }
+    if (PHOTO_CAT_ICONS[cat] && !c.img) { c.img = PHOTO_CAT_ICONS[cat]; c.adult = false; }
+    else if (PHOTO_CAT_ICONS[cat] && cat === 'כלובון') { c.img = PHOTO_CAT_ICONS[cat]; c.adult = false; }
     return `
       <button type="button" class="pcat-tile${active === cat ? ' active' : ''}" onclick="setSectionCategoryFilter('photos','${artEsc(cat)}')">
-        <span class="pcat-img${c.adult ? ' is-adult' : ''}${c.icon ? ' is-icon' : ''}">${c.img
-          ? `<img src="${escHtml(c.img)}" alt="" loading="lazy">`
+        <span class="pcat-img${c.adult ? ' is-adult' : ''}">${c.img
+          ? `<img src="${escHtml(c.img)}" alt="" onerror="if(this.src.indexOf('VeniceAI')===-1)this.src='./VeniceAI_4HW7DykOczKD6F_0 (1).png'" loading="lazy">`
           : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 9"/></svg>`}</span>
         <span class="pcat-name">${escHtml(cat)}</span>
         <span class="pcat-count">${c.n} גלריות</span>
