@@ -22067,17 +22067,7 @@ window.buildSubscriptionPage = buildSubscriptionPage;
 // עמוד חדשות 📰 — עדכונים וציוצים מ-X (טוויטר)
 // ==========================================
 
-const NEWS_DEFAULT_POSTS = [
-  {
-    id: 'news-haiku-55',
-    title: 'הכרזה רשמית: Claude Haiku 5.5 זמין כעת!',
-    category: 'AI וטכנולוגיה',
-    desc: 'המודל הקטן, המהיר והמשתלם ביותר של Anthropic עד כה. חסכון של כ-75% בעלויות ביחס לגרסה הקודמת עם חלון הקשר של 1 מיליון טוקנים.',
-    tweetUrl: 'https://x.com/claudeai/status/1843339304724213960',
-    createdAt: Date.now() - 3600 * 1000 * 24,
-    author: 'מערכת האתר'
-  }
-];
+const NEWS_DEFAULT_POSTS = []; // בלי ידיעות ברירת מחדל — רק מה שהמנהל פרסם
 
 let newsPostsData = [];
 let newsCategoryFilter = 'הכל';
@@ -22088,10 +22078,10 @@ function loadStoredNewsPosts() {
     const raw = localStorage.getItem('news_posts_cache_v1');
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed)) return parsed;
     }
   } catch (e) {}
-  return NEWS_DEFAULT_POSTS;
+  return [];
 }
 
 function saveStoredNewsPosts(posts) {
@@ -22115,10 +22105,8 @@ function subscribeNewsPosts() {
         newsPostsData = arr;
         saveStoredNewsPosts(newsPostsData);
       } else {
-        if (!newsPostsData || newsPostsData.length === 0) {
-          newsPostsData = NEWS_DEFAULT_POSTS;
-          saveStoredNewsPosts(newsPostsData);
-        }
+        newsPostsData = []; // אין ידיעות שמורות — רשימה ריקה
+        saveStoredNewsPosts(newsPostsData);
       }
       if (activePageId === 'page-news-main' && typeof mainContent !== 'undefined' && mainContent) {
         mainContent.innerHTML = buildNewsPage();
@@ -22137,7 +22125,21 @@ function setNewsCategory(cat) {
 }
 window.setNewsCategory = setNewsCategory;
 
+// רק המנהל מפרסם ומוחק מבזקים (גם כללי Firebase אוכפים זאת)
+function newsIsAdmin() { return typeof isAdmin === 'function' && isAdmin(); }
+
+async function deleteAllNewsPosts() {
+  if (!newsIsAdmin()) return;
+  if (!confirm('למחוק את כל המבזקים? אי אפשר לבטל.')) return;
+  try { await remove(ref(db, 'website/news_posts')); } catch (e) { alert('המחיקה נכשלה'); return; }
+  newsPostsData = [];
+  saveStoredNewsPosts(newsPostsData);
+  if (typeof mainContent !== 'undefined' && mainContent) mainContent.innerHTML = buildNewsPage();
+}
+window.deleteAllNewsPosts = deleteAllNewsPosts;
+
 function openNewsAddModal() {
+  if (!newsIsAdmin()) return;
   const modal = document.getElementById('news-add-modal');
   if (modal) {
     modal.style.display = 'flex';
@@ -22191,6 +22193,7 @@ function cleanTweetUrl(url) {
 }
 
 async function submitNewsPost() {
+  if (!newsIsAdmin()) { alert('רק מנהל האתר יכול לפרסם מבזקים'); return; }
   const urlInput = document.getElementById('news-tweet-url');
   const titleInput = document.getElementById('news-post-title');
   const catInput = document.getElementById('news-post-category');
@@ -22238,10 +22241,9 @@ async function submitNewsPost() {
     newsPostsData.unshift(newPost);
     saveStoredNewsPosts(newsPostsData);
   } catch (err) {
-    console.warn('Firebase news save fallback:', err);
-    newPost.id = 'local_' + Date.now();
-    newsPostsData.unshift(newPost);
-    saveStoredNewsPosts(newsPostsData);
+    console.warn('Firebase news save failed:', err);
+    alert('הפרסום נכשל. נסו שוב.');
+    return;
   }
 
   closeNewsAddModal();
@@ -22253,13 +22255,15 @@ async function submitNewsPost() {
 window.submitNewsPost = submitNewsPost;
 
 async function deleteNewsPost(postId) {
-  const isEd = (typeof isAdmin === 'function' && isAdmin()) || (typeof isEditMode !== 'undefined' && isEditMode);
+  if (!newsIsAdmin()) return;
   if (!confirm('האם אתה בטוח שברצונך למחוק מבזק זה?')) return;
 
   try {
     await remove(ref(db, `website/news_posts/${postId}`));
   } catch (e) {
     console.warn('Firebase news delete:', e);
+    alert('המחיקה נכשלה');
+    return;
   }
 
   newsPostsData = newsPostsData.filter(p => p.id !== postId);
@@ -22324,8 +22328,7 @@ function triggerTwitterWidgetsRender() {
 }
 
 function buildNewsCard(post) {
-  const isEd = (typeof isAdmin === 'function' && isAdmin()) || (typeof isEditMode !== 'undefined' && isEditMode);
-  const deleteBtn = isEd ? `
+  const deleteBtn = newsIsAdmin() ? `
     <button onclick="deleteNewsPost('${artEsc(post.id)}')" title="מחיקת מבזק" style="
       background: rgba(239, 68, 68, 0.12);
       border: 1px solid rgba(239, 68, 68, 0.3);
@@ -22499,6 +22502,8 @@ function buildNewsPage() {
           </p>
         </div>
 
+        ${newsIsAdmin() ? `<div style="display:flex; gap:8px; flex-wrap:wrap;">
+        ${newsPostsData.length ? `<button onclick="deleteAllNewsPosts()" style="background: rgba(239,68,68,0.12); color:#f87171; border:1px solid rgba(239,68,68,0.35); padding: 11px 16px; border-radius: 12px; font-size: 14px; font-weight: 800; cursor: pointer;">מחיקת כל המבזקים</button>` : ''}
         <button onclick="openNewsAddModal()" style="
           background: linear-gradient(135deg, #1d9bf0, #0284c7);
           color: #ffffff;
@@ -22517,6 +22522,7 @@ function buildNewsPage() {
           <span style="font-size: 16px;">➕</span>
           <span>הוספת עדכון</span>
         </button>
+        </div>` : ''}
       </div>
 
       <!-- סרגל סינון קטגוריות -->
