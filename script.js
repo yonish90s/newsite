@@ -1181,11 +1181,9 @@ function renderTopNav() {
   if (!topNavPages.includes('page-subscription-main') && pages.some(p => p && p.id === 'page-subscription-main')) {
     topNavPages.push('page-subscription-main');
   }
-  if (!topNavPages.includes('page-news-main') && pages.some(p => p && p.id === 'page-news-main')) {
-    const _ideaIdx = topNavPages.indexOf('page-ideas-main');
-    if (_ideaIdx >= 0) topNavPages.splice(_ideaIdx + 1, 0, 'page-news-main');
-    else topNavPages.push('page-news-main');
-  }
+  // "חדשות" תמיד במקום קבוע — האחרון בתפריט — כדי שלא יקפוץ בין רינדורים
+  topNavPages = topNavPages.filter(id => id !== 'page-news-main');
+  if (pages.some(p => p && p.id === 'page-news-main')) topNavPages.push('page-news-main');
   navLinksContainer.innerHTML = ''; // מנקה את התפריט הסטטי מה-HTML
   
   topNavPages.forEach(pageId => {
@@ -22161,9 +22159,24 @@ function closeNewsAddModal() {
 }
 window.closeNewsAddModal = closeNewsAddModal;
 
+// זיהוי הרשת לפי הקישור — כל רשת מוטמעת בדרך הרשמית שלה
+function newsPlatform(url) {
+  const u = String(url || '').toLowerCase();
+  if (/(^|\/\/|\.)(x|twitter)\.com\//.test(u)) return 'x';
+  if (/(^|\/\/|\.)(reddit\.com|redd\.it)\//.test(u)) return 'reddit';
+  if (/(^|\/\/|\.)(facebook\.com|fb\.watch|fb\.com)\//.test(u)) return 'facebook';
+  if (/(^|\/\/|\.)instagram\.com\//.test(u)) return 'instagram';
+  return /^\d+$/.test(u) ? 'x' : 'other';
+}
+const NEWS_PLATFORM_NAMES = { x: 'X', reddit: 'רדיט', facebook: 'פייסבוק', instagram: 'אינסטגרם', other: 'המקור' };
+
 function cleanTweetUrl(url) {
   if (!url) return '';
   url = url.trim();
+  const plat = newsPlatform(url);
+  // בפייסבוק הפרמטרים הם חלק מהקישור לפוסט — לא מורידים אותם
+  if (plat === 'facebook') return url;
+  if (plat === 'reddit' || plat === 'instagram') return url.split('?')[0].split('#')[0];
   // אם הוזן מזהה בלבד
   if (/^\d+$/.test(url)) {
     return `https://twitter.com/x/status/${url}`;
@@ -22189,7 +22202,7 @@ async function submitNewsPost() {
   const desc = descInput ? descInput.value.trim() : '';
 
   if (!rawUrl) {
-    alert('נא להזין קישור לפוסט ב-X (טוויטר)');
+    alert('נא להזין קישור לפוסט (X, רדיט, פייסבוק או אינסטגרם)');
     if (urlInput) urlInput.focus();
     return;
   }
@@ -22199,6 +22212,12 @@ async function submitNewsPost() {
     return;
   }
 
+  // קישור שיתוף קצר של רדיט (/s/...) לא ניתן להטמעה — צריך את הכתובת המלאה של הפוסט
+  if (newsPlatform(rawUrl) === 'reddit' && /\/s\/[A-Za-z0-9]+/.test(rawUrl)) {
+    alert('זה קישור שיתוף מקוצר של רדיט.\nפתחו אותו בדפדפן, והעתיקו את הכתובת המלאה מהשורה למעלה (היא מכילה /comments/).');
+    if (urlInput) urlInput.focus();
+    return;
+  }
   const tweetUrl = cleanTweetUrl(rawUrl);
   const isAuthUser = typeof auth !== 'undefined' && auth.currentUser;
   const authorName = isAuthUser ? (auth.currentUser.displayName || auth.currentUser.email || 'משתמש רשום') : 'עורך חדשות';
@@ -22253,7 +22272,46 @@ async function deleteNewsPost(postId) {
 }
 window.deleteNewsPost = deleteNewsPost;
 
+// הטמעה רשמית לכל רשת
+function newsEmbedHTML(post) {
+  const url = post.tweetUrl || '';
+  const plat = newsPlatform(url);
+  const safe = typeof safeUrl === 'function' ? safeUrl(url) : url;
+  if (plat === 'reddit') {
+    return `<blockquote class="reddit-embed-bq" data-embed-theme="light" data-embed-height="560" style="height:560px; margin:0 auto;"><a href="${escHtml(safe)}">טוען פוסט מרדיט...</a></blockquote>`;
+  }
+  if (plat === 'facebook') {
+    const isVideo = /\/videos?\/|\/watch|fb\.watch|\/reel\//i.test(url);
+    const src = `https://www.facebook.com/plugins/${isVideo ? 'video' : 'post'}.php?href=${encodeURIComponent(url)}&show_text=true&width=500`;
+    return `<iframe class="news-embed-frame fb" src="${escHtml(src)}" loading="lazy" allowfullscreen allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" title="פוסט מפייסבוק"></iframe>`;
+  }
+  if (plat === 'instagram') {
+    const m = url.match(/instagram\.com\/(?:[^/]+\/)?(p|reel|reels|tv)\/([A-Za-z0-9_-]+)/i);
+    if (m) {
+      const kind = m[1].toLowerCase() === 'reels' ? 'reel' : m[1].toLowerCase();
+      return `<iframe class="news-embed-frame ig" src="https://www.instagram.com/${kind}/${escHtml(m[2])}/embed/captioned/" loading="lazy" allowfullscreen title="פוסט מאינסטגרם"></iframe>`;
+    }
+  }
+  if (plat === 'x') {
+    return `<blockquote class="twitter-tweet" data-theme="light" data-conversation="none" data-align="center" style="margin: 0 auto;"><a href="${escHtml(safe)}">טוען פוסט מ-X...</a></blockquote>`;
+  }
+  return `<a class="news-embed-link" href="${escHtml(safe)}" target="_blank" rel="noopener">לפתיחת הפוסט במקור ›</a>`;
+}
+
+// רדיט: הסקריפט סורק את הדף רק בטעינה — טוענים אותו מחדש אחרי כל רינדור
+function newsLoadRedditWidgets() {
+  if (!document.querySelector('blockquote.reddit-embed-bq')) return;
+  const old = document.getElementById('reddit-embed-js');
+  if (old) old.remove();
+  const s = document.createElement('script');
+  s.id = 'reddit-embed-js';
+  s.async = true;
+  s.src = 'https://embed.reddit.com/widgets.js';
+  document.body.appendChild(s);
+}
+
 function triggerTwitterWidgetsRender() {
+  setTimeout(newsLoadRedditWidgets, 80);
   setTimeout(() => {
     try {
       if (window.twttr && window.twttr.widgets && typeof window.twttr.widgets.load === 'function') {
@@ -22324,8 +22382,7 @@ function buildNewsCard(post) {
             gap: 6px;
             font-weight: 700;
           ">
-            <span>צפייה ב-X</span>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+            <span>צפייה ב${newsPlatform(post.tweetUrl) === 'x' ? '-X' : NEWS_PLATFORM_NAMES[newsPlatform(post.tweetUrl)]}</span>
           </a>
         </div>
       </div>
@@ -22358,9 +22415,7 @@ function buildNewsCard(post) {
         min-height: 180px;
         overflow: hidden;
       ">
-        <blockquote class="twitter-tweet" data-theme="light" data-conversation="none" data-align="center" style="margin: 0 auto;">
-          <a href="${artEsc(post.tweetUrl)}">טוען ציוץ מ-X...</a>
-        </blockquote>
+        ${newsEmbedHTML(post)}
       </div>
     </article>
   `;

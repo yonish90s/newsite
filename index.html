@@ -14,7 +14,7 @@
   <!-- ספריית localforage לשמירת תמונות -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
   <!-- קישור לקובץ העיצוב החיצוני (עם פרמטר למניעת שמירה במטמון) -->
-  <link rel="stylesheet" href="./style.css?v=1469">
+  <link rel="stylesheet" href="./style.css?v=1470">
 </head>
 <body class="light-mode">
   <!-- שער אישור גיל (Age Gate Overlay) -->
@@ -1149,15 +1149,15 @@
   <div style="background:#18181c; border:1px solid #2e2e38; border-radius:18px; padding:24px; width:100%; max-width:520px; max-height:85vh; overflow-y:auto; display:flex; flex-direction:column; gap:16px; box-shadow:0 24px 60px rgba(0,0,0,0.6); color:#fff;">
     <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #2e2e38; padding-bottom:12px;">
       <h3 style="margin:0; font-size:18px; font-weight:800; display:flex; align-items:center; gap:8px;">
-        <span style="font-size:20px;">📰</span> הוספת עדכון מ-X (טוויטר)
+        <span style="font-size:20px;">📰</span> הוספת עדכון מהרשת
       </h3>
       <button type="button" onclick="closeNewsAddModal()" style="background:none; border:none; color:#a1a1aa; font-size:22px; cursor:pointer; line-height:1;">✕</button>
     </div>
 
     <label style="display:flex; flex-direction:column; gap:6px; font-size:13px; font-weight:700; color:#e2e8f0;">
-      <span>קישור לפוסט ב-X (טוויטר) <span style="color:#f43f5e;">*</span></span>
-      <input type="url" id="news-tweet-url" placeholder="לדוגמה: https://x.com/claudeai/status/184333..." style="padding:11px 14px; border:1px solid #3f3f46; border-radius:10px; font-size:13.5px; background:#09090b; color:#fff; direction:ltr; text-align:left;">
-      <span style="font-size:11.5px; color:#94a3b8; font-weight:normal;">הדבק כאן קישור מלא לפוסט מ-X או twitter.com</span>
+      <span>קישור לפוסט <span style="color:#f43f5e;">*</span></span>
+      <input type="url" id="news-tweet-url" placeholder="https://x.com/... · reddit.com/... · facebook.com/... · instagram.com/..." style="padding:11px 14px; border:1px solid #3f3f46; border-radius:10px; font-size:13.5px; background:#09090b; color:#fff; direction:ltr; text-align:left;">
+      <span style="font-size:11.5px; color:#94a3b8; font-weight:normal;">הדביקו קישור לפוסט מ-X, רדיט, פייסבוק או אינסטגרם (הפוסט צריך להיות ציבורי)</span>
     </label>
 
     <label style="display:flex; flex-direction:column; gap:6px; font-size:13px; font-weight:700; color:#e2e8f0;">
@@ -1211,7 +1211,7 @@
     try { if (localStorage.getItem('mtab_hidden') === '1') document.documentElement.classList.add('mtab-hidden'); } catch (e) {}
   </script>
   <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
-  <script type="module" src="./script.js?v=1445"></script>
+  <script type="module" src="./script.js?v=1447"></script>
   <script defer src="./a11y.js?v=1"></script>
 </body>
 </html>

@@ -9276,3 +9276,8 @@ html.age-not-verified .td-photo.is-adult { filter: blur(22px); transform: scale(
 .pcat-tiles { grid-auto-columns: 158px; }
 .pcat-tile { justify-content: center; gap: 6px; min-height: 92px; padding: 16px 12px; }
 .pcat-tile .pcat-count { margin-top: 0; }
+/* חדשות: הטמעות פייסבוק / אינסטגרם */
+.news-embed-frame { display: block; width: 100%; max-width: 500px; margin: 0 auto; border: none; border-radius: 10px; background: #fff; }
+.news-embed-frame.fb { height: 640px; }
+.news-embed-frame.ig { height: 760px; }
+.news-embed-link { color: #1d9bf0; font-weight: 800; text-decoration: none; padding: 30px; }
