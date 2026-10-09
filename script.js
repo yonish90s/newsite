@@ -14212,7 +14212,7 @@ function buildPhotosPage(albums, section) {
     `;
   }).join('');
 
-  const json = encodeURIComponent(JSON.stringify(albums));
+  const json = encodeURIComponent(JSON.stringify(_tileAlbums));
   const _adultOn = (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('age_verified') === 'true');
   let sectionTitle = 'כל הגלריות';
   let searchPlaceholder = '🔍 חיפוש גלריות...';
@@ -15785,6 +15785,8 @@ function photoCurrentSection() {
   return (el && el.dataset.section) ? el.dataset.section : 'photos';
 }
 
+let MASTER_PHOTO_ALBUMS = null;
+
 function photoGetAlbums() {
   // חשוב: לא לקרוא מנתוני עמוד קהילה/משתמש (שגם מסומנים photos-page) כדי לא לדרוס את התמונות
   const container = mainContent && mainContent.querySelector('.photos-page:not(.community-page):not(.user-page)');
@@ -15797,6 +15799,12 @@ function photoGetAlbums() {
   }
   if (!list) {
     list = (typeof PHOTOS_SAMPLES !== 'undefined' && Array.isArray(PHOTOS_SAMPLES)) ? [...PHOTOS_SAMPLES] : [];
+  }
+  if (!MASTER_PHOTO_ALBUMS || list.length > MASTER_PHOTO_ALBUMS.length) {
+    MASTER_PHOTO_ALBUMS = [...list];
+  } else if (list.length < MASTER_PHOTO_ALBUMS.length) {
+    // אם הרשימה הוקטנה עקב סינון קטגוריה קודם, משחזרים מהמאסטר
+    list = [...MASTER_PHOTO_ALBUMS];
   }
   if (!list.some(a => a && (a.id === 'ph-kloovon' || a.category === 'כלובון' || a.title === 'כלובון'))) {
     const kloovonItem = (typeof PHOTOS_SAMPLES !== 'undefined' && PHOTOS_SAMPLES.find(a => a && a.id === 'ph-kloovon')) || {
@@ -15815,6 +15823,7 @@ function photoGetAlbums() {
       verified: true
     };
     list.unshift(kloovonItem);
+    MASTER_PHOTO_ALBUMS = [...list];
   }
   return list;
 }
