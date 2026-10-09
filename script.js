@@ -6243,9 +6243,17 @@ window.syncStoryCategorySelect = syncStoryCategorySelect;
 let PHOTO_BAR_CATEGORIES = (function () {
   try {
     const saved = JSON.parse(localStorage.getItem('custom_photo_bar_categories'));
-    if (Array.isArray(saved) && saved.length > 0) return saved;
+    if (Array.isArray(saved) && saved.length > 0) {
+      if (!saved.includes('כלובון')) {
+        const idx = saved.indexOf('תמונות גולשים');
+        if (idx !== -1) saved.splice(idx + 1, 0, 'כלובון');
+        else saved.push('כלובון');
+        try { localStorage.setItem('custom_photo_bar_categories', JSON.stringify(saved)); } catch (e) {}
+      }
+      return saved;
+    }
   } catch (e) {}
-  return ['תמונות גולשים', 'כלובון'];
+  return ['תמונות גולשים', 'כלובון', 'לעסקים', 'כללי'];
 })();
 
 function savePhotoBarCategories() {
@@ -6275,11 +6283,18 @@ function applyRemoteCategoryBars(data, rerender) {
     syncStoryCategorySelect();
     if (rerender) _catRerender('stories');
   }
-  if (Array.isArray(data.photoBarCategories) && data.photoBarCategories.length
-      && JSON.stringify(data.photoBarCategories) !== JSON.stringify(PHOTO_BAR_CATEGORIES)) {
-    PHOTO_BAR_CATEGORIES = data.photoBarCategories.filter(Boolean);
-    try { localStorage.setItem('custom_photo_bar_categories', JSON.stringify(PHOTO_BAR_CATEGORIES)); } catch (e) {}
-    if (rerender) _catRerender('photos');
+  if (Array.isArray(data.photoBarCategories) && data.photoBarCategories.length) {
+    let cats = data.photoBarCategories.filter(Boolean);
+    if (!cats.includes('כלובון')) {
+      const idx = cats.indexOf('תמונות גולשים');
+      if (idx !== -1) cats.splice(idx + 1, 0, 'כלובון');
+      else cats.push('כלובון');
+    }
+    if (JSON.stringify(cats) !== JSON.stringify(PHOTO_BAR_CATEGORIES)) {
+      PHOTO_BAR_CATEGORIES = cats;
+      try { localStorage.setItem('custom_photo_bar_categories', JSON.stringify(PHOTO_BAR_CATEGORIES)); } catch (e) {}
+      if (rerender) _catRerender('photos');
+    }
   }
 }
 window.applyRemoteCategoryBars = applyRemoteCategoryBars;
@@ -20230,7 +20245,7 @@ window.setSectionCategoryFilter = setSectionCategoryFilter;
 
 // עמוד התמונות: הקטגוריות כריבועים (תמונה + שם), בסגנון קטלוג. לחיצה מסננת לפי הקטגוריה.
 // תמונה קבועה לריבוע של קטגוריה (במקום התמונה מהגלריה האחרונה)
-const PHOTO_CAT_ICONS = { 'כלובון': './cat-cage.webp' };
+const PHOTO_CAT_ICONS = { 'כלובון': './VeniceAI_4HW7DykOczKD6F_0 (1).png' };
 
 function photoCategoryTilesHTML(allAlbums) {
   const active = getSectionCategoryFilter('photos');
