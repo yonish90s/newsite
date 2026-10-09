@@ -259,6 +259,8 @@
         }
       },
 
+      "news_posts": { ".read": true },
+
       "tinder_likes": {
         "$uid": {
           "$target": {
