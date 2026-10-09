@@ -12772,27 +12772,40 @@ function avNormalize(cfg) {
 function avatarSVG(cfg) {
   const c = avNormalize(cfg);
   const skin = AV_SKIN[c.s], hair = AV_HAIR_C[c.hc], eye = AV_EYE_C[c.ec];
+  const shade = 'rgba(0,0,0,.14)';
   const P = [];
   P.push(`<circle cx="50" cy="50" r="50" fill="#7c3aed"/>`);
-  if (c.h === 2) P.push(`<path d="M24 50 C22 22 36 15 50 15 C64 15 78 22 76 50 L79 80 C70 83 64 74 65 60 L35 60 C36 74 30 83 21 80Z" fill="${hair}"/>`);
-  P.push(`<path d="M13 100 C15 80 31 73 50 73 C69 73 85 80 87 100Z" fill="#f97316"/>`);
-  P.push(`<path d="M40 80 Q50 88 60 80" fill="none" stroke="rgba(0,0,0,.18)" stroke-width="3" stroke-linecap="round"/>`);
-  P.push(`<rect x="43" y="64" width="14" height="13" rx="5" fill="${skin}"/><rect x="43" y="64" width="14" height="6" fill="rgba(0,0,0,.12)"/>`);
-  P.push(`<circle cx="26" cy="54" r="6.5" fill="${skin}"/><circle cx="74" cy="54" r="6.5" fill="${skin}"/>`);
-  P.push(`<ellipse cx="50" cy="50" rx="24.5" ry="27" fill="${skin}"/>`);
-  if (c.f === 2) P.push(`<path d="M25.5 50 C25 75 37 81 50 81 C63 81 75 75 74.5 50 C71 64 62 69 50 69 C38 69 29 64 25.5 50Z" fill="${hair}"/>`);
-  if (c.h === 1) P.push(`<path d="M25.5 47 C25 25 38 19 50 19 C62 19 75 25 74.5 47 C68 37 60 33 50 33 C40 33 32 37 25.5 47Z" fill="${hair}"/>`);
-  if (c.h === 2) P.push(`<path d="M25.5 49 C25 25 38 19 50 19 C62 19 75 25 74.5 49 C70 39 62 33 50 36 C38 33 30 39 25.5 49Z" fill="${hair}"/>`);
-  // גבות בצבע השיער (גם לקירח)
-  P.push(`<path d="M34 43.5 Q40 40.5 46 43 M54 43 Q60 40.5 66 43.5" fill="none" stroke="${hair}" stroke-width="2.6" stroke-linecap="round"/>`);
-  // עיניים עם צבע קשתית
-  P.push(`<ellipse cx="40" cy="51" rx="6" ry="5" fill="#fff"/><ellipse cx="60" cy="51" rx="6" ry="5" fill="#fff"/>`);
-  P.push(`<circle cx="40.5" cy="51.5" r="3.6" fill="${eye}"/><circle cx="60.5" cy="51.5" r="3.6" fill="${eye}"/>`);
-  P.push(`<circle cx="40.5" cy="51.5" r="1.7" fill="#0b0b0b"/><circle cx="60.5" cy="51.5" r="1.7" fill="#0b0b0b"/>`);
-  P.push(`<circle cx="41.8" cy="50.2" r="1" fill="#fff"/><circle cx="61.8" cy="50.2" r="1" fill="#fff"/>`);
-  P.push(`<path d="M48.5 55 Q47 60 50.5 61" fill="none" stroke="rgba(0,0,0,.22)" stroke-width="1.8" stroke-linecap="round"/>`);
-  if (c.f === 1) P.push(`<path d="M39 63 Q44.5 58 50 61.5 Q55.5 58 61 63 Q55.5 65.5 50 63.2 Q44.5 65.5 39 63Z" fill="${hair}"/>`);
-  P.push(`<path d="M42.5 66 Q50 71.5 57.5 66" fill="none" stroke="${AV_INK}" stroke-width="2.6" stroke-linecap="round"/>`);
+  // שיער ארוך — מאחורי הראש
+  if (c.h === 2) P.push(`<path d="M26 44 C24 24 37 16 50 16 C63 16 76 24 74 44 L76 78 C70 82 65 76 65 66 L35 66 C35 76 30 82 24 78Z" fill="${hair}"/>`);
+  // גוף וצוואר
+  P.push(`<path d="M14 100 C16 82 31 76 50 76 C69 76 84 82 86 100Z" fill="#f97316"/>`);
+  P.push(`<path d="M42 77 Q50 83 58 77" fill="none" stroke="rgba(0,0,0,.15)" stroke-width="2.5" stroke-linecap="round"/>`);
+  P.push(`<path d="M43 62 L43 76 Q50 80 57 76 L57 62Z" fill="${skin}"/><path d="M43 66 Q50 72 57 66 L57 62 L43 62Z" fill="${shade}"/>`);
+  // אוזניים וראש
+  P.push(`<ellipse cx="27.5" cy="51" rx="4.5" ry="6" fill="${skin}"/><ellipse cx="72.5" cy="51" rx="4.5" ry="6" fill="${skin}"/>`);
+  P.push(`<ellipse cx="27.8" cy="51" rx="2" ry="3.2" fill="${shade}"/><ellipse cx="72.2" cy="51" rx="2" ry="3.2" fill="${shade}"/>`);
+  P.push(`<path d="M28 46 C28 30 37 22 50 22 C63 22 72 30 72 46 C72 60 66 71 50 72 C34 71 28 60 28 46Z" fill="${skin}"/>`);
+  // שיער קצר / פוני של שיער ארוך
+  if (c.h === 1) P.push(`<path d="M27.5 46 C26 30 36 19 50 19 C64 19 74 30 72.5 46 C71 39 69 35 66 33 C60 30 54 31 50 31 C44 31 38 30 34 33 C31 35 29 39 27.5 46Z" fill="${hair}"/>`);
+  if (c.h === 2) P.push(`<path d="M27.5 47 C26 30 36 19 50 19 C64 19 74 30 72.5 47 C70 38 64 32 54 31 C46 31 38 33 33 38 C30 41 28.5 44 27.5 47Z" fill="${hair}"/>`);
+  // זקן לאורך הלסת — משאיר את הפה גלוי
+  if (c.f === 2) P.push(`<path d="M28.5 50 C29 63 36 73 50 74 C64 73 71 63 71.5 50 C69 57 66 60 62 61 C58 62 56 59 50 59 C44 59 42 62 38 61 C34 60 31 57 28.5 50Z" fill="${hair}"/>`);
+  // שפם (גם חלק מזקן מלא)
+  if (c.f >= 1) P.push(`<path d="M41.5 60.5 Q45.5 57 50 59 Q54.5 57 58.5 60.5 Q54.5 61.6 50 60.6 Q45.5 61.6 41.5 60.5Z" fill="${hair}"/>`);
+  // גבות
+  P.push(`<path d="M36.5 41.8 Q41 39.6 45.5 41.4 M54.5 41.4 Q59 39.6 63.5 41.8" fill="none" stroke="${hair === '#f1f5f9' ? '#9ca3af' : hair}" stroke-width="2.2" stroke-linecap="round"/>`);
+  // עיניים — גודל טבעי עם צבע קשתית
+  P.push(`<ellipse cx="41" cy="47.5" rx="4.4" ry="3.1" fill="#fff"/><ellipse cx="59" cy="47.5" rx="4.4" ry="3.1" fill="#fff"/>`);
+  P.push(`<circle cx="41.2" cy="47.6" r="2.4" fill="${eye}"/><circle cx="59.2" cy="47.6" r="2.4" fill="${eye}"/>`);
+  P.push(`<circle cx="41.2" cy="47.6" r="1.1" fill="#0b0b0b"/><circle cx="59.2" cy="47.6" r="1.1" fill="#0b0b0b"/>`);
+  P.push(`<circle cx="42" cy="46.8" r=".6" fill="#fff"/><circle cx="60" cy="46.8" r=".6" fill="#fff"/>`);
+  P.push(`<path d="M36.6 46.6 Q41 43.6 45.4 46.6 M54.6 46.6 Q59 43.6 63.4 46.6" fill="none" stroke="${AV_INK}" stroke-width="1.3" stroke-linecap="round" opacity=".75"/>`);
+  // אף
+  P.push(`<path d="M50 49 Q48.3 54.5 49.8 55.6 Q51.2 56 52 55.2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>`);
+  // פה
+  P.push(`<path d="M44.5 63.5 Q50 67 55.5 63.5" fill="none" stroke="#7a2e2e" stroke-width="2" stroke-linecap="round"/>`);
+  // לחיים
+  P.push(`<ellipse cx="35.5" cy="56" rx="3.4" ry="2.2" fill="#ff7a8a" opacity=".22"/><ellipse cx="64.5" cy="56" rx="3.4" ry="2.2" fill="#ff7a8a" opacity=".22"/>`);
   return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs><clipPath id="avc"><circle cx="50" cy="50" r="50"/></clipPath></defs><g clip-path="url(#avc)">${P.join('')}</g></svg>`;
 }
 window.avatarSVG = avatarSVG;
