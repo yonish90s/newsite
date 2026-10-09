@@ -9155,3 +9155,8 @@ html.age-not-verified .td-photo.is-adult { filter: blur(22px); transform: scale(
 .ke-score { text-align: center; color: #a3f93a; font-size: 16px; }
 .ke-del { width: 30px; height: 30px; border-radius: 50%; border: none; background: rgba(255,255,255,.08); color: #fca5a5; cursor: pointer; }
 .ke-empty { padding: 18px; text-align: center; color: rgba(241,236,255,.55); font-weight: 700; border: 1.5px dashed rgba(255,255,255,.14); border-radius: 14px; }
+/* עורך דמות פשוט: שם מתחת לכל אפשרות */
+.av-shape { display: flex; flex-direction: column; align-items: center; gap: 6px; aspect-ratio: auto; padding: 8px 6px 9px; }
+.av-shape svg { width: 100%; aspect-ratio: 1; height: auto; }
+.av-shape span { font-size: 13px; font-weight: 800; color: #e9e3ff; }
+.av-shapes { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); }
