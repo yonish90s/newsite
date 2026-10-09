@@ -6245,7 +6245,7 @@ let PHOTO_BAR_CATEGORIES = (function () {
     const saved = JSON.parse(localStorage.getItem('custom_photo_bar_categories'));
     if (Array.isArray(saved) && saved.length > 0) return saved;
   } catch (e) {}
-  return ['תמונות גולשים', 'לעסקים', 'כללי'];
+  return ['תמונות גולשים', 'כלובון'];
 })();
 
 function savePhotoBarCategories() {
@@ -20229,6 +20229,9 @@ function setSectionCategoryFilter(section, cat) {
 window.setSectionCategoryFilter = setSectionCategoryFilter;
 
 // עמוד התמונות: הקטגוריות כריבועים (תמונה + שם), בסגנון קטלוג. לחיצה מסננת לפי הקטגוריה.
+// תמונה קבועה לריבוע של קטגוריה (במקום התמונה מהגלריה האחרונה)
+const PHOTO_CAT_ICONS = { 'כלובון': './cat-cage.webp' };
+
 function photoCategoryTilesHTML(allAlbums) {
   const active = getSectionCategoryFilter('photos');
   const list = Array.isArray(allAlbums) ? allAlbums : [];
@@ -20247,9 +20250,10 @@ function photoCategoryTilesHTML(allAlbums) {
   const cats = ['הכל', ...PHOTO_BAR_CATEGORIES];
   const tile = (cat) => {
     const c = coverOf(cat);
+    if (PHOTO_CAT_ICONS[cat]) { c.img = PHOTO_CAT_ICONS[cat]; c.adult = false; c.icon = true; }
     return `
       <button type="button" class="pcat-tile${active === cat ? ' active' : ''}" onclick="setSectionCategoryFilter('photos','${artEsc(cat)}')">
-        <span class="pcat-img${c.adult ? ' is-adult' : ''}">${c.img
+        <span class="pcat-img${c.adult ? ' is-adult' : ''}${c.icon ? ' is-icon' : ''}">${c.img
           ? `<img src="${escHtml(c.img)}" alt="" loading="lazy">`
           : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 9"/></svg>`}</span>
         <span class="pcat-name">${escHtml(cat)}</span>

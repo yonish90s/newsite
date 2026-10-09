@@ -9196,3 +9196,6 @@ html.age-not-verified .td-photo.is-adult { filter: blur(22px); transform: scale(
 .ke-seek-text:focus { border-color: #ffd166; }
 .uw-chip.seek { background: rgba(255, 107, 181, 0.16); color: #ff8cc6; }
 .uw-seek-text { margin-top: 8px; color: #e5e5ea; font-weight: 600; font-style: italic; line-height: 1.5; }
+/* ריבוע קטגוריה עם סמל קבוע (למשל "כלובון") */
+.pcat-img.is-icon { background: #fff; }
+.pcat-img.is-icon img { object-fit: contain; padding: 6px; box-sizing: border-box; }
