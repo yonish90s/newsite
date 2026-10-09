@@ -22356,15 +22356,7 @@ function buildNewsCard(post) {
     ">
       <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
         <div style="display:flex; align-items:center; gap:10px;">
-          <span style="
-            background: linear-gradient(135deg, rgba(29, 155, 240, 0.2), rgba(2, 132, 199, 0.2));
-            color: #38bdf8;
-            border: 1px solid rgba(56, 189, 248, 0.3);
-            font-size: 12px;
-            font-weight: 800;
-            padding: 4px 10px;
-            border-radius: 999px;
-          ">${artEsc(post.category || 'מבזק')}</span>
+          
           ${dateStr ? `<span style="font-size: 12px; color: #71717a;">${dateStr}</span>` : ''}
         </div>
         <div style="display:flex; align-items:center; gap:8px;">
@@ -22446,16 +22438,13 @@ function buildNewsPage() {
   }).join('');
 
   let filtered = (newsPostsData && newsPostsData.length > 0) ? newsPostsData : NEWS_DEFAULT_POSTS;
-  if (newsCategoryFilter !== 'הכל') {
-    filtered = filtered.filter(p => (p.category || 'כללי') === newsCategoryFilter);
-  }
 
   const postsListHtml = filtered.length > 0
     ? filtered.map(buildNewsCard).join('')
     : `
       <div style="text-align: center; padding: 60px 20px; color: #71717a; background: #121216; border-radius: 16px; border: 1px dashed #272730;">
         <span style="font-size: 42px; display: block; margin-bottom: 12px;">📰</span>
-        <div style="font-size: 16px; font-weight: 700; color: #e4e4e7;">אין מבזקים בקטגוריה זו</div>
+        <div style="font-size: 16px; font-weight: 700; color: #e4e4e7;">עוד אין מבזקים</div>
         <div style="font-size: 13px; margin-top: 6px;">היה הראשון להעלות פוסט מעניין מ-X!</div>
       </div>
     `;
@@ -22526,7 +22515,7 @@ function buildNewsPage() {
           transition: transform 0.15s ease;
         ">
           <span style="font-size: 16px;">➕</span>
-          <span>הוספת עדכון מ-X</span>
+          <span>הוספת עדכון</span>
         </button>
       </div>
 
@@ -22539,7 +22528,6 @@ function buildNewsPage() {
         margin-bottom: 20px;
         scrollbar-width: thin;
       ">
-        ${filterTabs}
       </div>
 
       <!-- פיד הפוסטים -->
