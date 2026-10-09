@@ -14,7 +14,7 @@
   <!-- ספריית localforage לשמירת תמונות -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
   <!-- קישור לקובץ העיצוב החיצוני (עם פרמטר למניעת שמירה במטמון) -->
-  <link rel="stylesheet" href="./style.css?v=1470">
+  <link rel="stylesheet" href="./style.css?v=1471">
 </head>
 <body class="light-mode">
   <!-- שער אישור גיל (Age Gate Overlay) -->
@@ -1185,7 +1185,7 @@
     <button type="button" class="mtab" data-tab="tinder" onclick="navigateToPage('page-tinder-main')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.6 2.8 4.5 6.7 4.5c2.2 0 3.6 1.2 5.3 3 1.7-1.8 3.1-3 5.3-3 3.9 0 5.8 4.1 4.3 7.3C19.5 16.4 12 21 12 21z"/></svg><span>התאמות</span></button>
     <button type="button" class="mtab" data-tab="home" onclick="goToHomePage()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg><span>בית</span></button>
     <button type="button" class="mtab" data-tab="communities" onclick="navigateToPage('page-communities-main')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7.5" r="3"/><circle cx="5" cy="9.5" r="2.2"/><circle cx="19" cy="9.5" r="2.2"/><path d="M6.5 20v-1.5a5.5 5.5 0 0 1 11 0V20"/><path d="M1.5 19v-.8A3.6 3.6 0 0 1 6 14.7"/><path d="M22.5 19v-.8a3.6 3.6 0 0 0-4.5-3.5"/></svg><span>קהילות</span></button>
-    <button type="button" class="mtab" data-tab="a11y" onclick="var l=document.querySelector('.a11y-launcher'); if(l) l.click();"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><circle cx="12" cy="7.2" r="1.3" fill="currentColor"/><path d="M7.5 10h9M12 10v4.5M12 14.5l-2.5 4M12 14.5l2.5 4"/></svg><span>נגישות</span></button>
+    <button type="button" class="mtab" data-tab="news" onclick="navigateToPage('page-news-main')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h13v14H6a2 2 0 0 1-2-2z"/><path d="M17 9h3v8a2 2 0 0 1-2 2"/><path d="M7.5 9h6M7.5 12.5h6M7.5 16h4"/></svg><span>חדשות</span></button>
     <button type="button" class="mtab" data-tab="close" onclick="mobileTabsSetHidden(true)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6 6 18"/></svg><span>סגירה</span></button>
   </nav>
   <button type="button" id="mtab-open" class="mtab-open" onclick="mobileTabsSetHidden(false)" aria-label="הצג תפריט תחתון">
@@ -1200,7 +1200,7 @@
     try { if (localStorage.getItem('mtab_hidden') === '1') document.documentElement.classList.add('mtab-hidden'); } catch (e) {}
   </script>
   <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
-  <script type="module" src="./script.js?v=1452"></script>
+  <script type="module" src="./script.js?v=1453"></script>
   <script defer src="./a11y.js?v=1"></script>
 </body>
 </html>

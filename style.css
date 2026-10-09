@@ -9054,7 +9054,8 @@ html.age-not-verified .pcat-img.is-adult img { filter: blur(14px); }
   .mtab.active svg { color: var(--pink, #ec4899); }
   /* מקום לסרגל + כפתור הנגישות הצף מוסתר (פותחים מהסרגל) */
   html body { padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px)) !important; }
-  html body .a11y-launcher { opacity: 0 !important; pointer-events: none !important; }
+  /* כפתור הנגישות הצף חזר ("חדשות" במקומו בסרגל) — מעל הסרגל */
+  html body .a11y-launcher { bottom: calc(94px + env(safe-area-inset-bottom, 0px)) !important; }
   html body .a11y-panel { bottom: calc(154px + env(safe-area-inset-bottom, 0px)) !important; max-height: calc(100vh - 180px) !important; }
   /* מצב מוסתר: הסרגל נעלם, כפתור הנגישות חוזר, וכפתור ☰ לפתיחה מחדש */
   html.mtab-hidden .mtabs { display: none; }

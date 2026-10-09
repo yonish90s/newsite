@@ -8065,7 +8065,7 @@ function artSyncPagination() {
   if (typeof avatarHydrate === 'function') avatarHydrate(mainContent);
   // סרגל הטאבים במובייל: מסמנים את הטאב של העמוד הפתוח
   const _mq = (sel) => !!mainContent.querySelector(sel);
-  const _tab = _mq('.home-feed-page') ? 'home' : _mq('.tinder-page') ? 'tinder' : _mq('.communities-page') ? 'communities'
+  const _tab = _mq('.home-feed-page') ? 'home' : _mq('.tinder-page') ? 'tinder' : _mq('.news-page') ? 'news' : _mq('.communities-page') ? 'communities'
     : _mq('.photos-page[data-section="photos"]:not(.home-feed-photos)') ? 'photos' : '';
   document.querySelectorAll('#mtabs .mtab').forEach(b => b.classList.toggle('active', b.dataset.tab === _tab));
   if (artPagObserver) artPagObserver.disconnect();
