@@ -9062,7 +9062,7 @@ async function clearAllCustomCommunities() {
   if (!isEd) { alert('רק מנהל רשאי למחוק את כל הקהילות'); return; }
   if (!confirm('האם למחוק את כל הקהילות שקיימות בבסיס הנתונים ולשמור רק את "תמונות" ו"סיפורים"?')) return;
   try {
-    await remove(ref(db, 'website/communities'));
+    await set(ref(db, 'website/communities'), null);
     communitiesData = {};
     if (typeof showCopyToast === 'function') showCopyToast('🗑️ כל הקהילות נמחקו בהצלחה!');
     if (typeof navigateToPage === 'function') navigateToPage('page-communities-main');
@@ -9080,7 +9080,7 @@ async function deleteCommunity(communityId) {
   if (!comm) return;
   if (!confirm(`האם אתה בטוח שברצונך למחוק את הקהילה "${comm.name || 'זו'}"?`)) return;
   try {
-    await remove(ref(db, `website/communities/${communityId}`));
+    await set(ref(db, `website/communities/${communityId}`), null);
     delete communitiesData[communityId];
     if (typeof showCopyToast === 'function') showCopyToast('🗑️ הקהילה נמחקה בהצלחה');
     const listEl = document.getElementById('communities-list');
@@ -20813,7 +20813,7 @@ async function deleteIdea(ideaId) {
   const item = ideasData[ideaId];
   if (!confirm(`האם למחוק את הרעיון "${item ? item.title : 'זה'}"?`)) return;
   try {
-    await remove(ref(db, `website/ideas/${ideaId}`));
+    await set(ref(db, `website/ideas/${ideaId}`), null);
     delete ideasData[ideaId];
     if (typeof showCopyToast === 'function') showCopyToast('🗑️ הרעיון נמחק');
     if (typeof mainContent !== 'undefined' && mainContent) {
@@ -22131,7 +22131,7 @@ function newsIsAdmin() { return typeof isAdmin === 'function' && isAdmin(); }
 async function deleteAllNewsPosts() {
   if (!newsIsAdmin()) return;
   if (!confirm('למחוק את כל המבזקים? אי אפשר לבטל.')) return;
-  try { await remove(ref(db, 'website/news_posts')); } catch (e) { alert('המחיקה נכשלה'); return; }
+  try { await set(ref(db, 'website/news_posts'), null); } catch (e) { alert('המחיקה נכשלה'); return; }
   newsPostsData = [];
   saveStoredNewsPosts(newsPostsData);
   if (typeof mainContent !== 'undefined' && mainContent) mainContent.innerHTML = buildNewsPage();
@@ -22259,7 +22259,7 @@ async function deleteNewsPost(postId) {
   if (!confirm('האם אתה בטוח שברצונך למחוק מבזק זה?')) return;
 
   try {
-    await remove(ref(db, `website/news_posts/${postId}`));
+    await set(ref(db, `website/news_posts/${postId}`), null);
   } catch (e) {
     console.warn('Firebase news delete:', e);
     alert('המחיקה נכשלה');
