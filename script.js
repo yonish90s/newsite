@@ -265,7 +265,7 @@ let pages = defaultPages;
 let activePageId = 'page-photos-main';
 let topNavPages = ['page-ideas-main']; // העמודים שמופיעים בתפריט העליון
 // עמודים שמופיעים רק בסרגל הצד ("עמודי צד") ולא בתפריט העליון
-const SIDE_ONLY_PAGE_IDS = ['page-questions-main', 'page-offers-main', 'page-photos-main', 'page-stories-main', 'page-friends-main', 'page-forums-main', 'page-blinddate-main'];
+const SIDE_ONLY_PAGE_IDS = ['page-questions-main', 'page-offers-main', 'page-photos-main', 'page-stories-main', 'page-friends-main', 'page-forums-main', 'page-blinddate-main', 'page-tinder-main'];
 // זיהוי עמוד צד לפי מזהה, תוכן או כותרת (העמודים עשויים להיווצר עם מזהים דינמיים)
 function isSideOnlyPage(p) {
   if (!p) return false;
@@ -276,7 +276,7 @@ function isSideOnlyPage(p) {
   if (p.id === 'page-subscription-main' || (p.content || '').includes('subscription-page') || (p.title || '').includes('מנוי')) return false;
   if (SIDE_ONLY_PAGE_IDS.includes(p.id)) return true;
   const t = p.title || '', c = p.content || '';
-  if (c.includes('photos-page') || c.includes('stories-page') || c.includes('questions-page') || c.includes('offers-page') || c.includes('friends-page') || c.includes('forums-page') || c.includes('blinddate-page')) return true;
+  if (c.includes('photos-page') || c.includes('stories-page') || c.includes('questions-page') || c.includes('offers-page') || c.includes('friends-page') || c.includes('forums-page') || c.includes('blinddate-page') || c.includes('tinder-page')) return true;
   if (t.includes('תמונות') || t.includes('סיפורים') || t.includes('שאלות גולשים') || t.includes('הצעות')) return true;
   return false;
 }
@@ -548,7 +548,7 @@ function sanitizeToOnlyPhotosAndStories() {
   // לפי בקשת המשתמש: משאירים רק עמודי תמונות וסיפורים (מוחקים כתבות/קהילה וכל עמוד אחר).
   // מסננים רק כשקיים לפחות עמוד תמונות/סיפורים אחד, כדי לא לרוקן אתר תקין בטעות.
   if (pages.some(p => p && ((p.content || '').includes('photos-page') || (p.content || '').includes('stories-page')))) {
-    pages = pages.filter(p => p && (p.id === 'page-home-feed' || p.id === 'page-subscription-main' || (p.content || '').includes('home-feed-page') || (p.content || '').includes('subscription-page') || (p.content || '').includes('photos-page') || (p.content || '').includes('stories-page') || (p.content || '').includes('ideas-page') || (p.content || '').includes('communities-page') || (p.content || '').includes('info-page') || (p.content || '').includes('requests-page') || (p.content || '').includes('questions-page') || (p.content || '').includes('offers-page') || (p.content || '').includes('friends-page') || (p.content || '').includes('forums-page') || (p.content || '').includes('blinddate-page')));
+    pages = pages.filter(p => p && (p.id === 'page-home-feed' || p.id === 'page-subscription-main' || (p.content || '').includes('home-feed-page') || (p.content || '').includes('subscription-page') || (p.content || '').includes('photos-page') || (p.content || '').includes('stories-page') || (p.content || '').includes('ideas-page') || (p.content || '').includes('communities-page') || (p.content || '').includes('info-page') || (p.content || '').includes('requests-page') || (p.content || '').includes('questions-page') || (p.content || '').includes('offers-page') || (p.content || '').includes('friends-page') || (p.content || '').includes('forums-page') || (p.content || '').includes('blinddate-page') || (p.content || '').includes('tinder-page')));
   }
 
   // בוטסטראפ של עמודי ברירת המחדל (תמונות + סיפורים) רק כאשר אין אף עמוד באתר.
@@ -701,6 +701,11 @@ function sanitizeToOnlyPhotosAndStories() {
   const _frPage = pages.find(p => p && p.id === 'page-friends-main');
   if (!_frPage) pages.push({ id: 'page-friends-main', title: 'חברים', content: _frContent });
   else { _frPage.content = _frContent; if (!_frPage.title) _frPage.title = 'חברים'; }
+  // עמוד "התאמות" (טינדר) — תמיד קיים, נבנה דינמית
+  const _tdContent = '<div class="tinder-page" data-page-id="page-tinder-main"></div>';
+  const _tdPage = pages.find(p => p && p.id === 'page-tinder-main');
+  if (!_tdPage) pages.push({ id: 'page-tinder-main', title: 'התאמות', content: _tdContent });
+  else { _tdPage.content = _tdContent; if (!_tdPage.title) _tdPage.title = 'התאמות'; }
   // עמוד "Blind Date" — תמיד קיים, נבנה דינמית
   const _bdContent = '<div class="blinddate-page" data-page-id="page-blinddate-main"></div>';
   const _bdPage = pages.find(p => p && p.id === 'page-blinddate-main');
@@ -1376,6 +1381,15 @@ function renderPage() {
       if (typeof buildHomeFeedPage === 'function') {
         mainContent.innerHTML = buildHomeFeedPage();
         if (isEditMode) applyEditModeToContent();
+        try { window.scrollTo(0, 0); } catch (e) {}
+        return;
+      }
+    }
+
+    // עמוד "התאמות" (טינדר) — נבנה דינמית
+    if (currentPage.id === 'page-tinder-main' || (currentPage.content || '').includes('tinder-page')) {
+      if (typeof buildTinderPage === 'function') {
+        mainContent.innerHTML = buildTinderPage();
         try { window.scrollTo(0, 0); } catch (e) {}
         return;
       }
@@ -8000,9 +8014,11 @@ let artPagObserver = null;
 function artSyncPagination() {
   if (typeof mainContent === 'undefined' || !mainContent) return;
   if (typeof avatarHydrate === 'function') avatarHydrate(mainContent);
-  // סרגל הטאבים במובייל: "תמונות" מסומן כשעמוד התמונות פתוח
-  const _mtp = document.getElementById('mtab-photos');
-  if (_mtp) _mtp.classList.toggle('active', !!mainContent.querySelector('.photos-page[data-section="photos"]:not(.home-feed-photos)'));
+  // סרגל הטאבים במובייל: מסמנים את הטאב של העמוד הפתוח
+  const _mq = (sel) => !!mainContent.querySelector(sel);
+  const _tab = _mq('.home-feed-page') ? 'home' : _mq('.tinder-page') ? 'tinder' : _mq('.communities-page') ? 'communities'
+    : _mq('.photos-page[data-section="photos"]:not(.home-feed-photos)') ? 'photos' : '';
+  document.querySelectorAll('#mtabs .mtab').forEach(b => b.classList.toggle('active', b.dataset.tab === _tab));
   if (artPagObserver) artPagObserver.disconnect();
   try {
     artApplyPagination(mainContent.querySelector('.photos-page'), 'photos');
@@ -11144,6 +11160,7 @@ function buildLeftSidebarBox(popularHTML, section) {
       || p.id === 'page-friends-main' || c.includes('friends-page')
       || p.id === 'page-forums-main' || c.includes('forums-page')
       || p.id === 'page-blinddate-main' || c.includes('blinddate-page')
+      || p.id === 'page-tinder-main' || c.includes('tinder-page')
       || t.includes('תמונות') || t.includes('סיפורים') || t.includes('קומיקס')
       || c.includes('photos-page') || c.includes('stories-page');
   };
@@ -13120,6 +13137,173 @@ async function bdNext() {
   bdStart();
 }
 window.bdNext = bdNext;
+
+// ============================================================
+// עמוד "התאמות" בסגנון טינדר — כרטיסי משתמשים, החלקה ימינה/שמאלה, התאמה הדדית פותחת צ'אט
+// לייקים: website/tinder_likes/{myUid}/{targetUid} = 'like' | 'super'
+// ============================================================
+let tdFilter = 'הכל';
+let tdHistory = [];          // לכפתור "חזרה"
+let tdDrag = null;
+
+function tdSeenKey() { const u = auth.currentUser; return 'tinder_seen_' + (u ? u.uid : 'guest'); }
+function tdSeen() { try { return JSON.parse(localStorage.getItem(tdSeenKey()) || '{}'); } catch (e) { return {}; } }
+function tdMarkSeen(uid, v) {
+  const s = tdSeen();
+  if (v === null) delete s[uid]; else s[uid] = v;
+  try { localStorage.setItem(tdSeenKey(), JSON.stringify(s)); } catch (e) {}
+}
+
+// פרופילים מתוך הגלריות שפורסמו: תמונה אחרונה, גיל, אזור, מין, מספר גלריות
+function tdProfiles() {
+  const me = auth.currentUser ? auth.currentUser.uid : '';
+  const by = {};
+  friendsAllItems().forEach(it => {
+    if (!it || !it.authorId || it.authorId === me || it.isStory || it.type === 'story') return;
+    const img = (it.images && it.images[0]) || it.image;
+    if (!img) return;
+    const t = Number(it.createdAt) || 0;
+    const p = by[it.authorId] || (by[it.authorId] = { uid: it.authorId, name: it.author || 'משתמש', count: 0, t: 0 });
+    p.count++;
+    if (t >= p.t) Object.assign(p, { t, img, age: it.ageRange || '', region: it.region || '', gender: it.category || '', adult: !!it.isAdult, verified: it.verified });
+  });
+  const seen = tdSeen();
+  return Object.values(by)
+    .filter(p => !seen[p.uid])
+    .filter(p => tdFilter === 'הכל' || p.gender === tdFilter)
+    .sort((a, b) => b.t - a.t);
+}
+
+function buildTinderPage() {
+  return `<div class="tinder-page" data-page-id="page-tinder-main"><div class="td-inner">${tdViewHTML()}</div></div>`;
+}
+function tdRender() {
+  const el = mainContent && mainContent.querySelector('.tinder-page .td-inner');
+  if (el) el.innerHTML = tdViewHTML();
+}
+function tdViewHTML() {
+  const list = tdProfiles();
+  const chips = ['הכל', 'אישה', 'גבר', 'זוג'].map(c => `<button type="button" class="td-chip${tdFilter === c ? ' on' : ''}" onclick="tdSetFilter('${c}')">${c === 'הכל' ? 'כולם' : c === 'אישה' ? 'נשים' : c === 'גבר' ? 'גברים' : 'זוגות'}</button>`).join('');
+  const top = list[0], next = list[1];
+  const card = (p, cls) => p ? `
+    <div class="td-card ${cls}" data-uid="${escHtml(p.uid)}">
+      <div class="td-photo${p.adult ? ' is-adult' : ''}" style="background-image:url('${escHtml(p.img)}')"></div>
+      <div class="td-stamp like">LIKE</div><div class="td-stamp nope">NOPE</div>
+      <div class="td-info">
+        <div class="td-name">${escHtml(p.name)}${p.age ? ` <span>${escHtml(String(p.age))}</span>` : ''}${isUserVerified(p.uid, p.name, p.verified) ? verifiedSealHTML(24) : ''}</div>
+        <div class="td-meta">${p.region ? `<span>📍 ${escHtml(p.region)}</span>` : ''}<span>${p.count} גלריות</span></div>
+        <button type="button" class="td-more" onclick="event.stopPropagation(); openUserPage('${artEsc(p.uid)}','${artEsc(p.name)}')" aria-label="לפרופיל">i</button>
+      </div>
+    </div>` : '';
+  const ico = (d) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+  return `
+    <div class="td-head"><h1>התאמות</h1><div class="td-chips">${chips}</div></div>
+    <div class="td-stack">
+      ${top ? card(next, 'behind') + card(top, 'top') : `
+        <div class="td-empty">
+          <div class="td-empty-icon">${ico('<path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.6 2.8 4.5 6.7 4.5c2.2 0 3.6 1.2 5.3 3 1.7-1.8 3.1-3 5.3-3 3.9 0 5.8 4.1 4.3 7.3C19.5 16.4 12 21 12 21z"/>')}</div>
+          <b>אין כרגע עוד פרופילים</b><span>חזרו מאוחר יותר, או החליפו סינון</span>
+          <button type="button" class="td-reset" onclick="tdResetSeen()">להתחיל מחדש</button>
+        </div>`}
+    </div>
+    <div class="td-actions">
+      <button type="button" class="td-btn rewind" onclick="tdRewind()" ${tdHistory.length ? '' : 'disabled'} aria-label="חזרה">${ico('<path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/>')}</button>
+      <button type="button" class="td-btn nope" onclick="tdSwipe('nope')" ${top ? '' : 'disabled'} aria-label="לא">${ico('<path d="M6 6l12 12M18 6 6 18"/>')}</button>
+      <button type="button" class="td-btn super" onclick="tdSwipe('super')" ${top ? '' : 'disabled'} aria-label="סופר לייק"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5L2.5 9.4l6.6-.9z"/></svg></button>
+      <button type="button" class="td-btn like" onclick="tdSwipe('like')" ${top ? '' : 'disabled'} aria-label="לייק"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.6 2.8 4.5 6.7 4.5c2.2 0 3.6 1.2 5.3 3 1.7-1.8 3.1-3 5.3-3 3.9 0 5.8 4.1 4.3 7.3C19.5 16.4 12 21 12 21z"/></svg></button>
+      <button type="button" class="td-btn chat" onclick="tdChatTop()" ${top ? '' : 'disabled'} aria-label="הודעה">${ico('<path d="M4 5h16v11H9l-5 4z"/>')}</button>
+    </div>`;
+}
+function tdSetFilter(f) { tdFilter = f; tdRender(); }
+window.tdSetFilter = tdSetFilter;
+function tdResetSeen() { try { localStorage.removeItem(tdSeenKey()); } catch (e) {} tdHistory = []; tdRender(); }
+window.tdResetSeen = tdResetSeen;
+function tdChatTop() {
+  const c = mainContent.querySelector('.td-card.top');
+  if (!c) return;
+  const p = tdProfiles().find(x => x.uid === c.dataset.uid);
+  if (p && typeof dmStartWith === 'function') dmStartWith(p.uid, p.name);
+}
+window.tdChatTop = tdChatTop;
+
+async function tdSwipe(kind) {
+  const c = mainContent.querySelector('.td-card.top');
+  if (!c) return;
+  const uid = c.dataset.uid;
+  const p = tdProfiles().find(x => x.uid === uid);
+  if (kind !== 'nope' && !(auth.currentUser && !auth.currentUser.isAnonymous)) { openLiveChatLogin(); tdSnapBack(c); return; }
+  c.classList.add('fly', kind);
+  tdMarkSeen(uid, kind);
+  tdHistory.push(uid);
+  setTimeout(tdRender, 320);
+  if (kind === 'nope') return;
+  const me = auth.currentUser.uid;
+  try {
+    await set(ref(db, `website/tinder_likes/${me}/${uid}`), kind);
+    const back = await get(ref(db, `website/tinder_likes/${uid}/${me}`));
+    if (back.exists() && p) tdShowMatch(p);
+  } catch (e) { console.warn('tinder like failed', e); }
+}
+window.tdSwipe = tdSwipe;
+
+async function tdRewind() {
+  const uid = tdHistory.pop();
+  if (!uid) return;
+  const prev = tdSeen()[uid];
+  tdMarkSeen(uid, null);
+  if (prev && prev !== 'nope' && auth.currentUser) { try { await set(ref(db, `website/tinder_likes/${auth.currentUser.uid}/${uid}`), null); } catch (e) {} }
+  tdRender();
+}
+window.tdRewind = tdRewind;
+
+function tdShowMatch(p) {
+  const meName = liveChatUserName();
+  const ov = document.createElement('div');
+  ov.className = 'td-match';
+  ov.innerHTML = `
+    <div class="td-match-card">
+      <h2>It's a Match!</h2>
+      <p>את/ה ו-${escHtml(p.name)} אהבתם אחד את השני</p>
+      <div class="td-match-pics">
+        <span class="td-match-av" ${auth.currentUser ? `data-av-uid="${escHtml(auth.currentUser.uid)}"` : ''}>${escHtml(String(meName || '?').charAt(0))}</span>
+        <span class="td-match-av photo" style="background-image:url('${escHtml(p.img)}')"></span>
+      </div>
+      <button type="button" class="td-match-go">שלחו הודעה</button>
+      <button type="button" class="td-match-skip">להמשיך לגלוש</button>
+    </div>`;
+  document.body.appendChild(ov);
+  if (typeof avatarHydrate === 'function') avatarHydrate(ov);
+  ov.querySelector('.td-match-go').onclick = () => { ov.remove(); dmStartWith(p.uid, p.name); };
+  ov.querySelector('.td-match-skip').onclick = () => ov.remove();
+}
+
+// החלקה בגרירה (עכבר/מגע)
+function tdSnapBack(c) { c.style.transition = 'transform .3s ease'; c.style.transform = ''; c.classList.remove('dragging'); }
+document.addEventListener('pointerdown', (e) => {
+  const c = e.target.closest && e.target.closest('.td-card.top');
+  if (!c || e.target.closest('button')) return;
+  tdDrag = { c, x: e.clientX, y: e.clientY, dx: 0 };
+  c.style.transition = 'none';
+  c.classList.add('dragging');
+  try { c.setPointerCapture(e.pointerId); } catch (er) {}
+});
+document.addEventListener('pointermove', (e) => {
+  if (!tdDrag) return;
+  tdDrag.dx = e.clientX - tdDrag.x;
+  const dy = e.clientY - tdDrag.y;
+  tdDrag.c.style.transform = `translate(${tdDrag.dx}px, ${dy * 0.3}px) rotate(${tdDrag.dx / 14}deg)`;
+  tdDrag.c.style.setProperty('--like', Math.max(0, Math.min(1, tdDrag.dx / 110)));
+  tdDrag.c.style.setProperty('--nope', Math.max(0, Math.min(1, -tdDrag.dx / 110)));
+});
+document.addEventListener('pointerup', () => {
+  if (!tdDrag) return;
+  const { c, dx } = tdDrag;
+  tdDrag = null;
+  c.style.setProperty('--like', 0); c.style.setProperty('--nope', 0);
+  if (dx > 110) { c.style.transition = ''; c.style.transform = ''; tdSwipe('like'); }
+  else if (dx < -110) { c.style.transition = ''; c.style.transform = ''; tdSwipe('nope'); }
+  else tdSnapBack(c);
+});
 
 // ============================================================
 // עמוד "חברים" — טבלת תחרות: הכי הרבה פוסטים, הדירוג הגבוה, הכי הרבה נקודות
@@ -19470,7 +19654,7 @@ onPublicSiteValue((data) => {
     pList = dedupePageList(pList);
     // משאירים רק עמודי תמונות/סיפורים/קהילות (מוחקים כתבות וכל עמוד אחר)
     if (pList.some(p => p && ((p.content || '').includes('photos-page') || (p.content || '').includes('stories-page')))) {
-      pList = pList.filter(p => p && (p.id === 'page-home-feed' || p.id === 'page-subscription-main' || (p.content || '').includes('home-feed-page') || (p.content || '').includes('subscription-page') || (p.content || '').includes('photos-page') || (p.content || '').includes('stories-page') || (p.content || '').includes('ideas-page') || (p.content || '').includes('communities-page') || (p.content || '').includes('info-page') || (p.content || '').includes('requests-page') || (p.content || '').includes('questions-page') || (p.content || '').includes('offers-page') || (p.content || '').includes('friends-page') || (p.content || '').includes('forums-page') || (p.content || '').includes('blinddate-page') || p.id === 'page-ideas-main'));
+      pList = pList.filter(p => p && (p.id === 'page-home-feed' || p.id === 'page-subscription-main' || (p.content || '').includes('home-feed-page') || (p.content || '').includes('subscription-page') || (p.content || '').includes('photos-page') || (p.content || '').includes('stories-page') || (p.content || '').includes('ideas-page') || (p.content || '').includes('communities-page') || (p.content || '').includes('info-page') || (p.content || '').includes('requests-page') || (p.content || '').includes('questions-page') || (p.content || '').includes('offers-page') || (p.content || '').includes('friends-page') || (p.content || '').includes('forums-page') || (p.content || '').includes('blinddate-page') || (p.content || '').includes('tinder-page') || p.id === 'page-ideas-main'));
     }
     // מוודאים שעמוד "רעיונות" קיים
     const _ipd = pList.find(p => p && p.id === 'page-ideas-main');
@@ -19484,6 +19668,7 @@ onPublicSiteValue((data) => {
     // מוודאים שעמוד "קהילות" תמיד קיים (עם תוכן פלייסהולדר תקין)
     const _frp = pList.find(p => p && p.id === 'page-friends-main');
     if (!_frp) pList.push({ id: 'page-friends-main', title: 'חברים', content: '<div class="friends-page" data-page-id="page-friends-main"></div>' });
+    if (!pList.find(p => p && p.id === 'page-tinder-main')) pList.push({ id: 'page-tinder-main', title: 'התאמות', content: '<div class="tinder-page" data-page-id="page-tinder-main"></div>' });
     if (!pList.find(p => p && p.id === 'page-blinddate-main')) pList.push({ id: 'page-blinddate-main', title: 'Blind Date', content: '<div class="blinddate-page" data-page-id="page-blinddate-main"></div>' });
     if (!pList.find(p => p && p.id === 'page-forums-main')) pList.push({ id: 'page-forums-main', title: 'פורומים', content: '<div class="forums-page" data-page-id="page-forums-main"></div>' });
     const _cp = pList.find(p => p && p.id === 'page-communities-main');

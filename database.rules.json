@@ -259,6 +259,16 @@
         }
       },
 
+      "tinder_likes": {
+        "$uid": {
+          "$target": {
+            ".read": "auth != null && (auth.uid === $uid || auth.uid === $target)",
+            ".write": "auth != null && auth.token.firebase.sign_in_provider !== 'anonymous' && auth.uid === $uid && $uid !== $target",
+            ".validate": "!newData.exists() || newData.val() === 'like' || newData.val() === 'super'"
+          }
+        }
+      },
+
       "blind_queue": {
         ".read": "auth != null && auth.token.firebase.sign_in_provider !== 'anonymous'",
         "$uid": {
