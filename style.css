@@ -7360,6 +7360,9 @@ body {
   .hw-cards { height: 290px; max-width: 420px; width: 100%; margin: 0 auto; }
   .hw-card { height: 240px; }
   .hw-card-brand { font-size: 15px; }
+  /* מובייל: בכניסה לאתר רואים מיד את שלושת הכרטיסים — הכותרת והכפתור מתחתם */
+  .hw-cards { order: -1; }
+  .hw-inner { padding-top: 12px; }
 }
 
 /* ===================================================================
