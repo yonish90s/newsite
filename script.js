@@ -12749,17 +12749,19 @@ const AV_HAIR_C_NAMES = ['שחור', 'חום', 'בלונדיני', "ג'ינג'י
 const AV_EYE_C = ['#6b4423', '#3b82f6', '#2f9e5b', '#1a1a1a'];   // חום · כחול · ירוק · שחור
 const AV_EYE_C_NAMES = ['חום', 'כחול', 'ירוק', 'שחור'];
 const AV_BEARD_NAMES = ['בלי', 'שפם', 'זקן'];
-const AV_SEX_NAMES = ['לא נבחר', 'קוק', 'בול'];                 // 0 = לא נבחר
+const AV_SEX_NAMES = ['לא נבחר', 'גבר', 'אישה'];                // 0 = לא נבחר
+// תפקיד לפי מין: גבר — קוק / בול · אישה — שולטת / נשלטת
+const AV_ROLE_NAMES = { 1: ['', 'קוק', 'בול'], 2: ['', 'שולטת', 'נשלטת'] };
 // סמלי ♂ / ♀ מצוירים (תווי הסמלים עצמם מסוננים באתר)
 const AV_SEX_SIGN = ['',
   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="14" r="6"/><path d="M14.5 9.5 21 3M15 3h6v6"/></svg>',
   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="9" r="6"/><path d="M12 15v7M8.5 18.5h7"/></svg>'];
-const AV_DEFAULT = { s: 0, h: 1, hc: 1, ec: 0, f: 0, g: 0 };
+const AV_DEFAULT = { s: 0, h: 1, hc: 1, ec: 0, f: 0, g: 0, r: 0 };
 const AV_INK = '#1e1033';
 
 function avNormalize(cfg) {
   const out = Object.assign({}, AV_DEFAULT);
-  const lim = { s: AV_SKIN.length, h: AV_HAIR_NAMES.length, hc: AV_HAIR_C.length, ec: AV_EYE_C.length, f: AV_BEARD_NAMES.length, g: AV_SEX_NAMES.length };
+  const lim = { s: AV_SKIN.length, h: AV_HAIR_NAMES.length, hc: AV_HAIR_C.length, ec: AV_EYE_C.length, f: AV_BEARD_NAMES.length, g: AV_SEX_NAMES.length, r: 3 };
   Object.keys(out).forEach(k => {
     const v = cfg && Number(cfg[k]);
     if (Number.isInteger(v) && v >= 0 && v < lim[k]) out[k] = v;
@@ -12830,7 +12832,7 @@ function avatarRefresh(uid) {
 // --- עורך הדמות ---
 let avEdit = null;
 let avTab = 'sex';
-const AV_TABS = [['sex', 'מין'], ['skin', 'צבע עור'], ['hair', 'שיער'], ['eyes', 'עיניים'], ['beard', 'זקן']];
+const AV_TABS = [['sex', 'מין ותפקיד'], ['skin', 'צבע עור'], ['hair', 'שיער'], ['eyes', 'עיניים'], ['beard', 'זקן']];
 function avOptionsHTML() {
   // כל אפשרות מוצגת כדמות קטנה + שם
   const shapes = (key, names, label) => `
@@ -12840,8 +12842,11 @@ function avOptionsHTML() {
   switch (avTab) {
     case 'sex': return `
       <div class="av-group"><div class="av-group-title">מין</div><div class="av-sex">
-        ${[1, 2].map(i => `<button type="button" class="av-sex-btn${avEdit.g === i ? ' on' : ''}" onclick="avSet('g',${i})"><b>${AV_SEX_SIGN[i]}</b><span>${AV_SEX_NAMES[i]}</span></button>`).join('')}
-      </div></div>`;
+        ${[1, 2].map(i => `<button type="button" class="av-sex-btn${avEdit.g === i ? ' on' : ''}" onclick="avSet('g',${i}); avSet('r',0)"><b>${AV_SEX_SIGN[i]}</b><span>${AV_SEX_NAMES[i]}</span></button>`).join('')}
+      </div></div>
+      ${avEdit.g ? `<div class="av-group"><div class="av-group-title">תפקיד</div><div class="av-roles">
+        ${[1, 2].map(i => `<button type="button" class="av-role-btn${avEdit.r === i ? ' on' : ''}" onclick="avSet('r',${i})">${AV_ROLE_NAMES[avEdit.g][i]}</button>`).join('')}
+      </div></div>` : ''}`;
     case 'skin': return shapes('s', AV_SKIN_NAMES, 'צבע עור');
     case 'hair': return shapes('h', AV_HAIR_NAMES, 'תסרוקת') + shapes('hc', AV_HAIR_C_NAMES, 'צבע שיער');
     case 'eyes': return shapes('ec', AV_EYE_C_NAMES, 'צבע עיניים');
@@ -12900,7 +12905,7 @@ function avSetTab(k) { avTab = k; avRenderEditor(); }
 window.avSetTab = avSetTab;
 function avRandom() {
   const r = (n) => Math.floor(Math.random() * n);
-  avEdit = { s: r(AV_SKIN.length), h: r(AV_HAIR_NAMES.length), hc: r(AV_HAIR_C.length), ec: r(AV_EYE_C.length), f: r(AV_BEARD_NAMES.length), g: avEdit ? avEdit.g : 0 };
+  avEdit = { s: r(AV_SKIN.length), h: r(AV_HAIR_NAMES.length), hc: r(AV_HAIR_C.length), ec: r(AV_EYE_C.length), f: r(AV_BEARD_NAMES.length), g: avEdit ? avEdit.g : 0, r: avEdit ? avEdit.r : 0 };
   avRenderEditor();
 }
 window.avRandom = avRandom;
@@ -15632,7 +15637,12 @@ function userWatchHTML(st) {
           <small>${r.myRating ? `הדירוג שלך: <b class="uw-rate-num">${r.myRating}/5</b>` : 'לחצו לדירוג המשתמש'}</small>
         </div>`}
         <div class="uw-details">
-          ${(() => { const g = avNormalize(profile.avatar).g; return row('#ff9f0a', 'מין', g ? `<span class="uw-sex g${g}"><b>${AV_SEX_SIGN[g]}</b>${AV_SEX_NAMES[g]}</span>` : none); })()}
+          ${(() => {
+            const av = avNormalize(profile.avatar);
+            const role = av.g && av.r ? AV_ROLE_NAMES[av.g][av.r] : '';
+            return row('#ff9f0a', 'מין', av.g ? `<span class="uw-sex g${av.g}"><b>${AV_SEX_SIGN[av.g]}</b>${AV_SEX_NAMES[av.g]}</span>` : none)
+              + row('#ff375f', 'תפקיד', role ? `<span class="uw-role">${escHtml(role)}</span>` : none);
+          })()}
           ${row('#ffd60a', 'מאיפה', where ? `<span class="uw-text">${escHtml(where)}</span>` : none)}
           ${row('#64d2ff', 'טלגרם', tg ? `<a class="uw-link" href="https://t.me/${encodeURIComponent(tg)}" target="_blank" rel="noopener" dir="ltr">@${escHtml(tg)}</a>` : none)}
           ${row('#bf5af2', 'מייל', profile.email ? `<button type="button" class="uw-link" dir="ltr" onclick="copyEmailToClipboard('${artEsc(profile.email)}', event)" title="העתקת המייל">${escHtml(profile.email)}</button>` : none)}
