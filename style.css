@@ -2256,15 +2256,17 @@ body:not(.edit-mode) .hotspot-delete-btn {
   gap: 6px !important;
   padding: 6px 14px !important;
   font-size: 13px !important;
-  font-weight: 800 !important;
-  border-radius: 10px !important;
-  background: linear-gradient(135deg, #f472b6, #db2777) !important;
+  font-weight: 700 !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.05) !important;
   color: #ffffff !important;
-  border: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
   text-decoration: none !important;
   white-space: nowrap !important;
   cursor: pointer !important;
-  box-shadow: 0 3px 10px rgba(147, 51, 234, 0.25) !important;
+  box-shadow: none !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
   transition: all 0.2s ease !important;
 }
 .photos-page .photo-card-links .art-telegram-btn svg,
@@ -2277,27 +2279,31 @@ body:not(.edit-mode) .hotspot-delete-btn {
 .ideas-page .photo-card-links .art-telegram-btn:hover,
 .stories-page .photo-card-links .art-telegram-btn:hover {
   transform: translateY(-1px) !important;
-  box-shadow: 0 5px 14px rgba(147, 51, 234, 0.35) !important;
-  opacity: 0.96 !important;
+  background: rgba(255, 255, 255, 0.16) !important;
+  border-color: rgba(255, 255, 255, 0.5) !important;
   color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
 }
 .photos-page .photo-card-links .art-telegram-btn:active,
 .ideas-page .photo-card-links .art-telegram-btn:active,
 .stories-page .photo-card-links .art-telegram-btn:active {
-  transform: scale(0.97) !important;
+  transform: scale(0.96) !important;
 }
 
-/* כפתור שמירה — שומר על הגרדיאנט, ומשתנה במצב שמור */
+/* כפתור שמירה — שקוף ונקי, משתנה במצב שמור */
 .photos-page .photo-card-links .art-save-btn,
 .ideas-page .photo-card-links .art-save-btn,
 .stories-page .photo-card-links .art-save-btn,
 .photos-page .photo-card-links button:first-child,
 .ideas-page .photo-card-links button:first-child,
 .stories-page .photo-card-links button:first-child {
-  background: linear-gradient(135deg, #f472b6, #db2777) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
   color: #ffffff !important;
-  border: none !important;
-  box-shadow: 0 3px 10px rgba(147, 51, 234, 0.25) !important;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+  border-radius: 999px !important;
+  box-shadow: none !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
 }
 .photos-page .photo-card-links .art-save-btn svg,
 .ideas-page .photo-card-links .art-save-btn svg,
@@ -2310,9 +2316,15 @@ body:not(.edit-mode) .hotspot-delete-btn {
 .photos-page .photo-card-links .art-save-btn.is-saved,
 .ideas-page .photo-card-links .art-save-btn.is-saved,
 .stories-page .photo-card-links .art-save-btn.is-saved {
-  background: linear-gradient(135deg, #10b981, #059669) !important;
-  color: #ffffff !important;
-  box-shadow: 0 3px 10px rgba(16, 185, 129, 0.3) !important;
+  background: rgba(16, 185, 129, 0.18) !important;
+  border-color: rgba(16, 185, 129, 0.6) !important;
+  color: #34d399 !important;
+  box-shadow: none !important;
+}
+.photos-page .photo-card-links .art-save-btn.is-saved svg,
+.ideas-page .photo-card-links .art-save-btn.is-saved svg,
+.stories-page .photo-card-links .art-save-btn.is-saved svg {
+  stroke: #34d399 !important;
 }
 .photos-page .photo-card-links .art-telegram-btn.is-disabled,
 .ideas-page .photo-card-links .art-telegram-btn.is-disabled,
@@ -2592,14 +2604,16 @@ body:not(.edit-mode) .hotspot-delete-btn {
     align-items: center !important;
     justify-content: center !important;
     gap: 6px !important;
-    padding: 7px 14px !important;
+    padding: 6px 12px !important;
     font-size: 13px !important;
-    font-weight: 800 !important;
-    border-radius: 10px !important;
-    background: linear-gradient(135deg, #f472b6, #db2777) !important;
+    font-weight: 700 !important;
+    border-radius: 999px !important;
+    background: rgba(255, 255, 255, 0.05) !important;
     color: #ffffff !important;
-    border: none !important;
-    box-shadow: 0 3px 10px rgba(147, 51, 234, 0.25) !important;
+    border: 1px solid rgba(255, 255, 255, 0.22) !important;
+    box-shadow: none !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
     white-space: nowrap !important;
     flex-shrink: 0 !important;
   }
@@ -2617,15 +2631,25 @@ body:not(.edit-mode) .hotspot-delete-btn {
   .photos-page[data-section="photos"] .photo-card-links button:first-child,
   .photos-page.home-feed-photos .photo-card-links button:first-child,
   .stories-page .photo-card-links button:first-child {
-    background: linear-gradient(135deg, #f472b6, #db2777) !important;
+    background: rgba(255, 255, 255, 0.05) !important;
     color: #ffffff !important;
-    border: none !important;
+    border: 1px solid rgba(255, 255, 255, 0.22) !important;
+    border-radius: 999px !important;
+    box-shadow: none !important;
   }
   .photos-page[data-section="photos"] .photo-card-links .art-save-btn.is-saved,
   .photos-page.home-feed-photos .photo-card-links .art-save-btn.is-saved,
   .stories-page .photo-card-links .art-save-btn.is-saved {
-    background: linear-gradient(135deg, #10b981, #059669) !important;
-    box-shadow: 0 3px 10px rgba(16, 185, 129, 0.3) !important;
+    background: rgba(16, 185, 129, 0.18) !important;
+    border-color: rgba(16, 185, 129, 0.6) !important;
+    color: #34d399 !important;
+    box-shadow: none !important;
+  }
+  .photos-page[data-section="photos"] .photo-card-links .art-save-btn.is-saved svg,
+  .photos-page.home-feed-photos .photo-card-links .art-save-btn.is-saved svg,
+  .stories-page .photo-card-links .art-save-btn.is-saved svg,
+  .photos-page[data-section="photos"] .photo-card-links button:first-child.is-saved svg {
+    stroke: #34d399 !important;
   }
   .photos-page[data-section="photos"] .photo-card-links button:first-child svg,
   .photos-page.home-feed-photos .photo-card-links button:first-child svg,
@@ -6972,21 +6996,34 @@ html.a11y-images body *:not(.a11y-root, .a11y-root *) { background-image: none !
 .home-feed-open:hover { transform: translateY(-1px); box-shadow: var(--btn-shadow-hover); }
 .home-feed-open:active { transform: scale(0.97); }
 
-/* --- כפתורי כרטיס (שמירה / טלגרם / אימייל): גלולה, גרדיאנט סגול --- */
+/* --- כפתורי כרטיס (שמירה / טלגרם / אימייל): שקופים נקיים --- */
 .photo-card-links .art-telegram-btn,
 .photo-card-links .art-save-btn {
   border-radius: 999px !important;
-  background: var(--btn-grad) !important;
-  box-shadow: 0 3px 10px rgba(124, 58, 237, 0.28) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+}
+.photo-card-links .art-telegram-btn svg,
+.photo-card-links .art-save-btn svg {
+  stroke: #ffffff !important;
 }
 .photo-card-links .art-telegram-btn:hover,
-.photo-card-links .art-save-btn:hover { box-shadow: var(--btn-shadow-hover) !important; }
-.photo-card-links .art-save-btn.is-saved {
-  background: linear-gradient(135deg, #f5b400, #ffd23f) !important;
-  color: #2e1065 !important;
-  box-shadow: 0 3px 10px rgba(245, 180, 0, 0.35) !important;
+.photo-card-links .art-save-btn:hover {
+  background: rgba(255, 255, 255, 0.16) !important;
+  border-color: rgba(255, 255, 255, 0.5) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
 }
-.photo-card-links .art-save-btn.is-saved svg { stroke: #2e1065 !important; }
+.photo-card-links .art-save-btn.is-saved {
+  background: rgba(16, 185, 129, 0.18) !important;
+  border-color: rgba(16, 185, 129, 0.6) !important;
+  color: #34d399 !important;
+  box-shadow: none !important;
+}
+.photo-card-links .art-save-btn.is-saved svg { stroke: #34d399 !important; }
 
 /* --- טאבים/צ'יפים (סינונים, קהילה, צ'אט...) --- */
 .sidebar-tab-pill { border-radius: 999px !important; transition: all .15s ease !important; }
@@ -7220,21 +7257,25 @@ body {
 .home-feed-section .photo-card-links .art-telegram-btn,
 .home-feed-section .photo-card-links .art-save-btn {
   width: auto !important;
-  background: #f3efff !important;
-  color: #5b21b6 !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+  border-radius: 999px !important;
   box-shadow: none !important;
   padding: 6px 12px !important;
   font-size: 12.5px !important;
   font-weight: 700 !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
 }
 .home-feed-page .home-feed-section .photo-card-links button:first-child svg,
 .home-feed-section .photo-card-links .art-telegram-btn svg,
-.home-feed-section .photo-card-links .art-save-btn svg { stroke: #5b21b6 !important; }
+.home-feed-section .photo-card-links .art-save-btn svg { stroke: #ffffff !important; }
 .home-feed-section .photo-card-links .art-telegram-btn:hover,
-.home-feed-section .photo-card-links .art-save-btn:hover { background: var(--brand) !important; color: #fff !important; transform: none !important; }
+.home-feed-section .photo-card-links .art-save-btn:hover { background: rgba(255, 255, 255, 0.16) !important; border-color: rgba(255, 255, 255, 0.5) !important; color: #fff !important; transform: none !important; }
 .home-feed-section .photo-card-links .art-telegram-btn:hover svg,
 .home-feed-section .photo-card-links .art-save-btn:hover svg { stroke: #fff !important; }
-.home-feed-section .photo-card-links .art-save-btn.is-saved { background: var(--warm-grad) !important; color: var(--brand-ink) !important; }
+.home-feed-section .photo-card-links .art-save-btn.is-saved { background: rgba(16, 185, 129, 0.18) !important; border-color: rgba(16, 185, 129, 0.6) !important; color: #34d399 !important; }
 
 /* רצועת ה-Hero: כרטיסים עגולים יותר על השחור */
 .home-feed-page .qu-hero-wrap .qu-guide,
