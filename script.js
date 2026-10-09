@@ -20339,44 +20339,25 @@ function setSectionCategoryFilter(section, cat) {
 }
 window.setSectionCategoryFilter = setSectionCategoryFilter;
 
-// עמוד התמונות: הקטגוריות כריבועים (תמונה + שם), בסגנון קטלוג. לחיצה מסננת לפי הקטגוריה.
-// תמונה קבועה לריבוע של קטגוריה (במקום התמונה מהגלריה האחרונה)
-const PHOTO_CAT_ICONS = {
-  'כלובון': './kloovon.png',
-  'תמונות גולשים': './kloovon.png'
-};
-
+// עמוד התמונות: הקטגוריות כריבועים (שם + מספר גלריות, בלי תמונה). לחיצה מסננת לפי הקטגוריה.
 function photoCategoryTilesHTML(allAlbums) {
   const active = getSectionCategoryFilter('photos');
   const list = Array.isArray(allAlbums) ? allAlbums : [];
-  const newest = (arr) => arr.slice().sort((a, b) => (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0));
-  const coverOf = (cat) => {
-    const items = cat === 'הכל' ? list : list.filter(a => {
-      const c = a.category || '';
-      const hay = `${a.title || ''} ${a.summary || ''} ${a.desc || ''} ${c}`;
-      if (cat === 'לעסקים') return c.includes('עסק') || hay.includes('עסק');
-      if (cat === 'כללי') return !(c.includes('עסק') || hay.includes('עסק'));
-      return c === cat || hay.includes(cat);
-    });
-    const withImg = newest(items).find(a => (a.images && a.images[0]) || a.image);
-    return { img: withImg ? ((withImg.images && withImg.images[0]) || withImg.image) : '', adult: !!(withImg && withImg.isAdult), n: items.length };
-  };
+  const countOf = (cat) => cat === 'הכל' ? list.length : list.filter(a => {
+    const c = a.category || '';
+    const hay = `${a.title || ''} ${a.summary || ''} ${a.desc || ''} ${c}`;
+    if (cat === 'לעסקים') return c.includes('עסק') || hay.includes('עסק');
+    if (cat === 'כללי') return !(c.includes('עסק') || hay.includes('עסק'));
+    return c === cat || hay.includes(cat);
+  }).length;
   const cats = ['הכל', ...PHOTO_BAR_CATEGORIES];
-  const tile = (cat) => {
-    const c = coverOf(cat);
-    if (PHOTO_CAT_ICONS[cat] && !c.img) { c.img = PHOTO_CAT_ICONS[cat]; c.adult = false; }
-    else if (PHOTO_CAT_ICONS[cat] && cat === 'כלובון') { c.img = PHOTO_CAT_ICONS[cat]; c.adult = false; }
-    return `
+  const tile = (cat) => `
       <button type="button" class="pcat-tile${active === cat ? ' active' : ''}" onclick="setSectionCategoryFilter('photos','${artEsc(cat)}')">
-        <span class="pcat-img${c.adult ? ' is-adult' : ''}">${c.img
-          ? `<img src="${escHtml(c.img)}" alt="" onerror="if(this.src.indexOf('VeniceAI')===-1)this.src='./VeniceAI_4HW7DykOczKD6F_0 (1).png'" loading="lazy">`
-          : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 9"/></svg>`}</span>
         <span class="pcat-name">${escHtml(cat)}</span>
-        <span class="pcat-count">${c.n} גלריות</span>
+        <span class="pcat-count">${countOf(cat)} גלריות</span>
       </button>`;
-  };
   const editTile = (isAdmin() || isEditMode)
-    ? `<button type="button" class="pcat-tile edit" onclick="openCategoriesModal('photos')"><span class="pcat-img"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span><span class="pcat-name">ניהול קטגוריות</span></button>`
+    ? `<button type="button" class="pcat-tile edit" onclick="openCategoriesModal('photos')"><span class="pcat-name">+ ניהול קטגוריות</span></button>`
     : '';
   return `<div class="pcat-tiles">${cats.map(tile).join('')}${editTile}</div>`;
 }

@@ -9272,3 +9272,7 @@ html.age-not-verified .td-photo.is-adult { filter: blur(22px); transform: scale(
   }
 }
 
+/* ריבועי הקטגוריות בלי תמונה — שם ומספר גלריות בלבד */
+.pcat-tiles { grid-auto-columns: 158px; }
+.pcat-tile { justify-content: center; gap: 6px; min-height: 92px; padding: 16px 12px; }
+.pcat-tile .pcat-count { margin-top: 0; }
