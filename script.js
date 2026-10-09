@@ -22807,6 +22807,7 @@ function startSiteTour(force, edit) {
 window.startSiteTour = startSiteTour;
 
 function endSiteTour() {
+  try { localStorage.setItem(SITE_TOUR_KEY, '1'); } catch (e) {}
   if (__tourPicking) siteTourStopPick();
   __tourEdit = false;
   __tourDraft = null;
@@ -22998,13 +22999,15 @@ function openSiteTourEditor() {
 window.openSiteTourEditor = openSiteTourEditor;
 
 // מתחילים אחרי אישור שער הגיל (או מיד בכל כניסה לאתר)
+// הסיור קופץ רק בכניסה הראשונה לאתר; אחרי סגירה/סיום הוא לא מוצג שוב
+function siteTourSeen() { try { return localStorage.getItem(SITE_TOUR_KEY) === '1'; } catch (e) { return false; } }
 function maybeStartSiteTour() {
-  try { localStorage.removeItem(SITE_TOUR_KEY); } catch (e) {}
+  if (siteTourSeen() || window.__tourAutoStarted) return;
+  window.__tourAutoStarted = true;
   setTimeout(() => startSiteTour(true), 1200);
 }
 window.maybeStartSiteTour = maybeStartSiteTour;
 try {
-  localStorage.removeItem(SITE_TOUR_KEY);
   if (sessionStorage.getItem('age_verified') === 'true') maybeStartSiteTour();
 } catch (e) {}
 
