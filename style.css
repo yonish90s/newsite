@@ -9160,3 +9160,19 @@ html.age-not-verified .td-photo.is-adult { filter: blur(22px); transform: scale(
 .av-shape svg { width: 100%; aspect-ratio: 1; height: auto; }
 .av-shape span { font-size: 13px; font-weight: 800; color: #e9e3ff; }
 .av-shapes { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); }
+/* בחירת מין בעורך הדמות + תצוגה בשעון */
+.av-sex { display: flex; gap: 12px; }
+.av-sex-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 18px 10px; border-radius: 20px; border: 2px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04); color: #fff; font: inherit; cursor: pointer; }
+.av-sex-btn b { font-size: 40px; line-height: 1; }
+.av-sex-btn span { font-size: 17px; font-weight: 900; }
+.av-sex-btn:nth-child(1) b { color: #4cc3ff; }
+.av-sex-btn:nth-child(2) b { color: #ff6bb5; }
+.av-sex-btn.on { border-color: #ec4899; background: rgba(236, 72, 153, 0.14); }
+.uw-sex { display: inline-flex; align-items: center; gap: 6px; font-weight: 800; }
+.uw-sex b { font-size: 18px; }
+.uw-sex.g1 b { color: #4cc3ff; }
+.uw-sex.g2 b { color: #ff6bb5; }
+.av-sex-btn b { display: grid; place-items: center; }
+.av-sex-btn b svg { width: 42px; height: 42px; }
+.uw-sex b { display: inline-grid; place-items: center; }
+.uw-sex b svg { width: 18px; height: 18px; }
