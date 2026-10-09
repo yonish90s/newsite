@@ -9176,3 +9176,10 @@ html.age-not-verified .td-photo.is-adult { filter: blur(22px); transform: scale(
 .av-sex-btn b svg { width: 42px; height: 42px; }
 .uw-sex b { display: inline-grid; place-items: center; }
 .uw-sex b svg { width: 18px; height: 18px; }
+/* דירוג בכוכבים: ריחוף ממלא את כל הכוכבים עד הנבחר (משמאל לימין: 1 → 5) */
+.uw-stars:not(.static):hover .uw-star { color: #ffd60a; }
+.uw-stars:not(.static) .uw-star:hover ~ .uw-star { color: #3a3a3c; }
+.uw-stars.static .uw-star { cursor: default; }
+.uw-stars.static .uw-star:hover { transform: none; }
+.uw-rate-num { color: #ffd60a; font-size: 15px; }
+.uw-rate small b { color: #ffd60a; }

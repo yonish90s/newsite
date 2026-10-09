@@ -15157,6 +15157,7 @@ function getUserRatingData(targetUid) {
 function rateUserStars(targetUid, stars) {
   if (!targetUid) return;
   const myUid = auth.currentUser ? auth.currentUser.uid : 'guest';
+  if (myUid === targetUid) { if (typeof showCopyToast === 'function') showCopyToast('אי אפשר לדרג את עצמך'); return; }
   try {
     const raw = localStorage.getItem(`user_ratings_${targetUid}`);
     const data = raw ? JSON.parse(raw) : { ratings: {} };
@@ -15591,6 +15592,7 @@ function userWatchHTML(st) {
   const tg = String(profile.telegram || '').trim().replace(/^https?:\/\/t\.me\//i, '').replace(/^@/, '');
   const none = '<span class="uw-none">לא צוין</span>';
   const chips = (arr, cls) => arr.length ? arr.map(t => `<span class="uw-chip ${cls}">${escHtml(t)}</span>`).join('') : none;
+  const isOwn = !!(st.uid && auth.currentUser && !auth.currentUser.isAnonymous && auth.currentUser.uid === st.uid);
   const filled = r.myRating || Math.round(avg);
   const stars = [1, 2, 3, 4, 5].map(n =>
     `<button type="button" class="uw-star${n <= filled ? ' on' : ''}" onclick="rateUserStars('${artEsc(st.uid || '')}', ${n})" title="דרג ${n} כוכבים">★</button>`).join('');
@@ -15620,10 +15622,15 @@ function userWatchHTML(st) {
             <span style="color:#2ee6f5">${r.count}<small>מדרגים</small></span>
           </div>
         </div>
+        ${isOwn ? `
+        <div class="uw-rate own">
+          <div class="uw-stars static">${[1, 2, 3, 4, 5].map(n => `<span class="uw-star${n <= Math.round(avg) ? ' on' : ''}">★</span>`).join('')}</div>
+          <small>${r.count ? `הדירוג שלך מאחרים: <b>${avg}</b>/5 (${r.count})` : 'עוד לא דירגו אותך'}</small>
+        </div>` : `
         <div class="uw-rate">
           <div class="uw-stars">${stars}</div>
-          <small>${r.myRating ? `הדירוג שלך: ${r.myRating}★` : 'לחצו לדירוג המשתמש'}</small>
-        </div>
+          <small>${r.myRating ? `הדירוג שלך: <b class="uw-rate-num">${r.myRating}/5</b>` : 'לחצו לדירוג המשתמש'}</small>
+        </div>`}
         <div class="uw-details">
           ${(() => { const g = avNormalize(profile.avatar).g; return row('#ff9f0a', 'מין', g ? `<span class="uw-sex g${g}"><b>${AV_SEX_SIGN[g]}</b>${AV_SEX_NAMES[g]}</span>` : none); })()}
           ${row('#ffd60a', 'מאיפה', where ? `<span class="uw-text">${escHtml(where)}</span>` : none)}
