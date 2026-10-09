@@ -15455,6 +15455,156 @@ function userWatchRender() {
   const el = document.getElementById('user-page-watch');
   if (el && window._upState) el.innerHTML = userWatchHTML(window._upState);
 }
+window.userWatchRender = userWatchRender;
+
+// ============================================================
+// "מה אני אוהב/ת" — קינקים מדורגים (1–10) + גרף רדאר מסכם בעמוד המשתמש
+// נשמר ב-website/users/{uid}/profile/kinks = [{ n: 'BDSM', s: 8 }, ...]
+// ============================================================
+const KINK_CATALOG = [
+  'BDSM', 'שליטה נשית', 'שליטה גברית', 'כניעה', 'קשירה', 'רולפליי', 'פטיש רגליים', 'לטקס ועור',
+  'משחקי כוח', 'אקסהיביציוניזם', 'מציצנות', 'שלישיות', 'סווינגרס', 'קאקולד', 'עיסוי ארוטי', 'טנטרה',
+  'הלבשה תחתונה', 'צעצועים', 'משחקי טמפרטורה', 'דיבור מלוכלך'
+];
+const KINK_MAX = 30;
+
+function kinksNormalize(arr) {
+  const seen = new Set();
+  return (Array.isArray(arr) ? arr : [])
+    .map(k => ({ n: String((k && k.n) || '').trim().slice(0, 30), s: Math.max(1, Math.min(10, Math.round(Number(k && k.s) || 5))) }))
+    .filter(k => k.n && !seen.has(k.n) && seen.add(k.n))
+    .slice(0, KINK_MAX)
+    .sort((a, b) => b.s - a.s);
+}
+
+// רשימה ממוספרת: 1 = הכי אוהב/ת
+function kinksListHTML(kinks) {
+  return `<ol class="uw-kinks">${kinks.map((k, i) => `
+    <li><span class="uw-k-rank">${i + 1}</span><span class="uw-k-name">${escHtml(k.n)}</span>
+      <span class="uw-k-bar"><i style="width:${k.s * 10}%"></i></span><span class="uw-k-score">${k.s}</span></li>`).join('')}</ol>`;
+}
+
+// גרף רדאר (מתומן) של עד 8 הקינקים המובילים
+function kinksRadarHTML(kinks) {
+  const top = kinks.slice(0, 8);
+  const n = top.length;
+  if (n < 3) return '';
+  const cx = 160, cy = 150, R = 100;
+  const pt = (i, r) => {
+    const a = -Math.PI / 2 + (2 * Math.PI * i) / n;
+    return [cx + r * Math.cos(a), cy + r * Math.sin(a)];
+  };
+  const poly = (r) => top.map((_, i) => pt(i, r).map(v => v.toFixed(1)).join(',')).join(' ');
+  const rings = [1, 0.75, 0.5, 0.25].map((f, j) => `<polygon points="${poly(R * f)}" fill="${['#1c1c1e', '#232326', '#2a2a2e', '#323236'][j]}" stroke="rgba(255,255,255,.07)"/>`).join('');
+  const axes = top.map((_, i) => { const [x, y] = pt(i, R); return `<line x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="rgba(255,255,255,.08)"/>`; }).join('');
+  const shape = top.map((k, i) => pt(i, R * k.s / 10).map(v => v.toFixed(1)).join(',')).join(' ');
+  const labels = top.map((k, i) => {
+    const [x, y] = pt(i, R + 22);
+    const anchor = Math.abs(x - cx) < 8 ? 'middle' : (x > cx ? 'start' : 'end');
+    const name = k.n.length > 12 ? k.n.slice(0, 11) + '…' : k.n;
+    const yy = y + (y < cy - 10 ? -6 : y > cy + 10 ? 10 : 0);
+    return `<text x="${x.toFixed(1)}" y="${yy.toFixed(1)}" text-anchor="${anchor}" class="uw-r-label">${escHtml(name)}</text>
+      <text x="${x.toFixed(1)}" y="${(yy + 15).toFixed(1)}" text-anchor="${anchor}" class="uw-r-val">${k.s}/10</text>`;
+  }).join('');
+  return `
+    <div class="uw-summary">
+      <div class="uw-summary-title">סיכום — מה הכי אוהב/ת</div>
+      <svg class="uw-radar" viewBox="-10 -6 340 326">
+        ${rings}${axes}
+        <polygon points="${shape}" fill="rgba(236,72,153,.28)" stroke="#ec4899" stroke-width="2.5" stroke-linejoin="round"/>
+        ${top.map((k, i) => { const [x, y] = pt(i, R * k.s / 10); return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.5" fill="#ffd166"/>`; }).join('')}
+        ${labels}
+      </svg>
+    </div>`;
+}
+
+// --- עורך ---
+let kEdit = [];
+function openKinksEditor() {
+  const user = auth.currentUser;
+  if (!user || user.isAnonymous) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
+  const st = window._upState;
+  kEdit = kinksNormalize(st && st.uid === user.uid && st.profile ? st.profile.kinks : []);
+  let m = document.getElementById('kinks-editor');
+  if (!m) {
+    m = document.createElement('div');
+    m.id = 'kinks-editor';
+    m.className = 'av-overlay';
+    m.addEventListener('click', (e) => { if (e.target === m) m.style.display = 'none'; });
+    document.body.appendChild(m);
+  }
+  m.style.display = 'flex';
+  kinksRenderEditor();
+}
+window.openKinksEditor = openKinksEditor;
+function kinksRenderEditor() {
+  const m = document.getElementById('kinks-editor');
+  if (!m) return;
+  const sel = new Set(kEdit.map(k => k.n));
+  m.innerHTML = `
+    <div class="av-modal ke-modal" role="dialog" aria-label="מה אני אוהב/ת">
+      <button type="button" class="av-close" onclick="document.getElementById('kinks-editor').style.display='none'" aria-label="סגירה">✕</button>
+      <h2>מה אני אוהב/ת</h2>
+      <p class="ke-hint">בחרו כמה שרוצים, ודרגו כל אחד מ-1 עד 10. הרשימה מסודרת לפי מה שהכי אוהבים.</p>
+      <div class="ke-catalog">${KINK_CATALOG.map(n => `<button type="button" class="ke-chip${sel.has(n) ? ' on' : ''}" onclick="kinksToggle('${artEsc(n)}')">${sel.has(n) ? '✓ ' : '+ '}${escHtml(n)}</button>`).join('')}</div>
+      <div class="ke-add"><input id="ke-custom" maxlength="30" placeholder="משהו אחר? כתבו והוסיפו" onkeydown="if(event.key==='Enter'){event.preventDefault(); kinksAddCustom();}"><button type="button" onclick="kinksAddCustom()">הוספה</button></div>
+      <div class="ke-list">
+        ${kEdit.length ? kEdit.map((k, i) => `
+          <div class="ke-row">
+            <span class="uw-k-rank">${i + 1}</span>
+            <span class="ke-name">${escHtml(k.n)}</span>
+            <input type="range" min="1" max="10" step="1" value="${k.s}" oninput="kinksSetScore(${i}, this.value, this)" onchange="kinksResort()" aria-label="כמה אוהב/ת ${escHtml(k.n)}">
+            <b class="ke-score">${k.s}</b>
+            <button type="button" class="ke-del" onclick="kinksRemove(${i})" aria-label="הסרה">✕</button>
+          </div>`).join('') : '<div class="ke-empty">עוד לא נבחר כלום — לחצו על האפשרויות למעלה</div>'}
+      </div>
+      <div class="av-actions">
+        <button type="button" class="av-save" onclick="kinksSave()">שמירה</button>
+        <button type="button" class="av-cancel" onclick="document.getElementById('kinks-editor').style.display='none'">ביטול</button>
+      </div>
+    </div>`;
+}
+function kinksToggle(n) {
+  const i = kEdit.findIndex(k => k.n === n);
+  if (i >= 0) kEdit.splice(i, 1);
+  else if (kEdit.length < KINK_MAX) kEdit.push({ n, s: 5 });
+  kEdit = kinksNormalize(kEdit);
+  kinksRenderEditor();
+}
+window.kinksToggle = kinksToggle;
+function kinksAddCustom() {
+  const inp = document.getElementById('ke-custom');
+  const n = inp ? inp.value.trim().slice(0, 30) : '';
+  if (!n || kEdit.some(k => k.n === n) || kEdit.length >= KINK_MAX) return;
+  kEdit.push({ n, s: 5 });
+  kEdit = kinksNormalize(kEdit);
+  kinksRenderEditor();
+}
+window.kinksAddCustom = kinksAddCustom;
+function kinksSetScore(i, v, el) {
+  if (!kEdit[i]) return;
+  kEdit[i].s = Number(v);
+  const b = el && el.parentElement.querySelector('.ke-score');
+  if (b) b.textContent = v;
+}
+window.kinksSetScore = kinksSetScore;
+function kinksResort() { kEdit = kinksNormalize(kEdit); kinksRenderEditor(); }
+window.kinksResort = kinksResort;
+function kinksRemove(i) { kEdit.splice(i, 1); kinksRenderEditor(); }
+window.kinksRemove = kinksRemove;
+async function kinksSave() {
+  const user = auth.currentUser;
+  if (!user || user.isAnonymous) return;
+  const kinks = kinksNormalize(kEdit);
+  try {
+    await update(ref(db, `website/users/${user.uid}/profile`), { kinks });
+    const st = window._upState;
+    if (st && st.uid === user.uid) { st.profile = Object.assign({}, st.profile || {}, { kinks }); userWatchRender(); }
+    document.getElementById('kinks-editor').style.display = 'none';
+    if (typeof showCopyToast === 'function') showCopyToast('נשמר!');
+  } catch (e) { alert('השמירה נכשלה. נסו שוב.'); }
+}
+window.kinksSave = kinksSave;
 
 // עמוד משתמש בעיצוב שעון חכם: שם, טבעות נתונים, דירוג בכוכבים וכל הפרטים
 function userWatchHTML(st) {
@@ -15467,6 +15617,7 @@ function userWatchHTML(st) {
   const where = [profile.aboutCity, profile.aboutRegion].filter(Boolean).join(', ');
   const likes = aboutSplitTags(profile.aboutLikes);
   const dislikes = aboutSplitTags(profile.aboutDislikes);
+  const kinks = kinksNormalize(profile.kinks);
   const tg = String(profile.telegram || '').trim().replace(/^https?:\/\/t\.me\//i, '').replace(/^@/, '');
   const none = '<span class="uw-none">לא צוין</span>';
   const chips = (arr, cls) => arr.length ? arr.map(t => `<span class="uw-chip ${cls}">${escHtml(t)}</span>`).join('') : none;
@@ -15486,7 +15637,7 @@ function userWatchHTML(st) {
           <h1 id="user-page-name" class="uw-name">${escHtml(st.name || 'משתמש')}${st.verified ? verifiedSealHTML(28) : ''}</h1>
         </div>
         ${(st.uid && auth.currentUser && !auth.currentUser.isAnonymous && auth.currentUser.uid === st.uid)
-          ? `<button type="button" class="uw-edit-av" onclick="openAvatarEditor()">עיצוב הדמות שלי</button>` : ''}
+          ? `<div class="uw-own-actions"><button type="button" class="uw-edit-av" onclick="openAvatarEditor()">עיצוב הדמות שלי</button><button type="button" class="uw-edit-av alt" onclick="openKinksEditor()">עריכת מה אני אוהב/ת</button></div>` : ''}
         <div class="uw-mid">
           <svg class="uw-rings" viewBox="0 0 100 100">
             ${homeWatchRing(42, '#ff375f', st.galleries / 10)}
@@ -15507,9 +15658,10 @@ function userWatchHTML(st) {
           ${row('#ffd60a', 'מאיפה', where ? `<span class="uw-text">${escHtml(where)}</span>` : none)}
           ${row('#64d2ff', 'טלגרם', tg ? `<a class="uw-link" href="https://t.me/${encodeURIComponent(tg)}" target="_blank" rel="noopener" dir="ltr">@${escHtml(tg)}</a>` : none)}
           ${row('#bf5af2', 'מייל', profile.email ? `<button type="button" class="uw-link" dir="ltr" onclick="copyEmailToClipboard('${artEsc(profile.email)}', event)" title="העתקת המייל">${escHtml(profile.email)}</button>` : none)}
-          ${row('#30d158', 'אוהב/ת', `<div class="uw-chips">${chips(likes, 'like')}</div>`)}
+          ${row('#30d158', 'אוהב/ת', kinks.length ? kinksListHTML(kinks) : `<div class="uw-chips">${chips(likes, 'like')}</div>`)}
           ${row('#ff453a', 'לא אוהב/ת', `<div class="uw-chips">${chips(dislikes, 'dislike')}</div>`)}
         </div>
+        ${kinksRadarHTML(kinks)}
       </div>
     </div>`;
 }

@@ -9103,3 +9103,55 @@ html.age-not-verified .td-photo.is-adult { filter: blur(22px); transform: scale(
 .td-match-go, .td-match-skip { display: block; width: 260px; margin: 0 auto 10px; padding: 14px; border-radius: 999px; font: inherit; font-size: 16px; font-weight: 900; cursor: pointer; }
 .td-match-go { border: none; background: linear-gradient(135deg, #ff4d6d, #ec4899); color: #fff; }
 .td-match-skip { border: 2px solid rgba(255,255,255,.5); background: transparent; color: #fff; }
+
+/* ===================================================================
+   עמוד משתמש: שעון גדול יותר בדסקטופ + קינקים מדורגים + גרף רדאר
+   =================================================================== */
+@media (min-width: 900px) {
+  .up-watch { width: min(680px, 100%); border-radius: 92px; padding: 14px; }
+  .up-watch::after { height: 76px; left: -11px; width: 12px; }
+  .up-watch-screen { border-radius: 80px; padding: 40px 44px 42px; }
+  .uw-clock { font-size: 28px; }
+  .uw-avatar { width: 84px; height: 84px; font-size: 36px; }
+  .uw-name { font-size: 48px; }
+  .uw-rings { width: 150px; height: 150px; }
+  .uw-lines { font-size: 30px; gap: 8px; }
+  .uw-lines small { font-size: 14px; }
+  .uw-star { font-size: 34px; }
+  .uw-label { width: 100px; font-size: 16px; }
+  .uw-val { font-size: 17px; }
+}
+.uw-own-actions { display: flex; gap: 8px; flex-wrap: wrap; margin: -6px 0 16px; }
+.uw-own-actions .uw-edit-av { margin: 0; }
+.uw-edit-av.alt { background: linear-gradient(135deg, #ec4899, #be185d); }
+/* רשימה ממוספרת */
+.uw-kinks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; width: 100%; }
+.uw-kinks li { display: grid; grid-template-columns: 24px minmax(0, auto) 1fr 26px; align-items: center; gap: 8px; }
+.uw-k-rank { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 900; background: #1c1c1e; color: #ffd166; }
+.uw-kinks li:first-child .uw-k-rank { background: #ffd166; color: #000; }
+.uw-k-name { font-weight: 800; color: #f2f2f7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.uw-k-bar { height: 6px; border-radius: 3px; background: #1f1f22; overflow: hidden; }
+.uw-k-bar i { display: block; height: 100%; border-radius: 3px; background: linear-gradient(270deg, #30d158, #a3f93a); }
+.uw-k-score { font-weight: 900; color: #a3f93a; text-align: center; font-variant-numeric: tabular-nums; }
+/* רדאר */
+.uw-summary { margin-top: 18px; padding-top: 16px; border-top: 1px solid #1f1f22; }
+.uw-summary-title { font-size: 15px; font-weight: 800; color: #ffd166; margin-bottom: 6px; }
+.uw-radar { width: 100%; height: auto; display: block; overflow: visible; }
+.uw-r-label { fill: #e5e5ea; font-size: 12px; font-weight: 800; font-family: inherit; }
+.uw-r-val { fill: #a3f93a; font-size: 12px; font-weight: 900; font-family: inherit; }
+/* עורך */
+.ke-modal { width: min(640px, 100%); }
+.ke-hint { margin: -8px 0 14px; font-size: 14px; color: rgba(241, 236, 255, 0.7); }
+.ke-catalog { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 12px; }
+.ke-chip { border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.05); color: #e9e3ff; border-radius: 999px; padding: 7px 12px; font: inherit; font-size: 13.5px; font-weight: 800; cursor: pointer; }
+.ke-chip.on { background: var(--pink-grad, linear-gradient(135deg,#f472b6,#db2777)); border-color: transparent; color: #fff; }
+.ke-add { display: flex; gap: 8px; margin-bottom: 16px; }
+.ke-add input { flex: 1; min-width: 0; height: 42px; padding: 0 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.06); color: #fff; font: inherit; outline: none; }
+.ke-add button { border: none; border-radius: 12px; padding: 0 18px; background: rgba(255,255,255,.12); color: #fff; font: inherit; font-weight: 800; cursor: pointer; }
+.ke-list { display: flex; flex-direction: column; gap: 8px; }
+.ke-row { display: grid; grid-template-columns: 24px minmax(70px, 140px) 1fr 26px 30px; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 14px; background: rgba(255,255,255,.04); }
+.ke-name { font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ke-row input[type=range] { width: 100%; accent-color: #ec4899; }
+.ke-score { text-align: center; color: #a3f93a; font-size: 16px; }
+.ke-del { width: 30px; height: 30px; border-radius: 50%; border: none; background: rgba(255,255,255,.08); color: #fca5a5; cursor: pointer; }
+.ke-empty { padding: 18px; text-align: center; color: rgba(241,236,255,.55); font-weight: 700; border: 1.5px dashed rgba(255,255,255,.14); border-radius: 14px; }
