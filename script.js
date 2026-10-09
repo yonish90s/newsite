@@ -22557,10 +22557,10 @@ const SITE_TOUR_STEPS = [
     en: { title: 'Watch history', text: 'Everything you viewed is saved here so you can easily go back to it.' }
   },
   {
-    target: '.qu-arrow-btn',
+    target: '.hw-cta',
     mobile: true, // במובייל מוצג רק השלב הזה
-    he: { title: 'העלאת תוכן', text: 'בוחרים אזור ולוחצים על החץ למעלה כדי להעלות תמונות, קומיקס או סיפורים.' },
-    en: { title: 'Upload content', text: 'Pick a section and tap the up arrow to upload photos, comics or stories.' }
+    he: { title: 'העלאת תוכן', text: 'לחצו כאן כדי להעלות תמונות לאתר — בכמה שלבים קצרים.' },
+    en: { title: 'Upload content', text: 'Tap here to upload photos to the site in a few quick steps.' }
   },
   {
     target: '#manager-btn',
@@ -22783,7 +22783,7 @@ function startSiteTour(force, edit) {
   const ob = document.getElementById('onboarding-modal');
   if (ob && ob.style.display !== 'none') { setTimeout(() => startSiteTour(force), 800); return; }
   // השלב של ההעלאה נמצא בעמוד הבית
-  if (!document.querySelector('.qu-arrow-btn') && typeof goToHomePage === 'function') {
+  if (!document.querySelector('.hw-cta') && typeof goToHomePage === 'function') {
     try { goToHomePage(); } catch (e) {}
   }
   const els = siteTourEnsureEls();
