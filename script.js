@@ -12575,17 +12575,29 @@ window.quickUploadFinalSubmit = quickUploadFinalSubmit;
 // באנר פתיחה בראש עמוד הבית: רקע צהוב "נוזל", כותרת גדולה וכפתור,
 // ושלושה כרטיסים מוטים (תמונות / קומיקס / סיפורים) עם התוכן האחרון מכל סוג.
 function homeWelcomeHeroHTML() {
-  // בכוונה בלי תמונות משתמשים — באנר הפתיחה הוא הדבר הראשון שכל מבקר רואה
   const ico = (d) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
   const icons = {
     photos: ico('<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 9"/>'),
     comics: ico('<path d="M4 5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H10l-5 4v-4a2 2 0 0 1-1-2z"/><path d="M8 8h8M8 11h5"/>'),
     stories: ico('<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>')
   };
-  const card = (label, sub, icon, onclick, tint, cls) => `
+  // 4 התמונות האחרונות מכל סוג (2x2); אם אין תמונות בכלל — האייקון
+  const _latest = (arr) => (arr || []).slice().sort((a, b) => String(b.id || '').localeCompare(String(a.id || '')));
+  const _imgsOf = (it) => [it.cover].concat(it.images || [], it.image || []).filter(u => typeof u === 'string' && u);
+  const _pick4 = (arr) => _latest(arr).filter(it => it && it.approved !== false).map(it => _imgsOf(it)[0]).filter(Boolean).slice(0, 4);
+  const _all = (typeof getAllStoriesFromPages === 'function') ? getAllStoriesFromPages() : [];
+  const thumbs = {
+    photos: _pick4((typeof getPhotosForHome === 'function') ? getPhotosForHome() : []),
+    comics: _pick4(_all.filter(x => x && x.__kind !== 'stories')),
+    stories: _pick4(_all.filter(x => x && x.__kind === 'stories'))
+  };
+  const imgBox = (icon, list) => list.length
+    ? `<span class="hw-card-img hw-card-grid">${list.map(u => `<img src="${escHtml(u)}" alt="" loading="lazy">`).join('')}${'<i></i>'.repeat(4 - list.length)}</span>`
+    : `<span class="hw-card-img"><span class="hw-card-icon">${icon}</span></span>`;
+  const card = (label, sub, icon, onclick, tint, cls, list) => `
     <button type="button" class="hw-card ${cls}" style="--tint:${tint}" onclick="${onclick}">
       <span class="hw-card-top"><span class="hw-card-brand">${label}</span></span>
-      <span class="hw-card-img"><span class="hw-card-icon">${icon}</span></span>
+      ${imgBox(icon, list || [])}
       <span class="hw-card-foot">${sub}</span>
     </button>`;
   return `
@@ -12605,9 +12617,9 @@ function homeWelcomeHeroHTML() {
           </div>
         </div>
         <div class="hw-cards">
-          ${card('תמונות', 'גלריות מהקהילה', icons.photos, 'homeOpenPhotos()', '#c9bdf0', 'hw-c1')}
-          ${card('קומיקס', 'רצועות ואיורים', icons.comics, "homeOpenSection('page-stories-main')", '#f6a7a0', 'hw-c2')}
-          ${card('סיפורים', 'קצרים ומאמרים', icons.stories, "homeOpenSection('page-stories-text')", '#5b2a4e', 'hw-c3')}
+          ${card('תמונות', 'גלריות מהקהילה', icons.photos, 'homeOpenPhotos()', '#c9bdf0', 'hw-c1', thumbs.photos)}
+          ${card('קומיקס', 'רצועות ואיורים', icons.comics, "homeOpenSection('page-stories-main')", '#f6a7a0', 'hw-c2', thumbs.comics)}
+          ${card('סיפורים', 'קצרים ומאמרים', icons.stories, "homeOpenSection('page-stories-text')", '#5b2a4e', 'hw-c3', thumbs.stories)}
         </div>
       </div>
     </section>`;
