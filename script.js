@@ -15443,6 +15443,24 @@ const KINK_CATALOG = [
   'הלבשה תחתונה', 'צעצועים', 'משחקי טמפרטורה', 'דיבור מלוכלך'
 ];
 const KINK_MAX = 30;
+// "מה אני מחפש/ת" — בחירה מרובה בכל קבוצה + טקסט חופשי
+const SEEK_GROUPS = [
+  { key: 'role', title: 'תפקיד', opts: ['להישלט', 'לשלוט'] },
+  { key: 'size', title: 'איבר מין', opts: ['קטן', 'גדול'] },
+  { key: 'color', title: 'צבע', opts: ['לבן', 'חום', 'שחור'] }
+];
+function seekNormalize(o) {
+  o = o || {};
+  const out = { text: String(o.text || '').trim().slice(0, 200) };
+  SEEK_GROUPS.forEach(g => { out[g.key] = (Array.isArray(o[g.key]) ? o[g.key] : []).filter(v => g.opts.includes(v)); });
+  return out;
+}
+function seekHTML(o) {
+  const sk = seekNormalize(o);
+  const chips = SEEK_GROUPS.flatMap(g => sk[g.key].map(v => `<span class="uw-chip seek">${escHtml(v)}</span>`)).join('');
+  if (!chips && !sk.text) return '';
+  return `${chips ? `<div class="uw-chips">${chips}</div>` : ''}${sk.text ? `<div class="uw-seek-text">"${escHtml(sk.text)}"</div>` : ''}`;
+}
 
 function kinksNormalize(arr) {
   const seen = new Set();
@@ -15496,11 +15514,13 @@ function kinksRadarHTML(kinks) {
 
 // --- עורך ---
 let kEdit = [];
+let sEdit = seekNormalize();
 function openKinksEditor() {
   const user = auth.currentUser;
   if (!user || user.isAnonymous) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
   const st = window._upState;
   kEdit = kinksNormalize(st && st.uid === user.uid && st.profile ? st.profile.kinks : []);
+  sEdit = seekNormalize(st && st.uid === user.uid && st.profile ? st.profile.seeking : null);
   let m = document.getElementById('kinks-editor');
   if (!m) {
     m = document.createElement('div');
@@ -15516,11 +15536,20 @@ window.openKinksEditor = openKinksEditor;
 function kinksRenderEditor() {
   const m = document.getElementById('kinks-editor');
   if (!m) return;
+  const _t = document.getElementById('ke-seek-text');
+  if (_t) sEdit.text = _t.value;
   const sel = new Set(kEdit.map(k => k.n));
   m.innerHTML = `
     <div class="av-modal ke-modal" role="dialog" aria-label="מה אני אוהב/ת">
       <button type="button" class="av-close" onclick="document.getElementById('kinks-editor').style.display='none'" aria-label="סגירה">✕</button>
-      <h2>מה אני אוהב/ת</h2>
+      <h2>מה אני אוהב/ת ומחפש/ת</h2>
+      <div class="ke-section-title">מה אני מחפש/ת</div>
+      ${SEEK_GROUPS.map(g => `
+        <div class="ke-seek-row"><span>${g.title}</span><div>
+          ${g.opts.map(v => `<button type="button" class="ke-chip${sEdit[g.key].includes(v) ? ' on' : ''}" onclick="seekToggle('${g.key}','${artEsc(v)}')">${escHtml(v)}</button>`).join('')}
+        </div></div>`).join('')}
+      <textarea id="ke-seek-text" class="ke-seek-text" maxlength="200" rows="2" placeholder="בכמה מילים — מה אני מחפש/ת..." oninput="sEdit.text = this.value">${escHtml(sEdit.text)}</textarea>
+      <div class="ke-section-title">מה אני אוהב/ת</div>
       <p class="ke-hint">בחרו כמה שרוצים, ודרגו כל אחד מ-1 עד 10. הרשימה מסודרת לפי מה שהכי אוהבים.</p>
       <div class="ke-catalog">${KINK_CATALOG.map(n => `<button type="button" class="ke-chip${sel.has(n) ? ' on' : ''}" onclick="kinksToggle('${artEsc(n)}')">${sel.has(n) ? '✓ ' : '+ '}${escHtml(n)}</button>`).join('')}</div>
       <div class="ke-add"><input id="ke-custom" maxlength="30" placeholder="משהו אחר? כתבו והוסיפו" onkeydown="if(event.key==='Enter'){event.preventDefault(); kinksAddCustom();}"><button type="button" onclick="kinksAddCustom()">הוספה</button></div>
@@ -15540,6 +15569,17 @@ function kinksRenderEditor() {
       </div>
     </div>`;
 }
+function seekToggle(key, v) {
+  const t = document.getElementById('ke-seek-text');
+  if (t) sEdit.text = t.value;
+  const arr = sEdit[key];
+  const i = arr.indexOf(v);
+  if (i >= 0) arr.splice(i, 1); else arr.push(v);
+  kinksRenderEditor();
+}
+window.seekToggle = seekToggle;
+window.sEditRef = () => sEdit;
+
 function kinksToggle(n) {
   const i = kEdit.findIndex(k => k.n === n);
   if (i >= 0) kEdit.splice(i, 1);
@@ -15572,10 +15612,13 @@ async function kinksSave() {
   const user = auth.currentUser;
   if (!user || user.isAnonymous) return;
   const kinks = kinksNormalize(kEdit);
+  const _t = document.getElementById('ke-seek-text');
+  if (_t) sEdit.text = _t.value;
+  const seeking = seekNormalize(sEdit);
   try {
-    await update(ref(db, `website/users/${user.uid}/profile`), { kinks });
+    await update(ref(db, `website/users/${user.uid}/profile`), { kinks, seeking });
     const st = window._upState;
-    if (st && st.uid === user.uid) { st.profile = Object.assign({}, st.profile || {}, { kinks }); userWatchRender(); }
+    if (st && st.uid === user.uid) { st.profile = Object.assign({}, st.profile || {}, { kinks, seeking }); userWatchRender(); }
     document.getElementById('kinks-editor').style.display = 'none';
     if (typeof showCopyToast === 'function') showCopyToast('נשמר!');
   } catch (e) { alert('השמירה נכשלה. נסו שוב.'); }
@@ -15614,7 +15657,7 @@ function userWatchHTML(st) {
           <h1 id="user-page-name" class="uw-name">${escHtml(st.name || 'משתמש')}${st.verified ? verifiedSealHTML(28) : ''}</h1>
         </div>
         ${(st.uid && auth.currentUser && !auth.currentUser.isAnonymous && auth.currentUser.uid === st.uid)
-          ? `<div class="uw-own-actions"><button type="button" class="uw-edit-av" onclick="openAvatarEditor()">עיצוב הדמות שלי</button><button type="button" class="uw-edit-av alt" onclick="openKinksEditor()">עריכת מה אני אוהב/ת</button></div>` : ''}
+          ? `<div class="uw-own-actions"><button type="button" class="uw-edit-av" onclick="openAvatarEditor()">עיצוב הדמות שלי</button><button type="button" class="uw-edit-av alt" onclick="openKinksEditor()">מה אני אוהב/ת ומחפש/ת</button></div>` : ''}
         <div class="uw-mid">
           <svg class="uw-rings" viewBox="0 0 100 100">
             ${homeWatchRing(42, '#ff375f', st.galleries / 10)}
@@ -15646,6 +15689,7 @@ function userWatchHTML(st) {
           ${row('#ffd60a', 'מאיפה', where ? `<span class="uw-text">${escHtml(where)}</span>` : none)}
           ${row('#64d2ff', 'טלגרם', tg ? `<a class="uw-link" href="https://t.me/${encodeURIComponent(tg)}" target="_blank" rel="noopener" dir="ltr">@${escHtml(tg)}</a>` : none)}
           ${row('#bf5af2', 'מייל', profile.email ? `<button type="button" class="uw-link" dir="ltr" onclick="copyEmailToClipboard('${artEsc(profile.email)}', event)" title="העתקת המייל">${escHtml(profile.email)}</button>` : none)}
+          ${row('#ff6bb5', 'מחפש/ת', seekHTML(profile.seeking) || none)}
           ${row('#30d158', 'אוהב/ת', kinks.length ? kinksListHTML(kinks) : `<div class="uw-chips">${chips(likes, 'like')}</div>`)}
           ${row('#ff453a', 'לא אוהב/ת', `<div class="uw-chips">${chips(dislikes, 'dislike')}</div>`)}
         </div>

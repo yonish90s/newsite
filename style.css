@@ -9187,3 +9187,12 @@ html.age-not-verified .td-photo.is-adult { filter: blur(22px); transform: scale(
 .av-role-btn { flex: 1; padding: 14px 10px; border-radius: 16px; border: 2px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04); color: #fff; font: inherit; font-size: 17px; font-weight: 900; cursor: pointer; }
 .av-role-btn.on { border-color: #ffd166; background: rgba(255, 209, 102, 0.14); color: #ffd166; }
 .uw-role { display: inline-block; padding: 3px 12px; border-radius: 999px; background: rgba(255, 55, 95, 0.16); color: #ff6b8a; font-weight: 900; }
+/* "מה אני מחפש/ת" */
+.ke-section-title { font-size: 15px; font-weight: 900; color: #ffd166; margin: 6px 0 10px; }
+.ke-seek-row { display: flex; align-items: center; gap: 12px; margin-bottom: 9px; }
+.ke-seek-row > span { width: 74px; flex-shrink: 0; font-size: 14px; font-weight: 800; color: #e9e3ff; }
+.ke-seek-row > div { display: flex; gap: 7px; flex-wrap: wrap; }
+.ke-seek-text { width: 100%; box-sizing: border-box; margin: 4px 0 18px; padding: 10px 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.06); color: #fff; font: inherit; font-size: 15px; resize: vertical; outline: none; }
+.ke-seek-text:focus { border-color: #ffd166; }
+.uw-chip.seek { background: rgba(255, 107, 181, 0.16); color: #ff8cc6; }
+.uw-seek-text { margin-top: 8px; color: #e5e5ea; font-weight: 600; font-style: italic; line-height: 1.5; }
