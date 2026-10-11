@@ -20,12 +20,34 @@
       "tourConfig": { ".read": true },
       "uploadGuideVideo": { ".read": true },
       "podcastEmbed": { ".read": true },
+      "products": { ".read": true },
       "hideCart": { ".read": true },
       "hideChat": { ".read": true },
       "deleteCart": { ".read": true },
       "deleteChat": { ".read": true },
       "verified_users": { ".read": true },
       "admin_uid": { ".read": "auth != null" },
+
+      "polls": { ".read": true },
+
+      "poll_counts": {
+        ".read": true,
+        "$pollId": {
+          "$opt": {
+            ".write": "auth != null && root.child('website/polls/' + $pollId).exists() && newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000000 && (!data.exists() || newData.val() === data.val() + 1 || newData.val() === data.val() - 1)"
+          }
+        }
+      },
+
+      "poll_votes": {
+        "$pollId": {
+          "$uid": {
+            ".read": "auth != null && auth.uid === $uid",
+            ".write": "auth != null && auth.uid === $uid && root.child('website/polls/' + $pollId).exists()",
+            ".validate": "!newData.exists() || (newData.isNumber() && newData.val() >= 0 && newData.val() < 8)"
+          }
+        }
+      },
 
       "item_likes": {
         ".read": true,
@@ -254,7 +276,16 @@
                 ".validate": "!newData.exists() || (newData.isString() && newData.val().length >= 1 && newData.val().length <= 40)"
               }
             },
-            "$other": { ".validate": "$other === 'uid' || $other === 'name' || $other === 'text' || $other === 't' || $other === 'admin' || $other === 'likes'" }
+            "replyTo": {
+              ".validate": "newData.isString() && newData.val().length <= 40 && root.child('website/forum_posts/' + $topicId + '/' + newData.val()).exists()"
+            },
+            "dislikes": {
+              "$dislikerUid": {
+                ".write": "auth != null && auth.token.firebase.sign_in_provider !== 'anonymous' && auth.uid === $dislikerUid && data.parent().parent().exists()",
+                ".validate": "!newData.exists() || newData.val() === true"
+              }
+            },
+            "$other": { ".validate": "$other === 'uid' || $other === 'name' || $other === 'text' || $other === 't' || $other === 'admin' || $other === 'likes' || $other === 'dislikes' || $other === 'replyTo'" }
           }
         }
       },

@@ -265,7 +265,7 @@ let pages = defaultPages;
 let activePageId = 'page-photos-main';
 let topNavPages = ['page-ideas-main']; // העמודים שמופיעים בתפריט העליון
 // עמודים שמופיעים רק בסרגל הצד ("עמודי צד") ולא בתפריט העליון
-const SIDE_ONLY_PAGE_IDS = ['page-questions-main', 'page-offers-main', 'page-photos-main', 'page-stories-main', 'page-friends-main', 'page-forums-main', 'page-blinddate-main', 'page-tinder-main'];
+const SIDE_ONLY_PAGE_IDS = ['page-questions-main', 'page-offers-main', 'page-polls-main', 'page-photos-main', 'page-stories-main', 'page-friends-main', 'page-forums-main', 'page-products-main', 'page-blinddate-main', 'page-tinder-main'];
 // זיהוי עמוד צד לפי מזהה, תוכן או כותרת (העמודים עשויים להיווצר עם מזהים דינמיים)
 function isSideOnlyPage(p) {
   if (!p) return false;
@@ -717,6 +717,16 @@ function sanitizeToOnlyPhotosAndStories() {
   const _foPage = pages.find(p => p && p.id === 'page-forums-main');
   if (!_foPage) pages.push({ id: 'page-forums-main', title: 'פורומים', content: _foContent });
   else { _foPage.content = _foContent; if (!_foPage.title) _foPage.title = 'פורומים'; }
+  // עמוד "סקרים" — תמיד קיים, נבנה דינמית (בקבוצת "עמודי צד")
+  const _plContent = '<div class="polls-page" data-page-id="page-polls-main"></div>';
+  const _plPage = pages.find(p => p && p.id === 'page-polls-main');
+  if (!_plPage) pages.push({ id: 'page-polls-main', title: 'סקרים', content: _plContent });
+  else { _plPage.content = _plContent; if (!_plPage.title) _plPage.title = 'סקרים'; }
+  // עמוד "מוצרים" — תמיד קיים, נבנה דינמית
+  const _prContent = '<div class="products-page" data-page-id="page-products-main"></div>';
+  const _prPage = pages.find(p => p && p.id === 'page-products-main');
+  if (!_prPage) pages.push({ id: 'page-products-main', title: 'מוצרים', content: _prContent });
+  else { _prPage.content = _prContent; if (!_prPage.title) _prPage.title = 'מוצרים'; }
 
   // עמוד "מנוי" — תמיד קיים
   const _subContent = '<div class="subscription-page" data-page-id="page-subscription-main"></div>';
@@ -1427,6 +1437,26 @@ function renderPage() {
       }
     }
 
+    // עמוד "סקרים" — מוצג כטאב בתוך הפורומים
+    if (currentPage.id === 'page-polls-main' || (currentPage.content || '').includes('polls-page')) {
+      if (typeof buildForumsPage === 'function') {
+        forumTab = 'polls';
+        forumView = { forumId: null, topicId: null, composing: false };
+        mainContent.innerHTML = buildForumsPage();
+        try { window.scrollTo(0, 0); } catch (e) {}
+        return;
+      }
+    }
+
+    // עמוד "מוצרים" — נבנה דינמית
+    if (currentPage.id === 'page-products-main' || (currentPage.content || '').includes('products-page')) {
+      if (typeof buildProductsPage === 'function') {
+        mainContent.innerHTML = buildProductsPage();
+        try { window.scrollTo(0, 0); } catch (e) {}
+        return;
+      }
+    }
+
     // עמוד "פורומים" — נבנה דינמית (רשימת פורומים / נושאים / שרשור)
     if (currentPage.id === 'page-forums-main' || (currentPage.content || '').includes('forums-page')) {
       if (typeof buildForumsPage === 'function') {
@@ -1481,10 +1511,12 @@ function renderPage() {
       }
     }
 
-    // עמוד "שאלות גולשים"
+    // עמוד "שאלות גולשים" — מוצג כטאב בתוך הפורומים
     if (currentPage.id === 'page-questions-main' || (currentPage.title && currentPage.title.includes('שאלות גולשים'))) {
-      if (typeof buildQuestionsPage === 'function') {
-        mainContent.innerHTML = buildQuestionsPage();
+      if (typeof buildForumsPage === 'function') {
+        forumTab = 'questions';
+        forumView = { forumId: null, topicId: null, composing: false };
+        mainContent.innerHTML = buildForumsPage();
         try { window.scrollTo(0, 0); } catch (e) {}
         return;
       }
@@ -6274,20 +6306,29 @@ window.syncStoryCategorySelect = syncStoryCategorySelect;
 // ============================================================
 // עריכת סרגלי הקטגוריות (מנהל): 'stories' = קומיקס+סיפורים, 'photos' = עמוד התמונות
 // ============================================================
+// קטגוריות קבועות בעמוד התמונות — תמיד מופיעות (גם אם נשמרה רשימה ישנה בלעדיהן)
+function ensureFixedPhotoCats(cats) {
+  let changed = false;
+  [['כלובון', 'תמונות גולשים'], ['תמונות גוף', 'כלובון']].forEach(([cat, after]) => {
+    if (cats.includes(cat)) return;
+    const idx = cats.indexOf(after);
+    if (idx !== -1) cats.splice(idx + 1, 0, cat);
+    else cats.push(cat);
+    changed = true;
+  });
+  return changed;
+}
 let PHOTO_BAR_CATEGORIES = (function () {
   try {
     const saved = JSON.parse(localStorage.getItem('custom_photo_bar_categories'));
     if (Array.isArray(saved) && saved.length > 0) {
-      if (!saved.includes('כלובון')) {
-        const idx = saved.indexOf('תמונות גולשים');
-        if (idx !== -1) saved.splice(idx + 1, 0, 'כלובון');
-        else saved.push('כלובון');
+      if (ensureFixedPhotoCats(saved)) {
         try { localStorage.setItem('custom_photo_bar_categories', JSON.stringify(saved)); } catch (e) {}
       }
       return saved;
     }
   } catch (e) {}
-  return ['תמונות גולשים', 'כלובון', 'לעסקים', 'כללי'];
+  return ['תמונות גולשים', 'כלובון', 'תמונות גוף', 'לעסקים', 'כללי'];
 })();
 
 function savePhotoBarCategories() {
@@ -6319,11 +6360,7 @@ function applyRemoteCategoryBars(data, rerender) {
   }
   if (Array.isArray(data.photoBarCategories) && data.photoBarCategories.length) {
     let cats = data.photoBarCategories.filter(Boolean);
-    if (!cats.includes('כלובון')) {
-      const idx = cats.indexOf('תמונות גולשים');
-      if (idx !== -1) cats.splice(idx + 1, 0, 'כלובון');
-      else cats.push('כלובון');
-    }
+    ensureFixedPhotoCats(cats);
     if (JSON.stringify(cats) !== JSON.stringify(PHOTO_BAR_CATEGORIES)) {
       PHOTO_BAR_CATEGORIES = cats;
       try { localStorage.setItem('custom_photo_bar_categories', JSON.stringify(PHOTO_BAR_CATEGORIES)); } catch (e) {}
@@ -8065,7 +8102,7 @@ function artSyncPagination() {
   if (typeof avatarHydrate === 'function') avatarHydrate(mainContent);
   // סרגל הטאבים במובייל: מסמנים את הטאב של העמוד הפתוח
   const _mq = (sel) => !!mainContent.querySelector(sel);
-  const _tab = _mq('.home-feed-page') ? 'home' : _mq('.tinder-page') ? 'tinder' : _mq('.news-page') ? 'news' : _mq('.communities-page') ? 'communities'
+  const _tab = _mq('.home-feed-page') ? 'home' : _mq('.forums-page') ? 'forums' : _mq('.news-page') ? 'news' : _mq('.communities-page') ? 'communities'
     : _mq('.photos-page[data-section="photos"]:not(.home-feed-photos)') ? 'photos' : '';
   document.querySelectorAll('#mtabs .mtab').forEach(b => b.classList.toggle('active', b.dataset.tab === _tab));
   if (artPagObserver) artPagObserver.disconnect();
@@ -9890,7 +9927,14 @@ window.openQuestion = openQuestion;
 
 function backToQuestions() {
   activeQuestionId = null;
-  mainContent.innerHTML = buildQuestionsPage();
+  // השאלות נמצאות בטאב בתוך הפורומים
+  if (typeof buildForumsPage === 'function') {
+    forumTab = 'questions';
+    forumView = { forumId: null, topicId: null, composing: false };
+    mainContent.innerHTML = buildForumsPage();
+  } else {
+    mainContent.innerHTML = buildQuestionsPage();
+  }
 }
 window.backToQuestions = backToQuestions;
 
@@ -11174,6 +11218,7 @@ function buildLeftSidebarBox(popularHTML, section) {
     else if (page.id === 'page-subscription-main') icon = '💎';
     else if (page.id === 'page-questions-main') icon = '❓';
     else if (page.id === 'page-offers-main') icon = '🔥';
+    else if (page.id === 'page-polls-main') icon = '📊';
     else {
       const match = title.match(/([\u1F300-\u1F9FF\u2600-\u26FF\u2700-\u27BF])/);
       if (match) {
@@ -11193,12 +11238,10 @@ function buildLeftSidebarBox(popularHTML, section) {
     `;
   };
 
-  // קבוצה "עמודי צד" = שאלות גולשים, הצעות
+  // קבוצה "עמודי צד" = הצעות (שאלות גולשים וסקרים נמצאים בתוך הפורומים)
   const isQuestionsOrOffers = (p) => {
     const t = p.title || '', c = p.content || '';
-    return p.id === 'page-questions-main' || p.id === 'page-offers-main'
-      || t.includes('שאלות גולשים') || t.includes('הצעות')
-      || c.includes('questions-page') || c.includes('offers-page');
+    return p.id === 'page-offers-main' || t.includes('הצעות') || c.includes('offers-page');
   };
   // קבוצה "קהילות" = תמונות, סיפורים
   const isPhotosOrStories = (p) => {
@@ -11210,14 +11253,16 @@ function buildLeftSidebarBox(popularHTML, section) {
     return p.id === 'page-photos-main' || p.id === 'page-stories-main' || p.id === 'page-stories-text'
       || p.id === 'page-friends-main' || c.includes('friends-page')
       || p.id === 'page-forums-main' || c.includes('forums-page')
+      || p.id === 'page-products-main' || c.includes('products-page')
       || p.id === 'page-blinddate-main' || c.includes('blinddate-page')
       || p.id === 'page-tinder-main' || c.includes('tinder-page')
       || t.includes('תמונות') || t.includes('סיפורים') || t.includes('קומיקס')
       || c.includes('photos-page') || c.includes('stories-page');
   };
   const mainPagesHTML = pagesToDisplay.filter(p => !isSideOnlyPage(p) && !isPhotosOrStories(p) && !isQuestionsOrOffers(p)).map(renderNavItem).join('');
-  // "עמודי צד": שאלות גולשים קודם, ואז הצעות
-  const qFirst = (p) => (p.id === 'page-questions-main' || (p.title || '').includes('שאלות גולשים') || (p.content || '').includes('questions-page')) ? 0 : 1;
+  // "עמודי צד": שאלות גולשים קודם, ואז הצעות, ואז סקרים
+  const qFirst = (p) => (p.id === 'page-questions-main' || (p.title || '').includes('שאלות גולשים') || (p.content || '').includes('questions-page')) ? 0
+    : (p.id === 'page-polls-main' || (p.content || '').includes('polls-page')) ? 2 : 1;
   // "קהילות": תמונות קודם, ואז סיפורים
   const photoFirst = (p) => (p.id === 'page-photos-main' || (p.title || '').includes('תמונות') || (p.content || '').includes('photos-page')) ? 0 : 1;
   const sidePagesList = pagesToDisplay.filter(isQuestionsOrOffers).sort((a, b) => qFirst(a) - qFirst(b));
@@ -13499,6 +13544,314 @@ async function friendsLoad() {
 }
 
 // ============================================================
+// עמוד "סקרים" — המנהל יוצר סקרים, כל הגולשים מצביעים (הצבעה אחת לסקר, אפשר לשנות)
+// נתונים: website/polls/{pollId} (רק המנהל), website/poll_counts/{pollId}/{i} (±1),
+//          website/poll_votes/{pollId}/{uid} (כל משתמש רואה רק את ההצבעה שלו)
+// ============================================================
+let pollsData = null;      // {pollId: poll}
+let pollsCounts = {};      // {pollId: {i: n}}
+let pollsMyVotes = {};     // {pollId: i}
+let pollsUnsub = null;
+let pollsComposing = false;
+let pollsBusy = false;
+
+function pollsSubscribe() {
+  if (pollsUnsub) return;
+  pollsUnsub = onValue(ref(db, 'website/polls'), (snap) => {
+    pollsData = snap.val() || {};
+    pollsRender();
+    pollsLoadMyVotes();
+  }, () => { pollsData = {}; pollsRender(); });
+  onValue(ref(db, 'website/poll_counts'), (snap) => {
+    pollsCounts = snap.val() || {};
+    pollsRender();
+  }, () => {});
+}
+
+async function pollsLoadMyVotes() {
+  const uid = auth.currentUser && auth.currentUser.uid;
+  if (!uid || !pollsData) return;
+  const ids = Object.keys(pollsData);
+  const snaps = await Promise.all(ids.map(id => get(ref(db, `website/poll_votes/${id}/${uid}`)).catch(() => null)));
+  snaps.forEach((s, i) => { if (s && s.exists()) pollsMyVotes[ids[i]] = s.val(); });
+  pollsRender();
+}
+
+function buildPollsPage() {
+  setTimeout(pollsSubscribe, 0);
+  return `<div class="polls-page" data-page-id="page-polls-main"><div class="pl-inner">${pollsViewHTML()}</div></div>`;
+}
+window.buildPollsPage = buildPollsPage;
+function pollsRender() {
+  const el = mainContent && mainContent.querySelector('.polls-page .pl-inner');
+  if (el) el.innerHTML = pollsViewHTML(!!el.closest('.forums-page'));
+}
+
+function pollsViewHTML(embedded) {
+  const admin = typeof isAdmin === 'function' && isAdmin();
+  const list = Object.entries(pollsData || {}).map(([id, p]) => Object.assign({ id }, p))
+    .filter(p => p && p.q && Array.isArray(p.options)).sort((a, b) => (b.t || 0) - (a.t || 0));
+  let body;
+  if (pollsData === null) body = `<div class="pl-empty">טוען סקרים...</div>`;
+  else if (!list.length) body = `<div class="pl-empty">עוד אין סקרים — בקרוב יעלו כאן סקרים חדשים 📊</div>`;
+  else body = list.map(p => pollCardHTML(p, admin)).join('');
+  const addBtn = admin && !pollsComposing ? `<button type="button" class="pl-add-btn" onclick="pollsCompose(true)">+ סקר חדש</button>` : '';
+  return `
+    ${embedded ? (addBtn ? `<div class="pl-hero">${addBtn}</div>` : '') : `
+    <div class="pl-hero">
+      <h1>סקרים</h1>
+      <p>מה דעתכם? הצביעו וראו מה חושבת שאר הקהילה</p>
+      ${addBtn}
+    </div>`}
+    ${pollsComposing ? pollFormHTML() : ''}
+    <div class="pl-list">${body}</div>`;
+}
+
+function pollCardHTML(p, admin) {
+  const counts = pollsCounts[p.id] || {};
+  const nums = p.options.map((_, i) => Math.max(0, Number(counts[i]) || 0));
+  const total = nums.reduce((a, b) => a + b, 0);
+  const mine = pollsMyVotes[p.id];
+  const voted = typeof mine === 'number';
+  const opts = p.options.map((o, i) => {
+    const pct = total ? Math.round(nums[i] * 100 / total) : 0;
+    return `
+      <button type="button" class="pl-opt ${voted ? 'show' : ''} ${mine === i ? 'mine' : ''}" onclick="pollsVote('${artEsc(p.id)}', ${i})">
+        ${voted ? `<span class="pl-fill" style="width:${pct}%"></span>` : ''}
+        <span class="pl-opt-text">${mine === i ? '✓ ' : ''}${escHtml(o)}</span>
+        ${voted ? `<span class="pl-pct">${pct}%</span>` : ''}
+      </button>`;
+  }).join('');
+  return `
+    <article class="pl-card">
+      <h3 class="pl-q">${escHtml(p.q)}</h3>
+      <div class="pl-opts">${opts}</div>
+      <div class="pl-foot">
+        <span>${total} הצבעות${voted ? ' · אפשר לשנות הצבעה' : ''}</span>
+        ${admin ? `<button type="button" class="pl-del" onclick="pollsDelete('${artEsc(p.id)}')">🗑 מחיקה</button>` : ''}
+      </div>
+    </article>`;
+}
+
+function pollFormHTML() {
+  return `
+    <form class="pl-form" onsubmit="event.preventDefault(); pollsCreate(this)">
+      <div class="pl-form-title">סקר חדש</div>
+      <label>השאלה<input name="q" required maxlength="160" placeholder="לדוגמה: מה הדייט המושלם בעיניכם?"></label>
+      <label>אפשרויות (אפשרות בכל שורה, 2–8)<textarea name="options" rows="4" required placeholder="ארוחה במסעדה&#10;טיול בטבע&#10;ערב סרט בבית"></textarea></label>
+      <div class="pl-form-actions">
+        <button type="submit" class="pl-add-btn">פרסום הסקר</button>
+        <button type="button" class="pl-cancel" onclick="pollsCompose(false)">ביטול</button>
+      </div>
+    </form>`;
+}
+
+function pollsCompose(on) {
+  if (on && !isAdmin()) return;
+  pollsComposing = !!on;
+  pollsRender();
+}
+window.pollsCompose = pollsCompose;
+
+async function pollsCreate(form) {
+  if (!isAdmin()) return;
+  const f = new FormData(form);
+  const q = String(f.get('q') || '').trim().slice(0, 160);
+  const options = String(f.get('options') || '').split('\n').map(s => s.trim().slice(0, 80)).filter(Boolean).slice(0, 8);
+  if (!q) return;
+  if (options.length < 2) { alert('צריך לפחות 2 אפשרויות'); return; }
+  try {
+    await set(push(ref(db, 'website/polls')), { q, options, t: Date.now() });
+    pollsComposing = false;
+    pollsRender();
+    if (typeof showCopyToast === 'function') showCopyToast('✅ הסקר פורסם');
+  } catch (e) {
+    console.error('poll create failed', e);
+    alert('שגיאה בפרסום הסקר');
+  }
+}
+window.pollsCreate = pollsCreate;
+
+async function pollsDelete(id) {
+  if (!isAdmin()) return;
+  const p = pollsData && pollsData[id];
+  if (!p || !confirm(`למחוק את הסקר "${p.q}"?`)) return;
+  try {
+    await update(ref(db, 'website'), { [`polls/${id}`]: null, [`poll_counts/${id}`]: null });
+  } catch (e) {
+    console.error('poll delete failed', e);
+    alert('שגיאה במחיקת הסקר');
+  }
+}
+window.pollsDelete = pollsDelete;
+
+async function pollsVote(id, i) {
+  if (pollsBusy) return;
+  const prev = pollsMyVotes[id];
+  if (prev === i) return;
+  pollsBusy = true;
+  try {
+    if (!(await ensureGuestSignedIn())) { alert('לא ניתן להצביע כרגע'); return; }
+    const uid = auth.currentUser.uid;
+    await set(ref(db, `website/poll_votes/${id}/${uid}`), i);
+    pollsMyVotes[id] = i;
+    await runTransaction(ref(db, `website/poll_counts/${id}/${i}`), n => (Number(n) || 0) + 1);
+    if (typeof prev === 'number') {
+      await runTransaction(ref(db, `website/poll_counts/${id}/${prev}`), n => Math.max(0, (Number(n) || 0) - 1));
+    }
+    if (typeof trackEvent === 'function') trackEvent('poll_vote');
+  } catch (e) {
+    console.error('poll vote failed', e);
+    alert('שגיאה בהצבעה');
+  } finally {
+    pollsBusy = false;
+    pollsRender();
+  }
+}
+window.pollsVote = pollsVote;
+
+// ============================================================
+// עמוד "מוצרים" — מוצרים והיתרונות שלהם לזוגות
+// נתונים: website/products (רק המנהל עורך; כולם צופים). כל עוד אין נתונים — מוצגות דוגמאות התחלה.
+// ============================================================
+const PRODUCTS_DEFAULT = [
+  { id: 'p1', name: 'נרות ריחניים', desc: 'נרות בניחוחות עדינים שמשנים את האווירה בבית תוך דקה.',
+    benefits: ['יוצרים אווירה רומנטית ורגועה', 'עוזרים להתנתק מהמסכים ומהיום העמוס', 'הופכים ערב רגיל בבית לדייט'] },
+  { id: 'p2', name: 'שמן עיסוי', desc: 'שמן עיסוי איכותי לעיסוי זוגי בבית.',
+    benefits: ['מגביר מגע וקרבה', 'משחרר מתחים ועייפות', 'זמן איכות בלי הסחות דעת'] },
+  { id: 'p3', name: 'משחק שאלות לזוגות', desc: 'קלפים עם שאלות שפותחות שיחות שלא הייתם מגיעים אליהן לבד.',
+    benefits: ['מכירים אחד את השנייה מחדש', 'שיחות עמוקות וגם הרבה צחוק', 'מתאים גם לזוגות ותיקים וגם לחדשים'] },
+  { id: 'p4', name: 'ערכת ספא ביתית', desc: 'מלחי אמבט, מסכות פנים ופצצות אמבט לערב פינוק משותף.',
+    benefits: ['חוויית ספא בלי לצאת מהבית', 'פינוק הדדי שמחזק את הקשר', 'רעיון מעולה למתנה ליום נישואין'] }
+];
+const PRODUCT_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5C10 3 12 8 12 8s2-5 4.5-5a2.5 2.5 0 0 1 0 5"/></svg>';
+let productsData = null;   // null = עוד לא נטען; [] = ריק
+let productsUnsub = null;
+let productsEditing = null; // מזהה המוצר בעריכה, 'new' למוצר חדש
+
+function productsList() {
+  return (productsData && productsData.length) ? productsData : PRODUCTS_DEFAULT;
+}
+function productsSubscribe() {
+  if (productsUnsub) return;
+  productsUnsub = onValue(ref(db, 'website/products'), (snap) => {
+    const v = snap.val();
+    productsData = Array.isArray(v) ? v.filter(Boolean) : (v ? Object.values(v).filter(Boolean) : []);
+    productsRender();
+  }, () => { productsData = []; productsRender(); });
+}
+
+function buildProductsPage() {
+  setTimeout(productsSubscribe, 0);
+  return `<div class="products-page" data-page-id="page-products-main"><div class="pr-inner">${productsViewHTML()}</div></div>`;
+}
+window.buildProductsPage = buildProductsPage;
+function productsRender() {
+  const el = mainContent && mainContent.querySelector('.products-page .pr-inner');
+  if (el) el.innerHTML = productsViewHTML();
+}
+
+function productsViewHTML() {
+  const admin = typeof isAdmin === 'function' && isAdmin();
+  const list = productsList();
+  const cards = list.map(p => productsEditing === p.id ? productFormHTML(p) : productCardHTML(p, admin)).join('');
+  return `
+    <div class="pr-hero">
+      <h1>מוצרים לזוגות</h1>
+      <p>מוצרים שאנחנו אוהבים — ולמה הם עושים טוב לזוגיות</p>
+      ${admin && productsEditing !== 'new' ? `<button type="button" class="pr-add-btn" onclick="productsStartEdit('new')">+ הוספת מוצר</button>` : ''}
+    </div>
+    ${productsEditing === 'new' ? productFormHTML({}) : ''}
+    <div class="pr-grid">${cards}</div>`;
+}
+
+function productCardHTML(p, admin) {
+  const link = p.link ? safeUrl(p.link) : '';
+  const benefits = (p.benefits || []).filter(Boolean);
+  return `
+    <article class="pr-card">
+      <div class="pr-thumb">${p.image ? `<img src="${escHtml(p.image)}" alt="${escHtml(p.name || '')}" loading="lazy">` : `<span class="pr-icon">${PRODUCT_ICON}</span>`}</div>
+      <div class="pr-body">
+        <h3 class="pr-name">${escHtml(p.name || '')}</h3>
+        ${p.desc ? `<p class="pr-desc">${escHtml(p.desc)}</p>` : ''}
+        ${benefits.length ? `
+          <div class="pr-benefits-title">💞 היתרונות לזוגות</div>
+          <ul class="pr-benefits">${benefits.map(b => `<li>${escHtml(b)}</li>`).join('')}</ul>` : ''}
+        ${link && link !== '#' ? `<a class="pr-link" href="${escHtml(link)}" target="_blank" rel="noopener nofollow">לפרטים נוספים</a>` : ''}
+        ${admin ? `
+          <div class="pr-admin">
+            <button type="button" onclick="productsStartEdit('${artEsc(p.id)}')">✎ עריכה</button>
+            <button type="button" onclick="productsDelete('${artEsc(p.id)}')">🗑 מחיקה</button>
+          </div>` : ''}
+      </div>
+    </article>`;
+}
+
+function productFormHTML(p) {
+  return `
+    <form class="pr-form" onsubmit="event.preventDefault(); productsSave(this)">
+      <div class="pr-form-title">${p.id ? 'עריכת מוצר' : 'מוצר חדש'}</div>
+      <input type="hidden" name="id" value="${escHtml(p.id || '')}">
+      <label>שם המוצר<input name="name" required maxlength="80" value="${escHtml(p.name || '')}"></label>
+      <label>קישור לתמונה (אופציונלי)<input name="image" dir="ltr" value="${escHtml(p.image || '')}" placeholder="https://..."></label>
+      <label>תיאור קצר<textarea name="desc" rows="2" maxlength="400">${escHtml(p.desc || '')}</textarea></label>
+      <label>היתרונות לזוגות (יתרון בכל שורה)<textarea name="benefits" rows="4" maxlength="1200">${escHtml((p.benefits || []).join('\n'))}</textarea></label>
+      <label>קישור למוצר (אופציונלי)<input name="link" dir="ltr" value="${escHtml(p.link || '')}" placeholder="https://..."></label>
+      <div class="pr-form-actions">
+        <button type="submit" class="pr-save">שמירה</button>
+        <button type="button" class="pr-cancel" onclick="productsStartEdit(null)">ביטול</button>
+      </div>
+    </form>`;
+}
+
+function productsStartEdit(id) {
+  if (id && !isAdmin()) return;
+  productsEditing = id;
+  productsRender();
+}
+window.productsStartEdit = productsStartEdit;
+
+async function productsPersist(list) {
+  try {
+    await set(ref(db, 'website/products'), list);
+    if (typeof showCopyToast === 'function') showCopyToast('✅ המוצרים נשמרו');
+  } catch (e) {
+    console.error('products save failed', e);
+    alert('שגיאה בשמירת המוצרים');
+  }
+}
+
+async function productsSave(form) {
+  if (!isAdmin()) return;
+  const f = new FormData(form);
+  const val = (k) => String(f.get(k) || '').trim();
+  const item = {
+    id: val('id') || ('p' + Date.now()),
+    name: val('name'),
+    image: val('image'),
+    desc: val('desc'),
+    benefits: val('benefits').split('\n').map(s => s.trim()).filter(Boolean),
+    link: val('link')
+  };
+  if (!item.name) return;
+  const list = productsList().slice();
+  const i = list.findIndex(p => p.id === item.id);
+  if (i >= 0) list[i] = item; else list.push(item);
+  productsEditing = null;
+  await productsPersist(list);
+  productsRender();
+}
+window.productsSave = productsSave;
+
+async function productsDelete(id) {
+  if (!isAdmin()) return;
+  const p = productsList().find(x => x.id === id);
+  if (!p || !confirm(`למחוק את "${p.name}"?`)) return;
+  await productsPersist(productsList().filter(x => x.id !== id));
+}
+window.productsDelete = productsDelete;
+
+// ============================================================
 // עמוד "פורומים" — קטגוריות → פורום (רשימת נושאים) → נושא (הודעות ותגובות)
 // נתונים: website/forum_topics/{forumId}/{topicId}, website/forum_posts/{topicId}/{postId}
 // ============================================================
@@ -13568,6 +13921,7 @@ function forumSubscribe() {
 
 function buildForumsPage() {
   setTimeout(forumSubscribe, 0);
+  if (forumTab === 'polls') setTimeout(pollsSubscribe, 0);
   return `<div class="forums-page" data-page-id="page-forums-main"><div class="fo-inner">${forumViewHTML()}</div></div>`;
 }
 function forumRender() {
@@ -13575,17 +13929,52 @@ function forumRender() {
   if (el) el.innerHTML = forumViewHTML();
 }
 
+// הפורומים מאחדים גם את "שאלות גולשים" ו"סקרים" — כטאבים בראש העמוד
+let forumTab = 'forums'; // 'forums' | 'questions' | 'polls'
+const FORUM_TABS = [
+  { id: 'forums', label: 'פורומים' },
+  { id: 'questions', label: 'שאלות גולשים' },
+  { id: 'polls', label: 'סקרים' }
+];
+
 function forumViewHTML() {
   if (forumView.topicId && forumView.forumId) return forumTopicHTML();
   if (forumView.forumId) return forumListHTML();
-  return forumIndexHTML();
+  const tabs = FORUM_TABS.map(t => `<button type="button" class="fo-tab${forumTab === t.id ? ' active' : ''}" onclick="forumSetTab('${t.id}')">${t.label}</button>`).join('');
+  let body;
+  if (forumTab === 'questions') body = forumQuestionsHTML();
+  else if (forumTab === 'polls') body = `<div class="polls-page fo-polls"><div class="pl-inner">${pollsViewHTML(true)}</div></div>`;
+  else body = forumIndexHTML();
+  return `
+    <div class="fo-hero"><h1>פורומים</h1><p>מקום לדבר, לשאול, להצביע ולשתף עם כל הקהילה</p></div>
+    <div class="fo-tabs" role="tablist">${tabs}</div>
+    ${body}`;
+}
+
+function forumSetTab(tab) {
+  forumTab = FORUM_TABS.some(t => t.id === tab) ? tab : 'forums';
+  if (forumTab === 'questions' && typeof subscribeQuestions === 'function') subscribeQuestions();
+  if (forumTab === 'polls') pollsSubscribe();
+  forumView = { forumId: null, topicId: null, composing: false };
+  forumRender();
+}
+window.forumSetTab = forumSetTab;
+
+// טאב "שאלות גולשים" בתוך הפורומים — אותה רשימה ואותו חלון "שאל שאלה"
+function forumQuestionsHTML() {
+  if (typeof subscribeQuestions === 'function') subscribeQuestions();
+  return `
+    <div class="fo-q-head">
+      <input type="text" class="fo-q-search" placeholder="חיפוש שאלות..." value="${escHtml(questionsSearchQuery)}" oninput="questionsSearch(this.value)">
+      <button type="button" class="fo-btn" onclick="openQuestionModal()">+ שאלו שאלה</button>
+    </div>
+    <div class="q-list" id="questions-list">${questionsListHTML()}</div>`;
 }
 
 // --- רשימת הפורומים (כמו בצילום: נושאים / הודעות / הודעה אחרונה) ---
 function forumIndexHTML() {
   const loading = forumTopics === null;
   return `
-    <div class="fo-hero"><h1>פורומים</h1><p>מקום לדבר, לשאול ולשתף עם כל הקהילה</p></div>
     ${FORUM_CATEGORIES.map(cat => `
       <section class="fo-cat">
         <h2 class="fo-cat-title">${escHtml(cat.title)}</h2>
@@ -13695,6 +14084,113 @@ function forumGoPage(n) {
 }
 window.forumGoPage = forumGoPage;
 
+// ---- מובייל: הדיון בסגנון שרשור תגובות (אווטאר עם ראשי תיבות, תגובות מקוננות, לייק/דיסלייק) ----
+const FORUM_MOBILE_MQ = window.matchMedia('(max-width: 768px)');
+FORUM_MOBILE_MQ.addEventListener('change', () => { if (forumView.topicId) forumRender(); });
+let forumReplyTo = null;               // מזהה ההודעה שמשיבים לה
+const forumOpenThreads = new Set();    // שרשורים שהתגובות שלהם פתוחות
+
+function forumInitials(name) {
+  const words = String(name || '?').trim().split(/\s+/).filter(Boolean);
+  return (words.length > 1 ? words[0].charAt(0) + words[1].charAt(0) : (words[0] || '?').slice(0, 2));
+}
+function forumDateTime(t) {
+  if (!t) return '';
+  const d = new Date(t), pad = (n) => String(n).padStart(2, '0');
+  return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${String(d.getFullYear()).slice(2)} | ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function forumAvColor(p) {
+  return FRIENDS_AVATAR_COLORS[[...String(p.uid || p.name || '')].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 0) % FRIENDS_AVATAR_COLORS.length];
+}
+
+const FORUM_THUMB = (down, filled) => `<svg viewBox="0 0 24 24" fill="${filled ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"${down ? ' style="transform:rotate(180deg)"' : ''}><path d="M7 11v9H4a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1zM7 11l4-8a2.5 2.5 0 0 1 2.5 2.5V9h5.2a2 2 0 0 1 2 2.3l-1.2 7A2 2 0 0 1 17.5 20H7"/></svg>`;
+const FORUM_REPLY_ICO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 6 4 12l6 6"/><path d="M4 12h10a6 6 0 0 1 6 6v1"/></svg>';
+
+function forumThreadPostHTML(p, isReply, admin, myUid) {
+  const likes = Object.keys(p.likes || {}).length;
+  const dislikes = Object.keys(p.dislikes || {}).length;
+  const iLiked = !!(myUid && p.likes && p.likes[myUid]);
+  const iDisliked = !!(myUid && p.dislikes && p.dislikes[myUid]);
+  const nameClick = p.uid ? `onclick="openUserPage('${artEsc(p.uid)}','${artEsc(p.name || '')}')"` : '';
+  return `
+    <div class="fo-th-post${isReply ? ' reply' : ''}">
+      ${isReply ? '<span class="fo-th-dot"></span>' : `<span class="fo-th-av" style="--av:${forumAvColor(p)}">${escHtml(forumInitials(p.name))}</span>`}
+      <div class="fo-th-body">
+        <div class="fo-th-head">
+          <b class="fo-th-name" ${nameClick}>${escHtml(p.name || 'משתמש')}${p.uid && isUserVerified(p.uid, p.name) ? verifiedSealHTML(15) : ''}</b>
+          <span class="fo-th-date">${escHtml(forumDateTime(p.t))}</span>
+        </div>
+        <div class="fo-th-text">${escHtml(p.text || '').replace(/\n/g, '<br>')}</div>
+        <div class="fo-th-actions">
+          <button type="button" class="fo-th-join" onclick="forumStartReply('${artEsc(p.id)}')">${FORUM_REPLY_ICO}להצטרף לדיון</button>
+          <button type="button" class="fo-th-vote up${iLiked ? ' on' : ''}" onclick="forumToggleLike('${artEsc(p.id)}')" aria-label="לייק">${FORUM_THUMB(false, iLiked)}<span>${likes}</span></button>
+          <button type="button" class="fo-th-vote down${iDisliked ? ' on' : ''}" onclick="forumToggleDislike('${artEsc(p.id)}')" aria-label="דיסלייק">${FORUM_THUMB(true, iDisliked)}<span>${dislikes}</span></button>
+          ${admin ? `<button type="button" class="fo-del" onclick="forumDeletePost('${artEsc(p.id)}')">מחיקה</button>` : ''}
+        </div>
+      </div>
+    </div>`;
+}
+
+function forumTopicMobileHTML(f, t, posts, admin, myUid) {
+  // כל תגובה משויכת לשרשור של ההודעה הראשית שלה (גם תגובה לתגובה)
+  const byId = {};
+  (posts || []).forEach(p => { byId[p.id] = p; });
+  const rootOf = (p) => { let cur = p, guard = 0; while (cur.replyTo && byId[cur.replyTo] && guard++ < 50) cur = byId[cur.replyTo]; return cur.id; };
+  const roots = [], replies = {};
+  (posts || []).forEach(p => {
+    const r = (p.replyTo && byId[p.replyTo]) ? rootOf(p) : null;
+    if (r && r !== p.id) (replies[r] = replies[r] || []).push(p); else roots.push(p);
+  });
+  const threads = roots.map(p => {
+    const rs = replies[p.id] || [];
+    const open = forumOpenThreads.has(p.id);
+    return `
+      <div class="fo-thread${rs.length ? ' has-replies' : ''}">
+        ${forumThreadPostHTML(p, false, admin, myUid)}
+        ${rs.length ? `
+          <button type="button" class="fo-th-toggle${open ? ' open' : ''}" onclick="forumToggleThread('${artEsc(p.id)}')">
+            ${FORUM_REPLY_ICO}<span>${open ? 'הסתרת תגובות' : (rs.length === 1 ? 'תגובה אחת' : rs.length + ' תגובות')}</span>
+          </button>
+          ${open ? `<div class="fo-th-replies">${rs.map(r => forumThreadPostHTML(r, true, admin, myUid)).join('')}</div>` : ''}` : ''}
+      </div>`;
+  }).join('');
+  const target = forumReplyTo && byId[forumReplyTo];
+  return `
+    <div class="fo-crumbs"><a href="#" onclick="event.preventDefault(); forumOpen(null)">פורומים</a> › <a href="#" onclick="event.preventDefault(); forumOpen('${f.id}')">${escHtml(f.title)}</a></div>
+    <div class="fo-head"><div><h1>${escHtml(t ? t.title : '')}</h1></div>
+      ${admin ? `<button type="button" class="fo-btn ghost danger" onclick="forumDeleteTopic()">מחיקת הנושא</button>` : ''}
+    </div>
+    <div class="fo-threads">
+      ${posts === null ? '<div class="fo-empty">טוען...</div>' : (threads || '<div class="fo-empty">עדיין אין הודעות</div>')}
+    </div>
+    <div class="fo-reply" id="fo-reply-box">
+      ${forumRegistered() ? `
+        ${target ? `<div class="fo-reply-to"><span>תגובה ל<b>${escHtml(target.name || 'משתמש')}</b></span><button type="button" onclick="forumStartReply(null)" aria-label="ביטול">✕</button></div>` : ''}
+        <textarea id="fo-reply-text" class="fo-input" rows="3" maxlength="5000" placeholder="${target ? 'כתבו תגובה...' : 'הצטרפו לדיון...'}"></textarea>
+        <div class="fo-compose-actions"><button type="button" class="fo-btn" onclick="forumReply()">שליחת תגובה</button></div>`
+      : `<div class="fo-login"><span>כדי להגיב צריך להתחבר</span><button type="button" class="fo-btn" onclick="openLiveChatLogin()">התחברות</button></div>`}
+    </div>`;
+}
+
+function forumToggleThread(id) {
+  if (forumOpenThreads.has(id)) forumOpenThreads.delete(id); else forumOpenThreads.add(id);
+  forumRender();
+}
+window.forumToggleThread = forumToggleThread;
+
+function forumStartReply(postId) {
+  if (postId && !forumRegistered()) { openLiveChatLogin(); return; }
+  const draft = (document.getElementById('fo-reply-text') || {}).value || '';
+  forumReplyTo = postId || null;
+  forumRender();
+  const box = document.getElementById('fo-reply-text');
+  if (box) {
+    box.value = draft;
+    if (postId) { box.scrollIntoView({ behavior: 'smooth', block: 'center' }); box.focus({ preventScroll: true }); }
+  }
+}
+window.forumStartReply = forumStartReply;
+
 function forumTopicHTML() {
   const f = FORUM_BY_ID[forumView.forumId];
   const t = forumTopics && forumTopics[forumView.forumId] && forumTopics[forumView.forumId][forumView.topicId];
@@ -13702,6 +14198,7 @@ function forumTopicHTML() {
   const admin = typeof isAdmin === 'function' && isAdmin();
   const myUid = forumRegistered() ? auth.currentUser.uid : '';
   const posts = forumPosts ? Object.entries(forumPosts).map(([id, p]) => Object.assign({ id }, p)).sort((a, b) => (a.t || 0) - (b.t || 0)) : null;
+  if (FORUM_MOBILE_MQ.matches) return forumTopicMobileHTML(f, t, posts, admin, myUid);
   const total = posts ? posts.length : 0;
   forumPage = Math.min(Math.max(1, forumPage), Math.max(1, Math.ceil(total / FORUM_PAGE_SIZE)));
   const start = (forumPage - 1) * FORUM_PAGE_SIZE;
@@ -13763,10 +14260,26 @@ async function forumToggleLike(postId) {
   const p = forumPosts && forumPosts[postId];
   const on = !!(p && p.likes && p.likes[uid]);
   try {
-    await set(ref(db, `website/forum_posts/${forumView.topicId}/${postId}/likes/${uid}`),
-      on ? null : String(liveChatUserName() || 'משתמש').slice(0, 40));
+    // לייק מבטל דיסלייק (ולהפך)
+    await update(ref(db, `website/forum_posts/${forumView.topicId}/${postId}`), {
+      [`likes/${uid}`]: on ? null : String(liveChatUserName() || 'משתמש').slice(0, 40),
+      [`dislikes/${uid}`]: null
+    });
   } catch (e) { alert('הלייק לא נשמר. נסו שוב.'); }
 }
+async function forumToggleDislike(postId) {
+  if (!forumRegistered()) { openLiveChatLogin(); return; }
+  const uid = auth.currentUser.uid;
+  const p = forumPosts && forumPosts[postId];
+  const on = !!(p && p.dislikes && p.dislikes[uid]);
+  try {
+    await update(ref(db, `website/forum_posts/${forumView.topicId}/${postId}`), {
+      [`dislikes/${uid}`]: on ? null : true,
+      [`likes/${uid}`]: null
+    });
+  } catch (e) { alert('הדיסלייק לא נשמר. נסו שוב.'); }
+}
+window.forumToggleDislike = forumToggleDislike;
 window.forumToggleLike = forumToggleLike;
 
 function forumOpen(forumId) {
@@ -13780,6 +14293,8 @@ window.forumOpen = forumOpen;
 
 function forumOpenTopic(forumId, topicId) {
   if (forumPostsUnsub) { forumPostsUnsub(); forumPostsUnsub = null; }
+  forumReplyTo = null;
+  forumOpenThreads.clear();
   forumPosts = null;
   forumPage = 1;
   forumView = { forumId, topicId, composing: false };
@@ -13847,8 +14362,16 @@ async function forumReply() {
   try {
     const msg = { uid: user.uid, name, text: text.slice(0, 5000), t: now };
     if (typeof isAdmin === 'function' && isAdmin()) msg.admin = true;
+    if (forumReplyTo && forumPosts && forumPosts[forumReplyTo]) msg.replyTo = forumReplyTo;
     await set(push(ref(db, `website/forum_posts/${topicId}`)), msg);
     if (box) box.value = '';
+    // פותחים את השרשור כדי שהתגובה החדשה תיראה
+    if (msg.replyTo) {
+      let root = msg.replyTo, guard = 0;
+      while (forumPosts[root] && forumPosts[root].replyTo && forumPosts[forumPosts[root].replyTo] && guard++ < 50) root = forumPosts[root].replyTo;
+      forumOpenThreads.add(root);
+    }
+    forumReplyTo = null;
     forumPage = 9999; // העמוד האחרון — שם התגובה החדשה
     forumRender();
     await update(ref(db, `website/forum_topics/${forumId}/${topicId}`), { replies: increment(1), lastT: now, lastName: name, lastUid: user.uid });
@@ -19933,6 +20456,8 @@ onPublicSiteValue((data) => {
     if (!pList.find(p => p && p.id === 'page-tinder-main')) pList.push({ id: 'page-tinder-main', title: 'התאמות', content: '<div class="tinder-page" data-page-id="page-tinder-main"></div>' });
     if (!pList.find(p => p && p.id === 'page-blinddate-main')) pList.push({ id: 'page-blinddate-main', title: 'Blind Date', content: '<div class="blinddate-page" data-page-id="page-blinddate-main"></div>' });
     if (!pList.find(p => p && p.id === 'page-forums-main')) pList.push({ id: 'page-forums-main', title: 'פורומים', content: '<div class="forums-page" data-page-id="page-forums-main"></div>' });
+    if (!pList.find(p => p && p.id === 'page-polls-main')) pList.push({ id: 'page-polls-main', title: 'סקרים', content: '<div class="polls-page" data-page-id="page-polls-main"></div>' });
+    if (!pList.find(p => p && p.id === 'page-products-main')) pList.push({ id: 'page-products-main', title: 'מוצרים', content: '<div class="products-page" data-page-id="page-products-main"></div>' });
     const _cp = pList.find(p => p && p.id === 'page-communities-main');
     const _cpc = '<div class="communities-page" data-page-id="page-communities-main"></div>';
     if (!_cp) {
@@ -20498,6 +21023,8 @@ function communityShortcutsHTML() {
     if (kind === 'photos') return pages.find(p => p && p.id === 'page-photos-main')
       || pages.find(p => p && ((p.content || '').includes('data-section="photos"') || (p.title || '').includes('תמונות')));
     if (kind === 'stories') return pages.find(p => p && (p.id === 'page-stories-text' || (p.title || '') === 'סיפורים'));
+    if (kind === 'products') return pages.find(p => p && (p.id === 'page-products-main' || (p.content || '').includes('products-page')));
+    if (kind === 'forums') return pages.find(p => p && (p.id === 'page-forums-main' || (p.content || '').includes('forums-page')));
     // comics
     return pages.find(p => p && p.id === 'page-stories-main')
       || pages.find(p => p && (p.title || '') === 'קומיקס')
@@ -20520,7 +21047,9 @@ function communityShortcutsHTML() {
   };
   return card('תמונות', '🖼️', findPage('photos'), 'linear-gradient(135deg,#7c3aed,#4c1d95)')
        + card('קומיקס', '💥', findPage('comics'), 'linear-gradient(135deg,#8b5cf6,#6d28d9)')
-       + card('סיפורים', '📖', findPage('stories'), 'linear-gradient(135deg,#0ea5e9,#0369a1)');
+       + card('סיפורים', '📖', findPage('stories'), 'linear-gradient(135deg,#0ea5e9,#0369a1)')
+       + card('פורומים', '💬', findPage('forums'), 'linear-gradient(135deg,#a855f7,#7e22ce)')
+       + card('מוצרים', '🎁', findPage('products'), 'linear-gradient(135deg,#f472b6,#be185d)');
 }
 window.communityShortcutsHTML = communityShortcutsHTML;
 
@@ -20531,7 +21060,6 @@ function sidePagesShortcutsHTML() {
   const find = (id, cls, title) => pages.find(p => p && (!p.isHidden || _canSeeHidden)
     && (p.id === id || (p.content || '').includes(cls) || (p.title || '').includes(title)));
   const items = [
-    { page: find('page-questions-main', 'questions-page', 'שאלות גולשים'), title: 'שאלות גולשים', sub: 'שאלות ותשובות מהגולשים', emoji: '❓', grad: 'linear-gradient(135deg,#f59e0b,#b45309)' },
     { page: find('page-offers-main', 'offers-page', 'הצעות'), title: 'הצעות', sub: 'הצעות פעילות להערב', emoji: '🔥', grad: 'linear-gradient(135deg,#10b981,#047857)' }
   ].filter(x => x.page);
   if (!items.length) return '';
@@ -21337,11 +21865,14 @@ const UI_EN = {
   'לצפייה בכל התמונות': 'View all photos',
   'לצפייה בכל הקומיקס': 'View all comics',
   'לצפייה בכל הסיפורים': 'View all stories',
+  'לצפייה בכל הפורומים': 'View all forums',
+  'לצפייה בכל המוצרים': 'View all products',
   'כניסה': 'Enter',
   'כניסה לקהילה': 'Enter community',
 
   // ---- קטגוריות ----
   'תמונות גולשים': 'User Photos',
+  'תמונות גוף': 'Body Photos',
 
   // ---- אשף תמונות: כותרות טלגרם/אימייל (התאמה מדויקת בלבד) + placeholders ----
   'טלגרם': 'Telegram (optional)',

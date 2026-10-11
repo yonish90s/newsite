@@ -8187,6 +8187,18 @@ html body .home-feed-page .qu-hero-wrap .qu-chat-input:focus { border-color: #ff
   .qu-chat { height: 420px; }
   .qu-chat-head { padding: 12px 14px; }
   html body .qu-chat-messages { padding: 14px; }
+  /* מובייל: הצ'אט ממלא את כל המסך כמו חלון שיחה */
+  html body .home-feed-page .qu-hero-wrap .quick-upload-hero-container > .qu-hero-card.qu-chat-mode {
+    position: fixed !important; inset: 0 !important; z-index: 10000 !important;
+    width: 100% !important; max-width: none !important; height: 100dvh !important;
+    margin: 0 !important; border-radius: 0 !important; border: none !important;
+    transform: none !important;
+  }
+  html body .qu-hero-card.qu-chat-mode .qu-chat { height: 100%; max-height: none; }
+  html body .qu-hero-card.qu-chat-mode .qu-chat-head { padding-top: calc(12px + env(safe-area-inset-top)); }
+  html body .qu-hero-card.qu-chat-mode .qu-chat-bar { padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
+  /* במובייל הצ'אט נפתח כחלון שיחה מלא; נועלים את גלילת הדף מאחוריו */
+  html body:has(.qu-hero-card.qu-chat-mode) { overflow: hidden !important; }
 }
 
 /* ===================================================================
@@ -9060,14 +9072,12 @@ html.age-not-verified .pcat-img.is-adult img { filter: blur(14px); }
   .mtab.active svg { color: var(--pink, #ec4899); }
   /* מקום לסרגל + כפתור הנגישות הצף מוסתר (פותחים מהסרגל) */
   html body { padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px)) !important; }
-  /* כפתור הנגישות הצף חזר ("חדשות" במקומו בסרגל) — מעל הסרגל */
-  html body .a11y-launcher { bottom: calc(94px + env(safe-area-inset-bottom, 0px)) !important; }
-  html body .a11y-panel { bottom: calc(154px + env(safe-area-inset-bottom, 0px)) !important; max-height: calc(100vh - 180px) !important; }
+  /* במובייל אין כפתור נגישות צף (לפי בקשה) */
+  html body .a11y-launcher,
+  html body .a11y-panel { display: none !important; }
   /* מצב מוסתר: הסרגל נעלם, כפתור הנגישות חוזר, וכפתור ☰ לפתיחה מחדש */
   html.mtab-hidden .mtabs { display: none; }
   html.mtab-hidden body { padding-bottom: 0 !important; }
-  html.mtab-hidden body .a11y-launcher { opacity: 1 !important; pointer-events: auto !important; bottom: 80px !important; }
-  html.mtab-hidden body .a11y-panel { bottom: 140px !important; }
   html.mtab-hidden .mtab-open {
     position: fixed; z-index: 9501; right: 14px; bottom: calc(80px + env(safe-area-inset-bottom, 0px));
     width: 50px; height: 50px; display: grid; place-items: center;
@@ -9288,3 +9298,234 @@ html.age-not-verified .td-photo.is-adult { filter: blur(22px); transform: scale(
 .news-embed-frame.fb { height: 640px; }
 .news-embed-frame.ig { height: 760px; }
 .news-embed-link { color: #1d9bf0; font-weight: 800; text-decoration: none; padding: 30px; }
+
+/* ===================================================================
+   עמוד "מוצרים" — מוצרים והיתרונות שלהם לזוגות
+   =================================================================== */
+.products-page { direction: rtl; }
+.pr-inner { max-width: 1180px; margin: 0 auto; padding: 34px 20px 64px; }
+.pr-hero { text-align: center; margin-bottom: 30px; }
+.pr-hero h1 { margin: 0 0 8px; font-size: clamp(30px, 4.6vw, 46px); font-weight: 900; color: #fff; letter-spacing: -0.4px; }
+.pr-hero p { margin: 0; font-size: 16px; font-weight: 600; color: var(--dk-muted, #b9b0d6); }
+.pr-add-btn, .pr-save {
+  margin-top: 18px; padding: 11px 22px; border-radius: 14px; border: none; cursor: pointer;
+  background: var(--warm-grad, linear-gradient(135deg, #ffd166, #ff9f1c)); color: #190c35;
+  font: inherit; font-size: 15px; font-weight: 800;
+}
+.pr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
+.pr-card {
+  display: flex; flex-direction: column; overflow: hidden;
+  background: #241347; border: 1px solid rgba(255, 255, 255, 0.10); border-radius: 22px;
+  box-shadow: 0 24px 50px -30px rgba(0, 0, 0, 0.8);
+}
+.pr-thumb {
+  aspect-ratio: 16 / 10; display: grid; place-items: center; overflow: hidden;
+  background: linear-gradient(135deg, #ff8cc6 0%, #ec4899 100%);
+}
+.pr-card:nth-child(3n+2) .pr-thumb { background: linear-gradient(135deg, #f9a8d4 0%, #db2777 100%); }
+.pr-card:nth-child(3n) .pr-thumb { background: linear-gradient(135deg, #f472b6 0%, #be185d 100%); }
+.pr-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.pr-icon { width: 72px; height: 72px; color: rgba(255, 255, 255, 0.9); }
+.pr-icon svg { width: 100%; height: 100%; }
+.pr-body { flex: 1; display: flex; flex-direction: column; gap: 10px; padding: 18px 20px 20px; }
+html body .pr-name { margin: 0; font-size: 20px; font-weight: 900; color: #fff; }
+html body .pr-desc { margin: 0; font-size: 14.5px; line-height: 1.6; color: var(--dk-muted, #b9b0d6); }
+.pr-benefits-title { margin-top: 4px; font-size: 14px; font-weight: 800; color: #ffd166; }
+.pr-benefits { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 7px; }
+html body .pr-benefits li {
+  position: relative; padding-inline-start: 24px;
+  font-size: 14.5px; line-height: 1.5; color: #f1ecff;
+}
+.pr-benefits li::before {
+  content: '✓'; position: absolute; inset-inline-start: 0; top: 0;
+  color: var(--pink, #ec4899); font-weight: 900;
+}
+.pr-link {
+  margin-top: auto; align-self: flex-start; padding: 9px 18px; border-radius: 12px;
+  background: #ec4899; color: #fff; font-weight: 800; font-size: 14px; text-decoration: none;
+}
+.pr-link:hover { background: #db2777; }
+.pr-admin { display: flex; gap: 8px; margin-top: 6px; }
+.pr-admin button, .pr-cancel {
+  padding: 7px 14px; border-radius: 10px; cursor: pointer;
+  background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #f1ecff; font: inherit; font-size: 13px; font-weight: 700;
+}
+.pr-form {
+  display: flex; flex-direction: column; gap: 12px;
+  background: #241347; border: 1.5px solid #ffd166; border-radius: 22px; padding: 20px;
+  margin-bottom: 20px;
+}
+.pr-grid .pr-form { margin-bottom: 0; }
+.pr-form-title { font-size: 18px; font-weight: 900; color: #fff; }
+.pr-form label { display: flex; flex-direction: column; gap: 5px; font-size: 13px; font-weight: 700; color: var(--dk-muted, #b9b0d6); }
+.pr-form input, .pr-form textarea {
+  padding: 10px 12px; border-radius: 12px; font: inherit; font-size: 14.5px;
+  background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.12); color: #fff; outline: none;
+}
+.pr-form input:focus, .pr-form textarea:focus { border-color: #ffd166; }
+.pr-form-actions { display: flex; gap: 8px; }
+.pr-form-actions .pr-save { margin-top: 0; }
+@media (max-width: 640px) { .pr-inner { padding: 24px 14px 40px; } .pr-grid { grid-template-columns: 1fr; } }
+
+/* ===================================================================
+   עמוד "סקרים"
+   =================================================================== */
+.polls-page { direction: rtl; }
+.pl-inner { max-width: 760px; margin: 0 auto; padding: 34px 20px 64px; }
+.pl-hero { text-align: center; margin-bottom: 28px; }
+.pl-hero h1 { margin: 0 0 8px; font-size: clamp(30px, 4.6vw, 46px); font-weight: 900; color: #fff; letter-spacing: -0.4px; }
+.pl-hero p { margin: 0; font-size: 16px; font-weight: 600; color: var(--dk-muted, #b9b0d6); }
+.pl-add-btn {
+  margin-top: 18px; padding: 11px 22px; border-radius: 14px; border: none; cursor: pointer;
+  background: var(--warm-grad, linear-gradient(135deg, #ffd166, #ff9f1c)); color: #190c35;
+  font: inherit; font-size: 15px; font-weight: 800;
+}
+.pl-list { display: flex; flex-direction: column; gap: 18px; }
+.pl-card, .pl-form {
+  background: #241347; border: 1px solid rgba(255, 255, 255, 0.10); border-radius: 22px;
+  padding: 20px 22px; box-shadow: 0 24px 50px -30px rgba(0, 0, 0, 0.8);
+}
+html body .pl-q { margin: 0 0 14px; font-size: 19px; font-weight: 900; color: #fff; }
+.pl-opts { display: flex; flex-direction: column; gap: 9px; }
+.pl-opt {
+  position: relative; overflow: hidden; display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  width: 100%; min-height: 48px; padding: 0 16px; border-radius: 14px; cursor: pointer;
+  background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #f1ecff; font: inherit; font-size: 15px; font-weight: 700; text-align: right;
+  transition: border-color .15s ease, background .15s ease;
+}
+.pl-opt:hover { border-color: #ec4899; }
+.pl-opt.mine { border-color: #ffd166; }
+.pl-fill {
+  position: absolute; inset-block: 0; inset-inline-start: 0;
+  background: rgba(236, 72, 153, 0.28); transition: width .5s cubic-bezier(.2,.8,.2,1);
+}
+.pl-opt.mine .pl-fill { background: rgba(255, 209, 102, 0.26); }
+.pl-opt-text, .pl-pct { position: relative; }
+.pl-pct { font-weight: 900; color: #fff; font-variant-numeric: tabular-nums; }
+.pl-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 12px; font-size: 13px; font-weight: 600; color: rgba(241, 236, 255, 0.55); }
+.pl-del, .pl-cancel {
+  padding: 7px 14px; border-radius: 10px; cursor: pointer;
+  background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #f1ecff; font: inherit; font-size: 13px; font-weight: 700;
+}
+.pl-empty { padding: 34px 20px; text-align: center; font-size: 15px; font-weight: 600; color: var(--dk-muted, #b9b0d6); }
+.pl-form { display: flex; flex-direction: column; gap: 12px; margin-bottom: 18px; border: 1.5px solid #ffd166; }
+.pl-form-title { font-size: 18px; font-weight: 900; color: #fff; }
+.pl-form label { display: flex; flex-direction: column; gap: 5px; font-size: 13px; font-weight: 700; color: var(--dk-muted, #b9b0d6); }
+.pl-form input, .pl-form textarea {
+  padding: 10px 12px; border-radius: 12px; font: inherit; font-size: 14.5px;
+  background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.12); color: #fff; outline: none;
+}
+.pl-form input:focus, .pl-form textarea:focus { border-color: #ffd166; }
+.pl-form-actions { display: flex; align-items: center; gap: 8px; }
+.pl-form-actions .pl-add-btn { margin-top: 0; }
+@media (max-width: 640px) { .pl-inner { padding: 24px 14px 40px; } }
+
+/* פורומים: טאבים (פורומים / שאלות גולשים / סקרים) */
+.fo-tabs { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin: -8px 0 26px; }
+.fo-tab {
+  padding: 10px 20px; border-radius: 999px; cursor: pointer;
+  background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #f1ecff; font: inherit; font-size: 15px; font-weight: 800;
+  transition: background .15s ease, border-color .15s ease;
+}
+.fo-tab:hover { border-color: #ec4899; }
+.fo-tab.active { background: var(--pink-grad, linear-gradient(135deg, #f472b6, #db2777)); border-color: transparent; color: #fff; }
+.fo-q-head { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; }
+.fo-q-head .fo-btn { flex-shrink: 0; }
+.fo-q-search {
+  flex: 1; min-width: 0; height: 46px; padding: 0 16px; border-radius: 14px; outline: none;
+  background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #fff; font: inherit; font-size: 15px;
+}
+.fo-q-search:focus { border-color: #ffd166; }
+.fo-polls .pl-inner { padding: 0; }
+.fo-polls .pl-hero { margin-bottom: 18px; }
+.fo-polls .pl-hero .pl-add-btn { margin-top: 0; }
+@media (max-width: 640px) {
+  .fo-tab { padding: 9px 14px; font-size: 14px; }
+  .fo-q-head { flex-wrap: wrap; }
+  .fo-q-head .fo-btn { width: 100%; }
+}
+/* שאלות גולשים בתוך הפורומים — בעיצוב הכהה של הפורומים */
+html body .forums-page .q-list {
+  gap: 0; background: #241347; border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 22px; box-shadow: 0 24px 50px -30px rgba(0, 0, 0, 0.8);
+}
+html body .forums-page .q-row { padding: 16px 22px; border-bottom-color: rgba(255, 255, 255, 0.07); }
+html body .forums-page .q-row:hover { background: rgba(255, 255, 255, 0.04); }
+html body .forums-page .q-count { color: #fff; }
+html body .forums-page .q-count-lbl,
+html body .forums-page .q-row-meta { color: rgba(241, 236, 255, 0.55); }
+html body .forums-page .q-row-title { color: var(--pink, #ec4899); font-size: 17px; }
+html body .forums-page .q-empty { color: var(--dk-muted, #b9b0d6); }
+/* פרטי שאלה */
+html body .question-detail .q-back { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.14); color: #f1ecff; }
+html body .question-detail .q-detail-card { background: #241347; border-color: rgba(255, 255, 255, 0.10); box-shadow: none; }
+html body .question-detail .q-detail-title { color: #fff; }
+html body .question-detail .q-detail-meta { color: rgba(241, 236, 255, 0.55); }
+html body .question-detail .q-detail-text { color: #f1ecff; }
+html body .question-detail .q-answers-title { color: #fff; }
+html body .question-detail .q-answer,
+html body .question-detail .q-answer-form { background: #241347; border-color: rgba(255, 255, 255, 0.10); }
+html body .question-detail .q-answer-head { color: var(--pink, #ec4899); }
+html body .question-detail .q-answer-text { color: #f1ecff; }
+html body .question-detail .q-answer-form textarea {
+  background: rgba(255, 255, 255, 0.07); border-color: rgba(255, 255, 255, 0.12); color: #fff; outline: none;
+}
+html body .question-detail .q-answer-form textarea:focus { border-color: #ffd166; }
+html body .question-detail .q-answer-send { background: var(--warm-grad, linear-gradient(135deg, #ffd166, #ff9f1c)); color: #190c35; }
+
+/* ===================================================================
+   פורומים — מובייל: הדיון בסגנון שרשור תגובות
+   =================================================================== */
+.fo-threads { display: flex; flex-direction: column; margin-bottom: 18px; }
+.fo-thread { padding: 18px 0 14px; border-bottom: 1px solid rgba(255, 255, 255, 0.10); }
+.fo-thread:first-child { padding-top: 6px; }
+.fo-th-post { display: flex; align-items: flex-start; gap: 12px; position: relative; }
+.fo-th-av {
+  width: 46px; height: 46px; border-radius: 50%; flex-shrink: 0;
+  display: grid; place-items: center;
+  background: var(--av); color: #fff; font-size: 16px; font-weight: 800; letter-spacing: -0.5px;
+}
+.fo-th-body { flex: 1; min-width: 0; }
+.fo-th-head { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; }
+html body .fo-th-name { font-size: 17px; font-weight: 900; color: #fff; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+html body .fo-th-date { font-size: 13.5px; font-weight: 700; color: rgba(241, 236, 255, 0.5); direction: ltr; unicode-bidi: isolate; }
+html body .fo-th-text { margin-top: 8px; font-size: 18px; line-height: 1.5; color: #f1ecff; white-space: normal; word-break: break-word; }
+.fo-th-actions { display: flex; align-items: center; gap: 18px; margin-top: 12px; }
+.fo-th-join, .fo-th-vote, .fo-th-toggle {
+  display: inline-flex; align-items: center; gap: 6px; padding: 0; cursor: pointer;
+  background: none; border: none; font: inherit; font-weight: 800; color: rgba(241, 236, 255, 0.6);
+}
+.fo-th-join { font-size: 15px; }
+.fo-th-join svg { width: 20px; height: 20px; }
+.fo-th-vote { font-size: 15.5px; color: #f1ecff; font-variant-numeric: tabular-nums; }
+.fo-th-vote svg { width: 19px; height: 19px; color: rgba(241, 236, 255, 0.6); }
+.fo-th-vote.up.on, .fo-th-vote.up.on svg { color: #f87171; }
+.fo-th-vote.down.on, .fo-th-vote.down.on svg { color: #a5b4fc; }
+.fo-th-actions .fo-del { margin-inline-start: auto; }
+/* "2 תגובות" + הקו שמחבר לשרשור */
+.fo-th-toggle { position: relative; margin: 10px 58px 0 0; font-size: 15px; }
+.fo-th-toggle svg { width: 20px; height: 20px; }
+.fo-thread.has-replies > .fo-th-post::after {
+  content: ''; position: absolute; top: 52px; bottom: -34px; right: 22px;
+  border-right: 1.5px solid rgba(241, 236, 255, 0.28);
+}
+.fo-th-replies { position: relative; margin: 14px 22px 0 0; padding: 4px 36px 0 0; border-right: 1.5px solid rgba(241, 236, 255, 0.28); }
+.fo-th-replies .fo-th-post { padding: 14px 0 6px; }
+.fo-th-replies .fo-th-post + .fo-th-post { border-top: 1px solid rgba(255, 255, 255, 0.06); }
+.fo-th-dot {
+  position: absolute; right: -42px; top: 22px;
+  width: 12px; height: 12px; border-radius: 50%; background: #f87171;
+}
+.fo-th-replies .fo-th-text { font-size: 17px; }
+.fo-reply-to {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 8px 12px; border-radius: 12px; background: rgba(255, 209, 102, 0.1);
+  font-size: 14px; font-weight: 700; color: #ffe3a3;
+}
+.fo-reply-to b { margin-inline-start: 4px; color: #ffd166; }
+.fo-reply-to button { background: none; border: none; color: #ffe3a3; font-size: 16px; cursor: pointer; padding: 2px 6px; }
