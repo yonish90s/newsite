@@ -13595,7 +13595,8 @@ function pollsViewHTML(embedded) {
   if (pollsData === null) body = `<div class="pl-empty">טוען סקרים...</div>`;
   else if (!list.length) body = `<div class="pl-empty">עוד אין סקרים — בקרוב יעלו כאן סקרים חדשים 📊</div>`;
   else body = list.map(p => pollCardHTML(p, admin)).join('');
-  const addBtn = admin && !pollsComposing ? `<button type="button" class="pl-add-btn" onclick="pollsCompose(true)">+ סקר חדש</button>` : '';
+  // כל אחד יכול לפתוח סקר (גם אורח, עם שם זמני); רק המנהל מוחק
+  const addBtn = !pollsComposing ? `<button type="button" class="pl-add-btn" onclick="pollsCompose(true)">+ סקר חדש</button>` : '';
   return `
     ${embedded ? (addBtn ? `<div class="pl-hero">${addBtn}</div>` : '') : `
     <div class="pl-hero">
@@ -13637,6 +13638,7 @@ function pollFormHTML() {
   return `
     <form class="pl-form" onsubmit="event.preventDefault(); pollsCreate(this)">
       <div class="pl-form-title">סקר חדש</div>
+      ${typeof forumGuestNameFieldHTML === 'function' ? forumGuestNameFieldHTML('pl-new-name') : ''}
       <label>השאלה<input name="q" required maxlength="160" placeholder="לדוגמה: מה הדייט המושלם בעיניכם?"></label>
       <label>אפשרויות (אפשרות בכל שורה, 2–8)<textarea name="options" rows="4" required placeholder="ארוחה במסעדה&#10;טיול בטבע&#10;ערב סרט בבית"></textarea></label>
       <div class="pl-form-actions">
@@ -13647,21 +13649,21 @@ function pollFormHTML() {
 }
 
 function pollsCompose(on) {
-  if (on && !isAdmin()) return;
   pollsComposing = !!on;
   pollsRender();
 }
 window.pollsCompose = pollsCompose;
 
 async function pollsCreate(form) {
-  if (!isAdmin()) return;
   const f = new FormData(form);
   const q = String(f.get('q') || '').trim().slice(0, 160);
   const options = String(f.get('options') || '').split('\n').map(s => s.trim().slice(0, 80)).filter(Boolean).slice(0, 8);
   if (!q) return;
   if (options.length < 2) { alert('צריך לפחות 2 אפשרויות'); return; }
+  const me = await forumIdentity('pl-new-name');
+  if (!me) return;
   try {
-    await set(push(ref(db, 'website/polls')), { q, options, t: Date.now() });
+    await set(push(ref(db, 'website/polls')), { q, options, t: Date.now(), uid: me.uid, name: me.name });
     pollsComposing = false;
     pollsRender();
     if (typeof showCopyToast === 'function') showCopyToast('✅ הסקר פורסם');
@@ -13905,6 +13907,31 @@ function forumAvatar(name, key) {
 const FORUM_ICON = '<svg viewBox="0 0 32 28" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><path d="M3 4.5A3.5 3.5 0 0 1 6.5 1h12A3.5 3.5 0 0 1 22 4.5v7a3.5 3.5 0 0 1-3.5 3.5H11l-5 4v-4h0A3 3 0 0 1 3 12z"/><path d="M22 8h3.5A3.5 3.5 0 0 1 29 11.5v7a3 3 0 0 1-3 3v4l-5-4h-6.5A3.5 3.5 0 0 1 11 18v-3"/></svg>';
 
 function forumRegistered() { return auth.currentUser && !auth.currentUser.isAnonymous; }
+// אורחים יכולים לכתוב בפורומים עם שם זמני שהם בוחרים (נשמר בדפדפן)
+const FORUM_GUEST_KEY = 'forum_guest_name';
+function forumGuestName() { try { return (localStorage.getItem(FORUM_GUEST_KEY) || '').trim(); } catch (e) { return ''; } }
+function forumMyName() {
+  return String((forumRegistered() ? liveChatUserName() : forumGuestName()) || 'אורח').slice(0, 40);
+}
+function forumGuestNameFieldHTML(id) {
+  if (forumRegistered()) return '';
+  return `<input id="${id}" class="fo-input fo-guest-name" maxlength="30" placeholder="השם שלך (שם זמני)" value="${escHtml(forumGuestName())}">`;
+}
+// מחזיר את זהות הכותב: משתמש רשום, או אורח (התחברות אנונימית + השם שכתב)
+async function forumIdentity(nameFieldId) {
+  if (forumRegistered()) return { uid: auth.currentUser.uid, name: forumMyName(), guest: false };
+  const el = document.getElementById(nameFieldId);
+  const name = String((el ? el.value : forumGuestName()) || '').trim().slice(0, 30);
+  if (name.length < 2) { alert('נא לכתוב שם (לפחות 2 תווים)'); if (el) el.focus(); return null; }
+  if (!(await ensureGuestSignedIn())) { alert('לא ניתן לפרסם כרגע. נסו שוב.'); return null; }
+  try { localStorage.setItem(FORUM_GUEST_KEY, name); } catch (e) {}
+  return { uid: auth.currentUser.uid, name, guest: true };
+}
+// זיהוי לפעולות קטנות (לייק/דיסלייק) — גם לאורח, בלי שם
+async function forumEnsureUid() {
+  if (auth.currentUser) return auth.currentUser.uid;
+  return (await ensureGuestSignedIn()) ? auth.currentUser.uid : null;
+}
 function forumTopicsOf(forumId) {
   const map = (forumTopics && forumTopics[forumId]) || {};
   return Object.entries(map).map(([id, t]) => Object.assign({ id }, t)).filter(t => t && t.title)
@@ -14007,6 +14034,7 @@ function forumListHTML() {
   const topics = forumTopicsOf(f.id);
   const compose = forumView.composing ? `
     <div class="fo-compose">
+      ${forumGuestNameFieldHTML('fo-new-name')}
       <input id="fo-new-title" class="fo-input" maxlength="120" placeholder="כותרת הנושא">
       <textarea id="fo-new-text" class="fo-input" rows="5" maxlength="5000" placeholder="מה רצית לכתוב?"></textarea>
       <div class="fo-compose-actions">
@@ -14015,7 +14043,7 @@ function forumListHTML() {
       </div>
     </div>` : '';
   return `
-    <div class="fo-crumbs"><a href="#" onclick="event.preventDefault(); forumOpen(null)">פורומים</a> › <span>${escHtml(f.title)}</span></div>
+    ${forumNavHTML('לכל הפורומים', 'forumOpen(null)', `<a href="#" onclick="event.preventDefault(); forumOpen(null)">פורומים</a> › <span>${escHtml(f.title)}</span>`)}
     <div class="fo-head">
       <div><h1>${escHtml(f.title)}</h1><p>${escHtml(f.sub)}</p></div>
       ${forumView.composing ? '' : `<button type="button" class="fo-btn" onclick="forumSetComposing(true)">+ נושא חדש</button>`}
@@ -14111,13 +14139,13 @@ function forumThreadPostHTML(p, isReply, admin, myUid) {
   const dislikes = Object.keys(p.dislikes || {}).length;
   const iLiked = !!(myUid && p.likes && p.likes[myUid]);
   const iDisliked = !!(myUid && p.dislikes && p.dislikes[myUid]);
-  const nameClick = p.uid ? `onclick="openUserPage('${artEsc(p.uid)}','${artEsc(p.name || '')}')"` : '';
+  const nameClick = (p.uid && !p.guest) ? `onclick="openUserPage('${artEsc(p.uid)}','${artEsc(p.name || '')}')"` : '';
   return `
     <div class="fo-th-post${isReply ? ' reply' : ''}">
       ${isReply ? '<span class="fo-th-dot"></span>' : `<span class="fo-th-av" style="--av:${forumAvColor(p)}">${escHtml(forumInitials(p.name))}</span>`}
       <div class="fo-th-body">
         <div class="fo-th-head">
-          <b class="fo-th-name" ${nameClick}>${escHtml(p.name || 'משתמש')}${p.uid && isUserVerified(p.uid, p.name) ? verifiedSealHTML(15) : ''}</b>
+          <b class="fo-th-name" ${nameClick}>${escHtml(p.name || 'משתמש')}${!p.guest && p.uid && isUserVerified(p.uid, p.name) ? verifiedSealHTML(15) : ''}</b>${p.guest ? '<span class="fo-guest-tag">אורח</span>' : ''}
           <span class="fo-th-date">${escHtml(forumDateTime(p.t))}</span>
         </div>
         <div class="fo-th-text">${escHtml(p.text || '').replace(/\n/g, '<br>')}</div>
@@ -14156,7 +14184,7 @@ function forumTopicMobileHTML(f, t, posts, admin, myUid) {
   }).join('');
   const target = forumReplyTo && byId[forumReplyTo];
   return `
-    <div class="fo-crumbs"><a href="#" onclick="event.preventDefault(); forumOpen(null)">פורומים</a> › <a href="#" onclick="event.preventDefault(); forumOpen('${f.id}')">${escHtml(f.title)}</a></div>
+    ${forumNavHTML('חזרה ל' + f.title, `forumOpen('${f.id}')`, `<a href="#" onclick="event.preventDefault(); forumOpen(null)">פורומים</a> › <a href="#" onclick="event.preventDefault(); forumOpen('${f.id}')">${escHtml(f.title)}</a>`)}
     <div class="fo-head"><div><h1>${escHtml(t ? t.title : '')}</h1></div>
       ${admin ? `<button type="button" class="fo-btn ghost danger" onclick="forumDeleteTopic()">מחיקת הנושא</button>` : ''}
     </div>
@@ -14164,11 +14192,10 @@ function forumTopicMobileHTML(f, t, posts, admin, myUid) {
       ${posts === null ? '<div class="fo-empty">טוען...</div>' : (threads || '<div class="fo-empty">עדיין אין הודעות</div>')}
     </div>
     <div class="fo-reply" id="fo-reply-box">
-      ${forumRegistered() ? `
-        ${target ? `<div class="fo-reply-to"><span>תגובה ל<b>${escHtml(target.name || 'משתמש')}</b></span><button type="button" onclick="forumStartReply(null)" aria-label="ביטול">✕</button></div>` : ''}
-        <textarea id="fo-reply-text" class="fo-input" rows="3" maxlength="5000" placeholder="${target ? 'כתבו תגובה...' : 'הצטרפו לדיון...'}"></textarea>
-        <div class="fo-compose-actions"><button type="button" class="fo-btn" onclick="forumReply()">שליחת תגובה</button></div>`
-      : `<div class="fo-login"><span>כדי להגיב צריך להתחבר</span><button type="button" class="fo-btn" onclick="openLiveChatLogin()">התחברות</button></div>`}
+      ${target ? `<div class="fo-reply-to"><span>תגובה ל<b>${escHtml(target.name || 'משתמש')}</b></span><button type="button" onclick="forumStartReply(null)" aria-label="ביטול">✕</button></div>` : ''}
+      ${forumGuestNameFieldHTML('fo-reply-name')}
+      <textarea id="fo-reply-text" class="fo-input" rows="3" maxlength="5000" placeholder="${target ? 'כתבו תגובה...' : 'הצטרפו לדיון...'}"></textarea>
+      <div class="fo-compose-actions"><button type="button" class="fo-btn" onclick="forumReply()">שליחת תגובה</button></div>
     </div>`;
 }
 
@@ -14179,7 +14206,6 @@ function forumToggleThread(id) {
 window.forumToggleThread = forumToggleThread;
 
 function forumStartReply(postId) {
-  if (postId && !forumRegistered()) { openLiveChatLogin(); return; }
   const draft = (document.getElementById('fo-reply-text') || {}).value || '';
   forumReplyTo = postId || null;
   forumRender();
@@ -14196,7 +14222,7 @@ function forumTopicHTML() {
   const t = forumTopics && forumTopics[forumView.forumId] && forumTopics[forumView.forumId][forumView.topicId];
   if (!f || (forumTopics !== null && !t)) { forumView.topicId = null; return forumListHTML(); }
   const admin = typeof isAdmin === 'function' && isAdmin();
-  const myUid = forumRegistered() ? auth.currentUser.uid : '';
+  const myUid = auth.currentUser ? auth.currentUser.uid : '';
   const posts = forumPosts ? Object.entries(forumPosts).map(([id, p]) => Object.assign({ id }, p)).sort((a, b) => (a.t || 0) - (b.t || 0)) : null;
   if (FORUM_MOBILE_MQ.matches) return forumTopicMobileHTML(f, t, posts, admin, myUid);
   const total = posts ? posts.length : 0;
@@ -14205,12 +14231,12 @@ function forumTopicHTML() {
   const pager = forumPagerHTML(total);
   const postHTML = (p, idx) => {
     const st = forumAuthorStats(p.uid);
-    const role = forumRole(p, st);
+    const role = p.guest ? { label: 'אורח', cls: 'guest' } : forumRole(p, st);
     const likes = Object.entries(p.likes || {}).filter(([, n]) => typeof n === 'string');
     const iLiked = !!(myUid && p.likes && p.likes[myUid]);
     const names = likes.map(([, n]) => n);
     const likeText = names.length <= 3 ? names.join(', ') : `${names.slice(0, 3).join(', ')} ועוד ${names.length - 3}`;
-    const nameClick = p.uid ? `onclick="openUserPage('${artEsc(p.uid)}','${artEsc(p.name || '')}')"` : '';
+    const nameClick = (p.uid && !p.guest) ? `onclick="openUserPage('${artEsc(p.uid)}','${artEsc(p.name || '')}')"` : '';
     return `
       <article class="fo-post${idx === 0 ? ' first' : ''}">
         <aside class="fo-author">
@@ -14237,7 +14263,7 @@ function forumTopicHTML() {
       </article>`;
   };
   return `
-    <div class="fo-crumbs"><a href="#" onclick="event.preventDefault(); forumOpen(null)">פורומים</a> › <a href="#" onclick="event.preventDefault(); forumOpen('${f.id}')">${escHtml(f.title)}</a></div>
+    ${forumNavHTML('חזרה ל' + f.title, `forumOpen('${f.id}')`, `<a href="#" onclick="event.preventDefault(); forumOpen(null)">פורומים</a> › <a href="#" onclick="event.preventDefault(); forumOpen('${f.id}')">${escHtml(f.title)}</a>`)}
     <div class="fo-head"><div><h1>${escHtml(t ? t.title : '')}</h1></div>
       ${admin ? `<button type="button" class="fo-btn ghost danger" onclick="forumDeleteTopic()">מחיקת הנושא</button>` : ''}
     </div>
@@ -14247,29 +14273,28 @@ function forumTopicHTML() {
     </div>
     ${pager}
     <div class="fo-reply">
-      ${forumRegistered() ? `
-        <textarea id="fo-reply-text" class="fo-input" rows="4" maxlength="5000" placeholder="כתבו תגובה..."></textarea>
-        <div class="fo-compose-actions"><button type="button" class="fo-btn" onclick="forumReply()">שליחת תגובה</button></div>`
-      : `<div class="fo-login"><span>כדי להגיב צריך להתחבר</span><button type="button" class="fo-btn" onclick="openLiveChatLogin()">התחברות</button></div>`}
+      ${forumGuestNameFieldHTML('fo-reply-name')}
+      <textarea id="fo-reply-text" class="fo-input" rows="4" maxlength="5000" placeholder="כתבו תגובה..."></textarea>
+      <div class="fo-compose-actions"><button type="button" class="fo-btn" onclick="forumReply()">שליחת תגובה</button></div>
     </div>`;
 }
 
 async function forumToggleLike(postId) {
-  if (!forumRegistered()) { openLiveChatLogin(); return; }
-  const uid = auth.currentUser.uid;
+  const uid = await forumEnsureUid();
+  if (!uid) return;
   const p = forumPosts && forumPosts[postId];
   const on = !!(p && p.likes && p.likes[uid]);
   try {
     // לייק מבטל דיסלייק (ולהפך)
     await update(ref(db, `website/forum_posts/${forumView.topicId}/${postId}`), {
-      [`likes/${uid}`]: on ? null : String(liveChatUserName() || 'משתמש').slice(0, 40),
+      [`likes/${uid}`]: on ? null : forumMyName(),
       [`dislikes/${uid}`]: null
     });
   } catch (e) { alert('הלייק לא נשמר. נסו שוב.'); }
 }
 async function forumToggleDislike(postId) {
-  if (!forumRegistered()) { openLiveChatLogin(); return; }
-  const uid = auth.currentUser.uid;
+  const uid = await forumEnsureUid();
+  if (!uid) return;
   const p = forumPosts && forumPosts[postId];
   const on = !!(p && p.dislikes && p.dislikes[uid]);
   try {
@@ -14282,10 +14307,38 @@ async function forumToggleDislike(postId) {
 window.forumToggleDislike = forumToggleDislike;
 window.forumToggleLike = forumToggleLike;
 
+// כפתור חזרה בולט + פירורי לחם (במובייל הכפתור נדבק לראש המסך)
+const FORUM_BACK_ICO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>';
+function forumNavHTML(label, onclick, crumbs) {
+  return `
+    <div class="fo-nav">
+      <button type="button" class="fo-back" onclick="${onclick}">${FORUM_BACK_ICO}<span>${escHtml(label)}</span></button>
+      <div class="fo-crumbs">${crumbs}</div>
+    </div>`;
+}
+
+// כפתור "אחורה" של הדפדפן / מחוות החזרה בטלפון — חוזרים רמה אחת בתוך הפורומים
+let _forumPopping = false;
+function forumHistoryPush() {
+  if (_forumPopping) return;
+  try { history.pushState({ forum: { forumId: forumView.forumId, topicId: forumView.topicId, tab: forumTab } }, ''); } catch (e) {}
+}
+window.addEventListener('popstate', (e) => {
+  if (!mainContent || !mainContent.querySelector('.forums-page')) return;
+  const st = (e.state && e.state.forum) || { forumId: null, topicId: null, tab: 'forums' };
+  _forumPopping = true;
+  try {
+    forumTab = st.tab || 'forums';
+    if (st.topicId && st.forumId) forumOpenTopic(st.forumId, st.topicId);
+    else forumOpen(st.forumId || null);
+  } finally { _forumPopping = false; }
+});
+
 function forumOpen(forumId) {
   if (forumPostsUnsub) { forumPostsUnsub(); forumPostsUnsub = null; }
   forumPosts = null;
   forumView = { forumId: forumId || null, topicId: null, composing: false };
+  forumHistoryPush();
   forumRender();
   try { window.scrollTo(0, 0); } catch (e) {}
 }
@@ -14298,6 +14351,7 @@ function forumOpenTopic(forumId, topicId) {
   forumPosts = null;
   forumPage = 1;
   forumView = { forumId, topicId, composing: false };
+  forumHistoryPush();
   forumRender();
   try { window.scrollTo(0, 0); } catch (e) {}
   forumPostsUnsub = onValue(ref(db, `website/forum_posts/${topicId}`), (snap) => {
@@ -14314,7 +14368,6 @@ function forumOpenTopic(forumId, topicId) {
 window.forumOpenTopic = forumOpenTopic;
 
 function forumSetComposing(on) {
-  if (on && !forumRegistered()) { openLiveChatLogin(); return; }
   forumView.composing = !!on;
   forumRender();
   if (on) setTimeout(() => { const i = document.getElementById('fo-new-title'); if (i) i.focus(); }, 30);
@@ -14324,13 +14377,14 @@ window.forumSetComposing = forumSetComposing;
 let forumBusy = false;
 async function forumCreateTopic() {
   if (forumBusy) return;
-  if (!forumRegistered()) { openLiveChatLogin(); return; }
   const title = (document.getElementById('fo-new-title') || {}).value?.trim() || '';
   const text = (document.getElementById('fo-new-text') || {}).value?.trim() || '';
   if (title.length < 2) { alert('נא לכתוב כותרת'); return; }
   if (!text) { alert('נא לכתוב תוכן לנושא'); return; }
-  const user = auth.currentUser;
-  const name = String(liveChatUserName() || 'משתמש').slice(0, 40);
+  const me = await forumIdentity('fo-new-name');
+  if (!me) return;
+  const user = { uid: me.uid };
+  const name = me.name;
   const now = Date.now();
   const forumId = forumView.forumId;
   forumBusy = true;
@@ -14339,6 +14393,7 @@ async function forumCreateTopic() {
     await set(tRef, { title: title.slice(0, 120), uid: user.uid, name, t: now, lastT: now, lastName: name, lastUid: user.uid, replies: 0 });
     const first = { uid: user.uid, name, text: text.slice(0, 5000), t: now };
     if (typeof isAdmin === 'function' && isAdmin()) first.admin = true;
+    if (me.guest) first.guest = true;
     await set(push(ref(db, `website/forum_posts/${tRef.key}`)), first);
     forumOpenTopic(forumId, tRef.key);
   } catch (e) {
@@ -14350,12 +14405,13 @@ window.forumCreateTopic = forumCreateTopic;
 
 async function forumReply() {
   if (forumBusy) return;
-  if (!forumRegistered()) { openLiveChatLogin(); return; }
   const box = document.getElementById('fo-reply-text');
   const text = box ? box.value.trim() : '';
   if (!text) return;
-  const user = auth.currentUser;
-  const name = String(liveChatUserName() || 'משתמש').slice(0, 40);
+  const me = await forumIdentity('fo-reply-name');
+  if (!me) return;
+  const user = { uid: me.uid };
+  const name = me.name;
   const now = Date.now();
   const { forumId, topicId } = forumView;
   forumBusy = true;
@@ -14363,6 +14419,7 @@ async function forumReply() {
     const msg = { uid: user.uid, name, text: text.slice(0, 5000), t: now };
     if (typeof isAdmin === 'function' && isAdmin()) msg.admin = true;
     if (forumReplyTo && forumPosts && forumPosts[forumReplyTo]) msg.replyTo = forumReplyTo;
+    if (me.guest) msg.guest = true;
     await set(push(ref(db, `website/forum_posts/${topicId}`)), msg);
     if (box) box.value = '';
     // פותחים את השרשור כדי שהתגובה החדשה תיראה
@@ -17266,7 +17323,7 @@ function photoIsLikedLocal(id) {
   try {
     const user = auth.currentUser;
     const localKey = user ? `liked_galleries_${user.uid}` : 'guest_liked_galleries';
-    const liked = JSON.parse(localStorage.getItem(localKey) || localStorage.getItem('liked_galleries') || '{}');
+    const liked = JSON.parse(localStorage.getItem(localKey) || '{}');
     return !!liked[id];
   } catch (e) {
     return false;
@@ -17400,7 +17457,7 @@ function photoToggleLike(id) {
 
   let liked = {};
   try {
-    liked = JSON.parse(localStorage.getItem(localKey) || localStorage.getItem('liked_galleries') || '{}');
+    liked = JSON.parse(localStorage.getItem(localKey) || '{}');
   } catch (e) {}
 
   const isAddingLike = !liked[id];
@@ -17427,7 +17484,6 @@ function photoToggleLike(id) {
     localStorage.setItem(`like_budget_${user.uid}`, budget);
   }
   localStorage.setItem(localKey, JSON.stringify(liked));
-  localStorage.setItem('liked_galleries', JSON.stringify(liked));
 
   const isNowLiked = !!liked[id];
   if (isNowLiked && typeof trackEvent === 'function') trackEvent('like');
@@ -17715,7 +17771,7 @@ function photoGetLikedAlbums() {
   const user = auth.currentUser;
   const localKey = user ? `liked_galleries_${user.uid}` : 'guest_liked_galleries';
   let map = {};
-  try { map = JSON.parse(localStorage.getItem(localKey) || localStorage.getItem('liked_galleries') || '{}'); } catch (e) {}
+  try { map = JSON.parse(localStorage.getItem(localKey) || '{}'); } catch (e) {}
   const albums = (typeof photoGetAlbums === 'function') ? photoGetAlbums() : [];
   return albums.filter(a => map[a.id]);
 }
@@ -17736,7 +17792,7 @@ function openHistoryDrawer(skipPull) {
     if (changed && m && m.style.display !== 'none') openHistoryDrawer(true);
   });
   let history = [];
-  try { history = JSON.parse(localStorage.getItem('watch_history') || '[]'); } catch (e) {}
+  try { history = JSON.parse(localStorage.getItem(watchHistoryKey()) || '[]'); } catch (e) {}
   const inner = history.length
     ? `<div class="saved-grid">${history.map(item => _historyCell(item)).join('')}</div>`
     : `<div class="saved-empty">היסטוריית הצפייה שלך ריקה.<br>כל תמונה, סיפור או רעיון שתיכנס אליהם יופיעו כאן.</div>`;
@@ -17783,7 +17839,7 @@ window.openHistoryItem = openHistoryItem;
 // ניקוי היסטוריית הצפייה מתוך ה-drawer (מרענן את ה-drawer עצמו)
 function clearHistoryDrawer() {
   if (!confirm('האם ברצונך למחוק את כל היסטוריית הצפייה?')) return;
-  try { localStorage.removeItem('watch_history'); } catch (e) {}
+  try { localStorage.removeItem(watchHistoryKey()); } catch (e) {}
   _historyPush([]);
   openHistoryDrawer(true);
 }
@@ -21411,6 +21467,13 @@ function openIdeaDetailModal(ideaId) {
 window.openIdeaDetailModal = openIdeaDetailModal;
 
 // ===== היסטוריית צפייה, מועדפים/לייקים ושפה =====
+// כל משתמש (וכל אורח) מקבל היסטוריה משלו — משתמש חדש או אורח מתחילים נקי.
+// (פעם הייתה מפתח אחד משותף לכל מי שנכנס מאותו דפדפן — מוחקים אותו ואת מפתח הלייקים הישן.)
+function watchHistoryKey() {
+  const u = auth.currentUser;
+  return u ? `watch_history_${u.uid}` : 'watch_history_guest';
+}
+try { localStorage.removeItem('watch_history'); localStorage.removeItem('liked_galleries'); } catch (e) {}
 // היסטוריית צפייה — נשמרת בדפדפן, ולמשתמש מחובר גם בחשבון (website/users/{uid}/watch_history)
 // כדי שניקוי/מחיקה יחולו בכל המכשירים ולא רק במכשיר שבו ניקו.
 function _historyRemoteRef() {
@@ -21428,16 +21491,13 @@ async function _historyPull() {
   if (!r) return false;
   try {
     const snap = await get(r);
-    const local = localStorage.getItem('watch_history') || '[]';
-    if (!snap.exists()) {
-      _historyPush(JSON.parse(local));
-      return false;
-    }
+    const local = localStorage.getItem(watchHistoryKey()) || '[]';
+    if (!snap.exists()) return false; // חשבון חדש — מתחיל עם היסטוריה ריקה
     const v = snap.val() || {};
     const items = Array.isArray(v.items) ? v.items : (v.items ? Object.values(v.items) : []);
     const next = JSON.stringify(items);
     if (next === local) return false;
-    if (items.length) localStorage.setItem('watch_history', next); else localStorage.removeItem('watch_history');
+    if (items.length) localStorage.setItem(watchHistoryKey(), next); else localStorage.removeItem(watchHistoryKey());
     return true;
   } catch (e) { return false; }
 }
@@ -21445,7 +21505,7 @@ async function _historyPull() {
 function addToWatchHistory(item) {
   if (!item || !item.id) return;
   try {
-    let history = JSON.parse(localStorage.getItem('watch_history') || '[]');
+    let history = JSON.parse(localStorage.getItem(watchHistoryKey()) || '[]');
     history = history.filter(h => h.id !== item.id);
     const validImg = (item.images && item.images[0]) || item.img || '';
     history.unshift({
@@ -21459,7 +21519,7 @@ function addToWatchHistory(item) {
       date: new Date().toLocaleDateString('he-IL')
     });
     if (history.length > 50) history = history.slice(0, 50);
-    localStorage.setItem('watch_history', JSON.stringify(history));
+    localStorage.setItem(watchHistoryKey(), JSON.stringify(history));
     _historyPush(history);
   } catch (e) {}
 }
@@ -21468,7 +21528,7 @@ window.addToWatchHistory = addToWatchHistory;
 function openWatchHistoryPage(skipPull) {
   if (!skipPull) _historyPull().then(changed => { if (changed) openWatchHistoryPage(true); });
   let history = [];
-  try { history = JSON.parse(localStorage.getItem('watch_history') || '[]'); } catch (e) {}
+  try { history = JSON.parse(localStorage.getItem(watchHistoryKey()) || '[]'); } catch (e) {}
 
   let contentHTML = '';
   if (history.length === 0) {
@@ -21525,7 +21585,7 @@ window.openWatchHistoryModal = openWatchHistoryPage;
 
 function clearWatchHistory() {
   if (confirm("האם ברצונך למחוק את כל היסטוריית הצפייה?")) {
-    localStorage.removeItem('watch_history');
+    localStorage.removeItem(watchHistoryKey());
     _historyPush([]);
     openWatchHistoryPage(true);
   }
@@ -21534,9 +21594,9 @@ window.clearWatchHistory = clearWatchHistory;
 
 function removeFromWatchHistory(id) {
   try {
-    let history = JSON.parse(localStorage.getItem('watch_history') || '[]');
+    let history = JSON.parse(localStorage.getItem(watchHistoryKey()) || '[]');
     history = history.filter(h => h.id !== id);
-    localStorage.setItem('watch_history', JSON.stringify(history));
+    localStorage.setItem(watchHistoryKey(), JSON.stringify(history));
     _historyPush(history);
   } catch (e) {}
 }
@@ -21552,7 +21612,7 @@ function openFavoritesPage(tab) {
 
   let likedObj = {};
   let savedObj = {};
-  try { likedObj = JSON.parse(localStorage.getItem(likedKey) || localStorage.getItem('liked_galleries') || '{}'); } catch(e){}
+  try { likedObj = JSON.parse(localStorage.getItem(likedKey) || '{}'); } catch(e){}
   try { savedObj = JSON.parse(localStorage.getItem(savedKey) || '{}'); } catch(e){}
 
   const likedIds = Object.keys(likedObj).filter(k => likedObj[k]);

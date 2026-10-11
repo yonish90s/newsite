@@ -28,7 +28,15 @@
       "verified_users": { ".read": true },
       "admin_uid": { ".read": "auth != null" },
 
-      "polls": { ".read": true },
+      "polls": {
+        ".read": true,
+        "$pollId": {
+          ".write": "auth != null && !data.exists() && newData.child('uid').val() === auth.uid",
+          ".validate": "newData.hasChildren(['q', 'options', 't', 'uid', 'name']) && newData.child('q').isString() && newData.child('q').val().length >= 1 && newData.child('q').val().length <= 160 && newData.child('name').isString() && newData.child('name').val().length <= 40 && newData.child('t').isNumber() && newData.child('t').val() <= now + 60000 && newData.child('options/0').exists() && newData.child('options/1').exists() && !newData.child('options/8').exists()",
+          "options": { "$i": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 80" } },
+          "$other": { ".validate": "$other === 'q' || $other === 'options' || $other === 't' || $other === 'uid' || $other === 'name'" }
+        }
+      },
 
       "poll_counts": {
         ".read": true,
@@ -252,12 +260,12 @@
         ".read": true,
         "$forumId": {
           "$topicId": {
-            ".write": "auth != null && auth.token.firebase.sign_in_provider !== 'anonymous' && !data.exists() && newData.child('uid').val() === auth.uid && newData.child('lastUid').val() === auth.uid && newData.child('replies').val() === 0",
+            ".write": "auth != null && !data.exists() && newData.child('uid').val() === auth.uid && newData.child('lastUid').val() === auth.uid && newData.child('replies').val() === 0",
             ".validate": "!newData.exists() || ($forumId.length <= 30 && newData.hasChildren(['title', 'uid', 'name', 't', 'lastT', 'lastName', 'lastUid', 'replies']) && newData.child('title').isString() && newData.child('title').val().length >= 2 && newData.child('title').val().length <= 120 && newData.child('name').isString() && newData.child('name').val().length <= 40 && newData.child('t').isNumber() && newData.child('t').val() <= now + 60000)",
-            "replies": { ".write": "auth != null && auth.token.firebase.sign_in_provider !== 'anonymous' && data.exists() && newData.isNumber() && newData.val() === data.val() + 1" },
-            "lastT": { ".write": "auth != null && auth.token.firebase.sign_in_provider !== 'anonymous' && data.exists() && newData.isNumber() && newData.val() >= data.val() && newData.val() <= now + 60000" },
-            "lastName": { ".write": "auth != null && auth.token.firebase.sign_in_provider !== 'anonymous' && data.exists() && newData.isString() && newData.val().length <= 40" },
-            "lastUid": { ".write": "auth != null && auth.token.firebase.sign_in_provider !== 'anonymous' && data.exists() && newData.val() === auth.uid" },
+            "replies": { ".write": "auth != null && data.exists() && newData.isNumber() && newData.val() === data.val() + 1" },
+            "lastT": { ".write": "auth != null && data.exists() && newData.isNumber() && newData.val() >= data.val() && newData.val() <= now + 60000" },
+            "lastName": { ".write": "auth != null && data.exists() && newData.isString() && newData.val().length <= 40" },
+            "lastUid": { ".write": "auth != null && data.exists() && newData.val() === auth.uid" },
             "$other": { ".validate": "$other === 'title' || $other === 'uid' || $other === 'name' || $other === 't' || $other === 'lastT' || $other === 'lastName' || $other === 'lastUid' || $other === 'replies'" }
           }
         }
@@ -267,12 +275,12 @@
         ".read": true,
         "$topicId": {
           "$postId": {
-            ".write": "auth != null && auth.token.firebase.sign_in_provider !== 'anonymous' && !data.exists() && newData.child('uid').val() === auth.uid",
+            ".write": "auth != null && !data.exists() && newData.child('uid').val() === auth.uid",
             ".validate": "!newData.exists() || (newData.hasChildren(['uid', 'name', 'text', 't']) && newData.child('text').isString() && newData.child('text').val().length >= 1 && newData.child('text').val().length <= 5000 && newData.child('name').isString() && newData.child('name').val().length <= 40 && newData.child('t').isNumber() && newData.child('t').val() <= now + 60000)",
             "admin": { ".validate": "newData.val() === true && auth.token.email === 'yoni98321@gmail.com' && auth.token.email_verified === true" },
             "likes": {
               "$likerUid": {
-                ".write": "auth != null && auth.token.firebase.sign_in_provider !== 'anonymous' && auth.uid === $likerUid && data.parent().parent().exists()",
+                ".write": "auth != null && auth.uid === $likerUid && data.parent().parent().exists()",
                 ".validate": "!newData.exists() || (newData.isString() && newData.val().length >= 1 && newData.val().length <= 40)"
               }
             },
@@ -281,11 +289,12 @@
             },
             "dislikes": {
               "$dislikerUid": {
-                ".write": "auth != null && auth.token.firebase.sign_in_provider !== 'anonymous' && auth.uid === $dislikerUid && data.parent().parent().exists()",
+                ".write": "auth != null && auth.uid === $dislikerUid && data.parent().parent().exists()",
                 ".validate": "!newData.exists() || newData.val() === true"
               }
             },
-            "$other": { ".validate": "$other === 'uid' || $other === 'name' || $other === 'text' || $other === 't' || $other === 'admin' || $other === 'likes' || $other === 'dislikes' || $other === 'replyTo'" }
+            "guest": { ".validate": "newData.val() === true" },
+            "$other": { ".validate": "$other === 'uid' || $other === 'name' || $other === 'text' || $other === 't' || $other === 'admin' || $other === 'likes' || $other === 'dislikes' || $other === 'replyTo' || $other === 'guest'" }
           }
         }
       },

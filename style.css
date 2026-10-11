@@ -9529,3 +9529,39 @@ html body .fo-th-text { margin-top: 8px; font-size: 18px; line-height: 1.5; colo
 }
 .fo-reply-to b { margin-inline-start: 4px; color: #ffd166; }
 .fo-reply-to button { background: none; border: none; color: #ffe3a3; font-size: 16px; cursor: pointer; padding: 2px 6px; }
+
+/* מובייל: בלי עמודות הקישורים בפוטר (על האתר / תוכן / קהילה / צרו קשר) — נשאר רק הלוגו והרשתות */
+@media (max-width: 768px) {
+  html body .site-footer .site-footer-cols { display: none !important; }
+  html body .site-footer .site-footer-bottom { margin-top: 0 !important; padding-top: 0 !important; border-top: none !important; }
+}
+
+/* פורומים: כפתור חזרה בולט מעל כל פורום/דיון */
+.fo-nav { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+.fo-nav .fo-crumbs { margin-bottom: 0; }
+.fo-back {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 9px 16px 9px 18px; border-radius: 999px; cursor: pointer;
+  background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #fff; font: inherit; font-size: 15px; font-weight: 800;
+  max-width: 100%; transition: background .15s ease, border-color .15s ease;
+}
+.fo-back span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fo-back svg { width: 18px; height: 18px; flex-shrink: 0; color: #ffd166; }
+.fo-back:hover { background: rgba(255, 255, 255, 0.14); border-color: #ffd166; }
+@media (max-width: 768px) {
+  /* במובייל: הכפתור נשאר נגיש גם בגלילה */
+  .fo-nav {
+    position: sticky; top: 8px; z-index: 50;
+    margin: 0 -6px 14px; padding: 6px;
+  }
+  .fo-nav .fo-crumbs { display: none; }
+  .fo-back { background: rgba(36, 19, 71, 0.92); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 8px 22px -10px rgba(0, 0, 0, 0.8); }
+}
+/* פורומים: אורחים עם שם זמני */
+.fo-guest-tag {
+  padding: 2px 8px; border-radius: 999px; font-size: 11.5px; font-weight: 800;
+  background: rgba(255, 255, 255, 0.10); color: rgba(241, 236, 255, 0.75);
+}
+.fo-role.guest { background: rgba(255, 255, 255, 0.10) !important; color: rgba(241, 236, 255, 0.75) !important; }
+.fo-guest-name { max-width: 320px; }
