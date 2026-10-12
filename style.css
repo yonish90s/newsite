@@ -10124,3 +10124,58 @@ html.ms-open { overflow: hidden; }
 .hw-up-btn svg { width: 26px; height: 26px; }
 .hw-stat-upload:hover .hw-up-btn, .hw-stat-upload:active .hw-up-btn { transform: translateY(-2px); }
 .hw-stat-upload small { font-weight: 800 !important; color: #ffd166 !important; }
+
+/* ===================================================================
+   מובייל: ראש עמוד התמונות — מינימליסטי ומסודר
+   כפתור העלאה נמוך · קטגוריות כגלולות · שורה אחת של כלים + מתגים כגלולות
+   =================================================================== */
+.view-toggles .m-tools { margin: 0; }
+@media (max-width: 768px) {
+  .photos-page[data-section="photos"] .art-inner { padding-top: 12px !important; }
+  .photos-page[data-section="photos"] .art-layout { gap: 12px !important; }
+  .photos-page[data-section="photos"] .art-sidebar-right { position: static !important; top: auto !important; }
+  .photos-page[data-section="photos"] .cta-add-btn {
+    height: 46px; padding: 0 16px !important; margin: 0 !important; border-radius: 14px !important; font-size: 15px !important;
+  }
+
+  /* קטגוריות: גלולות קטנות בגלילה אופקית */
+  .photos-page[data-section="photos"] .pcat-tiles {
+    display: flex !important; gap: 8px !important; margin: 0 0 12px !important; padding: 2px 0 4px !important;
+    overflow-x: auto; scrollbar-width: none;
+  }
+  .photos-page[data-section="photos"] .pcat-tiles::-webkit-scrollbar { display: none; }
+  .photos-page[data-section="photos"] .pcat-tile {
+    flex: none; flex-direction: row; gap: 6px; padding: 0 14px; height: 36px; border-radius: 999px;
+    background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.12); box-shadow: none !important;
+  }
+  .photos-page[data-section="photos"] .pcat-tile:hover { transform: none; }
+  .photos-page[data-section="photos"] .pcat-tile.active { background: rgba(236, 72, 153, 0.16); border-color: #ec4899; }
+  .photos-page[data-section="photos"] .pcat-img { display: none; }
+  .photos-page[data-section="photos"] .pcat-name { font-size: 13.5px; font-weight: 700; }
+  .photos-page[data-section="photos"] .pcat-count { margin: 0; font-size: 12px; }
+  .photos-page[data-section="photos"] .pcat-count::before { content: "· "; }
+
+  /* כלים + מתגים: שורה אחת בגלילה אופקית, בלי קופסה */
+  .photos-page[data-section="photos"] .view-toggles {
+    display: flex !important; flex-wrap: nowrap !important; align-items: center; gap: 8px !important;
+    padding: 0 0 4px !important; margin: 0 0 14px !important; background: none !important; border: 0 !important; box-shadow: none !important;
+    overflow-x: auto; scrollbar-width: none;
+  }
+  .photos-page[data-section="photos"] .view-toggles::-webkit-scrollbar { display: none; }
+  .photos-page[data-section="photos"] .view-toggles .m-tools { flex: none; gap: 8px; padding-inline-end: 8px; border-inline-end: 1px solid rgba(255, 255, 255, 0.12); }
+  .photos-page[data-section="photos"] .m-tool { width: 36px; height: 36px; border-radius: 999px; }
+  .photos-page[data-section="photos"] .m-tool svg { width: 19px; height: 19px; }
+  .photos-page[data-section="photos"] .m-tool-badge { top: -4px; left: -4px; min-width: 16px; height: 16px; line-height: 16px; font-size: 10px; }
+  .photos-page[data-section="photos"] .m-tag-chip { height: 36px; font-size: 13px; padding: 0 12px; }
+  .photos-page[data-section="photos"] .view-toggles .tgl {
+    flex: none; position: relative; height: 36px; padding: 0 13px; gap: 0; border-radius: 999px;
+    background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.12);
+    font-size: 13px !important; font-weight: 700 !important; color: rgba(255, 255, 255, 0.85) !important; white-space: nowrap;
+    transition: background .15s ease, border-color .15s ease, color .15s ease;
+  }
+  .photos-page[data-section="photos"] .view-toggles .tgl .tgl-switch { position: absolute; width: 1px; height: 1px; overflow: hidden; opacity: 0; }
+  .photos-page[data-section="photos"] .view-toggles .tgl:has(input:checked) { background: rgba(236, 72, 153, 0.16); border-color: #ec4899; color: #fbcfe8 !important; }
+  .photos-page[data-section="photos"] .view-toggles .tgl:has(input:focus-visible) { outline: 2px solid #ec4899; outline-offset: 2px; }
+  .photos-page[data-section="photos"] .view-toggles .tgl-desktop-only { display: none !important; }
+}
+@media (max-width: 768px) { .photos-page[data-section="photos"] .pcat-tiles .pcat-tile { height: 36px !important; min-height: 0 !important; padding: 0 14px !important; align-items: center !important; justify-content: center !important; width: auto !important; min-width: 0 !important; } }

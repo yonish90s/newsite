@@ -15023,10 +15023,10 @@ function buildPhotosPage(albums, section) {
             : (section === 'secondhand' || section === 'communities' || section === 'photos' ? '' : (typeof sectionCategoryBarHTML === 'function' ? sectionCategoryBarHTML(section) : ''))}
           ${section === 'communities' ? '' : (section === 'secondhand' && typeof secondhandFilterBarHTML === 'function' ? secondhandFilterBarHTML() : photoFilterSectionHTML())}
           ${section === 'photos' ? photoCategoryTilesHTML(_tileAlbums) : ''}
-          ${section === 'photos' ? photoToolsRowHTML() : ''}
           ${section === 'communities' ? '' : (section === 'secondhand'
             ? (typeof secondhandTogglesHTML === 'function' ? secondhandTogglesHTML() : '')
             : `<div class="view-toggles">
+            ${section === 'photos' ? photoToolsRowHTML() : ''}
             <label class="tgl">
               <span class="tgl-label">✔️ משתמשים מאומתים</span>
               <span class="tgl-switch"><input type="checkbox" ${photoVerifiedOnly ? 'checked' : ''} onchange="photoToggleVerified(this.checked)"><span class="tgl-slider"></span></span>
