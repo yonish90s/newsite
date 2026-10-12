@@ -12800,8 +12800,6 @@ function homeWelcomeHeroHTML() {
       ${homeWatchHTML()}
       <div class="hw-inner">
         <div class="hw-text">
-          <h1 class="hw-title">יוצרים, משתפים,<br>מתחברים.</h1>
-          <p class="hw-sub">תמונות, קומיקס וסיפורים מהקהילה — כל מה שאתם יוצרים, במקום אחד.</p>
           <div class="hw-actions">
             <button type="button" class="hw-cta" onclick="homeWelcomeToUpload()">העלו תוכן</button>
             ${homeTodayStatsHTML()}
