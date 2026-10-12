@@ -10113,3 +10113,14 @@ html.ms-open { overflow: hidden; }
   .ms-panel { left: 0; top: 0; transform: none; width: 100%; height: 100%; max-height: none; border-radius: 0; }
   html.ms-open .mtabs, html.ms-open .mtab-open { display: none !important; }
 }
+
+/* עמוד הבית: ריבוע "העלאת תמונת גולשים" עם הכפתור הצהוב — במקום הריק בגריד הנתונים */
+.hw-stat-upload { background: none; border: 0; cursor: pointer; font: inherit; color: inherit; -webkit-tap-highlight-color: transparent; }
+.hw-up-btn {
+  width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center; flex: none;
+  background: linear-gradient(135deg, #ffd23f, #ff9f1c); color: #3a2433; box-shadow: 0 8px 20px -8px rgba(255, 159, 28, .7);
+  transition: transform .15s ease;
+}
+.hw-up-btn svg { width: 26px; height: 26px; }
+.hw-stat-upload:hover .hw-up-btn, .hw-stat-upload:active .hw-up-btn { transform: translateY(-2px); }
+.hw-stat-upload small { font-weight: 800 !important; color: #ffd166 !important; }

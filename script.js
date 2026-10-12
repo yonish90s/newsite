@@ -12852,6 +12852,10 @@ function homeTodayStatsHTML() {
       ${stat('hw-stat-discussions', '<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h9A2.5 2.5 0 0 1 18 5.5v5a2.5 2.5 0 0 1-2.5 2.5H10l-4 3.5V13a2.5 2.5 0 0 1-2-2.5z"/><path d="M18 8.5h.5A2.5 2.5 0 0 1 21 11v5a2.5 2.5 0 0 1-2 2.5V21l-3.5-2.5H12"/>', fmt(x && x.discussions), 'דיונים פעילים היום')}
       ${stat('hw-stat-questions', '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.2a2.6 2.6 0 0 1 5 .9c0 1.7-2.5 2.2-2.5 3.9"/><path d="M12 17h.01"/>', fmt(x && x.questions), 'שאלות היום')}
       ${stat('hw-stat-activity', '<path d="M3 12h4l2.5-6 4 12 2.5-6H21"/>', fmt(x && x.activity), 'נפח פעילות היום')}
+      <button type="button" class="hw-stat hw-stat-upload" onclick="homeUploadPhoto()">
+        <span class="hw-up-btn" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5.5 11.5 12 5l6.5 6.5"/></svg></span>
+        <span class="hw-stat-text"><small>העלאת תמונת גולשים</small></span>
+      </button>
     </div>`;
 }
 async function homeLoadTodayVisitors() {
@@ -12982,10 +12986,13 @@ function homeWatchClick() {
 }
 window.homeWatchClick = homeWatchClick;
 
-function homeWelcomeToUpload() {
-  const target = document.querySelector('.home-feed-page .qu-hero-wrap');
-  if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+// העלאת תמונה מעמוד הבית: עוברים לעמוד התמונות ופותחים את טופס ההעלאה (כדי שהגלריה תישמר שם)
+function homeUploadPhoto() {
+  if (typeof homeOpenPhotos === 'function') homeOpenPhotos();
+  setTimeout(() => { if (typeof openPhotoModal === 'function') openPhotoModal(); }, 350);
 }
+window.homeUploadPhoto = homeUploadPhoto;
+function homeWelcomeToUpload() { homeUploadPhoto(); }
 window.homeWelcomeToUpload = homeWelcomeToUpload;
 
 // ============================================================
@@ -14623,7 +14630,6 @@ function buildHomeFeedPage() {
   const maxPerRow = 4; // 4 האחרונים בלבד בבית
 
   // --- וידג'ט העלאה מהירה (Hero) בראש עמוד הבית ---
-  const quickUploadHero = renderQuickUploadHero();
 
   // אייקוני עמודות "חדש בקהילה" (אותם קווים כמו בבאנר הפתיחה)
   const _ico = (d) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
@@ -14673,28 +14679,6 @@ function buildHomeFeedPage() {
   return `<div class="articles-page home-feed-page" data-page-id="page-home-feed">
     <div class="art-inner">
       ${homeWelcomeHeroHTML()}
-      <div class="qu-hero-wrap">
-        <div class="qu-hero-row">
-          ${uploadGuideBoxHTML()}
-          ${quickUploadHero}
-          ${podcastBoxHTML()}
-        </div>
-        <div class="qu-hero-dots">
-          <button type="button" class="qu-hero-dot" onclick="quHeroGoTo(this, 0)" aria-label="פודקאסט"></button>
-          <button type="button" class="qu-hero-dot active" onclick="quHeroGoTo(this, 1)" aria-label="העלאת תוכן"></button>
-          <button type="button" class="qu-hero-dot" onclick="quHeroGoTo(this, 2)" aria-label="הסבר שימוש"></button>
-        </div>
-      </div>
-      <section class="home-trio">
-        <div class="home-trio-head">
-          <h2>חדש בקהילה</h2>
-          <p>תמונות, קומיקס וסיפורים — האחרונים מכל סוג, במקום אחד.</p>
-        </div>
-        <div class="home-trio-grid">
-          ${photosSection}
-          ${storiesSection}
-        </div>
-      </section>
     </div>
   </div>`;
 }
