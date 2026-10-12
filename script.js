@@ -14310,43 +14310,124 @@ function forumThreadPostHTML(p, isReply, admin, myUid) {
     </div>`;
 }
 
-function forumTopicMobileHTML(f, t, posts, admin, myUid) {
-  // כל תגובה משויכת לשרשור של ההודעה הראשית שלה (גם תגובה לתגובה)
-  const byId = {};
-  (posts || []).forEach(p => { byId[p.id] = p; });
-  const rootOf = (p) => { let cur = p, guard = 0; while (cur.replyTo && byId[cur.replyTo] && guard++ < 50) cur = byId[cur.replyTo]; return cur.id; };
-  const roots = [], replies = {};
-  (posts || []).forEach(p => {
-    const r = (p.replyTo && byId[p.replyTo]) ? rootOf(p) : null;
-    if (r && r !== p.id) (replies[r] = replies[r] || []).push(p); else roots.push(p);
-  });
-  const threads = roots.map(p => {
-    const rs = replies[p.id] || [];
-    const open = forumOpenThreads.has(p.id);
-    return `
-      <div class="fo-thread${rs.length ? ' has-replies' : ''}">
-        ${forumThreadPostHTML(p, false, admin, myUid)}
-        ${rs.length ? `
-          <button type="button" class="fo-th-toggle${open ? ' open' : ''}" onclick="forumToggleThread('${artEsc(p.id)}')">
-            ${FORUM_REPLY_ICO}<span>${open ? 'הסתרת תגובות' : (rs.length === 1 ? 'תגובה אחת' : rs.length + ' תגובות')}</span>
-          </button>
-          ${open ? `<div class="fo-th-replies">${rs.map(r => forumThreadPostHTML(r, true, admin, myUid)).join('')}</div>` : ''}` : ''}
-      </div>`;
-  }).join('');
-  const target = forumReplyTo && byId[forumReplyTo];
+// ===== מובייל: נושא בסגנון רדיט — פוסט פותח + תגובות עם קו שרשור (בצבעי האתר) =====
+const RD_UP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3.5 4 12.5h5v8h6v-8h5z"/></svg>';
+const RD_UP_ON = '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3.5 4 12.5h5v8h6v-8h5z"/></svg>';
+const RD_CMT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 4c4.7 0 8.5 3.2 8.5 7.2S16.7 18.4 12 18.4c-.9 0-1.8-.1-2.6-.3L5 20l1.2-3.6C4.5 15 3.5 13.2 3.5 11.2 3.5 7.2 7.3 4 12 4z"/></svg>';
+const RD_SHARE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 5l6 6-6 6"/><path d="M20 11H10a6 6 0 0 0-6 6v2"/></svg>';
+const RD_PLUS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8" stroke-linecap="round"/></svg>';
+const RD_MINUS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M8 12h8" stroke-linecap="round"/></svg>';
+function rdTimeAgo(t) {
+  if (!t) return '';
+  const m = Math.floor((Date.now() - t) / 60000);
+  if (m < 1) return 'עכשיו';
+  if (m < 60) return `לפני ${m} דק׳`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `לפני ${h} שע׳`;
+  const d = Math.floor(h / 24);
+  if (d === 1) return 'לפני יום';
+  if (d === 2) return 'לפני יומיים';
+  if (d < 30) return `לפני ${d} ימים`;
+  return new Date(t).toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric', year: '2-digit' });
+}
+function rdAvatar(p, cls) {
+  const uidAttr = (p.uid && !p.guest) ? `data-av-uid="${escHtml(p.uid)}"` : '';
+  return `<span class="rd-av ${cls || ''}" ${uidAttr} style="--av:${forumAvColor(p)}">${escHtml(forumInitials(p.name))}</span>`;
+}
+function rdVotes(p, myUid, pill) {
+  const likes = Object.keys(p.likes || {}).length, dislikes = Object.keys(p.dislikes || {}).length;
+  const up = !!(myUid && p.likes && p.likes[myUid]), down = !!(myUid && p.dislikes && p.dislikes[myUid]);
+  return `<span class="rd-votes${pill ? ' rd-pill' : ''}${up ? ' up' : ''}${down ? ' down' : ''}">
+      <button type="button" class="rd-vote" onclick="forumToggleLike('${artEsc(p.id)}')" aria-label="הצבעה בעד">${up ? RD_UP_ON : RD_UP}</button>
+      <b>${forumFmtCount(likes - dislikes)}</b>
+      <button type="button" class="rd-vote rd-vote-down" onclick="forumToggleDislike('${artEsc(p.id)}')" aria-label="הצבעה נגד">${down ? RD_UP_ON : RD_UP}</button>
+    </span>`;
+}
+function rdNameAttr(p) { return (p.uid && !p.guest) ? `onclick="openUserPage('${artEsc(p.uid)}','${artEsc(p.name || '')}')"` : ''; }
+function rdCommentHTML(p, admin, myUid, kids, depth) {
+  const open = forumOpenThreads.has(p.id);
+  const childList = kids[p.id] || [];
+  const countAll = (id) => (kids[id] || []).reduce((n, c) => n + 1 + countAll(c.id), 0);
+  const total = countAll(p.id);
   return `
-    ${forumNavHTML('חזרה ל' + f.title, `forumOpen('${f.id}')`, `<a href="#" onclick="event.preventDefault(); forumOpen(null)">פורומים</a> › <a href="#" onclick="event.preventDefault(); forumOpen('${f.id}')">${escHtml(f.title)}</a>`)}
-    <div class="fo-head"><div><h1>${escHtml(t ? t.title : '')}</h1></div>
-      ${admin ? `<button type="button" class="fo-btn ghost danger" onclick="forumDeleteTopic()">מחיקת הנושא</button>` : ''}
-    </div>
-    <div class="fo-threads">
-      ${posts === null ? '<div class="fo-empty">טוען...</div>' : (threads || '<div class="fo-empty">עדיין אין הודעות</div>')}
-    </div>
-    <div class="fo-reply" id="fo-reply-box">
+    <div class="rd-cmt${depth ? ' nested' : ''}">
+      <div class="rd-cmt-head">
+        ${rdAvatar(p)}
+        <b class="rd-cmt-name" ${rdNameAttr(p)}>${escHtml(p.name || 'משתמש')}</b>${!p.guest && p.uid && isUserVerified(p.uid, p.name) ? verifiedSealHTML(13) : ''}${p.guest ? '<span class="rd-tag">אורח</span>' : ''}
+        <span class="rd-dot">•</span><span class="rd-time">${escHtml(rdTimeAgo(p.t))}</span>
+      </div>
+      <div class="rd-cmt-body">
+        <div class="rd-text">${escHtml(p.text || '').replace(/\n/g, '<br>')}</div>
+        <div class="rd-actions">
+          ${rdVotes(p, myUid)}
+          <button type="button" class="rd-act" onclick="forumStartReply('${artEsc(p.id)}')">${RD_CMT}<span>תגובה</span></button>
+          ${admin ? `<button type="button" class="rd-act rd-del" onclick="forumDeletePost('${artEsc(p.id)}')">מחיקה</button>` : ''}
+        </div>
+        ${childList.length ? (open
+          ? `<div class="rd-children">${childList.map(c => rdCommentHTML(c, admin, myUid, kids, depth + 1)).join('')}</div>
+             <button type="button" class="rd-more" onclick="forumToggleThread('${artEsc(p.id)}')">${RD_MINUS}<span>הסתרת תגובות</span></button>`
+          : `<button type="button" class="rd-more" onclick="forumToggleThread('${artEsc(p.id)}')">${RD_PLUS}<span>${total === 1 ? 'עוד תגובה אחת' : `עוד ${total} תגובות`}</span></button>`) : ''}
+      </div>
+    </div>`;
+}
+function forumSharePage(title) {
+  const url = location.href;
+  if (navigator.share) { navigator.share({ title: title || document.title, url }).catch(() => {}); return; }
+  try { navigator.clipboard.writeText(url); if (typeof showCopyToast === 'function') showCopyToast('הקישור הועתק'); } catch (e) {}
+}
+window.forumSharePage = forumSharePage;
+function forumFocusReply() {
+  forumReplyTo = null;
+  const box = document.getElementById('fo-reply-text');
+  if (box) { box.focus(); box.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+}
+window.forumFocusReply = forumFocusReply;
+
+function forumTopicMobileHTML(f, t, posts, admin, myUid) {
+  const list = posts || [];
+  const byId = {};
+  list.forEach(p => { byId[p.id] = p; });
+  const op = list[0] || null;
+  // עץ תגובות: ילדים לפי replyTo (תגובה ישירה לפוסט הפותח = תגובה ראשית)
+  const kids = {}, tops = [];
+  list.slice(1).forEach(p => {
+    const parent = p.replyTo && byId[p.replyTo] && p.replyTo !== (op && op.id) ? p.replyTo : null;
+    if (parent) (kids[parent] = kids[parent] || []).push(p); else tops.push(p);
+  });
+  const nav = forumNavHTML('חזרה ל' + f.title, `forumOpen('${f.id}')`, `<a href="#" onclick="event.preventDefault(); forumOpen(null)">פורומים</a> › <a href="#" onclick="event.preventDefault(); forumOpen('${f.id}')">${escHtml(f.title)}</a>`);
+  if (posts === null) return `${nav}<div class="fo-empty">טוען...</div>`;
+  const target = forumReplyTo && byId[forumReplyTo];
+  const opHTML = op ? `
+    <article class="rd-post">
+      <div class="rd-post-head">
+        <span class="rd-sub-ic">${FORUM_ICON}</span>
+        <div class="rd-post-meta">
+          <div><b class="rd-sub" onclick="forumOpen('${f.id}')">${escHtml(f.title)}</b><span class="rd-dot"> • </span><span class="rd-time">${escHtml(rdTimeAgo(op.t))}</span></div>
+          <div class="rd-by" ${rdNameAttr(op)}>${escHtml(op.name || 'משתמש')}${op.guest ? ' <span class="rd-tag">אורח</span>' : ''}</div>
+        </div>
+        ${admin ? `<button type="button" class="rd-act rd-del" onclick="forumDeleteTopic()">מחיקה</button>` : ''}
+      </div>
+      <h1 class="rd-title">${escHtml(t ? t.title : '')}</h1>
+      <div class="rd-text rd-post-text">${escHtml(op.text || '').replace(/\n/g, '<br>')}</div>
+      <div class="rd-post-actions">
+        ${rdVotes(op, myUid, true)}
+        <button type="button" class="rd-pill" onclick="forumFocusReply()">${RD_CMT}<b>${forumFmtCount(list.length - 1)}</b></button>
+        <button type="button" class="rd-pill rd-pill-icon" onclick="forumSharePage('${artEsc(t ? t.title : '')}')" aria-label="שיתוף">${RD_SHARE}</button>
+      </div>
+    </article>` : '';
+  return `
+    ${nav}
+    ${opHTML}
+    <div class="rd-compose" id="fo-reply-box">
       ${target ? `<div class="fo-reply-to"><span>תגובה ל<b>${escHtml(target.name || 'משתמש')}</b></span><button type="button" onclick="forumStartReply(null)" aria-label="ביטול">✕</button></div>` : ''}
       ${forumGuestNameFieldHTML('fo-reply-name')}
-      <textarea id="fo-reply-text" class="fo-input" rows="3" maxlength="5000" placeholder="${target ? 'כתבו תגובה...' : 'הצטרפו לדיון...'}"></textarea>
-      <div class="fo-compose-actions"><button type="button" class="fo-btn" onclick="forumReply()">שליחת תגובה</button></div>
+      <div class="rd-compose-row">
+        <textarea id="fo-reply-text" class="rd-input" rows="1" maxlength="5000" placeholder="${target ? 'כתבו תגובה...' : 'הצטרפו לשיחה'}" oninput="this.style.height='auto'; this.style.height=Math.min(this.scrollHeight,180)+'px'"></textarea>
+        <button type="button" class="rd-send" onclick="forumReply()" aria-label="שליחה"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.4 20.4 21 12 3.4 3.6 3.4 10l12.6 2-12.6 2z"/></svg></button>
+      </div>
+    </div>
+    <div class="rd-comments">
+      ${tops.length ? tops.map(p => rdCommentHTML(p, admin, myUid, kids, 0)).join('') : '<div class="fo-empty">עדיין אין תגובות — היו הראשונים להגיב</div>'}
     </div>`;
 }
 
@@ -14576,8 +14657,8 @@ async function forumReply() {
     // פותחים את השרשור כדי שהתגובה החדשה תיראה
     if (msg.replyTo) {
       let root = msg.replyTo, guard = 0;
-      while (forumPosts[root] && forumPosts[root].replyTo && forumPosts[forumPosts[root].replyTo] && guard++ < 50) root = forumPosts[root].replyTo;
       forumOpenThreads.add(root);
+      while (forumPosts[root] && forumPosts[root].replyTo && forumPosts[forumPosts[root].replyTo] && guard++ < 50) { root = forumPosts[root].replyTo; forumOpenThreads.add(root); }
     }
     forumReplyTo = null;
     forumPage = 9999; // העמוד האחרון — שם התגובה החדשה
