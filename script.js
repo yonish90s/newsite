@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, signInAnonymously, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, EmailAuthProvider, linkWithCredential } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getDatabase, ref, set, get, child, onValue, push, update, increment, runTransaction, onDisconnect } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 // מסך מלא (מצב מחשב) — מוגדר מוקדם כדי שבוני העמודים יוכלו לקרוא אותו
@@ -367,6 +367,74 @@ async function ensureGuestSignedIn() {
   }
 }
 window.ensureGuestSignedIn = ensureGuestSignedIn;
+
+// ===== כניסה / הרשמה מהירה עם שם משתמש וסיסמה =====
+// Firebase דורש כתובת מייל, לכן שם המשתמש מומר לכתובת פנימית קבועה (לא נשלחים אליה מיילים).
+// שם בעברית/סימנים מקודד לאותיות ומספרים כדי שהכתובת תהיה תקינה.
+function usernameToEmail(name) {
+  const clean = String(name || '').trim().toLowerCase();
+  const bytes = new TextEncoder().encode(clean);
+  const hex = Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+  return `u${hex}@users.example.com`;
+}
+async function authUsernameLogin() {
+  const nameEl = document.getElementById('auth-username');
+  const passEl = document.getElementById('auth-password');
+  const msg = document.getElementById('auth-username-msg');
+  const btn = document.getElementById('auth-username-btn');
+  const say = (t, ok) => { if (msg) { msg.textContent = t; msg.classList.toggle('ok', !!ok); } };
+  const username = String(nameEl && nameEl.value || '').trim().replace(/\s+/g, ' ');
+  const password = String(passEl && passEl.value || '');
+  if (username.length < 2 || username.length > 24) return say('שם המשתמש צריך להיות 2–24 תווים');
+  if (/[<>"'`\\]/.test(username)) return say('שם המשתמש מכיל תווים לא חוקיים');
+  if (password.length < 6) return say('הסיסמה צריכה להיות לפחות 6 תווים');
+  const email = usernameToEmail(username);
+  if (btn) { btn.disabled = true; btn.textContent = 'רגע…'; }
+  say('');
+  const done = (isNew) => {
+    const u = auth.currentUser;
+    try {
+      const key = `user_profile_${u.uid}`;
+      const prof = JSON.parse(localStorage.getItem(key) || '{}');
+      if (!prof.nickname) { prof.nickname = username; localStorage.setItem(key, JSON.stringify(prof)); }
+    } catch (e) {}
+    const m = document.getElementById('auth-modal'); if (m) m.style.display = 'none';
+    if (passEl) passEl.value = '';
+    if (typeof showCopyToast === 'function') showCopyToast(isNew ? `ברוכים הבאים, ${username}! נרשמתם בהצלחה 🎉` : `שלום ${username}, התחברתם ✓`);
+    if (typeof dmRefreshList === 'function') { try { subscribeMyDMs(); dmRefreshList(); } catch (e) {} }
+  };
+  try {
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      done(false);
+      return;
+    } catch (e) {
+      // משתמש לא קיים (או סיסמה שגויה — Firebase לא מבחין) → מנסים להירשם
+      if (!['auth/invalid-credential', 'auth/user-not-found', 'auth/invalid-login-credentials'].includes(e.code)) throw e;
+    }
+    const cur = auth.currentUser;
+    if (cur && cur.isAnonymous) {
+      // אורח שנרשם — שומרים את אותו חשבון כדי שההודעות שלו יישארו
+      await linkWithCredential(cur, EmailAuthProvider.credential(email, password));
+    } else {
+      await createUserWithEmailAndPassword(auth, email, password);
+    }
+    try { await updateProfile(auth.currentUser, { displayName: username }); } catch (e) {}
+    done(true);
+  } catch (e) {
+    console.error('username auth failed', e);
+    const code = e && e.code;
+    if (code === 'auth/email-already-in-use' || code === 'auth/credential-already-in-use') say('שם המשתמש תפוס או שהסיסמה שגויה');
+    else if (code === 'auth/operation-not-allowed') say('הכניסה עם שם משתמש עדיין לא הופעלה באתר');
+    else if (code === 'auth/too-many-requests') say('יותר מדי ניסיונות — נסו שוב בעוד כמה דקות');
+    else if (code === 'auth/network-request-failed') say('אין חיבור לאינטרנט');
+    else if (code === 'auth/weak-password') say('הסיסמה חלשה מדי — לפחות 6 תווים');
+    else say('הכניסה נכשלה, נסו שוב');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'כניסה / הרשמה'; }
+  }
+}
+window.authUsernameLogin = authUsernameLogin;
 
 // --- מערכות דינמיות ---
 // פונקציה ליישום הרקעים למסך
@@ -6699,7 +6767,7 @@ function storyCardHTML(s, iconHint) {
 
     const scoreBadgeHTML = `
       <div style="display:inline-flex; align-items:center; gap:8px; font-size:12px; color:#64748b; font-weight:700; margin-top:4px;">
-        <span>👁️ ${viewsCount} צפיות</span>
+        ${viewsDistHTML(s.id, s.authorId)}
         <span>·</span>
         <span>❤️ ${likesCount} לייקים</span>
       </div>
@@ -8338,24 +8406,101 @@ function photoClearFilters() {
 }
 window.photoClearFilters = photoClearFilters;
 
+// ===== צפיות בגלריות — מונה משותף בשרת (website/photo_albums/{id}/views) =====
+// כל גולש מוסיף צפייה אחת לגלריה ביום לכל היותר; כולם רואים את אותו מספר.
+let albumViews = {};
+let albumViewsSubscribed = false;
+function subscribeAlbumViews() {
+  if (albumViewsSubscribed || typeof db === 'undefined') return;
+  albumViewsSubscribed = true;
+  try {
+    onValue(ref(db, 'website/photo_albums'), snap => {
+      const v = snap.val() || {};
+      albumViews = {};
+      Object.entries(v).forEach(([id, o]) => { if (o && typeof o.views === 'number') albumViews[id] = o.views; });
+      refreshViewBadges();
+    }, () => {});
+  } catch (e) {}
+}
 function photoGetViews(id) {
   if (!id) return 0;
-  try {
-    return Number(localStorage.getItem(`photo_views_${id}`)) || 0;
-  } catch(e) { return 0; }
+  subscribeAlbumViews();
+  if (typeof albumViews[id] === 'number') return albumViews[id];
+  return 0;
 }
-
 function photoIncrementViews(id) {
   if (!id) return 0;
-  try {
-    const cur = photoGetViews(id);
-    const updated = cur + 1;
-    localStorage.setItem(`photo_views_${id}`, updated);
-    if (typeof db !== 'undefined') {
-      try { set(ref(db, `website/photo_albums/${id}/views`), updated); } catch(e){}
-    }
-    return updated;
-  } catch(e) { return 1; }
+  subscribeAlbumViews();
+  const today = new Date().toDateString();
+  let seen = '';
+  try { seen = localStorage.getItem(`pv_seen_${id}`) || ''; } catch (e) {}
+  if (seen === today) return photoGetViews(id);
+  try { localStorage.setItem(`pv_seen_${id}`, today); } catch (e) {}
+  albumViews[id] = (albumViews[id] || 0) + 1; // עדכון מיידי במסך; השרת יאשר
+  refreshViewBadges();
+  try { set(ref(db, `website/photo_albums/${id}/views`), increment(1)).catch(() => {}); } catch (e) {}
+  return albumViews[id];
+}
+// 950 → 950 · 3,700 → 3.7K · 1,250,000 → 1.3M
+function formatViews(n) {
+  n = Number(n) || 0;
+  if (n < 1000) return String(n);
+  if (n < 1e6) return (n / 1000).toFixed(n < 1e4 ? 1 : 0).replace(/\.0$/, '') + 'K';
+  return (n / 1e6).toFixed(1).replace(/\.0$/, '') + 'M';
+}
+const VIEWS_EYE_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 4.5C6.9 4.5 2.7 7.6 1 12c1.7 4.4 5.9 7.5 11 7.5s9.3-3.1 11-7.5c-1.7-4.4-5.9-7.5-11-7.5zm0 12.5a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg>';
+function viewsBadgeHTML(id, extraClass) {
+  const n = photoGetViews(id);
+  return `<span class="pv-views${extraClass ? ' ' + extraClass : ''}" data-views-id="${escHtml(String(id || ''))}" title="${n.toLocaleString('he-IL')} צפיות">${VIEWS_EYE_SVG}<b>${formatViews(n)}</b></span>`;
+}
+// ===== מרחק ממני ליוצר (ק"מ) — ליד הצפיות. בלי מיקום (שלי או שלו) מוצג "?" =====
+const DIST_PIN_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6-5.3-6-10.2a6 6 0 0 1 12 0C18 15.7 12 21 12 21z"/><circle cx="12" cy="10.8" r="2.2"/><path d="M4.5 19.5c1.7 1 4.4 1.6 7.5 1.6s5.8-.6 7.5-1.6" stroke-dasharray="1.5 2.5"/></svg>';
+let distAutoTried = false;
+function distanceText(authorId) {
+  if (typeof userMapMe === 'undefined' || !userMapMe) return null;
+  const v = authorId && typeof userMapData !== 'undefined' && userMapData[authorId];
+  if (!v || typeof v.lat !== 'number' || typeof v.lng !== 'number') return null;
+  const km = radarDistanceKm(userMapMe, v);
+  return km < 1 ? '<1km' : `${Math.round(km)}km`;
+}
+function distanceBadgeHTML(authorId) {
+  try { if (typeof subscribeUserMap === 'function') subscribeUserMap(); } catch (e) {}
+  if (!distAutoTried) {
+    distAutoTried = true;
+    // מי שכבר אישר מיקום בעבר — מאתרים בשקט כדי להציג מרחקים
+    setTimeout(async () => {
+      try {
+        if (typeof userMapMe !== 'undefined' && userMapMe) return;
+        if (typeof photoLocationWanted === 'function' && !photoLocationWanted()) return;
+        const st = navigator.permissions && await navigator.permissions.query({ name: 'geolocation' });
+        if (st && st.state === 'granted' && typeof photoToggleLocation === 'function') photoToggleLocation(true, true);
+      } catch (e) {}
+    }, 0);
+  }
+  const t = distanceText(authorId);
+  const title = t ? `${t.replace('km', ' ק״מ')} ממך` : 'המרחק לא ידוע — צריך שגם את/ה וגם היוצר/ת תפעילו מיקום';
+  return `<span class="pv-dist${t ? '' : ' unknown'}" data-dist-author="${escHtml(String(authorId || ''))}" title="${escHtml(title)}">${DIST_PIN_SVG}<b>${t || '?'}</b></span>`;
+}
+function refreshDistanceBadges() {
+  document.querySelectorAll('.pv-dist[data-dist-author]').forEach(el => {
+    const t = distanceText(el.dataset.distAuthor);
+    const b = el.querySelector('b');
+    if (b) b.textContent = t || '?';
+    el.classList.toggle('unknown', !t);
+    el.title = t ? `${t.replace('km', ' ק״מ')} ממך` : 'המרחק לא ידוע — צריך שגם את/ה וגם היוצר/ת תפעילו מיקום';
+  });
+}
+function viewsDistHTML(id, authorId, extraClass) {
+  return `<span class="pv-meta${extraClass ? ' ' + extraClass : ''}">${viewsBadgeHTML(id)}${distanceBadgeHTML(authorId)}</span>`;
+}
+
+function refreshViewBadges() {
+  document.querySelectorAll('.pv-views[data-views-id]').forEach(el => {
+    const n = photoGetViews(el.dataset.viewsId);
+    const b = el.querySelector('b');
+    if (b) b.textContent = formatViews(n);
+    el.title = `${n.toLocaleString('he-IL')} צפיות`;
+  });
 }
 
 function renderPhotoCard(p, options = {}) {
@@ -8453,7 +8598,7 @@ function renderPhotoCard(p, options = {}) {
 
   const scoreBadgeHTML = `
     <div style="display:inline-flex; align-items:center; gap:8px; font-size:12px; color:#64748b; font-weight:700; margin-top:4px;">
-      <span>👁️ ${viewsCount} צפיות</span>
+      ${viewsDistHTML(p.id, p.authorId)}
       <span>·</span>
       <span>❤️ ${likesCount} לייקים</span>
     </div>
@@ -11466,6 +11611,7 @@ function refreshUserMaps() {
     });
   });
   renderUserMapActions();
+  refreshPhotoDistances();
 }
 
 function renderUserMapActions() {
@@ -12865,7 +13011,7 @@ const AV_SEX_SIGN = ['',
   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="14" r="6"/><path d="M14.5 9.5 21 3M15 3h6v6"/></svg>',
   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="9" r="6"/><path d="M12 15v7M8.5 18.5h7"/></svg>'];
 const AV_DEFAULT = { s: 0, h: 1, hc: 1, ec: 0, f: 0, g: 0, r: 0 };
-const AV_INK = '#1e1033';
+const AV_INK = '#3f2534';
 
 function avNormalize(cfg) {
   const out = Object.assign({}, AV_DEFAULT);
@@ -14895,12 +15041,21 @@ function buildPhotosPage(albums, section) {
             : (section === 'secondhand' || section === 'communities' || section === 'photos' ? '' : (typeof sectionCategoryBarHTML === 'function' ? sectionCategoryBarHTML(section) : ''))}
           ${section === 'communities' ? '' : (section === 'secondhand' && typeof secondhandFilterBarHTML === 'function' ? secondhandFilterBarHTML() : photoFilterSectionHTML())}
           ${section === 'photos' ? photoCategoryTilesHTML(_tileAlbums) : ''}
+          ${section === 'photos' ? photoToolsRowHTML() : ''}
           ${section === 'communities' ? '' : (section === 'secondhand'
             ? (typeof secondhandTogglesHTML === 'function' ? secondhandTogglesHTML() : '')
             : `<div class="view-toggles">
             <label class="tgl">
               <span class="tgl-label">✔️ משתמשים מאומתים</span>
               <span class="tgl-switch"><input type="checkbox" ${photoVerifiedOnly ? 'checked' : ''} onchange="photoToggleVerified(this.checked)"><span class="tgl-slider"></span></span>
+            </label>
+            <label class="tgl">
+              <span class="tgl-label">📝 רק טקסט</span>
+              <span class="tgl-switch"><input type="checkbox" ${photoImagesMode ? '' : 'checked'} onchange="photoToggleTextOnly(this.checked)"><span class="tgl-slider"></span></span>
+            </label>
+            <label class="tgl">
+              <span class="tgl-label">📍 פתח מיקום</span>
+              <span class="tgl-switch"><input type="checkbox" ${userMapMe ? 'checked' : ''} onchange="photoToggleLocation(this.checked)"><span class="tgl-slider"></span></span>
             </label>
             <label class="tgl tgl-desktop-only">
               <span class="tgl-label">⛶ מסך מלא (הסתרת סרגלי הצד)</span>
@@ -15366,6 +15521,7 @@ function photoOpenDetail(id) {
             <div class="pshow-info">
               <span class="pshow-star" aria-hidden="true">✱</span>
               <h1 class="pshow-title">${escHtml(a.title)}</h1>
+              <div class="pshow-views-row">${viewsDistHTML(a.id, a.authorId, 'pv-lg')}</div>
               <div class="pshow-desc">${contentHTML}</div>
                 <div class="art-meta pd-show-meta">
                   <span class="art-category-badge" style="background:${escHtml(a.categoryColor || '#10b981')}">${escHtml(a.category)}</span>
@@ -15419,7 +15575,16 @@ function photoOpenDetail(id) {
                     </button>`).join('')}
                 </div>` : ''}
               <div class="pshow-line"></div>
-              <button type="button" class="pshow-cta" onclick="dmStartAboutGallery('${artEsc(a.authorId || '')}', '${artEsc(a.author || '')}', '${artEsc(a.id)}')">שלחו הודעה ליוצר</button>
+              ${(a.telegramUrl || a.emailUrl) ? `
+                <div class="pshow-contact">
+                  ${a.telegramUrl ? `<a class="pshow-contact-btn tg" href="${escHtml(safeUrl(a.telegramUrl))}" target="_blank" rel="noopener">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+                      <span>טלגרם</span></a>` : ''}
+                  ${a.emailUrl ? `<button type="button" class="pshow-contact-btn mail" onclick="revealAndCopyEmail('${artEsc(a.emailUrl)}', this, event);" title="לחצו לחשיפת והעתקת האימייל">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                      <span>אימייל</span></button>` : ''}
+                </div>` : ''}
+              <button type="button" class="pshow-cta${(a.telegramUrl || a.emailUrl) ? ' has-contact' : ''}" onclick="dmStartAboutGallery('${artEsc(a.authorId || '')}', '${artEsc(a.author || '')}', '${artEsc(a.id)}')">שלחו הודעה ליוצר</button>
             </div>
           </div>
 
@@ -16032,15 +16197,142 @@ function buildUserPageHTML(authorId, authorName) {
   window._upState = { uid: authorId || '', name: authorName || 'משתמש', galleries: authorAlbums.length,
     verified: isUserVerified(authorId, authorName), profile: null, rating: getUserRatingData(authorId) };
 
+  window._upState.uploads = authorAlbums;
+  window._upState.counts = window._upState.counts || null;
   return `
   <div class="articles-page photos-page user-page photo-cols-${typeof photoGridCols !== 'undefined' ? photoGridCols : 4}" data-photos-json="${json}">
-    <div class="art-inner">
-      <button onclick="goBackFromUserPage()" style="background:#f1f5f9; border:1px solid #cbd5e1; border-radius:8px; padding:8px 16px; font-size:13px; font-weight:800; cursor:pointer; margin-bottom:16px; color:#334155;">← חזרה</button>
-      <div id="user-page-watch">${userWatchHTML(window._upState)}</div>
-      <div class="art-rows">${cards || '<div style="grid-column:1/-1; text-align:center; color:#94a3b8; padding:40px; font-weight:700;">אין גלריות להצגה עבור משתמש זה</div>'}</div>
+    <div class="art-inner pf-inner">
+      <button type="button" class="pf-back" onclick="goBackFromUserPage()">→ חזרה</button>
+      <div id="user-page-head">${profileHeadHTML(window._upState)}</div>
+      <div class="pf-tabs"><span class="pf-tab on">העלאות <b>${authorAlbums.length}</b></span></div>
+      ${profileUploadsHTML(authorAlbums)}
+      <details class="pf-more">
+        <summary>פרטים נוספים</summary>
+        <div id="user-page-watch">${userWatchHTML(window._upState)}</div>
+      </details>
     </div>
   </div>`;
 }
+
+// ===== פרופיל משתמש: כותרת (תמונה, שם, @שם, תיאור, פרטים, עוקבים) =====
+function profileHandle(name) {
+  return String(name || 'user').trim().toLowerCase().replace(/\s+/g, '');
+}
+function profileHeadHTML(st) {
+  st = st || {};
+  const profile = st.profile || {};
+  const uid = st.uid || '';
+  const name = st.name || 'משתמש';
+  const me = auth.currentUser;
+  const isOwn = !!(uid && me && !me.isAnonymous && me.uid === uid);
+  const following = uid && typeof isFollowing === 'function' && isFollowing(uid);
+  const c = st.counts || {};
+  const num = (n) => (typeof formatViews === 'function' ? formatViews(n || 0) : String(n || 0));
+  const totalViews = (st.uploads || []).reduce((sum, a) => sum + (typeof photoGetViews === 'function' ? photoGetViews(a.id) : 0), 0);
+  const av = (typeof avNormalize === 'function') ? avNormalize(profile.avatar) : {};
+  const role = av.g && av.r && typeof AV_ROLE_NAMES !== 'undefined' ? AV_ROLE_NAMES[av.g][av.r] : '';
+  const sex = av.g && typeof AV_SEX_NAMES !== 'undefined' ? AV_SEX_NAMES[av.g] : '';
+  const where = [profile.aboutCity, profile.aboutRegion].filter(Boolean).join(', ');
+  const facts = [
+    sex || role ? `<span class="pf-fact"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-4.4-9.3-9C1 8.5 3 5 6.5 5c2 0 3.6 1.1 4.5 2.6.3.5 1.7.5 2 0C13.9 6.1 15.5 5 17.5 5 21 5 23 8.5 21.3 12 19 16.6 12 21 12 21z"/></svg>${escHtml([sex, role].filter(Boolean).join(' · '))}</span>` : '',
+    where ? `<span class="pf-fact"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>${escHtml(where)}</span>` : '',
+    profile.age ? `<span class="pf-fact"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M12 8v13M3 12h18M12 8c-2-3-6-3-5.5-.5C7 9 12 8 12 8zm0 0c2-3 6-3 5.5-.5C17 9 12 8 12 8z"/></svg>גיל ${escHtml(String(profile.age))}</span>` : ''
+  ].filter(Boolean).join('') + (uid && !isOwn && typeof distanceBadgeHTML === 'function' ? `<span class="pf-fact">${distanceBadgeHTML(uid)}</span>` : '');
+  const bio = String(profile.bio || '').trim();
+  const actions = isOwn
+    ? `<button type="button" class="pf-btn pf-btn-outline" onclick="profileEditBio()">עריכת פרופיל</button>`
+    : `${uid ? `<button type="button" class="pf-btn pf-btn-icon" onclick="dmStartWith('${artEsc(uid)}','${artEsc(name)}')" title="שליחת הודעה" aria-label="שליחת הודעה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"/><path d="M12 9v6M9 12h6"/></svg></button>` : ''}
+       ${uid ? `<button type="button" class="pf-btn ${following ? 'pf-btn-outline following' : 'pf-btn-solid'}" onclick="profileToggleFollow('${artEsc(uid)}','${artEsc(name)}')">${following ? 'עוקב/ת ✓' : 'עקוב'}</button>` : ''}`;
+  return `
+    <section class="pf-head">
+      <div class="pf-top">
+        <span class="pf-avatar" ${uid ? `data-av-uid="${escHtml(uid)}"` : ''}>${escHtml(String(name).trim().charAt(0) || '?')}</span>
+        <div class="pf-actions">${actions}</div>
+      </div>
+      <h1 class="pf-name" id="user-page-name">${escHtml(name)}${st.verified ? verifiedSealHTML(22) : ''}</h1>
+      <div class="pf-handle" dir="auto">@${escHtml(profileHandle(name))}</div>
+      ${bio ? `<p class="pf-bio">${escHtml(bio)}</p>` : (isOwn ? `<button type="button" class="pf-bio-add" onclick="profileEditBio()">+ הוסיפו כמה מילים עליכם</button>` : '')}
+      ${facts ? `<div class="pf-facts">${facts}</div>` : ''}
+      <div class="pf-counts">
+        <span><b>${c.following != null ? num(c.following) : '—'}</b> עוקב/ת</span>
+        <span><b>${c.followers != null ? num(c.followers) : '—'}</b> עוקבים</span>
+        <span><b>${num(totalViews)}</b> צפיות</span>
+      </div>
+    </section>`;
+}
+// רשת ההעלאות של המשתמש — ריבועים עם כותרת וצפיות
+function profileUploadsHTML(albums) {
+  if (!albums.length) return `<div class="pf-empty">עדיין אין העלאות</div>`;
+  const adultOk = (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('age_verified') === 'true');
+  return `<div class="pf-grid">${albums.map(a => {
+    const img = (Array.isArray(a.images) ? a.images.find(Boolean) : '') || a.image || '';
+    const blur = a.isAdult && !adultOk;
+    const count = Array.isArray(a.images) ? a.images.filter(Boolean).length : 0;
+    return `<button type="button" class="pf-tile${blur ? ' pf-blur' : ''}" onclick="photoOpenDetail('${artEsc(a.id)}')" title="${escHtml(a.title || '')}">
+        ${img ? `<img src="${escHtml(img)}" alt="" loading="lazy">` : '<span class="pf-tile-ph"></span>'}
+        ${count > 1 ? `<span class="pf-tile-count">${count}</span>` : ''}
+        <span class="pf-tile-foot"><span class="pf-tile-title">${escHtml(a.title || '')}</span>${typeof viewsBadgeHTML === 'function' ? viewsBadgeHTML(a.id) : ''}</span>
+      </button>`;
+  }).join('')}</div>`;
+}
+function profileRenderHead() {
+  const el = document.getElementById('user-page-head');
+  if (el && window._upState) { el.innerHTML = profileHeadHTML(window._upState); if (typeof avatarHydrate === 'function') avatarHydrate(el); }
+}
+async function profileLoadCounts(uid) {
+  if (!uid) return;
+  try {
+    const snap = await get(ref(db, `website/follow_counts/${uid}`));
+    const v = snap.val() || {};
+    const st = window._upState;
+    if (!st || st.uid !== uid) return;
+    st.counts = { followers: Math.max(0, Number(v.followers) || 0), following: Math.max(0, Number(v.following) || 0) };
+    profileRenderHead();
+  } catch (e) { /* המונה עדיין לא זמין */ }
+}
+async function profileToggleFollow(uid, name) {
+  const before = typeof isFollowing === 'function' && isFollowing(uid);
+  await toggleFollow(uid, name, null);
+  const after = typeof isFollowing === 'function' && isFollowing(uid);
+  const st = window._upState;
+  if (st && st.uid === uid && before !== after && st.counts) st.counts.followers = Math.max(0, (st.counts.followers || 0) + (after ? 1 : -1));
+  profileRenderHead();
+}
+window.profileToggleFollow = profileToggleFollow;
+// עריכת "על עצמי" (עד 300 תווים) בפרופיל שלי
+function profileEditBio() {
+  const st = window._upState;
+  const u = auth.currentUser;
+  if (!st || !u || u.isAnonymous || u.uid !== st.uid) return;
+  const head = document.querySelector('.pf-head');
+  if (!head || head.querySelector('.pf-bio-edit')) return;
+  const cur = String((st.profile && st.profile.bio) || '');
+  const box = document.createElement('div');
+  box.className = 'pf-bio-edit';
+  box.innerHTML = `<textarea maxlength="300" rows="3" placeholder="כמה מילים עליכם…"></textarea>
+    <div class="pf-bio-edit-row"><span class="pf-bio-left"></span>
+      <button type="button" class="pf-btn pf-btn-outline" data-act="cancel">ביטול</button>
+      <button type="button" class="pf-btn pf-btn-solid" data-act="save">שמירה</button></div>`;
+  const ta = box.querySelector('textarea');
+  ta.value = cur;
+  const left = box.querySelector('.pf-bio-left');
+  const upd = () => { left.textContent = `${ta.value.length}/300`; };
+  ta.addEventListener('input', upd); upd();
+  box.querySelector('[data-act="cancel"]').onclick = () => box.remove();
+  box.querySelector('[data-act="save"]').onclick = async () => {
+    const bio = ta.value.trim().slice(0, 300);
+    try {
+      await update(ref(db, `website/users/${u.uid}/profile`), { bio });
+      st.profile = Object.assign({}, st.profile || {}, { bio });
+      profileRenderHead();
+      if (typeof showCopyToast === 'function') showCopyToast('הפרופיל עודכן ✓');
+    } catch (e) { if (typeof showCopyToast === 'function') showCopyToast('השמירה נכשלה'); }
+  };
+  const anchor = head.querySelector('.pf-bio, .pf-bio-add');
+  if (anchor) anchor.replaceWith(box); else head.querySelector('.pf-handle').after(box);
+  ta.focus();
+}
+window.profileEditBio = profileEditBio;
 
 async function openUserPage(authorId, authorName) {
   if (typeof mainContent === 'undefined' || !mainContent) return;
@@ -16048,7 +16340,9 @@ async function openUserPage(authorId, authorName) {
   try { window.scrollTo(0, 0); } catch (e) {}
   if (typeof photoApplyFilters === 'function') photoApplyFilters();
 
+  if (typeof avatarHydrate === 'function') avatarHydrate(mainContent);
   if (!authorId) return;
+  profileLoadCounts(authorId);
   userWatchLoadRatings(authorId);
   try {
     const snap = await get(ref(db, `website/users/${authorId}/profile`));
@@ -16060,6 +16354,7 @@ async function openUserPage(authorId, authorName) {
       if (profile.nickname) st.name = profile.nickname;
       st.verified = isUserVerified(authorId, profile.nickname || authorName);
       userWatchRender();
+      profileRenderHead();
     }
   } catch (e) { /* פרופיל לא זמין — משאירים את שם היוצר */ }
 }
@@ -16522,11 +16817,76 @@ function photoSizeAveragesHTML(albums) {
 // שני הפרמטרים בתחתית מסגרת התמונה בעמוד הגלריה
 function photoSizeBadgesHTML(a) {
   const val = (v) => v ? `${escHtml(String(v))}<small>ס״מ</small>` : '<span class="pshow-size-none">לא צוין</span>';
+  setTimeout(photoDistInit, 0);
   return `<div class="pshow-size">
       <div class="pshow-size-item"><span>אורך</span><b>${val(a.length)}</b></div>
       <div class="pshow-size-item"><span>היקף</span><b>${val(a.girth)}</b></div>
+      <div class="pshow-size-item pshow-dist" data-author="${escHtml(a.authorId || '')}"><span>מרחק</span><b>${photoDistanceHTML(a.authorId)}</b></div>
     </div>`;
 }
+
+// מרחק ממני למעלה הגלריה — לפי המיקום המעוגל (~1 ק"מ) שהוא שיתף במכ"ם הגולשים
+function photoDistanceHTML(authorId) {
+  if (!userMapMe) return `<button type="button" class="pshow-dist-btn" onclick="event.stopPropagation(); photoToggleLocation(true)">הפעלת מיקום</button>`;
+  const v = authorId && userMapData[authorId];
+  if (!v || typeof v.lat !== 'number' || typeof v.lng !== 'number') return '<span class="pshow-size-none">לא ידוע</span>';
+  const km = radarDistanceKm(userMapMe, v);
+  return km < 1 ? 'פחות מ-1<small>ק״מ</small>' : `${Math.round(km)}<small>ק״מ</small>`;
+}
+function refreshPhotoDistances() {
+  refreshDistanceBadges();
+  document.querySelectorAll('.pshow-dist').forEach(el => {
+    const b = el.querySelector('b');
+    if (b) b.innerHTML = photoDistanceHTML(el.dataset.author);
+  });
+}
+// בעמוד גלריה: טוענים את מיקומי הגולשים, ומאתרים אותי אוטומטית אם כבר אישרתי בעבר
+async function photoDistInit() {
+  if (!document.querySelector('.pshow-dist')) return;
+  subscribeUserMap();
+  if (!userMapMe && !userMapLocating && photoLocationWanted() && navigator.permissions && navigator.permissions.query) {
+    try {
+      const st = await navigator.permissions.query({ name: 'geolocation' });
+      if (st.state === 'granted') photoToggleLocation(true, true);
+    } catch (e) {}
+  }
+}
+function photoLocationWanted() {
+  try { return localStorage.getItem('photo_location_on') !== '0'; } catch (e) { return true; }
+}
+// מתג "פתח מיקום": מאתר אותי בדפדפן בלבד (לא משתף את המיקום עם אף אחד) כדי להציג מרחק בק"מ
+function photoToggleLocation(on, silent) {
+  const sync = (v) => document.querySelectorAll('.view-toggles input[onchange*="photoToggleLocation"]').forEach(b => { b.checked = v; });
+  try { localStorage.setItem('photo_location_on', on ? '1' : '0'); } catch (e) {}
+  if (!on) {
+    userMapMe = null;
+    sync(false);
+    refreshUserMaps();
+    document.querySelectorAll('.umap-canvas').forEach(el => radarCenter(el));
+    return;
+  }
+  if (!navigator.geolocation) { if (!silent && typeof showCopyToast === 'function') showCopyToast('הדפדפן אינו תומך במיקום'); sync(false); return; }
+  userMapLocating = true;
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      userMapLocating = false;
+      userMapMe = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      sync(true);
+      subscribeUserMap();
+      document.querySelectorAll('.umap-canvas').forEach(el => radarCenter(el));
+      refreshUserMaps();
+      if (!silent && typeof showCopyToast === 'function') showCopyToast('📍 המיקום הופעל — המרחקים מוצגים בק"מ');
+    },
+    () => {
+      userMapLocating = false;
+      sync(false);
+      refreshPhotoDistances();
+      if (!silent && typeof showCopyToast === 'function') showCopyToast('לא ניתן לקבל מיקום — בדקו את הרשאת המיקום בדפדפן');
+    },
+    { enableHighAccuracy: false, timeout: 12000, maximumAge: 5 * 60 * 1000 }
+  );
+}
+window.photoToggleLocation = photoToggleLocation;
 
 function openPhotoModal() {
   editingPhotoId = null;
@@ -17865,29 +18225,58 @@ function dmConvId(a, b) { return [a, b].sort().join('__'); }
 function dmName() { return (typeof liveChatUserName === 'function') ? liveChatUserName() : 'משתמש'; }
 function dmTime(ts) { return ts ? new Date(ts).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }) : ''; }
 
+let dmConvUnsub = null, dmConvUid = '';
 function subscribeMyDMs() {
   const u = auth.currentUser;
-  if (!u || dmConvSubscribed) return;
+  if (!u) return;
+  // אם המשתמש התחלף (למשל אורח שנרשם) — מחליפים את המנוי לשיחות שלו
+  if (dmConvSubscribed && dmConvUid === u.uid) return;
+  if (dmConvUnsub) { try { dmConvUnsub(); } catch (e) {} dmConvUnsub = null; }
   dmConvSubscribed = true;
+  dmConvUid = u.uid;
+  dmConversations = {};
   // מביאים את ה-uid של המנהל לשיחה הנעוצה
-  try { get(ref(db, 'website/admin_uid')).then(s => { dmAdminUid = s.val() || ''; const el = document.getElementById('dm-conv-list'); if (el) el.innerHTML = dmConvListHTML(); }); } catch (e) {}
-  onValue(ref(db, `website/user_dms/${u.uid}`), snap => {
+  try { get(ref(db, 'website/admin_uid')).then(s => { dmAdminUid = s.val() || ''; dmRefreshList(); }).catch(() => {}); } catch (e) {}
+  dmConvUnsub = onValue(ref(db, `website/user_dms/${u.uid}`), snap => {
     dmConversations = snap.val() || {};
-    const el = document.getElementById('dm-conv-list');
-    if (el) el.innerHTML = dmConvListHTML();
+    dmRefreshList();
     dmUpdateBadge();
-  });
+  }, () => {});
+}
+function dmRefreshList() {
+  const el = document.getElementById('dm-conv-list');
+  if (el) el.innerHTML = dmConvListHTML();
 }
 
-function dmOpenAdmin() {
+async function dmOpenAdmin() {
+  if (!auth.currentUser) {
+    const ok = (typeof ensureGuestSignedIn === 'function') ? await ensureGuestSignedIn() : false;
+    if (!ok) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
+  }
   const u = auth.currentUser;
-  if (!u) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
   const go = (adminUid) => {
-    if (!adminUid || adminUid === u.uid) { if (typeof showCopyToast === 'function') showCopyToast('שיחת מנהל אינה זמינה כרגע'); return; }
-    dmOpenConv(dmConvId(u.uid, adminUid), adminUid, 'מנהל האתר 👑');
+    if (!adminUid || adminUid === u.uid) {
+      if (typeof dmShowList === 'function') dmShowList();
+      if (typeof showCopyToast === 'function') showCopyToast('שיחת מנהל אינה זמינה כרגע');
+      return;
+    }
+    dmOpenConv(dmConvId(u.uid, adminUid), adminUid, 'מנהל האתר');
   };
-  if (dmAdminUid) go(dmAdminUid);
-  else { try { get(ref(db, 'website/admin_uid')).then(s => { dmAdminUid = s.val() || ''; go(dmAdminUid); }); } catch (e) { go(''); } }
+  if (dmAdminUid) { go(dmAdminUid); return; }
+  // החיבור לשרת יכול לקחת כמה שניות — פותחים מיד את מסך השיחה במצב טעינה כדי שהלחיצה תרגיש מיידית
+  dmShowLoadingThread('מנהל האתר');
+  try {
+    const snap = await Promise.race([
+      get(ref(db, 'website/admin_uid')),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 10000))
+    ]);
+    dmAdminUid = snap.val() || '';
+    go(dmAdminUid);
+  } catch (e) {
+    console.error('admin uid load failed', e);
+    if (typeof dmShowList === 'function') dmShowList();
+    if (typeof showCopyToast === 'function') showCopyToast('אין חיבור לשרת כרגע — נסו שוב בעוד רגע');
+  }
 }
 window.dmOpenAdmin = dmOpenAdmin;
 
@@ -17931,7 +18320,7 @@ function toggleNotifications(e) {
 window.toggleNotifications = toggleNotifications;
 function notifOpen(cid, uid, name) {
   const p = document.getElementById('notif-panel'); if (p) p.style.display = 'none';
-  if (typeof openMessages === 'function') { openMessages(); setTimeout(() => dmOpenConv(cid, uid, name || 'משתמש'), 60); }
+  if (typeof openMessages === 'function') { openMessages().then(() => dmOpenConv(cid, uid, name || 'משתמש')); }
 }
 window.notifOpen = notifOpen;
 if (typeof document !== 'undefined') {
@@ -17942,129 +18331,197 @@ if (typeof document !== 'undefined') {
   });
 }
 
-// חלון חיצוני — רשימת שיחות (טלגרם, בלי תמונות פרופיל)
+// ===== חלון הודעות בסגנון טלגרם: רשימה ← שיחה (מימין בדסקטופ, מסך מלא במובייל) =====
+const DM_AVATAR_GRADS = [
+  ['#ff885e', '#ff516a'], ['#ffcd6a', '#ffa85c'], ['#82b1ff', '#665fff'], ['#a0de7e', '#54cb68'],
+  ['#53edd6', '#28c9b7'], ['#72d5fd', '#2a9ef1'], ['#e0a2f3', '#d669ed']
+];
+function dmAvatarHTML(name, key, extraClass) {
+  const nm = String(name || '?').trim();
+  const words = nm.split(/\s+/).filter(Boolean);
+  const initials = (words.length > 1 && /^[A-Za-z]/.test(words[0]) ? words[0][0] + words[1][0] : nm.charAt(0)).toUpperCase();
+  let h = 0; const k = String(key || nm);
+  for (let i = 0; i < k.length; i++) h = (h * 31 + k.charCodeAt(i)) >>> 0;
+  const [a, b] = DM_AVATAR_GRADS[h % DM_AVATAR_GRADS.length];
+  return `<div class="tg-avatar${extraClass ? ' ' + extraClass : ''}" style="background:linear-gradient(180deg,${a},${b})">${escHtml(initials)}</div>`;
+}
+function dmListTime(ts) {
+  if (!ts) return '';
+  const d = new Date(ts), now = new Date();
+  if (d.toDateString() === now.toDateString()) return dmTime(ts);
+  return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+let dmSearchQuery = '';
+function dmSearch(q) { dmSearchQuery = String(q || '').trim().toLowerCase(); dmRefreshList(); }
+window.dmSearch = dmSearch;
+
 function dmConvListHTML() {
   const isAdminUser = (typeof isAdmin === 'function' && isAdmin());
-  // שיחה נעוצה עם מנהל האתר בראש הרשימה (לכל מי שאינו המנהל)
   const _act = (typeof dmActiveConv === 'object' && dmActiveConv) ? dmActiveConv.convId : '';
-  const pinned = isAdminUser ? '' : `
-    <div class="dm-conv dm-conv-pinned" onclick="dmOpenAdmin()">
-      <div class="dm-conv-avatar dm-conv-avatar-admin">👑</div>
-      <div class="dm-conv-main">
-        <div class="dm-conv-name">מנהל האתר</div>
-        <div class="dm-conv-last">שלחו הודעה לצוות האתר</div>
+  const q = dmSearchQuery;
+  const match = (...parts) => !q || parts.some(p => String(p || '').toLowerCase().includes(q));
+  // שיחה נעוצה עם מנהל האתר בראש הרשימה (לכל מי שאינו המנהל)
+  const pinned = (isAdminUser || !match('מנהל האתר', 'צוות')) ? '' : `
+    <div class="tg-row tg-row-pinned" onclick="dmOpenAdmin()">
+      <div class="tg-avatar tg-avatar-admin"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 8.5 7.5 12 12 5l4.5 7L21 8.5 19 18H5z"/><rect x="5" y="19.2" width="14" height="2" rx="1"/></svg></div>
+      <div class="tg-row-main">
+        <div class="tg-row-top"><span class="tg-row-name">מנהל האתר <span class="tg-verified" title="רשמי">✓</span></span><span class="tg-row-pin" title="נעוץ"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M14.5 2.5 21.5 9.5 19.4 10.2 15.6 14 15.2 18.6 13.8 20 9.9 16.1 4.4 21.6 2.4 21.6 2.4 19.6 7.9 14.1 4 10.2 5.4 8.8 10 8.4 13.8 4.6z"/></svg></span></div>
+        <div class="tg-row-last">שלחו הודעה לצוות האתר</div>
       </div>
     </div>`;
   const adminUid = dmAdminUid;
-  const list = Object.entries(dmConversations)
-    .filter(([cid, c]) => !(adminUid && c && c.otherUid === adminUid)) // לא לשכפל את שיחת המנהל
+  const list = Object.entries(dmConversations || {})
+    .filter(([cid, c]) => c && !(adminUid && c.otherUid === adminUid)) // לא לשכפל את שיחת המנהל
+    .filter(([cid, c]) => match(c.otherName, c.lastText))
     .sort((a, b) => (b[1].lastTime || 0) - (a[1].lastTime || 0));
-  if (!list.length) return pinned + '<div class="dm-empty">אין עוד שיחות.<br>אפשר לשלוח הודעה מדף של גלריה.</div>';
+  if (!list.length) {
+    return pinned + `<div class="tg-empty">${q ? 'לא נמצאו שיחות' : 'אין עוד שיחות.<br>אפשר לשלוח הודעה ליוצר מדף של גלריה.'}</div>`;
+  }
   return pinned + list.map(([cid, c]) => {
     const nm = c.otherName || 'משתמש';
     return `
-    <div class="dm-conv${cid === _act ? ' active' : ''}" data-cid="${escHtml(cid)}" onclick="dmOpenConv('${artEsc(cid)}','${artEsc(c.otherUid || '')}','${artEsc(nm)}')">
-      <div class="dm-conv-avatar">${escHtml(nm.trim().charAt(0))}</div>
-      <div class="dm-conv-main">
-        <div class="dm-conv-name">${escHtml(nm)}${c.unread ? ' <span class="dm-dot"></span>' : ''}</div>
-        <div class="dm-conv-last">${escHtml((c.lastText || '').slice(0, 42))}</div>
+    <div class="tg-row${cid === _act ? ' active' : ''}${c.unread ? ' unread' : ''}" data-cid="${escHtml(cid)}" onclick="dmOpenConv('${artEsc(cid)}','${artEsc(c.otherUid || '')}','${artEsc(nm)}')">
+      ${dmAvatarHTML(nm, c.otherUid)}
+      <div class="tg-row-main">
+        <div class="tg-row-top"><span class="tg-row-name">${escHtml(nm)}</span><span class="tg-row-time">${dmListTime(c.lastTime)}</span></div>
+        <div class="tg-row-bottom"><span class="tg-row-last">${escHtml((c.lastText || '').slice(0, 80))}</span>${c.unread ? '<span class="tg-unread">●</span>' : ''}</div>
       </div>
-      <div class="dm-conv-time">${dmTime(c.lastTime)}</div>
     </div>`;
   }).join('');
 }
 
-function openMessages() {
-  if (!auth.currentUser) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
+function dmGuestBannerHTML() {
+  const u = auth.currentUser;
+  if (!u || !u.isAnonymous) return '';
+  return `<div class="tg-guest">
+      <span>אתם גולשים כאורח. כדי לשמור את השיחות גם במכשיר אחר —</span>
+      <button type="button" onclick="openLiveChatLogin()">הרשמה מהירה</button>
+    </div>`;
+}
+
+async function openMessages() {
+  // גם אורח יכול לפתוח: מתחברים אנונימית ברקע (כללי ה-DM דורשים רק משתמש מחובר)
+  if (!auth.currentUser) {
+    const ok = (typeof ensureGuestSignedIn === 'function') ? await ensureGuestSignedIn() : false;
+    if (!ok) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
+  }
   subscribeMyDMs();
   let modal = document.getElementById('messages-modal');
   if (!modal) { modal = document.createElement('div'); modal.id = 'messages-modal'; document.body.appendChild(modal); }
-  // פריסת שני פאנלים בסגנון iMessage: רשימת שיחות + חלון צ'אט
+  dmSearchQuery = '';
+  modal.className = 'tg-modal';
   modal.innerHTML = `
-    <div class="dm-backdrop" onclick="closeMessages()"></div>
-    <div class="dm-window dm-imessage">
-      <div class="dm-sidebar">
-        <div class="dm-titlebar">
-          <span class="dm-title">הודעות</span>
-          <button class="dm-close" onclick="closeMessages()" title="סגור">✕</button>
+    <div class="tg-backdrop" onclick="closeMessages()"></div>
+    <aside class="tg-panel" role="dialog" aria-label="הודעות">
+      <section class="tg-view tg-list-view">
+        <header class="tg-head">
+          <button type="button" class="tg-round" onclick="closeMessages()" aria-label="סגירה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+          <span class="tg-head-title">הודעות</span>
+          <span class="tg-round tg-round-ghost" aria-hidden="true"></span>
+        </header>
+        <div class="tg-search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input type="search" placeholder="חיפוש" oninput="dmSearch(this.value)" aria-label="חיפוש שיחות">
         </div>
-        <div class="dm-conv-list" id="dm-conv-list">${dmConvListHTML()}</div>
-      </div>
-      <div class="dm-main" id="dm-main">
-        <div class="dm-placeholder"><div class="dm-placeholder-icon">💬</div><div>בחרו שיחה כדי להתחיל</div></div>
-      </div>
-    </div>`;
-  modal.style.display = 'flex';
+        ${dmGuestBannerHTML()}
+        <div class="tg-list" id="dm-conv-list">${dmConvListHTML()}</div>
+      </section>
+      <section class="tg-view tg-thread-view" id="dm-main"></section>
+    </aside>`;
+  modal.style.display = 'block';
+  document.documentElement.classList.add('tg-open');
+  requestAnimationFrame(() => modal.classList.add('show'));
   dmActiveConv = null;
 }
 window.openMessages = openMessages;
 
 function closeMessages() {
   const m = document.getElementById('messages-modal');
-  if (m) m.style.display = 'none';
+  if (m) { m.classList.remove('show'); setTimeout(() => { if (!m.classList.contains('show')) m.style.display = 'none'; }, 220); }
+  document.documentElement.classList.remove('tg-open');
   if (dmThreadUnsub) { dmThreadUnsub(); dmThreadUnsub = null; }
   dmActiveConv = null;
 }
 window.closeMessages = closeMessages;
 
-// רענון רשימת השיחות (הפאנל תמיד גלוי). במובייל — חזרה מהצ'אט לרשימה.
+// חזרה מהשיחה לרשימת השיחות
 function dmShowList() {
-  const el = document.getElementById('dm-conv-list');
-  if (el) el.innerHTML = dmConvListHTML();
-  const win = document.querySelector('.dm-window');
-  if (win) win.classList.remove('dm-show-thread');
-  const main = document.getElementById('dm-main');
-  if (main && !dmActiveConv) main.innerHTML = `<div class="dm-placeholder"><div class="dm-placeholder-icon">💬</div><div>בחרו שיחה כדי להתחיל</div></div>`;
+  if (dmThreadUnsub) { dmThreadUnsub(); dmThreadUnsub = null; }
+  dmActiveConv = null;
+  dmRefreshList();
+  const panel = document.querySelector('.tg-panel');
+  if (panel) panel.classList.remove('tg-show-thread');
 }
 window.dmShowList = dmShowList;
 
-// טעינת שיחה לפאנל הצ'אט (הרשימה נשארת גלויה) — סגנון iMessage
-function dmOpenConv(convId, otherUid, otherName, prefill) {
-  dmActiveConv = { convId, otherUid, otherName };
-  if (dmThreadUnsub) { dmThreadUnsub(); dmThreadUnsub = null; }
-  // אם חלון ההודעות לא פתוח — פותחים אותו קודם
-  if (!document.getElementById('dm-main')) { openMessages(); dmActiveConv = { convId, otherUid, otherName }; }
-  // סימון השיחה הפעילה ברשימה
-  document.querySelectorAll('.dm-conv').forEach(c => c.classList.toggle('active', c.getAttribute('data-cid') === convId));
-  const win = document.querySelector('.dm-window');
-  if (win) win.classList.add('dm-show-thread');
-  const initial = (otherName || 'מ').trim().charAt(0);
+// מסך שיחה זמני בזמן טעינה (למשל עד שמזהה המנהל מגיע מהשרת)
+async function dmShowLoadingThread(name) {
+  if (!document.getElementById('dm-main')) await openMessages();
+  const panel = document.querySelector('.tg-panel');
+  if (panel) panel.classList.add('tg-show-thread');
   const s = document.getElementById('dm-main');
   if (s) s.innerHTML = `
-    <div class="dm-thread-head">
-      <button class="dm-back" onclick="dmShowList()" title="חזרה">›</button>
-      <div class="dm-thread-avatar">${initial}</div>
-      <span class="dm-title">${escHtml(otherName || 'משתמש')}</span>
-      <button class="dm-close" onclick="closeMessages()" title="סגור">✕</button>
-    </div>
-    <div class="dm-messages" id="dm-messages"><div class="dm-empty">טוען…</div></div>
-    <div class="dm-input-row">
-      <input id="dm-input" type="text" maxlength="1000" placeholder="iMessage" onkeydown="if(event.key==='Enter'){event.preventDefault(); dmSendCurrent();}">
-      <button class="dm-send" onclick="dmSendCurrent()" title="שלח">➤</button>
+    <header class="tg-head tg-thread-head">
+      <button type="button" class="tg-round" onclick="dmShowList()" aria-label="חזרה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></button>
+      <div class="tg-thread-who"><span class="tg-head-title">${escHtml(name || '')}</span><span class="tg-thread-sub">מתחבר…</span></div>
+      <span class="tg-round tg-round-ghost" aria-hidden="true"></span>
+    </header>
+    <div class="tg-messages"><div class="tg-empty"><span class="tg-spinner"></span><br>טוען את השיחה…</div></div>`;
+}
+
+// פתיחת שיחה: מחליפה את הרשימה (כמו בטלגרם)
+async function dmOpenConv(convId, otherUid, otherName, prefill) {
+  if (dmThreadUnsub) { dmThreadUnsub(); dmThreadUnsub = null; }
+  // אם חלון ההודעות לא פתוח — פותחים אותו קודם
+  if (!document.getElementById('dm-main')) await openMessages();
+  dmActiveConv = { convId, otherUid, otherName };
+  const panel = document.querySelector('.tg-panel');
+  if (panel) panel.classList.add('tg-show-thread');
+  const s = document.getElementById('dm-main');
+  if (s) s.innerHTML = `
+    <header class="tg-head tg-thread-head">
+      <button type="button" class="tg-round" onclick="dmShowList()" aria-label="חזרה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></button>
+      <div class="tg-thread-who">
+        <span class="tg-head-title">${escHtml(otherName || 'משתמש')}</span>
+        <span class="tg-thread-sub">הודעה פרטית</span>
+      </div>
+      ${dmAvatarHTML(otherName || 'משתמש', otherUid, 'tg-avatar-sm')}
+    </header>
+    <div class="tg-messages" id="dm-messages"><div class="tg-empty">טוען…</div></div>
+    <div class="tg-compose">
+      <input id="dm-input" type="text" maxlength="1000" placeholder="הודעה" autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault(); dmSendCurrent();}">
+      <button type="button" class="tg-send" onclick="dmSendCurrent()" aria-label="שליחה"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.4 20.4 21 12 3.4 3.6 3.4 10l12.6 2-12.6 2z"/></svg></button>
     </div>`;
   // מסמנים כנקרא
   const u = auth.currentUser;
-  if (u) { try { update(ref(db, `website/user_dms/${u.uid}/${convId}`), { unread: false }); } catch (e) {} }
+  if (u) { try { update(ref(db, `website/user_dms/${u.uid}/${convId}`), { unread: false }).catch(() => {}); } catch (e) {} }
   dmThreadUnsub = onValue(ref(db, `website/dms/${convId}/messages`), snap => {
     const val = snap.val() || {};
     dmThreadMessages = Object.values(val).sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
     const box = document.getElementById('dm-messages');
     if (box) { box.innerHTML = dmMessagesHTML(); box.scrollTop = box.scrollHeight; }
+  }, () => {
+    const box = document.getElementById('dm-messages');
+    if (box) box.innerHTML = '<div class="tg-empty">לא ניתן לטעון את השיחה כרגע</div>';
   });
   setTimeout(() => {
     const i = document.getElementById('dm-input');
-    if (i) { if (prefill) i.value = prefill; i.focus(); }
+    if (i) { if (prefill) i.value = prefill; if (window.innerWidth > 768) i.focus(); }
   }, 80);
 }
 window.dmOpenConv = dmOpenConv;
 
 function dmMessagesHTML() {
   const myUid = auth.currentUser ? auth.currentUser.uid : '';
-  if (!dmThreadMessages.length) return '<div class="dm-empty">אין הודעות עדיין — כתבו את הראשונה!</div>';
+  if (!dmThreadMessages.length) return '<div class="tg-empty">אין הודעות עדיין — כתבו את הראשונה 👋</div>';
+  let lastDay = '';
   return dmThreadMessages.map(m => {
     const mine = m.from === myUid;
-    return `<div class="dm-msg ${mine ? 'mine' : 'theirs'}">
-      <div class="dm-bubble"><span class="dm-text">${escHtml(m.text || '')}</span><span class="dm-msg-time">${dmTime(m.timestamp)}</span></div>
+    const day = m.timestamp ? new Date(m.timestamp).toLocaleDateString('he-IL', { day: 'numeric', month: 'long' }) : '';
+    const sep = day && day !== lastDay ? `<div class="tg-day"><span>${escHtml(day)}</span></div>` : '';
+    lastDay = day || lastDay;
+    return `${sep}<div class="tg-msg ${mine ? 'mine' : 'theirs'}">
+      <div class="tg-bubble"><span class="tg-text">${escHtml(m.text || '')}</span><span class="tg-msg-time">${dmTime(m.timestamp)}${mine ? ' ✓' : ''}</span></div>
     </div>`;
   }).join('');
 }
@@ -18093,13 +18550,16 @@ async function dmSendCurrent() {
 window.dmSendCurrent = dmSendCurrent;
 
 // התחלת שיחה עם משתמש (למשל מדף גלריה)
-function dmStartWith(otherUid, otherName, prefill) {
+async function dmStartWith(otherUid, otherName, prefill) {
+  if (!auth.currentUser) {
+    const ok = (typeof ensureGuestSignedIn === 'function') ? await ensureGuestSignedIn() : false;
+    if (!ok) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
+  }
   const u = auth.currentUser;
-  if (!u) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
   if (!otherUid) { if (typeof showCopyToast === 'function') showCopyToast('לא ניתן לשלוח הודעה למשתמש זה'); return; }
   if (otherUid === u.uid) { if (typeof showCopyToast === 'function') showCopyToast('זו המודעה שלך 🙂'); return; }
-  openMessages();
-  setTimeout(() => dmOpenConv(dmConvId(u.uid, otherUid), otherUid, otherName || 'משתמש', prefill), 60);
+  await openMessages();
+  dmOpenConv(dmConvId(u.uid, otherUid), otherUid, otherName || 'משתמש', prefill);
 }
 window.dmStartWith = dmStartWith;
 
@@ -18141,6 +18601,10 @@ async function toggleFollow(uid, name, btn) {
   try {
     if (willFollow) { await set(ref(db, path), { name: name || '', since: Date.now() }); followedUids[uid] = { name: name || '', since: Date.now() }; }
     else { await set(ref(db, path), null); delete followedUids[uid]; }
+    // מונים ציבוריים של עוקבים/נעקבים לעמוד הפרופיל (לא חוסם אם הכלל עוד לא פורסם)
+    const step = increment(willFollow ? 1 : -1);
+    set(ref(db, `website/follow_counts/${uid}/followers`), step).catch(() => {});
+    set(ref(db, `website/follow_counts/${u.uid}/following`), step).catch(() => {});
     if (btn) { btn.textContent = willFollow ? '✓ עוקב' : '➕ עקוב'; btn.classList.toggle('following', willFollow); }
     if (typeof showCopyToast === 'function') showCopyToast(willFollow ? '👤 עוקב אחריו!' : 'הפסקת לעקוב');
   } catch (e) { console.error('follow failed', e); }
@@ -18685,6 +19149,12 @@ function photoToggleImages(on) {
   boxes.forEach(b => { if (b) b.checked = !!on; });
 }
 window.photoToggleImages = photoToggleImages;
+// מתג "רק טקסט" — מסתיר את התמונות ומציג רשימת כותרות צפופה (ההפך מ"הצג תמונות")
+function photoToggleTextOnly(on) {
+  photoToggleImages(!on);
+  document.querySelectorAll('.view-toggles input[onchange*="photoToggleTextOnly"]').forEach(b => { b.checked = !!on; });
+}
+window.photoToggleTextOnly = photoToggleTextOnly;
 
 // סינון משתמשים מאומתים בלבד. נשמר בין ביקורים.
 let photoVerifiedOnly = (function () {
@@ -18842,6 +19312,129 @@ function photoApplySort() {
   });
 }
 
+// ===== תגיות (#) וסינון — שורת כלים בעמוד התמונות; במובייל הסינון נפתח במסך מלא =====
+var photoHashtag = '';
+const HASHTAG_RE = /#([\p{L}\p{N}_]{2,30})/gu;
+function photoHashtagCounts() {
+  const counts = {};
+  ((typeof photoGetAlbums === 'function') ? photoGetAlbums() : []).forEach(a => {
+    if (!a || a.approved === false) return;
+    const seen = new Set();
+    for (const m of `${a.title || ''} ${a.summary || ''}`.matchAll(HASHTAG_RE)) {
+      const t = m[1].toLowerCase();
+      if (!seen.has(t)) { seen.add(t); counts[t] = (counts[t] || 0) + 1; }
+    }
+  });
+  return Object.entries(counts).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+}
+function photoActiveFilterCount() {
+  let n = (photoSel.category.length + photoSel.region.length + photoSel.date.length);
+  if (typeof currentPhotoGeneralFilter !== 'undefined' && ['הפופולארים', 'הישנים'].includes(currentPhotoGeneralFilter)) n++;
+  return n;
+}
+function photoToolsRowHTML() {
+  const n = photoActiveFilterCount();
+  return `<div class="m-tools">
+      <button type="button" class="m-tool${photoHashtag ? ' on' : ''}" onclick="openHashtagSheet()" aria-label="תגיות" title="תגיות">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M9 3 7 21M17 3l-2 18M4 8.5h17M3 15.5h17"/></svg>
+      </button>
+      <button type="button" class="m-tool m-tool-filter" onclick="openFilterSheet()" aria-label="סינון" title="סינון">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="15" cy="6" r="2.2" fill="var(--mt-bg,#492b3c)"/><circle cx="9" cy="12" r="2.2" fill="var(--mt-bg,#492b3c)"/><circle cx="15" cy="18" r="2.2" fill="var(--mt-bg,#492b3c)"/></svg>
+        ${n ? `<span class="m-tool-badge">${n}</span>` : ''}
+      </button>
+      ${photoHashtag ? `<button type="button" class="m-tag-chip" onclick="setPhotoHashtag('')">#${escHtml(photoHashtag)} <span aria-hidden="true">✕</span></button>` : ''}
+    </div>`;
+}
+function photoRefreshTools() {
+  document.querySelectorAll('.m-tools').forEach(el => { el.outerHTML = photoToolsRowHTML(); });
+}
+function setPhotoHashtag(tag) {
+  photoHashtag = String(tag || '').toLowerCase();
+  closeMSheet();
+  photoApplyFilters();
+  photoRefreshTools();
+  const list = mainContent.querySelector('.photo-section-row');
+  if (photoHashtag && list) list.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+window.setPhotoHashtag = setPhotoHashtag;
+
+// חלון "גיליון": במובייל מסך מלא עם חץ חזרה; במחשב חלון במרכז
+function openMSheet(title, bodyHTML, footHTML) {
+  let el = document.getElementById('m-sheet');
+  if (!el) { el = document.createElement('div'); el.id = 'm-sheet'; document.body.appendChild(el); }
+  el.innerHTML = `
+    <div class="ms-backdrop" onclick="closeMSheet()"></div>
+    <div class="ms-panel" role="dialog" aria-label="${escHtml(title)}">
+      <header class="ms-head">
+        <button type="button" class="ms-back" onclick="closeMSheet()" aria-label="חזרה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></button>
+        <span class="ms-title">${escHtml(title)}</span>
+      </header>
+      <div class="ms-body">${bodyHTML}</div>
+      ${footHTML ? `<footer class="ms-foot">${footHTML}</footer>` : ''}
+    </div>`;
+  document.documentElement.classList.add('ms-open');
+  requestAnimationFrame(() => el.classList.add('show'));
+}
+function closeMSheet() {
+  const el = document.getElementById('m-sheet');
+  document.documentElement.classList.remove('ms-open');
+  if (el) { el.classList.remove('show'); el.innerHTML = ''; }
+}
+window.closeMSheet = closeMSheet;
+
+function openHashtagSheet() {
+  const tags = photoHashtagCounts();
+  const body = tags.length
+    ? `<div class="ms-tags">${tags.map(([t, n]) => `<button type="button" class="ms-tag${t === photoHashtag ? ' on' : ''}" onclick="setPhotoHashtag('${artEsc(t)}')">#${escHtml(t)}<b>${n}</b></button>`).join('')}</div>`
+    : `<div class="ms-empty">עדיין אין תגיות.<br>כשמעלים גלריה אפשר לכתוב בתיאור למשל <b>#חוף</b> או <b>#זוגות</b> — והתגית תופיע כאן.</div>`;
+  openMSheet('תגיות', body, photoHashtag ? `<button type="button" class="ms-btn ghost" onclick="setPhotoHashtag('')">ביטול התגית #${escHtml(photoHashtag)}</button>` : '');
+}
+window.openHashtagSheet = openHashtagSheet;
+
+function filterSheetBodyHTML() {
+  const sortRaw = (typeof currentPhotoGeneralFilter !== 'undefined' && currentPhotoGeneralFilter) || '';
+  const sortNow = ['האחרונים', 'הפופולארים', 'הישנים'].includes(sortRaw) ? sortRaw : 'האחרונים';
+  const opt = (type, checked, onchange, label) => `
+    <label class="ms-opt${checked ? ' on' : ''}">
+      <input type="${type}" ${checked ? 'checked' : ''} onchange="${onchange}">
+      <span class="ms-dot" aria-hidden="true"></span><span>${escHtml(label)}</span>
+    </label>`;
+  const sec = (title, inner) => `<section class="ms-sec"><h4>${title}</h4><div class="ms-grid">${inner}</div></section>`;
+  const multi = (kind, list) => list.filter(v => v !== 'הכל').map(v => opt('checkbox', photoSel[kind].includes(v), `filterSheetToggle('${kind}','${artEsc(v)}',this.checked)`, v)).join('');
+  return sec('מיון לפי', ['האחרונים', 'הפופולארים', 'הישנים'].map(v => opt('radio', sortNow === v, `filterSheetSort('${artEsc(v)}')`, v === 'הפופולארים' ? 'הכי פופולריים' : v)).join(''))
+    + sec('מין', multi('category', PHOTO_CATEGORIES))
+    + sec('אזור', multi('region', PHOTO_REGIONS))
+    + sec('תאריך העלאה', multi('date', PHOTO_DATE_RANGES));
+}
+function filterSheetVisibleCount() {
+  return [...mainContent.querySelectorAll('.photos-page[data-section="photos"] .art-row')].filter(r => r.dataset.artMatch !== '0').length;
+}
+function filterSheetFootHTML() {
+  return `<button type="button" class="ms-btn ghost" onclick="filterSheetClear()">ניקוי</button>
+    <button type="button" class="ms-btn" onclick="closeMSheet()">הצגת ${filterSheetVisibleCount()} תוצאות</button>`;
+}
+function filterSheetRefresh() {
+  const body = document.querySelector('#m-sheet .ms-body'), foot = document.querySelector('#m-sheet .ms-foot');
+  if (body) { const y = body.scrollTop; body.innerHTML = filterSheetBodyHTML(); body.scrollTop = y; }
+  if (foot) foot.innerHTML = filterSheetFootHTML();
+  photoRefreshTools();
+}
+function openFilterSheet() {
+  openMSheet('סינון', filterSheetBodyHTML(), filterSheetFootHTML());
+}
+window.openFilterSheet = openFilterSheet;
+function filterSheetToggle(kind, value, checked) { photoToggleMulti(kind, value, checked); filterSheetRefresh(); }
+window.filterSheetToggle = filterSheetToggle;
+function filterSheetSort(value) { photoSetSort(value, { closest: () => null, checked: true }); filterSheetRefresh(); }
+window.filterSheetSort = filterSheetSort;
+function filterSheetClear() {
+  photoSel.category.length = 0; photoSel.region.length = 0; photoSel.date.length = 0;
+  photoSetSort('האחרונים', { closest: () => null, checked: true });
+  filterSheetRefresh();
+}
+window.filterSheetClear = filterSheetClear;
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && document.documentElement.classList.contains('ms-open')) closeMSheet(); });
+
 function photoApplyFilters() {
   photoApplySort();
   const searchInput = mainContent.querySelector('.photos-page .art-search');
@@ -18898,7 +19491,8 @@ function photoApplyFilters() {
     const isVerifiedRow = (r.dataset.verified === '1' || r.dataset.verified === 'true');
     const verifiedMatch = !photoVerifiedOnly || isVerifiedRow;
 
-    const show = categoryMatch && ageMatch && regionMatch && dateMatch && textMatch && verifiedMatch;
+    const tagMatch = !photoHashtag || text.includes('#' + photoHashtag);
+    const show = categoryMatch && ageMatch && regionMatch && dateMatch && textMatch && verifiedMatch && tagMatch;
     // העימוד הוא זה שקובע display בפועל; כאן רק מסמנים מה תואם
     r.dataset.artMatch = show ? '1' : '0';
     if (show) visible++;
@@ -22761,6 +23355,8 @@ function closeNewsAddModal() {
   if (u) u.value = '';
   if (t) t.value = '';
   if (d) d.value = '';
+  const im = document.getElementById('news-post-image');
+  if (im) im.value = '';
 }
 window.closeNewsAddModal = closeNewsAddModal;
 
@@ -22806,6 +23402,8 @@ async function submitNewsPost() {
   const title = titleInput ? titleInput.value.trim() : '';
   const category = catInput ? catInput.value : 'AI וטכנולוגיה';
   const desc = descInput ? descInput.value.trim() : '';
+  const imageRaw = ((document.getElementById('news-post-image') || {}).value || '').trim();
+  const image = /^https?:\/\/\S+$/i.test(imageRaw) ? imageRaw.slice(0, 1000) : '';
 
   if (!rawUrl) {
     alert('נא להזין קישור לפוסט (X, רדיט, פייסבוק או אינסטגרם)');
@@ -22832,6 +23430,7 @@ async function submitNewsPost() {
     title,
     category,
     desc,
+    image,
     tweetUrl,
     author: authorName,
     createdAt: Date.now()
@@ -22930,94 +23529,71 @@ function triggerTwitterWidgetsRender() {
   }, 50);
 }
 
-function buildNewsCard(post) {
-  const deleteBtn = newsIsAdmin() ? `
-    <button onclick="deleteNewsPost('${artEsc(post.id)}')" title="מחיקת מבזק" style="
-      background: rgba(239, 68, 68, 0.12);
-      border: 1px solid rgba(239, 68, 68, 0.3);
-      color: #f87171;
-      padding: 5px 12px;
-      border-radius: 8px;
-      font-size: 12px;
-      cursor: pointer;
-      font-weight: 700;
-      transition: all 0.2s;
-    ">🗑️ מחיקה</button>
-  ` : '';
-
-  const dateStr = post.createdAt ? new Date(post.createdAt).toLocaleDateString('he-IL', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
-
-  return `
-    <article class="news-feed-card" style="
-      background: #121216;
-      border: 1px solid #272730;
-      border-radius: 16px;
-      padding: 20px;
-      margin-bottom: 24px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.35);
-      direction: rtl;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    ">
-      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-        <div style="display:flex; align-items:center; gap:10px;">
-          
-          ${dateStr ? `<span style="font-size: 12px; color: #71717a;">${dateStr}</span>` : ''}
-        </div>
-        <div style="display:flex; align-items:center; gap:8px;">
-          ${deleteBtn}
-          <a href="${artEsc(post.tweetUrl)}" target="_blank" rel="noopener noreferrer" style="
-            background: rgba(255,255,255,0.06);
-            border: 1px solid rgba(255,255,255,0.12);
-            color: #e4e4e7;
-            padding: 5px 12px;
-            border-radius: 8px;
-            font-size: 12px;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            font-weight: 700;
-          ">
-            <span>צפייה ב${newsPlatform(post.tweetUrl) === 'x' ? '-X' : NEWS_PLATFORM_NAMES[newsPlatform(post.tweetUrl)]}</span>
-          </a>
-        </div>
-      </div>
-
-      <h3 style="
-        margin: 0;
-        font-size: 19px;
-        font-weight: 800;
-        color: #ffffff;
-        line-height: 1.4;
-      ">${artEsc(post.title || '')}</h3>
-
-      ${post.desc ? `
-        <p style="
-          margin: 0;
-          font-size: 14px;
-          color: #a1a1aa;
-          line-height: 1.6;
-        ">${artEsc(post.desc)}</p>
-      ` : ''}
-
-      <!-- תיבת ה-Embed של טוויטר / X -->
-      <div class="news-tweet-embed-wrap" style="
-        display: flex;
-        justify-content: center;
-        background: #ffffff;
-        border-radius: 14px;
-        padding: 12px;
-        border: 1px solid #e5e7eb;
-        min-height: 180px;
-        overflow: hidden;
-      ">
-        ${newsEmbedHTML(post)}
-      </div>
-    </article>
-  `;
+// ===== שורת חדשות בסגנון אתר חדשות: תמונה מימין, כותרת, כותב | תאריך, ותקציר לידיעה הראשונה =====
+const NEWS_PLATFORM_TILES = {
+  x: { bg: 'linear-gradient(135deg,#1f1f23,#000)', icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>' },
+  reddit: { bg: 'linear-gradient(135deg,#ff6a2b,#ff4500)', icon: '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="13.5" r="7.5"/><circle cx="18.5" cy="5.5" r="1.8"/><path d="M12 6l1.4-4 4.6 1" stroke="currentColor" stroke-width="1.4" fill="none"/></svg>' },
+  facebook: { bg: 'linear-gradient(135deg,#3b82f6,#1d4ed8)', icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 8h3V4h-3c-2.8 0-4.5 1.8-4.5 4.6V11H7v4h2.5v8h4v-8h3l.5-4h-3.5V8.8c0-.5.3-.8.5-.8z"/></svg>' },
+  instagram: { bg: 'linear-gradient(135deg,#f58529,#dd2a7b 55%,#8134af)', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>' },
+  other: { bg: 'linear-gradient(135deg,#6b455c,#492b3c)', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h13v14H6a2 2 0 0 1-2-2z"/><path d="M17 9h3v8a2 2 0 0 1-2 2"/><path d="M7.5 9h6M7.5 12.5h6M7.5 16h4"/></svg>' },
+};
+function newsWhen(ts) {
+  if (!ts) return '';
+  const d = new Date(ts), now = new Date();
+  const time = d.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+  const y = new Date(now); y.setDate(now.getDate() - 1);
+  if (d.toDateString() === now.toDateString()) return `היום, ${time}`;
+  if (d.toDateString() === y.toDateString()) return `אתמול, ${time}`;
+  return `${d.toLocaleDateString('he-IL', { day: 'numeric', month: 'short' })}, ${time}`;
 }
+function buildNewsCard(post, idx) {
+  const plat = newsPlatform(post.tweetUrl);
+  const tile = NEWS_PLATFORM_TILES[plat] || NEWS_PLATFORM_TILES.other;
+  const img = post.image && /^https?:\/\//i.test(post.image) ? safeUrl(post.image) : '';
+  const thumb = img
+    ? `<img src="${escHtml(img)}" alt="" loading="lazy" onerror="this.parentNode.classList.add('nl-noimg'); this.remove();">`
+    : `<span class="nl-tile-icon">${tile.icon}</span>`;
+  const featured = idx === 0 && post.desc;
+  const delBtn = newsIsAdmin() ? `<button type="button" class="nl-del" onclick="event.stopPropagation(); deleteNewsPost('${artEsc(post.id)}')" title="מחיקת מבזק">מחיקה</button>` : '';
+  return `
+    <article class="nl-item" data-news-id="${escHtml(post.id || '')}">
+      <div class="nl-row" role="button" tabindex="0" onclick="newsToggleEmbed('${artEsc(post.id || '')}')" onkeydown="if(event.key==='Enter'){newsToggleEmbed('${artEsc(post.id || '')}')}">
+        <div class="nl-thumb${img ? '' : ' nl-noimg'}" style="--tile:${tile.bg}">${thumb}</div>
+        <div class="nl-body">
+          <h3 class="nl-title">${escHtml(post.title || '')}</h3>
+          <div class="nl-meta">
+            <span class="nl-author">${escHtml(post.author || 'עורך חדשות')}</span>
+            <span class="nl-sep" aria-hidden="true"></span>
+            <span class="nl-when">${escHtml(newsWhen(post.createdAt))}</span>
+            ${delBtn}
+          </div>
+          ${!featured && post.desc ? `<p class="nl-desc-sm">${escHtml(post.desc)}</p>` : ''}
+        </div>
+      </div>
+      ${featured ? `<p class="nl-desc">${escHtml(post.desc)}</p>` : ''}
+      <div class="nl-embed" hidden></div>
+    </article>`;
+}
+// לחיצה על ידיעה פותחת/סוגרת את הפוסט המקורי (X / רדיט / ...) מתחתיה
+function newsToggleEmbed(id) {
+  const item = document.querySelector(`.nl-item[data-news-id="${CSS.escape(id)}"]`);
+  if (!item) return;
+  const box = item.querySelector('.nl-embed');
+  const open = box.hidden;
+  document.querySelectorAll('.nl-item.open').forEach(o => { if (o !== item) { o.classList.remove('open'); o.querySelector('.nl-embed').hidden = true; } });
+  item.classList.toggle('open', open);
+  box.hidden = !open;
+  if (open && !box.dataset.loaded) {
+    const post = (newsPostsData || []).find(p => String(p.id) === String(id));
+    if (!post) return;
+    const plat = newsPlatform(post.tweetUrl);
+    box.innerHTML = `<div class="nl-embed-inner">${newsEmbedHTML(post)}</div>
+      <a class="nl-source" href="${escHtml(safeUrl(post.tweetUrl))}" target="_blank" rel="noopener noreferrer">לצפייה ב${plat === 'x' ? '-X' : NEWS_PLATFORM_NAMES[plat]} ›</a>`;
+    box.dataset.loaded = '1';
+    triggerTwitterWidgetsRender();
+  }
+}
+window.newsToggleEmbed = newsToggleEmbed;
 
 function buildNewsPage() {
   subscribeNewsPosts();
@@ -23046,7 +23622,7 @@ function buildNewsPage() {
   let filtered = (newsPostsData && newsPostsData.length > 0) ? newsPostsData : NEWS_DEFAULT_POSTS;
 
   const postsListHtml = filtered.length > 0
-    ? filtered.map(buildNewsCard).join('')
+    ? filtered.map((p, i) => buildNewsCard(p, i)).join('')
     : `
       <div style="text-align: center; padding: 60px 20px; color: #71717a; background: #121216; border-radius: 16px; border: 1px dashed #272730;">
         <span style="font-size: 42px; display: block; margin-bottom: 12px;">📰</span>
@@ -23057,7 +23633,7 @@ function buildNewsPage() {
 
   return `
     <div class="news-page-container" style="
-      max-width: 860px;
+      max-width: 1000px;
       margin: 0 auto;
       padding: 24px 16px 80px 16px;
       direction: rtl;
@@ -23149,6 +23725,145 @@ function buildNewsPage() {
 window.buildNewsPage = buildNewsPage;
 
 
+
+// ==========================================
+// חיפוש באתר — אייקון בכותרת שנפתח לשורת חיפוש ברוחב מלא (גם במובייל)
+// מחפש בגלריות, קומיקס/סיפורים, קהילות, חדשות ועמודי האתר
+// ==========================================
+let siteSearchTimer = 0;
+function siteSearchEnsureDom() {
+  if (document.getElementById('site-search')) return;
+  const header = document.querySelector('header') || document.body;
+  const bar = document.createElement('div');
+  bar.id = 'site-search';
+  bar.className = 'ss-bar';
+  bar.innerHTML = `
+    <button type="button" class="ss-back" onclick="closeSiteSearch()" aria-label="סגירת החיפוש">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
+    </button>
+    <div class="ss-field">
+      <input id="site-search-input" type="search" placeholder="חיפוש" autocomplete="off" enterkeyhint="search" aria-label="חיפוש באתר"
+        oninput="siteSearchInput(this.value)" onkeydown="if(event.key==='Escape'){closeSiteSearch()} else if(event.key==='Enter'){event.preventDefault(); siteSearchOpenFirst()}">
+      <button type="button" class="ss-clear" onclick="siteSearchClear()" aria-label="ניקוי">✕</button>
+    </div>`;
+  header.appendChild(bar);
+  const res = document.createElement('div');
+  res.id = 'site-search-results';
+  res.className = 'ss-results';
+  res.addEventListener('click', (e) => { if (e.target === res) closeSiteSearch(); });
+  document.body.appendChild(res);
+}
+function openSiteSearch() {
+  siteSearchEnsureDom();
+  try { if (typeof subscribeCommunities === 'function') subscribeCommunities(); } catch (e) {}
+  try { if (typeof subscribeNewsPosts === 'function') subscribeNewsPosts(); } catch (e) {}
+  const hdr = document.querySelector('header');
+  if (hdr) document.documentElement.style.setProperty('--ss-top', Math.round(hdr.getBoundingClientRect().bottom) + 'px');
+  document.documentElement.classList.add('ss-open');
+  const inp = document.getElementById('site-search-input');
+  if (inp) { inp.value = ''; setTimeout(() => inp.focus(), 30); }
+  siteSearchRender('');
+}
+window.openSiteSearch = openSiteSearch;
+function closeSiteSearch() {
+  document.documentElement.classList.remove('ss-open');
+  const inp = document.getElementById('site-search-input');
+  if (inp) inp.blur();
+}
+window.closeSiteSearch = closeSiteSearch;
+function siteSearchClear() {
+  const inp = document.getElementById('site-search-input');
+  if (inp) { inp.value = ''; inp.focus(); }
+  siteSearchRender('');
+}
+window.siteSearchClear = siteSearchClear;
+function siteSearchInput(v) {
+  clearTimeout(siteSearchTimer);
+  siteSearchTimer = setTimeout(() => siteSearchRender(v), 120);
+}
+window.siteSearchInput = siteSearchInput;
+
+function siteSearchCollect(q) {
+  const norm = (t) => String(t || '').toLowerCase();
+  const hit = (...parts) => parts.some(p => norm(p).includes(q));
+  const out = [];
+  const firstImg = (o) => {
+    const arr = Array.isArray(o.images) ? o.images.filter(x => typeof x === 'string' && x) : [];
+    return arr[0] || o.image || o.cover || o.coverImage || '';
+  };
+  try {
+    const albums = (typeof getPhotosForHome === 'function') ? getPhotosForHome() : [];
+    (albums || []).forEach(a => { if (a && a.id && hit(a.title, a.summary, a.category, a.author)) out.push({ kind: 'photo', label: 'גלריה', id: a.id, title: a.title || 'גלריה', sub: a.author || a.category || '', img: firstImg(a), adult: !!a.isAdult }); });
+  } catch (e) {}
+  try {
+    const stories = (typeof getStoriesFeedData === 'function') ? getStoriesFeedData() : [];
+    (stories || []).forEach(st => { if (st && st.id && hit(st.title, st.summary, st.desc, st.category, st.author)) out.push({ kind: 'story', label: 'קומיקס', id: st.id, title: st.title || 'קומיקס', sub: st.author || st.category || '', img: firstImg(st), adult: !!st.isAdult }); });
+  } catch (e) {}
+  try {
+    Object.entries((typeof communitiesData !== 'undefined' && communitiesData) || {}).forEach(([id, c]) => {
+      if (c && hit(c.title, c.name, c.summary, c.desc)) out.push({ kind: 'community', label: 'קהילה', id, title: c.title || c.name || 'קהילה', sub: c.summary || c.desc || '', img: firstImg(c) });
+    });
+  } catch (e) {}
+  try {
+    ((typeof newsPostsData !== 'undefined' && newsPostsData) || []).forEach(n => { if (n && hit(n.title, n.desc)) out.push({ kind: 'news', label: 'חדשות', id: n.id, title: n.title || 'מבזק', sub: n.desc || '', img: n.image || '' }); });
+  } catch (e) {}
+  try {
+    ((typeof pages !== 'undefined' && Array.isArray(pages)) ? pages : []).forEach(p => {
+      if (p && p.id && p.title && !p.hidden && hit(p.title)) out.push({ kind: 'page', label: 'עמוד', id: p.id, title: String(p.title).replace(/[\u{1F300}-\u{1FAFF}☀-➿️]/gu, '').trim(), sub: '', img: '' });
+    });
+  } catch (e) {}
+  return out;
+}
+let siteSearchLast = [];
+function siteSearchRender(raw) {
+  const box = document.getElementById('site-search-results');
+  if (!box) return;
+  const q = String(raw || '').trim().toLowerCase();
+  const clr = document.querySelector('.ss-clear');
+  if (clr) clr.style.visibility = q ? 'visible' : 'hidden';
+  if (!q) {
+    siteSearchLast = [];
+    box.innerHTML = `<div class="ss-panel"><div class="ss-hint">חפשו גלריות, קומיקס, קהילות, חדשות ועמודים</div></div>`;
+    return;
+  }
+  const items = siteSearchCollect(q).slice(0, 30);
+  siteSearchLast = items;
+  const adultOk = (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('age_verified') === 'true');
+  const icons = {
+    photo: '<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 9"/>',
+    story: '<path d="M4 5h7v14H4z"/><path d="M13 5h7v14h-7z"/>',
+    community: '<circle cx="12" cy="8" r="3"/><circle cx="5" cy="10" r="2.2"/><circle cx="19" cy="10" r="2.2"/><path d="M6.5 20v-1.5a5.5 5.5 0 0 1 11 0V20"/>',
+    news: '<path d="M4 5h13v14H6a2 2 0 0 1-2-2z"/><path d="M17 9h3v8a2 2 0 0 1-2 2"/><path d="M7.5 9h6M7.5 12.5h6M7.5 16h4"/>',
+    page: '<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/>'
+  };
+  const rows = items.map((it, i) => {
+    const blur = it.adult && !adultOk ? ' ss-blur' : '';
+    const thumb = it.img
+      ? `<span class="ss-thumb${blur}"><img src="${escHtml(it.img)}" alt="" loading="lazy" onerror="this.remove()"></span>`
+      : `<span class="ss-thumb ss-thumb-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${icons[it.kind]}</svg></span>`;
+    return `<button type="button" class="ss-item" onclick="siteSearchOpen(${i})">
+        ${thumb}
+        <span class="ss-text"><span class="ss-title">${escHtml(it.title)}</span>${it.sub ? `<span class="ss-sub">${escHtml(String(it.sub).slice(0, 90))}</span>` : ''}</span>
+        <span class="ss-kind">${it.label}</span>
+      </button>`;
+  }).join('');
+  box.innerHTML = `<div class="ss-panel">${rows || `<div class="ss-hint">לא נמצאו תוצאות עבור "${escHtml(raw.trim())}"</div>`}</div>`;
+}
+function siteSearchOpen(i) {
+  const it = siteSearchLast[i];
+  if (!it) return;
+  closeSiteSearch();
+  if (it.kind === 'photo' || it.kind === 'story') { if (typeof openHistoryItem === 'function') openHistoryItem(it.id, it.kind === 'story' ? 'story' : 'photo'); }
+  else if (it.kind === 'community') { if (typeof openCommunityPage === 'function') openCommunityPage(it.id); }
+  else if (it.kind === 'news') { if (typeof navigateToPage === 'function') navigateToPage('page-news-main'); setTimeout(() => { if (typeof newsToggleEmbed === 'function') newsToggleEmbed(it.id); const el = document.querySelector(`.nl-item[data-news-id="${CSS.escape(String(it.id))}"]`); if (el) el.scrollIntoView({ block: 'center' }); }, 400); }
+  else if (it.kind === 'page') { if (typeof navigateToPage === 'function') navigateToPage(it.id); }
+}
+window.siteSearchOpen = siteSearchOpen;
+function siteSearchOpenFirst() { if (siteSearchLast.length) siteSearchOpen(0); }
+window.siteSearchOpenFirst = siteSearchOpenFirst;
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && document.documentElement.classList.contains('ss-open')) closeSiteSearch();
+});
 
 // ==========================================
 // סיור הדרכה (4 שלבים) — מוצג פעם אחת לגולש חדש, עם "הבא" / "הקודם"

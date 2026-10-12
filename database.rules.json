@@ -27,6 +27,13 @@
       "deleteChat": { ".read": true },
       "verified_users": { ".read": true },
       "admin_uid": { ".read": "auth != null" },
+      "follow_counts": {
+        ".read": true,
+        "$uid": {
+          "followers": { ".write": "auth != null && auth.uid !== $uid && auth.token.firebase.sign_in_provider !== 'anonymous'", ".validate": "newData.isNumber() && newData.val() >= 0 && ((!data.exists() && newData.val() <= 1) || (data.exists() && (newData.val() === data.val() + 1 || newData.val() === data.val() - 1)))" },
+          "following": { ".write": "auth != null && auth.uid === $uid", ".validate": "newData.isNumber() && newData.val() >= 0 && ((!data.exists() && newData.val() <= 1) || (data.exists() && (newData.val() === data.val() + 1 || newData.val() === data.val() - 1)))" }
+        }
+      },
 
       "polls": {
         ".read": true,
