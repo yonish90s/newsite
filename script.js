@@ -13241,11 +13241,19 @@ async function saveAvatar() {
 window.saveAvatar = saveAvatar;
 
 // ============================================================
-// עמוד "Blind Date" — נכנסים לתור, ומה שיוצא יוצא: שיחה פרטית 1 על 1 עם גולש/ת אקראי/ת
-// תור: website/blind_queue/{uid}   חדר: website/blind_rooms/{roomId} (a, b, msgs, ended)
+// עמוד "Blind Date" — התאמה אקראית, ואז חובה להיפגש:
+// מגרילים מסעדה אמיתית (OpenStreetMap) בעיר שלה + יום ושעה בערב. שניהם מאשרים —
+// מי שלא מאשר/ת מגריל/ה מחדש, עד ששניהם מאשרים. רק אז נפתחת השיחה.
+// פתוח גם לאורחים (חשבון אנונימי + שם זמני שנכתב פעם אחת).
+// תור: website/blind_queue/{uid}   חדר: website/blind_rooms/{roomId} (a, b, plan{round, ok}, msgs, ended)
 // ============================================================
 const BD_STALE_MS = 10 * 60 * 1000;
-let bd = { state: 'intro', me: { g: '', want: 'all' }, roomId: null, partner: null, msgs: {}, ended: false, unsubQ: null, unsubR: null, error: '' };
+const BD_CITIES = ['תל אביב-יפו', 'ירושלים', 'חיפה', 'ראשון לציון', 'פתח תקווה', 'אשדוד', 'נתניה', 'באר שבע', 'חולון', 'בני ברק',
+  'רמת גן', 'רחובות', 'אשקלון', 'בת ים', 'בית שמש', 'כפר סבא', 'הרצליה', 'חדרה', 'מודיעין-מכבים-רעות', 'רעננה', 'לוד', 'רמלה',
+  'נצרת', 'הוד השרון', 'ראש העין', 'גבעתיים', 'קריית גת', 'נהריה', 'אילת', 'עפולה', 'טבריה', 'כרמיאל', 'יבנה', 'קריית אתא', 'אור יהודה', 'נס ציונה'];
+const BD_PREFS_KEY = 'bd_prefs';
+let bd = { state: 'intro', me: { g: '', want: 'all', city: '' }, adult: false, roomId: null, room: null, partner: null, ended: false, unsubQ: null, unsubR: null, error: '', rolling: false, planTimer: null };
+try { Object.assign(bd.me, JSON.parse(localStorage.getItem(BD_PREFS_KEY) || '{}')); } catch (e) {}
 
 function bdRegistered() { return auth.currentUser && !auth.currentUser.isAnonymous; }
 function bdMatches(meG, meWant, other) {
@@ -13255,6 +13263,93 @@ function bdMatches(meG, meWant, other) {
   const theyLikeMe = other.want === 'all' || other.want === meG;
   return iLikeThem && theyLikeMe;
 }
+function bdMyName() {
+  if (bdRegistered()) return String(liveChatUserName() || 'משתמש').slice(0, 30);
+  const el = document.getElementById('bd-name');
+  return String((el ? el.value : forumGuestName()) || '').trim().slice(0, 30);
+}
+
+// --- הגרלת המפגש ---
+// העיר: העיר שלה (אם אחד מהשניים אישה), אחרת העיר של מי שחיכה בתור
+function bdPlanCity(r) {
+  if (!r) return '';
+  if (r.aG === 'f' && r.bG !== 'f') return r.aCity || r.bCity;
+  if (r.bG === 'f' && r.aG !== 'f') return r.bCity || r.aCity;
+  return r.aCity || r.bCity;
+}
+const bdRestCache = {};
+async function bdFetchRestaurants(city) {
+  if (bdRestCache[city]) return bdRestCache[city];
+  const q = `[out:json][timeout:20];area["name"="${city}"]["boundary"="administrative"]->.a;nwr["amenity"="restaurant"]["name"](area.a);out center 150;`;
+  // שרת ראשי + שרת גיבוי (השרתים הציבוריים לפעמים עמוסים)
+  for (const host of ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter']) {
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), 12000);
+  try {
+    const res = await fetch(host, {
+      method: 'POST', signal: ctl.signal,
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'data=' + encodeURIComponent(q)
+    });
+    if (!res.ok) continue;
+    const d = await res.json();
+    const list = (d.elements || []).map(e => ({
+      name: String(e.tags.name || '').slice(0, 80),
+      street: String([e.tags['addr:street'], e.tags['addr:housenumber']].filter(Boolean).join(' ')).slice(0, 80),
+      cuisine: String(e.tags.cuisine || '').split(';')[0].slice(0, 30),
+      lat: e.lat || (e.center && e.center.lat) || 0, lon: e.lon || (e.center && e.center.lon) || 0
+    })).filter(x => x.name);
+    bdRestCache[city] = list;
+    return list;
+  } catch (e) { /* ננסה את השרת הבא */ } finally { clearTimeout(timer); }
+  }
+  return [];
+}
+function bdRandomEvening() {
+  const d = new Date();
+  d.setDate(d.getDate() + 1 + Math.floor(Math.random() * 6));       // מחר עד עוד 6 ימים
+  const slot = Math.floor(Math.random() * 7);                         // 19:00 … 22:00 בחצאי שעה
+  d.setHours(19 + Math.floor(slot / 2), (slot % 2) * 30, 0, 0);
+  return d.getTime();
+}
+async function bdRollPlan() {
+  const r = bd.room; if (!r || !bd.roomId || bd.rolling) return;
+  bd.rolling = true; bdRender();
+  const city = bdPlanCity(r);
+  const list = await bdFetchRestaurants(city);
+  const prev = r.plan && r.plan.name;
+  const pool = list.filter(x => x.name !== prev);
+  const pick = pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
+  const plan = {
+    round: ((r.plan && r.plan.round) || 0) + 1, city, when: bdRandomEvening(),
+    name: pick ? pick.name : `מסעדה לבחירתכם ב${city}`, street: pick ? pick.street : '', cuisine: pick ? pick.cuisine : '',
+    lat: pick ? pick.lat : 0, lon: pick ? pick.lon : 0, by: auth.currentUser.uid
+  };
+  try { await set(ref(db, `website/blind_rooms/${bd.roomId}/plan`), plan); } catch (e) { /* השני כבר הגריל — זה בסדר */ }
+  bd.rolling = false; bdRender();
+}
+async function bdApprove() {
+  if (!bd.roomId || !bd.room || !bd.room.plan) return;
+  try { await set(ref(db, `website/blind_rooms/${bd.roomId}/plan/ok/${auth.currentUser.uid}`), true); } catch (e) { alert('לא נשמר. נסו שוב.'); }
+}
+window.bdApprove = bdApprove;
+window.bdReroll = () => bdRollPlan();
+function bdWhenText(t) {
+  const d = new Date(t);
+  const day = d.toLocaleDateString('he-IL', { weekday: 'long' });
+  return `${day} ${d.getDate()}.${d.getMonth() + 1} · ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+function bdMapsUrl(p) {
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.name + ' ' + p.city)}`;
+}
+function bdPlanCardHTML(p, compact) {
+  const pin = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>';
+  const clock = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
+  return `<div class="bd-plan${compact ? ' compact' : ''}">
+    <div class="bd-plan-row">${pin}<div><b>${escHtml(p.name)}</b><small>${escHtml([p.cuisine, p.street, p.city].filter(Boolean).join(' · '))}</small></div>
+      <a class="bd-plan-map" href="${escHtml(bdMapsUrl(p))}" target="_blank" rel="noopener">מפה</a></div>
+    <div class="bd-plan-row">${clock}<div><b>${escHtml(bdWhenText(p.when))}</b><small>ערב · פגישה ראשונה</small></div></div>
+  </div>`;
+}
 
 function buildBlindDatePage() {
   return `<div class="blinddate-page" data-page-id="page-blinddate-main"><div class="bd-inner">${bdViewHTML()}</div></div>`;
@@ -13262,11 +13357,11 @@ function buildBlindDatePage() {
 function bdRender() {
   const el = mainContent && mainContent.querySelector('.blinddate-page .bd-inner');
   if (!el) return;
-  const draft = document.getElementById('bd-input');
-  const val = draft ? draft.value : '';
+  const keep = id => { const x = document.getElementById(id); return x ? x.value : null; };
+  const draft = keep('bd-input'), nameDraft = keep('bd-name');
   el.innerHTML = bdViewHTML();
-  const d2 = document.getElementById('bd-input');
-  if (d2 && val) d2.value = val;
+  const d2 = document.getElementById('bd-input'); if (d2 && draft) d2.value = draft;
+  const n2 = document.getElementById('bd-name'); if (n2 && nameDraft !== null) n2.value = nameDraft;
   const box = el.querySelector('.bd-msgs');
   if (box) box.scrollTop = box.scrollHeight;
 }
@@ -13275,16 +13370,24 @@ function bdViewHTML() {
   const heart = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.6 2.8 4.5 6.7 4.5c2.2 0 3.6 1.2 5.3 3 1.7-1.8 3.1-3 5.3-3 3.9 0 5.8 4.1 4.3 7.3C19.5 16.4 12 21 12 21z"/></svg>';
   if (bd.state === 'intro') {
     const chip = (key, val, label) => `<button type="button" class="bd-chip${bd.me[key] === val ? ' on' : ''}" onclick="bdPick('${key}','${val}')">${label}</button>`;
+    const saved = bdRegistered() ? '' : forumGuestName();
+    const nameRow = bdRegistered() ? '' : (saved.length >= 2
+      ? `<div class="bd-row"><span>שם</span><div class="fo-guest-as" id="bd-name-wrap"><input type="hidden" id="bd-name" value="${escHtml(saved)}"><b>${escHtml(saved)}</b> <button type="button" class="fo-guest-change" onclick="forumGuestChangeName('bd-name')">שינוי</button></div></div>`
+      : `<div class="bd-row"><span>שם</span><div><input id="bd-name" class="bd-field" maxlength="30" placeholder="השם שלך"></div></div>`);
     return `
       <div class="bd-card bd-intro">
         <div class="bd-logo">${heart}</div>
         <h1>Blind Date</h1>
-        <p>נכנסים, מחכים — ומה שיוצא יוצא. שיחה פרטית ואקראית עם גולש/ת אחר/ת שמחכה בדיוק עכשיו.</p>
+        <p>יש התאמה? נפגשים. אנחנו מגרילים מסעדה בעיר ויום ושעה בערב — שניכם מאשרים, ורק אז נפתחת השיחה.</p>
+        ${nameRow}
         <div class="bd-row"><span>אני</span><div>${chip('g', 'm', 'גבר')}${chip('g', 'f', 'אישה')}</div></div>
         <div class="bd-row"><span>מחפש/ת</span><div>${chip('want', 'f', 'אישה')}${chip('want', 'm', 'גבר')}${chip('want', 'all', 'כולם')}</div></div>
+        <div class="bd-row"><span>עיר</span><div><select id="bd-city" class="bd-field" onchange="bdPick('city', this.value)">
+          <option value="">בחרו עיר</option>${BD_CITIES.map(c => `<option${bd.me.city === c ? ' selected' : ''}>${c}</option>`).join('')}</select></div></div>
+        <label class="bd-adult"><input type="checkbox" ${bd.adult ? 'checked' : ''} onchange="bdSetAdult(this.checked)"> אני מעל גיל 18 ומתחייב/ת להתנהגות מכבדת</label>
         ${bd.error ? `<div class="bd-error">${escHtml(bd.error)}</div>` : ''}
-        <button type="button" class="bd-go" onclick="bdStart()">${bdRegistered() ? 'התחילו' : 'התחברו כדי להתחיל'}</button>
-        <small class="bd-note">השיחה פרטית לשניכם בלבד. אפשר לסיים בכל רגע.</small>
+        <button type="button" class="bd-go" onclick="bdStart()">התחילו</button>
+        <small class="bd-note">פגישה ראשונה תמיד במקום ציבורי. ספרו לחבר/ה לאן אתם הולכים.</small>
       </div>`;
   }
   if (bd.state === 'waiting') {
@@ -13292,22 +13395,46 @@ function bdViewHTML() {
       <div class="bd-card bd-wait">
         <div class="bd-radar"><span></span><span></span><span></span><div class="bd-logo">${heart}</div></div>
         <h2>מחפשים לך התאמה...</h2>
-        <p>ברגע שמישהו/י מתאים/ה נכנס/ת — השיחה נפתחת. אפשר להשאיר את העמוד פתוח.</p>
+        <p>ברגע שמישהו/י מתאים/ה נכנס/ת — מגרילים לכם מקום ושעה. אפשר להשאיר את העמוד פתוח.</p>
         <button type="button" class="bd-ghost" onclick="bdCancel()">ביטול</button>
       </div>`;
   }
-  // chat / ended
   const myUid = auth.currentUser ? auth.currentUser.uid : '';
-  const msgs = Object.values(bd.msgs || {}).filter(m => m && m.text).sort((a, b) => (a.t || 0) - (b.t || 0));
+  const r = bd.room || {};
+  const p = r.plan;
+  const partnerName = (bd.partner && bd.partner.name) || 'גולש/ת';
+  const partnerUid = bd.partner && bd.partner.uid;
+  const ok = (p && p.ok) || {};
+  const agreed = p && ok[myUid] && partnerUid && ok[partnerUid];
+  const head = `<div class="bd-chat-head">
+        <span class="bd-avatar">${escHtml(String(partnerName).charAt(0))}</span>
+        <div><b>${escHtml(partnerName)}</b><small>${bd.ended ? 'המפגש בוטל' : agreed ? 'יש דייט! 🎉' : 'יש התאמה · קובעים מפגש'}</small></div>
+        <button type="button" class="bd-ghost small" onclick="bdNext()">${bd.ended ? 'חיפוש חדש' : 'יציאה'}</button>
+      </div>`;
+  // שלב 1: הגרלה ואישור המפגש
+  if (!agreed && !bd.ended) {
+    const body = !p || bd.rolling
+      ? `<div class="bd-rolling"><div class="bd-dice">🎲</div><b>מגרילים מסעדה ושעה${p ? ' חדשות' : ''}...</b></div>`
+      : `<p class="bd-plan-lead">${p.round > 1 ? `הגרלה מס׳ ${p.round} · ` : ''}כדי לדבר — קובעים להיפגש:</p>
+        ${bdPlanCardHTML(p)}
+        <div class="bd-plan-status">
+          <span class="${ok[myUid] ? 'yes' : ''}">את/ה ${ok[myUid] ? '✓ אישרת' : '· עוד לא'}</span>
+          <span class="${ok[partnerUid] ? 'yes' : ''}">${escHtml(partnerName)} ${ok[partnerUid] ? '✓ אישר/ה' : '· עוד לא'}</span>
+        </div>
+        ${ok[myUid] ? `<p class="bd-plan-wait">מחכים ש${escHtml(partnerName)} יאשר/תאשר...</p>
+          <button type="button" class="bd-ghost" onclick="bdReroll()">בעצם לא מתאים לי — הגרלה חוזרת</button>`
+        : `<div class="bd-plan-btns"><button type="button" class="bd-go" onclick="bdApprove()">✓ מאשר/ת, נפגשים</button>
+          <button type="button" class="bd-ghost" onclick="bdReroll()">🎲 לא מתאים — הגרלה חוזרת</button></div>`}`;
+    return `<div class="bd-card bd-chat">${head}<div class="bd-proposal">${body}</div></div>`;
+  }
+  // שלב 2: שניהם אישרו — השיחה פתוחה, והמפגש מוצמד למעלה
+  const msgs = Object.values(r.msgs || {}).filter(m => m && m.text).sort((a, b) => (a.t || 0) - (b.t || 0));
   return `
     <div class="bd-card bd-chat">
-      <div class="bd-chat-head">
-        <span class="bd-avatar">${escHtml(String((bd.partner && bd.partner.name) || '?').charAt(0))}</span>
-        <div><b>${escHtml((bd.partner && bd.partner.name) || 'גולש/ת')}</b><small>${bd.ended ? 'השיחה הסתיימה' : 'Blind Date · מחוברים עכשיו'}</small></div>
-        <button type="button" class="bd-ghost small" onclick="bdNext()">${bd.ended ? 'חיפוש חדש' : 'הבא ›'}</button>
-      </div>
+      ${head}
+      ${p ? bdPlanCardHTML(p, true) : ''}
       <div class="bd-msgs">
-        <div class="bd-sys">נוצרה התאמה! תגידו שלום 👋</div>
+        <div class="bd-sys">שניכם אישרתם — נתראה במפגש! עכשיו אפשר לדבר 👋</div>
         ${msgs.map(m => `<div class="bd-msg${m.from === myUid ? ' mine' : ''}"><span>${escHtml(m.text)}</span></div>`).join('')}
         ${bd.ended ? '<div class="bd-sys">השיחה הסתיימה.</div>' : ''}
       </div>
@@ -13319,27 +13446,37 @@ function bdViewHTML() {
     </div>`;
 }
 
-function bdPick(key, val) { bd.me[key] = val; bd.error = ''; bdRender(); }
+function bdPick(key, val) {
+  bd.me[key] = val; bd.error = '';
+  try { localStorage.setItem(BD_PREFS_KEY, JSON.stringify(bd.me)); } catch (e) {}
+  bdRender();
+}
 window.bdPick = bdPick;
+window.bdSetAdult = v => { bd.adult = !!v; };
 
 function bdStopListeners() {
   if (bd.unsubQ) { bd.unsubQ(); bd.unsubQ = null; }
   if (bd.unsubR) { bd.unsubR(); bd.unsubR = null; }
+  if (bd.planTimer) { clearTimeout(bd.planTimer); bd.planTimer = null; }
 }
 
 async function bdStart() {
-  if (!bdRegistered()) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
-  if (!bd.me.g) { bd.error = 'בחרו קודם "אני: גבר / אישה"'; bdRender(); return; }
+  const name = bdMyName();
+  if (name.length < 2) { bd.error = 'כתבו שם (לפחות 2 תווים)'; bdRender(); return; }
+  if (!bd.me.g) { bd.error = 'בחרו "אני: גבר / אישה"'; bdRender(); return; }
+  if (!bd.me.city) { bd.error = 'בחרו עיר — שם נגריל את המסעדה'; bdRender(); return; }
+  if (!bd.adult) { bd.error = 'יש לאשר שאתם מעל גיל 18'; bdRender(); return; }
+  if (!auth.currentUser && !(await ensureGuestSignedIn())) { bd.error = 'לא ניתן להתחבר כרגע. נסו שוב.'; bdRender(); return; }
+  if (!bdRegistered()) { try { localStorage.setItem(FORUM_GUEST_KEY, name); } catch (e) {} }
   const user = auth.currentUser;
-  const name = String(liveChatUserName() || 'משתמש').slice(0, 40);
   bd.state = 'waiting'; bd.error = ''; bdRender();
   try {
-    // 1. מחפשים מישהו שכבר מחכה ומתאים (הוותיק ביותר)
+    // 1. מחפשים מישהו שכבר מחכה ומתאים — קודם מאותה עיר, ובתוך זה הוותיק ביותר
     const snap = await get(ref(db, 'website/blind_queue'));
     const all = snap.exists() ? (snap.val() || {}) : {};
     const candidates = Object.entries(all)
       .filter(([uid, q]) => uid !== user.uid && bdMatches(bd.me.g, bd.me.want, q))
-      .sort((a, b) => (a[1].t || 0) - (b[1].t || 0));
+      .sort((a, b) => ((a[1].city === bd.me.city ? 0 : 1) - (b[1].city === bd.me.city ? 0 : 1)) || ((a[1].t || 0) - (b[1].t || 0)));
     for (const [otherUid, q] of candidates) {
       const roomId = `r${Date.now()}_${user.uid.slice(0, 8)}`;
       let claimed = false;
@@ -13350,18 +13487,21 @@ async function bdStart() {
         return Object.assign({}, cur, { status: 'matched', room: roomId, partner: user.uid, partnerName: name });
       });
       if (!claimed) continue;
-      await set(ref(db, `website/blind_rooms/${roomId}`), { a: otherUid, b: user.uid, aName: q.name || 'גולש/ת', bName: name, t: Date.now() });
-      bdJoinRoom(roomId, { uid: otherUid, name: q.name || 'גולש/ת' });
+      await set(ref(db, `website/blind_rooms/${roomId}`), {
+        a: otherUid, b: user.uid, aName: q.name || 'גולש/ת', bName: name,
+        aG: q.g || '', bG: bd.me.g, aCity: q.city || bd.me.city, bCity: bd.me.city, t: Date.now()
+      });
+      bdJoinRoom(roomId, { uid: otherUid, name: q.name || 'גולש/ת' }, null, true);
       return;
     }
     // 2. אין אף אחד — נכנסים לתור ומחכים שמישהו יתפוס אותנו
     const myRef = ref(db, `website/blind_queue/${user.uid}`);
-    await set(myRef, { name, g: bd.me.g, want: bd.me.want, t: Date.now(), status: 'waiting' });
+    await set(myRef, { name, g: bd.me.g, want: bd.me.want, city: bd.me.city, t: Date.now(), status: 'waiting' });
     try { onDisconnect(myRef).remove(); } catch (e) {}
     bd.unsubQ = onValue(myRef, s => {
       const q = s.val();
       if (q && q.status === 'matched' && q.room && bd.state === 'waiting') {
-        bdJoinRoom(q.room, { uid: q.partner, name: q.partnerName || 'גולש/ת' }, myRef);
+        bdJoinRoom(q.room, { uid: q.partner, name: q.partnerName || 'גולש/ת' }, myRef, false);
       }
     });
   } catch (e) {
@@ -13373,9 +13513,10 @@ window.bdStart = bdStart;
 
 // queueRef: אצל מי שחיכה — החדר נוצר רגע אחרי ה"תפיסה", אז מחכים שיהיה קריא,
 // ורק אז מוחקים את הרשומה בתור (היא נדרשת לכללים בזמן יצירת החדר)
-async function bdJoinRoom(roomId, partner, queueRef) {
+// creator: מי שיצר את החדר מגריל את המפגש הראשון; אם לא הגריל תוך 10 שניות — השני מגריל
+async function bdJoinRoom(roomId, partner, queueRef, creator) {
   bdStopListeners();
-  bd.state = 'chat'; bd.roomId = roomId; bd.partner = partner; bd.msgs = {}; bd.ended = false;
+  bd.state = 'chat'; bd.roomId = roomId; bd.partner = partner; bd.room = null; bd.ended = false; bd.rolling = false;
   bdRender();
   const roomRef = ref(db, `website/blind_rooms/${roomId}`);
   if (queueRef) {
@@ -13386,10 +13527,17 @@ async function bdJoinRoom(roomId, partner, queueRef) {
     set(queueRef, null).catch(() => {});
   }
   if (bd.roomId !== roomId) return;
+  let first = true;
   bd.unsubR = onValue(roomRef, s => {
-    const r = s.val() || {};
-    bd.msgs = r.msgs || {};
-    bd.ended = !!r.ended;
+    bd.room = s.val() || {};
+    bd.ended = !!bd.room.ended;
+    if (first) {
+      first = false;
+      if (!bd.room.plan) {
+        if (creator) bdRollPlan();
+        else bd.planTimer = setTimeout(() => { if (bd.roomId === roomId && bd.room && !bd.room.plan) bdRollPlan(); }, 10000);
+      }
+    }
     bdRender();
   }, () => {});
 }
@@ -13397,7 +13545,7 @@ async function bdJoinRoom(roomId, partner, queueRef) {
 async function bdSend() {
   const inp = document.getElementById('bd-input');
   const text = inp ? inp.value.trim() : '';
-  if (!text || !bd.roomId || bd.ended || !bdRegistered()) return;
+  if (!text || !bd.roomId || bd.ended || !auth.currentUser) return;
   inp.value = '';
   try {
     await set(push(ref(db, `website/blind_rooms/${bd.roomId}/msgs`)), { from: auth.currentUser.uid, text: text.slice(0, 500), t: Date.now() });
@@ -13410,15 +13558,15 @@ async function bdLeaveRoom() {
 }
 async function bdCancel() {
   bdStopListeners();
-  if (bdRegistered()) { try { await set(ref(db, `website/blind_queue/${auth.currentUser.uid}`), null); } catch (e) {} }
+  if (auth.currentUser) { try { await set(ref(db, `website/blind_queue/${auth.currentUser.uid}`), null); } catch (e) {} }
   bd.state = 'intro'; bdRender();
 }
 window.bdCancel = bdCancel;
 async function bdNext() {
   await bdLeaveRoom();
   bdStopListeners();
-  bd.roomId = null; bd.partner = null; bd.msgs = {}; bd.ended = false;
-  bdStart();
+  bd.roomId = null; bd.partner = null; bd.room = null; bd.ended = false;
+  bd.state = 'intro'; bdRender();
 }
 window.bdNext = bdNext;
 
