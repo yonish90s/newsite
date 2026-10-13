@@ -14796,10 +14796,90 @@ function buildHomeFeedPage() {
   return `<div class="articles-page home-feed-page" data-page-id="page-home-feed">
     <div class="art-inner">
       ${homeWelcomeHeroHTML()}
+      ${homeHowtoHTML()}
     </div>
   </div>`;
 }
 window.buildHomeFeedPage = buildHomeFeedPage;
+
+// ============================================================
+// "איך משתמשים באתר" — מקטעים בתחתית עמוד הבית: כרטיס מונפש (איור ↔ רשימת גלולות גוללת)
+// לצד כותרת גדולה, הסבר קצר ושורות קישור עם חץ
+// ============================================================
+const HOWTO_ICONS = {
+  upload: '<path d="M12 16V4M6.5 9.5 12 4l5.5 5.5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/>',
+  photo: '<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 9"/>',
+  comic: '<path d="M4 5h7v14H4zM13 5h7v14h-7z"/>',
+  story: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
+  forum: '<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h9A2.5 2.5 0 0 1 18 5.5v5a2.5 2.5 0 0 1-2.5 2.5H10l-4 3.5V13a2.5 2.5 0 0 1-2-2.5z"/>',
+  search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/>',
+  hash: '<path d="M9 3 7 21M17 3l-2 18M4 8.5h17M3 15.5h17"/>',
+  filter: '<path d="M4 6h16M7 12h10M10 18h4"/>',
+  pin: '<path d="M12 21s-6-5.3-6-10.2a6 6 0 0 1 12 0C18 15.7 12 21 12 21z"/><circle cx="12" cy="10.8" r="2.2"/>',
+  text: '<path d="M4 6h16M4 12h10M4 18h13"/>',
+  chat: '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"/>',
+  follow: '<circle cx="9" cy="8" r="3.5"/><path d="M3 20v-1a6 6 0 0 1 12 0v1"/><path d="M19 8v6M16 11h6"/>',
+  radar: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/>',
+  heart: '<path d="M12 20s-7-4.4-9.3-9C1 7.5 3 4 6.5 4c2 0 3.6 1.1 4.5 2.6.3.5 1.7.5 2 0C13.9 5.1 15.5 4 17.5 4 21 4 23 7.5 21.3 11 19 15.6 12 20 12 20z"/>',
+  star: '<path d="M12 2.5l2.9 6.2 6.8.8-5 4.7 1.3 6.7L12 17.6l-6 3.3 1.3-6.7-5-4.7 6.8-.8z"/>',
+  noads: '<path d="M4 4l16 16"/><rect x="3" y="5" width="18" height="14" rx="3"/>',
+  boost: '<path d="M12 19V5M5 12l7-7 7 7"/>',
+  lock: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+  eye: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'
+};
+const HOWTO_STEPS = [
+  { num: '01', title: 'מעלים.', art: 'upload',
+    text: 'משתפים את מה שיצרתם בכמה שניות: גלריית תמונות, רצועת קומיקס, סיפור או שאלה לקהילה. אפשר להוסיף #תגיות כדי שימצאו אתכם בקלות.',
+    pills: [['photo', 'גלריית תמונות'], ['comic', 'קומיקס'], ['story', 'סיפור'], ['forum', 'נושא בפורום'], ['hash', '#תגיות'], ['lock', 'תוכן פרטי']],
+    links: [['photo', 'העלאת תמונה', 'homeUploadPhoto()'], ['forum', 'פתיחת נושא בפורום', "navigateToPage('page-forums-main')"]] },
+  { num: '02', title: 'מגלים.', art: 'search',
+    text: 'מוצאים בדיוק מה שמעניין: חיפוש בכל האתר, סינון לפי אזור ותאריך, תגיות, ומרחק בק״מ מכם. אפשר גם לעבור ל"רק טקסט" ולראות יותר בפחות גלילה.',
+    pills: [['search', 'חיפוש באתר'], ['hash', 'תגיות'], ['filter', 'סינון ומיון'], ['pin', 'מרחק בק״מ'], ['text', 'רק טקסט'], ['eye', 'הכי נצפים']],
+    links: [['search', 'לחיפוש באתר', 'openSiteSearch()'], ['photo', 'לכל הגלריות', 'homeOpenPhotos()']] },
+  { num: '03', title: 'מתחברים.', art: 'chat',
+    text: 'שולחים הודעה פרטית ליוצרים, עוקבים אחרי מי שאהבתם, משתתפים בדיונים בפורומים ורואים מי גולש בסביבה — גם כאורחים.',
+    pills: [['chat', 'הודעות פרטיות'], ['follow', 'עוקבים'], ['forum', 'פורומים'], ['radar', 'גולשים בסביבה'], ['heart', 'לייקים'], ['star', 'דירוג משתמשים']],
+    links: [['chat', 'להודעות', 'openMessages()'], ['forum', 'לפורומים', "navigateToPage('page-forums-main')"]] },
+  { num: '04', title: 'משדרגים.', art: 'star',
+    text: 'בלי מנוי חודשי: בוחרים רק את השדרוגים שרוצים — בלי פרסומות, קידום התכנים, תג פרימיום ועוד — כל אחד בתשלום חד־פעמי קטן.',
+    pills: [['noads', 'בלי פרסומות'], ['boost', 'קידום התכנים'], ['star', 'תג פרימיום'], ['eye', 'מי צפה בי'], ['lock', 'תוכן פרימיום'], ['chat', 'הודעות ללא הגבלה']],
+    links: [['star', 'לשדרוגים', "navigateToPage('page-subscription-main')"]] },
+];
+function homeHowtoHTML() {
+  const ic = (k) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${HOWTO_ICONS[k] || ''}</svg>`;
+  const block = (st, i) => {
+    const pills = st.pills.concat(st.pills).map(([k, label]) => `<li class="ht-pill"><span class="ht-pill-ic">${ic(k)}</span><span>${escHtml(label)}</span></li>`).join('');
+    return `
+      <section class="ht-block${i % 2 ? ' flip' : ''}" style="--d:${i * 1.1}s">
+        <div class="ht-card" aria-hidden="true">
+          <div class="ht-stage">
+            <div class="ht-art">
+              <span class="ht-art-num">${st.num}</span>
+              <span class="ht-art-ic">${ic(st.art)}</span>
+              <span class="ht-art-dots"><i></i><i></i><i></i></span>
+            </div>
+            <ul class="ht-pills">${pills}</ul>
+          </div>
+        </div>
+        <div class="ht-copy">
+          <span class="ht-step">שלב ${st.num.replace(/^0/, '')}</span>
+          <h2 class="ht-title">${escHtml(st.title)}</h2>
+          <p class="ht-text">${escHtml(st.text)}</p>
+          <div class="ht-links">
+            ${st.links.map(([k, label, fn]) => `<button type="button" class="ht-link" onclick="${fn}">
+                <span class="ht-link-ic">${ic(k)}</span><span class="ht-link-label">${escHtml(label)}</span>
+                <span class="ht-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m11 6-6 6 6 6"/></svg></span>
+              </button>`).join('')}
+          </div>
+        </div>
+      </section>`;
+  };
+  return `
+    <div class="ht-wrap">
+      <header class="ht-head"><span class="ht-kicker">איך זה עובד</span><h2>כל מה שאפשר לעשות באתר — בארבעה צעדים</h2></header>
+      ${HOWTO_STEPS.map(block).join('')}
+    </div>`;
+}
 
 function homeOpenSection(targetId) {
   try {
