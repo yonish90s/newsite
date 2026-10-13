@@ -23175,151 +23175,131 @@ function subCarouselInit() {
 }
 window.subCarouselInit = subCarouselInit;
 
-function buildSubscriptionPage() {
-  setTimeout(subCarouselInit, 60);
-  const isYearly = currentSubscriptionBilling === 'yearly';
-
-  // מטבע לפי שפה: אנגלית -> דולר ($), עברית -> שקל (₪)
-  const isEnglish = (typeof getUiLang === 'function') && getUiLang() === 'en';
-  const currencySym = isEnglish ? '$' : '₪';
-  const cardsHtml = subscriptionPlansData.map(plan => {
-    const shekelPrice = isYearly ? plan.yearlyPrice : plan.monthlyPrice;
-    const price = isEnglish ? (plan.usd != null ? plan.usd : shekelPrice) : shekelPrice;
-    const origPrice = (!isEnglish && isYearly) ? plan.yearlyOriginal : null;
-    const formattedPrice = price.toLocaleString('he-IL');
-    const formattedOrigPrice = origPrice ? origPrice.toLocaleString('he-IL') : '';
-    const paymentPeriodLabel = isYearly ? 'בתשלום שנתי' : 'בתשלום חודשי';
-
-    const isSelected = plan.id === selectedSubscriptionPlan;
-    const cardBorder = isSelected ? '2px solid #8b5cf6' : '1px solid #e2e8f0';
-    const cardShadow = isSelected ? '0 12px 30px rgba(139, 92, 246, 0.15)' : '0 4px 16px rgba(0,0,0,0.04)';
-    const btnStyle = isSelected
-      ? 'background: #7c3aed; color: #ffffff; border: none;'
-      : 'background: #ffffff; color: #6366f1; border: 1.5px solid #a5b4fc;';
-
-    const featuresListHtml = plan.features.map(f => `
-      <li style="display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: #475569; line-height: 1.4;">
-        <span style="display: inline-block; width: 4px; height: 4px; background: #6366f1; border-radius: 50%; flex-shrink: 0;"></span>
-        <span>${f}</span>
-      </li>
-    `).join('') + (plan.exclusive || []).map(f => `
-      <li class="sub-exclusive" style="display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: #5b21b6; font-weight: 700; line-height: 1.4;">
-        <span style="flex-shrink: 0; font-size: 11px;">✨</span>
-        <span>${f}</span>
-      </li>
-    `).join('');
-
-    return `
-      <div class="sub-pricing-card ${isSelected ? 'featured' : ''}" onclick="selectSubscriptionPlan('${artEsc(plan.id)}')" style="
-        position: relative;
-        cursor: pointer;
-        background: #ffffff;
-        border-radius: 18px;
-        border: ${cardBorder};
-        box-shadow: ${cardShadow};
-        padding: 24px 20px;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        text-align: center;
-        flex: 1 1 200px;
-        min-width: 200px;
-        max-width: 250px;
-        transition: transform 0.2s, box-shadow 0.2s;
-      ">
-        ${plan.badge ? `
-          <div class="sub-badge" style="
-            position: absolute;
-            top: -12px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #a855f7;
-            color: #ffffff;
-            font-size: 11.5px;
-            font-weight: 800;
-            padding: 2px 14px;
-            border-radius: 12px;
-            box-shadow: 0 2px 6px rgba(168,85,247,0.3);
-            white-space: nowrap;
-          ">${plan.badge}</div>
-        ` : ''}
-
-        <div>
-          <!-- Title & Subtitle -->
-          <h3 class="sub-title" style="margin: 0 0 6px 0; font-size: 20px; font-weight: 800; color: #0f172a;">${escHtml(plan.title)}</h3>
-          <p class="sub-subtitle" style="margin: 0 0 20px 0; font-size: 11.5px; color: #64748b; line-height: 1.35; min-height: 32px;">${escHtml(plan.subtitle)}</p>
-
-          <!-- Price section -->
-          <div class="sub-price-box" style="margin-bottom: 16px; min-height: 80px; display: flex; flex-direction: column; justify-content: flex-end; align-items: center;">
-            ${isYearly && origPrice && origPrice > price ? `
-              <div style="font-size: 15px; color: #94a3b8; text-decoration: line-through; font-weight: 600; margin-bottom: 2px;">
-${currencySym}${formattedOrigPrice}
-              </div>
-            ` : '<div style="height: 22px;"></div>'}
-            
-            <div class="sub-price-row" style="display: flex; align-items: baseline; justify-content: center; gap: 4px; direction: rtl;">
-              <span class="sub-price" style="font-size: 38px; font-weight: 900; color: #0f172a; line-height: 1; letter-spacing: -1px;">${currencySym}${formattedPrice}</span>
-              <div style="display: flex; flex-direction: column; align-items: flex-start; text-align: right; line-height: 1.1;">
-                <span style="font-size: 11.5px; color: #64748b; font-weight: 700;">/ חודש</span>
-                <span style="font-size: 9.5px; color: #94a3b8;">${paymentPeriodLabel}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Credits & Usage details -->
-          <div class="sub-credits" style="background: #f5f3ff; border-radius: 10px; padding: 10px 8px; margin-bottom: 18px; border: 1px solid #ede9fe;">
-            <div style="font-size: 12.5px; font-weight: 800; color: #5b21b6; margin-bottom: 2px;">🎁 שבוע ניסיון חינם</div>
-            <div style="font-size: 11.5px; font-weight: 700; color: #334155; margin-bottom: 2px;">${SUBSCRIPTION_TRIAL_DAYS} ימים בלי לשלם</div>
-            <div style="font-size: 10px; color: #94a3b8;">ביטול בכל עת, בלי התחייבות</div>
-          </div>
-
-          <!-- Action Button -->
-          <button class="sub-start-btn" onclick="event.stopPropagation(); handleSubscriptionPlanSelect('${artEsc(plan.id)}')" style="
-            width: 100%;
-            padding: 10px 14px;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 800;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            ${btnStyle}
-          ">התחילו שבוע חינם</button>
-
-        </div>
-
-        <!-- Features Divider & List -->
-        <div class="sub-features" style="border-top: 1px solid #f1f5f9; padding-top: 16px; margin-top: 18px; text-align: right;">
-          <div class="sub-features-title" style="font-size: 11.5px; font-weight: 800; color: #1e293b; margin-bottom: 10px;">מה מקבלים:</div>
-          <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px;">
-            ${featuresListHtml}
-          </ul>
-        </div>
-      </div>
-    `;
-  }).join('');
-
+// ============================================================
+// שדרוגים בתשלום לפי פיצ'ר (במקום מנוי חודשי) — בוחרים ✓ ועוברים לדף התשלום
+// המחירים ניתנים לשינוי כאן. התשלום עצמו מתבצע בדף המאובטח של ספק הסליקה —
+// באתר לא מזינים פרטי אשראי.
+// ============================================================
+const SHOP_FEATURES = [
+  { id: 'no_ads',      title: 'בלי פרסומות',                 desc: 'גלישה נקייה בכל האתר',                         price: 5, icon: '<path d="M4 4l16 16"/><rect x="3" y="5" width="18" height="14" rx="3"/>' },
+  { id: 'premium',     title: 'תוכן פרימיום ונסתר',          desc: 'גישה לגלריות ולתכנים הנעולים',                 price: 7, icon: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>' },
+  { id: 'hd_photos',   title: 'תמונות באיכות מלאה',          desc: 'בלי דחיסה — כל הפרטים',                         price: 4, icon: '<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 9"/>' },
+  { id: 'who_viewed',  title: 'מי צפה בפרופיל שלי',          desc: 'רשימת המבקרים בפרופיל שלך',                    price: 6, icon: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>' },
+  { id: 'unlimited_dm',title: 'הודעות פרטיות ללא הגבלה',     desc: 'צ׳אט חופשי עם כל הקהילה',                       price: 5, icon: '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"/>' },
+  { id: 'boost',       title: 'קידום התכנים שלי',            desc: 'ההעלאות שלך מוצגות בראש הקהילות',             price: 9, icon: '<path d="M12 19V5M5 12l7-7 7 7"/>' },
+  { id: 'badge',       title: 'תג פרופיל פרימיום',           desc: 'תג מיוחד ליד השם שלך',                          price: 3, icon: '<path d="M12 2l2.9 6.3 6.9.7-5.2 4.6 1.5 6.8L12 17l-6.1 3.4 1.5-6.8L2.2 9l6.9-.7z"/>' },
+  { id: 'early',       title: 'גישה ראשונה לפיצ׳רים חדשים',  desc: 'מנסים חידושים לפני כולם',                       price: 3, icon: '<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>' },
+  { id: 'vip',         title: 'תמיכה VIP',                   desc: 'מענה מהיר ואישי מהצוות',                        price: 4, icon: '<path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="2" y="14" width="5" height="7" rx="2"/><rect x="17" y="14" width="5" height="7" rx="2"/>' },
+];
+// קישור לדף התשלום של ספק הסליקה (יוגדר כשנבחר ספק). ריק = עדיין לא מחובר.
+const SHOP_PAY_URL = '';
+const SHOP_KEY = 'shop_selection_v1';
+let shopSel = (function () { try { return new Set(JSON.parse(localStorage.getItem(SHOP_KEY) || '[]')); } catch (e) { return new Set(); } })();
+let shopView = 'list';
+let shopMethod = 'card';
+function shopSave() { try { localStorage.setItem(SHOP_KEY, JSON.stringify([...shopSel])); } catch (e) {} }
+function shopItems() { return SHOP_FEATURES.filter(f => shopSel.has(f.id)); }
+function shopTotal() { return shopItems().reduce((s, f) => s + f.price, 0); }
+const shopMoney = (n) => `₪${Number(n).toLocaleString('he-IL')}`;
+const shopIco = (d) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+function shopRerender() {
+  const w = document.querySelector('.shop');
+  if (w && w.parentElement) w.parentElement.innerHTML = buildSubscriptionPage();
+}
+function shopToggle(id) {
+  if (shopSel.has(id)) shopSel.delete(id); else shopSel.add(id);
+  shopSave();
+  // עדכון במקום (בלי לבנות מחדש) כדי שהגלילה לא תקפוץ
+  const card = document.querySelector(`.shop-card[data-id="${CSS.escape(id)}"]`);
+  if (card) { card.classList.toggle('on', shopSel.has(id)); card.setAttribute('aria-checked', shopSel.has(id) ? 'true' : 'false'); }
+  const bar = document.getElementById('shop-bar');
+  if (bar) bar.outerHTML = shopBarHTML();
+}
+window.shopToggle = shopToggle;
+function shopGo(view) {
+  if (view === 'checkout' && !shopSel.size) { if (typeof showCopyToast === 'function') showCopyToast('בחרו לפחות פיצ׳ר אחד'); return; }
+  shopView = view;
+  shopRerender();
+  try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) { window.scrollTo(0, 0); }
+}
+window.shopGo = shopGo;
+function shopRemove(id) {
+  shopSel.delete(id); shopSave();
+  if (!shopSel.size) shopView = 'list';
+  shopRerender();
+}
+window.shopRemove = shopRemove;
+function shopSetMethod(m) { shopMethod = m; document.querySelectorAll('.shop-method').forEach(b => b.classList.toggle('on', b.dataset.m === m)); }
+window.shopSetMethod = shopSetMethod;
+function shopBarHTML() {
+  const n = shopSel.size;
+  return `<div class="shop-bar${n ? ' show' : ''}" id="shop-bar">
+      <div class="shop-bar-info"><b>${shopMoney(shopTotal())}</b><span>${n === 1 ? 'פיצ׳ר אחד נבחר' : `${n} פיצ׳רים נבחרו`}</span></div>
+      <button type="button" class="shop-btn" onclick="shopGo('checkout')">לתשלום <span aria-hidden="true">←</span></button>
+    </div>`;
+}
+function shopListHTML() {
   return `
-    <div class="subscription-page-wrapper" style="
-      max-width: 1350px;
-      margin: 0 auto;
-      padding: 30px 16px 60px 16px;
-      direction: rtl;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans Hebrew', sans-serif;
-    ">
-      <div style="margin-bottom: 24px;"></div>
-
-      <!-- Pricing Cards Grid -->
-      <div class="sub-plans-grid" style="
-        display: flex;
-        flex-wrap: wrap;
-        gap: 16px;
-        justify-content: center;
-        align-items: stretch;
-      ">
-        ${cardsHtml}
-      </div>
+    <header class="shop-head">
+      <span class="shop-kicker">בלי מנוי · בלי חיובים חודשיים</span>
+      <h1>משלמים רק על מה שרוצים</h1>
+      <p>סמנו את השדרוגים שמעניינים אתכם — כל אחד בתשלום חד־פעמי קטן.</p>
+    </header>
+    <div class="shop-grid" role="group" aria-label="שדרוגים">
+      ${SHOP_FEATURES.map(f => {
+        const on = shopSel.has(f.id);
+        return `<button type="button" class="shop-card${on ? ' on' : ''}" data-id="${f.id}" role="checkbox" aria-checked="${on}" onclick="shopToggle('${f.id}')">
+            <span class="shop-check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>
+            <span class="shop-ic">${shopIco(f.icon)}</span>
+            <span class="shop-txt"><b>${escHtml(f.title)}</b><small>${escHtml(f.desc)}</small></span>
+            <span class="shop-price">${shopMoney(f.price)}</span>
+          </button>`;
+      }).join('')}
     </div>
-  `;
+    ${shopBarHTML()}`;
+}
+function shopCheckoutHTML() {
+  const items = shopItems();
+  const methods = [['card', 'כרטיס אשראי', '<rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M2 10h20M6 15h4"/>'], ['bit', 'Bit', '<rect x="6" y="2" width="12" height="20" rx="3"/><path d="M11 18h2"/>'], ['apple', 'Apple Pay', '<path d="M15.5 3c-1 .1-2.2.8-2.8 1.6-.6.7-1.1 1.8-.9 2.8 1.1 0 2.2-.6 2.8-1.4.6-.8 1-1.9.9-3zM12 8.5c-1.2 0-2.2-.7-3.3-.7-1.9 0-3.7 1.6-3.7 4.6 0 3.6 2.6 8.1 4.4 8.1 1 0 1.5-.6 2.6-.6s1.5.6 2.6.6c1.4 0 3-2.6 3.6-4.4-1.6-.7-2.4-2.2-2.4-3.8 0-1.4.8-2.6 1.9-3.3-.8-1-2-1.6-3.2-1.6-1.1 0-1.8.7-2.5.7z"/>']];
+  const email = (auth.currentUser && auth.currentUser.email && !/@users\.example\.com$/.test(auth.currentUser.email)) ? auth.currentUser.email : '';
+  return `
+    <button type="button" class="shop-back" onclick="shopGo('list')">→ חזרה לבחירת שדרוגים</button>
+    <div class="shop-co">
+      <section class="shop-co-card">
+        <h2>ההזמנה שלך</h2>
+        <ul class="shop-lines">
+          ${items.map(f => `<li>
+              <span class="shop-ic sm">${shopIco(f.icon)}</span>
+              <span class="shop-line-name">${escHtml(f.title)}</span>
+              <span class="shop-line-price">${shopMoney(f.price)}</span>
+              <button type="button" class="shop-x" onclick="shopRemove('${f.id}')" aria-label="הסרת ${escHtml(f.title)}">✕</button>
+            </li>`).join('')}
+        </ul>
+        <div class="shop-total"><span>סה״כ לתשלום</span><b>${shopMoney(shopTotal())}</b></div>
+        <div class="shop-note">תשלום חד־פעמי · בלי מנוי ובלי חיובים חוזרים</div>
+      </section>
+      <section class="shop-co-card">
+        <h2>אמצעי תשלום</h2>
+        <div class="shop-methods">
+          ${methods.map(([id, label, ic]) => `<button type="button" class="shop-method${shopMethod === id ? ' on' : ''}" data-m="${id}" onclick="shopSetMethod('${id}')">${shopIco(ic)}<span>${label}</span></button>`).join('')}
+        </div>
+        <label class="shop-field"><span>אימייל לקבלה</span><input id="shop-email" type="email" dir="ltr" autocomplete="email" placeholder="name@example.com" value="${escHtml(email)}"></label>
+        <button type="button" class="shop-btn shop-pay" onclick="shopPay()">תשלום מאובטח ${shopMoney(shopTotal())}</button>
+        <div class="shop-secure">${shopIco('<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>')}<span>התשלום מתבצע בדף המאובטח של חברת הסליקה — פרטי האשראי לא עוברים דרכנו</span></div>
+      </section>
+    </div>`;
+}
+function shopPay() {
+  const email = ((document.getElementById('shop-email') || {}).value || '').trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { if (typeof showCopyToast === 'function') showCopyToast('נא להזין אימייל תקין לקבלה'); const el = document.getElementById('shop-email'); if (el) el.focus(); return; }
+  if (typeof trackEvent === 'function') trackEvent('checkout_click');
+  if (!SHOP_PAY_URL) { if (typeof showCopyToast === 'function') showCopyToast('חיבור לחברת הסליקה יוגדר בקרוב'); return; }
+  const q = new URLSearchParams({ items: [...shopSel].join(','), amount: String(shopTotal()), method: shopMethod });
+  window.location.href = `${SHOP_PAY_URL}${SHOP_PAY_URL.includes('?') ? '&' : '?'}${q}`;
+}
+window.shopPay = shopPay;
+function buildSubscriptionPage() {
+  return `<div class="subscription-page-wrapper shop${shopView === 'checkout' ? ' is-checkout' : ''}">${shopView === 'checkout' ? shopCheckoutHTML() : shopListHTML()}</div>`;
 }
 window.buildSubscriptionPage = buildSubscriptionPage;
 

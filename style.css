@@ -10257,3 +10257,77 @@ html.ms-open { overflow: hidden; }
   .rd-more { display: inline-flex; align-items: center; gap: 8px; margin-top: 10px; padding: 4px 0; border: 0; background: none; color: rgba(255, 255, 255, 0.65); font: inherit; font-size: 14.5px; cursor: pointer; }
   .rd-more svg { width: 20px; height: 20px; }
 }
+
+/* ===================================================================
+   שדרוגים לפי פיצ'ר + דף תשלום (במקום מנוי חודשי)
+   =================================================================== */
+.shop { max-width: 880px; margin: 0 auto; padding: 28px 16px 140px; direction: rtl; color: #fff; }
+.shop-head { text-align: center; margin-bottom: 24px; }
+.shop-kicker { display: inline-block; font-size: 12.5px; font-weight: 800; color: #ffd166; background: rgba(255, 209, 102, .12); padding: 5px 12px; border-radius: 999px; }
+.shop-head h1 { margin: 12px 0 6px; font-size: clamp(24px, 4vw, 34px); font-weight: 900; }
+.shop-head p { margin: 0; color: rgba(255, 255, 255, .7); font-size: 15.5px; }
+.shop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
+.shop-card {
+  position: relative; display: flex; align-items: center; gap: 12px; padding: 16px 14px; text-align: start; cursor: pointer;
+  background: #57364a; border: 1.5px solid rgba(255, 255, 255, .08); border-radius: 18px; color: #fff; font: inherit;
+  transition: border-color .15s ease, background .15s ease, transform .12s ease; -webkit-tap-highlight-color: transparent;
+}
+.shop-card:hover { border-color: rgba(255, 255, 255, .22); }
+.shop-card:active { transform: scale(.985); }
+.shop-card.on { border-color: #ec4899; background: linear-gradient(180deg, rgba(236, 72, 153, .16), #57364a); }
+.shop-card:focus-visible { outline: 2px solid #ec4899; outline-offset: 2px; }
+.shop-check { width: 26px; height: 26px; flex: none; border-radius: 8px; border: 2px solid rgba(255, 255, 255, .35); display: grid; place-items: center; color: transparent; transition: .15s; }
+.shop-check svg { width: 16px; height: 16px; }
+.shop-card.on .shop-check { background: #ec4899; border-color: #ec4899; color: #fff; }
+.shop-ic { width: 42px; height: 42px; flex: none; border-radius: 12px; display: grid; place-items: center; background: rgba(255, 255, 255, .07); color: #f9a8d4; }
+.shop-ic svg { width: 22px; height: 22px; }
+.shop-ic.sm { width: 34px; height: 34px; border-radius: 10px; }
+.shop-ic.sm svg { width: 18px; height: 18px; }
+.shop-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.shop-txt b { font-size: 15.5px; font-weight: 800; }
+.shop-txt small { font-size: 12.5px; color: rgba(255, 255, 255, .62); }
+.shop-price { flex: none; font-size: 17px; font-weight: 900; color: #ffd166; font-variant-numeric: tabular-nums; }
+.shop-bar {
+  position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 140%); z-index: 9400;
+  width: min(560px, calc(100vw - 24px)); display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 10px 10px 10px 16px; border-radius: 20px; background: rgba(36, 22, 31, .94); border: 1px solid rgba(255, 255, 255, .12);
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-shadow: 0 18px 40px -12px rgba(0, 0, 0, .7); transition: transform .25s cubic-bezier(.2, .8, .2, 1); direction: rtl;
+}
+.shop-bar.show { transform: translate(-50%, 0); }
+.shop-bar-info { display: flex; flex-direction: column; padding-inline-start: 6px; }
+.shop-bar-info b { font-size: 20px; font-weight: 900; color: #ffd166; }
+.shop-bar-info span { font-size: 12.5px; color: rgba(255, 255, 255, .7); }
+.shop-btn { height: 50px; padding: 0 22px; border: 0; border-radius: 14px; cursor: pointer; font: inherit; font-size: 16px; font-weight: 900; color: #3a2433; background: linear-gradient(135deg, #ffd23f, #ff9f1c); box-shadow: 0 8px 20px -10px rgba(255, 159, 28, .9); display: inline-flex; align-items: center; gap: 8px; }
+.shop-back { background: rgba(255, 255, 255, .08); border: 1px solid rgba(255, 255, 255, .12); color: #fff; border-radius: 999px; padding: 8px 16px; font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; margin-bottom: 16px; }
+.shop-co { display: grid; grid-template-columns: 1.1fr 1fr; gap: 14px; align-items: start; }
+.shop-co-card { background: #57364a; border: 1px solid rgba(255, 255, 255, .08); border-radius: 20px; padding: 18px; }
+.shop-co-card h2 { margin: 0 0 12px; font-size: 18px; font-weight: 900; }
+.shop-lines { list-style: none; margin: 0; padding: 0; }
+.shop-lines li { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid rgba(255, 255, 255, .08); }
+.shop-line-name { flex: 1; min-width: 0; font-size: 15px; font-weight: 700; }
+.shop-line-price { font-weight: 800; font-variant-numeric: tabular-nums; }
+.shop-x { width: 28px; height: 28px; border: 0; border-radius: 50%; background: rgba(255, 255, 255, .08); color: rgba(255, 255, 255, .7); cursor: pointer; font-size: 12px; }
+.shop-total { display: flex; align-items: baseline; justify-content: space-between; margin-top: 14px; font-size: 16px; font-weight: 700; }
+.shop-total b { font-size: 28px; font-weight: 900; color: #ffd166; }
+.shop-note { margin-top: 6px; font-size: 12.5px; color: rgba(255, 255, 255, .6); }
+.shop-methods { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
+.shop-method { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 6px; border-radius: 14px; border: 1.5px solid rgba(255, 255, 255, .12); background: rgba(0, 0, 0, .1); color: #fff; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.shop-method svg { width: 24px; height: 24px; }
+.shop-method.on { border-color: #ec4899; background: rgba(236, 72, 153, .14); }
+.shop-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; font-size: 13.5px; font-weight: 700; color: rgba(255, 255, 255, .8); }
+.shop-field input { height: 48px; padding: 0 14px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, .18); background: rgba(0, 0, 0, .15); color: #fff; font: inherit; font-size: 16px; outline: none; }
+.shop-field input:focus { border-color: #ec4899; }
+.shop-pay { width: 100%; justify-content: center; height: 54px; font-size: 17px; }
+.shop-secure { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 12px; color: rgba(255, 255, 255, .6); line-height: 1.5; }
+.shop-secure svg { width: 18px; height: 18px; flex: none; }
+@media (max-width: 768px) {
+  .shop { padding: 18px 12px 170px; }
+  .shop-grid { grid-template-columns: 1fr; gap: 10px; }
+  .shop-card { padding: 14px 12px; }
+  .shop-co { grid-template-columns: 1fr; }
+  .shop-bar { bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
+}
+html body .shop .shop-card { display: flex !important; flex-direction: row !important; align-items: center !important; text-align: start !important; background: #57364a !important; border: 1.5px solid rgba(255, 255, 255, .08) !important; color: #fff !important; }
+html body .shop .shop-card.on { border-color: #ec4899 !important; background: linear-gradient(180deg, rgba(236, 72, 153, .16), #57364a) !important; }
+html body .shop .shop-co-card { background: #57364a !important; color: #fff !important; }
+html body .shop .shop-card:not(.on) .shop-check svg { opacity: 0 !important; }
