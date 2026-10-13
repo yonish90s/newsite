@@ -17141,6 +17141,8 @@ function photoToggleLocation(on, silent) {
 window.photoToggleLocation = photoToggleLocation;
 
 function openPhotoModal() {
+  // העלאה חדשה — רק דרך הצ'אט (הטופס המלא נשאר רק לעריכת פריט קיים)
+  if (typeof openQuickPublish === 'function') { openQuickPublish(); return; }
   editingPhotoId = null;
   document.getElementById('photo-title').value = '';
   document.getElementById('photo-summary').value = '';
