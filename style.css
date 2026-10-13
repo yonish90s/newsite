@@ -10630,3 +10630,5 @@ html body .apple-nav .notif-bell { background: #fbf4ee !important; }
 .ss-scope-btn.on { background: #ff8a5c; border-color: #ff8a5c; color: #2b2522; box-shadow: 0 8px 18px -10px rgba(240, 112, 63, .8); }
 .ss-scope-btn:focus-visible { outline: 3px solid rgba(255, 138, 92, .45); outline-offset: 2px; }
 @media (max-width: 768px) { .ss-scope { gap: 16px; } .ss-scope-btn { width: 54px; height: 54px; } }
+/* סיבת ההמלצה מתחת לכרטיס */
+.art-rec-why { display: inline-block; margin-top: 6px; font-size: 11.5px; font-weight: 700; color: #d9541f; background: #ffece3; padding: 2px 9px; border-radius: 999px; }

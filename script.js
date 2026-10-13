@@ -15411,6 +15411,122 @@ function pdShowStep(el, dir) {
 }
 Object.assign(window, { pdShowGo, pdShowStep });
 
+// ============================================================
+// מנוע המלצות לגלריות ("עוד תמונות שיעניינו אותך")
+// ציון לכל גלריה = דמיון לגלריה שצופים בה + התאמה לטעם האישי + פופולריות + טריות,
+// ואז דירוג מחדש לגיוון (MMR) כדי שלא יוצגו 6 גלריות כמעט זהות.
+// רץ כולו בדפדפן, בזמן ליניארי במספר הגלריות, עם מטמון למאפיינים.
+// ============================================================
+const RECO_KEY = 'reco_events_v1';
+const RECO_MAX_EVENTS = 200;
+const RECO_HALF_LIFE_DAYS = 7;          // אינטראקציה בת שבוע שווה חצי מאינטראקציה מהיום
+const RECO_EVENT_WEIGHT = { view: 1, save: 2.5, like: 3 };
+const RECO_W = { sim: 0.45, taste: 0.30, pop: 0.15, fresh: 0.10 };
+const RECO_STOP = new Set(['של', 'עם', 'את', 'על', 'אני', 'הוא', 'היא', 'זה', 'מה', 'גם', 'לא', 'כן', 'או', 'אם', 'כי', 'רק', 'יש', 'אין', 'מאוד', 'the', 'and', 'for', 'with']);
+const recoFeatCache = new Map();
+function recoFeatures(a) {
+  const key = a.id + '|' + (a.title || '') + '|' + (a.summary || '').length + '|' + (a.category || '');
+  const hit = recoFeatCache.get(a.id);
+  if (hit && hit.key === key) return hit.f;
+  const text = `${a.title || ''} ${a.summary || ''}`;
+  const tags = new Set([...text.matchAll(/#([\p{L}\p{N}_]{2,30})/gu)].map(m => m[1].toLowerCase()));
+  const words = new Set(text.toLowerCase().replace(/#[\p{L}\p{N}_]+/gu, ' ').split(/[^\p{L}\p{N}]+/u).filter(w => w.length > 1 && !RECO_STOP.has(w)));
+  const age = (typeof photoAgeBucket === 'function') ? photoAgeBucket(a.ageRange) : null;
+  const f = {
+    category: a.category || '', region: a.region || '', author: a.authorId || a.author || '',
+    age: age ? (age[0] + age[1]) / 2 : null, length: parseFloat(a.length) || null,
+    tags, words, time: (typeof photoAlbumTime === 'function') ? photoAlbumTime(a) : 0
+  };
+  recoFeatCache.set(a.id, { key, f });
+  return f;
+}
+const recoJaccard = (A, B) => { if (!A.size || !B.size) return 0; let n = 0; for (const x of A) if (B.has(x)) n++; return n / (A.size + B.size - n); };
+// דמיון בין שתי גלריות: 0..1
+function recoSimilarity(fa, fb) {
+  let s = 0, max = 0;
+  max += 3;   if (fa.category && fa.category === fb.category) s += 3;
+  max += 1.5; if (fa.region && fa.region === fb.region) s += 1.5;
+  max += 1.5; if (fa.age != null && fb.age != null) s += 1.5 * Math.max(0, 1 - Math.abs(fa.age - fb.age) / 20);
+  max += 1.5; if (fa.length && fb.length) s += 1.5 * Math.max(0, 1 - Math.abs(fa.length - fb.length) / 8);
+  max += 4;   s += 4 * recoJaccard(fa.tags, fb.tags);
+  max += 2;   s += 2 * recoJaccard(fa.words, fb.words);
+  max += 1;   if (fa.author && fa.author === fb.author) s += 1;
+  return s / max;
+}
+function recoEvents() {
+  try { const v = JSON.parse(localStorage.getItem(RECO_KEY) || '[]'); return Array.isArray(v) ? v : []; } catch (e) { return []; }
+}
+// רושמים צפייה / לייק / שמירה, יחד עם מאפייני הגלריה (כדי לבנות טעם בלי לחפש אותה שוב)
+function recoTrack(album, type) {
+  if (!album || !album.id || !RECO_EVENT_WEIGHT[type]) return;
+  const f = recoFeatures(album);
+  const ev = { id: album.id, type, t: Date.now(), c: f.category, r: f.region, a: f.author, tags: [...f.tags].slice(0, 10) };
+  const list = recoEvents();
+  list.push(ev);
+  try { localStorage.setItem(RECO_KEY, JSON.stringify(list.slice(-RECO_MAX_EVENTS))); } catch (e) {}
+}
+// פרופיל טעם: משקלים דועכים בזמן לכל קטגוריה / אזור / יוצר / תגית
+function recoProfile() {
+  const now = Date.now(), prof = { c: {}, r: {}, a: {}, tags: {}, seen: {}, total: 0 };
+  for (const e of recoEvents()) {
+    const w = (RECO_EVENT_WEIGHT[e.type] || 0) * Math.pow(0.5, (now - (e.t || now)) / (RECO_HALF_LIFE_DAYS * 864e5));
+    if (!w) continue;
+    prof.total += w;
+    if (e.c) prof.c[e.c] = (prof.c[e.c] || 0) + w;
+    if (e.r) prof.r[e.r] = (prof.r[e.r] || 0) + w;
+    if (e.a) prof.a[e.a] = (prof.a[e.a] || 0) + w;
+    (e.tags || []).forEach(t => { prof.tags[t] = (prof.tags[t] || 0) + w; });
+    if (e.type === 'view') prof.seen[e.id] = Math.max(prof.seen[e.id] || 0, e.t || 0);
+  }
+  return prof;
+}
+function recoTaste(f, prof) {
+  if (!prof.total) return 0;
+  const share = (map, k) => (k && map[k]) ? map[k] / prof.total : 0;
+  let tagScore = 0; f.tags.forEach(t => { tagScore += share(prof.tags, t); });
+  return Math.min(1, 0.45 * share(prof.c, f.category) + 0.2 * share(prof.r, f.region) + 0.15 * share(prof.a, f.author) + 0.6 * Math.min(1, tagScore));
+}
+// מחזיר עד k גלריות מומלצות, כל אחת עם סיבה קצרה להצגה
+function recoRecommend(current, albums, k = 6) {
+  const now = Date.now();
+  const isAdminView = (typeof isAdmin === 'function' && isAdmin()) || (typeof isEditMode !== 'undefined' && isEditMode);
+  const pool = (albums || []).filter(x => x && x.id !== current.id && x.approved !== false && (!x.adminOnly || isAdminView) && (!x.expiresAt || x.expiresAt > now) && Array.isArray(x.images) && x.images.some(Boolean));
+  if (!pool.length) return [];
+  const fc = recoFeatures(current), prof = recoProfile();
+  const pops = pool.map(x => Math.log1p((typeof photoGetViews === 'function' ? photoGetViews(x.id) : 0)) + 2 * Math.log1p(x.likes || 0));
+  const maxPop = Math.max(1, ...pops);
+  const scored = pool.map((x, i) => {
+    const f = recoFeatures(x);
+    const sim = recoSimilarity(fc, f), taste = recoTaste(f, prof), pop = pops[i] / maxPop;
+    const fresh = f.time ? Math.exp(-Math.max(0, now - f.time) / (14 * 864e5)) : 0.3;
+    let score = RECO_W.sim * sim + RECO_W.taste * taste + RECO_W.pop * pop + RECO_W.fresh * fresh;
+    const seenAt = prof.seen[x.id];
+    if (seenAt && now - seenAt < 864e5) score *= 0.35;            // נצפתה ב-24 השעות האחרונות — פחות עדיפות
+    score += Math.random() * 0.03;                                 // מעט גיוון בין ביקורים
+    const parts = [['sim', RECO_W.sim * sim], ['taste', RECO_W.taste * taste], ['pop', RECO_W.pop * pop], ['fresh', RECO_W.fresh * fresh]].sort((p, q) => q[1] - p[1]);
+    const reason = { sim: (f.category && f.category === fc.category) ? 'דומה למה שאתם רואים' : 'בסגנון דומה', taste: 'מותאם לטעם שלכם', pop: 'פופולרי בקהילה', fresh: 'חדש באתר' }[parts[0][0]];
+    return { album: x, f, score, reason };
+  });
+  // MMR: בכל צעד בוחרים את הגלריה עם הציון הגבוה, בניכוי הדמיון למה שכבר נבחר; עד 2 גלריות לאותו יוצר
+  const picked = [], perAuthor = {}, LAMBDA = 0.75;
+  const cand = scored.sort((p, q) => q.score - p.score).slice(0, 60);
+  while (picked.length < k && cand.length) {
+    let bestI = -1, best = -Infinity;
+    cand.forEach((c, i) => {
+      if ((perAuthor[c.f.author] || 0) >= 2) return;
+      const red = picked.length ? Math.max(...picked.map(p => recoSimilarity(c.f, p.f))) : 0;
+      const v = LAMBDA * c.score - (1 - LAMBDA) * red;
+      if (v > best) { best = v; bestI = i; }
+    });
+    if (bestI < 0) break;
+    const [c] = cand.splice(bestI, 1);
+    picked.push(c);
+    perAuthor[c.f.author] = (perAuthor[c.f.author] || 0) + 1;
+  }
+  return picked.map(p => Object.assign({}, p.album, { _recoReason: p.reason }));
+}
+window.recoRecommend = recoRecommend;
+
 function photoOpenDetail(id) {
   if (typeof trackEvent === 'function') trackEvent('gallery_open');
   window.__detailOpen = true; // מגן מפני רענון-רקע שיבעט מהעמוד הפנימי
@@ -15435,7 +15551,8 @@ function photoOpenDetail(id) {
     </div>
   `).join('');
 
-  const recommended = albums.filter(x => x.id !== id).slice(0, 3);
+  recoTrack(a, 'view');
+  const recommended = recoRecommend(a, albums, 6);
   const recHTML = recommended.map(r => {
     const rImg = r.images && r.images[0] ? r.images[0] : '';
     return `
@@ -15447,6 +15564,7 @@ function photoOpenDetail(id) {
         <div class="art-rec-text">
           <h4>${escHtml(r.title)}</h4>
           <div class="art-rec-meta">${escHtml(r.author)} · ${escHtml(r.timestamp)}</div>
+          ${r._recoReason ? `<div class="art-rec-why">${escHtml(r._recoReason)}</div>` : ''}
         </div>
       </div>
     `;
@@ -17846,7 +17964,12 @@ async function syncUserLikeBudget(user) {
 }
 window.syncUserLikeBudget = syncUserLikeBudget;
 
+// מאתר גלריה לפי מזהה (לרישום אינטראקציות במנוע ההמלצות)
+function recoFindAlbum(id) {
+  try { return ((typeof photoGetAlbums === 'function') ? photoGetAlbums() : []).find(x => x && String(x.id) === String(id)) || null; } catch (e) { return null; }
+}
 function photoToggleLike(id) {
+  try { if (!photoIsLikedLocal(id)) recoTrack(recoFindAlbum(id), 'like'); } catch (e) {}
   const isHomeFeed = (typeof activePageId !== 'undefined' && activePageId === 'page-home-feed') ||
                      (mainContent && !!mainContent.querySelector('.home-feed-page'));
 
@@ -18128,6 +18251,7 @@ window.photoIsSavedLocal = photoIsSavedLocal;
 
 function photoToggleSave(id, btnEl) {
   if (typeof trackEvent === 'function') trackEvent('save');
+  try { if (!photoIsSavedLocal(id)) recoTrack(recoFindAlbum(id), 'save'); } catch (e) {}
   const user = auth.currentUser;
   const localKey = user ? `saved_galleries_${user.uid}` : 'guest_saved_galleries';
 
