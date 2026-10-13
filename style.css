@@ -10685,3 +10685,4 @@ html body .apple-nav .notif-bell { background: #fbf4ee !important; }
 @keyframes bdRoll { 0% { transform: rotate(0); } 50% { transform: rotate(180deg) scale(1.1); } 100% { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .bd-dice { animation: none; } }
 @media (max-width: 640px) { .bd-row { flex-wrap: wrap; } .bd-field { min-width: 0; width: 100%; } .bd-row > div { flex: 1; } }
+.legal-btn.ghost { background: #f6efe9; }

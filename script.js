@@ -25697,6 +25697,7 @@ function buildSiteFooterHTML() {
               <li><a href="#" onclick="event.preventDefault(); openLegal('a11y')">הצהרת נגישות</a></li>
               <li><a href="#" onclick="event.preventDefault(); openLegal('refund')">ביטולים והחזרים</a></li>
               <li><a href="#" onclick="event.preventDefault(); openLegal('report')">דיווח והסרת תוכן</a></li>
+              <li><a href="#" onclick="event.preventDefault(); openLegal('mydata')">המידע שלי</a></li>
             </ul>
           </div>
           <div class="site-footer-col">
@@ -25806,12 +25807,38 @@ const LEGAL_DOCS = {
     </ul>
     <p>הודעת ביטול ניתן למסור בהודעה באתר, באימייל או בטלפון, וכן בכתב לכתובת העסק:</p>${legalBizHTML()}
     <p>אין חיוב חודשי ואין חידוש אוטומטי — כל פיצ׳ר נרכש בנפרד.</p>` },
+  mydata: { title: 'המידע שלי', html: () => `
+    <p>לפי חוק הגנת הפרטיות מותר לכם לראות את המידע שנשמר עליכם ולבקש למחוק אותו.</p>
+    <h3>הורדת המידע שלי</h3>
+    <p>קובץ עם כל מה שהאתר שמר במכשיר הזה ופרטי הפרופיל שלכם.</p>
+    <p><button type="button" class="legal-btn" onclick="legalExportMyData()">הורדת קובץ המידע</button></p>
+    <h3>מחיקת החשבון והמידע</h3>
+    <p>שלחו בקשה ונמחק את החשבון, הפרופיל והתוכן שהעליתם תוך 30 יום. המידע שבמכשיר הזה יימחק מיד.</p>
+    <p><button type="button" class="legal-btn ghost" onclick="legalRequestDelete()">בקשת מחיקה</button></p>` },
   report: { title: 'דיווח והסרת תוכן', html: () => `
     <p>נתקלתם בתוכן פוגעני, תוכן שמפר את הפרטיות שלכם, תמונה שלכם שפורסמה ללא הסכמה, לשון הרע או הפרת זכויות יוצרים? דווחו לנו ונטפל בהקדם.</p>
     <ul><li>קישור לתוכן או תיאור שלו.</li><li>מה הבעיה (ובהפרת זכויות יוצרים — מי בעל הזכויות).</li><li>דרך ליצור איתכם קשר.</li></ul>
     <p><b>תוכן אינטימי שפורסם ללא הסכמה או תוכן שמערב קטינים יוסר מיד</b> ויועבר לרשויות. ניתן לפנות גם למוקד 105 של המטה הלאומי להגנה על ילדים ברשת.</p>
     <p><button type="button" class="legal-btn" onclick="closeLegal(); openMessages()">שליחת דיווח למנהל האתר</button></p>${SITE_LEGAL.email ? `<p>או באימייל: <a href="mailto:${escHtml(SITE_LEGAL.email)}">${escHtml(SITE_LEGAL.email)}</a></p>` : ''}` }
 };
+function legalExportMyData() {
+  const local = {};
+  try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); local[k] = localStorage.getItem(k); } } catch (e) {}
+  const u = auth.currentUser;
+  const data = { exported: new Date().toISOString(), account: u ? { uid: u.uid, name: u.displayName || '', email: u.email || '', guest: u.isAnonymous } : null, browserData: local };
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
+  a.download = 'my-data.json'; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+async function legalRequestDelete() {
+  if (!confirm('למחוק את המידע שבמכשיר הזה ולפתוח בקשת מחיקה מול מנהל האתר?')) return;
+  try { localStorage.clear(); } catch (e) {}
+  closeLegal();
+  if (typeof showCopyToast === 'function') showCopyToast('המידע במכשיר נמחק. כתבו למנהל "בקשה למחיקת החשבון"');
+  if (typeof dmOpenAdmin === 'function') dmOpenAdmin(); else if (typeof openMessages === 'function') openMessages();
+}
+window.legalExportMyData = legalExportMyData; window.legalRequestDelete = legalRequestDelete;
 function openLegal(key) {
   const doc = LEGAL_DOCS[key]; if (!doc) return;
   let ov = document.getElementById('legal-modal');

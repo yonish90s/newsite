@@ -15,7 +15,7 @@
   <!-- ספריית localforage לשמירת תמונות -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
   <!-- קישור לקובץ העיצוב החיצוני (עם פרמטר למניעת שמירה במטמון) -->
-  <link rel="stylesheet" href="./style.css?v=1530">
+  <link rel="stylesheet" href="./style.css?v=1531">
 </head>
 <body class="light-mode">
   <!-- שער אישור גיל (Age Gate Overlay) -->
@@ -867,7 +867,7 @@
     </button>
 
     <p class="au-switch" id="au-switch">אין לכם חשבון? <button type="button" class="au-link strong" onclick="authSetMode('signup')">הרשמה</button></p>
-    <p class="au-terms">בהרשמה אתם מסכימים ל<a href="#">תנאי השימוש</a> שלנו.</p>
+    <p class="au-terms">בהרשמה אתם מסכימים ל<a href="#" onclick="event.preventDefault(); openLegal('terms')">תנאי השימוש</a> ול<a href="#" onclick="event.preventDefault(); openLegal('privacy')">מדיניות הפרטיות</a>, ומאשרים שאתם מעל גיל 18.</p>
   </div>
 </div>
 
@@ -1243,7 +1243,7 @@
     try { if (localStorage.getItem('mtab_hidden') === '1') document.documentElement.classList.add('mtab-hidden'); } catch (e) {}
   </script>
   <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
-  <script type="module" src="./script.js?v=1500"></script>
+  <script type="module" src="./script.js?v=1501"></script>
   <script defer src="./a11y.js?v=1"></script>
 </body>
 </html>
