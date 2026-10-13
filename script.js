@@ -14102,8 +14102,24 @@ function forumMyName() {
 }
 function forumGuestNameFieldHTML(id) {
   if (forumRegistered()) return '';
-  return `<input id="${id}" class="fo-input fo-guest-name" maxlength="30" placeholder="השם שלך (שם זמני)" value="${escHtml(forumGuestName())}">`;
+  const saved = forumGuestName();
+  // אורח שכבר כתב שם פעם אחת — לא מבקשים שוב; מציגים "מגיבים בתור" עם אפשרות לשנות
+  if (saved.length >= 2) {
+    return `<div class="fo-guest-as" id="${id}-wrap"><input type="hidden" id="${id}" value="${escHtml(saved)}">
+      <span>מגיבים בתור <b>${escHtml(saved)}</b></span>
+      <button type="button" class="fo-guest-change" onclick="forumGuestChangeName('${id}')">שינוי</button></div>`;
+  }
+  return `<input id="${id}" class="fo-input fo-guest-name" maxlength="30" placeholder="השם שלך (שם זמני)" value="">`;
 }
+function forumGuestChangeName(id) {
+  const wrap = document.getElementById(id + '-wrap');
+  if (!wrap) return;
+  const cur = forumGuestName();
+  wrap.outerHTML = `<input id="${id}" class="fo-input fo-guest-name" maxlength="30" placeholder="השם שלך (שם זמני)" value="${escHtml(cur)}">`;
+  const el = document.getElementById(id);
+  if (el) { el.focus(); el.select(); }
+}
+window.forumGuestChangeName = forumGuestChangeName;
 // מחזיר את זהות הכותב: משתמש רשום, או אורח (התחברות אנונימית + השם שכתב)
 async function forumIdentity(nameFieldId) {
   if (forumRegistered()) return { uid: auth.currentUser.uid, name: forumMyName(), guest: false };
