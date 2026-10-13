@@ -15555,7 +15555,7 @@ function photoOpenDetail(id) {
               <div class="art-meta" style="margin-bottom:14px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
                 <span class="art-category-badge" style="background:${escHtml(a.categoryColor || '#3b82f6')}">${escHtml(a.category)}</span>
                 <span>${escHtml(_sp.creator)}: <b>${escHtml(a.author)}</b></span>
-                ${a.authorId ? `<button onclick="toggleFollow('${artEsc(a.authorId)}','${artEsc(a.author || '')}', this)" class="follow-btn${isFollowing(a.authorId) ? ' following' : ''}">${isFollowing(a.authorId) ? '✓ עוקב' : '➕ עקוב'}</button>` : ''}
+                ${a.authorId && !isSiteAdminAuthor(a.authorId, a.author, a) ? `<button onclick="toggleFollow('${artEsc(a.authorId)}','${artEsc(a.author || '')}', this)" class="follow-btn${isFollowing(a.authorId) ? ' following' : ''}">${isFollowing(a.authorId) ? '✓ עוקב' : '➕ עקוב'}</button>` : ''}
                 <span>·</span>
                 <span>${escHtml(a.timestamp)}</span>
                 <button onclick="photoToggleLike('${artEsc(a.id)}')" class="photo-like-btn" style="background: ${photoIsLikedLocal(a.id) ? '#ede9fe' : '#ffffff'}; border: 1.5px solid ${photoIsLikedLocal(a.id) ? '#7c3aed' : '#e2e8f0'}; cursor: pointer; color: ${photoIsLikedLocal(a.id) ? '#7c3aed' : '#1e293b'}; display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 8px; transition: all 0.2s; font-weight: 700; font-size: 13px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
@@ -15625,7 +15625,7 @@ function photoOpenDetail(id) {
                 <div class="art-meta pd-show-meta">
                   <span class="art-category-badge" style="background:${escHtml(a.categoryColor || '#10b981')}">${escHtml(a.category)}</span>
                   <span>צילום: ${escHtml(a.author)}${isUserVerified(a.authorId, a.author, a.verified) ? verifiedSealHTML(18) : ''}</span>
-                  ${a.authorId ? `<button onclick="toggleFollow('${artEsc(a.authorId)}','${artEsc(a.author || '')}', this)" class="follow-btn${isFollowing(a.authorId) ? ' following' : ''}">${isFollowing(a.authorId) ? '✓ עוקב' : '➕ עקוב'}</button>` : ''}
+                  ${a.authorId && !isSiteAdminAuthor(a.authorId, a.author, a) ? `<button onclick="toggleFollow('${artEsc(a.authorId)}','${artEsc(a.author || '')}', this)" class="follow-btn${isFollowing(a.authorId) ? ' following' : ''}">${isFollowing(a.authorId) ? '✓ עוקב' : '➕ עקוב'}</button>` : ''}
                   <span>·</span>
                   <span>${escHtml(a.timestamp)}</span>
                   ${a.ageRange ? `<span>·</span><span>גיל ${escHtml(String(a.ageRange))}</span>` : ''}
@@ -16433,7 +16433,26 @@ function profileEditBio() {
 }
 window.profileEditBio = profileEditBio;
 
+// תוכן של מנהל האתר: אין לו פרופיל ציבורי ואי אפשר לעקוב אחריו
+const SITE_ADMIN_NAMES = ['מנהל האתר', 'מנהל', 'site admin', 'admin'];
+function siteAdminUid() {
+  if (typeof dmAdminUid !== 'undefined' && dmAdminUid) return dmAdminUid;
+  try { return localStorage.getItem('site_admin_uid') || ''; } catch (e) { return ''; }
+}
+function isSiteAdminAuthor(uid, name, item) {
+  if (item && item.byAdmin) return true;
+  const n = String(name || '').trim().toLowerCase();
+  if (n && SITE_ADMIN_NAMES.includes(n)) return true;
+  const a = siteAdminUid();
+  return !!(uid && a && uid === a);
+}
+window.isSiteAdminAuthor = isSiteAdminAuthor;
+
 async function openUserPage(authorId, authorName) {
+  if (isSiteAdminAuthor(authorId, authorName)) {
+    if (typeof showCopyToast === 'function') showCopyToast('התוכן הזה פורסם על ידי צוות האתר');
+    return;
+  }
   if (typeof mainContent === 'undefined' || !mainContent) return;
   mainContent.innerHTML = buildUserPageHTML(authorId, authorName);
   try { window.scrollTo(0, 0); } catch (e) {}
@@ -17470,6 +17489,7 @@ document.getElementById('photo-save').addEventListener('click', async () => {
       images: photoImgDataList.filter(Boolean),
       author: authorNickname,
       authorId: user ? user.uid : '',
+      byAdmin: !!((typeof isAdmin === 'function' && isAdmin()) || isEditMode),
       category: _isShSave ? _offerType : (document.getElementById('photo-category').value.trim() || 'כללי'),
       ageRange: (document.getElementById('photo-age') || {}).value || '',
       ...photoSizeFields(),
@@ -18335,7 +18355,7 @@ function subscribeMyDMs() {
   dmConvUid = u.uid;
   dmConversations = {};
   // מביאים את ה-uid של המנהל לשיחה הנעוצה
-  try { get(ref(db, 'website/admin_uid')).then(s => { dmAdminUid = s.val() || ''; dmRefreshList(); }).catch(() => {}); } catch (e) {}
+  try { get(ref(db, 'website/admin_uid')).then(s => { dmAdminUid = s.val() || ''; try { if (dmAdminUid) localStorage.setItem('site_admin_uid', dmAdminUid); } catch (e) {} dmRefreshList(); }).catch(() => {}); } catch (e) {}
   dmConvUnsub = onValue(ref(db, `website/user_dms/${u.uid}`), snap => {
     dmConversations = snap.val() || {};
     dmRefreshList();
@@ -18370,6 +18390,7 @@ async function dmOpenAdmin() {
       new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 10000))
     ]);
     dmAdminUid = snap.val() || '';
+    try { if (dmAdminUid) localStorage.setItem('site_admin_uid', dmAdminUid); } catch (e) {}
     go(dmAdminUid);
   } catch (e) {
     console.error('admin uid load failed', e);
@@ -18692,6 +18713,7 @@ function isFollowing(uid) { return !!(uid && followedUids[uid]); }
 window.isFollowing = isFollowing;
 
 async function toggleFollow(uid, name, btn) {
+  if (isSiteAdminAuthor(uid, name)) { if (typeof showCopyToast === 'function') showCopyToast('אי אפשר לעקוב אחרי צוות האתר'); return; }
   const u = auth.currentUser;
   if (!u) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
   if (!uid || uid === u.uid) { if (typeof showCopyToast === 'function') showCopyToast('אי אפשר לעקוב אחרי עצמך 🙂'); return; }
