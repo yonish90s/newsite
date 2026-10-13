@@ -10616,3 +10616,17 @@ html body .cta-add-btn, html body .au-submit, html body .shop-bar-go, html body 
 /* רקע לבן נקי בכל האתר; כרטיסים נבדלים בקו חול עדין */
 html body { background-color: #ffffff !important; }
 html body .apple-nav .notif-bell { background: #fbf4ee !important; }
+
+/* חיפוש: שלושה עיגולי סינון עם אייקון בלבד (תמונות · פורומים · סיפורים) */
+.ss-scope { display: flex; justify-content: center; gap: 18px; padding: 12px 8px 14px; border-bottom: 1px solid #efe6de; margin-bottom: 6px; }
+.ss-scope-btn {
+  width: 58px; height: 58px; border-radius: 50%; display: grid; place-items: center; cursor: pointer;
+  background: #fff; border: 2px solid #efe6de; color: #8a7f78; -webkit-tap-highlight-color: transparent;
+  transition: background .15s ease, border-color .15s ease, color .15s ease, transform .12s ease;
+}
+.ss-scope-btn svg { width: 26px; height: 26px; }
+.ss-scope-btn:hover { border-color: #ffc3a8; color: #2b2522; }
+.ss-scope-btn:active { transform: scale(.95); }
+.ss-scope-btn.on { background: #ff8a5c; border-color: #ff8a5c; color: #2b2522; box-shadow: 0 8px 18px -10px rgba(240, 112, 63, .8); }
+.ss-scope-btn:focus-visible { outline: 3px solid rgba(255, 138, 92, .45); outline-offset: 2px; }
+@media (max-width: 768px) { .ss-scope { gap: 16px; } .ss-scope-btn { width: 54px; height: 54px; } }

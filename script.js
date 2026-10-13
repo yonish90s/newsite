@@ -23878,6 +23878,7 @@ function openSiteSearch() {
   siteSearchEnsureDom();
   try { if (typeof subscribeCommunities === 'function') subscribeCommunities(); } catch (e) {}
   try { if (typeof subscribeNewsPosts === 'function') subscribeNewsPosts(); } catch (e) {}
+  try { if (typeof forumSubscribe === 'function') forumSubscribe(); } catch (e) {}
   const hdr = document.querySelector('header');
   if (hdr) document.documentElement.style.setProperty('--ss-top', Math.round(hdr.getBoundingClientRect().bottom) + 'px');
   document.documentElement.classList.add('ss-open');
@@ -23929,6 +23930,14 @@ function siteSearchCollect(q) {
     ((typeof newsPostsData !== 'undefined' && newsPostsData) || []).forEach(n => { if (n && hit(n.title, n.desc)) out.push({ kind: 'news', label: 'חדשות', id: n.id, title: n.title || 'מבזק', sub: n.desc || '', img: n.image || '' }); });
   } catch (e) {}
   try {
+    Object.entries((typeof forumTopics !== 'undefined' && forumTopics) || {}).forEach(([fid, topics]) => {
+      const f = (typeof FORUM_BY_ID !== 'undefined' && FORUM_BY_ID[fid]) || {};
+      Object.entries(topics || {}).forEach(([tid, t]) => {
+        if (t && hit(t.title, t.text, t.name, f.title)) out.push({ kind: 'forum', label: 'פורום', id: tid, forumId: fid, title: t.title || 'נושא', sub: [f.title, t.name].filter(Boolean).join(' · '), img: '' });
+      });
+    });
+  } catch (e) {}
+  try {
     ((typeof pages !== 'undefined' && Array.isArray(pages)) ? pages : []).forEach(p => {
       if (p && p.id && p.title && !p.hidden && hit(p.title)) out.push({ kind: 'page', label: 'עמוד', id: p.id, title: String(p.title).replace(/[\u{1F300}-\u{1FAFF}☀-➿️]/gu, '').trim(), sub: '', img: '' });
     });
@@ -23936,6 +23945,26 @@ function siteSearchCollect(q) {
   return out;
 }
 let siteSearchLast = [];
+// עיגולי סינון בחיפוש (אייקונים בלבד): תמונות · פורומים · סיפורים. בלי סימון = הכל
+const siteSearchScope = new Set();
+const SS_SCOPES = [
+  { id: 'photo', label: 'תמונות', icon: '<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 9"/>' },
+  { id: 'forum', label: 'פורומים', icon: '<path d="M3 6.5A2.5 2.5 0 0 1 5.5 4h8A2.5 2.5 0 0 1 16 6.5v4a2.5 2.5 0 0 1-2.5 2.5H9l-3.5 3v-3A2.5 2.5 0 0 1 3 10.5z"/><path d="M16 8h2.5A2.5 2.5 0 0 1 21 10.5v4a2.5 2.5 0 0 1-2.5 2.5v3L15 17h-3.5A2.5 2.5 0 0 1 9 14.5V13"/>' },
+  { id: 'story', label: 'סיפורים וקומיקס', icon: '<path d="M2 5.5C4.5 4 7.5 4 12 6c4.5-2 7.5-2 10-.5V19c-2.5-1.5-5.5-1.5-10 .5-4.5-2-7.5-2-10-.5z"/><path d="M12 6v13.5"/>' },
+];
+function siteSearchScopeHTML() {
+  return `<div class="ss-scope" role="group" aria-label="היכן לחפש">${SS_SCOPES.map(sc => {
+    const on = siteSearchScope.has(sc.id);
+    return `<button type="button" class="ss-scope-btn${on ? ' on' : ''}" onclick="siteSearchToggleScope('${sc.id}')" aria-pressed="${on}" aria-label="${sc.label}" title="${sc.label}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${sc.icon}</svg></button>`;
+  }).join('')}</div>`;
+}
+function siteSearchToggleScope(id) {
+  if (siteSearchScope.has(id)) siteSearchScope.delete(id); else siteSearchScope.add(id);
+  const inp = document.getElementById('site-search-input');
+  siteSearchRender(inp ? inp.value : '');
+  if (inp) inp.focus({ preventScroll: true });
+}
+window.siteSearchToggleScope = siteSearchToggleScope;
 function siteSearchRender(raw) {
   const box = document.getElementById('site-search-results');
   if (!box) return;
@@ -23944,16 +23973,19 @@ function siteSearchRender(raw) {
   if (clr) clr.style.visibility = q ? 'visible' : 'hidden';
   if (!q) {
     siteSearchLast = [];
-    box.innerHTML = `<div class="ss-panel"><div class="ss-hint">חפשו גלריות, קומיקס, קהילות, חדשות ועמודים</div></div>`;
+    box.innerHTML = `<div class="ss-panel">${siteSearchScopeHTML()}<div class="ss-hint">חפשו גלריות, פורומים, סיפורים, קהילות וחדשות</div></div>`;
     return;
   }
-  const items = siteSearchCollect(q).slice(0, 30);
+  let all = siteSearchCollect(q);
+  if (siteSearchScope.size) all = all.filter(it => siteSearchScope.has(it.kind));
+  const items = all.slice(0, 30);
   siteSearchLast = items;
   const adultOk = (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('age_verified') === 'true');
   const icons = {
     photo: '<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 9"/>',
     story: '<path d="M4 5h7v14H4z"/><path d="M13 5h7v14h-7z"/>',
     community: '<circle cx="12" cy="8" r="3"/><circle cx="5" cy="10" r="2.2"/><circle cx="19" cy="10" r="2.2"/><path d="M6.5 20v-1.5a5.5 5.5 0 0 1 11 0V20"/>',
+    forum: '<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h9A2.5 2.5 0 0 1 18 5.5v5a2.5 2.5 0 0 1-2.5 2.5H10l-4 3.5V13a2.5 2.5 0 0 1-2-2.5z"/>',
     news: '<path d="M4 5h13v14H6a2 2 0 0 1-2-2z"/><path d="M17 9h3v8a2 2 0 0 1-2 2"/><path d="M7.5 9h6M7.5 12.5h6M7.5 16h4"/>',
     page: '<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/>'
   };
@@ -23968,7 +24000,7 @@ function siteSearchRender(raw) {
         <span class="ss-kind">${it.label}</span>
       </button>`;
   }).join('');
-  box.innerHTML = `<div class="ss-panel">${rows || `<div class="ss-hint">לא נמצאו תוצאות עבור "${escHtml(raw.trim())}"</div>`}</div>`;
+  box.innerHTML = `<div class="ss-panel">${siteSearchScopeHTML()}${rows || `<div class="ss-hint">לא נמצאו תוצאות עבור "${escHtml(raw.trim())}"</div>`}</div>`;
 }
 function siteSearchOpen(i) {
   const it = siteSearchLast[i];
@@ -23976,6 +24008,7 @@ function siteSearchOpen(i) {
   closeSiteSearch();
   if (it.kind === 'photo' || it.kind === 'story') { if (typeof openHistoryItem === 'function') openHistoryItem(it.id, it.kind === 'story' ? 'story' : 'photo'); }
   else if (it.kind === 'community') { if (typeof openCommunityPage === 'function') openCommunityPage(it.id); }
+  else if (it.kind === 'forum') { if (typeof navigateToPage === 'function') navigateToPage('page-forums-main'); setTimeout(() => { if (typeof forumOpenTopic === 'function') forumOpenTopic(it.forumId, it.id); }, 300); }
   else if (it.kind === 'news') { if (typeof navigateToPage === 'function') navigateToPage('page-news-main'); setTimeout(() => { if (typeof newsToggleEmbed === 'function') newsToggleEmbed(it.id); const el = document.querySelector(`.nl-item[data-news-id="${CSS.escape(String(it.id))}"]`); if (el) el.scrollIntoView({ block: 'center' }); }, 400); }
   else if (it.kind === 'page') { if (typeof navigateToPage === 'function') navigateToPage(it.id); }
 }
