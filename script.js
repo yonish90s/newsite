@@ -23585,7 +23585,11 @@ function shopRemove(id) {
   shopRerender();
 }
 window.shopRemove = shopRemove;
-function shopSetMethod(m) { shopMethod = m; document.querySelectorAll('.shop-method').forEach(b => b.classList.toggle('on', b.dataset.m === m)); }
+function shopSetMethod(m) {
+  shopMethod = m;
+  document.querySelectorAll('.shop-method').forEach(b => b.classList.toggle('on', b.dataset.m === m));
+  const cc = document.getElementById('shop-cc'); if (cc) cc.hidden = m !== 'card';
+}
 window.shopSetMethod = shopSetMethod;
 function shopBarHTML() {
   const n = shopSel.size;
@@ -23648,6 +23652,7 @@ function shopCheckoutHTML() {
           <span class="shop-method-ic">${shopIco(ic)}</span>
         </button>`).join('')}
     </section>
+    ${shopCardHTML()}
     <section class="shop-sec">
       <h2>אימייל לקבלה</h2>
       <label class="shop-field"><input id="shop-email" type="email" dir="ltr" autocomplete="email" placeholder="name@example.com" value="${escHtml(email)}"></label>
@@ -23659,11 +23664,98 @@ function shopCheckoutHTML() {
       <button type="button" class="shop-btn shop-bar-go" onclick="shopPay()">תשלום מאובטח · ${shopMoney(shopTotal())}</button>
     </div>`;
 }
+// --- כרטיס אשראי חי: הכרטיס מתעדכן תוך כדי הקלדה ומתהפך בשדה ה-CVV ---
+// אבטחה: הערכים נשארים בדפדפן בלבד — לא נשמרים ולא נשלחים לשום מקום.
+// בחיבור לחברת סליקה מחליפים את השדות ב-Hosted Fields / iframe של החברה (תקן PCI).
+function shopCardBrand(num) {
+  const n = String(num).replace(/\D/g, '');
+  if (/^4/.test(n)) return 'visa';
+  if (/^(5[1-5]|2[2-7])/.test(n)) return 'mastercard';
+  if (/^3[47]/.test(n)) return 'amex';
+  if (/^36|^30[0-5]|^38/.test(n)) return 'diners';
+  return '';
+}
+function shopLuhn(num) {
+  const d = String(num).replace(/\D/g, ''); let sum = 0;
+  for (let i = 0; i < d.length; i++) { let x = +d[d.length - 1 - i]; if (i % 2) { x *= 2; if (x > 9) x -= 9; } sum += x; }
+  return d.length >= 13 && sum % 10 === 0;
+}
+const SHOP_BRAND_LABEL = { visa: 'VISA', mastercard: 'mastercard', amex: 'AMEX', diners: 'Diners' };
+function shopCardHTML() {
+  return `<section class="shop-sec shop-cc" id="shop-cc"${shopMethod === 'card' ? '' : ' hidden'}>
+    <h2>פרטי כרטיס</h2>
+    <div class="cc-stage"><div class="cc-card" id="cc-card">
+      <div class="cc-face cc-front">
+        <div class="cc-top"><span class="cc-chip"></span><span class="cc-brand" id="cc-brand"></span></div>
+        <div class="cc-num" id="cc-num" dir="ltr">•••• •••• •••• ••••</div>
+        <div class="cc-bottom" dir="ltr">
+          <div><small>CARD HOLDER</small><b id="cc-name">YOUR NAME</b></div>
+          <div><small>EXPIRES</small><b id="cc-exp">MM/YY</b></div>
+        </div>
+      </div>
+      <div class="cc-face cc-back">
+        <div class="cc-stripe"></div>
+        <div class="cc-sign" dir="ltr"><span id="cc-cvv">•••</span></div>
+        <small class="cc-back-note">CVV</small>
+      </div>
+    </div></div>
+    <div class="cc-fields">
+      <label class="cc-f cc-wide"><span>מספר כרטיס</span><input id="cc-in-num" inputmode="numeric" autocomplete="cc-number" placeholder="1234 5678 9012 3456" maxlength="23" oninput="shopCardInput(this)" onfocus="shopCardFlip(false)"></label>
+      <label class="cc-f cc-wide"><span>שם בעל הכרטיס</span><input id="cc-in-name" autocomplete="cc-name" placeholder="ISRAEL ISRAELI" maxlength="26" oninput="shopCardInput(this)" onfocus="shopCardFlip(false)"></label>
+      <label class="cc-f"><span>תוקף</span><input id="cc-in-exp" inputmode="numeric" autocomplete="cc-exp" placeholder="MM/YY" maxlength="5" oninput="shopCardInput(this)" onfocus="shopCardFlip(false)"></label>
+      <label class="cc-f"><span>CVV</span><input id="cc-in-cvv" inputmode="numeric" autocomplete="cc-csc" placeholder="123" maxlength="4" oninput="shopCardInput(this)" onfocus="shopCardFlip(true)" onblur="shopCardFlip(false)"></label>
+    </div>
+  </section>`;
+}
+function shopCardFlip(back) { const c = document.getElementById('cc-card'); if (c) c.classList.toggle('flipped', !!back); }
+function shopCardInput(el) {
+  const set = (id, v) => { const x = document.getElementById(id); if (x) x.textContent = v; };
+  if (el.id === 'cc-in-num') {
+    const brand = shopCardBrand(el.value);
+    const max = brand === 'amex' ? 15 : 16;
+    const d = el.value.replace(/\D/g, '').slice(0, max);
+    el.value = brand === 'amex' ? d.replace(/^(\d{0,4})(\d{0,6})(\d{0,5}).*/, (m, a, b, c) => [a, b, c].filter(Boolean).join(' ')) : d.replace(/(\d{4})(?=\d)/g, '$1 ');
+    const mask = (brand === 'amex' ? '•••• •••••• •••••' : '•••• •••• •••• ••••').split('');
+    let i = 0; const shown = mask.map(ch => ch === ' ' ? ' ' : (i < d.length ? d[i++] : '•')).join('');
+    set('cc-num', shown);
+    const b = document.getElementById('cc-brand'); if (b) { b.textContent = SHOP_BRAND_LABEL[brand] || ''; b.dataset.brand = brand; }
+    const card = document.getElementById('cc-card'); if (card) card.dataset.brand = brand;
+    el.classList.toggle('bad', d.length >= 13 && !shopLuhn(d));
+  } else if (el.id === 'cc-in-name') {
+    el.value = el.value.replace(/[^A-Za-z֐-׿ ']/g, '');
+    set('cc-name', el.value.trim().toUpperCase() || 'YOUR NAME');
+  } else if (el.id === 'cc-in-exp') {
+    let d = el.value.replace(/\D/g, '').slice(0, 4);
+    if (d.length === 1 && +d > 1) d = '0' + d;
+    el.value = d.length > 2 ? d.slice(0, 2) + '/' + d.slice(2) : d;
+    set('cc-exp', el.value || 'MM/YY');
+  } else if (el.id === 'cc-in-cvv') {
+    el.value = el.value.replace(/\D/g, '').slice(0, 4);
+    set('cc-cvv', el.value.replace(/./g, '•') || '•••');
+  }
+}
+function shopCardValid() {
+  const v = id => ((document.getElementById(id) || {}).value || '').trim();
+  const num = v('cc-in-num').replace(/\D/g, '');
+  if (!shopLuhn(num)) return ['cc-in-num', 'מספר הכרטיס לא תקין'];
+  if (v('cc-in-name').length < 2) return ['cc-in-name', 'נא לכתוב את השם שעל הכרטיס'];
+  const m = v('cc-in-exp').match(/^(\d{2})\/(\d{2})$/);
+  const now = new Date();
+  if (!m || +m[1] < 1 || +m[1] > 12 || new Date(2000 + +m[2], +m[1], 1) <= now) return ['cc-in-exp', 'תוקף הכרטיס לא תקין'];
+  if (!/^\d{3,4}$/.test(v('cc-in-cvv'))) return ['cc-in-cvv', 'CVV לא תקין'];
+  return null;
+}
+window.shopCardInput = shopCardInput; window.shopCardFlip = shopCardFlip;
+
 function shopPay() {
   const email = ((document.getElementById('shop-email') || {}).value || '').trim();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { if (typeof showCopyToast === 'function') showCopyToast('נא להזין אימייל תקין לקבלה'); const el = document.getElementById('shop-email'); if (el) el.focus(); return; }
   const terms = document.getElementById('shop-terms');
   if (terms && !terms.checked) { if (typeof showCopyToast === 'function') showCopyToast('יש לאשר את תנאי השימוש ומדיניות הביטול'); terms.focus(); return; }
+  if (shopMethod === 'card') {
+    const bad = shopCardValid();
+    if (bad) { if (typeof showCopyToast === 'function') showCopyToast(bad[1]); const el = document.getElementById(bad[0]); if (el) { el.focus(); el.classList.add('bad'); } return; }
+  }
   if (typeof trackEvent === 'function') trackEvent('checkout_click');
   if (!SHOP_PAY_URL) { if (typeof showCopyToast === 'function') showCopyToast('חיבור לחברת הסליקה יוגדר בקרוב'); return; }
   const q = new URLSearchParams({ items: [...shopSel].join(','), amount: String(shopTotal()), method: shopMethod });
