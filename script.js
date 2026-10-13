@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, signInAnonymously, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, EmailAuthProvider, linkWithCredential } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, signInAnonymously, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, EmailAuthProvider, linkWithCredential, setPersistence, browserLocalPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getDatabase, ref, set, get, child, onValue, push, update, increment, runTransaction, onDisconnect } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 // מסך מלא (מצב מחשב) — מוגדר מוקדם כדי שבוני העמודים יוכלו לקרוא אותו
@@ -377,6 +377,40 @@ function usernameToEmail(name) {
   const hex = Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
   return `u${hex}@users.example.com`;
 }
+// מצב החלון: כניסה / הרשמה (אותה פעולה — שם חדש נרשם, קיים נכנס; משתנים רק הטקסטים)
+let authMode = 'login';
+function authBtnLabel() { return authMode === 'signup' ? 'יצירת חשבון' : 'כניסה'; }
+function authSetMode(mode) {
+  authMode = mode === 'signup' ? 'signup' : 'login';
+  const su = authMode === 'signup';
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.innerHTML = v; };
+  set('au-title', su ? 'הצטרפו לקהילה' : 'ברוכים השבים');
+  set('au-sub', su ? 'בוחרים שם משתמש וסיסמה — וזהו, בלי מייל.' : 'התחברו כדי להעלות, להגיב ולשלוח הודעות.');
+  set('auth-username-btn', authBtnLabel());
+  set('au-switch', su ? 'כבר יש לכם חשבון? <button type="button" class="au-link strong" onclick="authSetMode(\'login\')">כניסה</button>'
+                      : 'אין לכם חשבון? <button type="button" class="au-link strong" onclick="authSetMode(\'signup\')">הרשמה</button>');
+  const pw = document.getElementById('auth-password');
+  if (pw) { pw.autocomplete = su ? 'new-password' : 'current-password'; pw.placeholder = su ? 'סיסמה (6 תווים לפחות)' : 'סיסמה'; }
+  const msg = document.getElementById('auth-username-msg'); if (msg) msg.textContent = '';
+}
+window.authSetMode = authSetMode;
+function authTogglePassword(btn) {
+  const pw = document.getElementById('auth-password');
+  if (!pw) return;
+  const show = pw.type === 'password';
+  pw.type = show ? 'text' : 'password';
+  btn.classList.toggle('on', show);
+  btn.setAttribute('aria-label', show ? 'הסתרת הסיסמה' : 'הצגת הסיסמה');
+}
+window.authTogglePassword = authTogglePassword;
+// לחשבון שם-משתמש אין מייל לשחזור — מפנים לשיחה עם מנהל האתר
+function authForgotPassword() {
+  const m = document.getElementById('auth-modal'); if (m) m.style.display = 'none';
+  if (typeof showCopyToast === 'function') showCopyToast('כתבו למנהל האתר ונעזור לכם לשחזר את הגישה');
+  if (typeof dmOpenAdmin === 'function') dmOpenAdmin();
+}
+window.authForgotPassword = authForgotPassword;
+
 async function authUsernameLogin() {
   const nameEl = document.getElementById('auth-username');
   const passEl = document.getElementById('auth-password');
@@ -391,6 +425,8 @@ async function authUsernameLogin() {
   const email = usernameToEmail(username);
   if (btn) { btn.disabled = true; btn.textContent = 'רגע…'; }
   say('');
+  // "השאר אותי מחובר" — בלי סימון, החיבור נשמר רק עד סגירת הדפדפן
+  try { const rem = document.getElementById('auth-remember'); await setPersistence(auth, (!rem || rem.checked) ? browserLocalPersistence : browserSessionPersistence); } catch (e) {}
   const done = (isNew) => {
     const u = auth.currentUser;
     try {
@@ -431,7 +467,7 @@ async function authUsernameLogin() {
     else if (code === 'auth/weak-password') say('הסיסמה חלשה מדי — לפחות 6 תווים');
     else say('הכניסה נכשלה, נסו שוב');
   } finally {
-    if (btn) { btn.disabled = false; btn.textContent = 'כניסה / הרשמה'; }
+    if (btn) { btn.disabled = false; btn.textContent = authBtnLabel(); }
   }
 }
 window.authUsernameLogin = authUsernameLogin;
@@ -23181,17 +23217,22 @@ window.subCarouselInit = subCarouselInit;
 // באתר לא מזינים פרטי אשראי.
 // ============================================================
 const SHOP_FEATURES = [
-  { id: 'no_ads',      title: 'בלי פרסומות',                 desc: 'גלישה נקייה בכל האתר',                         price: 5, icon: '<path d="M4 4l16 16"/><rect x="3" y="5" width="18" height="14" rx="3"/>' },
-  { id: 'premium',     title: 'תוכן פרימיום ונסתר',          desc: 'גישה לגלריות ולתכנים הנעולים',                 price: 7, icon: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>' },
-  { id: 'hd_photos',   title: 'תמונות באיכות מלאה',          desc: 'בלי דחיסה — כל הפרטים',                         price: 4, icon: '<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 9"/>' },
-  { id: 'who_viewed',  title: 'מי צפה בפרופיל שלי',          desc: 'רשימת המבקרים בפרופיל שלך',                    price: 6, icon: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>' },
-  { id: 'unlimited_dm',title: 'הודעות פרטיות ללא הגבלה',     desc: 'צ׳אט חופשי עם כל הקהילה',                       price: 5, icon: '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"/>' },
-  { id: 'boost',       title: 'קידום התכנים שלי',            desc: 'ההעלאות שלך מוצגות בראש הקהילות',             price: 9, icon: '<path d="M12 19V5M5 12l7-7 7 7"/>' },
-  { id: 'badge',       title: 'תג פרופיל פרימיום',           desc: 'תג מיוחד ליד השם שלך',                          price: 3, icon: '<path d="M12 2l2.9 6.3 6.9.7-5.2 4.6 1.5 6.8L12 17l-6.1 3.4 1.5-6.8L2.2 9l6.9-.7z"/>' },
-  { id: 'early',       title: 'גישה ראשונה לפיצ׳רים חדשים',  desc: 'מנסים חידושים לפני כולם',                       price: 3, icon: '<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>' },
-  { id: 'vip',         title: 'תמיכה VIP',                   desc: 'מענה מהיר ואישי מהצוות',                        price: 4, icon: '<path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="2" y="14" width="5" height="7" rx="2"/><rect x="17" y="14" width="5" height="7" rx="2"/>' },
+  { id: 'no_ads', g: 'browse',      title: 'בלי פרסומות',                 desc: 'גלישה נקייה בכל האתר',                         price: 5, icon: '<path d="M4 4l16 16"/><rect x="3" y="5" width="18" height="14" rx="3"/>' },
+  { id: 'premium', g: 'browse',     title: 'תוכן פרימיום ונסתר',          desc: 'גישה לגלריות ולתכנים הנעולים',                 price: 7, icon: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>' },
+  { id: 'hd_photos', g: 'browse',   title: 'תמונות באיכות מלאה',          desc: 'בלי דחיסה — כל הפרטים',                         price: 4, icon: '<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 9"/>' },
+  { id: 'who_viewed', g: 'exposure',  title: 'מי צפה בפרופיל שלי',          desc: 'רשימת המבקרים בפרופיל שלך',                    price: 6, icon: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>' },
+  { id: 'unlimited_dm', g: 'community',title: 'הודעות פרטיות ללא הגבלה',     desc: 'צ׳אט חופשי עם כל הקהילה',                       price: 5, icon: '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"/>' },
+  { id: 'boost', g: 'exposure',       title: 'קידום התכנים שלי',            desc: 'ההעלאות שלך מוצגות בראש הקהילות',             price: 9, icon: '<path d="M12 19V5M5 12l7-7 7 7"/>' },
+  { id: 'badge', g: 'exposure',       title: 'תג פרופיל פרימיום',           desc: 'תג מיוחד ליד השם שלך',                          price: 3, icon: '<path d="M12 2l2.9 6.3 6.9.7-5.2 4.6 1.5 6.8L12 17l-6.1 3.4 1.5-6.8L2.2 9l6.9-.7z"/>' },
+  { id: 'early', g: 'community',       title: 'גישה ראשונה לפיצ׳רים חדשים',  desc: 'מנסים חידושים לפני כולם',                       price: 3, icon: '<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>' },
+  { id: 'vip', g: 'community',         title: 'תמיכה VIP',                   desc: 'מענה מהיר ואישי מהצוות',                        price: 4, icon: '<path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="2" y="14" width="5" height="7" rx="2"/><rect x="17" y="14" width="5" height="7" rx="2"/>' },
 ];
 // קישור לדף התשלום של ספק הסליקה (יוגדר כשנבחר ספק). ריק = עדיין לא מחובר.
+const SHOP_GROUPS = [
+  { id: 'browse', title: 'גלישה' },
+  { id: 'exposure', title: 'חשיפה' },
+  { id: 'community', title: 'קהילה ותמיכה' },
+];
 const SHOP_PAY_URL = '';
 const SHOP_KEY = 'shop_selection_v1';
 let shopSel = (function () { try { return new Set(JSON.parse(localStorage.getItem(SHOP_KEY) || '[]')); } catch (e) { return new Set(); } })();
@@ -23210,10 +23251,12 @@ function shopToggle(id) {
   if (shopSel.has(id)) shopSel.delete(id); else shopSel.add(id);
   shopSave();
   // עדכון במקום (בלי לבנות מחדש) כדי שהגלילה לא תקפוץ
-  const card = document.querySelector(`.shop-card[data-id="${CSS.escape(id)}"]`);
+  const card = document.querySelector(`.shop-item[data-id="${CSS.escape(id)}"]`);
   if (card) { card.classList.toggle('on', shopSel.has(id)); card.setAttribute('aria-checked', shopSel.has(id) ? 'true' : 'false'); }
   const bar = document.getElementById('shop-bar');
   if (bar) bar.outerHTML = shopBarHTML();
+  const top = document.querySelector('.shop-top');
+  if (top) top.outerHTML = shopTopHTML('שדרוגים', '');
 }
 window.shopToggle = shopToggle;
 function shopGo(view) {
@@ -23234,28 +23277,38 @@ window.shopSetMethod = shopSetMethod;
 function shopBarHTML() {
   const n = shopSel.size;
   return `<div class="shop-bar${n ? ' show' : ''}" id="shop-bar">
-      <div class="shop-bar-info"><b>${shopMoney(shopTotal())}</b><span>${n === 1 ? 'פיצ׳ר אחד נבחר' : `${n} פיצ׳רים נבחרו`}</span></div>
-      <button type="button" class="shop-btn" onclick="shopGo('checkout')">לתשלום <span aria-hidden="true">←</span></button>
+      <span class="shop-bar-count">${n}</span>
+      <button type="button" class="shop-btn shop-bar-go" onclick="shopGo('checkout')">המשך לתשלום · ${shopMoney(shopTotal())}</button>
     </div>`;
+}
+function shopTopHTML(title, back) {
+  const n = shopSel.size;
+  return `<header class="shop-top">
+      ${back ? `<button type="button" class="shop-round" onclick="${back}" aria-label="חזרה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></button>` : '<span class="shop-round ghost"></span>'}
+      <h1>${title}</h1>
+      <button type="button" class="shop-round shop-basket" onclick="shopGo('checkout')" aria-label="לסל">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14l-1.3 11.1a2 2 0 0 1-2 1.9H8.3a2 2 0 0 1-2-1.9z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>
+        ${n ? `<b>${n}</b>` : ''}
+      </button>
+    </header>`;
+}
+function shopRowHTML(f) {
+  const on = shopSel.has(f.id);
+  return `<button type="button" class="shop-item${on ? ' on' : ''}" data-id="${f.id}" role="checkbox" aria-checked="${on}" onclick="shopToggle('${f.id}')">
+      <span class="shop-cb" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>
+      <span class="shop-item-txt"><b>${escHtml(f.title)}</b><small>${escHtml(f.desc)}</small></span>
+      <span class="shop-item-price">+${shopMoney(f.price)}</span>
+    </button>`;
 }
 function shopListHTML() {
   return `
-    <header class="shop-head">
-      <span class="shop-kicker">בלי מנוי · בלי חיובים חודשיים</span>
-      <h1>משלמים רק על מה שרוצים</h1>
-      <p>סמנו את השדרוגים שמעניינים אתכם — כל אחד בתשלום חד־פעמי קטן.</p>
-    </header>
-    <div class="shop-grid" role="group" aria-label="שדרוגים">
-      ${SHOP_FEATURES.map(f => {
-        const on = shopSel.has(f.id);
-        return `<button type="button" class="shop-card${on ? ' on' : ''}" data-id="${f.id}" role="checkbox" aria-checked="${on}" onclick="shopToggle('${f.id}')">
-            <span class="shop-check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>
-            <span class="shop-ic">${shopIco(f.icon)}</span>
-            <span class="shop-txt"><b>${escHtml(f.title)}</b><small>${escHtml(f.desc)}</small></span>
-            <span class="shop-price">${shopMoney(f.price)}</span>
-          </button>`;
-      }).join('')}
-    </div>
+    ${shopTopHTML('שדרוגים', '')}
+    <div class="shop-intro"><b>משלמים רק על מה שרוצים</b><span>בלי מנוי · תשלום חד־פעמי לכל שדרוג</span></div>
+    ${SHOP_GROUPS.map(g => `
+      <section class="shop-sec">
+        <h2>${g.title} <span class="shop-opt">אופציונלי</span></h2>
+        ${SHOP_FEATURES.filter(f => f.g === g.id).map(shopRowHTML).join('')}
+      </section>`).join('')}
     ${shopBarHTML()}`;
 }
 function shopCheckoutHTML() {
@@ -23263,30 +23316,33 @@ function shopCheckoutHTML() {
   const methods = [['card', 'כרטיס אשראי', '<rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M2 10h20M6 15h4"/>'], ['bit', 'Bit', '<rect x="6" y="2" width="12" height="20" rx="3"/><path d="M11 18h2"/>'], ['apple', 'Apple Pay', '<path d="M15.5 3c-1 .1-2.2.8-2.8 1.6-.6.7-1.1 1.8-.9 2.8 1.1 0 2.2-.6 2.8-1.4.6-.8 1-1.9.9-3zM12 8.5c-1.2 0-2.2-.7-3.3-.7-1.9 0-3.7 1.6-3.7 4.6 0 3.6 2.6 8.1 4.4 8.1 1 0 1.5-.6 2.6-.6s1.5.6 2.6.6c1.4 0 3-2.6 3.6-4.4-1.6-.7-2.4-2.2-2.4-3.8 0-1.4.8-2.6 1.9-3.3-.8-1-2-1.6-3.2-1.6-1.1 0-1.8.7-2.5.7z"/>']];
   const email = (auth.currentUser && auth.currentUser.email && !/@users\.example\.com$/.test(auth.currentUser.email)) ? auth.currentUser.email : '';
   return `
-    <button type="button" class="shop-back" onclick="shopGo('list')">→ חזרה לבחירת שדרוגים</button>
-    <div class="shop-co">
-      <section class="shop-co-card">
-        <h2>ההזמנה שלך</h2>
-        <ul class="shop-lines">
-          ${items.map(f => `<li>
-              <span class="shop-ic sm">${shopIco(f.icon)}</span>
-              <span class="shop-line-name">${escHtml(f.title)}</span>
-              <span class="shop-line-price">${shopMoney(f.price)}</span>
-              <button type="button" class="shop-x" onclick="shopRemove('${f.id}')" aria-label="הסרת ${escHtml(f.title)}">✕</button>
-            </li>`).join('')}
-        </ul>
-        <div class="shop-total"><span>סה״כ לתשלום</span><b>${shopMoney(shopTotal())}</b></div>
-        <div class="shop-note">תשלום חד־פעמי · בלי מנוי ובלי חיובים חוזרים</div>
-      </section>
-      <section class="shop-co-card">
-        <h2>אמצעי תשלום</h2>
-        <div class="shop-methods">
-          ${methods.map(([id, label, ic]) => `<button type="button" class="shop-method${shopMethod === id ? ' on' : ''}" data-m="${id}" onclick="shopSetMethod('${id}')">${shopIco(ic)}<span>${label}</span></button>`).join('')}
-        </div>
-        <label class="shop-field"><span>אימייל לקבלה</span><input id="shop-email" type="email" dir="ltr" autocomplete="email" placeholder="name@example.com" value="${escHtml(email)}"></label>
-        <button type="button" class="shop-btn shop-pay" onclick="shopPay()">תשלום מאובטח ${shopMoney(shopTotal())}</button>
-        <div class="shop-secure">${shopIco('<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>')}<span>התשלום מתבצע בדף המאובטח של חברת הסליקה — פרטי האשראי לא עוברים דרכנו</span></div>
-      </section>
+    ${shopTopHTML('תשלום', "shopGo('list')")}
+    <section class="shop-sec">
+      <h2>ההזמנה שלך</h2>
+      ${items.map(f => `<div class="shop-line">
+          <span class="shop-line-name">${escHtml(f.title)}</span>
+          <span class="shop-item-price">${shopMoney(f.price)}</span>
+          <button type="button" class="shop-x" onclick="shopRemove('${f.id}')" aria-label="הסרת ${escHtml(f.title)}">✕</button>
+        </div>`).join('')}
+      <div class="shop-total"><span>סה״כ</span><b>${shopMoney(shopTotal())}</b></div>
+      <div class="shop-note">תשלום חד־פעמי · בלי מנוי ובלי חיובים חוזרים</div>
+    </section>
+    <section class="shop-sec">
+      <h2>אמצעי תשלום</h2>
+      ${methods.map(([id, label, ic]) => `<button type="button" class="shop-item shop-method${shopMethod === id ? ' on' : ''}" data-m="${id}" onclick="shopSetMethod('${id}')">
+          <span class="shop-radio" aria-hidden="true"></span>
+          <span class="shop-item-txt"><b>${label}</b></span>
+          <span class="shop-method-ic">${shopIco(ic)}</span>
+        </button>`).join('')}
+    </section>
+    <section class="shop-sec">
+      <h2>אימייל לקבלה</h2>
+      <label class="shop-field"><input id="shop-email" type="email" dir="ltr" autocomplete="email" placeholder="name@example.com" value="${escHtml(email)}"></label>
+      <div class="shop-secure">${shopIco('<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>')}<span>התשלום מתבצע בדף המאובטח של חברת הסליקה — פרטי האשראי לא עוברים דרכנו</span></div>
+    </section>
+    <div class="shop-bar show">
+      <span class="shop-bar-count">${items.length}</span>
+      <button type="button" class="shop-btn shop-bar-go" onclick="shopPay()">תשלום מאובטח · ${shopMoney(shopTotal())}</button>
     </div>`;
 }
 function shopPay() {
