@@ -10727,3 +10727,11 @@ html body .apple-nav .notif-bell { background: #fbf4ee !important; }
 .cc-back { visibility: hidden; }
 .cc-card.flipped .cc-front { visibility: hidden; }
 .cc-card.flipped .cc-back { visibility: visible; }
+/* קהילות: בלי סרגלי צד (עמודי האתר / גולשים בסביבה) — הגריד ברוחב מלא */
+.photos-page[data-section="communities"] .art-sidebar { display: none !important; }
+.photos-page[data-section="communities"] .art-layout { display: block !important; }
+.photos-page[data-section="communities"] .art-layout > :not(.art-sidebar) { max-width: none !important; width: 100% !important; }
+.comm-grid-shortcut .comm-grid-thumb { display: grid; place-items: center; }
+.comm-sc-ic { width: 78px; height: 78px; border-radius: 24px; display: grid; place-items: center; background: rgba(255,255,255,.22); color: #fff; box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.35); backdrop-filter: blur(4px); transition: transform .25s; }
+.comm-sc-ic svg { width: 42px; height: 42px; }
+.comm-grid-shortcut:hover .comm-sc-ic { transform: scale(1.08) rotate(-4deg); }

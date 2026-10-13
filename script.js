@@ -22079,6 +22079,16 @@ function renderCommunityGridCard(c) {
 window.renderCommunityGridCard = renderCommunityGridCard;
 
 // ריבועי כניסה ל"תמונות" ו"סיפורים" — באותו סגנון כרטיס אחיד
+const COMM_SC_ICONS = {
+  photos: '<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/>',
+  comics: '<path d="M4 5h16v11H9l-5 4z"/><path d="M9 9.5h6M9 12.5h4"/>',
+  stories: '<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5M9 8h6M9 11h6"/>',
+  forums: '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M8.5 12h.01M12 12h.01M15.5 12h.01"/>',
+  friends: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><circle cx="17" cy="9" r="2.6"/><path d="M16 14.2a5 5 0 0 1 5.5 5.3"/>',
+  blind: '<path d="M12 20s-7-4.4-9-8.6C1.6 8.4 3.4 5 6.8 5c2 0 3.3 1.1 5.2 3 1.9-1.9 3.2-3 5.2-3 3.4 0 5.2 3.4 3.8 6.4C19 15.6 12 20 12 20z"/><path d="M7.5 11.5h3M13.5 11.5h3"/>',
+  match: '<path d="M9.5 18S4 14.6 2.6 11.4C1.6 9 3 6.5 5.6 6.5c1.5 0 2.5.8 3.9 2.2"/><path d="M14.5 20s-5.6-3.5-7-6.6C6.4 11 7.8 8.5 10.4 8.5c1.6 0 2.6.9 4.1 2.4 1.5-1.5 2.5-2.4 4.1-2.4 2.6 0 4 2.5 3 4.9C20.2 16.5 14.5 20 14.5 20z"/>',
+  products: '<path d="M3 8h18v4H3z"/><path d="M5 12v8h14v-8M12 8v12"/><path d="M12 8c-1.5-3-5-3.5-5-1.2C7 8 9 8 12 8zM12 8c1.5-3 5-3.5 5-1.2C17 8 15 8 12 8z"/>'
+};
 function communityShortcutsHTML() {
   const findPage = (kind) => {
     if (typeof pages === 'undefined' || !Array.isArray(pages)) return null;
@@ -22087,31 +22097,38 @@ function communityShortcutsHTML() {
     if (kind === 'stories') return pages.find(p => p && (p.id === 'page-stories-text' || (p.title || '') === 'סיפורים'));
     if (kind === 'products') return pages.find(p => p && (p.id === 'page-products-main' || (p.content || '').includes('products-page')));
     if (kind === 'forums') return pages.find(p => p && (p.id === 'page-forums-main' || (p.content || '').includes('forums-page')));
+    if (kind === 'friends') return pages.find(p => p && (p.id === 'page-friends-main' || (p.content || '').includes('friends-page')));
+    if (kind === 'blinddate') return pages.find(p => p && (p.id === 'page-blinddate-main' || (p.content || '').includes('blinddate-page')));
+    if (kind === 'tinder') return pages.find(p => p && (p.id === 'page-tinder-main' || (p.content || '').includes('tinder-page')));
     // comics
     return pages.find(p => p && p.id === 'page-stories-main')
       || pages.find(p => p && (p.title || '') === 'קומיקס')
       || pages.find(p => p && p.id !== 'page-stories-text' && (p.content || '').includes('stories-page') && !(p.content || '').includes('photos-page') && !(p.content || '').includes('photos-stories-feed'));
   };
-  const card = (title, emoji, page, grad) => {
+  const card = (title, emoji, page, grad, sub) => {
+    if (!page) return '';
     const oc = page ? `navigateToPage('${artEsc(page.id)}')` : '';
     return `
       <div class="comm-grid-card comm-grid-shortcut" onclick="${oc}" role="button" tabindex="0">
         <div class="comm-grid-thumb" style="background:${grad};">
-          <span style="font-size:56px; line-height:1;">${emoji}</span>
+          <span class="comm-sc-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${COMM_SC_ICONS[emoji] || ''}</svg></span>
         </div>
         <div class="comm-grid-info">
           <div class="comm-grid-name">${title}</div>
-          <div class="comm-grid-sub">לצפייה בכל ה${title}</div>
+          <div class="comm-grid-sub">${sub || `לצפייה בכל ה${title}`}</div>
           <button class="comm-grid-btn" onclick="event.stopPropagation(); ${oc}">כניסה</button>
         </div>
       </div>
     `;
   };
-  return card('תמונות', '🖼️', findPage('photos'), 'linear-gradient(135deg,#7c3aed,#4c1d95)')
-       + card('קומיקס', '💥', findPage('comics'), 'linear-gradient(135deg,#8b5cf6,#6d28d9)')
-       + card('סיפורים', '📖', findPage('stories'), 'linear-gradient(135deg,#0ea5e9,#0369a1)')
-       + card('פורומים', '💬', findPage('forums'), 'linear-gradient(135deg,#a855f7,#7e22ce)')
-       + card('מוצרים', '🎁', findPage('products'), 'linear-gradient(135deg,#f472b6,#be185d)');
+  return card('תמונות', 'photos', findPage('photos'), 'linear-gradient(135deg,#7c3aed,#4c1d95)')
+       + card('קומיקס', 'comics', findPage('comics'), 'linear-gradient(135deg,#8b5cf6,#6d28d9)')
+       + card('סיפורים', 'stories', findPage('stories'), 'linear-gradient(135deg,#0ea5e9,#0369a1)')
+       + card('פורומים', 'forums', findPage('forums'), 'linear-gradient(135deg,#a855f7,#7e22ce)')
+       + card('חברים', 'friends', findPage('friends'), 'linear-gradient(135deg,#ffd3b8,#ff8a5c)', 'הכירו גולשים חדשים')
+       + card('Blind Date', 'blind', findPage('blinddate'), 'linear-gradient(135deg,#ff8a5c,#d9541f)', 'התאמה אקראית ודייט אמיתי')
+       + card('התאמות', 'match', findPage('tinder'), 'linear-gradient(135deg,#ffb48f,#e8622f)', 'החליקו ומצאו התאמה')
+       + card('מוצרים', 'products', findPage('products'), 'linear-gradient(135deg,#f472b6,#be185d)');
 }
 window.communityShortcutsHTML = communityShortcutsHTML;
 
