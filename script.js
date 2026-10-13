@@ -12843,8 +12843,8 @@ function homeWelcomeHeroHTML() {
         </div>
         <div class="hw-cards">
           ${card('תמונות', 'גלריות מהקהילה', icons.photos, 'homeOpenPhotos()', '#ffffff', 'hw-c1', thumbs.photos)}
-          ${card('קומיקס', 'רצועות ואיורים', icons.comics, "homeOpenSection('page-stories-main')", '#fea91c', 'hw-c2', thumbs.comics)}
-          ${card('סיפורים', 'קצרים ומאמרים', icons.stories, "homeOpenSection('page-stories-text')", '#462d3c', 'hw-c3', thumbs.stories)}
+          ${card('קומיקס', 'רצועות ואיורים', icons.comics, "homeOpenSection('page-stories-main')", '#ffffff', 'hw-c2', thumbs.comics)}
+          ${card('סיפורים', 'קצרים ומאמרים', icons.stories, "homeOpenSection('page-stories-text')", '#ffffff', 'hw-c3', thumbs.stories)}
         </div>
       </div>
     </section>`;

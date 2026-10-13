@@ -10529,3 +10529,15 @@ html body .hw-c3 .hw-card-top { background: var(--plum-2) !important; }
 .shop-basket b { background: var(--plum) !important; color: var(--orange) !important; }
 html body .shop-bar:not(.show) { opacity: 0 !important; pointer-events: none !important; transform: translate(-50%, 320%) !important; }
 html body .shop-bar { transition: transform .25s cubic-bezier(.2,.8,.2,1), opacity .2s ease !important; }
+
+/* רקע חלק — בלי דוגמת נקודות, גם בלבן וגם בשזיף */
+html body { background-image: none !important; }
+html body .apple-nav { background: #462d3c !important; background-image: none !important; }
+/* שלושת הכרטיסים בראש עמוד הבית: צבע אחיד — לבן, כולל החלק העליון, טקסט בשזיף */
+html body .hw-card { background: #ffffff !important; }
+html body .hw-card .hw-card-top,
+html body .hw-c1 .hw-card-top, html body .hw-c2 .hw-card-top, html body .hw-c3 .hw-card-top { background: #ffffff !important; }
+html body .hw-card .hw-card-brand, html body .hw-card .hw-card-foot, html body .hw-card .hw-card-icon,
+html body .hw-c3 .hw-card-brand, html body .hw-c3 .hw-card-foot, html body .hw-c3 .hw-card-icon { color: #462d3c !important; }
+html body .hw-card-img { background: #f4eff2 !important; }
+html body .hw-card-grid i { background: #ece4ea !important; }
