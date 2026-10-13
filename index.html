@@ -15,7 +15,7 @@
   <!-- ספריית localforage לשמירת תמונות -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
   <!-- קישור לקובץ העיצוב החיצוני (עם פרמטר למניעת שמירה במטמון) -->
-  <link rel="stylesheet" href="./style.css?v=1528">
+  <link rel="stylesheet" href="./style.css?v=1529">
 </head>
 <body class="light-mode">
   <!-- שער אישור גיל (Age Gate Overlay) -->
@@ -1146,7 +1146,7 @@
     <div class="cookie-bar-btns">
       <button type="button" class="cookie-btn yes" onclick="cookieChoose('yes')">מאשר/ת</button>
       <button type="button" class="cookie-btn" onclick="cookieChoose('no')">לא מאשר/ת</button>
-      <button type="button" class="cookie-btn ghost" onclick="cookieOpenPolicy()">מדיניות פרטיות</button>
+      <button type="button" class="cookie-btn ghost" onclick="window.openLegal ? openLegal('privacy') : cookieOpenPolicy()">מדיניות פרטיות</button>
     </div>
   </div>
   <div id="cookie-policy" class="cookie-policy" onclick="if(event.target===this) this.style.display='none'">
@@ -1243,7 +1243,7 @@
     try { if (localStorage.getItem('mtab_hidden') === '1') document.documentElement.classList.add('mtab-hidden'); } catch (e) {}
   </script>
   <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
-  <script type="module" src="./script.js?v=1498"></script>
+  <script type="module" src="./script.js?v=1499"></script>
   <script defer src="./a11y.js?v=1"></script>
 </body>
 </html>

@@ -173,7 +173,8 @@ function _analyticsDayKey(d) { d = d || new Date(); return d.getFullYear() + '-'
 function _analyticsMonthKey(d) { d = d || new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); }
 // מי שלחץ "לא מאשר/ת" בבאנר העוגיות — לא נספר בסטטיסטיקות האנונימיות
 function analyticsAllowed() {
-  try { const c = localStorage.getItem('cookie_consent'); return c !== 'no' && c !== 'decline'; } catch (e) { return true; }
+  // הסכמה מפורשת בלבד (חוק הגנת הפרטיות, תיקון 13): נספרים רק מי שלחץ "מאשר/ת"
+  try { const c = localStorage.getItem('cookie_consent'); return c === 'yes' || c === 'accept'; } catch (e) { return false; }
 }
 function trackVisit() {
   if (!analyticsAllowed()) return;
@@ -23502,6 +23503,7 @@ function shopCheckoutHTML() {
     <section class="shop-sec">
       <h2>אימייל לקבלה</h2>
       <label class="shop-field"><input id="shop-email" type="email" dir="ltr" autocomplete="email" placeholder="name@example.com" value="${escHtml(email)}"></label>
+      <label class="shop-terms"><input type="checkbox" id="shop-terms"> <span>קראתי ואני מסכים/ה ל<a href="#" onclick="event.preventDefault(); openLegal('terms')">תנאי השימוש</a> ול<a href="#" onclick="event.preventDefault(); openLegal('refund')">מדיניות הביטול וההחזרים</a>. המחירים כוללים מע״מ.</span></label>
       <div class="shop-secure">${shopIco('<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>')}<span>התשלום מתבצע בדף המאובטח של חברת הסליקה — פרטי האשראי לא עוברים דרכנו</span></div>
     </section>
     <div class="shop-bar show">
@@ -23512,6 +23514,8 @@ function shopCheckoutHTML() {
 function shopPay() {
   const email = ((document.getElementById('shop-email') || {}).value || '').trim();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { if (typeof showCopyToast === 'function') showCopyToast('נא להזין אימייל תקין לקבלה'); const el = document.getElementById('shop-email'); if (el) el.focus(); return; }
+  const terms = document.getElementById('shop-terms');
+  if (terms && !terms.checked) { if (typeof showCopyToast === 'function') showCopyToast('יש לאשר את תנאי השימוש ומדיניות הביטול'); terms.focus(); return; }
   if (typeof trackEvent === 'function') trackEvent('checkout_click');
   if (!SHOP_PAY_URL) { if (typeof showCopyToast === 'function') showCopyToast('חיבור לחברת הסליקה יוגדר בקרוב'); return; }
   const q = new URLSearchParams({ items: [...shopSel].join(','), amount: String(shopTotal()), method: shopMethod });
@@ -25538,6 +25542,16 @@ function buildSiteFooterHTML() {
           ${contentLinks ? `<div class="site-footer-col"><h4>תוכן</h4><ul>${contentLinks}</ul></div>` : ''}
           ${communityLinks ? `<div class="site-footer-col"><h4>קהילה</h4><ul>${communityLinks}</ul></div>` : ''}
           <div class="site-footer-col">
+            <h4>מידע משפטי</h4>
+            <ul>
+              <li><a href="#" onclick="event.preventDefault(); openLegal('terms')">תנאי שימוש</a></li>
+              <li><a href="#" onclick="event.preventDefault(); openLegal('privacy')">מדיניות פרטיות</a></li>
+              <li><a href="#" onclick="event.preventDefault(); openLegal('a11y')">הצהרת נגישות</a></li>
+              <li><a href="#" onclick="event.preventDefault(); openLegal('refund')">ביטולים והחזרים</a></li>
+              <li><a href="#" onclick="event.preventDefault(); openLegal('report')">דיווח והסרת תוכן</a></li>
+            </ul>
+          </div>
+          <div class="site-footer-col">
             <h4>צרו קשר</h4>
             <ul>
               <li><a href="#" onclick="event.preventDefault(); openMessages()">שלחו לנו הודעה</a></li>
@@ -25554,6 +25568,121 @@ function buildSiteFooterHTML() {
       </div>
     </footer>`;
 }
+
+// ==========================================
+// מסמכים משפטיים — עמידה בדין הישראלי
+// (תנאי שימוש, פרטיות לפי חוק הגנת הפרטיות ותיקון 13, הצהרת נגישות לפי תקנות 35 ות"י 5568,
+//  ביטול עסקה לפי חוק הגנת הצרכן סעיף 14ג, דיווח והסרת תוכן)
+// ==========================================
+// פרטי העסק — חובה למלא לפני גבייה (חוק הגנת הצרכן, סעיף 14ג). שדה ריק לא יוצג.
+const SITE_LEGAL = {
+  owner: '',        // שם העסק / בעל האתר
+  bizId: '',        // מספר עוסק / ח.פ
+  address: '',      // כתובת למשלוח הודעות
+  phone: '',        // טלפון
+  email: '',        // אימייל לפניות
+  a11yName: '',     // רכז/ת הנגישות
+  a11yPhone: '',
+  a11yEmail: '',
+  updated: '13.10.2026'
+};
+function legalContactHTML(name, phone, email) {
+  const rows = [name && `<li>שם: ${escHtml(name)}</li>`, phone && `<li>טלפון: <a href="tel:${escHtml(phone)}">${escHtml(phone)}</a></li>`,
+    email && `<li>אימייל: <a href="mailto:${escHtml(email)}">${escHtml(email)}</a></li>`].filter(Boolean).join('');
+  return `<ul>${rows}<li><a href="#" onclick="event.preventDefault(); closeLegal(); openMessages()">הודעה ישירה דרך האתר</a></li></ul>`;
+}
+function legalBizHTML() {
+  const L = SITE_LEGAL;
+  const rows = [L.owner && `<li>${escHtml(L.owner)}</li>`, L.bizId && `<li>מס׳ עוסק / ח.פ: ${escHtml(L.bizId)}</li>`, L.address && `<li>כתובת: ${escHtml(L.address)}</li>`].join('');
+  return (rows ? `<ul>${rows}</ul>` : '') + legalContactHTML('', L.phone, L.email);
+}
+const LEGAL_DOCS = {
+  terms: { title: 'תנאי שימוש', html: () => `
+    <p>השימוש באתר מהווה הסכמה לתנאים אלה. התנאים מנוסחים בלשון זכר מטעמי נוחות בלבד ומיועדים לכל המגדרים.</p>
+    <h3>1. גיל ותוכן למבוגרים</h3>
+    <p>חלקים מהאתר מיועדים לבני 18 ומעלה בלבד ומוסתרים עד לאישור גיל. אסור בהחלט להעלות תוכן שמציג קטינים באופן מיני, תוכן שצולם או מופץ ללא הסכמת המצולמים, או תוכן אינטימי של אדם אחר (חוק למניעת הטרדה מינית, סעיף 3(א)(5א)). תוכן כזה יוסר מיד ויועבר לרשויות.</p>
+    <h3>2. תוכן גולשים</h3>
+    <p>המעלה תוכן מצהיר שהוא בעל הזכויות בו או שיש לו רשות לפרסמו, ושהתוכן אינו פוגע בפרטיות, אינו מהווה לשון הרע ואינו מפר זכויות יוצרים. המעלה נותן לאתר רשות להציג את התוכן באתר, וניתן לבקש את הסרתו בכל עת. האחריות לתוכן היא של מי שפרסם אותו.</p>
+    <h3>3. אסור</h3>
+    <ul><li>הטרדה, איומים, הסתה, גזענות או לשון הרע.</li><li>פרסום פרטים אישיים של אחרים ללא הסכמתם.</li><li>ספאם ופרסום מסחרי ללא הסכמה (חוק התקשורת, סעיף 30א).</li><li>התחזות, הונאה, או ניסיון לפגוע באבטחת האתר.</li></ul>
+    <p>האתר רשאי להסיר תוכן ולחסום משתמשים שמפרים את התנאים.</p>
+    <h3>4. רכישות</h3>
+    <p>רכישת פיצ׳רים באתר כפופה ל<a href="#" onclick="event.preventDefault(); openLegal('refund')">מדיניות הביטול וההחזרים</a>. המחירים בשקלים וכוללים מע״מ. התשלום מתבצע אצל חברת סליקה מאובטחת.</p>
+    <h3>5. אחריות</h3>
+    <p>האתר ניתן כפי שהוא (AS IS). אנו עושים מאמץ שהאתר יפעל ללא תקלות, אך איננו אחראים לנזק שנגרם משימוש בתוכן שפרסמו גולשים או מקשר בין גולשים.</p>
+    <h3>6. דין וסמכות</h3>
+    <p>על התנאים חל הדין הישראלי בלבד, וסמכות השיפוט נתונה לבתי המשפט המוסמכים בישראל.</p>
+    <h3>פרטי בעל האתר</h3>${legalBizHTML()}` },
+  privacy: { title: 'מדיניות פרטיות', html: () => `
+    <p>מדיניות זו מסבירה איזה מידע נאסף, למה, ומה הזכויות שלכם, בהתאם לחוק הגנת הפרטיות, התשמ״א-1981 (כולל תיקון 13) ותקנות אבטחת מידע. אינכם חייבים למסור מידע על פי חוק — אבל בלי חלק מהמידע לא ניתן להשתמש בחלק מהשירותים (למשל חשבון או הודעות).</p>
+    <h3>איזה מידע נאסף ולמה</h3>
+    <ul>
+      <li><b>חשבון:</b> שם, אימייל (בהתחברות עם גוגל), שם משתמש, ופרטים שתבחרו להוסיף לפרופיל — לצורך ניהול החשבון והצגת הפרופיל.</li>
+      <li><b>תוכן שהעליתם:</b> תמונות, טקסטים, תגובות והודעות — כדי להציג ולשמור אותם.</li>
+      <li><b>מיקום:</b> רק אם הפעלתם מיקום, בקירוב של כ-1 ק״מ, כדי להציג מרחק. ניתן לכבות בכל רגע.</li>
+      <li><b>העדפות בדפדפן:</b> תצוגה, שפה, נגישות, פריטים שמורים והיסטוריית צפייה — נשמרות במכשיר שלכם בלבד, ומשמשות גם להמלצות על גלריות.</li>
+      <li><b>סטטיסטיקה:</b> ספירת ביקורים ופעולות באופן אנונימי — רק אם אישרתם עוגיות.</li>
+      <li><b>תשלום:</b> אימייל לקבלה. פרטי האשראי נמסרים ישירות לחברת הסליקה ואינם נשמרים אצלנו.</li>
+    </ul>
+    <h3>עם מי המידע משותף</h3>
+    <p>המידע נשמר אצל ספקי תשתית: Google Firebase (מסד נתונים והתחברות) ו-Vercel (אחסון האתר), שעשויים לאחסן מידע מחוץ לישראל בהתאם לתקנות העברת מידע לחו״ל. המידע לא נמכר ולא מועבר לצד שלישי לשיווק. מידע יימסר לרשויות רק לפי דרישה חוקית.</p>
+    <h3>עוגיות</h3>
+    <p>עוגיות חיוניות לתפעול האתר פועלות תמיד. עוגיות סטטיסטיקה פועלות רק אחרי שלחצתם "מאשר/ת", ואפשר לשנות את הבחירה <a href="#" onclick="event.preventDefault(); closeLegal(); try{localStorage.removeItem('cookie_consent')}catch(e){}; maybeShowCookieBanner()">כאן</a>.</p>
+    <h3>הזכויות שלכם</h3>
+    <ul><li>לעיין במידע שנשמר עליכם (סעיף 13 לחוק).</li><li>לבקש לתקן או למחוק מידע (סעיף 14).</li><li>לבקש להסיר אתכם מדיוור (סעיף 17ו).</li></ul>
+    <p>נענה לבקשה תוך 30 יום. לפנייה:</p>${legalContactHTML('', SITE_LEGAL.phone, SITE_LEGAL.email)}
+    <h3>אבטחה ושמירה</h3>
+    <p>הגישה למידע מוגבלת בכללי אבטחה, החיבור לאתר מוצפן (HTTPS), ומידע נשמר רק כל עוד הוא נחוץ או עד שתבקשו למחוק. אירוע אבטחה חמור ידווח לרשות להגנת הפרטיות כנדרש.</p>
+    <p class="legal-upd">עודכן לאחרונה: ${SITE_LEGAL.updated}</p>` },
+  a11y: { title: 'הצהרת נגישות', html: () => `
+    <p>אנו רואים חשיבות בהנגשת האתר לאנשים עם מוגבלות, בהתאם לחוק שוויון זכויות לאנשים עם מוגבלות, התשנ״ח-1998, ותקנות שוויון זכויות (התאמות נגישות לשירות), התשע״ג-2013.</p>
+    <h3>רמת הנגישות</h3>
+    <p>האתר הונגש בהתאם לתקן הישראלי ת״י 5568, המבוסס על הנחיות WCAG 2.0 ברמה AA, ונבדק בדפדפנים Chrome, Safari ו-Firefox ובמובייל.</p>
+    <h3>מה הונגש</h3>
+    <ul><li>תפריט נגישות: הגדלת טקסט, ניגודיות, הדגשת קישורים, עצירת אנימציות ועוד.</li><li>ניווט מלא במקלדת ותגיות ARIA לקוראי מסך.</li><li>תמיכה מלאה בעברית ובכיוון ימין-לשמאל.</li><li>טקסט חלופי לתמונות ולכפתורי אייקון.</li></ul>
+    <p><a href="#" onclick="event.preventDefault(); closeLegal(); document.querySelector('.a11y-launcher')?.click()">פתיחת תפריט הנגישות</a></p>
+    <h3>חלקים שאינם נגישים במלואם</h3>
+    <p>תוכן שמעלים גולשים (תמונות וטקסטים) עשוי לחסור טקסט חלופי, ותוכן מוטמע מאתרים חיצוניים (X, אינסטגרם וכדומה) אינו בשליטתנו. אנו פועלים לשפר זאת.</p>
+    <h3>רכז/ת נגישות — נתקלתם בבעיה?</h3>
+    <p>נשמח לשמוע ולתקן. נא לציין את הבעיה, העמוד ואמצעי טכנולוגי שבו השתמשתם.</p>
+    ${legalContactHTML(SITE_LEGAL.a11yName, SITE_LEGAL.a11yPhone, SITE_LEGAL.a11yEmail || SITE_LEGAL.email)}
+    <p class="legal-upd">ההצהרה עודכנה: ${SITE_LEGAL.updated}</p>` },
+  refund: { title: 'ביטולים והחזרים', html: () => `
+    <p>בהתאם לחוק הגנת הצרכן, התשמ״א-1981 ותקנות הגנת הצרכן (ביטול עסקה), התשע״א-2010:</p>
+    <ul>
+      <li>ניתן לבטל רכישה תוך <b>14 יום</b> מיום העסקה או מקבלת המסמך המאשר אותה — המאוחר מביניהם.</li>
+      <li>בביטול יוחזר הסכום תוך 14 יום, בניכוי דמי ביטול של 5% מהמחיר או 100 ₪ — הנמוך מביניהם.</li>
+      <li>אם כבר נעשה שימוש בפיצ׳ר, ייתכן חיוב יחסי בעד התקופה שבה ניתן השירות.</li>
+      <li>אם הפיצ׳ר לא סופק או שהיה פגם — החזר מלא ללא דמי ביטול.</li>
+      <li>אזרחים ותיקים (65+), אנשים עם מוגבלות ועולים חדשים — זכות ביטול מורחבת של 4 חודשים בעסקאות שכללו שיחה, כקבוע בחוק.</li>
+    </ul>
+    <p>הודעת ביטול ניתן למסור בהודעה באתר, באימייל או בטלפון, וכן בכתב לכתובת העסק:</p>${legalBizHTML()}
+    <p>אין חיוב חודשי ואין חידוש אוטומטי — כל פיצ׳ר נרכש בנפרד.</p>` },
+  report: { title: 'דיווח והסרת תוכן', html: () => `
+    <p>נתקלתם בתוכן פוגעני, תוכן שמפר את הפרטיות שלכם, תמונה שלכם שפורסמה ללא הסכמה, לשון הרע או הפרת זכויות יוצרים? דווחו לנו ונטפל בהקדם.</p>
+    <ul><li>קישור לתוכן או תיאור שלו.</li><li>מה הבעיה (ובהפרת זכויות יוצרים — מי בעל הזכויות).</li><li>דרך ליצור איתכם קשר.</li></ul>
+    <p><b>תוכן אינטימי שפורסם ללא הסכמה או תוכן שמערב קטינים יוסר מיד</b> ויועבר לרשויות. ניתן לפנות גם למוקד 105 של המטה הלאומי להגנה על ילדים ברשת.</p>
+    <p><button type="button" class="legal-btn" onclick="closeLegal(); openMessages()">שליחת דיווח למנהל האתר</button></p>${SITE_LEGAL.email ? `<p>או באימייל: <a href="mailto:${escHtml(SITE_LEGAL.email)}">${escHtml(SITE_LEGAL.email)}</a></p>` : ''}` }
+};
+function openLegal(key) {
+  const doc = LEGAL_DOCS[key]; if (!doc) return;
+  let ov = document.getElementById('legal-modal');
+  if (!ov) {
+    ov = document.createElement('div'); ov.id = 'legal-modal'; ov.className = 'legal-modal';
+    ov.addEventListener('click', e => { if (e.target === ov) closeLegal(); });
+    document.body.appendChild(ov);
+  }
+  const tabs = Object.keys(LEGAL_DOCS).map(k => `<button type="button" class="legal-tab${k === key ? ' on' : ''}" onclick="openLegal('${k}')">${LEGAL_DOCS[k].title}</button>`).join('');
+  ov.innerHTML = `<div class="legal-card" role="dialog" aria-modal="true" aria-labelledby="legal-h">
+    <button type="button" class="legal-x" onclick="closeLegal()" aria-label="סגירה">✕</button>
+    <h2 id="legal-h">${doc.title}</h2><nav class="legal-tabs">${tabs}</nav>
+    <div class="legal-body">${doc.html()}</div></div>`;
+  ov.style.display = 'flex';
+  ov.querySelector('.legal-x').focus();
+}
+function closeLegal() { const ov = document.getElementById('legal-modal'); if (ov) ov.style.display = 'none'; }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLegal(); });
+window.openLegal = openLegal; window.closeLegal = closeLegal;
 
 // מוסיף את הפוטר בסוף התוכן אחרי כל רינדור של עמוד (renderPage מחליף את innerHTML)
 function ensureSiteFooter() {
