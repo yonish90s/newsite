@@ -10785,3 +10785,16 @@ html body .apple-nav .notif-bell { background: #fbf4ee !important; }
   .psf-btn.psf-ic b { position: absolute; top: -6px; left: -6px; }
   .psf-sort { min-width: 0; white-space: nowrap; }
 }
+/* סרגל תחתון: כפתור פלוס באמצע להעלאה (במקום "העלה תמונה") */
+.mtabs { grid-template-columns: repeat(8, minmax(0, 1fr)) !important; }
+.mtab-plus { display: grid !important; place-items: center; }
+.mtab-plus-ic { width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; background: linear-gradient(135deg, #ffa37d, #e8622f); color: #fff; box-shadow: 0 8px 18px -6px rgba(232,98,47,.6); transform: translateY(-6px); transition: transform .15s; }
+.mtab-plus-ic svg { width: 24px; height: 24px; }
+.mtab-plus:active .mtab-plus-ic { transform: translateY(-6px) scale(.92); }
+@media (max-width: 768px) {
+  .photos-page[data-section="photos"] .art-sidebar-right .cta-add-btn { display: none !important; }
+}
+@media (max-width: 768px) {
+  .photos-page[data-section="photos"] .art-sidebar-right { display: none !important; }
+}
+@media (max-width: 768px) { .content-switch { position: relative; top: auto; } }
