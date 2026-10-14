@@ -15335,7 +15335,6 @@ function buildPhotosPage(albums, section) {
               <div>
                 <h3 style="margin:0; font-size:18px; font-weight:900; color:#2b2522;">${sectionTitle}</h3>
               </div>
-              ${(!section || section === 'photos') ? photoSizeAveragesHTML(albums) : ''}
             </div>
             <div class="art-rows photo-collapsible expanded" id="photo-row-1">${row1HTML}</div>
             ${photoRowMoreBtn(newestAlbums.length, 'photo-row-1')}
