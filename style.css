@@ -10776,3 +10776,12 @@ html body .apple-nav .notif-bell { background: #fbf4ee !important; }
 @media (max-width: 768px) {
   .stories-page .view-toggles:not(:has(.tgl:not(.tgl-desktop-only))) { display: none !important; }
 }
+@media (max-width: 768px) {
+  /* כל הכלים באותה שורה עם המיון — אייקונים בלבד; שורת המתגים הישנה מוסתרת */
+  .photos-page[data-section="photos"] .view-toggles { display: none !important; }
+  .psf-btns { gap: 5px; }
+  .psf-btn.psf-ic { width: 36px; padding: 0; justify-content: center; position: relative; color: #5d534d; }
+  .psf-btn.psf-ic.on { color: #d9541f; border-color: #ff8a5c; background: #fff4ee; }
+  .psf-btn.psf-ic b { position: absolute; top: -6px; left: -6px; }
+  .psf-sort { min-width: 0; white-space: nowrap; }
+}

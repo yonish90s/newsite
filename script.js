@@ -21941,6 +21941,12 @@ function photoCatCirclesHTML(allAlbums) {
   };
   return `<div class="pcc-row">${['הכל', ...PHOTO_BAR_CATEGORIES].map(circle).join('')}</div>`;
 }
+// כפתור אייקון דו-מצבי (מאומתים / רק טקסט / מיקום) — מחליף מצב ומעדכן מיד
+function psfIcon(key, on, label, action, path) {
+  return `<button type="button" class="psf-btn psf-ic${on ? ' on' : ''}" aria-pressed="${on}" aria-label="${label}" title="${label}"
+    onclick="this.classList.toggle('on'); this.setAttribute('aria-pressed', this.classList.contains('on')); ${action}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${path}</svg></button>`;
+}
 // מובייל: שורת מיון + תגיות + סינון
 function photoSortFilterHTML() {
   const cur = (typeof currentPhotoGeneralFilter !== 'undefined' && currentPhotoGeneralFilter) || 'הכל';
@@ -21952,10 +21958,14 @@ function photoSortFilterHTML() {
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
     </label>
     <div class="psf-btns">
-      <button type="button" class="psf-btn${photoHashtag ? ' on' : ''}" onclick="openHashtagSheet()" aria-label="תגיות">#${photoHashtag ? escHtml(photoHashtag) : ''}</button>
-      <button type="button" class="psf-btn" onclick="openFilterSheet()">
+      ${psfIcon('verified', photoVerifiedOnly, 'משתמשים מאומתים', "photoToggleVerified(this.classList.contains('on'))", '<path d="M12 2.5l2.4 1.8 3 .1.9 2.8 2.3 1.9-1 2.9 1 2.9-2.3 1.9-.9 2.8-3 .1L12 21.5l-2.4-1.8-3-.1-.9-2.8-2.3-1.9 1-2.9-1-2.9 2.3-1.9.9-2.8 3-.1z"/><path d="M8.5 12l2.4 2.4 4.6-4.8"/>')}
+      ${psfIcon('text', !photoImagesMode, 'רק טקסט', "photoToggleTextOnly(this.classList.contains('on'))", '<path d="M5 6h14M5 10h14M5 14h10M5 18h7"/>')}
+      ${psfIcon('loc', !!userMapMe, 'פתח מיקום', "photoToggleLocation(this.classList.contains('on'))", '<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>')}
+      <button type="button" class="psf-btn psf-ic${photoHashtag ? ' on' : ''}" onclick="openHashtagSheet()" aria-label="תגיות" title="תגיות">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 3 7 21M17 3l-2 18M4 8.5h17M3 15.5h17"/></svg></button>
+      <button type="button" class="psf-btn psf-ic" onclick="openFilterSheet()" aria-label="סינון" title="סינון">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
-        סינון${n ? ` <b>${n}</b>` : ''}</button>
+        ${n ? `<b>${n}</b>` : ''}</button>
     </div>
   </div>`;
 }
