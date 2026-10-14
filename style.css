@@ -10735,3 +10735,69 @@ html body .apple-nav .notif-bell { background: #fbf4ee !important; }
 .comm-sc-ic { width: 78px; height: 78px; border-radius: 24px; display: grid; place-items: center; background: rgba(255,255,255,.22); color: #fff; box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.35); backdrop-filter: blur(4px); transition: transform .25s; }
 .comm-sc-ic svg { width: 42px; height: 42px; }
 .comm-grid-shortcut:hover .comm-sc-ic { transform: scale(1.08) rotate(-4deg); }
+
+/* ===== מובייל: עמוד תמונות בסגנון חנות (עיגולי קטגוריות, מיון/סינון, גריד 2 עמודות) ===== */
+.pm-head { display: none; }
+@media (max-width: 768px) {
+  .pm-head { display: block; margin: 0 -4px 6px; }
+  /* מעבר תמונות / סיפורים / קומיקס */
+  .content-switch { display: flex; gap: 4px; padding: 4px; margin: 0 4px 12px; background: #f6efe9; border-radius: 999px; position: sticky; top: 64px; z-index: 30; box-shadow: 0 4px 14px -10px rgba(43,37,34,.4); }
+  .cs-tab { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; height: 40px; border: 0; border-radius: 999px; background: transparent; color: #8a7f78; font: inherit; font-size: 14.5px; font-weight: 800; cursor: pointer; transition: background .2s, color .2s; }
+  .cs-tab svg { width: 18px; height: 18px; flex: none; }
+  .cs-tab.on { background: #fff; color: #2b2522; box-shadow: 0 2px 8px rgba(43,37,34,.12); }
+  .cs-tab.on svg { color: #ff8a5c; }
+  /* עיגולי קטגוריות */
+  .pcc-row { display: flex; gap: 14px; overflow-x: auto; padding: 4px 8px 0; scrollbar-width: none; border-bottom: 1px solid #f0e8e1; }
+  .pcc-row::-webkit-scrollbar { display: none; }
+  .pcc { flex: none; display: flex; flex-direction: column; align-items: center; gap: 6px; width: 70px; padding: 0 0 10px; border: 0; background: none; font: inherit; cursor: pointer; position: relative; }
+  .pcc-ring { width: 62px; height: 62px; border-radius: 50%; overflow: hidden; display: grid; place-items: center; background: #f6efe9; box-shadow: inset 0 0 0 1px rgba(43,37,34,.06); }
+  .pcc-ring img { width: 100%; height: 100%; object-fit: cover; }
+  .pcc-ring img.blur { filter: blur(10px); transform: scale(1.2); }
+  .pcc-ring > span { font-size: 22px; font-weight: 900; color: #d9541f; }
+  .pcc-name { font-size: 12.5px; font-weight: 700; color: #5d534d; white-space: nowrap; max-width: 70px; overflow: hidden; text-overflow: ellipsis; }
+  .pcc.on .pcc-name { color: #2b2522; font-weight: 900; }
+  .pcc.on .pcc-ring { box-shadow: 0 0 0 2.5px #fff, 0 0 0 4.5px #ff8a5c; }
+  .pcc.on::after { content: ''; position: absolute; bottom: -1px; left: 12px; right: 12px; height: 2.5px; border-radius: 2px; background: #ff8a5c; }
+  /* מיון + סינון */
+  .psf-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 8px 4px; }
+  .psf-sort { position: relative; display: flex; align-items: center; gap: 4px; font-size: 14px; font-weight: 800; color: #2b2522; }
+  .psf-sort select { appearance: none; -webkit-appearance: none; border: 0; background: transparent; font: inherit; font-weight: 800; color: #2b2522; padding: 4px 0 4px 20px; cursor: pointer; }
+  .psf-sort svg { width: 16px; height: 16px; position: absolute; left: 0; pointer-events: none; }
+  .psf-btns { display: flex; gap: 6px; }
+  .psf-btn { display: flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px; border-radius: 10px; border: 1px solid #eadfd6; background: #fff; color: #2b2522; font: inherit; font-size: 14px; font-weight: 800; cursor: pointer; }
+  .psf-btn svg { width: 18px; height: 18px; }
+  .psf-btn b { min-width: 18px; height: 18px; border-radius: 9px; background: #ff8a5c; font-size: 11px; display: grid; place-items: center; padding: 0 4px; }
+  .psf-btn.on { border-color: #ff8a5c; background: #fff4ee; }
+  /* מסתירים את מה שהוחלף: ריבועי הקטגוריות וכפתורי #/סינון הישנים */
+  .photos-page[data-section="photos"] .pcat-tiles,
+  .photos-page[data-section="photos"] .view-toggles .m-tools { display: none !important; }
+
+  /* גריד 2 עמודות במקום קרוסלה */
+  .photos-page[data-section="photos"]:not(.text-mode) .art-rows {
+    display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 14px 10px !important;
+    overflow: visible !important; scroll-snap-type: none !important; direction: rtl !important;
+  }
+  .photos-page[data-section="photos"]:not(.text-mode) .art-row {
+    flex: none !important; width: auto !important; min-width: 0; display: flex !important; flex-direction: column !important;
+    border: 0 !important; box-shadow: none !important; background: transparent !important; padding: 0 !important; border-radius: 0 !important;
+  }
+  .photos-page[data-section="photos"]:not(.text-mode) .art-row-img-container { order: -1; padding: 0 !important; width: 100% !important; }
+  .photos-page[data-section="photos"]:not(.text-mode) .art-row-img-wrap { aspect-ratio: 3 / 4 !important; border-radius: 14px !important; background: #f6efe9; width: 100% !important; height: auto !important; }
+  .photos-page[data-section="photos"]:not(.text-mode) .art-row-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
+  .photos-page[data-section="photos"]:not(.text-mode) .art-heart-overlay { top: 8px !important; left: 8px !important; right: auto !important; width: 32px !important; height: 32px !important; }
+  .photos-page[data-section="photos"]:not(.text-mode) :is(.art-zoom-btn, .photo-mini-thumbs, .photo-mini-thumbs-spacer, .photo-nav-overlay, .photo-card-links, .photo-count-badge) { display: none !important; }
+  .photos-page[data-section="photos"]:not(.text-mode) .photo-card-info { padding: 8px 2px 0 !important; text-align: right; }
+  .photos-page[data-section="photos"]:not(.text-mode) .photo-card-info h3 { font-size: 13.5px !important; line-height: 1.35 !important; margin: 0 0 3px !important; font-weight: 700 !important; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 0 !important; }
+  .photos-page[data-section="photos"]:not(.text-mode) .art-row-meta { font-size: 12px !important; color: #8a7f78 !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0 !important; }
+  .photos-page[data-section="photos"]:not(.text-mode) .pv-meta { font-size: 11.5px !important; }
+  .photos-page[data-section="photos"]:not(.text-mode) .photo-section-row { padding: 12px 8px !important; }
+}
+@media (max-width: 768px) {
+  .photos-page[data-section="photos"]:not(.text-mode) .art-rows .art-row .photo-card-links { display: none !important; }
+  .photos-page[data-section="photos"]:not(.text-mode) .art-rows .art-row .art-row-meta > :not(.photo-author-link) { display: none !important; }
+  .photos-page[data-section="photos"]:not(.text-mode) .art-rows .art-row .pv-meta ~ span { display: none !important; }
+  .photos-page[data-section="photos"]:not(.text-mode) .art-rows .art-row .photo-card-info > div { margin: 2px 0 0 !important; padding: 0 !important; border: 0 !important; }
+}
+@media (max-width: 768px) {
+  .stories-page .view-toggles:not(:has(.tgl:not(.tgl-desktop-only))) { display: none !important; }
+}

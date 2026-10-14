@@ -6875,6 +6875,7 @@ function buildStoriesPage(stories, storyKind) {
       <div class="art-featured-grid">${featuredHTML}</div>
       <div class="art-layout">
         <div class="art-main">
+          <div class="pm-head">${contentSwitchHTML(storyKind)}</div>
           <div class="art-search-wrap">
             <input type="text" class="art-search" placeholder="🔍 חיפוש ${kindLabel}..." oninput="storySearch(this.value)">
           </div>
@@ -15297,6 +15298,7 @@ function buildPhotosPage(albums, section) {
       <div class="art-featured-grid">${featuredHTML}</div>
       <div class="art-layout">
         <div class="art-main">
+          ${section === 'photos' ? `<div class="pm-head">${contentSwitchHTML('photos')}${photoCatCirclesHTML(_tileAlbums)}${photoSortFilterHTML()}</div>` : ''}
           <div class="art-search-wrap">
             <input type="text" class="art-search" placeholder="${searchPlaceholder}" oninput="photoSearch(this.value)">
           </div>
@@ -21894,6 +21896,70 @@ function setSectionCategoryFilter(section, cat) {
 }
 window.setSectionCategoryFilter = setSectionCategoryFilter;
 
+// ===== מובייל: מעבר מהיר בין תמונות / סיפורים / קומיקס =====
+function contentSwitchHTML(active) {
+  const ic = {
+    photos: '<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/>',
+    stories: '<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5M9 8h6M9 11h6"/>',
+    comics: '<path d="M4 5h16v11H9l-5 4z"/><path d="M9 9.5h6M9 12.5h4"/>'
+  };
+  const tabs = [['photos', 'תמונות'], ['stories', 'סיפורים'], ['comics', 'קומיקס']].map(([k, label]) => {
+    const pg = commFindPage(k);
+    if (!pg) return '';
+    return `<button type="button" class="cs-tab${active === k ? ' on' : ''}" ${active === k ? 'aria-current="page"' : `onclick="navigateToPage('${artEsc(pg.id)}')"`}>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${ic[k]}</svg><span>${label}</span></button>`;
+  }).join('');
+  return `<nav class="content-switch" aria-label="מעבר בין סוגי תוכן">${tabs}</nav>`;
+}
+window.contentSwitchHTML = contentSwitchHTML;
+
+// התאמת גלריה לקטגוריה (משותף לריבועים ולעיגולים)
+function photoCatMatch(a, cat) {
+  if (cat === 'הכל') return true;
+  const c = a.category || '';
+  const hay = `${a.title || ''} ${a.summary || ''} ${a.desc || ''} ${c}`;
+  if (cat === 'לעסקים') return c.includes('עסק') || hay.includes('עסק');
+  if (cat === 'כללי') return !(c.includes('עסק') || hay.includes('עסק'));
+  return c === cat || hay.includes(cat);
+}
+// מובייל: הקטגוריות כעיגולים עם תמונת שער מהקטגוריה (כמו בחנויות אופנה)
+function photoCatCirclesHTML(allAlbums) {
+  const active = getSectionCategoryFilter('photos');
+  const list = (Array.isArray(allAlbums) ? allAlbums : []).filter(a => a && a.approved !== false);
+  const adultOk = (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('age_verified') === 'true');
+  const cover = (cat) => {
+    const inCat = list.filter(a => photoCatMatch(a, cat));
+    const pick = inCat.find(a => !a.isAdult && ((a.images && a.images[0]) || a.image)) || inCat.find(a => (a.images && a.images[0]) || a.image);
+    if (!pick) return null;
+    return { src: (pick.images && pick.images[0]) || pick.image, blur: !!pick.isAdult && !adultOk };
+  };
+  const circle = (cat) => {
+    const cv = cover(cat);
+    const inner = cv ? `<img src="${escHtml(cv.src)}" alt="" loading="lazy"${cv.blur ? ' class="blur"' : ''}>` : `<span>${escHtml(String(cat).charAt(0))}</span>`;
+    return `<button type="button" class="pcc${active === cat ? ' on' : ''}" onclick="setSectionCategoryFilter('photos','${artEsc(cat)}')">
+      <span class="pcc-ring">${inner}</span><span class="pcc-name">${escHtml(cat)}</span></button>`;
+  };
+  return `<div class="pcc-row">${['הכל', ...PHOTO_BAR_CATEGORIES].map(circle).join('')}</div>`;
+}
+// מובייל: שורת מיון + תגיות + סינון
+function photoSortFilterHTML() {
+  const cur = (typeof currentPhotoGeneralFilter !== 'undefined' && currentPhotoGeneralFilter) || 'הכל';
+  const opts = [['הכל', 'מומלץ'], ['האחרונים', 'חדש ביותר'], ['הפופולארים', 'הכי פופולרי'], ['הישנים', 'הכי ישן']];
+  const n = photoActiveFilterCount();
+  return `<div class="psf-row">
+    <label class="psf-sort"><span>מיון:</span>
+      <select onchange="photoSetFilter('general', this.value)" aria-label="מיון">${opts.map(([v, l]) => `<option value="${v}"${cur === v ? ' selected' : ''}>${l}</option>`).join('')}</select>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+    </label>
+    <div class="psf-btns">
+      <button type="button" class="psf-btn${photoHashtag ? ' on' : ''}" onclick="openHashtagSheet()" aria-label="תגיות">#${photoHashtag ? escHtml(photoHashtag) : ''}</button>
+      <button type="button" class="psf-btn" onclick="openFilterSheet()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
+        סינון${n ? ` <b>${n}</b>` : ''}</button>
+    </div>
+  </div>`;
+}
+
 // עמוד התמונות: הקטגוריות כריבועים (שם + מספר גלריות, בלי תמונה). לחיצה מסננת לפי הקטגוריה.
 function photoCategoryTilesHTML(allAlbums) {
   const active = getSectionCategoryFilter('photos');
@@ -22089,8 +22155,7 @@ const COMM_SC_ICONS = {
   match: '<path d="M9.5 18S4 14.6 2.6 11.4C1.6 9 3 6.5 5.6 6.5c1.5 0 2.5.8 3.9 2.2"/><path d="M14.5 20s-5.6-3.5-7-6.6C6.4 11 7.8 8.5 10.4 8.5c1.6 0 2.6.9 4.1 2.4 1.5-1.5 2.5-2.4 4.1-2.4 2.6 0 4 2.5 3 4.9C20.2 16.5 14.5 20 14.5 20z"/>',
   products: '<path d="M3 8h18v4H3z"/><path d="M5 12v8h14v-8M12 8v12"/><path d="M12 8c-1.5-3-5-3.5-5-1.2C7 8 9 8 12 8zM12 8c1.5-3 5-3.5 5-1.2C17 8 15 8 12 8z"/>'
 };
-function communityShortcutsHTML() {
-  const findPage = (kind) => {
+function commFindPage(kind) {
     if (typeof pages === 'undefined' || !Array.isArray(pages)) return null;
     if (kind === 'photos') return pages.find(p => p && p.id === 'page-photos-main')
       || pages.find(p => p && ((p.content || '').includes('data-section="photos"') || (p.title || '').includes('תמונות')));
@@ -22104,7 +22169,11 @@ function communityShortcutsHTML() {
     return pages.find(p => p && p.id === 'page-stories-main')
       || pages.find(p => p && (p.title || '') === 'קומיקס')
       || pages.find(p => p && p.id !== 'page-stories-text' && (p.content || '').includes('stories-page') && !(p.content || '').includes('photos-page') && !(p.content || '').includes('photos-stories-feed'));
-  };
+}
+window.commFindPage = commFindPage;
+
+function communityShortcutsHTML() {
+  const findPage = commFindPage;
   const card = (title, emoji, page, grad, sub) => {
     if (!page) return '';
     const oc = page ? `navigateToPage('${artEsc(page.id)}')` : '';
