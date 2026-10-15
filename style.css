@@ -10910,3 +10910,4 @@ html body .co .co-method > * { margin: 0 !important; }
   .srail-me { margin-top: auto; height: auto; padding: 8px 0; display: flex; flex-direction: column; gap: 4px; font: inherit; font-size: 12px; font-weight: 700; }
   .srail-me svg { width: 28px; height: 28px; }
 }
+.mtabs { grid-template-columns: repeat(5, minmax(0, 1fr)) !important; max-width: 360px !important; }
