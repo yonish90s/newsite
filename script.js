@@ -23725,40 +23725,65 @@ function shopListHTML() {
 }
 function shopCheckoutHTML() {
   const items = shopItems();
-  const methods = [['card', 'כרטיס אשראי', '<rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M2 10h20M6 15h4"/>'], ['bit', 'Bit', '<rect x="6" y="2" width="12" height="20" rx="3"/><path d="M11 18h2"/>'], ['apple', 'Apple Pay', '<path d="M15.5 3c-1 .1-2.2.8-2.8 1.6-.6.7-1.1 1.8-.9 2.8 1.1 0 2.2-.6 2.8-1.4.6-.8 1-1.9.9-3zM12 8.5c-1.2 0-2.2-.7-3.3-.7-1.9 0-3.7 1.6-3.7 4.6 0 3.6 2.6 8.1 4.4 8.1 1 0 1.5-.6 2.6-.6s1.5.6 2.6.6c1.4 0 3-2.6 3.6-4.4-1.6-.7-2.4-2.2-2.4-3.8 0-1.4.8-2.6 1.9-3.3-.8-1-2-1.6-3.2-1.6-1.1 0-1.8.7-2.5.7z"/>']];
-  const email = (auth.currentUser && auth.currentUser.email && !/@users\.example\.com$/.test(auth.currentUser.email)) ? auth.currentUser.email : '';
+  const total = shopTotal();
+  const vat = Math.round(total * 18 / 118 * 100) / 100; // מע"מ 18% כלול במחיר
+  const logos = {
+    card: '<span class="co-logo visa">VISA</span><span class="co-logo mc"><i></i><i></i></span>',
+    bit: '<span class="co-logo bit">bit</span>',
+    apple: '<span class="co-logo apple"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 3c-1 .1-2.2.8-2.8 1.6-.6.7-1.1 1.8-.9 2.8 1.1 0 2.2-.6 2.8-1.4.6-.8 1-1.9.9-3zM12 8.5c-1.2 0-2.2-.7-3.3-.7-1.9 0-3.7 1.6-3.7 4.6 0 3.6 2.6 8.1 4.4 8.1 1 0 1.5-.6 2.6-.6s1.5.6 2.6.6c1.4 0 3-2.6 3.6-4.4-1.6-.7-2.4-2.2-2.4-3.8 0-1.4.8-2.6 1.9-3.3-.8-1-2-1.6-3.2-1.6-1.1 0-1.8.7-2.5.7z"/></svg>Pay</span>'
+  };
+  const methods = [['card', 'כרטיס אשראי'], ['bit', 'Bit'], ['apple', 'Apple Pay']];
+  const u = auth.currentUser;
+  const email = (u && u.email && !/@users\.example\.com$/.test(u.email)) ? u.email : '';
+  const registered = u && !u.isAnonymous;
   return `
     ${shopTopHTML('תשלום', "shopGo('list')")}
-    <section class="shop-sec">
-      <h2>ההזמנה שלך</h2>
-      ${items.map(f => `<div class="shop-line">
-          <span class="shop-line-name">${escHtml(f.title)}</span>
-          <span class="shop-item-price">${shopMoney(f.price)}</span>
-          <button type="button" class="shop-x" onclick="shopRemove('${f.id}')" aria-label="הסרת ${escHtml(f.title)}">✕</button>
-        </div>`).join('')}
-      <div class="shop-total"><span>סה״כ</span><b>${shopMoney(shopTotal())}</b></div>
-      <div class="shop-note">תשלום חד־פעמי · בלי מנוי ובלי חיובים חוזרים</div>
-    </section>
-    <section class="shop-sec">
-      <h2>אמצעי תשלום</h2>
-      ${methods.map(([id, label, ic]) => `<button type="button" class="shop-item shop-method${shopMethod === id ? ' on' : ''}" data-m="${id}" onclick="shopSetMethod('${id}')">
-          <span class="shop-radio" aria-hidden="true"></span>
-          <span class="shop-item-txt"><b>${label}</b></span>
-          <span class="shop-method-ic">${shopIco(ic)}</span>
-        </button>`).join('')}
-    </section>
-    ${shopCardHTML()}
-    <section class="shop-sec">
-      <h2>אימייל לקבלה</h2>
-      <label class="shop-field"><input id="shop-email" type="email" dir="ltr" autocomplete="email" placeholder="name@example.com" value="${escHtml(email)}"></label>
-      <label class="shop-terms"><input type="checkbox" id="shop-terms"> <span>קראתי ואני מסכים/ה ל<a href="#" onclick="event.preventDefault(); openLegal('terms')">תנאי השימוש</a> ול<a href="#" onclick="event.preventDefault(); openLegal('refund')">מדיניות הביטול וההחזרים</a>. המחירים כוללים מע״מ.</span></label>
-      <div class="shop-secure">${shopIco('<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>')}<span>התשלום מתבצע בדף המאובטח של חברת הסליקה — פרטי האשראי לא עוברים דרכנו</span></div>
-    </section>
-    <div class="shop-bar show">
-      <span class="shop-bar-count">${items.length}</span>
-      <button type="button" class="shop-btn shop-bar-go" onclick="shopPay()">תשלום מאובטח · ${shopMoney(shopTotal())}</button>
+    <div class="co">
+      <aside class="co-sum">
+        ${items.map(f => `<div class="co-item">
+            <span class="co-thumb">${shopIco(f.icon)}<b>1</b></span>
+            <span class="co-item-txt"><b>${escHtml(f.title)}</b><small>${escHtml(f.desc || '')}</small></span>
+            <span class="co-item-price">${shopMoney(f.price)}</span>
+            <button type="button" class="shop-x" onclick="shopRemove('${f.id}')" aria-label="הסרת ${escHtml(f.title)}">✕</button>
+          </div>`).join('')}
+        <div class="co-coupon"><input id="co-coupon" placeholder="קוד הנחה" autocomplete="off"><button type="button" onclick="shopApplyCoupon()">החל</button></div>
+        <div class="co-row"><span>סכום ביניים</span><span>${shopMoney(total)}</span></div>
+        <div class="co-row"><span>חיוב חוזר</span><span>אין — תשלום חד־פעמי</span></div>
+        <div class="co-row co-total"><span>סך הכל</span><span><small>ILS</small> ${shopMoney(total)}</span></div>
+        <div class="co-vat">כולל ${shopMoney(vat)} מע״מ</div>
+      </aside>
+      <main class="co-main">
+        <section class="co-sec">
+          <div class="co-sec-head"><h2>פרטי לקוח</h2>${registered ? '' : '<a href="#" onclick="event.preventDefault(); openLiveChatLogin()">התחברות</a>'}</div>
+          <label class="co-field"><input id="shop-email" type="email" dir="ltr" autocomplete="email" placeholder="אימייל לקבלה" value="${escHtml(email)}"></label>
+          <label class="co-check"><input type="checkbox" id="co-news"> <span>עדכנו אותי בחדשות והצעות בלעדיות</span></label>
+        </section>
+        <section class="co-sec">
+          <h2>תשלום</h2>
+          <p class="co-muted">כל העסקאות מאובטחות ומוצפנות.</p>
+          <div class="co-methods">
+            ${methods.map(([id, label]) => `<button type="button" class="shop-method co-method${shopMethod === id ? ' on' : ''}" data-m="${id}" onclick="shopSetMethod('${id}')">
+                <span class="co-radio" aria-hidden="true"></span><b>${label}</b><span class="co-logos">${logos[id]}</span>
+              </button>${id === 'card' ? shopCardHTML() : ''}`).join('')}
+          </div>
+        </section>
+        <label class="co-check shop-terms"><input type="checkbox" id="shop-terms"> <span>קראתי ואני מסכים/ה ל<a href="#" onclick="event.preventDefault(); openLegal('terms')">תנאי השימוש</a> ול<a href="#" onclick="event.preventDefault(); openLegal('refund')">מדיניות הביטול וההחזרים</a>. המחירים כוללים מע״מ.</span></label>
+        <button type="button" class="co-pay" onclick="shopPay()">שלם עכשיו · ${shopMoney(total)}</button>
+        <nav class="co-legal">
+          <a href="#" onclick="event.preventDefault(); openLegal('refund')">מדיניות החזרים</a>
+          <a href="#" onclick="event.preventDefault(); openLegal('privacy')">מדיניות הפרטיות</a>
+          <a href="#" onclick="event.preventDefault(); openLegal('terms')">תנאי שימוש</a>
+        </nav>
+      </main>
     </div>`;
 }
+function shopApplyCoupon() {
+  const el = document.getElementById('co-coupon');
+  if (!el || !el.value.trim()) return;
+  if (typeof showCopyToast === 'function') showCopyToast('קוד ההנחה לא תקף');
+  el.select();
+}
+window.shopApplyCoupon = shopApplyCoupon;
 // --- כרטיס אשראי חי: הכרטיס מתעדכן תוך כדי הקלדה ומתהפך בשדה ה-CVV ---
 // אבטחה: הערכים נשארים בדפדפן בלבד — לא נשמרים ולא נשלחים לשום מקום.
 // בחיבור לחברת סליקה מחליפים את השדות ב-Hosted Fields / iframe של החברה (תקן PCI).
@@ -23777,8 +23802,7 @@ function shopLuhn(num) {
 }
 const SHOP_BRAND_LABEL = { visa: 'VISA', mastercard: 'mastercard', amex: 'AMEX', diners: 'Diners' };
 function shopCardHTML() {
-  return `<section class="shop-sec shop-cc" id="shop-cc"${shopMethod === 'card' ? '' : ' hidden'}>
-    <h2>פרטי כרטיס</h2>
+  return `<div class="shop-cc co-cc" id="shop-cc"${shopMethod === 'card' ? '' : ' hidden'}>
     <div class="cc-stage"><div class="cc-card" id="cc-card">
       <div class="cc-face cc-front">
         <div class="cc-top"><span class="cc-chip"></span><span class="cc-brand" id="cc-brand"></span></div>
@@ -23800,7 +23824,7 @@ function shopCardHTML() {
       <label class="cc-f"><span>תוקף</span><input id="cc-in-exp" inputmode="numeric" autocomplete="cc-exp" placeholder="MM/YY" maxlength="5" oninput="shopCardInput(this)" onfocus="shopCardFlip(false)"></label>
       <label class="cc-f"><span>CVV</span><input id="cc-in-cvv" inputmode="numeric" autocomplete="cc-csc" placeholder="123" maxlength="4" oninput="shopCardInput(this)" onfocus="shopCardFlip(true)" onblur="shopCardFlip(false)"></label>
     </div>
-  </section>`;
+  </div>`;
 }
 function shopCardFlip(back) { const c = document.getElementById('cc-card'); if (c) c.classList.toggle('flipped', !!back); }
 function shopCardInput(el) {
