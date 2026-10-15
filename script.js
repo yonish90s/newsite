@@ -8211,6 +8211,7 @@ function artSyncPagination() {
   const _tab = _mq('.home-feed-page') ? 'home' : _mq('.forums-page') ? 'forums' : _mq('.news-page') ? 'news' : _mq('.communities-page') ? 'communities'
     : _mq('.photos-page[data-section="photos"]:not(.home-feed-photos)') ? 'photos' : '';
   document.querySelectorAll('#mtabs .mtab').forEach(b => b.classList.toggle('active', b.dataset.tab === _tab));
+  if (typeof sideRailSync === 'function') sideRailSync();
   if (artPagObserver) artPagObserver.disconnect();
   try {
     artApplyPagination(mainContent.querySelector('.photos-page'), 'photos');
@@ -14961,11 +14962,104 @@ function buildHomeFeedPage() {
 
   return `<div class="articles-page home-feed-page" data-page-id="page-home-feed">
     <div class="art-inner">
+      ${homeChipsHTML(photos, comics, stories)}
       ${homeWelcomeHeroHTML()}
+      ${homeCategoriesHTML(photos, comics, stories)}
     </div>
   </div>`;
 }
 window.buildHomeFeedPage = buildHomeFeedPage;
+
+// ===== עמוד הבית בסגנון חנות: עיגולי תוכן למעלה + אריחי קטגוריות צבעוניים =====
+// תמונת שער: קודם תוכן שאינו 18+; תוכן למבוגרים מטושטש עד אישור גיל
+function homeCover(items) {
+  const adultOk = (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('age_verified') === 'true');
+  const img = x => x && ((x.images && x.images[0]) || x.image || '');
+  const list = (items || []).filter(x => x && x.approved !== false && img(x));
+  const pick = list.find(x => !x.isAdult) || list[0];
+  return pick ? { src: img(pick), blur: !!pick.isAdult && !adultOk } : null;
+}
+function homeGo(kind) {
+  if (kind === 'photos') return homeOpenPhotos();
+  if (kind === 'comics') return homeOpenSection('page-stories-main');
+  if (kind === 'stories') return homeOpenSection('page-stories-text');
+  const ids = { news: 'page-news-main', offers: 'page-offers-main' };
+  const pg = ids[kind] ? { id: ids[kind] } : commFindPage(kind);
+  if (pg) navigateToPage(pg.id);
+}
+window.homeGo = homeGo;
+function homeChipsHTML(photos, comics, stories) {
+  const cv = { photos: homeCover(photos), comics: homeCover(comics), stories: homeCover(stories) };
+  const chip = (kind, label, cover, onclick) => `<button type="button" class="hc-chip" onclick="${onclick}">
+      <span class="hc-dot">${cover ? `<img src="${escHtml(cover.src)}" alt="" loading="lazy"${cover.blur ? ' class="blur"' : ''}>` : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${COMM_SC_ICONS[kind] || ''}</svg>`}</span>
+      <span>${escHtml(label)}</span></button>`;
+  const cats = (PHOTO_BAR_CATEGORIES || []).slice(0, 4).map(cat => chip('photos', cat,
+    homeCover((photos || []).filter(a => photoCatMatch(a, cat))),
+    `homeOpenPhotos(); setTimeout(() => setSectionCategoryFilter('photos', '${artEsc(cat)}'), 60)`)).join('');
+  return `<nav class="hc-chips" aria-label="קיצורי תוכן">
+      ${chip('photos', 'תמונות', cv.photos, "homeGo('photos')")}
+      ${chip('comics', 'קומיקס', cv.comics, "homeGo('comics')")}
+      ${chip('stories', 'סיפורים', cv.stories, "homeGo('stories')")}
+      ${cats}
+      <button type="button" class="hc-all" onclick="navigateToPage('page-communities-main')" aria-label="כל הקטגוריות" title="כל הקטגוריות">
+        <svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg></button>
+    </nav>`;
+}
+function homeCategoriesHTML(photos, comics, stories) {
+  const extra = {
+    news: '<path d="M4 5h13v14H6a2 2 0 0 1-2-2z"/><path d="M17 9h3v8a2 2 0 0 1-2 2"/><path d="M8 9h5M8 13h5"/>',
+    offers: '<path d="M12 3c.6 3.2 4 4.6 4 8.5A4 4 0 0 1 12 15.5a4 4 0 0 1-4-4c0-1.6.8-2.8 1.6-3.7.3 1.4 1 2.2 1.9 2.4C11.3 7.8 11 5.2 12 3z"/><path d="M6 15.5A6 6 0 0 0 18 15.5"/>'
+  };
+  const tiles = [
+    ['photos', 'תמונות', '#e8622f', homeCover(photos)], ['comics', 'קומיקס', '#7a2e4a', homeCover(comics)],
+    ['stories', 'סיפורים', '#2f5d62', homeCover(stories)], ['forums', 'פורומים', '#3d342f'], ['friends', 'חברים', '#d98a3a'],
+    ['blinddate', 'Blind Date', '#c2334d'], ['tinder', 'התאמות', '#f0703f'], ['products', 'מוצרים', '#5b6f9e'],
+    ['news', 'חדשות', '#8a6a4f'], ['offers', 'הצעות', '#b4572a']
+  ].filter(([k]) => ['photos', 'comics', 'stories', 'news', 'offers'].includes(k) || commFindPage(k));
+  const iconKey = { blinddate: 'blind', tinder: 'match' };
+  const tile = ([kind, label, color, cover]) => `<button type="button" class="hcat" style="--hc:${color}" onclick="homeGo('${kind}')">
+      ${cover ? `<img class="hcat-img${cover.blur ? ' blur' : ''}" src="${escHtml(cover.src)}" alt="" loading="lazy">`
+        : `<span class="hcat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${COMM_SC_ICONS[iconKey[kind] || kind] || extra[kind] || ''}</svg></span>`}
+      <span class="hcat-label">${escHtml(label)}</span></button>`;
+  return `<section class="hcats"><h2 class="hcats-title">קטגוריות <span aria-hidden="true">‹</span></h2><div class="hcats-grid">${tiles.map(tile).join('')}</div></section>`;
+}
+
+// ===== סרגל אייקונים בצד שמאל (דסקטופ) =====
+const SIDE_RAIL_ITEMS = [
+  ['home', 'בית', 'goToHomePage()', '<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>', true],
+  ['cats', 'קטגוריות', "navigateToPage('page-communities-main')", '<rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/>', true],
+  ['shop', 'שדרוגים', "navigateToPage('page-subscription-main')", '<path d="M3 4h2l2.4 11.2a1 1 0 0 0 1 .8h9.2a1 1 0 0 0 1-.8L21 8H6.2"/><circle cx="9.5" cy="20" r="1.5"/><circle cx="17.5" cy="20" r="1.5"/>', false],
+  ['saved', 'שמורים', 'openSavedModal()', '<path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.5"/>', false],
+  ['msgs', 'הודעות', 'openMessages()', '<rect x="3" y="5" width="18" height="15" rx="3"/><path d="M3 10h18M9 14h6"/>', false]
+];
+function sideRailHTML() {
+  const u = auth.currentUser;
+  const reg = u && !u.isAnonymous;
+  const btn = ([id, label, action, path, fill]) => `<button type="button" class="srail-btn" data-rail="${id}" onclick="${action}" aria-label="${label}" title="${label}">
+      <svg viewBox="0 0 24 24" fill="${fill ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="${fill ? 0 : 2}" stroke-linecap="round" stroke-linejoin="round">${path}</svg></button>`;
+  return `${SIDE_RAIL_ITEMS.map(btn).join('')}
+    <button type="button" class="srail-btn srail-me" onclick="${reg ? `openUserPage('${artEsc(u.uid)}')` : 'openLiveChatLogin()'}" aria-label="${reg ? 'הפרופיל שלי' : 'התחברות'}">
+      <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4.2"/><path d="M3.5 21a8.5 8.5 0 0 1 17 0z"/></svg><span>${reg ? 'פרופיל' : 'התחברות'}</span></button>`;
+}
+function renderSideRail() {
+  let el = document.getElementById('side-rail');
+  if (!el) {
+    el = document.createElement('nav');
+    el.id = 'side-rail'; el.className = 'srail'; el.setAttribute('aria-label', 'ניווט מהיר');
+    document.body.appendChild(el);
+    document.documentElement.classList.add('has-srail');
+  }
+  el.innerHTML = sideRailHTML();
+  sideRailSync();
+}
+function sideRailSync() {
+  const el = document.getElementById('side-rail'); if (!el) return;
+  const id = (typeof activePageId !== 'undefined' && activePageId) || '';
+  const map = { 'page-home-feed': 'home', 'page-communities-main': 'cats', 'page-subscription-main': 'shop' };
+  el.querySelectorAll('.srail-btn').forEach(b => b.classList.toggle('on', b.dataset.rail === (map[id] || (id ? '' : 'home'))));
+}
+window.sideRailSync = sideRailSync;
+try { renderSideRail(); onAuthStateChanged(auth, () => renderSideRail()); } catch (e) {}
 
 function homeOpenSection(targetId) {
   try {

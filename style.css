@@ -10862,3 +10862,51 @@ html body .co .co-method > * { margin: 0 !important; }
 .co .co-logo.visa, .co .co-logo.bit, .co .co-logo.apple { color: #fff !important; }
 .co .cc-card { width: min(300px, 100%); }
 .co .cc-num { font-size: 18px !important; letter-spacing: 1.5px; white-space: nowrap; }
+
+/* ===== עמוד הבית: עיגולי תוכן למעלה ===== */
+.hc-chips { display: flex; align-items: center; justify-content: center; gap: 22px; flex-wrap: wrap; padding: 18px 12px 6px; direction: rtl; }
+.hc-chip { display: flex; align-items: center; gap: 10px; border: 0; background: none; font: inherit; font-size: 17px; font-weight: 700; color: #2b2522; cursor: pointer; padding: 4px; border-radius: 999px; transition: background .2s; }
+.hc-chip:hover { background: #f6efe9; }
+.hc-dot { width: 42px; height: 42px; border-radius: 50%; overflow: hidden; display: grid; place-items: center; background: linear-gradient(135deg, #ffd3b8, #ff8a5c); color: #fff; flex: none; }
+.hc-dot img { width: 100%; height: 100%; object-fit: cover; }
+.hc-dot img.blur, .hcat-img.blur { filter: blur(10px); }
+.hc-dot svg { width: 22px; height: 22px; }
+.hc-all { width: 40px; height: 40px; border: 0; background: none; color: #cfc4bb; cursor: pointer; display: grid; place-items: center; }
+.hc-all svg { width: 30px; height: 30px; }
+.hc-all:hover { color: #ff8a5c; }
+/* ===== אריחי קטגוריות צבעוניים ===== */
+.hcats { padding: 28px 0 10px; direction: rtl; }
+.hcats-title { margin: 0 4px 14px; font-size: 20px; font-weight: 800; color: #2b2522; display: flex; gap: 6px; align-items: center; }
+.hcats-title span { font-size: 18px; color: #8a7f78; }
+.hcats-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+.hcat { position: relative; height: 170px; border: 0; border-radius: 18px; overflow: hidden; background: var(--hc); cursor: pointer; text-align: right; padding: 0; font: inherit; transition: transform .2s, box-shadow .2s; }
+.hcat:hover { transform: translateY(-3px); box-shadow: 0 16px 30px -18px rgba(0,0,0,.5); }
+.hcat-label { position: absolute; bottom: 14px; right: 16px; color: #fff; font-size: 16px; font-weight: 700; text-shadow: 0 1px 6px rgba(0,0,0,.25); z-index: 1; }
+.hcat-img { position: absolute; left: 10px; top: 12px; width: 52%; height: 78%; object-fit: cover; border-radius: 14px; transform: rotate(-6deg); box-shadow: 0 14px 26px -12px rgba(0,0,0,.55); transition: transform .3s; }
+.hcat:hover .hcat-img { transform: rotate(-2deg) scale(1.04); }
+.hcat-ic { position: absolute; left: 6px; top: 6px; width: 120px; height: 120px; color: rgba(255,255,255,.9); transform: rotate(-8deg); transition: transform .3s; }
+.hcat-ic svg { width: 100%; height: 100%; filter: drop-shadow(0 10px 14px rgba(0,0,0,.25)); }
+.hcat:hover .hcat-ic { transform: rotate(0) scale(1.05); }
+@media (max-width: 1000px) { .hcats-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 640px) {
+  .hc-chips { justify-content: flex-start; flex-wrap: nowrap; overflow-x: auto; gap: 12px; scrollbar-width: none; }
+  .hc-chips::-webkit-scrollbar { display: none; }
+  .hc-chip { flex: none; font-size: 14.5px; gap: 7px; }
+  .hc-dot { width: 36px; height: 36px; }
+  .hcats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .hcat { height: 120px; border-radius: 14px; }
+  .hcat-ic { width: 84px; height: 84px; }
+  .hcat-label { font-size: 14.5px; bottom: 10px; right: 12px; }
+}
+/* ===== סרגל אייקונים בצד שמאל (דסקטופ) ===== */
+.srail { display: none; }
+@media (min-width: 1100px) {
+  .srail { display: flex; flex-direction: column; align-items: center; gap: 10px; position: fixed; left: 0; top: 45px; bottom: 0; width: 72px; padding: 30vh 0 18px; box-sizing: border-box; background: #faf7f4; border-right: 1px solid #f0e8e1; z-index: 900; }
+  html.has-srail body { padding-left: 72px; }
+  .srail-btn { width: 48px; height: 48px; border: 0; border-radius: 14px; background: none; color: #b8aca3; display: grid; place-items: center; cursor: pointer; transition: color .2s, background .2s; }
+  .srail-btn svg { width: 26px; height: 26px; }
+  .srail-btn:hover { color: #2b2522; background: #f1ebe6; }
+  .srail-btn.on { color: #2b2522; }
+  .srail-me { margin-top: auto; height: auto; padding: 8px 0; display: flex; flex-direction: column; gap: 4px; font: inherit; font-size: 12px; font-weight: 700; }
+  .srail-me svg { width: 28px; height: 28px; }
+}
