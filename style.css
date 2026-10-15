@@ -10919,3 +10919,12 @@ html body .co .co-method > * { margin: 0 !important; }
   #quick-publish-modal .qp-card > div:last-child { padding-bottom: calc(12px + env(safe-area-inset-bottom)) !important; }
   #quick-publish-modal .qp-close { width: 36px !important; height: 36px !important; font-size: 18px !important; }
 }
+/* פורום במובייל: שורת התגובה מחליפה את הסרגל התחתון */
+@media (max-width: 768px) {
+  html:has(.rd-compose) #mtabs, html:has(.rd-compose) #mtab-open { display: none !important; }
+  .rd-compose { position: fixed; left: 0; right: 0; bottom: 0; z-index: 9000; margin: 0 !important; padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); background: rgba(255,255,255,.97); backdrop-filter: blur(10px); box-shadow: 0 -8px 24px -14px rgba(43,37,34,.35); border-top: 1px solid #f0e8e1; direction: rtl; }
+  .rd-compose .fo-guest-as { margin: 0 4px 6px; font-size: 12.5px; }
+  .rd-compose .fo-reply-to { margin-bottom: 6px; }
+  .rd-compose .rd-input { background: #f3eee9; border-color: #e6ddd5; }
+  .rd-comments { padding-bottom: 110px; }
+}

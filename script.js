@@ -14257,7 +14257,7 @@ function forumGuestNameFieldHTML(id) {
   // אורח שכבר כתב שם פעם אחת — לא מבקשים שוב; מציגים "מגיבים בתור" עם אפשרות לשנות
   if (saved.length >= 2) {
     return `<div class="fo-guest-as" id="${id}-wrap"><input type="hidden" id="${id}" value="${escHtml(saved)}">
-      <span>מגיבים בתור <b>${escHtml(saved)}</b></span>
+      <span>מגיבים בתור&nbsp;<b>${escHtml(saved)}</b></span>
       <button type="button" class="fo-guest-change" onclick="forumGuestChangeName('${id}')">שינוי</button></div>`;
   }
   return `<input id="${id}" class="fo-input fo-guest-name" maxlength="30" placeholder="השם שלך (שם זמני)" value="">`;
@@ -14271,6 +14271,16 @@ function forumGuestChangeName(id) {
   if (el) { el.focus(); el.select(); }
 }
 window.forumGuestChangeName = forumGuestChangeName;
+// מובייל: אורח בלי שם — קודם רק שדה "שם זמני", ואחרי זה נפתחת שורת התגובה
+function forumSetGuestName() {
+  const el = document.getElementById('fo-guest-first');
+  const name = String(el ? el.value : '').trim().slice(0, 30);
+  if (name.length < 2) { if (typeof showCopyToast === 'function') showCopyToast('נא לכתוב שם (לפחות 2 תווים)'); if (el) el.focus(); return; }
+  try { localStorage.setItem(FORUM_GUEST_KEY, name); } catch (e) {}
+  forumRender();
+  const box = document.getElementById('fo-reply-text'); if (box) box.focus();
+}
+window.forumSetGuestName = forumSetGuestName;
 // מחזיר את זהות הכותב: משתמש רשום, או אורח (התחברות אנונימית + השם שכתב)
 async function forumIdentity(nameFieldId) {
   if (forumRegistered()) return { uid: auth.currentUser.uid, name: forumMyName(), guest: false };
@@ -14623,11 +14633,16 @@ function forumTopicMobileHTML(f, t, posts, admin, myUid) {
     ${opHTML}
     <div class="rd-compose" id="fo-reply-box">
       ${target ? `<div class="fo-reply-to"><span>תגובה ל<b>${escHtml(target.name || 'משתמש')}</b></span><button type="button" onclick="forumStartReply(null)" aria-label="ביטול">✕</button></div>` : ''}
-      ${forumGuestNameFieldHTML('fo-reply-name')}
+      ${!forumRegistered() && forumGuestName().length < 2
+        ? `<div class="rd-compose-row">
+        <input id="fo-guest-first" class="rd-input" maxlength="30" placeholder="כתבו שם זמני כדי להגיב" onkeydown="if(event.key==='Enter'){event.preventDefault(); forumSetGuestName();}">
+        <button type="button" class="rd-send" onclick="forumSetGuestName()" aria-label="המשך"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.4 20.4 21 12 3.4 3.6 3.4 10l12.6 2-12.6 2z"/></svg></button>
+      </div>`
+        : `${forumGuestNameFieldHTML('fo-reply-name')}
       <div class="rd-compose-row">
-        <textarea id="fo-reply-text" class="rd-input" rows="1" maxlength="5000" placeholder="${target ? 'כתבו תגובה...' : 'הצטרפו לשיחה'}" oninput="this.style.height='auto'; this.style.height=Math.min(this.scrollHeight,180)+'px'"></textarea>
+        <textarea id="fo-reply-text" class="rd-input" rows="1" maxlength="5000" placeholder="${target ? 'כתבו תגובה...' : 'הצטרפו לשיחה'}" oninput="this.style.height='auto'; this.style.height=Math.min(this.scrollHeight,140)+'px'"></textarea>
         <button type="button" class="rd-send" onclick="forumReply()" aria-label="שליחה"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.4 20.4 21 12 3.4 3.6 3.4 10l12.6 2-12.6 2z"/></svg></button>
-      </div>
+      </div>`}
     </div>
     <div class="rd-comments">
       ${tops.length ? tops.map(p => rdCommentHTML(p, admin, myUid, kids, 0)).join('') : '<div class="fo-empty">עדיין אין תגובות — היו הראשונים להגיב</div>'}
