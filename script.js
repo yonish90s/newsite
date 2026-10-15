@@ -6827,7 +6827,7 @@ function storyCardHTML(s, iconHint) {
         <div class="art-row-text photo-card-info">
           <h3>${escHtml(s.title)}</h3>
           <div class="art-row-meta" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-            <span class="photo-author-link art-row-author" onclick="event.stopPropagation(); if(typeof openUserPage==='function') openUserPage('${artEsc(s.authorId || '')}', '${artEsc(s.author || '')}')" style="cursor: pointer; color: #2b2522; text-decoration: underline; font-weight: 600;">${escHtml(s.author)}${verifiedBadgeHTML}</span>
+            <span class="photo-author-link art-row-author" onclick="event.stopPropagation(); if(typeof openUserPage==='function') openUserPage('${artEsc(s.authorId || '')}', '${artEsc(s.author || '')}')" style="cursor: pointer; color: #2b2522; text-decoration: underline; font-weight: 600;">${authorAvHTML(s)}${escHtml(s.author)}${verifiedBadgeHTML}</span>
             <span class="art-row-sep">|</span>
             <span>${escHtml(s.timestamp)}</span>
             ${s.ageRange ? `<span class="art-row-sep">|</span><span>גיל ${escHtml(String(s.ageRange))}</span>` : ''}
@@ -7049,7 +7049,7 @@ function storyOpenDetail(id) {
             <div class="story-article-meta" style="margin-bottom:14px; color:#64748b;">
               <span>🗓️ ${escHtml(s.timestamp || '')}</span>
               <span>⏱️ זמן קריאה: ${_readMin} דקות</span>
-              <span>✍️ מאת <b>${escHtml(s.author || '')}</b></span>
+              <span class="au-line">מאת ${authorAvHTML(s)}<b>${escHtml(s.author || '')}</b></span>
             </div>
             ${_tagChips ? `<div class="story-article-tags">${_tagChips}</div>` : ''}
             ${storyLinkedChipHTML(s)}
@@ -7102,7 +7102,7 @@ function storyOpenDetail(id) {
               ${_comicDesc ? `<div class="pshow-desc story-comic-desc">${storyRichHTML(_comicDesc, window.storyInlineImgs, false)}</div>` : ''}
               <div class="art-meta pd-show-meta">
                 <span class="art-category-badge" style="background:${escHtml(s.categoryColor || '#8b5cf6')}">${escHtml(s.category || 'כללי')}</span>
-                <span>מאת <b>${escHtml(s.author || '')}</b></span>
+                <span class="au-line">מאת ${authorAvHTML(s)}<b>${escHtml(s.author || '')}</b></span>
                 <span>·</span>
                 <span>${escHtml(s.timestamp || '')}</span>
                 ${_n > 1 ? `<span>·</span><span id="story-page-counter">${_bmPage + 1} / ${_n}</span>` : ''}
@@ -8661,7 +8661,7 @@ function renderPhotoCard(p, options = {}) {
   // בעמוד הקהילות מציגים כרטיס "ריבוע" נקי — ללא תאריך/מאומת/צפיות/לייקים וכפתורים
   const metaHTML = options.hideMeta ? '' : `
       <div class="art-row-meta" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-        <span class="photo-author-link" onclick="event.stopPropagation(); openUserPage('${artEsc(p.authorId || '')}', '${artEsc(p.author)}')" style="cursor: pointer; color: #2b2522; text-decoration: underline; font-weight: 600;">${escHtml(p.author)}${verifiedBadgeHTML}</span>
+        <span class="photo-author-link" onclick="event.stopPropagation(); openUserPage('${artEsc(p.authorId || '')}', '${artEsc(p.author)}')" style="cursor: pointer; color: #2b2522; text-decoration: underline; font-weight: 600;">${authorAvHTML(p)}${escHtml(p.author)}${verifiedBadgeHTML}</span>
         <span class="art-row-sep">|</span>
         <span>${escHtml(p.timestamp)}</span>
         ${p.ageRange ? `<span class="art-row-sep">|</span><span>גיל ${escHtml(String(p.ageRange))}</span>` : ''}
@@ -13228,6 +13228,27 @@ function avatarSVG(cfg) {
 window.avatarSVG = avatarSVG;
 
 // --- מטמון דמויות לפי משתמש + "הידרציה" של עיגולי שם ---
+// עיגול תמונת פרופיל ליד שם המעלה: מנהל האתר — הלוגו; משתמש — הדמות שלו (נטענת ב-avatarHydrate), ובינתיים האות הראשונה
+const AU_COLORS = ['#ff8a5c', '#e8622f', '#7a2e4a', '#2f5d62', '#d98a3a', '#5b6f9e', '#c2334d', '#8a6a4f'];
+function authorAvHTML(item) {
+  if (!item) return '';
+  const uid = item.authorId || item.uid || '';
+  const name = String(item.author || item.name || '').trim();
+  if (typeof isSiteAdminAuthor === 'function' && isSiteAdminAuthor(uid, name, item)) return '<span class="au-av au-av-site"><img src="./logo.png" alt=""></span>';
+  let h = 0; for (const ch of (uid || name)) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  const okUid = /^[A-Za-z0-9_-]{10,}$/.test(uid);
+  return `<span class="au-av"${okUid ? ` data-av-uid="${escHtml(uid)}"` : ''} style="--av:${AU_COLORS[h % AU_COLORS.length]}">${escHtml(name.charAt(0) || '?')}</span>`;
+}
+window.authorAvHTML = authorAvHTML;
+// טוען דמויות לכל עיגול חדש שנוסף לעמוד (כרטיסים, תצוגה פנימית)
+if (typeof mainContent !== 'undefined' && mainContent) {
+  let auQueued = false;
+  new MutationObserver(() => {
+    if (auQueued) return; auQueued = true;
+    requestAnimationFrame(() => { auQueued = false; if (typeof avatarHydrate === 'function') avatarHydrate(mainContent); });
+  }).observe(mainContent, { childList: true, subtree: true });
+}
+
 const avatarCache = {};      // uid → config | null (אין דמות)
 const avatarPending = new Set();
 function avatarHydrate(root) {
@@ -16140,7 +16161,7 @@ function photoOpenDetail(id) {
               <h1 class="art-detail-title" style="margin-top:0;">${escHtml(a.title)}</h1>
               <div class="art-meta" style="margin-bottom:14px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
                 <span class="art-category-badge" style="background:${escHtml(a.categoryColor || '#3b82f6')}">${escHtml(a.category)}</span>
-                <span>${escHtml(_sp.creator)}: <b>${escHtml(a.author)}</b></span>
+                <span class="au-line">${escHtml(_sp.creator)}: ${authorAvHTML(a)}<b>${escHtml(a.author)}</b></span>
                 ${a.authorId && !isSiteAdminAuthor(a.authorId, a.author, a) ? `<button onclick="toggleFollow('${artEsc(a.authorId)}','${artEsc(a.author || '')}', this)" class="follow-btn${isFollowing(a.authorId) ? ' following' : ''}">${isFollowing(a.authorId) ? '✓ עוקב' : '➕ עקוב'}</button>` : ''}
                 <span>·</span>
                 <span>${escHtml(a.timestamp)}</span>

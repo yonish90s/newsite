@@ -10985,3 +10985,11 @@ html body .co .co-method > * { margin: 0 !important; }
   .pc-compose { position: fixed; left: 0; right: 0; bottom: 0; z-index: 9000; margin: 0; padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); background: rgba(255,255,255,.97); backdrop-filter: blur(10px); box-shadow: 0 -8px 24px -14px rgba(43,37,34,.35); border-top: 1px solid #f0e8e1; }
   .pc-section { padding-bottom: 100px; }
 }
+/* עיגול תמונת פרופיל ליד שם המעלה */
+.au-av { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; overflow: hidden; flex: none; vertical-align: middle; margin-inline-end: 6px; background: var(--av, #ff8a5c); color: #fff; font-size: 12px; font-weight: 800; text-decoration: none !important; box-shadow: 0 0 0 1.5px #fff, 0 1px 4px rgba(43,37,34,.2); }
+.au-av svg, .au-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.au-av.au-av-site { background: #2b2522; }
+.au-av.au-av-site img { object-fit: contain; padding: 3px; box-sizing: border-box; filter: none !important; }
+.photo-author-link { display: inline-flex; align-items: center; }
+.au-line { display: inline-flex; align-items: center; gap: 4px; }
+.au-line .au-av { margin: 0 2px; width: 28px; height: 28px; }
