@@ -19355,7 +19355,7 @@ async function submitPhotoComment(albumId) {
   const inp = document.getElementById('photo-comment-input');
   const text = inp ? inp.value.trim() : '';
   if (!text) return;
-  const name = (auth.currentUser && typeof liveChatUserName === 'function') ? liveChatUserName() : 'אורח';
+  const name = pcCommenterName();
   try {
     if (typeof trackEvent === 'function') trackEvent('comment');
     await push(ref(db, `website/photo_comments/${albumId}`), { text: text.slice(0, 1000), name, uid: auth.currentUser ? auth.currentUser.uid : '', createdAt: Date.now() });
@@ -19364,17 +19364,52 @@ async function submitPhotoComment(albumId) {
 }
 window.submitPhotoComment = submitPhotoComment;
 
+// ---- שורת תגובה (תמונות / סיפורים) — כמו בפורום: במובייל צמודה לתחתית במקום הסרגל,
+// ואורח בלי שם כותב קודם שם זמני (פעם אחת, משותף לפורומים) ורק אז נפתח שדה התגובה ----
+const PC_SEND_ICON = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.4 20.4 21 12 3.4 3.6 3.4 10l12.6 2-12.6 2z"/></svg>';
+function pcIsGuest() { return !(auth.currentUser && !auth.currentUser.isAnonymous); }
+function pcCommenterName() {
+  if (!pcIsGuest() && typeof liveChatUserName === 'function') return liveChatUserName();
+  return forumGuestName() || 'אורח';
+}
+function pcComposerHTML(kind, id, editName) {
+  const sid = artEsc(id);
+  const saved = pcIsGuest() ? forumGuestName() : '';
+  if (pcIsGuest() && (saved.length < 2 || editName)) {
+    return `<div class="pc-compose" id="${kind}-compose"><div class="pc-row">
+      <input id="${kind}-guest-first" class="pc-in" maxlength="30" placeholder="כתבו שם זמני כדי להגיב" value="${escHtml(editName ? saved : '')}" onkeydown="if(event.key==='Enter'){event.preventDefault(); pcSetGuestName('${kind}','${sid}');}">
+      <button type="button" class="pc-go" onclick="pcSetGuestName('${kind}','${sid}')" aria-label="המשך">${PC_SEND_ICON}</button>
+    </div></div>`;
+  }
+  const submit = kind === 'photo' ? 'submitPhotoComment' : 'submitStoryComment';
+  return `<div class="pc-compose" id="${kind}-compose">
+    ${saved ? `<div class="fo-guest-as"><span>מגיבים בתור&nbsp;<b>${escHtml(saved)}</b></span><button type="button" class="fo-guest-change" onclick="pcChangeName('${kind}','${sid}')">שינוי</button></div>` : ''}
+    <div class="pc-row">
+      <button type="button" class="pc-mic-ic" onclick="voiceRecToggle('${kind}', '${sid}')" aria-label="תגובה קולית" title="תגובה קולית"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg></button>
+      <textarea id="${kind}-comment-input" class="pc-in" rows="1" maxlength="1000" placeholder="הצטרפו לשיחה" oninput="this.style.height='auto'; this.style.height=Math.min(this.scrollHeight,140)+'px'"></textarea>
+      <button type="button" class="pc-go" onclick="${submit}('${sid}')" aria-label="שליחה">${PC_SEND_ICON}</button>
+    </div></div>`;
+}
+function pcRerender(kind, id, editName) {
+  const el = document.getElementById(kind + '-compose');
+  if (el) el.outerHTML = pcComposerHTML(kind, id, editName);
+}
+function pcSetGuestName(kind, id) {
+  const el = document.getElementById(kind + '-guest-first');
+  const name = String(el ? el.value : '').trim().slice(0, 30);
+  if (name.length < 2) { if (typeof showCopyToast === 'function') showCopyToast('נא לכתוב שם (לפחות 2 תווים)'); if (el) el.focus(); return; }
+  try { localStorage.setItem(FORUM_GUEST_KEY, name); } catch (e) {}
+  pcRerender(kind, id);
+  const box = document.getElementById(kind + '-comment-input'); if (box) box.focus();
+}
+function pcChangeName(kind, id) { pcRerender(kind, id, true); const el = document.getElementById(kind + '-guest-first'); if (el) { el.focus(); el.select(); } }
+window.pcSetGuestName = pcSetGuestName; window.pcChangeName = pcChangeName;
+
 function photoCommentsSectionHTML(albumId) {
   return `
     <div class="pc-section">
       <div class="pc-title">💬 תגובות (<span id="photo-comments-count">0</span>)</div>
-      <div class="pc-form">
-        <textarea id="photo-comment-input" rows="2" placeholder="כתבו תגובה, שתפו מה דעתכם..."></textarea>
-        <div class="pc-actions">
-          <button type="button" class="pc-mic" onclick="voiceRecToggle('photo', '${artEsc(albumId)}')" title="תגובה קולית">🎤 הקלטה</button>
-          <button onclick="submitPhotoComment('${artEsc(albumId)}')" class="pc-send">שלח תגובה</button>
-        </div>
-      </div>
+      ${pcComposerHTML('photo', albumId)}
       <div class="pc-voice" id="photo-voice-rec"></div>
       <div id="photo-comments-list">${photoCommentsListHTML()}</div>
     </div>`;
@@ -19412,7 +19447,7 @@ async function submitStoryComment(storyId) {
   const inp = document.getElementById('story-comment-input');
   const text = inp ? inp.value.trim() : '';
   if (!text) return;
-  const name = (auth.currentUser && typeof liveChatUserName === 'function') ? liveChatUserName() : 'אורח';
+  const name = pcCommenterName();
   try {
     if (typeof trackEvent === 'function') trackEvent('comment');
     await push(ref(db, `website/story_comments/${storyId}`), { text: text.slice(0, 1000), name, uid: auth.currentUser ? auth.currentUser.uid : '', createdAt: Date.now() });
@@ -19425,13 +19460,7 @@ function storyCommentsSectionHTML(storyId) {
   return `
     <div class="pc-section">
       <div class="pc-title">💬 תגובות (<span id="story-comments-count">0</span>)</div>
-      <div class="pc-form">
-        <textarea id="story-comment-input" rows="2" placeholder="כתבו תגובה, שתפו מה דעתכם..."></textarea>
-        <div class="pc-actions">
-          <button type="button" class="pc-mic" onclick="voiceRecToggle('story', '${artEsc(storyId)}')" title="תגובה קולית">🎤 הקלטה</button>
-          <button onclick="submitStoryComment('${artEsc(storyId)}')" class="pc-send">שלח תגובה</button>
-        </div>
-      </div>
+      ${pcComposerHTML('story', storyId)}
       <div class="pc-voice" id="story-voice-rec"></div>
       <div id="story-comments-list">${storyCommentsListHTML()}</div>
     </div>`;

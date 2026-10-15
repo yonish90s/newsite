@@ -10969,3 +10969,19 @@ html body .co .co-method > * { margin: 0 !important; }
 .algo-pairs li b { min-width: 34px; text-align: center; padding: 2px 8px; border-radius: 999px; background: #fff1ea; color: #d9541f; font-size: 12.5px; }
 .algo-how ul { margin: 0; padding-inline-start: 20px; display: flex; flex-direction: column; gap: 8px; font-size: 14px; line-height: 1.6; color: #5d534d; }
 @media (max-width: 640px) { .algo-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .algo-head h1 { font-size: 22px; } }
+/* שורת תגובה בתמונות/סיפורים */
+.pc-compose { margin: 8px 0 14px; direction: rtl; }
+.pc-compose .fo-guest-as { margin: 0 4px 6px; font-size: 12.5px; }
+.pc-row { display: flex; align-items: flex-end; gap: 8px; }
+.pc-in { flex: 1; min-width: 0; min-height: 46px; max-height: 140px; padding: 12px 18px; border-radius: 24px; resize: none; box-sizing: border-box; border: 1px solid #e6ddd5; background: #f3eee9; color: #2b2522; font: inherit; font-size: 16px; line-height: 1.4; outline: none; }
+.pc-in:focus { border-color: #ff8a5c; }
+.pc-go, .pc-mic-ic { width: 46px; height: 46px; flex: none; border: 0; border-radius: 50%; cursor: pointer; display: grid; place-items: center; }
+.pc-go { background: linear-gradient(135deg, #ff8a5c, #f0703f); color: #2b2522; }
+.pc-go svg { width: 20px; height: 20px; transform: scaleX(-1); }
+.pc-mic-ic { background: #f3eee9; color: #5d534d; }
+.pc-mic-ic svg { width: 21px; height: 21px; }
+@media (max-width: 768px) {
+  html:has(.pc-compose) #mtabs, html:has(.pc-compose) #mtab-open { display: none !important; }
+  .pc-compose { position: fixed; left: 0; right: 0; bottom: 0; z-index: 9000; margin: 0; padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); background: rgba(255,255,255,.97); backdrop-filter: blur(10px); box-shadow: 0 -8px 24px -14px rgba(43,37,34,.35); border-top: 1px solid #f0e8e1; }
+  .pc-section { padding-bottom: 100px; }
+}
