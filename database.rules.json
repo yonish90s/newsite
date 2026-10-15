@@ -71,6 +71,18 @@
         }
       },
 
+      "reco_stats": {
+        ".read": true,
+        "imp": { "$k": { ".write": "($k === 'sim' || $k === 'taste' || $k === 'pop' || $k === 'fresh' || $k === 'co') && newData.isNumber() && newData.val() > (data.exists() ? data.val() : 0) && newData.val() <= (data.exists() ? data.val() : 0) + 10" } },
+        "clk": { "$k": { ".write": "($k === 'sim' || $k === 'taste' || $k === 'pop' || $k === 'fresh' || $k === 'co') && newData.isNumber() && newData.val() > (data.exists() ? data.val() : 0) && newData.val() <= (data.exists() ? data.val() : 0) + 10" } },
+        "days": { "$day": { "$m": { ".write": "$day.length <= 12 && ($m === 'imp' || $m === 'clk') && newData.isNumber() && newData.val() > (data.exists() ? data.val() : 0) && newData.val() <= (data.exists() ? data.val() : 0) + 10" } } },
+        "co": { "$a": { "$b": { ".write": "$a.length <= 40 && $b.length <= 40 && newData.isNumber() && newData.val() > (data.exists() ? data.val() : 0) && newData.val() <= (data.exists() ? data.val() : 0) + 10" } } }
+      },
+      "reco_config": {
+        ".read": true,
+        ".write": "auth != null && auth.token.email === 'yoni98321@gmail.com' && auth.token.email_verified === true"
+      },
+
       "analytics": {
         "pageviews": { ".write": "newData.isNumber() && newData.val() === (data.exists() ? data.val() : 0) + 1" },
         "visits": { ".write": "newData.isNumber() && newData.val() === (data.exists() ? data.val() : 0) + 1" },

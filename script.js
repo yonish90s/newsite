@@ -765,6 +765,10 @@ function sanitizeToOnlyPhotosAndStories() {
   const _infoPage = pages.find(p => p && p.id === 'page-info-main');
   if (!_infoPage) {
     pages.push({ id: 'page-info-main', title: 'מידע 🔒', isHidden: true, content: _infoContent });
+  }
+  // עמוד "אלגוריתם" — מוסתר, למנהל בלבד
+  if (!pages.find(p => p && p.id === 'page-algorithm-main')) {
+    pages.push({ id: 'page-algorithm-main', title: 'אלגוריתם 🔒', isHidden: true, content: '<div class="algo-page" data-page-id="page-algorithm-main"></div>' });
   } else {
     if (_infoPage.isHidden === undefined) _infoPage.isHidden = true;
     _infoPage.content = _infoContent;
@@ -1598,6 +1602,13 @@ function renderPage() {
       }
     }
 
+    // עמוד "אלגוריתם" (למנהל בלבד)
+    if (currentPage.id === 'page-algorithm-main') {
+      mainContent.innerHTML = buildAlgoPage();
+      try { window.scrollTo(0, 0); } catch (e) {}
+      return;
+    }
+
     // עמוד "מידע" (למנהל בלבד) — מזוהה לפי מזהה
     if (currentPage.id === 'page-info-main') {
       if (typeof buildInfoPage === 'function') {
@@ -2199,6 +2210,7 @@ function artSerializePageContent() {
   if (communitiesList) {
     return '<div class="communities-page" data-page-id="page-communities-main"></div>';
   }
+  if (mainContent.querySelector('.algo-page')) return '<div class="algo-page" data-page-id="page-algorithm-main"></div>';
   const infoList = mainContent.querySelector('.info-page');
   if (infoList) {
     return '<div class="info-page" data-page-id="page-info-main"></div>';
@@ -9631,6 +9643,113 @@ function buildCommunitiesPage() {
 }
 window.buildCommunitiesPage = buildCommunitiesPage;
 
+// ============================================================
+// עמוד "אלגוריתם" (מנהל בלבד): מה האלגוריתם למד מהגולשים, ושליטה במשקלים
+// ============================================================
+function buildAlgoPage() {
+  recoSubscribe();
+  return `<div class="algo-page" data-page-id="page-algorithm-main"><div class="algo-inner">${algoBodyHTML()}</div></div>`;
+}
+function algoRender() {
+  const el = document.querySelector('.algo-page .algo-inner');
+  if (el) el.innerHTML = algoBodyHTML();
+}
+function algoBodyHTML() {
+  if (!(typeof isAdmin === 'function' && isAdmin())) return '<div class="algo-locked">🔒 העמוד הזה זמין למנהל האתר בלבד</div>';
+  const L = recoLearnedWeights(), act = recoActiveWeights();
+  const imp = recoStats.imp || {}, clk = recoStats.clk || {};
+  const pct = x => (x * 100).toFixed(1) + '%';
+  const mode = recoConfig.auto ? (L.ready ? 'אוטומטי — לומד מהגולשים' : `אוטומטי — אוסף נתונים (${L.totI}/${RECO_MIN_IMP})`) : (recoConfig.w ? 'ידני — משקלים שנשמרו' : 'ברירת מחדל');
+  // 14 הימים האחרונים
+  const days = [];
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date(Date.now() - i * 864e5);
+    const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const v = (recoStats.days || {})[k] || {};
+    days.push({ d, imp: v.imp || 0, clk: v.clk || 0 });
+  }
+  const maxCtr = Math.max(0.01, ...days.map(x => x.imp ? x.clk / x.imp : 0));
+  // זוגות "צפו גם" החזקים ביותר
+  const albums = (typeof photoGetAlbums === 'function') ? photoGetAlbums() : [];
+  const title = id => { const a = albums.find(x => recoKey(x.id) === id); return a ? a.title : null; };
+  const pairs = [], seen = new Set();
+  Object.entries(recoStats.co || {}).forEach(([a, m]) => Object.entries(m || {}).forEach(([b, n]) => {
+    const key = a < b ? a + '|' + b : b + '|' + a;
+    if (seen.has(key)) return;
+    seen.add(key);
+    if (title(a) && title(b)) pairs.push({ a: title(a), b: title(b), n: Number(n) || 0 });
+  }));
+  pairs.sort((p, q) => q.n - p.n);
+  const rows = RECO_SIGNALS.map(k => {
+    const delta = L.w[k] - RECO_W_DEFAULT[k];
+    const dir = delta > 0.005 ? 'up' : delta < -0.005 ? 'down' : '';
+    return `<tr>
+      <td><b>${RECO_LABEL[k]}</b></td>
+      <td>${(imp[k] || 0).toLocaleString('he-IL')}</td><td>${(clk[k] || 0).toLocaleString('he-IL')}</td>
+      <td>${imp[k] ? pct((clk[k] || 0) / imp[k]) : '—'}</td>
+      <td><div class="algo-bar"><span style="width:${(act[k] * 100).toFixed(0)}%"></span></div><small>${pct(act[k])}</small></td>
+      <td class="${dir}">${pct(L.w[k])} ${dir === 'up' ? '▲' : dir === 'down' ? '▼' : ''}</td>
+    </tr>`;
+  }).join('');
+  return `
+    <header class="algo-head">
+      <div><h1>אלגוריתם ההמלצות</h1><p>לומד מכל קליק של הגולשים על "עוד תמונות שיעניינו אותך" ומשפר לבד את המשקלים.</p></div>
+      <span class="algo-mode${recoConfig.auto ? ' on' : ''}">${mode}</span>
+    </header>
+    <div class="algo-kpis">
+      <div><small>המלצות שהוצגו</small><b>${L.totI.toLocaleString('he-IL')}</b></div>
+      <div><small>קליקים על המלצות</small><b>${L.totC.toLocaleString('he-IL')}</b></div>
+      <div><small>אחוז הקלקה</small><b>${L.totI ? pct(L.totC / L.totI) : '—'}</b></div>
+      <div><small>קשרי "צפו גם"</small><b>${pairs.length.toLocaleString('he-IL')}</b></div>
+    </div>
+    <section class="algo-card">
+      <h2>האותות — מה עובד</h2>
+      <div class="algo-table-wrap"><table class="algo-table">
+        <thead><tr><th>אות</th><th>הוצגו</th><th>קליקים</th><th>הקלקה</th><th>משקל פעיל</th><th>משקל שנלמד</th></tr></thead>
+        <tbody>${rows}</tbody></table></div>
+      <div class="algo-actions">
+        <label class="algo-switch"><input type="checkbox" ${recoConfig.auto ? 'checked' : ''} onchange="algoSetAuto(this.checked)"> למידה אוטומטית</label>
+        <button type="button" class="algo-btn" onclick="algoApply()" ${L.ready ? '' : 'disabled'}>שמירת המשקלים שנלמדו</button>
+        <button type="button" class="algo-btn ghost" onclick="algoReset()">איפוס לברירת מחדל</button>
+      </div>
+      ${L.ready ? '' : `<p class="algo-note">צריך לפחות ${RECO_MIN_IMP} הצגות כדי שהלמידה תתחיל להשפיע. עד אז — ברירת מחדל.</p>`}
+    </section>
+    <section class="algo-card">
+      <h2>אחוז הקלקה — 14 ימים</h2>
+      <div class="algo-chart">${days.map(x => {
+        const c = x.imp ? x.clk / x.imp : 0;
+        return `<div class="algo-col" title="${x.d.getDate()}.${x.d.getMonth() + 1}: ${x.clk}/${x.imp}"><span style="height:${Math.max(2, c / maxCtr * 100)}%"></span><small>${x.d.getDate()}</small></div>`;
+      }).join('')}</div>
+    </section>
+    <section class="algo-card">
+      <h2>מי שצפה בזה צפה גם — הקשרים החזקים</h2>
+      ${pairs.length
+        ? `<ol class="algo-pairs">${pairs.slice(0, 10).map(p => `<li><span>${escHtml(p.a)}</span><i>⇄</i><span>${escHtml(p.b)}</span><b>${p.n}</b></li>`).join('')}</ol>`
+        : '<p class="algo-note">עדיין אין מספיק צפיות רצופות.</p>'}
+    </section>
+    <section class="algo-card algo-how">
+      <h2>איך זה לומד</h2>
+      <ul>
+        <li><b>כל המלצה נרשמת עם הסיבה שלה</b> (דמיון / טעם / פופולריות / טריות / צפו גם), וכל קליק נזקף לזכותה.</li>
+        <li><b>אחוז הקלקה מוחלק</b> — סיבה עם מעט נתונים נמשכת לממוצע, כדי שקליק מקרי לא ישנה הכל.</li>
+        <li><b>שינוי עדין ומוגבל</b> — המשקל זז לפי שורש היחס לממוצע, בין 4% ל-60%, וסכום המשקלים תמיד 100%.</li>
+        <li><b>"צפו גם"</b> — שתי גלריות שנצפו ברצף באותו ביקור מתחזקות זו לזו, וזה הופך לאות חדש בהמלצות.</li>
+        <li><b>פרטיות</b> — נשמרים רק מספרים מצטברים, בלי זהות גולשים, ורק ממי שאישר עוגיות.</li>
+      </ul>
+    </section>`;
+}
+async function algoSave(cfg) {
+  try {
+    await set(ref(db, 'website/reco_config'), Object.assign({ auto: recoConfig.auto, w: recoConfig.w || null }, cfg, { updated: Date.now() }));
+    if (typeof showCopyToast === 'function') showCopyToast('נשמר');
+  } catch (e) { alert('השמירה נכשלה — ודאו שהכללים של Firebase הועלו'); }
+}
+function algoSetAuto(on) { algoSave({ auto: !!on }); }
+function algoApply() { const L = recoLearnedWeights(); if (L.ready) algoSave({ w: L.w, auto: false }); }
+function algoReset() { if (confirm('לאפס את המשקלים לברירת המחדל?')) algoSave({ w: null, auto: false }); }
+window.algoSetAuto = algoSetAuto; window.algoApply = algoApply; window.algoReset = algoReset;
+window.buildAlgoPage = buildAlgoPage;
+
 // עמוד "מוצרי יד שניה" — גריד מוצרים בקונספט של עמוד התמונות/רעיונות
 function buildSecondhandPage() {
   const albums = (typeof photoGetAlbums === 'function') ? photoGetAlbums() : [];
@@ -15696,7 +15815,72 @@ const RECO_KEY = 'reco_events_v1';
 const RECO_MAX_EVENTS = 200;
 const RECO_HALF_LIFE_DAYS = 7;          // אינטראקציה בת שבוע שווה חצי מאינטראקציה מהיום
 const RECO_EVENT_WEIGHT = { view: 1, save: 2.5, like: 3 };
-const RECO_W = { sim: 0.45, taste: 0.30, pop: 0.15, fresh: 0.10 };
+const RECO_W_DEFAULT = { sim: 0.40, taste: 0.27, pop: 0.13, fresh: 0.10, co: 0.10 };
+const RECO_SIGNALS = ['sim', 'taste', 'pop', 'fresh', 'co'];
+const RECO_LABEL = { sim: 'דמיון בתוכן', taste: 'טעם אישי', pop: 'פופולריות', fresh: 'טריות', co: 'צפו גם (קהילה)' };
+// מצב הלמידה מהקהילה: סטטיסטיקה מצטברת (בלי זהות משתמשים) + הגדרות המנהל
+let recoStats = { imp: {}, clk: {}, days: {}, co: {} };
+let recoConfig = { w: null, auto: true };
+let recoSubscribed = false;
+function recoSubscribe() {
+  if (recoSubscribed) return; recoSubscribed = true;
+  try {
+    onValue(ref(db, 'website/reco_stats'), snap => { recoStats = Object.assign({ imp: {}, clk: {}, days: {}, co: {} }, snap.val() || {}); if (document.querySelector('.algo-page')) algoRender(); }, () => {});
+    onValue(ref(db, 'website/reco_config'), snap => { recoConfig = Object.assign({ w: null, auto: true }, snap.val() || {}); if (document.querySelector('.algo-page')) algoRender(); }, () => {});
+  } catch (e) {}
+}
+// למידה: לכל אות (סיבת המלצה) מחשבים אחוז הקלקה מוחלק (Bayes), ומעלים את משקל
+// האותות שמקליקים עליהם יותר ממוצע — בעדינות (שורש) ובגבולות, כדי לא "להתאהב" ברעש.
+const RECO_MIN_IMP = 30;
+function recoLearnedWeights() {
+  const imp = recoStats.imp || {}, clk = recoStats.clk || {};
+  const totI = RECO_SIGNALS.reduce((a, k) => a + (imp[k] || 0), 0), totC = RECO_SIGNALS.reduce((a, k) => a + (clk[k] || 0), 0);
+  const prior = totI ? (totC + 1) / (totI + 10) : 0.1, A = 20;
+  const ctr = {}; RECO_SIGNALS.forEach(k => { ctr[k] = ((clk[k] || 0) + A * prior) / ((imp[k] || 0) + A); });
+  const mean = RECO_SIGNALS.reduce((a, k) => a + ctr[k], 0) / RECO_SIGNALS.length || 1;
+  const raw = {}; RECO_SIGNALS.forEach(k => { raw[k] = RECO_W_DEFAULT[k] * Math.pow(ctr[k] / mean, 0.5); });
+  const sum = RECO_SIGNALS.reduce((a, k) => a + raw[k], 0) || 1;
+  const w = {}; RECO_SIGNALS.forEach(k => { w[k] = Math.min(0.6, Math.max(0.04, raw[k] / sum)); });
+  const s2 = RECO_SIGNALS.reduce((a, k) => a + w[k], 0);
+  RECO_SIGNALS.forEach(k => { w[k] = w[k] / s2; });
+  return { w, ctr, totI, totC, ready: totI >= RECO_MIN_IMP };
+}
+// המשקלים שבשימוש: מה שהמנהל קבע, או (במצב אוטומטי) מה שנלמד, או ברירת המחדל
+function recoActiveWeights() {
+  if (recoConfig.auto) { const L = recoLearnedWeights(); if (L.ready) return L.w; }
+  if (recoConfig.w) return Object.assign({}, RECO_W_DEFAULT, recoConfig.w);
+  return RECO_W_DEFAULT;
+}
+const recoKey = id => String(id || '').replace(/[.#$\[\]\/]/g, '_');
+function recoStatBump(updates) {
+  if (typeof analyticsAllowed === 'function' && !analyticsAllowed()) return;
+  try { update(ref(db, 'website/reco_stats'), updates).catch(() => {}); } catch (e) {}
+}
+function recoDay() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+function recoLogImpressions(list) {
+  if (!list.length) return;
+  const u = {}, day = recoDay();
+  const n = {}; list.forEach(r => { const k = r._recoKey || 'sim'; n[k] = (n[k] || 0) + 1; });
+  Object.keys(n).forEach(k => { u[`imp/${k}`] = increment(n[k]); });
+  u[`days/${day}/imp`] = increment(list.length);
+  recoStatBump(u);
+}
+// קליק על המלצה: מעדכן את אחוז ההקלקה של האות שבזכותו היא הוצגה
+function recoClick(fromId, toId, key) {
+  const day = recoDay();
+  recoStatBump({ [`clk/${key || 'sim'}`]: increment(1), [`days/${day}/clk`]: increment(1) }); // הקשר "צפו גם" נרשם בפתיחה (recoNoteSequence)
+}
+window.recoClick = recoClick;
+// צפייה רציפה בשתי גלריות באותו ביקור (עד 30 דק') = קשר "צפו גם"
+let recoLastView = null;
+function recoNoteSequence(id) {
+  const now = Date.now();
+  if (recoLastView && recoLastView.id !== id && now - recoLastView.t < 30 * 60000) {
+    const a = recoKey(recoLastView.id), b = recoKey(id);
+    recoStatBump({ [`co/${a}/${b}`]: increment(1), [`co/${b}/${a}`]: increment(1) });
+  }
+  recoLastView = { id, t: now };
+}
 const RECO_STOP = new Set(['של', 'עם', 'את', 'על', 'אני', 'הוא', 'היא', 'זה', 'מה', 'גם', 'לא', 'כן', 'או', 'אם', 'כי', 'רק', 'יש', 'אין', 'מאוד', 'the', 'and', 'for', 'with']);
 const recoFeatCache = new Map();
 function recoFeatures(a) {
@@ -15767,6 +15951,10 @@ function recoRecommend(current, albums, k = 6) {
   const isAdminView = (typeof isAdmin === 'function' && isAdmin()) || (typeof isEditMode !== 'undefined' && isEditMode);
   const pool = (albums || []).filter(x => x && x.id !== current.id && x.approved !== false && (!x.adminOnly || isAdminView) && (!x.expiresAt || x.expiresAt > now) && Array.isArray(x.images) && x.images.some(Boolean));
   if (!pool.length) return [];
+  recoSubscribe();
+  const W = recoActiveWeights();
+  const coMap = (recoStats.co && recoStats.co[recoKey(current.id)]) || {};
+  const maxCo = Math.max(1, ...Object.values(coMap).map(Number).filter(n => n > 0));
   const fc = recoFeatures(current), prof = recoProfile();
   const pops = pool.map(x => Math.log1p((typeof photoGetViews === 'function' ? photoGetViews(x.id) : 0)) + 2 * Math.log1p(x.likes || 0));
   const maxPop = Math.max(1, ...pops);
@@ -15774,13 +15962,15 @@ function recoRecommend(current, albums, k = 6) {
     const f = recoFeatures(x);
     const sim = recoSimilarity(fc, f), taste = recoTaste(f, prof), pop = pops[i] / maxPop;
     const fresh = f.time ? Math.exp(-Math.max(0, now - f.time) / (14 * 864e5)) : 0.3;
-    let score = RECO_W.sim * sim + RECO_W.taste * taste + RECO_W.pop * pop + RECO_W.fresh * fresh;
+    const co = coMap[recoKey(x.id)] ? Math.log1p(coMap[recoKey(x.id)]) / Math.log1p(maxCo) : 0;
+    let score = W.sim * sim + W.taste * taste + W.pop * pop + W.fresh * fresh + W.co * co;
     const seenAt = prof.seen[x.id];
     if (seenAt && now - seenAt < 864e5) score *= 0.35;            // נצפתה ב-24 השעות האחרונות — פחות עדיפות
     score += Math.random() * 0.03;                                 // מעט גיוון בין ביקורים
-    const parts = [['sim', RECO_W.sim * sim], ['taste', RECO_W.taste * taste], ['pop', RECO_W.pop * pop], ['fresh', RECO_W.fresh * fresh]].sort((p, q) => q[1] - p[1]);
-    const reason = { sim: (f.category && f.category === fc.category) ? 'דומה למה שאתם רואים' : 'בסגנון דומה', taste: 'מותאם לטעם שלכם', pop: 'פופולרי בקהילה', fresh: 'חדש באתר' }[parts[0][0]];
-    return { album: x, f, score, reason };
+    const parts = [['sim', W.sim * sim], ['taste', W.taste * taste], ['pop', W.pop * pop], ['fresh', W.fresh * fresh], ['co', W.co * co]].sort((p, q) => q[1] - p[1]);
+    const key = parts[0][0];
+    const reason = { sim: (f.category && f.category === fc.category) ? 'דומה למה שאתם רואים' : 'בסגנון דומה', taste: 'מותאם לטעם שלכם', pop: 'פופולרי בקהילה', fresh: 'חדש באתר', co: 'מי שצפה בזה צפה גם' }[key];
+    return { album: x, f, score, reason, key };
   });
   // MMR: בכל צעד בוחרים את הגלריה עם הציון הגבוה, בניכוי הדמיון למה שכבר נבחר; עד 2 גלריות לאותו יוצר
   const picked = [], perAuthor = {}, LAMBDA = 0.75;
@@ -15798,7 +15988,9 @@ function recoRecommend(current, albums, k = 6) {
     picked.push(c);
     perAuthor[c.f.author] = (perAuthor[c.f.author] || 0) + 1;
   }
-  return picked.map(p => Object.assign({}, p.album, { _recoReason: p.reason }));
+  const out = picked.map(p => Object.assign({}, p.album, { _recoReason: p.reason, _recoKey: p.key }));
+  recoLogImpressions(out);
+  return out;
 }
 window.recoRecommend = recoRecommend;
 
@@ -15827,11 +16019,12 @@ function photoOpenDetail(id) {
   `).join('');
 
   recoTrack(a, 'view');
+  recoNoteSequence(a.id);
   const recommended = recoRecommend(a, albums, 6);
   const recHTML = recommended.map(r => {
     const rImg = r.images && r.images[0] ? r.images[0] : '';
     return `
-      <div class="art-rec-card" onclick="photoOpenDetail('${artEsc(r.id)}')">
+      <div class="art-rec-card" onclick="recoClick('${artEsc(a.id)}','${artEsc(r.id)}','${r._recoKey || 'sim'}'); photoOpenDetail('${artEsc(r.id)}')">
         <div class="art-rec-img">
           ${rImg ? `<img src="${escHtml(rImg)}" alt="">` : '<div class="art-card-img-placeholder"></div>'}
           <span class="art-rec-badge art-category-badge" style="background:${escHtml(r.categoryColor || '#10b981')}">${escHtml(r.category)}</span>
@@ -21666,6 +21859,9 @@ onPublicSiteValue((data) => {
     const _ipc = '<div class="info-page" data-page-id="page-info-main"></div>';
     if (!_ip) {
       pList.push({ id: 'page-info-main', title: 'מידע 🔒', isHidden: true, content: _ipc });
+    }
+    if (!pList.find(p => p && p.id === 'page-algorithm-main')) {
+      pList.push({ id: 'page-algorithm-main', title: 'אלגוריתם 🔒', isHidden: true, content: '<div class="algo-page" data-page-id="page-algorithm-main"></div>' });
     } else {
       if (_ip.isHidden === undefined) _ip.isHidden = true; _ip.content = _ipc; if (!_ip.title) _ip.title = 'מידע 🔒';
     }
@@ -26195,3 +26391,4 @@ if (mainContent) {
   }).observe(mainContent, { childList: true });
   ensureSiteFooter();
 }
+
