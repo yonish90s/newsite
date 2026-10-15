@@ -8900,14 +8900,14 @@ function qpEnsureModal() {
   modal.id = 'quick-publish-modal';
   modal.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999999; align-items:center; justify-content:center; direction:rtl; padding:16px; font-family:system-ui,sans-serif;';
   modal.innerHTML = `
-    <div style="background:#fff; border-radius:18px; width:100%; max-width:460px; height:80vh; max-height:640px; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 25px 60px rgba(0,0,0,0.35);">
+    <div class="qp-card" style="background:#fff; border-radius:18px; width:100%; max-width:460px; height:80vh; max-height:640px; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 25px 60px rgba(0,0,0,0.35);">
       <div style="background:#1a1a1a; color:#fff; padding:16px 18px; display:flex; align-items:center; gap:12px;">
         <div style="width:44px; height:44px; border-radius:50%; background:#22c55e; display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0;">🤖</div>
         <div style="flex:1; min-width:0;">
           <div style="font-size:16px; font-weight:900;">עוזר לפרסום מודעה מהיר</div>
           <div style="font-size:12px; color:#9ca3af;">🟢 זמין כעת · פרסום ב-30 שניות</div>
         </div>
-        <button onclick="document.getElementById('quick-publish-modal').style.display='none'" style="background:rgba(43, 37, 34, 0.12); border:none; color:#2b2522; width:30px; height:30px; border-radius:50%; cursor:pointer; font-size:16px; flex-shrink:0;">✕</button>
+        <button class="qp-close" aria-label="סגירה" onclick="document.getElementById('quick-publish-modal').style.display='none'" style="background:rgba(255,255,255,0.14); border:none; color:#fff; width:30px; height:30px; border-radius:50%; cursor:pointer; font-size:16px; flex-shrink:0;">✕</button>
       </div>
       <div id="qp-messages" style="flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:12px; background:#f7f7f8;"></div>
       <div style="display:flex; gap:8px; padding:12px; border-top:1px solid #eee; background:#fff; align-items:center;">

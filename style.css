@@ -10911,3 +10911,11 @@ html body .co .co-method > * { margin: 0 !important; }
   .srail-me svg { width: 28px; height: 28px; }
 }
 .mtabs { grid-template-columns: repeat(5, minmax(0, 1fr)) !important; max-width: 360px !important; }
+/* צ'אט פרסום מהיר — מסך מלא במובייל */
+@media (max-width: 768px) {
+  #quick-publish-modal { padding: 0 !important; }
+  #quick-publish-modal .qp-card { max-width: none !important; width: 100% !important; height: 100dvh !important; max-height: none !important; border-radius: 0 !important; box-shadow: none !important; }
+  #quick-publish-modal .qp-card > div:first-child { padding-top: calc(16px + env(safe-area-inset-top)) !important; }
+  #quick-publish-modal .qp-card > div:last-child { padding-bottom: calc(12px + env(safe-area-inset-bottom)) !important; }
+  #quick-publish-modal .qp-close { width: 36px !important; height: 36px !important; font-size: 18px !important; }
+}
