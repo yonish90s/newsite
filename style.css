@@ -10993,3 +10993,7 @@ html body .co .co-method > * { margin: 0 !important; }
 .photo-author-link { display: inline-flex; align-items: center; }
 .au-line { display: inline-flex; align-items: center; gap: 4px; }
 .au-line .au-av { margin: 0 2px; width: 28px; height: 28px; }
+/* אייקונים בכפתורי שמירה / אימייל / טלגרם — כהים, כדי שיראו אותם */
+html body .art-telegram-btn svg, html body .art-telegram-btn svg * { color: #2b2522 !important; stroke: #2b2522 !important; }
+html body .art-save-btn.is-saved svg * { fill: #2b2522 !important; }
+html body .art-telegram-btn.is-disabled svg * { stroke: #8a7f78 !important; }
