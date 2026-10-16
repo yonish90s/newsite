@@ -10997,3 +10997,36 @@ html body .co .co-method > * { margin: 0 !important; }
 html body .art-telegram-btn svg, html body .art-telegram-btn svg * { color: #2b2522 !important; stroke: #2b2522 !important; }
 html body .art-save-btn.is-saved svg * { fill: #2b2522 !important; }
 html body .art-telegram-btn.is-disabled svg * { stroke: #8a7f78 !important; }
+
+/* ===== הרשמה בשלושה שלבים ===== */
+.ob-modal { display: none; position: fixed; inset: 0; z-index: 10000000; background: #f3eee8; overflow-y: auto; direction: rtl; }
+.ob-wrap { width: 100%; max-width: 560px; margin: auto; padding: 28px 16px 40px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; gap: 26px; }
+.ob-logo { height: 54px; width: auto; }
+.ob-card { width: 100%; background: #fff; border-radius: 22px; padding: 26px 26px 28px; box-sizing: border-box; box-shadow: 0 20px 50px -30px rgba(43,37,34,.4); display: flex; flex-direction: column; gap: 16px; }
+.ob-top { display: flex; align-items: center; justify-content: space-between; }
+.ob-dots { display: flex; gap: 6px; }
+.ob-dots span { width: 28px; height: 5px; border-radius: 3px; background: #ece4dd; transition: background .3s; }
+.ob-dots span.on { background: #ff8a5c; }
+.ob-back, .ob-skip { border: 0; background: none; font: inherit; cursor: pointer; color: #8a7f78; }
+.ob-back { font-size: 26px; line-height: 1; width: 32px; }
+.ob-skip { font-size: 14px; font-weight: 700; text-decoration: underline; }
+.ob-card h2 { margin: 0; font-size: 24px; font-weight: 900; color: #2b2522; }
+.ob-sub { margin: -6px 0 0; font-size: 16px; color: #2b2522; }
+.ob-handle { display: flex; align-items: center; gap: 4px; height: 56px; padding: 0 16px; border-radius: 14px; border: 1.5px solid #e3dbd4; background: #f1edea; direction: ltr; }
+.ob-handle:focus-within, .ob-lbl input:focus, .ob-lbl textarea:focus { border-color: #ff8a5c; }
+.ob-handle b { font-size: 15.5px; color: #2b2522; white-space: nowrap; }
+.ob-handle input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font: inherit; font-size: 17px; color: #2b2522; }
+.ob-tip { display: flex; align-items: center; gap: 12px; padding: 16px 18px; border-radius: 14px; background: #f1e8e2; font-size: 15.5px; color: #2b2522; }
+.ob-tip i { width: 1px; align-self: stretch; background: #cbbfb5; }
+.ob-pick { display: flex; align-items: center; justify-content: center; gap: 8px; height: 54px; border-radius: 999px; background: #e3dfdc; font-weight: 800; font-size: 16.5px; color: #2b2522; cursor: pointer; }
+.ob-pick svg { width: 22px; height: 22px; }
+.ob-preview { width: 200px; height: 200px; margin: 0 auto; border-radius: 50%; overflow: hidden; background: #fbf3ea; box-shadow: 0 0 0 1px #eee6de, 0 10px 30px -18px rgba(43,37,34,.5); display: grid; place-items: center; }
+.ob-preview img, .ob-preview svg { width: 100%; height: 100%; object-fit: cover; }
+.ob-link { align-self: center; border: 0; background: none; font: inherit; font-size: 14px; font-weight: 700; color: #d9541f; text-decoration: underline; cursor: pointer; }
+.ob-lbl { display: flex; flex-direction: column; gap: 8px; font-size: 16px; font-weight: 800; color: #2b2522; }
+.ob-lbl input, .ob-lbl textarea { border: 1.5px solid #e3dbd4; background: #f1edea; border-radius: 14px; padding: 14px 16px; font: inherit; font-size: 16px; font-weight: 500; color: #2b2522; outline: none; resize: vertical; }
+.ob-err { color: #c2334d; font-weight: 800; font-size: 14px; }
+.ob-next { height: 56px; border: 0; border-radius: 999px; background: #2b2522; color: #fff; font: inherit; font-size: 18px; font-weight: 900; cursor: pointer; }
+.ob-next:disabled { opacity: .6; }
+@media (max-width: 480px) { .ob-card { padding: 20px 18px 22px; } .ob-preview { width: 170px; height: 170px; } }
+.ob-tip svg { width: 24px; height: 24px; flex: none; }

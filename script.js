@@ -439,6 +439,7 @@ async function authUsernameLogin() {
     if (passEl) passEl.value = '';
     if (typeof showCopyToast === 'function') showCopyToast(isNew ? `ברוכים הבאים, ${username}! נרשמתם בהצלחה 🎉` : `שלום ${username}, התחברתם ✓`);
     if (typeof dmRefreshList === 'function') { try { subscribeMyDMs(); dmRefreshList(); } catch (e) {} }
+    if (isNew && typeof openSignupSteps === 'function') setTimeout(openSignupSteps, 300);
   };
   try {
     try {
@@ -4070,6 +4071,8 @@ document.addEventListener('DOMContentLoaded', () => {
           const user = result.user;
           if (user.email === ADMIN_EMAIL) {
             alert(`שלום מנהל! התחברת בהצלחה עם המייל: ${user.email}`);
+          } else if (user.metadata && user.metadata.creationTime === user.metadata.lastSignInTime && typeof openSignupSteps === 'function') {
+            openSignupSteps(); // משתמש חדש — שלושת שלבי ההרשמה
           } else {
             alert(`התחברת בהצלחה כמשתמש רגיל (${user.email})! כעת תוכל לפנות לתמיכה.`);
           }
@@ -13260,14 +13263,17 @@ function avatarHydrate(root) {
     if (!uid) return;
     if (uid in avatarCache) {
       el.setAttribute('data-av-done', '1');
-      if (avatarCache[uid]) { el.innerHTML = avatarSVG(avatarCache[uid]); el.classList.add('has-av'); }
+      const av = avatarCache[uid];
+      if (av) { el.innerHTML = av.__photo ? `<img src="${escHtml(av.__photo)}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%">` : avatarSVG(av); el.classList.add('has-av'); }
     } else need.add(uid);
   });
   need.forEach(uid => {
     if (avatarPending.has(uid)) return;
     avatarPending.add(uid);
-    get(ref(db, `website/users/${uid}/profile/avatar`)).then(snap => {
-      avatarCache[uid] = snap.exists() ? avNormalize(snap.val()) : null;
+    // תמונת פרופיל שהועלתה קודמת לדמות המצוירת
+    Promise.all([get(ref(db, `website/users/${uid}/profile/photo`)), get(ref(db, `website/users/${uid}/profile/avatar`))]).then(([ph, snap]) => {
+      const photo = ph.exists() ? String(ph.val() || '') : '';
+      avatarCache[uid] = /^data:image\/(jpeg|png|webp);base64,/.test(photo) ? { __photo: photo } : (snap.exists() ? avNormalize(snap.val()) : null);
     }).catch(() => { avatarCache[uid] = null; }).finally(() => {
       avatarPending.delete(uid);
       avatarHydrate(document);
@@ -13279,6 +13285,121 @@ function avatarRefresh(uid) {
   document.querySelectorAll(`[data-av-uid="${CSS.escape(uid)}"]`).forEach(el => el.removeAttribute('data-av-done'));
   avatarHydrate(document);
 }
+
+// ============================================================
+// הרשמה בשלושה שלבים (אחרי יצירת חשבון): שם משתמש → תמונת פרופיל → קצת עליכם
+// handle נשמר ב-website/handles/{handle} = uid (כדי שיהיה ייחודי), והשאר בפרופיל
+// ============================================================
+let ob = null;
+const OB_TIP = '<div class="ob-tip"><svg viewBox="0 0 24 24" fill="none" stroke="#e8a317" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z" fill="#fde68a"/></svg><i></i>אפשר לשנות את זה בכל רגע!</div>';
+function obCleanHandle(v) { return String(v || '').trim().toLowerCase().replace(/^@/, '').replace(/\s+/g, '_').replace(/[^\p{L}\p{N}_.]/gu, '').slice(0, 20); }
+function openSignupSteps() {
+  const u = auth.currentUser;
+  if (!u || u.isAnonymous) return;
+  const name = (typeof liveChatUserName === 'function' && liveChatUserName()) || u.displayName || '';
+  ob = { step: 1, handle: obCleanHandle(name), photo: '', name, bio: '', busy: false, err: '' };
+  let m = document.getElementById('ob-modal');
+  if (!m) { m = document.createElement('div'); m.id = 'ob-modal'; m.className = 'ob-modal'; document.body.appendChild(m); }
+  m.style.display = 'flex';
+  obRender();
+}
+window.openSignupSteps = openSignupSteps;
+function obRender() {
+  const m = document.getElementById('ob-modal'); if (!m || !ob) return;
+  const u = auth.currentUser;
+  const dots = [1, 2, 3].map(i => `<span class="${i <= ob.step ? 'on' : ''}"></span>`).join('');
+  let body = '';
+  if (ob.step === 1) {
+    body = `<h2>בחרו שם משתמש</h2><p class="ob-sub">איך ייראה הקישור לפרופיל שלכם?</p>
+      <label class="ob-handle"><b dir="ltr">black1white00.com/@</b><input id="ob-handle" dir="auto" maxlength="20" value="${escHtml(ob.handle)}" placeholder="השם_שלכם" autocomplete="off" oninput="this.value = obCleanHandle(this.value)"></label>${OB_TIP}`;
+  } else if (ob.step === 2) {
+    const preview = ob.photo
+      ? `<img src="${ob.photo}" alt="">`
+      : (u && typeof avatarCache !== 'undefined' && avatarCache[u.uid] && !avatarCache[u.uid].__photo ? avatarSVG(avatarCache[u.uid])
+        : '<svg viewBox="0 0 120 120" class="ob-face"><path d="M18 70c0-30 18-52 42-52s42 22 42 52-18 40-42 40-42-10-42-40z" fill="#fff4ec"/><circle cx="50" cy="56" r="4.5" fill="#ff8a5c"/><circle cx="70" cy="56" r="4.5" fill="#ff8a5c"/><path d="M48 70c4 9 20 9 24 0" fill="none" stroke="#ff8a5c" stroke-width="5" stroke-linecap="round"/></svg>');
+    body = `<h2>בחרו תמונת פרופיל</h2>
+      <label class="ob-pick"><input type="file" accept="image/*" onchange="obPickPhoto(this)" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg>בחירת תמונה</label>
+      <div class="ob-preview">${preview}</div>
+      <button type="button" class="ob-link" onclick="obBuildAvatar()">או בנו דמות מצוירת</button>${OB_TIP}`;
+  } else {
+    body = `<h2>קצת עליכם</h2>
+      <label class="ob-lbl">שם תצוגה<input id="ob-name" maxlength="30" value="${escHtml(ob.name)}"></label>
+      <label class="ob-lbl">על עצמי<textarea id="ob-bio" rows="5" maxlength="300" placeholder="הציגו את עצמכם כדי שאחרים יכירו אתכם…">${escHtml(ob.bio)}</textarea></label>`;
+  }
+  m.innerHTML = `<div class="ob-wrap">
+      <img class="ob-logo" src="./logo.png" alt="">
+      <div class="ob-card" role="dialog" aria-modal="true">
+        <div class="ob-top">${ob.step > 1 ? `<button type="button" class="ob-back" onclick="obBack()" aria-label="חזרה">›</button>` : '<span></span>'}<div class="ob-dots">${dots}</div><button type="button" class="ob-skip" onclick="obClose()">דלגו</button></div>
+        ${body}
+        ${ob.err ? `<div class="ob-err">${escHtml(ob.err)}</div>` : ''}
+        <button type="button" class="ob-next" onclick="obNext()" ${ob.busy ? 'disabled' : ''}>${ob.busy ? 'רגע…' : ob.step === 3 ? 'סיום' : 'הבא'}</button>
+      </div></div>`;
+  const f = m.querySelector('#ob-handle, #ob-name'); if (f) f.focus();
+}
+function obCapture() {
+  const h = document.getElementById('ob-handle'); if (h) ob.handle = obCleanHandle(h.value);
+  const n = document.getElementById('ob-name'); if (n) ob.name = n.value.trim().slice(0, 30);
+  const b = document.getElementById('ob-bio'); if (b) ob.bio = b.value.trim().slice(0, 300);
+}
+function obBack() { obCapture(); ob.err = ''; ob.step = Math.max(1, ob.step - 1); obRender(); }
+function obClose() { const m = document.getElementById('ob-modal'); if (m) m.style.display = 'none'; ob = null; }
+// תמונה: חיתוך ריבועי ממורכז והקטנה ל-256px (JPEG) — קטן מספיק לשמירה בפרופיל
+function obPickPhoto(input) {
+  const file = input.files && input.files[0]; if (!file) return;
+  if (!/^image\//.test(file.type)) { ob.err = 'נא לבחור קובץ תמונה'; obRender(); return; }
+  const img = new Image();
+  img.onload = () => {
+    const S = 256, c = document.createElement('canvas'); c.width = c.height = S;
+    const side = Math.min(img.width, img.height);
+    c.getContext('2d').drawImage(img, (img.width - side) / 2, (img.height - side) / 2, side, side, 0, 0, S, S);
+    ob.photo = c.toDataURL('image/jpeg', 0.82); ob.err = ''; URL.revokeObjectURL(img.src); obRender();
+  };
+  img.onerror = () => { ob.err = 'לא הצלחנו לקרוא את התמונה'; obRender(); };
+  img.src = URL.createObjectURL(file);
+}
+function obBuildAvatar() {
+  if (typeof openAvatarEditor === 'function') { const m = document.getElementById('ob-modal'); if (m) m.style.display = 'none'; ob.waitAvatar = true; openAvatarEditor(); }
+}
+async function obNext() {
+  if (!ob || ob.busy) return;
+  obCapture(); ob.err = '';
+  const u = auth.currentUser; if (!u || u.isAnonymous) { obClose(); return; }
+  if (ob.step === 1) {
+    if (ob.handle.length < 3) { ob.err = 'שם המשתמש צריך להיות לפחות 3 תווים'; obRender(); return; }
+    ob.busy = true; obRender();
+    try {
+      const snap = await get(ref(db, `website/handles/${ob.handle}`));
+      if (snap.exists() && snap.val() !== u.uid) { ob.err = 'השם הזה תפוס — נסו אחר'; }
+      else ob.step = 2;
+    } catch (e) { ob.step = 2; } // אם הבדיקה נכשלה — ננסה לשמור בסוף
+    ob.busy = false; obRender(); return;
+  }
+  if (ob.step === 2) { ob.step = 3; obRender(); return; }
+  if (ob.name.length < 2) { ob.err = 'שם התצוגה צריך להיות לפחות 2 תווים'; obRender(); return; }
+  ob.busy = true; obRender();
+  try {
+    const old = await get(ref(db, `website/users/${u.uid}/profile/handle`)).catch(() => null);
+    const prev = old && old.exists() ? old.val() : '';
+    try {
+      await set(ref(db, `website/handles/${ob.handle}`), u.uid);
+      if (prev && prev !== ob.handle) set(ref(db, `website/handles/${prev}`), null).catch(() => {});
+    } catch (e) { ob.busy = false; ob.step = 1; ob.err = 'השם הזה תפוס — נסו אחר'; obRender(); return; }
+    const upd = { handle: ob.handle, nickname: ob.name, bio: ob.bio, onboarded: true };
+    if (ob.photo) upd.photo = ob.photo;
+    await update(ref(db, `website/users/${u.uid}/profile`), upd);
+    try { await updateProfile(u, { displayName: ob.name }); } catch (e) {}
+    try {
+      const key = `user_profile_${u.uid}`;
+      const lp = JSON.parse(localStorage.getItem(key) || '{}');
+      localStorage.setItem(key, JSON.stringify(Object.assign(lp, { nickname: ob.name })));
+    } catch (e) {}
+    if (typeof avatarCache !== 'undefined') { delete avatarCache[u.uid]; if (typeof avatarRefresh === 'function') avatarRefresh(u.uid); }
+    obClose();
+    if (typeof showCopyToast === 'function') showCopyToast('הפרופיל מוכן 🎉');
+  } catch (e) { ob.busy = false; ob.err = 'השמירה נכשלה, נסו שוב'; obRender(); }
+}
+Object.assign(window, { obNext, obBack, obClose, obPickPhoto, obBuildAvatar, obCleanHandle });
 
 // --- עורך הדמות ---
 let avEdit = null;
@@ -13348,7 +13469,11 @@ function openAvatarEditor() {
   avRenderEditor();
 }
 window.openAvatarEditor = openAvatarEditor;
-function closeAvatarEditor() { const m = document.getElementById('av-editor'); if (m) m.style.display = 'none'; }
+function closeAvatarEditor() {
+  const m = document.getElementById('av-editor'); if (m) m.style.display = 'none';
+  // חזרה לשלב תמונת הפרופיל בהרשמה, אם הגענו מכאן
+  if (typeof ob !== 'undefined' && ob && ob.waitAvatar) { ob.waitAvatar = false; const o = document.getElementById('ob-modal'); if (o) o.style.display = 'flex'; obRender(); }
+}
 window.closeAvatarEditor = closeAvatarEditor;
 function avSet(key, i) { avEdit[key] = i; avRenderEditor(); }
 window.avSet = avSet;
@@ -16956,7 +17081,7 @@ function profileHeadHTML(st) {
         <div class="pf-actions">${actions}</div>
       </div>
       <h1 class="pf-name" id="user-page-name">${escHtml(name)}${st.verified ? verifiedSealHTML(22) : ''}</h1>
-      <div class="pf-handle" dir="auto">@${escHtml(profileHandle(name))}</div>
+      <div class="pf-handle" dir="auto">@${escHtml(profile.handle || profileHandle(name))}</div>
       ${bio ? `<p class="pf-bio">${escHtml(bio)}</p>` : (isOwn ? `<button type="button" class="pf-bio-add" onclick="profileEditBio()">+ הוסיפו כמה מילים עליכם</button>` : '')}
       ${facts ? `<div class="pf-facts">${facts}</div>` : ''}
       <div class="pf-counts">

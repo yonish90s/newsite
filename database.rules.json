@@ -92,6 +92,14 @@
         "events_daily": { ".read": true, "$day": { "$event": { ".write": "$day.length <= 12 && $event.length <= 40 && newData.isNumber() && newData.val() === (data.exists() ? data.val() : 0) + 1" } } }
       },
 
+      "handles": {
+        ".read": true,
+        "$h": {
+          ".write": "auth != null && auth.token.firebase.sign_in_provider !== 'anonymous' && (!data.exists() || data.val() === auth.uid)",
+          ".validate": "!newData.exists() || (newData.val() === auth.uid && $h.length >= 3 && $h.length <= 20)"
+        }
+      },
+
       "users": {
         "$uid": {
           ".read": "auth != null && auth.uid === $uid",
