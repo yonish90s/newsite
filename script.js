@@ -16338,10 +16338,10 @@ function photoOpenDetail(id) {
         <div class="art-detail-inner">
           <button class="art-back-btn" onclick="photoGoBack()">← חזרה לגלריות</button>
 
-          <!-- תצוגת "מוצר": תמונה גדולה במסגרת צבעונית + כותרת, תיאור וריבועי בחירה -->
-          <div class="pshow pd-show${a.isAdult ? ' is-adult-album' : ''}">
-            <div class="pshow-stage">
-              <div class="pshow-frame photo-main-img-container${a.isAdult ? ' is-adult' : ''}" style="--tint:${PSHOW_TINTS[0]}; ${blurStyle}">
+          <!-- תצוגת "מוצר" בסגנון חנות: תמונה גדולה ונקייה + עמודת פרטים, ביקורות ויוצר -->
+          <div class="pd2 pd-show${a.isAdult ? ' is-adult-album' : ''}">
+            <div class="pd2-media">
+              <div class="pd2-frame pshow-frame photo-main-img-container${a.isAdult ? ' is-adult' : ''}" style="${blurStyle}">
                 <img id="photo-gallery-main-img" class="pshow-main" src="${escHtml(mainImg)}" alt="" style="${blurStyle}" onclick="artGalleryById('photos','${artEsc(id)}', this.getAttribute('src'))">
                 ${validImages.length > 1 ? `
                   <button type="button" class="pshow-arrow prev" onclick="event.stopPropagation(); pdShowStep(this, 1)" aria-label="תמונה הבאה"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
@@ -16349,77 +16349,70 @@ function photoOpenDetail(id) {
                 ` : ''}
                 ${photoSizeBadgesHTML(a)}
               </div>
-              ${validImages.length > 1 ? `<div class="pshow-dots">${validImages.map((_, i) => `<button type="button" class="pshow-dot${i === 0 ? ' active' : ''}" onclick="pdShowGo(this, ${i})" aria-label="תמונה ${i + 1}"></button>`).join('')}</div>` : ''}
-            </div>
-
-            <div class="pshow-info">
-              <span class="pshow-star" aria-hidden="true">✱</span>
-              <h1 class="pshow-title">${escHtml(a.title)}</h1>
-              <div class="pshow-views-row">${viewsDistHTML(a.id, a.authorId, 'pv-lg')}</div>
-              <div class="pshow-desc">${contentHTML}</div>
-                <div class="art-meta pd-show-meta">
-                  <span class="art-category-badge" style="background:${escHtml(a.categoryColor || '#10b981')}">${escHtml(a.category)}</span>
-                  <span>צילום: ${escHtml(a.author)}${isUserVerified(a.authorId, a.author, a.verified) ? verifiedSealHTML(18) : ''}</span>
-                  ${a.authorId && !isSiteAdminAuthor(a.authorId, a.author, a) ? `<button onclick="toggleFollow('${artEsc(a.authorId)}','${artEsc(a.author || '')}', this)" class="follow-btn${isFollowing(a.authorId) ? ' following' : ''}">${isFollowing(a.authorId) ? '✓ עוקב' : '➕ עקוב'}</button>` : ''}
-                  <span>·</span>
-                  <span>${escHtml(a.timestamp)}</span>
-                  ${a.ageRange ? `<span>·</span><span>גיל ${escHtml(String(a.ageRange))}</span>` : ''}
-                  ${isUserVerified(a.authorId, a.author, a.verified || a.verifiedUser) ? `<span>·</span><span style="color:#2563eb; font-weight:700; display:inline-flex; align-items:center; gap:4px;">חשבון זה מאומת <span style="background:#dbeafe; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:10px;">✓</span></span>` : ''}
-                  ${a.expiresAt ? renderExpirationBadge(a.expiresAt) : ''}
-                  <button onclick="photoToggleLike('${artEsc(a.id)}')" class="photo-like-btn" style="background: ${photoIsLikedLocal(a.id) ? '#ede9fe' : '#ffffff'}; border: 1.5px solid ${photoIsLikedLocal(a.id) ? '#7c3aed' : '#e2e8f0'}; cursor: pointer; color: ${photoIsLikedLocal(a.id) ? '#7c3aed' : '#1e293b'}; display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 8px; transition: all 0.2s; font-weight: 700; font-size: 13px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="${photoIsLikedLocal(a.id) ? '#7c3aed' : 'none'}" stroke="${photoIsLikedLocal(a.id) ? '#7c3aed' : '#7c3aed'}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
-                      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                    </svg>
-                    <span>${a.likes || 0} לייקים</span>
-                  </button>
-                  <button onclick="photoToggleSave('${artEsc(a.id)}')" class="photo-save-btn" style="background: rgba(0, 0, 0, 0.05); border: 1px solid #dddddd; cursor: pointer; color: #000000; display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; transition: background 0.2s; font-weight: bold; font-size: 13px;" title="${photoIsSavedLocal(a.id) ? 'הסר משמורים' : 'שמור גלריה'}">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="${photoIsSavedLocal(a.id) ? '#000' : 'none'}" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
-                      <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
-                    </svg>
-                    <span>שמור</span>
-                  </button>
-                  ${a.telegramUrl ? `
-                    <a href="${escHtml(safeUrl(a.telegramUrl))}" target="_blank" title="${escHtml(a.telegramUrl.replace('https://t.me/', '@'))}" class="art-telegram-btn" style="display: inline-flex; align-items: center; background: #2f2f2f; color: #ffffff; padding: 6px 12px; border-radius: 6px; font-size: 13px; text-decoration: none; font-weight: bold; gap: 6px; border: 1px solid rgba(38, 38, 38, 0.1);">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
-                        <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
-                      </svg>
-                      <span>טלגרם</span>
-                    </a>
-                  ` : ''}
-                  ${a.emailUrl ? `
-                    <button type="button" onclick="revealAndCopyEmail('${artEsc(a.emailUrl)}', this, event);" title="לחץ לחשיפת והעתקת אימייל" class="art-telegram-btn" style="display: inline-flex; align-items: center; background: #2f2f2f; color: #ffffff; padding: 6px 12px; border-radius: 6px; font-size: 13px; text-decoration: none; font-weight: bold; gap: 6px; border: 1px solid rgba(38, 38, 38, 0.1); cursor: pointer;">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
-                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                        <polyline points="22,6 12,13 2,6"/>
-                      </svg>
-                      <span>אימייל</span>
-                    </button>
-                  ` : ''}
-                  ${(isAdmin() || isEditMode) ? `
-                    <button type="button" onclick="openPhotoEditModal('${artEsc(a.id)}', event);" title="ערוך גלריה זו" style="display: inline-flex; align-items: center; background: #111111; color: #ffffff; padding: 6px 14px; border-radius: 6px; font-size: 13px; border: none; font-weight: bold; gap: 6px; cursor: pointer; transition: background 0.2s;">
-                      ✏️ ערוך גלריה
-                    </button>
-                  ` : ''}
-                </div>
               ${validImages.length > 1 ? `
-                <div class="pshow-tiles">
+                <div class="pd2-thumbs pshow-tiles">
                   ${validImages.map((imgUrl, i) => `
-                    <button type="button" class="pshow-tile${i === 0 ? ' active' : ''}" style="--tint:${PSHOW_TINTS[i % PSHOW_TINTS.length]}" onclick="pdShowGo(this, ${i})" aria-label="תמונה ${i + 1}">
+                    <button type="button" class="pshow-tile${i === 0 ? ' active' : ''}" onclick="pdShowGo(this, ${i})" aria-label="תמונה ${i + 1}">
                       <img src="${escHtml(imgUrl)}" alt="" loading="lazy" style="${blurStyle}">
                     </button>`).join('')}
                 </div>` : ''}
-              <div class="pshow-line"></div>
-              ${(a.telegramUrl || a.emailUrl) ? `
-                <div class="pshow-contact">
-                  ${a.telegramUrl ? `<a class="pshow-contact-btn tg" href="${escHtml(safeUrl(a.telegramUrl))}" target="_blank" rel="noopener">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
-                      <span>טלגרם</span></a>` : ''}
-                  ${a.emailUrl ? `<button type="button" class="pshow-contact-btn mail" onclick="revealAndCopyEmail('${artEsc(a.emailUrl)}', this, event);" title="לחצו לחשיפת והעתקת האימייל">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                      <span>אימייל</span></button>` : ''}
-                </div>` : ''}
-              <button type="button" class="pshow-cta${(a.telegramUrl || a.emailUrl) ? ' has-contact' : ''}" onclick="dmStartAboutGallery('${artEsc(a.authorId || '')}', '${artEsc(a.author || '')}', '${artEsc(a.id)}')">שלחו הודעה ליוצר</button>
             </div>
+
+            <aside class="pd2-info">
+              <div class="pd2-creator">
+                ${authorAvHTML(a)}
+                <div class="pd2-creator-txt" ${a.authorId && !isSiteAdminAuthor(a.authorId, a.author, a) ? `onclick="openUserPage('${artEsc(a.authorId)}','${artEsc(a.author || '')}')"` : ''}>
+                  <b>${escHtml(a.author || 'משתמש')}${isUserVerified(a.authorId, a.author, a.verified || a.verifiedUser) ? verifiedSealHTML(15) : ''}</b>
+                  <small>${escHtml(a.timestamp || '')}</small>
+                </div>
+                <button type="button" class="pd2-more" onclick="postShare('${artEsc(a.title || '')}')" aria-label="שיתוף">⋯</button>
+              </div>
+              <h1 class="pd2-title">${escHtml(a.title)}</h1>
+              <a href="#" class="pd2-stars-row" onclick="event.preventDefault(); document.getElementById('pd2-reviews')?.scrollIntoView({behavior:'smooth', block:'start'})"><span id="pd2-stars-top">${pdStarsHTML(0)}</span><u id="pd2-count-top">0 ביקורות</u></a>
+              <div class="pd2-pill">${viewsDistHTML(a.id, a.authorId, 'pv-lg')}</div>
+
+              ${a.category || a.ageRange || a.region ? `<div class="pd2-opts">
+                ${a.category ? `<div class="pd2-opt"><small>קטגוריה</small><span class="pd2-chip on">${escHtml(a.category)}</span></div>` : ''}
+                ${a.ageRange || a.region ? `<div class="pd2-opt"><small>פרטים</small><div class="pd2-chips">
+                  ${a.ageRange ? `<span class="pd2-chip">גיל ${escHtml(String(a.ageRange))}</span>` : ''}
+                  ${a.region ? `<span class="pd2-chip">${escHtml(a.region)}</span>` : ''}
+                </div></div>` : ''}
+              </div>` : ''}
+
+              <div class="pd2-buy">
+                <div class="pd2-buy-head"><b>יצירת קשר עם היוצר</b><small>${a.likes || 0} לייקים</small></div>
+                <div class="pd2-buy-btns">
+                  <button type="button" class="pd2-btn dark" onclick="dmStartAboutGallery('${artEsc(a.authorId || '')}', '${artEsc(a.author || '')}', '${artEsc(a.id)}')">שליחת הודעה</button>
+                  ${a.telegramUrl ? `<a class="pd2-btn accent" href="${escHtml(safeUrl(a.telegramUrl))}" target="_blank" rel="noopener">טלגרם</a>`
+                    : a.emailUrl ? `<button type="button" class="pd2-btn accent" onclick="revealAndCopyEmail('${artEsc(a.emailUrl)}', this, event);">אימייל</button>`
+                    : `<button type="button" class="pd2-btn accent" onclick="photoToggleLike('${artEsc(a.id)}')">${photoIsLikedLocal(a.id) ? 'אהבתי ✓' : 'אהבתי'}</button>`}
+                </div>
+              </div>
+              <div class="pd2-row2">
+                <button type="button" class="pd2-ghost" onclick="photoToggleSave('${artEsc(a.id)}')"><svg viewBox="0 0 24 24" fill="${photoIsSavedLocal(a.id) ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.4-9-8.6C1.6 8.4 3.4 5 6.8 5c2 0 3.3 1.1 5.2 3 1.9-1.9 3.2-3 5.2-3 3.4 0 5.2 3.4 3.8 6.4C19 15.6 12 20 12 20z"/></svg>${photoIsSavedLocal(a.id) ? 'נשמר' : 'שמירה'}</button>
+                <button type="button" class="pd2-ghost" onclick="postShare('${artEsc(a.title || '')}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg>שיתוף</button>
+              </div>
+              ${(isAdmin() || isEditMode) ? `<button type="button" class="pd2-ghost pd2-edit" onclick="openPhotoEditModal('${artEsc(a.id)}', event);">עריכת הגלריה</button>` : ''}
+
+              <details class="pd2-acc" open><summary>תיאור</summary><div class="pd2-desc">${contentHTML || '<p class="pd2-muted">אין תיאור</p>'}</div></details>
+              <details class="pd2-acc" id="pd2-reviews" open><summary>ביקורות</summary><div id="pd2-reviews-body">${pdReviewsHTML()}</div></details>
+              <details class="pd2-acc"><summary>פרטים</summary>
+                <ul class="pd2-facts">
+                  <li><span>פורסם</span><b>${escHtml(a.timestamp || '')}</b></li>
+                  ${a.category ? `<li><span>קטגוריה</span><b>${escHtml(a.category)}</b></li>` : ''}
+                  <li><span>תמונות בגלריה</span><b>${validImages.length || 1}</b></li>
+                  ${isUserVerified(a.authorId, a.author, a.verified || a.verifiedUser) ? '<li><span>חשבון</span><b>מאומת ✓</b></li>' : ''}
+                  ${a.expiresAt ? `<li><span>תוקף</span><b>${renderExpirationBadge(a.expiresAt)}</b></li>` : ''}
+                </ul>
+              </details>
+
+              ${a.authorId && !isSiteAdminAuthor(a.authorId, a.author, a) ? `
+              <div class="pd2-maker" onclick="openUserPage('${artEsc(a.authorId)}','${artEsc(a.author || '')}')">
+                ${authorAvHTML(a)}
+                <div><b>${escHtml(a.author || 'משתמש')}</b><small>לכל ההעלאות של היוצר</small></div>
+                <button type="button" onclick="event.stopPropagation(); toggleFollow('${artEsc(a.authorId)}','${artEsc(a.author || '')}', this)" class="follow-btn${isFollowing(a.authorId) ? ' following' : ''}">${isFollowing(a.authorId) ? 'עוקב/ת ✓' : 'עקוב'}</button>
+              </div>` : ''}
+            </aside>
           </div>
 
           ${photoCommentsSectionHTML(id)}
@@ -19643,16 +19636,60 @@ function subscribePhotoComments(albumId) {
     if (box) box.innerHTML = photoCommentsListHTML();
     const cnt = document.getElementById('photo-comments-count');
     if (cnt) cnt.textContent = Object.keys(photoCommentsData).length;
+    pdReviewsRender();
   });
 }
 window.subscribePhotoComments = subscribePhotoComments;
+
+// ---- ביקורות על גלריה: ממוצע כוכבים, התפלגות וכרטיסי ביקורת (מתוך תגובות עם כוכבים) ----
+const PD_STAR = '<svg viewBox="0 0 24 24"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17.2l-5.7 3.1 1.2-6.4L2.8 9.5l6.4-.8z"/></svg>';
+function pdStarsHTML(v) {
+  return `<span class="pd2-stars">${[1, 2, 3, 4, 5].map(i => `<i class="${v >= i - 0.25 ? 'on' : v >= i - 0.75 ? 'half' : ''}">${PD_STAR}</i>`).join('')}</span>`;
+}
+function pdReviewStats() {
+  const list = Object.values(photoCommentsData || {}).filter(c => c && Number(c.stars) >= 1 && Number(c.stars) <= 5);
+  const dist = [0, 0, 0, 0, 0, 0];
+  list.forEach(c => { dist[Math.round(Number(c.stars))]++; });
+  const avg = list.length ? list.reduce((s, c) => s + Number(c.stars), 0) / list.length : 0;
+  return { list: list.sort((x, y) => (y.createdAt || 0) - (x.createdAt || 0)), dist, avg };
+}
+function pdReviewsHTML() {
+  const { list, dist, avg } = pdReviewStats();
+  const max = Math.max(1, ...dist);
+  const bars = [5, 4, 3, 2, 1].map(n => `<div class="pd2-bar"><span>${n}</span><i><b style="width:${(dist[n] / max * 100).toFixed(0)}%"></b></i></div>`).join('');
+  const cards = list.slice(0, 8).map(c => `<div class="pd2-rcard">
+      ${pdStarsHTML(Number(c.stars))}
+      <p>${escHtml(String(c.text || '').slice(0, 140)) || '&nbsp;'}</p>
+      <small>${escHtml(c.name || 'אורח')} · ${c.createdAt ? new Date(c.createdAt).toLocaleDateString('he-IL') : ''}</small>
+    </div>`).join('');
+  return `<div class="pd2-rev-top">
+      <div class="pd2-rev-avg"><b>${list.length ? avg.toFixed(1) : '—'}</b>${pdStarsHTML(avg)}<small>${list.length} דירוגים</small></div>
+      <div class="pd2-bars">${bars}</div>
+    </div>
+    ${cards ? `<div class="pd2-rcards">${cards}</div>` : '<p class="pd2-muted">עדיין אין ביקורות — היו הראשונים לדרג!</p>'}
+    <button type="button" class="pd2-ghost pd2-wide" onclick="document.getElementById('photo-compose')?.scrollIntoView({behavior:'smooth', block:'center'}); document.getElementById('photo-comment-input')?.focus()">כתיבת ביקורת</button>`;
+}
+function pdReviewsRender() {
+  const body = document.getElementById('pd2-reviews-body');
+  if (body) body.innerHTML = pdReviewsHTML();
+  const { list, avg } = pdReviewStats();
+  const t = document.getElementById('pd2-stars-top'); if (t) t.innerHTML = pdStarsHTML(avg);
+  const n = document.getElementById('pd2-count-top'); if (n) n.textContent = `${list.length} ביקורות`;
+}
+// בחירת כוכבים בשורת התגובה (אופציונלי) — הופך את התגובה לביקורת
+let pcStars = 0;
+function pcSetStars(n) {
+  pcStars = pcStars === n ? 0 : n;
+  document.querySelectorAll('.pc-stars i').forEach((el, i) => el.classList.toggle('on', i < pcStars));
+}
+window.pcSetStars = pcSetStars;
 
 function photoCommentsListHTML() {
   const list = Object.values(photoCommentsData).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
   if (!list.length) return '<div class="pc-empty">אין תגובות עדיין. היו הראשונים להגיב!</div>';
   return list.map(c => `
     <div class="pc-comment">
-      <div class="pc-head">${escHtml(c.name || 'אורח')} · ${c.createdAt ? new Date(c.createdAt).toLocaleDateString('he-IL') : ''}</div>
+      <div class="pc-head">${escHtml(c.name || 'אורח')} · ${c.createdAt ? new Date(c.createdAt).toLocaleDateString('he-IL') : ''}${Number(c.stars) ? ' ' + pdStarsHTML(Number(c.stars)) : ''}</div>
       ${c.text ? `<div class="pc-text">${escHtml(c.text)}</div>` : ''}
       ${voiceCommentAudioHTML(c)}
     </div>`).join('');
@@ -19665,8 +19702,11 @@ async function submitPhotoComment(albumId) {
   const name = pcCommenterName();
   try {
     if (typeof trackEvent === 'function') trackEvent('comment');
-    await push(ref(db, `website/photo_comments/${albumId}`), { text: text.slice(0, 1000), name, uid: auth.currentUser ? auth.currentUser.uid : '', createdAt: Date.now() });
+    const rec = { text: text.slice(0, 1000), name, uid: auth.currentUser ? auth.currentUser.uid : '', createdAt: Date.now() };
+    if (pcStars >= 1 && pcStars <= 5) rec.stars = pcStars;
+    await push(ref(db, `website/photo_comments/${albumId}`), rec);
     if (inp) inp.value = '';
+    pcSetStars(pcStars); // איפוס הכוכבים
   } catch (e) { console.error('comment failed', e); if (typeof showCopyToast === 'function') showCopyToast('שגיאה בשליחת התגובה'); }
 }
 window.submitPhotoComment = submitPhotoComment;
@@ -19689,7 +19729,9 @@ function pcComposerHTML(kind, id, editName) {
     </div></div>`;
   }
   const submit = kind === 'photo' ? 'submitPhotoComment' : 'submitStoryComment';
+  if (kind === 'photo') pcStars = 0;
   return `<div class="pc-compose" id="${kind}-compose">
+    ${kind === 'photo' ? `<div class="pc-stars-row"><span>דירוג (לא חובה):</span><span class="pc-stars">${[1, 2, 3, 4, 5].map(n => `<i onclick="pcSetStars(${n})" role="button" aria-label="${n} כוכבים">${PD_STAR}</i>`).join('')}</span></div>` : ''}
     ${saved ? `<div class="fo-guest-as"><span>מגיבים בתור&nbsp;<b>${escHtml(saved)}</b></span><button type="button" class="fo-guest-change" onclick="pcChangeName('${kind}','${sid}')">שינוי</button></div>` : ''}
     <div class="pc-row">
       <button type="button" class="pc-mic-ic" onclick="voiceRecToggle('${kind}', '${sid}')" aria-label="תגובה קולית" title="תגובה קולית"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg></button>
