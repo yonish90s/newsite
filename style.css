@@ -11206,50 +11206,50 @@ html body .pd2-frame .pshow-size-none { color: #52525b !important; }
 /* =====================================================================
    שחור-לבן + צבע הדגשה אחד (סגול) לכל מה שפעיל: נשמר, נבחר, לשונית פעילה, מתג דלוק
    ===================================================================== */
-:root { --acc: #5b3df5; --acc-soft: #efebff; --acc-ink: #3b23c9; --like: #e11d48; }
-::selection { background: rgba(91, 61, 245, .2); }
+:root { --ui-acc: #2f6fdb; --ui-acc-soft: #eaf1fd; --ui-acc-ink: #1f56b8; --like: #e11d48; }
+::selection { background: rgba(47, 111, 219, .2); }
 /* שמירה */
 html body .art-save-btn.is-saved, html body .pd2-save.is-saved, html body .photo-save-btn.is-saved {
-  background: var(--acc) !important; border-color: var(--acc) !important; color: #ffffff !important; box-shadow: 0 4px 12px -4px rgba(91, 61, 245, .55) !important;
+  background: var(--ui-acc) !important; border-color: var(--ui-acc) !important; color: #ffffff !important; box-shadow: 0 4px 12px -4px rgba(47, 111, 219, .55) !important;
 }
 html body .art-save-btn.is-saved *, html body .pd2-save.is-saved * { color: #ffffff !important; }
 html body .art-save-btn.is-saved svg *, html body .pd2-save.is-saved svg * { stroke: #ffffff !important; fill: #ffffff !important; }
 /* לייק — לב אדום */
 html body .art-heart-overlay.liked svg, html body .art-heart-overlay.is-liked svg, html body .photo-like-btn.liked svg { fill: var(--like) !important; stroke: var(--like) !important; }
 /* לשוניות ובחירות פעילות */
-html body .pf-tabs .pf-tab.on::after, html body .pcc.on::after { background: var(--acc) !important; }
-html body .pcc.on .pcc-ring { box-shadow: 0 0 0 2.5px #fff, 0 0 0 4.5px var(--acc) !important; }
-html body .cs-tab.on svg { color: var(--acc) !important; }
-html body .srail-btn.on { color: var(--acc) !important; background: var(--acc-soft) !important; }
-@media (max-width: 768px) { html body .mtab.active { background: var(--acc-soft) !important; color: var(--acc-ink) !important; } html body .mtab.active svg { color: var(--acc) !important; } }
-html body .psf-btn.psf-ic.on, html body .psf-btn.on { color: var(--acc) !important; border-color: var(--acc) !important; background: var(--acc-soft) !important; }
-html body .psf-btn b, html body .shop-cart-count, html body .dm-pill-badge { background: var(--acc) !important; color: #fff !important; }
-html body .pd2-chip.on { border-color: var(--acc) !important; box-shadow: inset 0 0 0 1px var(--acc) !important; color: var(--acc-ink) !important; background: var(--acc-soft) !important; }
-html body .pd2-thumbs .pshow-tile.active { border-color: var(--acc) !important; }
-html body .pd2-bar b { background: var(--acc) !important; }
-html body .bd-chip.on, html body .shop-method.on .co-radio { border-color: var(--acc) !important; }
-html body .bd-chip.on { background: var(--acc) !important; color: #fff !important; }
-html body .co-method.on { box-shadow: inset 0 0 0 1.5px var(--acc) !important; background: #faf9ff !important; }
-html body .co-method.on .co-radio { border: 5px solid var(--acc) !important; }
-html body .shop-check.on, html body .shop-item.on .shop-check { background: var(--acc) !important; border-color: var(--acc) !important; }
+html body .pf-tabs .pf-tab.on::after, html body .pcc.on::after { background: var(--ui-acc) !important; }
+html body .pcc.on .pcc-ring { box-shadow: 0 0 0 2.5px #fff, 0 0 0 4.5px var(--ui-acc) !important; }
+html body .cs-tab.on svg { color: var(--ui-acc) !important; }
+html body .srail-btn.on { color: var(--ui-acc) !important; background: var(--ui-acc-soft) !important; }
+@media (max-width: 768px) { html body .mtab.active { background: var(--ui-acc-soft) !important; color: var(--ui-acc-ink) !important; } html body .mtab.active svg { color: var(--ui-acc) !important; } }
+html body .psf-btn.psf-ic.on, html body .psf-btn.on { color: var(--ui-acc) !important; border-color: var(--ui-acc) !important; background: var(--ui-acc-soft) !important; }
+html body .psf-btn b, html body .shop-cart-count, html body .dm-pill-badge { background: var(--ui-acc) !important; color: #fff !important; }
+html body .pd2-chip.on { border-color: var(--ui-acc) !important; box-shadow: inset 0 0 0 1px var(--ui-acc) !important; color: var(--ui-acc-ink) !important; background: var(--ui-acc-soft) !important; }
+html body .pd2-thumbs .pshow-tile.active { border-color: var(--ui-acc) !important; }
+html body .pd2-bar b { background: var(--ui-acc) !important; }
+html body .bd-chip.on, html body .shop-method.on .co-radio { border-color: var(--ui-acc) !important; }
+html body .bd-chip.on { background: var(--ui-acc) !important; color: #fff !important; }
+html body .co-method.on { box-shadow: inset 0 0 0 1.5px var(--ui-acc) !important; background: #f5f8fe !important; }
+html body .co-method.on .co-radio { border: 5px solid var(--ui-acc) !important; }
+html body .shop-check.on, html body .shop-item.on .shop-check { background: var(--ui-acc) !important; border-color: var(--ui-acc) !important; }
 /* מתגים */
-html body .tgl-switch input:checked + .tgl-slider { background: var(--acc) !important; }
-html body input[type="checkbox"], html body input[type="radio"] { accent-color: var(--acc); }
+html body .tgl-switch input:checked + .tgl-slider { background: var(--ui-acc) !important; }
+html body input[type="checkbox"], html body input[type="radio"] { accent-color: var(--ui-acc); }
 /* פוקוס ברור במקלדת */
-html body :focus-visible { outline: 2.5px solid var(--acc); outline-offset: 2px; }
+html body :focus-visible { outline: 2.5px solid var(--ui-acc); outline-offset: 2px; }
 /* קישורים "פעילים" קטנים */
-html body .fo-guest-change, html body .ob-link, html body .legal-body a, html body .co-legal a:hover { color: var(--acc) !important; }
-html body .ob-dots span.on, html body .algo-bar span, html body .algo-col span { background: var(--acc) !important; }
-html body .shop-item.on .shop-cb { background: var(--acc) !important; border-color: var(--acc) !important; color: #fff !important; }
-html body .shop-item.on { border-color: var(--acc) !important; }
+html body .fo-guest-change, html body .ob-link, html body .legal-body a, html body .co-legal a:hover { color: var(--ui-acc) !important; }
+html body .ob-dots span.on, html body .algo-bar span, html body .algo-col span { background: var(--ui-acc) !important; }
+html body .shop-item.on .shop-cb { background: var(--ui-acc) !important; border-color: var(--ui-acc) !important; color: #fff !important; }
+html body .shop-item.on { border-color: var(--ui-acc) !important; }
 html body:not(#_):not(#_) .art-save-btn.is-saved, html body:not(#_):not(#_) .pd2-save.is-saved {
-  background: var(--acc) !important; border-color: var(--acc) !important; color: #ffffff !important; box-shadow: 0 4px 12px -4px rgba(91, 61, 245, .55) !important;
+  background: var(--ui-acc) !important; border-color: var(--ui-acc) !important; color: #ffffff !important; box-shadow: 0 4px 12px -4px rgba(47, 111, 219, .55) !important;
 }
 html body:not(#_):not(#_) .art-save-btn.is-saved *, html body:not(#_):not(#_) .pd2-save.is-saved * { color: #ffffff !important; }
 html body:not(#_):not(#_) .art-save-btn.is-saved svg, html body:not(#_):not(#_) .art-save-btn.is-saved svg *, html body:not(#_):not(#_) .pd2-save.is-saved svg * { stroke: #ffffff !important; fill: #ffffff !important; }
 html body:not(#_):not(#_) .art-heart-overlay.liked svg, html body:not(#_):not(#_) .art-heart-overlay.liked svg * { fill: var(--like) !important; stroke: var(--like) !important; }
 html body:not(#_):not(#_):not(#_) .art-save-btn.is-saved, html body:not(#_):not(#_):not(#_) .photo-card-links .art-save-btn.is-saved,
-html body:not(#_):not(#_):not(#_) .photo-card-links button.is-saved, html body:not(#_):not(#_):not(#_) .pd2-save.is-saved { background: #5b3df5 !important; background-color: #5b3df5 !important; border-color: #5b3df5 !important; color: #fff !important; }
+html body:not(#_):not(#_):not(#_) .photo-card-links button.is-saved, html body:not(#_):not(#_):not(#_) .pd2-save.is-saved { background: #2f6fdb !important; background-color: #2f6fdb !important; border-color: #2f6fdb !important; color: #fff !important; }
 /* אריחי הקטגוריות בבית — פסטל בהיר, טקסט ואייקון בגוון כהה של האריח */
 html body .hcat { background: var(--hc) !important; border: 1px solid rgba(0,0,0,.04); }
 html body .hcat-label { color: var(--hci) !important; text-shadow: none !important; font-weight: 800; }
@@ -11266,7 +11266,7 @@ html body .hw-watch-date { color: #e11d48 !important; }
 html body .hw-watch-date b { color: #111111 !important; }
 html body .hw-cmp { background: #f4f4f5 !important; }
 html body .hw-watch-cmp-labels span { color: #52525b !important; }
-html body .hw-watch-tag { background: #efebff !important; color: #5b3df5 !important; }
+html body .hw-watch-tag { background: #eaf1fd !important; color: #2f6fdb !important; }
 html body .hw-watch-tag.demo { background: #f4f4f5 !important; color: #52525b !important; }
 html body .hw-watch-cta { background: #111111 !important; color: #ffffff !important; }
 html body .hw-watch-lines small { color: #52525b; opacity: 1; }
@@ -11279,3 +11279,44 @@ html body .uw-clock { color: #111111 !important; }
 html body .uw-name { color: #111111 !important; }
 html body .uw-star { color: #d4d4d8; }
 html body .up-watch-screen .hw-cmp, html body .up-watch-screen [style*="#1c1c1e"] { background: #f4f4f5 !important; }
+
+/* =====================================================================
+   כפתורים: מתאר כחול במנוחה → מתמלאים בכחול עם טקסט לבן כשמתקרבים (כמו "Pre-order")
+   ===================================================================== */
+:root { --ui-acc: #2f6fdb; --ui-acc-soft: #eaf1fd; --ui-acc-ink: #1f56b8; }
+::selection { background: rgba(47, 111, 219, .2); }
+html body:not(#_) :is(.pd2-ghost, .psf-btn, .pc-post-btn, .art-telegram-btn:not(.is-disabled), .follow-btn, .co-coupon button,
+  .bd-ghost, .legal-tab, .pf-btn-outline, .pf-btn-icon, .pfeed-sugg-item button, .algo-btn.ghost, .ob-pick, .pd2-wide,
+  .fo-guest-change, .pd2-maker .follow-btn, .shop-round, .tg-guest button, .pc-mic-ic) {
+  border: 1.5px solid var(--ui-acc) !important; color: var(--ui-acc) !important; background: #ffffff !important;
+  transition: background .15s ease, color .15s ease, box-shadow .15s ease, transform .1s ease !important;
+}
+html body:not(#_) :is(.pd2-ghost, .psf-btn, .pc-post-btn, .art-telegram-btn:not(.is-disabled), .follow-btn, .co-coupon button,
+  .bd-ghost, .legal-tab, .pf-btn-outline, .pf-btn-icon, .pfeed-sugg-item button, .algo-btn.ghost, .ob-pick, .pd2-wide,
+  .pd2-maker .follow-btn, .shop-round, .tg-guest button, .pc-mic-ic) :is(svg, svg *) { stroke: currentColor !important; color: inherit !important; }
+html body:not(#_) :is(.pd2-ghost, .psf-btn, .pc-post-btn, .art-telegram-btn:not(.is-disabled), .follow-btn, .co-coupon button,
+  .bd-ghost, .legal-tab, .pf-btn-outline, .pf-btn-icon, .pfeed-sugg-item button, .algo-btn.ghost, .ob-pick, .pd2-wide,
+  .pd2-maker .follow-btn, .shop-round, .tg-guest button, .pc-mic-ic) :is(span, b, small) { color: inherit !important; }
+/* מתקרבים / לוחצים / פעיל → מילוי כחול וטקסט לבן */
+html body:not(#_) :is(.pd2-ghost, .psf-btn, .pc-post-btn, .art-telegram-btn:not(.is-disabled), .follow-btn, .co-coupon button,
+  .bd-ghost, .legal-tab, .pf-btn-outline, .pf-btn-icon, .pfeed-sugg-item button, .algo-btn.ghost, .ob-pick, .pd2-wide,
+  .pd2-maker .follow-btn, .shop-round, .tg-guest button, .pc-mic-ic):is(:hover, :focus-visible, .on, .is-saved, .following),
+html body:not(#_) .legal-tab.on {
+  background: var(--ui-acc) !important; color: #ffffff !important; border-color: var(--ui-acc) !important; box-shadow: 0 6px 16px -8px rgba(47, 111, 219, .7) !important;
+}
+html body:not(#_) :is(.pd2-ghost, .psf-btn, .pc-post-btn, .art-telegram-btn, .follow-btn, .bd-ghost, .legal-tab, .pf-btn-outline, .pf-btn-icon, .shop-round, .pc-mic-ic):is(:hover, .on, .is-saved, .following) :is(svg, svg *) { stroke: #ffffff !important; }
+html body:not(#_) :is(.pd2-ghost, .psf-btn, .pc-post-btn, .follow-btn, .bd-ghost, .pf-btn-outline):active { transform: scale(.97); }
+/* כפתורים ראשיים שחורים — גם הם נצבעים בכחול כשמתקרבים */
+html body:not(#_) :is(.pd2-btn.dark, .co-pay, .ob-next, .pc-more, .hw-cta, .dm-pill, .algo-btn:not(.ghost), .legal-btn, .shop-bar-go, .pc-go, .rd-send, .mtab-plus-ic, .bd-go, .pfeed-empty .pc-more) {
+  transition: background .15s ease, box-shadow .15s ease, transform .1s ease !important;
+}
+html body:not(#_) :is(.pd2-btn.dark, .co-pay, .ob-next, .pc-more, .hw-cta, .dm-pill, .algo-btn:not(.ghost), .legal-btn, .shop-bar-go, .bd-go):hover,
+html body:not(#_) :is(.pc-go, .rd-send):hover, html body:not(#_) .mtab-plus:hover .mtab-plus-ic {
+  background: var(--ui-acc) !important; color: #ffffff !important; box-shadow: 0 8px 20px -10px rgba(47, 111, 219, .75) !important;
+}
+html body:not(#_) .pd2-btn.accent { background: #ffffff !important; color: var(--ui-acc) !important; border: 1.5px solid var(--ui-acc) !important; }
+html body:not(#_) .pd2-btn.accent:hover { background: var(--ui-acc) !important; color: #ffffff !important; }
+/* הדגשות "פעיל" שהיו בסגול — עכשיו בכחול */
+html body:not(#_):not(#_):not(#_) .art-save-btn.is-saved, html body:not(#_):not(#_):not(#_) .photo-card-links .art-save-btn.is-saved,
+html body:not(#_):not(#_):not(#_) .photo-card-links button.is-saved, html body:not(#_):not(#_):not(#_) .pd2-save.is-saved { background: var(--ui-acc) !important; background-color: var(--ui-acc) !important; border-color: var(--ui-acc) !important; }
+html body .algo-bar span, html body .algo-col span { background: var(--ui-acc) !important; }

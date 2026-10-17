@@ -13124,7 +13124,7 @@ function homeWatchBodyHTML() {
     </div>
     <div class="hw-watch-cmps">
       ${homeWatchGauge('#d97706', Math.min(1, d.points / 500), d.points)}
-      ${homeWatchGauge('#5b3df5', d.rank ? Math.max(0.08, 1 - (d.rank - 1) / 10) : 0, d.rank ? '#' + d.rank : '—')}
+      ${homeWatchGauge('#2f6fdb', d.rank ? Math.max(0.08, 1 - (d.rank - 1) / 10) : 0, d.rank ? '#' + d.rank : '—')}
       ${homeWatchGauge('#ea580c', Math.min(1, d.rCount / 20), d.rCount)}
     </div>
     <div class="hw-watch-cmp-labels"><span>נקודות</span><span>מקום</span><span>מדרגים</span></div>
