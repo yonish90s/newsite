@@ -11104,3 +11104,8 @@ html body .art-telegram-btn.is-disabled svg * { stroke: #8a7f78 !important; }
   #messages-modal.tg-compact.show .tg-panel { transform: none; opacity: 1; }
 }
 @media (min-width: 900px) { html.tg-open:has(#messages-modal.tg-compact), html.tg-open:has(#messages-modal.tg-compact) body { overflow: auto; } }
+/* כפתור ההודעות והחלון הקטן — בצד ימין, משמאל לכפתורי הנגישות והצ'אט */
+@media (min-width: 900px) {
+  .dm-pill, html.has-srail .dm-pill { left: auto; right: 96px; bottom: 22px; }
+  #messages-modal.tg-modal.tg-compact, html.has-srail #messages-modal.tg-modal.tg-compact { left: auto; right: 96px; }
+}
