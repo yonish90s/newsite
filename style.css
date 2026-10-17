@@ -11250,3 +11250,32 @@ html body:not(#_):not(#_) .art-save-btn.is-saved svg, html body:not(#_):not(#_) 
 html body:not(#_):not(#_) .art-heart-overlay.liked svg, html body:not(#_):not(#_) .art-heart-overlay.liked svg * { fill: var(--like) !important; stroke: var(--like) !important; }
 html body:not(#_):not(#_):not(#_) .art-save-btn.is-saved, html body:not(#_):not(#_):not(#_) .photo-card-links .art-save-btn.is-saved,
 html body:not(#_):not(#_):not(#_) .photo-card-links button.is-saved, html body:not(#_):not(#_):not(#_) .pd2-save.is-saved { background: #5b3df5 !important; background-color: #5b3df5 !important; border-color: #5b3df5 !important; color: #fff !important; }
+/* אריחי הקטגוריות בבית — פסטל בהיר, טקסט ואייקון בגוון כהה של האריח */
+html body .hcat { background: var(--hc) !important; border: 1px solid rgba(0,0,0,.04); }
+html body .hcat-label { color: var(--hci) !important; text-shadow: none !important; font-weight: 800; }
+html body .hcat-ic { color: var(--hci) !important; opacity: .9; }
+html body .hcat-ic svg { filter: none !important; }
+html body .hcat-img { box-shadow: 0 12px 24px -14px rgba(0,0,0,.35) !important; }
+html body .hcat:hover { box-shadow: 0 14px 28px -18px rgba(0,0,0,.3); }
+/* שעון בעמוד הבית — מסך בהיר עם צבעים ברורים */
+html body .hw-watch { background: linear-gradient(145deg, #d4d4d8, #ffffff 55%, #a1a1aa) !important; box-shadow: 0 24px 44px -22px rgba(0,0,0,.35) !important; }
+html body .hw-watch::after { background: linear-gradient(90deg, #a1a1aa, #71717a) !important; }
+html body .hw-watch-screen { background: #ffffff !important; color: #111111 !important; box-shadow: inset 0 0 0 1px #e4e4e7 !important; }
+html body .hw-watch-time { color: #111111 !important; font-weight: 400; }
+html body .hw-watch-date { color: #e11d48 !important; }
+html body .hw-watch-date b { color: #111111 !important; }
+html body .hw-cmp { background: #f4f4f5 !important; }
+html body .hw-watch-cmp-labels span { color: #52525b !important; }
+html body .hw-watch-tag { background: #efebff !important; color: #5b3df5 !important; }
+html body .hw-watch-tag.demo { background: #f4f4f5 !important; color: #52525b !important; }
+html body .hw-watch-cta { background: #111111 !important; color: #ffffff !important; }
+html body .hw-watch-lines small { color: #52525b; opacity: 1; }
+/* שעון בפרופיל — גם הוא בהיר */
+html body .up-watch-screen { background: #ffffff !important; color: #111111 !important; box-shadow: inset 0 0 0 1px #e4e4e7 !important; }
+html body .up-watch { background: linear-gradient(145deg, #d4d4d8, #ffffff 55%, #a1a1aa) !important; }
+html body .up-watch::after { background: linear-gradient(90deg, #a1a1aa, #71717a) !important; }
+html body .uw-badge, html body .uw-rate, html body .up-watch-screen [class^="uw-"][class$="box"] { background: #f4f4f5 !important; color: #3f3f46 !important; }
+html body .uw-clock { color: #111111 !important; }
+html body .uw-name { color: #111111 !important; }
+html body .uw-star { color: #d4d4d8; }
+html body .up-watch-screen .hw-cmp, html body .up-watch-screen [style*="#1c1c1e"] { background: #f4f4f5 !important; }

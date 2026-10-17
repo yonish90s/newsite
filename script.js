@@ -13112,20 +13112,20 @@ function homeWatchBodyHTML() {
     <div class="hw-watch-time">${hh}:${mm}</div>
     <div class="hw-watch-mid">
       <svg class="hw-watch-rings" viewBox="0 0 100 100">
-        ${homeWatchRing(42, '#ff375f', d.posts / 10)}
-        ${homeWatchRing(30, '#a3f93a', d.likes / 50)}
-        ${homeWatchRing(18, '#2ee6f5', avg / 5)}
+        ${homeWatchRing(42, '#e11d48', d.posts / 10)}
+        ${homeWatchRing(30, '#16a34a', d.likes / 50)}
+        ${homeWatchRing(18, '#0891b2', avg / 5)}
       </svg>
       <div class="hw-watch-lines">
-        <span style="color:#ff375f">${d.posts}<small>פוסטים</small></span>
-        <span style="color:#a3f93a">${d.likes}<small>לייקים</small></span>
-        <span style="color:#2ee6f5">${avg ? avg.toFixed(1) : '—'}<small>דירוג</small></span>
+        <span style="color:#e11d48">${d.posts}<small>פוסטים</small></span>
+        <span style="color:#16a34a">${d.likes}<small>לייקים</small></span>
+        <span style="color:#0891b2">${avg ? avg.toFixed(1) : '—'}<small>דירוג</small></span>
       </div>
     </div>
     <div class="hw-watch-cmps">
-      ${homeWatchGauge('#ffb340', Math.min(1, d.points / 500), d.points)}
-      ${homeWatchGauge('#e8ff3a', d.rank ? Math.max(0.08, 1 - (d.rank - 1) / 10) : 0, d.rank ? '#' + d.rank : '—')}
-      ${homeWatchGauge('#ff9f0a', Math.min(1, d.rCount / 20), d.rCount)}
+      ${homeWatchGauge('#d97706', Math.min(1, d.points / 500), d.points)}
+      ${homeWatchGauge('#5b3df5', d.rank ? Math.max(0.08, 1 - (d.rank - 1) / 10) : 0, d.rank ? '#' + d.rank : '—')}
+      ${homeWatchGauge('#ea580c', Math.min(1, d.rCount / 20), d.rCount)}
     </div>
     <div class="hw-watch-cmp-labels"><span>נקודות</span><span>מקום</span><span>מדרגים</span></div>
     ${mine ? '' : '<div class="hw-watch-cta">התחברו כדי לראות את שלכם</div>'}`;
@@ -15292,14 +15292,15 @@ function homeCategoriesHTML(photos, comics, stories) {
     news: '<path d="M4 5h13v14H6a2 2 0 0 1-2-2z"/><path d="M17 9h3v8a2 2 0 0 1-2 2"/><path d="M8 9h5M8 13h5"/>',
     offers: '<path d="M12 3c.6 3.2 4 4.6 4 8.5A4 4 0 0 1 12 15.5a4 4 0 0 1-4-4c0-1.6.8-2.8 1.6-3.7.3 1.4 1 2.2 1.9 2.4C11.3 7.8 11 5.2 12 3z"/><path d="M6 15.5A6 6 0 0 0 18 15.5"/>'
   };
+  // צבעים בהירים (פסטל) — הטקסט והאייקון כהים בגוון של כל אריח
   const tiles = [
-    ['photos', 'תמונות', '#18181b', homeCover(photos)], ['comics', 'קומיקס', '#7a2e4a', homeCover(comics)],
-    ['stories', 'סיפורים', '#2f5d62', homeCover(stories)], ['forums', 'פורומים', '#3d342f'], ['friends', 'חברים', '#d98a3a'],
-    ['blinddate', 'Blind Date', '#c2334d'], ['tinder', 'התאמות', '#3f3f46'], ['products', 'מוצרים', '#5b6f9e'],
-    ['news', 'חדשות', '#8a6a4f'], ['offers', 'הצעות', '#b4572a']
+    ['photos', 'תמונות', '#ece8ff|#4c3bcf', homeCover(photos)], ['comics', 'קומיקס', '#ffe4ec|#b4235a', homeCover(comics)],
+    ['stories', 'סיפורים', '#ddf4ec|#11735a', homeCover(stories)], ['forums', 'פורומים', '#e3edfd|#1d4fb8'], ['friends', 'חברים', '#fff1d1|#9a5b00'],
+    ['blinddate', 'Blind Date', '#ffe1e1|#c0262d'], ['tinder', 'התאמות', '#f4e8ff|#7e3bc4'], ['products', 'מוצרים', '#dff3fd|#0b6aa1'],
+    ['news', 'חדשות', '#eef0f3|#3f4652'], ['offers', 'הצעות', '#ffecd9|#b04a0f']
   ].filter(([k]) => ['photos', 'comics', 'stories', 'news', 'offers'].includes(k) || commFindPage(k));
   const iconKey = { blinddate: 'blind', tinder: 'match' };
-  const tile = ([kind, label, color, cover]) => `<button type="button" class="hcat" style="--hc:${color}" onclick="homeGo('${kind}')">
+  const tile = ([kind, label, color, cover]) => `<button type="button" class="hcat" style="--hc:${color.split('|')[0]}; --hci:${color.split('|')[1]}" onclick="homeGo('${kind}')">
       ${cover ? `<img class="hcat-img${cover.blur ? ' blur' : ''}" src="${escHtml(cover.src)}" alt="" loading="lazy">`
         : `<span class="hcat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${COMM_SC_ICONS[iconKey[kind] || kind] || extra[kind] || ''}</svg></span>`}
       <span class="hcat-label">${escHtml(label)}</span></button>`;
@@ -17584,14 +17585,14 @@ function userWatchHTML(st) {
           ? `<div class="uw-own-actions"><button type="button" class="uw-edit-av" onclick="openAvatarEditor()">עיצוב הדמות שלי</button><button type="button" class="uw-edit-av alt" onclick="openKinksEditor()">מה אני אוהב/ת ומחפש/ת</button></div>` : ''}
         <div class="uw-mid">
           <svg class="uw-rings" viewBox="0 0 100 100">
-            ${homeWatchRing(42, '#ff375f', st.galleries / 10)}
-            ${homeWatchRing(30, '#a3f93a', avg / 5)}
-            ${homeWatchRing(18, '#2ee6f5', r.count / 20)}
+            ${homeWatchRing(42, '#e11d48', st.galleries / 10)}
+            ${homeWatchRing(30, '#16a34a', avg / 5)}
+            ${homeWatchRing(18, '#0891b2', r.count / 20)}
           </svg>
           <div class="uw-lines">
-            <span style="color:#ff375f">${st.galleries}<small>גלריות שהועלו</small></span>
-            <span style="color:#a3f93a">${avg ? avg : '—'}<small>${avg ? 'דירוג ממוצע' : 'עדיין בלי דירוג'}</small></span>
-            <span style="color:#2ee6f5">${r.count}<small>מדרגים</small></span>
+            <span style="color:#e11d48">${st.galleries}<small>גלריות שהועלו</small></span>
+            <span style="color:#16a34a">${avg ? avg : '—'}<small>${avg ? 'דירוג ממוצע' : 'עדיין בלי דירוג'}</small></span>
+            <span style="color:#0891b2">${r.count}<small>מדרגים</small></span>
           </div>
         </div>
         ${isOwn ? `
@@ -17607,8 +17608,8 @@ function userWatchHTML(st) {
           ${(() => {
             const av = avNormalize(profile.avatar);
             const role = av.g && av.r ? AV_ROLE_NAMES[av.g][av.r] : '';
-            return row('#ff9f0a', 'מין', av.g ? `<span class="uw-sex g${av.g}"><b>${AV_SEX_SIGN[av.g]}</b>${AV_SEX_NAMES[av.g]}</span>` : none)
-              + row('#ff375f', 'תפקיד', role ? `<span class="uw-role">${escHtml(role)}</span>` : none);
+            return row('#ea580c', 'מין', av.g ? `<span class="uw-sex g${av.g}"><b>${AV_SEX_SIGN[av.g]}</b>${AV_SEX_NAMES[av.g]}</span>` : none)
+              + row('#e11d48', 'תפקיד', role ? `<span class="uw-role">${escHtml(role)}</span>` : none);
           })()}
           ${row('#ffd60a', 'מאיפה', where ? `<span class="uw-text">${escHtml(where)}</span>` : none)}
           ${row('#64d2ff', 'טלגרם', tg ? `<a class="uw-link" href="https://t.me/${encodeURIComponent(tg)}" target="_blank" rel="noopener" dir="ltr">@${escHtml(tg)}</a>` : none)}
