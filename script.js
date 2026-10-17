@@ -19235,6 +19235,7 @@ function subscribeMyDMs() {
 function dmRefreshList() {
   const el = document.getElementById('dm-conv-list');
   if (el) el.innerHTML = dmConvListHTML();
+  if (typeof dmPillRender === 'function') dmPillRender();
 }
 
 async function dmOpenAdmin() {
@@ -19399,15 +19400,16 @@ async function openMessages() {
   let modal = document.getElementById('messages-modal');
   if (!modal) { modal = document.createElement('div'); modal.id = 'messages-modal'; document.body.appendChild(modal); }
   dmSearchQuery = '';
-  modal.className = 'tg-modal';
+  // במחשב: חלון קטן צף בפינה (כמו באינסטגרם), עם אפשרות להגדיל; במובייל — מסך מלא כמו קודם
+  modal.className = 'tg-modal' + (window.matchMedia('(min-width: 900px)').matches && !dmExpanded ? ' tg-compact' : '');
   modal.innerHTML = `
     <div class="tg-backdrop" onclick="closeMessages()"></div>
     <aside class="tg-panel" role="dialog" aria-label="הודעות">
       <section class="tg-view tg-list-view">
         <header class="tg-head">
           <button type="button" class="tg-round" onclick="closeMessages()" aria-label="סגירה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
-          <span class="tg-head-title">הודעות</span>
-          <span class="tg-round tg-round-ghost" aria-hidden="true"></span>
+          <span class="tg-head-title"><img class="tg-logo" src="./logo.png" alt="">הודעות</span>
+          <button type="button" class="tg-round tg-expand" onclick="dmToggleExpand()" aria-label="הגדלה / הקטנה" title="הגדלה / הקטנה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M10 20H4v-6M20 4l-6 6M4 20l6-6"/></svg></button>
         </header>
         <div class="tg-search">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -19424,6 +19426,35 @@ async function openMessages() {
   dmActiveConv = null;
 }
 window.openMessages = openMessages;
+
+// ---- כפתור "הודעות" צף במחשב: אייקון + 3 עיגולים של השיחות האחרונות ----
+let dmExpanded = false;
+function dmToggleExpand() {
+  dmExpanded = !dmExpanded;
+  const m = document.getElementById('messages-modal');
+  if (m) m.classList.toggle('tg-compact', !dmExpanded && window.matchMedia('(min-width: 900px)').matches);
+}
+window.dmToggleExpand = dmToggleExpand;
+function dmPillRender() {
+  let el = document.getElementById('dm-pill');
+  if (!el) {
+    el = document.createElement('button');
+    el.type = 'button'; el.id = 'dm-pill'; el.className = 'dm-pill';
+    el.setAttribute('aria-label', 'הודעות');
+    el.onclick = () => openMessages();
+    document.body.appendChild(el);
+  }
+  const recent = Object.values(dmConversations || {}).filter(c => c && c.otherUid)
+    .sort((a, b) => (b.lastTime || 0) - (a.lastTime || 0)).slice(0, 3);
+  const n = dmUnreadCount();
+  el.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg>
+    <span class="dm-pill-txt">הודעות</span>
+    ${recent.length ? `<span class="dm-pill-avs">${recent.map(c => `<span class="dm-pill-av" data-av-uid="${escHtml(c.otherUid)}">${dmAvatarHTML(c.otherName || '?', c.otherUid)}</span>`).join('')}</span>` : ''}
+    ${n ? `<b class="dm-pill-badge">${n}</b>` : ''}`;
+  if (typeof avatarHydrate === 'function') avatarHydrate(el);
+}
+window.dmPillRender = dmPillRender;
+try { dmPillRender(); onAuthStateChanged(auth, u => { if (u) { try { subscribeMyDMs(); } catch (e) {} } dmPillRender(); }); } catch (e) {}
 
 function closeMessages() {
   const m = document.getElementById('messages-modal');

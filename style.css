@@ -11077,3 +11077,30 @@ html body .art-telegram-btn.is-disabled svg * { stroke: #8a7f78 !important; }
 .pfeed-sugg-item small { color: #8a7f78; font-size: 12.5px; }
 .pfeed-sugg-item button { border: 0; border-radius: 999px; background: #ff8a5c; color: #2b2522; font: inherit; font-weight: 800; padding: 7px 16px; cursor: pointer; }
 .hc-dot-feed { background: #2b2522 !important; }
+
+/* ===== הודעות: לוגו בכותרת + כפתור צף וחלון קטן במחשב ===== */
+.tg-head-title { display: inline-flex; align-items: center; gap: 8px; }
+.tg-logo { width: 26px; height: 26px; border-radius: 7px; object-fit: contain; background: #2b2522; padding: 3px; box-sizing: border-box; }
+.tg-expand { display: none !important; }
+.dm-pill { display: none; }
+@media (min-width: 900px) {
+  .tg-expand { display: grid !important; }
+  .dm-pill { display: flex; align-items: center; gap: 12px; position: fixed; left: 24px; bottom: 22px; z-index: 9500; height: 60px; padding: 0 12px 0 20px; border: 0; border-radius: 999px; background: #2b2522; color: #fff; font: inherit; font-size: 17px; font-weight: 800; cursor: pointer; box-shadow: 0 14px 30px -14px rgba(0,0,0,.55); direction: rtl; transition: transform .15s; }
+  html.has-srail .dm-pill { left: 96px; }
+  .dm-pill:hover { transform: translateY(-2px); }
+  .dm-pill > svg { width: 24px; height: 24px; }
+  .dm-pill-avs { display: flex; margin-inline-start: 10px; }
+  .dm-pill-av { width: 32px; height: 32px; border-radius: 50%; overflow: hidden; box-shadow: 0 0 0 2px #2b2522; margin-inline-start: -10px; display: grid; place-items: center; }
+  .dm-pill-av:first-child { margin-inline-start: 0; }
+  .dm-pill-av .tg-avatar { width: 100%; height: 100%; font-size: 12px; }
+  .dm-pill-av svg, .dm-pill-av img { width: 100%; height: 100%; }
+  .dm-pill-badge { position: absolute; top: -4px; right: 10px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px; background: #ff5a3c; color: #fff; font-size: 12px; display: grid; place-items: center; box-sizing: border-box; }
+  html.tg-open .dm-pill { display: none; }
+  /* חלון קטן בפינה */
+  #messages-modal.tg-modal.tg-compact { inset: auto; left: 24px; bottom: 22px; width: 390px; height: min(620px, calc(100vh - 110px)); }
+  html.has-srail #messages-modal.tg-modal.tg-compact { left: 96px; }
+  #messages-modal.tg-compact .tg-backdrop { display: none; }
+  #messages-modal.tg-compact .tg-panel { inset: 0; width: 100%; border-radius: 20px; border: 1px solid #efe6de; box-shadow: 0 24px 60px -20px rgba(0,0,0,.45); transform: translateY(16px) scale(.98); opacity: 0; transition: transform .2s, opacity .2s; }
+  #messages-modal.tg-compact.show .tg-panel { transform: none; opacity: 1; }
+}
+@media (min-width: 900px) { html.tg-open:has(#messages-modal.tg-compact), html.tg-open:has(#messages-modal.tg-compact) body { overflow: auto; } }
