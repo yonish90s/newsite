@@ -15276,7 +15276,9 @@ function homeChipsHTML(photos, comics, stories) {
   const cats = (PHOTO_BAR_CATEGORIES || []).slice(0, 4).map(cat => chip('photos', cat,
     homeCover((photos || []).filter(a => photoCatMatch(a, cat))),
     `homeOpenPhotos(); setTimeout(() => setSectionCategoryFilter('photos', '${artEsc(cat)}'), 60)`)).join('');
+  const feedChip = `<button type="button" class="hc-chip" onclick="openFeed()"><span class="hc-dot hc-dot-feed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg></span><span>הפיד שלי</span></button>`;
   return `<nav class="hc-chips" aria-label="קיצורי תוכן">
+      ${feedChip}
       ${chip('photos', 'תמונות', cv.photos, "homeGo('photos')")}
       ${chip('comics', 'קומיקס', cv.comics, "homeGo('comics')")}
       ${chip('stories', 'סיפורים', cv.stories, "homeGo('stories')")}
@@ -15307,6 +15309,7 @@ function homeCategoriesHTML(photos, comics, stories) {
 // ===== סרגל אייקונים בצד שמאל (דסקטופ) =====
 const SIDE_RAIL_ITEMS = [
   ['home', 'בית', 'goToHomePage()', '<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>', true],
+  ['feed', 'הפיד שלי', 'openFeed()', '<path d="M4 6h16M4 12h16M4 18h10"/>', false],
   ['cats', 'קטגוריות', "navigateToPage('page-communities-main')", '<rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/>', true],
   ['shop', 'שדרוגים', "navigateToPage('page-subscription-main')", '<path d="M3 4h2l2.4 11.2a1 1 0 0 0 1 .8h9.2a1 1 0 0 0 1-.8L21 8H6.2"/><circle cx="9.5" cy="20" r="1.5"/><circle cx="17.5" cy="20" r="1.5"/>', false],
   ['saved', 'שמורים', 'openSavedModal()', '<path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.5"/>', false],
@@ -15335,7 +15338,7 @@ function renderSideRail() {
 function sideRailSync() {
   const el = document.getElementById('side-rail'); if (!el) return;
   const id = (typeof activePageId !== 'undefined' && activePageId) || '';
-  const map = { 'page-home-feed': 'home', 'page-communities-main': 'cats', 'page-subscription-main': 'shop' };
+  const map = { 'page-home-feed': 'home', 'page-feed-main': 'feed', 'page-communities-main': 'cats', 'page-subscription-main': 'shop' };
   el.querySelectorAll('.srail-btn').forEach(b => b.classList.toggle('on', b.dataset.rail === (map[id] || (id ? '' : 'home'))));
 }
 window.sideRailSync = sideRailSync;
@@ -17022,7 +17025,8 @@ function buildUserPageHTML(authorId, authorName) {
     const isAuthor = (a.authorId && authorId) ? matchesId : matchesName;
     return isAuthor && a.approved !== false && (!a.adminOnly || _isAdminView) && (!a.expiresAt || a.expiresAt > now);
   });
-  const cards = authorAlbums.map(p => renderPhotoCard(p)).join('');
+  pfeedShown.profile = 0;
+  const authorPosts = feedByAuthor(feedAllItems(), authorId, authorName);
   const json = encodeURIComponent(JSON.stringify(albums));
   // מצב השעון של עמוד המשתמש — מתעדכן אחרי טעינת הפרופיל והדירוגים
   window._upState = { uid: authorId || '', name: authorName || 'משתמש', galleries: authorAlbums.length,
@@ -17035,16 +17039,142 @@ function buildUserPageHTML(authorId, authorName) {
     <div class="art-inner pf-inner">
       <button type="button" class="pf-back" onclick="goBackFromUserPage()">→ חזרה</button>
       <div id="user-page-head">${profileHeadHTML(window._upState)}</div>
-      <div class="pf-tabs"><span class="pf-tab on">העלאות <b>${authorAlbums.length}</b></span></div>
-      ${profileUploadsHTML(authorAlbums)}
-      <details class="pf-more">
-        <summary>פרטים נוספים</summary>
-        <div id="user-page-watch">${userWatchHTML(window._upState)}</div>
-      </details>
+      <nav class="pf-tabs">
+        <button type="button" class="pf-tab on" data-tab="posts" onclick="pfTab('posts')">פוסטים <b>${authorPosts.length}</b></button>
+        <button type="button" class="pf-tab" data-tab="gallery" onclick="pfTab('gallery')">גלריה <b>${authorAlbums.length}</b></button>
+        <button type="button" class="pf-tab" data-tab="about" onclick="pfTab('about')">אודות</button>
+      </nav>
+      <div class="pf-panel" data-panel="posts">${postsListHTML('profile', authorPosts, false)}</div>
+      <div class="pf-panel" data-panel="gallery" hidden>${profileUploadsHTML(authorAlbums)}</div>
+      <div class="pf-panel" data-panel="about" hidden><div id="user-page-watch">${userWatchHTML(window._upState)}</div></div>
     </div>
   </div>`;
 }
 
+// ============================================================
+// פוסטים בסגנון Ko-fi: כרטיס לכל העלאה (תמונות / סיפורים / קומיקס) + "טעינת עוד פוסטים".
+// משמש בפרופיל (לשונית "פוסטים") ובעמוד "הפיד שלי" (כל מה שהעלו מי שאני עוקב/ת אחריהם)
+// ============================================================
+const PFEED_STEP = 5;
+const pfeedLists = {};   // key → פריטים
+const pfeedShown = {};   // key → כמה מוצגים
+function feedAllItems() {
+  const isAdminView = (typeof isAdmin === 'function' && isAdmin()) || (typeof isEditMode !== 'undefined' && isEditMode);
+  const now = Date.now();
+  const photos = ((typeof photoGetAlbums === 'function') ? photoGetAlbums() : [])
+    .filter(a => a && a.approved !== false && (!a.adminOnly || isAdminView) && (!a.expiresAt || a.expiresAt > now))
+    .map(a => Object.assign({}, a, { __type: 'photo' }));
+  const stories = ((typeof getAllStoriesFromPages === 'function') ? getAllStoriesFromPages() : [])
+    .filter(s => s && s.approved !== false)
+    .map(s => Object.assign({}, s, { __type: s.__kind === 'stories' ? 'story' : 'comic' }));
+  return photos.concat(stories)
+    .map(x => Object.assign(x, { __t: (typeof photoAlbumTime === 'function' ? photoAlbumTime(x) : 0) || 0 }))
+    .sort((a, b) => b.__t - a.__t);
+}
+function feedByAuthor(items, uid, name) {
+  const n = String(name || '').toLowerCase();
+  return items.filter(x => (x.authorId && uid) ? x.authorId === uid : (n && String(x.author || '').toLowerCase() === n));
+}
+const PF_IC = {
+  img: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg>',
+  heart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.4-9-8.6C1.6 8.4 3.4 5 6.8 5c2 0 3.3 1.1 5.2 3 1.9-1.9 3.2-3 5.2-3 3.4 0 5.2 3.4 3.8 6.4C19 15.6 12 20 12 20z"/></svg>',
+  cmt: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>',
+  share: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 5l7 7-7 7M21 12H9a6 6 0 0 0-6 6"/></svg>',
+  eye: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>'
+};
+function postCardHTML(x, showAuthor) {
+  const adultOk = (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('age_verified') === 'true');
+  const imgs = (Array.isArray(x.images) ? x.images.filter(Boolean) : []);
+  if (!imgs.length && x.image) imgs.push(x.image);
+  const open = x.__type === 'photo' ? `photoOpenDetail('${artEsc(x.id)}')` : `storyOpenDetail('${artEsc(x.id)}')`;
+  const text = String(x.summary || x.desc || x.content || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  const short = text.length > 150 ? text.slice(0, 150).replace(/\s\S*$/, '') + '…' : text;
+  const kind = { photo: 'גלריה', story: 'סיפור', comic: 'קומיקס' }[x.__type];
+  const views = typeof photoGetViews === 'function' ? photoGetViews(x.id) : 0;
+  return `<article class="pc-post">
+    ${showAuthor ? `<header class="pc-post-head" onclick="openUserPage('${artEsc(x.authorId || '')}','${artEsc(x.author || '')}')">${authorAvHTML(x)}<div><b>${escHtml(x.author || 'משתמש')}</b><small>${escHtml(kind)} · ${escHtml(rdTimeAgo(x.__t))}</small></div></header>`
+      : `<div class="pc-post-kind">${escHtml(kind)} · ${escHtml(rdTimeAgo(x.__t))}</div>`}
+    <h3 onclick="${open}">${escHtml(x.title || '')}</h3>
+    ${short ? `<p class="pc-post-text">${escHtml(short)}</p>` : ''}
+    ${text.length > 150 && !imgs.length ? `<button type="button" class="pc-post-btn" onclick="${open}">קרא עוד</button>` : ''}
+    ${imgs.length ? `<div class="pc-post-media${x.isAdult && !adultOk ? ' blur' : ''}" onclick="${open}">
+        <img src="${escHtml(imgs[0])}" alt="" loading="lazy">
+        <span class="pc-post-count">${PF_IC.img}1/${imgs.length}</span>
+      </div>
+      <button type="button" class="pc-post-btn" onclick="${open}">${x.__type === 'photo' ? 'צפייה בגלריה' : 'לקריאה'}</button>` : ''}
+    <footer class="pc-post-foot">
+      <span>${PF_IC.heart}${Number(x.likes) || 0}</span>
+      <button type="button" onclick="${open}" aria-label="תגובות">${PF_IC.cmt}</button>
+      <span>${PF_IC.eye}${typeof formatViews === 'function' ? formatViews(views) : views}</span>
+      <button type="button" onclick="postShare('${artEsc(x.title || '')}')" aria-label="שיתוף">${PF_IC.share}</button>
+    </footer>
+  </article>`;
+}
+function postsListHTML(key, items, showAuthor, emptyHTML) {
+  pfeedLists[key] = { items, showAuthor };
+  pfeedShown[key] = Math.max(PFEED_STEP, pfeedShown[key] || 0);
+  return `<div class="pc-posts" id="pl-${key}">${postsListInner(key, emptyHTML)}</div>`;
+}
+function postsListInner(key, emptyHTML) {
+  const L = pfeedLists[key]; if (!L) return '';
+  if (!L.items.length) return emptyHTML || '<div class="pf-empty">עדיין אין פוסטים</div>';
+  const n = pfeedShown[key];
+  const more = L.items.length - n;
+  return L.items.slice(0, n).map(x => postCardHTML(x, L.showAuthor)).join('') +
+    (more > 0 ? `<button type="button" class="pc-more" onclick="postsMore('${key}')">טעינת עוד פוסטים <small>(${more})</small></button>` : '');
+}
+function postsMore(key) {
+  pfeedShown[key] = (pfeedShown[key] || PFEED_STEP) + PFEED_STEP;
+  const el = document.getElementById('pl-' + key);
+  if (el) el.innerHTML = postsListInner(key);
+}
+function postShare(title) {
+  const url = location.href;
+  if (navigator.share) { navigator.share({ title: title || document.title, url }).catch(() => {}); return; }
+  try { navigator.clipboard.writeText(url); if (typeof showCopyToast === 'function') showCopyToast('הקישור הועתק'); } catch (e) {}
+}
+window.postsMore = postsMore; window.postShare = postShare;
+
+// --- לשוניות בפרופיל: פוסטים / גלריה / אודות ---
+function pfTab(name) {
+  document.querySelectorAll('.pf-tabs .pf-tab').forEach(b => b.classList.toggle('on', b.dataset.tab === name));
+  document.querySelectorAll('.pf-panel').forEach(p => { p.hidden = p.dataset.panel !== name; });
+}
+window.pfTab = pfTab;
+
+// --- עמוד "הפיד שלי" ---
+function buildFeedPage() {
+  if (typeof subscribeMyFollows === 'function') { try { subscribeMyFollows(); } catch (e) {} }
+  const items = feedAllItems();
+  const json = encodeURIComponent(JSON.stringify(items.filter(x => x.__type === 'photo')));
+  const u = auth.currentUser;
+  const reg = u && !u.isAnonymous;
+  const follows = Object.keys(followedUids || {}).filter(k => followedUids[k]);
+  let body;
+  if (!reg) {
+    body = `<div class="pfeed-empty"><h2>הפיד שלכם מחכה</h2><p>התחברו ועקבו אחרי יוצרים — כל מה שהם מעלים יופיע כאן.</p><button type="button" class="pc-more" onclick="openLiveChatLogin()">התחברות</button></div>`;
+  } else {
+    const mine = items.filter(x => x.authorId && followedUids[x.authorId]);
+    // הצעות למעקב: היוצרים הפעילים ביותר שעוד לא עוקבים אחריהם
+    const counts = {};
+    items.forEach(x => {
+      if (!x.authorId || x.authorId === u.uid || followedUids[x.authorId] || (typeof isSiteAdminAuthor === 'function' && isSiteAdminAuthor(x.authorId, x.author, x))) return;
+      counts[x.authorId] = counts[x.authorId] || { x, n: 0 }; counts[x.authorId].n++;
+    });
+    const sugg = Object.values(counts).sort((a, b) => b.n - a.n).slice(0, 6);
+    const suggHTML = sugg.length ? `<section class="pfeed-sugg"><h3>מומלצים לעקוב</h3><div>${sugg.map(({ x, n }) => `
+        <div class="pfeed-sugg-item">${authorAvHTML(x)}<span onclick="openUserPage('${artEsc(x.authorId)}','${artEsc(x.author || '')}')"><b>${escHtml(x.author || 'משתמש')}</b><small>${n} העלאות</small></span>
+          <button type="button" onclick="toggleFollow('${artEsc(x.authorId)}','${artEsc(x.author || '')}', this)">עקבו</button></div>`).join('')}</div></section>` : '';
+    body = (follows.length ? '' : `<div class="pfeed-empty"><h2>עוד לא עוקבים אחרי אף אחד</h2><p>עקבו אחרי יוצרים שאהבתם, וההעלאות החדשות שלהם יופיעו כאן לפי הסדר.</p></div>`) +
+      suggHTML +
+      (follows.length ? postsListHTML('feed', mine, true, '<div class="pf-empty">מי שאתם עוקבים אחריו עוד לא העלה כלום</div>') : '');
+  }
+  return `<div class="user-page pfeed-page" data-photos-json="${json}"><div class="pfeed-inner">
+      <header class="pfeed-head"><h1>הפיד שלי</h1><p>כל מה שהעלו מי שאתם עוקבים אחריהם — החדש ביותר למעלה</p></header>
+      ${body}
+    </div></div>`;
+}
+window.buildFeedPage = buildFeedPage;
 // ===== פרופיל משתמש: כותרת (תמונה, שם, @שם, תיאור, פרטים, עוקבים) =====
 function profileHandle(name) {
   return String(name || 'user').trim().toLowerCase().replace(/\s+/g, '');
@@ -19926,34 +20056,6 @@ function fbFeedOpen(id, kind) {
 }
 window.fbFeedOpen = fbFeedOpen;
 
-// בונה את הפיד (בסגנון פייסבוק) — זמין גם לאורחים
-function buildFeedPage() {
-  if (typeof subscribeMyFollows === 'function') { try { subscribeMyFollows(); } catch (e) {} }
-  fbFeedPosts = fbFeedGetPosts();
-  fbFeedIndex = 0;
-  fbFeedBatchesLoaded = 0;
-  let name = 'אורח';
-  try {
-    const u = auth.currentUser;
-    if (u) {
-      const prof = JSON.parse(localStorage.getItem(`user_profile_${u.uid}`) || '{}');
-      name = prof.name || (typeof liveChatUserName === 'function' ? liveChatUserName() : '') || (u.email ? u.email.split('@')[0] : 'משתמש');
-    }
-  } catch (e) {}
-  setTimeout(fbFeedInit, 30);
-  return `
-    <div class="fb-feed">
-      ${fbFeedStoriesHTML(fbFeedPosts)}
-      <div class="fb-composer" onclick="fbFeedCompose()" role="button" tabindex="0">
-        <div class="fb-composer-avatar">👤</div>
-        <div class="fb-composer-input">מה בא לך לשתף, ${escHtml(name)}?</div>
-        <div class="fb-composer-icons"><span title="תמונה">🖼️</span><span title="וידאו">🎥</span></div>
-      </div>
-      <div class="fb-feed-list" id="fb-feed-list"></div>
-      <div id="fb-feed-sentinel" style="height:1px;"></div>
-    </div>`;
-}
-window.buildFeedPage = buildFeedPage;
 
 // פותח את עמוד הפיד (מכפתור הבית בכותרת)
 function openFeed() {

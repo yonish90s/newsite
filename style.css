@@ -11030,3 +11030,50 @@ html body .art-telegram-btn.is-disabled svg * { stroke: #8a7f78 !important; }
 .ob-next:disabled { opacity: .6; }
 @media (max-width: 480px) { .ob-card { padding: 20px 18px 22px; } .ob-preview { width: 170px; height: 170px; } }
 .ob-tip svg { width: 24px; height: 24px; flex: none; }
+
+/* ===== פוסטים בסגנון Ko-fi (פרופיל + הפיד שלי) ===== */
+.pc-posts { display: flex; flex-direction: column; gap: 14px; max-width: 560px; margin: 0 auto; direction: rtl; }
+.pc-post { background: #fff; border: 1px solid #efe6de; border-radius: 18px; padding: 16px 0 12px; overflow: hidden; box-shadow: 0 6px 18px -14px rgba(43,37,34,.35); }
+.pc-post > *:not(.pc-post-media) { margin-left: 16px; margin-right: 16px; }
+.pc-post-head { display: flex; align-items: center; gap: 10px; cursor: pointer; margin-bottom: 10px; }
+.pc-post-head .au-av { width: 38px; height: 38px; margin: 0; font-size: 15px; }
+.pc-post-head div { display: flex; flex-direction: column; }
+.pc-post-head b { font-size: 15px; color: #2b2522; }
+.pc-post-head small, .pc-post-kind { font-size: 12.5px; color: #8a7f78; font-weight: 600; }
+.pc-post-kind { margin-bottom: 6px; }
+.pc-post h3 { margin: 0 0 6px; font-size: 17px; font-weight: 800; color: #2b2522; cursor: pointer; }
+.pc-post-text { margin: 0 0 10px; font-size: 14.5px; line-height: 1.6; color: #5d534d; }
+.pc-post-media { position: relative; margin: 6px 0 10px; background: #f3eee9; cursor: pointer; aspect-ratio: 4 / 3; overflow: hidden; }
+.pc-post-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pc-post-media.blur img { filter: blur(22px); transform: scale(1.1); }
+.pc-post-count { position: absolute; top: 10px; right: 10px; display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 8px; background: rgba(43,37,34,.78); color: #fff; font-size: 12px; font-weight: 800; }
+.pc-post-count svg { width: 14px; height: 14px; }
+.pc-post-btn { display: inline-block; border: 0; border-radius: 10px; background: #f1ebe6; color: #2b2522; font: inherit; font-size: 13.5px; font-weight: 800; padding: 8px 14px; cursor: pointer; margin-bottom: 10px; }
+.pc-post-foot { display: flex; align-items: center; gap: 16px; font-size: 13px; font-weight: 700; color: #5d534d; }
+.pc-post-foot span, .pc-post-foot button { display: inline-flex; align-items: center; gap: 5px; border: 0; background: none; padding: 0; font: inherit; color: inherit; cursor: pointer; }
+.pc-post-foot svg { width: 18px; height: 18px; }
+.pc-post-foot button:last-child { margin-inline-start: auto; }
+.pc-more { align-self: center; border: 0; border-radius: 999px; background: #2b2522; color: #fff; font: inherit; font-weight: 800; font-size: 15px; padding: 12px 26px; cursor: pointer; }
+.pc-more small { opacity: .7; font-weight: 600; }
+/* לשוניות בפרופיל */
+.pf-tabs { display: flex; gap: 22px; border-bottom: 1px solid #efe6de; margin: 6px 0 16px; padding: 0 4px; }
+.pf-tabs .pf-tab { border: 0; background: none; font: inherit; font-size: 15px; font-weight: 800; color: #8a7f78; padding: 10px 0; cursor: pointer; position: relative; }
+.pf-tabs .pf-tab b { font-size: 12.5px; color: #b8aca3; margin-inline-start: 3px; }
+.pf-tabs .pf-tab.on { color: #2b2522; }
+.pf-tabs .pf-tab.on::after { content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 2.5px; border-radius: 2px; background: #ff8a5c; }
+/* הפיד שלי */
+.pfeed-inner { max-width: 600px; margin: 0 auto; padding: 22px 16px 90px; direction: rtl; }
+.pfeed-head h1 { margin: 0 0 4px; font-size: 26px; font-weight: 900; color: #2b2522; }
+.pfeed-head p { margin: 0 0 18px; color: #8a7f78; font-size: 14.5px; }
+.pfeed-empty { background: #fff; border: 1px solid #efe6de; border-radius: 18px; padding: 26px 20px; text-align: center; margin-bottom: 14px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.pfeed-empty h2 { margin: 0; font-size: 19px; color: #2b2522; }
+.pfeed-empty p { margin: 0 0 6px; color: #8a7f78; font-size: 14.5px; line-height: 1.6; }
+.pfeed-sugg { background: #fff; border: 1px solid #efe6de; border-radius: 18px; padding: 16px; margin-bottom: 14px; }
+.pfeed-sugg h3 { margin: 0 0 10px; font-size: 15.5px; color: #2b2522; }
+.pfeed-sugg-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; }
+.pfeed-sugg-item + .pfeed-sugg-item { border-top: 1px solid #f6f1ec; }
+.pfeed-sugg-item .au-av { width: 40px; height: 40px; margin: 0; }
+.pfeed-sugg-item span:not(.au-av) { flex: 1; display: flex; flex-direction: column; cursor: pointer; }
+.pfeed-sugg-item small { color: #8a7f78; font-size: 12.5px; }
+.pfeed-sugg-item button { border: 0; border-radius: 999px; background: #ff8a5c; color: #2b2522; font: inherit; font-weight: 800; padding: 7px 16px; cursor: pointer; }
+.hc-dot-feed { background: #2b2522 !important; }
