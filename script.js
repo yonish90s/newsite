@@ -16389,7 +16389,7 @@ function photoOpenDetail(id) {
                 </div>
               </div>
               <div class="pd2-row2">
-                <button type="button" class="pd2-ghost" onclick="photoToggleSave('${artEsc(a.id)}')"><svg viewBox="0 0 24 24" fill="${photoIsSavedLocal(a.id) ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.4-9-8.6C1.6 8.4 3.4 5 6.8 5c2 0 3.3 1.1 5.2 3 1.9-1.9 3.2-3 5.2-3 3.4 0 5.2 3.4 3.8 6.4C19 15.6 12 20 12 20z"/></svg>${photoIsSavedLocal(a.id) ? 'נשמר' : 'שמירה'}</button>
+                <button type="button" class="pd2-ghost pd2-save${photoIsSavedLocal(a.id) ? ' is-saved' : ''}" onclick="photoToggleSave('${artEsc(a.id)}')"><svg viewBox="0 0 24 24" fill="${photoIsSavedLocal(a.id) ? '#ffffff' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><span>${photoIsSavedLocal(a.id) ? 'שמור' : 'שמירה'}</span></button>
                 <button type="button" class="pd2-ghost" onclick="postShare('${artEsc(a.title || '')}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg>שיתוף</button>
               </div>
               ${(isAdmin() || isEditMode) ? `<button type="button" class="pd2-ghost pd2-edit" onclick="openPhotoEditModal('${artEsc(a.id)}', event);">עריכת הגלריה</button>` : ''}

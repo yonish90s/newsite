@@ -11202,3 +11202,51 @@ html body .pd2-frame::before, html body .pd2-frame::after { display: none !impor
 html body .pd2-frame .pshow-size-item { background: rgba(255,255,255,.95) !important; color: #111 !important; border: 1px solid #d4d4d8 !important; box-shadow: 0 2px 8px rgba(0,0,0,.12) !important; }
 html body .pd2-frame .pshow-size-item * { color: #111 !important; }
 html body .pd2-frame .pshow-size-none { color: #52525b !important; }
+
+/* =====================================================================
+   שחור-לבן + צבע הדגשה אחד (סגול) לכל מה שפעיל: נשמר, נבחר, לשונית פעילה, מתג דלוק
+   ===================================================================== */
+:root { --acc: #5b3df5; --acc-soft: #efebff; --acc-ink: #3b23c9; --like: #e11d48; }
+::selection { background: rgba(91, 61, 245, .2); }
+/* שמירה */
+html body .art-save-btn.is-saved, html body .pd2-save.is-saved, html body .photo-save-btn.is-saved {
+  background: var(--acc) !important; border-color: var(--acc) !important; color: #ffffff !important; box-shadow: 0 4px 12px -4px rgba(91, 61, 245, .55) !important;
+}
+html body .art-save-btn.is-saved *, html body .pd2-save.is-saved * { color: #ffffff !important; }
+html body .art-save-btn.is-saved svg *, html body .pd2-save.is-saved svg * { stroke: #ffffff !important; fill: #ffffff !important; }
+/* לייק — לב אדום */
+html body .art-heart-overlay.liked svg, html body .art-heart-overlay.is-liked svg, html body .photo-like-btn.liked svg { fill: var(--like) !important; stroke: var(--like) !important; }
+/* לשוניות ובחירות פעילות */
+html body .pf-tabs .pf-tab.on::after, html body .pcc.on::after { background: var(--acc) !important; }
+html body .pcc.on .pcc-ring { box-shadow: 0 0 0 2.5px #fff, 0 0 0 4.5px var(--acc) !important; }
+html body .cs-tab.on svg { color: var(--acc) !important; }
+html body .srail-btn.on { color: var(--acc) !important; background: var(--acc-soft) !important; }
+@media (max-width: 768px) { html body .mtab.active { background: var(--acc-soft) !important; color: var(--acc-ink) !important; } html body .mtab.active svg { color: var(--acc) !important; } }
+html body .psf-btn.psf-ic.on, html body .psf-btn.on { color: var(--acc) !important; border-color: var(--acc) !important; background: var(--acc-soft) !important; }
+html body .psf-btn b, html body .shop-cart-count, html body .dm-pill-badge { background: var(--acc) !important; color: #fff !important; }
+html body .pd2-chip.on { border-color: var(--acc) !important; box-shadow: inset 0 0 0 1px var(--acc) !important; color: var(--acc-ink) !important; background: var(--acc-soft) !important; }
+html body .pd2-thumbs .pshow-tile.active { border-color: var(--acc) !important; }
+html body .pd2-bar b { background: var(--acc) !important; }
+html body .bd-chip.on, html body .shop-method.on .co-radio { border-color: var(--acc) !important; }
+html body .bd-chip.on { background: var(--acc) !important; color: #fff !important; }
+html body .co-method.on { box-shadow: inset 0 0 0 1.5px var(--acc) !important; background: #faf9ff !important; }
+html body .co-method.on .co-radio { border: 5px solid var(--acc) !important; }
+html body .shop-check.on, html body .shop-item.on .shop-check { background: var(--acc) !important; border-color: var(--acc) !important; }
+/* מתגים */
+html body .tgl-switch input:checked + .tgl-slider { background: var(--acc) !important; }
+html body input[type="checkbox"], html body input[type="radio"] { accent-color: var(--acc); }
+/* פוקוס ברור במקלדת */
+html body :focus-visible { outline: 2.5px solid var(--acc); outline-offset: 2px; }
+/* קישורים "פעילים" קטנים */
+html body .fo-guest-change, html body .ob-link, html body .legal-body a, html body .co-legal a:hover { color: var(--acc) !important; }
+html body .ob-dots span.on, html body .algo-bar span, html body .algo-col span { background: var(--acc) !important; }
+html body .shop-item.on .shop-cb { background: var(--acc) !important; border-color: var(--acc) !important; color: #fff !important; }
+html body .shop-item.on { border-color: var(--acc) !important; }
+html body:not(#_):not(#_) .art-save-btn.is-saved, html body:not(#_):not(#_) .pd2-save.is-saved {
+  background: var(--acc) !important; border-color: var(--acc) !important; color: #ffffff !important; box-shadow: 0 4px 12px -4px rgba(91, 61, 245, .55) !important;
+}
+html body:not(#_):not(#_) .art-save-btn.is-saved *, html body:not(#_):not(#_) .pd2-save.is-saved * { color: #ffffff !important; }
+html body:not(#_):not(#_) .art-save-btn.is-saved svg, html body:not(#_):not(#_) .art-save-btn.is-saved svg *, html body:not(#_):not(#_) .pd2-save.is-saved svg * { stroke: #ffffff !important; fill: #ffffff !important; }
+html body:not(#_):not(#_) .art-heart-overlay.liked svg, html body:not(#_):not(#_) .art-heart-overlay.liked svg * { fill: var(--like) !important; stroke: var(--like) !important; }
+html body:not(#_):not(#_):not(#_) .art-save-btn.is-saved, html body:not(#_):not(#_):not(#_) .photo-card-links .art-save-btn.is-saved,
+html body:not(#_):not(#_):not(#_) .photo-card-links button.is-saved, html body:not(#_):not(#_):not(#_) .pd2-save.is-saved { background: #5b3df5 !important; background-color: #5b3df5 !important; border-color: #5b3df5 !important; color: #fff !important; }
