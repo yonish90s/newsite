@@ -11529,3 +11529,6 @@ html body:not(#_):not(#_) .umap-btn:hover { background: #2459c0 !important; }
   html body:not(#_):not(#_) #header-history-btn { display: none !important; }
 }
 html body:not(#_):not(#_) .art-zoom-btn { background: rgba(17, 17, 17, .6) !important; color: #ffffff !important; border: 0 !important; backdrop-filter: blur(6px); }
+/* הסרגל השמאלי נשאר ריק (בלי "עמודי האתר" / "גולשים בסביבה" / "פרסום מהיר") — מסתירים אותו כשהוא ריק */
+html body:not(#_) .art-sidebar-left:not(:has(> :not(.site-pages-widget-box))) { display: none !important; }
+@media (max-width: 1099px) { html body:not(#_) .art-sidebar-left:has(> .site-pages-widget-box) { display: block !important; } }

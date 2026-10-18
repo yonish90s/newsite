@@ -11720,13 +11720,6 @@ function buildLeftSidebarBox(popularHTML, section) {
         ` : ''}
       </div>
 
-      ${buildUserMapBox()}
-
-      ${section === 'communities' ? '' : `<div class="art-sidebar-box" style="border:1.5px solid #c4b5fd; background:#faf8ff; border-radius: 14px; padding: 16px; text-align: center;">
-        <div style="font-size: 14px; font-weight: 900; color:#262626; margin-bottom: 4px;">🤖 פרסום מודעה מהיר</div>
-        <div style="font-size: 11.5px; color: #64748b; margin-bottom: 10px; line-height: 1.4;">עוזר מונחה שיפרסם עבורך מודעה חדשה בצ׳אט תוך 30 שניות</div>
-        <button onclick="openQuickPublish()" style="width: 100%; background:linear-gradient(135deg,#2f6fdb,#2f6fdb); color: #ffffff; border: none; border-radius: 10px; padding: 10px; font-size: 13px; font-weight: 800; cursor: pointer; box-shadow:0 3px 10px rgba(0, 0, 0, 0.15);">🤖 צ׳אט לפרסום מהיר</button>
-      </div>`}
     </div>
   `;
 }
