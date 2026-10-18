@@ -11466,3 +11466,66 @@ html body:not(#_):not(#_) input[type="radio"]:checked::before { transform: scale
 html body:not(#_):not(#_) input[type="radio"]:focus-visible { box-shadow: 0 0 0 4px rgba(47, 111, 219, .2) !important; outline: none !important; }
 /* תיבות סימון באותה שפה */
 html body:not(#_):not(#_) input[type="checkbox"] { accent-color: #2f6fdb !important; }
+
+/* =====================================================================
+   שכבת עיצוב אחידה — נקי ומודרני
+   פונט Rubik · דף אוף-וייט עם כרטיסים לבנים · מסגרות עדינות · שדות ברורים
+   ===================================================================== */
+:root {
+  --ds-page: #f6f7f9; --ds-card: #ffffff; --ds-line: #e6e8ec; --ds-line-2: #d7dbe2;
+  --ds-ink: #0f1115; --ds-text: #3f4552; --ds-muted: #646b78; --ds-blue: #2f6fdb;
+  --ds-radius: 18px; --ds-shadow: 0 1px 2px rgba(16, 24, 40, .04), 0 6px 18px -12px rgba(16, 24, 40, .12);
+  --ds-font: 'Rubik', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+}
+/* פונט אחד לכל האתר */
+html body:not(#_), html body:not(#_) :is(button, input, textarea, select, h1, h2, h3, h4, h5, h6, p, span, a, label, small, b, strong, li, td, th, div) { font-family: var(--ds-font); }
+html body:not(#_) :is(h1, h2, h3) { letter-spacing: -0.2px; color: var(--ds-ink); }
+/* רקע הדף אוף-וייט — הכרטיסים הלבנים בולטים */
+html:not(.theme-dark), html:not(.theme-dark) body { background: var(--ds-page) !important; }
+/* כותרת עליונה נקייה */
+html body:not(#_) .apple-nav { background: rgba(255, 255, 255, .88) !important; border-bottom: 1px solid var(--ds-line) !important; box-shadow: none !important; backdrop-filter: saturate(180%) blur(14px); }
+html body:not(#_) .apple-nav .nav-links a { font-weight: 600 !important; font-size: 14px !important; padding: 6px 14px !important; }
+html body:not(#_) .apple-nav .notif-bell { background: #ffffff !important; border: 1px solid var(--ds-line) !important; color: var(--ds-ink) !important; box-shadow: none !important; transition: border-color .15s, color .15s, background .15s !important; }
+html body:not(#_) .apple-nav .notif-bell:hover { border-color: var(--ds-blue) !important; color: var(--ds-blue) !important; background: #f5f8fe !important; }
+/* כרטיסים: אותה פינה, מסגרת וצל בכל האתר */
+html body:not(#_) :is(.art-sidebar-box, .photo-section-row, .view-toggles, .pc-post, .pfeed-empty, .pfeed-sugg, .algo-card, .st-card, .comm-grid-card, .co, .pd2-buy, .fo-card, .fo-row, .of-card, .legal-card, .pcat-tile, .bd-card, .ob-card) {
+  border-radius: var(--ds-radius) !important; border: 1px solid var(--ds-line) !important; box-shadow: var(--ds-shadow) !important;
+}
+html body:not(#_) :is(.art-sidebar-box, .photo-section-row, .view-toggles, .pc-post, .pfeed-empty, .pfeed-sugg, .algo-card, .st-card, .comm-grid-card, .fo-card, .of-card, .pcat-tile:not(.active)) { background: var(--ds-card) !important; }
+/* כותרות מקטעים בלי פסים צבעוניים כבדים */
+html body:not(#_) .photo-section-row > div:first-child { border-bottom: 1px solid var(--ds-line) !important; }
+html body:not(#_) .art-sidebar-title { border-bottom: 1px solid var(--ds-line) !important; }
+/* שדות קלט אחידים */
+html body:not(#_) :is(input[type="text"], input[type="search"], input[type="email"], input[type="url"], input[type="number"], input[type="password"], input[type="tel"], textarea, select):not(.pc-in):not(.rd-input):not(.cc-f input) {
+  border: 1px solid var(--ds-line-2) !important; border-radius: 12px !important; background: #ffffff !important; color: var(--ds-ink) !important;
+  transition: border-color .15s, box-shadow .15s !important;
+}
+html body:not(#_) :is(input, textarea, select):focus { border-color: var(--ds-blue) !important; box-shadow: 0 0 0 4px rgba(47, 111, 219, .14) !important; outline: none !important; }
+html body:not(#_) .art-search { height: 46px !important; padding: 0 16px !important; font-size: 15px !important; }
+/* טקסט משני קריא */
+html body:not(#_) :is(.art-row-meta, .comm-grid-sub, .pc-post-text, .pd2-desc p) { color: var(--ds-text) !important; }
+/* מחשב: הסרגל בצד כבר מנווט — מסירים את תיבת "עמודי האתר" הכפולה */
+@media (min-width: 1100px) { html.has-srail body:not(#_) .site-pages-widget-box { display: none !important; } }
+/* בית: פחות רווח ריק מעל הפתיח, ומרווח מסודר לקטגוריות */
+html body:not(#_) .hw-inner { padding-top: 28px !important; padding-bottom: 36px !important; }
+html body:not(#_) .home-welcome { background: transparent !important; }
+html body:not(#_) .hcats { max-width: 1180px; margin: 0 auto; padding: 18px 20px 30px !important; }
+html body:not(#_) .hc-chips { padding-top: 22px !important; }
+/* סרגל תחתון במובייל: לבן זכוכיתי עם מסגרת עדינה */
+@media (max-width: 768px) {
+  html body:not(#_) .mtabs { background: rgba(255, 255, 255, .92) !important; border: 1px solid var(--ds-line) !important; box-shadow: 0 10px 30px -12px rgba(16, 24, 40, .28) !important; backdrop-filter: blur(14px); }
+  html body:not(#_) .mtab { color: #5c6370 !important; }
+}
+/* פוטר */
+html body:not(#_) .site-footer { background: #ffffff !important; border-top: 1px solid var(--ds-line) !important; }
+/* פתיח בעמוד הבית — קומפקטי, בלי חלל ריק */
+html body:not(#_) .home-welcome { min-height: 0 !important; }
+@media (min-width: 900px) { html body:not(#_) .hw-cards { height: 372px !important; } html body:not(#_) .hw-inner { padding-top: 12px !important; padding-bottom: 24px !important; } }
+html body:not(#_):not(#_) .umap-btn { background: var(--ds-blue) !important; color: #ffffff !important; border: 0 !important; border-radius: 999px !important; font-weight: 800 !important; box-shadow: 0 8px 18px -10px rgba(47, 111, 219, .7) !important; }
+html body:not(#_):not(#_) .umap-btn:hover { background: #2459c0 !important; }
+/* מובייל: כפתור בהיר/כהה זמין גם בטלפון (במקום כפתור ההיסטוריה) */
+@media (max-width: 768px) {
+  html body:not(#_):not(#_) #theme-toggle-btn { display: flex !important; }
+  html body:not(#_):not(#_) #header-history-btn { display: none !important; }
+}
+html body:not(#_):not(#_) .art-zoom-btn { background: rgba(17, 17, 17, .6) !important; color: #ffffff !important; border: 0 !important; backdrop-filter: blur(6px); }

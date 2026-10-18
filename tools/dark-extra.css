@@ -37,3 +37,12 @@ html.theme-dark body:not(#_):not(#_) .shop-basket b { background: #2f6fdb !impor
 html.theme-dark body:not(#_):not(#_) input[type="radio"] { background: transparent !important; border-color: #4a525e !important; }
 html.theme-dark body:not(#_):not(#_) input[type="radio"]:checked { border-color: #4d8bf0 !important; background: transparent !important; }
 html.theme-dark body:not(#_):not(#_) input[type="radio"]::before { background: #4d8bf0 !important; }
+html.theme-dark, html.theme-dark body { background: #121418 !important; }
+html.theme-dark body:not(#_) .apple-nav { background: rgba(18, 20, 24, .88) !important; border-bottom-color: #262b33 !important; }
+html.theme-dark body:not(#_) .apple-nav .notif-bell { background: #1b1e24 !important; border-color: #2c323b !important; color: #eceef1 !important; }
+html.theme-dark body:not(#_) :is(.art-sidebar-box, .photo-section-row, .view-toggles, .pc-post, .pfeed-empty, .pfeed-sugg, .algo-card, .st-card, .comm-grid-card, .fo-card, .of-card, .pcat-tile:not(.active), .co, .pd2-buy, .legal-card, .bd-card, .ob-card, .fo-row) { background: #1b1e24 !important; border-color: #2a2f37 !important; box-shadow: none !important; }
+html.theme-dark body:not(#_) :is(input[type="text"], input[type="search"], input[type="email"], input[type="url"], input[type="number"], input[type="password"], input[type="tel"], textarea, select) { background: #15181d !important; border-color: #323842 !important; color: #eceef1 !important; }
+html.theme-dark body:not(#_) :is(.art-row-meta, .comm-grid-sub, .pc-post-text, .pd2-desc p) { color: #b9c0ca !important; }
+html.theme-dark body:not(#_) :is(h1, h2, h3) { color: #eceef1; }
+html.theme-dark body:not(#_) .site-footer { background: #15181d !important; border-top-color: #262b33 !important; }
+@media (max-width: 768px) { html.theme-dark body:not(#_) .mtabs { background: rgba(27, 30, 36, .92) !important; border-color: #2c323b !important; } html.theme-dark body:not(#_) .mtab { color: #aab1bc !important; } }
