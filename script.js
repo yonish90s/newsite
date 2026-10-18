@@ -299,7 +299,11 @@ let deleteCart = false;
 let deleteChat = false;
 
 // פונקציית עזר לבדיקה האם המשתמש המחובר כרגע הוא המנהל המורשה
-const isAdmin = () => auth.currentUser && auth.currentUser.email === "yoni98321@gmail.com";
+const isAdmin = () => {
+  const r = !!(auth.currentUser && auth.currentUser.email === "yoni98321@gmail.com");
+  try { document.documentElement.classList.toggle('is-admin', r); } catch (e) {} // כפתורי מחיקה/עריכה למנהל בכל מקום
+  return r;
+};
 
 // מפתחות ציבוריים של האתר. כללי האבטחה חוסמים קריאה של כל website (הודעות, משתמשים וכו'),
 // ולכן קוראים רק את המפתחות האלה, כל אחד בנפרד.
@@ -6873,7 +6877,7 @@ function storyCardHTML(s, iconHint) {
             ${mainImg ? `<button class="art-zoom-btn" onclick="event.stopPropagation();artGalleryById('stories','${artEsc(s.id)}', this.closest('.art-row-img-wrap').querySelector('img') && this.closest('.art-row-img-wrap').querySelector('img').getAttribute('src'))" title="מסך מלא">⛶</button>` : ''}
             ${cardHeartOverlay}
             ${isEditMode ? `<button class="art-pin-btn" onclick="event.stopPropagation(); togglePinStory('${artEsc(s.id)}')" title="${s.pinned ? 'בטל נעץ' : 'נעץ בגריד'}" style="${s.pinned ? 'color:#ffd700;display:flex;' : ''}">${s.pinned ? '★' : '☆'}</button>` : ''}
-            ${isEditMode ? `<button class="art-edit-btn" onclick="event.stopPropagation(); openStoryEditModal('${artEsc(s.id)}')" title="ערוך סיפור">✎</button>` : ''}
+            ${(isEditMode || isAdmin()) ? `<button class="art-edit-btn" onclick="event.stopPropagation(); openStoryEditModal('${artEsc(s.id)}')" title="ערוך סיפור">✎</button>` : ''}
             <button class="art-delete-btn" onclick="event.stopPropagation();storyDelete('${artEsc(s.id)}',this)">✕</button>
           </div>
           ${miniThumbnailsHTML}
@@ -7424,7 +7428,7 @@ function storyGetCurrentKind() {
 }
 
 function storyDelete(id, el) {
-  if (!isEditMode) return;
+  if (!isEditMode && !isAdmin()) return; // המנהל מוחק כל תוכן, גם של גולשים
   if (!confirm('האם למחוק סיפור זה?')) return;
   removeItemFromStoredPages(id);
   const onHome = !!mainContent.querySelector('.home-feed-page');
@@ -17892,7 +17896,7 @@ function _setApprovedInStoredPages(id) {
 }
 
 function photoDelete(id, el) {
-  if (!isEditMode) return;
+  if (!isEditMode && !isAdmin()) return; // המנהל מוחק כל תוכן, גם של גולשים
   if (!confirm('האם למחוק גלריה זו?')) return;
   removeItemFromStoredPages(id);
   // פריט בתוך קהילה נשמר ב-website/communities/{id}/items — מוחקים משם

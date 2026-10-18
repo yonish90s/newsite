@@ -12369,3 +12369,5 @@ html[data-lang="en"] body :is(p, span, small, b, strong, h1, h2, h3, h4, h5, lab
   html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .comic-info .pshow-tiles { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 12px !important; max-height: none !important; overflow: visible !important; }
   html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .comic-info .pshow-tile { width: auto !important; height: auto !important; aspect-ratio: 1 !important; padding: 5% !important; border-radius: 16px !important; }
 }
+/* מנהל: כפתורי מחיקה ועריכה גלויים על כל כרטיס, גם בלי מצב עריכה */
+html.is-admin .art-delete-btn, html.is-admin .art-edit-btn { display: flex !important; }
