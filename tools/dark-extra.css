@@ -84,3 +84,14 @@ html.theme-dark .qp-bot { background: #1f2a3d; color: #8fb8ff; }
 html.theme-dark body:not(#_) #quick-publish-modal #qp-input { color: #eceef1 !important; }
 html.theme-dark body .hcat { background: #1b1e24 !important; border-color: #2a2f37 !important; }
 html.theme-dark body .hcat-label, html.theme-dark body .hcat-ic { color: #c8cdd4 !important; }
+@media (min-width: 769px) {
+  html.theme-dark body:not(#_) .pc-compose, html.theme-dark body:not(#_) .rd-compose { background: rgba(27, 30, 36, .96) !important; border-color: #2c323b !important; }
+  html.theme-dark body:not(#_) .rd-compose .rd-input, html.theme-dark body:not(#_) .pc-compose .pc-in { background: #22262d !important; color: #eceef1 !important; }
+}
+@media (min-width: 769px) {
+  html.theme-dark body:not(#_) .fo-reply { background: rgba(27, 30, 36, .96) !important; border-color: #2c323b !important; }
+  html.theme-dark body:not(#_) .fo-reply #fo-reply-text { background: #22262d !important; color: #eceef1 !important; }
+}
+html.theme-dark body:not(#_) #cookie-bar.cookie-bar { background: #1b1e24 !important; border-color: #2c323b !important; color: #eceef1 !important; }
+html.theme-dark body:not(#_) #cookie-bar .cookie-bar-text { color: #c8cdd4 !important; }
+html.theme-dark body:not(#_) #cookie-bar .cookie-btn:not(.yes):not(.ghost) { background: transparent !important; color: #eceef1 !important; border-color: #3a414b !important; }

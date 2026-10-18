@@ -11755,3 +11755,69 @@ html body:not(#_) .qp-field input { flex: 1; min-width: 0; height: 40px; border:
 }
 html body:not(#_) #quick-publish-modal #qp-input { border: 0 !important; box-shadow: none !important; background: transparent !important; border-radius: 0 !important; height: 40px !important; }
 html body:not(#_) .nav-links a:is([data-page-id="page-news-main"], [data-page-id="page-subscription-main"]) { display: none !important; }
+
+/* ===== מחשב: חלון תגובה צף בתמונה / סיפור / דיון בפורום ===== */
+@media (min-width: 769px) {
+  html body:not(#_) .pc-compose, html body:not(#_) .rd-compose {
+    position: fixed !important; z-index: 9200; bottom: 18px; left: 50%; transform: translateX(-50%);
+    width: min(640px, calc(100vw - 260px)); margin: 0 !important; padding: 12px 14px 14px !important; box-sizing: border-box;
+    background: rgba(255, 255, 255, .96) !important; -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+    border: 1px solid var(--ds-line, #e6e8ec) !important; border-radius: 22px !important;
+    box-shadow: 0 22px 50px -22px rgba(15, 17, 21, .45) !important;
+    animation: fc-in .25s cubic-bezier(.2, .8, .2, 1);
+  }
+  html.has-srail body:not(#_) .pc-compose, html.has-srail body:not(#_) .rd-compose { left: calc(50% + 36px); }
+  html body:not(#_) .pc-compose::before, html body:not(#_) .rd-compose::before {
+    content: "תגובה מהירה"; display: block; margin: 0 4px 8px; font-size: 12.5px; font-weight: 700; color: var(--ds-muted, #646b78);
+  }
+  html body:not(#_) :is(.pc-section, .rd-comments) { padding-bottom: 150px !important; }
+  html body:not(#_) .rd-compose .rd-input, html body:not(#_) .pc-compose .pc-in { background: #f4f5f7 !important; }
+}
+@keyframes fc-in { from { transform: translate(-50%, 16px); opacity: .6; } to { transform: translateX(-50%); opacity: 1; } }
+@media (min-width: 769px) {
+  html body:not(#_) .fo-reply {
+    position: fixed !important; z-index: 9200; bottom: 18px; left: 50%; transform: translateX(-50%);
+    width: min(640px, calc(100vw - 260px)); margin: 0 !important; padding: 12px 14px 14px !important; box-sizing: border-box;
+    display: grid !important; grid-template-columns: 1fr auto; gap: 8px 10px; align-items: end;
+    background: rgba(255, 255, 255, .96) !important; -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+    border: 1px solid var(--ds-line, #e6e8ec) !important; border-radius: 22px !important; box-shadow: 0 22px 50px -22px rgba(15, 17, 21, .45) !important;
+    animation: fc-in .25s cubic-bezier(.2, .8, .2, 1);
+  }
+  html.has-srail body:not(#_) .fo-reply { left: calc(50% + 36px); }
+  html body:not(#_) .fo-reply::before { content: "תגובה מהירה"; grid-column: 1 / -1; font-size: 12.5px; font-weight: 700; color: var(--ds-muted, #646b78); margin: 0 4px; }
+  html body:not(#_) .fo-reply > :is(.fo-guest-as, .fo-guest-name) { grid-column: 1 / -1; margin: 0 !important; }
+  html body:not(#_) .fo-reply #fo-reply-text { height: 48px !important; min-height: 48px; max-height: 140px; resize: none; border-radius: 16px !important; background: #f4f5f7 !important; padding: 12px 14px !important; margin: 0 !important; }
+  html body:not(#_) .fo-reply .fo-compose-actions { margin: 0 !important; }
+  html body:not(#_) .fo-reply .fo-btn { height: 48px !important; border-radius: 999px !important; padding: 0 20px !important; white-space: nowrap; }
+  html body:not(#_) .fo-posts { padding-bottom: 150px; }
+}
+
+/* ===== באנר עוגיות — כרטיס קטן ונקי בפינה (בלי אנימציית החלקה שהוצגה כמלבן שחור) ===== */
+html body:not(#_) #cookie-bar.cookie-bar {
+  left: auto !important; right: 20px !important; bottom: 20px !important; transform: none !important; transition: opacity .25s ease !important;
+  width: min(420px, calc(100% - 32px)) !important; padding: 16px 18px !important; gap: 12px !important;
+  flex-direction: column !important; align-items: stretch !important; flex-wrap: nowrap !important;
+  background: #ffffff !important; color: #0f1115 !important; border: 1px solid #e6e8ec !important; border-radius: 18px !important;
+  box-shadow: 0 20px 44px -18px rgba(15, 17, 21, .35) !important; backdrop-filter: none !important;
+}
+html body:not(#_) #cookie-bar.cookie-bar:not(.show) { opacity: 0 !important; pointer-events: none !important; }
+html body:not(#_) #cookie-bar .cookie-bar-icon { display: none !important; }
+html body:not(#_) #cookie-bar .cookie-bar-text { margin: 0 !important; font-size: 14px !important; line-height: 1.55 !important; color: #3f4552 !important; text-align: right !important; }
+html body:not(#_) #cookie-bar .cookie-bar-btns { display: flex !important; gap: 8px !important; flex-wrap: wrap !important; width: 100% !important; }
+html body:not(#_) #cookie-bar .cookie-btn { flex: 1 1 0 !important; height: 40px !important; padding: 0 12px !important; border-radius: 999px !important; font-weight: 800 !important; font-size: 14px !important; }
+html body:not(#_) #cookie-bar .cookie-btn.yes { background: #2f6fdb !important; color: #fff !important; border: 0 !important; }
+html body:not(#_) #cookie-bar .cookie-btn:not(.yes) { background: #ffffff !important; color: #0f1115 !important; border: 1px solid #d7dbe2 !important; }
+html body:not(#_) #cookie-bar .cookie-btn.ghost { flex-basis: 100% !important; border: 0 !important; background: transparent !important; color: #2f6fdb !important; height: 30px !important; }
+@media (max-width: 768px) { html body:not(#_) #cookie-bar.cookie-bar { right: 12px !important; left: 12px !important; width: auto !important; bottom: calc(96px + env(safe-area-inset-bottom, 0px)) !important; } }
+
+/* ===== פרסום מהיר במחשב — חלון צף וגדול יותר, בלי להחשיך את הדף ===== */
+@media (min-width: 769px) {
+  html body:not(#_) .qp-modal { background: transparent !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; pointer-events: none; align-items: flex-end !important; justify-content: center !important; padding: 0 0 18px !important; }
+  html.has-srail body:not(#_) .qp-modal { padding-left: 72px !important; }
+  html body:not(#_) .qp-modal .qp-card { pointer-events: auto; max-width: 680px !important; height: min(800px, calc(100vh - 90px)) !important;
+    box-shadow: 0 30px 80px -24px rgba(15, 17, 21, .5), 0 0 0 1px rgba(15, 17, 21, .04) !important; animation: qp-float .26s cubic-bezier(.2, .8, .2, 1); }
+  html body:not(#_) .qp-modal .qp-bubble { font-size: 15.5px; }
+}
+@keyframes qp-float { from { transform: translateY(24px); } to { transform: none; } }
+html body:not(#_) #cookie-bar .cookie-bar-text, html body:not(#_) #cookie-bar .cookie-bar-btns { flex: none !important; }
+html body:not(#_) #cookie-bar.cookie-bar { transition: none !important; height: auto !important; }
