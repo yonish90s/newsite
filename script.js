@@ -26875,3 +26875,95 @@ window.toggleSiteTheme = toggleSiteTheme;
     lastY = y;
   }, { passive: true });
 })();
+
+// ============================================================
+// תפריט צד במובייל (☰) — בסגנון פייסבוק: פרופיל, קיצורי דרך, כל הקהילות, עזרה והגדרות
+// ============================================================
+const MNAV_ICONS = {
+  photos: '<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/>',
+  stories: '<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5M9 8h6M9 11h6"/>',
+  comics: '<path d="M4 5h16v11H9l-5 4z"/><path d="M9 9.5h6M9 12.5h4"/>',
+  forums: '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M8.5 12h.01M12 12h.01M15.5 12h.01"/>',
+  friends: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><circle cx="17" cy="9" r="2.6"/><path d="M16 14.2a5 5 0 0 1 5.5 5.3"/>',
+  blinddate: '<path d="M12 20s-7-4.4-9-8.6C1.6 8.4 3.4 5 6.8 5c2 0 3.3 1.1 5.2 3 1.9-1.9 3.2-3 5.2-3 3.4 0 5.2 3.4 3.8 6.4C19 15.6 12 20 12 20z"/><path d="M7.5 11.5h3M13.5 11.5h3"/>',
+  tinder: '<path d="M9.5 18S4 14.6 2.6 11.4C1.6 9 3 6.5 5.6 6.5c1.5 0 2.5.8 3.9 2.2"/><path d="M14.5 20s-5.6-3.5-7-6.6C6.4 11 7.8 8.5 10.4 8.5c1.6 0 2.6.9 4.1 2.4 1.5-1.5 2.5-2.4 4.1-2.4 2.6 0 4 2.5 3 4.9C20.2 16.5 14.5 20 14.5 20z"/>',
+  products: '<path d="M3 8h18v4H3z"/><path d="M5 12v8h14v-8M12 8v12"/><path d="M12 8c-1.5-3-5-3.5-5-1.2C7 8 9 8 12 8zM12 8c1.5-3 5-3.5 5-1.2C17 8 15 8 12 8z"/>',
+  news: '<path d="M4 5h13v14H6a2 2 0 0 1-2-2z"/><path d="M17 9h3v8a2 2 0 0 1-2 2"/><path d="M8 9h5M8 13h5"/>',
+  offers: '<path d="M12 3c.6 3.2 4 4.6 4 8.5A4 4 0 0 1 12 15.5a4 4 0 0 1-4-4c0-1.6.8-2.8 1.6-3.7.3 1.4 1 2.2 1.9 2.4C11.3 7.8 11 5.2 12 3z"/><path d="M6 15.5A6 6 0 0 0 18 15.5"/>',
+  saved: '<path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>',
+  feed: '<path d="M4 11a9 9 0 0 1 9 9M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1.5"/>',
+  shop: '<path d="M3 4h2l2.4 11.2a1 1 0 0 0 1 .8h9.2a1 1 0 0 0 1-.8L21 8H6.2"/><circle cx="9.5" cy="20" r="1.5"/><circle cx="17.5" cy="20" r="1.5"/>',
+  msgs: '<path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/>',
+  history: '<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/>',
+  likes: '<path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>'
+};
+let mnavMore = false;
+function mnavGo(action) { closeMobileMenu(); setTimeout(() => { try { (new Function(action))(); } catch (e) { console.error(e); } }, 60); }
+window.mnavGo = mnavGo;
+function mobileMenuHTML() {
+  const u = auth.currentUser, reg = u && !u.isAnonymous;
+  const name = reg ? ((typeof liveChatUserName === 'function' && liveChatUserName()) || 'הפרופיל שלי') : 'אורח';
+  const nav = id => `navigateToPage('${id}')`;
+  const pageAct = kind => { const p = (typeof commFindPage === 'function') ? commFindPage(kind) : null; return p ? nav(p.id) : ''; };
+  const tiles = [
+    ['photos', 'תמונות', 'homeOpenPhotos()'], ['stories', 'סיפורים', "homeOpenSection('page-stories-text')"], ['comics', 'קומיקס', "homeOpenSection('page-stories-main')"],
+    ['forums', 'פורומים', pageAct('forums')], ['friends', 'חברים', pageAct('friends')], ['blinddate', 'Blind Date', pageAct('blinddate')],
+    ['tinder', 'התאמות', pageAct('tinder')], ['products', 'מוצרים', pageAct('products')], ['news', 'חדשות', nav('page-news-main')],
+    ['offers', 'הצעות', nav('page-offers-main')], ['feed', 'הפיד שלי', 'openFeed()'], ['saved', 'שמורים', 'openSavedModal()'],
+    ['likes', 'הלייקים שלי', 'openLikesDrawer()'], ['history', 'היסטוריה', 'openHistoryDrawer()'], ['msgs', 'הודעות', 'openMessages()'], ['shop', 'שדרוגים', nav('page-subscription-main')]
+  ].filter(t => t[2]);
+  const shown = mnavMore ? tiles : tiles.slice(0, 8);
+  const tile = ([k, label, act]) => `<button type="button" class="mnav-tile" onclick="mnavGo(${JSON.stringify(act).replace(/"/g, '&quot;')})">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${MNAV_ICONS[k]}</svg><span>${label}</span></button>`;
+  // קיצורי דרך: תמונות שער של התוכן החדש באתר
+  const items = (typeof feedAllItems === 'function') ? feedAllItems() : [];
+  const adultOk = (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('age_verified') === 'true');
+  const shortcuts = items.filter(x => (x.images && x.images[0]) || x.image).slice(0, 8).map(x => {
+    const img = (x.images && x.images[0]) || x.image;
+    const act = x.__type === 'photo' ? `homeOpenPhotos(); setTimeout(() => photoOpenDetail('${artEsc(x.id)}'), 450)` : `storyOpenDetail('${artEsc(x.id)}')`;
+    return `<button type="button" class="mnav-sc" onclick="mnavGo(${JSON.stringify(act).replace(/"/g, '&quot;')})">
+        <span class="mnav-sc-img${x.isAdult && !adultOk ? ' blur' : ''}"><img src="${escHtml(img)}" alt="" loading="lazy"></span><span class="mnav-sc-name">${escHtml(x.title || '')}</span></button>`;
+  }).join('');
+  const dark = document.documentElement.classList.contains('theme-dark');
+  return `<div class="mnav-backdrop" onclick="closeMobileMenu()"></div>
+    <aside class="mnav-panel" role="dialog" aria-label="תפריט">
+      <div class="mnav-top"><b>תפריט</b><button type="button" class="mnav-x" onclick="closeMobileMenu()" aria-label="סגירה">✕</button></div>
+      <button type="button" class="mnav-profile" onclick="mnavGo(${JSON.stringify(reg ? `openUserPage('${artEsc(u.uid)}')` : 'openLiveChatLogin()').replace(/"/g, '&quot;')})">
+        <span class="au-av mnav-av"${reg ? ` data-av-uid="${escHtml(u.uid)}"` : ''}>${escHtml(String(name).charAt(0))}</span>
+        <span class="mnav-pname"><b>${escHtml(name)}</b><small>${reg ? 'לפרופיל שלי' : 'התחברות / הרשמה'}</small></span>
+        <svg class="mnav-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+      </button>
+      ${shortcuts ? `<h4 class="mnav-h">קיצורי דרך</h4><div class="mnav-scs">${shortcuts}</div>` : ''}
+      <h4 class="mnav-h">הקהילות</h4>
+      <div class="mnav-grid">${shown.map(tile).join('')}</div>
+      ${tiles.length > 8 ? `<button type="button" class="mnav-more" onclick="mnavToggleMore()">${mnavMore ? 'הצג פחות' : 'הצג עוד'}</button>` : ''}
+      <details class="mnav-acc"><summary><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6M12 17h.01"/></svg>עזרה ותמיכה</summary>
+        <button type="button" onclick="mnavGo('dmOpenAdmin()')">שליחת הודעה לצוות האתר</button>
+        <button type="button" onclick="mnavGo(&quot;openLegal('report')&quot;)">דיווח על תוכן</button>
+        <button type="button" onclick="mnavGo(&quot;openLegal('a11y')&quot;)">הצהרת נגישות</button>
+      </details>
+      <details class="mnav-acc"><summary><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>הגדרות ופרטיות</summary>
+        <button type="button" onclick="toggleSiteTheme(); renderMobileMenu()">${dark ? 'מעבר למצב בהיר' : 'מעבר למצב כהה'}</button>
+        <button type="button" onclick="mnavGo(&quot;openLegal('privacy')&quot;)">מדיניות פרטיות</button>
+        <button type="button" onclick="mnavGo(&quot;openLegal('terms')&quot;)">תנאי שימוש</button>
+        <button type="button" onclick="mnavGo(&quot;openLegal('mydata')&quot;)">המידע שלי</button>
+      </details>
+    </aside>`;
+}
+function renderMobileMenu() { const m = document.getElementById('mnav'); if (m) { m.innerHTML = mobileMenuHTML(); if (typeof avatarHydrate === 'function') avatarHydrate(m); } }
+function openMobileMenu() {
+  let m = document.getElementById('mnav');
+  if (!m) { m = document.createElement('div'); m.id = 'mnav'; m.className = 'mnav'; document.body.appendChild(m); }
+  renderMobileMenu();
+  m.style.display = 'block';
+  document.documentElement.classList.add('mnav-open');
+  requestAnimationFrame(() => m.classList.add('show'));
+}
+function closeMobileMenu() {
+  const m = document.getElementById('mnav'); if (!m) return;
+  m.classList.remove('show'); document.documentElement.classList.remove('mnav-open');
+  setTimeout(() => { if (!m.classList.contains('show')) m.style.display = 'none'; }, 260);
+}
+function mnavToggleMore() { mnavMore = !mnavMore; renderMobileMenu(); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMobileMenu(); });
+Object.assign(window, { openMobileMenu, closeMobileMenu, renderMobileMenu, mnavToggleMore });

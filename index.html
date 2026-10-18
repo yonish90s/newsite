@@ -15,8 +15,8 @@
   <!-- ספריית localforage לשמירת תמונות -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
   <!-- קישור לקובץ העיצוב החיצוני (עם פרמטר למניעת שמירה במטמון) -->
-  <link rel="stylesheet" href="./style.css?v=1607">
-  <link rel="stylesheet" href="./dark.css?v=25">
+  <link rel="stylesheet" href="./style.css?v=1608">
+  <link rel="stylesheet" href="./dark.css?v=26">
   <script>
     // מצב בהיר/כהה — נקבע לפני שהדף מצויר כדי שלא יהבהב (בחירה שמורה, אחרת לפי הגדרות המכשיר)
     (function () {
@@ -263,6 +263,7 @@
             <span id="notif-badge" class="notif-badge" style="display:none"></span>
           </button>
           <button id="manager-btn" class="manager-btn">אורח</button>
+          <button id="mnav-btn" class="mnav-btn" onclick="openMobileMenu()" aria-label="תפריט" title="תפריט"><span></span><span></span><span></span></button>
         </div>
         <div id="notif-panel" class="notif-panel" style="display:none"></div>
       </div>
@@ -1241,7 +1242,7 @@ html.theme-dark .pl-bar { background: #2a2f37; }
     try { if (localStorage.getItem('mtab_hidden') === '1') document.documentElement.classList.add('mtab-hidden'); } catch (e) {}
   </script>
   <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
-  <script type="module" src="./script.js?v=1543"></script>
+  <script type="module" src="./script.js?v=1544"></script>
   <script defer src="./a11y.js?v=1"></script>
 </body>
 </html>
