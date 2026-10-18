@@ -27084,3 +27084,28 @@ function openForumsFullPage() {
 }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSidePanels(); });
 Object.assign(window, { openForumsPanel, closeForumsPanel, openForumsFullPage, closeSidePanel, closeSidePanels, openSidePanel, openCommunitiesPanel, openCommunitiesFullPage });
+
+// ============================================================
+// טקסט ארוך מדי (למשל כתובת מייל) — מקטינים את הכתב כדי שייכנס בשורה אחת
+// ============================================================
+const FIT_ONE_LINE_SEL = '.up-about-link, .uw-link, .em-pill-btn, [data-fit-line]';
+function fitOneLine(el) {
+  if (!el || !el.isConnected || !el.clientWidth) return;
+  el.style.fontSize = '';
+  let fs = parseFloat(getComputedStyle(el).fontSize) || 14;
+  let guard = 0;
+  while (el.scrollWidth > el.clientWidth + 1 && fs > 9 && guard++ < 30) {
+    fs -= 0.5;
+    el.style.fontSize = fs + 'px';
+  }
+}
+let _fitTimer = null;
+function fitOneLineAll() {
+  clearTimeout(_fitTimer);
+  _fitTimer = setTimeout(() => document.querySelectorAll(FIT_ONE_LINE_SEL).forEach(fitOneLine), 60);
+}
+new MutationObserver(muts => {
+  if (muts.some(m => [...m.addedNodes].some(n => n.nodeType === 1 && (n.matches(FIT_ONE_LINE_SEL) || n.querySelector(FIT_ONE_LINE_SEL))))) fitOneLineAll();
+}).observe(document.body, { childList: true, subtree: true });
+window.addEventListener('resize', fitOneLineAll);
+fitOneLineAll();

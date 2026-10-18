@@ -1761,6 +1761,30 @@ html.theme-dark body:not(#_):not(#_):not(#_):not(#_) :is(.qp-send, .rd-send, .pc
 html.theme-dark body:not(#_):not(#_):not(#_) .cm-panel-grid .comm-grid-thumb { background: #22262d !important; }
 html.theme-dark body:not(#_):not(#_):not(#_) .cm-panel-grid .comm-sc-ic { background: #2a2f37 !important; border: 1px solid #323842 !important; color: #c8cdd4 !important; }
 html.theme-dark body:not(#_):not(#_):not(#_) .cm-panel-grid .comm-sc-ic svg { color: #c8cdd4 !important; stroke: #c8cdd4 !important; }
+html.theme-dark .fo-panel .rd-sub { color: #eceef1 !important; }
+html.theme-dark .fo-panel .rd-by { color: rgba(236, 238, 241, 0.6) !important; }
+html.theme-dark .fo-panel .rd-time { color: rgba(236, 238, 241, 0.5) !important; }
+html.theme-dark .fo-panel .rd-title { color: #eceef1 !important; }
+html.theme-dark .fo-panel .rd-text { color: rgba(236, 238, 241, 0.9) !important; }
+html.theme-dark .fo-panel .rd-pill { background: rgba(255, 255, 255, 0.072) !important; color: #eceef1 !important; }
+html.theme-dark .fo-panel .rd-votes { color: rgba(236, 238, 241, 0.75) !important; }
+html.theme-dark .fo-panel .rd-votes b { color: rgba(236, 238, 241, 0.85) !important; }
+html.theme-dark .fo-panel .rd-votes.up .rd-vote:first-child, html.theme-dark .fo-panel .rd-votes.up b { color: #eceef1 !important; }
+html.theme-dark .fo-panel .rd-input { border: 1px solid rgba(255, 255, 255, 0.176) !important; background: rgba(255, 255, 255, 0.108) !important; color: #eceef1 !important; }
+html.theme-dark .fo-panel .rd-input::placeholder { color: rgba(236, 238, 241, 0.55) !important; }
+html.theme-dark .fo-panel .rd-input:focus { border-color: rgba(255, 255, 255, 0.1) !important; }
+html.theme-dark .fo-panel .rd-cmt-name { color: #eceef1 !important; }
+html.theme-dark .fo-panel .rd-dot { color: rgba(236, 238, 241, 0.4) !important; }
+html.theme-dark .fo-panel .rd-tag { background: rgba(255, 255, 255, 0.09) !important; color: rgba(236, 238, 241, 0.7) !important; }
+html.theme-dark .fo-panel .rd-cmt-body { border-inline-start: 1.5px solid rgba(255, 255, 255, 0.128) !important; }
+html.theme-dark .fo-panel .rd-actions { color: rgba(236, 238, 241, 0.7) !important; }
+html.theme-dark .fo-panel .rd-act { color: rgba(236, 238, 241, 0.75) !important; }
+html.theme-dark .fo-panel .rd-act:active, html.theme-dark .fo-panel .rd-vote:active { background: rgba(255, 255, 255, 0.072) !important; }
+html.theme-dark .fo-panel .rd-more { color: rgba(236, 238, 241, 0.65) !important; }
+html.theme-dark .fo-panel .rd-compose .rd-input { background: #2a2f37 !important; border-color: #323842 !important; }
+html.theme-dark body:not(#_):not(#_) .fo-panel .rd-compose { background: rgba(27, 30, 36, 0.97) !important; border-top: 1px solid #323842 !important; }
+html.theme-dark body:not(#_):not(#_) .fo-panel .rd-input { background: #22262d !important; border: 1px solid #323842 !important; }
+html.theme-dark body:not(#_):not(#_) .fo-panel .rd-sub-ic { background: #22262d !important; color: #c8cdd4 !important; }
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #eceef1 !important; }
 html.theme-dark [style*="color:#111111"] { color: #eceef1 !important; }

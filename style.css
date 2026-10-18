@@ -11989,3 +11989,115 @@ html body:not(#_):not(#_):not(#_) .cm-panel-grid .comm-grid-info { padding: 8px 
 html body:not(#_):not(#_):not(#_) .cm-panel-grid .comm-grid-name { font-size: 14px !important; margin: 0 !important; }
 html body:not(#_):not(#_):not(#_) .cm-panel-grid .comm-grid-sub { font-size: 11.5px !important; line-height: 1.3 !important; margin: 0 0 4px !important; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
 html body:not(#_):not(#_):not(#_) .cm-panel-grid .comm-grid-btn { width: 100% !important; padding: 6px 8px !important; font-size: 12.5px !important; min-height: 0 !important; height: auto !important; }
+
+/* ===== פורומים בחלון הצד במחשב — אותו עיצוב כמו במובייל (נושא, תגובות, שורת תגובה) ===== */
+.fo-panel .fo-cat { border-radius: 16px !important; margin-bottom: 14px !important; }
+.fo-panel .fo-cat-title { font-size: 15px !important; padding: 12px 16px !important; letter-spacing: .2px; }
+.fo-panel .fo-row { display: flex !important; align-items: center !important; gap: 12px !important; padding: 12px 14px !important; min-height: 0 !important; }
+.fo-panel .fo-row .fo-last { display: none !important; }
+.fo-panel .fo-row .fo-icon { width: 36px !important; height: 36px !important; border-radius: 10px !important; flex: none; }
+.fo-panel .fo-row .fo-icon svg { width: 20px !important; height: 20px !important; }
+.fo-panel .fo-row .fo-main { flex: 1; min-width: 0; gap: 2px !important; }
+.fo-panel .fo-row .fo-title { font-size: 15.5px !important; line-height: 1.3; }
+.fo-panel .fo-row .fo-main small { font-size: 12.5px !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+.fo-panel .fo-row .fo-stat { display: none !important; }
+.fo-panel .fo-row .fo-stat:last-of-type { display: flex !important; flex-direction: column; align-items: center; min-width: 40px; }
+.fo-panel .fo-row .fo-stat small { font-size: 10.5px !important; }
+.fo-panel .fo-row .fo-stat b { font-size: 14px !important; }
+.fo-panel .fo-row.topic .fo-stat:last-of-type small { display: none; }
+.fo-panel .rd-post { padding: 6px 2px 14px; direction: rtl; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; }
+.fo-panel .rd-post-head { display: flex; align-items: center; gap: 10px; }
+.fo-panel .rd-sub-ic { width: 40px; height: 40px; flex: none; border-radius: 50%; display: grid; place-items: center; background: linear-gradient(160deg, #2f6fdb, #2f6fdb); color: #ffffff; }
+.fo-panel .rd-sub-ic svg { width: 22px; height: 22px; }
+.fo-panel .rd-post-meta { flex: 1; min-width: 0; line-height: 1.35; }
+.fo-panel .rd-sub { font-size: 15px; font-weight: 700; color: #262626; cursor: pointer; }
+.fo-panel .rd-by { font-size: 14px; color: rgba(38, 38, 38, 0.6); cursor: pointer; }
+.fo-panel .rd-time { font-size: 13.5px; color: rgba(38, 38, 38, 0.5); }
+.fo-panel .rd-title { margin: 12px 0 8px; font-size: 21px; line-height: 1.35; font-weight: 800; color: #262626; }
+.fo-panel .rd-text { font-size: 16px; line-height: 1.6; color: rgba(38, 38, 38, 0.9); word-break: break-word; }
+.fo-panel .rd-post-actions { display: flex; align-items: center; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+.fo-panel .rd-pill { display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 14px; border-radius: 999px; border: 0; background: rgba(38, 38, 38, 0.08); color: #262626; font: inherit; font-size: 15px; cursor: pointer; }
+.fo-panel .rd-pill svg { width: 21px; height: 21px; }
+.fo-panel .rd-pill b { font-weight: 700; }
+.fo-panel .rd-pill-icon { width: 46px; padding: 0; justify-content: center; }
+.fo-panel .rd-votes { display: inline-flex; align-items: center; gap: 2px; color: rgba(38, 38, 38, 0.75); }
+.fo-panel .rd-votes b { min-width: 16px; text-align: center; font-size: 14px; font-weight: 700; color: rgba(38, 38, 38, 0.85); font-variant-numeric: tabular-nums; }
+.fo-panel .rd-votes.rd-pill { padding: 0 6px; gap: 4px; }
+.fo-panel .rd-votes.rd-pill b { font-size: 15px; }
+.fo-panel .rd-vote { width: 32px; height: 32px; border: 0; background: none; color: inherit; cursor: pointer; display: grid; place-items: center; border-radius: 50%; }
+.fo-panel .rd-vote svg { width: 20px; height: 20px; }
+.fo-panel .rd-vote-down svg { transform: rotate(180deg); }
+.fo-panel .rd-votes.up .rd-vote:first-child, .fo-panel .rd-votes.up b { color: #111111; }
+.fo-panel .rd-votes.down .rd-vote-down, .fo-panel .rd-votes.down b { color: #8b9cff; }
+.fo-panel .rd-compose { margin: 4px 0 18px; }
+.fo-panel .rd-compose-row { display: flex; align-items: flex-end; gap: 8px; }
+.fo-panel .rd-input {
+    flex: 1; min-width: 0; min-height: 46px; max-height: 180px; padding: 12px 18px; border-radius: 24px; resize: none; box-sizing: border-box;
+    border: 1px solid rgba(38, 38, 38, 0.22); background: rgba(0, 0, 0, 0.12); color: #262626; font: inherit; font-size: 16px; line-height: 1.4; outline: none; }
+.fo-panel .rd-input::placeholder { color: rgba(38, 38, 38, 0.55); }
+.fo-panel .rd-input:focus { border-color: rgba(255, 255, 255, 0.45); }
+.fo-panel .rd-send { width: 46px; height: 46px; flex: none; border: 0; border-radius: 50%; cursor: pointer; display: grid; place-items: center; background: linear-gradient(135deg, #2f6fdb, #2f6fdb); color: #ffffff; }
+.fo-panel .rd-send svg { width: 20px; height: 20px; transform: scaleX(-1); }
+.fo-panel .rd-comments { direction: rtl; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; }
+.fo-panel .rd-cmt { margin-bottom: 18px; }
+.fo-panel .rd-cmt.nested { margin: 14px 0 4px; }
+.fo-panel .rd-cmt-head { display: flex; align-items: center; gap: 8px; }
+.fo-panel .rd-av { width: 32px; height: 32px; flex: none; border-radius: 50%; overflow: hidden; display: grid; place-items: center; background: var(--av, #2f6fdb); color: #ffffff; font-size: 13px; font-weight: 800; }
+.fo-panel .rd-av svg { width: 100%; height: 100%; }
+.fo-panel .rd-cmt-name { font-size: 15px; font-weight: 700; color: #262626; cursor: pointer; }
+.fo-panel .rd-dot { color: rgba(38, 38, 38, 0.4); font-size: 12px; }
+.fo-panel .rd-tag { font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 999px; background: rgba(38, 38, 38, 0.1); color: rgba(38, 38, 38, 0.7); }
+.fo-panel .rd-cmt-body { margin-inline-start: 15px; padding-inline-start: 22px; border-inline-start: 1.5px solid rgba(38, 38, 38, 0.16); padding-top: 6px; }
+.fo-panel .rd-actions { display: flex; align-items: center; gap: 6px; margin-top: 8px; color: rgba(38, 38, 38, 0.7); }
+.fo-panel .rd-act { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 10px; border: 0; border-radius: 999px; background: none; color: rgba(38, 38, 38, 0.75); font: inherit; font-size: 14.5px; font-weight: 700; cursor: pointer; }
+.fo-panel .rd-act svg { width: 19px; height: 19px; }
+.fo-panel .rd-act:active, .fo-panel .rd-vote:active { background: rgba(38, 38, 38, 0.08); }
+.fo-panel .rd-del { color: #f87171; }
+.fo-panel .rd-more { display: inline-flex; align-items: center; gap: 8px; margin-top: 10px; padding: 4px 0; border: 0; background: none; color: rgba(38, 38, 38, 0.65); font: inherit; font-size: 14.5px; cursor: pointer; }
+.fo-panel .rd-more svg { width: 20px; height: 20px; }
+html body .fo-panel .forums-page .fo-inner { padding-top: 12px !important; }
+html body .fo-panel .fo-hero { padding: 6px 0 10px !important; margin-bottom: 8px !important; }
+html body .fo-panel .fo-hero h1, html body .fo-panel .fo-head h1 { font-size: 22px !important; margin: 0 0 3px !important; letter-spacing: -0.2px; line-height: 1.25; }
+html body .fo-panel .fo-hero p, html body .fo-panel .fo-head p { font-size: 13.5px !important; font-weight: 500 !important; line-height: 1.45; }
+html body .fo-panel .fo-head { gap: 10px !important; margin-bottom: 12px !important; align-items: center !important; }
+html body .fo-panel .fo-head .fo-btn { height: 38px !important; padding: 0 14px !important; font-size: 13.5px !important; border-radius: 12px !important; white-space: nowrap; }
+html body .fo-panel .fo-nav { margin-bottom: 10px !important; }
+html body .fo-panel .fo-back { height: 36px !important; padding: 0 14px !important; font-size: 13.5px !important; }
+html body .fo-panel .fo-back svg { width: 16px !important; height: 16px !important; }
+html body .fo-panel .fo-tabs { gap: 6px !important; margin-bottom: 12px !important; }
+html body .fo-panel .fo-tab { height: 36px !important; padding: 0 14px !important; font-size: 13.5px !important; }
+html body .fo-panel .fo-cat { margin-bottom: 10px !important; }
+html body .fo-panel .fo-cat-title { font-size: 13.5px !important; padding: 9px 14px !important; }
+html body .fo-panel .fo-row { padding: 10px 12px !important; gap: 10px !important; }
+html body .fo-panel .fo-row .fo-avatar { width: 38px !important; height: 38px !important; font-size: 15px !important; flex: none; }
+html body .fo-panel .fo-row .fo-icon { width: 32px !important; height: 32px !important; }
+html body .fo-panel .fo-row .fo-icon svg { width: 18px !important; height: 18px !important; }
+html body .fo-panel .fo-row .fo-title { font-size: 14.5px !important; }
+html body .fo-panel .fo-row .fo-main small { font-size: 12px !important; }
+html body .fo-panel .fo-empty { font-size: 13.5px !important; padding: 22px 12px !important; }
+html body .fo-panel .rd-title { font-size: 19px !important; margin: 10px 0 6px !important; }
+html body .fo-panel .rd-text { font-size: 15px !important; line-height: 1.55 !important; }
+html body .fo-panel .rd-sub-ic { width: 34px !important; height: 34px !important; }
+html body .fo-panel .rd-sub { font-size: 14px !important; }
+html body .fo-panel .rd-by, html body .fo-panel .rd-time { font-size: 12.5px !important; }
+html body .fo-panel .rd-pill { height: 36px !important; font-size: 14px !important; padding: 0 12px !important; }
+html body .fo-panel .rd-cmt-name { font-size: 14px !important; }
+html body .fo-panel .rd-av { width: 28px !important; height: 28px !important; font-size: 12px !important; }
+html body .fo-panel .rd-cmt-body { margin-inline-start: 13px !important; padding-inline-start: 19px !important; }
+html body .fo-panel .rd-act { font-size: 13.5px !important; height: 30px !important; }
+html body .fo-panel .rd-input { min-height: 42px !important; font-size: 15px !important; padding: 10px 16px !important; }
+html body .fo-panel .rd-send { width: 42px !important; height: 42px !important; }
+.fo-panel .rd-compose .fo-guest-as { margin: 0 4px 6px; font-size: 12.5px; }
+.fo-panel .rd-compose .fo-reply-to { margin-bottom: 6px; }
+.fo-panel .rd-compose .rd-input { background: #efefef; border-color: #dedede; }
+.fo-panel .rd-comments { padding-bottom: 110px; }
+/* שורת התגובה בתחתית חלון הצד */
+html body:not(#_):not(#_) .fo-panel .rd-compose { padding: 10px 14px 12px !important; background: rgba(255, 255, 255, .97) !important; border-top: 1px solid #e6e8ec !important; box-shadow: 0 -8px 24px -14px rgba(38, 38, 38, .3) !important; }
+html body:not(#_):not(#_) .fo-panel .rd-input { background: #f4f5f7 !important; border: 1px solid #dfe2e7 !important; border-radius: 22px !important; }
+html body:not(#_):not(#_) .fo-panel .rd-sub-ic { background: #eef0f3 !important; color: #3f4652 !important; }
+html body:not(#_):not(#_) .fo-panel .fo-inner:has(> .rd-compose) { display: flex !important; flex-direction: column !important; min-height: 100%; }
+html body:not(#_):not(#_) .fo-panel .fo-inner > .rd-compose { order: 99 !important; margin-top: auto !important; }
+html body:not(#_):not(#_) .fo-panel .fo-panel-body:has(.rd-compose) .forums-page { min-height: 100% !important; display: flex; flex-direction: column; }
+html body:not(#_):not(#_) .fo-panel .fo-panel-body:has(.rd-compose) .fo-inner { flex: 1; }
+/* טקסט שצריך להיכנס בשורה אחת (הכתב מוקטן אוטומטית אם ארוך מדי) */
+html body:not(#_):not(#_) :is(.up-about-link, .uw-link, .em-pill-btn, [data-fit-line]) { white-space: nowrap !important; word-break: normal !important; overflow-wrap: normal !important; max-width: 100% !important; overflow: hidden !important; text-overflow: clip !important; display: inline-block; vertical-align: middle; box-sizing: border-box; }
