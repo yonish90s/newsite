@@ -12280,3 +12280,16 @@ html body:not(#_):not(#_):not(#_) .pd2-stats .pv-views svg { width: 16px !import
 html body:not(#_):not(#_):not(#_) .pd2-toprow { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
 html body:not(#_):not(#_):not(#_) .pd2-toprow .art-back-btn { margin: 0 !important; }
 html body:not(#_):not(#_):not(#_) .pd2-topcat { display: inline-flex; align-items: center; height: 36px; padding: 0 16px; border-radius: 999px; border: 1.5px solid #111111; background: #ffffff; color: #111111; font-size: 14px; font-weight: 600; white-space: nowrap; max-width: 50%; overflow: hidden; text-overflow: ellipsis; }
+
+/* ===== מובייל: "שמירה · אימייל · שיתוף" מיד מתחת לשורת היוצר ===== */
+@media (max-width: 768px) {
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pd2-info { display: grid !important; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 10px; row-gap: 12px; align-items: stretch; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pd2-info > * { grid-column: 1 / -1; order: 20; margin-top: 0 !important; margin-bottom: 0 !important; min-width: 0; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pd2-info > .okb-wrap { display: contents !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pd2-info > .pd2-creator { order: 1; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pd2-info .okb-wrap .okb-pass, html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pd2-info .okb-wrap .okb-mini { order: 2; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pd2-info > .pd2-title { order: 3; margin-top: 4px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pd2-info .okb-wrap .okb-like { order: 4; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pd2-info .okb-wrap .okb-super { order: 5; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pd2-info .okb-wrap .okb-likes { order: 6; }
+}
