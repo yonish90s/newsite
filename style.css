@@ -11570,3 +11570,41 @@ html body:not(#_) .hw-watch-cta { grid-area: cta; margin: 0 !important; padding:
 html body:not(#_) .home-welcome { flex-direction: column !important; align-items: stretch !important; }
 html body:not(#_) .hw-inner { box-sizing: border-box !important; max-width: min(1180px, 100%) !important; }
 html body:not(#_) .hcats { box-sizing: border-box !important; width: 100% !important; max-width: 1180px !important; margin-left: auto !important; margin-right: auto !important; }
+
+/* ===== כרטיסי גלריה: שורת הכפתורים תמיד סימטרית, וצמודה לתחתית הכרטיס ===== */
+html body:not(#_) .art-row .photo-card-info { display: flex !important; flex-direction: column !important; }
+html body:not(#_) .art-row .photo-card-links {
+  display: grid !important; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 8px !important;
+  width: 100% !important; margin-top: auto !important; padding-top: 12px !important; justify-content: stretch !important; flex-wrap: nowrap !important;
+}
+html body:not(#_) .art-row .photo-card-links > * {
+  width: 100% !important; min-width: 0 !important; margin: 0 !important; justify-content: center !important;
+  height: 36px !important; padding: 0 8px !important; box-sizing: border-box !important; white-space: nowrap; overflow: hidden;
+}
+html body:not(#_) .art-row .photo-card-links > * span { overflow: hidden; text-overflow: ellipsis; }
+html body:not(#_) .art-row .photo-card-links > .is-disabled { display: none !important; }
+html body:not(#_) .art-rows { align-items: stretch !important; }
+html body:not(#_) .art-row { display: flex; flex-direction: column; }
+html body:not(#_) .art-row > .photo-card-info { flex: 1 1 auto; }
+
+/* ===== "גלריות נוספות שיעניינו אותך" ===== */
+html body:not(#_) .art-rec-section { margin-top: 36px !important; padding: 24px !important; border: 1px solid var(--ds-line, #e6e8ec) !important; border-radius: 22px !important; background: #ffffff !important; box-shadow: var(--ds-shadow) !important; }
+.rec-head { display: flex; flex-direction: column; gap: 2px; margin-bottom: 16px; }
+.rec-head h3 { margin: 0; font-size: 20px; font-weight: 800; color: var(--ds-ink, #0f1115); }
+.rec-head span { font-size: 13px; color: var(--ds-muted, #646b78); }
+html body:not(#_) .art-rec-grid { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)) !important; gap: 14px !important; margin: 0 !important; }
+html body:not(#_) .art-rec-card { border-radius: 16px !important; border: 1px solid var(--ds-line, #e6e8ec) !important; box-shadow: none !important; background: #ffffff !important; overflow: hidden; display: flex; flex-direction: column; transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease !important; }
+html body:not(#_) .art-rec-card:hover { transform: translateY(-3px) !important; box-shadow: 0 16px 30px -18px rgba(16, 24, 40, .35) !important; border-color: #c9dafa !important; }
+html body:not(#_) .art-rec-img { height: auto !important; aspect-ratio: 4 / 5; background: #f4f5f7; }
+html body:not(#_) .art-rec-img img { transition: transform .35s ease; }
+html body:not(#_) .art-rec-card:hover .art-rec-img img { transform: scale(1.04); }
+html body:not(#_) .art-rec-badge { position: absolute; top: 10px; right: 10px; left: auto !important; padding: 4px 10px !important; border-radius: 999px !important; background: rgba(255, 255, 255, .92) !important; color: #111 !important; font-size: 11.5px !important; font-weight: 700 !important; box-shadow: 0 2px 8px rgba(0,0,0,.12); }
+html body:not(#_) .art-rec-text { padding: 12px 14px 14px !important; display: flex; flex-direction: column; gap: 4px; flex: 1; }
+html body:not(#_) .art-rec-text h4 { margin: 0 !important; font-size: 14.5px !important; font-weight: 700 !important; line-height: 1.35 !important; color: var(--ds-ink, #0f1115) !important; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+html body:not(#_) .art-rec-meta { font-size: 12px !important; color: var(--ds-muted, #646b78) !important; }
+html body:not(#_) .art-rec-why { margin-top: auto !important; align-self: flex-start; padding: 3px 10px !important; border-radius: 999px !important; background: #eef3fd !important; color: #2459c0 !important; font-size: 11.5px !important; font-weight: 700 !important; }
+@media (max-width: 640px) {
+  html body:not(#_) .art-rec-section { padding: 16px !important; border-radius: 18px !important; }
+  html body:not(#_) .art-rec-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 10px !important; }
+}
+html body:not(#_) .art-row > .art-row-img-container { order: -1 !important; }

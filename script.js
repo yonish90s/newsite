@@ -16527,7 +16527,7 @@ function photoOpenDetail(id) {
           ${photoCommentsSectionHTML(id)}
 
           <div class="art-rec-section">
-            <h3 style="margin:0 0 16px;font-size:18px;font-weight:800">גלריות נוספות שיעניינו אותך</h3>
+            <div class="rec-head"><h3>גלריות נוספות שיעניינו אותך</h3><span>נבחרו בשבילך לפי מה שאתה צופה ואוהב</span></div>
             <div class="art-rec-grid">${recHTML}</div>
           </div>
         </div>
