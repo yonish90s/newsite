@@ -181,15 +181,18 @@ function trackVisit() {
   try {
     const today = _analyticsDayKey();
     // צפיית עמוד בכל טעינה
-    update(ref(db, 'website/analytics'), { pageviews: increment(1) }).catch(function () {});
-    // ביקור ייחודי — נספר פעם אחת ביום לכל דפדפן
+    update(ref(db, 'website/analytics'), { pageviews: increment(1), ['daily_pv/' + today]: increment(1) }).catch(function () {});
+    // ביקור ייחודי — נספר פעם אחת ביום לכל דפדפן; בנוסף: גולש חדש (ביקור ראשון אי פעם) או חוזר
     const last = localStorage.getItem('last_visit_day');
     if (last !== today) {
       localStorage.setItem('last_visit_day', today);
+      const isNew = !localStorage.getItem('first_visit_day') && !last;
+      if (!localStorage.getItem('first_visit_day')) localStorage.setItem('first_visit_day', last || today);
       update(ref(db, 'website/analytics'), {
         visits: increment(1),
         ['daily/' + today]: increment(1),
-        ['monthly/' + _analyticsMonthKey()]: increment(1)
+        ['monthly/' + _analyticsMonthKey()]: increment(1),
+        [(isNew ? 'daily_new/' : 'daily_return/') + today]: increment(1)
       }).catch(function () {});
     }
   } catch (e) {}
@@ -768,6 +771,9 @@ function sanitizeToOnlyPhotosAndStories() {
     pages.push({ id: 'page-info-main', title: 'מידע 🔒', isHidden: true, content: _infoContent });
   }
   // עמוד "אלגוריתם" — מוסתר, למנהל בלבד
+  if (!pages.find(p => p && p.id === 'page-stats-main')) {
+    pages.push({ id: 'page-stats-main', title: 'נתונים 🔒', isHidden: true, content: '<div class="stats-page" data-page-id="page-stats-main"></div>' });
+  }
   if (!pages.find(p => p && p.id === 'page-algorithm-main')) {
     pages.push({ id: 'page-algorithm-main', title: 'אלגוריתם 🔒', isHidden: true, content: '<div class="algo-page" data-page-id="page-algorithm-main"></div>' });
   } else {
@@ -1604,6 +1610,11 @@ function renderPage() {
     }
 
     // עמוד "אלגוריתם" (למנהל בלבד)
+    if (currentPage.id === 'page-stats-main') {
+      mainContent.innerHTML = buildStatsPage();
+      try { window.scrollTo(0, 0); } catch (e) {}
+      return;
+    }
     if (currentPage.id === 'page-algorithm-main') {
       mainContent.innerHTML = buildAlgoPage();
       try { window.scrollTo(0, 0); } catch (e) {}
@@ -2212,6 +2223,7 @@ function artSerializePageContent() {
     return '<div class="communities-page" data-page-id="page-communities-main"></div>';
   }
   if (mainContent.querySelector('.algo-page')) return '<div class="algo-page" data-page-id="page-algorithm-main"></div>';
+  if (mainContent.querySelector('.stats-page')) return '<div class="stats-page" data-page-id="page-stats-main"></div>';
   const infoList = mainContent.querySelector('.info-page');
   if (infoList) {
     return '<div class="info-page" data-page-id="page-info-main"></div>';
@@ -9753,6 +9765,106 @@ function algoReset() { if (confirm('לאפס את המשקלים לברירת ה
 window.algoSetAuto = algoSetAuto; window.algoApply = algoApply; window.algoReset = algoReset;
 window.buildAlgoPage = buildAlgoPage;
 
+// ============================================================
+// עמוד "נתונים" (מנהל בלבד): האם האתר מתקדם בכיוון הנכון?
+// כרטיסים עם מספר ל-28 הימים האחרונים, גרף קטן, והשוואה ל-28 הימים שלפני
+// ============================================================
+let statsData = null, statsRange = 28;
+function statsDayKey(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+function statsDays(n, offset) {
+  const out = [];
+  for (let i = n - 1 + (offset || 0); i >= (offset || 0); i--) out.push(statsDayKey(new Date(Date.now() - i * 864e5)));
+  return out;
+}
+async function statsLoad() {
+  const g = async path => { try { const s = await get(ref(db, path)); return s.val() || {}; } catch (e) { return {}; } };
+  const [daily, pv, nw, ret, ev, handles] = await Promise.all([
+    g('website/analytics/daily'), g('website/analytics/daily_pv'), g('website/analytics/daily_new'),
+    g('website/analytics/daily_return'), g('website/analytics/events_daily'), g('website/handles')
+  ]);
+  // העלאות לפי יום — מתוך הגלריות והסיפורים שבאתר
+  const ups = {};
+  feedAllItems().forEach(x => { if (x.__t) { const k = statsDayKey(new Date(x.__t)); ups[k] = (ups[k] || 0) + 1; } });
+  statsData = { daily, pv, nw, ret, ev, ups, members: Object.keys(handles).length, at: Date.now() };
+}
+function statsSeries(map, days, pick) { return days.map(d => Number(pick ? pick(map[d] || {}) : map[d]) || 0); }
+function statsSpark(vals, color) {
+  const W = 150, H = 54, max = Math.max(1, ...vals), n = vals.length;
+  const pts = vals.map((v, i) => [(n === 1 ? W : i / (n - 1) * W), H - 4 - (v / max) * (H - 10)]);
+  const line = pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
+  const id = 'sg' + color.replace('#', '');
+  return `<svg class="st-spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
+    <defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${color}" stop-opacity=".28"/><stop offset="1" stop-color="${color}" stop-opacity="0"/></linearGradient></defs>
+    <path d="${line} L${W} ${H} L0 ${H} Z" fill="url(#${id})"/><path d="${line}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+}
+const ST_ICONS = {
+  users: '<path d="M16 19a4 4 0 0 0-8 0"/><circle cx="12" cy="9" r="3.2"/><path d="M21 19a3.5 3.5 0 0 0-4-3.4M3 19a3.5 3.5 0 0 1 4-3.4"/><circle cx="18" cy="9.5" r="2.3"/><circle cx="6" cy="9.5" r="2.3"/>',
+  plus: '<circle cx="10" cy="8" r="3.5"/><path d="M3 20a7 7 0 0 1 11.5-5.4"/><path d="M18 14v6M15 17h6"/>',
+  ret: '<path d="M4 12a8 8 0 0 1 14-5.3L20 8"/><path d="M20 3v5h-5"/><path d="M20 12a8 8 0 0 1-14 5.3L4 16"/><path d="M4 21v-5h5"/>',
+  eye: '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  up: '<path d="M12 16V4M7 9l5-5 5 5"/><path d="M5 20h14"/>',
+  heart: '<path d="M12 20s-7-4.4-9-8.6C1.6 8.4 3.4 5 6.8 5c2 0 3.3 1.1 5.2 3 1.9-1.9 3.2-3 5.2-3 3.4 0 5.2 3.4 3.8 6.4C19 15.6 12 20 12 20z"/>',
+  spark: '<path d="M13 3 4 14h7l-1 7 9-11h-7z"/>',
+  cart: '<path d="M3 4h2l2.4 11.2a1 1 0 0 0 1 .8h9.2a1 1 0 0 0 1-.8L21 8H6.2"/><circle cx="9.5" cy="20" r="1.5"/><circle cx="17.5" cy="20" r="1.5"/>'
+};
+function statsCard(key, title, color, val, prev, vals, suffix, note) {
+  const diff = prev ? (val - prev) / prev * 100 : (val ? 100 : 0);
+  const dir = Math.abs(diff) < 1 ? 'flat' : diff > 0 ? 'up' : 'down';
+  const fmt = v => (typeof v === 'number' && !Number.isInteger(v)) ? v.toFixed(1) : Number(v).toLocaleString('he-IL');
+  return `<article class="st-card">
+    <div class="st-left">
+      <h3 style="color:${color}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ST_ICONS[key]}</svg>${title}</h3>
+      <small>${note || `${statsRange} הימים האחרונים`}</small>
+      <b class="st-num">${fmt(val)}${suffix ? `<span>${suffix}</span>` : ''}</b>
+      <span class="st-delta ${dir}">${dir === 'flat' ? '— ללא שינוי' : `${dir === 'up' ? '▲' : '▼'} ${Math.abs(diff).toFixed(0)}%`} <em>לעומת התקופה הקודמת</em></span>
+    </div>
+    ${statsSpark(vals, color)}
+  </article>`;
+}
+function statsBodyHTML() {
+  if (!(typeof isAdmin === 'function' && isAdmin())) return '<div class="algo-locked">🔒 העמוד הזה זמין למנהל האתר בלבד</div>';
+  if (!statsData) { statsLoad().then(statsRender); return '<div class="algo-locked">טוען נתונים…</div>'; }
+  const n = statsRange, cur = statsDays(n), prev = statsDays(n, n);
+  const D = statsData, sum = a => a.reduce((x, y) => x + y, 0);
+  const ser = (map, pick) => [statsSeries(map, cur, pick), statsSeries(map, prev, pick)];
+  const [act, actP] = ser(D.daily), [nw, nwP] = ser(D.nw), [ret, retP] = ser(D.ret), [pv, pvP] = ser(D.pv), [up, upP] = ser(D.ups);
+  const engPick = e => (e.like || 0) + (e.save || 0) + (e.comment || 0) + (e.dm_send || 0);
+  const [eng, engP] = ser(D.ev, engPick);
+  const [ev, evP] = ser(D.ev, e => e.engaged_visit || 0);
+  const [buy, buyP] = ser(D.ev, e => e.subscribe_click || 0);
+  const retRate = sum(act) ? sum(ret) / sum(act) * 100 : 0, retRateP = sum(actP) ? sum(retP) / sum(actP) * 100 : 0;
+  const engRate = sum(act) ? Math.min(100, sum(ev) / sum(act) * 100) : 0, engRateP = sum(actP) ? Math.min(100, sum(evP) / sum(actP) * 100) : 0;
+  const rateSeries = cur.map((d, i) => act[i] ? ret[i] / act[i] * 100 : 0);
+  const verdictUp = [sum(act) - sum(actP), sum(ret) - sum(retP), sum(eng) - sum(engP), sum(up) - sum(upP)].filter(x => x > 0).length;
+  const verdict = verdictUp >= 3 ? ['good', 'האתר מתקדם בכיוון הנכון 🎉', 'רוב המדדים עלו לעומת התקופה הקודמת.']
+    : verdictUp === 2 ? ['mid', 'יציב — יש מה לשפר', 'חצי מהמדדים עלו. כדאי לבדוק מה ירד.']
+    : ['bad', 'ירידה בפעילות', 'רוב המדדים ירדו — כדאי לעודד העלאות ותוכן חדש.'];
+  return `
+    <header class="st-head">
+      <div><h1>נתוני האתר</h1><p>רק אתה רואה את העמוד הזה · עודכן ${new Date(D.at).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}</p></div>
+      <div class="st-range">${[7, 28, 90].map(r => `<button type="button" class="${r === n ? 'on' : ''}" onclick="statsSetRange(${r})">${r} ימים</button>`).join('')}
+        <button type="button" onclick="statsRefresh()" aria-label="רענון">↻</button></div>
+    </header>
+    <div class="st-verdict ${verdict[0]}"><b>${verdict[1]}</b><span>${verdict[2]}</span></div>
+    <div class="st-grid">
+      ${statsCard('users', 'גולשים פעילים', '#4f46e5', sum(act), sum(actP), act, '', `ביקורים ייחודיים · ${n} ימים`)}
+      ${statsCard('ret', 'משתמשים חוזרים', '#0d9488', sum(ret), sum(retP), ret)}
+      ${statsCard('ret', 'אחוז חזרה', '#0891b2', retRate, retRateP, rateSeries, '%', 'מתוך הגולשים — כמה חזרו שוב')}
+      ${statsCard('plus', 'גולשים חדשים', '#2f6fdb', sum(nw), sum(nwP), nw)}
+      ${statsCard('eye', 'צפיות בעמודים', '#7c3aed', sum(pv), sum(pvP), pv)}
+      ${statsCard('up', 'העלאות חדשות', '#ea580c', sum(up), sum(upP), up, '', 'גלריות, סיפורים וקומיקס')}
+      ${statsCard('heart', 'פעולות מעורבות', '#e11d48', sum(eng), sum(engP), eng, '', 'לייקים, שמירות, תגובות והודעות')}
+      ${statsCard('spark', 'ביקורים עם פעולה', '#16a34a', engRate, engRateP, cur.map((d, i) => act[i] ? Math.min(100, ev[i] / act[i] * 100) : 0), '%', 'כמה מהביקורים לא נטשו')}
+      ${statsCard('cart', 'כניסות לתשלום', '#d97706', sum(buy), sum(buyP), buy)}
+    </div>
+    <p class="st-foot">משתמשים רשומים עם שם משתמש: <b>${D.members.toLocaleString('he-IL')}</b> · הנתונים אנונימיים ונספרים רק ממי שאישר עוגיות. "גולש חוזר" = מי שכבר ביקר בעבר ונכנס שוב ביום אחר.</p>`;
+}
+function buildStatsPage() { return `<div class="stats-page algo-page-like"><div class="st-inner">${statsBodyHTML()}</div></div>`; }
+function statsRender() { const el = document.querySelector('.stats-page .st-inner'); if (el) el.innerHTML = statsBodyHTML(); }
+function statsSetRange(r) { statsRange = r; statsRender(); }
+async function statsRefresh() { statsData = null; statsRender(); }
+Object.assign(window, { buildStatsPage, statsSetRange, statsRefresh });
+
 // עמוד "מוצרי יד שניה" — גריד מוצרים בקונספט של עמוד התמונות/רעיונות
 function buildSecondhandPage() {
   const albums = (typeof photoGetAlbums === 'function') ? photoGetAlbums() : [];
@@ -15321,7 +15433,8 @@ function sideRailHTML() {
   const reg = u && !u.isAnonymous;
   const btn = ([id, label, action, path, fill]) => `<button type="button" class="srail-btn" data-rail="${id}" onclick="${action}" aria-label="${label}" title="${label}">
       <svg viewBox="0 0 24 24" fill="${fill ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="${fill ? 0 : 2}" stroke-linecap="round" stroke-linejoin="round">${path}</svg></button>`;
-  return `${SIDE_RAIL_ITEMS.map(btn).join('')}
+  const adminBtn = (typeof isAdmin === 'function' && isAdmin()) ? btn(['stats', 'נתוני האתר (מנהל)', "navigateToPage('page-stats-main')", '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>', false]) : '';
+  return `${SIDE_RAIL_ITEMS.map(btn).join('')}${adminBtn}
     <button type="button" class="srail-btn srail-me" onclick="${reg ? `openUserPage('${artEsc(u.uid)}')` : 'openLiveChatLogin()'}" aria-label="${reg ? 'הפרופיל שלי' : 'התחברות'}">
       <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4.2"/><path d="M3.5 21a8.5 8.5 0 0 1 17 0z"/></svg><span>${reg ? 'פרופיל' : 'התחברות'}</span></button>`;
 }
@@ -15339,7 +15452,7 @@ function renderSideRail() {
 function sideRailSync() {
   const el = document.getElementById('side-rail'); if (!el) return;
   const id = (typeof activePageId !== 'undefined' && activePageId) || '';
-  const map = { 'page-home-feed': 'home', 'page-feed-main': 'feed', 'page-communities-main': 'cats', 'page-subscription-main': 'shop' };
+  const map = { 'page-stats-main': 'stats', 'page-home-feed': 'home', 'page-feed-main': 'feed', 'page-communities-main': 'cats', 'page-subscription-main': 'shop' };
   el.querySelectorAll('.srail-btn').forEach(b => b.classList.toggle('on', b.dataset.rail === (map[id] || (id ? '' : 'home'))));
 }
 window.sideRailSync = sideRailSync;
@@ -22213,6 +22326,9 @@ onPublicSiteValue((data) => {
     if (!_ip) {
       pList.push({ id: 'page-info-main', title: 'מידע 🔒', isHidden: true, content: _ipc });
     }
+    if (!pList.find(p => p && p.id === 'page-stats-main')) {
+      pList.push({ id: 'page-stats-main', title: 'נתונים 🔒', isHidden: true, content: '<div class="stats-page" data-page-id="page-stats-main"></div>' });
+    }
     if (!pList.find(p => p && p.id === 'page-algorithm-main')) {
       pList.push({ id: 'page-algorithm-main', title: 'אלגוריתם 🔒', isHidden: true, content: '<div class="algo-page" data-page-id="page-algorithm-main"></div>' });
     } else {
@@ -26754,3 +26870,4 @@ function toggleSiteTheme() {
   const meta = document.querySelector('meta[name="theme-color"]'); if (meta) meta.setAttribute('content', dark ? '#121418' : '#ffffff');
 }
 window.toggleSiteTheme = toggleSiteTheme;
+
