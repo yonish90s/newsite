@@ -11637,3 +11637,8 @@ html body:not(#_):not(#_) .comm-grid-shortcut .comm-sc-ic {
 }
 html body:not(#_):not(#_) .comm-grid-shortcut .comm-sc-ic svg { width: 38px !important; height: 38px !important; color: inherit !important; stroke: currentColor !important; }
 html body:not(#_):not(#_) .comm-grid-shortcut:hover .comm-sc-ic { transform: scale(1.06) !important; color: #2f6fdb !important; box-shadow: inset 0 0 0 1.5px #b9cff6 !important; background: #eef3fd !important; }
+/* סרגל תחתון במובייל: נעלם כשגוללים למטה, חוזר כשגוללים למעלה */
+@media (max-width: 768px) {
+  html body:not(#_) .mtabs { transition: transform .28s cubic-bezier(.2, .8, .2, 1), opacity .28s ease !important; will-change: transform; }
+  html.mtabs-away body:not(#_) .mtabs { transform: translateY(calc(100% + 24px)) !important; opacity: 0; pointer-events: none; }
+}

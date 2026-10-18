@@ -26864,3 +26864,14 @@ function toggleSiteTheme() {
 }
 window.toggleSiteTheme = toggleSiteTheme;
 
+
+// ---- מובייל: הסרגל התחתון נעלם בגלילה למטה וחוזר בגלילה למעלה ----
+(function () {
+  let lastY = window.scrollY || 0;
+  window.addEventListener('scroll', () => {
+    const y = window.scrollY || 0, dy = y - lastY;
+    if (Math.abs(dy) < 8) return;                               // תזוזה קטנה — מתעלמים מרעידות
+    document.documentElement.classList.toggle('mtabs-away', dy > 0 && y > 80);  // למטה מסתיר, למעלה מחזיר
+    lastY = y;
+  }, { passive: true });
+})();
