@@ -170,3 +170,8 @@ html.theme-dark body:not(#_):not(#_):not(#_) .story-bm-cell { background: #1b1e2
 html.theme-dark body:not(#_):not(#_):not(#_) .story-bm-title { color: #eceef1 !important; }
 html.theme-dark body:not(#_):not(#_):not(#_) :is(.story-bm-head, .story-bm-snippet) { color: #9aa2ad !important; }
 html.theme-dark body:not(#_):not(#_):not(#_) .story-bm-del { background: #22262d !important; color: #c8cdd4 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) .pd2-stats { background: #22262d !important; border-color: #323842 !important; color: #eceef1 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) :is(.pd2-rate svg, .pd2-stats .pv-views) { color: #eceef1 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) .pd2-rate small { color: #9aa2ad !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) .pd2-stats-sep { background: #3a414c !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) .pd2-topcat { background: transparent !important; border-color: #eceef1 !important; color: #eceef1 !important; }

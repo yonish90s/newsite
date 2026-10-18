@@ -16481,7 +16481,10 @@ function photoOpenDetail(id) {
     mainContent.innerHTML = `
       <div class="art-detail articles-page photos-page" data-photo-id="${id}" data-photos-json="${json}">
         <div class="art-detail-inner">
-          <button class="art-back-btn" onclick="photoGoBack()">חזרה לגלריות</button>
+          <div class="pd2-toprow">
+            <button class="art-back-btn" onclick="photoGoBack()">חזרה לגלריות</button>
+            ${a.category ? `<span class="pd2-topcat" title="קטגוריה">${escHtml(a.category)}</span>` : ''}
+          </div>
 
           <!-- תצוגת "מוצר" בסגנון חנות: תמונה גדולה ונקייה + עמודת פרטים, ביקורות ויוצר -->
           <div class="pd2 pd-show${a.isAdult ? ' is-adult-album' : ''}">
@@ -16510,14 +16513,15 @@ function photoOpenDetail(id) {
                   <b>${escHtml(a.author || 'משתמש')}${isUserVerified(a.authorId, a.author, a.verified || a.verifiedUser) ? verifiedSealHTML(15) : ''}</b>
                   <small>${escHtml(a.timestamp || '')}</small>
                 </div>
-                <button type="button" class="pd2-more" onclick="postShare('${artEsc(a.title || '')}')" aria-label="שיתוף">⋯</button>
+                <div class="pd2-stats">
+                  <a href="#" class="pd2-rate" title="ביקורות" onclick="event.preventDefault(); const r = document.getElementById('pd2-reviews'); if (r) { r.open = true; r.scrollIntoView({behavior:'smooth', block:'start'}); }"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5L2.5 9.4l6.6-.9z"/></svg><b id="pd2-stars-top">0</b><small id="pd2-count-top">(0)</small></a>
+                  <span class="pd2-stats-sep" aria-hidden="true"></span>
+                  ${viewsBadgeHTML(a.id)}
+                </div>
               </div>
               <h1 class="pd2-title">${escHtml(a.title)}</h1>
-              <a href="#" class="pd2-stars-row" onclick="event.preventDefault(); const r = document.getElementById('pd2-reviews'); if (r) { r.open = true; r.scrollIntoView({behavior:'smooth', block:'start'}); }"><span id="pd2-stars-top">${pdStarsHTML(0)}</span><u id="pd2-count-top">0 ביקורות</u></a>
-              <div class="pd2-pill">${viewsDistHTML(a.id, a.authorId, 'pv-lg')}</div>
 
-              ${a.category || a.ageRange || a.region ? `<div class="pd2-opts">
-                ${a.category ? `<div class="pd2-opt"><small>קטגוריה</small><span class="pd2-chip on">${escHtml(a.category)}</span></div>` : ''}
+              ${a.ageRange || a.region ? `<div class="pd2-opts">
                 ${a.ageRange || a.region ? `<div class="pd2-opt"><small>פרטים</small><div class="pd2-chips">
                   ${a.ageRange ? `<span class="pd2-chip">גיל ${escHtml(String(a.ageRange))}</span>` : ''}
                   ${a.region ? `<span class="pd2-chip">${escHtml(a.region)}</span>` : ''}
@@ -19822,8 +19826,8 @@ function pdReviewsRender() {
   const body = document.getElementById('pd2-reviews-body');
   if (body) body.innerHTML = pdReviewsHTML();
   const { list, avg } = pdReviewStats();
-  const t = document.getElementById('pd2-stars-top'); if (t) t.innerHTML = pdStarsHTML(avg);
-  const n = document.getElementById('pd2-count-top'); if (n) n.textContent = `${list.length} ביקורות`;
+  const t = document.getElementById('pd2-stars-top'); if (t) t.textContent = avg ? (Math.round(avg * 10) / 10).toFixed(1) : '0';
+  const n = document.getElementById('pd2-count-top'); if (n) n.textContent = `(${list.length})`;
 }
 // בחירת כוכבים בשורת התגובה (אופציונלי) — הופך את התגובה לביקורת
 let pcStars = 0;
