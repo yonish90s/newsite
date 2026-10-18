@@ -11701,3 +11701,8 @@ html body:not(#_) .cmp-av { width: 44px; height: 44px; margin: 0; font-size: 17p
 .cmp-ic:hover { background: #f0f2f5; }
 .cmp-ic.vid { color: #f02849; } .cmp-ic.pic { color: #45bd62; } .cmp-ic.feel { color: #f7b928; }
 @media (max-width: 768px) { .cmp-bar, .cmp-wrap { display: none !important; } }
+html body:not(#_) .nav-links a[data-page-id="page-communities-main"] { display: none !important; }
+/* שורת השיתוף — צרה וממורכזת (כמו בפייסבוק) */
+html body:not(#_) .cmp-bar { max-width: 680px; margin-left: auto !important; margin-right: auto !important; box-sizing: border-box; }
+html body:not(#_) .cmp-wrap { max-width: 720px; }
+html body:not(#_) .cmp-wrap { width: 100% !important; margin-left: auto !important; margin-right: auto !important; box-sizing: border-box !important; }
