@@ -127,3 +127,4 @@ html.theme-dark .rp-head b, html.theme-dark .rp-reason { color: #eceef1 !importa
 html.theme-dark .rp-reason:hover { background: #22262d !important; }
 html.theme-dark body:not(#_):not(#_):not(#_) input[type="radio"]:checked, html.theme-dark body:not(#_):not(#_):not(#_) input[type="radio"]:hover { border-color: #eceef1 !important; }
 html.theme-dark body:not(#_):not(#_):not(#_) input[type="radio"]::before { background: #eceef1 !important; }
+@media (min-width: 769px) { html.theme-dark body:not(#_):not(#_):not(#_) .cmp-bar { background: rgba(27, 30, 36, .96) !important; border-color: #323842 !important; } }

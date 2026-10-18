@@ -1972,6 +1972,9 @@ html.theme-dark .rp-reason { color: #eceef1 !important; }
 html.theme-dark .rp-reason:hover { background: #22262d !important; }
 html.theme-dark body:not(#_):not(#_):not(#_) input[type="radio"]:checked, html.theme-dark body:not(#_):not(#_):not(#_) input[type="radio"]:hover { border-color: #5b6472 !important; }
 html.theme-dark body:not(#_):not(#_):not(#_) input[type="radio"]::before { background: #3a414c !important; }
+@media (min-width: 769px) {
+html.theme-dark body:not(#_):not(#_):not(#_) .cmp-bar { background: rgba(27, 30, 36, 0.96) !important; border: 1px solid var(--ds-line, #323842) !important; }
+}
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #eceef1 !important; }
 html.theme-dark [style*="color:#111111"] { color: #eceef1 !important; }
@@ -2274,3 +2277,4 @@ html.theme-dark .rp-head b, html.theme-dark .rp-reason { color: #eceef1 !importa
 html.theme-dark .rp-reason:hover { background: #22262d !important; }
 html.theme-dark body:not(#_):not(#_):not(#_) input[type="radio"]:checked, html.theme-dark body:not(#_):not(#_):not(#_) input[type="radio"]:hover { border-color: #eceef1 !important; }
 html.theme-dark body:not(#_):not(#_):not(#_) input[type="radio"]::before { background: #eceef1 !important; }
+@media (min-width: 769px) { html.theme-dark body:not(#_):not(#_):not(#_) .cmp-bar { background: rgba(27, 30, 36, .96) !important; border-color: #323842 !important; } }

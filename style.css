@@ -12133,3 +12133,19 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_) .rp-send { border: 1.5px solid
 /* כפתור רדיו: נקודה שחורה במקום כחולה */
 html body:not(#_):not(#_):not(#_) input[type="radio"]:checked, html body:not(#_):not(#_):not(#_) input[type="radio"]:hover { border-color: #111111 !important; }
 html body:not(#_):not(#_):not(#_) input[type="radio"]::before { background: #111111 !important; }
+
+/* ===== "מה בא לך לשתף?" במחשב — צף בתחתית המסך, באותו מקום כמו "תגובה מהירה" ===== */
+@media (min-width: 769px) {
+  html body:not(#_):not(#_):not(#_) .cmp-wrap { margin: 0 !important; padding: 0 !important; height: 0; }
+  html body:not(#_):not(#_):not(#_) .cmp-bar {
+    position: fixed !important; z-index: 9100; bottom: 18px; left: 50%; transform: translateX(-50%);
+    width: min(640px, calc(100vw - 260px)) !important; max-width: none !important; margin: 0 !important; box-sizing: border-box;
+    background: rgba(255, 255, 255, .96) !important; -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+    border: 1px solid var(--ds-line, #e6e8ec) !important; border-radius: 22px !important;
+    box-shadow: 0 22px 50px -22px rgba(15, 17, 21, .45) !important; animation: fc-in .25s cubic-bezier(.2, .8, .2, 1);
+  }
+  html.has-srail body:not(#_):not(#_):not(#_) .cmp-bar { left: calc(50% + 36px); }
+  html body:has(.cmp-bar) { padding-bottom: 96px !important; }
+  /* כשחלון הפרסום המהיר פתוח — השורה מתחבאת מאחוריו */
+  html body:has(#quick-publish-modal[style*="flex"]) .cmp-bar { visibility: hidden; }
+}
