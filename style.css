@@ -12149,3 +12149,31 @@ html body:not(#_):not(#_):not(#_) input[type="radio"]::before { background: #111
   /* כשחלון הפרסום המהיר פתוח — השורה מתחבאת מאחוריו */
   html body:has(#quick-publish-modal[style*="flex"]) .cmp-bar { visibility: hidden; }
 }
+
+/* ===== תצוגת קומיקס / גלריה — תמונה נקייה בלי רקע צבעוני, וכפתור "קריאה במסך מלא" בסגנון האתר ===== */
+html body:not(#_):not(#_):not(#_) :is(.pshow-frame, .pshow-frame.photo-main-img-container) { background: transparent !important; padding: 0 !important; border-radius: 0 !important; aspect-ratio: auto !important; min-height: 0 !important; }
+html body:not(#_):not(#_):not(#_) .pshow-main { border-radius: 16px !important; box-shadow: 0 1px 2px rgba(16, 24, 40, .06), 0 18px 40px -24px rgba(16, 24, 40, .35) !important; max-height: 78vh; width: auto; margin: 0 auto; }
+html body:not(#_):not(#_):not(#_) .comic-show .pshow-frame .story-page-view { height: auto !important; min-height: 320px !important; }
+html body:not(#_):not(#_):not(#_) .comic-show .pshow-frame .story-page-inner { height: auto !important; }
+html body:not(#_):not(#_):not(#_) .comic-show .pshow-frame .story-img-page { max-height: 78vh !important; width: auto; border-radius: 16px !important; box-shadow: 0 1px 2px rgba(16, 24, 40, .06), 0 18px 40px -24px rgba(16, 24, 40, .35) !important; }
+html body:not(#_):not(#_):not(#_) .pshow-arrow { background: rgba(255, 255, 255, .92) !important; border: 1px solid #e6e8ec !important; color: #111111 !important; box-shadow: 0 6px 16px -8px rgba(16, 24, 40, .35) !important; }
+html body:not(#_):not(#_):not(#_) .pshow-tile { background: #f4f5f7 !important; padding: 6% !important; border-radius: 14px !important; border: 1px solid #e6e8ec !important; }
+html body:not(#_):not(#_):not(#_) :is(.pshow-tile.active, .comic-show .pshow-tile.story-page-thumb.active) { border: 1.5px solid #111111 !important; }
+html body:not(#_):not(#_):not(#_) .pshow-dot { border: 1.5px solid #c4c8d0 !important; width: 10px !important; height: 10px !important; }
+html body:not(#_):not(#_):not(#_) .pshow-dot.active { background: #111111 !important; border-color: #111111 !important; }
+html body:not(#_):not(#_):not(#_) .pshow-line { background: #e6e8ec !important; height: 1px !important; margin-bottom: 24px !important; }
+html body:not(#_):not(#_):not(#_) .pshow-title { color: #111111 !important; }
+html body:not(#_):not(#_):not(#_) :is(.pshow-desc, .pshow-meta, .comic-show .story-comic-desc) { color: #3f4552 !important; }
+html body:not(#_):not(#_):not(#_) .pshow-star { color: #111111 !important; }
+html body:not(#_):not(#_):not(#_) .pshow-cta {
+  display: inline-flex !important; align-items: center; justify-content: center; gap: 10px;
+  background: #ffffff !important; color: #111111 !important; border: 1px solid #d5d8de !important; border-radius: 12px !important;
+  font-size: 15px !important; font-weight: 600 !important; padding: 12px 26px !important; box-shadow: none !important; transform: none !important;
+  transition: border-color .15s ease, border-radius .18s ease, background .15s ease !important;
+}
+html body:not(#_):not(#_):not(#_) .pshow-cta::before { content: ""; width: 16px; height: 16px; background: currentColor; flex: none;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7'/%3E%3C/svg%3E") center / contain no-repeat;
+          mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7'/%3E%3C/svg%3E") center / contain no-repeat; }
+html body:not(#_):not(#_):not(#_) .pshow-cta:hover { background: #f6f7f9 !important; border-color: #9aa0aa !important; color: #111111 !important; }
+html body:not(#_):not(#_):not(#_) .pshow-cta:active { border: 1.5px solid #111111 !important; border-radius: 999px !important; }
+@media (max-width: 768px) { html body:not(#_):not(#_):not(#_) .pshow-cta { width: 100%; } }
