@@ -6897,7 +6897,7 @@ function buildStoriesPage(stories, storyKind) {
 
   const json = encodeURIComponent(JSON.stringify(stories));
   const _adultOn = (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('age_verified') === 'true');
-  return `<div class="articles-page stories-page story-cols-${storyGridCols}${photoImagesMode ? '' : ' text-mode'}" data-story-kind="${storyKind}" data-stories-json="${json}">
+  return `<div class="articles-page stories-page story-cols-${storyKind === 'comics' ? 2 : storyGridCols}${photoImagesMode ? '' : ' text-mode'}" data-story-kind="${storyKind}" data-stories-json="${json}">
     <div class="art-inner">
       <div class="art-featured-grid">${featuredHTML}</div>
       <div class="art-layout">
@@ -6917,7 +6917,7 @@ function buildStoriesPage(stories, storyKind) {
           </div>
           <div class="art-section-title-row">
             <div class="art-section-title">כל ה${kindLabel}</div>
-            ${storySizeBarHTML()}
+            ${storyKind === 'comics' ? '' : storySizeBarHTML()}
           </div>
           <div class="art-rows photo-collapsible expanded" id="story-row-main">${listHTML}</div>
           ${storyRowMoreBtn(stories.length, 'story-row-main')}
