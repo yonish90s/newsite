@@ -512,6 +512,15 @@
           ".write": "auth != null && !data.exists()",
           ".validate": "newData.hasChildren(['itemId','reason','at']) && newData.child('reason').isString() && newData.child('reason').val().length <= 500 && newData.child('itemId').isString() && newData.child('itemId').val().length <= 200 && newData.child('at').isNumber()"
         }
+      },
+      "reposts": {
+        ".read": true,
+        "$itemId": {
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid && auth.token.firebase.sign_in_provider !== 'anonymous'",
+            ".validate": "newData.hasChildren(['at','name']) && newData.child('at').isNumber() && newData.child('name').isString() && newData.child('name').val().length <= 60"
+          }
+        }
       }
     }
   }

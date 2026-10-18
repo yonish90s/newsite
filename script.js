@@ -17192,7 +17192,7 @@ function buildUserPageHTML(authorId, authorName) {
     return isAuthor && a.approved !== false && (!a.adminOnly || _isAdminView) && (!a.expiresAt || a.expiresAt > now);
   });
   pfeedShown.profile = 0;
-  const authorPosts = feedByAuthor(feedAllItems(), authorId, authorName);
+  const authorPosts = repostsMerge(feedByAuthor(feedAllItems(), authorId, authorName), authorId ? [authorId] : [], feedAllItems());
   const json = encodeURIComponent(JSON.stringify(albums));
   // מצב השעון של עמוד המשתמש — מתעדכן אחרי טעינת הפרופיל והדירוגים
   window._upState = { uid: authorId || '', name: authorName || 'משתמש', galleries: authorAlbums.length,
@@ -17258,6 +17258,7 @@ function postCardHTML(x, showAuthor) {
   const kind = { photo: 'גלריה', story: 'סיפור', comic: 'קומיקס' }[x.__type];
   const views = typeof photoGetViews === 'function' ? photoGetViews(x.id) : 0;
   return `<article class="pc-post">
+    ${x.__repostBy ? `<div class="pc-repost-by" onclick="openUserPage('${artEsc(x.__repostUid || '')}','${artEsc(x.__repostBy)}')">${REPOST_ICON || ''}<span>${escHtml(x.__repostBy)} שיתף/ה</span></div>` : ''}
     ${showAuthor ? `<header class="pc-post-head" onclick="openUserPage('${artEsc(x.authorId || '')}','${artEsc(x.author || '')}')">${authorAvHTML(x)}<div><b>${escHtml(x.author || 'משתמש')}</b><small>${escHtml(kind)} · ${escHtml(rdTimeAgo(x.__t))}</small></div></header>`
       : `<div class="pc-post-kind">${escHtml(kind)} · ${escHtml(rdTimeAgo(x.__t))}</div>`}
     <h3 onclick="${open}">${escHtml(x.title || '')}</h3>
@@ -17320,7 +17321,7 @@ function buildFeedPage() {
   if (!reg) {
     body = `<div class="pfeed-empty"><h2>הפיד שלכם מחכה</h2><p>התחברו ועקבו אחרי יוצרים — כל מה שהם מעלים יופיע כאן.</p><button type="button" class="pc-more" onclick="openLiveChatLogin()">התחברות</button></div>`;
   } else {
-    const mine = items.filter(x => x.authorId && followedUids[x.authorId]);
+    const mine = repostsMerge(items.filter(x => x.authorId && followedUids[x.authorId]), follows, items);
     // הצעות למעקב: היוצרים הפעילים ביותר שעוד לא עוקבים אחריהם
     const counts = {};
     items.forEach(x => {
@@ -24115,6 +24116,9 @@ Object.assign(UI_EN, {
 });
 UI_EN_PATTERNS.push([/^עמוד\s+(\d+)$/g, 'Page $1'], [/^תמונה\s+(\d+)$/g, 'Image $1']);
 Object.assign(UI_EN, { 'תמונת פרופיל': 'Profile picture', 'עצבו דמות משלכם — היא תופיע ליד השם שלכם בכל האתר': 'Design your own avatar — it appears next to your name across the site', 'יצירת תמונת פרופיל': 'Create profile picture', '🙋 פרטים עליי': '🙋 About me', 'פרטים עליי': 'About me', 'יוצג למי שנכנס לפרופיל שלך': 'Shown to anyone who visits your profile' });
+Object.assign(UI_EN, { 'שיתוף לפרופיל שלי — העוקבים שלך יראו': 'Share to my profile — your followers will see it', 'ביטול השיתוף מהפרופיל': 'Remove from my profile', 'שיתוף לפרופיל': 'Share to profile', 'שותף לפרופיל שלך — העוקבים שלך יראו את זה בפיד': 'Shared to your profile — your followers will see it in their feed', 'השיתוף הוסר מהפרופיל שלך': 'Removed from your profile', 'לא הצלחנו לשתף — נסו שוב': "Couldn't share — please try again" });
+UI_EN_PATTERNS.push([/(.+)\s+שיתף\/ה$/g, '$1 shared']);
+Object.assign(UI_EN, { 'מעקב אחרי היוצר': 'Follow the creator', 'ביטול מעקב': 'Unfollow' });
 let __uiTranslating = false;
 // לא נוגעים בקוד עצמו. הודעות משתמשים/תוכן מוגנים ממילא כי המילון מתרגם
 // רק מחרוזות מוכרות של הממשק — תוכן חופשי שהמשתמשים כתבו לא מופיע במילון.
@@ -27413,7 +27417,8 @@ function pd2ActionsHTML(a, kind) {
                 <button type="button" class="pti pd2-save${photoIsSavedLocal(a.id) ? ' is-saved' : ''}" onclick="photoToggleSave('${artEsc(a.id)}')" title="שמירה" aria-label="שמירה"><svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
                 ${a.emailUrl ? `<button type="button" class="pti" onclick="emailIconClick('${artEsc(a.emailUrl)}', this, event)" title="אימייל — לחיצה מעתיקה, לחיצה נוספת שולחת" aria-label="אימייל"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 7l8.5 6 8.5-6"/></svg></button>` : ''}
                 ${kind === 'comic' ? `<button type="button" class="pti" onclick="artGalleryById('stories', window.currentStoryId, document.querySelector('#story-page-view img') ? document.querySelector('#story-page-view img').getAttribute('src') : '')" title="קריאה במסך מלא" aria-label="קריאה במסך מלא"><svg viewBox="0 0 24 24"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></button>` : ''}
-                <button type="button" class="pti" onclick="postShare('${artEsc(a.title || '')}')" title="שיתוף" aria-label="שיתוף"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg></button>
+                ${repostBtnHTML(a.id)}
+                ${followIconHTML(a)}
               </div>`;
 }
 window.pd2ActionsHTML = pd2ActionsHTML;
@@ -27452,3 +27457,96 @@ window.pd2ActionsHTML = pd2ActionsHTML;
     .catch(() => withTimeout('https://ipapi.co/country/', 3500).then(r => r.text())
       .then(t => { const cc = String(t || '').trim().toUpperCase(); if (/^[A-Z]{2}$/.test(cc)) save(cc); }).catch(() => {}));
 })();
+
+
+// ============================================================
+// שיתוף לפרופיל (ריפוסט): הפריט מופיע בפרופיל שלי ובפיד של מי שעוקב אחריי
+// website/reposts/{itemId}/{uid} = { at, name }
+// ============================================================
+var REPOST_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l3 3-3 3"/><path d="M4 11V9a4 4 0 0 1 4-4h12"/><path d="M7 22l-3-3 3-3"/><path d="M20 13v2a4 4 0 0 1-4 4H4"/></svg>';
+var repostsData = {};
+var repostsSubscribed = false;
+function subscribeReposts() {
+  if (repostsSubscribed) return;
+  repostsSubscribed = true;
+  try {
+    onValue(ref(db, 'website/reposts'), snap => {
+      repostsData = snap.val() || {};
+      // מעדכנים מונים ומצב הכפתורים שעל המסך
+      document.querySelectorAll('.pti-repost[data-item]').forEach(b => repostSyncBtn(b));
+      if (activePageId === 'page-feed-main' && typeof mainContent !== 'undefined' && mainContent && mainContent.querySelector('.pfeed-page') && !document.querySelector('.pc-post:hover')) {
+        try { renderPage(); } catch (e) {}
+      }
+    });
+  } catch (e) {}
+}
+function repostCount(id) { const m = (repostsData || {})[id]; return m ? Object.keys(m).length : 0; }
+function repostIsMine(id) { const u = auth.currentUser; return !!(u && repostsData && repostsData[id] && repostsData[id][u.uid]); }
+function repostBtnHTML(id) {
+  subscribeReposts();
+  const n = repostCount(id), on = repostIsMine(id);
+  return `<button type="button" class="pti pti-repost${on ? ' on' : ''}" data-item="${escHtml(id)}" onclick="toggleRepost('${artEsc(id)}', this)" title="${on ? 'ביטול השיתוף מהפרופיל' : 'שיתוף לפרופיל שלי — העוקבים שלך יראו'}" aria-label="שיתוף לפרופיל">${REPOST_ICON}<b class="pti-n">${n || ''}</b></button>`;
+}
+function repostSyncBtn(b) {
+  const id = b.dataset.item, n = repostCount(id), on = repostIsMine(id);
+  b.classList.toggle('on', on);
+  const nb = b.querySelector('.pti-n'); if (nb) nb.textContent = n || '';
+}
+async function toggleRepost(id, btn) {
+  const u = auth.currentUser;
+  if (!u || u.isAnonymous) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
+  const on = repostIsMine(id);
+  const name = (typeof liveChatUserName === 'function' && liveChatUserName()) || u.displayName || 'משתמש';
+  try {
+    await set(ref(db, `website/reposts/${id}/${u.uid}`), on ? null : { at: Date.now(), name: String(name).slice(0, 60) });
+    if (!repostsData[id]) repostsData[id] = {};
+    if (on) delete repostsData[id][u.uid]; else repostsData[id][u.uid] = { at: Date.now(), name };
+    if (btn) repostSyncBtn(btn);
+    if (typeof showCopyToast === 'function') showCopyToast(on ? 'השיתוף הוסר מהפרופיל שלך' : 'שותף לפרופיל שלך — העוקבים שלך יראו את זה בפיד');
+  } catch (e) {
+    console.error('repost failed', e);
+    if (typeof showCopyToast === 'function') showCopyToast('לא הצלחנו לשתף — נסו שוב');
+  }
+}
+// מחזיר את רשימת הפוסטים + פריטים שהמשתמשים ברשימה שיתפו (כל פריט פעם אחת, לפי הזמן החדש ביותר)
+function repostsMerge(list, uids, allItems) {
+  subscribeReposts();
+  const want = new Set((uids || []).filter(Boolean));
+  if (!want.size) return list;
+  const byId = new Map(list.map(x => [x.id, x]));
+  (allItems || []).forEach(item => {
+    const m = (repostsData || {})[item.id]; if (!m) return;
+    Object.entries(m).forEach(([uid, r]) => {
+      if (!want.has(uid) || !r) return;
+      const t = Number(r.at) || 0;
+      const cur = byId.get(item.id);
+      if (cur && (cur.__t || 0) >= t) return;
+      byId.set(item.id, Object.assign({}, item, { __t: t, __repostBy: r.name || 'משתמש', __repostUid: uid }));
+    });
+  });
+  return [...byId.values()].sort((a, b) => (b.__t || 0) - (a.__t || 0));
+}
+Object.assign(window, { toggleRepost, repostBtnHTML });
+
+
+// כפתור "מעקב" אחרי היוצר (אייקון) — בעמוד הגלריה / הקומיקס, במקום כפתור השיתוף
+var FOLLOW_ICON = '<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="4"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M19 8v6M16 11h6"/></svg>';
+var FOLLOWING_ICON = '<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="4"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 11.5l2 2 4-4"/></svg>';
+function followIconHTML(a) {
+  const u = auth.currentUser;
+  if (!a || !a.authorId || (u && u.uid === a.authorId)) return '';
+  if (typeof isSiteAdminAuthor === 'function' && isSiteAdminAuthor(a.authorId, a.author, a)) return '';
+  try { if (typeof subscribeMyFollows === 'function') subscribeMyFollows(); } catch (e) {}
+  const on = typeof isFollowing === 'function' && isFollowing(a.authorId);
+  return `<button type="button" class="pti pti-follow${on ? ' on' : ''}" onclick="followIconClick('${artEsc(a.authorId)}', '${artEsc(a.author || '')}', this)" title="${on ? 'ביטול מעקב' : 'מעקב אחרי היוצר'}" aria-label="${on ? 'ביטול מעקב' : 'מעקב אחרי היוצר'}">${on ? FOLLOWING_ICON : FOLLOW_ICON}</button>`;
+}
+async function followIconClick(uid, name, btn) {
+  await toggleFollow(uid, name, null);
+  const on = typeof isFollowing === 'function' && isFollowing(uid);
+  document.querySelectorAll(`.pti-follow[onclick*="'${uid}'"]`).forEach(b => {
+    b.classList.toggle('on', on);
+    b.innerHTML = on ? FOLLOWING_ICON : FOLLOW_ICON;
+    b.title = on ? 'ביטול מעקב' : 'מעקב אחרי היוצר';
+  });
+}
+window.followIconClick = followIconClick;
