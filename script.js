@@ -11540,7 +11540,6 @@ let activeSidebarTab = 'filter';
 
 function buildSidebarTabs(savedHTML, pageType) {
   pageType = pageType || 'photos';
-  const uploadHtml = (buildQuickUploadBox() || '') + (savedHTML || '');
   const tabs = [
     { id: 'filter',    label: '🔎 סינונים', html: buildFiltersSidebarBox(pageType) },
     { id: 'community', label: '👥 קהילה',  html: sitePagesNavBoxHTML(pageType) },
@@ -11552,9 +11551,6 @@ function buildSidebarTabs(savedHTML, pageType) {
         <button onclick="openQuickPublish()" style="width:100%; background:linear-gradient(135deg,#2f6fdb,#2f6fdb); color:#ffffff; border:none; border-radius:10px; padding:12px; font-size:14px; font-weight:800; cursor:pointer; box-shadow:0 3px 10px rgba(0, 0, 0, 0.15);">🤖 צ׳אט מהיר לפרסום מודעה</button>
       </div>
     ` },
-    { id: 'event',     label: '🎉 אירוע',  html: buildEventsSidebarBox() },
-    { id: 'age',       label: '🔞 18+',    html: buildAgeFilterSidebarBox() },
-    { id: 'upload',    label: '⚡ העלאה',  html: uploadHtml || '<div style="text-align:center;color:#94a3b8;font-size:13px;padding:20px;">אין פעולות העלאה זמינות</div>' },
     { id: 'sites',     label: '🌐 אתרים',  html: buildPromotedSitesBox() },
     { id: 'info',      label: '📩 מידע',   html: (typeof buildInfoSubmitBox === 'function' ? buildInfoSubmitBox() : '') },
   ];
