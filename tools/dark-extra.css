@@ -180,3 +180,8 @@ html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) .pti:hover { backgr
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) :is(.pti.on, .pti.is-saved) { border-color: #eceef1 !important; }
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) .pd2-pages { color: #eceef1 !important; }
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) .comic-info .story-comic-desc { color: #c8cdd4 !important; }
+html.theme-dark .pf-av-row { background: #22262d !important; border-color: #323842 !important; }
+html.theme-dark .pf-av-row .pf-av-prev { background: #2a2f37 !important; color: #eceef1 !important; }
+html.theme-dark .pf-av-txt b { color: #eceef1 !important; }
+html.theme-dark .pf-av-txt small { color: #9aa2ad !important; }
+html.theme-dark body:not(#_):not(#_) .pf-av-btn { background: #1b1e24 !important; color: #eceef1 !important; border-color: #3a414c !important; }

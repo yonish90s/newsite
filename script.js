@@ -10939,6 +10939,11 @@ function buildSidebarAboutMeSectionHTML() {
     <div class="pf-about-sec" style="margin-top: 16px; padding-top: 14px; border-top: 1px dashed #cbd5e1; text-align: right; direction: rtl;">
       <div style="font-size: 13.5px; font-weight: 800; color: #1e293b; margin-bottom: 4px;">🙋 פרטים עליי</div>
       <div style="font-size: 11.5px; color: #64748b; margin-bottom: 4px;">יוצג למי שנכנס לפרופיל שלך</div>
+      <div class="pf-av-row">
+        <span class="au-av pf-av-prev" data-av-uid="${escHtml(user.uid)}">${escHtml(String((typeof liveChatUserName === 'function' && liveChatUserName()) || '?').trim().charAt(0) || '?')}</span>
+        <div class="pf-av-txt"><b>תמונת פרופיל</b><small>עצבו דמות משלכם — היא תופיע ליד השם שלכם בכל האתר</small></div>
+        <button type="button" class="pf-av-btn" onclick="openAvatarEditor()">יצירת תמונת פרופיל</button>
+      </div>
       <div style="${lbl}">📍 מאיפה אני</div>
       <div style="display:flex; gap:6px;">
         <select id="pf-about-region" style="${fld} flex:1;">
@@ -14938,7 +14943,7 @@ function forumThreadPostHTML(p, isReply, admin, myUid) {
         <div class="fo-th-actions">
           <button type="button" class="fo-th-join" onclick="forumStartReply('${artEsc(p.id)}')">${FORUM_REPLY_ICO}להצטרף לדיון</button>
           <button type="button" class="fo-th-vote up${iLiked ? ' on' : ''}" onclick="forumToggleLike('${artEsc(p.id)}')" aria-label="לייק">${FORUM_THUMB(false, iLiked)}<span>${likes}</span></button>
-          <button type="button" class="fo-th-vote down${iDisliked ? ' on' : ''}" onclick="forumToggleDislike('${artEsc(p.id)}')" aria-label="דיסלייק">${FORUM_THUMB(true, iDisliked)}<span>${dislikes}</span></button>
+          
           ${admin ? `<button type="button" class="fo-del" onclick="forumDeletePost('${artEsc(p.id)}')">מחיקה</button>` : ''}
         </div>
       </div>
@@ -14975,7 +14980,6 @@ function rdVotes(p, myUid, pill) {
   return `<span class="rd-votes${pill ? ' rd-pill' : ''}${up ? ' up' : ''}${down ? ' down' : ''}">
       <button type="button" class="rd-vote" onclick="forumToggleLike('${artEsc(p.id)}')" aria-label="הצבעה בעד">${up ? RD_UP_ON : RD_UP}</button>
       <b>${forumFmtCount(likes - dislikes)}</b>
-      <button type="button" class="rd-vote rd-vote-down" onclick="forumToggleDislike('${artEsc(p.id)}')" aria-label="הצבעה נגד">${down ? RD_UP_ON : RD_UP}</button>
     </span>`;
 }
 function rdNameAttr(p) { return (p.uid && !p.guest) ? `onclick="openUserPage('${artEsc(p.uid)}','${artEsc(p.name || '')}')"` : ''; }
@@ -24110,6 +24114,7 @@ Object.assign(UI_EN, {
   'הסבר קצר על הפוסט או ציטוט חשוב...': 'A short note about the post or a key quote...', 'כתוב הודעה... או / לפרסום לקהילה': 'Write a message... or / to post to the community'
 });
 UI_EN_PATTERNS.push([/^עמוד\s+(\d+)$/g, 'Page $1'], [/^תמונה\s+(\d+)$/g, 'Image $1']);
+Object.assign(UI_EN, { 'תמונת פרופיל': 'Profile picture', 'עצבו דמות משלכם — היא תופיע ליד השם שלכם בכל האתר': 'Design your own avatar — it appears next to your name across the site', 'יצירת תמונת פרופיל': 'Create profile picture', '🙋 פרטים עליי': '🙋 About me', 'פרטים עליי': 'About me', 'יוצג למי שנכנס לפרופיל שלך': 'Shown to anyone who visits your profile' });
 let __uiTranslating = false;
 // לא נוגעים בקוד עצמו. הודעות משתמשים/תוכן מוגנים ממילא כי המילון מתרגם
 // רק מחרוזות מוכרות של הממשק — תוכן חופשי שהמשתמשים כתבו לא מופיע במילון.

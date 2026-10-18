@@ -12371,3 +12371,12 @@ html[data-lang="en"] body :is(p, span, small, b, strong, h1, h2, h3, h4, h5, lab
 }
 /* מנהל: כפתורי מחיקה ועריכה גלויים על כל כרטיס, גם בלי מצב עריכה */
 html.is-admin .art-delete-btn, html.is-admin .art-edit-btn { display: flex !important; }
+/* "פרטים עליי": יצירת תמונת פרופיל */
+.pf-av-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 10px 0 4px; padding: 10px; border: 1px solid #e6e8ec; border-radius: 14px; background: #f6f7f9; }
+.pf-av-row .pf-av-prev { width: 48px; height: 48px; flex: none; border-radius: 50%; display: grid; place-items: center; background: #eef0f3; color: #111111; font-weight: 800; font-size: 20px; overflow: hidden; }
+.pf-av-txt { flex: 1 1 140px; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.pf-av-txt b { font-size: 13.5px; color: #111111; }
+.pf-av-txt small { font-size: 11.5px; color: #646b78; line-height: 1.4; }
+html body:not(#_):not(#_) .pf-av-btn { flex: 1 1 100%; height: 40px; border-radius: 12px; border: 1px solid #d5d8de; background: #ffffff; color: #111111; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+html body:not(#_):not(#_) .pf-av-btn:hover { border-color: #9aa0aa; background: #f6f7f9; }
+html body:not(#_):not(#_) .pf-av-btn:active { border: 1.5px solid #111111; border-radius: 999px; }
