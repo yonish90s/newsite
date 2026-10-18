@@ -7139,7 +7139,7 @@ function storyOpenDetail(id) {
               <div class="pd2-creator">
                 ${authorAvHTML(s)}
                 <div class="pd2-creator-txt" ${s.authorId ? `onclick="openUserPage('${artEsc(s.authorId)}','${artEsc(s.author || '')}')"` : ''}>
-                  <b>${escHtml(s.author || 'משתמש')}</b>
+                  <b>${escHtml(s.author || 'משתמש')}${isUserVerified(s.authorId, s.author, s.verified || s.verifiedUser) ? verifiedSealHTML(15) : ''}</b>
                   <small>${escHtml(s.timestamp || '')}</small>
                 </div>
                 <div class="pd2-stats">
@@ -10884,7 +10884,7 @@ window.saveUserNickname = saveUserNickname;
 const VERIFIED_SEAL_PATH = 'M12.00 0.80 L14.48 2.73 L17.60 2.30 L18.79 5.21 L21.70 6.40 L21.27 9.52 L23.20 12.00 L21.27 14.48 L21.70 17.60 L18.79 18.79 L17.60 21.70 L14.48 21.27 L12.00 23.20 L9.52 21.27 L6.40 21.70 L5.21 18.79 L2.30 17.60 L2.73 14.48 L0.80 12.00 L2.73 9.52 L2.30 6.40 L5.21 5.21 L6.40 2.30 L9.52 2.73Z';
 function verifiedSealHTML(size) {
   const px = size || 19;
-  return ` <span class="verified-seal" title="משתמש מאומת" aria-label="משתמש מאומת" style="width:${px}px;height:${px}px"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="${VERIFIED_SEAL_PATH}" fill="#1d9bf0"/><path d="M7.4 12.3l3.1 3.1 6.1-6.3" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
+  return ` <span class="verified-seal" title="משתמש מאומת" aria-label="משתמש מאומת" style="width:${px}px;height:${px}px"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="${VERIFIED_SEAL_PATH}" fill="#7f90a6"/><path d="M7.4 12.3l3.1 3.1 6.1-6.3" fill="none" stroke="#151a22" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
 }
 window.verifiedSealHTML = verifiedSealHTML;
 
@@ -27593,3 +27593,30 @@ function forumAnonMask(map) {
   return map;
 }
 Object.assign(window, { forumToggleAnon, forumAnonOn });
+
+// ============================================================
+// מובייל: תמונת הפרופיל בצד הכותרת (כמו ב-X) — לחיצה פותחת את התפריט
+// ============================================================
+function renderHeaderAvatar() {
+  const btn = document.getElementById('mnav-btn');
+  if (!btn) return;
+  const u = auth.currentUser;
+  const reg = u && !u.isAnonymous;
+  const name = reg ? String((typeof liveChatUserName === 'function' && liveChatUserName()) || u.displayName || '?') : '';
+  const badge = document.getElementById('notif-badge');
+  const dot = badge && badge.style.display !== 'none' && badge.textContent.trim() ? '<i class="hdr-av-dot" aria-hidden="true"></i>' : '';
+  btn.innerHTML = (reg
+    ? `<span class="au-av hdr-av" data-av-uid="${escHtml(u.uid)}">${escHtml(name.trim().charAt(0) || '?')}</span>`
+    : `<span class="hdr-av hdr-av-guest"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span>`) + dot;
+  btn.setAttribute('aria-label', reg ? 'התפריט והפרופיל שלי' : 'תפריט');
+  btn.classList.add('has-av');
+  if (typeof avatarHydrate === 'function') { try { avatarHydrate(btn); } catch (e) {} }
+}
+try {
+  renderHeaderAvatar();
+  onAuthStateChanged(auth, () => setTimeout(renderHeaderAvatar, 50));
+  // נקודת התראה על התמונה — מתעדכנת כשמספר ההתראות משתנה
+  const nb = document.getElementById('notif-badge');
+  if (nb) new MutationObserver(() => renderHeaderAvatar()).observe(nb, { attributes: true, childList: true, characterData: true, subtree: true });
+} catch (e) {}
+window.renderHeaderAvatar = renderHeaderAvatar;
