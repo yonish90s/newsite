@@ -117,3 +117,6 @@ html.theme-dark body:not(#_):not(#_):not(#_):not(#_) :is(.qp-send, .rd-send, .pc
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_) :is(.photo-filter-trigger-value, .au-av.cmp-av) { background: #2a2f37 !important; color: #eceef1 !important; }
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .hc-dot { background: #eceef1 !important; }
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .nav-links a.active-top-nav { color: #eceef1 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) .cm-panel-grid .comm-grid-thumb { background: #22262d !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) .cm-panel-grid .comm-sc-ic { background: #2a2f37 !important; border-color: #3a414c !important; color: #c8cdd4 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) .cm-panel-grid .comm-sc-ic svg { color: #c8cdd4 !important; stroke: #c8cdd4 !important; }

@@ -11972,3 +11972,20 @@ html body:not(#_):not(#_) .fo-panel .fo-row { grid-template-columns: 44px minmax
 html body:not(#_):not(#_) .fo-panel .fo-row .fo-last { display: none !important; }
 html body:not(#_):not(#_) .fo-panel .fo-row .fo-main { min-width: 0; }
 html body:not(#_):not(#_) .fo-panel .fo-row .fo-title { font-size: 15px !important; }
+
+/* ===== קהילות בחלון צד (מחשב) ===== */
+.cm-panel-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; padding: 16px; }
+html body:not(#_):not(#_) .cm-panel-grid .comm-grid-card { width: auto !important; min-width: 0 !important; max-width: none !important; margin: 0 !important; cursor: pointer; }
+html body:not(#_):not(#_) .cm-panel-grid .comm-grid-thumb { height: 92px !important; }
+html body:not(#_):not(#_) .cm-panel-grid .comm-grid-info { padding: 10px 12px 12px !important; }
+html body:not(#_):not(#_) .cm-panel-grid .comm-grid-btn { width: 100%; }
+/* קהילות בחלון הצד — 3 בכל שורה, כרטיסים קטנים ומסודרים */
+html body:not(#_):not(#_) .fo-panel .cm-panel-grid { display: grid !important; grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 10px !important; padding: 14px !important; }
+html body:not(#_):not(#_):not(#_) .cm-panel-grid .comm-grid-card { width: auto !important; min-width: 0 !important; max-width: none !important; height: auto !important; aspect-ratio: auto !important; margin: 0 !important; transform: none !important; }
+html body:not(#_):not(#_):not(#_) .cm-panel-grid .comm-grid-thumb { height: 78px !important; min-height: 0 !important; aspect-ratio: auto !important; background: #f4f5f7 !important; }
+html body:not(#_):not(#_):not(#_) .cm-panel-grid .comm-sc-ic { width: 44px !important; height: 44px !important; background: #eceef1 !important; border: 1px solid #dfe2e7 !important; color: #3f4652 !important; }
+html body:not(#_):not(#_):not(#_) .cm-panel-grid .comm-sc-ic svg { width: 22px !important; height: 22px !important; color: #3f4652 !important; stroke: #3f4652 !important; }
+html body:not(#_):not(#_):not(#_) .cm-panel-grid .comm-grid-info { padding: 8px 8px 10px !important; gap: 4px !important; }
+html body:not(#_):not(#_):not(#_) .cm-panel-grid .comm-grid-name { font-size: 14px !important; margin: 0 !important; }
+html body:not(#_):not(#_):not(#_) .cm-panel-grid .comm-grid-sub { font-size: 11.5px !important; line-height: 1.3 !important; margin: 0 0 4px !important; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+html body:not(#_):not(#_):not(#_) .cm-panel-grid .comm-grid-btn { width: 100% !important; padding: 6px 8px !important; font-size: 12.5px !important; min-height: 0 !important; height: auto !important; }

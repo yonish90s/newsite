@@ -1476,6 +1476,20 @@ function adjustImgAspectRatio(img) {
 
 // פונקציה שמציגה את התוכן של העמוד הנוכחי במרכז המסך
 function renderPage() {
+  // מחשב: פורומים / קהילות נפתחים בחלון צד מעל העמוד הנוכחי — מכל מקום שמנווטים אליהם (תפריט, סרגל, קישור)
+  const _spTarget = activePageId;
+  if ((_spTarget === 'page-forums-main' || _spTarget === 'page-communities-main')
+      && !window.__forceForumsPage && !window.__forceCommPage
+      && window.__lastRenderedPageId && window.__lastRenderedPageId !== _spTarget
+      && !window.matchMedia('(max-width: 768px)').matches && typeof openSidePanel === 'function') {
+    activePageId = window.__lastRenderedPageId;
+    try { saveToStorage(); } catch (e) {}
+    try { if (typeof renderTopNav === 'function') renderTopNav(); } catch (e) {}
+    if (_spTarget === 'page-forums-main') { closeSidePanels('fo-panel'); openForumsPanel(); }
+    else { closeSidePanels('cm-panel'); openCommunitiesPanel(); }
+    return;
+  }
+  window.__lastRenderedPageId = activePageId;
   // באג "יוצא מהדף": כשצופים בעמוד פנימי (גלריה/סיפור), רענון ברקע (סנכרון Firebase)
   // לא ירנדר מחדש את הרשימה ו"יבעט" את המשתמש החוצה.
   // חוסמים רק אם: (1) הדגל פעיל, (2) יש .art-detail במסך, (3) הנמצאים באותו עמוד שנפתחה התצוגה הפנימית בו.
@@ -11586,7 +11600,11 @@ function buildSidebarTabs(savedHTML, pageType) {
 
 function navigateToPage(pageId) {
   // מחשב: הפורומים נפתחים בחלון צד משמאל, בלי לעזוב את העמוד הנוכחי
-  if (pageId === 'page-forums-main' && !window.__forceForumsPage && typeof openForumsPanel === 'function' && !window.matchMedia('(max-width: 768px)').matches) { openForumsPanel(); return; }
+  const _desk = !window.matchMedia('(max-width: 768px)').matches;
+  if (pageId === 'page-forums-main' && !window.__forceForumsPage && typeof openForumsPanel === 'function' && _desk) { closeSidePanels('fo-panel'); openForumsPanel(); return; }
+  if (pageId === 'page-communities-main' && !window.__forceCommPage && typeof openCommunitiesPanel === 'function' && _desk) { closeSidePanels('cm-panel'); openCommunitiesPanel(); return; }
+  // מעבר לעמוד אחר — סוגרים חלונות צד פתוחים
+  if (typeof closeSidePanels === 'function') closeSidePanels();
   const page = (typeof pages !== 'undefined' && Array.isArray(pages)) ? pages.find(p => p && p.id === pageId) : null;
   if (!page) return;
   window.__detailOpen = false; // ניווט מפורש — מותר לרנדר מחדש
@@ -27016,15 +27034,53 @@ function openForumsPanel() {
   requestAnimationFrame(() => w.classList.add('show'));
   forumRender();
 }
-function closeForumsPanel() {
-  const w = document.getElementById('fo-panel'); if (!w) return;
+function closeForumsPanel() { closeSidePanel('fo-panel'); }
+function closeSidePanel(id) {
+  const w = document.getElementById(id); if (!w) return;
   w.classList.remove('show');
   setTimeout(() => { if (!w.classList.contains('show')) w.remove(); }, 260);
+}
+// סוגרים את כל חלונות הצד (חוץ מזה שמבקשים להשאיר)
+function closeSidePanels(keepId) {
+  document.querySelectorAll('.fo-panel-wrap').forEach(w => { if (w.id !== keepId) closeSidePanel(w.id); });
+}
+// חלון צד כללי משמאל — אותו מבנה כמו חלון הפורומים
+function openSidePanel(id, title, bodyHTML, fullAction) {
+  let w = document.getElementById(id);
+  if (!w) {
+    w = document.createElement('div');
+    w.id = id; w.className = 'fo-panel-wrap';
+    w.innerHTML = `<div class="fo-panel-backdrop" onclick="closeSidePanel('${id}')"></div>
+      <aside class="fo-panel" role="dialog" aria-label="${escHtml(title)}">
+        <header class="fo-panel-head">
+          <b>${escHtml(title)}</b>
+          ${fullAction ? `<button type="button" class="fo-panel-full" onclick="${fullAction}">פתיחה בעמוד מלא</button>` : ''}
+          <button type="button" class="fo-panel-x" onclick="closeSidePanel('${id}')" aria-label="סגירה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+        </header>
+        <div class="fo-panel-body"></div>
+      </aside>`;
+    document.body.appendChild(w);
+  }
+  w.querySelector('.fo-panel-body').innerHTML = bodyHTML;
+  w.style.display = 'block';
+  requestAnimationFrame(() => w.classList.add('show'));
+  return w;
+}
+// קהילות בחלון צד (מחשב): כל אזורי האתר ככרטיסים — לחיצה פותחת את העמוד וסוגרת את החלון
+function openCommunitiesPanel() {
+  const cards = (typeof communityShortcutsHTML === 'function' ? communityShortcutsHTML() : '')
+    + (typeof sidePagesShortcutsHTML === 'function' ? (sidePagesShortcutsHTML().match(/<div class="comm-grid-card[\s\S]*?<\/button>\s*<\/div>\s*<\/div>/g) || []).join('') : '');
+  openSidePanel('cm-panel', 'קהילות', `<div class="cm-panel-grid">${cards}</div>`, 'openCommunitiesFullPage()');
+}
+function openCommunitiesFullPage() {
+  closeSidePanel('cm-panel');
+  window.__forceCommPage = true;
+  try { navigateToPage('page-communities-main'); } finally { window.__forceCommPage = false; }
 }
 function openForumsFullPage() {
   closeForumsPanel();
   window.__forceForumsPage = true;
   try { navigateToPage('page-forums-main'); } finally { window.__forceForumsPage = false; }
 }
-document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.getElementById('fo-panel')) closeForumsPanel(); });
-Object.assign(window, { openForumsPanel, closeForumsPanel, openForumsFullPage });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSidePanels(); });
+Object.assign(window, { openForumsPanel, closeForumsPanel, openForumsFullPage, closeSidePanel, closeSidePanels, openSidePanel, openCommunitiesPanel, openCommunitiesFullPage });
