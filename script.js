@@ -15407,10 +15407,11 @@ function homeCategoriesHTML(photos, comics, stories) {
     ['news', 'חדשות', '#eef0f3|#3f4652'], ['offers', 'הצעות', '#ffecd9|#b04a0f']
   ].filter(([k]) => ['photos', 'comics', 'stories', 'news', 'offers'].includes(k) || commFindPage(k));
   const iconKey = { blinddate: 'blind', tinder: 'match' };
-  const tile = ([kind, label, color, cover]) => `<button type="button" class="hcat" style="--hc:${color.split('|')[0]}; --hci:${color.split('|')[1]}" onclick="homeGo('${kind}')">
+  // כל האריחים באותו סגנון נקי (אפור בהיר + אייקון כהה), בלי תמונות
+  const tile = ([kind, label]) => { const color = '#eef0f3|#3f4652', cover = null; return `<button type="button" class="hcat" style="--hc:${color.split('|')[0]}; --hci:${color.split('|')[1]}" onclick="homeGo('${kind}')">
       ${cover ? `<img class="hcat-img${cover.blur ? ' blur' : ''}" src="${escHtml(cover.src)}" alt="" loading="lazy">`
         : `<span class="hcat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${COMM_SC_ICONS[iconKey[kind] || kind] || extra[kind] || ''}</svg></span>`}
-      <span class="hcat-label">${escHtml(label)}</span></button>`;
+      <span class="hcat-label">${escHtml(label)}</span></button>`; };
   return `<section class="hcats"><h2 class="hcats-title">קטגוריות <span aria-hidden="true">‹</span></h2><div class="hcats-grid">${tiles.map(tile).join('')}</div></section>`;
 }
 
