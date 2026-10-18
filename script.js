@@ -23657,6 +23657,7 @@ window.openLanguageModal = openLanguageModal;
 
 function selectLanguage(lang) {
   localStorage.setItem('user_language', lang);
+  try { localStorage.setItem('user_language_chosen', '1'); localStorage.removeItem('user_language_auto'); } catch (e) {} // בחירה ידנית גוברת על הזיהוי לפי מדינה
   const modal = document.getElementById('language-modal');
   if (modal) modal.style.display = 'none';
   if (lang === 'en') {
@@ -23964,12 +23965,154 @@ const UI_EN_PATTERNS = [
   [/ ?שלנו\./g, '.']
 ];
 
+// ===== תוספות לתרגום (עדכון: כל הממשק החדש) =====
+Object.assign(UI_EN, {
+  // ניווט / כללי
+  'הפיד שלי': 'My Feed', 'קומיקס': 'Comics', 'סיפורים': 'Stories', 'פורומים': 'Forums', 'חברים': 'Friends', 'התאמות': 'Matches',
+  'מוצרים': 'Products', 'חדשות': 'News', 'הצעות': 'Offers', 'קטגוריות': 'Categories', 'קהילות': 'Communities', 'הקהילות': 'Communities',
+  'התחברות': 'Log in', 'הודעות': 'Messages', 'תפריט': 'Menu', 'בית': 'Home', 'מנוי ושדרוגים': 'Plans & upgrades', 'שדרוגים': 'Upgrades',
+  'מה בא לך לשתף?': 'What would you like to share?', 'העלו תוכן': 'Upload content', 'העלה תמונה': 'Upload photo', 'פרסום מהיר': 'Quick post',
+  'כניסה': 'Enter', 'סגירה': 'Close', 'סגור': 'Close', 'ביטול': 'Cancel', 'שליחה': 'Send', 'המשך': 'Continue', 'הרחב': 'Expand', 'אחר': 'Other',
+  'אורח': 'Guest', 'משתמש': 'User', 'מנהל האתר': 'Site Admin', 'כללי': 'General', 'הכל': 'All', 'פתיחה בעמוד מלא': 'Open full page',
+  // עמוד הבית
+  'גולשים היום': 'Visitors today', 'פוסטים עלו היום': 'Posts today', 'דיונים פעילים היום': 'Active discussions', 'שאלות היום': 'Questions today',
+  'נפח פעילות היום': 'Activity today', 'העלאת תמונת גולשים': 'Upload a member photo', 'גלריות מהקהילה': 'Galleries from the community',
+  'רצועות ואיורים': 'Strips & illustrations', 'קצרים ומאמרים': 'Shorts & articles', 'הנתונים שלי': 'My stats', 'דוגמה': 'Example', 'מעודכן עכשיו': 'Updated now',
+  'פוסטים': 'Posts', 'לייקים': 'Likes', 'דירוג': 'Rating', 'נקודות': 'Points', 'מקום': 'Rank', 'מדרגים': 'Raters', 'התחברו כדי לראות את שלכם': 'Log in to see yours',
+  // עוגיות
+  'אנו משתמשים בעוגיות לצורכי תפעול, אנליטיקה ושיווק. לפרטים ראו את מדיניות הפרטיות.': 'We use cookies for operation, analytics and marketing. See our privacy policy for details.',
+  'מאשר/ת': 'Accept', 'לא מאשר/ת': 'Decline', 'מדיניות פרטיות': 'Privacy policy', 'הסכמה לעוגיות': 'Cookie consent',
+  // תמונות / קומיקס / סיפורים
+  'כל הגלריות': 'All galleries', 'כל הקומיקס': 'All comics', 'כל הסיפורים': 'All stories', 'מיון תוצאות לפי': 'Sort results by', 'טווח גילאים': 'Age range',
+  'רק טקסט': 'Text only', 'פתח מיקום': 'Enable location', 'משתמשים מאומתים': 'Verified users', 'תגיות': 'Tags', 'סינון': 'Filter', 'מיון': 'Sort',
+  'מעבר בין סוגי תוכן': 'Switch content type', '🔍 חיפוש גלריות...': '🔍 Search galleries...', '🔍 חיפוש קומיקס...': '🔍 Search comics...', '🔍 חיפוש סיפורים...': '🔍 Search stories...',
+  'שמור לצפייה מאוחרת': 'Save for later', 'הסר משמורים': 'Remove from saved', 'טלגרם': 'Telegram', 'אימייל': 'Email', 'לחץ לחשיפת והעתקת אימייל': 'Click to reveal & copy email',
+  'דיווח על התוכן': 'Report this content', 'לייק לגלריה זו': 'Like this gallery', 'לייק': 'Like', 'מזער / הרחב': 'Collapse / expand', 'הגלריות השמורות שלי': 'My saved galleries',
+  'הודעות פרטיות': 'Private messages', 'המרחק לא ידוע — צריך שגם את/ה וגם היוצר/ת תפעילו מיקום': 'Distance unknown — both you and the creator need to enable location',
+  'כתבו כאן את המידע/ההודעה...': 'Write your info / message here...',
+  // עמוד גלריה / קומיקס
+  'חזרה לגלריות': 'Back to galleries', 'חזרה לקומיקס': 'Back to comics', 'חזרה לסיפורים': 'Back to stories', 'תיאור': 'Description', 'ביקורות': 'Reviews', 'פרטים': 'Details',
+  'עדיין אין ביקורות — היו הראשונים לדרג!': 'No reviews yet — be the first to rate!', 'כתיבת ביקורת': 'Write a review', 'פורסם': 'Published', 'קטגוריה': 'Category',
+  'תמונות בגלריה': 'Images in gallery', 'אין תגובות עדיין. היו הראשונים להגיב!': 'No comments yet. Be the first to comment!',
+  'גלריות נוספות שיעניינו אותך': 'More galleries you might like', 'נבחרו בשבילך לפי מה שאתה צופה ואוהב': 'Picked for you based on what you watch and like',
+  'פופולרי בקהילה': 'Popular in the community', 'חדש באתר': 'New on the site', 'קומיקס נוסף שיעניין אותך': 'More comics you might like', 'סיפורים נוספים שיעניינו אותך': 'More stories you might like',
+  'אהבתי': 'Like', 'הודעה ליוצר': 'Message the creator', 'הודעה': 'Message', 'שמירה': 'Save', 'שמור': 'Saved', 'שיתוף': 'Share',
+  'אימייל — לחיצה מעתיקה, לחיצה נוספת שולחת': 'Email — click to copy, click again to send', 'כתבו שם זמני כדי להגיב': 'Enter a temporary name to comment',
+  'קריאה במסך מלא': 'Read full screen', 'העמוד הבא': 'Next page', 'העמוד הקודם': 'Previous page', 'עמוד': 'Page', 'לקריאת הסיפור:': 'Read the story:', 'לקריאת הקומיקס:': 'Read the comic:',
+  'תגובה מהירה': 'Quick reply', 'הצטרפו לשיחה': 'Join the conversation', 'דירוג (לא חובה):': 'Rating (optional):', 'מגיבים בתור': 'Commenting as', 'שינוי': 'Change',
+  // פורומים
+  'חזרה לשער הקהילה': 'Back to Community Gate', 'שער הקהילה': 'Community Gate', 'תגובה': 'Reply', 'עוד תגובה אחת': 'One more reply', 'הצבעה בעד': 'Upvote', 'הצבעה נגד': 'Downvote',
+  'מקום לדבר, לשאול, להצביע ולשתף עם כל הקהילה': 'A place to talk, ask, vote and share with the whole community', 'שאלות גולשים': 'Member questions', 'סקרים': 'Polls',
+  'הקהילה': 'Community', 'היכרות, ברכות והודעות לכולם': 'Introductions, greetings and announcements', 'הצעות לשיפור האתר': 'Site improvement ideas', 'רעיונות, באגים ובקשות': 'Ideas, bugs and requests',
+  'שאלות ותשובות': 'Questions & answers', 'שאלו את הקהילה כל דבר': 'Ask the community anything', 'יצירה ותוכן': 'Creation & content', 'תמונות וצילום': 'Photos & photography',
+  'טיפים, ציוד ופידבק על תמונות': 'Tips, gear and photo feedback', 'קומיקס ואיור': 'Comics & illustration', 'ציור, סגנונות וכלים': 'Drawing, styles and tools',
+  'סיפורים וכתיבה': 'Stories & writing', 'כתיבה, רעיונות וביקורת על סיפורים': 'Writing, ideas and story feedback', 'אוף טופיק': 'Off-topic', 'כל מה שלא מתאים במקום אחר': "Anything that doesn't fit elsewhere",
+  'נושאים': 'Topics', 'שליחת תגובה': 'Send reply', 'נושא חדש': 'New topic',
+  // חלון קהילות
+  'לצפייה בכל התמונות': 'Browse all photos', 'לצפייה בכל הקומיקס': 'Browse all comics', 'לצפייה בכל הסיפורים': 'Browse all stories', 'לצפייה בכל הפורומים': 'Browse all forums',
+  'לצפייה בכל המוצרים': 'Browse all products', 'הכירו גולשים חדשים': 'Meet new members', 'התאמה אקראית ודייט אמיתי': 'Random match, real date', 'החליקו ומצאו התאמה': 'Swipe and find a match',
+  'הצעות פעילות להערב': 'Active offers for tonight',
+  // חדשות
+  'חדשות ומבזקים': 'News & updates', 'עדכונים בזמן אמת, ציוצים נבחרים וחדשות טכנולוגיה ישירות מ-X': 'Real-time updates, selected posts and tech news straight from X',
+  // שדרוגים
+  'משלמים רק על מה שרוצים': 'Pay only for what you want', 'בלי מנוי · תשלום חד־פעמי לכל שדרוג': 'No subscription · one-time payment per upgrade', 'גלישה': 'Browsing', 'אופציונלי': 'Optional',
+  'בלי פרסומות': 'No ads', 'גלישה נקייה בכל האתר': 'Clean browsing across the site', 'תוכן פרימיום ונסתר': 'Premium & hidden content', 'גישה לגלריות ולתכנים הנעולים': 'Access locked galleries and content',
+  'תמונות באיכות מלאה': 'Full-quality images', 'בלי דחיסה — כל הפרטים': 'No compression — every detail', 'חשיפה': 'Exposure', 'מי צפה בפרופיל שלי': 'Who viewed my profile',
+  'רשימת המבקרים בפרופיל שלך': 'List of your profile visitors', 'קידום התכנים שלי': 'Promote my content', 'ההעלאות שלך מוצגות בראש הקהילות': 'Your uploads shown at the top of communities',
+  'תג פרופיל פרימיום': 'Premium profile badge', 'תג מיוחד ליד השם שלך': 'A special badge next to your name', 'קהילה ותמיכה': 'Community & support',
+  'הודעות פרטיות ללא הגבלה': 'Unlimited private messages', 'צ׳אט חופשי עם כל הקהילה': 'Free chat with the whole community', 'גישה ראשונה לפיצ׳רים חדשים': 'Early access to new features',
+  'מנסים חידושים לפני כולם': 'Try new things before everyone', 'תמיכה VIP': 'VIP support', 'מענה מהיר ואישי מהצוות': 'Fast, personal replies from the team', 'לסל': 'To cart',
+  // שמורים / לייקים / היסטוריה
+  '🔖 שמורים': '🔖 Saved', 'שמורים': 'Saved', '❤️ הלייקים שלי': '❤️ My likes', 'הלייקים שלי': 'My likes', '🕒 היסטוריית צפייה': '🕒 Watch history', 'היסטוריית צפייה': 'Watch history',
+  'אין גלריות שמורות עדיין.': 'No saved galleries yet.', 'לחצו על "שמירה" בכרטיס כדי לשמור.': 'Click "Save" on a card to save it.',
+  '🔒 התחבר כדי לראות את הגלריות השמורות שלך': '🔒 Log in to see your saved galleries',
+  // פרסום מהיר
+  'זמין עכשיו · מוכן תוך 30 שניות': 'Available now · ready in 30 seconds', 'הוספת תמונה': 'Add image', 'כתבו כאן…': 'Type here…',
+  // דיווח
+  'דיווח על תוכן': 'Report content', 'תוכן פוגעני או אלים': 'Offensive or violent content', 'פרסום ללא הסכמה / פגיעה בפרטיות': 'Posted without consent / privacy violation',
+  'חשד לקטין': 'Suspected minor', 'ספאם או הונאה': 'Spam or scam', 'הפרת זכויות יוצרים': 'Copyright infringement', 'שליחת דיווח': 'Send report', 'פרטים נוספים (לא חובה)': 'More details (optional)',
+  'תודה — הדיווח נשלח למנהל האתר ויטופל בהקדם': 'Thanks — the report was sent to the site admin and will be handled soon',
+  // פיד
+  'כל מה שהעלו מי שאתם עוקבים אחריהם — החדש ביותר למעלה': 'Everything posted by people you follow — newest first', 'הפיד שלכם מחכה': 'Your feed is waiting',
+  'התחברו ועקבו אחרי יוצרים — כל מה שהם מעלים יופיע כאן.': 'Log in and follow creators — everything they post will show up here.',
+  // תפריט מובייל
+  'התחברות / הרשמה': 'Log in / sign up', 'לפרופיל שלי': 'My profile', 'קיצורי דרך': 'Shortcuts', 'כאן יופיע מה ששמרתם — לחצו על סימן השמירה בגלריה או בסיפור': 'Things you save will appear here — tap the save icon on a gallery or story',
+  'הצג עוד': 'Show more', 'הצג פחות': 'Show less', 'עזרה ותמיכה': 'Help & support', 'שליחת הודעה לצוות האתר': 'Message the site team', 'הצהרת נגישות': 'Accessibility statement',
+  'הגדרות ופרטיות': 'Settings & privacy', 'מעבר למצב כהה': 'Switch to dark mode', 'מעבר למצב בהיר': 'Switch to light mode', 'תנאי שימוש': 'Terms of use', 'המידע שלי': 'My data',
+  // פרופיל
+  'מין': 'Gender', 'תפקיד': 'Role', 'מאיפה': 'Location', 'מייל': 'Email', 'מחפש/ת': 'Looking for', 'אוהב/ת': 'Likes', 'לא אוהב/ת': 'Dislikes', 'לא צוין': 'Not specified',
+  'לא מאומת': 'Not verified', '✓ מאומת': '✓ Verified', 'גלריות שהועלו': 'Galleries uploaded', 'עדיין בלי דירוג': 'No rating yet', 'לחצו לדירוג המשתמש': 'Tap to rate this user',
+  'עוד לא דירגו אותך': 'Nobody has rated you yet', 'עיצוב הדמות שלי': 'Design my avatar', 'מה אני אוהב': 'What I like', 'אודות': 'About', 'גלריה': 'Gallery',
+  'עדיין אין פוסטים': 'No posts yet', 'עוקבים': 'Followers', 'נעקבים': 'Following', 'עוקב/ת': 'Following', 'מעקב': 'Follow', 'חזרה': 'Back',
+  // מסננים
+  'גיל': 'Age', 'מיקום': 'Location', 'תאריך': 'Date', 'גודל': 'Size', 'האחרונים': 'Newest', 'הפופולארים': 'Most popular', 'הישנים': 'Oldest',
+  // תיאורי כפתורים (title / aria-label)
+  'לוגו האתר - חזרה לדף הבית': 'Site logo - back to home', 'מצב בהיר / כהה': 'Light / dark mode', 'מעבר בין מצב בהיר לכהה': 'Toggle light and dark mode', 'חיפוש באתר': 'Search the site',
+  'שפה / Language': 'Language', 'בחירת שפה / Language': 'Choose language', 'משימות והתקדמות באתר': 'Tasks & progress', 'הפיד שלי — מי שאני עוקב': 'My feed — people I follow', 'התראות': 'Notifications',
+  'קיצורי תוכן': 'Content shortcuts', 'כל הקטגוריות': 'All categories', 'מידע אישי — סטטיסטיקות שלך': 'Personal info — your stats', 'גרור לשנות מיקום': 'Drag to move',
+  'ניווט ראשי': 'Main navigation', 'העלאה': 'Upload', 'הצג תפריט תחתון': 'Show bottom menu', 'ניווט מהיר': 'Quick navigation', "הסתר צ'אט": 'Hide chat', 'מחק לגמרי': 'Delete completely',
+  'מסך מלא': 'Full screen', 'הצגת הסיסמה': 'Show password', 'תפריט נגישות — פתיחת הגדרות נגישות ותצוגה': 'Accessibility menu — open accessibility and display settings',
+  'סגירת הגדרות הנגישות': 'Close accessibility settings', 'הקטנת גודל טקסט': 'Decrease text size', 'הגדלת גודל טקסט': 'Increase text size', 'הקטנת מרווח שורות': 'Decrease line spacing',
+  'הגדלת מרווח שורות': 'Increase line spacing', 'הקטנת מרווח אותיות': 'Decrease letter spacing', 'הגדלת מרווח אותיות': 'Increase letter spacing', 'שם משתמש': 'Username', 'סיסמה': 'Password',
+  'הקלד הודעה...': 'Type a message...', 'שם או כינוי': 'Name or nickname', 'שם (אופציונלי)': 'Name (optional)'
+});
+UI_EN_PATTERNS.push(
+  [/([\d,]+)\s*גלריות/g, '$1 galleries'],
+  [/([\d,]+)\s*דירוגים/g, '$1 ratings'],
+  [/([\d,]+)\s*ביקורות/g, '$1 reviews'],
+  [/([\d,]+)\s*תכנים/g, '$1 items'],
+  [/לפני\s+(\d+)\s+ימים/g, '$1 days ago'], [/לפני\s+(\d+)\s+שעות/g, '$1 hours ago'], [/לפני\s+(\d+)\s+דקות/g, '$1 minutes ago'],
+  [/לפני יום/g, 'a day ago'], [/לפני שעה/g, 'an hour ago'], [/לפני דקה/g, 'a minute ago'],
+  [/(\d+)\s*באוק׳/g, 'Oct $1'], [/(\d+)\s*בספט׳/g, 'Sep $1'], [/(\d+)\s*בנוב׳/g, 'Nov $1'], [/(\d+)\s*בדצמ׳/g, 'Dec $1'], [/(\d+)\s*בינו׳/g, 'Jan $1'], [/(\d+)\s*בפבר׳/g, 'Feb $1'],
+  [/(\d+)\s*במרץ/g, 'Mar $1'], [/(\d+)\s*באפר׳/g, 'Apr $1'], [/(\d+)\s*במאי/g, 'May $1'], [/(\d+)\s*ביוני/g, 'Jun $1'], [/(\d+)\s*ביולי/g, 'Jul $1'], [/(\d+)\s*באוג׳/g, 'Aug $1'],
+  [/מנהל האתר\s*·/g, 'Site Admin ·'],
+  [/תגובות\s*\(/g, 'Comments ('],
+  [/המשך לתשלום/g, 'Continue to payment'],
+  [/רק טקסט/g, 'Text only'], [/פתח מיקום/g, 'Enable location'],
+  [/מה כותרת הסיפור שברצונך לפרסם\?/g, "What's the title of the story you'd like to post?"],
+  [/מה כותרת הקומיקס שברצונך לפרסם\?/g, "What's the title of the comic you'd like to post?"],
+  [/מה כותרת המוצר שברצונך לפרסם\?/g, "What's the title of the product you'd like to post?"],
+  [/עכשיו הוסף תמונות למודעה \(עד 5\) בלחיצה על כפתור המצלמה/g, 'Now add images (up to 5) using the camera button'],
+  [/מעולה!/g, 'Excellent!'], [/כשסיימת — כתוב/g, "When you're done, type"], [/כתוב אותו עכשיו, או כתוב/g, 'type it now, or type'],
+  [/רוצה להוסיף תיאור קצר\?/g, 'Want to add a short description?'], [/הוסף תמונות עם/g, 'Add images with'], [/, וכשתסיים כתוב/g, ", and when you're done type"],
+  [/נוספה תמונה/g, 'Image added'], [/הוסף עוד, או כתוב/g, 'Add more, or type'], [/הגעת למקסימום של 5 תמונות\./g, 'You reached the maximum of 5 images.'],
+  [/צריך לפחות תמונה אחת/g, 'At least one image is needed'], [/לחץ על 📷 להוספה\./g, 'Tap 📷 to add.'], [/מפרסם את התוכן\.\.\./g, 'Publishing your content...'],
+  [/המודעה פורסמה בהצלחה!/g, 'Your post was published!'], [/הסיפור פורסם!/g, 'Your story was published!'], [/שגיאה בפרסום\. נסה שוב מאוחר יותר\./g, 'Publishing failed. Please try again later.'],
+  [/מה המחיר המבוקש\? כתוב מספר בש״ח, או/g, "What's the asking price? Enter a number in ₪, or"], [/מה המחיר\? כתוב מספר בש״ח, או/g, "What's the price? Enter a number in ₪, or"],
+  [/^המשך$/g, 'continue'], [/^דלג$/g, 'skip'], [/לפרסום\./g, 'to publish.'],
+  [/^מאת$/g, 'by']
+);
+Object.assign(UI_EN, {
+  // פוטר
+  'על האתר': 'About the site', 'דף הבית': 'Home page', 'הגדרות נגישות': 'Accessibility settings', 'תוכן': 'Content', 'קהילה': 'Community', 'מידע משפטי': 'Legal',
+  'ביטולים והחזרים': 'Cancellations & refunds', 'דיווח והסרת תוכן': 'Report & remove content', 'צרו קשר': 'Contact us', 'שלחו לנו הודעה': 'Send us a message',
+  '© 2026 כל הזכויות שמורות.': '© 2026 All rights reserved.', 'X (טוויטר)': 'X (Twitter)', 'פייסבוק': 'Facebook', 'יוטיוב': 'YouTube', 'אינסטגרם': 'Instagram', 'טיקטוק': 'TikTok', 'דיסקורד': 'Discord',
+  'לכל הפורומים': 'All forums', 'טוען...': 'Loading...', 'כלובון': 'Chastity cage', 'שחורים על לבנות': 'Interracial',
+  // שדות בטפסים
+  'כותרת הכתבה': 'Article title', 'תיאור קצר של הכתבה...': 'Short article description...', 'שם הכותב': 'Author name', 'למשל: חדשות, סקירות, טכנולוגיה': 'e.g. news, reviews, tech',
+  'כתוב את תוכן הכתבה המלא כאן...': 'Write the full article here...', 'כותרת הסיפור': 'Story title', 'תיאור קצר של הסיפור...': 'Short story description...',
+  'כתוב את תוכן הסיפור המלא כאן...': 'Write the full story here...', 'שם קטגוריה חדשה...': 'New category name...', 'כותרת הגלריה': 'Gallery title',
+  'תיאור קצר... אפשר להוסיף #תגיות': 'Short description... you can add #tags', 'אורך': 'Length', 'היקף': 'Girth', 'לדוגמה: 250': 'e.g. 250', 'הוספת סעיף חדש...': 'Add a new item...',
+  'לדוגמה: אספני רכב': 'e.g. car collectors', 'על מה הקהילה?': 'What is the community about?', 'צבע: אדום, כחול מצב: חדש, משומש': 'Color: red, blue  Condition: new, used',
+  'לדוגמה: יוצאים לבר בתל אביב / יושבים בים / מסיבה...': 'e.g. going to a bar in Tel Aviv / at the beach / a party...', 'למשל: תל אביב, מרכז...': 'e.g. Tel Aviv, center...',
+  'למשל: עכשיו / 22:00...': 'e.g. now / 22:00...', 'לדוגמה: איך יודעים שזה אהבה?': 'e.g. how do you know it is love?', 'ספרו עוד על הסיטואציה...': 'Tell us more about the situation...',
+  'שם הקורס או השיעור': 'Course or lesson name', 'תיאור קצר של הקורס...': 'Short course description...', 'שם המרצה': 'Instructor name', 'למשל: תכנות, שיווק, עיצוב': 'e.g. coding, marketing, design',
+  'הדבק קישור (למשל: https://vimeo.com/1205176242)': 'Paste a link (e.g. https://vimeo.com/1205176242)', 'שם המוצר': 'Product name', 'למשל: חריטה חינם, מבצע': 'e.g. free engraving, sale',
+  'למשל: ₪999': 'e.g. ₪999', 'למשל: גוגל': 'e.g. Google', 'מה כותרת השיתוף?': "What's the post title?", 'כאן כותבים את השיתוף המלא...': 'Write the full post here...',
+  'אפשרות 1 *': 'Option 1 *', 'אפשרות 2 *': 'Option 2 *', 'אפשרות 3': 'Option 3', 'אפשרות 4': 'Option 4', 'אפשרות 5': 'Option 5', 'מה הרעיון': "What's the idea",
+  'תיאור קצר במשפט או שניים...': 'A short description in a sentence or two...', 'הסבר מורחב על הרעיון והיתרונות שלו...': 'A detailed explanation of the idea and its benefits...',
+  'רשום כל שלב בשורה נפרדת (למשל: שלב 1: מחקר שוק...)': 'Write each step on its own line (e.g. Step 1: market research...)', 'למשל: ₪10,000 או להצעת מחיר': 'e.g. ₪10,000 or on request',
+  'למשל: 1-3 שבועות': 'e.g. 1-3 weeks', 'למשל: React, Node.js, Firebase': 'e.g. React, Node.js, Firebase', 'למשל: השקת Claude Haiku 5.5 החדש': 'e.g. the new Claude Haiku 5.5 launch',
+  'הסבר קצר על הפוסט או ציטוט חשוב...': 'A short note about the post or a key quote...', 'כתוב הודעה... או / לפרסום לקהילה': 'Write a message... or / to post to the community'
+});
+UI_EN_PATTERNS.push([/^עמוד\s+(\d+)$/g, 'Page $1'], [/^תמונה\s+(\d+)$/g, 'Image $1']);
 let __uiTranslating = false;
 // לא נוגעים בקוד עצמו. הודעות משתמשים/תוכן מוגנים ממילא כי המילון מתרגם
 // רק מחרוזות מוכרות של הממשק — תוכן חופשי שהמשתמשים כתבו לא מופיע במילון.
 const UI_SKIP_SEL = 'script, style';
 function translateChromeToEnglish() {
   if (getUiLang() !== 'en') return;
+  document.documentElement.setAttribute('data-lang', 'en');
   __uiTranslating = true;
   try {
     const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
@@ -23987,12 +24130,29 @@ function translateChromeToEnglish() {
         n.nodeValue = n.nodeValue.replace(key, UI_EN[key]);
         return;
       }
+      // מחרוזת עם אימוג'י/סימן בהתחלה או בסוף (למשל "📝 רק טקסט") — מתרגמים את הליבה
+      const m = key.match(/^([^\u0590-\u05FFA-Za-z0-9"'(]*)(.*?)([^\u0590-\u05FFA-Za-z0-9"')]*)$/);
+      if (m && m[2] && m[2] !== key && Object.prototype.hasOwnProperty.call(UI_EN, m[2])) {
+        n.nodeValue = n.nodeValue.replace(m[2], UI_EN[m[2]]);
+        return;
+      }
       // תבניות (מספרים דינמיים)
       let v = n.nodeValue, changed = false;
       for (const [re, rep] of UI_EN_PATTERNS) {
         if (re.test(v)) { v = v.replace(re, rep); changed = true; }
       }
       if (changed) n.nodeValue = v;
+    });
+    // כותרות ותיאורי כפתורים (title / aria-label)
+    document.querySelectorAll('[title], [aria-label]').forEach(el => {
+      ['title', 'aria-label'].forEach(attr => {
+        const raw = el.getAttribute(attr); if (!raw || !/[\u0590-\u05FF]/.test(raw)) return;
+        const k = raw.trim();
+        if (Object.prototype.hasOwnProperty.call(UI_EN, k)) { el.setAttribute(attr, UI_EN[k]); return; }
+        let v = raw, changed = false;
+        for (const [re, rep] of UI_EN_PATTERNS) { if (re.test(v)) { v = v.replace(re, rep); changed = true; } }
+        if (changed) el.setAttribute(attr, v);
+      });
     });
     document.querySelectorAll('input[placeholder], textarea[placeholder]').forEach(inp => {
       const raw = inp.placeholder || '';
@@ -26805,6 +26965,7 @@ const LEGAL_DOCS = {
       <li><b>תשלום:</b> אימייל לקבלה. פרטי האשראי נמסרים ישירות לחברת הסליקה ואינם נשמרים אצלנו.</li>
     </ul>
     <h3>עם מי המידע משותף</h3>
+    <p>כדי להציג את האתר בשפה המתאימה, בכניסה הראשונה האתר בודק את המדינה שממנה מתבצעת הגלישה לפי כתובת ה-IP (באמצעות השירות api.country.is). נשמר רק קוד המדינה, בדפדפן שלכם, לשעה. אפשר תמיד לבחור שפה ידנית בכפתור השפה.</p>
     <p>המידע נשמר אצל ספקי תשתית: Google Firebase (מסד נתונים והתחברות) ו-Vercel (אחסון האתר), שעשויים לאחסן מידע מחוץ לישראל בהתאם לתקנות העברת מידע לחו״ל. המידע לא נמכר ולא מועבר לצד שלישי לשיווק. מידע יימסר לרשויות רק לפי דרישה חוקית.</p>
     <h3>עוגיות</h3>
     <p>עוגיות חיוניות לתפעול האתר פועלות תמיד. עוגיות סטטיסטיקה פועלות רק אחרי שלחצתם "מאשר/ת", ואפשר לשנות את הבחירה <a href="#" onclick="event.preventDefault(); closeLegal(); try{localStorage.removeItem('cookie_consent')}catch(e){}; maybeShowCookieBanner()">כאן</a>.</p>
@@ -27247,3 +27408,38 @@ function pd2ActionsHTML(a, kind) {
               </div>`;
 }
 window.pd2ActionsHTML = pd2ActionsHTML;
+
+
+// ============================================================
+// שפה לפי מדינה: מי שגולש מחוץ לישראל (גם דרך VPN) — האתר מוצג באנגלית
+// רק אם הגולש לא בחר שפה בעצמו. בחירה ידנית תמיד גוברת.
+// ============================================================
+(function autoLanguageByCountry() {
+  let chosen = null, auto = null;
+  try { chosen = localStorage.getItem('user_language_chosen'); auto = localStorage.getItem('user_language_auto'); } catch (e) { return; }
+  if (chosen === '1') return;
+  const apply = (country) => {
+    if (!country) return;
+    const cur = getUiLang();
+    if (country !== 'IL' && cur !== 'en') {
+      try { localStorage.setItem('user_language', 'en'); localStorage.setItem('user_language_auto', '1'); } catch (e) {}
+      try { if (typeof renderPage === 'function') renderPage(); } catch (e) {}
+      translateChromeToEnglish();
+    } else if (country === 'IL' && auto === '1' && cur === 'en') {
+      // חזר לישראל (בלי VPN) ולא בחר אנגלית בעצמו — חוזרים לעברית
+      try { localStorage.setItem('user_language', 'he'); localStorage.removeItem('user_language_auto'); } catch (e) {}
+      try { location.reload(); } catch (e) {}
+    }
+  };
+  // תוצאה שמורה לשעה — כדי לא לשאול בכל טעינה
+  try {
+    const c = JSON.parse(localStorage.getItem('geo_country') || 'null');
+    if (c && c.cc && Date.now() - c.t < 3600e3) { apply(c.cc); return; }
+  } catch (e) {}
+  const save = (cc) => { try { localStorage.setItem('geo_country', JSON.stringify({ cc, t: Date.now() })); } catch (e) {} apply(cc); };
+  const withTimeout = (url, ms) => Promise.race([fetch(url, { cache: 'no-store' }), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms))]);
+  withTimeout('https://api.country.is/', 3500)
+    .then(r => r.json()).then(d => { if (d && d.country) save(String(d.country).toUpperCase()); else throw new Error('no country'); })
+    .catch(() => withTimeout('https://ipapi.co/country/', 3500).then(r => r.text())
+      .then(t => { const cc = String(t || '').trim().toUpperCase(); if (/^[A-Z]{2}$/.test(cc)) save(cc); }).catch(() => {}));
+})();

@@ -12360,3 +12360,7 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_) .comic-info .pshow-tiles { gri
 }
 html body:not(#_):not(#_):not(#_):not(#_):not(#_) .comic-show .pshow-frame .story-page-view { min-height: 0 !important; height: auto !important; }
 html body:not(#_):not(#_):not(#_):not(#_):not(#_) .comic-show .pshow-stage { gap: 12px !important; }
+/* אנגלית: טקסטים שמגיעים מה-CSS */
+html[data-lang="en"] body :is(.pc-compose, .rd-compose, .fo-reply)::before { content: "Quick reply" !important; }
+/* אנגלית: כל משפט נקבע לפי הכיוון של עצמו — נקודות ופיסוק במקום הנכון */
+html[data-lang="en"] body :is(p, span, small, b, strong, h1, h2, h3, h4, h5, label, summary, li, button, a, .cookie-bar-text, .qp-bubble, .saved-empty, .mnav-sc-empty) { unicode-bidi: plaintext; }
