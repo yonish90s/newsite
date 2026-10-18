@@ -138,3 +138,15 @@ html.theme-dark body:not(#_):not(#_):not(#_) :is(.pshow-desc, .pshow-meta, .comi
 html.theme-dark body:not(#_):not(#_):not(#_) .pshow-cta { background: #1b1e24 !important; color: #eceef1 !important; border-color: #3a414c !important; }
 html.theme-dark body:not(#_):not(#_):not(#_) .pshow-cta:hover { background: #22262d !important; color: #eceef1 !important; }
 html.theme-dark body:not(#_):not(#_):not(#_) .pshow-cta:active { border-color: #eceef1 !important; }
+/* עמוד משתמש — כרטיס נקי במצב כהה */
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .up-watch { background: #1b1e24 !important; border-color: #323842 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_) :is(.up-watch-screen, .uw-name, .uw-lines span, .uw-val, .uw-text, .uw-link, .uw-sex b, .uw-chip, .uw-avatar) { color: #eceef1 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_) :is(.uw-avatar, .uw-badge, .uw-chip) { background: #2a2f37 !important; border-color: #3a414c !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .uw-badge { color: #c8cdd4 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .uw-badge.ok { background: transparent !important; color: #eceef1 !important; border-color: #eceef1 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .uw-rate { background: #22262d !important; border-color: #323842 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .uw-row { border-color: #2a2f37 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_) :is(.uw-label, .uw-lines small, .uw-rate small) { color: #9aa2ad !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .uw-star { color: #3a414c !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_) :is(.uw-star.on, .uw-star:hover) { color: #eceef1 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .uw-chip.dislike { background: transparent !important; color: #9aa2ad !important; }

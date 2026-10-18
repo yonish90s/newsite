@@ -17700,13 +17700,12 @@ function userWatchHTML(st) {
   const filled = r.myRating || Math.round(avg);
   const stars = [1, 2, 3, 4, 5].map(n =>
     `<button type="button" class="uw-star${n <= filled ? ' on' : ''}" onclick="rateUserStars('${artEsc(st.uid || '')}', ${n})" title="דרג ${n} כוכבים">★</button>`).join('');
-  const row = (color, label, value) => `<div class="uw-row"><span class="uw-label" style="color:${color}">${label}</span><div class="uw-val">${value}</div></div>`;
+  const row = (color, label, value) => `<div class="uw-row"><span class="uw-label">${label}</span><div class="uw-val">${value}</div></div>`;
   return `
     <div class="up-watch">
       <div class="up-watch-screen">
         <div class="uw-top">
           <span class="uw-badge ${st.verified ? 'ok' : ''}">${st.verified ? '✓ מאומת' : 'לא מאומת'}</span>
-          <span class="uw-clock">${hh}:${mm}</span>
         </div>
         <div class="uw-head">
           <span class="uw-avatar" ${st.uid ? `data-av-uid="${escHtml(st.uid)}"` : ''}>${escHtml(String(st.name || '?').trim().charAt(0) || '?')}</span>

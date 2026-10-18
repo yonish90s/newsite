@@ -12177,3 +12177,28 @@ html body:not(#_):not(#_):not(#_) .pshow-cta::before { content: ""; width: 16px;
 html body:not(#_):not(#_):not(#_) .pshow-cta:hover { background: #f6f7f9 !important; border-color: #9aa0aa !important; color: #111111 !important; }
 html body:not(#_):not(#_):not(#_) .pshow-cta:active { border: 1.5px solid #111111 !important; border-radius: 999px !important; }
 @media (max-width: 768px) { html body:not(#_):not(#_):not(#_) .pshow-cta { width: 100%; } }
+
+/* ===== עמוד משתמש — כרטיס נקי ורחב (לא שעון), בלי צבעים ===== */
+html body:not(#_):not(#_):not(#_):not(#_) .up-watch { width: min(760px, 100%) !important; padding: 0 !important; border-radius: 20px !important; background: #ffffff !important; border: 1px solid #e6e8ec !important; box-shadow: 0 1px 2px rgba(16, 24, 40, .04), 0 10px 30px -18px rgba(16, 24, 40, .18) !important; margin: 6px auto 30px !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .up-watch::after, html body:not(#_):not(#_):not(#_):not(#_) .up-watch::before { content: none !important; display: none !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .up-watch-screen { border-radius: 20px !important; background: transparent !important; color: #111111 !important; box-shadow: none !important; padding: 24px 26px 26px !important; font-family: var(--ds-font, inherit) !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .uw-clock { display: none !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .uw-top { justify-content: flex-start !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .uw-badge { background: #f1f2f4 !important; color: #3f4652 !important; border: 1px solid #e6e8ec; }
+html body:not(#_):not(#_):not(#_):not(#_) .uw-badge.ok { background: #ffffff !important; color: #111111 !important; border: 1.5px solid #111111; }
+html body:not(#_):not(#_):not(#_):not(#_) .uw-avatar { background: #eef0f3 !important; color: #111111 !important; border: 1px solid #e2e5ea; }
+html body:not(#_):not(#_):not(#_):not(#_) .uw-name { color: #111111 !important; font-size: 32px !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .uw-lines span { color: #111111 !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .uw-lines small { color: #646b78 !important; opacity: 1 !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .uw-rate { background: #f6f7f9 !important; border: 1px solid #e6e8ec; }
+html body:not(#_):not(#_):not(#_):not(#_) .uw-rate small { color: #646b78 !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .uw-star { color: #d5d8de !important; }
+html body:not(#_):not(#_):not(#_):not(#_) :is(.uw-star.on, .uw-star:hover) { color: #111111 !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .uw-row { border-top: 1px solid #eceef1 !important; padding: 12px 2px !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .uw-label { color: #646b78 !important; font-weight: 600 !important; }
+html body:not(#_):not(#_):not(#_):not(#_) :is(.uw-val, .uw-text) { color: #111111 !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .uw-none { color: #9aa0aa !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .uw-link { color: #111111 !important; text-decoration: underline; text-decoration-color: #c4c8d0; text-underline-offset: 3px; }
+html body:not(#_):not(#_):not(#_):not(#_) .uw-chip { background: #f1f2f4 !important; color: #111111 !important; border: 1px solid #e6e8ec; font-weight: 600 !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .uw-chip.dislike { background: #ffffff !important; color: #646b78 !important; text-decoration: line-through; text-decoration-color: #c4c8d0; }
+html body:not(#_):not(#_):not(#_):not(#_) .uw-sex b { color: #111111 !important; }
