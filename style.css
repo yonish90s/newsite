@@ -11851,3 +11851,124 @@ html body:not(#_):not(#_) .fo-panel .fo-reply::before { display: none !important
   html body:not(#_):not(#_) .qp-modal .qp-msgs { padding: 14px 22px !important; }
   html body:not(#_):not(#_) .qp-modal .qp-bar { padding: 10px 18px 14px !important; }
 }
+
+
+/* =====================================================================
+   כפתורים אחידים בכל האתר:
+   רגיל — לבן, מסגרת אפורה דקה, טקסט כהה (כמו "אימייל")
+   לחוץ / נבחר / פעיל — גלולה עם מסגרת שחורה (כמו תיבת האימייל)
+   ===================================================================== */
+:root { --btn-bg: #ffffff; --btn-line: #d5d8de; --btn-ink: #111111; --btn-on: #111111; --btn-hover: #f6f7f9; }
+html body:not(#_):not(#_):not(#_):not(#_) :is(.pd2-ghost, .psf-btn, .pc-post-btn, .art-telegram-btn, .follow-btn, .co-coupon button, .bd-ghost, .legal-tab, .pf-btn, .pf-btn-outline,
+  .pf-btn-icon, .pf-btn-solid, .pfeed-sugg-item button, .algo-btn, .ob-pick, .pd2-wide, .shop-round, .tg-guest button, .cta-add-btn, .art-add-btn,
+  .comm-grid-btn, .pc-more, .co-pay, .ob-next, .legal-btn, .bd-go, .hw-cta, .shop-bar-go, .pd2-btn, .art-back-btn, .art-save-btn, .art-edit-btn,
+  .art-delete-btn, .art-pin-btn, .art-page-btn, .fo-btn, .em-pill-btn, .crm-btn, .td-btn, .umap-btn, .story-cat-btn, .story-size-btn,
+  .story-general-filter-btn, .photo-tab-btn, .sidebar-saved-btn, .readmore-btn, .q-ask-btn, .shop-btn, .shop-add-btn, .of-btn-join, .ms-btn,
+  .site-page-nav-item, .sidebar-tab-pill, .photo-filter-trigger, .fo-panel-full, .cookie-btn, .hc-chip, .pd2-chip, .bd-chip, .st-range button,
+  .photo-card-links button, .photo-card-links a, .dm-pill, .pl-add-btn, .pr-add-btn, .qu-publish-btn, .photo-save-btn,
+  button[style*="background:#2f6fdb"], button[style*="background: #2f6fdb"], button[style*="linear-gradient(135deg,#2f6fdb"]) {
+  background: var(--btn-bg) !important; background-image: none !important; color: var(--btn-ink) !important;
+  border: 1px solid var(--btn-line) !important; border-radius: 12px !important; box-shadow: none !important;
+  font-weight: 500 !important; letter-spacing: 0 !important; text-shadow: none !important;
+  transition: border-color .15s ease, border-radius .18s ease, background .15s ease, box-shadow .15s ease !important;
+}
+html body:not(#_):not(#_):not(#_):not(#_) :is(.pd2-ghost, .psf-btn, .pc-post-btn, .art-telegram-btn, .follow-btn, .co-coupon button, .bd-ghost, .legal-tab, .pf-btn, .pf-btn-outline,
+  .pf-btn-icon, .pf-btn-solid, .pfeed-sugg-item button, .algo-btn, .ob-pick, .pd2-wide, .shop-round, .tg-guest button, .cta-add-btn, .art-add-btn,
+  .comm-grid-btn, .pc-more, .co-pay, .ob-next, .legal-btn, .bd-go, .hw-cta, .shop-bar-go, .pd2-btn, .art-back-btn, .art-save-btn, .art-edit-btn,
+  .art-delete-btn, .art-pin-btn, .art-page-btn, .fo-btn, .em-pill-btn, .crm-btn, .td-btn, .umap-btn, .story-cat-btn, .story-size-btn,
+  .story-general-filter-btn, .photo-tab-btn, .sidebar-saved-btn, .readmore-btn, .q-ask-btn, .shop-btn, .shop-add-btn, .of-btn-join, .ms-btn,
+  .site-page-nav-item, .sidebar-tab-pill, .photo-filter-trigger, .fo-panel-full, .cookie-btn, .hc-chip, .pd2-chip, .bd-chip, .st-range button,
+  .photo-card-links button, .photo-card-links a, .dm-pill, .pl-add-btn, .pr-add-btn, .qu-publish-btn, .photo-save-btn,
+  button[style*="background:#2f6fdb"], button[style*="background: #2f6fdb"], button[style*="linear-gradient(135deg,#2f6fdb"]) :is(span, b, small, strong, i, em) { color: inherit !important; }
+html body:not(#_):not(#_):not(#_):not(#_) :is(.pd2-ghost, .psf-btn, .pc-post-btn, .art-telegram-btn, .follow-btn, .co-coupon button, .bd-ghost, .legal-tab, .pf-btn, .pf-btn-outline,
+  .pf-btn-icon, .pf-btn-solid, .pfeed-sugg-item button, .algo-btn, .ob-pick, .pd2-wide, .shop-round, .tg-guest button, .cta-add-btn, .art-add-btn,
+  .comm-grid-btn, .pc-more, .co-pay, .ob-next, .legal-btn, .bd-go, .hw-cta, .shop-bar-go, .pd2-btn, .art-back-btn, .art-save-btn, .art-edit-btn,
+  .art-delete-btn, .art-pin-btn, .art-page-btn, .fo-btn, .em-pill-btn, .crm-btn, .td-btn, .umap-btn, .story-cat-btn, .story-size-btn,
+  .story-general-filter-btn, .photo-tab-btn, .sidebar-saved-btn, .readmore-btn, .q-ask-btn, .shop-btn, .shop-add-btn, .of-btn-join, .ms-btn,
+  .site-page-nav-item, .sidebar-tab-pill, .photo-filter-trigger, .fo-panel-full, .cookie-btn, .hc-chip, .pd2-chip, .bd-chip, .st-range button,
+  .photo-card-links button, .photo-card-links a, .dm-pill, .pl-add-btn, .pr-add-btn, .qu-publish-btn, .photo-save-btn,
+  button[style*="background:#2f6fdb"], button[style*="background: #2f6fdb"], button[style*="linear-gradient(135deg,#2f6fdb"]) :is(svg[stroke]:not([stroke="none"]), svg [stroke]:not([stroke="none"])) { stroke: currentColor !important; }
+html body:not(#_):not(#_):not(#_):not(#_) :is(.pd2-ghost, .psf-btn, .pc-post-btn, .art-telegram-btn, .follow-btn, .co-coupon button, .bd-ghost, .legal-tab, .pf-btn, .pf-btn-outline,
+  .pf-btn-icon, .pf-btn-solid, .pfeed-sugg-item button, .algo-btn, .ob-pick, .pd2-wide, .shop-round, .tg-guest button, .cta-add-btn, .art-add-btn,
+  .comm-grid-btn, .pc-more, .co-pay, .ob-next, .legal-btn, .bd-go, .hw-cta, .shop-bar-go, .pd2-btn, .art-back-btn, .art-save-btn, .art-edit-btn,
+  .art-delete-btn, .art-pin-btn, .art-page-btn, .fo-btn, .em-pill-btn, .crm-btn, .td-btn, .umap-btn, .story-cat-btn, .story-size-btn,
+  .story-general-filter-btn, .photo-tab-btn, .sidebar-saved-btn, .readmore-btn, .q-ask-btn, .shop-btn, .shop-add-btn, .of-btn-join, .ms-btn,
+  .site-page-nav-item, .sidebar-tab-pill, .photo-filter-trigger, .fo-panel-full, .cookie-btn, .hc-chip, .pd2-chip, .bd-chip, .st-range button,
+  .photo-card-links button, .photo-card-links a, .dm-pill, .pl-add-btn, .pr-add-btn, .qu-publish-btn, .photo-save-btn,
+  button[style*="background:#2f6fdb"], button[style*="background: #2f6fdb"], button[style*="linear-gradient(135deg,#2f6fdb"]):hover { background: var(--btn-hover) !important; border-color: #9aa0aa !important; color: var(--btn-ink) !important; box-shadow: none !important; }
+html body:not(#_):not(#_):not(#_):not(#_) :is(.pd2-ghost, .psf-btn, .pc-post-btn, .art-telegram-btn, .follow-btn, .co-coupon button, .bd-ghost, .legal-tab, .pf-btn, .pf-btn-outline,
+  .pf-btn-icon, .pf-btn-solid, .pfeed-sugg-item button, .algo-btn, .ob-pick, .pd2-wide, .shop-round, .tg-guest button, .cta-add-btn, .art-add-btn,
+  .comm-grid-btn, .pc-more, .co-pay, .ob-next, .legal-btn, .bd-go, .hw-cta, .shop-bar-go, .pd2-btn, .art-back-btn, .art-save-btn, .art-edit-btn,
+  .art-delete-btn, .art-pin-btn, .art-page-btn, .fo-btn, .em-pill-btn, .crm-btn, .td-btn, .umap-btn, .story-cat-btn, .story-size-btn,
+  .story-general-filter-btn, .photo-tab-btn, .sidebar-saved-btn, .readmore-btn, .q-ask-btn, .shop-btn, .shop-add-btn, .of-btn-join, .ms-btn,
+  .site-page-nav-item, .sidebar-tab-pill, .photo-filter-trigger, .fo-panel-full, .cookie-btn, .hc-chip, .pd2-chip, .bd-chip, .st-range button,
+  .photo-card-links button, .photo-card-links a, .dm-pill, .pl-add-btn, .pr-add-btn, .qu-publish-btn, .photo-save-btn,
+  button[style*="background:#2f6fdb"], button[style*="background: #2f6fdb"], button[style*="linear-gradient(135deg,#2f6fdb"]):is(:active, .on, .active, .is-saved, .following, .selected, [aria-pressed="true"], [aria-selected="true"]),
+html body:not(#_):not(#_):not(#_):not(#_) .legal-tab.on, html body:not(#_):not(#_):not(#_):not(#_) .site-page-nav-item.active, html body:not(#_):not(#_):not(#_):not(#_) .sidebar-tab-pill.active {
+  background: var(--btn-bg) !important; color: var(--btn-ink) !important; border: 1.5px solid var(--btn-on) !important;
+  border-radius: 999px !important; box-shadow: none !important;
+}
+html body:not(#_):not(#_):not(#_):not(#_) :is(.pd2-ghost, .psf-btn, .pc-post-btn, .art-telegram-btn, .follow-btn, .co-coupon button, .bd-ghost, .legal-tab, .pf-btn, .pf-btn-outline,
+  .pf-btn-icon, .pf-btn-solid, .pfeed-sugg-item button, .algo-btn, .ob-pick, .pd2-wide, .shop-round, .tg-guest button, .cta-add-btn, .art-add-btn,
+  .comm-grid-btn, .pc-more, .co-pay, .ob-next, .legal-btn, .bd-go, .hw-cta, .shop-bar-go, .pd2-btn, .art-back-btn, .art-save-btn, .art-edit-btn,
+  .art-delete-btn, .art-pin-btn, .art-page-btn, .fo-btn, .em-pill-btn, .crm-btn, .td-btn, .umap-btn, .story-cat-btn, .story-size-btn,
+  .story-general-filter-btn, .photo-tab-btn, .sidebar-saved-btn, .readmore-btn, .q-ask-btn, .shop-btn, .shop-add-btn, .of-btn-join, .ms-btn,
+  .site-page-nav-item, .sidebar-tab-pill, .photo-filter-trigger, .fo-panel-full, .cookie-btn, .hc-chip, .pd2-chip, .bd-chip, .st-range button,
+  .photo-card-links button, .photo-card-links a, .dm-pill, .pl-add-btn, .pr-add-btn, .qu-publish-btn, .photo-save-btn,
+  button[style*="background:#2f6fdb"], button[style*="background: #2f6fdb"], button[style*="linear-gradient(135deg,#2f6fdb"]):is(:active, .on, .active, .is-saved, .following, .selected, [aria-pressed="true"], [aria-selected="true"]) :is(svg, svg *) { color: var(--btn-ink) !important; }
+html body:not(#_):not(#_):not(#_):not(#_) :is(.pd2-ghost, .psf-btn, .pc-post-btn, .art-telegram-btn, .follow-btn, .co-coupon button, .bd-ghost, .legal-tab, .pf-btn, .pf-btn-outline,
+  .pf-btn-icon, .pf-btn-solid, .pfeed-sugg-item button, .algo-btn, .ob-pick, .pd2-wide, .shop-round, .tg-guest button, .cta-add-btn, .art-add-btn,
+  .comm-grid-btn, .pc-more, .co-pay, .ob-next, .legal-btn, .bd-go, .hw-cta, .shop-bar-go, .pd2-btn, .art-back-btn, .art-save-btn, .art-edit-btn,
+  .art-delete-btn, .art-pin-btn, .art-page-btn, .fo-btn, .em-pill-btn, .crm-btn, .td-btn, .umap-btn, .story-cat-btn, .story-size-btn,
+  .story-general-filter-btn, .photo-tab-btn, .sidebar-saved-btn, .readmore-btn, .q-ask-btn, .shop-btn, .shop-add-btn, .of-btn-join, .ms-btn,
+  .site-page-nav-item, .sidebar-tab-pill, .photo-filter-trigger, .fo-panel-full, .cookie-btn, .hc-chip, .pd2-chip, .bd-chip, .st-range button,
+  .photo-card-links button, .photo-card-links a, .dm-pill, .pl-add-btn, .pr-add-btn, .qu-publish-btn, .photo-save-btn,
+  button[style*="background:#2f6fdb"], button[style*="background: #2f6fdb"], button[style*="linear-gradient(135deg,#2f6fdb"]):is(:active, .on, .active, .is-saved, .following, .selected, [aria-pressed="true"], [aria-selected="true"]) :is(svg[stroke]:not([stroke="none"]), svg [stroke]:not([stroke="none"])) { stroke: var(--btn-ink) !important; }
+html body:not(#_):not(#_):not(#_):not(#_) :is(.art-save-btn, .pd2-save, .photo-save-btn).is-saved svg :is([fill]:not([fill="none"]), path) { fill: var(--btn-ink) !important; }
+html body:not(#_):not(#_):not(#_):not(#_) :is(.pd2-ghost, .psf-btn, .pc-post-btn, .art-telegram-btn, .follow-btn, .co-coupon button, .bd-ghost, .legal-tab, .pf-btn, .pf-btn-outline,
+  .pf-btn-icon, .pf-btn-solid, .pfeed-sugg-item button, .algo-btn, .ob-pick, .pd2-wide, .shop-round, .tg-guest button, .cta-add-btn, .art-add-btn,
+  .comm-grid-btn, .pc-more, .co-pay, .ob-next, .legal-btn, .bd-go, .hw-cta, .shop-bar-go, .pd2-btn, .art-back-btn, .art-save-btn, .art-edit-btn,
+  .art-delete-btn, .art-pin-btn, .art-page-btn, .fo-btn, .em-pill-btn, .crm-btn, .td-btn, .umap-btn, .story-cat-btn, .story-size-btn,
+  .story-general-filter-btn, .photo-tab-btn, .sidebar-saved-btn, .readmore-btn, .q-ask-btn, .shop-btn, .shop-add-btn, .of-btn-join, .ms-btn,
+  .site-page-nav-item, .sidebar-tab-pill, .photo-filter-trigger, .fo-panel-full, .cookie-btn, .hc-chip, .pd2-chip, .bd-chip, .st-range button,
+  .photo-card-links button, .photo-card-links a, .dm-pill, .pl-add-btn, .pr-add-btn, .qu-publish-btn, .photo-save-btn,
+  button[style*="background:#2f6fdb"], button[style*="background: #2f6fdb"], button[style*="linear-gradient(135deg,#2f6fdb"]):focus-visible { outline: none !important; box-shadow: 0 0 0 3px rgba(17, 17, 17, .14) !important; border-color: var(--btn-on) !important; }
+html body:not(#_):not(#_):not(#_):not(#_) :is(.pd2-ghost, .psf-btn, .pc-post-btn, .art-telegram-btn, .follow-btn, .co-coupon button, .bd-ghost, .legal-tab, .pf-btn, .pf-btn-outline,
+  .pf-btn-icon, .pf-btn-solid, .pfeed-sugg-item button, .algo-btn, .ob-pick, .pd2-wide, .shop-round, .tg-guest button, .cta-add-btn, .art-add-btn,
+  .comm-grid-btn, .pc-more, .co-pay, .ob-next, .legal-btn, .bd-go, .hw-cta, .shop-bar-go, .pd2-btn, .art-back-btn, .art-save-btn, .art-edit-btn,
+  .art-delete-btn, .art-pin-btn, .art-page-btn, .fo-btn, .em-pill-btn, .crm-btn, .td-btn, .umap-btn, .story-cat-btn, .story-size-btn,
+  .story-general-filter-btn, .photo-tab-btn, .sidebar-saved-btn, .readmore-btn, .q-ask-btn, .shop-btn, .shop-add-btn, .of-btn-join, .ms-btn,
+  .site-page-nav-item, .sidebar-tab-pill, .photo-filter-trigger, .fo-panel-full, .cookie-btn, .hc-chip, .pd2-chip, .bd-chip, .st-range button,
+  .photo-card-links button, .photo-card-links a, .dm-pill, .pl-add-btn, .pr-add-btn, .qu-publish-btn, .photo-save-btn,
+  button[style*="background:#2f6fdb"], button[style*="background: #2f6fdb"], button[style*="linear-gradient(135deg,#2f6fdb"]):active { transform: none !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .site-page-nav-item .site-page-nav-badge { background: #eef0f3 !important; color: #3f4652 !important; }
+/* תפריט עליון: בלי מסגרת במנוחה, ובעמוד הפעיל — אותה גלולה שחורה */
+html body:not(#_):not(#_):not(#_):not(#_) .nav-links a { border: 1.5px solid transparent !important; background: transparent !important; color: #2a2d33 !important; box-shadow: none !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .nav-links a:hover { background: var(--btn-hover) !important; color: #111111 !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .nav-links a.active-top-nav, html body:not(#_):not(#_):not(#_):not(#_) .nav-links a.active-top-nav:hover { background: var(--btn-bg) !important; color: var(--btn-ink) !important; border-color: var(--btn-on) !important; }
+/* בלי כחול: צבע ההדגשה של האתר הוא עכשיו שחור (במצב כהה — לבן) */
+:root { --ui-acc: #111111; --ui-acc-soft: #f1f2f4; --ui-acc-ink: #111111; --b-blue: #111111; --b-blue-d: #000000; --b-soft: #f1f2f4; --ds-blue: #111111; }
+::selection { background: rgba(17, 17, 17, .14); }
+html body:not(#_):not(#_):not(#_):not(#_) :is(.hw-up-btn, .hw-watch-cta, .pcat-tile.active, .chat-fab, #global-chat-fab, .a11y-launcher) {
+  background: var(--btn-bg) !important; background-image: none !important; color: var(--btn-ink) !important; border: 1px solid var(--btn-line) !important; box-shadow: 0 6px 18px -10px rgba(16, 24, 40, .35) !important;
+}
+html body:not(#_):not(#_):not(#_):not(#_) :is(.hw-up-btn, .hw-watch-cta, .pcat-tile.active, .chat-fab, #global-chat-fab, .a11y-launcher) * { color: inherit !important; }
+html body:not(#_):not(#_):not(#_):not(#_) :is(.hw-up-btn, .chat-fab, #global-chat-fab, .a11y-launcher) :is(svg[stroke]:not([stroke="none"]), svg [stroke]:not([stroke="none"])) { stroke: currentColor !important; }
+html body:not(#_):not(#_):not(#_):not(#_) :is(.hw-up-btn, .hw-watch-cta, .chat-fab, #global-chat-fab, .a11y-launcher):hover { border-color: #9aa0aa !important; background: var(--btn-hover) !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .pcat-tile.active { border: 1.5px solid var(--btn-on) !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .photo-filter-trigger-value, html body:not(#_):not(#_):not(#_):not(#_) :is(.hc-dot, .au-av.cmp-av) { background: #eef0f3 !important; color: #111111 !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .hc-dot { background: #111111 !important; }
+html body:not(#_):not(#_):not(#_):not(#_) :is(.srail-btn.on, .mtab.active) { background: #f1f2f4 !important; color: #111111 !important; }
+html body:not(#_):not(#_):not(#_):not(#_) :is(.srail-btn.on, .mtab.active) svg { color: #111111 !important; }
+html body:not(#_):not(#_):not(#_):not(#_) :is(.qp-send, .rd-send, .pc-go, .mtab-plus-ic) { background: #111111 !important; background-image: none !important; color: #ffffff !important; box-shadow: none !important; }
+html body:not(#_):not(#_):not(#_):not(#_) :is(.qp-send, .rd-send, .pc-go):hover { background: #000000 !important; }
+/* לשוניות הפורום באותו סגנון */
+html body:not(#_):not(#_):not(#_):not(#_) .fo-tab { background: var(--btn-bg) !important; background-image: none !important; color: var(--btn-ink) !important; border: 1px solid var(--btn-line) !important; border-radius: 12px !important; box-shadow: none !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .fo-tab:hover { border-color: #9aa0aa !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .fo-tab.active { border: 1.5px solid var(--btn-on) !important; border-radius: 999px !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .fo-tab * { color: inherit !important; }
+/* פורומים בחלון הצד — שורות קומפקטיות: אייקון · שם ותיאור · נושאים · הודעות */
+html body:not(#_):not(#_) .fo-panel .fo-row { grid-template-columns: 44px minmax(0, 1fr) 64px 64px !important; gap: 10px !important; padding: 12px 14px !important; }
+html body:not(#_):not(#_) .fo-panel .fo-row .fo-last { display: none !important; }
+html body:not(#_):not(#_) .fo-panel .fo-row .fo-main { min-width: 0; }
+html body:not(#_):not(#_) .fo-panel .fo-row .fo-title { font-size: 15px !important; }
