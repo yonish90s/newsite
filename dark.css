@@ -1708,6 +1708,11 @@ html.theme-dark .mnav-acc { border-top: 1px solid var(--ds-line, #323842) !impor
 html.theme-dark .mnav-acc summary { color: var(--ds-ink, #eceef1) !important; }
 html.theme-dark .mnav-acc > button { color: var(--ds-text, #c8cdd4) !important; }
 html.theme-dark .mnav-acc > button:hover { background: #22262d !important; }
+html.theme-dark .cmp-bar { background: #1b1e24 !important; border: 1px solid var(--ds-line, #323842) !important; }
+html.theme-dark .cmp-input { background: #22262d !important; color: #c8cdd4 !important; }
+html.theme-dark .cmp-input:hover { background: #2a2f37 !important; }
+html.theme-dark .cmp-ic:hover { background: #22262d !important; }
+html.theme-dark .cmp-ic.vid { color: color-mix(in srgb, #f02849 55%, white) !important; }
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #eceef1 !important; }
 html.theme-dark [style*="color:#111111"] { color: #eceef1 !important; }
@@ -1949,3 +1954,6 @@ html.theme-dark .mnav-acc { border-top-color: #2a2f37; }
 html.theme-dark .mnav-acc > button { color: #b9c0ca; }
 html.theme-dark .mnav-acc > button:hover { background: #1b1e24; }
 html.theme-dark .mnav-sc-name { color: #b9c0ca; }
+html.theme-dark .cmp-bar { background: #1b1e24; border-color: #2a2f37; box-shadow: none; }
+html.theme-dark .cmp-input { background: #262a31; color: #a9b0ba; }
+html.theme-dark .cmp-input:hover, html.theme-dark .cmp-ic:hover { background: #2e333b; }

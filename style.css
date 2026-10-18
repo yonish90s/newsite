@@ -11687,3 +11687,17 @@ html.mnav-open, html.mnav-open body { overflow: hidden; }
 .mnav-acc[open] summary::after { transform: rotate(180deg); }
 .mnav-acc > button { display: block; width: 100%; text-align: right; padding: 12px 40px 12px 8px; border: 0; background: none; font: inherit; font-size: 14.5px; color: var(--ds-text, #3f4552); cursor: pointer; border-radius: 10px; }
 .mnav-acc > button:hover { background: #eef1f5; }
+
+/* ===== שורת "מה בא לך לשתף?" (מחשב) ===== */
+.cmp-bar { display: flex; align-items: center; gap: 12px; padding: 12px 14px; margin: 0 0 16px; background: #ffffff; border: 1px solid var(--ds-line, #e6e8ec); border-radius: 18px; box-shadow: var(--ds-shadow); direction: rtl; }
+.cmp-wrap { max-width: 1180px; margin: 14px auto 0; padding: 0 20px; box-sizing: border-box; }
+.cmp-wrap .cmp-bar { margin: 0; }
+html body:not(#_) .cmp-av { width: 44px; height: 44px; margin: 0; font-size: 17px; flex: none; }
+.cmp-input { flex: 1; min-width: 0; height: 46px; padding: 0 18px; border: 0; border-radius: 999px; background: #f0f2f5; color: #65676b; font: inherit; font-size: 15.5px; text-align: right; cursor: pointer; transition: background .15s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cmp-input:hover { background: #e4e6eb; }
+.cmp-icons { display: flex; gap: 4px; }
+.cmp-ic { width: 44px; height: 44px; border: 0; border-radius: 12px; background: transparent; display: grid; place-items: center; cursor: pointer; transition: background .15s; }
+.cmp-ic svg { width: 26px; height: 26px; }
+.cmp-ic:hover { background: #f0f2f5; }
+.cmp-ic.vid { color: #f02849; } .cmp-ic.pic { color: #45bd62; } .cmp-ic.feel { color: #f7b928; }
+@media (max-width: 768px) { .cmp-bar, .cmp-wrap { display: none !important; } }

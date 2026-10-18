@@ -6903,6 +6903,7 @@ function buildStoriesPage(stories, storyKind) {
       <div class="art-layout">
         <div class="art-main">
           <div class="pm-head">${contentSwitchHTML(storyKind)}</div>
+          ${composerBarHTML()}
           <div class="art-search-wrap">
             <input type="text" class="art-search" placeholder="🔍 חיפוש ${kindLabel}..." oninput="storySearch(this.value)">
           </div>
@@ -15348,6 +15349,7 @@ function buildHomeFeedPage() {
   return `<div class="articles-page home-feed-page" data-page-id="page-home-feed">
     <div class="art-inner">
       ${homeChipsHTML(photos, comics, stories)}
+      <div class="cmp-wrap">${composerBarHTML()}</div>
       ${homeWelcomeHeroHTML()}
       ${homeCategoriesHTML(photos, comics, stories)}
     </div>
@@ -15783,6 +15785,7 @@ function buildPhotosPage(albums, section) {
       <div class="art-layout">
         <div class="art-main">
           ${section === 'photos' ? `<div class="pm-head">${contentSwitchHTML('photos')}${photoCatCirclesHTML(_tileAlbums)}${photoSortFilterHTML()}</div>` : ''}
+          ${section === 'photos' ? composerBarHTML() : ''}
           <div class="art-search-wrap">
             <input type="text" class="art-search" placeholder="${searchPlaceholder}" oninput="photoSearch(this.value)">
           </div>
@@ -17273,6 +17276,7 @@ function buildFeedPage() {
   }
   return `<div class="user-page pfeed-page" data-photos-json="${json}"><div class="pfeed-inner">
       <header class="pfeed-head"><h1>הפיד שלי</h1><p>כל מה שהעלו מי שאתם עוקבים אחריהם — החדש ביותר למעלה</p></header>
+      ${composerBarHTML()}
       ${body}
     </div></div>`;
 }
@@ -26967,3 +26971,24 @@ function closeMobileMenu() {
 function mnavToggleMore() { mnavMore = !mnavMore; renderMobileMenu(); }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMobileMenu(); });
 Object.assign(window, { openMobileMenu, closeMobileMenu, renderMobileMenu, mnavToggleMore });
+
+// ============================================================
+// שורת "מה בא לך לשתף?" (מחשב) — העלאה מהירה מתוך העמוד
+// ============================================================
+function composerBarHTML() {
+  const u = auth.currentUser, reg = u && !u.isAnonymous;
+  const name = reg ? ((typeof liveChatUserName === 'function' && liveChatUserName()) || '') : '';
+  const first = String(name).trim().split(/\s+/)[0] || '';
+  const ic = (cls, label, act, path) => `<button type="button" class="cmp-ic ${cls}" onclick="${act}" title="${label}" aria-label="${label}"><svg viewBox="0 0 24 24">${path}</svg></button>`;
+  return `<div class="cmp-bar">
+    <span class="au-av cmp-av"${reg ? ` data-av-uid="${escHtml(u.uid)}"` : ''}>${escHtml((first || 'א').charAt(0))}</span>
+    <button type="button" class="cmp-input" onclick="openQuickPublish()">מה בא לך לשתף${first ? ', ' + escHtml(first) : ''}?</button>
+    <div class="cmp-icons">
+      ${ic('vid', 'סיפור / כתבה', "openQuickPublish(null, 'story')", '<rect x="2.5" y="6" width="13" height="12" rx="3" fill="currentColor"/><path d="M15.5 10.5 21 7.5v9l-5.5-3z" fill="currentColor"/><circle cx="9" cy="12" r="2.6" fill="#fff"/>')}
+      ${ic('pic', 'תמונות', 'composerPhoto()', '<rect x="5" y="3" width="15" height="15" rx="2.5" fill="currentColor" opacity=".55"/><rect x="3" y="6" width="15" height="15" rx="2.5" fill="currentColor"/><circle cx="8.3" cy="11" r="1.7" fill="#fff"/><path d="M4.5 19.5l4.5-4.8 3 3 2.3-2.3 3.2 4.1z" fill="#fff"/>')}
+      ${ic('feel', 'פרסום מהיר', 'openQuickPublish()', '<circle cx="12" cy="12" r="9.5" fill="currentColor"/><circle cx="8.8" cy="10" r="1.3" fill="#fff"/><circle cx="15.2" cy="10" r="1.3" fill="#fff"/><path d="M7.8 13.6c1 2 2.5 3 4.2 3s3.2-1 4.2-3" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>')}
+    </div>
+  </div>`;
+}
+function composerPhoto() { openQuickPublish(); setTimeout(() => { if (typeof qpAddImage === 'function') qpAddImage(); }, 250); }
+window.composerPhoto = composerPhoto;

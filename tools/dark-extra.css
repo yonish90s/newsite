@@ -68,3 +68,6 @@ html.theme-dark .mnav-acc { border-top-color: #2a2f37; }
 html.theme-dark .mnav-acc > button { color: #b9c0ca; }
 html.theme-dark .mnav-acc > button:hover { background: #1b1e24; }
 html.theme-dark .mnav-sc-name { color: #b9c0ca; }
+html.theme-dark .cmp-bar { background: #1b1e24; border-color: #2a2f37; box-shadow: none; }
+html.theme-dark .cmp-input { background: #262a31; color: #a9b0ba; }
+html.theme-dark .cmp-input:hover, html.theme-dark .cmp-ic:hover { background: #2e333b; }
