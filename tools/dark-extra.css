@@ -1,0 +1,24 @@
+
+/* --- תוספות ידניות למצב כהה (נוספות לסוף dark.css) --- */
+#theme-toggle-btn .tt-sun { display: none; }
+html.theme-dark #theme-toggle-btn .tt-sun { display: block; }
+html.theme-dark #theme-toggle-btn .tt-moon { display: none; }
+html.theme-dark img.site-footer-logo, html.theme-dark .tg-logo, html.theme-dark .ob-logo { filter: none; }
+html.theme-dark .pd2-frame, html.theme-dark .pd2-frame.photo-main-img-container { background: #1b1e24 !important; border-color: #323842 !important; }
+html.theme-dark :is(.pd2-ghost, .psf-btn, .pc-post-btn, .art-telegram-btn:not(.is-disabled), .follow-btn, .co-coupon button, .bd-ghost, .legal-tab, .pf-btn-outline, .pf-btn-icon, .pfeed-sugg-item button, .algo-btn.ghost, .ob-pick, .pd2-wide, .shop-round, .tg-guest button, .pc-mic-ic, .pd2-btn.accent):not(:hover):not(.on):not(.is-saved):not(.following) { background: transparent !important; border-color: #4d8bf0 !important; color: #7fb0ff !important; }
+html.theme-dark .hw-watch-screen, html.theme-dark .up-watch-screen { background: #1b1e24 !important; color: #eceef1 !important; }
+html.theme-dark .hw-watch-time, html.theme-dark .hw-watch-date b, html.theme-dark .uw-name, html.theme-dark .uw-clock { color: #eceef1 !important; }
+html.theme-dark .hw-cmp { background: #22262d !important; }
+html.theme-dark .umap-btn { background: #2f6fdb !important; color: #ffffff !important; }
+html.theme-dark .shop-bar-count, html.theme-dark .shop-basket b { color: #ffffff !important; }
+html.theme-dark [style*="color:#262626"], html.theme-dark [style*="color: #262626"], html.theme-dark [style*="color:#111111"], html.theme-dark [style*="color: #111111"] { color: #eceef1 !important; }
+html.theme-dark body:not(#_):not(#_) .site-page-nav-item:not(.active):not(:hover),
+html.theme-dark body:not(#_):not(#_) .photo-filter-trigger:not(:hover):not(.open):not(.active),
+html.theme-dark body:not(#_):not(#_) :is(.pd2-ghost, .psf-btn, .pc-post-btn, .art-telegram-btn:not(.is-disabled), .follow-btn, .bd-ghost, .legal-tab, .pf-btn-outline, .pf-btn-icon, .pd2-btn.accent):not(:hover):not(.on):not(.is-saved):not(.following) {
+  background: transparent !important; border-color: #4d8bf0 !important; color: #8fb8ff !important;
+}
+html.theme-dark body:not(#_):not(#_) .site-page-nav-item:not(.active):not(:hover) *, html.theme-dark body:not(#_):not(#_) .photo-filter-trigger:not(:hover) * { color: inherit !important; }
+html.theme-dark body:not(#_):not(#_) .photo-filter-trigger .photo-filter-trigger-value { background: #2f6fdb !important; color: #fff !important; }
+html.theme-dark body:not(#_):not(#_) .shop-bar-count, html.theme-dark body:not(#_):not(#_) .shop-bar b { color: #ffffff !important; }
+html.theme-dark body:not(#_):not(#_) .site-page-nav-item.active, html.theme-dark body:not(#_):not(#_) .site-page-nav-item:hover,
+html.theme-dark body:not(#_):not(#_) .photo-filter-trigger:hover { background: #2f6fdb !important; border-color: #2f6fdb !important; color: #ffffff !important; }
