@@ -15419,7 +15419,8 @@ const SIDE_RAIL_ITEMS = [
   ['home', 'בית', 'goToHomePage()', '<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>', true],
   ['feed', 'הפיד שלי', 'openFeed()', '<path d="M4 6h16M4 12h16M4 18h10"/>', false],
   ['cats', 'קטגוריות', "navigateToPage('page-communities-main')", '<rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/>', true],
-  ['shop', 'שדרוגים', "navigateToPage('page-subscription-main')", '<path d="M3 4h2l2.4 11.2a1 1 0 0 0 1 .8h9.2a1 1 0 0 0 1-.8L21 8H6.2"/><circle cx="9.5" cy="20" r="1.5"/><circle cx="17.5" cy="20" r="1.5"/>', false],
+  ['news', 'חדשות', "navigateToPage('page-news-main')", '<path d="M4 5h13v14H6a2 2 0 0 1-2-2z"/><path d="M17 9h3v8a2 2 0 0 1-2 2"/><path d="M8 9h5M8 13h5"/>', false],
+  ['shop', 'מנוי ושדרוגים', "navigateToPage('page-subscription-main')", '<path d="M3 4h2l2.4 11.2a1 1 0 0 0 1 .8h9.2a1 1 0 0 0 1-.8L21 8H6.2"/><circle cx="9.5" cy="20" r="1.5"/><circle cx="17.5" cy="20" r="1.5"/>', false],
   ['saved', 'שמורים', 'openSavedModal()', '<path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.5"/>', false],
   ['msgs', 'הודעות', 'openMessages()', '<rect x="3" y="5" width="18" height="15" rx="3"/><path d="M3 10h18M9 14h6"/>', false]
 ];
@@ -15447,7 +15448,7 @@ function renderSideRail() {
 function sideRailSync() {
   const el = document.getElementById('side-rail'); if (!el) return;
   const id = (typeof activePageId !== 'undefined' && activePageId) || '';
-  const map = { 'page-stats-main': 'stats', 'page-home-feed': 'home', 'page-feed-main': 'feed', 'page-communities-main': 'cats', 'page-subscription-main': 'shop' };
+  const map = { 'page-news-main': 'news', 'page-stats-main': 'stats', 'page-home-feed': 'home', 'page-feed-main': 'feed', 'page-communities-main': 'cats', 'page-subscription-main': 'shop' };
   el.querySelectorAll('.srail-btn').forEach(b => b.classList.toggle('on', b.dataset.rail === (map[id] || (id ? '' : 'home'))));
 }
 window.sideRailSync = sideRailSync;

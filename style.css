@@ -11754,3 +11754,4 @@ html body:not(#_) .qp-field input { flex: 1; min-width: 0; height: 40px; border:
   .qp-bar { padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
 }
 html body:not(#_) #quick-publish-modal #qp-input { border: 0 !important; box-shadow: none !important; background: transparent !important; border-radius: 0 !important; height: 40px !important; }
+html body:not(#_) .nav-links a:is([data-page-id="page-news-main"], [data-page-id="page-subscription-main"]) { display: none !important; }
