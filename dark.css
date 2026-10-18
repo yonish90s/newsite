@@ -2047,6 +2047,10 @@ html.theme-dark body:not(#_):not(#_) .pf-av-btn:hover { background: #22262d !imp
 html.theme-dark body:not(#_):not(#_) .pf-av-btn:active { border: 1.5px solid #5b6472 !important; }
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) .pti-repost.on { border: 1.5px solid #5b6472 !important; }
 html.theme-dark .pc-repost-by { color: #c8cdd4 !important; }
+html.theme-dark .fo-anon { border: 1px solid #323842 !important; background: #1b1e24 !important; color: #c8cdd4 !important; }
+html.theme-dark .fo-anon.on { border: 1.5px solid #5b6472 !important; color: #eceef1 !important; }
+html.theme-dark.theme-dark .fo-anon { background: #3a414c !important; }
+html.theme-dark.theme-dark .fo-anon.on { border-color: #323842 !important; }
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #eceef1 !important; }
 html.theme-dark [style*="color:#111111"] { color: #eceef1 !important; }

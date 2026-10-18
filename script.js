@@ -14709,6 +14709,11 @@ function forumSetGuestName() {
 window.forumSetGuestName = forumSetGuestName;
 // מחזיר את זהות הכותב: משתמש רשום, או אורח (התחברות אנונימית + השם שכתב)
 async function forumIdentity(nameFieldId) {
+  if (forumAnonOn()) {
+    const uid = await forumEnsureUid();
+    if (!uid) { alert('לא ניתן לפרסם כרגע. נסו שוב.'); return null; }
+    return { uid, name: 'אנונימי', guest: !forumRegistered(), anon: true };
+  }
   if (forumRegistered()) return { uid: auth.currentUser.uid, name: forumMyName(), guest: false };
   const el = document.getElementById(nameFieldId);
   const name = String((el ? el.value : forumGuestName()) || '').trim().slice(0, 30);
@@ -14732,6 +14737,7 @@ function forumSubscribe() {
   if (forumTopicsUnsub) return;
   forumTopicsUnsub = onValue(ref(db, 'website/forum_topics'), (snap) => {
     forumTopics = snap.exists() ? (snap.val() || {}) : {};
+    Object.values(forumTopics).forEach(m => forumAnonMask(m || {}));
     forumRender();
   }, () => { forumTopics = {}; forumRender(); });
 }
@@ -14825,7 +14831,8 @@ function forumListHTML() {
   const topics = forumTopicsOf(f.id);
   const compose = forumView.composing ? `
     <div class="fo-compose">
-      ${forumGuestNameFieldHTML('fo-new-name')}
+      ${forumAnonToggleHTML()}
+      ${forumAnonOn() ? '' : forumGuestNameFieldHTML('fo-new-name')}
       <input id="fo-new-title" class="fo-input" maxlength="120" placeholder="כותרת הנושא">
       <textarea id="fo-new-text" class="fo-input" rows="5" maxlength="5000" placeholder="מה רצית לכתוב?"></textarea>
       <div class="fo-compose-actions">
@@ -15059,12 +15066,13 @@ function forumTopicMobileHTML(f, t, posts, admin, myUid) {
     ${opHTML}
     <div class="rd-compose" id="fo-reply-box">
       ${target ? `<div class="fo-reply-to"><span>תגובה ל<b>${escHtml(target.name || 'משתמש')}</b></span><button type="button" onclick="forumStartReply(null)" aria-label="ביטול">✕</button></div>` : ''}
-      ${!forumRegistered() && forumGuestName().length < 2
+      ${forumAnonToggleHTML()}
+      ${!forumRegistered() && !forumAnonOn() && forumGuestName().length < 2
         ? `<div class="rd-compose-row">
         <input id="fo-guest-first" class="rd-input" maxlength="30" placeholder="כתבו שם זמני כדי להגיב" onkeydown="if(event.key==='Enter'){event.preventDefault(); forumSetGuestName();}">
         <button type="button" class="rd-send" onclick="forumSetGuestName()" aria-label="המשך"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.4 20.4 21 12 3.4 3.6 3.4 10l12.6 2-12.6 2z"/></svg></button>
       </div>`
-        : `${forumGuestNameFieldHTML('fo-reply-name')}
+        : `${forumAnonOn() ? '' : forumGuestNameFieldHTML('fo-reply-name')}
       <div class="rd-compose-row">
         <textarea id="fo-reply-text" class="rd-input" rows="1" maxlength="5000" placeholder="${target ? 'כתבו תגובה...' : 'הצטרפו לשיחה'}" oninput="this.style.height='auto'; this.style.height=Math.min(this.scrollHeight,140)+'px'"></textarea>
         <button type="button" class="rd-send" onclick="forumReply()" aria-label="שליחה"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.4 20.4 21 12 3.4 3.6 3.4 10l12.6 2-12.6 2z"/></svg></button>
@@ -15149,7 +15157,8 @@ function forumTopicHTML() {
     </div>
     ${pager}
     <div class="fo-reply">
-      ${forumGuestNameFieldHTML('fo-reply-name')}
+      ${forumAnonToggleHTML()}
+      ${forumAnonOn() ? '' : forumGuestNameFieldHTML('fo-reply-name')}
       <textarea id="fo-reply-text" class="fo-input" rows="4" maxlength="5000" placeholder="כתבו תגובה..."></textarea>
       <div class="fo-compose-actions"><button type="button" class="fo-btn" onclick="forumReply()">שליחת תגובה</button></div>
     </div>`;
@@ -15232,7 +15241,7 @@ function forumOpenTopic(forumId, topicId) {
   try { window.scrollTo(0, 0); } catch (e) {}
   forumPostsUnsub = onValue(ref(db, `website/forum_posts/${topicId}`), (snap) => {
     if (forumView.topicId !== topicId) return;
-    forumPosts = snap.exists() ? (snap.val() || {}) : {};
+    forumPosts = forumAnonMask(snap.exists() ? (snap.val() || {}) : {});
     // שומרים טיוטת תגובה בזמן רענון
     const draft = document.getElementById('fo-reply-text');
     const val = draft ? draft.value : '';
@@ -15266,10 +15275,13 @@ async function forumCreateTopic() {
   forumBusy = true;
   try {
     const tRef = push(ref(db, `website/forum_topics/${forumId}`));
-    await set(tRef, { title: title.slice(0, 120), uid: user.uid, name, t: now, lastT: now, lastName: name, lastUid: user.uid, replies: 0 });
+    const topic = { title: title.slice(0, 120), uid: user.uid, name, t: now, lastT: now, lastName: name, lastUid: user.uid, replies: 0 };
+    if (me.anon) topic.anon = true;
+    await set(tRef, topic);
     const first = { uid: user.uid, name, text: text.slice(0, 5000), t: now };
     if (typeof isAdmin === 'function' && isAdmin()) first.admin = true;
     if (me.guest) first.guest = true;
+    if (me.anon) first.anon = true;
     await set(push(ref(db, `website/forum_posts/${tRef.key}`)), first);
     forumOpenTopic(forumId, tRef.key);
   } catch (e) {
@@ -15296,6 +15308,7 @@ async function forumReply() {
     if (typeof isAdmin === 'function' && isAdmin()) msg.admin = true;
     if (forumReplyTo && forumPosts && forumPosts[forumReplyTo]) msg.replyTo = forumReplyTo;
     if (me.guest) msg.guest = true;
+    if (me.anon) msg.anon = true;
     await set(push(ref(db, `website/forum_posts/${topicId}`)), msg);
     if (box) box.value = '';
     // פותחים את השרשור כדי שהתגובה החדשה תיראה
@@ -15307,7 +15320,7 @@ async function forumReply() {
     forumReplyTo = null;
     forumPage = 9999; // העמוד האחרון — שם התגובה החדשה
     forumRender();
-    await update(ref(db, `website/forum_topics/${forumId}/${topicId}`), { replies: increment(1), lastT: now, lastName: name, lastUid: user.uid });
+    await update(ref(db, `website/forum_topics/${forumId}/${topicId}`), { replies: increment(1), lastT: now, lastName: name, lastUid: user.uid, lastAnon: !!me.anon });
   } catch (e) {
     console.error('forum reply failed', e);
     alert('שליחת התגובה נכשלה. נסו שוב.');
@@ -24119,6 +24132,7 @@ Object.assign(UI_EN, { 'תמונת פרופיל': 'Profile picture', 'עצבו �
 Object.assign(UI_EN, { 'שיתוף לפרופיל שלי — העוקבים שלך יראו': 'Share to my profile — your followers will see it', 'ביטול השיתוף מהפרופיל': 'Remove from my profile', 'שיתוף לפרופיל': 'Share to profile', 'שותף לפרופיל שלך — העוקבים שלך יראו את זה בפיד': 'Shared to your profile — your followers will see it in their feed', 'השיתוף הוסר מהפרופיל שלך': 'Removed from your profile', 'לא הצלחנו לשתף — נסו שוב': "Couldn't share — please try again" });
 UI_EN_PATTERNS.push([/(.+)\s+שיתף\/ה$/g, '$1 shared']);
 Object.assign(UI_EN, { 'מעקב אחרי היוצר': 'Follow the creator', 'ביטול מעקב': 'Unfollow' });
+Object.assign(UI_EN, { 'פרסום באנונימי': 'Post anonymously', 'אנונימי': 'Anonymous' });
 let __uiTranslating = false;
 // לא נוגעים בקוד עצמו. הודעות משתמשים/תוכן מוגנים ממילא כי המילון מתרגם
 // רק מחרוזות מוכרות של הממשק — תוכן חופשי שהמשתמשים כתבו לא מופיע במילון.
@@ -27550,3 +27564,32 @@ async function followIconClick(uid, name, btn) {
   });
 }
 window.followIconClick = followIconClick;
+
+
+// ============================================================
+// פורום: תגובה / שאלה באנונימי — השם מוצג "אנונימי" ובלי קישור לפרופיל
+// ============================================================
+function forumAnonOn() { try { return sessionStorage.getItem('forum_anon') === '1'; } catch (e) { return false; } }
+function forumToggleAnon(on) {
+  try { sessionStorage.setItem('forum_anon', on ? '1' : '0'); } catch (e) {}
+  // שומרים טקסט שכבר נכתב
+  const keep = {};
+  ['fo-reply-text', 'fo-new-title', 'fo-new-text'].forEach(id => { const el = document.getElementById(id); if (el) keep[id] = el.value; });
+  if (typeof forumRender === 'function') forumRender();
+  Object.entries(keep).forEach(([id, v]) => { const el = document.getElementById(id); if (el) el.value = v; });
+}
+function forumAnonToggleHTML() {
+  const on = forumAnonOn();
+  return `<label class="fo-anon${on ? ' on' : ''}"><input type="checkbox" ${on ? 'checked' : ''} onchange="forumToggleAnon(this.checked)"><span class="fo-anon-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10h18"/><path d="M5 10l2-6h10l2 6"/><circle cx="7.5" cy="15.5" r="3"/><circle cx="16.5" cy="15.5" r="3"/><path d="M10.5 15.5h3"/></svg></span><span>פרסום באנונימי</span></label>`;
+}
+// בתצוגה: פוסט/נושא אנונימי — בלי מזהה משתמש (אין תמונה, אין קישור לפרופיל)
+function forumAnonMask(map) {
+  Object.values(map || {}).forEach(p => {
+    if (p && p.lastAnon) { p.lastUid = ''; p.lastName = 'אנונימי'; }
+    if (!p || !p.anon) return;
+    p.__uid = p.uid; p.uid = ''; p.name = 'אנונימי';
+    if (p.lastUid && p.lastUid === p.__uid) { p.lastUid = ''; }
+  });
+  return map;
+}
+Object.assign(window, { forumToggleAnon, forumAnonOn });

@@ -12389,3 +12389,11 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pti-repost.on { border: 1.5px
 @media (max-width: 768px) { html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pti-repost { min-width: 36px; padding: 0 8px; } }
 .pc-repost-by { display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; color: #646b78; margin: -2px 0 8px; cursor: pointer; }
 .pc-repost-by svg { width: 15px; height: 15px; }
+
+/* פורום: מתג "פרסום באנונימי" */
+.fo-anon { display: inline-flex; align-items: center; gap: 8px; margin: 0 2px 8px; padding: 6px 12px 6px 10px; border-radius: 999px; border: 1px solid #d5d8de; background: #ffffff; color: #3f4552; font-size: 13px; font-weight: 600; cursor: pointer; user-select: none; }
+.fo-anon input { position: absolute; opacity: 0; pointer-events: none; }
+.fo-anon-ic svg { width: 17px; height: 17px; display: block; }
+.fo-anon.on { border: 1.5px solid #111111; color: #111111; }
+html.theme-dark .fo-anon { background: #1b1e24 !important; border-color: #3a414c !important; color: #c8cdd4 !important; }
+html.theme-dark .fo-anon.on { border-color: #eceef1 !important; color: #eceef1 !important; }
