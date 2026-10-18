@@ -12227,3 +12227,21 @@ html body:not(#_):not(#_) .pg-panel-inner :is(.news-page-container, .subscriptio
 .mnav-sc-empty { font-size: 13px; color: #646b78; background: #f6f7f9; border: 1px dashed #d5d8de; border-radius: 14px; padding: 12px 14px; margin: 0 0 6px; line-height: 1.5; }
 .mnav-sc-img svg { width: 26px; height: 26px; color: #646b78; margin: auto; }
 .mnav-sc-img:has(svg) { display: grid; place-items: center; background: #f1f2f4; }
+
+/* ===== חלונות "שמורים" / "הלייקים שלי" / היסטוריה — לבנים במצב בהיר (שחורים במצב כהה) ===== */
+html body:not(#_):not(#_):not(#_) .saved-window { background: #ffffff !important; border-top: 1px solid #e6e8ec !important; box-shadow: 0 -14px 40px -12px rgba(16, 24, 40, .25) !important; border-radius: 18px 18px 0 0 !important; }
+html body:not(#_):not(#_):not(#_) .saved-titlebar { background: #ffffff !important; border-bottom: 1px solid #eceef1 !important; padding: 12px 16px !important; }
+html body:not(#_):not(#_):not(#_) .saved-title { color: #111111 !important; font-size: 16px !important; }
+html body:not(#_):not(#_):not(#_) .saved-close { width: 34px; height: 34px; border-radius: 50%; background: #eef0f3 !important; color: #3f4652 !important; font-size: 15px !important; }
+html body:not(#_):not(#_):not(#_) .saved-close:hover { background: #e2e5ea !important; color: #111111 !important; }
+html body:not(#_):not(#_):not(#_) .saved-body { background: #ffffff !important; }
+html body:not(#_):not(#_):not(#_) .saved-thumb { background: #f4f5f7 !important; border: 1px solid #e6e8ec !important; border-radius: 12px !important; }
+html body:not(#_):not(#_):not(#_) .saved-cell:hover .saved-thumb { border-color: #111111 !important; }
+html body:not(#_):not(#_):not(#_) .saved-name { color: #3f4552 !important; font-size: 12px !important; }
+html body:not(#_):not(#_):not(#_) .saved-empty { color: #646b78 !important; }
+html body:not(#_):not(#_):not(#_) .saved-backdrop { background: rgba(15, 17, 21, .2) !important; }
+html body:not(#_):not(#_):not(#_) .story-bm-cell { background: #f6f7f9 !important; border-color: #e6e8ec !important; }
+html body:not(#_):not(#_):not(#_) .story-bm-title { color: #111111 !important; }
+html body:not(#_):not(#_):not(#_) .story-bm-head { color: #646b78 !important; }
+html body:not(#_):not(#_):not(#_) .story-bm-snippet { color: #646b78 !important; }
+html body:not(#_):not(#_):not(#_) .story-bm-del { background: #eef0f3 !important; color: #3f4652 !important; }

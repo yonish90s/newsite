@@ -154,3 +154,19 @@ html.theme-dark body:not(#_):not(#_):not(#_) .pshow-actions .story-linked-chip {
 html.theme-dark body:not(#_):not(#_):not(#_) .pshow-actions .story-linked-chip:hover { background: #22262d !important; }
 html.theme-dark .mnav-sc-empty { background: #22262d !important; border-color: #3a414c !important; color: #9aa2ad !important; }
 html.theme-dark .mnav-sc-img:has(svg) { background: #2a2f37 !important; }
+/* חלונות שמורים / לייקים — שחור במצב כהה */
+html.theme-dark body:not(#_):not(#_):not(#_) .saved-window, html.theme-dark body:not(#_):not(#_):not(#_) .saved-titlebar, html.theme-dark body:not(#_):not(#_):not(#_) .saved-body { background: #111214 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) .saved-window { border-top-color: #2a2f37 !important; box-shadow: 0 -14px 40px -12px rgba(0, 0, 0, .7) !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) .saved-titlebar { border-bottom-color: #2a2f37 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) .saved-title { color: #eceef1 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) .saved-close { background: #22262d !important; color: #c8cdd4 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) .saved-close:hover { background: #2a2f37 !important; color: #eceef1 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) .saved-thumb { background: #1b1e24 !important; border-color: #2a2f37 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) .saved-cell:hover .saved-thumb { border-color: #eceef1 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) .saved-name { color: #c8cdd4 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) .saved-empty { color: #9aa2ad !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) .saved-backdrop { background: rgba(0, 0, 0, .45) !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) .story-bm-cell { background: #1b1e24 !important; border-color: #2a2f37 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) .story-bm-title { color: #eceef1 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) :is(.story-bm-head, .story-bm-snippet) { color: #9aa2ad !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) .story-bm-del { background: #22262d !important; color: #c8cdd4 !important; }
