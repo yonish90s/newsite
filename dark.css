@@ -2008,6 +2008,9 @@ html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .uw-sex b { color: #eceef1 
 html.theme-dark body:not(#_):not(#_):not(#_) .pshow-actions .story-linked-chip { background: #1b1e24 !important; color: #eceef1 !important; border: 1px solid #323842 !important; }
 html.theme-dark body:not(#_):not(#_):not(#_) .pshow-actions .story-linked-chip:hover { background: #22262d !important; }
 html.theme-dark body:not(#_):not(#_):not(#_) .pshow-actions .story-linked-chip:active { border: 1.5px solid #5b6472 !important; }
+html.theme-dark .mnav-sc-empty { color: #c8cdd4 !important; background: #22262d !important; border: 1px dashed #323842 !important; }
+html.theme-dark .mnav-sc-img svg { color: #c8cdd4 !important; }
+html.theme-dark .mnav-sc-img:has(svg) { background: #22262d !important; }
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #eceef1 !important; }
 html.theme-dark [style*="color:#111111"] { color: #eceef1 !important; }
@@ -2335,3 +2338,5 @@ html.theme-dark body:not(#_):not(#_):not(#_):not(#_) :is(.uw-star.on, .uw-star:h
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .uw-chip.dislike { background: transparent !important; color: #9aa2ad !important; }
 html.theme-dark body:not(#_):not(#_):not(#_) .pshow-actions .story-linked-chip { background: #1b1e24 !important; color: #eceef1 !important; border-color: #3a414c !important; }
 html.theme-dark body:not(#_):not(#_):not(#_) .pshow-actions .story-linked-chip:hover { background: #22262d !important; }
+html.theme-dark .mnav-sc-empty { background: #22262d !important; border-color: #3a414c !important; color: #9aa2ad !important; }
+html.theme-dark .mnav-sc-img:has(svg) { background: #2a2f37 !important; }

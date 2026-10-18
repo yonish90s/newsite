@@ -12218,3 +12218,12 @@ html body:not(#_):not(#_):not(#_) .pshow-actions .story-linked-chip::after { con
 html body:not(#_):not(#_):not(#_) .pshow-actions .story-linked-chip:hover { background: #f6f7f9 !important; border-color: #9aa0aa !important; }
 html body:not(#_):not(#_):not(#_) .pshow-actions .story-linked-chip:active { border: 1.5px solid #111111 !important; border-radius: 999px !important; }
 @media (max-width: 768px) { html body:not(#_):not(#_):not(#_) .pshow-actions > * { flex: 1 1 100%; justify-content: center; } }
+
+/* ===== חדשות / מנוי בחלון צד ===== */
+html body:not(#_):not(#_) .pg-panel-wrap .fo-panel { width: min(640px, 94vw); }
+html body:not(#_):not(#_) .pg-panel-inner { padding: 12px 14px 20px; }
+html body:not(#_):not(#_) .pg-panel-inner > * { max-width: none !important; width: 100% !important; margin-left: 0 !important; margin-right: 0 !important; box-sizing: border-box; }
+html body:not(#_):not(#_) .pg-panel-inner :is(.news-page-container, .subscription-page, .subscription-page-wrapper) { padding-left: 0 !important; padding-right: 0 !important; max-width: none !important; }
+.mnav-sc-empty { font-size: 13px; color: #646b78; background: #f6f7f9; border: 1px dashed #d5d8de; border-radius: 14px; padding: 12px 14px; margin: 0 0 6px; line-height: 1.5; }
+.mnav-sc-img svg { width: 26px; height: 26px; color: #646b78; margin: auto; }
+.mnav-sc-img:has(svg) { display: grid; place-items: center; background: #f1f2f4; }

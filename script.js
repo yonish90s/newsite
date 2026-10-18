@@ -1478,15 +1478,16 @@ function adjustImgAspectRatio(img) {
 function renderPage() {
   // מחשב: פורומים / קהילות נפתחים בחלון צד מעל העמוד הנוכחי — מכל מקום שמנווטים אליהם (תפריט, סרגל, קישור)
   const _spTarget = activePageId;
-  if ((_spTarget === 'page-forums-main' || _spTarget === 'page-communities-main')
-      && !window.__forceForumsPage && !window.__forceCommPage
+  if ((_spTarget === 'page-forums-main' || _spTarget === 'page-communities-main' || _spTarget === 'page-news-main' || _spTarget === 'page-subscription-main')
+      && !window.__forceForumsPage && !window.__forceCommPage && !window.__forcePanelPage
       && window.__lastRenderedPageId && window.__lastRenderedPageId !== _spTarget
       && !window.matchMedia('(max-width: 768px)').matches && typeof openSidePanel === 'function') {
     activePageId = window.__lastRenderedPageId;
     try { saveToStorage(); } catch (e) {}
     try { if (typeof renderTopNav === 'function') renderTopNav(); } catch (e) {}
     if (_spTarget === 'page-forums-main') { closeSidePanels('fo-panel'); openForumsPanel(); }
-    else { closeSidePanels('cm-panel'); openCommunitiesPanel(); }
+    else if (_spTarget === 'page-communities-main') { closeSidePanels('cm-panel'); openCommunitiesPanel(); }
+    else openPagePanel(_spTarget);
     return;
   }
   window.__lastRenderedPageId = activePageId;
@@ -11605,6 +11606,7 @@ function navigateToPage(pageId) {
   const _desk = !window.matchMedia('(max-width: 768px)').matches;
   if (pageId === 'page-forums-main' && !window.__forceForumsPage && typeof openForumsPanel === 'function' && _desk) { closeSidePanels('fo-panel'); openForumsPanel(); return; }
   if (pageId === 'page-communities-main' && !window.__forceCommPage && typeof openCommunitiesPanel === 'function' && _desk) { closeSidePanels('cm-panel'); openCommunitiesPanel(); return; }
+  if ((pageId === 'page-news-main' || pageId === 'page-subscription-main') && !window.__forcePanelPage && typeof openPagePanel === 'function' && _desk) { openPagePanel(pageId); return; }
   // מעבר לעמוד אחר — סוגרים חלונות צד פתוחים
   if (typeof closeSidePanels === 'function') closeSidePanels();
   const page = (typeof pages !== 'undefined' && Array.isArray(pages)) ? pages.find(p => p && p.id === pageId) : null;
@@ -15441,8 +15443,6 @@ const SIDE_RAIL_ITEMS = [
   ['cats', 'קטגוריות', "navigateToPage('page-communities-main')", '<rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/>', true],
   ['news', 'חדשות', "navigateToPage('page-news-main')", '<path d="M4 5h13v14H6a2 2 0 0 1-2-2z"/><path d="M17 9h3v8a2 2 0 0 1-2 2"/><path d="M8 9h5M8 13h5"/>', false],
   ['shop', 'מנוי ושדרוגים', "navigateToPage('page-subscription-main')", '<path d="M3 4h2l2.4 11.2a1 1 0 0 0 1 .8h9.2a1 1 0 0 0 1-.8L21 8H6.2"/><circle cx="9.5" cy="20" r="1.5"/><circle cx="17.5" cy="20" r="1.5"/>', false],
-  ['saved', 'שמורים', 'openSavedModal()', '<path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.5"/>', false],
-  ['msgs', 'הודעות', 'openMessages()', '<rect x="3" y="5" width="18" height="15" rx="3"/><path d="M3 10h18M9 14h6"/>', false]
 ];
 function sideRailHTML() {
   const u = auth.currentUser;
@@ -24721,8 +24721,9 @@ function subscribeNewsPosts() {
         newsPostsData = []; // אין ידיעות שמורות — רשימה ריקה
         saveStoredNewsPosts(newsPostsData);
       }
-      if (activePageId === 'page-news-main' && typeof mainContent !== 'undefined' && mainContent) {
-        mainContent.innerHTML = buildNewsPage();
+      if (document.getElementById('nw-panel')) newsRerender();
+      else if (activePageId === 'page-news-main' && typeof mainContent !== 'undefined' && mainContent) {
+        newsRerender();
       }
     });
   } catch (e) {
@@ -24732,9 +24733,7 @@ function subscribeNewsPosts() {
 
 function setNewsCategory(cat) {
   newsCategoryFilter = cat;
-  if (typeof mainContent !== 'undefined' && mainContent) {
-    mainContent.innerHTML = buildNewsPage();
-  }
+  newsRerender();
 }
 window.setNewsCategory = setNewsCategory;
 
@@ -24747,7 +24746,7 @@ async function deleteAllNewsPosts() {
   try { await set(ref(db, 'website/news_posts'), null); } catch (e) { alert('המחיקה נכשלה'); return; }
   newsPostsData = [];
   saveStoredNewsPosts(newsPostsData);
-  if (typeof mainContent !== 'undefined' && mainContent) mainContent.innerHTML = buildNewsPage();
+  newsRerender();
 }
 window.deleteAllNewsPosts = deleteAllNewsPosts;
 
@@ -24867,7 +24866,7 @@ async function submitNewsPost() {
   closeNewsAddModal();
   if (typeof showCopyToast === 'function') showCopyToast('📰 המבזק פורסם בהצלחה!');
   if (typeof mainContent !== 'undefined' && mainContent) {
-    mainContent.innerHTML = buildNewsPage();
+    newsRerender();
   }
 }
 window.submitNewsPost = submitNewsPost;
@@ -24889,7 +24888,7 @@ async function deleteNewsPost(postId) {
 
   if (typeof showCopyToast === 'function') showCopyToast('🗑️ המבזק נמחק');
   if (typeof mainContent !== 'undefined' && mainContent) {
-    mainContent.innerHTML = buildNewsPage();
+    newsRerender();
   }
 }
 window.deleteNewsPost = deleteNewsPost;
@@ -26939,14 +26938,18 @@ function mobileMenuHTML() {
   const shown = mnavMore ? tiles : tiles.slice(0, 8);
   const tile = ([k, label, act]) => `<button type="button" class="mnav-tile" onclick="mnavGo(${JSON.stringify(act).replace(/"/g, '&quot;')})">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${MNAV_ICONS[k]}</svg><span>${label}</span></button>`;
-  // קיצורי דרך: תמונות שער של התוכן החדש באתר
-  const items = (typeof feedAllItems === 'function') ? feedAllItems() : [];
+  // קיצורי דרך: מה שהגולש שמר (גלריות / סיפורים / קומיקס) — החדש ביותר קודם
+  let savedMap = {};
+  try { savedMap = JSON.parse(localStorage.getItem(u ? `saved_galleries_${u.uid}` : 'guest_saved_galleries') || '{}') || {}; } catch (e) {}
+  const savedIds = Object.keys(savedMap).filter(k => savedMap[k]);
+  const items = ((typeof feedAllItems === 'function') ? feedAllItems() : []).filter(x => x && savedMap[x.id]);
+  items.sort((a, b) => savedIds.indexOf(b.id) - savedIds.indexOf(a.id)); // נשמר אחרון — מופיע ראשון
   const adultOk = (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('age_verified') === 'true');
-  const shortcuts = items.filter(x => (x.images && x.images[0]) || x.image).slice(0, 8).map(x => {
+  const shortcuts = items.slice(0, 12).map(x => {
     const img = (x.images && x.images[0]) || x.image;
     const act = x.__type === 'photo' ? `homeOpenPhotos(); setTimeout(() => photoOpenDetail('${artEsc(x.id)}'), 450)` : `storyOpenDetail('${artEsc(x.id)}')`;
     return `<button type="button" class="mnav-sc" onclick="mnavGo(${JSON.stringify(act).replace(/"/g, '&quot;')})">
-        <span class="mnav-sc-img${x.isAdult && !adultOk ? ' blur' : ''}"><img src="${escHtml(img)}" alt="" loading="lazy"></span><span class="mnav-sc-name">${escHtml(x.title || '')}</span></button>`;
+        <span class="mnav-sc-img${x.isAdult && !adultOk ? ' blur' : ''}">${img ? `<img src="${escHtml(img)}" alt="" loading="lazy">` : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>'}</span><span class="mnav-sc-name">${escHtml(x.title || '')}</span></button>`;
   }).join('');
   const dark = document.documentElement.classList.contains('theme-dark');
   return `<div class="mnav-backdrop" onclick="closeMobileMenu()"></div>
@@ -26957,7 +26960,7 @@ function mobileMenuHTML() {
         <span class="mnav-pname"><b>${escHtml(name)}</b><small>${reg ? 'לפרופיל שלי' : 'התחברות / הרשמה'}</small></span>
         <svg class="mnav-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
       </button>
-      ${shortcuts ? `<h4 class="mnav-h">קיצורי דרך</h4><div class="mnav-scs">${shortcuts}</div>` : ''}
+      <h4 class="mnav-h">קיצורי דרך</h4>${shortcuts ? `<div class="mnav-scs">${shortcuts}</div>` : '<div class="mnav-sc-empty">כאן יופיע מה ששמרתם — לחצו על סימן השמירה בגלריה או בסיפור</div>'}
       <h4 class="mnav-h">הקהילות</h4>
       <div class="mnav-grid">${shown.map(tile).join('')}</div>
       ${tiles.length > 8 ? `<button type="button" class="mnav-more" onclick="mnavToggleMore()">${mnavMore ? 'הצג פחות' : 'הצג עוד'}</button>` : ''}
@@ -27039,7 +27042,8 @@ function closeForumsPanel() { closeSidePanel('fo-panel'); }
 function closeSidePanel(id) {
   const w = document.getElementById(id); if (!w) return;
   w.classList.remove('show');
-  setTimeout(() => { if (!w.classList.contains('show')) w.remove(); }, 260);
+  w.id = id + '-closing'; // כבר לא "פתוח" — רינדורים חדשים לא ייכנסו אליו
+  setTimeout(() => w.remove(), 260);
 }
 // סוגרים את כל חלונות הצד (חוץ מזה שמבקשים להשאיר)
 function closeSidePanels(keepId) {
@@ -27155,3 +27159,31 @@ async function sendReportContent(id, title) {
   }
 }
 Object.assign(window, { cardReportBtnHTML, openReportContent, closeReportContent, sendReportContent });
+
+
+// ============================================================
+// חדשות / מנוי ושדרוגים בחלון צד (מחשב)
+// ============================================================
+const PAGE_PANELS = {
+  'page-news-main': { id: 'nw-panel', title: 'חדשות', build: () => buildNewsPage() },
+  'page-subscription-main': { id: 'sb-panel', title: 'מנוי ושדרוגים', build: () => buildSubscriptionPage() }
+};
+function openPagePanel(pageId) {
+  const cfg = PAGE_PANELS[pageId]; if (!cfg) return;
+  closeSidePanels(cfg.id);
+  const w = openSidePanel(cfg.id, cfg.title, `<div class="pg-panel-inner">${cfg.build()}</div>`, `openPageFull('${pageId}')`);
+  w.classList.add('pg-panel-wrap');
+}
+function openPageFull(pageId) {
+  const cfg = PAGE_PANELS[pageId]; if (cfg) closeSidePanel(cfg.id);
+  window.__forcePanelPage = true;
+  try { navigateToPage(pageId); } finally { window.__forcePanelPage = false; }
+}
+// רינדור מחדש של החדשות — בחלון הצד אם פתוח, אחרת בעמוד
+function newsRerender() {
+  const body = document.querySelector('#nw-panel .pg-panel-inner');
+  if (body) { body.innerHTML = buildNewsPage(); return; }
+  if (typeof mainContent !== 'undefined' && mainContent && mainContent.querySelector('.news-page, .news-page-container')) mainContent.innerHTML = buildNewsPage();
+  else if (typeof mainContent !== 'undefined' && mainContent && activePageId === 'page-news-main') mainContent.innerHTML = buildNewsPage();
+}
+Object.assign(window, { openPagePanel, openPageFull, newsRerender });

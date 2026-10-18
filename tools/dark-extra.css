@@ -152,3 +152,5 @@ html.theme-dark body:not(#_):not(#_):not(#_):not(#_) :is(.uw-star.on, .uw-star:h
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .uw-chip.dislike { background: transparent !important; color: #9aa2ad !important; }
 html.theme-dark body:not(#_):not(#_):not(#_) .pshow-actions .story-linked-chip { background: #1b1e24 !important; color: #eceef1 !important; border-color: #3a414c !important; }
 html.theme-dark body:not(#_):not(#_):not(#_) .pshow-actions .story-linked-chip:hover { background: #22262d !important; }
+html.theme-dark .mnav-sc-empty { background: #22262d !important; border-color: #3a414c !important; color: #9aa2ad !important; }
+html.theme-dark .mnav-sc-img:has(svg) { background: #2a2f37 !important; }
