@@ -5515,7 +5515,7 @@ function artOpenDetail(id) {
   mainContent.innerHTML = `
     <div class="art-detail articles-page" data-article-id="${id}" data-articles-json="${json}">
       <div class="art-detail-inner">
-        <button class="art-back-btn" onclick="artGoBack()">← חזרה לכתבות</button>
+        <button class="art-back-btn" onclick="artGoBack()">חזרה לכתבות</button>
         ${a.image ? `<img class="art-detail-hero" src="${escHtml(a.image)}" alt="">` : ''}
         <div class="art-detail-body">
           <div class="art-meta" style="margin-bottom:12px">
@@ -7055,7 +7055,7 @@ function storyOpenDetail(id) {
       <div class="art-detail articles-page stories-page story-article-page" data-story-kind="${_srcKind}" data-story-id="${id}" data-stories-json="${json}">
         <div class="art-detail-inner">
           <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
-            <button class="art-back-btn" onclick="storyGoBack()" style="background:#f1f5f9; border:1px solid #cbd5e1; border-radius:8px; padding:6px 14px; font-weight:700; cursor:pointer;">← חזרה לסיפורים</button>
+            <button class="art-back-btn" onclick="storyGoBack()" style="background:#f1f5f9; border:1px solid #cbd5e1; border-radius:8px; padding:6px 14px; font-weight:700; cursor:pointer;">חזרה לסיפורים</button>
             ${_editBtn}
           </div>
           <article class="story-article" style="margin-top:16px;">
@@ -7095,7 +7095,7 @@ function storyOpenDetail(id) {
       <div class="art-detail articles-page stories-page" data-story-kind="${escHtml(_srcKind)}" data-story-id="${escHtml(id)}" data-stories-json="${json}">
         <div class="art-detail-inner">
           <div class="story-detail-head" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
-            <button class="art-back-btn" onclick="storyGoBack()">← חזרה לקומיקס</button>
+            <button class="art-back-btn" onclick="storyGoBack()">חזרה לקומיקס</button>
             <div style="display:flex; justify-content:flex-end;">${_editBtn}</div>
           </div>
 
@@ -7170,7 +7170,7 @@ function storyOpenDetail(id) {
     <div class="art-detail articles-page stories-page" data-story-kind="${escHtml(_srcKind)}" data-story-id="${escHtml(id)}" data-stories-json="${json}">
       <div class="art-detail-inner">
         <div class="story-detail-head" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
-          <button class="art-back-btn" onclick="storyGoBack()" style="background:#f1f5f9; border:1px solid #cbd5e1; border-radius:8px; padding:6px 14px; font-weight:700; cursor:pointer;">← חזרה לסיפורים</button>
+          <button class="art-back-btn" onclick="storyGoBack()" style="background:#f1f5f9; border:1px solid #cbd5e1; border-radius:8px; padding:6px 14px; font-weight:700; cursor:pointer;">חזרה לסיפורים</button>
           <div class="story-detail-titlewrap" style="text-align:center;">
             <h1 class="art-detail-title" style="margin:0; font-size:22px; font-weight:900;">${escHtml(s.title || '')}</h1>
             <div class="art-meta" style="margin-top:4px; font-size:13px; color:#64748b; display:flex; align-items:center; justify-content:center; gap:8px;">
@@ -16327,25 +16327,25 @@ function photoOpenDetail(id) {
 
   // פאנלי צד — לרעיונות ולמוצרי יד שניה (אותו קונספט, תוכן מותאם)
   const _sp = isSecondhand ? (a.isWanted ? {
-    back: '← חזרה למוצרים',
+    back: 'חזרה למוצרים',
     right: (typeof secondhandWantedHowBoxHTML === 'function' ? secondhandWantedHowBoxHTML() : ''),
     left: (typeof secondhandOffersBoxHTML === 'function' ? secondhandOffersBoxHTML(a) : ''),
     creator: 'מחפש/ת',
     recTitle: 'עוד ביד שניה'
   } : {
-    back: '← חזרה למוצרים',
+    back: 'חזרה למוצרים',
     right: (typeof secondhandBuyBoxHTML === 'function' ? secondhandBuyBoxHTML(a) : ''),
     left: (typeof secondhandDetailsBoxHTML === 'function' ? secondhandDetailsBoxHTML(a) : ''),
     creator: 'מוכר',
     recTitle: 'מוצרים נוספים שיעניינו אותך'
   }) : (a.isProblem ? {
-    back: '← חזרה לרעיונות',
+    back: 'חזרה לרעיונות',
     right: (typeof ideaTenderHowBoxHTML === 'function' ? ideaTenderHowBoxHTML() : ''),
     left: (typeof ideaBidsBoxHTML === 'function' ? ideaBidsBoxHTML(a) : ''),
     creator: 'פרסם/ה',
     recTitle: 'עוד בעיות ורעיונות'
   } : {
-    back: '← חזרה לרעיונות',
+    back: 'חזרה לרעיונות',
     right: ideaExecutionBoxHTML(a),
     left: ideaTechnicalBoxHTML(a),
     creator: 'יוצר הרעיון',
@@ -16443,7 +16443,7 @@ function photoOpenDetail(id) {
     mainContent.innerHTML = `
       <div class="art-detail articles-page photos-page" data-photo-id="${id}" data-photos-json="${json}">
         <div class="art-detail-inner">
-          <button class="art-back-btn" onclick="photoGoBack()">← חזרה לגלריות</button>
+          <button class="art-back-btn" onclick="photoGoBack()">חזרה לגלריות</button>
 
           <!-- תצוגת "מוצר" בסגנון חנות: תמונה גדולה ונקייה + עמודת פרטים, ביקורות ויוצר -->
           <div class="pd2 pd-show${a.isAdult ? ' is-adult-album' : ''}">
@@ -20844,7 +20844,7 @@ function courseOpenDetail(id) {
   mainContent.innerHTML = `
     <div class="art-detail articles-page courses-page" data-course-id="${id}" data-courses-json="${json}">
       <div class="art-detail-inner">
-        <button class="art-back-btn" onclick="courseGoBack()">← חזרה לקורסים</button>
+        <button class="art-back-btn" onclick="courseGoBack()">חזרה לקורסים</button>
         
         <!-- נגן וידאו מובנה במקום תמונת כותרת -->
         ${getCourseVideoPlayerHTML(c.video)}

@@ -1681,6 +1681,8 @@ html.theme-dark body:not(#_) .art-rec-badge { background: rgba(27, 30, 36, 0.92)
 html.theme-dark body:not(#_) .art-rec-text h4 { color: var(--ds-ink, #eceef1) !important; }
 html.theme-dark body:not(#_) .art-rec-meta { color: var(--ds-muted, #c8cdd4) !important; }
 html.theme-dark body:not(#_) .art-rec-why { background: #22262d !important; color: color-mix(in srgb, #2459c0 55%, white) !important; }
+html.theme-dark body:not(#_):not(#_) .art-back-btn { border: 1px solid var(--ds-line, #323842) !important; background: #1b1e24 !important; color: var(--ds-ink, #eceef1) !important; }
+html.theme-dark body:not(#_):not(#_) .art-back-btn:hover { background: #22262d !important; }
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #eceef1 !important; }
 html.theme-dark [style*="color:#111111"] { color: #eceef1 !important; }
@@ -1906,3 +1908,5 @@ html.theme-dark body:not(#_) .hw-cmp { background: #22262d !important; }
 html.theme-dark body:not(#_) .art-rec-section, html.theme-dark body:not(#_) .art-rec-card { background: #1b1e24 !important; border-color: #2a2f37 !important; }
 html.theme-dark .rec-head h3, html.theme-dark body:not(#_) .art-rec-text h4 { color: #eceef1 !important; }
 html.theme-dark body:not(#_) .art-rec-why { background: #1f2a3d !important; color: #8fb8ff !important; }
+html.theme-dark body:not(#_):not(#_) .art-back-btn { background: #1b1e24 !important; border-color: #2c323b !important; color: #eceef1 !important; }
+html.theme-dark body:not(#_):not(#_) .art-back-btn:hover { border-color: #4d8bf0 !important; color: #8fb8ff !important; background: #1f2633 !important; }
