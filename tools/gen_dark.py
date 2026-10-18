@@ -10,7 +10,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PAGE, CARD, SURF, SURF2, RAISE = '#121418', '#1b1e24', '#22262d', '#2a2f37', '#343a43'
 BORDER = '#323842'
 TEXT, TEXT2, MUTED = '#eceef1', '#c8cdd4', '#9aa2ad'
-ACC = '#4d8bf0'
+ACC = '#3a414c'
 
 HEX = r'#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3,4})\b'
 RGB = r'rgba?\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*(?:,\s*[\d.]+\s*)?\)'

@@ -4989,7 +4989,7 @@ function showCopyToast(msg) {
   if (!toast) {
     toast = document.createElement('div');
     toast.id = 'global-copy-toast';
-    toast.style.cssText = 'position:fixed; bottom:30px; left:50%; transform:translateX(-50%); background:#2f6fdb; color:#ffffff; padding:12px 24px; border-radius:30px; font-size:14px; font-weight:bold; z-index:9999999; box-shadow:0 10px 30px rgba(0, 0, 0, 0.3); transition:all 0.3s ease; direction:rtl; opacity:0; pointer-events:none;';
+    toast.style.cssText = 'position:fixed; bottom:30px; left:50%; transform:translateX(-50%); background:#111111; color:#ffffff; padding:12px 24px; border-radius:30px; font-size:14px; font-weight:bold; z-index:9999999; box-shadow:0 10px 30px rgba(0, 0, 0, 0.3); transition:all 0.3s ease; direction:rtl; opacity:0; pointer-events:none;';
     document.body.appendChild(toast);
   }
   toast.textContent = msg;
@@ -5065,7 +5065,7 @@ function buildEventsSidebarBox() {
         <h4 style="margin: 0; font-size: 14px; font-weight: 800; color:#262626; display: flex; align-items: center; gap: 6px;">
           <span>🎉 מפגש ואירוע קרוב</span>
         </h4>
-        ${isEd ? `<button onclick="openEditEventModal()" style="background: #3b82f6; color: white; border: none; border-radius: 6px; padding: 2px 8px; font-size: 11px; font-weight: bold; cursor: pointer;">✏️ ערוך אירוע</button>` : ''}
+        ${isEd ? `<button onclick="openEditEventModal()" style="background: #111111; color: white; border: none; border-radius: 6px; padding: 2px 8px; font-size: 11px; font-weight: bold; cursor: pointer;">✏️ ערוך אירוע</button>` : ''}
       </div>
 
       <h5 style="margin: 0 0 5px; font-size: 13.5px; font-weight: 800; color: #111827;">${escHtml(ev.title)}</h5>
@@ -5083,12 +5083,12 @@ function buildEventsSidebarBox() {
         ` : ''}
       </div>
 
-      <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(37, 99, 235, 0.06); padding: 5px 10px; border-radius: 8px; margin-bottom: 6px; font-size: 12px; font-weight: 800; color: #1d4ed8;">
+      <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(17, 17, 17, 0.06); padding: 5px 10px; border-radius: 8px; margin-bottom: 6px; font-size: 12px; font-weight: 800; color: #000000;">
         <span>👥 נרשמו עד כה:</span>
-        <span style="background: #2563eb; color: white; padding: 2px 8px; border-radius: 12px; font-weight: 900;">${regCount} משתתפים</span>
+        <span style="background: #111111; color: white; padding: 2px 8px; border-radius: 12px; font-weight: 900;">${regCount} משתתפים</span>
       </div>
 
-      <button onclick="openEventRegisterModal()" style="width: 100%; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; border: none; border-radius: 8px; padding: 8px; font-size: 13px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25); transition: transform 0.2s, background 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;">
+      <button onclick="openEventRegisterModal()" style="width: 100%; background: linear-gradient(135deg, #111111 0%, #000000 100%); color: white; border: none; border-radius: 8px; padding: 8px; font-size: 13px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 12px rgba(17, 17, 17, 0.25); transition: transform 0.2s, background 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;">
         <span>✍️ להרשמה לאירוע</span>
       </button>
 
@@ -5138,7 +5138,7 @@ function openEventRegisterModal() {
 
         <div style="display:flex; gap:10px; margin-top:10px;">
           <button onclick="document.getElementById('event-register-modal').style.display='none'" style="flex:1; padding:11px; border:1px solid #cbd5e1; border-radius:8px; background:#ffffff; cursor:pointer; font-weight:700; font-size:14px;">ביטול</button>
-          <button onclick="submitEventRegistration()" style="flex:1.5; padding:11px; border:none; border-radius:8px; background:#2563eb; color:#ffffff; cursor:pointer; font-weight:800; font-size:14px;">אישור הרשמה ✓</button>
+          <button onclick="submitEventRegistration()" style="flex:1.5; padding:11px; border:none; border-radius:8px; background:#111111; color:#ffffff; cursor:pointer; font-weight:800; font-size:14px;">אישור הרשמה ✓</button>
         </div>
       </div>
     `;
@@ -5214,7 +5214,7 @@ function openEventRegistrantsAdminModal() {
     <tr style="border-bottom: 1px solid #f1f5f9; background: ${i % 2 === 0 ? '#ffffff' : '#f8fafc'};">
       <td style="padding: 10px 12px; font-weight: 800; color: #64748b;">${i + 1}</td>
       <td style="padding: 10px 12px; font-weight: 800; color: #0f172a;">${escHtml(r.userName || 'ללא שם')}</td>
-      <td style="padding: 10px 12px; color: #2563eb; font-weight: 700; direction: ltr; text-align: right;"><a href="tel:${escHtml(r.userPhone)}" style="color:#2563eb; text-decoration:none;">${escHtml(r.userPhone || '--')}</a></td>
+      <td style="padding: 10px 12px; color: #111111; font-weight: 700; direction: ltr; text-align: right;"><a href="tel:${escHtml(r.userPhone)}" style="color:#111111; text-decoration:none;">${escHtml(r.userPhone || '--')}</a></td>
       <td style="padding: 10px 12px; color: #475569; direction: ltr; text-align: right;">${escHtml(r.userEmail || '--')}</td>
       <td style="padding: 10px 12px; color: #64748b; font-size: 12px;">${escHtml(r.createdAt || '')}</td>
       <td style="padding: 10px 12px; text-align: center;">
@@ -5312,7 +5312,7 @@ function openEditEventModal() {
 
         <div style="display:flex; gap:10px; margin-top:8px;">
           <button onclick="document.getElementById('event-edit-modal').style.display='none'" style="flex:1; padding:10px; border:1px solid #cbd5e1; border-radius:8px; background:#ffffff; cursor:pointer; font-weight:700; font-size:14px;">ביטול</button>
-          <button onclick="saveEditedEvent()" style="flex:1.5; padding:10px; border:none; border-radius:8px; background:#3b82f6; color:#ffffff; cursor:pointer; font-weight:800; font-size:14px;">שמור שינויים ✓</button>
+          <button onclick="saveEditedEvent()" style="flex:1.5; padding:10px; border:none; border-radius:8px; background:#111111; color:#ffffff; cursor:pointer; font-weight:800; font-size:14px;">שמור שינויים ✓</button>
         </div>
       </div>
     `;
@@ -5930,7 +5930,7 @@ window.buildCompoundInterestPage = function() {
               <span>רווח מריבית: <strong id="ci-bar-i-pct" style="color:#10b981;">50%</strong></span>
             </div>
             <div style="height: 14px; background: #e2e8f0; border-radius: 50px; overflow: hidden; display: flex;">
-              <div id="ci-bar-p" style="width: 50%; background: #3b82f6; transition: width 0.3s ease;"></div>
+              <div id="ci-bar-p" style="width: 50%; background: #111111; transition: width 0.3s ease;"></div>
               <div id="ci-bar-i" style="width: 50%; background: #10b981; transition: width 0.3s ease;"></div>
             </div>
           </div>
@@ -6021,7 +6021,7 @@ window.buildEverythingMoneyPage = function() {
             <label>סימול המניה (למשל AAPL, NVDA, TSLA)</label>
             <div style="position:relative; display:flex; gap:8px;">
               <input type="text" id="em-ticker" value="AAPL" class="em-stock-input" placeholder="הקלד סימול מניה...">
-              <button onclick="fetchStockData()" style="background:#2f6fdb; color:#ffffff; border:none; padding:0 16px; border-radius:12px; font-weight:800; cursor:pointer; font-size:13px; white-space:nowrap;">🔍 רענן</button>
+              <button onclick="fetchStockData()" style="background:#111111; color:#ffffff; border:none; padding:0 16px; border-radius:12px; font-weight:800; cursor:pointer; font-size:13px; white-space:nowrap;">🔍 רענן</button>
             </div>
           </div>
           <div>
@@ -6809,11 +6809,11 @@ function storyCardHTML(s, iconHint) {
       const svg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;"><path d="${iconPath}"/>${extraPath || ''}</svg>`;
       if (url) {
         if (label === 'אימייל') {
-          return `<button type="button" onclick="revealAndCopyEmail('${artEsc(url)}', this, event);" class="art-telegram-btn" title="לחץ לחשיפת והעתקת אימייל">${svg}<span>${label}</span></button>`;
+          return `<button type="button" onclick="revealAndCopyEmail('${artEsc(url)}', this, event);" class="art-telegram-btn" title="לחץ לחשיפת והעתקת אימייל" aria-label="אימייל">${svg}</button>`;
         }
-        return `<a href="${escHtml(safeUrl(url))}" target="_blank" onclick="event.stopPropagation();" class="art-telegram-btn">${svg}<span>${label}</span></a>`;
+        return `<a href="${escHtml(safeUrl(url))}" target="_blank" onclick="event.stopPropagation();" class="art-telegram-btn" title="${label}" aria-label="${label}">${svg}</a>`;
       }
-      return `<span class="art-telegram-btn is-disabled" onclick="event.stopPropagation();" aria-disabled="true">${svg}<span>${label}</span></span>`;
+      return `<span class="art-telegram-btn is-disabled" onclick="event.stopPropagation();" aria-disabled="true" title="${label}">${svg}</span>`;
     };
 
     const isLikedCard = typeof photoIsLikedLocal === 'function' ? photoIsLikedLocal(s.id) : false;
@@ -6831,7 +6831,6 @@ function storyCardHTML(s, iconHint) {
         <svg width="14" height="14" viewBox="0 0 24 24" fill="${isSavedCard ? '#ffffff' : 'none'}" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
           <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
         </svg>
-        <span>${isSavedCard ? 'שמור' : 'שמירה'}</span>
       </button>
     `;
 
@@ -6840,6 +6839,7 @@ function storyCardHTML(s, iconHint) {
         ${cardSaveBtnHTML}
         ${cardLink(s.telegramUrl, 'טלגרם', 'M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z')}
         ${cardLink(s.emailUrl, 'אימייל', 'M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z', '<polyline points="22,6 12,13 2,6"/>')}
+      ${cardReportBtnHTML(s.id, s.title)}
       </div>
     `;
 
@@ -6860,7 +6860,7 @@ function storyCardHTML(s, iconHint) {
             <span class="art-row-sep">|</span>
             <span>${escHtml(s.timestamp)}</span>
             ${s.ageRange ? `<span class="art-row-sep">|</span><span>גיל ${escHtml(String(s.ageRange))}</span>` : ''}
-            ${isVerifiedStory ? `<span class="art-row-sep">|</span><span style="color:#2563eb; font-weight:700; display:inline-flex; align-items:center; gap:4px;">חשבון זה מאומת <span style="background:#dbeafe; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:10px;">✓</span></span>` : ''}
+            ${isVerifiedStory ? `<span class="art-row-sep">|</span><span style="color:#111111; font-weight:700; display:inline-flex; align-items:center; gap:4px;">חשבון זה מאומת <span style="background:#dbeafe; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:10px;">✓</span></span>` : ''}
           </div>
           ${scoreBadgeHTML}
           ${cardLinksHTML}
@@ -6937,11 +6937,11 @@ function buildStoriesPage(stories, storyKind) {
           ${storyRowMoreBtn(stories.length, 'story-row-main')}
           <div class="art-pagination" style="display:none"></div>
           <div class="art-no-results" style="display:none">לא נמצאו ${kindLabel} התואמים לחיפוש</div>
-          <button class="art-add-btn" onclick="openStoryModal()" style="background:#2f6fdb; color:#ffffff;">+ הוסף ${storyKind === 'stories' ? 'סיפור' : 'קומיקס'} חדש</button>
+          <button class="art-add-btn" onclick="openStoryModal()" style="background:#111111; color:#ffffff;">+ הוסף ${storyKind === 'stories' ? 'סיפור' : 'קומיקס'} חדש</button>
         </div>
         <div class="art-sidebar art-sidebar-right">
           ${(isAdmin() || isEditMode) ? `
-          <button onclick="openStoryModal()" style="background:#2f6fdb; width:100%; padding:12px 16px; border-radius:8px; border:none; color:#ffffff; font-weight:bold; font-size:14px; cursor:pointer; margin-bottom:16px;">+ הוסף סיפור חדש</button>
+          <button onclick="openStoryModal()" style="background:#111111; width:100%; padding:12px 16px; border-radius:8px; border:none; color:#ffffff; font-weight:bold; font-size:14px; cursor:pointer; margin-bottom:16px;">+ הוסף סיפור חדש</button>
           ` : ''}
           ${buildSidebarTabs('', 'stories')}
         </div>
@@ -7167,13 +7167,13 @@ function storyOpenDetail(id) {
       
       ${storyPagesArr.length > 1 ? `
       <div class="story-viewer-nav" style="display:flex; align-items:center; justify-content:center; gap:16px; margin-top:16px; direction:ltr;">
-        <button type="button" class="story-nav-btn" id="story-prev-btn" onclick="event.stopPropagation(); storyPrevPage()" title="הקודם" style="width:38px; height:38px; border-radius:50%; background:#3b82f6; color:#ffffff; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+        <button type="button" class="story-nav-btn" id="story-prev-btn" onclick="event.stopPropagation(); storyPrevPage()" title="הקודם" style="width:38px; height:38px; border-radius:50%; background:#111111; color:#ffffff; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center;">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
         
         <div class="story-page-thumbs" style="display:flex; gap:8px; overflow-x:auto; padding:4px; max-width:80%;">${thumbsHTML}</div>
         
-        <button type="button" class="story-nav-btn" id="story-next-btn" onclick="event.stopPropagation(); storyNextPage()" title="הבא" style="width:38px; height:38px; border-radius:50%; background:#3b82f6; color:#ffffff; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+        <button type="button" class="story-nav-btn" id="story-next-btn" onclick="event.stopPropagation(); storyNextPage()" title="הבא" style="width:38px; height:38px; border-radius:50%; background:#111111; color:#ffffff; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center;">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
         </button>
       </div>
@@ -7508,11 +7508,11 @@ function renderStoryImagesEditor() {
         ${pg.type === 'image' ? `<button type="button" onclick="storyMakeCover(${i})" title="הפוך לתמונת פרופיל של הסיפור (תוסר מתוך הסיפור)" style="border:1px solid #111111; color:#111111; background:#f8f8f8; border-radius:5px; height:26px; padding:0 6px; cursor:pointer; font-size:11px; font-weight:800; white-space:nowrap;">⭐ לכריכה</button>` : ''}
         <button type="button" onclick="storyRemoveImage(${i})" title="הסר עמוד" style="border:1px solid #fca5a5; color:#dc2626; background:#ffffff; border-radius:5px; width:26px; height:26px; cursor:pointer; font-size:12px;">✕</button>
       </div>`;
-    const badge = `<span style="background:${pg.type === 'text' ? '#8b5cf6' : '#3b82f6'}; color:#262626; font-size:10px; font-weight:800; padding:2px 8px; border-radius:6px;">עמוד ${i + 1} · ${pg.type === 'text' ? 'טקסט 📝' : 'תמונה 🖼️'}</span>`;
+    const badge = `<span style="background:${pg.type === 'text' ? '#8b5cf6' : '#111111'}; color:#262626; font-size:10px; font-weight:800; padding:2px 8px; border-radius:6px;">עמוד ${i + 1} · ${pg.type === 'text' ? 'טקסט 📝' : 'תמונה 🖼️'}</span>`;
     const _ln = (pg.type === 'text') ? (pg.text || '').split('\n').length : 0;
     const _over = _ln > STORY_MAX_LINES;
     const _cntTxt = _over ? (_ln + ' שורות · יתחלק אוטומטית ל-' + Math.ceil(_ln / STORY_MAX_LINES) + ' עמודים') : (_ln + ' / ' + STORY_MAX_LINES + ' שורות');
-    const _cntColor = _over ? '#2563eb' : (_ln >= STORY_MAX_LINES ? '#dc2626' : '#64748b');
+    const _cntColor = _over ? '#111111' : (_ln >= STORY_MAX_LINES ? '#dc2626' : '#64748b');
     const inner = pg.type === 'text'
       ? `<textarea id="story-txt-${i}" oninput="storySetPageText(${i}, this.value)" placeholder="כתבו את הטקסט... (מעל ${STORY_MAX_LINES} שורות יתחלק אוטומטית לעמודים)" style="width:100%; min-height:120px; padding:8px 10px; border:1px solid #dddddd; border-radius:8px; font-size:14px; font-weight:700; line-height:1.7; resize:vertical; box-sizing:border-box;">${escHtml(pg.text || '')}</textarea>
          <div id="story-txt-count-${i}" style="font-size:11px; font-weight:800; text-align:left; margin-top:3px; color:${_cntColor};">${_cntTxt}</div>`
@@ -8623,20 +8623,20 @@ function renderPhotoCard(p, options = {}) {
     if (url) {
       if (label === 'אימייל') {
         return `
-          <button type="button" onclick="revealAndCopyEmail('${artEsc(url)}', this, event);" class="art-telegram-btn" title="לחץ לחשיפת והעתקת אימייל">
-            ${svg}<span>${label}</span>
+          <button type="button" onclick="revealAndCopyEmail('${artEsc(url)}', this, event);" class="art-telegram-btn" title="לחץ לחשיפת והעתקת אימייל" aria-label="אימייל">
+            ${svg}
           </button>
         `;
       }
       return `
-        <a href="${escHtml(safeUrl(url))}" target="_blank" onclick="event.stopPropagation();" class="art-telegram-btn">
-          ${svg}<span>${label}</span>
+        <a href="${escHtml(safeUrl(url))}" target="_blank" onclick="event.stopPropagation();" class="art-telegram-btn" title="${label}" aria-label="${label}">
+          ${svg}
         </a>
       `;
     }
     return `
-      <span class="art-telegram-btn is-disabled" onclick="event.stopPropagation();" aria-disabled="true">
-        ${svg}<span>${label}</span>
+      <span class="art-telegram-btn is-disabled" onclick="event.stopPropagation();" aria-disabled="true" title="${label}">
+        ${svg}
       </span>
     `;
   };
@@ -8665,7 +8665,6 @@ function renderPhotoCard(p, options = {}) {
       <svg width="14" height="14" viewBox="0 0 24 24" fill="${isSavedCard ? '#ffffff' : 'none'}" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
         <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
       </svg>
-      <span>${isSavedCard ? 'שמור' : 'שמירה'}</span>
     </button>
   `;
 
@@ -8674,6 +8673,7 @@ function renderPhotoCard(p, options = {}) {
       ${cardSaveBtnHTML}
       ${cardLink(p.telegramUrl, 'טלגרם', 'M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z')}
       ${cardLink(p.emailUrl, 'אימייל', 'M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z', '<polyline points="22,6 12,13 2,6"/>')}
+      ${cardReportBtnHTML(p.id, p.title)}
     </div>
   `;
 
@@ -8695,14 +8695,14 @@ function renderPhotoCard(p, options = {}) {
         <span class="art-row-sep">|</span>
         <span>${escHtml(p.timestamp)}</span>
         ${p.ageRange ? `<span class="art-row-sep">|</span><span>גיל ${escHtml(String(p.ageRange))}</span>` : ''}
-        ${isVerifiedAlbum ? `<span class="art-row-sep">|</span><span style="color:#2563eb; font-weight:700; display:inline-flex; align-items:center; gap:4px;">חשבון זה מאומת <span style="background:#dbeafe; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:10px;">✓</span></span>` : ''}
+        ${isVerifiedAlbum ? `<span class="art-row-sep">|</span><span style="color:#111111; font-weight:700; display:inline-flex; align-items:center; gap:4px;">חשבון זה מאומת <span style="background:#dbeafe; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:10px;">✓</span></span>` : ''}
       </div>
       ${scoreBadgeHTML}
       ${cardLinksHTML}
   `;
   const classActionHTML = p.isClassAction ? `<div style="display:inline-block; background:#0f172a; color:#ffffff; font-size:11px; font-weight:800; padding:2px 8px; border-radius:6px; margin-bottom:4px;">⚖️ תביעה ייצוגית${p.businessName ? ' · ' + escHtml(p.businessName) : ''}</div>`
-    : (p.isProblem ? `<div style="display:inline-block; background:#2f6fdb; color:#ffffff; font-size:11px; font-weight:800; padding:2px 8px; border-radius:6px; margin-bottom:4px;">🎯 בעיה לפתרון · ${(p.bids ? Object.keys(p.bids).length : 0)} הצעות</div>`
-    : (p.isWanted ? `<div style="display:inline-block; background:#2563eb; color:#ffffff; font-size:11px; font-weight:800; padding:2px 8px; border-radius:6px; margin-bottom:4px;">🔎 מחפש/ת · ${(p.offers ? Object.keys(p.offers).length : 0)} הצעות</div>` : ''));
+    : (p.isProblem ? `<div style="display:inline-block; background:#111111; color:#ffffff; font-size:11px; font-weight:800; padding:2px 8px; border-radius:6px; margin-bottom:4px;">🎯 בעיה לפתרון · ${(p.bids ? Object.keys(p.bids).length : 0)} הצעות</div>`
+    : (p.isWanted ? `<div style="display:inline-block; background:#111111; color:#ffffff; font-size:11px; font-weight:800; padding:2px 8px; border-radius:6px; margin-bottom:4px;">🔎 מחפש/ת · ${(p.offers ? Object.keys(p.offers).length : 0)} הצעות</div>` : ''));
   const infoBlock = `
     <div class="art-row-text photo-card-info">
       ${classActionHTML}
@@ -8822,13 +8822,13 @@ function buildLiveChatBox() {
   subscribeLiveChat();
   return `
     <div class="art-sidebar-box" style="padding:0; overflow:hidden; display:flex; flex-direction:column;">
-      <div style="background:linear-gradient(135deg,#2f6fdb,#2f6fdb); color:#ffffff; padding:12px 14px; font-size:14px; font-weight:900; display:flex; align-items:center; gap:8px;">
+      <div style="background:linear-gradient(135deg,#111111,#111111); color:#ffffff; padding:12px 14px; font-size:14px; font-weight:900; display:flex; align-items:center; gap:8px;">
         <span>💬 צ'אט חי — דברו זה עם זה</span>
       </div>
       <div id="live-chat-messages" style="height:250px; overflow-y:auto; padding:12px; display:flex; flex-direction:column; gap:8px; background:#fafafa;">${liveChatMessagesHTML()}</div>
       <div style="display:flex; gap:6px; padding:10px 10px 4px; border-top:1px solid #eeeeee; background:#ffffff;">
         <input id="live-chat-input" type="text" maxlength="500" placeholder="כתוב הודעה... או / לפרסום לקהילה" onkeydown="if(event.key==='Enter'){event.preventDefault(); sendLiveChatMessage();}" style="flex:1; padding:9px 12px; border:1px solid #dddddd; border-radius:20px; font-size:13px; outline:none; box-sizing:border-box;">
-        <button onclick="sendLiveChatMessage()" style="background:#2f6fdb; color:#ffffff; border:none; border-radius:20px; padding:9px 16px; font-size:13px; font-weight:800; cursor:pointer; flex-shrink:0;">שלח</button>
+        <button onclick="sendLiveChatMessage()" style="background:#111111; color:#ffffff; border:none; border-radius:20px; padding:9px 16px; font-size:13px; font-weight:800; cursor:pointer; flex-shrink:0;">שלח</button>
       </div>
       <div style="padding:0 12px 10px; background:#ffffff; font-size:11px; color:#94a3b8;">💡 טיפ: הקלד <b>/</b> ואז שם קהילה כדי לפרסם מודעה מהירה לקהילה</div>
     </div>
@@ -8913,7 +8913,7 @@ function buildQuickUploadBox() {
       <div class="art-sidebar-box" style="border:1.5px solid #111111; background:rgba(0, 0, 0, 0.009); border-radius:12px; padding:16px; text-align:center;">
         <div style="font-size:14px; font-weight:900; color:#262626; margin-bottom:4px;">⚡ העלאה מהירה</div>
         <div style="font-size:12px; color:#64748b; margin-bottom:12px; line-height:1.4;">הפרטים שלך (מייל/טלגרם) כבר שמורים וימולאו אוטומטית</div>
-        <button onclick="openPhotoModal()" style="width:100%; background:#2f6fdb; color:#ffffff; border:none; border-radius:8px; padding:11px; font-size:14px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 2px 8px rgba(0, 0, 0, 0.125);">
+        <button onclick="openPhotoModal()" style="width:100%; background:#111111; color:#ffffff; border:none; border-radius:8px; padding:11px; font-size:14px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 2px 8px rgba(0, 0, 0, 0.125);">
           <span style="font-size:16px;">📷</span> העלאת גלריה חדשה
         </button>
       </div>
@@ -9006,8 +9006,8 @@ function openQuickPublish(communityId, itemType) {
     qpStep = 'type_choice';
     qpBubble('bot', `שלום! 🤖 ברוך הבא לפרסום ${where}.<br>בחר איזה סוג תוכן ברצונך להעלות:<br><br>
       <div style="display:flex; gap:8px; margin-top:6px;">
-        <button type="button" onclick="qpSelectType('photo')" style="flex:1; background:#2f6fdb; color:#ffffff; border:none; border-radius:8px; padding:10px; font-weight:800; cursor:pointer;">📸 תמונה / גלריה</button>
-        <button type="button" onclick="qpSelectType('story')" style="flex:1; background:#2f6fdb; color:#ffffff; border:none; border-radius:8px; padding:10px; font-weight:800; cursor:pointer;">📖 סיפור / כתבה</button>
+        <button type="button" onclick="qpSelectType('photo')" style="flex:1; background:#111111; color:#ffffff; border:none; border-radius:8px; padding:10px; font-weight:800; cursor:pointer;">📸 תמונה / גלריה</button>
+        <button type="button" onclick="qpSelectType('story')" style="flex:1; background:#111111; color:#ffffff; border:none; border-radius:8px; padding:10px; font-weight:800; cursor:pointer;">📖 סיפור / כתבה</button>
       </div>
     `);
   } else {
@@ -9114,7 +9114,7 @@ function qpAskShOffer() {
 }
 function qpAskShRegion() {
   const opts = ['צפון', 'מרכז', 'דרום', 'ירושלים', 'שרון', 'שפלה'];
-  const btns = opts.map(o => `<button onclick="qpPickSh('region','${artEsc(o)}')" style="background:#dbeafe; color:#1e40af; border:1px solid #bfdbfe; border-radius:999px; padding:6px 16px; font-size:13px; font-weight:800; cursor:pointer; margin:3px;">${escHtml(o)}</button>`).join('');
+  const btns = opts.map(o => `<button onclick="qpPickSh('region','${artEsc(o)}')" style="background:#dbeafe; color:#1e40af; border:1px solid #dfe2e7; border-radius:999px; padding:6px 16px; font-size:13px; font-weight:800; cursor:pointer; margin:3px;">${escHtml(o)}</button>`).join('');
   qpBubble('bot', `📍 מה <b>המיקום</b>?<br><div style="margin-top:6px;">${btns}</div>`);
 }
 function qpPickSh(kind, value) {
@@ -9449,7 +9449,7 @@ function renderStoryCommunityCard(s) {
     <div class="art-card story-card" onclick="storyOpenDetail('${artEsc(s.id)}')" style="border-radius:14px; overflow:hidden; background:#ffffff; border:1px solid #e2e8f0; display:flex; flex-direction:column; cursor:pointer; transition:transform 0.15s, box-shadow 0.15s;" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 10px 25px rgba(0,0,0,0.1)';" onmouseout="this.style.transform='none'; this.style.boxShadow='none';">
       <div style="position:relative; height:170px; width:100%; overflow:hidden; background:#0f172a;">
         <img src="${escHtml(mainImg)}" style="width:100%; height:100%; object-fit:cover;">
-        <span style="position:absolute; top:10px; right:10px; background:#2f6fdb; color:#ffffff; font-size:11px; font-weight:800; padding:4px 10px; border-radius:999px; box-shadow:0 2px 6px rgba(0, 0, 0, 0.2);">📖 סיפור</span>
+        <span style="position:absolute; top:10px; right:10px; background:#111111; color:#ffffff; font-size:11px; font-weight:800; padding:4px 10px; border-radius:999px; box-shadow:0 2px 6px rgba(0, 0, 0, 0.2);">📖 סיפור</span>
       </div>
       <div style="padding:14px; display:flex; flex-direction:column; gap:6px; flex:1; text-align:right; direction:rtl;">
         <div style="font-size:15px; font-weight:900; color:#0f172a; line-height:1.3; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escHtml(s.title || 'סיפור')}</div>
@@ -9575,8 +9575,8 @@ function buildCommunityPageHTML(community) {
   const uploadBtnsHTML = canUpload
     ? `
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px;">
-        <button onclick="openQuickPublish('${artEsc(community.id)}', 'photo')" style="background:linear-gradient(135deg,#2f6fdb,#2f6fdb); color:#ffffff; border:none; border-radius:10px; padding:12px; font-size:13.5px; font-weight:800; cursor:pointer; box-shadow:0 3px 10px rgba(0, 0, 0, 0.125);">📸 העלה תמונה לקהילה</button>
-        <button onclick="openQuickPublish('${artEsc(community.id)}', 'story')" style="background:linear-gradient(135deg,#2f6fdb,#2f6fdb); color:#ffffff; border:none; border-radius:10px; padding:12px; font-size:13.5px; font-weight:800; cursor:pointer; box-shadow:0 3px 10px rgba(0, 0, 0, 0.125);">📖 כתוב סיפור לקהילה</button>
+        <button onclick="openQuickPublish('${artEsc(community.id)}', 'photo')" style="background:linear-gradient(135deg,#111111,#111111); color:#ffffff; border:none; border-radius:10px; padding:12px; font-size:13.5px; font-weight:800; cursor:pointer; box-shadow:0 3px 10px rgba(0, 0, 0, 0.125);">📸 העלה תמונה לקהילה</button>
+        <button onclick="openQuickPublish('${artEsc(community.id)}', 'story')" style="background:linear-gradient(135deg,#111111,#111111); color:#ffffff; border:none; border-radius:10px; padding:12px; font-size:13.5px; font-weight:800; cursor:pointer; box-shadow:0 3px 10px rgba(0, 0, 0, 0.125);">📖 כתוב סיפור לקהילה</button>
       </div>
     `
     : `<button onclick="openLiveChatLogin()" style="width:100%; background:#f1f5f9; color:#0f172a; border:1px solid #cbd5e1; border-radius:10px; padding:12px; font-size:14px; font-weight:800; cursor:pointer; margin-bottom:20px;">🔒 התחבר כדי להעלות לקהילה</button>`;
@@ -9588,7 +9588,7 @@ function buildCommunityPageHTML(community) {
       <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:16px; padding:20px; margin-bottom:20px; display:flex; align-items:center; gap:16px; box-shadow:0 4px 15px rgba(0, 0, 0, 0.03); direction:rtl; flex-wrap:wrap;">
         ${community.image
           ? `<img src="${escHtml(community.image)}" alt="" style="width:56px; height:56px; border-radius:14px; object-fit:cover; flex-shrink:0;">`
-          : `<div style="width:56px; height:56px; border-radius:14px; background:linear-gradient(135deg,#2f6fdb,#2f6fdb); color:#ffffff; display:flex; align-items:center; justify-content:center; font-size:26px; flex-shrink:0;">${escHtml(community.icon || '🏘️')}</div>`}
+          : `<div style="width:56px; height:56px; border-radius:14px; background:linear-gradient(135deg,#111111,#111111); color:#ffffff; display:flex; align-items:center; justify-content:center; font-size:26px; flex-shrink:0;">${escHtml(community.icon || '🏘️')}</div>`}
         <div style="flex:1; min-width:200px;">
           <div style="font-size:20px; font-weight:900; color:#0f172a;">${escHtml(community.name || 'קהילה')}</div>
           <div style="font-size:13px; color:#64748b; margin-top:2px;">${escHtml(community.desc || '')}</div>
@@ -9865,7 +9865,7 @@ function statsBodyHTML() {
       ${statsCard('users', 'גולשים פעילים', '#4f46e5', sum(act), sum(actP), act, '', `ביקורים ייחודיים · ${n} ימים`)}
       ${statsCard('ret', 'משתמשים חוזרים', '#0d9488', sum(ret), sum(retP), ret)}
       ${statsCard('ret', 'אחוז חזרה', '#0891b2', retRate, retRateP, rateSeries, '%', 'מתוך הגולשים — כמה חזרו שוב')}
-      ${statsCard('plus', 'גולשים חדשים', '#2f6fdb', sum(nw), sum(nwP), nw)}
+      ${statsCard('plus', 'גולשים חדשים', '#111111', sum(nw), sum(nwP), nw)}
       ${statsCard('eye', 'צפיות בעמודים', '#7c3aed', sum(pv), sum(pvP), pv)}
       ${statsCard('up', 'העלאות חדשות', '#ea580c', sum(up), sum(upP), up, '', 'גלריות, סיפורים וקומיקס')}
       ${statsCard('heart', 'פעולות מעורבות', '#e11d48', sum(eng), sum(engP), eng, '', 'לייקים, שמירות, תגובות והודעות')}
@@ -10022,7 +10022,7 @@ function buildInfoSubmitBox() {
       <div style="font-size:12px; color:#64748b; margin-bottom:10px; line-height:1.4;">כל אחד יכול לכתוב לנו — גם בלי הרשמה.</div>
       <input id="info-submit-name" type="text" placeholder="שם (אופציונלי)" value="${prefill}" style="width:100%; box-sizing:border-box; padding:9px 12px; border:1px solid #dddddd; border-radius:8px; font-size:13px; margin-bottom:8px;">
       <textarea id="info-submit-text" rows="3" placeholder="כתבו כאן את המידע/ההודעה..." style="width:100%; box-sizing:border-box; padding:9px 12px; border:1px solid #dddddd; border-radius:8px; font-size:13px; resize:vertical; margin-bottom:8px;"></textarea>
-      <button onclick="submitUserInfo()" style="width:100%; background:#2f6fdb; color:#ffffff; border:none; border-radius:8px; padding:10px; font-size:13.5px; font-weight:800; cursor:pointer;">שליחה</button>
+      <button onclick="submitUserInfo()" style="width:100%; background:#111111; color:#ffffff; border:none; border-radius:8px; padding:10px; font-size:13.5px; font-weight:800; cursor:pointer;">שליחה</button>
     </div>
   `;
 }
@@ -10117,7 +10117,7 @@ function buildInfoPage() {
         ${kpi('an-month', 'כניסות החודש', '📅', '#7c3aed')}
         ${kpi('an-total', 'סה״כ כניסות', '🚪', '#0f172a')}
         ${kpi('an-pageviews', 'צפיות בעמודים', '👁️', '#0f172a')}
-        ${kpi('an-users', 'משתמשים רשומים', '🧑‍🤝‍🧑', '#2563eb')}
+        ${kpi('an-users', 'משתמשים רשומים', '🧑‍🤝‍🧑', '#111111')}
         ${kpi('an-active24', 'פעילים ב-24 שעות', '🟢', '#16a34a')}
         ${kpi('an-active30', 'פעילים ב-30 יום', '📈', '#16a34a')}
         ${kpi('an-galleries', 'גלריות', '🖼️', '#8b5cf6')}
@@ -10153,7 +10153,7 @@ function buildInfoPage() {
           <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:18px; margin-bottom:24px; box-shadow:0 4px 15px rgba(0, 0, 0, 0.03);">
             <div style="font-size:16px; font-weight:900; color:#0f172a; margin-bottom:8px;">📝 המידע שלי</div>
             <textarea id="admin-info-notes" rows="8" placeholder="כתוב כאן מידע פרטי שרק אתה רואה..." style="width:100%; box-sizing:border-box; padding:12px; border:1px solid #dddddd; border-radius:10px; font-size:14px; line-height:1.6; resize:vertical;">${escHtml(adminInfoText)}</textarea>
-            <button onclick="saveAdminInfo()" style="margin-top:10px; background:#2f6fdb; color:#ffffff; border:none; border-radius:8px; padding:10px 20px; font-size:14px; font-weight:800; cursor:pointer;">שמור מידע</button>
+            <button onclick="saveAdminInfo()" style="margin-top:10px; background:#111111; color:#ffffff; border:none; border-radius:8px; padding:10px 20px; font-size:14px; font-weight:800; cursor:pointer;">שמור מידע</button>
           </div>
 
           <div style="font-size:16px; font-weight:900; color:#0f172a; margin-bottom:12px;">📥 מידע שהתקבל ממשתמשים (טופס ציבורי)</div>
@@ -10192,7 +10192,7 @@ function renderAnalyticsChart(daily) {
     const h = Math.round((d.val / max) * 100);
     return `<div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; height:100%;">
       <div style="font-size:11px; font-weight:800; color:#334155;">${escHtml(d.val)}</div>
-      <div style="width:100%; flex:1; display:flex; align-items:flex-end;"><div style="width:100%; height:${h}%; min-height:3px; background:linear-gradient(180deg,#2f6fdb,#2f6fdb); border-radius:6px 6px 0 0; color:#ffffff;"></div></div>
+      <div style="width:100%; flex:1; display:flex; align-items:flex-end;"><div style="width:100%; height:${h}%; min-height:3px; background:linear-gradient(180deg,#111111,#111111); border-radius:6px 6px 0 0; color:#ffffff;"></div></div>
       <div style="font-size:11px; color:#94a3b8; font-weight:700;">${escHtml(d.label)}</div>
     </div>`;
   }).join('');
@@ -10316,7 +10316,7 @@ function buildQuestionsPage() {
             <div class="q-list" id="questions-list">${questionsListHTML()}</div>
           </div>
           <div class="art-sidebar art-sidebar-right">
-            <button onclick="openQuestionModal()" style="background:#2f6fdb; width:100%; padding:12px 16px; border-radius:8px; border:none; color:#ffffff; font-weight:bold; font-size:14px; cursor:pointer; margin-bottom:16px;">➕ שאל שאלה חדשה</button>
+            <button onclick="openQuestionModal()" style="background:#111111; width:100%; padding:12px 16px; border-radius:8px; border:none; color:#ffffff; font-weight:bold; font-size:14px; cursor:pointer; margin-bottom:16px;">➕ שאל שאלה חדשה</button>
             ${buildSidebarTabs('', 'questions')}
           </div>
           ${buildLeftSidebarBox('', 'questions')}
@@ -10607,7 +10607,7 @@ function buildOffersPage() {
             <div class="of-list" id="offers-list">${offersListHTML()}</div>
           </div>
           <div class="art-sidebar art-sidebar-right">
-            <button onclick="openOfferModal()" style="background:#2f6fdb; width:100%; padding:12px 16px; border-radius:8px; border:none; color:#ffffff; font-weight:bold; font-size:14px; cursor:pointer; margin-bottom:16px;">➕ הוסף הצעה חדשה</button>
+            <button onclick="openOfferModal()" style="background:#111111; width:100%; padding:12px 16px; border-radius:8px; border:none; color:#ffffff; font-weight:bold; font-size:14px; cursor:pointer; margin-bottom:16px;">➕ הוסף הצעה חדשה</button>
             ${buildSidebarTabs('', 'offers')}
           </div>
           ${buildLeftSidebarBox('', 'offers')}
@@ -10781,16 +10781,16 @@ function buildSidebarNameChangeSectionHTML() {
       </div>
       
       <div style="font-size: 12px; color: #475569; margin-bottom: 8px;">
-        שם נוכחי: <strong style="color: #2563eb;">${escHtml(currentName)}</strong>
+        שם נוכחי: <strong style="color: #111111;">${escHtml(currentName)}</strong>
       </div>
 
       ${canChange ? `
         <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px;">
           <input type="text" id="pf-new-name-input" value="${escHtml(currentName)}" placeholder="הכנס שם חדש..." 
                  style="flex: 1; min-width: 120px; padding: 7px 10px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13px; outline: none; transition: border-color 0.2s;"
-                 onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#cbd5e1'">
+                 onfocus="this.style.borderColor='#111111'" onblur="this.style.borderColor='#cbd5e1'">
           <button type="button" onclick="saveUserNickname()" 
-                  style="background: #2563eb; color: #ffffff; border: none; border-radius: 8px; padding: 7px 14px; font-size: 13px; font-weight: 700; cursor: pointer; transition: background 0.15s ease;">
+                  style="background: #111111; color: #ffffff; border: none; border-radius: 8px; padding: 7px 14px; font-size: 13px; font-weight: 700; cursor: pointer; transition: background 0.15s ease;">
             שמור
           </button>
         </div>
@@ -10940,7 +10940,7 @@ function buildSidebarAboutMeSectionHTML() {
       <textarea id="pf-about-likes" rows="2" maxlength="500" placeholder="מופרד בפסיקים, לדוגמה: ..., ..." style="${fld} resize:vertical;">${escHtml(p.aboutLikes || '')}</textarea>
       <div style="${lbl}">🚫 מה אני לא אוהב/ת</div>
       <textarea id="pf-about-dislikes" rows="2" maxlength="500" placeholder="מופרד בפסיקים" style="${fld} resize:vertical;">${escHtml(p.aboutDislikes || '')}</textarea>
-      <button type="button" onclick="saveAboutMe()" style="margin-top:10px; width:100%; background:#2563eb; color:#ffffff; border:none; border-radius:8px; padding:8px 14px; font-size:13px; font-weight:700; cursor:pointer;">שמור פרטים</button>
+      <button type="button" onclick="saveAboutMe()" style="margin-top:10px; width:100%; background:#111111; color:#ffffff; border:none; border-radius:8px; padding:8px 14px; font-size:13px; font-weight:700; cursor:pointer;">שמור פרטים</button>
     </div>
   `;
 }
@@ -11054,7 +11054,7 @@ function buildSidebarVerificationSectionHTML() {
       ` : ''}
       <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 6px;">
         <label style="background: #f8fafc; border: 1.5px dashed #cbd5e1; border-radius: 8px; padding: 10px; text-align: center; cursor: pointer; font-size: 12.5px; color: #334155; font-weight: 600; transition: all 0.2s;"
-               onmouseover="this.style.borderColor='#2563eb'" onmouseout="this.style.borderColor='#cbd5e1'">
+               onmouseover="this.style.borderColor='#111111'" onmouseout="this.style.borderColor='#cbd5e1'">
           📷 בחר תמונת פנים
           <input type="file" id="pf-verification-file" accept="image/*" style="display: none;" onchange="previewVerificationPhoto(this)">
         </label>
@@ -11062,7 +11062,7 @@ function buildSidebarVerificationSectionHTML() {
           <img id="pf-verification-preview-img" style="width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 2px solid #111111; margin: 0 auto;">
         </div>
         <button type="button" onclick="submitAccountVerification()" 
-                style="background: #2563eb; color: #ffffff; border: none; border-radius: 8px; padding: 8px 14px; font-size: 13px; font-weight: 700; cursor: pointer; transition: background 0.15s ease;">
+                style="background: #111111; color: #ffffff; border: none; border-radius: 8px; padding: 8px 14px; font-size: 13px; font-weight: 700; cursor: pointer; transition: background 0.15s ease;">
           שלח תמונת פנים למנהל
         </button>
       </div>
@@ -11563,7 +11563,7 @@ function buildSidebarTabs(savedHTML, pageType) {
       <div class="art-sidebar-box" style="text-align:center; padding:18px; border:1.5px solid #c4b5fd; background:#faf8ff; border-radius:12px;">
         <div style="font-size:15px; font-weight:900; color:#262626; margin-bottom:6px;">🤖 פרסום מודעה מהיר</div>
         <div style="font-size:12px; color:#64748b; margin-bottom:12px; line-height:1.45;">עוזר מונחה שיפרסם עבורך מודעה חדשה בצ׳אט תוך 30 שניות</div>
-        <button onclick="openQuickPublish()" style="width:100%; background:linear-gradient(135deg,#2f6fdb,#2f6fdb); color:#ffffff; border:none; border-radius:10px; padding:12px; font-size:14px; font-weight:800; cursor:pointer; box-shadow:0 3px 10px rgba(0, 0, 0, 0.15);">🤖 צ׳אט מהיר לפרסום מודעה</button>
+        <button onclick="openQuickPublish()" style="width:100%; background:linear-gradient(135deg,#111111,#111111); color:#ffffff; border:none; border-radius:10px; padding:12px; font-size:14px; font-weight:800; cursor:pointer; box-shadow:0 3px 10px rgba(0, 0, 0, 0.15);">🤖 צ׳אט מהיר לפרסום מודעה</button>
       </div>
     ` },
     { id: 'sites',     label: '🌐 אתרים',  html: buildPromotedSitesBox() },
@@ -13193,15 +13193,15 @@ const HOME_WATCH_DAYS = ['יום א׳', 'יום ב׳', 'יום ג׳', 'יום ד
 function homeWatchRing(r, color, pct) {
   const c = 2 * Math.PI * r;
   const p = Math.max(0, Math.min(1, pct || 0));
-  return `<circle cx="50" cy="50" r="${r}" fill="none" stroke="${color}" stroke-opacity=".22" stroke-width="9"/>
-    <circle class="hw-ring" cx="50" cy="50" r="${r}" fill="none" stroke="${color}" stroke-width="9" stroke-linecap="round"
+  return `<circle cx="50" cy="50" r="${r}" fill="none" style="stroke:${color}" stroke-opacity=".16" stroke-width="9"/>
+    <circle class="hw-ring" cx="50" cy="50" r="${r}" fill="none" style="stroke:${color}" stroke-width="9" stroke-linecap="round"
       stroke-dasharray="${(c * p).toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 50 50)"/>`;
 }
 function homeWatchGauge(color, pct, inner) {
   const r = 20, c = 2 * Math.PI * r, p = Math.max(0, Math.min(1, pct || 0));
   return `<span class="hw-cmp">
-      <svg viewBox="0 0 50 50"><circle cx="25" cy="25" r="${r}" fill="none" stroke="${color}" stroke-opacity=".25" stroke-width="5"/>
-        <circle cx="25" cy="25" r="${r}" fill="none" stroke="${color}" stroke-width="5" stroke-linecap="round"
+      <svg viewBox="0 0 50 50"><circle cx="25" cy="25" r="${r}" fill="none" style="stroke:${color}" stroke-opacity=".16" stroke-width="5"/>
+        <circle cx="25" cy="25" r="${r}" fill="none" style="stroke:${color}" stroke-width="5" stroke-linecap="round"
           stroke-dasharray="${(c * p).toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 25 25)"/></svg>
       <b style="color:${color}">${inner}</b>
     </span>`;
@@ -13238,20 +13238,20 @@ function homeWatchBodyHTML() {
     </div>
     <div class="hw-watch-mid">
       <svg class="hw-watch-rings" viewBox="0 0 100 100">
-        ${homeWatchRing(42, '#e11d48', d.posts / 10)}
-        ${homeWatchRing(30, '#16a34a', d.likes / 50)}
-        ${homeWatchRing(18, '#0891b2', avg / 5)}
+        ${homeWatchRing(42, 'var(--hw-c1)', d.posts / 10)}
+        ${homeWatchRing(30, 'var(--hw-c2)', d.likes / 50)}
+        ${homeWatchRing(18, 'var(--hw-c3)', avg / 5)}
       </svg>
       <div class="hw-watch-lines">
-        <span style="color:#e11d48">${d.posts}<small>פוסטים</small></span>
-        <span style="color:#16a34a">${d.likes}<small>לייקים</small></span>
-        <span style="color:#0891b2">${avg ? avg.toFixed(1) : '—'}<small>דירוג</small></span>
+        <span style="color:var(--hw-c1)">${d.posts}<small>פוסטים</small></span>
+        <span style="color:var(--hw-c1)">${d.likes}<small>לייקים</small></span>
+        <span style="color:var(--hw-c1)">${avg ? avg.toFixed(1) : '—'}<small>דירוג</small></span>
       </div>
     </div>
     <div class="hw-watch-gauges"><div class="hw-watch-cmps">
-      ${homeWatchGauge('#d97706', Math.min(1, d.points / 500), d.points)}
-      ${homeWatchGauge('#2f6fdb', d.rank ? Math.max(0.08, 1 - (d.rank - 1) / 10) : 0, d.rank ? '#' + d.rank : '—')}
-      ${homeWatchGauge('#ea580c', Math.min(1, d.rCount / 20), d.rCount)}
+      ${homeWatchGauge('var(--hw-c1)', Math.min(1, d.points / 500), d.points)}
+      ${homeWatchGauge('var(--hw-c1)', d.rank ? Math.max(0.08, 1 - (d.rank - 1) / 10) : 0, d.rank ? '#' + d.rank : '—')}
+      ${homeWatchGauge('var(--hw-c1)', Math.min(1, d.rCount / 20), d.rCount)}
     </div>
     <div class="hw-watch-cmp-labels"><span>נקודות</span><span>מקום</span><span>מדרגים</span></div></div>
     ${mine ? '' : '<div class="hw-watch-cta">התחברו כדי לראות את שלכם</div>'}`;
@@ -15659,7 +15659,7 @@ function buildPhotosPage(albums, section) {
           <input id="profile-edit-telegram" type="text" placeholder="שם משתמש בטלגרם (ללא @)" value="${escHtml(tg)}" style="padding:8px 12px; border:1px solid #dddddd; border-radius:8px; font-size:13px; width:100%; box-sizing:border-box;">
           <input id="profile-edit-email" type="email" placeholder="אימייל" value="${escHtml(email)}" style="padding:8px 12px; border:1px solid #dddddd; border-radius:8px; font-size:13px; width:100%; box-sizing:border-box;">
           <div style="display:flex; gap:6px; margin-top: 4px;">
-            <button onclick="photoSaveProfile()" style="background:#2f6fdb; color:#ffffff; border:none; padding:8px 12px; border-radius:8px; font-size:12px; font-weight:800; cursor:pointer; flex:1;">שמור</button>
+            <button onclick="photoSaveProfile()" style="background:#111111; color:#ffffff; border:none; padding:8px 12px; border-radius:8px; font-size:12px; font-weight:800; cursor:pointer; flex:1;">שמור</button>
             <button onclick="photoToggleProfileEdit()" style="background:#f3f4f6; color:#555555; border:none; padding:8px 12px; border-radius:8px; font-size:12px; font-weight:800; cursor:pointer;">ביטול</button>
           </div>
         </div>
@@ -15746,7 +15746,7 @@ function buildPhotosPage(albums, section) {
   let sectionTitle = 'כל הגלריות';
   let searchPlaceholder = '🔍 חיפוש גלריות...';
   let noResultsText = 'לא נמצאו עיצובים התואמים לחיפוש';
-  let addBtnHTML = `<button class="cta-add-btn" onclick="openPhotoModal()" style="background:#2f6fdb; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: #ffffff; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); transition: all 0.2s;">
+  let addBtnHTML = `<button class="cta-add-btn" onclick="openPhotoModal()" style="background:#111111; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: #ffffff; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); transition: all 0.2s;">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
           <line x1="12" y1="5" x2="12" y2="19"></line>
           <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -15758,10 +15758,10 @@ function buildPhotosPage(albums, section) {
     sectionTitle = 'כל הרעיונות';
     searchPlaceholder = '🔍 חיפוש רעיונות...';
     noResultsText = 'לא נמצאו רעיונות התואמים לחיפוש';
-    addBtnHTML = `<button class="cta-add-btn" onclick="openIdeaModal()" style="background:#3b82f6; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: white; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); transition: all 0.2s;">
+    addBtnHTML = `<button class="cta-add-btn" onclick="openIdeaModal()" style="background:#111111; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: white; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); transition: all 0.2s;">
         💡 הוסף רעיון חדש
        </button>
-       <button onclick="openProblemModal()" style="background:#2f6fdb; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: #ffffff; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+       <button onclick="openProblemModal()" style="background:#111111; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: #ffffff; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
         🎯 פרסם בעיה לפתרון (מכרז)
        </button>`;
   } else if (section === 'communities') {
@@ -15773,24 +15773,24 @@ function buildPhotosPage(albums, section) {
     sectionTitle = 'כל המוצרים';
     searchPlaceholder = '🔍 חיפוש מוצרים...';
     noResultsText = 'לא נמצאו מוצרים התואמים לחיפוש';
-    addBtnHTML = `<button class="cta-add-btn" onclick="openPhotoModal()" style="background:#2f6fdb; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: #ffffff; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); transition: all 0.2s;">
+    addBtnHTML = `<button class="cta-add-btn" onclick="openPhotoModal()" style="background:#111111; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: #ffffff; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); transition: all 0.2s;">
         ➕ הוסף מוצר יד שניה
        </button>
-       <button onclick="openWantedModal()" style="background:#2563eb; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: white; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+       <button onclick="openWantedModal()" style="background:#111111; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: white; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
         🔎 מחפש מוצר (קבל הצעות)
        </button>`;
   } else if (section === 'partnerships') {
     sectionTitle = 'כל השותפויות';
     searchPlaceholder = '🔍 חיפוש שותפויות...';
     noResultsText = 'לא נמצאו שותפויות התואמות לחיפוש';
-    addBtnHTML = `<button class="cta-add-btn" onclick="openPhotoModal()" style="background:#2f6fdb; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: #ffffff; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); transition: all 0.2s;">
+    addBtnHTML = `<button class="cta-add-btn" onclick="openPhotoModal()" style="background:#111111; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: #ffffff; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); transition: all 0.2s;">
         ➕ פרסום שותפות חדשה
        </button>`;
   } else if (section === 'reviews') {
     sectionTitle = 'כל הביקורות';
     searchPlaceholder = '🔍 חיפוש ביקורות...';
     noResultsText = 'לא נמצאו ביקורות התואמות לחיפוש';
-    addBtnHTML = `<button class="cta-add-btn" onclick="openPhotoModal()" style="background:#2f6fdb; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: #ffffff; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); transition: all 0.2s;">
+    addBtnHTML = `<button class="cta-add-btn" onclick="openPhotoModal()" style="background:#111111; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: #ffffff; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); transition: all 0.2s;">
         ✍️ כתוב ביקורת
        </button>
        <button onclick="openClassActionModal()" style="background:#0f172a; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: white; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
@@ -15849,7 +15849,7 @@ function buildPhotosPage(albums, section) {
 
           <div class="art-pagination" style="display:none"></div>
           <div class="art-no-results" style="display:none">${noResultsText}</div>
-          ${(isAdmin() || isEditMode) ? (section === 'ideas' ? `<button class="art-add-btn" onclick="openIdeaModal()" style="background:#3b82f6">💡 הוסף רעיון חדש</button>` : `<button class="art-add-btn" onclick="openPhotoModal()" style="background:#2f6fdb; color:#ffffff;">+ הוסף עיצוב אתר חדש</button>`) : ''}
+          ${(isAdmin() || isEditMode) ? (section === 'ideas' ? `<button class="art-add-btn" onclick="openIdeaModal()" style="background:#111111">💡 הוסף רעיון חדש</button>` : `<button class="art-add-btn" onclick="openPhotoModal()" style="background:#111111; color:#ffffff;">+ הוסף עיצוב אתר חדש</button>`) : ''}
         </div>
         <div class="art-sidebar art-sidebar-right">
           ${addBtnHTML}
@@ -15867,35 +15867,35 @@ function ideaExecutionBoxHTML(a) {
     const lines = a.executionStepsText.split(/\n+/).map(l => l.trim()).filter(Boolean);
     stepsHTML = lines.map((line, idx) => `
       <div style="display:flex; gap:12px; align-items:flex-start; margin-bottom:14px; background:#f8fafc; padding:10px 12px; border-radius:10px; border:1px solid #e2e8f0;">
-        <span style="background:linear-gradient(135deg,#3b82f6,#2563eb); color:#ffffff; font-weight:900; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0; box-shadow:0 2px 6px rgba(59,130,246,0.3);">${idx + 1}</span>
+        <span style="background:linear-gradient(135deg,#111111,#111111); color:#ffffff; font-weight:900; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0; box-shadow:0 2px 6px rgba(59,130,246,0.3);">${idx + 1}</span>
         <div style="font-size:13.5px; color:#334155; line-height:1.5; font-weight:700;">${escHtml(line)}</div>
       </div>
     `).join('');
   } else {
     stepsHTML = `
       <div style="display:flex; gap:12px; align-items:flex-start; margin-bottom:14px; background:#f8fafc; padding:10px 12px; border-radius:10px; border:1px solid #e2e8f0;">
-        <span style="background:linear-gradient(135deg,#3b82f6,#2563eb); color:#ffffff; font-weight:900; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0; box-shadow:0 2px 6px rgba(59,130,246,0.3);">1</span>
+        <span style="background:linear-gradient(135deg,#111111,#111111); color:#ffffff; font-weight:900; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0; box-shadow:0 2px 6px rgba(59,130,246,0.3);">1</span>
         <div>
           <div style="font-size:13.5px; font-weight:800; color:#0f172a;">📌 אפיון ומחקר שוק</div>
           <div style="font-size:12px; color:#64748b; line-height:1.4; margin-top:2px;">הגדרת דרישות המערכת, אפיון הפיצ'רים ובדיקת כדאיות טכנית.</div>
         </div>
       </div>
       <div style="display:flex; gap:12px; align-items:flex-start; margin-bottom:14px; background:#f8fafc; padding:10px 12px; border-radius:10px; border:1px solid #e2e8f0;">
-        <span style="background:linear-gradient(135deg,#3b82f6,#2563eb); color:#ffffff; font-weight:900; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0; box-shadow:0 2px 6px rgba(59,130,246,0.3);">2</span>
+        <span style="background:linear-gradient(135deg,#111111,#111111); color:#ffffff; font-weight:900; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0; box-shadow:0 2px 6px rgba(59,130,246,0.3);">2</span>
         <div>
           <div style="font-size:13.5px; font-weight:800; color:#0f172a;">🛠️ עיצוב חווית משתמש (UI/UX)</div>
           <div style="font-size:12px; color:#64748b; line-height:1.4; margin-top:2px;">יצירת Wireframes ועיצוב ממשק משתמש מודרני, פשוט ונגיש.</div>
         </div>
       </div>
       <div style="display:flex; gap:12px; align-items:flex-start; margin-bottom:14px; background:#f8fafc; padding:10px 12px; border-radius:10px; border:1px solid #e2e8f0;">
-        <span style="background:linear-gradient(135deg,#3b82f6,#2563eb); color:#ffffff; font-weight:900; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0; box-shadow:0 2px 6px rgba(59,130,246,0.3);">3</span>
+        <span style="background:linear-gradient(135deg,#111111,#111111); color:#ffffff; font-weight:900; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0; box-shadow:0 2px 6px rgba(59,130,246,0.3);">3</span>
         <div>
           <div style="font-size:13.5px; font-weight:800; color:#0f172a;">💻 פיתוח גרסת MVP</div>
           <div style="font-size:12px; color:#64748b; line-height:1.4; margin-top:2px;">כתיבת הקוד בטכנולוגיות המתקדמות ביותר וסנכרון מלא עם מסד הנתונים.</div>
         </div>
       </div>
       <div style="display:flex; gap:12px; align-items:flex-start; margin-bottom:14px; background:#f8fafc; padding:10px 12px; border-radius:10px; border:1px solid #e2e8f0;">
-        <span style="background:linear-gradient(135deg,#3b82f6,#2563eb); color:#ffffff; font-weight:900; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0; box-shadow:0 2px 6px rgba(59,130,246,0.3);">4</span>
+        <span style="background:linear-gradient(135deg,#111111,#111111); color:#ffffff; font-weight:900; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0; box-shadow:0 2px 6px rgba(59,130,246,0.3);">4</span>
         <div>
           <div style="font-size:13.5px; font-weight:800; color:#0f172a;">🚀 בדיקות והשקה</div>
           <div style="font-size:12px; color:#64748b; line-height:1.4; margin-top:2px;">הרצת טסטים, בדיקות עומסים ואבטחה, והשקה הדרגתית לקהילת המשתמשים.</div>
@@ -15912,7 +15912,7 @@ function ideaExecutionBoxHTML(a) {
       <div style="display:flex; flex-direction:column;">
         ${stepsHTML}
       </div>
-      <div style="background:#eff6ff; border-right:4px solid #111111; padding:12px 14px; border-radius:10px; font-size:12.5px; color:#1e40af; line-height:1.5; margin-top:12px; font-weight:600;">
+      <div style="background:#f6f7f9; border-right:4px solid #111111; padding:12px 14px; border-radius:10px; font-size:12.5px; color:#1e40af; line-height:1.5; margin-top:12px; font-weight:600;">
         💡 <b>טיפ זהב לביצוע:</b> מומלץ להתחיל בבניית אב-טיפוס (Prototype) ולקבל משוב מהיר מהגולשים בקהילה לפני פיתוח מלא.
       </div>
     </div>
@@ -15977,7 +15977,7 @@ function secondhandBuyBoxHTML(a) {
   ];
   const stepsHTML = steps.map(s => `
       <div style="display:flex; gap:12px; align-items:flex-start; margin-bottom:14px; background:#f8fafc; padding:10px 12px; border-radius:10px; border:1px solid #e2e8f0;">
-        <span style="background:linear-gradient(135deg,#3b82f6,#2563eb); color:#ffffff; font-weight:900; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0; box-shadow:0 2px 6px rgba(59,130,246,0.3);">${s.n}</span>
+        <span style="background:linear-gradient(135deg,#111111,#111111); color:#ffffff; font-weight:900; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0; box-shadow:0 2px 6px rgba(59,130,246,0.3);">${s.n}</span>
         <div><div style="font-size:13.5px; font-weight:800; color:#0f172a;">${s.t}</div><div style="font-size:12px; color:#64748b; line-height:1.4; margin-top:2px;">${s.d}</div></div>
       </div>`).join('');
   return `
@@ -15986,14 +15986,14 @@ function secondhandBuyBoxHTML(a) {
         <span>🤝 איך רוכשים</span>
       </div>
       <div style="display:flex; flex-direction:column;">${stepsHTML}</div>
-      <div style="background:#eff6ff; border-right:4px solid #111111; padding:12px 14px; border-radius:10px; font-size:12.5px; color:#1e40af; line-height:1.5; margin-top:12px; font-weight:600;">
+      <div style="background:#f6f7f9; border-right:4px solid #111111; padding:12px 14px; border-radius:10px; font-size:12.5px; color:#1e40af; line-height:1.5; margin-top:12px; font-weight:600;">
         💡 <b>טיפ לרכישה בטוחה:</b> בדקו את המוצר לפני התשלום ותאמו מפגש במקום ציבורי ומואר.
       </div>
       ${(a.offerType === 'השאלה' && Array.isArray(a.loanTerms) && a.loanTerms.length) ? `
       <div style="margin-top:16px; background:#ffffff; border:1.5px solid #cbd5e1; border-radius:12px; padding:14px;">
         <div style="font-size:14px; font-weight:900; color:#0f172a; margin-bottom:10px; display:flex; align-items:center; gap:6px;">📜 תנאי חוזה ההשאלה</div>
         <div style="display:flex; flex-direction:column; gap:6px;">
-          ${a.loanTerms.map((t, i) => `<div style="font-size:12.5px; color:#334155; line-height:1.5; display:flex; gap:6px;"><span style="color:#2563eb; font-weight:800;">${i + 1}.</span><span>${escHtml(t)}</span></div>`).join('')}
+          ${a.loanTerms.map((t, i) => `<div style="font-size:12.5px; color:#334155; line-height:1.5; display:flex; gap:6px;"><span style="color:#111111; font-weight:800;">${i + 1}.</span><span>${escHtml(t)}</span></div>`).join('')}
         </div>
         <div style="font-size:11px; color:#94a3b8; margin-top:10px;">* התנאים מוצגים כהסכמה בין המשאיל לשואל.</div>
       </div>` : ''}
@@ -16013,7 +16013,7 @@ function secondhandDetailsBoxHTML(a) {
   // תיבה ראשית לפי סוג ההצעה
   let mainBox;
   if (offer === 'השאלה') {
-    mainBox = `<div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:12px; padding:12px 14px;"><div style="font-size:11.5px; color:#1e40af; font-weight:800; margin-bottom:4px;">🔄 להשאלה · לתקופה</div><div style="font-size:18px; font-weight:900; color:#1d4ed8;">${escHtml(detail || 'לפי סיכום')}</div></div>`;
+    mainBox = `<div style="background:#f6f7f9; border:1px solid #dfe2e7; border-radius:12px; padding:12px 14px;"><div style="font-size:11.5px; color:#1e40af; font-weight:800; margin-bottom:4px;">🔄 להשאלה · לתקופה</div><div style="font-size:18px; font-weight:900; color:#000000;">${escHtml(detail || 'לפי סיכום')}</div></div>`;
   } else if (offer === 'החלפה') {
     mainBox = `<div style="background:#efefef; border:1px solid #e4e4e7; border-radius:12px; padding:12px 14px;"><div style="font-size:11.5px; color:#111111; font-weight:800; margin-bottom:4px;">🔁 להחלפה תמורת</div><div style="font-size:18px; font-weight:900; color:#111111;">${escHtml(detail || 'לפי סיכום')}</div></div>`;
   } else {
@@ -17053,7 +17053,7 @@ function openBatteryTasksModal() {
         <span style="font-size:14px; font-weight:800; color:${t.done ? '#15803d' : '#334155'};">${escHtml(t.title)}</span>
       </div>
       ${t.done ? '<span style="font-size:12px; font-weight:900; color:#16a34a; background:#dcfce7; padding:4px 10px; border-radius:20px;">הושלם ✓</span>' : `
-        <button onclick="document.getElementById('battery-tasks-modal').style.display='none'; ${t.action}" style="background:#2563eb; color:#ffffff; border:none; border-radius:8px; padding:6px 14px; font-size:12.5px; font-weight:800; cursor:pointer; box-shadow:0 2px 6px rgba(37,99,235,0.2);">בצע עכשיו ➔</button>
+        <button onclick="document.getElementById('battery-tasks-modal').style.display='none'; ${t.action}" style="background:#111111; color:#ffffff; border:none; border-radius:8px; padding:6px 14px; font-size:12.5px; font-weight:800; cursor:pointer; box-shadow:0 2px 6px rgba(17, 17, 17,0.2);">בצע עכשיו ➔</button>
       `}
     </div>
   `).join('');
@@ -17110,7 +17110,7 @@ function openSelfieVerificationModal() {
       </p>
 
       <div style="margin-bottom:20px;">
-        <label style="display:inline-block; background:#2563eb; color:#ffffff; padding:12px 24px; border-radius:10px; font-size:14px; font-weight:800; cursor:pointer; box-shadow:0 4px 12px rgba(37,99,235,0.25);">
+        <label style="display:inline-block; background:#111111; color:#ffffff; padding:12px 24px; border-radius:10px; font-size:14px; font-weight:800; cursor:pointer; box-shadow:0 4px 12px rgba(17, 17, 17,0.25);">
           📷 בחר תמונת אימות / סלפי
           <input type="file" accept="image/*" onchange="confirmSelfiePhotoUpload(this)" style="display:none;">
         </label>
@@ -17716,14 +17716,14 @@ function userWatchHTML(st) {
           ? `<div class="uw-own-actions"><button type="button" class="uw-edit-av" onclick="openAvatarEditor()">עיצוב הדמות שלי</button><button type="button" class="uw-edit-av alt" onclick="openKinksEditor()">מה אני אוהב/ת ומחפש/ת</button></div>` : ''}
         <div class="uw-mid">
           <svg class="uw-rings" viewBox="0 0 100 100">
-            ${homeWatchRing(42, '#e11d48', st.galleries / 10)}
-            ${homeWatchRing(30, '#16a34a', avg / 5)}
-            ${homeWatchRing(18, '#0891b2', r.count / 20)}
+            ${homeWatchRing(42, 'var(--hw-c1)', st.galleries / 10)}
+            ${homeWatchRing(30, 'var(--hw-c2)', avg / 5)}
+            ${homeWatchRing(18, 'var(--hw-c3)', r.count / 20)}
           </svg>
           <div class="uw-lines">
-            <span style="color:#e11d48">${st.galleries}<small>גלריות שהועלו</small></span>
-            <span style="color:#16a34a">${avg ? avg : '—'}<small>${avg ? 'דירוג ממוצע' : 'עדיין בלי דירוג'}</small></span>
-            <span style="color:#0891b2">${r.count}<small>מדרגים</small></span>
+            <span style="color:var(--hw-c1)">${st.galleries}<small>גלריות שהועלו</small></span>
+            <span style="color:var(--hw-c1)">${avg ? avg : '—'}<small>${avg ? 'דירוג ממוצע' : 'עדיין בלי דירוג'}</small></span>
+            <span style="color:var(--hw-c1)">${r.count}<small>מדרגים</small></span>
           </div>
         </div>
         ${isOwn ? `
@@ -18174,7 +18174,7 @@ function openWantedModal() {
       <label style="font-size:13px; font-weight:700;">תקציב מקסימלי (אופציונלי)</label>
       <input id="wt-budget" type="text" placeholder="לדוגמה: עד 2000 ₪" style="padding:10px 12px; border:1px solid #dddddd; border-radius:8px; font-size:14px; box-sizing:border-box;">
       <div style="display:flex; gap:10px; margin-top:4px;">
-        <button onclick="submitWanted()" style="flex:2; background:#2563eb; color:#ffffff; border:none; border-radius:8px; padding:11px; font-size:14px; font-weight:800; cursor:pointer;">🔎 פרסם בקשה</button>
+        <button onclick="submitWanted()" style="flex:2; background:#111111; color:#ffffff; border:none; border-radius:8px; padding:11px; font-size:14px; font-weight:800; cursor:pointer;">🔎 פרסם בקשה</button>
         <button onclick="document.getElementById('wanted-modal').remove()" style="flex:1; background:#ffffff; color:#334155; border:1px solid #dddddd; border-radius:8px; padding:11px; font-size:14px; cursor:pointer;">ביטול</button>
       </div>
     </div>`;
@@ -18216,7 +18216,7 @@ function secondhandWantedHowBoxHTML() {
   ];
   const stepsHTML = steps.map(s => `
       <div style="display:flex; gap:12px; align-items:flex-start; margin-bottom:14px; background:#f8fafc; padding:10px 12px; border-radius:10px; border:1px solid #e2e8f0;">
-        <span style="background:linear-gradient(135deg,#3b82f6,#2563eb); color:#ffffff; font-weight:900; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0;">${s.n}</span>
+        <span style="background:linear-gradient(135deg,#111111,#111111); color:#ffffff; font-weight:900; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0;">${s.n}</span>
         <div><div style="font-size:13.5px; font-weight:800; color:#0f172a;">${s.t}</div><div style="font-size:12px; color:#64748b; line-height:1.4; margin-top:2px;">${s.d}</div></div>
       </div>`).join('');
   return `<div class="idea-exec-box"><div style="font-size:16px; font-weight:900; color:#0f172a; border-bottom:2.5px solid #111111; padding-bottom:10px; margin-bottom:16px;">🔎 איך זה עובד</div><div style="display:flex; flex-direction:column;">${stepsHTML}</div></div>`;
@@ -18232,21 +18232,21 @@ function secondhandOffersBoxHTML(a) {
   const rows = offers.length ? offers.map((o, i) => {
     const chosen = a.chosenOffer === o.oid;
     return `
-      <div style="display:flex; align-items:center; gap:10px; background:${chosen ? '#eff6ff' : '#f8fafc'}; border:1px solid ${chosen ? '#93c5fd' : '#e2e8f0'}; border-radius:10px; padding:10px 12px;">
+      <div style="display:flex; align-items:center; gap:10px; background:${chosen ? '#f6f7f9' : '#f8fafc'}; border:1px solid ${chosen ? '#93c5fd' : '#e2e8f0'}; border-radius:10px; padding:10px 12px;">
         <div style="flex:1; min-width:0;">
-          <div style="font-size:14px; font-weight:900; color:#1d4ed8;">₪${escHtml(String(o.price))}${i === 0 ? ' <span style="font-size:11px; color:#111111;">🏆 הכי זול</span>' : ''}${chosen ? ' <span style="font-size:11px; color:#2563eb;">✓ נבחר</span>' : ''}</div>
+          <div style="font-size:14px; font-weight:900; color:#000000;">₪${escHtml(String(o.price))}${i === 0 ? ' <span style="font-size:11px; color:#111111;">🏆 הכי זול</span>' : ''}${chosen ? ' <span style="font-size:11px; color:#111111;">✓ נבחר</span>' : ''}</div>
           <div style="font-size:12px; color:#334155; font-weight:700;">${escHtml(o.model || '')}</div>
           <div style="font-size:11.5px; color:#64748b;">${escHtml(o.name || 'משתמש')}</div>
         </div>
-        ${canChoose && !a.chosenOffer ? `<button onclick="chooseWantedOffer('${artEsc(a.id)}','${artEsc(o.oid)}')" style="background:#2563eb; color:#ffffff; border:none; border-radius:8px; padding:6px 12px; font-size:12px; font-weight:800; cursor:pointer;">בחר</button>` : ''}
+        ${canChoose && !a.chosenOffer ? `<button onclick="chooseWantedOffer('${artEsc(a.id)}','${artEsc(o.oid)}')" style="background:#111111; color:#ffffff; border:none; border-radius:8px; padding:6px 12px; font-size:12px; font-weight:800; cursor:pointer;">בחר</button>` : ''}
       </div>`;
   }).join('') : '<div style="font-size:13px; color:#94a3b8; text-align:center; padding:12px;">אין הצעות עדיין — היו הראשונים להציע!</div>';
   return `
     <div class="idea-tech-box">
       <div style="font-size:16px; font-weight:900; color:#0f172a; border-bottom:2.5px solid #111111; padding-bottom:10px; margin-bottom:16px;">💰 הצעות (${offers.length})</div>
-      ${a.budget ? `<div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:12px; padding:12px 14px; margin-bottom:12px;"><div style="font-size:11.5px; color:#1e40af; font-weight:800; margin-bottom:4px;">🎯 תקציב</div><div style="font-size:15px; font-weight:900; color:#1d4ed8;">${escHtml(a.budget)}</div></div>` : ''}
+      ${a.budget ? `<div style="background:#f6f7f9; border:1px solid #dfe2e7; border-radius:12px; padding:12px 14px; margin-bottom:12px;"><div style="font-size:11.5px; color:#1e40af; font-weight:800; margin-bottom:4px;">🎯 תקציב</div><div style="font-size:15px; font-weight:900; color:#000000;">${escHtml(a.budget)}</div></div>` : ''}
       <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;">${rows}</div>
-      ${!a.chosenOffer ? `<button onclick="submitWantedOffer('${artEsc(a.id)}')" style="width:100%; background:linear-gradient(135deg,#3b82f6,#2563eb); color:#ffffff; border:none; padding:12px; border-radius:12px; font-weight:800; font-size:14px; cursor:pointer; box-shadow:0 4px 14px rgba(37,99,235,0.3);">💰 הגש הצעה</button>` : '<div style="text-align:center; font-size:13px; font-weight:800; color:#2563eb; padding:8px;">✓ נבחרה הצעה — הבקשה נסגרה</div>'}
+      ${!a.chosenOffer ? `<button onclick="submitWantedOffer('${artEsc(a.id)}')" style="width:100%; background:linear-gradient(135deg,#111111,#111111); color:#ffffff; border:none; padding:12px; border-radius:12px; font-weight:800; font-size:14px; cursor:pointer; box-shadow:0 4px 14px rgba(17, 17, 17,0.3);">💰 הגש הצעה</button>` : '<div style="text-align:center; font-size:13px; font-weight:800; color:#111111; padding:8px;">✓ נבחרה הצעה — הבקשה נסגרה</div>'}
     </div>`;
 }
 window.secondhandOffersBoxHTML = secondhandOffersBoxHTML;
@@ -21738,7 +21738,7 @@ function buildCommunityPage() {
           <h2 style="font-size:24px; font-weight:800; color:#262626; margin:0; display:flex; align-items:center; gap:8px;">👥 קהילת השיתופים והפנטזיות</h2>
           <p style="font-size:14px; color:#6b7280; margin:6px 0 0 0;">מרחב פתוח לשתף סיפורים, פנטזיות ותמונות, לקרוא ולהגיב אחד לשני!</p>
         </div>
-        <button onclick="openNewPostModal()" style="background:#2f6fdb; color:#ffffff; border:none; padding:12px 24px; border-radius:14px; font-size:14px; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:8px; box-shadow:0 4px 12px rgba(0, 0, 0, 0.15); transition:transform 0.2s, background 0.2s;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1.0)'">
+        <button onclick="openNewPostModal()" style="background:#111111; color:#ffffff; border:none; padding:12px 24px; border-radius:14px; font-size:14px; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:8px; box-shadow:0 4px 12px rgba(0, 0, 0, 0.15); transition:transform 0.2s, background 0.2s;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1.0)'">
           ✍️ שתף פנטזיה חדשה
         </button>
       </div>
@@ -21822,7 +21822,7 @@ function renderCommunityPostsList() {
     const typeBadge = isPoll
       ? `<span style="display:inline-block; font-size:11px; font-weight:800; color:#262626; background:rgba(0, 0, 0, 0.03); padding:3px 10px; border-radius:999px; margin-bottom:6px;">🗳️ סקר</span>`
       : isQuestion
-      ? `<span style="display:inline-block; font-size:11px; font-weight:800; color:#2563eb; background:rgba(37,99,235,0.1); padding:3px 10px; border-radius:999px; margin-bottom:6px;">❓ שאלה</span>`
+      ? `<span style="display:inline-block; font-size:11px; font-weight:800; color:#111111; background:rgba(17, 17, 17,0.1); padding:3px 10px; border-radius:999px; margin-bottom:6px;">❓ שאלה</span>`
       : '';
 
     return `
@@ -21889,7 +21889,7 @@ function renderCommunityPostsList() {
         <!-- כתיבת תגובה חדשה -->
         <div style="display:flex; gap:8px; align-items:center;">
           <input type="text" id="comment-input-${escHtml(p.id)}" placeholder="${commentPlaceholder}" style="flex:1; padding:8px 12px; border:1px solid #dddddd; border-radius:10px; font-size:13px; outline:none;" onkeydown="if(event.key==='Enter')submitCommunityComment('${artEsc(p.id)}')">
-          <button onclick="submitCommunityComment('${artEsc(p.id)}')" style="background:#2f6fdb; color:#ffffff; border:none; padding:8px 16px; border-radius:10px; font-size:13px; font-weight:bold; cursor:pointer; transition:background 0.2s;">שלח 🚀</button>
+          <button onclick="submitCommunityComment('${artEsc(p.id)}')" style="background:#111111; color:#ffffff; border:none; padding:8px 16px; border-radius:10px; font-size:13px; font-weight:bold; cursor:pointer; transition:background 0.2s;">שלח 🚀</button>
         </div>
       </div>
     `;
@@ -22223,7 +22223,7 @@ function openSocialLinksModal() {
 
         <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:8px;">
           <button type="button" onclick="closeSocialLinksModal()" style="background:#f3f4f6; border:none; border-radius:8px; padding:8px 16px; font-weight:bold; cursor:pointer;">ביטול</button>
-          <button type="button" onclick="saveSocialLinksModal()" style="background:#2f6fdb; color:#ffffff; border:none; border-radius:8px; padding:8px 20px; font-weight:bold; cursor:pointer;">שמור קישורים 💾</button>
+          <button type="button" onclick="saveSocialLinksModal()" style="background:#111111; color:#ffffff; border:none; border-radius:8px; padding:8px 20px; font-weight:bold; cursor:pointer;">שמור קישורים 💾</button>
         </div>
       </div>
     `;
@@ -22648,7 +22648,7 @@ function ideasCategoryBarHTML() {
         const isActive = currentIdeaCategoryFilter === c.id;
         return `
           <button type="button" onclick="setIdeaCategoryFilter('${artEsc(c.id)}')"
-                  style="padding:8px 20px; border-radius:999px; border:${isActive ? 'none' : '1px solid #cbd5e1'}; background:${isActive ? '#3b82f6' : '#fff'}; color:${isActive ? '#fff' : '#334155'}; font-size:14px; font-weight:800; cursor:pointer; box-shadow:${isActive ? '0 4px 14px rgba(59,130,246,0.35)' : '0 1px 3px rgba(0,0,0,0.05)'}; transition:all 0.2s;">
+                  style="padding:8px 20px; border-radius:999px; border:${isActive ? 'none' : '1px solid #cbd5e1'}; background:${isActive ? '#111111' : '#fff'}; color:${isActive ? '#fff' : '#334155'}; font-size:14px; font-weight:800; cursor:pointer; box-shadow:${isActive ? '0 4px 14px rgba(59,130,246,0.35)' : '0 1px 3px rgba(0,0,0,0.05)'}; transition:all 0.2s;">
             ${escHtml(c.label)}
           </button>
         `;
@@ -22795,7 +22795,7 @@ function sectionCategoryBarHTML(section) {
     ? `<button type="button" onclick="openCategoriesModal('photos')" style="padding:8px 16px; border-radius:999px; border:1px dashed #111111; background:rgba(0, 0, 0, 0.03); color:#262626; font-size:14px; font-weight:700; cursor:pointer;">✏️ ניהול קטגוריות</button>`
     : '';
   const active = getSectionCategoryFilter(section);
-  const activeBg = isPhotos ? '#8b5cf6' : '#3b82f6';
+  const activeBg = isPhotos ? '#8b5cf6' : '#111111';
   const activeShadow = isPhotos ? '0 4px 14px rgba(139,92,246,0.35)' : '0 4px 14px rgba(59,130,246,0.35)';
   return `
     <div class="section-category-bar" style="display:flex; gap:10px; align-items:center; margin-bottom:16px; flex-wrap:wrap; padding:6px 0;">
@@ -23175,7 +23175,7 @@ function openProblemModal() {
       <label style="font-size:13px; font-weight:700;">תקציב מקסימלי (אופציונלי)</label>
       <input id="pr-budget" type="text" placeholder="לדוגמה: עד 3000 ₪" style="padding:10px 12px; border:1px solid #dddddd; border-radius:8px; font-size:14px; box-sizing:border-box;">
       <div style="display:flex; gap:10px; margin-top:4px;">
-        <button onclick="submitProblem()" style="flex:2; background:#2f6fdb; color:#ffffff; border:none; border-radius:8px; padding:11px; font-size:14px; font-weight:800; cursor:pointer;">🎯 פרסם בעיה</button>
+        <button onclick="submitProblem()" style="flex:2; background:#111111; color:#ffffff; border:none; border-radius:8px; padding:11px; font-size:14px; font-weight:800; cursor:pointer;">🎯 פרסם בעיה</button>
         <button onclick="document.getElementById('problem-modal').remove()" style="flex:1; background:#ffffff; color:#334155; border:1px solid #dddddd; border-radius:8px; padding:11px; font-size:14px; cursor:pointer;">ביטול</button>
       </div>
     </div>`;
@@ -23234,7 +23234,7 @@ function ideaBidsBoxHTML(a) {
       </div>
       ${a.budget ? `<div style="background:#f8f8f8; border:1px solid #e4e4e7; border-radius:12px; padding:12px 14px; margin-bottom:12px;"><div style="font-size:11.5px; color:#111111; font-weight:800; margin-bottom:4px;">🎯 תקציב מבוקש</div><div style="font-size:15px; font-weight:900; color:#111111;">${escHtml(a.budget)}</div></div>` : ''}
       <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;">${rowsHTML}</div>
-      ${!a.chosenBid ? `<button onclick="submitBid('${artEsc(a.id)}')" style="width:100%; background:linear-gradient(135deg,#2f6fdb,#2f6fdb); color:#ffffff; border:none; padding:12px; border-radius:12px; font-weight:800; font-size:14px; cursor:pointer; box-shadow:0 4px 14px rgba(0, 0, 0, 0.15);">💰 הגש הצעת מחיר</button>` : '<div style="text-align:center; font-size:13px; font-weight:800; color:#16a34a; padding:8px;">✓ נבחרה הצעה — המכרז נסגר</div>'}
+      ${!a.chosenBid ? `<button onclick="submitBid('${artEsc(a.id)}')" style="width:100%; background:linear-gradient(135deg,#111111,#111111); color:#ffffff; border:none; padding:12px; border-radius:12px; font-weight:800; font-size:14px; cursor:pointer; box-shadow:0 4px 14px rgba(0, 0, 0, 0.15);">💰 הגש הצעת מחיר</button>` : '<div style="text-align:center; font-size:13px; font-weight:800; color:#16a34a; padding:8px;">✓ נבחרה הצעה — המכרז נסגר</div>'}
     </div>`;
 }
 window.ideaBidsBoxHTML = ideaBidsBoxHTML;
@@ -23248,7 +23248,7 @@ function ideaTenderHowBoxHTML() {
   ];
   const stepsHTML = steps.map(s => `
       <div style="display:flex; gap:12px; align-items:flex-start; margin-bottom:14px; background:#f8fafc; padding:10px 12px; border-radius:10px; border:1px solid #e2e8f0;">
-        <span style="background:linear-gradient(135deg,#2f6fdb,#2f6fdb); color:#ffffff; font-weight:900; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0;">${s.n}</span>
+        <span style="background:linear-gradient(135deg,#111111,#111111); color:#ffffff; font-weight:900; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0;">${s.n}</span>
         <div><div style="font-size:13.5px; font-weight:800; color:#0f172a;">${s.t}</div><div style="font-size:12px; color:#64748b; line-height:1.4; margin-top:2px;">${s.d}</div></div>
       </div>`).join('');
   return `
@@ -23345,7 +23345,7 @@ function openIdeaDetailModal(ideaId) {
           ✍️ מוצע על ידי: <b>${escHtml(item.author || 'אנונימי')}</b>
         </div>
         <button onclick="toggleIdeaVote('${artEsc(item.id)}'); document.getElementById('idea-detail-modal').style.display='none';" 
-                style="display:flex; align-items:center; gap:8px; padding:8px 18px; border-radius:999px; border:${hasVoted ? 'none' : '1px solid #cbd5e1'}; background:${hasVoted ? '#3b82f6' : '#f8fafc'}; color:${hasVoted ? '#fff' : '#334155'}; font-size:14px; font-weight:800; cursor:pointer;">
+                style="display:flex; align-items:center; gap:8px; padding:8px 18px; border-radius:999px; border:${hasVoted ? 'none' : '1px solid #cbd5e1'}; background:${hasVoted ? '#111111' : '#f8fafc'}; color:${hasVoted ? '#fff' : '#334155'}; font-size:14px; font-weight:800; cursor:pointer;">
           <span>▲</span>
           <span>${count} הצבעות</span>
         </button>
@@ -23427,7 +23427,7 @@ function openWatchHistoryPage(skipPull) {
         <div style="font-size:48px; margin-bottom:16px; opacity:0.6;">🕒</div>
         <h3 style="margin:0 0 8px; font-size:20px; font-weight:800;">היסטוריית הצפייה שלך ריקה</h3>
         <p style="margin:0 0 20px; color:#64748b; font-size:14px; max-width:400px;">כל תמונה, סיפור או רעיון שתיכנס אליהם יופיעו כאן באופן אוטומטי.</p>
-        <button onclick="if(typeof renderPhotosPage==='function'){renderPhotosPage();}else{location.reload();}" style="background:#2f6fdb; color:#ffffff; border:none; padding:10px 24px; border-radius:10px; font-weight:bold; font-size:14px; cursor:pointer; box-shadow:0 4px 12px rgba(0, 0, 0, 0.15);">גלה פריטים באתר</button>
+        <button onclick="if(typeof renderPhotosPage==='function'){renderPhotosPage();}else{location.reload();}" style="background:#111111; color:#ffffff; border:none; padding:10px 24px; border-radius:10px; font-weight:bold; font-size:14px; cursor:pointer; box-shadow:0 4px 12px rgba(0, 0, 0, 0.15);">גלה פריטים באתר</button>
       </div>
     `;
   } else {
@@ -23534,7 +23534,7 @@ function openFavoritesPage(tab) {
         <p style="margin:0 0 24px; color:#64748b; font-size:14px; max-width:420px;">
           ${currentFavTab === 'likes' ? 'לחץ ❤️ על גלריה, תמונה או סיפור כדי להוסיף אותם למועדפים שלך.' : 'לחץ על שמירה בגלריה כדי לשמור אותה לצפייה מאוחרת בדפדפן זה.'}
         </p>
-        <button onclick="if(typeof renderPhotosPage==='function'){renderPhotosPage();}else{location.reload();}" style="background:#2f6fdb; color:#ffffff; border:none; padding:12px 28px; border-radius:10px; font-weight:800; font-size:15px; cursor:pointer; box-shadow:0 4px 14px rgba(0, 0, 0, 0.175);">Browse items / גלה פריטים 🚀</button>
+        <button onclick="if(typeof renderPhotosPage==='function'){renderPhotosPage();}else{location.reload();}" style="background:#111111; color:#ffffff; border:none; padding:12px 28px; border-radius:10px; font-weight:800; font-size:15px; cursor:pointer; box-shadow:0 4px 14px rgba(0, 0, 0, 0.175);">Browse items / גלה פריטים 🚀</button>
       </div>
     `;
   } else {
@@ -23569,11 +23569,11 @@ function openFavoritesPage(tab) {
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:2px solid #f1f5f9; padding-bottom:14px; flex-wrap:wrap; gap:12px;">
         <div style="display:flex; align-items:center; gap:12px;">
           <h1 style="margin:0; font-size:24px; font-weight:900; letter-spacing:-0.5px;">FAVORITES / מועדפים ושמורים</h1>
-          <span style="background:#2f6fdb; color:#ffffff; padding:3px 10px; border-radius:12px; font-size:12px; font-weight:800;">${targetCount} פריטים</span>
+          <span style="background:#111111; color:#ffffff; padding:3px 10px; border-radius:12px; font-size:12px; font-weight:800;">${targetCount} פריטים</span>
         </div>
         <div style="display:flex; gap:8px;">
-          <button onclick="openFavoritesPage('likes')" style="padding:8px 18px; border-radius:10px; border:none; font-weight:800; font-size:13px; cursor:pointer; transition:all 0.2s; ${currentFavTab === 'likes' ? 'background:#2f6fdb; color:#ffffff; box-shadow:0 3px 10px rgba(0, 0, 0, 0.15);' : 'background:#f1f5f9; color:#ffffff;'}">❤️ בלייקים שלי (${likedIds.length})</button>
-          <button onclick="openFavoritesPage('saves')" style="padding:8px 18px; border-radius:10px; border:none; font-weight:800; font-size:13px; cursor:pointer; transition:all 0.2s; ${currentFavTab === 'saves' ? 'background:#2f6fdb; color:#ffffff; box-shadow:0 3px 10px rgba(0, 0, 0, 0.15);' : 'background:#f1f5f9; color:#ffffff;'}">🔖 בשמורים שלי (${savedIds.length})</button>
+          <button onclick="openFavoritesPage('likes')" style="padding:8px 18px; border-radius:10px; border:none; font-weight:800; font-size:13px; cursor:pointer; transition:all 0.2s; ${currentFavTab === 'likes' ? 'background:#111111; color:#ffffff; box-shadow:0 3px 10px rgba(0, 0, 0, 0.15);' : 'background:#f1f5f9; color:#ffffff;'}">❤️ בלייקים שלי (${likedIds.length})</button>
+          <button onclick="openFavoritesPage('saves')" style="padding:8px 18px; border-radius:10px; border:none; font-weight:800; font-size:13px; cursor:pointer; transition:all 0.2s; ${currentFavTab === 'saves' ? 'background:#111111; color:#ffffff; box-shadow:0 3px 10px rgba(0, 0, 0, 0.15);' : 'background:#f1f5f9; color:#ffffff;'}">🔖 בשמורים שלי (${savedIds.length})</button>
         </div>
       </div>
       ${contentHTML}
@@ -25792,7 +25792,7 @@ const CRM_STAGES = [
   { id: 'lost', label: 'לא רלוונטי' }
 ];
 const CRM_SEGMENTS = {
-  new: { label: 'חדש', color: '#2563eb', bg: '#eff6ff' },
+  new: { label: 'חדש', color: '#111111', bg: '#f6f7f9' },
   active: { label: 'פעיל', color: '#15803d', bg: '#f0fdf4' },
   risk: { label: 'בסיכון נטישה', color: '#b45309', bg: '#fff6f1' },
   churned: { label: 'נטש', color: '#b91c1c', bg: '#fef2f2' }
@@ -27109,3 +27109,48 @@ new MutationObserver(muts => {
 }).observe(document.body, { childList: true, subtree: true });
 window.addEventListener('resize', fitOneLineAll);
 fitOneLineAll();
+
+
+// ============================================================
+// דיווח על תוכן — כפתור דגל בכרטיס, חלון קטן לבחירת סיבה, נשמר למנהל ב-content_reports
+// ============================================================
+function cardReportBtnHTML(id, title) {
+  return `<button type="button" class="art-telegram-btn art-report-btn" onclick="event.stopPropagation(); openReportContent('${artEsc(id || '')}', '${artEsc(title || '')}')" title="דיווח על התוכן" aria-label="דיווח על התוכן">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M4 22V4"/><path d="M4 4h12l-2 4 2 4H4"/></svg>
+    </button>`;
+}
+const REPORT_REASONS = ['תוכן פוגעני או אלים', 'פרסום ללא הסכמה / פגיעה בפרטיות', 'חשד לקטין', 'ספאם או הונאה', 'הפרת זכויות יוצרים', 'אחר'];
+function openReportContent(id, title) {
+  let m = document.getElementById('report-modal');
+  if (m) m.remove();
+  m = document.createElement('div');
+  m.id = 'report-modal'; m.className = 'rp-modal';
+  m.innerHTML = `<div class="rp-card" role="dialog" aria-label="דיווח על תוכן">
+      <div class="rp-head"><b>דיווח על תוכן</b><button type="button" class="fo-panel-x" onclick="closeReportContent()" aria-label="סגירה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+      ${title ? `<div class="rp-item">${escHtml(title)}</div>` : ''}
+      <div class="rp-reasons">${REPORT_REASONS.map((r, i) => `<label class="rp-reason"><input type="radio" name="rp-reason" value="${escHtml(r)}"${i === 0 ? ' checked' : ''}><span>${escHtml(r)}</span></label>`).join('')}</div>
+      <textarea id="rp-note" class="rp-note" rows="3" maxlength="400" placeholder="פרטים נוספים (לא חובה)"></textarea>
+      <div class="rp-actions"><button type="button" class="pf-btn" onclick="closeReportContent()">ביטול</button><button type="button" class="pf-btn rp-send" onclick="sendReportContent('${artEsc(id)}', '${artEsc(title || '')}')">שליחת דיווח</button></div>
+    </div>`;
+  m.addEventListener('click', e => { if (e.target === m) closeReportContent(); });
+  document.body.appendChild(m);
+}
+function closeReportContent() { const m = document.getElementById('report-modal'); if (m) m.remove(); }
+async function sendReportContent(id, title) {
+  const r = document.querySelector('#report-modal input[name="rp-reason"]:checked');
+  const note = (document.getElementById('rp-note') || {}).value || '';
+  const reason = (r ? r.value : 'אחר') + (note.trim() ? ' — ' + note.trim() : '');
+  try {
+    if (!auth.currentUser) await signInAnonymously(auth);
+    await set(push(ref(db, 'website/content_reports')), {
+      itemId: String(id || ''), title: String(title || '').slice(0, 200), reason: reason.slice(0, 500),
+      uid: auth.currentUser ? auth.currentUser.uid : '', at: Date.now()
+    });
+    closeReportContent();
+    if (typeof showCopyToast === 'function') showCopyToast('תודה — הדיווח נשלח למנהל האתר ויטופל בהקדם');
+  } catch (e) {
+    console.error('report failed', e);
+    if (typeof showCopyToast === 'function') showCopyToast('לא הצלחנו לשלוח את הדיווח — נסו שוב');
+  }
+}
+Object.assign(window, { cardReportBtnHTML, openReportContent, closeReportContent, sendReportContent });

@@ -2,49 +2,97 @@
   "rules": {
     ".read": false,
     ".write": false,
-
     "website": {
       ".read": "auth != null && auth.token.email === 'yoni98321@gmail.com' && auth.token.email_verified === true",
       ".write": "auth != null && auth.token.email === 'yoni98321@gmail.com' && auth.token.email_verified === true",
-
-      "pages": { ".read": true },
-      "activePageId": { ".read": true },
-      "topNavPages": { ".read": true },
-      "navHTML": { ".read": true },
-      "siteBackgrounds": { ".read": true },
-      "promotedSites": { ".read": true },
-      "socialLinks": { ".read": true },
-      "onboardingVideos": { ".read": true },
-      "storyCategories": { ".read": true },
-      "photoBarCategories": { ".read": true },
-      "tourConfig": { ".read": true },
-      "uploadGuideVideo": { ".read": true },
-      "podcastEmbed": { ".read": true },
-      "products": { ".read": true },
-      "hideCart": { ".read": true },
-      "hideChat": { ".read": true },
-      "deleteCart": { ".read": true },
-      "deleteChat": { ".read": true },
-      "verified_users": { ".read": true },
-      "admin_uid": { ".read": "auth != null" },
+      "pages": {
+        ".read": true
+      },
+      "activePageId": {
+        ".read": true
+      },
+      "topNavPages": {
+        ".read": true
+      },
+      "navHTML": {
+        ".read": true
+      },
+      "siteBackgrounds": {
+        ".read": true
+      },
+      "promotedSites": {
+        ".read": true
+      },
+      "socialLinks": {
+        ".read": true
+      },
+      "onboardingVideos": {
+        ".read": true
+      },
+      "storyCategories": {
+        ".read": true
+      },
+      "photoBarCategories": {
+        ".read": true
+      },
+      "tourConfig": {
+        ".read": true
+      },
+      "uploadGuideVideo": {
+        ".read": true
+      },
+      "podcastEmbed": {
+        ".read": true
+      },
+      "products": {
+        ".read": true
+      },
+      "hideCart": {
+        ".read": true
+      },
+      "hideChat": {
+        ".read": true
+      },
+      "deleteCart": {
+        ".read": true
+      },
+      "deleteChat": {
+        ".read": true
+      },
+      "verified_users": {
+        ".read": true
+      },
+      "admin_uid": {
+        ".read": "auth != null"
+      },
       "follow_counts": {
         ".read": true,
         "$uid": {
-          "followers": { ".write": "auth != null && auth.uid !== $uid && auth.token.firebase.sign_in_provider !== 'anonymous'", ".validate": "newData.isNumber() && newData.val() >= 0 && ((!data.exists() && newData.val() <= 1) || (data.exists() && (newData.val() === data.val() + 1 || newData.val() === data.val() - 1)))" },
-          "following": { ".write": "auth != null && auth.uid === $uid", ".validate": "newData.isNumber() && newData.val() >= 0 && ((!data.exists() && newData.val() <= 1) || (data.exists() && (newData.val() === data.val() + 1 || newData.val() === data.val() - 1)))" }
+          "followers": {
+            ".write": "auth != null && auth.uid !== $uid && auth.token.firebase.sign_in_provider !== 'anonymous'",
+            ".validate": "newData.isNumber() && newData.val() >= 0 && ((!data.exists() && newData.val() <= 1) || (data.exists() && (newData.val() === data.val() + 1 || newData.val() === data.val() - 1)))"
+          },
+          "following": {
+            ".write": "auth != null && auth.uid === $uid",
+            ".validate": "newData.isNumber() && newData.val() >= 0 && ((!data.exists() && newData.val() <= 1) || (data.exists() && (newData.val() === data.val() + 1 || newData.val() === data.val() - 1)))"
+          }
         }
       },
-
       "polls": {
         ".read": true,
         "$pollId": {
           ".write": "auth != null && !data.exists() && newData.child('uid').val() === auth.uid",
           ".validate": "newData.hasChildren(['q', 'options', 't', 'uid', 'name']) && newData.child('q').isString() && newData.child('q').val().length >= 1 && newData.child('q').val().length <= 160 && newData.child('name').isString() && newData.child('name').val().length <= 40 && newData.child('t').isNumber() && newData.child('t').val() <= now + 60000 && newData.child('options/0').exists() && newData.child('options/1').exists() && !newData.child('options/8').exists()",
-          "options": { "$i": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 80" } },
-          "$other": { ".validate": "$other === 'q' || $other === 'options' || $other === 't' || $other === 'uid' || $other === 'name'" }
+          "options": {
+            "$i": {
+              ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 80"
+            }
+          },
+          "$other": {
+            ".validate": "$other === 'q' || $other === 'options' || $other === 't' || $other === 'uid' || $other === 'name'"
+          }
         }
       },
-
       "poll_counts": {
         ".read": true,
         "$pollId": {
@@ -53,7 +101,6 @@
           }
         }
       },
-
       "poll_votes": {
         "$pollId": {
           "$uid": {
@@ -63,38 +110,90 @@
           }
         }
       },
-
       "item_likes": {
         ".read": true,
         "$itemId": {
           ".write": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000000 && (!data.exists() || newData.val() === data.val() + 1 || newData.val() === data.val() - 1)"
         }
       },
-
       "reco_stats": {
         ".read": true,
-        "imp": { "$k": { ".write": "($k === 'sim' || $k === 'taste' || $k === 'pop' || $k === 'fresh' || $k === 'co') && newData.isNumber() && newData.val() > (data.exists() ? data.val() : 0) && newData.val() <= (data.exists() ? data.val() : 0) + 10" } },
-        "clk": { "$k": { ".write": "($k === 'sim' || $k === 'taste' || $k === 'pop' || $k === 'fresh' || $k === 'co') && newData.isNumber() && newData.val() > (data.exists() ? data.val() : 0) && newData.val() <= (data.exists() ? data.val() : 0) + 10" } },
-        "days": { "$day": { "$m": { ".write": "$day.length <= 12 && ($m === 'imp' || $m === 'clk') && newData.isNumber() && newData.val() > (data.exists() ? data.val() : 0) && newData.val() <= (data.exists() ? data.val() : 0) + 10" } } },
-        "co": { "$a": { "$b": { ".write": "$a.length <= 40 && $b.length <= 40 && newData.isNumber() && newData.val() > (data.exists() ? data.val() : 0) && newData.val() <= (data.exists() ? data.val() : 0) + 10" } } }
+        "imp": {
+          "$k": {
+            ".write": "($k === 'sim' || $k === 'taste' || $k === 'pop' || $k === 'fresh' || $k === 'co') && newData.isNumber() && newData.val() > (data.exists() ? data.val() : 0) && newData.val() <= (data.exists() ? data.val() : 0) + 10"
+          }
+        },
+        "clk": {
+          "$k": {
+            ".write": "($k === 'sim' || $k === 'taste' || $k === 'pop' || $k === 'fresh' || $k === 'co') && newData.isNumber() && newData.val() > (data.exists() ? data.val() : 0) && newData.val() <= (data.exists() ? data.val() : 0) + 10"
+          }
+        },
+        "days": {
+          "$day": {
+            "$m": {
+              ".write": "$day.length <= 12 && ($m === 'imp' || $m === 'clk') && newData.isNumber() && newData.val() > (data.exists() ? data.val() : 0) && newData.val() <= (data.exists() ? data.val() : 0) + 10"
+            }
+          }
+        },
+        "co": {
+          "$a": {
+            "$b": {
+              ".write": "$a.length <= 40 && $b.length <= 40 && newData.isNumber() && newData.val() > (data.exists() ? data.val() : 0) && newData.val() <= (data.exists() ? data.val() : 0) + 10"
+            }
+          }
+        }
       },
       "reco_config": {
         ".read": true,
         ".write": "auth != null && auth.token.email === 'yoni98321@gmail.com' && auth.token.email_verified === true"
       },
-
       "analytics": {
-        "pageviews": { ".write": "newData.isNumber() && newData.val() === (data.exists() ? data.val() : 0) + 1" },
-        "visits": { ".write": "newData.isNumber() && newData.val() === (data.exists() ? data.val() : 0) + 1" },
-        "daily": { ".read": true, "$day": { ".write": "newData.isNumber() && newData.val() === (data.exists() ? data.val() : 0) + 1" } },
-        "monthly": { "$month": { ".write": "newData.isNumber() && newData.val() === (data.exists() ? data.val() : 0) + 1" } },
-        "events": { "$event": { ".write": "$event.length <= 40 && newData.isNumber() && newData.val() === (data.exists() ? data.val() : 0) + 1" } },
-        "events_daily": { ".read": true, "$day": { "$event": { ".write": "$day.length <= 12 && $event.length <= 40 && newData.isNumber() && newData.val() === (data.exists() ? data.val() : 0) + 1" } } },
-        "daily_pv": { "$day": { ".write": "$day.length <= 12 && newData.isNumber() && newData.val() === (data.exists() ? data.val() : 0) + 1" } },
-        "daily_new": { "$day": { ".write": "$day.length <= 12 && newData.isNumber() && newData.val() === (data.exists() ? data.val() : 0) + 1" } },
-        "daily_return": { "$day": { ".write": "$day.length <= 12 && newData.isNumber() && newData.val() === (data.exists() ? data.val() : 0) + 1" } }
+        "pageviews": {
+          ".write": "newData.isNumber() && newData.val() === (data.exists() ? data.val() : 0) + 1"
+        },
+        "visits": {
+          ".write": "newData.isNumber() && newData.val() === (data.exists() ? data.val() : 0) + 1"
+        },
+        "daily": {
+          ".read": true,
+          "$day": {
+            ".write": "newData.isNumber() && newData.val() === (data.exists() ? data.val() : 0) + 1"
+          }
+        },
+        "monthly": {
+          "$month": {
+            ".write": "newData.isNumber() && newData.val() === (data.exists() ? data.val() : 0) + 1"
+          }
+        },
+        "events": {
+          "$event": {
+            ".write": "$event.length <= 40 && newData.isNumber() && newData.val() === (data.exists() ? data.val() : 0) + 1"
+          }
+        },
+        "events_daily": {
+          ".read": true,
+          "$day": {
+            "$event": {
+              ".write": "$day.length <= 12 && $event.length <= 40 && newData.isNumber() && newData.val() === (data.exists() ? data.val() : 0) + 1"
+            }
+          }
+        },
+        "daily_pv": {
+          "$day": {
+            ".write": "$day.length <= 12 && newData.isNumber() && newData.val() === (data.exists() ? data.val() : 0) + 1"
+          }
+        },
+        "daily_new": {
+          "$day": {
+            ".write": "$day.length <= 12 && newData.isNumber() && newData.val() === (data.exists() ? data.val() : 0) + 1"
+          }
+        },
+        "daily_return": {
+          "$day": {
+            ".write": "$day.length <= 12 && newData.isNumber() && newData.val() === (data.exists() ? data.val() : 0) + 1"
+          }
+        }
       },
-
       "handles": {
         ".read": true,
         "$h": {
@@ -102,32 +201,34 @@
           ".validate": "!newData.exists() || (newData.val() === auth.uid && $h.length >= 3 && $h.length <= 20)"
         }
       },
-
       "users": {
         "$uid": {
           ".read": "auth != null && auth.uid === $uid",
           ".write": "auth != null && auth.uid === $uid",
-          "profile": { ".read": true },
-          "last_seen": { ".read": true }
+          "profile": {
+            ".read": true
+          },
+          "last_seen": {
+            ".read": true
+          }
         }
       },
-
       "user_follows": {
         "$uid": {
           ".read": "auth != null && auth.uid === $uid",
           ".write": "auth != null && auth.uid === $uid"
         }
       },
-
       "user_map": {
         ".read": true,
         "$uid": {
           ".write": "auth != null && auth.uid === $uid && auth.token.firebase.sign_in_provider !== 'anonymous'",
           ".validate": "!newData.exists() || (newData.hasChildren(['lat', 'lng', 'name', 't']) && newData.child('lat').isNumber() && newData.child('lat').val() >= 29.3 && newData.child('lat').val() <= 33.5 && newData.child('lng').isNumber() && newData.child('lng').val() >= 34.2 && newData.child('lng').val() <= 35.95 && newData.child('name').isString() && newData.child('name').val().length <= 40 && newData.child('t').isNumber())",
-          "$other": { ".validate": "$other === 'lat' || $other === 'lng' || $other === 'name' || $other === 't'" }
+          "$other": {
+            ".validate": "$other === 'lat' || $other === 'lng' || $other === 'name' || $other === 't'"
+          }
         }
       },
-
       "user_ratings": {
         ".read": true,
         "$targetUid": {
@@ -137,7 +238,6 @@
           }
         }
       },
-
       "dms": {
         "$convId": {
           ".read": "auth != null && ($convId.beginsWith(auth.uid + '__') || $convId.endsWith('__' + auth.uid))",
@@ -149,7 +249,6 @@
           }
         }
       },
-
       "user_dms": {
         "$uid": {
           ".read": "auth != null && auth.uid === $uid",
@@ -158,7 +257,6 @@
           }
         }
       },
-
       "chats": {
         "$uid": {
           ".read": "auth != null && auth.uid === $uid",
@@ -170,7 +268,6 @@
           }
         }
       },
-
       "live_chat": {
         ".read": true,
         "$msgId": {
@@ -178,7 +275,6 @@
           ".validate": "newData.child('uid').val() === auth.uid && newData.child('text').isString() && newData.child('text').val().length <= 500"
         }
       },
-
       "photo_comments": {
         ".read": true,
         "$albumId": {
@@ -188,7 +284,6 @@
           }
         }
       },
-
       "story_comments": {
         ".read": true,
         "$storyId": {
@@ -198,21 +293,25 @@
           }
         }
       },
-
       "photo_albums": {
         ".read": true,
         "$albumId": {
-          "views": { ".write": "newData.isNumber() && newData.val() >= 0" }
+          "views": {
+            ".write": "newData.isNumber() && newData.val() >= 0"
+          }
         }
       },
-
       "community_posts": {
         ".read": true,
         "$postId": {
           ".write": "auth != null && ((!data.exists() && newData.child('authorId').val() === auth.uid) || (data.exists() && data.child('authorId').val() === auth.uid))",
-          "likes": { ".write": "auth != null && newData.isNumber() && newData.val() >= 0" },
+          "likes": {
+            ".write": "auth != null && newData.isNumber() && newData.val() >= 0"
+          },
           "votes": {
-            "$voterUid": { ".write": "auth != null && auth.uid === $voterUid" }
+            "$voterUid": {
+              ".write": "auth != null && auth.uid === $voterUid"
+            }
           },
           "comments": {
             "$commentId": {
@@ -222,17 +321,17 @@
           }
         }
       },
-
       "communities": {
         ".read": true,
         "$communityId": {
           ".write": "auth != null && !data.exists() && newData.child('createdBy').val() === auth.uid",
           "items": {
-            "$itemId": { ".write": "auth != null && !data.exists()" }
+            "$itemId": {
+              ".write": "auth != null && !data.exists()"
+            }
           }
         }
       },
-
       "ideas": {
         ".read": true,
         "$ideaId": {
@@ -248,7 +347,6 @@
           }
         }
       },
-
       "offers": {
         ".read": true,
         "$offerId": {
@@ -265,7 +363,6 @@
           }
         }
       },
-
       "questions": {
         ".read": true,
         "$questionId": {
@@ -278,36 +375,45 @@
           }
         }
       },
-
       "verification_requests": {
         "$uid": {
           ".read": "auth != null && auth.uid === $uid",
           ".write": "auth != null && auth.uid === $uid && newData.child('status').val() === 'pending'"
         }
       },
-
       "forum_topics": {
         ".read": true,
         "$forumId": {
           "$topicId": {
             ".write": "auth != null && !data.exists() && newData.child('uid').val() === auth.uid && newData.child('lastUid').val() === auth.uid && newData.child('replies').val() === 0",
             ".validate": "!newData.exists() || ($forumId.length <= 30 && newData.hasChildren(['title', 'uid', 'name', 't', 'lastT', 'lastName', 'lastUid', 'replies']) && newData.child('title').isString() && newData.child('title').val().length >= 2 && newData.child('title').val().length <= 120 && newData.child('name').isString() && newData.child('name').val().length <= 40 && newData.child('t').isNumber() && newData.child('t').val() <= now + 60000)",
-            "replies": { ".write": "auth != null && data.exists() && newData.isNumber() && newData.val() === data.val() + 1" },
-            "lastT": { ".write": "auth != null && data.exists() && newData.isNumber() && newData.val() >= data.val() && newData.val() <= now + 60000" },
-            "lastName": { ".write": "auth != null && data.exists() && newData.isString() && newData.val().length <= 40" },
-            "lastUid": { ".write": "auth != null && data.exists() && newData.val() === auth.uid" },
-            "$other": { ".validate": "$other === 'title' || $other === 'uid' || $other === 'name' || $other === 't' || $other === 'lastT' || $other === 'lastName' || $other === 'lastUid' || $other === 'replies'" }
+            "replies": {
+              ".write": "auth != null && data.exists() && newData.isNumber() && newData.val() === data.val() + 1"
+            },
+            "lastT": {
+              ".write": "auth != null && data.exists() && newData.isNumber() && newData.val() >= data.val() && newData.val() <= now + 60000"
+            },
+            "lastName": {
+              ".write": "auth != null && data.exists() && newData.isString() && newData.val().length <= 40"
+            },
+            "lastUid": {
+              ".write": "auth != null && data.exists() && newData.val() === auth.uid"
+            },
+            "$other": {
+              ".validate": "$other === 'title' || $other === 'uid' || $other === 'name' || $other === 't' || $other === 'lastT' || $other === 'lastName' || $other === 'lastUid' || $other === 'replies'"
+            }
           }
         }
       },
-
       "forum_posts": {
         ".read": true,
         "$topicId": {
           "$postId": {
             ".write": "auth != null && !data.exists() && newData.child('uid').val() === auth.uid",
             ".validate": "!newData.exists() || (newData.hasChildren(['uid', 'name', 'text', 't']) && newData.child('text').isString() && newData.child('text').val().length >= 1 && newData.child('text').val().length <= 5000 && newData.child('name').isString() && newData.child('name').val().length <= 40 && newData.child('t').isNumber() && newData.child('t').val() <= now + 60000)",
-            "admin": { ".validate": "newData.val() === true && auth.token.email === 'yoni98321@gmail.com' && auth.token.email_verified === true" },
+            "admin": {
+              ".validate": "newData.val() === true && auth.token.email === 'yoni98321@gmail.com' && auth.token.email_verified === true"
+            },
             "likes": {
               "$likerUid": {
                 ".write": "auth != null && auth.uid === $likerUid && data.parent().parent().exists()",
@@ -323,14 +429,18 @@
                 ".validate": "!newData.exists() || newData.val() === true"
               }
             },
-            "guest": { ".validate": "newData.val() === true" },
-            "$other": { ".validate": "$other === 'uid' || $other === 'name' || $other === 'text' || $other === 't' || $other === 'admin' || $other === 'likes' || $other === 'dislikes' || $other === 'replyTo' || $other === 'guest'" }
+            "guest": {
+              ".validate": "newData.val() === true"
+            },
+            "$other": {
+              ".validate": "$other === 'uid' || $other === 'name' || $other === 'text' || $other === 't' || $other === 'admin' || $other === 'likes' || $other === 'dislikes' || $other === 'replyTo' || $other === 'guest'"
+            }
           }
         }
       },
-
-      "news_posts": { ".read": true },
-
+      "news_posts": {
+        ".read": true
+      },
       "tinder_likes": {
         "$uid": {
           "$target": {
@@ -340,22 +450,25 @@
           }
         }
       },
-
       "blind_queue": {
         ".read": "auth != null",
         "$uid": {
           ".write": "auth != null && (auth.uid === $uid || (data.child('status').val() === 'waiting' && !data.child('room').exists() && newData.child('status').val() === 'matched' && newData.child('partner').val() === auth.uid && newData.child('room').isString() && newData.child('g').val() === data.child('g').val() && newData.child('want').val() === data.child('want').val() && newData.child('name').val() === data.child('name').val() && newData.child('city').val() === data.child('city').val()))",
           ".validate": "!newData.exists() || (newData.hasChildren(['name', 'g', 'want', 't', 'status']) && newData.child('name').isString() && newData.child('name').val().length <= 40 && (newData.child('g').val() === 'm' || newData.child('g').val() === 'f') && (newData.child('want').val() === 'm' || newData.child('want').val() === 'f' || newData.child('want').val() === 'all') && newData.child('t').isNumber() && newData.child('t').val() <= now + 60000 && (newData.child('status').val() === 'waiting' || newData.child('status').val() === 'matched'))",
-          "$other": { ".validate": "$other === 'name' || $other === 'g' || $other === 'want' || $other === 't' || $other === 'status' || $other === 'room' || $other === 'partner' || ($other === 'city' && newData.isString() && newData.val().length <= 40) || ($other === 'partnerName' && newData.isString() && newData.val().length <= 40)" }
+          "$other": {
+            ".validate": "$other === 'name' || $other === 'g' || $other === 'want' || $other === 't' || $other === 'status' || $other === 'room' || $other === 'partner' || ($other === 'city' && newData.isString() && newData.val().length <= 40) || ($other === 'partnerName' && newData.isString() && newData.val().length <= 40)"
+          }
         }
       },
-
       "blind_rooms": {
         "$roomId": {
           ".read": "auth != null && (data.child('a').val() === auth.uid || data.child('b').val() === auth.uid)",
           ".write": "auth != null && !data.exists() && newData.child('b').val() === auth.uid && root.child('website/blind_queue').child(newData.child('a').val()).child('room').val() === $roomId && root.child('website/blind_queue').child(newData.child('a').val()).child('partner').val() === auth.uid",
           ".validate": "!newData.exists() || (newData.hasChildren(['a', 'b', 't']) && newData.child('aName').isString() && newData.child('aName').val().length <= 40 && newData.child('bName').isString() && newData.child('bName').val().length <= 40)",
-          "ended": { ".write": "auth != null && (data.parent().child('a').val() === auth.uid || data.parent().child('b').val() === auth.uid)", ".validate": "newData.val() === true" },
+          "ended": {
+            ".write": "auth != null && (data.parent().child('a').val() === auth.uid || data.parent().child('b').val() === auth.uid)",
+            ".validate": "newData.val() === true"
+          },
           "plan": {
             ".write": "auth != null && (data.parent().child('a').val() === auth.uid || data.parent().child('b').val() === auth.uid) && newData.exists() && newData.child('round').val() === (data.exists() ? data.child('round').val() + 1 : 1) && data.parent().child('ended').val() !== true",
             ".validate": "newData.hasChildren(['round', 'name', 'city', 'when']) && newData.child('round').isNumber() && newData.child('name').isString() && newData.child('name').val().length <= 100 && newData.child('city').isString() && newData.child('city').val().length <= 40 && newData.child('when').isNumber()",
@@ -374,21 +487,31 @@
           }
         }
       },
-
       "pending_submissions": {
-        "$submissionId": { ".write": "auth != null && !data.exists()" }
+        "$submissionId": {
+          ".write": "auth != null && !data.exists()"
+        }
       },
-
       "user_submissions": {
-        "$submissionId": { ".write": "!data.exists()" }
+        "$submissionId": {
+          ".write": "!data.exists()"
+        }
       },
-
       "search_history": {
-        "$entryId": { ".write": "!data.exists()" }
+        "$entryId": {
+          ".write": "!data.exists()"
+        }
       },
-
       "event_registrations": {
-        "$registrationId": { ".write": "!data.exists()" }
+        "$registrationId": {
+          ".write": "!data.exists()"
+        }
+      },
+      "content_reports": {
+        "$reportId": {
+          ".write": "auth != null && !data.exists()",
+          ".validate": "newData.hasChildren(['itemId','reason','at']) && newData.child('reason').isString() && newData.child('reason').val().length <= 500 && newData.child('itemId').isString() && newData.child('itemId').val().length <= 200 && newData.child('at').isNumber()"
+        }
       }
     }
   }

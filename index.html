@@ -15,8 +15,8 @@
   <!-- ספריית localforage לשמירת תמונות -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
   <!-- קישור לקובץ העיצוב החיצוני (עם פרמטר למניעת שמירה במטמון) -->
-  <link rel="stylesheet" href="./style.css?v=1631">
-  <link rel="stylesheet" href="./dark.css?v=47">
+  <link rel="stylesheet" href="./style.css?v=1634">
+  <link rel="stylesheet" href="./dark.css?v=50">
   <script>
     // מצב בהיר/כהה — נקבע לפני שהדף מצויר כדי שלא יהבהב (בחירה שמורה, אחרת לפי הגדרות המכשיר)
     (function () {
@@ -289,11 +289,11 @@
       
         <button id="btn-add-page" class="float-btn edit-float-btn" style="background: #2196F3; color: white;">+ הוסף עמוד</button>
         <button id="btn-manage-pages" class="float-btn edit-float-btn" style="background: #555555; color: white;">ניהול עמודים 🗂️</button>
-        <button id="btn-add-hidden-page" class="float-btn edit-float-btn" style="background: #2f6fdb; color: #ffffff;">+ דף מוסתר 🔒</button>
-        <button id="btn-add-articles-page" class="float-btn edit-float-btn" style="background: #2f6fdb; color: #ffffff;">דף כתבות 📰</button>
-        <button id="btn-add-stories-page" class="float-btn edit-float-btn" style="background: #2f6fdb; color: #ffffff;">דף סיפורים 📖</button>
+        <button id="btn-add-hidden-page" class="float-btn edit-float-btn" style="background: #111111; color: #ffffff;">+ דף מוסתר 🔒</button>
+        <button id="btn-add-articles-page" class="float-btn edit-float-btn" style="background: #111111; color: #ffffff;">דף כתבות 📰</button>
+        <button id="btn-add-stories-page" class="float-btn edit-float-btn" style="background: #111111; color: #ffffff;">דף סיפורים 📖</button>
         <button id="btn-add-photos-page" class="float-btn edit-float-btn" style="background: #10b981; color: #262626;">דף תמונות 🖼️</button>
-        <button id="btn-add-community-page" class="float-btn edit-float-btn" style="background: #2f6fdb; color: #ffffff;">דף קהילה 👥</button>
+        <button id="btn-add-community-page" class="float-btn edit-float-btn" style="background: #111111; color: #ffffff;">דף קהילה 👥</button>
         <button id="btn-edit-mode" class="float-btn edit-float-btn">מצב עריכה ✏️</button>
         <button id="btn-save-site" class="float-btn edit-float-btn" style="background: #4CAF50; color: #262626;">שמור שינויים 💾</button>
         <button id="btn-reset-site" class="float-btn edit-float-btn" style="background: #f44336; color: white;">איפוס אתר 🗑️</button>
@@ -307,7 +307,7 @@
         <button id="btn-block" class="float-btn add-float-btn">בלוק 📦</button>
         <button id="btn-split-el" class="float-btn edit-float-btn">חתוך ✂️</button>
         <button id="btn-add-hotspot" class="float-btn add-float-btn">אזור לחיץ 🎯</button>
-        <button id="btn-restore-chat" class="float-btn edit-float-btn" style="background: #2f6fdb; color: #ffffff; display: none;">שחזר צ'אט 💬</button>
+        <button id="btn-restore-chat" class="float-btn edit-float-btn" style="background: #111111; color: #ffffff; display: none;">שחזר צ'אט 💬</button>
       </div>
       
     </div>
@@ -323,7 +323,7 @@
     </select>
     <div style="display:flex; gap:10px; justify-content:flex-end;">
       <button id="page-link-cancel" style="background:#f5f5f5; border:none; border-radius:8px; padding:9px 20px; font-size:14px; cursor:pointer;">ביטול</button>
-      <button id="page-link-save" style="background:#2f6fdb; color:#ffffff; border:none; border-radius:8px; padding:9px 20px; font-size:14px; font-weight:600; cursor:pointer;">שמור קישור</button>
+      <button id="page-link-save" style="background:#111111; color:#ffffff; border:none; border-radius:8px; padding:9px 20px; font-size:14px; font-weight:600; cursor:pointer;">שמור קישור</button>
     </div>
   </div>
 </div>
@@ -451,7 +451,7 @@ html.theme-dark .pl-bar { background: #2a2f37; }
     <img id="art-img-preview" src="" alt="" style="display:none; max-height:140px; border-radius:8px; object-fit:cover; width:100%;">
     <div style="display:flex; gap:10px; margin-top:4px;">
       <button id="art-cancel" style="flex:1; padding:10px; border:1px solid #dddddd; border-radius:8px; background:#ffffff; cursor:pointer; font-size:14px;">ביטול</button>
-      <button id="art-save" style="flex:1; padding:10px; border:none; border-radius:8px; background:#2f6fdb; color:#ffffff; cursor:pointer; font-size:14px; font-weight:700;">שמור כתבה</button>
+      <button id="art-save" style="flex:1; padding:10px; border:none; border-radius:8px; background:#111111; color:#ffffff; cursor:pointer; font-size:14px; font-weight:700;">שמור כתבה</button>
     </div>
   </div>
 </div>
@@ -496,7 +496,7 @@ html.theme-dark .pl-bar { background: #2a2f37; }
 
     <div style="display:flex; gap:10px; margin-top:4px;">
       <button id="story-cancel" style="flex:1; padding:10px; border:1px solid #dddddd; border-radius:8px; background:#ffffff; cursor:pointer; font-size:14px;">ביטול</button>
-      <button id="story-save" style="flex:1; padding:10px; border:none; border-radius:8px; background:#2f6fdb; color:#ffffff; cursor:pointer; font-size:14px; font-weight:700;">שמור סיפור</button>
+      <button id="story-save" style="flex:1; padding:10px; border:none; border-radius:8px; background:#111111; color:#ffffff; cursor:pointer; font-size:14px; font-weight:700;">שמור סיפור</button>
     </div>
   </div>
 </div>
@@ -511,7 +511,7 @@ html.theme-dark .pl-bar { background: #2a2f37; }
     
     <div style="display:flex; gap:8px;">
       <input id="new-story-cat-input" type="text" placeholder="שם קטגוריה חדשה..." style="flex:1; padding:10px 14px; border:1px solid #dddddd; border-radius:8px; font-size:14px; box-sizing:border-box;">
-      <button onclick="addStoryCategory()" style="background:#2f6fdb; color:#ffffff; border:none; padding:10px 16px; border-radius:8px; font-weight:700; cursor:pointer; font-size:14px; flex-shrink:0;">➕ הוסף</button>
+      <button onclick="addStoryCategory()" style="background:#111111; color:#ffffff; border:none; padding:10px 16px; border-radius:8px; font-weight:700; cursor:pointer; font-size:14px; flex-shrink:0;">➕ הוסף</button>
     </div>
 
     <div id="story-categories-list-container" style="display:flex; flex-direction:column; gap:8px; max-height:280px; overflow-y:auto;"></div>
@@ -629,7 +629,7 @@ html.theme-dark .pl-bar { background: #2a2f37; }
 
     <div style="display:flex; gap:10px; margin-top:8px;">
       <button id="photo-cancel" style="flex:1; padding:10px; border:1px solid #dddddd; border-radius:8px; background:#ffffff; cursor:pointer; font-size:14px;">ביטול</button>
-      <button id="photo-save" style="flex:1; padding:10px; border:none; border-radius:8px; background:#2f6fdb; color:#ffffff; cursor:pointer; font-size:14px; font-weight:700;">שמור גלריה</button>
+      <button id="photo-save" style="flex:1; padding:10px; border:none; border-radius:8px; background:#111111; color:#ffffff; cursor:pointer; font-size:14px; font-weight:700;">שמור גלריה</button>
     </div>
   </div>
 </div>
@@ -656,7 +656,7 @@ html.theme-dark .pl-bar { background: #2a2f37; }
     </label>
     <div style="display:flex; gap:10px; margin-top:8px;">
       <button id="community-cancel" style="flex:1; padding:10px; border:1px solid #dddddd; border-radius:8px; background:#ffffff; cursor:pointer; font-size:14px;">ביטול</button>
-      <button id="community-save" style="flex:1; padding:10px; border:none; border-radius:8px; background:#2f6fdb; color:#ffffff; cursor:pointer; font-size:14px; font-weight:700;">צור קהילה</button>
+      <button id="community-save" style="flex:1; padding:10px; border:none; border-radius:8px; background:#111111; color:#ffffff; cursor:pointer; font-size:14px; font-weight:700;">צור קהילה</button>
     </div>
   </div>
 </div>
@@ -700,7 +700,7 @@ html.theme-dark .pl-bar { background: #2a2f37; }
 
     <div style="display:flex; gap:10px; margin-top:8px;">
       <button onclick="document.getElementById('offer-modal').style.display='none'" style="flex:1; padding:10px; border:1px solid #dddddd; border-radius:8px; background:#ffffff; cursor:pointer; font-size:14px;">ביטול</button>
-      <button onclick="saveOffer()" style="flex:1; padding:10px; border:none; border-radius:8px; background:#2f6fdb; color:#ffffff; cursor:pointer; font-size:14px; font-weight:700;">פרסם הצעה</button>
+      <button onclick="saveOffer()" style="flex:1; padding:10px; border:none; border-radius:8px; background:#111111; color:#ffffff; cursor:pointer; font-size:14px; font-weight:700;">פרסם הצעה</button>
     </div>
   </div>
 </div>
@@ -711,7 +711,7 @@ html.theme-dark .pl-bar { background: #2a2f37; }
     <h3 style="margin:0; font-size:18px; font-weight:800; color:#0f172a;">בחירת מין להצטרפות ✋</h3>
     <p style="margin:0; font-size:13.5px; color:#64748b;">כדי שנוכל לחלק בין גברים לנשים בהצעה, נא לבחור:</p>
     <div style="display:flex; gap:12px;">
-      <button onclick="submitJoinWithGender('גבר')" style="flex:1; padding:14px; border:2px solid #3b82f6; border-radius:12px; background:#eff6ff; color:#1d4ed8; font-size:16px; font-weight:800; cursor:pointer; transition:all 0.15s ease;">
+      <button onclick="submitJoinWithGender('גבר')" style="flex:1; padding:14px; border:2px solid #111111; border-radius:12px; background:#f6f7f9; color:#000000; font-size:16px; font-weight:800; cursor:pointer; transition:all 0.15s ease;">
         ♂️ גבר
       </button>
       <button onclick="submitJoinWithGender('אישה')" style="flex:1; padding:14px; border:2px solid #111111; border-radius:12px; background:#f5f5f5; color:#be185d; font-size:16px; font-weight:800; cursor:pointer; transition:all 0.15s ease;">
@@ -756,7 +756,7 @@ html.theme-dark .pl-bar { background: #2a2f37; }
     </label>
     <div style="display:flex; gap:10px; margin-top:8px;">
       <button onclick="document.getElementById('question-modal').style.display='none'" style="flex:1; padding:10px; border:1px solid #dddddd; border-radius:8px; background:#ffffff; cursor:pointer; font-size:14px;">ביטול</button>
-      <button onclick="saveQuestion()" style="flex:1; padding:10px; border:none; border-radius:8px; background:#2f6fdb; color:#ffffff; cursor:pointer; font-size:14px; font-weight:700;">פרסם שאלה</button>
+      <button onclick="saveQuestion()" style="flex:1; padding:10px; border:none; border-radius:8px; background:#111111; color:#ffffff; cursor:pointer; font-size:14px; font-weight:700;">פרסם שאלה</button>
     </div>
   </div>
 </div>
@@ -808,7 +808,7 @@ html.theme-dark .pl-bar { background: #2a2f37; }
     <img id="shop-img-preview" src="" alt="" style="display:none; max-height:140px; border-radius:8px; object-fit:contain; width:100%;">
     <div style="display:flex; gap:10px; margin-top:4px;">
       <button id="shop-cancel" style="flex:1; padding:10px; border:1px solid #dddddd; border-radius:8px; background:#ffffff; cursor:pointer; font-size:14px;">ביטול</button>
-      <button id="shop-save" style="flex:1; padding:10px; border:none; border-radius:8px; background:#2f6fdb; color:#ffffff; cursor:pointer; font-size:14px; font-weight:700;">שמור מוצר</button>
+      <button id="shop-save" style="flex:1; padding:10px; border:none; border-radius:8px; background:#111111; color:#ffffff; cursor:pointer; font-size:14px; font-weight:700;">שמור מוצר</button>
     </div>
   </div>
 </div>
@@ -959,7 +959,7 @@ html.theme-dark .pl-bar { background: #2a2f37; }
     
     <!-- פרטי הפרופיל -->
     <div style="display:flex; align-items:center; gap:16px; margin-bottom:24px; background:#f9fafb; padding:16px; border-radius:16px; border:1px solid #f3f4f6;">
-      <div style="width:64px; height:64px; border-radius:50%; background:#2f6fdb; display:flex; align-items:center; justify-content:center; color:#ffffff; font-size:28px; font-weight:bold; box-shadow:0 4px 10px rgba(0, 0, 0, 0.1);">
+      <div style="width:64px; height:64px; border-radius:50%; background:#111111; display:flex; align-items:center; justify-content:center; color:#ffffff; font-size:28px; font-weight:bold; box-shadow:0 4px 10px rgba(0, 0, 0, 0.1);">
         👤
       </div>
       <div>
@@ -1027,7 +1027,7 @@ html.theme-dark .pl-bar { background: #2a2f37; }
     
     <div style="display:flex; gap:10px; margin-top:8px;">
       <button onclick="document.getElementById('community-post-modal').style.display='none'" style="flex:1; padding:12px; border:1px solid #dddddd; border-radius:10px; background:#ffffff; cursor:pointer; font-size:14px; font-weight:bold; color:#555555;">ביטול</button>
-      <button onclick="submitCommunityPost()" style="flex:1; padding:12px; border:none; border-radius:10px; background:#2f6fdb; color:#ffffff; cursor:pointer; font-size:14px; font-weight:bold; box-shadow:0 4px 12px rgba(0, 0, 0, 0.15);">פרסם בקהילה 🚀</button>
+      <button onclick="submitCommunityPost()" style="flex:1; padding:12px; border:none; border-radius:10px; background:#111111; color:#ffffff; cursor:pointer; font-size:14px; font-weight:bold; box-shadow:0 4px 12px rgba(0, 0, 0, 0.15);">פרסם בקהילה 🚀</button>
     </div>
   </div>
 </div>
@@ -1035,7 +1035,7 @@ html.theme-dark .pl-bar { background: #2a2f37; }
 <!-- מודל הוספת רעיון חדש -->
 <div id="idea-modal" style="display:none; position:fixed; inset:0; background:rgba(0, 0, 0, 0.6); z-index:999999; align-items:center; justify-content:center; direction:rtl; padding:20px;">
   <div style="background:#ffffff; border-radius:16px; padding:24px; width:100%; max-width:500px; max-height:85vh; overflow-y:auto; display:flex; flex-direction:column; gap:14px; box-shadow:0 20px 60px rgba(0, 0, 0, 0.3);">
-    <h3 style="margin:0; font-size:18px; font-weight:800; color:#0f172a; border-bottom:2px solid #3b82f6; padding-bottom:8px;">💡 הוספת רעיון חדש</h3>
+    <h3 style="margin:0; font-size:18px; font-weight:800; color:#0f172a; border-bottom:2px solid #111111; padding-bottom:8px;">💡 הוספת רעיון חדש</h3>
     
     <label style="display:flex; flex-direction:column; gap:4px; font-size:13px; font-weight:700;">
       <span>כותרת הרעיון <span style="color:red">*</span></span>
@@ -1089,7 +1089,7 @@ html.theme-dark .pl-bar { background: #2a2f37; }
 
     <div style="display:flex; gap:10px; margin-top:10px;">
       <button id="idea-cancel" style="flex:1; padding:12px; border:1px solid #cbd5e1; border-radius:10px; background:#ffffff; cursor:pointer; font-size:14px; font-weight:800; color:#475569;">ביטול</button>
-      <button id="idea-save" style="flex:1; padding:12px; border:none; border-radius:10px; background:#3b82f6; color:#ffffff; cursor:pointer; font-size:14px; font-weight:800; box-shadow:0 4px 12px rgba(59,130,246,0.3);">שמור רעיון 🚀</button>
+      <button id="idea-save" style="flex:1; padding:12px; border:none; border-radius:10px; background:#111111; color:#ffffff; cursor:pointer; font-size:14px; font-weight:800; box-shadow:0 4px 12px rgba(59,130,246,0.3);">שמור רעיון 🚀</button>
     </div>
   </div>
 </div>
@@ -1118,7 +1118,7 @@ html.theme-dark .pl-bar { background: #2a2f37; }
       <button onclick="document.getElementById('user-likes-saves-modal').style.display='none'" style="background:none; border:none; color:#818181; font-size:20px; cursor:pointer;">✕</button>
     </div>
     <div style="display:flex; gap:10px; margin-bottom:14px;">
-      <button id="tab-likes-btn" onclick="switchLikesTab('likes')" style="flex:1; padding:8px; background:#2f6fdb; color:#ffffff; border:none; border-radius:8px; font-weight:bold; cursor:pointer; font-size:13px;">❤️ בלייקים שלי</button>
+      <button id="tab-likes-btn" onclick="switchLikesTab('likes')" style="flex:1; padding:8px; background:#111111; color:#ffffff; border:none; border-radius:8px; font-weight:bold; cursor:pointer; font-size:13px;">❤️ בלייקים שלי</button>
       <button id="tab-saves-btn" onclick="switchLikesTab('saves')" style="flex:1; padding:8px; background:#2a2a34; color:#a1a1aa; border:none; border-radius:8px; font-weight:bold; cursor:pointer; font-size:13px;">🔖 בשמורים שלי</button>
     </div>
     <div id="user-likes-saves-list" style="max-height:360px; overflow-y:auto; display:flex; flex-direction:column; gap:10px;">
@@ -1242,7 +1242,7 @@ html.theme-dark .pl-bar { background: #2a2f37; }
     try { if (localStorage.getItem('mtab_hidden') === '1') document.documentElement.classList.add('mtab-hidden'); } catch (e) {}
   </script>
   <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
-  <script type="module" src="./script.js?v=1555"></script>
+  <script type="module" src="./script.js?v=1558"></script>
   <script defer src="./a11y.js?v=1"></script>
 </body>
 </html>
