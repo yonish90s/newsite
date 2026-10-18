@@ -11585,6 +11585,8 @@ function buildSidebarTabs(savedHTML, pageType) {
 }
 
 function navigateToPage(pageId) {
+  // מחשב: הפורומים נפתחים בחלון צד משמאל, בלי לעזוב את העמוד הנוכחי
+  if (pageId === 'page-forums-main' && !window.__forceForumsPage && typeof openForumsPanel === 'function' && !window.matchMedia('(max-width: 768px)').matches) { openForumsPanel(); return; }
   const page = (typeof pages !== 'undefined' && Array.isArray(pages)) ? pages.find(p => p && p.id === pageId) : null;
   if (!page) return;
   window.__detailOpen = false; // ניווט מפורש — מותר לרנדר מחדש
@@ -14687,8 +14689,9 @@ function buildForumsPage() {
   return `<div class="forums-page" data-page-id="page-forums-main"><div class="fo-inner">${forumViewHTML()}</div></div>`;
 }
 function forumRender() {
-  const el = mainContent && mainContent.querySelector('.forums-page .fo-inner');
-  if (el) el.innerHTML = forumViewHTML();
+  // מרנדרים גם בעמוד הפורומים וגם בחלון הצד (אם פתוח)
+  document.querySelectorAll('.forums-page .fo-inner').forEach(el => { el.innerHTML = forumViewHTML(); });
+  const panel = document.querySelector('#fo-panel .fo-panel-body'); if (panel) panel.scrollTop = 0;
 }
 
 // הפורומים מאחדים גם את "שאלות גולשים" ו"סקרים" — כטאבים בראש העמוד
@@ -15045,7 +15048,7 @@ function forumTopicHTML() {
   const admin = typeof isAdmin === 'function' && isAdmin();
   const myUid = auth.currentUser ? auth.currentUser.uid : '';
   const posts = forumPosts ? Object.entries(forumPosts).map(([id, p]) => Object.assign({ id }, p)).sort((a, b) => (a.t || 0) - (b.t || 0)) : null;
-  if (FORUM_MOBILE_MQ.matches) return forumTopicMobileHTML(f, t, posts, admin, myUid);
+  if (FORUM_MOBILE_MQ.matches || document.getElementById('fo-panel')) return forumTopicMobileHTML(f, t, posts, admin, myUid);
   const total = posts ? posts.length : 0;
   forumPage = Math.min(Math.max(1, forumPage), Math.max(1, Math.ceil(total / FORUM_PAGE_SIZE)));
   const start = (forumPage - 1) * FORUM_PAGE_SIZE;
@@ -26994,3 +26997,40 @@ function composerBarHTML() {
 }
 function composerPhoto() { openQuickPublish(); setTimeout(() => { if (typeof qpAddImage === 'function') qpAddImage(); }, 250); }
 window.composerPhoto = composerPhoto;
+
+// ============================================================
+// פורומים בחלון צד (מחשב) — נפתח משמאל מעל העמוד הנוכחי
+// ============================================================
+function openForumsPanel() {
+  let w = document.getElementById('fo-panel');
+  if (!w) {
+    w = document.createElement('div');
+    w.id = 'fo-panel'; w.className = 'fo-panel-wrap';
+    w.innerHTML = `<div class="fo-panel-backdrop" onclick="closeForumsPanel()"></div>
+      <aside class="fo-panel" role="dialog" aria-label="פורומים">
+        <header class="fo-panel-head">
+          <b>פורומים</b>
+          <button type="button" class="fo-panel-full" onclick="openForumsFullPage()">פתיחה בעמוד מלא</button>
+          <button type="button" class="fo-panel-x" onclick="closeForumsPanel()" aria-label="סגירה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+        </header>
+        <div class="fo-panel-body"><div class="forums-page fo-in-panel"><div class="fo-inner"></div></div></div>
+      </aside>`;
+    document.body.appendChild(w);
+  }
+  if (typeof forumSubscribe === 'function') forumSubscribe();
+  w.style.display = 'block';
+  requestAnimationFrame(() => w.classList.add('show'));
+  forumRender();
+}
+function closeForumsPanel() {
+  const w = document.getElementById('fo-panel'); if (!w) return;
+  w.classList.remove('show');
+  setTimeout(() => { if (!w.classList.contains('show')) w.remove(); }, 260);
+}
+function openForumsFullPage() {
+  closeForumsPanel();
+  window.__forceForumsPage = true;
+  try { navigateToPage('page-forums-main'); } finally { window.__forceForumsPage = false; }
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.getElementById('fo-panel')) closeForumsPanel(); });
+Object.assign(window, { openForumsPanel, closeForumsPanel, openForumsFullPage });

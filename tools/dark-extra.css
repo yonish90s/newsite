@@ -95,3 +95,12 @@ html.theme-dark body .hcat-label, html.theme-dark body .hcat-ic { color: #c8cdd4
 html.theme-dark body:not(#_) #cookie-bar.cookie-bar { background: #1b1e24 !important; border-color: #2c323b !important; color: #eceef1 !important; }
 html.theme-dark body:not(#_) #cookie-bar .cookie-bar-text { color: #c8cdd4 !important; }
 html.theme-dark body:not(#_) #cookie-bar .cookie-btn:not(.yes):not(.ghost) { background: transparent !important; color: #eceef1 !important; border-color: #3a414b !important; }
+
+/* פורומים בחלון צד */
+html.theme-dark .fo-panel { background: #1b1e24 !important; box-shadow: 8px 0 40px rgba(0,0,0,.5) !important; }
+html.theme-dark .fo-panel-backdrop { background: rgba(0,0,0,.45) !important; }
+html.theme-dark .fo-panel-head { border-color: #323842 !important; }
+html.theme-dark .fo-panel-head b { color: #eceef1 !important; }
+html.theme-dark .fo-panel-full { border-color: #4d8bf0 !important; color: #4d8bf0 !important; background: transparent !important; }
+html.theme-dark .fo-panel-full:hover { background: #4d8bf0 !important; color: #fff !important; }
+html.theme-dark .fo-panel-x { background: #2a2f37 !important; color: #c8cdd4 !important; }

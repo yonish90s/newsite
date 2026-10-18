@@ -11821,3 +11821,33 @@ html body:not(#_) #cookie-bar .cookie-btn.ghost { flex-basis: 100% !important; b
 @keyframes qp-float { from { transform: translateY(24px); } to { transform: none; } }
 html body:not(#_) #cookie-bar .cookie-bar-text, html body:not(#_) #cookie-bar .cookie-bar-btns { flex: none !important; }
 html body:not(#_) #cookie-bar.cookie-bar { transition: none !important; height: auto !important; }
+
+/* ===== פורומים בחלון צד משמאל (מחשב) ===== */
+.fo-panel-wrap { position: fixed; inset: 0; z-index: 9000; display: none; }
+.fo-panel-backdrop { position: absolute; inset: 0; background: rgba(15, 17, 21, 0.28); opacity: 0; transition: opacity .25s ease; }
+.fo-panel { position: absolute; top: 0; bottom: 0; left: 0; width: min(560px, 92vw); background: #fff; box-shadow: 8px 0 40px rgba(15, 17, 21, 0.14); display: flex; flex-direction: column; transform: translateX(-100%); transition: transform .26s cubic-bezier(.2,.8,.2,1); direction: rtl; font-family: var(--ds-font, inherit); }
+.fo-panel-wrap.show .fo-panel { transform: none; }
+.fo-panel-wrap.show .fo-panel-backdrop { opacity: 1; }
+.fo-panel-head { display: flex; align-items: center; gap: 10px; padding: 14px 18px; border-bottom: 1px solid #e6e8ec; flex: none; }
+.fo-panel-head b { font-size: 18px; font-weight: 700; color: #0f1115; margin-inline-end: auto; }
+.fo-panel-full { border: 1.5px solid #2f6fdb; background: transparent; color: #2f6fdb; border-radius: 999px; padding: 6px 14px; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; transition: background .15s, color .15s; }
+.fo-panel-full:hover { background: #2f6fdb; color: #fff; }
+.fo-panel-x { width: 36px; height: 36px; border-radius: 50%; border: 0; background: #eef0f3; color: #3f4652; display: grid; place-items: center; cursor: pointer; }
+.fo-panel-x:hover { background: #e2e5ea; }
+.fo-panel-x svg { width: 18px; height: 18px; }
+.fo-panel-body { flex: 1; overflow-y: auto; overscroll-behavior: contain; }
+html body:not(#_) .fo-panel .forums-page { padding: 0 !important; margin: 0 !important; min-height: 0 !important; max-width: none !important; width: 100% !important; }
+html body:not(#_) .fo-panel .fo-inner { padding: 14px 16px 0 !important; max-width: none !important; width: 100% !important; box-sizing: border-box; }
+html body:not(#_):not(#_) .fo-panel .rd-compose,
+html body:not(#_):not(#_) .fo-panel .fo-reply { position: sticky !important; bottom: 0 !important; left: auto !important; right: auto !important; transform: none !important; width: auto !important; max-width: none !important; margin: 12px -16px 0 !important; border-radius: 0 !important; z-index: 2; }
+html body:not(#_):not(#_) .fo-panel .rd-compose::before,
+html body:not(#_):not(#_) .fo-panel .fo-reply::before { display: none !important; }
+@media (max-width: 768px) { .fo-panel-wrap { display: none !important; } }
+
+/* ===== פרסום מהיר במחשב — מלבן ארוך ונמוך בתחתית המסך, מעל העמוד הנוכחי ===== */
+@media (min-width: 769px) {
+  html body:not(#_):not(#_) .qp-modal .qp-card { max-width: min(1040px, calc(100vw - 140px)) !important; width: 100% !important; height: min(380px, calc(100vh - 120px)) !important; border-radius: 22px !important; }
+  html body:not(#_):not(#_) .qp-modal .qp-head { padding: 10px 18px !important; }
+  html body:not(#_):not(#_) .qp-modal .qp-msgs { padding: 14px 22px !important; }
+  html body:not(#_):not(#_) .qp-modal .qp-bar { padding: 10px 18px 14px !important; }
+}
