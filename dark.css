@@ -1654,6 +1654,8 @@ html.theme-dark body:not(#_) .sidebar-tab-pill:not(.active) { background: #1b1e2
 html.theme-dark body:not(#_) .fo-row, html.theme-dark body:not(#_) .fo-row * { --muted: #c8cdd4 !important; }
 html.theme-dark body:not(#_):not(#_) .fr-avatar { color: #eceef1 !important; }
 html.theme-dark body:not(#_):not(#_) #global-chat-fab, html.theme-dark body:not(#_):not(#_) .chat-fab { border-color: #323842 !important; }
+html.theme-dark body:not(#_):not(#_) input[type="radio"] { border: 2px solid #323842 !important; background: #1b1e24 !important; }
+html.theme-dark body:not(#_):not(#_) input[type="radio"]:checked { background: #1b1e24 !important; }
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #eceef1 !important; }
 html.theme-dark [style*="color:#111111"] { color: #eceef1 !important; }
@@ -1861,3 +1863,6 @@ html.theme-dark body:not(#_) :is(.srail-me, .fo-row small, .of-empty, .story-siz
 html.theme-dark body:not(#_) .sidebar-tab-pill:not(.active) { background: transparent !important; border-color: #3a414b !important; color: #eceef1 !important; }
 html.theme-dark body:not(#_):not(#_) .fr-avatar { color: #111111 !important; }
 html.theme-dark body:not(#_):not(#_) .shop-basket b { background: #2f6fdb !important; color: #ffffff !important; }
+html.theme-dark body:not(#_):not(#_) input[type="radio"] { background: transparent !important; border-color: #4a525e !important; }
+html.theme-dark body:not(#_):not(#_) input[type="radio"]:checked { border-color: #4d8bf0 !important; background: transparent !important; }
+html.theme-dark body:not(#_):not(#_) input[type="radio"]::before { background: #4d8bf0 !important; }

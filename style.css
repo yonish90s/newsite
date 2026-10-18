@@ -11444,3 +11444,25 @@ html body:not(#_):not(#_) .fr-avatar { color: #111111 !important; text-shadow: n
 html body:not(#_):not(#_) .shop-basket b { background: #2f6fdb !important; color: #ffffff !important; }
 html body:not(#_):not(#_) #global-chat-fab, html body:not(#_):not(#_) .chat-fab { background: #2f6fdb !important; color: #ffffff !important; border-color: #ffffff !important; box-shadow: 0 10px 22px -10px rgba(47, 111, 219, .8) !important; }
 html body:not(#_):not(#_) .chat-fab :is(svg, svg *) { color: #ffffff !important; stroke: #ffffff; }
+
+/* ===== כפתורי בחירה (רדיו) נקיים: עיגול עם מסגרת, ובבחירה — נקודה כחולה במרכז ===== */
+html body:not(#_):not(#_) input[type="radio"] {
+  -webkit-appearance: none !important; appearance: none !important;
+  width: 20px !important; height: 20px !important; min-width: 20px; margin: 0 !important; padding: 0 !important;
+  border: 2px solid #c4c8d0 !important; border-radius: 50% !important; background: #ffffff !important;
+  display: inline-grid !important; place-content: center !important; cursor: pointer; box-shadow: none !important;
+  transition: border-color .15s ease, box-shadow .15s ease !important; vertical-align: middle; flex: none;
+}
+html body:not(#_):not(#_) input[type="radio"]::before {
+  content: "" !important; width: 10px !important; height: 10px !important; border-radius: 50% !important;
+  background: #2f6fdb !important; transform: scale(0) !important; transition: transform .15s cubic-bezier(.3, 1.4, .5, 1) !important;
+  position: static !important; inset: auto !important;
+}
+html body:not(#_):not(#_) input[type="radio"]::after { content: none !important; display: none !important; }
+html body:not(#_):not(#_) input[type="radio"]:hover { border-color: #2f6fdb !important; }
+html body:not(#_):not(#_) input[type="radio"]:hover:not(:checked)::before { transform: scale(0) !important; }
+html body:not(#_):not(#_) input[type="radio"]:checked { border-color: #2f6fdb !important; background: #ffffff !important; }
+html body:not(#_):not(#_) input[type="radio"]:checked::before { transform: scale(1) !important; }
+html body:not(#_):not(#_) input[type="radio"]:focus-visible { box-shadow: 0 0 0 4px rgba(47, 111, 219, .2) !important; outline: none !important; }
+/* תיבות סימון באותה שפה */
+html body:not(#_):not(#_) input[type="checkbox"] { accent-color: #2f6fdb !important; }
