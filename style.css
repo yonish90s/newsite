@@ -12293,3 +12293,22 @@ html body:not(#_):not(#_):not(#_) .pd2-topcat { display: inline-flex; align-item
   html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pd2-info .okb-wrap .okb-super { order: 5; }
   html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pd2-info .okb-wrap .okb-likes { order: 6; }
 }
+
+/* ===== הכפתורים כאייקונים בלבד, בשורת "חזרה" ליד הקטגוריה ===== */
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pd2-info .okb-wrap, html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pd2-info .okb-row, html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pd2-info .okb-sub, html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pd2-info .okb-wrap * { display: none !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pd2-topend { display: flex; align-items: center; gap: 8px; min-width: 0; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pd2-topacts { display: flex; align-items: center; gap: 6px; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pti { width: 38px; height: 38px; flex: none; display: inline-grid; place-items: center; padding: 0; border-radius: 50%; background: #ffffff; border: 1px solid #d5d8de; color: #111111; cursor: pointer; transition: border-color .15s, background .15s; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pti:hover { border-color: #9aa0aa; background: #f6f7f9; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pti svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pti.on, html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pti.is-saved { border: 1.5px solid #111111; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) :is(.pti-like.on, .pti.pd2-save.is-saved) svg { fill: currentColor; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pd2-toprow .pd2-topcat { max-width: 110px; height: 38px; }
+@media (max-width: 768px) {
+  /* בפלאפון: "חזרה" כחץ בלבד כדי שהכל ייכנס בשורה אחת */
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pd2-toprow .art-back-btn { font-size: 0 !important; width: 38px !important; height: 38px !important; min-width: 38px; padding: 0 !important; justify-content: center !important; border-radius: 50% !important; gap: 0 !important; flex: none; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pd2-toprow { gap: 6px; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pd2-topacts { gap: 5px; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pti { width: 36px; height: 36px; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pd2-toprow .pd2-topcat { height: 36px; padding: 0 12px; font-size: 13px; max-width: 84px; }
+}
