@@ -15404,9 +15404,9 @@ function homeChipsHTML(photos, comics, stories) {
   const feedChip = `<button type="button" class="hc-chip" onclick="openFeed()"><span class="hc-dot hc-dot-feed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg></span><span>הפיד שלי</span></button>`;
   return `<nav class="hc-chips" aria-label="קיצורי תוכן">
       ${feedChip}
-      ${chip('photos', 'תמונות', cv.photos, "homeGo('photos')")}
-      ${chip('comics', 'קומיקס', cv.comics, "homeGo('comics')")}
-      ${chip('stories', 'סיפורים', cv.stories, "homeGo('stories')")}
+      ${chip('photos', 'תמונות', null, "homeGo('photos')")}
+      ${chip('comics', 'קומיקס', null, "homeGo('comics')")}
+      ${chip('stories', 'סיפורים', null, "homeGo('stories')")}
       <button type="button" class="hc-all" onclick="navigateToPage('page-communities-main')" aria-label="כל הקטגוריות" title="כל הקטגוריות">
         <svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg></button>
     </nav>`;
