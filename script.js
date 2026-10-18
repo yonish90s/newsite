@@ -8926,22 +8926,23 @@ function qpEnsureModal() {
   if (modal) return modal;
   modal = document.createElement('div');
   modal.id = 'quick-publish-modal';
-  modal.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(0, 0, 0, 0.6); z-index:9999999; align-items:center; justify-content:center; direction:rtl; padding:16px; font-family:system-ui,sans-serif;';
+  modal.className = 'qp-modal';
+  modal.style.display = 'none';
+  modal.addEventListener('click', e => { if (e.target === modal) modal.style.display = 'none'; });
   modal.innerHTML = `
-    <div class="qp-card" style="background:#ffffff; border-radius:18px; width:100%; max-width:460px; height:80vh; max-height:640px; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 25px 60px rgba(0, 0, 0, 0.35);">
-      <div style="background:#1a1a1a; color:#ffffff; padding:16px 18px; display:flex; align-items:center; gap:12px;">
-        <div style="width:44px; height:44px; border-radius:50%; background:#22c55e; display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0;">🤖</div>
-        <div style="flex:1; min-width:0;">
-          <div style="font-size:16px; font-weight:900;">עוזר לפרסום מודעה מהיר</div>
-          <div style="font-size:12px; color:#9ca3af;">🟢 זמין כעת · פרסום ב-30 שניות</div>
+    <div class="qp-card" role="dialog" aria-modal="true" aria-label="פרסום מהיר">
+      <header class="qp-head">
+        <span class="qp-bot" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l1.9 4.6 4.6 1.9-4.6 1.9L12 15.5l-1.9-4.6L5.5 9l4.6-1.9z"/><path d="M18.5 14l.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9z" opacity=".7"/></svg></span>
+        <div class="qp-title"><b>פרסום מהיר</b><small><i></i>זמין עכשיו · מוכן תוך 30 שניות</small></div>
+        <button type="button" class="qp-close" aria-label="סגירה" onclick="document.getElementById('quick-publish-modal').style.display='none'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      </header>
+      <div id="qp-messages" class="qp-msgs"></div>
+      <div class="qp-bar">
+        <div class="qp-field">
+          <button type="button" class="qp-add" onclick="qpAddImage()" title="הוספת תמונה" aria-label="הוספת תמונה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+          <input id="qp-input" type="text" placeholder="כתבו כאן…" autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault(); qpHandleSend();}">
+          <button type="button" class="qp-send" onclick="qpHandleSend()" aria-label="שליחה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
         </div>
-        <button class="qp-close" aria-label="סגירה" onclick="document.getElementById('quick-publish-modal').style.display='none'" style="background:rgba(255, 255, 255, 0.14); border:none; color:#ffffff; width:30px; height:30px; border-radius:50%; cursor:pointer; font-size:16px; flex-shrink:0;">✕</button>
-      </div>
-      <div id="qp-messages" style="flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:12px; background:#f7f7f8;"></div>
-      <div style="display:flex; gap:8px; padding:12px; border-top:1px solid #eeeeee; background:#ffffff; align-items:center;">
-        <button onclick="qpAddImage()" title="הוסף תמונה" style="width:40px; height:40px; border-radius:50%; background:#f1f5f9; border:1px solid #e2e8f0; cursor:pointer; font-size:18px; flex-shrink:0;">📷</button>
-        <input id="qp-input" type="text" placeholder="הקלד תשובה לבוט..." onkeydown="if(event.key==='Enter'){event.preventDefault(); qpHandleSend();}" style="flex:1; padding:11px 14px; border:1px solid #dddddd; border-radius:22px; font-size:14px; outline:none; box-sizing:border-box;">
-        <button onclick="qpHandleSend()" style="width:44px; height:44px; border-radius:50%; background:#22c55e; border:none; color:#262626; cursor:pointer; font-size:18px; flex-shrink:0;">➤</button>
       </div>
     </div>
   `;
@@ -8952,10 +8953,9 @@ function qpEnsureModal() {
 function qpBubble(role, html) {
   const box = document.getElementById('qp-messages');
   if (!box) return;
-  const mine = role === 'user';
   const wrap = document.createElement('div');
-  wrap.style.cssText = `display:flex; justify-content:${mine ? 'flex-start' : 'flex-end'};`;
-  wrap.innerHTML = `<div style="max-width:82%; background:${mine ? '#22c55e' : '#fff'}; color:${mine ? '#fff' : '#111'}; padding:10px 14px; border-radius:14px; font-size:14px; line-height:1.5; box-shadow:0 1px 3px rgba(0, 0, 0, 0.08); ${mine ? 'border-bottom-right-radius:4px;' : 'border-bottom-left-radius:4px;'} word-break:break-word;">${html}</div>`;
+  wrap.className = 'qp-row ' + (role === 'user' ? 'me' : 'bot');
+  wrap.innerHTML = `<div class="qp-bubble">${html}</div>`;
   box.appendChild(wrap);
   box.scrollTop = box.scrollHeight;
 }
