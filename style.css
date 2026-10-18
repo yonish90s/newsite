@@ -12315,3 +12315,27 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pd2-toprow .pd2-topcat { max-
 /* כותרת הגלריה — בחצי הגודל, עדיין מודגשת */
 html body:not(#_):not(#_):not(#_) .pd2-title { font-size: 14px !important; font-weight: 800 !important; line-height: 1.4 !important; }
 @media (max-width: 768px) { html body:not(#_):not(#_):not(#_) .pd2-title { font-size: 12px !important; } }
+
+/* ===== עמוד הגלריה במחשב ===== */
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pd2-acts-desk { display: none; }
+@media (min-width: 769px) {
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pd2-toprow .pd2-topacts { display: none !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pd2-acts-desk { display: block; order: 2; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pd2-acts-desk .pd2-topacts { gap: 8px; padding: 2px 0 4px; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pd2-acts-desk .pti { width: 42px; height: 42px; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pd2-acts-desk .pti svg { width: 19px; height: 19px; }
+  /* תמונה נקייה: בלי מסגרת אפורה, מותאמת לגובה המסך */
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pd2 .pshow-frame, html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pd2 .pshow-frame.photo-main-img-container { border: 0 !important; outline: 0 !important; box-shadow: none !important; background: transparent !important; height: auto !important; max-height: none !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pd2 .pshow-main { max-height: calc(100vh - 210px) !important; max-width: 100% !important; width: auto !important; height: auto !important; object-fit: contain; display: block; margin: 0 auto; }
+  /* עמודת הפרטים: נדבקת למעלה בגלילה, מרווחים נעימים */
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pd2-info { position: sticky; top: 76px; align-self: start; display: flex !important; flex-direction: column; gap: 14px; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pd2-info > * { margin-top: 0 !important; margin-bottom: 0 !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pd2-title { font-size: 16px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pd2-toprow { margin-bottom: 18px; }
+}
+@media (min-width: 769px) {
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pd2-info > .pd2-creator { order: -3; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pd2-info > .pd2-acts-desk { order: -2; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pd2-info > .pd2-title { order: -1; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pd2 .pshow-main { max-height: calc(100vh - 270px) !important; }
+}

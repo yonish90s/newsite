@@ -16484,13 +16484,7 @@ function photoOpenDetail(id) {
           <div class="pd2-toprow">
             <button class="art-back-btn" onclick="photoGoBack()">חזרה לגלריות</button>
             <div class="pd2-topend">
-              <div class="pd2-topacts">
-                <button type="button" class="pti pti-like${photoIsLikedLocal(a.id) ? ' on' : ''}" onclick="this.classList.toggle('on'); photoToggleLike('${artEsc(a.id)}')" title="אהבתי" aria-label="אהבתי"><svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></button>
-                <button type="button" class="pti" onclick="dmStartAboutGallery('${artEsc(a.authorId || '')}', '${artEsc(a.author || '')}', '${artEsc(a.id)}')" title="הודעה ליוצר" aria-label="הודעה ליוצר"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg></button>
-                <button type="button" class="pti pd2-save${photoIsSavedLocal(a.id) ? ' is-saved' : ''}" onclick="photoToggleSave('${artEsc(a.id)}')" title="שמירה" aria-label="שמירה"><svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
-                ${a.emailUrl ? `<button type="button" class="pti" onclick="emailIconClick('${artEsc(a.emailUrl)}', this, event)" title="אימייל — לחיצה מעתיקה, לחיצה נוספת שולחת" aria-label="אימייל"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 7l8.5 6 8.5-6"/></svg></button>` : ''}
-                <button type="button" class="pti" onclick="postShare('${artEsc(a.title || '')}')" title="שיתוף" aria-label="שיתוף"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg></button>
-              </div>
+              ${pd2ActionsHTML(a)}
               ${a.category ? `<span class="pd2-topcat" title="קטגוריה">${escHtml(a.category)}</span>` : ''}
             </div>
           </div>
@@ -16528,6 +16522,7 @@ function photoOpenDetail(id) {
                   ${viewsBadgeHTML(a.id)}
                 </div>
               </div>
+              <div class="pd2-acts-desk">${pd2ActionsHTML(a)}</div>
               <h1 class="pd2-title">${escHtml(a.title)}</h1>
 
               ${a.ageRange || a.region ? `<div class="pd2-opts">
@@ -27230,3 +27225,16 @@ function emailIconClick(url, btn, e) {
   if (btn) { btn.dataset.revealed = '1'; btn.classList.add('on'); }
 }
 window.emailIconClick = emailIconClick;
+
+
+// כפתורי הפעולה של עמוד הגלריה (אייקונים בלבד) — בשורה העליונה בפלאפון, בעמודת הפרטים במחשב
+function pd2ActionsHTML(a) {
+  return `<div class="pd2-topacts">
+                <button type="button" class="pti pti-like${photoIsLikedLocal(a.id) ? ' on' : ''}" onclick="this.classList.toggle('on'); photoToggleLike('${artEsc(a.id)}')" title="אהבתי" aria-label="אהבתי"><svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></button>
+                <button type="button" class="pti" onclick="dmStartAboutGallery('${artEsc(a.authorId || '')}', '${artEsc(a.author || '')}', '${artEsc(a.id)}')" title="הודעה ליוצר" aria-label="הודעה ליוצר"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg></button>
+                <button type="button" class="pti pd2-save${photoIsSavedLocal(a.id) ? ' is-saved' : ''}" onclick="photoToggleSave('${artEsc(a.id)}')" title="שמירה" aria-label="שמירה"><svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
+                ${a.emailUrl ? `<button type="button" class="pti" onclick="emailIconClick('${artEsc(a.emailUrl)}', this, event)" title="אימייל — לחיצה מעתיקה, לחיצה נוספת שולחת" aria-label="אימייל"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 7l8.5 6 8.5-6"/></svg></button>` : ''}
+                <button type="button" class="pti" onclick="postShare('${artEsc(a.title || '')}')" title="שיתוף" aria-label="שיתוף"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg></button>
+              </div>`;
+}
+window.pd2ActionsHTML = pd2ActionsHTML;
