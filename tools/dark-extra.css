@@ -22,3 +22,7 @@ html.theme-dark body:not(#_):not(#_) .photo-filter-trigger .photo-filter-trigger
 html.theme-dark body:not(#_):not(#_) .shop-bar-count, html.theme-dark body:not(#_):not(#_) .shop-bar b { color: #ffffff !important; }
 html.theme-dark body:not(#_):not(#_) .site-page-nav-item.active, html.theme-dark body:not(#_):not(#_) .site-page-nav-item:hover,
 html.theme-dark body:not(#_):not(#_) .photo-filter-trigger:hover { background: #2f6fdb !important; border-color: #2f6fdb !important; color: #ffffff !important; }
+html.theme-dark body:not(#_):not(#_) .okb-pass:not(.is-saved):not(:hover) { background: transparent !important; border-color: #eceef1 !important; color: #eceef1 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) .okb-pass.is-saved, html.theme-dark body:not(#_):not(#_) .okb-pass:hover { background: #eceef1 !important; color: #121418 !important; border-color: #eceef1 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) .okb-pass.is-saved svg * { fill: #121418 !important; stroke: #121418 !important; }
+html.theme-dark body:not(#_):not(#_) .okb-mini { background: transparent !important; border-color: #4a525e !important; color: #eceef1 !important; }

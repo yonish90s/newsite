@@ -11343,3 +11343,37 @@ html body:not(#_) .td-btn.super { color: #2f6fdb !important; } html body:not(#_)
 html body:not(#_) .td-btn svg { color: inherit !important; }
 html body:not(#_) .td-btn:hover { background: currentColor !important; }
 html body:not(#_) .td-btn:hover svg { color: #ffffff !important; }
+
+/* ===== כפתורי הגלריה בסגנון PASS / LIKE / SUPERLIKE ===== */
+.okb-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+html body:not(#_):not(#_) .okb {
+  height: 56px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  font: inherit; font-size: 17px; font-weight: 900; letter-spacing: .2px; cursor: pointer; padding: 0 14px; white-space: nowrap;
+  transition: transform .12s ease, box-shadow .2s ease, filter .2s ease, background .2s ease !important;
+}
+html body:not(#_):not(#_) .okb svg { width: 22px; height: 22px; flex: none; }
+html body:not(#_):not(#_) .okb:hover { transform: translateY(-2px); }
+html body:not(#_):not(#_) .okb:active { transform: scale(.97); }
+/* שמירה — מתאר שחור עבה */
+html body:not(#_):not(#_) .okb-pass { background: #ffffff !important; border: 2.5px solid #111111 !important; color: #111111 !important; box-shadow: none !important; }
+html body:not(#_):not(#_) .okb-pass * { color: inherit !important; }
+html body:not(#_):not(#_) .okb-pass svg, html body:not(#_):not(#_) .okb-pass svg * { stroke: currentColor !important; }
+html body:not(#_):not(#_) .okb-pass:hover { background: #111111 !important; color: #ffffff !important; }
+html body:not(#_):not(#_):not(#_) .okb-pass.is-saved { background: #111111 !important; border-color: #111111 !important; color: #ffffff !important; }
+html body:not(#_):not(#_):not(#_) .okb-pass.is-saved svg * { fill: #ffffff !important; stroke: #ffffff !important; }
+/* אהבתי — ורוד פסטל, לב שחור; כשאהבתי — ורוד חזק ולב לבן */
+html body:not(#_):not(#_) .okb-like { background: #f6c3ef !important; border: 0 !important; color: #111111 !important; }
+html body:not(#_):not(#_) .okb-like * { color: inherit !important; }
+html body:not(#_):not(#_) .okb-like:hover { filter: brightness(.96); box-shadow: 0 10px 22px -12px rgba(219, 39, 119, .55) !important; }
+html body:not(#_):not(#_) .okb-like.on { background: #e8199b !important; color: #ffffff !important; box-shadow: 0 10px 22px -12px rgba(232, 25, 155, .7) !important; }
+/* הודעה — גרדיאנט כחול-סגול עם צל */
+html body:not(#_):not(#_) .okb-super { background: linear-gradient(90deg, #0b0fb8 0%, #4b26e8 55%, #7b4dff 100%) !important; border: 0 !important; color: #ffffff !important; box-shadow: 0 10px 24px -10px rgba(75, 38, 232, .75) !important; }
+html body:not(#_):not(#_) .okb-super * { color: inherit !important; }
+html body:not(#_):not(#_) .okb-super:hover { filter: brightness(1.12); box-shadow: 0 14px 28px -10px rgba(75, 38, 232, .85) !important; }
+/* שורה משנית */
+.okb-sub { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+html body:not(#_):not(#_) .okb-mini { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px; border-radius: 999px; border: 1.5px solid #d4d4d8 !important; background: #fff !important; color: #111 !important; font: inherit; font-size: 13.5px; font-weight: 800; cursor: pointer; text-decoration: none; }
+html body:not(#_):not(#_) .okb-mini:hover { border-color: #111 !important; }
+.okb-mini svg { width: 16px; height: 16px; }
+.okb-likes { margin-inline-start: auto; font-size: 13px; font-weight: 700; color: #71717a; }
+@media (max-width: 420px) { html body:not(#_):not(#_) .okb { font-size: 15px; height: 52px; gap: 6px; padding: 0 8px; } html body:not(#_):not(#_) .okb svg { width: 19px; height: 19px; } }

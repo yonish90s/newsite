@@ -1628,6 +1628,13 @@ html.theme-dark body:not(#_) .a11y-launcher { border-color: #323842 !important; 
 html.theme-dark body:not(#_) .td-btn { background: #1b1e24 !important; border: 1.5px solid #323842 !important; }
 html.theme-dark body:not(#_) .td-btn.nope { color: color-mix(in srgb, #dc2626 55%, white) !important; }
 html.theme-dark body:not(#_) .td-btn.chat { color: color-mix(in srgb, #7c3aed 55%, white) !important; }
+html.theme-dark body:not(#_):not(#_) .okb-pass { background: #1b1e24 !important; border: 2.5px solid #5b6472 !important; color: #eceef1 !important; }
+html.theme-dark body:not(#_):not(#_) .okb-pass:hover { background: #4d8bf0 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) .okb-pass.is-saved { background: #4d8bf0 !important; border-color: #5b6472 !important; }
+html.theme-dark body:not(#_):not(#_) .okb-like { background: color-mix(in srgb, #f6c3ef 22%, #1b1e24) !important; color: #eceef1 !important; }
+html.theme-dark body:not(#_):not(#_) .okb-mini { border: 1.5px solid #323842 !important; background: #1b1e24 !important; color: #eceef1 !important; }
+html.theme-dark body:not(#_):not(#_) .okb-mini:hover { border-color: #5b6472 !important; }
+html.theme-dark .okb-likes { color: #c8cdd4 !important; }
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #eceef1 !important; }
 html.theme-dark [style*="color:#111111"] { color: #eceef1 !important; }
@@ -1823,3 +1830,7 @@ html.theme-dark body:not(#_):not(#_) .photo-filter-trigger .photo-filter-trigger
 html.theme-dark body:not(#_):not(#_) .shop-bar-count, html.theme-dark body:not(#_):not(#_) .shop-bar b { color: #ffffff !important; }
 html.theme-dark body:not(#_):not(#_) .site-page-nav-item.active, html.theme-dark body:not(#_):not(#_) .site-page-nav-item:hover,
 html.theme-dark body:not(#_):not(#_) .photo-filter-trigger:hover { background: #2f6fdb !important; border-color: #2f6fdb !important; color: #ffffff !important; }
+html.theme-dark body:not(#_):not(#_) .okb-pass:not(.is-saved):not(:hover) { background: transparent !important; border-color: #eceef1 !important; color: #eceef1 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) .okb-pass.is-saved, html.theme-dark body:not(#_):not(#_) .okb-pass:hover { background: #eceef1 !important; color: #121418 !important; border-color: #eceef1 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) .okb-pass.is-saved svg * { fill: #121418 !important; stroke: #121418 !important; }
+html.theme-dark body:not(#_):not(#_) .okb-mini { background: transparent !important; border-color: #4a525e !important; color: #eceef1 !important; }

@@ -16380,18 +16380,20 @@ function photoOpenDetail(id) {
                 </div></div>` : ''}
               </div>` : ''}
 
-              <div class="pd2-buy">
-                <div class="pd2-buy-head"><b>יצירת קשר עם היוצר</b><small>${a.likes || 0} לייקים</small></div>
-                <div class="pd2-buy-btns">
-                  <button type="button" class="pd2-btn dark" onclick="dmStartAboutGallery('${artEsc(a.authorId || '')}', '${artEsc(a.author || '')}', '${artEsc(a.id)}')">שליחת הודעה</button>
-                  ${a.telegramUrl ? `<a class="pd2-btn accent" href="${escHtml(safeUrl(a.telegramUrl))}" target="_blank" rel="noopener">טלגרם</a>`
-                    : a.emailUrl ? `<button type="button" class="pd2-btn accent" onclick="revealAndCopyEmail('${artEsc(a.emailUrl)}', this, event);">אימייל</button>`
-                    : `<button type="button" class="pd2-btn accent" onclick="photoToggleLike('${artEsc(a.id)}')">${photoIsLikedLocal(a.id) ? 'אהבתי ✓' : 'אהבתי'}</button>`}
-                </div>
+              <!-- שלושה כפתורים גדולים: שמירה (מתאר) · אהבתי (ורוד) · הודעה (גרדיאנט) -->
+              <div class="okb-row">
+                <button type="button" class="okb okb-pass pd2-save${photoIsSavedLocal(a.id) ? ' is-saved' : ''}" onclick="photoToggleSave('${artEsc(a.id)}')">
+                  <svg viewBox="0 0 24 24" fill="${photoIsSavedLocal(a.id) ? '#ffffff' : 'none'}" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><span>${photoIsSavedLocal(a.id) ? 'שמור' : 'שמירה'}</span></button>
+                <button type="button" class="okb okb-like${photoIsLikedLocal(a.id) ? ' on' : ''}" onclick="this.classList.toggle('on'); photoToggleLike('${artEsc(a.id)}')">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg><span>אהבתי</span></button>
+                <button type="button" class="okb okb-super" onclick="dmStartAboutGallery('${artEsc(a.authorId || '')}', '${artEsc(a.author || '')}', '${artEsc(a.id)}')">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 3H4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h3v3.5L11.5 18H20a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z"/><path d="M5 1.2l.7 1.6 1.6.7-1.6.7L5 5.8l-.7-1.6-1.6-.7 1.6-.7z" fill="#fff"/></svg><span>הודעה</span></button>
               </div>
-              <div class="pd2-row2">
-                <button type="button" class="pd2-ghost pd2-save${photoIsSavedLocal(a.id) ? ' is-saved' : ''}" onclick="photoToggleSave('${artEsc(a.id)}')"><svg viewBox="0 0 24 24" fill="${photoIsSavedLocal(a.id) ? '#ffffff' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><span>${photoIsSavedLocal(a.id) ? 'שמור' : 'שמירה'}</span></button>
-                <button type="button" class="pd2-ghost" onclick="postShare('${artEsc(a.title || '')}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg>שיתוף</button>
+              <div class="okb-sub">
+                ${a.telegramUrl ? `<a class="okb-mini" href="${escHtml(safeUrl(a.telegramUrl))}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>טלגרם</a>` : ''}
+                ${a.emailUrl ? `<button type="button" class="okb-mini" onclick="revealAndCopyEmail('${artEsc(a.emailUrl)}', this, event);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>אימייל</button>` : ''}
+                <button type="button" class="okb-mini" onclick="postShare('${artEsc(a.title || '')}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg>שיתוף</button>
+                <span class="okb-likes">${a.likes || 0} לייקים</span>
               </div>
               ${(isAdmin() || isEditMode) ? `<button type="button" class="pd2-ghost pd2-edit" onclick="openPhotoEditModal('${artEsc(a.id)}', event);">עריכת הגלריה</button>` : ''}
 
