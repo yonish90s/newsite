@@ -11534,3 +11534,38 @@ html body:not(#_) .art-sidebar-left:not(:has(> :not(.site-pages-widget-box))) { 
 /* "עמודי האתר" בתוך לשונית "קהילה" */
 html body:not(#_) .sp-tab-wrap .site-pages-widget-box { display: block !important; margin: 0 !important; }
 html body:not(#_) .art-sidebar-left .site-pages-widget-box { display: none !important; }
+
+/* ===== "הנתונים שלי" בעמוד הבית — כרטיס רחב ונקי (במקום שעון) ===== */
+.hw-stats-wrap { position: relative; z-index: 1; width: 100%; max-width: 1180px; margin: 0 auto 10px; padding: 0 20px; box-sizing: border-box; }
+html body:not(#_) .hw-watch, html body:not(#_) button.hw-watch {
+  display: block !important; position: static !important; transform: none !important; width: 100% !important; padding: 0 !important;
+  border-radius: var(--ds-radius, 18px) !important; background: #ffffff !important; border: 1px solid var(--ds-line, #e6e8ec) !important;
+  box-shadow: var(--ds-shadow) !important; cursor: pointer; text-align: right; font: inherit;
+}
+html body:not(#_) .hw-watch::after { display: none !important; }
+html body:not(#_) .hw-watch:hover { transform: none !important; border-color: #c9dafa !important; }
+html body:not(#_) .hw-watch-screen {
+  border-radius: inherit !important; background: transparent !important; box-shadow: none !important; color: var(--ds-ink, #0f1115) !important;
+  padding: 18px 22px !important; direction: rtl !important;
+  display: grid !important; grid-template-columns: auto 1fr auto; grid-template-areas: "top top top" "mid gauges cta"; align-items: center; gap: 12px 28px;
+}
+html body:not(#_) .hw-watch-top { grid-area: top; display: flex; align-items: center; justify-content: flex-start; gap: 10px; }
+.hw-watch-title { font-size: 17px; font-weight: 800; color: var(--ds-ink, #0f1115); }
+html body:not(#_) .hw-watch-time { display: none !important; }
+html body:not(#_) .hw-watch-mid { grid-area: mid; margin: 0 !important; gap: 14px !important; direction: rtl; }
+html body:not(#_) .hw-watch-rings { width: 76px !important; height: 76px !important; }
+html body:not(#_) .hw-watch-lines { font-size: 18px !important; gap: 4px !important; }
+html body:not(#_) .hw-watch-lines small { font-size: 12px !important; color: var(--ds-muted, #646b78) !important; margin-inline-start: 6px; }
+.hw-watch-gauges { grid-area: gauges; justify-self: center; display: flex; flex-direction: column; gap: 6px; }
+html body:not(#_) .hw-watch-cmps { gap: 26px; justify-content: center !important; direction: rtl; }
+html body:not(#_) .hw-watch-cmp-labels { gap: 26px; justify-content: center !important; direction: rtl !important; margin: 0 !important; }
+html body:not(#_) .hw-watch-cmp-labels span { width: 56px !important; font-size: 12px !important; color: var(--ds-muted, #646b78) !important; }
+html body:not(#_) .hw-cmp { width: 56px !important; height: 56px !important; background: #f4f5f7 !important; }
+html body:not(#_) .hw-watch-cta { grid-area: cta; margin: 0 !important; padding: 12px 20px !important; border-radius: 999px !important; background: var(--ds-blue, #2f6fdb) !important; color: #fff !important; font-size: 14px !important; white-space: nowrap; }
+@media (max-width: 760px) {
+  html body:not(#_) .hw-watch-screen { grid-template-columns: 1fr; grid-template-areas: "top" "mid" "gauges" "cta"; justify-items: center; text-align: center; padding: 16px !important; }
+  html body:not(#_) .hw-watch-top { justify-content: center; }
+  html body:not(#_) .hw-watch-cmps, html body:not(#_) .hw-watch-cmp-labels { gap: 18px; }
+}
+html body:not(#_) .home-welcome { flex-direction: column !important; align-items: stretch !important; }
+html body:not(#_) .hw-inner { box-sizing: border-box !important; max-width: min(1180px, 100%) !important; }

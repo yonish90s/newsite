@@ -13064,7 +13064,6 @@ function homeWelcomeHeroHTML() {
         <path d="M0 0H1440V250C1440 290 1410 310 1380 300C1340 288 1330 330 1300 340C1262 352 1250 300 1215 300C1180 300 1180 380 1140 390C1100 400 1095 330 1060 320C1025 310 1020 420 970 430C925 438 925 360 890 345C850 330 845 300 810 300C770 300 770 470 720 470C670 470 680 330 640 320C600 310 600 360 560 370C520 380 515 300 470 300C430 300 430 410 385 415C340 420 345 330 300 320C255 310 250 380 210 385C165 390 170 300 120 295C80 290 70 330 40 330C15 330 0 310 0 290Z"/>
         <path d="M1130 470C1130 445 1145 425 1152 400C1159 425 1174 445 1174 470C1174 488 1164 500 1152 500C1140 500 1130 488 1130 470Z"/>
       </svg>
-      ${homeWatchHTML()}
       <div class="hw-inner">
         <div class="hw-text">
           <div class="hw-actions">
@@ -13078,6 +13077,7 @@ function homeWelcomeHeroHTML() {
           ${card('סיפורים', 'קצרים ומאמרים', icons.stories, "homeOpenSection('page-stories-text')", '#ffffff', 'hw-c3', thumbs.stories)}
         </div>
       </div>
+      <div class="hw-stats-wrap">${homeWatchHTML()}</div>
     </section>`;
 }
 
@@ -13212,10 +13212,9 @@ function homeWatchBodyHTML() {
   const avg = Number(d.avg) || 0;
   return `
     <div class="hw-watch-top">
-      <span class="hw-watch-tag${mine ? '' : ' demo'}">${mine ? 'מידע אישי' : 'דוגמה'}</span>
-      <span class="hw-watch-date">${HOME_WATCH_DAYS[now.getDay()]} <b>${now.getDate()}</b></span>
+      <b class="hw-watch-title">הנתונים שלי</b>
+      <span class="hw-watch-tag${mine ? '' : ' demo'}">${mine ? 'מעודכן עכשיו' : 'דוגמה'}</span>
     </div>
-    <div class="hw-watch-time">${hh}:${mm}</div>
     <div class="hw-watch-mid">
       <svg class="hw-watch-rings" viewBox="0 0 100 100">
         ${homeWatchRing(42, '#e11d48', d.posts / 10)}
@@ -13228,12 +13227,12 @@ function homeWatchBodyHTML() {
         <span style="color:#0891b2">${avg ? avg.toFixed(1) : '—'}<small>דירוג</small></span>
       </div>
     </div>
-    <div class="hw-watch-cmps">
+    <div class="hw-watch-gauges"><div class="hw-watch-cmps">
       ${homeWatchGauge('#d97706', Math.min(1, d.points / 500), d.points)}
       ${homeWatchGauge('#2f6fdb', d.rank ? Math.max(0.08, 1 - (d.rank - 1) / 10) : 0, d.rank ? '#' + d.rank : '—')}
       ${homeWatchGauge('#ea580c', Math.min(1, d.rCount / 20), d.rCount)}
     </div>
-    <div class="hw-watch-cmp-labels"><span>נקודות</span><span>מקום</span><span>מדרגים</span></div>
+    <div class="hw-watch-cmp-labels"><span>נקודות</span><span>מקום</span><span>מדרגים</span></div></div>
     ${mine ? '' : '<div class="hw-watch-cta">התחברו כדי לראות את שלכם</div>'}`;
 }
 function homeWatchHTML() {
