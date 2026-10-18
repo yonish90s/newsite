@@ -11569,3 +11569,4 @@ html body:not(#_) .hw-watch-cta { grid-area: cta; margin: 0 !important; padding:
 }
 html body:not(#_) .home-welcome { flex-direction: column !important; align-items: stretch !important; }
 html body:not(#_) .hw-inner { box-sizing: border-box !important; max-width: min(1180px, 100%) !important; }
+html body:not(#_) .hcats { box-sizing: border-box !important; width: 100% !important; max-width: 1180px !important; margin-left: auto !important; margin-right: auto !important; }
