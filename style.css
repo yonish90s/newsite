@@ -12312,3 +12312,6 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pd2-toprow .pd2-topcat { max-
   html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pti { width: 36px; height: 36px; }
   html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pd2-toprow .pd2-topcat { height: 36px; padding: 0 12px; font-size: 13px; max-width: 84px; }
 }
+/* כותרת הגלריה — בחצי הגודל, עדיין מודגשת */
+html body:not(#_):not(#_):not(#_) .pd2-title { font-size: 14px !important; font-weight: 800 !important; line-height: 1.4 !important; }
+@media (max-width: 768px) { html body:not(#_):not(#_):not(#_) .pd2-title { font-size: 12px !important; } }
