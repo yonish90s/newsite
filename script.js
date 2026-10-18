@@ -11543,7 +11543,7 @@ function buildSidebarTabs(savedHTML, pageType) {
   const uploadHtml = (buildQuickUploadBox() || '') + (savedHTML || '');
   const tabs = [
     { id: 'filter',    label: '🔎 סינונים', html: buildFiltersSidebarBox(pageType) },
-    { id: 'community', label: '👥 קהילה',  html: (typeof buildSocialCommunityBox === 'function' ? buildSocialCommunityBox() : '') },
+    { id: 'community', label: '👥 קהילה',  html: sitePagesNavBoxHTML(pageType) },
     { id: 'chat',      label: '💬 צ׳אט',   html: buildLiveChatBox() },
     { id: 'publish',   label: '🤖 פרסום',  html: `
       <div class="art-sidebar-box" style="text-align:center; padding:18px; border:1.5px solid #c4b5fd; background:#faf8ff; border-radius:12px;">
@@ -11603,6 +11603,11 @@ function navigateToPage(pageId) {
 }
 window.navigateToPage = navigateToPage;
 
+// תיבת "עמודי האתר" בלבד (בלי עטיפת הסרגל) — מוצגת בלשונית "קהילה" שבצד
+function sitePagesNavBoxHTML(section) {
+  const h = buildLeftSidebarBox('', section || 'photos').trim();
+  return '<div class="sp-tab-wrap">' + h.replace(/^<div class="art-sidebar art-sidebar-left">/, '').replace(/<\/div>\s*$/, '') + '</div>';
+}
 function buildLeftSidebarBox(popularHTML, section) {
   const defaultNavItems = [
     { id: 'page-photos-main', title: 'תמונות 🖼️' },

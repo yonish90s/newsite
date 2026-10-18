@@ -11505,7 +11505,7 @@ html body:not(#_) .art-search { height: 46px !important; padding: 0 16px !import
 /* טקסט משני קריא */
 html body:not(#_) :is(.art-row-meta, .comm-grid-sub, .pc-post-text, .pd2-desc p) { color: var(--ds-text) !important; }
 /* מחשב: הסרגל בצד כבר מנווט — מסירים את תיבת "עמודי האתר" הכפולה */
-@media (min-width: 1100px) { html.has-srail body:not(#_) .site-pages-widget-box { display: none !important; } }
+@media (min-width: 1100px) { html.has-srail body:not(#_) .art-sidebar-left .site-pages-widget-box { display: none !important; } }
 /* בית: פחות רווח ריק מעל הפתיח, ומרווח מסודר לקטגוריות */
 html body:not(#_) .hw-inner { padding-top: 28px !important; padding-bottom: 36px !important; }
 html body:not(#_) .home-welcome { background: transparent !important; }
@@ -11531,4 +11531,6 @@ html body:not(#_):not(#_) .umap-btn:hover { background: #2459c0 !important; }
 html body:not(#_):not(#_) .art-zoom-btn { background: rgba(17, 17, 17, .6) !important; color: #ffffff !important; border: 0 !important; backdrop-filter: blur(6px); }
 /* הסרגל השמאלי נשאר ריק (בלי "עמודי האתר" / "גולשים בסביבה" / "פרסום מהיר") — מסתירים אותו כשהוא ריק */
 html body:not(#_) .art-sidebar-left:not(:has(> :not(.site-pages-widget-box))) { display: none !important; }
-@media (max-width: 1099px) { html body:not(#_) .art-sidebar-left:has(> .site-pages-widget-box) { display: block !important; } }
+/* "עמודי האתר" בתוך לשונית "קהילה" */
+html body:not(#_) .sp-tab-wrap .site-pages-widget-box { display: block !important; margin: 0 !important; }
+html body:not(#_) .art-sidebar-left .site-pages-widget-box { display: none !important; }
