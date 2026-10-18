@@ -12202,3 +12202,19 @@ html body:not(#_):not(#_):not(#_):not(#_) .uw-link { color: #111111 !important; 
 html body:not(#_):not(#_):not(#_):not(#_) .uw-chip { background: #f1f2f4 !important; color: #111111 !important; border: 1px solid #e6e8ec; font-weight: 600 !important; }
 html body:not(#_):not(#_):not(#_):not(#_) .uw-chip.dislike { background: #ffffff !important; color: #646b78 !important; text-decoration: line-through; text-decoration-color: #c4c8d0; }
 html body:not(#_):not(#_):not(#_):not(#_) .uw-sex b { color: #111111 !important; }
+
+/* ===== שני הכפתורים בשורה אחת: "לקריאת הסיפור" + "קריאה במסך מלא" — אותו סגנון ===== */
+html body:not(#_):not(#_):not(#_) .pshow-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+html body:not(#_):not(#_):not(#_) .pshow-actions .story-linked-chip {
+  display: inline-flex !important; align-items: center; gap: 8px; margin: 0 !important; cursor: pointer; max-width: 100%; box-sizing: border-box;
+  background: #ffffff !important; color: #111111 !important; border: 1px solid #d5d8de !important; border-radius: 12px !important;
+  font-size: 15px !important; font-weight: 600 !important; padding: 12px 22px !important; box-shadow: none !important; line-height: 1.2;
+  transition: border-color .15s ease, border-radius .18s ease, background .15s ease !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+html body:not(#_):not(#_):not(#_) .pshow-actions .story-linked-chip b { font-weight: 700; overflow: hidden; text-overflow: ellipsis; color: inherit !important; }
+html body:not(#_):not(#_):not(#_) .pshow-actions .story-linked-chip::after { content: ""; width: 16px; height: 16px; background: currentColor; flex: none;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M19 12H5M11 6l-6 6 6 6'/%3E%3C/svg%3E") center / contain no-repeat;
+          mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M19 12H5M11 6l-6 6 6 6'/%3E%3C/svg%3E") center / contain no-repeat; }
+html body:not(#_):not(#_):not(#_) .pshow-actions .story-linked-chip:hover { background: #f6f7f9 !important; border-color: #9aa0aa !important; }
+html body:not(#_):not(#_):not(#_) .pshow-actions .story-linked-chip:active { border: 1.5px solid #111111 !important; border-radius: 999px !important; }
+@media (max-width: 768px) { html body:not(#_):not(#_):not(#_) .pshow-actions > * { flex: 1 1 100%; justify-content: center; } }

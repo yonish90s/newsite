@@ -2005,6 +2005,9 @@ html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .uw-link { color: #eceef1 !
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .uw-chip { background: #22262d !important; color: #eceef1 !important; border: 1px solid #323842 !important; }
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .uw-chip.dislike { background: #1b1e24 !important; color: #c8cdd4 !important; }
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .uw-sex b { color: #eceef1 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) .pshow-actions .story-linked-chip { background: #1b1e24 !important; color: #eceef1 !important; border: 1px solid #323842 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) .pshow-actions .story-linked-chip:hover { background: #22262d !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) .pshow-actions .story-linked-chip:active { border: 1.5px solid #5b6472 !important; }
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #eceef1 !important; }
 html.theme-dark [style*="color:#111111"] { color: #eceef1 !important; }
@@ -2330,3 +2333,5 @@ html.theme-dark body:not(#_):not(#_):not(#_):not(#_) :is(.uw-label, .uw-lines sm
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .uw-star { color: #3a414c !important; }
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_) :is(.uw-star.on, .uw-star:hover) { color: #eceef1 !important; }
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .uw-chip.dislike { background: transparent !important; color: #9aa2ad !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) .pshow-actions .story-linked-chip { background: #1b1e24 !important; color: #eceef1 !important; border-color: #3a414c !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) .pshow-actions .story-linked-chip:hover { background: #22262d !important; }

@@ -7137,10 +7137,12 @@ function storyOpenDetail(id) {
                 <span>${escHtml(s.timestamp || '')}</span>
                 ${_n > 1 ? `<span>·</span><span id="story-page-counter">${_bmPage + 1} / ${_n}</span>` : ''}
               </div>
-              ${storyLinkedChipHTML(s)}
               ${_n > 1 ? `<div class="pshow-tiles">${_tiles}</div>` : ''}
               <div class="pshow-line"></div>
+              <div class="pshow-actions">
+              ${storyLinkedChipHTML(s)}
               <button type="button" class="pshow-cta" onclick="artGalleryById('stories', window.currentStoryId, document.querySelector('#story-page-view img') ? document.querySelector('#story-page-view img').getAttribute('src') : '')">קריאה במסך מלא</button>
+              </div>
             </div>
           </div>
 
@@ -12091,8 +12093,8 @@ function storyLinkedChipHTML(s) {
     if (!linked) linked = all.find(x => x.linkedId === s.id);
     if (!linked || linked.id === s.id) return '';
     const kindLbl = linked.__kind === 'stories' ? 'הסיפור' : 'הקומיקס';
-    return `<div class="story-linked-chip" onclick="storyOpenLinked('${artEsc(linked.id)}')">
-      🔗 לקריאת ${kindLbl}: <b>${escHtml(linked.title || '')}</b> ←
+    return `<div class="story-linked-chip" role="button" tabindex="0" onclick="storyOpenLinked('${artEsc(linked.id)}')">
+      לקריאת ${kindLbl}: <b>${escHtml(linked.title || '')}</b>
     </div>`;
   } catch (e) { return ''; }
 }
