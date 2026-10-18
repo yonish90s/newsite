@@ -11403,3 +11403,44 @@ html body:not(#_):not(#_) .okb-mini:hover { border-color: #111 !important; }
 .st-spark { width: 150px; height: 60px; flex: none; }
 .st-foot { margin: 16px 2px 0; font-size: 13px; color: #71717a; line-height: 1.6; }
 @media (max-width: 420px) { .st-spark { width: 110px; } .st-num { font-size: 30px; } }
+
+/* =====================================================================
+   שפת כפתורים אחידה ונקייה + תיקוני קריאות (בדיקה אוטומטית של ניגודיות)
+   ראשי = כחול מלא · משני = מתאר כחול שמתמלא · שקט = אפור בהיר · פעיל = כחול מלא
+   ===================================================================== */
+:root { --b-blue: #2f6fdb; --b-blue-d: #2459c0; --b-soft: #eef3fd; --b-ink: #111111; --b-muted: #5f6470; --b-line: #dcdfe5; }
+
+/* תפריט עליון: לשונית פעילה כחולה עם טקסט לבן, האחרות כהות עם ריחוף עדין */
+html body:not(#_) .apple-nav .nav-links a, html body:not(#_) .nav-links a { color: #2a2d33 !important; border-radius: 999px !important; transition: background .15s, color .15s !important; }
+html body:not(#_) .apple-nav .nav-links a:hover { background: var(--b-soft) !important; color: var(--b-blue) !important; }
+html body:not(#_) .apple-nav .active-top-nav, html body:not(#_) .nav-links a.active-top-nav, html body:not(#_) .apple-nav .nav-links a.active-top-nav:hover {
+  background: var(--b-blue) !important; color: #ffffff !important; box-shadow: 0 6px 14px -8px rgba(47, 111, 219, .8) !important;
+}
+/* כפתורי לשונית/צ'יפ פעילים */
+html body:not(#_) .sidebar-tab-pill.active, html body:not(#_) .pcat-tile.active { background: var(--b-blue) !important; border-color: var(--b-blue) !important; color: #ffffff !important; }
+html body:not(#_) .pcat-tile.active * { color: #ffffff !important; }
+html body:not(#_) .sidebar-tab-pill:not(.active) { background: #ffffff !important; border: 1.5px solid var(--b-line) !important; color: var(--b-ink) !important; }
+html body:not(#_) .sidebar-tab-pill:not(.active):hover { border-color: var(--b-blue) !important; color: var(--b-blue) !important; }
+/* טקסט משני שהיה חלש מדי */
+html body:not(#_) :is(.srail-me, .fo-row small, .fo-row .fo-row-sub, .of-empty, .story-size-label, .shop-item small, .shop-item-txt small, .fo-empty, .pf-empty, .pd2-muted, .pfeed-head p) { color: var(--b-muted) !important; }
+html body:not(#_) .fo-row, html body:not(#_) .fo-row * { --muted: #5f6470; }
+html body:not(#_) .fr-avatar { color: #ffffff !important; text-shadow: 0 1px 2px rgba(0,0,0,.35); }
+
+/* כל הכפתורים: פינות עגולות, משקל אחיד, מעבר רך, פוקוס ברור */
+html body:not(#_) :is(button, .btn, a.btn) { -webkit-tap-highlight-color: transparent; }
+html body:not(#_) :is(.pd2-ghost, .psf-btn, .pc-post-btn, .follow-btn, .bd-ghost, .pf-btn, .pc-more, .co-pay, .ob-next, .shop-btn, .legal-btn, .algo-btn, .okb-mini, .st-range button, .pd2-btn, .art-telegram-btn, .cta-add-btn, .art-add-btn, .comm-grid-btn, .bd-go, .hw-cta) {
+  border-radius: 999px !important; font-weight: 800 !important; letter-spacing: .1px;
+}
+/* כפתורים ראשיים שהיו בצבעים שונים (ירוק/סגול/כהה) — כחול אחיד */
+html body:not(#_) :is(.cta-add-btn, .art-add-btn, .comm-grid-btn, .pc-more, .co-pay, .ob-next, .legal-btn, .algo-btn:not(.ghost), .bd-go, .hw-cta, .shop-bar-go, .pd2-btn.dark) {
+  background: var(--b-blue) !important; color: #ffffff !important; border: 0 !important; box-shadow: 0 8px 18px -10px rgba(47, 111, 219, .7) !important;
+}
+html body:not(#_) :is(.cta-add-btn, .art-add-btn, .comm-grid-btn, .pc-more, .co-pay, .ob-next, .legal-btn, .algo-btn:not(.ghost), .bd-go, .hw-cta, .shop-bar-go, .pd2-btn.dark):hover { background: var(--b-blue-d) !important; }
+html body:not(#_) :is(.cta-add-btn, .art-add-btn, .comm-grid-btn, .pc-more, .co-pay, .ob-next, .legal-btn, .bd-go, .hw-cta, .shop-bar-go, .pd2-btn.dark) * { color: #ffffff !important; }
+html body:not(#_) :is(.cta-add-btn, .art-add-btn, .comm-grid-btn) :is(svg, svg *) { stroke: #ffffff !important; }
+html body:not(#_) :is(button, a):focus-visible { outline: 2.5px solid var(--b-blue) !important; outline-offset: 2px !important; }
+html body:not(#_) :is(button, a)[disabled], html body:not(#_) button:disabled { opacity: .45 !important; cursor: not-allowed !important; }
+html body:not(#_):not(#_) .fr-avatar { color: #111111 !important; text-shadow: none !important; }
+html body:not(#_):not(#_) .shop-basket b { background: #2f6fdb !important; color: #ffffff !important; }
+html body:not(#_):not(#_) #global-chat-fab, html body:not(#_):not(#_) .chat-fab { background: #2f6fdb !important; color: #ffffff !important; border-color: #ffffff !important; box-shadow: 0 10px 22px -10px rgba(47, 111, 219, .8) !important; }
+html body:not(#_):not(#_) .chat-fab :is(svg, svg *) { color: #ffffff !important; stroke: #ffffff; }

@@ -15,8 +15,8 @@
   <!-- ספריית localforage לשמירת תמונות -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
   <!-- קישור לקובץ העיצוב החיצוני (עם פרמטר למניעת שמירה במטמון) -->
-  <link rel="stylesheet" href="./style.css?v=1582">
-  <link rel="stylesheet" href="./dark.css?v=10">
+  <link rel="stylesheet" href="./style.css?v=1586">
+  <link rel="stylesheet" href="./dark.css?v=14">
   <script>
     // מצב בהיר/כהה — נקבע לפני שהדף מצויר כדי שלא יהבהב (בחירה שמורה, אחרת לפי הגדרות המכשיר)
     (function () {
@@ -329,50 +329,35 @@
 <!-- WEBSITE PRELOADER — BLACK1WHITE00 LOGO (נבנה בקוד: חד בכל מסך) -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@700&display=swap">
 <div id="website-preloader" role="status" aria-label="האתר נטען">
-  <div class="pl-glow" aria-hidden="true"></div>
-  <div class="pl-logo" dir="ltr" aria-hidden="true"><span style="--i:0">B</span><span style="--i:1">l</span><span style="--i:2">a</span><span style="--i:3">c</span><span style="--i:4">k</span><span style="--i:5">1</span><span style="--i:6">W</span><span style="--i:7">h</span><span style="--i:8">i</span><span style="--i:9">t</span><span style="--i:10">e</span><span style="--i:11">0</span><span style="--i:12">0</span><span class="pl-dom" style="--i:13">.com</span></div>
-  <div class="pl-bar" aria-hidden="true"><div class="pl-bar-fill"></div></div>
+  <div class="pl-card">
+    <img class="pl-mark" src="./logo.png" alt="" width="76" height="76">
+    <div class="pl-name" dir="ltr">Black1White00<span>.com</span></div>
+    <div class="pl-bar" aria-hidden="true"><div class="pl-bar-fill"></div></div>
+  </div>
 </div>
 
 <style>
+/* מסך טעינה נקי: לוגו, שם האתר ופס התקדמות כחול דק */
 #website-preloader {
   position: fixed; inset: 0; z-index: 9999999;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 34px;
-  background: radial-gradient(circle at 50% 42%, #ffffff 0%, #ffffff 60%, #e7e7e7 100%);
-  overflow: hidden;
-  transition: opacity 0.45s ease, visibility 0.45s ease;
+  display: grid; place-items: center;
+  background: #ffffff;
+  transition: opacity 0.4s ease, visibility 0.4s ease;
 }
-.pl-glow {
-  position: absolute; width: 70vmin; height: 70vmin; border-radius: 50%;
-  background: radial-gradient(circle, rgba(0, 0, 0, 0.066) 0%, rgba(0, 0, 0, 0) 65%);
-  animation: pl-pulse 2.4s ease-in-out infinite;
-}
-.pl-logo {
-  position: relative; white-space: nowrap;
-  font-family: 'Fredoka', 'Arial Rounded MT Bold', 'Trebuchet MS', sans-serif; font-weight: 700;
-  font-size: clamp(30px, 8.2vw, 92px); line-height: 1; letter-spacing: -0.01em;
-}
-.pl-logo span {
-  display: inline-block;
-  color: #111111;
-  -webkit-text-stroke: 0.14em #262626;
-  paint-order: stroke fill;
-  text-shadow: 0 0.07em 0 #262626, 0 0.16em 0.22em rgba(0, 0, 0, 0.18);
-  animation: pl-pop 0.55s cubic-bezier(.34, 1.56, .64, 1) both, pl-wave 1.8s ease-in-out infinite;
-  animation-delay: calc(var(--i) * 45ms), calc(0.7s + var(--i) * 90ms);
-}
-.pl-logo .pl-dom { font-size: 0.62em; margin-inline-start: 0.04em; }
-.pl-bar { position: relative; width: min(240px, 52vw); height: 6px; border-radius: 99px; background: rgba(38, 38, 38, 0.1); overflow: hidden; }
-.pl-bar-fill { position: absolute; inset: 0 auto 0 0; width: 40%; border-radius: 99px; background: linear-gradient(90deg, #2f6fdb, #2f6fdb); animation: pl-slide 1.3s ease-in-out infinite; }
-@keyframes pl-pop { from { opacity: 0; transform: translateY(0.4em) scale(0.6); } to { opacity: 1; transform: none; } }
-@keyframes pl-wave { 0%, 100% { translate: 0 0; } 50% { translate: 0 -0.08em; } }
-@keyframes pl-pulse { 0%, 100% { transform: scale(0.92); opacity: 0.8; } 50% { transform: scale(1.06); opacity: 1; } }
-@keyframes pl-slide { 0% { transform: translateX(-110%); } 100% { transform: translateX(260%); } }
-@media (prefers-reduced-motion: reduce) {
-  .pl-glow, .pl-logo span, .pl-bar-fill { animation: none; }
-}
+html.theme-dark #website-preloader { background: #121418; }
+.pl-card { background: none !important; box-shadow: none !important; border: 0 !important; display: flex; flex-direction: column; align-items: center; gap: 18px; animation: pl-in .5s cubic-bezier(.2, .8, .2, 1) both; }
+.pl-mark { width: 76px; height: 76px; border-radius: 22px; box-shadow: 0 16px 34px -16px rgba(17, 17, 17, .45); animation: pl-breathe 1.8s ease-in-out infinite; }
+.pl-name { font: 800 22px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; letter-spacing: -0.3px; color: #111111; }
+.pl-name span { color: #8a8a93; font-weight: 600; }
+html.theme-dark .pl-name { color: #eceef1; }
+.pl-bar { position: relative; width: 160px; height: 4px; border-radius: 99px; background: #ececee; overflow: hidden; }
+html.theme-dark .pl-bar { background: #2a2f37; }
+.pl-bar-fill { position: absolute; inset: 0 auto 0 0; width: 38%; border-radius: 99px; background: #2f6fdb; animation: pl-slide 1.1s cubic-bezier(.45, 0, .55, 1) infinite; }
+@keyframes pl-in { from { opacity: 0; transform: translateY(8px) scale(.98); } to { opacity: 1; transform: none; } }
+@keyframes pl-breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+@keyframes pl-slide { 0% { transform: translateX(-110%); } 100% { transform: translateX(290%); } }
+@media (prefers-reduced-motion: reduce) { .pl-card, .pl-mark, .pl-bar-fill { animation: none; } }
 </style>
 
 <script>
@@ -1255,7 +1240,7 @@
     try { if (localStorage.getItem('mtab_hidden') === '1') document.documentElement.classList.add('mtab-hidden'); } catch (e) {}
   </script>
   <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
-  <script type="module" src="./script.js?v=1534"></script>
+  <script type="module" src="./script.js?v=1535"></script>
   <script defer src="./a11y.js?v=1"></script>
 </body>
 </html>

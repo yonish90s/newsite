@@ -1648,6 +1648,12 @@ html.theme-dark .st-num span { color: #c8cdd4 !important; }
 html.theme-dark .st-delta.down { color: color-mix(in srgb, #dc2626 55%, white) !important; }
 html.theme-dark .st-delta.flat { color: #c8cdd4 !important; }
 html.theme-dark .st-foot { color: #c8cdd4 !important; }
+html.theme-dark { --b-soft: #22262d !important; --b-ink: #eceef1 !important; --b-muted: #c8cdd4 !important; --b-line: #323842 !important; }
+html.theme-dark body:not(#_) .apple-nav .nav-links a, html.theme-dark body:not(#_) .nav-links a { color: #eceef1 !important; }
+html.theme-dark body:not(#_) .sidebar-tab-pill:not(.active) { background: #1b1e24 !important; }
+html.theme-dark body:not(#_) .fo-row, html.theme-dark body:not(#_) .fo-row * { --muted: #c8cdd4 !important; }
+html.theme-dark body:not(#_):not(#_) .fr-avatar { color: #eceef1 !important; }
+html.theme-dark body:not(#_):not(#_) #global-chat-fab, html.theme-dark body:not(#_):not(#_) .chat-fab { border-color: #323842 !important; }
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #eceef1 !important; }
 html.theme-dark [style*="color:#111111"] { color: #eceef1 !important; }
@@ -1849,3 +1855,9 @@ html.theme-dark body:not(#_):not(#_):not(#_) .okb-pass.is-saved svg * { fill: #1
 html.theme-dark body:not(#_):not(#_) .okb-mini { background: transparent !important; border-color: #4a525e !important; color: #eceef1 !important; }
 html.theme-dark .st-card { background: #1b1e24 !important; border-color: #2a2f37 !important; }
 html.theme-dark .st-num, html.theme-dark .st-inner { color: #eceef1 !important; }
+html.theme-dark body:not(#_) .apple-nav .nav-links a:not(.active-top-nav), html.theme-dark body:not(#_) .nav-links a:not(.active-top-nav) { color: #c8cdd4 !important; }
+html.theme-dark body:not(#_) .apple-nav .nav-links a:not(.active-top-nav):hover { background: #22262d !important; color: #8fb8ff !important; }
+html.theme-dark body:not(#_) :is(.srail-me, .fo-row small, .of-empty, .story-size-label, .shop-item small, .shop-item-txt small, .fo-empty, .pf-empty, .pd2-muted, .pfeed-head p) { color: #9aa2ad !important; }
+html.theme-dark body:not(#_) .sidebar-tab-pill:not(.active) { background: transparent !important; border-color: #3a414b !important; color: #eceef1 !important; }
+html.theme-dark body:not(#_):not(#_) .fr-avatar { color: #111111 !important; }
+html.theme-dark body:not(#_):not(#_) .shop-basket b { background: #2f6fdb !important; color: #ffffff !important; }
