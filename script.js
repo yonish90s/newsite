@@ -11620,9 +11620,23 @@ function navigateToPage(pageId) {
   if (typeof renderSideMenu === 'function') { try { renderSideMenu(); } catch (e) {} }
   if (typeof renderTopNav === 'function') { try { renderTopNav(); } catch (e) {} }
   if (typeof renderPage === 'function') { try { renderPage(); } catch (e) {} }
-  try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) {}
+  if (!mobileScrollToCards()) { try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) {} }
 }
 window.navigateToPage = navigateToPage;
+
+// מובייל: בכניסה לתמונות / קומיקס / סיפורים — גוללים ישר לכרטיס הראשון כך שהוא נראה במלואו
+function mobileScrollToCards() {
+  if (!window.matchMedia('(max-width: 768px)').matches || typeof mainContent === 'undefined' || !mainContent) return false;
+  const list = mainContent.querySelector(':is(.photos-page, .stories-page) .art-rows');
+  if (!list || mainContent.querySelector('.art-detail')) return false;
+  const row = list.closest('.art-layout, .art-inner') && list.previousElementSibling && list.previousElementSibling.classList.contains('art-section-title-row') ? list.previousElementSibling : list;
+  const nav = document.querySelector('.apple-nav, header');
+  const navH = nav ? nav.getBoundingClientRect().height : 56;
+  const top = row.getBoundingClientRect().top + window.scrollY - navH - 6;
+  try { window.scrollTo({ top: Math.max(0, top), behavior: 'auto' }); } catch (e) { window.scrollTo(0, Math.max(0, top)); }
+  return true;
+}
+window.mobileScrollToCards = mobileScrollToCards;
 
 // תיבת "עמודי האתר" בלבד (בלי עטיפת הסרגל) — מוצגת בלשונית "קהילה" שבצד
 function sitePagesNavBoxHTML(section) {
