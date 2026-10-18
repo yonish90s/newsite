@@ -16513,7 +16513,7 @@ function photoOpenDetail(id) {
                 <button type="button" class="pd2-more" onclick="postShare('${artEsc(a.title || '')}')" aria-label="שיתוף">⋯</button>
               </div>
               <h1 class="pd2-title">${escHtml(a.title)}</h1>
-              <a href="#" class="pd2-stars-row" onclick="event.preventDefault(); document.getElementById('pd2-reviews')?.scrollIntoView({behavior:'smooth', block:'start'})"><span id="pd2-stars-top">${pdStarsHTML(0)}</span><u id="pd2-count-top">0 ביקורות</u></a>
+              <a href="#" class="pd2-stars-row" onclick="event.preventDefault(); const r = document.getElementById('pd2-reviews'); if (r) { r.open = true; r.scrollIntoView({behavior:'smooth', block:'start'}); }"><span id="pd2-stars-top">${pdStarsHTML(0)}</span><u id="pd2-count-top">0 ביקורות</u></a>
               <div class="pd2-pill">${viewsDistHTML(a.id, a.authorId, 'pv-lg')}</div>
 
               ${a.category || a.ageRange || a.region ? `<div class="pd2-opts">
@@ -16525,6 +16525,7 @@ function photoOpenDetail(id) {
               </div>` : ''}
 
               <!-- שלושה כפתורים גדולים: שמירה (מתאר) · אהבתי (ורוד) · הודעה (גרדיאנט) -->
+              <div class="okb-wrap">
               <div class="okb-row">
                 <button type="button" class="okb okb-pass pd2-save${photoIsSavedLocal(a.id) ? ' is-saved' : ''}" onclick="photoToggleSave('${artEsc(a.id)}')">
                   <svg viewBox="0 0 24 24" fill="${photoIsSavedLocal(a.id) ? '#ffffff' : 'none'}" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><span>${photoIsSavedLocal(a.id) ? 'שמור' : 'שמירה'}</span></button>
@@ -16539,10 +16540,11 @@ function photoOpenDetail(id) {
                 <button type="button" class="okb-mini" onclick="postShare('${artEsc(a.title || '')}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg>שיתוף</button>
                 <span class="okb-likes">${a.likes || 0} לייקים</span>
               </div>
+              </div>
               ${(isAdmin() || isEditMode) ? `<button type="button" class="pd2-ghost pd2-edit" onclick="openPhotoEditModal('${artEsc(a.id)}', event);">עריכת הגלריה</button>` : ''}
 
               <details class="pd2-acc" open><summary>תיאור</summary><div class="pd2-desc">${contentHTML || '<p class="pd2-muted">אין תיאור</p>'}</div></details>
-              <details class="pd2-acc" id="pd2-reviews" open><summary>ביקורות</summary><div id="pd2-reviews-body">${pdReviewsHTML()}</div></details>
+              <details class="pd2-acc" id="pd2-reviews"><summary>ביקורות</summary><div id="pd2-reviews-body">${pdReviewsHTML()}</div></details>
               <details class="pd2-acc"><summary>פרטים</summary>
                 <ul class="pd2-facts">
                   <li><span>פורסם</span><b>${escHtml(a.timestamp || '')}</b></li>

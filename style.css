@@ -12248,3 +12248,19 @@ html body:not(#_):not(#_):not(#_) .story-bm-del { background: #eef0f3 !important
 /* בלי אורך / היקף / מרחק על התמונה — המסגרת בלי ריווח תחתון עבורם */
 html body:not(#_):not(#_):not(#_) .pshow-size { display: none !important; }
 html body:not(#_):not(#_):not(#_) .pshow-frame:has(.pshow-size) { padding-bottom: 0 !important; }
+
+/* ===== מובייל: כפתורי הגלריה בשתי שורות מסודרות ===== */
+@media (max-width: 768px) {
+  html body:not(#_):not(#_):not(#_):not(#_) .okb-wrap { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 10px; align-items: stretch; }
+  html body:not(#_):not(#_):not(#_):not(#_) .okb-wrap > .okb-row, html body:not(#_):not(#_):not(#_):not(#_) .okb-wrap > .okb-sub { display: contents !important; }
+  /* שורה 1: אהבתי · הודעה */
+  html body:not(#_):not(#_):not(#_):not(#_) .okb-wrap .okb-like { grid-column: span 6; order: 1; }
+  html body:not(#_):not(#_):not(#_):not(#_) .okb-wrap .okb-super { grid-column: span 6; order: 2; }
+  html body:not(#_):not(#_):not(#_):not(#_) .okb-wrap :is(.okb-like, .okb-super) { height: 52px !important; min-height: 52px !important; border-radius: 16px !important; font-size: 16px !important; padding: 0 12px !important; }
+  /* שורה 2: שמירה · אימייל · שיתוף (וטלגרם אם יש) — כפתורים שווים */
+  html body:not(#_):not(#_):not(#_):not(#_) .okb-wrap .okb-pass, html body:not(#_):not(#_):not(#_):not(#_) .okb-wrap .okb-mini { grid-column: span 4; order: 3; height: 46px !important; min-height: 46px !important; border-radius: 14px !important; padding: 0 8px !important; font-size: 14px !important; justify-content: center !important; display: inline-flex !important; align-items: center; gap: 6px; width: 100%; box-sizing: border-box; }
+  html body:not(#_):not(#_):not(#_):not(#_) .okb-wrap:has(.okb-mini ~ .okb-mini ~ .okb-mini) :is(.okb-pass, .okb-mini) { grid-column: span 3; }
+  html body:not(#_):not(#_):not(#_):not(#_) .okb-wrap .okb-pass svg, html body:not(#_):not(#_):not(#_):not(#_) .okb-wrap .okb-mini svg { width: 17px !important; height: 17px !important; flex: none; }
+  html body:not(#_):not(#_):not(#_):not(#_) .okb-wrap .okb-pass span, html body:not(#_):not(#_):not(#_):not(#_) .okb-wrap .okb-mini span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  html body:not(#_):not(#_):not(#_):not(#_) .okb-wrap .okb-likes { grid-column: 1 / -1; order: 9; margin: 0 !important; text-align: center; font-size: 12.5px; }
+}
