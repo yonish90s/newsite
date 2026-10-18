@@ -178,3 +178,5 @@ html.theme-dark body:not(#_):not(#_):not(#_) .pd2-topcat { background: transpare
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) .pti { background: #1b1e24 !important; border-color: #3a414c !important; color: #eceef1 !important; }
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) .pti:hover { background: #22262d !important; }
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) :is(.pti.on, .pti.is-saved) { border-color: #eceef1 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) .pd2-pages { color: #eceef1 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) .comic-info .story-comic-desc { color: #c8cdd4 !important; }

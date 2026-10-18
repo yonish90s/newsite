@@ -12339,3 +12339,24 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pd2-acts-desk { display: none
   html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pd2-info > .pd2-title { order: -1; }
   html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pd2 .pshow-main { max-height: calc(100vh - 270px) !important; }
 }
+
+/* ===== קומיקס — אותו סידור כמו עמוד הגלריה ===== */
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .comic-show .pshow-cta { display: none !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .comic-show .pshow-actions:not(:has(.story-linked-chip)) { display: none !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .comic-show .pshow-line { display: none !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .comic-info .pd2-creator .au-av { width: 36px; height: 36px; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pd2-pages { font-size: 13px; font-weight: 700; color: #111111; font-variant-numeric: tabular-nums; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .comic-info .story-comic-desc { font-size: 14px !important; line-height: 1.6 !important; color: #3f4552 !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .comic-info .pshow-tiles { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px !important; margin: 0 !important; }
+@media (max-width: 768px) { html body:not(#_):not(#_):not(#_):not(#_):not(#_) .comic-info .pshow-tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (min-width: 769px) {
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .comic-show { align-items: start; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .comic-show .pshow-frame .story-img-page { max-height: calc(100vh - 270px) !important; }
+}
+@media (min-width: 769px) {
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pshow.comic-show { display: grid !important; grid-template-columns: 400px minmax(0, 1fr) !important; gap: 36px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pshow.comic-show > .pshow-info { order: -1; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pshow.comic-show > .pshow-stage { min-width: 0; }
+}
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .comic-show .pshow-frame .story-page-view { min-height: 0 !important; height: auto !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .comic-show .pshow-stage { gap: 12px !important; }
