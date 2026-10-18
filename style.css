@@ -12245,3 +12245,6 @@ html body:not(#_):not(#_):not(#_) .story-bm-title { color: #111111 !important; }
 html body:not(#_):not(#_):not(#_) .story-bm-head { color: #646b78 !important; }
 html body:not(#_):not(#_):not(#_) .story-bm-snippet { color: #646b78 !important; }
 html body:not(#_):not(#_):not(#_) .story-bm-del { background: #eef0f3 !important; color: #3f4652 !important; }
+/* בלי אורך / היקף / מרחק על התמונה — המסגרת בלי ריווח תחתון עבורם */
+html body:not(#_):not(#_):not(#_) .pshow-size { display: none !important; }
+html body:not(#_):not(#_):not(#_) .pshow-frame:has(.pshow-size) { padding-bottom: 0 !important; }
