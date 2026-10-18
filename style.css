@@ -12101,3 +12101,10 @@ html body:not(#_):not(#_) .fo-panel .fo-panel-body:has(.rd-compose) .forums-page
 html body:not(#_):not(#_) .fo-panel .fo-panel-body:has(.rd-compose) .fo-inner { flex: 1; }
 /* טקסט שצריך להיכנס בשורה אחת (הכתב מוקטן אוטומטית אם ארוך מדי) */
 html body:not(#_):not(#_) :is(.up-about-link, .uw-link, .em-pill-btn, [data-fit-line]) { white-space: nowrap !important; word-break: normal !important; overflow-wrap: normal !important; max-width: 100% !important; overflow: hidden !important; text-overflow: clip !important; display: inline-block; vertical-align: middle; box-sizing: border-box; }
+/* "שמור" בדף הגלריה — באותו סגנון של כל הכפתורים (אהבתי / הודעה נשארים כמו שהם) */
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .okb-pass { background: var(--btn-bg) !important; color: var(--btn-ink) !important; border: 1px solid var(--btn-line) !important; box-shadow: none !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .okb-pass:hover { background: var(--btn-hover) !important; border-color: #9aa0aa !important; color: var(--btn-ink) !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .okb-pass.is-saved, html body:not(#_):not(#_):not(#_):not(#_):not(#_) .okb-pass:active { background: var(--btn-bg) !important; color: var(--btn-ink) !important; border: 1.5px solid var(--btn-on) !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .okb-pass * { color: inherit !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .okb-pass svg, html body:not(#_):not(#_):not(#_):not(#_):not(#_) .okb-pass svg * { stroke: currentColor !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .okb-pass.is-saved svg :is(path, rect, polygon) { fill: currentColor !important; }
