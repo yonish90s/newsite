@@ -15383,16 +15383,12 @@ function homeChipsHTML(photos, comics, stories) {
   const chip = (kind, label, cover, onclick) => `<button type="button" class="hc-chip" onclick="${onclick}">
       <span class="hc-dot">${cover ? `<img src="${escHtml(cover.src)}" alt="" loading="lazy"${cover.blur ? ' class="blur"' : ''}>` : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${COMM_SC_ICONS[kind] || ''}</svg>`}</span>
       <span>${escHtml(label)}</span></button>`;
-  const cats = (PHOTO_BAR_CATEGORIES || []).slice(0, 4).map(cat => chip('photos', cat,
-    homeCover((photos || []).filter(a => photoCatMatch(a, cat))),
-    `homeOpenPhotos(); setTimeout(() => setSectionCategoryFilter('photos', '${artEsc(cat)}'), 60)`)).join('');
   const feedChip = `<button type="button" class="hc-chip" onclick="openFeed()"><span class="hc-dot hc-dot-feed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg></span><span>הפיד שלי</span></button>`;
   return `<nav class="hc-chips" aria-label="קיצורי תוכן">
       ${feedChip}
       ${chip('photos', 'תמונות', cv.photos, "homeGo('photos')")}
       ${chip('comics', 'קומיקס', cv.comics, "homeGo('comics')")}
       ${chip('stories', 'סיפורים', cv.stories, "homeGo('stories')")}
-      ${cats}
       <button type="button" class="hc-all" onclick="navigateToPage('page-communities-main')" aria-label="כל הקטגוריות" title="כל הקטגוריות">
         <svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg></button>
     </nav>`;
@@ -26989,9 +26985,7 @@ function composerBarHTML() {
     <span class="au-av cmp-av"${reg ? ` data-av-uid="${escHtml(u.uid)}"` : ''}>${escHtml((first || 'א').charAt(0))}</span>
     <button type="button" class="cmp-input" onclick="openQuickPublish()">מה בא לך לשתף${first ? ', ' + escHtml(first) : ''}?</button>
     <div class="cmp-icons">
-      ${ic('vid', 'סיפור / כתבה', "openQuickPublish(null, 'story')", '<rect x="2.5" y="6" width="13" height="12" rx="3" fill="currentColor"/><path d="M15.5 10.5 21 7.5v9l-5.5-3z" fill="currentColor"/><circle cx="9" cy="12" r="2.6" fill="#fff"/>')}
       ${ic('pic', 'תמונות', 'composerPhoto()', '<rect x="5" y="3" width="15" height="15" rx="2.5" fill="currentColor" opacity=".55"/><rect x="3" y="6" width="15" height="15" rx="2.5" fill="currentColor"/><circle cx="8.3" cy="11" r="1.7" fill="#fff"/><path d="M4.5 19.5l4.5-4.8 3 3 2.3-2.3 3.2 4.1z" fill="#fff"/>')}
-      ${ic('feel', 'פרסום מהיר', 'openQuickPublish()', '<circle cx="12" cy="12" r="9.5" fill="currentColor"/><circle cx="8.8" cy="10" r="1.3" fill="#fff"/><circle cx="15.2" cy="10" r="1.3" fill="#fff"/><path d="M7.8 13.6c1 2 2.5 3 4.2 3s3.2-1 4.2-3" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>')}
     </div>
   </div>`;
 }
