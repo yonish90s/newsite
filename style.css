@@ -12413,3 +12413,5 @@ html.theme-dark .mnav-btn.has-av .hdr-av-guest { background: #2a2f37 !important;
 html.theme-dark .mnav-btn.has-av .hdr-av-dot { background: #eceef1 !important; border-color: #121418 !important; }
 /* תג "מאומת" בסגנון X — אפור-כחלחל, בלי זוהר */
 html body .verified-seal { filter: none !important; vertical-align: -0.15em; }
+/* תגובה מהירה: בלי שורת "דירוג (לא חובה)" */
+html body .pc-stars-row { display: none !important; }
