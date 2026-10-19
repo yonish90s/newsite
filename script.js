@@ -19716,7 +19716,7 @@ async function dmOpenConv(convId, otherUid, otherName, prefill) {
     </header>
     <div class="tg-messages" id="dm-messages"><div class="tg-empty">טוען…</div></div>
     <div class="tg-compose">
-      <input id="dm-input" type="text" maxlength="1000" placeholder="הודעה" autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault(); dmSendCurrent();}">
+      <textarea id="dm-input" rows="1" maxlength="1000" placeholder="הודעה" autocomplete="off" oninput="dmAutoGrow(this)" onkeydown="if(event.key==='Enter' && !event.shiftKey && window.innerWidth > 768){event.preventDefault(); dmSendCurrent();}"></textarea>
       <button type="button" class="tg-send" onclick="dmSendCurrent()" aria-label="שליחה"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.4 20.4 21 12 3.4 3.6 3.4 10l12.6 2-12.6 2z"/></svg></button>
     </div>`;
   // מסמנים כנקרא
@@ -19733,7 +19733,7 @@ async function dmOpenConv(convId, otherUid, otherName, prefill) {
   });
   setTimeout(() => {
     const i = document.getElementById('dm-input');
-    if (i) { if (prefill) i.value = prefill; if (window.innerWidth > 768) i.focus(); }
+    if (i) { if (prefill) i.value = prefill; dmAutoGrow(i); if (window.innerWidth > 768) i.focus(); }
   }, 80);
 }
 window.dmOpenConv = dmOpenConv;
@@ -19761,6 +19761,7 @@ async function dmSendCurrent() {
   const text = inp.value.trim();
   if (!text) return;
   inp.value = '';
+  dmAutoGrow(inp);
   const { convId, otherUid, otherName } = dmActiveConv;
   const now = Date.now();
   const myName = dmName();
@@ -27912,3 +27913,12 @@ async function messageUploader(id, title, authorId, author) {
   return dmStartWith(a, 'מנהל האתר', `הודעה עבור ${author || 'מי שהעלה'} — לגבי "${t}" (מזהה ${id}): `);
 }
 window.messageUploader = messageUploader;
+
+
+// תיבת ההודעה בשיחה מתרחבת לפי הטקסט (עד ~6 שורות, אחר כך נגללת)
+function dmAutoGrow(el) {
+  if (!el) return;
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight + 2, 150) + 'px';
+}
+window.dmAutoGrow = dmAutoGrow;

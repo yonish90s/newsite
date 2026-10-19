@@ -12587,3 +12587,12 @@ html.theme-dark body:not(#_):not(#_) .fo-admin-add { color: #eceef1 !important; 
 /* כפתורי הכרטיס: אייקונים בלבד (גם "הצעה") — כך שגם 5-6 כפתורים נכנסים בשורה */
 html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .photo-card-links .art-offer-btn span { display: none !important; }
 html body:not(#_):not(#_):not(#_):not(#_):not(#_) .photo-card-links { gap: 6px !important; }
+/* שיחה: תיבת הודעה שמתרחבת עם הטקסט */
+.tg-compose { align-items: flex-end !important; }
+.tg-compose textarea#dm-input { flex: 1; min-width: 0; min-height: 42px; max-height: 150px; padding: 10px 16px; border-radius: 21px; outline: 0; resize: none; overflow-y: auto; line-height: 1.4; box-sizing: border-box;
+  border: 1px solid rgba(38, 38, 38, 0.1); background: #ffffff; color: #262626; font: inherit; font-size: 16px; white-space: pre-wrap; word-break: break-word; }
+html body:not(#_):not(#_) .tg-compose textarea#dm-input { border-radius: 21px !important; padding: 10px 16px !important; height: 42px; }
+html.theme-dark .tg-compose textarea#dm-input { background: #22262d !important; border-color: #3a414c !important; color: #eceef1 !important; }
+/* "הצעה" רק בעמוד יד שניה */
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :not(.secondhand-page) .photo-card-links .art-offer-btn { display: none !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .secondhand-page .photo-card-links .art-offer-btn { display: inline-flex !important; }

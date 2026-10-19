@@ -2119,6 +2119,8 @@ html.theme-dark .fo-admin button:last-child:hover { color: color-mix(in srgb, #b
 html.theme-dark body:not(#_):not(#_) .fo-admin-add { border: 1.5px dashed #323842 !important; color: #eceef1 !important; }
 html.theme-dark body:not(#_):not(#_) .fo-admin-add:hover { border-color: #5b6472 !important; background: #22262d !important; }
 html.theme-dark.theme-dark .fo-admin button { background: #3a414c !important; }
+html.theme-dark .tg-compose textarea#dm-input { border: 1px solid rgba(255, 255, 255, 0.08) !important; background: #1b1e24 !important; color: #eceef1 !important; }
+html.theme-dark.theme-dark .tg-compose textarea#dm-input { background: #3a414c !important; }
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #eceef1 !important; }
 html.theme-dark [style*="color:#111111"] { color: #eceef1 !important; }
