@@ -8704,6 +8704,7 @@ function renderPhotoCard(p, options = {}) {
 
   const cardLinksHTML = `
     <div class="photo-card-links">
+      <button type="button" class="art-telegram-btn art-like-btn${isLikedCard ? ' liked' : ''}" onclick="event.stopPropagation(); photoToggleLike('${artEsc(p.id)}')" title="אהבתי" aria-label="אהבתי"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/></svg></button>
       ${cardSaveBtnHTML}
       ${cardLink(p.telegramUrl, 'טלגרם', 'M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z')}
       ${cardLink(p.emailUrl, 'אימייל', 'M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z', '<polyline points="22,6 12,13 2,6"/>')}
@@ -19203,6 +19204,7 @@ function photoToggleLike(id) {
   allTgLikeBtns.forEach(btn => {
     const onclickAttr = btn.getAttribute('onclick') || '';
     if (onclickAttr.includes(id) && onclickAttr.includes('photoToggleLike')) {
+      btn.classList.toggle('liked', isNowLiked);
       btn.style.color = isNowLiked ? '#8b5cf6' : '#ffffff';
       const svg = btn.querySelector('svg');
       if (svg) {

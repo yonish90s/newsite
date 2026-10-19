@@ -13453,3 +13453,21 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_) .cookie-bar .cookie-btn.ghost 
 }
 /* עוגיות: "אישור" בורוד */
 html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .cookie-bar .cookie-btn.yes { background: #ec5f80 !important; border-color: #ec5f80 !important; color: #ffffff !important; }
+
+/* כפתור "אהבתי" בשורת הכפתורים (מחוץ לתמונה) */
+.art-like-btn { display: none !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-like-btn:not(.liked) svg { fill: none !important; stroke: currentColor !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-like-btn.liked svg { fill: #ec5f80 !important; stroke: #ec5f80 !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-like-btn.liked { color: #ec5f80 !important; }
+
+/* מובייל: שורת הכפתורים (כולל לב) ישר מתחת לתמונה */
+@media (max-width: 768px) {
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 > .art-row { gap: 0 !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 .art-row-text { display: contents !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 .art-row-img-container { order: -2 !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 .photo-card-links { order: -1 !important; margin: 6px 0 6px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 .art-like-btn { display: flex !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 .art-row-text > h3 { margin: 0 2px 2px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 .art-row-text > .art-row-meta { margin: 0 2px 2px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 .art-row-text > div:not(.art-row-meta):not(.photo-card-links) { margin: 0 2px !important; }
+}
