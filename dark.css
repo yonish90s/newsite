@@ -2100,6 +2100,10 @@ html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) .shop-it
 html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) .shop-item.on .shop-cb { background: #2a2f37 !important; border-color: #323842 !important; color: #eceef1 !important; }
 html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) .shop-basket b { background: #2a2f37 !important; color: #eceef1 !important; border-color: #5b6472 !important; }
 html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) .shop-opt { background: #3a414c !important; }
+html.theme-dark .of-price { border: 1px solid #323842 !important; background: #1b1e24 !important; }
+html.theme-dark .of-price:focus-within { border-color: #5b6472 !important; }
+html.theme-dark .of-price span { color: #eceef1 !important; }
+html.theme-dark.theme-dark .of-price { background: #3a414c !important; }
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #eceef1 !important; }
 html.theme-dark [style*="color:#111111"] { color: #eceef1 !important; }

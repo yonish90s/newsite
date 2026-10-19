@@ -1311,6 +1311,14 @@ function renderTopNav() {
   if (!topNavPages.includes('page-subscription-main') && pages.some(p => p && p.id === 'page-subscription-main')) {
     topNavPages.push('page-subscription-main');
   }
+  // "מוצרי יד שניה" — גלוי תמיד, צמוד ל"בית" בתפריט העליון
+  const _shTop = pages.find(p => p && p.id === 'page-secondhand-main');
+  if (_shTop) {
+    if (_shTop.isHidden) _shTop.isHidden = false;
+    topNavPages = topNavPages.filter(id => id !== 'page-secondhand-main');
+    const _hi = topNavPages.indexOf('page-home-feed');
+    if (_hi >= 0) topNavPages.splice(_hi + 1, 0, 'page-secondhand-main'); else topNavPages.unshift('page-secondhand-main');
+  }
   // "חדשות" תמיד במקום קבוע — האחרון בתפריט — כדי שלא יקפוץ בין רינדורים
   topNavPages = topNavPages.filter(id => id !== 'page-news-main');
   if (pages.some(p => p && p.id === 'page-news-main')) topNavPages.push('page-news-main');
@@ -8689,6 +8697,7 @@ function renderPhotoCard(p, options = {}) {
       ${cardSaveBtnHTML}
       ${cardLink(p.telegramUrl, 'טלגרם', 'M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z')}
       ${cardLink(p.emailUrl, 'אימייל', 'M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z', '<polyline points="22,6 12,13 2,6"/>')}
+      <button type="button" class="art-telegram-btn art-offer-btn" onclick="event.stopPropagation(); openPriceOffer('${artEsc(p.id)}', '${artEsc(p.title || '')}', '${artEsc(p.authorId || '')}', '${artEsc(p.author || '')}')" title="הצעת מחיר" aria-label="הצעת מחיר"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg><span>הצעה</span></button>
       ${cardReportBtnHTML(p.id, p.title)}
     </div>
   `;
@@ -24148,6 +24157,7 @@ Object.assign(UI_EN, { 'תגובות': 'Comments' });
 Object.assign(UI_EN, { 'הפיד של האתר': "The site's feed", 'התחברו ועקבו אחרי יוצרים — כל מה שהם מעלים יופיע כאן': 'Log in and follow creators — everything they post will show up here' });
 Object.assign(UI_EN, { 'שיתופים': 'Reposts', 'עדיין אין שיתופים': 'No reposts yet' });
 UI_EN_PATTERNS.push([/^(\d+)\s*פוסטים$/g, '$1 posts'], [/^(\d+)\s*שיתופים$/g, '$1 reposts']);
+Object.assign(UI_EN, { 'הצעה': 'Offer', 'הצעת מחיר': 'Price offer', 'כמה תרצו להציע?': 'How much would you like to offer?', 'הודעה למוכר (לא חובה)': 'Message to the seller (optional)', 'שליחת ההצעה': 'Send offer', 'נא לכתוב מחיר': 'Please enter a price', 'מוצרי יד שניה': 'Second-hand', 'מוצרי יד שניה 🛒': 'Second-hand 🛒' });
 let __uiTranslating = false;
 // לא נוגעים בקוד עצמו. הודעות משתמשים/תוכן מוגנים ממילא כי המילון מתרגם
 // רק מחרוזות מוכרות של הממשק — תוכן חופשי שהמשתמשים כתבו לא מופיע במילון.
@@ -27727,3 +27737,34 @@ function pfGridFilter(f) {
   const g = document.getElementById('pfg-grid'); if (g) g.innerHTML = pfGridCardsHTML(f);
 }
 window.pfGridFilter = pfGridFilter;
+
+
+// ============================================================
+// יד שניה: "הצעה" — כותבים מחיר, וההצעה נשלחת למוכר בהודעה פרטית
+// ============================================================
+function openPriceOffer(id, title, sellerUid, sellerName) {
+  if (!sellerUid) { if (typeof showCopyToast === 'function') showCopyToast('למוכר אין חשבון באתר — אפשר לפנות אליו באימייל'); return; }
+  let m = document.getElementById('offer-modal'); if (m) m.remove();
+  m = document.createElement('div');
+  m.id = 'offer-modal'; m.className = 'rp-modal';
+  m.innerHTML = `<div class="rp-card" role="dialog" aria-label="הצעת מחיר">
+      <div class="rp-head"><b>הצעת מחיר</b><button type="button" class="fo-panel-x" onclick="closePriceOffer()" aria-label="סגירה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+      ${title ? `<div class="rp-item">${escHtml(title)}</div>` : ''}
+      <label class="of-price"><span>₪</span><input id="offer-price" type="number" inputmode="numeric" min="1" max="10000000" placeholder="כמה תרצו להציע?"></label>
+      <textarea id="offer-note" class="rp-note" rows="2" maxlength="300" placeholder="הודעה למוכר (לא חובה)"></textarea>
+      <div class="rp-actions"><button type="button" class="pf-btn" onclick="closePriceOffer()">ביטול</button><button type="button" class="pf-btn rp-send" onclick="sendPriceOffer('${artEsc(title)}', '${artEsc(sellerUid)}', '${artEsc(sellerName)}')">שליחת ההצעה</button></div>
+    </div>`;
+  m.addEventListener('click', e => { if (e.target === m) closePriceOffer(); });
+  document.body.appendChild(m);
+  setTimeout(() => { const i = document.getElementById('offer-price'); if (i) i.focus(); }, 60);
+}
+function closePriceOffer() { const m = document.getElementById('offer-modal'); if (m) m.remove(); }
+function sendPriceOffer(title, sellerUid, sellerName) {
+  const price = Math.round(Number((document.getElementById('offer-price') || {}).value));
+  if (!price || price < 1) { if (typeof showCopyToast === 'function') showCopyToast('נא לכתוב מחיר'); const i = document.getElementById('offer-price'); if (i) i.focus(); return; }
+  const note = String((document.getElementById('offer-note') || {}).value || '').trim();
+  const text = `שלום! הצעת מחיר ל"${String(title || '').slice(0, 100)}": ₪${price.toLocaleString('he-IL')}${note ? '\n' + note : ''}`;
+  closePriceOffer();
+  if (typeof dmStartWith === 'function') dmStartWith(sellerUid, sellerName || 'מוכר', text);
+}
+Object.assign(window, { openPriceOffer, closePriceOffer, sendPriceOffer });

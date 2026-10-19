@@ -12536,3 +12536,18 @@ html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) :is(.shop-item-txt 
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) .shop-item-txt small { color: #9aa2ad !important; }
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) .shop-basket b { background: #eceef1 !important; color: #111111 !important; border-color: #121418 !important; }
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) .shop-opt { background: #22262d !important; color: #c8cdd4 !important; }
+
+/* ===== יד שניה: כפתור "הצעה" (רק בעמוד יד שניה) ===== */
+.art-offer-btn { display: none !important; }
+.secondhand-page .photo-card-links .art-offer-btn { display: inline-flex !important; gap: 6px; }
+.secondhand-page .photo-card-links .art-offer-btn span { display: inline !important; font-size: 13px; font-weight: 700; }
+/* הצעה במקום טלגרם — נשארים 4 כפתורים */
+.secondhand-page .photo-card-links .art-telegram-btn[title="טלגרם"] { display: none !important; }
+.of-price { display: flex; align-items: center; gap: 8px; height: 52px; padding: 0 14px; border: 1px solid #d5d8de; border-radius: 14px; margin-bottom: 10px; background: #ffffff; }
+.of-price:focus-within { border-color: #111111; }
+.of-price span { font-size: 20px; font-weight: 800; color: #111111; }
+html body:not(#_):not(#_):not(#_) .of-price input { flex: 1; min-width: 0; border: 0 !important; outline: 0; box-shadow: none !important; background: transparent !important; font-size: 20px !important; font-weight: 700; padding: 0 !important; height: 100%; }
+html.theme-dark .of-price { background: #22262d !important; border-color: #3a414c !important; }
+html.theme-dark .of-price span, html.theme-dark .of-price input { color: #eceef1 !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .secondhand-page .photo-card-links .art-telegram-btn[title="טלגרם"] { display: none !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .secondhand-page .photo-card-links .art-offer-btn { display: inline-flex !important; }
