@@ -24264,6 +24264,7 @@ Object.assign(UI_EN, { 'הצעות שקיבלתי': 'Offers received', 'הצעו
 Object.assign(UI_EN, { 'ממתין לתשובה': 'Awaiting reply', 'הצעה נגדית': 'Counter-offer', 'אושר': 'Accepted', 'נדחה': 'Rejected', 'נחתם': 'Signed', 'אישור': 'Accept', 'שינוי': 'Change', 'דחייה': 'Reject', 'מחכות לתשובה שלי': 'Awaiting my reply', 'שליחת הצעה נגדית': 'Send counter-offer', 'המחיר שלך': 'Your price' });
 UI_EN_PATTERNS.push([/^ממתין לתשובה של (.+)$/g, 'Waiting for $1 to reply']);
 Object.assign(UI_EN, { 'נשמר בשמורים': 'Added to your Bookmarks', 'הוסר מהשמורים': 'Removed from Bookmarks', 'הוספה לתיקייה': 'Add to Folder', 'שם לתיקייה חדשה': 'New folder name', 'יצירה': 'Create', 'עדיין אין תיקיות — צרו את הראשונה': 'No folders yet — create the first one', 'התיקייה ריקה עדיין.': 'This folder is empty.' });
+Object.assign(UI_EN, { 'חיפושים אחרונים': 'Recent searches', 'אנשים': 'People', 'תוכן': 'Content', 'חפשו אנשים, גלריות, פורומים, סיפורים, קהילות וחדשות': 'Search people, galleries, forums, stories, communities and news' });
 let __uiTranslating = false;
 // לא נוגעים בקוד עצמו. הודעות משתמשים/תוכן מוגנים ממילא כי המילון מתרגם
 // רק מחרוזות מוכרות של הממשק — תוכן חופשי שהמשתמשים כתבו לא מופיע במילון.
@@ -25617,7 +25618,8 @@ function siteSearchRender(raw) {
   if (clr) clr.style.visibility = q ? 'visible' : 'hidden';
   if (!q) {
     siteSearchLast = [];
-    box.innerHTML = `<div class="ss-panel">${siteSearchScopeHTML()}<div class="ss-hint">חפשו גלריות, פורומים, סיפורים, קהילות וחדשות</div></div>`;
+    box.innerHTML = `<div class="ss-panel">${siteSearchScopeHTML()}${ssRecentHTML() || '<div class="ss-hint">חפשו אנשים, גלריות, פורומים, סיפורים, קהילות וחדשות</div>'}</div>`;
+    if (typeof avatarHydrate === 'function') avatarHydrate(box);
     return;
   }
   let all = siteSearchCollect(q);
@@ -25644,11 +25646,15 @@ function siteSearchRender(raw) {
         <span class="ss-kind">${it.label}</span>
       </button>`;
   }).join('');
-  box.innerHTML = `<div class="ss-panel">${siteSearchScopeHTML()}${rows || `<div class="ss-hint">לא נמצאו תוצאות עבור "${escHtml(raw.trim())}"</div>`}</div>`;
+  const people = siteSearchScope.size ? [] : ssFindUsers(q);
+  const peopleHTML = people.length ? `<div class="ss-sec-title">אנשים</div>${people.map(p => `<button type="button" class="ss-user" onclick="ssOpenUser('${artEsc(p.uid)}','${artEsc(p.name)}')">${authorAvHTML({ authorId: p.uid, author: p.name })}<span class="ss-text"><span class="ss-title">${escHtml(p.name)}</span><span class="ss-sub" dir="ltr">@${escHtml(typeof profileHandle === 'function' ? profileHandle(p.name) : p.name)}${p.n ? ` · ${p.n} העלאות` : ''}</span></span></button>`).join('')}<div class="ss-sec-title">תוכן</div>` : '';
+  box.innerHTML = `<div class="ss-panel">${siteSearchScopeHTML()}${peopleHTML}${rows || (people.length ? '' : `<div class="ss-hint">לא נמצאו תוצאות עבור "${escHtml(raw.trim())}"</div>`)}</div>`;
+  if (typeof avatarHydrate === 'function') avatarHydrate(box);
 }
 function siteSearchOpen(i) {
   const it = siteSearchLast[i];
   if (!it) return;
+  try { const inp = document.getElementById('site-search-input'); if (inp && inp.value.trim()) ssRecentAdd({ q: inp.value.trim() }); } catch (e) {}
   closeSiteSearch();
   if (it.kind === 'photo' || it.kind === 'story') { if (typeof openHistoryItem === 'function') openHistoryItem(it.id, it.kind === 'story' ? 'story' : 'photo'); }
   else if (it.kind === 'community') { if (typeof openCommunityPage === 'function') openCommunityPage(it.id); }
@@ -28361,3 +28367,50 @@ function folderCreate(id) {
 }
 function savedOpenFolder(n) { window.__savedFolder = n; openSavedModal(); }
 Object.assign(window, { openFolderPicker, folderToggle, folderCreate, savedOpenFolder });
+
+
+// ============================================================
+// חיפוש בסגנון X: "חיפושים אחרונים" (אנשים + מילים), ומציאת משתמשים
+// ============================================================
+function ssRecentGet() { try { return JSON.parse(localStorage.getItem('ss_recent') || '[]') || []; } catch (e) { return []; } }
+function ssRecentSet(a) { try { localStorage.setItem('ss_recent', JSON.stringify(a.slice(0, 12))); } catch (e) {} }
+function ssRecentAdd(entry) {
+  const a = ssRecentGet().filter(x => entry.uid ? x.uid !== entry.uid : (x.q || '').toLowerCase() !== String(entry.q || '').toLowerCase());
+  a.unshift(entry); ssRecentSet(a);
+}
+function ssRecentClear() { ssRecentSet([]); siteSearchRender(''); }
+function ssRecentHTML() {
+  const a = ssRecentGet(); if (!a.length) return '';
+  const users = a.filter(x => x.uid), words = a.filter(x => x.q);
+  return `<div class="ss-recent">
+    <div class="ss-recent-head"><b>חיפושים אחרונים</b><button type="button" class="ss-recent-clear" onclick="ssRecentClear()" aria-label="ניקוי">✕</button></div>
+    ${users.length ? `<div class="ss-recent-users">${users.slice(0, 8).map(u => `<button type="button" class="ss-ru" onclick="ssOpenUser('${artEsc(u.uid)}','${artEsc(u.name || '')}')">${authorAvHTML({ authorId: u.uid, author: u.name || '' })}<b>${escHtml(u.name || '')}</b><small dir="ltr">@${escHtml(typeof profileHandle === 'function' ? profileHandle(u.name || '') : (u.name || ''))}</small></button>`).join('')}</div>` : ''}
+    ${words.map(w => `<div class="ss-rw"><button type="button" class="ss-rw-text" onclick="ssUseQuery('${artEsc(w.q)}')">${escHtml(w.q)}</button><button type="button" class="ss-rw-fill" onclick="ssFillQuery('${artEsc(w.q)}')" aria-label="העתקה לשורת החיפוש"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 17 7 7M7 15V7h8"/></svg></button></div>`).join('')}
+  </div>`;
+}
+function ssFillQuery(q) { const inp = document.getElementById('site-search-input'); if (inp) { inp.value = q; inp.focus(); } siteSearchRender(q); }
+function ssUseQuery(q) { ssRecentAdd({ q }); ssFillQuery(q); }
+function ssOpenUser(uid, name) { ssRecentAdd({ uid, name }); closeSiteSearch(); if (typeof openUserPage === 'function') openUserPage(uid, name); }
+// משתמשים: מכל מי שהעלה תוכן, כתב בפורום או ש"אני עוקב/ת" אחריו
+function ssFindUsers(q) {
+  const map = {};
+  const add = (uid, name, n) => {
+    if (!uid || !name || !/^[A-Za-z0-9_-]{10,}$/.test(uid)) return;
+    if (!map[uid]) map[uid] = { uid, name: String(name), n: 0 };
+    map[uid].n += n || 0;
+  };
+  // כל התוכן מכל העמודים (תמונות, קומיקס, סיפורים, יד שניה…)
+  try {
+    ((typeof pages !== 'undefined' && Array.isArray(pages)) ? pages : []).forEach(pg => {
+      String((pg && pg.content) || '').replace(/data-(?:photos|stories)-json="([^"]*)"/g, (m, enc) => {
+        try { (JSON.parse(decodeURIComponent(enc)) || []).forEach(x => x && add(x.authorId, x.author, 1)); } catch (e) {}
+        return m;
+      });
+    });
+  } catch (e) {}
+  try { Object.values((typeof forumTopics !== 'undefined' && forumTopics) || {}).forEach(m => Object.values(m || {}).forEach(t => { if (t && !t.anon) add(t.uid, t.name, 0); })); } catch (e) {}
+  try { Object.entries((typeof followedUids !== 'undefined' && followedUids) || {}).forEach(([uid, v]) => add(uid, v && v.name, 0)); } catch (e) {}
+  return Object.values(map).filter(u => u.name.toLowerCase().includes(q) || (typeof profileHandle === 'function' && profileHandle(u.name).toLowerCase().includes(q)))
+    .sort((a, b) => b.n - a.n).slice(0, 6);
+}
+Object.assign(window, { ssRecentClear, ssFillQuery, ssUseQuery, ssOpenUser });

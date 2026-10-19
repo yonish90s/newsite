@@ -12793,3 +12793,31 @@ html body:not(#_):not(#_) .sv-folder.on { border: 1.5px solid #111111; }
 html.theme-dark .fd-row { color: #eceef1 !important; } html.theme-dark .fd-row:hover { background: #22262d !important; }
 html.theme-dark body:not(#_):not(#_) .sv-folder { background: #1b1e24 !important; color: #eceef1 !important; border-color: #3a414c !important; }
 html.theme-dark body:not(#_):not(#_) .sv-folder.on { border-color: #eceef1 !important; }
+
+/* ===== חיפוש בסגנון X ===== */
+.ss-recent { padding: 6px 4px; }
+.ss-recent-head { display: flex; align-items: center; justify-content: space-between; margin: 6px 0 12px; }
+.ss-recent-head b { font-size: 20px; font-weight: 800; color: #111111; }
+.ss-recent-clear { width: 30px; height: 30px; border-radius: 50%; border: 0; background: #111111; color: #ffffff; font-size: 13px; cursor: pointer; }
+.ss-recent-users { display: flex; gap: 14px; overflow-x: auto; padding-bottom: 12px; margin-bottom: 6px; }
+.ss-ru { flex: none; width: 92px; display: flex; flex-direction: column; align-items: center; gap: 4px; border: 0; background: none; cursor: pointer; font: inherit; padding: 0; }
+.ss-ru .au-av { width: 64px !important; height: 64px !important; font-size: 24px !important; border-radius: 50%; }
+.ss-ru b { font-size: 13.5px; color: #111111; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ss-ru small { font-size: 12px; color: #646b78; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ss-rw { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.ss-rw-text { flex: 1; text-align: right; padding: 13px 2px; border: 0; background: none; font: inherit; font-size: 16px; color: #111111; cursor: pointer; }
+.ss-rw-fill { width: 36px; height: 36px; border: 0; background: none; color: #646b78; cursor: pointer; display: grid; place-items: center; }
+.ss-rw-fill svg { width: 20px; height: 20px; }
+.ss-sec-title { font-size: 13px; font-weight: 800; color: #646b78; margin: 10px 4px 4px; }
+.ss-user { display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 6px; border: 0; background: none; border-radius: 12px; cursor: pointer; font: inherit; text-align: right; }
+.ss-user:hover { background: #f6f7f9; }
+.ss-user .au-av { width: 44px !important; height: 44px !important; flex: none; border-radius: 50%; }
+html.theme-dark :is(.ss-recent-head b, .ss-ru b, .ss-rw-text) { color: #eceef1 !important; }
+html.theme-dark :is(.ss-ru small, .ss-rw-fill, .ss-sec-title) { color: #9aa2ad !important; }
+html.theme-dark .ss-recent-clear { background: #eceef1 !important; color: #111111 !important; }
+html.theme-dark .ss-user:hover { background: #22262d !important; }
+/* חיפוש פתוח: מסתירים את תוכן הכותרת כדי שלא יעלה על שורת החיפוש */
+html.ss-open body header.apple-nav > .apple-nav-content { visibility: hidden !important; }
+html.ss-open body #site-search { background: var(--ds-card, #ffffff); z-index: 61 !important; }
+html.theme-dark.ss-open body #site-search { background: #121418 !important; }
+html.ss-open body header.apple-nav { transform: none !important; }
