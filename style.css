@@ -13322,3 +13322,32 @@ html.theme-dark body:not(#_):not(#_) .ha-box .ha-x:hover { background: rgba(255,
 .fo-panel.resizing { transition: none !important; user-select: none; }
 html.fo-resizing, html.fo-resizing * { cursor: ew-resize !important; user-select: none !important; }
 @media (max-width: 768px) { .fo-panel-resize { display: none; } }
+
+/* ===== קהילות כאריחים (בהשראת Higgsfield): אייקון קטן, כותרת + תגית TOP/NEW, תיאור קצר ===== */
+html body:not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="communities"] #photo-row-1 { display: grid !important; grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 12px !important; padding: 0 !important; background: transparent !important; box-shadow: none !important; overflow: visible !important; direction: rtl !important; scroll-snap-type: none !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="communities"] .photo-section-row { background: transparent !important; border: 0 !important; box-shadow: none !important; padding: 0 !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="communities"] .comm-grid-card { position: relative !important; display: flex !important; flex-direction: column !important; justify-content: space-between !important; gap: 22px !important; min-height: 104px !important; height: auto !important; aspect-ratio: auto !important; padding: 14px 16px !important; margin: 0 !important; border-radius: 14px !important; background: #f3f3f5 !important; border: 1px solid #e8e8ec !important; box-shadow: none !important; overflow: hidden !important; cursor: pointer !important; flex: none !important; width: auto !important; transition: background .15s ease, border-color .15s ease, transform .15s ease !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="communities"] .comm-grid-card:hover { background: #ececf0 !important; border-color: #d9d9e0 !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="communities"] .comm-grid-card:active { transform: scale(.98) !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="communities"] .comm-grid-card :is(.cg-cover, .comm-grid-btn) { display: none !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="communities"] .comm-grid-thumb { position: static !important; width: 22px !important; height: 22px !important; min-height: 0 !important; aspect-ratio: auto !important; background: none !important; border-radius: 0 !important; padding: 0 !important; margin: 0 !important; display: block !important; color: #111111 !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="communities"] .comm-grid-thumb :is(.comm-sc-ic, span) { position: static !important; width: 20px !important; height: 20px !important; background: none !important; border: 0 !important; box-shadow: none !important; padding: 0 !important; display: block !important; color: inherit !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="communities"] .comm-grid-thumb svg { width: 20px !important; height: 20px !important; color: inherit !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="communities"] .comm-grid-info { position: static !important; padding: 0 !important; margin: 0 !important; background: none !important; display: flex !important; flex-direction: column !important; gap: 4px !important; text-align: start !important; align-items: flex-start !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="communities"] .comm-grid-name { display: flex !important; align-items: center !important; gap: 7px !important; font-size: 14.5px !important; font-weight: 700 !important; color: #111111 !important; text-shadow: none !important; line-height: 1.25 !important; margin: 0 !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="communities"] .comm-grid-sub { font-size: 12px !important; font-weight: 400 !important; color: #8a8f99 !important; text-shadow: none !important; margin: 0 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; max-width: 100% !important; }
+.cg-badge { font-style: italic; font-weight: 800; font-size: 10px; letter-spacing: .02em; padding: 2px 6px; border-radius: 5px; line-height: 1.2; }
+.cg-badge-top { background: #ec4b8b; color: #ffffff; }
+.cg-badge-new { background: #d6f74a; color: #111111; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="communities"] .comm-grid-card { background: #232327 !important; border-color: #2e2e34 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="communities"] .comm-grid-card:hover { background: #2a2a30 !important; border-color: #3a3a42 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="communities"] .comm-grid-thumb, html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="communities"] .comm-grid-name { color: #f2f2f4 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="communities"] .comm-grid-sub { color: #8d8d96 !important; }
+@media (max-width: 768px) {
+  html body:not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="communities"] #photo-row-1 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 8px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="communities"] .comm-grid-card { min-height: 92px !important; padding: 12px !important; gap: 16px !important; border-radius: 12px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="communities"] .comm-grid-name { font-size: 13px !important; gap: 5px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="communities"] .comm-grid-sub { font-size: 11px !important; }
+  .cg-badge { font-size: 9px; padding: 1px 5px; }
+}
+html body:not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="communities"] .comm-grid-card::before, html body:not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="communities"] .comm-grid-card::after, html body:not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="communities"] .comm-grid-thumb::before, html body:not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="communities"] .comm-grid-thumb::after { display: none !important; content: none !important; }

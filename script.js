@@ -1492,7 +1492,7 @@ function adjustImgAspectRatio(img) {
 function renderPage() {
   // מחשב: פורומים / קהילות נפתחים בחלון צד מעל העמוד הנוכחי — מכל מקום שמנווטים אליהם (תפריט, סרגל, קישור)
   const _spTarget = activePageId;
-  if ((_spTarget === 'page-forums-main' || _spTarget === 'page-communities-main' || _spTarget === 'page-news-main' || _spTarget === 'page-subscription-main')
+  if ((_spTarget === 'page-news-main' || _spTarget === 'page-subscription-main')
       && !window.__forceForumsPage && !window.__forceCommPage && !window.__forcePanelPage
       && window.__lastRenderedPageId && window.__lastRenderedPageId !== _spTarget
       && !window.matchMedia('(max-width: 768px)').matches && typeof openSidePanel === 'function') {
@@ -11720,8 +11720,6 @@ function buildSidebarTabs(savedHTML, pageType) {
 function navigateToPage(pageId) {
   // מחשב: הפורומים נפתחים בחלון צד משמאל, בלי לעזוב את העמוד הנוכחי
   const _desk = !window.matchMedia('(max-width: 768px)').matches;
-  if (pageId === 'page-forums-main' && !window.__forceForumsPage && typeof openForumsPanel === 'function' && _desk) { closeSidePanels('fo-panel'); openForumsPanel(); return; }
-  if (pageId === 'page-communities-main' && !window.__forceCommPage && typeof openCommunitiesPanel === 'function' && _desk) { closeSidePanels('cm-panel'); openCommunitiesPanel(); return; }
   if ((pageId === 'page-news-main' || pageId === 'page-subscription-main') && !window.__forcePanelPage && typeof openPagePanel === 'function' && _desk) { openPagePanel(pageId); return; }
   // מעבר לעמוד אחר — סוגרים חלונות צד פתוחים
   if (typeof closeSidePanels === 'function') closeSidePanels();
@@ -23225,7 +23223,7 @@ function communityShortcutsHTML() {
     covers.comics = pick(all.filter(s => s && s.__kind !== 'stories'));
     covers.stories = pick(all.filter(s => s && s.__kind === 'stories'));
   } catch (e) {}
-  const card = (title, emoji, page, grad, sub) => {
+  const card = (title, emoji, page, grad, sub, badge) => {
     if (!page) return '';
     const oc = page ? `navigateToPage('${artEsc(page.id)}')` : '';
     const cover = covers[emoji] || '';
@@ -23236,20 +23234,20 @@ function communityShortcutsHTML() {
           <span class="comm-sc-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${COMM_SC_ICONS[emoji] || ''}</svg></span>
         </div>
         <div class="comm-grid-info">
-          <div class="comm-grid-name">${title}</div>
+          <div class="comm-grid-name">${title}${badge ? `<em class="cg-badge cg-badge-${badge.toLowerCase()}">${badge}</em>` : ''}</div>
           <div class="comm-grid-sub">${sub || `לצפייה בכל ה${title}`}</div>
           <button class="comm-grid-btn" onclick="event.stopPropagation(); ${oc}">כניסה</button>
         </div>
       </div>
     `;
   };
-  return card('תמונות גולשים', 'photos', findPage('photos'), 'linear-gradient(135deg,#7c3aed,#4c1d95)')
+  return card('תמונות גולשים', 'photos', findPage('photos'), 'linear-gradient(135deg,#7c3aed,#4c1d95)', 'גלריות מהקהילה', 'TOP')
        + card('קומיקס', 'comics', findPage('comics'), 'linear-gradient(135deg,#8b5cf6,#6d28d9)')
        + card('סיפורים', 'stories', findPage('stories'), 'linear-gradient(135deg,#0ea5e9,#0369a1)')
        + card('פורומים', 'forums', findPage('forums'), 'linear-gradient(135deg,#a855f7,#7e22ce)')
        + card('חברים', 'friends', findPage('friends'), 'linear-gradient(135deg,#52525b,#18181b)', 'הכירו גולשים חדשים')
-       + card('Blind Date', 'blind', findPage('blinddate'), 'linear-gradient(135deg,#3f3f46,#111111)', 'התאמה אקראית ודייט אמיתי')
-       + card('התאמות', 'match', findPage('tinder'), 'linear-gradient(135deg,#71717a,#27272a)', 'החליקו ומצאו התאמה')
+       + card('Blind Date', 'blind', findPage('blinddate'), 'linear-gradient(135deg,#3f3f46,#111111)', 'התאמה אקראית ודייט אמיתי', 'NEW')
+       + card('התאמות', 'match', findPage('tinder'), 'linear-gradient(135deg,#71717a,#27272a)', 'החליקו ומצאו התאמה', 'NEW')
        + card('מוצרים', 'products', findPage('products'), 'linear-gradient(135deg,#f472b6,#be185d)');
 }
 window.communityShortcutsHTML = communityShortcutsHTML;
@@ -27490,6 +27488,11 @@ window.composerPhoto = composerPhoto;
 // פורומים בחלון צד (מחשב) — נפתח משמאל מעל העמוד הנוכחי
 // ============================================================
 function openForumsPanel() {
+  // לבקשת בעל האתר: הפורומים נפתחים בעמוד מלא ולא בחלון צד
+  if (typeof closeSidePanels === 'function') closeSidePanels();
+  window.__forceForumsPage = true;
+  try { navigateToPage('page-forums-main'); } finally { window.__forceForumsPage = false; }
+  return;
   let w = document.getElementById('fo-panel');
   if (!w) {
     w = document.createElement('div');
@@ -27548,6 +27551,10 @@ function openSidePanel(id, title, bodyHTML, fullAction) {
 }
 // קהילות בחלון צד (מחשב): כל אזורי האתר ככרטיסים — לחיצה פותחת את העמוד וסוגרת את החלון
 function openCommunitiesPanel() {
+  if (typeof closeSidePanels === 'function') closeSidePanels();
+  window.__forceCommPage = true;
+  try { navigateToPage('page-communities-main'); } finally { window.__forceCommPage = false; }
+  return;
   const cards = (typeof communityShortcutsHTML === 'function' ? communityShortcutsHTML() : '')
     + (typeof sidePagesShortcutsHTML === 'function' ? (sidePagesShortcutsHTML().match(/<div class="comm-grid-card[\s\S]*?<\/button>\s*<\/div>\s*<\/div>/g) || []).join('') : '');
   openSidePanel('cm-panel', 'קהילות', `<div class="cm-panel-grid">${cards}</div>`, 'openCommunitiesFullPage()');
