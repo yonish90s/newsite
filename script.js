@@ -17705,8 +17705,8 @@ function kinksRadarHTML(kinks) {
     return [cx + r * Math.cos(a), cy + r * Math.sin(a)];
   };
   const poly = (r) => top.map((_, i) => pt(i, r).map(v => v.toFixed(1)).join(',')).join(' ');
-  const rings = [1, 0.75, 0.5, 0.25].map((f, j) => `<polygon points="${poly(R * f)}" fill="${['#1c1c1e', '#232326', '#2a2a2e', '#323236'][j]}" stroke="rgba(255,255,255,.07)"/>`).join('');
-  const axes = top.map((_, i) => { const [x, y] = pt(i, R); return `<line x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="rgba(255,255,255,.08)"/>`; }).join('');
+  const rings = [1, 0.75, 0.5, 0.25].map((f, j) => `<polygon class="uw-r-ring r${j + 1}" points="${poly(R * f)}"/>`).join('');
+  const axes = top.map((_, i) => { const [x, y] = pt(i, R); return `<line class="uw-r-axis" x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}"/>`; }).join('');
   const shape = top.map((k, i) => pt(i, R * k.s / 10).map(v => v.toFixed(1)).join(',')).join(' ');
   const labels = top.map((k, i) => {
     const [x, y] = pt(i, R + 22);
@@ -17721,8 +17721,8 @@ function kinksRadarHTML(kinks) {
       <div class="uw-summary-title">סיכום — מה הכי אוהב/ת</div>
       <svg class="uw-radar" viewBox="-10 -6 340 326">
         ${rings}${axes}
-        <polygon points="${shape}" fill="rgba(236,72,153,.28)" stroke="#ec4899" stroke-width="2.5" stroke-linejoin="round"/>
-        ${top.map((k, i) => { const [x, y] = pt(i, R * k.s / 10); return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.5" fill="#111111"/>`; }).join('')}
+        <polygon class="uw-r-shape" points="${shape}" stroke-width="2.5" stroke-linejoin="round"/>
+        ${top.map((k, i) => { const [x, y] = pt(i, R * k.s / 10); return `<circle class="uw-r-dot" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4"/>`; }).join('')}
         ${labels}
       </svg>
     </div>`;

@@ -12658,3 +12658,39 @@ html.theme-dark :is(.ofp-stat b, .ofp-title, .ofp-who b, .ofp-price) { color: #e
 html.theme-dark .ofp-note { background: #22262d !important; color: #c8cdd4 !important; }
 html.theme-dark .ofp-kind { background: #2a2f37 !important; color: #c8cdd4 !important; }
 html.theme-dark .ofp-kind.loan { background: #eceef1 !important; color: #111111 !important; }
+
+/* ===== פרופיל: "אוהב/ת" + גרף הסיכום — בסגנון האתר, בלי ירוק/ורוד ===== */
+html body:not(#_):not(#_):not(#_):not(#_) .uw-kinks { display: flex; flex-direction: column; gap: 10px; margin: 0; padding: 0; list-style: none; }
+html body:not(#_):not(#_):not(#_):not(#_) .uw-kinks li { display: grid; grid-template-columns: 22px minmax(70px, auto) 1fr 22px; align-items: center; gap: 10px; }
+html body:not(#_):not(#_):not(#_):not(#_) .uw-k-rank { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: #111111; color: #ffffff; font-size: 11.5px; font-weight: 800; }
+html body:not(#_):not(#_):not(#_):not(#_) .uw-k-name { color: #111111 !important; font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+html body:not(#_):not(#_):not(#_):not(#_) .uw-k-bar { height: 8px; border-radius: 999px; background: #eceef1 !important; overflow: hidden; display: block; }
+html body:not(#_):not(#_):not(#_):not(#_) .uw-k-bar i { display: block; height: 100%; border-radius: 999px; background: #111111 !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .uw-k-score { color: #111111 !important; font-weight: 800; font-size: 14px; text-align: center; font-variant-numeric: tabular-nums; }
+html body:not(#_):not(#_):not(#_):not(#_) .uw-role { background: #f1f2f4 !important; color: #111111 !important; border: 1px solid #e6e8ec; font-weight: 700 !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .uw-summary { border-top: 1px solid #eceef1 !important; margin-top: 8px; padding-top: 14px; }
+html body:not(#_):not(#_):not(#_):not(#_) .uw-summary-title { color: #111111 !important; font-size: 15px; font-weight: 700; }
+html body:not(#_):not(#_):not(#_):not(#_) .uw-radar .uw-r-ring { fill: #ffffff; stroke: #e1e4e8; stroke-width: 1; }
+html body:not(#_):not(#_):not(#_):not(#_) .uw-radar .uw-r-ring.r1 { fill: #f6f7f9; }
+html body:not(#_):not(#_):not(#_):not(#_) .uw-radar .uw-r-ring.r3 { fill: #f6f7f9; }
+html body:not(#_):not(#_):not(#_):not(#_) .uw-radar .uw-r-axis { stroke: #e1e4e8; stroke-width: 1; }
+html body:not(#_):not(#_):not(#_):not(#_) .uw-radar .uw-r-shape { fill: rgba(17, 17, 17, .12); stroke: #111111; }
+html body:not(#_):not(#_):not(#_):not(#_) .uw-radar .uw-r-dot { fill: #111111; stroke: #ffffff; stroke-width: 2; }
+html body:not(#_):not(#_):not(#_):not(#_) .uw-radar .uw-r-label { fill: #3f4552 !important; font-size: 13px; font-weight: 700; }
+html body:not(#_):not(#_):not(#_):not(#_) .uw-radar .uw-r-val { fill: #111111 !important; font-size: 13px; font-weight: 800; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_) :is(.uw-k-name, .uw-k-score, .uw-summary-title) { color: #eceef1 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .uw-k-rank { background: #eceef1 !important; color: #111111 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .uw-k-bar { background: #2a2f37 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .uw-k-bar i { background: #eceef1 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .uw-role { background: #2a2f37 !important; color: #eceef1 !important; border-color: #3a414c !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .uw-summary { border-color: #2a2f37 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .uw-radar .uw-r-ring { fill: #1b1e24 !important; stroke: #323842 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .uw-radar :is(.uw-r-ring.r1, .uw-r-ring.r3) { fill: #22262d !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .uw-radar .uw-r-axis { stroke: #323842 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .uw-radar .uw-r-shape { fill: rgba(236, 238, 241, .14) !important; stroke: #eceef1 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .uw-radar .uw-r-dot { fill: #eceef1 !important; stroke: #1b1e24 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .uw-radar .uw-r-label { fill: #c8cdd4 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .uw-radar .uw-r-val { fill: #eceef1 !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .uw-row:has(.uw-kinks) { flex-direction: column !important; align-items: stretch !important; gap: 10px !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .uw-row:has(.uw-kinks) .uw-label { width: auto !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .uw-kinks li { grid-template-columns: 22px minmax(90px, 40%) 1fr 26px !important; }

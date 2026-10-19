@@ -2154,6 +2154,24 @@ html.theme-dark .ofp-note { color: #c8cdd4 !important; background: #22262d !impo
 html.theme-dark.theme-dark .ofp-stat, html.theme-dark.theme-dark .ofp-row { background: #3a414c !important; }
 html.theme-dark.theme-dark .ofp-note { background: #3a414c !important; }
 html.theme-dark.theme-dark .ofp-kind.loan { background: #2a2f37 !important; color: #eceef1 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .uw-k-rank { background: #3a414c !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .uw-k-name { color: #eceef1 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .uw-k-bar { background: #2a2f37 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .uw-k-bar i { background: #3a414c !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .uw-k-score { color: #eceef1 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .uw-role { background: #22262d !important; color: #eceef1 !important; border: 1px solid #323842 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .uw-summary { border-top: 1px solid #323842 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .uw-summary-title { color: #eceef1 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .uw-radar .uw-r-shape { fill: rgba(236, 238, 241, 0.12) !important; stroke: #eceef1 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .uw-radar .uw-r-dot { fill: #eceef1 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .uw-radar .uw-r-label { fill: #c8cdd4 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .uw-radar .uw-r-val { fill: #eceef1 !important; }
+html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_) .uw-k-rank { background: #2a2f37 !important; color: #eceef1 !important; }
+html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_) .uw-k-bar i { background: #2a2f37 !important; }
+html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_) .uw-radar .uw-r-ring { fill: #eceef1 !important; stroke: #eceef1 !important; }
+html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_) .uw-radar :is(.uw-r-ring.r1, .uw-r-ring.r3) { fill: #eceef1 !important; }
+html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_) .uw-radar .uw-r-axis { stroke: #eceef1 !important; }
+html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_) .uw-radar .uw-r-dot { stroke: #eceef1 !important; }
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #eceef1 !important; }
 html.theme-dark [style*="color:#111111"] { color: #eceef1 !important; }
