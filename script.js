@@ -8714,7 +8714,7 @@ function renderPhotoCard(p, options = {}) {
 
   const isVerifiedAlbum = isUserVerified(p.authorId, p.author, p.verified || p.verifiedUser);
   const verifiedBadgeHTML = isVerifiedAlbum ? verifiedSealHTML() : '';
-  const priceBadgeHTML = p.price ? `<div class="art-price-badge">💰 ${escHtml(String(p.price))}</div>` : '';
+  const priceBadgeHTML = p.price ? `<div class="art-price-badge">💰 ${escHtml(String(p.price))}${p.offerType === 'השאלה' && p.priceUnit ? ` <small class="art-price-unit">${escHtml(p.priceUnit)}</small>` : ''}</div>${p.offerType === 'השאלה' && (p.loanPeriod || p.offerDetail) ? `<div class="art-loan-period">תקופת השאלה: ${escHtml(String(p.loanPeriod || p.offerDetail).slice(0, 30))}</div>` : ''}` : (p.offerType === 'השאלה' && (p.loanPeriod || p.offerDetail) ? `<div class="art-loan-period">תקופת השאלה: ${escHtml(String(p.loanPeriod || p.offerDetail).slice(0, 30))}</div>` : '');
   // בעמוד הקהילות מציגים כרטיס "ריבוע" נקי — ללא תאריך/מאומת/צפיות/לייקים וכפתורים
   const metaHTML = options.hideMeta ? '' : `
       <div class="art-row-meta" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
@@ -9092,10 +9092,53 @@ function qpHandleSend() {
       qpData.price = n ? (n + ' ₪') : '';
       qpBubble('user', qpData.price || escHtml(text));
     } else { qpBubble('user', 'דלג'); }
+    if (qpData.offerType === 'השאלה') { qpAskLoanUnit(); return; }
+    qpStep = 'done';
+    qpPublish();
+  } else if (qpStep === 'loan_period') {
+    inp.value = '';
+    if (text && text !== 'דלג') { qpData.loanPeriod = String(text).trim().slice(0, 40); qpBubble('user', 'תקופת השאלה: ' + escHtml(qpData.loanPeriod)); }
+    else qpBubble('user', 'דלג');
+    qpAskLoanTerms();
+  } else if (qpStep === 'loan_terms') {
+    inp.value = '';
+    const t = String(text || '').trim();
+    if (t && t !== 'המשך' && t !== 'דלג') {
+      const add = t.split(/\n+/).map(x => x.replace(/^[\d\.\-\*•\s]+/, '').trim()).filter(Boolean).slice(0, 10).map(x => x.slice(0, 160));
+      qpData.loanTerms = (qpData.loanTerms || []).concat(add).slice(0, 15);
+      qpBubble('user', add.map(x => '• ' + escHtml(x)).join('<br>'));
+      qpBubble('bot', `נוסף לתקנון ✓ (${qpData.loanTerms.length} סעיפים). עוד סעיף? כתבו אותו, או כתבו <b>המשך</b> לפרסום.`);
+      return;
+    }
+    qpBubble('user', 'המשך');
     qpStep = 'done';
     qpPublish();
   }
 }
+// תקנון השאלה: סעיפי ברירת מחדל + סעיפים שהמשאיל מוסיף. השואל חותם עליו בעמוד המוצר.
+function qpAskLoanTerms() {
+  qpStep = 'loan_terms';
+  if (!Array.isArray(qpData.loanTerms) || !qpData.loanTerms.length) qpData.loanTerms = PHOTO_LOAN_DEFAULT_TERMS.slice();
+  qpBubble('bot', `📜 <b>תקנון ההשאלה</b> — השואל יחתום עליו לפני שמקבל את המוצר:<br>${qpData.loanTerms.map((x, i) => `${i + 1}. ${escHtml(x)}`).join('<br>')}<br><br>רוצים להוסיף סעיף משלכם? כתבו אותו (כל שורה = סעיף), או כתבו <b>המשך</b>.`);
+}
+// השאלה: המחיר הוא לכל יום / שבוע / חודש, ואחר כך — לכמה זמן משאילים
+function qpAskLoanUnit() {
+  qpStep = 'loan_unit';
+  const opts = ['ליום', 'לשבוע', 'לחודש'];
+  const btns = opts.map(o => `<button type="button" class="qp-chip" onclick="qpPickLoan('unit','${o}')">${o}</button>`).join('');
+  qpBubble('bot', `⏱️ המחיר הוא...<br><div class="qp-chips">${btns}</div>`);
+}
+function qpAskLoanPeriod() {
+  qpStep = 'loan_period';
+  const opts = ['יום', 'שבוע', 'חודש', '3 חודשים', 'חצי שנה'];
+  const btns = opts.map(o => `<button type="button" class="qp-chip" onclick="qpPickLoan('period','${o}')">${o}</button>`).join('');
+  qpBubble('bot', `📅 מה <b>תקופת ההשאלה</b>? בחרו או כתבו בעצמכם, או <b>דלג</b>.<br><div class="qp-chips">${btns}</div>`);
+}
+function qpPickLoan(kind, v) {
+  if (kind === 'unit' && qpStep === 'loan_unit') { qpData.priceUnit = v; qpBubble('user', escHtml((qpData.price || '') + ' ' + v)); qpAskLoanPeriod(); }
+  else if (kind === 'period' && qpStep === 'loan_period') { qpData.loanPeriod = v; qpBubble('user', 'תקופת השאלה: ' + escHtml(v)); qpAskLoanTerms(); }
+}
+window.qpPickLoan = qpPickLoan;
 
 function qpCommunityFilters() {
   const c = (qpData.communityId && typeof communitiesData !== 'undefined') ? communitiesData[qpData.communityId] : null;
@@ -9154,6 +9197,7 @@ function qpPickSh(kind, value) {
     qpData.region = value;
     qpBubble('user', 'מיקום: ' + escHtml(value));
     if (qpData.offerType === 'החלפה') { qpStep = 'done'; qpPublish(); }
+    else if (qpData.offerType === 'השאלה') { qpStep = 'price'; qpBubble('bot', '💰 כמה עולה ההשאלה? כתוב מספר בש״ח (למשל 20), או <b>דלג</b>.'); }
     else { qpStep = 'price'; qpBubble('bot', '💰 מה המחיר המבוקש? כתוב מספר בש״ח, או <b>דלג</b>.'); }
   }
 }
@@ -9220,6 +9264,9 @@ async function qpPublish() {
     expiresAt: null,
     tags: qpData.tags || {},
     price: qpData.price || '',
+    priceUnit: qpData.priceUnit || '',
+    loanPeriod: qpData.loanPeriod || '',
+    loanTerms: (qpData.offerType === 'השאלה' && Array.isArray(qpData.loanTerms)) ? qpData.loanTerms.slice(0, 15) : [],
     approved: isAdminNow
   };
   try {
@@ -24171,6 +24218,10 @@ Object.assign(UI_EN, { 'הצעה': 'Offer', 'הצעת מחיר': 'Price offer', 
 Object.assign(UI_EN, { 'מוצרים נוספים שיעניינו אותך': 'More products you might like', 'חזרה למוצרים': 'Back to products', 'מחיר לפי סיכום': 'Price negotiable', 'להשאלה': 'For loan', 'להחלפה': 'For swap', 'מכירה': 'Sale' });
 Object.assign(UI_EN, { '+ פורום חדש': '+ New forum', 'עריכת הפורום': 'Edit forum', 'הסרת הפורום': 'Remove forum', 'עריכת הנושא': 'Edit topic', 'מחיקת הנושא': 'Delete topic', 'עריכת השאלה': 'Edit question', 'מחיקת השאלה': 'Delete question', 'עריכה': 'Edit', 'מחיקה': 'Delete' });
 Object.assign(UI_EN, { 'הודעה למעלה': 'Message the uploader', 'מי שהעלה פרסם כאורח — ההודעה תגיע למנהל האתר שיעביר אותה': 'The uploader posted as a guest — your message goes to the site admin, who will pass it on' });
+Object.assign(UI_EN, { 'ליום': '/ day', 'לשבוע': '/ week', 'לחודש': '/ month', 'תקופת השאלה:': 'Loan period:', 'יום': 'a day', 'שבוע': 'a week', 'חודש': 'a month', '3 חודשים': '3 months', 'חצי שנה': 'half a year' });
+UI_EN_PATTERNS.push([/תקופת השאלה:/g, 'Loan period:']);
+Object.assign(UI_EN, { 'תקנון ההשאלה': 'Loan agreement', 'חתימה על התקנון': 'Sign the agreement', 'שם מלא': 'Full name', 'חתמו כאן באצבע או בעכבר': 'Sign here with your finger or mouse', 'ניקוי': 'Clear', 'קראתי את כל הסעיפים ואני מסכים/ה להם': 'I have read all the clauses and agree to them', 'חתימה ושליחה למשאיל': 'Sign and send to the lender', 'המוצר יוחזר במצב שבו התקבל': 'The item will be returned in the condition it was received', 'תקופת ההשאלה מוסכמת מראש בין הצדדים': 'The loan period is agreed in advance', 'נזק, אובדן או גניבה — באחריות השואל': 'Damage, loss or theft is the borrower’s responsibility', 'איסוף והחזרה בתיאום מראש': 'Pickup and return by prior arrangement', 'אין להעביר את המוצר לצד שלישי ללא אישור': 'The item may not be passed to a third party without approval' });
+UI_EN_PATTERNS.push([/^(\d+) סעיפים · חתימה$/g, '$1 clauses · signature']);
 let __uiTranslating = false;
 // לא נוגעים בקוד עצמו. הודעות משתמשים/תוכן מוגנים ממילא כי המילון מתרגם
 // רק מחרוזות מוכרות של הממשק — תוכן חופשי שהמשתמשים כתבו לא מופיע במילון.
@@ -27789,10 +27840,13 @@ function pd2ProductInfoHTML(a) {
   const offer = a.offerType || 'מכירה';
   let price = (a.price != null && String(a.price).trim()) ? String(a.price).trim() : '';
   if (price && !/[₪$]/.test(price) && /\d/.test(price)) price = '₪' + price;
-  const main = offer === 'השאלה' ? 'להשאלה' : offer === 'החלפה' ? 'להחלפה' : (price || 'מחיר לפי סיכום');
+  const main = offer === 'השאלה' ? (price ? `${price}${a.priceUnit ? ' ' + a.priceUnit : ''}` : 'להשאלה') : offer === 'החלפה' ? 'להחלפה' : (price || 'מחיר לפי סיכום');
+  const period = offer === 'השאלה' ? (a.loanPeriod || (a.offerDetail || '').trim()) : '';
   return `<div class="pd2-product">
       <div class="pd2-price">${escHtml(main)}</div>
-      <div class="pd2-prod-chips"><span>${escHtml(offer)}</span>${a.region ? `<span>${escHtml(a.region)}</span>` : ''}${(a.offerDetail || '').trim() ? `<span>${escHtml(String(a.offerDetail).trim().slice(0, 40))}</span>` : ''}</div>
+      <div class="pd2-prod-chips"><span>${escHtml(offer)}</span>${a.region ? `<span>${escHtml(a.region)}</span>` : ''}${(a.offerDetail || '').trim() && offer !== 'השאלה' ? `<span>${escHtml(String(a.offerDetail).trim().slice(0, 40))}</span>` : ''}</div>
+      ${period ? `<div class="pd2-loan-period">תקופת השאלה: <b>${escHtml(String(period).slice(0, 40))}</b></div>` : ''}
+      ${offer === 'השאלה' ? loanAgreementHTML(a) : ''}
       <button type="button" class="pd2-offer-btn" onclick="openPriceOffer('${artEsc(a.id)}', '${artEsc(a.title || '')}', '${artEsc(a.authorId || '')}', '${artEsc(a.author || '')}')">הצעת מחיר</button>
     </div>`;
 }
@@ -27922,3 +27976,77 @@ function dmAutoGrow(el) {
   el.style.height = Math.min(el.scrollHeight + 2, 150) + 'px';
 }
 window.dmAutoGrow = dmAutoGrow;
+
+
+// ============================================================
+// תקנון השאלה + חתימה דיגיטלית (השואל חותם בעמוד המוצר)
+// website/loan_signatures/{itemId}/{uid} = { name, at, sig }
+// ============================================================
+function loanAgreementHTML(a) {
+  const terms = (Array.isArray(a.loanTerms) && a.loanTerms.length) ? a.loanTerms : PHOTO_LOAN_DEFAULT_TERMS;
+  setTimeout(() => loanSigInit(a), 0);
+  return `<details class="loan-agr" id="loan-agr">
+    <summary><b>תקנון ההשאלה</b><small>${terms.length} סעיפים · חתימה</small></summary>
+    <ol class="loan-terms">${terms.map(t => `<li>${escHtml(t)}</li>`).join('')}</ol>
+    <div class="loan-sign" id="loan-sign">
+      <div class="loan-sign-head">חתימה על התקנון</div>
+      <input id="loan-sign-name" class="loan-sign-name" maxlength="60" placeholder="שם מלא">
+      <div class="loan-pad-wrap"><canvas id="loan-pad" class="loan-pad" width="600" height="180" aria-label="חתמו כאן"></canvas><span class="loan-pad-hint">חתמו כאן באצבע או בעכבר</span><button type="button" class="loan-pad-clear" onclick="loanSigClear()">ניקוי</button></div>
+      <label class="loan-agree"><input type="checkbox" id="loan-agree"><span>קראתי את כל הסעיפים ואני מסכים/ה להם</span></label>
+      <button type="button" class="pd2-offer-btn loan-sign-btn" onclick="loanSigSubmit('${artEsc(a.id)}', '${artEsc(a.title || '')}', '${artEsc(a.authorId || '')}', '${artEsc(a.author || '')}')">חתימה ושליחה למשאיל</button>
+    </div>
+  </details>`;
+}
+let loanPadDirty = false;
+function loanSigInit(a) {
+  const c = document.getElementById('loan-pad'); if (!c || c.dataset.ready) return;
+  c.dataset.ready = '1';
+  const ctx = c.getContext('2d');
+  ctx.lineWidth = 3.2; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = '#111111';
+  let drawing = false;
+  const pos = e => { const r = c.getBoundingClientRect(); const t = e.touches ? e.touches[0] : e; return { x: (t.clientX - r.left) * (c.width / r.width), y: (t.clientY - r.top) * (c.height / r.height) }; };
+  const start = e => { drawing = true; const p = pos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); e.preventDefault(); };
+  const move = e => { if (!drawing) return; const p = pos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); loanPadDirty = true; c.parentElement.classList.add('signed'); e.preventDefault(); };
+  const end = () => { drawing = false; };
+  c.addEventListener('mousedown', start); c.addEventListener('mousemove', move); window.addEventListener('mouseup', end);
+  c.addEventListener('touchstart', start, { passive: false }); c.addEventListener('touchmove', move, { passive: false }); c.addEventListener('touchend', end);
+  // כבר חתמתי? מציגים אישור במקום הטופס
+  const u = auth.currentUser;
+  if (u && a && a.id) {
+    get(ref(db, `website/loan_signatures/${a.id}/${u.uid}`)).then(snap => {
+      const v = snap.val(); if (!v) return;
+      const box = document.getElementById('loan-sign');
+      if (box) box.innerHTML = `<div class="loan-signed">✓ חתמת על התקנון ב-${escHtml(new Date(v.at).toLocaleDateString('he-IL'))} בשם <b>${escHtml(v.name || '')}</b></div>`;
+    }).catch(() => {});
+  }
+}
+function loanSigClear() {
+  const c = document.getElementById('loan-pad'); if (!c) return;
+  c.getContext('2d').clearRect(0, 0, c.width, c.height); loanPadDirty = false; c.parentElement.classList.remove('signed');
+}
+async function loanSigSubmit(id, title, lenderUid, lenderName) {
+  const name = String((document.getElementById('loan-sign-name') || {}).value || '').trim();
+  if (name.length < 2) { showCopyToast('נא לכתוב שם מלא'); return; }
+  if (!loanPadDirty) { showCopyToast('נא לחתום בתיבת החתימה'); return; }
+  if (!(document.getElementById('loan-agree') || {}).checked) { showCopyToast('נא לאשר שקראת את הסעיפים'); return; }
+  if (!auth.currentUser) { const ok = (typeof ensureGuestSignedIn === 'function') ? await ensureGuestSignedIn() : false; if (!ok) { openLiveChatLogin(); return; } }
+  const u = auth.currentUser;
+  const c = document.getElementById('loan-pad');
+  let sig = '';
+  try {
+    // חתימה מוקטנת — כדי לשמור במסד
+    const t = document.createElement('canvas'); t.width = 300; t.height = 90;
+    const tc = t.getContext('2d'); tc.fillStyle = '#ffffff'; tc.fillRect(0, 0, 300, 90); tc.drawImage(c, 0, 0, 300, 90);
+    sig = t.toDataURL('image/jpeg', 0.7);
+  } catch (e) {}
+  try {
+    await set(ref(db, `website/loan_signatures/${id}/${u.uid}`), { name: name.slice(0, 60), at: Date.now(), sig: sig.length < 60000 ? sig : '' });
+    const box = document.getElementById('loan-sign');
+    if (box) box.innerHTML = `<div class="loan-signed">✓ חתמת על התקנון בשם <b>${escHtml(name)}</b> — המשאיל קיבל הודעה</div>`;
+    showCopyToast('החתימה נשמרה ונשלחה למשאיל');
+    if (lenderUid && lenderUid !== u.uid && typeof dmStartWith === 'function') {
+      dmStartWith(lenderUid, lenderName || 'משאיל', `✍️ חתמתי על תקנון ההשאלה של "${String(title || '').slice(0, 80)}" בשם ${name}. אשמח לתאם איסוף.`);
+    }
+  } catch (e) { console.error(e); showCopyToast('לא הצלחנו לשמור את החתימה — נסו שוב'); }
+}
+Object.assign(window, { loanSigClear, loanSigSubmit });

@@ -534,6 +534,15 @@
       },
       "forum_config": {
         ".read": true
+      },
+      "loan_signatures": {
+        "$itemId": {
+          "$uid": {
+            ".read": "auth != null && auth.uid === $uid",
+            ".write": "auth != null && auth.uid === $uid && !data.exists()",
+            ".validate": "newData.hasChildren(['name','at']) && newData.child('name').isString() && newData.child('name').val().length <= 60 && newData.child('at').isNumber() && (!newData.child('sig').exists() || (newData.child('sig').isString() && newData.child('sig').val().length < 60000))"
+          }
+        }
       }
     }
   }

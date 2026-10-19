@@ -2121,6 +2121,25 @@ html.theme-dark body:not(#_):not(#_) .fo-admin-add:hover { border-color: #5b6472
 html.theme-dark.theme-dark .fo-admin button { background: #3a414c !important; }
 html.theme-dark .tg-compose textarea#dm-input { border: 1px solid rgba(255, 255, 255, 0.08) !important; background: #1b1e24 !important; color: #eceef1 !important; }
 html.theme-dark.theme-dark .tg-compose textarea#dm-input { background: #3a414c !important; }
+html.theme-dark .art-price-unit { color: #c8cdd4 !important; }
+html.theme-dark .art-loan-period { color: #c8cdd4 !important; }
+html.theme-dark .pd2-loan-period { color: #c8cdd4 !important; }
+html.theme-dark .pd2-loan-period b { color: #eceef1 !important; }
+html.theme-dark body:not(#_):not(#_) .qp-chip { border: 1px solid #323842 !important; background: #1b1e24 !important; color: #eceef1 !important; }
+html.theme-dark body:not(#_):not(#_) .qp-chip:hover { border-color: #5b6472 !important; }
+html.theme-dark.theme-dark body:not(#_):not(#_) .qp-chip { background: #3a414c !important; }
+html.theme-dark .loan-agr { border: 1px solid #323842 !important; background: #22262d !important; }
+html.theme-dark .loan-agr > summary b { color: #eceef1 !important; }
+html.theme-dark .loan-agr > summary small { color: #c8cdd4 !important; }
+html.theme-dark .loan-terms { color: #eceef1 !important; }
+html.theme-dark .loan-sign { border-top: 1px dashed #323842 !important; background: #1b1e24 !important; }
+html.theme-dark .loan-sign-head { color: #eceef1 !important; }
+html.theme-dark .loan-pad-wrap { border: 1.5px dashed #323842 !important; background: #1b1e24 !important; }
+html.theme-dark body:not(#_):not(#_) .loan-pad-clear { border: 1px solid #323842 !important; background: #1b1e24 !important; color: #c8cdd4 !important; }
+html.theme-dark .loan-agree { color: #eceef1 !important; }
+html.theme-dark .loan-signed { color: #eceef1 !important; }
+html.theme-dark.theme-dark .loan-agr { background: #3a414c !important; }
+html.theme-dark.theme-dark .loan-sign { background: #3a414c !important; }
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #eceef1 !important; }
 html.theme-dark [style*="color:#111111"] { color: #eceef1 !important; }
