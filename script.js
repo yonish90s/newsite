@@ -15586,6 +15586,7 @@ function homeTabsToggle(k, on) {
 }
 Object.assign(window, { homeTabsPicker, homeTabsToggle });
 function homeCategoriesHTML(photos, comics, stories) {
+  return ''; // הוסר מדף הבית לבקשת בעל האתר
   const extra = {
     news: '<path d="M4 5h13v14H6a2 2 0 0 1-2-2z"/><path d="M17 9h3v8a2 2 0 0 1-2 2"/><path d="M8 9h5M8 13h5"/>',
     offers: '<path d="M12 3c.6 3.2 4 4.6 4 8.5A4 4 0 0 1 12 15.5a4 4 0 0 1-4-4c0-1.6.8-2.8 1.6-3.7.3 1.4 1 2.2 1.9 2.4C11.3 7.8 11 5.2 12 3z"/><path d="M6 15.5A6 6 0 0 0 18 15.5"/>'
@@ -28613,7 +28614,8 @@ function homeAsideHTML() {
         <span class="ha-txt"><b>${escHtml(st.name || '')}</b><small dir="ltr">${escHtml(host(st.url))}</small></span></span>
       <a class="ha-btn" href="${escHtml(typeof safeUrl === 'function' ? safeUrl(st.url) : st.url)}" target="_blank" rel="noopener sponsored">כניסה</a>
     </div>`;
-  const box = (title, rows, more) => rows ? `<section class="ha-box"><h3>${title}</h3>${rows}${more ? `<button type="button" class="ha-more" onclick="${more}">הצג עוד</button>` : ''}</section>` : '';
+  let haHidden = []; try { haHidden = JSON.parse(localStorage.getItem('ha_hidden') || '[]') || []; } catch (e) {}
+  const box = (title, rows, more) => (rows && !haHidden.includes(title)) ? `<section class="ha-box"><h3>${title}</h3><button type="button" class="ha-x" onclick="homeAsideHide(this, '${artEsc(title)}')" aria-label="הסתרה" title="הסתרה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>${rows}${more ? `<button type="button" class="ha-more" onclick="${more}">הצג עוד</button>` : ''}</section>` : '';
   return `<aside class="home-aside" aria-label="המלצות">
     ${box('את מי לעקוב', who.slice(0, 3).map(whoRow).join(''), "homeAsideMore('who')")}
     ${box('פורומים להצטרף', forums.slice(0, 3).map(forumRow).join(''), 'openForumsPanel()')}
@@ -28819,3 +28821,14 @@ function hwCardFocus(card) {
   return false;
 }
 window.hwCardFocus = hwCardFocus;
+
+
+// הסתרת ריבוע בעמודה הימנית של דף הבית (נשמר בדפדפן)
+function homeAsideHide(btn, title) {
+  let h = []; try { h = JSON.parse(localStorage.getItem('ha_hidden') || '[]') || []; } catch (e) {}
+  if (!h.includes(title)) h.push(title);
+  try { localStorage.setItem('ha_hidden', JSON.stringify(h)); } catch (e) {}
+  const box = btn.closest('.ha-box');
+  if (box) { box.style.transition = 'opacity .25s ease, transform .25s ease'; box.style.opacity = '0'; box.style.transform = 'scale(.97)'; setTimeout(() => box.remove(), 250); }
+}
+window.homeAsideHide = homeAsideHide;

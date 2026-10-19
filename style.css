@@ -13307,3 +13307,10 @@ html body:not(#_):not(#_):not(#_) .mnx .mnx-grid .mnx-item svg { width: 22px !im
 html body:not(#_):not(#_):not(#_) .mnx .mnx-grid .mnx-item span { font-size: 11.5px !important; white-space: normal !important; overflow: hidden !important; display: -webkit-box !important; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 html.theme-dark body:not(#_):not(#_):not(#_) .mnx .mnx-grid .mnx-item { background: #1d1924 !important; border-color: #2a2433 !important; color: #eceef1 !important; }
 html.theme-dark body:not(#_):not(#_):not(#_) .mnx .mnx-grid .mnx-item svg { color: #ec5f80 !important; }
+
+/* כפתור X להסתרת ריבוע בעמודה הימנית של דף הבית */
+.ha-box { position: relative; }
+html body:not(#_):not(#_) .ha-box .ha-x { position: absolute; top: 12px; left: 12px; width: 26px; height: 26px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: #8a8f99; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background .15s ease, color .15s ease; }
+html body:not(#_):not(#_) .ha-box .ha-x:hover { background: rgba(0,0,0,.06); color: #111111; }
+html body:not(#_):not(#_) .ha-box .ha-x svg { width: 15px; height: 15px; }
+html.theme-dark body:not(#_):not(#_) .ha-box .ha-x:hover { background: rgba(255,255,255,.08); color: #ffffff; }
