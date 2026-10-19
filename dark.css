@@ -2318,6 +2318,8 @@ html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .mtabs { border: 1px solid 
 html.theme-dark.theme-dark body:not(#_):not(#_) { background: #352e42 !important; }
 html.theme-dark.theme-dark body:not(#_):not(#_) :is(.apple-nav, .hx-tabs, #m-sheet, .side-panel, .cookie-bar) { background-color: #352e42 !important; border-color: #5b6472 !important; }
 html.theme-dark.theme-dark body:not(#_):not(#_) :is(.cr-card, .ha-box, .pf-card, .fs-slider .dsl) { border-color: #5b6472 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) .mnx .mnx-grid .mnx-item { background: #1d1924 !important; border: 1px solid #2a2433 !important; color: #eceef1 !important; }
+html.theme-dark.theme-dark body:not(#_):not(#_):not(#_) .mnx .mnx-grid .mnx-item { background: #352e42 !important; border-color: #5b6472 !important; }
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #eceef1 !important; }
 html.theme-dark [style*="color:#111111"] { color: #eceef1 !important; }

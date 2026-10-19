@@ -27429,11 +27429,11 @@ function mobileMenuHTML() {
         ${reg ? `<small class="mnx-handle" dir="ltr">@${escHtml((typeof profileHandle === 'function' ? profileHandle(name) : name))}</small>` : ''}
         ${reg ? `<div class="mnx-counts"><button type="button" onclick="${go(`openUserPage('${artEsc(u.uid)}')`)}"><b id="mnx-following">—</b> נעקבים</button><button type="button" onclick="${go(`openUserPage('${artEsc(u.uid)}')`)}"><b id="mnx-followers">—</b> עוקבים</button></div>` : `<button type="button" class="mnx-login" onclick="${go('openLiveChatLogin()')}">התחברות / הרשמה</button>`}
       </header>
-      <nav class="mnx-list">${mainItems.map(listItem).join('')}</nav>
+      <nav class="mnx-list mnx-grid">${mainItems.map(listItem).join('')}</nav>
       <div class="mnx-sep"></div>
       <h4 class="mnav-h">קיצורי דרך</h4>${shortcuts ? `<div class="mnav-scs">${shortcuts}</div>` : '<div class="mnav-sc-empty">כאן יופיע מה ששמרתם — לחצו על סימן השמירה בגלריה או בסיפור</div>'}
       <h4 class="mnav-h">הקהילות</h4>
-      <nav class="mnx-list small">${tiles.filter(t => !['feed', 'saved', 'msgs', 'history', 'shop', 'likes'].includes(t[0])).map(listItem).join('')}</nav>
+      <nav class="mnx-list small mnx-grid">${tiles.filter(t => !['feed', 'saved', 'msgs', 'history', 'shop', 'likes'].includes(t[0])).map(listItem).join('')}</nav>
       <div class="mnx-sep"></div>
       <details class="mnav-acc"><summary><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6M12 17h.01"/></svg>עזרה ותמיכה</summary>
         <button type="button" onclick="mnavGo('dmOpenAdmin()')">שליחת הודעה לצוות האתר</button>
