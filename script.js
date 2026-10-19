@@ -7149,6 +7149,7 @@ function storyOpenDetail(id) {
               </div>
               <div class="pd2-acts-desk">${pd2ActionsHTML(s, 'comic')}</div>
               <h1 class="pd2-title">${escHtml(s.title || '')}</h1>
+              ${postBarHTML(s)}
               ${_comicDesc ? `<div class="pshow-desc story-comic-desc">${storyRichHTML(_comicDesc, window.storyInlineImgs, false)}</div>` : ''}
               ${_n > 1 ? `<div class="pshow-tiles">${_tiles}</div>` : ''}
               <div class="pshow-line"></div>
@@ -16553,6 +16554,7 @@ function photoOpenDetail(id) {
               </div>
               <div class="pd2-acts-desk">${pd2ActionsHTML(a)}</div>
               <h1 class="pd2-title">${escHtml(a.title)}</h1>
+              ${postBarHTML(a)}
 
               ${a.ageRange || a.region ? `<div class="pd2-opts">
                 ${a.ageRange || a.region ? `<div class="pd2-opt"><small>פרטים</small><div class="pd2-chips">
@@ -19823,6 +19825,7 @@ function subscribePhotoComments(albumId) {
     if (box) box.innerHTML = photoCommentsListHTML();
     const cnt = document.getElementById('photo-comments-count');
     if (cnt) cnt.textContent = Object.keys(photoCommentsData).length;
+    document.querySelectorAll('.pb-n').forEach(n => { n.textContent = Object.keys(photoCommentsData).length; });
     pdReviewsRender();
   });
 }
@@ -19964,6 +19967,7 @@ function subscribeStoryComments(storyId) {
     if (box) box.innerHTML = storyCommentsListHTML();
     const cnt = document.getElementById('story-comments-count');
     if (cnt) cnt.textContent = Object.keys(storyCommentsData).length;
+    document.querySelectorAll('.pb-n').forEach(n => { n.textContent = Object.keys(storyCommentsData).length; });
   });
 }
 window.subscribeStoryComments = subscribeStoryComments;
@@ -24133,6 +24137,7 @@ Object.assign(UI_EN, { 'שיתוף לפרופיל שלי — העוקבים של
 UI_EN_PATTERNS.push([/(.+)\s+שיתף\/ה$/g, '$1 shared']);
 Object.assign(UI_EN, { 'מעקב אחרי היוצר': 'Follow the creator', 'ביטול מעקב': 'Unfollow' });
 Object.assign(UI_EN, { 'פרסום באנונימי': 'Post anonymously', 'אנונימי': 'Anonymous' });
+Object.assign(UI_EN, { 'תגובות': 'Comments' });
 let __uiTranslating = false;
 // לא נוגעים בקוד עצמו. הודעות משתמשים/תוכן מוגנים ממילא כי המילון מתרגם
 // רק מחרוזות מוכרות של הממשק — תוכן חופשי שהמשתמשים כתבו לא מופיע במילון.
@@ -27620,3 +27625,47 @@ try {
   if (nb) new MutationObserver(() => renderHeaderAvatar()).observe(nb, { attributes: true, childList: true, characterData: true, subtree: true });
 } catch (e) {}
 window.renderHeaderAvatar = renderHeaderAvatar;
+
+
+// ============================================================
+// שורת פוסט: תגובות (מספר — לחיצה פותחת את התגובות) · שיתוף · אודות היוצר
+// ============================================================
+function postBarHTML(a) {
+  const hasAuthor = a && a.authorId && !(typeof isSiteAdminAuthor === 'function' && isSiteAdminAuthor(a.authorId, a.author, a));
+  return `<div class="post-bar">
+    <button type="button" class="pb-btn pb-cmt" onclick="togglePostComments(this)" aria-expanded="false">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 4h12a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H9l-4 3.5V15H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><path d="M20 8h.5A1.5 1.5 0 0 1 22 9.5v6a1.5 1.5 0 0 1-1.5 1.5H20v2.5L17 17h-5" opacity=".55"/></svg>
+      <span>תגובות</span><b class="pb-n">0</b>
+    </button>
+    <button type="button" class="pb-btn" onclick="postShare('${artEsc((a && a.title) || '')}')">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M14 4.5V8C7.5 8.6 4 12.4 3 19c2.4-3.4 5.6-5 11-5v3.5l7-6.5z"/></svg>
+      <span>שיתוף</span>
+    </button>
+    ${hasAuthor ? `<span class="pb-sep" aria-hidden="true"></span>
+    <button type="button" class="pb-btn" onclick="openAuthorAbout('${artEsc(a.authorId)}', '${artEsc(a.author || '')}')">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><path d="M8 11h8M8 14.5h8M8 18h5" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <span>אודות</span>
+    </button>` : ''}
+  </div>`;
+}
+function togglePostComments(btn) {
+  const sec = document.querySelector('.art-detail .pc-section');
+  if (!sec) return;
+  const open = !sec.classList.contains('open');
+  sec.classList.toggle('open', open);
+  document.querySelectorAll('.pb-cmt').forEach(b => { b.classList.toggle('on', open); b.setAttribute('aria-expanded', open ? 'true' : 'false'); });
+  if (open) setTimeout(() => { try { sec.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {} }, 30);
+}
+function openAuthorAbout(uid, name) {
+  if (typeof openUserPage !== 'function') return;
+  openUserPage(uid, name);
+  // פותחים את לשונית "אודות" בפרופיל
+  let tries = 0;
+  const t = setInterval(() => {
+    if (document.querySelector('.pf-tabs .pf-tab[data-tab="about"]') || ++tries > 20) {
+      clearInterval(t);
+      try { if (typeof pfTab === 'function') pfTab('about'); } catch (e) {}
+    }
+  }, 120);
+}
+Object.assign(window, { togglePostComments, openAuthorAbout });

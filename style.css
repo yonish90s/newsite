@@ -12415,3 +12415,24 @@ html.theme-dark .mnav-btn.has-av .hdr-av-dot { background: #eceef1 !important; b
 html body .verified-seal { filter: none !important; vertical-align: -0.15em; }
 /* תגובה מהירה: בלי שורת "דירוג (לא חובה)" */
 html body .pc-stars-row { display: none !important; }
+
+/* ===== שורת פוסט: תגובות · שיתוף | אודות ===== */
+.post-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pb-btn { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 14px; border-radius: 12px; border: 1px solid #e6e8ec; background: #f4f5f7; color: #111111; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; transition: background .15s, border-color .15s; }
+.pb-btn:hover { background: #eceef1; border-color: #d5d8de; }
+.pb-btn svg { width: 18px; height: 18px; flex: none; color: #3f4652; }
+.pb-btn b { font-weight: 800; font-variant-numeric: tabular-nums; }
+.pb-btn.on { border: 1.5px solid #111111; background: #ffffff; }
+.pb-sep { width: 1px; height: 26px; background: #d5d8de; margin: 0 4px; }
+/* התגובות סגורות עד שלוחצים על "תגובות" */
+html body .art-detail .pc-section:not(.open) { display: none !important; }
+html.theme-dark .pb-btn { background: #22262d !important; border-color: #323842 !important; color: #eceef1 !important; }
+html.theme-dark .pb-btn:hover { background: #2a2f37 !important; }
+html.theme-dark .pb-btn svg { color: #c8cdd4 !important; }
+html.theme-dark .pb-btn svg path[stroke="#fff"] { stroke: #22262d !important; }
+html.theme-dark .pb-btn.on { border-color: #eceef1 !important; background: #1b1e24 !important; }
+html.theme-dark .pb-sep { background: #3a414c !important; }
+@media (max-width: 768px) {
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pd2-info > .post-bar { order: 3; }
+  .pb-btn { height: 38px; padding: 0 12px; font-size: 13.5px; }
+}
