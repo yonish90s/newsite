@@ -2187,6 +2187,7 @@ html.theme-dark .ofp-btn.no { color: color-mix(in srgb, #a61b1b 55%, white) !imp
 html.theme-dark .ofp-btn.no:hover { background: #2a2f37 !important; }
 html.theme-dark .ofp-btn.wait:hover { background: #22262d !important; }
 html.theme-dark.theme-dark .ofp-btn { background: #3a414c !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) .hw-cmp b { color: var(--hw-c1, #eceef1) !important; }
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #eceef1 !important; }
 html.theme-dark [style*="color:#111111"] { color: #eceef1 !important; }
