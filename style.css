@@ -13223,3 +13223,60 @@ html.theme-dark body:not(#_):not(#_) :is(.cr-card, .ha-box, .pf-card, .fs-slider
   html body:not(#_):not(#_) .cr-head p { font-size: 12px !important; }
   html body:not(#_):not(#_) .cr-new { font-size: 9.5px !important; padding: 3px 7px !important; }
 }
+
+/* ===== מובייל: שורת הלשוניות ושורת העיגולים באותו גודל כמו שורת הסינון (36px) ===== */
+@media (max-width: 768px) {
+  html body:not(#_):not(#_):not(#_) .content-switch { gap: 6px !important; padding: 4px 0 !important; min-height: 0 !important; }
+  html body:not(#_):not(#_):not(#_) .content-switch .cs-tab { height: 36px !important; min-height: 0 !important; padding: 0 12px !important; font-size: 13px !important; white-space: nowrap !important; line-height: 1 !important; border-radius: 12px !important; gap: 6px !important; }
+  html body:not(#_):not(#_):not(#_) .content-switch .cs-tab svg { width: 16px !important; height: 16px !important; }
+  html body:not(#_):not(#_):not(#_) .pcc-row { gap: 14px !important; padding: 4px 0 6px !important; }
+  html body:not(#_):not(#_):not(#_) .pcc { gap: 4px !important; min-width: 0 !important; padding: 0 !important; }
+  html body:not(#_):not(#_):not(#_) .pcc-ring { width: 36px !important; height: 36px !important; min-width: 36px !important; font-size: 14px !important; border-width: 1.5px !important; padding: 0 !important; }
+  html body:not(#_):not(#_):not(#_) .pcc-ring img { width: 100% !important; height: 100% !important; }
+  html body:not(#_):not(#_):not(#_) .pcc-name { font-size: 10.5px !important; max-width: 64px !important; }
+}
+
+/* ===== מובייל: "כל הגלריות" — 2 בשורה, תמונה ריבועית עם צפיות ומספר תמונות, הפרטים והכפתורים מתחת ===== */
+.pg-ov { display: none; }
+.pg-hide { display: none !important; }
+@media (max-width: 768px) {
+  html body:not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 14px 10px !important; overflow: visible !important; scroll-snap-type: none !important; direction: rtl !important; padding: 0 !important; }
+  html body:not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 > .art-row { flex: none !important; width: auto !important; min-width: 0 !important; display: flex !important; flex-direction: column !important; padding: 0 !important; margin: 0 !important; gap: 6px !important; border: 0 !important; box-shadow: none !important; background: transparent !important; }
+  html body:not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 > .art-row.pg-hide { display: none !important; }
+  html body:not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 .art-row-img-container { order: -1 !important; width: 100% !important; }
+  html body:not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 .art-row-img-wrap { width: 100% !important; height: auto !important; aspect-ratio: 1 / 1 !important; border-radius: 10px !important; margin: 0 !important; }
+  html body:not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 .art-row-img-wrap img { width: 100% !important; height: 100% !important; object-fit: cover !important; }
+  html body:not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 :is(.photo-mini-thumbs-spacer, .photo-mini-thumbs, .photo-count-badge, .art-zoom-btn, .photo-nav-overlay) { display: none !important; }
+  html body:not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 .art-heart-overlay { width: 28px !important; height: 28px !important; top: 6px !important; right: 6px !important; }
+  html body:not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 .pg-ov { display: flex; position: absolute; left: 0; right: 0; bottom: 0; padding: 18px 8px 6px; justify-content: space-between; direction: ltr; color: #fff; font-size: 12px; font-weight: 600; background: linear-gradient(transparent, rgba(0,0,0,.55)); pointer-events: none; z-index: 2; }
+  .pg-ov span { display: inline-flex; align-items: center; gap: 4px; }
+  .pg-ov svg { width: 14px; height: 14px; }
+  html body:not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 .art-row-text { width: 100% !important; padding: 0 2px !important; margin: 0 !important; gap: 3px !important; }
+  html body:not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 .art-row-text h3 { font-size: 13px !important; line-height: 1.3 !important; margin: 0 !important; display: -webkit-box !important; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden !important; }
+  html body:not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 .art-row-meta { font-size: 11px !important; gap: 4px !important; flex-wrap: nowrap !important; overflow: hidden !important; white-space: nowrap !important; }
+  html body:not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 .art-row-meta .au-av { width: 18px !important; height: 18px !important; }
+  html body:not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 .art-row-text > div:not(.art-row-meta):not(.photo-card-links) { font-size: 11px !important; }
+  html body:not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 .photo-card-links { display: flex !important; flex-wrap: wrap !important; gap: 4px !important; margin-top: 4px !important; justify-content: flex-start !important; }
+  html body:not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 .photo-card-links .art-telegram-btn { width: 28px !important; height: 28px !important; min-width: 28px !important; padding: 0 !important; border-radius: 9px !important; flex: 0 0 28px !important; }
+  html body:not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 .photo-card-links .art-telegram-btn svg { width: 14px !important; height: 14px !important; }
+  html body:not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 .photo-card-links .art-telegram-btn > span { display: none !important; }
+}
+@media (max-width: 768px) {
+  html body:not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="photos"] .photo-section-row { background: transparent !important; border: 0 !important; box-shadow: none !important; padding: 6px 0 !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 .art-row-img-container { padding: 0 !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 .photo-card-links { flex-wrap: nowrap !important; gap: 3px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 .photo-card-links .art-telegram-btn { width: 25px !important; height: 25px !important; min-width: 25px !important; flex: 0 0 25px !important; border-radius: 8px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 .photo-card-links .art-telegram-btn svg { width: 13px !important; height: 13px !important; }
+}
+@media (max-width: 768px) {
+  html body:not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 .art-row-text h3 { font-size: 12.5px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 .art-row-meta { font-size: 10px !important; gap: 3px !important; min-width: 0 !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 .art-row-meta > * { font-size: 10px !important; flex-shrink: 1 !important; min-width: 0 !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 .art-row-meta .photo-author-link { overflow: hidden !important; text-overflow: ellipsis !important; max-width: 60% !important; gap: 3px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 .art-row-meta .au-av { width: 15px !important; height: 15px !important; flex: 0 0 15px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 .art-row-text > div:not(.art-row-meta):not(.photo-card-links), html body:not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 .pv-meta * { font-size: 10px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 .pv-meta svg { width: 12px !important; height: 12px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 .photo-card-links { gap: 2px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 .photo-card-links .art-telegram-btn { width: 24px !important; height: 24px !important; min-width: 24px !important; flex: 0 0 24px !important; border-radius: 7px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 .photo-card-links .art-telegram-btn svg { width: 12px !important; height: 12px !important; }
+}

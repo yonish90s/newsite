@@ -8766,6 +8766,7 @@ function renderPhotoCard(p, options = {}) {
       <div class="art-row-img-container" style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0;">
         <div class="art-row-img-wrap" style="--bg-img: url('${mainImg || ''}');">
           ${mainImg ? `<img src="${escHtml(mainImg)}" alt="">` : '<div class="art-row-img-placeholder"></div>'}
+          <div class="pg-ov" aria-hidden="true"><span class="pg-ov-v"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>${formatViews(viewsCount)}</span><span class="pg-ov-n"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="14" height="14" rx="2"/><path d="M21 8v10a2 2 0 0 1-2 2H8"/></svg>${validImages.length || 1}</span></div>
           ${validImages.length > 1 ? `<div class="photo-count-badge">1 / ${validImages.length}</div>` : ''}
           ${mainImg ? `<button class="art-zoom-btn" onclick="event.stopPropagation();artGalleryById('photos','${artEsc(p.id)}', this.closest('.art-row-img-wrap').querySelector('img') && this.closest('.art-row-img-wrap').querySelector('img').getAttribute('src'))" title="מסך מלא">⛶</button>` : ''}
           ${cardHeartOverlay}
@@ -28709,9 +28710,8 @@ function photoCandyRowsHTML(albums) {
   const byTime = albums.slice().sort((a, b) => ((typeof photoAlbumTime === 'function' ? photoAlbumTime(b) : 0) - (typeof photoAlbumTime === 'function' ? photoAlbumTime(a) : 0)));
   const byViews = albums.slice().sort((a, b) => (photoGetViews(b.id) || 0) - (photoGetViews(a.id) || 0));
   const cats = (typeof PHOTO_BAR_CATEGORIES !== 'undefined' ? PHOTO_BAR_CATEGORIES : []).slice(0, 4).map(c => [c, albums.filter(a => typeof photoCatMatch === 'function' && photoCatMatch(a, c))]).filter(([, l]) => l.length >= 2);
+  if (!cats.length) return '';
   return `<div class="cr-wrap">
-    ${row('חדש', 'באתר', 'הגלריות האחרונות שעלו', byTime, "document.getElementById('photo-row-1')?.scrollIntoView({behavior:'smooth', block:'start'})")}
-    ${row('הכי', 'נצפים', 'מה שכולם מסתכלים עליו עכשיו', byViews, '')}
     ${cats.map(([c, l]) => row(c, '', '', l, `setSectionCategoryFilter('photos','${artEsc(c)}')`)).join('')}
   </div>`;
 }
@@ -28760,3 +28760,48 @@ function dualSliderCommit(el) {
   if (foot && typeof filterSheetFootHTML === 'function') foot.innerHTML = filterSheetFootHTML();
 }
 Object.assign(window, { dualSliderInput, dualSliderCommit });
+
+
+// ============================================================
+// מובייל — "כל הגלריות" בתמונות גולשים: 2 בשורה, 4 בהתחלה ועוד 4 בכל גלילה למטה
+// ============================================================
+let pgLimit = 4;
+function pgGridRows() {
+  const row = document.querySelector('.photos-page[data-section="photos"] #photo-row-1');
+  return row ? [...row.children].filter(r => r.classList.contains('art-row')) : [];
+}
+function pgGridApply() {
+  const rows = pgGridRows();
+  if (!rows.length) return;
+  const mobile = window.matchMedia('(max-width: 768px)').matches;
+  let shown = 0;
+  rows.forEach(r => {
+    const eligible = r.dataset.artMatch !== '0' && r.style.display !== 'none';
+    const hide = mobile && eligible && shown >= pgLimit;
+    if (eligible && !hide) shown++;
+    r.classList.toggle('pg-hide', hide);
+  });
+}
+function pgGridOnScroll() {
+  const rows = pgGridRows();
+  if (!rows.length) return;
+  const hidden = rows.some(r => r.classList.contains('pg-hide'));
+  if (hidden) {
+    const row = rows[0].parentElement;
+    const bottom = row.getBoundingClientRect().bottom;
+    if (bottom < window.innerHeight + 260) { pgLimit += 4; pgGridApply(); }
+  }
+}
+let pgGridRaf = 0;
+window.addEventListener('scroll', () => { if (pgGridRaf) return; pgGridRaf = requestAnimationFrame(() => { pgGridRaf = 0; pgGridOnScroll(); }); }, { passive: true });
+window.addEventListener('resize', pgGridApply);
+(function pgGridWatch() {
+  let lastRow = null;
+  const obs = new MutationObserver(() => {
+    const row = document.querySelector('.photos-page[data-section="photos"] #photo-row-1');
+    if (row !== lastRow) { lastRow = row; pgLimit = 4; }
+    pgGridApply();
+  });
+  const start = () => obs.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'data-art-match'] });
+  if (document.body) start(); else document.addEventListener('DOMContentLoaded', start);
+})();
