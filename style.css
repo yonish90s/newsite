@@ -12565,3 +12565,9 @@ html.theme-dark .pd2-prod-chips span { background: #22262d !important; border-co
 html.theme-dark body:not(#_):not(#_):not(#_) .pd2-offer-btn { background: #eceef1 !important; border-color: #eceef1 !important; color: #111111 !important; }
 @media (max-width: 768px) { html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pd2-info > .pd2-product { order: 3; } }
 html body .pd2-info:has(.pd2-product) > .pd2-opts { display: none !important; }
+/* מחיר בכרטיס מוצר — בלי רקע ירוק, טקסט שחור בולט */
+html body:not(#_):not(#_):not(#_) .art-price-badge { background: transparent !important; background-image: none !important; color: #111111 !important; box-shadow: none !important; border: 0 !important; padding: 2px 0 !important; font-size: 17px !important; font-weight: 800 !important; width: auto !important; text-align: start !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) .art-price-badge { color: #eceef1 !important; }
+/* המחיר מוצג גם בפלאפון; "הצעה" — אייקון בלבד כמו שאר הכפתורים */
+@media (max-width: 768px) { html body:not(#_):not(#_):not(#_):not(#_) .secondhand-page .art-price-badge { display: block !important; font-size: 16px !important; } }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .secondhand-page .photo-card-links .art-offer-btn span { display: none !important; }
