@@ -12515,3 +12515,24 @@ html.theme-dark body:not(#_):not(#_):not(#_):not(#_) :is(.au-field > svg, .au-fi
   html body:not(#_):not(#_):not(#_):not(#_) #auth-modal .au-terms { font-size: 12px !important; line-height: 1.6 !important; text-align: center; margin: 4px 0 0 !important; }
   html body:not(#_):not(#_):not(#_):not(#_) #auth-modal .au-switch { text-align: center; margin: 4px 0 0 !important; }
 }
+
+/* ===== עמוד השדרוגים — ברור במצב בהיר ===== */
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .shop-item { background: transparent !important; border: 0 !important; box-shadow: none !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .shop-item .shop-cb { width: 26px !important; height: 26px !important; flex: none; border-radius: 8px !important; border: 1.5px solid #c4c8d0 !important; background: #ffffff !important; color: transparent !important; display: grid !important; place-items: center !important; transition: background .15s, border-color .15s; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .shop-item .shop-cb svg { width: 16px !important; height: 16px !important; stroke: currentColor !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .shop-item.on .shop-cb { background: #111111 !important; border-color: #111111 !important; color: #ffffff !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .shop-item:hover .shop-cb { border-color: #111111 !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .shop-item-txt b { color: #111111 !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .shop-item-txt small { color: #646b78 !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .shop-item-price { color: #111111 !important; font-weight: 700 !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .shop-item.on .shop-item-price { color: #111111 !important; }
+/* סל: מונה עגול וברור */
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .shop-basket { position: relative !important; overflow: visible !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .shop-basket b { position: absolute !important; top: -6px !important; inset-inline-start: -6px !important; min-width: 20px !important; height: 20px !important; padding: 0 5px !important; border-radius: 999px !important; background: #111111 !important; color: #ffffff !important; font-size: 11.5px !important; font-weight: 800 !important; line-height: 20px !important; text-align: center !important; border: 2px solid #ffffff !important; box-sizing: content-box; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .shop-opt { background: #f1f2f4 !important; color: #3f4552 !important; border-radius: 999px !important; padding: 2px 8px !important; font-size: 11.5px !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) .shop-item .shop-cb { background: #1b1e24 !important; border-color: #3a414c !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) .shop-item.on .shop-cb { background: #eceef1 !important; border-color: #eceef1 !important; color: #111111 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) :is(.shop-item-txt b, .shop-item-price, .shop-item.on .shop-item-price) { color: #eceef1 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) .shop-item-txt small { color: #9aa2ad !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) .shop-basket b { background: #eceef1 !important; color: #111111 !important; border-color: #121418 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) .shop-opt { background: #22262d !important; color: #c8cdd4 !important; }
