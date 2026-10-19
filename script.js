@@ -11513,7 +11513,7 @@ function buildFiltersSidebarBox(pageType) {
         </label>`).join('')}</div>`;
   const sections = {
     offer: sec('סוג ההצעה', shRadio('offer', typeof shOfferFilter !== 'undefined' ? shOfferFilter : 'הכל', typeof SH_OFFER_TYPES !== 'undefined' ? SH_OFFER_TYPES : ['הכל']), true),
-    price: sec('טווח מחירים', shRadio('price', typeof shPriceFilter !== 'undefined' ? shPriceFilter : 'הכל', typeof SH_PRICE_RANGES !== 'undefined' ? SH_PRICE_RANGES : ['הכל']), true),
+    price: sec('טווח מחירים', dualSliderHTML('price'), true),
     shRegion: sec('מיקום', shRadio('region', typeof shRegionFilter !== 'undefined' ? shRegionFilter : 'הכל', typeof SH_REGIONS !== 'undefined' ? SH_REGIONS : ['הכל'])),
     storyCat: sec('קטגוריה', storyCatBody, true),
     age: sec('טווח גילאים', ageBody),
@@ -20820,11 +20820,12 @@ function filterSheetBodyHTML() {
     const shRow = (key, label, cur, list) => row(key, label, cur, list.map(v => radio(cur === v, `setShFilter('${key}','${artEsc(v)}'); if (typeof pfRefreshShBar === 'function') pfRefreshShBar(); filterSheetRefresh()`, v)).join(''));
     return sortRow
       + shRow('offer', 'סוג ההצעה', shOfferFilter, SH_OFFER_TYPES)
-      + shRow('price', 'טווח מחירים', shPriceFilter, SH_PRICE_RANGES)
+      + `<div class="fs-slider"><div class="fs-slider-head"><span class="fs-label">טווח מחירים</span></div>${dualSliderHTML('price')}</div>`
       + shRow('region', 'מיקום', shRegionFilter, SH_REGIONS)
       + tgl('הפעלת מיקום', !!shLocationEnabled, 'toggleShLocation(this.checked)');
   }
   return sortRow
+    + `<div class="fs-slider"><div class="fs-slider-head"><span class="fs-label">טווח גילאים</span></div>${dualSliderHTML('age')}</div>`
     + row('category', 'מין', multiVal('category'), multi('category', PHOTO_CATEGORIES))
     + row('region', 'אזור', multiVal('region'), multi('region', PHOTO_REGIONS))
     + row('date', 'תאריך העלאה', multiVal('date'), multi('date', PHOTO_DATE_RANGES))
@@ -23072,6 +23073,8 @@ let shOfferFilter = 'הכל';
 let shPriceFilter = 'הכל';
 let shRegionFilter = 'הכל';
 let shLocationEnabled = false;
+const SH_PRICE_TOP = 5000;          // הקצה העליון של סליידר המחיר (= "5000+")
+let shPriceMin = 0, shPriceMax = SH_PRICE_TOP;
 
 function setShFilter(kind, val) {
   if (kind === 'offer') shOfferFilter = val;
@@ -23092,7 +23095,10 @@ function secondhandApplyFilters(albums) {
   return albums.filter(a => {
     if (shOfferFilter !== 'הכל' && (a.offerType || '') !== shOfferFilter) return false;
     if (shRegionFilter !== 'הכל' && (a.region || '') !== shRegionFilter) return false;
-    if (shPriceFilter !== 'הכל') {
+    if (shPriceFilter === 'טווח') {
+      const n = _shPriceNum(a);
+      if (isNaN(n) || n < shPriceMin || (shPriceMax < SH_PRICE_TOP && n > shPriceMax)) return false;
+    } else if (shPriceFilter !== 'הכל') {
       const n = _shPriceNum(a);
       if (isNaN(n)) return false;
       if (shPriceFilter === 'עד ₪100' && !(n <= 100)) return false;
@@ -24352,6 +24358,7 @@ UI_EN_PATTERNS.push([/^(\d+) הודעות$/g, '$1 posts']);
 Object.assign(UI_EN, { 'בשבילך': 'For you', 'במעקב': 'Following', 'הוספה': 'Add', 'הלשוניות שלי': 'My tabs', 'סיום': 'Done', 'הוספת לשונית': 'Add tab' });
 Object.assign(UI_EN, { 'עריכה': 'Edit', 'מחובר/ת': 'online', 'עדיין אין פוסטים...': 'No posts yet...', 'פרסמו תמונות וסרטונים כדי שיופיעו בפרופיל שלכם.': 'Publish photos and videos to display on your profile page.', 'הוספת פוסט': 'Add a post', 'תמונת פרופיל': 'Profile photo', 'העלאת תמונה': 'Upload photo', 'צילום תמונה': 'Take photo', 'עיצוב דמות': 'Design avatar', 'הסרת התמונה': 'Remove photo', 'שינוי תמונת פרופיל': 'Change profile photo' });
 Object.assign(UI_EN, { 'באתר': 'on the site', 'הגלריות האחרונות שעלו': 'The latest galleries', 'נצפים': 'viewed', 'מה שכולם מסתכלים עליו עכשיו': 'What everyone is watching now', '✦ חדש': '✦ NEW' });
+Object.assign(UI_EN, { 'מינימום': 'Minimum', 'מקסימום': 'Maximum' });
 let __uiTranslating = false;
 // לא נוגעים בקוד עצמו. הודעות משתמשים/תוכן מוגנים ממילא כי המילון מתרגם
 // רק מחרוזות מוכרות של הממשק — תוכן חופשי שהמשתמשים כתבו לא מופיע במילון.
@@ -28708,3 +28715,48 @@ function photoCandyRowsHTML(albums) {
     ${cats.map(([c, l]) => row(c, '', '', l, `setSectionCategoryFilter('photos','${artEsc(c)}')`)).join('')}
   </div>`;
 }
+
+
+// ============================================================
+// סליידר כפול (גיל / טווח מחירים) — מסילה דקה, חלק ממולא, ידיות עגולות לבנות
+// ============================================================
+const DUAL_SLIDERS = {
+  age: { min: 18, max: 99, step: 1, get: () => [photoAgeMin, photoAgeMax], fmt: (v) => String(v), top: '',
+    set: (a, b) => { photoAgeMin = a; photoAgeMax = b; if (typeof photoApplyFilters === 'function') photoApplyFilters(); try { photoRefreshTools(); } catch (e) {} } },
+  price: { min: 0, max: SH_PRICE_TOP, step: 50, get: () => [shPriceMin, shPriceMax], fmt: (v) => '₪' + Number(v).toLocaleString('he-IL'), top: '+',
+    set: (a, b) => { shPriceMin = a; shPriceMax = b; setShFilter('price', (a <= 0 && b >= SH_PRICE_TOP) ? 'הכל' : 'טווח'); if (typeof pfRefreshShBar === 'function') pfRefreshShBar(); } }
+};
+function dualSliderHTML(key) {
+  const d = DUAL_SLIDERS[key]; if (!d) return '';
+  const [a, b] = d.get();
+  const pct = v => ((v - d.min) / (d.max - d.min)) * 100;
+  const lbl = v => d.fmt(v) + (v >= d.max && d.top ? d.top : '');
+  return `<div class="dsl" data-key="${key}">
+    <div class="dsl-vals" dir="ltr"><b class="dsl-a">${lbl(a)}</b><span>—</span><b class="dsl-b">${lbl(b)}</b></div>
+    <div class="dsl-track" dir="ltr"><span class="dsl-rail"></span><span class="dsl-fill" style="left:${pct(a)}%; width:${pct(b) - pct(a)}%"></span>
+      <input type="range" class="dsl-in dsl-in-a" min="${d.min}" max="${d.max}" step="${d.step}" value="${a}" oninput="dualSliderInput(this)" onchange="dualSliderCommit(this)" aria-label="מינימום">
+      <input type="range" class="dsl-in dsl-in-b" min="${d.min}" max="${d.max}" step="${d.step}" value="${b}" oninput="dualSliderInput(this)" onchange="dualSliderCommit(this)" aria-label="מקסימום">
+    </div>
+  </div>`;
+}
+function dualSliderRead(el) {
+  const w = el.closest('.dsl'); const d = DUAL_SLIDERS[w.dataset.key];
+  const ia = w.querySelector('.dsl-in-a'), ib = w.querySelector('.dsl-in-b');
+  let a = Number(ia.value), b = Number(ib.value);
+  if (a > b) { if (el === ia) { a = b; ia.value = a; } else { b = a; ib.value = b; } }
+  return { w, d, a, b };
+}
+function dualSliderInput(el) {
+  const { w, d, a, b } = dualSliderRead(el);
+  const pct = v => ((v - d.min) / (d.max - d.min)) * 100;
+  const f = w.querySelector('.dsl-fill'); f.style.left = pct(a) + '%'; f.style.width = (pct(b) - pct(a)) + '%';
+  w.querySelector('.dsl-a').textContent = d.fmt(a) + (a >= d.max && d.top ? d.top : '');
+  w.querySelector('.dsl-b').textContent = d.fmt(b) + (b >= d.max && d.top ? d.top : '');
+}
+function dualSliderCommit(el) {
+  const { d, a, b } = dualSliderRead(el);
+  d.set(a, b);
+  const foot = document.querySelector('#m-sheet .ms-foot');
+  if (foot && typeof filterSheetFootHTML === 'function') foot.innerHTML = filterSheetFootHTML();
+}
+Object.assign(window, { dualSliderInput, dualSliderCommit });

@@ -13113,3 +13113,55 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .loan-agr > su
 .top-toast .st-row { font-size: 15px !important; font-weight: 600 !important; align-items: flex-start !important; line-height: 1.4; }
 .top-toast .st-row svg { width: 20px !important; height: 20px !important; margin-top: 1px; }
 .top-toast { padding: 13px 16px !important; }
+
+/* ===== סליידר טווח (גיל / מחיר) — בסגנון התמונה ששלחת ===== */
+.dsl { padding: 6px 2px 4px; }
+.dsl-vals { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; font-size: 14px; color: #3f4552; }
+.dsl-vals b { font-weight: 700; color: #111111; font-variant-numeric: tabular-nums; }
+.dsl-vals span { color: #9aa0aa; }
+.dsl-track { position: relative; height: 26px; }
+.dsl-rail, .dsl-fill { position: absolute; top: 50%; height: 4px; margin-top: -2px; border-radius: 4px; }
+.dsl-rail { left: 0; right: 0; background: #d6d8d0; }
+.dsl-fill { background: #4d5d3c; }
+.dsl-in { position: absolute; inset: 0; width: 100%; margin: 0; background: transparent; pointer-events: none; -webkit-appearance: none; appearance: none; height: 26px; }
+.dsl-in::-webkit-slider-runnable-track { background: transparent; border: 0; }
+.dsl-in::-moz-range-track { background: transparent; border: 0; }
+.dsl-in::-webkit-slider-thumb { -webkit-appearance: none; pointer-events: auto; width: 24px; height: 24px; border-radius: 50%; background: #ffffff; border: 2.5px solid #2f3a26; box-shadow: 0 2px 6px rgba(0,0,0,.18); cursor: grab; margin-top: 0; }
+.dsl-in::-moz-range-thumb { pointer-events: auto; width: 20px; height: 20px; border-radius: 50%; background: #ffffff; border: 2.5px solid #2f3a26; box-shadow: 0 2px 6px rgba(0,0,0,.18); cursor: grab; }
+.fs-slider { padding: 14px 0 16px; border-bottom: 1px solid #f1f2f4; }
+.fs-slider-head { margin-bottom: 8px; }
+.fs-slider .dsl { background: #f1f2ec; border-radius: 16px; padding: 12px 16px 10px; }
+html.theme-dark .dsl-vals b { color: #eceef1 !important; } html.theme-dark .dsl-vals { color: #c8cdd4 !important; }
+html.theme-dark .dsl-rail { background: #3a414c !important; } html.theme-dark .dsl-fill { background: #a3b88a !important; }
+html.theme-dark .dsl-in::-webkit-slider-thumb { background: #eceef1; border-color: #a3b88a; }
+html.theme-dark .fs-slider .dsl { background: #22262d !important; } html.theme-dark .fs-slider { border-color: #22262d !important; }
+
+/* ===== מובייל: פרופורציות עדינות בסגנון X — לא מגושם ===== */
+@media (max-width: 768px) {
+  html body:not(#_):not(#_):not(#_) .mtabs { height: 54px !important; padding: 4px 8px !important; border-radius: 22px !important; left: 12px !important; right: 12px !important; bottom: calc(8px + env(safe-area-inset-bottom)) !important; gap: 2px !important; }
+  html body:not(#_):not(#_):not(#_) .mtabs .mtab { min-height: 0 !important; height: 46px !important; padding: 3px 4px !important; gap: 2px !important; font-size: 10px !important; font-weight: 600 !important; border-radius: 16px !important; }
+  html body:not(#_):not(#_):not(#_) .mtabs .mtab > svg { width: 20px !important; height: 20px !important; }
+  html body:not(#_):not(#_):not(#_) .mtabs .mtab > span { font-size: 10px !important; line-height: 1.1 !important; }
+  html body:not(#_):not(#_):not(#_) .mtabs .mtab-plus-ic { width: 40px !important; height: 40px !important; }
+  html body:not(#_):not(#_):not(#_) .mtabs .mtab-plus-ic svg { width: 18px !important; height: 18px !important; }
+  html body:not(#_):not(#_):not(#_) .mtabs .mtab.active, html body:not(#_):not(#_):not(#_) .mtabs .mtab.on { font-weight: 700 !important; }
+  /* כפתורי הכותרת העליונה */
+  html body:not(#_):not(#_):not(#_) .apple-nav-content .notif-bell,
+  html body:not(#_):not(#_):not(#_) .apple-nav-content .mnav-btn,
+  html body:not(#_):not(#_):not(#_) .apple-nav-content > div > button { width: 32px !important; height: 32px !important; min-width: 32px !important; padding: 0 !important; }
+  html body:not(#_):not(#_):not(#_) .apple-nav-content .notif-bell svg,
+  html body:not(#_):not(#_):not(#_) .apple-nav-content button svg { width: 16px !important; height: 16px !important; }
+  html body:not(#_):not(#_):not(#_) .apple-nav-content .mnav-btn img, html body:not(#_):not(#_):not(#_) .apple-nav-content .mnav-btn .hav { width: 30px !important; height: 30px !important; }
+  /* לשוניות הבית */
+  html body:not(#_):not(#_):not(#_) .hx-tabs .hx-tab { font-size: 13.5px !important; padding: 11px 12px !important; }
+  /* באנר העוגיות */
+  html body:not(#_):not(#_):not(#_) .cookie-bar { padding: 12px 14px !important; gap: 8px !important; border-radius: 16px !important; left: 10px !important; right: 10px !important; }
+  html body:not(#_):not(#_):not(#_) .cookie-bar-text { font-size: 12.5px !important; line-height: 1.45 !important; font-weight: 500 !important; }
+  html body:not(#_):not(#_):not(#_) .cookie-bar-icon { display: none !important; }
+  html body:not(#_):not(#_):not(#_) .cookie-bar-btns { gap: 6px !important; }
+  html body:not(#_):not(#_):not(#_) .cookie-btn { height: 34px !important; min-height: 0 !important; padding: 0 12px !important; font-size: 12.5px !important; border-radius: 999px !important; }
+  /* סליידר קומפקטי */
+  .dsl-vals { font-size: 13px; margin-bottom: 6px; }
+  .dsl-in::-webkit-slider-thumb { width: 20px; height: 20px; border-width: 2px; }
+  .dsl-track { height: 22px; } .dsl-in { height: 22px; }
+}
