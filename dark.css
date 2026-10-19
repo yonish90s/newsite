@@ -2080,6 +2080,13 @@ html.theme-dark .pfg-title { color: #eceef1 !important; }
 html.theme-dark .pfg-by { color: #c8cdd4 !important; }
 html.theme-dark.theme-dark .pfg-tab.on::after { background: #2a2f37 !important; }
 html.theme-dark.theme-dark .pfg-media { background: #3a414c !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .au-field { border: 1px solid #323842 !important; background: #1b1e24 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .au-field:focus-within { border-color: #5b6472 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .au-field > svg { color: #c8cdd4 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .au-field input { color: #eceef1 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .au-field .au-eye { color: #c8cdd4 !important; }
+html.theme-dark.theme-dark html body:not(#_):not(#_):not(#_):not(#_) .au-field, html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_) .au-field { background: #3a414c !important; }
+html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_) .au-field:focus-within { border-color: #323842 !important; }
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #eceef1 !important; }
 html.theme-dark [style*="color:#111111"] { color: #eceef1 !important; }

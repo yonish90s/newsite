@@ -12483,3 +12483,35 @@ html.theme-dark .pfg-tab.on::after { background: #eceef1 !important; }
 html.theme-dark .pfg-media { background: #22262d !important; }
 html.theme-dark .pfg-title { color: #eceef1 !important; }
 html.theme-dark .pfg-by { color: #9aa2ad !important; }
+
+/* ===== חלון ההתחברות — שדות נקיים (האייקון והעין בתוך השדה) וחלון ברור בפלאפון ===== */
+html body:not(#_):not(#_):not(#_):not(#_) .au-field { display: flex !important; align-items: center !important; gap: 10px !important; height: 52px !important; padding: 0 14px !important; border: 1px solid #d5d8de !important; border-radius: 14px !important; background: #ffffff !important; box-sizing: border-box !important; width: 100% !important; margin: 0 !important; transition: border-color .15s, box-shadow .15s; }
+html body:not(#_):not(#_):not(#_):not(#_) .au-field:focus-within { border-color: #111111 !important; box-shadow: 0 0 0 3px rgba(17, 17, 17, .08) !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .au-field > svg { width: 20px !important; height: 20px !important; flex: none !important; color: #646b78 !important; position: static !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .au-field input { flex: 1 1 auto !important; min-width: 0 !important; width: auto !important; height: 100% !important; border: 0 !important; outline: 0 !important; box-shadow: none !important; background: transparent !important; padding: 0 !important; margin: 0 !important; font-size: 16px !important; color: #111111 !important; border-radius: 0 !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .au-field .au-eye { position: static !important; flex: none !important; width: 34px !important; height: 34px !important; margin: 0 -6px 0 0 !important; display: grid !important; place-items: center !important; background: transparent !important; border: 0 !important; color: #646b78 !important; transform: none !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .au-field .au-eye svg { width: 20px !important; height: 20px !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .au-form { display: flex !important; flex-direction: column !important; gap: 12px !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .au-submit { height: 52px !important; border-radius: 14px !important; font-size: 16px !important; font-weight: 700 !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .au-social { height: 50px !important; border-radius: 14px !important; display: flex !important; align-items: center !important; justify-content: center !important; gap: 10px !important; font-size: 15px !important; font-weight: 600 !important; width: 100% !important; }
+html.theme-dark html body:not(#_):not(#_):not(#_):not(#_) .au-field, html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .au-field { background: #22262d !important; border-color: #3a414c !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .au-field:focus-within { border-color: #eceef1 !important; box-shadow: 0 0 0 3px rgba(236, 238, 241, .1) !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .au-field input { color: #eceef1 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_) :is(.au-field > svg, .au-field .au-eye) { color: #9aa2ad !important; }
+@media (max-width: 768px) {
+  /* בפלאפון: החלון תופס את כל המסך, נגלל, ושום דבר לא נחתך מתחת לסרגל הדפדפן */
+  html body:not(#_):not(#_):not(#_):not(#_) #auth-modal.auth-modal-overlay { align-items: stretch !important; justify-content: stretch !important; padding: 0 !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) #auth-modal .au-card { width: 100% !important; max-width: none !important; height: 100dvh !important; max-height: 100dvh !important; border-radius: 0 !important; margin: 0 !important; overflow-y: auto !important; -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
+    padding: calc(14px + env(safe-area-inset-top, 0px)) 20px calc(28px + env(safe-area-inset-bottom, 0px)) !important; box-sizing: border-box !important; display: flex !important; flex-direction: column !important; gap: 12px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) #auth-modal .au-hero { flex: none !important; min-height: 0 !important; height: auto !important; padding: 18px 16px !important; margin: 34px 0 4px !important; border-radius: 20px !important; gap: 10px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) #auth-modal .au-hero-art { width: 96px !important; height: auto !important; flex: none; }
+  html body:not(#_):not(#_):not(#_):not(#_) #auth-modal .au-brand { font-size: 24px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) #auth-modal .au-hero p { font-size: 13.5px !important; margin: 4px 0 8px !important; line-height: 1.5 !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) #auth-modal .au-close { position: absolute !important; top: calc(12px + env(safe-area-inset-top, 0px)) !important; inset-inline-start: 14px !important; z-index: 3; }
+  html body:not(#_):not(#_):not(#_):not(#_) #auth-modal .au-title { font-size: 26px !important; margin: 6px 0 0 !important; text-align: center; }
+  html body:not(#_):not(#_):not(#_):not(#_) #auth-modal .au-sub { margin: 0 0 6px !important; text-align: center; font-size: 14px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) #auth-modal .au-row { margin: 2px 0 !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) #auth-modal .au-or { margin: 6px 0 0 !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) #auth-modal .au-terms { font-size: 12px !important; line-height: 1.6 !important; text-align: center; margin: 4px 0 0 !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) #auth-modal .au-switch { text-align: center; margin: 4px 0 0 !important; }
+}
