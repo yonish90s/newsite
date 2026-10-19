@@ -244,7 +244,7 @@
           "messages": {
             "$msgId": {
               ".write": "auth != null && !data.exists() && ($convId.beginsWith(auth.uid + '__') || $convId.endsWith('__' + auth.uid))",
-              ".validate": "newData.child('from').val() === auth.uid && newData.child('text').isString() && newData.child('text').val().length <= 1000"
+              ".validate": "newData.child('from').val() === auth.uid && newData.child('text').isString() && newData.child('text').val().length <= 1000 && (!newData.child('img').exists() || (newData.child('img').isString() && newData.child('img').val().matches(/^data:image\\/(jpeg|png|webp|gif);base64,/) && newData.child('img').val().length <= 400000))"
             }
           }
         }

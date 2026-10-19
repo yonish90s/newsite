@@ -2241,6 +2241,17 @@ html.theme-dark.theme-dark body:not(#_):not(#_) .sh-filter-open { background: #3
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet.fs-x .ms-foot .fs-go { background: #3a414c !important; }
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet.fs-x .ms-foot .fs-reset { background: #2a2f37 !important; color: #eceef1 !important; }
 html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet.fs-x .ms-foot .fs-go { background: #2a2f37 !important; color: #eceef1 !important; }
+html.theme-dark .tg-plus { border: 1px solid #323842 !important; background: #22262d !important; color: #eceef1 !important; }
+html.theme-dark .tg-attach-prev { background: #1b1e24 !important; }
+html.theme-dark .tg-prev { border: 1px solid #323842 !important; }
+html.theme-dark .att-panel { background: #1b1e24 !important; }
+html.theme-dark .att-grip { background: #343a43 !important; }
+html.theme-dark .att-head b { color: #eceef1 !important; }
+html.theme-dark .att-x { background: #22262d !important; color: #c8cdd4 !important; }
+html.theme-dark .att-tile { background: #22262d !important; color: #eceef1 !important; }
+html.theme-dark.theme-dark .tg-plus { background: #3a414c !important; }
+html.theme-dark.theme-dark .tg-attach-prev, html.theme-dark.theme-dark .att-panel { background: #3a414c !important; }
+html.theme-dark.theme-dark .att-tile, html.theme-dark.theme-dark .att-x { background: #3a414c !important; }
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #eceef1 !important; }
 html.theme-dark [style*="color:#111111"] { color: #eceef1 !important; }

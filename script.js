@@ -19798,7 +19798,9 @@ async function dmOpenConv(convId, otherUid, otherName, prefill) {
       ${dmAvatarHTML(otherName || 'משתמש', otherUid, 'tg-avatar-sm')}
     </header>
     <div class="tg-messages" id="dm-messages"><div class="tg-empty">טוען…</div></div>
+    <div class="tg-attach-prev" id="dm-attach-prev"></div>
     <div class="tg-compose">
+      <button type="button" class="tg-plus" onclick="dmOpenAttach()" aria-label="צירוף תמונה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
       <textarea id="dm-input" rows="1" maxlength="1000" placeholder="הודעה" autocomplete="off" oninput="dmAutoGrow(this)" onkeydown="if(event.key==='Enter' && !event.shiftKey && window.innerWidth > 768){event.preventDefault(); dmSendCurrent();}"></textarea>
       <button type="button" class="tg-send" onclick="dmSendCurrent()" aria-label="שליחה"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.4 20.4 21 12 3.4 3.6 3.4 10l12.6 2-12.6 2z"/></svg></button>
     </div>`;
@@ -19831,7 +19833,7 @@ function dmMessagesHTML() {
     const sep = day && day !== lastDay ? `<div class="tg-day"><span>${escHtml(day)}</span></div>` : '';
     lastDay = day || lastDay;
     return `${sep}<div class="tg-msg ${mine ? 'mine' : 'theirs'}">
-      <div class="tg-bubble"><span class="tg-text">${escHtml(m.text || '')}</span><span class="tg-msg-time">${dmTime(m.timestamp)}${mine ? ' ✓' : ''}</span></div>
+      <div class="tg-bubble${m.img ? ' has-img' : ''}">${m.img && /^data:image\/(jpeg|png|webp|gif);base64,/.test(m.img) ? `<img class="tg-img" src="${escHtml(m.img)}" alt="" loading="lazy" onclick="dmViewImg(this.src)">` : ''}${m.text ? `<span class="tg-text">${escHtml(m.text)}</span>` : ''}<span class="tg-msg-time">${dmTime(m.timestamp)}${mine ? ' ✓' : ''}</span></div>
     </div>`;
   }).join('');
 }
@@ -19842,17 +19844,23 @@ async function dmSendCurrent() {
   const inp = document.getElementById('dm-input');
   if (!inp) return;
   const text = inp.value.trim();
-  if (!text) return;
+  const imgs = (window.__dmAttach || []).slice();
+  if (!text && !imgs.length) return;
   inp.value = '';
   dmAutoGrow(inp);
+  window.__dmAttach = []; dmRenderAttach();
   const { convId, otherUid, otherName } = dmActiveConv;
   const now = Date.now();
   const myName = dmName();
   try {
-    await push(ref(db, `website/dms/${convId}/messages`), { from: u.uid, fromName: myName, text: text.slice(0, 1000), timestamp: now });
+    for (let k = 0; k < imgs.length; k++) {
+      await push(ref(db, `website/dms/${convId}/messages`), { from: u.uid, fromName: myName, text: '', img: imgs[k], timestamp: now + k });
+    }
+    if (text) await push(ref(db, `website/dms/${convId}/messages`), { from: u.uid, fromName: myName, text: text.slice(0, 1000), timestamp: now + imgs.length });
     if (typeof trackEvent === 'function') trackEvent('dm_send');
-    await update(ref(db, `website/user_dms/${u.uid}/${convId}`), { otherUid, otherName, lastText: text.slice(0, 60), lastTime: now, unread: false });
-    await update(ref(db, `website/user_dms/${otherUid}/${convId}`), { otherUid: u.uid, otherName: myName, lastText: text.slice(0, 60), lastTime: now, unread: true });
+    const last = text ? text.slice(0, 60) : '📷 תמונה';
+    await update(ref(db, `website/user_dms/${u.uid}/${convId}`), { otherUid, otherName, lastText: last, lastTime: now, unread: false });
+    await update(ref(db, `website/user_dms/${otherUid}/${convId}`), { otherUid: u.uid, otherName: myName, lastText: last, lastTime: now, unread: true });
   } catch (e) {
     console.error('dm send failed', e);
     if (typeof showCopyToast === 'function') showCopyToast('שגיאה בשליחת ההודעה');
@@ -24293,6 +24301,7 @@ Object.assign(UI_EN, { 'נשמר בשמורים': 'Added to your Bookmarks', 'ה
 Object.assign(UI_EN, { 'חיפושים אחרונים': 'Recent searches', 'אנשים': 'People', 'תוכן': 'Content', 'חפשו אנשים, גלריות, פורומים, סיפורים, קהילות וחדשות': 'Search people, galleries, forums, stories, communities and news' });
 Object.assign(UI_EN, { 'מיון': 'Sort', 'החדשים ביותר': 'Newest', 'הכי פופולרי': 'Most popular', 'הישנים ביותר': 'Oldest', 'אזור': 'Region', 'תאריך העלאה': 'Date posted', 'משתמשים מאומתים בלבד': 'Verified users only', 'קרוב אליי': 'Near you', 'הפעלת מיקום': 'Enable location', 'איפוס': 'Reset' });
 UI_EN_PATTERNS.push([/^הצגת (\d+) תוצאות$/g, 'Show $1 results']);
+Object.assign(UI_EN, { 'צירוף לשיחה': 'Add to chat', 'מצלמה': 'Camera', 'תמונות': 'Photos', 'קבצים': 'Files', 'צירוף תמונה': 'Attach image', '📷 תמונה': '📷 Photo' });
 let __uiTranslating = false;
 // לא נוגעים בקוד עצמו. הודעות משתמשים/תוכן מוגנים ממילא כי המילון מתרגם
 // רק מחרוזות מוכרות של הממשק — תוכן חופשי שהמשתמשים כתבו לא מופיע במילון.
@@ -28442,3 +28451,53 @@ function ssFindUsers(q) {
     .sort((a, b) => b.n - a.n).slice(0, 6);
 }
 Object.assign(window, { ssRecentClear, ssFillQuery, ssUseQuery, ssOpenUser });
+
+
+// ============================================================
+// שיחה: צירוף תמונות — חלון "מצלמה · תמונות · קבצים" ותצוגה מקדימה לפני שליחה
+// ============================================================
+window.__dmAttach = [];
+function dmOpenAttach() {
+  let m = document.getElementById('dm-attach'); if (m) m.remove();
+  m = document.createElement('div'); m.id = 'dm-attach'; m.className = 'att-sheet';
+  const tile = (label, icon, accept, capture, multi) => `<label class="att-tile"><input type="file" accept="${accept}"${capture ? ' capture="environment"' : ''}${multi ? ' multiple' : ''} onchange="dmAttachFiles(this.files)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${icon}</svg><span>${label}</span></label>`;
+  m.innerHTML = `<div class="att-backdrop" onclick="dmCloseAttach()"></div>
+    <div class="att-panel" role="dialog" aria-label="צירוף">
+      <div class="att-grip"></div>
+      <div class="att-head"><button type="button" class="att-x" onclick="dmCloseAttach()" aria-label="סגירה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button><b>צירוף לשיחה</b><span></span></div>
+      <div class="att-grid">
+        ${tile('מצלמה', '<path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/>', 'image/*', true, false)}
+        ${tile('תמונות', '<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/>', 'image/*', false, true)}
+        ${tile('קבצים', '<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M12 17v-6M9.5 13.5 12 11l2.5 2.5"/>', 'image/*', false, true)}
+      </div>
+    </div>`;
+  document.body.appendChild(m);
+  requestAnimationFrame(() => m.classList.add('show'));
+}
+function dmCloseAttach() { const m = document.getElementById('dm-attach'); if (m) { m.classList.remove('show'); setTimeout(() => m.remove(), 220); } }
+async function dmAttachFiles(files) {
+  dmCloseAttach();
+  const list = [...(files || [])].filter(f => /^image\//.test(f.type)).slice(0, 6);
+  for (const f of list) {
+    try {
+      const data = await artCompressImage(f, 1280, 0.78);
+      if (data && data.length < 400000) window.__dmAttach.push(data);
+      else if (data) showCopyToast('התמונה גדולה מדי');
+    } catch (e) {}
+  }
+  dmRenderAttach();
+  const i = document.getElementById('dm-input'); if (i) i.focus();
+}
+function dmRenderAttach() {
+  const box = document.getElementById('dm-attach-prev'); if (!box) return;
+  const a = window.__dmAttach || [];
+  box.innerHTML = a.map((src, i) => `<span class="tg-prev"><img src="${src}" alt=""><button type="button" onclick="dmRemoveAttach(${i})" aria-label="הסרה">✕</button></span>`).join('');
+  box.classList.toggle('on', a.length > 0);
+}
+function dmRemoveAttach(i) { (window.__dmAttach || []).splice(i, 1); dmRenderAttach(); }
+function dmViewImg(src) {
+  const v = document.createElement('div'); v.className = 'tg-viewer';
+  v.innerHTML = `<img src="${src}" alt="">`; v.onclick = () => v.remove();
+  document.body.appendChild(v);
+}
+Object.assign(window, { dmOpenAttach, dmCloseAttach, dmAttachFiles, dmRemoveAttach, dmViewImg });

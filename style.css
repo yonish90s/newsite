@@ -12860,3 +12860,35 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet.fs-x .ms-foot
 html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet.fs-x .ms-foot .fs-reset { background: #eceef1 !important; color: #111111 !important; border: 0 !important; }
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet.fs-x .ms-foot .fs-go { background: #eceef1 !important; color: #111111 !important; }
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet.fs-x .ms-foot .fs-reset { background: #2a2f37 !important; color: #eceef1 !important; }
+
+/* ===== שיחה: צירוף תמונות ===== */
+.tg-plus { width: 42px; height: 42px; flex: none; border-radius: 50%; border: 1px solid #e6e8ec; background: #f4f5f7; color: #111111; display: grid; place-items: center; cursor: pointer; }
+.tg-plus svg { width: 20px; height: 20px; }
+.tg-attach-prev { display: none; gap: 8px; padding: 8px 12px 0; overflow-x: auto; background: #ffffff; }
+.tg-attach-prev.on { display: flex; }
+.tg-prev { position: relative; flex: none; width: 72px; height: 72px; border-radius: 12px; overflow: hidden; border: 1px solid #e6e8ec; }
+.tg-prev img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.tg-prev button { position: absolute; top: 4px; left: 4px; width: 22px; height: 22px; border-radius: 50%; border: 0; background: rgba(0,0,0,.6); color: #fff; font-size: 11px; cursor: pointer; }
+.tg-bubble.has-img { padding: 4px !important; }
+.tg-img { display: block; max-width: 240px; max-height: 320px; width: 100%; border-radius: 14px; object-fit: cover; cursor: zoom-in; }
+.tg-bubble.has-img .tg-text { display: block; padding: 6px 8px 2px; }
+.tg-viewer { position: fixed; inset: 0; z-index: 2147483000; background: rgba(0,0,0,.92); display: grid; place-items: center; cursor: zoom-out; }
+.tg-viewer img { max-width: 96vw; max-height: 92vh; border-radius: 8px; }
+.att-sheet { position: fixed; inset: 0; z-index: 2147482000; }
+.att-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,.35); opacity: 0; transition: opacity .2s; }
+.att-panel { position: absolute; inset-inline: 0; bottom: 0; background: #ffffff; border-radius: 28px 28px 0 0; padding: 8px 18px calc(22px + env(safe-area-inset-bottom, 0px)); transform: translateY(100%); transition: transform .24s cubic-bezier(.2,.8,.2,1); direction: rtl; font-family: var(--ds-font, inherit); max-width: 620px; margin: 0 auto; }
+.att-sheet.show .att-backdrop { opacity: 1; } .att-sheet.show .att-panel { transform: none; }
+.att-grip { width: 44px; height: 5px; border-radius: 3px; background: #d5d8de; margin: 2px auto 10px; }
+.att-head { display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; margin-bottom: 14px; }
+.att-head b { text-align: center; font-size: 18px; color: #111111; }
+.att-x { width: 44px; height: 44px; border-radius: 50%; border: 0; background: #f1f2f4; color: #3f4552; display: grid; place-items: center; cursor: pointer; }
+.att-x svg { width: 20px; height: 20px; }
+.att-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.att-tile { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; height: 104px; border-radius: 20px; background: #f4f5f7; color: #111111; font-size: 16px; font-weight: 600; cursor: pointer; }
+.att-tile input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.att-tile svg { width: 28px; height: 28px; }
+html.theme-dark .tg-plus { background: #22262d !important; border-color: #3a414c !important; color: #eceef1 !important; }
+html.theme-dark .tg-attach-prev, html.theme-dark .att-panel { background: #1b1e24 !important; }
+html.theme-dark .att-head b, html.theme-dark .att-tile { color: #eceef1 !important; }
+html.theme-dark .att-tile, html.theme-dark .att-x { background: #22262d !important; }
+html.theme-dark .att-x { color: #c8cdd4 !important; }
