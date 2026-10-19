@@ -12436,3 +12436,14 @@ html.theme-dark .pb-sep { background: #3a414c !important; }
   html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pd2-info > .post-bar { order: 3; }
   .pb-btn { height: 38px; padding: 0 12px; font-size: 13.5px; }
 }
+/* הפיד לאורח: פס הזמנה עליון + הפיד של מנהל האתר */
+.pfeed-guest { display: flex; align-items: center; gap: 12px; padding: 12px 14px; margin: 0 0 14px; border: 1px solid #e6e8ec; border-radius: 16px; background: #ffffff; }
+.pfeed-guest > div { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.pfeed-guest b { font-size: 15px; color: #111111; }
+.pfeed-guest small { font-size: 12.5px; color: #646b78; line-height: 1.4; }
+html body:not(#_):not(#_) .pfeed-guest-btn { flex: none; height: 38px; padding: 0 16px; border-radius: 12px; border: 1px solid #d5d8de; background: #ffffff; color: #111111; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+html body:not(#_):not(#_) .pfeed-guest-btn:hover { border-color: #9aa0aa; background: #f6f7f9; }
+html.theme-dark .pfeed-guest { background: #1b1e24 !important; border-color: #323842 !important; }
+html.theme-dark .pfeed-guest b { color: #eceef1 !important; }
+html.theme-dark .pfeed-guest small { color: #9aa2ad !important; }
+html.theme-dark body:not(#_):not(#_) .pfeed-guest-btn { background: #22262d !important; color: #eceef1 !important; border-color: #3a414c !important; }

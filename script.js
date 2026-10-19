@@ -16542,7 +16542,7 @@ function photoOpenDetail(id) {
             <aside class="pd2-info">
               <div class="pd2-creator">
                 ${authorAvHTML(a)}
-                <div class="pd2-creator-txt" ${a.authorId && !isSiteAdminAuthor(a.authorId, a.author, a) ? `onclick="openUserPage('${artEsc(a.authorId)}','${artEsc(a.author || '')}')"` : ''}>
+                <div class="pd2-creator-txt" ${a.authorId || isSiteAdminAuthor(a.authorId, a.author, a) ? `onclick="openUserPage('${artEsc(a.authorId || '')}','${artEsc(a.author || '')}')"` : ''}>
                   <b>${escHtml(a.author || 'משתמש')}${isUserVerified(a.authorId, a.author, a.verified || a.verifiedUser) ? verifiedSealHTML(15) : ''}</b>
                   <small>${escHtml(a.timestamp || '')}</small>
                 </div>
@@ -17334,7 +17334,10 @@ function buildFeedPage() {
   const follows = Object.keys(followedUids || {}).filter(k => followedUids[k]);
   let body;
   if (!reg) {
-    body = `<div class="pfeed-empty"><h2>הפיד שלכם מחכה</h2><p>התחברו ועקבו אחרי יוצרים — כל מה שהם מעלים יופיע כאן.</p><button type="button" class="pc-more" onclick="openLiveChatLogin()">התחברות</button></div>`;
+    // אורח: רואה את הפיד של מנהל האתר, ומעליו הזמנה להתחבר ולעקוב אחרי יוצרים
+    const siteFeed = items.filter(x => typeof isSiteAdminAuthor === 'function' && isSiteAdminAuthor(x.authorId, x.author, x));
+    body = `<div class="pfeed-guest"><div><b>הפיד של האתר</b><small>התחברו ועקבו אחרי יוצרים — כל מה שהם מעלים יופיע כאן</small></div><button type="button" class="pfeed-guest-btn" onclick="openLiveChatLogin()">התחברות</button></div>`
+      + postsListHTML('sitefeed', siteFeed, true, '<div class="pf-empty">עדיין אין פוסטים</div>');
   } else {
     const mine = repostsMerge(items.filter(x => x.authorId && followedUids[x.authorId]), follows, items);
     // הצעות למעקב: היוצרים הפעילים ביותר שעוד לא עוקבים אחריהם
@@ -17494,9 +17497,12 @@ function isSiteAdminAuthor(uid, name, item) {
 window.isSiteAdminAuthor = isSiteAdminAuthor;
 
 async function openUserPage(authorId, authorName) {
+  // מנהל האתר — הפרופיל והאודות שלו פתוחים לכולם (גם לאורחים)
   if (isSiteAdminAuthor(authorId, authorName)) {
-    if (typeof showCopyToast === 'function') showCopyToast('התוכן הזה פורסם על ידי צוות האתר');
-    return;
+    let a = siteAdminUid();
+    if (!a) { try { const snap = await get(ref(db, 'website/admin_uid')); a = snap.val() || ''; if (a) localStorage.setItem('site_admin_uid', a); } catch (e) {} }
+    if (!a) { if (typeof showCopyToast === 'function') showCopyToast('הפרופיל של מנהל האתר לא זמין כרגע'); return; }
+    authorId = a; authorName = 'מנהל האתר';
   }
   if (typeof mainContent === 'undefined' || !mainContent) return;
   mainContent.innerHTML = buildUserPageHTML(authorId, authorName);
@@ -19796,7 +19802,8 @@ function isFollowing(uid) { return !!(uid && followedUids[uid]); }
 window.isFollowing = isFollowing;
 
 async function toggleFollow(uid, name, btn) {
-  if (isSiteAdminAuthor(uid, name)) { if (typeof showCopyToast === 'function') showCopyToast('אי אפשר לעקוב אחרי צוות האתר'); return; }
+  // מעקב אחרי מנהל האתר — לפי המזהה האמיתי שלו
+  if (isSiteAdminAuthor(uid, name)) { const a = siteAdminUid(); if (!a) { if (typeof showCopyToast === 'function') showCopyToast('נסו שוב בעוד רגע'); return; } uid = a; name = 'מנהל האתר'; }
   const u = auth.currentUser;
   if (!u) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
   if (!uid || uid === u.uid) { if (typeof showCopyToast === 'function') showCopyToast('אי אפשר לעקוב אחרי עצמך 🙂'); return; }
@@ -24138,6 +24145,7 @@ UI_EN_PATTERNS.push([/(.+)\s+שיתף\/ה$/g, '$1 shared']);
 Object.assign(UI_EN, { 'מעקב אחרי היוצר': 'Follow the creator', 'ביטול מעקב': 'Unfollow' });
 Object.assign(UI_EN, { 'פרסום באנונימי': 'Post anonymously', 'אנונימי': 'Anonymous' });
 Object.assign(UI_EN, { 'תגובות': 'Comments' });
+Object.assign(UI_EN, { 'הפיד של האתר': "The site's feed", 'התחברו ועקבו אחרי יוצרים — כל מה שהם מעלים יופיע כאן': 'Log in and follow creators — everything they post will show up here' });
 let __uiTranslating = false;
 // לא נוגעים בקוד עצמו. הודעות משתמשים/תוכן מוגנים ממילא כי המילון מתרגם
 // רק מחרוזות מוכרות של הממשק — תוכן חופשי שהמשתמשים כתבו לא מופיע במילון.
@@ -27554,7 +27562,6 @@ var FOLLOWING_ICON = '<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="4"/><pat
 function followIconHTML(a) {
   const u = auth.currentUser;
   if (!a || !a.authorId || (u && u.uid === a.authorId)) return '';
-  if (typeof isSiteAdminAuthor === 'function' && isSiteAdminAuthor(a.authorId, a.author, a)) return '';
   try { if (typeof subscribeMyFollows === 'function') subscribeMyFollows(); } catch (e) {}
   const on = typeof isFollowing === 'function' && isFollowing(a.authorId);
   return `<button type="button" class="pti pti-follow${on ? ' on' : ''}" onclick="followIconClick('${artEsc(a.authorId)}', '${artEsc(a.author || '')}', this)" title="${on ? 'ביטול מעקב' : 'מעקב אחרי היוצר'}" aria-label="${on ? 'ביטול מעקב' : 'מעקב אחרי היוצר'}">${on ? FOLLOWING_ICON : FOLLOW_ICON}</button>`;
@@ -27631,7 +27638,7 @@ window.renderHeaderAvatar = renderHeaderAvatar;
 // שורת פוסט: תגובות (מספר — לחיצה פותחת את התגובות) · שיתוף · אודות היוצר
 // ============================================================
 function postBarHTML(a) {
-  const hasAuthor = a && a.authorId && !(typeof isSiteAdminAuthor === 'function' && isSiteAdminAuthor(a.authorId, a.author, a));
+  const hasAuthor = a && (a.authorId || (typeof isSiteAdminAuthor === 'function' && isSiteAdminAuthor(a.authorId, a.author, a)));
   return `<div class="post-bar">
     <button type="button" class="pb-btn pb-cmt" onclick="togglePostComments(this)" aria-expanded="false">
       <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 4h12a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H9l-4 3.5V15H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><path d="M20 8h.5A1.5 1.5 0 0 1 22 9.5v6a1.5 1.5 0 0 1-1.5 1.5H20v2.5L17 17h-5" opacity=".55"/></svg>
@@ -27642,7 +27649,7 @@ function postBarHTML(a) {
       <span>שיתוף</span>
     </button>
     ${hasAuthor ? `<span class="pb-sep" aria-hidden="true"></span>
-    <button type="button" class="pb-btn" onclick="openAuthorAbout('${artEsc(a.authorId)}', '${artEsc(a.author || '')}')">
+    <button type="button" class="pb-btn" onclick="openAuthorAbout('${artEsc(a.authorId || '')}', '${artEsc(a.author || '')}')">
       <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><path d="M8 11h8M8 14.5h8M8 18h5" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/></svg>
       <span>אודות</span>
     </button>` : ''}

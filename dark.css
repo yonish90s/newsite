@@ -2064,6 +2064,13 @@ html.theme-dark .pb-sep { background: #343a43 !important; }
 html.theme-dark.theme-dark .pb-btn { background: #3a414c !important; }
 html.theme-dark.theme-dark .pb-btn svg path[stroke="#fff"] { stroke: #eceef1 !important; }
 html.theme-dark.theme-dark .pb-btn.on { border-color: #323842 !important; background: #3a414c !important; }
+html.theme-dark .pfeed-guest { border: 1px solid #323842 !important; background: #1b1e24 !important; }
+html.theme-dark .pfeed-guest b { color: #eceef1 !important; }
+html.theme-dark .pfeed-guest small { color: #c8cdd4 !important; }
+html.theme-dark body:not(#_):not(#_) .pfeed-guest-btn { border: 1px solid #323842 !important; background: #1b1e24 !important; color: #eceef1 !important; }
+html.theme-dark body:not(#_):not(#_) .pfeed-guest-btn:hover { background: #22262d !important; }
+html.theme-dark.theme-dark .pfeed-guest { background: #3a414c !important; }
+html.theme-dark.theme-dark body:not(#_):not(#_) .pfeed-guest-btn { background: #3a414c !important; }
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #eceef1 !important; }
 html.theme-dark [style*="color:#111111"] { color: #eceef1 !important; }

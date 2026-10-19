@@ -63,7 +63,7 @@
         ".read": true
       },
       "admin_uid": {
-        ".read": "auth != null"
+        ".read": true
       },
       "follow_counts": {
         ".read": true,
