@@ -12923,3 +12923,20 @@ html.theme-dark :is(.ha-txt small, .ha-more) { color: #9aa2ad !important; }
 html.theme-dark .ha-ic { background: #2a2f37 !important; color: #c8cdd4 !important; }
 html.theme-dark body:not(#_):not(#_):not(#_) .ha-btn { background: #eceef1 !important; color: #111111 !important; }
 html.theme-dark body:not(#_):not(#_):not(#_) .ha-btn.on { background: transparent !important; color: #eceef1 !important; border-color: #3a414c !important; }
+
+/* ===== לשוניות בסגנון X בעמוד הבית ===== */
+html body:not(#_):not(#_) .hx-tabs { display: flex; align-items: stretch; gap: 4px; overflow-x: auto; scrollbar-width: none; border-bottom: 1px solid #e6e8ec; margin: 0 0 14px; padding: 0 4px; position: sticky; top: 56px; z-index: 5; background: var(--ds-page, #f6f7f9); }
+.hx-tabs::-webkit-scrollbar { display: none; }
+.hx-tab { position: relative; flex: none; padding: 14px 14px 13px; border: 0; background: none; font: inherit; font-size: 16px; font-weight: 600; color: #646b78; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
+.hx-tab:hover { color: #111111; }
+.hx-tab.on { color: #111111; font-weight: 800; }
+.hx-tab.on::after { content: ""; position: absolute; inset-inline: 10px; bottom: -1px; height: 4px; border-radius: 4px; background: #111111; }
+.hx-add svg { width: 18px; height: 18px; }
+.hx-dot { width: 7px; height: 7px; border-radius: 50%; background: #111111; }
+.hx-pick { display: flex; flex-direction: column; }
+.hx-pick-row { display: flex; align-items: center; justify-content: space-between; padding: 15px 4px; border-bottom: 1px solid #f1f2f4; font-size: 17px; font-weight: 700; color: #111111; cursor: pointer; }
+@media (max-width: 768px) { html body:not(#_):not(#_) .hx-tabs { top: 0; margin: 0 -4px 12px; } .hx-tab { font-size: 15px; padding: 13px 12px 12px; } }
+html.theme-dark body:not(#_):not(#_) .hx-tabs { background: #121418 !important; border-color: #2a2f37 !important; }
+html.theme-dark .hx-tab { color: #9aa2ad !important; } html.theme-dark .hx-tab.on, html.theme-dark .hx-tab:hover { color: #eceef1 !important; }
+html.theme-dark .hx-tab.on::after, html.theme-dark .hx-dot { background: #eceef1 !important; }
+html.theme-dark .hx-pick-row { color: #eceef1 !important; border-color: #22262d !important; }

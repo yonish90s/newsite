@@ -15540,21 +15540,43 @@ function homeGo(kind) {
   if (pg) navigateToPage(pg.id);
 }
 window.homeGo = homeGo;
+// שורת לשוניות בסגנון X: "בשבילך · עוקבים · ..." + לשוניות שהגולש בוחר ("+" להוספה)
+const HOME_TABS_ALL = {
+  foryou: ['בשבילך', ''],
+  feed: ['במעקב', 'openFeed()'],
+  photos: ['תמונות גולשים', "homeGo('photos')"],
+  comics: ['קומיקס', "homeGo('comics')"],
+  stories: ['סיפורים', "homeGo('stories')"],
+  secondhand: ['מוצרי גולשים', "navigateToPage('page-secondhand-main')"],
+  forums: ['פורומים', "navigateToPage('page-forums-main')"],
+  news: ['חדשות', "navigateToPage('page-news-main')"],
+  communities: ['קהילות', "navigateToPage('page-communities-main')"]
+};
+function homeTabsGet() {
+  try { const a = JSON.parse(localStorage.getItem('home_tabs') || 'null'); if (Array.isArray(a)) return a.filter(k => HOME_TABS_ALL[k] && k !== 'foryou' && k !== 'feed'); } catch (e) {}
+  return ['photos', 'comics', 'stories'];
+}
 function homeChipsHTML(photos, comics, stories) {
-  const cv = { photos: homeCover(photos), comics: homeCover(comics), stories: homeCover(stories) };
-  const chip = (kind, label, cover, onclick) => `<button type="button" class="hc-chip" onclick="${onclick}">
-      <span class="hc-dot">${cover ? `<img src="${escHtml(cover.src)}" alt="" loading="lazy"${cover.blur ? ' class="blur"' : ''}>` : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${COMM_SC_ICONS[kind] || ''}</svg>`}</span>
-      <span>${escHtml(label)}</span></button>`;
-  const feedChip = `<button type="button" class="hc-chip" onclick="openFeed()"><span class="hc-dot hc-dot-feed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg></span><span>הפיד שלי</span></button>`;
-  return `<nav class="hc-chips" aria-label="קיצורי תוכן">
-      ${feedChip}
-      ${chip('photos', 'תמונות גולשים', null, "homeGo('photos')")}
-      ${chip('comics', 'קומיקס', null, "homeGo('comics')")}
-      ${chip('stories', 'סיפורים', null, "homeGo('stories')")}
-      <button type="button" class="hc-all" onclick="navigateToPage('page-communities-main')" aria-label="כל הקטגוריות" title="כל הקטגוריות">
-        <svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg></button>
+  const tabs = ['foryou', 'feed', ...homeTabsGet()];
+  return `<nav class="hx-tabs" aria-label="לשוניות">
+      ${tabs.map(k => `<button type="button" class="hx-tab${k === 'foryou' ? ' on' : ''}" ${HOME_TABS_ALL[k][1] ? `onclick="${HOME_TABS_ALL[k][1]}"` : ''}>${escHtml(HOME_TABS_ALL[k][0])}</button>`).join('')}
+      <button type="button" class="hx-tab hx-add" onclick="homeTabsPicker()" aria-label="הוספת לשונית"><span class="hx-dot"></span>הוספה<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
     </nav>`;
 }
+function homeTabsPicker() {
+  const cur = homeTabsGet();
+  const opts = Object.keys(HOME_TABS_ALL).filter(k => k !== 'foryou' && k !== 'feed');
+  const body = `<div class="hx-pick">${opts.map(k => `<label class="hx-pick-row"><span>${escHtml(HOME_TABS_ALL[k][0])}</span><span class="tgl-switch"><input type="checkbox" ${cur.includes(k) ? 'checked' : ''} onchange="homeTabsToggle('${k}', this.checked)"><span class="tgl-slider"></span></span></label>`).join('')}</div>`;
+  openMSheet('הלשוניות שלי', body, `<button type="button" class="ms-btn" onclick="closeMSheet(); if (typeof renderPage === 'function') renderPage();">סיום</button>`);
+}
+function homeTabsToggle(k, on) {
+  let a = homeTabsGet().filter(x => x !== k);
+  if (on) a.push(k);
+  try { localStorage.setItem('home_tabs', JSON.stringify(a)); } catch (e) {}
+  const nav = document.querySelector('.hx-tabs');
+  if (nav) nav.outerHTML = homeChipsHTML();
+}
+Object.assign(window, { homeTabsPicker, homeTabsToggle });
 function homeCategoriesHTML(photos, comics, stories) {
   const extra = {
     news: '<path d="M4 5h13v14H6a2 2 0 0 1-2-2z"/><path d="M17 9h3v8a2 2 0 0 1-2 2"/><path d="M8 9h5M8 13h5"/>',
@@ -24305,6 +24327,7 @@ UI_EN_PATTERNS.push([/^הצגת (\d+) תוצאות$/g, 'Show $1 results']);
 Object.assign(UI_EN, { 'צירוף לשיחה': 'Add to chat', 'מצלמה': 'Camera', 'תמונות': 'Photos', 'קבצים': 'Files', 'צירוף תמונה': 'Attach image', '📷 תמונה': '📷 Photo' });
 Object.assign(UI_EN, { 'את מי לעקוב': 'Who to follow', 'פורומים להצטרף': 'Forums to join', 'אתרים מומלצים': 'Recommended sites', 'עקיבה': 'Follow', 'עוקב/ת': 'Following', 'פרטיות': 'Privacy', 'נגישות': 'Accessibility' });
 UI_EN_PATTERNS.push([/^(\d+) הודעות$/g, '$1 posts']);
+Object.assign(UI_EN, { 'בשבילך': 'For you', 'במעקב': 'Following', 'הוספה': 'Add', 'הלשוניות שלי': 'My tabs', 'סיום': 'Done', 'הוספת לשונית': 'Add tab' });
 let __uiTranslating = false;
 // לא נוגעים בקוד עצמו. הודעות משתמשים/תוכן מוגנים ממילא כי המילון מתרגם
 // רק מחרוזות מוכרות של הממשק — תוכן חופשי שהמשתמשים כתבו לא מופיע במילון.
