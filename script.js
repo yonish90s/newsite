@@ -24255,6 +24255,7 @@ Object.assign(UI_EN, { 'תקנון ההשאלה': 'Loan agreement', 'חתימה 
 UI_EN_PATTERNS.push([/^(\d+) סעיפים · חתימה$/g, '$1 clauses · signature']);
 Object.assign(UI_EN, { 'סוג ההצעה': 'Offer type', 'טווח מחירים': 'Price range', 'מכירה': 'Sale', 'השאלה': 'Loan', 'החלפה': 'Swap', 'עד ₪100': 'Up to ₪100' });
 Object.assign(UI_EN, { 'תמונות גולשים': 'Member photos', 'תמונות גולשים 🖼️': 'Member photos 🖼️', 'מוצרי גולשים': 'Member products', 'מוצרי גולשים 🛒': 'Member products 🛒', 'עוד ממוצרי הגולשים': 'More member products' });
+Object.assign(UI_EN, { 'הצעות שקיבלתי': 'Offers received', 'הצעות ששלחתי': 'Offers sent', 'ממוצע הצעה': 'Average offer', 'התקבלו': 'received', 'נשלחו': 'sent', 'חתימה על תקנון': 'Agreement signed', 'למוצר': 'Open item', 'עדיין לא שלחת הצעות': "You haven't sent any offers yet", 'עדיין לא קיבלת הצעות — פרסמו מוצר במוצרי גולשים': 'No offers yet — post an item in Member products' });
 let __uiTranslating = false;
 // לא נוגעים בקוד עצמו. הודעות משתמשים/תוכן מוגנים ממילא כי המילון מתרגם
 // רק מחרוזות מוכרות של הממשק — תוכן חופשי שהמשתמשים כתבו לא מופיע במילון.
@@ -27841,6 +27842,7 @@ window.pfGridFilter = pfGridFilter;
 // יד שניה: "הצעה" — כותבים מחיר, וההצעה נשלחת למוכר בהודעה פרטית
 // ============================================================
 function openPriceOffer(id, title, sellerUid, sellerName) {
+  window.__offerItemId = id;
   if (!sellerUid) { if (typeof showCopyToast === 'function') showCopyToast('למוכר אין חשבון באתר — אפשר לפנות אליו באימייל'); return; }
   let m = document.getElementById('offer-modal'); if (m) m.remove();
   m = document.createElement('div');
@@ -27863,6 +27865,7 @@ function sendPriceOffer(title, sellerUid, sellerName) {
   const note = String((document.getElementById('offer-note') || {}).value || '').trim();
   const text = `שלום! הצעת מחיר ל"${String(title || '').slice(0, 100)}": ₪${price.toLocaleString('he-IL')}${note ? '\n' + note : ''}`;
   closePriceOffer();
+  offerRecord({ kind: 'price', toUid: sellerUid, toName: sellerName, itemId: window.__offerItemId || '', title, price, note });
   if (typeof dmStartWith === 'function') dmStartWith(sellerUid, sellerName || 'מוכר', text);
 }
 Object.assign(window, { openPriceOffer, closePriceOffer, sendPriceOffer });
@@ -28077,6 +28080,7 @@ async function loanSigSubmit(id, title, lenderUid, lenderName) {
     const box = document.getElementById('loan-sign');
     if (box) box.innerHTML = `<div class="loan-signed">✓ חתמת על התקנון בשם <b>${escHtml(name)}</b> — המשאיל קיבל הודעה</div>`;
     showCopyToast('החתימה נשמרה ונשלחה למשאיל');
+    if (lenderUid && lenderUid !== u.uid) offerRecord({ kind: 'loan', toUid: lenderUid, toName: lenderName, itemId: id, title, price: 0, note: 'חתם/ה על תקנון ההשאלה בשם ' + name });
     if (lenderUid && lenderUid !== u.uid && typeof dmStartWith === 'function') {
       dmStartWith(lenderUid, lenderName || 'משאיל', `✍️ חתמתי על תקנון ההשאלה של "${String(title || '').slice(0, 80)}" בשם ${name}. אשמח לתאם איסוף.`);
     }
@@ -28091,3 +28095,84 @@ function pfRefreshShBar() {
   if (bar && typeof secondhandFilterBarHTML === 'function') bar.outerHTML = secondhandFilterBarHTML();
 }
 window.pfRefreshShBar = pfRefreshShBar;
+
+
+// ============================================================
+// מרכז ההצעות (אייקון תג בכותרת): הצעות שקיבלתי / ששלחתי, כולל חתימות על תקנוני השאלה
+// website/offers_in/{toUid}/{id}  ·  website/offers_out/{fromUid}/{id}
+// ============================================================
+var offersIn = {}, offersOut = {}, offersSubUid = '';
+async function offerRecord(o) {
+  try {
+    if (!auth.currentUser && typeof ensureGuestSignedIn === 'function') await ensureGuestSignedIn();
+    const u = auth.currentUser; if (!u || !o.toUid) return;
+    const id = push(ref(db, `website/offers_in/${o.toUid}`)).key;
+    const fromName = (typeof liveChatUserName === 'function' && liveChatUserName()) || u.displayName || 'אורח';
+    const rec = { kind: o.kind || 'price', itemId: String(o.itemId || '').slice(0, 80), title: String(o.title || '').slice(0, 120), price: Number(o.price) || 0,
+      note: String(o.note || '').slice(0, 300), fromUid: u.uid, fromName: String(fromName).slice(0, 60), toUid: o.toUid, toName: String(o.toName || '').slice(0, 60), at: Date.now() };
+    await set(ref(db, `website/offers_in/${o.toUid}/${id}`), rec);
+    await set(ref(db, `website/offers_out/${u.uid}/${id}`), rec);
+  } catch (e) { console.warn('offer record failed', e); }
+}
+function offersSubscribe() {
+  const u = auth.currentUser;
+  if (!u || offersSubUid === u.uid) return;
+  offersSubUid = u.uid;
+  try {
+    onValue(ref(db, `website/offers_in/${u.uid}`), snap => { offersIn = snap.val() || {}; offersBadge(); offersRerender(); }, () => {});
+    onValue(ref(db, `website/offers_out/${u.uid}`), snap => { offersOut = snap.val() || {}; offersRerender(); }, () => {});
+  } catch (e) {}
+}
+function offersSeenAt() { try { return Number(localStorage.getItem('offers_seen_at') || 0); } catch (e) { return 0; } }
+function offersBadge() {
+  const b = document.getElementById('offers-badge'); if (!b) return;
+  const n = Object.values(offersIn).filter(o => o && o.at > offersSeenAt()).length;
+  b.textContent = n > 9 ? '9+' : String(n); b.style.display = n ? '' : 'none';
+}
+var offersTab = 'in';
+function ofpListHTML() {
+  const list = Object.entries(offersTab === 'in' ? offersIn : offersOut).map(([id, o]) => Object.assign({ id }, o)).sort((a, b) => (b.at || 0) - (a.at || 0));
+  const inCount = Object.keys(offersIn).length, outCount = Object.keys(offersOut).length;
+  const prices = Object.values(offersIn).filter(o => o && o.kind === 'price' && o.price > 0).map(o => o.price);
+  const avg = prices.length ? Math.round(prices.reduce((a, b) => a + b, 0) / prices.length) : 0;
+  const stat = (label, val) => `<div class="ofp-stat"><b>${val}</b><small>${label}</small></div>`;
+  const row = o => {
+    const other = offersTab === 'in' ? (o.fromName || 'אורח') : (o.toName || 'משתמש');
+    const otherUid = offersTab === 'in' ? o.fromUid : o.toUid;
+    const when = typeof rdTimeAgo === 'function' ? rdTimeAgo(o.at) : new Date(o.at).toLocaleDateString('he-IL');
+    return `<div class="ofp-row">
+      <div class="ofp-row-main">
+        <div class="ofp-row-top"><span class="ofp-kind ${o.kind === 'loan' ? 'loan' : ''}">${o.kind === 'loan' ? 'חתימה על תקנון' : 'הצעת מחיר'}</span><small>${escHtml(when)}</small></div>
+        <b class="ofp-title">${escHtml(o.title || '')}</b>
+        <div class="ofp-who">${offersTab === 'in' ? 'מאת' : 'אל'} <b>${escHtml(other)}</b>${o.price ? ` · <span class="ofp-price">₪${Number(o.price).toLocaleString('he-IL')}</span>` : ''}</div>
+        ${o.note ? `<div class="ofp-note">${escHtml(o.note)}</div>` : ''}
+      </div>
+      <div class="ofp-actions">
+        ${otherUid ? `<button type="button" class="pti" title="הודעה" aria-label="הודעה" onclick="dmStartWith('${artEsc(otherUid)}', '${artEsc(other)}', '')"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg></button>` : ''}
+        ${o.itemId ? `<button type="button" class="pti" title="למוצר" aria-label="למוצר" onclick="closeSidePanel('ofp-panel'); photoOpenDetail('${artEsc(o.itemId)}')"><svg viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></svg></button>` : ''}
+        ${offersTab === 'in' ? `<button type="button" class="pti" title="מחיקה" aria-label="מחיקה" onclick="offerDelete('${artEsc(o.id)}')"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button>` : ''}
+      </div>
+    </div>`;
+  };
+  return `<div class="ofp">
+    <div class="ofp-stats">${stat('הצעות שקיבלתי', inCount)}${stat('הצעות ששלחתי', outCount)}${stat('ממוצע הצעה', avg ? '₪' + avg.toLocaleString('he-IL') : '—')}</div>
+    <nav class="pfg-tabs"><button type="button" class="pfg-tab${offersTab === 'in' ? ' on' : ''}" onclick="offersSetTab('in')"><b>${inCount}</b> התקבלו</button><button type="button" class="pfg-tab${offersTab === 'out' ? ' on' : ''}" onclick="offersSetTab('out')"><b>${outCount}</b> נשלחו</button></nav>
+    <div class="ofp-list">${list.length ? list.map(row).join('') : `<div class="pf-empty">${offersTab === 'in' ? 'עדיין לא קיבלת הצעות — פרסמו מוצר במוצרי גולשים' : 'עדיין לא שלחת הצעות'}</div>`}</div>
+  </div>`;
+}
+function offersRerender() { const b = document.querySelector('#ofp-panel .fo-panel-body'); if (b) b.innerHTML = ofpListHTML(); }
+function offersSetTab(t) { offersTab = t; offersRerender(); }
+async function offerDelete(id) {
+  const u = auth.currentUser; if (!u || !confirm('למחוק את ההצעה מהרשימה?')) return;
+  try { await set(ref(db, `website/offers_in/${u.uid}/${id}`), null); } catch (e) {}
+}
+async function openOffersPanel() {
+  if (!auth.currentUser) { const ok = (typeof ensureGuestSignedIn === 'function') ? await ensureGuestSignedIn() : false; if (!ok) { openLiveChatLogin(); return; } }
+  offersSubscribe();
+  closeSidePanels('ofp-panel');
+  openSidePanel('ofp-panel', 'הצעות', ofpListHTML(), '');
+  try { localStorage.setItem('offers_seen_at', String(Date.now())); } catch (e) {}
+  offersBadge();
+}
+try { onAuthStateChanged(auth, u => { if (u) setTimeout(offersSubscribe, 300); }); } catch (e) {}
+Object.assign(window, { openOffersPanel, offersSetTab, offerDelete });

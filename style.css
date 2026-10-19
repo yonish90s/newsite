@@ -12632,3 +12632,29 @@ html.theme-dark .loan-terms, html.theme-dark .loan-agree { color: #c8cdd4 !impor
 html.theme-dark .loan-sign { background: #22262d !important; border-color: #3a414c !important; }
 /* יד שניה במחשב: הסינון בפאנל הצד — בלי שורת הסינון הכפולה למעלה */
 @media (min-width: 1100px) { html body:not(#_):not(#_) .secondhand-page .sh-filter-bar { display: none !important; } }
+
+/* ===== מרכז ההצעות ===== */
+.ofp { padding: 14px 16px 20px; }
+.ofp-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
+.ofp-stat { border: 1px solid #e6e8ec; border-radius: 14px; padding: 10px 12px; background: #f9fafb; display: flex; flex-direction: column; gap: 2px; }
+.ofp-stat b { font-size: 20px; font-weight: 800; color: #111111; font-variant-numeric: tabular-nums; }
+.ofp-stat small { font-size: 12px; color: #646b78; }
+.ofp-list { display: flex; flex-direction: column; gap: 10px; }
+.ofp-row { display: flex; gap: 10px; align-items: flex-start; padding: 12px; border: 1px solid #e6e8ec; border-radius: 14px; background: #ffffff; }
+.ofp-row-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.ofp-row-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.ofp-row-top small { font-size: 12px; color: #9aa0aa; }
+.ofp-kind { font-size: 11.5px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: #f1f2f4; color: #3f4552; }
+.ofp-kind.loan { background: #111111; color: #ffffff; }
+.ofp-title { font-size: 14.5px; color: #111111; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ofp-who { font-size: 13px; color: #646b78; }
+.ofp-who b { color: #111111; }
+.ofp-price { font-weight: 800; color: #111111; }
+.ofp-note { font-size: 13px; color: #3f4552; background: #f6f7f9; border-radius: 10px; padding: 6px 10px; margin-top: 4px; white-space: pre-wrap; }
+.ofp-actions { display: flex; flex-direction: column; gap: 6px; }
+.ofp-actions .pti { width: 34px; height: 34px; }
+html.theme-dark .ofp-stat, html.theme-dark .ofp-row { background: #1b1e24 !important; border-color: #323842 !important; }
+html.theme-dark :is(.ofp-stat b, .ofp-title, .ofp-who b, .ofp-price) { color: #eceef1 !important; }
+html.theme-dark .ofp-note { background: #22262d !important; color: #c8cdd4 !important; }
+html.theme-dark .ofp-kind { background: #2a2f37 !important; color: #c8cdd4 !important; }
+html.theme-dark .ofp-kind.loan { background: #eceef1 !important; color: #111111 !important; }

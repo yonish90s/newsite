@@ -2140,6 +2140,20 @@ html.theme-dark .loan-agree { color: #eceef1 !important; }
 html.theme-dark .loan-signed { color: #eceef1 !important; }
 html.theme-dark.theme-dark .loan-agr { background: #3a414c !important; }
 html.theme-dark.theme-dark .loan-sign { background: #3a414c !important; }
+html.theme-dark .ofp-stat { border: 1px solid #323842 !important; background: #22262d !important; }
+html.theme-dark .ofp-stat b { color: #eceef1 !important; }
+html.theme-dark .ofp-stat small { color: #c8cdd4 !important; }
+html.theme-dark .ofp-row { border: 1px solid #323842 !important; background: #1b1e24 !important; }
+html.theme-dark .ofp-kind { background: #22262d !important; color: #c8cdd4 !important; }
+html.theme-dark .ofp-kind.loan { background: #3a414c !important; }
+html.theme-dark .ofp-title { color: #eceef1 !important; }
+html.theme-dark .ofp-who { color: #c8cdd4 !important; }
+html.theme-dark .ofp-who b { color: #eceef1 !important; }
+html.theme-dark .ofp-price { color: #eceef1 !important; }
+html.theme-dark .ofp-note { color: #c8cdd4 !important; background: #22262d !important; }
+html.theme-dark.theme-dark .ofp-stat, html.theme-dark.theme-dark .ofp-row { background: #3a414c !important; }
+html.theme-dark.theme-dark .ofp-note { background: #3a414c !important; }
+html.theme-dark.theme-dark .ofp-kind.loan { background: #2a2f37 !important; color: #eceef1 !important; }
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #eceef1 !important; }
 html.theme-dark [style*="color:#111111"] { color: #eceef1 !important; }
