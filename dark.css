@@ -2188,6 +2188,18 @@ html.theme-dark .ofp-btn.no:hover { background: #2a2f37 !important; }
 html.theme-dark .ofp-btn.wait:hover { background: #22262d !important; }
 html.theme-dark.theme-dark .ofp-btn { background: #3a414c !important; }
 html.theme-dark body:not(#_):not(#_):not(#_) .hw-cmp b { color: var(--hw-c1, #eceef1) !important; }
+html.theme-dark .mnx-head { border-bottom: 1px solid #323842 !important; }
+html.theme-dark .mnx-name { color: #eceef1 !important; }
+html.theme-dark .mnx-handle { color: #c8cdd4 !important; }
+html.theme-dark .mnx-counts button { color: #c8cdd4 !important; }
+html.theme-dark .mnx-counts b { color: #eceef1 !important; }
+html.theme-dark body:not(#_):not(#_) .mnx-login { border: 1.5px solid #5b6472 !important; background: #3a414c !important; }
+html.theme-dark .mnx-item { color: #eceef1 !important; }
+html.theme-dark .mnx-item:active { background: #22262d !important; }
+html.theme-dark .mnx-item svg { color: #eceef1 !important; }
+html.theme-dark .mnx-sep { background: #2a2f37 !important; }
+html.theme-dark.theme-dark .mnx-item:active { background: #3a414c !important; }
+html.theme-dark.theme-dark body:not(#_):not(#_) .mnx-login { background: #2a2f37 !important; color: #eceef1 !important; border-color: #323842 !important; }
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #eceef1 !important; }
 html.theme-dark [style*="color:#111111"] { color: #eceef1 !important; }

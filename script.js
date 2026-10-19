@@ -27248,6 +27248,9 @@ window.toggleSiteTheme = toggleSiteTheme;
 // תפריט צד במובייל (☰) — בסגנון פייסבוק: פרופיל, קיצורי דרך, כל הקהילות, עזרה והגדרות
 // ============================================================
 const MNAV_ICONS = {
+  profile: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+  deals: '<path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.5"/>',
+  secondhand: '<path d="M3 4h2l2.4 11.2a1 1 0 0 0 1 .8h9.2a1 1 0 0 0 1-.8L21 8H6.2"/><circle cx="9.5" cy="20" r="1.5"/><circle cx="17.5" cy="20" r="1.5"/>',
   photos: '<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/>',
   stories: '<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5M9 8h6M9 11h6"/>',
   comics: '<path d="M4 5h16v11H9l-5 4z"/><path d="M9 9.5h6M9 12.5h4"/>',
@@ -27274,7 +27277,7 @@ function mobileMenuHTML() {
   const nav = id => `navigateToPage('${id}')`;
   const pageAct = kind => { const p = (typeof commFindPage === 'function') ? commFindPage(kind) : null; return p ? nav(p.id) : ''; };
   const tiles = [
-    ['photos', 'תמונות גולשים', 'homeOpenPhotos()'], ['stories', 'סיפורים', "homeOpenSection('page-stories-text')"], ['comics', 'קומיקס', "homeOpenSection('page-stories-main')"],
+    ['photos', 'תמונות גולשים', 'homeOpenPhotos()'], ['secondhand', 'מוצרי גולשים', nav('page-secondhand-main')], ['stories', 'סיפורים', "homeOpenSection('page-stories-text')"], ['comics', 'קומיקס', "homeOpenSection('page-stories-main')"],
     ['forums', 'פורומים', pageAct('forums')], ['friends', 'חברים', pageAct('friends')], ['blinddate', 'Blind Date', pageAct('blinddate')],
     ['tinder', 'התאמות', pageAct('tinder')], ['products', 'מוצרים', pageAct('products')], ['news', 'חדשות', nav('page-news-main')],
     ['offers', 'הצעות', nav('page-offers-main')], ['feed', 'הפיד שלי', 'openFeed()'], ['saved', 'שמורים', 'openSavedModal()'],
@@ -27297,18 +27300,34 @@ function mobileMenuHTML() {
         <span class="mnav-sc-img${x.isAdult && !adultOk ? ' blur' : ''}">${img ? `<img src="${escHtml(img)}" alt="" loading="lazy">` : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>'}</span><span class="mnav-sc-name">${escHtml(x.title || '')}</span></button>`;
   }).join('');
   const dark = document.documentElement.classList.contains('theme-dark');
+  const myUid = reg ? u.uid : '';
+  if (myUid) setTimeout(() => mnavLoadCounts(myUid), 0);
+  const go = act => `mnavGo(${JSON.stringify(act).replace(/"/g, '&quot;')})`;
+  const listItem = ([k, label, act]) => `<button type="button" class="mnx-item" onclick="${go(act)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${MNAV_ICONS[k] || ''}</svg><span>${label}</span></button>`;
+  const mainItems = [
+    ['profile', 'פרופיל', reg ? `openUserPage('${artEsc(u.uid)}')` : 'openLiveChatLogin()'],
+    ['saved', 'שמורים', 'openSavedModal()'], ['feed', 'הפיד שלי', 'openFeed()'], ['msgs', 'הודעות', 'openMessages()'],
+    ['deals', 'הצעות שלי', 'openOffersPanel()'], ['shop', 'מנוי ושדרוגים', nav('page-subscription-main')], ['history', 'היסטוריה', 'openHistoryDrawer()']
+  ];
   return `<div class="mnav-backdrop" onclick="closeMobileMenu()"></div>
-    <aside class="mnav-panel" role="dialog" aria-label="תפריט">
-      <div class="mnav-top"><b>תפריט</b><button type="button" class="mnav-x" onclick="closeMobileMenu()" aria-label="סגירה">✕</button></div>
-      <button type="button" class="mnav-profile" onclick="mnavGo(${JSON.stringify(reg ? `openUserPage('${artEsc(u.uid)}')` : 'openLiveChatLogin()').replace(/"/g, '&quot;')})">
-        <span class="au-av mnav-av"${reg ? ` data-av-uid="${escHtml(u.uid)}"` : ''}>${escHtml(String(name).charAt(0))}</span>
-        <span class="mnav-pname"><b>${escHtml(name)}</b><small>${reg ? 'לפרופיל שלי' : 'התחברות / הרשמה'}</small></span>
-        <svg class="mnav-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
-      </button>
+    <aside class="mnav-panel mnx" role="dialog" aria-label="תפריט">
+      <header class="mnx-head">
+        <div class="mnx-head-row">
+          <button type="button" class="mnx-av-btn" onclick="${go(reg ? `openUserPage('${artEsc(u.uid)}')` : 'openLiveChatLogin()')}" aria-label="הפרופיל שלי">
+            <span class="au-av mnx-av"${reg ? ` data-av-uid="${escHtml(u.uid)}"` : ''}>${escHtml(String(name).charAt(0))}</span>
+          </button>
+          <button type="button" class="mnav-x" onclick="closeMobileMenu()" aria-label="סגירה">✕</button>
+        </div>
+        <b class="mnx-name">${escHtml(name)}</b>
+        ${reg ? `<small class="mnx-handle" dir="ltr">@${escHtml((typeof profileHandle === 'function' ? profileHandle(name) : name))}</small>` : ''}
+        ${reg ? `<div class="mnx-counts"><button type="button" onclick="${go(`openUserPage('${artEsc(u.uid)}')`)}"><b id="mnx-following">—</b> נעקבים</button><button type="button" onclick="${go(`openUserPage('${artEsc(u.uid)}')`)}"><b id="mnx-followers">—</b> עוקבים</button></div>` : `<button type="button" class="mnx-login" onclick="${go('openLiveChatLogin()')}">התחברות / הרשמה</button>`}
+      </header>
+      <nav class="mnx-list">${mainItems.map(listItem).join('')}</nav>
+      <div class="mnx-sep"></div>
       <h4 class="mnav-h">קיצורי דרך</h4>${shortcuts ? `<div class="mnav-scs">${shortcuts}</div>` : '<div class="mnav-sc-empty">כאן יופיע מה ששמרתם — לחצו על סימן השמירה בגלריה או בסיפור</div>'}
       <h4 class="mnav-h">הקהילות</h4>
-      <div class="mnav-grid">${shown.map(tile).join('')}</div>
-      ${tiles.length > 8 ? `<button type="button" class="mnav-more" onclick="mnavToggleMore()">${mnavMore ? 'הצג פחות' : 'הצג עוד'}</button>` : ''}
+      <nav class="mnx-list small">${tiles.filter(t => !['feed', 'saved', 'msgs', 'history', 'shop', 'likes'].includes(t[0])).map(listItem).join('')}</nav>
+      <div class="mnx-sep"></div>
       <details class="mnav-acc"><summary><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6M12 17h.01"/></svg>עזרה ותמיכה</summary>
         <button type="button" onclick="mnavGo('dmOpenAdmin()')">שליחת הודעה לצוות האתר</button>
         <button type="button" onclick="mnavGo(&quot;openLegal('report')&quot;)">דיווח על תוכן</button>
@@ -28273,3 +28292,15 @@ async function openOffersPanel() {
 }
 try { onAuthStateChanged(auth, u => { if (u) setTimeout(offersSubscribe, 300); }); } catch (e) {}
 Object.assign(window, { openOffersPanel, offersSetTab, offerDecide, offerCounter, offerCounterSend });
+
+
+// תפריט צד (מובייל): מספר העוקבים והנעקבים
+async function mnavLoadCounts(uid) {
+  try {
+    const snap = await get(ref(db, `website/follow_counts/${uid}`));
+    const v = snap.val() || {};
+    const fmt = n => (Number(n) || 0).toLocaleString('he-IL');
+    const a = document.getElementById('mnx-following'), b = document.getElementById('mnx-followers');
+    if (a) a.textContent = fmt(v.following); if (b) b.textContent = fmt(v.followers);
+  } catch (e) {}
+}

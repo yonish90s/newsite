@@ -12744,3 +12744,29 @@ html body:not(#_):not(#_):not(#_) .hw-watch-cmps { gap: 34px !important; }
   html body:not(#_):not(#_) header.apple-nav { transition: transform .25s ease !important; will-change: transform; }
   html.mtabs-away body:not(#_):not(#_) header.apple-nav { transform: translateY(-110%) !important; }
 }
+
+/* ===== תפריט צד במובייל — בסגנון X ===== */
+.mnx-head { padding: 6px 4px 14px; border-bottom: 1px solid #eceef1; margin-bottom: 6px; display: flex; flex-direction: column; gap: 2px; }
+.mnx-head-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.mnx-av-btn { padding: 0; border: 0; background: none; cursor: pointer; }
+.mnx-av { width: 52px !important; height: 52px !important; border-radius: 50%; font-size: 22px !important; display: grid; place-items: center; overflow: hidden; }
+.mnx-name { font-size: 20px; font-weight: 800; color: #111111; }
+.mnx-handle { font-size: 14px; color: #646b78; text-align: right; }
+.mnx-counts { display: flex; gap: 18px; margin-top: 10px; }
+.mnx-counts button { padding: 0; border: 0; background: none; font: inherit; font-size: 14.5px; color: #646b78; cursor: pointer; }
+.mnx-counts b { color: #111111; font-weight: 800; margin-inline-end: 2px; font-variant-numeric: tabular-nums; }
+html body:not(#_):not(#_) .mnx-login { margin-top: 10px; height: 42px; border-radius: 999px; border: 1.5px solid #111111; background: #111111; color: #ffffff; font: inherit; font-weight: 700; font-size: 15px; cursor: pointer; }
+.mnx-list { display: flex; flex-direction: column; }
+.mnx-item { display: flex; align-items: center; gap: 18px; padding: 13px 6px; border: 0; background: none; font: inherit; font-size: 20px; font-weight: 700; color: #111111; cursor: pointer; text-align: right; border-radius: 12px; }
+.mnx-item:active { background: #f1f2f4; }
+.mnx-item svg { width: 26px; height: 26px; flex: none; color: #111111; }
+.mnx-list.small .mnx-item { font-size: 16.5px; font-weight: 600; padding: 10px 6px; gap: 16px; }
+.mnx-list.small .mnx-item svg { width: 22px; height: 22px; }
+.mnx-sep { height: 1px; background: #eceef1; margin: 8px 0; }
+.mnx .mnav-top, .mnx .mnav-profile, .mnx .mnav-grid, .mnx .mnav-more { display: none !important; }
+html.theme-dark .mnx-head, html.theme-dark .mnx-sep { border-color: #2a2f37 !important; background-color: transparent; }
+html.theme-dark .mnx-sep { background: #2a2f37 !important; }
+html.theme-dark :is(.mnx-name, .mnx-counts b, .mnx-item, .mnx-item svg) { color: #eceef1 !important; }
+html.theme-dark :is(.mnx-handle, .mnx-counts button) { color: #9aa2ad !important; }
+html.theme-dark .mnx-item:active { background: #22262d !important; }
+html.theme-dark body:not(#_):not(#_) .mnx-login { background: #eceef1 !important; color: #111111 !important; border-color: #eceef1 !important; }
