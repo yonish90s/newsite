@@ -13208,7 +13208,7 @@ function homeWelcomeHeroHTML() {
     ? `<span class="hw-card-img hw-card-grid">${list.map(u => `<img src="${escHtml(u)}" alt="" loading="lazy">`).join('')}${'<i></i>'.repeat(4 - list.length)}</span>`
     : `<span class="hw-card-img"><span class="hw-card-icon">${icon}</span></span>`;
   const card = (label, sub, icon, onclick, tint, cls, list) => `
-    <button type="button" class="hw-card ${cls}" style="--tint:${tint}" onclick="${onclick}">
+    <button type="button" class="hw-card ${cls} ${cls === 'hw-c1' ? 'hw-pos-r' : cls === 'hw-c2' ? 'hw-pos-c' : 'hw-pos-l'}" style="--tint:${tint}" onclick="if (!hwCardFocus(this)) return; ${onclick}">
       <span class="hw-card-top"><span class="hw-card-brand">${label}</span></span>
       ${imgBox(icon, list || [])}
       <span class="hw-card-foot">${sub}</span>
@@ -28805,3 +28805,17 @@ window.addEventListener('resize', pgGridApply);
   const start = () => obs.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'data-art-match'] });
   if (document.body) start(); else document.addEventListener('DOMContentLoaded', start);
 })();
+
+
+// באנר הבית: הקלפים ישרים אחד על השני; לחיצה על קלף צדדי מזיזה אותו בעדינות לאמצע,
+// לחיצה על הקלף שבאמצע פותחת אותו. מחזיר true כשצריך לפתוח.
+function hwCardFocus(card) {
+  if (card.classList.contains('hw-pos-c')) return true;
+  const wrap = card.closest('.hw-cards'); if (!wrap) return true;
+  const center = wrap.querySelector('.hw-pos-c');
+  const from = card.classList.contains('hw-pos-l') ? 'hw-pos-l' : 'hw-pos-r';
+  if (center) { center.classList.remove('hw-pos-c'); center.classList.add(from); }
+  card.classList.remove(from); card.classList.add('hw-pos-c');
+  return false;
+}
+window.hwCardFocus = hwCardFocus;

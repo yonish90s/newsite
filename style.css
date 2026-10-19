@@ -13290,3 +13290,11 @@ html.theme-dark body:not(#_):not(#_) :is(.cr-card, .ha-box, .pf-card, .fs-slider
   html body:not(#_):not(#_):not(#_):not(#_) .pcc-ring { width: 30px !important; height: 30px !important; min-width: 30px !important; font-size: 12px !important; }
   html body:not(#_):not(#_):not(#_):not(#_) .pcc-name { font-size: 9.5px !important; max-width: 56px !important; }
 }
+
+/* ===== באנר הבית: קלפים ישרים אחד על השני, הקלף הנבחר זז לאמצע ===== */
+html body:not(#_):not(#_):not(#_) .hw-cards .hw-card { right: auto !important; left: 50% !important; transition: transform .55s cubic-bezier(.22,.9,.24,1), opacity .4s ease, box-shadow .4s ease, filter .4s ease !important; will-change: transform; }
+html body:not(#_):not(#_):not(#_) .hw-cards .hw-card.hw-pos-c { transform: translateX(-50%) translateY(0) scale(1) !important; z-index: 3 !important; filter: none !important; }
+html body:not(#_):not(#_):not(#_) .hw-cards .hw-card.hw-pos-r { transform: translateX(-12%) translateY(18px) scale(.86) !important; z-index: 2 !important; filter: brightness(.82) !important; }
+html body:not(#_):not(#_):not(#_) .hw-cards .hw-card.hw-pos-l { transform: translateX(-88%) translateY(18px) scale(.86) !important; z-index: 1 !important; filter: brightness(.82) !important; }
+html body:not(#_):not(#_):not(#_) .hw-cards .hw-card.hw-pos-c:hover { transform: translateX(-50%) translateY(-6px) scale(1.02) !important; }
+html body:not(#_):not(#_):not(#_) .hw-cards .hw-card:not(.hw-pos-c):hover { filter: brightness(.95) !important; }
