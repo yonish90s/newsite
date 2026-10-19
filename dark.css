@@ -2343,6 +2343,10 @@ html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) 
 @media (max-width: 768px) {
 html.theme-dark.mtab-hidden body:not(#_):not(#_):not(#_) .mtab-open { border: 1px solid rgba(255, 255, 255, 0.1) !important; }
 }
+@media (max-width: 768px) {
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) .home-welcome :is(.hw-stats, .hw-watch) { background: #17141d !important; border: 1px solid #2a2433 !important; }
+html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) .home-welcome :is(.hw-stats, .hw-watch) { background: #352e42 !important; border-color: #5b6472 !important; }
+}
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #eceef1 !important; }
 html.theme-dark [style*="color:#111111"] { color: #eceef1 !important; }

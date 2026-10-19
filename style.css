@@ -13477,3 +13477,21 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-like-btn.liked { 
   html.mtab-hidden body:not(#_):not(#_):not(#_) .mtab-open { width: 36px !important; height: 36px !important; min-width: 0 !important; padding: 0 !important; bottom: calc(14px + env(safe-area-inset-bottom)) !important; box-shadow: 0 4px 12px rgba(0,0,0,.16) !important; background: rgba(24,20,30,.82) !important; -webkit-backdrop-filter: blur(14px) !important; backdrop-filter: blur(14px) !important; color: #ffffff !important; border: 1px solid rgba(255,255,255,.1) !important; }
   html.mtab-hidden body:not(#_):not(#_):not(#_) .mtab-open svg { width: 16px !important; height: 16px !important; }
 }
+
+/* ===== מובייל: סידור מחדש של דף הבית — נתוני היום למעלה, הקלפים, כפתור העלאה, ואז הנתונים שלי ===== */
+@media (max-width: 768px) {
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .home-welcome { padding: 0 !important; margin: 0 !important; min-height: 0 !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .home-welcome .hw-inner { display: flex !important; flex-direction: column !important; align-items: stretch !important; gap: 14px !important; padding: 14px 16px 0 !important; min-height: 0 !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .home-welcome :is(.hw-text, .hw-actions) { display: contents !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .home-welcome .hw-stats { order: 1 !important; margin: 0 !important; width: 100% !important; box-sizing: border-box !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .home-welcome .hw-cards { order: 2 !important; height: 250px !important; margin: 4px auto 0 !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .home-welcome .hw-cards .hw-card { top: 4px !important; height: 226px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .home-welcome .hw-cta { order: 3 !important; align-self: center !important; margin: 0 0 4px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .home-welcome .hw-stats-wrap { padding: 14px 16px 18px !important; margin: 0 !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .home-welcome .hw-stats-wrap .hw-watch { width: 100% !important; margin: 0 !important; }
+  /* שני הכרטיסים (נתוני היום / הנתונים שלי) באותו סגנון */
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .home-welcome :is(.hw-stats, .hw-watch) { background: #ffffff !important; border: 1px solid #ececf0 !important; border-radius: 16px !important; box-shadow: none !important; }
+  html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) .home-welcome :is(.hw-stats, .hw-watch) { background: #17141d !important; border-color: #2a2433 !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .home-welcome :is(.hw-stats, .hw-watch)::after { display: none !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .home-welcome .hw-watch-screen { background: transparent !important; border: 0 !important; box-shadow: none !important; }
+}
