@@ -6852,6 +6852,7 @@ function storyCardHTML(s, iconHint) {
         ${cardSaveBtnHTML}
         ${cardLink(s.telegramUrl, 'טלגרם', 'M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z')}
         ${cardLink(s.emailUrl, 'אימייל', 'M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z', '<polyline points="22,6 12,13 2,6"/>')}
+      ${cardMsgBtnHTML(s)}
       ${cardReportBtnHTML(s.id, s.title)}
       </div>
     `;
@@ -8698,6 +8699,7 @@ function renderPhotoCard(p, options = {}) {
       ${cardLink(p.telegramUrl, 'טלגרם', 'M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z')}
       ${cardLink(p.emailUrl, 'אימייל', 'M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z', '<polyline points="22,6 12,13 2,6"/>')}
       <button type="button" class="art-telegram-btn art-offer-btn" onclick="event.stopPropagation(); openPriceOffer('${artEsc(p.id)}', '${artEsc(p.title || '')}', '${artEsc(p.authorId || '')}', '${artEsc(p.author || '')}')" title="הצעת מחיר" aria-label="הצעת מחיר"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg><span>הצעה</span></button>
+      ${cardMsgBtnHTML(p)}
       ${cardReportBtnHTML(p.id, p.title)}
     </div>
   `;
@@ -24167,6 +24169,7 @@ UI_EN_PATTERNS.push([/^(\d+)\s*פוסטים$/g, '$1 posts'], [/^(\d+)\s*שיתו
 Object.assign(UI_EN, { 'הצעה': 'Offer', 'הצעת מחיר': 'Price offer', 'כמה תרצו להציע?': 'How much would you like to offer?', 'הודעה למוכר (לא חובה)': 'Message to the seller (optional)', 'שליחת ההצעה': 'Send offer', 'נא לכתוב מחיר': 'Please enter a price', 'מוצרי יד שניה': 'Second-hand', 'מוצרי יד שניה 🛒': 'Second-hand 🛒' });
 Object.assign(UI_EN, { 'מוצרים נוספים שיעניינו אותך': 'More products you might like', 'חזרה למוצרים': 'Back to products', 'מחיר לפי סיכום': 'Price negotiable', 'להשאלה': 'For loan', 'להחלפה': 'For swap', 'מכירה': 'Sale' });
 Object.assign(UI_EN, { '+ פורום חדש': '+ New forum', 'עריכת הפורום': 'Edit forum', 'הסרת הפורום': 'Remove forum', 'עריכת הנושא': 'Edit topic', 'מחיקת הנושא': 'Delete topic', 'עריכת השאלה': 'Edit question', 'מחיקת השאלה': 'Delete question', 'עריכה': 'Edit', 'מחיקה': 'Delete' });
+Object.assign(UI_EN, { 'הודעה למעלה': 'Message the uploader', 'מי שהעלה פרסם כאורח — ההודעה תגיע למנהל האתר שיעביר אותה': 'The uploader posted as a guest — your message goes to the site admin, who will pass it on' });
 let __uiTranslating = false;
 // לא נוגעים בקוד עצמו. הודעות משתמשים/תוכן מוגנים ממילא כי המילון מתרגם
 // רק מחרוזות מוכרות של הממשק — תוכן חופשי שהמשתמשים כתבו לא מופיע במילון.
@@ -27886,3 +27889,26 @@ async function questionAdminDelete(id) {
   catch (e) { alert('המחיקה נכשלה'); }
 }
 Object.assign(window, { forumAdminEdit, forumAdminRemove, forumAdminAdd, forumAdminEditTopic, forumAdminDeleteTopic, forumAdminEditPost, questionAdminEdit, questionAdminDelete });
+
+
+// ============================================================
+// "הודעה" בכרטיס: שליחת הודעה פרטית למי שהעלה — גם אם העלה כאורח.
+// פריט ישן בלי חשבון מקושר — ההודעה מגיעה למנהל האתר, שמעביר אותה.
+// ============================================================
+function cardMsgBtnHTML(x) {
+  if (!x) return '';
+  return `<button type="button" class="art-telegram-btn art-msg-btn" onclick="event.stopPropagation(); messageUploader('${artEsc(x.id || '')}', '${artEsc(x.title || '')}', '${artEsc(x.authorId || '')}', '${artEsc(x.author || '')}')" title="הודעה למעלה" aria-label="הודעה למעלה"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg></button>`;
+}
+async function messageUploader(id, title, authorId, author) {
+  const t = String(title || '').slice(0, 100);
+  if (authorId) {
+    return dmStartWith(authorId, author || 'משתמש', t ? `שלום! לגבי "${t}": ` : 'שלום! ');
+  }
+  // אין חשבון מקושר — שולחים למנהל האתר עם פרטי הפריט
+  let a = (typeof siteAdminUid === 'function') ? siteAdminUid() : '';
+  if (!a) { try { const snap = await get(ref(db, 'website/admin_uid')); a = snap.val() || ''; if (a) localStorage.setItem('site_admin_uid', a); } catch (e) {} }
+  if (!a) { if (typeof showCopyToast === 'function') showCopyToast('לא ניתן לשלוח הודעה כרגע'); return; }
+  if (typeof showCopyToast === 'function') showCopyToast('מי שהעלה פרסם כאורח — ההודעה תגיע למנהל האתר שיעביר אותה');
+  return dmStartWith(a, 'מנהל האתר', `הודעה עבור ${author || 'מי שהעלה'} — לגבי "${t}" (מזהה ${id}): `);
+}
+window.messageUploader = messageUploader;
