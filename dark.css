@@ -2200,6 +2200,16 @@ html.theme-dark .mnx-item svg { color: #eceef1 !important; }
 html.theme-dark .mnx-sep { background: #2a2f37 !important; }
 html.theme-dark.theme-dark .mnx-item:active { background: #3a414c !important; }
 html.theme-dark.theme-dark body:not(#_):not(#_) .mnx-login { background: #2a2f37 !important; color: #eceef1 !important; border-color: #323842 !important; }
+html.theme-dark .save-toast { background: #3a414c !important; }
+html.theme-dark.theme-dark .save-toast { background: #2a2f37 !important; color: #eceef1 !important; }
+html.theme-dark.theme-dark body:not(#_):not(#_) .save-toast .st-btn { background: #343a43 !important; color: #eceef1 !important; }
+html.theme-dark .fd-row { color: #eceef1 !important; }
+html.theme-dark .fd-row:hover { background: #22262d !important; }
+html.theme-dark body:not(#_):not(#_) .sv-folder { border: 1px solid #323842 !important; background: #1b1e24 !important; color: #eceef1 !important; }
+html.theme-dark body:not(#_):not(#_) .sv-folder.on { border: 1.5px solid #5b6472 !important; }
+html.theme-dark.theme-dark .fd-row:hover { background: #3a414c !important; }
+html.theme-dark.theme-dark body:not(#_):not(#_) .sv-folder { background: #3a414c !important; }
+html.theme-dark.theme-dark body:not(#_):not(#_) .sv-folder.on { border-color: #323842 !important; }
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #eceef1 !important; }
 html.theme-dark [style*="color:#111111"] { color: #eceef1 !important; }

@@ -19328,7 +19328,7 @@ function photoToggleSave(id, btnEl) {
   }
 
   if (typeof showCopyToast === 'function') {
-    showCopyToast(isNowSaved ? 'הפריט נשמר בהצלחה! 🔖' : 'הפריט הוסר מהשמורים');
+    if (typeof saveToast === 'function') saveToast(id, isNowSaved); else showCopyToast(isNowSaved ? 'הפריט נשמר בהצלחה! 🔖' : 'הפריט הוסר מהשמורים');
   }
 
   // אם אנחנו בתוך עמוד תצוגת פריט מפורט בלבד
@@ -19390,10 +19390,15 @@ function openSavedModal() {
   if (!auth.currentUser) {
     galleriesHTML = `<div class="saved-empty">🔒 התחבר כדי לראות את הגלריות השמורות שלך</div>`;
   } else {
-    const saved = photoGetSavedAlbums();
-    galleriesHTML = saved.length
+    let saved = photoGetSavedAlbums();
+    const folders = savedFolders();
+    const fNames = Object.keys(folders);
+    const cur = window.__savedFolder || '';
+    if (cur && folders[cur]) saved = saved.filter(a => folders[cur].includes(a.id));
+    const chips = fNames.length ? `<div class="sv-folders"><button type="button" class="sv-folder${cur ? '' : ' on'}" onclick="savedOpenFolder('')">הכל</button>${fNames.map(n => `<button type="button" class="sv-folder${cur === n ? ' on' : ''}" onclick="savedOpenFolder('${artEsc(n)}')">${escHtml(n)} <small>${folders[n].length}</small></button>`).join('')}</div>` : '';
+    galleriesHTML = chips + (saved.length
       ? `<div class="saved-grid">${saved.map(a => _drawerCell(a.id, (a.images && a.images[0]) ? a.images[0] : a.image, a.title)).join('')}</div>`
-      : `<div class="saved-empty">אין גלריות שמורות עדיין.<br>לחצו על "שמירה" בכרטיס כדי לשמור.</div>`;
+      : `<div class="saved-empty">${cur ? 'התיקייה ריקה עדיין.' : 'אין גלריות שמורות עדיין.<br>לחצו על "שמירה" בכרטיס כדי לשמור.'}</div>`);
   }
   openSideDrawer('🔖 שמורים', bmHTML + galleriesHTML);
 }
@@ -24258,6 +24263,7 @@ Object.assign(UI_EN, { 'תמונות גולשים': 'Member photos', 'תמונו
 Object.assign(UI_EN, { 'הצעות שקיבלתי': 'Offers received', 'הצעות ששלחתי': 'Offers sent', 'ממוצע הצעה': 'Average offer', 'התקבלו': 'received', 'נשלחו': 'sent', 'חתימה על תקנון': 'Agreement signed', 'למוצר': 'Open item', 'עדיין לא שלחת הצעות': "You haven't sent any offers yet", 'עדיין לא קיבלת הצעות — פרסמו מוצר במוצרי גולשים': 'No offers yet — post an item in Member products' });
 Object.assign(UI_EN, { 'ממתין לתשובה': 'Awaiting reply', 'הצעה נגדית': 'Counter-offer', 'אושר': 'Accepted', 'נדחה': 'Rejected', 'נחתם': 'Signed', 'אישור': 'Accept', 'שינוי': 'Change', 'דחייה': 'Reject', 'מחכות לתשובה שלי': 'Awaiting my reply', 'שליחת הצעה נגדית': 'Send counter-offer', 'המחיר שלך': 'Your price' });
 UI_EN_PATTERNS.push([/^ממתין לתשובה של (.+)$/g, 'Waiting for $1 to reply']);
+Object.assign(UI_EN, { 'נשמר בשמורים': 'Added to your Bookmarks', 'הוסר מהשמורים': 'Removed from Bookmarks', 'הוספה לתיקייה': 'Add to Folder', 'שם לתיקייה חדשה': 'New folder name', 'יצירה': 'Create', 'עדיין אין תיקיות — צרו את הראשונה': 'No folders yet — create the first one', 'התיקייה ריקה עדיין.': 'This folder is empty.' });
 let __uiTranslating = false;
 // לא נוגעים בקוד עצמו. הודעות משתמשים/תוכן מוגנים ממילא כי המילון מתרגם
 // רק מחרוזות מוכרות של הממשק — תוכן חופשי שהמשתמשים כתבו לא מופיע במילון.
@@ -28304,3 +28310,54 @@ async function mnavLoadCounts(uid) {
     if (a) a.textContent = fmt(v.following); if (b) b.textContent = fmt(v.followers);
   } catch (e) {}
 }
+
+
+// ============================================================
+// שמירה בסגנון X: הודעה קטנה למעלה "נשמר בשמורים" + "הוספה לתיקייה"
+// התיקיות נשמרות בדפדפן: saved_folders_{uid|guest} = { שם: [ids] }
+// ============================================================
+function savedFoldersKey() { const u = auth.currentUser; return u ? `saved_folders_${u.uid}` : 'guest_saved_folders'; }
+function savedFolders() { try { return JSON.parse(localStorage.getItem(savedFoldersKey()) || '{}') || {}; } catch (e) { return {}; } }
+function savedFoldersSet(f) { try { localStorage.setItem(savedFoldersKey(), JSON.stringify(f)); } catch (e) {} }
+function saveToast(id, saved) {
+  let t = document.getElementById('save-toast');
+  if (t) t.remove();
+  t = document.createElement('div');
+  t.id = 'save-toast'; t.className = 'save-toast';
+  t.innerHTML = `<div class="st-row"><svg viewBox="0 0 24 24" fill="${saved ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><span>${saved ? 'נשמר בשמורים' : 'הוסר מהשמורים'}</span></div>
+    ${saved ? `<button type="button" class="st-btn" onclick="openFolderPicker('${artEsc(id)}')">הוספה לתיקייה</button>` : ''}`;
+  document.body.appendChild(t);
+  requestAnimationFrame(() => t.classList.add('show'));
+  clearTimeout(window.__saveToastT);
+  window.__saveToastT = setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, saved ? 4200 : 2200);
+}
+function openFolderPicker(id) {
+  const t = document.getElementById('save-toast'); if (t) t.remove();
+  const f = savedFolders();
+  let m = document.getElementById('folder-modal'); if (m) m.remove();
+  m = document.createElement('div'); m.id = 'folder-modal'; m.className = 'rp-modal';
+  const row = n => `<button type="button" class="fd-row${f[n].includes(id) ? ' on' : ''}" onclick="folderToggle('${artEsc(id)}','${artEsc(n)}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span>${escHtml(n)}</span><small>${f[n].length}</small><i>${f[n].includes(id) ? '✓' : ''}</i></button>`;
+  m.innerHTML = `<div class="rp-card" role="dialog" aria-label="הוספה לתיקייה">
+      <div class="rp-head"><b>הוספה לתיקייה</b><button type="button" class="fo-panel-x" onclick="document.getElementById('folder-modal').remove()" aria-label="סגירה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+      <div class="fd-list">${Object.keys(f).map(row).join('') || '<div class="rp-item">עדיין אין תיקיות — צרו את הראשונה</div>'}</div>
+      <div class="fd-new"><input id="fd-new-name" maxlength="30" placeholder="שם לתיקייה חדשה"><button type="button" class="pf-btn rp-send" onclick="folderCreate('${artEsc(id)}')">יצירה</button></div>
+    </div>`;
+  m.addEventListener('click', e => { if (e.target === m) m.remove(); });
+  document.body.appendChild(m);
+}
+function folderToggle(id, name) {
+  const f = savedFolders(); if (!f[name]) return;
+  f[name] = f[name].includes(id) ? f[name].filter(x => x !== id) : f[name].concat([id]);
+  savedFoldersSet(f); openFolderPicker(id);
+  showCopyToast(f[name].includes(id) ? `נוסף לתיקייה "${name}"` : `הוסר מהתיקייה "${name}"`);
+}
+function folderCreate(id) {
+  const n = String((document.getElementById('fd-new-name') || {}).value || '').trim().slice(0, 30);
+  if (!n) return;
+  const f = savedFolders(); if (!f[n]) f[n] = [];
+  if (id && !f[n].includes(id)) f[n].push(id);
+  savedFoldersSet(f); openFolderPicker(id);
+  showCopyToast(`נוסף לתיקייה "${n}"`);
+}
+function savedOpenFolder(n) { window.__savedFolder = n; openSavedModal(); }
+Object.assign(window, { openFolderPicker, folderToggle, folderCreate, savedOpenFolder });
