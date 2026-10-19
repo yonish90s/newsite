@@ -4999,25 +4999,32 @@ function revealAndCopyEmail(emailStr, btn, e) {
 }
 window.revealAndCopyEmail = revealAndCopyEmail;
 
+// הודעה קטנה מלמעלה בסגנון X (לכל פעולה באתר) — עם אייקון לפי סוג ההודעה
 function showCopyToast(msg) {
-  let toast = document.getElementById('global-copy-toast');
-  if (!toast) {
-    toast = document.createElement('div');
-    toast.id = 'global-copy-toast';
-    toast.style.cssText = 'position:fixed; bottom:30px; left:50%; transform:translateX(-50%); background:#111111; color:#ffffff; padding:12px 24px; border-radius:30px; font-size:14px; font-weight:bold; z-index:9999999; box-shadow:0 10px 30px rgba(0, 0, 0, 0.3); transition:all 0.3s ease; direction:rtl; opacity:0; pointer-events:none;';
-    document.body.appendChild(toast);
-  }
-  toast.textContent = msg;
-  toast.style.opacity = '1';
-  toast.style.transform = 'translateX(-50%) translateY(0)';
-
+  const text = String(msg || '').replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]/gu, '').replace(/\s{2,}/g, ' ').trim();
+  const kind = /שגיאה|לא הצלחנו|נכשל|לא ניתן|נא ל|אי אפשר/.test(text) ? 'warn'
+    : /מייל|אימייל|הועתק|העתק/.test(text) ? 'mail'
+    : /הוסר|נמחק|נדחה|הסרת/.test(text) ? 'del' : 'ok';
+  const icons = {
+    ok: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+    mail: '<rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 7l8.5 6 8.5-6"/>',
+    del: '<path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/>',
+    warn: '<circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5v.01"/>'
+  };
+  let t = document.getElementById('top-toast');
+  if (t) t.remove();
+  const old = document.getElementById('global-copy-toast'); if (old) old.remove();
+  t = document.createElement('div');
+  t.id = 'top-toast'; t.className = 'save-toast top-toast' + (kind === 'warn' ? ' warn' : '');
+  t.setAttribute('role', 'status');
+  t.innerHTML = `<div class="st-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${icons[kind]}</svg><span>${escHtml(text)}</span></div>`;
+  document.body.appendChild(t);
+  requestAnimationFrame(() => t.classList.add('show'));
   clearTimeout(window.__copyToastTimer);
-  window.__copyToastTimer = setTimeout(() => {
-    toast.style.opacity = '0';
-    toast.style.transform = 'translateX(-50%) translateY(10px)';
-  }, 2200);
+  window.__copyToastTimer = setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, Math.min(5000, 1800 + text.length * 35));
 }
 window.copyEmailToClipboard = copyEmailToClipboard;
+window.showCopyToast = showCopyToast;
 
 function toggleSidebarAgeVerification(checked) {
   if (checked) {

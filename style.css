@@ -13038,3 +13038,78 @@ html body:not(#_):not(#_):not(#_) :not(.cm-panel-grid):has(> .comm-grid-shortcut
 @media (min-width: 900px) { html body:not(#_):not(#_):not(#_) :not(.cm-panel-grid):has(> .comm-grid-shortcut) { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; gap: 16px !important; } }
 html body:not(#_):not(#_):not(#_) :has(> .comm-grid-shortcut) > .comm-grid-shortcut { width: auto !important; max-width: none !important; min-width: 0 !important; margin: 0 !important; }
 @media (max-width: 768px) { html body:not(#_):not(#_):not(#_) .comm-grid-shortcut .comm-grid-name { font-size: 16px !important; } }
+
+/* ===== טיפוגרפיה קטנה, ברורה ומסודרת (בהשראת הדוגמאות) ===== */
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .cr-head h2 { font-size: 20px !important; letter-spacing: -.2px; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .cr-head p { font-size: 13.5px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .cr-cap b { font-size: 16px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .cr-cap em { font-size: 15px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .cr-cap small { font-size: 11.5px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .cr-new { font-size: 11.5px !important; padding: 5px 10px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .comm-grid-shortcut .comm-grid-name { font-size: 16px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .comm-grid-shortcut .comm-grid-sub { font-size: 11.5px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .mnx-name { font-size: 18px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .mnx-handle, html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .mnx-counts button { font-size: 13.5px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .mnx-item { font-size: 17px !important; padding: 11px 6px !important; gap: 16px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .mnx-item svg { width: 23px !important; height: 23px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .mnx-list.small .mnx-item { font-size: 15px !important; padding: 9px 6px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .fs-label, html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .fs-toggle { font-size: 15.5px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .fs-val { font-size: 14.5px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .fs-opt { font-size: 14.5px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .fs-row-head { padding: 15px 0 !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet.fs-x .ms-btn { height: 48px !important; font-size: 15.5px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .hx-tab { font-size: 14.5px !important; padding: 12px 12px 11px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .ha-box h3 { font-size: 17px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .ha-txt b { font-size: 14px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .ha-txt small { font-size: 12.5px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .ha-btn { height: 32px !important; font-size: 13px !important; padding: 0 14px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pf-head .pf-name { font-size: 23px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pf-head .pf-avatar { width: 96px !important; height: 96px !important; font-size: 38px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pf-empty-x b { font-size: 17px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pf-empty-x p { font-size: 14px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pf-empty-btn { height: 46px !important; font-size: 15.5px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .ss-recent-head b { font-size: 17px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .ss-rw-text { font-size: 15px !important; padding: 11px 2px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .ss-ru .au-av { width: 56px !important; height: 56px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .save-toast .st-row { font-size: 15px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .save-toast .st-btn { height: 38px !important; font-size: 14px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pph-row { font-size: 15.5px !important; padding: 13px 6px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .att-tile { font-size: 14.5px !important; height: 92px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .att-head b { font-size: 16px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .ofp-title { font-size: 14px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .ofp-stat b { font-size: 18px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pd2-price { font-size: 21px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .loan-agr > summary b { font-size: 14.5px !important; }
+
+/* ===== מובייל: טקסט קטן, ברור ומסודר בכל האתר ===== */
+@media (max-width: 768px) {
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) { -webkit-text-size-adjust: 100%; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) :is(.art-section-title, .photo-section-row h3, .art-rec-section h3, .rec-head h3, .pc-title) { font-size: 17px !important; letter-spacing: -.2px; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .art-row :is(h3, .art-row-title) { font-size: 15px !important; line-height: 1.35 !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .art-row :is(.art-row-meta, .art-row-meta *, .photo-author-link) { font-size: 12.5px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .art-row :is(.pv-meta, .pv-meta *) { font-size: 12px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .hcat .hcat-label { font-size: 14px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .hcats-title { font-size: 17px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) :is(.hw-watch-title) { font-size: 16px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .hw-cmp b { font-size: 22px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) :is(.hw-card-foot, .hw-watch-cmp-labels span, .hw-watch-lines small) { font-size: 11.5px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .fo-row .fo-title { font-size: 14.5px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .fo-row .fo-main small { font-size: 12px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) :is(.fo-hero h1, .fo-head h1) { font-size: 20px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .rd-title { font-size: 18px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) :is(.rd-text, .rd-cmt-body) { font-size: 14.5px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pd2-creator-txt b { font-size: 14px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pd2-creator-txt small { font-size: 12px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) :is(.pd2-acc summary, .pd2-acc > summary) { font-size: 15px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) :is(.pd2-desc, .pd2-desc p) { font-size: 14px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) :is(.tg-text) { font-size: 15px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) :is(.uw-val, .uw-label) { font-size: 13.5px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .mtab span { font-size: 10.5px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pfg-tab, html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pf-tab { font-size: 13.5px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pc-post h3 { font-size: 16px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pc-post-text { font-size: 14px !important; }
+}
+/* הודעות מלמעלה לכל פעולה */
+.top-toast .st-row { font-size: 15px !important; font-weight: 600 !important; align-items: flex-start !important; line-height: 1.4; }
+.top-toast .st-row svg { width: 20px !important; height: 20px !important; margin-top: 1px; }
+.top-toast { padding: 13px 16px !important; }
