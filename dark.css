@@ -2340,6 +2340,9 @@ html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .photos-pag
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 .photo-card-links .art-telegram-btn.is-saved { background: #352e42 !important; }
 html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 .photo-card-links .art-telegram-btn { background: #352e42 !important; }
 }
+@media (max-width: 768px) {
+html.theme-dark.mtab-hidden body:not(#_):not(#_):not(#_) .mtab-open { border: 1px solid rgba(255, 255, 255, 0.1) !important; }
+}
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #eceef1 !important; }
 html.theme-dark [style*="color:#111111"] { color: #eceef1 !important; }

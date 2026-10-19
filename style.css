@@ -13471,3 +13471,9 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-like-btn.liked { 
   html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 .art-row-text > .art-row-meta { margin: 0 2px 2px !important; }
   html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 .art-row-text > div:not(.art-row-meta):not(.photo-card-links) { margin: 0 2px !important; }
 }
+
+/* מובייל: כפתור פתיחת הסרגל התחתון (אחרי סגירה) — קטן ועדין (~60% פחות) */
+@media (max-width: 768px) {
+  html.mtab-hidden body:not(#_):not(#_):not(#_) .mtab-open { width: 36px !important; height: 36px !important; min-width: 0 !important; padding: 0 !important; bottom: calc(14px + env(safe-area-inset-bottom)) !important; box-shadow: 0 4px 12px rgba(0,0,0,.16) !important; background: rgba(24,20,30,.82) !important; -webkit-backdrop-filter: blur(14px) !important; backdrop-filter: blur(14px) !important; color: #ffffff !important; border: 1px solid rgba(255,255,255,.1) !important; }
+  html.mtab-hidden body:not(#_):not(#_):not(#_) .mtab-open svg { width: 16px !important; height: 16px !important; }
+}
