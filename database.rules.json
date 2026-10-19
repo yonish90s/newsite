@@ -531,6 +531,9 @@
             ".validate": "newData.hasChildren(['at','name']) && newData.child('at').isNumber() && newData.child('name').isString() && newData.child('name').val().length <= 60"
           }
         }
+      },
+      "forum_config": {
+        ".read": true
       }
     }
   }

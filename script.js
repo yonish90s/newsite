@@ -10303,6 +10303,7 @@ function questionsListHTML() {
   return list.map(q => {
     const n = questionAnswerCount(q);
     return `<div class="q-row" onclick="openQuestion('${artEsc(q.id)}')">
+      ${(typeof isAdmin === 'function' && isAdmin()) ? `<span class="fo-admin q-admin" onclick="event.stopPropagation()"><button type="button" onclick="questionAdminEdit('${artEsc(q.id)}')" title="עריכת השאלה" aria-label="עריכה">${FO_EDIT_IC}</button><button type="button" onclick="questionAdminDelete('${artEsc(q.id)}')" title="מחיקת השאלה" aria-label="מחיקה">${FO_DEL_IC}</button></span>` : ''}
       <div class="q-count"><span class="q-count-num">${n}</span><span class="q-count-lbl">עצות</span></div>
       <div class="q-row-main">
         <div class="q-row-title">${escHtml(q.title || '')}</div>
@@ -14808,8 +14809,10 @@ function forumQuestionsHTML() {
 // --- רשימת הפורומים (כמו בצילום: נושאים / הודעות / הודעה אחרונה) ---
 function forumIndexHTML() {
   const loading = forumTopics === null;
+  const admin = typeof isAdmin === 'function' && isAdmin();
+  forumConfigSubscribe();
   return `
-    ${FORUM_CATEGORIES.map(cat => `
+    ${forumCats().map(cat => `
       <section class="fo-cat">
         <h2 class="fo-cat-title">${escHtml(cat.title)}</h2>
         ${cat.forums.map(f => {
@@ -14819,7 +14822,8 @@ function forumIndexHTML() {
           return `
           <div class="fo-row" onclick="forumOpen('${f.id}')" role="button" tabindex="0">
             <span class="fo-icon">${FORUM_ICON}</span>
-            <div class="fo-main"><b class="fo-title">${escHtml(f.title)}</b><small>${escHtml(f.sub)}</small></div>
+            <div class="fo-main"><b class="fo-title">${escHtml(f.title)}</b><small>${escHtml(f.sub || '')}</small></div>
+            ${admin ? `<span class="fo-admin" onclick="event.stopPropagation()"><button type="button" onclick="forumAdminEdit('${artEsc(f.id)}')" title="עריכת הפורום" aria-label="עריכה">${FO_EDIT_IC}</button><button type="button" onclick="forumAdminRemove('${artEsc(f.id)}')" title="הסרת הפורום" aria-label="הסרה">${FO_DEL_IC}</button></span>` : ''}
             <div class="fo-stat"><small>נושאים</small><b>${loading ? '—' : forumFmtCount(topics.length)}</b></div>
             <div class="fo-stat"><small>הודעות</small><b>${loading ? '—' : forumFmtCount(msgs)}</b></div>
             <div class="fo-last">${last ? `
@@ -14831,12 +14835,13 @@ function forumIndexHTML() {
             </div>
           </div>`;
         }).join('')}
-      </section>`).join('')}`;
+      </section>`).join('')}
+    ${admin ? `<button type="button" class="fo-admin-add" onclick="forumAdminAdd()">+ פורום חדש</button>` : ''}`;
 }
 
 // --- פורום: רשימת נושאים ---
 function forumListHTML() {
-  const f = FORUM_BY_ID[forumView.forumId];
+  const f = forumGet(forumView.forumId);
   if (!f) { forumView = { forumId: null, topicId: null, composing: false }; return forumIndexHTML(); }
   const topics = forumTopicsOf(f.id);
   const compose = forumView.composing ? `
@@ -14862,6 +14867,7 @@ function forumListHTML() {
         <div class="fo-row topic" onclick="forumOpenTopic('${f.id}','${artEsc(t.id)}')" role="button" tabindex="0">
           ${forumAvatar(t.name, t.uid)}
           <div class="fo-main"><b class="fo-title">${escHtml(t.title)}</b><small>${escHtml(t.name || '')} · ${escHtml(forumTimeAgo(t.t))}</small></div>
+          ${(typeof isAdmin === 'function' && isAdmin()) ? `<span class="fo-admin" onclick="event.stopPropagation()"><button type="button" onclick="forumAdminEditTopic('${f.id}','${artEsc(t.id)}')" title="עריכת הנושא" aria-label="עריכה">${FO_EDIT_IC}</button><button type="button" onclick="forumAdminDeleteTopic('${f.id}','${artEsc(t.id)}')" title="מחיקת הנושא" aria-label="מחיקה">${FO_DEL_IC}</button></span>` : ''}
           <div class="fo-stat"><small>תגובות</small><b>${forumFmtCount(t.replies || 0)}</b></div>
           <div class="fo-last"><div class="fo-last-text"><small>תגובה אחרונה</small><small>${escHtml(forumTimeAgo(t.lastT || t.t))} · <span class="fo-name">${escHtml(t.lastName || t.name || '')}</span></small></div></div>
         </div>`).join('') : `<div class="fo-empty">${forumTopics === null ? 'טוען...' : 'עדיין אין נושאים בפורום הזה — פתחו את הראשון!'}</div>`}
@@ -14961,7 +14967,7 @@ function forumThreadPostHTML(p, isReply, admin, myUid) {
           <button type="button" class="fo-th-join" onclick="forumStartReply('${artEsc(p.id)}')">${FORUM_REPLY_ICO}להצטרף לדיון</button>
           <button type="button" class="fo-th-vote up${iLiked ? ' on' : ''}" onclick="forumToggleLike('${artEsc(p.id)}')" aria-label="לייק">${FORUM_THUMB(false, iLiked)}<span>${likes}</span></button>
           
-          ${admin ? `<button type="button" class="fo-del" onclick="forumDeletePost('${artEsc(p.id)}')">מחיקה</button>` : ''}
+          ${admin ? `<button type="button" class="fo-del" onclick="forumAdminEditPost('${artEsc(p.id)}')">עריכה</button><button type="button" class="fo-del" onclick="forumDeletePost('${artEsc(p.id)}')">מחיקה</button>` : ''}
         </div>
       </div>
     </div>`;
@@ -15017,7 +15023,7 @@ function rdCommentHTML(p, admin, myUid, kids, depth) {
         <div class="rd-actions">
           ${rdVotes(p, myUid)}
           <button type="button" class="rd-act" onclick="forumStartReply('${artEsc(p.id)}')">${RD_CMT}<span>תגובה</span></button>
-          ${admin ? `<button type="button" class="rd-act rd-del" onclick="forumDeletePost('${artEsc(p.id)}')">מחיקה</button>` : ''}
+          ${admin ? `<button type="button" class="rd-act" onclick="forumAdminEditPost('${artEsc(p.id)}')">עריכה</button><button type="button" class="rd-act rd-del" onclick="forumDeletePost('${artEsc(p.id)}')">מחיקה</button>` : ''}
         </div>
         ${childList.length ? (open
           ? `<div class="rd-children">${childList.map(c => rdCommentHTML(c, admin, myUid, kids, depth + 1)).join('')}</div>
@@ -15112,7 +15118,7 @@ function forumStartReply(postId) {
 window.forumStartReply = forumStartReply;
 
 function forumTopicHTML() {
-  const f = FORUM_BY_ID[forumView.forumId];
+  const f = forumGet(forumView.forumId);
   const t = forumTopics && forumTopics[forumView.forumId] && forumTopics[forumView.forumId][forumView.topicId];
   if (!f || (forumTopics !== null && !t)) { forumView.topicId = null; return forumListHTML(); }
   const admin = typeof isAdmin === 'function' && isAdmin();
@@ -24160,6 +24166,7 @@ Object.assign(UI_EN, { 'שיתופים': 'Reposts', 'עדיין אין שיתו�
 UI_EN_PATTERNS.push([/^(\d+)\s*פוסטים$/g, '$1 posts'], [/^(\d+)\s*שיתופים$/g, '$1 reposts']);
 Object.assign(UI_EN, { 'הצעה': 'Offer', 'הצעת מחיר': 'Price offer', 'כמה תרצו להציע?': 'How much would you like to offer?', 'הודעה למוכר (לא חובה)': 'Message to the seller (optional)', 'שליחת ההצעה': 'Send offer', 'נא לכתוב מחיר': 'Please enter a price', 'מוצרי יד שניה': 'Second-hand', 'מוצרי יד שניה 🛒': 'Second-hand 🛒' });
 Object.assign(UI_EN, { 'מוצרים נוספים שיעניינו אותך': 'More products you might like', 'חזרה למוצרים': 'Back to products', 'מחיר לפי סיכום': 'Price negotiable', 'להשאלה': 'For loan', 'להחלפה': 'For swap', 'מכירה': 'Sale' });
+Object.assign(UI_EN, { '+ פורום חדש': '+ New forum', 'עריכת הפורום': 'Edit forum', 'הסרת הפורום': 'Remove forum', 'עריכת הנושא': 'Edit topic', 'מחיקת הנושא': 'Delete topic', 'עריכת השאלה': 'Edit question', 'מחיקת השאלה': 'Delete question', 'עריכה': 'Edit', 'מחיקה': 'Delete' });
 let __uiTranslating = false;
 // לא נוגעים בקוד עצמו. הודעות משתמשים/תוכן מוגנים ממילא כי המילון מתרגם
 // רק מחרוזות מוכרות של הממשק — תוכן חופשי שהמשתמשים כתבו לא מופיע במילון.
@@ -27785,3 +27792,97 @@ function pd2ProductInfoHTML(a) {
       <button type="button" class="pd2-offer-btn" onclick="openPriceOffer('${artEsc(a.id)}', '${artEsc(a.title || '')}', '${artEsc(a.authorId || '')}', '${artEsc(a.author || '')}')">הצעת מחיר</button>
     </div>`;
 }
+
+
+// ============================================================
+// ניהול פורומים (מנהל בלבד): עריכה / הסרה / הוספה של פורומים, נושאים, הודעות ושאלות
+// הגדרות הפורומים: website/forum_config/{forumId} = { title, sub, hidden, custom, cat }
+// ============================================================
+var FO_EDIT_IC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
+var FO_DEL_IC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>';
+var forumConfig = {};
+var forumConfigSubscribed = false;
+function forumConfigSubscribe() {
+  if (forumConfigSubscribed) return;
+  forumConfigSubscribed = true;
+  try { onValue(ref(db, 'website/forum_config'), snap => { forumConfig = snap.val() || {}; if (typeof forumRender === 'function') forumRender(); }, () => {}); } catch (e) {}
+}
+function forumCats() {
+  forumConfigSubscribe();
+  const cfg = forumConfig || {};
+  const cats = FORUM_CATEGORIES.map(c => ({ title: c.title, forums: c.forums.map(f => Object.assign({}, f, cfg[f.id] || {})) }));
+  Object.entries(cfg).forEach(([id, c]) => {
+    if (!c || !c.custom) return;
+    let cat = cats.find(x => x.title === (c.cat || 'כללי'));
+    if (!cat) { cat = { title: c.cat || 'כללי', forums: [] }; cats.push(cat); }
+    cat.forums.push(Object.assign({ id }, c));
+  });
+  cats.forEach(c => { c.forums = c.forums.filter(f => !f.hidden); });
+  return cats.filter(c => c.forums.length);
+}
+function forumGet(id) {
+  for (const c of forumCats()) for (const f of c.forums) if (f.id === id) return f;
+  return null;
+}
+function forumAdminOk() { return typeof isAdmin === 'function' && isAdmin(); }
+async function forumAdminEdit(id) {
+  if (!forumAdminOk()) return;
+  const f = forumGet(id); if (!f) return;
+  const title = prompt('שם הפורום:', f.title || ''); if (title === null) return;
+  const sub = prompt('תיאור קצר:', f.sub || ''); if (sub === null) return;
+  try { await update(ref(db, `website/forum_config/${id}`), { title: title.trim().slice(0, 60) || f.title, sub: sub.trim().slice(0, 120) }); showCopyToast('הפורום עודכן'); }
+  catch (e) { alert('העדכון נכשל'); }
+}
+async function forumAdminRemove(id) {
+  if (!forumAdminOk()) return;
+  const f = forumGet(id); if (!f || !confirm(`להסיר את הפורום "${f.title}"? (הנושאים שבו נשמרים ואפשר להחזיר)`)) return;
+  try {
+    if (f.custom) await set(ref(db, `website/forum_config/${id}`), null);
+    else await update(ref(db, `website/forum_config/${id}`), { hidden: true });
+    showCopyToast('הפורום הוסר');
+  } catch (e) { alert('ההסרה נכשלה'); }
+}
+async function forumAdminAdd() {
+  if (!forumAdminOk()) return;
+  const title = (prompt('שם הפורום החדש:') || '').trim(); if (!title) return;
+  const sub = (prompt('תיאור קצר:') || '').trim();
+  const cat = (prompt('באיזו קטגוריה? (למשל: הקהילה / יצירה ותוכן / כללי)', 'כללי') || 'כללי').trim();
+  const id = 'f' + Date.now().toString(36);
+  try { await set(ref(db, `website/forum_config/${id}`), { custom: true, title: title.slice(0, 60), sub: sub.slice(0, 120), cat: cat.slice(0, 40) }); showCopyToast('הפורום נוסף'); }
+  catch (e) { alert('ההוספה נכשלה'); }
+}
+async function forumAdminEditTopic(forumId, topicId) {
+  if (!forumAdminOk()) return;
+  const t = forumTopics && forumTopics[forumId] && forumTopics[forumId][topicId]; if (!t) return;
+  const title = prompt('כותרת הנושא:', t.title || ''); if (title === null || title.trim().length < 2) return;
+  try { await update(ref(db, `website/forum_topics/${forumId}/${topicId}`), { title: title.trim().slice(0, 120) }); showCopyToast('הנושא עודכן'); }
+  catch (e) { alert('העדכון נכשל'); }
+}
+async function forumAdminDeleteTopic(forumId, topicId) {
+  if (!forumAdminOk() || !confirm('למחוק את הנושא וכל התגובות שלו?')) return;
+  try {
+    await set(ref(db, `website/forum_posts/${topicId}`), null);
+    await set(ref(db, `website/forum_topics/${forumId}/${topicId}`), null);
+    showCopyToast('הנושא נמחק');
+  } catch (e) { alert('המחיקה נכשלה'); }
+}
+async function forumAdminEditPost(postId) {
+  if (!forumAdminOk()) return;
+  const p = forumPosts && forumPosts[postId]; if (!p) return;
+  const text = prompt('עריכת ההודעה:', p.text || ''); if (text === null || !text.trim()) return;
+  try { await update(ref(db, `website/forum_posts/${forumView.topicId}/${postId}`), { text: text.trim().slice(0, 5000) }); showCopyToast('ההודעה עודכנה'); }
+  catch (e) { alert('העדכון נכשל'); }
+}
+async function questionAdminEdit(id) {
+  if (!forumAdminOk()) return;
+  const q = (typeof questionsData !== 'undefined' && questionsData[id]) || null; if (!q) return;
+  const title = prompt('השאלה:', q.title || ''); if (title === null || !title.trim()) return;
+  try { await update(ref(db, `website/questions/${id}`), { title: title.trim().slice(0, 200) }); showCopyToast('השאלה עודכנה'); }
+  catch (e) { alert('העדכון נכשל'); }
+}
+async function questionAdminDelete(id) {
+  if (!forumAdminOk() || !confirm('למחוק את השאלה וכל העצות שלה?')) return;
+  try { await set(ref(db, `website/questions/${id}`), null); showCopyToast('השאלה נמחקה'); }
+  catch (e) { alert('המחיקה נכשלה'); }
+}
+Object.assign(window, { forumAdminEdit, forumAdminRemove, forumAdminAdd, forumAdminEditTopic, forumAdminDeleteTopic, forumAdminEditPost, questionAdminEdit, questionAdminDelete });

@@ -2113,6 +2113,12 @@ html.theme-dark.theme-dark .pd2-product { background: #3a414c !important; }
 html.theme-dark.theme-dark .pd2-prod-chips span { background: #3a414c !important; }
 html.theme-dark.theme-dark body:not(#_):not(#_):not(#_) .pd2-offer-btn { background: #2a2f37 !important; border-color: #323842 !important; color: #eceef1 !important; }
 html.theme-dark body:not(#_):not(#_):not(#_) .art-price-badge { color: #eceef1 !important; }
+html.theme-dark .fo-admin button { border: 1px solid #323842 !important; background: #1b1e24 !important; color: #c8cdd4 !important; }
+html.theme-dark .fo-admin button:hover { border-color: #5b6472 !important; color: #eceef1 !important; }
+html.theme-dark .fo-admin button:last-child:hover { color: color-mix(in srgb, #b91c1c 55%, white) !important; }
+html.theme-dark body:not(#_):not(#_) .fo-admin-add { border: 1.5px dashed #323842 !important; color: #eceef1 !important; }
+html.theme-dark body:not(#_):not(#_) .fo-admin-add:hover { border-color: #5b6472 !important; background: #22262d !important; }
+html.theme-dark.theme-dark .fo-admin button { background: #3a414c !important; }
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #eceef1 !important; }
 html.theme-dark [style*="color:#111111"] { color: #eceef1 !important; }
