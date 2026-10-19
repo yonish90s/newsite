@@ -20756,27 +20756,48 @@ function openHashtagSheet() {
 }
 window.openHashtagSheet = openHashtagSheet;
 
+// סינון בסגנון X: שורות "שם · ערך ›" שנפתחות לבחירה, מתגים, ובתחתית "איפוס" ו"הצגת תוצאות"
+function fsIsShop() { return !!(typeof mainContent !== 'undefined' && mainContent && mainContent.querySelector('.secondhand-page')); }
 function filterSheetBodyHTML() {
+  const open = window.__fsOpen || '';
+  const shop = fsIsShop();
   const sortRaw = (typeof currentPhotoGeneralFilter !== 'undefined' && currentPhotoGeneralFilter) || '';
   const sortNow = ['האחרונים', 'הפופולארים', 'הישנים'].includes(sortRaw) ? sortRaw : 'האחרונים';
-  const opt = (type, checked, onchange, label) => `
-    <label class="ms-opt${checked ? ' on' : ''}">
-      <input type="${type}" ${checked ? 'checked' : ''} onchange="${onchange}">
-      <span class="ms-dot" aria-hidden="true"></span><span>${escHtml(label)}</span>
-    </label>`;
-  const sec = (title, inner) => `<section class="ms-sec"><h4>${title}</h4><div class="ms-grid">${inner}</div></section>`;
-  const multi = (kind, list) => list.filter(v => v !== 'הכל').map(v => opt('checkbox', photoSel[kind].includes(v), `filterSheetToggle('${kind}','${artEsc(v)}',this.checked)`, v)).join('');
-  return sec('מיון לפי', ['האחרונים', 'הפופולארים', 'הישנים'].map(v => opt('radio', sortNow === v, `filterSheetSort('${artEsc(v)}')`, v === 'הפופולארים' ? 'הכי פופולריים' : v)).join(''))
-    + sec('מין', multi('category', PHOTO_CATEGORIES))
-    + sec('אזור', multi('region', PHOTO_REGIONS))
-    + sec('תאריך העלאה', multi('date', PHOTO_DATE_RANGES));
+  const sortLbl = { 'האחרונים': 'החדשים ביותר', 'הפופולארים': 'הכי פופולרי', 'הישנים': 'הישנים ביותר' };
+  const chev = '<svg class="fs-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>';
+  const row = (key, label, value, optsHTML) => `<div class="fs-row${open === key ? ' open' : ''}">
+      <button type="button" class="fs-row-head" onclick="fsToggleRow('${key}')"><span class="fs-label">${label}</span><span class="fs-val">${escHtml(value)}</span>${chev}</button>
+      ${open === key ? `<div class="fs-opts">${optsHTML}</div>` : ''}
+    </div>`;
+  const radio = (on, act, label) => `<button type="button" class="fs-opt${on ? ' on' : ''}" onclick="${act}"><span>${escHtml(label)}</span><i>${on ? '✓' : ''}</i></button>`;
+  const multiVal = kind => photoSel[kind].length ? photoSel[kind].join(', ') : 'הכל';
+  const multi = (kind, list) => list.filter(v => v !== 'הכל').map(v => radio(photoSel[kind].includes(v), `filterSheetToggle('${kind}','${artEsc(v)}',${!photoSel[kind].includes(v)})`, v)).join('');
+  const tgl = (label, on, act) => `<label class="fs-toggle"><span>${label}</span><span class="tgl-switch"><input type="checkbox" ${on ? 'checked' : ''} onchange="${act}"><span class="tgl-slider"></span></span></label>`;
+  const sortRow = row('sort', 'מיון', sortLbl[sortNow], ['האחרונים', 'הפופולארים', 'הישנים'].map(v => radio(sortNow === v, `filterSheetSort('${artEsc(v)}')`, sortLbl[v])).join(''));
+  if (shop) {
+    const shRow = (key, label, cur, list) => row(key, label, cur, list.map(v => radio(cur === v, `setShFilter('${key}','${artEsc(v)}'); if (typeof pfRefreshShBar === 'function') pfRefreshShBar(); filterSheetRefresh()`, v)).join(''));
+    return sortRow
+      + shRow('offer', 'סוג ההצעה', shOfferFilter, SH_OFFER_TYPES)
+      + shRow('price', 'טווח מחירים', shPriceFilter, SH_PRICE_RANGES)
+      + shRow('region', 'מיקום', shRegionFilter, SH_REGIONS)
+      + tgl('הפעלת מיקום', !!shLocationEnabled, 'toggleShLocation(this.checked)');
+  }
+  return sortRow
+    + row('category', 'מין', multiVal('category'), multi('category', PHOTO_CATEGORIES))
+    + row('region', 'אזור', multiVal('region'), multi('region', PHOTO_REGIONS))
+    + row('date', 'תאריך העלאה', multiVal('date'), multi('date', PHOTO_DATE_RANGES))
+    + tgl('משתמשים מאומתים בלבד', !!photoVerifiedOnly, 'photoToggleVerified(!this.checked); filterSheetRefresh()')
+    + tgl('קרוב אליי', !!userMapMe, 'photoToggleLocation(!this.checked)');
 }
+function fsToggleRow(k) { window.__fsOpen = window.__fsOpen === k ? '' : k; filterSheetRefresh(); }
+window.fsToggleRow = fsToggleRow;
 function filterSheetVisibleCount() {
+  if (fsIsShop()) return [...mainContent.querySelectorAll('.secondhand-page .art-row')].filter(r => getComputedStyle(r).display !== 'none' && r.dataset.artMatch !== '0').length;
   return [...mainContent.querySelectorAll('.photos-page[data-section="photos"] .art-row')].filter(r => r.dataset.artMatch !== '0').length;
 }
 function filterSheetFootHTML() {
-  return `<button type="button" class="ms-btn ghost" onclick="filterSheetClear()">ניקוי</button>
-    <button type="button" class="ms-btn" onclick="closeMSheet()">הצגת ${filterSheetVisibleCount()} תוצאות</button>`;
+  return `<button type="button" class="ms-btn ghost fs-reset" onclick="filterSheetClear()">איפוס</button>
+    <button type="button" class="ms-btn fs-go" onclick="closeMSheet()">הצגת ${filterSheetVisibleCount()} תוצאות</button>`;
 }
 function filterSheetRefresh() {
   const body = document.querySelector('#m-sheet .ms-body'), foot = document.querySelector('#m-sheet .ms-foot');
@@ -20785,7 +20806,9 @@ function filterSheetRefresh() {
   photoRefreshTools();
 }
 function openFilterSheet() {
+  window.__fsOpen = '';
   openMSheet('סינון', filterSheetBodyHTML(), filterSheetFootHTML());
+  const sh = document.getElementById('m-sheet'); if (sh) sh.classList.add('fs-x');
 }
 window.openFilterSheet = openFilterSheet;
 function filterSheetToggle(kind, value, checked) { photoToggleMulti(kind, value, checked); filterSheetRefresh(); }
@@ -20793,6 +20816,7 @@ window.filterSheetToggle = filterSheetToggle;
 function filterSheetSort(value) { photoSetSort(value, { closest: () => null, checked: true }); filterSheetRefresh(); }
 window.filterSheetSort = filterSheetSort;
 function filterSheetClear() {
+  if (fsIsShop()) { ['offer', 'price', 'region'].forEach(k => setShFilter(k, 'הכל')); if (typeof pfRefreshShBar === 'function') pfRefreshShBar(); }
   photoSel.category.length = 0; photoSel.region.length = 0; photoSel.date.length = 0;
   photoSetSort('האחרונים', { closest: () => null, checked: true });
   filterSheetRefresh();
@@ -23047,7 +23071,9 @@ function secondhandFilterBarHTML() {
         ${opts.map(o => `<option value="${escHtml(o)}"${o === cur ? ' selected' : ''}>${escHtml(o)}</option>`).join('')}
       </select>
     </div>`;
+  const n = ['offer', 'price', 'region'].filter(k => ({ offer: shOfferFilter, price: shPriceFilter, region: shRegionFilter })[k] !== 'הכל').length;
   return `
+    <button type="button" class="sh-filter-open" onclick="openFilterSheet()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg><span>סינון</span>${n ? `<b>${n}</b>` : ''}</button>
     <div class="sh-filter-bar">
       ${sel('offer', shOfferFilter, SH_OFFER_TYPES)}
       ${sel('price', shPriceFilter, SH_PRICE_RANGES)}
@@ -24265,6 +24291,8 @@ Object.assign(UI_EN, { 'ממתין לתשובה': 'Awaiting reply', 'הצעה נ
 UI_EN_PATTERNS.push([/^ממתין לתשובה של (.+)$/g, 'Waiting for $1 to reply']);
 Object.assign(UI_EN, { 'נשמר בשמורים': 'Added to your Bookmarks', 'הוסר מהשמורים': 'Removed from Bookmarks', 'הוספה לתיקייה': 'Add to Folder', 'שם לתיקייה חדשה': 'New folder name', 'יצירה': 'Create', 'עדיין אין תיקיות — צרו את הראשונה': 'No folders yet — create the first one', 'התיקייה ריקה עדיין.': 'This folder is empty.' });
 Object.assign(UI_EN, { 'חיפושים אחרונים': 'Recent searches', 'אנשים': 'People', 'תוכן': 'Content', 'חפשו אנשים, גלריות, פורומים, סיפורים, קהילות וחדשות': 'Search people, galleries, forums, stories, communities and news' });
+Object.assign(UI_EN, { 'מיון': 'Sort', 'החדשים ביותר': 'Newest', 'הכי פופולרי': 'Most popular', 'הישנים ביותר': 'Oldest', 'אזור': 'Region', 'תאריך העלאה': 'Date posted', 'משתמשים מאומתים בלבד': 'Verified users only', 'קרוב אליי': 'Near you', 'הפעלת מיקום': 'Enable location', 'איפוס': 'Reset' });
+UI_EN_PATTERNS.push([/^הצגת (\d+) תוצאות$/g, 'Show $1 results']);
 let __uiTranslating = false;
 // לא נוגעים בקוד עצמו. הודעות משתמשים/תוכן מוגנים ממילא כי המילון מתרגם
 // רק מחרוזות מוכרות של הממשק — תוכן חופשי שהמשתמשים כתבו לא מופיע במילון.

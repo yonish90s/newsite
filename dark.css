@@ -2222,6 +2222,25 @@ html.theme-dark.theme-dark .ss-recent-clear { background: #2a2f37 !important; co
 html.theme-dark.theme-dark .ss-user:hover { background: #3a414c !important; }
 html.theme-dark.ss-open body #site-search { background: var(--ds-card, #1b1e24) !important; }
 html.theme-dark.theme-dark.ss-open body #site-search { background: #3a414c !important; }
+html.theme-dark .fs-row { border-bottom: 1px solid #323842 !important; }
+html.theme-dark .fs-label { color: #eceef1 !important; }
+html.theme-dark .fs-val { color: #c8cdd4 !important; }
+html.theme-dark .fs-opt { color: #eceef1 !important; }
+html.theme-dark .fs-opt:hover { background: #22262d !important; }
+html.theme-dark .fs-toggle { border-bottom: 1px solid #323842 !important; color: #eceef1 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) #m-sheet.fs-x .fs-reset { background: #2a2f37 !important; color: #eceef1 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) #m-sheet.fs-x .fs-go { background: #3a414c !important; }
+html.theme-dark.theme-dark .fs-row, html.theme-dark.theme-dark .fs-toggle { border-color: #5b6472 !important; }
+html.theme-dark.theme-dark .fs-opt:hover { background: #3a414c !important; }
+html.theme-dark.theme-dark body:not(#_):not(#_):not(#_) #m-sheet.fs-x .fs-go { background: #2a2f37 !important; color: #eceef1 !important; }
+@media (max-width: 768px) {
+html.theme-dark body:not(#_):not(#_) .sh-filter-open { border: 1px solid #323842 !important; background: #1b1e24 !important; color: #eceef1 !important; }
+html.theme-dark .sh-filter-open b { background: #3a414c !important; }
+html.theme-dark.theme-dark body:not(#_):not(#_) .sh-filter-open { background: #3a414c !important; }
+}
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet.fs-x .ms-foot .fs-go { background: #3a414c !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet.fs-x .ms-foot .fs-reset { background: #2a2f37 !important; color: #eceef1 !important; }
+html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet.fs-x .ms-foot .fs-go { background: #2a2f37 !important; color: #eceef1 !important; }
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #eceef1 !important; }
 html.theme-dark [style*="color:#111111"] { color: #eceef1 !important; }

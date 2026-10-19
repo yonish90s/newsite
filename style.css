@@ -12821,3 +12821,42 @@ html.ss-open body header.apple-nav > .apple-nav-content { visibility: hidden !im
 html.ss-open body #site-search { background: var(--ds-card, #ffffff); z-index: 61 !important; }
 html.theme-dark.ss-open body #site-search { background: #121418 !important; }
 html.ss-open body header.apple-nav { transform: none !important; }
+
+/* ===== סינון בסגנון X (חלון תחתון) ===== */
+#m-sheet.fs-x .ms-panel { border-radius: 26px 26px 0 0; }
+#m-sheet.fs-x .ms-body { padding: 4px 22px 10px; }
+.fs-row { border-bottom: 1px solid #f1f2f4; }
+.fs-row-head { width: 100%; display: flex; align-items: center; gap: 10px; padding: 18px 0; border: 0; background: none; font: inherit; cursor: pointer; text-align: right; }
+.fs-label { flex: 1; font-size: 17px; font-weight: 700; color: #111111; }
+.fs-val { font-size: 16px; color: #646b78; max-width: 55%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fs-chev { width: 18px; height: 18px; color: #9aa0aa; flex: none; transition: transform .2s; }
+.fs-row.open .fs-chev { transform: rotate(-90deg); }
+.fs-opts { display: flex; flex-direction: column; padding: 0 0 12px; }
+.fs-opt { display: flex; align-items: center; justify-content: space-between; padding: 11px 6px; border: 0; background: none; border-radius: 10px; font: inherit; font-size: 15.5px; color: #111111; cursor: pointer; text-align: right; }
+.fs-opt:hover { background: #f6f7f9; }
+.fs-opt i { font-style: normal; font-weight: 800; }
+.fs-opt.on { font-weight: 700; }
+.fs-toggle { display: flex; align-items: center; justify-content: space-between; padding: 16px 0; border-bottom: 1px solid #f1f2f4; font-size: 17px; font-weight: 700; color: #111111; cursor: pointer; }
+#m-sheet.fs-x .ms-foot { display: flex; gap: 12px; padding: 14px 22px calc(16px + env(safe-area-inset-bottom, 0px)); }
+html body:not(#_):not(#_):not(#_) #m-sheet.fs-x .ms-btn { flex: 1; height: 54px; border-radius: 999px; font-size: 17px; font-weight: 700; }
+html body:not(#_):not(#_):not(#_) #m-sheet.fs-x .fs-reset { background: #eceef1; color: #111111; border: 0; }
+html body:not(#_):not(#_):not(#_) #m-sheet.fs-x .fs-go { background: #111111; color: #ffffff; border: 0; }
+html.theme-dark .fs-row, html.theme-dark .fs-toggle { border-color: #22262d !important; }
+html.theme-dark :is(.fs-label, .fs-opt, .fs-toggle) { color: #eceef1 !important; }
+html.theme-dark .fs-val { color: #9aa2ad !important; }
+html.theme-dark .fs-opt:hover { background: #22262d !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) #m-sheet.fs-x .fs-reset { background: #2a2f37 !important; color: #eceef1 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) #m-sheet.fs-x .fs-go { background: #eceef1 !important; color: #111111 !important; }
+/* יד שניה במובייל: כפתור "סינון" במקום שלוש הבחירות */
+.sh-filter-open { display: none; }
+@media (max-width: 768px) {
+  html body:not(#_):not(#_) .secondhand-page .sh-filter-bar { display: none !important; }
+  html body:not(#_):not(#_) .sh-filter-open { display: inline-flex; align-items: center; gap: 8px; height: 42px; padding: 0 16px; border-radius: 999px; border: 1px solid #d5d8de; background: #ffffff; color: #111111; font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; margin-bottom: 10px; }
+  .sh-filter-open svg { width: 18px; height: 18px; }
+  .sh-filter-open b { min-width: 20px; height: 20px; border-radius: 999px; background: #111111; color: #ffffff; font-size: 12px; display: grid; place-items: center; padding: 0 5px; }
+  html.theme-dark body:not(#_):not(#_) .sh-filter-open { background: #1b1e24 !important; color: #eceef1 !important; border-color: #3a414c !important; }
+}
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet.fs-x .ms-foot .fs-go { background: #111111 !important; color: #ffffff !important; border: 0 !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet.fs-x .ms-foot .fs-reset { background: #eceef1 !important; color: #111111 !important; border: 0 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet.fs-x .ms-foot .fs-go { background: #eceef1 !important; color: #111111 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet.fs-x .ms-foot .fs-reset { background: #2a2f37 !important; color: #eceef1 !important; }
