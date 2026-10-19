@@ -12940,3 +12940,40 @@ html.theme-dark body:not(#_):not(#_) .hx-tabs { background: #121418 !important; 
 html.theme-dark .hx-tab { color: #9aa2ad !important; } html.theme-dark .hx-tab.on, html.theme-dark .hx-tab:hover { color: #eceef1 !important; }
 html.theme-dark .hx-tab.on::after, html.theme-dark .hx-dot { background: #eceef1 !important; }
 html.theme-dark .hx-pick-row { color: #eceef1 !important; border-color: #22262d !important; }
+
+/* ===== פרופיל בסגנון טלגרם ===== */
+html body:not(#_):not(#_) .pf-head { display: flex; flex-direction: column; align-items: center; text-align: center; position: relative; padding-top: 8px; }
+html body:not(#_):not(#_) .pf-head .pf-top { flex-direction: column; align-items: center; width: 100%; position: static; }
+html body:not(#_):not(#_) .pf-head .pf-actions { position: absolute; top: 4px; inset-inline-end: 0; }
+.pf-av-wrap { position: relative; display: inline-block; }
+html body:not(#_):not(#_) .pf-head .pf-avatar { width: 112px !important; height: 112px !important; font-size: 44px !important; border-radius: 50% !important; }
+.pf-av-plus { position: absolute; bottom: 2px; inset-inline-start: 2px; width: 34px; height: 34px; border-radius: 50%; border: 3px solid #ffffff; background: #111111; color: #ffffff; display: grid; place-items: center; cursor: pointer; padding: 0; }
+.pf-av-plus svg { width: 16px; height: 16px; }
+html body:not(#_):not(#_) .pf-edit-pill { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 16px; border-radius: 999px; border: 1px solid #e6e8ec; background: #f4f5f7; color: #111111; font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; }
+.pf-edit-pill svg { width: 20px; height: 20px; }
+html body:not(#_):not(#_) .pf-head .pf-name { font-size: 28px !important; margin: 10px 0 2px !important; justify-content: center; }
+.pf-online { color: #646b78; }
+html body:not(#_):not(#_) .pf-head .pf-facts, html body:not(#_):not(#_) .pf-head .pf-counts { justify-content: center; }
+html body:not(#_):not(#_) .pf-head .pf-bio, html body:not(#_):not(#_) .pf-head .pf-bio-add { align-self: stretch; text-align: right; background: #f6f7f9; border: 1px solid #eceef1; border-radius: 18px; padding: 14px 16px; margin: 12px 0 4px; }
+.pf-empty-x { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; padding: 30px 16px 24px; }
+.pf-empty-art { width: 110px; height: 110px; color: #3f4552; }
+.pf-empty-art svg { width: 100%; height: 100%; }
+.pf-empty-x b { font-size: 20px; color: #111111; }
+.pf-empty-x p { margin: 0; font-size: 15px; color: #646b78; max-width: 300px; line-height: 1.5; }
+html body:not(#_):not(#_) .pf-empty-btn { margin-top: 10px; width: min(320px, 100%); height: 50px; border-radius: 14px; border: 0; background: #111111; color: #ffffff; font: inherit; font-size: 17px; font-weight: 700; cursor: pointer; }
+.pph { display: flex; flex-direction: column; padding: 4px 0; }
+.pph-row { position: relative; display: flex; align-items: center; gap: 16px; padding: 15px 6px; border: 0; background: none; font: inherit; font-size: 17px; font-weight: 600; color: #111111; cursor: pointer; text-align: right; border-bottom: 1px solid #f1f2f4; }
+.pph-row input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.pph-row svg { width: 24px; height: 24px; flex: none; }
+.pph-row.danger { color: #b91c1c; }
+html.theme-dark .pf-av-plus { border-color: #121418 !important; background: #eceef1 !important; color: #111111 !important; }
+html.theme-dark body:not(#_):not(#_) .pf-edit-pill { background: #22262d !important; border-color: #3a414c !important; color: #eceef1 !important; }
+html.theme-dark body:not(#_):not(#_) .pf-head :is(.pf-bio, .pf-bio-add) { background: #1b1e24 !important; border-color: #2a2f37 !important; }
+html.theme-dark .pf-empty-x b, html.theme-dark .pph-row { color: #eceef1 !important; }
+html.theme-dark .pf-empty-art { color: #c8cdd4 !important; }
+html.theme-dark body:not(#_):not(#_) .pf-empty-btn { background: #eceef1 !important; color: #111111 !important; }
+html.theme-dark .pph-row { border-color: #22262d !important; } html.theme-dark .pph-row.danger { color: #fca5a5 !important; }
+html body:not(#_):not(#_):not(#_) .pf-head .pf-actions { position: static !important; order: 9; display: flex; gap: 8px; justify-content: center; margin-top: 12px; }
+html body:not(#_):not(#_):not(#_) .pf-head .pf-top { display: contents !important; }
+html body:not(#_):not(#_):not(#_) .pf-head .pf-av-wrap { order: 0; }
+html body:not(#_):not(#_):not(#_) .pf-head > :not(.pf-top) { order: 1; }

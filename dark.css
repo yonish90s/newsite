@@ -2273,6 +2273,21 @@ html.theme-dark .hx-pick-row { border-bottom: 1px solid #323842 !important; colo
 html.theme-dark.theme-dark body:not(#_):not(#_) .hx-tabs { background: #3a414c !important; }
 html.theme-dark.theme-dark .hx-tab.on::after, html.theme-dark.theme-dark .hx-dot { background: #2a2f37 !important; }
 html.theme-dark.theme-dark .hx-pick-row { border-color: #5b6472 !important; }
+html.theme-dark .pf-av-plus { border: 3px solid #323842 !important; background: #3a414c !important; }
+html.theme-dark body:not(#_):not(#_) .pf-edit-pill { border: 1px solid #323842 !important; background: #22262d !important; color: #eceef1 !important; }
+html.theme-dark .pf-online { color: #c8cdd4 !important; }
+html.theme-dark body:not(#_):not(#_) .pf-head .pf-bio, html.theme-dark body:not(#_):not(#_) .pf-head .pf-bio-add { background: #22262d !important; border: 1px solid #323842 !important; }
+html.theme-dark .pf-empty-art { color: #c8cdd4 !important; }
+html.theme-dark .pf-empty-x b { color: #eceef1 !important; }
+html.theme-dark .pf-empty-x p { color: #c8cdd4 !important; }
+html.theme-dark body:not(#_):not(#_) .pf-empty-btn { background: #3a414c !important; }
+html.theme-dark .pph-row { color: #eceef1 !important; border-bottom: 1px solid #323842 !important; }
+html.theme-dark .pph-row.danger { color: color-mix(in srgb, #b91c1c 55%, white) !important; }
+html.theme-dark.theme-dark .pf-av-plus { border-color: #5b6472 !important; background: #2a2f37 !important; color: #eceef1 !important; }
+html.theme-dark.theme-dark body:not(#_):not(#_) .pf-edit-pill { background: #3a414c !important; }
+html.theme-dark.theme-dark body:not(#_):not(#_) .pf-head :is(.pf-bio, .pf-bio-add) { background: #3a414c !important; }
+html.theme-dark.theme-dark body:not(#_):not(#_) .pf-empty-btn { background: #2a2f37 !important; color: #eceef1 !important; }
+html.theme-dark.theme-dark .pph-row { border-color: #5b6472 !important; }
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #eceef1 !important; }
 html.theme-dark [style*="color:#111111"] { color: #eceef1 !important; }

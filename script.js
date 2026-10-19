@@ -17418,7 +17418,7 @@ function postsListHTML(key, items, showAuthor, emptyHTML) {
 }
 function postsListInner(key, emptyHTML) {
   const L = pfeedLists[key]; if (!L) return '';
-  if (!L.items.length) return emptyHTML || '<div class="pf-empty">עדיין אין פוסטים</div>';
+  if (!L.items.length) return emptyHTML || pfEmptyPostsHTML(key);
   const n = pfeedShown[key];
   const more = L.items.length - n;
   return L.items.slice(0, n).map(x => postCardHTML(x, L.showAuthor)).join('') +
@@ -17506,17 +17506,20 @@ function profileHeadHTML(st) {
   ].filter(Boolean).join('') + (uid && !isOwn && typeof distanceBadgeHTML === 'function' ? `<span class="pf-fact">${distanceBadgeHTML(uid)}</span>` : '');
   const bio = String(profile.bio || '').trim();
   const actions = isOwn
-    ? `<button type="button" class="pf-btn pf-btn-outline" onclick="profileEditBio()">עריכת פרופיל</button>`
+    ? `<button type="button" class="pf-edit-pill" onclick="profileEditBio()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9" stroke-dasharray="3 2.4"/><path d="M12 8v8M8 12h8"/></svg>עריכה</button>`
     : `${uid ? `<button type="button" class="pf-btn pf-btn-icon" onclick="dmStartWith('${artEsc(uid)}','${artEsc(name)}')" title="שליחת הודעה" aria-label="שליחת הודעה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"/><path d="M12 9v6M9 12h6"/></svg></button>` : ''}
        ${uid ? `<button type="button" class="pf-btn ${following ? 'pf-btn-outline following' : 'pf-btn-solid'}" onclick="profileToggleFollow('${artEsc(uid)}','${artEsc(name)}')">${following ? 'עוקב/ת ✓' : 'עקוב'}</button>` : ''}`;
   return `
     <section class="pf-head">
       <div class="pf-top">
-        <span class="pf-avatar" ${uid ? `data-av-uid="${escHtml(uid)}"` : ''}>${escHtml(String(name).trim().charAt(0) || '?')}</span>
+        <span class="pf-av-wrap">
+          <span class="pf-avatar" ${uid ? `data-av-uid="${escHtml(uid)}"` : ''}>${escHtml(String(name).trim().charAt(0) || '?')}</span>
+          ${isOwn ? `<button type="button" class="pf-av-plus" onclick="openProfilePhotoSheet()" aria-label="שינוי תמונת פרופיל"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>` : ''}
+        </span>
         <div class="pf-actions">${actions}</div>
       </div>
       <h1 class="pf-name" id="user-page-name">${escHtml(name)}${st.verified ? verifiedSealHTML(22) : ''}</h1>
-      <div class="pf-handle" dir="auto">@${escHtml(profile.handle || profileHandle(name))}</div>
+      <div class="pf-handle" dir="auto">@${escHtml(profile.handle || profileHandle(name))}${isOwn ? ' · <span class="pf-online">מחובר/ת</span>' : ''}</div>
       ${bio ? `<p class="pf-bio">${escHtml(bio)}</p>` : (isOwn ? `<button type="button" class="pf-bio-add" onclick="profileEditBio()">+ הוסיפו כמה מילים עליכם</button>` : '')}
       ${facts ? `<div class="pf-facts">${facts}</div>` : ''}
       <div class="pf-counts">
@@ -24328,6 +24331,7 @@ Object.assign(UI_EN, { 'צירוף לשיחה': 'Add to chat', 'מצלמה': 'Ca
 Object.assign(UI_EN, { 'את מי לעקוב': 'Who to follow', 'פורומים להצטרף': 'Forums to join', 'אתרים מומלצים': 'Recommended sites', 'עקיבה': 'Follow', 'עוקב/ת': 'Following', 'פרטיות': 'Privacy', 'נגישות': 'Accessibility' });
 UI_EN_PATTERNS.push([/^(\d+) הודעות$/g, '$1 posts']);
 Object.assign(UI_EN, { 'בשבילך': 'For you', 'במעקב': 'Following', 'הוספה': 'Add', 'הלשוניות שלי': 'My tabs', 'סיום': 'Done', 'הוספת לשונית': 'Add tab' });
+Object.assign(UI_EN, { 'עריכה': 'Edit', 'מחובר/ת': 'online', 'עדיין אין פוסטים...': 'No posts yet...', 'פרסמו תמונות וסרטונים כדי שיופיעו בפרופיל שלכם.': 'Publish photos and videos to display on your profile page.', 'הוספת פוסט': 'Add a post', 'תמונת פרופיל': 'Profile photo', 'העלאת תמונה': 'Upload photo', 'צילום תמונה': 'Take photo', 'עיצוב דמות': 'Design avatar', 'הסרת התמונה': 'Remove photo', 'שינוי תמונת פרופיל': 'Change profile photo' });
 let __uiTranslating = false;
 // לא נוגעים בקוד עצמו. הודעות משתמשים/תוכן מוגנים ממילא כי המילון מתרגם
 // רק מחרוזות מוכרות של הממשק — תוכן חופשי שהמשתמשים כתבו לא מופיע במילון.
@@ -28601,3 +28605,51 @@ function homeAsideMore(kind) {
   if (kind === 'sites') { const s = (PROMOTED_SITES || [])[0]; if (s) window.open(s.url, '_blank', 'noopener'); }
 }
 Object.assign(window, { homeAsideFollow, homeAsideMore });
+
+
+// ============================================================
+// פרופיל בסגנון טלגרם: שינוי תמונת פרופיל (העלאה / עיצוב דמות / הסרה) ומצב "אין פוסטים"
+// ============================================================
+function pfEmptyPostsHTML(key) {
+  const st = window._upState || {};
+  const u = auth.currentUser;
+  const own = key === 'profile' && u && !u.isAnonymous && st.uid === u.uid;
+  return `<div class="pf-empty-x">
+    <div class="pf-empty-art"><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"><rect x="10" y="12" width="40" height="40" rx="6"/><rect x="16" y="6" width="40" height="40" rx="6" fill="currentColor" fill-opacity=".06"/><circle cx="27" cy="20" r="4"/><path d="M16 38l10-10 8 8 6-6 10 10"/></svg></div>
+    <b>עדיין אין פוסטים...</b>
+    <p>${own ? 'פרסמו תמונות וסרטונים כדי שיופיעו בפרופיל שלכם.' : 'כשיעלו כאן תכנים — הם יופיעו כאן.'}</p>
+    ${own ? `<button type="button" class="pf-empty-btn" onclick="openQuickPublish()">הוספת פוסט</button>` : ''}
+  </div>`;
+}
+function openProfilePhotoSheet() {
+  const body = `<div class="pph">
+    <label class="pph-row"><input type="file" accept="image/*" onchange="profilePhotoUpload(this.files && this.files[0])"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg><span>העלאת תמונה</span></label>
+    <label class="pph-row"><input type="file" accept="image/*" capture="user" onchange="profilePhotoUpload(this.files && this.files[0])"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/></svg><span>צילום תמונה</span></label>
+    <button type="button" class="pph-row" onclick="closeMSheet(); openAvatarEditor()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span>עיצוב דמות</span></button>
+    <button type="button" class="pph-row danger" onclick="profilePhotoRemove()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg><span>הסרת התמונה</span></button>
+  </div>`;
+  openMSheet('תמונת פרופיל', body, '');
+}
+async function profilePhotoUpload(file) {
+  const u = auth.currentUser; if (!u || u.isAnonymous || !file) return;
+  closeMSheet();
+  try {
+    const data = await artCompressImage(file, 480, 0.82);
+    if (!data || data.length > 200000) { showCopyToast('התמונה גדולה מדי'); return; }
+    await set(ref(db, `website/users/${u.uid}/profile/photo`), data);
+    profilePhotoApply(u.uid, data);
+    showCopyToast('תמונת הפרופיל עודכנה');
+  } catch (e) { console.error(e); showCopyToast('לא הצלחנו להעלות — נסו שוב'); }
+}
+async function profilePhotoRemove() {
+  const u = auth.currentUser; if (!u || u.isAnonymous) return;
+  closeMSheet();
+  try { await set(ref(db, `website/users/${u.uid}/profile/photo`), null); profilePhotoApply(u.uid, ''); showCopyToast('התמונה הוסרה'); } catch (e) {}
+}
+function profilePhotoApply(uid, data) {
+  try { delete avatarCache[uid]; } catch (e) {}
+  document.querySelectorAll(`[data-av-uid="${uid}"]`).forEach(el => el.removeAttribute('data-av-done'));
+  if (data) document.querySelectorAll(`[data-av-uid="${uid}"]`).forEach(el => { el.innerHTML = `<img src="${data}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`; el.setAttribute('data-av-done', '1'); });
+  else if (typeof avatarHydrate === 'function') avatarHydrate(document);
+}
+Object.assign(window, { openProfilePhotoSheet, profilePhotoUpload, profilePhotoRemove });
