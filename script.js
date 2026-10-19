@@ -16455,7 +16455,7 @@ function photoOpenDetail(id) {
 
   const json = encodeURIComponent(JSON.stringify(albums));
 
-  if (isIdea || isSecondhand) {
+  if (isIdea || (isSecondhand && a.isWanted)) {
     mainContent.innerHTML = `
       <div class="art-detail articles-page photos-page ideas-detail-page" data-photo-id="${id}" data-photos-json="${json}">
         <div class="art-detail-inner" style="max-width: 1350px; margin: 0 auto;">
@@ -16521,9 +16521,9 @@ function photoOpenDetail(id) {
       <div class="art-detail articles-page photos-page" data-photo-id="${id}" data-photos-json="${json}">
         <div class="art-detail-inner">
           <div class="pd2-toprow">
-            <button class="art-back-btn" onclick="photoGoBack()">חזרה לגלריות</button>
+            <button class="art-back-btn" onclick="photoGoBack()">${isSecondhand ? 'חזרה למוצרים' : 'חזרה לגלריות'}</button>
             <div class="pd2-topend">
-              ${pd2ActionsHTML(a)}
+              ${pd2ActionsHTML(a, isSecondhand ? 'product' : '')}
               ${a.category ? `<span class="pd2-topcat" title="קטגוריה">${escHtml(a.category)}</span>` : ''}
             </div>
           </div>
@@ -16561,8 +16561,9 @@ function photoOpenDetail(id) {
                   ${viewsBadgeHTML(a.id)}
                 </div>
               </div>
-              <div class="pd2-acts-desk">${pd2ActionsHTML(a)}</div>
+              <div class="pd2-acts-desk">${pd2ActionsHTML(a, isSecondhand ? 'product' : '')}</div>
               <h1 class="pd2-title">${escHtml(a.title)}</h1>
+              ${isSecondhand ? pd2ProductInfoHTML(a) : ''}
               ${postBarHTML(a)}
 
               ${a.ageRange || a.region ? `<div class="pd2-opts">
@@ -16615,7 +16616,7 @@ function photoOpenDetail(id) {
           ${photoCommentsSectionHTML(id)}
 
           <div class="art-rec-section">
-            <div class="rec-head"><h3>גלריות נוספות שיעניינו אותך</h3><span>נבחרו בשבילך לפי מה שאתה צופה ואוהב</span></div>
+            <div class="rec-head"><h3>${isSecondhand ? "מוצרים נוספים שיעניינו אותך" : "גלריות נוספות שיעניינו אותך"}</h3><span>נבחרו בשבילך לפי מה שאתה צופה ואוהב</span></div>
             <div class="art-rec-grid">${recHTML}</div>
           </div>
         </div>
@@ -24158,6 +24159,7 @@ Object.assign(UI_EN, { 'הפיד של האתר': "The site's feed", 'התחבר�
 Object.assign(UI_EN, { 'שיתופים': 'Reposts', 'עדיין אין שיתופים': 'No reposts yet' });
 UI_EN_PATTERNS.push([/^(\d+)\s*פוסטים$/g, '$1 posts'], [/^(\d+)\s*שיתופים$/g, '$1 reposts']);
 Object.assign(UI_EN, { 'הצעה': 'Offer', 'הצעת מחיר': 'Price offer', 'כמה תרצו להציע?': 'How much would you like to offer?', 'הודעה למוכר (לא חובה)': 'Message to the seller (optional)', 'שליחת ההצעה': 'Send offer', 'נא לכתוב מחיר': 'Please enter a price', 'מוצרי יד שניה': 'Second-hand', 'מוצרי יד שניה 🛒': 'Second-hand 🛒' });
+Object.assign(UI_EN, { 'מוצרים נוספים שיעניינו אותך': 'More products you might like', 'חזרה למוצרים': 'Back to products', 'מחיר לפי סיכום': 'Price negotiable', 'להשאלה': 'For loan', 'להחלפה': 'For swap', 'מכירה': 'Sale' });
 let __uiTranslating = false;
 // לא נוגעים בקוד עצמו. הודעות משתמשים/תוכן מוגנים ממילא כי המילון מתרגם
 // רק מחרוזות מוכרות של הממשק — תוכן חופשי שהמשתמשים כתבו לא מופיע במילון.
@@ -27455,6 +27457,7 @@ function pd2ActionsHTML(a, kind) {
                 <button type="button" class="pti" onclick="${kind === 'comic' ? `dmStartWith('${artEsc(a.authorId || '')}', '${artEsc(a.author || 'משתמש')}', '${artEsc('שלום! פנייה לגבי הקומיקס: "' + String(a.title || '').slice(0, 120) + '"')}')` : `dmStartAboutGallery('${artEsc(a.authorId || '')}', '${artEsc(a.author || '')}', '${artEsc(a.id)}')`}" title="הודעה ליוצר" aria-label="הודעה ליוצר"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg></button>
                 <button type="button" class="pti pd2-save${photoIsSavedLocal(a.id) ? ' is-saved' : ''}" onclick="photoToggleSave('${artEsc(a.id)}')" title="שמירה" aria-label="שמירה"><svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
                 ${a.emailUrl ? `<button type="button" class="pti" onclick="emailIconClick('${artEsc(a.emailUrl)}', this, event)" title="אימייל — לחיצה מעתיקה, לחיצה נוספת שולחת" aria-label="אימייל"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 7l8.5 6 8.5-6"/></svg></button>` : ''}
+                ${kind === 'product' ? `<button type="button" class="pti pti-offer" onclick="openPriceOffer('${artEsc(a.id)}', '${artEsc(a.title || '')}', '${artEsc(a.authorId || '')}', '${artEsc(a.author || '')}')" title="הצעת מחיר" aria-label="הצעת מחיר"><svg viewBox="0 0 24 24"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg></button>` : ''}
                 ${kind === 'comic' ? `<button type="button" class="pti" onclick="artGalleryById('stories', window.currentStoryId, document.querySelector('#story-page-view img') ? document.querySelector('#story-page-view img').getAttribute('src') : '')" title="קריאה במסך מלא" aria-label="קריאה במסך מלא"><svg viewBox="0 0 24 24"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></button>` : ''}
                 ${repostBtnHTML(a.id)}
                 ${followIconHTML(a)}
@@ -27768,3 +27771,17 @@ function sendPriceOffer(title, sellerUid, sellerName) {
   if (typeof dmStartWith === 'function') dmStartWith(sellerUid, sellerName || 'מוכר', text);
 }
 Object.assign(window, { openPriceOffer, closePriceOffer, sendPriceOffer });
+
+
+// מוצר יד שניה בעמוד הגלריה: מחיר בולט + סוג ההצעה ומיקום (בסגנון הדף)
+function pd2ProductInfoHTML(a) {
+  const offer = a.offerType || 'מכירה';
+  let price = (a.price != null && String(a.price).trim()) ? String(a.price).trim() : '';
+  if (price && !/[₪$]/.test(price) && /\d/.test(price)) price = '₪' + price;
+  const main = offer === 'השאלה' ? 'להשאלה' : offer === 'החלפה' ? 'להחלפה' : (price || 'מחיר לפי סיכום');
+  return `<div class="pd2-product">
+      <div class="pd2-price">${escHtml(main)}</div>
+      <div class="pd2-prod-chips"><span>${escHtml(offer)}</span>${a.region ? `<span>${escHtml(a.region)}</span>` : ''}${(a.offerDetail || '').trim() ? `<span>${escHtml(String(a.offerDetail).trim().slice(0, 40))}</span>` : ''}</div>
+      <button type="button" class="pd2-offer-btn" onclick="openPriceOffer('${artEsc(a.id)}', '${artEsc(a.title || '')}', '${artEsc(a.authorId || '')}', '${artEsc(a.author || '')}')">הצעת מחיר</button>
+    </div>`;
+}
