@@ -13351,3 +13351,52 @@ html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="
   .cg-badge { font-size: 9px; padding: 1px 5px; }
 }
 html body:not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="communities"] .comm-grid-card::before, html body:not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="communities"] .comm-grid-card::after, html body:not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="communities"] .comm-grid-thumb::before, html body:not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="communities"] .comm-grid-thumb::after { display: none !important; content: none !important; }
+
+/* ===== מובייל: הקטנה משמעותית (~60%) — נתוני היום, "הנתונים שלי", אייקוני הפוטר ===== */
+@media (max-width: 768px) {
+  /* נתוני היום: שורה אחת קומפקטית של 6 */
+  html body:not(#_):not(#_):not(#_):not(#_) .hw-stats { display: grid !important; grid-template-columns: repeat(6, minmax(0, 1fr)) !important; gap: 0 !important; padding: 6px 4px !important; border-radius: 14px !important; min-height: 0 !important; height: auto !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .hw-stats .hw-stat { display: flex !important; flex-direction: column !important; align-items: center !important; gap: 2px !important; padding: 4px 1px !important; min-height: 0 !important; height: auto !important; border: 0 !important; background: transparent !important; box-shadow: none !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .hw-stats .hw-stat-ico { width: 20px !important; height: 20px !important; min-width: 20px !important; border-radius: 6px !important; padding: 0 !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .hw-stats .hw-stat-ico svg { width: 12px !important; height: 12px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .hw-stats .hw-stat-ico.live::after, html body:not(#_):not(#_):not(#_):not(#_) .hw-stats .hw-stat-ico.live::before { width: 6px !important; height: 6px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .hw-stats .hw-stat-text { display: flex !important; flex-direction: column !important; align-items: center !important; gap: 0 !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .hw-stats .hw-stat b { font-size: 13px !important; line-height: 1.15 !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .hw-stats .hw-stat small { font-size: 8.5px !important; line-height: 1.15 !important; white-space: normal !important; text-align: center !important; max-width: 54px; }
+  html body:not(#_):not(#_):not(#_):not(#_) .hw-stats .hw-stat-upload { gap: 2px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .hw-stats .hw-stat-upload > *:first-child { width: 20px !important; height: 20px !important; min-width: 20px !important; border-radius: 6px !important; box-shadow: none !important; padding: 0 !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .hw-stats .hw-stat-upload svg { width: 12px !important; height: 12px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .hw-stats .hw-stat-upload :is(span, small, b):not(:first-child) { font-size: 8.5px !important; line-height: 1.15 !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .hw-stats > * + * { border-inline-start: 0 !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .hw-stats::before, html body:not(#_):not(#_):not(#_):not(#_) .hw-stats::after, html body:not(#_):not(#_):not(#_):not(#_) .hw-stat::before, html body:not(#_):not(#_):not(#_):not(#_) .hw-stat::after { display: none !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .hw-cta { font-size: 12px !important; padding: 6px 14px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .hw-actions { gap: 8px !important; }
+
+  /* הנתונים שלי: כרטיס קומפקטי בשורה אחת */
+  html body:not(#_):not(#_):not(#_):not(#_) .hw-watch { min-height: 0 !important; height: auto !important; padding: 0 !important; border-radius: 14px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .hw-watch-screen { display: grid !important; grid-template-columns: auto 1fr !important; grid-template-areas: "top top" "mid gauges" "cta cta" !important; align-items: center !important; gap: 4px 10px !important; padding: 8px 12px !important; min-height: 0 !important; height: auto !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .hw-watch-top { grid-area: top !important; margin: 0 !important; gap: 6px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .hw-watch-title { font-size: 12px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .hw-watch-tag { font-size: 9px !important; padding: 1px 6px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .hw-watch-mid { grid-area: mid !important; margin: 0 !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .hw-watch-lines { display: flex !important; flex-direction: row !important; gap: 8px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .hw-watch-lines span { font-size: 12px !important; font-weight: 800 !important; line-height: 1.2 !important; display: inline-flex !important; flex-direction: column !important; align-items: center !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .hw-watch-lines small { font-size: 8.5px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .hw-watch-gauges { grid-area: gauges !important; width: auto !important; height: auto !important; margin: 0 !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .hw-watch-cmps { gap: 8px !important; justify-content: space-around !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .hw-cmp b { font-size: 13px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .hw-watch-cmp-labels { font-size: 8.5px !important; gap: 8px !important; justify-content: space-around !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .hw-watch-cmp-labels span { font-size: 8.5px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .hw-watch-cta { grid-area: cta !important; font-size: 11px !important; padding: 5px 12px !important; margin: 2px auto 0 !important; min-height: 0 !important; height: auto !important; box-shadow: none !important; }
+
+  /* אייקוני הרשתות בפוטר */
+  html body:not(#_):not(#_):not(#_):not(#_) :is(.footer-social-btn, .site-footer-social) { width: 26px !important; height: 26px !important; min-width: 26px !important; padding: 0 !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) :is(.footer-social-btn, .site-footer-social) svg { width: 12px !important; height: 12px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) :is(.footer-social) { gap: 6px !important; }
+}
+@media (max-width: 768px) {
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .hw-cmp b { font-size: 13px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.hw-watch-lines span, .hw-watch-title) { font-size: 12px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.hw-watch-lines small, .hw-watch-cmp-labels, .hw-watch-cmp-labels span) { font-size: 8.5px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .hw-watch-cta { font-size: 11px !important; padding: 5px 12px !important; }
+}
