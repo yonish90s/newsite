@@ -13280,3 +13280,13 @@ html.theme-dark body:not(#_):not(#_) :is(.cr-card, .ha-box, .pf-card, .fs-slider
   html body:not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 .photo-card-links .art-telegram-btn { width: 24px !important; height: 24px !important; min-width: 24px !important; flex: 0 0 24px !important; border-radius: 7px !important; }
   html body:not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 .photo-card-links .art-telegram-btn svg { width: 12px !important; height: 12px !important; }
 }
+/* מובייל: לשוניות ועיגולי קטגוריות — עוד יותר קטנים */
+@media (max-width: 768px) {
+  html body:not(#_):not(#_):not(#_):not(#_) .content-switch { gap: 4px !important; padding: 2px 0 !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .content-switch .cs-tab { height: 30px !important; padding: 0 10px !important; font-size: 12px !important; border-radius: 10px !important; gap: 5px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .content-switch .cs-tab svg { width: 14px !important; height: 14px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .pcc-row { gap: 12px !important; padding: 2px 0 4px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .pcc { gap: 3px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .pcc-ring { width: 30px !important; height: 30px !important; min-width: 30px !important; font-size: 12px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .pcc-name { font-size: 9.5px !important; max-width: 56px !important; }
+}
