@@ -12739,3 +12739,8 @@ html body:not(#_):not(#_):not(#_) .hw-cmp { width: auto !important; height: auto
 html body:not(#_):not(#_):not(#_) .hw-cmp svg { display: none !important; }
 html body:not(#_):not(#_):not(#_) .hw-cmp b { position: static !important; inset: auto !important; transform: none !important; font-size: 28px !important; font-weight: 800 !important; color: var(--hw-c1, #111111) !important; line-height: 1.1; font-variant-numeric: tabular-nums; }
 html body:not(#_):not(#_):not(#_) .hw-watch-cmps { gap: 34px !important; }
+/* מובייל: גם הכותרת העליונה יורדת כשגוללים למטה וחוזרת כשגוללים למעלה (כמו הסרגל התחתון) */
+@media (max-width: 768px) {
+  html body:not(#_):not(#_) header.apple-nav { transition: transform .25s ease !important; will-change: transform; }
+  html.mtabs-away body:not(#_):not(#_) header.apple-nav { transform: translateY(-110%) !important; }
+}
