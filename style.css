@@ -12892,3 +12892,34 @@ html.theme-dark .tg-attach-prev, html.theme-dark .att-panel { background: #1b1e2
 html.theme-dark .att-head b, html.theme-dark .att-tile { color: #eceef1 !important; }
 html.theme-dark .att-tile, html.theme-dark .att-x { background: #22262d !important; }
 html.theme-dark .att-x { color: #c8cdd4 !important; }
+
+/* ===== עמוד הבית במחשב: עמודת המלצות מימין (בסגנון X) ===== */
+.home-aside { display: none; }
+@media (min-width: 1240px) {
+  html body:not(#_):not(#_) .home-feed-page.has-aside { display: grid !important; grid-template-columns: 330px minmax(0, 1fr); gap: 28px; align-items: start; max-width: 1560px; margin: 0 auto; padding-inline: 20px; box-sizing: border-box; }
+  html body:not(#_):not(#_) .home-feed-page.has-aside > .art-inner { min-width: 0; max-width: none !important; width: 100% !important; margin: 0 !important; }
+  .home-aside { display: flex; flex-direction: column; gap: 16px; position: sticky; top: 76px; padding-top: 18px; }
+}
+.ha-box { border: 1px solid #e6e8ec; border-radius: 20px; background: #ffffff; padding: 14px 16px 6px; }
+.ha-box h3 { margin: 0 0 6px; font-size: 20px; font-weight: 800; color: #111111; }
+.ha-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; }
+.ha-who { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; border: 0; background: none; padding: 0; font: inherit; text-align: right; cursor: pointer; color: inherit; }
+.ha-who .au-av, .ha-ic { width: 42px !important; height: 42px !important; flex: none; border-radius: 50%; display: grid; place-items: center; overflow: hidden; font-size: 17px; }
+.ha-ic { background: #f1f2f4; color: #3f4552; font-size: 20px; }
+.ha-ic svg { width: 20px; height: 20px; }
+.ha-ic.site img { width: 100%; height: 100%; object-fit: cover; }
+.ha-txt { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.ha-txt b { font-size: 15px; color: #111111; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: inline-flex; align-items: center; gap: 2px; }
+.ha-txt small { font-size: 13.5px; color: #646b78; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: right; }
+html body:not(#_):not(#_):not(#_) .ha-btn { flex: none; height: 34px; padding: 0 16px; border-radius: 999px; border: 0; background: #111111; color: #ffffff; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; }
+html body:not(#_):not(#_):not(#_) .ha-btn.on { background: #ffffff; color: #111111; border: 1px solid #d5d8de; }
+.ha-more { display: block; width: 100%; text-align: right; border: 0; background: none; padding: 12px 0 10px; font: inherit; font-size: 14.5px; color: #3f4552; font-weight: 600; cursor: pointer; }
+.ha-more:hover { color: #111111; text-decoration: underline; }
+.ha-foot { font-size: 12.5px; color: #9aa0aa; padding: 0 6px; }
+.ha-foot a { color: inherit; text-decoration: none; } .ha-foot a:hover { text-decoration: underline; }
+html.theme-dark .ha-box { background: #1b1e24 !important; border-color: #2a2f37 !important; }
+html.theme-dark :is(.ha-box h3, .ha-txt b) { color: #eceef1 !important; }
+html.theme-dark :is(.ha-txt small, .ha-more) { color: #9aa2ad !important; }
+html.theme-dark .ha-ic { background: #2a2f37 !important; color: #c8cdd4 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) .ha-btn { background: #eceef1 !important; color: #111111 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) .ha-btn.on { background: transparent !important; color: #eceef1 !important; border-color: #3a414c !important; }

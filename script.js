@@ -15510,7 +15510,8 @@ function buildHomeFeedPage() {
       ${trioCard('trio-stories', 'סיפורים', 'סיפורים קצרים ומאמרים שכדאי לקרוא.', storyTiles(stories, '✍️'), "homeOpenSection('page-stories-text')", 'לכל הסיפורים')}
     </div>`;
 
-  return `<div class="articles-page home-feed-page" data-page-id="page-home-feed">
+  return `<div class="articles-page home-feed-page has-aside" data-page-id="page-home-feed">
+    ${homeAsideHTML()}
     <div class="art-inner">
       ${homeChipsHTML(photos, comics, stories)}
       <div class="cmp-wrap">${composerBarHTML()}</div>
@@ -24302,6 +24303,8 @@ Object.assign(UI_EN, { 'חיפושים אחרונים': 'Recent searches', 'אנ
 Object.assign(UI_EN, { 'מיון': 'Sort', 'החדשים ביותר': 'Newest', 'הכי פופולרי': 'Most popular', 'הישנים ביותר': 'Oldest', 'אזור': 'Region', 'תאריך העלאה': 'Date posted', 'משתמשים מאומתים בלבד': 'Verified users only', 'קרוב אליי': 'Near you', 'הפעלת מיקום': 'Enable location', 'איפוס': 'Reset' });
 UI_EN_PATTERNS.push([/^הצגת (\d+) תוצאות$/g, 'Show $1 results']);
 Object.assign(UI_EN, { 'צירוף לשיחה': 'Add to chat', 'מצלמה': 'Camera', 'תמונות': 'Photos', 'קבצים': 'Files', 'צירוף תמונה': 'Attach image', '📷 תמונה': '📷 Photo' });
+Object.assign(UI_EN, { 'את מי לעקוב': 'Who to follow', 'פורומים להצטרף': 'Forums to join', 'אתרים מומלצים': 'Recommended sites', 'עקיבה': 'Follow', 'עוקב/ת': 'Following', 'פרטיות': 'Privacy', 'נגישות': 'Accessibility' });
+UI_EN_PATTERNS.push([/^(\d+) הודעות$/g, '$1 posts']);
 let __uiTranslating = false;
 // לא נוגעים בקוד עצמו. הודעות משתמשים/תוכן מוגנים ממילא כי המילון מתרגם
 // רק מחרוזות מוכרות של הממשק — תוכן חופשי שהמשתמשים כתבו לא מופיע במילון.
@@ -28501,3 +28504,77 @@ function dmViewImg(src) {
   document.body.appendChild(v);
 }
 Object.assign(window, { dmOpenAttach, dmCloseAttach, dmAttachFiles, dmRemoveAttach, dmViewImg });
+
+
+// ============================================================
+// עמוד הבית במחשב: עמודה מימין בסגנון X — את מי לעקוב · פורומים להצטרף · אתרים מומלצים
+// ============================================================
+function homeAsideHTML() {
+  const u = auth.currentUser, me = u ? u.uid : '';
+  try { if (typeof subscribeMyFollows === 'function') subscribeMyFollows(); } catch (e) {}
+  // את מי לעקוב: מי שהעלה הכי הרבה תוכן ועוד לא עוקבים אחריו
+  const map = {};
+  try {
+    ((typeof pages !== 'undefined' && Array.isArray(pages)) ? pages : []).forEach(pg => {
+      String((pg && pg.content) || '').replace(/data-(?:photos|stories)-json="([^"]*)"/g, (m, enc) => {
+        try { (JSON.parse(decodeURIComponent(enc)) || []).forEach(x => {
+          if (!x || !x.authorId || !/^[A-Za-z0-9_-]{10,}$/.test(x.authorId) || x.authorId === me) return;
+          if (!map[x.authorId]) map[x.authorId] = { uid: x.authorId, name: x.author || 'משתמש', n: 0, item: x };
+          map[x.authorId].n++;
+        }); } catch (e) {}
+        return m;
+      });
+    });
+  } catch (e) {}
+  const who = Object.values(map).filter(p => !(typeof isFollowing === 'function' && isFollowing(p.uid))).sort((a, b) => b.n - a.n);
+  const whoRow = p => {
+    const admin = typeof isSiteAdminAuthor === 'function' && isSiteAdminAuthor(p.uid, p.name, p.item);
+    const name = admin ? 'מנהל האתר' : p.name;
+    const verified = admin || (typeof isUserVerified === 'function' && isUserVerified(p.uid, p.name));
+    return `<div class="ha-row">
+      <button type="button" class="ha-who" onclick="openUserPage('${artEsc(p.uid)}','${artEsc(name)}')">${authorAvHTML({ authorId: p.uid, author: name })}
+        <span class="ha-txt"><b>${escHtml(name)}${verified ? verifiedSealHTML(15) : ''}</b><small dir="ltr">@${escHtml(typeof profileHandle === 'function' ? profileHandle(name) : name)}</small></span></button>
+      <button type="button" class="ha-btn" onclick="homeAsideFollow(this, '${artEsc(p.uid)}', '${artEsc(name)}')">עקיבה</button>
+    </div>`;
+  };
+  // פורומים להצטרף: הפעילים ביותר
+  let forums = [];
+  try {
+    forums = (typeof forumCats === 'function' ? forumCats() : []).flatMap(c => c.forums).map(f => {
+      const t = (typeof forumTopicsOf === 'function') ? forumTopicsOf(f.id) : [];
+      return { f, n: t.reduce((a, x) => a + 1 + (Number(x.replies) || 0), 0) };
+    }).sort((a, b) => b.n - a.n);
+  } catch (e) {}
+  const forumRow = ({ f, n }) => `<div class="ha-row">
+      <span class="ha-who"><span class="ha-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg></span>
+        <span class="ha-txt"><b>${escHtml(f.title)}</b><small>${n ? `${n} הודעות` : escHtml(f.sub || '')}</small></span></span>
+      <button type="button" class="ha-btn" onclick="openForumsPanel(); setTimeout(() => forumOpen('${artEsc(f.id)}'), 120)">כניסה</button>
+    </div>`;
+  // אתרים מומלצים
+  const sites = (typeof PROMOTED_SITES !== 'undefined' && Array.isArray(PROMOTED_SITES)) ? PROMOTED_SITES : [];
+  const host = url => { try { return new URL(url).hostname.replace(/^www\./, ''); } catch (e) { return ''; } };
+  const siteRow = st => `<div class="ha-row">
+      <span class="ha-who"><span class="ha-ic site">${st.image ? `<img src="${escHtml(st.image)}" alt="">` : escHtml(st.icon || '🌐')}</span>
+        <span class="ha-txt"><b>${escHtml(st.name || '')}</b><small dir="ltr">${escHtml(host(st.url))}</small></span></span>
+      <a class="ha-btn" href="${escHtml(typeof safeUrl === 'function' ? safeUrl(st.url) : st.url)}" target="_blank" rel="noopener sponsored">כניסה</a>
+    </div>`;
+  const box = (title, rows, more) => rows ? `<section class="ha-box"><h3>${title}</h3>${rows}${more ? `<button type="button" class="ha-more" onclick="${more}">הצג עוד</button>` : ''}</section>` : '';
+  return `<aside class="home-aside" aria-label="המלצות">
+    ${box('את מי לעקוב', who.slice(0, 3).map(whoRow).join(''), "homeAsideMore('who')")}
+    ${box('פורומים להצטרף', forums.slice(0, 3).map(forumRow).join(''), 'openForumsPanel()')}
+    ${box('אתרים מומלצים', sites.slice(0, 3).map(siteRow).join(''), sites.length > 3 ? "homeAsideMore('sites')" : '')}
+    <div class="ha-foot"><a href="#" onclick="event.preventDefault(); openLegal('terms')">תנאי שימוש</a> · <a href="#" onclick="event.preventDefault(); openLegal('privacy')">פרטיות</a> · <a href="#" onclick="event.preventDefault(); openLegal('a11y')">נגישות</a></div>
+  </aside>`;
+}
+async function homeAsideFollow(btn, uid, name) {
+  await toggleFollow(uid, name, null);
+  const on = typeof isFollowing === 'function' && isFollowing(uid);
+  btn.textContent = on ? 'עוקב/ת' : 'עקיבה';
+  btn.classList.toggle('on', on);
+}
+function homeAsideMore(kind) {
+  const aside = document.querySelector('.home-aside'); if (!aside) return;
+  if (kind === 'who') { openFeed(); return; }
+  if (kind === 'sites') { const s = (PROMOTED_SITES || [])[0]; if (s) window.open(s.url, '_blank', 'noopener'); }
+}
+Object.assign(window, { homeAsideFollow, homeAsideMore });

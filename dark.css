@@ -2252,6 +2252,17 @@ html.theme-dark .att-tile { background: #22262d !important; color: #eceef1 !impo
 html.theme-dark.theme-dark .tg-plus { background: #3a414c !important; }
 html.theme-dark.theme-dark .tg-attach-prev, html.theme-dark.theme-dark .att-panel { background: #3a414c !important; }
 html.theme-dark.theme-dark .att-tile, html.theme-dark.theme-dark .att-x { background: #3a414c !important; }
+html.theme-dark .ha-box { border: 1px solid #323842 !important; background: #1b1e24 !important; }
+html.theme-dark .ha-box h3 { color: #eceef1 !important; }
+html.theme-dark .ha-ic { background: #22262d !important; color: #c8cdd4 !important; }
+html.theme-dark .ha-txt b { color: #eceef1 !important; }
+html.theme-dark .ha-txt small { color: #c8cdd4 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) .ha-btn { background: #3a414c !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) .ha-btn.on { background: #1b1e24 !important; color: #eceef1 !important; border: 1px solid #323842 !important; }
+html.theme-dark .ha-more { color: #c8cdd4 !important; }
+html.theme-dark .ha-more:hover { color: #eceef1 !important; }
+html.theme-dark.theme-dark .ha-box { background: #3a414c !important; }
+html.theme-dark.theme-dark body:not(#_):not(#_):not(#_) .ha-btn { background: #2a2f37 !important; color: #eceef1 !important; }
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #eceef1 !important; }
 html.theme-dark [style*="color:#111111"] { color: #eceef1 !important; }
