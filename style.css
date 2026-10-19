@@ -12630,3 +12630,5 @@ html.theme-dark .loan-agr { background: #1b1e24 !important; border-color: #32384
 html.theme-dark .loan-agr > summary b, html.theme-dark .loan-sign-head, html.theme-dark .loan-signed { color: #eceef1 !important; }
 html.theme-dark .loan-terms, html.theme-dark .loan-agree { color: #c8cdd4 !important; }
 html.theme-dark .loan-sign { background: #22262d !important; border-color: #3a414c !important; }
+/* יד שניה במחשב: הסינון בפאנל הצד — בלי שורת הסינון הכפולה למעלה */
+@media (min-width: 1100px) { html body:not(#_):not(#_) .secondhand-page .sh-filter-bar { display: none !important; } }

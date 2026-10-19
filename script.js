@@ -738,9 +738,9 @@ function sanitizeToOnlyPhotosAndStories() {
     const _shContent = (typeof buildPhotosPage === 'function')
       ? buildPhotosPage([], 'secondhand')
       : '<div class="photos-page secondhand-page" data-page-id="page-secondhand-main" data-section="secondhand" data-photos-json="%5B%5D"></div>';
-    pages.push({ id: 'page-secondhand-main', title: 'מוצרי יד שניה 🛒', content: _shContent });
+    pages.push({ id: 'page-secondhand-main', title: 'מוצרי גולשים 🛒', content: _shContent });
   } else {
-    if (!_shPage.title) _shPage.title = 'מוצרי יד שניה 🛒';
+    if (!_shPage.title) _shPage.title = 'מוצרי גולשים 🛒';
   }
 
   // עמוד "שותפויות" — עמוד גריד (כמו יד 2)
@@ -1315,6 +1315,8 @@ function renderTopNav() {
   const _shTop = pages.find(p => p && p.id === 'page-secondhand-main');
   if (_shTop) {
     if (_shTop.isHidden) _shTop.isHidden = false;
+    _shTop.title = 'מוצרי גולשים 🛒';
+    const _phTop = pages.find(p => p && p.id === 'page-photos-main'); if (_phTop) _phTop.title = 'תמונות גולשים 🖼️';
     topNavPages = topNavPages.filter(id => id !== 'page-secondhand-main');
     const _hi = topNavPages.indexOf('page-home-feed');
     if (_hi >= 0) topNavPages.splice(_hi + 1, 0, 'page-secondhand-main'); else topNavPages.unshift('page-secondhand-main');
@@ -6718,7 +6720,7 @@ function storyFilterCategory(cat, btn) {
     selectedStoryCategories.clear();
     selectedStoryCategories.add(cat);
   }
-  const bar = btn.closest('.story-category-tabs');
+  const bar = btn ? btn.closest('.story-category-tabs') : document.querySelector('.story-category-tabs');
   if (bar) bar.querySelectorAll('.story-cat-btn').forEach(b => b.classList.toggle('active', storyCatIsActive(b.textContent.trim())));
   artPageState.stories = 1;
   storyApplyFilters();
@@ -6957,7 +6959,7 @@ function buildStoriesPage(stories, storyKind) {
           ${(isAdmin() || isEditMode) ? `
           <button onclick="openStoryModal()" style="background:#111111; width:100%; padding:12px 16px; border-radius:8px; border:none; color:#ffffff; font-weight:bold; font-size:14px; cursor:pointer; margin-bottom:16px;">+ הוסף סיפור חדש</button>
           ` : ''}
-          ${buildSidebarTabs('', 'stories')}
+          ${buildSidebarTabs('', storyKind === 'comics' ? 'comics' : 'stories')}
         </div>
         ${buildLeftSidebarBox(popularHTML, 'stories')}
       </div>
@@ -8470,7 +8472,7 @@ function pfRefreshSidebar() {
     .filter(sec => !sec.classList.contains('pf-collapsed'))
     .map(sec => (sec.querySelector('.pf-sec-title-text') || {}).textContent);
   const tmp = document.createElement('div');
-  tmp.innerHTML = buildFiltersSidebarBox(pfActivePage());
+  tmp.innerHTML = buildFiltersSidebarBox(pfFilterKind());
   const fresh = tmp.firstElementChild;
   if (!fresh) return;
   fresh.querySelectorAll('.pf-sec').forEach(sec => {
@@ -8504,7 +8506,7 @@ function photoClearFilters() {
   // מרעננים את פאנל הסינונים של העמוד הפעיל כדי לאפס את כל תיבות הסימון
   const page = (typeof pfActivePage === 'function') ? pfActivePage() : 'photos';
   const box = mainContent.querySelector('.pf-box');
-  if (box) box.outerHTML = buildFiltersSidebarBox(page);
+  if (box) box.outerHTML = buildFiltersSidebarBox(pfFilterKind());
   // מרעננים את שורת הצ׳יפים (בעמוד התמונות)
   if (typeof photoRenderFilterBar === 'function') photoRenderFilterBar();
   if (typeof pfApplyActive === 'function') pfApplyActive();
@@ -10934,7 +10936,7 @@ async function saveUserNickname() {
 
   const page = (typeof pfActivePage === 'function') ? pfActivePage() : 'photos';
   const box = mainContent.querySelector('.pf-box');
-  if (box) box.outerHTML = buildFiltersSidebarBox(page);
+  if (box) box.outerHTML = buildFiltersSidebarBox(pfFilterKind());
 
   if (typeof pfApplyActive === 'function') pfApplyActive();
 }
@@ -11242,7 +11244,7 @@ async function submitAccountVerification() {
 
   const page = (typeof pfActivePage === 'function') ? pfActivePage() : 'photos';
   const box = document.querySelector('.pf-box');
-  if (box) box.outerHTML = buildFiltersSidebarBox(page);
+  if (box) box.outerHTML = buildFiltersSidebarBox(pfFilterKind());
 }
 window.submitAccountVerification = submitAccountVerification;
 
@@ -11380,7 +11382,7 @@ async function processVerificationRequest(targetUid, action) {
 
   const page = (typeof pfActivePage === 'function') ? pfActivePage() : 'photos';
   const box = document.querySelector('.pf-box');
-  if (box) box.outerHTML = buildFiltersSidebarBox(page);
+  if (box) box.outerHTML = buildFiltersSidebarBox(pfFilterKind());
   if (typeof pfApplyActive === 'function') pfApplyActive();
 }
 window.processVerificationRequest = processVerificationRequest;
@@ -11424,6 +11426,8 @@ window.initVerificationRealtimeListener = initVerificationRealtimeListener;
 
 function buildFiltersSidebarBox(pageType) {
   pageType = pageType || 'photos';
+  const fKind = pageType;                                   // photos | comics | stories | secondhand | ...
+  if (pageType === 'comics') pageType = 'stories';          // מיון/עמודות של קומיקס = של סיפורים
   const f = productFilters;
   const priceBtn = (id, label) =>
     `<button type="button" class="pf-price-pill${f.price === id ? ' active' : ''}" onclick="setPriceFilter('${id}', this)">${label}</button>`;
@@ -11489,7 +11493,22 @@ function buildFiltersSidebarBox(pageType) {
         `).join('')}
       </div>`;
 
+  // יד שניה: סוג ההצעה · טווח מחירים · מיקום (בחירה אחת בכל קבוצה)
+  const shRadio = (kind, cur, opts) => `<div class="pf-check-group">${opts.map(o => `
+        <label class="pf-check"><span class="pf-check-label">${escHtml(o)}</span>
+          <input type="radio" name="pf-sh-${kind}" ${o === cur ? 'checked' : ''} onchange="setShFilter('${kind}', '${artEsc(o)}'); if (typeof pfRefreshShBar === 'function') pfRefreshShBar();">
+        </label>`).join('')}</div>`;
+  // קומיקס / סיפורים: קטגוריות הקומיקס
+  const storyCats = (typeof STORY_CATEGORIES !== 'undefined' ? STORY_CATEGORIES : []);
+  const storyCatBody = `<div class="pf-check-group">${['הכל', ...storyCats].map(c => `
+        <label class="pf-check"><span class="pf-check-label">${escHtml(c)}</span>
+          <input type="radio" name="pf-story-cat" ${(typeof storyCatIsActive === 'function' && storyCatIsActive(c)) ? 'checked' : ''} onchange="storyFilterCategory('${artEsc(c)}', null)">
+        </label>`).join('')}</div>`;
   const sections = {
+    offer: sec('סוג ההצעה', shRadio('offer', typeof shOfferFilter !== 'undefined' ? shOfferFilter : 'הכל', typeof SH_OFFER_TYPES !== 'undefined' ? SH_OFFER_TYPES : ['הכל']), true),
+    price: sec('טווח מחירים', shRadio('price', typeof shPriceFilter !== 'undefined' ? shPriceFilter : 'הכל', typeof SH_PRICE_RANGES !== 'undefined' ? SH_PRICE_RANGES : ['הכל']), true),
+    shRegion: sec('מיקום', shRadio('region', typeof shRegionFilter !== 'undefined' ? shRegionFilter : 'הכל', typeof SH_REGIONS !== 'undefined' ? SH_REGIONS : ['הכל'])),
+    storyCat: sec('קטגוריה', storyCatBody, true),
     age: sec('טווח גילאים', ageBody),
     sort: sec('מיון תוצאות לפי', sortBody, true),
     category: sec('מין', catBody),
@@ -11498,7 +11517,10 @@ function buildFiltersSidebarBox(pageType) {
     size: sec('גודל', sizeBody)
   };
   // סינונים שונים מעמוד לעמוד: בסיפורים רק כללי/תאריך/גודל
-  const allowed = (pageType === 'stories') ? ['sort', 'date', 'size'] : ['sort', 'age', 'category', 'region', 'date', 'size'];
+  const allowed = fKind === 'secondhand' ? ['sort', 'offer', 'price', 'shRegion', 'date']
+    : fKind === 'comics' ? ['sort', 'storyCat', 'date']
+    : fKind === 'stories' ? ['sort', 'storyCat', 'date', 'size']
+    : ['sort', 'age', 'category', 'region', 'date', 'size'];
 
   return `
     <div class="art-sidebar-box pf-box" style="border:1.5px solid #e2e8f0; border-radius:14px; padding:18px; background:#ffffff; box-shadow:0 4px 15px rgba(15,23,42,0.05); text-align:right; direction:rtl;">
@@ -11542,6 +11564,15 @@ window.buildFiltersSidebarBox = buildFiltersSidebarBox;
 // מצב מיון נפרד לעמוד הסיפורים (כדי שהסינון ישפיע על אותו עמוד בלבד)
 let currentStoryGeneralFilter = 'הכל';
 // זיהוי העמוד הפעיל והחלת הסינון עליו בלבד
+// סוג הסינון לפי העמוד: תמונות / קומיקס / סיפורים / יד שניה — לכל אחד סינונים משלו
+function pfFilterKind() {
+  const m = (typeof mainContent !== 'undefined' && mainContent) ? mainContent : document;
+  if (m.querySelector('.secondhand-page')) return 'secondhand';
+  const st = m.querySelector('.stories-page');
+  if (st) return st.getAttribute('data-story-kind') === 'comics' ? 'comics' : 'stories';
+  return 'photos';
+}
+window.pfFilterKind = pfFilterKind;
 function pfActivePage() {
   return (typeof mainContent !== 'undefined' && mainContent && mainContent.querySelector('.stories-page')) ? 'stories' : 'photos';
 }
@@ -11722,7 +11753,7 @@ function sitePagesNavBoxHTML(section) {
 }
 function buildLeftSidebarBox(popularHTML, section) {
   const defaultNavItems = [
-    { id: 'page-photos-main', title: 'תמונות 🖼️' },
+    { id: 'page-photos-main', title: 'תמונות גולשים 🖼️' },
     { id: 'page-stories-main', title: 'קומיקס 💥' },
     { id: 'page-stories-text', title: 'סיפורים 📖' },
     { id: 'page-ideas-main', title: 'רעיונות 💡' },
@@ -12457,7 +12488,7 @@ function renderQuickUploadHero() {
       <div class="qu-options-grid is-single">
         <button type="button" class="qu-dest-pill ${st.target === 'photos' ? 'active' : ''}" onclick="quickUploadSetTarget('photos')">
           <span class="qu-pill-icon">🖼️</span>
-          <div class="qu-pill-text"><strong>תמונות</strong><small>אלבומים וגלריות תמונות</small></div>
+          <div class="qu-pill-text"><strong>תמונות גולשים</strong><small>אלבומים וגלריות תמונות</small></div>
         </button>
       </div>
       <div class="qu-input-row" style="margin-top:16px;">
@@ -13188,7 +13219,7 @@ function homeWelcomeHeroHTML() {
           </div>
         </div>
         <div class="hw-cards">
-          ${card('תמונות', 'גלריות מהקהילה', icons.photos, 'homeOpenPhotos()', '#ffffff', 'hw-c1', thumbs.photos)}
+          ${card('תמונות גולשים', 'גלריות מהקהילה', icons.photos, 'homeOpenPhotos()', '#ffffff', 'hw-c1', thumbs.photos)}
           ${card('קומיקס', 'רצועות ואיורים', icons.comics, "homeOpenSection('page-stories-main')", '#ffffff', 'hw-c2', thumbs.comics)}
           ${card('סיפורים', 'קצרים ומאמרים', icons.stories, "homeOpenSection('page-stories-text')", '#ffffff', 'hw-c3', thumbs.stories)}
         </div>
@@ -15466,7 +15497,7 @@ function buildHomeFeedPage() {
   const photoCards = photos.slice(0, maxPerRow).map(p => (typeof renderPhotoCard === 'function') ? renderPhotoCard(p) : '');
   const photosSection = `
     <div class="photos-page photo-cols-${pcols}${photoImagesMode ? '' : ' text-mode'}${photoNoImgMargins ? ' no-img-margins' : ''} home-feed-photos" data-section="photos" data-photos-json="${photosJson}">
-      ${trioCard('trio-photos', 'תמונות', 'הגלריות החדשות ביותר מהקהילה.', photoCards, 'homeOpenPhotos()', 'לכל התמונות')}
+      ${trioCard('trio-photos', 'תמונות גולשים', 'הגלריות החדשות ביותר מהקהילה.', photoCards, 'homeOpenPhotos()', 'לכל התמונות')}
     </div>`;
 
   // --- קומיקס + סיפורים (עטיפה אחת) ---
@@ -15516,7 +15547,7 @@ function homeChipsHTML(photos, comics, stories) {
   const feedChip = `<button type="button" class="hc-chip" onclick="openFeed()"><span class="hc-dot hc-dot-feed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg></span><span>הפיד שלי</span></button>`;
   return `<nav class="hc-chips" aria-label="קיצורי תוכן">
       ${feedChip}
-      ${chip('photos', 'תמונות', null, "homeGo('photos')")}
+      ${chip('photos', 'תמונות גולשים', null, "homeGo('photos')")}
       ${chip('comics', 'קומיקס', null, "homeGo('comics')")}
       ${chip('stories', 'סיפורים', null, "homeGo('stories')")}
       <button type="button" class="hc-all" onclick="navigateToPage('page-communities-main')" aria-label="כל הקטגוריות" title="כל הקטגוריות">
@@ -15530,7 +15561,7 @@ function homeCategoriesHTML(photos, comics, stories) {
   };
   // צבעים בהירים (פסטל) — הטקסט והאייקון כהים בגוון של כל אריח
   const tiles = [
-    ['photos', 'תמונות', '#ece8ff|#4c3bcf', homeCover(photos)], ['comics', 'קומיקס', '#ffe4ec|#b4235a', homeCover(comics)],
+    ['photos', 'תמונות גולשים', '#ece8ff|#4c3bcf', homeCover(photos)], ['comics', 'קומיקס', '#ffe4ec|#b4235a', homeCover(comics)],
     ['stories', 'סיפורים', '#ddf4ec|#11735a', homeCover(stories)], ['forums', 'פורומים', '#e3edfd|#1d4fb8'], ['friends', 'חברים', '#fff1d1|#9a5b00'],
     ['blinddate', 'Blind Date', '#ffe1e1|#c0262d'], ['tinder', 'התאמות', '#f4e8ff|#7e3bc4'], ['products', 'מוצרים', '#dff3fd|#0b6aa1'],
     ['news', 'חדשות', '#eef0f3|#3f4652'], ['offers', 'הצעות', '#ffecd9|#b04a0f']
@@ -15884,7 +15915,7 @@ function buildPhotosPage(albums, section) {
     searchPlaceholder = '🔍 חיפוש מוצרים...';
     noResultsText = 'לא נמצאו מוצרים התואמים לחיפוש';
     addBtnHTML = `<button class="cta-add-btn" onclick="openPhotoModal()" style="background:#111111; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: #ffffff; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); transition: all 0.2s;">
-        ➕ הוסף מוצר יד שניה
+        ➕ הוספת מוצר
        </button>
        <button onclick="openWantedModal()" style="background:#111111; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: white; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
         🔎 מחפש מוצר (קבל הצעות)
@@ -15963,7 +15994,7 @@ function buildPhotosPage(albums, section) {
         </div>
         <div class="art-sidebar art-sidebar-right">
           ${addBtnHTML}
-          ${section === 'communities' ? '' : buildSidebarTabs(savedHTML, section === 'ideas' ? 'ideas' : 'photos')}
+          ${section === 'communities' ? '' : buildSidebarTabs(savedHTML, section === 'ideas' ? 'ideas' : section === 'secondhand' ? 'secondhand' : 'photos')}
         </div>
         ${buildLeftSidebarBox(popularHTML, section)}
       </div>
@@ -16463,7 +16494,7 @@ function photoOpenDetail(id) {
     right: (typeof secondhandWantedHowBoxHTML === 'function' ? secondhandWantedHowBoxHTML() : ''),
     left: (typeof secondhandOffersBoxHTML === 'function' ? secondhandOffersBoxHTML(a) : ''),
     creator: 'מחפש/ת',
-    recTitle: 'עוד ביד שניה'
+    recTitle: 'עוד ממוצרי הגולשים'
   } : {
     back: 'חזרה למוצרים',
     right: (typeof secondhandBuyBoxHTML === 'function' ? secondhandBuyBoxHTML(a) : ''),
@@ -22448,9 +22479,9 @@ onPublicSiteValue((data) => {
     const _shp = pList.find(p => p && p.id === 'page-secondhand-main');
     if (!_shp) {
       const _shpc = (typeof buildPhotosPage === 'function') ? buildPhotosPage([], 'secondhand') : '<div class="photos-page secondhand-page" data-page-id="page-secondhand-main" data-section="secondhand" data-photos-json="%5B%5D"></div>';
-      pList.push({ id: 'page-secondhand-main', title: 'מוצרי יד שניה 🛒', content: _shpc });
+      pList.push({ id: 'page-secondhand-main', title: 'מוצרי גולשים 🛒', content: _shpc });
     } else if (!_shp.title) {
-      _shp.title = 'מוצרי יד שניה 🛒';
+      _shp.title = 'מוצרי גולשים 🛒';
     }
     // עמוד "שותפויות"
     const _ptp = pList.find(p => p && p.id === 'page-partnerships-main');
@@ -22823,7 +22854,7 @@ function contentSwitchHTML(active) {
     stories: '<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5M9 8h6M9 11h6"/>',
     comics: '<path d="M4 5h16v11H9l-5 4z"/><path d="M9 9.5h6M9 12.5h4"/>'
   };
-  const tabs = [['photos', 'תמונות'], ['stories', 'סיפורים'], ['comics', 'קומיקס']].map(([k, label]) => {
+  const tabs = [['photos', 'תמונות גולשים'], ['stories', 'סיפורים'], ['comics', 'קומיקס']].map(([k, label]) => {
     const pg = commFindPage(k);
     if (!pg) return '';
     return `<button type="button" class="cs-tab${active === k ? ' on' : ''}" ${active === k ? 'aria-current="page"' : `onclick="navigateToPage('${artEsc(pg.id)}')"`}>
@@ -23120,7 +23151,7 @@ function communityShortcutsHTML() {
       </div>
     `;
   };
-  return card('תמונות', 'photos', findPage('photos'), 'linear-gradient(135deg,#7c3aed,#4c1d95)')
+  return card('תמונות גולשים', 'photos', findPage('photos'), 'linear-gradient(135deg,#7c3aed,#4c1d95)')
        + card('קומיקס', 'comics', findPage('comics'), 'linear-gradient(135deg,#8b5cf6,#6d28d9)')
        + card('סיפורים', 'stories', findPage('stories'), 'linear-gradient(135deg,#0ea5e9,#0369a1)')
        + card('פורומים', 'forums', findPage('forums'), 'linear-gradient(135deg,#a855f7,#7e22ce)')
@@ -24222,6 +24253,8 @@ Object.assign(UI_EN, { 'ליום': '/ day', 'לשבוע': '/ week', 'לחודש'
 UI_EN_PATTERNS.push([/תקופת השאלה:/g, 'Loan period:']);
 Object.assign(UI_EN, { 'תקנון ההשאלה': 'Loan agreement', 'חתימה על התקנון': 'Sign the agreement', 'שם מלא': 'Full name', 'חתמו כאן באצבע או בעכבר': 'Sign here with your finger or mouse', 'ניקוי': 'Clear', 'קראתי את כל הסעיפים ואני מסכים/ה להם': 'I have read all the clauses and agree to them', 'חתימה ושליחה למשאיל': 'Sign and send to the lender', 'המוצר יוחזר במצב שבו התקבל': 'The item will be returned in the condition it was received', 'תקופת ההשאלה מוסכמת מראש בין הצדדים': 'The loan period is agreed in advance', 'נזק, אובדן או גניבה — באחריות השואל': 'Damage, loss or theft is the borrower’s responsibility', 'איסוף והחזרה בתיאום מראש': 'Pickup and return by prior arrangement', 'אין להעביר את המוצר לצד שלישי ללא אישור': 'The item may not be passed to a third party without approval' });
 UI_EN_PATTERNS.push([/^(\d+) סעיפים · חתימה$/g, '$1 clauses · signature']);
+Object.assign(UI_EN, { 'סוג ההצעה': 'Offer type', 'טווח מחירים': 'Price range', 'מכירה': 'Sale', 'השאלה': 'Loan', 'החלפה': 'Swap', 'עד ₪100': 'Up to ₪100' });
+Object.assign(UI_EN, { 'תמונות גולשים': 'Member photos', 'תמונות גולשים 🖼️': 'Member photos 🖼️', 'מוצרי גולשים': 'Member products', 'מוצרי גולשים 🛒': 'Member products 🛒', 'עוד ממוצרי הגולשים': 'More member products' });
 let __uiTranslating = false;
 // לא נוגעים בקוד עצמו. הודעות משתמשים/תוכן מוגנים ממילא כי המילון מתרגם
 // רק מחרוזות מוכרות של הממשק — תוכן חופשי שהמשתמשים כתבו לא מופיע במילון.
@@ -26968,13 +27001,13 @@ function buildSiteFooterHTML() {
     return `<li><a href="#" onclick="event.preventDefault(); navigateToPage('${pageId}')">${escHtml(cleanTitle(p.title) || fallback)}</a></li>`;
   };
   const contentLinks = [
-    link('page-photos-main', 'תמונות'), link('page-stories-main', 'סיפורים'),
+    link('page-photos-main', 'תמונות גולשים'), link('page-stories-main', 'סיפורים'),
     link('page-ideas-main', 'רעיונות'), link('page-news-main', 'חדשות'), link('page-questions-main', 'שאלות גולשים'),
     link('page-reviews-main', 'ביקורת')
   ].join('');
   const communityLinks = [
     link('page-communities-main', 'קהילה'), link('page-offers-main', 'הצעות'),
-    link('page-partnerships-main', 'שותפויות'), link('page-secondhand-main', 'מוצרי יד שניה'),
+    link('page-partnerships-main', 'שותפויות'), link('page-secondhand-main', 'מוצרי גולשים'),
     link('page-subscription-main', 'מנוי')
   ].join('');
   const social = Object.keys(SITE_FOOTER_SOCIAL).filter(k => SITE_FOOTER_SOCIAL[k]).map(k => {
@@ -27238,7 +27271,7 @@ function mobileMenuHTML() {
   const nav = id => `navigateToPage('${id}')`;
   const pageAct = kind => { const p = (typeof commFindPage === 'function') ? commFindPage(kind) : null; return p ? nav(p.id) : ''; };
   const tiles = [
-    ['photos', 'תמונות', 'homeOpenPhotos()'], ['stories', 'סיפורים', "homeOpenSection('page-stories-text')"], ['comics', 'קומיקס', "homeOpenSection('page-stories-main')"],
+    ['photos', 'תמונות גולשים', 'homeOpenPhotos()'], ['stories', 'סיפורים', "homeOpenSection('page-stories-text')"], ['comics', 'קומיקס', "homeOpenSection('page-stories-main')"],
     ['forums', 'פורומים', pageAct('forums')], ['friends', 'חברים', pageAct('friends')], ['blinddate', 'Blind Date', pageAct('blinddate')],
     ['tinder', 'התאמות', pageAct('tinder')], ['products', 'מוצרים', pageAct('products')], ['news', 'חדשות', nav('page-news-main')],
     ['offers', 'הצעות', nav('page-offers-main')], ['feed', 'הפיד שלי', 'openFeed()'], ['saved', 'שמורים', 'openSavedModal()'],
@@ -28050,3 +28083,11 @@ async function loanSigSubmit(id, title, lenderUid, lenderName) {
   } catch (e) { console.error(e); showCopyToast('לא הצלחנו לשמור את החתימה — נסו שוב'); }
 }
 Object.assign(window, { loanSigClear, loanSigSubmit });
+
+
+// יד שניה: מסנכרנים את שורת הסינון העליונה (בפלאפון) עם הסינון בצד
+function pfRefreshShBar() {
+  const bar = document.querySelector('.sh-filter-bar');
+  if (bar && typeof secondhandFilterBarHTML === 'function') bar.outerHTML = secondhandFilterBarHTML();
+}
+window.pfRefreshShBar = pfRefreshShBar;
