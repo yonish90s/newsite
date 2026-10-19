@@ -13400,3 +13400,22 @@ html body:not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="communities
   html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.hw-watch-lines small, .hw-watch-cmp-labels, .hw-watch-cmp-labels span) { font-size: 8.5px !important; }
   html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .hw-watch-cta { font-size: 11px !important; padding: 5px 12px !important; }
 }
+
+/* ===== אייקוני הכותרת — קו דק אחיד, בלי מסגרות, מתאים לבהיר ולכהה ===== */
+:root { --hd-ink: #1d1d22; --hd-hover: #f1f0f4; --hd-av-bg: #f1f0f4; }
+html.theme-dark { --hd-ink: #ebe8f0; --hd-hover: #241f2d; --hd-av-bg: #241f2d; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .apple-nav-content :is(.notif-bell, .mnav-btn) { width: 34px !important; height: 34px !important; min-width: 34px !important; padding: 0 !important; border: 0 !important; border-radius: 50% !important; background: transparent !important; box-shadow: none !important; color: var(--hd-ink) !important; align-items: center !important; justify-content: center !important; transition: background .15s ease, color .15s ease, transform .12s ease !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .apple-nav-content :is(.notif-bell, .mnav-btn):hover { background: var(--hd-hover) !important; color: #ec5f80 !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .apple-nav-content :is(.notif-bell, .mnav-btn):active { transform: scale(.92) !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .apple-nav-content .notif-bell svg { width: 20px !important; height: 20px !important; stroke-width: 1.75 !important; color: inherit !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .apple-nav-content .mnav-btn .hdr-av { width: 30px !important; height: 30px !important; border-radius: 50% !important; background: var(--hd-av-bg) !important; color: var(--hd-ink) !important; border: 0 !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .apple-nav-content .mnav-btn .hdr-av svg { width: 18px !important; height: 18px !important; }
+@media (max-width: 768px) {
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .apple-nav-content :is(.notif-bell, .mnav-btn) { width: 32px !important; height: 32px !important; min-width: 32px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .apple-nav-content .notif-bell svg { width: 19px !important; height: 19px !important; }
+}
+
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .apple-nav-content #header-likes-btn svg, html body:not(#_):not(#_):not(#_):not(#_):not(#_) .apple-nav-content #header-likes-btn svg path { fill: none !important; stroke: currentColor !important; }
+
+/* ===== תמונות נקיות: בלי לב ובלי שום מלל על התמונה ===== */
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) :is(.art-heart-overlay, .pg-ov, .photo-count-badge, .cr-cap, .cr-new, .cr-count, .art-row-img-wrap .score-badge, .art-row-img-wrap [class*="badge"]) { display: none !important; }

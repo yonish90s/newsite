@@ -27869,7 +27869,7 @@ function renderHeaderAvatar() {
   const dot = badge && badge.style.display !== 'none' && badge.textContent.trim() ? '<i class="hdr-av-dot" aria-hidden="true"></i>' : '';
   btn.innerHTML = (reg
     ? `<span class="au-av hdr-av" data-av-uid="${escHtml(u.uid)}">${escHtml(name.trim().charAt(0) || '?')}</span>`
-    : `<span class="hdr-av hdr-av-guest"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span>`) + dot;
+    : `<span class="hdr-av hdr-av-guest"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="3.6"/><path d="M5.5 19.5a6.5 6.5 0 0 1 13 0"/></svg></span>`) + dot;
   btn.setAttribute('aria-label', reg ? 'התפריט והפרופיל שלי' : 'תפריט');
   btn.classList.add('has-av');
   if (typeof avatarHydrate === 'function') { try { avatarHydrate(btn); } catch (e) {} }

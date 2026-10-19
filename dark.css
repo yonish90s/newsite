@@ -2331,6 +2331,8 @@ html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="
 html.theme-dark .cg-badge-new { background: color-mix(in srgb, #d6f74a 22%, #17141d) !important; color: #eceef1 !important; }
 html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="communities"] .comm-grid-card { background: #352e42 !important; }
 html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="communities"] .comm-grid-sub { color: #9aa2ad !important; }
+html.theme-dark { --hd-ink: #eceef1 !important; --hd-av-bg: #1d1924 !important; }
+html.theme-dark.theme-dark { --hd-av-bg: #352e42 !important; }
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #eceef1 !important; }
 html.theme-dark [style*="color:#111111"] { color: #eceef1 !important; }
