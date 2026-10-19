@@ -13495,3 +13495,19 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-like-btn.liked { 
   html body:not(#_):not(#_):not(#_):not(#_):not(#_) .home-welcome :is(.hw-stats, .hw-watch)::after { display: none !important; }
   html body:not(#_):not(#_):not(#_):not(#_):not(#_) .home-welcome .hw-watch-screen { background: transparent !important; border: 0 !important; box-shadow: none !important; }
 }
+
+/* ===== תפריט הצד: ריבועים קטנים בהרבה (~60%) — 4 בשורה ===== */
+html body:not(#_):not(#_):not(#_):not(#_) .mnx .mnx-list.mnx-grid { grid-template-columns: repeat(4, 1fr) !important; gap: 6px !important; padding: 6px 12px !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .mnx .mnx-grid .mnx-item { aspect-ratio: auto !important; height: 54px !important; padding: 6px 2px !important; gap: 4px !important; border-radius: 11px !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .mnx .mnx-grid .mnx-item svg { width: 16px !important; height: 16px !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .mnx .mnx-grid .mnx-item span { font-size: 9.5px !important; font-weight: 600 !important; -webkit-line-clamp: 1 !important; white-space: nowrap !important; text-overflow: ellipsis !important; max-width: 100% !important; display: block !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .mnx :is(.mnav-h) { font-size: 13px !important; margin: 10px 14px 4px !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .mnx .mnav-acc summary { font-size: 12.5px !important; padding: 10px 14px !important; gap: 8px !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .mnx .mnav-acc summary svg { width: 16px !important; height: 16px !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .mnx .mnav-sc-empty { font-size: 11px !important; padding: 8px 10px !important; margin: 0 12px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .mnx .mnx-grid .mnx-item span { flex: none !important; height: auto !important; min-height: 12px !important; max-height: none !important; line-height: 12px !important; overflow: hidden !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .mnx .mnav-scs { gap: 6px !important; padding: 0 12px !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .mnx .mnav-sc { width: 54px !important; flex: 0 0 54px !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .mnx .mnav-sc-img { width: 54px !important; height: 54px !important; border-radius: 11px !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .mnx .mnav-sc-name { font-size: 9.5px !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .mnx .mnx-grid .mnx-item { justify-content: center !important; }
