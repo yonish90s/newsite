@@ -24200,6 +24200,7 @@ Object.assign(UI_EN, {
   'רצועות ואיורים': 'Strips & illustrations', 'קצרים ומאמרים': 'Shorts & articles', 'הנתונים שלי': 'My stats', 'דוגמה': 'Example', 'מעודכן עכשיו': 'Updated now',
   'פוסטים': 'Posts', 'לייקים': 'Likes', 'דירוג': 'Rating', 'נקודות': 'Points', 'מקום': 'Rank', 'מדרגים': 'Raters', 'התחברו כדי לראות את שלכם': 'Log in to see yours',
   // עוגיות
+  'אנו משתמשים בעוגיות.': 'We use cookies.', 'פרטים': 'Details', 'אישור': 'Accept', 'דחייה': 'Decline',
   'אנו משתמשים בעוגיות לצורכי תפעול, אנליטיקה ושיווק. לפרטים ראו את מדיניות הפרטיות.': 'We use cookies for operation, analytics and marketing. See our privacy policy for details.',
   'מאשר/ת': 'Accept', 'לא מאשר/ת': 'Decline', 'מדיניות פרטיות': 'Privacy policy', 'הסכמה לעוגיות': 'Cookie consent',
   // תמונות / קומיקס / סיפורים

@@ -2333,6 +2333,13 @@ html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_) .photos-page[dat
 html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="communities"] .comm-grid-sub { color: #9aa2ad !important; }
 html.theme-dark { --hd-ink: #eceef1 !important; --hd-av-bg: #1d1924 !important; }
 html.theme-dark.theme-dark { --hd-av-bg: #352e42 !important; }
+@media (max-width: 768px) {
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 .art-row-meta > span:not(.photo-author-link):not(.art-row-sep) { color: #9aa2ad !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 .art-row-text > div:not(.art-row-meta):not(.photo-card-links) { color: #9aa2ad !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 .photo-card-links .art-telegram-btn { background: #1d1924 !important; color: #eceef1 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 .photo-card-links .art-telegram-btn.is-saved { background: #352e42 !important; }
+html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 .photo-card-links .art-telegram-btn { background: #352e42 !important; }
+}
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #eceef1 !important; }
 html.theme-dark [style*="color:#111111"] { color: #eceef1 !important; }

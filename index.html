@@ -15,8 +15,8 @@
   <!-- ספריית localforage לשמירת תמונות -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
   <!-- קישור לקובץ העיצוב החיצוני (עם פרמטר למניעת שמירה במטמון) -->
-  <link rel="stylesheet" href="./style.css?v=1726">
-  <link rel="stylesheet" href="./dark.css?v=143">
+  <link rel="stylesheet" href="./style.css?v=1728">
+  <link rel="stylesheet" href="./dark.css?v=145">
   <script>
     // מצב בהיר/כהה — נקבע לפני שהדף מצויר כדי שלא יהבהב (בחירה שמורה, אחרת לפי הגדרות המכשיר)
     (function () {
@@ -1138,11 +1138,10 @@ html.theme-dark .pl-bar { background: #2a2f37; }
   <!-- באנר עוגיות — קופץ בכל כניסה לאתר -->
   <div id="cookie-bar" class="cookie-bar" role="dialog" aria-live="polite" aria-label="הסכמה לעוגיות">
     <span class="cookie-bar-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-4.5-4A4 4 0 0 1 13 3.1 10 10 0 0 0 12 2zm-3.5 7a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm6 6a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm-7 2a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm4-4.5a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg></span>
-    <p class="cookie-bar-text">אנו משתמשים בעוגיות לצורכי תפעול, אנליטיקה ושיווק. לפרטים ראו את מדיניות הפרטיות.</p>
+    <p class="cookie-bar-text">אנו משתמשים בעוגיות.&nbsp;<a href="#" class="cookie-more" onclick="event.preventDefault(); window.openLegal ? openLegal('privacy') : cookieOpenPolicy()">פרטים</a></p>
     <div class="cookie-bar-btns">
-      <button type="button" class="cookie-btn yes" onclick="cookieChoose('yes')">מאשר/ת</button>
-      <button type="button" class="cookie-btn" onclick="cookieChoose('no')">לא מאשר/ת</button>
-      <button type="button" class="cookie-btn ghost" onclick="window.openLegal ? openLegal('privacy') : cookieOpenPolicy()">מדיניות פרטיות</button>
+      <button type="button" class="cookie-btn yes" onclick="cookieChoose('yes')">אישור</button>
+      <button type="button" class="cookie-btn" onclick="cookieChoose('no')">דחייה</button>
     </div>
   </div>
   <div id="cookie-policy" class="cookie-policy" onclick="if(event.target===this) this.style.display='none'">
@@ -1237,7 +1236,7 @@ html.theme-dark .pl-bar { background: #2a2f37; }
     try { if (localStorage.getItem('mtab_hidden') === '1') document.documentElement.classList.add('mtab-hidden'); } catch (e) {}
   </script>
   <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
-  <script type="module" src="./script.js?v=1636"></script>
+  <script type="module" src="./script.js?v=1637"></script>
   <script defer src="./a11y.js?v=1"></script>
 </body>
 </html>
