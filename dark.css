@@ -2172,6 +2172,9 @@ html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_) .uw-radar .uw-r-
 html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_) .uw-radar :is(.uw-r-ring.r1, .uw-r-ring.r3) { fill: #eceef1 !important; }
 html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_) .uw-radar .uw-r-axis { stroke: #eceef1 !important; }
 html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_) .uw-radar .uw-r-dot { stroke: #eceef1 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) .art-price-unit { color: #eceef1 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) .art-loan-period { color: #eceef1 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) .pd2-loan-period { color: #eceef1 !important; }
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #eceef1 !important; }
 html.theme-dark [style*="color:#111111"] { color: #eceef1 !important; }

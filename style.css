@@ -12694,3 +12694,8 @@ html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .uw-radar .uw-r-val { fill:
 html body:not(#_):not(#_):not(#_):not(#_) .uw-row:has(.uw-kinks) { flex-direction: column !important; align-items: stretch !important; gap: 10px !important; }
 html body:not(#_):not(#_):not(#_):not(#_) .uw-row:has(.uw-kinks) .uw-label { width: auto !important; }
 html body:not(#_):not(#_):not(#_):not(#_) .uw-kinks li { grid-template-columns: 22px minmax(90px, 40%) 1fr 26px !important; }
+/* השאלה: "לחודש" ו"תקופת השאלה" מודגשים כמו המחיר */
+html body:not(#_):not(#_):not(#_) .art-price-unit { font-size: 16px !important; font-weight: 800 !important; color: #111111 !important; margin-inline-start: 4px; }
+html body:not(#_):not(#_):not(#_) .art-loan-period { font-size: 14px !important; font-weight: 800 !important; color: #111111 !important; }
+html body:not(#_):not(#_):not(#_) .pd2-loan-period { font-weight: 800 !important; color: #111111 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) :is(.art-price-unit, .art-loan-period, .pd2-loan-period) { color: #eceef1 !important; }
