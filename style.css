@@ -13165,3 +13165,61 @@ html.theme-dark .fs-slider .dsl { background: #22262d !important; } html.theme-d
   .dsl-in::-webkit-slider-thumb { width: 20px; height: 20px; border-width: 2px; }
   .dsl-track { height: 22px; } .dsl-in { height: 22px; }
 }
+
+/* ===== צבעים חיים בהשראת candy.ai — ורוד ראשי, סגול לגבולות, זהב לפרימיום ===== */
+:root { --cd-pink: #ec5f80; --cd-pink-2: #f27596; --cd-pink-soft: rgba(236,95,128,.12); --cd-purple: #8b3dff; --cd-gold: #d9b45a; }
+/* כפתורי פעולה ראשיים = גלולה ורודה */
+html body:not(#_):not(#_):not(#_) :is(.ha-btn, .fs-go, .pf-empty-btn, .mnx-login, .hw-cta, .cookie-btn.yes, .ofp-send, .dm-send-btn, #dm-send, .lc-btn-primary, .pd2-offer-btn) {
+  background: var(--cd-pink) !important; color: #ffffff !important; border-color: var(--cd-pink) !important; box-shadow: 0 4px 14px rgba(236,95,128,.28) !important;
+}
+html body:not(#_):not(#_):not(#_) :is(.ha-btn, .fs-go, .pf-empty-btn, .mnx-login, .hw-cta, .cookie-btn.yes):hover { background: var(--cd-pink-2) !important; }
+html body:not(#_):not(#_):not(#_) .ha-btn.following, html body:not(#_):not(#_):not(#_) .ha-btn.on { background: transparent !important; color: var(--cd-pink) !important; box-shadow: none !important; }
+/* מילת הדגשה בכותרות המקטעים */
+html body:not(#_):not(#_) .cr-head h2 > span { color: var(--cd-pink) !important; }
+/* תגית "✦ חדש" */
+html body:not(#_):not(#_) .cr-new { background: var(--cd-pink) !important; color: #ffffff !important; border: 0 !important; border-radius: 0 0 10px 0 !important; font-weight: 800 !important; }
+/* לשונית פעילה + נקודה */
+html body:not(#_):not(#_) .hx-tab.on::after { background: var(--cd-pink) !important; }
+html body:not(#_):not(#_) .hx-dot { background: var(--cd-pink) !important; }
+/* כרטיסים מודגשים — מסגרת סגולה */
+html body:not(#_):not(#_) .cr-card:hover { box-shadow: 0 0 0 2px var(--cd-purple), 0 8px 24px rgba(139,61,255,.25) !important; }
+/* סליידרים בורוד */
+html body:not(#_):not(#_) .dsl-fill { background: var(--cd-pink) !important; }
+html body:not(#_):not(#_) .dsl-in::-webkit-slider-thumb { border-color: var(--cd-pink) !important; }
+/* מתגים פעילים */
+html body:not(#_):not(#_) .fs-switch.on, html body:not(#_):not(#_) .fs-toggle.on { background: var(--cd-pink) !important; }
+/* מונים/באדג'ים */
+html body:not(#_):not(#_) :is(.mtab-badge, #offers-badge, .notif-badge, .sh-filter-open b) { background: var(--cd-pink) !important; color: #fff !important; }
+/* סרגל תחתון במובייל — זכוכית כהה, פעיל בורוד */
+@media (max-width: 768px) {
+  html body:not(#_):not(#_):not(#_):not(#_) .mtabs { background: rgba(24,20,30,.82) !important; -webkit-backdrop-filter: blur(18px) saturate(1.4) !important; backdrop-filter: blur(18px) saturate(1.4) !important; border: 1px solid rgba(255,255,255,.08) !important; box-shadow: 0 10px 30px rgba(0,0,0,.35) !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .mtabs .mtab { color: #d9d4e0 !important; background: transparent !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .mtabs .mtab > svg { color: #d9d4e0 !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .mtabs .mtab.active, html body:not(#_):not(#_):not(#_):not(#_) .mtabs .mtab.active > svg { color: var(--cd-pink) !important; background: transparent !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .mtabs .mtab-plus-ic { background: transparent !important; color: #ffffff !important; box-shadow: none !important; border: 0 !important; }
+}
+/* מצב כהה — שחור-סגלגל כמו candy */
+html.theme-dark body:not(#_):not(#_) { background: #0f0d14 !important; }
+html.theme-dark body:not(#_):not(#_) :is(.apple-nav, .hx-tabs, #m-sheet, .side-panel, .cookie-bar) { background-color: #131019 !important; border-color: #241f2d !important; }
+html.theme-dark body:not(#_):not(#_) :is(.cr-card, .ha-box, .pf-card, .fs-slider .dsl) { border-color: #2a2433 !important; }
+
+/* ===== מובייל: עוד יותר קטן ===== */
+@media (max-width: 768px) {
+  html body:not(#_):not(#_):not(#_):not(#_) .mtabs { height: 50px !important; padding: 3px 6px !important; border-radius: 20px !important; left: 14px !important; right: 14px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .mtabs .mtab { height: 44px !important; font-size: 9.5px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .mtabs .mtab > svg { width: 18px !important; height: 18px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .mtabs .mtab > span { font-size: 9.5px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .mtabs .mtab-plus-ic { width: 34px !important; height: 34px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .mtabs .mtab-plus-ic svg { width: 20px !important; height: 20px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .apple-nav-content .notif-bell,
+  html body:not(#_):not(#_):not(#_):not(#_) .apple-nav-content .mnav-btn,
+  html body:not(#_):not(#_):not(#_):not(#_) .apple-nav-content > div > button { width: 29px !important; height: 29px !important; min-width: 29px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .apple-nav-content button svg { width: 15px !important; height: 15px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .hx-tabs .hx-tab { font-size: 13px !important; padding: 9px 11px !important; }
+  html body:not(#_):not(#_):not(#_) :is(.ha-btn, .fs-go, .pf-empty-btn, .mnx-login, .hw-cta) { font-size: 13px !important; padding: 7px 16px !important; min-height: 0 !important; height: auto !important; }
+  html body:not(#_):not(#_):not(#_) .cookie-btn { height: 30px !important; font-size: 12px !important; }
+  html body:not(#_):not(#_):not(#_) .cookie-bar-text { font-size: 12px !important; }
+  html body:not(#_):not(#_) .cr-head h2 { font-size: 17px !important; }
+  html body:not(#_):not(#_) .cr-head p { font-size: 12px !important; }
+  html body:not(#_):not(#_) .cr-new { font-size: 9.5px !important; padding: 3px 7px !important; }
+}
