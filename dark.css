@@ -2071,6 +2071,15 @@ html.theme-dark body:not(#_):not(#_) .pfeed-guest-btn { border: 1px solid #32384
 html.theme-dark body:not(#_):not(#_) .pfeed-guest-btn:hover { background: #22262d !important; }
 html.theme-dark.theme-dark .pfeed-guest { background: #3a414c !important; }
 html.theme-dark.theme-dark body:not(#_):not(#_) .pfeed-guest-btn { background: #3a414c !important; }
+html.theme-dark .pfg-tabs { border-bottom: 1px solid #323842 !important; }
+html.theme-dark .pfg-tab { color: #c8cdd4 !important; }
+html.theme-dark .pfg-tab.on { color: #eceef1 !important; }
+html.theme-dark .pfg-tab.on::after { background: #3a414c !important; }
+html.theme-dark .pfg-media { background: #22262d !important; }
+html.theme-dark .pfg-title { color: #eceef1 !important; }
+html.theme-dark .pfg-by { color: #c8cdd4 !important; }
+html.theme-dark.theme-dark .pfg-tab.on::after { background: #2a2f37 !important; }
+html.theme-dark.theme-dark .pfg-media { background: #3a414c !important; }
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #eceef1 !important; }
 html.theme-dark [style*="color:#111111"] { color: #eceef1 !important; }

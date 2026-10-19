@@ -17225,7 +17225,7 @@ function buildUserPageHTML(authorId, authorName) {
         <button type="button" class="pf-tab" data-tab="gallery" onclick="pfTab('gallery')">גלריה <b>${authorAlbums.length}</b></button>
         <button type="button" class="pf-tab" data-tab="about" onclick="pfTab('about')">אודות</button>
       </nav>
-      <div class="pf-panel" data-panel="posts">${postsListHTML('profile', authorPosts, false)}</div>
+      <div class="pf-panel" data-panel="posts">${pfGridHTML(authorPosts)}<div class="pf-list-mobile">${postsListHTML('profile', authorPosts, false)}</div></div>
       <div class="pf-panel" data-panel="gallery" hidden>${profileUploadsHTML(authorAlbums)}</div>
       <div class="pf-panel" data-panel="about" hidden><div id="user-page-watch">${userWatchHTML(window._upState)}</div></div>
     </div>
@@ -24146,6 +24146,8 @@ Object.assign(UI_EN, { 'מעקב אחרי היוצר': 'Follow the creator', 'ב
 Object.assign(UI_EN, { 'פרסום באנונימי': 'Post anonymously', 'אנונימי': 'Anonymous' });
 Object.assign(UI_EN, { 'תגובות': 'Comments' });
 Object.assign(UI_EN, { 'הפיד של האתר': "The site's feed", 'התחברו ועקבו אחרי יוצרים — כל מה שהם מעלים יופיע כאן': 'Log in and follow creators — everything they post will show up here' });
+Object.assign(UI_EN, { 'שיתופים': 'Reposts', 'עדיין אין שיתופים': 'No reposts yet' });
+UI_EN_PATTERNS.push([/^(\d+)\s*פוסטים$/g, '$1 posts'], [/^(\d+)\s*שיתופים$/g, '$1 reposts']);
 let __uiTranslating = false;
 // לא נוגעים בקוד עצמו. הודעות משתמשים/תוכן מוגנים ממילא כי המילון מתרגם
 // רק מחרוזות מוכרות של הממשק — תוכן חופשי שהמשתמשים כתבו לא מופיע במילון.
@@ -27676,3 +27678,52 @@ function openAuthorAbout(uid, name) {
   }, 120);
 }
 Object.assign(window, { togglePostComments, openAuthorAbout });
+
+
+// ============================================================
+// פרופיל במחשב: "הכל / פוסטים / שיתופים" + גריד תמונות (צפיות, מספר תמונות, כותרת, ממי שותף)
+// ============================================================
+var pfGridItems = [];
+function pfGridHTML(items) {
+  pfGridItems = items || [];
+  const posts = pfGridItems.filter(x => !x.__repostBy).length;
+  const reposts = pfGridItems.length - posts;
+  return `<div class="pfg">
+    <nav class="pfg-tabs" role="tablist">
+      <button type="button" class="pfg-tab on" data-f="all" onclick="pfGridFilter('all')">הכל</button>
+      <button type="button" class="pfg-tab" data-f="posts" onclick="pfGridFilter('posts')"><b>${posts}</b> פוסטים</button>
+      <button type="button" class="pfg-tab" data-f="reposts" onclick="pfGridFilter('reposts')"><b>${reposts}</b> שיתופים</button>
+    </nav>
+    <div class="pfg-grid" id="pfg-grid">${pfGridCardsHTML('all')}</div>
+  </div>`;
+}
+function pfGridCardsHTML(f) {
+  const adultOk = (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('age_verified') === 'true');
+  const list = pfGridItems.filter(x => f === 'all' || (f === 'posts' ? !x.__repostBy : !!x.__repostBy));
+  if (!list.length) return `<div class="pf-empty">${f === 'reposts' ? 'עדיין אין שיתופים' : 'עדיין אין פוסטים'}</div>`;
+  return list.map(x => {
+    const imgs = (Array.isArray(x.images) ? x.images.filter(Boolean) : []);
+    if (!imgs.length && x.image) imgs.push(x.image);
+    const open = x.__type === 'photo' ? `photoOpenDetail('${artEsc(x.id)}')` : `storyOpenDetail('${artEsc(x.id)}')`;
+    const views = typeof photoGetViews === 'function' ? photoGetViews(x.id) : 0;
+    const vtxt = typeof formatViews === 'function' ? formatViews(views) : views;
+    const kindIc = x.__type === 'photo'
+      ? '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 7h3l1.5-2h7L17 7h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.4" fill="#000" opacity=".35"/></svg>'
+      : '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 3h11l3 3v15H5z"/></svg>';
+    const by = x.__repostBy ? `<small class="pfg-by">${REPOST_ICON || ''}<span>${escHtml(x.author || 'משתמש')}</span></small>` : '';
+    return `<article class="pfg-card" onclick="${open}">
+      <div class="pfg-media${x.isAdult && !adultOk ? ' blur' : ''}">
+        ${imgs.length ? `<img src="${escHtml(imgs[0])}" alt="" loading="lazy">` : `<div class="pfg-ph">${kindIc}</div>`}
+        <span class="pfg-views"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>${vtxt}</span>
+        <span class="pfg-count">${kindIc}${imgs.length || 1}</span>
+      </div>
+      <b class="pfg-title">${escHtml(x.title || '')}</b>
+      ${by}
+    </article>`;
+  }).join('');
+}
+function pfGridFilter(f) {
+  document.querySelectorAll('.pfg-tab').forEach(b => b.classList.toggle('on', b.dataset.f === f));
+  const g = document.getElementById('pfg-grid'); if (g) g.innerHTML = pfGridCardsHTML(f);
+}
+window.pfGridFilter = pfGridFilter;
