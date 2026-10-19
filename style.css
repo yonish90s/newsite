@@ -13314,3 +13314,11 @@ html body:not(#_):not(#_) .ha-box .ha-x { position: absolute; top: 12px; left: 1
 html body:not(#_):not(#_) .ha-box .ha-x:hover { background: rgba(0,0,0,.06); color: #111111; }
 html body:not(#_):not(#_) .ha-box .ha-x svg { width: 15px; height: 15px; }
 html.theme-dark body:not(#_):not(#_) .ha-box .ha-x:hover { background: rgba(255,255,255,.08); color: #ffffff; }
+
+/* חלון צד: ידית גרירה בקצה כדי למתוח / להקטין */
+.fo-panel-resize { position: absolute; top: 0; bottom: 0; right: -5px; width: 10px; cursor: ew-resize; z-index: 5; touch-action: none; }
+.fo-panel-resize::after { content: ""; position: absolute; top: 50%; right: 3px; width: 4px; height: 44px; margin-top: -22px; border-radius: 4px; background: rgba(120,120,130,.35); transition: background .15s ease, height .15s ease; }
+.fo-panel-resize:hover::after, .fo-panel.resizing .fo-panel-resize::after { background: #ec5f80; height: 64px; margin-top: -32px; }
+.fo-panel.resizing { transition: none !important; user-select: none; }
+html.fo-resizing, html.fo-resizing * { cursor: ew-resize !important; user-select: none !important; }
+@media (max-width: 768px) { .fo-panel-resize { display: none; } }

@@ -27506,6 +27506,7 @@ function openForumsPanel() {
     document.body.appendChild(w);
   }
   if (typeof forumSubscribe === 'function') forumSubscribe();
+  sidePanelApplyWidth(w);
   w.style.display = 'block';
   requestAnimationFrame(() => w.classList.add('show'));
   forumRender();
@@ -27535,9 +27536,11 @@ function openSidePanel(id, title, bodyHTML, fullAction) {
           <button type="button" class="fo-panel-x" onclick="closeSidePanel('${id}')" aria-label="סגירה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
         </header>
         <div class="fo-panel-body"></div>
+        <div class="fo-panel-resize" onpointerdown="sidePanelResizeStart(event)" title="גררו כדי להגדיל / להקטין" aria-hidden="true"></div>
       </aside>`;
     document.body.appendChild(w);
   }
+  sidePanelApplyWidth(w);
   w.querySelector('.fo-panel-body').innerHTML = bodyHTML;
   w.style.display = 'block';
   requestAnimationFrame(() => w.classList.add('show'));
@@ -28832,3 +28835,31 @@ function homeAsideHide(btn, title) {
   if (box) { box.style.transition = 'opacity .25s ease, transform .25s ease'; box.style.opacity = '0'; box.style.transform = 'scale(.97)'; setTimeout(() => box.remove(), 250); }
 }
 window.homeAsideHide = homeAsideHide;
+
+
+// חלון צד — אפשר למתוח ולהקטין בגרירה של הקצה (נשמר בדפדפן)
+function sidePanelApplyWidth(w) {
+  const p = w && w.querySelector('.fo-panel'); if (!p) return;
+  if (!p.querySelector('.fo-panel-resize')) p.insertAdjacentHTML('beforeend', '<div class="fo-panel-resize" onpointerdown="sidePanelResizeStart(event)" title="גררו כדי להגדיל / להקטין" aria-hidden="true"></div>');
+  let v = 0; try { v = Number(localStorage.getItem('side_panel_w')) || 0; } catch (e) {}
+  if (v && window.innerWidth > 768) p.style.setProperty('width', Math.min(v, window.innerWidth - 40) + 'px', 'important');
+  else p.style.removeProperty('width');
+}
+function sidePanelResizeStart(e) {
+  if (window.innerWidth <= 768) return;
+  const p = e.target.closest('.fo-panel'); if (!p) return;
+  e.preventDefault();
+  const left = p.getBoundingClientRect().left;
+  p.classList.add('resizing'); document.documentElement.classList.add('fo-resizing');
+  const move = ev => {
+    const wv = Math.max(320, Math.min(ev.clientX - left, window.innerWidth - 40));
+    p.style.setProperty('width', wv + 'px', 'important');
+  };
+  const up = () => {
+    window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up);
+    p.classList.remove('resizing'); document.documentElement.classList.remove('fo-resizing');
+    try { localStorage.setItem('side_panel_w', String(Math.round(p.getBoundingClientRect().width))); } catch (er) {}
+  };
+  window.addEventListener('pointermove', move); window.addEventListener('pointerup', up);
+}
+window.sidePanelResizeStart = sidePanelResizeStart;
