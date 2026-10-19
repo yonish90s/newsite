@@ -12699,3 +12699,32 @@ html body:not(#_):not(#_):not(#_) .art-price-unit { font-size: 16px !important; 
 html body:not(#_):not(#_):not(#_) .art-loan-period { font-size: 14px !important; font-weight: 800 !important; color: #111111 !important; }
 html body:not(#_):not(#_):not(#_) .pd2-loan-period { font-weight: 800 !important; color: #111111 !important; }
 html.theme-dark body:not(#_):not(#_):not(#_) :is(.art-price-unit, .art-loan-period, .pd2-loan-period) { color: #eceef1 !important; }
+
+/* ===== הצעות: סטטוס והתמקחות (ירוק = אושר, אדום = נדחה, צהוב = ממתין / שינוי) ===== */
+.ofp-st { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; padding: 3px 10px 3px 8px; border-radius: 999px; }
+.ofp-st i { font-style: normal; width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; color: #ffffff; }
+.ofp-st.ok { background: #e7f6ec; color: #13693a; } .ofp-st.ok i { background: #16a34a; }
+.ofp-st.no { background: #fdecec; color: #a61b1b; } .ofp-st.no i { background: #dc2626; }
+.ofp-st.wait { background: #fff6db; color: #7a5a00; } .ofp-st.wait i { background: #f5b301; color: #f5b301; font-size: 0; }
+.ofp-row.turn { border-color: #f5b301; box-shadow: 0 0 0 1px #f5b301 inset; }
+.ofp-hist { margin: 6px 0 0; padding: 0 18px 0 0; font-size: 12.5px; color: #3f4552; display: flex; flex-direction: column; gap: 3px; }
+.ofp-hist b { color: #111111; }
+.ofp-decide { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+.ofp-btn { flex: 1 1 0; min-width: 84px; height: 38px; border-radius: 12px; font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1.5px solid; background: #ffffff; }
+.ofp-btn i { font-style: normal; width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; color: #ffffff; }
+.ofp-btn.ok { border-color: #16a34a; color: #13693a; } .ofp-btn.ok i { background: #16a34a; } .ofp-btn.ok:hover { background: #e7f6ec; }
+.ofp-btn.no { border-color: #dc2626; color: #a61b1b; } .ofp-btn.no i { background: #dc2626; } .ofp-btn.no:hover { background: #fdecec; }
+.ofp-btn.wait { border-color: #f5b301; color: #7a5a00; } .ofp-btn.wait i { background: #f5b301; font-size: 0; } .ofp-btn.wait:hover { background: #fff6db; }
+.ofp-waiting { margin-top: 8px; font-size: 12.5px; color: #7a5a00; font-weight: 600; }
+html.theme-dark .ofp-hist { color: #c8cdd4 !important; } html.theme-dark .ofp-hist b { color: #eceef1 !important; }
+html.theme-dark .ofp-btn { background: #1b1e24 !important; }
+html.theme-dark .ofp-st.ok { background: rgba(22,163,74,.18) !important; color: #6ee7a0 !important; }
+html.theme-dark .ofp-st.no { background: rgba(220,38,38,.18) !important; color: #fca5a5 !important; }
+html.theme-dark .ofp-st.wait { background: rgba(245,179,1,.16) !important; color: #fcd34d !important; }
+html.theme-dark .ofp-btn.ok { color: #6ee7a0 !important; } html.theme-dark .ofp-btn.no { color: #fca5a5 !important; } html.theme-dark .ofp-btn.wait { color: #fcd34d !important; }
+html.theme-dark .ofp-waiting { color: #fcd34d !important; }
+/* מרכז ההצעות נפתח גם בפלאפון — במסך מלא */
+@media (max-width: 768px) {
+  html body #ofp-panel.fo-panel-wrap { display: block !important; z-index: 99990; }
+  html body #ofp-panel .fo-panel { width: 100% !important; }
+}

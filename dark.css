@@ -2175,6 +2175,18 @@ html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_) .uw-radar .uw-r-
 html.theme-dark body:not(#_):not(#_):not(#_) .art-price-unit { color: #eceef1 !important; }
 html.theme-dark body:not(#_):not(#_):not(#_) .art-loan-period { color: #eceef1 !important; }
 html.theme-dark body:not(#_):not(#_):not(#_) .pd2-loan-period { color: #eceef1 !important; }
+html.theme-dark .ofp-st.ok { background: #22262d !important; color: color-mix(in srgb, #13693a 55%, white) !important; }
+html.theme-dark .ofp-st.no { background: #2a2f37 !important; color: color-mix(in srgb, #a61b1b 55%, white) !important; }
+html.theme-dark .ofp-st.wait { background: #22262d !important; }
+html.theme-dark .ofp-hist { color: #c8cdd4 !important; }
+html.theme-dark .ofp-hist b { color: #eceef1 !important; }
+html.theme-dark .ofp-btn { background: #1b1e24 !important; }
+html.theme-dark .ofp-btn.ok { color: color-mix(in srgb, #13693a 55%, white) !important; }
+html.theme-dark .ofp-btn.ok:hover { background: #22262d !important; }
+html.theme-dark .ofp-btn.no { color: color-mix(in srgb, #a61b1b 55%, white) !important; }
+html.theme-dark .ofp-btn.no:hover { background: #2a2f37 !important; }
+html.theme-dark .ofp-btn.wait:hover { background: #22262d !important; }
+html.theme-dark.theme-dark .ofp-btn { background: #3a414c !important; }
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #eceef1 !important; }
 html.theme-dark [style*="color:#111111"] { color: #eceef1 !important; }

@@ -348,19 +348,10 @@
         }
       },
       "offers": {
-        ".read": true,
-        "$offerId": {
-          ".write": "auth != null && ((!data.exists() && newData.child('authorUid').val() === auth.uid) || (data.exists() && data.child('authorUid').val() === auth.uid))",
-          "requests": {
-            "$requesterUid": {
-              ".write": "auth != null && (auth.uid === $requesterUid || root.child('website/offers').child($offerId).child('authorUid').val() === auth.uid)"
-            }
-          },
-          "participants": {
-            "$participantUid": {
-              ".write": "auth != null && root.child('website/offers').child($offerId).child('authorUid').val() === auth.uid"
-            }
-          }
+        "$id": {
+          ".read": "auth != null && (data.child('fromUid').val() === auth.uid || data.child('toUid').val() === auth.uid)",
+          ".write": "auth != null && ((!data.exists() && newData.child('fromUid').val() === auth.uid) || (data.exists() && newData.exists() && (data.child('fromUid').val() === auth.uid || data.child('toUid').val() === auth.uid) && newData.child('fromUid').val() === data.child('fromUid').val() && newData.child('toUid').val() === data.child('toUid').val()))",
+          ".validate": "newData.hasChildren(['kind','fromUid','toUid','at','status']) && newData.child('status').val().matches(/^(pending|counter|accepted|rejected|signed)$/) && (!newData.child('note').exists() || newData.child('note').val().length <= 300) && (!newData.child('title').exists() || newData.child('title').val().length <= 120)"
         }
       },
       "questions": {
@@ -559,6 +550,15 @@
           "$id": {
             ".write": "auth != null && auth.uid === $uid",
             ".validate": "!newData.exists() || (newData.hasChildren(['kind','fromUid','toUid','at']) && newData.child('fromUid').val() === auth.uid && newData.child('at').isNumber() && (!newData.child('note').exists() || newData.child('note').val().length <= 300) && (!newData.child('title').exists() || newData.child('title').val().length <= 120))"
+          }
+        }
+      },
+      "offers_idx": {
+        "$uid": {
+          ".read": "auth != null && auth.uid === $uid",
+          "$id": {
+            ".write": "auth != null && !data.exists()",
+            ".validate": "newData.val() === true"
           }
         }
       }

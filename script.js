@@ -24256,6 +24256,8 @@ UI_EN_PATTERNS.push([/^(\d+) סעיפים · חתימה$/g, '$1 clauses · signa
 Object.assign(UI_EN, { 'סוג ההצעה': 'Offer type', 'טווח מחירים': 'Price range', 'מכירה': 'Sale', 'השאלה': 'Loan', 'החלפה': 'Swap', 'עד ₪100': 'Up to ₪100' });
 Object.assign(UI_EN, { 'תמונות גולשים': 'Member photos', 'תמונות גולשים 🖼️': 'Member photos 🖼️', 'מוצרי גולשים': 'Member products', 'מוצרי גולשים 🛒': 'Member products 🛒', 'עוד ממוצרי הגולשים': 'More member products' });
 Object.assign(UI_EN, { 'הצעות שקיבלתי': 'Offers received', 'הצעות ששלחתי': 'Offers sent', 'ממוצע הצעה': 'Average offer', 'התקבלו': 'received', 'נשלחו': 'sent', 'חתימה על תקנון': 'Agreement signed', 'למוצר': 'Open item', 'עדיין לא שלחת הצעות': "You haven't sent any offers yet", 'עדיין לא קיבלת הצעות — פרסמו מוצר במוצרי גולשים': 'No offers yet — post an item in Member products' });
+Object.assign(UI_EN, { 'ממתין לתשובה': 'Awaiting reply', 'הצעה נגדית': 'Counter-offer', 'אושר': 'Accepted', 'נדחה': 'Rejected', 'נחתם': 'Signed', 'אישור': 'Accept', 'שינוי': 'Change', 'דחייה': 'Reject', 'מחכות לתשובה שלי': 'Awaiting my reply', 'שליחת הצעה נגדית': 'Send counter-offer', 'המחיר שלך': 'Your price' });
+UI_EN_PATTERNS.push([/^ממתין לתשובה של (.+)$/g, 'Waiting for $1 to reply']);
 let __uiTranslating = false;
 // לא נוגעים בקוד עצמו. הודעות משתמשים/תוכן מוגנים ממילא כי המילון מתרגם
 // רק מחרוזות מוכרות של הממשק — תוכן חופשי שהמשתמשים כתבו לא מופיע במילון.
@@ -27859,14 +27861,26 @@ function openPriceOffer(id, title, sellerUid, sellerName) {
   setTimeout(() => { const i = document.getElementById('offer-price'); if (i) i.focus(); }, 60);
 }
 function closePriceOffer() { const m = document.getElementById('offer-modal'); if (m) m.remove(); }
-function sendPriceOffer(title, sellerUid, sellerName) {
+async function sendPriceOffer(title, sellerUid, sellerName) {
   const price = Math.round(Number((document.getElementById('offer-price') || {}).value));
   if (!price || price < 1) { if (typeof showCopyToast === 'function') showCopyToast('נא לכתוב מחיר'); const i = document.getElementById('offer-price'); if (i) i.focus(); return; }
   const note = String((document.getElementById('offer-note') || {}).value || '').trim();
   const text = `שלום! הצעת מחיר ל"${String(title || '').slice(0, 100)}": ₪${price.toLocaleString('he-IL')}${note ? '\n' + note : ''}`;
   closePriceOffer();
-  offerRecord({ kind: 'price', toUid: sellerUid, toName: sellerName, itemId: window.__offerItemId || '', title, price, note });
-  if (typeof dmStartWith === 'function') dmStartWith(sellerUid, sellerName || 'מוכר', text);
+  await offerRecord({ kind: 'price', toUid: sellerUid, toName: sellerName, itemId: window.__offerItemId || '', title, price, note });
+  // הודעה פרטית קצרה למוכר, ופתיחת מרכז ההצעות (שם רואים את הסטטוס ומתמקחים)
+  try {
+    const u = auth.currentUser;
+    if (u && sellerUid !== u.uid) {
+      const convId = dmConvId(u.uid, sellerUid), now = Date.now();
+      await push(ref(db, `website/dms/${convId}/messages`), { from: u.uid, fromName: dmName(), text: text.slice(0, 1000), timestamp: now });
+      await update(ref(db, `website/user_dms/${u.uid}/${convId}`), { otherUid: sellerUid, otherName: sellerName || '', lastText: text.slice(0, 60), lastTime: now, unread: false });
+      await update(ref(db, `website/user_dms/${sellerUid}/${convId}`), { otherUid: u.uid, otherName: dmName(), lastText: text.slice(0, 60), lastTime: now, unread: true });
+    }
+  } catch (e) {}
+  showCopyToast('ההצעה נשלחה — אפשר לעקוב אחריה ב"הצעות"');
+  offersTab = 'out';
+  openOffersPanel();
 }
 Object.assign(window, { openPriceOffer, closePriceOffer, sendPriceOffer });
 
@@ -28098,20 +28112,34 @@ window.pfRefreshShBar = pfRefreshShBar;
 
 
 // ============================================================
-// מרכז ההצעות (אייקון תג בכותרת): הצעות שקיבלתי / ששלחתי, כולל חתימות על תקנוני השאלה
-// website/offers_in/{toUid}/{id}  ·  website/offers_out/{fromUid}/{id}
+// מרכז ההצעות + התמקחות: כל הצעה היא רשומה משותפת לשני הצדדים
+// website/offers/{id} = { kind, itemId, title, price, note, fromUid, fromName, toUid, toName, at,
+//                         status: pending|counter|accepted|rejected|signed, lastBy, history: [...] }
+// website/offers_idx/{uid}/{id} = true  (רשימת ההצעות של כל משתמש)
 // ============================================================
-var offersIn = {}, offersOut = {}, offersSubUid = '';
+var offersMap = {}, offersSubUid = '', offersItemUnsubs = {};
+var OFFER_ST = {
+  pending: { cls: 'wait', ic: '●', label: 'ממתין לתשובה' },
+  counter: { cls: 'wait', ic: '●', label: 'הצעה נגדית' },
+  accepted: { cls: 'ok', ic: '✓', label: 'אושר' },
+  rejected: { cls: 'no', ic: '✕', label: 'נדחה' },
+  signed: { cls: 'ok', ic: '✓', label: 'נחתם' }
+};
 async function offerRecord(o) {
   try {
     if (!auth.currentUser && typeof ensureGuestSignedIn === 'function') await ensureGuestSignedIn();
     const u = auth.currentUser; if (!u || !o.toUid) return;
-    const id = push(ref(db, `website/offers_in/${o.toUid}`)).key;
+    const id = push(ref(db, 'website/offers')).key;
     const fromName = (typeof liveChatUserName === 'function' && liveChatUserName()) || u.displayName || 'אורח';
+    const now = Date.now();
+    const status = o.kind === 'loan' ? 'signed' : 'pending';
     const rec = { kind: o.kind || 'price', itemId: String(o.itemId || '').slice(0, 80), title: String(o.title || '').slice(0, 120), price: Number(o.price) || 0,
-      note: String(o.note || '').slice(0, 300), fromUid: u.uid, fromName: String(fromName).slice(0, 60), toUid: o.toUid, toName: String(o.toName || '').slice(0, 60), at: Date.now() };
-    await set(ref(db, `website/offers_in/${o.toUid}/${id}`), rec);
-    await set(ref(db, `website/offers_out/${u.uid}/${id}`), rec);
+      note: String(o.note || '').slice(0, 300), fromUid: u.uid, fromName: String(fromName).slice(0, 60), toUid: o.toUid, toName: String(o.toName || '').slice(0, 60),
+      at: now, status, lastBy: u.uid, updatedAt: now,
+      history: [{ by: u.uid, name: String(fromName).slice(0, 60), action: o.kind === 'loan' ? 'signed' : 'offer', price: Number(o.price) || 0, note: String(o.note || '').slice(0, 300), at: now }] };
+    await set(ref(db, `website/offers/${id}`), rec);
+    await set(ref(db, `website/offers_idx/${u.uid}/${id}`), true);
+    await set(ref(db, `website/offers_idx/${o.toUid}/${id}`), true);
   } catch (e) { console.warn('offer record failed', e); }
 }
 function offersSubscribe() {
@@ -28119,60 +28147,129 @@ function offersSubscribe() {
   if (!u || offersSubUid === u.uid) return;
   offersSubUid = u.uid;
   try {
-    onValue(ref(db, `website/offers_in/${u.uid}`), snap => { offersIn = snap.val() || {}; offersBadge(); offersRerender(); }, () => {});
-    onValue(ref(db, `website/offers_out/${u.uid}`), snap => { offersOut = snap.val() || {}; offersRerender(); }, () => {});
+    onValue(ref(db, `website/offers_idx/${u.uid}`), snap => {
+      const ids = Object.keys(snap.val() || {});
+      ids.forEach(id => {
+        if (offersItemUnsubs[id]) return;
+        offersItemUnsubs[id] = onValue(ref(db, `website/offers/${id}`), s2 => {
+          const v = s2.val();
+          if (v) offersMap[id] = Object.assign({ id }, v); else delete offersMap[id];
+          offersBadge(); offersRerender();
+        }, () => {});
+      });
+      offersBadge(); offersRerender();
+    }, () => {});
   } catch (e) {}
 }
-function offersSeenAt() { try { return Number(localStorage.getItem('offers_seen_at') || 0); } catch (e) { return 0; } }
+function offersMyTurn(o) {
+  const u = auth.currentUser;
+  return !!(u && o && (o.status === 'pending' || o.status === 'counter') && o.lastBy !== u.uid);
+}
 function offersBadge() {
   const b = document.getElementById('offers-badge'); if (!b) return;
-  const n = Object.values(offersIn).filter(o => o && o.at > offersSeenAt()).length;
+  const n = Object.values(offersMap).filter(offersMyTurn).length;   // הצעות שמחכות לתשובה שלי
   b.textContent = n > 9 ? '9+' : String(n); b.style.display = n ? '' : 'none';
 }
 var offersTab = 'in';
 function ofpListHTML() {
-  const list = Object.entries(offersTab === 'in' ? offersIn : offersOut).map(([id, o]) => Object.assign({ id }, o)).sort((a, b) => (b.at || 0) - (a.at || 0));
-  const inCount = Object.keys(offersIn).length, outCount = Object.keys(offersOut).length;
-  const prices = Object.values(offersIn).filter(o => o && o.kind === 'price' && o.price > 0).map(o => o.price);
+  const u = auth.currentUser, me = u ? u.uid : '';
+  const all = Object.values(offersMap);
+  const inList = all.filter(o => o.toUid === me), outList = all.filter(o => o.fromUid === me);
+  const list = (offersTab === 'in' ? inList : outList).sort((a, b) => (b.updatedAt || b.at || 0) - (a.updatedAt || a.at || 0));
+  const prices = inList.filter(o => o.kind === 'price' && o.price > 0).map(o => o.price);
   const avg = prices.length ? Math.round(prices.reduce((a, b) => a + b, 0) / prices.length) : 0;
+  const waiting = all.filter(offersMyTurn).length;
   const stat = (label, val) => `<div class="ofp-stat"><b>${val}</b><small>${label}</small></div>`;
   const row = o => {
-    const other = offersTab === 'in' ? (o.fromName || 'אורח') : (o.toName || 'משתמש');
-    const otherUid = offersTab === 'in' ? o.fromUid : o.toUid;
-    const when = typeof rdTimeAgo === 'function' ? rdTimeAgo(o.at) : new Date(o.at).toLocaleDateString('he-IL');
-    return `<div class="ofp-row">
+    const mine = o.fromUid === me;
+    const other = mine ? (o.toName || 'משתמש') : (o.fromName || 'אורח');
+    const otherUid = mine ? o.toUid : o.fromUid;
+    const st = OFFER_ST[o.status] || OFFER_ST.pending;
+    const when = typeof rdTimeAgo === 'function' ? rdTimeAgo(o.updatedAt || o.at) : '';
+    const myTurn = offersMyTurn(o);
+    const hist = Array.isArray(o.history) ? o.history.slice(-6) : [];
+    return `<div class="ofp-row${myTurn ? ' turn' : ''}">
       <div class="ofp-row-main">
-        <div class="ofp-row-top"><span class="ofp-kind ${o.kind === 'loan' ? 'loan' : ''}">${o.kind === 'loan' ? 'חתימה על תקנון' : 'הצעת מחיר'}</span><small>${escHtml(when)}</small></div>
+        <div class="ofp-row-top"><span class="ofp-st ${st.cls}"><i>${st.ic}</i>${escHtml(st.label)}</span><small>${escHtml(when)}</small></div>
         <b class="ofp-title">${escHtml(o.title || '')}</b>
-        <div class="ofp-who">${offersTab === 'in' ? 'מאת' : 'אל'} <b>${escHtml(other)}</b>${o.price ? ` · <span class="ofp-price">₪${Number(o.price).toLocaleString('he-IL')}</span>` : ''}</div>
-        ${o.note ? `<div class="ofp-note">${escHtml(o.note)}</div>` : ''}
+        <div class="ofp-who">${mine ? 'אל' : 'מאת'}&nbsp;<b>${escHtml(other)}</b>${o.price ? ` · <span class="ofp-price">₪${Number(o.price).toLocaleString('he-IL')}</span>` : ''}${o.kind === 'loan' ? ' · השאלה' : ''}</div>
+        ${hist.length > 1 ? `<ol class="ofp-hist">${hist.map(h => `<li><b>${escHtml(h.by === me ? 'את/ה' : (h.name || other))}</b>&nbsp;${escHtml({ offer: 'הציע/ה', counter: 'הציע/ה מחדש', accepted: 'אישר/ה', rejected: 'דחה/תה', signed: 'חתם/ה' }[h.action] || '')}${h.price ? ` ₪${Number(h.price).toLocaleString('he-IL')}` : ''}${h.note ? ` — ${escHtml(h.note)}` : ''}</li>`).join('')}</ol>`
+          : (o.note ? `<div class="ofp-note">${escHtml(o.note)}</div>` : '')}
+        ${myTurn ? `<div class="ofp-decide">
+          <button type="button" class="ofp-btn ok" onclick="offerDecide('${artEsc(o.id)}','accepted')"><i>✓</i>אישור</button>
+          <button type="button" class="ofp-btn wait" onclick="offerCounter('${artEsc(o.id)}')"><i>●</i>שינוי</button>
+          <button type="button" class="ofp-btn no" onclick="offerDecide('${artEsc(o.id)}','rejected')"><i>✕</i>דחייה</button>
+        </div>` : (o.status === 'pending' || o.status === 'counter' ? `<div class="ofp-waiting">ממתין לתשובה של&nbsp;${escHtml(other)}</div>` : '')}
       </div>
       <div class="ofp-actions">
         ${otherUid ? `<button type="button" class="pti" title="הודעה" aria-label="הודעה" onclick="dmStartWith('${artEsc(otherUid)}', '${artEsc(other)}', '')"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg></button>` : ''}
         ${o.itemId ? `<button type="button" class="pti" title="למוצר" aria-label="למוצר" onclick="closeSidePanel('ofp-panel'); photoOpenDetail('${artEsc(o.itemId)}')"><svg viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></svg></button>` : ''}
-        ${offersTab === 'in' ? `<button type="button" class="pti" title="מחיקה" aria-label="מחיקה" onclick="offerDelete('${artEsc(o.id)}')"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button>` : ''}
       </div>
     </div>`;
   };
   return `<div class="ofp">
-    <div class="ofp-stats">${stat('הצעות שקיבלתי', inCount)}${stat('הצעות ששלחתי', outCount)}${stat('ממוצע הצעה', avg ? '₪' + avg.toLocaleString('he-IL') : '—')}</div>
-    <nav class="pfg-tabs"><button type="button" class="pfg-tab${offersTab === 'in' ? ' on' : ''}" onclick="offersSetTab('in')"><b>${inCount}</b> התקבלו</button><button type="button" class="pfg-tab${offersTab === 'out' ? ' on' : ''}" onclick="offersSetTab('out')"><b>${outCount}</b> נשלחו</button></nav>
+    <div class="ofp-stats">${stat('מחכות לתשובה שלי', waiting)}${stat('הצעות שקיבלתי', inList.length)}${stat('ממוצע הצעה', avg ? '₪' + avg.toLocaleString('he-IL') : '—')}</div>
+    <nav class="pfg-tabs"><button type="button" class="pfg-tab${offersTab === 'in' ? ' on' : ''}" onclick="offersSetTab('in')"><b>${inList.length}</b> התקבלו</button><button type="button" class="pfg-tab${offersTab === 'out' ? ' on' : ''}" onclick="offersSetTab('out')"><b>${outList.length}</b> נשלחו</button></nav>
     <div class="ofp-list">${list.length ? list.map(row).join('') : `<div class="pf-empty">${offersTab === 'in' ? 'עדיין לא קיבלת הצעות — פרסמו מוצר במוצרי גולשים' : 'עדיין לא שלחת הצעות'}</div>`}</div>
   </div>`;
 }
 function offersRerender() { const b = document.querySelector('#ofp-panel .fo-panel-body'); if (b) b.innerHTML = ofpListHTML(); }
 function offersSetTab(t) { offersTab = t; offersRerender(); }
-async function offerDelete(id) {
-  const u = auth.currentUser; if (!u || !confirm('למחוק את ההצעה מהרשימה?')) return;
-  try { await set(ref(db, `website/offers_in/${u.uid}/${id}`), null); } catch (e) {}
+async function offerUpdate(id, status, price, note) {
+  const u = auth.currentUser; const o = offersMap[id]; if (!u || !o) return;
+  const name = (typeof liveChatUserName === 'function' && liveChatUserName()) || u.displayName || 'אורח';
+  const now = Date.now();
+  const hist = (Array.isArray(o.history) ? o.history.slice(-20) : []).concat([{ by: u.uid, name: String(name).slice(0, 60), action: status === 'counter' ? 'counter' : status, price: Number(price) || 0, note: String(note || '').slice(0, 300), at: now }]);
+  const upd = { status, lastBy: u.uid, updatedAt: now, history: hist };
+  if (status === 'counter') { if (price) upd.price = Number(price); upd.note = String(note || '').slice(0, 300); }
+  try {
+    await update(ref(db, `website/offers/${id}`), upd);
+    const other = o.fromUid === u.uid ? o.toUid : o.fromUid, otherName = o.fromUid === u.uid ? o.toName : o.fromName;
+    const msg = status === 'accepted' ? `✅ אישרתי את ההצעה על "${o.title}"${o.price ? ` — ₪${Number(o.price).toLocaleString('he-IL')}` : ''}`
+      : status === 'rejected' ? `❌ דחיתי את ההצעה על "${o.title}"`
+      : `🟡 הצעה נגדית על "${o.title}"${price ? `: ₪${Number(price).toLocaleString('he-IL')}` : ''}${note ? ` — ${note}` : ''}`;
+    showCopyToast(status === 'accepted' ? 'ההצעה אושרה' : status === 'rejected' ? 'ההצעה נדחתה' : 'ההצעה הנגדית נשלחה');
+    // עדכון גם בהודעה פרטית
+    try {
+      const convId = dmConvId(u.uid, other);
+      await push(ref(db, `website/dms/${convId}/messages`), { from: u.uid, fromName: dmName(), text: msg.slice(0, 1000), timestamp: now });
+      await update(ref(db, `website/user_dms/${u.uid}/${convId}`), { otherUid: other, otherName: otherName || '', lastText: msg.slice(0, 60), lastTime: now, unread: false });
+      await update(ref(db, `website/user_dms/${other}/${convId}`), { otherUid: u.uid, otherName: dmName(), lastText: msg.slice(0, 60), lastTime: now, unread: true });
+    } catch (e) {}
+  } catch (e) { console.error(e); showCopyToast('לא הצלחנו לעדכן — נסו שוב'); }
+}
+function offerDecide(id, status) {
+  const o = offersMap[id]; if (!o) return;
+  if (status === 'rejected' && !confirm('לדחות את ההצעה?')) return;
+  offerUpdate(id, status, o.price, '');
+}
+// שינוי: מחיר משלי, או שינוי סעיף (בהשאלה)
+function offerCounter(id) {
+  const o = offersMap[id]; if (!o) return;
+  let m = document.getElementById('offer-modal'); if (m) m.remove();
+  m = document.createElement('div'); m.id = 'offer-modal'; m.className = 'rp-modal';
+  m.innerHTML = `<div class="rp-card" role="dialog" aria-label="הצעה נגדית">
+      <div class="rp-head"><b>הצעה נגדית</b><button type="button" class="fo-panel-x" onclick="closePriceOffer()" aria-label="סגירה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+      <div class="rp-item">${escHtml(o.title || '')}${o.price ? ` · עכשיו ₪${Number(o.price).toLocaleString('he-IL')}` : ''}</div>
+      <label class="of-price"><span>₪</span><input id="counter-price" type="number" inputmode="numeric" min="0" value="${Number(o.price) || ''}" placeholder="המחיר שלך"></label>
+      <textarea id="counter-note" class="rp-note" rows="3" maxlength="300" placeholder="${o.kind === 'loan' || /השאלה/.test(o.note || '') ? 'איזה סעיף לשנות? למשל: סעיף 3 — נזק באחריות משותפת' : 'הערה (לא חובה)'}"></textarea>
+      <div class="rp-actions"><button type="button" class="pf-btn" onclick="closePriceOffer()">ביטול</button><button type="button" class="pf-btn rp-send" onclick="offerCounterSend('${artEsc(id)}')">שליחת הצעה נגדית</button></div>
+    </div>`;
+  m.addEventListener('click', e => { if (e.target === m) closePriceOffer(); });
+  document.body.appendChild(m);
+}
+function offerCounterSend(id) {
+  const price = Math.round(Number((document.getElementById('counter-price') || {}).value)) || 0;
+  const note = String((document.getElementById('counter-note') || {}).value || '').trim();
+  if (!price && !note) { showCopyToast('כתבו מחיר או שינוי'); return; }
+  closePriceOffer();
+  offerUpdate(id, 'counter', price, note);
 }
 async function openOffersPanel() {
   if (!auth.currentUser) { const ok = (typeof ensureGuestSignedIn === 'function') ? await ensureGuestSignedIn() : false; if (!ok) { openLiveChatLogin(); return; } }
   offersSubscribe();
   closeSidePanels('ofp-panel');
   openSidePanel('ofp-panel', 'הצעות', ofpListHTML(), '');
-  try { localStorage.setItem('offers_seen_at', String(Date.now())); } catch (e) {}
-  offersBadge();
 }
 try { onAuthStateChanged(auth, u => { if (u) setTimeout(offersSubscribe, 300); }); } catch (e) {}
-Object.assign(window, { openOffersPanel, offersSetTab, offerDelete });
+Object.assign(window, { openOffersPanel, offersSetTab, offerDecide, offerCounter, offerCounterSend });
