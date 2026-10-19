@@ -15999,6 +15999,7 @@ function buildPhotosPage(albums, section) {
             </label>
           </div>`)}
 
+          ${section === 'photos' ? photoCandyRowsHTML(newestAlbums) : ''}
           <!-- מקטע מאוחד: כל הרעיונות / כל הגלריות -->
           <div class="photo-section-row" style="margin-bottom: 32px; background: #ffffff; padding: 18px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);">
             <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:2.5px solid #111111; padding-bottom:10px; margin-bottom:18px;">
@@ -23200,11 +23201,22 @@ window.commFindPage = commFindPage;
 
 function communityShortcutsHTML() {
   const findPage = commFindPage;
+  // תמונות שער לשורות של תמונות / קומיקס / סיפורים (בהשראת candy.ai)
+  const covers = {};
+  try {
+    const all = (typeof getAllStoriesFromPages === 'function') ? getAllStoriesFromPages() : [];
+    const pick = arr => { const x = (arr || []).find(a => a && ((a.images && a.images.find(Boolean)) || a.image)); return x ? ((x.images && x.images.find(Boolean)) || x.image) : ''; };
+    covers.photos = pick(typeof getPhotosForHome === 'function' ? getPhotosForHome() : []);
+    covers.comics = pick(all.filter(s => s && s.__kind !== 'stories'));
+    covers.stories = pick(all.filter(s => s && s.__kind === 'stories'));
+  } catch (e) {}
   const card = (title, emoji, page, grad, sub) => {
     if (!page) return '';
     const oc = page ? `navigateToPage('${artEsc(page.id)}')` : '';
+    const cover = covers[emoji] || '';
     return `
-      <div class="comm-grid-card comm-grid-shortcut" onclick="${oc}" role="button" tabindex="0">
+      <div class="comm-grid-card comm-grid-shortcut${cover ? ' has-cover' : ''}" onclick="${oc}" role="button" tabindex="0">
+        ${cover ? `<img class="cg-cover" src="${escHtml(cover)}" alt="" loading="lazy">` : ''}
         <div class="comm-grid-thumb" style="background:${grad};">
           <span class="comm-sc-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${COMM_SC_ICONS[emoji] || ''}</svg></span>
         </div>
@@ -24332,6 +24344,7 @@ Object.assign(UI_EN, { 'את מי לעקוב': 'Who to follow', 'פורומים 
 UI_EN_PATTERNS.push([/^(\d+) הודעות$/g, '$1 posts']);
 Object.assign(UI_EN, { 'בשבילך': 'For you', 'במעקב': 'Following', 'הוספה': 'Add', 'הלשוניות שלי': 'My tabs', 'סיום': 'Done', 'הוספת לשונית': 'Add tab' });
 Object.assign(UI_EN, { 'עריכה': 'Edit', 'מחובר/ת': 'online', 'עדיין אין פוסטים...': 'No posts yet...', 'פרסמו תמונות וסרטונים כדי שיופיעו בפרופיל שלכם.': 'Publish photos and videos to display on your profile page.', 'הוספת פוסט': 'Add a post', 'תמונת פרופיל': 'Profile photo', 'העלאת תמונה': 'Upload photo', 'צילום תמונה': 'Take photo', 'עיצוב דמות': 'Design avatar', 'הסרת התמונה': 'Remove photo', 'שינוי תמונת פרופיל': 'Change profile photo' });
+Object.assign(UI_EN, { 'באתר': 'on the site', 'הגלריות האחרונות שעלו': 'The latest galleries', 'נצפים': 'viewed', 'מה שכולם מסתכלים עליו עכשיו': 'What everyone is watching now', '✦ חדש': '✦ NEW' });
 let __uiTranslating = false;
 // לא נוגעים בקוד עצמו. הודעות משתמשים/תוכן מוגנים ממילא כי המילון מתרגם
 // רק מחרוזות מוכרות של הממשק — תוכן חופשי שהמשתמשים כתבו לא מופיע במילון.
@@ -28653,3 +28666,38 @@ function profilePhotoApply(uid, data) {
   else if (typeof avatarHydrate === 'function') avatarHydrate(document);
 }
 Object.assign(window, { openProfilePhotoSheet, profilePhotoUpload, profilePhotoRemove });
+
+
+// ============================================================
+// תמונות בהשראת candy.ai: שורות נגללות של כרטיסים גבוהים עם השם על התמונה
+// ============================================================
+function photoCandyRowsHTML(albums) {
+  albums = (albums || []).filter(a => a && a.approved !== false);
+  if (albums.length < 2) return '';
+  const adultOk = (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('age_verified') === 'true');
+  const now = Date.now();
+  const card = a => {
+    const img = (Array.isArray(a.images) && a.images.find(Boolean)) || a.image || '';
+    const t = typeof photoAlbumTime === 'function' ? photoAlbumTime(a) : 0;
+    const isNew = t && now - t < 3 * 864e5;
+    const views = typeof photoGetViews === 'function' ? photoGetViews(a.id) : 0;
+    return `<button type="button" class="cr-card" onclick="photoOpenDetail('${artEsc(a.id)}')">
+      ${img ? `<img src="${escHtml(img)}" alt="" loading="lazy" class="${a.isAdult && !adultOk ? 'blur' : ''}">` : '<span class="cr-ph"></span>'}
+      ${isNew ? '<span class="cr-new">✦ חדש</span>' : ''}
+      ${(a.images || []).filter(Boolean).length > 1 ? `<span class="cr-count">${(a.images || []).filter(Boolean).length}</span>` : ''}
+      <span class="cr-cap"><b>${escHtml(a.title || '')}</b>${a.ageRange ? `&nbsp;<em>${escHtml(String(a.ageRange))}</em>` : ''}<small>${typeof formatViews === 'function' ? formatViews(views) : views} צפיות</small></span>
+    </button>`;
+  };
+  const row = (accent, rest, sub, list, more) => list.length ? `<section class="cr-sec">
+      <header class="cr-head"><div><h2><span>${escHtml(accent)}</span>${rest ? '&nbsp;' + escHtml(rest) : ''}</h2>${sub ? `<p>${escHtml(sub)}</p>` : ''}</div>${more ? `<button type="button" class="cr-more" onclick="${more}" aria-label="לכל הגלריות"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>` : ''}</header>
+      <div class="cr-row">${list.slice(0, 12).map(card).join('')}</div>
+    </section>` : '';
+  const byTime = albums.slice().sort((a, b) => ((typeof photoAlbumTime === 'function' ? photoAlbumTime(b) : 0) - (typeof photoAlbumTime === 'function' ? photoAlbumTime(a) : 0)));
+  const byViews = albums.slice().sort((a, b) => (photoGetViews(b.id) || 0) - (photoGetViews(a.id) || 0));
+  const cats = (typeof PHOTO_BAR_CATEGORIES !== 'undefined' ? PHOTO_BAR_CATEGORIES : []).slice(0, 4).map(c => [c, albums.filter(a => typeof photoCatMatch === 'function' && photoCatMatch(a, c))]).filter(([, l]) => l.length >= 2);
+  return `<div class="cr-wrap">
+    ${row('חדש', 'באתר', 'הגלריות האחרונות שעלו', byTime, "document.getElementById('photo-row-1')?.scrollIntoView({behavior:'smooth', block:'start'})")}
+    ${row('הכי', 'נצפים', 'מה שכולם מסתכלים עליו עכשיו', byViews, '')}
+    ${cats.map(([c, l]) => row(c, '', '', l, `setSectionCategoryFilter('photos','${artEsc(c)}')`)).join('')}
+  </div>`;
+}

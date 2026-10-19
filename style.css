@@ -12977,3 +12977,64 @@ html body:not(#_):not(#_):not(#_) .pf-head .pf-actions { position: static !impor
 html body:not(#_):not(#_):not(#_) .pf-head .pf-top { display: contents !important; }
 html body:not(#_):not(#_):not(#_) .pf-head .pf-av-wrap { order: 0; }
 html body:not(#_):not(#_):not(#_) .pf-head > :not(.pf-top) { order: 1; }
+
+/* ===== תמונות בהשראת candy.ai: שורות של כרטיסים גבוהים ===== */
+.cr-wrap { display: flex; flex-direction: column; gap: 26px; margin: 4px 0 28px; }
+.cr-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+.cr-head h2 { margin: 0; font-size: 22px; font-weight: 800; color: #111111; letter-spacing: -.2px; }
+.cr-head h2 span { color: #646b78; }
+.cr-head p { margin: 2px 0 0; font-size: 14px; color: #646b78; }
+.cr-more { width: 36px; height: 36px; border-radius: 50%; border: 0; background: none; color: #111111; display: grid; place-items: center; cursor: pointer; flex: none; }
+.cr-more svg { width: 22px; height: 22px; }
+.cr-row { display: grid; grid-auto-flow: column; grid-auto-columns: 168px; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; padding-bottom: 4px; }
+.cr-row::-webkit-scrollbar { display: none; }
+.cr-card { position: relative; aspect-ratio: 2 / 3; border-radius: 18px; overflow: hidden; border: 0; padding: 0; background: #e6e8ec; cursor: pointer; scroll-snap-align: start; text-align: right; }
+.cr-card img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .3s ease; }
+.cr-card img.blur { filter: blur(18px); }
+.cr-card:hover img { transform: scale(1.04); }
+.cr-card::after { content: ""; position: absolute; inset: 45% 0 0; background: linear-gradient(transparent, rgba(0,0,0,.72)); pointer-events: none; }
+.cr-cap { position: absolute; inset: auto 12px 12px; z-index: 1; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 6px; color: #ffffff; }
+.cr-cap b { font-size: 16px; font-weight: 800; line-height: 1.2; max-width: 100%; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.cr-cap em { font-style: normal; font-size: 15px; font-weight: 700; opacity: .8; }
+.cr-cap small { flex-basis: 100%; font-size: 12px; opacity: .85; }
+.cr-new { position: absolute; top: 0; inset-inline-start: 0; z-index: 1; background: #111111; color: #ffffff; font-size: 11.5px; font-weight: 800; padding: 5px 10px; border-end-end-radius: 12px; }
+.cr-count { position: absolute; top: 10px; inset-inline-end: 10px; z-index: 1; min-width: 26px; height: 26px; padding: 0 6px; border-radius: 999px; background: rgba(0,0,0,.55); color: #ffffff; font-size: 12px; font-weight: 700; display: grid; place-items: center; backdrop-filter: blur(6px); }
+@media (max-width: 768px) { .cr-row { grid-auto-columns: 44vw; } .cr-head h2 { font-size: 20px; } }
+@media (min-width: 1100px) { .cr-row { grid-auto-columns: 190px; } }
+html.theme-dark .cr-head h2, html.theme-dark .cr-more { color: #eceef1 !important; }
+html.theme-dark .cr-head h2 span, html.theme-dark .cr-head p { color: #9aa2ad !important; }
+html.theme-dark .cr-card { background: #22262d !important; }
+html.theme-dark .cr-new { background: #eceef1 !important; color: #111111 !important; }
+/* טיפוגרפיה בהשראת candy.ai: כותרות גדולות ומודגשות, שמות גדולים על התמונה */
+html body:not(#_):not(#_) .cr-head h2 { font-size: 26px; font-weight: 800; letter-spacing: -.4px; line-height: 1.15; }
+html body:not(#_):not(#_) .cr-head p { font-size: 15.5px; margin-top: 4px; }
+html body:not(#_):not(#_) .cr-card { border-radius: 20px; }
+html body:not(#_):not(#_) .cr-cap { inset: auto 14px 14px; }
+html body:not(#_):not(#_) .cr-cap b { font-size: 20px; font-weight: 800; letter-spacing: -.2px; text-shadow: 0 1px 8px rgba(0,0,0,.35); }
+html body:not(#_):not(#_) .cr-cap em { font-size: 18px; font-weight: 700; opacity: .75; }
+html body:not(#_):not(#_) .cr-cap small { font-size: 12.5px; font-weight: 600; opacity: .8; }
+html body:not(#_):not(#_) .cr-new { font-size: 12.5px; padding: 6px 12px; border-end-end-radius: 14px; }
+@media (max-width: 768px) { html body:not(#_):not(#_) .cr-head h2 { font-size: 24px; } html body:not(#_):not(#_) .cr-cap b { font-size: 18px; } }
+
+/* ===== קהילות בהשראת candy.ai: כרטיסים גבוהים עם השם על התמונה ===== */
+html body:not(#_):not(#_):not(#_) .comm-grid-card.comm-grid-shortcut { position: relative; overflow: hidden; border-radius: 20px !important; aspect-ratio: 3 / 4; padding: 0 !important; display: block !important; background: #eef0f3 !important; border: 0 !important; }
+html body:not(#_):not(#_):not(#_) .comm-grid-shortcut .cg-cover { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+html body:not(#_):not(#_):not(#_) .comm-grid-shortcut .comm-grid-thumb { position: absolute !important; inset: 0 0 40% !important; height: auto !important; background: transparent !important; display: grid !important; place-items: center; }
+html body:not(#_):not(#_):not(#_) .comm-grid-shortcut.has-cover .comm-grid-thumb { display: none !important; }
+html body:not(#_):not(#_):not(#_) .comm-grid-shortcut .comm-sc-ic { width: 64px !important; height: 64px !important; background: #ffffff !important; border: 0 !important; }
+html body:not(#_):not(#_):not(#_) .comm-grid-shortcut .comm-sc-ic svg { width: 30px !important; height: 30px !important; }
+html body:not(#_):not(#_):not(#_) .comm-grid-shortcut::after { content: ""; position: absolute; inset: 40% 0 0; background: linear-gradient(transparent, rgba(0,0,0,.7)); pointer-events: none; }
+html body:not(#_):not(#_):not(#_) .comm-grid-shortcut:not(.has-cover)::after { background: linear-gradient(transparent, rgba(0,0,0,.08)); }
+html body:not(#_):not(#_):not(#_) .comm-grid-shortcut .comm-grid-info { position: absolute !important; inset: auto 12px 12px !important; z-index: 1; padding: 0 !important; background: transparent !important; text-align: right; display: flex !important; flex-direction: column; gap: 2px; }
+html body:not(#_):not(#_):not(#_) .comm-grid-shortcut .comm-grid-name { font-size: 19px !important; font-weight: 800 !important; color: #111111 !important; letter-spacing: -.2px; }
+html body:not(#_):not(#_):not(#_) .comm-grid-shortcut .comm-grid-sub { font-size: 12.5px !important; color: #3f4552 !important; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+html body:not(#_):not(#_):not(#_) .comm-grid-shortcut.has-cover :is(.comm-grid-name, .comm-grid-sub) { color: #ffffff !important; text-shadow: 0 1px 8px rgba(0,0,0,.35); }
+html body:not(#_):not(#_):not(#_) .comm-grid-shortcut .comm-grid-btn { display: none !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) .comm-grid-card.comm-grid-shortcut { background: #22262d !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) .comm-grid-shortcut:not(.has-cover) :is(.comm-grid-name) { color: #eceef1 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) .comm-grid-shortcut:not(.has-cover) .comm-grid-sub { color: #9aa2ad !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) .comm-grid-shortcut .comm-sc-ic { background: #2a2f37 !important; }
+html body:not(#_):not(#_):not(#_) :not(.cm-panel-grid):has(> .comm-grid-shortcut) { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 12px !important; }
+@media (min-width: 900px) { html body:not(#_):not(#_):not(#_) :not(.cm-panel-grid):has(> .comm-grid-shortcut) { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; gap: 16px !important; } }
+html body:not(#_):not(#_):not(#_) :has(> .comm-grid-shortcut) > .comm-grid-shortcut { width: auto !important; max-width: none !important; min-width: 0 !important; margin: 0 !important; }
+@media (max-width: 768px) { html body:not(#_):not(#_):not(#_) .comm-grid-shortcut .comm-grid-name { font-size: 16px !important; } }

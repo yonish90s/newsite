@@ -2288,6 +2288,20 @@ html.theme-dark.theme-dark body:not(#_):not(#_) .pf-edit-pill { background: #3a4
 html.theme-dark.theme-dark body:not(#_):not(#_) .pf-head :is(.pf-bio, .pf-bio-add) { background: #3a414c !important; }
 html.theme-dark.theme-dark body:not(#_):not(#_) .pf-empty-btn { background: #2a2f37 !important; color: #eceef1 !important; }
 html.theme-dark.theme-dark .pph-row { border-color: #5b6472 !important; }
+html.theme-dark .cr-head h2 { color: #eceef1 !important; }
+html.theme-dark .cr-head h2 span { color: #c8cdd4 !important; }
+html.theme-dark .cr-head p { color: #c8cdd4 !important; }
+html.theme-dark .cr-more { color: #eceef1 !important; }
+html.theme-dark .cr-card { background: #2a2f37 !important; }
+html.theme-dark .cr-new { background: #3a414c !important; }
+html.theme-dark.theme-dark .cr-card { background: #3a414c !important; }
+html.theme-dark.theme-dark .cr-new { background: #2a2f37 !important; color: #eceef1 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) .comm-grid-card.comm-grid-shortcut { background: #22262d !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) .comm-grid-shortcut .comm-sc-ic { background: #1b1e24 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) .comm-grid-shortcut:not(.has-cover)::after { background: linear-gradient(transparent, rgba(255, 255, 255, 0.072)) !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) .comm-grid-shortcut .comm-grid-name { color: #eceef1 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) .comm-grid-shortcut .comm-grid-sub { color: #c8cdd4 !important; }
+html.theme-dark.theme-dark body:not(#_):not(#_):not(#_) .comm-grid-card.comm-grid-shortcut { background: #3a414c !important; }
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #eceef1 !important; }
 html.theme-dark [style*="color:#111111"] { color: #eceef1 !important; }
