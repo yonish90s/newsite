@@ -14633,6 +14633,13 @@ function productsRender() {
 function productsViewHTML() {
   const admin = typeof isAdmin === 'function' && isAdmin();
   const list = productsList();
+  if (productsEditing && productsEditing !== 'new') {
+    const ep = list.find(p => p.id === productsEditing);
+    if (ep) return productFormHTML(ep);
+  }
+  if (productsEditing === 'new') return productFormHTML({});
+  return productDetailViewHTML(list, admin);
+  // eslint-disable-next-line no-unreachable
   const cards = list.map(p => productsEditing === p.id ? productFormHTML(p) : productCardHTML(p, admin)).join('');
   return `
     <div class="pr-hero">
@@ -14676,6 +14683,8 @@ function productFormHTML(p) {
       <label>תיאור קצר<textarea name="desc" rows="2" maxlength="400">${escHtml(p.desc || '')}</textarea></label>
       <label>היתרונות לזוגות (יתרון בכל שורה)<textarea name="benefits" rows="4" maxlength="1200">${escHtml((p.benefits || []).join('\n'))}</textarea></label>
       <label>קישור למוצר (אופציונלי)<input name="link" dir="ltr" value="${escHtml(p.link || '')}" placeholder="https://..."></label>
+      <label>מחיר (אופציונלי)<input name="price" value="${escHtml(p.price || '')}" placeholder="למשל 89"></label>
+      <label>מותג / יצרן (אופציונלי)<input name="brand" value="${escHtml(p.brand || '')}"></label>
       <div class="pr-form-actions">
         <button type="submit" class="pr-save">שמירה</button>
         <button type="button" class="pr-cancel" onclick="productsStartEdit(null)">ביטול</button>
@@ -14710,7 +14719,9 @@ async function productsSave(form) {
     image: val('image'),
     desc: val('desc'),
     benefits: val('benefits').split('\n').map(s => s.trim()).filter(Boolean),
-    link: val('link')
+    link: val('link'),
+    price: val('price'),
+    brand: val('brand')
   };
   if (!item.name) return;
   const list = productsList().slice();
@@ -29692,4 +29703,57 @@ function ofpDemoCardHTML() {
       <button type="button" class="ofc-b ok" onclick="${demo}" title="אישור" aria-label="אישור"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
     </div>
   </div>`;
+}
+
+
+// ============================================================
+// מוצרים לזוגות — עמוד מוצר בסגנון חנות (גלריה, פרטים, תיבת רכישה) + מוצרים נוספים להחלפה
+// ============================================================
+let productsSel = 0;
+function productsPick(i) { productsSel = i; productsRender(); try { mainContent.querySelector('.prd')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {} }
+function productWishToggle(id, btn) {
+  let w = {}; try { w = JSON.parse(localStorage.getItem('pr_wish') || '{}') || {}; } catch (e) {}
+  w[id] = !w[id]; if (!w[id]) delete w[id];
+  try { localStorage.setItem('pr_wish', JSON.stringify(w)); } catch (e) {}
+  btn.classList.toggle('on', !!w[id]);
+  if (typeof showCopyToast === 'function') showCopyToast(w[id] ? 'נוסף לרשימת המשאלות' : 'הוסר מרשימת המשאלות');
+}
+Object.assign(window, { productsPick, productWishToggle });
+function productDetailViewHTML(list, admin) {
+  if (productsSel >= list.length) productsSel = 0;
+  const p = list[productsSel] || {};
+  let wish = {}; try { wish = JSON.parse(localStorage.getItem('pr_wish') || '{}') || {}; } catch (e) {}
+  const link = p.link ? safeUrl(p.link) : '';
+  const hasLink = link && link !== '#';
+  const benefits = (p.benefits || []).filter(Boolean);
+  const media = x => x.image ? `<img src="${escHtml(x.image)}" alt="" loading="lazy">` : `<span class="prd-ph">${PRODUCT_ICON}</span>`;
+  const check = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+  const price = String(p.price || '').trim();
+  return `
+    <div class="prd-head"><h1>מוצרים לזוגות</h1>${admin ? `<button type="button" class="pr-add-btn" onclick="productsStartEdit('new')">+ הוספת מוצר</button>` : ''}</div>
+    <div class="prd">
+      <div class="prd-gallery">
+        <div class="prd-main">${media(p)}</div>
+        <div class="prd-thumbs">${list.map((x, i) => `<button type="button" class="prd-thumb${i === productsSel ? ' on' : ''}" onclick="productsPick(${i})" title="${escHtml(x.name || '')}">${media(x)}</button>`).join('')}</div>
+      </div>
+      <div class="prd-info">
+        <span class="prd-badge">מומלץ לזוגות</span>
+        <h2 class="prd-title">${escHtml(p.name || '')}</h2>
+        ${p.brand ? `<div class="prd-brand">מותג: <b>${escHtml(p.brand)}</b></div>` : ''}
+        ${p.desc ? `<p class="prd-desc">${escHtml(p.desc)}</p>` : ''}
+        ${benefits.length ? `<h3 class="prd-h">היתרונות לזוגות</h3>
+          <ul class="prd-feats">${benefits.map(b => `<li><span class="prd-feat-ic">${check}</span>${escHtml(b)}</li>`).join('')}</ul>` : ''}
+        ${admin ? `<div class="pr-admin"><button type="button" onclick="productsStartEdit('${artEsc(p.id)}')">עריכה</button><button type="button" onclick="productsDelete('${artEsc(p.id)}')">מחיקה</button></div>` : ''}
+      </div>
+      <aside class="prd-buy">
+        <div class="prd-buy-box">
+          ${price ? `<div class="prd-price">₪${escHtml(price.replace(/^₪/, ''))}</div>` : `<div class="prd-price soft">מחיר בקישור</div>`}
+          ${hasLink ? `<a class="prd-cta" href="${escHtml(link)}" target="_blank" rel="noopener nofollow sponsored">לרכישה</a>` : `<button type="button" class="prd-cta" disabled>בקרוב</button>`}
+        </div>
+        <button type="button" class="prd-wish${wish[p.id] ? ' on' : ''}" onclick="productWishToggle('${artEsc(p.id)}', this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/></svg>הוספה לרשימת המשאלות</button>
+        <div class="prd-trust"><b>✓ נבחר בקפידה</b><span>מוצרים שאנחנו ממליצים עליהם לזוגות — עם הסבר למה הם עושים טוב לקשר.</span></div>
+      </aside>
+    </div>
+    ${list.length > 1 ? `<h3 class="prd-more-h">מוצרים נוספים</h3>
+      <div class="prd-more">${list.map((x, i) => i === productsSel ? '' : `<button type="button" class="prd-more-card" onclick="productsPick(${i})"><span class="prd-more-img">${media(x)}</span><b>${escHtml(x.name || '')}</b>${x.price ? `<small>₪${escHtml(String(x.price).replace(/^₪/, ''))}</small>` : ''}</button>`).join('')}</div>` : ''}`;
 }
