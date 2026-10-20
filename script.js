@@ -15304,7 +15304,7 @@ function forumTopicHTML() {
       ${posts === null ? '<div class="fo-empty">טוען...</div>' : posts.slice(start, start + FORUM_PAGE_SIZE).map((p, i) => postHTML(p, start + i)).join('')}
     </div>
     ${pager}
-    <div class="fo-reply" id="fo-reply-box">
+    <div class="fo-reply${forumReplyTo ? ' is-open' : ''}" id="fo-reply-box">
       ${forumReplyTo && byId[forumReplyTo] ? `<div class="fo-reply-to"><span>תגובה ל<b>${escHtml(byId[forumReplyTo].name || 'משתמש')}</b></span><button type="button" onclick="forumStartReply(null)" aria-label="ביטול">✕</button></div>` : ''}
       ${forumMiniNameHTML('fo-reply-name')}
       <div class="fo-mini-row">
@@ -20152,8 +20152,8 @@ function pcComposerHTML(kind, id, editName) {
   if (kind === 'photo') pcStars = 0;
   return `<div class="pc-compose" id="${kind}-compose">
     ${kind === 'photo' ? `<div class="pc-stars-row"><span>דירוג (לא חובה):</span><span class="pc-stars">${[1, 2, 3, 4, 5].map(n => `<i onclick="pcSetStars(${n})" role="button" aria-label="${n} כוכבים">${PD_STAR}</i>`).join('')}</span></div>` : ''}
-    ${saved ? `<div class="fo-guest-as"><span>מגיבים בתור&nbsp;<b>${escHtml(saved)}</b></span><button type="button" class="fo-guest-change" onclick="pcChangeName('${kind}','${sid}')">שינוי</button></div>` : ''}
     <div class="pc-row">
+      ${saved ? `<button type="button" class="pc-mic-ic pc-who" onclick="pcChangeName('${kind}','${sid}')" aria-label="שינוי השם" title="מגיבים בתור ${escHtml(saved)} — לחצו לשינוי"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.6"/><path d="M5.5 19.5a6.5 6.5 0 0 1 13 0"/></svg></button>` : ''}
       <button type="button" class="pc-mic-ic" onclick="voiceRecToggle('${kind}', '${sid}')" aria-label="תגובה קולית" title="תגובה קולית"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg></button>
       <textarea id="${kind}-comment-input" class="pc-in" rows="1" maxlength="1000" placeholder="הצטרפו לשיחה" oninput="this.style.height='auto'; this.style.height=Math.min(this.scrollHeight,140)+'px'"></textarea>
       <button type="button" class="pc-go" onclick="${submit}('${sid}')" aria-label="שליחה">${PC_SEND_ICON}</button>

@@ -14395,3 +14395,24 @@ html body:not(#_):not(#_):not(#_):not(#_) .rd-compose-row .fo-mini-btn { width: 
 html body:not(#_):not(#_):not(#_):not(#_) .rd-compose-row { align-items: center !important; gap: 6px !important; }
 html.theme-dark .fo-mini-btn { border-color: #333336 !important; color: #c9ccd1 !important; }
 html.theme-dark .fo-mini-btn.on, html.theme-dark .fo-mini-btn.send { background: #ececec !important; border-color: #ececec !important; color: #111111 !important; }
+
+/* תיבת תגובה (תמונות/סיפורים/פורום): בלי "תגובה מהירה"; בתוך החלון — במקום, ברוחב החלון */
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) :is(.pc-compose, .rd-compose)::before { content: none !important; display: none !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pcw-body .pc-compose { position: sticky !important; bottom: 0 !important; left: auto !important; right: auto !important; transform: none !important; width: auto !important; max-width: none !important; margin: 10px 0 0 !important; box-shadow: 0 -6px 16px rgba(0,0,0,.05) !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pc-row .pc-who { flex: none; }
+
+/* ===== במחשב: תגובות / תיאור / ביקורות נפתחים כחלון צד מעוגן בצד ימין למטה (כמו בטוויטר) ===== */
+@media (min-width: 769px) {
+  html body:not(#_):not(#_):not(#_):not(#_) .pcw-wrap { inset: auto 0 0 auto; width: 0; height: 0; overflow: visible; }
+  html body:not(#_):not(#_):not(#_):not(#_) .pcw-wrap .pcw-backdrop { display: none !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .pcw-wrap .pcw { position: fixed !important; left: auto !important; top: auto !important; right: 24px !important; bottom: 0 !important; width: 400px !important; max-width: calc(100vw - 48px) !important; height: min(640px, 78vh) !important; max-height: none !important; min-height: 0 !important; border-radius: 16px 16px 0 0 !important; transform: translateY(24px) !important; opacity: 0; box-shadow: 0 0 0 1px rgba(0,0,0,.06), 0 10px 40px rgba(0,0,0,.22) !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .pcw-wrap.show .pcw { transform: none !important; opacity: 1; }
+  html body:not(#_):not(#_):not(#_):not(#_) .pcw-wrap .pcw-body { flex: 1; }
+  html.pcw-open { overflow: auto !important; }
+  html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .pcw-wrap .pcw { box-shadow: 0 0 0 1px rgba(255,255,255,.08), 0 10px 40px rgba(0,0,0,.6) !important; }
+}
+
+/* פורום במחשב: חלון התגובה הצף מופיע רק אחרי לחיצה על "תגובה" בהודעה */
+@media (min-width: 769px) {
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .fo-reply:not(.is-open) { display: none !important; }
+}
