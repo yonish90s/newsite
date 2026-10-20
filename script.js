@@ -29358,3 +29358,37 @@ function cardFollowHeadHTML(a) {
   return `<button type="button" class="card-follow-h${on ? ' on' : ''}" onclick="event.stopPropagation(); followIconClick('${artEsc(a.authorId)}', '${artEsc(a.author || '')}', this)">${on ? 'במעקב' : 'עקיבה'}</button>`;
 }
 Object.assign(UI_EN, { 'עקיבה': 'Follow', 'במעקב': 'Following' });
+
+
+// ============================================================
+// עמוד פריט: "שיעניינו אותך" — ריבועים קטנים בשורה, מעל שורת הכפתורים (בגודל הכפתורים)
+// ============================================================
+function recMiniEnhance() {
+  document.querySelectorAll('.art-rec-section:not([data-mini])').forEach(sec => {
+    sec.dataset.mini = '1';
+    const cards = [...sec.querySelectorAll('.art-rec-card')];
+    const acts = sec.closest('.art-detail, .pd2, [class*="detail"]')?.querySelector('.pd2-topacts') || document.querySelector('.art-detail .pd2-topacts');
+    if (!cards.length || !acts) return;
+    const items = cards.map((c, i) => {
+      const img = c.querySelector('img');
+      const title = (c.querySelector('h4') || {}).textContent || '';
+      return `<button type="button" class="rec-mini-item" data-i="${i}" title="${escHtml(title)}" aria-label="${escHtml(title)}">${img ? `<img src="${escHtml(img.getAttribute('src') || '')}" alt="" loading="lazy">` : ''}</button>`;
+    }).join('');
+    const strip = document.createElement('div');
+    strip.className = 'rec-mini';
+    strip.innerHTML = items;
+    strip.addEventListener('click', e => {
+      const b = e.target.closest('.rec-mini-item'); if (!b) return;
+      const c = cards[Number(b.dataset.i)]; if (c) c.click();
+    });
+    const host = acts.closest('.pd2-toprow') || acts.closest('.pd2-topend') || acts;
+    host.parentNode.insertBefore(strip, host);
+    sec.classList.add('rec-mini-src');
+  });
+}
+(function recMiniWatch() {
+  let t = 0;
+  const obs = new MutationObserver(() => { if (t) return; t = setTimeout(() => { t = 0; recMiniEnhance(); }, 60); });
+  const start = () => obs.observe(document.body, { childList: true, subtree: true });
+  if (document.body) start(); else document.addEventListener('DOMContentLoaded', start);
+})();

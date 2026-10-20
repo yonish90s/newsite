@@ -2459,6 +2459,8 @@ html.theme-dark.hdr-can-back .hdr-back { color: var(--hd-ink, #eceef1) !importan
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) .card-follow-h { border: 1px solid #5b6472 !important; background: #352e42 !important; }
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) .card-follow-h.on { color: #eceef1 !important; border-color: #2a2433 !important; }
 }
+html.theme-dark .rec-mini-item { border: 1px solid #2a2433 !important; background: #1d1924 !important; }
+html.theme-dark.theme-dark .rec-mini-item { background: #352e42 !important; }
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #eceef1 !important; }
 html.theme-dark [style*="color:#111111"] { color: #eceef1 !important; }

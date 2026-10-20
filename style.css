@@ -14105,3 +14105,12 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_
 }
 
 @media (max-width: 768px) { html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) .card-follow-h { width: auto !important; min-width: 0 !important; max-width: 90px !important; right: auto !important; flex: none !important; margin: 0 !important; justify-content: center !important; } }
+
+/* "שיעניינו אותך" כריבועים קטנים בשורה מעל הכפתורים */
+.rec-mini { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 2px 0 8px; }
+.rec-mini::-webkit-scrollbar { display: none; }
+.rec-mini-item { flex: 0 0 46px; width: 46px; height: 46px; padding: 0; border: 1px solid #e3e3ea; border-radius: 12px; overflow: hidden; background: #f1f1f4; cursor: pointer; }
+.rec-mini-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.rec-mini-item:active { transform: scale(.94); }
+html.theme-dark .rec-mini-item { border-color: #2f293a !important; background: #1d1924 !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .art-rec-section.rec-mini-src { display: none !important; }
