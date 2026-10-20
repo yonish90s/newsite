@@ -14423,3 +14423,8 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pc-row .pc-who { flex: none; 
   body { zoom: .75; }
   .main-layout { height: calc(100vh / .75); }
 }
+/* מצב עריכה (גרירת רכיבים): בלי הקטנה — כדי שהגרירה תהיה מדויקת */
+@media (min-width: 1100px) and (max-width: 1999px) {
+  body.edit-mode { zoom: 1 !important; }
+  body.edit-mode .main-layout { height: 100vh !important; }
+}

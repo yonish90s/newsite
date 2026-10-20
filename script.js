@@ -28945,9 +28945,10 @@ function sidePanelResizeStart(e) {
   const p = e.target.closest('.fo-panel'); if (!p) return;
   e.preventDefault();
   const left = p.getBoundingClientRect().left;
+  const sc = (p.getBoundingClientRect().width / (p.offsetWidth || 1)) || 1;   // תיקון לקנה המידה (zoom) במחשב
   p.classList.add('resizing'); document.documentElement.classList.add('fo-resizing');
   const move = ev => {
-    const wv = Math.max(320, Math.min(ev.clientX - left, window.innerWidth - 40));
+    const wv = Math.max(320, Math.min((ev.clientX - left) / sc, window.innerWidth / sc - 40));
     p.style.setProperty('width', wv + 'px', 'important');
   };
   const up = () => {
