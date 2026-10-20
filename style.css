@@ -14138,3 +14138,19 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_
 html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pf-box .pf-check:has(input:checked) .pf-check-label { color: #ffffff !important; }
 html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pf-box .pf-clear-btn { order: 3; flex: 0 0 100%; height: 30px !important; margin: 8px 0 0 !important; padding: 0 !important; font-size: 12px !important; border-radius: 999px !important; }
 html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pf-box > :not(.pf-sec):not(.pf-clear-btn) { order: 0; flex: 0 0 100%; }
+
+
+/* מובייל: שורת עיגולי הקטגוריות בגובה של שורת "תצוגה" (~30px) — עיגול קטן והשם לידו */
+@media (max-width: 768px) {
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pcc-row { gap: 6px !important; padding: 2px 0 6px !important; align-items: center !important; min-height: 0 !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pcc { flex-direction: row !important; align-items: center !important; gap: 5px !important; height: 30px !important; padding: 0 10px 0 4px !important; border-radius: 999px !important; border: 1px solid transparent !important; flex: none !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pcc.active, html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pcc.on, html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pcc[aria-pressed="true"] { background: #f1f1f4 !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pcc-ring { width: 22px !important; height: 22px !important; min-width: 22px !important; font-size: 10px !important; border-width: 1px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pcc-name { font-size: 11.5px !important; max-width: 90px !important; line-height: 1 !important; white-space: nowrap !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pcc::after, html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pcc .pcc-name::after { display: none !important; }
+}
+
+@media (max-width: 768px) {
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pcc { width: auto !important; min-width: 0 !important; max-width: none !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pcc-name { max-width: 110px !important; overflow: hidden !important; text-overflow: ellipsis !important; width: auto !important; flex: none !important; }
+}
