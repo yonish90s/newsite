@@ -28727,8 +28727,19 @@ function homeAsideHTML() {
   let haHidden = []; try { haHidden = JSON.parse(localStorage.getItem('ha_hidden') || '[]') || []; } catch (e) {}
   const box = (title, rows, more) => (rows && !haHidden.includes(title)) ? `<section class="ha-box"><h3>${title}</h3><button type="button" class="ha-x" onclick="homeAsideHide(this, '${artEsc(title)}')" aria-label="הסתרה" title="הסתרה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>${rows}${more ? `<button type="button" class="ha-more" onclick="${more}">הצג עוד</button>` : ''}</section>` : '';
   return `<aside class="home-aside" aria-label="המלצות">
-    ${box('את מי לעקוב', who.slice(0, 3).map(whoRow).join(''), "homeAsideMore('who')")}
-    ${homeAsideLoginHTML()}
+    ${(() => {
+      const whoBox = box('את מי לעקוב', who.slice(0, 3).map(whoRow).join(''), "homeAsideMore('who')");
+      const loginBox = homeAsideLoginHTML();
+      if (!loginBox || !whoBox) return whoBox + loginBox;
+      // אורח: שתי הלשוניות בתיבה אחת — "את מי לעקוב" / "התחברות"
+      let tab = 'who'; try { tab = localStorage.getItem('ha_tab') === 'login' ? 'login' : 'who'; } catch (e) {}
+      const strip = h => h.replace(/^\s*<section class="ha-box[^"]*">/, '').replace(/<\/section>\s*$/, '').replace(/<h3>[^<]*<\/h3>/, '');
+      return `<section class="ha-box ha-tabbed" data-tab="${tab}">
+        <nav class="pfg-tabs ha-tabs"><button type="button" class="pfg-tab${tab === 'who' ? ' on' : ''}" onclick="haSetTab(this, 'who')">את מי לעקוב</button><button type="button" class="pfg-tab${tab === 'login' ? ' on' : ''}" onclick="haSetTab(this, 'login')">התחברות</button></nav>
+        <div class="ha-pane" data-pane="who">${strip(whoBox)}</div>
+        <div class="ha-pane ha-login" data-pane="login">${strip(loginBox)}</div>
+      </section>`;
+    })()}
     ${box('פורומים להצטרף', forums.slice(0, 3).map(forumRow).join(''), 'openForumsPanel()')}
     ${box('אתרים מומלצים', sites.slice(0, 3).map(siteRow).join(''), sites.length > 3 ? "homeAsideMore('sites')" : '')}
     <div class="ha-foot"><a href="#" onclick="event.preventDefault(); openLegal('terms')">תנאי שימוש</a> · <a href="#" onclick="event.preventDefault(); openLegal('privacy')">פרטיות</a> · <a href="#" onclick="event.preventDefault(); openLegal('a11y')">נגישות</a></div>
@@ -29655,3 +29666,11 @@ function haLoginSubmit(form) {
   setTimeout(() => { const m = document.getElementById('auth-username-msg'); if (msg && m && m.textContent.trim()) msg.textContent = m.textContent.trim(); }, 1500);
 }
 Object.assign(window, { haLoginSubmit });
+
+function haSetTab(btn, tab) {
+  const box = btn.closest('.ha-tabbed'); if (!box) return;
+  box.dataset.tab = tab;
+  box.querySelectorAll('.ha-tabs .pfg-tab').forEach(b => b.classList.toggle('on', b === btn));
+  try { localStorage.setItem('ha_tab', tab); } catch (e) {}
+}
+window.haSetTab = haSetTab;

@@ -14697,3 +14697,10 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.s
 .ofc-b.ok { background: #34a853; }
 .ofc-b.msg { background: #3a3a3c; }
 @media (max-width: 420px) { .ofc-av { width: 44px; height: 44px; font-size: 18px; } .ofc-b { width: 40px; height: 40px; } .ofc-b svg { width: 19px; height: 19px; } .ofc-name { font-size: 15.5px; } }
+
+/* דף הבית (מחשב): "את מי לעקוב" / "התחברות" — תיבה אחת עם שתי לשוניות */
+.ha-tabbed .ha-tabs { margin: -4px 0 10px; }
+.ha-tabbed .ha-tabs .pfg-tab { flex: 1; font-size: 14px; }
+.ha-tabbed .ha-pane { display: none; }
+.ha-tabbed[data-tab="who"] .ha-pane[data-pane="who"], .ha-tabbed[data-tab="login"] .ha-pane[data-pane="login"] { display: block; }
+.ha-tabbed .ha-pane .ha-x { display: none !important; }
