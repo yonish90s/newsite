@@ -2511,6 +2511,15 @@ html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-detail .pc-compose .pc-av { background: #2a2a2c !important; color: #d9d9d9 !important; }
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-detail .pc-compose .pc-go { background: #3a3a3d !important; }
 }
+html.theme-dark .ha-login .ha-in { border: 1px solid #333336 !important; background: #1c1c1e !important; }
+html.theme-dark .ha-login .ha-in:focus { border-color: #5b6472 !important; }
+html.theme-dark .ha-login .ha-login-btn { background: #3a3a3d !important; }
+html.theme-dark .ha-login .ha-login-msg { color: color-mix(in srgb, #c0392b 55%, white) !important; }
+html.theme-dark .ha-login .ha-login-google { border: 1px solid #333336 !important; }
+html.theme-dark .ha-login .ha-login-foot { color: #bdbdbd !important; }
+html.theme-dark .ha-login .ha-login-foot button { color: #d9d9d9 !important; }
+html.theme-dark.theme-dark .ha-login .ha-in { background: #3a3a3d !important; }
+html.theme-dark.theme-dark .ha-login .ha-login-btn { background: #2a2a2c !important; color: #d9d9d9 !important; }
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #d9d9d9 !important; }
 html.theme-dark [style*="color:#111111"] { color: #d9d9d9 !important; }

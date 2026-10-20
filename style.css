@@ -14462,3 +14462,19 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pc-row .pc-who { flex: none; 
 @media (min-width: 1100px) and (max-width: 1999px) {
   html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-detail .art-detail-inner { zoom: 1.33; max-width: 600px !important; }
 }
+
+/* תיבת התחברות קטנה בעמודה הימנית של דף הבית (מחשב בלבד) */
+.ha-login form { display: flex; flex-direction: column; gap: 7px; margin-top: 4px; }
+.ha-login .ha-in { height: 36px; padding: 0 12px; border: 1px solid #dcdce3; border-radius: 10px; background: #ffffff; font: inherit; font-size: 13px; color: inherit; outline: none; }
+.ha-login .ha-in:focus { border-color: #111111; }
+.ha-login .ha-login-btn { height: 36px; border: 0; border-radius: 10px; background: #111111; color: #ffffff; font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; }
+.ha-login .ha-login-msg { font-size: 12px; color: #c0392b; min-height: 0; }
+.ha-login .ha-login-msg:empty { display: none; }
+.ha-login .ha-login-google { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; height: 36px; margin-top: 8px; border: 1px solid #dcdce3; border-radius: 10px; background: transparent; font: inherit; font-size: 13px; font-weight: 600; color: inherit; cursor: pointer; }
+.ha-login .ha-login-foot { margin: 8px 0 0; font-size: 12.5px; color: #6b7180; text-align: center; }
+.ha-login .ha-login-foot button { border: 0; background: none; padding: 0; font: inherit; font-weight: 700; color: #111111; text-decoration: underline; cursor: pointer; }
+@media (max-width: 1099px) { .ha-login { display: none !important; } }
+html.theme-dark .ha-login .ha-in { background: #1c1c1e !important; border-color: #333336 !important; color: #ececec !important; }
+html.theme-dark .ha-login .ha-login-btn { background: #ececec !important; color: #111111 !important; }
+html.theme-dark .ha-login .ha-login-google { border-color: #333336 !important; }
+html.theme-dark .ha-login .ha-login-foot button { color: #ececec !important; }

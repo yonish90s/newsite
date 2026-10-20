@@ -28724,6 +28724,7 @@ function homeAsideHTML() {
   const box = (title, rows, more) => (rows && !haHidden.includes(title)) ? `<section class="ha-box"><h3>${title}</h3><button type="button" class="ha-x" onclick="homeAsideHide(this, '${artEsc(title)}')" aria-label="הסתרה" title="הסתרה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>${rows}${more ? `<button type="button" class="ha-more" onclick="${more}">הצג עוד</button>` : ''}</section>` : '';
   return `<aside class="home-aside" aria-label="המלצות">
     ${box('את מי לעקוב', who.slice(0, 3).map(whoRow).join(''), "homeAsideMore('who')")}
+    ${homeAsideLoginHTML()}
     ${box('פורומים להצטרף', forums.slice(0, 3).map(forumRow).join(''), 'openForumsPanel()')}
     ${box('אתרים מומלצים', sites.slice(0, 3).map(siteRow).join(''), sites.length > 3 ? "homeAsideMore('sites')" : '')}
     <div class="ha-foot"><a href="#" onclick="event.preventDefault(); openLegal('terms')">תנאי שימוש</a> · <a href="#" onclick="event.preventDefault(); openLegal('privacy')">פרטיות</a> · <a href="#" onclick="event.preventDefault(); openLegal('a11y')">נגישות</a></div>
@@ -29622,3 +29623,32 @@ window.__pcAuthor = function (kind, id) {
   const sel = document.querySelector('.art-detail .pd2-creator-txt b, .art-detail .pd2-info .photo-author-link');
   return sel ? sel.textContent.trim() : '';
 };
+
+
+// דף הבית (מחשב): תיבת התחברות קטנה בעמודה הימנית — רק לאורחים
+function homeAsideLoginHTML() {
+  const u = auth.currentUser;
+  if (u && !u.isAnonymous) return '';
+  return `<section class="ha-box ha-login">
+    <h3>התחברות</h3>
+    <form onsubmit="event.preventDefault(); haLoginSubmit(this)" autocomplete="on">
+      <input class="ha-in" name="username" placeholder="שם משתמש" autocomplete="username" maxlength="24" required>
+      <input class="ha-in" name="password" type="password" placeholder="סיסמה" autocomplete="current-password" minlength="6" maxlength="64" required>
+      <button type="submit" class="ha-login-btn">כניסה</button>
+      <div class="ha-login-msg" role="status"></div>
+    </form>
+    <button type="button" class="ha-login-google" onclick="document.getElementById('auth-google-login-btn')?.click()"><svg width="16" height="16" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.63-.06-1.25-.16-1.84H9v3.47h4.84c-.21 1.12-.84 2.07-1.8 2.71v2.24h2.91c1.7-1.56 2.69-3.86 2.69-6.58z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.91-2.24c-.8.54-1.84.87-3.05.87-2.35 0-4.33-1.58-5.04-3.71H.95v2.3A9 9 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.96 10.74A5.4 5.4 0 0 1 3.6 9c0-.6.1-1.19.29-1.74V4.96H.95A8.99 8.99 0 0 0 0 9c0 1.48.36 2.89.99 4.13l2.97-2.39z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.59C13.47.89 11.43 0 9 0 5.02 0 1.57 2.29.21 5.62l3.04 2.36c.7-2.13 2.68-3.71 5.04-3.71z"/></svg><span>המשך עם Google</span></button>
+    <p class="ha-login-foot">אין חשבון? <button type="button" onclick="openLiveChatLogin(); setTimeout(() => { if (typeof authSetMode === 'function') authSetMode('signup'); }, 60)">הרשמה</button></p>
+  </section>`;
+}
+function haLoginSubmit(form) {
+  const user = form.username.value.trim(), pass = form.password.value;
+  const mu = document.getElementById('auth-username'), mp = document.getElementById('auth-password');
+  if (!mu || !mp || typeof authUsernameLogin !== 'function') { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
+  mu.value = user; mp.value = pass;
+  const msg = form.querySelector('.ha-login-msg');
+  if (msg) msg.textContent = '';
+  try { authUsernameLogin(); } catch (e) {}
+  setTimeout(() => { const m = document.getElementById('auth-username-msg'); if (msg && m && m.textContent.trim()) msg.textContent = m.textContent.trim(); }, 1500);
+}
+Object.assign(window, { haLoginSubmit });
