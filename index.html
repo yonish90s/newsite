@@ -15,8 +15,8 @@
   <!-- ספריית localforage לשמירת תמונות -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
   <!-- קישור לקובץ העיצוב החיצוני (עם פרמטר למניעת שמירה במטמון) -->
-  <link rel="stylesheet" href="./style.css?v=1737">
-  <link rel="stylesheet" href="./dark.css?v=154">
+  <link rel="stylesheet" href="./style.css?v=1739">
+  <link rel="stylesheet" href="./dark.css?v=156">
   <script>
     // מצב בהיר/כהה — נקבע לפני שהדף מצויר כדי שלא יהבהב (בחירה שמורה, אחרת לפי הגדרות המכשיר)
     (function () {
@@ -1219,8 +1219,10 @@ html.theme-dark .pl-bar { background: #2a2f37; }
   <!-- מובייל: כפתורי X (סגירה) ונגישות בסרגל הטאבים התחתון + כפתור לפתיחתו מחדש -->
   <nav id="mtabs" class="mtabs" aria-label="ניווט ראשי">
     <button type="button" class="mtab" data-tab="photos" onclick="homeOpenPhotos()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 9"/></svg><span>תמונות גולשים</span></button>
+    <button type="button" class="mtab" data-tab="products" onclick="navigateToPage('page-secondhand-main')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14l-1.2 11.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg><span>מוצרי גולשים</span></button>
     <button type="button" class="mtab" data-tab="home" onclick="goToHomePage()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg><span>בית</span></button>
     <button type="button" class="mtab mtab-plus" data-tab="upload" onclick="openPhotoModal()" aria-label="העלאה"><span class="mtab-plus-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></button>
+    <button type="button" class="mtab" data-tab="forums" onclick="navigateToPage('page-forums-main')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h11a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H9l-4 3.5V15H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/><path d="M19.5 9.5H20a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-.5V21l-3.5-2.5h-4"/></svg><span>פורומים</span></button>
     <button type="button" class="mtab" data-tab="messages" onclick="openMessages()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 4.5 2.8 11.7c-.9.4-.9 1.6 0 1.9l4.7 1.6 1.8 5.6c.2.7 1.1.9 1.6.4l2.6-2.5 4.9 3.6c.6.4 1.4.1 1.6-.6l3.2-15.6c.2-.9-.6-1.6-1.4-1.3z"/><path d="m7.5 15.2 9.8-7.4"/></svg><span>הודעות</span><b class="dm-open-badge mtab-badge" style="display:none"></b></button>
     <button type="button" class="mtab" data-tab="close" onclick="mobileTabsSetHidden(true)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6 6 18"/></svg><span>סגירה</span></button>
   </nav>
@@ -1236,7 +1238,7 @@ html.theme-dark .pl-bar { background: #2a2f37; }
     try { if (localStorage.getItem('mtab_hidden') === '1') document.documentElement.classList.add('mtab-hidden'); } catch (e) {}
   </script>
   <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
-  <script type="module" src="./script.js?v=1640"></script>
+  <script type="module" src="./script.js?v=1641"></script>
   <script defer src="./a11y.js?v=1"></script>
 </body>
 </html>

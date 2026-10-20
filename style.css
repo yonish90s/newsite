@@ -13570,3 +13570,17 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-follow-btn.on { c
   html body:not(#_):not(#_):not(#_):not(#_) .pf-panel :is(.pfg-views, .pfg-count, .pf-tile-count) { display: none !important; }
   html body:not(#_):not(#_):not(#_):not(#_) .pf-panel :is(.pfg-media, .pf-tile) { border-radius: 10px !important; overflow: hidden !important; }
 }
+
+/* סרגל תחתון עם 7 פריטים — צפוף ומסודר */
+@media (max-width: 768px) {
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .mtabs { gap: 0 !important; padding: 3px 4px !important; left: 10px !important; right: 10px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .mtabs .mtab { flex: 1 1 0 !important; min-width: 0 !important; padding: 3px 1px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .mtabs .mtab > span { font-size: 8.5px !important; line-height: 1.05 !important; white-space: normal !important; text-align: center !important; max-width: 100% !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .mtabs .mtab > svg { width: 18px !important; height: 18px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .mtabs .mtab-plus { flex: 0 0 42px !important; }
+}
+@media (max-width: 768px) {
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .mtabs { display: grid !important; grid-template-columns: 1fr 1fr 1fr 44px 1fr 1fr 1fr !important; align-items: center !important; flex-wrap: nowrap !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .mtabs .mtab { width: auto !important; min-width: 0 !important; overflow: hidden !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .mtabs .mtab > span { white-space: normal !important; word-break: keep-all; overflow-wrap: anywhere; }
+}

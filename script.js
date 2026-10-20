@@ -8286,7 +8286,7 @@ function artSyncPagination() {
   // סרגל הטאבים במובייל: מסמנים את הטאב של העמוד הפתוח
   const _mq = (sel) => !!mainContent.querySelector(sel);
   const _tab = _mq('.home-feed-page') ? 'home' : _mq('.forums-page') ? 'forums' : _mq('.news-page') ? 'news' : _mq('.communities-page') ? 'communities'
-    : _mq('.photos-page[data-section="photos"]:not(.home-feed-photos)') ? 'photos' : '';
+    : _mq('.photos-page[data-section="photos"]:not(.home-feed-photos)') ? 'photos' : _mq('.photos-page[data-section="secondhand"]') ? 'products' : '';
   document.querySelectorAll('#mtabs .mtab').forEach(b => b.classList.toggle('active', b.dataset.tab === _tab));
   if (typeof sideRailSync === 'function') sideRailSync();
   if (artPagObserver) artPagObserver.disconnect();
