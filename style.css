@@ -14345,3 +14345,14 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_
 @media (hover: hover) and (pointer: fine) {
   .art-row-img-wrap:hover .img-tags { opacity: 1; transform: none; pointer-events: auto; }
 }
+
+
+/* תיקון: במחשב — אייקוני דיווח/הודעה/מייל/טלגרם בשורת היוצר של הכרטיס (לא נעלמים) */
+@media (min-width: 769px) {
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-row .card-head-acts { display: inline-flex !important; align-items: center !important; gap: 10px !important; margin-inline-start: auto !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-row .card-head-acts .art-telegram-btn { display: inline-flex !important; align-items: center !important; justify-content: center !important; width: 26px !important; height: 26px !important; min-width: 0 !important; padding: 0 !important; border: 0 !important; border-radius: 50% !important; background: transparent !important; box-shadow: none !important; color: #4b505b !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-row .card-head-acts .art-telegram-btn:hover { background: rgba(127,127,140,.12) !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-row .card-head-acts .art-telegram-btn svg { width: 16px !important; height: 16px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-row .card-head-acts .art-telegram-btn > span { display: none !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-row .art-row-meta { display: flex !important; align-items: center !important; flex-wrap: wrap !important; }
+}

@@ -278,3 +278,5 @@ html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):
   html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.rd-cmt-name, .rd-time, .rd-dot, .rd-actions .rd-reply, .rd-votes) { color: #939393 !important; }
   html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .rd-votes.up { color: #4c9bff !important; }
 }
+
+@media (min-width: 769px) { html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-row .card-head-acts .art-telegram-btn { color: #c9ccd1 !important; } }
