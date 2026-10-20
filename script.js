@@ -30020,3 +30020,7 @@ window.hcDot = hcDot;
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
   setTimeout(init, 1500);
 })();
+
+// סרגל הכפתורים התחתון במובייל — מוסתר לפי בקשת הבעלים. להחזרה: לשנות ל-false
+const MTABS_HIDDEN = true;
+document.documentElement.classList.toggle('mtabs-off', MTABS_HIDDEN);

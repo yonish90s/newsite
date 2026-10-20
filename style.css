@@ -15016,3 +15016,9 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_
   html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-detail .pshow-tiles.pshow-tiles-up .pshow-tile { flex: 0 0 68px !important; width: 68px !important; height: 68px !important; aspect-ratio: 1 !important; padding: 4% !important; border-radius: 12px !important; }
   html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-detail .pshow-stage:has(.pshow-tiles-up) .pshow-dots { display: none !important; }
 }
+
+/* סרגל תחתון במובייל מוסתר (html.mtabs-off — נשלט מ-MTABS_HIDDEN ב-script.js) */
+@media (max-width: 768px) {
+  html.mtabs-off body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #mtabs.mtabs { display: none !important; }
+}
+@media (max-width: 768px) { html.mtabs-off body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) { padding-bottom: 16px !important; } }
