@@ -14808,3 +14808,26 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_
 .otr-next{flex:none;border:0;border-radius:999px;background:#111;color:#fff;font:600 12px var(--site-font,inherit);padding:7px 13px;cursor:pointer}
 .otr-next:active{transform:scale(.95)}
 .otr-demo{opacity:.92}
+
+/* ===== נתוני האתר בתוך "הנתונים שלי" ===== */
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .hw-site { grid-column: 1 / -1; grid-row: auto; display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-top: 6px; padding-top: 10px; border-top: 1px solid #ececee; direction: rtl; width: 100%; }
+.hw-site-ttl { font-size: 11px; font-weight: 700; color: #8a8a90; white-space: nowrap; }
+.hw-site-st { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+.hw-site-st svg { width: 14px; height: 14px; color: #ec5f80; flex: none; }
+.hw-site-st b { font-size: 14px; font-weight: 800; color: #111; font-variant-numeric: tabular-nums; }
+.hw-site-st small { font-size: 11px; color: #8a8a90; }
+@media (max-width: 768px) {
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .hw-site { margin-top: 4px; padding-top: 6px; gap: 4px; }
+  .hw-site-ttl { display: none; }
+  .hw-site-st { flex-direction: column; gap: 1px; flex: 1; }
+  .hw-site-st svg { width: 12px; height: 12px; }
+  .hw-site-st b { font-size: 12px; }
+  .hw-site-st small { font-size: 8.5px; }
+}
+@media (min-width: 769px) {
+  .hw-site-st { gap: 6px; }
+  .hw-site-st svg { width: 17px; height: 17px; }
+  .hw-site-st b { font-size: 19px; }
+  .hw-site-st small { font-size: 12.5px; }
+  .hw-site-ttl { font-size: 12.5px; }
+}

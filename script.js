@@ -13402,7 +13402,34 @@ function homeWatchBodyHTML() {
       ${homeWatchGauge('var(--hw-c1)', Math.min(1, d.rCount / 20), d.rCount)}
     </div>
     <div class="hw-watch-cmp-labels"><span>נקודות</span><span>מקום</span><span>מדרגים</span></div></div>
-    ${mine ? '' : '<div class="hw-watch-cta">התחברו כדי לראות את שלכם</div>'}`;
+    ${mine ? '' : '<div class="hw-watch-cta">התחברו כדי לראות את שלכם</div>'}
+    ${homeSiteStatsHTML()}`;
+}
+// נתוני האתר: פוסטים, משתמשים (שפרסמו/הגיבו/דירגו), לייקים ותגובות
+var cardCmtUids = new Set();
+function homeSiteStatsHTML() {
+  try { cardCmtSubscribe(); } catch (e) {}
+  if (friendsRatings === null && !homeWatchRatingsLoading) {
+    homeWatchRatingsLoading = true;
+    get(ref(db, 'website/user_ratings')).then(snap => { friendsRatings = snap.exists() ? (snap.val() || {}) : {}; homeWatchUpdate(); })
+      .catch(() => { friendsRatings = {}; }).finally(() => { homeWatchRatingsLoading = false; });
+  }
+  const items = friendsAllItems();
+  const users = new Set(cardCmtUids);
+  items.forEach(it => { const k = it.authorId || String(it.author || '').trim(); if (k) users.add(k); });
+  Object.keys(friendsRatings || {}).forEach(uid => users.add(uid));
+  const likes = items.reduce((n, it) => n + Math.max(0, Number(it.likes) || 0), 0);
+  const cmts = Object.values(cardCmtCounts || {}).reduce((n, c) => n + c, 0);
+  const f = n => Number(n || 0).toLocaleString('he-IL');
+  const ic = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+  const st = (icon, v, l) => `<span class="hw-site-st">${ic(icon)}<b>${f(v)}</b><small>${l}</small></span>`;
+  return `<div class="hw-site">
+      <small class="hw-site-ttl">נתוני האתר</small>
+      ${st('<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/>', items.length, 'פוסטים')}
+      ${st('<circle cx="9" cy="8" r="3.2"/><path d="M3 19.5v-.8A5 5 0 0 1 8 13.7h2a5 5 0 0 1 5 5v.8"/><path d="M16 4.6a3.2 3.2 0 0 1 0 6.3M18.5 13.9a5 5 0 0 1 2.5 4.3v1.3"/>', users.size, 'משתמשים')}
+      ${st('<path d="M7 10v11H4a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1h3zm0 0 4-7a2.5 2.5 0 0 1 2.5 2.5V9h5.4a2 2 0 0 1 2 2.3l-1.3 8A2 2 0 0 1 17.6 21H7"/>', likes, 'לייקים')}
+      ${st('<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"/>', cmts, 'תגובות')}
+    </div>`;
 }
 function homeWatchHTML() {
   if (!window._homeWatchTimer) {
@@ -24296,7 +24323,7 @@ Object.assign(UI_EN, {
   // עמוד הבית
   'גולשים היום': 'Visitors today', 'פוסטים עלו היום': 'Posts today', 'דיונים פעילים היום': 'Active discussions', 'שאלות היום': 'Questions today',
   'נפח פעילות היום': 'Activity today', 'העלאת תמונת גולשים': 'Upload a member photo', 'גלריות מהקהילה': 'Galleries from the community',
-  'רצועות ואיורים': 'Strips & illustrations', 'קצרים ומאמרים': 'Shorts & articles', 'הנתונים שלי': 'My stats', 'דוגמה': 'Example', 'מעודכן עכשיו': 'Updated now',
+  'רצועות ואיורים': 'Strips & illustrations', 'קצרים ומאמרים': 'Shorts & articles', 'הנתונים שלי': 'My stats', 'נתוני האתר': 'Site stats', 'משתמשים': 'Users', 'תגובות': 'Comments', 'דוגמה': 'Example', 'מעודכן עכשיו': 'Updated now',
   'פוסטים': 'Posts', 'לייקים': 'Likes', 'דירוג': 'Rating', 'נקודות': 'Points', 'מקום': 'Rank', 'מדרגים': 'Raters', 'התחברו כדי לראות את שלכם': 'Log in to see yours',
   // עוגיות
   'אנו משתמשים בעוגיות.': 'We use cookies.', 'פרטים': 'Details', 'אישור': 'Accept', 'דחייה': 'Decline',
@@ -29459,8 +29486,9 @@ function cardCmtSubscribe() {
     try {
       onValue(ref(db, `website/${k}`), snap => {
         const v = snap.val() || {};
-        Object.keys(v).forEach(id => { cardCmtCounts[id] = Object.keys(v[id] || {}).length; });
+        Object.keys(v).forEach(id => { cardCmtCounts[id] = Object.keys(v[id] || {}).length; Object.values(v[id] || {}).forEach(c => { if (c && c.uid) cardCmtUids.add(c.uid); }); });
         apply();
+        if (document.querySelector('.hw-site')) { clearTimeout(window._hwSiteT); window._hwSiteT = setTimeout(homeWatchUpdate, 200); }
       });
     } catch (e) {}
   });

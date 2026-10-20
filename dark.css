@@ -2595,6 +2595,10 @@ html.theme-dark .otr-card-txt b { color: #d9d9d9 !important; }
 html.theme-dark .otr-card-txt small { color: #939393 !important; }
 html.theme-dark .otr-pill.ok { background: #3a3a3d !important; }
 html.theme-dark .otr-next { background: #3a3a3d !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .hw-site { border-top: 1px solid #333336 !important; }
+html.theme-dark .hw-site-ttl { color: #939393 !important; }
+html.theme-dark .hw-site-st b { color: #d9d9d9 !important; }
+html.theme-dark .hw-site-st small { color: #939393 !important; }
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #d9d9d9 !important; }
 html.theme-dark [style*="color:#111111"] { color: #d9d9d9 !important; }
@@ -3077,3 +3081,8 @@ html.theme-dark .otr-step.done .otr-dot{background:#d9d9d9;border-color:#d9d9d9;
 html.theme-dark .otr-card{background:#232325}
 html.theme-dark .otr-card-txt small{color:#939393}
 html.theme-dark .otr-pill.ok,html.theme-dark .otr-next{background:#d9d9d9;color:#121212}
+
+/* נתוני האתר */
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .hw-site { border-top-color: #333336; }
+html.theme-dark .hw-site-st b { color: #d9d9d9; }
+html.theme-dark .hw-site-ttl, html.theme-dark .hw-site-st small { color: #939393; }
