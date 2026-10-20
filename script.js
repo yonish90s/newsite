@@ -28873,3 +28873,38 @@ function sidePanelResizeStart(e) {
   window.addEventListener('pointermove', move); window.addEventListener('pointerup', up);
 }
 window.sidePanelResizeStart = sidePanelResizeStart;
+
+// ============================================================
+// מובייל: בורר "תצוגה" אחיד (גריד 2 בשורה / רשימה 1 בשורה) בתמונות, קומיקס, סיפורים ויד 2
+// ============================================================
+function mviewGet() { try { return localStorage.getItem('m_view') === 'list' ? 'list' : 'grid'; } catch (e) { return 'grid'; } }
+function mviewApply() { document.documentElement.classList.toggle('mview-list', mviewGet() === 'list'); }
+function mviewSet(v) {
+  try { localStorage.setItem('m_view', v); } catch (e) {}
+  mviewApply();
+  document.querySelectorAll('.mview-btn').forEach(b => b.classList.toggle('on', b.dataset.v === v));
+}
+function mviewBarHTML() {
+  const v = mviewGet();
+  const ic = {
+    grid: '<rect x="4" y="4" width="7" height="7" rx="1.6"/><rect x="13" y="4" width="7" height="7" rx="1.6"/><rect x="4" y="13" width="7" height="7" rx="1.6"/><rect x="13" y="13" width="7" height="7" rx="1.6"/>',
+    list: '<rect x="4" y="4" width="16" height="7" rx="1.6"/><rect x="4" y="13" width="16" height="7" rx="1.6"/>'
+  };
+  const b = (k, t) => `<button type="button" class="mview-btn${v === k ? ' on' : ''}" data-v="${k}" onclick="mviewSet('${k}')" aria-label="${t}" title="${t}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round">${ic[k]}</svg></button>`;
+  return `<div class="mview-bar"><span class="mview-label">תצוגה</span>${b('grid', 'גריד')}${b('list', 'רשימה')}</div>`;
+}
+function mviewInject() {
+  if (!window.matchMedia('(max-width: 768px)').matches) return;
+  const rows = document.querySelector('.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page:not(.photos-stories-feed) #story-row-main');
+  if (!rows || rows.previousElementSibling?.classList?.contains('mview-bar')) return;
+  rows.insertAdjacentHTML('beforebegin', mviewBarHTML());
+}
+mviewApply();
+(function mviewWatch() {
+  let t = 0;
+  const obs = new MutationObserver(() => { if (t) return; t = requestAnimationFrame(() => { t = 0; mviewInject(); }); });
+  const start = () => { obs.observe(document.body, { childList: true, subtree: true }); mviewInject(); };
+  if (document.body) start(); else document.addEventListener('DOMContentLoaded', start);
+})();
+Object.assign(window, { mviewSet });
+Object.assign(UI_EN, { 'תצוגה': 'View', 'גריד': 'Grid', 'רשימה': 'List' });
