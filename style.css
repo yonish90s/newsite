@@ -14154,3 +14154,13 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_
   html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pcc { width: auto !important; min-width: 0 !important; max-width: none !important; }
   html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pcc-name { max-width: 110px !important; overflow: hidden !important; text-overflow: ellipsis !important; width: auto !important; flex: none !important; }
 }
+
+
+/* לייקים / שמורים / היסטוריה: ריבועים קטנים ומסודרים, בגודל של שורת ה"הצעות" */
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .saved-grid { display: grid !important; grid-template-columns: repeat(auto-fill, 52px) !important; gap: 8px !important; justify-content: start !important; padding: 12px 14px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .saved-grid .saved-cell { width: 52px !important; padding: 0 !important; margin: 0 !important; border: 0 !important; background: none !important; box-shadow: none !important; cursor: pointer; position: relative; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .saved-grid .saved-thumb { width: 52px !important; height: 52px !important; aspect-ratio: 1 / 1 !important; border-radius: 12px !important; overflow: hidden !important; border: 1px solid #e3e3ea !important; background: #f1f1f4 !important; display: grid !important; place-items: center !important; font-size: 18px !important; margin: 0 !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .saved-grid .saved-thumb img { width: 100% !important; height: 100% !important; object-fit: cover !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .saved-grid .saved-name { display: none !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .saved-grid .saved-cell:active .saved-thumb { transform: scale(.94); }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .saved-grid .saved-cell :is(button, .saved-remove, .saved-x) { width: 18px !important; height: 18px !important; min-width: 0 !important; font-size: 10px !important; top: -4px !important; left: -4px !important; padding: 0 !important; }
