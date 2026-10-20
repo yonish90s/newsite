@@ -16727,7 +16727,7 @@ function photoOpenDetail(id) {
     `;
   } else {
     mainContent.innerHTML = `
-      <div class="art-detail articles-page photos-page" data-photo-id="${id}" data-photos-json="${json}">
+      <div class="art-detail articles-page photos-page art-pd3" data-photo-id="${id}" data-photos-json="${json}">
         <div class="art-detail-inner">
           <div class="pd2-toprow">
             <button class="art-back-btn" onclick="photoGoBack()">${isSecondhand ? 'חזרה למוצרים' : 'חזרה לגלריות'}</button>
@@ -16738,7 +16738,7 @@ function photoOpenDetail(id) {
           </div>
 
           <!-- תצוגת "מוצר" בסגנון חנות: תמונה גדולה ונקייה + עמודת פרטים, ביקורות ויוצר -->
-          <div class="pd2 pd-show${a.isAdult ? ' is-adult-album' : ''}">
+          <div class="pd2 pd3 pd-show${a.isAdult ? ' is-adult-album' : ''}">
             <div class="pd2-media">
               <div class="pd2-frame pshow-frame photo-main-img-container${a.isAdult ? ' is-adult' : ''}" style="${blurStyle}">
                 <img id="photo-gallery-main-img" class="pshow-main" src="${escHtml(mainImg)}" alt="" style="${blurStyle}" onclick="artGalleryById('photos','${artEsc(id)}', this.getAttribute('src'))">
@@ -16771,6 +16771,7 @@ function photoOpenDetail(id) {
                 </div>
               </div>
               <div class="pd2-acts-desk">${pd2ActionsHTML(a, isSecondhand ? 'product' : '')}</div>
+              <span class="pd3-badge">${escHtml(a.category || (isSecondhand ? 'מוצרי גולשים' : 'תמונות גולשים'))}</span>
               <h1 class="pd2-title">${escHtml(a.title)}</h1>
               ${isSecondhand ? pd2ProductInfoHTML(a) : ''}
               ${postBarHTML(a)}
@@ -16782,6 +16783,30 @@ function photoOpenDetail(id) {
                 </div></div>` : ''}
               </div>` : ''}
 
+              <details class="pd2-acc" open><summary>תיאור</summary><div class="pd2-desc">${contentHTML || '<p class="pd2-muted">אין תיאור</p>'}</div></details>
+              <details class="pd2-acc" id="pd2-reviews"><summary>ביקורות</summary><div id="pd2-reviews-body">${pdReviewsHTML()}</div></details>
+              <details class="pd2-acc"><summary>פרטים</summary>
+                <ul class="pd2-facts">
+                  <li><span>פורסם</span><b>${escHtml(a.timestamp || '')}</b></li>
+                  ${a.category ? `<li><span>קטגוריה</span><b>${escHtml(a.category)}</b></li>` : ''}
+                  <li><span>תמונות בגלריה</span><b>${validImages.length || 1}</b></li>
+                  ${isUserVerified(a.authorId, a.author, a.verified || a.verifiedUser) ? '<li><span>חשבון</span><b>מאומת ✓</b></li>' : ''}
+                  ${a.expiresAt ? `<li><span>תוקף</span><b>${renderExpirationBadge(a.expiresAt)}</b></li>` : ''}
+                </ul>
+              </details>
+
+              <div class="pd3-desc">${contentHTML || ''}</div>
+              <div class="pd3-feats-h">פרטים</div>
+              <ul class="pd3-feats">
+                <li><span class="pd3-fi">✓</span>פורסם ${escHtml(a.timestamp || '')}</li>
+                <li><span class="pd3-fi">✓</span>${validImages.length || 1} תמונות בגלריה</li>
+                ${a.category ? `<li><span class="pd3-fi">✓</span>${escHtml(a.category)}</li>` : ''}
+                ${isUserVerified(a.authorId, a.author, a.verified || a.verifiedUser) ? '<li><span class="pd3-fi">✓</span>חשבון מאומת</li>' : ''}
+              </ul>
+            </aside>
+            <aside class="pd3-box">
+              <div class="pd3-box-card">
+                <div class="pd3-box-stat"><b>${a.likes || 0}</b> לייקים</div>
               <!-- שלושה כפתורים גדולים: שמירה (מתאר) · אהבתי (ורוד) · הודעה (גרדיאנט) -->
               <div class="okb-wrap">
               <div class="okb-row">
@@ -16800,25 +16825,14 @@ function photoOpenDetail(id) {
               </div>
               </div>
               ${(isAdmin() || isEditMode) ? `<button type="button" class="pd2-ghost pd2-edit" onclick="openPhotoEditModal('${artEsc(a.id)}', event);">עריכת הגלריה</button>` : ''}
-
-              <details class="pd2-acc" open><summary>תיאור</summary><div class="pd2-desc">${contentHTML || '<p class="pd2-muted">אין תיאור</p>'}</div></details>
-              <details class="pd2-acc" id="pd2-reviews"><summary>ביקורות</summary><div id="pd2-reviews-body">${pdReviewsHTML()}</div></details>
-              <details class="pd2-acc"><summary>פרטים</summary>
-                <ul class="pd2-facts">
-                  <li><span>פורסם</span><b>${escHtml(a.timestamp || '')}</b></li>
-                  ${a.category ? `<li><span>קטגוריה</span><b>${escHtml(a.category)}</b></li>` : ''}
-                  <li><span>תמונות בגלריה</span><b>${validImages.length || 1}</b></li>
-                  ${isUserVerified(a.authorId, a.author, a.verified || a.verifiedUser) ? '<li><span>חשבון</span><b>מאומת ✓</b></li>' : ''}
-                  ${a.expiresAt ? `<li><span>תוקף</span><b>${renderExpirationBadge(a.expiresAt)}</b></li>` : ''}
-                </ul>
-              </details>
-
+              </div>
               ${a.authorId && !isSiteAdminAuthor(a.authorId, a.author, a) ? `
               <div class="pd2-maker" onclick="openUserPage('${artEsc(a.authorId)}','${artEsc(a.author || '')}')">
                 ${authorAvHTML(a)}
                 <div><b>${escHtml(a.author || 'משתמש')}</b><small>לכל ההעלאות של היוצר</small></div>
                 <button type="button" onclick="event.stopPropagation(); toggleFollow('${artEsc(a.authorId)}','${artEsc(a.author || '')}', this)" class="follow-btn${isFollowing(a.authorId) ? ' following' : ''}">${isFollowing(a.authorId) ? 'עוקב/ת ✓' : 'עקוב'}</button>
               </div>` : ''}
+              <div class="pd3-trust"><b>✓ נבדק ע״י הקהילה</b><span>תוכן שגולשים העלו — אפשר לדרג, להגיב ולשלוח הודעה ליוצר.</span></div>
             </aside>
           </div>
 
