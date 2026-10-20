@@ -29058,3 +29058,70 @@ function closeCommentsWindow() {
 }
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.getElementById('pcw')) closeCommentsWindow(); });
 Object.assign(window, { openCommentsWindow, closeCommentsWindow });
+
+
+// ============================================================
+// "ביקורות" / "פרטים" (אקורדיונים בעמוד הפריט) — כפתורים בשורת הפוסט, כל אחד נפתח בחלון נפרד
+// ============================================================
+function openMoveWin(title, el, onClose) {
+  if (!el || document.getElementById('pcw')) return;
+  const mark = document.createComment('pcw-home');
+  el.parentNode.insertBefore(mark, el);
+  const w = document.createElement('div');
+  w.id = 'pcw'; w.className = 'pcw-wrap';
+  w.innerHTML = `<div class="pcw-backdrop" onclick="closeMoveWin()"></div>
+    <section class="pcw" role="dialog" aria-label="${escHtml(title)}">
+      <header class="pcw-head"><b>${escHtml(title)}</b>
+        <button type="button" class="pcw-x" onclick="closeMoveWin()" aria-label="סגירה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      </header>
+      <div class="pcw-body"></div>
+    </section>`;
+  document.body.appendChild(w);
+  w.querySelector('.pcw-body').appendChild(el);
+  window.__pcwMove = { el, mark, onClose };
+  document.documentElement.classList.add('pcw-open');
+  setTimeout(() => w.classList.add('show'), 10);
+}
+function closeMoveWin() {
+  const st = window.__pcwMove;
+  if (!st) return closeCommentsWindow();
+  const w = document.getElementById('pcw');
+  if (st.mark && st.mark.parentNode) { st.mark.parentNode.insertBefore(st.el, st.mark); st.mark.remove(); }
+  try { st.onClose && st.onClose(); } catch (e) {}
+  window.__pcwMove = null;
+  document.documentElement.classList.remove('pcw-open');
+  if (w) { w.classList.remove('show'); setTimeout(() => w.remove(), 220); }
+}
+function pbAccOpen(btn) {
+  const bar = btn.closest('.post-bar');
+  const host = bar && (bar.closest('.pd2-info') || bar.parentElement);
+  const det = host && host.querySelectorAll('details.pd2-acc')[Number(btn.dataset.i)];
+  if (!det) return;
+  det.open = true;
+  btn.classList.add('on');
+  openMoveWin(btn.dataset.t, det, () => { det.open = false; btn.classList.remove('on'); });
+}
+function pbEnhance() {
+  document.querySelectorAll('.post-bar:not([data-acc])').forEach(bar => {
+    bar.dataset.acc = '1';
+    const host = bar.closest('.pd2-info') || bar.parentElement;
+    const accs = host ? [...host.querySelectorAll('details.pd2-acc')] : [];
+    if (!accs.length) return;
+    const ic = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 4h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z" opacity=".25"/><path d="M7 8h10v1.8H7zM7 11.2h10V13H7zM7 14.4h6v1.8H7z"/></svg>';
+    const icStar = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>';
+    const html = accs.map((d, i) => {
+      d.classList.add('pb-acc-src');
+      const t = ((d.querySelector('summary') || {}).textContent || '').trim();
+      return `<button type="button" class="pb-btn pb-acc" data-i="${i}" data-t="${escHtml(t)}" onclick="pbAccOpen(this)">${/ביקור|Review/.test(t) ? icStar : ic}<span>${escHtml(t)}</span></button>`;
+    }).join('');
+    const sep = bar.querySelector('.pb-sep');
+    if (sep) sep.insertAdjacentHTML('beforebegin', html); else bar.insertAdjacentHTML('beforeend', html);
+  });
+}
+(function pbWatch() {
+  let t = 0;
+  const obs = new MutationObserver(() => { if (t) return; t = setTimeout(() => { t = 0; pbEnhance(); }, 60); });
+  const start = () => obs.observe(document.body, { childList: true, subtree: true });
+  if (document.body) start(); else document.addEventListener('DOMContentLoaded', start);
+})();
+Object.assign(window, { openMoveWin, closeMoveWin, pbAccOpen });

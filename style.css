@@ -13759,3 +13759,30 @@ html.theme-dark .pcw-x { background: #241f2d !important; color: #ebe8f0 !importa
 }
 @media (max-width: 768px) { .pcw { min-height: 55vh; } html.pcw-open #cookie-bar { display: none !important; } }
 .pcw { min-height: 320px; }
+
+/* שורת הפוסט: תגובות · שיתוף · ביקורות · פרטים | אודות — בשורה אחת; האקורדיונים עצמם מוסתרים */
+html body:not(#_):not(#_):not(#_) .post-bar { flex-wrap: nowrap !important; overflow-x: auto !important; scrollbar-width: none; }
+html body:not(#_):not(#_):not(#_) .post-bar::-webkit-scrollbar { display: none; }
+html body:not(#_):not(#_):not(#_) .post-bar .pb-btn { flex: none !important; white-space: nowrap !important; }
+html body:not(#_):not(#_):not(#_) .post-bar .pb-acc.on { border-color: #ec5f80 !important; color: #ec5f80 !important; }
+html body:not(#_):not(#_):not(#_) details.pd2-acc.pb-acc-src { display: none !important; }
+html body:not(#_):not(#_):not(#_) .pcw-body details.pd2-acc.pb-acc-src { display: block !important; border: 0 !important; margin: 0 !important; padding: 0 !important; }
+html body:not(#_):not(#_):not(#_) .pcw-body details.pd2-acc > summary { display: none !important; }
+@media (max-width: 768px) {
+  html body:not(#_):not(#_):not(#_):not(#_) .post-bar { gap: 6px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .post-bar .pb-btn { height: 32px !important; padding: 0 11px !important; font-size: 12px !important; gap: 5px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .post-bar .pb-btn svg { width: 15px !important; height: 15px !important; }
+}
+
+/* כותרת חלון נפרד + עוגיות לא מעל החלון */
+html body:not(#_):not(#_):not(#_) .pcw-head b { color: #1d1d22 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) .pcw-head b { color: #ebe8f0 !important; }
+html.pcw-open body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #cookie-bar { display: none !important; }
+
+/* תמונות בכרטיסים: כל התמונה נכנסת לפריים (בלי חיתוך) */
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) .art-row-img-wrap { background: #f1f1f4 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) .art-row-img-wrap { background: #0c0a10 !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) .art-row-img-wrap img { object-fit: contain !important; object-position: center !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .photos-page .art-row-img-wrap img { object-fit: contain !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .photos-page .art-row-img-wrap { background-color: #f1f1f4; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .photos-page .art-row-img-wrap { background-color: #0c0a10 !important; }
