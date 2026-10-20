@@ -13786,3 +13786,9 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.p
 html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .photos-page .art-row-img-wrap img { object-fit: contain !important; }
 html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .photos-page .art-row-img-wrap { background-color: #f1f1f4; }
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .photos-page .art-row-img-wrap { background-color: #0c0a10 !important; }
+
+/* "גלריות נוספות שיעניינו אותך" — כל המקטע קטן בהרבה */
+html body:not(#_):not(#_):not(#_) .art-rec-section { zoom: .6; }
+@media (max-width: 768px) {
+  html body:not(#_):not(#_):not(#_) .art-rec-section { zoom: .62; }
+}
