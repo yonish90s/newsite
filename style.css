@@ -14117,3 +14117,24 @@ html body:not(#_):not(#_):not(#_):not(#_) .art-rec-section.rec-mini-src { displa
 .rec-mini-wrap { display: flex; flex-direction: column; gap: 4px; margin: 0 0 6px; }
 .rec-mini-label { font-size: 11px; font-weight: 700; letter-spacing: .02em; color: #8a8f99; }
 html.theme-dark .rec-mini-label { color: #8d8899 !important; }
+
+
+/* ===== תיבת הסינון בצד: לשוניות-גלולות (כמו "סינונים / קהילה / אתרים / מידע"), קטנה ומסודרת ===== */
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pf-box { display: flex !important; flex-wrap: wrap !important; gap: 6px !important; padding: 12px !important; border-radius: 14px !important; border: 1px solid #e6e6ec !important; box-shadow: none !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pf-box > .pf-sec { display: contents !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pf-box .pf-sec-head { order: 1; display: inline-flex !important; align-items: center !important; gap: 4px !important; height: 28px !important; padding: 0 11px !important; margin: 0 !important; border: 1px solid #dcdce3 !important; border-radius: 999px !important; background: #ffffff !important; font-size: 12px !important; font-weight: 600 !important; color: #1d1d22 !important; cursor: pointer; white-space: nowrap; border-bottom: 1px solid #dcdce3 !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pf-box .pf-sec-head .pf-sec-chev { display: none !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pf-box .pf-sec-head .pf-sec-title-text { font-size: 12px !important; font-weight: 600 !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pf-box .pf-sec:not(.pf-collapsed) > .pf-sec-head { border: 1.5px solid #111111 !important; font-weight: 700 !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pf-box .pf-sec-body { order: 2; flex: 0 0 100% !important; width: 100% !important; margin: 4px 0 0 !important; padding: 10px 0 2px !important; border-top: 1px solid #efeff3 !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pf-box .pf-sec.pf-collapsed > .pf-sec-body { display: none !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pf-box .pf-sec:not(.pf-collapsed) ~ .pf-sec:not(.pf-collapsed) > .pf-sec-body { display: none !important; }
+/* האפשרויות כצ'יפים קטנים */
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pf-box .pf-check-group { display: flex !important; flex-wrap: wrap !important; gap: 6px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pf-box .pf-check { display: inline-flex !important; align-items: center !important; height: 26px !important; padding: 0 10px !important; margin: 0 !important; border: 1px solid #e3e3ea !important; border-radius: 999px !important; background: #f6f6f8 !important; cursor: pointer; width: auto !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pf-box .pf-check input { position: absolute !important; opacity: 0 !important; width: 0 !important; height: 0 !important; pointer-events: none; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pf-box .pf-check-label { font-size: 11.5px !important; font-weight: 600 !important; color: #3a3f4a !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pf-box .pf-check:has(input:checked) { background: #111111 !important; border-color: #111111 !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pf-box .pf-check:has(input:checked) .pf-check-label { color: #ffffff !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pf-box .pf-clear-btn { order: 3; flex: 0 0 100%; height: 30px !important; margin: 8px 0 0 !important; padding: 0 !important; font-size: 12px !important; border-radius: 999px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pf-box > :not(.pf-sec):not(.pf-clear-btn) { order: 0; flex: 0 0 100%; }

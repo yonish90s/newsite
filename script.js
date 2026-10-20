@@ -11552,7 +11552,11 @@ function buildFiltersSidebarBox(pageType) {
 // מזעור/הרחבה של מקטע סינון בודד
 function pfToggleSection(head) {
   const sec = head.closest('.pf-sec');
-  if (sec) sec.classList.toggle('pf-collapsed');
+  if (!sec) return;
+  const opening = sec.classList.contains('pf-collapsed');
+  // מקטע אחד פתוח בכל פעם (כמו לשוניות)
+  sec.parentElement.querySelectorAll(':scope > .pf-sec').forEach(x => x.classList.add('pf-collapsed'));
+  if (opening) sec.classList.remove('pf-collapsed');
 }
 window.pfToggleSection = pfToggleSection;
 
