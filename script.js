@@ -29506,18 +29506,8 @@ document.addEventListener('click', e => {
   const tagBtn = e.target.closest('.img-tags-tag');
   if (tagBtn) return;
   if (wrap.classList.contains('show-tags')) return; // לחיצה שנייה — נפתח כרגיל
-  const row = wrap.closest('.art-row');
-  const tags = cardTagsOf(row);
-  if (!tags.length) return;
   e.stopPropagation(); e.preventDefault();
-  let ov = wrap.querySelector('.img-tags');
-  if (!ov) {
-    const title = (row.querySelector('.art-row-text > h3') || {}).textContent || '';
-    ov = document.createElement('div');
-    ov.className = 'img-tags';
-    ov.innerHTML = `${title ? `<b>${escHtml(title)}</b>` : ''}<div>${tags.map(t => `<span class="img-tags-tag" onclick="event.stopPropagation(); setPhotoHashtag('${artEsc(t.slice(1))}')">${escHtml(t)}</span>`).join(' ')}</div>`;
-    wrap.appendChild(ov);
-  }
+  imgTagsEnsure(wrap);
   wrap.classList.add('show-tags');
   clearTimeout(wrap.__tagsT);
   wrap.__tagsT = setTimeout(() => wrap.classList.remove('show-tags'), 4500);
@@ -29553,3 +29543,20 @@ document.addEventListener('click', e => {
     head.closest('.pcw').classList.toggle('full');
   });
 })();
+
+// שכבת המידע על התמונה: כותרת, שורת תיאור והאשטאגים (מופיעה בלחיצה במובייל / במעבר עכבר במחשב)
+function imgTagsEnsure(wrap) {
+  if (wrap.querySelector('.img-tags')) return;
+  const row = wrap.closest('.art-row'); if (!row) return;
+  const title = (row.querySelector('.art-row-text > h3') || {}).textContent || '';
+  const desc = ((row.querySelector('.card-desc') || {}).textContent || '').replace(/#[\p{L}\p{N}_]+/gu, '').replace(/\s+/g, ' ').trim();
+  const tags = cardTagsOf(row);
+  const ov = document.createElement('div');
+  ov.className = 'img-tags';
+  ov.innerHTML = `${title ? `<b>${escHtml(title)}</b>` : ''}${desc ? `<p>${escHtml(desc.length > 110 ? desc.slice(0, 110) + '…' : desc)}</p>` : ''}${tags.length ? `<div>${tags.map(t => `<span class="img-tags-tag" onclick="event.stopPropagation(); setPhotoHashtag('${artEsc(t.slice(1))}')">${escHtml(t)}</span>`).join(' ')}</div>` : ''}`;
+  wrap.appendChild(ov);
+}
+document.addEventListener('mouseover', e => {
+  const wrap = e.target.closest && e.target.closest('#photo-row-1 > .art-row .art-row-img-wrap, #story-row-main > .art-row .art-row-img-wrap');
+  if (wrap) imgTagsEnsure(wrap);
+}, { passive: true });

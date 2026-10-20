@@ -14341,3 +14341,7 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_
   html body:not(#_):not(#_):not(#_) .pcw .pcw-head::before { width: 44px !important; height: 5px !important; margin-left: -22px !important; top: 7px !important; }
   html body:not(#_):not(#_):not(#_) .pcw.full .pcw-head { padding-top: calc(16px + env(safe-area-inset-top)) !important; }
 }
+.img-tags p { margin: 0; font-size: 13px; line-height: 1.4; opacity: .92; text-shadow: 0 1px 3px rgba(0,0,0,.5); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+@media (hover: hover) and (pointer: fine) {
+  .art-row-img-wrap:hover .img-tags { opacity: 1; transform: none; pointer-events: auto; }
+}
