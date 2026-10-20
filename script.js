@@ -29115,7 +29115,7 @@ function openCommentsWindow() {
   w.id = 'pcw'; w.className = 'pcw-wrap';
   w.innerHTML = `<div class="pcw-backdrop" onclick="closeCommentsWindow()"></div>
     <section class="pcw" role="dialog" aria-label="תגובות">
-      <header class="pcw-head"><b>תגובות${n && n !== '0' ? ` <span>${escHtml(n)}</span>` : ''}</b>
+      <header class="pcw-head"><b>תגובות${n && n !== '0' ? `&nbsp;<span>(${escHtml(n)})</span>` : ''}</b>
         <button type="button" class="pcw-x" onclick="closeCommentsWindow()" aria-label="סגירה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
       </header>
       <div class="pcw-body"></div>
@@ -29522,3 +29522,34 @@ document.addEventListener('click', e => {
   clearTimeout(wrap.__tagsT);
   wrap.__tagsT = setTimeout(() => wrap.classList.remove('show-tags'), 4500);
 }, true);
+
+
+// חלון נפרד (תגובות / תיאור / פרטים): גוררים את הידית למעלה = מסך מלא, למטה = חזרה / סגירה; הקשה על הידית מחליפה
+(function pcwDrag() {
+  let y0 = null, startFull = false, panel = null;
+  document.addEventListener('touchstart', e => {
+    const head = e.target.closest && e.target.closest('#pcw .pcw-head');
+    if (!head || e.target.closest('button')) return;
+    panel = head.closest('.pcw'); y0 = e.touches[0].clientY; startFull = panel.classList.contains('full');
+    panel.style.transition = 'none';
+  }, { passive: true });
+  document.addEventListener('touchmove', e => {
+    if (y0 == null || !panel) return;
+    const dy = e.touches[0].clientY - y0;
+    if (dy > 0) panel.style.transform = `translateY(${dy}px)`;
+  }, { passive: true });
+  document.addEventListener('touchend', e => {
+    if (y0 == null || !panel) return;
+    const dy = (e.changedTouches[0] || {}).clientY - y0;
+    panel.style.transition = ''; panel.style.transform = '';
+    if (Math.abs(dy) < 8) panel.classList.toggle('full');
+    else if (dy < -40) panel.classList.add('full');
+    else if (dy > 80) { if (startFull) panel.classList.remove('full'); else if (typeof closeMoveWin === 'function') closeMoveWin(); }
+    y0 = null; panel = null;
+  });
+  document.addEventListener('click', e => {
+    const head = e.target.closest && e.target.closest('#pcw .pcw-head');
+    if (!head || e.target.closest('button') || window.matchMedia('(pointer: coarse)').matches) return;
+    head.closest('.pcw').classList.toggle('full');
+  });
+})();

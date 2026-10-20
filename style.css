@@ -14332,3 +14332,12 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_
   html body:not(#_):not(#_):not(#_):not(#_):not(#_) .rd-votes b { font-size: 14px !important; font-weight: 600 !important; }
   html body:not(#_):not(#_):not(#_):not(#_):not(#_) .rd-votes.up { color: #1d72f2 !important; }
 }
+
+/* חלון נפרד במסך מלא (גרירה למעלה של הידית) */
+@media (max-width: 768px) {
+  html body:not(#_):not(#_):not(#_) .pcw { transition: transform .22s cubic-bezier(.2,.8,.2,1), max-height .25s ease, height .25s ease, border-radius .25s ease; }
+  html body:not(#_):not(#_):not(#_) .pcw.full { max-height: 100vh !important; height: 100vh !important; height: 100dvh !important; border-radius: 0 !important; }
+  html body:not(#_):not(#_):not(#_) .pcw .pcw-head { cursor: grab; touch-action: none; }
+  html body:not(#_):not(#_):not(#_) .pcw .pcw-head::before { width: 44px !important; height: 5px !important; margin-left: -22px !important; top: 7px !important; }
+  html body:not(#_):not(#_):not(#_) .pcw.full .pcw-head { padding-top: calc(16px + env(safe-area-inset-top)) !important; }
+}
