@@ -13917,3 +13917,21 @@ html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not
   html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .home-feed-page .art-inner > :is(.hs-bar, .hx-tabs, .hc, .hx-explore) { margin-left: 12px !important; margin-right: 12px !important; width: auto !important; }
   html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .home-feed-page .art-inner > .hs-bar { width: calc(100% - 24px) !important; }
 }
+
+
+/* ===== כוכבי דירוג: כוכבים צהובים מעוגלים ===== */
+:root { --star-on: #fdc229; --star-off: #d9d9df; }
+html.theme-dark { --star-on: #fdc229; --star-off: #3a3444; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.uw-star, .urb-star) { font-size: 0 !important; width: 26px !important; height: 26px !important; display: inline-block !important; vertical-align: middle; background: var(--star-off) !important; color: transparent !important; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 3.2l2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 16.6l-5.2 2.8 1-5.9-4.3-4.1 5.9-.8z' fill='black' stroke='black' stroke-width='2.6' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 3.2l2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 16.6l-5.2 2.8 1-5.9-4.3-4.1 5.9-.8z' fill='black' stroke='black' stroke-width='2.6' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat; border: 0 !important; padding: 0 !important; margin: 0 1px !important; cursor: pointer; transition: transform .12s ease; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.uw-star.on, .uw-stars.static .uw-star.on) { background: var(--star-on) !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .urb-star[style*="f59e0b"] { background: var(--star-on) !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.uw-star, .urb-star):active { transform: scale(.9); }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .uw-stars.static .uw-star { width: 18px !important; height: 18px !important; cursor: default; }
+/* כוכבי SVG (ביקורות / תגובות / תג הדירוג) — מעוגלים וצהובים */
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.pd2-stars, .pc-stars, .pd2-rate) svg path { stroke: currentColor; stroke-width: 2.4; stroke-linejoin: round; paint-order: stroke; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.pd2-stars i, .pc-stars i) { color: var(--star-off); }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.pd2-stars i, .pc-stars i) svg { fill: var(--star-off) !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.pd2-stars i.on, .pc-stars i.on) { color: var(--star-on) !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.pd2-stars i.on, .pc-stars i.on) svg { fill: var(--star-on) !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pd2-rate svg { color: var(--star-on) !important; fill: var(--star-on) !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .fr-stars { color: var(--star-on) !important; }
