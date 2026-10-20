@@ -14038,3 +14038,27 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_
 html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) .photo-card-links .art-follow-btn.on { background: #111111 !important; border-color: #111111 !important; color: #ffffff !important; }
 html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) .photo-card-links .art-follow-btn.on svg { stroke: #ffffff !important; }
 html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) .photo-card-links .art-telegram-btn:not(.on):not(.is-saved):not(.liked) { color: #1d1d22 !important; border-color: #d6d6de !important; }
+
+
+/* ===== "הפיד שלי": בורר תצוגה — גריד / רשימה / פיד (בפיד: כל התמונה ברורה) ===== */
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .mview-bar.mview-feedpage { display: flex !important; margin: 4px 0 12px; }
+/* גריד (ברירת מחדל כשנבחר) */
+html:not(.mview-list) body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pfeed-page .pc-posts { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 10px !important; }
+html:not(.mview-list) body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pfeed-page .pc-posts > .pc-more { grid-column: 1 / -1; }
+html:not(.mview-list) body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pfeed-page .pc-post { padding: 8px !important; margin: 0 !important; display: flex !important; flex-direction: column !important; gap: 4px !important; }
+html:not(.mview-list) body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pfeed-page .pc-post :is(.pc-post-text, .pc-post-btn, .pc-post-count, .pc-repost-by) { display: none !important; }
+html:not(.mview-list) body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pfeed-page .pc-post .pc-post-media { order: -1; aspect-ratio: 1 / 1; margin: 0 !important; border-radius: 10px !important; }
+html:not(.mview-list) body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pfeed-page .pc-post .pc-post-media img { width: 100% !important; height: 100% !important; object-fit: cover !important; }
+html:not(.mview-list) body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pfeed-page .pc-post h3 { font-size: 13px !important; margin: 2px 0 0 !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+html:not(.mview-list) body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pfeed-page .pc-post .pc-post-head { gap: 6px !important; }
+html:not(.mview-list) body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pfeed-page .pc-post .pc-post-head b { font-size: 11.5px !important; }
+html:not(.mview-list) body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pfeed-page .pc-post .pc-post-head small { font-size: 10px !important; }
+html:not(.mview-list) body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pfeed-page .pc-post .pc-post-foot { font-size: 11px !important; gap: 8px !important; padding-top: 4px !important; }
+/* רשימה */
+html.mview-list:not(.mview-feed) body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pfeed-page .pc-post .pc-post-media { aspect-ratio: 4 / 3; }
+html.mview-list:not(.mview-feed) body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pfeed-page .pc-post .pc-post-media img { width: 100% !important; height: 100% !important; object-fit: cover !important; }
+/* פיד: כל התמונה, ברורה, בפרופורציות שלה */
+html.mview-feed body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pfeed-page .pc-post .pc-post-media { aspect-ratio: auto !important; height: auto !important; max-height: none !important; background: none !important; }
+html.mview-feed body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pfeed-page .pc-post .pc-post-media img { position: static !important; width: 100% !important; height: auto !important; max-height: 80vh !important; object-fit: contain !important; display: block !important; }
+html.mview-feed body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pfeed-page .pc-post .pc-post-btn { display: none !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pfeed-page .pc-post-count { display: none !important; }
