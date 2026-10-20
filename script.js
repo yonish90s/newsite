@@ -29455,9 +29455,22 @@ function recMiniEnhance() {
       const c = cards[Number(b.dataset.i)]; if (c) c.click();
     });
     const host = acts.closest('.pd2-toprow') || acts.closest('.pd2-topend') || acts;
-    host.parentNode.insertBefore(strip, host);
+    const inner = host.closest('.art-detail-inner');
+    // מובייל: ההצעות בתחתית העמוד; מחשב: מעל הכפתורים
+    if (inner && window.matchMedia('(max-width: 900px)').matches) { strip.classList.add('rec-mini-bottom'); inner.appendChild(strip); }
+    else host.parentNode.insertBefore(strip, host);
     sec.classList.add('rec-mini-src');
   });
+  // מובייל: שורת היוצר (תמונה, שם, תאריך, דירוג וצפיות) מעל התמונה
+  if (window.matchMedia('(max-width: 900px)').matches) {
+    document.querySelectorAll('.art-detail .pd2:not([data-cr-up])').forEach(pd => {
+      const cr = pd.querySelector('.pd2-info > .pd2-creator'), media = pd.querySelector(':scope > .pd2-media');
+      if (!cr || !media) return;
+      pd.dataset.crUp = '1';
+      cr.classList.add('pd2-creator-up');
+      pd.insertBefore(cr, media);
+    });
+  }
 }
 (function recMiniWatch() {
   let t = 0;
@@ -29545,19 +29558,23 @@ function cardHeadActsEnhance() {
     // סדר: טלגרם · מייל · הודעה · דיווח
     const order = b => b.classList.contains('art-report-btn') ? 4 : b.classList.contains('art-msg-btn') ? 3 : /מייל|mail/i.test(b.getAttribute('aria-label') || b.title || '') ? 2 : 1;
     pick.sort((a, b) => order(a) - order(b)).forEach(b => box.appendChild(b));
-    // שורה תחתונה: תאריך / גיל + צפיות · לייקים באותה שורה; מתחתיה שורת טלגרם · מייל · הודעה · דיווח
+    // התאריך עובר לשורת היוצר; הצפיות + טלגרם · מייל · הודעה · דיווח עוברים לשורת הלייק/תגובות/שיתוף/שמירה;
+    // שורת "X לייקים" מוסרת (הלייקים כבר מופיעים ליד כפתור הלייק)
     const text = links.parentElement;
-    const foot = document.createElement('div');
-    foot.className = 'card-foot';
     const dates = document.createElement('span');
     dates.className = 'cf-date';
     [...meta.children].filter(c => !c.matches('.photo-author-link, .art-row-sep, .card-head-acts')).forEach(c => dates.appendChild(c));
     meta.querySelectorAll('.art-row-sep').forEach(c => c.remove());
-    if (dates.children.length) foot.appendChild(dates);
+    [...dates.children].forEach(c => { if (/^\s*(גיל|Age)(\s|$)/.test(c.textContent || '')) c.remove(); });   // בלי גיל
+    if (dates.children.length) meta.appendChild(dates);
     const stats = [...text.children].find(c => c.querySelector && c.querySelector('.pv-meta'));
-    if (stats) { stats.classList.add('cf-stats'); foot.appendChild(stats); }
-    if (foot.children.length) text.appendChild(foot);
-    if (box.children.length) text.appendChild(box);
+    const views = stats && stats.querySelector('.pv-views');
+    if (views) { views.classList.add('cf-views'); box.prepend(views); }
+    if (stats) stats.remove();
+    if (box.children.length) {
+      const save = links.querySelector('.art-save-btn');
+      if (save) save.before(box); else links.appendChild(box);
+    }
   });
 }
 (function cardHeadActsWatch() {
