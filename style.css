@@ -14763,3 +14763,21 @@ html.theme-dark .prd-desc { color: #d9d9d9 !important; }
 html.theme-dark .prd-feat-ic { background: #2a2a2c !important; }
 html.theme-dark .prd-trust { background: #1a2a1f !important; color: #d9d9d9 !important; }
 html.theme-dark .prd-h { border-color: #2a2a2c !important; }
+
+
+/* מוצרים לזוגות — מותאם לסגנון האתר: שחור-לבן עם נגיעת ורוד, בלי כתום/ירוק */
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .prd-badge { background: #111111 !important; color: #ffffff !important; border-radius: 999px !important; font-size: 11.5px !important; padding: 3px 11px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .prd-ph { color: #1d1d22 !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .prd-main, html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .prd-thumb, html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .prd-more-img { background: #f1f1f4 !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .prd-thumb.on { border-color: #111111 !important; box-shadow: 0 0 0 1px #111111 !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .prd-brand b { color: #1d1d22 !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .prd-feats li { color: #1d1d22 !important; opacity: 1 !important; background: none !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .prd-feat-ic { color: #1d1d22 !important; background: #f1f1f4 !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .prd-cta { background: #111111 !important; color: #ffffff !important; border-radius: 999px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .prd-cta:disabled { background: #e6e6ea !important; color: #8a8f99 !important; opacity: 1 !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .prd-wish { border: 1px solid #d6d6de !important; color: #1d1d22 !important; border-radius: 999px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .prd-wish.on { color: #ec5f80 !important; border-color: #ec5f80 !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .prd-trust { background: #f6f6f8 !important; color: #4b505b !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .prd-trust b { color: #1d1d22 !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .prd-buy-box { border-color: #ececf0 !important; border-radius: 18px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .prd-more-card { border-color: #ececf0 !important; border-radius: 16px !important; }
