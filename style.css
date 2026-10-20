@@ -15042,3 +15042,4 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_
 @media (max-width: 768px) {
   html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #cookie-bar.cookie-bar { bottom: calc(8px + env(safe-area-inset-bottom, 0px)) !important; left: 8px !important; right: 8px !important; }
 }
+@media (max-width: 768px) { html.mtabs-off body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #mtab-open { display: none !important; } }
