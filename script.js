@@ -20851,8 +20851,8 @@ function openMSheet(title, bodyHTML, footHTML) {
     <div class="ms-backdrop" onclick="closeMSheet()"></div>
     <div class="ms-panel" role="dialog" aria-label="${escHtml(title)}">
       <header class="ms-head">
-        <button type="button" class="ms-back" onclick="closeMSheet()" aria-label="חזרה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></button>
         <span class="ms-title">${escHtml(title)}</span>
+        <button type="button" class="ms-back ms-x" onclick="closeMSheet()" aria-label="סגירה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
       </header>
       <div class="ms-body">${bodyHTML}</div>
       ${footHTML ? `<footer class="ms-foot">${footHTML}</footer>` : ''}
@@ -20889,11 +20889,12 @@ function filterSheetBodyHTML() {
       <button type="button" class="fs-row-head" onclick="fsToggleRow('${key}')"><span class="fs-label">${label}</span><span class="fs-val">${escHtml(value)}</span>${chev}</button>
       ${open === key ? `<div class="fs-opts">${optsHTML}</div>` : ''}
     </div>`;
-  const radio = (on, act, label) => `<button type="button" class="fs-opt${on ? ' on' : ''}" onclick="${act}"><span>${escHtml(label)}</span><i>${on ? '✓' : ''}</i></button>`;
+  const radio = (on, act, label, ic) => `<button type="button" class="fs-opt${on ? ' on' : ''}" onclick="${act}">${ic ? `<svg class="fs-opt-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ic}</svg>` : ''}<span>${escHtml(label)}</span><i>${on ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>' : ''}</i></button>`;
+  const sortIc = { 'האחרונים': '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/><path d="M16.5 3.5 19 6"/>', 'הפופולארים': '<path d="M12 3c.7 3.6 4.5 5.1 4.5 9.5a4.5 4.5 0 0 1-9 0c0-1.8.9-3.1 1.8-4.1.3 1.5 1.1 2.4 2.1 2.6C11.2 8.6 11 5.7 12 3z"/>', 'הישנים': '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l-3 2"/>' };
   const multiVal = kind => photoSel[kind].length ? photoSel[kind].join(', ') : 'הכל';
   const multi = (kind, list) => list.filter(v => v !== 'הכל').map(v => radio(photoSel[kind].includes(v), `filterSheetToggle('${kind}','${artEsc(v)}',${!photoSel[kind].includes(v)})`, v)).join('');
   const tgl = (label, on, act) => `<label class="fs-toggle"><span>${label}</span><span class="tgl-switch"><input type="checkbox" ${on ? 'checked' : ''} onchange="${act}"><span class="tgl-slider"></span></span></label>`;
-  const sortRow = row('sort', 'מיון', sortLbl[sortNow], ['האחרונים', 'הפופולארים', 'הישנים'].map(v => radio(sortNow === v, `filterSheetSort('${artEsc(v)}')`, sortLbl[v])).join(''));
+  const sortRow = row('sort', 'מיון', sortLbl[sortNow], ['האחרונים', 'הפופולארים', 'הישנים'].map(v => radio(sortNow === v, `filterSheetSort('${artEsc(v)}')`, sortLbl[v], sortIc[v])).join(''));
   if (shop) {
     const shRow = (key, label, cur, list) => row(key, label, cur, list.map(v => radio(cur === v, `setShFilter('${key}','${artEsc(v)}'); if (typeof pfRefreshShBar === 'function') pfRefreshShBar(); filterSheetRefresh()`, v)).join(''));
     return sortRow
@@ -29485,3 +29486,38 @@ function cardHeadActsEnhance() {
   const start = () => { obs.observe(document.body, { childList: true, subtree: true }); cardHeadActsEnhance(); };
   if (document.body) start(); else document.addEventListener('DOMContentLoaded', start);
 })();
+
+
+// ============================================================
+// מובייל: לחיצה על תמונה בכרטיס מציגה עליה את הכותרת וההאשטאגים (כמו בשידור חי);
+// לחיצה נוספת פותחת את הפריט. כרטיס בלי האשטאגים — נפתח מיד.
+// ============================================================
+function cardTagsOf(row) {
+  const txt = (row.querySelector('.card-desc') || {}).textContent || '';
+  const search = row.getAttribute('data-search') || '';
+  const all = (txt + ' ' + search).match(/#[\p{L}\p{N}_]+/gu) || [];
+  return [...new Set(all.map(t => t.toLowerCase()))].slice(0, 12);
+}
+document.addEventListener('click', e => {
+  if (!window.matchMedia('(max-width: 768px)').matches) return;
+  const wrap = e.target.closest && e.target.closest('#photo-row-1 > .art-row .art-row-img-wrap, #story-row-main > .art-row .art-row-img-wrap');
+  if (!wrap || e.target.closest('button, a')) return;
+  const tagBtn = e.target.closest('.img-tags-tag');
+  if (tagBtn) return;
+  if (wrap.classList.contains('show-tags')) return; // לחיצה שנייה — נפתח כרגיל
+  const row = wrap.closest('.art-row');
+  const tags = cardTagsOf(row);
+  if (!tags.length) return;
+  e.stopPropagation(); e.preventDefault();
+  let ov = wrap.querySelector('.img-tags');
+  if (!ov) {
+    const title = (row.querySelector('.art-row-text > h3') || {}).textContent || '';
+    ov = document.createElement('div');
+    ov.className = 'img-tags';
+    ov.innerHTML = `${title ? `<b>${escHtml(title)}</b>` : ''}<div>${tags.map(t => `<span class="img-tags-tag" onclick="event.stopPropagation(); setPhotoHashtag('${artEsc(t.slice(1))}')">${escHtml(t)}</span>`).join(' ')}</div>`;
+    wrap.appendChild(ov);
+  }
+  wrap.classList.add('show-tags');
+  clearTimeout(wrap.__tagsT);
+  wrap.__tagsT = setTimeout(() => wrap.classList.remove('show-tags'), 4500);
+}, true);

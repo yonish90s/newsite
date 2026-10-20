@@ -14286,3 +14286,34 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_
 html body, html body :is(button, input, textarea, select, h1, h2, h3, h4, h5, h6, p, span, a, b, small, strong, label, li, div) { font-family: var(--site-font) !important; }
 html body { font-size: 15px; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; letter-spacing: 0; }
 html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .card-desc { font-size: 15px !important; line-height: 1.45 !important; }
+
+
+/* ===== חלון תחתון (סינון, תגיות וכו') בסגנון רדיט: לבן, כותרת + X עגול, שורות עם אייקונים, נבחר = אפור + ✓ ===== */
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet .ms-panel { top: auto !important; bottom: 0 !important; left: 0 !important; right: 0 !important; height: auto !important; max-height: 86vh !important; border-radius: 22px 22px 0 0 !important; background: #ffffff !important; overflow: hidden !important; display: flex !important; flex-direction: column !important; box-shadow: 0 -10px 40px rgba(0,0,0,.18) !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet .ms-backdrop { background: rgba(0,0,0,.45) !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet .ms-head { background: transparent !important; color: #111111 !important; display: flex !important; align-items: center !important; justify-content: space-between !important; padding: 18px 18px 10px !important; min-height: 0 !important; border: 0 !important; box-shadow: none !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet .ms-title { font-size: 20px !important; font-weight: 800 !important; color: #111111 !important; margin: 0 !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet .ms-x { order: 2; width: 36px !important; height: 36px !important; border-radius: 50% !important; background: #eceef0 !important; color: #111111 !important; border: 0 !important; display: grid !important; place-items: center !important; padding: 0 !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet .ms-x svg { width: 18px !important; height: 18px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet .ms-body { overflow-y: auto !important; padding: 0 0 8px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet .fs-row { border: 0 !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet .fs-row-head { min-height: 54px !important; padding: 0 18px !important; font-size: 16px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet .fs-row-head .fs-label { font-size: 16px !important; font-weight: 600 !important; color: #111111 !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet .fs-row-head .fs-val { font-size: 14px !important; color: #6b7180 !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet .fs-opts { padding: 0 !important; background: none !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet .fs-opt { display: flex !important; align-items: center !important; gap: 14px !important; width: 100% !important; min-height: 54px !important; padding: 0 18px !important; border: 0 !important; border-radius: 0 !important; background: transparent !important; font-size: 17px !important; color: #111111 !important; text-align: start !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet .fs-opt span { flex: 1 !important; font-weight: 400 !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet .fs-opt .fs-opt-ic { width: 24px !important; height: 24px !important; flex: none !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet .fs-opt i { width: 24px; height: 24px; display: grid; place-items: center; font-style: normal; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet .fs-opt i svg { width: 22px; height: 22px; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet .fs-opt.on { background: #e9ecef !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet :is(.fs-toggle, .fs-slider) { padding-left: 18px !important; padding-right: 18px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet .ms-foot { padding: 10px 16px calc(12px + env(safe-area-inset-bottom)) !important; border-top: 1px solid #eef0f2 !important; background: #ffffff !important; }
+
+/* האשטאגים על התמונה (מובייל, אחרי לחיצה) */
+.img-tags { position: absolute; inset: 0 0 auto 0; z-index: 3; padding: 12px 14px 28px; background: linear-gradient(rgba(0,0,0,.62), rgba(0,0,0,0)); color: #ffffff; display: flex; flex-direction: column; gap: 4px; opacity: 0; transform: translateY(-6px); transition: opacity .2s ease, transform .2s ease; pointer-events: none; text-align: start; }
+.show-tags .img-tags { opacity: 1; transform: none; pointer-events: auto; }
+.img-tags b { font-size: 14px; font-weight: 700; text-shadow: 0 1px 3px rgba(0,0,0,.5); }
+.img-tags div { font-size: 13.5px; line-height: 1.5; text-shadow: 0 1px 3px rgba(0,0,0,.5); }
+.img-tags-tag { cursor: pointer; font-weight: 600; }
+.img-tags-tag:active { opacity: .7; }

@@ -2475,6 +2475,16 @@ html.theme-dark.mview-list body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):
 html.theme-dark.mview-list body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) .card-desc { color: #d9d9d9 !important; }
 html.theme-dark.mview-list body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) .card-desc-more { color: #939393 !important; }
 }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet .ms-panel { background: #1c1c1e !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet .ms-head { color: #d9d9d9 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet .ms-title { color: #d9d9d9 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet .ms-x { background: #2a2a2c !important; color: #d9d9d9 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet .fs-row-head .fs-label { color: #d9d9d9 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet .fs-row-head .fs-val { color: #bdbdbd !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet .fs-opt { color: #d9d9d9 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet .fs-opt.on { background: #2a2a2c !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet .ms-foot { border-top: 1px solid #333336 !important; background: #1c1c1e !important; }
+html.theme-dark .img-tags { background: linear-gradient(rgba(0,0,0,.62), rgba(255, 255, 255, 0)) !important; }
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #d9d9d9 !important; }
 html.theme-dark [style*="color:#111111"] { color: #d9d9d9 !important; }
@@ -2917,3 +2927,9 @@ html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) 
 html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pcw-head { border-color: #2a2a2c !important; }
 html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pcw-x { background: #2a2a2c !important; color: #ececec !important; }
 html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.pd2-desc, .pd2-desc p) { font-size: 15px !important; }
+
+html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet :is(.ms-panel, .ms-foot) { background: #1c1c1e !important; }
+html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet :is(.ms-title, .fs-row-head .fs-label, .fs-opt) { color: #ececec !important; }
+html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet .ms-x { background: #2a2a2c !important; color: #ececec !important; }
+html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet .fs-opt.on { background: #2a2a2c !important; }
+html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet .ms-foot { border-color: #2a2a2c !important; }
