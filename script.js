@@ -28421,22 +28421,26 @@ function ofpListHTML() {
     const when = typeof rdTimeAgo === 'function' ? rdTimeAgo(o.updatedAt || o.at) : '';
     const myTurn = offersMyTurn(o);
     const hist = Array.isArray(o.history) ? o.history.slice(-6) : [];
-    return `<div class="ofp-row${myTurn ? ' turn' : ''}">
-      <div class="ofp-row-main">
-        <div class="ofp-row-top"><span class="ofp-st ${st.cls}"><i>${st.ic}</i>${escHtml(st.label)}</span><small>${escHtml(when)}</small></div>
-        <b class="ofp-title">${escHtml(o.title || '')}</b>
-        <div class="ofp-who">${mine ? 'אל' : 'מאת'}&nbsp;<b>${escHtml(other)}</b>${o.price ? ` · <span class="ofp-price">₪${Number(o.price).toLocaleString('he-IL')}</span>` : ''}${o.kind === 'loan' ? ' · השאלה' : ''}</div>
-        ${hist.length > 1 ? `<ol class="ofp-hist">${hist.map(h => `<li><b>${escHtml(h.by === me ? 'את/ה' : (h.name || other))}</b>&nbsp;${escHtml({ offer: 'הציע/ה', counter: 'הציע/ה מחדש', accepted: 'אישר/ה', rejected: 'דחה/תה', signed: 'חתם/ה' }[h.action] || '')}${h.price ? ` ₪${Number(h.price).toLocaleString('he-IL')}` : ''}${h.note ? ` — ${escHtml(h.note)}` : ''}</li>`).join('')}</ol>`
-          : (o.note ? `<div class="ofp-note">${escHtml(o.note)}</div>` : '')}
-        ${myTurn ? `<div class="ofp-decide">
-          <button type="button" class="ofp-btn ok" onclick="offerDecide('${artEsc(o.id)}','accepted')"><i>✓</i>אישור</button>
-          <button type="button" class="ofp-btn wait" onclick="offerCounter('${artEsc(o.id)}')"><i>●</i>שינוי</button>
-          <button type="button" class="ofp-btn no" onclick="offerDecide('${artEsc(o.id)}','rejected')"><i>✕</i>דחייה</button>
-        </div>` : (o.status === 'pending' || o.status === 'counter' ? `<div class="ofp-waiting">ממתין לתשובה של&nbsp;${escHtml(other)}</div>` : '')}
+    const priceTxt = o.price ? `₪${Number(o.price).toLocaleString('he-IL')}${o.kind === 'loan' ? (o.priceUnit ? ' ' + o.priceUnit : '') : ''}` : '';
+    const sub = [priceTxt, o.title || '', o.kind === 'loan' ? 'השאלה' : ''].filter(Boolean).join(' · ');
+    const lastNote = hist.length ? (hist[hist.length - 1].note || '') : (o.note || '');
+    const ic = {
+      no: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>',
+      deal: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h11M4 7l3-3M4 7l3 3"/><path d="M20 17H9M20 17l-3-3M20 17l-3 3"/></svg>',
+      ok: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>'
+    };
+    return `<div class="ofc${myTurn ? ' turn' : ''}">
+      <span class="ofc-av" style="--av:${typeof forumAvColor === 'function' ? forumAvColor({ uid: otherUid, name: other }) : '#555'}" ${otherUid ? `onclick="openUserPage('${artEsc(otherUid)}','${artEsc(other)}')"` : ''}>${escHtml(String(other).trim().charAt(0) || '?')}</span>
+      <div class="ofc-main" ${o.itemId ? `onclick="closeSidePanel('ofp-panel'); photoOpenDetail('${artEsc(o.itemId)}')"` : ''}>
+        <b class="ofc-name">${escHtml(other)}</b>
+        <span class="ofc-sub">${escHtml(sub)}</span>
+        <span class="ofc-st"><i class="${st.cls}"></i>${myTurn ? 'הצעה ממתינה לתשובה שלך' : escHtml(st.label)}${when ? ' · ' + escHtml(when) : ''}${lastNote ? ' · ' + escHtml(lastNote) : ''}</span>
       </div>
-      <div class="ofp-actions">
-        ${otherUid ? `<button type="button" class="pti" title="הודעה" aria-label="הודעה" onclick="dmStartWith('${artEsc(otherUid)}', '${artEsc(other)}', '')"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg></button>` : ''}
-        ${o.itemId ? `<button type="button" class="pti" title="למוצר" aria-label="למוצר" onclick="closeSidePanel('ofp-panel'); photoOpenDetail('${artEsc(o.itemId)}')"><svg viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></svg></button>` : ''}
+      <div class="ofc-btns">
+        ${myTurn ? `<button type="button" class="ofc-b no" onclick="offerDecide('${artEsc(o.id)}','rejected')" title="דחייה" aria-label="דחייה">${ic.no}</button>
+        <button type="button" class="ofc-b deal" onclick="offerCounter('${artEsc(o.id)}')" title="משא ומתן — שינוי מחיר או סעיפים" aria-label="משא ומתן">${ic.deal}</button>
+        <button type="button" class="ofc-b ok" onclick="offerDecide('${artEsc(o.id)}','accepted')" title="אישור" aria-label="אישור">${ic.ok}</button>`
+        : (otherUid ? `<button type="button" class="ofc-b msg" onclick="dmStartWith('${artEsc(otherUid)}', '${artEsc(other)}', '')" title="הודעה" aria-label="הודעה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg></button>` : '')}
       </div>
     </div>`;
   };
