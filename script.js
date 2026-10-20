@@ -15527,7 +15527,10 @@ function buildHomeFeedPage() {
   return `<div class="articles-page home-feed-page has-aside" data-page-id="page-home-feed">
     ${homeAsideHTML()}
     <div class="art-inner">
+      ${homeSearchBarHTML()}
       ${homeChipsHTML(photos, comics, stories)}
+      ${homeHeroCarouselHTML(photos, comics, stories)}
+      ${homeExploreHTML()}
       <div class="cmp-wrap">${composerBarHTML()}</div>
       ${homeWelcomeHeroHTML()}
       ${homeCategoriesHTML(photos, comics, stories)}
@@ -15575,6 +15578,7 @@ function homeChipsHTML(photos, comics, stories) {
   return `<nav class="hx-tabs" aria-label="לשוניות">
       ${tabs.map(k => `<button type="button" class="hx-tab${k === 'foryou' ? ' on' : ''}" ${HOME_TABS_ALL[k][1] ? `onclick="${HOME_TABS_ALL[k][1]}"` : ''}>${escHtml(HOME_TABS_ALL[k][0])}</button>`).join('')}
       <button type="button" class="hx-tab hx-add" onclick="homeTabsPicker()" aria-label="הוספת לשונית"><span class="hx-dot"></span>הוספה<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+      <button type="button" class="hx-more" onclick="event.stopPropagation(); this.parentElement.scrollBy({ left: -160, behavior: 'smooth' })" aria-label="עוד לשוניות"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
     </nav>`;
 }
 function homeTabsPicker() {
@@ -29184,3 +29188,89 @@ function uwPillOpen(btn) {
 })();
 window.uwPillOpen = uwPillOpen;
 Object.assign(UI_EN, { 'דירוג': 'Rating', 'סיכום': 'Summary' });
+
+
+// ============================================================
+// דף הבית בהשראת MakerWorld: שורת חיפוש, קרוסלת תמונות (בלי כיתוב), "גלו עוד" — הקהילות
+// ============================================================
+function homeSearchBarHTML() {
+  return `<button type="button" class="hs-bar" onclick="openSiteSearch()" aria-label="חיפוש באתר">
+    <svg class="hs-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>
+    <span class="hs-ph">חיפוש תמונות, משתמשים, קהילות ועוד</span>
+    <svg class="hs-img" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><circle cx="9" cy="9.5" r="1.8"/><path d="M20.5 15.5 15.5 11l-8 8"/></svg>
+  </button>`;
+}
+function homeHeroCarouselHTML(photos, comics, stories) {
+  const adultOk = (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('age_verified') === 'true');
+  const img = x => x && (((x.images || []).find(Boolean)) || x.cover || x.image || '');
+  const pick = [];
+  const add = (arr, kind) => (arr || []).filter(x => x && x.approved !== false && img(x)).slice(0, 3).forEach(x => pick.push({ x, kind }));
+  add(photos, 'photo'); add(comics, 'story'); add(stories, 'story');
+  if (pick.length < 2) return '';
+  const slides = pick.slice(0, 7).map(({ x, kind }) => {
+    const open = kind === 'photo' ? `homeOpenPhotos(); setTimeout(() => photoOpenDetail('${artEsc(x.id)}'), 450)` : `storyOpenDetail('${artEsc(x.id)}')`;
+    return `<button type="button" class="hc-slide${x.isAdult && !adultOk ? ' blur' : ''}" onclick="${open}"><img src="${escHtml(img(x))}" alt="" loading="lazy"></button>`;
+  }).join('');
+  const dots = pick.slice(0, 7).map((_, i) => `<i class="${i === 0 ? 'on' : ''}"></i>`).join('');
+  setTimeout(hcInit, 60);
+  return `<section class="hc" aria-label="תמונות נבחרות">
+    <div class="hc-track" dir="ltr" onscroll="hcSync(this)">${slides}</div>
+    <button type="button" class="hc-arr prev" onclick="hcGo(this, -1)" aria-label="הקודם"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
+    <button type="button" class="hc-arr next" onclick="hcGo(this, 1)" aria-label="הבא"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
+    <div class="hc-dots" dir="ltr">${dots}</div>
+  </section>`;
+}
+function hcGo(btn, dir) {
+  const t = btn.closest('.hc').querySelector('.hc-track');
+  const w = t.clientWidth, n = t.children.length;
+  let i = Math.round(t.scrollLeft / w) + dir;
+  if (i >= n) i = 0; if (i < 0) i = n - 1;
+  t.scrollTo({ left: i * w, behavior: 'smooth' });
+}
+function hcSync(t) {
+  const i = Math.round(t.scrollLeft / Math.max(1, t.clientWidth));
+  t.closest('.hc').querySelectorAll('.hc-dots i').forEach((d, k) => d.classList.toggle('on', k === i));
+}
+let hcTimer = 0;
+function hcInit() {
+  clearInterval(hcTimer);
+  hcTimer = setInterval(() => {
+    const hc = document.querySelector('.home-feed-page .hc');
+    if (!hc) return clearInterval(hcTimer);
+    if (hc.matches(':hover') || document.hidden) return;
+    hcGo(hc.querySelector('.hc-arr.next'), 1);
+  }, 5000);
+}
+function homeExploreHTML() {
+  if (typeof commFindPage !== 'function') return '';
+  const items = [
+    ['photos', 'תמונות גולשים', 'גלריות מהקהילה', 'linear-gradient(135deg,#f9a8c4,#c084fc)'],
+    ['products', 'מוצרי גולשים', 'קנייה, מכירה והשאלה', 'linear-gradient(135deg,#fcd34d,#f97316)'],
+    ['forums', 'פורומים', 'לדבר, לשאול ולהכיר', 'linear-gradient(135deg,#93c5fd,#6366f1)'],
+    ['comics', 'קומיקס', 'ציורים ורצועות', 'linear-gradient(135deg,#a7f3d0,#14b8a6)'],
+    ['stories', 'סיפורים', 'קצרים ומאמרים', 'linear-gradient(135deg,#fda4af,#e11d48)'],
+    ['friends', 'חברים', 'הכירו גולשים חדשים', 'linear-gradient(135deg,#c4b5fd,#7c3aed)'],
+    ['blind', 'Blind Date', 'התאמה ודייט אמיתי', 'linear-gradient(135deg,#f0abfc,#db2777)'],
+    ['match', 'התאמות', 'החליקו ומצאו התאמה', 'linear-gradient(135deg,#fecaca,#ef4444)']
+  ];
+  const pageKey = { products: 'products', blind: 'blinddate', match: 'tinder' };
+  const cards = items.map(([k, title, sub, grad]) => {
+    let page = null;
+    if (k !== 'products') { try { page = commFindPage(pageKey[k] || k); } catch (e) {} }
+    if (k === 'products' && !page) page = { id: 'page-secondhand-main' };
+    if (k === 'forums' && !page) page = { id: 'page-forums-main' };
+    if (!page) return '';
+    return `<button type="button" class="hx-card" onclick="navigateToPage('${artEsc(page.id)}')">
+      <span class="hx-card-text"><b>${escHtml(title)}</b><small>${escHtml(sub)}</small></span>
+      <span class="hx-card-ic" style="background:${grad}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${(typeof COMM_SC_ICONS !== 'undefined' && COMM_SC_ICONS[k]) || COMM_SC_ICONS.photos || ''}</svg></span>
+    </button>`;
+  }).join('');
+  if (!cards) return '';
+  return `<section class="hx-explore">
+    <h2>גלו עוד</h2>
+    <div class="hx-explore-row">${cards}</div>
+    <button type="button" class="hx-explore-next" onclick="this.previousElementSibling.scrollBy({ left: -220, behavior: 'smooth' })" aria-label="עוד"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
+  </section>`;
+}
+Object.assign(window, { hcGo, hcSync });
+Object.assign(UI_EN, { 'חיפוש תמונות, משתמשים, קהילות ועוד': 'Search photos, users, communities and more', 'גלו עוד': 'Explore more', 'גלריות מהקהילה': 'Galleries from the community', 'קנייה, מכירה והשאלה': 'Buy, sell and lend', 'לדבר, לשאול ולהכיר': 'Talk, ask and meet', 'ציורים ורצועות': 'Drawings and strips', 'קצרים ומאמרים': 'Shorts and articles', 'התאמה ודייט אמיתי': 'Match and real date', 'החליקו ומצאו התאמה': 'Swipe and find a match' });

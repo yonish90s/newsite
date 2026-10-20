@@ -198,3 +198,10 @@ html.theme-dark body:not(#_):not(#_) .dsl-in::-webkit-slider-thumb { background:
 @media (max-width: 768px) {
   html body:not(#_):not(#_):not(#_):not(#_):not(#_) .mtabs .mtab.active, html body:not(#_):not(#_):not(#_):not(#_):not(#_) .mtabs .mtab.active > svg, html body:not(#_):not(#_):not(#_):not(#_):not(#_) .mtabs .mtab.active > span { color: #ec5f80 !important; background: transparent !important; }
 }
+
+/* לשוניות הבית: הפעילה בהירה במצב כהה (כמו MakerWorld) */
+html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .hx-tabs .hx-tab { background: #241f2d !important; color: #ebe8f0 !important; }
+html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .hx-tabs .hx-tab.on { background: #e8e6ec !important; color: #111111 !important; }
+html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .hs-bar { background: #17141d !important; border-color: #2f293a !important; }
+html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .hx-explore { background: linear-gradient(135deg, #2a1722, #221a33) !important; }
+html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .hx-card { background: #17141d !important; }
