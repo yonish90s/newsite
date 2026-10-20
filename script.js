@@ -28996,7 +28996,6 @@ function mviewInject() {
   document.querySelectorAll('.pfeed-page .pc-posts').forEach(pl => {
     if (!pl.previousElementSibling?.classList?.contains('mview-bar')) pl.insertAdjacentHTML('beforebegin', mviewBarHTML().replace('mview-bar', 'mview-bar mview-feedpage'));
   });
-  if (!window.matchMedia('(max-width: 768px)').matches) return;
   const rows = document.querySelector('.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page:not(.photos-stories-feed) #story-row-main');
   if (rows && !rows.previousElementSibling?.classList?.contains('mview-bar')) rows.insertAdjacentHTML('beforebegin', mviewBarHTML());
   // מובייל: כפתור "סינון" בתחילת שורת הקטגוריות (במקום שורת הכלים הארוכה)
