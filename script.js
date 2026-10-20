@@ -27920,6 +27920,8 @@ function postBarHTML(a) {
   </div>`;
 }
 function togglePostComments(btn) {
+  // לבקשת בעל האתר: התגובות נפתחות בחלון נפרד
+  if (typeof openCommentsWindow === 'function') return openCommentsWindow();
   const sec = document.querySelector('.art-detail .pc-section');
   if (!sec) return;
   const open = !sec.classList.contains('open');
@@ -29013,3 +29015,46 @@ function cardMoreDo(sel) {
 }
 Object.assign(window, { cardMoreOpen, cardMoreDo });
 Object.assign(UI_EN, { 'פיד': 'Feed', 'אפשרויות': 'Options', 'שליחת הודעה למשתמש': 'Message the user', 'דיווח על התוכן': 'Report content' });
+
+
+// ============================================================
+// חלון תגובות נפרד — מעבירים את מקטע התגובות הקיים לחלון (ומחזירים אותו בסגירה)
+// ============================================================
+function openCommentsWindow() {
+  const sec = document.querySelector('.art-detail .pc-section');
+  if (!sec || document.getElementById('pcw')) return;
+  const mark = document.createComment('pcw-home');
+  sec.parentNode.insertBefore(mark, sec);
+  window.__pcwMark = mark;
+  const n = (document.querySelector('.pb-cmt .pb-n') || {}).textContent || '';
+  const w = document.createElement('div');
+  w.id = 'pcw'; w.className = 'pcw-wrap';
+  w.innerHTML = `<div class="pcw-backdrop" onclick="closeCommentsWindow()"></div>
+    <section class="pcw" role="dialog" aria-label="תגובות">
+      <header class="pcw-head"><b>תגובות${n && n !== '0' ? ` <span>${escHtml(n)}</span>` : ''}</b>
+        <button type="button" class="pcw-x" onclick="closeCommentsWindow()" aria-label="סגירה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      </header>
+      <div class="pcw-body"></div>
+    </section>`;
+  document.body.appendChild(w);
+  w.querySelector('.pcw-body').appendChild(sec);
+  sec.classList.add('open');
+  document.documentElement.classList.add('pcw-open');
+  document.querySelectorAll('.pb-cmt').forEach(b => { b.classList.add('on'); b.setAttribute('aria-expanded', 'true'); });
+  setTimeout(() => w.classList.add('show'), 10);
+}
+function closeCommentsWindow() {
+  const w = document.getElementById('pcw'); if (!w) return;
+  const sec = w.querySelector('.pc-section');
+  const mark = window.__pcwMark;
+  if (sec && mark && mark.parentNode) { mark.parentNode.insertBefore(sec, mark); mark.remove(); }
+  else if (sec) sec.remove();
+  if (sec) sec.classList.remove('open');
+  window.__pcwMark = null;
+  w.classList.remove('show');
+  document.documentElement.classList.remove('pcw-open');
+  document.querySelectorAll('.pb-cmt').forEach(b => { b.classList.remove('on'); b.setAttribute('aria-expanded', 'false'); });
+  setTimeout(() => w.remove(), 220);
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.getElementById('pcw')) closeCommentsWindow(); });
+Object.assign(window, { openCommentsWindow, closeCommentsWindow });
