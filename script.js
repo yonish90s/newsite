@@ -14902,32 +14902,57 @@ function forumIndexHTML() {
   const loading = forumTopics === null;
   const admin = typeof isAdmin === 'function' && isAdmin();
   forumConfigSubscribe();
-  return `
-    ${forumCats().map(cat => `
-      <section class="fo-cat">
-        <h2 class="fo-cat-title">${escHtml(cat.title)}</h2>
+  const latest = [];
+  const cats = forumCats();
+  const catsHTML = cats.map(cat => `
+      <section class="fi-cat">
+        <h2 class="fi-cat-title">${escHtml(cat.title)}</h2>
         ${cat.forums.map(f => {
           const topics = forumTopicsOf(f.id);
+          topics.forEach(t => latest.push({ f, t }));
           const msgs = topics.reduce((a, t) => a + 1 + (Number(t.replies) || 0), 0);
-          const last = topics[0];
+          const last = topics.slice().sort((a, b) => (b.lastT || b.t || 0) - (a.lastT || a.t || 0))[0];
+          const nT = loading ? '—' : forumFmtCount(topics.length), nM = loading ? '—' : forumFmtCount(msgs);
+          const lastName = last ? (last.lastName || last.name || '') : '';
           return `
-          <div class="fo-row" onclick="forumOpen('${f.id}')" role="button" tabindex="0">
-            <span class="fo-icon">${FORUM_ICON}</span>
-            <div class="fo-main"><b class="fo-title">${escHtml(f.title)}</b><small>${escHtml(f.sub || '')}</small></div>
+          <div class="fi-row" onclick="forumOpen('${f.id}')" role="button" tabindex="0">
+            <span class="fi-icon">${FORUM_ICON}</span>
+            <div class="fi-main">
+              <b class="fi-title">${escHtml(f.title)}</b>
+              ${f.sub ? `<small class="fi-sub">${escHtml(f.sub)}</small>` : ''}
+              <div class="fi-mstats"><span>נושאים:&nbsp;<b>${nT}</b></span><span>הודעות:&nbsp;<b>${nM}</b></span></div>
+              ${last ? `<div class="fi-mlast"><span class="fi-last-title" onclick="event.stopPropagation(); forumOpenTopic('${f.id}','${artEsc(last.id)}')">${escHtml(last.title)}</span><small>${escHtml(forumTimeAgo(last.lastT || last.t))} · <span class="fi-name">${escHtml(lastName)}</span></small></div>` : ''}
+            </div>
             ${admin ? `<span class="fo-admin" onclick="event.stopPropagation()"><button type="button" onclick="forumAdminEdit('${artEsc(f.id)}')" title="עריכת הפורום" aria-label="עריכה">${FO_EDIT_IC}</button><button type="button" onclick="forumAdminRemove('${artEsc(f.id)}')" title="הסרת הפורום" aria-label="הסרה">${FO_DEL_IC}</button></span>` : ''}
-            <div class="fo-stat"><small>נושאים</small><b>${loading ? '—' : forumFmtCount(topics.length)}</b></div>
-            <div class="fo-stat"><small>הודעות</small><b>${loading ? '—' : forumFmtCount(msgs)}</b></div>
-            <div class="fo-last">${last ? `
-              ${forumAvatar(last.lastName || last.name, last.lastUid || last.uid)}
-              <div class="fo-last-text">
-                <span class="fo-last-title" onclick="event.stopPropagation(); forumOpenTopic('${f.id}','${artEsc(last.id)}')">${escHtml(last.title)}</span>
-                <small>${escHtml(forumTimeAgo(last.lastT || last.t))} · <span class="fo-name">${escHtml(last.lastName || last.name || '')}</span></small>
-              </div>` : `<small class="fo-none">${loading ? '' : 'עדיין אין נושאים'}</small>`}
+            <div class="fi-stat"><small>נושאים</small><b>${nT}</b></div>
+            <div class="fi-stat"><small>הודעות</small><b>${nM}</b></div>
+            <div class="fi-last">${last ? `
+              <div class="fi-last-text">
+                <span class="fi-last-title" onclick="event.stopPropagation(); forumOpenTopic('${f.id}','${artEsc(last.id)}')">${escHtml(last.title)}</span>
+                <small>${escHtml(forumTimeAgo(last.lastT || last.t))} · <span class="fi-name">${escHtml(lastName)}</span></small>
+              </div>
+              <span class="fi-av">${forumAvatar(lastName, last.lastUid || last.uid)}</span>` : `<small class="fi-none">${loading ? '' : 'עדיין אין נושאים'}</small>`}
             </div>
           </div>`;
         }).join('')}
-      </section>`).join('')}
-    ${admin ? `<button type="button" class="fo-admin-add" onclick="forumAdminAdd()">+ פורום חדש</button>` : ''}`;
+      </section>`).join('');
+  latest.sort((a, b) => (b.t.lastT || b.t.t || 0) - (a.t.lastT || a.t.t || 0));
+  const side = `<aside class="fi-side">
+      <section class="fi-side-box">
+        <h3>הודעות חדשות</h3>
+        ${latest.length ? latest.slice(0, 8).map(({ f, t }) => `
+          <button type="button" class="fi-new" onclick="forumOpenTopic('${f.id}','${artEsc(t.id)}')">
+            <span class="fi-av">${forumAvatar(t.lastName || t.name, t.lastUid || t.uid)}</span>
+            <span class="fi-new-text"><b>${escHtml(t.title)}</b><small>הודעה אחרונה: ${escHtml(t.lastName || t.name || '')} · ${escHtml(forumTimeAgo(t.lastT || t.t))}</small><small class="fi-new-f">${escHtml(f.title)}</small></span>
+          </button>`).join('') : `<p class="fi-none">${loading ? 'טוען...' : 'עדיין אין הודעות'}</p>`}
+      </section>
+    </aside>`;
+  return `<div class="fi-layout">
+      <div class="fi-main-col">${catsHTML}
+        ${admin ? `<button type="button" class="fo-admin-add" onclick="forumAdminAdd()">+ פורום חדש</button>` : ''}
+      </div>
+      ${side}
+    </div>`;
 }
 
 // --- פורום: רשימת נושאים ---
@@ -29012,7 +29037,7 @@ function forumTopicRowHTML(f, t) {
   </div>`;
 }
 Object.assign(window, { forumSetSort, forumListGo });
-Object.assign(UI_EN, { 'מיון:': 'Sort:', 'פעילות אחרונה': 'Latest activity', 'נושאים חדשים': 'New topics', 'הכי הרבה תגובות': 'Most replies', 'הכי נצפים': 'Most viewed', 'תגובות:': 'Replies:', 'צפיות:': 'Views:' });
+Object.assign(UI_EN, { 'נושאים:': 'Topics:', 'הודעות:': 'Messages:', 'הודעות חדשות': 'New posts', 'הודעה אחרונה:': 'Last post:', 'עדיין אין הודעות': 'No posts yet', 'מיון:': 'Sort:', 'פעילות אחרונה': 'Latest activity', 'נושאים חדשים': 'New topics', 'הכי הרבה תגובות': 'Most replies', 'הכי נצפים': 'Most viewed', 'תגובות:': 'Replies:', 'צפיות:': 'Views:' });
 
 
 // תצוגת "פיד" (מובייל): כפתור ⋯ בראש הכרטיס — דיווח ושליחת הודעה למשתמש
