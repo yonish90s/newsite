@@ -14951,16 +14951,17 @@ function forumListHTML() {
       ${forumView.composing ? '' : `<button type="button" class="fo-btn" onclick="forumSetComposing(true)">+ נושא חדש</button>`}
     </div>
     ${compose}
-    <section class="fo-cat">
-      ${topics.length ? topics.map(t => `
-        <div class="fo-row topic" onclick="forumOpenTopic('${f.id}','${artEsc(t.id)}')" role="button" tabindex="0">
-          ${forumAvatar(t.name, t.uid)}
-          <div class="fo-main"><b class="fo-title">${escHtml(t.title)}</b><small>${escHtml(t.name || '')} · ${escHtml(forumTimeAgo(t.t))}</small></div>
-          ${(typeof isAdmin === 'function' && isAdmin()) ? `<span class="fo-admin" onclick="event.stopPropagation()"><button type="button" onclick="forumAdminEditTopic('${f.id}','${artEsc(t.id)}')" title="עריכת הנושא" aria-label="עריכה">${FO_EDIT_IC}</button><button type="button" onclick="forumAdminDeleteTopic('${f.id}','${artEsc(t.id)}')" title="מחיקת הנושא" aria-label="מחיקה">${FO_DEL_IC}</button></span>` : ''}
-          <div class="fo-stat"><small>תגובות</small><b>${forumFmtCount(t.replies || 0)}</b></div>
-          <div class="fo-last"><div class="fo-last-text"><small>תגובה אחרונה</small><small>${escHtml(forumTimeAgo(t.lastT || t.t))} · <span class="fo-name">${escHtml(t.lastName || t.name || '')}</span></small></div></div>
-        </div>`).join('') : `<div class="fo-empty">${forumTopics === null ? 'טוען...' : 'עדיין אין נושאים בפורום הזה — פתחו את הראשון!'}</div>`}
-    </section>`;
+    ${forumTopicPagerHTML(topics.length)}
+    <section class="fx-list">
+      <div class="fx-bar">
+        <label class="fx-sort"><span>מיון:</span><select onchange="forumSetSort(this.value)">
+          ${[['last', 'פעילות אחרונה'], ['new', 'נושאים חדשים'], ['replies', 'הכי הרבה תגובות'], ['views', 'הכי נצפים']].map(([k, l]) => `<option value="${k}"${forumSort === k ? ' selected' : ''}>${l}</option>`).join('')}
+        </select></label>
+      </div>
+      ${topics.length ? forumSortTopics(topics).slice((forumListPage - 1) * FORUM_TOPICS_PER_PAGE, forumListPage * FORUM_TOPICS_PER_PAGE).map(t => forumTopicRowHTML(f, t)).join('')
+        : `<div class="fo-empty">${forumTopics === null ? 'טוען...' : 'עדיין אין נושאים בפורום הזה — פתחו את הראשון!'}</div>`}
+    </section>
+    ${forumTopicPagerHTML(topics.length)}    </section>`;
 }
 
 // --- נושא: הודעות + תגובה (בסגנון פורום קלאסי: כרטיס מחבר מימין, תוכן משמאל, לייקים בתחתית) ---
@@ -15327,6 +15328,7 @@ window.addEventListener('popstate', (e) => {
 function forumOpen(forumId) {
   if (forumPostsUnsub) { forumPostsUnsub(); forumPostsUnsub = null; }
   forumPosts = null;
+  if (forumView.forumId !== (forumId || null)) forumListPage = 1;
   forumView = { forumId: forumId || null, topicId: null, composing: false };
   forumHistoryPush();
   forumRender();
@@ -15341,6 +15343,7 @@ function forumOpenTopic(forumId, topicId) {
   forumPosts = null;
   forumPage = 1;
   forumView = { forumId, topicId, composing: false };
+  try { if (typeof photoIncrementViews === 'function') photoIncrementViews(topicId); } catch (e) {}
   forumHistoryPush();
   forumRender();
   try { window.scrollTo(0, 0); } catch (e) {}
@@ -15947,12 +15950,12 @@ function buildPhotosPage(albums, section) {
     sectionTitle = 'כל המוצרים';
     searchPlaceholder = '🔍 חיפוש מוצרים...';
     noResultsText = 'לא נמצאו מוצרים התואמים לחיפוש';
-    addBtnHTML = `<button class="cta-add-btn" onclick="openPhotoModal()" style="background:#111111; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: #ffffff; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); transition: all 0.2s;">
+    addBtnHTML = `<div class="sh-side-actions"><button class="cta-add-btn" onclick="openPhotoModal()" style="background:#111111; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: #ffffff; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); transition: all 0.2s;">
         ➕ הוספת מוצר
        </button>
        <button onclick="openWantedModal()" style="background:#111111; width: 100%; padding: 12px 16px; border-radius: 8px; border: none; color: white; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
         🔎 מחפש מוצר (קבל הצעות)
-       </button>`;
+       </button></div>`;
   } else if (section === 'partnerships') {
     sectionTitle = 'כל השותפויות';
     searchPlaceholder = '🔍 חיפוש שותפויות...';
@@ -23124,13 +23127,17 @@ function secondhandFilterBarHTML() {
       </select>
     </div>`;
   const n = ['offer', 'price', 'region'].filter(k => ({ offer: shOfferFilter, price: shPriceFilter, region: shRegionFilter })[k] !== 'הכל').length;
-  return `
-    <button type="button" class="sh-filter-open" onclick="openFilterSheet()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg><span>סינון</span>${n ? `<b>${n}</b>` : ''}</button>
+  return `<div class="sh-top">
+    <div class="sh-top-row">
+      <button type="button" class="sh-filter-open" onclick="openFilterSheet()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg><span>סינון</span>${n ? `<b>${n}</b>` : ''}</button>
+      <button type="button" class="sh-act" onclick="openPhotoModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg><span>הוספת מוצר</span></button>
+      <button type="button" class="sh-act" onclick="openWantedModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/></svg><span>מחפש מוצר</span></button>
+    </div>
     <div class="sh-filter-bar">
       ${sel('offer', shOfferFilter, SH_OFFER_TYPES)}
       ${sel('price', shPriceFilter, SH_PRICE_RANGES)}
       ${sel('region', shRegionFilter, SH_REGIONS)}
-    </div>`;
+    </div></div>`;
 }
 window.secondhandFilterBarHTML = secondhandFilterBarHTML;
 
@@ -28247,7 +28254,7 @@ Object.assign(window, { loanSigClear, loanSigSubmit });
 
 // יד שניה: מסנכרנים את שורת הסינון העליונה (בפלאפון) עם הסינון בצד
 function pfRefreshShBar() {
-  const bar = document.querySelector('.sh-filter-bar');
+  const bar = document.querySelector('.sh-top') || document.querySelector('.sh-filter-bar');
   if (bar && typeof secondhandFilterBarHTML === 'function') bar.outerHTML = secondhandFilterBarHTML();
 }
 window.pfRefreshShBar = pfRefreshShBar;
@@ -28923,3 +28930,58 @@ function cardFollowBtnHTML(a) {
   const t = on ? 'ביטול מעקב' : 'מעקב אחרי היוצר';
   return `<button type="button" class="art-telegram-btn art-follow-btn pti-follow${on ? ' on' : ''}" onclick="event.stopPropagation(); followIconClick('${artEsc(a.authorId)}', '${artEsc(a.author || '')}', this)" title="${t}" aria-label="${t}">${on ? FOLLOWING_ICON : FOLLOW_ICON}</button>`;
 }
+
+
+// ============================================================
+// פורום: רשימת נושאים בסגנון פורום קלאסי (XenForo) — אווטאר, כותרת, מחבר · תאריך, עמודים,
+// עמודת תגובות/צפיות ועמודת "תגובה אחרונה" עם אווטאר קטן; עימוד ומיון למעלה
+// ============================================================
+const FORUM_TOPICS_PER_PAGE = 20;
+let forumListPage = 1;
+let forumSort = 'last';
+function forumSortTopics(topics) {
+  const arr = topics.slice();
+  const views = t => (typeof photoGetViews === 'function' ? photoGetViews(t.id) : 0);
+  if (forumSort === 'new') arr.sort((a, b) => (b.t || 0) - (a.t || 0));
+  else if (forumSort === 'replies') arr.sort((a, b) => (b.replies || 0) - (a.replies || 0));
+  else if (forumSort === 'views') arr.sort((a, b) => views(b) - views(a));
+  else arr.sort((a, b) => (b.lastT || b.t || 0) - (a.lastT || a.t || 0));
+  return arr;
+}
+function forumSetSort(v) { forumSort = v; forumListPage = 1; forumRender(); }
+function forumListGo(n) { forumListPage = n; forumRender(); try { mainContent.querySelector('.fx-list')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {} }
+function forumTopicPagerHTML(total) {
+  const pages = Math.max(1, Math.ceil(total / FORUM_TOPICS_PER_PAGE));
+  if (forumListPage > pages) forumListPage = pages;
+  if (pages <= 1) return '';
+  const nums = [];
+  for (let i = 1; i <= pages; i++) {
+    if (i <= 3 || i === pages || Math.abs(i - forumListPage) <= 1) nums.push(i);
+    else if (nums[nums.length - 1] !== '…') nums.push('…');
+  }
+  return `<div class="fx-pager">${nums.map(n => n === '…' ? '<span class="fx-gap">…</span>'
+    : `<button type="button" class="fx-pg${n === forumListPage ? ' on' : ''}" onclick="forumListGo(${n})">${n}</button>`).join('')}
+    ${forumListPage < pages ? `<button type="button" class="fx-pg fx-next" onclick="forumListGo(${forumListPage + 1})">הבא ‹</button>` : ''}</div>`;
+}
+function forumTopicRowHTML(f, t) {
+  const admin = typeof isAdmin === 'function' && isAdmin();
+  const views = typeof photoGetViews === 'function' ? photoGetViews(t.id) : 0;
+  const posts = 1 + (Number(t.replies) || 0);
+  const pages = Math.ceil(posts / FORUM_PAGE_SIZE);
+  const open = `forumOpenTopic('${f.id}','${artEsc(t.id)}')`;
+  const pageChips = pages > 1 ? `<span class="fx-pages">${[...new Set([Math.max(2, pages - 2), Math.max(2, pages - 1), pages])].filter(n => n > 1).map(n => `<button type="button" onclick="event.stopPropagation(); ${open}; setTimeout(() => forumGoPage(${n}), 60)">${n}</button>`).join('')}</span>` : '';
+  const lastName = t.lastName || t.name || '';
+  return `<div class="fx-row" onclick="${open}" role="button" tabindex="0">
+    <span class="fx-av">${forumAvatar(t.name, t.uid)}</span>
+    <div class="fx-main">
+      <b class="fx-title">${escHtml(t.title)}</b>
+      <div class="fx-meta"><span class="fx-author">${escHtml(t.name || '')}</span><span class="fx-dot">·</span><span>${escHtml(forumTimeAgo(t.t))}</span>${pageChips}</div>
+      <div class="fx-meta fx-meta-m"><span>${forumFmtCount(t.replies || 0)} תגובות</span><span class="fx-dot">·</span><span>${forumFmtCount(views)} צפיות</span><span class="fx-dot">·</span><span class="fx-last-t">${escHtml(forumTimeAgo(t.lastT || t.t))}</span></div>
+    </div>
+    ${admin ? `<span class="fo-admin" onclick="event.stopPropagation()"><button type="button" onclick="forumAdminEditTopic('${f.id}','${artEsc(t.id)}')" title="עריכת הנושא" aria-label="עריכה">${FO_EDIT_IC}</button><button type="button" onclick="forumAdminDeleteTopic('${f.id}','${artEsc(t.id)}')" title="מחיקת הנושא" aria-label="מחיקה">${FO_DEL_IC}</button></span>` : ''}
+    <dl class="fx-stats"><dt>תגובות:</dt><dd>${forumFmtCount(t.replies || 0)}</dd><dt>צפיות:</dt><dd>${forumFmtCount(views)}</dd></dl>
+    <div class="fx-last"><div class="fx-last-text"><span class="fx-last-t">${escHtml(forumTimeAgo(t.lastT || t.t))}</span><span class="fx-last-n">${escHtml(lastName)}</span></div><span class="fx-av sm">${forumAvatar(lastName, t.lastUid || t.uid)}</span></div>
+  </div>`;
+}
+Object.assign(window, { forumSetSort, forumListGo });
+Object.assign(UI_EN, { 'מיון:': 'Sort:', 'פעילות אחרונה': 'Latest activity', 'נושאים חדשים': 'New topics', 'הכי הרבה תגובות': 'Most replies', 'הכי נצפים': 'Most viewed', 'תגובות:': 'Replies:', 'צפיות:': 'Views:' });
