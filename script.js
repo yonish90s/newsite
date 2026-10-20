@@ -29478,7 +29478,19 @@ function cardHeadActsEnhance() {
     // סדר: טלגרם · מייל · הודעה · דיווח
     const order = b => b.classList.contains('art-report-btn') ? 4 : b.classList.contains('art-msg-btn') ? 3 : /מייל|mail/i.test(b.getAttribute('aria-label') || b.title || '') ? 2 : 1;
     pick.sort((a, b) => order(a) - order(b)).forEach(b => box.appendChild(b));
-    if (box.children.length) meta.appendChild(box);
+    // שורה תחתונה: תאריך / גיל + צפיות · לייקים באותה שורה; מתחתיה שורת טלגרם · מייל · הודעה · דיווח
+    const text = links.parentElement;
+    const foot = document.createElement('div');
+    foot.className = 'card-foot';
+    const dates = document.createElement('span');
+    dates.className = 'cf-date';
+    [...meta.children].filter(c => !c.matches('.photo-author-link, .art-row-sep, .card-head-acts')).forEach(c => dates.appendChild(c));
+    meta.querySelectorAll('.art-row-sep').forEach(c => c.remove());
+    if (dates.children.length) foot.appendChild(dates);
+    const stats = [...text.children].find(c => c.querySelector && c.querySelector('.pv-meta'));
+    if (stats) { stats.classList.add('cf-stats'); foot.appendChild(stats); }
+    if (foot.children.length) text.appendChild(foot);
+    if (box.children.length) text.appendChild(box);
   });
 }
 (function cardHeadActsWatch() {
