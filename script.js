@@ -29357,7 +29357,7 @@ function cardFollowHeadHTML(a) {
   const on = typeof isFollowing === 'function' && isFollowing(a.authorId);
   return `<button type="button" class="card-follow-h${on ? ' on' : ''}" onclick="event.stopPropagation(); followIconClick('${artEsc(a.authorId)}', '${artEsc(a.author || '')}', this)">${on ? 'במעקב' : 'עקיבה'}</button>`;
 }
-Object.assign(UI_EN, { 'עקיבה': 'Follow', 'במעקב': 'Following' });
+Object.assign(UI_EN, { 'הצעות': 'Suggestions', 'עקיבה': 'Follow', 'במעקב': 'Following' });
 
 
 // ============================================================
@@ -29375,8 +29375,8 @@ function recMiniEnhance() {
       return `<button type="button" class="rec-mini-item" data-i="${i}" title="${escHtml(title)}" aria-label="${escHtml(title)}">${img ? `<img src="${escHtml(img.getAttribute('src') || '')}" alt="" loading="lazy">` : ''}</button>`;
     }).join('');
     const strip = document.createElement('div');
-    strip.className = 'rec-mini';
-    strip.innerHTML = items;
+    strip.className = 'rec-mini-wrap';
+    strip.innerHTML = `<span class="rec-mini-label">הצעות</span><div class="rec-mini">${items}</div>`;
     strip.addEventListener('click', e => {
       const b = e.target.closest('.rec-mini-item'); if (!b) return;
       const c = cards[Number(b.dataset.i)]; if (c) c.click();

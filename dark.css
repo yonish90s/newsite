@@ -2461,6 +2461,8 @@ html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not
 }
 html.theme-dark .rec-mini-item { border: 1px solid #2a2433 !important; background: #1d1924 !important; }
 html.theme-dark.theme-dark .rec-mini-item { background: #352e42 !important; }
+html.theme-dark .rec-mini-label { color: #9aa2ad !important; }
+html.theme-dark.theme-dark .rec-mini-label { color: #9aa2ad !important; }
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #eceef1 !important; }
 html.theme-dark [style*="color:#111111"] { color: #eceef1 !important; }
