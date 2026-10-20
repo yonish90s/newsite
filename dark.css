@@ -2443,6 +2443,13 @@ html.theme-dark.theme-dark .fi-row:hover, html.theme-dark.theme-dark .fi-new:hov
 @media (max-width: 768px) {
 html.theme-dark .fi-mstats b { color: #eceef1 !important; }
 }
+html.theme-dark .fo-thread-meta { color: var(--fi-muted, #9aa2ad) !important; }
+html.theme-dark .fo-thread-meta b { color: var(--fi-acc, color-mix(in srgb, #b0244a 55%, white)) !important; }
+html.theme-dark .fo-quote { color: #c8cdd4 !important; }
+html.theme-dark .fo-like-names { color: var(--fi-muted, #9aa2ad) !important; }
+@media (max-width: 768px) {
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .fo-posts .fo-author-name { color: var(--fi-acc, color-mix(in srgb, #b0244a 55%, white)) !important; }
+}
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #eceef1 !important; }
 html.theme-dark [style*="color:#111111"] { color: #eceef1 !important; }

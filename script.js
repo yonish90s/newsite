@@ -15241,7 +15241,9 @@ function forumTopicHTML() {
   const admin = typeof isAdmin === 'function' && isAdmin();
   const myUid = auth.currentUser ? auth.currentUser.uid : '';
   const posts = forumPosts ? Object.entries(forumPosts).map(([id, p]) => Object.assign({ id }, p)).sort((a, b) => (a.t || 0) - (b.t || 0)) : null;
-  if (FORUM_MOBILE_MQ.matches || document.getElementById('fo-panel')) return forumTopicMobileHTML(f, t, posts, admin, myUid);
+  // לבקשת בעל האתר: גם במובייל — תצוגת שרשור קלאסית (כמו בפורומי XenForo)
+  const byId = {}; (posts || []).forEach((p, i) => { byId[p.id] = Object.assign({ __idx: i }, p); });
+  const op0 = posts && posts[0];
   const total = posts ? posts.length : 0;
   forumPage = Math.min(Math.max(1, forumPage), Math.max(1, Math.ceil(total / FORUM_PAGE_SIZE)));
   const start = (forumPage - 1) * FORUM_PAGE_SIZE;
@@ -15268,20 +15270,22 @@ function forumTopicHTML() {
         </aside>
         <div class="fo-post-main">
           <div class="fo-post-head">
-            <span>${escHtml(forumDateShort(p.t))}</span>
-            <span class="fo-post-num">${admin && idx > 0 ? `<button type="button" class="fo-del" onclick="forumDeletePost('${artEsc(p.id)}')">מחיקה</button>` : ''}#${idx + 1}</span>
+            <span>${escHtml(forumTimeAgo(p.t) || forumDateShort(p.t))}</span>
+            <span class="fo-post-num">${admin && idx > 0 ? `<button type="button" class="fo-del" onclick="forumDeletePost('${artEsc(p.id)}')">מחיקה</button>` : ''}<button type="button" class="fo-post-share" onclick="forumSharePage('${artEsc(t ? t.title : '')}')" aria-label="שיתוף"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 5h5v5M19 5l-8 8"/><path d="M18 14v4a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h4"/></svg></button>#${idx + 1}</span>
           </div>
+          ${(() => { const q = p.replyTo && byId[p.replyTo]; if (!q || (op0 && q.id === op0.id)) return ''; const txt = String(q.text || ''); return `<blockquote class="fo-quote" onclick="forumGoPage(${Math.floor(q.__idx / FORUM_PAGE_SIZE) + 1})"><b>${escHtml(q.name || 'משתמש')} כתב/ה: <span aria-hidden="true">↑</span></b><span>${escHtml(txt.length > 220 ? txt.slice(0, 220) + '…' : txt).replace(/\n/g, '<br>')}</span></blockquote>`; })()}
           <div class="fo-post-text">${escHtml(p.text || '').replace(/\n/g, '<br>')}</div>
           <div class="fo-likes${names.length ? ' has' : ''}">
             <button type="button" class="fo-like-btn${iLiked ? ' on' : ''}" onclick="forumToggleLike('${artEsc(p.id)}')" title="${iLiked ? 'ביטול לייק' : 'לייק'}"><svg viewBox="0 0 24 24" fill="${iLiked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M7 11v9H4a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1zM7 11l4-8a2.5 2.5 0 0 1 2.5 2.5V9h5.2a2 2 0 0 1 2 2.3l-1.2 7A2 2 0 0 1 17.5 20H7"/></svg>${iLiked ? 'אהבת' : 'לייק'}</button>
-            ${names.length ? `<span class="fo-like-names">${escHtml(likeText)}</span>` : ''}
+            <button type="button" class="fo-like-btn fo-quote-btn" onclick="forumStartReply('${artEsc(p.id)}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 6 4 12l6 6"/><path d="M4 12h10a6 6 0 0 1 6 6v1"/></svg>תגובה</button>
+            ${names.length ? `<span class="fo-like-names">אהבו: ${escHtml(likeText)}</span>` : ''}
           </div>
         </div>
       </article>`;
   };
   return `
     ${forumNavHTML('חזרה ל' + f.title, `forumOpen('${f.id}')`, `<a href="#" onclick="event.preventDefault(); forumOpen(null)">פורומים</a> › <a href="#" onclick="event.preventDefault(); forumOpen('${f.id}')">${escHtml(f.title)}</a>`)}
-    <div class="fo-head"><div><h1>${escHtml(t ? t.title : '')}</h1></div>
+    <div class="fo-head"><div><h1>${escHtml(t ? t.title : '')}</h1>${op0 ? `<p class="fo-thread-meta"><span>פותח/ת הנושא:&nbsp;<b>${escHtml(op0.name || 'משתמש')}</b></span><span>תאריך פתיחה:&nbsp;${escHtml(forumDateShort(op0.t))}</span><span>${forumFmtCount(Math.max(0, posts.length - 1))} תגובות</span></p>` : ''}</div>
       ${admin ? `<button type="button" class="fo-btn ghost danger" onclick="forumDeleteTopic()">מחיקת הנושא</button>` : ''}
     </div>
     ${pager}
@@ -15289,7 +15293,8 @@ function forumTopicHTML() {
       ${posts === null ? '<div class="fo-empty">טוען...</div>' : posts.slice(start, start + FORUM_PAGE_SIZE).map((p, i) => postHTML(p, start + i)).join('')}
     </div>
     ${pager}
-    <div class="fo-reply">
+    <div class="fo-reply" id="fo-reply-box">
+      ${forumReplyTo && byId[forumReplyTo] ? `<div class="fo-reply-to"><span>תגובה ל<b>${escHtml(byId[forumReplyTo].name || 'משתמש')}</b></span><button type="button" onclick="forumStartReply(null)" aria-label="ביטול">✕</button></div>` : ''}
       ${forumAnonToggleHTML()}
       ${forumAnonOn() ? '' : forumGuestNameFieldHTML('fo-reply-name')}
       <textarea id="fo-reply-text" class="fo-input" rows="4" maxlength="5000" placeholder="כתבו תגובה..."></textarea>
