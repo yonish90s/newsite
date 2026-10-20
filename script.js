@@ -15210,14 +15210,13 @@ function forumTopicMobileHTML(f, t, posts, admin, myUid) {
     ${opHTML}
     <div class="rd-compose" id="fo-reply-box">
       ${target ? `<div class="fo-reply-to"><span>תגובה ל<b>${escHtml(target.name || 'משתמש')}</b></span><button type="button" onclick="forumStartReply(null)" aria-label="ביטול">✕</button></div>` : ''}
-      ${forumAnonToggleHTML()}
       ${!forumRegistered() && !forumAnonOn() && forumGuestName().length < 2
         ? `<div class="rd-compose-row">
         <input id="fo-guest-first" class="rd-input" maxlength="30" placeholder="כתבו שם זמני כדי להגיב" onkeydown="if(event.key==='Enter'){event.preventDefault(); forumSetGuestName();}">
         <button type="button" class="rd-send" onclick="forumSetGuestName()" aria-label="המשך"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.4 20.4 21 12 3.4 3.6 3.4 10l12.6 2-12.6 2z"/></svg></button>
       </div>`
-        : `${forumAnonOn() ? '' : forumGuestNameFieldHTML('fo-reply-name')}
-      <div class="rd-compose-row">
+        : `${forumMiniNameHTML('fo-reply-name')}
+      <div class="rd-compose-row">${forumMiniIconsHTML('fo-reply-name')}
         <textarea id="fo-reply-text" class="rd-input" rows="1" maxlength="5000" placeholder="${target ? 'כתבו תגובה...' : 'הצטרפו לשיחה'}" oninput="this.style.height='auto'; this.style.height=Math.min(this.scrollHeight,140)+'px'"></textarea>
         <button type="button" class="rd-send" onclick="forumReply()" aria-label="שליחה"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.4 20.4 21 12 3.4 3.6 3.4 10l12.6 2-12.6 2z"/></svg></button>
       </div>`}
@@ -15307,10 +15306,11 @@ function forumTopicHTML() {
     ${pager}
     <div class="fo-reply" id="fo-reply-box">
       ${forumReplyTo && byId[forumReplyTo] ? `<div class="fo-reply-to"><span>תגובה ל<b>${escHtml(byId[forumReplyTo].name || 'משתמש')}</b></span><button type="button" onclick="forumStartReply(null)" aria-label="ביטול">✕</button></div>` : ''}
-      ${forumAnonToggleHTML()}
-      ${forumAnonOn() ? '' : forumGuestNameFieldHTML('fo-reply-name')}
-      <textarea id="fo-reply-text" class="fo-input" rows="4" maxlength="5000" placeholder="כתבו תגובה..."></textarea>
-      <div class="fo-compose-actions"><button type="button" class="fo-btn" onclick="forumReply()">שליחת תגובה</button></div>
+      ${forumMiniNameHTML('fo-reply-name')}
+      <div class="fo-mini-row">
+        <textarea id="fo-reply-text" class="fo-input" rows="2" maxlength="5000" placeholder="כתבו תגובה..."></textarea>
+        <div class="fo-mini-btns">${forumMiniIconsHTML('fo-reply-name')}<button type="button" class="fo-mini-btn send" onclick="forumReply()" aria-label="שליחת תגובה" title="שליחה"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.4 20.4 21 12 3.4 3.6 3.4 10l12.6 2-12.6 2z"/></svg></button></div>
+      </div>
     </div>`;
 }
 
@@ -29572,3 +29572,28 @@ document.addEventListener('mouseover', e => {
   const wrap = e.target.closest && e.target.closest('#photo-row-1 > .art-row .art-row-img-wrap, #story-row-main > .art-row .art-row-img-wrap');
   if (wrap) imgTagsEnsure(wrap);
 }, { passive: true });
+
+
+// תיבת תגובה מינימליסטית: אייקון אנונימי + אייקון שם (שינוי השם) + שליחה — בלי שורות טקסט
+function forumMiniNameHTML(id) {
+  if (forumRegistered() || forumAnonOn()) return '';
+  const saved = forumGuestName();
+  if (saved.length >= 2) return `<input type="hidden" id="${id}" value="${escHtml(saved)}">`;
+  return `<input id="${id}" class="fo-input fo-guest-name" maxlength="30" placeholder="השם שלך (שם זמני)" value="">`;
+}
+function forumMiniIconsHTML(id) {
+  const on = forumAnonOn();
+  const name = forumRegistered() ? '' : forumGuestName();
+  const anon = `<button type="button" class="fo-mini-btn anon${on ? ' on' : ''}" onclick="forumToggleAnon(${on ? 'false' : 'true'})" aria-pressed="${on}" title="${on ? 'מפרסמים באנונימי — לחצו לביטול' : 'פרסום באנונימי'}" aria-label="פרסום באנונימי"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10h18"/><path d="M5 10l2-6h10l2 6"/><circle cx="7.5" cy="15.5" r="3"/><circle cx="16.5" cy="15.5" r="3"/><path d="M10.5 15.5h3"/></svg></button>`;
+  const who = (!on && name.length >= 2) ? `<button type="button" class="fo-mini-btn who" onclick="forumMiniRename('${id}')" title="מגיבים בתור ${escHtml(name)} — לחצו לשינוי" aria-label="שינוי השם"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.6"/><path d="M5.5 19.5a6.5 6.5 0 0 1 13 0"/></svg></button>` : '';
+  return anon + who;
+}
+function forumMiniRename(id) {
+  const cur = forumGuestName();
+  const v = (prompt('השם שלך בתגובות:', cur) || '').trim().slice(0, 30);
+  if (v.length < 2) return;
+  try { localStorage.setItem(FORUM_GUEST_KEY, v); } catch (e) {}
+  const el = document.getElementById(id); if (el) el.value = v;
+  if (typeof showCopyToast === 'function') showCopyToast('מגיבים בתור ' + v);
+}
+Object.assign(window, { forumMiniRename });
