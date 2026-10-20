@@ -2550,6 +2550,7 @@ html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) .story-article-tag 
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) .story-linked-chip { color: #d9d9d9 !important; }
 html.theme-dark .ofc { background: #3a3a3d !important; }
 html.theme-dark .ofc-st { color: #939393 !important; }
+html.theme-dark .ofc-demo-tag { background: rgba(27, 30, 36, 0.14) !important; }
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #d9d9d9 !important; }
 html.theme-dark [style*="color:#111111"] { color: #d9d9d9 !important; }

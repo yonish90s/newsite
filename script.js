@@ -28447,7 +28447,7 @@ function ofpListHTML() {
   return `<div class="ofp">
     <div class="ofp-stats">${stat('מחכות לתשובה שלי', waiting)}${stat('הצעות שקיבלתי', inList.length)}${stat('ממוצע הצעה', avg ? '₪' + avg.toLocaleString('he-IL') : '—')}</div>
     <nav class="pfg-tabs"><button type="button" class="pfg-tab${offersTab === 'in' ? ' on' : ''}" onclick="offersSetTab('in')"><b>${inList.length}</b> התקבלו</button><button type="button" class="pfg-tab${offersTab === 'out' ? ' on' : ''}" onclick="offersSetTab('out')"><b>${outList.length}</b> נשלחו</button></nav>
-    <div class="ofp-list">${list.length ? list.map(row).join('') : `<div class="pf-empty">${offersTab === 'in' ? 'עדיין לא קיבלת הצעות — פרסמו מוצר במוצרי גולשים' : 'עדיין לא שלחת הצעות'}</div>`}</div>
+    <div class="ofp-list">${list.length ? list.map(row).join('') : `${ofpDemoCardHTML()}<div class="pf-empty">${offersTab === 'in' ? 'עדיין לא קיבלת הצעות — פרסמו מוצר במוצרי גולשים' : 'עדיין לא שלחת הצעות'}</div>`}</div>
   </div>`;
 }
 function offersRerender() { const b = document.querySelector('#ofp-panel .fo-panel-body'); if (b) b.innerHTML = ofpListHTML(); }
@@ -29674,3 +29674,22 @@ function haSetTab(btn, tab) {
   try { localStorage.setItem('ha_tab', tab); } catch (e) {}
 }
 window.haSetTab = haSetTab;
+
+
+// הצעה לדוגמה — מוצגת כשאין עדיין הצעות (גם לאורח), כדי שיהיה ברור איך זה עובד
+function ofpDemoCardHTML() {
+  const demo = "showCopyToast('זו הצעה לדוגמה — כך תיראה הצעה אמיתית')";
+  return `<div class="ofc turn ofc-demo">
+    <span class="ofc-av" style="--av:#6d5bd0">ד</span>
+    <div class="ofc-main" onclick="${demo}">
+      <b class="ofc-name">דניאל <em class="ofc-demo-tag">דוגמה</em></b>
+      <span class="ofc-sub">₪850 · נינטנדו סוויץ' · כמו חדש</span>
+      <span class="ofc-st"><i class="wait"></i>הצעה ממתינה לתשובה שלך · לפני 5 דקות</span>
+    </div>
+    <div class="ofc-btns">
+      <button type="button" class="ofc-b no" onclick="${demo}" title="דחייה" aria-label="דחייה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+      <button type="button" class="ofc-b deal" onclick="${demo}" title="משא ומתן — שינוי מחיר או סעיפים" aria-label="משא ומתן"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h11M4 7l3-3M4 7l3 3"/><path d="M20 17H9M20 17l-3-3M20 17l-3 3"/></svg></button>
+      <button type="button" class="ofc-b ok" onclick="${demo}" title="אישור" aria-label="אישור"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
+    </div>
+  </div>`;
+}
