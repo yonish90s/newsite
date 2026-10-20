@@ -5021,7 +5021,7 @@ function showCopyToast(msg) {
   document.body.appendChild(t);
   requestAnimationFrame(() => t.classList.add('show'));
   clearTimeout(window.__copyToastTimer);
-  window.__copyToastTimer = setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, Math.min(5000, 1800 + text.length * 35));
+  window.__copyToastTimer = setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 250); }, 1000);
 }
 window.copyEmailToClipboard = copyEmailToClipboard;
 window.showCopyToast = showCopyToast;
