@@ -273,3 +273,8 @@ html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):
 html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet .ms-x { background: #2a2a2c !important; color: #ececec !important; }
 html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet .fs-opt.on { background: #2a2a2c !important; }
 html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet .ms-foot { border-color: #2a2a2c !important; }
+@media (max-width: 768px) {
+  html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .rd-cmt .rd-text, html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.rd-post-text, .rd-title) { color: #d9d9d9 !important; }
+  html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.rd-cmt-name, .rd-time, .rd-dot, .rd-actions .rd-reply, .rd-votes) { color: #939393 !important; }
+  html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .rd-votes.up { color: #4c9bff !important; }
+}

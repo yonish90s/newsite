@@ -15102,8 +15102,8 @@ function forumThreadPostHTML(p, isReply, admin, myUid) {
 }
 
 // ===== מובייל: נושא בסגנון רדיט — פוסט פותח + תגובות עם קו שרשור (בצבעי האתר) =====
-const RD_UP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3.5 4 12.5h5v8h6v-8h5z"/></svg>';
-const RD_UP_ON = '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3.5 4 12.5h5v8h6v-8h5z"/></svg>';
+const RD_UP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 10.5v9.5H4.8a1 1 0 0 1-1-1v-7.5a1 1 0 0 1 1-1z"/><path d="M7.5 10.5 11 4a2.4 2.4 0 0 1 2.6 2.7L13.2 9.5h5.3a2 2 0 0 1 2 2.4l-1.3 6.5a2 2 0 0 1-2 1.6H7.5"/></svg>';
+const RD_UP_ON = '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 10.5v9.5H4.8a1 1 0 0 1-1-1v-7.5a1 1 0 0 1 1-1z"/><path d="M7.5 10.5 11 4a2.4 2.4 0 0 1 2.6 2.7L13.2 9.5h5.3a2 2 0 0 1 2 2.4l-1.3 6.5a2 2 0 0 1-2 1.6H7.5"/></svg>';
 const RD_CMT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 4c4.7 0 8.5 3.2 8.5 7.2S16.7 18.4 12 18.4c-.9 0-1.8-.1-2.6-.3L5 20l1.2-3.6C4.5 15 3.5 13.2 3.5 11.2 3.5 7.2 7.3 4 12 4z"/></svg>';
 const RD_SHARE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 5l6 6-6 6"/><path d="M20 11H10a6 6 0 0 0-6 6v2"/></svg>';
 const RD_PLUS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8" stroke-linecap="round"/></svg>';
@@ -15129,7 +15129,7 @@ function rdVotes(p, myUid, pill) {
   const likes = Object.keys(p.likes || {}).length, dislikes = Object.keys(p.dislikes || {}).length;
   const up = !!(myUid && p.likes && p.likes[myUid]), down = !!(myUid && p.dislikes && p.dislikes[myUid]);
   return `<span class="rd-votes${pill ? ' rd-pill' : ''}${up ? ' up' : ''}${down ? ' down' : ''}">
-      <button type="button" class="rd-vote" onclick="forumToggleLike('${artEsc(p.id)}')" aria-label="הצבעה בעד">${up ? RD_UP_ON : RD_UP}</button>
+      <button type="button" class="rd-vote" onclick="forumToggleLike('${artEsc(p.id)}')" aria-label="לייק">${up ? RD_UP_ON : RD_UP}</button>
       <b>${forumFmtCount(likes - dislikes)}</b>
     </span>`;
 }
@@ -15149,8 +15149,8 @@ function rdCommentHTML(p, admin, myUid, kids, depth) {
       <div class="rd-cmt-body">
         <div class="rd-text">${escHtml(p.text || '').replace(/\n/g, '<br>')}</div>
         <div class="rd-actions">
+          <button type="button" class="rd-act rd-reply" onclick="forumStartReply('${artEsc(p.id)}')" aria-label="תגובה" title="תגובה">${FORUM_REPLY_ICO}</button>
           ${rdVotes(p, myUid)}
-          <button type="button" class="rd-act" onclick="forumStartReply('${artEsc(p.id)}')">${RD_CMT}<span>תגובה</span></button>
           ${admin ? `<button type="button" class="rd-act" onclick="forumAdminEditPost('${artEsc(p.id)}')">עריכה</button><button type="button" class="rd-act rd-del" onclick="forumDeletePost('${artEsc(p.id)}')">מחיקה</button>` : ''}
         </div>
         ${childList.length ? (open
@@ -15252,7 +15252,8 @@ function forumTopicHTML() {
   const admin = typeof isAdmin === 'function' && isAdmin();
   const myUid = auth.currentUser ? auth.currentUser.uid : '';
   const posts = forumPosts ? Object.entries(forumPosts).map(([id, p]) => Object.assign({ id }, p)).sort((a, b) => (a.t || 0) - (b.t || 0)) : null;
-  // לבקשת בעל האתר: גם במובייל — תצוגת שרשור קלאסית (כמו בפורומי XenForo)
+  // מובייל: שרשור תגובות מקונן (כמו ברדיט) — לייק במקום חץ, תגובה כאייקון
+  if (FORUM_MOBILE_MQ.matches) return forumTopicMobileHTML(f, t, posts, admin, myUid);
   const byId = {}; (posts || []).forEach((p, i) => { byId[p.id] = Object.assign({ __idx: i }, p); });
   const op0 = posts && posts[0];
   const total = posts ? posts.length : 0;

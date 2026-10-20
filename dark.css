@@ -2485,6 +2485,14 @@ html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet .fs-opt.on { background: #2a2a2c !important; }
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet .ms-foot { border-top: 1px solid #333336 !important; background: #1c1c1e !important; }
 html.theme-dark .img-tags { background: linear-gradient(rgba(0,0,0,.62), rgba(255, 255, 255, 0)) !important; }
+@media (max-width: 768px) {
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) .rd-cmt .rd-text, html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) .rd-post-text { color: #d9d9d9 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) .rd-cmt-name { color: #bdbdbd !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) :is(.rd-time, .rd-dot) { color: #bdbdbd !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) .rd-title { color: #d9d9d9 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) .rd-actions .rd-reply { color: #bdbdbd !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) .rd-votes { color: #bdbdbd !important; }
+}
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #d9d9d9 !important; }
 html.theme-dark [style*="color:#111111"] { color: #d9d9d9 !important; }
@@ -2933,3 +2941,8 @@ html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):
 html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet .ms-x { background: #2a2a2c !important; color: #ececec !important; }
 html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet .fs-opt.on { background: #2a2a2c !important; }
 html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet .ms-foot { border-color: #2a2a2c !important; }
+@media (max-width: 768px) {
+  html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .rd-cmt .rd-text, html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.rd-post-text, .rd-title) { color: #d9d9d9 !important; }
+  html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.rd-cmt-name, .rd-time, .rd-dot, .rd-actions .rd-reply, .rd-votes) { color: #939393 !important; }
+  html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .rd-votes.up { color: #4c9bff !important; }
+}

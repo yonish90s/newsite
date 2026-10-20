@@ -14317,3 +14317,18 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_
 .img-tags div { font-size: 13.5px; line-height: 1.5; text-shadow: 0 1px 3px rgba(0,0,0,.5); }
 .img-tags-tag { cursor: pointer; font-weight: 600; }
 .img-tags-tag:active { opacity: .7; }
+
+/* ===== פורום במובייל: טקסט כמו ברדיט (מצב בהיר), תגובה = אייקון בלבד, לייק במקום חץ ===== */
+@media (max-width: 768px) {
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .rd-cmt .rd-text, html body:not(#_):not(#_):not(#_):not(#_):not(#_) .rd-post-text { font-size: 16px !important; line-height: 1.42 !important; font-weight: 400 !important; color: #1a1a1b !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .rd-cmt-name { font-size: 13.5px !important; font-weight: 600 !important; color: #576f76 !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) :is(.rd-time, .rd-dot) { font-size: 13.5px !important; color: #576f76 !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .rd-title { font-size: 19px !important; font-weight: 700 !important; color: #1a1a1b !important; line-height: 1.3 !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .rd-actions { justify-content: flex-end !important; gap: 14px !important; margin-top: 6px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .rd-actions .rd-reply { width: 30px !important; height: 30px !important; padding: 0 !important; display: grid !important; place-items: center !important; background: none !important; border: 0 !important; color: #576f76 !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .rd-actions .rd-reply svg { width: 20px !important; height: 20px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .rd-votes { gap: 4px !important; color: #576f76 !important; background: none !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .rd-votes .rd-vote svg { width: 20px !important; height: 20px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .rd-votes b { font-size: 14px !important; font-weight: 600 !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .rd-votes.up { color: #1d72f2 !important; }
+}
