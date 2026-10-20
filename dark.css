@@ -2380,6 +2380,13 @@ html.theme-dark.theme-dark .fx-pg.on { background: #352e42 !important; }
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .sh-top-row :is(.sh-filter-open, .sh-act) { border: 1px solid #2a2433 !important; background: #17141d !important; color: #eceef1 !important; }
 html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_) .sh-top-row :is(.sh-filter-open, .sh-act:not(:nth-child(2))) { background: #352e42 !important; }
 }
+@media (max-width: 768px) {
+html.theme-dark.mview-feed body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) > .art-row { border-bottom: 1px solid #2a2433 !important; }
+html.theme-dark.theme-dark.mview-feed body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) > .art-row { border-color: #5b6472 !important; }
+html.theme-dark.mview-feed body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) .art-row-meta > span:not(.photo-author-link):not(.art-row-sep) { color: #9aa2ad !important; }
+html.theme-dark.mview-feed body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) .photo-card-links .art-telegram-btn { border: 1px solid #2a2433 !important; }
+html.theme-dark.mview-feed body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) .photo-card-links .art-save-btn.is-saved { background: #352e42 !important; border-color: #5b6472 !important; }
+}
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #eceef1 !important; }
 html.theme-dark [style*="color:#111111"] { color: #eceef1 !important; }

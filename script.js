@@ -6864,6 +6864,7 @@ function storyCardHTML(s, iconHint) {
       ${cardMsgBtnHTML(s)}
       ${cardFollowBtnHTML(s)}
       ${cardReportBtnHTML(s.id, s.title)}
+      ${cardMoreBtnHTML()}
       </div>
     `;
 
@@ -8713,6 +8714,7 @@ function renderPhotoCard(p, options = {}) {
       ${cardMsgBtnHTML(p)}
       ${cardFollowBtnHTML(p)}
       ${cardReportBtnHTML(p.id, p.title)}
+      ${cardMoreBtnHTML()}
     </div>
   `;
 
@@ -28886,8 +28888,8 @@ window.sidePanelResizeStart = sidePanelResizeStart;
 // ============================================================
 // מובייל: בורר "תצוגה" אחיד (גריד 2 בשורה / רשימה 1 בשורה) בתמונות, קומיקס, סיפורים ויד 2
 // ============================================================
-function mviewGet() { try { return localStorage.getItem('m_view') === 'list' ? 'list' : 'grid'; } catch (e) { return 'grid'; } }
-function mviewApply() { document.documentElement.classList.toggle('mview-list', mviewGet() === 'list'); }
+function mviewGet() { try { const v = localStorage.getItem('m_view'); return v === 'list' || v === 'feed' ? v : 'grid'; } catch (e) { return 'grid'; } }
+function mviewApply() { const v = mviewGet(); document.documentElement.classList.toggle('mview-list', v === 'list' || v === 'feed'); document.documentElement.classList.toggle('mview-feed', v === 'feed'); }
 function mviewSet(v) {
   try { localStorage.setItem('m_view', v); } catch (e) {}
   mviewApply();
@@ -28897,10 +28899,11 @@ function mviewBarHTML() {
   const v = mviewGet();
   const ic = {
     grid: '<rect x="4" y="4" width="7" height="7" rx="1.6"/><rect x="13" y="4" width="7" height="7" rx="1.6"/><rect x="4" y="13" width="7" height="7" rx="1.6"/><rect x="13" y="13" width="7" height="7" rx="1.6"/>',
-    list: '<rect x="4" y="4" width="16" height="7" rx="1.6"/><rect x="4" y="13" width="16" height="7" rx="1.6"/>'
+    list: '<rect x="4" y="4" width="16" height="7" rx="1.6"/><rect x="4" y="13" width="16" height="7" rx="1.6"/>',
+    feed: '<circle cx="6" cy="5" r="1.6"/><path d="M9.5 5h10.5"/><rect x="4" y="9" width="16" height="8" rx="1.6"/><path d="M4 20.5h5M12 20.5h3"/>'
   };
   const b = (k, t) => `<button type="button" class="mview-btn${v === k ? ' on' : ''}" data-v="${k}" onclick="mviewSet('${k}')" aria-label="${t}" title="${t}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round">${ic[k]}</svg></button>`;
-  return `<div class="mview-bar"><span class="mview-label">תצוגה</span>${b('grid', 'גריד')}${b('list', 'רשימה')}</div>`;
+  return `<div class="mview-bar"><span class="mview-label">תצוגה</span>${b('grid', 'גריד')}${b('list', 'רשימה')}${b('feed', 'פיד')}</div>`;
 }
 function mviewInject() {
   if (!window.matchMedia('(max-width: 768px)').matches) return;
@@ -28913,7 +28916,7 @@ function mviewInject() {
 mviewApply();
 (function mviewWatch() {
   let t = 0;
-  const obs = new MutationObserver(() => { if (t) return; t = requestAnimationFrame(() => { t = 0; mviewInject(); }); });
+  const obs = new MutationObserver(() => { if (t) return; t = setTimeout(() => { t = 0; mviewInject(); }, 40); });
   const start = () => { obs.observe(document.body, { childList: true, subtree: true }); mviewInject(); };
   if (document.body) start(); else document.addEventListener('DOMContentLoaded', start);
 })();
@@ -28985,3 +28988,28 @@ function forumTopicRowHTML(f, t) {
 }
 Object.assign(window, { forumSetSort, forumListGo });
 Object.assign(UI_EN, { 'מיון:': 'Sort:', 'פעילות אחרונה': 'Latest activity', 'נושאים חדשים': 'New topics', 'הכי הרבה תגובות': 'Most replies', 'הכי נצפים': 'Most viewed', 'תגובות:': 'Replies:', 'צפיות:': 'Views:' });
+
+
+// תצוגת "פיד" (מובייל): כפתור ⋯ בראש הכרטיס — דיווח ושליחת הודעה למשתמש
+function cardMoreBtnHTML() {
+  return `<button type="button" class="card-more" onclick="event.stopPropagation(); cardMoreOpen(this)" aria-label="עוד אפשרויות" title="עוד"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button>`;
+}
+function cardMoreOpen(btn) {
+  const card = btn.closest('.art-row'); if (!card) return;
+  window.__cardMoreCard = card;
+  const ic = {
+    msg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8.5 8.5 0 0 1-12.6 7.4L3 21l1.6-5.4A8.5 8.5 0 1 1 21 12z"/></svg>',
+    report: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/></svg>'
+  };
+  const item = (sel, label, icon) => card.querySelector(sel) ? `<button type="button" class="cm-item" onclick="cardMoreDo('${sel}')">${icon}<span>${label}</span></button>` : '';
+  const body = `<div class="cm-menu">${item('.art-msg-btn', 'שליחת הודעה למשתמש', ic.msg)}${item('.art-report-btn', 'דיווח על התוכן', ic.report)}</div>`;
+  if (typeof openMSheet === 'function') openMSheet('אפשרויות', body, '');
+}
+function cardMoreDo(sel) {
+  const card = window.__cardMoreCard;
+  if (typeof closeMSheet === 'function') closeMSheet();
+  const b = card && card.querySelector(sel);
+  if (b) setTimeout(() => b.click(), 220);
+}
+Object.assign(window, { cardMoreOpen, cardMoreDo });
+Object.assign(UI_EN, { 'פיד': 'Feed', 'אפשרויות': 'Options', 'שליחת הודעה למשתמש': 'Message the user', 'דיווח על התוכן': 'Report content' });
