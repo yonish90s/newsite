@@ -13584,3 +13584,55 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-follow-btn.on { c
   html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .mtabs .mtab { width: auto !important; min-width: 0 !important; overflow: hidden !important; }
   html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .mtabs .mtab > span { white-space: normal !important; word-break: keep-all; overflow-wrap: anywhere; }
 }
+
+/* ===== מובייל: פרופיל ופורומים — כתב ופרופורציות קטנים בהרבה ===== */
+@media (max-width: 768px) {
+  /* ראש הפרופיל */
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pf-back { height: 26px !important; padding: 0 10px !important; font-size: 11px !important; border-radius: 999px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pf-head { padding: 14px 12px !important; border-radius: 14px !important; gap: 4px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pf-head .pf-av-wrap, html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pf-head .pf-avatar { width: 58px !important; height: 58px !important; min-width: 58px !important; font-size: 22px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pf-head .pf-av-plus { width: 18px !important; height: 18px !important; font-size: 12px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pf-head .pf-name { font-size: 15px !important; margin: 4px 0 0 !important; line-height: 1.25 !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pf-head :is(.pf-handle, .pf-facts, .pf-fact, .pf-counts, .pf-counts span, .pf-counts b) { font-size: 11px !important; line-height: 1.35 !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pf-head .pf-fact svg { width: 11px !important; height: 11px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pf-head .pf-counts { gap: 10px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pf-head .pf-actions { gap: 6px !important; margin-top: 6px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pf-head .pf-btn { height: 28px !important; min-height: 0 !important; padding: 0 12px !important; font-size: 11.5px !important; border-radius: 999px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pf-head .pf-btn-icon { width: 28px !important; padding: 0 !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pf-head .pf-btn svg { width: 14px !important; height: 14px !important; }
+  /* לשוניות ותוכן */
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) :is(.pf-tabs .pf-tab, .pfg-tabs .pfg-tab) { height: 30px !important; min-height: 0 !important; font-size: 11.5px !important; padding: 0 8px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) :is(.pf-tabs .pf-tab b, .pfg-tabs .pfg-tab b) { font-size: 11px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pfg-card .pfg-title { font-size: 11.5px !important; line-height: 1.3 !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pf-panel .up-watch { zoom: .8; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .mview-bar.mview-pf .mview-label { font-size: 11px !important; }
+  /* פורומים — הכל בקנה מידה קטן יותר */
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .forums-page:not(.fo-in-panel) .fo-inner { zoom: .8; }
+}
+@media (max-width: 768px) {
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pf-head :is(.pf-av-wrap, .pf-avatar) { width: 58px !important; height: 58px !important; min-width: 58px !important; font-size: 22px !important; }
+}
+
+/* חיזוק — גדלי הפרופיל במובייל */
+@media (max-width: 768px) {
+  /* ראש הפרופיל */
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pf-back { height: 26px !important; padding: 0 10px !important; font-size: 11px !important; border-radius: 999px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pf-head { padding: 14px 12px !important; border-radius: 14px !important; gap: 4px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pf-head .pf-av-wrap, html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pf-head .pf-avatar { width: 58px !important; height: 58px !important; min-width: 58px !important; font-size: 22px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pf-head .pf-av-plus { width: 18px !important; height: 18px !important; font-size: 12px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pf-head .pf-name { font-size: 15px !important; margin: 4px 0 0 !important; line-height: 1.25 !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pf-head :is(.pf-handle, .pf-facts, .pf-fact, .pf-counts, .pf-counts span, .pf-counts b) { font-size: 11px !important; line-height: 1.35 !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pf-head .pf-fact svg { width: 11px !important; height: 11px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pf-head .pf-counts { gap: 10px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pf-head .pf-actions { gap: 6px !important; margin-top: 6px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pf-head .pf-btn { height: 28px !important; min-height: 0 !important; padding: 0 12px !important; font-size: 11.5px !important; border-radius: 999px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pf-head .pf-btn-icon { width: 28px !important; padding: 0 !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pf-head .pf-btn svg { width: 14px !important; height: 14px !important; }
+  /* לשוניות ותוכן */
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.pf-tabs .pf-tab, .pfg-tabs .pfg-tab) { height: 30px !important; min-height: 0 !important; font-size: 11.5px !important; padding: 0 8px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.pf-tabs .pf-tab b, .pfg-tabs .pfg-tab b) { font-size: 11px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pfg-card .pfg-title { font-size: 11.5px !important; line-height: 1.3 !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pf-panel .up-watch { zoom: .8; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .mview-bar.mview-pf .mview-label { font-size: 11px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pf-head :is(.pf-facts, .pf-counts) { margin-top: 2px !important; }
+}
