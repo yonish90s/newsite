@@ -6882,6 +6882,7 @@ function storyCardHTML(s, iconHint) {
       <div class="art-row" data-category="${escHtml(s.category || 'כללי')}" data-verified="${isVerifiedStory ? '1' : '0'}" data-time="${storyTime}" data-score="${storyScore}" data-search="${escHtml([s.title, s.summary, s.author, s.category].filter(Boolean).join(' '))}" onclick="storyOpenDetail('${artEsc(s.id)}')">
         <div class="art-row-text photo-card-info">
           <h3>${escHtml(s.title)}</h3>
+          ${(s.summary || s.desc) ? `<p class="card-desc">${escHtml(String(s.summary || s.desc).replace(/<[^>]+>/g, ' ').trim())}</p>` : ''}
           <div class="art-row-meta" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
             <span class="photo-author-link art-row-author" onclick="event.stopPropagation(); if(typeof openUserPage==='function') openUserPage('${artEsc(s.authorId || '')}', '${artEsc(s.author || '')}')" style="cursor: pointer; color: #262626; text-decoration: underline; font-weight: 600;">${authorAvHTML(s)}${escHtml(s.author)}${verifiedBadgeHTML}</span>
             <span class="art-row-sep">|</span>
@@ -6922,6 +6923,7 @@ function buildStoriesPage(stories, storyKind) {
       <div class="art-featured-info">
         <span class="art-category-badge" style="background:${escHtml(s.categoryColor || '#8b5cf6')}">${escHtml(s.category)}</span>
         <h3>${escHtml(s.title)}</h3>
+        ${(s.summary || s.desc) ? `<p class="card-desc">${escHtml(String(s.summary || s.desc).replace(/<[^>]+>/g, ' ').trim())}</p>` : ''}
         <div class="art-featured-meta">${escHtml(s.author)} · ${escHtml(s.timestamp)}</div>
       </div>
     </div>
@@ -8752,6 +8754,7 @@ function renderPhotoCard(p, options = {}) {
     <div class="art-row-text photo-card-info">
       ${classActionHTML}
       <h3>${escHtml(p.title)}</h3>
+      ${p.summary ? `<p class="card-desc">${escHtml(String(p.summary).trim())}</p>` : ''}
       ${priceBadgeHTML}
       ${metaHTML}
     </div>
@@ -29368,7 +29371,7 @@ function cardFollowHeadHTML(a) {
   const on = typeof isFollowing === 'function' && isFollowing(a.authorId);
   return `<button type="button" class="card-follow-h${on ? ' on' : ''}" onclick="event.stopPropagation(); followIconClick('${artEsc(a.authorId)}', '${artEsc(a.author || '')}', this)">${on ? 'במעקב' : 'עקיבה'}</button>`;
 }
-Object.assign(UI_EN, { 'הצעות': 'Suggestions', 'עקיבה': 'Follow', 'במעקב': 'Following' });
+Object.assign(UI_EN, { 'קרא עוד...': 'See more...', 'הצעות': 'Suggestions', 'עקיבה': 'Follow', 'במעקב': 'Following' });
 
 
 // ============================================================
@@ -29445,7 +29448,21 @@ function cardStatsBtnsHTML(a, kind) {
 // כרטיסים: דיווח / הודעה / מייל / טלגרם — עוברים לשורת הראש (בין שם המשתמש לכפתור העקיבה);
 // למטה נשארים לייק · תגובות · שיתוף · שמירה
 // ============================================================
+function cardDescEnhance() {
+  document.querySelectorAll('.card-desc:not([data-chk])').forEach(d => {
+    if (!d.getClientRects().length) return;
+    d.dataset.chk = '1';
+    if (d.scrollHeight > d.clientHeight + 2) {
+      d.classList.add('clamped');
+      const more = document.createElement('button');
+      more.type = 'button'; more.className = 'card-desc-more'; more.textContent = 'קרא עוד...';
+      more.addEventListener('click', e => { e.stopPropagation(); d.classList.remove('clamped'); d.classList.add('open'); more.remove(); });
+      d.insertAdjacentElement('afterend', more);
+    }
+  });
+}
 function cardHeadActsEnhance() {
+  try { cardDescEnhance(); } catch (e) {}
   document.querySelectorAll('#photo-row-1 > .art-row, #story-row-main > .art-row').forEach(row => {
     if (row.dataset.headActs) return;
     const links = row.querySelector('.photo-card-links');

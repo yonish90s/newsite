@@ -13192,16 +13192,16 @@ html body:not(#_):not(#_) .fs-switch.on, html body:not(#_):not(#_) .fs-toggle.on
 html body:not(#_):not(#_) :is(.mtab-badge, #offers-badge, .notif-badge, .sh-filter-open b) { background: var(--cd-pink) !important; color: #fff !important; }
 /* סרגל תחתון במובייל — זכוכית כהה, פעיל בורוד */
 @media (max-width: 768px) {
-  html body:not(#_):not(#_):not(#_):not(#_) .mtabs { background: rgba(24,20,30,.82) !important; -webkit-backdrop-filter: blur(18px) saturate(1.4) !important; backdrop-filter: blur(18px) saturate(1.4) !important; border: 1px solid rgba(255,255,255,.08) !important; box-shadow: 0 10px 30px rgba(0,0,0,.35) !important; }
-  html body:not(#_):not(#_):not(#_):not(#_) .mtabs .mtab { color: #d9d4e0 !important; background: transparent !important; }
-  html body:not(#_):not(#_):not(#_):not(#_) .mtabs .mtab > svg { color: #d9d4e0 !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .mtabs { background: rgba(36,37,38,.86) !important; -webkit-backdrop-filter: blur(18px) saturate(1.4) !important; backdrop-filter: blur(18px) saturate(1.4) !important; border: 1px solid rgba(255,255,255,.08) !important; box-shadow: 0 10px 30px rgba(0,0,0,.35) !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .mtabs .mtab { color: #d0d2d6 !important; background: transparent !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .mtabs .mtab > svg { color: #d0d2d6 !important; }
   html body:not(#_):not(#_):not(#_):not(#_) .mtabs .mtab.active, html body:not(#_):not(#_):not(#_):not(#_) .mtabs .mtab.active > svg { color: var(--cd-pink) !important; background: transparent !important; }
   html body:not(#_):not(#_):not(#_):not(#_) .mtabs .mtab-plus-ic { background: transparent !important; color: #ffffff !important; box-shadow: none !important; border: 0 !important; }
 }
 /* מצב כהה — שחור-סגלגל כמו candy */
-html.theme-dark body:not(#_):not(#_) { background: #0f0d14 !important; }
-html.theme-dark body:not(#_):not(#_) :is(.apple-nav, .hx-tabs, #m-sheet, .side-panel, .cookie-bar) { background-color: #131019 !important; border-color: #241f2d !important; }
-html.theme-dark body:not(#_):not(#_) :is(.cr-card, .ha-box, .pf-card, .fs-slider .dsl) { border-color: #2a2433 !important; }
+html.theme-dark body:not(#_):not(#_) { background: #18191a !important; }
+html.theme-dark body:not(#_):not(#_) :is(.apple-nav, .hx-tabs, #m-sheet, .side-panel, .cookie-bar) { background-color: #1c1d1f !important; border-color: #303133 !important; }
+html.theme-dark body:not(#_):not(#_) :is(.cr-card, .ha-box, .pf-card, .fs-slider .dsl) { border-color: #3a3b3c !important; }
 
 /* ===== מובייל: עוד יותר קטן ===== */
 @media (max-width: 768px) {
@@ -13305,7 +13305,7 @@ html body:not(#_):not(#_):not(#_) .mnx .mnx-grid .mnx-item { display: flex !impo
 html body:not(#_):not(#_):not(#_) .mnx .mnx-grid .mnx-item:active { transform: scale(.96) !important; }
 html body:not(#_):not(#_):not(#_) .mnx .mnx-grid .mnx-item svg { width: 22px !important; height: 22px !important; margin: 0 !important; flex: none !important; }
 html body:not(#_):not(#_):not(#_) .mnx .mnx-grid .mnx-item span { font-size: 11.5px !important; white-space: normal !important; overflow: hidden !important; display: -webkit-box !important; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-html.theme-dark body:not(#_):not(#_):not(#_) .mnx .mnx-grid .mnx-item { background: #1d1924 !important; border-color: #2a2433 !important; color: #eceef1 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) .mnx .mnx-grid .mnx-item { background: #2a2b2d !important; border-color: #3a3b3c !important; color: #eceef1 !important; }
 html.theme-dark body:not(#_):not(#_):not(#_) .mnx .mnx-grid .mnx-item svg { color: #ec5f80 !important; }
 
 /* כפתור X להסתרת ריבוע בעמודה הימנית של דף הבית */
@@ -13403,7 +13403,7 @@ html body:not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="communities
 
 /* ===== אייקוני הכותרת — קו דק אחיד, בלי מסגרות, מתאים לבהיר ולכהה ===== */
 :root { --hd-ink: #1d1d22; --hd-hover: #f1f0f4; --hd-av-bg: #f1f0f4; }
-html.theme-dark { --hd-ink: #ebe8f0; --hd-hover: #241f2d; --hd-av-bg: #241f2d; }
+html.theme-dark { --hd-ink: #e4e6eb; --hd-hover: #303133; --hd-av-bg: #303133; }
 html body:not(#_):not(#_):not(#_):not(#_):not(#_) .apple-nav-content :is(.notif-bell, .mnav-btn) { width: 34px !important; height: 34px !important; min-width: 34px !important; padding: 0 !important; border: 0 !important; border-radius: 50% !important; background: transparent !important; box-shadow: none !important; color: var(--hd-ink) !important; align-items: center !important; justify-content: center !important; transition: background .15s ease, color .15s ease, transform .12s ease !important; }
 html body:not(#_):not(#_):not(#_):not(#_):not(#_) .apple-nav-content :is(.notif-bell, .mnav-btn):hover { background: var(--hd-hover) !important; color: #ec5f80 !important; }
 html body:not(#_):not(#_):not(#_):not(#_):not(#_) .apple-nav-content :is(.notif-bell, .mnav-btn):active { transform: scale(.92) !important; }
@@ -13448,7 +13448,7 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_) .cookie-bar .cookie-btn.ghost 
   html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 .photo-card-links .art-telegram-btn { width: auto !important; min-width: 0 !important; flex: none !important; height: 28px !important; border-radius: 9px !important; border: 0 !important; background: #f1f1f4 !important; color: #2a2a30 !important; box-shadow: none !important; }
   html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 .photo-card-links .art-telegram-btn.is-saved { background: #111111 !important; color: #ffffff !important; }
   html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 .photo-card-links .art-telegram-btn svg { width: 14px !important; height: 14px !important; }
-  html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 .photo-card-links .art-telegram-btn { background: #221d2a !important; color: #e8e4ee !important; }
+  html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 .photo-card-links .art-telegram-btn { background: #2d2e30 !important; color: #e4e6eb !important; }
   html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="photos"] #photo-row-1 .photo-card-links .art-telegram-btn.is-saved { background: #ec5f80 !important; color: #ffffff !important; }
 }
 /* עוגיות: "אישור" בורוד */
@@ -13474,7 +13474,7 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-like-btn.liked { 
 
 /* מובייל: כפתור פתיחת הסרגל התחתון (אחרי סגירה) — קטן ועדין (~60% פחות) */
 @media (max-width: 768px) {
-  html.mtab-hidden body:not(#_):not(#_):not(#_) .mtab-open { width: 36px !important; height: 36px !important; min-width: 0 !important; padding: 0 !important; bottom: calc(14px + env(safe-area-inset-bottom)) !important; box-shadow: 0 4px 12px rgba(0,0,0,.16) !important; background: rgba(24,20,30,.82) !important; -webkit-backdrop-filter: blur(14px) !important; backdrop-filter: blur(14px) !important; color: #ffffff !important; border: 1px solid rgba(255,255,255,.1) !important; }
+  html.mtab-hidden body:not(#_):not(#_):not(#_) .mtab-open { width: 36px !important; height: 36px !important; min-width: 0 !important; padding: 0 !important; bottom: calc(14px + env(safe-area-inset-bottom)) !important; box-shadow: 0 4px 12px rgba(0,0,0,.16) !important; background: rgba(36,37,38,.86) !important; -webkit-backdrop-filter: blur(14px) !important; backdrop-filter: blur(14px) !important; color: #ffffff !important; border: 1px solid rgba(255,255,255,.1) !important; }
   html.mtab-hidden body:not(#_):not(#_):not(#_) .mtab-open svg { width: 16px !important; height: 16px !important; }
 }
 
@@ -13491,7 +13491,7 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-like-btn.liked { 
   html body:not(#_):not(#_):not(#_):not(#_):not(#_) .home-welcome .hw-stats-wrap .hw-watch { width: 100% !important; margin: 0 !important; }
   /* שני הכרטיסים (נתוני היום / הנתונים שלי) באותו סגנון */
   html body:not(#_):not(#_):not(#_):not(#_):not(#_) .home-welcome :is(.hw-stats, .hw-watch) { background: #ffffff !important; border: 1px solid #ececf0 !important; border-radius: 16px !important; box-shadow: none !important; }
-  html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) .home-welcome :is(.hw-stats, .hw-watch) { background: #17141d !important; border-color: #2a2433 !important; }
+  html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) .home-welcome :is(.hw-stats, .hw-watch) { background: #242526 !important; border-color: #3a3b3c !important; }
   html body:not(#_):not(#_):not(#_):not(#_):not(#_) .home-welcome :is(.hw-stats, .hw-watch)::after { display: none !important; }
   html body:not(#_):not(#_):not(#_):not(#_):not(#_) .home-welcome .hw-watch-screen { background: transparent !important; border: 0 !important; box-shadow: none !important; }
 }
@@ -13521,7 +13521,7 @@ html body:not(#_):not(#_):not(#_):not(#_) .mnx .mnx-grid .mnx-item { justify-con
   .mview-label { font-size: 12px; font-weight: 700; color: #8a8f99; margin-inline-end: 4px; }
   html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .mview-btn { width: 30px !important; height: 30px !important; padding: 0 !important; border-radius: 9px !important; border: 0 !important; background: transparent !important; color: #8a8f99 !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; box-shadow: none !important; }
   html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .mview-btn.on { background: #f1f1f4 !important; color: #111111 !important; }
-  html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .mview-btn.on { background: #241f2d !important; color: #ec5f80 !important; }
+  html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .mview-btn.on { background: #303133 !important; color: #ec5f80 !important; }
   .mview-btn svg { width: 17px; height: 17px; }
 
   /* גריד (ברירת מחדל): 2 בשורה בכל ארבעת המקטעים */
@@ -13538,7 +13538,7 @@ html body:not(#_):not(#_):not(#_):not(#_) .mnx .mnx-grid .mnx-item { justify-con
   html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) .photo-card-links .art-telegram-btn { width: auto !important; min-width: 0 !important; flex: none !important; height: 28px !important; padding: 0 !important; border-radius: 9px !important; border: 0 !important; background: #f1f1f4 !important; color: #2a2a30 !important; box-shadow: none !important; }
   html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) .photo-card-links .art-telegram-btn > span { display: none !important; }
   html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) .photo-card-links .art-telegram-btn svg { width: 14px !important; height: 14px !important; }
-  html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) .photo-card-links .art-telegram-btn { background: #221d2a !important; color: #e8e4ee !important; }
+  html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) .photo-card-links .art-telegram-btn { background: #2d2e30 !important; color: #e4e6eb !important; }
   html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) .art-row-text > h3 { font-size: 13px !important; font-weight: 700 !important; margin: 0 2px 2px !important; line-height: 1.3 !important; display: -webkit-box !important; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden !important; }
   html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) .art-row-meta { font-size: 10px !important; margin: 0 2px 2px !important; gap: 1px 6px !important; flex-wrap: wrap !important; }
   html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) .art-row-meta .art-row-sep { display: none !important; }
@@ -13671,13 +13671,13 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-follow-btn.on { c
 .fx-pg.on { background: #fff1f4; border-color: #ec5f80; color: #c43d60; position: relative; z-index: 1; }
 .fx-pg.fx-next { margin-inline-start: 8px; border-radius: 6px; }
 .fx-gap { min-width: 34px; height: 32px; display: inline-grid; place-items: center; border: 1px solid #e3e3ea; margin-inline-start: -1px; color: #8a8f99; background: #ffffff; }
-html.theme-dark .fx-list { background: #17141d !important; border-color: #2a2433 !important; }
-html.theme-dark .fx-bar { background: #1d1924 !important; border-color: #2a2433 !important; }
-html.theme-dark .fx-row { border-color: #241f2d !important; }
-html.theme-dark .fx-row:hover { background: #1d1924 !important; }
-html.theme-dark .fx-title, html.theme-dark .fx-stats dd { color: #ebe8f0 !important; }
-html.theme-dark .fx-pages button, html.theme-dark .fx-pg, html.theme-dark .fx-gap { background: #17141d !important; border-color: #2f293a !important; }
-html.theme-dark .fx-pg.on { background: #2a1720 !important; border-color: #ec5f80 !important; color: #f27596 !important; }
+html.theme-dark .fx-list { background: #242526 !important; border-color: #3a3b3c !important; }
+html.theme-dark .fx-bar { background: #2a2b2d !important; border-color: #3a3b3c !important; }
+html.theme-dark .fx-row { border-color: #303133 !important; }
+html.theme-dark .fx-row:hover { background: #2a2b2d !important; }
+html.theme-dark .fx-title, html.theme-dark .fx-stats dd { color: #e4e6eb !important; }
+html.theme-dark .fx-pages button, html.theme-dark .fx-pg, html.theme-dark .fx-gap { background: #242526 !important; border-color: #3a3b3c !important; }
+html.theme-dark .fx-pg.on { background: #2c2d30 !important; border-color: #ec5f80 !important; color: #f27596 !important; }
 @media (max-width: 900px) {
   .fx-row { grid-template-columns: 40px minmax(0, 1fr) auto; gap: 10px; padding: 10px 12px; }
   .fx-stats, .fx-last { display: none; }
@@ -13697,7 +13697,7 @@ html.theme-dark .fx-pg.on { background: #2a1720 !important; border-color: #ec5f8
   html body:not(#_):not(#_):not(#_):not(#_) .sh-top-row .sh-act:nth-child(2) { background: #ec5f80 !important; border-color: #ec5f80 !important; color: #ffffff !important; }
   html body:not(#_):not(#_):not(#_):not(#_) .sh-top-row :is(.sh-filter-open, .sh-act) svg { width: 14px !important; height: 14px !important; }
   html body:not(#_):not(#_):not(#_):not(#_) .sh-top-row .sh-filter-open b { min-width: 16px; height: 16px; font-size: 10px; }
-  html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .sh-top-row :is(.sh-filter-open, .sh-act:not(:nth-child(2))) { background: #17141d !important; border-color: #2f293a !important; color: #ebe8f0 !important; }
+  html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .sh-top-row :is(.sh-filter-open, .sh-act:not(:nth-child(2))) { background: #242526 !important; border-color: #3a3b3c !important; color: #e4e6eb !important; }
   html body:not(#_):not(#_):not(#_) .sh-side-actions { display: none !important; }
 }
 
@@ -13711,7 +13711,7 @@ html.theme-dark .fx-pg.on { background: #2a1720 !important; border-color: #ec5f8
 @media (max-width: 768px) {
   html.mview-feed body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) { grid-template-columns: 1fr !important; gap: 0 !important; }
   html.mview-feed body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) > .art-row { position: relative !important; padding: 12px 0 14px !important; border-bottom: 1px solid #ececf0 !important; }
-  html.theme-dark.mview-feed body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) > .art-row { border-color: #241f2d !important; }
+  html.theme-dark.mview-feed body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) > .art-row { border-color: #303133 !important; }
   /* ראש: אווטאר + שם · תאריך */
   html.mview-feed body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) .art-row-meta { order: -4 !important; margin: 0 0 6px !important; padding-inline-end: 40px !important; flex-wrap: nowrap !important; gap: 6px !important; font-size: 12.5px !important; }
   html.mview-feed body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) .art-row-meta .photo-author-link { flex: 0 1 auto !important; font-size: 13px !important; font-weight: 700 !important; gap: 7px !important; }
@@ -13724,7 +13724,7 @@ html.theme-dark .fx-pg.on { background: #2a1720 !important; border-color: #ec5f8
   /* שורת כפתורים כגלולות */
   html.mview-feed body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) .photo-card-links { order: -1 !important; display: flex !important; gap: 8px !important; margin: 10px 0 0 !important; position: static !important; }
   html.mview-feed body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) .photo-card-links .art-telegram-btn { height: 34px !important; min-width: 44px !important; padding: 0 12px !important; border-radius: 999px !important; border: 1px solid #e3e3ea !important; background: transparent !important; flex: none !important; }
-  html.theme-dark.mview-feed body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) .photo-card-links .art-telegram-btn { border-color: #2f293a !important; background: transparent !important; }
+  html.theme-dark.mview-feed body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) .photo-card-links .art-telegram-btn { border-color: #3a3b3c !important; background: transparent !important; }
   html.mview-feed body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) .photo-card-links .art-telegram-btn svg { width: 17px !important; height: 17px !important; }
   html.mview-feed body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) .photo-card-links :is(.art-report-btn, .art-msg-btn) { display: none !important; }
   html.mview-feed body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) .photo-card-links .art-save-btn { margin-inline-start: 0 !important; }
@@ -13736,7 +13736,7 @@ html.theme-dark .fx-pg.on { background: #2a1720 !important; border-color: #ec5f8
 
 /* ===== חלון תגובות נפרד ===== */
 .pcw-wrap { position: fixed; inset: 0; z-index: 9600; }
-.pcw-backdrop { position: absolute; inset: 0; background: rgba(15, 13, 20, .45); opacity: 0; transition: opacity .2s ease; }
+.pcw-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,.5); opacity: 0; transition: opacity .2s ease; }
 .pcw { position: absolute; left: 50%; top: 50%; width: min(620px, 94vw); max-height: 84vh; transform: translate(-50%, -46%) scale(.98); opacity: 0; transition: transform .22s cubic-bezier(.2,.8,.2,1), opacity .2s ease; background: #ffffff; border-radius: 18px; box-shadow: 0 24px 60px rgba(0,0,0,.25); display: flex; flex-direction: column; overflow: hidden; direction: rtl; }
 .pcw-wrap.show .pcw-backdrop { opacity: 1; }
 .pcw-wrap.show .pcw { transform: translate(-50%, -50%) scale(1); opacity: 1; }
@@ -13748,9 +13748,9 @@ html.theme-dark .fx-pg.on { background: #2a1720 !important; border-color: #ec5f8
 .pcw-body { overflow-y: auto; padding: 8px 14px 16px; -webkit-overflow-scrolling: touch; }
 html body:not(#_):not(#_):not(#_) .pcw-body .pc-section { display: block !important; margin: 0 !important; border: 0 !important; box-shadow: none !important; padding: 0 !important; max-height: none !important; }
 html.pcw-open { overflow: hidden; }
-html.theme-dark .pcw { background: #17141d !important; color: #ebe8f0; }
-html.theme-dark .pcw-head { border-color: #2a2433 !important; }
-html.theme-dark .pcw-x { background: #241f2d !important; color: #ebe8f0 !important; }
+html.theme-dark .pcw { background: #242526 !important; color: #e4e6eb; }
+html.theme-dark .pcw-head { border-color: #3a3b3c !important; }
+html.theme-dark .pcw-x { background: #303133 !important; color: #e4e6eb !important; }
 @media (max-width: 768px) {
   .pcw { left: 0; right: 0; top: auto; bottom: 0; width: 100%; max-height: 86vh; border-radius: 18px 18px 0 0; transform: translateY(100%); opacity: 1; }
   .pcw-wrap.show .pcw { transform: translateY(0); }
@@ -13776,16 +13776,16 @@ html body:not(#_):not(#_):not(#_) .pcw-body details.pd2-acc > summary { display:
 
 /* כותרת חלון נפרד + עוגיות לא מעל החלון */
 html body:not(#_):not(#_):not(#_) .pcw-head b { color: #1d1d22 !important; }
-html.theme-dark body:not(#_):not(#_):not(#_) .pcw-head b { color: #ebe8f0 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) .pcw-head b { color: #e4e6eb !important; }
 html.pcw-open body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #cookie-bar { display: none !important; }
 
 /* תמונות בכרטיסים: כל התמונה נכנסת לפריים (בלי חיתוך) */
 html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) .art-row-img-wrap { background: #f1f1f4 !important; }
-html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) .art-row-img-wrap { background: #0c0a10 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) .art-row-img-wrap { background: #18191a !important; }
 html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) .art-row-img-wrap img { object-fit: contain !important; object-position: center !important; }
 html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .photos-page .art-row-img-wrap img { object-fit: contain !important; }
 html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .photos-page .art-row-img-wrap { background-color: #f1f1f4; }
-html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .photos-page .art-row-img-wrap { background-color: #0c0a10 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .photos-page .art-row-img-wrap { background-color: #18191a !important; }
 
 /* "גלריות נוספות שיעניינו אותך" — כל המקטע קטן בהרבה */
 html body:not(#_):not(#_):not(#_) .art-rec-section { zoom: .6; }
@@ -13862,18 +13862,18 @@ html.theme-dark body:not(#_):not(#_):not(#_) .uw-pills .uw-pill.on { border-colo
 .hs-bar { display: flex; align-items: center; gap: 10px; width: 100%; height: 44px; padding: 0 14px; margin: 4px 0 12px; border: 1px solid #dcdce3; border-radius: 999px; background: #ffffff; color: #8a8f99; font: inherit; cursor: text; text-align: start; }
 .hs-bar .hs-ic, .hs-bar .hs-img { width: 20px; height: 20px; flex: none; color: #6b7180; }
 .hs-ph { flex: 1; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-html.theme-dark .hs-bar { background: #17141d !important; border-color: #2f293a !important; color: #8d8899 !important; }
-html.theme-dark .hs-bar :is(.hs-ic, .hs-img) { color: #a8a3b3 !important; }
+html.theme-dark .hs-bar { background: #242526 !important; border-color: #3a3b3c !important; color: #b0b3b8 !important; }
+html.theme-dark .hs-bar :is(.hs-ic, .hs-img) { color: #b0b3b8 !important; }
 /* לשוניות כגלולות מלבניות */
 html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .hx-tabs { gap: 8px !important; border-bottom: 0 !important; padding: 2px 0 !important; margin: 0 0 12px !important; position: relative !important; top: auto !important; background: transparent !important; }
 html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .hx-tabs .hx-tab { height: 36px !important; padding: 0 16px !important; border-radius: 10px !important; background: #f0f0f3 !important; color: #3a3f4a !important; font-size: 13.5px !important; font-weight: 700 !important; }
 html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .hx-tabs .hx-tab.on { background: #111111 !important; color: #ffffff !important; }
 html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .hx-tabs .hx-tab::after { display: none !important; }
-html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .hx-tabs .hx-tab { background: #241f2d !important; color: #ebe8f0 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .hx-tabs .hx-tab { background: #303133 !important; color: #e4e6eb !important; }
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .hx-tabs .hx-tab.on { background: #e8e6ec !important; color: #111111 !important; }
 .hx-more { position: sticky; left: 0; flex: none; width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(127,127,140,.25); background: #ffffff; color: #1d1d22; display: grid; place-items: center; cursor: pointer; margin-inline-start: auto; box-shadow: -10px 0 14px rgba(246,247,249,.9); }
 .hx-more svg { width: 18px; height: 18px; }
-html.theme-dark .hx-more { background: #17141d !important; color: #ebe8f0 !important; box-shadow: -10px 0 14px rgba(15,13,20,.9) !important; }
+html.theme-dark .hx-more { background: #242526 !important; color: #e4e6eb !important; box-shadow: -10px 0 14px rgba(24,25,26,.9) !important; }
 /* קרוסלת תמונות בלי כיתוב */
 .hc { position: relative; border-radius: 18px; overflow: hidden; margin: 0 0 14px; background: #ececf0; }
 .hc-track { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; aspect-ratio: 16 / 9; }
@@ -13887,7 +13887,7 @@ html.theme-dark .hx-more { background: #17141d !important; color: #ebe8f0 !impor
 .hc-dots { position: absolute; bottom: 10px; left: 0; right: 0; display: flex; justify-content: center; gap: 6px; pointer-events: none; }
 .hc-dots i { width: 7px; height: 7px; border-radius: 99px; background: rgba(255,255,255,.55); transition: width .2s ease, background .2s ease; }
 .hc-dots i.on { width: 22px; background: #ffffff; }
-html.theme-dark .hc { background: #17141d !important; }
+html.theme-dark .hc { background: #242526 !important; }
 /* גלו עוד — הקהילות */
 .hx-explore { position: relative; border-radius: 18px; padding: 14px 0 14px 0; margin: 0 0 16px; background: linear-gradient(135deg, #fde7ef, #ede4fb); overflow: hidden; }
 .hx-explore h2 { margin: 0 16px 10px; font-size: 18px; font-weight: 800; color: #1d1d22; }
@@ -13901,9 +13901,9 @@ html.theme-dark .hc { background: #17141d !important; }
 .hx-card-ic svg { width: 28px; height: 28px; }
 .hx-explore-next { position: absolute; left: 8px; top: 50%; margin-top: 4px; width: 34px; height: 34px; border-radius: 50%; border: 0; background: rgba(17,17,17,.75); color: #fff; display: grid; place-items: center; cursor: pointer; }
 .hx-explore-next svg { width: 18px; height: 18px; }
-html.theme-dark .hx-explore { background: linear-gradient(135deg, #2a1722, #221a33) !important; }
-html.theme-dark .hx-explore h2, html.theme-dark .hx-card-text b { color: #ebe8f0 !important; }
-html.theme-dark .hx-card { background: #17141d !important; }
+html.theme-dark .hx-explore { background: linear-gradient(135deg, #26272a, #2c2d30) !important; }
+html.theme-dark .hx-explore h2, html.theme-dark .hx-card-text b { color: #e4e6eb !important; }
+html.theme-dark .hx-card { background: #242526 !important; }
 @media (min-width: 769px) {
   .hc-track { aspect-ratio: 21 / 8; }
   .hx-card { flex-basis: 30%; }
@@ -13921,7 +13921,7 @@ html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not
 
 /* ===== כוכבי דירוג: כוכבים צהובים מעוגלים ===== */
 :root { --star-on: #fdc229; --star-off: #d9d9df; }
-html.theme-dark { --star-on: #fdc229; --star-off: #3a3444; }
+html.theme-dark { --star-on: #fdc229; --star-off: #4a4b4d; }
 html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.uw-star, .urb-star) { font-size: 0 !important; width: 26px !important; height: 26px !important; display: inline-block !important; vertical-align: middle; background: var(--star-off) !important; color: transparent !important; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 3.2l2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 16.6l-5.2 2.8 1-5.9-4.3-4.1 5.9-.8z' fill='black' stroke='black' stroke-width='2.6' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 3.2l2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 16.6l-5.2 2.8 1-5.9-4.3-4.1 5.9-.8z' fill='black' stroke='black' stroke-width='2.6' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat; border: 0 !important; padding: 0 !important; margin: 0 1px !important; cursor: pointer; transition: transform .12s ease; }
 html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.uw-star.on, .uw-stars.static .uw-star.on) { background: var(--star-on) !important; }
 html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .urb-star[style*="f59e0b"] { background: var(--star-on) !important; }
@@ -13938,7 +13938,7 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_
 
 /* ===== פורומים — דף ראשי בסגנון פורום קלאסי (בהשראת הסולידית) ===== */
 :root { --fi-acc: #b0244a; --fi-line: #e6e6ec; --fi-head: #f6f3f5; --fi-muted: #8a8f99; }
-html.theme-dark { --fi-acc: #f27596; --fi-line: #2a2433; --fi-head: #1d1924; --fi-muted: #8d8899; }
+html.theme-dark { --fi-acc: #f27596; --fi-line: #3a3b3c; --fi-head: #2a2b2d; --fi-muted: #b0b3b8; }
 .fi-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
 @media (min-width: 1100px) { .fi-layout { grid-template-columns: minmax(0, 1fr) 290px; align-items: start; } }
 .fi-cat { background: #ffffff; border: 1px solid var(--fi-line); border-radius: 10px; overflow: hidden; margin: 0 0 16px; }
@@ -13974,9 +13974,9 @@ html.theme-dark { --fi-acc: #f27596; --fi-line: #2a2433; --fi-head: #1d1924; --f
 .fi-new-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .fi-new-text b { font-size: 13px; font-weight: 600; color: var(--fi-acc); line-height: 1.35; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .fi-new-text small { font-size: 11.5px; color: var(--fi-muted); }
-html.theme-dark .fi-cat, html.theme-dark .fi-side-box { background: #17141d !important; }
-html.theme-dark .fi-row:hover, html.theme-dark .fi-new:hover { background: #1d1924 !important; }
-html.theme-dark .fi-stat b { color: #ebe8f0 !important; }
+html.theme-dark .fi-cat, html.theme-dark .fi-side-box { background: #242526 !important; }
+html.theme-dark .fi-row:hover, html.theme-dark .fi-new:hover { background: #2a2b2d !important; }
+html.theme-dark .fi-stat b { color: #e4e6eb !important; }
 @media (max-width: 1099px) { .fi-side { display: none; } }
 /* מובייל: כמו בהשראה — אייקון בצד, כותרת, "נושאים: N הודעות: N", ההודעה האחרונה מתחת */
 @media (max-width: 768px) {
@@ -13989,7 +13989,7 @@ html.theme-dark .fi-stat b { color: #ebe8f0 !important; }
   .fi-sub { display: none; }
   .fi-mstats { display: flex; gap: 10px; font-size: 12.5px; color: var(--fi-muted); }
   .fi-mstats b { color: #1d1d22; font-weight: 600; }
-  html.theme-dark .fi-mstats b { color: #ebe8f0; }
+  html.theme-dark .fi-mstats b { color: #e4e6eb; }
   .fi-mlast { display: flex; flex-direction: column; gap: 1px; }
   .fi-mlast .fi-last-title { max-width: 100%; font-size: 13px; }
   .fi-icon svg { width: 28px; height: 24px; }
@@ -14000,7 +14000,7 @@ html.theme-dark .fi-stat b { color: #ebe8f0 !important; }
 .fo-thread-meta b { color: var(--fi-acc, #b0244a); font-weight: 600; }
 .fo-quote { margin: 0 0 10px; padding: 8px 12px; border-inline-start: 3px solid #f0a35e; background: rgba(240,163,94,.08); border-radius: 4px; font-size: 13px; color: #4b505b; cursor: pointer; display: flex; flex-direction: column; gap: 4px; }
 .fo-quote b { font-size: 12.5px; color: #c46a1f; font-weight: 700; }
-html.theme-dark .fo-quote { background: rgba(240,163,94,.08) !important; color: #c9c4d2 !important; }
+html.theme-dark .fo-quote { background: rgba(240,163,94,.08) !important; color: #c9ccd1 !important; }
 .fo-post-share { border: 0; background: none; color: inherit; opacity: .7; cursor: pointer; padding: 0 6px; display: inline-flex; vertical-align: middle; }
 .fo-post-share svg { width: 15px; height: 15px; }
 .fo-quote-btn { margin-inline-start: 6px; }
@@ -14068,7 +14068,7 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_
 html.hdr-can-back .hdr-back { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; min-width: 32px; margin-inline-end: 6px; padding: 0; border: 1px solid rgba(127,127,140,.28); border-radius: 50%; background: transparent; color: var(--hd-ink, #1d1d22); cursor: pointer; flex: none; }
 .hdr-back svg { width: 17px; height: 17px; }
 .hdr-back:hover { color: #ec5f80; }
-html.theme-dark .hdr-back { color: #ebe8f0 !important; border-color: #3a3346 !important; }
+html.theme-dark .hdr-back { color: #e4e6eb !important; border-color: #4a4b4d !important; }
 html body:not(#_):not(#_):not(#_):not(#_) .apple-nav-content { align-items: center; }
 html.hdr-can-back body:not(#_):not(#_):not(#_):not(#_):not(#_) #mainContent :is(.art-back-btn, .pf-back, .fo-nav .fo-back) { display: none !important; }
 
@@ -14112,11 +14112,11 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_
 .rec-mini-item { flex: 0 0 46px; width: 46px; height: 46px; padding: 0; border: 1px solid #e3e3ea; border-radius: 12px; overflow: hidden; background: #f1f1f4; cursor: pointer; }
 .rec-mini-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .rec-mini-item:active { transform: scale(.94); }
-html.theme-dark .rec-mini-item { border-color: #2f293a !important; background: #1d1924 !important; }
+html.theme-dark .rec-mini-item { border-color: #3a3b3c !important; background: #2a2b2d !important; }
 html body:not(#_):not(#_):not(#_):not(#_) .art-rec-section.rec-mini-src { display: none !important; }
 .rec-mini-wrap { display: flex; flex-direction: column; gap: 4px; margin: 0 0 6px; }
 .rec-mini-label { font-size: 11px; font-weight: 700; letter-spacing: .02em; color: #8a8f99; }
-html.theme-dark .rec-mini-label { color: #8d8899 !important; }
+html.theme-dark .rec-mini-label { color: #b0b3b8 !important; }
 
 
 /* ===== תיבת הסינון בצד: לשוניות-גלולות (כמו "סינונים / קהילה / אתרים / מידע"), קטנה ומסודרת ===== */
@@ -14223,7 +14223,7 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_
 
 /* מצבים פעילים ברורים (בהיר וכהה): לייק = אגודל כחול מלא, שיתוף = ירוק, שמור/עוקב = מלא */
 :root { --act-like: #1d72f2; --act-rep: #00a36c; --act-ink: #111111; --act-idle: #2a2e36; }
-html.theme-dark { --act-like: #4c9bff; --act-rep: #2fd59b; --act-ink: #ffffff; --act-idle: #d6d1de; }
+html.theme-dark { --act-like: #4c9bff; --act-rep: #2fd59b; --act-ink: #ffffff; --act-idle: #c9ccd1; }
 html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .photo-card-links .art-telegram-btn { color: var(--act-idle) !important; }
 html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .photo-card-links .art-telegram-btn svg { stroke-width: 1.9 !important; }
 html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .photo-card-links .art-like-btn.liked { color: var(--act-like) !important; }
@@ -14264,3 +14264,25 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_
   html.mview-list body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) .art-row-meta::after { content: "" !important; order: 3 !important; flex-basis: 100% !important; height: 0 !important; display: block !important; }
   html.mview-list body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) .art-row-meta > span:not(.photo-author-link):not(.card-head-acts) { order: 4 !important; font-size: 10.5px !important; padding-inline-start: 34px; }
 }
+
+
+/* תיאור בכרטיס (כמו פוסט): עד 4 שורות ואז "קרא עוד..."; שורת הכפתורים קרובה לתמונה */
+.card-desc { display: none; }
+.card-desc-more { display: none; }
+@media (max-width: 768px) {
+  html.mview-list body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) .card-desc { display: -webkit-box !important; -webkit-box-orient: vertical; -webkit-line-clamp: 4; overflow: hidden; order: -3 !important; margin: 0 2px 6px !important; font-size: 14px !important; line-height: 1.5 !important; font-weight: 400 !important; color: #1d1d22 !important; white-space: pre-line; }
+  html.mview-list body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) .card-desc.open { display: block !important; -webkit-line-clamp: unset; overflow: visible; }
+  html.mview-list body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) .card-desc-more { display: inline-block !important; order: -3 !important; align-self: flex-start; margin: -4px 2px 8px !important; padding: 0 !important; border: 0 !important; background: none !important; font: inherit !important; font-size: 13px !important; font-weight: 600 !important; color: #8a8f99 !important; cursor: pointer; }
+  html.mview-list body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) .art-row-text > h3 { margin-bottom: 4px !important; }
+  /* שורת הכפתורים כמו בפייסבוק: קרובה לתמונה, לייק · תגובות · שיתוף ושמירה בסוף */
+  html.mview-list body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) .photo-card-links { justify-content: flex-start !important; gap: 22px !important; margin: 8px 4px 2px !important; }
+  html.mview-list body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) .photo-card-links .art-telegram-btn svg { width: 21px !important; height: 21px !important; }
+  html.mview-list body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) .photo-card-links .art-telegram-btn .pc-n { font-size: 13.5px !important; font-weight: 500 !important; }
+  html.mview-list body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) .photo-card-links .art-save-btn { margin-inline-start: auto !important; }
+}
+
+/* ===== גופן האתר: נקי וקריא כמו בפייסבוק (גופן המערכת), גודל טקסט בסיסי 15px ===== */
+:root { --site-font: -apple-system, BlinkMacSystemFont, "Segoe UI", "SF Pro Text", "Helvetica Neue", Roboto, "Noto Sans Hebrew", Arial, sans-serif; }
+html body, html body :is(button, input, textarea, select, h1, h2, h3, h4, h5, h6, p, span, a, b, small, strong, label, li, div) { font-family: var(--site-font) !important; }
+html body { font-size: 15px; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; letter-spacing: 0; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .card-desc { font-size: 15px !important; line-height: 1.45 !important; }

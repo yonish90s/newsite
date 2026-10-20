@@ -7,10 +7,10 @@
 import re, os
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PAGE, CARD, SURF, SURF2, RAISE = '#0f0d14', '#17141d', '#1d1924', '#252030', '#2f293a'
-BORDER = '#2a2433'
+PAGE, CARD, SURF, SURF2, RAISE = '#18191a', '#242526', '#2a2b2d', '#303133', '#3a3b3c'
+BORDER = '#3a3b3c'
 TEXT, TEXT2, MUTED = '#eceef1', '#c8cdd4', '#9aa2ad'
-ACC = '#352e42'
+ACC = '#3e4042'
 
 HEX = r'#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3,4})\b'
 RGB = r'rgba?\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*(?:,\s*[\d.]+\s*)?\)'
