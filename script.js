@@ -29327,7 +29327,7 @@ function homeHeroCarouselHTML(photos, comics, stories) {
   if (pick.length < 2) return '';
   const slides = pick.slice(0, 7).map(({ x, kind }) => {
     const open = kind === 'photo' ? `homeOpenPhotos(); setTimeout(() => photoOpenDetail('${artEsc(x.id)}'), 450)` : `storyOpenDetail('${artEsc(x.id)}')`;
-    return `<button type="button" class="hc-slide${x.isAdult && !adultOk ? ' blur' : ''}" onclick="${open}"><img src="${escHtml(img(x))}" alt="" loading="lazy"></button>`;
+    return `<button type="button" class="hc-slide${x.isAdult && !adultOk ? ' blur' : ''}" onclick="${open}"><span class="hc-bg" style="background-image:url('${escHtml(String(img(x)).replace(/'/g, '%27'))}')"></span><img src="${escHtml(img(x))}" alt="" loading="lazy"></button>`;
   }).join('');
   const dots = pick.slice(0, 7).map((_, i) => `<i class="${i === 0 ? 'on' : ''}"></i>`).join('');
   setTimeout(hcInit, 60);
