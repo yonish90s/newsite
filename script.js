@@ -6858,6 +6858,7 @@ function storyCardHTML(s, iconHint) {
 
     const cardLinksHTML = `
       <div class="photo-card-links">
+        ${cardStatsBtnsHTML(s, 'story')}
         ${cardSaveBtnHTML}
         ${cardLink(s.telegramUrl, 'טלגרם', 'M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z')}
         ${cardLink(s.emailUrl, 'אימייל', 'M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z', '<polyline points="22,6 12,13 2,6"/>')}
@@ -8708,7 +8709,7 @@ function renderPhotoCard(p, options = {}) {
 
   const cardLinksHTML = `
     <div class="photo-card-links">
-      <button type="button" class="art-telegram-btn art-like-btn${isLikedCard ? ' liked' : ''}" onclick="event.stopPropagation(); photoToggleLike('${artEsc(p.id)}')" title="לייק" aria-label="לייק"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M7.5 10.5v9.5H4.8a1 1 0 0 1-1-1v-7.5a1 1 0 0 1 1-1z"/><path d="M7.5 10.5 11 4a2.4 2.4 0 0 1 2.6 2.7L13.2 9.5h5.3a2 2 0 0 1 2 2.4l-1.3 6.5a2 2 0 0 1-2 1.6H7.5"/></svg></button>
+      ${cardStatsBtnsHTML(p, 'photo')}
       ${cardSaveBtnHTML}
       ${cardLink(p.telegramUrl, 'טלגרם', 'M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z')}
       ${cardLink(p.emailUrl, 'אימייל', 'M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z', '<polyline points="22,6 12,13 2,6"/>')}
@@ -29402,3 +29403,39 @@ function recMiniEnhance() {
   const start = () => obs.observe(document.body, { childList: true, subtree: true });
   if (document.body) start(); else document.addEventListener('DOMContentLoaded', start);
 })();
+
+
+// ============================================================
+// כרטיסים: לייק / תגובות / שיתופים — עם המספר ליד האייקון
+// ============================================================
+var cardCmtCounts = {};
+var cardCmtSubscribed = false;
+function cardCmtSubscribe() {
+  if (cardCmtSubscribed) return;
+  cardCmtSubscribed = true;
+  const apply = () => document.querySelectorAll('.art-cmt-btn[data-id]').forEach(b => { const n = cardCmtCounts[b.dataset.id] || 0; const el = b.querySelector('.pc-n'); if (el) el.textContent = n ? formatViews(n) : ''; });
+  ['photo_comments', 'story_comments'].forEach(k => {
+    try {
+      onValue(ref(db, `website/${k}`), snap => {
+        const v = snap.val() || {};
+        Object.keys(v).forEach(id => { cardCmtCounts[id] = Object.keys(v[id] || {}).length; });
+        apply();
+      });
+    } catch (e) {}
+  });
+}
+function cardStatsBtnsHTML(a, kind) {
+  if (!a || !a.id) return '';
+  try { cardCmtSubscribe(); } catch (e) {}
+  try { if (typeof subscribeReposts === 'function') subscribeReposts(); } catch (e) {}
+  const id = artEsc(a.id);
+  const liked = typeof photoIsLikedLocal === 'function' && photoIsLikedLocal(a.id);
+  const likes = Number(a.likes) || 0;
+  const cmts = cardCmtCounts[a.id] || 0;
+  const reps = typeof repostCount === 'function' ? repostCount(a.id) : 0;
+  const n = v => v ? formatViews(v) : '';
+  const open = kind === 'photo' ? `photoOpenDetail('${id}')` : `storyOpenDetail('${id}')`;
+  return `<button type="button" class="art-telegram-btn art-like-btn${liked ? ' liked' : ''}" onclick="event.stopPropagation(); photoToggleLike('${id}')" title="לייק" aria-label="לייק"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M7.5 10.5v9.5H4.8a1 1 0 0 1-1-1v-7.5a1 1 0 0 1 1-1z"/><path d="M7.5 10.5 11 4a2.4 2.4 0 0 1 2.6 2.7L13.2 9.5h5.3a2 2 0 0 1 2 2.4l-1.3 6.5a2 2 0 0 1-2 1.6H7.5"/></svg><span class="pc-n">${likes || ''}</span></button>
+    <button type="button" class="art-telegram-btn art-cmt-btn" data-id="${escHtml(a.id)}" onclick="event.stopPropagation(); ${open}; setTimeout(() => { if (typeof openCommentsWindow === 'function') openCommentsWindow(); }, 900)" title="תגובות" aria-label="תגובות"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M20.5 11.5a8 8 0 0 1-11.7 7.1L4 20l1.3-4.4A8 8 0 1 1 20.5 11.5z"/></svg><span class="pc-n">${n(cmts)}</span></button>
+    <button type="button" class="art-telegram-btn art-rep-btn pti-repost" data-item="${escHtml(a.id)}" onclick="event.stopPropagation(); toggleRepost('${id}', this)" title="שיתוף לפרופיל" aria-label="שיתוף"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M14 5l6 6-6 6"/><path d="M20 11H10a6 6 0 0 0-6 6v2"/></svg><b class="pti-n pc-n">${n(reps)}</b></button>`;
+}
