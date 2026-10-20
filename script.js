@@ -8283,6 +8283,7 @@ let artPagObserver = null;
 // לקרוא לעימוד בכל אתר קריאה בנפרד מסנכרנים אותו אחרי כל שינוי ב-DOM
 function artSyncPagination() {
   if (typeof mainContent === 'undefined' || !mainContent) return;
+  try { if (typeof hdrBackSync === 'function') hdrBackSync(); } catch (e) {}
   if (typeof avatarHydrate === 'function') avatarHydrate(mainContent);
   // סרגל הטאבים במובייל: מסמנים את הטאב של העמוד הפתוח
   const _mq = (sel) => !!mainContent.querySelector(sel);
@@ -19074,7 +19075,14 @@ window.syncUserLikeBudget = syncUserLikeBudget;
 function recoFindAlbum(id) {
   try { return ((typeof photoGetAlbums === 'function') ? photoGetAlbums() : []).find(x => x && String(x.id) === String(id)) || null; } catch (e) { return null; }
 }
+// תגובה מיידית: מעדכנים את הלב מיד, ואת העבודה הכבדה (שמירה וסנכרון) עושים אחרי שהמסך התעדכן
 function photoToggleLike(id) {
+  try {
+    document.querySelectorAll(`.art-like-btn[onclick*="'${id}'"]`).forEach(b => b.classList.toggle('liked'));
+  } catch (e) {}
+  setTimeout(() => _photoToggleLikeImpl(id), 16);
+}
+function _photoToggleLikeImpl(id) {
   try { if (!photoIsLikedLocal(id)) recoTrack(recoFindAlbum(id), 'like'); } catch (e) {}
   const isHomeFeed = (typeof activePageId !== 'undefined' && activePageId === 'page-home-feed') ||
                      (mainContent && !!mainContent.querySelector('.home-feed-page'));
@@ -29308,3 +29316,32 @@ function homeExploreHTML() {
 }
 Object.assign(window, { hcGo, hcSync });
 Object.assign(UI_EN, { 'חיפוש תמונות, משתמשים, קהילות ועוד': 'Search photos, users, communities and more', 'גלו עוד': 'Explore more', 'גלריות מהקהילה': 'Galleries from the community', 'קנייה, מכירה והשאלה': 'Buy, sell and lend', 'לדבר, לשאול ולהכיר': 'Talk, ask and meet', 'ציורים ורצועות': 'Drawings and strips', 'קצרים ומאמרים': 'Shorts and articles', 'התאמה ודייט אמיתי': 'Match and real date', 'החליקו ומצאו התאמה': 'Swipe and find a match' });
+
+
+// ============================================================
+// כפתור "חזרה" בכותרת — מימין ללוגו, רק כשיש לאן לחזור (מפעיל את כפתור החזרה של העמוד)
+// ============================================================
+function hdrBackTarget() {
+  if (typeof mainContent === 'undefined' || !mainContent) return null;
+  return mainContent.querySelector('.art-back-btn, .pf-back, .fo-nav .fo-back, .q-back');
+}
+function hdrBackSync() {
+  const home = !!(mainContent && mainContent.querySelector('.home-feed-page'));
+  const can = !!hdrBackTarget() || !home;
+  document.documentElement.classList.toggle('hdr-can-back', can);
+}
+function hdrBack() {
+  const t = hdrBackTarget();
+  if (t) { t.click(); return; }
+  if (history.length > 1) history.back(); else if (typeof goToHomePage === 'function') goToHomePage();
+}
+Object.assign(window, { hdrBack });
+
+
+// כל לחיצה מקבלת תגובה ויזואלית מיידית (גם לפני שהפעולה עצמה מסתיימת)
+document.addEventListener('pointerdown', e => {
+  const b = e.target.closest && e.target.closest('button, .pti, .art-telegram-btn, .mtab, [role="button"]');
+  if (!b) return;
+  b.classList.remove('tap-pop'); void b.offsetWidth; b.classList.add('tap-pop');
+  setTimeout(() => b.classList.remove('tap-pop'), 260);
+}, { passive: true });

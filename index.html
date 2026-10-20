@@ -15,8 +15,8 @@
   <!-- ספריית localforage לשמירת תמונות -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
   <!-- קישור לקובץ העיצוב החיצוני (עם פרמטר למניעת שמירה במטמון) -->
-  <link rel="stylesheet" href="./style.css?v=1770">
-  <link rel="stylesheet" href="./dark.css?v=188">
+  <link rel="stylesheet" href="./style.css?v=1775">
+  <link rel="stylesheet" href="./dark.css?v=193">
   <script>
     // מצב בהיר/כהה — נקבע לפני שהדף מצויר כדי שלא יהבהב (בחירה שמורה, אחרת לפי הגדרות המכשיר)
     (function () {
@@ -203,6 +203,8 @@
     <!-- הסרגל העליון של האתר (Apple Nav) -->
     <header class="apple-nav">
       <div class="apple-nav-content">
+        <!-- חזרה — מימין ללוגו, מופיע רק כשיש לאן לחזור -->
+        <button type="button" id="hdr-back" class="hdr-back" onclick="hdrBack()" aria-label="חזרה" title="חזרה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
         <!-- לוגו האתר -->
         <div class="logo-area" style="cursor: pointer;" title="לוגו האתר - חזרה לדף הבית" onclick="if(typeof goToHomePage === 'function') goToHomePage();">
           <img id="main-logo" src="./logo.png" alt="לוגו" style="height: 20px; display: block; cursor: pointer;">
@@ -1238,7 +1240,7 @@ html.theme-dark .pl-bar { background: #2a2f37; }
     try { if (localStorage.getItem('mtab_hidden') === '1') document.documentElement.classList.add('mtab-hidden'); } catch (e) {}
   </script>
   <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
-  <script type="module" src="./script.js?v=1657"></script>
+  <script type="module" src="./script.js?v=1661"></script>
   <script defer src="./a11y.js?v=1"></script>
 </body>
 </html>

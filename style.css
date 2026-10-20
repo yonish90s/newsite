@@ -14062,3 +14062,26 @@ html.mview-feed body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not
 html.mview-feed body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pfeed-page .pc-post .pc-post-media img { position: static !important; width: 100% !important; height: auto !important; max-height: 80vh !important; object-fit: contain !important; display: block !important; }
 html.mview-feed body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pfeed-page .pc-post .pc-post-btn { display: none !important; }
 html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pfeed-page .pc-post-count { display: none !important; }
+
+/* כפתור "חזרה" בכותרת, מימין ללוגו; כפתורי החזרה שבתוך העמוד מוסתרים (הכותרת מפעילה אותם) */
+.hdr-back { display: none; }
+html.hdr-can-back .hdr-back { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; min-width: 32px; margin-inline-end: 6px; padding: 0; border: 1px solid rgba(127,127,140,.28); border-radius: 50%; background: transparent; color: var(--hd-ink, #1d1d22); cursor: pointer; flex: none; }
+.hdr-back svg { width: 17px; height: 17px; }
+.hdr-back:hover { color: #ec5f80; }
+html.theme-dark .hdr-back { color: #ebe8f0 !important; border-color: #3a3346 !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .apple-nav-content { align-items: center; }
+html.hdr-can-back body:not(#_):not(#_):not(#_):not(#_):not(#_) #mainContent :is(.art-back-btn, .pf-back, .fo-nav .fo-back) { display: none !important; }
+
+/* תגובה מהירה ללחיצות: בלי השהיית הדאבל-טאפ במובייל + אנימציית לחיצה קצרה */
+button, a, [role="button"], .pti, .art-telegram-btn, .mtab { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+@keyframes tapPop { 0% { transform: scale(1); } 40% { transform: scale(.88); } 100% { transform: scale(1); } }
+.tap-pop { animation: tapPop .24s ease-out; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photo-card-links .art-telegram-btn, .pti) { transition: background-color .08s ease, color .08s ease, border-color .08s ease !important; }
+/* לוגו נשאר צמוד לכפתור החזרה */
+html body:not(#_):not(#_):not(#_):not(#_) .apple-nav-content > .logo-area { margin-inline-end: auto !important; }
+/* "הפיד שלי": שורת היוצר תמיד מעל התמונה (בכל התצוגות) */
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pfeed-page .pc-post { display: flex !important; flex-direction: column !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pfeed-page .pc-post > .pc-repost-by { order: -3 !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pfeed-page .pc-post > :is(.pc-post-head, .pc-post-kind) { order: -2 !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pfeed-page .pc-post > .pc-post-media { order: -1 !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pfeed-page .pc-post-foot { display: none !important; }
