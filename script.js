@@ -28890,7 +28890,7 @@ window.sidePanelResizeStart = sidePanelResizeStart;
 // ============================================================
 // מובייל: בורר "תצוגה" אחיד (גריד 2 בשורה / רשימה 1 בשורה) בתמונות, קומיקס, סיפורים ויד 2
 // ============================================================
-function mviewGet() { try { const v = localStorage.getItem('m_view'); return v === 'list' || v === 'feed' ? v : 'grid'; } catch (e) { return 'grid'; } }
+function mviewGet() { try { const v = localStorage.getItem('m_view'); return v === 'list' || v === 'grid' ? v : 'feed'; } catch (e) { return 'feed'; } }  // ברירת מחדל: פיד
 function mviewApply() { const v = mviewGet(); document.documentElement.classList.toggle('mview-list', v === 'list' || v === 'feed'); document.documentElement.classList.toggle('mview-feed', v === 'feed'); }
 function mviewSet(v) {
   try { localStorage.setItem('m_view', v); } catch (e) {}
