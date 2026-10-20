@@ -8286,7 +8286,7 @@ function artSyncPagination() {
   if (typeof avatarHydrate === 'function') avatarHydrate(mainContent);
   // סרגל הטאבים במובייל: מסמנים את הטאב של העמוד הפתוח
   const _mq = (sel) => !!mainContent.querySelector(sel);
-  const _tab = _mq('.home-feed-page') ? 'home' : _mq('.forums-page') ? 'forums' : _mq('.news-page') ? 'news' : _mq('.communities-page') ? 'communities'
+  const _tab = _mq('.home-feed-page') ? 'home' : _mq('.forums-page') ? 'forums' : _mq('.user-page') ? 'profile' : _mq('.news-page') ? 'news' : _mq('.communities-page') ? 'communities'
     : _mq('.photos-page[data-section="photos"]:not(.home-feed-photos)') ? 'photos' : _mq('.photos-page[data-section="secondhand"]') ? 'products' : '';
   document.querySelectorAll('#mtabs .mtab').forEach(b => b.classList.toggle('active', b.dataset.tab === _tab));
   if (typeof sideRailSync === 'function') sideRailSync();
@@ -14863,6 +14863,127 @@ const FORUM_TABS = [
   { id: 'polls', label: 'סקרים' }
 ];
 
+const FORUM_PREFIXES = [
+  { id: 'דיון', ic: '💬', cls: 'disc' },
+  { id: 'שאלה', ic: '❓', cls: 'qa' },
+  { id: 'הצעה', ic: '💡', cls: 'idea' },
+  { id: 'שיתוף', ic: '📢', cls: 'share' },
+  { id: 'המלצה', ic: '🔥', cls: 'hot' }
+];
+window.__foAttachNew = [];
+window.__foAttachReply = [];
+window.__foPrefix = '';
+
+function forumSetPrefix(p) {
+  window.__foPrefix = (window.__foPrefix === p) ? '' : p;
+  document.querySelectorAll('.fo-pfx-btn').forEach(b => b.classList.toggle('on', b.dataset.p === window.__foPrefix));
+}
+window.forumSetPrefix = forumSetPrefix;
+
+async function forumAttachPick(files, isReply) {
+  const arr = isReply ? window.__foAttachReply : window.__foAttachNew;
+  const list = [...(files || [])].filter(f => /^image\//.test(f.type)).slice(0, 4 - arr.length);
+  for (const f of list) {
+    try {
+      const data = await artCompressImage(f, 1280, 0.78);
+      if (data && data.length < 400000) arr.push(data);
+      else if (data && typeof showCopyToast === 'function') showCopyToast('התמונה גדולה מדי');
+    } catch (e) {}
+  }
+  forumRenderAttach(isReply);
+}
+function forumRemoveAttach(i, isReply) {
+  const arr = isReply ? window.__foAttachReply : window.__foAttachNew;
+  arr.splice(i, 1);
+  forumRenderAttach(isReply);
+}
+function forumRenderAttach(isReply) {
+  const box = document.getElementById(isReply ? 'fo-reply-attach-prev' : 'fo-new-attach-prev');
+  if (!box) return;
+  const arr = isReply ? window.__foAttachReply : window.__foAttachNew;
+  box.innerHTML = arr.map((src, i) => `<span class="fo-att-thumb"><img src="${src}" alt=""><button type="button" onclick="forumRemoveAttach(${i}, ${isReply ? 'true' : 'false'})" aria-label="הסרה">✕</button></span>`).join('');
+  box.style.display = arr.length ? 'flex' : 'none';
+}
+function forumInsertFmt(targetId, before, after) {
+  const el = document.getElementById(targetId);
+  if (!el) return;
+  const s = el.selectionStart || 0, e = el.selectionEnd || 0;
+  const val = el.value || '';
+  const sel = val.slice(s, e) || 'טקסט';
+  el.value = val.slice(0, s) + before + sel + (after || '') + val.slice(e);
+  el.focus();
+  el.setSelectionRange(s + before.length, s + before.length + sel.length);
+}
+function forumPlusAction() {
+  if (forumTab === 'questions' && typeof openQuestionModal === 'function') { openQuestionModal(); return; }
+  if (forumTab === 'polls' && typeof pollsSetCreating === 'function') { pollsSetCreating(true); return; }
+  if (forumView && forumView.topicId) { forumFocusReply(); return; }
+  forumSetComposing(true);
+  setTimeout(() => {
+    const box = document.querySelector('.fo-compose');
+    if (box) box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 40);
+}
+Object.assign(window, { forumAttachPick, forumRemoveAttach, forumRenderAttach, forumInsertFmt, forumPlusAction });
+
+function forumComposeBoxHTML(fixedForumId) {
+  const cats = forumCats();
+  const allForums = cats.flatMap(c => c.forums);
+  const selectedForumId = fixedForumId || forumView.forumId || (allForums[0] && allForums[0].id) || 'gate';
+  const curName = forumAnonOn() ? 'אנונימי' : (forumRegistered() ? forumMyName() : (forumGuestName() || 'אורח'));
+  const curUid = (!forumAnonOn() && forumRegistered() && auth.currentUser) ? auth.currentUser.uid : '';
+  const attachArr = window.__foAttachNew || [];
+  return `
+    <div class="fo-compose">
+      <div class="fo-compose-head">
+        <div class="fo-compose-who">
+          <span class="fo-compose-av">${forumAvatar(curName, curUid)}</span>
+          <div class="fo-compose-who-txt">
+            <b>פתיחת נושא חדש בפורום</b>
+            <small>מפרסם בתור: <span>${escHtml(curName)}</span></small>
+          </div>
+        </div>
+        ${forumAnonToggleHTML()}
+      </div>
+      ${forumAnonOn() ? '' : forumGuestNameFieldHTML('fo-new-name')}
+      <div class="fo-compose-meta-row">
+        <label class="fo-compose-cat">
+          <span>פורום:</span>
+          <select id="fo-new-forum" class="fo-select">
+            ${cats.map(c => `<optgroup label="${escHtml(c.title)}">${c.forums.map(f => `<option value="${escHtml(f.id)}"${f.id === selectedForumId ? ' selected' : ''}>${escHtml(f.title)}</option>`).join('')}</optgroup>`).join('')}
+          </select>
+        </label>
+        <div class="fo-pfx-bar" role="group" aria-label="תגית נושא">
+          ${FORUM_PREFIXES.map(p => `<button type="button" class="fo-pfx-btn ${p.cls}${window.__foPrefix === p.id ? ' on' : ''}" data-p="${p.id}" onclick="forumSetPrefix('${p.id}')"><span>${p.ic}</span>${p.id}</button>`).join('')}
+        </div>
+      </div>
+      <input id="fo-new-title" class="fo-input fo-title-in" maxlength="120" placeholder="כותרת הנושא (ברורה ומזמינה לדיון)...">
+      <div class="fo-editor-wrap">
+        <div class="fo-toolbar">
+          <button type="button" class="fo-tool-btn" onclick="forumInsertFmt('fo-new-text','**','**')" title="הדגשה"><b>B</b></button>
+          <button type="button" class="fo-tool-btn" onclick="forumInsertFmt('fo-new-text','• ','')" title="רשימה">• רשימה</button>
+          <button type="button" class="fo-tool-btn" onclick="forumInsertFmt('fo-new-text','> ','')" title="ציטוט">❝ ציטוט</button>
+          <label class="fo-tool-btn fo-tool-upload" title="צירוף תמונות לנושא">
+            <input type="file" accept="image/*" multiple style="display:none" onchange="forumAttachPick(this.files, false); this.value=''">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg>
+            <span>צירוף תמונה</span>
+          </label>
+        </div>
+        <textarea id="fo-new-text" class="fo-input fo-textarea" rows="5" maxlength="5000" placeholder="כתבו כאן את תוכן ההודעה, שאלה או נושא לדיון..."></textarea>
+        <div id="fo-new-attach-prev" class="fo-attach-prev" style="display:${attachArr.length ? 'flex' : 'none'}">
+          ${attachArr.map((src, i) => `<span class="fo-att-thumb"><img src="${src}" alt=""><button type="button" onclick="forumRemoveAttach(${i}, false)" aria-label="הסרה">✕</button></span>`).join('')}
+        </div>
+      </div>
+      <div class="fo-compose-actions">
+        <button type="button" class="fo-btn fo-submit-btn" onclick="forumCreateTopic()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="m22 2-7 20-4-9-9-4 20-7z"/></svg>
+          <span>פרסום הנושא בפורום</span>
+        </button>
+        <button type="button" class="fo-btn ghost" onclick="forumSetComposing(false)">ביטול</button>
+      </div>
+    </div>`;
+}
+
 function forumViewHTML() {
   if (forumView.topicId && forumView.forumId) return forumTopicHTML();
   if (forumView.forumId) return forumListHTML();
@@ -14872,8 +14993,14 @@ function forumViewHTML() {
   else if (forumTab === 'polls') body = `<div class="polls-page fo-polls"><div class="pl-inner">${pollsViewHTML(true)}</div></div>`;
   else body = forumIndexHTML();
   return `
-    <div class="fo-hero"><h1>פורומים</h1><p>מקום לדבר, לשאול, להצביע ולשתף עם כל הקהילה</p></div>
+    <div class="fo-hero">
+      <div class="fo-hero-row">
+        <div><h1>פורומים</h1><p>מקום לדבר, לשאול, להצביע ולשתף עם כל הקהילה</p></div>
+        ${forumTab === 'forums' && !forumView.composing ? `<button type="button" class="fo-btn fo-new-main-btn" onclick="forumSetComposing(true)">+ פתיחת נושא חדש</button>` : ''}
+      </div>
+    </div>
     <div class="fo-tabs" role="tablist">${tabs}</div>
+    ${forumTab === 'forums' && forumView.composing ? forumComposeBoxHTML(null) : ''}
     ${body}`;
 }
 
@@ -14935,17 +15062,7 @@ function forumListHTML() {
   const f = forumGet(forumView.forumId);
   if (!f) { forumView = { forumId: null, topicId: null, composing: false }; return forumIndexHTML(); }
   const topics = forumTopicsOf(f.id);
-  const compose = forumView.composing ? `
-    <div class="fo-compose">
-      ${forumAnonToggleHTML()}
-      ${forumAnonOn() ? '' : forumGuestNameFieldHTML('fo-new-name')}
-      <input id="fo-new-title" class="fo-input" maxlength="120" placeholder="כותרת הנושא">
-      <textarea id="fo-new-text" class="fo-input" rows="5" maxlength="5000" placeholder="מה רצית לכתוב?"></textarea>
-      <div class="fo-compose-actions">
-        <button type="button" class="fo-btn" onclick="forumCreateTopic()">פרסום הנושא</button>
-        <button type="button" class="fo-btn ghost" onclick="forumSetComposing(false)">ביטול</button>
-      </div>
-    </div>` : '';
+  const compose = forumView.composing ? forumComposeBoxHTML(f.id) : '';
   return `
     ${forumNavHTML('לכל הפורומים', 'forumOpen(null)', `<a href="#" onclick="event.preventDefault(); forumOpen(null)">פורומים</a> › <span>${escHtml(f.title)}</span>`)}
     <div class="fo-head">
@@ -14963,10 +15080,10 @@ function forumListHTML() {
       ${topics.length ? forumSortTopics(topics).slice((forumListPage - 1) * FORUM_TOPICS_PER_PAGE, forumListPage * FORUM_TOPICS_PER_PAGE).map(t => forumTopicRowHTML(f, t)).join('')
         : `<div class="fo-empty">${forumTopics === null ? 'טוען...' : 'עדיין אין נושאים בפורום הזה — פתחו את הראשון!'}</div>`}
     </section>
-    ${forumTopicPagerHTML(topics.length)}    </section>`;
+    ${forumTopicPagerHTML(topics.length)}`;
 }
 
-// --- נושא: הודעות + תגובה (בסגנון פורום קלאסי: כרטיס מחבר מימין, תוכן משמאל, לייקים בתחתית) ---
+// --- נושא: הודעות + תגובה (בסגנון פורום XenForo מודרני — מותאם למובייל ולמחשב) ---
 const FORUM_PAGE_SIZE = 15;
 let forumPage = 1;
 let forumRatingsLoading = false;
@@ -14987,15 +15104,56 @@ function forumAuthorStats(uid) {
 }
 function forumRole(p, st) {
   if (p.admin) return { label: 'מנהל', cls: 'admin' };
-  if (st.points >= 200) return { label: 'משתמש בכיר', cls: '' };
-  if (st.points >= 50) return { label: 'משתמש פעיל', cls: '' };
-  return { label: 'משתמש חדש', cls: '' };
+  if (st.points >= 200) return { label: 'Gold', cls: 'gold' };
+  if (st.points >= 50) return { label: 'משתמש פעיל', cls: 'active' };
+  return { label: 'חבר קהילה', cls: '' };
 }
 function forumDateShort(t) {
   if (!t) return '';
   const d = new Date(t);
-  return d.toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric', year: '2-digit' });
+  return d.toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit', year: '2-digit' }) + ' ב-' +
+    d.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
 }
+function forumRelativeDayTime(t) {
+  if (!t) return '';
+  const now = new Date();
+  const d = new Date(t);
+  const timeStr = d.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const startOfTarget = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  const diffDays = Math.round((startOfToday - startOfTarget) / 86400000);
+  if (diffDays === 0) return `היום ב-${timeStr}`;
+  if (diffDays === 1) return `אתמול ב-${timeStr}`;
+  if (diffDays > 1 && diffDays < 7) {
+    const days = ['יום א׳', 'יום ב׳', 'יום ג׳', 'יום ד׳', 'יום ה׳', 'יום ו׳', 'שבת'];
+    return `${days[d.getDay()]} ב-${timeStr}`;
+  }
+  return d.toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit', year: '2-digit' });
+}
+
+const forumUserSexCache = {};
+function forumUserSexLabel(uid) {
+  if (!uid || String(uid).startsWith('n:') || !/^[A-Za-z0-9_-]{15,}$/.test(String(uid))) return '';
+  if (uid in forumUserSexCache) return forumUserSexCache[uid];
+  try {
+    const local = JSON.parse(localStorage.getItem(`user_profile_${uid}`) || 'null');
+    if (local && local.sex) {
+      forumUserSexCache[uid] = local.sex === 'female' ? 'אישה' : local.sex === 'male' ? 'גבר' : '';
+      return forumUserSexCache[uid];
+    }
+  } catch (e) {}
+  forumUserSexCache[uid] = '';
+  get(ref(db, `website/users/${uid}/profile/sex`)).then(snap => {
+    const v = snap.val();
+    const lbl = v === 'female' ? 'אישה' : v === 'male' ? 'גבר' : '';
+    if (lbl && forumUserSexCache[uid] !== lbl) {
+      forumUserSexCache[uid] = lbl;
+      document.querySelectorAll(`[data-fo-sex-uid="${uid}"]`).forEach(el => { el.textContent = lbl; });
+    }
+  }).catch(() => {});
+  return forumUserSexCache[uid];
+}
+
 function forumPagerHTML(total) {
   const pages = Math.max(1, Math.ceil(total / FORUM_PAGE_SIZE));
   if (pages <= 1) return '';
@@ -15013,14 +15171,12 @@ function forumPagerHTML(total) {
 function forumGoPage(n) {
   forumPage = n;
   forumRender();
-  const el = mainContent && mainContent.querySelector('.fo-posts');
+  const el = mainContent && mainContent.querySelector('.xf-posts, .fo-posts');
   if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 window.forumGoPage = forumGoPage;
 
-// ---- מובייל: הדיון בסגנון שרשור תגובות (אווטאר עם ראשי תיבות, תגובות מקוננות, לייק/דיסלייק) ----
 const FORUM_MOBILE_MQ = window.matchMedia('(max-width: 768px)');
-FORUM_MOBILE_MQ.addEventListener('change', () => { if (forumView.topicId) forumRender(); });
 let forumReplyTo = null;               // מזהה ההודעה שמשיבים לה
 const forumOpenThreads = new Set();    // שרשורים שהתגובות שלהם פתוחות
 
@@ -15036,42 +15192,6 @@ function forumDateTime(t) {
 function forumAvColor(p) {
   return FRIENDS_AVATAR_COLORS[[...String(p.uid || p.name || '')].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 0) % FRIENDS_AVATAR_COLORS.length];
 }
-
-const FORUM_THUMB = (down, filled) => `<svg viewBox="0 0 24 24" fill="${filled ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"${down ? ' style="transform:rotate(180deg)"' : ''}><path d="M7 11v9H4a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1zM7 11l4-8a2.5 2.5 0 0 1 2.5 2.5V9h5.2a2 2 0 0 1 2 2.3l-1.2 7A2 2 0 0 1 17.5 20H7"/></svg>`;
-const FORUM_REPLY_ICO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 6 4 12l6 6"/><path d="M4 12h10a6 6 0 0 1 6 6v1"/></svg>';
-
-function forumThreadPostHTML(p, isReply, admin, myUid) {
-  const likes = Object.keys(p.likes || {}).length;
-  const dislikes = Object.keys(p.dislikes || {}).length;
-  const iLiked = !!(myUid && p.likes && p.likes[myUid]);
-  const iDisliked = !!(myUid && p.dislikes && p.dislikes[myUid]);
-  const nameClick = (p.uid && !p.guest) ? `onclick="openUserPage('${artEsc(p.uid)}','${artEsc(p.name || '')}')"` : '';
-  return `
-    <div class="fo-th-post${isReply ? ' reply' : ''}">
-      ${isReply ? '<span class="fo-th-dot"></span>' : `<span class="fo-th-av" style="--av:${forumAvColor(p)}">${escHtml(forumInitials(p.name))}</span>`}
-      <div class="fo-th-body">
-        <div class="fo-th-head">
-          <b class="fo-th-name" ${nameClick}>${escHtml(p.name || 'משתמש')}${!p.guest && p.uid && isUserVerified(p.uid, p.name) ? verifiedSealHTML(15) : ''}</b>${p.guest ? '<span class="fo-guest-tag">אורח</span>' : ''}
-          <span class="fo-th-date">${escHtml(forumDateTime(p.t))}</span>
-        </div>
-        <div class="fo-th-text">${escHtml(p.text || '').replace(/\n/g, '<br>')}</div>
-        <div class="fo-th-actions">
-          <button type="button" class="fo-th-join" onclick="forumStartReply('${artEsc(p.id)}')">${FORUM_REPLY_ICO}להצטרף לדיון</button>
-          <button type="button" class="fo-th-vote up${iLiked ? ' on' : ''}" onclick="forumToggleLike('${artEsc(p.id)}')" aria-label="לייק">${FORUM_THUMB(false, iLiked)}<span>${likes}</span></button>
-          
-          ${admin ? `<button type="button" class="fo-del" onclick="forumAdminEditPost('${artEsc(p.id)}')">עריכה</button><button type="button" class="fo-del" onclick="forumDeletePost('${artEsc(p.id)}')">מחיקה</button>` : ''}
-        </div>
-      </div>
-    </div>`;
-}
-
-// ===== מובייל: נושא בסגנון רדיט — פוסט פותח + תגובות עם קו שרשור (בצבעי האתר) =====
-const RD_UP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3.5 4 12.5h5v8h6v-8h5z"/></svg>';
-const RD_UP_ON = '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3.5 4 12.5h5v8h6v-8h5z"/></svg>';
-const RD_CMT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 4c4.7 0 8.5 3.2 8.5 7.2S16.7 18.4 12 18.4c-.9 0-1.8-.1-2.6-.3L5 20l1.2-3.6C4.5 15 3.5 13.2 3.5 11.2 3.5 7.2 7.3 4 12 4z"/></svg>';
-const RD_SHARE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 5l6 6-6 6"/><path d="M20 11H10a6 6 0 0 0-6 6v2"/></svg>';
-const RD_PLUS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8" stroke-linecap="round"/></svg>';
-const RD_MINUS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M8 12h8" stroke-linecap="round"/></svg>';
 function rdTimeAgo(t) {
   if (!t) return '';
   const m = Math.floor((Date.now() - t) / 60000);
@@ -15085,111 +15205,36 @@ function rdTimeAgo(t) {
   if (d < 30) return `לפני ${d} ימים`;
   return new Date(t).toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric', year: '2-digit' });
 }
-function rdAvatar(p, cls) {
-  const uidAttr = (p.uid && !p.guest) ? `data-av-uid="${escHtml(p.uid)}"` : '';
-  return `<span class="rd-av ${cls || ''}" ${uidAttr} style="--av:${forumAvColor(p)}">${escHtml(forumInitials(p.name))}</span>`;
-}
-function rdVotes(p, myUid, pill) {
-  const likes = Object.keys(p.likes || {}).length, dislikes = Object.keys(p.dislikes || {}).length;
-  const up = !!(myUid && p.likes && p.likes[myUid]), down = !!(myUid && p.dislikes && p.dislikes[myUid]);
-  return `<span class="rd-votes${pill ? ' rd-pill' : ''}${up ? ' up' : ''}${down ? ' down' : ''}">
-      <button type="button" class="rd-vote" onclick="forumToggleLike('${artEsc(p.id)}')" aria-label="הצבעה בעד">${up ? RD_UP_ON : RD_UP}</button>
-      <b>${forumFmtCount(likes - dislikes)}</b>
-    </span>`;
-}
-function rdNameAttr(p) { return (p.uid && !p.guest) ? `onclick="openUserPage('${artEsc(p.uid)}','${artEsc(p.name || '')}')"` : ''; }
-function rdCommentHTML(p, admin, myUid, kids, depth) {
-  const open = forumOpenThreads.has(p.id);
-  const childList = kids[p.id] || [];
-  const countAll = (id) => (kids[id] || []).reduce((n, c) => n + 1 + countAll(c.id), 0);
-  const total = countAll(p.id);
-  return `
-    <div class="rd-cmt${depth ? ' nested' : ''}">
-      <div class="rd-cmt-head">
-        ${rdAvatar(p)}
-        <b class="rd-cmt-name" ${rdNameAttr(p)}>${escHtml(p.name || 'משתמש')}</b>${!p.guest && p.uid && isUserVerified(p.uid, p.name) ? verifiedSealHTML(13) : ''}${p.guest ? '<span class="rd-tag">אורח</span>' : ''}
-        <span class="rd-dot">•</span><span class="rd-time">${escHtml(rdTimeAgo(p.t))}</span>
-      </div>
-      <div class="rd-cmt-body">
-        <div class="rd-text">${escHtml(p.text || '').replace(/\n/g, '<br>')}</div>
-        <div class="rd-actions">
-          ${rdVotes(p, myUid)}
-          <button type="button" class="rd-act" onclick="forumStartReply('${artEsc(p.id)}')">${RD_CMT}<span>תגובה</span></button>
-          ${admin ? `<button type="button" class="rd-act" onclick="forumAdminEditPost('${artEsc(p.id)}')">עריכה</button><button type="button" class="rd-act rd-del" onclick="forumDeletePost('${artEsc(p.id)}')">מחיקה</button>` : ''}
-        </div>
-        ${childList.length ? (open
-          ? `<div class="rd-children">${childList.map(c => rdCommentHTML(c, admin, myUid, kids, depth + 1)).join('')}</div>
-             <button type="button" class="rd-more" onclick="forumToggleThread('${artEsc(p.id)}')">${RD_MINUS}<span>הסתרת תגובות</span></button>`
-          : `<button type="button" class="rd-more" onclick="forumToggleThread('${artEsc(p.id)}')">${RD_PLUS}<span>${total === 1 ? 'עוד תגובה אחת' : `עוד ${total} תגובות`}</span></button>`) : ''}
-      </div>
-    </div>`;
-}
 function forumSharePage(title) {
   const url = location.href;
   if (navigator.share) { navigator.share({ title: title || document.title, url }).catch(() => {}); return; }
   try { navigator.clipboard.writeText(url); if (typeof showCopyToast === 'function') showCopyToast('הקישור הועתק'); } catch (e) {}
 }
 window.forumSharePage = forumSharePage;
+
+function forumSharePost(postId, num, title) {
+  const url = location.href.split('#')[0] + '#fo-post-' + postId;
+  if (navigator.share) { navigator.share({ title: `${title || 'הודעה'} (#${num})`, url }).catch(() => {}); return; }
+  try { navigator.clipboard.writeText(url); if (typeof showCopyToast === 'function') showCopyToast(`קישור להודעה #${num} הועתק`); } catch (e) {}
+}
+window.forumSharePost = forumSharePost;
+
+function forumScrollToPost(postId) {
+  const el = document.getElementById('fo-post-' + postId);
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.classList.add('xf-flash');
+    setTimeout(() => el.classList.remove('xf-flash'), 1600);
+  }
+}
+window.forumScrollToPost = forumScrollToPost;
+
 function forumFocusReply() {
   forumReplyTo = null;
-  const box = document.getElementById('fo-reply-text');
+  const box = document.getElementById('fo-reply-text') || document.getElementById('fo-guest-first');
   if (box) { box.focus(); box.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
 }
 window.forumFocusReply = forumFocusReply;
-
-function forumTopicMobileHTML(f, t, posts, admin, myUid) {
-  const list = posts || [];
-  const byId = {};
-  list.forEach(p => { byId[p.id] = p; });
-  const op = list[0] || null;
-  // עץ תגובות: ילדים לפי replyTo (תגובה ישירה לפוסט הפותח = תגובה ראשית)
-  const kids = {}, tops = [];
-  list.slice(1).forEach(p => {
-    const parent = p.replyTo && byId[p.replyTo] && p.replyTo !== (op && op.id) ? p.replyTo : null;
-    if (parent) (kids[parent] = kids[parent] || []).push(p); else tops.push(p);
-  });
-  const nav = forumNavHTML('חזרה ל' + f.title, `forumOpen('${f.id}')`, `<a href="#" onclick="event.preventDefault(); forumOpen(null)">פורומים</a> › <a href="#" onclick="event.preventDefault(); forumOpen('${f.id}')">${escHtml(f.title)}</a>`);
-  if (posts === null) return `${nav}<div class="fo-empty">טוען...</div>`;
-  const target = forumReplyTo && byId[forumReplyTo];
-  const opHTML = op ? `
-    <article class="rd-post">
-      <div class="rd-post-head">
-        <span class="rd-sub-ic">${FORUM_ICON}</span>
-        <div class="rd-post-meta">
-          <div><b class="rd-sub" onclick="forumOpen('${f.id}')">${escHtml(f.title)}</b><span class="rd-dot"> • </span><span class="rd-time">${escHtml(rdTimeAgo(op.t))}</span></div>
-          <div class="rd-by" ${rdNameAttr(op)}>${escHtml(op.name || 'משתמש')}${op.guest ? ' <span class="rd-tag">אורח</span>' : ''}</div>
-        </div>
-        ${admin ? `<button type="button" class="rd-act rd-del" onclick="forumDeleteTopic()">מחיקה</button>` : ''}
-      </div>
-      <h1 class="rd-title">${escHtml(t ? t.title : '')}</h1>
-      <div class="rd-text rd-post-text">${escHtml(op.text || '').replace(/\n/g, '<br>')}</div>
-      <div class="rd-post-actions">
-        ${rdVotes(op, myUid, true)}
-        <button type="button" class="rd-pill" onclick="forumFocusReply()">${RD_CMT}<b>${forumFmtCount(list.length - 1)}</b></button>
-        <button type="button" class="rd-pill rd-pill-icon" onclick="forumSharePage('${artEsc(t ? t.title : '')}')" aria-label="שיתוף">${RD_SHARE}</button>
-      </div>
-    </article>` : '';
-  return `
-    ${nav}
-    ${opHTML}
-    <div class="rd-compose" id="fo-reply-box">
-      ${target ? `<div class="fo-reply-to"><span>תגובה ל<b>${escHtml(target.name || 'משתמש')}</b></span><button type="button" onclick="forumStartReply(null)" aria-label="ביטול">✕</button></div>` : ''}
-      ${forumAnonToggleHTML()}
-      ${!forumRegistered() && !forumAnonOn() && forumGuestName().length < 2
-        ? `<div class="rd-compose-row">
-        <input id="fo-guest-first" class="rd-input" maxlength="30" placeholder="כתבו שם זמני כדי להגיב" onkeydown="if(event.key==='Enter'){event.preventDefault(); forumSetGuestName();}">
-        <button type="button" class="rd-send" onclick="forumSetGuestName()" aria-label="המשך"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.4 20.4 21 12 3.4 3.6 3.4 10l12.6 2-12.6 2z"/></svg></button>
-      </div>`
-        : `${forumAnonOn() ? '' : forumGuestNameFieldHTML('fo-reply-name')}
-      <div class="rd-compose-row">
-        <textarea id="fo-reply-text" class="rd-input" rows="1" maxlength="5000" placeholder="${target ? 'כתבו תגובה...' : 'הצטרפו לשיחה'}" oninput="this.style.height='auto'; this.style.height=Math.min(this.scrollHeight,140)+'px'"></textarea>
-        <button type="button" class="rd-send" onclick="forumReply()" aria-label="שליחה"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.4 20.4 21 12 3.4 3.6 3.4 10l12.6 2-12.6 2z"/></svg></button>
-      </div>`}
-    </div>
-    <div class="rd-comments">
-      ${tops.length ? tops.map(p => rdCommentHTML(p, admin, myUid, kids, 0)).join('') : '<div class="fo-empty">עדיין אין תגובות — היו הראשונים להגיב</div>'}
-    </div>`;
-}
 
 function forumToggleThread(id) {
   if (forumOpenThreads.has(id)) forumOpenThreads.delete(id); else forumOpenThreads.add(id);
@@ -15201,13 +15246,19 @@ function forumStartReply(postId) {
   const draft = (document.getElementById('fo-reply-text') || {}).value || '';
   forumReplyTo = postId || null;
   forumRender();
-  const box = document.getElementById('fo-reply-text');
+  const box = document.getElementById('fo-reply-text') || document.getElementById('fo-guest-first');
   if (box) {
-    box.value = draft;
+    if (box.id === 'fo-reply-text') box.value = draft;
     if (postId) { box.scrollIntoView({ behavior: 'smooth', block: 'center' }); box.focus({ preventScroll: true }); }
   }
 }
 window.forumStartReply = forumStartReply;
+
+const XF_SHARE_IC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>';
+const XF_REPLY_IC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17 4 12l5-5"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>';
+const XF_LIKE_IC = (on) => `<svg viewBox="0 0 24 24" fill="${on ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M7 11v9H4a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1zM7 11l4-8a2.5 2.5 0 0 1 2.5 2.5V9h5.2a2 2 0 0 1 2 2.3l-1.2 7A2 2 0 0 1 17.5 20H7"/></svg>`;
+const XF_USER_IC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>';
+const XF_CLOCK_IC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
 
 function forumTopicHTML() {
   const f = forumGet(forumView.forumId);
@@ -15216,59 +15267,137 @@ function forumTopicHTML() {
   const admin = typeof isAdmin === 'function' && isAdmin();
   const myUid = auth.currentUser ? auth.currentUser.uid : '';
   const posts = forumPosts ? Object.entries(forumPosts).map(([id, p]) => Object.assign({ id }, p)).sort((a, b) => (a.t || 0) - (b.t || 0)) : null;
-  if (FORUM_MOBILE_MQ.matches || document.getElementById('fo-panel')) return forumTopicMobileHTML(f, t, posts, admin, myUid);
+  const byId = {};
+  if (posts) posts.forEach(p => { byId[p.id] = p; });
   const total = posts ? posts.length : 0;
   forumPage = Math.min(Math.max(1, forumPage), Math.max(1, Math.ceil(total / FORUM_PAGE_SIZE)));
   const start = (forumPage - 1) * FORUM_PAGE_SIZE;
   const pager = forumPagerHTML(total);
-  const postHTML = (p, idx) => {
+  const target = forumReplyTo && byId[forumReplyTo];
+  const pfxObj = t && t.prefix ? FORUM_PREFIXES.find(x => x.id === t.prefix) : null;
+  const pfxBadge = pfxObj ? `<span class="fo-pfx-tag ${pfxObj.cls}">${pfxObj.ic} ${escHtml(pfxObj.id)}</span>` : (t && t.prefix ? `<span class="fo-pfx-tag">${escHtml(t.prefix)}</span>` : '');
+
+  const postCardHTML = (p, idx) => {
     const st = forumAuthorStats(p.uid);
-    const role = p.guest ? { label: 'אורח', cls: 'guest' } : forumRole(p, st);
+    const role = p.anon ? { label: 'אנונימי', cls: 'guest' } : p.guest ? { label: 'אורח', cls: 'guest' } : forumRole(p, st);
+    const sexLbl = (!p.guest && !p.anon && p.uid) ? forumUserSexLabel(p.uid) : '';
+    const subTitle = sexLbl || (p.anon ? 'מפרסם אנונימי' : p.guest ? 'משתמש אורח' : 'חבר קהילה');
     const likes = Object.entries(p.likes || {}).filter(([, n]) => typeof n === 'string');
     const iLiked = !!(myUid && p.likes && p.likes[myUid]);
     const names = likes.map(([, n]) => n);
     const likeText = names.length <= 3 ? names.join(', ') : `${names.slice(0, 3).join(', ')} ועוד ${names.length - 3}`;
-    const nameClick = (p.uid && !p.guest) ? `onclick="openUserPage('${artEsc(p.uid)}','${artEsc(p.name || '')}')"` : '';
+    const nameClick = (p.uid && !p.guest && !p.anon) ? `onclick="openUserPage('${artEsc(p.uid)}','${artEsc(p.name || '')}')"` : '';
+    const quoted = p.replyTo && byId[p.replyTo] ? byId[p.replyTo] : null;
+    const quoteBlock = quoted ? `
+      <blockquote class="xf-quote" onclick="forumScrollToPost('${artEsc(quoted.id)}')">
+        <div class="xf-quote-head"><span>${escHtml(quoted.name || 'משתמש')} כתב/ה:</span><i class="xf-quote-up" aria-hidden="true">↑</i></div>
+        <div class="xf-quote-body">${escHtml(String(quoted.text || '').slice(0, 280))}${String(quoted.text || '').length > 280 ? '…' : ''}</div>
+      </blockquote>` : '';
+    const imgs = Array.isArray(p.images) ? p.images.filter(Boolean) : [];
+    const imgsHTML = imgs.length ? `
+      <div class="xf-post-imgs">
+        ${imgs.map(src => `<button type="button" class="xf-post-img" onclick="dmViewImg('${artEsc(src)}')"><img src="${escHtml(src)}" alt="" loading="lazy"></button>`).join('')}
+      </div>` : '';
+
     return `
-      <article class="fo-post${idx === 0 ? ' first' : ''}">
-        <aside class="fo-author">
-          <span class="fo-author-av" ${p.uid ? `data-av-uid="${escHtml(p.uid)}"` : ''} style="--av:${FRIENDS_AVATAR_COLORS[[...String(p.uid || p.name || '')].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 0) % FRIENDS_AVATAR_COLORS.length]}">${escHtml(String(p.name || '?').trim().charAt(0) || '?')}</span>
-          <b class="fo-author-name" ${nameClick}>${escHtml(p.name || 'משתמש')}${p.uid && isUserVerified(p.uid, p.name) ? verifiedSealHTML(18) : ''}</b>
-          <span class="fo-role ${role.cls}">${role.label}</span>
-          <dl class="fo-author-stats">
-            <div><dt>פוסטים:</dt><dd>${Number(st.posts || 0).toLocaleString('he-IL')}</dd></div>
-            <div><dt>נקודות:</dt><dd>${Number(st.points || 0).toLocaleString('he-IL')}</dd></div>
-            <div><dt>דירוג:</dt><dd>${st.rCount ? '★ ' + Number(st.avg).toFixed(1) : '—'}</dd></div>
-          </dl>
-        </aside>
-        <div class="fo-post-main">
-          <div class="fo-post-head">
-            <span>${escHtml(forumDateShort(p.t))}</span>
-            <span class="fo-post-num">${admin && idx > 0 ? `<button type="button" class="fo-del" onclick="forumDeletePost('${artEsc(p.id)}')">מחיקה</button>` : ''}#${idx + 1}</span>
+      <article class="xf-post${idx === 0 ? ' is-op' : ''}" id="fo-post-${escHtml(p.id)}">
+        <header class="xf-post-userbar">
+          <div class="xf-post-av-wrap" ${nameClick}>${forumAvatar(p.name, p.uid)}</div>
+          <div class="xf-post-userinfo">
+            <div class="xf-post-namerow">
+              <b class="xf-post-username" ${nameClick}>${escHtml(p.name || 'משתמש')}${!p.guest && !p.anon && p.uid && isUserVerified(p.uid, p.name) ? verifiedSealHTML(15) : ''}</b>
+            </div>
+            <span class="xf-post-usertitle" ${p.uid && !p.guest && !p.anon ? `data-fo-sex-uid="${escHtml(p.uid)}"` : ''}>${escHtml(subTitle)}</span>
+            <span class="xf-badge ${role.cls}">${escHtml(role.label)}${role.cls === 'gold' ? ' <i>🌟</i>' : ''}</span>
           </div>
-          <div class="fo-post-text">${escHtml(p.text || '').replace(/\n/g, '<br>')}</div>
-          <div class="fo-likes${names.length ? ' has' : ''}">
-            <button type="button" class="fo-like-btn${iLiked ? ' on' : ''}" onclick="forumToggleLike('${artEsc(p.id)}')" title="${iLiked ? 'ביטול לייק' : 'לייק'}"><svg viewBox="0 0 24 24" fill="${iLiked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M7 11v9H4a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1zM7 11l4-8a2.5 2.5 0 0 1 2.5 2.5V9h5.2a2 2 0 0 1 2 2.3l-1.2 7A2 2 0 0 1 17.5 20H7"/></svg>${iLiked ? 'אהבת' : 'לייק'}</button>
-            ${names.length ? `<span class="fo-like-names">${escHtml(likeText)}</span>` : ''}
+        </header>
+        <div class="xf-post-meta">
+          <time class="xf-post-date">${escHtml(forumDateShort(p.t))}</time>
+          <div class="xf-post-meta-end">
+            ${admin ? `<button type="button" class="xf-admin-act" onclick="forumAdminEditPost('${artEsc(p.id)}')">עריכה</button>` : ''}
+            ${admin && idx > 0 ? `<button type="button" class="xf-admin-del" onclick="forumDeletePost('${artEsc(p.id)}')">מחיקה</button>` : ''}
+            <button type="button" class="xf-share-btn" onclick="forumSharePost('${artEsc(p.id)}', ${idx + 1}, '${artEsc(t ? t.title : '')}')" aria-label="שיתוף הודעה">${XF_SHARE_IC}</button>
+            <a class="xf-post-num" href="#fo-post-${escHtml(p.id)}" onclick="event.preventDefault(); forumSharePost('${artEsc(p.id)}', ${idx + 1}, '${artEsc(t ? t.title : '')}')">#${idx + 1}</a>
           </div>
         </div>
+        <div class="xf-post-content">
+          ${quoteBlock}
+          <div class="xf-post-body">${escHtml(p.text || '').replace(/\n/g, '<br>')}</div>
+          ${imgsHTML}
+        </div>
+        <footer class="xf-post-foot">
+          ${names.length ? `
+            <div class="xf-reactions-bar">
+              <span class="xf-react-icons" aria-hidden="true"><i>👍</i><i>😍</i><i>😲</i></span>
+              <span class="xf-react-names">${escHtml(likeText)}</span>
+            </div>` : ''}
+          <div class="xf-post-actions">
+            <button type="button" class="xf-act-btn like${iLiked ? ' on' : ''}" onclick="forumToggleLike('${artEsc(p.id)}')">
+              ${XF_LIKE_IC(iLiked)}
+              <span>${iLiked ? 'אהבת' : 'אהבתי'}${likes.length ? ` (${likes.length})` : ''}</span>
+            </button>
+            <button type="button" class="xf-act-btn reply" onclick="forumStartReply('${artEsc(p.id)}')">
+              ${XF_REPLY_IC}
+              <span>ציטוט / תגובה</span>
+            </button>
+          </div>
+        </footer>
       </article>`;
   };
+
+  const replyAttach = window.__foAttachReply || [];
   return `
-    ${forumNavHTML('חזרה ל' + f.title, `forumOpen('${f.id}')`, `<a href="#" onclick="event.preventDefault(); forumOpen(null)">פורומים</a> › <a href="#" onclick="event.preventDefault(); forumOpen('${f.id}')">${escHtml(f.title)}</a>`)}
-    <div class="fo-head"><div><h1>${escHtml(t ? t.title : '')}</h1></div>
-      ${admin ? `<button type="button" class="fo-btn ghost danger" onclick="forumDeleteTopic()">מחיקת הנושא</button>` : ''}
+    <div class="xf-topic-top">
+      <div class="xf-topic-top-bar">
+        <button type="button" class="xf-back-cat" onclick="forumOpen('${f.id}')">${FORUM_BACK_ICO}<span>${escHtml(f.title)}</span></button>
+        ${admin ? `<button type="button" class="fo-btn ghost danger xf-del-topic" onclick="forumDeleteTopic()">מחיקת הנושא</button>` : ''}
+      </div>
+      <h1 class="xf-topic-title">${pfxBadge}${escHtml(t ? t.title : '')}</h1>
+      <div class="xf-topic-submeta">
+        <span class="xf-submeta-item">${XF_USER_IC}<b>${escHtml(t ? (t.name || 'משתמש') : '')}</b></span>
+        <span class="xf-submeta-dot">·</span>
+        <span class="xf-submeta-item">${XF_CLOCK_IC}<span>${escHtml(t ? forumDateShort(t.t) : '')}</span></span>
+      </div>
     </div>
     ${pager}
-    <div class="fo-posts">
-      ${posts === null ? '<div class="fo-empty">טוען...</div>' : posts.slice(start, start + FORUM_PAGE_SIZE).map((p, i) => postHTML(p, start + i)).join('')}
+    <div class="xf-posts fo-posts">
+      ${posts === null ? '<div class="fo-empty">טוען...</div>' : posts.slice(start, start + FORUM_PAGE_SIZE).map((p, i) => postCardHTML(p, start + i)).join('')}
     </div>
     ${pager}
-    <div class="fo-reply">
-      ${forumAnonToggleHTML()}
-      ${forumAnonOn() ? '' : forumGuestNameFieldHTML('fo-reply-name')}
-      <textarea id="fo-reply-text" class="fo-input" rows="4" maxlength="5000" placeholder="כתבו תגובה..."></textarea>
-      <div class="fo-compose-actions"><button type="button" class="fo-btn" onclick="forumReply()">שליחת תגובה</button></div>
+    <div class="fo-reply xf-reply-box" id="fo-reply-box">
+      <div class="xf-reply-head">
+        <b>הוספת תגובה לדיון</b>
+        ${forumAnonToggleHTML()}
+      </div>
+      ${target ? `
+        <div class="fo-reply-to xf-replying-banner">
+          <span>משיבים עם ציטוט ל-<b>${escHtml(target.name || 'משתמש')}</b>: "${escHtml(String(target.text || '').slice(0, 70))}${String(target.text || '').length > 70 ? '…' : ''}"</span>
+          <button type="button" onclick="forumStartReply(null)" aria-label="ביטול">✕</button>
+        </div>` : ''}
+      ${!forumRegistered() && !forumAnonOn() && forumGuestName().length < 2
+        ? `<div class="rd-compose-row">
+            <input id="fo-guest-first" class="fo-input" maxlength="30" placeholder="כתבו שם זמני כדי להגיב בדיון" onkeydown="if(event.key==='Enter'){event.preventDefault(); forumSetGuestName();}">
+            <button type="button" class="fo-btn" onclick="forumSetGuestName()">המשך</button>
+          </div>`
+        : `${forumAnonOn() ? '' : forumGuestNameFieldHTML('fo-reply-name')}
+          <div class="fo-editor-wrap">
+            <div class="fo-toolbar">
+              <button type="button" class="fo-tool-btn" onclick="forumInsertFmt('fo-reply-text','**','**')" title="הדגשה"><b>B</b></button>
+              <button type="button" class="fo-tool-btn" onclick="forumInsertFmt('fo-reply-text','> ','')" title="ציטוט">❝ ציטוט</button>
+              <label class="fo-tool-btn fo-tool-upload" title="צירוף תמונה לתגובה">
+                <input type="file" accept="image/*" multiple style="display:none" onchange="forumAttachPick(this.files, true); this.value=''">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg>
+                <span>צירוף תמונה</span>
+              </label>
+            </div>
+            <textarea id="fo-reply-text" class="fo-input fo-textarea" rows="3" maxlength="5000" placeholder="${target ? 'כתבו את התגובה שלכם לציטוט...' : 'כתבו תגובה לנושא...'}"></textarea>
+            <div id="fo-reply-attach-prev" class="fo-attach-prev" style="display:${replyAttach.length ? 'flex' : 'none'}">
+              ${replyAttach.map((src, i) => `<span class="fo-att-thumb"><img src="${src}" alt=""><button type="button" onclick="forumRemoveAttach(${i}, true)" aria-label="הסרה">✕</button></span>`).join('')}
+            </div>
+          </div>
+          <div class="fo-compose-actions">
+            <button type="button" class="fo-btn fo-submit-btn" onclick="forumReply()">שליחת תגובה</button>
+          </div>`}
     </div>`;
 }
 
@@ -15364,6 +15493,7 @@ window.forumOpenTopic = forumOpenTopic;
 
 function forumSetComposing(on) {
   forumView.composing = !!on;
+  if (!on) { window.__foAttachNew = []; window.__foPrefix = ''; }
   forumRender();
   if (on) setTimeout(() => { const i = document.getElementById('fo-new-title'); if (i) i.focus(); }, 30);
 }
@@ -15374,25 +15504,32 @@ async function forumCreateTopic() {
   if (forumBusy) return;
   const title = (document.getElementById('fo-new-title') || {}).value?.trim() || '';
   const text = (document.getElementById('fo-new-text') || {}).value?.trim() || '';
-  if (title.length < 2) { alert('נא לכתוב כותרת'); return; }
-  if (!text) { alert('נא לכתוב תוכן לנושא'); return; }
+  const imgs = (window.__foAttachNew || []).slice(0, 4);
+  if (title.length < 2) { alert('נא לכתוב כותרת לנושא'); return; }
+  if (!text && !imgs.length) { alert('נא לכתוב תוכן לנושא או לצרף תמונה'); return; }
   const me = await forumIdentity('fo-new-name');
   if (!me) return;
   const user = { uid: me.uid };
   const name = me.name;
   const now = Date.now();
-  const forumId = forumView.forumId;
+  const selForum = (document.getElementById('fo-new-forum') || {}).value;
+  const forumId = selForum || forumView.forumId || 'gate';
+  const prefix = window.__foPrefix || '';
   forumBusy = true;
   try {
     const tRef = push(ref(db, `website/forum_topics/${forumId}`));
     const topic = { title: title.slice(0, 120), uid: user.uid, name, t: now, lastT: now, lastName: name, lastUid: user.uid, replies: 0 };
+    if (prefix) topic.prefix = prefix;
     if (me.anon) topic.anon = true;
     await set(tRef, topic);
     const first = { uid: user.uid, name, text: text.slice(0, 5000), t: now };
+    if (imgs.length) first.images = imgs;
     if (typeof isAdmin === 'function' && isAdmin()) first.admin = true;
     if (me.guest) first.guest = true;
     if (me.anon) first.anon = true;
     await set(push(ref(db, `website/forum_posts/${tRef.key}`)), first);
+    window.__foAttachNew = [];
+    window.__foPrefix = '';
     forumOpenTopic(forumId, tRef.key);
   } catch (e) {
     console.error('forum topic failed', e);
@@ -15405,7 +15542,8 @@ async function forumReply() {
   if (forumBusy) return;
   const box = document.getElementById('fo-reply-text');
   const text = box ? box.value.trim() : '';
-  if (!text) return;
+  const imgs = (window.__foAttachReply || []).slice(0, 4);
+  if (!text && !imgs.length) return;
   const me = await forumIdentity('fo-reply-name');
   if (!me) return;
   const user = { uid: me.uid };
@@ -15415,18 +15553,14 @@ async function forumReply() {
   forumBusy = true;
   try {
     const msg = { uid: user.uid, name, text: text.slice(0, 5000), t: now };
+    if (imgs.length) msg.images = imgs;
     if (typeof isAdmin === 'function' && isAdmin()) msg.admin = true;
     if (forumReplyTo && forumPosts && forumPosts[forumReplyTo]) msg.replyTo = forumReplyTo;
     if (me.guest) msg.guest = true;
     if (me.anon) msg.anon = true;
     await set(push(ref(db, `website/forum_posts/${topicId}`)), msg);
     if (box) box.value = '';
-    // פותחים את השרשור כדי שהתגובה החדשה תיראה
-    if (msg.replyTo) {
-      let root = msg.replyTo, guard = 0;
-      forumOpenThreads.add(root);
-      while (forumPosts[root] && forumPosts[root].replyTo && forumPosts[forumPosts[root].replyTo] && guard++ < 50) { root = forumPosts[root].replyTo; forumOpenThreads.add(root); }
-    }
+    window.__foAttachReply = [];
     forumReplyTo = null;
     forumPage = 9999; // העמוד האחרון — שם התגובה החדשה
     forumRender();
@@ -18195,6 +18329,10 @@ function photoToggleLocation(on, silent) {
 window.photoToggleLocation = photoToggleLocation;
 
 function openPhotoModal() {
+  // כשנמצאים בעמוד הפורומים — כפתור ה-+ פותח העלאת נושא/שאלה/תגובה המותאמת לפורום
+  if (typeof mainContent !== 'undefined' && mainContent && mainContent.querySelector('.forums-page')) {
+    if (typeof forumPlusAction === 'function') { forumPlusAction(); return; }
+  }
   // העלאה חדשה — רק דרך הצ'אט (הטופס המלא נשאר רק לעריכת פריט קיים)
   if (typeof openQuickPublish === 'function') { openQuickPublish(); return; }
   editingPhotoId = null;
@@ -28995,16 +29133,20 @@ function forumTopicRowHTML(f, t) {
   const open = `forumOpenTopic('${f.id}','${artEsc(t.id)}')`;
   const pageChips = pages > 1 ? `<span class="fx-pages">${[...new Set([Math.max(2, pages - 2), Math.max(2, pages - 1), pages])].filter(n => n > 1).map(n => `<button type="button" onclick="event.stopPropagation(); ${open}; setTimeout(() => forumGoPage(${n}), 60)">${n}</button>`).join('')}</span>` : '';
   const lastName = t.lastName || t.name || '';
+  const relWhen = typeof forumRelativeDayTime === 'function' ? forumRelativeDayTime(t.lastT || t.t) : forumTimeAgo(t.lastT || t.t);
+  const pfxObj = t.prefix && typeof FORUM_PREFIXES !== 'undefined' ? FORUM_PREFIXES.find(x => x.id === t.prefix) : null;
+  const pfxHTML = pfxObj ? `<span class="fo-pfx-tag sm ${pfxObj.cls}">${pfxObj.ic} ${escHtml(pfxObj.id)}</span>` : (t.prefix ? `<span class="fo-pfx-tag sm">${escHtml(t.prefix)}</span>` : '');
   return `<div class="fx-row" onclick="${open}" role="button" tabindex="0">
     <span class="fx-av">${forumAvatar(t.name, t.uid)}</span>
     <div class="fx-main">
-      <b class="fx-title">${escHtml(t.title)}</b>
-      <div class="fx-meta"><span class="fx-author">${escHtml(t.name || '')}</span><span class="fx-dot">·</span><span>${escHtml(forumTimeAgo(t.t))}</span>${pageChips}</div>
-      <div class="fx-meta fx-meta-m"><span>${forumFmtCount(t.replies || 0)} תגובות</span><span class="fx-dot">·</span><span>${forumFmtCount(views)} צפיות</span><span class="fx-dot">·</span><span class="fx-last-t">${escHtml(forumTimeAgo(t.lastT || t.t))}</span></div>
+      <b class="fx-title">${pfxHTML}${escHtml(t.title)}</b>
+      <div class="fx-author-line"><span class="fx-author">${escHtml(t.name || 'אורח')}</span></div>
+      <div class="fx-meta fx-meta-d"><span class="fx-author">${escHtml(t.name || '')}</span><span class="fx-dot">·</span><span>${escHtml(forumTimeAgo(t.t))}</span>${pageChips}</div>
+      <div class="fx-meta fx-meta-m"><span class="fx-replies-lbl">תגובות: <b>${forumFmtCount(t.replies || 0)}</b></span><span class="fx-dot">·</span><span class="fx-last-t">${escHtml(relWhen)}</span>${pageChips}</div>
     </div>
     ${admin ? `<span class="fo-admin" onclick="event.stopPropagation()"><button type="button" onclick="forumAdminEditTopic('${f.id}','${artEsc(t.id)}')" title="עריכת הנושא" aria-label="עריכה">${FO_EDIT_IC}</button><button type="button" onclick="forumAdminDeleteTopic('${f.id}','${artEsc(t.id)}')" title="מחיקת הנושא" aria-label="מחיקה">${FO_DEL_IC}</button></span>` : ''}
     <dl class="fx-stats"><dt>תגובות:</dt><dd>${forumFmtCount(t.replies || 0)}</dd><dt>צפיות:</dt><dd>${forumFmtCount(views)}</dd></dl>
-    <div class="fx-last"><div class="fx-last-text"><span class="fx-last-t">${escHtml(forumTimeAgo(t.lastT || t.t))}</span><span class="fx-last-n">${escHtml(lastName)}</span></div><span class="fx-av sm">${forumAvatar(lastName, t.lastUid || t.uid)}</span></div>
+    <div class="fx-last"><div class="fx-last-text"><span class="fx-last-t">${escHtml(relWhen)}</span><span class="fx-last-n">${escHtml(lastName)}</span></div><span class="fx-av sm">${forumAvatar(lastName, t.lastUid || t.uid)}</span></div>
   </div>`;
 }
 Object.assign(window, { forumSetSort, forumListGo });
@@ -29144,43 +29286,3 @@ function pbEnhance() {
   if (document.body) start(); else document.addEventListener('DOMContentLoaded', start);
 })();
 Object.assign(window, { openMoveWin, closeMoveWin, pbAccOpen });
-
-
-// ============================================================
-// אודות בפרופיל: דירוג / פרטים / סיכום — כפתורים בשורה, כל אחד נפתח בחלון נפרד
-// ============================================================
-const UW_PILLS = [
-  ['uw-rate', 'דירוג', '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>'],
-  ['uw-details', 'פרטים', '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 4h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z" opacity=".25"/><path d="M7 8h10v1.8H7zM7 11.2h10V13H7zM7 14.4h6v1.8H7z"/></svg>'],
-  ['uw-summary', 'סיכום', '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3 21 9.5 17.5 20h-11L3 9.5z" opacity=".3"/><path d="M12 7.5 16.5 11 15 16H9l-1.5-5z"/></svg>']
-];
-function uwEnhance() {
-  document.querySelectorAll('.up-watch-screen:not([data-pills])').forEach(scr => {
-    scr.dataset.pills = '1';
-    const btns = UW_PILLS.map(([cls, label, ic]) => {
-      const el = scr.querySelector(':scope > .' + cls);
-      if (!el) return '';
-      el.classList.add('uw-src');
-      return `<button type="button" class="pb-btn uw-pill" data-c="${cls}" onclick="uwPillOpen(this)">${ic}<span>${label}</span></button>`;
-    }).join('');
-    if (!btns) return;
-    const anchor = scr.querySelector(':scope > .uw-mid') || scr.querySelector(':scope > .uw-head');
-    const html = `<div class="post-bar uw-pills" data-acc="1">${btns}</div>`;
-    if (anchor) anchor.insertAdjacentHTML('afterend', html); else scr.insertAdjacentHTML('beforeend', html);
-  });
-}
-function uwPillOpen(btn) {
-  const scr = btn.closest('.up-watch-screen');
-  const el = scr && scr.querySelector(':scope > .' + btn.dataset.c);
-  if (!el) return;
-  btn.classList.add('on');
-  openMoveWin(btn.textContent.trim(), el, () => btn.classList.remove('on'));
-}
-(function uwWatch() {
-  let t = 0;
-  const obs = new MutationObserver(() => { if (t) return; t = setTimeout(() => { t = 0; uwEnhance(); }, 60); });
-  const start = () => obs.observe(document.body, { childList: true, subtree: true });
-  if (document.body) start(); else document.addEventListener('DOMContentLoaded', start);
-})();
-window.uwPillOpen = uwPillOpen;
-Object.assign(UI_EN, { 'דירוג': 'Rating', 'סיכום': 'Summary' });

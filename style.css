@@ -13580,7 +13580,7 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-follow-btn.on { c
   html body:not(#_):not(#_):not(#_):not(#_):not(#_) .mtabs .mtab-plus { flex: 0 0 42px !important; }
 }
 @media (max-width: 768px) {
-  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .mtabs { display: grid !important; grid-template-columns: 1fr 1fr 1fr 44px 1fr 1fr 1fr !important; align-items: center !important; flex-wrap: nowrap !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .mtabs { display: grid !important; grid-template-columns: repeat(4, minmax(0, 1fr)) 40px repeat(3, minmax(0, 1fr)) !important; align-items: center !important; flex-wrap: nowrap !important; }
   html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .mtabs .mtab { width: auto !important; min-width: 0 !important; overflow: hidden !important; }
   html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .mtabs .mtab > span { white-space: normal !important; word-break: keep-all; overflow-wrap: anywhere; }
 }
@@ -13606,8 +13606,8 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-follow-btn.on { c
   html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pfg-card .pfg-title { font-size: 11.5px !important; line-height: 1.3 !important; }
   html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pf-panel .up-watch { zoom: .8; }
   html body:not(#_):not(#_):not(#_):not(#_):not(#_) .mview-bar.mview-pf .mview-label { font-size: 11px !important; }
-  /* פורומים — הכל בקנה מידה קטן יותר */
-  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .forums-page:not(.fo-in-panel) .fo-inner { zoom: .8; }
+  /* פורומים — גודל טבעי וחד */
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .forums-page:not(.fo-in-panel) .fo-inner { zoom: 1; }
 }
 @media (max-width: 768px) {
   html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pf-head :is(.pf-av-wrap, .pf-avatar) { width: 58px !important; height: 58px !important; min-width: 58px !important; font-size: 22px !important; }
@@ -13850,9 +13850,1012 @@ html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not
   html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pf-head .pf-counts :is(span, b) { font-size: 11px !important; }
 }
 
-/* אודות בפרופיל: המקטעים כפתורים בשורה, נפתחים בחלון נפרד */
-html body:not(#_):not(#_):not(#_) .up-watch-screen > .uw-src { display: none !important; }
-html body:not(#_):not(#_):not(#_) .pcw-body .uw-src { display: block !important; margin: 0 !important; }
-html body:not(#_):not(#_):not(#_) .uw-pills { display: flex !important; gap: 6px !important; margin: 10px 0 4px !important; padding: 0 !important; border: 0 !important; background: none !important; justify-content: flex-start !important; }
-html body:not(#_):not(#_):not(#_) .uw-pills .uw-pill.on { border-color: #111111 !important; color: #111111 !important; }
-html.theme-dark body:not(#_):not(#_):not(#_) .uw-pills .uw-pill.on { border-color: #ffffff !important; color: #ffffff !important; }
+/* ============================================================================
+   MODERN XENFORO FORUM UI (Topic List, Topic Thread View & Native Composer)
+   ============================================================================ */
+
+/* --- 1. Topic List Row (Modern XenForo Clean Layout) --- */
+.fx-list {
+  background: #ffffff;
+  border: 1px solid #e6e7ee;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(20, 20, 35, 0.035);
+  overflow: hidden;
+  margin: 12px 0;
+}
+.fx-bar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 10px 16px;
+  background: #f8f8fb;
+  border-bottom: 1px solid #e6e7ee;
+}
+.fx-row {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr) auto 145px 175px;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 16px;
+  border-bottom: 1px solid #ededf3;
+  cursor: pointer;
+  transition: background 0.14s ease;
+}
+.fx-row:hover {
+  background: #fafafd;
+}
+.fx-av {
+  padding-top: 2px;
+}
+.fx-av .fo-avatar {
+  width: 44px !important;
+  height: 44px !important;
+  font-size: 17px !important;
+  border-radius: 50% !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+.fx-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.fx-title {
+  font-size: 15.5px;
+  font-weight: 700;
+  color: #191a22;
+  line-height: 1.42;
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: unset !important;
+  word-break: break-word;
+}
+.fx-author-line {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 13px;
+  color: #7c8190;
+  line-height: 1.3;
+}
+.fx-author {
+  color: #5c6170;
+  font-weight: 500;
+}
+.fx-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 12.5px;
+  color: #8c91a0;
+}
+.fx-meta-m {
+  display: none;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  font-size: 12.5px;
+  color: #8c91a0;
+}
+.fx-meta-m b {
+  font-weight: 600;
+  color: #606575;
+}
+.fx-meta-d {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.fx-pin {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 20px;
+  padding: 0 7px;
+  margin-inline-end: 6px;
+  border-radius: 6px;
+  background: #fff0f4;
+  color: #e04870;
+  font-size: 11px;
+  font-weight: 700;
+  vertical-align: middle;
+}
+.fx-pfx {
+  display: inline-flex;
+  align-items: center;
+  height: 21px;
+  padding: 0 8px;
+  margin-inline-end: 6px;
+  border-radius: 6px;
+  background: #f1f2f7;
+  color: #464b59;
+  font-size: 11.5px;
+  font-weight: 700;
+  vertical-align: middle;
+}
+.fx-cat-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #f3f3f8;
+  color: #6e7382;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+@media (max-width: 900px) {
+  .fx-row {
+    grid-template-columns: 44px minmax(0, 1fr) auto;
+    gap: 12px;
+    padding: 13px 14px;
+  }
+  .fx-stats, .fx-last, .fx-meta-d {
+    display: none !important;
+  }
+  .fx-meta-m {
+    display: inline-flex !important;
+  }
+  .fx-title {
+    font-size: 15px !important;
+    line-height: 1.42 !important;
+    display: block !important;
+    -webkit-line-clamp: unset !important;
+    white-space: normal !important;
+  }
+  .fx-av .fo-avatar {
+    width: 42px !important;
+    height: 42px !important;
+    font-size: 16px !important;
+  }
+}
+
+/* --- 2. XenForo Topic Thread Header (.xf-topic-top) --- */
+.xf-topic-top {
+  background: #ffffff;
+  border: 1px solid #e6e7ee;
+  border-radius: 16px;
+  padding: 16px 18px;
+  margin-bottom: 14px;
+  box-shadow: 0 2px 10px rgba(20, 20, 35, 0.03);
+}
+.xf-topic-back-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.xf-back-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid #e2e3ec;
+  background: #f8f8fb;
+  color: #363945;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.xf-back-pill:hover {
+  border-color: #ec5f80;
+  color: #ec5f80;
+  background: #fff5f8;
+}
+.xf-back-pill svg {
+  width: 15px;
+  height: 15px;
+}
+.xf-topic-h1 {
+  margin: 0 0 10px;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.38;
+  color: #16171f;
+  word-break: break-word;
+}
+.xf-topic-submeta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 13px;
+  color: #7c8190;
+}
+.xf-submeta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.xf-submeta-item svg {
+  width: 14px;
+  height: 14px;
+  opacity: 0.78;
+}
+.xf-submeta-dot {
+  opacity: 0.55;
+}
+
+/* --- 3. XenForo Post Card (.xf-post) --- */
+.xf-posts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.xf-post {
+  background: #ffffff;
+  border: 1px solid #e5e6ee;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 3px 12px rgba(20, 20, 35, 0.035);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.xf-post.xf-post-flash {
+  border-color: #ec5f80 !important;
+  box-shadow: 0 0 0 3px rgba(236, 95, 128, 0.22) !important;
+}
+
+/* Post User Header Bar with speech-bubble pointer */
+.xf-post-userbar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  background: linear-gradient(180deg, #f7f7fb 0%, #f1f2f8 100%);
+  border-bottom: 1px solid #e5e6ef;
+}
+.xf-post-userbar::after {
+  content: "";
+  position: absolute;
+  bottom: -7px;
+  right: 28px;
+  width: 12px;
+  height: 12px;
+  background: #f1f2f8;
+  border-right: 1px solid #e5e6ef;
+  border-bottom: 1px solid #e5e6ef;
+  transform: rotate(45deg);
+  pointer-events: none;
+}
+.xf-post-user-right {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+}
+.xf-post-av .fo-avatar {
+  width: 44px !important;
+  height: 44px !important;
+  font-size: 17px !important;
+  border-radius: 50% !important;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+.xf-post-uinfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.xf-post-uname-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.xf-post-uname {
+  font-size: 15px;
+  font-weight: 800;
+  color: #c83e6b;
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.xf-post-uname.clickable {
+  cursor: pointer;
+}
+.xf-post-uname.clickable:hover {
+  text-decoration: underline;
+}
+.xf-post-usex {
+  font-size: 12.5px;
+  color: #6e7385;
+  font-weight: 500;
+}
+.xf-post-user-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.xf-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 25px;
+  padding: 0 11px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+}
+.xf-badge.gold {
+  background: linear-gradient(135deg, #fff6d6 0%, #ffe699 100%);
+  border: 1px solid #e6c35c;
+  color: #7a5600;
+  box-shadow: 0 1px 3px rgba(180, 130, 0, 0.12);
+}
+.xf-badge.admin {
+  background: linear-gradient(135deg, #ffe8ef 0%, #ffd0df 100%);
+  border: 1px solid #ec5f80;
+  color: #a82348;
+}
+.xf-badge.guest {
+  background: #eceef5;
+  border: 1px solid #dadce6;
+  color: #666b7a;
+}
+
+/* Post Meta Bar (Date on right, Share + #N on left) */
+.xf-post-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px 8px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid #f2f2f7;
+  font-size: 12.5px;
+  color: #8a8f9e;
+}
+.xf-post-meta-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.xf-share-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #8a8f9e;
+  cursor: pointer;
+  transition: background 0.14s ease, color 0.14s ease;
+}
+.xf-share-btn:hover {
+  background: #f2f3f8;
+  color: #ec5f80;
+}
+.xf-share-btn svg {
+  width: 15px;
+  height: 15px;
+}
+.xf-post-num {
+  color: #8a8f9e;
+  font-weight: 700;
+  text-decoration: none;
+  font-variant-numeric: tabular-nums;
+}
+.xf-post-num:hover {
+  color: #ec5f80;
+}
+
+/* Quoted Post Block (.xf-quote) */
+.xf-quote {
+  margin: 8px 16px 6px;
+  background: #f8f8fc;
+  border: 1px solid #e6e7f0;
+  border-right: 3.5px solid #ec5f80;
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.xf-quote:hover {
+  background: #f3f4fa;
+}
+.xf-quote-head {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 12px;
+  background: rgba(236, 95, 128, 0.06);
+  border-bottom: 1px solid #ececf4;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #d6456b;
+}
+.xf-quote-arr {
+  font-size: 13px;
+  line-height: 1;
+}
+.xf-quote-body {
+  padding: 8px 12px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: #525665;
+  font-style: italic;
+}
+
+/* Post Body & Images */
+.xf-post-body {
+  padding: 12px 16px 14px;
+  font-size: 15.5px;
+  line-height: 1.68;
+  color: #1c1d24;
+  word-break: break-word;
+}
+.xf-post-imgs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+  padding: 0 16px 14px;
+}
+.xf-post-img-item {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #e6e7ef;
+  background: #f6f6fa;
+  cursor: zoom-in;
+  max-height: 280px;
+}
+.xf-post-img-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Reactions Bar (.xf-reactions-bar) */
+.xf-reactions-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 16px 10px;
+  padding: 7px 12px;
+  background: #f7f7fb;
+  border: 1px solid #ebecf3;
+  border-radius: 10px;
+  font-size: 12.5px;
+  color: #5c6170;
+}
+.xf-react-icons {
+  display: inline-flex;
+  align-items: center;
+  font-size: 14px;
+  letter-spacing: -2px;
+}
+.xf-react-names {
+  font-weight: 600;
+  color: #3b3f4c;
+}
+
+/* Post Footer Actions (.xf-post-actions) */
+.xf-post-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 16px;
+  background: #fafafd;
+  border-top: 1px solid #ededf4;
+}
+.xf-post-act-right, .xf-post-act-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.xf-act-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid #e2e3ec;
+  background: #ffffff;
+  color: #454957;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.xf-act-btn:hover {
+  border-color: #ec5f80;
+  color: #ec5f80;
+  background: #fff6f8;
+}
+.xf-act-btn.liked {
+  background: #141418;
+  border-color: #141418;
+  color: #ffffff;
+}
+.xf-act-btn svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* --- 4. Forum-Adapted Rich Topic Composer & Reply Box --- */
+.fo-compose, .xf-reply-box {
+  background: #ffffff;
+  border: 1px solid #e4e5ee;
+  border-radius: 18px;
+  padding: 16px;
+  margin: 12px 0 16px;
+  box-shadow: 0 8px 28px rgba(20, 20, 35, 0.06);
+}
+.fo-compose-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #ededf4;
+  flex-wrap: wrap;
+}
+.fo-compose-who {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.fo-compose-who .fo-avatar {
+  width: 38px !important;
+  height: 38px !important;
+  font-size: 15px !important;
+  border-radius: 50% !important;
+}
+.fo-compose-who-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.fo-compose-who-text b {
+  font-size: 14px;
+  font-weight: 800;
+  color: #1b1c24;
+}
+.fo-compose-who-text small {
+  font-size: 11.5px;
+  color: #8a8f9e;
+}
+.fo-compose-head-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Compact Anonymous Switch Pill (fixes giant SVG issue) */
+.fo-anon {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  height: 32px !important;
+  padding: 0 11px !important;
+  border-radius: 999px !important;
+  border: 1px solid #e1e2ec !important;
+  background: #f7f7fb !important;
+  color: #494d5c !important;
+  font-size: 12.5px !important;
+  font-weight: 700 !important;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s ease;
+}
+.fo-anon input {
+  width: 14px !important;
+  height: 14px !important;
+  margin: 0 !important;
+  accent-color: #ec5f80;
+}
+.fo-anon-chip {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+}
+.fo-anon svg, .fo-anon-chip svg {
+  width: 16px !important;
+  height: 16px !important;
+  min-width: 16px !important;
+  max-width: 16px !important;
+  max-height: 16px !important;
+  flex: 0 0 16px !important;
+}
+.fo-anon:has(input:checked) {
+  background: #191a22 !important;
+  border-color: #191a22 !important;
+  color: #ffffff !important;
+}
+
+.fo-compose-x {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 0;
+  background: #f1f2f7;
+  color: #555968;
+  font-size: 14px;
+  display: inline-grid;
+  place-items: center;
+  cursor: pointer;
+}
+.fo-compose-x:hover {
+  background: #e5e6ef;
+  color: #191a22;
+}
+
+/* Category Selector + Prefix Pills Row */
+.fo-compose-meta-row {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.fo-compose-cat-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.fo-compose-lbl {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #686d7d;
+  white-space: nowrap;
+}
+.fo-select {
+  flex: 1;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px solid #dfe0ea;
+  background: #f9f9fc;
+  color: #1c1d24;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.fo-pfx-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+.fo-pfx-bar::-webkit-scrollbar {
+  display: none;
+}
+.fo-pfx-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 30px;
+  padding: 0 11px;
+  border-radius: 999px;
+  border: 1px solid #e2e3ec;
+  background: #ffffff;
+  color: #555968;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.14s ease;
+}
+.fo-pfx-btn.on {
+  background: #fff0f4;
+  border-color: #ec5f80;
+  color: #d63d66;
+}
+
+/* Title Input & Rich Editor Box */
+.fo-title-input {
+  width: 100%;
+  height: 44px;
+  padding: 0 14px;
+  margin-bottom: 10px;
+  border-radius: 12px;
+  border: 1px solid #dfe0ea;
+  background: #fbfbfd;
+  color: #191a22;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  box-sizing: border-box;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.fo-title-input:focus {
+  outline: none;
+  border-color: #ec5f80;
+  background: #ffffff;
+}
+.fo-editor-wrap {
+  border: 1px solid #dfe0ea;
+  border-radius: 14px;
+  background: #fbfbfd;
+  overflow: hidden;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.fo-editor-wrap:focus-within {
+  border-color: #ec5f80;
+  background: #ffffff;
+}
+.fo-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  background: #f4f5fa;
+  border-bottom: 1px solid #e6e7f0;
+}
+.fo-tb-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  min-width: 28px;
+  padding: 0 8px;
+  border-radius: 7px;
+  border: 0;
+  background: transparent;
+  color: #494d5c;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.fo-tb-btn:hover {
+  background: #e8e9f2;
+  color: #191a22;
+}
+.fo-tb-btn svg {
+  width: 15px;
+  height: 15px;
+}
+.fo-tb-sep {
+  width: 1px;
+  height: 18px;
+  background: #dcdde8;
+  margin: 0 4px;
+}
+.fo-editor-wrap textarea {
+  width: 100%;
+  border: 0 !important;
+  background: transparent !important;
+  padding: 12px 14px !important;
+  font: inherit;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: #191a22;
+  resize: vertical;
+  min-height: 110px;
+  box-sizing: border-box;
+}
+.fo-editor-wrap textarea:focus {
+  outline: none;
+}
+
+/* Image Attachments Preview Strip */
+.fo-attach-prev {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px 10px;
+  flex-wrap: wrap;
+  border-top: 1px dashed #e5e6ef;
+}
+.fo-attach-thumb {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #dedfe8;
+}
+.fo-attach-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.fo-attach-del {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 0;
+  background: rgba(20, 20, 28, 0.78);
+  color: #ffffff;
+  font-size: 11px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+/* Composer Footer & Submit Button */
+.fo-compose-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 12px;
+}
+.fo-attach-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 13px;
+  border-radius: 10px;
+  border: 1px solid #e1e2ec;
+  background: #f8f8fc;
+  color: #454957;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.fo-attach-btn:hover {
+  border-color: #ec5f80;
+  color: #ec5f80;
+}
+.fo-attach-btn svg {
+  width: 16px;
+  height: 16px;
+}
+.fo-submit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 38px;
+  padding: 0 20px;
+  border-radius: 11px;
+  border: 0;
+  background: linear-gradient(135deg, #ec5f80 0%, #d94368 100%);
+  color: #ffffff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(236, 95, 128, 0.28);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.fo-submit-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(236, 95, 128, 0.36);
+}
+.fo-submit-btn svg {
+  width: 15px;
+  height: 15px;
+}
+
+.xf-reply-quote-pill {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 12px;
+  margin-bottom: 8px;
+  border-radius: 9px;
+  background: #fff0f4;
+  border: 1px solid #f8c6d4;
+  color: #c4365c;
+  font-size: 12.5px;
+}
+.xf-reply-quote-pill button {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+/* --- 5. Dark Mode Overrides for XenForo Forum UI & Composer --- */
+html.theme-dark .xf-topic-top,
+html.theme-dark .xf-post,
+html.theme-dark .fo-compose,
+html.theme-dark .xf-reply-box {
+  background: #17141d !important;
+  border-color: #2b2535 !important;
+}
+html.theme-dark .xf-topic-h1,
+html.theme-dark .xf-post-body,
+html.theme-dark .fo-compose-who-text b,
+html.theme-dark .fo-title-input,
+html.theme-dark .fo-editor-wrap textarea,
+html.theme-dark .fo-select {
+  color: #eeeaf4 !important;
+}
+html.theme-dark .xf-post-userbar {
+  background: linear-gradient(180deg, #211c2a 0%, #1b1723 100%) !important;
+  border-color: #2d2738 !important;
+}
+html.theme-dark .xf-post-userbar::after {
+  background: #1b1723 !important;
+  border-color: #2d2738 !important;
+}
+html.theme-dark .xf-post-uname {
+  color: #f47b9b !important;
+}
+html.theme-dark .xf-post-meta {
+  border-color: #231e2c !important;
+}
+html.theme-dark .xf-quote {
+  background: #1e1926 !important;
+  border-color: #2f283c !important;
+  border-right-color: #ec5f80 !important;
+}
+html.theme-dark .xf-quote-head {
+  background: rgba(236, 95, 128, 0.1) !important;
+  border-color: #2c2538 !important;
+  color: #f47b9b !important;
+}
+html.theme-dark .xf-quote-body {
+  color: #c7c2d1 !important;
+}
+html.theme-dark .xf-reactions-bar {
+  background: #1e1a27 !important;
+  border-color: #2c2637 !important;
+  color: #b8b2c4 !important;
+}
+html.theme-dark .xf-react-names {
+  color: #e4dff0 !important;
+}
+html.theme-dark .xf-post-actions {
+  background: #1a1621 !important;
+  border-color: #292334 !important;
+}
+html.theme-dark .xf-act-btn,
+html.theme-dark .xf-back-pill,
+html.theme-dark .fo-pfx-btn,
+html.theme-dark .fo-attach-btn,
+html.theme-dark .fo-anon {
+  background: #211c29 !important;
+  border-color: #322b3e !important;
+  color: #ddd8e6 !important;
+}
+html.theme-dark .xf-act-btn.liked,
+html.theme-dark .fo-anon:has(input:checked) {
+  background: #ffffff !important;
+  border-color: #ffffff !important;
+  color: #141418 !important;
+}
+html.theme-dark .fo-pfx-btn.on {
+  background: #331a24 !important;
+  border-color: #ec5f80 !important;
+  color: #f786a3 !important;
+}
+html.theme-dark .fo-title-input,
+html.theme-dark .fo-editor-wrap,
+html.theme-dark .fo-select {
+  background: #120f17 !important;
+  border-color: #2f283b !important;
+}
+html.theme-dark .fo-toolbar {
+  background: #1d1825 !important;
+  border-color: #2d2638 !important;
+}
+html.theme-dark .fo-tb-btn {
+  color: #ccc6d8 !important;
+}
+html.theme-dark .fo-compose-head {
+  border-color: #282232 !important;
+}
+
