@@ -19756,8 +19756,25 @@ async function openMessages() {
   document.documentElement.classList.add('tg-open');
   requestAnimationFrame(() => modal.classList.add('show'));
   dmActiveConv = null;
+  dmSearchRevealInit(modal);
 }
 window.openMessages = openMessages;
+// החיפוש בהודעות מוסתר — מופיע רק כשגוללים למעלה (בראש הרשימה), ונעלם כשגוללים למטה
+function dmSearchRevealInit(modal) {
+  const view = modal.querySelector('.tg-list-view');
+  const list = modal.querySelector('#dm-conv-list');
+  const box = modal.querySelector('.tg-search');
+  if (!view || !list || !box) return;
+  view.classList.add('tg-search-hid');
+  const input = box.querySelector('input');
+  const show = () => view.classList.remove('tg-search-hid');
+  const hide = () => { if (input && (input.value || document.activeElement === input)) return; view.classList.add('tg-search-hid'); };
+  let last = list.scrollTop, ty = null;
+  list.addEventListener('scroll', () => { const st = list.scrollTop; if (st < last - 4) show(); else if (st > last + 4 && st > 20) hide(); last = st; }, { passive: true });
+  list.addEventListener('wheel', e => { if (e.deltaY < 0 && list.scrollTop <= 0) show(); }, { passive: true });
+  list.addEventListener('touchstart', e => { ty = e.touches[0].clientY; }, { passive: true });
+  list.addEventListener('touchmove', e => { if (ty != null && list.scrollTop <= 0 && e.touches[0].clientY - ty > 18) show(); }, { passive: true });
+}
 
 // ---- כפתור "הודעות" צף במחשב: אייקון + 3 עיגולים של השיחות האחרונות ----
 let dmExpanded = false;

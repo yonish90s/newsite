@@ -13792,3 +13792,29 @@ html body:not(#_):not(#_):not(#_) .art-rec-section { zoom: .6; }
 @media (max-width: 768px) {
   html body:not(#_):not(#_):not(#_) .art-rec-section { zoom: .62; }
 }
+
+/* ===== הודעות: חיפוש רק כשגוללים למעלה; הכל קטן יותר (~40%) ===== */
+html body:not(#_):not(#_):not(#_) .tg-list-view .tg-search { transition: max-height .22s ease, opacity .18s ease, margin .22s ease, padding .22s ease; max-height: 60px; overflow: hidden; }
+html body:not(#_):not(#_):not(#_) .tg-list-view.tg-search-hid .tg-search { max-height: 0 !important; opacity: 0 !important; margin-top: 0 !important; margin-bottom: 0 !important; padding-top: 0 !important; padding-bottom: 0 !important; border-width: 0 !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .tg-list-view .tg-head { padding: 8px 12px !important; min-height: 0 !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .tg-list-view .tg-round { width: 28px !important; height: 28px !important; min-width: 28px !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .tg-list-view .tg-round svg { width: 14px !important; height: 14px !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .tg-list-view .tg-head-title { font-size: 14px !important; gap: 6px !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .tg-list-view .tg-logo { width: 18px !important; height: 18px !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .tg-list-view .tg-search { height: auto !important; padding: 5px 10px !important; margin: 4px 12px 6px !important; gap: 6px !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .tg-list-view .tg-search input { font-size: 13px !important; height: 22px !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .tg-list-view .tg-search svg { width: 14px !important; height: 14px !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .tg-list-view .tg-guest { font-size: 11px !important; padding: 8px 10px !important; margin: 4px 12px 6px !important; gap: 6px !important; line-height: 1.4 !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .tg-list-view .tg-guest :is(button, a) { font-size: 11px !important; height: 26px !important; min-height: 0 !important; padding: 0 12px !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .tg-list-view .tg-row { padding: 7px 12px !important; gap: 10px !important; min-height: 0 !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .tg-list-view .tg-row :is(.tg-av, .au-av, .tg-row-av) { width: 38px !important; height: 38px !important; min-width: 38px !important; font-size: 15px !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .tg-list-view .tg-row :is(.tg-row-name, .tg-row-top b) { font-size: 13px !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .tg-list-view .tg-row .tg-row-last { font-size: 11.5px !important; line-height: 1.3 !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .tg-list-view .tg-row :is(.tg-row-time, small) { font-size: 10.5px !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .tg-list-view .tg-row svg { max-width: 14px; max-height: 14px; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .tg-list-view .tg-row .tg-avatar { width: 40px !important; height: 40px !important; min-width: 40px !important; font-size: 16px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .tg-list-view .tg-row .tg-avatar svg { width: 18px !important; height: 18px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .tg-list-view .tg-row .tg-verified { width: 13px !important; height: 13px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .tg-list-view.tg-search-hid .tg-search { padding: 0 !important; margin: 0 !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .tg-list-view .tg-row { padding-top: 6px !important; padding-bottom: 6px !important; min-height: 0 !important; height: auto !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .tg-list-view .tg-row .tg-row-main { padding-top: 6px !important; padding-bottom: 6px !important; min-height: 0 !important; height: auto !important; gap: 2px !important; }
