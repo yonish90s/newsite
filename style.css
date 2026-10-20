@@ -14017,3 +14017,12 @@ html.theme-dark .fo-quote { background: rgba(240,163,94,.08) !important; color: 
   html body:not(#_):not(#_):not(#_):not(#_) .fo-posts .fo-post-text { font-size: 14px !important; line-height: 1.6 !important; }
   html body:not(#_):not(#_):not(#_):not(#_) .fo-posts .fo-likes { flex-wrap: wrap !important; gap: 6px !important; margin-top: 10px !important; }
 }
+
+
+/* תצוגת פיד: התמונה כולה, ברורה, בגודל הטבעי שלה (בלי חיתוך ובלי טשטוש) */
+@media (max-width: 768px) {
+  html.mview-feed body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) .art-row-img-wrap { aspect-ratio: auto !important; height: auto !important; max-height: none !important; background: none !important; display: block !important; overflow: hidden !important; }
+  html.mview-feed body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) .art-row-img-wrap::before, html.mview-feed body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) .art-row-img-wrap::after { display: none !important; content: none !important; }
+  html.mview-feed body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) .art-row-img-wrap img { position: static !important; display: block !important; width: 100% !important; height: auto !important; max-height: 78vh !important; object-fit: contain !important; filter: none !important; transform: none !important; margin: 0 auto !important; }
+  html.age-not-verified.mview-feed body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) .art-row[data-adult="1"] .art-row-img-wrap img { filter: blur(22px) !important; }
+}
