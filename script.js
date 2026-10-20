@@ -28908,20 +28908,22 @@ window.sidePanelResizeStart = sidePanelResizeStart;
 // מובייל: בורר "תצוגה" אחיד (גריד 2 בשורה / רשימה 1 בשורה) בתמונות, קומיקס, סיפורים ויד 2
 // ============================================================
 function mviewGet() { try { const v = localStorage.getItem('m_view'); return v === 'list' || v === 'grid' ? v : 'feed'; } catch (e) { return 'feed'; } }  // ברירת מחדל: פיד
-function mviewApply() { const v = mviewGet(); document.documentElement.classList.toggle('mview-list', v === 'list' || v === 'feed'); document.documentElement.classList.toggle('mview-feed', v === 'feed'); }
-function mviewSet(v) {
-  try { localStorage.setItem('m_view', v); } catch (e) {}
+// בפרופיל — הגדרה נפרדת, ברירת מחדל גריד
+function mviewGetPf() { try { const v = localStorage.getItem('m_view_pf'); return v === 'list' || v === 'feed' ? v : 'grid'; } catch (e) { return 'grid'; } }
+function mviewApply() { document.documentElement.classList.toggle('pfview-list', mviewGetPf() !== 'grid'); const v = mviewGet(); document.documentElement.classList.toggle('mview-list', v === 'list' || v === 'feed'); document.documentElement.classList.toggle('mview-feed', v === 'feed'); }
+function mviewSet(v, pf) {
+  try { localStorage.setItem(pf ? 'm_view_pf' : 'm_view', v); } catch (e) {}
   mviewApply();
-  document.querySelectorAll('.mview-btn').forEach(b => b.classList.toggle('on', b.dataset.v === v));
+  document.querySelectorAll(pf ? '.mview-pf .mview-btn' : '.mview-bar:not(.mview-pf) .mview-btn').forEach(b => b.classList.toggle('on', b.dataset.v === v));
 }
-function mviewBarHTML() {
-  const v = mviewGet();
+function mviewBarHTML(pf) {
+  const v = pf ? mviewGetPf() : mviewGet();
   const ic = {
     grid: '<rect x="4" y="4" width="7" height="7" rx="1.6"/><rect x="13" y="4" width="7" height="7" rx="1.6"/><rect x="4" y="13" width="7" height="7" rx="1.6"/><rect x="13" y="13" width="7" height="7" rx="1.6"/>',
     list: '<rect x="4" y="4" width="16" height="7" rx="1.6"/><rect x="4" y="13" width="16" height="7" rx="1.6"/>',
     feed: '<circle cx="6" cy="5" r="1.6"/><path d="M9.5 5h10.5"/><rect x="4" y="9" width="16" height="8" rx="1.6"/><path d="M4 20.5h5M12 20.5h3"/>'
   };
-  const b = (k, t) => `<button type="button" class="mview-btn${v === k ? ' on' : ''}" data-v="${k}" onclick="mviewSet('${k}')" aria-label="${t}" title="${t}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round">${ic[k]}</svg></button>`;
+  const b = (k, t) => `<button type="button" class="mview-btn${v === k ? ' on' : ''}" data-v="${k}" onclick="mviewSet('${k}'${pf ? ', 1' : ''})" aria-label="${t}" title="${t}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round">${ic[k]}</svg></button>`;
   return `<div class="mview-bar"><span class="mview-label">תצוגה</span>${b('grid', 'גריד')}${b('list', 'רשימה')}${b('feed', 'פיד')}</div>`;
 }
 function mviewInject() {
@@ -28930,7 +28932,7 @@ function mviewInject() {
   if (rows && !rows.previousElementSibling?.classList?.contains('mview-bar')) rows.insertAdjacentHTML('beforebegin', mviewBarHTML());
   // עמוד משתמש: אחרי לשוניות פוסטים / גלריה / אודות
   const pfTabs = document.querySelector('.pf-tabs');
-  if (pfTabs && !pfTabs.nextElementSibling?.classList?.contains('mview-bar')) pfTabs.insertAdjacentHTML('afterend', mviewBarHTML().replace('mview-bar', 'mview-bar mview-pf'));
+  if (pfTabs && !pfTabs.nextElementSibling?.classList?.contains('mview-bar')) pfTabs.insertAdjacentHTML('afterend', mviewBarHTML(true).replace('mview-bar', 'mview-bar mview-pf'));
 }
 mviewApply();
 (function mviewWatch() {

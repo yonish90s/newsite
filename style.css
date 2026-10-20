@@ -13561,12 +13561,12 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-follow-btn.on { c
 /* עמוד משתמש במובייל: בורר תצוגה — גריד (2 בשורה) / רשימה */
 @media (max-width: 768px) {
   html body:not(#_):not(#_):not(#_) .mview-bar.mview-pf { margin: 10px 4px 8px; }
-  html:not(.mview-list) body:not(#_):not(#_):not(#_):not(#_) .pf-panel .pfg { display: block !important; }
-  html:not(.mview-list) body:not(#_):not(#_):not(#_):not(#_) .pf-panel .pf-list-mobile { display: none !important; }
-  html.mview-list body:not(#_):not(#_):not(#_):not(#_) .pf-panel .pfg { display: none !important; }
-  html.mview-list body:not(#_):not(#_):not(#_):not(#_) .pf-panel .pf-list-mobile { display: block !important; }
+  html:not(.pfview-list) body:not(#_):not(#_):not(#_):not(#_) .pf-panel .pfg { display: block !important; }
+  html:not(.pfview-list) body:not(#_):not(#_):not(#_):not(#_) .pf-panel .pf-list-mobile { display: none !important; }
+  html.pfview-list body:not(#_):not(#_):not(#_):not(#_) .pf-panel .pfg { display: none !important; }
+  html.pfview-list body:not(#_):not(#_):not(#_):not(#_) .pf-panel .pf-list-mobile { display: block !important; }
   html body:not(#_):not(#_):not(#_):not(#_) .pf-panel :is(.pfg-grid, .pf-grid) { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
-  html.mview-list body:not(#_):not(#_):not(#_):not(#_) .pf-panel .pf-grid { grid-template-columns: 1fr !important; gap: 14px !important; }
+  html.pfview-list body:not(#_):not(#_):not(#_):not(#_) .pf-panel .pf-grid { grid-template-columns: 1fr !important; gap: 14px !important; }
   html body:not(#_):not(#_):not(#_):not(#_) .pf-panel :is(.pfg-views, .pfg-count, .pf-tile-count) { display: none !important; }
   html body:not(#_):not(#_):not(#_):not(#_) .pf-panel :is(.pfg-media, .pf-tile) { border-radius: 10px !important; overflow: hidden !important; }
 }
