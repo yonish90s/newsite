@@ -280,3 +280,10 @@ html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):
 }
 
 @media (min-width: 769px) { html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-row .card-head-acts .art-telegram-btn { color: #c9ccd1 !important; } }
+
+@media (min-width: 1100px) {
+  html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-detail .pc-section, html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-detail .pc-compose { border-color: #2f3336 !important; }
+  html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-detail .pc-compose .pc-av { background: #2a2a2c !important; color: #ececec !important; }
+  html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-detail .pc-compose .pc-go { background: #eff3f4 !important; color: #0f1419 !important; }
+  html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-detail .pc-compose .pc-replying { color: #71767b !important; }
+}

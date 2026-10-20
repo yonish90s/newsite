@@ -14428,3 +14428,37 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pc-row .pc-who { flex: none; 
   body.edit-mode { zoom: 1 !important; }
   body.edit-mode .main-layout { height: 100vh !important; }
 }
+
+
+/* ===== מחשב: עמוד פריט בפרופורציות של פוסט בטוויטר — עמודה אחת ממורכזת, טקסט מעל התמונה, תגובות מתחת ===== */
+.pc-av, .pc-replying, .pc-go-txt { display: none; }
+@media (min-width: 1100px) {
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-detail .art-detail-inner { max-width: 680px !important; margin: 0 auto !important; padding: 8px 0 40px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-detail .pd2 { display: flex !important; flex-direction: column !important; gap: 14px !important; grid-template-columns: none !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-detail .pd2 > .pd2-info { order: 1 !important; width: 100% !important; max-width: none !important; position: static !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-detail .pd2 > .pd2-media { order: 2 !important; width: 100% !important; max-width: none !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-detail .pd2-media img { width: 100% !important; height: auto !important; max-height: 80vh !important; object-fit: contain !important; border-radius: 16px !important; }
+  /* תגובות מתחת לפוסט */
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-detail .pc-section { display: block !important; margin: 18px 0 0 !important; padding: 0 !important; border-top: 1px solid #ececf0 !important; }
+  /* תיבת תגובה בסגנון טוויטר */
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-detail .pc-compose { position: static !important; transform: none !important; left: auto !important; right: auto !important; width: auto !important; max-width: none !important; margin: 0 !important; padding: 12px 0 14px !important; border: 0 !important; border-bottom: 1px solid #ececf0 !important; border-radius: 0 !important; background: transparent !important; box-shadow: none !important; display: grid !important; grid-template-columns: 48px 1fr !important; column-gap: 12px !important; row-gap: 4px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-detail .pc-compose .pc-replying { display: block !important; grid-column: 2 !important; font-size: 14px !important; color: #6b7180 !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-detail .pc-compose .pc-replying b { color: #1d9bf0 !important; font-weight: 500 !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-detail .pc-compose .pc-av { display: grid !important; grid-column: 1 !important; grid-row: span 3 !important; width: 44px; height: 44px; border-radius: 50%; background: #e7e7ec; color: #333; font-weight: 700; font-size: 18px; place-items: center; align-self: start; margin-top: 2px; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-detail .pc-compose .pc-stars-row { grid-column: 2 !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-detail .pc-compose .pc-row { grid-column: 2 !important; display: grid !important; grid-template-columns: auto auto 1fr auto !important; grid-template-areas: "ta ta ta ta" "who mic gap go" !important; align-items: center !important; gap: 8px 6px !important; background: none !important; border: 0 !important; padding: 0 !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-detail .pc-compose .pc-in { grid-area: ta !important; border: 0 !important; background: transparent !important; box-shadow: none !important; font-size: 20px !important; padding: 8px 0 !important; min-height: 44px !important; outline: none !important; color: inherit !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-detail .pc-compose .pc-who { grid-area: who !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-detail .pc-compose .pc-mic-ic:not(.pc-who) { grid-area: mic !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-detail .pc-compose :is(.pc-who, .pc-mic-ic) { width: 34px !important; height: 34px !important; border: 0 !important; background: transparent !important; color: #1d9bf0 !important; border-radius: 50% !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-detail .pc-compose :is(.pc-who, .pc-mic-ic):hover { background: rgba(29,155,240,.1) !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-detail .pc-compose :is(.pc-who, .pc-mic-ic) svg { width: 20px !important; height: 20px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-detail .pc-compose .pc-go { grid-area: go !important; width: auto !important; height: 36px !important; padding: 0 18px !important; border-radius: 999px !important; background: #0f1419 !important; color: #ffffff !important; opacity: .5; border: 0 !important; font-weight: 700 !important; font-size: 15px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-detail .pc-compose.has-text .pc-go { opacity: 1; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-detail .pc-compose .pc-go svg { display: none !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-detail .pc-compose .pc-go .pc-go-txt { display: inline !important; }
+}
+/* מחשב: עמוד הפוסט בקנה מידה כמו בטוויטר (מבטל את ההקטנה הכללית בעמוד הזה) */
+@media (min-width: 1100px) and (max-width: 1999px) {
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-detail .art-detail-inner { zoom: 1.33; max-width: 600px !important; }
+}

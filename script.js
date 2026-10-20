@@ -20150,13 +20150,17 @@ function pcComposerHTML(kind, id, editName) {
   }
   const submit = kind === 'photo' ? 'submitPhotoComment' : 'submitStoryComment';
   if (kind === 'photo') pcStars = 0;
+  const meName = (auth.currentUser && !auth.currentUser.isAnonymous) ? ((auth.currentUser.displayName || (auth.currentUser.email || '').split('@')[0]) || '') : saved;
+  const author = (() => { try { const a = (typeof window.__pcAuthor === 'function') ? window.__pcAuthor(kind, id) : ''; return a || ''; } catch (e) { return ''; } })();
   return `<div class="pc-compose" id="${kind}-compose">
+    ${author ? `<div class="pc-replying">מגיבים ל־<b>@${escHtml(author)}</b></div>` : ''}
+    <span class="pc-av" aria-hidden="true">${escHtml(String(meName || 'א').trim().charAt(0) || 'א')}</span>
     ${kind === 'photo' ? `<div class="pc-stars-row"><span>דירוג (לא חובה):</span><span class="pc-stars">${[1, 2, 3, 4, 5].map(n => `<i onclick="pcSetStars(${n})" role="button" aria-label="${n} כוכבים">${PD_STAR}</i>`).join('')}</span></div>` : ''}
     <div class="pc-row">
       ${saved ? `<button type="button" class="pc-mic-ic pc-who" onclick="pcChangeName('${kind}','${sid}')" aria-label="שינוי השם" title="מגיבים בתור ${escHtml(saved)} — לחצו לשינוי"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.6"/><path d="M5.5 19.5a6.5 6.5 0 0 1 13 0"/></svg></button>` : ''}
       <button type="button" class="pc-mic-ic" onclick="voiceRecToggle('${kind}', '${sid}')" aria-label="תגובה קולית" title="תגובה קולית"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg></button>
-      <textarea id="${kind}-comment-input" class="pc-in" rows="1" maxlength="1000" placeholder="הצטרפו לשיחה" oninput="this.style.height='auto'; this.style.height=Math.min(this.scrollHeight,140)+'px'"></textarea>
-      <button type="button" class="pc-go" onclick="${submit}('${sid}')" aria-label="שליחה">${PC_SEND_ICON}</button>
+      <textarea id="${kind}-comment-input" class="pc-in" rows="1" maxlength="1000" placeholder="הצטרפו לשיחה" oninput="this.style.height='auto'; this.style.height=Math.min(this.scrollHeight,140)+'px'; this.closest('.pc-compose').classList.toggle('has-text', !!this.value.trim())"></textarea>
+      <button type="button" class="pc-go" onclick="${submit}('${sid}')" aria-label="שליחה">${PC_SEND_ICON}<span class="pc-go-txt">הגב</span></button>
     </div></div>`;
 }
 function pcRerender(kind, id, editName) {
@@ -27992,7 +27996,11 @@ function postBarHTML(a) {
   </div>`;
 }
 function togglePostComments(btn) {
-  // לבקשת בעל האתר: התגובות נפתחות בחלון נפרד
+  // מחשב: התגובות מוצגות מתחת לפוסט (כמו בטוויטר) — גוללים אליהן; מובייל: חלון נפרד
+  if (window.matchMedia('(min-width: 1100px)').matches) {
+    const sec = document.querySelector('.art-detail .pc-section');
+    if (sec) { sec.classList.add('open'); try { sec.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {} const ta = sec.querySelector('textarea'); if (ta) setTimeout(() => ta.focus({ preventScroll: true }), 350); return; }
+  }
   if (typeof openCommentsWindow === 'function') return openCommentsWindow();
   const sec = document.querySelector('.art-detail .pc-section');
   if (!sec) return;
@@ -29464,8 +29472,17 @@ function cardDescEnhance() {
     }
   });
 }
+function pcReplyingEnhance() {
+  document.querySelectorAll('.art-detail .pc-compose:not([data-rep])').forEach(c => {
+    c.dataset.rep = '1';
+    if (c.querySelector('.pc-replying')) return;
+    const a = window.__pcAuthor ? window.__pcAuthor() : '';
+    if (a) c.insertAdjacentHTML('afterbegin', `<div class="pc-replying">מגיבים ל־<b>@${escHtml(a)}</b></div>`);
+  });
+}
 function cardHeadActsEnhance() {
   try { cardDescEnhance(); } catch (e) {}
+  try { pcReplyingEnhance(); } catch (e) {}
   document.querySelectorAll('#photo-row-1 > .art-row, #story-row-main > .art-row').forEach(row => {
     if (row.dataset.headActs) return;
     const links = row.querySelector('.photo-card-links');
@@ -29598,3 +29615,10 @@ function forumMiniRename(id) {
   if (typeof showCopyToast === 'function') showCopyToast('מגיבים בתור ' + v);
 }
 Object.assign(window, { forumMiniRename });
+
+
+// שם היוצר לשורת "מגיבים ל־@..." בתיבת התגובה
+window.__pcAuthor = function (kind, id) {
+  const sel = document.querySelector('.art-detail .pd2-creator-txt b, .art-detail .pd2-info .photo-author-link');
+  return sel ? sel.textContent.trim() : '';
+};

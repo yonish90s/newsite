@@ -2504,6 +2504,13 @@ html.theme-dark .fo-mini-btn { border: 1px solid #333336 !important; color: #bdb
 html.theme-dark .fo-mini-btn.on { background: #3a3a3d !important; border-color: #5b6472 !important; }
 html.theme-dark .fo-mini-btn.send { background: #3a3a3d !important; border-color: #5b6472 !important; }
 html.theme-dark.theme-dark .fo-mini-btn.on, html.theme-dark.theme-dark .fo-mini-btn.send { background: #2a2a2c !important; border-color: #333336 !important; color: #d9d9d9 !important; }
+@media (min-width: 1100px) {
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-detail .pc-section { border-top: 1px solid #333336 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-detail .pc-compose { border-bottom: 1px solid #333336 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-detail .pc-compose .pc-replying { color: #bdbdbd !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-detail .pc-compose .pc-av { background: #2a2a2c !important; color: #d9d9d9 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-detail .pc-compose .pc-go { background: #3a3a3d !important; }
+}
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #d9d9d9 !important; }
 html.theme-dark [style*="color:#111111"] { color: #d9d9d9 !important; }
@@ -2959,3 +2966,10 @@ html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):
 }
 
 @media (min-width: 769px) { html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-row .card-head-acts .art-telegram-btn { color: #c9ccd1 !important; } }
+
+@media (min-width: 1100px) {
+  html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-detail .pc-section, html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-detail .pc-compose { border-color: #2f3336 !important; }
+  html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-detail .pc-compose .pc-av { background: #2a2a2c !important; color: #ececec !important; }
+  html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-detail .pc-compose .pc-go { background: #eff3f4 !important; color: #0f1419 !important; }
+  html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-detail .pc-compose .pc-replying { color: #71767b !important; }
+}
