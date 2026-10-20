@@ -232,3 +232,8 @@ html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):
 html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pf-box .pf-sec-body { border-color: #2a2433 !important; }
 
 html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .saved-grid .saved-thumb { border-color: #2f293a !important; background: #1d1924 !important; }
+
+@media (max-width: 768px) {
+  html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="photos"] .pcc-filter { background: #ffffff !important; color: #111111 !important; border-color: #ffffff !important; }
+  html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="photos"] .pcc-filter .pcc-name { color: #111111 !important; }
+}

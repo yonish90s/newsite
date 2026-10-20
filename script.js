@@ -28983,6 +28983,12 @@ function mviewInject() {
   if (!window.matchMedia('(max-width: 768px)').matches) return;
   const rows = document.querySelector('.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page:not(.photos-stories-feed) #story-row-main');
   if (rows && !rows.previousElementSibling?.classList?.contains('mview-bar')) rows.insertAdjacentHTML('beforebegin', mviewBarHTML());
+  // מובייל: כפתור "סינון" בתחילת שורת הקטגוריות (במקום שורת הכלים הארוכה)
+  document.querySelectorAll('.photos-page[data-section="photos"] .pm-head').forEach(head => {
+    const row = head.querySelector('.pcc-row');
+    if (!row || !head.querySelector('.psf-row') || row.querySelector('.pcc-filter')) return;
+    row.insertAdjacentHTML('afterbegin', `<button type="button" class="pcc pcc-filter" onclick="openFilterSheet()" aria-label="סינון ומיון"><span class="pcc-ring"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg></span><span class="pcc-name">סינון</span></button>`);
+  });
   // עמוד משתמש: אחרי לשוניות פוסטים / גלריה / אודות
   const pfTabs = document.querySelector('.pf-tabs');
   if (pfTabs && !pfTabs.nextElementSibling?.classList?.contains('mview-bar')) pfTabs.insertAdjacentHTML('afterend', mviewBarHTML(true).replace('mview-bar', 'mview-bar mview-pf'));
