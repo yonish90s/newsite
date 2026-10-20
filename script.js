@@ -6865,6 +6865,7 @@ function storyCardHTML(s, iconHint) {
       ${cardFollowBtnHTML(s)}
       ${cardReportBtnHTML(s.id, s.title)}
       ${cardMoreBtnHTML()}
+      ${cardFollowHeadHTML(s)}
       </div>
     `;
 
@@ -8716,6 +8717,7 @@ function renderPhotoCard(p, options = {}) {
       ${cardFollowBtnHTML(p)}
       ${cardReportBtnHTML(p.id, p.title)}
       ${cardMoreBtnHTML()}
+      ${cardFollowHeadHTML(p)}
     </div>
   `;
 
@@ -27892,6 +27894,7 @@ function followIconHTML(a) {
 async function followIconClick(uid, name, btn) {
   await toggleFollow(uid, name, null);
   const on = typeof isFollowing === 'function' && isFollowing(uid);
+  document.querySelectorAll(`.card-follow-h[onclick*="'${uid}'"]`).forEach(b => { b.classList.toggle('on', on); b.textContent = on ? 'במעקב' : 'עקיבה'; });
   document.querySelectorAll(`.pti-follow[onclick*="'${uid}'"]`).forEach(b => {
     b.classList.toggle('on', on);
     b.innerHTML = on ? FOLLOWING_ICON : FOLLOW_ICON;
@@ -29345,3 +29348,13 @@ document.addEventListener('pointerdown', e => {
   b.classList.remove('tap-pop'); void b.offsetWidth; b.classList.add('tap-pop');
   setTimeout(() => b.classList.remove('tap-pop'), 260);
 }, { passive: true });
+
+
+// כפתור "עקיבה" בראש הכרטיס (ליד שם המשתמש) — בכל שלוש התצוגות
+function cardFollowHeadHTML(a) {
+  const u = auth.currentUser;
+  if (!a || !a.authorId || (u && u.uid === a.authorId)) return '';
+  const on = typeof isFollowing === 'function' && isFollowing(a.authorId);
+  return `<button type="button" class="card-follow-h${on ? ' on' : ''}" onclick="event.stopPropagation(); followIconClick('${artEsc(a.authorId)}', '${artEsc(a.author || '')}', this)">${on ? 'במעקב' : 'עקיבה'}</button>`;
+}
+Object.assign(UI_EN, { 'עקיבה': 'Follow', 'במעקב': 'Following' });
