@@ -29461,12 +29461,15 @@ function recMiniEnhance() {
   });
   // מובייל: שורת היוצר (תמונה, שם, תאריך, דירוג וצפיות) מעל התמונה
   if (window.matchMedia('(max-width: 900px)').matches) {
-    document.querySelectorAll('.art-detail .pd2:not([data-cr-up])').forEach(pd => {
-      const cr = pd.querySelector('.pd2-info > .pd2-creator'), media = pd.querySelector(':scope > .pd2-media');
+    document.querySelectorAll('.art-detail :is(.pd2, .pshow):not([data-cr-up])').forEach(pd => {
+      const cr = pd.querySelector('.pd2-info > .pd2-creator'), media = pd.querySelector(':scope > .pd2-media, :scope > .pshow-stage');
       if (!cr || !media) return;
       pd.dataset.crUp = '1';
       cr.classList.add('pd2-creator-up');
       pd.insertBefore(cr, media);
+      // קומיקס: הממוזערות של העמודים — מיד מתחת לתמונה המוצגת
+      const tiles = pd.querySelector('.comic-info .pshow-tiles'), frame = media.querySelector('.pshow-frame');
+      if (tiles && frame) { tiles.classList.add('pshow-tiles-up'); frame.after(tiles); }
     });
   }
 }
@@ -29991,4 +29994,29 @@ window.hcDot = hcDot;
     if (t.classList.contains('hc-track')) { const w = t.clientWidth; t.scrollTo({ left: Math.round(t.scrollLeft / w) * w, behavior: 'smooth' }); }
     if (moved) { const stop = ev => { ev.stopPropagation(); ev.preventDefault(); }; document.addEventListener('click', stop, { capture: true, once: true }); setTimeout(() => document.removeEventListener('click', stop, true), 50); }
   });
+})();
+
+// ============================================================
+// מובייל: אייקוני הכותרת (פרופיל, שפה, לייקים, חיפוש, מצב כהה) מוסתרים מאחורי כפתור ≡ — לחיצה פותחת אותם
+// במחשב (ri-pop = display:contents) הכותרת נשארת כמו שהיא
+// ============================================================
+(function headerIconsMenu() {
+  const init = () => {
+    const ri = document.querySelector('.right-icons');
+    if (!ri || ri.querySelector('.ri-pop')) return;
+    const pop = document.createElement('div');
+    pop.className = 'ri-pop';
+    [...ri.children].forEach(c => pop.appendChild(c));
+    const btn = document.createElement('button');
+    btn.type = 'button'; btn.className = 'ri-more'; btn.setAttribute('aria-label', 'תפריט');
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>';
+    btn.addEventListener('click', e => { e.stopPropagation(); ri.classList.toggle('ri-open'); });
+    ri.appendChild(pop); ri.appendChild(btn);
+    // ילדים שנוספים לכותרת מאוחר יותר עוברים גם הם לתפריט
+    new MutationObserver(() => [...ri.children].forEach(c => { if (c !== pop && c !== btn) pop.appendChild(c); })).observe(ri, { childList: true });
+    // לחיצה על אחד האייקונים או מחוץ לתפריט — סוגרת
+    document.addEventListener('click', e => { if (!ri.classList.contains('ri-open')) return; if (e.target.closest('.ri-more')) return; setTimeout(() => ri.classList.remove('ri-open'), 0); });
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+  setTimeout(init, 1500);
 })();
