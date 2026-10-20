@@ -29144,3 +29144,43 @@ function pbEnhance() {
   if (document.body) start(); else document.addEventListener('DOMContentLoaded', start);
 })();
 Object.assign(window, { openMoveWin, closeMoveWin, pbAccOpen });
+
+
+// ============================================================
+// אודות בפרופיל: דירוג / פרטים / סיכום — כפתורים בשורה, כל אחד נפתח בחלון נפרד
+// ============================================================
+const UW_PILLS = [
+  ['uw-rate', 'דירוג', '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>'],
+  ['uw-details', 'פרטים', '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 4h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z" opacity=".25"/><path d="M7 8h10v1.8H7zM7 11.2h10V13H7zM7 14.4h6v1.8H7z"/></svg>'],
+  ['uw-summary', 'סיכום', '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3 21 9.5 17.5 20h-11L3 9.5z" opacity=".3"/><path d="M12 7.5 16.5 11 15 16H9l-1.5-5z"/></svg>']
+];
+function uwEnhance() {
+  document.querySelectorAll('.up-watch-screen:not([data-pills])').forEach(scr => {
+    scr.dataset.pills = '1';
+    const btns = UW_PILLS.map(([cls, label, ic]) => {
+      const el = scr.querySelector(':scope > .' + cls);
+      if (!el) return '';
+      el.classList.add('uw-src');
+      return `<button type="button" class="pb-btn uw-pill" data-c="${cls}" onclick="uwPillOpen(this)">${ic}<span>${label}</span></button>`;
+    }).join('');
+    if (!btns) return;
+    const anchor = scr.querySelector(':scope > .uw-mid') || scr.querySelector(':scope > .uw-head');
+    const html = `<div class="post-bar uw-pills" data-acc="1">${btns}</div>`;
+    if (anchor) anchor.insertAdjacentHTML('afterend', html); else scr.insertAdjacentHTML('beforeend', html);
+  });
+}
+function uwPillOpen(btn) {
+  const scr = btn.closest('.up-watch-screen');
+  const el = scr && scr.querySelector(':scope > .' + btn.dataset.c);
+  if (!el) return;
+  btn.classList.add('on');
+  openMoveWin(btn.textContent.trim(), el, () => btn.classList.remove('on'));
+}
+(function uwWatch() {
+  let t = 0;
+  const obs = new MutationObserver(() => { if (t) return; t = setTimeout(() => { t = 0; uwEnhance(); }, 60); });
+  const start = () => obs.observe(document.body, { childList: true, subtree: true });
+  if (document.body) start(); else document.addEventListener('DOMContentLoaded', start);
+})();
+window.uwPillOpen = uwPillOpen;
+Object.assign(UI_EN, { 'דירוג': 'Rating', 'סיכום': 'Summary' });

@@ -13849,3 +13849,10 @@ html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not
   html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pf-head .pf-counts { grid-area: counts !important; justify-content: flex-start !important; gap: 12px !important; margin: 6px 0 0 !important; padding-top: 6px !important; border-top: 1px solid rgba(127,127,140,.15) !important; }
   html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pf-head .pf-counts :is(span, b) { font-size: 11px !important; }
 }
+
+/* אודות בפרופיל: המקטעים כפתורים בשורה, נפתחים בחלון נפרד */
+html body:not(#_):not(#_):not(#_) .up-watch-screen > .uw-src { display: none !important; }
+html body:not(#_):not(#_):not(#_) .pcw-body .uw-src { display: block !important; margin: 0 !important; }
+html body:not(#_):not(#_):not(#_) .uw-pills { display: flex !important; gap: 6px !important; margin: 10px 0 4px !important; padding: 0 !important; border: 0 !important; background: none !important; justify-content: flex-start !important; }
+html body:not(#_):not(#_):not(#_) .uw-pills .uw-pill.on { border-color: #111111 !important; color: #111111 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) .uw-pills .uw-pill.on { border-color: #ffffff !important; color: #ffffff !important; }
