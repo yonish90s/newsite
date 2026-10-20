@@ -29439,3 +29439,32 @@ function cardStatsBtnsHTML(a, kind) {
     <button type="button" class="art-telegram-btn art-cmt-btn" data-id="${escHtml(a.id)}" onclick="event.stopPropagation(); ${open}; setTimeout(() => { if (typeof openCommentsWindow === 'function') openCommentsWindow(); }, 900)" title="תגובות" aria-label="תגובות"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M20.5 11.5a8 8 0 0 1-11.7 7.1L4 20l1.3-4.4A8 8 0 1 1 20.5 11.5z"/></svg><span class="pc-n">${n(cmts)}</span></button>
     <button type="button" class="art-telegram-btn art-rep-btn pti-repost" data-item="${escHtml(a.id)}" onclick="event.stopPropagation(); toggleRepost('${id}', this)" title="שיתוף לפרופיל" aria-label="שיתוף"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M14 5l6 6-6 6"/><path d="M20 11H10a6 6 0 0 0-6 6v2"/></svg><b class="pti-n pc-n">${n(reps)}</b></button>`;
 }
+
+
+// ============================================================
+// כרטיסים: דיווח / הודעה / מייל / טלגרם — עוברים לשורת הראש (בין שם המשתמש לכפתור העקיבה);
+// למטה נשארים לייק · תגובות · שיתוף · שמירה
+// ============================================================
+function cardHeadActsEnhance() {
+  document.querySelectorAll('#photo-row-1 > .art-row, #story-row-main > .art-row').forEach(row => {
+    if (row.dataset.headActs) return;
+    const links = row.querySelector('.photo-card-links');
+    const meta = row.querySelector('.art-row-meta');
+    if (!links || !meta) return;
+    row.dataset.headActs = '1';
+    const box = document.createElement('span');
+    box.className = 'card-head-acts';
+    const pick = [...links.querySelectorAll('.art-telegram-btn')].filter(b =>
+      !b.matches('.art-like-btn, .art-cmt-btn, .art-rep-btn, .art-save-btn, .art-offer-btn, .art-follow-btn, .is-disabled'));
+    // סדר: טלגרם · מייל · הודעה · דיווח
+    const order = b => b.classList.contains('art-report-btn') ? 4 : b.classList.contains('art-msg-btn') ? 3 : /מייל|mail/i.test(b.getAttribute('aria-label') || b.title || '') ? 2 : 1;
+    pick.sort((a, b) => order(a) - order(b)).forEach(b => box.appendChild(b));
+    if (box.children.length) meta.appendChild(box);
+  });
+}
+(function cardHeadActsWatch() {
+  let t = 0;
+  const obs = new MutationObserver(() => { if (t) return; t = setTimeout(() => { t = 0; cardHeadActsEnhance(); }, 50); });
+  const start = () => { obs.observe(document.body, { childList: true, subtree: true }); cardHeadActsEnhance(); };
+  if (document.body) start(); else document.addEventListener('DOMContentLoaded', start);
+})();
