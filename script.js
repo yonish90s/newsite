@@ -17559,10 +17559,9 @@ function buildFeedPage() {
   const follows = Object.keys(followedUids || {}).filter(k => followedUids[k]);
   let body;
   if (!reg) {
-    // אורח: רואה את הפיד של מנהל האתר, ומעליו הזמנה להתחבר ולעקוב אחרי יוצרים
+    // אורח: רואה את הפיד של מנהל האתר
     const siteFeed = items.filter(x => typeof isSiteAdminAuthor === 'function' && isSiteAdminAuthor(x.authorId, x.author, x));
-    body = `<div class="pfeed-guest"><div><b>הפיד של האתר</b><small>התחברו ועקבו אחרי יוצרים — כל מה שהם מעלים יופיע כאן</small></div><button type="button" class="pfeed-guest-btn" onclick="openLiveChatLogin()">התחברות</button></div>`
-      + postsListHTML('sitefeed', siteFeed, true, '<div class="pf-empty">עדיין אין פוסטים</div>');
+    body = postsListHTML('sitefeed', siteFeed, true, '<div class="pf-empty">עדיין אין פוסטים</div>');
   } else {
     const mine = repostsMerge(items.filter(x => x.authorId && followedUids[x.authorId]), follows, items);
     // הצעות למעקב: היוצרים הפעילים ביותר שעוד לא עוקבים אחריהם
@@ -17580,7 +17579,6 @@ function buildFeedPage() {
       (follows.length ? postsListHTML('feed', mine, true, '<div class="pf-empty">מי שאתם עוקבים אחריו עוד לא העלה כלום</div>') : '');
   }
   return `<div class="user-page pfeed-page" data-photos-json="${json}"><div class="pfeed-inner">
-      <header class="pfeed-head"><h1>הפיד שלי</h1><p>כל מה שהעלו מי שאתם עוקבים אחריהם — החדש ביותר למעלה</p></header>
       ${composerBarHTML()}
       ${body}
     </div></div>`;
@@ -29329,7 +29327,7 @@ function homeHeroCarouselHTML(photos, comics, stories) {
     const open = kind === 'photo' ? `homeOpenPhotos(); setTimeout(() => photoOpenDetail('${artEsc(x.id)}'), 450)` : `storyOpenDetail('${artEsc(x.id)}')`;
     return `<button type="button" class="hc-slide${x.isAdult && !adultOk ? ' blur' : ''}" onclick="${open}"><span class="hc-bg" style="background-image:url('${escHtml(String(img(x)).replace(/'/g, '%27'))}')"></span><img src="${escHtml(img(x))}" alt="" loading="lazy"></button>`;
   }).join('');
-  const dots = pick.slice(0, 7).map((_, i) => `<i class="${i === 0 ? 'on' : ''}"></i>`).join('');
+  const dots = pick.slice(0, 7).map((_, i) => `<i class="${i === 0 ? 'on' : ''}" onclick="hcDot(this, ${i})"></i>`).join('');
   setTimeout(hcInit, 60);
   return `<section class="hc" aria-label="תמונות נבחרות">
     <div class="hc-track" dir="ltr" onscroll="hcSync(this)">${slides}</div>
@@ -29942,3 +29940,55 @@ function stockAdjust(id, d) {
 }
 Object.assign(window, { adminSetTab, adminOpenTab, stockSet, stockAdjust });
 Object.assign(UI_EN, { 'מנהל': 'Admin', 'מנהל 🔒': 'Admin 🔒', 'מלאי': 'Inventory', 'במלאי': 'In stock', 'מלאי נמוך': 'Low stock', 'אזל': 'Out of stock', 'יחידות במלאי': 'Units in stock', 'אזלו': 'Sold out', 'לא הוגדר': 'Not set' });
+
+
+// ============================================================
+// בלי חיצים באתר: במובייל מחליקים עם האצבע, במחשב — ממוזערות / נקודות, וגרירה עם העכבר בשורות
+// ============================================================
+function hcDot(el, i) {
+  const t = el.closest('.hc') && el.closest('.hc').querySelector('.hc-track');
+  if (t) t.scrollTo({ left: i * t.clientWidth, behavior: 'smooth' });
+}
+window.hcDot = hcDot;
+(function swipeNav() {
+  let sx = 0, sy = 0, el = null;
+  document.addEventListener('touchstart', e => {
+    el = e.target.closest && e.target.closest('.pd-show .pshow-frame, #story-page-view');
+    if (!el) return;
+    sx = e.touches[0].clientX; sy = e.touches[0].clientY;
+  }, { passive: true });
+  document.addEventListener('touchend', e => {
+    if (!el) return;
+    const t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy;
+    const target = el; el = null;
+    if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy) * 1.2) return;
+    // באתר RTL: החלקה שמאלה = הבא
+    const dir = dx < 0 ? 1 : -1;
+    if (target.id === 'story-page-view') { if (dir > 0) storyNextPage(); else storyPrevPage(); }
+    else pdShowStep(target, dir);
+  }, { passive: true });
+})();
+(function dragScroll() {
+  const SEL = '.hx-tabs, .hx-explore-row, .hc-track, .rec-mini, .pd2-thumbs, .story-page-thumbs';
+  let el = null, x0 = 0, l0 = 0, moved = false;
+  document.addEventListener('mousedown', e => {
+    if (e.button !== 0) return;
+    el = e.target.closest && e.target.closest(SEL);
+    if (!el || el.scrollWidth <= el.clientWidth) { el = null; return; }
+    x0 = e.clientX; l0 = el.scrollLeft; moved = false;
+  });
+  document.addEventListener('mousemove', e => {
+    if (!el) return;
+    const dx = e.clientX - x0;
+    if (!moved && Math.abs(dx) < 6) return;
+    moved = true; el.classList.add('dragging');
+    el.scrollLeft = l0 - dx;
+    e.preventDefault();
+  });
+  document.addEventListener('mouseup', () => {
+    if (!el) return;
+    const t = el; el = null; t.classList.remove('dragging');
+    if (t.classList.contains('hc-track')) { const w = t.clientWidth; t.scrollTo({ left: Math.round(t.scrollLeft / w) * w, behavior: 'smooth' }); }
+    if (moved) { const stop = ev => { ev.stopPropagation(); ev.preventDefault(); }; document.addEventListener('click', stop, { capture: true, once: true }); setTimeout(() => document.removeEventListener('click', stop, true), 50); }
+  });
+})();
