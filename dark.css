@@ -2450,6 +2450,10 @@ html.theme-dark .fo-like-names { color: var(--fi-muted, #9aa2ad) !important; }
 @media (max-width: 768px) {
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .fo-posts .fo-author-name { color: var(--fi-acc, color-mix(in srgb, #b0244a 55%, white)) !important; }
 }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photo-card-links .art-telegram-btn, .pti) { color: #eceef1 !important; border-color: #2a2433 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.art-follow-btn.on, .pti-follow.on) { background: #352e42 !important; border-color: #5b6472 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) .photo-card-links .art-follow-btn.on { background: #352e42 !important; border-color: #5b6472 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) .photo-card-links .art-telegram-btn:not(.on):not(.is-saved):not(.liked) { color: #eceef1 !important; border-color: #2a2433 !important; }
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #eceef1 !important; }
 html.theme-dark [style*="color:#111111"] { color: #eceef1 !important; }
@@ -2830,3 +2834,14 @@ html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):
 html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .hs-bar { background: #17141d !important; border-color: #2f293a !important; }
 html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .hx-explore { background: linear-gradient(135deg, #2a1722, #221a33) !important; }
 html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .hx-card { background: #17141d !important; }
+
+/* כפתורי פעולה ברורים במצב כהה; "עוקב" = לבן מלא עם אייקון שחור */
+html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photo-card-links .art-telegram-btn, .pti) { color: #ebe8f0 !important; border-color: #3a3346 !important; opacity: 1 !important; }
+html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.art-follow-btn.on, .pti-follow.on) { background: #ffffff !important; border-color: #ffffff !important; color: #111111 !important; }
+html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.art-follow-btn.on, .pti-follow.on) svg { stroke: #111111 !important; color: #111111 !important; }
+html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.art-like-btn.liked, .photo-card-links .art-save-btn.is-saved) { background: #ffffff !important; border-color: #ffffff !important; color: #111111 !important; }
+html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.art-like-btn.liked, .photo-card-links .art-save-btn.is-saved) svg { fill: #111111 !important; stroke: #111111 !important; }
+
+html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) .photo-card-links .art-follow-btn.on { background: #ffffff !important; border-color: #ffffff !important; color: #111111 !important; }
+html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) .photo-card-links .art-follow-btn.on svg { stroke: #111111 !important; }
+html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) .photo-card-links .art-telegram-btn:not(.on):not(.is-saved):not(.liked) { color: #ebe8f0 !important; border-color: #3a3346 !important; }
