@@ -29035,7 +29035,7 @@ function mviewBarHTML(pf) {
     feed: '<circle cx="6" cy="5" r="1.6"/><path d="M9.5 5h10.5"/><rect x="4" y="9" width="16" height="8" rx="1.6"/><path d="M4 20.5h5M12 20.5h3"/>'
   };
   const b = (k, t) => `<button type="button" class="mview-btn${v === k ? ' on' : ''}" data-v="${k}" onclick="mviewSet('${k}'${pf ? ', 1' : ''})" aria-label="${t}" title="${t}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round">${ic[k]}</svg></button>`;
-  return `<div class="mview-bar">${b('grid', 'גריד')}${b('list', 'רשימה')}${b('feed', 'פיד')}</div>`;
+  return `<div class="mview-bar"><span class="mview-label">תצוגה</span>${b('grid', 'גריד')}${b('list', 'רשימה')}${b('feed', 'פיד')}</div>`;
 }
 function mviewInject() {
   // "הפיד שלי": בורר התצוגה מופיע גם במחשב
@@ -29043,18 +29043,7 @@ function mviewInject() {
     if (!pl.previousElementSibling?.classList?.contains('mview-bar')) pl.insertAdjacentHTML('beforebegin', mviewBarHTML().replace('mview-bar', 'mview-bar mview-feedpage'));
   });
   const rows = document.querySelector('.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page:not(.photos-stories-feed) #story-row-main');
-  if (rows) {
-    const pg = rows.closest('.photos-page, .stories-page') || rows.parentElement;
-    const tools = window.matchMedia('(max-width: 768px)').matches ? pg.querySelector('.pm-head .pcc-row') : null;
-    if (tools && !pg.querySelector('.pm-tools')) {
-      // שורה אחת: סינון + קטגוריות (נגללות) + אייקוני התצוגה בקצה
-      pg.querySelectorAll('.mview-bar').forEach(b => b.remove());
-      const wrap = document.createElement('div');
-      wrap.className = 'pm-tools';
-      tools.before(wrap); wrap.appendChild(tools);
-      wrap.insertAdjacentHTML('beforeend', mviewBarHTML());
-    } else if (!tools && !pg.querySelector('.mview-bar')) rows.insertAdjacentHTML('beforebegin', mviewBarHTML());
-  }
+  if (rows && !rows.previousElementSibling?.classList?.contains('mview-bar')) rows.insertAdjacentHTML('beforebegin', mviewBarHTML());
   // מובייל: כפתור "סינון" בתחילת שורת הקטגוריות (במקום שורת הכלים הארוכה)
   document.querySelectorAll('.photos-page[data-section="photos"] .pm-head').forEach(head => {
     const row = head.querySelector('.pcc-row');
@@ -30035,3 +30024,13 @@ window.hcDot = hcDot;
 // סרגל הכפתורים התחתון במובייל — מוסתר לפי בקשת הבעלים. להחזרה: לשנות ל-false
 const MTABS_HIDDEN = true;
 document.documentElement.classList.toggle('mtabs-off', MTABS_HIDDEN);
+
+// סמלים בלבד במובייל: שם הלשונית/הקטגוריה נשמר כ-title ו-aria-label
+(function iconOnlyTitles() {
+  const run = () => document.querySelectorAll('.content-switch .cs-tab:not([title]), .pcc-row .pcc:not([title])').forEach(b => {
+    const t = (b.querySelector('.pcc-name, span:last-child') || b).textContent.trim();
+    if (t) { b.title = t; if (!b.getAttribute('aria-label')) b.setAttribute('aria-label', t); }
+  });
+  let tm = 0;
+  new MutationObserver(() => { clearTimeout(tm); tm = setTimeout(run, 80); }).observe(document.documentElement, { childList: true, subtree: true });
+})();
