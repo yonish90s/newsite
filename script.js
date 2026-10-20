@@ -28419,6 +28419,7 @@ function ofpListHTML() {
   const u = auth.currentUser, me = u ? u.uid : '';
   const all = Object.values(offersMap);
   const inList = all.filter(o => o.toUid === me), outList = all.filter(o => o.fromUid === me);
+  const orders = all.filter(o => o.status === 'accepted' || o.status === 'signed').sort((a, b) => (b.updatedAt || b.at || 0) - (a.updatedAt || a.at || 0));
   const list = (offersTab === 'in' ? inList : outList).sort((a, b) => (b.updatedAt || b.at || 0) - (a.updatedAt || a.at || 0));
   const prices = inList.filter(o => o.kind === 'price' && o.price > 0).map(o => o.price);
   const avg = prices.length ? Math.round(prices.reduce((a, b) => a + b, 0) / prices.length) : 0;
@@ -28457,8 +28458,8 @@ function ofpListHTML() {
   };
   return `<div class="ofp">
     <div class="ofp-stats">${stat('מחכות לתשובה שלי', waiting)}${stat('הצעות שקיבלתי', inList.length)}${stat('ממוצע הצעה', avg ? '₪' + avg.toLocaleString('he-IL') : '—')}</div>
-    <nav class="pfg-tabs"><button type="button" class="pfg-tab${offersTab === 'in' ? ' on' : ''}" onclick="offersSetTab('in')"><b>${inList.length}</b> התקבלו</button><button type="button" class="pfg-tab${offersTab === 'out' ? ' on' : ''}" onclick="offersSetTab('out')"><b>${outList.length}</b> נשלחו</button></nav>
-    <div class="ofp-list">${list.length ? list.map(row).join('') : `${ofpDemoCardHTML()}<div class="pf-empty">${offersTab === 'in' ? 'עדיין לא קיבלת הצעות — פרסמו מוצר במוצרי גולשים' : 'עדיין לא שלחת הצעות'}</div>`}</div>
+    <nav class="pfg-tabs"><button type="button" class="pfg-tab${offersTab === 'in' ? ' on' : ''}" onclick="offersSetTab('in')"><b>${inList.length}</b> התקבלו</button><button type="button" class="pfg-tab${offersTab === 'out' ? ' on' : ''}" onclick="offersSetTab('out')"><b>${outList.length}</b> נשלחו</button><button type="button" class="pfg-tab${offersTab === 'orders' ? ' on' : ''}" onclick="offersSetTab('orders')"><b>${orders.length}</b> הזמנות</button></nav>
+    ${offersTab === 'orders' ? `<div class="ofp-list">${orders.length ? orders.map(o => orderTrackHTML(o, me)).join('') : orderTrackHTML(null, me) + '<div class="pf-empty">עדיין אין הזמנות — הצעה שאושרה הופכת להזמנה עם מעקב משלוח</div>'}</div>` : `<div class="ofp-list">${list.length ? list.map(row).join('') : `${ofpDemoCardHTML()}<div class="pf-empty">${offersTab === 'in' ? 'עדיין לא קיבלת הצעות — פרסמו מוצר במוצרי גולשים' : 'עדיין לא שלחת הצעות'}</div>`}</div>`}
   </div>`;
 }
 function offersRerender() { const b = document.querySelector('#ofp-panel .fo-panel-body'); if (b) b.innerHTML = ofpListHTML(); }
@@ -29757,3 +29758,58 @@ function productDetailViewHTML(list, admin) {
     ${list.length > 1 ? `<h3 class="prd-more-h">מוצרים נוספים</h3>
       <div class="prd-more">${list.map((x, i) => i === productsSel ? '' : `<button type="button" class="prd-more-card" onclick="productsPick(${i})"><span class="prd-more-img">${media(x)}</span><b>${escHtml(x.name || '')}</b>${x.price ? `<small>₪${escHtml(String(x.price).replace(/^₪/, ''))}</small>` : ''}</button>`).join('')}</div>` : ''}`;
 }
+
+
+// ============================================================
+// הזמנות: הצעה שאושרה = הזמנה עם מעקב משלוח (המוכר מקדם שלב, הקונה רואה איפה זה עומד)
+// website/offers/{id}/ship = { stage: 0..4, t: { "0": ts, ... } }
+// ============================================================
+const SHIP_STEPS = [
+  ['הוזמן', '<path d="M7 3h10v18H7z"/><path d="M10 8h4M10 12h4M10 16h2"/>'],
+  ['נארז', '<path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5z"/><path d="M3.5 7.5 12 12l8.5-4.5M12 12v9"/>'],
+  ['נשלח', '<path d="M4 7h12v10H4z"/><path d="M8 11h4"/><path d="M16 10h3l2 3v4h-5"/>'],
+  ['בדרך', '<path d="M3 7h11v9H3z"/><path d="M14 10h4l3 3v3h-7"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/>'],
+  ['נמסר', '<path d="M5 12.5l4.5 4.5L19 7.5"/>']
+];
+function orderTrackHTML(o, me) {
+  const demo = !o;
+  if (demo) o = { id: 'demo', title: "נינטנדו סוויץ'", price: 850, fromName: 'דניאל', toName: 'את/ה', fromUid: 'x', toUid: me || 'y', updatedAt: Date.now() - 3600e3, ship: { stage: 2, t: { 0: Date.now() - 3600e3 * 26, 1: Date.now() - 3600e3 * 20, 2: Date.now() - 3600e3 * 3 } } };
+  const ship = o.ship || {};
+  const stage = Math.min(4, Math.max(0, Number(ship.stage) || 0));
+  const times = Object.assign({ 0: o.updatedAt || o.at }, ship.t || {});
+  const seller = o.toUid === me;
+  const other = seller ? (o.fromName || 'קונה') : (o.toName || 'מוכר');
+  const fmt = t => { if (!t) return ''; const d = new Date(t); return d.toDateString() === new Date().toDateString() ? d.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }) : d.getDate() + '.' + (d.getMonth() + 1); };
+  const steps = SHIP_STEPS.map(([lbl, ic], i) => `<div class="otr-step${i < stage ? ' done' : i === stage ? ' now' : ''}">
+      <span class="otr-dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ic}</svg></span>
+      <b>${lbl}</b><small>${i <= stage ? escHtml(fmt(times[i])) : ''}</small>
+    </div>`).join('');
+  const code = '#' + String(o.id).slice(-6).toUpperCase();
+  const st = SHIP_STEPS[stage][0];
+  return `<div class="otr${demo ? ' otr-demo' : ''}">
+    <div class="otr-head"><b>מעקב משלוח</b><small>${escHtml(code)}${demo ? ' · דוגמה' : ''}</small></div>
+    <div class="otr-steps" style="--p:${stage / 4}">${steps}</div>
+    <div class="otr-card">
+      <div class="otr-card-txt">
+        <b>${escHtml(o.title || 'הזמנה')}${o.price ? ` · ₪${Number(o.price).toLocaleString('he-IL')}` : ''}</b>
+        <small>${seller ? 'אל' : 'מאת'}&nbsp;${escHtml(other)}</small>
+        <span class="otr-pill${stage === 4 ? ' ok' : ''}">${escHtml(st)}</span>
+      </div>
+      ${demo ? `<button type="button" class="otr-next" onclick="showCopyToast('זו הזמנה לדוגמה — כך ייראה מעקב משלוח אמיתי')">עדכון שלב ›</button>`
+        : (seller && stage < 4 ? `<button type="button" class="otr-next" onclick="orderShipAdvance('${artEsc(o.id)}')">${escHtml(SHIP_STEPS[stage + 1][0])} ›</button>` : '')}
+    </div>
+  </div>`;
+}
+async function orderShipAdvance(id) {
+  const o = offersMap[id]; const u = auth.currentUser;
+  if (!o || !u || o.toUid !== u.uid) return;
+  const ship = o.ship || {}; const stage = Math.min(4, (Number(ship.stage) || 0) + 1);
+  const t = Object.assign({}, ship.t || {}); t[stage] = Date.now();
+  try {
+    await update(ref(db, `website/offers/${id}`), { ship: { stage, t }, updatedAt: Date.now() });
+    showCopyToast('המשלוח עודכן: ' + SHIP_STEPS[stage][0]);
+    try { if (typeof dmSendSystem === 'function') dmSendSystem(o.fromUid, `📦 עדכון משלוח על "${o.title}": ${SHIP_STEPS[stage][0]}`); } catch (e) {}
+  } catch (e) { showCopyToast('לא הצלחנו לעדכן את המשלוח'); }
+}
+window.orderShipAdvance = orderShipAdvance;
+Object.assign(UI_EN, { 'הזמנות': 'Orders', 'מעקב משלוח': 'Shipment tracking', 'הוזמן': 'Ordered', 'נארז': 'Packed', 'נשלח': 'Shipped', 'בדרך': 'In transit', 'נמסר': 'Delivered', 'עדכון שלב ›': 'Update stage ›' });

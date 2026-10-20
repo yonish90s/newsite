@@ -297,3 +297,13 @@ html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):
 html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .prd-wish { border-color: #333336 !important; }
 html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .prd-wish.on { color: #ec5f80 !important; border-color: #ec5f80 !important; }
 html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .prd-trust { background: #1c1c1e !important; color: #b0b3b8 !important; }
+
+/* הזמנות: מעקב משלוח */
+html.theme-dark .otr{background:#1c1c1e;border-color:#333336}
+html.theme-dark .otr-head b,html.theme-dark .otr-card-txt b,html.theme-dark .otr-step.done b,html.theme-dark .otr-step.now b{color:#d9d9d9}
+html.theme-dark .otr-steps::before{background:#333336}
+html.theme-dark .otr-dot{background:#232325;border-color:#3a3a3d;color:#777}
+html.theme-dark .otr-step.done .otr-dot{background:#d9d9d9;border-color:#d9d9d9;color:#121212}
+html.theme-dark .otr-card{background:#232325}
+html.theme-dark .otr-card-txt small{color:#939393}
+html.theme-dark .otr-pill.ok,html.theme-dark .otr-next{background:#d9d9d9;color:#121212}

@@ -14781,3 +14781,30 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_
 html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .prd-trust b { color: #1d1d22 !important; }
 html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .prd-buy-box { border-color: #ececf0 !important; border-radius: 18px !important; }
 html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .prd-more-card { border-color: #ececf0 !important; border-radius: 16px !important; }
+
+/* ===== הזמנות: מעקב משלוח ===== */
+.otr{border:1px solid #e6e6e6;border-radius:14px;padding:12px;margin:0 0 10px;background:#fff;direction:rtl}
+.otr-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}
+.otr-head b{font-size:14px;color:#111}
+.otr-head small{font-size:11px;color:#888;font-variant-numeric:tabular-nums}
+.otr-steps{position:relative;display:grid;grid-template-columns:repeat(5,1fr);margin-bottom:12px}
+.otr-steps::before,.otr-steps::after{content:"";position:absolute;top:14px;right:10%;height:2px;border-radius:2px}
+.otr-steps::before{left:10%;background:#e6e6e6}
+.otr-steps::after{width:calc(80% * var(--p));background:#ec5f80}
+.otr-step{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;text-align:center;gap:3px}
+.otr-dot{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#fff;border:2px solid #e0e0e0;color:#aaa}
+.otr-dot svg{width:14px;height:14px}
+.otr-step.done .otr-dot{background:#111;border-color:#111;color:#fff}
+.otr-step.now .otr-dot{background:#ec5f80;border-color:#ec5f80;color:#fff;box-shadow:0 0 0 4px rgba(236,95,128,.18)}
+.otr-step b{font-size:11px;font-weight:600;color:#999}
+.otr-step.done b,.otr-step.now b{color:#111}
+.otr-step small{font-size:9.5px;color:#999;min-height:12px;font-variant-numeric:tabular-nums}
+.otr-card{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#f6f6f7;border-radius:10px;padding:9px 11px}
+.otr-card-txt{display:flex;flex-direction:column;gap:2px;min-width:0}
+.otr-card-txt b{font-size:13px;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.otr-card-txt small{font-size:11px;color:#777}
+.otr-pill{align-self:flex-start;margin-top:3px;font-size:10.5px;font-weight:700;padding:2px 9px;border-radius:999px;background:rgba(236,95,128,.12);color:#d4436a}
+.otr-pill.ok{background:#111;color:#fff}
+.otr-next{flex:none;border:0;border-radius:999px;background:#111;color:#fff;font:600 12px var(--site-font,inherit);padding:7px 13px;cursor:pointer}
+.otr-next:active{transform:scale(.95)}
+.otr-demo{opacity:.92}
