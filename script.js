@@ -6862,6 +6862,7 @@ function storyCardHTML(s, iconHint) {
         ${cardLink(s.telegramUrl, 'טלגרם', 'M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z')}
         ${cardLink(s.emailUrl, 'אימייל', 'M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z', '<polyline points="22,6 12,13 2,6"/>')}
       ${cardMsgBtnHTML(s)}
+      ${cardFollowBtnHTML(s)}
       ${cardReportBtnHTML(s.id, s.title)}
       </div>
     `;
@@ -8710,6 +8711,7 @@ function renderPhotoCard(p, options = {}) {
       ${cardLink(p.emailUrl, 'אימייל', 'M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z', '<polyline points="22,6 12,13 2,6"/>')}
       <button type="button" class="art-telegram-btn art-offer-btn" onclick="event.stopPropagation(); openPriceOffer('${artEsc(p.id)}', '${artEsc(p.title || '')}', '${artEsc(p.authorId || '')}', '${artEsc(p.author || '')}')" title="הצעת מחיר" aria-label="הצעת מחיר"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg><span>הצעה</span></button>
       ${cardMsgBtnHTML(p)}
+      ${cardFollowBtnHTML(p)}
       ${cardReportBtnHTML(p.id, p.title)}
     </div>
   `;
@@ -28896,8 +28898,10 @@ function mviewBarHTML() {
 function mviewInject() {
   if (!window.matchMedia('(max-width: 768px)').matches) return;
   const rows = document.querySelector('.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page:not(.photos-stories-feed) #story-row-main');
-  if (!rows || rows.previousElementSibling?.classList?.contains('mview-bar')) return;
-  rows.insertAdjacentHTML('beforebegin', mviewBarHTML());
+  if (rows && !rows.previousElementSibling?.classList?.contains('mview-bar')) rows.insertAdjacentHTML('beforebegin', mviewBarHTML());
+  // עמוד משתמש: אחרי לשוניות פוסטים / גלריה / אודות
+  const pfTabs = document.querySelector('.pf-tabs');
+  if (pfTabs && !pfTabs.nextElementSibling?.classList?.contains('mview-bar')) pfTabs.insertAdjacentHTML('afterend', mviewBarHTML().replace('mview-bar', 'mview-bar mview-pf'));
 }
 mviewApply();
 (function mviewWatch() {
@@ -28908,3 +28912,14 @@ mviewApply();
 })();
 Object.assign(window, { mviewSet });
 Object.assign(UI_EN, { 'תצוגה': 'View', 'גריד': 'Grid', 'רשימה': 'List' });
+
+
+// כפתור "מעקב" בשורת הכפתורים של כרטיס (תמונות / קומיקס / סיפורים / יד 2) — לפני הדיווח
+function cardFollowBtnHTML(a) {
+  const u = auth.currentUser;
+  if (!a || !a.authorId || (u && u.uid === a.authorId)) return '';
+  try { if (typeof subscribeMyFollows === 'function') subscribeMyFollows(); } catch (e) {}
+  const on = typeof isFollowing === 'function' && isFollowing(a.authorId);
+  const t = on ? 'ביטול מעקב' : 'מעקב אחרי היוצר';
+  return `<button type="button" class="art-telegram-btn art-follow-btn pti-follow${on ? ' on' : ''}" onclick="event.stopPropagation(); followIconClick('${artEsc(a.authorId)}', '${artEsc(a.author || '')}', this)" title="${t}" aria-label="${t}">${on ? FOLLOWING_ICON : FOLLOW_ICON}</button>`;
+}

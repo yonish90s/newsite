@@ -13553,3 +13553,20 @@ html body:not(#_):not(#_):not(#_):not(#_) .mnx .mnx-grid .mnx-item { justify-con
   html.mview-list body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) .art-row-meta { font-size: 11.5px !important; }
 }
 @media (max-width: 768px) { html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page, .stories-page) .pv-dist.unknown { display: none !important; } }
+
+/* כפתור מעקב בכרטיסים */
+html body:not(#_):not(#_):not(#_) .art-follow-btn svg { width: 14px; height: 14px; fill: none !important; stroke: currentColor !important; stroke-width: 2 !important; stroke-linecap: round; stroke-linejoin: round; display: block; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-follow-btn.on { color: #ec5f80 !important; }
+
+/* עמוד משתמש במובייל: בורר תצוגה — גריד (2 בשורה) / רשימה */
+@media (max-width: 768px) {
+  html body:not(#_):not(#_):not(#_) .mview-bar.mview-pf { margin: 10px 4px 8px; }
+  html:not(.mview-list) body:not(#_):not(#_):not(#_):not(#_) .pf-panel .pfg { display: block !important; }
+  html:not(.mview-list) body:not(#_):not(#_):not(#_):not(#_) .pf-panel .pf-list-mobile { display: none !important; }
+  html.mview-list body:not(#_):not(#_):not(#_):not(#_) .pf-panel .pfg { display: none !important; }
+  html.mview-list body:not(#_):not(#_):not(#_):not(#_) .pf-panel .pf-list-mobile { display: block !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .pf-panel :is(.pfg-grid, .pf-grid) { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
+  html.mview-list body:not(#_):not(#_):not(#_):not(#_) .pf-panel .pf-grid { grid-template-columns: 1fr !important; gap: 14px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .pf-panel :is(.pfg-views, .pfg-count, .pf-tile-count) { display: none !important; }
+  html body:not(#_):not(#_):not(#_):not(#_) .pf-panel :is(.pfg-media, .pf-tile) { border-radius: 10px !important; overflow: hidden !important; }
+}
