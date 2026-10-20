@@ -7106,9 +7106,9 @@ function storyOpenDetail(id) {
             <h1 class="story-article-title">${escHtml(s.title || '')}</h1>
             <div class="story-article-rule"></div>
             <div class="story-article-meta" style="margin-bottom:14px; color:#64748b;">
-              <span>🗓️ ${escHtml(s.timestamp || '')}</span>
-              <span>⏱️ זמן קריאה: ${_readMin} דקות</span>
-              <span class="au-line">מאת ${authorAvHTML(s)}<b>${escHtml(s.author || '')}</b></span>
+              <span class="au-line">${authorAvHTML(s)}<b>${escHtml(s.author || 'אנונימי')}</b></span>
+              <span class="sam-dot">·</span><span>${escHtml(s.timestamp || '')}</span>
+              <span class="sam-dot">·</span><span>${_readMin} דק׳ קריאה</span>
             </div>
             ${_tagChips ? `<div class="story-article-tags">${_tagChips}</div>` : ''}
             ${storyLinkedChipHTML(s)}
@@ -29392,7 +29392,7 @@ function recMiniEnhance() {
   document.querySelectorAll('.art-rec-section:not([data-mini])').forEach(sec => {
     sec.dataset.mini = '1';
     const cards = [...sec.querySelectorAll('.art-rec-card')];
-    const acts = sec.closest('.art-detail, .pd2, [class*="detail"]')?.querySelector('.pd2-topacts') || document.querySelector('.art-detail .pd2-topacts');
+    const acts = sec.closest('.art-detail, .pd2, [class*="detail"]')?.querySelector('.pd2-topacts') || document.querySelector('.art-detail .pd2-topacts') || document.querySelector('.art-detail .story-article');
     if (!cards.length || !acts) return;
     const items = cards.map((c, i) => {
       const img = c.querySelector('img');

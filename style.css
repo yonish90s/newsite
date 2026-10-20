@@ -14655,3 +14655,21 @@ html.theme-dark .ha-login .ha-login-foot button { color: #ececec !important; }
   html.mview-feed body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.photos-page[data-section="photos"] #photo-row-1, .photos-page[data-section="secondhand"] #photo-row-1, .stories-page #story-row-main) { max-width: 560px !important; }
   html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .mview-bar { max-width: 600px; margin-inline: auto !important; }
 }
+
+/* ===== עמוד סיפור: מינימליסטי — שורת מידע אחת קטנה, תגיות כטקסט, קישור פשוט ===== */
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .story-article-rule { display: none !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .story-article-title { margin: 0 0 8px !important; font-size: 26px !important; font-weight: 800 !important; line-height: 1.25 !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .story-article-meta { display: flex !important; flex-wrap: wrap !important; align-items: center !important; gap: 6px !important; margin: 0 0 10px !important; font-size: 13px !important; color: #8a8f99 !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .story-article-meta .au-line { display: inline-flex !important; align-items: center !important; gap: 6px !important; color: #1d1d22 !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .story-article-meta .au-line b { font-weight: 600 !important; font-size: 13px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .story-article-meta .au-av { width: 22px !important; height: 22px !important; font-size: 11px !important; }
+.sam-dot { opacity: .6; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .story-article-tags { display: flex !important; flex-wrap: wrap !important; gap: 10px !important; margin: 0 0 12px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .story-article-tag { background: none !important; border: 0 !important; padding: 0 !important; font-size: 13px !important; font-weight: 500 !important; color: #8a8f99 !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .story-article-tag::before { content: "#"; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .story-linked-chip { display: inline-flex !important; align-items: center !important; gap: 4px !important; padding: 0 !important; margin: 0 0 16px !important; border: 0 !important; background: none !important; box-shadow: none !important; font-size: 13.5px !important; font-weight: 500 !important; color: #1d1d22 !important; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .story-linked-chip::after { content: " ←"; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) :is(.story-article-meta .au-line, .story-linked-chip) { color: #ececec !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .story-article-meta { flex-direction: row !important; justify-content: flex-start !important; text-align: start !important; align-items: center !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .story-article-meta > * { width: auto !important; margin: 0 !important; display: inline-flex !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.story-article-title, .story-article-tags, .story-linked-chip) { text-align: start !important; justify-content: flex-start !important; }
