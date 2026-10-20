@@ -768,23 +768,8 @@ function sanitizeToOnlyPhotosAndStories() {
   // מסירים לצמיתות את העמודים "יד שניה" ו"השוואת מחירים"
   pages = pages.filter(p => p && !REMOVED_PHOTO_PAGE_IDS.includes(p.id));
 
-  // עמוד "מידע" — תמיד קיים אך מוסתר (מופיע בתפריט רק למנהל)
-  const _infoContent = '<div class="info-page" data-page-id="page-info-main"></div>';
-  const _infoPage = pages.find(p => p && p.id === 'page-info-main');
-  if (!_infoPage) {
-    pages.push({ id: 'page-info-main', title: 'מידע 🔒', isHidden: true, content: _infoContent });
-  }
-  // עמוד "אלגוריתם" — מוסתר, למנהל בלבד
-  if (!pages.find(p => p && p.id === 'page-stats-main')) {
-    pages.push({ id: 'page-stats-main', title: 'נתונים 🔒', isHidden: true, content: '<div class="stats-page" data-page-id="page-stats-main"></div>' });
-  }
-  if (!pages.find(p => p && p.id === 'page-algorithm-main')) {
-    pages.push({ id: 'page-algorithm-main', title: 'אלגוריתם 🔒', isHidden: true, content: '<div class="algo-page" data-page-id="page-algorithm-main"></div>' });
-  } else {
-    if (_infoPage.isHidden === undefined) _infoPage.isHidden = true;
-    _infoPage.content = _infoContent;
-    if (!_infoPage.title) _infoPage.title = 'מידע 🔒';
-  }
+  // "מידע", "נתונים", "אלגוריתם" ו"מלאי" מאוחדים בעמוד אחד "מנהל" — מוסתר, למנהל בלבד
+  pages = adminPageNormalize(pages);
 
   // עמוד "בקשות" — תמיד קיים אך מוסתר (מופיע בתפריט רק למנהל, לאישור העלאות)
   const _reqContent = '<div class="requests-page" data-page-id="page-requests-main"></div>';
@@ -1638,7 +1623,12 @@ function renderPage() {
       }
     }
 
-    // עמוד "אלגוריתם" (למנהל בלבד)
+    // עמוד "מנהל" (למנהל בלבד): מידע · נתונים · אלגוריתם · מלאי
+    if (currentPage.id === 'page-admin-main') {
+      mainContent.innerHTML = buildAdminPage();
+      try { window.scrollTo(0, 0); } catch (e) {}
+      return;
+    }
     if (currentPage.id === 'page-stats-main') {
       mainContent.innerHTML = buildStatsPage();
       try { window.scrollTo(0, 0); } catch (e) {}
@@ -14712,6 +14702,7 @@ function productFormHTML(p) {
       <label>קישור למוצר (אופציונלי)<input name="link" dir="ltr" value="${escHtml(p.link || '')}" placeholder="https://..."></label>
       <label>מחיר (אופציונלי)<input name="price" value="${escHtml(p.price || '')}" placeholder="למשל 89"></label>
       <label>מותג / יצרן (אופציונלי)<input name="brand" value="${escHtml(p.brand || '')}"></label>
+      <label>מלאי — כמות יחידות (אופציונלי)<input name="stock" type="number" min="0" value="${p.stock === undefined ? '' : escHtml(String(p.stock))}"></label>
       <div class="pr-form-actions">
         <button type="submit" class="pr-save">שמירה</button>
         <button type="button" class="pr-cancel" onclick="productsStartEdit(null)">ביטול</button>
@@ -14750,6 +14741,7 @@ async function productsSave(form) {
     price: val('price'),
     brand: val('brand')
   };
+  if (val('stock') !== '') item.stock = Math.max(0, Math.round(Number(val('stock')) || 0));
   if (!item.name) return;
   const list = productsList().slice();
   const i = list.findIndex(p => p.id === item.id);
@@ -15710,7 +15702,7 @@ function sideRailHTML() {
   const reg = u && !u.isAnonymous;
   const btn = ([id, label, action, path, fill]) => `<button type="button" class="srail-btn" data-rail="${id}" onclick="${action}" aria-label="${label}" title="${label}">
       <svg viewBox="0 0 24 24" fill="${fill ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="${fill ? 0 : 2}" stroke-linecap="round" stroke-linejoin="round">${path}</svg></button>`;
-  const adminBtn = (typeof isAdmin === 'function' && isAdmin()) ? btn(['stats', 'נתוני האתר (מנהל)', "navigateToPage('page-stats-main')", '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>', false]) : '';
+  const adminBtn = (typeof isAdmin === 'function' && isAdmin()) ? btn(['stats', 'נתוני האתר (מנהל)', "adminOpenTab('stats')", '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>', false]) : '';
   return `${SIDE_RAIL_ITEMS.map(btn).join('')}${adminBtn}
     <button type="button" class="srail-btn srail-me" onclick="${reg ? `openUserPage('${artEsc(u.uid)}')` : 'openLiveChatLogin()'}" aria-label="${reg ? 'הפרופיל שלי' : 'התחברות'}">
       <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4.2"/><path d="M3.5 21a8.5 8.5 0 0 1 17 0z"/></svg><span>${reg ? 'פרופיל' : 'התחברות'}</span></button>`;
@@ -15729,7 +15721,7 @@ function renderSideRail() {
 function sideRailSync() {
   const el = document.getElementById('side-rail'); if (!el) return;
   const id = (typeof activePageId !== 'undefined' && activePageId) || '';
-  const map = { 'page-news-main': 'news', 'page-stats-main': 'stats', 'page-home-feed': 'home', 'page-feed-main': 'feed', 'page-communities-main': 'cats', 'page-subscription-main': 'shop' };
+  const map = { 'page-news-main': 'news', 'page-stats-main': 'stats', 'page-admin-main': 'stats', 'page-home-feed': 'home', 'page-feed-main': 'feed', 'page-communities-main': 'cats', 'page-subscription-main': 'shop' };
   el.querySelectorAll('.srail-btn').forEach(b => b.classList.toggle('on', b.dataset.rail === (map[id] || (id ? '' : 'home'))));
 }
 window.sideRailSync = sideRailSync;
@@ -22707,20 +22699,8 @@ onPublicSiteValue((data) => {
     } else if (!_rvp.title) {
       _rvp.title = 'ביקורת ⭐';
     }
-    // עמוד "מידע" — קיים תמיד אך מוסתר
-    const _ip = pList.find(p => p && p.id === 'page-info-main');
-    const _ipc = '<div class="info-page" data-page-id="page-info-main"></div>';
-    if (!_ip) {
-      pList.push({ id: 'page-info-main', title: 'מידע 🔒', isHidden: true, content: _ipc });
-    }
-    if (!pList.find(p => p && p.id === 'page-stats-main')) {
-      pList.push({ id: 'page-stats-main', title: 'נתונים 🔒', isHidden: true, content: '<div class="stats-page" data-page-id="page-stats-main"></div>' });
-    }
-    if (!pList.find(p => p && p.id === 'page-algorithm-main')) {
-      pList.push({ id: 'page-algorithm-main', title: 'אלגוריתם 🔒', isHidden: true, content: '<div class="algo-page" data-page-id="page-algorithm-main"></div>' });
-    } else {
-      if (_ip.isHidden === undefined) _ip.isHidden = true; _ip.content = _ipc; if (!_ip.title) _ip.title = 'מידע 🔒';
-    }
+    // עמוד "מנהל" (מידע · נתונים · אלגוריתם · מלאי) — קיים תמיד אך מוסתר
+    pList = adminPageNormalize(pList);
     // עמוד "בקשות" — קיים תמיד אך מוסתר (למנהל בלבד)
     const _rp = pList.find(p => p && p.id === 'page-requests-main');
     const _rpc = '<div class="requests-page" data-page-id="page-requests-main"></div>';
@@ -29791,7 +29771,8 @@ function productDetailViewHTML(list, admin) {
       <aside class="prd-buy">
         <div class="prd-buy-box">
           ${price ? `<div class="prd-price">₪${escHtml(price.replace(/^₪/, ''))}</div>` : `<div class="prd-price soft">מחיר בקישור</div>`}
-          ${hasLink ? `<a class="prd-cta" href="${escHtml(link)}" target="_blank" rel="noopener nofollow sponsored">לרכישה</a>` : `<button type="button" class="prd-cta" disabled>בקרוב</button>`}
+          ${p.stock !== undefined && p.stock !== '' ? `<div class="prd-stock${Number(p.stock) <= 0 ? ' out' : Number(p.stock) <= 3 ? ' low' : ''}">${Number(p.stock) <= 0 ? 'אזל מהמלאי' : Number(p.stock) <= 3 ? `נשארו ${Number(p.stock)} במלאי` : 'במלאי'}</div>` : ''}
+          ${Number(p.stock) <= 0 && p.stock !== undefined && p.stock !== '' ? `<button type="button" class="prd-cta" disabled>אזל מהמלאי</button>` : hasLink ? `<a class="prd-cta" href="${escHtml(link)}" target="_blank" rel="noopener nofollow sponsored">לרכישה</a>` : `<button type="button" class="prd-cta" disabled>בקרוב</button>`}
         </div>
         <button type="button" class="prd-wish${wish[p.id] ? ' on' : ''}" onclick="productWishToggle('${artEsc(p.id)}', this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/></svg>הוספה לרשימת המשאלות</button>
         <div class="prd-trust"><b>✓ נבחר בקפידה</b><span>מוצרים שאנחנו ממליצים עליהם לזוגות — עם הסבר למה הם עושים טוב לקשר.</span></div>
@@ -29855,3 +29836,92 @@ async function orderShipAdvance(id) {
 }
 window.orderShipAdvance = orderShipAdvance;
 Object.assign(UI_EN, { 'הזמנות': 'Orders', 'מעקב משלוח': 'Shipment tracking', 'הוזמן': 'Ordered', 'נארז': 'Packed', 'נשלח': 'Shipped', 'בדרך': 'In transit', 'נמסר': 'Delivered', 'עדכון שלב ›': 'Update stage ›' });
+
+
+// ============================================================
+// עמוד "מנהל" — מאחד את מידע / נתונים / אלגוריתם / מלאי בלשוניות (רק מנהל האתר רואה)
+// ============================================================
+function adminPageNormalize(list) {
+  list = (list || []).filter(p => p && !['page-info-main', 'page-stats-main', 'page-algorithm-main'].includes(p.id));
+  const ap = list.find(p => p.id === 'page-admin-main');
+  if (!ap) list.push({ id: 'page-admin-main', title: 'מנהל 🔒', isHidden: true, content: '<div class="admin-page" data-page-id="page-admin-main"></div>' });
+  else { ap.isHidden = true; if (!ap.title) ap.title = 'מנהל 🔒'; }
+  return list;
+}
+var adminTab;
+function adminTabBody() {
+  if (!adminTab) { try { adminTab = localStorage.getItem('adm_tab') || 'info'; } catch (e) { adminTab = 'info'; } }
+  if (adminTab === 'stats') return buildStatsPage();
+  if (adminTab === 'algo') return buildAlgoPage();
+  if (adminTab === 'stock') return stockPageHTML();
+  return buildInfoPage();
+}
+function buildAdminPage() {
+  if (!(typeof isAdmin === 'function' && isAdmin())) return '<div class="admin-page"><div class="algo-locked">🔒 העמוד הזה זמין למנהל האתר בלבד</div></div>';
+  const body = adminTabBody();
+  return `<div class="admin-page" data-page-id="page-admin-main">
+    <div class="adm-head"><h1>מנהל</h1>
+      <nav class="adm-tabs">${[['info', 'מידע'], ['stats', 'נתונים'], ['algo', 'אלגוריתם'], ['stock', 'מלאי']].map(([k, l]) => `<button type="button" class="adm-tab${adminTab === k ? ' on' : ''}" onclick="adminSetTab('${k}')">${l}</button>`).join('')}</nav>
+    </div>
+    <div class="adm-body">${body}</div>
+  </div>`;
+}
+function adminSetTab(t) {
+  adminTab = t; try { localStorage.setItem('adm_tab', t); } catch (e) {}
+  const el = document.querySelector('.admin-page');
+  if (el) el.outerHTML = buildAdminPage();
+}
+function adminOpenTab(t) {
+  adminTab = t; try { localStorage.setItem('adm_tab', t); } catch (e) {}
+  if (typeof currentPage !== 'undefined' && currentPage && currentPage.id === 'page-admin-main') adminSetTab(t);
+  else navigateToPage('page-admin-main');
+}
+
+// מלאי: כמות לכל מוצר ב"מוצרים לזוגות" (שדה stock ב-website/products)
+function stockPageHTML() {
+  setTimeout(productsSubscribe, 0);
+  const list = productsList();
+  const st = n => n === undefined || n === null || n === '' ? ['לא הוגדר', 'na'] : n <= 0 ? ['אזל', 'out'] : n <= 3 ? ['מלאי נמוך', 'low'] : ['במלאי', 'ok'];
+  const total = list.reduce((a, p) => a + Math.max(0, Number(p.stock) || 0), 0);
+  const out = list.filter(p => p.stock !== undefined && p.stock !== '' && Number(p.stock) <= 0).length;
+  const low = list.filter(p => Number(p.stock) > 0 && Number(p.stock) <= 3).length;
+  const rows = list.map(p => {
+    const n = p.stock === undefined || p.stock === '' ? null : Number(p.stock);
+    const [lbl, cls] = st(n);
+    return `<div class="stk-row">
+      <span class="stk-img">${p.image ? `<img src="${escHtml(p.image)}" alt="" loading="lazy">` : PRODUCT_ICON}</span>
+      <span class="stk-name"><b>${escHtml(p.name || '')}</b>${p.price ? `<small>₪${escHtml(String(p.price))}</small>` : ''}</span>
+      <span class="stk-pill ${cls}">${lbl}</span>
+      <span class="stk-qty">
+        <button type="button" onclick="stockAdjust('${artEsc(p.id)}', -1)" aria-label="הפחתה">−</button>
+        <input type="number" min="0" inputmode="numeric" value="${n === null ? '' : n}" placeholder="—" onchange="stockSet('${artEsc(p.id)}', this.value)">
+        <button type="button" onclick="stockAdjust('${artEsc(p.id)}', 1)" aria-label="הוספה">+</button>
+      </span>
+    </div>`;
+  }).join('');
+  return `<div class="stock-page">
+    <div class="stk-sum">
+      <div><b>${list.length}</b><small>מוצרים</small></div>
+      <div><b>${total.toLocaleString('he-IL')}</b><small>יחידות במלאי</small></div>
+      <div><b>${low}</b><small>מלאי נמוך</small></div>
+      <div><b>${out}</b><small>אזלו</small></div>
+    </div>
+    <div class="stk-list">${rows || '<div class="pf-empty">אין מוצרים עדיין</div>'}</div>
+    <p class="stk-note">המלאי של "מוצרים לזוגות". מוצר שמלאי שלו 0 מסומן כ"אזל" בעמוד המוצר.</p>
+  </div>`;
+}
+async function stockSet(id, val) {
+  if (!isAdmin()) return;
+  const list = productsList().map(p => Object.assign({}, p));
+  const p = list.find(x => x.id === id); if (!p) return;
+  if (val === '' || val === null) delete p.stock; else p.stock = Math.max(0, Math.round(Number(val) || 0));
+  productsData = list;
+  await productsPersist(list);
+  if (adminTab === 'stock') adminSetTab('stock');
+}
+function stockAdjust(id, d) {
+  const p = productsList().find(x => x.id === id); if (!p) return;
+  stockSet(id, Math.max(0, (Number(p.stock) || 0) + d));
+}
+Object.assign(window, { adminSetTab, adminOpenTab, stockSet, stockAdjust });
+Object.assign(UI_EN, { 'מנהל': 'Admin', 'מנהל 🔒': 'Admin 🔒', 'מלאי': 'Inventory', 'במלאי': 'In stock', 'מלאי נמוך': 'Low stock', 'אזל': 'Out of stock', 'יחידות במלאי': 'Units in stock', 'אזלו': 'Sold out', 'לא הוגדר': 'Not set' });

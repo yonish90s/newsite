@@ -14887,3 +14887,51 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .hw-site { grid-column
 @media (max-width: 1099px) {
   html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-pd3 .pd3-box .okb-wrap { display: none !important; }
 }
+
+/* ===== עמוד מנהל: לשוניות מידע · נתונים · אלגוריתם · מלאי ===== */
+.admin-page { direction: rtl; max-width: 1100px; margin: 0 auto; padding: 14px 16px 40px; }
+.adm-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+.adm-head h1 { margin: 0; font-size: 22px; font-weight: 800; }
+.adm-tabs { display: flex; gap: 6px; background: #f1f1f3; padding: 4px; border-radius: 999px; }
+.adm-tab { border: 0; background: transparent; padding: 7px 16px; border-radius: 999px; font: inherit; font-size: 14px; font-weight: 600; color: #55555c; cursor: pointer; }
+.adm-tab.on { background: #111111; color: #ffffff; }
+.adm-body > * { margin-top: 0 !important; }
+.stock-page { display: flex; flex-direction: column; gap: 14px; }
+.stk-sum { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.stk-sum > div { border: 1px solid #e6e6ea; border-radius: 14px; background: #ffffff; padding: 12px; display: flex; flex-direction: column; gap: 2px; }
+.stk-sum b { font-size: 22px; font-weight: 800; color: #111; }
+.stk-sum small { font-size: 12px; color: #77777e; }
+.stk-list { border: 1px solid #e6e6ea; border-radius: 14px; background: #ffffff; overflow: hidden; }
+.stk-row { display: grid; grid-template-columns: 44px 1fr auto auto; align-items: center; gap: 12px; padding: 10px 12px; }
+.stk-row + .stk-row { border-top: 1px solid #f0f0f2; }
+.stk-img { width: 44px; height: 44px; border-radius: 10px; background: #f1f1f3; display: grid; place-items: center; overflow: hidden; color: #111; }
+.stk-img img { width: 100%; height: 100%; object-fit: cover; }
+.stk-img svg { width: 22px; height: 22px; }
+.stk-name { display: flex; flex-direction: column; min-width: 0; }
+.stk-name b { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.stk-name small { font-size: 12px; color: #77777e; }
+.stk-pill { font-size: 11.5px; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: #f1f1f3; color: #77777e; white-space: nowrap; }
+.stk-pill.ok { background: #111111; color: #ffffff; }
+.stk-pill.low { background: rgba(236,95,128,.12); color: #d4436a; }
+.stk-pill.out { background: #ec5f80; color: #ffffff; }
+.stk-qty { display: inline-flex; align-items: center; border: 1px solid #dcdce2; border-radius: 999px; overflow: hidden; direction: ltr; }
+.stk-qty button { width: 32px; height: 32px; border: 0; background: transparent; font-size: 17px; font-weight: 700; cursor: pointer; color: #111; }
+.stk-qty input { width: 46px; height: 32px; border: 0; text-align: center; font: inherit; font-size: 14px; font-weight: 700; background: transparent; color: #111; -moz-appearance: textfield; }
+.stk-qty input::-webkit-inner-spin-button, .stk-qty input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.stk-note { margin: 0; font-size: 12px; color: #8a8a90; }
+.prd-stock { font-size: 13px; font-weight: 700; color: #111; }
+.prd-stock.low, .prd-stock.out { color: #d4436a; }
+@media (max-width: 768px) {
+  .admin-page { padding: 10px 12px 30px; }
+  .adm-head h1 { font-size: 18px; }
+  .adm-tabs { width: 100%; }
+  .adm-tab { flex: 1; padding: 6px 4px; font-size: 13px; }
+  .stk-sum { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .stk-sum b { font-size: 18px; }
+  .stk-row { grid-template-columns: 38px 1fr auto; gap: 8px; }
+  .stk-img { width: 38px; height: 38px; }
+  .stk-pill { grid-column: 2; justify-self: start; }
+  .stk-qty { grid-column: 3; grid-row: 1 / span 2; }
+}
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .admin-page { color: #111111; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .admin-page :is(.stk-name b, .stk-sum b, .adm-head h1) { color: #111111 !important; }
