@@ -15131,8 +15131,3 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_
 html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .hr-card { min-width: 0 !important; width: 240px; max-width: 240px; overflow: hidden; }
 @media (max-width: 768px) { html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .hr-card { width: 74%; max-width: 74%; } }
 html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .hr-card > * { max-width: 100%; }
-
-/* דף הבית במחשב: העמודה הצדדית צמודה לקצה, המרכז רחב יותר על חשבון השוליים */
-@media (min-width: 1100px) {
-  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .home-feed-page.has-aside { max-width: none !important; grid-template-columns: 290px minmax(0, 1fr) !important; gap: 20px !important; padding-inline: 12px 16px !important; margin: 0 !important; }
-}
