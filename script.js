@@ -30105,3 +30105,17 @@ function homeRowsHTML(photos, comics, stories) {
     + row('קומיקס', comics, 'story', "homeOpenSection('page-stories-main')");
 }
 Object.assign(UI_EN, { 'הכל': 'All' });
+
+// Enter שולח תגובה (תגובות לתמונות/סיפורים, תשובה בפורום, ושדה השם של אורח לפניהן). Shift+Enter = שורה חדשה
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter' || e.shiftKey || e.isComposing || e.keyCode === 229) return;
+  const el = e.target;
+  if (!el || !el.closest) return;
+  const box = el.closest('.pc-compose, .rd-compose');
+  if (!box || !el.matches('textarea, input[type="text"], input:not([type])')) return;
+  const send = box.querySelector('.pc-go, .rd-send');
+  if (!send || send.disabled) return;
+  if (el.tagName === 'TEXTAREA' && !el.value.trim()) { e.preventDefault(); return; }   // לא שולחים תגובה ריקה
+  e.preventDefault();
+  send.click();
+});
