@@ -27625,6 +27625,7 @@ function mobileMenuHTML() {
         <button type="button" onclick="mnavGo(&quot;openLegal('privacy')&quot;)">מדיניות פרטיות</button>
         <button type="button" onclick="mnavGo(&quot;openLegal('terms')&quot;)">תנאי שימוש</button>
         <button type="button" onclick="mnavGo(&quot;openLegal('mydata')&quot;)">המידע שלי</button>
+        <button type="button" onclick="adultBlurToggle(); renderMobileMenu()">${document.documentElement.classList.contains('adult-blur') ? 'הצגת תמונות 18+' : 'טשטוש תמונות 18+'}</button>
       </details>
       <div class="mnav-social">${typeof footerSocialRowHTML === 'function' ? footerSocialRowHTML() : ''}</div>
     </aside>`;
@@ -30409,3 +30410,47 @@ function likeCountsPaint(likes) {
   };
   if (document.body) start(); else document.addEventListener('DOMContentLoaded', start);
 })();
+
+
+// ============================================================
+// תמונות מטושטשות כברירת מחדל. כפתור "18+" בכותרת → אישור גיל → התמונות מוצגות והכפתור נעלם (הבחירה נשמרת).
+// אפשר לחזור לטשטוש מתפריט ≡ → הגדרות ופרטיות.
+// ============================================================
+function adultBlurOn() { return document.documentElement.classList.contains('adult-blur'); }
+function adultBlurSet(on) {
+  document.documentElement.classList.toggle('adult-blur', on);
+  try { if (on) localStorage.removeItem('show_adult'); else { localStorage.setItem('show_adult', '1'); sessionStorage.setItem('age_verified', 'true'); } } catch (e) {}
+  adultBtnSync();
+}
+function adultBlurToggle() { if (adultBlurOn()) adultReveal(); else adultBlurSet(true); }
+function adultReveal() {
+  if (!adultBlurOn()) return;
+  let m = document.getElementById('adult-confirm');
+  if (!m) {
+    m = document.createElement('div'); m.id = 'adult-confirm';
+    m.innerHTML = `<div class="ac-card" role="dialog" aria-modal="true" aria-label="אישור גיל">
+      <b class="ac-badge">18+</b>
+      <h3>הצגת תמונות למבוגרים</h3>
+      <p>התמונות באתר מיועדות למבוגרים בלבד. בלחיצה על אישור את/ה מצהיר/ה שמלאו לך 18.</p>
+      <div class="ac-btns"><button type="button" class="ac-no" onclick="document.getElementById('adult-confirm').remove()">ביטול</button><button type="button" class="ac-yes" onclick="adultBlurSet(false); document.getElementById('adult-confirm').remove()">אני מעל גיל 18 — הצג</button></div>
+    </div>`;
+    m.addEventListener('click', e => { if (e.target === m) m.remove(); });
+    document.body.appendChild(m);
+  }
+}
+function adultBtnSync() {
+  let b = document.getElementById('adult-btn');
+  if (!b) {
+    const hdr = document.querySelector('header.apple-nav'); if (!hdr) return;
+    b = document.createElement('button');
+    b.id = 'adult-btn'; b.type = 'button'; b.className = 'adult-btn';
+    b.setAttribute('aria-label', 'הצגת תמונות למבוגרים');
+    b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span>18+</span>';
+    b.addEventListener('click', adultReveal);
+    hdr.appendChild(b);
+  }
+  b.hidden = !adultBlurOn();
+}
+Object.assign(window, { adultReveal, adultBlurSet, adultBlurToggle });
+Object.assign(UI_EN, { 'הצגת תמונות למבוגרים': 'Show adult images', 'אני מעל גיל 18 — הצג': "I'm over 18 — show", 'ביטול': 'Cancel', 'הצגת תמונות 18+': 'Show 18+ images', 'טשטוש תמונות 18+': 'Blur 18+ images' });
+(function () { const go = () => adultBtnSync(); if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go(); setTimeout(go, 1200); })();

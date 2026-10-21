@@ -511,3 +511,6 @@ html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not
 
 html.theme-dark.img-fade body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.art-row-img-wrap, .pd2-frame, .hr-img, .pc-post-media, .pfg-media, .nl-thumb, .prd-main):has(img:not([data-ld])) { background: linear-gradient(110deg, #1a1a1a 30%, #232323 50%, #1a1a1a 70%) !important; background-size: 220% 100% !important; }
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .hr-like.liked { color: #e8823d !important; }
+
+html.theme-dark header.apple-nav .adult-btn:not([hidden]) { background: #e8823d !important; box-shadow: 0 4px 14px rgba(232,130,61,.35) !important; }
+html.theme-dark #adult-confirm :is(.ac-badge, .ac-yes) { background: #e8823d !important; }

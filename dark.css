@@ -2910,6 +2910,10 @@ html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not
 html.theme-dark { --gl-bg: rgba(17, 17, 17, 0.72) !important; --gl-bg-strong: rgba(17, 17, 17, 0.86) !important; --gl-line: rgba(255, 255, 255, 0.064) !important; --gl-text: #ffffff !important; }
 html.theme-dark.theme-dark { --gl-line: rgba(255, 255, 255, 0.1) !important; }
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet .ms-backdrop { background: rgba(255, 255, 255, 0.252) !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) header.apple-nav .adult-btn:not([hidden]) { background: #e8823d !important; }
+html.theme-dark #adult-confirm .ac-card { background: var(--gl-bg-strong, #111111) !important; border: 1px solid var(--gl-line, rgba(255, 255, 255, 0.064)) !important; color: var(--gl-text, #ffffff) !important; }
+html.theme-dark #adult-confirm .ac-badge { background: #e8823d !important; }
+html.theme-dark #adult-confirm .ac-yes { background: #e8823d !important; }
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #ffffff !important; }
 html.theme-dark [style*="color:#111111"] { color: #ffffff !important; }
@@ -3622,3 +3626,6 @@ html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not
 
 html.theme-dark.img-fade body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.art-row-img-wrap, .pd2-frame, .hr-img, .pc-post-media, .pfg-media, .nl-thumb, .prd-main):has(img:not([data-ld])) { background: linear-gradient(110deg, #1a1a1a 30%, #232323 50%, #1a1a1a 70%) !important; background-size: 220% 100% !important; }
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .hr-like.liked { color: #e8823d !important; }
+
+html.theme-dark header.apple-nav .adult-btn:not([hidden]) { background: #e8823d !important; box-shadow: 0 4px 14px rgba(232,130,61,.35) !important; }
+html.theme-dark #adult-confirm :is(.ac-badge, .ac-yes) { background: #e8823d !important; }
