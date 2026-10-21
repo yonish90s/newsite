@@ -30172,7 +30172,7 @@ function homeRowsHTML(photos, comics, stories) {
     </button>`;
   };
   const row = (title, items, kind, all) => {
-    const list = (items || []).filter(ok).slice(0, 12);
+    const list = (items || []).filter(ok).slice(0, 10);   // 10 ההעלאות הראשונות
     if (!list.length) return '';
     return `<section class="hr-box">
       <div class="hr-head"><h2>${title}</h2><button type="button" class="hr-all" onclick="${all}">הכל</button></div>
