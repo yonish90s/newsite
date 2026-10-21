@@ -13263,7 +13263,6 @@ function homeWelcomeHeroHTML() {
           ${card('סיפורים', 'קצרים ומאמרים', icons.stories, "homeOpenSection('page-stories-text')", '#ffffff', 'hw-c3', thumbs.stories)}
         </div>
       </div>
-      <div class="hw-stats-wrap">${homeWatchHTML()}</div>
     </section>`;
 }
 
@@ -29975,7 +29974,7 @@ function adminPageNormalize(list) {
 var adminTab;
 function adminTabBody() {
   if (!adminTab) { try { adminTab = localStorage.getItem('adm_tab') || 'info'; } catch (e) { adminTab = 'info'; } }
-  if (adminTab === 'stats') { setTimeout(adminCountriesLoad, 0); return buildStatsPage() + '<section class="adm-cc" id="adm-cc"><h2>כניסות לפי מדינה</h2><div class="adm-cc-body">טוען…</div></section>'; }
+  if (adminTab === 'stats') { setTimeout(adminCountriesLoad, 0); return buildStatsPage() + '<section class="adm-cc" id="adm-cc"><h2>כניסות לפי מדינה</h2><div class="adm-cc-body">טוען…</div></section>' + `<section class="adm-watch"><h2>הנתונים שלי ונתוני האתר</h2><div class="hw-stats-wrap">${homeWatchHTML()}</div></section>`; }
   if (adminTab === 'algo') return buildAlgoPage();
   if (adminTab === 'stock') return stockPageHTML();
   return buildInfoPage();
