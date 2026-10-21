@@ -7126,8 +7126,9 @@ function storyOpenDetail(id) {
         <img src="${escHtml(pg.url)}" alt="" loading="lazy">
       </button>`).join('');
     mainContent.innerHTML = `
-      <div class="art-detail articles-page stories-page" data-story-kind="${escHtml(_srcKind)}" data-story-id="${escHtml(id)}" data-stories-json="${json}">
+      <div class="art-detail articles-page stories-page art-pd3 art-comic3" data-story-kind="${escHtml(_srcKind)}" data-story-id="${escHtml(id)}" data-stories-json="${json}">
         <div class="art-detail-inner">
+          <h1 class="pd3-pagehead">קומיקס</h1>
           <div class="pd2-toprow">
             <button class="art-back-btn" onclick="storyGoBack()">חזרה לקומיקס</button>
             <div class="pd2-topend">
@@ -7172,6 +7173,17 @@ function storyOpenDetail(id) {
               <button type="button" class="pshow-cta" onclick="artGalleryById('stories', window.currentStoryId, document.querySelector('#story-page-view img') ? document.querySelector('#story-page-view img').getAttribute('src') : '')">קריאה במסך מלא</button>
               </div>
             </div>
+            <aside class="pd3-box comic-box">
+              <div class="pd3-box-card">
+                <div class="pd3-box-stat"><b>${s.likes || 0}</b> לייקים</div>
+                <div class="okb-wrap"><div class="okb-row">
+                  <button type="button" class="okb okb-super" onclick="artGalleryById('stories', window.currentStoryId, document.querySelector('#story-page-view img') ? document.querySelector('#story-page-view img').getAttribute('src') : '')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg><span>קריאה במסך מלא</span></button>
+                  <button type="button" class="okb okb-pass pd2-save${photoIsSavedLocal(s.id) ? ' is-saved' : ''}" onclick="photoToggleSave('${artEsc(s.id)}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><span>שמירה</span></button>
+                  <button type="button" class="okb okb-like${photoIsLikedLocal(s.id) ? ' on' : ''}" onclick="this.classList.toggle('on'); photoToggleLike('${artEsc(s.id)}')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg><span>אהבתי</span></button>
+                </div></div>
+              </div>
+              <div class="pd3-trust"><b>✓ נבחר בקפידה</b><span>קומיקס שגולשים יצרו — אפשר לדרג, להגיב ולשתף.</span></div>
+            </aside>
           </div>
 
           ${(typeof storyCommentsSectionHTML === 'function') ? storyCommentsSectionHTML(id) : ''}
@@ -16708,6 +16720,7 @@ function photoOpenDetail(id) {
     mainContent.innerHTML = `
       <div class="art-detail articles-page photos-page art-pd3" data-photo-id="${id}" data-photos-json="${json}">
         <div class="art-detail-inner">
+          <h1 class="pd3-pagehead">${isSecondhand ? 'מוצרי גולשים' : 'תמונות גולשים'}</h1>
           <div class="pd2-toprow">
             <button class="art-back-btn" onclick="photoGoBack()">${isSecondhand ? 'חזרה למוצרים' : 'חזרה לגלריות'}</button>
             <div class="pd2-topend">
@@ -29454,11 +29467,13 @@ function recMiniEnhance() {
       pd.dataset.crUp = '1';
       cr.classList.add('pd2-creator-up');
       pd.insertBefore(cr, media);
-      // קומיקס: הממוזערות של העמודים — מיד מתחת לתמונה המוצגת
-      const tiles = pd.querySelector('.comic-info .pshow-tiles'), frame = media.querySelector('.pshow-frame');
-      if (tiles && frame) { tiles.classList.add('pshow-tiles-up'); frame.after(tiles); }
     });
   }
+  // קומיקס: הממוזערות של העמודים — מיד מתחת לתמונה המוצגת (מובייל ומחשב)
+  document.querySelectorAll('.art-detail .pshow.comic-show').forEach(pd => {
+    const tiles = pd.querySelector('.comic-info .pshow-tiles'), frame = pd.querySelector('.pshow-stage .pshow-frame');
+    if (tiles && frame) { tiles.classList.add('pshow-tiles-up'); frame.after(tiles); }
+  });
 }
 (function recMiniWatch() {
   let t = 0;
