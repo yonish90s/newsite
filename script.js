@@ -29425,8 +29425,9 @@ function hdrBackSync() {
 }
 function hdrBack() {
   const t = hdrBackTarget();
-  if (t) { t.click(); return; }
-  if (history.length > 1) history.back(); else if (typeof goToHomePage === 'function') goToHomePage();
+  if (t) { t.click(); return; }   // מתוך פריט/דיון — חזרה לרשימה שלו
+  // מכל עמוד אחר — לדף הבית (כך שלחיצות חוזרות תמיד מגיעות לדף הבית ולא יוצאות מהאתר)
+  if (typeof goToHomePage === 'function') goToHomePage(); else history.back();
 }
 Object.assign(window, { hdrBack });
 
