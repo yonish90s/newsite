@@ -19356,10 +19356,7 @@ function _photoToggleLikeImpl(id) {
         svg.setAttribute('fill', isNowLiked ? '#8b5cf6' : 'none');
         svg.setAttribute('stroke', isNowLiked ? '#8b5cf6' : 'currentColor');
       }
-      const span = btn.querySelector('span');
-      if (span && !isNaN(parseInt(span.textContent, 10))) {
-        span.textContent = item.likes || 0;
-      }
+      // המספר מתעדכן ב-likeCountsBump (מהמספר שבמסך)
     }
   });
 
@@ -19385,9 +19382,11 @@ function _photoToggleLikeImpl(id) {
     }
   }
 
-  // 6. סנכרון ושמירה במאגר הראשי (pages) וב-localStorage / Firebase
+  // מספר הלייקים במסך: מהמספר שמוצג כרגע ±1 (לא מעותק ישן של הנתונים) — כדי שלא יקפוץ
+  try { likeCountsBump(id, isNowLiked ? 1 : -1); } catch (e) {}
+  // 6. (בוטל) שכתוב כל נתוני העמודים ושמירה מקומית בכל לייק — כבד ומיותר: המונה נשמר ב-website/item_likes
   try {
-    if (typeof pages !== 'undefined' && Array.isArray(pages)) {
+    if (false) {
       let pageModified = false;
       pages.forEach(p => {
         if (!p || !p.content) return;
@@ -19431,10 +19430,7 @@ function _photoToggleLikeImpl(id) {
     console.error('Error saving updated likes to pages:', e);
   }
 
-  // 7. אם אנחנו בעמוד תמונות רגיל (לא עמוד הבית) ואיננו בתצוגת פיד, נשמור את תוכן העמוד הנוכחי
-  if (!isHomeFeed) {
-    saveCurrentPageContent();
-  }
+  // 7. (בוטל) שמירת תוכן העמוד כולו בכל לייק
 
   // 8. סנכרון תקציב הלייקים ל-Firebase
   if (user) {
@@ -22694,7 +22690,12 @@ onPublicSiteValue((data) => {
   
   let changed = false;
   
-  if (data.pages) {
+  // נתוני העמודים מהשרת לא השתנו (רק מוני לייקים / אנליטיקה) — לא בונים את העמוד מחדש; רק מעדכנים מספרי לייקים במסך
+  const _rawPages = data.pages ? JSON.stringify(data.pages) : '';
+  const _pagesSame = !!_rawPages && _rawPages === window.__lastRawPages;
+  if (_pagesSame) { try { applyItemLikesToPages(pages, data.item_likes); likeCountsPaint(data.item_likes); } catch (e) {} }
+  if (data.pages && !_pagesSame) {
+    window.__lastRawPages = _rawPages;
     let pList = data.pages.filter(p => p && p.id !== 'page-ci' && p.id !== 'page-em' && !p.title?.includes('ריבית') && !p.title?.includes('Everything'));
     // מסירים עמודי תמונות/סיפורים כפולים (למשל עמוד סיפורים ריק) — משאירים את זה עם התוכן
     pList = dedupePageList(pList);
@@ -22806,8 +22807,11 @@ onPublicSiteValue((data) => {
     pList = pList.filter(p => p && !REMOVED_PHOTO_PAGE_IDS.includes(p.id));
     applyItemLikesToPages(pList, data.item_likes);
     if (JSON.stringify(pages) !== JSON.stringify(pList)) {
+      // אם ההבדל היחיד הוא מוני לייקים — מעדכנים את הנתונים והמספרים במסך בלי לבנות את העמוד מחדש (בלי קפיצות ובלי תקיעה)
+      const onlyLikes = (() => { try { const cur = JSON.parse(JSON.stringify(pages)); applyItemLikesToPages(cur, data.item_likes); return JSON.stringify(cur) === JSON.stringify(pList); } catch (e) { return false; } })();
       pages = pList;
-      changed = true;
+      if (onlyLikes) { try { likeCountsPaint(data.item_likes); } catch (e) {} }
+      else changed = true;
     }
   }
 
@@ -30323,7 +30327,7 @@ function deepLinkSync() {
     gsap.registerPlugin(ST);
     // כותרת: לוגו, קישורים ואייקונים נכנסים בעדינות
     const hdrParts = document.querySelectorAll('header.apple-nav .logo-area, header.apple-nav .nav-links > *, header.apple-nav .right-icons .ri-pop > *');
-    gsap.from(hdrParts, { y: -10, opacity: 0, duration: 0.5, ease: 'power2.out', stagger: 0.04, clearProps: 'transform,opacity' });
+    gsap.from(hdrParts, { opacity: 0, duration: 0.6, ease: 'power1.out', stagger: 0.03, clearProps: 'opacity' });
     // צל לכותרת אחרי שמתחילים לגלול
     ST.create({ start: 'top -8', end: 99999, toggleClass: { targets: 'header.apple-nav', className: 'hdr-scrolled' } });
     // חשיפה בגלילה — לאלמנטים חדשים בכל פעם שהעמוד משתנה
@@ -30334,10 +30338,10 @@ function deepLinkSync() {
       const below = fresh.filter(el => el.getBoundingClientRect().top > vh * 0.92);
       const inView = fresh.filter(el => el.getBoundingClientRect().top <= vh * 0.92);
       fresh.forEach(el => { el.dataset.gs = '1'; });
-      if (inView.length) gsap.fromTo(inView, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.45, ease: 'power2.out', stagger: 0.04, clearProps: 'transform,opacity' });
+      // מה שכבר במסך — מוצג מיד, בלי קפיצה. רק מה שנכנס בגלילה מופיע ברכות (דהייה + תזוזה קטנה)
       if (below.length) {
-        gsap.set(below, { opacity: 0, y: 28 });
-        ST.batch(below, { start: 'top 94%', once: true, onEnter: batch => gsap.to(batch, { opacity: 1, y: 0, duration: 0.55, ease: 'power3.out', stagger: 0.06, overwrite: true, clearProps: 'transform,opacity' }) });
+        gsap.set(below, { opacity: 0, y: 14 });
+        ST.batch(below, { start: 'top 96%', once: true, onEnter: batch => gsap.to(batch, { opacity: 1, y: 0, duration: 0.7, ease: 'power2.out', stagger: 0.07, overwrite: true, clearProps: 'transform,opacity' }) });
       }
       ST.getAll().forEach(t => { if (t.trigger && !document.contains(t.trigger)) t.kill(); });
       ST.refresh();
@@ -30352,3 +30356,26 @@ function deepLinkSync() {
     .then(() => load('https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js'))
     .then(start).catch(() => {});
 })();
+
+
+// מוני לייקים במסך — בלי לבנות את העמוד מחדש
+function likeBtnsFor(id) {
+  return [...document.querySelectorAll(`.art-like-btn[onclick*="'${id}'"], .pti-like[onclick*="'${id}'"]`)];
+}
+function likeCountsSet(id, n) {
+  n = Math.max(0, Number(n) || 0);
+  likeBtnsFor(id).forEach(b => {
+    let el = b.querySelector('.pc-n, .pti-n');
+    if (!el && n) { el = document.createElement(b.classList.contains('pti-like') ? 'b' : 'span'); el.className = b.classList.contains('pti-like') ? 'pti-n' : 'pc-n'; b.appendChild(el); }
+    if (el) el.textContent = n ? String(n) : '';
+  });
+}
+function likeCountsBump(id, delta) {
+  const first = likeBtnsFor(id).map(b => b.querySelector('.pc-n, .pti-n')).find(Boolean);
+  const cur = first ? (parseInt(first.textContent, 10) || 0) : 0;
+  likeCountsSet(id, cur + delta);
+}
+function likeCountsPaint(likes) {
+  if (!likes) return;
+  Object.entries(likes).forEach(([id, n]) => { if (typeof n === 'number' && likeBtnsFor(id).length) likeCountsSet(id, n); });
+}
