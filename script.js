@@ -15637,7 +15637,6 @@ function buildHomeFeedPage() {
   return `<div class="articles-page home-feed-page has-aside" data-page-id="page-home-feed">
     ${homeAsideHTML()}
     <div class="art-inner">
-      ${homeSearchBarHTML()}
       ${homeChipsHTML(photos, comics, stories)}
       ${homeHeroCarouselHTML(photos, comics, stories)}
       ${homeExploreHTML()}
