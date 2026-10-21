@@ -589,6 +589,15 @@
           ".write": "auth != null && ((!data.exists() && newData.child('fromUid').val() === auth.uid) || (data.exists() && newData.exists() && (data.child('fromUid').val() === auth.uid || data.child('toUid').val() === auth.uid) && newData.child('fromUid').val() === data.child('fromUid').val() && newData.child('toUid').val() === data.child('toUid').val()))",
           ".validate": "newData.hasChildren(['kind','fromUid','toUid','at','status']) && newData.child('status').val().matches(/^(pending|counter|accepted|rejected|signed)$/) && (!newData.child('note').exists() || newData.child('note').val().length <= 300) && (!newData.child('title').exists() || newData.child('title').val().length <= 120)"
         }
+      },
+      "item_likers": {
+        ".read": true,
+        "$itemId": {
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid",
+            ".validate": "!newData.exists() || (newData.hasChildren(['at','name']) && newData.child('at').isNumber() && newData.child('name').isString() && newData.child('name').val().length <= 60)"
+          }
+        }
       }
     }
   }

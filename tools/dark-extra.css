@@ -514,3 +514,6 @@ html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not
 
 html.theme-dark header.apple-nav .adult-btn:not([hidden]) { background: #e8823d !important; box-shadow: 0 4px 14px rgba(232,130,61,.35) !important; }
 html.theme-dark #adult-confirm :is(.ac-badge, .ac-yes) { background: #e8823d !important; }
+
+html.theme-dark .pl-row { border-bottom-color: rgba(255,255,255,.08) !important; }
+html.theme-dark .pl-av { background: #262626; color: #eee; }

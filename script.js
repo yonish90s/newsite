@@ -19173,7 +19173,9 @@ function photoToggleLike(id) {
   try {
     document.querySelectorAll(`.art-like-btn[onclick*="'${id}'"], .hr-like[onclick*="'${id}'"]`).forEach(b => b.classList.toggle('liked'));
   } catch (e) {}
-  setTimeout(() => _photoToggleLikeImpl(id), 16);
+  let willLike = true;
+  try { willLike = !photoIsLikedLocal(id); } catch (e) {}
+  setTimeout(() => { _photoToggleLikeImpl(id); likersWrite(id, willLike); }, 16);
 }
 function _photoToggleLikeImpl(id) {
   try { if (!photoIsLikedLocal(id)) recoTrack(recoFindAlbum(id), 'like'); } catch (e) {}
@@ -27969,7 +27971,7 @@ function repostIsMine(id) { const u = auth.currentUser; return !!(u && repostsDa
 function repostBtnHTML(id) {
   subscribeReposts();
   const n = repostCount(id), on = repostIsMine(id);
-  return `<button type="button" class="pti pti-repost${on ? ' on' : ''}" data-item="${escHtml(id)}" onclick="toggleRepost('${artEsc(id)}', this)" title="${on ? 'ביטול השיתוף מהפרופיל' : 'שיתוף לפרופיל שלי — העוקבים שלך יראו'}" aria-label="שיתוף לפרופיל">${REPOST_ICON}<b class="pti-n">${n || ''}</b></button>`;
+  return `<button type="button" class="pti pti-repost${on ? ' on' : ''}" data-item="${escHtml(id)}" onclick="repostersOpen('${artEsc(id)}')" title="${on ? 'ביטול השיתוף מהפרופיל' : 'שיתוף לפרופיל שלי — העוקבים שלך יראו'}" aria-label="שיתוף לפרופיל">${REPOST_ICON}<b class="pti-n">${n || ''}</b></button>`;
 }
 function repostSyncBtn(b) {
   const id = b.dataset.item, n = repostCount(id), on = repostIsMine(id);
@@ -29614,7 +29616,7 @@ function cardStatsBtnsHTML(a, kind) {
   const open = kind === 'photo' ? `photoOpenDetail('${id}')` : `storyOpenDetail('${id}')`;
   return `<button type="button" class="art-telegram-btn art-like-btn${liked ? ' liked' : ''}" onclick="event.stopPropagation(); photoToggleLike('${id}')" title="לייק" aria-label="לייק"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M7.5 10.5v9.5H4.8a1 1 0 0 1-1-1v-7.5a1 1 0 0 1 1-1z"/><path d="M7.5 10.5 11 4a2.4 2.4 0 0 1 2.6 2.7L13.2 9.5h5.3a2 2 0 0 1 2 2.4l-1.3 6.5a2 2 0 0 1-2 1.6H7.5"/></svg><span class="pc-n">${likes || ''}</span></button>
     <button type="button" class="art-telegram-btn art-cmt-btn" data-id="${escHtml(a.id)}" onclick="event.stopPropagation(); ${open}; setTimeout(() => { if (typeof openCommentsWindow === 'function') openCommentsWindow(); }, 900)" title="תגובות" aria-label="תגובות"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M20.5 11.5a8 8 0 0 1-11.7 7.1L4 20l1.3-4.4A8 8 0 1 1 20.5 11.5z"/></svg><span class="pc-n">${n(cmts)}</span></button>
-    <button type="button" class="art-telegram-btn art-rep-btn pti-repost" data-item="${escHtml(a.id)}" onclick="event.stopPropagation(); toggleRepost('${id}', this)" title="שיתוף לפרופיל" aria-label="שיתוף"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M14 5l6 6-6 6"/><path d="M20 11H10a6 6 0 0 0-6 6v2"/></svg><b class="pti-n pc-n">${n(reps)}</b></button>`;
+    <button type="button" class="art-telegram-btn art-rep-btn pti-repost" data-item="${escHtml(a.id)}" onclick="event.stopPropagation(); repostersOpen('${id}')" title="מי שיתף" aria-label="שיתוף"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M14 5l6 6-6 6"/><path d="M20 11H10a6 6 0 0 0-6 6v2"/></svg><b class="pti-n pc-n">${n(reps)}</b></button>`;
 }
 
 
@@ -30457,3 +30459,61 @@ function adultBtnSync() {
 Object.assign(window, { adultReveal, adultBlurSet, adultBlurToggle });
 Object.assign(UI_EN, { 'הצגת תמונות למבוגרים': 'Show adult images', 'אני מעל גיל 18 — הצג': "I'm over 18 — show", 'ביטול': 'Cancel', 'הצגת תמונות 18+': 'Show 18+ images', 'טשטוש תמונות 18+': 'Blur 18+ images' });
 (function () { const go = () => adultBtnSync(); if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go(); setTimeout(go, 1200); })();
+
+// ---- מי עשה לייק / מי שיתף: ריבועים — לחיצה ארוכה על לייק פותחת את רשימת הלוחצים, לחיצה על שיתוף את רשימת המשתפים ----
+function likersWrite(id, on) {
+  const u = auth.currentUser;
+  if (!u || !id) return;
+  const name = (typeof liveChatUserName === 'function' && liveChatUserName()) || u.displayName || (u.isAnonymous ? 'אורח' : 'משתמש');
+  try { set(ref(db, `website/item_likers/${id}/${u.uid}`), on ? { at: Date.now(), name: String(name).slice(0, 60) } : null).catch(() => {}); } catch (e) {}
+}
+function peopleListHTML(map, emptyText) {
+  const rows = Object.entries(map || {}).filter(([, v]) => v && typeof v === 'object').sort((x, y) => (y[1].at || 0) - (x[1].at || 0));
+  if (!rows.length) return `<div class="ms-empty">${emptyText}</div>`;
+  return `<div class="pl-list">${rows.map(([uid, v]) => {
+    const nm = String(v.name || 'משתמש');
+    return `<div class="pl-row"><span class="au-av pl-av">${escHtml(nm.trim().charAt(0) || '?')}</span><span class="pl-name">${escHtml(nm)}</span><span class="pl-t">${v.at ? escHtml(new Date(v.at).toLocaleDateString('he-IL')) : ''}</span></div>`;
+  }).join('')}</div>`;
+}
+async function likersOpen(id) {
+  openMSheet('מי עשה לייק', '<div class="ms-empty">טוען…</div>');
+  let map = {};
+  try { map = (await get(ref(db, `website/item_likers/${id}`))).val() || {}; } catch (e) {}
+  const body = document.querySelector('#m-sheet .ms-body');
+  if (body) body.innerHTML = peopleListHTML(map, 'עדיין אין כאן שמות של מי שעשה לייק.');
+  try { avatarLetterColors(body); } catch (e) {}
+}
+function repostersOpen(id) {
+  try { subscribeReposts(); } catch (e) {}
+  const mine = repostIsMine(id);
+  openMSheet('מי שיתף', peopleListHTML((repostsData || {})[id], 'עוד אף אחד לא שיתף את זה.'),
+    `<button type="button" class="ms-btn${mine ? ' ghost' : ''}" onclick="repostersToggle('${artEsc(id)}')">${mine ? 'ביטול השיתוף שלי' : 'שיתוף לפרופיל שלי'}</button>`);
+  try { avatarLetterColors(document.querySelector('#m-sheet .ms-body')); } catch (e) {}
+}
+async function repostersToggle(id) {
+  await toggleRepost(id, null);
+  document.querySelectorAll(`.pti-repost[data-item="${CSS.escape(id)}"]`).forEach(b => { try { repostSyncBtn(b); } catch (e) {} });
+  if (document.getElementById('m-sheet')?.classList.contains('show')) repostersOpen(id);
+}
+window.likersOpen = likersOpen;
+window.repostersOpen = repostersOpen;
+window.repostersToggle = repostersToggle;
+(function likeLongPress() {
+  const SEL = '.art-like-btn, .pti-like, .hr-like';
+  let timer = 0, fired = false, sx = 0, sy = 0;
+  const idOf = b => ((b.getAttribute('onclick') || '').match(/photoToggleLike\('([^']+)'/) || [])[1];
+  document.addEventListener('pointerdown', e => {
+    const b = e.target.closest && e.target.closest(SEL);
+    fired = false; clearTimeout(timer);
+    if (!b) return;
+    const id = idOf(b); if (!id) return;
+    sx = e.clientX; sy = e.clientY;
+    timer = setTimeout(() => { fired = true; try { navigator.vibrate && navigator.vibrate(15); } catch (er) {} likersOpen(id); }, 480);
+  }, true);
+  document.addEventListener('pointermove', e => { if (timer && Math.hypot(e.clientX - sx, e.clientY - sy) > 10) clearTimeout(timer); }, true);
+  ['pointerup', 'pointercancel'].forEach(t => document.addEventListener(t, () => clearTimeout(timer), true));
+  document.addEventListener('click', e => {
+    if (fired && e.target.closest && e.target.closest(SEL)) { e.stopPropagation(); e.preventDefault(); fired = false; }
+  }, true);
+  document.addEventListener('contextmenu', e => { if (e.target.closest && e.target.closest(SEL)) e.preventDefault(); }, true);
+})();
