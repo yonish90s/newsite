@@ -29533,6 +29533,9 @@ function cardHeadActsEnhance() {
   try { cardDescEnhance(); } catch (e) {}
   try { pcReplyingEnhance(); } catch (e) {}
   document.querySelectorAll('#photo-row-1 > .art-row, #story-row-main > .art-row').forEach(row => {
+    // כפתור "לחיצה" עגול קטן בפינה הימנית התחתונה של התמונה — מציג/מסתיר את הכותרת וההאשטאגים
+    const iw = row.querySelector('.art-row-img-wrap');
+    if (iw && !iw.querySelector('.img-tap-btn')) iw.insertAdjacentHTML('beforeend', `<button type="button" class="img-tap-btn" aria-label="פרטים על התמונה" onclick="imgTapToggle(this, event)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9.5 3.5a1.75 1.75 0 0 1 3.5 0V10l.6-.1a1.7 1.7 0 0 1 1.9 1.1l.1.3.5-.1a1.7 1.7 0 0 1 2 1.2l.6-.1a1.7 1.7 0 0 1 2 1.6V18a5 5 0 0 1-5 5h-2.2a5 5 0 0 1-4-2l-3.8-5a1.75 1.75 0 0 1 2.6-2.3l1.2 1.1z"/></svg></button>`);
     if (row.dataset.headActs) return;
     const links = row.querySelector('.photo-card-links');
     const meta = row.querySelector('.art-row-meta');
@@ -30020,3 +30023,12 @@ document.documentElement.classList.toggle('mtabs-off', MTABS_HIDDEN);
   let tm = 0;
   new MutationObserver(() => { clearTimeout(tm); tm = setTimeout(run, 80); }).observe(document.documentElement, { childList: true, subtree: true });
 })();
+
+function imgTapToggle(btn, e) {
+  e.stopPropagation(); e.preventDefault();
+  const wrap = btn.closest('.art-row-img-wrap'); if (!wrap) return;
+  imgTagsEnsure(wrap);
+  clearTimeout(wrap.__tagsT);
+  wrap.classList.toggle('show-tags');
+}
+window.imgTapToggle = imgTapToggle;
