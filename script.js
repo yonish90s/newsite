@@ -30061,22 +30061,36 @@ function hcDot(el, i) {
 }
 window.hcDot = hcDot;
 (function swipeNav() {
-  let sx = 0, sy = 0, el = null;
+  // החלקה באצבע בין תמונות (עמוד פריט / קומיקס): התמונה זזה עם האצבע, ומעבר כשמשחררים
+  let sx = 0, sy = 0, el = null, dx = 0, horiz = null;
+  const img = () => el && el.querySelector('img');
+  const reset = () => { const i = img(); if (i) { i.style.transition = 'transform .2s ease'; i.style.transform = ''; setTimeout(() => { i.style.transition = ''; }, 220); } };
   document.addEventListener('touchstart', e => {
     el = e.target.closest && e.target.closest('.pd-show .pshow-frame, #story-page-view');
-    if (!el) return;
-    sx = e.touches[0].clientX; sy = e.touches[0].clientY;
+    if (!el || e.touches.length > 1) { el = null; return; }
+    sx = e.touches[0].clientX; sy = e.touches[0].clientY; dx = 0; horiz = null;
   }, { passive: true });
-  document.addEventListener('touchend', e => {
+  document.addEventListener('touchmove', e => {
     if (!el) return;
-    const t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy;
-    const target = el; el = null;
-    if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy) * 1.2) return;
+    dx = e.touches[0].clientX - sx;
+    const dy = e.touches[0].clientY - sy;
+    if (horiz === null && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) horiz = Math.abs(dx) > Math.abs(dy);
+    if (!horiz) return;
+    if (e.cancelable) e.preventDefault();
+    const i = img(); if (i) i.style.transform = `translateX(${dx * 0.6}px)`;
+  }, { passive: false });
+  const end = () => {
+    if (!el) return;
+    const target = el, go = horiz && Math.abs(dx) >= 40;
+    reset(); el = null;
+    if (!go) return;
     // באתר RTL: החלקה שמאלה = הבא
     const dir = dx < 0 ? 1 : -1;
     if (target.id === 'story-page-view') { if (dir > 0) storyNextPage(); else storyPrevPage(); }
     else pdShowStep(target, dir);
-  }, { passive: true });
+  };
+  document.addEventListener('touchend', end, { passive: true });
+  document.addEventListener('touchcancel', end, { passive: true });
 })();
 (function dragScroll() {
   const SEL = '.hx-tabs, .hx-explore-row, .hc-track, .rec-mini, .pd2-thumbs, .story-page-thumbs';
