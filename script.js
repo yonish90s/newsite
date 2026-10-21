@@ -15587,6 +15587,7 @@ function buildHomeFeedPage() {
       ${homeChipsHTML(photos, comics, stories)}
       ${homeHeroCarouselHTML(photos, comics, stories)}
       ${homeExploreHTML()}
+      ${homeRowsHTML(photos, comics, stories)}
       <div class="cmp-wrap">${composerBarHTML()}</div>
       ${homeWelcomeHeroHTML()}
       ${homeCategoriesHTML(photos, comics, stories)}
@@ -30032,3 +30033,40 @@ function imgTapToggle(btn, e) {
   wrap.classList.toggle('show-tags');
 }
 window.imgTapToggle = imgTapToggle;
+
+
+// ============================================================
+// דף הבית: שורות "תמונות גולשים" / "סיפורים" / "קומיקס" — כל אחת במלבן מעוגל,
+// כרטיסים נגללים לצד (תמונה, כותרת, יוצר בצבע הדגש, קטגוריה · תאריך · לייקים)
+// ============================================================
+function homeRowsHTML(photos, comics, stories) {
+  const adultOk = (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('age_verified') === 'true');
+  const img = x => x && (((x.images || []).find(Boolean)) || x.cover || x.image || '');
+  const ok = x => x && x.approved !== false;
+  const card = (x, kind) => {
+    const src = img(x);
+    const n = (x.images || []).filter(Boolean).length;
+    const open = kind === 'photo' ? `homeOpenPhotos(); setTimeout(() => photoOpenDetail('${artEsc(x.id)}'), 450)` : `storyOpenDetail('${artEsc(x.id)}')`;
+    const likes = Number(x.likes) || 0;
+    return `<button type="button" class="hr-card" onclick="${open}">
+      <span class="hr-img${x.isAdult && !adultOk ? ' blur' : ''}">${src ? `<img src="${escHtml(src)}" alt="" loading="lazy">` : ''}
+        ${x.category ? `<span class="hr-badge">${escHtml(x.category)}</span>` : ''}
+        ${n > 1 ? `<span class="hr-count">${n} תמונות</span>` : ''}</span>
+      <b class="hr-title">${escHtml(x.title || '')}</b>
+      <span class="hr-author">${escHtml(x.author || 'משתמש')}</span>
+      <span class="hr-meta">${escHtml(x.timestamp || '')}${likes ? `<span class="hr-likes"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 10v11H4a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1h3zm0 0 4-7a2.5 2.5 0 0 1 2.5 2.5V9h5.4a2 2 0 0 1 2 2.3l-1.3 8A2 2 0 0 1 17.6 21H7"/></svg>${likes}</span>` : ''}</span>
+    </button>`;
+  };
+  const row = (title, items, kind, all) => {
+    const list = (items || []).filter(ok).slice(0, 12);
+    if (!list.length) return '';
+    return `<section class="hr-box">
+      <div class="hr-head"><h2>${title}</h2><button type="button" class="hr-all" onclick="${all}">הכל</button></div>
+      <div class="hr-row">${list.map(x => card(x, kind)).join('')}</div>
+    </section>`;
+  };
+  return row('תמונות גולשים', photos, 'photo', 'homeOpenPhotos()')
+    + row('סיפורים', stories, 'story', "homeOpenSection('page-stories-text')")
+    + row('קומיקס', comics, 'story', "homeOpenSection('page-stories-main')");
+}
+Object.assign(UI_EN, { 'הכל': 'All' });
