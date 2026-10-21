@@ -27579,7 +27579,7 @@ function mobileMenuHTML() {
   const adultOk = (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('age_verified') === 'true');
   const shortcuts = items.slice(0, 12).map(x => {
     const img = (x.images && x.images[0]) || x.image;
-    const act = x.__type === 'photo' ? `homeOpenPhotos(); setTimeout(() => photoOpenDetail('${artEsc(x.id)}'), 450)` : `storyOpenDetail('${artEsc(x.id)}')`;
+    const act = x.__type === 'photo' ? `homeOpenPhotos(); photoOpenDetail('${artEsc(x.id)}')` : `storyOpenDetail('${artEsc(x.id)}')`;
     return `<button type="button" class="mnav-sc" onclick="mnavGo(${JSON.stringify(act).replace(/"/g, '&quot;')})">
         <span class="mnav-sc-img${x.isAdult && !adultOk ? ' blur' : ''}">${img ? `<img src="${escHtml(img)}" alt="" loading="lazy">` : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>'}</span><span class="mnav-sc-name">${escHtml(x.title || '')}</span></button>`;
   }).join('');
@@ -29416,7 +29416,7 @@ function homeHeroCarouselHTML(photos, comics, stories) {
   add(photos, 'photo'); add(comics, 'story'); add(stories, 'story');
   if (pick.length < 2) return '';
   const slides = pick.slice(0, 7).map(({ x, kind }) => {
-    const open = kind === 'photo' ? `homeOpenPhotos(); setTimeout(() => photoOpenDetail('${artEsc(x.id)}'), 450)` : `storyOpenDetail('${artEsc(x.id)}')`;
+    const open = kind === 'photo' ? `homeOpenPhotos(); photoOpenDetail('${artEsc(x.id)}')` : `storyOpenDetail('${artEsc(x.id)}')`;
     return `<button type="button" class="hc-slide${x.isAdult && !adultOk ? ' blur' : ''}" onclick="${open}"><span class="hc-bg" style="background-image:url('${escHtml(String(img(x)).replace(/'/g, '%27'))}')"></span><img src="${escHtml(img(x))}" alt="" loading="lazy"></button>`;
   }).join('');
   const dots = pick.slice(0, 7).map((_, i) => `<i class="${i === 0 ? 'on' : ''}" onclick="hcDot(this, ${i})"></i>`).join('');
@@ -30155,7 +30155,7 @@ function homeRowsHTML(photos, comics, stories) {
   const card = (x, kind) => {
     const src = img(x);
     const n = (x.images || []).filter(Boolean).length;
-    const open = kind === 'photo' ? `homeOpenPhotos(); setTimeout(() => photoOpenDetail('${artEsc(x.id)}'), 450)` : `storyOpenDetail('${artEsc(x.id)}')`;
+    const open = kind === 'photo' ? `homeOpenPhotos(); photoOpenDetail('${artEsc(x.id)}')` : `storyOpenDetail('${artEsc(x.id)}')`;
     const likes = Number(x.likes) || 0;
     return `<button type="button" class="hr-card" onclick="${open}">
       <span class="hr-img${x.isAdult && !adultOk ? ' blur' : ''}">${src ? `<img src="${escHtml(src)}" alt="" loading="lazy">` : ''}
