@@ -11007,8 +11007,6 @@ function buildSidebarAboutMeSectionHTML() {
       set_('pf-about-region', v.aboutRegion); set_('pf-about-city', v.aboutCity);
       set_('pf-about-likes', v.aboutLikes); set_('pf-about-dislikes', v.aboutDislikes);
       set_('pf-about-telegram', v.telegram); set_('pf-about-email', v.email);
-      set_('pf-about-links', (v.links || []).join(' '));
-      pfSocials().forEach(([k]) => set_('pf-soc-' + k, (v.socials || {})[k]));
     }).catch(() => {});
   }
   const fld = 'width:100%; box-sizing:border-box; padding:7px 10px; border:1.5px solid #cbd5e1; border-radius:8px; font-size:13px; font-family:inherit; outline:none; background:#ffffff;';
@@ -11032,12 +11030,6 @@ function buildSidebarAboutMeSectionHTML() {
       </div>
       <div style="${lbl}">✈️ טלגרם</div>
       <input id="pf-about-telegram" type="text" dir="ltr" maxlength="40" placeholder="@username" value="${escHtml(p.telegram || '')}" style="${fld} text-align:left;">
-      <div style="${lbl}">🔗 קישורים (אתר, בלוג — עד 3, מופרדים ברווח)</div>
-      <input id="pf-about-links" type="text" dir="ltr" maxlength="300" placeholder="mysite.com instagram.com/me" value="${escHtml((p.links || []).join(' '))}" style="${fld} text-align:left;">
-      <div style="${lbl}">@ רשתות חברתיות (שם משתמש)</div>
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
-        ${pfSocials().map(([k, label]) => `<input id="pf-soc-${k}" type="text" dir="ltr" maxlength="40" placeholder="${label}" value="${escHtml((p.socials || {})[k] || '')}" style="${fld} text-align:left;">`).join('')}
-      </div>
       <div style="${lbl}">✉️ מייל</div>
       <input id="pf-about-email" type="email" dir="ltr" maxlength="80" placeholder="example@mail.com" value="${escHtml(p.email || '')}" style="${fld} text-align:left;">
       <div style="${lbl}">💚 מה אני אוהב/ת</div>
@@ -11061,9 +11053,7 @@ async function saveAboutMe() {
     aboutLikes: aboutSplitTags(val('pf-about-likes')).join(', '),
     aboutDislikes: aboutSplitTags(val('pf-about-dislikes')).join(', '),
     telegram: val('pf-about-telegram').slice(0, 40),
-    email: val('pf-about-email').slice(0, 80),
-    links: pfCleanLinks(val('pf-about-links')),
-    socials: pfSocials().reduce((o, [k]) => { const h = pfCleanHandle(val('pf-soc-' + k)); if (h) o[k] = h; return o; }, {})
+    email: val('pf-about-email').slice(0, 80)
   };
   if (data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
     if (typeof showCopyToast === 'function') showCopyToast('כתובת המייל לא תקינה');
@@ -18051,12 +18041,13 @@ function userWatchHTML(st) {
             return row('#ea580c', 'מין', av.g ? `<span class="uw-sex g${av.g}"><b>${AV_SEX_SIGN[av.g]}</b>${AV_SEX_NAMES[av.g]}</span>` : none)
               + row('#e11d48', 'תפקיד', role ? `<span class="uw-role">${escHtml(role)}</span>` : none);
           })()}
+          ${row('#ffd60a', 'מאיפה', where ? `<span class="uw-text">${escHtml(where)}</span>` : none)}
+          ${row('#64d2ff', 'טלגרם', tg ? `<a class="uw-link" href="https://t.me/${encodeURIComponent(tg)}" target="_blank" rel="noopener" dir="ltr">@${escHtml(tg)}</a>` : none)}
           ${row('#bf5af2', 'מייל', profile.email ? `<button type="button" class="uw-link" dir="ltr" onclick="copyEmailToClipboard('${artEsc(profile.email)}', event)" title="העתקת המייל">${escHtml(profile.email)}</button>` : none)}
           ${row('#ff6bb5', 'מחפש/ת', seekHTML(profile.seeking) || none)}
           ${row('#30d158', 'אוהב/ת', kinks.length ? kinksListHTML(kinks) : `<div class="uw-chips">${chips(likes, 'like')}</div>`)}
           ${row('#ff453a', 'לא אוהב/ת', `<div class="uw-chips">${chips(dislikes, 'dislike')}</div>`)}
         </div>
-        ${pfInfoHTML(profile)}
         ${kinksRadarHTML(kinks)}
       </div>
     </div>`;
@@ -30167,45 +30158,3 @@ function newsBackToList() {
 }
 Object.assign(window, { newsOpenArticle, newsBackToList });
 Object.assign(UI_EN, { 'נקודות עיקריות': 'Key points', 'עוד חדשות': 'More news', 'חזרה לחדשות': 'Back to news' });
-
-
-// ============================================================
-// פרופיל: בלוק "פרטים" — מיקום, אזור, קישורים ופרטים ליצירת קשר (כמו בדף "אודות")
-// ============================================================
-// פונקציות (ולא const) — כדי שיהיו זמינות גם אם הטופס נבנה לפני שהקוד בסוף הקובץ רץ
-function pfSocials() { return [['x', 'X'], ['instagram', 'Instagram'], ['tiktok', 'TikTok'], ['youtube', 'YouTube'], ['linkedin', 'LinkedIn']]; }
-function pfSocUrl(k, h) { return ({ x: h => 'https://x.com/' + h, instagram: h => 'https://instagram.com/' + h, tiktok: h => 'https://www.tiktok.com/@' + h, youtube: h => 'https://www.youtube.com/@' + h, linkedin: h => 'https://www.linkedin.com/in/' + h, telegram: h => 'https://t.me/' + h })[k](h); }
-function pfSocIc(k) { return ({
-  x: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231z"/></svg>',
-  instagram: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>',
-  tiktok: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 3c.4 2.2 1.9 3.8 4 4v3a7.4 7.4 0 0 1-4-1.3V15a6 6 0 1 1-6-6v3.1a3 3 0 1 0 3 2.9V3z"/></svg>',
-  youtube: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21.6 7.2a2.6 2.6 0 0 0-1.8-1.8C18.2 5 12 5 12 5s-6.2 0-7.8.4A2.6 2.6 0 0 0 2.4 7.2 27 27 0 0 0 2 12a27 27 0 0 0 .4 4.8 2.6 2.6 0 0 0 1.8 1.8C5.8 19 12 19 12 19s6.2 0 7.8-.4a2.6 2.6 0 0 0 1.8-1.8A27 27 0 0 0 22 12a27 27 0 0 0-.4-4.8zM10 15V9l5.2 3z"/></svg>',
-  linkedin: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 3a2 2 0 1 1 0 4 2 2 0 0 1 0-4zM2.5 8.5h3V21h-3zM9 8.5h2.9v1.7c.5-.9 1.7-2 3.6-2 3.4 0 4 2.2 4 5.1V21h-3v-6.8c0-1.6 0-3.6-2.2-3.6s-2.4 1.7-2.4 3.5V21H9z"/></svg>',
-  telegram: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21.5 3.5 2.8 10.7c-1.3.5-1.2 1.3-.2 1.6l4.8 1.5 1.8 5.6c.2.7.4.9.9.9.4 0 .6-.2.9-.5l2.3-2.2 4.8 3.5c.9.5 1.5.2 1.7-.8L22.9 5c.3-1.4-.5-2-1.4-1.5z"/></svg>'
-})[k] || ''; }
-function pfCleanHandle(v) {
-  v = String(v || '').trim().replace(/^https?:\/\/[^/]+\/(in\/)?@?/i, '').replace(/^@/, '').replace(/\/.*$/, '');
-  return /^[A-Za-z0-9._-]{1,40}$/.test(v) ? v : '';
-}
-function pfCleanLinks(v) {
-  return String(v || '').split(/[\s,]+/).map(x => x.trim()).filter(Boolean).slice(0, 3).map(x => /^https?:\/\//i.test(x) ? x : 'https://' + x)
-    .filter(x => { try { const u = new URL(x); return /^https?:$/.test(u.protocol) && /\./.test(u.hostname); } catch (e) { return false; } }).map(x => x.slice(0, 120));
-}
-function pfInfoHTML(profile) {
-  profile = profile || {};
-  const ic = d => `<span class="pfi-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${d}</svg></span>`;
-  const city = String(profile.aboutCity || '').trim(), region = String(profile.aboutRegion || '').trim();
-  const links = pfCleanLinks((profile.links || []).join(' '));
-  const soc = Object.assign({}, profile.socials || {});
-  const tg = pfCleanHandle(profile.telegram); if (tg) soc.telegram = tg;
-  const socItems = ['x', 'instagram', 'tiktok', 'youtube', 'linkedin', 'telegram'].filter(k => pfCleanHandle(soc[k]))
-    .map(k => { const h = pfCleanHandle(soc[k]); return `<a class="pfi-link" href="${escHtml(pfSocUrl(k, h))}" target="_blank" rel="noopener nofollow ugc" dir="ltr"><span class="pfi-soc">${pfSocIc(k)}</span>${escHtml(h)}</a>`; });
-  const sep = '<span class="pfi-dot">·</span>';
-  const rows = [];
-  if (city) rows.push(`<div class="pfi-row">${ic('<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>')}<a class="pfi-link" href="https://www.google.com/maps/search/${encodeURIComponent(city)}" target="_blank" rel="noopener">${escHtml(city)}</a></div>`);
-  if (region) rows.push(`<div class="pfi-row">${ic('<path d="M3 6.5 9 4l6 2.5L21 4v13.5L15 20l-6-2.5L3 20z"/><path d="M9 4v13.5M15 6.5V20"/>')}<span class="pfi-text">${escHtml(region)}</span></div>`);
-  if (links.length) rows.push(`<h3 class="pfi-h">קישורים</h3><div class="pfi-row">${ic('<path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/>')}<div class="pfi-vals">${links.map(u => { let host = u; try { host = new URL(u).hostname.replace(/^www\./, ''); } catch (e) {} return `<a class="pfi-link" href="${escHtml(safeUrl(u))}" target="_blank" rel="noopener nofollow ugc" dir="ltr">${escHtml(host)}</a>`; }).join(sep)}</div></div>`);
-  if (socItems.length) rows.push(`<h3 class="pfi-h">פרטים ליצירת קשר</h3><div class="pfi-row">${ic('<circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-4 8"/>')}<div class="pfi-vals">${socItems.join(sep)}</div></div>`);
-  return rows.length ? `<section class="pf-info">${rows.join('')}</section>` : '';
-}
-Object.assign(UI_EN, { 'קישורים': 'Links', 'פרטים ליצירת קשר': 'Contact info' });
