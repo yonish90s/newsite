@@ -16,13 +16,13 @@
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
   <!-- קישור לקובץ העיצוב החיצוני (עם פרמטר למניעת שמירה במטמון) -->
   <link rel="stylesheet" href="./style.css?v=1896">
-  <link rel="stylesheet" id="dark-css" href="./dark.css?v=279" media="not all">
+  <link rel="stylesheet" id="dark-css" href="./dark.css?v=280" media="not all">
   <script>
-    // מצב בהיר/כהה — נקבע לפני שהדף מצויר כדי שלא יהבהב (בחירה שמורה, אחרת לפי הגדרות המכשיר)
+    // מצב בהיר/כהה — נקבע לפני שהדף מצויר כדי שלא יהבהב (בחירה שמורה, אחרת כהה)
     (function () {
       var t = null;
       try { t = localStorage.getItem('site_theme'); } catch (e) {}
-      if (!t) t = (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+      if (!t) t = 'dark';   // ברירת מחדל: מצב כהה (מי שבחר בהיר — הבחירה שלו נשמרת)
       if (t === 'dark') { document.documentElement.classList.add('theme-dark'); var dc = document.getElementById('dark-css'); if (dc) dc.media = 'all'; }
     })();
   </script>
