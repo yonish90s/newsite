@@ -15302,8 +15302,8 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_
 
 /* ===== פורומים במחשב = כמו במובייל: עמודה אחת ממורכזת + אותם חוקים של המובייל (הועתקו מתוך @media max-width) ===== */
 @media (min-width: 769px) {
-html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .forums-page { max-width: 760px !important; margin-inline: auto !important; }
-html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .forums-page :is(.fo-inner, .fi-layout) { max-width: 760px !important; width: 100% !important; margin-inline: auto !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .forums-page { max-width: 1160px !important; margin-inline: auto !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .forums-page :is(.fo-inner, .fi-layout) { max-width: 1160px !important; width: 100% !important; margin-inline: auto !important; }
 html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .forums-page .fi-layout { display: block !important; }
 html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .forums-page .fi-side { display: none !important; }
 /* במובייל: הכפתור נשאר נגיש גם בגלילה */
