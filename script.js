@@ -15668,10 +15668,14 @@ function homeTabsGet() {
   try { const a = JSON.parse(localStorage.getItem('home_tabs') || 'null'); if (Array.isArray(a)) return a.filter(k => HOME_TABS_ALL[k] && k !== 'foryou' && k !== 'feed'); } catch (e) {}
   return ['photos', 'comics', 'stories'];
 }
-function homeChipsHTML(photos, comics, stories) {
+function homeChipsHTML(photos, comics, stories, active, extraCls) {
+  active = active || 'foryou';
   const tabs = ['foryou', 'feed', ...homeTabsGet()];
-  return `<nav class="hx-tabs" aria-label="לשוניות">
-      ${tabs.map(k => `<button type="button" class="hx-tab${k === 'foryou' ? ' on' : ''}" ${HOME_TABS_ALL[k][1] ? `onclick="${HOME_TABS_ALL[k][1]}"` : ''}>${escHtml(HOME_TABS_ALL[k][0])}</button>`).join('')}
+  if (!tabs.includes(active) && HOME_TABS_ALL[active]) tabs.push(active);
+  // מחוץ לעמוד הבית "בשבילך" מחזיר לבית
+  const act = k => k === 'foryou' ? (extraCls ? 'goToHomePage()' : '') : HOME_TABS_ALL[k][1];
+  return `<nav class="hx-tabs${extraCls ? ' ' + extraCls : ''}" aria-label="לשוניות">
+      ${tabs.map(k => `<button type="button" class="hx-tab${k === active ? ' on' : ''}" ${act(k) ? `onclick="${act(k)}"` : ''}>${escHtml(HOME_TABS_ALL[k][0])}</button>`).join('')}
       <button type="button" class="hx-tab hx-add" onclick="homeTabsPicker()" aria-label="הוספת לשונית"><span class="hx-dot"></span>הוספה<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
       <button type="button" class="hx-more" onclick="event.stopPropagation(); this.parentElement.scrollBy({ left: -160, behavior: 'smooth' })" aria-label="עוד לשוניות"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
     </nav>`;
@@ -15686,8 +15690,7 @@ function homeTabsToggle(k, on) {
   let a = homeTabsGet().filter(x => x !== k);
   if (on) a.push(k);
   try { localStorage.setItem('home_tabs', JSON.stringify(a)); } catch (e) {}
-  const nav = document.querySelector('.hx-tabs');
-  if (nav) nav.outerHTML = homeChipsHTML();
+  document.querySelectorAll('.hx-tabs').forEach(nav => { nav.outerHTML = nav.classList.contains('hx-global') ? homeChipsHTML(0, 0, 0, mTabsActive(), 'hx-global') : homeChipsHTML(); });
 }
 Object.assign(window, { homeTabsPicker, homeTabsToggle });
 function homeCategoriesHTML(photos, comics, stories) {
@@ -27880,7 +27883,7 @@ function pd2ActionsHTML(a, kind) {
   return `<div class="pd2-topacts">
                 <button type="button" class="pti pti-like${photoIsLikedLocal(a.id) ? ' on' : ''}" onclick="this.classList.toggle('on'); photoToggleLike('${artEsc(a.id)}')" title="לייק" aria-label="לייק">${sv('<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.6 1-1.1a5.5 5.5 0 0 0 0-7.7z"/>')}${likes ? `<b class="pti-n">${likes}</b>` : ''}</button>
                 <button type="button" class="pti pti-cmt" onclick="togglePostComments(this)" title="תגובות" aria-label="תגובות">${sv('<path d="M20.5 11.5a8 8 0 0 1-11.7 7.1L4 20l1.3-4.4A8 8 0 1 1 20.5 11.5z"/>')}${cn ? `<b class="pti-n">${cn}</b>` : ''}</button>
-                <button type="button" class="pti pti-repost${ron ? ' on' : ''}" data-item="${escHtml(a.id)}" onclick="repostersOpen('${artEsc(a.id)}')" title="מי שיתף" aria-label="שיתוף">${sv('<path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/>')}<b class="pti-n">${rn || ''}</b></button>
+                <button type="button" class="pti pti-repost${ron ? ' on' : ''}" data-item="${escHtml(a.id)}" onclick="toggleRepost('${artEsc(a.id)}', this)" title="שיתוף לפרופיל שלי (לחיצה ארוכה — מי שיתף)" aria-label="שיתוף">${sv('<path d="M14 5l6 6-6 6"/><path d="M20 11H10a6 6 0 0 0-6 6v2"/>')}<b class="pti-n">${rn || ''}</b></button>
                 <button type="button" class="pti pd2-save${photoIsSavedLocal(a.id) ? ' is-saved' : ''}" onclick="photoToggleSave('${artEsc(a.id)}')" title="שמירה" aria-label="שמירה"><svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
                 ${kind === 'product' ? `<button type="button" class="pti pti-offer" onclick="openPriceOffer('${artEsc(a.id)}', '${artEsc(a.title || '')}', '${artEsc(a.authorId || '')}', '${artEsc(a.author || '')}')" title="הצעת מחיר" aria-label="הצעת מחיר"><svg viewBox="0 0 24 24"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg></button>` : ''}
                 ${kind === 'comic' ? `<button type="button" class="pti" onclick="artGalleryById('stories', window.currentStoryId, document.querySelector('#story-page-view img') ? document.querySelector('#story-page-view img').getAttribute('src') : '')" title="קריאה במסך מלא" aria-label="קריאה במסך מלא"><svg viewBox="0 0 24 24"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></button>` : `<button type="button" class="pti" onclick="document.getElementById('photo-gallery-main-img') && document.getElementById('photo-gallery-main-img').click()" title="קריאה במסך מלא" aria-label="קריאה במסך מלא"><svg viewBox="0 0 24 24"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></button>`}
@@ -27968,12 +27971,12 @@ function repostIsMine(id) { const u = auth.currentUser; return !!(u && repostsDa
 function repostBtnHTML(id) {
   subscribeReposts();
   const n = repostCount(id), on = repostIsMine(id);
-  return `<button type="button" class="pti pti-repost${on ? ' on' : ''}" data-item="${escHtml(id)}" onclick="repostersOpen('${artEsc(id)}')" title="${on ? 'ביטול השיתוף מהפרופיל' : 'שיתוף לפרופיל שלי — העוקבים שלך יראו'}" aria-label="שיתוף לפרופיל">${REPOST_ICON}<b class="pti-n">${n || ''}</b></button>`;
+  return `<button type="button" class="pti pti-repost${on ? ' on' : ''}" data-item="${escHtml(id)}" onclick="toggleRepost('${artEsc(id)}', this)" title="${on ? 'ביטול השיתוף מהפרופיל' : 'שיתוף לפרופיל שלי — העוקבים שלך יראו'}" aria-label="שיתוף לפרופיל">${REPOST_ICON}<b class="pti-n">${n || ''}</b></button>`;
 }
 function repostSyncBtn(b) {
   const id = b.dataset.item, n = repostCount(id), on = repostIsMine(id);
   b.classList.toggle('on', on);
-  const nb = b.querySelector('.pti-n'); if (nb) nb.textContent = n || '';
+  const nb = b.querySelector('.pti-n, .pc-n'); if (nb) nb.textContent = n || '';
 }
 async function toggleRepost(id, btn) {
   const u = auth.currentUser;
@@ -27984,8 +27987,10 @@ async function toggleRepost(id, btn) {
     await set(ref(db, `website/reposts/${id}/${u.uid}`), on ? null : { at: Date.now(), name: String(name).slice(0, 60) });
     if (!repostsData[id]) repostsData[id] = {};
     if (on) delete repostsData[id][u.uid]; else repostsData[id][u.uid] = { at: Date.now(), name };
-    if (btn) repostSyncBtn(btn);
-    if (typeof showCopyToast === 'function') showCopyToast(on ? 'השיתוף הוסר מהפרופיל שלך' : 'שותף לפרופיל שלך — העוקבים שלך יראו את זה בפיד');
+    document.querySelectorAll(`.pti-repost[data-item="${CSS.escape(id)}"]`).forEach(b => repostSyncBtn(b));
+    if (btn && !btn.matches('.pti-repost[data-item]')) repostSyncBtn(btn);
+    glassBanner(on ? { title: 'השיתוף הוסר מהפרופיל שלך', icon: 'del' }
+      : { title: 'שותף לפרופיל שלך', sub: 'העוקבים שלך יראו את זה', icon: 'ok', btn: 'מי שיתף', onBtn: () => repostersOpen(id) });
   } catch (e) {
     console.error('repost failed', e);
     if (typeof showCopyToast === 'function') showCopyToast('לא הצלחנו לשתף — נסו שוב');
@@ -29606,7 +29611,7 @@ function cardStatsBtnsHTML(a, kind) {
   const open = kind === 'photo' ? `photoOpenDetail('${id}')` : `storyOpenDetail('${id}')`;
   return `<button type="button" class="art-telegram-btn art-like-btn${liked ? ' liked' : ''}" onclick="event.stopPropagation(); photoToggleLike('${id}')" title="לייק" aria-label="לייק"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.6 1-1.1a5.5 5.5 0 0 0 0-7.7z"/></svg><span class="pc-n">${likes || ''}</span></button>
     <button type="button" class="art-telegram-btn art-cmt-btn" data-id="${escHtml(a.id)}" onclick="event.stopPropagation(); ${open}; setTimeout(() => { if (typeof openCommentsWindow === 'function') openCommentsWindow(); }, 900)" title="תגובות" aria-label="תגובות"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M20.5 11.5a8 8 0 0 1-11.7 7.1L4 20l1.3-4.4A8 8 0 1 1 20.5 11.5z"/></svg><span class="pc-n">${n(cmts)}</span></button>
-    <button type="button" class="art-telegram-btn art-rep-btn pti-repost" data-item="${escHtml(a.id)}" onclick="event.stopPropagation(); repostersOpen('${id}')" title="מי שיתף" aria-label="שיתוף"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/></svg><b class="pti-n pc-n">${n(reps)}</b></button>`;
+    <button type="button" class="art-telegram-btn art-rep-btn pti-repost" data-item="${escHtml(a.id)}" onclick="event.stopPropagation(); toggleRepost('${id}', this)" title="שיתוף לפרופיל שלי (לחיצה ארוכה — מי שיתף)" aria-label="שיתוף"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M14 5l6 6-6 6"/><path d="M20 11H10a6 6 0 0 0-6 6v2"/></svg><b class="pti-n pc-n">${n(reps)}</b></button>`;
 }
 
 
@@ -30505,16 +30510,16 @@ window.likersOpen = likersOpen;
 window.repostersOpen = repostersOpen;
 window.repostersToggle = repostersToggle;
 (function likeLongPress() {
-  const SEL = '.art-like-btn, .pti-like, .hr-like';
+  const SEL = '.art-like-btn, .pti-like, .hr-like, .pti-repost[data-item]';
   let timer = 0, fired = false, sx = 0, sy = 0;
-  const idOf = b => ((b.getAttribute('onclick') || '').match(/photoToggleLike\('([^']+)'/) || [])[1];
+  const idOf = b => b.dataset.item || ((b.getAttribute('onclick') || '').match(/photoToggleLike\('([^']+)'/) || [])[1];
   document.addEventListener('pointerdown', e => {
     const b = e.target.closest && e.target.closest(SEL);
     fired = false; clearTimeout(timer);
     if (!b) return;
     const id = idOf(b); if (!id) return;
     sx = e.clientX; sy = e.clientY;
-    timer = setTimeout(() => { fired = true; try { if (navigator.vibrate && navigator.userActivation && navigator.userActivation.hasBeenActive) navigator.vibrate(15); } catch (er) {} likersOpen(id); }, 480);
+    timer = setTimeout(() => { fired = true; try { if (navigator.vibrate && navigator.userActivation && navigator.userActivation.hasBeenActive) navigator.vibrate(15); } catch (er) {} (b.matches('.pti-repost') ? repostersOpen : likersOpen)(id); }, 480);
   }, true);
   document.addEventListener('pointermove', e => { if (timer && Math.hypot(e.clientX - sx, e.clientY - sy) > 10) clearTimeout(timer); }, true);
   ['pointerup', 'pointercancel'].forEach(t => document.addEventListener(t, () => clearTimeout(timer), true));
@@ -30532,9 +30537,9 @@ function hrActsHTML(x, kind) {
   const saved = typeof photoIsSavedLocal === 'function' && photoIsSavedLocal(x.id);
   const ic = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
   const b = (cls, on, label, d, n) => `<span class="hr-sq ${cls}" role="button" tabindex="0" aria-label="${label}" title="${label}" onclick="event.stopPropagation(); event.preventDefault(); ${on}">${ic(d)}${n ? `<span class="pc-n">${n}</span>` : ''}</span>`;
-  return b('hr-rep pti-repost" data-item="' + escHtml(x.id), `repostersOpen('${id}')`, 'מי שיתף', '<path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/>', reps ? formatViews(reps) : '')
+  return b('hr-rep pti-repost" data-item="' + escHtml(x.id), `toggleRepost('${id}', this)`, 'שיתוף לפרופיל', '<path d="M14 5l6 6-6 6"/><path d="M20 11H10a6 6 0 0 0-6 6v2"/>', reps ? formatViews(reps) : '')
     + b('hr-save' + (saved ? ' is-saved' : ''), `photoToggleSave('${id}'); this.classList.toggle('is-saved')`, 'שמירה', '<path d="M6 3h12v18l-6-4.5L6 21z"/>')
-    + b('hr-share', `hrShare('${kind}', '${id}', this)`, 'שליחה', '<path d="M14 5l7 7-7 7"/><path d="M21 12H9a6 6 0 0 0-6 6v1"/>')
+    + b('hr-share', `hrShare('${kind}', '${id}', this)`, 'שליחה', '<path d="M12 3v12"/><path d="M7.5 7.5 12 3l4.5 4.5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/>')
     + b('hr-flag', `openReportContent('${id}', '${artEsc(x.title || '')}')`, 'דיווח', '<path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/>');
 }
 function hrShare(kind, id, el) {
@@ -30704,3 +30709,49 @@ async function adsDelete(id) {
   try { await set(ref(db, 'website/ads/' + id), null); showCopyToast('הפרסומת נמחקה'); } catch (e) { showCopyToast('לא הצלחנו למחוק'); }
 }
 Object.assign(window, { adsAdd, adsDelete, adsPreview });
+
+// ============================================================
+// מובייל: שורת הלשוניות של עמוד הבית ("בשבילך · במעקב · תמונות גולשים · קומיקס…") מופיעה בראש כל עמוד באתר,
+// והלשונית של העמוד הנוכחי מסומנת. בעמוד הבית עצמו — השורה המקורית. במחשב ללא שינוי.
+// ============================================================
+function mTabsActive() {
+  const mc = typeof mainContent !== 'undefined' && mainContent;
+  const id = typeof activePageId !== 'undefined' ? activePageId : '';
+  const map = { 'page-secondhand-main': 'secondhand', 'page-forums-main': 'forums', 'page-news-main': 'news', 'page-communities-main': 'communities', 'page-stories-main': 'comics', 'page-stories-text': 'stories', 'page-feed-main': 'feed' };
+  if (map[id]) return map[id];
+  if (mc && mc.querySelector('.pfeed-page')) return 'feed';
+  if (mc && mc.querySelector('.photos-page[data-section="secondhand"]')) return 'secondhand';
+  if (mc && mc.querySelector('.photos-page[data-section="photos"]')) return 'photos';
+  if (mc && mc.querySelector('.stories-page')) return 'comics';
+  return '';
+}
+(function mTabsEverywhere() {
+  const mq = window.matchMedia('(max-width: 768px)');
+  let q = 0;
+  function sync() {
+    q = 0;
+    const mc = typeof mainContent !== 'undefined' && mainContent;
+    if (!mc) return;
+    const cur = mc.querySelector(':scope > .hx-global');
+    if (!mq.matches || mc.querySelector('.hx-tabs:not(.hx-global)')) { if (cur) cur.remove(); return; }
+    const active = mTabsActive();
+    if (cur && cur.dataset.active === active && mc.firstElementChild === cur) return;
+    if (cur) cur.remove();
+    const t = document.createElement('div');
+    t.innerHTML = homeChipsHTML(0, 0, 0, active, 'hx-global');
+    const nav = t.firstElementChild;
+    nav.dataset.active = active;
+    mc.prepend(nav);
+    const on = nav.querySelector('.hx-tab.on');
+    if (on) try { on.scrollIntoView({ block: 'nearest', inline: 'center' }); } catch (e) {}
+  }
+  const go = () => { if (!q) q = setTimeout(sync, 0); };
+  const start = () => {
+    const mc = typeof mainContent !== 'undefined' && mainContent;
+    if (!mc) return setTimeout(start, 300);
+    new MutationObserver(go).observe(mc, { childList: true });
+    mq.addEventListener && mq.addEventListener('change', go);
+    go();
+  };
+  start();
+})();
