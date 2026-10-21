@@ -15916,3 +15916,6 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_
 #adult-confirm .ac-btns button { flex: 1; height: 44px; border-radius: 12px; border: 0; font: inherit; font-size: 14.5px; font-weight: 700; cursor: pointer; }
 #adult-confirm .ac-no { background: rgba(127,127,127,.16); color: inherit; }
 #adult-confirm .ac-yes { background: #ec5f80; color: #fff; }
+
+/* מחשב: כפתור 18+ בתוך שורת האייקונים */
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) header.apple-nav .adult-btn.in-icons:not([hidden]) { position: static !important; transform: none !important; translate: none !important; height: 30px; margin-inline-start: 6px; }

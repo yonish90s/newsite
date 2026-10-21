@@ -30419,7 +30419,7 @@ function likeCountsPaint(likes) {
 function adultBlurOn() { return document.documentElement.classList.contains('adult-blur'); }
 function adultBlurSet(on) {
   document.documentElement.classList.toggle('adult-blur', on);
-  try { if (on) localStorage.removeItem('show_adult'); else { localStorage.setItem('show_adult', '1'); sessionStorage.setItem('age_verified', 'true'); } } catch (e) {}
+  try { if (!on) sessionStorage.setItem('age_verified', 'true'); localStorage.removeItem('show_adult'); } catch (e) {}   // לא נשמר — בכל כניסה מחדש התמונות מטושטשות
   adultBtnSync();
 }
 function adultBlurToggle() { if (adultBlurOn()) adultReveal(); else adultBlurSet(true); }
@@ -30447,7 +30447,10 @@ function adultBtnSync() {
     b.setAttribute('aria-label', 'הצגת תמונות למבוגרים');
     b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span>18+</span>';
     b.addEventListener('click', adultReveal);
-    hdr.appendChild(b);
+    // מחשב: בתוך שורת האייקונים של הכותרת (ליד מצב כהה/חיפוש); מובייל: באמצע הכותרת
+    const pop = document.querySelector('header.apple-nav .right-icons .ri-pop');
+    if (pop && window.matchMedia('(min-width: 769px)').matches) { b.classList.add('in-icons'); pop.prepend(b); }
+    else hdr.appendChild(b);
   }
   b.hidden = !adultBlurOn();
 }
