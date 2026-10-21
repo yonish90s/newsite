@@ -7,7 +7,7 @@
 import re, os
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PAGE, CARD, SURF, SURF2, RAISE = '#000000', '#111111', '#1a1a1a', '#222222', '#2a2a2a'
+PAGE, CARD, SURF, SURF2, RAISE = '#111111', '#111111', '#111111', '#1c1c1c', '#242424'
 BORDER = '#2a2a2a'
 TEXT, TEXT2, MUTED = '#ffffff', '#d0d0d0', '#9a9a9a'
 ACC = '#262626'
@@ -44,7 +44,7 @@ def map_bg(c):
     L, C = lum(r, g, b), chroma(r, g, b)
     if is_pink(r, g, b): return ORANGE if a >= 1 else f'rgba(232, 130, 61, {fa(a)})'
     if a < 1:
-        if L > 0.8: return f'rgba(27, 30, 36, {fa(a)})'
+        if L > 0.8: return f'rgba(17, 17, 17, {fa(a)})'
         if L < 0.3 and a < 0.3 and C < 0.2: return f'rgba(255, 255, 255, {fa(a * 0.9)})'
         return None
     if C > 0.16:
