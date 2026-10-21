@@ -15,15 +15,15 @@
   <!-- ספריית localforage לשמירת תמונות -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
   <!-- קישור לקובץ העיצוב החיצוני (עם פרמטר למניעת שמירה במטמון) -->
-  <link rel="stylesheet" href="./style.css?v=1876">
-  <link rel="stylesheet" href="./dark.css?v=272">
+  <link rel="stylesheet" href="./style.css?v=1879">
+  <link rel="stylesheet" id="dark-css" href="./dark.css?v=273" media="not all">
   <script>
     // מצב בהיר/כהה — נקבע לפני שהדף מצויר כדי שלא יהבהב (בחירה שמורה, אחרת לפי הגדרות המכשיר)
     (function () {
       var t = null;
       try { t = localStorage.getItem('site_theme'); } catch (e) {}
       if (!t) t = (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
-      if (t === 'dark') document.documentElement.classList.add('theme-dark');
+      if (t === 'dark') { document.documentElement.classList.add('theme-dark'); var dc = document.getElementById('dark-css'); if (dc) dc.media = 'all'; }
     })();
   </script>
 </head>
@@ -1240,7 +1240,7 @@ html.theme-dark .pl-bar { background: #2a2f37; }
     try { if (localStorage.getItem('mtab_hidden') === '1') document.documentElement.classList.add('mtab-hidden'); } catch (e) {}
   </script>
   <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
-  <script type="module" src="./script.js?v=1721"></script>
+  <script type="module" src="./script.js?v=1722"></script>
   <script defer src="./a11y.js?v=1"></script>
 </body>
 </html>

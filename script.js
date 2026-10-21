@@ -27459,6 +27459,7 @@ if (mainContent) {
 // ---- מצב בהיר / כהה (הבחירה נשמרת בדפדפן) ----
 function toggleSiteTheme() {
   const dark = !document.documentElement.classList.contains('theme-dark');
+  const dc = document.getElementById('dark-css'); if (dc) dc.media = 'all';   // קובץ המצב הכהה נטען לא-חוסם; מפעילים אותו כשעוברים לכהה
   document.documentElement.classList.toggle('theme-dark', dark);
   try { localStorage.setItem('site_theme', dark ? 'dark' : 'light'); } catch (e) {}
   const meta = document.querySelector('meta[name="theme-color"]'); if (meta) meta.setAttribute('content', dark ? '#121418' : '#ffffff');
@@ -27946,7 +27947,7 @@ function followIconHTML(a) {
 async function followIconClick(uid, name, btn) {
   await toggleFollow(uid, name, null);
   const on = typeof isFollowing === 'function' && isFollowing(uid);
-  document.querySelectorAll(`.card-follow-h[onclick*="'${uid}'"]`).forEach(b => { b.classList.toggle('on', on); b.textContent = on ? 'במעקב' : 'עקיבה'; });
+  document.querySelectorAll(`.card-follow-h[onclick*="'${uid}'"]`).forEach(b => { b.classList.toggle('on', on); b.textContent = on ? 'במעקב' : 'עקוב'; });
   document.querySelectorAll(`.pti-follow[onclick*="'${uid}'"]`).forEach(b => {
     b.classList.toggle('on', on);
     b.innerHTML = on ? FOLLOWING_ICON : FOLLOW_ICON;
@@ -28739,7 +28740,7 @@ function homeAsideHTML() {
     return `<div class="ha-row">
       <button type="button" class="ha-who" onclick="openUserPage('${artEsc(p.uid)}','${artEsc(name)}')">${authorAvHTML({ authorId: p.uid, author: name })}
         <span class="ha-txt"><b>${escHtml(name)}${verified ? verifiedSealHTML(15) : ''}</b><small dir="ltr">@${escHtml(typeof profileHandle === 'function' ? profileHandle(name) : name)}</small></span></button>
-      <button type="button" class="ha-btn" onclick="homeAsideFollow(this, '${artEsc(p.uid)}', '${artEsc(name)}')">עקיבה</button>
+      <button type="button" class="ha-btn" onclick="homeAsideFollow(this, '${artEsc(p.uid)}', '${artEsc(name)}')">עקוב</button>
     </div>`;
   };
   // פורומים להצטרף: הפעילים ביותר
@@ -28787,7 +28788,7 @@ function homeAsideHTML() {
 async function homeAsideFollow(btn, uid, name) {
   await toggleFollow(uid, name, null);
   const on = typeof isFollowing === 'function' && isFollowing(uid);
-  btn.textContent = on ? 'עוקב/ת' : 'עקיבה';
+  btn.textContent = on ? 'עוקב/ת' : 'עקוב';
   btn.classList.toggle('on', on);
 }
 function homeAsideMore(kind) {
@@ -29151,7 +29152,14 @@ function cardMoreOpen(btn) {
     report: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/></svg>'
   };
   const item = (sel, label, icon) => card.querySelector(sel) ? `<button type="button" class="cm-item" onclick="cardMoreDo('${sel}')">${icon}<span>${label}</span></button>` : '';
-  const body = `<div class="cm-menu">${item('.art-msg-btn', 'שליחת הודעה למשתמש', ic.msg)}${item('.art-report-btn', 'דיווח על התוכן', ic.report)}</div>`;
+  // שאר הפעולות של הכרטיס (טלגרם, מייל) — מהכפתורים שבשורת הפעולות, עם האייקון שלהם
+  const extra = [...card.querySelectorAll('.card-head-acts > .art-telegram-btn:not(.art-msg-btn):not(.art-report-btn)')].map((b, i) => {
+    b.dataset.cmIdx = String(i);
+    const svg = b.querySelector('svg');
+    const label = b.getAttribute('aria-label') || b.title || (/mail|מייל/i.test(b.outerHTML) ? 'אימייל' : 'טלגרם');
+    return `<button type="button" class="cm-item" onclick="cardMoreDo('[data-cm-idx=&quot;${i}&quot;]')">${svg ? svg.outerHTML : ''}<span>${escHtml(label)}</span></button>`;
+  }).join('');
+  const body = `<div class="cm-menu">${item('.art-msg-btn', 'שליחת הודעה למשתמש', ic.msg)}${extra}${item('.art-report-btn', 'דיווח על התוכן', ic.report)}</div>`;
   if (typeof openMSheet === 'function') openMSheet('אפשרויות', body, '');
 }
 function cardMoreDo(sel) {
@@ -29434,9 +29442,9 @@ function cardFollowHeadHTML(a) {
   const u = auth.currentUser;
   if (!a || !a.authorId || (u && u.uid === a.authorId)) return '';
   const on = typeof isFollowing === 'function' && isFollowing(a.authorId);
-  return `<button type="button" class="card-follow-h${on ? ' on' : ''}" onclick="event.stopPropagation(); followIconClick('${artEsc(a.authorId)}', '${artEsc(a.author || '')}', this)">${on ? 'במעקב' : 'עקיבה'}</button>`;
+  return `<button type="button" class="card-follow-h${on ? ' on' : ''}" onclick="event.stopPropagation(); followIconClick('${artEsc(a.authorId)}', '${artEsc(a.author || '')}', this)">${on ? 'במעקב' : 'עקוב'}</button>`;
 }
-Object.assign(UI_EN, { 'קרא עוד...': 'See more...', 'הצעות': 'Suggestions', 'עקיבה': 'Follow', 'במעקב': 'Following' });
+Object.assign(UI_EN, { 'קרא עוד...': 'See more...', 'הצעות': 'Suggestions', 'עקיבה': 'Follow', 'עקוב': 'Follow', 'במעקב': 'Following' });
 
 
 // ============================================================
