@@ -29441,8 +29441,8 @@ function recMiniEnhance() {
     });
     const host = acts.closest('.pd2-toprow') || acts.closest('.pd2-topend') || acts;
     const inner = host.closest('.art-detail-inner');
-    // מובייל: ההצעות בתחתית העמוד; מחשב: מעל הכפתורים
-    if (inner && window.matchMedia('(max-width: 900px)').matches) { strip.classList.add('rec-mini-bottom'); inner.appendChild(strip); }
+    // ההצעות בתחתית העמוד (מובייל ומחשב)
+    if (inner) { strip.classList.add('rec-mini-bottom'); inner.appendChild(strip); }
     else host.parentNode.insertBefore(strip, host);
     sec.classList.add('rec-mini-src');
   });

@@ -15131,3 +15131,21 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_
 html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .hr-card { min-width: 0 !important; width: 240px; max-width: 240px; overflow: hidden; }
 @media (max-width: 768px) { html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .hr-card { width: 74%; max-width: 74%; } }
 html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .hr-card > * { max-width: 100%; }
+
+/* ההצעות בתחתית העמוד גם במחשב */
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-detail .rec-mini-wrap.rec-mini-bottom { margin: 22px 0 8px !important; }
+
+/* מחשב: התמונה הראשית בעמוד הפריט גדולה */
+@media (min-width: 1100px) {
+  /* תמונות / מוצרי גולשים: עמודת התמונה מקבלת את רוב הרוחב */
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-detail.art-pd3 .art-detail-inner { max-width: 1400px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-pd3 .pd2.pd3 { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) minmax(240px, .62fr) !important; gap: 28px !important; }
+  /* קומיקס / סיפור מאויר: כמו עמוד תמונה — תמונה גדולה מימין, פרטים משמאל */
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-detail:has(.comic-show) .art-detail-inner { zoom: 1 !important; max-width: 1300px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-detail .pshow.comic-show { display: grid !important; grid-template-columns: minmax(0, 1.7fr) minmax(300px, 1fr) !important; gap: 32px !important; align-items: start !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-detail .pshow.comic-show > .pshow-stage { order: 0 !important; width: auto !important; max-width: none !important; position: sticky; top: 70px; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-detail .pshow.comic-show > :not(.pshow-stage) { order: 1 !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-detail .pshow.comic-show .pshow-frame { width: 100% !important; max-width: none !important; height: auto !important; min-height: 420px !important; aspect-ratio: auto !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-detail .pshow.comic-show .story-page-view { width: 100% !important; min-height: 420px !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .art-detail .pshow.comic-show .story-page-view img { width: 100% !important; height: auto !important; max-height: 80vh !important; object-fit: contain !important; }
+}
