@@ -27629,6 +27629,7 @@ function mobileMenuHTML() {
         <button type="button" onclick="mnavGo(&quot;openLegal('terms')&quot;)">תנאי שימוש</button>
         <button type="button" onclick="mnavGo(&quot;openLegal('mydata')&quot;)">המידע שלי</button>
       </details>
+      <div class="mnav-social">${typeof footerSocialRowHTML === 'function' ? footerSocialRowHTML() : ''}</div>
     </aside>`;
 }
 function renderMobileMenu() { const m = document.getElementById('mnav'); if (m) { m.innerHTML = mobileMenuHTML(); if (typeof avatarHydrate === 'function') avatarHydrate(m); } }
