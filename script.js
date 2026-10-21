@@ -30304,3 +30304,51 @@ function deepLinkSync() {
   };
   if (document.body) add(); else document.addEventListener('DOMContentLoaded', add);
 })();
+
+
+// ============================================================
+// אנימציות GSAP — במחשב בלבד (במובייל הספרייה לא נטענת בכלל):
+// כניסה רכה של הכותרת, צל לכותרת בגלילה, וכרטיסים/מקטעים שעולים למקום כשנכנסים למסך.
+// מכבדים "הפחתת תנועה"; אם GSAP לא נטען — הכל מוצג כרגיל.
+// ============================================================
+(function gsapMotion() {
+  const desktop = window.matchMedia && matchMedia('(min-width: 769px)').matches;
+  const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!desktop || reduce) return;
+  const REVEAL = '.hr-box, .hx-explore, .hc, .hw-stats, .hw-watch, #photo-row-1 > .art-row, #story-row-main > .art-row, .pc-post, .fi-cat, .fx-row, .rd-post, .rd-cmt, .nl-item, .prd, .prd-more-card, .pfg-card, .adm-cc';
+  const load = src => new Promise((res, rej) => { const sc = document.createElement('script'); sc.src = src; sc.async = true; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); });
+  const start = () => {
+    const gsap = window.gsap, ST = window.ScrollTrigger;
+    if (!gsap || !ST) return;
+    gsap.registerPlugin(ST);
+    // כותרת: לוגו, קישורים ואייקונים נכנסים בעדינות
+    const hdrParts = document.querySelectorAll('header.apple-nav .logo-area, header.apple-nav .nav-links > *, header.apple-nav .right-icons .ri-pop > *');
+    gsap.from(hdrParts, { y: -10, opacity: 0, duration: 0.5, ease: 'power2.out', stagger: 0.04, clearProps: 'transform,opacity' });
+    // צל לכותרת אחרי שמתחילים לגלול
+    ST.create({ start: 'top -8', end: 99999, toggleClass: { targets: 'header.apple-nav', className: 'hdr-scrolled' } });
+    // חשיפה בגלילה — לאלמנטים חדשים בכל פעם שהעמוד משתנה
+    const reveal = () => {
+      const fresh = [...document.querySelectorAll(REVEAL)].filter(el => !el.dataset.gs && el.offsetParent !== null);
+      if (!fresh.length) return;
+      const vh = window.innerHeight;
+      const below = fresh.filter(el => el.getBoundingClientRect().top > vh * 0.92);
+      const inView = fresh.filter(el => el.getBoundingClientRect().top <= vh * 0.92);
+      fresh.forEach(el => { el.dataset.gs = '1'; });
+      if (inView.length) gsap.fromTo(inView, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.45, ease: 'power2.out', stagger: 0.04, clearProps: 'transform,opacity' });
+      if (below.length) {
+        gsap.set(below, { opacity: 0, y: 28 });
+        ST.batch(below, { start: 'top 94%', once: true, onEnter: batch => gsap.to(batch, { opacity: 1, y: 0, duration: 0.55, ease: 'power3.out', stagger: 0.06, overwrite: true, clearProps: 'transform,opacity' }) });
+      }
+      ST.getAll().forEach(t => { if (t.trigger && !document.contains(t.trigger)) t.kill(); });
+      ST.refresh();
+      // ביטחון: מה שנשאר שקוף ונמצא במסך — מוצג
+      setTimeout(() => below.forEach(el => { if (el.isConnected && getComputedStyle(el).opacity === '0' && el.getBoundingClientRect().top < window.innerHeight) gsap.set(el, { clearProps: 'transform,opacity' }); }), 2500);
+    };
+    let t = 0;
+    new MutationObserver(() => { clearTimeout(t); t = setTimeout(reveal, 120); }).observe(document.body, { childList: true, subtree: true });
+    reveal();
+  };
+  load('https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js')
+    .then(() => load('https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js'))
+    .then(start).catch(() => {});
+})();
