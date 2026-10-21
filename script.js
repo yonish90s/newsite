@@ -27862,17 +27862,40 @@ window.emailIconClick = emailIconClick;
 
 // כפתורי הפעולה של עמוד הגלריה (אייקונים בלבד) — בשורה העליונה בפלאפון, בעמודת הפרטים במחשב
 function pd2ActionsHTML(a, kind) {
+  // אותם אייקונים ובאותו סדר כמו בכרטיס: לייק · תגובות · שיתוף · שמירה … ⋯ (הודעה/מייל בתפריט). בלי כפילויות.
+  const sv = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+  subscribeReposts();
+  const rn = repostCount(a.id), ron = repostIsMine(a.id);
+  const cn = (typeof cardCmtCounts !== 'undefined' && cardCmtCounts && cardCmtCounts[a.id]) || 0;
+  const likes = Number(a.likes) || 0;
   return `<div class="pd2-topacts">
-                <button type="button" class="pti pti-like${photoIsLikedLocal(a.id) ? ' on' : ''}" onclick="this.classList.toggle('on'); photoToggleLike('${artEsc(a.id)}')" title="אהבתי" aria-label="אהבתי"><svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></button>
-                <button type="button" class="pti" onclick="${kind === 'comic' ? `dmStartWith('${artEsc(a.authorId || '')}', '${artEsc(a.author || 'משתמש')}', '${artEsc('שלום! פנייה לגבי הקומיקס: "' + String(a.title || '').slice(0, 120) + '"')}')` : `dmStartAboutGallery('${artEsc(a.authorId || '')}', '${artEsc(a.author || '')}', '${artEsc(a.id)}')`}" title="הודעה ליוצר" aria-label="הודעה ליוצר"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg></button>
+                <button type="button" class="pti pti-like${photoIsLikedLocal(a.id) ? ' on' : ''}" onclick="this.classList.toggle('on'); photoToggleLike('${artEsc(a.id)}')" title="לייק" aria-label="לייק">${sv('<path d="M7.5 10.5v9.5H4.8a1 1 0 0 1-1-1v-7.5a1 1 0 0 1 1-1z"/><path d="M7.5 10.5 11 4a2.4 2.4 0 0 1 2.6 2.7L13.2 9.5h5.3a2 2 0 0 1 2 2.4l-1.3 6.5a2 2 0 0 1-2 1.6H7.5"/>')}${likes ? `<b class="pti-n">${likes}</b>` : ''}</button>
+                <button type="button" class="pti pti-cmt" onclick="togglePostComments(this)" title="תגובות" aria-label="תגובות">${sv('<path d="M20.5 11.5a8 8 0 0 1-11.7 7.1L4 20l1.3-4.4A8 8 0 1 1 20.5 11.5z"/>')}${cn ? `<b class="pti-n">${cn}</b>` : ''}</button>
+                <button type="button" class="pti pti-repost${ron ? ' on' : ''}" data-item="${escHtml(a.id)}" onclick="toggleRepost('${artEsc(a.id)}', this)" title="שיתוף לפרופיל" aria-label="שיתוף">${sv('<path d="M14 5l6 6-6 6"/><path d="M20 11H10a6 6 0 0 0-6 6v2"/>')}<b class="pti-n">${rn || ''}</b></button>
                 <button type="button" class="pti pd2-save${photoIsSavedLocal(a.id) ? ' is-saved' : ''}" onclick="photoToggleSave('${artEsc(a.id)}')" title="שמירה" aria-label="שמירה"><svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
-                ${a.emailUrl ? `<button type="button" class="pti" onclick="emailIconClick('${artEsc(a.emailUrl)}', this, event)" title="אימייל — לחיצה מעתיקה, לחיצה נוספת שולחת" aria-label="אימייל"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 7l8.5 6 8.5-6"/></svg></button>` : ''}
                 ${kind === 'product' ? `<button type="button" class="pti pti-offer" onclick="openPriceOffer('${artEsc(a.id)}', '${artEsc(a.title || '')}', '${artEsc(a.authorId || '')}', '${artEsc(a.author || '')}')" title="הצעת מחיר" aria-label="הצעת מחיר"><svg viewBox="0 0 24 24"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg></button>` : ''}
                 ${kind === 'comic' ? `<button type="button" class="pti" onclick="artGalleryById('stories', window.currentStoryId, document.querySelector('#story-page-view img') ? document.querySelector('#story-page-view img').getAttribute('src') : '')" title="קריאה במסך מלא" aria-label="קריאה במסך מלא"><svg viewBox="0 0 24 24"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></button>` : ''}
-                ${repostBtnHTML(a.id)}
                 ${followIconHTML(a)}
+                <button type="button" class="pti pti-more" onclick="pd2MoreOpen(this)" title="עוד" aria-label="עוד אפשרויות"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button>
+                <span class="pd2-more-src" hidden>
+                <button type="button" class="pti" onclick="${kind === 'comic' ? `dmStartWith('${artEsc(a.authorId || '')}', '${artEsc(a.author || 'משתמש')}', '${artEsc('שלום! פנייה לגבי הקומיקס: "' + String(a.title || '').slice(0, 120) + '"')}')` : `dmStartAboutGallery('${artEsc(a.authorId || '')}', '${artEsc(a.author || '')}', '${artEsc(a.id)}')`}" title="הודעה ליוצר" aria-label="הודעה ליוצר"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg></button>
+                ${a.emailUrl ? `<button type="button" class="pti" onclick="emailIconClick('${artEsc(a.emailUrl)}', this, event)" title="אימייל — לחיצה מעתיקה, לחיצה נוספת שולחת" aria-label="אימייל"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 7l8.5 6 8.5-6"/></svg></button>` : ''}
+                </span>
               </div>`;
 }
+// תפריט ⋯ בעמוד הפריט: הודעה ליוצר ומייל (אותם כפתורים, בלי אייקון כפול בשורה)
+function pd2MoreOpen(btn) {
+  const src = btn.closest('.pd2-topacts') && btn.closest('.pd2-topacts').querySelector('.pd2-more-src');
+  if (!src) return;
+  window.__pd2MoreSrc = src;
+  const items = [...src.querySelectorAll('button')].map((b, i) => `<button type="button" class="cm-item" onclick="pd2MoreDo(${i})">${(b.querySelector('svg') || {}).outerHTML || ''}<span>${escHtml(b.getAttribute('aria-label') || b.title || '')}</span></button>`).join('');
+  if (typeof openMSheet === 'function') openMSheet('אפשרויות', `<div class="cm-menu">${items}</div>`, '');
+}
+function pd2MoreDo(i) {
+  const src = window.__pd2MoreSrc; if (typeof closeMSheet === 'function') closeMSheet();
+  const b = src && src.querySelectorAll('button')[i]; if (b) setTimeout(() => b.click(), 220);
+}
+Object.assign(window, { pd2MoreOpen, pd2MoreDo });
 window.pd2ActionsHTML = pd2ActionsHTML;
 
 
