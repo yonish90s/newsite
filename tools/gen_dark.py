@@ -7,10 +7,15 @@
 import re, os
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PAGE, CARD, SURF, SURF2, RAISE = '#121212', '#1c1c1e', '#232325', '#2a2a2c', '#333336'
-BORDER = '#333336'
-TEXT, TEXT2, MUTED = '#d9d9d9', '#bdbdbd', '#939393'
-ACC = '#3a3a3d'
+PAGE, CARD, SURF, SURF2, RAISE = '#000000', '#111111', '#1a1a1a', '#222222', '#2a2a2a'
+BORDER = '#2a2a2a'
+TEXT, TEXT2, MUTED = '#ffffff', '#d0d0d0', '#9a9a9a'
+ACC = '#262626'
+ORANGE = '#e8823d'   # הדגש במצב כהה: כתום רך במקום הוורוד
+
+
+def is_pink(r, g, b):
+    return r > 190 and g < 130 and 60 < b < 170 and r - b > 60
 
 HEX = r'#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3,4})\b'
 RGB = r'rgba?\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*(?:,\s*[\d.]+\s*)?\)'
@@ -37,6 +42,7 @@ def fa(a): return ('%.3f' % a).rstrip('0').rstrip('.')
 def map_bg(c):
     r, g, b, a = parse(c)
     L, C = lum(r, g, b), chroma(r, g, b)
+    if is_pink(r, g, b): return ORANGE if a >= 1 else f'rgba(232, 130, 61, {fa(a)})'
     if a < 1:
         if L > 0.8: return f'rgba(27, 30, 36, {fa(a)})'
         if L < 0.3 and a < 0.3 and C < 0.2: return f'rgba(255, 255, 255, {fa(a * 0.9)})'
@@ -55,6 +61,7 @@ def map_bg(c):
 def map_fg(c):
     r, g, b, a = parse(c)
     L, C = lum(r, g, b), chroma(r, g, b)
+    if is_pink(r, g, b): return ORANGE if a >= 1 else f'rgba(232, 130, 61, {fa(a)})'
     if C > 0.2:
         if L < 0.35: return f'color-mix(in srgb, {c} 55%, white)'   # צבע כהה (טקסט אריח) → בהיר יותר
         return None
@@ -70,6 +77,7 @@ def map_fg(c):
 def map_border(c):
     r, g, b, a = parse(c)
     L, C = lum(r, g, b), chroma(r, g, b)
+    if is_pink(r, g, b): return ORANGE if a >= 1 else f'rgba(232, 130, 61, {fa(a)})'
     if C > 0.16: return None
     if a < 1:
         if L < 0.35: return f'rgba(255, 255, 255, {fa(min(1, a * 0.8))})'

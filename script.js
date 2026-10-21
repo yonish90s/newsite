@@ -8209,29 +8209,19 @@ const artPageState = { photos: 1, stories: 1 };
 function artApplyPagination(container, key) {
   if (!container || !container.querySelector('.art-rows')) return;
 
-  if (key === 'photos') {
-    const rows = Array.from(container.querySelectorAll('.art-row'));
-    rows.forEach(r => {
-      const show = r.dataset.artMatch !== '0';
-      r.style.display = show ? '' : 'none';
-    });
-    const bar = container.querySelector('.art-pagination');
-    if (bar) { bar.innerHTML = ''; bar.style.display = 'none'; }
-    return;
-  }
-
-  const rows = Array.from(container.querySelectorAll('.art-rows > .art-row'));
+  const rows = Array.from(container.querySelectorAll(key === 'photos' ? '#photo-row-1 > .art-row' : '.art-rows > .art-row'));
+  const PAGE = key === 'photos' ? 24 : ART_PAGE_SIZE;
   // artMatch מסומן על ידי החיפוש והסינון; פריט בלי סימון נחשב תואם
   const matching = rows.filter(r => r.dataset.artMatch !== '0');
-  const totalPages = Math.max(1, Math.ceil(matching.length / ART_PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(matching.length / PAGE));
 
   let page = artPageState[key] || 1;
   page = Math.min(Math.max(page, 1), totalPages);
   artPageState[key] = page;
 
   rows.forEach(r => { r.style.display = 'none'; });
-  const start = (page - 1) * ART_PAGE_SIZE;
-  matching.slice(start, start + ART_PAGE_SIZE).forEach(r => { r.style.display = ''; });
+  const start = (page - 1) * PAGE;
+  matching.slice(start, start + PAGE).forEach(r => { r.style.display = ''; });
 
   const bar = container.querySelector('.art-pagination');
   if (!bar) return;
@@ -8242,23 +8232,17 @@ function artApplyPagination(container, key) {
   }
   bar.style.display = 'flex';
 
-  // חלון מספרים מצומצם כדי שהסרגל לא יתארך בלי סוף
-  const nums = [];
-  const from = Math.max(1, Math.min(page - 2, totalPages - 4));
-  const to = Math.min(totalPages, Math.max(page + 2, 5));
-  if (from > 1) nums.push(1, '…');
-  for (let i = from; i <= to; i++) nums.push(i);
-  if (to < totalPages) nums.push('…', totalPages);
-
-  let html = `<button class="art-page-btn art-page-nav" ${page === 1 ? 'disabled' : ''} onclick="artGoToPage('${key}', ${page - 1})">הקודם</button>`;
-  nums.forEach(n => {
-    if (n === '…') {
-      html += `<span class="art-page-gap">…</span>`;
-    } else {
-      html += `<button class="art-page-btn${n === page ? ' active' : ''}" onclick="artGoToPage('${key}', ${n})">${n}</button>`;
-    }
-  });
-  html += `<button class="art-page-btn art-page-nav" ${page === totalPages ? 'disabled' : ''} onclick="artGoToPage('${key}', ${page + 1})">הבא</button>`;
+  // « ‹ 1 2 3 › »  +  [עמוד] מעבר — חלון של 3 מספרים סביב העמוד הנוכחי
+  const from = Math.max(1, Math.min(page - 1, totalPages - 2));
+  const to = Math.min(totalPages, from + 2);
+  const ic = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+  const R = '<path d="M9 6l6 6-6 6"/>', RR = '<path d="M6 6l6 6-6 6M13 6l6 6-6 6"/>';
+  const nav = (n, d, lbl, off) => `<button type="button" class="art-page-btn art-page-nav" ${off ? 'disabled' : ''} onclick="artGoToPage('${key}', ${n})" aria-label="${lbl}">${ic(d)}</button>`;
+  let html = `<div class="apg-nums">${nav(1, RR, 'עמוד ראשון', page === 1)}${nav(page - 1, R, 'הקודם', page === 1)}`;
+  for (let n = from; n <= to; n++) html += `<button type="button" class="art-page-btn${n === page ? ' active' : ''}" onclick="artGoToPage('${key}', ${n})">${n}</button>`;
+  html += `${nav(page + 1, R, 'הבא', page === totalPages).replace('art-page-nav', 'art-page-nav apg-fwd')}${nav(totalPages, RR, 'עמוד אחרון', page === totalPages).replace('art-page-nav', 'art-page-nav apg-fwd')}</div>`;
+  html += `<form class="apg-go" onsubmit="event.preventDefault(); const v = parseInt(this.p.value, 10); if (v >= 1 && v <= ${totalPages}) artGoToPage('${key}', v); else this.p.value = '';">
+      <input name="p" type="number" inputmode="numeric" min="1" max="${totalPages}" placeholder="עמוד" aria-label="מספר עמוד"><button type="submit">מעבר</button></form>`;
   bar.innerHTML = html;
 }
 
