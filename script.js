@@ -15090,6 +15090,7 @@ window.forumGoPage = forumGoPage;
 
 // ---- מובייל: הדיון בסגנון שרשור תגובות (אווטאר עם ראשי תיבות, תגובות מקוננות, לייק/דיסלייק) ----
 const FORUM_MOBILE_MQ = window.matchMedia('(max-width: 768px)');
+const FORUM_DESKTOP_AS_MOBILE = true;   // הפורומים במחשב נראים כמו במובייל (עמודה אחת ממורכזת)
 FORUM_MOBILE_MQ.addEventListener('change', () => { if (forumView.topicId) forumRender(); });
 let forumReplyTo = null;               // מזהה ההודעה שמשיבים לה
 const forumOpenThreads = new Set();    // שרשורים שהתגובות שלהם פתוחות
@@ -15285,8 +15286,8 @@ function forumTopicHTML() {
   const admin = typeof isAdmin === 'function' && isAdmin();
   const myUid = auth.currentUser ? auth.currentUser.uid : '';
   const posts = forumPosts ? Object.entries(forumPosts).map(([id, p]) => Object.assign({ id }, p)).sort((a, b) => (a.t || 0) - (b.t || 0)) : null;
-  // מובייל: שרשור תגובות מקונן (כמו ברדיט) — לייק במקום חץ, תגובה כאייקון
-  if (FORUM_MOBILE_MQ.matches) return forumTopicMobileHTML(f, t, posts, admin, myUid);
+  // שרשור תגובות מקונן (כמו ברדיט) — לייק במקום חץ, תגובה כאייקון. לפי בקשת הבעלים: גם במחשב, כמו במובייל
+  if (FORUM_MOBILE_MQ.matches || FORUM_DESKTOP_AS_MOBILE) return forumTopicMobileHTML(f, t, posts, admin, myUid);
   const byId = {}; (posts || []).forEach((p, i) => { byId[p.id] = Object.assign({ __idx: i }, p); });
   const op0 = posts && posts[0];
   const total = posts ? posts.length : 0;

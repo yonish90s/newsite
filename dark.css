@@ -2801,6 +2801,44 @@ html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pm-head .pcc.pcc-filter .pcc-name { color: #ffffff !important; }
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pm-head .pcc-row > .pcc-sep { background: #1c1c1c !important; }
 }
+@media (min-width: 769px) {
+html.theme-dark .fo-back { background: rgba(17, 17, 17, 0.92) !important; }
+html.theme-dark .rd-sub-ic { background: linear-gradient(160deg, #262626, #262626) !important; }
+html.theme-dark .rd-sub { color: #ffffff !important; }
+html.theme-dark .rd-by { color: rgba(236, 238, 241, 0.6) !important; }
+html.theme-dark .rd-time { color: rgba(236, 238, 241, 0.5) !important; }
+html.theme-dark .rd-title { color: #ffffff !important; }
+html.theme-dark .rd-text { color: rgba(236, 238, 241, 0.9) !important; }
+html.theme-dark .rd-pill { background: rgba(255, 255, 255, 0.072) !important; color: #ffffff !important; }
+html.theme-dark .rd-votes { color: rgba(236, 238, 241, 0.75) !important; }
+html.theme-dark .rd-votes b { color: rgba(236, 238, 241, 0.85) !important; }
+html.theme-dark .rd-votes.up .rd-vote:first-child, html.theme-dark .rd-votes.up b { color: #ffffff !important; }
+html.theme-dark .rd-input { border: 1px solid rgba(255, 255, 255, 0.176) !important; background: rgba(255, 255, 255, 0.108) !important; color: #ffffff !important; }
+html.theme-dark .rd-input::placeholder { color: rgba(236, 238, 241, 0.55) !important; }
+html.theme-dark .rd-input:focus { border-color: rgba(255, 255, 255, 0.1) !important; }
+html.theme-dark .rd-send { background: linear-gradient(135deg, #262626, #262626) !important; }
+html.theme-dark .rd-av { background: var(--av, #262626) !important; }
+html.theme-dark .rd-cmt-name { color: #ffffff !important; }
+html.theme-dark .rd-dot { color: rgba(236, 238, 241, 0.4) !important; }
+html.theme-dark .rd-tag { background: rgba(255, 255, 255, 0.09) !important; color: rgba(236, 238, 241, 0.7) !important; }
+html.theme-dark .rd-cmt-body { border-inline-start: 1.5px solid rgba(255, 255, 255, 0.128) !important; }
+html.theme-dark .rd-actions { color: rgba(236, 238, 241, 0.7) !important; }
+html.theme-dark .rd-act { color: rgba(236, 238, 241, 0.75) !important; }
+html.theme-dark .rd-act:active, html.theme-dark .rd-vote:active { background: rgba(255, 255, 255, 0.072) !important; }
+html.theme-dark .rd-del { color: #e8823d !important; }
+html.theme-dark .rd-more { color: rgba(236, 238, 241, 0.65) !important; }
+html.theme-dark .rd-compose { background: rgba(17, 17, 17, 0.97) !important; border-top: 1px solid #2a2a2a !important; }
+html.theme-dark .rd-compose .rd-input { background: #1c1c1c !important; border-color: #2a2a2a !important; }
+html.theme-dark .fi-mstats b { color: #ffffff !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .fo-posts .fo-author-name { color: var(--fi-acc, color-mix(in srgb, #b0244a 55%, white)) !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) .rd-cmt .rd-text, html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) .rd-post-text { color: #ffffff !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) .rd-cmt-name { color: #d0d0d0 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) :is(.rd-time, .rd-dot) { color: #d0d0d0 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) .rd-title { color: #ffffff !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) .rd-actions .rd-reply { color: #d0d0d0 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) .rd-votes { color: #d0d0d0 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) .rd-votes.up { color: #e8823d !important; }
+}
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #ffffff !important; }
 html.theme-dark [style*="color:#111111"] { color: #ffffff !important; }

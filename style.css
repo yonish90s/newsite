@@ -15299,3 +15299,166 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_
   html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pm-head .pcc.pcc-filter .pcc-name { font-weight: 600 !important; color: #111111 !important; }
   html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pm-head .pcc-row > .pcc-sep { width: 1px; height: 20px; background: #e2e2e6; flex: none; }
 }
+
+/* ===== פורומים במחשב = כמו במובייל: עמודה אחת ממורכזת + אותם חוקים של המובייל (הועתקו מתוך @media max-width) ===== */
+@media (min-width: 769px) {
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .forums-page { max-width: 760px !important; margin-inline: auto !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .forums-page :is(.fo-inner, .fi-layout) { max-width: 760px !important; width: 100% !important; margin-inline: auto !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .forums-page .fi-layout { display: block !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .forums-page .fi-side { display: none !important; }
+/* במובייל: הכפתור נשאר נגיש גם בגלילה */
+  .fo-nav { position: sticky; top: 8px; z-index: 50;
+    margin: 0 -6px 14px; padding: 6px; }
+.fo-nav .fo-crumbs { display: none; }
+.fo-back { background: rgba(255, 255, 255, 0.92); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 8px 22px -10px rgba(0, 0, 0, 0.8); }
+.fo-cat-title { font-size: 15px !important; padding: 12px 16px !important; letter-spacing: .2px; }
+.fo-row { display: flex !important; align-items: center !important; gap: 12px !important; padding: 12px 14px !important; min-height: 0 !important; }
+.fo-row .fo-last { display: none !important; }
+.fo-row .fo-icon { width: 36px !important; height: 36px !important; border-radius: 10px !important; flex: none; }
+.fo-row .fo-icon svg { width: 20px !important; height: 20px !important; }
+.fo-row .fo-main { flex: 1; min-width: 0; gap: 2px !important; }
+.fo-row .fo-title { font-size: 15.5px !important; line-height: 1.3; }
+.fo-row .fo-main small { font-size: 12.5px !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+.fo-row .fo-stat { display: none !important; }
+.fo-row .fo-stat:last-of-type { display: flex !important; flex-direction: column; align-items: center; min-width: 40px; }
+.fo-row .fo-stat small { font-size: 10.5px !important; }
+.fo-row .fo-stat b { font-size: 14px !important; }
+.fo-row.topic .fo-stat:last-of-type small { display: none; }
+/* פוסט פותח */
+  .rd-post { padding: 6px 2px 14px; direction: rtl; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; }
+.rd-post-head { display: flex; align-items: center; gap: 10px; }
+.rd-sub-ic { width: 40px; height: 40px; flex: none; border-radius: 50%; display: grid; place-items: center; background: linear-gradient(160deg, #111111, #111111); color: #ffffff; }
+.rd-sub-ic svg { width: 22px; height: 22px; }
+.rd-post-meta { flex: 1; min-width: 0; line-height: 1.35; }
+.rd-sub { font-size: 15px; font-weight: 700; color: #262626; cursor: pointer; }
+.rd-by { font-size: 14px; color: rgba(38, 38, 38, 0.6); cursor: pointer; }
+.rd-time { font-size: 13.5px; color: rgba(38, 38, 38, 0.5); }
+.rd-title { margin: 12px 0 8px; font-size: 21px; line-height: 1.35; font-weight: 800; color: #262626; }
+.rd-text { font-size: 16px; line-height: 1.6; color: rgba(38, 38, 38, 0.9); word-break: break-word; }
+.rd-post-actions { display: flex; align-items: center; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+.rd-pill { display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 14px; border-radius: 999px; border: 0; background: rgba(38, 38, 38, 0.08); color: #262626; font: inherit; font-size: 15px; cursor: pointer; }
+.rd-pill svg { width: 21px; height: 21px; }
+.rd-pill b { font-weight: 700; }
+.rd-pill-icon { width: 46px; padding: 0; justify-content: center; }
+.rd-votes { display: inline-flex; align-items: center; gap: 2px; color: rgba(38, 38, 38, 0.75); }
+.rd-votes b { min-width: 16px; text-align: center; font-size: 14px; font-weight: 700; color: rgba(38, 38, 38, 0.85); font-variant-numeric: tabular-nums; }
+.rd-votes.rd-pill { padding: 0 6px; gap: 4px; }
+.rd-votes.rd-pill b { font-size: 15px; }
+.rd-vote { width: 32px; height: 32px; border: 0; background: none; color: inherit; cursor: pointer; display: grid; place-items: center; border-radius: 50%; }
+.rd-vote svg { width: 20px; height: 20px; }
+.rd-vote-down svg { transform: rotate(180deg); }
+.rd-votes.up .rd-vote:first-child, .rd-votes.up b { color: #111111; }
+.rd-votes.down .rd-vote-down, .rd-votes.down b { color: #8b9cff; }
+/* "הצטרפו לשיחה" */
+  .rd-compose { margin: 4px 0 18px; }
+.rd-compose-row { display: flex; align-items: flex-end; gap: 8px; }
+.rd-input { flex: 1; min-width: 0; min-height: 46px; max-height: 180px; padding: 12px 18px; border-radius: 24px; resize: none; box-sizing: border-box;
+    border: 1px solid rgba(38, 38, 38, 0.22); background: rgba(0, 0, 0, 0.12); color: #262626; font: inherit; font-size: 16px; line-height: 1.4; outline: none; }
+.rd-input::placeholder { color: rgba(38, 38, 38, 0.55); }
+.rd-input:focus { border-color: rgba(255, 255, 255, 0.45); }
+.rd-send { width: 46px; height: 46px; flex: none; border: 0; border-radius: 50%; cursor: pointer; display: grid; place-items: center; background: linear-gradient(135deg, #111111, #111111); color: #ffffff; }
+.rd-send svg { width: 20px; height: 20px; transform: scaleX(-1); }
+/* תגובות */
+  .rd-comments { direction: rtl; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; }
+.rd-cmt { margin-bottom: 18px; }
+.rd-cmt.nested { margin: 14px 0 4px; }
+.rd-cmt-head { display: flex; align-items: center; gap: 8px; }
+.rd-av { width: 32px; height: 32px; flex: none; border-radius: 50%; overflow: hidden; display: grid; place-items: center; background: var(--av, #111111); color: #ffffff; font-size: 13px; font-weight: 800; }
+.rd-av svg { width: 100%; height: 100%; }
+.rd-cmt-name { font-size: 15px; font-weight: 700; color: #262626; cursor: pointer; }
+.rd-dot { color: rgba(38, 38, 38, 0.4); font-size: 12px; }
+.rd-tag { font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 999px; background: rgba(38, 38, 38, 0.1); color: rgba(38, 38, 38, 0.7); }
+.rd-cmt-body { margin-inline-start: 15px; padding-inline-start: 22px; border-inline-start: 1.5px solid rgba(38, 38, 38, 0.16); padding-top: 6px; }
+.rd-actions { display: flex; align-items: center; gap: 6px; margin-top: 8px; color: rgba(38, 38, 38, 0.7); }
+.rd-act { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 10px; border: 0; border-radius: 999px; background: none; color: rgba(38, 38, 38, 0.75); font: inherit; font-size: 14.5px; font-weight: 700; cursor: pointer; }
+.rd-act svg { width: 19px; height: 19px; }
+.rd-act:active, .rd-vote:active { background: rgba(38, 38, 38, 0.08); }
+.rd-del { color: #f87171; }
+.rd-more { display: inline-flex; align-items: center; gap: 8px; margin-top: 10px; padding: 4px 0; border: 0; background: none; color: rgba(38, 38, 38, 0.65); font: inherit; font-size: 14.5px; cursor: pointer; }
+.rd-more svg { width: 20px; height: 20px; }
+html body .forums-page .fo-inner { padding-top: 12px !important; }
+html body .fo-hero { padding: 6px 0 10px !important; margin-bottom: 8px !important; }
+html body .fo-hero h1, html body .fo-head h1 { font-size: 22px !important; margin: 0 0 3px !important; letter-spacing: -0.2px; line-height: 1.25; }
+html body .fo-hero p, html body .fo-head p { font-size: 13.5px !important; font-weight: 500 !important; line-height: 1.45; }
+html body .fo-head { gap: 10px !important; margin-bottom: 12px !important; align-items: center !important; }
+html body .fo-head .fo-btn { height: 38px !important; padding: 0 14px !important; font-size: 13.5px !important; border-radius: 12px !important; white-space: nowrap; }
+html body .fo-nav { margin-bottom: 10px !important; }
+html body .fo-back { height: 36px !important; padding: 0 14px !important; font-size: 13.5px !important; }
+html body .fo-back svg { width: 16px !important; height: 16px !important; }
+html body .fo-tabs { gap: 6px !important; margin-bottom: 12px !important; }
+html body .fo-tab { height: 36px !important; padding: 0 14px !important; font-size: 13.5px !important; }
+/* שורות נושאים / פורומים */
+  html body .fo-cat { margin-bottom: 10px !important; }
+html body .fo-cat-title { font-size: 13.5px !important; padding: 9px 14px !important; }
+html body .fo-row { padding: 10px 12px !important; gap: 10px !important; }
+html body .fo-row .fo-avatar { width: 38px !important; height: 38px !important; font-size: 15px !important; flex: none; }
+html body .fo-row .fo-icon { width: 32px !important; height: 32px !important; }
+html body .fo-row .fo-icon svg { width: 18px !important; height: 18px !important; }
+html body .fo-row .fo-title { font-size: 14.5px !important; }
+html body .fo-row .fo-main small { font-size: 12px !important; }
+html body .fo-empty { font-size: 13.5px !important; padding: 22px 12px !important; }
+/* דף נושא בסגנון רדיט — מעט קטן יותר */
+  html body .rd-title { font-size: 19px !important; margin: 10px 0 6px !important; }
+html body .rd-text { font-size: 15px !important; line-height: 1.55 !important; }
+html body .rd-sub-ic { width: 34px !important; height: 34px !important; }
+html body .rd-sub { font-size: 14px !important; }
+html body .rd-by, html body .rd-time { font-size: 12.5px !important; }
+html body .rd-pill { height: 36px !important; font-size: 14px !important; padding: 0 12px !important; }
+html body .rd-cmt-name { font-size: 14px !important; }
+html body .rd-av { width: 28px !important; height: 28px !important; font-size: 12px !important; }
+html body .rd-cmt-body { margin-inline-start: 13px !important; padding-inline-start: 19px !important; }
+html body .rd-act { font-size: 13.5px !important; height: 30px !important; }
+html body .rd-input { min-height: 42px !important; font-size: 15px !important; padding: 10px 16px !important; }
+html body .rd-send { width: 42px !important; height: 42px !important; }
+html:has(.rd-compose) #mtabs, html:has(.rd-compose) #mtab-open { display: none !important; }
+.rd-compose { position: fixed; left: 0; right: 0; bottom: 0; z-index: 9000; margin: 0 !important; padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); background: rgba(255, 255, 255, 0.97); backdrop-filter: blur(10px); box-shadow: 0 -8px 24px -14px rgba(38, 38, 38, 0.35); border-top: 1px solid #e9e9e9; direction: rtl; }
+.rd-compose .fo-guest-as { margin: 0 4px 6px; font-size: 12.5px; }
+.rd-compose .fo-reply-to { margin-bottom: 6px; }
+.rd-compose .rd-input { background: #efefef; border-color: #dedede; }
+.rd-comments { padding-bottom: 110px; }
+.fo-panel-wrap { display: none !important; }
+html body #ofp-panel.fo-panel-wrap { display: block !important; z-index: 99990; }
+html body #ofp-panel .fo-panel { width: 100% !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .fo-row .fo-title { font-size: 14.5px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .fo-row .fo-main small { font-size: 12px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) :is(.fo-hero h1, .fo-head h1) { font-size: 20px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .rd-title { font-size: 18px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) :is(.rd-text, .rd-cmt-body) { font-size: 14.5px !important; }
+.fo-panel-resize { display: none; }
+/* פורומים — הכל בקנה מידה קטן יותר */
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .forums-page:not(.fo-in-panel) .fo-inner { zoom: .8; }
+.fi-cat { border-radius: 0; border-left: 0; border-right: 0; margin: 0 0 10px; }
+.fi-row { grid-template-columns: minmax(0, 1fr) auto 36px; gap: 8px; padding: 12px 14px; }
+.fi-row .fi-icon { order: 9; }
+.fi-row :is(.fi-stat, .fi-last) { display: none; }
+.fi-main { gap: 3px; }
+.fi-title { font-size: 15.5px; }
+.fi-sub { display: none; }
+.fi-mstats { display: flex; gap: 10px; font-size: 12.5px; color: var(--fi-muted); }
+.fi-mstats b { color: #1d1d22; font-weight: 600; }
+html.theme-dark .fi-mstats b { color: #ececec; }
+.fi-mlast { display: flex; flex-direction: column; gap: 1px; }
+.fi-mlast .fi-last-title { max-width: 100%; font-size: 13px; }
+.fi-icon svg { width: 28px; height: 24px; }
+html body:not(#_):not(#_):not(#_):not(#_) .fo-posts .fo-post { display: flex !important; flex-direction: column !important; gap: 0 !important; padding: 0 !important; border-radius: 0 !important; border-left: 0 !important; border-right: 0 !important; margin: 0 0 8px !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .fo-posts .fo-author { display: grid !important; grid-template-columns: 44px minmax(0, 1fr) !important; grid-template-areas: "av name" "av role" !important; align-items: center !important; column-gap: 10px !important; row-gap: 0 !important; width: auto !important; padding: 12px 14px 4px !important; border: 0 !important; background: none !important; text-align: start !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .fo-posts .fo-author-av { grid-area: av !important; width: 44px !important; height: 44px !important; font-size: 18px !important; margin: 0 !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .fo-posts .fo-author-name { grid-area: name !important; font-size: 14.5px !important; color: var(--fi-acc, #b0244a) !important; margin: 0 !important; justify-self: start !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .fo-posts .fo-role { grid-area: role !important; justify-self: start !important; margin: 0 !important; font-size: 11.5px !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .fo-posts .fo-author-stats { display: none !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .fo-posts .fo-post-main { padding: 4px 14px 12px !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .fo-posts .fo-post-head { font-size: 12px !important; padding: 4px 0 8px !important; margin: 0 0 8px !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .fo-posts .fo-post-text { font-size: 14px !important; line-height: 1.6 !important; }
+html body:not(#_):not(#_):not(#_):not(#_) .fo-posts .fo-likes { flex-wrap: wrap !important; gap: 6px !important; margin-top: 10px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .rd-cmt .rd-text, html body:not(#_):not(#_):not(#_):not(#_):not(#_) .rd-post-text { font-size: 16px !important; line-height: 1.42 !important; font-weight: 400 !important; color: #1a1a1b !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .rd-cmt-name { font-size: 13.5px !important; font-weight: 600 !important; color: #576f76 !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) :is(.rd-time, .rd-dot) { font-size: 13.5px !important; color: #576f76 !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .rd-title { font-size: 19px !important; font-weight: 700 !important; color: #1a1a1b !important; line-height: 1.3 !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .rd-actions { justify-content: flex-end !important; gap: 14px !important; margin-top: 6px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .rd-actions .rd-reply { width: 30px !important; height: 30px !important; padding: 0 !important; display: grid !important; place-items: center !important; background: none !important; border: 0 !important; color: #576f76 !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .rd-actions .rd-reply svg { width: 20px !important; height: 20px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .rd-votes { gap: 4px !important; color: #576f76 !important; background: none !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .rd-votes .rd-vote svg { width: 20px !important; height: 20px !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .rd-votes b { font-size: 14px !important; font-weight: 600 !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) .rd-votes.up { color: #1d72f2 !important; }
+}
