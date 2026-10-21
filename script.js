@@ -29690,7 +29690,8 @@ function cardTagsOf(row) {
   const all = (txt + ' ' + search).match(/#[\p{L}\p{N}_]+/gu) || [];
   return [...new Set(all.map(t => t.toLowerCase()))].slice(0, 12);
 }
-document.addEventListener('click', e => {
+// הכיתוב על התמונה (כותרת/תיאור/האשטאגים) מוצג רק בלחיצה על כפתור היד — לחיצה על התמונה פותחת את הפריט ישר
+false && document.addEventListener('click', e => {
   if (!window.matchMedia('(max-width: 768px)').matches) return;
   const wrap = e.target.closest && e.target.closest('#photo-row-1 > .art-row .art-row-img-wrap, #story-row-main > .art-row .art-row-img-wrap');
   if (!wrap || e.target.closest('button, a')) return;
