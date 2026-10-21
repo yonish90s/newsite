@@ -25545,7 +25545,7 @@ function buildNewsCard(post, idx) {
   const delBtn = newsIsAdmin() ? `<button type="button" class="nl-del" onclick="event.stopPropagation(); deleteNewsPost('${artEsc(post.id)}')" title="מחיקת מבזק">מחיקה</button>` : '';
   return `
     <article class="nl-item" data-news-id="${escHtml(post.id || '')}">
-      <div class="nl-row" role="button" tabindex="0" onclick="newsToggleEmbed('${artEsc(post.id || '')}')" onkeydown="if(event.key==='Enter'){newsToggleEmbed('${artEsc(post.id || '')}')}">
+      <div class="nl-row" role="button" tabindex="0" onclick="newsOpenArticle('${artEsc(post.id || '')}')" onkeydown="if(event.key==='Enter'){newsOpenArticle('${artEsc(post.id || '')}')}">
         <div class="nl-thumb${img ? '' : ' nl-noimg'}" style="--tile:${tile.bg}">${thumb}</div>
         <div class="nl-body">
           <h3 class="nl-title">${escHtml(post.title || '')}</h3>
@@ -27794,6 +27794,7 @@ function openPageFull(pageId) {
 function newsRerender() {
   const body = document.querySelector('#nw-panel .pg-panel-inner');
   if (body) { body.innerHTML = buildNewsPage(); return; }
+  if (typeof mainContent !== 'undefined' && mainContent && mainContent.querySelector('.news-article')) return;   // כתבה פתוחה — לא דורסים אותה
   if (typeof mainContent !== 'undefined' && mainContent && mainContent.querySelector('.news-page, .news-page-container')) mainContent.innerHTML = buildNewsPage();
   else if (typeof mainContent !== 'undefined' && mainContent && activePageId === 'page-news-main') mainContent.innerHTML = buildNewsPage();
 }
@@ -30119,3 +30120,39 @@ document.addEventListener('keydown', e => {
   e.preventDefault();
   send.click();
 });
+
+
+// ============================================================
+// חדשות: עמוד כתבה (כמו באתרי חדשות) — כותרת גדולה, כותב | תאריך, תמונה רחבה, "נקודות עיקריות", והפוסט המקורי
+// ============================================================
+function newsOpenArticle(id) {
+  const list = (newsPostsData && newsPostsData.length) ? newsPostsData : (typeof NEWS_DEFAULT_POSTS !== 'undefined' ? NEWS_DEFAULT_POSTS : []);
+  const post = list.find(p => String(p.id) === String(id));
+  if (!post || typeof mainContent === 'undefined' || !mainContent) return;
+  const img = post.image && /^https?:\/\//i.test(post.image) ? safeUrl(post.image) : '';
+  const plat = newsPlatform(post.tweetUrl);
+  // נקודות עיקריות: התקציר מחולק למשפטים/שורות (עד 5)
+  const points = String(post.desc || '').split(/\n+|(?<=[.!?])\s+/).map(x => x.trim()).filter(x => x.length > 2).slice(0, 5);
+  const others = list.filter(p => String(p.id) !== String(id)).slice(0, 6);
+  mainContent.innerHTML = `<div class="news-article" data-page-id="page-news-article">
+    <button type="button" class="art-back-btn na-back" onclick="newsBackToList()">חזרה לחדשות</button>
+    <article class="na">
+      <h1 class="na-title">${escHtml(post.title || '')}</h1>
+      <div class="na-meta"><span class="na-author">${escHtml(post.author || 'עורך חדשות')}</span><span class="na-sep" aria-hidden="true"></span><span class="na-when">${escHtml(newsWhen(post.createdAt))}</span></div>
+      ${img ? `<div class="na-img"><img src="${escHtml(img)}" alt="" loading="lazy" onerror="this.parentNode.remove()"></div>` : ''}
+      ${points.length ? `<section class="na-points"><h2>נקודות עיקריות</h2><ul>${points.map(x => `<li>${escHtml(x)}</li>`).join('')}</ul></section>` : ''}
+      ${post.tweetUrl ? `<div class="na-embed">${newsEmbedHTML(post)}</div>
+        <a class="na-source" href="${escHtml(safeUrl(post.tweetUrl))}" target="_blank" rel="noopener noreferrer">לצפייה ב${plat === 'x' ? '-X' : NEWS_PLATFORM_NAMES[plat]} ›</a>` : ''}
+    </article>
+    ${others.length ? `<section class="na-more"><h2>עוד חדשות</h2>${others.map((p, i) => buildNewsCard(p, i + 1)).join('')}</section>` : ''}
+  </div>`;
+  try { triggerTwitterWidgetsRender(); } catch (e) {}
+  try { window.scrollTo(0, 0); } catch (e) {}
+  try { if (typeof hdrBackSync === 'function') hdrBackSync(); } catch (e) {}
+}
+function newsBackToList() {
+  if (typeof mainContent !== 'undefined' && mainContent) mainContent.innerHTML = buildNewsPage();
+  try { window.scrollTo(0, 0); } catch (e) {}
+}
+Object.assign(window, { newsOpenArticle, newsBackToList });
+Object.assign(UI_EN, { 'נקודות עיקריות': 'Key points', 'עוד חדשות': 'More news', 'חזרה לחדשות': 'Back to news' });
