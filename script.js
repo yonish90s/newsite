@@ -1477,7 +1477,7 @@ function adjustImgAspectRatio(img) {
 function renderPage() {
   // מחשב: פורומים / קהילות נפתחים בחלון צד מעל העמוד הנוכחי — מכל מקום שמנווטים אליהם (תפריט, סרגל, קישור)
   const _spTarget = activePageId;
-  if ((_spTarget === 'page-news-main' || _spTarget === 'page-subscription-main')
+  if (_spTarget === 'page-subscription-main'
       && !window.__forceForumsPage && !window.__forceCommPage && !window.__forcePanelPage
       && window.__lastRenderedPageId && window.__lastRenderedPageId !== _spTarget
       && !window.matchMedia('(max-width: 768px)').matches && typeof openSidePanel === 'function') {
@@ -11730,7 +11730,8 @@ function buildSidebarTabs(savedHTML, pageType) {
 function navigateToPage(pageId) {
   // מחשב: הפורומים נפתחים בחלון צד משמאל, בלי לעזוב את העמוד הנוכחי
   const _desk = !window.matchMedia('(max-width: 768px)').matches;
-  if ((pageId === 'page-news-main' || pageId === 'page-subscription-main') && !window.__forcePanelPage && typeof openPagePanel === 'function' && _desk) { openPagePanel(pageId); return; }
+  // חדשות נפתחות כעמוד מלא (כדי שאפשר להיכנס לכתבה); רק המנוי נשאר בחלון צד
+  if (pageId === 'page-subscription-main' && !window.__forcePanelPage && typeof openPagePanel === 'function' && _desk) { openPagePanel(pageId); return; }
   // מעבר לעמוד אחר — סוגרים חלונות צד פתוחים
   if (typeof closeSidePanels === 'function') closeSidePanels();
   const page = (typeof pages !== 'undefined' && Array.isArray(pages)) ? pages.find(p => p && p.id === pageId) : null;
@@ -30129,6 +30130,7 @@ function newsOpenArticle(id) {
   const list = (newsPostsData && newsPostsData.length) ? newsPostsData : (typeof NEWS_DEFAULT_POSTS !== 'undefined' ? NEWS_DEFAULT_POSTS : []);
   const post = list.find(p => String(p.id) === String(id));
   if (!post || typeof mainContent === 'undefined' || !mainContent) return;
+  try { if (typeof closeSidePanels === 'function') closeSidePanels(); } catch (e) {}
   const img = post.image && /^https?:\/\//i.test(post.image) ? safeUrl(post.image) : '';
   const plat = newsPlatform(post.tweetUrl);
   // נקודות עיקריות: התקציר מחולק למשפטים/שורות (עד 5)
