@@ -1167,7 +1167,17 @@ html.theme-dark .pl-bar { background: #2a2f37; }
     }
     function cookieOpenPolicy() { var p = document.getElementById('cookie-policy'); if (p) p.style.display = 'flex'; }
     function maybeShowCookieBanner() {
-      setTimeout(function () { var b = document.getElementById('cookie-bar'); if (b) { b.style.display = ''; b.classList.add('show'); } }, 900);
+      setTimeout(function () {
+        var b = document.getElementById('cookie-bar'); if (!b) return;
+        b.style.display = ''; b.classList.add('show');
+        // אם לא לחצו כלום — הבאנר יורד לבד אחרי 2 שניות (בלי לשמור הסכמה: סטטיסטיקות נשארות כבויות עד "אישור").
+        // ריחוף/נגיעה בבאנר עוצרים את הספירה, כדי לא להעלים אותו באמצע קריאה
+        var t = setTimeout(function () { b.classList.remove('show'); setTimeout(function () { if (!b.classList.contains('show')) b.style.display = 'none'; }, 400); }, 2000);
+        var stop = function () { clearTimeout(t); };
+        b.addEventListener('mouseenter', stop, { once: true });
+        b.addEventListener('touchstart', stop, { once: true, passive: true });
+        b.addEventListener('focusin', stop, { once: true });
+      }, 900);
     }
     window.maybeShowCookieBanner = maybeShowCookieBanner;
     window.cookieConsent = function (c) { cookieChoose(c === 'accept' ? 'yes' : 'no'); };
