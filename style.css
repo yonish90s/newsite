@@ -15613,3 +15613,6 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_) .rd-votes.up { color: #1d72f2 
 @media (min-width: 1100px) {
   html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .home-feed-page.has-aside { margin-right: max(48px, calc((100% - 1620px) / 2 - 120px)) !important; margin-left: auto !important; max-width: 1620px !important; }
 }
+@media (min-width: 1100px) {
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .articles-page:not(.home-feed-page):not(.art-detail) > .art-inner { margin-right: max(48px, calc((100% - 1560px) / 2 - 120px)) !important; margin-left: auto !important; }
+}
