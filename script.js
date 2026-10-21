@@ -29028,7 +29028,9 @@ window.sidePanelResizeStart = sidePanelResizeStart;
 // ============================================================
 // מובייל: בורר "תצוגה" אחיד (גריד 2 בשורה / רשימה 1 בשורה) בתמונות, קומיקס, סיפורים ויד 2
 // ============================================================
-function mviewGet() { try { const v = localStorage.getItem('m_view'); return v === 'list' || v === 'grid' ? v : 'feed'; } catch (e) { return 'feed'; } }  // ברירת מחדל: פיד
+// ברירת מחדל: גריד (רשת תמונות) בכל מקום. מעבר חד-פעמי (m_view_v2) מאפס בחירה ישנה כדי שכולם יתחילו ברשת; אחר כך הבחירה נשמרת
+try { if (!localStorage.getItem('m_view_v2')) { localStorage.removeItem('m_view'); localStorage.removeItem('m_view_pf'); localStorage.setItem('m_view_v2', '1'); } } catch (e) {}
+function mviewGet() { try { const v = localStorage.getItem('m_view'); return v === 'list' || v === 'feed' ? v : 'grid'; } catch (e) { return 'grid'; } }
 // בפרופיל — הגדרה נפרדת, ברירת מחדל גריד
 function mviewGetPf() { try { const v = localStorage.getItem('m_view_pf'); return v === 'list' || v === 'feed' ? v : 'grid'; } catch (e) { return 'grid'; } }
 function mviewApply() { document.documentElement.classList.toggle('pfview-list', mviewGetPf() !== 'grid'); const v = mviewGet(); document.documentElement.classList.toggle('mview-list', v === 'list' || v === 'feed'); document.documentElement.classList.toggle('mview-feed', v === 'feed'); }
