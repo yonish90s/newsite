@@ -2914,6 +2914,10 @@ html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not
 html.theme-dark #adult-confirm .ac-card { background: var(--gl-bg-strong, #111111) !important; border: 1px solid var(--gl-line, rgba(255, 255, 255, 0.064)) !important; color: var(--gl-text, #ffffff) !important; }
 html.theme-dark #adult-confirm .ac-badge { background: #e8823d !important; }
 html.theme-dark #adult-confirm .ac-yes { background: #e8823d !important; }
+html.theme-dark { --gl-sel-line: rgba(255, 255, 255, 0.144) !important; }
+html.theme-dark.theme-dark { --gl-sel-line: rgba(255, 255, 255, 0.1) !important; }
+html.theme-dark:root { --gl-btn-line: rgba(255, 255, 255, 0.08) !important; }
+html.theme-dark.theme-dark:root { --gl-btn-line: rgba(255, 255, 255, 0.1) !important; }
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #ffffff !important; }
 html.theme-dark [style*="color:#111111"] { color: #ffffff !important; }
