@@ -13572,8 +13572,19 @@ if (typeof mainContent !== 'undefined' && mainContent) {
 
 const avatarCache = {};      // uid → config | null (אין דמות)
 const avatarPending = new Set();
+// עיגול פרופיל בלי תמונה: צבע קבוע לכל משתמש (לפי האות/השם), כדי שיהיה ברור ושונה
+const AV_LETTER_COLORS = ['#e8823d', '#3b82f6', '#10b981', '#8b5cf6', '#ef4444', '#14b8a6', '#f59e0b', '#ec4899', '#6366f1', '#84cc16'];
+function avatarLetterColors(root) {
+  (root || document).querySelectorAll('.au-av:not(.au-av-site):not([data-avc])').forEach(el => {
+    const key = (el.getAttribute('data-av-uid') || '') + (el.textContent || '').trim();
+    let h = 0; for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
+    el.setAttribute('data-avc', '1');
+    el.style.setProperty('--avc', AV_LETTER_COLORS[h % AV_LETTER_COLORS.length]);
+  });
+}
 function avatarHydrate(root) {
   root = root || document;
+  try { avatarLetterColors(root); } catch (e) {}
   const slots = root.querySelectorAll('[data-av-uid]:not([data-av-done])');
   const need = new Set();
   slots.forEach(el => {
