@@ -15,7 +15,10 @@ ORANGE = '#e8823d'   # הדגש במצב כהה: כתום רך במקום הוו
 
 
 def is_pink(r, g, b):
-    return r > 190 and g < 130 and 60 < b < 170 and r - b > 60
+    # צבעי הדגש (ורוד, וגם כחול של אייקונים/קישורים) → כתום רך במצב כהה
+    pink = r > 190 and g < 130 and 60 < b < 170 and r - b > 60
+    blue = b > 180 and r < 130 and b - r > 80
+    return pink or blue
 
 HEX = r'#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3,4})\b'
 RGB = r'rgba?\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*(?:,\s*[\d.]+\s*)?\)'
