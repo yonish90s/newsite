@@ -7174,7 +7174,7 @@ function storyOpenDetail(id) {
             <div class="pshow-info pd2-info comic-info">
               <div class="pd2-creator">
                 ${authorAvHTML(s)}
-                <div class="pd2-creator-txt" ${s.authorId ? `onclick="openUserPage('${artEsc(s.authorId)}','${artEsc(s.author || '')}')"` : ''}>
+                <div class="pd2-creator-txt" ${s.authorId || s.author ? `onclick="openUserPage('${artEsc(s.authorId || '')}','${artEsc(s.author || '')}')"` : ''}>
                   <b>${escHtml(s.author || 'משתמש')}${isUserVerified(s.authorId, s.author, s.verified || s.verifiedUser) ? verifiedSealHTML(15) : ''}</b>
                   <small>${escHtml(s.timestamp || '')}</small>
                 </div>
@@ -27883,13 +27883,12 @@ function pd2ActionsHTML(a, kind) {
   return `<div class="pd2-topacts">
                 <button type="button" class="pti pti-like${photoIsLikedLocal(a.id) ? ' on' : ''}" onclick="this.classList.toggle('on'); photoToggleLike('${artEsc(a.id)}')" title="לייק" aria-label="לייק">${sv('<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.6 1-1.1a5.5 5.5 0 0 0 0-7.7z"/>')}${likes ? `<b class="pti-n">${likes}</b>` : ''}</button>
                 <button type="button" class="pti pti-cmt" onclick="togglePostComments(this)" title="תגובות" aria-label="תגובות">${sv('<path d="M20.5 11.5a8 8 0 0 1-11.7 7.1L4 20l1.3-4.4A8 8 0 1 1 20.5 11.5z"/>')}${cn ? `<b class="pti-n">${cn}</b>` : ''}</button>
-                <button type="button" class="pti pti-repost${ron ? ' on' : ''}" data-item="${escHtml(a.id)}" onclick="toggleRepost('${artEsc(a.id)}', this)" title="שיתוף לפרופיל" aria-label="שיתוף">${sv('<path d="M14 5l6 6-6 6"/><path d="M20 11H10a6 6 0 0 0-6 6v2"/>')}<b class="pti-n">${rn || ''}</b></button>
+                <button type="button" class="pti pti-repost${ron ? ' on' : ''}" data-item="${escHtml(a.id)}" onclick="repostersOpen('${artEsc(a.id)}')" title="מי שיתף" aria-label="שיתוף">${sv('<path d="M14 5l6 6-6 6"/><path d="M20 11H10a6 6 0 0 0-6 6v2"/>')}<b class="pti-n">${rn || ''}</b></button>
                 <button type="button" class="pti pd2-save${photoIsSavedLocal(a.id) ? ' is-saved' : ''}" onclick="photoToggleSave('${artEsc(a.id)}')" title="שמירה" aria-label="שמירה"><svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
                 ${kind === 'product' ? `<button type="button" class="pti pti-offer" onclick="openPriceOffer('${artEsc(a.id)}', '${artEsc(a.title || '')}', '${artEsc(a.authorId || '')}', '${artEsc(a.author || '')}')" title="הצעת מחיר" aria-label="הצעת מחיר"><svg viewBox="0 0 24 24"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg></button>` : ''}
-                ${kind === 'comic' ? `<button type="button" class="pti" onclick="artGalleryById('stories', window.currentStoryId, document.querySelector('#story-page-view img') ? document.querySelector('#story-page-view img').getAttribute('src') : '')" title="קריאה במסך מלא" aria-label="קריאה במסך מלא"><svg viewBox="0 0 24 24"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></button>` : ''}
-                ${followIconHTML(a)}
+                ${kind === 'comic' ? `<button type="button" class="pti" onclick="artGalleryById('stories', window.currentStoryId, document.querySelector('#story-page-view img') ? document.querySelector('#story-page-view img').getAttribute('src') : '')" title="קריאה במסך מלא" aria-label="קריאה במסך מלא"><svg viewBox="0 0 24 24"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></button>` : `<button type="button" class="pti" onclick="document.getElementById('photo-gallery-main-img') && document.getElementById('photo-gallery-main-img').click()" title="קריאה במסך מלא" aria-label="קריאה במסך מלא"><svg viewBox="0 0 24 24"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></button>`}
                 <button type="button" class="pti pti-more" onclick="pd2MoreOpen(this)" title="עוד" aria-label="עוד אפשרויות"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button>
-                <span class="pd2-more-src" hidden>
+                <span class="pd2-more-src" hidden>${followIconHTML(a)}
                 <button type="button" class="pti" onclick="${kind === 'comic' ? `dmStartWith('${artEsc(a.authorId || '')}', '${artEsc(a.author || 'משתמש')}', '${artEsc('שלום! פנייה לגבי הקומיקס: "' + String(a.title || '').slice(0, 120) + '"')}')` : `dmStartAboutGallery('${artEsc(a.authorId || '')}', '${artEsc(a.author || '')}', '${artEsc(a.id)}')`}" title="הודעה ליוצר" aria-label="הודעה ליוצר"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg></button>
                 ${a.emailUrl ? `<button type="button" class="pti" onclick="emailIconClick('${artEsc(a.emailUrl)}', this, event)" title="אימייל — לחיצה מעתיקה, לחיצה נוספת שולחת" aria-label="אימייל"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 7l8.5 6 8.5-6"/></svg></button>` : ''}
                 </span>
@@ -30067,7 +30066,7 @@ window.hcDot = hcDot;
   const reset = () => { const i = img(); if (i) { i.style.transition = 'transform .2s ease'; i.style.transform = ''; setTimeout(() => { i.style.transition = ''; }, 220); } };
   document.addEventListener('touchstart', e => {
     el = e.target.closest && e.target.closest('.pd-show .pshow-frame, #story-page-view');
-    if (!el || e.touches.length > 1) { el = null; return; }
+    if (!el || e.touches.length > 1 || e.target.closest('.m-track')) { el = null; return; }
     sx = e.touches[0].clientX; sy = e.touches[0].clientY; dx = 0; horiz = null;
   }, { passive: true });
   document.addEventListener('touchmove', e => {
@@ -30524,7 +30523,7 @@ window.repostersToggle = repostersToggle;
     if (!b) return;
     const id = idOf(b); if (!id) return;
     sx = e.clientX; sy = e.clientY;
-    timer = setTimeout(() => { fired = true; try { navigator.vibrate && navigator.vibrate(15); } catch (er) {} likersOpen(id); }, 480);
+    timer = setTimeout(() => { fired = true; try { if (navigator.vibrate && navigator.userActivation && navigator.userActivation.hasBeenActive) navigator.vibrate(15); } catch (er) {} likersOpen(id); }, 480);
   }, true);
   document.addEventListener('pointermove', e => { if (timer && Math.hypot(e.clientX - sx, e.clientY - sy) > 10) clearTimeout(timer); }, true);
   ['pointerup', 'pointercancel'].forEach(t => document.addEventListener(t, () => clearTimeout(timer), true));
@@ -30554,3 +30553,64 @@ function hrShare(kind, id, el) {
   try { navigator.clipboard.writeText(url); if (typeof showCopyToast === 'function') showCopyToast('הקישור הועתק'); } catch (e) {}
 }
 window.hrShare = hrShare;
+
+// ============================================================
+// מובייל: קרוסלה אמיתית בעמוד פריט/קומיקס עם כמה תמונות — גוללים עם האצבע כמו בקרוסלה של עמוד הבית
+// (scroll-snap של הדפדפן). הנקודות מתעדכנות; לחיצה על נקודה גוללת אליה. במחשב — ללא שינוי.
+// ============================================================
+(function mobileImageTrack() {
+  const mq = window.matchMedia('(max-width: 768px)');
+  const rootOf = f => f.closest('.pd2-media, .pshow-stage') || f.parentElement;
+  const setDots = (f, i) => rootOf(f).querySelectorAll('.pshow-dot').forEach((d, k) => d.classList.toggle('active', k === i));
+  function build(frame, srcs, onSettle, onTap) {
+    frame.dataset.mt = '1';
+    const track = document.createElement('div');
+    track.className = 'm-track';
+    track.dir = 'ltr';
+    track.innerHTML = srcs.map((u, i) => `<div class="m-slide"><img src="${escHtml(u)}" alt="" ${i ? 'loading="lazy"' : ''} draggable="false"></div>`).join('');
+    frame.appendChild(track);
+    frame.classList.add('has-mtrack');
+    let t = 0, cur = 0;
+    track.addEventListener('scroll', () => {
+      const i = Math.round(track.scrollLeft / Math.max(1, track.clientWidth));
+      if (i !== cur) { cur = i; setDots(frame, i); }
+      clearTimeout(t); t = setTimeout(() => { try { onSettle && onSettle(cur); } catch (e) {} }, 140);
+    }, { passive: true });
+    track.addEventListener('click', e => { const sl = e.target.closest('.m-slide'); if (!sl) return; e.stopPropagation(); try { onTap && onTap([...track.children].indexOf(sl)); } catch (er) {} });
+    rootOf(frame).querySelectorAll('.pshow-dot').forEach((d, k) => d.addEventListener('click', e => { e.stopImmediatePropagation(); e.preventDefault(); track.scrollTo({ left: k * track.clientWidth, behavior: 'smooth' }); }, true));
+    setDots(frame, 0);
+  }
+  function scan() {
+    if (!mq.matches) return;
+    // תמונות גולשים / מוצרי גולשים
+    document.querySelectorAll('.pd-show .pshow-frame:not([data-mt])').forEach(frame => {
+      const root = frame.closest('.pd-show');
+      const srcs = [...root.querySelectorAll('.pshow-tile img')].map(i => i.getAttribute('src')).filter(Boolean);
+      if (srcs.length < 2) return;
+      const main = frame.querySelector('.pshow-main');
+      build(frame, srcs, null, i => { if (main) { main.setAttribute('src', srcs[i]); main.click(); } });
+    });
+    // קומיקס (רק כשכל העמודים הם תמונות)
+    const view = document.getElementById('story-page-view');
+    const frame = view && view.closest('.pshow-frame');
+    const pages = window.storyPagesData || [];
+    if (frame && !frame.dataset.mt && pages.length > 1 && rootOf(frame).querySelectorAll('.pshow-dot').length === pages.length && pages.every(p => p && p.type === 'image' && p.url)) {
+      build(frame, pages.map(p => p.url), i => { if ((window.currentStoryPage || 0) !== i) storyGoToPage(i); }, null);
+    }
+  }
+  let q = 0;
+  let late = 0;
+  new MutationObserver(() => {
+    clearTimeout(late); late = setTimeout(scan, 450);   // נתוני הקומיקס מגיעים רגע אחרי הציור
+    if (q) return; q = requestAnimationFrame(() => { q = 0; scan(); });
+  }).observe(document.body, { childList: true, subtree: true });
+  mq.addEventListener && mq.addEventListener('change', scan);
+  scan();
+})();
+// עמוד פריט: לחיצה על עיגול הפרופיל של היוצר פותחת את הפרופיל (כמו לחיצה על השם)
+document.addEventListener('click', e => {
+  const av = e.target.closest && e.target.closest('.pd2-creator .au-av');
+  if (!av) return;
+  const txt = av.closest('.pd2-creator').querySelector('.pd2-creator-txt[onclick]');
+  if (txt) { e.stopPropagation(); txt.click(); }
+});
