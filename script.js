@@ -16780,6 +16780,7 @@ function photoOpenDetail(id) {
                 ` : ''}
                 
               </div>
+              ${validImages.length > 1 ? `<div class="pshow-dots pd-mdots">${validImages.map((_, i) => `<button type="button" class="pshow-dot${i === 0 ? ' active' : ''}" onclick="pdShowGo(this, ${i})" aria-label="תמונה ${i + 1}"></button>`).join('')}</div>` : ''}
               ${validImages.length > 1 ? `
                 <div class="pd2-thumbs pshow-tiles">
                   ${validImages.map((imgUrl, i) => `
@@ -27880,7 +27881,7 @@ function pd2ActionsHTML(a, kind) {
   const cn = (typeof cardCmtCounts !== 'undefined' && cardCmtCounts && cardCmtCounts[a.id]) || 0;
   const likes = Number(a.likes) || 0;
   return `<div class="pd2-topacts">
-                <button type="button" class="pti pti-like${photoIsLikedLocal(a.id) ? ' on' : ''}" onclick="this.classList.toggle('on'); photoToggleLike('${artEsc(a.id)}')" title="לייק" aria-label="לייק">${sv('<path d="M7.5 10.5v9.5H4.8a1 1 0 0 1-1-1v-7.5a1 1 0 0 1 1-1z"/><path d="M7.5 10.5 11 4a2.4 2.4 0 0 1 2.6 2.7L13.2 9.5h5.3a2 2 0 0 1 2 2.4l-1.3 6.5a2 2 0 0 1-2 1.6H7.5"/>')}${likes ? `<b class="pti-n">${likes}</b>` : ''}</button>
+                <button type="button" class="pti pti-like${photoIsLikedLocal(a.id) ? ' on' : ''}" onclick="this.classList.toggle('on'); photoToggleLike('${artEsc(a.id)}')" title="לייק" aria-label="לייק">${sv('<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.6 1-1.1a5.5 5.5 0 0 0 0-7.7z"/>')}${likes ? `<b class="pti-n">${likes}</b>` : ''}</button>
                 <button type="button" class="pti pti-cmt" onclick="togglePostComments(this)" title="תגובות" aria-label="תגובות">${sv('<path d="M20.5 11.5a8 8 0 0 1-11.7 7.1L4 20l1.3-4.4A8 8 0 1 1 20.5 11.5z"/>')}${cn ? `<b class="pti-n">${cn}</b>` : ''}</button>
                 <button type="button" class="pti pti-repost${ron ? ' on' : ''}" data-item="${escHtml(a.id)}" onclick="toggleRepost('${artEsc(a.id)}', this)" title="שיתוף לפרופיל" aria-label="שיתוף">${sv('<path d="M14 5l6 6-6 6"/><path d="M20 11H10a6 6 0 0 0-6 6v2"/>')}<b class="pti-n">${rn || ''}</b></button>
                 <button type="button" class="pti pd2-save${photoIsSavedLocal(a.id) ? ' is-saved' : ''}" onclick="photoToggleSave('${artEsc(a.id)}')" title="שמירה" aria-label="שמירה"><svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
@@ -29614,7 +29615,7 @@ function cardStatsBtnsHTML(a, kind) {
   const reps = typeof repostCount === 'function' ? repostCount(a.id) : 0;
   const n = v => v ? formatViews(v) : '';
   const open = kind === 'photo' ? `photoOpenDetail('${id}')` : `storyOpenDetail('${id}')`;
-  return `<button type="button" class="art-telegram-btn art-like-btn${liked ? ' liked' : ''}" onclick="event.stopPropagation(); photoToggleLike('${id}')" title="לייק" aria-label="לייק"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M7.5 10.5v9.5H4.8a1 1 0 0 1-1-1v-7.5a1 1 0 0 1 1-1z"/><path d="M7.5 10.5 11 4a2.4 2.4 0 0 1 2.6 2.7L13.2 9.5h5.3a2 2 0 0 1 2 2.4l-1.3 6.5a2 2 0 0 1-2 1.6H7.5"/></svg><span class="pc-n">${likes || ''}</span></button>
+  return `<button type="button" class="art-telegram-btn art-like-btn${liked ? ' liked' : ''}" onclick="event.stopPropagation(); photoToggleLike('${id}')" title="לייק" aria-label="לייק"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.6 1-1.1a5.5 5.5 0 0 0 0-7.7z"/></svg><span class="pc-n">${likes || ''}</span></button>
     <button type="button" class="art-telegram-btn art-cmt-btn" data-id="${escHtml(a.id)}" onclick="event.stopPropagation(); ${open}; setTimeout(() => { if (typeof openCommentsWindow === 'function') openCommentsWindow(); }, 900)" title="תגובות" aria-label="תגובות"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M20.5 11.5a8 8 0 0 1-11.7 7.1L4 20l1.3-4.4A8 8 0 1 1 20.5 11.5z"/></svg><span class="pc-n">${n(cmts)}</span></button>
     <button type="button" class="art-telegram-btn art-rep-btn pti-repost" data-item="${escHtml(a.id)}" onclick="event.stopPropagation(); repostersOpen('${id}')" title="מי שיתף" aria-label="שיתוף"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M14 5l6 6-6 6"/><path d="M20 11H10a6 6 0 0 0-6 6v2"/></svg><b class="pti-n pc-n">${n(reps)}</b></button>`;
 }
@@ -30170,7 +30171,8 @@ function homeRowsHTML(photos, comics, stories) {
         ${n > 1 ? `<span class="hr-count">${n} תמונות</span>` : ''}</span>
       <b class="hr-title">${escHtml(x.title || '')}</b>
       <span class="hr-author">${escHtml(x.author || 'משתמש')}</span>
-      <span class="hr-meta">${escHtml(x.timestamp || '')}<span class="hr-like${typeof photoIsLikedLocal === 'function' && photoIsLikedLocal(x.id) ? ' liked' : ''}" role="button" tabindex="0" aria-label="לייק" onclick="event.stopPropagation(); event.preventDefault(); photoToggleLike('${artEsc(x.id)}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 10.5v9.5H4.8a1 1 0 0 1-1-1v-7.5a1 1 0 0 1 1-1z"/><path d="M7.5 10.5 11 4a2.4 2.4 0 0 1 2.6 2.7L13.2 9.5h5.3a2 2 0 0 1 2 2.4l-1.3 6.5a2 2 0 0 1-2 1.6H7.5"/></svg><span class="pc-n">${likes || ''}</span></span></span>
+      <span class="hr-meta">${escHtml(x.timestamp || '')}</span>
+      <span class="hr-acts"><span class="hr-like${typeof photoIsLikedLocal === 'function' && photoIsLikedLocal(x.id) ? ' liked' : ''}" role="button" tabindex="0" aria-label="לייק" onclick="event.stopPropagation(); event.preventDefault(); photoToggleLike('${artEsc(x.id)}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.6 1-1.1a5.5 5.5 0 0 0 0-7.7z"/></svg><span class="pc-n">${likes || ''}</span></span>${hrActsHTML(x, kind)}</span>
     </button>`;
   };
   const row = (title, items, kind, all) => {
@@ -30517,3 +30519,24 @@ window.repostersToggle = repostersToggle;
   }, true);
   document.addEventListener('contextmenu', e => { if (e.target.closest && e.target.closest(SEL)) e.preventDefault(); }, true);
 })();
+
+// ריבועי הפעולה בכרטיסי שורות הבית (אחרי הלייק): שיתוף + מונה, שמירה, שליחה, דיווח
+function hrActsHTML(x, kind) {
+  const id = artEsc(x.id);
+  try { subscribeReposts(); } catch (e) {}
+  const reps = repostCount(x.id);
+  const saved = typeof photoIsSavedLocal === 'function' && photoIsSavedLocal(x.id);
+  const ic = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+  const b = (cls, on, label, d, n) => `<span class="hr-sq ${cls}" role="button" tabindex="0" aria-label="${label}" title="${label}" onclick="event.stopPropagation(); event.preventDefault(); ${on}">${ic(d)}${n ? `<span class="pc-n">${n}</span>` : ''}</span>`;
+  return b('hr-rep pti-repost" data-item="' + escHtml(x.id), `repostersOpen('${id}')`, 'מי שיתף', '<path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/>', reps ? formatViews(reps) : '')
+    + b('hr-save' + (saved ? ' is-saved' : ''), `photoToggleSave('${id}'); this.classList.toggle('is-saved')`, 'שמירה', '<path d="M6 3h12v18l-6-4.5L6 21z"/>')
+    + b('hr-share', `hrShare('${kind}', '${id}', this)`, 'שליחה', '<path d="M14 5l7 7-7 7"/><path d="M21 12H9a6 6 0 0 0-6 6v1"/>')
+    + b('hr-flag', `openReportContent('${id}', '${artEsc(x.title || '')}')`, 'דיווח', '<path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/>');
+}
+function hrShare(kind, id, el) {
+  const url = location.origin + location.pathname + (kind === 'photo' ? '#p/' : '#s/') + id;
+  const t = el && el.closest('.hr-card') && el.closest('.hr-card').querySelector('.hr-title');
+  if (navigator.share) { navigator.share({ title: (t && t.textContent) || document.title, url }).catch(() => {}); return; }
+  try { navigator.clipboard.writeText(url); if (typeof showCopyToast === 'function') showCopyToast('הקישור הועתק'); } catch (e) {}
+}
+window.hrShare = hrShare;
