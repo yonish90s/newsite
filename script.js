@@ -15642,7 +15642,6 @@ function buildHomeFeedPage() {
       ${homeExploreHTML()}
       ${homeRowsHTML(photos, comics, stories)}
       <div class="cmp-wrap">${composerBarHTML()}</div>
-      ${homeWelcomeHeroHTML()}
       ${homeCategoriesHTML(photos, comics, stories)}
     </div>
   </div>`;
@@ -29973,7 +29972,7 @@ function adminPageNormalize(list) {
 var adminTab;
 function adminTabBody() {
   if (!adminTab) { try { adminTab = localStorage.getItem('adm_tab') || 'info'; } catch (e) { adminTab = 'info'; } }
-  if (adminTab === 'stats') { setTimeout(adminCountriesLoad, 0); return buildStatsPage() + '<section class="adm-cc" id="adm-cc"><h2>כניסות לפי מדינה</h2><div class="adm-cc-body">טוען…</div></section>' + `<section class="adm-watch"><h2>הנתונים שלי ונתוני האתר</h2><div class="hw-stats-wrap">${homeWatchHTML()}</div></section>`; }
+  if (adminTab === 'stats') { setTimeout(adminCountriesLoad, 0); return buildStatsPage() + '<section class="adm-cc" id="adm-cc"><h2>כניסות לפי מדינה</h2><div class="adm-cc-body">טוען…</div></section>' + `<section class="adm-watch"><h2>הנתונים שלי ונתוני האתר</h2><div class="hw-stats-wrap">${homeWatchHTML()}</div></section>` + `<section class="adm-watch adm-today"><h2>היום באתר</h2><div class="adm-home-hero">${homeWelcomeHeroHTML()}</div></section>`; }
   if (adminTab === 'algo') return buildAlgoPage();
   if (adminTab === 'stock') return stockPageHTML();
   return buildInfoPage();
