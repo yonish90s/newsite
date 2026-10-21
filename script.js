@@ -20964,9 +20964,9 @@ function filterSheetBodyHTML() {
   const sortNow = ['האחרונים', 'הפופולארים', 'הישנים'].includes(sortRaw) ? sortRaw : 'האחרונים';
   const sortLbl = { 'האחרונים': 'החדשים ביותר', 'הפופולארים': 'הכי פופולרי', 'הישנים': 'הישנים ביותר' };
   const chev = '<svg class="fs-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>';
-  const row = (key, label, value, optsHTML) => `<div class="fs-row${open === key ? ' open' : ''}">
-      <button type="button" class="fs-row-head" onclick="fsToggleRow('${key}')"><span class="fs-label">${label}</span><span class="fs-val">${escHtml(value)}</span>${chev}</button>
-      ${open === key ? `<div class="fs-opts">${optsHTML}</div>` : ''}
+  const row = (key, label, value, optsHTML) => `<div class="fs-row open fs-sec" data-k="${key}">
+      <div class="fs-sec-h">${label}</div>
+      <div class="fs-opts">${optsHTML}</div>
     </div>`;
   const radio = (on, act, label, ic) => `<button type="button" class="fs-opt${on ? ' on' : ''}" onclick="${act}">${ic ? `<svg class="fs-opt-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ic}</svg>` : ''}<span>${escHtml(label)}</span><i>${on ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>' : ''}</i></button>`;
   const sortIc = { 'האחרונים': '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/><path d="M16.5 3.5 19 6"/>', 'הפופולארים': '<path d="M12 3c.7 3.6 4.5 5.1 4.5 9.5a4.5 4.5 0 0 1-9 0c0-1.8.9-3.1 1.8-4.1.3 1.5 1.1 2.4 2.1 2.6C11.2 8.6 11 5.7 12 3z"/>', 'הישנים': '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l-3 2"/>' };
@@ -20998,9 +20998,20 @@ function filterSheetVisibleCount() {
 }
 function filterSheetFootHTML() {
   return `<button type="button" class="ms-btn ghost fs-reset" onclick="filterSheetClear()">איפוס</button>
-    <button type="button" class="ms-btn fs-go" onclick="closeMSheet()">הצגת ${filterSheetVisibleCount()} תוצאות</button>`;
+    <button type="button" class="ms-btn fs-go" onclick="closeMSheet(); fsActiveSync()">הצגת ${filterSheetVisibleCount()} תוצאות</button>`;
+}
+// נקודה על כפתור הסינון כשיש סינון פעיל
+function fsActiveSync() {
+  let on = false;
+  try {
+    on = ['category', 'region', 'date'].some(k => photoSel[k] && photoSel[k].length)
+      || !!photoVerifiedOnly || (typeof photoAgeMin !== 'undefined' && (photoAgeMin > 18 || photoAgeMax < 99))
+      || (typeof currentPhotoGeneralFilter !== 'undefined' && currentPhotoGeneralFilter && currentPhotoGeneralFilter !== 'האחרונים' && currentPhotoGeneralFilter !== 'הכל');
+  } catch (e) {}
+  document.querySelectorAll('.pcc-filter').forEach(b => b.classList.toggle('has-active', on));
 }
 function filterSheetRefresh() {
+  setTimeout(fsActiveSync, 0);
   const body = document.querySelector('#m-sheet .ms-body'), foot = document.querySelector('#m-sheet .ms-foot');
   if (body) { const y = body.scrollTop; body.innerHTML = filterSheetBodyHTML(); body.scrollTop = y; }
   if (foot) foot.innerHTML = filterSheetFootHTML();
