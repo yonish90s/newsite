@@ -7163,10 +7163,18 @@ function storyOpenDetail(id) {
                 </div>
               </div>
               <div class="pd2-acts-desk">${pd2ActionsHTML(s, 'comic')}</div>
+              <span class="pd3-badge">${escHtml(s.category || 'קומיקס')}</span>
               <h1 class="pd2-title">${escHtml(s.title || '')}</h1>
               ${postBarHTML(s)}
               ${_comicDesc ? `<div class="pshow-desc story-comic-desc">${storyRichHTML(_comicDesc, window.storyInlineImgs, false)}</div>` : ''}
               ${_n > 1 ? `<div class="pshow-tiles">${_tiles}</div>` : ''}
+              <div class="pd3-feats-h">פרטים</div>
+              <ul class="pd3-feats">
+                <li><span class="pd3-fi">✓</span>פורסם ${escHtml(s.timestamp || '')}</li>
+                <li><span class="pd3-fi">✓</span>${_n || 1} עמודים</li>
+                ${s.category ? `<li><span class="pd3-fi">✓</span>${escHtml(s.category)}</li>` : ''}
+                ${isUserVerified(s.authorId, s.author, s.verified || s.verifiedUser) ? '<li><span class="pd3-fi">✓</span>חשבון מאומת</li>' : ''}
+              </ul>
               <div class="pshow-line"></div>
               <div class="pshow-actions">
               ${storyLinkedChipHTML(s)}
