@@ -19174,7 +19174,7 @@ function recoFindAlbum(id) {
 // תגובה מיידית: מעדכנים את הלב מיד, ואת העבודה הכבדה (שמירה וסנכרון) עושים אחרי שהמסך התעדכן
 function photoToggleLike(id) {
   try {
-    document.querySelectorAll(`.art-like-btn[onclick*="'${id}'"]`).forEach(b => b.classList.toggle('liked'));
+    document.querySelectorAll(`.art-like-btn[onclick*="'${id}'"], .hr-like[onclick*="'${id}'"]`).forEach(b => b.classList.toggle('liked'));
   } catch (e) {}
   setTimeout(() => _photoToggleLikeImpl(id), 16);
 }
@@ -22852,9 +22852,15 @@ onPublicSiteValue((data) => {
     if (pages.some(p => p && p.id === 'page-subscription-main') && !navs.includes('page-subscription-main')) {
       navs.push('page-subscription-main');
     }
-    if (JSON.stringify(topNavPages) !== JSON.stringify(navs)) {
+    // משווים לפי אילו עמודים בתפריט (קוד אחר משנה את הסדר) — אחרת כל עדכון קטן (לייק) בנה את כל העמוד מחדש והבהב
+    // משווים לתוצאה הקודמת שחושבה מהשרת (קוד אחר משנה את topNavPages מקומית) — אחרת כל עדכון קטן (לייק) בנה את העמוד מחדש והבהב
+    const _navKey = JSON.stringify(navs);
+    if (_navKey !== window.__lastNavKey) {
+      const _first = window.__lastNavKey === undefined && Array.isArray(topNavPages) && topNavPages.length > 0;
+      window.__lastNavKey = _navKey;
       topNavPages = navs;
-      changed = true;
+      if (!_first) changed = true;   // בפעם הראשונה רק רושמים את הבסיס (התפריט כבר מוצג) — בלי לבנות מחדש
+      else { try { renderTopNav(); } catch (e) {} }
     }
   }
   if (data.siteBackgrounds && JSON.stringify(siteBackgrounds) !== JSON.stringify(data.siteBackgrounds)) {
@@ -30163,7 +30169,7 @@ function homeRowsHTML(photos, comics, stories) {
         ${n > 1 ? `<span class="hr-count">${n} תמונות</span>` : ''}</span>
       <b class="hr-title">${escHtml(x.title || '')}</b>
       <span class="hr-author">${escHtml(x.author || 'משתמש')}</span>
-      <span class="hr-meta">${escHtml(x.timestamp || '')}${likes ? `<span class="hr-likes"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 10v11H4a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1h3zm0 0 4-7a2.5 2.5 0 0 1 2.5 2.5V9h5.4a2 2 0 0 1 2 2.3l-1.3 8A2 2 0 0 1 17.6 21H7"/></svg>${likes}</span>` : ''}</span>
+      <span class="hr-meta">${escHtml(x.timestamp || '')}<span class="hr-like${typeof photoIsLikedLocal === 'function' && photoIsLikedLocal(x.id) ? ' liked' : ''}" role="button" tabindex="0" aria-label="לייק" onclick="event.stopPropagation(); event.preventDefault(); photoToggleLike('${artEsc(x.id)}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 10.5v9.5H4.8a1 1 0 0 1-1-1v-7.5a1 1 0 0 1 1-1z"/><path d="M7.5 10.5 11 4a2.4 2.4 0 0 1 2.6 2.7L13.2 9.5h5.3a2 2 0 0 1 2 2.4l-1.3 6.5a2 2 0 0 1-2 1.6H7.5"/></svg><span class="pc-n">${likes || ''}</span></span></span>
     </button>`;
   };
   const row = (title, items, kind, all) => {
@@ -30360,7 +30366,7 @@ function deepLinkSync() {
 
 // מוני לייקים במסך — בלי לבנות את העמוד מחדש
 function likeBtnsFor(id) {
-  return [...document.querySelectorAll(`.art-like-btn[onclick*="'${id}'"], .pti-like[onclick*="'${id}'"]`)];
+  return [...document.querySelectorAll(`.art-like-btn[onclick*="'${id}'"], .pti-like[onclick*="'${id}'"], .hr-like[onclick*="'${id}'"]`)];
 }
 function likeCountsSet(id, n) {
   n = Math.max(0, Number(n) || 0);
@@ -30379,3 +30385,29 @@ function likeCountsPaint(likes) {
   if (!likes) return;
   Object.entries(likes).forEach(([id, n]) => { if (typeof n === 'number' && likeBtnsFor(id).length) likeCountsSet(id, n); });
 }
+
+// ============================================================
+// נטרול "עיוותים": תמונה מופיעה בדהייה רכה רק כשנטענה במלואה (עד אז — שלד עדין בגודל הסופי),
+// ותוכן עמוד חדש מופיע בדהייה קצרה במקום החלפה חדה. שקיפות בלבד — בלי תזוזה/הגדלה.
+// ============================================================
+(function smoothPaint() {
+  const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const IMG_SEL = '.art-row-img-wrap img, .pd2-frame img, .pshow-frame img, .hr-img img, .hc-slide img, .pc-post-media img, .pfg-media img, .nl-thumb img, .na-img img, .prd-main img';
+  const mark = img => { if (img.dataset.ld) return; const done = () => { img.dataset.ld = '1'; }; if (img.complete && img.naturalWidth) done(); else { img.addEventListener('load', done, { once: true }); img.addEventListener('error', done, { once: true }); } };
+  const scan = root => { (root || document).querySelectorAll(IMG_SEL).forEach(mark); };
+  let lastPage = null;
+  const pageFade = () => {
+    if (reduce) return;
+    const mc = document.getElementById('mainContent'); if (!mc) return;
+    const first = mc.firstElementChild;
+    if (first && first !== lastPage) { lastPage = first; first.classList.remove('mc-in'); void first.offsetWidth; first.classList.add('mc-in'); }
+  };
+  let t = 0;
+  const run = () => { t = 0; scan(); pageFade(); };
+  const start = () => {
+    document.documentElement.classList.add('img-fade');
+    run();
+    new MutationObserver(() => { if (!t) t = setTimeout(run, 0); }).observe(document.body, { childList: true, subtree: true });
+  };
+  if (document.body) start(); else document.addEventListener('DOMContentLoaded', start);
+})();
