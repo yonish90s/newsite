@@ -5016,23 +5016,9 @@ function showCopyToast(msg) {
   const kind = /שגיאה|לא הצלחנו|נכשל|לא ניתן|נא ל|אי אפשר/.test(text) ? 'warn'
     : /מייל|אימייל|הועתק|העתק/.test(text) ? 'mail'
     : /הוסר|נמחק|נדחה|הסרת/.test(text) ? 'del' : 'ok';
-  const icons = {
-    ok: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
-    mail: '<rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 7l8.5 6 8.5-6"/>',
-    del: '<path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/>',
-    warn: '<circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5v.01"/>'
-  };
-  let t = document.getElementById('top-toast');
-  if (t) t.remove();
-  const old = document.getElementById('global-copy-toast'); if (old) old.remove();
-  t = document.createElement('div');
-  t.id = 'top-toast'; t.className = 'save-toast top-toast' + (kind === 'warn' ? ' warn' : '');
-  t.setAttribute('role', 'status');
-  t.innerHTML = `<div class="st-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${icons[kind]}</svg><span>${escHtml(text)}</span></div>`;
-  document.body.appendChild(t);
-  requestAnimationFrame(() => t.classList.add('show'));
-  clearTimeout(window.__copyToastTimer);
-  window.__copyToastTimer = setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 250); }, 1000);
+  // משפט ארוך: החלק הראשון ככותרת, השאר כשורה שנייה
+  const m = text.match(/^(.{4,40}?)\s[—–-]\s(.+)$/);
+  glassBanner({ title: m ? m[1] : text, sub: m ? m[2] : '', icon: kind });
 }
 window.copyEmailToClipboard = copyEmailToClipboard;
 window.showCopyToast = showCopyToast;
@@ -19177,6 +19163,7 @@ function photoToggleLike(id) {
   let willLike = true;
   try { willLike = !photoIsLikedLocal(id); } catch (e) {}
   setTimeout(() => { _photoToggleLikeImpl(id); likersWrite(id, willLike); }, 16);
+  glassBanner(willLike ? { title: 'אהבת את זה', sub: 'לחיצה ארוכה על הלב — מי עשה לייק', icon: 'heart' } : { title: 'הלייק הוסר', icon: 'heart-off' });
 }
 function _photoToggleLikeImpl(id) {
   try { if (!photoIsLikedLocal(id)) recoTrack(recoFindAlbum(id), 'like'); } catch (e) {}
@@ -19670,6 +19657,7 @@ window.closeSavedModal = closeSavedModal;
 // הודעות פרטיות בין משתמשים (DM) — תיבת דואר בסגנון טלגרם/וואטסאפ
 // ============================================================
 let dmConversations = {};
+let dmConvSeen = false;
 let dmConvSubscribed = false;
 let dmActiveConv = null;
 let dmThreadUnsub = null;
@@ -19690,10 +19678,19 @@ function subscribeMyDMs() {
   dmConvSubscribed = true;
   dmConvUid = u.uid;
   dmConversations = {};
+  dmConvSeen = false;
   // מביאים את ה-uid של המנהל לשיחה הנעוצה
   try { get(ref(db, 'website/admin_uid')).then(s => { dmAdminUid = s.val() || ''; try { if (dmAdminUid) localStorage.setItem('site_admin_uid', dmAdminUid); } catch (e) {} dmRefreshList(); }).catch(() => {}); } catch (e) {}
   dmConvUnsub = onValue(ref(db, `website/user_dms/${u.uid}`), snap => {
+    const prev = dmConversations, first = !dmConvSeen;
     dmConversations = snap.val() || {};
+    dmConvSeen = true;
+    if (!first) Object.entries(dmConversations).forEach(([cid, c]) => {
+      const p0 = prev && prev[cid];
+      if (c && c.unread && (c.lastTime || 0) > ((p0 && p0.lastTime) || 0) && !(dmActiveConv && dmActiveConv.convId === cid && document.getElementById('messages-modal') && document.getElementById('messages-modal').offsetParent)) {
+        glassBanner({ title: c.otherName || 'הודעה חדשה', sub: c.lastText || '', icon: 'msg', btn: 'לפתיחה', onBtn: () => notifOpen(cid, c.otherUid || '', c.otherName || '') });
+      }
+    });
     dmRefreshList();
     dmUpdateBadge();
   }, () => {});
@@ -28653,16 +28650,9 @@ function savedFoldersKey() { const u = auth.currentUser; return u ? `saved_folde
 function savedFolders() { try { return JSON.parse(localStorage.getItem(savedFoldersKey()) || '{}') || {}; } catch (e) { return {}; } }
 function savedFoldersSet(f) { try { localStorage.setItem(savedFoldersKey(), JSON.stringify(f)); } catch (e) {} }
 function saveToast(id, saved) {
-  let t = document.getElementById('save-toast');
-  if (t) t.remove();
-  t = document.createElement('div');
-  t.id = 'save-toast'; t.className = 'save-toast';
-  t.innerHTML = `<div class="st-row"><svg viewBox="0 0 24 24" fill="${saved ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><span>${saved ? 'נשמר בשמורים' : 'הוסר מהשמורים'}</span></div>
-    ${saved ? `<button type="button" class="st-btn" onclick="openFolderPicker('${artEsc(id)}')">הוספה לתיקייה</button>` : ''}`;
-  document.body.appendChild(t);
-  requestAnimationFrame(() => t.classList.add('show'));
-  clearTimeout(window.__saveToastT);
-  window.__saveToastT = setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, saved ? 4200 : 2200);
+  glassBanner(saved
+    ? { title: 'נשמר', sub: 'אפשר למצוא בשמורים', icon: 'save', btn: 'לתיקייה', onBtn: () => openFolderPicker(id) }
+    : { title: 'הוסר מהשמורים', icon: 'del' });
 }
 function openFolderPicker(id) {
   const t = document.getElementById('save-toast'); if (t) t.remove();
@@ -29978,6 +29968,7 @@ function adminTabBody() {
   if (adminTab === 'stats') { setTimeout(adminCountriesLoad, 0); return buildStatsPage() + '<section class="adm-cc" id="adm-cc"><h2>כניסות לפי מדינה</h2><div class="adm-cc-body">טוען…</div></section>' + `<section class="adm-watch"><h2>הנתונים שלי ונתוני האתר</h2><div class="hw-stats-wrap">${homeWatchHTML()}</div></section>` + `<section class="adm-watch adm-today"><h2>היום באתר</h2><div class="adm-home-hero">${homeWelcomeHeroHTML()}</div></section>`; }
   if (adminTab === 'algo') return buildAlgoPage();
   if (adminTab === 'stock') return stockPageHTML();
+  if (adminTab === 'ads') return adsAdminHTML();
   return buildInfoPage();
 }
 function buildAdminPage() {
@@ -29985,7 +29976,7 @@ function buildAdminPage() {
   const body = adminTabBody();
   return `<div class="admin-page" data-page-id="page-admin-main">
     <div class="adm-head"><h1>מנהל</h1>
-      <nav class="adm-tabs">${[['info', 'מידע'], ['stats', 'נתונים'], ['algo', 'אלגוריתם'], ['stock', 'מלאי']].map(([k, l]) => `<button type="button" class="adm-tab${adminTab === k ? ' on' : ''}" onclick="adminSetTab('${k}')">${l}</button>`).join('')}</nav>
+      <nav class="adm-tabs">${[['info', 'מידע'], ['stats', 'נתונים'], ['algo', 'אלגוריתם'], ['stock', 'מלאי'], ['ads', 'פרסומות']].map(([k, l]) => `<button type="button" class="adm-tab${adminTab === k ? ' on' : ''}" onclick="adminSetTab('${k}')">${l}</button>`).join('')}</nav>
     </div>
     <div class="adm-body">${body}</div>
   </div>`;
@@ -30614,3 +30605,102 @@ document.addEventListener('click', e => {
   const txt = av.closest('.pd2-creator').querySelector('.pd2-creator-txt[onclick]');
   if (txt) { e.stopPropagation(); txt.click(); }
 });
+
+// ============================================================
+// באנר זכוכית עליון — לכל הודעה באתר (פעולות, הודעות נכנסות, פרסומות). יורד אחרי שנייה וחצי;
+// כשהאצבע/העכבר עליו הוא מחכה. כפתור צד אופציונלי + X.
+// ============================================================
+const GB_ICONS = {
+  ok: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  mail: '<rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 7l8.5 6 8.5-6"/>',
+  del: '<path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/>',
+  warn: '<circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5v.01"/>',
+  save: '<path d="M6 3h12v18l-6-4.5L6 21z" fill="currentColor"/>',
+  heart: '<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.6 1-1.1a5.5 5.5 0 0 0 0-7.7z" fill="currentColor"/>',
+  'heart-off': '<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.6 1-1.1a5.5 5.5 0 0 0 0-7.7z"/>',
+  msg: '<path d="M20.5 11.5a8 8 0 0 1-11.7 7.1L4 20l1.3-4.4A8 8 0 1 1 20.5 11.5z"/>',
+  ad: '<path d="M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/>'
+};
+function glassBanner(o) {
+  o = o || {};
+  const ms = o.ms || 1500;
+  let el = document.getElementById('glass-banner');
+  if (el) el.remove();
+  el = document.createElement('div');
+  el.id = 'glass-banner';
+  el.className = 'gbn' + (o.cls ? ' ' + o.cls : '');
+  el.setAttribute('role', 'status');
+  el.innerHTML = `<div class="gbn-row">
+      <span class="gbn-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${GB_ICONS[o.icon] || GB_ICONS.ok}</svg></span>
+      <span class="gbn-txt"><b>${escHtml(o.title || '')}</b>${o.sub ? `<small>${escHtml(o.sub)}</small>` : ''}</span>
+      ${o.btn ? `<button type="button" class="gbn-btn">${escHtml(o.btn)}</button>` : ''}
+      <button type="button" class="gbn-x" aria-label="סגירה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div><i class="gbn-bar" style="animation-duration:${ms}ms"></i>`;
+  document.body.appendChild(el);
+  let t = 0;
+  const close = () => { clearTimeout(t); el.classList.remove('show'); setTimeout(() => el.remove(), 260); };
+  const arm = () => { clearTimeout(t); t = setTimeout(close, ms); };
+  el.querySelector('.gbn-x').onclick = e => { e.stopPropagation(); close(); };
+  const b = el.querySelector('.gbn-btn');
+  if (b) b.onclick = e => { e.stopPropagation(); close(); try { o.onBtn && o.onBtn(); } catch (er) {} };
+  el.onclick = () => { if (o.onBtn) { close(); try { o.onBtn(); } catch (er) {} } };
+  // כשמחזיקים/מרחפים — לא נסגר, ופס הזמן עוצר
+  el.addEventListener('pointerenter', () => { clearTimeout(t); el.classList.add('hold'); });
+  el.addEventListener('pointerleave', () => { el.classList.remove('hold'); const bar = el.querySelector('.gbn-bar'); bar.style.animation = 'none'; void bar.offsetWidth; bar.style.animation = ''; arm(); });
+  requestAnimationFrame(() => el.classList.add('show'));
+  arm();
+  window.__gbnAt = Date.now();
+}
+window.glassBanner = glassBanner;
+
+// ---- פרסומות: רשימה ב-website/ads (רק המנהל עורך), מוצגות בבאנר כל 30 שניות ----
+var adsList = [], adsIdx = 0;
+(function adsRotate() {
+  try { onValue(ref(db, 'website/ads'), snap => { const v = snap.val() || {}; adsList = Object.entries(v).map(([id, a]) => Object.assign({ id }, a)).filter(a => a && a.title && a.active !== false).sort((x, y) => (x.t || 0) - (y.t || 0)); if (document.querySelector('.ads-admin')) adsAdminRefresh(); }, () => {}); } catch (e) {}
+  setInterval(() => {
+    if (!adsList.length || document.hidden) return;
+    if (document.getElementById('glass-banner') || Date.now() - (window.__gbnAt || 0) < 4000) return;   // לא דורסים הודעה אחרת
+    const a = adsList[adsIdx++ % adsList.length];
+    const url = /^https?:\/\//i.test(a.url || '') ? a.url : '';
+    glassBanner({ title: a.title, sub: a.text || '', icon: 'ad', cls: 'gbn-ad', btn: url ? (a.btn || 'לפרטים') : '', onBtn: url ? () => window.open(url, '_blank', 'noopener') : null });
+  }, 30000);
+})();
+function adsAdminHTML() {
+  const rows = adsList.length ? adsList.map(a => `<div class="ads-row"><span class="ads-t"><b>${escHtml(a.title)}</b><small>${escHtml(a.text || '')}</small><small dir="ltr">${escHtml(a.url || '')}</small></span><button type="button" class="ads-del" onclick="adsDelete('${artEsc(a.id)}')">מחיקה</button></div>`).join('')
+    : '<div class="ads-empty">עדיין אין פרסומות. מה שתוסיף כאן יופיע לגולשים בבאנר העליון כל 30 שניות.</div>';
+  return `<div class="ads-admin">
+    <div class="ads-form">
+      <input id="ad-title" maxlength="60" placeholder="כותרת (חובה)">
+      <input id="ad-text" maxlength="90" placeholder="שורה שנייה">
+      <input id="ad-url" dir="ltr" placeholder="https://קישור">
+      <input id="ad-btn" maxlength="16" placeholder="טקסט הכפתור (למשל: לפרטים)">
+      <button type="button" class="ads-add" onclick="adsAdd()">הוספת פרסומת</button>
+      <button type="button" class="ads-prev" onclick="adsPreview()">תצוגה מקדימה</button>
+    </div>
+    <div class="ads-list">${rows}</div>
+  </div>`;
+}
+function adsAdminRefresh() { const el = document.querySelector('.ads-admin .ads-list'); if (el) { const tmp = document.createElement('div'); tmp.innerHTML = adsAdminHTML(); el.replaceWith(tmp.querySelector('.ads-list')); } }
+function adsFormVal() {
+  const v = id => (document.getElementById(id) || {}).value || '';
+  return { title: v('ad-title').trim().slice(0, 60), text: v('ad-text').trim().slice(0, 90), url: v('ad-url').trim().slice(0, 300), btn: v('ad-btn').trim().slice(0, 16) };
+}
+function adsPreview() {
+  const a = adsFormVal();
+  glassBanner({ title: a.title || 'כותרת הפרסומת', sub: a.text, icon: 'ad', cls: 'gbn-ad', btn: a.url ? (a.btn || 'לפרטים') : '', ms: 4000 });
+}
+async function adsAdd() {
+  const a = adsFormVal();
+  if (!a.title) { showCopyToast('חסרה כותרת לפרסומת'); return; }
+  if (a.url && !/^https?:\/\//i.test(a.url)) { showCopyToast('הקישור צריך להתחיל ב-https://'); return; }
+  try {
+    await set(ref(db, 'website/ads/ad' + Date.now()), Object.assign(a, { t: Date.now(), active: true }));
+    ['ad-title', 'ad-text', 'ad-url', 'ad-btn'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    showCopyToast('הפרסומת נוספה');
+  } catch (e) { showCopyToast('לא הצלחנו לשמור — נסו שוב'); }
+}
+async function adsDelete(id) {
+  if (!confirm('למחוק את הפרסומת?')) return;
+  try { await set(ref(db, 'website/ads/' + id), null); showCopyToast('הפרסומת נמחקה'); } catch (e) { showCopyToast('לא הצלחנו למחוק'); }
+}
+Object.assign(window, { adsAdd, adsDelete, adsPreview });

@@ -598,6 +598,9 @@
             ".validate": "!newData.exists() || (newData.hasChildren(['at','name']) && newData.child('at').isNumber() && newData.child('name').isString() && newData.child('name').val().length <= 60)"
           }
         }
+      },
+      "ads": {
+        ".read": true
       }
     }
   }
