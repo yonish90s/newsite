@@ -196,8 +196,29 @@ function trackVisit() {
       }).catch(function () {});
     }
   } catch (e) {}
+  try { setTimeout(trackCountry, 2500); } catch (e) {}
 }
 window.trackVisit = trackVisit;
+// כניסות לפי מדינה — מונה מצרפי בלבד (בלי שום מידע על הגולש), פעם ביום לכל דפדפן, ורק למי שאישר סטטיסטיקות
+function trackCountry() {
+  if (!analyticsAllowed()) return;
+  const today = _analyticsDayKey();
+  try { if (localStorage.getItem('cc_counted_day') === today) return; } catch (e) { return; }
+  const count = (cc) => {
+    if (!/^[A-Z]{2}$/.test(cc || '')) return;
+    try { localStorage.setItem('cc_counted_day', today); } catch (e) {}
+    update(ref(db, 'website/analytics'), { ['countries/' + cc]: increment(1), ['countries_monthly/' + _analyticsMonthKey() + '/' + cc]: increment(1) }).catch(function () {});
+  };
+  try {
+    const c = JSON.parse(localStorage.getItem('geo_country') || 'null');
+    if (c && c.cc && Date.now() - c.t < 86400e3) { count(c.cc); return; }
+  } catch (e) {}
+  fetch('https://api.country.is/', { cache: 'no-store' }).then(r => r.json()).then(d => {
+    const cc = d && d.country ? String(d.country).toUpperCase() : '';
+    try { localStorage.setItem('geo_country', JSON.stringify({ cc, t: Date.now() })); } catch (e) {}
+    count(cc);
+  }).catch(() => {});
+}
 
 // מעקב פעולות אנונימי (בלי מידע אישי) — מונים לפי סוג פעולה ויום, לחישוב הקלקות ואחוז נטישה ב-CRM.
 // "ביקור מעורב" = ביקור שבו הגולש עשה לפחות פעולה אחת (אחרת הוא נחשב נטישה).
@@ -8289,6 +8310,7 @@ function artSyncPagination() {
     : _mq('.photos-page[data-section="photos"]:not(.home-feed-photos)') ? 'photos' : _mq('.photos-page[data-section="secondhand"]') ? 'products' : '';
   document.querySelectorAll('#mtabs .mtab').forEach(b => b.classList.toggle('active', b.dataset.tab === _tab));
   if (typeof sideRailSync === 'function') sideRailSync();
+  try { if (typeof deepLinkSync === 'function') deepLinkSync(); } catch (e) {}
   if (artPagObserver) artPagObserver.disconnect();
   try {
     artApplyPagination(mainContent.querySelector('.photos-page'), 'photos');
@@ -28388,7 +28410,7 @@ window.pfRefreshShBar = pfRefreshShBar;
 
 // ============================================================
 // מרכז ההצעות + התמקחות: כל הצעה היא רשומה משותפת לשני הצדדים
-// website/offers/{id} = { kind, itemId, title, price, note, fromUid, fromName, toUid, toName, at,
+// website/deals/{id} = { kind, itemId, title, price, note, fromUid, fromName, toUid, toName, at,
 //                         status: pending|counter|accepted|rejected|signed, lastBy, history: [...] }
 // website/offers_idx/{uid}/{id} = true  (רשימת ההצעות של כל משתמש)
 // ============================================================
@@ -28404,7 +28426,7 @@ async function offerRecord(o) {
   try {
     if (!auth.currentUser && typeof ensureGuestSignedIn === 'function') await ensureGuestSignedIn();
     const u = auth.currentUser; if (!u || !o.toUid) return;
-    const id = push(ref(db, 'website/offers')).key;
+    const id = push(ref(db, 'website/deals')).key;
     const fromName = (typeof liveChatUserName === 'function' && liveChatUserName()) || u.displayName || 'אורח';
     const now = Date.now();
     const status = o.kind === 'loan' ? 'signed' : 'pending';
@@ -28412,7 +28434,7 @@ async function offerRecord(o) {
       note: String(o.note || '').slice(0, 300), fromUid: u.uid, fromName: String(fromName).slice(0, 60), toUid: o.toUid, toName: String(o.toName || '').slice(0, 60),
       at: now, status, lastBy: u.uid, updatedAt: now,
       history: [{ by: u.uid, name: String(fromName).slice(0, 60), action: o.kind === 'loan' ? 'signed' : 'offer', price: Number(o.price) || 0, note: String(o.note || '').slice(0, 300), at: now }] };
-    await set(ref(db, `website/offers/${id}`), rec);
+    await set(ref(db, `website/deals/${id}`), rec);
     await set(ref(db, `website/offers_idx/${u.uid}/${id}`), true);
     await set(ref(db, `website/offers_idx/${o.toUid}/${id}`), true);
   } catch (e) { console.warn('offer record failed', e); }
@@ -28426,7 +28448,7 @@ function offersSubscribe() {
       const ids = Object.keys(snap.val() || {});
       ids.forEach(id => {
         if (offersItemUnsubs[id]) return;
-        offersItemUnsubs[id] = onValue(ref(db, `website/offers/${id}`), s2 => {
+        offersItemUnsubs[id] = onValue(ref(db, `website/deals/${id}`), s2 => {
           const v = s2.val();
           if (v) offersMap[id] = Object.assign({ id }, v); else delete offersMap[id];
           offersBadge(); offersRerender();
@@ -28503,7 +28525,7 @@ async function offerUpdate(id, status, price, note) {
   const upd = { status, lastBy: u.uid, updatedAt: now, history: hist };
   if (status === 'counter') { if (price) upd.price = Number(price); upd.note = String(note || '').slice(0, 300); }
   try {
-    await update(ref(db, `website/offers/${id}`), upd);
+    await update(ref(db, `website/deals/${id}`), upd);
     const other = o.fromUid === u.uid ? o.toUid : o.fromUid, otherName = o.fromUid === u.uid ? o.toName : o.fromName;
     const msg = status === 'accepted' ? `✅ אישרתי את ההצעה על "${o.title}"${o.price ? ` — ₪${Number(o.price).toLocaleString('he-IL')}` : ''}`
       : status === 'rejected' ? `❌ דחיתי את ההצעה על "${o.title}"`
@@ -29830,7 +29852,7 @@ function productDetailViewHTML(list, admin) {
 
 // ============================================================
 // הזמנות: הצעה שאושרה = הזמנה עם מעקב משלוח (המוכר מקדם שלב, הקונה רואה איפה זה עומד)
-// website/offers/{id}/ship = { stage: 0..4, t: { "0": ts, ... } }
+// website/deals/{id}/ship = { stage: 0..4, t: { "0": ts, ... } }
 // ============================================================
 const SHIP_STEPS = [
   ['הוזמן', '<path d="M7 3h10v18H7z"/><path d="M10 8h4M10 12h4M10 16h2"/>'],
@@ -29874,7 +29896,7 @@ async function orderShipAdvance(id) {
   const ship = o.ship || {}; const stage = Math.min(4, (Number(ship.stage) || 0) + 1);
   const t = Object.assign({}, ship.t || {}); t[stage] = Date.now();
   try {
-    await update(ref(db, `website/offers/${id}`), { ship: { stage, t }, updatedAt: Date.now() });
+    await update(ref(db, `website/deals/${id}`), { ship: { stage, t }, updatedAt: Date.now() });
     showCopyToast('המשלוח עודכן: ' + SHIP_STEPS[stage][0]);
     try { if (typeof dmSendSystem === 'function') dmSendSystem(o.fromUid, `📦 עדכון משלוח על "${o.title}": ${SHIP_STEPS[stage][0]}`); } catch (e) {}
   } catch (e) { showCopyToast('לא הצלחנו לעדכן את המשלוח'); }
@@ -29896,7 +29918,7 @@ function adminPageNormalize(list) {
 var adminTab;
 function adminTabBody() {
   if (!adminTab) { try { adminTab = localStorage.getItem('adm_tab') || 'info'; } catch (e) { adminTab = 'info'; } }
-  if (adminTab === 'stats') return buildStatsPage();
+  if (adminTab === 'stats') { setTimeout(adminCountriesLoad, 0); return buildStatsPage() + '<section class="adm-cc" id="adm-cc"><h2>כניסות לפי מדינה</h2><div class="adm-cc-body">טוען…</div></section>'; }
   if (adminTab === 'algo') return buildAlgoPage();
   if (adminTab === 'stock') return stockPageHTML();
   return buildInfoPage();
@@ -30136,7 +30158,7 @@ function newsOpenArticle(id) {
   // נקודות עיקריות: התקציר מחולק למשפטים/שורות (עד 5)
   const points = String(post.desc || '').split(/\n+|(?<=[.!?])\s+/).map(x => x.trim()).filter(x => x.length > 2).slice(0, 5);
   const others = list.filter(p => String(p.id) !== String(id)).slice(0, 6);
-  mainContent.innerHTML = `<div class="news-article" data-page-id="page-news-article">
+  mainContent.innerHTML = `<div class="news-article" data-page-id="page-news-article" data-news-id="${escHtml(String(post.id))}">
     <button type="button" class="art-back-btn na-back" onclick="newsBackToList()">חזרה לחדשות</button>
     <article class="na">
       <h1 class="na-title">${escHtml(post.title || '')}</h1>
@@ -30158,3 +30180,81 @@ function newsBackToList() {
 }
 Object.assign(window, { newsOpenArticle, newsBackToList });
 Object.assign(UI_EN, { 'נקודות עיקריות': 'Key points', 'עוד חדשות': 'More news', 'חזרה לחדשות': 'Back to news' });
+
+
+// עמוד מנהל → נתונים: טבלת כניסות לפי מדינה (סה"כ והחודש)
+function ccFlag(cc) { return String(cc).toUpperCase().replace(/./g, ch => String.fromCodePoint(127397 + ch.charCodeAt(0))); }
+function ccName(cc) { try { return new Intl.DisplayNames(['he'], { type: 'region' }).of(cc) || cc; } catch (e) { return cc; } }
+async function adminCountriesLoad() {
+  const box = document.querySelector('#adm-cc .adm-cc-body'); if (!box) return;
+  try {
+    const [all, mon] = await Promise.all([
+      get(ref(db, 'website/analytics/countries')).then(s => s.val() || {}),
+      get(ref(db, 'website/analytics/countries_monthly/' + _analyticsMonthKey())).then(s => s.val() || {})
+    ]);
+    const rows = Object.entries(all).filter(([cc, n]) => /^[A-Z]{2}$/.test(cc) && Number(n) > 0).sort((a, b) => b[1] - a[1]);
+    const total = rows.reduce((a, [, n]) => a + Number(n), 0);
+    box.innerHTML = rows.length ? `<table class="adm-cc-table"><thead><tr><th>מדינה</th><th>סה״כ</th><th>החודש</th><th></th></tr></thead><tbody>${rows.map(([cc, n]) => `
+      <tr><td><span class="adm-cc-flag">${ccFlag(cc)}</span>${escHtml(ccName(cc))}</td><td><b>${Number(n).toLocaleString('he-IL')}</b></td><td>${Number(mon[cc] || 0).toLocaleString('he-IL')}</td>
+      <td><span class="adm-cc-bar"><i style="width:${Math.max(3, Math.round(Number(n) / total * 100))}%"></i></span>${Math.round(Number(n) / total * 100)}%</td></tr>`).join('')}</tbody></table>`
+      : '<div class="pf-empty">עדיין אין נתונים — הספירה מתחילה מעכשיו (רק גולשים שאישרו סטטיסטיקות)</div>';
+  } catch (e) { box.textContent = 'אין הרשאה לקרוא את הנתונים (צריך להיות מחובר כמנהל)'; }
+}
+Object.assign(UI_EN, { 'כניסות לפי מדינה': 'Visits by country' });
+
+
+// ============================================================
+// קישורים ישירים: כשפריט פתוח הכתובת מקבלת #p/<id> (תמונה/מוצר), #s/<id> (סיפור/קומיקס), #n/<id> (חדשות).
+// כך "שיתוף" (שמשתמש בכתובת הנוכחית) שולח קישור ישיר, וכניסה מקישור כזה פותחת את הפריט.
+// ============================================================
+function deepLinkCurrent() {
+  if (typeof mainContent === 'undefined' || !mainContent) return '';
+  const ph = mainContent.querySelector('.art-detail[data-photo-id]');
+  if (ph) return '#p/' + encodeURIComponent(ph.getAttribute('data-photo-id'));
+  const st = mainContent.querySelector('.art-detail[data-story-id]');
+  if (st) return '#s/' + encodeURIComponent(st.getAttribute('data-story-id'));
+  const nw = mainContent.querySelector('.news-article[data-news-id]');
+  if (nw) return '#n/' + encodeURIComponent(nw.getAttribute('data-news-id'));
+  return '';
+}
+function deepLinkSync() {
+  if (window.__deepLinkOpening) return;   // בזמן פתיחה מקישור — לא מוחקים את הכתובת
+  const want = deepLinkCurrent();
+  const cur = location.hash || '';
+  const isOurs = /^#[psn]\//.test(cur);
+  if (want && want !== cur) history.replaceState(history.state, '', location.pathname + location.search + want);
+  else if (!want && isOurs) history.replaceState(history.state, '', location.pathname + location.search);
+}
+(function deepLinkOpenOnLoad() {
+  const m = (location.hash || '').match(/^#([psn])\/(.+)$/);
+  if (!m) return;
+  const kind = m[1], id = decodeURIComponent(m[2]);
+  window.__deepLinkOpening = true;
+  let tries = 0;
+  const done = () => { window.__deepLinkOpening = false; try { deepLinkSync(); } catch (e) {} };
+  const attempt = () => {
+    tries++;
+    if (deepLinkCurrent() === '#' + kind + '/' + encodeURIComponent(id)) return done();
+    if (tries > 16) return done();
+    try {
+      if (kind === 'p') { if (typeof homeOpenPhotos === 'function') homeOpenPhotos(); setTimeout(() => { try { photoOpenDetail(id); } catch (e) {} }, 450); }
+      else if (kind === 's') { storyOpenDetail(id); }
+      else if (kind === 'n') { navigateToPage('page-news-main'); setTimeout(() => { try { newsOpenArticle(id); } catch (e) {} }, 400); }
+    } catch (e) {}
+    setTimeout(attempt, 1200);
+  };
+  setTimeout(attempt, 1500);
+})();
+
+// מובייל: כפתור "+" צף להעלאה (הסרגל התחתון מוסתר) — לא מוצג בעמודי פריט, שם יש את תיבת התגובה
+(function uploadFab() {
+  const add = () => {
+    if (document.getElementById('up-fab')) return;
+    const b = document.createElement('button');
+    b.id = 'up-fab'; b.type = 'button'; b.className = 'up-fab'; b.setAttribute('aria-label', 'העלאה');
+    b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>';
+    b.addEventListener('click', () => { if (typeof openPhotoModal === 'function') openPhotoModal(); });
+    document.body.appendChild(b);
+  };
+  if (document.body) add(); else document.addEventListener('DOMContentLoaded', add);
+})();
