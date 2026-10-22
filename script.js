@@ -27661,7 +27661,7 @@ function composerBarHTML() {
   const ic = (cls, label, act, path) => `<button type="button" class="cmp-ic ${cls}" onclick="${act}" title="${label}" aria-label="${label}"><svg viewBox="0 0 24 24">${path}</svg></button>`;
   return `<div class="cmp-bar">
     <span class="au-av cmp-av"${reg ? ` data-av-uid="${escHtml(u.uid)}"` : ''}>${escHtml((first || 'א').charAt(0))}</span>
-    <button type="button" class="cmp-input" onclick="openQuickPublish()">מה בא לך לשתף${first ? ', ' + escHtml(first) : ''}?</button>
+    <span class="cmp-wrapf"><input type="text" class="cmp-input cmp-field" maxlength="120" autocomplete="off" enterkeyhint="send" aria-label="פרסום מהיר" placeholder="מה בא לך לשתף${first ? ', ' + escHtml(first) : ''}? הקלידו / להעלאה מהירה"></span>
     <div class="cmp-icons">
       ${ic('pic', 'תמונות', 'composerPhoto()', '<g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="m21 16-5-5-9 9"/></g>')}
     </div>
@@ -30754,4 +30754,87 @@ function mTabsActive() {
     go();
   };
   start();
+})();
+
+// ============================================================
+// פרסום מהיר עם "/" — בשורת "מה בא לך לשתף?" מקלידים / ונפתח תפריט (תמונות, מוצר, סיפור, פורום, הודעה)
+// עם תיאור באפור. חיצים + Enter או לחיצה. טקסט רגיל + Enter = פרסום תמונה עם הטקסט ככותרת.
+// ============================================================
+const SLASH_CMDS = [
+  { g: 'up', k: 'photos', t: 'תמונות', d: 'העלאת גלריית תמונות', a: 'photo gallery תמונה גלריה', i: '<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="m21 16-5-5-9 9"/>' },
+  { g: 'up', k: 'product', t: 'מוצר', d: 'פרסום מוצר יד שנייה למכירה', a: 'product sell מוצרים יד שניה', i: '<path d="M5 8h14l-1.2 11.1a1 1 0 0 1-1 .9H7.2a1 1 0 0 1-1-.9z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/>' },
+  { g: 'up', k: 'story', t: 'סיפור', d: 'כתיבת סיפור, כתבה או קומיקס', a: 'story comic קומיקס כתבה', i: '<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 1 6.5 18H20v3H6.5"/>' },
+  { g: 'up', k: 'forum', t: 'פורום', d: 'פתיחת נושא חדש לדיון', a: 'forum thread דיון נושא', i: '<path d="M20.5 11.5a8 8 0 0 1-11.7 7.1L4 20l1.3-4.4A8 8 0 1 1 20.5 11.5z"/>' },
+  { g: 'go', k: 'home', t: 'בית', d: 'חזרה לעמוד הבית', a: 'home', run: () => { goToHomePage(); }, i: '<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>' },
+  { g: 'go', k: 'feed', t: 'הפיד שלי', d: 'מה פרסמו מי שאני עוקב אחריהם', a: 'feed following', run: () => { openFeed(); }, i: '<path d="M4 6h16M4 12h16M4 18h10"/>' },
+  { g: 'go', k: 'search', t: 'חיפוש', d: 'חיפוש בכל האתר', a: 'search find', run: () => { openSiteSearch(); }, i: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>' },
+  { g: 'go', k: 'msgs', t: 'הודעות', d: 'השיחות הפרטיות שלי', a: 'messages dm צאט', run: () => { openMessages(); }, i: '<path d="M20.5 11.5a8 8 0 0 1-11.7 7.1L4 20l1.3-4.4A8 8 0 1 1 20.5 11.5z"/>' },
+  { g: 'go', k: 'profile', t: 'הפרופיל שלי', d: 'הפרופיל והחשבון', a: 'profile account חשבון', run: () => { document.getElementById('manager-btn') && document.getElementById('manager-btn').click(); }, i: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>' },
+  { g: 'go', k: 'likes', t: 'לייקים', d: 'מה שעשיתי לו לייק', a: 'likes אהבתי', run: () => { openLikesDrawer(); }, i: '<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.6 1-1.1a5.5 5.5 0 0 0 0-7.7z"/>' },
+  { g: 'go', k: 'saved', t: 'שמורים', d: 'מה ששמרתי לאחר כך', a: 'saved bookmarks שמירה', run: () => { openSavedModal(); }, i: '<path d="M6 3h12v18l-6-4.5L6 21z"/>' },
+  { g: 'go', k: 'history', t: 'היסטוריה', d: 'מה שצפיתי בו לאחרונה', a: 'history צפיות', run: () => { openHistoryDrawer(); }, i: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>' },
+  { g: 'go', k: 'offers', t: 'הצעות', d: 'הצעות מחיר ועסקאות', a: 'offers deals עסקאות', run: () => { openOffersPanel(); }, i: '<path d="M20 12 12 20l-8-8V4h8z"/><circle cx="8.5" cy="8.5" r="1.3"/>' },
+  { g: 'go', k: 'theme', t: 'מצב כהה / בהיר', d: 'החלפת צבעי האתר', a: 'theme dark light כהה בהיר', run: () => { toggleSiteTheme(); }, i: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>' },
+  { g: 'go', k: 'gophotos', t: 'תמונות גולשים', d: 'מעבר לגלריות', a: 'photos gallery', run: () => { homeGo('photos'); }, i: '<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="m21 16-5-5-9 9"/>' },
+  { g: 'go', k: 'gocomics', t: 'קומיקס', d: 'מעבר לקומיקס', a: 'comics', run: () => { homeGo('comics'); }, i: '<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/>' },
+  { g: 'go', k: 'goproducts', t: 'מוצרי גולשים', d: 'מעבר למוצרים', a: 'products shop חנות', run: () => { navigateToPage('page-secondhand-main'); }, i: '<path d="M5 8h14l-1.2 11.1a1 1 0 0 1-1 .9H7.2a1 1 0 0 1-1-.9z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/>' },
+  { g: 'go', k: 'goforums', t: 'פורומים', d: 'מעבר לפורומים', a: 'forums', run: () => { navigateToPage('page-forums-main'); }, i: '<path d="M20.5 11.5a8 8 0 0 1-11.7 7.1L4 20l1.3-4.4A8 8 0 1 1 20.5 11.5z"/>' },
+  { g: 'go', k: 'gonews', t: 'חדשות', d: 'מעבר לחדשות', a: 'news', run: () => { navigateToPage('page-news-main'); }, i: '<path d="M4 5h13v14H6a2 2 0 0 1-2-2z"/><path d="M17 9h3v8a2 2 0 0 1-2 2"/>' },
+  { g: 'go', k: 'gocomm', t: 'קהילות', d: 'מעבר לקהילות', a: 'communities', run: () => { navigateToPage('page-communities-main'); }, i: '<circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20a6 6 0 0 1 12 0M14 20a5 5 0 0 1 8-3.5"/>' },
+];
+function slashStart(k, text) {
+  text = String(text || '').trim();
+  if (k === 'forum') {
+    navigateToPage('page-forums-main');
+    setTimeout(() => { const i = document.getElementById('fo-new-title'); if (i) { if (text) i.value = text; i.scrollIntoView({ block: 'center' }); i.focus(); } }, 600);
+    return;
+  }
+  if (k === 'msg') { if (typeof openMessages === 'function') openMessages(); return; }
+  const sec = k === 'product' ? 'secondhand' : k === 'story' ? 'stories' : 'photos';
+  const orig = qpCurrentSection;
+  qpCurrentSection = () => sec;
+  try { openQuickPublish(null, k === 'story' ? 'story' : 'photo'); } finally { qpCurrentSection = orig; }
+  if (text) setTimeout(() => { const i = document.getElementById('qp-input'); if (i) { i.value = text; if (typeof qpHandleSend === 'function') qpHandleSend(); } }, 180);
+}
+window.slashStart = slashStart;
+(function slashMenu() {
+  let menu = null, field = null, items = [], sel = 0;
+  const close = () => { if (menu) menu.remove(); menu = null; items = []; };
+  const query = v => { const m = v.match(/(?:^|\s)\/([^\s/]*)$/); return m ? m[1].toLowerCase() : null; };
+  const textOf = v => v.replace(/(?:^|\s)\/[^\s/]*$/, '').trim();
+  function render() {
+    const q = query(field.value);
+    if (q === null) return close();
+    items = SLASH_CMDS.filter(c => !q || c.t.includes(q) || c.k.startsWith(q) || c.a.toLowerCase().includes(q));
+    if (!items.length) return close();
+    sel = Math.min(sel, items.length - 1);
+    if (!menu) { menu = document.createElement('div'); menu.className = 'slash-menu'; menu.setAttribute('role', 'listbox'); document.body.appendChild(menu); }
+    menu.innerHTML = items.map((c, i) => `${i === 0 || items[i - 1].g !== c.g ? `<div class="sm-g">${c.g === 'up' ? 'העלאה מהירה' : 'קיצורי דרך'}</div>` : ''}<button type="button" class="sm-item${i === sel ? ' on' : ''}" data-i="${i}" role="option"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${c.i}</svg><b>${c.t}</b><span>${c.d}</span></button>`).join('');
+    const onEl = menu.querySelector('.sm-item.on'); if (onEl) try { onEl.scrollIntoView({ block: 'nearest' }); } catch (e) {}
+    const r = field.closest('.cmp-bar').getBoundingClientRect();
+    const up = r.top > window.innerHeight / 2;
+    Object.assign(menu.style, { left: r.left + 'px', width: r.width + 'px', top: up ? '' : (r.bottom + 8) + 'px', bottom: up ? (window.innerHeight - r.top + 8) + 'px' : '' });
+  }
+  function pick(i) {
+    const c = items[i]; if (!c) return;
+    const text = textOf(field.value);
+    field.value = ''; close(); field.blur();
+    if (c.run) { try { c.run(); } catch (e) {} return; }
+    slashStart(c.k, text);
+  }
+  document.addEventListener('input', e => { if (!e.target.matches || !e.target.matches('.cmp-field')) return; field = e.target; sel = 0; render(); });
+  document.addEventListener('keydown', e => {
+    if (!e.target.matches || !e.target.matches('.cmp-field')) return;
+    field = e.target;
+    if (menu && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) { e.preventDefault(); sel = (sel + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length; render(); return; }
+    if (menu && (e.key === 'Enter' || e.key === 'Tab')) { e.preventDefault(); pick(sel); return; }
+    if (e.key === 'Escape') { close(); return; }
+    if (e.key === 'Enter' && field.value.trim()) { e.preventDefault(); const t = field.value; field.value = ''; field.blur(); slashStart('photos', t); }
+  });
+  document.addEventListener('mousedown', e => {
+    const b = e.target.closest && e.target.closest('.slash-menu .sm-item');
+    if (b) { e.preventDefault(); pick(+b.dataset.i); return; }
+    if (menu && !e.target.closest('.slash-menu, .cmp-field')) close();
+  }, true);
+  window.addEventListener('scroll', () => { if (menu && field) render(); }, { passive: true });
 })();
