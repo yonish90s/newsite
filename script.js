@@ -30662,13 +30662,18 @@ window.glassBanner = glassBanner;
 var adsList = [], adsIdx = 0;
 (function adsRotate() {
   try { onValue(ref(db, 'website/ads'), snap => { const v = snap.val() || {}; adsList = Object.entries(v).map(([id, a]) => Object.assign({ id }, a)).filter(a => a && a.title && a.active !== false).sort((x, y) => (x.t || 0) - (y.t || 0)); if (document.querySelector('.ads-admin')) adsAdminRefresh(); }, () => {}); } catch (e) {}
-  setInterval(() => {
+  const show = () => {
     if (!adsList.length || document.hidden) return;
     if (document.getElementById('glass-banner') || Date.now() - (window.__gbnAt || 0) < 4000) return;   // לא דורסים הודעה אחרת
     const a = adsList[adsIdx++ % adsList.length];
     const url = /^https?:\/\//i.test(a.url || '') ? a.url : '';
-    glassBanner({ title: a.title, sub: a.text || '', icon: 'ad', cls: 'gbn-ad', btn: url ? (a.btn || 'לפרטים') : '', onBtn: url ? () => window.open(url, '_blank', 'noopener') : null });
-  }, 30000);
+    // פרסומת יכולה להוביל לקישור חיצוני או לעמוד באתר (page)
+    const go = a.page ? () => navigateToPage(a.page) : url ? () => window.open(url, '_blank', 'noopener') : null;
+    glassBanner({ title: a.title, sub: a.text || '', icon: 'ad', cls: 'gbn-ad', btn: go ? (a.btn || 'לפרטים') : '', onBtn: go });
+  };
+  // פרסומת ראשונה מיד כשנכנסים לאתר, ואז כל 30 שניות
+  let first = setInterval(() => { if (adsList.length) { clearInterval(first); setTimeout(show, 1500); } }, 500);
+  setInterval(show, 30000);
 })();
 function adsAdminHTML() {
   const rows = adsList.length ? adsList.map(a => `<div class="ads-row"><span class="ads-t"><b>${escHtml(a.title)}</b><small>${escHtml(a.text || '')}</small><small dir="ltr">${escHtml(a.url || '')}</small></span><button type="button" class="ads-del" onclick="adsDelete('${artEsc(a.id)}')">מחיקה</button></div>`).join('')
