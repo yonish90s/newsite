@@ -30661,18 +30661,24 @@ window.glassBanner = glassBanner;
 // ---- פרסומות: רשימה ב-website/ads (רק המנהל עורך), מוצגות בבאנר כל 30 שניות ----
 var adsList = [], adsIdx = 0;
 (function adsRotate() {
-  try { onValue(ref(db, 'website/ads'), snap => { const v = snap.val() || {}; adsList = Object.entries(v).map(([id, a]) => Object.assign({ id }, a)).filter(a => a && a.title && a.active !== false).sort((x, y) => (x.t || 0) - (y.t || 0)); if (document.querySelector('.ads-admin')) adsAdminRefresh(); }, () => {}); } catch (e) {}
+  try { adsList = JSON.parse(localStorage.getItem('ads_cache') || '[]') || []; } catch (e) {}   // עותק מקומי — מוצג מיד בכניסה
+  try { onValue(ref(db, 'website/ads'), snap => { const v = snap.val() || {}; adsList = Object.entries(v).map(([id, a]) => Object.assign({ id }, a)).filter(a => a && a.title && a.active !== false).sort((x, y) => (x.t || 0) - (y.t || 0)); try { localStorage.setItem('ads_cache', JSON.stringify(adsList)); } catch (e) {} if (document.querySelector('.ads-admin')) adsAdminRefresh(); }, () => {}); } catch (e) {}
   const show = () => {
     if (!adsList.length || document.hidden) return;
-    if (document.getElementById('glass-banner') || Date.now() - (window.__gbnAt || 0) < 4000) return;   // לא דורסים הודעה אחרת
+    if (document.getElementById('glass-banner') || Date.now() - (window.__gbnAt || 0) < 2500) return;   // לא דורסים הודעה אחרת
     const a = adsList[adsIdx++ % adsList.length];
     const url = /^https?:\/\//i.test(a.url || '') ? a.url : '';
     // פרסומת יכולה להוביל לקישור חיצוני או לעמוד באתר (page)
     const go = a.page ? () => navigateToPage(a.page) : url ? () => window.open(url, '_blank', 'noopener') : null;
     glassBanner({ title: a.title, sub: a.text || '', icon: 'ad', cls: 'gbn-ad', btn: go ? (a.btn || 'לפרטים') : '', onBtn: go });
+    return true;
   };
   // פרסומת ראשונה מיד כשנכנסים לאתר, ואז כל 30 שניות
-  let first = setInterval(() => { if (adsList.length) { clearInterval(first); setTimeout(show, 1500); } }, 500);
+  let tries = 0;
+  const first = setInterval(() => {
+    if (!adsList.length) { if (++tries > 40) clearInterval(first); return; }
+    if (show() || ++tries > 40) clearInterval(first);   // אם הודעה אחרת מוצגת — מנסים שוב בעוד רגע
+  }, 400);
   setInterval(show, 30000);
 })();
 function adsAdminHTML() {
