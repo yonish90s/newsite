@@ -15665,6 +15665,7 @@ const HOME_TABS_ALL = {
   communities: ['קהילות', "navigateToPage('page-communities-main')"]
 };
 function homeTabsGet() {
+  return Object.keys(HOME_TABS_ALL).filter(k => k !== 'foryou' && k !== 'feed');   // כל הלשוניות תמיד פעילות
   try { const a = JSON.parse(localStorage.getItem('home_tabs') || 'null'); if (Array.isArray(a)) return a.filter(k => HOME_TABS_ALL[k] && k !== 'foryou' && k !== 'feed'); } catch (e) {}
   return ['photos', 'comics', 'stories'];
 }
@@ -15676,8 +15677,7 @@ function homeChipsHTML(photos, comics, stories, active, extraCls) {
   const act = k => k === 'foryou' ? (extraCls ? 'goToHomePage()' : '') : HOME_TABS_ALL[k][1];
   return `<nav class="hx-tabs${extraCls ? ' ' + extraCls : ''}" aria-label="לשוניות">
       ${tabs.map(k => `<button type="button" class="hx-tab${k === active ? ' on' : ''}" ${act(k) ? `onclick="${act(k)}"` : ''}>${escHtml(HOME_TABS_ALL[k][0])}</button>`).join('')}
-      <button type="button" class="hx-tab hx-add" onclick="homeTabsPicker()" aria-label="הוספת לשונית"><span class="hx-dot"></span>הוספה<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
-      <button type="button" class="hx-more" onclick="event.stopPropagation(); this.parentElement.scrollBy({ left: -160, behavior: 'smooth' })" aria-label="עוד לשוניות"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
+            <button type="button" class="hx-more" onclick="event.stopPropagation(); this.parentElement.scrollBy({ left: -160, behavior: 'smooth' })" aria-label="עוד לשוניות"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
     </nav>`;
 }
 function homeTabsPicker() {
@@ -27663,7 +27663,7 @@ function composerBarHTML() {
     <span class="au-av cmp-av"${reg ? ` data-av-uid="${escHtml(u.uid)}"` : ''}>${escHtml((first || 'א').charAt(0))}</span>
     <button type="button" class="cmp-input" onclick="openQuickPublish()">מה בא לך לשתף${first ? ', ' + escHtml(first) : ''}?</button>
     <div class="cmp-icons">
-      ${ic('pic', 'תמונות', 'composerPhoto()', '<rect x="5" y="3" width="15" height="15" rx="2.5" fill="currentColor" opacity=".55"/><rect x="3" y="6" width="15" height="15" rx="2.5" fill="currentColor"/><circle cx="8.3" cy="11" r="1.7" fill="#fff"/><path d="M4.5 19.5l4.5-4.8 3 3 2.3-2.3 3.2 4.1z" fill="#fff"/>')}
+      ${ic('pic', 'תמונות', 'composerPhoto()', '<g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="m21 16-5-5-9 9"/></g>')}
     </div>
   </div>`;
 }
