@@ -26249,6 +26249,7 @@ function siteTourGo(delta) {
 window.siteTourGo = siteTourGo;
 
 function startSiteTour(force, edit) {
+  if (!edit && !SITE_TOUR_AUTO) return;   // המדריך כבוי — לא בכניסה, לא בהתחברות (רק עורך המנהל)
   __tourEdit = !!edit && isAdmin();
   __tourDraft = __tourEdit ? JSON.parse(JSON.stringify(Object.assign({}, __tourConfig || {}))) : null;
   // אם סרטוני ההדרכה פתוחים — מחכים שייסגרו
@@ -26466,7 +26467,7 @@ window.openSiteTourEditor = openSiteTourEditor;
 // מתחילים אחרי אישור שער הגיל (או מיד בכל כניסה לאתר)
 // הסיור קופץ רק בכניסה הראשונה לאתר; אחרי סגירה/סיום הוא לא מוצג שוב
 function siteTourSeen() { try { return localStorage.getItem(SITE_TOUR_KEY) === '1'; } catch (e) { return false; } }
-const SITE_TOUR_AUTO = false;   // המדריך הקופץ כבוי לבקשת בעל האתר (להחזרה: true)
+var SITE_TOUR_AUTO = false;   // המדריך הקופץ כבוי לבקשת בעל האתר (להחזרה: true)
 function maybeStartSiteTour() {
   if (!SITE_TOUR_AUTO) return;
   if (siteTourSeen() || window.__tourAutoStarted) return;
