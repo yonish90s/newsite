@@ -20078,6 +20078,14 @@ async function dmOpenConv(convId, otherUid, otherName, prefill) {
     </header>
     <div class="tg-messages" id="dm-messages"><div class="tg-empty">טוען…</div></div>
     <div class="tg-attach-prev" id="dm-attach-prev"></div>
+    <div class="dm-quick-chips">
+      <button type="button" class="dm-quick-chip" onclick="dmQuickSend('👋 שלום!')">👋 שלום!</button>
+      <button type="button" class="dm-quick-chip" onclick="dmQuickSend('👍 תודה רבה!')">👍 תודה!</button>
+      <button type="button" class="dm-quick-chip" onclick="dmQuickSend('🏷️ מעוניין במוצר')">🏷️ מעוניין במוצר</button>
+      <button type="button" class="dm-quick-chip" onclick="dmQuickSend('📍 מה המיקום שלך?')">📍 מיקום</button>
+      <button type="button" class="dm-quick-chip" onclick="dmQuickSend('💰 מה המחיר הסופי?')">💰 מחיר סופי</button>
+      <button type="button" class="dm-quick-chip" onclick="dmQuickSend('📦 עדיין רלוונטי?')">📦 רלוונטי?</button>
+    </div>
     <div class="tg-compose">
       <button type="button" class="tg-plus" onclick="dmOpenAttach()" aria-label="צירוף תמונה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
       <textarea id="dm-input" rows="1" maxlength="1000" placeholder="הודעה" autocomplete="off" oninput="dmAutoGrow(this)" onkeydown="if(event.key==='Enter' && !event.shiftKey && window.innerWidth > 768){event.preventDefault(); dmSendCurrent();}"></textarea>
@@ -20146,6 +20154,16 @@ async function dmSendCurrent() {
   }
 }
 window.dmSendCurrent = dmSendCurrent;
+
+function dmQuickSend(text) {
+  const inp = document.getElementById('dm-input');
+  if (inp) {
+    inp.value = text;
+    if (typeof dmAutoGrow === 'function') dmAutoGrow(inp);
+    dmSendCurrent();
+  }
+}
+window.dmQuickSend = dmQuickSend;
 
 // התחלת שיחה עם משתמש (למשל מדף גלריה)
 async function dmStartWith(otherUid, otherName, prefill) {
@@ -31107,8 +31125,155 @@ const ASK_FAQ = [
   [/חיפוש|לחפש|איפה/, 'החיפוש מחפש בכל האתר — תמונות, קומיקס, מוצרים, פורומים וחדשות.', ['פתיחת חיפוש', () => openSiteSearch()]]
 ];
 const ASK_SUGG = ['קח אותי לקומיקס', 'אני רוצה להעלות תמונה', 'איך מוכרים מוצר?', 'מה זה ריפוסט?', 'תפתח את ההודעות'];
-let askLog = [];
+
+// ============================================================
+// עוזר האתר, היסטוריית שיחות וקיצורי דרך מהירים (בסגנון ElevenLabs Spotlight)
+// ============================================================
+const ASK_QUICK_ACTIONS = [
+  {
+    id: 'upload-photo',
+    title: 'העלאת תמונה או גלריה',
+    sub: 'שיתוף יצירה או תמונות חדשות לקהילה',
+    tag: 'פתח ↵',
+    cat: 'תמונות',
+    run: () => slashStart('photos')
+  },
+  {
+    id: 'new-forum',
+    title: 'פרסום נושא בפורום',
+    sub: 'פתיחת דיון, שיתוף רעיון או שאלת שאלה',
+    tag: 'דיון ↵',
+    cat: 'פורומים',
+    run: () => slashStart('forum')
+  },
+  {
+    id: 'write-story',
+    title: 'כתיבת סיפור או קומיקס',
+    sub: 'פרסום פרק, סיפור בהמשכים או קומיקס מאויר',
+    tag: 'יצירה ↵',
+    cat: 'סיפורים',
+    run: () => slashStart('story')
+  },
+  {
+    id: 'sell-product',
+    title: 'פרסום מוצר למכירה',
+    sub: 'העלאת מוצר יד שניה או פריט למכירה',
+    tag: 'חנות ↵',
+    cat: 'מוצרים',
+    run: () => slashStart('product')
+  },
+  {
+    id: 'site-search',
+    title: 'חיפוש בכל האתר',
+    sub: 'חיפוש תמונות, סיפורים, מוצרים ודיונים',
+    tag: 'חיפוש ↵',
+    cat: 'הכל',
+    run: () => openSiteSearch()
+  },
+  {
+    id: 'open-dms',
+    title: 'הודעות ושיחות פרטיות',
+    sub: 'צ\'אט ישיר ושיחות עם חברי הקהילה',
+    tag: 'צ\'אט ↵',
+    cat: 'דיבוב',
+    run: () => openMessages()
+  },
+  {
+    id: 'offers',
+    title: 'הצעות מחיר ומשא ומתן',
+    sub: 'הצעות על מוצרים, עסקאות ומשא ומתן פעיל',
+    tag: 'הצעות ↵',
+    cat: 'הצעות',
+    run: () => openOffersPanel()
+  },
+  {
+    id: 'saved-items',
+    title: 'השמורים והלייקים שלי',
+    sub: 'גישה מהירה לפריטים שאהבת ושמרת לאחר כך',
+    tag: 'שמורים ↵',
+    cat: 'חברים',
+    run: () => openSavedModal()
+  },
+  {
+    id: 'theme-toggle',
+    title: 'החלפת מצב תצוגה (כהה / בהיר)',
+    sub: 'מעבר מהיר בין מצב יום למצב לילה',
+    tag: 'החלף ↵',
+    cat: 'Speech',
+    run: () => toggleSiteTheme()
+  }
+];
+
+// מנהל היסטוריית שיחות ושאילתות
+function askGetHistory() {
+  try {
+    const raw = localStorage.getItem('site_ask_history_v1');
+    if (raw) {
+      const arr = JSON.parse(raw);
+      if (Array.isArray(arr) && arr.length) return arr;
+    }
+  } catch (e) {}
+  return [
+    { query: 'מה קורה', sub: 'עוזר האתר · שיחה', time: Date.now() - 600000 },
+    { query: 'איך מעלים תמונה?', sub: 'מדריך והעלאה מהירה', time: Date.now() - 3600000 },
+    { query: 'קח אותי לקומיקס', sub: 'ניווט מהיר', time: Date.now() - 86400000 }
+  ];
+}
+
+function askSaveHistoryItem(query, sub) {
+  if (!query || !query.trim()) return;
+  try {
+    let hist = askGetHistory().filter(h => h && h.query && h.query.trim().toLowerCase() !== query.trim().toLowerCase());
+    hist.unshift({
+      query: query.trim(),
+      sub: sub || 'עוזר האתר',
+      time: Date.now()
+    });
+    if (hist.length > 25) hist = hist.slice(0, 25);
+    localStorage.setItem('site_ask_history_v1', JSON.stringify(hist));
+  } catch (e) {}
+}
+
+function askClearHistory() {
+  try { localStorage.removeItem('site_ask_history_v1'); } catch (e) {}
+  askRender();
+}
+window.askClearHistory = askClearHistory;
+
+function askRemoveHistoryItem(query, e) {
+  if (e) e.stopPropagation();
+  try {
+    let hist = askGetHistory().filter(h => h && h.query !== query);
+    localStorage.setItem('site_ask_history_v1', JSON.stringify(hist));
+  } catch (e) {}
+  askRender();
+}
+window.askRemoveHistoryItem = askRemoveHistoryItem;
+
+// טעינת שיחה נוכחית שמורה
+let askLog = (function() {
+  try {
+    const raw = localStorage.getItem('site_ask_active_log_v1');
+    if (raw) {
+      const a = JSON.parse(raw);
+      if (Array.isArray(a)) return a;
+    }
+  } catch (e) {}
+  return [];
+})();
 let askActs = [];
+let askViewMode = askLog.length ? 'chat' : 'hub'; // 'hub' | 'chat'
+let askFilterQuery = '';
+
+function askSetView(mode) {
+  askViewMode = mode;
+  askRender();
+  if (mode === 'hub') {
+    setTimeout(() => { const inp = document.getElementById('ask-input'); if (inp) inp.focus(); }, 60);
+  }
+}
+window.askSetView = askSetView;
+
 function askReply(q) {
   const t = String(q || '').trim();
   if (!t) return null;
@@ -31125,55 +31290,221 @@ function askReply(q) {
   if (f) return { text: f[1], btn: f[2] };
   return { text: 'לא הבנתי עד הסוף 🙂 אפשר לבקש פעולה ("קח אותי לפורומים", "תעלה מוצר") או לשאול ("איך שומרים פריט?").', sugg: true };
 }
+
 function askOpen() {
   let el = document.getElementById('ask-panel');
   if (!el) {
     el = document.createElement('div');
     el.id = 'ask-panel';
     el.innerHTML = `<div class="ask-backdrop" onclick="askClose()"></div>
-      <section class="ask-card" role="dialog" aria-label="עוזר האתר">
-        <header class="ask-head"><b>עוזר האתר</b>
-          <button type="button" class="ask-hb" onclick="askNew()" title="שיחה חדשה" aria-label="שיחה חדשה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
-          <button type="button" class="ask-hb" onclick="askClose()" title="סגירה" aria-label="סגירה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      <section class="ask-card" role="dialog" aria-label="חיפוש פעולות, קיצורים ועוזר האתר">
+        <header class="ask-search-top">
+          <span class="ask-search-ic">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          </span>
+          <input type="text" id="ask-input" maxlength="300" placeholder="Search actions, voices, music, assets..." autocomplete="off">
+          <div class="ask-top-actions">
+            <button type="button" class="ask-hb-btn" id="ask-toggle-view" onclick="askSetView(askViewMode === 'hub' ? 'chat' : 'hub')" title="החלפת תצוגה">
+              ${askViewMode === 'hub' ? '💬 לשיחה' : '⚡ קיצורים'}
+            </button>
+            <button type="button" class="ask-hb" onclick="askNew()" title="שיחה חדשה" aria-label="שיחה חדשה">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            </button>
+            <button type="button" class="ask-hb" onclick="askClose()" title="סגירה" aria-label="סגירה">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            </button>
+          </div>
         </header>
         <div class="ask-msgs" id="ask-msgs"></div>
-        <form class="ask-bar" onsubmit="event.preventDefault(); askSend()">
-          <textarea id="ask-input" rows="2" maxlength="300" placeholder="שאלו כל דבר… למשל: קח אותי לקומיקס"></textarea>
-          <button type="submit" class="ask-send" aria-label="שליחה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+        <form class="ask-chat-bar" id="ask-chat-bar" onsubmit="event.preventDefault(); askSend()" style="display:none;">
+          <input type="text" id="ask-chat-input" maxlength="300" placeholder="שאלו שאלה נוספת..." autocomplete="off">
+          <button type="submit" class="ask-send" aria-label="שליחה">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+          </button>
         </form>
       </section>`;
     document.body.appendChild(el);
-    el.querySelector('#ask-input').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); askSend(); } if (e.key === 'Escape') askClose(); });
+    const inp = el.querySelector('#ask-input');
+    inp.addEventListener('input', e => {
+      askFilterQuery = (e.target.value || '').trim();
+      if (askViewMode === 'hub') askRender();
+    });
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        askSend(inp.value);
+      }
+      if (e.key === 'Escape') askClose();
+    });
   }
   askRender();
   document.documentElement.classList.add('ask-open');
   requestAnimationFrame(() => el.classList.add('show'));
-  setTimeout(() => { const i = document.getElementById('ask-input'); if (i) i.focus(); }, 60);
+  setTimeout(() => {
+    const i = (askViewMode === 'chat' && document.getElementById('ask-chat-input')) || document.getElementById('ask-input');
+    if (i) i.focus();
+  }, 80);
 }
-function askClose() { const el = document.getElementById('ask-panel'); if (el) el.classList.remove('show'); document.documentElement.classList.remove('ask-open'); }
-function askNew() { askLog = []; askActs = []; askRender(); }
+
+function askClose() {
+  const el = document.getElementById('ask-panel');
+  if (el) el.classList.remove('show');
+  document.documentElement.classList.remove('ask-open');
+}
+
+function askNew() {
+  askLog = [];
+  askActs = [];
+  askFilterQuery = '';
+  askViewMode = 'hub';
+  try { localStorage.removeItem('site_ask_active_log_v1'); } catch (e) {}
+  const inp = document.getElementById('ask-input');
+  if (inp) inp.value = '';
+  const cinp = document.getElementById('ask-chat-input');
+  if (cinp) cinp.value = '';
+  askRender();
+}
+
 function askRender() {
   const box = document.getElementById('ask-msgs');
   if (!box) return;
+  const toggleBtn = document.getElementById('ask-toggle-view');
+  if (toggleBtn) {
+    toggleBtn.innerHTML = askViewMode === 'hub' ? '💬 לשיחה' : '⚡ קיצורים והיסטוריה';
+    toggleBtn.style.display = askLog.length ? 'inline-flex' : (askViewMode === 'chat' ? 'inline-flex' : 'none');
+  }
+  const chatBar = document.getElementById('ask-chat-bar');
+  if (chatBar) {
+    chatBar.style.display = askViewMode === 'chat' ? 'flex' : 'none';
+  }
+
+  // תצוגת קיצורים והיסטוריה (סגנון ElevenLabs Spotlight)
+  if (askViewMode === 'hub') {
+    const q = askFilterQuery.toLowerCase();
+    const actions = ASK_QUICK_ACTIONS.filter(a => !q || a.title.toLowerCase().includes(q) || a.sub.toLowerCase().includes(q) || a.tag.toLowerCase().includes(q));
+    const history = askGetHistory().filter(h => !q || h.query.toLowerCase().includes(q) || (h.sub && h.sub.toLowerCase().includes(q)));
+    const u = auth.currentUser;
+    const userPic = u && u.photoURL ? `<img src="${escHtml(u.photoURL)}" class="ask-recent-thumb" alt="">` : `<span class="ask-recent-initial">${escHtml((u && u.displayName ? u.displayName.charAt(0) : 'ג'))}</span>`;
+
+    let html = `<div class="ask-hub-view">`;
+    
+    // Quick actions
+    if (actions.length) {
+      html += `
+        <div class="ask-sec-header">
+          <span class="ask-sec-label">Quick actions</span>
+        </div>
+        <div class="ask-actions-list">
+          ${actions.map((a, idx) => `
+            <div class="ask-action-row" onclick="askRunAction(${idx})" role="button" tabindex="0">
+              <span class="ask-action-ic">${getCategoryIconSVG(a.cat)}</span>
+              <div class="ask-action-texts">
+                <b class="ask-action-title">${escHtml(a.title)}</b>
+                <span class="ask-action-sub">${escHtml(a.sub)}</span>
+              </div>
+              <span class="ask-action-tag">${escHtml(a.tag)}</span>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    // Recent
+    if (history.length) {
+      html += `
+        <div class="ask-sec-header ask-sec-recent">
+          <span class="ask-sec-label">Recent</span>
+          <button type="button" class="ask-clear-btn" onclick="askClearHistory()" title="נקה היסטוריה">נקה</button>
+        </div>
+        <div class="ask-recent-list">
+          ${history.map((h) => `
+            <div class="ask-recent-row" onclick="askSend(${JSON.stringify(h.query).replace(/"/g, '&quot;')})" role="button" tabindex="0">
+              <div class="ask-recent-av-wrap">
+                ${userPic}
+              </div>
+              <div class="ask-recent-texts">
+                <b class="ask-recent-query">${escHtml(h.query)}</b>
+                <span class="ask-recent-sub">${escHtml(h.sub || 'עוזר האתר')}</span>
+              </div>
+              <button type="button" class="ask-recent-del" onclick="askRemoveHistoryItem(${JSON.stringify(h.query).replace(/"/g, '&quot;')}, event)" title="הסר מההיסטוריה" aria-label="הסר">✕</button>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    if (!actions.length && !history.length) {
+      html += `
+        <div class="ask-empty-search">
+          <span class="ask-empty-ic">🔍</span>
+          <b>לא נמצאו קיצורים או שיחות תואמות</b>
+          <small>לחצו Enter כדי לשאול את עוזר האתר ישירות</small>
+        </div>
+      `;
+    }
+
+    html += `</div>`;
+    box.innerHTML = html;
+    return;
+  }
+
+  // תצוגת שיחת צ'אט פעילה
   const chips = `<div class="ask-sugg">${ASK_SUGG.map(s => `<button type="button" onclick="askSend(${JSON.stringify(s).replace(/"/g, '&quot;')})">${escHtml(s)}</button>`).join('')}</div>`;
   if (!askLog.length) {
     box.innerHTML = `<div class="ask-empty"><span class="ask-logo"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 4.5 21 11l-7.6 2.6L10.8 21z"/></svg></span><b>התחילו שיחה</b><small>טיפ: ${/Mac|iPhone|iPad/.test(navigator.platform) ? '⌘' : 'Ctrl'}+K פותח את העוזר מכל מקום באתר</small>${chips}</div>`;
     return;
   }
-  box.innerHTML = askLog.map((m, i) => `<div class="ask-m ${m.who}">${escHtml(m.text)}${m.btn != null ? `<button type="button" class="ask-act" onclick="askDo(${m.btn})">${escHtml(m.btnLabel)}</button>` : ''}${m.sugg ? chips : ''}</div>`).join('');
+  box.innerHTML = askLog.map((m, i) => `
+    <div class="ask-m ${m.who}">
+      ${escHtml(m.text)}
+      ${m.btn != null ? `<button type="button" class="ask-act" onclick="askDo(${m.btn})">${escHtml(m.btnLabel)}</button>` : ''}
+      ${m.sugg ? chips : ''}
+    </div>
+  `).join('');
   box.scrollTop = box.scrollHeight;
 }
-function askDo(i) { const f = askActs[i]; if (f) { if (window.matchMedia('(max-width: 768px)').matches) askClose(); try { f(); } catch (e) {} } }
+
+function askRunAction(idx) {
+  const a = ASK_QUICK_ACTIONS[idx];
+  if (!a) return;
+  askSaveHistoryItem(a.title, a.sub);
+  if (window.matchMedia('(max-width: 768px)').matches) askClose();
+  try { a.run(); } catch (e) {}
+}
+window.askRunAction = askRunAction;
+
+function askDo(i) {
+  const f = askActs[i];
+  if (f) {
+    if (window.matchMedia('(max-width: 768px)').matches) askClose();
+    try { f(); } catch (e) {}
+  }
+}
+
 function askSend(text) {
-  const inp = document.getElementById('ask-input');
-  const q = String(text != null ? text : (inp ? inp.value : '')).trim();
+  const topInp = document.getElementById('ask-input');
+  const chatInp = document.getElementById('ask-chat-input');
+  let q = '';
+  if (text != null) {
+    q = String(text).trim();
+  } else if (chatInp && chatInp.value.trim()) {
+    q = chatInp.value.trim();
+  } else if (topInp && topInp.value.trim()) {
+    q = topInp.value.trim();
+  }
   if (!q) return;
-  if (inp) inp.value = '';
+  if (topInp) topInp.value = '';
+  if (chatInp) chatInp.value = '';
+  askFilterQuery = '';
+  askViewMode = 'chat';
   askLog.push({ who: 'me', text: q });
   const r = askReply(q);
   const m = { who: 'bot', text: r.text, sugg: !!r.sugg };
   if (r.btn) { askActs.push(r.btn[1]); m.btn = askActs.length - 1; m.btnLabel = r.btn[0]; }
   askLog.push(m);
+  // שמירת היסטוריית שאילתות ושיחה פעילה
+  askSaveHistoryItem(q, r.text.slice(0, 36) + '…');
+  try { localStorage.setItem('site_ask_active_log_v1', JSON.stringify(askLog)); } catch (e) {}
   askRender();
   if (r.run) setTimeout(() => { if (window.matchMedia('(max-width: 768px)').matches) askClose(); try { r.run(); } catch (e) {} }, 450);
 }
