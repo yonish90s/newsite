@@ -15720,6 +15720,7 @@ function homeCategoriesHTML(photos, comics, stories) {
 const SIDE_RAIL_ITEMS = [
   ['home', 'בית', 'goToHomePage()', '<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>', true],
   ['feed', 'הפיד שלי', 'openFeed()', '<path d="M4 6h16M4 12h16M4 18h10"/>', false],
+  ['news', 'חדשות', "navigateToPage('page-news-main')", '<path d="M4 5h13v14H6a2 2 0 0 1-2-2z"/><path d="M17 9h3v8a2 2 0 0 1-2 2"/><path d="M8 9h5M8 13h5M8 17h3"/>', false],
   ['cats', 'קטגוריות', "navigateToPage('page-communities-main')", '<rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/>', true],
   ['photos', 'תמונות גולשים', 'homeOpenPhotos()', '<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/>', false],
   ['store', 'החנות', "navigateToPage('page-products-main')", '<path d="M5 8h14l-1.2 11.1a1 1 0 0 1-1 .9H7.2a1 1 0 0 1-1-.9z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/>', false],
@@ -15750,7 +15751,7 @@ function renderSideRail() {
 function sideRailSync() {
   const el = document.getElementById('side-rail'); if (!el) return;
   const id = (typeof activePageId !== 'undefined' && activePageId) || '';
-  const map = { 'page-photos-main': 'photos', 'page-products-main': 'store', 'page-secondhand-main': 'secondhand', 'page-stats-main': 'stats', 'page-admin-main': 'stats', 'page-home-feed': 'home', 'page-feed-main': 'feed', 'page-communities-main': 'cats', 'page-subscription-main': 'shop' };
+  const map = { 'page-photos-main': 'photos', 'page-products-main': 'store', 'page-secondhand-main': 'secondhand', 'page-stats-main': 'stats', 'page-admin-main': 'stats', 'page-home-feed': 'home', 'page-feed-main': 'feed', 'page-communities-main': 'cats', 'page-subscription-main': 'shop', 'page-news-main': 'news' };
   el.querySelectorAll('.srail-btn').forEach(b => b.classList.toggle('on', b.dataset.rail === (map[id] || (id ? '' : 'home'))));
 }
 window.sideRailSync = sideRailSync;
@@ -29935,7 +29936,7 @@ function productDetailViewHTML(list, admin) {
         <div class="prd-buy-box">
           ${price ? `<div class="prd-price">₪${escHtml(price.replace(/^₪/, ''))}</div>` : `<div class="prd-price soft">מחיר בקישור</div>`}
           ${p.stock !== undefined && p.stock !== '' ? `<div class="prd-stock${Number(p.stock) <= 0 ? ' out' : Number(p.stock) <= 3 ? ' low' : ''}">${Number(p.stock) <= 0 ? 'אזל מהמלאי' : Number(p.stock) <= 3 ? `נשארו ${Number(p.stock)} במלאי` : 'במלאי'}</div>` : ''}
-          ${Number(p.stock) <= 0 && p.stock !== undefined && p.stock !== '' ? `<button type="button" class="prd-cta" disabled>אזל מהמלאי</button>` : hasLink ? `<a class="prd-cta" href="${escHtml(link)}" target="_blank" rel="noopener nofollow sponsored">לרכישה</a>` : `<button type="button" class="prd-cta" disabled>בקרוב</button>`}
+          ${Number(p.stock) <= 0 && p.stock !== undefined && p.stock !== '' ? `<button type="button" class="prd-cta" disabled>אזל מהמלאי</button>` : hasLink ? `<a class="prd-cta" href="${escHtml(link)}" target="_blank" rel="noopener nofollow sponsored">לרכישה</a>` : price ? `<button type="button" class="prd-cta" onclick="productOrder('${artEsc(p.id)}')">להזמנה</button>` : `<button type="button" class="prd-cta" disabled>בקרוב</button>`}
         </div>
         <button type="button" class="prd-wish${wish[p.id] ? ' on' : ''}" onclick="productWishToggle('${artEsc(p.id)}', this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/></svg>הוספה לרשימת המשאלות</button>
         <div class="prd-trust"><b>✓ נבחר בקפידה</b><span>מוצרים שאנחנו ממליצים עליהם לזוגות — עם הסבר למה הם עושים טוב לקשר.</span></div>
@@ -31290,3 +31291,14 @@ document.addEventListener('keydown', e => {
   scan();
   setTimeout(safety, 900);
 })();
+
+// הזמנת מוצר מהחנות (בלי קישור חיצוני): פותח הודעה פרטית למנהל האתר עם פרטי ההזמנה
+async function productOrder(id) {
+  const p = productsList().find(x => x.id === id);
+  if (!p) return;
+  let admin = dmAdminUid || (localStorage.getItem('site_admin_uid') || '');
+  if (!admin) { try { admin = (await get(ref(db, 'website/admin_uid'))).val() || ''; } catch (e) {} }
+  const price = String(p.price || '').replace(/^₪/, '');
+  dmStartWith(admin, 'מנהל האתר', `שלום, אני רוצה להזמין: ${p.name}${price ? ` (₪${price})` : ''}. איך ממשיכים?`);
+}
+window.productOrder = productOrder;
