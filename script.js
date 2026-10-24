@@ -15629,18 +15629,14 @@ function buildHomeFeedPage() {
       ${trioCard('trio-stories', 'סיפורים', 'סיפורים קצרים ומאמרים שכדאי לקרוא.', storyTiles(stories, '✍️'), "homeOpenSection('page-stories-text')", 'לכל הסיפורים')}
     </div>`;
 
-  // אלמנטים מ"דף 2": פתיח עם ערימת תמונות ומספרים, רצועות נעות, מספרים ומדריך
-  let _p2 = null;
-  try { _p2 = buildPage2(true); setTimeout(p2Init, 0); } catch (e) { _p2 = null; }
   return `<div class="articles-page home-feed-page has-aside" data-page-id="page-home-feed">
     ${homeAsideHTML()}
     <div class="art-inner">
       ${homeChipsHTML(photos, comics, stories)}
       ${modBoxHTML()}
-      ${_p2 ? `<div class="p2-page p2-embed p2-top">${_p2.hero}</div>` : homeHeroCarouselHTML(photos, comics, stories)}
+      ${homeHeroCarouselHTML(photos, comics, stories)}
       ${homeExploreHTML()}
       ${homeRowsHTML(photos, comics, stories)}
-      ${_p2 ? `<div class="p2-page p2-embed p2-bottom">${_p2.marq}${_p2.nums}${_p2.guide}</div>` : ''}
       <div class="cmp-wrap">${composerBarHTML()}</div>
       ${homeCategoriesHTML(photos, comics, stories)}
     </div>
@@ -31244,7 +31240,7 @@ function p2Data() {
   photos.forEach(x => { const c = x.category || 'כללי'; cats[c] = (cats[c] || 0) + 1; });
   return { photos: withImg, stories: sWithImg, img, nPhotos: photos.length, nStories: stories.length, nAuthors: authors.size, likes, cats };
 }
-function buildPage2(only) {
+function buildPage2() {
   const d = p2Data();
   const open = x => d.photos.includes(x) ? `homeOpenPhotos(); photoOpenDetail('${artEsc(x.id)}')` : `storyOpenDetail('${artEsc(x.id)}')`;
   const pic = (x, cls) => `<span class="${cls}"><img src="${escHtml(d.img(x))}" alt="" loading="lazy"></span>`;
@@ -31268,8 +31264,8 @@ function buildPage2(only) {
     ['מוצרי גולשים', 'קונים ומוכרים בתוך הקהילה', "navigateToPage('page-secondhand-main')"],
     ['עוזר האתר', 'Ctrl+K או כפתור העוזר', 'askOpen()']
   ].map(([t, s2, a], i) => `<button type="button" class="p2-gd p2-rv" style="--d:${i}" onclick="${a}"><span class="p2-gd-n">${String(i + 1).padStart(2, '0')}</span><b>${t}</b><small>${s2}</small></button>`).join('');
-  const parts = {
-    hero: `<section class="p2-hero">
+  return `<div class="p2-page" data-page-id="page-two">
+    <section class="p2-hero">
       <div class="p2-glow a"></div><div class="p2-glow b"></div>
       <div class="p2-hero-in">
         <div class="p2-hero-txt">
@@ -31290,40 +31286,40 @@ function buildPage2(only) {
         <div><b data-count="${d.nAuthors}">0</b><small>יוצרים</small></div>
         <div><b data-count="${d.likes}">0</b><small>לייקים</small></div>
       </div>
-    </section>`,
-    marq: `<section class="p2-sec p2-marq">
+    </section>
+
+    <section class="p2-sec p2-marq">
       <span class="p2-kicker p2-rv">נבחרו בשבילך</span>
       <h2 class="p2-h2 p2-rv">כל מה שעלה לאחרונה, בתנועה אחת</h2>
       <div class="p2-marq-wrap">
         ${strip(pool.slice(0, half))}
         ${strip(pool.slice(half).length ? pool.slice(half) : pool.slice(0, half), true)}
       </div>
-    </section>`,
-    grid: `${grid ? `<section class="p2-sec">
+    </section>
+
+    ${grid ? `<section class="p2-sec">
       <span class="p2-kicker p2-rv">קומיקס · סיפורים · חדש</span>
       <h2 class="p2-h2 p2-rv">היצירות של השבוע</h2>
       <div class="p2-grid">${grid}</div>
-    </section>` : ''}`,
-    nums: `${cats.length ? `<section class="p2-sec p2-nums">
+    </section>` : ''}
+
+    ${cats.length ? `<section class="p2-sec p2-nums">
       <span class="p2-kicker p2-rv">הקהילה במספרים</span>
       <h2 class="p2-h2 p2-rv">מה הכי מעלים אצלנו</h2>
       <div class="p2-bars">${cats.map(([c, n], i) => `<div class="p2-bar p2-rv" style="--d:${i}"><span class="p2-bar-l"><b>${escHtml(c)}</b><small>${n} גלריות</small></span><span class="p2-bar-t"><i style="--w:${Math.round(n / cmax * 100)}%"></i></span></div>`).join('')}</div>
-    </section>` : ''}`,
-    guide: `<section class="p2-sec">
+    </section>` : ''}
+
+    <section class="p2-sec">
       <span class="p2-kicker p2-rv">מדריך קצר</span>
       <h2 class="p2-h2 p2-rv">כל מה שצריך לדעת, ב-6 צעדים</h2>
       <div class="p2-guide">${guide}</div>
-    </section>`
-  };
-  if (only) return parts;
-  return `<div class="p2-page" data-page-id="page-two">${parts.hero}${parts.marq}${parts.grid}${parts.nums}${parts.guide}</div>`;
+    </section>
+  </div>`;
 }
 let p2Timers = [];
 function p2Init() {
   p2Timers.forEach(clearInterval); p2Timers = [];
-  document.querySelectorAll('.p2-page').forEach(p2InitOne);
-}
-function p2InitOne(page) {
+  const page = document.querySelector('.p2-page');
   if (!page) return;
   const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   // כותרת: מילים נכנסות + סוף מתחלף
