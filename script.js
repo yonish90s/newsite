@@ -1644,6 +1644,13 @@ function renderPage() {
       }
     }
 
+    // "דף 2" — עמוד תמונות בסגנון נחיתה עם תנועה
+    if (currentPage.id === 'page-two') {
+      mainContent.innerHTML = buildPage2();
+      try { window.scrollTo(0, 0); } catch (e) {}
+      p2Init();
+      return;
+    }
     // עמוד "מנהל" (למנהל בלבד): מידע · נתונים · אלגוריתם · מלאי
     if (currentPage.id === 'page-admin-main') {
       mainContent.innerHTML = buildAdminPage();
@@ -11742,7 +11749,9 @@ function navigateToPage(pageId) {
   if (pageId === 'page-subscription-main' && !window.__forcePanelPage && typeof openPagePanel === 'function' && _desk) { openPagePanel(pageId); return; }
   // מעבר לעמוד אחר — סוגרים חלונות צד פתוחים
   if (typeof closeSidePanels === 'function') closeSidePanels();
-  const page = (typeof pages !== 'undefined' && Array.isArray(pages)) ? pages.find(p => p && p.id === pageId) : null;
+  let page = (typeof pages !== 'undefined' && Array.isArray(pages)) ? pages.find(p => p && p.id === pageId) : null;
+  // "דף 2" הוא עמוד וירטואלי — מוסיפים לרשימה אם עוד לא שם
+  if (!page && pageId === 'page-two' && Array.isArray(pages)) { page = { id: 'page-two', title: 'דף 2', isHidden: false, content: '<div class="p2-page"></div>' }; pages.push(page); }
   if (!page) return;
   window.__detailOpen = false; // ניווט מפורש — מותר לרנדר מחדש
   if (typeof isEditMode !== 'undefined' && isEditMode && typeof saveCurrentPageContent === 'function') {
@@ -15663,7 +15672,8 @@ const HOME_TABS_ALL = {
   secondhand: ['מוצרי גולשים', "navigateToPage('page-secondhand-main')"],
   forums: ['פורומים', "navigateToPage('page-forums-main')"],
   news: ['חדשות', "navigateToPage('page-news-main')"],
-  communities: ['קהילות', "navigateToPage('page-communities-main')"]
+  communities: ['קהילות', "navigateToPage('page-communities-main')"],
+  page2: ['דף 2', "navigateToPage('page-two')"]
 };
 function homeTabsGet() {
   return Object.keys(HOME_TABS_ALL).filter(k => k !== 'foryou' && k !== 'feed');   // כל הלשוניות תמיד פעילות
@@ -29974,6 +29984,9 @@ function adminPageNormalize(list) {
   const ap = list.find(p => p.id === 'page-admin-main');
   if (!ap) list.push({ id: 'page-admin-main', title: 'מנהל 🔒', isHidden: true, content: '<div class="admin-page" data-page-id="page-admin-main"></div>' });
   else { ap.isHidden = true; if (!ap.title) ap.title = 'מנהל 🔒'; }
+  const p2 = list.find(p => p.id === 'page-two');
+  if (!p2) list.push({ id: 'page-two', title: 'דף 2', isHidden: false, content: '<div class="p2-page"></div>' });
+  else p2.isHidden = false;
   return list;
 }
 var adminTab;
@@ -30738,7 +30751,7 @@ Object.assign(window, { adsAdd, adsDelete, adsPreview });
 function mTabsActive() {
   const mc = typeof mainContent !== 'undefined' && mainContent;
   const id = typeof activePageId !== 'undefined' ? activePageId : '';
-  const map = { 'page-secondhand-main': 'secondhand', 'page-forums-main': 'forums', 'page-news-main': 'news', 'page-communities-main': 'communities', 'page-stories-main': 'comics', 'page-stories-text': 'stories', 'page-feed-main': 'feed' };
+  const map = { 'page-two': 'page2', 'page-secondhand-main': 'secondhand', 'page-forums-main': 'forums', 'page-news-main': 'news', 'page-communities-main': 'communities', 'page-stories-main': 'comics', 'page-stories-text': 'stories', 'page-feed-main': 'feed' };
   if (map[id]) return map[id];
   if (mc && mc.querySelector('.pfeed-page')) return 'feed';
   if (mc && mc.querySelector('.photos-page[data-section="secondhand"]')) return 'secondhand';
@@ -30802,6 +30815,7 @@ const SLASH_CMDS = [
   { g: 'go', k: 'goforums', t: 'פורומים', d: 'מעבר לפורומים', a: 'forums', run: () => { navigateToPage('page-forums-main'); }, i: '<path d="M20.5 11.5a8 8 0 0 1-11.7 7.1L4 20l1.3-4.4A8 8 0 1 1 20.5 11.5z"/>' },
   { g: 'go', k: 'gonews', t: 'חדשות', d: 'מעבר לחדשות', a: 'news', run: () => { navigateToPage('page-news-main'); }, i: '<path d="M4 5h13v14H6a2 2 0 0 1-2-2z"/><path d="M17 9h3v8a2 2 0 0 1-2 2"/>' },
   { g: 'go', k: 'gocomm', t: 'קהילות', d: 'מעבר לקהילות', a: 'communities', run: () => { navigateToPage('page-communities-main'); }, i: '<circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20a6 6 0 0 1 12 0M14 20a5 5 0 0 1 8-3.5"/>' },
+  { g: 'go', k: 'gopage2', t: 'דף 2', d: 'הגלריה בתצוגת נחיתה', a: 'page 2 עמוד 2', run: () => { navigateToPage('page-two'); }, i: '<rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 9h18"/>' },
 ];
 function slashStart(k, text) {
   text = String(text || '').trim();
@@ -31021,6 +31035,7 @@ const ASK_GO = [
   [/הצעות|עסקאות|הצעת מחיר/, 'להצעות', () => openOffersPanel()],
   [/פרופיל|חשבון|התחבר/, 'לפרופיל', () => { const b = document.getElementById('manager-btn'); if (b) b.click(); }],
   [/מנהל|ניהול/, 'לעמוד המנהל', () => navigateToPage('page-admin-main')],
+  [/דף 2|דף שתיים|עמוד 2/, 'לדף 2', () => navigateToPage('page-two')],
   [/בית|ראשי/, 'לעמוד הבית', () => goToHomePage()]
 ];
 const ASK_UP = [
@@ -31206,3 +31221,148 @@ document.addEventListener('keydown', e => {
   scan();
   setTimeout(safety, 900);
 })();
+
+// ============================================================
+// "דף 2" — עמוד תמונות בסגנון דף נחיתה (מבנה ותנועה בהשראת cognifit, תוכן מהאתר):
+// פתיח עם כותרת מתחלפת וערימת תמונות אנכית · שתי רצועות נעות · רשת קומיקס · מספרים עם פסים · מדריך קצר
+// ============================================================
+function p2Data() {
+  const ok = x => x && x.approved !== false;
+  const img = x => x && (((x.images || []).find(Boolean)) || x.cover || x.image || '');
+  // אותם מקורות כמו עמוד הבית
+  let photos = [], stories = [];
+  try { photos = (typeof getPhotosForHome === 'function' ? getPhotosForHome() : []).filter(ok); } catch (e) {}
+  try { stories = (typeof getAllStoriesFromPages === 'function' ? getAllStoriesFromPages() : []).filter(ok); } catch (e) {}
+  const withImg = photos.filter(img), sWithImg = stories.filter(img);
+  const authors = new Set(photos.concat(stories).map(x => x.authorId || x.author).filter(Boolean));
+  const likes = photos.concat(stories).reduce((a, x) => a + (Number(x.likes) || 0), 0);
+  const cats = {};
+  photos.forEach(x => { const c = x.category || 'כללי'; cats[c] = (cats[c] || 0) + 1; });
+  return { photos: withImg, stories: sWithImg, img, nPhotos: photos.length, nStories: stories.length, nAuthors: authors.size, likes, cats };
+}
+function buildPage2() {
+  const d = p2Data();
+  const open = x => d.photos.includes(x) ? `homeOpenPhotos(); photoOpenDetail('${artEsc(x.id)}')` : `storyOpenDetail('${artEsc(x.id)}')`;
+  const pic = (x, cls) => `<span class="${cls}"><img src="${escHtml(d.img(x))}" alt="" loading="lazy"></span>`;
+  const stack = d.photos.slice(0, 6);
+  const maxLikes = Math.max(1, ...stack.map(x => Number(x.likes) || 0));
+  const stackHTML = stack.map((x, i) => `<button type="button" class="p2-card" data-i="${i}" onclick="${open(x)}">
+      ${pic(x, 'p2-card-img')}
+      <span class="p2-card-body"><b>${escHtml(x.title || 'ללא כותרת')}</b><small>${escHtml(x.author || 'משתמש')}</small>
+        <span class="p2-meter"><i style="--w:${Math.round((Number(x.likes) || 0) / maxLikes * 100)}%"></i></span>
+        <span class="p2-card-foot"><span>♥ ${Number(x.likes) || 0}</span><span>${escHtml(x.category || 'כללי')}</span></span></span>
+    </button>`).join('');
+  const pool = d.photos.concat(d.stories);
+  const strip = (arr, rev) => arr.length ? `<div class="p2-strip${rev ? ' rev' : ''}"><div class="p2-strip-in">${arr.concat(arr).map((x, i) => `<button type="button" class="p2-tile"${i >= arr.length ? ' aria-hidden="true" tabindex="-1"' : ''} onclick="${open(x)}">${pic(x, 'p2-tile-img')}<span>${escHtml(x.title || '')}</span></button>`).join('')}</div></div>` : '';
+  const half = Math.ceil(pool.length / 2);
+  const feat = d.photos[0] || pool[0];
+  const grid = d.stories.concat(d.photos.slice(6)).slice(0, 6).map(x => `<button type="button" class="p2-g p2-rv" onclick="${open(x)}">${pic(x, 'p2-g-img')}<span class="p2-g-body"><span class="p2-live"><i></i>חדש</span><b>${escHtml(x.title || '')}</b><small>${escHtml(x.author || 'משתמש')}</small></span></button>`).join('');
+  const cats = Object.entries(d.cats).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const cmax = Math.max(1, ...cats.map(c => c[1]));
+  const guide = [
+    ['העלאת תמונה', 'לוחצים + או מקלידים / בשורת השיתוף', "slashStart('photos')"],
+    ['לייק ומי אהב', 'לחיצה על הלב · לחיצה ארוכה מראה מי', "homeGo('photos')"],
+    ['ריפוסט לפרופיל', 'החץ משתף לעוקבים שלך', "homeGo('photos')"],
+    ['שמירה לאחר כך', 'הסימנייה שומרת · אפשר בתיקיות', 'openSavedModal()'],
+    ['מוצרי גולשים', 'קונים ומוכרים בתוך הקהילה', "navigateToPage('page-secondhand-main')"],
+    ['עוזר האתר', 'Ctrl+K או כפתור העוזר', 'askOpen()']
+  ].map(([t, s2, a], i) => `<button type="button" class="p2-gd p2-rv" style="--d:${i}" onclick="${a}"><span class="p2-gd-n">${String(i + 1).padStart(2, '0')}</span><b>${t}</b><small>${s2}</small></button>`).join('');
+  return `<div class="p2-page" data-page-id="page-two">
+    <section class="p2-hero">
+      <div class="p2-glow a"></div><div class="p2-glow b"></div>
+      <div class="p2-hero-in">
+        <div class="p2-hero-txt">
+          <span class="p2-eyebrow"><i class="p2-dot"></i>תמונות גולשים · מתעדכן כל יום</span>
+          <h1 class="p2-h1"><span class="p2-h1a">הגלריה של הקהילה</span><span class="p2-rot" data-words="מתעדכנת כל יום.|יוצרים אמיתיים.|בלי פילטרים מיותרים.">מתעדכנת כל יום.</span></h1>
+          <p class="p2-lead">תמונות, קומיקס וסיפורים מהגולשים — במקום אחד. עוקבים אחרי היוצרים שאוהבים, שומרים, משתפים ומעלים בעצמכם בשניות.</p>
+          <div class="p2-ctas">
+            <button type="button" class="p2-btn pri" onclick="homeGo('photos')">לכל התמונות <span aria-hidden="true">←</span></button>
+            <button type="button" class="p2-btn sec" onclick="slashStart('photos')">העלאת תמונה</button>
+          </div>
+          <small class="p2-fine">${d.nPhotos.toLocaleString('he-IL')} גלריות · ${d.nAuthors.toLocaleString('he-IL')} יוצרים · מתעדכן בזמן אמת</small>
+        </div>
+        <div class="p2-stack" aria-label="תמונות נבחרות">${stackHTML}<div class="p2-vdots">${stack.map((_, i) => `<i data-i="${i}"></i>`).join('')}</div></div>
+      </div>
+      <div class="p2-stats">
+        <div><b data-count="${d.nPhotos}">0</b><small>גלריות</small></div>
+        <div><b data-count="${d.nStories}">0</b><small>קומיקס וסיפורים</small></div>
+        <div><b data-count="${d.nAuthors}">0</b><small>יוצרים</small></div>
+        <div><b data-count="${d.likes}">0</b><small>לייקים</small></div>
+      </div>
+    </section>
+
+    <section class="p2-sec p2-marq">
+      <span class="p2-kicker p2-rv">נבחרו בשבילך</span>
+      <h2 class="p2-h2 p2-rv">כל מה שעלה לאחרונה, בתנועה אחת</h2>
+      <div class="p2-marq-wrap">
+        ${strip(pool.slice(0, half))}
+        ${feat ? `<button type="button" class="p2-phone" onclick="${open(feat)}"><span class="p2-phone-glow"></span>${pic(feat, 'p2-phone-img')}<span class="p2-phone-cap"><i class="p2-dot"></i>${escHtml(feat.title || '')}</span></button>` : ''}
+        ${strip(pool.slice(half).length ? pool.slice(half) : pool.slice(0, half), true)}
+      </div>
+    </section>
+
+    ${grid ? `<section class="p2-sec">
+      <span class="p2-kicker p2-rv">קומיקס · סיפורים · חדש</span>
+      <h2 class="p2-h2 p2-rv">היצירות של השבוע</h2>
+      <div class="p2-grid">${grid}</div>
+    </section>` : ''}
+
+    ${cats.length ? `<section class="p2-sec p2-nums">
+      <span class="p2-kicker p2-rv">הקהילה במספרים</span>
+      <h2 class="p2-h2 p2-rv">מה הכי מעלים אצלנו</h2>
+      <div class="p2-bars">${cats.map(([c, n], i) => `<div class="p2-bar p2-rv" style="--d:${i}"><span class="p2-bar-l"><b>${escHtml(c)}</b><small>${n} גלריות</small></span><span class="p2-bar-t"><i style="--w:${Math.round(n / cmax * 100)}%"></i></span></div>`).join('')}</div>
+    </section>` : ''}
+
+    <section class="p2-sec">
+      <span class="p2-kicker p2-rv">מדריך קצר</span>
+      <h2 class="p2-h2 p2-rv">כל מה שצריך לדעת, ב-6 צעדים</h2>
+      <div class="p2-guide">${guide}</div>
+    </section>
+  </div>`;
+}
+let p2Timers = [];
+function p2Init() {
+  p2Timers.forEach(clearInterval); p2Timers = [];
+  const page = document.querySelector('.p2-page');
+  if (!page) return;
+  const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // כותרת: מילים נכנסות + סוף מתחלף
+  const h1 = page.querySelector('.p2-h1a');
+  if (h1) h1.innerHTML = h1.textContent.split(' ').map((w, i) => `<span class="mw" style="--i:${i}">${escHtml(w)}</span>`).join('');
+  const rot = page.querySelector('.p2-rot');
+  const setRot = w => { rot.innerHTML = w.split(' ').map((x, i) => `<span class="mw" style="--i:${i}">${escHtml(x)}</span>`).join(''); rot.classList.remove('in'); void rot.offsetWidth; rot.classList.add('in'); };
+  if (rot) { const words = rot.dataset.words.split('|'); let k = 0; setRot(words[0]); if (!reduce) p2Timers.push(setInterval(() => { if (!rot.isConnected) return p2Timers.forEach(clearInterval); k = (k + 1) % words.length; setRot(words[k]); }, 3200)); }
+  requestAnimationFrame(() => page.classList.add('p2-on'));
+  setTimeout(() => page.classList.add('p2-on'), 60);
+  // ערימת תמונות אנכית
+  const cards = [...page.querySelectorAll('.p2-card')], dots = [...page.querySelectorAll('.p2-vdots i')];
+  let cur = 0;
+  const show = i => {
+    cur = (i + cards.length) % cards.length;
+    cards.forEach((c, j) => { const rel = (j - cur + cards.length) % cards.length; c.dataset.pos = rel === 0 ? 'cur' : rel === 1 ? 'next' : rel === cards.length - 1 ? 'prev' : 'off'; });
+    dots.forEach((dt, j) => dt.classList.toggle('on', j === cur));
+  };
+  if (cards.length) {
+    show(0);
+    dots.forEach((dt, j) => dt.addEventListener('click', () => show(j)));
+    if (!reduce && cards.length > 1) p2Timers.push(setInterval(() => { if (!page.isConnected) return; if (!page.querySelector('.p2-stack:hover')) show(cur + 1); }, 3000));
+  }
+  // מספרים רצים
+  const count = el => {
+    const to = Number(el.dataset.count) || 0, t0 = performance.now(), dur = 1400;
+    const tick = () => { const p = Math.min(1, (performance.now() - t0) / dur); el.textContent = Math.round(to * (1 - Math.pow(1 - p, 3))).toLocaleString('he-IL'); if (p < 1) setTimeout(tick, 30); };
+    reduce ? (el.textContent = to.toLocaleString('he-IL')) : tick();
+  };
+  // חשיפה בגלילה
+  const reveal = el => { el.classList.add('in'); if (el.dataset.count) count(el); };
+  const targets = [...page.querySelectorAll('.p2-rv, .p2-stats b')];
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver(ents => ents.forEach(en => { if (en.isIntersecting) { reveal(en.target); io.unobserve(en.target); } }), { rootMargin: '0px 0px -6% 0px' });
+    targets.forEach(el => io.observe(el));
+  }
+  const safety = () => { const vh = innerHeight; targets.forEach(el => { if (!el.classList.contains('in')) { const r = el.getBoundingClientRect(); if (r.top < vh && r.bottom > 0) reveal(el); } }); };
+  setTimeout(safety, 700);
+  const onScroll = () => { if (!page.isConnected) return window.removeEventListener('scroll', onScroll); safety(); };
+  window.addEventListener('scroll', onScroll, { passive: true });
+}
+window.buildPage2 = buildPage2;
