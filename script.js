@@ -25430,8 +25430,41 @@ function closeNewsAddModal() {
   if (d) d.value = '';
   const im = document.getElementById('news-post-image');
   if (im) im.value = '';
+  const bd = document.getElementById('news-post-body'); if (bd) bd.value = '';
+  const pv = document.getElementById('news-post-image-prev'); if (pv) { pv.hidden = true; pv.removeAttribute('src'); }
+  newsCoverData = '';
 }
 window.closeNewsAddModal = closeNewsAddModal;
+// תמונה ראשית מהמכשיר — נדחסת ונשמרת עם הכתבה
+let newsCoverData = '';
+async function newsPickCover(inp) {
+  const f = inp.files && inp.files[0];
+  if (!f) return;
+  newsCoverData = await artCompressImage(f, 1400, 0.8);
+  const pv = document.getElementById('news-post-image-prev');
+  if (pv && newsCoverData) { pv.src = newsCoverData; pv.hidden = false; }
+  const u = document.getElementById('news-post-image'); if (u) u.value = '';
+  inp.value = '';
+}
+window.newsPickCover = newsPickCover;
+window.newsBodyHTML = (b) => newsBodyHTML(b);
+// תוכן כתבה: פסקאות טקסט + קישור יוטיוב בשורה משלו = סרטון מוטמע
+function newsYtId(line) {
+  const m = String(line || '').trim().match(/^(?:https?:\/\/)?(?:www\.|m\.)?(?:youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/|live\/)|youtu\.be\/)([A-Za-z0-9_-]{11})(?:\S*)$/);
+  return m ? m[1] : '';
+}
+function newsBodyHTML(body) {
+  const out = []; let para = [];
+  const flush = () => { if (para.length) { out.push(`<p>${para.map(escHtml).join('<br>')}</p>`); para = []; } };
+  String(body || '').split('\n').forEach(line => {
+    const yt = newsYtId(line);
+    if (yt) { flush(); out.push(`<div class="na-yt"><iframe src="https://www.youtube-nocookie.com/embed/${yt}" title="YouTube" loading="lazy" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>`); return; }
+    if (!line.trim()) { flush(); return; }
+    para.push(line);
+  });
+  flush();
+  return out.join('');
+}
 
 // זיהוי הרשת לפי הקישור — כל רשת מוטמעת בדרך הרשמית שלה
 function newsPlatform(url) {
@@ -25476,11 +25509,12 @@ async function submitNewsPost() {
   const category = catInput ? catInput.value : 'AI וטכנולוגיה';
   const desc = descInput ? descInput.value.trim() : '';
   const imageRaw = ((document.getElementById('news-post-image') || {}).value || '').trim();
-  const image = /^https?:\/\/\S+$/i.test(imageRaw) ? imageRaw.slice(0, 1000) : '';
+  const image = /^https?:\/\/\S+$/i.test(imageRaw) ? imageRaw.slice(0, 1000) : (newsCoverData || '');
+  const body = ((document.getElementById('news-post-body') || {}).value || '').trim().slice(0, 20000);
 
-  if (!rawUrl) {
-    alert('נא להזין קישור לפוסט (X, רדיט, פייסבוק או אינסטגרם)');
-    if (urlInput) urlInput.focus();
+  if (!rawUrl && !body) {
+    alert('כתבו את תוכן הכתבה (או צרפו קישור לפוסט מרשת חברתית)');
+    const b = document.getElementById('news-post-body'); if (b) b.focus();
     return;
   }
   if (!title) {
@@ -25490,12 +25524,12 @@ async function submitNewsPost() {
   }
 
   // קישור שיתוף קצר של רדיט (/s/...) לא ניתן להטמעה — צריך את הכתובת המלאה של הפוסט
-  if (newsPlatform(rawUrl) === 'reddit' && /\/s\/[A-Za-z0-9]+/.test(rawUrl)) {
+  if (rawUrl && newsPlatform(rawUrl) === 'reddit' && /\/s\/[A-Za-z0-9]+/.test(rawUrl)) {
     alert('זה קישור שיתוף מקוצר של רדיט.\nפתחו אותו בדפדפן, והעתיקו את הכתובת המלאה מהשורה למעלה (היא מכילה /comments/).');
     if (urlInput) urlInput.focus();
     return;
   }
-  const tweetUrl = cleanTweetUrl(rawUrl);
+  const tweetUrl = rawUrl ? cleanTweetUrl(rawUrl) : '';
   const isAuthUser = typeof auth !== 'undefined' && auth.currentUser;
   const authorName = isAuthUser ? (auth.currentUser.displayName || auth.currentUser.email || 'משתמש רשום') : 'עורך חדשות';
 
@@ -25504,6 +25538,7 @@ async function submitNewsPost() {
     category,
     desc,
     image,
+    body,
     tweetUrl,
     author: authorName,
     createdAt: Date.now()
@@ -25622,7 +25657,7 @@ function newsWhen(ts) {
 function buildNewsCard(post, idx) {
   const plat = newsPlatform(post.tweetUrl);
   const tile = NEWS_PLATFORM_TILES[plat] || NEWS_PLATFORM_TILES.other;
-  const img = post.image && /^https?:\/\//i.test(post.image) ? safeUrl(post.image) : '';
+  const img = post.image && /^https?:\/\//i.test(post.image) ? safeUrl(post.image) : (/^data:image\//.test(post.image || '') ? post.image : '');
   const thumb = img
     ? `<img src="${escHtml(img)}" alt="" loading="lazy" onerror="this.parentNode.classList.add('nl-noimg'); this.remove();">`
     : `<span class="nl-tile-icon">${tile.icon}</span>`;
@@ -25798,7 +25833,7 @@ window.buildNewsPage = buildNewsPage;
 // טור ראשי — רשימת ידיעות (תמונה מימין, כותרת, כותב | תאריך) + רשת של שני כרטיסים גדולים, וטור צד משמאל =====
 function newsThumbHTML(post, cls) {
   const tile = NEWS_PLATFORM_TILES[newsPlatform(post.tweetUrl)] || NEWS_PLATFORM_TILES.other;
-  const img = post.image && /^https?:\/\//i.test(post.image) ? safeUrl(post.image) : '';
+  const img = post.image && /^https?:\/\//i.test(post.image) ? safeUrl(post.image) : (/^data:image\//.test(post.image || '') ? post.image : '');
   return `<span class="${cls}${img ? '' : ' ng-noimg'}" style="--tile:${tile.bg}">${img ? `<img src="${escHtml(img)}" alt="" loading="lazy" onerror="this.parentNode.classList.add('ng-noimg'); this.remove();">` : `<span class="ng-ic">${tile.icon}</span>`}</span>`;
 }
 window.newsMagazineHTML = (...a) => newsMagazineHTML(...a);
@@ -30292,7 +30327,7 @@ function newsOpenArticle(id) {
   const post = list.find(p => String(p.id) === String(id));
   if (!post || typeof mainContent === 'undefined' || !mainContent) return;
   try { if (typeof closeSidePanels === 'function') closeSidePanels(); } catch (e) {}
-  const img = post.image && /^https?:\/\//i.test(post.image) ? safeUrl(post.image) : '';
+  const img = post.image && /^https?:\/\//i.test(post.image) ? safeUrl(post.image) : (/^data:image\//.test(post.image || '') ? post.image : '');
   const plat = newsPlatform(post.tweetUrl);
   // נקודות עיקריות: התקציר מחולק למשפטים/שורות (עד 5)
   const points = String(post.desc || '').split(/\n+|(?<=[.!?])\s+/).map(x => x.trim()).filter(x => x.length > 2).slice(0, 5);
@@ -30303,7 +30338,8 @@ function newsOpenArticle(id) {
       <h1 class="na-title">${escHtml(post.title || '')}</h1>
       <div class="na-meta"><span class="na-author">${escHtml(post.author || 'עורך חדשות')}</span><span class="na-sep" aria-hidden="true"></span><span class="na-when">${escHtml(newsWhen(post.createdAt))}</span></div>
       ${img ? `<div class="na-img"><img src="${escHtml(img)}" alt="" loading="lazy" onerror="this.parentNode.remove()"></div>` : ''}
-      ${points.length ? `<section class="na-points"><h2>נקודות עיקריות</h2><ul>${points.map(x => `<li>${escHtml(x)}</li>`).join('')}</ul></section>` : ''}
+      ${!post.body && points.length ? `<section class="na-points"><h2>נקודות עיקריות</h2><ul>${points.map(x => `<li>${escHtml(x)}</li>`).join('')}</ul></section>` : ''}
+      ${post.body ? `${post.desc ? `<p class="na-lead">${escHtml(post.desc)}</p>` : ''}<div class="na-body">${newsBodyHTML(post.body)}</div>` : ''}
       ${post.tweetUrl ? `<div class="na-embed">${newsEmbedHTML(post)}</div>
         <a class="na-source" href="${escHtml(safeUrl(post.tweetUrl))}" target="_blank" rel="noopener noreferrer">לצפייה ב${plat === 'x' ? '-X' : NEWS_PLATFORM_NAMES[plat]} ›</a>` : ''}
     </article>
