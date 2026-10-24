@@ -25765,14 +25765,50 @@ function buildNewsPage() {
       ">
       </div>
 
-      <!-- פיד הפוסטים -->
-      <div class="news-feed-list">
-        ${postsListHtml}
-      </div>
+      ${filtered.length ? newsMagazineHTML(filtered) : `<div class="news-feed-list">${postsListHtml}</div>`}
     </div>
   `;
 }
 window.buildNewsPage = buildNewsPage;
+
+// ===== עמוד חדשות בסגנון מגזין (מבנה כמו gadgety): 3 ידיעות מובילות עם כותרת על התמונה,
+// טור ראשי — רשימת ידיעות (תמונה מימין, כותרת, כותב | תאריך) + רשת של שני כרטיסים גדולים, וטור צד משמאל =====
+function newsThumbHTML(post, cls) {
+  const tile = NEWS_PLATFORM_TILES[newsPlatform(post.tweetUrl)] || NEWS_PLATFORM_TILES.other;
+  const img = post.image && /^https?:\/\//i.test(post.image) ? safeUrl(post.image) : '';
+  return `<span class="${cls}${img ? '' : ' ng-noimg'}" style="--tile:${tile.bg}">${img ? `<img src="${escHtml(img)}" alt="" loading="lazy" onerror="this.parentNode.classList.add('ng-noimg'); this.remove();">` : `<span class="ng-ic">${tile.icon}</span>`}</span>`;
+}
+window.newsMagazineHTML = (...a) => newsMagazineHTML(...a);
+function newsMagazineHTML(list) {
+  const open = p => `newsOpenArticle('${artEsc(p.id || '')}')`;
+  const meta = p => `<span class="ng-meta"><span class="ng-author">${escHtml(p.author || 'עורך חדשות')}</span><i></i><span>${escHtml(newsWhen(p.createdAt))}</span></span>`;
+  const nTop = list.length >= 5 ? 3 : list.length >= 3 ? 1 : 0;   // מעט ידיעות — פחות מובילות, יותר רשימה
+  const top = list.slice(0, nTop), rest = list.slice(nTop);
+  const firstList = rest.slice(0, 4), grid = rest.slice(4, 6), more = rest.slice(6);
+  const topHTML = top.map(p => `<button type="button" class="ng-hero" onclick="${open(p)}">${newsThumbHTML(p, 'ng-hero-img')}<span class="ng-hero-cap">${escHtml(p.title || '')}</span></button>`).join('');
+  const gridHTML = grid.map(p => `<button type="button" class="ng-card" onclick="${open(p)}">${newsThumbHTML(p, 'ng-card-img')}<span class="ng-card-body"><b>${escHtml(p.title || '')}</b>${meta(p)}</span></button>`).join('');
+  const popular = list.slice(0, 5).map((p, i) => `<button type="button" class="ng-pop" onclick="${open(p)}"><span class="ng-pop-n">${i + 1}</span><span class="ng-pop-t">${escHtml(p.title || '')}</span></button>`).join('');
+  let comm = '';
+  try {
+    const img = x => x && (((x.images || []).find(Boolean)) || x.cover || x.image || '');
+    const ph = (typeof getPhotosForHome === 'function' ? getPhotosForHome() : []).filter(x => x && x.approved !== false && img(x)).slice(0, 3);
+    comm = ph.map(x => `<button type="button" class="ng-side-card" onclick="homeOpenPhotos(); photoOpenDetail('${artEsc(x.id)}')"><span class="ng-side-img"><img src="${escHtml(img(x))}" alt="" loading="lazy"></span><b>${escHtml(x.title || '')}</b><small>${escHtml(x.author || 'משתמש')}</small></button>`).join('');
+  } catch (e) {}
+  return `<div class="ng">
+    ${topHTML ? `<section class="ng-top" style="--n:${top.length}">${topHTML}</section>` : ''}
+    <div class="ng-layout">
+      <main class="ng-main">
+        <div class="news-feed-list">${firstList.map((p, i) => buildNewsCard(p, i)).join('')}</div>
+        ${gridHTML ? `<div class="ng-grid2">${gridHTML}</div>` : ''}
+        ${more.length ? `<div class="news-feed-list">${more.map((p, i) => buildNewsCard(p, i + 1)).join('')}</div>` : ''}
+      </main>
+      <aside class="ng-side">
+        <section class="ng-side-box"><h3>הכי נקראים</h3>${popular}</section>
+        ${comm ? `<section class="ng-side-box"><h3>מהקהילה</h3>${comm}</section>` : ''}
+      </aside>
+    </div>
+  </div>`;
+}
 
 
 
