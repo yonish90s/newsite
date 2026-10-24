@@ -31255,7 +31255,6 @@ function buildPage2() {
   const pool = d.photos.concat(d.stories);
   const strip = (arr, rev) => arr.length ? `<div class="p2-strip${rev ? ' rev' : ''}"><div class="p2-strip-in">${arr.concat(arr).map((x, i) => `<button type="button" class="p2-tile"${i >= arr.length ? ' aria-hidden="true" tabindex="-1"' : ''} onclick="${open(x)}">${pic(x, 'p2-tile-img')}<span>${escHtml(x.title || '')}</span></button>`).join('')}</div></div>` : '';
   const half = Math.ceil(pool.length / 2);
-  const feat = d.photos[0] || pool[0];
   const grid = d.stories.concat(d.photos.slice(6)).slice(0, 6).map(x => `<button type="button" class="p2-g p2-rv" onclick="${open(x)}">${pic(x, 'p2-g-img')}<span class="p2-g-body"><span class="p2-live"><i></i>חדש</span><b>${escHtml(x.title || '')}</b><small>${escHtml(x.author || 'משתמש')}</small></span></button>`).join('');
   const cats = Object.entries(d.cats).sort((a, b) => b[1] - a[1]).slice(0, 5);
   const cmax = Math.max(1, ...cats.map(c => c[1]));
@@ -31296,7 +31295,6 @@ function buildPage2() {
       <h2 class="p2-h2 p2-rv">כל מה שעלה לאחרונה, בתנועה אחת</h2>
       <div class="p2-marq-wrap">
         ${strip(pool.slice(0, half))}
-        ${feat ? `<button type="button" class="p2-phone" onclick="${open(feat)}"><span class="p2-phone-glow"></span>${pic(feat, 'p2-phone-img')}<span class="p2-phone-cap"><i class="p2-dot"></i>${escHtml(feat.title || '')}</span></button>` : ''}
         ${strip(pool.slice(half).length ? pool.slice(half) : pool.slice(0, half), true)}
       </div>
     </section>
