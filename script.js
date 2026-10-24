@@ -31923,3 +31923,110 @@ if (document.readyState === 'loading') {
 } else {
   updateFreeTrialBannerState();
 }
+
+// ==========================================
+// מנוע תלת-ממד ואינטראקטיביות מתקדמת (בהשראת Fable / Awwwards Web Design)
+// ==========================================
+(function() {
+  if (window.__interactive3dInit) return;
+  window.__interactive3dInit = true;
+
+  // מכשירי מגע שומרים על ביצועים חלקים ללא תלת-ממד רגיש לעכבר
+  if (window.matchMedia && window.matchMedia('(hover: none) and (pointer: coarse)').matches) return;
+
+  const TARGET_SELECTOR = '.art-row, .art-featured-card, .trial-banner-inner, .p2-hero-in, .gate-paper-card, .sub-trial-hero';
+
+  function init3DTilt(el) {
+    if (el.__has3d) return;
+    el.__has3d = true;
+
+    // יצירת אלמנט תאורת ברק פנימי (Glare)
+    let glare = el.querySelector('.card-glare');
+    if (!glare) {
+      glare = document.createElement('div');
+      glare.className = 'card-glare';
+      glare.setAttribute('aria-hidden', 'true');
+      el.appendChild(glare);
+    }
+
+    let rect = null;
+    let rafId = null;
+    let targetX = 0, targetY = 0;
+    let curX = 0, curY = 0;
+
+    const onEnter = () => {
+      rect = el.getBoundingClientRect();
+      el.classList.add('is-hover-3d');
+    };
+
+    const onMove = (e) => {
+      if (!rect) rect = el.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const midX = rect.width / 2;
+      const midY = rect.height / 2;
+
+      // חישוב זוויות הטיה אלגנטיות (עד 6 מעלות לתנועה מעודנת ומדויקת)
+      targetX = ((x - midX) / midX) * 6;
+      targetY = -((y - midY) / midY) * 6;
+
+      // מיקום נקודת האור (Glare)
+      const px = Math.round((x / rect.width) * 100);
+      const py = Math.round((y / rect.height) * 100);
+      el.style.setProperty('--gx', `${px}%`);
+      el.style.setProperty('--gy', `${py}%`);
+
+      if (!rafId) rafId = requestAnimationFrame(updateSpring);
+    };
+
+    const updateSpring = () => {
+      // תנועה פיזיקלית חלקה (Spring damping)
+      curX += (targetX - curX) * 0.16;
+      curY += (targetY - curY) * 0.16;
+
+      el.style.setProperty('--rx', `${curY.toFixed(2)}deg`);
+      el.style.setProperty('--ry', `${curX.toFixed(2)}deg`);
+
+      if (Math.abs(targetX - curX) > 0.05 || Math.abs(targetY - curY) > 0.05) {
+        rafId = requestAnimationFrame(updateSpring);
+      } else {
+        rafId = null;
+      }
+    };
+
+    const onLeave = () => {
+      rect = null;
+      targetX = 0;
+      targetY = 0;
+      el.classList.remove('is-hover-3d');
+      if (!rafId) rafId = requestAnimationFrame(updateSpring);
+    };
+
+    el.addEventListener('mouseenter', onEnter, { passive: true });
+    el.addEventListener('mousemove', onMove, { passive: true });
+    el.addEventListener('mouseleave', onLeave, { passive: true });
+  }
+
+  function bindAll3D() {
+    const list = document.querySelectorAll(TARGET_SELECTOR);
+    for (let i = 0; i < list.length; i++) {
+      init3DTilt(list[i]);
+    }
+  }
+
+  let timer = 0;
+  const observer = new MutationObserver(() => {
+    clearTimeout(timer);
+    timer = setTimeout(bindAll3D, 120);
+  });
+
+  if (document.body) {
+    observer.observe(document.body, { childList: true, subtree: true });
+    bindAll3D();
+  } else {
+    document.addEventListener('DOMContentLoaded', () => {
+      observer.observe(document.body, { childList: true, subtree: true });
+      bindAll3D();
+    });
+  }
+})();

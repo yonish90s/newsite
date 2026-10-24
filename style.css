@@ -16932,3 +16932,88 @@ html.theme-dark .ft-guarantee {
   color: #a1a1aa;
 }
 
+/* ===== 3D Spatial & Interactive Effects (בהשראת Fable / Awwwards Web Design) ===== */
+.art-row, .art-featured-card, .trial-banner-inner, .gate-paper-card, .sub-trial-hero {
+  position: relative;
+  transform-style: preserve-3d;
+  will-change: transform;
+  transform: perspective(1000px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
+}
+
+.is-hover-3d {
+  transition: none !important;
+  z-index: 10;
+}
+
+/* אפקט ברק זוהר דינמי (Glare) */
+.card-glare {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 5;
+  opacity: 0;
+  background: radial-gradient(circle 320px at var(--gx, 50%) var(--gy, 50%), rgba(255, 255, 255, 0.22), transparent 70%);
+  transition: opacity 0.3s ease;
+  mix-blend-mode: overlay;
+}
+
+.is-hover-3d .card-glare {
+  opacity: 1;
+}
+
+/* אפקט זוהר כפתור והבזק אור (Shimmer Beam) */
+@keyframes ctaShimmer {
+  0% { transform: translateX(-150%) skewX(-20deg); }
+  35%, 100% { transform: translateX(250%) skewX(-20deg); }
+}
+
+.trial-cta-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.trial-cta-btn::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+  animation: ctaShimmer 4s infinite cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+/* אור אמביינט צף בעומק (Ambient Depth Orbs) */
+.trial-offer-banner::before {
+  content: '';
+  position: absolute;
+  top: -40px;
+  right: 15%;
+  width: 180px;
+  height: 140px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(242, 178, 58, 0.45), transparent 70%);
+  filter: blur(40px);
+  pointer-events: none;
+  animation: floatOrb 6s ease-in-out infinite alternate;
+}
+
+@keyframes floatOrb {
+  0% { transform: translateY(0) scale(1); opacity: 0.6; }
+  100% { transform: translateY(14px) scale(1.15); opacity: 0.95; }
+}
+
+/* נגישות — למשתמשים שהגדירו הפחתת תנועה */
+@media (prefers-reduced-motion: reduce) {
+  .art-row, .art-featured-card, .trial-banner-inner, .gate-paper-card, .sub-trial-hero {
+    transform: none !important;
+    transition: none !important;
+  }
+  .card-glare, .trial-cta-btn::after, .trial-offer-banner::before {
+    display: none !important;
+  }
+}
+

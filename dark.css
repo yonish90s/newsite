@@ -2965,6 +2965,8 @@ html.theme-dark.theme-dark .free-trial-dialog { background: #352e42 !important; 
 html.theme-dark.theme-dark .ft-perks { background: #352e42 !important; }
 html.theme-dark.theme-dark .ft-perk-ico { background: #352e42 !important; }
 html.theme-dark.theme-dark .ft-foot { background: #352e42 !important; border-top-color: rgba(255, 255, 255, 0.1) !important; }
+html.theme-dark .card-glare { background: radial-gradient(circle 320px at var(--gx, 50%) var(--gy, 50%), rgba(27, 30, 36, 0.22), transparent 70%) !important; }
+html.theme-dark .trial-cta-btn::after { background: linear-gradient(90deg, transparent, rgba(27, 30, 36, 0.45), transparent) !important; }
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #eceef1 !important; }
 html.theme-dark [style*="color:#111111"] { color: #eceef1 !important; }
