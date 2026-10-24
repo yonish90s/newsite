@@ -2945,6 +2945,26 @@ html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) :is(.pca
 html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) :is(.pcat-tile, .cat-item, .story-cat-btn, .pcc) .pcat-ic, html.theme-dark.theme-dark body:not(#_):not(#_):not(#_) .pcc-ring { background: #352e42 !important; }
 html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) :is(.pcat-tile.active, .cat-item.active, .story-cat-btn.active, .pcc.on) .pcat-ic, html.theme-dark.theme-dark body:not(#_):not(#_):not(#_) .pcc.on .pcc-ring { background: #352e42 !important; }
 html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) :is(.pcat-tile, .cat-item, .story-cat-btn) .pcat-name, html.theme-dark.theme-dark body:not(#_):not(#_):not(#_) .pcc-name { color: #9aa2ad !important; }
+html.theme-dark .trial-offer-banner { border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important; }
+html.theme-dark .trial-banner-pill { background: rgba(27, 30, 36, 0.18) !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; }
+html.theme-dark .trial-cta-btn { color: #eceef1 !important; }
+html.theme-dark .trial-banner-close { background: rgba(27, 30, 36, 0.16) !important; }
+html.theme-dark .trial-banner-close:hover { background: rgba(27, 30, 36, 0.28) !important; }
+html.theme-dark .free-trial-dialog { background: #17141d !important; border: 1px solid rgba(255, 255, 255, 0.064) !important; }
+html.theme-dark .ft-close { background: rgba(27, 30, 36, 0.2) !important; }
+html.theme-dark .ft-close:hover { background: rgba(27, 30, 36, 0.35) !important; }
+html.theme-dark .ft-badge { background: rgba(27, 30, 36, 0.2) !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; }
+html.theme-dark .ft-perks { background: #17141d !important; }
+html.theme-dark .ft-perk-ico { background: #1d1924 !important; border: 1px solid #2a2433 !important; }
+html.theme-dark .ft-perk b { color: #eceef1 !important; }
+html.theme-dark .ft-perk small { color: #c8cdd4 !important; }
+html.theme-dark .ft-foot { background: #1d1924 !important; border-top: 1px solid #2a2433 !important; }
+html.theme-dark .ft-guarantee { color: #c8cdd4 !important; }
+html.theme-dark .sub-trial-badge { background: rgba(27, 30, 36, 0.2) !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; }
+html.theme-dark.theme-dark .free-trial-dialog { background: #352e42 !important; border-color: rgba(255, 255, 255, 0.1) !important; }
+html.theme-dark.theme-dark .ft-perks { background: #352e42 !important; }
+html.theme-dark.theme-dark .ft-perk-ico { background: #352e42 !important; }
+html.theme-dark.theme-dark .ft-foot { background: #352e42 !important; border-top-color: rgba(255, 255, 255, 0.1) !important; }
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #eceef1 !important; }
 html.theme-dark [style*="color:#111111"] { color: #eceef1 !important; }

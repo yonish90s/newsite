@@ -15,8 +15,8 @@
   <!-- ספריית localforage לשמירת תמונות -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
   <!-- קישור לקובץ העיצוב החיצוני (עם פרמטר למניעת שמירה במטמון) -->
-  <link rel="stylesheet" href="./style.css?v=1959">
-  <link rel="stylesheet" id="dark-css" href="./dark.css?v=342" media="not all">
+  <link rel="stylesheet" href="./style.css?v=1960">
+  <link rel="stylesheet" id="dark-css" href="./dark.css?v=343" media="not all">
   <script>
     // קישור ישיר לפריט (#p/…, #s/…, #n/…) — מסמנים מיד, כדי שהכתובת לא תימחק לפני שהפריט נפתח
     window.__deepLinkOpening = /^#[psn]\//.test(location.hash || '');
@@ -269,6 +269,22 @@
         <div id="notif-panel" class="notif-panel" style="display:none"></div>
       </div>
     </header>
+
+    <!-- באנר הצעה בולט: נסה עכשיו חודש חינם -->
+    <aside id="trial-offer-banner" class="trial-offer-banner" role="banner" aria-label="הצעה מיוחדת: חודש ניסיון חינם">
+      <div class="trial-banner-inner">
+        <div class="trial-banner-info">
+          <span class="trial-banner-pill">🎁 הצעה מיוחדת</span>
+          <span class="trial-banner-title">הצטרפו עכשיו וקבלו גישה מלאה לכל התמונות, הסיפורים והכלים ללא עלות!</span>
+        </div>
+        <div class="trial-banner-actions">
+          <button type="button" class="trial-cta-btn" onclick="openFreeTrialModal()">
+            <span>נסה עכשיו חודש חינם</span>
+          </button>
+          <button type="button" class="trial-banner-close" onclick="dismissTrialBanner(event)" title="הסתר הצעה" aria-label="סגירה">✕</button>
+        </div>
+      </div>
+    </aside>
 
     <!-- מעטפת התוכן: מחלקת את המסך לאזור מרכזי ולתפריט צדדי -->
     <div class="content-wrapper">
@@ -1254,7 +1270,7 @@ html.theme-dark .pl-bar { background: #2a2f37; }
     try { if (localStorage.getItem('mtab_hidden') === '1') document.documentElement.classList.add('mtab-hidden'); } catch (e) {}
   </script>
   <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
-  <script type="module" src="./script.js?v=1799"></script>
+  <script type="module" src="./script.js?v=1800"></script>
   <script defer src="./a11y.js?v=1"></script>
 </body>
 </html>

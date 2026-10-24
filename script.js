@@ -25214,8 +25214,23 @@ function shopRowHTML(f) {
     </button>`;
 }
 function shopListHTML() {
+  const trialExpiry = Number(localStorage.getItem('site_free_trial_active_v1') || 0);
+  const isTrial = trialExpiry > Date.now();
+  const trialHero = `
+    <div class="sub-trial-hero">
+      <div class="sub-trial-hero-inner">
+        <span class="sub-trial-badge">${isTrial ? '👑 מנוי פעיל' : '🎁 הטבה מיוחדת לזמן מוגבל'}</span>
+        <h2 class="sub-trial-title">${isTrial ? 'חודש הניסיון שלך פעיל כעת!' : 'רוצה לנסות את כל האתר בחינם?'}</h2>
+        <p class="sub-trial-desc">${isTrial ? 'אתם נהנים מגישה מלאה לכל התמונות, הגלריות והכלים המתקדמים.' : 'קבלו חודש ניסיון מלא (30 ימים) ללא תשלום, ללא כרטיס אשראי וללא התחייבות.'}</p>
+        <button type="button" class="trial-cta-btn" onclick="openFreeTrialModal()">
+          <span>${isTrial ? 'הטבות המנוי שלך ✨' : 'אני רוצה חודש ניסיון חינם'}</span>
+        </button>
+      </div>
+    </div>
+  `;
   return `
     ${shopTopHTML('שדרוגים', '')}
+    ${trialHero}
     <div class="shop-intro"><b>משלמים רק על מה שרוצים</b><span>בלי מנוי · תשלום חד־פעמי לכל שדרוג</span></div>
     ${SHOP_GROUPS.map(g => `
       <section class="shop-sec">
@@ -31800,3 +31815,111 @@ window.buildPage2 = buildPage2;
   window.addEventListener('scroll', () => { if (!sq) sq = setTimeout(() => { sq = 0; safety(); }, 200); }, { passive: true });
   scan();
 })();
+
+// ==========================================
+// מבצע הצעה בולטת: נסה עכשיו חודש חינם
+// ==========================================
+function openFreeTrialModal() {
+  let m = document.getElementById('free-trial-modal');
+  if (!m) {
+    m = document.createElement('div');
+    m.id = 'free-trial-modal';
+    m.className = 'free-trial-overlay';
+    m.innerHTML = `
+      <div class="free-trial-backdrop" onclick="closeFreeTrialModal()"></div>
+      <div class="free-trial-dialog" role="dialog" aria-modal="true" aria-labelledby="ft-title">
+        <button type="button" class="ft-close" onclick="closeFreeTrialModal()" aria-label="סגירה">✕</button>
+        <div class="ft-hero">
+          <div class="ft-badge">🎁 הטבה בלעדית לזמן מוגבל</div>
+          <h2 id="ft-title" class="ft-title">חודש ניסיון חינם מלא!</h2>
+          <p class="ft-subtitle">קבלו גישה מיידית לכל התכנים, הגלריות והכלים המתקדמים באתר למשך 30 ימים שלמים, 100% חינם.</p>
+        </div>
+        <div class="ft-perks">
+          <div class="ft-perk">
+            <span class="ft-perk-ico">🖼️</span>
+            <div><b>גישה מלאה לכל הגלריות</b><small>צפייה והורדה של תמונות באיכות הגבוהה ביותר</small></div>
+          </div>
+          <div class="ft-perk">
+            <span class="ft-perk-ico">📖</span>
+            <div><b>כל הסיפורים והפרקים</b><small>קריאה ללא הגבלה של קומיקסים, סיפורים ויצירות</small></div>
+          </div>
+          <div class="ft-perk">
+            <span class="ft-perk-ico">💬</span>
+            <div><b>הודעות וצ'אט חופשי</b><small>תקשורת מהירה ובלתי מוגבלת עם כל חברי הקהילה</small></div>
+          </div>
+          <div class="ft-perk">
+            <span class="ft-perk-ico">👑</span>
+            <div><b>תג מנוי VIP בלעדי</b><small>סמל כוכב יוקרתי ליד הפרופיל והפוסטים שלך</small></div>
+          </div>
+        </div>
+        <div class="ft-foot">
+          <button type="button" class="trial-cta-btn ft-action-btn" onclick="activateFreeTrial()">
+            <span>אני רוצה חודש ניסיון חינם 🚀</span>
+          </button>
+          <div class="ft-guarantee">🛡️ ללא כרטיס אשראי · ללא התחייבות · מופעל מיידית</div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(m);
+  }
+  m.classList.add('show');
+}
+window.openFreeTrialModal = openFreeTrialModal;
+
+function closeFreeTrialModal() {
+  const m = document.getElementById('free-trial-modal');
+  if (m) m.classList.remove('show');
+}
+window.closeFreeTrialModal = closeFreeTrialModal;
+
+function activateFreeTrial() {
+  try {
+    localStorage.setItem('site_free_trial_active_v1', String(Date.now() + 30 * 24 * 60 * 60 * 1000));
+  } catch (e) {}
+  closeFreeTrialModal();
+  updateFreeTrialBannerState();
+  if (typeof showCopyToast === 'function') {
+    showCopyToast('🎉 חודש הניסיון שלך הופעל בהצלחה! תיהנה מכל הפיצ\'רים באתר');
+  }
+}
+window.activateFreeTrial = activateFreeTrial;
+
+function dismissTrialBanner(e) {
+  if (e) e.stopPropagation();
+  const b = document.getElementById('trial-offer-banner');
+  if (b) {
+    b.style.display = 'none';
+    try { sessionStorage.setItem('trial_banner_dismissed', '1'); } catch (err) {}
+  }
+}
+window.dismissTrialBanner = dismissTrialBanner;
+
+function updateFreeTrialBannerState() {
+  const b = document.getElementById('trial-offer-banner');
+  if (!b) return;
+  try {
+    if (sessionStorage.getItem('trial_banner_dismissed') === '1') {
+      b.style.display = 'none';
+      return;
+    }
+    const trialExpiry = Number(localStorage.getItem('site_free_trial_active_v1') || 0);
+    const now = Date.now();
+    if (trialExpiry > now) {
+      const daysLeft = Math.max(1, Math.ceil((trialExpiry - now) / (24 * 60 * 60 * 1000)));
+      const titleEl = b.querySelector('.trial-banner-title');
+      const pillEl = b.querySelector('.trial-banner-pill');
+      const btn = b.querySelector('.trial-cta-btn');
+      if (pillEl) pillEl.textContent = '👑 מנוי VIP פעיל';
+      if (titleEl) titleEl.textContent = `חודש הניסיון שלך פעיל כעת! נותרו עוד ${daysLeft} ימים של גישה חופשית`;
+      if (btn) btn.innerHTML = '<span>הטבות המנוי שלך ✨</span>';
+    }
+  } catch (e) {}
+}
+window.updateFreeTrialBannerState = updateFreeTrialBannerState;
+
+// הפעלה ראשונית של מצב הבאנר
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', updateFreeTrialBannerState);
+} else {
+  updateFreeTrialBannerState();
+}
