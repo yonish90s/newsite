@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, signInAnonymously, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, EmailAuthProvider, linkWithCredential, setPersistence, browserLocalPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider, FacebookAuthProvider, signOut, onAuthStateChanged, signInAnonymously, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, EmailAuthProvider, linkWithCredential, setPersistence, browserLocalPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getDatabase, ref, set, get, child, onValue, push, update, increment, runTransaction, onDisconnect } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 // מסך מלא (מצב מחשב) — מוגדר מוקדם כדי שבוני העמודים יוכלו לקרוא אותו
@@ -4132,6 +4132,28 @@ document.addEventListener('DOMContentLoaded', () => {
         .catch((error) => {
           console.error("שגיאה מפורטת בהתחברות:", error);
           alert("התחברות נכשלה. קוד שגיאה: " + error.code + "\nהודעה: " + error.message);
+        });
+    });
+  }
+
+  // התחברות / הרשמה עם פייסבוק
+  const authFacebookLoginBtn = document.getElementById('auth-facebook-login-btn');
+  if (authFacebookLoginBtn && authModal) {
+    authFacebookLoginBtn.addEventListener('click', () => {
+      authModal.style.display = 'none';
+      signInWithPopup(auth, new FacebookAuthProvider())
+        .then((result) => {
+          const user = result.user;
+          if (user.metadata && user.metadata.creationTime === user.metadata.lastSignInTime && typeof openSignupSteps === 'function') openSignupSteps();
+          else if (typeof showCopyToast === 'function') showCopyToast('התחברת בהצלחה');
+        })
+        .catch((error) => {
+          console.error('facebook login failed', error);
+          if (error && error.code === 'auth/popup-closed-by-user') return;
+          const msg = error && error.code === 'auth/operation-not-allowed' ? 'ההתחברות עם פייסבוק עוד לא הופעלה — נסו בינתיים עם Google'
+            : error && error.code === 'auth/account-exists-with-different-credential' ? 'כבר יש חשבון עם המייל הזה — התחברו עם Google'
+            : 'ההתחברות עם פייסבוק נכשלה — נסו שוב';
+          if (typeof showCopyToast === 'function') showCopyToast(msg); else alert(msg);
         });
     });
   }
