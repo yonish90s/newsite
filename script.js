@@ -29982,6 +29982,7 @@ function adminTabBody() {
   if (adminTab === 'algo') return buildAlgoPage();
   if (adminTab === 'stock') return stockPageHTML();
   if (adminTab === 'ads') return adsAdminHTML();
+  if (adminTab === 'storage') { setTimeout(storageCalc, 0); return storageHTML(); }
   return buildInfoPage();
 }
 function buildAdminPage() {
@@ -29989,7 +29990,7 @@ function buildAdminPage() {
   const body = adminTabBody();
   return `<div class="admin-page" data-page-id="page-admin-main">
     <div class="adm-head"><h1>מנהל</h1>
-      <nav class="adm-tabs">${[['info', 'מידע'], ['stats', 'נתונים'], ['algo', 'אלגוריתם'], ['stock', 'מלאי'], ['ads', 'פרסומות']].map(([k, l]) => `<button type="button" class="adm-tab${adminTab === k ? ' on' : ''}" onclick="adminSetTab('${k}')">${l}</button>`).join('')}</nav>
+      <nav class="adm-tabs">${[['info', 'מידע'], ['stats', 'נתונים'], ['algo', 'אלגוריתם'], ['stock', 'מלאי'], ['ads', 'פרסומות'], ['storage', 'אחסון']].map(([k, l]) => `<button type="button" class="adm-tab${adminTab === k ? ' on' : ''}" onclick="adminSetTab('${k}')">${l}</button>`).join('')}</nav>
     </div>
     <div class="adm-body">${body}</div>
   </div>`;
@@ -30935,3 +30936,66 @@ async function modFixSave(id) {
   await _reqMutate(id, 'approve');
 }
 Object.assign(window, { modBoxToggle, modApprove, modReject, modFixOpen, modFixSave, modBoxRefresh });
+
+// ============================================================
+// מנהל → "אחסון": כמה מקום נשאר ב-Firebase (התמונות נשמרות במסד עצמו) ובורסל, וכמה תמונות עוד אפשר להעלות
+// מגבלות התוכנית החינמית: Firebase Spark — מסד 1GB, הורדה 10GB לחודש; Vercel Hobby — תעבורה 100GB לחודש
+// ============================================================
+const STORAGE_LIMITS = { fbBytes: 1024 ** 3, fbMonthly: 10 * 1024 **3, vcMonthly: 100 * 1024 ** 3, vcDeploy: 100 * 1024 ** 2 };
+function fmtBytes(n) {
+  if (!(n >= 0)) return '—';
+  const u = ['B', 'KB', 'MB', 'GB']; let i = 0;
+  while (n >= 1024 && i < u.length - 1) { n /= 1024; i++; }
+  return (n >= 100 || i === 0 ? Math.round(n) : n.toFixed(1)) + ' ' + u[i];
+}
+function storageHTML() {
+  return `<div class="stor-page" id="stor-page"><div class="stor-loading">מחשב את נפח האחסון…</div></div>`;
+}
+async function storageCalc() {
+  const el = document.getElementById('stor-page');
+  if (!el) return;
+  let db0 = 0, imgs = [], err = '';
+  try {
+    const snap = await get(ref(db, 'website'));
+    const json = JSON.stringify(snap.val() || {});
+    db0 = new Blob([json]).size;
+    imgs = json.match(/data:image\/[a-z+]+;base64,[A-Za-z0-9+/=]+/g) || [];
+  } catch (e) { err = 'לא הצלחנו לקרוא את המסד'; }
+  let site = null;
+  try { site = await (await fetch('site-stats.json?t=' + Date.now())).json(); } catch (e) {}
+  const uniq = [...new Set(imgs)];
+  const imgBytes = uniq.reduce((a, x) => a + x.length, 0);
+  const avg = uniq.length ? imgBytes / uniq.length : 190 * 1024;
+  const left = Math.max(0, STORAGE_LIMITS.fbBytes - db0);
+  const canMore = Math.floor(left / avg);
+  const pct = (a, b) => Math.min(100, Math.round(a / b * 1000) / 10);
+  const bar = (p) => `<div class="stor-bar"><i style="width:${Math.max(1, p)}%"></i></div>`;
+  el.innerHTML = `
+    <section class="stor-hero">
+      <small>עוד אפשר להעלות בערך</small>
+      <b>${canMore.toLocaleString('he-IL')}</b>
+      <small>תמונות (לפי גודל ממוצע של ${fmtBytes(avg)} לתמונה)</small>
+    </section>
+    <section class="stor-card">
+      <h3>Firebase — מסד הנתונים והתמונות</h3>
+      ${err ? `<p class="stor-err">${err}</p>` : `
+      <div class="stor-line"><span>בשימוש</span><b>${fmtBytes(db0)} מתוך ${fmtBytes(STORAGE_LIMITS.fbBytes)}</b></div>
+      ${bar(pct(db0, STORAGE_LIMITS.fbBytes))}
+      <div class="stor-line"><span>נשאר</span><b>${fmtBytes(left)} (${(100 - pct(db0, STORAGE_LIMITS.fbBytes)).toFixed(1)}%)</b></div>
+      <div class="stor-line"><span>תמונות שמורות</span><b>${uniq.length.toLocaleString('he-IL')} · ${fmtBytes(imgBytes)}</b></div>
+      <div class="stor-line"><span>הורדות בחודש (מגבלה)</span><b>${fmtBytes(STORAGE_LIMITS.fbMonthly)}</b></div>`}
+      <a class="stor-link" href="https://console.firebase.google.com/project/newsite-f76e2/usage" target="_blank" rel="noopener">שימוש מדויק בקונסולה של Firebase</a>
+    </section>
+    <section class="stor-card">
+      <h3>Vercel — קבצי האתר</h3>
+      ${site ? `
+      <div class="stor-line"><span>גודל האתר</span><b>${fmtBytes(site.bytes)} · ${site.files} קבצים</b></div>
+      ${bar(pct(site.bytes, STORAGE_LIMITS.vcDeploy))}
+      <div class="stor-line"><span>נשאר עד ${fmtBytes(STORAGE_LIMITS.vcDeploy)}</span><b>${fmtBytes(Math.max(0, STORAGE_LIMITS.vcDeploy - site.bytes))}</b></div>` : '<p class="stor-err">אין נתון על גודל האתר</p>'}
+      <div class="stor-line"><span>תעבורה בחודש (מגבלה)</span><b>${fmtBytes(STORAGE_LIMITS.vcMonthly)}</b></div>
+      <p class="stor-note">התמונות לא נשמרות בורסל אלא ב-Firebase, אז העלאת תמונות לא תופסת מקום בורסל.</p>
+      <a class="stor-link" href="https://vercel.com/dashboard/usage" target="_blank" rel="noopener">תעבורה מדויקת בלוח של Vercel</a>
+    </section>
+    <button type="button" class="stor-refresh" onclick="storageCalc()">חישוב מחדש</button>`;
+}
+window.storageCalc = storageCalc;
