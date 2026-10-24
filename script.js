@@ -26466,7 +26466,9 @@ window.openSiteTourEditor = openSiteTourEditor;
 // מתחילים אחרי אישור שער הגיל (או מיד בכל כניסה לאתר)
 // הסיור קופץ רק בכניסה הראשונה לאתר; אחרי סגירה/סיום הוא לא מוצג שוב
 function siteTourSeen() { try { return localStorage.getItem(SITE_TOUR_KEY) === '1'; } catch (e) { return false; } }
+const SITE_TOUR_AUTO = false;   // המדריך הקופץ כבוי לבקשת בעל האתר (להחזרה: true)
 function maybeStartSiteTour() {
+  if (!SITE_TOUR_AUTO) return;
   if (siteTourSeen() || window.__tourAutoStarted) return;
   window.__tourAutoStarted = true;
   setTimeout(() => startSiteTour(true), 1200);
