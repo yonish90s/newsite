@@ -6705,6 +6705,62 @@ function storySetGeneralFilter(opt, btn) {
 }
 window.storySetGeneralFilter = storySetGeneralFilter;
 
+// אייקונים מודרניים לקטגוריות (בסגנון ElevenLabs)
+function getCategoryIconSVG(catName) {
+  const c = String(catName || '').trim();
+  const cl = c.toLowerCase();
+  if (c === 'הכל' || c === 'כל הקטגוריות' || cl === 'all' || cl === 'voice clone' || c.includes('שכפול')) {
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="4" y="4" width="6" height="6" rx="1.5"/><rect x="14" y="4" width="6" height="6" rx="1.5"/><rect x="4" y="14" width="6" height="6" rx="1.5"/><rect x="14" y="14" width="6" height="6" rx="1.5"/></svg>`;
+  }
+  if (cl === 'speech' || c.includes('דיבור') || c.includes('שמע') || c.includes('קול')) {
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 3v18M8 6v12M4 9v6M16 8v8M20 10v4"/></svg>`;
+  }
+  if (cl === 'music' || c.includes('מוזיק') || c.includes('שיר')) {
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>`;
+  }
+  if (cl === 'image' || c.includes('תמונ') || c.includes('צילום') || c.includes('גלרי') || cl === 'photos') {
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>`;
+  }
+  if (cl === 'video' || c.includes('וידאו') || c.includes('סרט')) {
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m22 7-6 4v2l6 4V7z"/><rect x="2" y="6" width="14" height="12" rx="3"/></svg>`;
+  }
+  if (cl === 'dubbing' || c.includes('דיבוב') || c.includes('תרגום') || c.includes('פורום') || c.includes('דיון')) {
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`;
+  }
+  if (cl === 'avatar' || c.includes('גוף') || c.includes('מודל') || c.includes('אווטאר') || c.includes('דמות')) {
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m19 8 1 2 2 1-2 1-1 2-1-2-2-1 2-1 1-2z"/></svg>`;
+  }
+  if (cl === 'transcribe' || c.includes('תמלול') || c.includes('חדשות')) {
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M10 13h4M10 17h4"/></svg>`;
+  }
+  if (cl === 'audiobooks' || c.includes('ספר') || c.includes('סיפור') || c.includes('כתיבה')) {
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10M6 10h10"/></svg>`;
+  }
+  if (cl === 'more' || c.includes('ניהול') || c.includes('עוד') || c.includes('הוסף')) {
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="8" cy="12" r="1.2" fill="currentColor"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/><circle cx="16" cy="12" r="1.2" fill="currentColor"/></svg>`;
+  }
+  if (c.includes('כלוב')) {
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="12" cy="10" r="3"/><path d="M12 13v4M10 19h4"/></svg>`;
+  }
+  if (c.includes('עסק') || c.includes('מסחר')) {
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="3"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2M12 12v2"/></svg>`;
+  }
+  if (c.includes('קומיקס') || c.includes('איור') || c.includes('ציור')) {
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/><path d="M9 9.5h6M9 12.5h4"/></svg>`;
+  }
+  if (c.includes('מוצר') || c.includes('יד שניה') || c.includes('קניה') || c.includes('מכיר')) {
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4zM3 6h18M16 10a4 4 0 0 1-8 0"/></svg>`;
+  }
+  if (c.includes('הצע') || c.includes('מתנ')) {
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M12 8v13M3 12h18M12 8a3 3 0 0 0-3-3 3 3 0 0 0 3 3zm0 0a3 3 0 0 1 3-3 3 3 0 0 1-3 3z"/></svg>`;
+  }
+  if (c.includes('חבר') || c.includes('היכר')) {
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>`;
+  }
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 2.5 5.5L20 11l-4 4 1 6-5-3-5 3 1-6-4-4 5.5-2.5L12 3z"/></svg>`;
+}
+window.getCategoryIconSVG = getCategoryIconSVG;
+
 // שורת סינון קטגוריות לסיפורים (בחירה יחידה)
 function storyCatIsActive(c) {
   return c === 'הכל' ? selectedStoryCategories.size === 0 : selectedStoryCategories.has(c);
@@ -6712,11 +6768,19 @@ function storyCatIsActive(c) {
 function storyCategoryBarHTML() {
   const cats = ['הכל', ...STORY_CATEGORIES];
   const editBtn = (isAdmin() || isEditMode) ? `
-    <button type="button" class="story-cat-btn" onclick="openStoryCategoriesModal()" style="background: rgba(0, 0, 0, 0.03); color: #262626; border: 1px dashed #111111; font-weight: 700;">✏️ ניהול קטגוריות</button>
+    <button type="button" class="pcat-tile pcat-edit" onclick="openStoryCategoriesModal()" title="ניהול קטגוריות">
+      <span class="pcat-ic">${getCategoryIconSVG('More')}</span>
+      <span class="pcat-name">ניהול</span>
+    </button>
   ` : '';
   return `
-    <div class="story-category-tabs" style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-      ${cats.map(c => `<button type="button" class="story-cat-btn${storyCatIsActive(c) ? ' active' : ''}" onclick="storyFilterCategory('${artEsc(c)}', this)">${c}</button>`).join('')}
+    <div class="pcat-tiles story-category-tabs" role="tablist" aria-label="קטגוריות סיפורים">
+      ${cats.map(c => `
+        <button type="button" class="pcat-tile story-cat-btn${storyCatIsActive(c) ? ' active' : ''}" onclick="storyFilterCategory('${artEsc(c)}', this)" data-cat="${escHtml(c)}">
+          <span class="pcat-ic">${getCategoryIconSVG(c)}</span>
+          <span class="pcat-name">${escHtml(c)}</span>
+        </button>
+      `).join('')}
       ${editBtn}
     </div>
   `;
@@ -6732,7 +6796,10 @@ function storyFilterCategory(cat, btn) {
     selectedStoryCategories.add(cat);
   }
   const bar = btn ? btn.closest('.story-category-tabs') : document.querySelector('.story-category-tabs');
-  if (bar) bar.querySelectorAll('.story-cat-btn').forEach(b => b.classList.toggle('active', storyCatIsActive(b.textContent.trim())));
+  if (bar) bar.querySelectorAll('.story-cat-btn').forEach(b => {
+    const c = b.getAttribute('data-cat') || (b.querySelector('.pcat-name') ? b.querySelector('.pcat-name').textContent.trim() : b.textContent.trim());
+    b.classList.toggle('active', storyCatIsActive(c));
+  });
   artPageState.stories = 1;
   storyApplyFilters();
 }
@@ -23141,24 +23208,9 @@ function photoCatMatch(a, cat) {
   if (cat === 'כללי') return !(c.includes('עסק') || hay.includes('עסק'));
   return c === cat || hay.includes(cat);
 }
-// מובייל: הקטגוריות כעיגולים עם תמונת שער מהקטגוריה (כמו בחנויות אופנה)
+// מובייל: סרגל קטגוריות בעיצוב מודרני אחיד (סקוורקל + שם)
 function photoCatCirclesHTML(allAlbums) {
-  const active = getSectionCategoryFilter('photos');
-  const list = (Array.isArray(allAlbums) ? allAlbums : []).filter(a => a && a.approved !== false);
-  const adultOk = (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('age_verified') === 'true');
-  const cover = (cat) => {
-    const inCat = list.filter(a => photoCatMatch(a, cat));
-    const pick = inCat.find(a => !a.isAdult && ((a.images && a.images[0]) || a.image)) || inCat.find(a => (a.images && a.images[0]) || a.image);
-    if (!pick) return null;
-    return { src: (pick.images && pick.images[0]) || pick.image, blur: !!pick.isAdult && !adultOk };
-  };
-  const circle = (cat) => {
-    const cv = cover(cat);
-    const inner = cv ? `<img src="${escHtml(cv.src)}" alt="" loading="lazy"${cv.blur ? ' class="blur"' : ''}>` : `<span>${escHtml(String(cat).charAt(0))}</span>`;
-    return `<button type="button" class="pcc${active === cat ? ' on' : ''}" onclick="setSectionCategoryFilter('photos','${artEsc(cat)}')">
-      <span class="pcc-ring">${inner}</span><span class="pcc-name">${escHtml(cat)}</span></button>`;
-  };
-  return `<div class="pcc-row">${['הכל', ...PHOTO_BAR_CATEGORIES].map(circle).join('')}</div>`;
+  return photoCategoryTilesHTML(allAlbums);
 }
 // כפתור אייקון דו-מצבי (מאומתים / רק טקסט / מיקום) — מחליף מצב ומעדכן מיד
 function psfIcon(key, on, label, action, path) {
@@ -23189,53 +23241,48 @@ function photoSortFilterHTML() {
   </div>`;
 }
 
-// עמוד התמונות: הקטגוריות כריבועים (שם + מספר גלריות, בלי תמונה). לחיצה מסננת לפי הקטגוריה.
+// עמוד התמונות: הקטגוריות בעיצוב מודרני (סקוורקל אייקון + שם תחתיו)
 function photoCategoryTilesHTML(allAlbums) {
   const active = getSectionCategoryFilter('photos');
-  const list = Array.isArray(allAlbums) ? allAlbums : [];
-  const countOf = (cat) => cat === 'הכל' ? list.length : list.filter(a => {
-    const c = a.category || '';
-    const hay = `${a.title || ''} ${a.summary || ''} ${a.desc || ''} ${c}`;
-    if (cat === 'לעסקים') return c.includes('עסק') || hay.includes('עסק');
-    if (cat === 'כללי') return !(c.includes('עסק') || hay.includes('עסק'));
-    return c === cat || hay.includes(cat);
-  }).length;
   const cats = ['הכל', ...PHOTO_BAR_CATEGORIES];
   const tile = (cat) => `
       <button type="button" class="pcat-tile${active === cat ? ' active' : ''}" onclick="setSectionCategoryFilter('photos','${artEsc(cat)}')">
+        <span class="pcat-ic">${getCategoryIconSVG(cat)}</span>
         <span class="pcat-name">${escHtml(cat)}</span>
-        <span class="pcat-count">${countOf(cat)} גלריות</span>
       </button>`;
   const editTile = (isAdmin() || isEditMode)
-    ? `<button type="button" class="pcat-tile edit" onclick="openCategoriesModal('photos')"><span class="pcat-name">+ ניהול קטגוריות</span></button>`
+    ? `<button type="button" class="pcat-tile pcat-edit" onclick="openCategoriesModal('photos')" title="ניהול קטגוריות">
+        <span class="pcat-ic">${getCategoryIconSVG('More')}</span>
+        <span class="pcat-name">+ ניהול</span>
+      </button>`
     : '';
-  return `<div class="pcat-tiles">${cats.map(tile).join('')}${editTile}</div>`;
+  return `<div class="pcat-tiles" role="tablist" aria-label="קטגוריות">${cats.map(tile).join('')}${editTile}</div>`;
 }
 
 function sectionCategoryBarHTML(section) {
-  // עמוד התמונות — צבע סגול; שאר העמודים נשארים כחול
   const isPhotos = section === 'photos';
   const cats = isPhotos
     ? [{ id: 'הכל', label: 'הכל' }, ...PHOTO_BAR_CATEGORIES.map(c => ({ id: c, label: c }))]
     : [
       { id: 'הכל', label: 'הכל' },
-      { id: 'לעסקים', label: '💼 לעסקים' },
-      { id: 'כללי', label: '💡 כללי' }
+      { id: 'לעסקים', label: 'לעסקים' },
+      { id: 'כללי', label: 'כללי' }
     ];
   const editBtn = (isPhotos && (isAdmin() || isEditMode))
-    ? `<button type="button" onclick="openCategoriesModal('photos')" style="padding:8px 16px; border-radius:999px; border:1px dashed #111111; background:rgba(0, 0, 0, 0.03); color:#262626; font-size:14px; font-weight:700; cursor:pointer;">✏️ ניהול קטגוריות</button>`
+    ? `<button type="button" class="pcat-tile pcat-edit" onclick="openCategoriesModal('photos')" title="ניהול קטגוריות">
+        <span class="pcat-ic">${getCategoryIconSVG('More')}</span>
+        <span class="pcat-name">ניהול</span>
+      </button>`
     : '';
   const active = getSectionCategoryFilter(section);
-  const activeBg = isPhotos ? '#8b5cf6' : '#111111';
-  const activeShadow = isPhotos ? '0 4px 14px rgba(139,92,246,0.35)' : '0 4px 14px rgba(59,130,246,0.35)';
   return `
-    <div class="section-category-bar" style="display:flex; gap:10px; align-items:center; margin-bottom:16px; flex-wrap:wrap; padding:6px 0;">
+    <div class="pcat-tiles section-category-bar" role="tablist" aria-label="קטגוריות">
       ${cats.map(c => {
         const isActive = active === c.id;
         return `
-          <button type="button" onclick="setSectionCategoryFilter('${section}','${artEsc(c.id)}')"
-                  style="padding:8px 20px; border-radius:999px; border:${isActive ? 'none' : '1px solid #cbd5e1'}; background:${isActive ? activeBg : '#fff'}; color:${isActive ? '#fff' : '#334155'}; font-size:14px; font-weight:800; cursor:pointer; box-shadow:${isActive ? activeShadow : '0 1px 3px rgba(0,0,0,0.05)'}; transition:all 0.2s;">
-            ${escHtml(c.label)}
+          <button type="button" class="pcat-tile${isActive ? ' active' : ''}" onclick="setSectionCategoryFilter('${section}','${artEsc(c.id)}')">
+            <span class="pcat-ic">${getCategoryIconSVG(c.label)}</span>
+            <span class="pcat-name">${escHtml(c.label)}</span>
           </button>
         `;
       }).join('')}

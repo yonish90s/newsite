@@ -16326,3 +16326,189 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_
   html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .rv { opacity: 0; transform: translateY(22px); transition: opacity .7s ease, transform .7s cubic-bezier(.2,.8,.2,1) !important; transition-delay: calc(var(--rvd, 0) * 90ms) !important; }
   html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .rv.rv-in { opacity: 1; transform: none; }
 }
+
+/* ============================================================================
+   MODERN CATEGORY BAR (ElevenLabs Squircle Icon-over-Label Design)
+   ============================================================================ */
+html body:not(#_):not(#_):not(#_):not(#_) :is(.pcat-tiles, .cat-bar, .story-category-tabs, .home-pcat-tiles, .section-category-bar) {
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+  gap: 8px !important;
+  overflow-x: auto !important;
+  scrollbar-width: none !important;
+  -webkit-overflow-scrolling: touch !important;
+  padding: 6px 4px 14px !important;
+  margin: 6px 0 16px !important;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+html body:not(#_):not(#_):not(#_):not(#_) :is(.pcat-tiles, .cat-bar, .story-category-tabs, .home-pcat-tiles, .section-category-bar)::-webkit-scrollbar {
+  display: none !important;
+}
+
+/* Category Item */
+html body:not(#_):not(#_):not(#_):not(#_) :is(.pcat-tile, .cat-item, .story-cat-btn, .pcc) {
+  display: inline-flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 68px !important;
+  max-width: 92px !important;
+  width: auto !important;
+  height: auto !important;
+  min-height: 0 !important;
+  padding: 7px 10px 8px !important;
+  border-radius: 14px !important;
+  border: 1px solid transparent !important;
+  background: transparent !important;
+  color: #4b5563 !important;
+  cursor: pointer !important;
+  text-decoration: none !important;
+  user-select: none !important;
+  flex: 0 0 auto !important;
+  box-shadow: none !important;
+  transform: none !important;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.12s ease !important;
+}
+
+html body:not(#_):not(#_):not(#_):not(#_) :is(.pcat-tile, .cat-item, .story-cat-btn, .pcc):hover:not(.active):not(.on) {
+  background: rgba(0, 0, 0, 0.035) !important;
+}
+html body:not(#_):not(#_):not(#_):not(#_) :is(.pcat-tile, .cat-item, .story-cat-btn, .pcc):hover:not(.active):not(.on) .pcat-ic {
+  border-color: #cbd5e1 !important;
+  transform: translateY(-1px);
+}
+
+/* Active Category Item (like "Speech" in the screenshot) */
+html body:not(#_):not(#_):not(#_):not(#_) :is(.pcat-tile.active, .cat-item.active, .story-cat-btn.active, .pcc.on) {
+  background: #f1f2f5 !important;
+  border-color: rgba(0, 0, 0, 0.04) !important;
+  box-shadow: none !important;
+}
+
+/* Icon Box inside each item */
+html body:not(#_):not(#_):not(#_):not(#_) :is(.pcat-tile, .cat-item, .story-cat-btn, .pcc) .pcat-ic,
+html body:not(#_):not(#_):not(#_) .pcc-ring {
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
+  border-radius: 12px !important;
+  background: #ffffff !important;
+  border: 1px solid #e5e7eb !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+  display: grid !important;
+  place-items: center !important;
+  color: #1f2937 !important;
+  overflow: hidden !important;
+  transition: all 0.15s ease !important;
+  margin: 0 !important;
+}
+
+/* Active Icon Box */
+html body:not(#_):not(#_):not(#_):not(#_) :is(.pcat-tile.active, .cat-item.active, .story-cat-btn.active, .pcc.on) .pcat-ic,
+html body:not(#_):not(#_):not(#_) .pcc.on .pcc-ring {
+  background: #ffffff !important;
+  border-color: #d1d5db !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08) !important;
+  color: #111827 !important;
+}
+
+/* SVG icon inside the icon box */
+html body:not(#_):not(#_):not(#_):not(#_) :is(.pcat-tile, .cat-item, .story-cat-btn, .pcc) .pcat-ic svg,
+html body:not(#_):not(#_) .pcc-ring svg {
+  width: 20px !important;
+  height: 20px !important;
+  stroke-width: 1.85 !important;
+  color: inherit !important;
+  display: block !important;
+}
+
+/* Label text underneath */
+html body:not(#_):not(#_):not(#_):not(#_) :is(.pcat-tile, .cat-item, .story-cat-btn) .pcat-name,
+html body:not(#_):not(#_) .pcc-name {
+  margin-top: 6px !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  line-height: 1.25 !important;
+  color: #4b5563 !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  max-width: 80px !important;
+  display: block !important;
+}
+
+/* Active Label */
+html body:not(#_):not(#_):not(#_):not(#_) :is(.pcat-tile.active, .cat-item.active, .story-cat-btn.active, .pcc.on) .pcat-name,
+html body:not(#_):not(#_) .pcc.on .pcc-name {
+  color: #111827 !important;
+  font-weight: 700 !important;
+}
+
+/* Hide count text if present */
+html body:not(#_):not(#_):not(#_):not(#_) :is(.pcat-tile, .cat-item) .pcat-count {
+  display: none !important;
+}
+
+/* Edit / More button */
+html body:not(#_):not(#_):not(#_):not(#_) :is(.pcat-tile.pcat-edit, .pcat-tile.edit) {
+  border: 1px dashed #d1d5db !important;
+  background: transparent !important;
+}
+html body:not(#_):not(#_):not(#_):not(#_) :is(.pcat-tile.pcat-edit, .pcat-tile.edit) .pcat-ic {
+  background: transparent !important;
+  border-style: dashed !important;
+}
+
+/* Responsive: show category bar cleanly on both desktop and mobile without duplication */
+@media (max-width: 768px) {
+  html body:not(#_):not(#_):not(#_):not(#_) .art-main > .pcat-tiles {
+    display: none !important;
+  }
+  html body:not(#_):not(#_):not(#_):not(#_) .pm-head .pcat-tiles {
+    display: flex !important;
+  }
+  html body:not(#_):not(#_):not(#_):not(#_) .pcc-row {
+    border-bottom: 0 !important;
+    padding-bottom: 4px !important;
+  }
+}
+@media (min-width: 769px) {
+  html body:not(#_):not(#_):not(#_):not(#_) .art-main > .pcat-tiles {
+    display: flex !important;
+  }
+}
+
+/* Dark Mode Overrides */
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) :is(.pcat-tile, .cat-item, .story-cat-btn, .pcc) {
+  color: #b0a9bd !important;
+}
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) :is(.pcat-tile.active, .cat-item.active, .story-cat-btn.active, .pcc.on) {
+  background: #251f2e !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) :is(.pcat-tile, .cat-item, .story-cat-btn, .pcc) .pcat-ic,
+html.theme-dark body:not(#_):not(#_):not(#_) .pcc-ring {
+  background: #17131e !important;
+  border-color: #2e263a !important;
+  color: #ece7f4 !important;
+}
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) :is(.pcat-tile.active, .cat-item.active, .story-cat-btn.active, .pcc.on) .pcat-ic,
+html.theme-dark body:not(#_):not(#_):not(#_) .pcc.on .pcc-ring {
+  background: #1f1a28 !important;
+  border-color: #443854 !important;
+  color: #ffffff !important;
+}
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) :is(.pcat-tile, .cat-item, .story-cat-btn) .pcat-name,
+html.theme-dark body:not(#_):not(#_):not(#_) .pcc-name {
+  color: #9d96ab !important;
+}
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) :is(.pcat-tile.active, .cat-item.active, .story-cat-btn.active, .pcc.on) .pcat-name,
+html.theme-dark body:not(#_):not(#_):not(#_) .pcc.on .pcc-name {
+  color: #ffffff !important;
+}
+
