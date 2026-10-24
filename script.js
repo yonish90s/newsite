@@ -30999,3 +30999,136 @@ async function storageCalc() {
     <button type="button" class="stor-refresh" onclick="storageCalc()">חישוב מחדש</button>`;
 }
 window.storageCalc = storageCalc;
+
+// ============================================================
+// עוזר האתר — צ'אט צד: פקודות ("תעלה תמונה", "קח אותי לקומיקס") מבוצעות מיד, ושאלות ("איך מוכרים מוצר?") מקבלות הסבר + כפתור.
+// נפתח מכפתור "עוזר" בכותרת או Ctrl/⌘+K. בלי שרת — זיהוי לפי מילות מפתח.
+// ============================================================
+const ASK_GO = [
+  [/קומיקס|קומיקסים/, 'לקומיקס', () => homeGo('comics')],
+  [/סיפור|סיפורים/, 'לסיפורים', () => homeGo('stories')],
+  [/מוצרי גולשים|מוצרים|יד שני|חנות|קניות/, 'למוצרי גולשים', () => navigateToPage('page-secondhand-main')],
+  [/תמונות|גלרי/, 'לתמונות גולשים', () => homeGo('photos')],
+  [/פורו[םמ]|דיונ/, 'לפורומים', () => navigateToPage('page-forums-main')],
+  [/חדשות/, 'לחדשות', () => navigateToPage('page-news-main')],
+  [/קהיל/, 'לקהילות', () => navigateToPage('page-communities-main')],
+  [/פיד|במעקב|עוקב אחרי/, 'לפיד שלך', () => openFeed()],
+  [/הודע|צאט|צ'אט|שיחות/, 'להודעות', () => openMessages()],
+  [/לייק|אהבתי/, 'ללייקים שלך', () => openLikesDrawer()],
+  [/שמור/, 'לשמורים', () => openSavedModal()],
+  [/היסטורי|צפיתי/, 'להיסטוריית הצפייה', () => openHistoryDrawer()],
+  [/הצעות|עסקאות|הצעת מחיר/, 'להצעות', () => openOffersPanel()],
+  [/פרופיל|חשבון|התחבר/, 'לפרופיל', () => { const b = document.getElementById('manager-btn'); if (b) b.click(); }],
+  [/מנהל|ניהול/, 'לעמוד המנהל', () => navigateToPage('page-admin-main')],
+  [/בית|ראשי/, 'לעמוד הבית', () => goToHomePage()]
+];
+const ASK_UP = [
+  [/מוצר|למכור|מכירה|למכירה/, 'product', 'פרסום מוצר'],
+  [/סיפור|קומיקס|כתבה/, 'story', 'כתיבת סיפור / קומיקס'],
+  [/פורו[םמ]|נושא|דיון|שאלה בפורום/, 'forum', 'נושא חדש בפורום'],
+  [/תמונ|גלרי|צילום/, 'photos', 'העלאת תמונות']
+];
+const ASK_FAQ = [
+  [/איך.*(מוכר|למכור)|מכירת מוצר/, 'כדי למכור מוצר: לוחצים "פרסום מוצר", כותבים כותרת, מוסיפים עד 5 תמונות ומחיר. המוצר יופיע ב"מוצרי גולשים" אחרי אישור מנהל.', ['פרסום מוצר', () => slashStart('product')]],
+  [/איך.*(מעל|להעלות|לעלות|לפרסם)|העלאת תמונ/, 'כדי להעלות: לוחצים על + או כותבים בשורת "מה בא לך לשתף?" ובוחרים סוג. אפשר גם להקליד / ולבחור מהתפריט. התוכן מתפרסם אחרי אישור מנהל.', ['העלאת תמונות', () => slashStart('photos')]],
+  [/ריפוסט|שיתוף לפרופיל|לשתף/, 'ריפוסט (החץ ↪) משתף פריט לפרופיל שלך — העוקבים שלך יראו אותו. לחיצה ארוכה על החץ מראה מי שיתף.', null],
+  [/מי עשה לייק|מי אהב|לייק/, 'לחיצה על הלב נותנת לייק. לחיצה ארוכה על הלב מראה מי עשה לייק.', ['הלייקים שלי', () => openLikesDrawer()]],
+  [/שמיר|לשמור|שמורים/, 'לחיצה על הסימנייה שומרת פריט לאחר כך. אפשר לסדר שמורים בתיקיות.', ['השמורים שלי', () => openSavedModal()]],
+  [/18|טשטוש|מטושטש/, 'התמונות מטושטשות עד שמאשרים גיל 18+ בכפתור שבראש המסך. האישור תקף לביקור הנוכחי.', null],
+  [/כהה|בהיר|צבע/, 'מעבר בין מצב כהה לבהיר — באייקון השמש בכותרת, או כאן:', ['החלפת מצב', () => toggleSiteTheme()]],
+  [/עוקב|לעקוב|מעקב/, 'לעקוב אחרי יוצר: "עקוב" בפרופיל שלו או בתפריט ⋯ של הפריט. מה שהם מפרסמים מופיע ב"במעקב".', ['הפיד שלי', () => openFeed()]],
+  [/הודעה פרטית|לשלוח הודעה|לכתוב ל/, 'הודעה פרטית: בתפריט ⋯ של פריט ← "הודעה", או מחלון ההודעות.', ['ההודעות', () => openMessages()]],
+  [/סלש|\/|קיצור/, 'בשורת "מה בא לך לשתף?" מקלידים / ונפתח תפריט של העלאה מהירה וקיצורי דרך.', null],
+  [/הצעת מחיר|להציע מחיר|מיקוח/, 'בעמוד של מוצר יש כפתור "הצעה" — שולחים הצעת מחיר למוכר וממשיכים במשא ומתן ב"הצעות".', ['ההצעות', () => openOffersPanel()]],
+  [/חיפוש|לחפש|איפה/, 'החיפוש מחפש בכל האתר — תמונות, קומיקס, מוצרים, פורומים וחדשות.', ['פתיחת חיפוש', () => openSiteSearch()]]
+];
+const ASK_SUGG = ['קח אותי לקומיקס', 'אני רוצה להעלות תמונה', 'איך מוכרים מוצר?', 'מה זה ריפוסט?', 'תפתח את ההודעות'];
+let askLog = [];
+let askActs = [];
+function askReply(q) {
+  const t = String(q || '').trim();
+  if (!t) return null;
+  const isQ = /^(איך|מה|למה|איפה|מתי|האם|אפשר)|\?$/.test(t);
+  const isUp = /(תעלה|להעלות|לעלות|העלה|אעלה|לפרסם|פרסם|תפרסם|למכור|לכתוב סיפור|ליצור|חדש)/.test(t);
+  const isGo = /(קח|תיקח|תעביר|עבור|פתח|תפתח|תראה|הראה|לך ל|עבור ל|אני רוצה לראות|להיכנס|תכניס)/.test(t);
+  const srch = t.match(/^(?:חפש|תחפש|חיפוש)\s+(.+)/);
+  if (srch) return { text: `מחפש "${srch[1]}"…`, run: () => { openSiteSearch(); setTimeout(() => { const i = document.getElementById('site-search-input'); if (i) { i.value = srch[1]; i.dispatchEvent(new Event('input', { bubbles: true })); } }, 80); } };
+  if (isUp && !isQ) { const u = ASK_UP.find(([re]) => re.test(t)) || ASK_UP[3]; return { text: `פותח ${u[2]}…`, run: () => slashStart(u[1]) }; }
+  if (isQ) { const f = ASK_FAQ.find(([re]) => re.test(t)); if (f) return { text: f[1], btn: f[2] }; }
+  const g = ASK_GO.find(([re]) => re.test(t));
+  if (g && (isGo || !isQ)) return { text: `לוקח אותך ${g[1]}…`, run: g[2] };
+  const f = ASK_FAQ.find(([re]) => re.test(t));
+  if (f) return { text: f[1], btn: f[2] };
+  return { text: 'לא הבנתי עד הסוף 🙂 אפשר לבקש פעולה ("קח אותי לפורומים", "תעלה מוצר") או לשאול ("איך שומרים פריט?").', sugg: true };
+}
+function askOpen() {
+  let el = document.getElementById('ask-panel');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'ask-panel';
+    el.innerHTML = `<div class="ask-backdrop" onclick="askClose()"></div>
+      <section class="ask-card" role="dialog" aria-label="עוזר האתר">
+        <header class="ask-head"><b>עוזר האתר</b>
+          <button type="button" class="ask-hb" onclick="askNew()" title="שיחה חדשה" aria-label="שיחה חדשה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+          <button type="button" class="ask-hb" onclick="askClose()" title="סגירה" aria-label="סגירה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+        </header>
+        <div class="ask-msgs" id="ask-msgs"></div>
+        <form class="ask-bar" onsubmit="event.preventDefault(); askSend()">
+          <textarea id="ask-input" rows="2" maxlength="300" placeholder="שאלו כל דבר… למשל: קח אותי לקומיקס"></textarea>
+          <button type="submit" class="ask-send" aria-label="שליחה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+        </form>
+      </section>`;
+    document.body.appendChild(el);
+    el.querySelector('#ask-input').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); askSend(); } if (e.key === 'Escape') askClose(); });
+  }
+  askRender();
+  document.documentElement.classList.add('ask-open');
+  requestAnimationFrame(() => el.classList.add('show'));
+  setTimeout(() => { const i = document.getElementById('ask-input'); if (i) i.focus(); }, 60);
+}
+function askClose() { const el = document.getElementById('ask-panel'); if (el) el.classList.remove('show'); document.documentElement.classList.remove('ask-open'); }
+function askNew() { askLog = []; askActs = []; askRender(); }
+function askRender() {
+  const box = document.getElementById('ask-msgs');
+  if (!box) return;
+  const chips = `<div class="ask-sugg">${ASK_SUGG.map(s => `<button type="button" onclick="askSend(${JSON.stringify(s).replace(/"/g, '&quot;')})">${escHtml(s)}</button>`).join('')}</div>`;
+  if (!askLog.length) {
+    box.innerHTML = `<div class="ask-empty"><span class="ask-logo"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 4.5 21 11l-7.6 2.6L10.8 21z"/></svg></span><b>התחילו שיחה</b><small>טיפ: ${/Mac|iPhone|iPad/.test(navigator.platform) ? '⌘' : 'Ctrl'}+K פותח את העוזר מכל מקום באתר</small>${chips}</div>`;
+    return;
+  }
+  box.innerHTML = askLog.map((m, i) => `<div class="ask-m ${m.who}">${escHtml(m.text)}${m.btn != null ? `<button type="button" class="ask-act" onclick="askDo(${m.btn})">${escHtml(m.btnLabel)}</button>` : ''}${m.sugg ? chips : ''}</div>`).join('');
+  box.scrollTop = box.scrollHeight;
+}
+function askDo(i) { const f = askActs[i]; if (f) { if (window.matchMedia('(max-width: 768px)').matches) askClose(); try { f(); } catch (e) {} } }
+function askSend(text) {
+  const inp = document.getElementById('ask-input');
+  const q = String(text != null ? text : (inp ? inp.value : '')).trim();
+  if (!q) return;
+  if (inp) inp.value = '';
+  askLog.push({ who: 'me', text: q });
+  const r = askReply(q);
+  const m = { who: 'bot', text: r.text, sugg: !!r.sugg };
+  if (r.btn) { askActs.push(r.btn[1]); m.btn = askActs.length - 1; m.btnLabel = r.btn[0]; }
+  askLog.push(m);
+  askRender();
+  if (r.run) setTimeout(() => { if (window.matchMedia('(max-width: 768px)').matches) askClose(); try { r.run(); } catch (e) {} }, 450);
+}
+Object.assign(window, { askOpen, askClose, askNew, askSend, askDo });
+document.addEventListener('keydown', e => {
+  if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K' || e.key === 'ל')) { e.preventDefault(); document.documentElement.classList.contains('ask-open') ? askClose() : askOpen(); }
+});
+// כפתור "עוזר" בכותרת, ליד החיפוש
+(function askHeaderBtn() {
+  const add = () => {
+    if (document.querySelector('.ask-hdr-btn')) return true;
+    const sb = document.querySelector('header [onclick^="openSiteSearch"]');
+    if (!sb) return false;
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = sb.className + ' ask-hdr-btn'; b.title = 'עוזר האתר (Ctrl+K)'; b.setAttribute('aria-label', 'עוזר האתר');
+    b.setAttribute('onclick', 'askOpen()');
+    b.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 4.5 21 11l-7.6 2.6L10.8 21z"/></svg>';
+    sb.parentNode.insertBefore(b, sb);
+    return true;
+  };
+  if (!add()) { const t = setInterval(() => { if (add()) clearInterval(t); }, 500); setTimeout(() => clearInterval(t), 15000); }
+})();
