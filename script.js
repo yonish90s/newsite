@@ -30653,7 +30653,8 @@ function glassBanner(o) {
     </div><i class="gbn-bar" style="animation-duration:${ms}ms"></i>`;
   document.body.appendChild(el);
   let t = 0;
-  const close = () => { clearTimeout(t); el.classList.remove('show'); setTimeout(() => el.remove(), 260); };
+  // יציאה: הריבוע הולך וקטן ונעלם
+  const close = () => { clearTimeout(t); if (el.classList.contains('out')) return; el.classList.add('out'); setTimeout(() => el.remove(), 560); };
   const arm = () => { clearTimeout(t); t = setTimeout(close, ms); };
   el.querySelector('.gbn-x').onclick = e => { e.stopPropagation(); close(); };
   const b = el.querySelector('.gbn-btn');
@@ -31046,6 +31047,49 @@ const ASK_FAQ = [
 const ASK_SUGG = ['קח אותי לקומיקס', 'אני רוצה להעלות תמונה', 'איך מוכרים מוצר?', 'מה זה ריפוסט?', 'תפתח את ההודעות'];
 let askLog = [];
 let askActs = [];
+let askId = '';
+// היסטוריית שיחות — נשמרת בדפדפן של הגולש (עד 30 שיחות)
+function askStore() { try { return JSON.parse(localStorage.getItem('ask_history') || '[]') || []; } catch (e) { return []; } }
+function askSave() {
+  if (!askLog.length) return;
+  if (!askId) askId = 'c' + Date.now();
+  const list = askStore().filter(c => c.id !== askId);
+  const first = (askLog.find(m => m.who === 'me') || {}).text || 'שיחה';
+  list.unshift({ id: askId, t: Date.now(), title: first.slice(0, 60), log: askLog.map(m => ({ who: m.who, text: m.text })) });
+  try { localStorage.setItem('ask_history', JSON.stringify(list.slice(0, 30))); } catch (e) {}
+}
+function askHistory() {
+  const box = document.getElementById('ask-msgs');
+  if (!box) return;
+  const list = askStore();
+  const when = t => { const d = new Date(t); const today = new Date().toDateString() === d.toDateString(); return today ? d.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }) : d.toLocaleDateString('he-IL'); };
+  box.innerHTML = `<div class="ask-hist"><div class="ask-hist-h"><b>השיחות שלי</b>${list.length ? '<button type="button" onclick="askHistoryClear()">ניקוי</button>' : ''}</div>
+    ${list.length ? list.map(c => `<button type="button" class="ask-hist-row" onclick="askLoad('${artEsc(c.id)}')"><span>${escHtml(c.title)}</span><small>${when(c.t)} · ${c.log.length} הודעות</small></button>`).join('') : '<div class="ask-hist-empty">עוד אין שיחות שמורות</div>'}
+    <button type="button" class="ask-hist-back" onclick="askRender()">חזרה לשיחה</button></div>`;
+}
+function askLoad(id) {
+  const c = askStore().find(x => x.id === id);
+  if (!c) return;
+  askId = c.id; askLog = c.log.map(m => Object.assign({}, m)); askActs = [];
+  askRender();
+}
+function askHistoryClear() {
+  if (!confirm('למחוק את כל היסטוריית השיחות?')) return;
+  try { localStorage.removeItem('ask_history'); } catch (e) {}
+  askHistory();
+}
+// קיצורי דרך מהירים — שורה קבועה מעל שדה הכתיבה
+const ASK_QUICK = [
+  ['העלאת תמונה', () => slashStart('photos')], ['קומיקס', () => homeGo('comics')], ['הודעות', () => openMessages()],
+  ['שמורים', () => openSavedModal()], ['לייקים', () => openLikesDrawer()], ['חיפוש', () => openSiteSearch()],
+  ['מוצרי גולשים', () => navigateToPage('page-secondhand-main')], ['מצב כהה/בהיר', () => toggleSiteTheme()]
+];
+function askQuick(i) {
+  const q = ASK_QUICK[i]; if (!q) return;
+  askLog.push({ who: 'me', text: q[0] }, { who: 'bot', text: 'פותח ' + q[0] + '…' });
+  askSave(); askRender();
+  setTimeout(() => { if (window.matchMedia('(max-width: 768px)').matches) askClose(); try { q[1](); } catch (e) {} }, 350);
+}
 function askReply(q) {
   const t = String(q || '').trim();
   if (!t) return null;
@@ -31070,10 +31114,12 @@ function askOpen() {
     el.innerHTML = `<div class="ask-backdrop" onclick="askClose()"></div>
       <section class="ask-card" role="dialog" aria-label="עוזר האתר">
         <header class="ask-head"><b>עוזר האתר</b>
+          <button type="button" class="ask-hb" onclick="askHistory()" title="היסטוריית שיחות" aria-label="היסטוריית שיחות"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/></svg></button>
           <button type="button" class="ask-hb" onclick="askNew()" title="שיחה חדשה" aria-label="שיחה חדשה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
           <button type="button" class="ask-hb" onclick="askClose()" title="סגירה" aria-label="סגירה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
         </header>
         <div class="ask-msgs" id="ask-msgs"></div>
+        <div class="ask-quick" id="ask-quick"></div>
         <form class="ask-bar" onsubmit="event.preventDefault(); askSend()">
           <textarea id="ask-input" rows="2" maxlength="300" placeholder="שאלו כל דבר… למשל: קח אותי לקומיקס"></textarea>
           <button type="submit" class="ask-send" aria-label="שליחה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
@@ -31088,10 +31134,12 @@ function askOpen() {
   setTimeout(() => { const i = document.getElementById('ask-input'); if (i) i.focus(); }, 60);
 }
 function askClose() { const el = document.getElementById('ask-panel'); if (el) el.classList.remove('show'); document.documentElement.classList.remove('ask-open'); }
-function askNew() { askLog = []; askActs = []; askRender(); }
+function askNew() { askLog = []; askActs = []; askId = ''; askRender(); }
 function askRender() {
   const box = document.getElementById('ask-msgs');
   if (!box) return;
+  const qk = document.getElementById('ask-quick');
+  if (qk && !qk.childElementCount) qk.innerHTML = ASK_QUICK.map((q, i) => `<button type="button" onclick="askQuick(${i})">${escHtml(q[0])}</button>`).join('');
   const chips = `<div class="ask-sugg">${ASK_SUGG.map(s => `<button type="button" onclick="askSend(${JSON.stringify(s).replace(/"/g, '&quot;')})">${escHtml(s)}</button>`).join('')}</div>`;
   if (!askLog.length) {
     box.innerHTML = `<div class="ask-empty"><span class="ask-logo"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 4.5 21 11l-7.6 2.6L10.8 21z"/></svg></span><b>התחילו שיחה</b><small>טיפ: ${/Mac|iPhone|iPad/.test(navigator.platform) ? '⌘' : 'Ctrl'}+K פותח את העוזר מכל מקום באתר</small>${chips}</div>`;
@@ -31111,10 +31159,11 @@ function askSend(text) {
   const m = { who: 'bot', text: r.text, sugg: !!r.sugg };
   if (r.btn) { askActs.push(r.btn[1]); m.btn = askActs.length - 1; m.btnLabel = r.btn[0]; }
   askLog.push(m);
+  askSave();
   askRender();
   if (r.run) setTimeout(() => { if (window.matchMedia('(max-width: 768px)').matches) askClose(); try { r.run(); } catch (e) {} }, 450);
 }
-Object.assign(window, { askOpen, askClose, askNew, askSend, askDo });
+Object.assign(window, { askOpen, askClose, askNew, askSend, askDo, askHistory, askLoad, askHistoryClear, askQuick, askRender });
 document.addEventListener('keydown', e => {
   if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K' || e.key === 'ל')) { e.preventDefault(); document.documentElement.classList.contains('ask-open') ? askClose() : askOpen(); }
 });
