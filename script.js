@@ -31245,11 +31245,9 @@ function buildPage2() {
   const open = x => d.photos.includes(x) ? `homeOpenPhotos(); photoOpenDetail('${artEsc(x.id)}')` : `storyOpenDetail('${artEsc(x.id)}')`;
   const pic = (x, cls) => `<span class="${cls}"><img src="${escHtml(d.img(x))}" alt="" loading="lazy"></span>`;
   const stack = d.photos.slice(0, 6);
-  const maxLikes = Math.max(1, ...stack.map(x => Number(x.likes) || 0));
   const stackHTML = stack.map((x, i) => `<button type="button" class="p2-card" data-i="${i}" onclick="${open(x)}">
       ${pic(x, 'p2-card-img')}
       <span class="p2-card-body"><b>${escHtml(x.title || 'ללא כותרת')}</b><small>${escHtml(x.author || 'משתמש')}</small>
-        <span class="p2-meter"><i style="--w:${Math.round((Number(x.likes) || 0) / maxLikes * 100)}%"></i></span>
         <span class="p2-card-foot"><span>♥ ${Number(x.likes) || 0}</span><span>${escHtml(x.category || 'כללי')}</span></span></span>
     </button>`).join('');
   const pool = d.photos.concat(d.stories);
