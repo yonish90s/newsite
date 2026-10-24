@@ -31382,15 +31382,33 @@ window.buildPage2 = buildPage2;
     el.classList.add('rv-in');
     setTimeout(() => el.classList.remove('rv', 'rv-in'), 1400);   // מנקים כדי שלא ישפיע על אפקטים אחרים
   }), { rootMargin: '0px 0px -6% 0px', threshold: 0.01 });
+  // מזהה העמוד הנוכחי (עמוד + פריט פתוח) — כשהוא משתנה זו כניסה לעמוד חדש
+  let lastKey = null, enterUntil = 0;
+  const pageKey = () => {
+    const mc = typeof mainContent !== 'undefined' && mainContent;
+    const det = mc && mc.querySelector('.art-detail, .news-article');
+    return (typeof activePageId !== 'undefined' ? activePageId : '') + '|' + (det ? (det.getAttribute('data-photo-id') || det.getAttribute('data-story-id') || det.getAttribute('data-news-id') || det.className) : '');
+  };
   const scan = () => {
     const vh = window.innerHeight;
+    const key = pageKey();
+    if (key !== lastKey) { if (lastKey !== null || true) enterUntil = Date.now() + 1500; lastKey = key; }
+    const entering = Date.now() < enterUntil;
     const fresh = [...document.querySelectorAll(SEL)].filter(el => !el.dataset.rv && !el.closest('.p2-page, #m-sheet, #ask-panel, .slash-menu, #glass-banner'));
     if (!fresh.length) return;
     const sib = new Map();
+    let inView = 0;
     fresh.forEach(el => {
       el.dataset.rv = '1';
       const r = el.getBoundingClientRect();
-      if (r.top < vh * 0.94 && r.bottom > 0) return;   // כבר במסך — בלי הסתרה
+      if (r.top < vh * 0.94 && r.bottom > 0) {
+        // כניסה לעמוד: גם מה שכבר במסך עולה ומופיע אחד אחרי השני
+        if (!entering) return;
+        el.style.setProperty('--rvd', Math.min(inView++, 8));
+        el.classList.add('rv');
+        setTimeout(() => { el.classList.add('rv-in'); setTimeout(() => el.classList.remove('rv', 'rv-in'), 1600); }, 40);
+        return;
+      }
       const k = el.parentElement; const n = sib.get(k) || 0; sib.set(k, n + 1);
       el.style.setProperty('--rvd', Math.min(n, 6));
       el.classList.add('rv');
