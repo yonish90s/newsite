@@ -7172,7 +7172,6 @@ function storyOpenDetail(id) {
               <div class="pd2-acts-desk">${pd2ActionsHTML(s, 'comic')}</div>
               <span class="pd3-badge">${escHtml(s.category || 'קומיקס')}</span>
               <h1 class="pd2-title">${escHtml(s.title || '')}</h1>
-              ${postBarHTML(s)}
               ${_comicDesc ? `<div class="pshow-desc story-comic-desc">${storyRichHTML(_comicDesc, window.storyInlineImgs, false)}</div>` : ''}
               ${_n > 1 ? `<div class="pshow-tiles">${_tiles}</div>` : ''}
               <div class="pd3-feats-h">פרטים</div>
@@ -7196,6 +7195,7 @@ function storyOpenDetail(id) {
                   <button type="button" class="okb okb-pass pd2-save${photoIsSavedLocal(s.id) ? ' is-saved' : ''}" onclick="photoToggleSave('${artEsc(s.id)}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><span>שמירה</span></button>
                   <button type="button" class="okb okb-like${photoIsLikedLocal(s.id) ? ' on' : ''}" onclick="this.classList.toggle('on'); photoToggleLike('${artEsc(s.id)}')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg><span>אהבתי</span></button>
                 </div></div>
+                ${postBarHTML(s)}
               </div>
               <div class="pd3-trust"><b>✓ נבחר בקפידה</b><span>קומיקס שגולשים יצרו — אפשר לדרג, להגיב ולשתף.</span></div>
             </aside>
@@ -16797,7 +16797,6 @@ function photoOpenDetail(id) {
               <span class="pd3-badge">${escHtml(a.category || (isSecondhand ? 'מוצרי גולשים' : 'תמונות גולשים'))}</span>
               <h1 class="pd2-title">${escHtml(a.title)}</h1>
               ${isSecondhand ? pd2ProductInfoHTML(a) : ''}
-              ${postBarHTML(a)}
 
               ${a.ageRange || a.region ? `<div class="pd2-opts">
                 ${a.ageRange || a.region ? `<div class="pd2-opt"><small>פרטים</small><div class="pd2-chips">
@@ -16843,10 +16842,10 @@ function photoOpenDetail(id) {
               <div class="okb-sub">
                 ${a.telegramUrl ? `<a class="okb-mini" href="${escHtml(safeUrl(a.telegramUrl))}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>טלגרם</a>` : ''}
                 ${a.emailUrl ? `<button type="button" class="okb-mini" onclick="revealAndCopyEmail('${artEsc(a.emailUrl)}', this, event);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>אימייל</button>` : ''}
-                <button type="button" class="okb-mini" onclick="postShare('${artEsc(a.title || '')}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg>שיתוף</button>
                 <span class="okb-likes">${a.likes || 0} לייקים</span>
               </div>
               </div>
+              ${postBarHTML(a)}
               ${(isAdmin() || isEditMode) ? `<button type="button" class="pd2-ghost pd2-edit" onclick="openPhotoEditModal('${artEsc(a.id)}', event);">עריכת הגלריה</button>` : ''}
               </div>
               ${a.authorId && !isSiteAdminAuthor(a.authorId, a.author, a) ? `
