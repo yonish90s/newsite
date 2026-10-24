@@ -16933,7 +16933,7 @@ html.theme-dark .ft-guarantee {
 }
 
 /* ===== 3D Spatial & Interactive Effects (בהשראת Fable / Awwwards Web Design) ===== */
-.art-row, .art-featured-card, .trial-banner-inner, .gate-paper-card, .sub-trial-hero {
+.art-row, .art-featured-card, .trial-banner-inner, .gate-paper-card, .sub-trial-hero, .sub-tier-card {
   position: relative;
   transform-style: preserve-3d;
   will-change: transform;
@@ -17006,14 +17006,165 @@ html.theme-dark .ft-guarantee {
   100% { transform: translateY(14px) scale(1.15); opacity: 0.95; }
 }
 
+/* ==========================================================================
+   21st.dev & Framer Motion Modern UI System (בהשראת הסרטון של Chris Cordero)
+   - 21st.dev Magic Card Spotlight Border Glow (חישוב נקודתי לפי מיקום העכבר)
+   - 21st.dev Border Beam (קרן אור נעה דינמית סביב כרטיסים ובאנרים)
+   - 21st.dev Living Pulse Dot (חיווי חי פועם)
+   - Framer Motion Spring Press Feedback (תגובת לחיצה פיזיקלית קפיצית)
+   - 21st.dev Subtle Dot Grid Background (מרקם נקודות יוקרתי ועדין)
+   ========================================================================== */
+
+/* 1. חיווי חי פועם (Living Pulse Dot) */
+.live-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #10b981;
+  position: relative;
+  vertical-align: middle;
+  margin-inline-end: 6px;
+  flex-shrink: 0;
+}
+
+.live-dot::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 2px solid #10b981;
+  animation: liveDotPing 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+  opacity: 0.75;
+}
+
+@keyframes liveDotPing {
+  0% { transform: scale(0.8); opacity: 0.9; }
+  70%, 100% { transform: scale(2.2); opacity: 0; }
+}
+
+/* 2. תגובת לחיצה קפיצית טקטילית (Framer Motion Spring Physics) */
+button,
+.btn,
+.trial-cta-btn,
+.art-telegram-btn,
+.pcat-tile,
+.sub-tier-card,
+.cat-item,
+.story-cat-btn,
+.ft-action-btn {
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+button:active:not(:disabled),
+.btn:active:not(.disabled),
+.trial-cta-btn:active,
+.art-telegram-btn:active,
+.pcat-tile:active,
+.sub-tier-card:active,
+.ft-action-btn:active {
+  transform: scale(0.96) !important;
+}
+
+/* 3. 21st.dev Magic Card Spotlight Border Glow */
+.art-row::before,
+.art-featured-card::before,
+.sub-tier-card::before,
+.gate-paper-card::before,
+.sub-trial-hero::before {
+  content: '';
+  position: absolute;
+  inset: -1.5px;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: radial-gradient(320px circle at var(--gx, 50%) var(--gy, 50%), rgba(147, 51, 234, 0.7), rgba(59, 130, 246, 0.45) 40%, transparent 75%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 6;
+}
+
+.is-hover-3d.art-row::before,
+.is-hover-3d.art-featured-card::before,
+.is-hover-3d.sub-tier-card::before,
+.is-hover-3d.gate-paper-card::before,
+.is-hover-3d.sub-trial-hero::before {
+  opacity: 1;
+}
+
+/* 4. 21st.dev Border Beam (קרן לייזר נעה על הבאנר והכרטיס המוביל) */
+.trial-offer-banner::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2.5px;
+  background: linear-gradient(90deg, transparent 0%, rgba(242, 178, 58, 0.2) 20%, #f2b23a 45%, #ffffff 50%, #c084fc 55%, rgba(168, 85, 247, 0.2) 80%, transparent 100%);
+  background-size: 250% 100%;
+  animation: borderBeamSweep 4s linear infinite;
+  pointer-events: none;
+  z-index: 10;
+}
+
+@keyframes borderBeamSweep {
+  0% { background-position: 250% 0; }
+  100% { background-position: -250% 0; }
+}
+
+@property --beam-deg {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.sub-trial-hero::after {
+  content: '';
+  position: absolute;
+  inset: -1.5px;
+  border-radius: inherit;
+  padding: 2px;
+  background: conic-gradient(from var(--beam-deg, 0deg) at 50% 50%, transparent 0deg, transparent 280deg, #f2b23a 320deg, #ffffff 345deg, #a855f7 355deg, transparent 360deg);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  animation: subHeroBeam 4s linear infinite;
+  z-index: 7;
+}
+
+@keyframes subHeroBeam {
+  0% { --beam-deg: 0deg; }
+  100% { --beam-deg: 360deg; }
+}
+
+/* 5. 21st.dev Dot Grid Background עדין */
+.sub-trial-hero,
+.trial-banner-inner {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.12) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+
+/* Dark mode התאמות לספוטלייט */
+html.theme-dark .art-row::before,
+html.theme-dark .art-featured-card::before,
+html.theme-dark .sub-tier-card::before,
+html.theme-dark .gate-paper-card::before {
+  background: radial-gradient(340px circle at var(--gx, 50%) var(--gy, 50%), rgba(168, 85, 247, 0.8), rgba(99, 102, 241, 0.55) 45%, transparent 75%);
+}
+
 /* נגישות — למשתמשים שהגדירו הפחתת תנועה */
 @media (prefers-reduced-motion: reduce) {
-  .art-row, .art-featured-card, .trial-banner-inner, .gate-paper-card, .sub-trial-hero {
+  .art-row, .art-featured-card, .trial-banner-inner, .gate-paper-card, .sub-trial-hero, .sub-tier-card {
     transform: none !important;
     transition: none !important;
   }
-  .card-glare, .trial-cta-btn::after, .trial-offer-banner::before {
+  .card-glare, .trial-cta-btn::after, .trial-offer-banner::before, .trial-offer-banner::after, .sub-trial-hero::after, .live-dot::after {
     display: none !important;
+    animation: none !important;
   }
 }
 

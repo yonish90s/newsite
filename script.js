@@ -25219,7 +25219,7 @@ function shopListHTML() {
   const trialHero = `
     <div class="sub-trial-hero">
       <div class="sub-trial-hero-inner">
-        <span class="sub-trial-badge">${isTrial ? '👑 מנוי פעיל' : '🎁 הטבה מיוחדת לזמן מוגבל'}</span>
+        <span class="sub-trial-badge"><span class="live-dot" aria-hidden="true"></span> ${isTrial ? '👑 מנוי פעיל' : '🎁 הטבה מיוחדת לזמן מוגבל'}</span>
         <h2 class="sub-trial-title">${isTrial ? 'חודש הניסיון שלך פעיל כעת!' : 'רוצה לנסות את כל האתר בחינם?'}</h2>
         <p class="sub-trial-desc">${isTrial ? 'אתם נהנים מגישה מלאה לכל התמונות, הגלריות והכלים המתקדמים.' : 'קבלו חודש ניסיון מלא (30 ימים) ללא תשלום, ללא כרטיס אשראי וללא התחייבות.'}</p>
         <button type="button" class="trial-cta-btn" onclick="openFreeTrialModal()">
@@ -31934,7 +31934,7 @@ if (document.readyState === 'loading') {
   // מכשירי מגע שומרים על ביצועים חלקים ללא תלת-ממד רגיש לעכבר
   if (window.matchMedia && window.matchMedia('(hover: none) and (pointer: coarse)').matches) return;
 
-  const TARGET_SELECTOR = '.art-row, .art-featured-card, .trial-banner-inner, .p2-hero-in, .gate-paper-card, .sub-trial-hero';
+  const TARGET_SELECTOR = '.art-row, .art-featured-card, .trial-banner-inner, .p2-hero-in, .gate-paper-card, .sub-trial-hero, .sub-tier-card';
 
   function init3DTilt(el) {
     if (el.__has3d) return;
