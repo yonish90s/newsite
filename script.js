@@ -15624,6 +15624,7 @@ function buildHomeFeedPage() {
     ${homeAsideHTML()}
     <div class="art-inner">
       ${homeChipsHTML(photos, comics, stories)}
+      ${modBoxHTML()}
       ${homeHeroCarouselHTML(photos, comics, stories)}
       ${homeExploreHTML()}
       ${homeRowsHTML(photos, comics, stories)}
@@ -18914,7 +18915,7 @@ function _pendingFromUserSubs() {
 function subscribePendingSubmissions() {
   if (pendingSubmissionsSubscribed) return;
   pendingSubmissionsSubscribed = true;
-  const rebuild = () => { const el = document.getElementById('pending-requests-list'); if (el) el.innerHTML = pendingRequestsListHTML(); };
+  const rebuild = () => { const el = document.getElementById('pending-requests-list'); if (el) el.innerHTML = pendingRequestsListHTML(); modBoxRefresh(); };
   onValue(ref(db, 'website/pending_submissions'), (snap) => {
     pendingSubmissionsData = snap.val() || {};
     rebuild();
@@ -18953,6 +18954,13 @@ function _reqGetStoredAlbums() {
   try { return JSON.parse(decodeURIComponent(m[1])) || []; } catch (e) { return []; }
 }
 
+function pendingRequestsAll() {
+  const map = new Map();
+  Object.values(pendingSubmissionsData || {}).forEach(p => { if (p && p.id) map.set(p.id, p); });
+  _pendingFromUserSubs().forEach(p => { if (p && p.id && !map.has(p.id)) map.set(p.id, p); });
+  _reqGetStoredAlbums().filter(p => p && p.approved === false).forEach(p => { if (p && p.id && !map.has(p.id)) map.set(p.id, p); });
+  return Array.from(map.values()).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+}
 function pendingRequestsListHTML() {
   const fbPending = Object.values(pendingSubmissionsData || {});
   const localAlbums = _reqGetStoredAlbums();
@@ -30849,3 +30857,81 @@ window.slashStart = slashStart;
   }, true);
   window.addEventListener('scroll', () => { if (menu && field) render(); }, { passive: true });
 })();
+
+// ============================================================
+// מנהל: תיבת "ממתינים לאישור" בעמוד הבית — פוסטים שגולשים ביקשו להעלות. ✓ אישור · ⇆ תיקון · ✕ דחייה
+// ============================================================
+var modBoxAll = false;
+function modBoxHTML() {
+  if (!(typeof isAdmin === 'function' && isAdmin())) return '';
+  try { subscribePendingSubmissions(); } catch (e) {}
+  const list = pendingRequestsAll();
+  if (!list.length) return '<div class="mod-box" hidden></div>';
+  const shown = modBoxAll ? list : list.slice(0, 3);
+  const kind = p => (p.isStory || p.type === 'story') ? 'סיפור / קומיקס' : (p.isWanted || p.isProduct || p.price ? 'מוצר' : 'תמונות');
+  const btn = (cls, label, act, d) => `<button type="button" class="mod-b ${cls}" onclick="${act}" title="${label}" aria-label="${label}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">${d}</svg></button>`;
+  const rows = shown.map(p => {
+    const img = (p.images && p.images.find(Boolean)) || p.image || p.cover || '';
+    const id = artEsc(p.id);
+    return `<div class="mod-row">
+      <span class="mod-th">${img ? `<img src="${escHtml(img)}" alt="" loading="lazy">` : ''}</span>
+      <span class="mod-tx"><b>${escHtml(p.title || 'ללא כותרת')}</b><small>${escHtml(p.author || 'משתמש')} · ${kind(p)}</small></span>
+      <span class="mod-acts">
+        ${btn('ok', 'אישור ופרסום', `modApprove('${id}')`, '<path d="M5 12.5l4.5 4.5L19 7.5"/>')}
+        ${btn('fix', 'תיקון לפני פרסום', `modFixOpen('${id}')`, '<path d="M4 8h14l-3-3"/><path d="M20 16H6l3 3"/>')}
+        ${btn('no', 'דחייה', `modReject('${id}')`, '<path d="M6 6l12 12M18 6L6 18"/>')}
+      </span>
+    </div>`;
+  }).join('<i class="mod-sep"></i>');
+  return `<section class="mod-box">
+    <div class="mod-head"><b>ממתינים לאישור</b><span class="mod-n">${list.length}</span></div>
+    ${rows}
+    ${list.length > 3 ? `<button type="button" class="mod-more" onclick="modBoxToggle()">${modBoxAll ? 'הצג פחות' : `הצג עוד (${list.length - 3})`}</button>` : ''}
+  </section>`;
+}
+function modBoxRefresh() {
+  const el = document.querySelector('.mod-box');
+  if (!el) return;
+  const t = document.createElement('div'); t.innerHTML = modBoxHTML() || '<div class="mod-box" hidden></div>';
+  el.replaceWith(t.firstElementChild);
+}
+function modBoxToggle() { modBoxAll = !modBoxAll; modBoxRefresh(); }
+function modApprove(id) { _reqMutate(id, 'approve'); }
+function modReject(id) { if (confirm('לדחות ולמחוק את הבקשה?')) _reqMutate(id, 'reject'); }
+function modFixOpen(id) {
+  const p = pendingRequestsAll().find(x => x.id === id);
+  if (!p) return;
+  const img = (p.images && p.images.find(Boolean)) || p.image || '';
+  const body = `<div class="mod-fix">
+    ${img ? `<img class="mod-fix-img" src="${escHtml(img)}" alt="">` : ''}
+    <label>כותרת<input id="mod-f-title" maxlength="120" value="${escHtml(p.title || '')}"></label>
+    <label>תיאור<textarea id="mod-f-sum" rows="4" maxlength="2000">${escHtml(p.summary || '')}</textarea></label>
+    ${p.price !== undefined && p.price !== '' ? `<label>מחיר<input id="mod-f-price" inputmode="decimal" maxlength="20" value="${escHtml(String(p.price))}"></label>` : ''}
+  </div>`;
+  openMSheet('תיקון לפני פרסום', body, `<button type="button" class="ms-btn" onclick="modFixSave('${artEsc(id)}')">שמירה ופרסום</button><button type="button" class="ms-btn ghost" onclick="closeMSheet()">ביטול</button>`);
+}
+async function modFixSave(id) {
+  const v = sel => { const el = document.getElementById(sel); return el ? el.value.trim() : undefined; };
+  const patch = { title: v('mod-f-title'), summary: v('mod-f-sum') };
+  const pr = v('mod-f-price'); if (pr !== undefined) patch.price = pr;
+  Object.keys(patch).forEach(k => patch[k] === undefined && delete patch[k]);
+  if (!patch.title) { showCopyToast('חסרה כותרת'); return; }
+  // מעדכנים בכל מקור שבו הבקשה יושבת: pending_submissions, user_submissions (אורחים), ועמודים שמורים
+  if (pendingSubmissionsData[id]) {
+    Object.assign(pendingSubmissionsData[id], patch);
+    try { await update(ref(db, `website/pending_submissions/${id}`), patch); } catch (e) {}
+  }
+  Object.entries(userSubmissionsData || {}).forEach(([k, s]) => { if (s && s.album && s.album.id === id) Object.assign(s.album, patch); });
+  if (typeof pages !== 'undefined' && Array.isArray(pages)) pages.forEach(pg => {
+    if (!pg || !pg.content || pg.content.indexOf(id) === -1) return;
+    pg.content = pg.content.replace(/data-(photos|stories)-json="([^"]*)"/g, (full, kind, enc) => {
+      let arr; try { arr = JSON.parse(decodeURIComponent(enc)); } catch (e) { return full; }
+      if (!Array.isArray(arr) || !arr.some(x => x && x.id === id)) return full;
+      arr.forEach(x => { if (x && x.id === id) Object.assign(x, patch); });
+      return `data-${kind}-json="${encodeURIComponent(JSON.stringify(arr))}"`;
+    });
+  });
+  closeMSheet();
+  await _reqMutate(id, 'approve');
+}
+Object.assign(window, { modBoxToggle, modApprove, modReject, modFixOpen, modFixSave, modBoxRefresh });
