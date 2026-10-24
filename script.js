@@ -29448,6 +29448,7 @@ function hcGo(btn, dir) {
 function hcSync(t) {
   const i = Math.round(t.scrollLeft / Math.max(1, t.clientWidth));
   t.closest('.hc').querySelectorAll('.hc-dots i').forEach((d, k) => d.classList.toggle('on', k === i));
+  [...t.children].forEach((sl, k) => sl.classList.toggle('on', k === i));
 }
 let hcTimer = 0;
 function hcInit() {
@@ -31131,4 +31132,77 @@ document.addEventListener('keydown', e => {
     return true;
   };
   if (!add()) { const t = setInterval(() => { if (add()) clearInterval(t); }, 500); setTimeout(() => clearInterval(t), 15000); }
+})();
+
+// ============================================================
+// תנועה בעמוד הראשי (בהשראת cognifit): כותרות נכנסות מילה-מילה, כרטיסים עולים בהדרגה,
+// שורת "גלו עוד" זזה לאט בלופ (נעצרת כשנוגעים), שקופית פעילה בקרוסלה, נקודה "חיה" וכפתורים פועמים.
+// מכבד "הפחתת תנועה" של המערכת.
+// ============================================================
+(function homeMotion() {
+  if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  document.documentElement.classList.add('motion-on');
+  const HEADS = '.hr-head h2, .hx-explore h2, .pd3-pagehead, .mod-head b, .stor-hero b';
+  const io = 'IntersectionObserver' in window ? new IntersectionObserver(ents => ents.forEach(en => {
+    if (!en.isIntersecting) return;
+    en.target.classList.add('in');
+    io.unobserve(en.target);
+  }), { rootMargin: '0px 0px -8% 0px' }) : null;
+  const splitWords = el => {
+    if (el.dataset.words || el.children.length || !el.textContent.trim()) return;
+    el.dataset.words = '1';
+    const words = el.textContent.trim().split(/\s+/);
+    el.innerHTML = words.map((w, i) => `<span class="mw" style="--i:${i}">${escHtml(w)}</span>`).join(' ');
+    el.classList.add('mw-wrap');
+    io ? io.observe(el) : el.classList.add('in');
+  };
+  const cards = row => {
+    if (row.dataset.mc) return;
+    row.dataset.mc = '1';
+    [...row.children].forEach((c, i) => { c.style.setProperty('--ci', Math.min(i, 8)); });
+    row.classList.add('mc-row');
+    io ? io.observe(row) : row.classList.add('in');
+  };
+  const marquee = row => {
+    if (row.dataset.mq || row.scrollWidth <= row.clientWidth + 20) return;
+    row.dataset.mq = '1';
+    const orig = [...row.children];
+    orig.forEach(c => { const k = c.cloneNode(true); k.setAttribute('aria-hidden', 'true'); k.tabIndex = -1; k.classList.add('mq-clone'); row.appendChild(k); });
+    let paused = 0, last = 0;
+    const half = () => row.scrollWidth / 2;
+    const stop = () => { paused = Date.now() + 5000; };
+    ['pointerdown', 'wheel', 'touchstart', 'focusin'].forEach(t => row.addEventListener(t, stop, { passive: true }));
+    row.addEventListener('mouseenter', () => { paused = Infinity; });
+    row.addEventListener('mouseleave', () => { paused = Date.now() + 800; });
+    const rtl = getComputedStyle(row).direction === 'rtl';
+    const step = ts => {
+      if (!row.isConnected) return;
+      const dt = last ? Math.min(64, ts - last) : 16; last = ts;
+      if (Date.now() > paused && !document.hidden) {
+        const v = 0.025 * dt;                 // ~25px לשנייה
+        let x = row.scrollLeft + (rtl ? -v : v);
+        if (Math.abs(x) >= half()) x += rtl ? half() : -half();
+        row.scrollLeft = x;
+      }
+      requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  };
+  const scan = () => {
+    document.querySelectorAll(HEADS).forEach(splitWords);
+    document.querySelectorAll('.hr-row').forEach(cards);
+    document.querySelectorAll('.hx-explore-row').forEach(marquee);
+    document.querySelectorAll('.hc-track').forEach(t => { if (!t.querySelector('.hc-slide.on') && t.children[0]) t.children[0].classList.add('on'); });
+  };
+  // רשת ביטחון: מה שבמסך מקבל .in גם אם ה-IntersectionObserver לא ירה
+  const safety = () => {
+    const vh = window.innerHeight;
+    document.querySelectorAll('.mw-wrap:not(.in), .mc-row:not(.in)').forEach(el => { const r = el.getBoundingClientRect(); if (r.top < vh && r.bottom > 0) el.classList.add('in'); });
+  };
+  let sq = 0;
+  window.addEventListener('scroll', () => { if (!sq) sq = setTimeout(() => { sq = 0; safety(); }, 150); }, { passive: true });
+  let q = 0;
+  new MutationObserver(() => { clearTimeout(q); q = setTimeout(() => { scan(); setTimeout(safety, 900); }, 60); }).observe(document.body, { childList: true, subtree: true });
+  scan();
+  setTimeout(safety, 900);
 })();
