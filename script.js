@@ -30373,6 +30373,7 @@ function deepLinkSync() {
     ST.create({ start: 'top -8', end: 99999, toggleClass: { targets: 'header.apple-nav', className: 'hdr-scrolled' } });
     // חשיפה בגלילה — לאלמנטים חדשים בכל פעם שהעמוד משתנה
     const reveal = () => {
+      if (window.__siteReveal) return;   // החשיפה החלקה האחידה (siteReveal) מטפלת בזה בכל המכשירים
       const fresh = [...document.querySelectorAll(REVEAL)].filter(el => !el.dataset.gs && el.offsetParent !== null);
       if (!fresh.length) return;
       const vh = window.innerHeight;
@@ -31362,3 +31363,44 @@ function p2Init() {
   window.addEventListener('scroll', onScroll, { passive: true });
 }
 window.buildPage2 = buildPage2;
+
+// ============================================================
+// חשיפה חלקה בגלילה — בכל האתר ובכל המכשירים (כמו "היצירות של השבוע" ב"דף 2"):
+// כל כרטיס/מקטע שנכנס למסך עולה בעדינות ומופיע, אחד אחרי השני. מה שכבר במסך בטעינה — מוצג מיד.
+// ============================================================
+(function siteReveal() {
+  if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if (!('IntersectionObserver' in window)) return;
+  window.__siteReveal = true;
+  const SEL = ['.hr-box', '.hx-explore', '.hw-stats', '.hw-watch', '#photo-row-1 > .art-row', '#story-row-main > .art-row',
+    '.pc-post', '.fi-cat', '.fx-row', '.rd-post', '.rd-cmt', '.nl-item', '.prd', '.prd-more-card', '.pfg-card', '.adm-cc',
+    '.rec-mini > *', '.pd2-info > *', '.pc-section', '.art-rec-section', '.ha-box', '.stk-row', '.ads-row', '.mod-row', '.stor-card', '.cmp-wrap'].join(', ');
+  const io = new IntersectionObserver(ents => ents.forEach(en => {
+    if (!en.isIntersecting) return;
+    const el = en.target;
+    io.unobserve(el);
+    el.classList.add('rv-in');
+    setTimeout(() => el.classList.remove('rv', 'rv-in'), 1400);   // מנקים כדי שלא ישפיע על אפקטים אחרים
+  }), { rootMargin: '0px 0px -6% 0px', threshold: 0.01 });
+  const scan = () => {
+    const vh = window.innerHeight;
+    const fresh = [...document.querySelectorAll(SEL)].filter(el => !el.dataset.rv && !el.closest('.p2-page, #m-sheet, #ask-panel, .slash-menu, #glass-banner'));
+    if (!fresh.length) return;
+    const sib = new Map();
+    fresh.forEach(el => {
+      el.dataset.rv = '1';
+      const r = el.getBoundingClientRect();
+      if (r.top < vh * 0.94 && r.bottom > 0) return;   // כבר במסך — בלי הסתרה
+      const k = el.parentElement; const n = sib.get(k) || 0; sib.set(k, n + 1);
+      el.style.setProperty('--rvd', Math.min(n, 6));
+      el.classList.add('rv');
+      io.observe(el);
+    });
+  };
+  // רשת ביטחון: מה שבמסך ועדיין מוסתר — מוצג
+  const safety = () => { const vh = window.innerHeight; document.querySelectorAll('.rv:not(.rv-in)').forEach(el => { const r = el.getBoundingClientRect(); if (r.top < vh && r.bottom > 0) el.classList.add('rv-in'); }); };
+  let q = 0, sq = 0;
+  new MutationObserver(() => { clearTimeout(q); q = setTimeout(scan, 80); }).observe(document.body, { childList: true, subtree: true });
+  window.addEventListener('scroll', () => { if (!sq) sq = setTimeout(() => { sq = 0; safety(); }, 200); }, { passive: true });
+  scan();
+})();
