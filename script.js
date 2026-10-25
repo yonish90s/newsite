@@ -961,7 +961,7 @@ async function initSite() {
     ]);
 
     if (Object.keys(data).length) {
-      if (data.pages && Array.isArray(data.pages)) { pages = data.pages; applyItemLikesToPages(pages, data.item_likes); }
+      if (data.pages && Array.isArray(data.pages)) { pages = data.pages; mediaHydratePages(pages); applyItemLikesToPages(pages, data.item_likes); }
       if (data.topNavPages && Array.isArray(data.topNavPages)) topNavPages = data.topNavPages;
       if (data.siteBackgrounds) siteBackgrounds = data.siteBackgrounds;
       if (data.promotedSites) {
@@ -1121,7 +1121,7 @@ function saveToStorage() {
   if (isAdmin()) try {
     const dbRef = ref(db, 'website');
     update(dbRef, {
-      pages: pages,
+      pages: mediaStripForSave(pages),
       activePageId: activePageId,
       topNavPages: topNavPages,
       navHTML: navHTML,
@@ -7001,7 +7001,8 @@ function buildStoriesPage(stories, storyKind) {
   </div>`;
 }
 
-function storyOpenDetail(id) {
+function storyOpenDetail(id) { return mediaGate(id, () => _storyOpenDetailImpl(id)); }
+function _storyOpenDetailImpl(id) {
   if (typeof trackEvent === 'function') trackEvent('story_open');
   window.__detailOpen = true; // מגן מפני רענון-רקע שיבעט מהעמוד הפנימי
   window.__detailOpenPageId = activePageId; // שומר איזה עמוד פעיל כשנפתחה התצוגה הפנימית
@@ -7028,6 +7029,7 @@ function storyOpenDetail(id) {
     if (s && !stories.length) stories = demos;
   }
   if (!s) return;
+  if (s) mediaApply(s);
   if (typeof addToWatchHistory === 'function') addToWatchHistory({ ...s, type: 'story' });
 
   const validImages = s.images ? s.images.filter(img => !!img) : (s.image ? [s.image] : []);
@@ -7696,7 +7698,8 @@ function openStoryModal() {
 }
 
 // פותח את חלון הסיפור עם הנתונים הקיימים לעריכה (מנהל בלבד)
-function openStoryEditModal(id) {
+function openStoryEditModal(id) { if (!mediaAllLoaded && mediaNeedsLoad()) { const _a = arguments; mediaLoadAll().then(() => _openStoryEditModalImpl.apply(null, _a)); return; } return _openStoryEditModalImpl.apply(null, arguments); }
+function _openStoryEditModalImpl(id) {
   if (!isEditMode) return;
   syncStoryCategorySelect();
   const s = storyGetStories().find(x => x.id === id);
@@ -16577,7 +16580,8 @@ function recoRecommend(current, albums, k = 6) {
 }
 window.recoRecommend = recoRecommend;
 
-function photoOpenDetail(id) {
+function photoOpenDetail(id) { return mediaGate(id, () => _photoOpenDetailImpl(id)); }
+function _photoOpenDetailImpl(id) {
   if (typeof trackEvent === 'function') trackEvent('gallery_open');
   window.__detailOpen = true; // מגן מפני רענון-רקע שיבעט מהעמוד הפנימי
   window.__detailOpenPageId = activePageId; // שומר איזה עמוד פעיל כשנפתחה התצוגה הפנימית
@@ -16589,6 +16593,7 @@ function photoOpenDetail(id) {
   try { albums = JSON.parse(decodeURIComponent(container.dataset.photosJson)); } catch(e){ return; }
   const a = albums.find(x => x.id === id);
   if (!a) return;
+  mediaApply(a);
   if (typeof addToWatchHistory === 'function') addToWatchHistory(a);
 
   const validImages = (a.images || []).filter(img => !!img);
@@ -18624,7 +18629,8 @@ function chooseWantedOffer(id, offerId) {
 }
 window.chooseWantedOffer = chooseWantedOffer;
 
-function openPhotoEditModal(id, e) {
+function openPhotoEditModal(id, e) { if (!mediaAllLoaded && mediaNeedsLoad()) { const _a = arguments; mediaLoadAll().then(() => _openPhotoEditModalImpl.apply(null, _a)); return; } return _openPhotoEditModalImpl.apply(null, arguments); }
+function _openPhotoEditModalImpl(id, e) {
   if (e) {
     if (typeof e.stopPropagation === 'function') e.stopPropagation();
     if (typeof e.preventDefault === 'function') e.preventDefault();
@@ -22832,6 +22838,7 @@ onPublicSiteValue((data) => {
     }
     // מסירים את העמודים "יד שניה" ו"השוואת מחירים"
     pList = pList.filter(p => p && !REMOVED_PHOTO_PAGE_IDS.includes(p.id));
+    mediaHydratePages(pList);
     applyItemLikesToPages(pList, data.item_likes);
     if (JSON.stringify(pages) !== JSON.stringify(pList)) {
       // אם ההבדל היחיד הוא מוני לייקים — מעדכנים את הנתונים והמספרים במסך בלי לבנות את העמוד מחדש (בלי קפיצות ובלי תקיעה)
@@ -31583,3 +31590,101 @@ async function coSendToSeller() {
   dmStartWith(admin, 'מנהל האתר', msg);
 }
 Object.assign(window, { productCheckout, coQty, coShip, coPay, coSendToSeller });
+
+// ============================================================
+// מהירות: התמונות הכבדות (כל עמודי הקומיקס, תמונות נוספות בגלריה) נשמרות ב-website/media/{id}
+// ובנתוני העמודים נשאר רק השער. גולש טוען את השאר רק כשהוא פותח פריט; המנהל טוען הכול ברקע
+// (כדי שעריכה תעבוד כרגיל), ובשמירה של המנהל ההפרדה נעשית מחדש — כך העמודים נשארים קלים.
+// ============================================================
+var MEDIA = {}, mediaAllLoaded = false, mediaAllLoading = null, MEDIA_SAVED = {};
+function mediaIsHeavy(it) {
+  if (!it || !it.id) return false;
+  const imgs = Array.isArray(it.images) ? it.images.filter(Boolean) : [];
+  const pgs = Array.isArray(it.pages) ? it.pages : [];
+  return imgs.length > 1 || pgs.some(p => p && (typeof p === 'string' || p.type === 'image')) || (it.inlineImages && typeof it.inlineImages === 'object' && Object.keys(it.inlineImages).length > 0);
+}
+function mediaApply(it) {
+  if (!it || !it._media) return it;
+  const m = MEDIA[it.id];
+  if (!m) return it;
+  if (Array.isArray(m.images)) it.images = m.images;
+  if (Array.isArray(m.pages)) it.pages = m.pages;
+  if (m.inlineImages) it.inlineImages = m.inlineImages;
+  delete it._media;
+  return it;
+}
+function mediaEachList(list, fn) {
+  if (!Array.isArray(list)) return;
+  list.forEach(p => {
+    if (!p || !p.content || p.content.indexOf('-json="') === -1) return;
+    p.content = p.content.replace(/data-(photos|stories)-json="([^"]*)"/g, (full, kind, enc) => {
+      let arr; try { arr = JSON.parse(decodeURIComponent(enc)); } catch (e) { return full; }
+      if (!Array.isArray(arr)) return full;
+      return fn(arr) ? `data-${kind}-json="${encodeURIComponent(JSON.stringify(arr))}"` : full;
+    });
+  });
+}
+// מנהל / מצב עריכה: משלימים את כל המדיה לתוך העמודים בזיכרון
+function mediaHydratePages(list) {
+  const editor = (typeof isAdmin === 'function' && isAdmin()) || (typeof isEditMode !== 'undefined' && isEditMode);
+  if (!editor) return;
+  if (!mediaAllLoaded) { mediaLoadAll(); return; }
+  mediaEachList(list, arr => { let t = false; arr.forEach(it => { if (it && it._media && MEDIA[it.id]) { mediaApply(it); t = true; } }); return t; });
+}
+function mediaLoadAll() {
+  if (mediaAllLoading) return mediaAllLoading;
+  mediaAllLoading = get(ref(db, 'website/media')).then(snap => {
+    const v = snap.val() || {};
+    Object.keys(v).forEach(id => { MEDIA[id] = v[id]; MEDIA_SAVED[id] = JSON.stringify(v[id]); });
+    mediaAllLoaded = true;
+    if (Array.isArray(pages)) { mediaHydratePages(pages); try { if (typeof renderPage === 'function' && !window.__detailOpen) renderPage(); } catch (e) {} }
+  }).catch(() => { mediaAllLoading = null; });
+  return mediaAllLoading;
+}
+async function mediaEnsure(id) {
+  if (MEDIA[id] || mediaAllLoaded) return MEDIA[id] || null;
+  try {
+    const v = (await Promise.race([get(ref(db, 'website/media/' + id)), new Promise((_, r) => setTimeout(() => r(new Error('t')), 4000))])).val();
+    MEDIA[id] = v || {};
+  } catch (e) { MEDIA[id] = MEDIA[id] || null; }
+  return MEDIA[id];
+}
+// פתיחת פריט: אם צריך — מביאים קודם את התמונות המלאות שלו
+function mediaGate(id, run) {
+  if (!id || MEDIA[id] || mediaAllLoaded) return run();
+  return mediaEnsure(id).then(run, run);
+}
+// לפני שמירת העמודים ב-Firebase: מוציאים את המדיה הכבדה ל-website/media (רק מה שהשתנה)
+function mediaStripForSave(list) {
+  let out;
+  try { out = JSON.parse(JSON.stringify(list)); } catch (e) { return list; }
+  const updates = {};
+  mediaEachList(out, arr => {
+    let t = false;
+    arr.forEach(it => {
+      if (!mediaIsHeavy(it)) return;
+      const m = { images: Array.isArray(it.images) ? it.images : null, pages: Array.isArray(it.pages) ? it.pages : null, inlineImages: it.inlineImages || null };
+      const js = JSON.stringify(m);
+      if (MEDIA_SAVED[it.id] !== js) { updates['media/' + it.id] = m; MEDIA_SAVED[it.id] = js; }
+      MEDIA[it.id] = m;
+      const first = (Array.isArray(it.images) ? it.images.find(Boolean) : '') || (Array.isArray(it.pages) ? ((it.pages.find(p => p && (typeof p === 'string' || p.type === 'image')) || {}).url || '') : '');
+      const ni = Array.isArray(it.images) ? it.images.filter(Boolean).length : 0, np = Array.isArray(it.pages) ? it.pages.length : 0;
+      it.images = first ? [first] : [];
+      it.pages = [];
+      delete it.inlineImages;
+      it._media = { ni, np };
+      t = true;
+    });
+    return t;
+  });
+  if (Object.keys(updates).length) { try { update(ref(db, 'website'), updates).catch(e => console.error('media save failed', e)); } catch (e) {} }
+  return out;
+}
+Object.assign(window, { mediaLoadAll });
+
+function mediaNeedsLoad() { return true; }
+// המנהל מתחבר → טוענים את כל המדיה ברקע (כדי שעריכה ושמירה יעבדו על הנתונים המלאים)
+(function mediaAdminWatch() {
+  const t = setInterval(() => { try { if (typeof isAdmin === 'function' && isAdmin()) { clearInterval(t); mediaLoadAll(); } } catch (e) {} }, 1500);
+  setTimeout(() => clearInterval(t), 10 * 60 * 1000);
+})();

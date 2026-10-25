@@ -614,6 +614,9 @@
           ".write": "auth != null && !data.exists() && newData.exists()",
           ".validate": "newData.hasChildren(['q','t','uid']) && newData.child('q').isString() && newData.child('q').val().length <= 300 && newData.child('t').isNumber() && newData.child('uid').val() === auth.uid"
         }
+      },
+      "media": {
+        ".read": true
       }
     }
   }
