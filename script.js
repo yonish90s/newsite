@@ -16819,7 +16819,6 @@ function photoOpenDetail(id) {
               <div class="pd2-acts-desk">${pd2ActionsHTML(a, isSecondhand ? 'product' : '')}</div>
               <span class="pd3-badge">${escHtml(a.category || (isSecondhand ? 'מוצרי גולשים' : 'תמונות גולשים'))}</span>
               <h1 class="pd2-title">${escHtml(a.title)}</h1>
-              ${isSecondhand ? pd2ProductInfoHTML(a) : ''}
 
               ${a.ageRange || a.region ? `<div class="pd2-opts">
                 ${a.ageRange || a.region ? `<div class="pd2-opt"><small>פרטים</small><div class="pd2-chips">
@@ -16851,7 +16850,7 @@ function photoOpenDetail(id) {
             </aside>
             <aside class="pd3-box">
               <div class="pd3-box-card">
-                <div class="pd3-box-stat"><b>${a.likes || 0}</b> לייקים</div>
+                ${isSecondhand ? pd2ProductInfoHTML(a, true) : `<div class="pd3-box-stat"><b>${a.likes || 0}</b> לייקים</div>`}
               <!-- שלושה כפתורים גדולים: שמירה (מתאר) · אהבתי (ורוד) · הודעה (גרדיאנט) -->
               <div class="okb-wrap">
               <div class="okb-row">
@@ -16859,6 +16858,7 @@ function photoOpenDetail(id) {
                   <svg viewBox="0 0 24 24" fill="${photoIsSavedLocal(a.id) ? '#ffffff' : 'none'}" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><span>${photoIsSavedLocal(a.id) ? 'שמור' : 'שמירה'}</span></button>
                 <button type="button" class="okb okb-like${photoIsLikedLocal(a.id) ? ' on' : ''}" onclick="this.classList.toggle('on'); photoToggleLike('${artEsc(a.id)}')">
                   <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg><span>אהבתי</span></button>
+                ${isSecondhand ? `<button type="button" class="okb okb-offer" onclick="openPriceOffer('${artEsc(a.id)}', '${artEsc(a.title || '')}', '${artEsc(a.authorId || '')}', '${artEsc(a.author || '')}')" aria-label="הצעת מחיר" title="הצעת מחיר"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.4"/></svg></button>` : ''}
                 <button type="button" class="okb okb-super" onclick="dmStartAboutGallery('${artEsc(a.authorId || '')}', '${artEsc(a.author || '')}', '${artEsc(a.id)}')">
                   <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 3H4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h3v3.5L11.5 18H20a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z"/><path d="M5 1.2l.7 1.6 1.6.7-1.6.7L5 5.8l-.7-1.6-1.6-.7 1.6-.7z" fill="#fff"/></svg><span>הודעה</span></button>
               </div>
@@ -16868,8 +16868,8 @@ function photoOpenDetail(id) {
                 <span class="okb-likes">${a.likes || 0} לייקים</span>
               </div>
               </div>
-              ${postBarHTML(a)}
               ${(isAdmin() || isEditMode) ? `<button type="button" class="pd2-ghost pd2-edit" onclick="openPhotoEditModal('${artEsc(a.id)}', event);">עריכת הגלריה</button>` : ''}
+              ${postBarHTML(a)}
               </div>
               ${a.authorId && !isSiteAdminAuthor(a.authorId, a.author, a) ? `
               <div class="pd2-maker" onclick="openUserPage('${artEsc(a.authorId)}','${artEsc(a.author || '')}')">
@@ -28345,18 +28345,18 @@ Object.assign(window, { openPriceOffer, closePriceOffer, sendPriceOffer });
 
 
 // מוצר יד שניה בעמוד הגלריה: מחיר בולט + סוג ההצעה ומיקום (בסגנון הדף)
-function pd2ProductInfoHTML(a) {
+function pd2ProductInfoHTML(a, inBox) {
   const offer = a.offerType || 'מכירה';
   let price = (a.price != null && String(a.price).trim()) ? String(a.price).trim() : '';
   if (price && !/[₪$]/.test(price) && /\d/.test(price)) price = '₪' + price;
   const main = offer === 'השאלה' ? (price ? `${price}${a.priceUnit ? ' ' + a.priceUnit : ''}` : 'להשאלה') : offer === 'החלפה' ? 'להחלפה' : (price || 'מחיר לפי סיכום');
   const period = offer === 'השאלה' ? (a.loanPeriod || (a.offerDetail || '').trim()) : '';
-  return `<div class="pd2-product">
+  return `<div class="pd2-product${inBox ? ' in-box' : ''}">
       <div class="pd2-price">${escHtml(main)}</div>
       <div class="pd2-prod-chips"><span>${escHtml(offer)}</span>${a.region ? `<span>${escHtml(a.region)}</span>` : ''}${(a.offerDetail || '').trim() && offer !== 'השאלה' ? `<span>${escHtml(String(a.offerDetail).trim().slice(0, 40))}</span>` : ''}</div>
       ${period ? `<div class="pd2-loan-period">תקופת השאלה: <b>${escHtml(String(period).slice(0, 40))}</b></div>` : ''}
       ${offer === 'השאלה' ? loanAgreementHTML(a) : ''}
-      <button type="button" class="pd2-offer-btn" onclick="openPriceOffer('${artEsc(a.id)}', '${artEsc(a.title || '')}', '${artEsc(a.authorId || '')}', '${artEsc(a.author || '')}')">הצעת מחיר</button>
+      ${inBox ? '' : `<button type="button" class="pd2-offer-btn" onclick="openPriceOffer('${artEsc(a.id)}', '${artEsc(a.title || '')}', '${artEsc(a.authorId || '')}', '${artEsc(a.author || '')}')">הצעת מחיר</button>`}
     </div>`;
 }
 
@@ -31363,3 +31363,15 @@ async function productOrder(id) {
   dmStartWith(admin, 'מנהל האתר', `שלום, אני רוצה להזמין: ${p.name}${price ? ` (₪${price})` : ''}. איך ממשיכים?`);
 }
 window.productOrder = productOrder;
+
+// כפתורי תיבת הפעולות מוצגים כאייקונים בלבד — השם נשמר כ-title / aria-label
+(function okbLabels() {
+  const run = () => document.querySelectorAll('.pd3-box-card :is(.okb, .okb-mini):not([data-lbl])').forEach(b => {
+    const t = b.textContent.replace(/\s+/g, ' ').trim();
+    b.dataset.lbl = '1';
+    if (t) { if (!b.getAttribute('aria-label')) b.setAttribute('aria-label', t); if (!b.title) b.title = t; }
+  });
+  let q = 0;
+  new MutationObserver(() => { clearTimeout(q); q = setTimeout(run, 50); }).observe(document.body, { childList: true, subtree: true });
+  run();
+})();
