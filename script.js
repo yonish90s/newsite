@@ -29994,7 +29994,7 @@ function productDetailViewHTML(list, admin) {
         <div class="prd-buy-box">
           ${price ? `<div class="prd-price">₪${escHtml(price.replace(/^₪/, ''))}</div>` : `<div class="prd-price soft">מחיר בקישור</div>`}
           ${p.stock !== undefined && p.stock !== '' ? `<div class="prd-stock${Number(p.stock) <= 0 ? ' out' : Number(p.stock) <= 3 ? ' low' : ''}">${Number(p.stock) <= 0 ? 'אזל מהמלאי' : Number(p.stock) <= 3 ? `נשארו ${Number(p.stock)} במלאי` : 'במלאי'}</div>` : ''}
-          ${Number(p.stock) <= 0 && p.stock !== undefined && p.stock !== '' ? `<button type="button" class="prd-cta" disabled>אזל מהמלאי</button>` : hasLink ? `<a class="prd-cta" href="${escHtml(link)}" target="_blank" rel="noopener nofollow sponsored">לרכישה</a>` : price ? `<button type="button" class="prd-cta" onclick="productOrder('${artEsc(p.id)}')">להזמנה</button>` : `<button type="button" class="prd-cta" disabled>בקרוב</button>`}
+          ${Number(p.stock) <= 0 && p.stock !== undefined && p.stock !== '' ? `<button type="button" class="prd-cta" disabled>אזל מהמלאי</button>` : hasLink ? `<a class="prd-cta" href="${escHtml(link)}" target="_blank" rel="noopener nofollow sponsored">לרכישה</a>` : price ? `<button type="button" class="prd-cta" onclick="productCheckout('${artEsc(p.id)}')">לתשלום</button>` : `<button type="button" class="prd-cta" disabled>בקרוב</button>`}
         </div>
         <button type="button" class="prd-wish${wish[p.id] ? ' on' : ''}" onclick="productWishToggle('${artEsc(p.id)}', this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/></svg>הוספה לרשימת המשאלות</button>
         <div class="prd-trust"><b>✓ נבחר בקפידה</b><span>מוצרים שאנחנו ממליצים עליהם לזוגות — עם הסבר למה הם עושים טוב לקשר.</span></div>
@@ -31487,3 +31487,99 @@ function askAdminCopyInfo() {
 }
 Object.assign(window, { askAdminAnswer, askAdminDismiss, askAdminAdd, askAdminDel, askAdminSaveNotes, askAdminCopyInfo });
 askKbSubscribe();
+
+// כותרת הלשונית בדפדפן לפי העמוד הנוכחי ("חדשות · Black1White00")
+(function pageTitles() {
+  const BASE = 'Black1White00 — תמונות, קומיקס וקהילה';
+  const clean = t => String(t || '').replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}🔒]/gu, '').replace(/\s+/g, ' ').trim();
+  let last = '';
+  const sync = () => {
+    const mc = typeof mainContent !== 'undefined' && mainContent;
+    const det = mc && mc.querySelector('.art-detail .pd2-title, .art-detail h1, .news-article .na-title');
+    const pg = (typeof pages !== 'undefined' && Array.isArray(pages)) ? pages.find(p => p && p.id === activePageId) : null;
+    let t = BASE;
+    if (det && det.textContent.trim()) t = clean(det.textContent).slice(0, 60) + ' · Black1White00';
+    else if (pg && pg.id !== 'page-home-feed' && clean(pg.title)) t = clean(pg.title) + ' · Black1White00';
+    if (t !== last) { last = t; document.title = t; }
+  };
+  let q = 0;
+  const start = () => { const mc = typeof mainContent !== 'undefined' && mainContent; if (!mc) return setTimeout(start, 300); new MutationObserver(() => { clearTimeout(q); q = setTimeout(sync, 120); }).observe(mc, { childList: true }); sync(); };
+  start();
+})();
+
+// ============================================================
+// תשלום הדגמה בחנות: סיכום הזמנה, פרטי לקוח, "תשלום" בכרטיס בדיקה נעול — בלי חיוב ובלי שמירת פרטי כרטיס
+// ============================================================
+let coState = null;
+function coPrice(p) { return Math.max(0, parseFloat(String(p.price || '').replace(/[^\d.]/g, '')) || 0); }
+function productCheckout(id) {
+  const p = productsList().find(x => x.id === id);
+  if (!p) return;
+  coState = { id, qty: 1, ship: 'delivery', step: 'form' };
+  coRender();
+}
+function coTotals() {
+  const p = productsList().find(x => x.id === coState.id) || {};
+  const sub = coPrice(p) * coState.qty, ship = coState.ship === 'delivery' ? 25 : 0;
+  return { p, sub, ship, total: sub + ship };
+}
+const coMoney = n => '₪' + Number(n).toLocaleString('he-IL', { maximumFractionDigits: 2 });
+function coRender() {
+  if (!coState) return;
+  const { p, sub, ship, total } = coTotals();
+  if (coState.step === 'done') {
+    openMSheet('ההזמנה התקבלה', `<div class="co-done">
+        <span class="co-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
+        <b>התשלום התקבל (הדגמה)</b>
+        <p>מספר הזמנה <span dir="ltr">${escHtml(coState.orderNo)}</span> · ${escHtml(p.name || '')} × ${coState.qty} · ${coMoney(total)}</p>
+        <small>זו הדגמה בלבד — לא בוצע חיוב. כדי שהמוכר יקבל את ההזמנה, שלחו לו את הפרטים:</small>
+      </div>`, `<button type="button" class="ms-btn" onclick="coSendToSeller()">שליחת פרטי ההזמנה למוכר</button><button type="button" class="ms-btn ghost" onclick="closeMSheet()">סגירה</button>`);
+    return;
+  }
+  const v = k => escHtml((coState[k] || ''));
+  openMSheet('תשלום', `<div class="co">
+      <div class="co-demo">מצב הדגמה — לא יבוצע חיוב אמיתי. אין להזין פרטי כרטיס אמיתיים.</div>
+      <section class="co-sum">
+        <div class="co-item"><b>${escHtml(p.name || '')}</b><span>${coMoney(coPrice(p))}</span></div>
+        <div class="co-qty"><span>כמות</span><span class="co-step"><button type="button" onclick="coQty(-1)" aria-label="פחות">−</button><b>${coState.qty}</b><button type="button" onclick="coQty(1)" aria-label="יותר">+</button></span></div>
+        <div class="co-ship">
+          <label><input type="radio" name="co-ship" ${coState.ship === 'delivery' ? 'checked' : ''} onchange="coShip('delivery')"> משלוח עד הבית <small>₪25</small></label>
+          <label><input type="radio" name="co-ship" ${coState.ship === 'pickup' ? 'checked' : ''} onchange="coShip('pickup')"> איסוף עצמי <small>חינם</small></label>
+        </div>
+        <div class="co-line"><span>סכום ביניים</span><span>${coMoney(sub)}</span></div>
+        <div class="co-line"><span>משלוח</span><span>${ship ? coMoney(ship) : 'חינם'}</span></div>
+        <div class="co-line co-total"><span>לתשלום</span><span>${coMoney(total)}</span></div>
+      </section>
+      <section class="co-form">
+        <input id="co-name" placeholder="שם מלא" maxlength="60" value="${v('name')}" autocomplete="name">
+        <input id="co-phone" placeholder="טלפון" maxlength="20" inputmode="tel" value="${v('phone')}" autocomplete="tel" dir="ltr">
+        ${coState.ship === 'delivery' ? `<input id="co-addr" placeholder="כתובת למשלוח" maxlength="120" value="${v('addr')}" autocomplete="street-address">` : ''}
+      </section>
+      <section class="co-card" aria-label="כרטיס בדיקה (הדגמה)">
+        <input value="4242 4242 4242 4242" readonly tabindex="-1" dir="ltr" aria-label="מספר כרטיס בדיקה">
+        <div><input value="12/30" readonly tabindex="-1" dir="ltr" aria-label="תוקף"><input value="123" readonly tabindex="-1" dir="ltr" aria-label="CVV"></div>
+        <small>כרטיס בדיקה קבוע — השדות נעולים</small>
+      </section>
+    </div>`, `<button type="button" class="ms-btn co-pay" onclick="coPay(this)">תשלום ${coMoney(total)} (הדגמה)</button>`);
+}
+function coKeep() { ['name', 'phone', 'addr'].forEach(k => { const el = document.getElementById('co-' + k); if (el) coState[k] = el.value; }); }
+function coQty(d) { coKeep(); coState.qty = Math.max(1, Math.min(10, coState.qty + d)); coRender(); }
+function coShip(v) { coKeep(); coState.ship = v; coRender(); }
+function coPay(btn) {
+  coKeep();
+  const need = [['name', 'שם מלא'], ['phone', 'טלפון']].concat(coState.ship === 'delivery' ? [['addr', 'כתובת']] : []);
+  const miss = need.find(([k]) => !String(coState[k] || '').trim());
+  if (miss) { showCopyToast('חסר: ' + miss[1]); const el = document.getElementById('co-' + miss[0]); if (el) el.focus(); return; }
+  if (!/^[0-9+\-\s]{7,20}$/.test(coState.phone.trim())) { showCopyToast('מספר הטלפון לא תקין'); return; }
+  btn.disabled = true; btn.classList.add('busy'); btn.textContent = 'מעבד תשלום…';
+  setTimeout(() => { coState.step = 'done'; coState.orderNo = 'BW-' + String(Date.now()).slice(-6); coRender(); }, 1400);
+}
+async function coSendToSeller() {
+  const { p, total } = coTotals();
+  let admin = (typeof dmAdminUid !== 'undefined' && dmAdminUid) || (localStorage.getItem('site_admin_uid') || '');
+  if (!admin) { try { admin = (await get(ref(db, 'website/admin_uid'))).val() || ''; } catch (e) {} }
+  const msg = `הזמנה ${coState.orderNo} (תשלום הדגמה): ${p.name} × ${coState.qty} — ${coMoney(total)}. ${coState.ship === 'delivery' ? 'משלוח' : 'איסוף עצמי'}. שם: ${coState.name}, טלפון: ${coState.phone}${coState.ship === 'delivery' ? ', כתובת: ' + coState.addr : ''}.`;
+  closeMSheet();
+  dmStartWith(admin, 'מנהל האתר', msg);
+}
+Object.assign(window, { productCheckout, coQty, coShip, coPay, coSendToSeller });
