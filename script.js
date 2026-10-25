@@ -20060,7 +20060,7 @@ function dmMessagesHTML() {
     const sep = day && day !== lastDay ? `<div class="tg-day"><span>${escHtml(day)}</span></div>` : '';
     lastDay = day || lastDay;
     return `${sep}<div class="tg-msg ${mine ? 'mine' : 'theirs'}">
-      <div class="tg-bubble${m.img ? ' has-img' : ''}">${m.img && /^data:image\/(jpeg|png|webp|gif);base64,/.test(m.img) ? `<img class="tg-img" src="${escHtml(m.img)}" alt="" loading="lazy" onclick="dmViewImg(this.src)">` : ''}${m.text ? `<span class="tg-text">${escHtml(m.text)}</span>` : ''}<span class="tg-msg-time">${dmTime(m.timestamp)}${mine ? ' ✓' : ''}</span></div>
+      <div class="tg-bubble${m.img ? ' has-img' : ''}">${m.img && /^data:image\/(jpeg|png|webp|gif);base64,/.test(m.img) ? `<img class="tg-img" src="${escHtml(m.img)}" alt="" loading="lazy" onclick="dmViewImg(this.src)">` : ''}${m.text ? `${dmRichHTML(m.text)}` : ''}<span class="tg-msg-time">${dmTime(m.timestamp)}${mine ? ' ✓' : ''}</span></div>
     </div>`;
   }).join('');
 }
@@ -20115,7 +20115,7 @@ function dmStartAboutGallery(otherUid, otherName, albumId) {
   try {
     const albums = (typeof photoGetAlbums === 'function') ? photoGetAlbums() : [];
     const a = albums.find(x => String(x.id) === String(albumId));
-    if (a && a.title) prefill = `שלום! פנייה לגבי הגלריה: "${String(a.title).slice(0, 120)}"`;
+    if (a && a.title) prefill = `שלום! פנייה לגבי הגלריה: "${String(a.title).slice(0, 120)}"\n${location.origin}/#p/${a.id}`;
   } catch (e) {}
   dmStartWith(otherUid, otherName || 'משתמש', prefill);
 }
@@ -30001,7 +30001,7 @@ function productDetailViewHTML(list, admin) {
         <div class="prd-buy-box">
           ${price ? `<div class="prd-price">₪${escHtml(price.replace(/^₪/, ''))}</div>` : `<div class="prd-price soft">מחיר בקישור</div>`}
           ${p.stock !== undefined && p.stock !== '' ? `<div class="prd-stock${Number(p.stock) <= 0 ? ' out' : Number(p.stock) <= 3 ? ' low' : ''}">${Number(p.stock) <= 0 ? 'אזל מהמלאי' : Number(p.stock) <= 3 ? `נשארו ${Number(p.stock)} במלאי` : 'במלאי'}</div>` : ''}
-          ${Number(p.stock) <= 0 && p.stock !== undefined && p.stock !== '' ? `<button type="button" class="prd-cta" disabled>אזל מהמלאי</button>` : hasLink ? `<a class="prd-cta" href="${escHtml(link)}" target="_blank" rel="noopener nofollow sponsored">לרכישה</a>` : price ? `<button type="button" class="prd-cta" onclick="productCheckout('${artEsc(p.id)}')">לתשלום</button>` : `<button type="button" class="prd-cta" disabled>בקרוב</button>`}
+          ${Number(p.stock) <= 0 && p.stock !== undefined && p.stock !== '' ? `<button type="button" class="prd-cta" disabled>אזל מהמלאי</button>` : hasLink ? `<a class="prd-cta" href="${escHtml(link)}" target="_blank" rel="noopener nofollow sponsored">לרכישה</a>` : price ? `<div class="prd-buy"><button type="button" class="prd-cta" onclick="cartAdd('${artEsc(p.id)}')">הוספה לעגלה</button><button type="button" class="prd-cta prd-now" onclick="productCheckout('${artEsc(p.id)}')">קנייה עכשיו</button></div>` : `<button type="button" class="prd-cta" disabled>בקרוב</button>`}
         </div>
         <button type="button" class="prd-wish${wish[p.id] ? ' on' : ''}" onclick="productWishToggle('${artEsc(p.id)}', this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/></svg>הוספה לרשימת המשאלות</button>
         <div class="prd-trust"><b>✓ נבחר בקפידה</b><span>מוצרים שאנחנו ממליצים עליהם לזוגות — עם הסבר למה הם עושים טוב לקשר.</span></div>
@@ -31519,36 +31519,32 @@ askKbSubscribe();
 // ============================================================
 let coState = null;
 function coPrice(p) { return Math.max(0, parseFloat(String(p.price || '').replace(/[^\d.]/g, '')) || 0); }
-function productCheckout(id) {
-  const p = productsList().find(x => x.id === id);
-  if (!p) return;
-  coState = { id, qty: 1, ship: 'delivery', step: 'form' };
-  coRender();
-}
+function productCheckout(id) { coState = { items: [{ id, qty: 1 }], fromCart: false, ship: 'delivery', step: 'form' }; coRender(); }
+function cartCheckout() { const c = cartGet(); if (!c.length) { showCopyToast('העגלה ריקה'); return; } coState = { items: c.map(x => ({ id: x.id, qty: x.qty })), fromCart: true, ship: 'delivery', step: 'form' }; coRender(); }
+function coLines() { const list = productsList(); return coState.items.map(x => ({ ...x, p: list.find(p => p.id === x.id) })).filter(x => x.p); }
 function coTotals() {
-  const p = productsList().find(x => x.id === coState.id) || {};
-  const sub = coPrice(p) * coState.qty, ship = coState.ship === 'delivery' ? 25 : 0;
-  return { p, sub, ship, total: sub + ship };
+  const lines = coLines();
+  const sub = lines.reduce((a, l) => a + coPrice(l.p) * l.qty, 0), ship = coState.ship === 'delivery' ? 25 : 0;
+  return { lines, sub, ship, total: sub + ship };
 }
 const coMoney = n => '₪' + Number(n).toLocaleString('he-IL', { maximumFractionDigits: 2 });
 function coRender() {
   if (!coState) return;
-  const { p, sub, ship, total } = coTotals();
+  const { lines, sub, ship, total } = coTotals();
   if (coState.step === 'done') {
     openMSheet('ההזמנה התקבלה', `<div class="co-done">
         <span class="co-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
         <b>התשלום התקבל (הדגמה)</b>
-        <p>מספר הזמנה <span dir="ltr">${escHtml(coState.orderNo)}</span> · ${escHtml(p.name || '')} × ${coState.qty} · ${coMoney(total)}</p>
-        <small>זו הדגמה בלבד — לא בוצע חיוב. כדי שהמוכר יקבל את ההזמנה, שלחו לו את הפרטים:</small>
-      </div>`, `<button type="button" class="ms-btn" onclick="coSendToSeller()">שליחת פרטי ההזמנה למוכר</button><button type="button" class="ms-btn ghost" onclick="closeMSheet()">סגירה</button>`);
+        <p>מספר הזמנה <span dir="ltr">${escHtml(coState.orderNo)}</span> · ${lines.length} פריטים · ${coMoney(total)}</p>
+        <small>זו הדגמה בלבד — לא בוצע חיוב. ההזמנה נשמרה ב"ההזמנות שלי".</small>
+      </div>`, `<button type="button" class="ms-btn" onclick="closeMSheet(); ordersOpen('${escHtml(coState.orderNo)}')">לצפייה בקבלה</button><button type="button" class="ms-btn ghost" onclick="coSendToSeller()">שליחה למוכר</button>`);
     return;
   }
   const v = k => escHtml((coState[k] || ''));
   openMSheet('תשלום', `<div class="co">
       <div class="co-demo">מצב הדגמה — לא יבוצע חיוב אמיתי. אין להזין פרטי כרטיס אמיתיים.</div>
       <section class="co-sum">
-        <div class="co-item"><b>${escHtml(p.name || '')}</b><span>${coMoney(coPrice(p))}</span></div>
-        <div class="co-qty"><span>כמות</span><span class="co-step"><button type="button" onclick="coQty(-1)" aria-label="פחות">−</button><b>${coState.qty}</b><button type="button" onclick="coQty(1)" aria-label="יותר">+</button></span></div>
+        ${lines.map((l, i) => `<div class="co-item"><span class="co-it"><b>${escHtml(l.p.name || '')}</b><small>${coMoney(coPrice(l.p))}</small></span><span class="co-step"><button type="button" onclick="coQty(${i},-1)" aria-label="פחות">−</button><b>${l.qty}</b><button type="button" onclick="coQty(${i},1)" aria-label="יותר">+</button></span></div>`).join('')}
         <div class="co-ship">
           <label><input type="radio" name="co-ship" ${coState.ship === 'delivery' ? 'checked' : ''} onchange="coShip('delivery')"> משלוח עד הבית <small>₪25</small></label>
           <label><input type="radio" name="co-ship" ${coState.ship === 'pickup' ? 'checked' : ''} onchange="coShip('pickup')"> איסוף עצמי <small>חינם</small></label>
@@ -31570,7 +31566,7 @@ function coRender() {
     </div>`, `<button type="button" class="ms-btn co-pay" onclick="coPay(this)">תשלום ${coMoney(total)} (הדגמה)</button>`);
 }
 function coKeep() { ['name', 'phone', 'addr'].forEach(k => { const el = document.getElementById('co-' + k); if (el) coState[k] = el.value; }); }
-function coQty(d) { coKeep(); coState.qty = Math.max(1, Math.min(10, coState.qty + d)); coRender(); }
+function coQty(i, d) { coKeep(); const it = coState.items[i]; if (!it) return; it.qty = Math.max(1, Math.min(10, it.qty + d)); coRender(); }
 function coShip(v) { coKeep(); coState.ship = v; coRender(); }
 function coPay(btn) {
   coKeep();
@@ -31579,17 +31575,22 @@ function coPay(btn) {
   if (miss) { showCopyToast('חסר: ' + miss[1]); const el = document.getElementById('co-' + miss[0]); if (el) el.focus(); return; }
   if (!/^[0-9+\-\s]{7,20}$/.test(coState.phone.trim())) { showCopyToast('מספר הטלפון לא תקין'); return; }
   btn.disabled = true; btn.classList.add('busy'); btn.textContent = 'מעבד תשלום…';
-  setTimeout(() => { coState.step = 'done'; coState.orderNo = 'BW-' + String(Date.now()).slice(-6); coRender(); }, 1400);
+  setTimeout(() => {
+    coState.step = 'done'; coState.orderNo = 'BW-' + String(Date.now()).slice(-6);
+    const { lines, sub, ship, total } = coTotals();
+    ordersAdd({ no: coState.orderNo, t: Date.now(), items: lines.map(l => ({ id: l.id, name: l.p.name, price: coPrice(l.p), qty: l.qty, image: l.p.image || '' })), sub, ship, total, method: coState.ship, name: coState.name, phone: coState.phone, addr: coState.ship === 'delivery' ? coState.addr : '' });
+    if (coState.fromCart) cartSet([]);
+    coRender();
+  }, 1400);
 }
 async function coSendToSeller() {
-  const { p, total } = coTotals();
+  const o = ordersGet().find(x => x.no === coState.orderNo);
   let admin = (typeof dmAdminUid !== 'undefined' && dmAdminUid) || (localStorage.getItem('site_admin_uid') || '');
   if (!admin) { try { admin = (await get(ref(db, 'website/admin_uid'))).val() || ''; } catch (e) {} }
-  const msg = `הזמנה ${coState.orderNo} (תשלום הדגמה): ${p.name} × ${coState.qty} — ${coMoney(total)}. ${coState.ship === 'delivery' ? 'משלוח' : 'איסוף עצמי'}. שם: ${coState.name}, טלפון: ${coState.phone}${coState.ship === 'delivery' ? ', כתובת: ' + coState.addr : ''}.`;
   closeMSheet();
-  dmStartWith(admin, 'מנהל האתר', msg);
+  dmStartWith(admin, 'מנהל האתר', o ? orderMsgText(o) : `הזמנה ${coState.orderNo}`);
 }
-Object.assign(window, { productCheckout, coQty, coShip, coPay, coSendToSeller });
+Object.assign(window, { productCheckout, cartCheckout, coQty, coShip, coPay, coSendToSeller });
 
 // ============================================================
 // מהירות: התמונות הכבדות (כל עמודי הקומיקס, תמונות נוספות בגלריה) נשמרות ב-website/media/{id}
@@ -31688,3 +31689,146 @@ function mediaNeedsLoad() { return true; }
   const t = setInterval(() => { try { if (typeof isAdmin === 'function' && isAdmin()) { clearInterval(t); mediaLoadAll(); } } catch (e) {} }, 1500);
   setTimeout(() => clearInterval(t), 10 * 60 * 1000);
 })();
+
+// ============================================================
+// עגלת קניות (בדפדפן של הגולש) + כפתור עגלה בשורה העליונה
+// ============================================================
+function cartGet() { try { return (JSON.parse(localStorage.getItem('bw_cart') || '[]') || []).filter(x => x && x.id && x.qty > 0); } catch (e) { return []; } }
+function cartSet(c) { try { localStorage.setItem('bw_cart', JSON.stringify(c)); } catch (e) {} cartBadge(); if (document.getElementById('cart-panel')) cartRender(); }
+function cartAdd(id) {
+  const c = cartGet(); const it = c.find(x => x.id === id);
+  if (it) it.qty = Math.min(10, it.qty + 1); else c.push({ id, qty: 1 });
+  cartSet(c);
+  const p = productsList().find(x => x.id === id);
+  glassBanner({ title: 'נוסף לעגלה', sub: p ? p.name : '', icon: 'ok', btn: 'לעגלה', onBtn: () => cartOpen() });
+}
+function cartQty(id, d) { const c = cartGet(); const it = c.find(x => x.id === id); if (!it) return; it.qty += d; cartSet(it.qty > 0 ? c : c.filter(x => x.id !== id)); }
+function cartCount() { return cartGet().reduce((a, x) => a + x.qty, 0); }
+function cartBadge() { const n = cartCount(); document.querySelectorAll('.cart-hdr-n').forEach(b => { b.textContent = n || ''; b.hidden = !n; }); }
+function cartRender() {
+  const box = document.getElementById('cart-panel'); if (!box) return;
+  const list = productsList(); const c = cartGet();
+  const lines = c.map(x => ({ ...x, p: list.find(p => p.id === x.id) })).filter(x => x.p);
+  const sub = lines.reduce((a, l) => a + coPrice(l.p) * l.qty, 0);
+  box.querySelector('.cart-body').innerHTML = lines.length ? lines.map(l => `<div class="cart-row">
+      <span class="cart-th">${l.p.image ? `<img src="${escHtml(l.p.image)}" alt="">` : PRODUCT_ICON}</span>
+      <span class="cart-tx"><b>${escHtml(l.p.name || '')}</b><small>${coMoney(coPrice(l.p))}</small></span>
+      <span class="co-step"><button type="button" onclick="cartQty('${artEsc(l.id)}',-1)" aria-label="פחות">−</button><b>${l.qty}</b><button type="button" onclick="cartQty('${artEsc(l.id)}',1)" aria-label="יותר">+</button></span>
+    </div>`).join('') : `<div class="cart-empty">העגלה ריקה<br><button type="button" class="ms-btn" onclick="cartClose(); navigateToPage('page-products-main')">לחנות</button></div>`;
+  box.querySelector('.cart-foot').innerHTML = lines.length ? `<div class="co-line co-total"><span>סה״כ (לפני משלוח)</span><span>${coMoney(sub)}</span></div><button type="button" class="ms-btn" onclick="cartClose(); cartCheckout()">לתשלום</button>` : '';
+}
+function cartOpen() {
+  let el = document.getElementById('cart-panel');
+  if (!el) {
+    el = document.createElement('div'); el.id = 'cart-panel';
+    el.innerHTML = `<div class="ask-backdrop" onclick="cartClose()"></div><section class="ask-card cart-card" role="dialog" aria-label="העגלה שלי">
+      <header class="ask-head"><b>העגלה שלי</b><button type="button" class="ask-hb" onclick="cartClose(); ordersOpen()" title="ההזמנות שלי" aria-label="ההזמנות שלי"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg></button><button type="button" class="ask-hb" onclick="cartClose()" aria-label="סגירה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header>
+      <div class="cart-body ask-msgs"></div><div class="cart-foot"></div></section>`;
+    document.body.appendChild(el);
+  }
+  cartRender();
+  requestAnimationFrame(() => el.classList.add('show'));
+  setTimeout(() => el.classList.add('show'), 30);
+}
+function cartClose() { const el = document.getElementById('cart-panel'); if (el) el.classList.remove('show'); }
+(function cartHeaderBtn() {
+  const add = () => {
+    if (document.querySelector('.cart-hdr-btn')) return true;
+    const sb = document.querySelector('header [onclick^="openSiteSearch"]');
+    if (!sb) return false;
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = sb.className + ' cart-hdr-btn'; b.title = 'העגלה שלי'; b.setAttribute('aria-label', 'העגלה שלי');
+    b.setAttribute('onclick', 'cartOpen()');
+    b.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M3 4h2l2.4 11.2a1 1 0 0 0 1 .8h9.4a1 1 0 0 0 1-.8L20.5 8H6.2"/></svg><i class="cart-hdr-n" hidden></i>';
+    sb.parentNode.insertBefore(b, sb);
+    cartBadge();
+    return true;
+  };
+  if (!add()) { const t = setInterval(() => { if (add()) clearInterval(t); }, 500); setTimeout(() => clearInterval(t), 15000); }
+})();
+
+// ============================================================
+// ההזמנות שלי + קבלה בסגנון מעקב משלוח (שלבים, זמן אספקה, כתובת, פריטים, מספר הזמנה)
+// ============================================================
+function ordersGet() { try { return JSON.parse(localStorage.getItem('bw_orders') || '[]') || []; } catch (e) { return []; } }
+function ordersAdd(o) { const list = ordersGet(); list.unshift(o); try { localStorage.setItem('bw_orders', JSON.stringify(list.slice(0, 50))); } catch (e) {} }
+const ORDER_STEPS = ['הוזמן', 'נאסף', 'נארז', 'נשלח'];
+function orderStep(o) { const min = (Date.now() - o.t) / 60000; return min < 2 ? 1 : min < 60 ? 2 : min < 24 * 60 ? 3 : 4; }   // הדגמה: מתקדם עם הזמן
+function orderEta(o) {
+  const add = (d, n) => { const x = new Date(d); let k = 0; while (k < n) { x.setDate(x.getDate() + 1); if (x.getDay() !== 5 && x.getDay() !== 6) k++; } return x; };
+  const f = d => d.toLocaleDateString('he-IL', { day: 'numeric', month: 'short' });
+  return o.method === 'pickup' ? 'מוכן לאיסוף תוך יום עסקים' : `3–7 ימי עסקים (${f(add(o.t, 3))}–${f(add(o.t, 7))})`;
+}
+function orderMsgText(o) {
+  return `🧾 הזמנה ${o.no}\n${o.items.map(i => `• ${i.name} × ${i.qty} — ₪${i.price * i.qty}`).join('\n')}\nסה״כ ₪${o.total} · ${o.method === 'pickup' ? 'איסוף עצמי' : 'משלוח'} (תשלום הדגמה)\nשם: ${o.name} · טלפון: ${o.phone}${o.addr ? ' · כתובת: ' + o.addr : ''}`;
+}
+function orderReceiptHTML(o) {
+  const st = orderStep(o);
+  return `<article class="rcp">
+    <div class="rcp-band"><span>✓ אחריות משלוח</span><small>זיכוי על איחור · החזרה אם הפריט ניזוק</small></div>
+    <div class="rcp-top"><div><b>${st >= 4 ? 'ההזמנה נשלחה' : st >= 3 ? 'ההזמנה נארזה' : 'ההזמנה בהכנה'}</b><small>רוב ההזמנות יוצאות תוך 2 ימי עסקים</small></div>
+      <button type="button" class="rcp-btn" onclick="dmStartWith(localStorage.getItem('site_admin_uid') || '', 'מנהל האתר', ${escHtml(JSON.stringify('שאלה לגבי הזמנה ' + o.no))})">עדכונים</button></div>
+    <div class="rcp-steps">${ORDER_STEPS.map((l, i) => `<div class="rcp-st${i < st ? ' done' : ''}"><i>${i < st ? '✓' : ''}</i><span>${l}</span></div>`).join('')}<span class="rcp-bar" style="--p:${Math.round((Math.min(st, 4) - 1) / 3 * 100)}%"></span></div>
+    <div class="rcp-mid">
+      <div><b>${o.method === 'pickup' ? 'איסוף עצמי' : 'כתובת למשלוח'}</b><p>${escHtml(o.name || '')}${o.addr ? ' · ' + escHtml(o.addr) : ''}</p><small dir="ltr">${escHtml(o.phone || '')}</small></div>
+      <div><b>זמן אספקה</b><p class="rcp-eta">${escHtml(orderEta(o))}</p></div>
+    </div>
+    <div class="rcp-items"><div><b>פריטי ההזמנה</b><small>מספר הזמנה: <span dir="ltr">${escHtml(o.no)}</span></small></div>
+      <div class="rcp-thumbs">${o.items.map(i => `<span title="${escHtml(i.name)} × ${i.qty}">${i.image ? `<img src="${escHtml(i.image)}" alt="">` : PRODUCT_ICON}<em>${i.qty}</em></span>`).join('')}</div></div>
+    <div class="rcp-lines">${o.items.map(i => `<div><span>${escHtml(i.name)} × ${i.qty}</span><span>₪${i.price * i.qty}</span></div>`).join('')}<div><span>משלוח</span><span>${o.ship ? '₪' + o.ship : 'חינם'}</span></div><div class="rcp-sum"><span>סה״כ שולם (הדגמה)</span><span>₪${o.total}</span></div></div>
+    <div class="rcp-foot"><small>🛡️ לעולם לא נבקש תשלום נוסף ב-SMS או במייל.</small><span>${new Date(o.t).toLocaleString('he-IL')}</span></div>
+  </article>`;
+}
+function ordersOpen(no) {
+  const list = ordersGet();
+  const sel = no ? list.filter(o => o.no === no) : list;
+  openMSheet(no ? 'קבלה' : 'ההזמנות שלי', sel.length ? sel.map(orderReceiptHTML).join('') : '<div class="cart-empty">עוד אין הזמנות</div>', no ? `<button type="button" class="ms-btn ghost" onclick="ordersOpen()">כל ההזמנות</button>` : '');
+}
+Object.assign(window, { cartAdd, cartQty, cartOpen, cartClose, ordersOpen });
+
+// ============================================================
+// צ'אט: הודעה על קנייה / עם קישור לתמונה מוצגת ככרטיס מסודר
+// ============================================================
+function dmRichHTML(text) {
+  const t = String(text || '');
+  const om = t.match(/^🧾 הזמנה (BW-\d+)\n([\s\S]*)$/);
+  if (om) {
+    const lines = om[2].split('\n');
+    const items = lines.filter(l => l.startsWith('• ')).map(l => l.slice(2));
+    const total = (lines.find(l => l.startsWith('סה״כ')) || '');
+    const who = (lines.find(l => l.startsWith('שם:')) || '');
+    const mine = ordersGet().some(o => o.no === om[1]);
+    return `<div class="dm-card dm-order"><div class="dm-card-h"><span class="dm-card-ic">🧾</span><b>הזמנה <span dir="ltr">${escHtml(om[1])}</span></b></div>
+      <ul>${items.map(i => `<li>${escHtml(i)}</li>`).join('')}</ul><div class="dm-card-sum">${escHtml(total)}</div>${who ? `<small>${escHtml(who)}</small>` : ''}
+      ${mine ? `<button type="button" class="dm-card-btn" onclick="ordersOpen('${escHtml(om[1])}')">לצפייה בקבלה</button>` : ''}</div>`;
+  }
+  const lm = t.match(/https?:\/\/[^\s]+\/#([ps])\/([A-Za-z0-9_-]+)/);
+  if (lm) {
+    const kind = lm[1], id = lm[2];
+    let it = null;
+    try { it = kind === 'p' ? (typeof getPhotosForHome === 'function' ? getPhotosForHome() : []).concat(typeof photoGetAlbums === 'function' ? photoGetAlbums() : []).find(x => x && x.id === id) : (typeof getAllStoriesFromPages === 'function' ? getAllStoriesFromPages() : []).find(x => x && x.id === id); } catch (e) {}
+    const img = it && (((it.images || []).find(Boolean)) || it.cover || it.image || '');
+    const rest = t.replace(lm[0], '').trim();
+    const open = kind === 'p' ? `homeOpenPhotos(); photoOpenDetail('${artEsc(id)}')` : `storyOpenDetail('${artEsc(id)}')`;
+    return `${rest ? `<span class="tg-text">${escHtml(rest)}</span>` : ''}<button type="button" class="dm-card dm-item" onclick="if (typeof closeMessages === 'function') closeMessages(); ${open}">
+      ${img ? `<span class="dm-item-img"><img src="${escHtml(img)}" alt="" loading="lazy"></span>` : ''}<span class="dm-item-tx"><b>${escHtml((it && it.title) || 'פריט באתר')}</b><small>${kind === 'p' ? 'תמונות גולשים' : 'קומיקס / סיפור'} · לחצו לפתיחה</small></span></button>`;
+  }
+  return `<span class="tg-text">${escHtml(t)}</span>`;
+}
+
+// ============================================================
+// עמוד הבית: כפתור יד על כל תמונה בשורות — חושף את התמונה הזו בלבד ונעלם
+// ============================================================
+(function homeTapReveal() {
+  const run = () => {
+    if (!document.documentElement.classList.contains('adult-blur')) return;
+    document.querySelectorAll('.hr-card .hr-img:not(.unblur):not([data-tap])').forEach(w => {
+      w.dataset.tap = '1';
+      w.insertAdjacentHTML('beforeend', `<span class="img-tap-btn hr-tap" role="button" tabindex="0" aria-label="הצגת התמונה" onclick="event.stopPropagation(); event.preventDefault(); const w = this.closest('.hr-img'); w.classList.add('unblur'); w.classList.remove('blur'); this.remove();"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 11.24V7.5a2.5 2.5 0 0 1 5 0v3.74c1.21-.81 2-2.18 2-3.74C16 5.01 13.99 3 11.5 3S7 5.01 7 7.5c0 1.56.79 2.93 2 3.74zm9.84 4.63-4.54-2.26c-.17-.07-.35-.11-.54-.11H13v-6c0-.83-.67-1.5-1.5-1.5S10 6.67 10 7.5v10.74l-3.43-.72c-.08-.01-.15-.03-.24-.03-.31 0-.59.13-.79.33l-.79.8 4.94 4.94c.27.27.65.44 1.06.44h6.79c.75 0 1.33-.55 1.44-1.28l.75-5.27c.01-.07.02-.14.02-.2 0-.62-.38-1.16-.91-1.38z"/></svg></span>`);
+    });
+  };
+  let q = 0;
+  new MutationObserver(() => { clearTimeout(q); q = setTimeout(run, 120); }).observe(document.body, { childList: true, subtree: true });
+  run();
+})();
+window.dmRichHTML = (t) => dmRichHTML(t);
