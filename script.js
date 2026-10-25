@@ -31849,137 +31849,132 @@ window.dmRichHTML = (t) => dmRichHTML(t);
 // עמוד "AI ותוכנה": הורדת האפליקציה, חיבור MCP וצ'אט עם מודלי שפה
 // מה שאין לו שרת אמיתי מסומן כהדגמה. צ'אט: מפתח API של הגולש נשמר רק בדפדפן שלו ונשלח ישירות לספק.
 // ============================================================
+// ---- חיבורים (המקום היחיד לעדכן) ----
+// downloads: קישורים לקבצי ההתקנה כשיהיו (ריק = "בקרוב"). המפתחות למודלים — במשתני הסביבה של Vercel (ראו api/chat.js).
+const AI_CONFIG = {
+  mcpUrl: 'https://black1white00.com/api/mcp',
+  chatUrl: '/api/chat',
+  downloads: { windows: '', mac: '', android: '', ios: '' }
+};
 const AI_MODELS = [
-  { id: 'claude-opus-5-5', name: 'Claude Opus 5.5', prov: 'anthropic' },
-  { id: 'claude-sonnet-5-5', name: 'Claude Sonnet 5.5', prov: 'anthropic' },
-  { id: 'claude-haiku-5-5', name: 'Claude Haiku 5.5', prov: 'anthropic' },
-  { id: 'openai', name: 'ChatGPT (OpenAI)', prov: 'openai' },
-  { id: 'gemini', name: 'Gemini (Google)', prov: 'google' },
-  { id: 'llama', name: 'Llama (Meta)', prov: 'demo' },
-  { id: 'mistral', name: 'Mistral', prov: 'demo' },
-  { id: 'deepseek', name: 'DeepSeek', prov: 'demo' },
-  { id: 'grok', name: 'Grok (xAI)', prov: 'demo' }
+  { id: 'claude-opus-5-5', name: 'Claude Opus 5.5' },
+  { id: 'claude-sonnet-5-5', name: 'Claude Sonnet 5.5' },
+  { id: 'claude-haiku-5-5', name: 'Claude Haiku 5.5' },
+  { id: 'openai', name: 'ChatGPT' },
+  { id: 'gemini', name: 'Gemini' },
+  { id: 'llama', name: 'Llama', demo: true },
+  { id: 'mistral', name: 'Mistral', demo: true },
+  { id: 'deepseek', name: 'DeepSeek', demo: true },
+  { id: 'grok', name: 'Grok', demo: true }
 ];
-const AI_PROV = { anthropic: 'Anthropic', openai: 'OpenAI', google: 'Google AI Studio', demo: '' };
 let aiLog = [], aiModel = 'claude-sonnet-5-5', aiBusy = false;
-function aiKey(prov) { try { return localStorage.getItem('ai_key_' + prov) || ''; } catch (e) { return ''; } }
-function aiCustomModel(prov) { try { return localStorage.getItem('ai_model_' + prov) || ''; } catch (e) { return ''; } }
+const AI_IC = {
+  dl: '<path d="M12 4v11"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/>',
+  win: '<rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/>',
+  mac: '<rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8M12 17v4"/>',
+  android: '<rect x="6" y="3" width="12" height="18" rx="3"/><path d="M11 18h2"/>',
+  ios: '<rect x="6.5" y="2.5" width="11" height="19" rx="3"/><path d="M10.5 5h3"/>',
+  copy: '<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/>'
+};
+const aiSvg = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
 function buildAiPage() {
   try { aiModel = localStorage.getItem('ai_model') || aiModel; } catch (e) {}
-  const dl = (os, label, sub, icon) => `<button type="button" class="ai-dl" onclick="aiDownload('${os}')"><span class="ai-dl-ic">${icon}</span><span><b>${label}</b><small>${sub}</small></span></button>`;
-  const mcpCfg = JSON.stringify({ mcpServers: { black1white00: { url: 'https://black1white00.com/mcp', headers: { Authorization: 'Bearer YOUR_TOKEN' } } } }, null, 2);
+  const plat = [['windows', 'Windows', AI_IC.win], ['mac', 'macOS', AI_IC.mac], ['android', 'Android', AI_IC.android], ['ios', 'iPhone', AI_IC.ios]];
   return `<div class="ai-page" data-page-id="page-ai">
-    <section class="ai-hero">
-      <span class="ai-kicker">AI ותוכנה</span>
-      <h1>Black1White00 בכל מקום — ובחיבור לכל מודל</h1>
-      <p>אפליקציה למחשב ולטלפון, חיבור לעוזרי AI דרך MCP, וצ'אט אחד עם כל מודלי השפה.</p>
-    </section>
+    <header class="ai-head"><span class="ai-kicker">AI ותוכנה</span><h1>האתר שלך, בכל מקום</h1><p>אפליקציה, חיבור לעוזרי AI, וצ'אט אחד עם כל המודלים.</p></header>
+
     <section class="ai-sec">
-      <h2>הורדת התוכנה</h2>
-      <div class="ai-dls">
-        ${dl('pwa', 'התקנה מהדפדפן', 'מומלץ · עובד בכל מכשיר', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>')}
-        ${dl('windows', 'Windows', 'הדגמה · ‎.exe', '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.5 10 4.5v7H3zM11 4.3 21 3v8.5H11zM3 12.5h7v7l-7-1zM11 12.5h10V21l-10-1.4z"/></svg>')}
-        ${dl('mac', 'macOS', 'הדגמה · ‎.dmg', '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.4 12.6c0-2.4 2-3.5 2-3.6-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.1-2.8.9-3.5.9s-1.8-.9-3-.9C6.900 7.200 5.300 8.200 4.500 9.700c-1.700 2.900-.400 7.200 1.200 9.600.8 1.100 1.700 2.400 2.900 2.300 1.200 0 1.600-.7 3-.7s1.800.7 3 .7c1.300 0 2.100-1.100 2.800-2.200.9-1.300 1.300-2.500 1.300-2.600 0 0-2.400-.9-2.300-4.200zM14.200 5.700c.6-.8 1.100-1.900 1-3-.9 0-2.100.6-2.800 1.400-.6.700-1.100 1.800-1 2.900 1.100.1 2.100-.5 2.800-1.300z"/></svg>')}
-        ${dl('android', 'Android', 'הדגמה · Google Play', '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 9h10v8a1 1 0 0 1-1 1h-1v3h-2v-3h-2v3H9v-3H8a1 1 0 0 1-1-1zM5 9.5a1 1 0 0 1 2 0v5a1 1 0 0 1-2 0zM17 9.5a1 1 0 0 1 2 0v5a1 1 0 0 1-2 0zM7.2 8a4.8 4.8 0 0 1 9.6 0z"/></svg>')}
-        ${dl('ios', 'iPhone', 'הדגמה · App Store', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M10.5 18.5h3" stroke-linecap="round"/></svg>')}
+      <div class="ai-sec-h"><h2>הורדה</h2></div>
+      <div class="ai-dl-main">
+        <button type="button" class="ai-primary" onclick="aiDownload('pwa')">${aiSvg(AI_IC.dl)}<span>התקנת האפליקציה</span></button>
+        <small>מתקינים ישירות מהדפדפן — עובד במחשב ובטלפון, בלי חנות.</small>
       </div>
+      <div class="ai-plats">${plat.map(([k, l, ic]) => `<button type="button" class="ai-plat" onclick="aiDownload('${k}')">${aiSvg(ic)}<span>${l}</span><small>${AI_CONFIG.downloads[k] ? 'הורדה' : 'בקרוב'}</small></button>`).join('')}</div>
     </section>
+
     <section class="ai-sec">
-      <h2>חיבור ל-MCP</h2>
-      <p class="ai-note">חברו את Claude, Cursor או כל לקוח MCP לאתר — כדי לחפש תמונות, לקרוא את החדשות ולשלוח הודעות מתוך העוזר. <b>השרת עצמו עדיין בהדגמה</b> — ההגדרות מוכנות לרגע שבו הוא יעלה.</p>
-      <div class="ai-tabs" role="tablist">${['Claude Desktop', 'Cursor', 'VS Code'].map((t, i) => `<button type="button" class="ai-tab${i === 0 ? ' on' : ''}" onclick="aiMcpTab(this, ${i})">${t}</button>`).join('')}</div>
-      <div class="ai-code"><pre id="ai-mcp-cfg" dir="ltr">${escHtml(mcpCfg)}</pre><button type="button" class="ai-copy" onclick="aiCopy('ai-mcp-cfg')">העתקה</button></div>
+      <div class="ai-sec-h"><h2>חיבור MCP</h2><span class="ai-live"><i></i>פעיל</span></div>
+      <p class="ai-note">מחברים את Claude, Cursor או VS Code לאתר — והעוזר יכול לחפש תמונות, קומיקס ומוצרים, ולקרוא את החדשות.</p>
+      <div class="ai-url"><code id="ai-mcp-url" dir="ltr">${escHtml(AI_CONFIG.mcpUrl)}</code><button type="button" class="ai-icbtn" onclick="aiCopyText(AI_CONFIG_URL())" aria-label="העתקת הכתובת" title="העתקה">${aiSvg(AI_IC.copy)}</button></div>
+      <div class="ai-seg" role="tablist">${['Claude', 'Cursor', 'VS Code'].map((t, i) => `<button type="button" class="ai-seg-b${i === 0 ? ' on' : ''}" onclick="aiMcpTab(this, ${i})">${t}</button>`).join('')}</div>
       <ol class="ai-steps" id="ai-mcp-steps"></ol>
-      <div class="ai-tools"><b>כלים שהשרת חושף (הדגמה):</b> <code>search_items</code> · <code>get_item</code> · <code>list_news</code> · <code>send_message</code> · <code>my_orders</code></div>
+      <div class="ai-code"><pre id="ai-mcp-cfg" dir="ltr"></pre><button type="button" class="ai-icbtn" onclick="aiCopyText(document.getElementById('ai-mcp-cfg').textContent)" aria-label="העתקת ההגדרה" title="העתקה">${aiSvg(AI_IC.copy)}</button></div>
+      <div class="ai-tools">${['search_items', 'get_item', 'list_news', 'list_products'].map(t => `<code>${t}</code>`).join('')}</div>
     </section>
+
     <section class="ai-sec">
-      <h2>צ'אט עם כל המודלים</h2>
-      <p class="ai-note">בחרו מודל ושאלו. עם מפתח API משלכם (נשמר רק בדפדפן שלכם ונשלח ישירות לספק) — תשובה אמיתית. בלי מפתח — מצב הדגמה.</p>
+      <div class="ai-sec-h"><h2>צ'אט</h2>
+        <select id="ai-model" class="ai-select" onchange="aiSetModel(this.value)" aria-label="בחירת מודל">${AI_MODELS.map(m => `<option value="${m.id}"${m.id === aiModel ? ' selected' : ''}>${m.name}</option>`).join('')}</select>
+      </div>
       <div class="ai-chat">
-        <div class="ai-bar">
-          <select id="ai-model" onchange="aiSetModel(this.value)">${AI_MODELS.map(m => `<option value="${m.id}"${m.id === aiModel ? ' selected' : ''}>${m.name}${m.prov === 'demo' ? ' (הדגמה)' : ''}</option>`).join('')}</select>
-          <button type="button" class="ai-keybtn" onclick="aiKeyOpen()">מפתחות API</button>
-          <button type="button" class="ai-keybtn" onclick="aiClear()">שיחה חדשה</button>
-        </div>
         <div class="ai-msgs" id="ai-msgs"></div>
-        <form class="ai-input" onsubmit="event.preventDefault(); aiSend()"><textarea id="ai-q" rows="2" maxlength="4000" placeholder="כתבו הודעה…"></textarea><button type="submit" class="ask-send" aria-label="שליחה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button></form>
+        <form class="ai-input" onsubmit="event.preventDefault(); aiSend()"><textarea id="ai-q" rows="1" maxlength="4000" placeholder="כתבו הודעה…"></textarea><button type="submit" class="ask-send" aria-label="שליחה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button></form>
       </div>
     </section>
   </div>`;
 }
-const AI_MCP_STEPS = [
-  ['פתחו ב-Claude Desktop: הגדרות ← Developer ← Edit Config.', 'הדביקו את ההגדרה בקובץ claude_desktop_config.json ושמרו.', 'הפעילו מחדש את Claude — הכלים של Black1White00 יופיעו בתפריט הכלים.'],
-  ['ב-Cursor: Settings ← MCP ← Add new MCP server.', 'הדביקו את ההגדרה בקובץ ‎.cursor/mcp.json.', 'רעננו — השרת יופיע ברשימה כ-"black1white00".'],
-  ['ב-VS Code: פתחו את פלטת הפקודות ← "MCP: Add Server".', 'בחרו HTTP והדביקו את הכתובת https://black1white00.com/mcp.', 'אשרו — הכלים יהיו זמינים במצב Agent.']
+function AI_CONFIG_URL() { return AI_CONFIG.mcpUrl; }
+const AI_MCP = [
+  { steps: ['Claude Desktop ← הגדרות ← Connectors ← Add custom connector.', 'מדביקים את הכתובת שלמעלה ושומרים.', 'בשיחה חדשה — הכלים של Black1White00 זמינים.'], cfg: { mcpServers: { black1white00: { type: 'http', url: '{url}' } } } },
+  { steps: ['Cursor ← Settings ← MCP ← Add new MCP server.', 'מדביקים את ההגדרה בקובץ ‎.cursor/mcp.json.', 'השרת יופיע ברשימה כ-"black1white00".'], cfg: { mcpServers: { black1white00: { url: '{url}' } } } },
+  { steps: ['VS Code ← פלטת הפקודות ← "MCP: Add Server" ← HTTP.', 'מדביקים את הכתובת, או את ההגדרה בקובץ ‎.vscode/mcp.json.', 'הכלים זמינים במצב Agent.'], cfg: { servers: { black1white00: { type: 'http', url: '{url}' } } } }
 ];
-function aiMcpTab(btn, i) { document.querySelectorAll('.ai-tab').forEach(b => b.classList.toggle('on', b === btn)); const ol = document.getElementById('ai-mcp-steps'); if (ol) ol.innerHTML = AI_MCP_STEPS[i].map(x => `<li>${escHtml(x)}</li>`).join(''); }
-function aiInit() { aiMcpTab(document.querySelector('.ai-tab'), 0); aiRender(); const q = document.getElementById('ai-q'); if (q) q.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); aiSend(); } }); }
-function aiCopy(id) { const el = document.getElementById(id); if (!el) return; try { navigator.clipboard.writeText(el.textContent); showCopyToast('הועתק'); } catch (e) {} }
+function aiMcpTab(btn, i) {
+  document.querySelectorAll('.ai-seg-b').forEach(b => b.classList.toggle('on', b === btn));
+  const t = AI_MCP[i];
+  const ol = document.getElementById('ai-mcp-steps'); if (ol) ol.innerHTML = t.steps.map(x => `<li>${escHtml(x)}</li>`).join('');
+  const pre = document.getElementById('ai-mcp-cfg'); if (pre) pre.textContent = JSON.stringify(t.cfg, null, 2).replace('{url}', AI_CONFIG.mcpUrl);
+}
+function aiInit() {
+  aiMcpTab(document.querySelector('.ai-seg-b'), 0); aiRender();
+  const q = document.getElementById('ai-q');
+  if (q) { q.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); aiSend(); } }); q.addEventListener('input', () => { q.style.height = 'auto'; q.style.height = Math.min(q.scrollHeight, 160) + 'px'; }); }
+}
+function aiCopyText(t) { try { navigator.clipboard.writeText(t); showCopyToast('הועתק'); } catch (e) {} }
 let aiInstallEvt = null;
 window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); aiInstallEvt = e; });
 function aiDownload(os) {
   if (os === 'pwa') {
     if (aiInstallEvt) { aiInstallEvt.prompt(); aiInstallEvt = null; return; }
-    glassBanner({ title: 'התקנה מהדפדפן', sub: /iPhone|iPad/.test(navigator.userAgent) ? 'בספארי: כפתור השיתוף ← "הוספה למסך הבית"' : 'בתפריט הדפדפן: "התקנת האפליקציה" / "הוספה למסך הבית"', icon: 'ok', ms: 4000 });
+    if (window.matchMedia('(display-mode: standalone)').matches) { glassBanner({ title: 'האפליקציה כבר מותקנת', icon: 'ok' }); return; }
+    glassBanner({ title: 'התקנה', sub: /iPhone|iPad/.test(navigator.userAgent) ? 'בספארי: שיתוף ← "הוספה למסך הבית"' : 'בתפריט הדפדפן: "התקנת האפליקציה"', icon: 'ok', ms: 4000 });
     return;
   }
-  glassBanner({ title: 'הדגמה', sub: 'קובץ ההתקנה ל-' + ({ windows: 'Windows', mac: 'macOS', android: 'Android', ios: 'iPhone' }[os]) + ' יהיה זמין בקרוב. בינתיים — "התקנה מהדפדפן".', icon: 'warn', ms: 4000 });
+  const url = AI_CONFIG.downloads[os];
+  if (url) { window.open(url, '_blank', 'noopener'); return; }
+  glassBanner({ title: 'בקרוב', sub: 'בינתיים — "התקנת האפליקציה" מהדפדפן', icon: 'warn', ms: 3000 });
 }
 function aiSetModel(v) { aiModel = v; try { localStorage.setItem('ai_model', v); } catch (e) {} }
-function aiClear() { aiLog = []; aiRender(); }
 function aiRender() {
   const box = document.getElementById('ai-msgs'); if (!box) return;
-  box.innerHTML = aiLog.length ? aiLog.map(m => `<div class="ai-m ${m.who}">${m.who === 'bot' ? `<small>${escHtml(m.model || '')}${m.demo ? ' · הדגמה' : ''}</small>` : ''}<span>${escHtml(m.text)}</span></div>`).join('') + (aiBusy ? '<div class="ai-m bot ai-typing"><span>…</span></div>' : '')
-    : '<div class="ai-empty">בחרו מודל למעלה ושאלו כל דבר.</div>';
+  const m = AI_MODELS.find(x => x.id === aiModel) || AI_MODELS[1];
+  box.innerHTML = aiLog.length ? aiLog.map(x => `<div class="ai-m ${x.who}">${x.who === 'bot' ? `<small>${escHtml(x.model || '')}${x.demo ? ' · הדגמה' : ''}</small>` : ''}<span>${escHtml(x.text)}</span></div>`).join('') + (aiBusy ? '<div class="ai-m bot ai-typing"><span><i></i><i></i><i></i></span></div>' : '')
+    : `<div class="ai-empty"><b>${escHtml(m.name)}</b><span>שאלו כל דבר</span></div>`;
   box.scrollTop = box.scrollHeight;
 }
-function aiKeyOpen() {
-  const row = (prov, ph, mph) => `<label class="ai-key"><b>${AI_PROV[prov]}</b><input id="aik-${prov}" type="password" autocomplete="off" placeholder="${ph}" value="${escHtml(aiKey(prov))}"><input id="aim-${prov}" placeholder="${mph}" value="${escHtml(aiCustomModel(prov))}" dir="ltr"></label>`;
-  openMSheet('מפתחות API', `<div class="ai-keys"><p class="ai-note">המפתחות נשמרים רק בדפדפן הזה, ונשלחים ישירות לספק — לא לשרתי האתר. השתמשו רק במפתחות שלכם.</p>
-    ${row('anthropic', 'sk-ant-…', 'מזהה מודל (אופציונלי)')}${row('openai', 'sk-…', 'מזהה מודל, למשל gpt-…')}${row('google', 'AIza…', 'מזהה מודל, למשל gemini-…')}</div>`,
-    `<button type="button" class="ms-btn" onclick="aiKeySave()">שמירה</button><button type="button" class="ms-btn ghost" onclick="aiKeyClear()">מחיקת כל המפתחות</button>`);
-}
-function aiKeySave() { ['anthropic', 'openai', 'google'].forEach(p => { const k = (document.getElementById('aik-' + p) || {}).value || ''; const m = (document.getElementById('aim-' + p) || {}).value || ''; try { k ? localStorage.setItem('ai_key_' + p, k.trim()) : localStorage.removeItem('ai_key_' + p); m ? localStorage.setItem('ai_model_' + p, m.trim()) : localStorage.removeItem('ai_model_' + p); } catch (e) {} }); closeMSheet(); showCopyToast('נשמר בדפדפן הזה'); }
-function aiKeyClear() { ['anthropic', 'openai', 'google'].forEach(p => { try { localStorage.removeItem('ai_key_' + p); localStorage.removeItem('ai_model_' + p); } catch (e) {} }); closeMSheet(); showCopyToast('המפתחות נמחקו'); }
 function aiDemoReply(q, m) {
-  const t = String(q).trim();
-  if (/שלום|היי|hello|hi/i.test(t)) return `שלום! אני ${m.name} במצב הדגמה. הוסיפו מפתח API כדי לקבל תשובות אמיתיות.`;
-  return `(${m.name}, הדגמה) קיבלתי: "${t.slice(0, 120)}". כדי לקבל תשובה אמיתית — לחצו "מפתחות API" והוסיפו מפתח של ${AI_PROV[m.prov] || 'הספק'}${m.prov === 'demo' ? ' (המודל הזה זמין כרגע רק בהדגמה)' : ''}.`;
-}
-async function aiCall(m, history) {
-  const key = aiKey(m.prov);
-  if (!key || m.prov === 'demo') return { text: aiDemoReply(history[history.length - 1].content, m), demo: true };
-  const msgs = history.slice(-20);
-  if (m.prov === 'anthropic') {
-    const r = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' }, body: JSON.stringify({ model: aiCustomModel('anthropic') || m.id, max_tokens: 1024, messages: msgs }) });
-    const j = await r.json(); if (!r.ok) throw new Error((j.error && j.error.message) || r.status);
-    return { text: (j.content || []).filter(c => c.type === 'text').map(c => c.text).join('\n') };
-  }
-  if (m.prov === 'openai') {
-    const model = aiCustomModel('openai'); if (!model) throw new Error('הוסיפו מזהה מודל של OpenAI בחלון המפתחות');
-    const r = await fetch('https://api.openai.com/v1/chat/completions', { method: 'POST', headers: { 'content-type': 'application/json', authorization: 'Bearer ' + key }, body: JSON.stringify({ model, messages: msgs }) });
-    const j = await r.json(); if (!r.ok) throw new Error((j.error && j.error.message) || r.status);
-    return { text: ((j.choices || [])[0] || {}).message ? j.choices[0].message.content : '' };
-  }
-  if (m.prov === 'google') {
-    const model = aiCustomModel('google'); if (!model) throw new Error('הוסיפו מזהה מודל של Gemini בחלון המפתחות');
-    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, { method: 'POST', headers: { 'content-type': 'application/json', 'x-goog-api-key': key }, body: JSON.stringify({ contents: msgs.map(x => ({ role: x.role === 'assistant' ? 'model' : 'user', parts: [{ text: x.content }] })) }) });
-    const j = await r.json(); if (!r.ok) throw new Error((j.error && j.error.message) || r.status);
-    return { text: (((j.candidates || [])[0] || {}).content || { parts: [] }).parts.map(p => p.text || '').join('') };
-  }
-  return { text: aiDemoReply(history[history.length - 1].content, m), demo: true };
+  return /שלום|היי|hello|hi/i.test(q) ? `שלום! אני ${m.name} (הדגמה). כשהמפתח יחובר בשרת — אענה באמת.` : `(${m.name}, הדגמה) קיבלתי: "${String(q).slice(0, 120)}".`;
 }
 async function aiSend() {
   if (aiBusy) return;
   const inp = document.getElementById('ai-q'); const q = inp ? inp.value.trim() : '';
   if (!q) return;
-  inp.value = '';
+  inp.value = ''; inp.style.height = '';
   const m = AI_MODELS.find(x => x.id === aiModel) || AI_MODELS[1];
-  aiLog.push({ who: 'me', text: q });
-  aiBusy = true; aiRender();
-  const history = aiLog.filter(x => !x.err).map(x => ({ role: x.who === 'me' ? 'user' : 'assistant', content: x.text }));
-  try { const r = await aiCall(m, history); aiLog.push({ who: 'bot', text: r.text || '(אין תשובה)', model: m.name, demo: !!r.demo }); }
-  catch (e) { aiLog.push({ who: 'bot', text: 'שגיאה: ' + (e.message || e), model: m.name, err: true }); }
+  aiLog.push({ who: 'me', text: q }); aiBusy = true; aiRender();
+  const history = aiLog.filter(x => !x.err && !x.demo).map(x => ({ role: x.who === 'me' ? 'user' : 'assistant', content: x.text }));
+  let out;
+  if (m.demo) out = { text: aiDemoReply(q, m), demo: true };
+  else {
+    try {
+      const r = await fetch(AI_CONFIG.chatUrl, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ model: m.id, messages: history }) });
+      const j = await r.json().catch(() => ({}));
+      if ([404, 405, 501, 503].includes(r.status)) out = { text: aiDemoReply(q, m), demo: true };   // השרת עוד לא מחובר → הדגמה
+      else if (!r.ok) out = { text: 'שגיאה: ' + (j.error === 'too_many_requests' ? 'יותר מדי הודעות — נסו שוב בעוד דקה' : (j.error || r.status)), err: true };
+      else out = { text: j.text || '(אין תשובה)' };
+    } catch (e) { out = { text: aiDemoReply(q, m), demo: true }; }
+  }
+  aiLog.push(Object.assign({ who: 'bot', model: m.name }, out));
   aiBusy = false; aiRender();
 }
-Object.assign(window, { aiMcpTab, aiCopy, aiDownload, aiSetModel, aiClear, aiKeyOpen, aiKeySave, aiKeyClear, aiSend });
+Object.assign(window, { aiMcpTab, aiCopyText, AI_CONFIG_URL, aiDownload, aiSetModel, aiSend });

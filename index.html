@@ -26,14 +26,17 @@
   <meta name="twitter:description" content="קהילה דיסקרטית למבוגרים: גלריות, קומיקס, סיפורים, פורומים ומוצרי גולשים.">
   <meta name="twitter:image" content="https://black1white00.com/logo-black-white.png">
   <meta name="theme-color" content="#111111">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <script>if ('serviceWorker' in navigator) window.addEventListener('load', function () { navigator.serviceWorker.register('/sw.js').catch(function () {}); });</script>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMDAgMTAwJz48cmVjdCB3aWR0aD0nMTAwJyBoZWlnaHQ9JzEwMCcgcng9JzI0JyBmaWxsPScjMWUxZTFmJy8+PGNpcmNsZSBjeD0nMzYnIGN5PSc1MCcgcj0nMTcnIGZpbGw9JyNmZmYnLz48Y2lyY2xlIGN4PSc2NCcgY3k9JzUwJyByPScxNycgZmlsbD0nI2ZmZicvPjxjaXJjbGUgY3g9JzQwJyBjeT0nNTInIHI9JzYnIGZpbGw9JyMxZTFlMWYnLz48Y2lyY2xlIGN4PSc2MCcgY3k9JzUyJyByPSc2JyBmaWxsPScjMWUxZTFmJy8+PC9zdmc+">
   <!-- ספריית interact.js לגרירה ושינוי גודל (נטענת בדחייה למניעת עיכוב) -->
   <script defer src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
   <!-- ספריית localforage לשמירת תמונות -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
   <!-- קישור לקובץ העיצוב החיצוני (עם פרמטר למניעת שמירה במטמון) -->
-  <link rel="stylesheet" href="./style.min.css?v=1987">
-  <link rel="stylesheet" id="dark-css" href="./dark.min.css?v=370" media="not all">
+  <link rel="stylesheet" href="./style.min.css?v=1989">
+  <link rel="stylesheet" id="dark-css" href="./dark.min.css?v=372" media="not all">
   <script>
     // קישור ישיר לפריט (#p/…, #s/…, #n/…) — מסמנים מיד, כדי שהכתובת לא תימחק לפני שהפריט נפתח
     window.__deepLinkOpening = /^#[psn]\//.test(location.hash || '');
@@ -1285,7 +1288,7 @@ html.theme-dark .pl-bar { background: #2a2f37; }
     try { if (localStorage.getItem('mtab_hidden') === '1') document.documentElement.classList.add('mtab-hidden'); } catch (e) {}
   </script>
   <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
-  <script type="module" src="./script.min.js?v=1825"></script>
+  <script type="module" src="./script.min.js?v=1827"></script>
   <script defer src="./a11y.js?v=1"></script>
 </body>
 </html>
