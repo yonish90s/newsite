@@ -284,7 +284,7 @@
         ".read": true,
         "$msgId": {
           ".write": "auth != null && !data.exists()",
-          ".validate": "newData.child('uid').val() === auth.uid && newData.child('text').isString() && newData.child('text').val().length <= 500"
+          ".validate": "(!newData.child('name').exists() || (newData.child('name').isString() && newData.child('name').val().length <= 80)) && (!newData.child('text').exists() || (newData.child('text').isString() && newData.child('text').val().length <= 500)) && newData.child('uid').val() === auth.uid"
         }
       },
       "photo_comments": {
@@ -292,7 +292,7 @@
         "$albumId": {
           "$commentId": {
             ".write": "!data.exists()",
-            ".validate": "newData.child('text').isString() && newData.child('text').val().length <= 1000 && (!newData.child('voice').exists() || (newData.child('voice').isString() && newData.child('voice').val().beginsWith('data:audio/') && newData.child('voice').val().length <= 450000 && newData.child('voiceSec').isNumber() && newData.child('voiceSec').val() <= 70)) && (newData.child('uid').val() === '' || (auth != null && newData.child('uid').val() === auth.uid)) && (!newData.child('stars').exists() || (newData.child('stars').isNumber() && newData.child('stars').val() >= 1 && newData.child('stars').val() <= 5))"
+            ".validate": "newData.child('createdAt').isNumber() && (!newData.child('name').exists() || (newData.child('name').isString() && newData.child('name').val().length <= 80)) && (!newData.child('text').exists() || (newData.child('text').isString() && newData.child('text').val().length <= 2000)) && (!newData.child('voice').exists() || (newData.child('voice').isString() && newData.child('voice').val().length <= 1500000 && newData.child('voice').val().beginsWith('data:audio/'))) && (!newData.child('uid').exists() || newData.child('uid').val() === '' || (auth != null && newData.child('uid').val() === auth.uid))"
           }
         }
       },
@@ -301,7 +301,7 @@
         "$storyId": {
           "$commentId": {
             ".write": "!data.exists()",
-            ".validate": "newData.child('text').isString() && newData.child('text').val().length <= 1000 && (!newData.child('voice').exists() || (newData.child('voice').isString() && newData.child('voice').val().beginsWith('data:audio/') && newData.child('voice').val().length <= 450000 && newData.child('voiceSec').isNumber() && newData.child('voiceSec').val() <= 70)) && (newData.child('uid').val() === '' || (auth != null && newData.child('uid').val() === auth.uid))"
+            ".validate": "newData.child('createdAt').isNumber() && (!newData.child('name').exists() || (newData.child('name').isString() && newData.child('name').val().length <= 80)) && (!newData.child('text').exists() || (newData.child('text').isString() && newData.child('text').val().length <= 2000)) && (!newData.child('voice').exists() || (newData.child('voice').isString() && newData.child('voice').val().length <= 1500000 && newData.child('voice').val().beginsWith('data:audio/'))) && (!newData.child('uid').exists() || newData.child('uid').val() === '' || (auth != null && newData.child('uid').val() === auth.uid))"
           }
         }
       },
@@ -309,7 +309,7 @@
         ".read": true,
         "$albumId": {
           "views": {
-            ".write": "newData.isNumber() && newData.val() >= 0"
+            ".write": "newData.isNumber() && newData.val() === (data.exists() ? data.val() : 0) + 1"
           }
         }
       },
@@ -318,7 +318,7 @@
         "$postId": {
           ".write": "auth != null && ((!data.exists() && newData.child('authorId').val() === auth.uid) || (data.exists() && data.child('authorId').val() === auth.uid))",
           "likes": {
-            ".write": "auth != null && newData.isNumber() && newData.val() >= 0"
+            ".write": "auth != null && newData.isNumber() && newData.val() >= 0 && (!data.exists() || newData.val() === data.val() + 1 || newData.val() === data.val() - 1)"
           },
           "votes": {
             "$voterUid": {
@@ -382,9 +382,10 @@
           "answers": {
             "$answerId": {
               ".write": "!data.exists()",
-              ".validate": "newData.child('text').isString() && newData.child('text').val().length <= 2000"
+              ".validate": "(!newData.child('text').exists() || (newData.child('text').isString() && newData.child('text').val().length <= 2000)) && (!newData.child('name').exists() || (newData.child('name').isString() && newData.child('name').val().length <= 80)) && (!newData.child('uid').exists() || newData.child('uid').val() === '' || (auth != null && newData.child('uid').val() === auth.uid))"
             }
-          }
+          },
+          ".validate": "(!newData.child('title').exists() || (newData.child('title').isString() && newData.child('title').val().length <= 200)) && (!newData.child('text').exists() || (newData.child('text').isString() && newData.child('text').val().length <= 3000)) && (!newData.child('category').exists() || (newData.child('category').isString() && newData.child('category').val().length <= 60)) && (!newData.child('age').exists() || (newData.child('age').isString() && newData.child('age').val().length <= 10)) && (!newData.child('authorName').exists() || (newData.child('authorName').isString() && newData.child('authorName').val().length <= 80)) && (!newData.child('authorUid').exists() || newData.child('authorUid').val() === '' || (auth != null && newData.child('authorUid').val() === auth.uid))"
         }
       },
       "verification_requests": {
@@ -418,7 +419,7 @@
               ".validate": "newData.val() === true"
             },
             "lastAnon": {
-              ".write": "auth != null && data.parent().exists()",
+              ".write": "auth != null && data.parent().exists() && newData.isBoolean()",
               ".validate": "newData.isBoolean()"
             }
           }
@@ -516,23 +517,26 @@
       },
       "user_submissions": {
         "$submissionId": {
-          ".write": "!data.exists()"
+          ".write": "!data.exists()",
+          ".validate": "(!newData.child('name').exists() || (newData.child('name').isString() && newData.child('name').val().length <= 80)) && (!newData.child('text').exists() || (newData.child('text').isString() && newData.child('text').val().length <= 1000)) && (!newData.child('uid').exists() || newData.child('uid').val() === '' || (auth != null && newData.child('uid').val() === auth.uid)) && (!newData.child('album').exists() || auth != null)"
         }
       },
       "search_history": {
         "$entryId": {
-          ".write": "!data.exists()"
+          ".write": "!data.exists()",
+          ".validate": "(!newData.child('query').exists() || (newData.child('query').isString() && newData.child('query').val().length <= 300)) && (!newData.child('page').exists() || (newData.child('page').isString() && newData.child('page').val().length <= 100)) && (!newData.child('user').exists() || (newData.child('user').isString() && newData.child('user').val().length <= 80))"
         }
       },
       "event_registrations": {
         "$registrationId": {
-          ".write": "!data.exists()"
+          ".write": "!data.exists()",
+          ".validate": "(!newData.child('userName').exists() || (newData.child('userName').isString() && newData.child('userName').val().length <= 100)) && (!newData.child('userPhone').exists() || (newData.child('userPhone').isString() && newData.child('userPhone').val().length <= 30)) && (!newData.child('userEmail').exists() || (newData.child('userEmail').isString() && newData.child('userEmail').val().length <= 120)) && (!newData.child('eventTitle').exists() || (newData.child('eventTitle').isString() && newData.child('eventTitle').val().length <= 200)) && (!newData.child('userId').exists() || (auth != null && newData.child('userId').val() === auth.uid))"
         }
       },
       "content_reports": {
         "$reportId": {
           ".write": "auth != null && !data.exists()",
-          ".validate": "newData.hasChildren(['itemId','reason','at']) && newData.child('reason').isString() && newData.child('reason').val().length <= 500 && newData.child('itemId').isString() && newData.child('itemId').val().length <= 200 && newData.child('at').isNumber()"
+          ".validate": "(!newData.child('title').exists() || (newData.child('title').isString() && newData.child('title').val().length <= 200)) && (!newData.child('reason').exists() || (newData.child('reason').isString() && newData.child('reason').val().length <= 600)) && (!newData.child('itemId').exists() || (newData.child('itemId').isString() && newData.child('itemId').val().length <= 100)) && (!newData.child('uid').exists() || newData.child('uid').val() === '' || (auth != null && newData.child('uid').val() === auth.uid))"
         }
       },
       "reposts": {

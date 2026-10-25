@@ -6673,6 +6673,8 @@ let selectedStoryCategories = new Set();
 
 // בורר גודל: 2 / 3 / 4 סיפורים בשורה. משנה את הגריד ושומר את הבחירה.
 function storySizeBarHTML() {
+  return '';   // בורר "גודל" הוסר לבקשת בעל האתר
+  // eslint-disable-next-line no-unreachable
   return `
     <div class="story-size-bar">
       <span class="story-size-label">גודל</span>
@@ -8475,11 +8477,6 @@ function photoFilterBarHTML() {
           </button>
         `;
       }).join('')}
-      <button type="button" class="photo-filter-trigger has-value" onclick="photoToggleFilterGroup('size')">
-        <span class="photo-filter-trigger-label">גודל</span>
-        <span class="photo-filter-trigger-value">${curCols}</span>
-        <span class="photo-filter-caret" aria-hidden="true">▾</span>
-      </button>
       ${anySet ? `<button type="button" class="photo-filter-clear" onclick="photoClearFilters()">נקה הכל</button>` : ''}
     </div>
   `;
@@ -11563,8 +11560,8 @@ function buildFiltersSidebarBox(pageType) {
   // סינונים שונים מעמוד לעמוד: בסיפורים רק כללי/תאריך/גודל
   const allowed = fKind === 'secondhand' ? ['sort', 'offer', 'price', 'shRegion', 'date']
     : fKind === 'comics' ? ['sort', 'storyCat', 'date']
-    : fKind === 'stories' ? ['sort', 'storyCat', 'date', 'size']
-    : ['sort', 'age', 'category', 'region', 'date', 'size'];
+    : fKind === 'stories' ? ['sort', 'storyCat', 'date']
+    : ['sort', 'age', 'category', 'region', 'date'];   // בורר "גודל" הוסר
 
   return `
     <div class="art-sidebar-box pf-box" style="border:1.5px solid #e2e8f0; border-radius:14px; padding:18px; background:#ffffff; box-shadow:0 4px 15px rgba(15,23,42,0.05); text-align:right; direction:rtl;">
@@ -27408,7 +27405,8 @@ function buildSiteFooterHTML() {
   ].join('');
   const social = Object.keys(SITE_FOOTER_SOCIAL).filter(k => SITE_FOOTER_SOCIAL[k]).map(k => {
     const raw = SITE_FOOTER_SOCIAL[k];
-    const href = k === 'email' ? 'mailto:' + raw : raw;
+    const href = safeUrl(k === 'email' ? 'mailto:' + raw : raw);
+    if (!href || href === '#') return '';
     return `<a class="site-footer-social" href="${escHtml(href)}" target="_blank" rel="noopener" aria-label="${k}">${SITE_FOOTER_ICONS[k]}</a>`;
   }).join('');
   const year = new Date().getFullYear();
@@ -29751,7 +29749,7 @@ function cardHeadActsEnhance() {
   document.querySelectorAll('#photo-row-1 > .art-row, #story-row-main > .art-row').forEach(row => {
     // כפתור "לחיצה" עגול קטן בפינה הימנית התחתונה של התמונה — מציג/מסתיר את הכותרת וההאשטאגים
     const iw = row.querySelector('.art-row-img-wrap');
-    if (iw && !iw.querySelector('.img-tap-btn')) iw.insertAdjacentHTML('beforeend', `<button type="button" class="img-tap-btn" aria-label="פרטים על התמונה" onclick="imgTapToggle(this, event)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9.5 3.5a1.75 1.75 0 0 1 3.5 0V10l.6-.1a1.7 1.7 0 0 1 1.9 1.1l.1.3.5-.1a1.7 1.7 0 0 1 2 1.2l.6-.1a1.7 1.7 0 0 1 2 1.6V18a5 5 0 0 1-5 5h-2.2a5 5 0 0 1-4-2l-3.8-5a1.75 1.75 0 0 1 2.6-2.3l1.2 1.1z"/></svg></button>`);
+    if (iw && !iw.classList.contains('unblur') && !iw.querySelector('.img-tap-btn')) iw.insertAdjacentHTML('beforeend', `<button type="button" class="img-tap-btn" aria-label="פרטים על התמונה" onclick="imgTapToggle(this, event)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9.5 3.5a1.75 1.75 0 0 1 3.5 0V10l.6-.1a1.7 1.7 0 0 1 1.9 1.1l.1.3.5-.1a1.7 1.7 0 0 1 2 1.2l.6-.1a1.7 1.7 0 0 1 2 1.6V18a5 5 0 0 1-5 5h-2.2a5 5 0 0 1-4-2l-3.8-5a1.75 1.75 0 0 1 2.6-2.3l1.2 1.1z"/></svg></button>`);
     if (row.dataset.headActs) return;
     const links = row.querySelector('.photo-card-links');
     const meta = row.querySelector('.art-row-meta');
@@ -30259,11 +30257,12 @@ document.documentElement.classList.toggle('mtabs-off', MTABS_HIDDEN);
 })();
 
 function imgTapToggle(btn, e) {
+  // לחיצה על היד: מסירה את הטשטוש מהתמונה הזו בלבד (בלי כיתוב), והכפתור נעלם
   e.stopPropagation(); e.preventDefault();
   const wrap = btn.closest('.art-row-img-wrap'); if (!wrap) return;
-  imgTagsEnsure(wrap);
-  clearTimeout(wrap.__tagsT);
-  wrap.classList.toggle('show-tags');
+  wrap.classList.remove('show-tags');
+  wrap.classList.add('unblur');
+  btn.remove();
 }
 window.imgTapToggle = imgTapToggle;
 
