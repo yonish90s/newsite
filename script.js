@@ -30080,6 +30080,7 @@ function adminTabBody() {
   if (adminTab === 'stock') return stockPageHTML();
   if (adminTab === 'ads') return adsAdminHTML();
   if (adminTab === 'storage') { setTimeout(storageCalc, 0); return storageHTML(); }
+  if (adminTab === 'assist') { setTimeout(askAdminLoad, 0); return '<div class="aska-page" id="aska-page"><div class="stor-loading">טוען…</div></div>'; }
   return buildInfoPage();
 }
 function buildAdminPage() {
@@ -30087,7 +30088,7 @@ function buildAdminPage() {
   const body = adminTabBody();
   return `<div class="admin-page" data-page-id="page-admin-main">
     <div class="adm-head"><h1>מנהל</h1>
-      <nav class="adm-tabs">${[['info', 'מידע'], ['stats', 'נתונים'], ['algo', 'אלגוריתם'], ['stock', 'מלאי'], ['ads', 'פרסומות'], ['storage', 'אחסון']].map(([k, l]) => `<button type="button" class="adm-tab${adminTab === k ? ' on' : ''}" onclick="adminSetTab('${k}')">${l}</button>`).join('')}</nav>
+      <nav class="adm-tabs">${[['info', 'מידע'], ['stats', 'נתונים'], ['algo', 'אלגוריתם'], ['stock', 'מלאי'], ['ads', 'פרסומות'], ['storage', 'אחסון'], ['assist', 'עוזר']].map(([k, l]) => `<button type="button" class="adm-tab${adminTab === k ? ' on' : ''}" onclick="adminSetTab('${k}')">${l}</button>`).join('')}</nav>
     </div>
     <div class="adm-body">${body}</div>
   </div>`;
@@ -31185,11 +31186,15 @@ function askQuick(i) {
   const q = ASK_QUICK[i]; if (!q) return;
   askLog.push({ who: 'me', text: q[0] }, { who: 'bot', text: 'פותח ' + q[0] + '…' });
   askSave(); askRender();
-  setTimeout(() => { if (window.matchMedia('(max-width: 768px)').matches) askClose(); try { q[1](); } catch (e) {} }, 350);
+  setTimeout(() => { askClose(); try { q[1](); } catch (e) {} }, 350);
 }
 function askReply(q) {
   const t = String(q || '').trim();
   if (!t) return null;
+  // פקודה ("קח אותי…", "תעלה…", "חפש…") קודמת למאגר הידע
+  const isCmd = /^(קח|תיקח|תעביר|עבור|פתח|תפתח|תראה|הראה|תעלה|העלה|לעלות|להעלות|חפש|תחפש)/.test(t);
+  const kb = isCmd ? null : askKbAnswer(t);
+  if (kb) return kb;
   const isQ = /^(איך|מה|למה|איפה|מתי|האם|אפשר)|\?$/.test(t);
   const isUp = /(תעלה|להעלות|לעלות|העלה|אעלה|לפרסם|פרסם|תפרסם|למכור|לכתוב סיפור|ליצור|חדש)/.test(t);
   const isGo = /(קח|תיקח|תעביר|עבור|פתח|תפתח|תראה|הראה|לך ל|עבור ל|אני רוצה לראות|להיכנס|תכניס)/.test(t);
@@ -31201,7 +31206,8 @@ function askReply(q) {
   if (g && (isGo || !isQ)) return { text: `לוקח אותך ${g[1]}…`, run: g[2] };
   const f = ASK_FAQ.find(([re]) => re.test(t));
   if (f) return { text: f[1], btn: f[2] };
-  return { text: 'לא הבנתי עד הסוף 🙂 אפשר לבקש פעולה ("קח אותי לפורומים", "תעלה מוצר") או לשאול ("איך שומרים פריט?").', sugg: true };
+  askLogUnknown(t);
+  return { text: 'עוד אין לי תשובה מדויקת לזה — העברתי את השאלה לצוות האתר, ובפעם הבאה אדע לענות. בינתיים אפשר לבקש פעולה ("קח אותי לפורומים", "תעלה מוצר") או לשאול משהו אחר.', sugg: true };
 }
 function askOpen() {
   let el = document.getElementById('ask-panel');
@@ -31245,7 +31251,7 @@ function askRender() {
   box.innerHTML = askLog.map((m, i) => `<div class="ask-m ${m.who}">${escHtml(m.text)}${m.btn != null ? `<button type="button" class="ask-act" onclick="askDo(${m.btn})">${escHtml(m.btnLabel)}</button>` : ''}${m.sugg ? chips : ''}</div>`).join('');
   box.scrollTop = box.scrollHeight;
 }
-function askDo(i) { const f = askActs[i]; if (f) { if (window.matchMedia('(max-width: 768px)').matches) askClose(); try { f(); } catch (e) {} } }
+function askDo(i) { const f = askActs[i]; if (f) { askClose(); try { f(); } catch (e) {} } }
 function askSend(text) {
   const inp = document.getElementById('ask-input');
   const q = String(text != null ? text : (inp ? inp.value : '')).trim();
@@ -31258,7 +31264,7 @@ function askSend(text) {
   askLog.push(m);
   askSave();
   askRender();
-  if (r.run) setTimeout(() => { if (window.matchMedia('(max-width: 768px)').matches) askClose(); try { r.run(); } catch (e) {} }, 450);
+  if (r.run) setTimeout(() => { askClose(); try { r.run(); } catch (e) {} }, 450);
 }
 Object.assign(window, { askOpen, askClose, askNew, askSend, askDo, askHistory, askLoad, askHistoryClear, askQuick, askRender });
 document.addEventListener('keydown', e => {
@@ -31375,3 +31381,110 @@ window.productOrder = productOrder;
   new MutationObserver(() => { clearTimeout(q); q = setTimeout(run, 50); }).observe(document.body, { childList: true, subtree: true });
   run();
 })();
+
+// ============================================================
+// עוזר האתר — מאגר ידע שלומד: website/assistant_kb (המנהל כותב, כולם קוראים):
+//   items: שאלות ותשובות · notes: "מידע על האתר" (פסקאות). שאלה שאין לה תשובה נשמרת ב-website/assistant_unanswered
+//   והמנהל עונה עליה בלשונית "עוזר" — מאותו רגע העוזר יודע לענות לכולם.
+// ============================================================
+let askKb = { items: {}, notes: '' }, askKbSub = false;
+function askKbSubscribe() {
+  if (askKbSub) return; askKbSub = true;
+  try { const c = JSON.parse(localStorage.getItem('ask_kb_cache') || 'null'); if (c) askKb = c; } catch (e) {}
+  try { onValue(ref(db, 'website/assistant_kb'), snap => { const v = snap.val() || {}; askKb = { items: v.items || {}, notes: v.notes || '' }; try { localStorage.setItem('ask_kb_cache', JSON.stringify(askKb)); } catch (e) {} if (document.getElementById('aska-page')) askAdminRender(); }, () => {}); } catch (e) {}
+}
+const ASK_STOP = new Set(['של', 'את', 'על', 'עם', 'זה', 'זו', 'אני', 'לי', 'יש', 'אין', 'אפשר', 'איך', 'מה', 'למה', 'מתי', 'איפה', 'האם', 'או', 'גם', 'כל', 'אם', 'אז', 'כי', 'הוא', 'היא', 'אתם', 'אתה', 'לא', 'כן', 'רוצה', 'צריך', 'בבקשה', 'תודה', 'שלום', 'היי', 'אותי', 'לך', 'שלי', 'שלך', 'עוד', 'כמה', 'מי', 'זאת', 'the', 'a', 'to', 'is', 'how', 'what']);
+function askNorm(w) { return w.replace(/[ןםךףץ]$/, ch => ({ 'ן': 'נ', 'ם': 'מ', 'ך': 'כ', 'ף': 'פ', 'ץ': 'צ' })[ch]); }
+// כל מילה = קבוצת צורות: כפי שהיא + בלי אות שימוש בהתחלה (ה/ו/ב/ל/מ/ש/כ) — כדי ש"המשלוח" ו"משלוח" יתאימו
+function askTokens(t) {
+  return String(t || '').toLowerCase().replace(/[^֐-׿a-z0-9\s]/g, ' ').split(/\s+/)
+    .filter(w => w.length > 1 && !ASK_STOP.has(w))
+    .map(w => { const v = [askNorm(w)]; if (w.length > 3 && /^[הובלמשכ]/.test(w)) v.push(askNorm(w.slice(1))); if (w.length > 4 && /^(וה|של|מה|לה|בה|כש)/.test(w)) v.push(askNorm(w.slice(2))); return v; });
+}
+function askScore(qt, text) {
+  const tt = new Set(askTokens(text).flat());
+  if (!qt.length || !tt.size) return 0;
+  const near = (a, b) => a === b || (a.length > 3 && b.length > 3 && (a.startsWith(b) || b.startsWith(a)));
+  let hit = 0;
+  qt.forEach(vs => { if (vs.some(w => tt.has(w) || [...tt].some(x => near(w, x)))) hit++; });
+  return hit ? hit / qt.length : 0;   // כמה ממילות השאלה נמצאות בתשובה
+}
+function askKbAnswer(q) {
+  askKbSubscribe();
+  const qt = askTokens(q);
+  if (!qt.length) return null;
+  let best = null, bs = 0;
+  Object.values(askKb.items || {}).forEach(it => { if (!it || !it.a) return; const sc = askScore(qt, (it.q || '') + ' ' + (it.k || '')); if (sc > bs) { bs = sc; best = it; } });
+  if (best && bs >= 0.5) return { text: best.a };
+  // חיפוש בפסקאות "מידע על האתר"
+  const paras = String(askKb.notes || '').split(/\n\s*\n|\n/).map(x => x.trim()).filter(x => x.length > 8);
+  let bp = '', ps = 0;
+  paras.forEach(p => { const sc = askScore(qt, p); if (sc > ps) { ps = sc; bp = p; } });
+  if (bp && ps >= 0.6 && (qt.length < 3 || ps * qt.length >= 2)) return { text: bp };
+  return null;
+}
+function askLogUnknown(q) {
+  try {
+    const u = auth.currentUser;
+    if (!u) return;
+    push(ref(db, 'website/assistant_unanswered'), { q: String(q).slice(0, 300), t: Date.now(), uid: u.uid }).catch(() => {});
+  } catch (e) {}
+}
+// ---- לשונית "עוזר" במנהל ----
+let askUnanswered = {};
+async function askAdminLoad() {
+  askKbSubscribe();
+  try { askUnanswered = (await get(ref(db, 'website/assistant_unanswered'))).val() || {}; } catch (e) { askUnanswered = {}; }
+  askAdminRender();
+}
+function askAdminRender() {
+  const el = document.getElementById('aska-page'); if (!el) return;
+  const un = Object.entries(askUnanswered || {}).sort((a, b) => (b[1].t || 0) - (a[1].t || 0));
+  const items = Object.entries(askKb.items || {}).sort((a, b) => (b[1].t || 0) - (a[1].t || 0));
+  el.innerHTML = `
+    <section class="aska-sec"><h3>שאלות שהעוזר לא ידע לענות <span class="mod-n">${un.length}</span></h3>
+      ${un.length ? un.map(([id, x]) => `<div class="aska-q"><b>${escHtml(x.q || '')}</b><small>${new Date(x.t || 0).toLocaleString('he-IL')}</small>
+        <textarea id="aska-a-${escHtml(id)}" rows="2" placeholder="התשובה שהעוזר ייתן מעכשיו"></textarea>
+        <div class="aska-acts"><button type="button" class="ms-btn" onclick="askAdminAnswer('${artEsc(id)}')">שמירה כתשובה</button><button type="button" class="ms-btn ghost" onclick="askAdminDismiss('${artEsc(id)}')">מחיקה</button></div></div>`).join('') : '<p class="aska-empty">אין שאלות חדשות 🎉</p>'}
+    </section>
+    <section class="aska-sec"><h3>מאגר תשובות (${items.length})</h3>
+      <div class="aska-add"><input id="aska-nq" maxlength="200" placeholder="שאלה (למשל: איך מוחקים חשבון?)"><textarea id="aska-na" rows="3" maxlength="1500" placeholder="התשובה"></textarea><input id="aska-nk" maxlength="200" placeholder="מילות מפתח נוספות (אופציונלי)"><button type="button" class="ms-btn" onclick="askAdminAdd()">הוספה למאגר</button></div>
+      ${items.map(([id, x]) => `<div class="aska-item"><b>${escHtml(x.q || '')}</b><p>${escHtml(x.a || '')}</p><button type="button" class="aska-del" onclick="askAdminDel('${artEsc(id)}')">מחיקה</button></div>`).join('')}
+    </section>
+    <section class="aska-sec"><h3>מידע על האתר לעוזר</h3>
+      <p class="aska-hint">כל פסקה כאן היא מידע שהעוזר יכול לצטט כשהוא נשאל עליו (מדיניות, משלוחים, תשלום, כללי הקהילה…).</p>
+      <textarea id="aska-notes" rows="10" maxlength="20000">${escHtml(askKb.notes || '')}</textarea>
+      <div class="aska-acts"><button type="button" class="ms-btn" onclick="askAdminSaveNotes()">שמירה ופרסום לעוזר</button><button type="button" class="ms-btn ghost" onclick="askAdminCopyInfo()">העתקה מהמידע במנהל</button></div>
+    </section>`;
+}
+async function askAdminWriteItem(q, a, k) {
+  const id = 'q' + Date.now();
+  await set(ref(db, `website/assistant_kb/items/${id}`), { q: q.slice(0, 200), a: a.slice(0, 1500), k: (k || '').slice(0, 200), t: Date.now() });
+}
+async function askAdminAnswer(id) {
+  const ta = document.getElementById('aska-a-' + id); const a = ta ? ta.value.trim() : '';
+  if (!a) { showCopyToast('כתבו תשובה'); return; }
+  const q = (askUnanswered[id] || {}).q || '';
+  try { await askAdminWriteItem(q, a); await set(ref(db, `website/assistant_unanswered/${id}`), null); delete askUnanswered[id]; showCopyToast('נשמר — העוזר יודע לענות על זה'); askAdminRender(); } catch (e) { showCopyToast('לא הצלחנו לשמור'); }
+}
+async function askAdminDismiss(id) { try { await set(ref(db, `website/assistant_unanswered/${id}`), null); delete askUnanswered[id]; askAdminRender(); } catch (e) {} }
+async function askAdminAdd() {
+  const v = id => ((document.getElementById(id) || {}).value || '').trim();
+  if (!v('aska-nq') || !v('aska-na')) { showCopyToast('צריך שאלה ותשובה'); return; }
+  try { await askAdminWriteItem(v('aska-nq'), v('aska-na'), v('aska-nk')); showCopyToast('נוסף למאגר'); } catch (e) { showCopyToast('לא הצלחנו לשמור'); }
+}
+async function askAdminDel(id) { if (!confirm('למחוק את התשובה מהמאגר?')) return; try { await set(ref(db, `website/assistant_kb/items/${id}`), null); } catch (e) {} }
+async function askAdminSaveNotes() {
+  const ta = document.getElementById('aska-notes');
+  try { await set(ref(db, 'website/assistant_kb/notes'), (ta ? ta.value : '').slice(0, 20000)); showCopyToast('המידע פורסם לעוזר'); } catch (e) { showCopyToast('לא הצלחנו לשמור'); }
+}
+function askAdminCopyInfo() {
+  try { subscribeAdminInfo(); } catch (e) {}
+  const ta = document.getElementById('aska-notes');
+  const src = (typeof adminInfoText !== 'undefined' && adminInfoText) || '';
+  if (!src) { showCopyToast('אין עדיין טקסט בעמוד המידע'); return; }
+  if (ta) ta.value = (ta.value ? ta.value + '\n\n' : '') + src;
+  showCopyToast('הועתק — לחצו "שמירה ופרסום לעוזר"');
+}
+Object.assign(window, { askAdminAnswer, askAdminDismiss, askAdminAdd, askAdminDel, askAdminSaveNotes, askAdminCopyInfo });
+askKbSubscribe();
