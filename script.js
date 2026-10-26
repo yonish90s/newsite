@@ -17589,20 +17589,33 @@ function buildUserPageHTML(authorId, authorName) {
     verified: isUserVerified(authorId, authorName), profile: null, rating: getUserRatingData(authorId) };
 
   window._upState.uploads = authorAlbums;
+  const market = pfMarketItems(authorId, authorName);
+  window._upState.market = market;
+  window._upState.posts = authorPosts;
+  // במחשב פותחים על "סקירה" (כמו בפרופיל של Printables), במובייל — על הפוסטים
+  setTimeout(() => { if (window.matchMedia('(min-width: 1024px)').matches && document.querySelector('.pf-tab[data-tab="overview"]')) pfTab('overview'); }, 0);
   window._upState.counts = window._upState.counts || null;
   return `
   <div class="articles-page photos-page user-page photo-cols-${typeof photoGridCols !== 'undefined' ? photoGridCols : 4}" data-photos-json="${json}">
     <div class="art-inner pf-inner">
       <button type="button" class="pf-back" onclick="goBackFromUserPage()">→ חזרה</button>
-      <div id="user-page-head">${profileHeadHTML(window._upState)}</div>
+      <div class="pf-desk">
+      <aside class="pf-side"><div id="user-page-head">${profileHeadHTML(window._upState)}${pfSideHTML(window._upState)}</div></aside>
+      <div class="pf-main">
       <nav class="pf-tabs">
+        <button type="button" class="pf-tab pf-desk-only" data-tab="overview" onclick="pfTab('overview')">סקירה</button>
         <button type="button" class="pf-tab on" data-tab="posts" onclick="pfTab('posts')">פוסטים <b>${authorPosts.length}</b></button>
         <button type="button" class="pf-tab" data-tab="gallery" onclick="pfTab('gallery')">גלריה <b>${authorAlbums.length}</b></button>
+        ${market.length ? `<button type="button" class="pf-tab" data-tab="market" onclick="pfTab('market')">יד 2 <b>${market.length}</b></button>` : ''}
         <button type="button" class="pf-tab" data-tab="about" onclick="pfTab('about')">אודות</button>
       </nav>
+      <div class="pf-panel" data-panel="overview" hidden>${pfOverviewHTML(authorAlbums, market, authorPosts)}</div>
       <div class="pf-panel" data-panel="posts">${pfGridHTML(authorPosts)}<div class="pf-list-mobile">${postsListHTML('profile', authorPosts, false)}</div></div>
       <div class="pf-panel" data-panel="gallery" hidden>${profileUploadsHTML(authorAlbums)}</div>
+      ${market.length ? `<div class="pf-panel" data-panel="market" hidden><div class="pf-cards">${market.map(a => pfCardHTML(a, true)).join('')}</div></div>` : ''}
       <div class="pf-panel" data-panel="about" hidden><div id="user-page-watch">${userWatchHTML(window._upState)}</div></div>
+      </div>
+      </div>
     </div>
   </div>`;
 }
@@ -17804,9 +17817,106 @@ function profileUploadsHTML(albums) {
       </button>`;
   }).join('')}</div>`;
 }
+// ============================================================
+// פרופיל במחשב בסגנון Printables: כרטיס צד (תמונה + רמה, שם, נתונים, כפתורים, תגים)
+// ולשונית "סקירה": באנר תמונות, "נבחרים", "יד 2 — למכירה" עם תגית מחיר, ו"אוספים" לפי קטגוריה.
+// ============================================================
+function pfMarketItems(uid, name) {
+  try {
+    const pg = (pages || []).find(p => p && (p.content || '').includes('data-section="secondhand"'));
+    const m = pg && pg.content.match(/data-photos-json="([^"]*)"/);
+    const arr = m ? JSON.parse(decodeURIComponent(m[1])) : [];
+    const n = String(name || '').toLowerCase(), now = Date.now();
+    return (Array.isArray(arr) ? arr : []).filter(a => a && a.approved !== false && (!a.expiresAt || a.expiresAt > now) &&
+      ((a.authorId && uid) ? a.authorId === uid : (n && String(a.author || '').toLowerCase() === n))).map(a => Object.assign({}, a, { __market: true, __pageId: pg.id }));
+  } catch (e) { return []; }
+}
+function pfOpenItem(id, market) {
+  if (market) {
+    const pg = (pages || []).find(p => p && (p.content || '').includes('data-section="secondhand"'));
+    if (pg) { navigateToPage(pg.id); setTimeout(() => { try { photoOpenDetail(id); } catch (e) {} }, 450); }
+    return;
+  }
+  photoOpenDetail(id);
+}
+window.pfOpenItem = pfOpenItem;
+const pfImg = a => (Array.isArray(a.images) ? a.images.find(Boolean) : '') || a.image || '';
+function pfStats(st) {
+  const ups = (st.uploads || []).concat(st.market || []);
+  const likes = ups.reduce((n, a) => n + (Number(a.likes) || 0), 0);
+  const views = ups.reduce((n, a) => n + (typeof photoGetViews === 'function' ? photoGetViews(a.id) : 0), 0);
+  const posts = (st.posts || []).length;
+  const level = Math.max(1, Math.min(99, 1 + Math.floor(Math.sqrt(likes * 2 + posts * 6 + views / 20))));
+  return { likes, views, posts, level };
+}
+function pfSideHTML(st) {
+  st = st || {};
+  const me = auth.currentUser, uid = st.uid || '', name = st.name || 'משתמש';
+  const isOwn = !!(uid && me && !me.isAnonymous && me.uid === uid);
+  const following = uid && typeof isFollowing === 'function' && isFollowing(uid);
+  const x = pfStats(st), num = n => (typeof formatViews === 'function' ? formatViews(n) : String(n));
+  const market = st.market || [];
+  const I = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+  const badges = [
+    st.verified ? ['v', I('<path d="M5 12.5l4.5 4.5L19 7.5"/>'), 'מאומת'] : null,
+    x.posts >= 10 ? ['gold', I('<circle cx="12" cy="9" r="5"/><path d="M8.5 13.5 7 21l5-2.5 5 2.5-1.5-7.5"/>'), 'ותיק'] : x.posts >= 1 ? ['green', I('<path d="M12 20V10"/><path d="M12 10C12 6 9 4 5 4c0 4 3 6 7 6zM12 13c0-3 2.5-5 6-5 0 3-2.5 5-6 5z"/>'), 'יוצר'] : null,
+    x.likes >= 50 ? ['fire', I('<path d="M12 21c-4 0-6.5-2.6-6.5-6 0-4 3.5-6 4-10 2.5 1.5 4 4 4 6 1-.7 1.5-2 1.5-3 2 1.8 3.5 4.3 3.5 7 0 3.4-2.5 6-6.5 6z"/>'), 'פופולרי'] : x.likes >= 5 ? ['pink', I('<path d="M12 20s-7-4.4-9-8.6C1.6 8.4 3.4 5 6.8 5c2 0 3.3 1.1 5.2 3 1.9-1.9 3.2-3 5.2-3 3.4 0 5.2 3.4 3.8 6.4C19 15.6 12 20 12 20z"/>'), 'אהוב'] : null,
+    market.length ? ['blue', I('<path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.5"/>'), 'מוכר'] : null,
+    (st.posts || []).some(p => p.__type === 'comic' || p.__type === 'story') ? ['purple', I('<path d="M4 5a2 2 0 0 1 2-2h12v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5"/>'), 'כותב'] : null
+  ].filter(Boolean).slice(0, 3);
+  const btns = isOwn
+    ? `<button type="button" class="pfs-btn primary" onclick="openPhotoModal && openPhotoModal()">＋ העלאה חדשה</button>
+       <button type="button" class="pfs-btn" onclick="profileEditBio()">עריכת פרופיל</button>`
+    : `${uid ? `<button type="button" class="pfs-btn primary" onclick="profileToggleFollow('${artEsc(uid)}','${artEsc(name)}')">${following ? '✓ עוקב/ת' : '＋ עקוב'}</button>
+       <button type="button" class="pfs-btn" onclick="dmStartWith('${artEsc(uid)}','${artEsc(name)}')">שליחת הודעה</button>` : ''}
+       ${market.length ? `<button type="button" class="pfs-btn" onclick="pfTab('market')">${market.length} מוצרים למכירה</button>` : ''}`;
+  return `<div class="pfs">
+    <span class="pfs-lvl">רמה ${x.level}</span>
+    <div class="pfs-nums"><span title="צפיות">${PF_IC.eye}<b>${num(x.views)}</b></span><span title="לייקים">${PF_IC.heart}<b>${num(x.likes)}</b></span></div>
+    <div class="pfs-btns">${btns}</div>
+    ${badges.length ? `<div class="pfs-badges">${badges.map(([k, i, l]) => `<div class="pfs-badge b-${k}"><span>${i}</span><small>${l}</small></div>`).join('')}</div>` : ''}
+  </div>`;
+}
+function pfCardHTML(a, market) {
+  const adultOk = (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('age_verified') === 'true');
+  const img = pfImg(a), n = Array.isArray(a.images) ? a.images.filter(Boolean).length : 0;
+  const saved = typeof photoIsSavedLocal === 'function' && photoIsSavedLocal(a.id);
+  const price = market && a.price ? String(a.price).replace(/\s*₪\s*/, '') : '';
+  return `<article class="pfc">
+    <button type="button" class="pfc-img${a.isAdult && !adultOk ? ' pf-blur' : ''}" onclick="pfOpenItem('${artEsc(a.id)}', ${market ? 'true' : 'false'})">
+      ${img ? `<img src="${escHtml(img)}" alt="" loading="lazy">` : '<span class="pf-tile-ph"></span>'}
+      ${a.pinned ? '<span class="pfc-star" title="נבחר">★</span>' : ''}
+      ${market ? `<span class="pfc-price">${price ? '₪' + escHtml(price) : escHtml(a.offerType || 'למסירה')}</span>` : ''}
+      ${n > 1 ? `<span class="pfc-dots">${'<i></i>'.repeat(Math.min(5, n))}</span>` : ''}
+    </button>
+    <button type="button" class="pfc-title" onclick="pfOpenItem('${artEsc(a.id)}', ${market ? 'true' : 'false'})">${escHtml(a.title || '')}</button>
+    <footer class="pfc-foot">
+      <span>${PF_IC.heart}${Number(a.likes) || 0}</span>
+      <span>${PF_IC.eye}${typeof formatViews === 'function' ? formatViews(photoGetViews(a.id)) : 0}</span>
+      ${market ? '' : `<button type="button" class="pfc-save${saved ? ' on' : ''}" onclick="photoToggleSave('${artEsc(a.id)}', this); this.classList.toggle('on')" aria-label="שמירה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M6 3h12v18l-6-4.5L6 21z"/></svg></button>`}
+    </footer>
+  </article>`;
+}
+function pfOverviewHTML(albums, market, posts) {
+  const adultOk = (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('age_verified') === 'true');
+  const pool = albums.concat(market).filter(a => pfImg(a));
+  const banner = pool.slice().sort((a, b) => (Number(b.likes) || 0) - (Number(a.likes) || 0)).slice(0, 5);
+  const top = albums.slice().sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || (Number(b.likes) || 0) - (Number(a.likes) || 0)).slice(0, 4);
+  const cats = {};
+  albums.forEach(a => { const k = a.category || 'כללי'; (cats[k] = cats[k] || []).push(a); });
+  const colls = Object.entries(cats).sort((a, b) => b[1].length - a[1].length).slice(0, 4);
+  const head = (t, btn, tab) => `<div class="pfo-h"><h2>${t}</h2>${btn ? `<button type="button" onclick="pfTab('${tab}')">${btn}</button>` : ''}</div>`;
+  if (!pool.length && !posts.length) return `<div class="pf-empty">עדיין אין כאן תוכן</div>`;
+  return `<div class="pfo">
+    ${banner.length ? `<div class="pfo-banner" style="--n:${banner.length}">${banner.map(a => `<button type="button" class="pfo-bn${a.isAdult && !adultOk ? ' pf-blur' : ''}" onclick="pfOpenItem('${artEsc(a.id)}', ${a.__market ? 'true' : 'false'})"><img src="${escHtml(pfImg(a))}" alt="" loading="lazy"></button>`).join('')}</div>` : ''}
+    ${top.length ? `<section>${head('נבחרים', 'כל הגלריות', 'gallery')}<div class="pf-cards">${top.map(a => pfCardHTML(a, false)).join('')}</div></section>` : ''}
+    ${market.length ? `<section>${head('יד 2 — למכירה', market.length > 4 ? 'כל המוצרים' : '', 'market')}<div class="pf-cards">${market.slice(0, 4).map(a => pfCardHTML(a, true)).join('')}</div></section>` : ''}
+    ${colls.length > 1 || (colls[0] && colls[0][1].length > 1) ? `<section>${head('אוספים', 'הכל', 'gallery')}<div class="pf-colls">${colls.map(([k, L]) => `<button type="button" class="pfo-coll" onclick="pfTab('gallery')"><span class="pfo-coll-grid">${L.slice(0, 4).map(a => `<span class="${a.isAdult && !adultOk ? 'pf-blur' : ''}">${pfImg(a) ? `<img src="${escHtml(pfImg(a))}" alt="" loading="lazy">` : ''}</span>`).join('')}${'<span></span>'.repeat(Math.max(0, 4 - L.length))}</span><b>${escHtml(k)}</b><small>${L.length} גלריות</small></button>`).join('')}</div></section>` : ''}
+  </div>`;
+}
 function profileRenderHead() {
   const el = document.getElementById('user-page-head');
-  if (el && window._upState) { el.innerHTML = profileHeadHTML(window._upState); if (typeof avatarHydrate === 'function') avatarHydrate(el); }
+  if (el && window._upState) { el.innerHTML = profileHeadHTML(window._upState) + pfSideHTML(window._upState); if (typeof avatarHydrate === 'function') avatarHydrate(el); }
 }
 async function profileLoadCounts(uid) {
   if (!uid) return;
