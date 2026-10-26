@@ -32606,21 +32606,37 @@ const RENT_CATS = [
 ];
 const RENT_UNITS = { hour: 'לשעה', day: 'ליום', print: 'להדפסה', gram: 'לגרם', page: 'לעמוד' };
 const RENT_SITE_FEE = 0.05;   // עמלת האתר על כל השכרה (5%), מוצגת לשוכר בפירוט המחיר
-// דוגמאות: מדפסות תלת מימד אצל גולשים (מוצגות כל עוד אין מודעות אמיתיות בקטגוריה)
+// דוגמאות: ציוד אצל גולשים (מוצגות בכל קטגוריה כל עוד אין בה מודעות אמיתיות). תמונות: Wikimedia Commons, בתיקייה rent/
 const RENT_DEMO = [
-  { id: 'd1', demo: true, cat: '3d', title: 'Bambu Lab X1 Carbon — הדפסה מהירה ב-4 צבעים', price: 1.2, unit: 'gram', min: 30, city: 'תל אביב', owner: 'רון כהן', rating: 4.9, reviews: 38, t: Date.now() - 2 * 3600e3,
-    desc: 'מדפסת מהירה עם AMS לארבעה צבעים. שולחים קובץ STL/3MF, אני מדפיס ומתאם איסוף. מתאים לאבי־טיפוס, מתנות ודגמים.', specs: ['שטח הדפסה 25×25×25 ס״מ', 'PLA / PETG / TPU', 'עד 4 צבעים בהדפסה אחת', 'זמן אספקה: 1–2 ימים'], g: ['#0f172a', '#334155'] },
-  { id: 'd2', demo: true, cat: '3d', title: 'Prusa MK4 — שימוש עצמי בסדנה, כולל הדרכה', price: 25, unit: 'hour', min: 2, city: 'חיפה', owner: 'מאיה לוי', rating: 4.8, reviews: 21, t: Date.now() - 6 * 3600e3,
-    desc: 'באים לסדנה ומדפיסים בעצמכם. בפעם הראשונה — חצי שעה הדרכה בחינם. פילמנט PLA כלול במחיר.', specs: ['שטח הדפסה 25×21×22 ס״מ', 'PLA כלול, PETG בתוספת', 'חניה חינם ליד הסדנה'], g: ['#7c2d12', '#ea580c'] },
-  { id: 'd3', demo: true, cat: '3d', title: 'Elegoo Saturn 4 Ultra — הדפסת שרף ברזולוציה גבוהה', price: 45, unit: 'print', min: 1, city: 'ירושלים', owner: 'דניאל אברהם', rating: 5.0, reviews: 12, t: Date.now() - 26 * 3600e3,
-    desc: 'הדפסת שרף לפרטים קטנים במיוחד: מיניאטורות, תכשיטים ודגמים דנטליים. כולל שטיפה וייבוש UV.', specs: ['רזולוציה 12K', 'שרף אפור / שקוף', 'עד 21×13×22 ס״מ'], g: ['#3b0764', '#7e22ce'] },
-  { id: 'd4', demo: true, cat: '3d', title: 'Creality K1 Max — לחלקים גדולים', price: 0.9, unit: 'gram', min: 50, city: 'ראשון לציון', owner: 'אלון מזרחי', rating: 4.6, reviews: 17, t: Date.now() - 2 * 864e5,
-    desc: 'שטח הדפסה גדול לחלקים בגודל מלא: מעמדים, קופסאות, חלקי רחפן. אפשר גם משלוח עד הבית.', specs: ['שטח הדפסה 30×30×30 ס״מ', 'PLA / PETG / ABS', 'משלוח בתוספת ₪25'], g: ['#064e3b', '#059669'] },
-  { id: 'd5', demo: true, cat: '3d', title: 'Anycubic Kobra 3 Combo — השכרה הביתה לסוף שבוע', price: 120, unit: 'day', min: 2, city: 'באר שבע', owner: 'נועה פרץ', rating: 4.7, reviews: 9, t: Date.now() - 3 * 864e5,
-    desc: 'לוקחים את המדפסת הביתה ליומיים ומעלה. מגיעה מכוילת, עם 1 ק״ג PLA ומדריך קצר. פיקדון ₪500 שמוחזר בהחזרה.', specs: ['4 צבעים', 'כולל 1 ק״ג PLA', 'פיקדון ₪500'], g: ['#1e3a8a', '#2563eb'] },
-  { id: 'd6', demo: true, cat: '3d', title: 'Bambu Lab A1 mini — הדפסות קטנות ומהירות', price: 15, unit: 'print', min: 1, city: 'נתניה', owner: 'עידו שלום', rating: 4.9, reviews: 44, t: Date.now() - 5 * 864e5,
-    desc: 'מחזיקי מפתחות, שמות, חלקי חילוף קטנים. שולחים קובץ או בוחרים דגם מוכן — מוכן תוך כמה שעות.', specs: ['עד 18×18×18 ס״מ', 'PLA במגוון צבעים', 'איסוף עצמי'], g: ['#831843', '#db2777'] }
-];
+  { id: 'd1', cat: '3d', img: 'rent/p3d-farm.jpg', title: 'חוות 4 מדפסות Prusa — הרבה חלקים במקביל', price: 1.2, unit: 'gram', min: 30, city: 'תל אביב', owner: 'רון כהן', rating: 4.9, reviews: 38, t: -2,
+    desc: 'ארבע מדפסות שעובדות במקביל, אז גם הזמנה של עשרות חלקים מוכנה מהר. שולחים קובץ STL/3MF, אני מדפיס ומתאם איסוף.', specs: ['25×21×21 ס״מ לכל מדפסת', 'PLA / PETG / TPU', 'אספקה: 1–2 ימים'] },
+  { id: 'd2', cat: '3d', img: 'rent/p3d-prusa-mk2.jpg', title: 'Prusa i3 MK3 — שימוש עצמי בסדנה, כולל הדרכה', price: 25, unit: 'hour', min: 2, city: 'חיפה', owner: 'מאיה לוי', rating: 4.8, reviews: 21, t: -6,
+    desc: 'באים לסדנה ומדפיסים בעצמכם. בפעם הראשונה — חצי שעה הדרכה בחינם. פילמנט PLA כלול במחיר.', specs: ['25×21×21 ס״מ', 'PLA כלול, PETG בתוספת', 'חניה חינם ליד הסדנה'] },
+  { id: 'd3', cat: '3d', img: 'rent/p3d-resin.jpg', title: 'Elegoo Mars — הדפסת שרף לפרטים קטנים', price: 45, unit: 'print', min: 1, city: 'ירושלים', owner: 'דניאל אברהם', rating: 5.0, reviews: 12, t: -26,
+    desc: 'הדפסת שרף לפרטים קטנים במיוחד: מיניאטורות, תכשיטים ודגמים. כולל שטיפה וייבוש UV.', specs: ['רזולוציה גבוהה', 'שרף אפור / שקוף', 'עד 12×7×15 ס״מ'] },
+  { id: 'd4', cat: '3d', img: 'rent/p3d-imprimante.jpg', title: 'Creality Ender 3 — הדפסה זולה לפי גרם', price: 0.9, unit: 'gram', min: 50, city: 'ראשון לציון', owner: 'אלון מזרחי', rating: 4.6, reviews: 17, t: -48,
+    desc: 'הדרך הכי זולה להדפיס: מעמדים, קופסאות, חלקי חילוף לבית. אפשר גם משלוח עד הבית.', specs: ['22×22×25 ס״מ', 'PLA / PETG', 'משלוח בתוספת ₪25'] },
+  { id: 'd5', cat: '3d', img: 'rent/p3d-prusa-metal.jpg', title: 'מדפסת Prusa i3 (מסגרת מתכת) — השכרה הביתה', price: 90, unit: 'day', min: 2, city: 'באר שבע', owner: 'נועה פרץ', rating: 4.7, reviews: 9, t: -72,
+    desc: 'לוקחים את המדפסת הביתה ליומיים ומעלה. מגיעה מכוילת, עם 1 ק״ג PLA ומדריך קצר.', specs: ['כולל 1 ק״ג PLA', 'פיקדון ₪500 שמוחזר', 'הדרכה בטלפון'] },
+  { id: 'd6', cat: '3d', img: 'rent/p3d-shields.jpg', title: 'הדפסה סדרתית — מחזיקים, ווים וחלקים קטנים', price: 15, unit: 'print', min: 1, city: 'נתניה', owner: 'עידו שלום', rating: 4.9, reviews: 44, t: -120,
+    desc: 'מחזיקי מפתחות, ווים לקיר, חלקי חילוף קטנים. שולחים קובץ או בוחרים דגם מוכן — מוכן תוך כמה שעות.', specs: ['עד 18×18×18 ס״מ', 'PLA במגוון צבעים', 'איסוף עצמי'] },
+  { id: 'p1', cat: 'printer', img: 'rent/laser.jpg', title: 'מדפסת לייזר Brother — שחור-לבן מהיר', price: 0.4, unit: 'page', min: 10, city: 'פתח תקווה', owner: 'שירה גולן', rating: 4.8, reviews: 63, t: -3,
+    desc: 'שולחים PDF במייל או בוואטסאפ, ואוספים מהלובי תוך שעה. מושלם לעבודות, חוזים וטפסים.', specs: ['A4 שחור-לבן', 'דו-צדדי', 'נייר כלול'] },
+  { id: 'p2', cat: 'printer', img: 'rent/mfp.jpg', title: 'מכונת צילום משרדית Ricoh — צבע, סריקה ו-A3', price: 1.5, unit: 'page', min: 5, city: 'תל אביב', owner: 'משרד שחר', rating: 4.7, reviews: 29, t: -20,
+    desc: 'מכונה משרדית גדולה: הדפסה בצבע, A3, סריקה למייל וכריכה. אפשר להגיע ולהדפיס בעצמכם בשעות המשרד.', specs: ['צבע / שחור-לבן', 'A4 ו-A3', 'סריקה למייל'] },
+  { id: 'p3', cat: 'printer', img: 'rent/inkjet.jpg', title: 'מדפסת צבע Epson — תמונות ועבודות לבית ספר', price: 1, unit: 'page', min: 1, city: 'מודיעין', owner: 'אבי דהן', rating: 4.5, reviews: 14, t: -50,
+    desc: 'הדפסת תמונות ועבודות צבעוניות לילדים. גם נייר צילום מבריק בתוספת קטנה.', specs: ['צבע מלא', 'נייר צילום ₪2', 'איסוף מהבית'] },
+  { id: 't1', cat: 'tools', img: 'rent/drill.jpg', title: 'מברגה-מקדחה נטענת Panasonic + סט ביטים', price: 35, unit: 'day', min: 1, city: 'תל אביב', owner: 'יוסי ברק', rating: 4.9, reviews: 52, t: -1,
+    desc: 'לתליית מדפים, תמונות והרכבת רהיטים. מגיעה עם 2 סוללות טעונות, סט ביטים ומקדחים לקיר.', specs: ['2 סוללות', 'מקדחים לבטון ולעץ', 'פיקדון ₪200'] },
+  { id: 't2', cat: 'tools', img: 'rent/washer.jpg', title: 'מכונת שטיפה בלחץ — לחצר, לרכב ולמרפסת', price: 90, unit: 'day', min: 1, city: 'אשדוד', owner: 'מוטי אזולאי', rating: 4.6, reviews: 18, t: -30,
+    desc: 'מנקה אבנים, דקים, רכב ומרפסות בקלות. כולל צינור 10 מ׳ וראש סיבובי.', specs: ['צינור 10 מ׳', 'ראש סיבובי', 'פיקדון ₪300'] },
+  { id: 'c1', cat: 'photo', img: 'rent/camera.jpg', title: 'מצלמת Nikon D850 + עדשה 24-70', price: 180, unit: 'day', min: 1, city: 'רמת גן', owner: 'ליאור צילום', rating: 5.0, reviews: 27, t: -8,
+    desc: 'מצלמה מקצועית לאירועים, צילומי מוצר ופורטרטים. כוללת 2 סוללות, כרטיס 128GB ותיק.', specs: ['45 מגה-פיקסל', 'עדשה 24-70 f/2.8', 'פיקדון ₪2,000'] },
+  { id: 'c2', cat: 'photo', img: 'rent/projector.jpg', title: 'מקרן לערבי סרטים, מצגות ואירועים', price: 80, unit: 'day', min: 1, city: 'הרצליה', owner: 'גל אורן', rating: 4.8, reviews: 33, t: -40,
+    desc: 'מקרן בהיר עם כבל HDMI ומסך נייד 100 אינץ׳. מתאים לסרט בחצר או למצגת במשרד.', specs: ['Full HD', 'מסך 100 אינץ׳ בתוספת ₪30', 'רמקול בלוטות׳ כלול'] },
+  { id: 'o1', cat: 'other', img: 'rent/sewing.jpg', title: 'מכונת תפירה — לתיקונים, קיצורים ותחפושות', price: 30, unit: 'day', min: 1, city: 'כפר סבא', owner: 'רותי שמש', rating: 4.7, reviews: 11, t: -96,
+    desc: 'מכונה וותיקה ואמינה שעובדת מצוין. כולל חוטים בסיסיים ושיעור קצר אם צריך.', specs: ['חוטים כלולים', 'הדרכה של 15 דק׳', 'איסוף עצמי'] }
+].map(r => Object.assign({ demo: true }, r, { t: Date.now() + r.t * 3600e3 }));
 let rentData = null, rentUnsub = null;
 const rentUI = { cat: 'all', q: '', city: 'all', sort: 'new' };
 function rentSubscribe() {
@@ -32687,7 +32703,7 @@ function rentViewHTML() {
     </div>
     <nav class="rn-cats">${RENT_CATS.map(c => `<button type="button" class="rn-cat${rentUI.cat === c.id ? ' on' : ''}" onclick="rentSet('cat', '${c.id}')">${c.ic} ${c.name} <small>${count(c.id)}</small></button>`).join('')}</nav>
     <div class="rn-grid">${rentGridHTML()}</div>
-    <p class="rn-fine">איך זה עובד: בוחרים ציוד ← שולחים בקשה עם כמות/זמן ← בעל הציוד מאשר ומתאמים איסוף. התשלום לבעל הציוד, ועמלת שירות של ${Math.round(RENT_SITE_FEE * 100)}% לאתר.</p>`;
+    <p class="rn-fine">איך זה עובד: בוחרים ציוד ← שולחים בקשה עם כמות/זמן ← בעל הציוד מאשר ומתאמים איסוף. התשלום לבעל הציוד, ועמלת שירות של ${Math.round(RENT_SITE_FEE * 100)}% לאתר.<br><small>תמונות הדוגמה: Wikimedia Commons (רישיון חופשי)</small></p>`;
 }
 function buildRentPage() {
   setTimeout(rentSubscribe, 0);

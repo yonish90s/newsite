@@ -3108,6 +3108,7 @@ html.theme-dark .rn-cat small { color: #d0d0d0 !important; }
 html.theme-dark .rn-cat.on { background: #262626 !important; border-color: #5b6472 !important; }
 html.theme-dark .rn-card { border: 1px solid #2a2a2a !important; background: #111111 !important; }
 html.theme-dark .rn-img { background: #111111 !important; }
+html.theme-dark .rn-det-img { background: #111111 !important; }
 html.theme-dark .rn-demo { background: rgba(17, 17, 17, 0.9) !important; color: #ffffff !important; }
 html.theme-dark .rn-price { color: #ffffff !important; }
 html.theme-dark .rn-price small { color: #d0d0d0 !important; }
