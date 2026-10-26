@@ -25873,77 +25873,23 @@ function buildNewsPage() {
     `;
 
   return `
-    <div class="news-page-container" style="
+    <div class="news-page-container lk-news" style="
       max-width: 1000px;
       margin: 0 auto;
       padding: 24px 16px 80px 16px;
       direction: rtl;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans Hebrew', sans-serif;
     ">
-      <!-- כותרת עמוד וכפתור הוספה -->
-      <div style="
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 16px;
-        margin-bottom: 24px;
-        border-bottom: 2px solid #e7e7e7;
-        padding-bottom: 18px;
-      ">
-        <div>
-          <h1 style="
-            margin: 0;
-            font-size: 26px;
-            font-weight: 900;
-            color: #262626;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-          ">
-            <span>חדשות ומבזקים</span>
-            <span style="
-              display: inline-flex;
-              align-items: center;
-              background: #000000;
-              border: 1px solid #333333;
-              border-radius: 8px;
-              padding: 2px 8px;
-              font-size: 14px;
-              font-weight: bold;
-              color: #ffffff;
-            ">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="margin-left:4px;"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-              Live
-            </span>
-          </h1>
-          <p style="margin: 6px 0 0 0; font-size: 13.5px; color: #818181;">
-            עדכונים בזמן אמת, ציוצים נבחרים וחדשות טכנולוגיה ישירות מ-X
-          </p>
+      <!-- כותרת עמוד (בהשראת getlatka) -->
+      <header class="lk-head">
+        <nav class="lk-crumbs" aria-label="ניווט"><span>Black1White00</span><span>/</span><b>חדשות</b></nav>
+        <div class="lk-head-row">
+          <div><h1 class="lk-h1">חדשות ומבזקים</h1><p class="lk-sub">עדכונים, כתבות וסרטונים — כל מה שחם בקהילה ובעולם.</p></div>
+          ${newsIsAdmin() ? `<div class="lk-actions">${newsPostsData.length ? `<button onclick="deleteAllNewsPosts()" style="background: rgba(239,68,68,0.12); color:#f87171; border:1px solid rgba(239,68,68,0.35); padding: 11px 16px; border-radius: 12px; font-size: 14px; font-weight: 800; cursor: pointer;">מחיקת כל המבזקים</button>` : ''}<button type="button" class="lk-btn" onclick="openNewsAddModal()">+ הוספת עדכון</button></div>` : ''}
         </div>
-
-        ${newsIsAdmin() ? `<div style="display:flex; gap:8px; flex-wrap:wrap;">
-        ${newsPostsData.length ? `<button onclick="deleteAllNewsPosts()" style="background: rgba(239,68,68,0.12); color:#f87171; border:1px solid rgba(239,68,68,0.35); padding: 11px 16px; border-radius: 12px; font-size: 14px; font-weight: 800; cursor: pointer;">מחיקת כל המבזקים</button>` : ''}
-        <button onclick="openNewsAddModal()" style="
-          background: linear-gradient(135deg, #1d9bf0, #0284c7);
-          color: #ffffff;
-          border: none;
-          padding: 11px 20px;
-          border-radius: 12px;
-          font-size: 14px;
-          font-weight: 800;
-          cursor: pointer;
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          box-shadow: 0 4px 16px rgba(29, 155, 240, 0.35);
-          transition: transform 0.15s ease;
-        ">
-          <span style="font-size: 16px;">➕</span>
-          <span>הוספת עדכון</span>
-        </button>
-        </div>` : ''}
-      </div>
+        ${(() => { const L = (newsPostsData && newsPostsData.length) ? newsPostsData : []; const last = L.reduce((m, x) => Math.max(m, Number(x.createdAt) || 0), 0); const vids = L.filter(x => /(youtube\.com|youtu\.be)/.test(String(x.body || ''))).length;
+          return `<div class="lk-stats"><div><small>כתבות</small><b>${L.length}</b><span>בארכיון</span></div><div><small>עודכן לאחרונה</small><b>${last ? escHtml(newsWhen(last)) : '—'}</b><span>מתעדכן בזמן אמת</span></div><div><small>עם סרטון</small><b>${vids}</b><span>כתבות עם YouTube</span></div></div>`; })()}
+      </header>
 
       <!-- סרגל סינון קטגוריות -->
       <div style="
@@ -30470,23 +30416,60 @@ function newsOpenArticle(id) {
   // נקודות עיקריות: התקציר מחולק למשפטים/שורות (עד 5)
   const points = String(post.desc || '').split(/\n+|(?<=[.!?])\s+/).map(x => x.trim()).filter(x => x.length > 2).slice(0, 5);
   const others = list.filter(p => String(p.id) !== String(id)).slice(0, 6);
-  mainContent.innerHTML = `<div class="news-article" data-page-id="page-news-article" data-news-id="${escHtml(String(post.id))}">
-    <button type="button" class="art-back-btn na-back" onclick="newsBackToList()">חזרה לחדשות</button>
+  // מבנה בהשראת getlatka: פירורי לחם, כותרת גדולה + כותרת משנה, שורת פרטים, קופסאות נתונים, תוכן העניינים בצד
+  const plain = (post.title || '') + ' ' + (post.desc || '') + ' ' + String(post.body || '').replace(/https?:\/\/\S+/g, ' ');
+  const mins = Math.max(1, Math.round(plain.split(/\s+/).filter(Boolean).length / 180));
+  const nYt = (String(post.body || '').match(/(youtube\.com\/(watch|shorts|embed)|youtu\.be\/)/g) || []).length;
+  const pub = post.createdAt ? new Date(post.createdAt) : null;
+  const toc = [
+    post.body && post.desc ? ['lk-lead', 'תקציר'] : null,
+    !post.body && points.length ? ['lk-points', 'נקודות עיקריות'] : null,
+    post.body ? ['lk-body', 'הכתבה'] : null,
+    nYt ? ['lk-video', nYt > 1 ? 'סרטונים' : 'סרטון'] : null,
+    post.tweetUrl ? ['lk-source', 'המקור'] : null,
+    others.length ? ['lk-more', 'עוד חדשות'] : null
+  ].filter(Boolean);
+  mainContent.innerHTML = `<div class="news-article lk" data-page-id="page-news-article" data-news-id="${escHtml(String(post.id))}">
+    <nav class="lk-crumbs" aria-label="ניווט"><button type="button" onclick="newsBackToList()">חדשות</button><span>/</span><span>${escHtml(post.category && post.category !== 'הכל' ? post.category : 'כתבה')}</span><span>/</span><b>${escHtml((post.title || '').slice(0, 40))}</b></nav>
+    <div class="lk-grid">
     <article class="na">
       <h1 class="na-title">${escHtml(post.title || '')}</h1>
-      <div class="na-meta"><span class="na-author">${escHtml(post.author || 'עורך חדשות')}</span><span class="na-sep" aria-hidden="true"></span><span class="na-when">${escHtml(newsWhen(post.createdAt))}</span></div>
+      ${post.body && post.desc ? `<p class="lk-sub" id="lk-lead">${escHtml(post.desc)}</p>` : ''}
+      <div class="na-meta"><span class="na-author">${escHtml(post.author || 'עורך חדשות')}</span><span class="na-sep" aria-hidden="true"></span><span class="na-when">${escHtml(newsWhen(post.createdAt))}</span>${plat && post.tweetUrl ? `<span class="na-sep" aria-hidden="true"></span><span>${escHtml(NEWS_PLATFORM_NAMES[plat] || '')}</span>` : ''}</div>
+      <div class="lk-stats">
+        <div><small>מחבר</small><b>${escHtml(post.author || 'עורך חדשות')}</b><span>Black1White00</span></div>
+        <div><small>פורסם</small><b>${pub ? escHtml(pub.toLocaleDateString('he-IL', { day: 'numeric', month: 'short' })) : '—'}</b><span>${pub ? escHtml(pub.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })) : ''}</span></div>
+        <div><small>זמן קריאה</small><b>${mins} דק׳</b><span>${nYt ? nYt + (nYt > 1 ? ' סרטונים' : ' סרטון') : 'טקסט בלבד'}</span></div>
+      </div>
       ${img ? `<div class="na-img"><img src="${escHtml(img)}" alt="" loading="lazy" onerror="this.parentNode.remove()"></div>` : ''}
-      ${!post.body && points.length ? `<section class="na-points"><h2>נקודות עיקריות</h2><ul>${points.map(x => `<li>${escHtml(x)}</li>`).join('')}</ul></section>` : ''}
-      ${post.body ? `${post.desc ? `<p class="na-lead">${escHtml(post.desc)}</p>` : ''}<div class="na-body">${newsBodyHTML(post.body)}</div>` : ''}
-      ${post.tweetUrl ? `<div class="na-embed">${newsEmbedHTML(post)}</div>
+      ${!post.body && points.length ? `<section class="na-points" id="lk-points"><h2>נקודות עיקריות</h2><ul>${points.map(x => `<li>${escHtml(x)}</li>`).join('')}</ul></section>` : ''}
+      ${post.body ? `<div class="na-body" id="lk-body">${newsBodyHTML(post.body)}</div>` : ''}
+      ${post.tweetUrl ? `<div class="na-embed" id="lk-source">${newsEmbedHTML(post)}</div>
         <a class="na-source" href="${escHtml(safeUrl(post.tweetUrl))}" target="_blank" rel="noopener noreferrer">לצפייה ב${plat === 'x' ? '-X' : NEWS_PLATFORM_NAMES[plat]} ›</a>` : ''}
     </article>
-    ${others.length ? `<section class="na-more"><h2>עוד חדשות</h2>${others.map((p, i) => buildNewsCard(p, i + 1)).join('')}</section>` : ''}
+    ${toc.length > 1 ? `<aside class="lk-toc"><small>בכתבה</small>${toc.map(([id, l], i) => `<button type="button" data-to="${id}" class="${i ? '' : 'on'}" onclick="lkTocGo('${id}')">${l}</button>`).join('')}</aside>` : ''}
+    </div>
+    ${others.length ? `<section class="na-more" id="lk-more"><h2>עוד חדשות</h2>${others.map((p, i) => buildNewsCard(p, i + 1)).join('')}</section>` : ''}
   </div>`;
+  const yt = mainContent.querySelector('.na-body .na-yt'); if (yt) yt.id = 'lk-video';
+  lkTocSpy();
   try { triggerTwitterWidgetsRender(); } catch (e) {}
   try { window.scrollTo(0, 0); } catch (e) {}
   try { if (typeof hdrBackSync === 'function') hdrBackSync(); } catch (e) {}
 }
+// תוכן העניינים בכתבה: קפיצה לחלק + סימון החלק הנוכחי בזמן גלילה
+function lkTocGo(id) { const el = document.getElementById(id); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+function lkTocSpy() {
+  if (window.__lkSpy) window.removeEventListener('scroll', window.__lkSpy);
+  const fn = () => {
+    const btns = [...document.querySelectorAll('.lk-toc button')]; if (!btns.length) { window.removeEventListener('scroll', fn); return; }
+    let cur = btns[0];
+    btns.forEach(b => { const el = document.getElementById(b.dataset.to); if (el && el.getBoundingClientRect().top < 160) cur = b; });
+    btns.forEach(b => b.classList.toggle('on', b === cur));
+  };
+  window.__lkSpy = fn; window.addEventListener('scroll', fn, { passive: true });
+}
+window.lkTocGo = lkTocGo;
 function newsBackToList() {
   if (typeof mainContent !== 'undefined' && mainContent) mainContent.innerHTML = buildNewsPage();
   try { window.scrollTo(0, 0); } catch (e) {}
