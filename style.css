@@ -16704,3 +16704,28 @@ html.adult-blur #ask-panel .ask-item-img img { filter: blur(14px); transform: sc
 #ask-panel .ask-item-txt b { font-size: 12.5px; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 #ask-panel .ask-item-txt small { font-size: 11px; color: #6b7280; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 @media (prefers-reduced-motion: reduce) { #ask-panel .ask-typing i, #ask-panel .ask-caret { animation: none; } }
+
+/* ===== מודעה קבועה: פרימיום — שבועיים חינם ===== */
+.promo-trial { position: relative; overflow: hidden; isolation: isolate; border-radius: 20px; padding: 18px 18px 16px; color: #ffffff; background: linear-gradient(140deg, #1e1b4b 0%, #4c1d95 45%, #0e7490 100%); box-shadow: 0 10px 30px rgba(76, 29, 149, .25); display: flex; flex-direction: column; gap: 8px; text-align: right; }
+.promo-trial .pt-glow { position: absolute; inset: -40% -30% auto auto; width: 220px; height: 220px; border-radius: 50%; background: radial-gradient(circle, rgba(103, 232, 249, .45), transparent 65%); z-index: -1; animation: ptGlow 6s ease-in-out infinite alternate; }
+@keyframes ptGlow { to { transform: translate(-40px, 30px) scale(1.15); } }
+.promo-trial .pt-badge { align-self: flex-start; font-size: 11.5px; font-weight: 800; letter-spacing: .2px; padding: 4px 10px; border-radius: 999px; background: rgba(255, 255, 255, .14); border: 1px solid rgba(255, 255, 255, .22); }
+.promo-trial .pt-title { font-size: 22px; line-height: 1.2; font-weight: 900; }
+.promo-trial .pt-sub { margin: 0; font-size: 13px; opacity: .85; }
+.promo-trial .pt-perks { list-style: none; margin: 2px 0 4px; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
+.promo-trial .pt-perks li::before { content: '✓'; display: inline-grid; place-items: center; width: 17px; height: 17px; margin-inline-end: 7px; border-radius: 50%; background: rgba(103, 232, 249, .25); color: #a5f3fc; font-size: 10px; font-weight: 900; }
+.promo-trial .pt-cta { border: 0; border-radius: 12px; padding: 11px 14px; font: inherit; font-size: 14px; font-weight: 800; color: #1e1b4b; background: #ffffff; cursor: pointer; transition: transform .15s ease, box-shadow .15s ease; }
+.promo-trial .pt-cta:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(0, 0, 0, .25); }
+.promo-trial .pt-fine { font-size: 11px; opacity: .7; text-align: center; }
+.promo-trial.inline { margin: 14px 0; }
+@media (min-width: 640px) and (max-width: 1239px) {
+  .promo-trial.inline { display: grid; grid-template-columns: 1fr auto; grid-template-areas: "badge cta" "title cta" "perks fine"; align-items: center; column-gap: 20px; }
+  .promo-trial.inline .pt-badge { grid-area: badge; } .promo-trial.inline .pt-title { grid-area: title; } .promo-trial.inline .pt-perks { grid-area: perks; flex-direction: row; flex-wrap: wrap; gap: 12px; }
+  .promo-trial.inline .pt-cta { grid-area: cta; } .promo-trial.inline .pt-fine { grid-area: fine; }
+}
+@media (min-width: 1240px) { .promo-trial.inline { display: none; } }
+@media (prefers-reduced-motion: reduce) { .promo-trial .pt-glow { animation: none; } }
+/* במחשב: חלונות (קבלה, הזמנה התקבלה, ההזמנות שלי…) גדולים וממורכזים — לא קטנים בפינה */
+@media (min-width: 769px) {
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet .ms-panel { top: 50% !important; left: 50% !important; right: auto !important; bottom: auto !important; transform: translate(-50%, -50%) !important; width: min(720px, calc(100% - 48px)) !important; max-height: min(90%, 1000px) !important; border-radius: 22px !important; box-shadow: 0 30px 80px rgba(0,0,0,.35) !important; }
+}

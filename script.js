@@ -15665,6 +15665,7 @@ function buildHomeFeedPage() {
       ${homeChipsHTML(photos, comics, stories)}
       ${modBoxHTML()}
       ${homeHeroCarouselHTML(photos, comics, stories)}
+      ${promoTrialHTML('inline')}
       ${homeExploreHTML()}
       ${homeRowsHTML(photos, comics, stories)}
       <div class="cmp-wrap">${composerBarHTML()}</div>
@@ -25023,8 +25024,8 @@ window.saveOnboardingAdmin = saveOnboardingAdmin;
 // ==========================================
 let currentSubscriptionBilling = 'yearly'; // 'yearly' | 'monthly'
 
-// כל המסלולים: שבוע ניסיון חינם. כל מסלול מוסיף פיצ'רים שאין במסלולים שמתחתיו (exclusive).
-const SUBSCRIPTION_TRIAL_DAYS = 7;
+// כל המסלולים: שבועיים ניסיון חינם. כל מסלול מוסיף פיצ'רים שאין במסלולים שמתחתיו (exclusive).
+const SUBSCRIPTION_TRIAL_DAYS = 14;
 const subscriptionPlansData = [
   {
     id: 'basic',
@@ -25116,6 +25117,36 @@ function handleSubscriptionPlanSelect(planId) {
   alert(`בחרת במסלול ${planName} (${periodText}) — כולל ${SUBSCRIPTION_TRIAL_DAYS} ימי ניסיון חינם! תהליך ההרשמה יתחבר בקרוב.`);
 }
 window.handleSubscriptionPlanSelect = handleSubscriptionPlanSelect;
+
+// ============================================================
+// מודעה קבועה: "פרימיום — נסו שבועיים חינם" (בראש העמודה הימנית במחשב, ובעמוד הבית במובייל)
+// הניסיון כרגע בהדגמה: נשמר בדפדפן ומציג כמה ימים נשארו.
+// ============================================================
+function promoTrialUntil() { return Number(localStorage.getItem('premium_trial_until') || 0); }
+function promoTrialHTML(where) {
+  const until = promoTrialUntil(), now = Date.now();
+  if (until > now) {
+    const left = Math.max(1, Math.ceil((until - now) / 864e5));
+    return `<section class="promo-trial on ${where}"><div class="pt-glow"></div><span class="pt-badge">💎 פרימיום פעיל</span><b class="pt-title">נשארו לכם ${left} ימי ניסיון</b><p class="pt-sub">תיהנו מגלישה בלי פרסומות ומתוכן נעול.</p></section>`;
+  }
+  return `<section class="promo-trial ${where}" role="complementary" aria-label="מבצע פרימיום">
+    <div class="pt-glow"></div>
+    <span class="pt-badge">💎 Black1White00 פרימיום</span>
+    <b class="pt-title">נסו שבועיים חינם</b>
+    <ul class="pt-perks"><li>בלי פרסומות</li><li>גלריות ותכנים נעולים</li><li>תג פרימיום ליד השם</li></ul>
+    <button type="button" class="pt-cta" onclick="promoTrialStart()">להתחיל 14 ימים חינם</button>
+    <small class="pt-fine">בלי התחייבות · ביטול בכל רגע</small>
+  </section>`;
+}
+function promoTrialStart() {
+  const u = auth.currentUser;
+  if (!u || u.isAnonymous) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); glassBanner({ title: 'כמעט שם 💎', sub: 'התחברו כדי להפעיל שבועיים חינם', ms: 3000 }); return; }
+  try { localStorage.setItem('premium_trial_until', String(Date.now() + SUBSCRIPTION_TRIAL_DAYS * 864e5)); } catch (e) {}
+  if (typeof trackEvent === 'function') trackEvent('trial_start');
+  glassBanner({ title: '💎 הניסיון החינמי הופעל!', sub: `${SUBSCRIPTION_TRIAL_DAYS} ימים של פרימיום — תהנו`, ms: 3500 });
+  document.querySelectorAll('.promo-trial').forEach(el => { const w = el.classList.contains('aside') ? 'aside' : 'inline'; el.outerHTML = promoTrialHTML(w); });
+}
+window.promoTrialStart = promoTrialStart;
 
 
 // מנוי במובייל: קרוסלה — מתחילים מהמסלול המומלץ, נקודות מתחת מסמנות איפה נמצאים
@@ -29033,6 +29064,7 @@ function homeAsideHTML() {
   let haHidden = []; try { haHidden = JSON.parse(localStorage.getItem('ha_hidden') || '[]') || []; } catch (e) {}
   const box = (title, rows, more) => (rows && !haHidden.includes(title)) ? `<section class="ha-box"><h3>${title}</h3><button type="button" class="ha-x" onclick="homeAsideHide(this, '${artEsc(title)}')" aria-label="הסתרה" title="הסתרה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>${rows}${more ? `<button type="button" class="ha-more" onclick="${more}">הצג עוד</button>` : ''}</section>` : '';
   return `<aside class="home-aside" aria-label="המלצות">
+    ${promoTrialHTML('aside')}
     ${(() => {
       const whoBox = box('את מי לעקוב', who.slice(0, 3).map(whoRow).join(''), "homeAsideMore('who')");
       const loginBox = homeAsideLoginHTML();
