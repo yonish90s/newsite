@@ -16960,3 +16960,20 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_
   .rent-page .rn-det-img { grid-row: 2 / span 7; aspect-ratio: 4 / 3; position: sticky; top: 80px; }
   .rent-page .rn-det > :not(.rn-det-img):not(.rn-det-title) { grid-column: 2; }
 }
+
+/* השוק: לשוניות אזורים + תג סוג על כל כרטיס */
+.rn-secs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.rn-sec { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 6px; border-radius: 14px; border: 1px solid #e5e7eb; background: #ffffff; color: #111827; font: inherit; font-size: 14px; font-weight: 800; cursor: pointer; }
+.rn-sec span { font-size: 22px; line-height: 1; }
+.rn-sec small { font-size: 11px; font-weight: 700; color: #6b7280; }
+.rn-sec.on { border-color: #ff7a00; background: #fff7ed; box-shadow: 0 0 0 2px rgba(255, 122, 0, .2); }
+.rn-kind { position: absolute; bottom: 8px; right: 8px; font-style: normal; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 999px; color: #ffffff; background: #ea580c; }
+.rn-kind.k-used { background: #2563eb; }
+.rn-kind.k-store { background: #059669; }
+.rn-pubmenu { position: relative; }
+.rn-pubmenu summary { list-style: none; }
+.rn-pubmenu summary::-webkit-details-marker { display: none; }
+.rn-pubmenu > div { position: absolute; top: calc(100% + 6px); left: 0; z-index: 5; min-width: 200px; display: flex; flex-direction: column; padding: 6px; border-radius: 14px; background: #ffffff; border: 1px solid #e5e7eb; box-shadow: 0 12px 30px rgba(0, 0, 0, .15); }
+.rn-pubmenu > div button { border: 0; background: transparent; text-align: right; padding: 10px 12px; border-radius: 10px; font: inherit; font-size: 14px; font-weight: 700; color: #111827; cursor: pointer; }
+.rn-pubmenu > div button:hover { background: #f3f4f6; }
+@media (max-width: 640px) { .rn-sec { font-size: 12px; padding: 8px 4px; } .rn-sec span { font-size: 18px; } .rn-pubmenu { width: 100%; } .rn-pubmenu > div { right: 0; left: 0; } }

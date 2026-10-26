@@ -857,8 +857,8 @@ function sanitizeToOnlyPhotosAndStories() {
   // עמוד "השכרת ציוד" — תמיד קיים, נבנה דינמית
   const _rnContent = '<div class="rent-page" data-page-id="page-rent-main"></div>';
   const _rnPage = pages.find(p => p && p.id === 'page-rent-main');
-  if (!_rnPage) pages.push({ id: 'page-rent-main', title: 'השכרת ציוד', content: _rnContent });
-  else { _rnPage.content = _rnContent; if (!_rnPage.title) _rnPage.title = 'השכרת ציוד'; }
+  if (!_rnPage) pages.push({ id: 'page-rent-main', title: 'השוק', content: _rnContent });
+  else { _rnPage.content = _rnContent; _rnPage.title = 'השוק'; }
 
   // עמוד "מנוי" — תמיד קיים
   const _subContent = '<div class="subscription-page" data-page-id="page-subscription-main"></div>';
@@ -11787,6 +11787,8 @@ function navigateToPage(pageId) {
   // מעבר לעמוד אחר — סוגרים חלונות צד פתוחים
   if (typeof closeSidePanels === 'function') closeSidePanels();
   if (pageId === 'page-ai') { window.__detailOpen = false; activePageId = 'page-ai'; try { renderSideMenu(); renderTopNav(); } catch (e) {} renderPage(); try { window.scrollTo({ top: 0 }); } catch (e) {} return; }
+  // "מוצרי גולשים" (יד 2) מאוחד עכשיו בעמוד "השוק" — חוץ מפתיחת מוצר/פרסום שצריכים את העמוד המקורי
+  if (pageId === 'page-secondhand-main' && !window.__shDirect && typeof mktGo === 'function') { mktGo('used'); return; }
   const page = (typeof pages !== 'undefined' && Array.isArray(pages)) ? pages.find(p => p && p.id === pageId) : null;
   if (!page) return;
   window.__detailOpen = false; // ניווט מפורש — מותר לרנדר מחדש
@@ -15715,8 +15717,7 @@ const HOME_TABS_ALL = {
   photos: ['תמונות גולשים', "homeGo('photos')"],
   comics: ['קומיקס', "homeGo('comics')"],
   stories: ['סיפורים', "homeGo('stories')"],
-  secondhand: ['מוצרי גולשים', "navigateToPage('page-secondhand-main')"],
-  rent: ['השכרת ציוד', "navigateToPage('page-rent-main')"],
+  secondhand: ['השוק', "mktGo('all')"],
   forums: ['פורומים', "navigateToPage('page-forums-main')"],
   news: ['חדשות', "navigateToPage('page-news-main')"],
   communities: ['קהילות', "navigateToPage('page-communities-main')"],
@@ -15781,8 +15782,7 @@ const SIDE_RAIL_ITEMS = [
   ['cats', 'קטגוריות', "navigateToPage('page-communities-main')", '<rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/>', true],
   ['photos', 'תמונות גולשים', 'homeOpenPhotos()', '<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/>', false],
   ['store', 'החנות', "navigateToPage('page-products-main')", '<path d="M5 8h14l-1.2 11.1a1 1 0 0 1-1 .9H7.2a1 1 0 0 1-1-.9z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/>', false],
-  ['secondhand', 'מוצרי גולשים', "navigateToPage('page-secondhand-main')", '<path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.5"/>', false],
-  ['rent', 'השכרת ציוד', "navigateToPage('page-rent-main')", '<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/>', false],
+  ['secondhand', 'השוק: יד 2, השכרה ואחסון', "mktGo('all')", '<path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.5"/>', false],
   ['invest', 'תמכו / השקיעו בנו', "investOpen('invest')", '<path d="M12 20.5s-7.5-4.6-9.2-9.3C1.7 8 3.6 4.5 7.1 4.5c2 0 3.4 1.1 4.9 2.9 1.5-1.8 2.9-2.9 4.9-2.9 3.5 0 5.4 3.5 4.3 6.7-1.7 4.7-9.2 9.3-9.2 9.3z"/>', false],
   ['shop', 'מנוי ושדרוגים', "navigateToPage('page-subscription-main')", '<path d="M3 4h2l2.4 11.2a1 1 0 0 0 1 .8h9.2a1 1 0 0 0 1-.8L21 8H6.2"/><circle cx="9.5" cy="20" r="1.5"/><circle cx="17.5" cy="20" r="1.5"/>', false],
 ];
@@ -15810,7 +15810,7 @@ function renderSideRail() {
 function sideRailSync() {
   const el = document.getElementById('side-rail'); if (!el) return;
   const id = (typeof activePageId !== 'undefined' && activePageId) || '';
-  const map = { 'page-photos-main': 'photos', 'page-products-main': 'store', 'page-secondhand-main': 'secondhand', 'page-rent-main': 'rent', 'page-stats-main': 'stats', 'page-admin-main': 'stats', 'page-home-feed': 'home', 'page-feed-main': 'feed', 'page-communities-main': 'cats', 'page-subscription-main': 'shop', 'page-news-main': 'news' };
+  const map = { 'page-photos-main': 'photos', 'page-products-main': 'store', 'page-secondhand-main': 'secondhand', 'page-rent-main': 'secondhand', 'page-stats-main': 'stats', 'page-admin-main': 'stats', 'page-home-feed': 'home', 'page-feed-main': 'feed', 'page-communities-main': 'cats', 'page-subscription-main': 'shop', 'page-news-main': 'news' };
   el.querySelectorAll('.srail-btn').forEach(b => b.classList.toggle('on', b.dataset.rail === (map[id] || (id ? '' : 'home'))));
 }
 window.sideRailSync = sideRailSync;
@@ -22854,7 +22854,7 @@ onPublicSiteValue((data) => {
     if (!pList.find(p => p && p.id === 'page-forums-main')) pList.push({ id: 'page-forums-main', title: 'פורומים', content: '<div class="forums-page" data-page-id="page-forums-main"></div>' });
     if (!pList.find(p => p && p.id === 'page-polls-main')) pList.push({ id: 'page-polls-main', title: 'סקרים', content: '<div class="polls-page" data-page-id="page-polls-main"></div>' });
     if (!pList.find(p => p && p.id === 'page-products-main')) pList.push({ id: 'page-products-main', title: 'מוצרים', content: '<div class="products-page" data-page-id="page-products-main"></div>' });
-    if (!pList.find(p => p && p.id === 'page-rent-main')) pList.push({ id: 'page-rent-main', title: 'השכרת ציוד', content: '<div class="rent-page" data-page-id="page-rent-main"></div>' });
+    if (!pList.find(p => p && p.id === 'page-rent-main')) pList.push({ id: 'page-rent-main', title: 'השוק', content: '<div class="rent-page" data-page-id="page-rent-main"></div>' });
     const _cp = pList.find(p => p && p.id === 'page-communities-main');
     const _cpc = '<div class="communities-page" data-page-id="page-communities-main"></div>';
     if (!_cp) {
@@ -32602,9 +32602,52 @@ const RENT_CATS = [
   { id: 'printer', name: 'מדפסות', ic: '🖨️' },
   { id: 'tools', name: 'כלי עבודה', ic: '🛠️' },
   { id: 'photo', name: 'צילום וסאונד', ic: '📷' },
-  { id: 'other', name: 'אחר', ic: '📦' }
+  { id: 'other', name: 'אחר', ic: '🧰' },
+  { id: 'storage', name: 'שטח לאחסון', ic: '📦', store: true }
 ];
-const RENT_UNITS = { kg: 'לקילו', hour: 'לשעה', day: 'ליום', print: 'להדפסה', gram: 'לגרם', page: 'לעמוד' };
+const RENT_UNITS = { kg: 'לקילו', hour: 'לשעה', day: 'ליום', print: 'להדפסה', gram: 'לגרם', page: 'לעמוד', m2: 'למ״ר לחודש', box: 'לארגז לחודש', month: 'לחודש' };
+// השוק: שלושה אזורים בעמוד אחד — יד 2 (מוצרי גולשים), השכרת ציוד ושטח לאחסון
+const MKT_SECS = [
+  { id: 'all', name: 'הכל', ic: '✨' },
+  { id: 'used', name: 'יד 2', ic: '🛒', sub: 'קונים, מוכרים, מחליפים ומשאילים' },
+  { id: 'rent', name: 'השכרת ציוד', ic: '🔧', sub: 'מדפסות, תלת מימד וכלי עבודה — משלמים על השימוש' },
+  { id: 'store', name: 'שטח לאחסון', ic: '📦', sub: 'מחסן, חדר או חניה פנויים — מאחסנים חפצים אצל מישהו קרוב' }
+];
+const mktSecOf = r => r.kind === 'used' ? 'used' : r.cat === 'storage' ? 'store' : 'rent';
+// דוגמאות יד 2 (מוצגות כשיש מעט מוצרים אמיתיים)
+const USED_DEMO = [
+  { id: 'u1', offer: 'מכירה', img: 'rent/u-sofa.jpg', title: 'ספה תלת-מושבית מעור, במצב מצוין', price: 1200, city: 'גבעתיים', owner: 'הילה רוזן', t: -5, desc: 'ספה נוחה מעור שחור, 3 מושבים. בלי קרעים, מבית ללא בעלי חיים. איסוף עצמי מקומה 2 עם מעלית.', specs: ['רוחב 2.1 מ׳', 'עור אמיתי', 'איסוף עצמי'] },
+  { id: 'u2', offer: 'מכירה', img: 'rent/u-fridge.jpg', title: 'מקרר Panasonic דו-דלתי, 4 שנים', price: 1450, city: 'חולון', owner: 'שמעון לוי', t: -22, desc: 'מקרר שקט וחסכוני, מקפיא למטה. עובר דירה ולכן מוכר. אפשר לבוא לראות שעובד.', specs: ['320 ליטר', 'No Frost', 'הובלה בתיאום'] },
+  { id: 'u3', offer: 'החלפה', img: 'rent/u-guitar.jpg', title: 'גיטרה חשמלית Gibson Les Paul — להחלפה בקלידים', price: 0, city: 'חיפה', owner: 'עומר נחום', t: -54, desc: 'גיטרה במצב מצוין עם תיק קשיח. מחפש להחליף בקלידים / סינתיסייזר באותה רמה.', specs: ['כולל תיק קשיח', 'מיתרים חדשים', 'החלפה בלבד'] },
+  { id: 'u4', offer: 'השאלה', img: 'rent/u-bike.jpg', title: 'אופני עיר להשאלה לשבוע–חודש', price: 60, unit: 'month', city: 'תל אביב', owner: 'נטע קפלן', t: -80, desc: 'אופני עיר קלים ונוחים, עם מנעול. מתאים למי שמגיע לעיר לתקופה קצרה.', specs: ['כולל מנעול', 'פיקדון ₪300', 'תחזוקה כלולה'] }
+].map(r => Object.assign({ demo: true, kind: 'used' }, r, { t: Date.now() + r.t * 3600e3 }));
+// מוצרי יד 2 אמיתיים — מגיעים מעמוד "מוצרי גולשים" (נשמרים בתוכן העמוד)
+function usedAll() {
+  let raw = [];
+  try {
+    const pg = (typeof pages !== 'undefined' && Array.isArray(pages)) ? pages.find(x => x && x.id === 'page-secondhand-main') : null;
+    const m = pg && (pg.content || '').match(/data-photos-json="([^"]*)"/);
+    raw = (m ? (JSON.parse(decodeURIComponent(m[1])) || []) : []).filter(x => x && x.id && x.title && x.approved !== false && !x.adminOnly); } catch (e) {}
+  const real = raw.map(x => ({ id: 'sh_' + x.id, shId: x.id, kind: 'used', offer: x.offerType || x.category || 'מכירה', title: x.title, price: parseFloat(String(x.price || '').replace(/[^\d.]/g, '')) || 0, priceTxt: x.price || '',
+    unitTxt: x.priceUnit || '', city: x.region || '', owner: x.author || '', t: Number(x.createdAt) || 0, img: x.image || (Array.isArray(x.images) && x.images[0]) || '' }));
+  return real.concat(real.length < 6 ? USED_DEMO : []);
+}
+function mktAll() { return rentAll().concat(usedAll()); }
+function mktGo(sec) {
+  rentUI.sec = sec || 'all'; rentUI.open = null; rentUI.cat = 'all';
+  if (typeof activePageId !== 'undefined' && activePageId === 'page-rent-main' && mainContent && mainContent.querySelector('.rent-page')) { rentRender(); try { window.scrollTo({ top: 0 }); } catch (e) {} return; }
+  navigateToPage('page-rent-main');
+}
+// מוצר יד 2 אמיתי נפתח בעמוד המוצר המקורי שלו
+function mktOpenUsed(shId) {
+  window.__shDirect = true;
+  try { navigateToPage('page-secondhand-main'); } finally { window.__shDirect = false; }
+  setTimeout(() => { if (typeof photoOpenDetail === 'function') photoOpenDetail(shId); }, 80);
+}
+function mktPublish(sec) {
+  if (sec === 'used') { window.__shDirect = true; try { navigateToPage('page-secondhand-main'); } finally { window.__shDirect = false; } setTimeout(() => { if (typeof openQuickPublish === 'function') openQuickPublish(); }, 120); return; }
+  rentPublishOpen(sec === 'store' ? 'storage' : '');
+}
 const rentMin = r => Number(r.min) || (r.unit === 'kg' ? 0.1 : 1);
 // סקיצות: דברים שאפשר להדפיס בתלת מימד — משקל משוער (גרם) וזמן הדפסה, כדי לחשב מחיר לפי קילו
 const RENT_IDEAS = [
@@ -32650,10 +32693,22 @@ const RENT_DEMO = [
   { id: 'c2', cat: 'photo', img: 'rent/projector.jpg', title: 'מקרן לערבי סרטים, מצגות ואירועים', price: 80, unit: 'day', min: 1, city: 'הרצליה', owner: 'גל אורן', rating: 4.8, reviews: 33, t: -40,
     desc: 'מקרן בהיר עם כבל HDMI ומסך נייד 100 אינץ׳. מתאים לסרט בחצר או למצגת במשרד.', specs: ['Full HD', 'מסך 100 אינץ׳ בתוספת ₪30', 'רמקול בלוטות׳ כלול'] },
   { id: 'o1', cat: 'other', img: 'rent/sewing.jpg', title: 'מכונת תפירה — לתיקונים, קיצורים ותחפושות', price: 30, unit: 'day', min: 1, city: 'כפר סבא', owner: 'רותי שמש', rating: 4.7, reviews: 11, t: -96,
-    desc: 'מכונה וותיקה ואמינה שעובדת מצוין. כולל חוטים בסיסיים ושיעור קצר אם צריך.', specs: ['חוטים כלולים', 'הדרכה של 15 דק׳', 'איסוף עצמי'] }
+    desc: 'מכונה וותיקה ואמינה שעובדת מצוין. כולל חוטים בסיסיים ושיעור קצר אם צריך.', specs: ['חוטים כלולים', 'הדרכה של 15 דק׳', 'איסוף עצמי'] },
+  { id: 's1', cat: 'storage', img: 'rent/s-units.jpg', title: 'יחידת אחסון סגורה 4 מ״ר — גישה 24/7', price: 55, unit: 'm2', min: 2, city: 'ראשון לציון', owner: 'מחסני השכונה', rating: 4.8, reviews: 41, t: -4,
+    desc: 'יחידה נעולה במבנה מקורה עם מצלמות. אתם מחזיקים את המפתח ונכנסים מתי שרוצים. מתאים לרהיטים בזמן מעבר דירה.', specs: ['גישה 24/7', 'מצלמות אבטחה', 'עגלות להעמסה'] },
+  { id: 's2', cat: 'storage', img: 'rent/s-attic.jpg', title: 'עליית גג יבשה — מקום לארגזים ומזוודות', price: 25, unit: 'box', min: 3, city: 'רעננה', owner: 'משפחת כרמי', rating: 4.9, reviews: 12, t: -18,
+    desc: 'עליית גג נקייה ויבשה בבית פרטי. מאחסנים לכם ארגזים, מזוודות וקישוטי חג. מתאמים הגעה מראש.', specs: ['יבש ומאוורר', 'עד 20 ארגזים', 'גישה בתיאום'] },
+  { id: 's3', cat: 'storage', img: 'rent/s-container.jpg', title: 'מכולה 20 רגל בחצר — לציוד גדול', price: 650, unit: 'month', min: 1, city: 'כפר יונה', owner: 'אבי חקלאי', rating: 4.6, reviews: 8, t: -36,
+    desc: 'מכולה שלמה רק לכם, בחצר סגורה עם שער. מתאימה לציוד בנייה, רהיטים או מלאי של עסק קטן.', specs: ['15 מ״ר', 'גישה ברכב עד הדלת', 'מנעול שלכם'] },
+  { id: 's4', cat: 'storage', img: 'rent/s-shelves.jpg', title: 'מדף בחדר אחסון — למשחקים, ספרים וציוד קטן', price: 15, unit: 'box', min: 1, city: 'פתח תקווה', owner: 'דנה שושן', rating: 4.7, reviews: 19, t: -60,
+    desc: 'מקום על מדף בחדר אחסון בבניין. מתאים לכמה ארגזים או משחקים שאין להם מקום בבית.', specs: ['ארגז עד 60×40 ס״מ', 'מקורה ונעול', 'גישה בערבים'] },
+  { id: 's5', cat: 'storage', img: 'rent/s-boxes.jpg', title: 'אחסון ארגזים בזמן מעבר דירה — כולל איסוף', price: 20, unit: 'box', min: 5, city: 'ירושלים', owner: 'עברנו בקלות', rating: 4.8, reviews: 57, t: -90,
+    desc: 'אוספים מכם את הארגזים, מאחסנים במחסן יבש ומחזירים לדירה החדשה. מחיר לארגז לחודש, האיסוף בתוספת.', specs: ['איסוף והחזרה ₪150', 'ביטוח בסיסי', 'מינימום 5 ארגזים'] },
+  { id: 's6', cat: 'storage', img: 'rent/s-parking.jpg', title: 'חניה מקורה פנויה — לרכב, אופנוע או נגרר', price: 300, unit: 'month', min: 1, city: 'חיפה', owner: 'יעקב פרידמן', rating: 4.5, reviews: 6, t: -130,
+    desc: 'חניה מקורה בחניון פתוח של בניין, מתאימה גם לאחסון סירה קטנה או נגרר. שלט לשער כלול.', specs: ['מקורה', 'שלט לשער', 'ליד הכניסה'] }
 ].map(r => Object.assign({ demo: true }, r, { t: Date.now() + r.t * 3600e3 }));
 let rentData = null, rentUnsub = null;
-const rentUI = { cat: 'all', q: '', city: 'all', sort: 'new' };
+const rentUI = { sec: 'all', cat: 'all', q: '', city: 'all', sort: 'new' };
 function rentSubscribe() {
   if (rentUnsub) return;
   try {
@@ -32670,7 +32725,9 @@ function rentAll() {
   return real.concat(demo);
 }
 function rentCatOf(id) { return RENT_CATS.find(c => c.id === id) || RENT_CATS[RENT_CATS.length - 1]; }
-function rentPriceTxt(r) { return `₪${Number(r.price).toLocaleString('he-IL', { maximumFractionDigits: 2 })} <small>${RENT_UNITS[r.unit] || ''}${r.unit === 'kg' ? ` · ₪${(r.price / 10).toLocaleString('he-IL', { maximumFractionDigits: 1 })} ל-100 גרם` : ''}</small>`; }
+function rentPriceTxt(r) {
+  if (r.kind === 'used') return r.offer === 'החלפה' && !r.price ? '🔁 להחלפה' : r.priceTxt ? `${escHtml(r.priceTxt)} <small>${escHtml(r.unitTxt || '')}</small>` : `₪${Number(r.price).toLocaleString('he-IL')} <small>${RENT_UNITS[r.unit] || ''}</small>`;
+  return `₪${Number(r.price).toLocaleString('he-IL', { maximumFractionDigits: 2 })} <small>${RENT_UNITS[r.unit] || ''}${r.unit === 'kg' ? ` · ₪${(r.price / 10).toLocaleString('he-IL', { maximumFractionDigits: 1 })} ל-100 גרם` : ''}</small>`; }
 function rentAgo(t) {
   const m = Math.max(1, Math.round((Date.now() - (t || 0)) / 6e4));
   return m < 60 ? `לפני ${m} דק׳` : m < 1440 ? `לפני ${Math.round(m / 60)} שע׳` : `לפני ${Math.round(m / 1440)} ימים`;
@@ -32682,7 +32739,7 @@ function rentThumb(r, big) {
 }
 function rentList() {
   const q = rentUI.q.trim().toLowerCase();
-  let l = rentAll().filter(r => (rentUI.cat === 'all' || r.cat === rentUI.cat) && (rentUI.city === 'all' || r.city === rentUI.city)
+  let l = mktAll().filter(r => (rentUI.sec === 'all' || mktSecOf(r) === rentUI.sec) && (rentUI.sec !== 'rent' || rentUI.cat === 'all' || r.cat === rentUI.cat) && (rentUI.city === 'all' || r.city === rentUI.city)
     && (!q || [r.title, r.desc, r.city, r.owner].join(' ').toLowerCase().includes(q)));
   if (rentUI.sort === 'cheap') l.sort((a, b) => a.price - b.price);
   else if (rentUI.sort === 'rating') l.sort((a, b) => (b.rating || 0) - (a.rating || 0));
@@ -32690,8 +32747,10 @@ function rentList() {
   return l;
 }
 function rentCardHTML(r) {
-  return `<button type="button" class="rn-card" onclick="rentOpen('${artEsc(r.id)}')">
-    <span class="rn-img">${rentThumb(r)}${r.demo ? '<em class="rn-demo">דוגמה</em>' : ''}</span>
+  const sec = mktSecOf(r), tag = sec === 'used' ? r.offer : sec === 'store' ? 'אחסון' : 'השכרה';
+  const go = r.shId ? `mktOpenUsed('${artEsc(r.shId)}')` : `rentOpen('${artEsc(r.id)}')`;
+  return `<button type="button" class="rn-card" onclick="${go}">
+    <span class="rn-img">${rentThumb(r)}<em class="rn-kind k-${sec}">${escHtml(tag || '')}</em>${r.demo ? '<em class="rn-demo">דוגמה</em>' : ''}</span>
     <span class="rn-body">
       <span class="rn-price">${rentPriceTxt(r)}</span>
       <b class="rn-title">${escHtml(r.title)}</b>
@@ -32702,27 +32761,35 @@ function rentCardHTML(r) {
 }
 function rentGridHTML() {
   const l = rentList();
-  return l.length ? l.map(rentCardHTML).join('') : `<div class="rn-empty">אין עדיין ציוד בקטגוריה הזאת.<br><button type="button" class="rn-pub" onclick="rentPublishOpen()">היו הראשונים לפרסם</button></div>`;
+  return l.length ? l.map(rentCardHTML).join('') : `<div class="rn-empty">אין עדיין מודעות כאן.<br><button type="button" class="rn-pub" onclick="mktPublish('${rentUI.sec}')">היו הראשונים לפרסם</button></div>`;
 }
 function rentViewHTML() {
-  const cities = [...new Set(rentAll().map(r => r.city).filter(Boolean))].sort();
-  const count = id => id === 'all' ? rentAll().length : rentAll().filter(r => r.cat === id).length;
+  const all = mktAll();
+  const cities = [...new Set(all.map(r => r.city).filter(Boolean))].sort();
+  const eq = all.filter(r => mktSecOf(r) === 'rent');
+  const count = id => id === 'all' ? eq.length : eq.filter(r => r.cat === id).length;
+  const secCount = id => id === 'all' ? all.length : all.filter(r => mktSecOf(r) === id).length;
+  const sec = MKT_SECS.find(x => x.id === rentUI.sec) || MKT_SECS[0];
+  const pubBtn = rentUI.sec === 'all'
+    ? `<details class="rn-pubmenu"><summary class="rn-pub">+ פרסום מודעה</summary><div>${MKT_SECS.slice(1).map(x => `<button type="button" onclick="mktPublish('${x.id}')">${x.ic} ${x.name}</button>`).join('')}</div></details>`
+    : `<button type="button" class="rn-pub" onclick="mktPublish('${rentUI.sec}')">+ ${rentUI.sec === 'used' ? 'פרסום מוצר ליד 2' : rentUI.sec === 'store' ? 'פרסום שטח לאחסון' : 'פרסום ציוד להשכרה'}</button>`;
   return `<header class="rn-head">
-      <div><h1>השכרת ציוד 🔧</h1><p>מדפסות, מדפסות תלת מימד וכלי עבודה של גולשים — משלמים רק על השימוש.</p></div>
-      <button type="button" class="rn-pub" onclick="rentPublishOpen()">+ פרסמו ציוד להשכרה</button>
+      <div><h1>השוק 🛒</h1><p>${escHtml(sec.sub || 'יד 2, השכרת ציוד ושטחי אחסון של גולשים — הכול במקום אחד.')}</p></div>
+      ${pubBtn}
     </header>
+    <nav class="rn-secs">${MKT_SECS.map(x => `<button type="button" class="rn-sec${rentUI.sec === x.id ? ' on' : ''}" onclick="mktGo('${x.id}')"><span>${x.ic}</span>${x.name}<small>${secCount(x.id)}</small></button>`).join('')}</nav>
     <div class="rn-bar">
-      <input type="search" class="rn-q" placeholder="מה צריך? למשל: מדפסת תלת מימד בתל אביב" value="${escHtml(rentUI.q)}" oninput="rentSet('q', this.value)">
+      <input type="search" class="rn-q" placeholder="${rentUI.sec === 'store' ? 'איפה לאחסן? למשל: מחסן בתל אביב' : rentUI.sec === 'used' ? 'מה מחפשים? למשל: ספה, מקרר, אופניים' : 'מה צריך? למשל: מדפסת תלת מימד בתל אביב'}" value="${escHtml(rentUI.q)}" oninput="rentSet('q', this.value)">
       <select class="rn-sel" onchange="rentSet('city', this.value)" aria-label="עיר"><option value="all">כל הארץ</option>${cities.map(c => `<option${rentUI.city === c ? ' selected' : ''}>${escHtml(c)}</option>`).join('')}</select>
       <select class="rn-sel" onchange="rentSet('sort', this.value)" aria-label="מיון">${[['new', 'הכי חדש'], ['cheap', 'הכי זול'], ['rating', 'דירוג גבוה']].map(([v, t]) => `<option value="${v}"${rentUI.sort === v ? ' selected' : ''}>${t}</option>`).join('')}</select>
     </div>
-    <nav class="rn-cats">${RENT_CATS.map(c => `<button type="button" class="rn-cat${rentUI.cat === c.id ? ' on' : ''}" onclick="rentSet('cat', '${c.id}')">${c.ic} ${c.name} <small>${count(c.id)}</small></button>`).join('')}</nav>
+    ${rentUI.sec === 'rent' ? `<nav class="rn-cats">${RENT_CATS.filter(c => !c.store).map(c => `<button type="button" class="rn-cat${rentUI.cat === c.id ? ' on' : ''}" onclick="rentSet('cat', '${c.id}')">${c.ic} ${c.name} <small>${count(c.id)}</small></button>`).join('')}</nav>` : ''}
     ${rentIdeasHTML()}
     <div class="rn-grid">${rentGridHTML()}</div>
-    <p class="rn-fine">איך זה עובד: בוחרים ציוד ← שולחים בקשה עם כמות/זמן ← בעל הציוד מאשר ומתאמים איסוף. התשלום לבעל הציוד, ועמלת שירות של ${Math.round(RENT_SITE_FEE * 100)}% לאתר.<br><small>תמונות הדוגמה: Wikimedia Commons (רישיון חופשי)</small></p>`;
+    <p class="rn-fine">איך זה עובד: בוחרים מודעה ← שולחים בקשה ← בעל המודעה מאשר ומתאמים. בהשכרה ובאחסון התשלום לבעל המודעה, ועמלת שירות של ${Math.round(RENT_SITE_FEE * 100)}% לאתר.<br><small>תמונות הדוגמה: Wikimedia Commons (רישיון חופשי)</small></p>`;
 }
 function rentIdeasHTML() {
-  if (rentUI.cat !== 'all' && rentUI.cat !== '3d') return '';
+  if (!['all', 'rent'].includes(rentUI.sec) || (rentUI.cat !== 'all' && rentUI.cat !== '3d')) return '';
   const kgs = rentAll().filter(r => r.unit === 'kg').map(r => r.price);
   if (!kgs.length) return '';
   const low = Math.min(...kgs);
@@ -32741,10 +32808,11 @@ function rentRender(gridOnly) {
   if (gridOnly && !open) { const g = el.querySelector('.rn-grid'); if (g) g.innerHTML = rentGridHTML(); return; }
   el.innerHTML = open ? rentDetailHTML(open) : rentViewHTML();
 }
-function rentSet(k, v) { rentUI[k] = v; rentUI.open = null; rentRender(k === 'q'); }
-function rentFind(id) { return rentAll().find(r => r.id === id); }
+function rentSet(k, v) { rentUI[k] = v; rentUI.open = null; if (k === 'cat' && v !== 'all') rentUI.sec = 'rent'; rentRender(k === 'q'); }
+function rentFind(id) { return mktAll().find(r => r.id === id); }
 function rentCalc(r, qty) {
-  const sub = Math.round(r.price * qty * 100) / 100, fee = Math.round(sub * RENT_SITE_FEE * 100) / 100;
+  const months = r.cat === 'storage' && r.unit !== 'month' ? Math.max(1, Math.round(Number((document.getElementById('rn-months') || {}).value) || 1)) : 1;
+  const sub = Math.round(r.price * qty * months * 100) / 100, fee = Math.round(sub * RENT_SITE_FEE * 100) / 100;
   return { sub, fee, total: Math.round((sub + fee) * 100) / 100 };
 }
 // עמוד מודעה מלא (לא חלון קופץ): נפתח בתוך עמוד ההשכרה, עם "חזרה" וכפתור אחורה של הדפדפן
@@ -32765,22 +32833,23 @@ window.addEventListener('popstate', (e) => {
 function rentDetailHTML(r) {
   const qty = rentMin(r);
   const c = rentCalc(r, qty);
-  return `<button type="button" class="rn-back" onclick="rentBack()">→ חזרה לכל הציוד</button>
+  return `<button type="button" class="rn-back" onclick="rentBack()">→ חזרה לשוק</button>
     <div class="rn-det">
       <h1 class="rn-det-title">${escHtml(r.title)}</h1>
       <div class="rn-det-img">${rentThumb(r, true)}${r.demo ? '<em class="rn-demo">דוגמה</em>' : ''}</div>
       <div class="rn-det-price">${rentPriceTxt(r)}${r.unit === 'kg' ? `<span>מינימום ${Math.round(rentMin(r) * 1000)} גרם</span>` : r.min > 1 ? `<span>מינימום ${r.min}</span>` : ''}</div>
-      <div class="rn-det-meta">📍 ${escHtml(r.city || '')} · ${escHtml(rentCatOf(r.cat).name)} · ${rentAgo(r.t)}</div>
-      <div class="rn-det-owner"><span class="rn-av">${escHtml((r.owner || '?').slice(0, 1))}</span><span><b>${escHtml(r.owner || '')}</b><small>${r.rating ? `⭐ ${r.rating} · ${r.reviews || 0} השכרות` : 'משכיר/ה חדש/ה'}</small></span></div>
+      <div class="rn-det-meta">📍 ${escHtml(r.city || '')} · ${escHtml(r.kind === 'used' ? 'יד 2 · ' + (r.offer || '') : rentCatOf(r.cat).name)} · ${rentAgo(r.t)}</div>
+      <div class="rn-det-owner"><span class="rn-av">${escHtml((r.owner || '?').slice(0, 1))}</span><span><b>${escHtml(r.owner || '')}</b><small>${r.rating ? `⭐ ${r.rating} · ${r.reviews || 0} עסקאות` : r.kind === 'used' ? 'מוכר/ת באתר' : 'משכיר/ה חדש/ה'}</small></span></div>
       ${r.desc ? `<p class="rn-det-desc">${escHtml(r.desc)}</p>` : ''}
       ${(r.specs || []).length ? `<ul class="rn-specs">${r.specs.map(s => `<li>${escHtml(s)}</li>`).join('')}</ul>` : ''}
       ${r.unit === 'kg' ? `<div class="rn-pick"><b>בחרו מה להדפיס — המשקל יחושב לבד</b><div class="rn-ideas-row">${RENT_IDEAS.map(i => `<button type="button" class="rn-idea sm" data-g="${i.g}" onclick="rentIdeaPick('${artEsc(r.id)}', '${i.id}', this)"><span class="rn-sk">${rentIdeaSVG(i)}</span><b>${i.name}</b><small>~${i.g} גרם · ₪${Math.max(1, rentIdeaPrice(i, r.price))}</small></button>`).join('')}</div></div>` : ''}
-      <div class="rn-calc">
+      ${r.kind === 'used' ? `<div class="rn-calc"><textarea id="rn-note" maxlength="250" rows="3" placeholder="היי, המוצר עדיין זמין? מתי אפשר לבוא לראות?"></textarea><button type="button" class="rn-go" onclick="rentRequest('${artEsc(r.id)}')">${r.offer === 'החלפה' ? 'הצעת החלפה' : r.offer === 'השאלה' ? 'בקשת השאלה' : 'פנייה למוכר'}</button></div>` : `<div class="rn-calc">
         <label>${r.unit === 'kg' ? 'כמה קילו? <small id="rn-grams">(' + Math.round(qty * 1000) + ' גרם)</small>' : `כמה ${escHtml((RENT_UNITS[r.unit] || '').replace(/^ל/, '')) || 'יחידות'}?`}<input id="rn-qty" type="number" min="${rentMin(r)}" step="${r.unit === 'kg' ? 0.01 : 1}" value="${qty}" inputmode="decimal" oninput="rentCalcUpd('${artEsc(r.id)}')"></label>
         <div class="rn-sum" id="rn-sum">${rentSumHTML(c)}</div>
         <textarea id="rn-note" maxlength="250" rows="2" placeholder="מה רוצים להדפיס / לעשות, ומתי נוח לכם?"></textarea>
-        <button type="button" class="rn-go" onclick="rentRequest('${artEsc(r.id)}')">שליחת בקשת השכרה</button>
-      </div>
+        ${r.cat === 'storage' && r.unit !== 'month' ? `<label>לכמה חודשים?<input id="rn-months" type="number" min="1" value="1" inputmode="numeric" oninput="rentCalcUpd('${artEsc(r.id)}')"></label>` : ''}
+        <button type="button" class="rn-go" onclick="rentRequest('${artEsc(r.id)}')">${r.cat === 'storage' ? 'שליחת בקשת אחסון' : 'שליחת בקשת השכרה'}</button>
+      </div>`}
     </div>`;
 }
 function rentSumHTML(c) {
@@ -32807,24 +32876,26 @@ function rentIdeaPick(id, ideaId, btn) {
 async function rentRequest(id) {
   const r = rentFind(id); if (!r) return;
   const qty = Math.max(rentMin(r), Number((document.getElementById('rn-qty') || {}).value) || 0);
+  const months = Math.max(1, Math.round(Number((document.getElementById('rn-months') || {}).value) || 1));
   const note = String((document.getElementById('rn-note') || {}).value || '').trim();
   const c = rentCalc(r, qty);
   const u = auth.currentUser;
   if (!u || u.isAnonymous) { closeMSheet(); if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); glassBanner({ title: 'כמעט שם', sub: 'התחברו כדי לשלוח בקשת השכרה', icon: 'msg' }); return; }
   if (r.uid === u.uid) { showCopyToast('זה הציוד שלך 🙂'); return; }
-  if (r.demo) { glassBanner({ title: 'הבקשה נשלחה (הדגמה)', sub: `${r.owner} · ₪${c.total.toLocaleString('he-IL')}`, icon: 'ok', ms: 2600 }); return; }
+  if (r.demo) { glassBanner({ title: 'הבקשה נשלחה (הדגמה)', sub: r.kind === 'used' ? r.owner : `${r.owner} · ₪${c.total.toLocaleString('he-IL')}`, icon: 'ok', ms: 2600 }); return; }
   await offerRecord({ kind: 'rent', toUid: r.uid, toName: r.owner, itemId: 'rent_' + r.id, title: r.title, price: c.total,
-    note: `${qty} ${RENT_UNITS[r.unit] || ''} · שימוש ₪${c.sub} + עמלה ₪${c.fee}${note ? ' — ' + note : ''}` });
+    note: `${qty} ${RENT_UNITS[r.unit] || ''}${r.cat === 'storage' && r.unit !== 'month' ? ` × ${months} חודשים` : ''} · שימוש ₪${c.sub} + עמלה ₪${c.fee}${note ? ' — ' + note : ''}` });
   if (typeof trackEvent === 'function') trackEvent('rent_request');
   glassBanner({ title: 'בקשת ההשכרה נשלחה', sub: `${r.owner} יקבל/תקבל אותה בהצעות שלו/ה`, icon: 'ok', ms: 2600 });
 }
 let rentForm = { img: '' };
-function rentPublishOpen() {
+function rentPublishOpen(preCat) {
   const u = auth.currentUser;
   if (!u || u.isAnonymous) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); glassBanner({ title: 'כמעט שם', sub: 'התחברו כדי לפרסם ציוד להשכרה', icon: 'msg' }); return; }
   rentForm = { img: '' };
-  openMSheet('פרסום ציוד להשכרה', `<div class="rn-form">
-      <label>קטגוריה<select id="rf-cat">${RENT_CATS.filter(c => c.id !== 'all').map(c => `<option value="${c.id}">${c.ic} ${c.name}</option>`).join('')}</select></label>
+  const st = preCat === 'storage';
+  openMSheet(st ? 'פרסום שטח לאחסון' : 'פרסום ציוד להשכרה', `<div class="rn-form">
+      <label>קטגוריה<select id="rf-cat">${RENT_CATS.filter(c => c.id !== 'all').map(c => `<option value="${c.id}"${c.id === preCat ? ' selected' : ''}>${c.ic} ${c.name}</option>`).join('')}</select></label>
       <label>כותרת *<input id="rf-title" maxlength="80" placeholder="למשל: מדפסת תלת מימד Bambu A1 — הדפסות קטנות"></label>
       <div class="rn-row"><label>מחיר ₪ *<input id="rf-price" type="number" min="0" step="0.1" inputmode="decimal" placeholder="20"></label>
         <label>לפי<select id="rf-unit">${Object.entries(RENT_UNITS).map(([k, v]) => `<option value="${k}">${v.replace(/^ל/, '')}</option>`).join('')}</select></label>
@@ -32861,7 +32932,7 @@ async function rentPublish(btn) {
     glassBanner({ title: 'הציוד פורסם להשכרה', sub: rec.title, icon: 'ok', ms: 2400 });
   } catch (e) { btn.disabled = false; btn.textContent = 'פרסום'; showCopyToast('הפרסום נכשל — נסו שוב'); }
 }
-Object.assign(window, { rentBack, rentIdeaPick, buildRentPage, rentSet, rentOpen, rentCalcUpd, rentRequest, rentPublishOpen, rentPickImg, rentPublish });
+Object.assign(window, { mktGo, mktOpenUsed, mktPublish, rentBack, rentIdeaPick, buildRentPage, rentSet, rentOpen, rentCalcUpd, rentRequest, rentPublishOpen, rentPickImg, rentPublish });
 
 // ============================================================
 // תמכו / השקיעו בנו: תרומה בכל סכום, או השקעה לפי שווי חברה ₪100,000 (עד 10% מוצעים).
