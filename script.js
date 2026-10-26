@@ -33019,11 +33019,44 @@ Object.assign(window, { investOpen, investTab, investAmt, investPct, investSend 
   const WRAPS = '.art-row-img-wrap, .pd2-frame, .pshow-frame, .hr-img, .hc-slide, .pc-post-media, .pfg-media, .rec-mini-item, .pshow-tile, .prd-main, .prd-more-img, .art-rec-card, .hx-card-thumb, .lb-stage';
   const HAND = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M10 2.5a1.5 1.5 0 0 0-1.5 1.5v8.3l-1.2-1.2a1.6 1.6 0 0 0-2.3 2.3l4.4 4.6A6 6 0 0 0 13.7 20H15a5 5 0 0 0 5-5v-3.5a1.5 1.5 0 0 0-3 0V11a1.5 1.5 0 0 0-3 0v-.5a1.5 1.5 0 0 0-3 0V4A1.5 1.5 0 0 0 10 2.5z"/></svg>';
   const on = () => document.documentElement.classList.contains('adult-blur');
-  const reveal = w => { w.classList.add('unblur'); w.classList.remove('blur', 'show-tags'); w.querySelectorAll('.img-tap-btn').forEach(b => b.remove()); };
+  // פריטים שנחשפו נזכרים (בלשונית הזו) — כשנכנסים לתמונה / קומיקס / סיפור הם נשארים גלויים גם בפנים
+  const KEY = 'revealed_items';
+  let seen; try { seen = new Set(JSON.parse(sessionStorage.getItem(KEY) || '[]')); } catch (e) { seen = new Set(); }
+  const ID_RX = /(?:photoOpenDetail|storyOpenDetail|feedOpenGallery|openHistoryItem)\(\s*'([^']+)'/;
+  const idOf = el => {
+    for (let n = el, i = 0; n && n !== document.body && i < 8; n = n.parentElement, i++) {
+      const d = n.dataset || {};
+      if (d.photoId || d.storyId) return d.photoId || d.storyId;
+      const m = (n.getAttribute && n.getAttribute('onclick') || '').match(ID_RX);
+      if (m) return m[1];
+    }
+    // בתוך עמוד פריט: המזהה של הפריט הפתוח
+    const det = el.closest && el.closest('.art-detail[data-photo-id], .art-detail[data-story-id]');
+    if (det) return det.dataset.photoId || det.dataset.storyId;
+    if (el.closest && el.closest('.story-page-view, .lb-stage, #art-lightbox') && window.currentStoryId) return String(window.currentStoryId);
+    return '';
+  };
+  const openId = () => {
+    const det = document.querySelector('.art-detail[data-photo-id], .art-detail[data-story-id]');
+    if (det) return det.dataset.photoId || det.dataset.storyId;
+    const m = location.hash.match(/^#[ps]\/(.+)$/); if (m) return decodeURIComponent(m[1]);
+    return window.currentStoryId ? String(window.currentStoryId) : '';
+  };
+  const unblur = w => { w.classList.add('unblur'); w.classList.remove('blur', 'show-tags'); w.querySelectorAll('.img-tap-btn').forEach(b => b.remove()); };
+  const reveal = w => {
+    unblur(w);
+    const id = idOf(w);
+    if (id) { seen.add(id); try { sessionStorage.setItem(KEY, JSON.stringify([...seen].slice(-300))); } catch (e) {} }
+  };
   const run = () => {
     if (!on()) return;
+    const cur = openId(), curSeen = cur && seen.has(cur);
     document.querySelectorAll(WRAPS).forEach(w => {
-      if (w.classList.contains('unblur') || w.querySelector('.img-tap-btn') || !w.querySelector('img')) return;
+      if (w.classList.contains('unblur') || !w.querySelector('img')) return;
+      // תמונה של פריט שכבר נחשף — גלויה (בכרטיסים, בעמוד הפריט ובמסך המלא שלו)
+      const inside = w.closest('.art-detail, .story-page-view, .lb-stage, #art-lightbox, .pd2-frame, .pshow-frame');
+      if ((inside && curSeen) || seen.has(idOf(w))) { unblur(w); return; }
+      if (w.querySelector('.img-tap-btn')) return;
       if (getComputedStyle(w).position === 'static') w.style.position = 'relative';
       w.insertAdjacentHTML('beforeend', `<span class="img-tap-btn uni-tap" role="button" tabindex="0" aria-label="הצגת התמונה">${HAND}</span>`);
     });
@@ -33042,6 +33075,7 @@ Object.assign(window, { investOpen, investTab, investAmt, investPct, investSend 
   let q = 0;
   new MutationObserver(() => { clearTimeout(q); q = setTimeout(run, 150); }).observe(document.body, { childList: true, subtree: true });
   new MutationObserver(run).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+  window.addEventListener('hashchange', () => setTimeout(run, 60));
   run();
 })();
 
