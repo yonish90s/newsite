@@ -14688,6 +14688,7 @@ function productsSubscribe() {
     const v = snap.val();
     productsData = Array.isArray(v) ? v.filter(Boolean) : (v ? Object.values(v).filter(Boolean) : []);
     productsRender();
+    if (coState && document.getElementById('ck-page') && typeof ckRender === 'function') ckRender();
   }, () => { productsData = []; productsRender(); });
 }
 
@@ -31863,9 +31864,10 @@ askKbSubscribe();
 // ============================================================
 let coState = null;
 function coPrice(p) { return Math.max(0, parseFloat(String(p.price || '').replace(/[^\d.]/g, '')) || 0); }
-function productCheckout(id) { coState = { items: [{ id, qty: 1 }], fromCart: false, ship: 'delivery', step: 'form' }; coRender(); }
-function cartCheckout() { const c = cartGet(); if (!c.length) { showCopyToast('העגלה ריקה'); return; } coState = { items: c.map(x => ({ id: x.id, qty: x.qty })), fromCart: true, ship: 'delivery', step: 'form' }; coRender(); }
-function coLines() { const list = productsList(); return coState.items.map(x => ({ ...x, p: list.find(p => p.id === x.id) })).filter(x => x.p); }
+function productCheckout(id) { productsSubscribe(); coState = { items: [{ id, qty: 1 }], fromCart: false, ship: 'delivery', step: 'form' }; coRender(); }
+function cartCheckout() { productsSubscribe(); const c = cartGet(); if (!c.length) { showCopyToast('העגלה ריקה'); return; } coState = { items: c.map(x => ({ id: x.id, qty: x.qty })), fromCart: true, ship: 'delivery', step: 'form' }; coRender(); }
+// רק מחירים אמיתיים מהמסד: PRODUCTS_DEFAULT (לפני טעינה) הם בלי מחיר והזמנות נשמרו ב-₪0
+function coLines() { const list = productsData || []; return coState.items.map(x => ({ ...x, p: list.find(p => p.id === x.id) })).filter(x => x.p && coPrice(x.p) > 0); }
 function coTotals() {
   const lines = coLines();
   const sub = lines.reduce((a, l) => a + coPrice(l.p) * l.qty, 0), ship = coState.ship === 'delivery' ? 25 : 0;
@@ -32561,6 +32563,7 @@ function ckPay(btn) {
   btn.disabled = true; btn.textContent = 'מעבד תשלום…';
   setTimeout(() => {
     const t = ckTotals();
+    if (!t.lines.length || t.lines.length !== coState.items.length) { ckRender(); showCopyToast('המוצרים עדיין נטענים — נסו שוב בעוד רגע'); return; }
     coState.name = ((coState.first || '') + ' ' + (coState.last || '')).trim();
     coState.addr = ckNeedsShip() ? [[coState.street, coState.house].filter(Boolean).join(' '), coState.city, coState.zip].filter(Boolean).join(', ') : '';
     coState.ship = ckNeedsShip() ? 'delivery' : 'pickup';
