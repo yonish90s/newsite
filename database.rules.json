@@ -625,6 +625,12 @@
           ".validate": "newData.hasChildren(['t','uid','kind','amount','name','phone']) && newData.child('uid').val() === auth.uid && newData.child('t').isNumber() && newData.child('t').val() <= now + 60000 && newData.child('kind').isString() && newData.child('kind').val().matches(/^(invest|donate)$/) && newData.child('amount').isNumber() && newData.child('amount').val() > 0 && newData.child('amount').val() <= 100000 && newData.child('name').isString() && newData.child('name').val().length <= 60 && newData.child('phone').isString() && newData.child('phone').val().length <= 20 && (!newData.child('email').exists() || newData.child('email').isString() && newData.child('email').val().length <= 120) && (!newData.child('note').exists() || newData.child('note').isString() && newData.child('note').val().length <= 300) && (!newData.child('pct').exists() || newData.child('pct').isNumber() && newData.child('pct').val() > 0 && newData.child('pct').val() <= 10)"
         }
       },
+      "feedback": {
+        "$id": {
+          ".write": "auth != null && !data.exists() && newData.exists()",
+          ".validate": "newData.hasChildren(['t','uid','text']) && newData.child('uid').val() === auth.uid && newData.child('t').isNumber() && newData.child('t').val() <= now + 60000 && newData.child('text').isString() && newData.child('text').val().length <= 800 && (!newData.child('stars').exists() || newData.child('stars').isNumber() && newData.child('stars').val() >= 1 && newData.child('stars').val() <= 5) && (!newData.child('topic').exists() || newData.child('topic').isString() && newData.child('topic').val().length <= 30) && (!newData.child('contact').exists() || newData.child('contact').isString() && newData.child('contact').val().length <= 120) && (!newData.child('name').exists() || newData.child('name').isString() && newData.child('name').val().length <= 60) && (!newData.child('page').exists() || newData.child('page').isString() && newData.child('page').val().length <= 60)"
+        }
+      },
       "assistant_kb": {
         ".read": true
       },

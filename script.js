@@ -15793,6 +15793,8 @@ function sideRailHTML() {
       <svg viewBox="0 0 24 24" fill="${fill ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="${fill ? 0 : 2}" stroke-linecap="round" stroke-linejoin="round">${path}</svg></button>`;
   const adminBtn = (typeof isAdmin === 'function' && isAdmin()) ? btn(['stats', 'נתוני האתר (מנהל)', "adminOpenTab('stats')", '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>', false]) : '';
   return `${SIDE_RAIL_ITEMS.map(btn).join('')}${adminBtn}
+    <button type="button" class="srail-btn srail-me srail-fb" onclick="feedbackOpen()" aria-label="שליחת ביקורת — מה לשפר באתר" title="שליחת ביקורת — מה לשפר באתר">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"/><path d="M12 7.6l1.2 2.5 2.7.4-2 1.9.5 2.7-2.4-1.3-2.4 1.3.5-2.7-2-1.9 2.7-.4z" fill="currentColor" stroke="none"/></svg><span>ביקורת</span></button>
     <button type="button" class="srail-btn srail-me" onclick="${reg ? `openUserPage('${artEsc(u.uid)}')` : 'openLiveChatLogin()'}" aria-label="${reg ? 'הפרופיל שלי' : 'התחברות'}">
       <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4.2"/><path d="M3.5 21a8.5 8.5 0 0 1 17 0z"/></svg><span>${reg ? 'פרופיל' : 'התחברות'}</span></button>`;
 }
@@ -16958,8 +16960,8 @@ function _photoOpenDetailImpl(id) {
                   <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 3H4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h3v3.5L11.5 18H20a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z"/><path d="M5 1.2l.7 1.6 1.6.7-1.6.7L5 5.8l-.7-1.6-1.6-.7 1.6-.7z" fill="#fff"/></svg><span>הודעה</span></button>
               </div>
               <div class="okb-sub">
-                ${a.telegramUrl ? `<a class="okb-mini" href="${escHtml(safeUrl(a.telegramUrl))}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>טלגרם</a>` : ''}
-                ${a.emailUrl ? `<button type="button" class="okb-mini" onclick="revealAndCopyEmail('${artEsc(a.emailUrl)}', this, event);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>אימייל</button>` : ''}
+                ${a.telegramUrl ? `<a class="okb-mini" href="${escHtml(safeUrl(a.telegramUrl))}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg><span>טלגרם</span></a>` : ''}
+                ${a.emailUrl ? `<button type="button" class="okb-mini" onclick="revealAndCopyEmail('${artEsc(a.emailUrl)}', this, event);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><span>מייל</span></button>` : ''}
                 <span class="okb-likes">${a.likes || 0} לייקים</span>
               </div>
               </div>
@@ -33008,3 +33010,77 @@ async function investSend(btn) {
   } catch (e) { btn.disabled = false; btn.textContent = inv ? 'שליחת הבעת עניין' : 'אני רוצה לתרום'; showCopyToast('השליחה נכשלה — נסו שוב'); }
 }
 Object.assign(window, { investOpen, investTab, investAmt, investPct, investSend });
+
+// ============================================================
+// כל תמונה מטושטשת באתר (מצב 18+): כפתור יד בפינה, ולחיצה ראשונה — על היד או על התמונה — רק חושפת אותה במקום.
+// רק אחרי שהתמונה גלויה, לחיצה נוספת פותחת אותה כרגיל.
+// ============================================================
+(function uniTapReveal() {
+  const WRAPS = '.art-row-img-wrap, .pd2-frame, .pshow-frame, .hr-img, .hc-slide, .pc-post-media, .pfg-media, .rec-mini-item, .pshow-tile, .prd-main, .prd-more-img, .art-rec-card, .hx-card-thumb, .lb-stage';
+  const HAND = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M10 2.5a1.5 1.5 0 0 0-1.5 1.5v8.3l-1.2-1.2a1.6 1.6 0 0 0-2.3 2.3l4.4 4.6A6 6 0 0 0 13.7 20H15a5 5 0 0 0 5-5v-3.5a1.5 1.5 0 0 0-3 0V11a1.5 1.5 0 0 0-3 0v-.5a1.5 1.5 0 0 0-3 0V4A1.5 1.5 0 0 0 10 2.5z"/></svg>';
+  const on = () => document.documentElement.classList.contains('adult-blur');
+  const reveal = w => { w.classList.add('unblur'); w.classList.remove('blur', 'show-tags'); w.querySelectorAll('.img-tap-btn').forEach(b => b.remove()); };
+  const run = () => {
+    if (!on()) return;
+    document.querySelectorAll(WRAPS).forEach(w => {
+      if (w.classList.contains('unblur') || w.querySelector('.img-tap-btn') || !w.querySelector('img')) return;
+      if (getComputedStyle(w).position === 'static') w.style.position = 'relative';
+      w.insertAdjacentHTML('beforeend', `<span class="img-tap-btn uni-tap" role="button" tabindex="0" aria-label="הצגת התמונה">${HAND}</span>`);
+    });
+  };
+  // שלב הלכידה: לפני כל onclick של הכרטיס, כדי שהלחיצה לא "תיכנס פנימה"
+  window.addEventListener('click', e => {
+    if (!on()) return;
+    const w = e.target.closest && e.target.closest(WRAPS);
+    if (!w || w.classList.contains('unblur') || !w.querySelector('img')) return;
+    e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
+    reveal(w);
+  }, true);
+  window.addEventListener('keydown', e => {
+    if ((e.key === 'Enter' || e.key === ' ') && e.target.classList && e.target.classList.contains('uni-tap')) { e.preventDefault(); const w = e.target.closest(WRAPS); if (w) reveal(w); }
+  }, true);
+  let q = 0;
+  new MutationObserver(() => { clearTimeout(q); q = setTimeout(run, 150); }).observe(document.body, { childList: true, subtree: true });
+  new MutationObserver(run).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+  run();
+})();
+
+
+// ============================================================
+// "שליחת ביקורת": הגולשים כותבים מה לשפר באתר → website/feedback (רק המנהל קורא)
+// ============================================================
+const FB_TOPICS = ['עיצוב', 'מהירות', 'תוכן', 'באג / תקלה', 'רעיון חדש', 'אחר'];
+let fbState = { stars: 0, topic: '' };
+function feedbackOpen() {
+  fbState = { stars: 0, topic: '' };
+  openMSheet('מה לשפר באתר?', `<div class="fb">
+      <p class="fb-lead">נשמח לשמוע — כל ביקורת עוזרת לנו לשפר. אפשר גם בלי להתחבר.</p>
+      <div class="fb-stars" role="radiogroup" aria-label="דירוג">${[1, 2, 3, 4, 5].map(n => `<button type="button" class="fb-star" data-n="${n}" onclick="feedbackStar(${n})" aria-label="${n} כוכבים">★</button>`).join('')}</div>
+      <div class="fb-topics">${FB_TOPICS.map(t => `<button type="button" class="fb-topic" onclick="feedbackTopic(this)">${t}</button>`).join('')}</div>
+      <textarea id="fb-text" maxlength="800" rows="5" placeholder="מה הפריע לך? מה היית משנה או מוסיף?"></textarea>
+      <input id="fb-contact" maxlength="120" placeholder="מייל או טלפון לחזרה (לא חובה)">
+    </div>`, `<button type="button" class="ms-btn fb-go" onclick="feedbackSend(this)">שליחת הביקורת</button>`);
+}
+function feedbackStar(n) { fbState.stars = n; document.querySelectorAll('#m-sheet .fb-star').forEach(b => b.classList.toggle('on', Number(b.dataset.n) <= n)); }
+function feedbackTopic(btn) { const on = !btn.classList.contains('on'); document.querySelectorAll('#m-sheet .fb-topic').forEach(b => b.classList.remove('on')); btn.classList.toggle('on', on); fbState.topic = on ? btn.textContent : ''; }
+async function feedbackSend(btn) {
+  const text = String((document.getElementById('fb-text') || {}).value || '').trim();
+  const contact = String((document.getElementById('fb-contact') || {}).value || '').trim();
+  if (text.length < 3 && !fbState.stars) { showCopyToast('כתבו כמה מילים או בחרו דירוג'); return; }
+  btn.disabled = true; btn.textContent = 'שולח…';
+  try {
+    if (!auth.currentUser && typeof ensureGuestSignedIn === 'function') await ensureGuestSignedIn();
+    const u = auth.currentUser; if (!u) throw new Error('auth');
+    const rec = { t: Date.now(), uid: u.uid, text: text.slice(0, 800), page: String((typeof activePageId !== 'undefined' && activePageId) || '').slice(0, 60) };
+    if (fbState.stars) rec.stars = fbState.stars;
+    if (fbState.topic) rec.topic = fbState.topic.slice(0, 30);
+    if (contact) rec.contact = contact.slice(0, 120);
+    const nm = (typeof liveChatUserName === 'function' && liveChatUserName()) || u.displayName || '';
+    if (nm && !u.isAnonymous) rec.name = String(nm).slice(0, 60);
+    await set(push(ref(db, 'website/feedback')), rec);
+    if (typeof trackEvent === 'function') trackEvent('feedback_sent');
+    closeMSheet();
+    glassBanner({ title: 'תודה על הביקורת! 💬', sub: 'קראנו ונשתמש בה כדי לשפר', icon: 'ok', ms: 2600 });
+  } catch (e) { btn.disabled = false; btn.textContent = 'שליחת הביקורת'; showCopyToast('השליחה נכשלה — נסו שוב'); }
+}
+Object.assign(window, { feedbackOpen, feedbackStar, feedbackTopic, feedbackSend });
