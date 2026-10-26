@@ -31549,6 +31549,12 @@ function coRender() {
         <b>התשלום התקבל (הדגמה)</b>
         <p>מספר הזמנה <span dir="ltr">${escHtml(coState.orderNo)}</span> · ${lines.length} פריטים · ${coMoney(total)}</p>
         <small>זו הדגמה בלבד — לא בוצע חיוב. ההזמנה נשמרה ב"ההזמנות שלי".</small>
+        <span class="co-mail" id="co-mail-st">${escHtml(coState.mailStatus || 'שולחים קבלה ל-' + (coState.email || '') + '…')}</span>
+        <div class="co-share">
+          <button type="button" onclick="receiptShare('${escHtml(coState.orderNo)}', 'whatsapp')">קבלה בוואטסאפ</button>
+          <button type="button" onclick="receiptShare('${escHtml(coState.orderNo)}', 'sms')">קבלה ב-SMS</button>
+          <button type="button" onclick="receiptShare('${escHtml(coState.orderNo)}', 'email')">פתיחה במייל</button>
+        </div>
       </div>`, `<button type="button" class="ms-btn" onclick="closeMSheet(); ordersOpen('${escHtml(coState.orderNo)}')">לצפייה בקבלה</button><button type="button" class="ms-btn ghost" onclick="coSendToSeller()">שליחה למוכר</button>`);
     return;
   }
@@ -31568,6 +31574,7 @@ function coRender() {
       <section class="co-form">
         <input id="co-name" placeholder="שם מלא" maxlength="60" value="${v('name')}" autocomplete="name">
         <input id="co-phone" placeholder="טלפון" maxlength="20" inputmode="tel" value="${v('phone')}" autocomplete="tel" dir="ltr">
+        <input id="co-email" type="email" placeholder="אימייל — לשם נשלחת הקבלה" maxlength="120" value="${v('email')}" autocomplete="email" dir="ltr">
         ${coState.ship === 'delivery' ? `<input id="co-addr" placeholder="כתובת למשלוח" maxlength="120" value="${v('addr')}" autocomplete="street-address">` : ''}
       </section>
       <section class="co-card" aria-label="כרטיס בדיקה (הדגמה)">
@@ -31577,20 +31584,24 @@ function coRender() {
       </section>
     </div>`, `<button type="button" class="ms-btn co-pay" onclick="coPay(this)">תשלום ${coMoney(total)} (הדגמה)</button>`);
 }
-function coKeep() { ['name', 'phone', 'addr'].forEach(k => { const el = document.getElementById('co-' + k); if (el) coState[k] = el.value; }); }
+function coKeep() { ['name', 'phone', 'email', 'addr'].forEach(k => { const el = document.getElementById('co-' + k); if (el) coState[k] = el.value; }); }
 function coQty(i, d) { coKeep(); const it = coState.items[i]; if (!it) return; it.qty = Math.max(1, Math.min(10, it.qty + d)); coRender(); }
 function coShip(v) { coKeep(); coState.ship = v; coRender(); }
 function coPay(btn) {
   coKeep();
-  const need = [['name', 'שם מלא'], ['phone', 'טלפון']].concat(coState.ship === 'delivery' ? [['addr', 'כתובת']] : []);
+  if (!coLines().length) { showCopyToast('המוצרים עדיין נטענים — נסו שוב בעוד רגע'); return; }
+  const need = [['name', 'שם מלא'], ['phone', 'טלפון'], ['email', 'אימייל']].concat(coState.ship === 'delivery' ? [['addr', 'כתובת']] : []);
   const miss = need.find(([k]) => !String(coState[k] || '').trim());
   if (miss) { showCopyToast('חסר: ' + miss[1]); const el = document.getElementById('co-' + miss[0]); if (el) el.focus(); return; }
   if (!/^[0-9+\-\s]{7,20}$/.test(coState.phone.trim())) { showCopyToast('מספר הטלפון לא תקין'); return; }
+  if (!/^[^\s@]{1,64}@[^\s@]{1,100}\.[a-z]{2,}$/i.test(String(coState.email || '').trim())) { showCopyToast('כתובת האימייל לא תקינה'); const el = document.getElementById('co-email'); if (el) el.focus(); return; }
   btn.disabled = true; btn.classList.add('busy'); btn.textContent = 'מעבד תשלום…';
   setTimeout(() => {
     coState.step = 'done'; coState.orderNo = 'BW-' + String(Date.now()).slice(-6);
     const { lines, sub, ship, total } = coTotals();
-    ordersAdd({ no: coState.orderNo, t: Date.now(), items: lines.map(l => ({ id: l.id, name: l.p.name, price: coPrice(l.p), qty: l.qty, image: l.p.image || '' })), sub, ship, total, method: coState.ship, name: coState.name, phone: coState.phone, addr: coState.ship === 'delivery' ? coState.addr : '' });
+    const order = { no: coState.orderNo, t: Date.now(), items: lines.map(l => ({ id: l.id, name: l.p.name, price: coPrice(l.p), qty: l.qty, image: l.p.image || '' })), sub, ship, total, method: coState.ship, name: coState.name.trim(), phone: coState.phone.trim(), email: coState.email.trim(), addr: coState.ship === 'delivery' ? coState.addr.trim() : '' };
+    ordersAdd(order);
+    orderSaveRemote(order).then(() => receiptSendEmail(order));
     if (coState.fromCart) cartSet([]);
     coRender();
   }, 1400);
@@ -31978,3 +31989,36 @@ async function aiSend() {
   aiBusy = false; aiRender();
 }
 Object.assign(window, { aiMcpTab, aiCopyText, AI_CONFIG_URL, aiDownload, aiSetModel, aiSend });
+
+// ============================================================
+// הזמנות: שמירה במסד (המנהל רואה ומקבל סיכום יומי), קבלה במייל (דרך /api/receipt) ובוואטסאפ / SMS
+// ============================================================
+async function sha256Hex(t) { const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t)); return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join(''); }
+async function orderSaveRemote(o) {
+  try {
+    if (!auth.currentUser && typeof ensureGuestSignedIn === 'function') await ensureGuestSignedIn();
+    const u = auth.currentUser; if (!u) return;
+    const rec = { no: o.no, t: o.t, uid: u.uid, items: o.items.map(i => ({ id: i.id, name: String(i.name).slice(0, 80), price: i.price, qty: i.qty })), sub: o.sub, ship: o.ship, total: o.total, method: o.method, name: o.name.slice(0, 60), phone: o.phone.slice(0, 20), email: o.email.slice(0, 120), addr: (o.addr || '').slice(0, 160), demo: true };
+    await set(ref(db, 'website/orders/' + o.no), rec);
+    await set(ref(db, 'website/order_stubs/' + o.no), { h: await sha256Hex(o.email.toLowerCase() + '|' + o.no), t: o.t });
+  } catch (e) { console.warn('order save failed', e); }
+}
+function receiptText(o) {
+  return `קבלה — Black1White00\nהזמנה ${o.no} · ${new Date(o.t).toLocaleString('he-IL')}\n${o.items.map(i => `• ${i.name} × ${i.qty} — ₪${i.price * i.qty}`).join('\n')}\nמשלוח: ${o.ship ? '₪' + o.ship : 'חינם'}\nסה״כ: ₪${o.total} (תשלום הדגמה)\n${o.method === 'pickup' ? 'איסוף עצמי' : 'משלוח ל: ' + (o.addr || '')}`;
+}
+function coMailStatus(t) { if (coState) coState.mailStatus = t; const el = document.getElementById('co-mail-st'); if (el) el.textContent = t; }
+async function receiptSendEmail(o) {
+  try {
+    const r = await fetch('/api/receipt', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ no: o.no, email: o.email, order: { items: o.items.map(i => ({ name: i.name, price: i.price, qty: i.qty })), sub: o.sub, ship: o.ship, total: o.total, method: o.method, name: o.name, addr: o.addr, t: o.t } }) });
+    if (r.ok) coMailStatus('✓ הקבלה נשלחה ל-' + o.email);
+    else coMailStatus('אפשר לשלוח לעצמכם את הקבלה בכפתורים למטה');
+  } catch (e) { coMailStatus('אפשר לשלוח לעצמכם את הקבלה בכפתורים למטה'); }
+}
+function receiptShare(no, via) {
+  const o = ordersGet().find(x => x.no === no); if (!o) return;
+  const txt = receiptText(o);
+  if (via === 'whatsapp') window.open('https://wa.me/?text=' + encodeURIComponent(txt), '_blank', 'noopener');
+  else if (via === 'sms') location.href = 'sms:' + encodeURIComponent(o.phone || '') + '?&body=' + encodeURIComponent(txt);
+  else location.href = 'mailto:' + encodeURIComponent(o.email || '') + '?subject=' + encodeURIComponent('קבלה — הזמנה ' + o.no) + '&body=' + encodeURIComponent(txt);
+}
+Object.assign(window, { receiptShare });

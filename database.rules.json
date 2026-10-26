@@ -617,6 +617,19 @@
       },
       "media": {
         ".read": true
+      },
+      "orders": {
+        "$id": {
+          ".write": "auth != null && !data.exists() && newData.child('uid').val() === auth.uid && $id.matches(/^BW-[0-9]{6}$/)",
+          ".validate": "newData.hasChildren(['no','t','uid','items','total','email','name','phone']) && newData.child('t').isNumber() && newData.child('total').isNumber() && newData.child('email').isString() && newData.child('email').val().length <= 120 && newData.child('name').isString() && newData.child('name').val().length <= 60 && newData.child('phone').isString() && newData.child('phone').val().length <= 20 && (!newData.child('addr').exists() || newData.child('addr').isString() && newData.child('addr').val().length <= 160)"
+        }
+      },
+      "order_stubs": {
+        ".read": true,
+        "$id": {
+          ".write": "auth != null && !data.exists() && $id.matches(/^BW-[0-9]{6}$/)",
+          ".validate": "newData.hasChildren(['h','t']) && newData.child('h').isString() && newData.child('h').val().length === 64 && newData.child('t').isNumber() && newData.child('t').val() <= now + 60000"
+        }
       }
     }
   }
