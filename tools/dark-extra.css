@@ -669,3 +669,6 @@ html.theme-dark .adv-pack.on { border-color: #ffffff !important; box-shadow: 0 0
 html.theme-dark .adv-pack em { background: #f97316 !important; color: #ffffff !important; }
 html.theme-dark .ads-req-acts button:first-child { background: #ffffff !important; color: #111111 !important; }
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .promo-trial .pt-cta { background: #ffffff !important; color: #1e1b4b !important; }
+
+html.theme-dark .promo-row .ad-card.ad-invite { background: linear-gradient(135deg, #2a1a0e, #3a2210) !important; border-color: #5a3413 !important; color: #fdba74 !important; }
+html.theme-dark .promo-row .ad-card:not(.ad-invite) { background: #161616 !important; border-color: #2a2a2a !important; color: #ffffff !important; }

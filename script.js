@@ -15666,8 +15666,7 @@ function buildHomeFeedPage() {
       ${homeChipsHTML(photos, comics, stories)}
       ${modBoxHTML()}
       ${homeHeroCarouselHTML(photos, comics, stories)}
-      ${promoTrialHTML('inline')}
-      ${adSlotHTML('inline')}
+      <div class="promo-row inline">${promoTrialHTML('row')}${adSlotHTML('row')}</div>
       ${homeExploreHTML()}
       ${homeRowsHTML(photos, comics, stories)}
       <div class="cmp-wrap">${composerBarHTML()}</div>
@@ -25130,15 +25129,10 @@ function promoTrialHTML(where) {
   const until = promoTrialUntil(), now = Date.now();
   if (until > now) {
     const left = Math.max(1, Math.ceil((until - now) / 864e5));
-    return `<section class="promo-trial on ${where}"><div class="pt-glow"></div><span class="pt-badge">💎 פרימיום פעיל</span><b class="pt-title">נשארו לכם ${left} ימי ניסיון</b><p class="pt-sub">תיהנו מגלישה בלי פרסומות ומתוכן נעול.</p></section>`;
+    return `<section class="promo-trial on ${where}"><span class="pt-chip" title="גלישה בלי פרסומות ותוכן נעול">💎 פרימיום · עוד ${left} ימים</span></section>`;
   }
   return `<section class="promo-trial ${where}" role="complementary" aria-label="מבצע פרימיום">
-    <div class="pt-glow"></div>
-    <span class="pt-badge">💎 Black1White00 פרימיום</span>
-    <b class="pt-title">נסו שבועיים חינם</b>
-    <ul class="pt-perks"><li>בלי פרסומות</li><li>גלריות ותכנים נעולים</li><li>תג פרימיום ליד השם</li></ul>
-    <button type="button" class="pt-cta" onclick="promoTrialStart()">להתחיל 14 ימים חינם</button>
-    <small class="pt-fine">בלי התחייבות · ביטול בכל רגע</small>
+    <button type="button" class="pt-chip" onclick="promoTrialStart()" title="14 ימים חינם: בלי פרסומות · גלריות ותכנים נעולים · תג פרימיום — בלי התחייבות">💎 <u>פרימיום חינם</u></button>
   </section>`;
 }
 function promoTrialStart() {
@@ -25147,7 +25141,7 @@ function promoTrialStart() {
   try { localStorage.setItem('premium_trial_until', String(Date.now() + SUBSCRIPTION_TRIAL_DAYS * 864e5)); } catch (e) {}
   if (typeof trackEvent === 'function') trackEvent('trial_start');
   glassBanner({ title: '💎 הניסיון החינמי הופעל!', sub: `${SUBSCRIPTION_TRIAL_DAYS} ימים של פרימיום — תהנו`, ms: 3500 });
-  document.querySelectorAll('.promo-trial').forEach(el => { const w = el.classList.contains('aside') ? 'aside' : 'inline'; el.outerHTML = promoTrialHTML(w); });
+  document.querySelectorAll('.promo-trial').forEach(el => { const w = el.classList.contains('aside') ? 'aside' : el.classList.contains('row') ? 'row' : 'inline'; el.outerHTML = promoTrialHTML(w); });
 }
 window.promoTrialStart = promoTrialStart;
 
@@ -29067,8 +29061,7 @@ function homeAsideHTML() {
   let haHidden = []; try { haHidden = JSON.parse(localStorage.getItem('ha_hidden') || '[]') || []; } catch (e) {}
   const box = (title, rows, more) => (rows && !haHidden.includes(title)) ? `<section class="ha-box"><h3>${title}</h3><button type="button" class="ha-x" onclick="homeAsideHide(this, '${artEsc(title)}')" aria-label="הסתרה" title="הסתרה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>${rows}${more ? `<button type="button" class="ha-more" onclick="${more}">הצג עוד</button>` : ''}</section>` : '';
   return `<aside class="home-aside" aria-label="המלצות">
-    ${promoTrialHTML('aside')}
-    ${adSlotHTML('aside')}
+    <div class="promo-row aside">${promoTrialHTML('aside')}${adSlotHTML('aside')}</div>
     ${(() => {
       const whoBox = box('את מי לעקוב', who.slice(0, 3).map(whoRow).join(''), "homeAsideMore('who')");
       const loginBox = homeAsideLoginHTML();
@@ -30871,6 +30864,7 @@ function glassBanner(o) {
       <span class="gbn-txt"><b>${escHtml(o.title || '')}</b>${o.sub ? `<small>${escHtml(o.sub)}</small>` : ''}</span>
       ${o.btn ? `<button type="button" class="gbn-btn">${escHtml(o.btn)}</button>` : ''}
       <button type="button" class="gbn-x" aria-label="סגירה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      <img class="gbn-logo" src="./logo.png" alt="" width="40" height="40">
     </div><i class="gbn-bar" style="animation-duration:${ms}ms"></i>`;
   document.body.appendChild(el);
   let t = 0;
@@ -30880,7 +30874,7 @@ function glassBanner(o) {
   el.querySelector('.gbn-x').onclick = e => { e.stopPropagation(); close(); };
   const b = el.querySelector('.gbn-btn');
   if (b) b.onclick = e => { e.stopPropagation(); close(); try { o.onBtn && o.onBtn(); } catch (er) {} };
-  el.onclick = () => { if (o.onBtn) { close(); try { o.onBtn(); } catch (er) {} } };
+  el.onclick = () => { close(); if (o.onBtn) { try { o.onBtn(); } catch (er) {} } };   // לחיצה על הגלולה סוגרת אותה
   // כשמחזיקים/מרחפים — לא נסגר, ופס הזמן עוצר
   el.addEventListener('pointerenter', () => { clearTimeout(t); el.classList.add('hold'); });
   el.addEventListener('pointerleave', () => { el.classList.remove('hold'); const bar = el.querySelector('.gbn-bar'); bar.style.animation = 'none'; void bar.offsetWidth; bar.style.animation = ''; arm(); });
@@ -30978,9 +30972,10 @@ function adCardInner(a, preview) {
 function adSlotHTML(where) {
   const list = (typeof adsList !== 'undefined' && adsList) || [];
   const a = list.length ? list[adSlotIdx % list.length] : null;
+  const go = a ? adGo(a) : 'adsAdvertiseOpen()';
   return `<section class="ad-slot ${where}${a ? '' : ' empty'}" aria-label="פרסומת">
-    ${a ? `<div class="ad-card">${adCardInner(a)}</div>` : `<div class="ad-card ad-invite"><span class="ad-tag">📣 פרסום</span><b class="ad-title">העסק שלכם כאן</b><p class="ad-text">הגיעו לאלפי גולשים בכל חודש — במחשב ובמובייל.</p></div>`}
-    <button type="button" class="ad-own" onclick="adsAdvertiseOpen()">📣 רוצים להופיע כאן? <u>פרסמו אצלנו</u></button>
+    <button type="button" class="ad-card${a ? '' : ' ad-invite'}"${go ? ` onclick="${go}"` : ''} title="${a ? escHtml(a.text || a.title || '') : 'הגיעו לאלפי גולשים בכל חודש — במחשב ובמובייל'}">${a ? `${a.img ? `<img class="ad-thumb" src="${escHtml(a.img)}" alt="" loading="lazy">` : ''}<span class="ad-tag">ממומן</span><b class="ad-title">${escHtml(a.title || '')}</b>` : '<b class="ad-title">העסק שלכם כאן</b>'}</button>
+    <button type="button" class="ad-own" onclick="adsAdvertiseOpen()">📣 <u>פרסמו אצלנו</u></button>
   </section>`;
 }
 // החלפת המודעה במשבצת כל 9 שניות (רק כשיש יותר ממודעה אחת)
@@ -30988,7 +30983,7 @@ setInterval(() => {
   const list = (typeof adsList !== 'undefined' && adsList) || [];
   if (document.hidden || !document.querySelector('.ad-slot')) return;
   if (list.length > 1) adSlotIdx++;
-  document.querySelectorAll('.ad-slot').forEach(el => { const w = el.classList.contains('aside') ? 'aside' : 'inline'; const tmp = document.createElement('div'); tmp.innerHTML = adSlotHTML(w); const n = tmp.firstElementChild; if (el.innerHTML !== n.innerHTML) { el.replaceWith(n); n.classList.add('ad-swap'); } });
+  document.querySelectorAll('.ad-slot').forEach(el => { const w = el.classList.contains('aside') ? 'aside' : el.classList.contains('row') ? 'row' : 'inline'; const tmp = document.createElement('div'); tmp.innerHTML = adSlotHTML(w); const n = tmp.firstElementChild; if (el.innerHTML !== n.innerHTML) { el.replaceWith(n); n.classList.add('ad-swap'); } });
 }, 9000);
 function adsAdvertiseOpen() {
   const body = `<div class="adv">
