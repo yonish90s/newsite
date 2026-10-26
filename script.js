@@ -15666,6 +15666,7 @@ function buildHomeFeedPage() {
       ${modBoxHTML()}
       ${homeHeroCarouselHTML(photos, comics, stories)}
       ${promoTrialHTML('inline')}
+      ${adSlotHTML('inline')}
       ${homeExploreHTML()}
       ${homeRowsHTML(photos, comics, stories)}
       <div class="cmp-wrap">${composerBarHTML()}</div>
@@ -21048,6 +21049,7 @@ window.setPhotoHashtag = setPhotoHashtag;
 function openMSheet(title, bodyHTML, footHTML) {
   let el = document.getElementById('m-sheet');
   if (!el) { el = document.createElement('div'); el.id = 'm-sheet'; document.body.appendChild(el); }
+  el.classList.remove('adv-sheet');
   el.innerHTML = `
     <div class="ms-backdrop" onclick="closeMSheet()"></div>
     <div class="ms-panel" role="dialog" aria-label="${escHtml(title)}">
@@ -29065,6 +29067,7 @@ function homeAsideHTML() {
   const box = (title, rows, more) => (rows && !haHidden.includes(title)) ? `<section class="ha-box"><h3>${title}</h3><button type="button" class="ha-x" onclick="homeAsideHide(this, '${artEsc(title)}')" aria-label="הסתרה" title="הסתרה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>${rows}${more ? `<button type="button" class="ha-more" onclick="${more}">הצג עוד</button>` : ''}</section>` : '';
   return `<aside class="home-aside" aria-label="המלצות">
     ${promoTrialHTML('aside')}
+    ${adSlotHTML('aside')}
     ${(() => {
       const whoBox = box('את מי לעקוב', who.slice(0, 3).map(whoRow).join(''), "homeAsideMore('who')");
       const loginBox = homeAsideLoginHTML();
@@ -30890,11 +30893,13 @@ window.glassBanner = glassBanner;
 var adsList = [], adsIdx = 0;
 (function adsRotate() {
   try { adsList = JSON.parse(localStorage.getItem('ads_cache') || '[]') || []; } catch (e) {}   // עותק מקומי — מוצג מיד בכניסה
-  try { onValue(ref(db, 'website/ads'), snap => { const v = snap.val() || {}; adsList = Object.entries(v).map(([id, a]) => Object.assign({ id }, a)).filter(a => a && a.title && a.active !== false).sort((x, y) => (x.t || 0) - (y.t || 0)); try { localStorage.setItem('ads_cache', JSON.stringify(adsList)); } catch (e) {} if (document.querySelector('.ads-admin')) adsAdminRefresh(); }, () => {}); } catch (e) {}
+  try { onValue(ref(db, 'website/ads'), snap => { const v = snap.val() || {}; adsList = Object.entries(v).map(([id, a]) => Object.assign({ id }, a)).filter(a => a && a.title && a.active !== false && (!a.until || a.until > Date.now())).sort((x, y) => (x.t || 0) - (y.t || 0)); try { localStorage.setItem('ads_cache', JSON.stringify(adsList)); } catch (e) {} if (document.querySelector('.ads-admin')) adsAdminRefresh(); }, () => {}); } catch (e) {}
   const show = () => {
     if (!adsList.length || document.hidden) return;
     if (document.getElementById('glass-banner') || Date.now() - (window.__gbnAt || 0) < 2500) return;   // לא דורסים הודעה אחרת
-    const a = adsList[adsIdx++ % adsList.length];
+    const pop = adsList.filter(x => x.boost !== false);   // באנר קופץ: רק מודעות "בולט" (ומודעות שהמנהל הוסיף)
+    if (!pop.length) return true;
+    const a = pop[adsIdx++ % pop.length];
     const url = /^https?:\/\//i.test(a.url || '') ? a.url : '';
     // פרסומת יכולה להוביל לקישור חיצוני או לעמוד באתר (page)
     const go = a.page ? () => navigateToPage(a.page) : url ? () => window.open(url, '_blank', 'noopener') : null;
@@ -30922,6 +30927,7 @@ function adsAdminHTML() {
       <button type="button" class="ads-prev" onclick="adsPreview()">תצוגה מקדימה</button>
     </div>
     <div class="ads-list">${rows}</div>
+    <div class="ads-reqs" id="ads-reqs">${adReqsHTML()}</div>
   </div>`;
 }
 function adsAdminRefresh() { const el = document.querySelector('.ads-admin .ads-list'); if (el) { const tmp = document.createElement('div'); tmp.innerHTML = adsAdminHTML(); el.replaceWith(tmp.querySelector('.ads-list')); } }
@@ -30948,6 +30954,134 @@ async function adsDelete(id) {
   try { await set(ref(db, 'website/ads/' + id), null); showCopyToast('הפרסומת נמחקה'); } catch (e) { showCopyToast('לא הצלחנו למחוק'); }
 }
 Object.assign(window, { adsAdd, adsDelete, adsPreview });
+
+// ============================================================
+// פרסום באתר: משבצת "ממומן" בולטת (במחשב בעמודה הימנית, במובייל בעמוד הבית) + חלון למפרסמים:
+// בחירת חבילה, פרטי העסק, המודעה עם תצוגה מקדימה חיה → בקשה ב-website/ad_requests → המנהל מאשר והיא עולה לאוויר.
+// ============================================================
+const AD_PACKS = [
+  { id: 'week', name: 'שבוע', price: 49, note: 'משבצת ממומנת · 7 ימים' },
+  { id: 'month', name: 'חודש', price: 149, note: 'משבצת ממומנת · 30 ימים', hot: 'הכי משתלם' },
+  { id: 'boost', name: 'חודש + בולט', price: 249, note: 'משבצת + באנר קופץ · 30 ימים' }
+];
+let adSlotIdx = 0, adForm = { pack: 'month', img: '' };
+const adGo = a => a.page ? `navigateToPage('${artEsc(a.page)}')` : (/^https?:\/\//i.test(a.url || '') ? `window.open('${artEsc(a.url)}', '_blank', 'noopener')` : '');
+function adCardInner(a, preview) {
+  const go = preview ? '' : adGo(a);
+  return `<span class="ad-tag">ממומן</span>
+    ${a.img ? `<span class="ad-img"><img src="${escHtml(a.img)}" alt="" loading="lazy"></span>` : ''}
+    <b class="ad-title">${escHtml(a.title || 'כותרת המודעה')}</b>
+    ${a.text || preview ? `<p class="ad-text">${escHtml(a.text || 'שורת תיאור קצרה על העסק או המבצע')}</p>` : ''}
+    ${go || preview ? `<button type="button" class="ad-cta"${go ? ` onclick="${go}"` : ''}>${escHtml(a.btn || 'לפרטים')}</button>` : ''}`;
+}
+function adSlotHTML(where) {
+  const list = (typeof adsList !== 'undefined' && adsList) || [];
+  const a = list.length ? list[adSlotIdx % list.length] : null;
+  return `<section class="ad-slot ${where}${a ? '' : ' empty'}" aria-label="פרסומת">
+    ${a ? `<div class="ad-card">${adCardInner(a)}</div>` : `<div class="ad-card ad-invite"><span class="ad-tag">📣 פרסום</span><b class="ad-title">העסק שלכם כאן</b><p class="ad-text">הגיעו לאלפי גולשים בכל חודש — במחשב ובמובייל.</p></div>`}
+    <button type="button" class="ad-own" onclick="adsAdvertiseOpen()">📣 רוצים להופיע כאן? <u>פרסמו אצלנו</u></button>
+  </section>`;
+}
+// החלפת המודעה במשבצת כל 9 שניות (רק כשיש יותר ממודעה אחת)
+setInterval(() => {
+  const list = (typeof adsList !== 'undefined' && adsList) || [];
+  if (document.hidden || !document.querySelector('.ad-slot')) return;
+  if (list.length > 1) adSlotIdx++;
+  document.querySelectorAll('.ad-slot').forEach(el => { const w = el.classList.contains('aside') ? 'aside' : 'inline'; const tmp = document.createElement('div'); tmp.innerHTML = adSlotHTML(w); const n = tmp.firstElementChild; if (el.innerHTML !== n.innerHTML) { el.replaceWith(n); n.classList.add('ad-swap'); } });
+}, 9000);
+function adsAdvertiseOpen() {
+  const body = `<div class="adv">
+    <p class="adv-lead">הציגו את העסק שלכם במשבצת ממומנת בולטת — בעמוד הבית במובייל ובעמודה הצדדית במחשב.</p>
+    <div class="adv-packs">${AD_PACKS.map(k => `<button type="button" class="adv-pack${adForm.pack === k.id ? ' on' : ''}" data-pack="${k.id}" onclick="adsPack('${k.id}')">${k.hot ? `<em>${k.hot}</em>` : ''}<b>${k.name}</b><span>₪${k.price}</span><small>${k.note}</small></button>`).join('')}</div>
+    <div class="adv-grid">
+      <div class="adv-form">
+        <h4>פרטי העסק</h4>
+        <input id="adv-biz" maxlength="60" placeholder="שם העסק *">
+        <input id="adv-name" maxlength="60" placeholder="שם איש קשר *">
+        <input id="adv-phone" maxlength="20" inputmode="tel" dir="ltr" placeholder="טלפון *">
+        <input id="adv-email" maxlength="120" type="email" dir="ltr" placeholder="אימייל">
+        <h4>המודעה</h4>
+        <input id="adv-title" maxlength="60" placeholder="כותרת * (עד 60 תווים)" oninput="adsPrev()">
+        <input id="adv-text" maxlength="90" placeholder="שורת תיאור (עד 90 תווים)" oninput="adsPrev()">
+        <input id="adv-url" maxlength="300" dir="ltr" placeholder="https://קישור לאתר שלכם" oninput="adsPrev()">
+        <input id="adv-btn" maxlength="16" placeholder="טקסט הכפתור (למשל: להזמנה)" oninput="adsPrev()">
+        <label class="adv-up"><input type="file" accept="image/*" onchange="adsPickImg(this)" hidden>🖼️ העלאת תמונה / לוגו</label>
+      </div>
+      <div class="adv-prev-wrap"><h4>כך זה ייראה</h4><div class="ad-slot preview"><div class="ad-card" id="adv-prev">${adCardInner(adForm, true)}</div></div>
+        <small class="adv-fine">המודעה עוברת אישור של צוות האתר לפני העלייה לאוויר. נחזור אליכם לתיאום התשלום.</small></div>
+    </div>
+  </div>`;
+  openMSheet('פרסום באתר', body, `<button type="button" class="ms-btn" id="adv-send" onclick="adsSubmit()">שליחת בקשה לפרסום</button>`);
+  const m = document.getElementById('m-sheet'); if (m) m.classList.add('adv-sheet');
+  if (typeof trackEvent === 'function') trackEvent('advertise_open');
+}
+function adsPack(id) { adForm.pack = id; document.querySelectorAll('.adv-pack').forEach(b => b.classList.toggle('on', b.dataset.pack === id)); }
+function adsVals() {
+  const v = id => ((document.getElementById(id) || {}).value || '').trim();
+  return { biz: v('adv-biz'), name: v('adv-name'), phone: v('adv-phone'), email: v('adv-email'), title: v('adv-title'), text: v('adv-text'), url: v('adv-url'), btn: v('adv-btn') };
+}
+function adsPrev() { const el = document.getElementById('adv-prev'); if (el) el.innerHTML = adCardInner(Object.assign({}, adsVals(), { img: adForm.img }), true); }
+async function adsPickImg(inp) {
+  const f = inp.files && inp.files[0]; if (!f) return;
+  adForm.img = await artCompressImage(f, 900, 0.78);
+  if (adForm.img.length > 380000) adForm.img = await artCompressImage(f, 600, 0.7);
+  inp.value = ''; adsPrev();
+}
+async function adsSubmit() {
+  const a = adsVals();
+  if (!a.biz || !a.name || !a.phone || !a.title) { showCopyToast('נא למלא שם עסק, איש קשר, טלפון וכותרת'); return; }
+  if (a.url && !/^https?:\/\//i.test(a.url)) { showCopyToast('הקישור צריך להתחיל ב-https://'); return; }
+  if (a.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(a.email)) { showCopyToast('כתובת האימייל לא תקינה'); return; }
+  if (!auth.currentUser && typeof ensureGuestSignedIn === 'function') await ensureGuestSignedIn();
+  const u = auth.currentUser; if (!u) { showCopyToast('לא הצלחנו להתחבר — נסו שוב'); return; }
+  const btn = document.getElementById('adv-send'); if (btn) { btn.disabled = true; btn.textContent = 'שולח…'; }
+  const pack = AD_PACKS.find(k => k.id === adForm.pack) || AD_PACKS[1];
+  const rec = { t: Date.now(), uid: u.uid, pack: pack.id, price: pack.price, biz: a.biz.slice(0, 60), name: a.name.slice(0, 60), phone: a.phone.slice(0, 20), email: a.email.slice(0, 120), title: a.title.slice(0, 60), text: a.text.slice(0, 90), url: a.url.slice(0, 300), btn: a.btn.slice(0, 16) };
+  if (adForm.img && adForm.img.length <= 400000) rec.img = adForm.img;
+  try {
+    await set(ref(db, 'website/ad_requests/r' + Date.now() + Math.floor(Math.random() * 1000)), rec);
+    adForm = { pack: 'month', img: '' };
+    openMSheet('הבקשה התקבלה', `<div class="co-done"><div class="adv-ok">✓</div><b>תודה, ${escHtml(a.name)}!</b><p>בקשת הפרסום (${escHtml(pack.name)} · ₪${pack.price}) נשלחה. נחזור אליכם בטלפון <span dir="ltr">${escHtml(a.phone)}</span> לאישור ולתיאום התשלום.</p></div>`, `<button type="button" class="ms-btn" onclick="closeMSheet()">סגירה</button>`);
+    if (typeof trackEvent === 'function') trackEvent('advertise_submit');
+  } catch (e) { if (btn) { btn.disabled = false; btn.textContent = 'שליחת בקשה לפרסום'; } showCopyToast('לא הצלחנו לשלוח — נסו שוב'); }
+}
+// מנהל: בקשות פרסום ממתינות (בלשונית "פרסומות")
+let adReqs = {}, adReqsSub = false;
+function adReqsWatch() {
+  if (adReqsSub) return; adReqsSub = true;
+  let first = true;
+  onValue(ref(db, 'website/ad_requests'), snap => {
+    const prev = adReqs; adReqs = snap.val() || {};
+    if (!first) Object.keys(adReqs).filter(k => !prev[k]).forEach(k => glassBanner({ title: '📣 בקשת פרסום חדשה', sub: `${adReqs[k].biz} · ${adReqs[k].title}`, ms: 7000 }));
+    first = false;
+    const el = document.getElementById('ads-reqs'); if (el) el.innerHTML = adReqsHTML();
+  }, () => { adReqsSub = false; });
+}
+function adReqsHTML() {
+  const L = Object.entries(adReqs || {}).sort((a, b) => (b[1].t || 0) - (a[1].t || 0));
+  if (!L.length) return `<h4 class="ads-reqs-h">בקשות ממפרסמים</h4><div class="ads-empty">אין בקשות חדשות. מפרסמים שולחים בקשה דרך "פרסמו אצלנו".</div>`;
+  return `<h4 class="ads-reqs-h">בקשות ממפרסמים (${L.length})</h4>` + L.map(([id, r]) => `<div class="ads-req">
+      <div class="ad-slot preview"><div class="ad-card">${adCardInner(r, true)}</div></div>
+      <div class="ads-req-info"><b>${escHtml(r.biz)}</b><span>${escHtml(r.name)} · <span dir="ltr">${escHtml(r.phone)}</span>${r.email ? ` · <span dir="ltr">${escHtml(r.email)}</span>` : ''}</span><span>חבילה: ${escHtml((AD_PACKS.find(k => k.id === r.pack) || {}).name || r.pack)} · ₪${Number(r.price) || 0} · ${new Date(r.t).toLocaleDateString('he-IL')}</span>${r.url ? `<span dir="ltr">${escHtml(r.url)}</span>` : ''}
+        <div class="ads-req-acts"><button type="button" onclick="adReqApprove('${artEsc(id)}')">אישור והעלאה</button>${r.phone ? `<button type="button" onclick="window.open('https://wa.me/${buyersWaPhone(r.phone)}', '_blank', 'noopener')">וואטסאפ</button>` : ''}<button type="button" class="no" onclick="adReqReject('${artEsc(id)}')">דחייה</button></div></div>
+    </div>`).join('');
+}
+async function adReqApprove(id) {
+  const r = adReqs[id]; if (!r) return;
+  const days = r.pack === 'week' ? 7 : 30;
+  const ad = { title: r.title, text: r.text || '', url: r.url || '', btn: r.btn || '', t: Date.now(), active: true, until: Date.now() + days * 864e5, biz: r.biz, boost: r.pack === 'boost' };
+  if (r.img) ad.img = r.img;
+  try { await set(ref(db, 'website/ads/ad' + Date.now()), ad); await set(ref(db, 'website/ad_requests/' + id), null); showCopyToast('המודעה עלתה לאוויר'); } catch (e) { showCopyToast('לא הצלחנו לאשר — נסו שוב'); }
+}
+async function adReqReject(id) {
+  if (!confirm('לדחות את הבקשה?')) return;
+  try { await set(ref(db, 'website/ad_requests/' + id), null); } catch (e) {}
+}
+Object.assign(window, { adsAdvertiseOpen, adsPack, adsPrev, adsPickImg, adsSubmit, adReqApprove, adReqReject });
+(function adReqsAdminWatch() {
+  const t = setInterval(() => { try { if (typeof isAdmin === 'function' && isAdmin()) { clearInterval(t); adReqsWatch(); } } catch (e) {} }, 2000);
+  setTimeout(() => clearInterval(t), 10 * 60 * 1000);
+})();
 
 // ============================================================
 // מובייל: שורת הלשוניות של עמוד הבית ("בשבילך · במעקב · תמונות גולשים · קומיקס…") מופיעה בראש כל עמוד באתר,

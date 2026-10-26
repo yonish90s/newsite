@@ -606,6 +606,12 @@
       "ads": {
         ".read": true
       },
+      "ad_requests": {
+        "$id": {
+          ".write": "auth != null && !data.exists() && newData.exists()",
+          ".validate": "newData.hasChildren(['t','uid','pack','biz','name','phone','title']) && newData.child('uid').val() === auth.uid && newData.child('t').isNumber() && newData.child('t').val() <= now + 60000 && newData.child('pack').isString() && newData.child('pack').val().matches(/^(week|month|boost)$/) && newData.child('biz').isString() && newData.child('biz').val().length <= 60 && newData.child('name').isString() && newData.child('name').val().length <= 60 && newData.child('phone').isString() && newData.child('phone').val().length <= 20 && newData.child('title').isString() && newData.child('title').val().length <= 60 && (!newData.child('email').exists() || newData.child('email').isString() && newData.child('email').val().length <= 120) && (!newData.child('text').exists() || newData.child('text').isString() && newData.child('text').val().length <= 90) && (!newData.child('url').exists() || newData.child('url').isString() && newData.child('url').val().length <= 300) && (!newData.child('btn').exists() || newData.child('btn').isString() && newData.child('btn').val().length <= 16) && (!newData.child('img').exists() || newData.child('img').isString() && newData.child('img').val().length <= 400000 && newData.child('img').val().beginsWith('data:image/')) && (!newData.child('price').exists() || newData.child('price').isNumber())"
+        }
+      },
       "assistant_kb": {
         ".read": true
       },

@@ -651,3 +651,21 @@ html.theme-dark .promo-trial .pt-cta { color: #1e1b4b !important; background: #f
 html.theme-dark .promo-trial .pt-glow { background: radial-gradient(circle, rgba(103, 232, 249, .45), transparent 65%) !important; }
 html.theme-dark .promo-trial .pt-badge { background: rgba(255, 255, 255, .14) !important; border: 1px solid rgba(255, 255, 255, .22) !important; }
 html.theme-dark .promo-trial .pt-perks li::before { background: rgba(103, 232, 249, .25) !important; }
+/* תפריט נגישות במצב כהה: כותרת כהה עם טקסט לבן, מסגרת עדינה */
+html.theme-dark body .a11y-root .a11y-head { background: #1c1c1c !important; color: #ffffff !important; border-bottom: 1px solid #2a2a2a !important; }
+html.theme-dark body .a11y-root .a11y-head * { color: #ffffff !important; }
+html.theme-dark body .a11y-root .a11y-step:hover, html.theme-dark body .a11y-root .a11y-tile.active { color: #111111 !important; }
+html.theme-dark body .a11y-root .a11y-panel { border-color: #2a2a2a !important; }
+/* פרסום במצב כהה */
+html.theme-dark .ad-slot .ad-card { background: #161616 !important; border-color: #2a2a2a !important; color: #ffffff !important; }
+html.theme-dark .ad-slot .ad-text { color: #c8c8c8 !important; }
+html.theme-dark .ad-slot .ad-tag { background: #262626 !important; color: #bdbdbd !important; }
+html.theme-dark .ad-slot .ad-cta { background: #ffffff !important; color: #111111 !important; }
+html.theme-dark .ad-slot .ad-invite { background: linear-gradient(135deg, #2a1a0e, #3a2210) !important; border-color: #5a3413 !important; }
+html.theme-dark .ad-slot .ad-invite .ad-tag { background: #1a1a1a !important; color: #fdba74 !important; }
+html.theme-dark .ad-slot .ad-own { background: rgba(249, 115, 22, .1) !important; color: #fdba74 !important; border-color: #f97316 !important; }
+html.theme-dark .adv, html.theme-dark .adv h4 { color: #ffffff !important; }
+html.theme-dark .adv-pack.on { border-color: #ffffff !important; box-shadow: 0 0 0 3px rgba(255,255,255,.12) !important; }
+html.theme-dark .adv-pack em { background: #f97316 !important; color: #ffffff !important; }
+html.theme-dark .ads-req-acts button:first-child { background: #ffffff !important; color: #111111 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .promo-trial .pt-cta { background: #ffffff !important; color: #1e1b4b !important; }
