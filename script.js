@@ -32604,21 +32604,36 @@ const RENT_CATS = [
   { id: 'photo', name: 'צילום וסאונד', ic: '📷' },
   { id: 'other', name: 'אחר', ic: '📦' }
 ];
-const RENT_UNITS = { hour: 'לשעה', day: 'ליום', print: 'להדפסה', gram: 'לגרם', page: 'לעמוד' };
+const RENT_UNITS = { kg: 'לקילו', hour: 'לשעה', day: 'ליום', print: 'להדפסה', gram: 'לגרם', page: 'לעמוד' };
+const rentMin = r => Number(r.min) || (r.unit === 'kg' ? 0.1 : 1);
+// סקיצות: דברים שאפשר להדפיס בתלת מימד — משקל משוער (גרם) וזמן הדפסה, כדי לחשב מחיר לפי קילו
+const RENT_IDEAS = [
+  { id: 'stand', name: 'מעמד לטלפון', g: 45, h: 2, svg: '<path d="M18 52h44M24 52l14-36h8l-6 36"/><path d="M38 16l16 26"/><path d="M50 42h8v10"/><path d="M28 47l3-8M33 47l3-8" opacity=".45"/>' },
+  { id: 'hook', name: 'וו לקיר', g: 15, h: 0.7, svg: '<rect x="30" y="8" width="20" height="22" rx="4"/><circle cx="40" cy="15" r="2"/><path d="M40 30v10a8 8 0 0 0 16 0v-4"/><path d="M53 36l3-3 3 3"/>' },
+  { id: 'cable', name: 'מארגן כבלים', g: 12, h: 0.5, svg: '<rect x="14" y="30" width="52" height="16" rx="5"/><path d="M24 30v-6a5 5 0 0 1 10 0v6M36 30v-6a5 5 0 0 1 10 0v6M48 30v-6a5 5 0 0 1 10 0v6"/><path d="M29 18c0-8 2-10 0-14M41 18c0-8 2-10 0-14M53 18c0-8 2-10 0-14" opacity=".45"/>' },
+  { id: 'pot', name: 'עציץ קטן', g: 120, h: 5, svg: '<path d="M22 28h36l-5 24H27z"/><path d="M20 22h40v6H20z"/><path d="M40 22c-2-8-10-12-16-10 2 6 8 9 16 10zM40 22c2-9 10-14 17-12-2 7-9 11-17 12z"/><path d="M30 34l2 14M38 34v14M46 34l-1 14" opacity=".4"/>' },
+  { id: 'key', name: 'מחזיק מפתחות עם שם', g: 6, h: 0.3, svg: '<rect x="20" y="22" width="44" height="18" rx="6"/><circle cx="27" cy="31" r="3"/><path d="M30 31h-10a6 6 0 1 1 0-0.1"/><path d="M36 27v8M40 27l4 8M44 27v8M50 27h6M53 27v8" opacity=".6"/>' },
+  { id: 'box', name: 'קופסה עם מכסה', g: 90, h: 4, svg: '<path d="M16 26l24-10 24 10-24 10z"/><path d="M16 26v18l24 10 24-10V26M40 36v18"/><path d="M14 22l26-11 26 11" opacity=".5"/><path d="M22 34l12 5M22 40l12 5" opacity=".35"/>' },
+  { id: 'gear', name: 'גלגל שיניים / חלק חילוף', g: 30, h: 1.5, svg: '<circle cx="40" cy="31" r="13"/><circle cx="40" cy="31" r="5"/><path d="M40 12v6M40 44v6M21 31h6M53 31h6M27 18l4 4M49 40l4 4M27 44l4-4M49 22l4-4"/>' },
+  { id: 'pen', name: 'כוס לעטים', g: 70, h: 3, svg: '<path d="M26 22h28v30H26z"/><path d="M26 30h28M26 38h28M26 46h28" opacity=".4"/><path d="M32 22l-4-16M40 22V4M48 22l5-14"/>' },
+  { id: 'mini', name: 'פסלון / מיניאטורה', g: 25, h: 3, svg: '<circle cx="40" cy="16" r="7"/><path d="M33 26h14l3 14h-20z"/><path d="M30 40l-2 10h24l-2-10"/><path d="M24 52h32"/><path d="M33 26l-6 8M47 26l6 8"/>' }
+];
+const rentIdeaSVG = i => `<svg viewBox="0 0 80 60" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${i.svg}</svg>`;
+function rentIdeaPrice(i, perKg) { return Math.round(i.g / 1000 * perKg * (1 + RENT_SITE_FEE)); }
 const RENT_SITE_FEE = 0.05;   // עמלת האתר על כל השכרה (5%), מוצגת לשוכר בפירוט המחיר
 // דוגמאות: ציוד אצל גולשים (מוצגות בכל קטגוריה כל עוד אין בה מודעות אמיתיות). תמונות: Wikimedia Commons, בתיקייה rent/
 const RENT_DEMO = [
-  { id: 'd1', cat: '3d', img: 'rent/p3d-farm.jpg', title: 'חוות 4 מדפסות Prusa — הרבה חלקים במקביל', price: 1.2, unit: 'gram', min: 30, city: 'תל אביב', owner: 'רון כהן', rating: 4.9, reviews: 38, t: -2,
+  { id: 'd1', cat: '3d', img: 'rent/p3d-farm.jpg', title: 'חוות 4 מדפסות Prusa — הרבה חלקים במקביל', price: 320, unit: 'kg', min: 0.05, city: 'תל אביב', owner: 'רון כהן', rating: 4.9, reviews: 38, t: -2,
     desc: 'ארבע מדפסות שעובדות במקביל, אז גם הזמנה של עשרות חלקים מוכנה מהר. שולחים קובץ STL/3MF, אני מדפיס ומתאם איסוף.', specs: ['25×21×21 ס״מ לכל מדפסת', 'PLA / PETG / TPU', 'אספקה: 1–2 ימים'] },
-  { id: 'd2', cat: '3d', img: 'rent/p3d-prusa-mk2.jpg', title: 'Prusa i3 MK3 — שימוש עצמי בסדנה, כולל הדרכה', price: 25, unit: 'hour', min: 2, city: 'חיפה', owner: 'מאיה לוי', rating: 4.8, reviews: 21, t: -6,
+  { id: 'd2', cat: '3d', img: 'rent/p3d-prusa-mk2.jpg', title: 'Prusa i3 MK3 — הדפסה בסדנה, כולל הדרכה', price: 260, unit: 'kg', min: 0.1, city: 'חיפה', owner: 'מאיה לוי', rating: 4.8, reviews: 21, t: -6,
     desc: 'באים לסדנה ומדפיסים בעצמכם. בפעם הראשונה — חצי שעה הדרכה בחינם. פילמנט PLA כלול במחיר.', specs: ['25×21×21 ס״מ', 'PLA כלול, PETG בתוספת', 'חניה חינם ליד הסדנה'] },
-  { id: 'd3', cat: '3d', img: 'rent/p3d-resin.jpg', title: 'Elegoo Mars — הדפסת שרף לפרטים קטנים', price: 45, unit: 'print', min: 1, city: 'ירושלים', owner: 'דניאל אברהם', rating: 5.0, reviews: 12, t: -26,
+  { id: 'd3', cat: '3d', img: 'rent/p3d-resin.jpg', title: 'Elegoo Mars — הדפסת שרף לפרטים קטנים', price: 900, unit: 'kg', min: 0.02, city: 'ירושלים', owner: 'דניאל אברהם', rating: 5.0, reviews: 12, t: -26,
     desc: 'הדפסת שרף לפרטים קטנים במיוחד: מיניאטורות, תכשיטים ודגמים. כולל שטיפה וייבוש UV.', specs: ['רזולוציה גבוהה', 'שרף אפור / שקוף', 'עד 12×7×15 ס״מ'] },
-  { id: 'd4', cat: '3d', img: 'rent/p3d-imprimante.jpg', title: 'Creality Ender 3 — הדפסה זולה לפי גרם', price: 0.9, unit: 'gram', min: 50, city: 'ראשון לציון', owner: 'אלון מזרחי', rating: 4.6, reviews: 17, t: -48,
+  { id: 'd4', cat: '3d', img: 'rent/p3d-imprimante.jpg', title: 'Creality Ender 3 — הדפסה זולה לפי קילו', price: 190, unit: 'kg', min: 0.1, city: 'ראשון לציון', owner: 'אלון מזרחי', rating: 4.6, reviews: 17, t: -48,
     desc: 'הדרך הכי זולה להדפיס: מעמדים, קופסאות, חלקי חילוף לבית. אפשר גם משלוח עד הבית.', specs: ['22×22×25 ס״מ', 'PLA / PETG', 'משלוח בתוספת ₪25'] },
   { id: 'd5', cat: '3d', img: 'rent/p3d-prusa-metal.jpg', title: 'מדפסת Prusa i3 (מסגרת מתכת) — השכרה הביתה', price: 90, unit: 'day', min: 2, city: 'באר שבע', owner: 'נועה פרץ', rating: 4.7, reviews: 9, t: -72,
     desc: 'לוקחים את המדפסת הביתה ליומיים ומעלה. מגיעה מכוילת, עם 1 ק״ג PLA ומדריך קצר.', specs: ['כולל 1 ק״ג PLA', 'פיקדון ₪500 שמוחזר', 'הדרכה בטלפון'] },
-  { id: 'd6', cat: '3d', img: 'rent/p3d-shields.jpg', title: 'הדפסה סדרתית — מחזיקים, ווים וחלקים קטנים', price: 15, unit: 'print', min: 1, city: 'נתניה', owner: 'עידו שלום', rating: 4.9, reviews: 44, t: -120,
+  { id: 'd6', cat: '3d', img: 'rent/p3d-shields.jpg', title: 'הדפסה סדרתית — מחזיקים, ווים וחלקים קטנים', price: 290, unit: 'kg', min: 0.05, city: 'נתניה', owner: 'עידו שלום', rating: 4.9, reviews: 44, t: -120,
     desc: 'מחזיקי מפתחות, ווים לקיר, חלקי חילוף קטנים. שולחים קובץ או בוחרים דגם מוכן — מוכן תוך כמה שעות.', specs: ['עד 18×18×18 ס״מ', 'PLA במגוון צבעים', 'איסוף עצמי'] },
   { id: 'p1', cat: 'printer', img: 'rent/laser.jpg', title: 'מדפסת לייזר Brother — שחור-לבן מהיר', price: 0.4, unit: 'page', min: 10, city: 'פתח תקווה', owner: 'שירה גולן', rating: 4.8, reviews: 63, t: -3,
     desc: 'שולחים PDF במייל או בוואטסאפ, ואוספים מהלובי תוך שעה. מושלם לעבודות, חוזים וטפסים.', specs: ['A4 שחור-לבן', 'דו-צדדי', 'נייר כלול'] },
@@ -32655,7 +32670,7 @@ function rentAll() {
   return real.concat(demo);
 }
 function rentCatOf(id) { return RENT_CATS.find(c => c.id === id) || RENT_CATS[RENT_CATS.length - 1]; }
-function rentPriceTxt(r) { return `₪${Number(r.price).toLocaleString('he-IL', { maximumFractionDigits: 2 })} <small>${RENT_UNITS[r.unit] || ''}</small>`; }
+function rentPriceTxt(r) { return `₪${Number(r.price).toLocaleString('he-IL', { maximumFractionDigits: 2 })} <small>${RENT_UNITS[r.unit] || ''}${r.unit === 'kg' ? ` · ₪${(r.price / 10).toLocaleString('he-IL', { maximumFractionDigits: 1 })} ל-100 גרם` : ''}</small>`; }
 function rentAgo(t) {
   const m = Math.max(1, Math.round((Date.now() - (t || 0)) / 6e4));
   return m < 60 ? `לפני ${m} דק׳` : m < 1440 ? `לפני ${Math.round(m / 60)} שע׳` : `לפני ${Math.round(m / 1440)} ימים`;
@@ -32702,42 +32717,71 @@ function rentViewHTML() {
       <select class="rn-sel" onchange="rentSet('sort', this.value)" aria-label="מיון">${[['new', 'הכי חדש'], ['cheap', 'הכי זול'], ['rating', 'דירוג גבוה']].map(([v, t]) => `<option value="${v}"${rentUI.sort === v ? ' selected' : ''}>${t}</option>`).join('')}</select>
     </div>
     <nav class="rn-cats">${RENT_CATS.map(c => `<button type="button" class="rn-cat${rentUI.cat === c.id ? ' on' : ''}" onclick="rentSet('cat', '${c.id}')">${c.ic} ${c.name} <small>${count(c.id)}</small></button>`).join('')}</nav>
+    ${rentIdeasHTML()}
     <div class="rn-grid">${rentGridHTML()}</div>
     <p class="rn-fine">איך זה עובד: בוחרים ציוד ← שולחים בקשה עם כמות/זמן ← בעל הציוד מאשר ומתאמים איסוף. התשלום לבעל הציוד, ועמלת שירות של ${Math.round(RENT_SITE_FEE * 100)}% לאתר.<br><small>תמונות הדוגמה: Wikimedia Commons (רישיון חופשי)</small></p>`;
 }
+function rentIdeasHTML() {
+  if (rentUI.cat !== 'all' && rentUI.cat !== '3d') return '';
+  const kgs = rentAll().filter(r => r.unit === 'kg').map(r => r.price);
+  if (!kgs.length) return '';
+  const low = Math.min(...kgs);
+  return `<section class="rn-ideas"><h2>💡 מה אפשר להדפיס? <small>מחיר לפי משקל — החל מ-₪${low} לקילו</small></h2>
+    <div class="rn-ideas-row">${RENT_IDEAS.map(i => `<button type="button" class="rn-idea" onclick="rentSet('cat', '3d')"><span class="rn-sk">${rentIdeaSVG(i)}</span><b>${i.name}</b><small>~${i.g} גרם · ${i.h < 1 ? Math.round(i.h * 60) + ' דק׳' : i.h + ' שע׳'}</small><em>מ-₪${Math.max(1, rentIdeaPrice(i, low))}</em></button>`).join('')}</div></section>`;
+}
 function buildRentPage() {
   setTimeout(rentSubscribe, 0);
+  rentUI.open = null;
   return `<div class="rent-page" data-page-id="page-rent-main"><div class="rn-inner">${rentViewHTML()}</div></div>`;
 }
 function rentRender(gridOnly) {
   const el = typeof mainContent !== 'undefined' && mainContent && mainContent.querySelector('.rent-page .rn-inner');
   if (!el) return;
-  if (gridOnly) { const g = el.querySelector('.rn-grid'); if (g) g.innerHTML = rentGridHTML(); return; }
-  el.innerHTML = rentViewHTML();
+  const open = rentUI.open && rentFind(rentUI.open);
+  if (gridOnly && !open) { const g = el.querySelector('.rn-grid'); if (g) g.innerHTML = rentGridHTML(); return; }
+  el.innerHTML = open ? rentDetailHTML(open) : rentViewHTML();
 }
-function rentSet(k, v) { rentUI[k] = v; rentRender(k === 'q'); }
+function rentSet(k, v) { rentUI[k] = v; rentUI.open = null; rentRender(k === 'q'); }
 function rentFind(id) { return rentAll().find(r => r.id === id); }
 function rentCalc(r, qty) {
   const sub = Math.round(r.price * qty * 100) / 100, fee = Math.round(sub * RENT_SITE_FEE * 100) / 100;
   return { sub, fee, total: Math.round((sub + fee) * 100) / 100 };
 }
+// עמוד מודעה מלא (לא חלון קופץ): נפתח בתוך עמוד ההשכרה, עם "חזרה" וכפתור אחורה של הדפדפן
+let _rentPopping = false;
 function rentOpen(id) {
   const r = rentFind(id); if (!r) return;
-  const qty = Math.max(1, Number(r.min) || 1);
+  rentUI.open = id;
+  if (!_rentPopping) { try { history.pushState({ rent: id }, ''); } catch (e) {} }
+  rentRender();
+  try { window.scrollTo({ top: 0 }); } catch (e) {}
+}
+function rentBack() { if (history.state && history.state.rent) { history.back(); return; } rentUI.open = null; rentRender(); }
+window.addEventListener('popstate', (e) => {
+  if (!mainContent || !mainContent.querySelector('.rent-page')) return;
+  _rentPopping = true;
+  try { const id = e.state && e.state.rent; if (id) rentOpen(id); else { rentUI.open = null; rentRender(); } } finally { _rentPopping = false; }
+});
+function rentDetailHTML(r) {
+  const qty = rentMin(r);
   const c = rentCalc(r, qty);
-  openMSheet(r.title, `<div class="rn-det">
+  return `<button type="button" class="rn-back" onclick="rentBack()">→ חזרה לכל הציוד</button>
+    <div class="rn-det">
+      <h1 class="rn-det-title">${escHtml(r.title)}</h1>
       <div class="rn-det-img">${rentThumb(r, true)}${r.demo ? '<em class="rn-demo">דוגמה</em>' : ''}</div>
-      <div class="rn-det-price">${rentPriceTxt(r)}${r.min > 1 ? `<span>מינימום ${r.min}</span>` : ''}</div>
+      <div class="rn-det-price">${rentPriceTxt(r)}${r.unit === 'kg' ? `<span>מינימום ${Math.round(rentMin(r) * 1000)} גרם</span>` : r.min > 1 ? `<span>מינימום ${r.min}</span>` : ''}</div>
       <div class="rn-det-meta">📍 ${escHtml(r.city || '')} · ${escHtml(rentCatOf(r.cat).name)} · ${rentAgo(r.t)}</div>
       <div class="rn-det-owner"><span class="rn-av">${escHtml((r.owner || '?').slice(0, 1))}</span><span><b>${escHtml(r.owner || '')}</b><small>${r.rating ? `⭐ ${r.rating} · ${r.reviews || 0} השכרות` : 'משכיר/ה חדש/ה'}</small></span></div>
       ${r.desc ? `<p class="rn-det-desc">${escHtml(r.desc)}</p>` : ''}
       ${(r.specs || []).length ? `<ul class="rn-specs">${r.specs.map(s => `<li>${escHtml(s)}</li>`).join('')}</ul>` : ''}
+      ${r.unit === 'kg' ? `<div class="rn-pick"><b>בחרו מה להדפיס — המשקל יחושב לבד</b><div class="rn-ideas-row">${RENT_IDEAS.map(i => `<button type="button" class="rn-idea sm" data-g="${i.g}" onclick="rentIdeaPick('${artEsc(r.id)}', '${i.id}', this)"><span class="rn-sk">${rentIdeaSVG(i)}</span><b>${i.name}</b><small>~${i.g} גרם · ₪${Math.max(1, rentIdeaPrice(i, r.price))}</small></button>`).join('')}</div></div>` : ''}
       <div class="rn-calc">
-        <label>כמה ${escHtml((RENT_UNITS[r.unit] || '').replace(/^ל/, '')) || 'יחידות'}?<input id="rn-qty" type="number" min="${Number(r.min) || 1}" value="${qty}" inputmode="decimal" oninput="rentCalcUpd('${artEsc(r.id)}')"></label>
+        <label>${r.unit === 'kg' ? 'כמה קילו? <small id="rn-grams">(' + Math.round(qty * 1000) + ' גרם)</small>' : `כמה ${escHtml((RENT_UNITS[r.unit] || '').replace(/^ל/, '')) || 'יחידות'}?`}<input id="rn-qty" type="number" min="${rentMin(r)}" step="${r.unit === 'kg' ? 0.01 : 1}" value="${qty}" inputmode="decimal" oninput="rentCalcUpd('${artEsc(r.id)}')"></label>
         <div class="rn-sum" id="rn-sum">${rentSumHTML(c)}</div>
         <textarea id="rn-note" maxlength="250" rows="2" placeholder="מה רוצים להדפיס / לעשות, ומתי נוח לכם?"></textarea>
+        <button type="button" class="rn-go" onclick="rentRequest('${artEsc(r.id)}')">שליחת בקשת השכרה</button>
       </div>
-    </div>`, `<button type="button" class="ms-btn rn-go" onclick="rentRequest('${artEsc(r.id)}')">שליחת בקשת השכרה</button>`);
+    </div>`;
 }
 function rentSumHTML(c) {
   return `<span>שימוש <b>₪${c.sub.toLocaleString('he-IL')}</b></span><span>עמלת שירות <b>₪${c.fee.toLocaleString('he-IL')}</b></span><span class="rn-tot">סה״כ <b>₪${c.total.toLocaleString('he-IL')}</b></span>`;
@@ -32745,17 +32789,29 @@ function rentSumHTML(c) {
 function rentCalcUpd(id) {
   const r = rentFind(id), inp = document.getElementById('rn-qty'), out = document.getElementById('rn-sum');
   if (!r || !inp || !out) return;
-  out.innerHTML = rentSumHTML(rentCalc(r, Math.max(Number(r.min) || 1, Number(inp.value) || 0)));
+  const q = Math.max(rentMin(r), Number(inp.value) || 0);
+  out.innerHTML = rentSumHTML(rentCalc(r, q));
+  const gr = document.getElementById('rn-grams'); if (gr) gr.textContent = '(' + Math.round(q * 1000) + ' גרם)';
+}
+// בחירת סקיצה: מוסיפה את המשקל שלה לכמות ומוסיפה את שם הפריט להערה (לחיצה נוספת מסירה)
+function rentIdeaPick(id, ideaId, btn) {
+  const r = rentFind(id), i = RENT_IDEAS.find(x => x.id === ideaId), inp = document.getElementById('rn-qty'), note = document.getElementById('rn-note');
+  if (!r || !i || !inp) return;
+  btn.classList.toggle('on');
+  const picked = [...document.querySelectorAll('.rent-page .rn-pick .rn-idea.on')];
+  const grams = picked.reduce((a, b) => a + Number(b.dataset.g), 0);
+  inp.value = grams ? Math.max(rentMin(r), Math.round(grams) / 1000) : rentMin(r);
+  if (note) note.value = picked.length ? 'להדפיס: ' + picked.map(b => b.querySelector('b').textContent).join(', ') : '';
+  rentCalcUpd(id);
 }
 async function rentRequest(id) {
   const r = rentFind(id); if (!r) return;
-  const qty = Math.max(Number(r.min) || 1, Number((document.getElementById('rn-qty') || {}).value) || 0);
+  const qty = Math.max(rentMin(r), Number((document.getElementById('rn-qty') || {}).value) || 0);
   const note = String((document.getElementById('rn-note') || {}).value || '').trim();
   const c = rentCalc(r, qty);
   const u = auth.currentUser;
   if (!u || u.isAnonymous) { closeMSheet(); if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); glassBanner({ title: 'כמעט שם', sub: 'התחברו כדי לשלוח בקשת השכרה', icon: 'msg' }); return; }
   if (r.uid === u.uid) { showCopyToast('זה הציוד שלך 🙂'); return; }
-  closeMSheet();
   if (r.demo) { glassBanner({ title: 'הבקשה נשלחה (הדגמה)', sub: `${r.owner} · ₪${c.total.toLocaleString('he-IL')}`, icon: 'ok', ms: 2600 }); return; }
   await offerRecord({ kind: 'rent', toUid: r.uid, toName: r.owner, itemId: 'rent_' + r.id, title: r.title, price: c.total,
     note: `${qty} ${RENT_UNITS[r.unit] || ''} · שימוש ₪${c.sub} + עמלה ₪${c.fee}${note ? ' — ' + note : ''}` });
@@ -32772,7 +32828,7 @@ function rentPublishOpen() {
       <label>כותרת *<input id="rf-title" maxlength="80" placeholder="למשל: מדפסת תלת מימד Bambu A1 — הדפסות קטנות"></label>
       <div class="rn-row"><label>מחיר ₪ *<input id="rf-price" type="number" min="0" step="0.1" inputmode="decimal" placeholder="20"></label>
         <label>לפי<select id="rf-unit">${Object.entries(RENT_UNITS).map(([k, v]) => `<option value="${k}">${v.replace(/^ל/, '')}</option>`).join('')}</select></label>
-        <label>מינימום<input id="rf-min" type="number" min="1" value="1" inputmode="numeric"></label></div>
+        <label>מינימום<input id="rf-min" type="number" min="0.01" step="0.01" value="1" inputmode="decimal"></label></div>
       <label>עיר *<input id="rf-city" maxlength="30" placeholder="תל אביב"></label>
       <label>תיאור<textarea id="rf-desc" maxlength="600" rows="3" placeholder="מה הציוד יודע לעשות, מה כלול, איך מתאמים"></textarea></label>
       <label>פרטים חשובים (שורה לכל פרט)<textarea id="rf-specs" maxlength="400" rows="3" placeholder="שטח הדפסה 25×25 ס״מ&#10;PLA / PETG&#10;פיקדון ₪300"></textarea></label>
@@ -32794,7 +32850,7 @@ async function rentPublish(btn) {
   const title = v('rf-title'), price = Number(v('rf-price')), city = v('rf-city');
   if (!title || !city || !(price > 0)) { showCopyToast('צריך כותרת, מחיר ועיר'); return; }
   const rec = { uid: u.uid, owner: String((typeof liveChatUserName === 'function' && liveChatUserName()) || u.displayName || 'גולש/ת').slice(0, 60),
-    cat: v('rf-cat') || 'other', title: title.slice(0, 80), price: Math.round(price * 100) / 100, unit: v('rf-unit') || 'hour', min: Math.max(1, Math.round(Number(v('rf-min')) || 1)),
+    cat: v('rf-cat') || 'other', title: title.slice(0, 80), price: Math.round(price * 100) / 100, unit: v('rf-unit') || 'hour', min: Math.max(0.01, Math.round((Number(v('rf-min')) || 1) * 100) / 100),
     city: city.slice(0, 30), desc: v('rf-desc').slice(0, 600), specs: v('rf-specs').split('\n').map(s => s.trim()).filter(Boolean).slice(0, 8).map(s => s.slice(0, 60)), t: Date.now() };
   if (rentForm.img) rec.img = rentForm.img;
   btn.disabled = true; btn.textContent = 'מפרסם…';
@@ -32805,7 +32861,7 @@ async function rentPublish(btn) {
     glassBanner({ title: 'הציוד פורסם להשכרה', sub: rec.title, icon: 'ok', ms: 2400 });
   } catch (e) { btn.disabled = false; btn.textContent = 'פרסום'; showCopyToast('הפרסום נכשל — נסו שוב'); }
 }
-Object.assign(window, { buildRentPage, rentSet, rentOpen, rentCalcUpd, rentRequest, rentPublishOpen, rentPickImg, rentPublish });
+Object.assign(window, { rentBack, rentIdeaPick, buildRentPage, rentSet, rentOpen, rentCalcUpd, rentRequest, rentPublishOpen, rentPickImg, rentPublish });
 
 // ============================================================
 // תמכו / השקיעו בנו: תרומה בכל סכום, או השקעה לפי שווי חברה ₪100,000 (עד 10% מוצעים).
