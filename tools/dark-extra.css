@@ -672,3 +672,16 @@ html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not
 
 html.theme-dark .promo-row .ad-card.ad-invite { background: linear-gradient(135deg, #2a1a0e, #3a2210) !important; border-color: #5a3413 !important; color: #fdba74 !important; }
 html.theme-dark .promo-row .ad-card:not(.ad-invite) { background: #161616 !important; border-color: #2a2a2a !important; color: #ffffff !important; }
+html.theme-dark .rn-card, html.theme-dark .rn-cat, html.theme-dark .rn-q, html.theme-dark .rn-sel, html.theme-dark .rn-calc, html.theme-dark :is(.rn-calc, .rn-form) :is(input, select, textarea) { background: #161616 !important; border-color: #2a2a2a !important; color: #ffffff !important; }
+html.theme-dark .rn-cat.on { background: #ffffff !important; border-color: #ffffff !important; color: #111111 !important; }
+html.theme-dark .rn-cat.on small { color: #4b5563 !important; }
+html.theme-dark :is(.rn-price, .rn-sum .rn-tot) { color: #ffffff !important; }
+html.theme-dark .rn-specs li { background: #232323 !important; }
+html.theme-dark :is(.rn-head p, .rn-meta, .rn-owner, .rn-fine, .rn-sum, .rn-det-meta, .rn-det-owner small, .rn-price small) { color: #a8a8a8 !important; }
+html.theme-dark .inv-tabs { background: #1c1c1c !important; }
+html.theme-dark .inv-tab.on { background: #2a2a2a !important; color: #ffffff !important; }
+html.theme-dark .inv-tab { color: #a8a8a8 !important; }
+html.theme-dark .inv-amt, html.theme-dark :is(.inv-who, .inv-own) :is(input, textarea) { background: #161616 !important; border-color: #2a2a2a !important; color: #ffffff !important; }
+html.theme-dark .inv-amt.on { background: #ffffff !important; color: #111111 !important; border-color: #ffffff !important; }
+html.theme-dark .inv-pct-l b { color: #c4b5fd !important; }
+html.theme-dark .inv-fine { color: #a8a8a8 !important; }

@@ -290,7 +290,7 @@ let pages = defaultPages;
 let activePageId = 'page-photos-main';
 let topNavPages = ['page-ideas-main']; // העמודים שמופיעים בתפריט העליון
 // עמודים שמופיעים רק בסרגל הצד ("עמודי צד") ולא בתפריט העליון
-const SIDE_ONLY_PAGE_IDS = ['page-questions-main', 'page-offers-main', 'page-polls-main', 'page-photos-main', 'page-stories-main', 'page-friends-main', 'page-forums-main', 'page-products-main', 'page-blinddate-main', 'page-tinder-main'];
+const SIDE_ONLY_PAGE_IDS = ['page-questions-main', 'page-offers-main', 'page-polls-main', 'page-photos-main', 'page-stories-main', 'page-friends-main', 'page-forums-main', 'page-products-main', 'page-rent-main', 'page-blinddate-main', 'page-tinder-main'];
 // זיהוי עמוד צד לפי מזהה, תוכן או כותרת (העמודים עשויים להיווצר עם מזהים דינמיים)
 function isSideOnlyPage(p) {
   if (!p) return false;
@@ -853,6 +853,12 @@ function sanitizeToOnlyPhotosAndStories() {
   const _prPage = pages.find(p => p && p.id === 'page-products-main');
   if (!_prPage) pages.push({ id: 'page-products-main', title: 'מוצרים', content: _prContent });
   else { _prPage.content = _prContent; if (!_prPage.title) _prPage.title = 'מוצרים'; }
+
+  // עמוד "השכרת ציוד" — תמיד קיים, נבנה דינמית
+  const _rnContent = '<div class="rent-page" data-page-id="page-rent-main"></div>';
+  const _rnPage = pages.find(p => p && p.id === 'page-rent-main');
+  if (!_rnPage) pages.push({ id: 'page-rent-main', title: 'השכרת ציוד', content: _rnContent });
+  else { _rnPage.content = _rnContent; if (!_rnPage.title) _rnPage.title = 'השכרת ציוד'; }
 
   // עמוד "מנוי" — תמיד קיים
   const _subContent = '<div class="subscription-page" data-page-id="page-subscription-main"></div>';
@@ -1606,6 +1612,14 @@ function renderPage() {
       }
     }
 
+    // עמוד "השכרת ציוד" — נבנה דינמית
+    if (currentPage.id === 'page-rent-main' || (currentPage.content || '').includes('rent-page')) {
+      if (typeof buildRentPage === 'function') {
+        mainContent.innerHTML = buildRentPage();
+        try { window.scrollTo(0, 0); } catch (e) {}
+        return;
+      }
+    }
     // עמוד "מוצרים" — נבנה דינמית
     if (currentPage.id === 'page-products-main' || (currentPage.content || '').includes('products-page')) {
       if (typeof buildProductsPage === 'function') {
@@ -15702,6 +15716,7 @@ const HOME_TABS_ALL = {
   comics: ['קומיקס', "homeGo('comics')"],
   stories: ['סיפורים', "homeGo('stories')"],
   secondhand: ['מוצרי גולשים', "navigateToPage('page-secondhand-main')"],
+  rent: ['השכרת ציוד', "navigateToPage('page-rent-main')"],
   forums: ['פורומים', "navigateToPage('page-forums-main')"],
   news: ['חדשות', "navigateToPage('page-news-main')"],
   communities: ['קהילות', "navigateToPage('page-communities-main')"],
@@ -15767,6 +15782,8 @@ const SIDE_RAIL_ITEMS = [
   ['photos', 'תמונות גולשים', 'homeOpenPhotos()', '<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/>', false],
   ['store', 'החנות', "navigateToPage('page-products-main')", '<path d="M5 8h14l-1.2 11.1a1 1 0 0 1-1 .9H7.2a1 1 0 0 1-1-.9z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/>', false],
   ['secondhand', 'מוצרי גולשים', "navigateToPage('page-secondhand-main')", '<path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.5"/>', false],
+  ['rent', 'השכרת ציוד', "navigateToPage('page-rent-main')", '<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/>', false],
+  ['invest', 'תמכו / השקיעו בנו', "investOpen('invest')", '<path d="M12 20.5s-7.5-4.6-9.2-9.3C1.7 8 3.6 4.5 7.1 4.5c2 0 3.4 1.1 4.9 2.9 1.5-1.8 2.9-2.9 4.9-2.9 3.5 0 5.4 3.5 4.3 6.7-1.7 4.7-9.2 9.3-9.2 9.3z"/>', false],
   ['shop', 'מנוי ושדרוגים', "navigateToPage('page-subscription-main')", '<path d="M3 4h2l2.4 11.2a1 1 0 0 0 1 .8h9.2a1 1 0 0 0 1-.8L21 8H6.2"/><circle cx="9.5" cy="20" r="1.5"/><circle cx="17.5" cy="20" r="1.5"/>', false],
 ];
 function sideRailHTML() {
@@ -15793,7 +15810,7 @@ function renderSideRail() {
 function sideRailSync() {
   const el = document.getElementById('side-rail'); if (!el) return;
   const id = (typeof activePageId !== 'undefined' && activePageId) || '';
-  const map = { 'page-photos-main': 'photos', 'page-products-main': 'store', 'page-secondhand-main': 'secondhand', 'page-stats-main': 'stats', 'page-admin-main': 'stats', 'page-home-feed': 'home', 'page-feed-main': 'feed', 'page-communities-main': 'cats', 'page-subscription-main': 'shop', 'page-news-main': 'news' };
+  const map = { 'page-photos-main': 'photos', 'page-products-main': 'store', 'page-secondhand-main': 'secondhand', 'page-rent-main': 'rent', 'page-stats-main': 'stats', 'page-admin-main': 'stats', 'page-home-feed': 'home', 'page-feed-main': 'feed', 'page-communities-main': 'cats', 'page-subscription-main': 'shop', 'page-news-main': 'news' };
   el.querySelectorAll('.srail-btn').forEach(b => b.classList.toggle('on', b.dataset.rail === (map[id] || (id ? '' : 'home'))));
 }
 window.sideRailSync = sideRailSync;
@@ -22837,6 +22854,7 @@ onPublicSiteValue((data) => {
     if (!pList.find(p => p && p.id === 'page-forums-main')) pList.push({ id: 'page-forums-main', title: 'פורומים', content: '<div class="forums-page" data-page-id="page-forums-main"></div>' });
     if (!pList.find(p => p && p.id === 'page-polls-main')) pList.push({ id: 'page-polls-main', title: 'סקרים', content: '<div class="polls-page" data-page-id="page-polls-main"></div>' });
     if (!pList.find(p => p && p.id === 'page-products-main')) pList.push({ id: 'page-products-main', title: 'מוצרים', content: '<div class="products-page" data-page-id="page-products-main"></div>' });
+    if (!pList.find(p => p && p.id === 'page-rent-main')) pList.push({ id: 'page-rent-main', title: 'השכרת ציוד', content: '<div class="rent-page" data-page-id="page-rent-main"></div>' });
     const _cp = pList.find(p => p && p.id === 'page-communities-main');
     const _cpc = '<div class="communities-page" data-page-id="page-communities-main"></div>';
     if (!_cp) {
@@ -27535,6 +27553,7 @@ function buildSiteFooterHTML() {
             <ul>
               <li><a href="#" onclick="event.preventDefault(); goToHomePage()">דף הבית</a></li>
               <li><a href="#" onclick="event.preventDefault(); document.querySelector('.a11y-launcher')?.click()">הגדרות נגישות</a></li>
+              <li><a href="#" onclick="event.preventDefault(); investOpen('invest')">💛 תמכו / השקיעו בנו</a></li>
             </ul>
           </div>
           ${contentLinks ? `<div class="site-footer-col"><h4>תוכן</h4><ul>${contentLinks}</ul></div>` : ''}
@@ -28763,7 +28782,7 @@ function ofpListHTML() {
     const myTurn = offersMyTurn(o);
     const hist = Array.isArray(o.history) ? o.history.slice(-6) : [];
     const priceTxt = o.price ? `₪${Number(o.price).toLocaleString('he-IL')}${o.kind === 'loan' ? (o.priceUnit ? ' ' + o.priceUnit : '') : ''}` : '';
-    const sub = [priceTxt, o.title || '', o.kind === 'loan' ? 'השאלה' : ''].filter(Boolean).join(' · ');
+    const sub = [priceTxt, o.title || '', o.kind === 'loan' ? 'השאלה' : o.kind === 'rent' ? 'השכרה' : ''].filter(Boolean).join(' · ');
     const lastNote = hist.length ? (hist[hist.length - 1].note || '') : (o.note || '');
     const ic = {
       no: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>',
@@ -32572,3 +32591,277 @@ function ckPay(btn) {
   }, 1400);
 }
 Object.assign(window, { ckClose, ckQty, ckCoupon, ckNext, ckPay, ckRender });
+
+// ============================================================
+// השכרת ציוד (כמו יד 2): כל אחד מפרסם ציוד שיש לו — מדפסת, מדפסת תלת מימד, כלי עבודה — וגובה עמלה על השימוש.
+// מודעות ב-website/rentals (כל אחד כותב רק את שלו); בקשת השכרה נשמרת כעסקה (website/deals, kind: 'rent') מול בעל הציוד.
+// ============================================================
+const RENT_CATS = [
+  { id: 'all', name: 'הכל', ic: '✨' },
+  { id: '3d', name: 'מדפסות תלת מימד', ic: '🧊' },
+  { id: 'printer', name: 'מדפסות', ic: '🖨️' },
+  { id: 'tools', name: 'כלי עבודה', ic: '🛠️' },
+  { id: 'photo', name: 'צילום וסאונד', ic: '📷' },
+  { id: 'other', name: 'אחר', ic: '📦' }
+];
+const RENT_UNITS = { hour: 'לשעה', day: 'ליום', print: 'להדפסה', gram: 'לגרם', page: 'לעמוד' };
+const RENT_SITE_FEE = 0.05;   // עמלת האתר על כל השכרה (5%), מוצגת לשוכר בפירוט המחיר
+// דוגמאות: מדפסות תלת מימד אצל גולשים (מוצגות כל עוד אין מודעות אמיתיות בקטגוריה)
+const RENT_DEMO = [
+  { id: 'd1', demo: true, cat: '3d', title: 'Bambu Lab X1 Carbon — הדפסה מהירה ב-4 צבעים', price: 1.2, unit: 'gram', min: 30, city: 'תל אביב', owner: 'רון כהן', rating: 4.9, reviews: 38, t: Date.now() - 2 * 3600e3,
+    desc: 'מדפסת מהירה עם AMS לארבעה צבעים. שולחים קובץ STL/3MF, אני מדפיס ומתאם איסוף. מתאים לאבי־טיפוס, מתנות ודגמים.', specs: ['שטח הדפסה 25×25×25 ס״מ', 'PLA / PETG / TPU', 'עד 4 צבעים בהדפסה אחת', 'זמן אספקה: 1–2 ימים'], g: ['#0f172a', '#334155'] },
+  { id: 'd2', demo: true, cat: '3d', title: 'Prusa MK4 — שימוש עצמי בסדנה, כולל הדרכה', price: 25, unit: 'hour', min: 2, city: 'חיפה', owner: 'מאיה לוי', rating: 4.8, reviews: 21, t: Date.now() - 6 * 3600e3,
+    desc: 'באים לסדנה ומדפיסים בעצמכם. בפעם הראשונה — חצי שעה הדרכה בחינם. פילמנט PLA כלול במחיר.', specs: ['שטח הדפסה 25×21×22 ס״מ', 'PLA כלול, PETG בתוספת', 'חניה חינם ליד הסדנה'], g: ['#7c2d12', '#ea580c'] },
+  { id: 'd3', demo: true, cat: '3d', title: 'Elegoo Saturn 4 Ultra — הדפסת שרף ברזולוציה גבוהה', price: 45, unit: 'print', min: 1, city: 'ירושלים', owner: 'דניאל אברהם', rating: 5.0, reviews: 12, t: Date.now() - 26 * 3600e3,
+    desc: 'הדפסת שרף לפרטים קטנים במיוחד: מיניאטורות, תכשיטים ודגמים דנטליים. כולל שטיפה וייבוש UV.', specs: ['רזולוציה 12K', 'שרף אפור / שקוף', 'עד 21×13×22 ס״מ'], g: ['#3b0764', '#7e22ce'] },
+  { id: 'd4', demo: true, cat: '3d', title: 'Creality K1 Max — לחלקים גדולים', price: 0.9, unit: 'gram', min: 50, city: 'ראשון לציון', owner: 'אלון מזרחי', rating: 4.6, reviews: 17, t: Date.now() - 2 * 864e5,
+    desc: 'שטח הדפסה גדול לחלקים בגודל מלא: מעמדים, קופסאות, חלקי רחפן. אפשר גם משלוח עד הבית.', specs: ['שטח הדפסה 30×30×30 ס״מ', 'PLA / PETG / ABS', 'משלוח בתוספת ₪25'], g: ['#064e3b', '#059669'] },
+  { id: 'd5', demo: true, cat: '3d', title: 'Anycubic Kobra 3 Combo — השכרה הביתה לסוף שבוע', price: 120, unit: 'day', min: 2, city: 'באר שבע', owner: 'נועה פרץ', rating: 4.7, reviews: 9, t: Date.now() - 3 * 864e5,
+    desc: 'לוקחים את המדפסת הביתה ליומיים ומעלה. מגיעה מכוילת, עם 1 ק״ג PLA ומדריך קצר. פיקדון ₪500 שמוחזר בהחזרה.', specs: ['4 צבעים', 'כולל 1 ק״ג PLA', 'פיקדון ₪500'], g: ['#1e3a8a', '#2563eb'] },
+  { id: 'd6', demo: true, cat: '3d', title: 'Bambu Lab A1 mini — הדפסות קטנות ומהירות', price: 15, unit: 'print', min: 1, city: 'נתניה', owner: 'עידו שלום', rating: 4.9, reviews: 44, t: Date.now() - 5 * 864e5,
+    desc: 'מחזיקי מפתחות, שמות, חלקי חילוף קטנים. שולחים קובץ או בוחרים דגם מוכן — מוכן תוך כמה שעות.', specs: ['עד 18×18×18 ס״מ', 'PLA במגוון צבעים', 'איסוף עצמי'], g: ['#831843', '#db2777'] }
+];
+let rentData = null, rentUnsub = null;
+const rentUI = { cat: 'all', q: '', city: 'all', sort: 'new' };
+function rentSubscribe() {
+  if (rentUnsub) return;
+  try {
+    rentUnsub = onValue(ref(db, 'website/rentals'), snap => {
+      const v = snap.val() || {};
+      rentData = Object.entries(v).map(([id, r]) => Object.assign({ id }, r)).filter(r => r && r.title && r.active !== false);
+      rentRender();
+    }, () => { rentData = []; rentRender(); });
+  } catch (e) { rentData = []; }
+}
+function rentAll() {
+  const real = rentData || [];
+  const demo = RENT_DEMO.filter(d => !real.some(r => r.cat === d.cat));
+  return real.concat(demo);
+}
+function rentCatOf(id) { return RENT_CATS.find(c => c.id === id) || RENT_CATS[RENT_CATS.length - 1]; }
+function rentPriceTxt(r) { return `₪${Number(r.price).toLocaleString('he-IL', { maximumFractionDigits: 2 })} <small>${RENT_UNITS[r.unit] || ''}</small>`; }
+function rentAgo(t) {
+  const m = Math.max(1, Math.round((Date.now() - (t || 0)) / 6e4));
+  return m < 60 ? `לפני ${m} דק׳` : m < 1440 ? `לפני ${Math.round(m / 60)} שע׳` : `לפני ${Math.round(m / 1440)} ימים`;
+}
+function rentThumb(r, big) {
+  const c = rentCatOf(r.cat), g = r.g || ['#1f2937', '#4b5563'];
+  return r.img ? `<img src="${escHtml(r.img)}" alt="" loading="lazy">`
+    : `<span class="rn-ph" style="background:linear-gradient(140deg,${g[0]},${g[1]})"><b>${c.ic}</b>${big ? `<i>${escHtml(c.name)}</i>` : ''}</span>`;
+}
+function rentList() {
+  const q = rentUI.q.trim().toLowerCase();
+  let l = rentAll().filter(r => (rentUI.cat === 'all' || r.cat === rentUI.cat) && (rentUI.city === 'all' || r.city === rentUI.city)
+    && (!q || [r.title, r.desc, r.city, r.owner].join(' ').toLowerCase().includes(q)));
+  if (rentUI.sort === 'cheap') l.sort((a, b) => a.price - b.price);
+  else if (rentUI.sort === 'rating') l.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+  else l.sort((a, b) => (b.t || 0) - (a.t || 0));
+  return l;
+}
+function rentCardHTML(r) {
+  return `<button type="button" class="rn-card" onclick="rentOpen('${artEsc(r.id)}')">
+    <span class="rn-img">${rentThumb(r)}${r.demo ? '<em class="rn-demo">דוגמה</em>' : ''}</span>
+    <span class="rn-body">
+      <span class="rn-price">${rentPriceTxt(r)}</span>
+      <b class="rn-title">${escHtml(r.title)}</b>
+      <span class="rn-meta">📍 ${escHtml(r.city || '')} · ${rentAgo(r.t)}</span>
+      <span class="rn-owner">${escHtml(r.owner || '')}${r.rating ? ` · ⭐ ${r.rating}${r.reviews ? ` (${r.reviews})` : ''}` : ''}</span>
+    </span>
+  </button>`;
+}
+function rentGridHTML() {
+  const l = rentList();
+  return l.length ? l.map(rentCardHTML).join('') : `<div class="rn-empty">אין עדיין ציוד בקטגוריה הזאת.<br><button type="button" class="rn-pub" onclick="rentPublishOpen()">היו הראשונים לפרסם</button></div>`;
+}
+function rentViewHTML() {
+  const cities = [...new Set(rentAll().map(r => r.city).filter(Boolean))].sort();
+  const count = id => id === 'all' ? rentAll().length : rentAll().filter(r => r.cat === id).length;
+  return `<header class="rn-head">
+      <div><h1>השכרת ציוד 🔧</h1><p>מדפסות, מדפסות תלת מימד וכלי עבודה של גולשים — משלמים רק על השימוש.</p></div>
+      <button type="button" class="rn-pub" onclick="rentPublishOpen()">+ פרסמו ציוד להשכרה</button>
+    </header>
+    <div class="rn-bar">
+      <input type="search" class="rn-q" placeholder="מה צריך? למשל: מדפסת תלת מימד בתל אביב" value="${escHtml(rentUI.q)}" oninput="rentSet('q', this.value)">
+      <select class="rn-sel" onchange="rentSet('city', this.value)" aria-label="עיר"><option value="all">כל הארץ</option>${cities.map(c => `<option${rentUI.city === c ? ' selected' : ''}>${escHtml(c)}</option>`).join('')}</select>
+      <select class="rn-sel" onchange="rentSet('sort', this.value)" aria-label="מיון">${[['new', 'הכי חדש'], ['cheap', 'הכי זול'], ['rating', 'דירוג גבוה']].map(([v, t]) => `<option value="${v}"${rentUI.sort === v ? ' selected' : ''}>${t}</option>`).join('')}</select>
+    </div>
+    <nav class="rn-cats">${RENT_CATS.map(c => `<button type="button" class="rn-cat${rentUI.cat === c.id ? ' on' : ''}" onclick="rentSet('cat', '${c.id}')">${c.ic} ${c.name} <small>${count(c.id)}</small></button>`).join('')}</nav>
+    <div class="rn-grid">${rentGridHTML()}</div>
+    <p class="rn-fine">איך זה עובד: בוחרים ציוד ← שולחים בקשה עם כמות/זמן ← בעל הציוד מאשר ומתאמים איסוף. התשלום לבעל הציוד, ועמלת שירות של ${Math.round(RENT_SITE_FEE * 100)}% לאתר.</p>`;
+}
+function buildRentPage() {
+  setTimeout(rentSubscribe, 0);
+  return `<div class="rent-page" data-page-id="page-rent-main"><div class="rn-inner">${rentViewHTML()}</div></div>`;
+}
+function rentRender(gridOnly) {
+  const el = typeof mainContent !== 'undefined' && mainContent && mainContent.querySelector('.rent-page .rn-inner');
+  if (!el) return;
+  if (gridOnly) { const g = el.querySelector('.rn-grid'); if (g) g.innerHTML = rentGridHTML(); return; }
+  el.innerHTML = rentViewHTML();
+}
+function rentSet(k, v) { rentUI[k] = v; rentRender(k === 'q'); }
+function rentFind(id) { return rentAll().find(r => r.id === id); }
+function rentCalc(r, qty) {
+  const sub = Math.round(r.price * qty * 100) / 100, fee = Math.round(sub * RENT_SITE_FEE * 100) / 100;
+  return { sub, fee, total: Math.round((sub + fee) * 100) / 100 };
+}
+function rentOpen(id) {
+  const r = rentFind(id); if (!r) return;
+  const qty = Math.max(1, Number(r.min) || 1);
+  const c = rentCalc(r, qty);
+  openMSheet(r.title, `<div class="rn-det">
+      <div class="rn-det-img">${rentThumb(r, true)}${r.demo ? '<em class="rn-demo">דוגמה</em>' : ''}</div>
+      <div class="rn-det-price">${rentPriceTxt(r)}${r.min > 1 ? `<span>מינימום ${r.min}</span>` : ''}</div>
+      <div class="rn-det-meta">📍 ${escHtml(r.city || '')} · ${escHtml(rentCatOf(r.cat).name)} · ${rentAgo(r.t)}</div>
+      <div class="rn-det-owner"><span class="rn-av">${escHtml((r.owner || '?').slice(0, 1))}</span><span><b>${escHtml(r.owner || '')}</b><small>${r.rating ? `⭐ ${r.rating} · ${r.reviews || 0} השכרות` : 'משכיר/ה חדש/ה'}</small></span></div>
+      ${r.desc ? `<p class="rn-det-desc">${escHtml(r.desc)}</p>` : ''}
+      ${(r.specs || []).length ? `<ul class="rn-specs">${r.specs.map(s => `<li>${escHtml(s)}</li>`).join('')}</ul>` : ''}
+      <div class="rn-calc">
+        <label>כמה ${escHtml((RENT_UNITS[r.unit] || '').replace(/^ל/, '')) || 'יחידות'}?<input id="rn-qty" type="number" min="${Number(r.min) || 1}" value="${qty}" inputmode="decimal" oninput="rentCalcUpd('${artEsc(r.id)}')"></label>
+        <div class="rn-sum" id="rn-sum">${rentSumHTML(c)}</div>
+        <textarea id="rn-note" maxlength="250" rows="2" placeholder="מה רוצים להדפיס / לעשות, ומתי נוח לכם?"></textarea>
+      </div>
+    </div>`, `<button type="button" class="ms-btn rn-go" onclick="rentRequest('${artEsc(r.id)}')">שליחת בקשת השכרה</button>`);
+}
+function rentSumHTML(c) {
+  return `<span>שימוש <b>₪${c.sub.toLocaleString('he-IL')}</b></span><span>עמלת שירות <b>₪${c.fee.toLocaleString('he-IL')}</b></span><span class="rn-tot">סה״כ <b>₪${c.total.toLocaleString('he-IL')}</b></span>`;
+}
+function rentCalcUpd(id) {
+  const r = rentFind(id), inp = document.getElementById('rn-qty'), out = document.getElementById('rn-sum');
+  if (!r || !inp || !out) return;
+  out.innerHTML = rentSumHTML(rentCalc(r, Math.max(Number(r.min) || 1, Number(inp.value) || 0)));
+}
+async function rentRequest(id) {
+  const r = rentFind(id); if (!r) return;
+  const qty = Math.max(Number(r.min) || 1, Number((document.getElementById('rn-qty') || {}).value) || 0);
+  const note = String((document.getElementById('rn-note') || {}).value || '').trim();
+  const c = rentCalc(r, qty);
+  const u = auth.currentUser;
+  if (!u || u.isAnonymous) { closeMSheet(); if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); glassBanner({ title: 'כמעט שם', sub: 'התחברו כדי לשלוח בקשת השכרה', icon: 'msg' }); return; }
+  if (r.uid === u.uid) { showCopyToast('זה הציוד שלך 🙂'); return; }
+  closeMSheet();
+  if (r.demo) { glassBanner({ title: 'הבקשה נשלחה (הדגמה)', sub: `${r.owner} · ₪${c.total.toLocaleString('he-IL')}`, icon: 'ok', ms: 2600 }); return; }
+  await offerRecord({ kind: 'rent', toUid: r.uid, toName: r.owner, itemId: 'rent_' + r.id, title: r.title, price: c.total,
+    note: `${qty} ${RENT_UNITS[r.unit] || ''} · שימוש ₪${c.sub} + עמלה ₪${c.fee}${note ? ' — ' + note : ''}` });
+  if (typeof trackEvent === 'function') trackEvent('rent_request');
+  glassBanner({ title: 'בקשת ההשכרה נשלחה', sub: `${r.owner} יקבל/תקבל אותה בהצעות שלו/ה`, icon: 'ok', ms: 2600 });
+}
+let rentForm = { img: '' };
+function rentPublishOpen() {
+  const u = auth.currentUser;
+  if (!u || u.isAnonymous) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); glassBanner({ title: 'כמעט שם', sub: 'התחברו כדי לפרסם ציוד להשכרה', icon: 'msg' }); return; }
+  rentForm = { img: '' };
+  openMSheet('פרסום ציוד להשכרה', `<div class="rn-form">
+      <label>קטגוריה<select id="rf-cat">${RENT_CATS.filter(c => c.id !== 'all').map(c => `<option value="${c.id}">${c.ic} ${c.name}</option>`).join('')}</select></label>
+      <label>כותרת *<input id="rf-title" maxlength="80" placeholder="למשל: מדפסת תלת מימד Bambu A1 — הדפסות קטנות"></label>
+      <div class="rn-row"><label>מחיר ₪ *<input id="rf-price" type="number" min="0" step="0.1" inputmode="decimal" placeholder="20"></label>
+        <label>לפי<select id="rf-unit">${Object.entries(RENT_UNITS).map(([k, v]) => `<option value="${k}">${v.replace(/^ל/, '')}</option>`).join('')}</select></label>
+        <label>מינימום<input id="rf-min" type="number" min="1" value="1" inputmode="numeric"></label></div>
+      <label>עיר *<input id="rf-city" maxlength="30" placeholder="תל אביב"></label>
+      <label>תיאור<textarea id="rf-desc" maxlength="600" rows="3" placeholder="מה הציוד יודע לעשות, מה כלול, איך מתאמים"></textarea></label>
+      <label>פרטים חשובים (שורה לכל פרט)<textarea id="rf-specs" maxlength="400" rows="3" placeholder="שטח הדפסה 25×25 ס״מ&#10;PLA / PETG&#10;פיקדון ₪300"></textarea></label>
+      <label class="rn-file">📷 תמונה (לא חובה)<input type="file" accept="image/*" onchange="rentPickImg(this)"><span id="rf-img-st"></span></label>
+    </div>`, `<button type="button" class="ms-btn rn-go" onclick="rentPublish(this)">פרסום</button>`);
+}
+async function rentPickImg(inp) {
+  const f = inp.files && inp.files[0]; if (!f) return;
+  const st = document.getElementById('rf-img-st');
+  try {
+    rentForm.img = await artCompressImage(f, 900, 0.78);
+    if (rentForm.img.length > 380000) rentForm.img = await artCompressImage(f, 600, 0.7);
+    if (st) st.textContent = '✓ התמונה מוכנה';
+  } catch (e) { rentForm.img = ''; if (st) st.textContent = 'לא הצלחנו לטעון את התמונה'; }
+}
+async function rentPublish(btn) {
+  const u = auth.currentUser; if (!u || u.isAnonymous) return;
+  const v = id => String((document.getElementById(id) || {}).value || '').trim();
+  const title = v('rf-title'), price = Number(v('rf-price')), city = v('rf-city');
+  if (!title || !city || !(price > 0)) { showCopyToast('צריך כותרת, מחיר ועיר'); return; }
+  const rec = { uid: u.uid, owner: String((typeof liveChatUserName === 'function' && liveChatUserName()) || u.displayName || 'גולש/ת').slice(0, 60),
+    cat: v('rf-cat') || 'other', title: title.slice(0, 80), price: Math.round(price * 100) / 100, unit: v('rf-unit') || 'hour', min: Math.max(1, Math.round(Number(v('rf-min')) || 1)),
+    city: city.slice(0, 30), desc: v('rf-desc').slice(0, 600), specs: v('rf-specs').split('\n').map(s => s.trim()).filter(Boolean).slice(0, 8).map(s => s.slice(0, 60)), t: Date.now() };
+  if (rentForm.img) rec.img = rentForm.img;
+  btn.disabled = true; btn.textContent = 'מפרסם…';
+  try {
+    await set(push(ref(db, 'website/rentals')), rec);
+    closeMSheet(); rentUI.cat = rec.cat; rentRender();
+    if (typeof trackEvent === 'function') trackEvent('rent_publish');
+    glassBanner({ title: 'הציוד פורסם להשכרה', sub: rec.title, icon: 'ok', ms: 2400 });
+  } catch (e) { btn.disabled = false; btn.textContent = 'פרסום'; showCopyToast('הפרסום נכשל — נסו שוב'); }
+}
+Object.assign(window, { buildRentPage, rentSet, rentOpen, rentCalcUpd, rentRequest, rentPublishOpen, rentPickImg, rentPublish });
+
+// ============================================================
+// תמכו / השקיעו בנו: תרומה בכל סכום, או השקעה לפי שווי חברה ₪100,000 (עד 10% מוצעים).
+// כרגע זו הבעת עניין בלבד → website/invest_requests (רק המנהל קורא); חוזרים למשקיע עם הסכם ותשלום.
+// ============================================================
+const INVEST_CFG = { valuation: 100000, maxPct: 10, minPct: 0.5, step: 0.5, donate: [20, 50, 100, 250] };
+let invState = { tab: 'invest', pct: 1, amount: 50 };
+const invMoney = n => '₪' + Math.round(n).toLocaleString('he-IL');
+function investOpen(tab) {
+  if (tab) invState.tab = tab;
+  openMSheet('תמכו או השקיעו בנו', `<div class="inv" id="inv-box">${investBodyHTML()}</div>`, `<button type="button" class="ms-btn inv-go" onclick="investSend(this)">${invState.tab === 'invest' ? 'שליחת הבעת עניין' : 'אני רוצה לתרום'}</button>`);
+}
+function investBodyHTML() {
+  const v = INVEST_CFG.valuation, pct = invState.pct, amt = v * pct / 100;
+  const tabs = `<div class="inv-tabs">${[['invest', '📈 השקעה'], ['donate', '💛 תרומה']].map(([k, t]) => `<button type="button" class="inv-tab${invState.tab === k ? ' on' : ''}" onclick="investTab('${k}')">${t}</button>`).join('')}</div>`;
+  const who = `<div class="inv-who">
+      <input id="inv-name" maxlength="60" placeholder="שם מלא *" autocomplete="name">
+      <input id="inv-phone" maxlength="20" inputmode="tel" placeholder="טלפון *" autocomplete="tel">
+      <input id="inv-email" maxlength="120" type="email" placeholder="מייל" autocomplete="email">
+      <textarea id="inv-note" maxlength="300" rows="2" placeholder="משהו שתרצו להוסיף?"></textarea>
+    </div>`;
+  if (invState.tab === 'donate') return `${tabs}
+    <p class="inv-lead">אוהבים את האתר? כל תרומה עוזרת לנו לשמור אותו חינמי, מהיר ובלי פרסומות מעצבנות.</p>
+    <div class="inv-amts">${INVEST_CFG.donate.map(a => `<button type="button" class="inv-amt${invState.amount === a ? ' on' : ''}" onclick="investAmt(${a})">${invMoney(a)}</button>`).join('')}
+      <label class="inv-own">סכום אחר<input type="number" min="5" inputmode="numeric" value="${INVEST_CFG.donate.includes(invState.amount) ? '' : invState.amount}" oninput="investAmt(this.value, true)"></label></div>
+    ${who}
+    <p class="inv-fine">אחרי השליחה נחזור אליכם עם קישור תשלום מאובטח. התרומה אינה מקנה זכויות בחברה.</p>`;
+  return `${tabs}
+    <div class="inv-val"><span>שווי החברה</span><b>${invMoney(v)}</b><small>מוצעים עד ${INVEST_CFG.maxPct}% · ${invMoney(v / 100)} לכל 1%</small></div>
+    <label class="inv-pct-l">כמה אחוזים תרצו לקנות?<b id="inv-pct-v">${pct}%</b></label>
+    <input type="range" class="inv-range" min="${INVEST_CFG.minPct}" max="${INVEST_CFG.maxPct}" step="${INVEST_CFG.step}" value="${pct}" oninput="investPct(this.value)">
+    <div class="inv-chips">${[1, 2.5, 5, 10].map(p => `<button type="button" class="inv-amt${pct === p ? ' on' : ''}" onclick="investPct(${p}, true)">${p}%</button>`).join('')}</div>
+    <div class="inv-sum"><span>סכום ההשקעה</span><b id="inv-amt-v">${invMoney(amt)}</b></div>
+    ${who}
+    <p class="inv-fine">זו הבעת עניין בלבד ולא הצעה לציבור. ההשקעה תתבצע רק בהסכם חתום, במסגרת הפטורים בחוק ניירות ערך (עד 35 משקיעים), ובכפוף לאישור שלנו.</p>`;
+}
+function investKeep() { const o = {}; ['name', 'phone', 'email', 'note'].forEach(k => { const el = document.getElementById('inv-' + k); if (el) o[k] = el.value; }); return o; }
+function investRerender() {
+  const keep = investKeep(), box = document.getElementById('inv-box'); if (!box) return;
+  box.innerHTML = investBodyHTML();
+  Object.entries(keep).forEach(([k, v]) => { const el = document.getElementById('inv-' + k); if (el) el.value = v; });
+  const go = document.querySelector('#m-sheet .inv-go'); if (go) go.textContent = invState.tab === 'invest' ? 'שליחת הבעת עניין' : 'אני רוצה לתרום';
+}
+function investTab(t) { invState.tab = t; investRerender(); }
+function investAmt(a, typed) { invState.amount = Math.max(0, Math.round(Number(a) || 0)); if (!typed) investRerender(); }
+function investPct(p, rerender) {
+  invState.pct = Math.min(INVEST_CFG.maxPct, Math.max(INVEST_CFG.minPct, Number(p) || INVEST_CFG.minPct));
+  if (rerender) { investRerender(); return; }
+  const pv = document.getElementById('inv-pct-v'), av = document.getElementById('inv-amt-v');
+  if (pv) pv.textContent = invState.pct + '%';
+  if (av) av.textContent = invMoney(INVEST_CFG.valuation * invState.pct / 100);
+  document.querySelectorAll('#inv-box .inv-chips .inv-amt').forEach(b => b.classList.toggle('on', parseFloat(b.textContent) === invState.pct));
+}
+async function investSend(btn) {
+  const f = investKeep(), name = (f.name || '').trim(), phone = (f.phone || '').trim(), email = (f.email || '').trim();
+  if (!name || !/^[0-9+\-\s]{7,20}$/.test(phone)) { showCopyToast('צריך שם וטלפון תקין'); return; }
+  if (email && !/^[^\s@]{1,64}@[^\s@]{1,100}\.[a-z]{2,}$/i.test(email)) { showCopyToast('כתובת המייל לא תקינה'); return; }
+  const inv = invState.tab === 'invest';
+  const amount = inv ? INVEST_CFG.valuation * invState.pct / 100 : invState.amount;
+  if (!(amount >= 5)) { showCopyToast('בחרו סכום'); return; }
+  btn.disabled = true; btn.textContent = 'שולח…';
+  try {
+    if (!auth.currentUser && typeof ensureGuestSignedIn === 'function') await ensureGuestSignedIn();
+    const u = auth.currentUser; if (!u) throw new Error('auth');
+    const rec = { t: Date.now(), uid: u.uid, kind: inv ? 'invest' : 'donate', amount: Math.round(amount), name: name.slice(0, 60), phone: phone.slice(0, 20) };
+    if (inv) { rec.pct = invState.pct; rec.valuation = INVEST_CFG.valuation; }
+    if (email) rec.email = email.slice(0, 120);
+    if ((f.note || '').trim()) rec.note = f.note.trim().slice(0, 300);
+    await set(push(ref(db, 'website/invest_requests')), rec);
+    if (typeof trackEvent === 'function') trackEvent(inv ? 'invest_interest' : 'donate_interest');
+    closeMSheet();
+    glassBanner({ title: inv ? 'תודה! קיבלנו את הבעת העניין' : 'תודה על התמיכה 💛', sub: inv ? `${invState.pct}% · ${invMoney(amount)} — נחזור אליכם בקרוב` : `${invMoney(amount)} — נשלח לכם קישור תשלום`, icon: 'ok', ms: 3200 });
+  } catch (e) { btn.disabled = false; btn.textContent = inv ? 'שליחת הבעת עניין' : 'אני רוצה לתרום'; showCopyToast('השליחה נכשלה — נסו שוב'); }
+}
+Object.assign(window, { investOpen, investTab, investAmt, investPct, investSend });
