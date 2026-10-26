@@ -7038,6 +7038,7 @@ function _storyOpenDetailImpl(id) {
   if (!s) return;
   if (s) mediaApply(s);
   if (typeof addToWatchHistory === 'function') addToWatchHistory({ ...s, type: 'story' });
+  try { recoTrack(s, 'view'); } catch (e) {}
 
   const validImages = s.images ? s.images.filter(img => !!img) : (s.image ? [s.image] : []);
 
@@ -15916,11 +15917,7 @@ function buildPhotosPage(albums, section) {
   });
 
   // 2. שורה שנייה: בשבילך (נעוצים קודם, ואז המלצות)
-  const forYouAlbums = [...albums].sort((a, b) => {
-    if (a.pinned && !b.pinned) return -1;
-    if (!a.pinned && b.pinned) return 1;
-    return (b.likes || 0) - (a.likes || 0);
-  });
+  const forYouAlbums = (() => { try { return feedRank(albums); } catch (e) { return [...albums].sort((a, b) => (b.likes || 0) - (a.likes || 0)); } })();
 
   // 3. שורה שלישית: הכי הרבה לייקים וצפיות (מיון משוקלל: צפייה 1 נקודה + לייק 1 נקודה)
   const mostPopularAlbums = [...albums].sort((a, b) => {
@@ -16596,6 +16593,66 @@ function recoRecommend(current, albums, k = 6) {
   return out;
 }
 window.recoRecommend = recoRecommend;
+
+// ============================================================
+// אלגוריתם פיד בסגנון פייסבוק (EdgeRank מודרני), רץ בדפדפן:
+// ציון = קרבה ליוצר × משקל התוכן × דעיכה בזמן + מהירות מעורבות (לייקים/צפיות ביחס לגיל הפוסט)
+// ואז גיוון: לא אותו יוצר פעמיים ברצף, ערבוב סוגי תוכן, מה שנצפה לאחרונה יורד, "הסתרה" נלמדת.
+// ============================================================
+const FEED_HALF_LIFE_H = 36;
+function feedHidden() { try { return JSON.parse(localStorage.getItem('feed_hidden_v1') || '{}') || {}; } catch (e) { return {}; } }
+function feedHide(id, btn) {
+  const h = feedHidden(); h.items = h.items || {}; h.items[id] = Date.now();
+  const x = (typeof feedAllItems === 'function' ? feedAllItems() : []).find(i => i.id === id);
+  if (x && x.authorId) { h.authors = h.authors || {}; h.authors[x.authorId] = (h.authors[x.authorId] || 0) + 1; }
+  try { localStorage.setItem('feed_hidden_v1', JSON.stringify(h)); } catch (e) {}
+  const card = btn && btn.closest('.pc-post');
+  if (card) card.outerHTML = `<div class="pc-hidden">הפוסט הוסתר — נציג לכם פחות תוכן כזה</div>`;
+}
+window.feedHide = feedHide;
+function feedRank(items, opts) {
+  opts = opts || {};
+  const now = Date.now(), prof = recoProfile(), hid = feedHidden();
+  const hidItems = hid.items || {}, hidAuth = hid.authors || {};
+  const fol = (typeof followedUids === 'object' && followedUids) || {};
+  const list = (items || []).filter(x => x && x.id && !hidItems[x.id]);
+  const engRaw = list.map(x => {
+    const ageH = Math.max(0, (now - (x.__t || photoAlbumTime(x) || now)) / 36e5);
+    const views = typeof photoGetViews === 'function' ? photoGetViews(x.id) : 0;
+    return (2 * Math.log1p(Number(x.likes) || 0) + Math.log1p(views) + 3 * Math.log1p(Number(x.commentsCount) || 0)) / Math.pow(ageH + 2, 0.6);
+  });
+  const maxEng = Math.max(1e-6, ...engRaw);
+  const scored = list.map((x, i) => {
+    const f = recoFeatures(x);
+    const ageH = Math.max(0, (now - (x.__t || f.time || now)) / 36e5);
+    let aff = 0.15, why = '';
+    if (x.authorId && fol[x.authorId]) aff = 1;
+    else if (prof.total && f.author && prof.a[f.author]) { aff = Math.min(0.9, 0.25 + 2 * prof.a[f.author] / prof.total); why = 'כי צפיתם ביצירות של ' + (x.author || 'היוצר'); }
+    if (aff < 0.35 && typeof isSiteAdminAuthor === 'function' && isSiteAdminAuthor(x.authorId, x.author, x)) aff = 0.35;
+    if (x.authorId && hidAuth[x.authorId]) aff *= Math.pow(0.5, hidAuth[x.authorId]);
+    const taste = recoTaste(f, prof);
+    const nImg = Array.isArray(x.images) ? x.images.filter(Boolean).length : 0;
+    const weight = 0.6 + taste + (nImg > 3 ? 0.1 : 0) + (String(x.summary || '').length > 40 ? 0.05 : 0);
+    const decay = Math.pow(0.5, ageH / FEED_HALF_LIFE_H);
+    const eng = engRaw[i] / maxEng;
+    let score = aff * weight * (0.25 + decay) + 0.6 * eng + (x.pinned ? 0.5 : 0);
+    const seen = prof.seen[x.id];
+    if (seen && now - seen < 48 * 36e5) score *= 0.5;
+    score += Math.random() * 0.02;
+    if (!why) why = taste > 0.25 ? 'מותאם לטעם שלכם' : eng > 0.6 ? 'פופולרי עכשיו בקהילה' : ageH < 6 ? 'חדש באתר' : 'מומלץ בשבילכם';
+    return { x, f, score, why };
+  }).sort((a, b) => b.score - a.score);
+  // גיוון: בכל צעד לוקחים את הטוב ביותר מבין 5 הראשונים שלא חוזר על היוצר / הסוג של הקודמים
+  const out = [];
+  while (scored.length) {
+    const prev = out[out.length - 1], prev2 = out[out.length - 2];
+    let k = scored.slice(0, 5).findIndex(c => !(prev && c.f.author && c.f.author === prev.f.author) && !(prev && prev2 && c.x.__type && c.x.__type === prev.x.__type && c.x.__type === prev2.x.__type));
+    if (k < 0) k = 0;
+    out.push(scored.splice(k, 1)[0]);
+  }
+  return out.map(c => opts.why ? Object.assign({}, c.x, { __why: c.why }) : c.x);
+}
+window.feedRank = feedRank;
 
 function photoOpenDetail(id) { return mediaGate(id, () => _photoOpenDetailImpl(id)); }
 function _photoOpenDetailImpl(id) {
@@ -17570,6 +17627,7 @@ function postCardHTML(x, showAuthor) {
   const kind = { photo: 'גלריה', story: 'סיפור', comic: 'קומיקס' }[x.__type];
   const views = typeof photoGetViews === 'function' ? photoGetViews(x.id) : 0;
   return `<article class="pc-post">
+    ${x.__why ? `<div class="pc-why"><span>✨ ${escHtml(x.__why)}</span><button type="button" onclick="feedHide('${artEsc(x.id)}', this)" title="הסתרה — פחות כאלה" aria-label="הסתרה">✕</button></div>` : ''}
     ${x.__repostBy ? `<div class="pc-repost-by" onclick="openUserPage('${artEsc(x.__repostUid || '')}','${artEsc(x.__repostBy)}')">${REPOST_ICON || ''}<span>${escHtml(x.__repostBy)} שיתף/ה</span></div>` : ''}
     ${showAuthor ? `<header class="pc-post-head" onclick="openUserPage('${artEsc(x.authorId || '')}','${artEsc(x.author || '')}')">${authorAvHTML(x)}<div><b>${escHtml(x.author || 'משתמש')}</b><small>${escHtml(kind)} · ${escHtml(rdTimeAgo(x.__t))}</small></div></header>`
       : `<div class="pc-post-kind">${escHtml(kind)} · ${escHtml(rdTimeAgo(x.__t))}</div>`}
@@ -17632,10 +17690,15 @@ function buildFeedPage() {
   let body;
   if (!reg) {
     // אורח: רואה את הפיד של מנהל האתר
-    const siteFeed = items.filter(x => typeof isSiteAdminAuthor === 'function' && isSiteAdminAuthor(x.authorId, x.author, x));
+    const siteFeed = feedRank(items.filter(x => typeof isSiteAdminAuthor === 'function' && isSiteAdminAuthor(x.authorId, x.author, x)));
     body = postsListHTML('sitefeed', siteFeed, true, '<div class="pf-empty">עדיין אין פוסטים</div>');
   } else {
-    const mine = repostsMerge(items.filter(x => x.authorId && followedUids[x.authorId]), follows, items);
+    const mineRaw = repostsMerge(items.filter(x => x.authorId && followedUids[x.authorId]), follows, items);
+    // כמו בפייסבוק: הפוסטים של מי שעוקבים אחריו מדורגים לפי רלוונטיות, ובין כל 3 נכנסת המלצה מיוצר אחר
+    const recs = feedRank(items.filter(x => x.authorId !== u.uid && !(x.authorId && followedUids[x.authorId])), { why: true }).slice(0, 30);
+    const mine = []; const ranked = feedRank(mineRaw);
+    ranked.forEach((x, i) => { mine.push(x); if (i % 3 === 2 && recs.length) mine.push(recs.shift()); });
+    if (ranked.length < 6) mine.push(...recs.splice(0, 12 - ranked.length));
     // הצעות למעקב: היוצרים הפעילים ביותר שעוד לא עוקבים אחריהם
     const counts = {};
     items.forEach(x => {
@@ -17646,9 +17709,9 @@ function buildFeedPage() {
     const suggHTML = sugg.length ? `<section class="pfeed-sugg"><h3>מומלצים לעקוב</h3><div>${sugg.map(({ x, n }) => `
         <div class="pfeed-sugg-item">${authorAvHTML(x)}<span onclick="openUserPage('${artEsc(x.authorId)}','${artEsc(x.author || '')}')"><b>${escHtml(x.author || 'משתמש')}</b><small>${n} העלאות</small></span>
           <button type="button" onclick="toggleFollow('${artEsc(x.authorId)}','${artEsc(x.author || '')}', this)">עקבו</button></div>`).join('')}</div></section>` : '';
-    body = (follows.length ? '' : `<div class="pfeed-empty"><h2>עוד לא עוקבים אחרי אף אחד</h2><p>עקבו אחרי יוצרים שאהבתם, וההעלאות החדשות שלהם יופיעו כאן לפי הסדר.</p></div>`) +
+    body = (follows.length ? '' : `<div class="pfeed-empty"><h2>עוד לא עוקבים אחרי אף אחד</h2><p>עקבו אחרי יוצרים שאהבתם, וההעלאות שלהם יופיעו כאן. בינתיים — המלצות שנבחרו בשבילכם 👇</p></div>`) +
       suggHTML +
-      (follows.length ? postsListHTML('feed', mine, true, '<div class="pf-empty">מי שאתם עוקבים אחריו עוד לא העלה כלום</div>') : '');
+      postsListHTML('feed', mine, true, '<div class="pf-empty">מי שאתם עוקבים אחריו עוד לא העלה כלום</div>');
   }
   return `<div class="user-page pfeed-page" data-photos-json="${json}"><div class="pfeed-inner">
       ${composerBarHTML()}
@@ -19876,15 +19939,16 @@ function dmConvListHTML() {
         <div class="tg-row-last">שלחו הודעה לצוות האתר</div>
       </div>
     </div>`;
+  const buyers = (isAdminUser && typeof buyersRowHTML === 'function' && match('עדכוני רוכשים', 'הזמנות', 'קניות')) ? buyersRowHTML() : '';
   const adminUid = dmAdminUid;
   const list = Object.entries(dmConversations || {})
     .filter(([cid, c]) => c && !(adminUid && c.otherUid === adminUid)) // לא לשכפל את שיחת המנהל
     .filter(([cid, c]) => match(c.otherName, c.lastText))
     .sort((a, b) => (b[1].lastTime || 0) - (a[1].lastTime || 0));
   if (!list.length) {
-    return pinned + `<div class="tg-empty">${q ? 'לא נמצאו שיחות' : 'אין עוד שיחות.<br>אפשר לשלוח הודעה ליוצר מדף של גלריה.'}</div>`;
+    return buyers + pinned + `<div class="tg-empty">${q ? 'לא נמצאו שיחות' : 'אין עוד שיחות.<br>אפשר לשלוח הודעה ליוצר מדף של גלריה.'}</div>`;
   }
-  return pinned + list.map(([cid, c]) => {
+  return buyers + pinned + list.map(([cid, c]) => {
     const nm = c.otherName || 'משתמש';
     return `
     <div class="tg-row${cid === _act ? ' active' : ''}${c.unread ? ' unread' : ''}" data-cid="${escHtml(cid)}" onclick="dmOpenConv('${artEsc(cid)}','${artEsc(c.otherUid || '')}','${artEsc(nm)}')">
@@ -31167,7 +31231,7 @@ const ASK_FAQ = [
   [/הצעת מחיר|להציע מחיר|מיקוח/, 'בעמוד של מוצר יש כפתור "הצעה" — שולחים הצעת מחיר למוכר וממשיכים במשא ומתן ב"הצעות".', ['ההצעות', () => openOffersPanel()]],
   [/חיפוש|לחפש|איפה/, 'החיפוש מחפש בכל האתר — תמונות, קומיקס, מוצרים, פורומים וחדשות.', ['פתיחת חיפוש', () => openSiteSearch()]]
 ];
-const ASK_SUGG = ['קח אותי לקומיקס', 'אני רוצה להעלות תמונה', 'איך מוכרים מוצר?', 'מה זה ריפוסט?', 'תפתח את ההודעות'];
+const ASK_SUGG = ['תמליץ לי על משהו', 'מה חדש באתר?', 'קח אותי לקומיקס', 'אני רוצה להעלות תמונה', 'איך מוכרים מוצר?', 'מה זה ריפוסט?', 'תפתח את ההודעות'];
 let askLog = [];
 let askActs = [];
 let askId = '';
@@ -31178,7 +31242,7 @@ function askSave() {
   if (!askId) askId = 'c' + Date.now();
   const list = askStore().filter(c => c.id !== askId);
   const first = (askLog.find(m => m.who === 'me') || {}).text || 'שיחה';
-  list.unshift({ id: askId, t: Date.now(), title: first.slice(0, 60), log: askLog.map(m => ({ who: m.who, text: m.text })) });
+  list.unshift({ id: askId, t: Date.now(), title: first.slice(0, 60), log: askLog.filter(m => !m.typing).map(m => ({ who: m.who, text: m.text, items: m.items || undefined })) });
   try { localStorage.setItem('ask_history', JSON.stringify(list.slice(0, 30))); } catch (e) {}
 }
 function askHistory() {
@@ -31216,6 +31280,8 @@ function askQuick(i) {
 function askReply(q) {
   const t = String(q || '').trim();
   if (!t) return null;
+  const smart = askSmart(t);
+  if (smart) return smart;
   // פקודה ("קח אותי…", "תעלה…", "חפש…") קודמת למאגר הידע
   const isCmd = /^(קח|תיקח|תעביר|עבור|פתח|תפתח|תראה|הראה|תעלה|העלה|לעלות|להעלות|חפש|תחפש)/.test(t);
   const kb = isCmd ? null : askKbAnswer(t);
@@ -31231,6 +31297,8 @@ function askReply(q) {
   if (g && (isGo || !isQ)) return { text: `לוקח אותך ${g[1]}…`, run: g[2] };
   const f = ASK_FAQ.find(([re]) => re.test(t));
   if (f) return { text: f[1], btn: f[2] };
+  const found = askFindContent(t);
+  if (found) return found;
   askLogUnknown(t);
   return { text: 'עוד אין לי תשובה מדויקת לזה — העברתי את השאלה לצוות האתר, ובפעם הבאה אדע לענות. בינתיים אפשר לבקש פעולה ("קח אותי לפורומים", "תעלה מוצר") או לשאול משהו אחר.', sugg: true };
 }
@@ -31273,7 +31341,7 @@ function askRender() {
     box.innerHTML = `<div class="ask-empty"><span class="ask-logo"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 4.5 21 11l-7.6 2.6L10.8 21z"/></svg></span><b>התחילו שיחה</b><small>טיפ: ${/Mac|iPhone|iPad/.test(navigator.platform) ? '⌘' : 'Ctrl'}+K פותח את העוזר מכל מקום באתר</small>${chips}</div>`;
     return;
   }
-  box.innerHTML = askLog.map((m, i) => `<div class="ask-m ${m.who}">${escHtml(m.text)}${m.btn != null ? `<button type="button" class="ask-act" onclick="askDo(${m.btn})">${escHtml(m.btnLabel)}</button>` : ''}${m.sugg ? chips : ''}</div>`).join('');
+  box.innerHTML = askLog.map((m, i) => m.typing ? `<div class="ask-m bot ask-typing"><i></i><i></i><i></i></div>` : m.shown != null ? `<div class="ask-m bot">${escHtml(m.shown)}<i class="ask-caret"></i></div>` : `<div class="ask-m ${m.who}">${escHtml(m.text)}${m.items && m.items.length ? askItemsHTML(m.items) : ''}${m.btn != null ? `<button type="button" class="ask-act" onclick="askDo(${m.btn})">${escHtml(m.btnLabel)}</button>` : ''}${m.sugg ? chips : ''}</div>`).join('');
   box.scrollTop = box.scrollHeight;
 }
 function askDo(i) { const f = askActs[i]; if (f) { askClose(); try { f(); } catch (e) {} } }
@@ -31282,16 +31350,106 @@ function askSend(text) {
   const q = String(text != null ? text : (inp ? inp.value : '')).trim();
   if (!q) return;
   if (inp) inp.value = '';
+  if (askBusy) return;
   askLog.push({ who: 'me', text: q });
   const r = askReply(q);
-  const m = { who: 'bot', text: r.text, sugg: !!r.sugg };
+  const m = { who: 'bot', text: r.text, sugg: !!r.sugg, items: r.items || null, typing: true, shown: '' };
   if (r.btn) { askActs.push(r.btn[1]); m.btn = askActs.length - 1; m.btnLabel = r.btn[0]; }
   askLog.push(m);
-  askSave();
   askRender();
-  if (r.run) setTimeout(() => { askClose(); try { r.run(); } catch (e) {} }, 450);
+  // "חושב…" ואז הקלדה מילה-מילה — זמן החשיבה תלוי באורך השאלה והתשובה
+  askBusy = true;
+  const think = Math.min(1500, 450 + q.length * 12 + (r.items ? 350 : 0) + Math.random() * 300);
+  setTimeout(() => {
+    m.typing = false;
+    const words = String(m.text).split(/(\s+)/);
+    let i = 0;
+    const step = () => {
+      i += 2; m.shown = words.slice(0, i).join('');
+      if (i >= words.length) { delete m.shown; askBusy = false; askSave(); askRender(); if (r.run) setTimeout(() => { askClose(); try { r.run(); } catch (e) {} }, 500); return; }
+      askRenderLast(); setTimeout(step, 28 + Math.random() * 30);
+    };
+    step();
+  }, r.run ? Math.min(think, 600) : think);
+}
+let askBusy = false;
+function askRenderLast() {
+  const box = document.getElementById('ask-msgs'); if (!box) return;
+  const el = box.lastElementChild, m = askLog[askLog.length - 1];
+  if (!el || !m) return askRender();
+  el.innerHTML = escHtml(m.shown) + '<i class="ask-caret"></i>';
+  box.scrollTop = box.scrollHeight;
 }
 Object.assign(window, { askOpen, askClose, askNew, askSend, askDo, askHistory, askLoad, askHistoryClear, askQuick, askRender });
+
+// ============================================================
+// עוזר "חכם" בלי מודל שפה: כוונות שיחה (ברכה/תודה/מי אתה), המלצות אישיות מאלגוריתם הפיד,
+// חיפוש בתוכן האתר לפי מילים, "עוד" להמשך, והקשר מהשאלה הקודמת. התשובות מגוונות כדי להרגיש טבעי.
+// ============================================================
+let askCtx = { items: [], pos: 0, kind: '' };
+const askPick = a => a[Math.floor(Math.random() * a.length)];
+function askUserName() { try { const u = auth.currentUser; if (!u || u.isAnonymous) return ''; const n = (u.displayName || '').split(' ')[0]; return n; } catch (e) { return ''; } }
+function askKindOf(t) { return /קומיקס/.test(t) ? 'comic' : /סיפור|סיפורים/.test(t) ? 'story' : /תמונ|גלרי|צילום/.test(t) ? 'photo' : ''; }
+const ASK_KIND_NAME = { comic: 'קומיקס', story: 'סיפורים', photo: 'גלריות', '': 'יצירות' };
+function askPack(list, kind, intro) {
+  askCtx = { items: list, pos: 4, kind };
+  return { text: intro, items: list.slice(0, 4).map(x => ({ id: x.id, k: x.__type, title: x.title || '', img: (Array.isArray(x.images) ? x.images.find(Boolean) : '') || x.image || '', adult: !!x.isAdult, why: x.__why || '' })) };
+}
+function askSmart(t) {
+  const name = askUserName();
+  if (/^(היי|הי|שלום|אהלן|הלו|בוקר טוב|ערב טוב|צהריים טובים|מה נשמע|מה קורה|מה המצב)(?=[\s!?.,]|$)/.test(t) && t.length < 25)
+    return { text: askPick([`היי${name ? ' ' + name : ''}! 👋 במה אפשר לעזור היום? אפשר לבקש ממני המלצה, לחפש משהו או לקחת אתכם לכל מקום באתר.`, `שלום${name ? ' ' + name : ''} 🙂 רוצים שאמליץ על משהו לפי הטעם שלכם, או שיש שאלה?`, `אהלן! אני כאן. אפשר לכתוב למשל "תמליץ לי על קומיקס" או "איך מעלים תמונה".`]), sugg: true };
+  if (/^(תודה|תודה רבה|תנקס|thanks|מעולה|אחלה|סבבה|יופי)(?=[\s!?.,]|$)/.test(t) && t.length < 25)
+    return { text: askPick(['בכיף! 🙌 אם צריך עוד משהו — אני כאן.', 'שמח לעזור 🙂', 'בשמחה! רוצים שאמליץ על עוד משהו?']) };
+  if (/(מי אתה|מה אתה|אתה בוט|אתה רובוט|אתה אמיתי|בינה מלאכותית|\bai\b|צ'?אט ?gpt)/i.test(t))
+    return { text: 'אני העוזר החכם של האתר 🤖 אני מכיר את כל התוכן כאן, לומד ממה שאתם אוהבים וצופים, ויכול להמליץ, לחפש, לענות על שאלות ולקחת אתכם לכל מקום — פשוט כתבו מה בא לכם.' };
+  if (/^(עוד|עוד כאלה|עוד אחד|תן עוד|תני עוד|הבא|more)(?=[\s!?.,]|$)/.test(t) && askCtx.items.length) {
+    const next = askCtx.items.slice(askCtx.pos, askCtx.pos + 4);
+    if (!next.length) return { text: 'זה כל מה שמצאתי כרגע 🙂 רוצים שאחפש משהו אחר?' };
+    const r = askPack(askCtx.items, askCtx.kind, askPick(['הנה עוד כמה:', 'עוד כמה שאולי תאהבו:', 'בבקשה, עוד בחירות:']));
+    r.items = next.map(x => ({ id: x.id, k: x.__type, title: x.title || '', img: (Array.isArray(x.images) ? x.images.find(Boolean) : '') || x.image || '', adult: !!x.isAdult, why: x.__why || '' }));
+    askCtx.pos += 4;
+    return r;
+  }
+  const wantRec = /(תמליץ|תמליצי|המלצ|מה כדאי|מה לראות|מה לקרוא|משהו טוב|משעמם לי|בשבילי|מה חדש|חדשים|מה פופולרי|פופולרי|הכי טוב|הכי שווה|טרנד|מה מומלץ|תפתיע)/.test(t);
+  if (!wantRec) return null;
+  const kind = askKindOf(t);
+  let all = (typeof feedAllItems === 'function' ? feedAllItems() : []).filter(x => !kind || x.__type === kind);
+  if (!all.length) return { text: `עוד אין ${ASK_KIND_NAME[kind]} באתר — אבל ממש בקרוב יהיו 🙂` };
+  let list, intro;
+  if (/(חדש|חדשים|מה חדש)/.test(t)) { list = all.slice().sort((a, b) => (b.__t || 0) - (a.__t || 0)).map(x => Object.assign({}, x, { __why: 'עלה לאחרונה' })); intro = `הנה ה${ASK_KIND_NAME[kind]} החדשים ביותר באתר:`; }
+  else if (/(פופולרי|הכי טוב|הכי שווה|טרנד)/.test(t)) { list = all.slice().sort((a, b) => ((Number(b.likes) || 0) * 3 + photoGetViews(b.id)) - ((Number(a.likes) || 0) * 3 + photoGetViews(a.id))).map(x => Object.assign({}, x, { __why: 'הכי אהוב בקהילה' })); intro = `אלה ה${ASK_KIND_NAME[kind]} הכי אהובים כרגע:`; }
+  else {
+    list = feedRank(all, { why: true });
+    const prof = recoProfile();
+    intro = prof.total > 3 ? askPick([`לפי מה שאהבתם עד עכשיו, בחרתי לכם${kind ? ' ' + ASK_KIND_NAME[kind] : ''}:`, 'ניתחתי את מה שצפיתם בו — אלה הכי מתאימים לכם:', `${name ? name + ', ' : ''}אני חושב שתאהבו את אלה:`]) : askPick(['עוד לא הכרתי את הטעם שלכם — אז הנה מה שהכי עובד בקהילה עכשיו. ככל שתצפו ותעשו לייקים, ההמלצות ישתפרו:', 'הנה כמה בחירות טובות להתחלה:']);
+  }
+  return askPack(list, kind, intro + (list.length > 4 ? '\nרוצים עוד? כתבו "עוד".' : ''));
+}
+function askFindContent(t) {
+  const qt = askTokens(t);
+  if (!qt.length) return null;
+  const kind = askKindOf(t);
+  const all = (typeof feedAllItems === 'function' ? feedAllItems() : []).filter(x => !kind || x.__type === kind);
+  const hits = all.map(x => ({ x, s: askScore(qt, `${x.title || ''} ${x.summary || ''} ${x.category || ''} ${x.author || ''}`) })).filter(h => h.s >= 0.5).sort((a, b) => b.s - a.s || (Number(b.x.likes) || 0) - (Number(a.x.likes) || 0)).map(h => Object.assign({}, h.x, { __why: h.x.author ? 'מאת ' + h.x.author : '' }));
+  if (!hits.length) return null;
+  return askPack(hits, kind, hits.length === 1 ? 'מצאתי משהו שמתאים בדיוק:' : `מצאתי ${hits.length} תוצאות שקשורות לזה. הנה הכי רלוונטיות:`);
+}
+function askItemsHTML(items) {
+  const adultOk = (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('age_verified') === 'true');
+  const kindName = { photo: 'גלריה', story: 'סיפור', comic: 'קומיקס' };
+  return `<div class="ask-items">${items.map(it => `<button type="button" class="ask-item" onclick="askOpenItem('${artEsc(it.k || '')}','${artEsc(it.id)}')">
+      <span class="ask-item-img${it.adult && !adultOk ? ' blur' : ''}">${it.img ? `<img src="${escHtml(it.img)}" alt="" loading="lazy">` : ''}</span>
+      <span class="ask-item-txt"><b>${escHtml(it.title || 'ללא כותרת')}</b><small>${escHtml(kindName[it.k] || '')}${it.why ? ' · ' + escHtml(it.why) : ''}</small></span></button>`).join('')}</div>`;
+}
+function askOpenItem(k, id) {
+  askClose();
+  try {
+    if (k === 'photo') { if (typeof homeOpenPhotos === 'function') homeOpenPhotos(); setTimeout(() => { try { photoOpenDetail(id); } catch (e) {} }, 450); }
+    else storyOpenDetail(id);
+  } catch (e) {}
+}
+window.askOpenItem = askOpenItem;
 document.addEventListener('keydown', e => {
   if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K' || e.key === 'ל')) { e.preventDefault(); document.documentElement.classList.contains('ask-open') ? askClose() : askOpen(); }
 });
@@ -31786,7 +31944,7 @@ function cartClose() { const el = document.getElementById('cart-panel'); if (el)
 // ============================================================
 function ordersGet() { try { return JSON.parse(localStorage.getItem('bw_orders') || '[]') || []; } catch (e) { return []; } }
 function ordersAdd(o) { const list = ordersGet(); list.unshift(o); try { localStorage.setItem('bw_orders', JSON.stringify(list.slice(0, 50))); } catch (e) {} }
-const ORDER_STEPS = ['הוזמן', 'נאסף', 'נארז', 'נשלח'];
+const ORDER_STEPS = ['הוזמן', 'אושר', 'נארז', 'נשלח'];
 function orderStep(o) { const min = (Date.now() - o.t) / 60000; return min < 2 ? 1 : min < 60 ? 2 : min < 24 * 60 ? 3 : 4; }   // הדגמה: מתקדם עם הזמן
 function orderEta(o) {
   const add = (d, n) => { const x = new Date(d); let k = 0; while (k < n) { x.setDate(x.getDate() + 1); if (x.getDay() !== 5 && x.getDay() !== 6) k++; } return x; };
@@ -31800,7 +31958,7 @@ function orderReceiptHTML(o) {
   const st = orderStep(o);
   return `<article class="rcp">
     <div class="rcp-band"><span>✓ אחריות משלוח</span><small>זיכוי על איחור · החזרה אם הפריט ניזוק</small></div>
-    <div class="rcp-top"><div><b>${st >= 4 ? 'ההזמנה נשלחה' : st >= 3 ? 'ההזמנה נארזה' : 'ההזמנה בהכנה'}</b><small>רוב ההזמנות יוצאות תוך 2 ימי עסקים</small></div>
+    <div class="rcp-top"><div><b>${st >= 4 ? 'ההזמנה נשלחה' : st >= 3 ? 'ההזמנה נארזה' : st >= 2 ? 'ההזמנה אושרה' : 'ההזמנה התקבלה'}</b><small>רוב ההזמנות יוצאות תוך 2 ימי עסקים</small></div>
       <button type="button" class="rcp-btn" onclick="dmStartWith(localStorage.getItem('site_admin_uid') || '', 'מנהל האתר', ${escHtml(JSON.stringify('שאלה לגבי הזמנה ' + o.no))})">עדכונים</button></div>
     <div class="rcp-steps">${ORDER_STEPS.map((l, i) => `<div class="rcp-st${i < st ? ' done' : ''}"><i>${i < st ? '✓' : ''}</i><span>${l}</span></div>`).join('')}<span class="rcp-bar" style="--p:${Math.round((Math.min(st, 4) - 1) / 3 * 100)}%"></span></div>
     <div class="rcp-mid">
@@ -32025,8 +32183,9 @@ async function receiptSendEmail(o) {
     else coMailStatus('הופקה קבלה לדוגמה — לחצו "קבלה לדוגמה"');
   } catch (e) { coMailStatus('הופקה קבלה לדוגמה — לחצו "קבלה לדוגמה"'); }
 }
+function receiptFind(no) { return ordersGet().find(x => x.no === no) || (typeof buyersOrders === 'object' && buyersOrders[no]) || null; }
 function receiptShare(no, via) {
-  const o = ordersGet().find(x => x.no === no); if (!o) return;
+  const o = receiptFind(no); if (!o) return;
   const txt = receiptText(o);
   if (via === 'whatsapp') window.open('https://wa.me/?text=' + encodeURIComponent(txt), '_blank', 'noopener');
   else if (via === 'sms') location.href = 'sms:' + encodeURIComponent(o.phone || '') + '?&body=' + encodeURIComponent(txt);
@@ -32050,11 +32209,11 @@ function receiptDocHTML(o) {
   </div>`;
 }
 function receiptDocOpen(no) {
-  const o = ordersGet().find(x => x.no === no); if (!o) return;
+  const o = receiptFind(no); if (!o) return;
   openMSheet('קבלה לדוגמה', receiptDocHTML(o), `<button type="button" class="ms-btn" onclick="receiptPrint('${escHtml(no)}')">הדפסה / שמירה כ-PDF</button><button type="button" class="ms-btn ghost" onclick="receiptShare('${escHtml(no)}', 'whatsapp')">שליחה בוואטסאפ</button>`);
 }
 function receiptPrint(no) {
-  const o = ordersGet().find(x => x.no === no); if (!o) return;
+  const o = receiptFind(no); if (!o) return;
   const w = window.open('', '_blank');
   if (!w) { showCopyToast('אפשרו חלונות קופצים כדי להדפיס'); return; }
   w.document.write(`<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><title>קבלה ${escHtml(o.no)}</title><style>
@@ -32068,6 +32227,99 @@ function receiptPrint(no) {
   w.document.close();
 }
 Object.assign(window, { receiptDocOpen, receiptPrint });
+
+// ============================================================
+// מנהל: "עדכוני רוכשים" — שיחה נעוצה בחלון ההודעות עם כל הקניות בזמן אמת,
+// התראה מיידית כשנכנסת קנייה (באנר + התראת דפדפן), וכפתורים לשליחת קבלה ללקוח.
+// ============================================================
+var buyersOrders = {};
+let buyersSub = false;
+const buyersSeenGet = () => Number(localStorage.getItem('buyers_seen') || 0);
+function buyersList() { return Object.values(buyersOrders || {}).filter(o => o && o.no && Array.isArray(o.items)).sort((a, b) => (a.t || 0) - (b.t || 0)); }
+function buyersUnread() { const s = buyersSeenGet(); return buyersList().filter(o => (o.t || 0) > s).length; }
+function buyersWatch() {
+  if (buyersSub) return; buyersSub = true;
+  let first = true;
+  onValue(ref(db, 'website/orders'), snap => {
+    const prev = buyersOrders; buyersOrders = snap.val() || {};
+    if (!first) Object.values(buyersOrders).filter(o => o && o.no && !prev[o.no]).forEach(buyersAlert);
+    first = false;
+    if (typeof dmRefreshList === 'function') dmRefreshList();
+    if (document.getElementById('buyers-feed')) buyersRenderFeed();
+  }, () => { buyersSub = false; });
+}
+function buyersAlert(o) {
+  const first = String(o.name || '').split(' ')[0] || 'לקוח';
+  glassBanner({ title: `🛒 קנייה חדשה · ₪${o.total}`, sub: `${first} · ${o.items.length} פריטים · ${o.no}`, btn: 'צפייה', ms: 9000, onBtn: () => buyersOpen() });
+  try { if ('Notification' in window && Notification.permission === 'granted') new Notification('🛒 קנייה חדשה באתר', { body: `${o.no} · ₪${o.total} · ${first}`, icon: './icon-192.png', tag: o.no }); } catch (e) {}
+}
+function buyersRowHTML() {
+  const L = buyersList(), last = L[L.length - 1], n = buyersUnread();
+  return `<div class="tg-row tg-row-pinned tg-row-buyers${n ? ' unread' : ''}" onclick="buyersOpen()">
+      <div class="tg-avatar tg-avatar-buyers"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7h12l-1 13H7z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg></div>
+      <div class="tg-row-main">
+        <div class="tg-row-top"><span class="tg-row-name">עדכוני רוכשים</span><span class="tg-row-time">${last ? dmListTime(last.t) : ''}</span></div>
+        <div class="tg-row-bottom"><span class="tg-row-last">${last ? escHtml(`${String(last.name || '').split(' ')[0]} קנה/תה ב-₪${last.total} · ${last.no}`) : 'כאן יופיעו הקניות באתר בזמן אמת'}</span>${n ? `<span class="tg-unread tg-unread-n">${n}</span>` : ''}</div>
+      </div>
+    </div>`;
+}
+const buyersWaPhone = p => { const d = String(p || '').replace(/\D/g, ''); return d.startsWith('0') ? '972' + d.slice(1) : d; };
+function buyersCardHTML(o) {
+  const d = new Date(o.t || 0);
+  const isNew = (o.t || 0) > buyersSeenGet();
+  const no = escHtml(o.no);
+  return `<div class="by-card${isNew ? ' new' : ''}">
+    <div class="by-top"><b>🛒 קנייה ${isNew ? 'חדשה' : ''}</b><span dir="ltr">${no}</span></div>
+    <div class="by-when">${d.toLocaleDateString('he-IL')} · ${d.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}${o.demo ? ' · <em>תשלום הדגמה</em>' : ''}</div>
+    <div class="by-who"><b>${escHtml(o.name || '')}</b>${o.email ? `<span dir="ltr">${escHtml(o.email)}</span>` : ''}${o.phone ? `<span dir="ltr">${escHtml(o.phone)}</span>` : ''}${o.addr ? `<span>${escHtml(o.addr)}</span>` : `<span>${o.method === 'pickup' ? 'איסוף עצמי' : ''}</span>`}</div>
+    <div class="by-items">${o.items.map(i => `<div><span>${escHtml(i.name)} × ${i.qty}</span><span>₪${i.price * i.qty}</span></div>`).join('')}${o.ship ? `<div><span>משלוח</span><span>₪${o.ship}</span></div>` : ''}<div class="by-sum"><span>סה״כ</span><span>₪${o.total}</span></div></div>
+    <div class="by-acts">
+      <button type="button" onclick="receiptShare('${no}', 'mail')">קבלה במייל</button>
+      ${o.phone ? `<button type="button" onclick="buyersWhatsApp('${no}')">וואטסאפ ללקוח</button>` : ''}
+      <button type="button" onclick="receiptDocOpen('${no}')">קבלה / PDF</button>
+    </div>
+  </div>`;
+}
+function buyersWhatsApp(no) {
+  const o = receiptFind(no); if (!o) return;
+  window.open('https://wa.me/' + buyersWaPhone(o.phone) + '?text=' + encodeURIComponent(`היי ${String(o.name || '').split(' ')[0]}, תודה על הקנייה! 🙏\n\n` + receiptText(o)), '_blank', 'noopener');
+}
+function buyersRenderFeed() {
+  const box = document.getElementById('buyers-feed'); if (!box) return;
+  const L = buyersList();
+  const total = L.reduce((a, o) => a + (Number(o.total) || 0), 0);
+  box.innerHTML = L.length ? `<div class="by-stats">${L.length} קניות · ₪${total.toLocaleString('he-IL')} סה״כ</div>` + L.map(buyersCardHTML).join('') : '<div class="tg-empty">עוד אין קניות. כשמישהו יקנה — זה יופיע כאן מיד, ותקבלו התראה.</div>';
+  box.scrollTop = box.scrollHeight;
+}
+async function buyersOpen() {
+  buyersWatch();
+  if (!document.getElementById('dm-main')) await openMessages();
+  if (typeof dmThreadUnsub === 'function') { try { dmThreadUnsub(); } catch (e) {} dmThreadUnsub = null; }
+  dmActiveConv = null;
+  const panel = document.querySelector('.tg-panel'); if (panel) panel.classList.add('tg-show-thread');
+  const s = document.getElementById('dm-main'); if (!s) return;
+  const canNotify = 'Notification' in window && Notification.permission === 'default';
+  s.innerHTML = `
+    <header class="tg-head tg-thread-head">
+      <button type="button" class="tg-round" onclick="dmShowList()" aria-label="חזרה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></button>
+      <div class="tg-thread-who"><span class="tg-head-title">עדכוני רוכשים</span><span class="tg-thread-sub">קניות מהחנות בזמן אמת</span></div>
+      <div class="tg-avatar tg-avatar-sm tg-avatar-buyers"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7h12l-1 13H7z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg></div>
+    </header>
+    ${canNotify ? `<button type="button" class="by-notify" onclick="buyersAskNotify(this)">🔔 קבלו התראה במחשב/בטלפון ברגע שנכנסת קנייה</button>` : ''}
+    <div class="tg-messages by-feed" id="buyers-feed"></div>`;
+  buyersRenderFeed();
+  const L = buyersList();
+  if (L.length) { try { localStorage.setItem('buyers_seen', String(L[L.length - 1].t || Date.now())); } catch (e) {} }
+  setTimeout(() => { if (typeof dmRefreshList === 'function') dmRefreshList(); }, 1500);
+}
+function buyersAskNotify(btn) {
+  try { Notification.requestPermission().then(p => { if (btn) btn.remove(); if (p === 'granted') glassBanner({ title: 'התראות הופעלו', sub: 'תקבלו התראה על כל קנייה חדשה', ms: 2500 }); }); } catch (e) {}
+}
+Object.assign(window, { buyersOpen, buyersWhatsApp, buyersAskNotify });
+(function buyersAdminWatch() {
+  const t = setInterval(() => { try { if (typeof isAdmin === 'function' && isAdmin()) { clearInterval(t); buyersWatch(); } } catch (e) {} }, 2000);
+  setTimeout(() => clearInterval(t), 10 * 60 * 1000);
+})();
 
 // ============================================================
 // עמוד תשלום מלא (כמו בחנות): פרטי לקוח · פרטי משלוח (רק כשבמוצר מוגדר משלוח) · סיכום הזמנה · קופון · מע״מ

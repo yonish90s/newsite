@@ -3053,6 +3053,22 @@ html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #ck-page .ck-lines small { color: #d0d0d0 !important; }
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #ck-page .co-card input { color: #d0d0d0 !important; }
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #ck-page .co-card small { color: #9a9a9a !important; }
+html.theme-dark #messages-modal .by-stats { color: #d0d0d0 !important; background: #111111 !important; }
+html.theme-dark #messages-modal .by-card { background: #111111 !important; border: 1px solid #2a2a2a !important; color: #ffffff !important; }
+html.theme-dark #messages-modal .by-top span { color: #d0d0d0 !important; }
+html.theme-dark #messages-modal .by-when { color: #d0d0d0 !important; }
+html.theme-dark #messages-modal .by-who span { color: #d0d0d0 !important; }
+html.theme-dark #messages-modal .by-items { border-top: 1px dashed #2a2a2a !important; }
+html.theme-dark #messages-modal .by-sum { border-top: 1px solid #2a2a2a !important; }
+html.theme-dark #messages-modal .by-acts button { border: 1px solid #2a2a2a !important; background: #111111 !important; color: #ffffff !important; }
+html.theme-dark #messages-modal .by-acts button:first-child { background: #262626 !important; border-color: #5b6472 !important; }
+html.theme-dark #messages-modal .by-notify { background: #111111 !important; color: color-mix(in srgb, #065f46 55%, white) !important; }
+html.theme-dark .pc-post .pc-why { color: #d0d0d0 !important; }
+html.theme-dark .pc-post .pc-why button:hover { background: #111111 !important; color: #ffffff !important; }
+html.theme-dark .pc-hidden { color: #d0d0d0 !important; border: 1px dashed #2a2a2a !important; }
+html.theme-dark #ask-panel .ask-item { border: 1px solid #2a2a2a !important; background: #111111 !important; color: #ffffff !important; }
+html.theme-dark #ask-panel .ask-item-img { background: #111111 !important; }
+html.theme-dark #ask-panel .ask-item-txt small { color: #d0d0d0 !important; }
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #ffffff !important; }
 html.theme-dark [style*="color:#111111"] { color: #ffffff !important; }
