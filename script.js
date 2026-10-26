@@ -14756,6 +14756,10 @@ function productFormHTML(p) {
       <label>מחיר (אופציונלי)<input name="price" value="${escHtml(p.price || '')}" placeholder="למשל 89"></label>
       <label>מותג / יצרן (אופציונלי)<input name="brand" value="${escHtml(p.brand || '')}"></label>
       <label>מלאי — כמות יחידות (אופציונלי)<input name="stock" type="number" min="0" value="${p.stock === undefined ? '' : escHtml(String(p.stock))}"></label>
+      <label class="pr-ship-l"><span><input type="checkbox" name="shipOn" ${p.shipOn ? 'checked' : ''}> מוצר עם משלוח (בתשלום יופיעו פרטי משלוח)</span></label>
+      <label>מחיר משלוח (₪)<input name="shipPrice" type="number" min="0" step="1" value="${p.shipPrice === undefined ? '' : escHtml(String(p.shipPrice))}" placeholder="למשל 29"></label>
+      <label>זמן אספקה<input name="shipEta" maxlength="80" value="${escHtml(p.shipEta || '')}" placeholder="למשל: 3–5 ימי עסקים"></label>
+      <label>מק״ט (אופציונלי)<input name="sku" maxlength="40" dir="ltr" value="${escHtml(p.sku || '')}"></label>
       <div class="pr-form-actions">
         <button type="submit" class="pr-save">שמירה</button>
         <button type="button" class="pr-cancel" onclick="productsStartEdit(null)">ביטול</button>
@@ -14795,6 +14799,10 @@ async function productsSave(form) {
     brand: val('brand')
   };
   if (val('stock') !== '') item.stock = Math.max(0, Math.round(Number(val('stock')) || 0));
+  item.shipOn = f.get('shipOn') === 'on';
+  if (val('shipPrice') !== '') item.shipPrice = Math.max(0, Number(val('shipPrice')) || 0);
+  if (val('shipEta')) item.shipEta = val('shipEta');
+  if (val('sku')) item.sku = val('sku');
   if (!item.name) return;
   const list = productsList().slice();
   const i = list.findIndex(p => p.id === item.id);
@@ -31544,6 +31552,7 @@ function coRender() {
   if (!coState) return;
   const { lines, sub, ship, total } = coTotals();
   if (coState.step === 'done') {
+    ckClose();
     openMSheet('ההזמנה התקבלה', `<div class="co-done">
         <span class="co-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
         <b>התשלום התקבל (הדגמה)</b>
@@ -31551,6 +31560,7 @@ function coRender() {
         <small>זו הדגמה בלבד — לא בוצע חיוב. ההזמנה נשמרה ב"ההזמנות שלי".</small>
         <span class="co-mail" id="co-mail-st">${escHtml(coState.mailStatus || 'שולחים קבלה ל-' + (coState.email || '') + '…')}</span>
         <div class="co-share">
+          <button type="button" class="co-share-main" onclick="receiptDocOpen('${escHtml(coState.orderNo)}')">קבלה לדוגמה</button>
           <button type="button" onclick="receiptShare('${escHtml(coState.orderNo)}', 'whatsapp')">קבלה בוואטסאפ</button>
           <button type="button" onclick="receiptShare('${escHtml(coState.orderNo)}', 'sms')">קבלה ב-SMS</button>
           <button type="button" onclick="receiptShare('${escHtml(coState.orderNo)}', 'email')">פתיחה במייל</button>
@@ -31558,6 +31568,7 @@ function coRender() {
       </div>`, `<button type="button" class="ms-btn" onclick="closeMSheet(); ordersOpen('${escHtml(coState.orderNo)}')">לצפייה בקבלה</button><button type="button" class="ms-btn ghost" onclick="coSendToSeller()">שליחה למוכר</button>`);
     return;
   }
+  if (coState.step === 'form' || coState.step === 'pay') { closeMSheet(); return ckRender(); }
   const v = k => escHtml((coState[k] || ''));
   openMSheet('תשלום', `<div class="co">
       <div class="co-demo">מצב הדגמה — לא יבוצע חיוב אמיתי. אין להזין פרטי כרטיס אמיתיים.</div>
@@ -31799,7 +31810,7 @@ function orderReceiptHTML(o) {
     <div class="rcp-items"><div><b>פריטי ההזמנה</b><small>מספר הזמנה: <span dir="ltr">${escHtml(o.no)}</span></small></div>
       <div class="rcp-thumbs">${o.items.map(i => `<span title="${escHtml(i.name)} × ${i.qty}">${i.image ? `<img src="${escHtml(i.image)}" alt="">` : PRODUCT_ICON}<em>${i.qty}</em></span>`).join('')}</div></div>
     <div class="rcp-lines">${o.items.map(i => `<div><span>${escHtml(i.name)} × ${i.qty}</span><span>₪${i.price * i.qty}</span></div>`).join('')}<div><span>משלוח</span><span>${o.ship ? '₪' + o.ship : 'חינם'}</span></div><div class="rcp-sum"><span>סה״כ שולם (הדגמה)</span><span>₪${o.total}</span></div></div>
-    <div class="rcp-foot"><small>🛡️ לעולם לא נבקש תשלום נוסף ב-SMS או במייל.</small><span>${new Date(o.t).toLocaleString('he-IL')}</span></div>
+    <div class="rcp-foot"><small>🛡️ לעולם לא נבקש תשלום נוסף ב-SMS או במייל.</small><button type="button" class="rcp-btn" onclick="receiptDocOpen('${escHtml(o.no)}')">קבלה</button></div>
   </article>`;
 }
 function ordersOpen(no) {
@@ -32011,8 +32022,8 @@ async function receiptSendEmail(o) {
   try {
     const r = await fetch('/api/receipt', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ no: o.no, email: o.email, order: { items: o.items.map(i => ({ name: i.name, price: i.price, qty: i.qty })), sub: o.sub, ship: o.ship, total: o.total, method: o.method, name: o.name, addr: o.addr, t: o.t } }) });
     if (r.ok) coMailStatus('✓ הקבלה נשלחה ל-' + o.email);
-    else coMailStatus('אפשר לשלוח לעצמכם את הקבלה בכפתורים למטה');
-  } catch (e) { coMailStatus('אפשר לשלוח לעצמכם את הקבלה בכפתורים למטה'); }
+    else coMailStatus('הופקה קבלה לדוגמה — לחצו "קבלה לדוגמה"');
+  } catch (e) { coMailStatus('הופקה קבלה לדוגמה — לחצו "קבלה לדוגמה"'); }
 }
 function receiptShare(no, via) {
   const o = ordersGet().find(x => x.no === no); if (!o) return;
@@ -32022,3 +32033,126 @@ function receiptShare(no, via) {
   else location.href = 'mailto:' + encodeURIComponent(o.email || '') + '?subject=' + encodeURIComponent('קבלה — הזמנה ' + o.no) + '&body=' + encodeURIComponent(txt);
 }
 Object.assign(window, { receiptShare });
+
+// ============================================================
+// קבלה לדוגמה — מסמך קבלה מעוצב (כמו שיישלח במייל): צפייה, הדפסה ושמירה כ-PDF
+// ============================================================
+const RECEIPT_BIZ = { name: 'Black1White00', site: 'black1white00.com', note: 'מסמך לדוגמה — תשלום הדגמה, לא בוצע חיוב.' };
+function receiptDocHTML(o) {
+  const d = new Date(o.t);
+  const rows = o.items.map(i => `<tr><td>${escHtml(i.name)}</td><td>${i.qty}</td><td>₪${Number(i.price).toLocaleString('he-IL')}</td><td>₪${(i.price * i.qty).toLocaleString('he-IL')}</td></tr>`).join('');
+  return `<div class="rd">
+    <div class="rd-top"><div><b class="rd-biz">${RECEIPT_BIZ.name}</b><small>${RECEIPT_BIZ.site}</small></div><div class="rd-meta"><b>קבלה</b><small>מס׳ <span dir="ltr">${escHtml(o.no)}</span></small><small>${d.toLocaleDateString('he-IL')} · ${d.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}</small></div></div>
+    <div class="rd-to"><small>לכבוד</small><b>${escHtml(o.name || '')}</b><span dir="ltr">${escHtml(o.email || '')}</span><span dir="ltr">${escHtml(o.phone || '')}</span>${o.addr ? `<span>${escHtml(o.addr)}</span>` : ''}</div>
+    <table class="rd-t"><thead><tr><th>פריט</th><th>כמות</th><th>מחיר</th><th>סה״כ</th></tr></thead><tbody>${rows}</tbody></table>
+    <div class="rd-sum"><div><span>סכום ביניים</span><span>₪${Number(o.sub).toLocaleString('he-IL')}</span></div><div><span>${o.method === 'pickup' ? 'איסוף עצמי' : 'משלוח'}</span><span>${o.ship ? '₪' + o.ship : 'חינם'}</span></div><div class="rd-total"><span>סה״כ לתשלום</span><span>₪${Number(o.total).toLocaleString('he-IL')}</span></div><div><span>אמצעי תשלום</span><span>כרטיס בדיקה ‎•••• 4242</span></div></div>
+    <p class="rd-note">${RECEIPT_BIZ.note}</p>
+  </div>`;
+}
+function receiptDocOpen(no) {
+  const o = ordersGet().find(x => x.no === no); if (!o) return;
+  openMSheet('קבלה לדוגמה', receiptDocHTML(o), `<button type="button" class="ms-btn" onclick="receiptPrint('${escHtml(no)}')">הדפסה / שמירה כ-PDF</button><button type="button" class="ms-btn ghost" onclick="receiptShare('${escHtml(no)}', 'whatsapp')">שליחה בוואטסאפ</button>`);
+}
+function receiptPrint(no) {
+  const o = ordersGet().find(x => x.no === no); if (!o) return;
+  const w = window.open('', '_blank');
+  if (!w) { showCopyToast('אפשרו חלונות קופצים כדי להדפיס'); return; }
+  w.document.write(`<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><title>קבלה ${escHtml(o.no)}</title><style>
+    body{font-family:Arial,Helvetica,sans-serif;color:#111;margin:32px;}
+    .rd{max-width:640px;margin:auto}.rd-top{display:flex;justify-content:space-between;border-bottom:2px solid #111;padding-bottom:14px;margin-bottom:16px}
+    .rd-biz{font-size:22px}.rd small,.rd-meta small{display:block;color:#666;font-size:12px}.rd-meta{text-align:left}.rd-meta b{font-size:18px}
+    .rd-to{display:flex;flex-direction:column;gap:2px;margin-bottom:16px;font-size:14px}.rd-to small{color:#666}
+    .rd-t{width:100%;border-collapse:collapse;font-size:14px}.rd-t th,.rd-t td{padding:8px 4px;border-bottom:1px solid #ddd;text-align:right}.rd-t th{background:#f4f4f4}
+    .rd-sum{margin-top:12px;font-size:14px}.rd-sum div{display:flex;justify-content:space-between;padding:4px 0}.rd-total{font-weight:bold;font-size:16px;border-top:2px solid #111;margin-top:4px;padding-top:8px!important}
+    .rd-note{margin-top:20px;color:#888;font-size:12px}</style></head><body>${receiptDocHTML(o)}<script>window.onload=function(){window.print()}<\/script></body></html>`);
+  w.document.close();
+}
+Object.assign(window, { receiptDocOpen, receiptPrint });
+
+// ============================================================
+// עמוד תשלום מלא (כמו בחנות): פרטי לקוח · פרטי משלוח (רק כשבמוצר מוגדר משלוח) · סיכום הזמנה · קופון · מע״מ
+// ============================================================
+const VAT_RATE = 0.18;
+const COUPONS = { BW10: 10, WELCOME: 15 };   // קודי קופון לדוגמה: קוד → אחוז הנחה
+function ckNeedsShip() { return coLines().some(l => l.p.shipOn); }
+function ckTotals() {
+  const lines = coLines();
+  const sub = lines.reduce((a, l) => a + coPrice(l.p) * l.qty, 0);
+  const ship = ckNeedsShip() ? Math.max(0, ...lines.filter(l => l.p.shipOn).map(l => Number(l.p.shipPrice) || 0)) : 0;
+  const pct = COUPONS[String(coState.coupon || '').toUpperCase()] || 0;
+  const disc = Math.round(sub * pct) / 100;
+  const total = Math.max(0, sub - disc + ship);
+  return { lines, sub, ship, disc, pct, total, vat: Math.round(total * VAT_RATE / (1 + VAT_RATE) * 100) / 100 };
+}
+function ckClose() { const el = document.getElementById('ck-page'); if (el) el.remove(); document.documentElement.classList.remove('ck-open'); }
+function ckKeep() { document.querySelectorAll('#ck-page [data-k]').forEach(el => { coState[el.dataset.k] = el.value; }); }
+function ckRender() {
+  ckKeep();
+  const { lines, sub, ship, disc, pct, total, vat } = ckTotals();
+  const needShip = ckNeedsShip();
+  const m = n => '₪ ' + Number(n).toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const v = k => escHtml(coState[k] || '');
+  const fld = (k, label, req, attrs = '') => `<label class="ck-f"><span>${label}${req ? ' *' : ''}</span><input data-k="${k}" value="${v(k)}" ${attrs}></label>`;
+  let el = document.getElementById('ck-page');
+  if (!el) { el = document.createElement('div'); el.id = 'ck-page'; document.body.appendChild(el); }
+  document.documentElement.classList.add('ck-open');
+  const summary = `<aside class="ck-sum">
+      <div class="ck-sum-h"><b>סיכום ההזמנה (${lines.length === 1 ? 'פריט אחד' : lines.length + ' פריטים'})</b></div>
+      ${lines.map((l, i) => `<div class="ck-item"><span class="ck-th">${l.p.image ? `<img src="${escHtml(l.p.image)}" alt="">` : PRODUCT_ICON}<i>${l.qty}</i></span>
+        <span class="ck-it"><b>${escHtml(l.p.name || '')}</b>${l.p.shipOn && l.p.shipEta ? `<small>זמן אספקה: ${escHtml(l.p.shipEta)}</small>` : ''}${l.p.sku ? `<small>מק״ט: <span dir="ltr">${escHtml(l.p.sku)}</span></small>` : ''}
+          ${coState.step === 'form' ? `<span class="co-step"><button type="button" onclick="ckQty(${i},-1)" aria-label="פחות">−</button><b>${l.qty}</b><button type="button" onclick="ckQty(${i},1)" aria-label="יותר">+</button></span>` : ''}</span>
+        <span class="ck-ip">${m(coPrice(l.p) * l.qty)}</span></div>`).join('')}
+      <details class="ck-coupon"${coState.coupon ? ' open' : ''}><summary>יש לך קוד קופון?</summary><div><input data-k="coupon" value="${v('coupon')}" placeholder="קוד קופון" dir="ltr"><button type="button" onclick="ckCoupon()">החלה</button></div>${coState.coupon ? `<small>${pct ? `✓ הנחה של ${pct}%` : 'הקוד לא תקף'}</small>` : ''}</details>
+      <div class="ck-lines"><div><span>סכום ביניים</span><span>${m(sub)}</span></div>${disc ? `<div><span>הנחה (${pct}%)</span><span>− ${m(disc)}</span></div>` : ''}${needShip ? `<div><span>משלוח</span><span>${ship ? m(ship) : 'חינם'}</span></div>` : ''}
+        <div class="ck-total"><span>סך הכל</span><span>${m(total)}</span></div><small>כולל מע״מ בסך ${m(vat)}</small></div>
+    </aside>`;
+  const form = coState.step === 'pay'
+    ? `<section class="ck-form"><h2>תשלום</h2><div class="co-demo">מצב הדגמה — לא יבוצע חיוב אמיתי.</div>
+        <div class="co-card"><input value="4242 4242 4242 4242" readonly tabindex="-1" dir="ltr" aria-label="מספר כרטיס בדיקה"><div><input value="12/30" readonly tabindex="-1" dir="ltr" aria-label="תוקף"><input value="123" readonly tabindex="-1" dir="ltr" aria-label="CVV"></div><small>כרטיס בדיקה קבוע — השדות נעולים</small></div>
+        <div class="ck-recap"><b>${escHtml((coState.first || '') + ' ' + (coState.last || ''))}</b><span dir="ltr">${escHtml(coState.email || '')} · ${escHtml(coState.phone || '')}</span>${needShip ? `<span>${escHtml([coState.street, coState.house].filter(Boolean).join(' '))}, ${escHtml(coState.city || '')}</span>` : ''}<button type="button" class="ck-link" onclick="coState.step='form'; ckRender()">עריכה</button></div>
+        <button type="button" class="ck-go" onclick="ckPay(this)">תשלום ${m(total)}</button></section>`
+    : `<section class="ck-form">
+        <h2>פרטי הלקוח/ה</h2>
+        ${fld('email', 'מייל', true, 'type="email" autocomplete="email" dir="ltr" maxlength="120"')}
+        <div class="ck-row">${fld('first', 'שם פרטי', true, 'autocomplete="given-name" maxlength="40"')}${fld('last', 'שם משפחה', true, 'autocomplete="family-name" maxlength="40"')}</div>
+        <label class="ck-f"><span>טלפון *</span><span class="ck-phone"><span class="ck-flag" aria-hidden="true">🇮🇱</span><input data-k="phone" value="${v('phone')}" type="tel" inputmode="tel" autocomplete="tel" dir="ltr" maxlength="20"></span></label>
+        ${fld('company', 'שם החברה', false, 'autocomplete="organization" maxlength="60"')}
+        ${needShip ? `<h2>פרטי המשלוח</h2>
+          <label class="ck-f"><span>מדינה/אזור *</span><select data-k="country">${['ישראל'].map(c => `<option${(coState.country || 'ישראל') === c ? ' selected' : ''}>${c}</option>`).join('')}</select></label>
+          <div class="ck-row">${fld('street', 'שם הרחוב', true, 'autocomplete="address-line1" maxlength="60"')}${fld('house', 'מספר הבית', true, 'maxlength="10"')}</div>
+          ${fld('city', 'עיר', true, 'autocomplete="address-level2" maxlength="40"')}
+          ${fld('zip', 'מיקוד', false, 'inputmode="numeric" autocomplete="postal-code" dir="ltr" maxlength="7"')}` : ''}
+        <button type="button" class="ck-go" onclick="ckNext()">המשך</button>
+      </section>`;
+  el.innerHTML = `<header class="ck-head"><b>תשלום</b><button type="button" class="ck-link" onclick="ckClose()">המשך גלישה באתר</button></header>
+    <div class="ck-body">${form}${summary}</div>`;
+}
+function ckQty(i, d) { ckKeep(); const it = coState.items[i]; if (!it) return; it.qty = Math.max(1, Math.min(10, it.qty + d)); ckRender(); }
+function ckCoupon() { ckKeep(); ckRender(); }
+function ckNext() {
+  ckKeep();
+  const need = [['email', 'מייל'], ['first', 'שם פרטי'], ['last', 'שם משפחה'], ['phone', 'טלפון']].concat(ckNeedsShip() ? [['street', 'שם הרחוב'], ['house', 'מספר הבית'], ['city', 'עיר']] : []);
+  const miss = need.find(([k]) => !String(coState[k] || '').trim());
+  if (miss) { showCopyToast('חסר: ' + miss[1]); const e = document.querySelector(`#ck-page [data-k="${miss[0]}"]`); if (e) e.focus(); return; }
+  if (!/^[^\s@]{1,64}@[^\s@]{1,100}\.[a-z]{2,}$/i.test(coState.email.trim())) { showCopyToast('כתובת המייל לא תקינה'); return; }
+  if (!/^[0-9+\-\s]{7,20}$/.test(coState.phone.trim())) { showCopyToast('מספר הטלפון לא תקין'); return; }
+  if (!coLines().length) { showCopyToast('המוצרים עדיין נטענים — נסו שוב בעוד רגע'); return; }
+  coState.step = 'pay'; ckRender(); try { document.getElementById('ck-page').scrollTo(0, 0); } catch (e) {}
+}
+function ckPay(btn) {
+  btn.disabled = true; btn.textContent = 'מעבד תשלום…';
+  setTimeout(() => {
+    const t = ckTotals();
+    coState.name = ((coState.first || '') + ' ' + (coState.last || '')).trim();
+    coState.addr = ckNeedsShip() ? [[coState.street, coState.house].filter(Boolean).join(' '), coState.city, coState.zip].filter(Boolean).join(', ') : '';
+    coState.ship = ckNeedsShip() ? 'delivery' : 'pickup';
+    coState.orderNo = 'BW-' + String(Date.now()).slice(-6);
+    const order = { no: coState.orderNo, t: Date.now(), items: t.lines.map(l => ({ id: l.id, name: l.p.name, price: coPrice(l.p), qty: l.qty, image: l.p.image || '' })), sub: t.sub, ship: t.ship, disc: t.disc, total: t.total, vat: t.vat, method: coState.ship, name: coState.name, phone: coState.phone.trim(), email: coState.email.trim(), company: coState.company || '', addr: coState.addr };
+    ordersAdd(order);
+    orderSaveRemote(order).then(() => receiptSendEmail(order));
+    if (coState.fromCart) cartSet([]);
+    coState.step = 'done';
+    coRender();
+  }, 1400);
+}
+Object.assign(window, { ckClose, ckQty, ckCoupon, ckNext, ckPay, ckRender });
