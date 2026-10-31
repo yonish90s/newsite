@@ -16840,7 +16840,7 @@ html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not
 .rn-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .rn-head h1 { margin: 0; font-size: 26px; font-weight: 900; }
 .rn-head p { margin: 4px 0 0; font-size: 14px; color: #6b7280; }
-.rn-pub { border: 0; border-radius: 12px; padding: 10px 16px; font: inherit; font-size: 14px; font-weight: 800; background: #ff7a00; color: #ffffff; cursor: pointer; }
+.rn-pub { border: 0; border-radius: 12px; padding: 10px 16px; font: inherit; font-size: 14px; font-weight: 800; background: #ea4c89; color: #ffffff; cursor: pointer; }
 .rn-pub:hover { filter: brightness(1.05); }
 .rn-bar { display: flex; gap: 8px; flex-wrap: wrap; }
 .rn-q { flex: 1 1 260px; min-width: 0; height: 42px; padding: 0 14px; border-radius: 12px; border: 1px solid #d1d5db; background: #ffffff; font: inherit; font-size: 14px; }
@@ -16878,7 +16878,7 @@ html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not
 .rn-det-owner { display: flex; align-items: center; gap: 10px; }
 .rn-det-owner > span:last-child { display: flex; flex-direction: column; }
 .rn-det-owner small { font-size: 12.5px; color: #6b7280; }
-.rn-av { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; background: #ff7a00; color: #ffffff; font-weight: 900; }
+.rn-av { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; background: #ea4c89; color: #ffffff; font-weight: 900; }
 .rn-det-desc { margin: 0; font-size: 14px; line-height: 1.6; }
 .rn-specs { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 6px; }
 .rn-specs li { font-size: 12.5px; padding: 4px 10px; border-radius: 999px; background: #f3f4f6; }
@@ -16888,7 +16888,7 @@ html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not
 .rn-calc input { width: 96px; text-align: center; }
 .rn-sum { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: #4b5563; }
 .rn-sum .rn-tot { margin-inline-start: auto; font-size: 15px; color: #111827; }
-.rn-go { width: 100%; background: #ff7a00 !important; color: #ffffff !important; border: 0 !important; }
+.rn-go { width: 100%; background: #ea4c89 !important; color: #ffffff !important; border: 0 !important; }
 .rn-form { display: flex; flex-direction: column; gap: 10px; }
 .rn-form label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; font-weight: 700; }
 .rn-row { display: grid; grid-template-columns: 1.2fr 1fr .8fr; gap: 8px; }
@@ -16929,6 +16929,7 @@ html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not
 /* פרטי מודעת השכרה בחלון */
 #m-sheet .rn-det, #m-sheet .rn-form, #m-sheet .inv { padding: 4px 18px 10px; }
 html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet .ms-foot .ms-btn:is(.rn-go, .inv-go) { background: #ff7a00 !important; color: #ffffff !important; border: 0 !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet .ms-foot .ms-btn.rn-go { background: #ea4c89 !important; }
 
 /* ===== תמכו / השקיעו בנו ===== */
 .inv { display: flex; flex-direction: column; gap: 12px; }
@@ -16964,9 +16965,9 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_
 .rn-idea .rn-sk svg { width: 100%; height: 100%; display: block; }
 .rn-idea b { font-size: 12.5px; line-height: 1.25; }
 .rn-idea small { font-size: 11px; color: #6b7280; }
-.rn-idea em { font-style: normal; font-size: 12px; font-weight: 800; color: #ea580c; }
+.rn-idea em { font-style: normal; font-size: 12px; font-weight: 800; color: #d6336c; }
 .rn-idea:hover { border-color: #fdba74; }
-.rn-idea.on { border-color: #ff7a00; box-shadow: 0 0 0 2px rgba(255, 122, 0, .25); }
+.rn-idea.on { border-color: #ea4c89; box-shadow: 0 0 0 2px rgba(234, 76, 137, .25); }
 .rn-idea.sm { width: 112px; padding: 8px 6px; }
 .rn-idea.sm .rn-sk { width: 70px; height: 52px; }
 .rn-pick { display: flex; flex-direction: column; gap: 8px; }
@@ -16974,9 +16975,9 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_
 .rn-calc label small { font-size: 12px; font-weight: 600; color: #6b7280; }
 
 /* עמוד מודעה מלא */
-.rn-back { align-self: flex-start; border: 0; background: transparent; color: #ea580c; font: inherit; font-size: 14px; font-weight: 800; padding: 4px 0; cursor: pointer; }
+.rn-back { align-self: flex-start; border: 0; background: transparent; color: #d6336c; font: inherit; font-size: 14px; font-weight: 800; padding: 4px 0; cursor: pointer; }
 .rn-det-title { grid-column: 1 / -1; margin: 0; font-size: 24px; font-weight: 900; line-height: 1.25; }
-.rent-page .rn-go { width: 100%; height: 48px; border: 0; border-radius: 14px; background: #ff7a00; color: #ffffff; font: inherit; font-size: 15px; font-weight: 800; cursor: pointer; }
+.rent-page .rn-go { width: 100%; height: 48px; border: 0; border-radius: 14px; background: #ea4c89; color: #ffffff; font: inherit; font-size: 15px; font-weight: 800; cursor: pointer; }
 .rent-page .rn-go:hover { filter: brightness(1.05); }
 /* עמוד מודעה בסגנון dribbble: כותרת גדולה + מפרסם, תמונה גדולה, כרטיס מחיר עם כפתור ורוד ומתאר, כרטיס מפרסם, "על המודעה" ותגיות */
 .rn-det-head { display: flex; flex-direction: column; gap: 8px; }
@@ -17035,8 +17036,8 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_
 .rn-sec { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 6px; border-radius: 14px; border: 1px solid #e5e7eb; background: #ffffff; color: #111827; font: inherit; font-size: 14px; font-weight: 800; cursor: pointer; }
 .rn-sec span { font-size: 22px; line-height: 1; }
 .rn-sec small { font-size: 11px; font-weight: 700; color: #6b7280; }
-.rn-sec.on { border-color: #ff7a00; background: #fff7ed; box-shadow: 0 0 0 2px rgba(255, 122, 0, .2); }
-.rn-kind { position: absolute; bottom: 8px; right: 8px; font-style: normal; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 999px; color: #ffffff; background: #ea580c; }
+.rn-sec.on { border-color: #ea4c89; background: #fdf2f7; box-shadow: 0 0 0 2px rgba(234, 76, 137, .2); }
+.rn-kind { position: absolute; bottom: 8px; right: 8px; font-style: normal; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 999px; color: #ffffff; background: #d6336c; }
 .rn-kind.k-used { background: #2563eb; }
 .rn-kind.k-store { background: #059669; }
 .rn-pubmenu { position: relative; }

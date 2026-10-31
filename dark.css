@@ -3101,6 +3101,7 @@ html.theme-dark .promo-row .ad-card:not(.ad-invite) { background: #111111 !impor
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #glass-banner { border: 1px solid rgba(255, 255, 255, 0.1) !important; }
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #glass-banner .gbn-btn { background: rgba(17, 17, 17, 0.14) !important; }
 html.theme-dark .rn-head p { color: #d0d0d0 !important; }
+html.theme-dark .rn-pub { background: #e8823d !important; }
 html.theme-dark .rn-q { border: 1px solid #2a2a2a !important; background: #111111 !important; }
 html.theme-dark .rn-sel { border: 1px solid #2a2a2a !important; background: #111111 !important; }
 html.theme-dark .rn-cat { border: 1px solid #2a2a2a !important; background: #111111 !important; color: #ffffff !important; }
@@ -3120,11 +3121,13 @@ html.theme-dark .rn-det-price small { color: #d0d0d0 !important; }
 html.theme-dark .rn-det-price span { color: #d0d0d0 !important; }
 html.theme-dark .rn-det-meta { color: #d0d0d0 !important; }
 html.theme-dark .rn-det-owner small { color: #d0d0d0 !important; }
+html.theme-dark .rn-av { background: #e8823d !important; }
 html.theme-dark .rn-specs li { background: #111111 !important; }
 html.theme-dark .rn-calc { border: 1px solid #2a2a2a !important; }
 html.theme-dark .rn-calc input, html.theme-dark .rn-calc textarea, html.theme-dark .rn-form input, html.theme-dark .rn-form select, html.theme-dark .rn-form textarea { border: 1px solid #2a2a2a !important; background: #111111 !important; }
 html.theme-dark .rn-sum { color: #d0d0d0 !important; }
 html.theme-dark .rn-sum .rn-tot { color: #ffffff !important; }
+html.theme-dark .rn-go { background: #e8823d !important; }
 @media (min-width: 1100px) {
 html.theme-dark .rn-shelf-h { color: #ffffff !important; }
 html.theme-dark .rn-shelf-more { color: #e8823d !important; }
@@ -3135,6 +3138,7 @@ html.theme-dark .rn-tile-m { color: #d0d0d0 !important; }
 html.theme-dark .rn-tile-p { color: #e8823d !important; }
 html.theme-dark .rn-tile-p small { color: #d0d0d0 !important; }
 }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet .ms-foot .ms-btn.rn-go { background: #e8823d !important; }
 html.theme-dark .inv-tabs { background: #111111 !important; }
 html.theme-dark .inv-tab { color: #d0d0d0 !important; }
 html.theme-dark .inv-tab.on { background: #111111 !important; color: #ffffff !important; }
@@ -3148,7 +3152,11 @@ html.theme-dark .rn-ideas h2 small { color: #d0d0d0 !important; }
 html.theme-dark .rn-idea { border: 1px solid #2a2a2a !important; background: #111111 !important; color: #ffffff !important; }
 html.theme-dark .rn-idea .rn-sk { color: #d0d0d0 !important; background-image: linear-gradient(#111111 1px, transparent 1px), linear-gradient(90deg, #111111 1px, transparent 1px) !important; }
 html.theme-dark .rn-idea small { color: #d0d0d0 !important; }
+html.theme-dark .rn-idea em { color: #e8823d !important; }
+html.theme-dark .rn-idea.on { border-color: #e8823d !important; }
 html.theme-dark .rn-calc label small { color: #d0d0d0 !important; }
+html.theme-dark .rn-back { color: #e8823d !important; }
+html.theme-dark .rent-page .rn-go { background: #e8823d !important; }
 html.theme-dark .rn-det-by { color: #ffffff !important; }
 html.theme-dark .rn-av.lg { background: #262626 !important; }
 html.theme-dark .rn-det-about h2, html.theme-dark .rn-det-rel h2 { color: #ffffff !important; }
@@ -3173,7 +3181,8 @@ html.theme-dark .rent-page .rn-det-desc { color: #ffffff !important; }
 }
 html.theme-dark .rn-sec { border: 1px solid #2a2a2a !important; background: #111111 !important; color: #ffffff !important; }
 html.theme-dark .rn-sec small { color: #d0d0d0 !important; }
-html.theme-dark .rn-sec.on { background: #111111 !important; }
+html.theme-dark .rn-sec.on { border-color: #e8823d !important; background: #111111 !important; }
+html.theme-dark .rn-kind { background: #e8823d !important; }
 html.theme-dark .rn-kind.k-used { background: #e8823d !important; }
 html.theme-dark .rn-pubmenu > div { background: #111111 !important; border: 1px solid #2a2a2a !important; }
 html.theme-dark .rn-pubmenu > div button { color: #ffffff !important; }
@@ -4181,10 +4190,10 @@ html.theme-dark .inv-pct-l b { color: #c4b5fd !important; }
 html.theme-dark .inv-fine { color: #a8a8a8 !important; }
 html.theme-dark .rn-idea { background: #161616 !important; border-color: #2a2a2a !important; color: #ffffff !important; }
 html.theme-dark .rn-idea .rn-sk { color: #e5e5e5 !important; background-color: #1d1d1d !important; background-image: linear-gradient(#262626 1px, transparent 1px), linear-gradient(90deg, #262626 1px, transparent 1px) !important; }
-html.theme-dark .rn-idea.on { border-color: #ff7a00 !important; }
+html.theme-dark .rn-idea.on { border-color: #ea4c89 !important; }
 html.theme-dark :is(.rn-idea small, .rn-ideas h2 small, .rn-calc label small) { color: #a8a8a8 !important; }
 html.theme-dark .rn-sec, html.theme-dark .rn-pubmenu > div { background: #161616 !important; border-color: #2a2a2a !important; color: #ffffff !important; }
-html.theme-dark .rn-sec.on { background: #2a1a0e !important; border-color: #ff7a00 !important; }
+html.theme-dark .rn-sec.on { background: #2a1420 !important; border-color: #ea4c89 !important; }
 html.theme-dark .rn-sec small { color: #a8a8a8 !important; }
 html.theme-dark .rn-pubmenu > div button { color: #ffffff !important; }
 html.theme-dark .rn-pubmenu > div button:hover { background: #232323 !important; }
