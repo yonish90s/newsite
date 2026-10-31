@@ -8834,8 +8834,20 @@ function renderPhotoCard(p, options = {}) {
         </div>
         ${miniThumbnailsHTML}
       </div>
+      <div class="pf-cap"><b>${escHtml(p.title || '')}</b><span class="pf-cap-m">${escHtml(p.author || '')}${p.timestamp ? ' · ' + escHtml(p.timestamp) : ''}</span><span class="pf-cap-f"><span class="pf-cap-l">❤ ${likesCount}</span><span class="pf-cap-m">👁 ${formatViews(viewsCount)}</span></span></div>
     </div>
   `;
+}
+
+// מחשב, תמונות גולשים: עמודת טקסט בצד הגריד (בסגנון free3d) — כותרת, הסבר וקטגוריות כקישורים
+function photoSideHTML(count) {
+  const cur = (typeof sectionCatFilters !== 'undefined' && sectionCatFilters.photos) || 'הכל';
+  const cats = ['הכל'].concat(typeof PHOTO_BAR_CATEGORIES !== 'undefined' ? PHOTO_BAR_CATEGORIES.filter(c => c !== 'הכל') : []);
+  return `<aside class="pf-side">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg>${escHtml(cur === 'הכל' ? 'תמונות גולשים' : cur)}</h2>
+    <p>גלריות שגולשים העלו לאתר — ${count} גלריות${cur === 'הכל' ? '' : ' בקטגוריה הזו'}. לוחצים על תמונה כדי לראות את כל הגלריה, לעשות לייק או לשלוח הודעה.</p>
+    <p>קטגוריות: ${cats.map(c => `<a class="${c === cur ? 'on' : ''}" onclick="setSectionCategoryFilter('photos','${artEsc(c)}')">${escHtml(c)}</a>`).join(', ')}</p>
+  </aside>`;
 }
 
 // מספר הגלריות המוצגות בכל שורה לפני לחיצה על "עוד" (שורת גריד אחת = 4 עמודות)
@@ -16185,7 +16197,7 @@ function buildPhotosPage(albums, section) {
                 <h3 style="margin:0; font-size:18px; font-weight:900; color:#262626;">${sectionTitle}</h3>
               </div>
             </div>
-            <div class="art-rows photo-collapsible expanded" id="photo-row-1">${row1HTML}</div>
+            ${section === 'photos' ? `<div class="pf3">${photoSideHTML(albums.length)}<div class="art-rows photo-collapsible expanded" id="photo-row-1">${row1HTML}</div></div>` : `<div class="art-rows photo-collapsible expanded" id="photo-row-1">${row1HTML}</div>`}
             ${photoRowMoreBtn(newestAlbums.length, 'photo-row-1')}
           </div>
           ${section === 'communities' && typeof sidePagesShortcutsHTML === 'function' ? sidePagesShortcutsHTML() : ''}
@@ -32854,8 +32866,52 @@ function rentCardHTML(r) {
     </span>
   </button>`;
 }
+// מחשב: מדפים בסגנון free3d — עמודת טקסט בצד (כותרת, הסבר, קישורי תת-קטגוריות) ולידה הרבה תמונות בשורות של 6
+const rentWide = () => { try { return window.matchMedia('(min-width: 1100px)').matches; } catch (e) { return false; } };
+function rentTileHTML(r) {
+  const sec = mktSecOf(r), tag = sec === 'used' ? r.offer : sec === 'store' ? 'אחסון' : 'השכרה';
+  const go = r.shId ? `mktOpenUsed('${artEsc(r.shId)}')` : `rentOpen('${artEsc(r.id)}')`;
+  return `<button type="button" class="rn-tile" onclick="${go}">
+    <span class="rn-tile-img">${rentThumb(r)}${r.demo ? '<em class="rn-demo">דוגמה</em>' : ''}</span>
+    <b class="rn-tile-t">${escHtml(r.title)}</b>
+    <span class="rn-tile-m">${escHtml(tag || '')} · ${escHtml(r.city || '')} · ${escHtml(r.owner || '')}</span>
+    <span class="rn-tile-f"><span class="rn-tile-p">${rentPriceTxt(r)}</span><span class="rn-tile-s">${r.rating ? `★ ${r.rating}` : rentAgo(r.t)}</span></span>
+  </button>`;
+}
+function rentShelvesHTML(l) {
+  const cityLinks = list => [...new Set(list.map(r => r.city).filter(Boolean))].slice(0, 12).map(c => `<a onclick="rentSet('city', '${artEsc(c)}')">${escHtml(c)}</a>`);
+  let groups;
+  if (rentUI.sec === 'all') {
+    groups = MKT_SECS.slice(1).map(s => {
+      const items = l.filter(r => mktSecOf(r) === s.id);
+      const links = s.id === 'rent' ? RENT_CATS.filter(c => !c.store && c.id !== 'all' && items.some(r => r.cat === c.id)).map(c => `<a onclick="rentSet('cat', '${c.id}')">${escHtml(c.name)}</a>`) : cityLinks(items);
+      return { ic: s.ic, name: s.name, sub: s.sub, items, links, linksLbl: s.id === 'rent' ? 'תת-קטגוריות' : 'ערים', more: `mktGo('${s.id}')` };
+    });
+  } else if (rentUI.sec === 'rent') {
+    groups = RENT_CATS.filter(c => !c.store && c.id !== 'all').map(c => ({ ic: c.ic, name: c.name, items: l.filter(r => r.cat === c.id) }));
+  } else if (rentUI.sec === 'used') {
+    const offers = [...new Set(l.map(r => r.offer || 'מכירה'))];
+    groups = offers.map(o => ({ ic: o === 'החלפה' ? '🔁' : o === 'השאלה' ? '🤝' : '🏷️', name: o, items: l.filter(r => (r.offer || 'מכירה') === o) }));
+  } else {
+    const s = MKT_SECS.find(x => x.id === rentUI.sec) || MKT_SECS[0];
+    groups = [{ ic: s.ic, name: s.name, sub: s.sub, items: l }];
+  }
+  return groups.filter(g => g.items.length).map(g => {
+    const links = g.links || cityLinks(g.items);
+    return `<section class="rn-shelf">
+      <aside class="rn-shelf-side">
+        <h2><span>${g.ic}</span>${escHtml(g.name)} <small>${g.items.length}</small></h2>
+        ${g.sub ? `<p>${escHtml(g.sub)}</p>` : ''}
+        ${links.length ? `<p class="rn-shelf-links">${g.linksLbl || 'ערים'}: ${links.join(', ')}</p>` : ''}
+        ${g.more ? `<button type="button" class="rn-shelf-more" onclick="${g.more}">לכל ה-${g.items.length} ›</button>` : ''}
+      </aside>
+      <div class="rn-shelf-row">${(g.more ? g.items.slice(0, 12) : g.items).map(rentTileHTML).join('')}</div>
+    </section>`;
+  }).join('');
+}
 function rentGridHTML() {
   const l = rentList();
+  if (l.length && rentWide()) return rentShelvesHTML(l);
   return l.length ? l.map(rentCardHTML).join('') : `<div class="rn-empty">אין עדיין מודעות כאן.<br><button type="button" class="rn-pub" onclick="mktPublish('${rentUI.sec}')">היו הראשונים לפרסם</button></div>`;
 }
 function rentViewHTML() {
@@ -32903,6 +32959,7 @@ function rentRender(gridOnly) {
   if (gridOnly && !open) { const g = el.querySelector('.rn-grid'); if (g) g.innerHTML = rentGridHTML(); return; }
   el.innerHTML = open ? rentDetailHTML(open) : rentViewHTML();
 }
+try { window.matchMedia('(min-width: 1100px)').addEventListener('change', () => rentRender(true)); } catch (e) {}
 function rentSet(k, v) { rentUI[k] = v; rentUI.open = null; if (k === 'cat' && v !== 'all') rentUI.sec = 'rent'; rentRender(k === 'q'); }
 function rentFind(id) { return mktAll().find(r => r.id === id); }
 function rentCalc(r, qty) {
