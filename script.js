@@ -8837,13 +8837,13 @@ function renderPhotoCard(p, options = {}) {
           <button class="art-delete-btn" onclick="event.stopPropagation();photoDelete('${artEsc(p.id)}',this)">✕</button>
           <div class="pf-hov"><b>${escHtml(p.title || '')}</b><span class="pf-hov-btns">
             <button type="button" onclick="event.stopPropagation(); photoOpenDetail('${artEsc(p.id)}')" title="תגובות" aria-label="תגובות"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H4l2.2-2.6A8 8 0 1 1 21 12z"/></svg></button>
-            <button type="button" class="${isSavedCard ? 'on' : ''}" onclick="event.stopPropagation(); photoToggleSave('${artEsc(p.id)}')" title="שמירה" aria-label="שמירה"><svg viewBox="0 0 24 24" fill="${isSavedCard ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
-            <button type="button" class="${isLikedCard ? 'on' : ''}" onclick="event.stopPropagation(); photoToggleLike('${artEsc(p.id)}')" title="לייק" aria-label="לייק"><svg viewBox="0 0 24 24" fill="${isLikedCard ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/></svg></button>
+            <button type="button" class="${isSavedCard ? 'on' : ''}" data-save="${escHtml(p.id)}" onclick="event.stopPropagation(); photoToggleSave('${artEsc(p.id)}')" title="שמירה" aria-label="שמירה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
+            <button type="button" class="${isLikedCard ? 'on' : ''}" data-like="${escHtml(p.id)}" onclick="event.stopPropagation(); photoToggleLike('${artEsc(p.id)}')" title="לייק" aria-label="לייק">${LIKE_SVG}</button>
           </span></div>
         </div>
         ${miniThumbnailsHTML}
       </div>
-      <div class="pf-cap">${authorAvHTML(p)}<b class="pf-au">${escHtml(p.author || '')}</b><span class="pf-st"><span><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54z"/></svg>${likesCount}</span><span><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 5C5.5 5 2 12 2 12s3.5 7 10 7 10-7 10-7-3.5-7-10-7zm0 11a4 4 0 1 1 0-8 4 4 0 0 1 0 8z"/></svg>${formatViews(viewsCount)}</span></span></div>
+      <div class="pf-cap">${authorAvHTML(p)}<b class="pf-au">${escHtml(p.author || '')}</b><span class="pf-st"><span>${LIKE_SVG}<span data-likes-n="${escHtml(p.id)}">${likesCount}</span></span><span><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 5C5.5 5 2 12 2 12s3.5 7 10 7 10-7 10-7-3.5-7-10-7zm0 11a4 4 0 1 1 0-8 4 4 0 0 1 0 8z"/></svg>${formatViews(viewsCount)}</span></span></div>
     </div>
   `;
 }
@@ -19413,6 +19413,8 @@ function recoFindAlbum(id) {
   try { return ((typeof photoGetAlbums === 'function') ? photoGetAlbums() : []).find(x => x && String(x.id) === String(id)) || null; } catch (e) { return null; }
 }
 // תגובה מיידית: מעדכנים את הלב מיד, ואת העבודה הכבדה (שמירה וסנכרון) עושים אחרי שהמסך התעדכן
+// אייקון "לייק" (אגודל) לכרטיסים ולשכבות הריחוף
+const LIKE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v11"/><path d="M15 5.9 14 10h5.8a2 2 0 0 1 1.9 2.6l-2.3 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.8a2 2 0 0 0 1.8-1.1L12 2a3.1 3.1 0 0 1 3 3.9z"/></svg>';
 function photoToggleLike(id) {
   try {
     document.querySelectorAll(`.art-like-btn[onclick*="'${id}'"], .hr-like[onclick*="'${id}'"]`).forEach(b => b.classList.toggle('liked'));
@@ -19543,6 +19545,9 @@ function _photoToggleLikeImpl(id) {
 
   const isNowLiked = !!liked[id];
   if (isNowLiked && typeof trackEvent === 'function') trackEvent('like');
+  // כפתורי הלייק בכרטיסים ובשכבות הריחוף + מוני הלייקים מתחת לכרטיסים — מתעדכנים מיד
+  document.querySelectorAll('[data-like]').forEach(b => { if (b.dataset.like === id) b.classList.toggle('on', isNowLiked); });
+  document.querySelectorAll('[data-likes-n]').forEach(n => { if (n.dataset.likesN === id) n.textContent = Math.max(0, (parseInt(n.textContent, 10) || 0) + (isNowLiked ? 1 : -1)); });
 
   // מונה הלייקים נשמר ב-Firebase בנתיב נפרד (גולשים לא כותבים ל-pages)
   const likeDelta = isNowLiked ? 1 : -1;
@@ -19719,6 +19724,7 @@ function photoToggleSave(id, btnEl) {
   }
 
   localStorage.setItem(localKey, JSON.stringify(saved));
+  document.querySelectorAll('[data-save]').forEach(b => { if (b.dataset.save === id) b.classList.toggle('on', isNowSaved); });
   
   if (user) {
     try {
@@ -30492,14 +30498,19 @@ function homeRowsHTML(photos, comics, stories) {
     const n = (x.images || []).filter(Boolean).length;
     const open = kind === 'photo' ? `homeOpenPhotos(); photoOpenDetail('${artEsc(x.id)}')` : `storyOpenDetail('${artEsc(x.id)}')`;
     const likes = Number(x.likes) || 0;
-    return `<button type="button" class="hr-card" onclick="${open}">
+    const views = typeof photoGetViews === 'function' ? photoGetViews(x.id) : 0;
+    const liked = typeof photoIsLikedLocal === 'function' && photoIsLikedLocal(x.id);
+    const saved = typeof photoIsSavedLocal === 'function' && photoIsSavedLocal(x.id);
+    const ic = d => `<svg viewBox="0 0 24 24" fill="currentColor">${d}</svg>`;
+    return `<button type="button" class="hr-card" onclick="${open}" title="${escHtml(x.title || '')}">
       <span class="hr-img${x.isAdult && !adultOk ? ' blur' : ''}">${src ? `<img src="${escHtml(src)}" alt="" loading="lazy">` : ''}
         ${x.category ? `<span class="hr-badge">${escHtml(x.category)}</span>` : ''}
-        ${n > 1 ? `<span class="hr-count">${n} תמונות</span>` : ''}</span>
-      <b class="hr-title">${escHtml(x.title || '')}</b>
-      <span class="hr-author">${escHtml(x.author || 'משתמש')}</span>
-      <span class="hr-meta">${escHtml(x.timestamp || '')}</span>
-      <span class="hr-acts"><span class="hr-like${typeof photoIsLikedLocal === 'function' && photoIsLikedLocal(x.id) ? ' liked' : ''}" role="button" tabindex="0" aria-label="לייק" onclick="event.stopPropagation(); event.preventDefault(); photoToggleLike('${artEsc(x.id)}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.6 1-1.1a5.5 5.5 0 0 0 0-7.7z"/></svg><span class="pc-n">${likes || ''}</span></span>${hrActsHTML(x, kind)}</span>
+        ${n > 1 ? `<span class="hr-count">${n} תמונות</span>` : ''}
+        <span class="hr-hov"><b>${escHtml(x.title || '')}</b><span class="hr-hov-btns">
+          <span role="button" tabindex="0" class="${saved ? 'on' : ''}" data-save="${escHtml(x.id)}" aria-label="שמירה" title="שמירה" onclick="event.stopPropagation(); event.preventDefault(); photoToggleSave('${artEsc(x.id)}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></span>
+          <span role="button" tabindex="0" class="${liked ? 'on' : ''}" data-like="${escHtml(x.id)}" aria-label="לייק" title="לייק" onclick="event.stopPropagation(); event.preventDefault(); photoToggleLike('${artEsc(x.id)}')">${LIKE_SVG}</span>
+        </span></span></span>
+      <span class="hr-foot">${authorAvHTML(x)}<b class="hr-au">${escHtml(x.author || 'משתמש')}</b><span class="hr-st"><span>${LIKE_SVG}<span data-likes-n="${escHtml(x.id)}">${likes}</span></span><span>${ic('<path d="M12 5C5.5 5 2 12 2 12s3.5 7 10 7 10-7 10-7-3.5-7-10-7zm0 11a4 4 0 1 1 0-8 4 4 0 0 1 0 8z"/>')}${typeof formatViews === 'function' ? formatViews(views) : views}</span></span></span>
     </button>`;
   };
   const row = (title, items, kind, all) => {
@@ -30885,26 +30896,6 @@ window.repostersToggle = repostersToggle;
   document.addEventListener('contextmenu', e => { if (e.target.closest && e.target.closest(SEL)) e.preventDefault(); }, true);
 })();
 
-// ריבועי הפעולה בכרטיסי שורות הבית (אחרי הלייק): שיתוף + מונה, שמירה, שליחה, דיווח
-function hrActsHTML(x, kind) {
-  const id = artEsc(x.id);
-  try { subscribeReposts(); } catch (e) {}
-  const reps = repostCount(x.id);
-  const saved = typeof photoIsSavedLocal === 'function' && photoIsSavedLocal(x.id);
-  const ic = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
-  const b = (cls, on, label, d, n) => `<span class="hr-sq ${cls}" role="button" tabindex="0" aria-label="${label}" title="${label}" onclick="event.stopPropagation(); event.preventDefault(); ${on}">${ic(d)}${n ? `<span class="pc-n">${n}</span>` : ''}</span>`;
-  return b('hr-rep pti-repost" data-item="' + escHtml(x.id), `toggleRepost('${id}', this)`, 'שיתוף לפרופיל', '<path d="M14 5l6 6-6 6"/><path d="M20 11H10a6 6 0 0 0-6 6v2"/>', reps ? formatViews(reps) : '')
-    + b('hr-save' + (saved ? ' is-saved' : ''), `photoToggleSave('${id}'); this.classList.toggle('is-saved')`, 'שמירה', '<path d="M6 3h12v18l-6-4.5L6 21z"/>')
-    + b('hr-share', `hrShare('${kind}', '${id}', this)`, 'שליחה', '<path d="M12 3v12"/><path d="M7.5 7.5 12 3l4.5 4.5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/>')
-    + b('hr-flag', `openReportContent('${id}', '${artEsc(x.title || '')}')`, 'דיווח', '<path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/>');
-}
-function hrShare(kind, id, el) {
-  const url = location.origin + location.pathname + (kind === 'photo' ? '#p/' : '#s/') + id;
-  const t = el && el.closest('.hr-card') && el.closest('.hr-card').querySelector('.hr-title');
-  if (navigator.share) { navigator.share({ title: (t && t.textContent) || document.title, url }).catch(() => {}); return; }
-  try { navigator.clipboard.writeText(url); if (typeof showCopyToast === 'function') showCopyToast('הקישור הועתק'); } catch (e) {}
-}
-window.hrShare = hrShare;
 
 // ============================================================
 // מובייל: קרוסלה אמיתית בעמוד פריט/קומיקס עם כמה תמונות — גוללים עם האצבע כמו בקרוסלה של עמוד הבית
@@ -33252,6 +33243,8 @@ Object.assign(window, { investOpen, investTab, investAmt, investPct, investSend 
     if (!on()) return;
     const w = e.target.closest && e.target.closest(WRAPS);
     if (!w || w.classList.contains('unblur') || !w.querySelector('img')) return;
+    // כפתורי לייק/שמירה/תגובות על התמונה עושים רק את הפעולה שלהם — בלי לחשוף את התמונה ובלי לפתוח אותה
+    if (e.target.closest('.pf-hov-btns, .hr-hov-btns')) return;
     e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
     reveal(w);
   }, true);
