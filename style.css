@@ -16902,18 +16902,13 @@ html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not
   .rn-price { font-size: 16px; }
   .rn-title { font-size: 13px; }
 }
-/* מחשב: מדפים בסגנון free3d — עמודת טקסט בצד ושורות של 6 תמונות על רקע אפור בהיר */
+/* מחשב: מדפים בסגנון free3d — כותרת ושורות של 6 תמונות על רקע אפור בהיר */
 @media (min-width: 1100px) {
   .rent-page .rn-inner { max-width: 1560px; }
   .rn-grid:has(> .rn-shelf) { display: flex; flex-direction: column; gap: 34px; }
-  .rn-shelf { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 32px; align-items: start; }
-  .rn-shelf-side { position: sticky; top: 80px; display: flex; flex-direction: column; gap: 10px; }
-  .rn-shelf-side h2 { margin: 0; display: flex; align-items: center; gap: 10px; font-size: 21px; font-weight: 800; color: #1f2937; }
-  .rn-shelf-side h2 small { font-size: 13px; font-weight: 700; color: #9ca3af; }
-  .rn-shelf-side p { margin: 0; font-size: 15px; line-height: 1.55; color: #4b5563; }
-  .rn-shelf-links a { color: #2b7bc9; cursor: pointer; text-decoration: none; }
-  .rn-shelf-links a:hover { text-decoration: underline; }
-  .rn-shelf-more { align-self: flex-start; border: 0; background: none; padding: 0; font: inherit; font-size: 14px; font-weight: 800; color: #2b7bc9; cursor: pointer; }
+  .rn-shelf-h { margin: 0 0 16px; display: flex; align-items: center; gap: 10px; font-size: 21px; font-weight: 800; color: #1f2937; }
+  .rn-shelf-h small { font-size: 13px; font-weight: 700; color: #9ca3af; }
+  .rn-shelf-more { margin-inline-start: auto; border: 0; background: none; padding: 0; font: inherit; font-size: 14px; font-weight: 800; color: #2b7bc9; cursor: pointer; }
   .rn-shelf-row { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 32px 26px; }
   .rn-tile { display: flex; flex-direction: column; gap: 4px; min-width: 0; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: right; cursor: pointer; }
   .rn-tile-img { position: relative; display: block; aspect-ratio: 1; overflow: hidden; background: #f3f4f6; margin-bottom: 12px; }
@@ -16928,7 +16923,6 @@ html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not
   .rn-tile-s { flex: none; font-size: 12.5px; color: #9ca3af; }
 }
 @media (min-width: 1100px) and (max-width: 1399px) {
-  .rn-shelf { grid-template-columns: 210px minmax(0, 1fr); gap: 24px; }
   .rn-shelf-row { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 26px 18px; }
 }
 
@@ -17219,20 +17213,9 @@ html.adult-blur body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not
 }
 html.adult-blur body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.pfc-img, .pfo-bn, .pfo-coll-grid span):not(.unblur) img { filter: blur(16px) !important; transform: scale(1.12) !important; }
 
-/* מחשב, תמונות גולשים: הרבה תמונות בשורה (בסגנון free3d) — עמודת טקסט בצד, ריבועים על אפור בהיר וכיתוב מתחת */
-.pf-side, .pf-cap { display: none; }
+/* מחשב, תמונות גולשים: הרבה תמונות בשורה (בסגנון free3d) — ריבועים על אפור בהיר וכיתוב מתחת */
+.pf-cap { display: none; }
 @media (min-width: 1100px) {
-  .photos-page[data-section="photos"] .pf3 { display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 0 30px; align-items: start; }
-  .photos-page[data-section="photos"] .pf3 > .pf-side { grid-column: 1; grid-row: 1 / span 3; }
-  .photos-page[data-section="photos"] .pf3 > :not(.pf-side) { grid-column: 2; min-width: 0; }
-  .photos-page[data-section="photos"] .pf3 > .mview-bar { justify-self: end; margin-bottom: 14px; }
-  .photos-page[data-section="photos"] .pf-side { position: sticky; top: 80px; display: flex; flex-direction: column; gap: 10px; }
-  .pf-side h2 { margin: 0; display: flex; align-items: center; gap: 10px; font-size: 21px; font-weight: 800; color: #1f2937; }
-  .pf-side h2 svg { width: 26px; height: 26px; flex: none; }
-  .pf-side p { margin: 0; font-size: 15px; line-height: 1.55; color: #4b5563; }
-  .pf-side a { color: #2b7bc9; cursor: pointer; text-decoration: none; }
-  .pf-side a:hover, .pf-side a.on { text-decoration: underline; }
-  .pf-side a.on { font-weight: 800; }
   html:not(.mview-list):not(.mview-feed) body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="photos"] .pf3 #photo-row-1 { grid-template-columns: repeat(6, minmax(0, 1fr)) !important; gap: 30px 22px !important; }
   html:not(.mview-list):not(.mview-feed) body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="photos"] .pf3 #photo-row-1 > .art-row { overflow: visible !important; border-radius: 0 !important; }
   html:not(.mview-list):not(.mview-feed) body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="photos"] .pf3 #photo-row-1 > .art-row > .pf-cap { display: flex !important; }
@@ -17248,6 +17231,5 @@ html.adult-blur body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not
   .pf-cap-f .pf-cap-m { font-size: 12.5px; color: #9ca3af; }
 }
 @media (min-width: 1100px) and (max-width: 1399px) {
-  .photos-page[data-section="photos"] .pf3 { grid-template-columns: 200px minmax(0, 1fr); gap: 0 22px; }
   html:not(.mview-list):not(.mview-feed) body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .photos-page[data-section="photos"] .pf3 #photo-row-1 { grid-template-columns: repeat(5, minmax(0, 1fr)) !important; gap: 26px 16px !important; }
 }

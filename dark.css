@@ -3126,9 +3126,7 @@ html.theme-dark .rn-calc input, html.theme-dark .rn-calc textarea, html.theme-da
 html.theme-dark .rn-sum { color: #d0d0d0 !important; }
 html.theme-dark .rn-sum .rn-tot { color: #ffffff !important; }
 @media (min-width: 1100px) {
-html.theme-dark .rn-shelf-side h2 { color: #ffffff !important; }
-html.theme-dark .rn-shelf-side p { color: #d0d0d0 !important; }
-html.theme-dark .rn-shelf-links a { color: #e8823d !important; }
+html.theme-dark .rn-shelf-h { color: #ffffff !important; }
 html.theme-dark .rn-shelf-more { color: #e8823d !important; }
 html.theme-dark .rn-tile-img { background: #111111 !important; }
 html.theme-dark .rn-tile-t { color: #ffffff !important; }
@@ -3251,9 +3249,6 @@ html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .user-page .pfs-badge.b-v span { background: linear-gradient(160deg, #e8823d, #0891b2) !important; }
 }
 @media (min-width: 1100px) {
-html.theme-dark .pf-side h2 { color: #ffffff !important; }
-html.theme-dark .pf-side p { color: #d0d0d0 !important; }
-html.theme-dark .pf-side a { color: #e8823d !important; }
 html.theme-dark .photos-page[data-section="photos"] .pf3 .art-row-img-wrap { background: #111111 !important; }
 html.theme-dark .pf-cap b { color: #ffffff !important; }
 html.theme-dark .art-row:hover .pf-cap b { color: #e8823d !important; }
@@ -4162,11 +4157,11 @@ html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pfc-star { background: #c026d3 !important; color: #ffffff !important; }
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .user-page .pfs-lvl { background: #22d3ee !important; color: #0b3b45 !important; }
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .user-page .pf-tab.on { border-bottom-color: #f97316 !important; }
-html.theme-dark :is(.rn-shelf-side h2, .rn-tile-t) { color: #ffffff !important; }
-html.theme-dark :is(.rn-shelf-side p, .rn-tile-m, .rn-tile-p small) { color: #a8a8a8 !important; }
-html.theme-dark :is(.rn-shelf-links a, .rn-shelf-more, .rn-tile-p, .rn-tile:hover .rn-tile-t) { color: #5aa7ef !important; }
+html.theme-dark :is(.rn-shelf-h, .rn-tile-t) { color: #ffffff !important; }
+html.theme-dark :is(.rn-shelf-h small, .rn-tile-m, .rn-tile-p small) { color: #a8a8a8 !important; }
+html.theme-dark :is(.rn-shelf-more, .rn-tile-p, .rn-tile:hover .rn-tile-t) { color: #5aa7ef !important; }
 html.theme-dark .rn-tile-img { background: #1d1d1d !important; }
-html.theme-dark :is(.pf-side h2, .pf-cap b) { color: #ffffff !important; }
-html.theme-dark :is(.pf-side p, .pf-cap-m) { color: #a8a8a8 !important; }
-html.theme-dark :is(.pf-side a, .pf-cap-l) { color: #5aa7ef !important; }
+html.theme-dark .pf-cap b { color: #ffffff !important; }
+html.theme-dark .pf-cap-m { color: #a8a8a8 !important; }
+html.theme-dark .pf-cap-l { color: #5aa7ef !important; }
 html.theme-dark .photos-page[data-section="photos"] .pf3 .art-row-img-wrap { background: #1d1d1d !important; }

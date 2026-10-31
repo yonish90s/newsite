@@ -1336,12 +1336,16 @@ function renderTopNav() {
   // "חדשות" תמיד במקום קבוע — האחרון בתפריט — כדי שלא יקפוץ בין רינדורים
   topNavPages = topNavPages.filter(id => id !== 'page-news-main');
   if (pages.some(p => p && p.id === 'page-news-main')) topNavPages.push('page-news-main');
+  // "השוק" תמיד צמוד ל"מוצרי גולשים", משמאל לו בתפריט (הסדר בתפריט מוצג הפוך)
+  topNavPages = topNavPages.filter(id => id !== 'page-rent-main');
+  const _shIdx = topNavPages.indexOf('page-secondhand-main');
+  if (_shIdx > -1 && pages.some(p => p && p.id === 'page-rent-main')) topNavPages.splice(_shIdx, 0, 'page-rent-main');
   navLinksContainer.innerHTML = ''; // מנקה את התפריט הסטטי מה-HTML
   
   topNavPages.forEach(pageId => {
     const page = pages.find(p => p.id === pageId);
     if (!page) return; // במקרה שהעמוד נמחק
-    if (pageId === 'page-ci' || pageId === 'page-em' || isSideOnlyPage(page) || page.title?.includes('ריבית') || page.title?.includes('Everything')) return;
+    if (pageId === 'page-ci' || pageId === 'page-em' || (isSideOnlyPage(page) && pageId !== 'page-rent-main') || page.title?.includes('ריבית') || page.title?.includes('Everything')) return;
     if (!isEditMode && page.isHidden && !isAdmin()) return; // מסתיר עמודים מוסתרים גם למעלה
     
     const a = document.createElement('a');
@@ -8839,17 +8843,6 @@ function renderPhotoCard(p, options = {}) {
   `;
 }
 
-// מחשב, תמונות גולשים: עמודת טקסט בצד הגריד (בסגנון free3d) — כותרת, הסבר וקטגוריות כקישורים
-function photoSideHTML(count) {
-  const cur = (typeof sectionCatFilters !== 'undefined' && sectionCatFilters.photos) || 'הכל';
-  const cats = ['הכל'].concat(typeof PHOTO_BAR_CATEGORIES !== 'undefined' ? PHOTO_BAR_CATEGORIES.filter(c => c !== 'הכל') : []);
-  return `<aside class="pf-side">
-    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg>${escHtml(cur === 'הכל' ? 'תמונות גולשים' : cur)}</h2>
-    <p>גלריות שגולשים העלו לאתר — ${count} גלריות${cur === 'הכל' ? '' : ' בקטגוריה הזו'}. לוחצים על תמונה כדי לראות את כל הגלריה, לעשות לייק או לשלוח הודעה.</p>
-    <p>קטגוריות: ${cats.map(c => `<a class="${c === cur ? 'on' : ''}" onclick="setSectionCategoryFilter('photos','${artEsc(c)}')">${escHtml(c)}</a>`).join(', ')}</p>
-  </aside>`;
-}
-
 // מספר הגלריות המוצגות בכל שורה לפני לחיצה על "עוד" (שורת גריד אחת = 4 עמודות)
 const PHOTO_ROW_LIMIT = 4;
 
@@ -16197,7 +16190,7 @@ function buildPhotosPage(albums, section) {
                 <h3 style="margin:0; font-size:18px; font-weight:900; color:#262626;">${sectionTitle}</h3>
               </div>
             </div>
-            ${section === 'photos' ? `<div class="pf3">${photoSideHTML(albums.length)}<div class="art-rows photo-collapsible expanded" id="photo-row-1">${row1HTML}</div></div>` : `<div class="art-rows photo-collapsible expanded" id="photo-row-1">${row1HTML}</div>`}
+            ${section === 'photos' ? `<div class="pf3"><div class="art-rows photo-collapsible expanded" id="photo-row-1">${row1HTML}</div></div>` : `<div class="art-rows photo-collapsible expanded" id="photo-row-1">${row1HTML}</div>`}
             ${photoRowMoreBtn(newestAlbums.length, 'photo-row-1')}
           </div>
           ${section === 'communities' && typeof sidePagesShortcutsHTML === 'function' ? sidePagesShortcutsHTML() : ''}
@@ -32866,7 +32859,7 @@ function rentCardHTML(r) {
     </span>
   </button>`;
 }
-// מחשב: מדפים בסגנון free3d — עמודת טקסט בצד (כותרת, הסבר, קישורי תת-קטגוריות) ולידה הרבה תמונות בשורות של 6
+// מחשב: מדפים בסגנון free3d — כותרת קצרה ומתחתיה הרבה תמונות בשורות של 6
 const rentWide = () => { try { return window.matchMedia('(min-width: 1100px)').matches; } catch (e) { return false; } };
 function rentTileHTML(r) {
   const sec = mktSecOf(r), tag = sec === 'used' ? r.offer : sec === 'store' ? 'אחסון' : 'השכרה';
@@ -32879,13 +32872,11 @@ function rentTileHTML(r) {
   </button>`;
 }
 function rentShelvesHTML(l) {
-  const cityLinks = list => [...new Set(list.map(r => r.city).filter(Boolean))].slice(0, 12).map(c => `<a onclick="rentSet('city', '${artEsc(c)}')">${escHtml(c)}</a>`);
   let groups;
   if (rentUI.sec === 'all') {
     groups = MKT_SECS.slice(1).map(s => {
       const items = l.filter(r => mktSecOf(r) === s.id);
-      const links = s.id === 'rent' ? RENT_CATS.filter(c => !c.store && c.id !== 'all' && items.some(r => r.cat === c.id)).map(c => `<a onclick="rentSet('cat', '${c.id}')">${escHtml(c.name)}</a>`) : cityLinks(items);
-      return { ic: s.ic, name: s.name, sub: s.sub, items, links, linksLbl: s.id === 'rent' ? 'תת-קטגוריות' : 'ערים', more: `mktGo('${s.id}')` };
+      return { ic: s.ic, name: s.name, items, more: `mktGo('${s.id}')` };
     });
   } else if (rentUI.sec === 'rent') {
     groups = RENT_CATS.filter(c => !c.store && c.id !== 'all').map(c => ({ ic: c.ic, name: c.name, items: l.filter(r => r.cat === c.id) }));
@@ -32894,17 +32885,11 @@ function rentShelvesHTML(l) {
     groups = offers.map(o => ({ ic: o === 'החלפה' ? '🔁' : o === 'השאלה' ? '🤝' : '🏷️', name: o, items: l.filter(r => (r.offer || 'מכירה') === o) }));
   } else {
     const s = MKT_SECS.find(x => x.id === rentUI.sec) || MKT_SECS[0];
-    groups = [{ ic: s.ic, name: s.name, sub: s.sub, items: l }];
+    groups = [{ ic: s.ic, name: s.name, items: l }];
   }
   return groups.filter(g => g.items.length).map(g => {
-    const links = g.links || cityLinks(g.items);
     return `<section class="rn-shelf">
-      <aside class="rn-shelf-side">
-        <h2><span>${g.ic}</span>${escHtml(g.name)} <small>${g.items.length}</small></h2>
-        ${g.sub ? `<p>${escHtml(g.sub)}</p>` : ''}
-        ${links.length ? `<p class="rn-shelf-links">${g.linksLbl || 'ערים'}: ${links.join(', ')}</p>` : ''}
-        ${g.more ? `<button type="button" class="rn-shelf-more" onclick="${g.more}">לכל ה-${g.items.length} ›</button>` : ''}
-      </aside>
+      <h2 class="rn-shelf-h"><span>${g.ic}</span>${escHtml(g.name)} <small>${g.items.length}</small>${g.more ? `<button type="button" class="rn-shelf-more" onclick="${g.more}">לכל ה-${g.items.length} ›</button>` : ''}</h2>
       <div class="rn-shelf-row">${(g.more ? g.items.slice(0, 12) : g.items).map(rentTileHTML).join('')}</div>
     </section>`;
   }).join('');
