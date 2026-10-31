@@ -35,18 +35,18 @@
   <!-- ספריית localforage לשמירת תמונות -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
   <!-- קישור לקובץ העיצוב החיצוני (עם פרמטר למניעת שמירה במטמון) -->
-  <link rel="stylesheet" href="./style.min.css?v=2019">
-  <link rel="stylesheet" id="dark-css" href="./dark.min.css?v=392" media="not all">
+  <link rel="stylesheet" href="./style.min.css?v=2020">
+  <link rel="stylesheet" id="dark-css" href="./dark.min.css?v=393" media="not all">
   <script>
     // קישור ישיר לפריט (#p/…, #s/…, #n/…) — מסמנים מיד, כדי שהכתובת לא תימחק לפני שהפריט נפתח
     window.__deepLinkOpening = /^#[psn]\//.test(location.hash || '');
     // תמונות מטושטשות בכל כניסה עד שהגולש מאשר 18+ (נקבע לפני הציור — בלי הבזק של תמונה גלויה)
     document.documentElement.classList.add('adult-blur');   // בכל טעינה מחדש — מטושטש עד אישור
-    // מצב בהיר/כהה — נקבע לפני שהדף מצויר כדי שלא יהבהב (בחירה שמורה, אחרת כהה)
+    // מצב בהיר/כהה — נקבע לפני שהדף מצויר כדי שלא יהבהב (בחירה שמורה, אחרת בהיר)
     (function () {
       var t = null;
       try { t = localStorage.getItem('site_theme'); } catch (e) {}
-      if (!t) t = 'dark';   // ברירת מחדל: מצב כהה (מי שבחר בהיר — הבחירה שלו נשמרת)
+      if (!t) t = 'light';   // ברירת מחדל: מצב בהיר (מי שבחר כהה — הבחירה שלו נשמרת)
       if (t === 'dark') { document.documentElement.classList.add('theme-dark'); var dc = document.getElementById('dark-css'); if (dc) dc.media = 'all'; }
     })();
   </script>
@@ -234,6 +234,13 @@
           <img id="main-logo" src="./logo.png" alt="לוגו" style="height: 20px; display: block; cursor: pointer;">
         </div>
         
+        <!-- מחשב: שורת חיפוש גדולה בכותרת (בסגנון dribbble) -->
+        <form class="hdr-search" role="search" onsubmit="event.preventDefault(); hdrSearchGo();">
+          <input id="hdr-search-q" type="search" placeholder="מה מחפשים? תמונות, מוצרים, סיפורים..." autocomplete="off" aria-label="חיפוש באתר" oninput="this.closest('form').classList.toggle('has-q', !!this.value)">
+          <button type="button" class="hdr-search-x" onclick="var i=document.getElementById('hdr-search-q'); i.value=''; i.focus(); this.closest('form').classList.remove('has-q');" aria-label="ניקוי">×</button>
+          <button type="submit" class="hdr-search-go" aria-label="חיפוש"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg></button>
+        </form>
+
         <!-- תפריט הניווט העליון המרכזי -->
         <nav class="nav-links" dir="ltr" style="display: flex; gap: 32px; align-items: center;">
           <a href="#" class="active-top-nav" data-page-id="page-photos-main">תמונות 🖼️</a>
@@ -1288,7 +1295,7 @@ html.theme-dark .pl-bar { background: #2a2f37; }
     try { if (localStorage.getItem('mtab_hidden') === '1') document.documentElement.classList.add('mtab-hidden'); } catch (e) {}
   </script>
   <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
-  <script type="module" src="./script.min.js?v=1856"></script>
+  <script type="module" src="./script.min.js?v=1857"></script>
   <script defer src="./a11y.js?v=1"></script>
 </body>
 </html>

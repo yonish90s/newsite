@@ -8835,10 +8835,15 @@ function renderPhotoCard(p, options = {}) {
           ${(isAdmin() || isEditMode) ? `<button class="art-edit-btn" onclick="event.stopPropagation(); openPhotoEditModal('${artEsc(p.id)}', event)" title="ערוך גלריה" style="position: absolute; bottom: 8px; right: 8px; background: rgba(0, 0, 0, 0.7); color: white; border: none; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 14px; z-index: 10;">✏️</button>` : ''}
           ${isEditMode ? `<button class="art-pin-btn" onclick="event.stopPropagation(); togglePinPhoto('${artEsc(p.id)}')" title="${p.pinned ? 'בטל נעץ' : 'נעץ בגריד'}" style="${p.pinned ? 'color:#ffd700;display:flex;' : ''}">${p.pinned ? '★' : '☆'}</button>` : ''}
           <button class="art-delete-btn" onclick="event.stopPropagation();photoDelete('${artEsc(p.id)}',this)">✕</button>
+          <div class="pf-hov"><b>${escHtml(p.title || '')}</b><span class="pf-hov-btns">
+            <button type="button" onclick="event.stopPropagation(); photoOpenDetail('${artEsc(p.id)}')" title="תגובות" aria-label="תגובות"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H4l2.2-2.6A8 8 0 1 1 21 12z"/></svg></button>
+            <button type="button" class="${isSavedCard ? 'on' : ''}" onclick="event.stopPropagation(); photoToggleSave('${artEsc(p.id)}')" title="שמירה" aria-label="שמירה"><svg viewBox="0 0 24 24" fill="${isSavedCard ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
+            <button type="button" class="${isLikedCard ? 'on' : ''}" onclick="event.stopPropagation(); photoToggleLike('${artEsc(p.id)}')" title="לייק" aria-label="לייק"><svg viewBox="0 0 24 24" fill="${isLikedCard ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/></svg></button>
+          </span></div>
         </div>
         ${miniThumbnailsHTML}
       </div>
-      <div class="pf-cap"><b>${escHtml(p.title || '')}</b><span class="pf-cap-m">${escHtml(p.author || '')}${p.timestamp ? ' · ' + escHtml(p.timestamp) : ''}</span><span class="pf-cap-f"><span class="pf-cap-l">❤ ${likesCount}</span><span class="pf-cap-m">👁 ${formatViews(viewsCount)}</span></span></div>
+      <div class="pf-cap">${authorAvHTML(p)}<b class="pf-au">${escHtml(p.author || '')}</b><span class="pf-st"><span><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54z"/></svg>${likesCount}</span><span><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 5C5.5 5 2 12 2 12s3.5 7 10 7 10-7 10-7-3.5-7-10-7zm0 11a4 4 0 1 1 0-8 4 4 0 0 1 0 8z"/></svg>${formatViews(viewsCount)}</span></span></div>
     </div>
   `;
 }
@@ -16150,7 +16155,7 @@ function buildPhotosPage(albums, section) {
       <div class="art-featured-grid">${featuredHTML}</div>
       <div class="art-layout">
         <div class="art-main">
-          ${section === 'photos' ? `<div class="pm-head">${contentSwitchHTML('photos')}${photoCatCirclesHTML(_tileAlbums)}${photoSortFilterHTML()}</div>` : ''}
+          ${section === 'photos' ? `<div class="pm-head">${contentSwitchHTML('photos')}${photoCatCirclesHTML(_tileAlbums)}${photoSortFilterHTML()}<button type="button" class="pf-upload" onclick="openPhotoModal()">+ העלאת תמונה</button></div>` : ''}
           ${section === 'photos' ? composerBarHTML() : ''}
           <div class="art-search-wrap">
             <input type="text" class="art-search" placeholder="${searchPlaceholder}" oninput="photoSearch(this.value)">
@@ -26104,6 +26109,14 @@ function openSiteSearch() {
   siteSearchRender('');
 }
 window.openSiteSearch = openSiteSearch;
+// חיפוש מהשורה בכותרת (מחשב): פותח את החיפוש הרגיל עם מה שהוקלד
+function hdrSearchGo() {
+  const q = String((document.getElementById('hdr-search-q') || {}).value || '').trim();
+  openSiteSearch();
+  const inp = document.getElementById('site-search-input');
+  if (inp && q) { inp.value = q; siteSearchRender(q); }
+}
+window.hdrSearchGo = hdrSearchGo;
 function closeSiteSearch() {
   document.documentElement.classList.remove('ss-open');
   const inp = document.getElementById('site-search-input');
@@ -32970,23 +32983,57 @@ window.addEventListener('popstate', (e) => {
 function rentDetailHTML(r) {
   const qty = rentMin(r);
   const c = rentCalc(r, qty);
+  const sec = mktSecOf(r), kind = r.kind === 'used' ? 'יד 2 · ' + (r.offer || '') : rentCatOf(r.cat).name;
+  const mine = r.owner ? mktAll().filter(x => x.owner === r.owner).length : 0;
+  // תגיות קשורות (כמו "Browse Related" ב-dribbble): קטגוריה, עיר, סוג הצעה
+  const tags = [[kind, sec === 'rent' ? `rentSet('cat', '${artEsc(r.cat || 'all')}')` : `mktGo('${sec}')`], r.city ? [r.city, `rentSet('city', '${artEsc(r.city)}')`] : null, [MKT_SECS.find(x => x.id === sec).name, `mktGo('${sec}')`]].filter(Boolean);
+  const ic = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
   return `<button type="button" class="rn-back" onclick="rentBack()">→ חזרה לשוק</button>
     <div class="rn-det">
-      <h1 class="rn-det-title">${escHtml(r.title)}</h1>
-      <div class="rn-det-img">${rentThumb(r, true)}${r.demo ? '<em class="rn-demo">דוגמה</em>' : ''}</div>
-      <div class="rn-det-price">${rentPriceTxt(r)}${r.unit === 'kg' ? `<span>מינימום ${Math.round(rentMin(r) * 1000)} גרם</span>` : r.min > 1 ? `<span>מינימום ${r.min}</span>` : ''}</div>
-      <div class="rn-det-meta">📍 ${escHtml(r.city || '')} · ${escHtml(r.kind === 'used' ? 'יד 2 · ' + (r.offer || '') : rentCatOf(r.cat).name)} · ${rentAgo(r.t)}</div>
-      <div class="rn-det-owner"><span class="rn-av">${escHtml((r.owner || '?').slice(0, 1))}</span><span><b>${escHtml(r.owner || '')}</b><small>${r.rating ? `⭐ ${r.rating} · ${r.reviews || 0} עסקאות` : r.kind === 'used' ? 'מוכר/ת באתר' : 'משכיר/ה חדש/ה'}</small></span></div>
-      ${r.desc ? `<p class="rn-det-desc">${escHtml(r.desc)}</p>` : ''}
-      ${(r.specs || []).length ? `<ul class="rn-specs">${r.specs.map(s => `<li>${escHtml(s)}</li>`).join('')}</ul>` : ''}
-      ${r.unit === 'kg' ? `<div class="rn-pick"><b>בחרו מה להדפיס — המשקל יחושב לבד</b><div class="rn-ideas-row">${RENT_IDEAS.map(i => `<button type="button" class="rn-idea sm" data-g="${i.g}" onclick="rentIdeaPick('${artEsc(r.id)}', '${i.id}', this)"><span class="rn-sk">${rentIdeaSVG(i)}</span><b>${i.name}</b><small>~${i.g} גרם · ₪${Math.max(1, rentIdeaPrice(i, r.price))}</small></button>`).join('')}</div></div>` : ''}
-      ${r.kind === 'used' ? `<div class="rn-calc"><textarea id="rn-note" maxlength="250" rows="3" placeholder="היי, המוצר עדיין זמין? מתי אפשר לבוא לראות?"></textarea><button type="button" class="rn-go" onclick="rentRequest('${artEsc(r.id)}')">${r.offer === 'החלפה' ? 'הצעת החלפה' : r.offer === 'השאלה' ? 'בקשת השאלה' : 'פנייה למוכר'}</button></div>` : `<div class="rn-calc">
-        <label>${r.unit === 'kg' ? 'כמה קילו? <small id="rn-grams">(' + Math.round(qty * 1000) + ' גרם)</small>' : `כמה ${escHtml((RENT_UNITS[r.unit] || '').replace(/^ל/, '')) || 'יחידות'}?`}<input id="rn-qty" type="number" min="${rentMin(r)}" step="${r.unit === 'kg' ? 0.01 : 1}" value="${qty}" inputmode="decimal" oninput="rentCalcUpd('${artEsc(r.id)}')"></label>
-        <div class="rn-sum" id="rn-sum">${rentSumHTML(c)}</div>
-        <textarea id="rn-note" maxlength="250" rows="2" placeholder="מה רוצים להדפיס / לעשות, ומתי נוח לכם?"></textarea>
-        ${r.cat === 'storage' && r.unit !== 'month' ? `<label>לכמה חודשים?<input id="rn-months" type="number" min="1" value="1" inputmode="numeric" oninput="rentCalcUpd('${artEsc(r.id)}')"></label>` : ''}
-        <button type="button" class="rn-go" onclick="rentRequest('${artEsc(r.id)}')">${r.cat === 'storage' ? 'שליחת בקשת אחסון' : 'שליחת בקשת השכרה'}</button>
-      </div>`}
+      <header class="rn-det-head">
+        <h1 class="rn-det-title">${escHtml(r.title)}</h1>
+        <div class="rn-det-by"><span class="rn-av sm">${escHtml((r.owner || '?').slice(0, 1))}</span><span>${escHtml(r.owner || '')}</span><em>${escHtml(kind)}</em></div>
+      </header>
+      <div class="rn-det-main">
+        <div class="rn-det-img">${rentThumb(r, true)}${r.demo ? '<em class="rn-demo">דוגמה</em>' : ''}</div>
+        <section class="rn-det-about">
+          <h2>על המודעה</h2>
+          ${r.desc ? `<p class="rn-det-desc">${escHtml(r.desc)}</p>` : ''}
+          ${(r.specs || []).length ? `<ul class="rn-specs">${r.specs.map(s => `<li>${escHtml(s)}</li>`).join('')}</ul>` : ''}
+          ${r.unit === 'kg' ? `<div class="rn-pick"><b>בחרו מה להדפיס — המשקל יחושב לבד</b><div class="rn-ideas-row">${RENT_IDEAS.map(i => `<button type="button" class="rn-idea sm" data-g="${i.g}" onclick="rentIdeaPick('${artEsc(r.id)}', '${i.id}', this)"><span class="rn-sk">${rentIdeaSVG(i)}</span><b>${i.name}</b><small>~${i.g} גרם · ₪${Math.max(1, rentIdeaPrice(i, r.price))}</small></button>`).join('')}</div></div>` : ''}
+        </section>
+        <section class="rn-det-rel"><h2>עוד בשוק</h2><div>${tags.map(([t, go]) => `<button type="button" onclick="${go}">${escHtml(t)}</button>`).join('')}</div></section>
+      </div>
+      <aside class="rn-det-side">
+        <div class="rn-det-card rn-det-buy">
+          <div class="rn-det-price">${rentPriceTxt(r)}${r.rating ? `<span class="rn-det-chip">⚡ ${r.reviews || 0} עסקאות</span>` : ''}</div>
+          <dl class="rn-det-facts">
+            <div><dt>מיקום:</dt><dd>${escHtml(r.city || '—')}</dd></div>
+            <div><dt>פורסם:</dt><dd>${rentAgo(r.t)}</dd></div>
+            ${r.unit === 'kg' ? `<div><dt>מינימום:</dt><dd>${Math.round(rentMin(r) * 1000)} גרם</dd></div>` : r.min > 1 ? `<div><dt>מינימום:</dt><dd>${r.min}</dd></div>` : ''}
+          </dl>
+          ${r.kind === 'used' ? `<div class="rn-calc"><textarea id="rn-note" maxlength="250" rows="3" placeholder="היי, המוצר עדיין זמין? מתי אפשר לבוא לראות?"></textarea></div>
+          <div class="rn-det-btns"><button type="button" class="rn-go" onclick="rentRequest('${artEsc(r.id)}')">${ic('<path d="M21 12a8 8 0 0 1-8 8H4l2.2-2.6A8 8 0 1 1 21 12z"/>')}${r.offer === 'החלפה' ? 'הצעת החלפה' : r.offer === 'השאלה' ? 'בקשת השאלה' : 'פנייה למוכר'}</button></div>` : `<div class="rn-calc">
+            <label>${r.unit === 'kg' ? 'כמה קילו? <small id="rn-grams">(' + Math.round(qty * 1000) + ' גרם)</small>' : `כמה ${escHtml((RENT_UNITS[r.unit] || '').replace(/^ל/, '')) || 'יחידות'}?`}<input id="rn-qty" type="number" min="${rentMin(r)}" step="${r.unit === 'kg' ? 0.01 : 1}" value="${qty}" inputmode="decimal" oninput="rentCalcUpd('${artEsc(r.id)}')"></label>
+            ${r.cat === 'storage' && r.unit !== 'month' ? `<label>לכמה חודשים?<input id="rn-months" type="number" min="1" value="1" inputmode="numeric" oninput="rentCalcUpd('${artEsc(r.id)}')"></label>` : ''}
+            <div class="rn-sum" id="rn-sum">${rentSumHTML(c)}</div>
+            <textarea id="rn-note" maxlength="250" rows="2" placeholder="מה רוצים להדפיס / לעשות, ומתי נוח לכם?"></textarea>
+          </div>
+          <div class="rn-det-btns"><button type="button" class="rn-go" onclick="rentRequest('${artEsc(r.id)}')">${ic('<rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/>')}${r.cat === 'storage' ? 'בקשת אחסון' : 'בקשת השכרה'}</button><button type="button" class="rn-ask" onclick="var n=document.getElementById('rn-note'); if(n) n.focus();">${ic('<path d="M21 12a8 8 0 0 1-8 8H4l2.2-2.6A8 8 0 1 1 21 12z"/>')}שאלה למפרסם</button></div>`}
+        </div>
+        <div class="rn-det-card rn-det-seller">
+          <span class="rn-av lg">${escHtml((r.owner || '?').slice(0, 1))}</span>
+          <div>
+            <b>${escHtml(r.owner || '')}</b>
+            ${r.rating ? `<span class="rn-det-rate">★ ${r.rating} <small>(${r.reviews || 0})</small></span>` : `<span class="rn-det-rate"><small>${r.kind === 'used' ? 'מוכר/ת באתר' : 'משכיר/ה חדש/ה'}</small></span>`}
+            <ul>
+              ${r.city ? `<li>${ic('<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>')}${escHtml(r.city)}</li>` : ''}
+              <li>${ic('<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>')}פורסם ${rentAgo(r.t)}</li>
+              ${mine ? `<li>${ic('<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 9h8M8 13h8M8 17h5"/>')}${mine} מודעות בשוק</li>` : ''}
+            </ul>
+          </div>
+        </div>
+      </aside>
     </div>`;
 }
 function rentSumHTML(c) {

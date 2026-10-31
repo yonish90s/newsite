@@ -708,7 +708,16 @@ html.theme-dark :is(.rn-shelf-h, .rn-tile-t) { color: #ffffff !important; }
 html.theme-dark :is(.rn-shelf-h small, .rn-tile-m, .rn-tile-p small) { color: #a8a8a8 !important; }
 html.theme-dark :is(.rn-shelf-more, .rn-tile-p, .rn-tile:hover .rn-tile-t) { color: #5aa7ef !important; }
 html.theme-dark .rn-tile-img { background: #1d1d1d !important; }
-html.theme-dark .pf-cap b { color: #ffffff !important; }
-html.theme-dark .pf-cap-m { color: #a8a8a8 !important; }
-html.theme-dark .pf-cap-l { color: #5aa7ef !important; }
+html.theme-dark .pf-au { color: #ffffff !important; }
+html.theme-dark .pf-st { color: #a8a8a8 !important; }
 html.theme-dark .photos-page[data-section="photos"] .pf3 .art-row-img-wrap { background: #1d1d1d !important; }
+html.theme-dark body:has(.photos-page[data-section="photos"]) { --pf-ink: #ffffff; --pf-mute: #a8a8a8; --pf-soft: #232323; }
+html.theme-dark .pm-head > .pf-upload { background: #ffffff !important; color: #111111 !important; }
+html.theme-dark .photos-page[data-section="photos"] .pm-head :is(.psf-sort, .pcc.pcc-filter) { background: #161616 !important; border-color: #2a2a2a !important; }
+html.theme-dark body:not(#_):not(#_) header.apple-nav .hdr-search { background: #1c1c1c !important; }
+html.theme-dark body:not(#_):not(#_) header.apple-nav .hdr-search input { color: #ffffff !important; }
+html.theme-dark .rn-det-card { background: #161616 !important; }
+html.theme-dark :is(.rn-det-by, .rn-det-about h2, .rn-det-rel h2, .rn-det-buy .rn-det-price, .rn-det-facts, .rn-det-seller b, .rn-det-rate, .rn-det-seller ul, .rent-page .rn-det-desc) { color: #ffffff !important; }
+html.theme-dark :is(.rn-det-rel button, .rent-page .rn-det-btns .rn-ask) { background: #111111 !important; border-color: #2a2a2a !important; color: #ffffff !important; }
+html.theme-dark .rn-det-chip { background: #2a2414 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .rent-page .rn-specs li { color: #ffffff !important; background: #232323 !important; }
