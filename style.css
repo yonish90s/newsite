@@ -16902,28 +16902,44 @@ html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not
   .rn-price { font-size: 16px; }
   .rn-title { font-size: 13px; }
 }
-/* מחשב: מדפים בסגנון free3d — כותרת ושורות של 6 תמונות על רקע אפור בהיר */
+/* כרטיסי מוצר נקיים: תמונה על לבן, שם + מחיר, כפתור + עגול, קווים דקים בין העמודות ומרווחים גדולים */
+.rn-grid:has(> .rn-tiles) { display: block; }
+.rn-tiles { --cols: 2; display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); row-gap: 18px; }
+.rn-tile { position: relative; display: flex; flex-direction: column; gap: 14px; min-width: 0; padding: 14px 12px 18px; border: 0; border-inline-start: 1px solid #ececf0; border-radius: 0; background: #ffffff; color: inherit; font: inherit; text-align: right; cursor: pointer; }
+.rn-tiles > .rn-tile:nth-child(2n+1) { border-inline-start-color: transparent; }
+.rn-tile-img { position: relative; display: block; aspect-ratio: 1; overflow: hidden; background: #ffffff; }
+.rn-tile-img img { position: absolute; inset: 0; width: 100% !important; height: 100% !important; max-height: none; object-fit: contain; display: block; transition: transform .3s ease; }
+.rn-tile:hover .rn-tile-img img { transform: scale(1.04); }
+.rn-tile-f { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.rn-tile-txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.rn-tile-t { font-size: 15px; font-weight: 500; line-height: 1.35; color: #111111; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rn-tile-p { font-size: 15px; font-weight: 500; color: #111111; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rn-tile-p small { font-size: 12px; color: #6b7280; }
+.rn-tile-plus { flex: none; width: 44px; height: 44px; border-radius: 50%; border: 1px solid #dcdce0; display: grid; place-items: center; color: #111111; transition: background .15s ease, border-color .15s ease, color .15s ease; }
+.rn-tile-plus svg { width: 20px; height: 20px; }
+.rn-tile:hover .rn-tile-plus { background: #ea4c89; border-color: #ea4c89; color: #ffffff; }
+@media (min-width: 700px) {
+  .rn-tiles { --cols: 3; row-gap: 30px; }
+  .rn-tiles > .rn-tile:nth-child(2n+1) { border-inline-start-color: #ececf0; }
+  .rn-tiles > .rn-tile:nth-child(3n+1) { border-inline-start-color: transparent; }
+  .rn-tile { padding: 18px 22px 22px; gap: 18px; }
+  .rn-tile-t, .rn-tile-p { font-size: 16.5px; }
+}
 @media (min-width: 1100px) {
   .rent-page .rn-inner { max-width: 1560px; }
-  .rn-grid:has(> .rn-shelf) { display: flex; flex-direction: column; gap: 34px; }
-  .rn-shelf-h { margin: 0 0 16px; display: flex; align-items: center; gap: 10px; font-size: 21px; font-weight: 800; color: #1f2937; }
+  .rn-grid:has(> .rn-shelf) { display: flex; flex-direction: column; gap: 46px; }
+  .rn-shelf-h { margin: 0 0 18px; display: flex; align-items: center; gap: 10px; font-size: 22px; font-weight: 800; color: #111111; }
   .rn-shelf-h small { font-size: 13px; font-weight: 700; color: #9ca3af; }
-  .rn-shelf-more { margin-inline-start: auto; border: 0; background: none; padding: 0; font: inherit; font-size: 14px; font-weight: 800; color: #2b7bc9; cursor: pointer; }
-  .rn-shelf-row { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 32px 26px; }
-  .rn-tile { display: flex; flex-direction: column; gap: 4px; min-width: 0; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: right; cursor: pointer; }
-  .rn-tile-img { position: relative; display: block; aspect-ratio: 1; overflow: hidden; background: #f3f4f6; margin-bottom: 12px; }
-  .rn-tile-img img { position: absolute; inset: 0; width: 100% !important; height: 100% !important; max-height: none; object-fit: cover; display: block; transition: transform .25s ease; }
-  .rn-tile:hover .rn-tile-img img { transform: scale(1.04); }
-  .rn-tile-t { font-size: 15px; font-weight: 800; line-height: 1.4; color: #1f2937; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-  .rn-tile:hover .rn-tile-t { color: #2b7bc9; }
-  .rn-tile-m { font-size: 13.5px; color: #4b5563; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .rn-tile-f { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-top: 6px; }
-  .rn-tile-p { font-size: 16px; font-weight: 800; color: #2b7bc9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .rn-tile-p small { font-size: 12px; font-weight: 600; color: #6b7280; }
-  .rn-tile-s { flex: none; font-size: 12.5px; color: #9ca3af; }
+  .rn-shelf-more { margin-inline-start: auto; border: 0; background: none; padding: 0; font: inherit; font-size: 14.5px; font-weight: 800; color: #ea4c89; cursor: pointer; }
+  .rn-tiles { --cols: 5; row-gap: 40px; }
+  .rn-tiles > .rn-tile:nth-child(3n+1) { border-inline-start-color: #ececf0; }
+  .rn-tiles > .rn-tile:nth-child(5n+1) { border-inline-start-color: transparent; }
+  .rn-tile { padding: 22px 30px 26px; gap: 22px; }
 }
 @media (min-width: 1100px) and (max-width: 1399px) {
-  .rn-shelf-row { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 26px 18px; }
+  .rn-tiles { --cols: 4; }
+  .rn-tiles > .rn-tile:nth-child(5n+1) { border-inline-start-color: #ececf0; }
+  .rn-tiles > .rn-tile:nth-child(4n+1) { border-inline-start-color: transparent; }
 }
 
 /* פרטי מודעת השכרה בחלון */
@@ -16985,12 +17001,36 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_
 .rn-det-by em { font-style: normal; font-size: 11.5px; font-weight: 800; padding: 3px 8px; border-radius: 6px; background: #3d3d4e; color: #ffffff; }
 .rn-av.sm { width: 26px; height: 26px; font-size: 12px; }
 .rn-av.lg { flex: none; width: 76px; height: 76px; font-size: 30px; background: #0d0c22; }
-.rn-det-main, .rn-det-side { display: contents; }
-.rn-det-img { order: 1; }
+.rn-det-main, .rn-det-side, .rn-det-stick { display: contents; }
+.rn-det-gal { order: 1; display: flex; flex-direction: column; gap: 12px; }
 .rn-det-buy { order: 2; }
-.rn-det-about { order: 3; display: flex; flex-direction: column; gap: 12px; }
-.rn-det-rel { order: 4; }
+.rn-save { order: 3; }
+.rn-det-about { order: 4; display: flex; flex-direction: column; gap: 12px; }
 .rn-det-seller { order: 5; }
+.rn-det-rel { order: 6; }
+.rn-det-note { order: 7; }
+.rn-det-more { order: 8; }
+.rn-det-badge { align-self: flex-start; padding: 5px 12px; border-radius: 999px; background: #0d0c22; color: #ffffff; font-size: 12.5px; font-weight: 800; }
+.rn-det-dot { color: #9e9ea7; }
+.rn-det-thumbs { display: flex; flex-wrap: wrap; gap: 10px; }
+.rn-det-thumbs button { width: 84px; height: 84px; padding: 0; border: 2px solid transparent; border-radius: 12px; overflow: hidden; background: #f3f3f4; cursor: pointer; }
+.rn-det-thumbs button.on { border-color: #ea4c89; }
+.rn-det-thumbs img { width: 100% !important; height: 100% !important; object-fit: cover; display: block; }
+.rn-det-muted { color: #6e6d7a !important; }
+.rn-det-about h3 { margin: 10px 0 0; padding-top: 18px; border-top: 1px solid #ececf0; font-size: 17px; font-weight: 800; color: #0d0c22; }
+.rn-det-checks { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px 24px; }
+.rn-det-checks li { display: flex; align-items: center; gap: 12px; font-size: 15.5px; line-height: 1.45; color: #0d0c22; }
+.rn-det-checks li > span { flex: none; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: #f3f3f4; color: #0d0c22; }
+.rn-det-checks li > span svg { width: 18px; height: 18px; }
+.rent-page .rn-save { display: flex; align-items: center; justify-content: center; gap: 10px; height: 54px; border: 0; border-radius: 14px; background: #fdf2f7; color: #c2185b; font: inherit; font-size: 16px; font-weight: 800; cursor: pointer; }
+.rent-page .rn-save:hover { background: #fbe4ef; }
+.rent-page .rn-save svg { width: 20px; height: 20px; }
+.rent-page .rn-save.is-saved svg { fill: #ea4c89; stroke: #ea4c89; }
+.rn-det-note { padding: 18px 20px; border-radius: 14px; background: #f8f7f4; }
+.rn-det-note b { display: flex; align-items: center; gap: 8px; font-size: 15.5px; color: #0d0c22; }
+.rn-det-note b svg { width: 18px; height: 18px; }
+.rn-det-note p { margin: 6px 0 0; font-size: 14.5px; line-height: 1.55; color: #4b5563; }
+.rn-det-more h2 { margin: 0 0 8px; font-size: 21px; font-weight: 800; color: #0d0c22; }
 .rn-det-about h2, .rn-det-rel h2 { margin: 6px 0 0; font-size: 19px; font-weight: 800; color: #0d0c22; }
 .rn-det-rel > div { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
 .rn-det-rel button { height: 42px; padding: 0 20px; border: 1px solid #e7e7e9; border-radius: 999px; background: #ffffff; color: #0d0c22; font: inherit; font-size: 15px; cursor: pointer; }
@@ -17022,10 +17062,12 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_
 @media (min-width: 900px) {
   .rent-page .rn-inner:has(> .rn-det) { max-width: 1320px; }
   .rent-page .rn-det { display: grid; grid-template-columns: minmax(0, 1fr) 380px; grid-template-areas: "head head" "main side"; gap: 34px 44px; align-items: start; }
+  .rent-page .rn-det-more { margin-top: 30px; padding-top: 30px; border-top: 1px solid #ececf0; }
   .rent-page .rn-det-head { grid-area: head; }
   .rent-page .rn-det-title { font-size: 34px; letter-spacing: -.01em; }
   .rent-page .rn-det-main { grid-area: main; display: flex; flex-direction: column; gap: 30px; min-width: 0; }
-  .rent-page .rn-det-side { grid-area: side; display: flex; flex-direction: column; gap: 22px; position: sticky; top: calc(var(--hdr-h, 45px) + 20px); }
+  .rent-page .rn-det-side { grid-area: side; display: block; align-self: stretch; }
+  .rent-page .rn-det-stick { display: flex; flex-direction: column; gap: 18px; position: sticky; top: calc(var(--hdr-h, 45px) + 20px); }
   .rent-page .rn-det-img { aspect-ratio: 4 / 3; border-radius: 16px; }
   .rent-page .rn-det-desc { font-size: 17px; line-height: 1.65; color: #0d0c22; }
   .rent-page .rn-det-card { padding: 30px; }
@@ -17342,4 +17384,12 @@ html.adult-blur body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not
   html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) header.apple-nav #manager-btn { height: 50px !important; padding: 0 26px !important; border: 0 !important; border-radius: 999px !important; background: #0d0c22 !important; color: #ffffff !important; font-size: 16px !important; font-weight: 700 !important; }
   html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) header.apple-nav #manager-btn:hover { background: #3d3d4e !important; }
   html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) header.apple-nav #header-search-btn { display: none !important; }
+}
+
+/* מחשב: חלון ההודעות נפתח מימין בדיוק כמו העגלה — כרטיס צף מעוגל, זכוכית, נכנס בהחלקה מימין; שניהם מתחת לכותרת */
+@media (min-width: 1024px) {
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #cart-panel .cart-card { top: calc(var(--hdr-h, 45px) + 12px) !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #messages-modal.tg-modal.tg-compact { position: fixed !important; inset: auto !important; left: auto !important; right: 16px !important; top: calc(var(--hdr-h, 45px) + 12px) !important; bottom: 16px !important; width: min(420px, calc(100vw - 120px)) !important; height: auto !important; max-height: none !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #messages-modal.tg-compact .tg-panel { position: absolute !important; inset: 0 !important; width: 100% !important; height: 100% !important; border-radius: 26px !important; overflow: hidden !important; background: rgba(255, 255, 255, .88) !important; -webkit-backdrop-filter: blur(24px) saturate(170%) !important; backdrop-filter: blur(24px) saturate(170%) !important; border: 1px solid rgba(0, 0, 0, .08) !important; box-shadow: 0 18px 50px rgba(0, 0, 0, .3) !important; transform: translateX(36px) scale(.96) !important; opacity: 0 !important; transition: transform .4s cubic-bezier(.2, .9, .25, 1.05), opacity .25s ease !important; }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #messages-modal.tg-compact.show .tg-panel { transform: none !important; opacity: 1 !important; }
 }
