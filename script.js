@@ -31125,7 +31125,7 @@ function likeCountsPaint(likes) {
 
 
 // ============================================================
-// תמונות מטושטשות כברירת מחדל. כפתור "18+" בכותרת → אישור גיל → התמונות מוצגות והכפתור נעלם (הבחירה נשמרת).
+// תמונות מטושטשות כברירת מחדל. לחיצה על תמונה חושפת אותה.
 // אפשר לחזור לטשטוש מתפריט ≡ → הגדרות ופרטיות.
 // ============================================================
 function adultBlurOn() { return document.documentElement.classList.contains('adult-blur'); }
@@ -31150,22 +31150,8 @@ function adultReveal() {
     document.body.appendChild(m);
   }
 }
-function adultBtnSync() {
-  let b = document.getElementById('adult-btn');
-  if (!b) {
-    const hdr = document.querySelector('header.apple-nav'); if (!hdr) return;
-    b = document.createElement('button');
-    b.id = 'adult-btn'; b.type = 'button'; b.className = 'adult-btn';
-    b.setAttribute('aria-label', 'הצגת תמונות למבוגרים');
-    b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span>18+</span>';
-    b.addEventListener('click', adultReveal);
-    // מחשב: בתוך שורת האייקונים של הכותרת (ליד מצב כהה/חיפוש); מובייל: באמצע הכותרת
-    const pop = document.querySelector('header.apple-nav .right-icons .ri-pop');
-    if (pop && window.matchMedia('(min-width: 769px)').matches) { b.classList.add('in-icons'); pop.prepend(b); }
-    else hdr.appendChild(b);
-  }
-  b.hidden = !adultBlurOn();
-}
+// כפתור ה-18+ הוסר מהכותרת: תמונה מטושטשת נחשפת בלחיצה עליה
+function adultBtnSync() {}
 Object.assign(window, { adultReveal, adultBlurSet, adultBlurToggle });
 Object.assign(UI_EN, { 'הצגת תמונות למבוגרים': 'Show adult images', 'אני מעל גיל 18 — הצג': "I'm over 18 — show", 'ביטול': 'Cancel', 'הצגת תמונות 18+': 'Show 18+ images', 'טשטוש תמונות 18+': 'Blur 18+ images' });
 (function () { const go = () => adultBtnSync(); if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go(); setTimeout(go, 1200); })();
@@ -31887,7 +31873,7 @@ const ASK_FAQ = [
   [/ריפוסט|שיתוף לפרופיל|לשתף/, 'ריפוסט (החץ ↪) משתף פריט לפרופיל שלך — העוקבים שלך יראו אותו. לחיצה ארוכה על החץ מראה מי שיתף.', null],
   [/מי עשה לייק|מי אהב|לייק/, 'לחיצה על הלב נותנת לייק. לחיצה ארוכה על הלב מראה מי עשה לייק.', ['הלייקים שלי', () => openLikesDrawer()]],
   [/שמיר|לשמור|שמורים/, 'לחיצה על הסימנייה שומרת פריט לאחר כך. אפשר לסדר שמורים בתיקיות.', ['השמורים שלי', () => openSavedModal()]],
-  [/18|טשטוש|מטושטש/, 'התמונות מטושטשות עד שמאשרים גיל 18+ בכפתור שבראש המסך. האישור תקף לביקור הנוכחי.', null],
+  [/18|טשטוש|מטושטש/, 'התמונות מטושטשות, ולחיצה על תמונה חושפת אותה.', null],
   [/כהה|בהיר|צבע/, 'מעבר בין מצב כהה לבהיר — באייקון השמש בכותרת, או כאן:', ['החלפת מצב', () => toggleSiteTheme()]],
   [/עוקב|לעקוב|מעקב/, 'לעקוב אחרי יוצר: "עקוב" בפרופיל שלו או בתפריט ⋯ של הפריט. מה שהם מפרסמים מופיע ב"במעקב".', ['הפיד שלי', () => openFeed()]],
   [/הודעה פרטית|לשלוח הודעה|לכתוב ל/, 'הודעה פרטית: בתפריט ⋯ של פריט ← "הודעה", או מחלון ההודעות.', ['ההודעות', () => openMessages()]],
