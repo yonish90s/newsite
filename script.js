@@ -15622,6 +15622,45 @@ async function forumDeletePost(postId) {
 }
 window.forumDeletePost = forumDeletePost;
 
+// דף הבית בסגנון dribbble (מחשב): גריד גדול של כל התוכן, בלי עמודות צד.
+// כדי לחזור לעיצוב הקודם של דף הבית (שורות + עמודה צדדית) — לשנות ל-false
+const HOME_GRID = true;
+const homeGridOn = () => HOME_GRID && window.matchMedia('(min-width: 1100px)').matches;
+let homeGridSort = 'popular', _hgItems = [];
+function homeGridCardsHTML() {
+  const t = x => Number(x.createdAt) || (typeof photoAlbumTime === 'function' ? photoAlbumTime(x) : 0) || 0;
+  const pop = x => (Number(x.likes) || 0) + (typeof photoGetViews === 'function' ? photoGetViews(x.id) : 0);
+  const list = _hgItems.slice().sort((a, b) => homeGridSort === 'new' ? t(b.x) - t(a.x) : pop(b.x) - pop(a.x) || t(b.x) - t(a.x));
+  return list.length ? list.map(i => homeCardHTML(i.x, i.kind)).join('') : '<div class="hg-empty">עדיין אין כאן תוכן — היו הראשונים להעלות!</div>';
+}
+function homeGridHTML(photos, comics, stories) {
+  const ok = x => x && x.approved !== false && x.id;
+  _hgItems = (photos || []).filter(ok).map(x => ({ x, kind: 'photo' }))
+    .concat((comics || []).concat(stories || []).filter(ok).map(x => ({ x, kind: 'story' })));
+  return `<section class="hg">
+    <div class="hg-top">
+      <div class="promo-row aside">${promoTrialHTML('row')}${adSlotHTML('row')}</div>
+      <label class="hg-sort"><select onchange="homeGridSetSort(this.value)" aria-label="מיון">${[['popular', 'פופולרי'], ['new', 'חדש']].map(([v, l]) => `<option value="${v}"${homeGridSort === v ? ' selected' : ''}>${l}</option>`).join('')}</select><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></label>
+    </div>
+    <div class="hg-grid">${homeGridCardsHTML()}</div>
+  </section>`;
+}
+// העמודה הצדדית בגריד: מגירה נשלפת מימין, סגורה כברירת מחדל כדי שיראו את כל התמונות
+const homeSideOpen = () => { try { return localStorage.getItem('home_side_open') === '1'; } catch (e) { return false; } };
+function homeSideToggle() {
+  const d = document.querySelector('.home-feed-page .hg-drawer'); if (!d) return;
+  const on = d.classList.toggle('open');
+  try { localStorage.setItem('home_side_open', on ? '1' : '0'); } catch (e) {}
+}
+window.homeSideToggle = homeSideToggle;
+function homeGridSetSort(v) {
+  homeGridSort = v === 'new' ? 'new' : 'popular';
+  const g = document.querySelector('.home-feed-page .hg-grid');
+  if (g) g.innerHTML = homeGridCardsHTML();
+}
+window.homeGridSetSort = homeGridSetSort;
+// מעבר בין מחשב לטלפון בזמן שדף הבית פתוח — בונים אותו מחדש בעיצוב המתאים
+try { window.matchMedia('(min-width: 1100px)').addEventListener('change', () => { if (HOME_GRID && typeof mainContent !== 'undefined' && mainContent && mainContent.querySelector('.home-feed-page') && typeof renderPage === 'function') renderPage(); }); } catch (e) {}
 function buildHomeFeedPage() {
   const all = (typeof getAllStoriesFromPages === 'function') ? getAllStoriesFromPages() : [];
   let comics = all.filter(s => s && s.__kind !== 'stories');
@@ -15686,6 +15725,18 @@ function buildHomeFeedPage() {
       ${trioCard('trio-stories', 'סיפורים', 'סיפורים קצרים ומאמרים שכדאי לקרוא.', storyTiles(stories, '✍️'), "homeOpenSection('page-stories-text')", 'לכל הסיפורים')}
     </div>`;
 
+  if (homeGridOn()) return `<div class="articles-page home-feed-page home-grid" data-page-id="page-home-feed">
+    <div class="art-inner">
+      <div class="cmp-wrap">${composerBarHTML()}</div>
+      ${homeChipsHTML(photos, comics, stories)}
+      ${modBoxHTML()}
+      ${homeGridHTML(photos, comics, stories)}
+    </div>
+    <div class="hg-drawer${homeSideOpen() ? ' open' : ''}">
+      <button type="button" class="hg-drawer-tab" onclick="homeSideToggle()" aria-label="פתיחה / סגירה של העמודה הצדדית" title="עוד"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
+      ${homeAsideHTML()}
+    </div>
+  </div>`;
   return `<div class="articles-page home-feed-page has-aside" data-page-id="page-home-feed">
     ${homeAsideHTML()}
     <div class="art-inner">
@@ -30495,30 +30546,32 @@ window.imgTapToggle = imgTapToggle;
 // דף הבית: שורות "תמונות גולשים" / "סיפורים" / "קומיקס" — כל אחת במלבן מעוגל,
 // כרטיסים נגללים לצד (תמונה, כותרת, יוצר בצבע הדגש, קטגוריה · תאריך · לייקים)
 // ============================================================
-function homeRowsHTML(photos, comics, stories) {
+// כרטיס תוכן בדף הבית (תמונה/סיפור/קומיקס) — משותף לשורות הבית ולגריד הגדול
+function homeCardHTML(x, kind) {
   const adultOk = (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('age_verified') === 'true');
   const img = x => x && (((x.images || []).find(Boolean)) || x.cover || x.image || '');
+  const src = img(x);
+  const n = (x.images || []).filter(Boolean).length;
+  const open = kind === 'photo' ? `homeOpenPhotos(); photoOpenDetail('${artEsc(x.id)}')` : `storyOpenDetail('${artEsc(x.id)}')`;
+  const likes = Number(x.likes) || 0;
+  const views = typeof photoGetViews === 'function' ? photoGetViews(x.id) : 0;
+  const liked = typeof photoIsLikedLocal === 'function' && photoIsLikedLocal(x.id);
+  const saved = typeof photoIsSavedLocal === 'function' && photoIsSavedLocal(x.id);
+  const ic = d => `<svg viewBox="0 0 24 24" fill="currentColor">${d}</svg>`;
+  return `<button type="button" class="hr-card" onclick="${open}" title="${escHtml(x.title || '')}">
+    <span class="hr-img${x.isAdult && !adultOk ? ' blur' : ''}">${src ? `<img src="${escHtml(src)}" alt="" loading="lazy">` : ''}
+      ${x.category ? `<span class="hr-badge">${escHtml(x.category)}</span>` : ''}
+      ${n > 1 ? `<span class="hr-count">${n} תמונות</span>` : ''}
+      <span class="hr-hov"><b>${escHtml(x.title || '')}</b><span class="hr-hov-btns">
+        <span role="button" tabindex="0" class="${saved ? 'on' : ''}" data-save="${escHtml(x.id)}" aria-label="שמירה" title="שמירה" onclick="event.stopPropagation(); event.preventDefault(); photoToggleSave('${artEsc(x.id)}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></span>
+        <span role="button" tabindex="0" class="${liked ? 'on' : ''}" data-like="${escHtml(x.id)}" aria-label="לייק" title="לייק" onclick="event.stopPropagation(); event.preventDefault(); photoToggleLike('${artEsc(x.id)}')">${LIKE_SVG}</span>
+      </span></span></span>
+    <span class="hr-foot"><span class="hr-by" role="button" tabindex="0" title="לפרופיל" onclick="event.stopPropagation(); event.preventDefault(); cardOpenAuthor('${artEsc(x.authorId || x.uid || '')}', '${artEsc(x.author || '')}')">${authorAvHTML(x)}<b class="hr-au">${escHtml(x.author || 'משתמש')}</b></span><span class="hr-st"><span>${LIKE_SVG}<span data-likes-n="${escHtml(x.id)}">${likes}</span></span><span>${ic('<path d="M12 5C5.5 5 2 12 2 12s3.5 7 10 7 10-7 10-7-3.5-7-10-7zm0 11a4 4 0 1 1 0-8 4 4 0 0 1 0 8z"/>')}${typeof formatViews === 'function' ? formatViews(views) : views}</span></span></span>
+  </button>`;
+}
+function homeRowsHTML(photos, comics, stories) {
   const ok = x => x && x.approved !== false;
-  const card = (x, kind) => {
-    const src = img(x);
-    const n = (x.images || []).filter(Boolean).length;
-    const open = kind === 'photo' ? `homeOpenPhotos(); photoOpenDetail('${artEsc(x.id)}')` : `storyOpenDetail('${artEsc(x.id)}')`;
-    const likes = Number(x.likes) || 0;
-    const views = typeof photoGetViews === 'function' ? photoGetViews(x.id) : 0;
-    const liked = typeof photoIsLikedLocal === 'function' && photoIsLikedLocal(x.id);
-    const saved = typeof photoIsSavedLocal === 'function' && photoIsSavedLocal(x.id);
-    const ic = d => `<svg viewBox="0 0 24 24" fill="currentColor">${d}</svg>`;
-    return `<button type="button" class="hr-card" onclick="${open}" title="${escHtml(x.title || '')}">
-      <span class="hr-img${x.isAdult && !adultOk ? ' blur' : ''}">${src ? `<img src="${escHtml(src)}" alt="" loading="lazy">` : ''}
-        ${x.category ? `<span class="hr-badge">${escHtml(x.category)}</span>` : ''}
-        ${n > 1 ? `<span class="hr-count">${n} תמונות</span>` : ''}
-        <span class="hr-hov"><b>${escHtml(x.title || '')}</b><span class="hr-hov-btns">
-          <span role="button" tabindex="0" class="${saved ? 'on' : ''}" data-save="${escHtml(x.id)}" aria-label="שמירה" title="שמירה" onclick="event.stopPropagation(); event.preventDefault(); photoToggleSave('${artEsc(x.id)}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></span>
-          <span role="button" tabindex="0" class="${liked ? 'on' : ''}" data-like="${escHtml(x.id)}" aria-label="לייק" title="לייק" onclick="event.stopPropagation(); event.preventDefault(); photoToggleLike('${artEsc(x.id)}')">${LIKE_SVG}</span>
-        </span></span></span>
-      <span class="hr-foot"><span class="hr-by" role="button" tabindex="0" title="לפרופיל" onclick="event.stopPropagation(); event.preventDefault(); cardOpenAuthor('${artEsc(x.authorId || x.uid || '')}', '${artEsc(x.author || '')}')">${authorAvHTML(x)}<b class="hr-au">${escHtml(x.author || 'משתמש')}</b></span><span class="hr-st"><span>${LIKE_SVG}<span data-likes-n="${escHtml(x.id)}">${likes}</span></span><span>${ic('<path d="M12 5C5.5 5 2 12 2 12s3.5 7 10 7 10-7 10-7-3.5-7-10-7zm0 11a4 4 0 1 1 0-8 4 4 0 0 1 0 8z"/>')}${typeof formatViews === 'function' ? formatViews(views) : views}</span></span></span>
-    </button>`;
-  };
+  const card = homeCardHTML;
   const row = (title, items, kind, all) => {
     const list = (items || []).filter(ok).slice(0, 10);   // 10 ההעלאות הראשונות
     if (!list.length) return '';
@@ -31107,14 +31160,14 @@ function adSlotHTML(where) {
     <button type="button" class="ad-own" onclick="adsAdvertiseOpen()">📣 <u>פרסמו אצלנו</u></button>
   </section>`;
 }
-// מחשב, דף הבית: הכפתורים הצפים (נגישות, צ'אט, הודעות) כאייקונים בראש העמוד — ממש מעל שורת הפרימיום בעמודה הצדדית
+// מחשב, דף הבית: הכפתורים הצפים (נגישות, צ'אט, הודעות) כאייקונים בראש העמוד — מיושרים לצד ימין של העמודה הצדדית (או של הגריד)
 (function fabsDock() {
   const mq = window.matchMedia('(min-width: 1100px)');
   const root = document.documentElement;
   let raf = 0;
   const place = () => {
     raf = 0;
-    const aside = mq.matches && document.querySelector('.home-feed-page .home-aside');
+    const aside = mq.matches && document.querySelector('.home-feed-page:not(.home-grid) .home-aside, .home-feed-page .hg');
     const hdr = document.querySelector('header.apple-nav');
     if (!aside || !hdr) { root.classList.remove('fabs-top'); return; }
     const z = parseFloat(getComputedStyle(document.body).zoom) || 1;
