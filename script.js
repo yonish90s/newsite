@@ -32437,7 +32437,7 @@ function coPrice(p) { return Math.max(0, parseFloat(String(p.price || '').replac
 function productCheckout(id) { productsSubscribe(); coState = { items: [{ id, qty: 1 }], fromCart: false, ship: 'delivery', step: 'form' }; coRender(); }
 function cartCheckout() { productsSubscribe(); const c = cartGet(); if (!c.length) { showCopyToast('העגלה ריקה'); return; } coState = { items: c.map(x => ({ id: x.id, qty: x.qty })), fromCart: true, ship: 'delivery', step: 'form' }; coRender(); }
 // רק מחירים אמיתיים מהמסד: PRODUCTS_DEFAULT (לפני טעינה) הם בלי מחיר והזמנות נשמרו ב-₪0
-function coLines() { const list = productsData || []; return coState.items.map(x => ({ ...x, p: list.find(p => p.id === x.id) })).filter(x => x.p && coPrice(x.p) > 0); }
+function coLines() { const list = (productsData || []).concat(mktCartItems()); return coState.items.map(x => ({ ...x, p: list.find(p => p.id === x.id) })).filter(x => x.p && coPrice(x.p) > 0); }
 function coTotals() {
   const lines = coLines();
   const sub = lines.reduce((a, l) => a + coPrice(l.p) * l.qty, 0), ship = coState.ship === 'delivery' ? 25 : 0;
@@ -32623,28 +32623,55 @@ function mediaNeedsLoad() { return true; }
 // ============================================================
 // עגלת קניות (בדפדפן של הגולש) + כפתור עגלה בשורה העליונה
 // ============================================================
+// מוצרי הדוגמה בשוק נכנסים לעגלה כמו מוצרים רגילים. מודעה אמיתית של גולש ממשיכה בפנייה למוכר, כי התשלום כאן עוד הדגמה
+function mktBuyable(r) { return !!r && !!r.demo && !r.shId && coPrice(r) > 0 && !['החלפה', 'השאלה'].includes(r.offer); }
+function mktCartItems() {
+  if (typeof mktAll !== 'function') return [];
+  return mktAll().filter(mktBuyable).map(r => ({ id: 'mkt_' + r.id, name: r.title, price: r.price, image: r.img || (r.images || [])[0] || '', unit: (RENT_UNITS[r.unit] || '') }));
+}
+function cartCatalog() { return productsList().concat(mktCartItems()); }
+function mktCartAdd(id, qty) {
+  const key = 'mkt_' + id, c = cartGet(), it = c.find(x => x.id === key), n = Math.max(1, Math.round(Number(qty) || 1));
+  if (it) it.qty = Math.min(30, it.qty + n); else c.push({ id: key, qty: n });
+  cartSet(c);
+  const p = cartCatalog().find(x => x.id === key);
+  glassBanner({ title: 'נוסף לעגלה', sub: p ? p.name : '', icon: 'ok', btn: 'לעגלה', onBtn: () => cartOpen() });
+}
+window.mktCartAdd = mktCartAdd;
 function cartGet() { try { return (JSON.parse(localStorage.getItem('bw_cart') || '[]') || []).filter(x => x && x.id && x.qty > 0); } catch (e) { return []; } }
 function cartSet(c) { try { localStorage.setItem('bw_cart', JSON.stringify(c)); } catch (e) {} cartBadge(); if (document.getElementById('cart-panel')) cartRender(); }
 function cartAdd(id) {
   const c = cartGet(); const it = c.find(x => x.id === id);
   if (it) it.qty = Math.min(10, it.qty + 1); else c.push({ id, qty: 1 });
   cartSet(c);
-  const p = productsList().find(x => x.id === id);
+  const p = cartCatalog().find(x => x.id === id);
   glassBanner({ title: 'נוסף לעגלה', sub: p ? p.name : '', icon: 'ok', btn: 'לעגלה', onBtn: () => cartOpen() });
 }
 function cartQty(id, d) { const c = cartGet(); const it = c.find(x => x.id === id); if (!it) return; it.qty += d; cartSet(it.qty > 0 ? c : c.filter(x => x.id !== id)); }
 function cartCount() { return cartGet().reduce((a, x) => a + x.qty, 0); }
-function cartBadge() { const n = cartCount(); document.querySelectorAll('.cart-hdr-n').forEach(b => { b.textContent = n || ''; b.hidden = !n; }); }
+function cartBadge() {
+  const n = cartCount();
+  document.querySelectorAll('.cart-hdr-n').forEach(b => { b.textContent = n || ''; b.hidden = !n; });
+  // בטלפון אין אייקון עגלה בכותרת: כפתור צף כשיש פריטים בעגלה
+  let f = document.getElementById('cart-fab');
+  if (!f && n) {
+    f = document.createElement('button');
+    f.id = 'cart-fab'; f.type = 'button'; f.setAttribute('onclick', 'cartOpen()'); f.setAttribute('aria-label', 'העגלה שלי');
+    f.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M3 4h2l2.6 12h11l2-8H6"/></svg><b></b>';
+    document.body.appendChild(f);
+  }
+  if (f) { f.hidden = !n; f.querySelector('b').textContent = n; }
+}
 function cartRender() {
   const box = document.getElementById('cart-panel'); if (!box) return;
-  const list = productsList(); const c = cartGet();
+  const list = cartCatalog(); const c = cartGet();
   const lines = c.map(x => ({ ...x, p: list.find(p => p.id === x.id) })).filter(x => x.p);
   const sub = lines.reduce((a, l) => a + coPrice(l.p) * l.qty, 0);
   box.querySelector('.cart-body').innerHTML = lines.length ? lines.map(l => `<div class="cart-row">
       <span class="cart-th">${l.p.image ? `<img src="${escHtml(l.p.image)}" alt="">` : PRODUCT_ICON}</span>
-      <span class="cart-tx"><b>${escHtml(l.p.name || '')}</b><small>${coMoney(coPrice(l.p))}</small></span>
+      <span class="cart-tx"><b>${escHtml(l.p.name || '')}</b><small>${coMoney(coPrice(l.p))}${l.p.unit ? ' ' + escHtml(l.p.unit) : ''}</small></span>
       <span class="co-step"><button type="button" onclick="cartQty('${artEsc(l.id)}',-1)" aria-label="פחות">−</button><b>${l.qty}</b><button type="button" onclick="cartQty('${artEsc(l.id)}',1)" aria-label="יותר">+</button></span>
-    </div>`).join('') : `<div class="cart-empty">העגלה ריקה<br><button type="button" class="ms-btn" onclick="cartClose(); navigateToPage('page-products-main')">לחנות</button></div>`;
+    </div>`).join('') : `<div class="cart-empty">העגלה ריקה<br><button type="button" class="ms-btn" onclick="cartClose(); mktGo('all')">לשוק</button></div>`;
   box.querySelector('.cart-foot').innerHTML = lines.length ? `<div class="co-line co-total"><span>סה״כ (לפני משלוח)</span><span>${coMoney(sub)}</span></div><button type="button" class="ms-btn" onclick="cartClose(); cartCheckout()">לתשלום</button>` : '';
 }
 function cartOpen() {
@@ -32902,6 +32929,7 @@ Object.assign(window, { aiMcpTab, aiCopyText, AI_CONFIG_URL, aiDownload, aiSetMo
 // ============================================================
 async function sha256Hex(t) { const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t)); return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join(''); }
 async function orderSaveRemote(o) {
+  if (CONTENT_HIDDEN) return;   // קנייה של תוכן לדוגמה לא נשמרת במסד
   try {
     if (!auth.currentUser && typeof ensureGuestSignedIn === 'function') await ensureGuestSignedIn();
     const u = auth.currentUser; if (!u) return;
@@ -33312,7 +33340,7 @@ function rentTileHTML(r) {
     <span class="rn-tile-img">${rentThumb(r)}${r.demo ? '<em class="rn-demo">דוגמה</em>' : ''}</span>
     <b class="rn-tile-t">${escHtml(r.title)}</b>
     <span class="rn-tile-d">${escHtml([tag, r.city].filter(Boolean).join(' · '))}</span>
-    <span class="rn-tile-f"><span class="rn-tile-p">${rentPriceTxt(r)}</span><span class="rn-tile-plus" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 6v12M6 12h12"/></svg></span></span>
+    <span class="rn-tile-f"><span class="rn-tile-p">${rentPriceTxt(r)}</span><span class="rn-tile-plus"${mktBuyable(r) ? ` role="button" aria-label="הוספה לעגלה" title="הוספה לעגלה" onclick="event.stopPropagation(); mktCartAdd('${artEsc(r.id)}', ${rentMin(r)})"` : ' aria-hidden="true"'}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 6v12M6 12h12"/></svg></span></span>
   </button>`;
 }
 function rentShelvesHTML(l) {
@@ -33480,7 +33508,7 @@ function rentDetailHTML(r) {
         ${r.shId ? '' : `<textarea id="rn-note" class="pd-note-in" maxlength="250" rows="2" placeholder="${r.kind === 'used' ? 'היי, המוצר עדיין זמין? מתי אפשר לבוא לראות?' : 'מה רוצים לעשות, ומתי נוח לכם?'}"></textarea>`}
         <div class="pd-act">
           <button type="button" class="rn-ask pd-sec" onclick="${ask}">${r.shId ? 'הודעה למוכר' : 'שאלה למפרסם'}</button>
-          <button type="button" class="rn-go pd-main" onclick="${main[0]}">${main[1]}</button>
+          ${mktBuyable(r) ? `<button type="button" class="rn-go pd-main" onclick="mktCartAdd('${artEsc(r.id)}', (document.getElementById('rn-qty') || {}).value || 1)">הוספה לעגלה</button>` : `<button type="button" class="rn-go pd-main" onclick="${main[0]}">${main[1]}</button>`}
         </div>
         <div class="pd-rows">
           <button type="button" class="pd-row" onclick="${r.city ? `rentSet('city', '${artEsc(r.city)}')` : `mktGo('${sec}')`}"><span><b>${r.city ? 'איסוף ב' + escHtml(r.city) : 'מיקום בתיאום'}</b><small>${r.kind === 'used' ? 'מתאמים ישירות עם המוכר/ת' : 'עמלת שירות ' + Math.round(RENT_SITE_FEE * 100) + '% לאתר'}</small></span>${chev}</button>
