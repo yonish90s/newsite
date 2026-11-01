@@ -8843,7 +8843,7 @@ function renderPhotoCard(p, options = {}) {
         </div>
         ${miniThumbnailsHTML}
       </div>
-      <div class="pf-cap">${authorAvHTML(p)}<b class="pf-au">${escHtml(p.author || '')}</b><span class="pf-st"><span>${LIKE_SVG}<span data-likes-n="${escHtml(p.id)}">${likesCount}</span></span><span><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 5C5.5 5 2 12 2 12s3.5 7 10 7 10-7 10-7-3.5-7-10-7zm0 11a4 4 0 1 1 0-8 4 4 0 0 1 0 8z"/></svg>${formatViews(viewsCount)}</span></span></div>
+      <div class="pf-cap"><span class="pf-by" role="button" tabindex="0" title="לפרופיל" onclick="event.stopPropagation(); event.preventDefault(); cardOpenAuthor('${artEsc(p.authorId || p.uid || '')}', '${artEsc(p.author || '')}')">${authorAvHTML(p)}<b class="pf-au">${escHtml(p.author || '')}</b></span><span class="pf-st"><span>${LIKE_SVG}<span data-likes-n="${escHtml(p.id)}">${likesCount}</span></span><span><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 5C5.5 5 2 12 2 12s3.5 7 10 7 10-7 10-7-3.5-7-10-7zm0 11a4 4 0 1 1 0-8 4 4 0 0 1 0 8z"/></svg>${formatViews(viewsCount)}</span></span></div>
     </div>
   `;
 }
@@ -15689,13 +15689,13 @@ function buildHomeFeedPage() {
   return `<div class="articles-page home-feed-page has-aside" data-page-id="page-home-feed">
     ${homeAsideHTML()}
     <div class="art-inner">
+      <div class="cmp-wrap">${composerBarHTML()}</div>
       ${homeChipsHTML(photos, comics, stories)}
       ${modBoxHTML()}
       ${homeHeroCarouselHTML(photos, comics, stories)}
       <div class="promo-row inline">${promoTrialHTML('row')}${adSlotHTML('row')}</div>
       ${homeExploreHTML()}
       ${homeRowsHTML(photos, comics, stories)}
-      <div class="cmp-wrap">${composerBarHTML()}</div>
       ${homeCategoriesHTML(photos, comics, stories)}
     </div>
   </div>`;
@@ -17998,6 +17998,12 @@ function isSiteAdminAuthor(uid, name, item) {
 }
 window.isSiteAdminAuthor = isSiteAdminAuthor;
 
+// לחיצה על היוצר בכרטיס: פותחת את הפרופיל שלו, ואם אין לו חשבון באתר — מודיעה שאין פרופיל
+function cardOpenAuthor(uid, name) {
+  if (uid || (typeof isSiteAdminAuthor === 'function' && isSiteAdminAuthor(uid, name))) { window.__detailOpen = false; openUserPage(uid, name); return; }
+  if (typeof showCopyToast === 'function') showCopyToast('למשתמש הזה אין פרופיל באתר');
+}
+window.cardOpenAuthor = cardOpenAuthor;
 async function openUserPage(authorId, authorName) {
   // מנהל האתר — הפרופיל והאודות שלו פתוחים לכולם (גם לאורחים)
   if (isSiteAdminAuthor(authorId, authorName)) {
@@ -30510,7 +30516,7 @@ function homeRowsHTML(photos, comics, stories) {
           <span role="button" tabindex="0" class="${saved ? 'on' : ''}" data-save="${escHtml(x.id)}" aria-label="שמירה" title="שמירה" onclick="event.stopPropagation(); event.preventDefault(); photoToggleSave('${artEsc(x.id)}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></span>
           <span role="button" tabindex="0" class="${liked ? 'on' : ''}" data-like="${escHtml(x.id)}" aria-label="לייק" title="לייק" onclick="event.stopPropagation(); event.preventDefault(); photoToggleLike('${artEsc(x.id)}')">${LIKE_SVG}</span>
         </span></span></span>
-      <span class="hr-foot">${authorAvHTML(x)}<b class="hr-au">${escHtml(x.author || 'משתמש')}</b><span class="hr-st"><span>${LIKE_SVG}<span data-likes-n="${escHtml(x.id)}">${likes}</span></span><span>${ic('<path d="M12 5C5.5 5 2 12 2 12s3.5 7 10 7 10-7 10-7-3.5-7-10-7zm0 11a4 4 0 1 1 0-8 4 4 0 0 1 0 8z"/>')}${typeof formatViews === 'function' ? formatViews(views) : views}</span></span></span>
+      <span class="hr-foot"><span class="hr-by" role="button" tabindex="0" title="לפרופיל" onclick="event.stopPropagation(); event.preventDefault(); cardOpenAuthor('${artEsc(x.authorId || x.uid || '')}', '${artEsc(x.author || '')}')">${authorAvHTML(x)}<b class="hr-au">${escHtml(x.author || 'משתמש')}</b></span><span class="hr-st"><span>${LIKE_SVG}<span data-likes-n="${escHtml(x.id)}">${likes}</span></span><span>${ic('<path d="M12 5C5.5 5 2 12 2 12s3.5 7 10 7 10-7 10-7-3.5-7-10-7zm0 11a4 4 0 1 1 0-8 4 4 0 0 1 0 8z"/>')}${typeof formatViews === 'function' ? formatViews(views) : views}</span></span></span>
     </button>`;
   };
   const row = (title, items, kind, all) => {
