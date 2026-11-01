@@ -15778,22 +15778,27 @@ function homeFlipHTML() {
     <div class="hf-dots">${list.map((_, k) => `<i class="${k ? '' : 'on'}"></i>`).join('')}</div>
   </section>`;
 }
-function homeFlipSet(sec, i) {
-  const cards = [...sec.querySelectorAll('.hf-card')];
-  i = (i + cards.length) % cards.length;
-  sec.dataset.i = i;
+// מצייר את הקרוסלה במיקום p (יכול להיות שבר — בזמן שהאצבע גוררת, הקלפים זזים איתה)
+function homeFlipPaint(sec, p) {
+  const cards = [...sec.querySelectorAll('.hf-card')], n = cards.length;
+  const near = ((Math.round(p) % n) + n) % n;
   cards.forEach((c, k) => {
-    let d = k - i;
-    if (d > cards.length / 2) d -= cards.length;
-    if (d < -cards.length / 2) d += cards.length;
+    let d = (((k - p) % n) + n) % n;
+    if (d > n / 2) d -= n;
     const a = Math.abs(d);
-    c.style.transform = `translateX(${-d * 52}%) scale(${a ? Math.max(.6, 1 - a * .17) : 1})`;
-    c.style.zIndex = 20 - a;
-    c.style.opacity = a > 2 ? 0 : 1;
-    c.classList.toggle('on', !d);
+    c.style.transform = `translateX(${-d * 52}%) scale(${Math.max(.6, 1 - a * .17)})`;
+    c.style.zIndex = Math.round(20 - a * 2);
+    c.style.opacity = Math.min(1, Math.max(0, 3 - a));
+    c.classList.toggle('on', k === near);
     c.classList.toggle('far', a > 2);
   });
-  sec.querySelectorAll('.hf-dots i').forEach((dot, k) => dot.classList.toggle('on', k === i));
+  sec.querySelectorAll('.hf-dots i').forEach((dot, k) => dot.classList.toggle('on', k === near));
+}
+function homeFlipSet(sec, i) {
+  const n = sec.querySelectorAll('.hf-card').length;
+  i = (i + n) % n;
+  sec.dataset.i = i;
+  homeFlipPaint(sec, i);
 }
 function homeFlipGo(btn, step) { const sec = btn.closest('.hf'); homeFlipSet(sec, Number(sec.dataset.i) + step); }
 function homeFlipOpen(card) {
@@ -15810,15 +15815,56 @@ function homeFlipKey(e) {
   if (e.key === 'ArrowLeft') { e.preventDefault(); homeFlipSet(sec, Number(sec.dataset.i) + 1); }
   if (e.key === 'ArrowRight') { e.preventDefault(); homeFlipSet(sec, Number(sec.dataset.i) - 1); }
 }
-// גרירה/החלקה: שמאלה — לבא, ימינה — לקודם (כמו בעברית)
+// החלקה באצבע / גרירה בעכבר: הקלפים זזים עם היד. שמאלה — לבא, ימינה — לקודם (כמו בעברית)
 (function homeFlipDrag() {
-  let sec = null, x0 = 0;
-  document.addEventListener('pointerdown', e => { const s = e.target.closest && e.target.closest('.hf'); if (!s || e.target.closest('.hf-nav, .hf-plus')) return; sec = s; x0 = e.clientX; sec.dataset.dragged = '0'; });
-  document.addEventListener('pointerup', e => {
+  let sec = null, x0 = 0, y0 = 0, dx = 0, live = false;
+  const pos = () => {
+    const card = sec.querySelector('.hf-card');
+    return Number(sec.dataset.i) - dx / ((card ? card.offsetWidth : 300) * .52 || 1);
+  };
+  const end = commit => {
     if (!sec) return;
-    const dx = e.clientX - x0;
-    if (Math.abs(dx) > 40) { sec.dataset.dragged = '1'; homeFlipSet(sec, Number(sec.dataset.i) + (dx < 0 ? 1 : -1)); setTimeout(() => { if (sec) sec.dataset.dragged = '0'; sec = null; }, 0); } else sec = null;
+    const s = sec, start = Number(s.dataset.i);
+    if (live) {
+      s.classList.remove('hf-dragging');
+      let to = start;
+      if (commit) { to = Math.round(pos()); if (to === start && Math.abs(dx) > 40) to = start + (dx < 0 ? 1 : -1); }
+      homeFlipSet(s, to);
+      s.dataset.dragged = '1';   // הלחיצה שמגיעה אחרי ההחלקה לא פותחת את הקלף
+      setTimeout(() => { s.dataset.dragged = '0'; }, 400);
+    }
+    sec = null; live = false;
+  };
+  document.addEventListener('pointerdown', e => {
+    const s = e.target.closest && e.target.closest('.hf');
+    if (!s || e.button > 0 || e.target.closest('.hf-nav, .hf-plus')) return;
+    sec = s; x0 = e.clientX; y0 = e.clientY; dx = 0; live = false;
   });
+  document.addEventListener('pointermove', e => {
+    if (!sec) return;
+    dx = e.clientX - x0;
+    const dy = e.clientY - y0;
+    if (!live) {
+      if (Math.abs(dy) > 10 && Math.abs(dy) > Math.abs(dx)) { sec = null; return; }   // גלילה של הדף למטה
+      if (Math.abs(dx) < 8) return;
+      live = true;
+      sec.classList.add('hf-dragging');
+      try { sec.setPointerCapture(e.pointerId); } catch (err) {}
+    }
+    homeFlipPaint(sec, pos());
+  });
+  document.addEventListener('pointerup', () => end(true));
+  document.addEventListener('pointercancel', () => end(false));
+  // משטח מגע במחשב: החלקה לצדדים בשתי אצבעות
+  let acc = 0, lock = 0;
+  document.addEventListener('wheel', e => {
+    const s = e.target.closest && e.target.closest('.hf');
+    if (!s || Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
+    e.preventDefault();
+    if (Date.now() < lock) return;
+    acc += e.deltaX;
+    if (Math.abs(acc) > 60) { homeFlipSet(s, Number(s.dataset.i) + (acc > 0 ? 1 : -1)); acc = 0; lock = Date.now() + 380; }
+  }, { passive: false });
 })();
 Object.assign(window, { homeFlipGo, homeFlipClick, homeFlipKey, homeFlipOpen });
 function homeGridSetSort(v) {
