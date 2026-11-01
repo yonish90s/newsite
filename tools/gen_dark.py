@@ -7,15 +7,15 @@
 import re, os
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PAGE, CARD, SURF, SURF2, RAISE = '#111111', '#111111', '#111111', '#1c1c1c', '#242424'
+PAGE, CARD, SURF, SURF2, RAISE = '#0a0a0a', '#111111', '#111111', '#1c1c1c', '#242424'
 BORDER = '#2a2a2a'
 TEXT, TEXT2, MUTED = '#ffffff', '#d0d0d0', '#9a9a9a'
 ACC = '#262626'
-ORANGE = '#e8823d'   # הדגש במצב כהה: כתום רך במקום הוורוד
+ORANGE = '#e4202b'   # הדגש במצב כהה: אדום (שחור-אדום) במקום הוורוד
 
 
 def is_pink(r, g, b):
-    # צבעי הדגש (ורוד, וגם כחול של אייקונים/קישורים) → כתום רך במצב כהה
+    # צבעי הדגש (ורוד, וגם כחול של אייקונים/קישורים) → אדום במצב כהה
     pink = r > 190 and g < 130 and 60 < b < 170 and r - b > 60
     blue = b > 180 and r < 130 and b - r > 80
     return pink or blue
@@ -45,7 +45,7 @@ def fa(a): return ('%.3f' % a).rstrip('0').rstrip('.')
 def map_bg(c):
     r, g, b, a = parse(c)
     L, C = lum(r, g, b), chroma(r, g, b)
-    if is_pink(r, g, b): return ORANGE if a >= 1 else f'rgba(232, 130, 61, {fa(a)})'
+    if is_pink(r, g, b): return ORANGE if a >= 1 else f'rgba(228, 32, 43, {fa(a)})'
     if a < 1:
         if L > 0.8: return f'rgba(17, 17, 17, {fa(a)})'
         if L < 0.3 and a < 0.3 and C < 0.2: return f'rgba(255, 255, 255, {fa(a * 0.9)})'
@@ -64,7 +64,7 @@ def map_bg(c):
 def map_fg(c):
     r, g, b, a = parse(c)
     L, C = lum(r, g, b), chroma(r, g, b)
-    if is_pink(r, g, b): return ORANGE if a >= 1 else f'rgba(232, 130, 61, {fa(a)})'
+    if is_pink(r, g, b): return ORANGE if a >= 1 else f'rgba(228, 32, 43, {fa(a)})'
     if C > 0.2:
         if L < 0.35: return f'color-mix(in srgb, {c} 55%, white)'   # צבע כהה (טקסט אריח) → בהיר יותר
         return None
@@ -80,7 +80,7 @@ def map_fg(c):
 def map_border(c):
     r, g, b, a = parse(c)
     L, C = lum(r, g, b), chroma(r, g, b)
-    if is_pink(r, g, b): return ORANGE if a >= 1 else f'rgba(232, 130, 61, {fa(a)})'
+    if is_pink(r, g, b): return ORANGE if a >= 1 else f'rgba(228, 32, 43, {fa(a)})'
     if C > 0.16: return None
     if a < 1:
         if L < 0.35: return f'rgba(255, 255, 255, {fa(min(1, a * 0.8))})'
