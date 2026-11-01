@@ -4,7 +4,7 @@ import { getDatabase, ref, set as _dbSet, get as _dbGet, child, onValue as _dbOn
 
 // הסתרת כל התוכן באתר, לכולם (גם למנהל), והצגת תוכן לדוגמה במקומו. שום דבר לא נמחק מהמסד: קריאות מהענפים האלה לא מגיעות למסד,
 // וכתיבות אליהם נחסמות כדי שמסך ריק לא ידרוס את התוכן האמיתי. להחזרת התוכן: false, בנייה וקידום ?v=
-const CONTENT_HIDDEN = true;
+const CONTENT_HIDDEN = false;
 const HIDDEN_PATH = /^website\/(media|communities|community_posts|forum_topics|forum_posts|news_posts|polls|poll_counts|poll_votes|ideas|questions|photo_albums|photo_comments|story_comments|products|rentals|deals|reposts|item_likes|item_likers|photoBarCategories|storyCategories|users\/[^/]+\/(likes_data|saved_galleries|watch_history))(\/|$)/;
 if (CONTENT_HIDDEN) document.documentElement.classList.remove('adult-blur');   // אין מה לטשטש בזמן ההסתרה
 const dbPathOf = r => decodeURIComponent(new URL(r.toString()).pathname).replace(/^\/|\/$/g, '');
@@ -32918,7 +32918,7 @@ Object.assign(window, { aiMcpTab, aiCopyText, AI_CONFIG_URL, aiDownload, aiSetMo
 // ============================================================
 async function sha256Hex(t) { const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t)); return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join(''); }
 async function orderSaveRemote(o) {
-  if (CONTENT_HIDDEN) return;   // קנייה של תוכן לדוגמה לא נשמרת במסד
+  if (CONTENT_HIDDEN || o.items.every(i => String(i.id).startsWith('mkt_'))) return;   // קנייה של מוצרי דוגמה לא נשמרת במסד
   try {
     if (!auth.currentUser && typeof ensureGuestSignedIn === 'function') await ensureGuestSignedIn();
     const u = auth.currentUser; if (!u) return;
