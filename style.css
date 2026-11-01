@@ -16908,7 +16908,8 @@ html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not
 .rn-tile-img img { position: absolute; inset: 0; width: 100% !important; height: 100% !important; max-height: none; object-fit: contain; display: block; transition: transform .3s ease; }
 .rn-tile:hover .rn-tile-img img { transform: scale(1.04); }
 .rn-tile-f { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.rn-tile-txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.rn-tile-d { display: none; }
+.rn-tile > .rn-tile-t { margin-bottom: -16px; }
 .rn-tile-t { font-size: 15px; font-weight: 500; line-height: 1.35; color: #111111; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .rn-tile-p { font-size: 15px; font-weight: 500; color: #111111; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .rn-tile-p small { font-size: 12px; color: #6b7280; }

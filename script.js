@@ -32968,9 +32968,12 @@ function rentList() {
 // מחשב: מדפים בסגנון free3d — כותרת קצרה ומתחתיה הרבה תמונות בשורות של 6
 const rentWide = () => { try { return window.matchMedia('(min-width: 1100px)').matches; } catch (e) { return false; } };
 function rentTileHTML(r) {
+  const sec = mktSecOf(r), tag = sec === 'used' ? r.offer : sec === 'store' ? 'אחסון' : 'השכרה';
   return `<button type="button" class="rn-tile" onclick="rentOpen('${artEsc(r.id)}')">
     <span class="rn-tile-img">${rentThumb(r)}${r.demo ? '<em class="rn-demo">דוגמה</em>' : ''}</span>
-    <span class="rn-tile-f"><span class="rn-tile-txt"><b class="rn-tile-t">${escHtml(r.title)}</b><span class="rn-tile-p">${rentPriceTxt(r)}</span></span><span class="rn-tile-plus" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 6v12M6 12h12"/></svg></span></span>
+    <b class="rn-tile-t">${escHtml(r.title)}</b>
+    <span class="rn-tile-d">${escHtml([tag, r.city].filter(Boolean).join(' · '))}</span>
+    <span class="rn-tile-f"><span class="rn-tile-p">${rentPriceTxt(r)}</span><span class="rn-tile-plus" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 6v12M6 12h12"/></svg></span></span>
   </button>`;
 }
 function rentShelvesHTML(l) {
