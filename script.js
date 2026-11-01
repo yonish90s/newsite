@@ -17660,8 +17660,9 @@ function buildUserPageHTML(authorId, authorName) {
   const market = pfMarketItems(authorId, authorName);
   window._upState.market = market;
   window._upState.posts = authorPosts;
-  // במחשב פותחים על "סקירה" (כמו בפרופיל של Printables), במובייל — על הפוסטים
-  setTimeout(() => { if (window.matchMedia('(min-width: 1024px)').matches && document.querySelector('.pf-tab[data-tab="overview"]')) pfTab('overview'); }, 0);
+  // במחשב פותחים על "נתונים" (קוביות הסטטיסטיקה), במובייל — על הפוסטים
+  setTimeout(() => { if (window.matchMedia('(min-width: 1024px)').matches && document.querySelector('.pf-tab[data-tab="dash"]')) pfTab('dash'); }, 0);
+  setTimeout(pfDashRefresh, 1500); setTimeout(pfDashRefresh, 4000);
   window._upState.counts = window._upState.counts || null;
   return `
   <div class="articles-page photos-page user-page photo-cols-${typeof photoGridCols !== 'undefined' ? photoGridCols : 4}" data-photos-json="${json}">
@@ -17671,12 +17672,14 @@ function buildUserPageHTML(authorId, authorName) {
       <aside class="pf-side"><div id="user-page-head">${profileHeadHTML(window._upState)}${pfSideHTML(window._upState)}</div></aside>
       <div class="pf-main">
       <nav class="pf-tabs">
+        <button type="button" class="pf-tab" data-tab="dash" onclick="pfTab('dash')">נתונים</button>
         <button type="button" class="pf-tab pf-desk-only" data-tab="overview" onclick="pfTab('overview')">סקירה</button>
         <button type="button" class="pf-tab on" data-tab="posts" onclick="pfTab('posts')">פוסטים <b>${authorPosts.length}</b></button>
         <button type="button" class="pf-tab" data-tab="gallery" onclick="pfTab('gallery')">גלריה <b>${authorAlbums.length}</b></button>
         ${market.length ? `<button type="button" class="pf-tab" data-tab="market" onclick="pfTab('market')">יד 2 <b>${market.length}</b></button>` : ''}
         <button type="button" class="pf-tab" data-tab="about" onclick="pfTab('about')">אודות</button>
       </nav>
+      <div class="pf-panel" data-panel="dash" hidden>${pfDashHTML(window._upState, authorAlbums, market, authorPosts)}</div>
       <div class="pf-panel" data-panel="overview" hidden>${pfOverviewHTML(authorAlbums, market, authorPosts)}</div>
       <div class="pf-panel" data-panel="posts">${pfGridHTML(authorPosts)}<div class="pf-list-mobile">${postsListHTML('profile', authorPosts, false)}</div></div>
       <div class="pf-panel" data-panel="gallery" hidden>${profileUploadsHTML(authorAlbums)}</div>
@@ -17965,6 +17968,94 @@ function pfCardHTML(a, market) {
     </footer>
   </article>`;
 }
+// ===== לשונית "נתונים" בפרופיל: קוביות סטטיסטיקה (צפיות, לייקים, עוקבים, העלאות), גרף צפיות, מד מעורבות ופעילות אחרונה.
+// "עלה/ירד" — לעומת תמונת מצב שנשמרת בדפדפן ומתחדשת פעם ביום
+function pfDashHTML(st, albums, market, posts) {
+  const fmt = n => typeof formatViews === 'function' ? formatViews(n) : String(n);
+  const time = a => (typeof photoAlbumTime === 'function' ? photoAlbumTime(a) : 0) || Number(a.createdAt) || 0;
+  const list = albums.slice().sort((a, b) => time(a) - time(b));
+  const viewsOf = a => (typeof photoGetViews === 'function' ? photoGetViews(a.id) : 0) || 0;
+  const views = list.reduce((t, a) => t + viewsOf(a), 0), likes = list.reduce((t, a) => t + (Number(a.likes) || 0), 0);
+  // תמונת מצב קודמת (מלפני יום לפחות) — כדי להראות אם עלה או ירד
+  const key = 'pf_snap_' + (st.uid || st.name || '');
+  let snap = null;
+  try { snap = JSON.parse(localStorage.getItem(key) || 'null'); } catch (e) {}
+  // שומרים רק אחרי שמוני הצפיות נטענו (אחרת נשמר 0 והשוואה של מחר תהיה שגויה)
+  if ((views > 0 || !list.length) && (!snap || Date.now() - (snap.t || 0) > 864e5)) { try { localStorage.setItem(key, JSON.stringify({ views, likes, uploads: list.length, followers: st.counts ? st.counts.followers : (snap ? snap.followers : null), t: Date.now() })); } catch (e) {} }
+  const base = snap;
+  const delta = (now, was) => {
+    if (!base || was == null) return '';
+    const d = now - was;
+    return d ? `<span class="pfd-delta ${d > 0 ? 'up' : 'down'}">${d > 0 ? '+' : ''}${fmt(d)}</span>` : '<span class="pfd-delta">ללא שינוי</span>';
+  };
+  // גרפים קטנים
+  const last = list.slice(-7), mx = Math.max(1, ...last.map(viewsOf));
+  const bars = `<span class="pfd-bars">${(last.length ? last : [0]).map(a => `<i style="height:${Math.max(10, Math.round((a ? viewsOf(a) : 0) / mx * 100))}%"></i>`).join('')}</span>`;
+  const spark = (vals, w, h) => {
+    const v = vals.length > 1 ? vals : [0, ...vals, 0];
+    const m = Math.max(1, ...v), stp = w / (v.length - 1);
+    return v.map((x, i) => `${i ? 'L' : 'M'}${(i * stp).toFixed(1)},${(h - 4 - x / m * (h - 8)).toFixed(1)}`).join(' ');
+  };
+  const likeLine = spark(list.slice(-10).map(a => Number(a.likes) || 0), 120, 44);
+  const viewLine = spark(list.slice(-24).map(viewsOf), 560, 150);
+  const eng = views ? Math.min(100, Math.round(likes / views * 100)) : 0;
+  const avg = list.length ? Math.round(views / list.length) : 0;
+  const top = list.slice().sort((a, b) => viewsOf(b) - viewsOf(a))[0];
+  const recent = list.slice(-3).reverse();
+  const img = a => a && (((a.images || []).find(Boolean)) || a.image || '');
+  const ic = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+  const followers = st.counts ? st.counts.followers : null;
+  return `<section class="pfd">
+    <div class="pfd-cube"><div><small>צפיות</small><b>${fmt(views)}</b>${delta(views, base && base.views)}</div>${bars}</div>
+    <div class="pfd-cube"><span class="pfd-ic">${ic('<path d="M7 10v11"/><path d="M15 5.9 14 10h5.8a2 2 0 0 1 1.9 2.6l-2.3 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.8a2 2 0 0 0 1.8-1.1L12 2a3.1 3.1 0 0 1 3 3.9z"/>')}</span><div><small>לייקים</small><b>${fmt(likes)}</b>${delta(likes, base && base.likes)}</div><svg class="pfd-spark" viewBox="0 0 120 44"><path d="${likeLine}"/></svg></div>
+    <div class="pfd-cube"><span class="pfd-ic">${ic('<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/>')}</span><div><small>עוקבים</small><b id="pfd-followers">${followers == null ? '—' : fmt(followers)}</b><span id="pfd-followers-d">${followers == null ? '' : delta(followers, base && base.followers)}</span></div></div>
+    <div class="pfd-cube pfd-hi"><div><small>העלאות</small><b>${list.length}</b>${delta(list.length, base && base.uploads)}</div><svg class="pfd-wave" viewBox="0 0 90 40"><path d="M2 30 C 14 30, 16 8, 30 10 S 44 34, 58 24 S 76 2, 88 8"/></svg></div>
+
+    <div class="pfd-card pfd-chart">
+      <div class="pfd-h"><b>צפיות לאורך זמן</b><span class="pfd-tag">${list.length ? 'לפי ההעלאות' : 'עדיין אין העלאות'}</span></div>
+      <div class="pfd-mini"><div><small>ממוצע להעלאה</small><b>${fmt(avg)}</b></div><div><small>יחס לייקים</small><b>${eng}%</b></div></div>
+      <svg class="pfd-line" viewBox="0 0 560 150" preserveAspectRatio="none"><path class="pfd-area" d="${viewLine} L560,150 L0,150 Z"/><path d="${viewLine}"/></svg>
+    </div>
+    <div class="pfd-card pfd-gauge-card">
+      <div class="pfd-h"><b>מעורבות</b></div>
+      <small class="pfd-sub">כמה מהצופים עשו לייק</small>
+      <b class="pfd-big">${fmt(likes)} <small>לייקים</small></b>
+      <div class="pfd-gauge" style="--p:${eng}"><svg viewBox="0 0 120 64"><path class="bg" d="M10 60 A50 50 0 0 1 110 60"/><path class="fg" d="M10 60 A50 50 0 0 1 110 60" pathLength="100"/></svg><b>${eng}%</b></div>
+    </div>
+    <div class="pfd-card pfd-me">
+      ${typeof authorAvHTML === 'function' ? authorAvHTML({ authorId: st.uid, author: st.name }) : ''}
+      <b>${escHtml(st.name || 'משתמש')}</b>
+      <small>${st.verified ? 'חשבון מאומת ✓' : 'חבר/ה בקהילה'}</small>
+      <div class="pfd-me-n"><div><small>העלאות</small><b>${list.length}</b></div><div><small>עוקבים</small><b id="pfd-followers-2">${followers == null ? '—' : fmt(followers)}</b></div><div><small>פוסטים</small><b>${posts.length}</b></div></div>
+    </div>
+
+    <div class="pfd-card pfd-recent">
+      <div class="pfd-h"><b>העלאות אחרונות</b></div>
+      ${recent.length ? recent.map(a => `<button type="button" class="pfd-row" onclick="photoOpenDetail('${artEsc(a.id)}')"><i></i><span><b>${escHtml(a.title || 'ללא כותרת')}</b><small>${escHtml(a.timestamp || '')}</small></span><em>${fmt(viewsOf(a))} צפיות</em></button>`).join('') : '<p class="pfd-empty">עדיין אין העלאות</p>'}
+    </div>
+    <div class="pfd-card pfd-top">
+      <div class="pfd-h"><b>הכי נצפה</b></div>
+      ${top ? `<button type="button" class="pfd-top-img hr-img" onclick="photoOpenDetail('${artEsc(top.id)}')">${img(top) ? `<img src="${escHtml(img(top))}" alt="" loading="lazy">` : ''}</button><b class="pfd-top-t">${escHtml(top.title || '')}</b><small>${fmt(viewsOf(top))} צפיות · ${fmt(Number(top.likes) || 0)} לייקים</small>` : '<p class="pfd-empty">עדיין אין העלאות</p>'}
+    </div>
+    <div class="pfd-card pfd-safe">
+      <span class="pfd-ic big">${ic('<path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/>')}</span>
+      <b>${market.length ? `${market.length} מוצרים ביד 2` : 'יד 2'}</b>
+      <small>${market.length ? 'המוצרים שלך בשוק — כולם במקום אחד' : 'אין עדיין מוצרים למכירה'}</small>
+      <button type="button" class="pfd-btn" onclick="${market.length ? "pfTab('market')" : "mktGo('used')"}">${market.length ? 'לכל המוצרים' : 'לשוק'}</button>
+    </div>
+  </section>`;
+}
+// מוני הצפיות מגיעים מהשרת רגע אחרי שהעמוד נבנה — מרעננים את הקוביות כשהם מגיעים
+function pfDashRefresh() {
+  const st = window._upState, panel = document.querySelector('.pf-panel[data-panel="dash"]');
+  if (!st || !panel || !st.uploads) return;
+  panel.innerHTML = pfDashHTML(st, st.uploads, st.market || [], st.posts || []);
+}
+function pfDashCounts(st) {
+  const fmt = n => typeof formatViews === 'function' ? formatViews(n) : String(n);
+  ['pfd-followers', 'pfd-followers-2'].forEach(id => { const el = document.getElementById(id); if (el && st.counts) el.textContent = fmt(st.counts.followers); });
+}
+
 function pfOverviewHTML(albums, market, posts) {
   const adultOk = (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('age_verified') === 'true');
   const pool = albums.concat(market).filter(a => pfImg(a));
@@ -17995,6 +18086,7 @@ async function profileLoadCounts(uid) {
     if (!st || st.uid !== uid) return;
     st.counts = { followers: Math.max(0, Number(v.followers) || 0), following: Math.max(0, Number(v.following) || 0) };
     profileRenderHead();
+    pfDashCounts(st);
   } catch (e) { /* המונה עדיין לא זמין */ }
 }
 async function profileToggleFollow(uid, name) {
