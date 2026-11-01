@@ -16735,6 +16735,42 @@ function feedRank(items, opts) {
 window.feedRank = feedRank;
 
 function photoOpenDetail(id) { return mediaGate(id, () => _photoOpenDetailImpl(id)); }
+// כרטיס הצד של עמוד מוצר/גלריה: מחיר ותגיות, שמירה/אהבתי/הצעה/הודעה, שיתוף ותגובות, היוצר + מעקב, "נבדק ע״י הקהילה".
+// משותף לעמוד המוצר הישן ולעמוד המודעה החדש בשוק (מוצרי יד 2 אמיתיים)
+function pd3BoxHTML(a, isSecondhand) {
+  return `
+    <aside class="pd3-box">
+      <div class="pd3-box-card">
+        ${isSecondhand ? pd2ProductInfoHTML(a, true) : `<div class="pd3-box-stat"><b>${a.likes || 0}</b> לייקים</div>`}
+      <!-- שלושה כפתורים גדולים: שמירה (מתאר) · אהבתי (ורוד) · הודעה (גרדיאנט) -->
+      <div class="okb-wrap">
+      <div class="okb-row">
+        <button type="button" class="okb okb-pass pd2-save${photoIsSavedLocal(a.id) ? ' is-saved' : ''}" onclick="photoToggleSave('${artEsc(a.id)}')">
+          <svg viewBox="0 0 24 24" fill="${photoIsSavedLocal(a.id) ? '#ffffff' : 'none'}" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><span>${photoIsSavedLocal(a.id) ? 'שמור' : 'שמירה'}</span></button>
+        <button type="button" class="okb okb-like${photoIsLikedLocal(a.id) ? ' on' : ''}" onclick="this.classList.toggle('on'); photoToggleLike('${artEsc(a.id)}')">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg><span>אהבתי</span></button>
+        ${isSecondhand ? `<button type="button" class="okb okb-offer" onclick="openPriceOffer('${artEsc(a.id)}', '${artEsc(a.title || '')}', '${artEsc(a.authorId || '')}', '${artEsc(a.author || '')}')" aria-label="הצעת מחיר" title="הצעת מחיר"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.4"/></svg></button>` : ''}
+        <button type="button" class="okb okb-super" onclick="dmStartAboutGallery('${artEsc(a.authorId || '')}', '${artEsc(a.author || '')}', '${artEsc(a.id)}')">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 3H4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h3v3.5L11.5 18H20a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z"/><path d="M5 1.2l.7 1.6 1.6.7-1.6.7L5 5.8l-.7-1.6-1.6-.7 1.6-.7z" fill="#fff"/></svg><span>הודעה</span></button>
+      </div>
+      <div class="okb-sub">
+        ${a.telegramUrl ? `<a class="okb-mini" href="${escHtml(safeUrl(a.telegramUrl))}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg><span>טלגרם</span></a>` : ''}
+        ${a.emailUrl ? `<button type="button" class="okb-mini" onclick="revealAndCopyEmail('${artEsc(a.emailUrl)}', this, event);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><span>מייל</span></button>` : ''}
+        <span class="okb-likes">${a.likes || 0} לייקים</span>
+      </div>
+      </div>
+      ${(isAdmin() || isEditMode) ? `<button type="button" class="pd2-ghost pd2-edit" onclick="openPhotoEditModal('${artEsc(a.id)}', event);">עריכת הגלריה</button>` : ''}
+      ${postBarHTML(a)}
+      </div>
+      ${a.authorId && !isSiteAdminAuthor(a.authorId, a.author, a) ? `
+      <div class="pd2-maker" onclick="openUserPage('${artEsc(a.authorId)}','${artEsc(a.author || '')}')">
+        ${authorAvHTML(a)}
+        <div><b>${escHtml(a.author || 'משתמש')}</b><small>לכל ההעלאות של היוצר</small></div>
+        <button type="button" onclick="event.stopPropagation(); toggleFollow('${artEsc(a.authorId)}','${artEsc(a.author || '')}', this)" class="follow-btn${isFollowing(a.authorId) ? ' following' : ''}">${isFollowing(a.authorId) ? 'עוקב/ת ✓' : 'עקוב'}</button>
+      </div>` : ''}
+      <div class="pd3-trust"><b>✓ נבדק ע״י הקהילה</b><span>תוכן שגולשים העלו — אפשר לדרג, להגיב ולשלוח הודעה ליוצר.</span></div>
+    </aside>`;
+}
 function _photoOpenDetailImpl(id) {
   if (typeof trackEvent === 'function') trackEvent('gallery_open');
   window.__detailOpen = true; // מגן מפני רענון-רקע שיבעט מהעמוד הפנימי
@@ -17004,37 +17040,7 @@ function _photoOpenDetailImpl(id) {
                 ${isUserVerified(a.authorId, a.author, a.verified || a.verifiedUser) ? '<li><span class="pd3-fi">✓</span>חשבון מאומת</li>' : ''}
               </ul>
             </aside>
-            <aside class="pd3-box">
-              <div class="pd3-box-card">
-                ${isSecondhand ? pd2ProductInfoHTML(a, true) : `<div class="pd3-box-stat"><b>${a.likes || 0}</b> לייקים</div>`}
-              <!-- שלושה כפתורים גדולים: שמירה (מתאר) · אהבתי (ורוד) · הודעה (גרדיאנט) -->
-              <div class="okb-wrap">
-              <div class="okb-row">
-                <button type="button" class="okb okb-pass pd2-save${photoIsSavedLocal(a.id) ? ' is-saved' : ''}" onclick="photoToggleSave('${artEsc(a.id)}')">
-                  <svg viewBox="0 0 24 24" fill="${photoIsSavedLocal(a.id) ? '#ffffff' : 'none'}" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><span>${photoIsSavedLocal(a.id) ? 'שמור' : 'שמירה'}</span></button>
-                <button type="button" class="okb okb-like${photoIsLikedLocal(a.id) ? ' on' : ''}" onclick="this.classList.toggle('on'); photoToggleLike('${artEsc(a.id)}')">
-                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg><span>אהבתי</span></button>
-                ${isSecondhand ? `<button type="button" class="okb okb-offer" onclick="openPriceOffer('${artEsc(a.id)}', '${artEsc(a.title || '')}', '${artEsc(a.authorId || '')}', '${artEsc(a.author || '')}')" aria-label="הצעת מחיר" title="הצעת מחיר"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.4"/></svg></button>` : ''}
-                <button type="button" class="okb okb-super" onclick="dmStartAboutGallery('${artEsc(a.authorId || '')}', '${artEsc(a.author || '')}', '${artEsc(a.id)}')">
-                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 3H4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h3v3.5L11.5 18H20a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z"/><path d="M5 1.2l.7 1.6 1.6.7-1.6.7L5 5.8l-.7-1.6-1.6-.7 1.6-.7z" fill="#fff"/></svg><span>הודעה</span></button>
-              </div>
-              <div class="okb-sub">
-                ${a.telegramUrl ? `<a class="okb-mini" href="${escHtml(safeUrl(a.telegramUrl))}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg><span>טלגרם</span></a>` : ''}
-                ${a.emailUrl ? `<button type="button" class="okb-mini" onclick="revealAndCopyEmail('${artEsc(a.emailUrl)}', this, event);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><span>מייל</span></button>` : ''}
-                <span class="okb-likes">${a.likes || 0} לייקים</span>
-              </div>
-              </div>
-              ${(isAdmin() || isEditMode) ? `<button type="button" class="pd2-ghost pd2-edit" onclick="openPhotoEditModal('${artEsc(a.id)}', event);">עריכת הגלריה</button>` : ''}
-              ${postBarHTML(a)}
-              </div>
-              ${a.authorId && !isSiteAdminAuthor(a.authorId, a.author, a) ? `
-              <div class="pd2-maker" onclick="openUserPage('${artEsc(a.authorId)}','${artEsc(a.author || '')}')">
-                ${authorAvHTML(a)}
-                <div><b>${escHtml(a.author || 'משתמש')}</b><small>לכל ההעלאות של היוצר</small></div>
-                <button type="button" onclick="event.stopPropagation(); toggleFollow('${artEsc(a.authorId)}','${artEsc(a.author || '')}', this)" class="follow-btn${isFollowing(a.authorId) ? ' following' : ''}">${isFollowing(a.authorId) ? 'עוקב/ת ✓' : 'עקוב'}</button>
-              </div>` : ''}
-              <div class="pd3-trust"><b>✓ נבדק ע״י הקהילה</b><span>תוכן שגולשים העלו — אפשר לדרג, להגיב ולשלוח הודעה ליוצר.</span></div>
-            </aside>
+            ${pd3BoxHTML(a, isSecondhand)}
           </div>
 
           ${photoCommentsSectionHTML(id)}
@@ -32838,7 +32844,7 @@ function usedAll() {
     raw = (m ? (JSON.parse(decodeURIComponent(m[1])) || []) : []).filter(x => x && x.id && x.title && x.approved !== false && !x.adminOnly); } catch (e) {}
   const real = raw.map(x => ({ id: 'sh_' + x.id, shId: x.id, kind: 'used', offer: x.offerType || x.category || 'מכירה', title: x.title, price: parseFloat(String(x.price || '').replace(/[^\d.]/g, '')) || 0, priceTxt: x.price || '',
     unitTxt: x.priceUnit || '', city: x.region || '', owner: x.author || '', uid: x.authorId || '', t: Number(x.createdAt) || 0, img: x.image || (Array.isArray(x.images) && x.images[0]) || '',
-    images: (Array.isArray(x.images) ? x.images : []).filter(Boolean), desc: String(x.summary || x.body || '').trim(),
+    raw: x, images: (Array.isArray(x.images) ? x.images : []).filter(Boolean), desc: String(x.summary || x.body || '').trim(),
     specs: [x.loanPeriod ? 'תקופת השאלה: ' + x.loanPeriod : ''].concat(Array.isArray(x.loanTerms) ? x.loanTerms.filter(v => typeof v === 'string') : []).filter(Boolean).slice(0, 8) }));
   return real.concat(real.length < 6 ? USED_DEMO : []);
 }
@@ -33036,7 +33042,19 @@ function rentRender(gridOnly) {
   const open = rentUI.open && rentFind(rentUI.open);
   if (gridOnly && !open) { const g = el.querySelector('.rn-grid'); if (g) g.innerHTML = rentGridHTML(); return; }
   el.innerHTML = open ? rentDetailHTML(open) : rentViewHTML();
+  if (open) { requestAnimationFrame(rentStickFix); setTimeout(rentStickFix, 120); }   // שוב אחרי שהשורה העליונה (שיתוף + לשוניות) יורדת מעמוד המודעה
 }
+// עמוד מודעה במחשב: כרטיס המחיר נדבק בדיוק בגובה שבו הוא מתחיל — כך הוא לא זז בכלל כשגוללים
+// (הגלילה קורית בתוך אזור התוכן שמתחת לכותרת, לכן מודדים ביחס אליו)
+function rentStickFix() {
+  const st = document.querySelector('.rent-page .rn-det-stick'), side = st && st.parentElement;
+  if (!st || !window.matchMedia('(min-width: 900px)').matches) return;
+  const sc = st.closest('main.center-content') || document.scrollingElement;
+  const z = parseFloat(getComputedStyle(document.body).zoom) || 1;
+  const top = side.getBoundingClientRect().top - sc.getBoundingClientRect().top + sc.scrollTop;
+  st.style.top = Math.max(0, Math.round(top / z)) + 'px';
+}
+window.addEventListener('resize', () => requestAnimationFrame(rentStickFix));
 try { window.matchMedia('(min-width: 1100px)').addEventListener('change', () => rentRender(true)); } catch (e) {}
 function rentSet(k, v) { rentUI[k] = v; rentUI.open = null; if (k === 'cat' && v !== 'all') rentUI.sec = 'rent'; rentRender(k === 'q'); }
 function rentFind(id) { return mktAll().find(r => r.id === id); }
@@ -33090,6 +33108,7 @@ function rentDetailHTML(r) {
           ${(r.specs || []).length ? `<h3>מה כדאי לדעת</h3><ul class="rn-det-checks">${r.specs.map(s => `<li><span>${ic('<path d="M5 12.5l4.5 4.5L19 7.5"/>')}</span>${escHtml(s)}</li>`).join('')}</ul>` : ''}
           ${r.unit === 'kg' ? `<div class="rn-pick"><b>בחרו מה להדפיס — המשקל יחושב לבד</b><div class="rn-ideas-row">${RENT_IDEAS.map(i => `<button type="button" class="rn-idea sm" data-g="${i.g}" onclick="rentIdeaPick('${artEsc(r.id)}', '${i.id}', this)"><span class="rn-sk">${rentIdeaSVG(i)}</span><b>${i.name}</b><small>~${i.g} גרם · ₪${Math.max(1, rentIdeaPrice(i, r.price))}</small></button>`).join('')}</div></div>` : ''}
         </section>
+        ${r.raw ? '' : `
         <div class="rn-det-card rn-det-seller">
           <span class="rn-av lg">${escHtml((r.owner || '?').slice(0, 1))}</span>
           <div>
@@ -33102,8 +33121,10 @@ function rentDetailHTML(r) {
             </ul>
           </div>
         </div>
+        `}
         <section class="rn-det-rel"><h2>עוד בשוק</h2><div>${tags.map(([t, go]) => `<button type="button" onclick="${go}">${escHtml(t)}</button>`).join('')}</div></section>
       </div>
+      ${r.raw ? `<aside class="rn-det-side"><div class="rn-det-stick rn-det-old art-pd3">${pd3BoxHTML(r.raw, true)}</div></aside>` : `
       <aside class="rn-det-side"><div class="rn-det-stick">
         <div class="rn-det-card rn-det-buy">
           <div class="rn-det-price">${rentPriceTxt(r)}${r.rating ? `<span class="rn-det-chip">⚡ ${r.reviews || 0} עסקאות</span>` : ''}</div>
@@ -33125,6 +33146,7 @@ function rentDetailHTML(r) {
         <button type="button" class="rn-save${saved ? ' is-saved' : ''}" onclick="${r.shId ? `photoToggleSave('${artEsc(r.shId)}')` : `showCopyToast('זו מודעת דוגמה 🙂')`}">${ic('<path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/>')}<span>${saved ? 'שמור' : 'שמירה לרשימה שלי'}</span></button>
         <div class="rn-det-note"><b>${ic('<path d="M5 12.5l4.5 4.5L19 7.5"/>')}איך זה עובד</b><p>${r.kind === 'used' ? 'שולחים הצעה או שאלה, המוכר/ת עונה ומתאמים איסוף. משלמים ישירות למוכר/ת.' : `שולחים בקשה, בעל המודעה מאשר ומתאמים. עמלת שירות של ${Math.round(RENT_SITE_FEE * 100)}% לאתר.`}</p></div>
       </div></aside>
+      `}
     </div>
     ${more.length ? `<section class="rn-det-more"><h2>מוצרים נוספים</h2><div class="rn-tiles">${more.map(rentTileHTML).join('')}</div></section>` : ''}`;
 }
