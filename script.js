@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, signInWithPopup, GoogleAuthProvider, FacebookAuthProvider, signOut, onAuthStateChanged, signInAnonymously, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, EmailAuthProvider, linkWithCredential, setPersistence, browserLocalPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider, FacebookAuthProvider, OAuthProvider, TwitterAuthProvider, signOut, onAuthStateChanged, signInAnonymously, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, EmailAuthProvider, linkWithCredential, setPersistence, browserLocalPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getDatabase, ref, set, get, child, onValue, push, update, increment, runTransaction, onDisconnect } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 // מסך מלא (מצב מחשב) — מוגדר מוקדם כדי שבוני העמודים יוכלו לקרוא אותו
@@ -4164,34 +4164,32 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // התחברות / הרשמה עם פייסבוק
-  const authFacebookLoginBtn = document.getElementById('auth-facebook-login-btn');
-  if (authFacebookLoginBtn && authModal) {
-    authFacebookLoginBtn.addEventListener('click', () => {
-      authModal.style.display = 'none';
-      signInWithPopup(auth, new FacebookAuthProvider())
-        .then((result) => {
+  // שאר דרכי ההתחברות. ספק שעוד לא הופעל ב-Firebase (Authentication → Sign-in method) מוצג כ"בקרוב" —
+  // אחרי שמפעילים אותו שם, משנים כאן ל-true
+  const AUTH_READY = { facebook: false, apple: false, microsoft: false, x: false };
+  [['facebook', 'auth-facebook-login-btn', () => new FacebookAuthProvider(), 'Facebook'],
+   ['apple', 'auth-apple-login-btn', () => new OAuthProvider('apple.com'), 'Apple'],
+   ['microsoft', 'auth-microsoft-login-btn', () => new OAuthProvider('microsoft.com'), 'Microsoft'],
+   ['x', 'auth-x-login-btn', () => new TwitterAuthProvider(), 'X']].forEach(([key, id, make, name]) => {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+    if (!AUTH_READY[key]) { btn.disabled = true; btn.classList.add('soon'); btn.querySelector('em').textContent = 'בקרוב'; return; }
+    btn.addEventListener('click', () => {
+      if (authModal) authModal.style.display = 'none';
+      signInWithPopup(auth, make())
+        .then(result => {
           const user = result.user;
           if (user.metadata && user.metadata.creationTime === user.metadata.lastSignInTime && typeof openSignupSteps === 'function') openSignupSteps();
           else if (typeof showCopyToast === 'function') showCopyToast('התחברת בהצלחה');
         })
-        .catch((error) => {
-          console.error('facebook login failed', error);
+        .catch(error => {
+          console.error(name + ' login failed', error);
           if (error && error.code === 'auth/popup-closed-by-user') return;
-          const msg = error && error.code === 'auth/operation-not-allowed' ? 'ההתחברות עם פייסבוק עוד לא הופעלה — נסו בינתיים עם Google'
-            : error && error.code === 'auth/account-exists-with-different-credential' ? 'כבר יש חשבון עם המייל הזה — התחברו עם Google'
-            : 'ההתחברות עם פייסבוק נכשלה — נסו שוב';
+          const msg = error && error.code === 'auth/account-exists-with-different-credential' ? 'כבר יש חשבון עם המייל הזה — התחברו בדרך שבה נרשמתם' : `ההתחברות עם ${name} נכשלה — נסו שוב`;
           if (typeof showCopyToast === 'function') showCopyToast(msg); else alert(msg);
         });
     });
-  }
-
-  const authMicrosoftLoginBtn = document.getElementById('auth-microsoft-login-btn');
-  if (authMicrosoftLoginBtn) {
-    authMicrosoftLoginBtn.addEventListener('click', () => {
-      alert("התחברות באמצעות Microsoft אינה פעילה כרגע. אנא השתמש בהתחברות באמצעות Google.");
-    });
-  }
+  });
 
   const authEmailSubmitBtn = document.getElementById('auth-email-submit-btn');
   if (authEmailSubmitBtn) {
@@ -20250,6 +20248,7 @@ function toggleNotifications(e) {
   const panel = document.getElementById('notif-panel');
   if (!panel) return;
   if (panel.style.display === 'block') { panel.style.display = 'none'; return; }
+  const op = document.getElementById('ofp-panel'); if (op && op.classList.contains('ofp-drop')) op.remove();   // רק חלונית אחת פתוחה
   if (auth.currentUser && typeof subscribeMyDMs === 'function') subscribeMyDMs();
   panel.innerHTML = `<div class="notif-head">🔔 התראות</div><div class="notif-list">${notificationsHTML()}</div>`;
   panel.style.display = 'block';
@@ -28763,10 +28762,9 @@ function openPriceOffer(id, title, sellerUid, sellerName) {
   m.innerHTML = `<div class="rp-card" role="dialog" aria-label="הצעת מחיר">
       <div class="rp-head"><b>הצעת מחיר</b><button type="button" class="fo-panel-x" onclick="closePriceOffer()" aria-label="סגירה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
       ${title ? `<div class="rp-item">${escHtml(title)}</div>` : ''}
-      ${ask ? `<div class="of-ask">המחיר המבוקש: <b>₪${ask.toLocaleString('he-IL')}</b></div>` : ''}
-      <div class="of-slide"><input id="offer-range" type="range" min="${lo}" max="${hi}" step="${step}" value="${def}" oninput="offerSlide(this.value)" aria-label="סכום ההצעה">
+      <div class="of-bal"><span>ההצעה שלך${ask ? `<small>המחיר המבוקש ₪${ask.toLocaleString('he-IL')}</small>` : ''}</span><label class="of-price"><span>₪</span><input id="offer-price" type="number" inputmode="numeric" min="1" max="10000000" value="${def}" aria-label="סכום ההצעה" oninput="offerSlideSync(this.value)"></label></div>
+      <div class="of-slide"><input id="offer-range" type="range" min="${lo}" max="${hi}" step="${step}" value="${def}" style="--p:${Math.round((def - lo) / (hi - lo) * 100)}%" oninput="offerSlide(this.value)" aria-label="סכום ההצעה">
         <div class="of-slide-l"><span>₪${lo.toLocaleString('he-IL')}</span><b id="offer-pct">${ask ? Math.round(def / ask * 100) + '% מהמבוקש' : ''}</b><span>₪${hi.toLocaleString('he-IL')}</span></div></div>
-      <label class="of-price"><span>₪</span><input id="offer-price" type="number" inputmode="numeric" min="1" max="10000000" value="${def}" placeholder="כמה תרצו להציע?" oninput="offerSlideSync(this.value)"></label>
       <textarea id="offer-note" class="rp-note" rows="2" maxlength="300" placeholder="הודעה למוכר (לא חובה)"></textarea>
       <div class="rp-actions"><button type="button" class="pf-btn" onclick="closePriceOffer()">ביטול</button><button type="button" class="pf-btn rp-send" onclick="sendPriceOffer('${artEsc(title)}', '${artEsc(sellerUid)}', '${artEsc(sellerName)}')">שליחת ההצעה</button></div>
     </div>`;
@@ -28784,7 +28782,8 @@ function offerSlideSync(v) {
   offerPct(v);
 }
 function offerPct(v) {
-  const el = document.getElementById('offer-pct'), ask = window.__offerAsk;
+  const el = document.getElementById('offer-pct'), ask = window.__offerAsk, r = document.getElementById('offer-range');
+  if (r) r.style.setProperty('--p', Math.min(100, Math.max(0, (Number(r.value) - Number(r.min)) / (Number(r.max) - Number(r.min)) * 100)) + '%');
   if (el && ask) el.textContent = Math.round(Number(v) / ask * 100) + '% מהמבוקש';
 }
 function closePriceOffer() { const m = document.getElementById('offer-modal'); if (m) m.remove(); }
@@ -29197,12 +29196,28 @@ function offerCounterSend(id) {
   closePriceOffer();
   offerUpdate(id, 'counter', price, note);
 }
-async function openOffersPanel() {
+// הצעות נפתחות כמו ההתראות: חלונית קטנה שיורדת מתחת לכותרת (לחיצה נוספת או לחיצה בחוץ סוגרת)
+async function openOffersPanel(e) {
+  if (e && e.stopPropagation) e.stopPropagation();
+  const cur = document.getElementById('ofp-panel');
+  if (e && cur && cur.classList.contains('ofp-drop')) { cur.remove(); return; }
   if (!auth.currentUser) { const ok = (typeof ensureGuestSignedIn === 'function') ? await ensureGuestSignedIn() : false; if (!ok) { openLiveChatLogin(); return; } }
   offersSubscribe();
-  closeSidePanels('ofp-panel');
-  openSidePanel('ofp-panel', 'הצעות', ofpListHTML(), '');
+  closeSidePanels();
+  if (cur) cur.remove();
+  const np = document.getElementById('notif-panel'); if (np) np.style.display = 'none';
+  const p = document.createElement('div');
+  p.id = 'ofp-panel'; p.className = 'notif-panel ofp-drop'; p.style.display = 'block'; p.dataset.t = Date.now();
+  p.innerHTML = `<div class="notif-head">הצעות</div><div class="fo-panel-body ofp-drop-body">${ofpListHTML()}</div>`;
+  document.body.appendChild(p);
 }
+// סגירה בלחיצה בחוץ — בשלב הלכידה, כי לחיצות על תמונות מטושטשות נעצרות לפני שמגיעות למסמך
+window.addEventListener('pointerdown', e => {
+  const p = document.getElementById('ofp-panel');
+  if (!p || !p.classList.contains('ofp-drop') || Date.now() - Number(p.dataset.t || 0) < 300) return;
+  const b = document.getElementById('offers-btn');
+  if (!p.contains(e.target) && !(b && b.contains(e.target)) && !e.target.closest('.rp-modal, #m-sheet')) p.remove();
+}, true);
 try { onAuthStateChanged(auth, u => { if (u) setTimeout(offersSubscribe, 300); }); } catch (e) {}
 Object.assign(window, { openOffersPanel, offersSetTab, offerDecide, offerCounter, offerCounterSend });
 
