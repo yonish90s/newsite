@@ -2,19 +2,59 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/fireba
 import { getAuth, signInWithPopup, GoogleAuthProvider, FacebookAuthProvider, OAuthProvider, TwitterAuthProvider, signOut, onAuthStateChanged, signInAnonymously, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, EmailAuthProvider, linkWithCredential, setPersistence, browserLocalPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getDatabase, ref, set as _dbSet, get as _dbGet, child, onValue as _dbOnValue, push as _dbPush, update as _dbUpdate, increment, runTransaction as _dbTransaction, onDisconnect } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-// הסתרת כל התוכן באתר, לכולם (גם למנהל). שום דבר לא נמחק מהמסד: קריאות מהענפים האלה חוזרות ריקות,
+// הסתרת כל התוכן באתר, לכולם (גם למנהל), והצגת תוכן לדוגמה במקומו. שום דבר לא נמחק מהמסד: קריאות מהענפים האלה לא מגיעות למסד,
 // וכתיבות אליהם נחסמות כדי שמסך ריק לא ידרוס את התוכן האמיתי. להחזרת התוכן: false, בנייה וקידום ?v=
 const CONTENT_HIDDEN = true;
-const HIDDEN_PATH = /^website\/(media|communities|community_posts|forum_topics|forum_posts|news_posts|polls|poll_counts|poll_votes|ideas|questions|photo_albums|photo_comments|story_comments|products|rentals|deals|reposts|users\/[^/]+\/(likes_data|saved_galleries|watch_history))(\/|$)/;
+const HIDDEN_PATH = /^website\/(media|communities|community_posts|forum_topics|forum_posts|news_posts|polls|poll_counts|poll_votes|ideas|questions|photo_albums|photo_comments|story_comments|products|rentals|deals|reposts|item_likes|item_likers|photoBarCategories|storyCategories|users\/[^/]+\/(likes_data|saved_galleries|watch_history))(\/|$)/;
+if (CONTENT_HIDDEN) document.documentElement.classList.remove('adult-blur');   // התוכן לדוגמה לא מטושטש
 const dbPathOf = r => decodeURIComponent(new URL(r.toString()).pathname).replace(/^\/|\/$/g, '');
 const writeBlocked = path => path === 'website' || path === 'website/pages' || path.startsWith('website/pages/') || HIDDEN_PATH.test(path);
-// עמוד תוכן נשאר עם המעטפת שלו (לפיה האתר מזהה אותו), בלי הפריטים
+// תוכן לדוגמה שמוצג בזמן ההסתרה. הוא חי רק בקוד ולא נכתב למסד
+const DEMO_AUTHOR = 'תוכן לדוגמה';
+const DEMO_T = Date.parse('2026-11-01T10:00:00Z');
+const demoImg = id => `https://images.unsplash.com/photo-${id}?w=800&q=80`;
+const DEMO_PHOTOS = [
+  ['1460925895917-afdab827c52f', 'שולחן עבודה בבוקר'], ['1507238691740-187a5b1d37b8', 'פינת עבודה שקטה'], ['1551288049-bebda4e38f71', 'גרפים על המסך'],
+  ['1472851294608-062f824d29cc', 'חלון ראווה'], ['1441986300917-64674bd600d8', 'חנות קטנה בעיר'], ['1526178613552-2b45c6c302f0', 'רגע של ריכוז'],
+  ['1551836022-d5d88e9218df', 'פגישת צוות'], ['1519389950473-47ba0277781c', 'עובדים יחד'], ['1504711434969-e33886168f5c', 'עיתון הבוקר'],
+  ['1499750310107-5fef28a66643', 'מחברת ומחשב'], ['1542744094-3a31b272c390', 'סיעור מוחות'], ['1522542550221-31fd19575a2d', 'סקיצות על הקיר']
+].map(([img, title], i) => ({ id: 'demo-ph' + (i + 1), type: 'photo', isStory: false, title, summary: 'תמונה לדוגמה', body: 'תמונה לדוגמה', image: demoImg(img), images: [demoImg(img)],
+  author: DEMO_AUTHOR, authorId: '', category: 'תמונות גולשים', categoryColor: '#2f7a48', timestamp: '1.11.2026', createdAt: DEMO_T - i * 3600000, isAdult: false, adminOnly: false, approved: true, likes: 0 }));
+const DEMO_STORIES = [
+  ['1464822759023-fed622ff2c3b', 'המסע אל מעבר להרים', 'קבוצת חברים יוצאת לטיול שמשתבש בדרך הכי טובה.'],
+  ['1509198397868-475647b2a1e5', 'השען מהרחוב הישן', 'שעון אחד קטן מתחיל ללכת לאחור, ומשם הכול משתנה.'],
+  ['1499750310107-5fef28a66643', 'המכתב שלא נשלח', 'מכתב ישן שנמצא במגירה מחזיר שתי חברות לשיחה אחת.'],
+  ['1504711434969-e33886168f5c', 'הכתבה האחרונה', 'כתב ותיק מקבל משימה אחרונה ומגלה שהסיפור קרוב לבית.']
+];
+const DEMO_COMIC_IMGS = ['1441986300917-64674bd600d8', '1526178613552-2b45c6c302f0', '1551836022-d5d88e9218df', '1519389950473-47ba0277781c'];
+const demoStory = (kind, [storyImg, title, summary], i, img = kind === 'comic' ? DEMO_COMIC_IMGS[i] : storyImg) => ({ id: `demo-${kind}${i + 1}`, title, summary, body: summary + '\n\nזהו טקסט לדוגמה בלבד.', author: DEMO_AUTHOR, category: 'כללי', categoryColor: '#2f7a48',
+  image: demoImg(img), images: [demoImg(img)], pages: kind === 'comic' ? [{ type: 'image', url: demoImg(img) }] : [], link: '', linkedId: '', timestamp: '1.11.2026', createdAt: DEMO_T - i * 3600000, isAdult: false, likes: 0 });
+const DEMO_COMMUNITIES = Object.fromEntries([['צילום', '📷', 'מקום לשתף תמונות ורעיונות'], ['טיולים', '🥾', 'מסלולים והמלצות'], ['בישול', '🍳', 'מתכונים וטיפים']].map(([name, icon, desc], i) =>
+  ['demo-c' + (i + 1), { id: 'demo-c' + (i + 1), name, icon, desc, createdAt: DEMO_T, createdBy: '', createdByName: DEMO_AUTHOR, items: {} }]));
+const DEMO_NEWS = Object.fromEntries([['האתר בהתחדשות', 'עיצוב חדש ותכנים חדשים בדרך.'], ['פינת הטיפים', 'כתבה לדוגמה עם כמה טיפים שימושיים.'], ['מה חדש השבוע', 'סיכום קצר לדוגמה של העדכונים האחרונים.']].map(([title, desc], i) =>
+  ['demo-n' + (i + 1), { title, desc, author: DEMO_AUTHOR, category: 'חדשות', createdAt: DEMO_T - i * 86400000, tweetUrl: '' }]));
+const DEMO_TOPICS = [['מה דעתכם על העיצוב החדש?', 'demo-t1'], ['הצעות לשיפור האתר', 'demo-t2']];
+const demoValue = path => {
+  if (path === 'website/communities') return DEMO_COMMUNITIES;
+  if (path === 'website/news_posts') return DEMO_NEWS;
+  if (path === 'website/forum_topics') return { gate: Object.fromEntries(DEMO_TOPICS.map(([title, id]) => [id, { title, name: DEMO_AUTHOR, uid: '', t: DEMO_T, replies: 0, lastT: DEMO_T, lastName: DEMO_AUTHOR }])) };
+  if (path === 'website/forum_topics/gate') return demoValue('website/forum_topics').gate;
+  const fp = path.match(/^website\/forum_posts\/(demo-t\d)$/);
+  if (fp) return { p1: { name: DEMO_AUTHOR, uid: '', t: DEMO_T, text: 'זהו דיון לדוגמה.' } };
+  return null;
+};
+// עמוד תוכן נשאר עם המעטפת שלו (לפיה האתר מזהה אותו), ובתוכה רק הפריטים לדוגמה
 const emptyPageContent = c => {
   const open = String(c || '').match(/^<div[^>]*data-(?:stories|photos)-json="[^"]*"[^>]*>/);
-  return open ? open[0].replace(/(data-(?:stories|photos)-json=")[^"]*"/, '$1%5B%5D"') + '</div>' : c;
+  if (!open) return c;
+  const list = /data-story-kind="comics"/.test(open[0]) ? DEMO_STORIES.map((x, i) => demoStory('comic', x, i))
+    : /data-story-kind="stories"/.test(open[0]) ? DEMO_STORIES.map((x, i) => demoStory('story', x, i))
+    : /data-section="photos"/.test(open[0]) ? DEMO_PHOTOS : [];
+  return open[0].replace(/(data-(?:stories|photos)-json=")[^"]*"/, '$1' + encodeURIComponent(JSON.stringify(list)) + '"') + '</div>';
 };
 function hideDbValue(path, v) {
-  if (v === null || v === undefined || HIDDEN_PATH.test(path)) return null;
+  if (HIDDEN_PATH.test(path)) return demoValue(path);
+  if (v === null || v === undefined) return null;
   if (typeof v !== 'object') return v;
   if (path === 'website/pages') return (Array.isArray(v) ? v : Object.values(v)).map(p => (p && p.content) ? Object.assign({}, p, { content: emptyPageContent(p.content) }) : p);
   if (path === 'website' || path === 'website/users' || /^website\/users\/[^/]+$/.test(path)) {
@@ -36,12 +76,12 @@ const blockedNotice = () => { try { if (navigator.userActivation && navigator.us
 const hideSnap = (r, sn) => { const path = dbPathOf(r); return needsHide(path) ? fakeSnap(hideDbValue(path, sn.val()), sn.key) : sn; };
 const get = !CONTENT_HIDDEN ? _dbGet : async r => {
   const path = dbPathOf(r);
-  if (HIDDEN_PATH.test(path)) return fakeSnap(null, path.split('/').pop());
+  if (HIDDEN_PATH.test(path)) return fakeSnap(demoValue(path), path.split('/').pop());
   return hideSnap(r, await _dbGet(r));
 };
 const onValue = !CONTENT_HIDDEN ? _dbOnValue : (r, cb, ...rest) => {
   const path = dbPathOf(r);
-  if (HIDDEN_PATH.test(path)) { queueMicrotask(() => cb(fakeSnap(null, path.split('/').pop()))); return () => {}; }
+  if (HIDDEN_PATH.test(path)) { queueMicrotask(() => cb(fakeSnap(demoValue(path), path.split('/').pop()))); return () => {}; }
   return _dbOnValue(r, sn => cb(hideSnap(r, sn)), ...rest);
 };
 const set = !CONTENT_HIDDEN ? _dbSet : async (r, v) => {
@@ -6605,6 +6645,7 @@ let PHOTO_BAR_CATEGORIES = (function () {
   } catch (e) {}
   return ['תמונות גולשים', 'כלובון', 'תמונות גוף', 'לעסקים', 'כללי'];
 })();
+if (CONTENT_HIDDEN) { STORY_CATEGORIES = ['כללי']; PHOTO_BAR_CATEGORIES = ['תמונות גולשים', 'כללי']; }
 
 function savePhotoBarCategories() {
   try { localStorage.setItem('custom_photo_bar_categories', JSON.stringify(PHOTO_BAR_CATEGORIES)); } catch (e) {}
@@ -23556,7 +23597,7 @@ function subscribeIdeas() {
         set(ref(db, `website/ideas/${item.id}`), item);
       });
       ideasData = {};
-      if (!CONTENT_HIDDEN) IDEAS_SAMPLES.forEach(i => ideasData[i.id] = i);
+      IDEAS_SAMPLES.forEach(i => ideasData[i.id] = i);
     } else {
       ideasData = val;
     }
@@ -33101,7 +33142,7 @@ function usedAll() {
     unitTxt: x.priceUnit || '', city: x.region || '', owner: x.author || '', uid: x.authorId || '', t: Number(x.createdAt) || 0, img: x.image || (Array.isArray(x.images) && x.images[0]) || '',
     raw: x, images: (Array.isArray(x.images) ? x.images : []).filter(Boolean), desc: String(x.summary || x.body || '').trim(),
     specs: [x.loanPeriod ? 'תקופת השאלה: ' + x.loanPeriod : ''].concat(Array.isArray(x.loanTerms) ? x.loanTerms.filter(v => typeof v === 'string') : []).filter(Boolean).slice(0, 8) }));
-  return real.concat(!CONTENT_HIDDEN && real.length < 6 ? USED_DEMO : []);
+  return real.concat(real.length < 6 ? USED_DEMO : []);
 }
 function mktAll() { return rentAll().concat(usedAll()); }
 function mktGo(sec) {
@@ -33192,7 +33233,7 @@ function rentSubscribe() {
 }
 function rentAll() {
   const real = rentData || [];
-  const demo = CONTENT_HIDDEN ? [] : RENT_DEMO.filter(d => !real.some(r => r.cat === d.cat));
+  const demo = RENT_DEMO.filter(d => !real.some(r => r.cat === d.cat));
   return real.concat(demo);
 }
 function rentCatOf(id) { return RENT_CATS.find(c => c.id === id) || RENT_CATS[RENT_CATS.length - 1]; }
