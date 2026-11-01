@@ -33042,8 +33042,13 @@ function rentRender(gridOnly) {
   const open = rentUI.open && rentFind(rentUI.open);
   if (gridOnly && !open) { const g = el.querySelector('.rn-grid'); if (g) g.innerHTML = rentGridHTML(); return; }
   el.innerHTML = open ? rentDetailHTML(open) : rentViewHTML();
-  if (open) { requestAnimationFrame(rentStickFix); setTimeout(rentStickFix, 120); }   // שוב אחרי שהשורה העליונה (שיתוף + לשוניות) יורדת מעמוד המודעה
+  if (open) {
+    requestAnimationFrame(rentStickFix); setTimeout(rentStickFix, 120);
+    if (typeof subscribePhotoComments === 'function') subscribePhotoComments(rentCommentsKey(open));
+  }   // שוב אחרי שהשורה העליונה (שיתוף + לשוניות) יורדת מעמוד המודעה
 }
+// תגובות במודעה: מוצר יד 2 אמיתי משתף את התגובות עם עמוד המוצר המקורי; השכרה/אחסון — מפתח משלהן
+const rentCommentsKey = r => r.shId || ('rent_' + r.id);
 // עמוד מודעה במחשב: כרטיס המחיר נדבק בדיוק בגובה שבו הוא מתחיל — כך הוא לא זז בכלל כשגוללים
 // (הגלילה קורית בתוך אזור התוכן שמתחת לכותרת, לכן מודדים ביחס אליו)
 function rentStickFix() {
@@ -33123,6 +33128,7 @@ function rentDetailHTML(r) {
         </div>
         `}
         <section class="rn-det-rel"><h2>עוד בשוק</h2><div>${tags.map(([t, go]) => `<button type="button" onclick="${go}">${escHtml(t)}</button>`).join('')}</div></section>
+        <section class="rn-det-cmts">${typeof photoCommentsSectionHTML === 'function' ? photoCommentsSectionHTML(rentCommentsKey(r)) : ''}</section>
       </div>
       ${r.raw ? `<aside class="rn-det-side"><div class="rn-det-stick rn-det-old art-pd3">${pd3BoxHTML(r.raw, true)}</div></aside>` : `
       <aside class="rn-det-side"><div class="rn-det-stick">
