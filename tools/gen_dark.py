@@ -15,10 +15,11 @@ ORANGE = '#e4202b'   # הדגש במצב כהה: אדום (שחור-אדום) ב
 
 
 def is_pink(r, g, b):
-    # צבעי הדגש (ורוד, וגם כחול של אייקונים/קישורים) → אדום במצב כהה
+    # צבעי הדגש (ורוד/ירוק-יער, וגם כחול של אייקונים/קישורים) → אדום במצב כהה
     pink = r > 190 and g < 130 and 60 < b < 170 and r - b > 60
     blue = b > 180 and r < 130 and b - r > 80
-    return pink or blue
+    forest = g > r + 25 and g > b + 15 and g < 140   # הירוק-יער של המצב הבהיר (Moss) → אדום במצב כהה
+    return pink or blue or forest
 
 HEX = r'#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3,4})\b'
 RGB = r'rgba?\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*(?:,\s*[\d.]+\s*)?\)'

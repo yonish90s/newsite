@@ -35,8 +35,8 @@
   <!-- ספריית localforage לשמירת תמונות -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
   <!-- קישור לקובץ העיצוב החיצוני (עם פרמטר למניעת שמירה במטמון) -->
-  <link rel="stylesheet" href="./style.min.css?v=2045">
-  <link rel="stylesheet" id="dark-css" href="./dark.min.css?v=408" media="not all">
+  <link rel="stylesheet" href="./style.min.css?v=2047">
+  <link rel="stylesheet" id="dark-css" href="./dark.min.css?v=409" media="not all">
   <script>
     // קישור ישיר לפריט (#p/…, #s/…, #n/…) — מסמנים מיד, כדי שהכתובת לא תימחק לפני שהפריט נפתח
     window.__deepLinkOpening = /^#[psn]\//.test(location.hash || '');
@@ -47,6 +47,8 @@
       var t = null;
       try { t = localStorage.getItem('site_theme'); } catch (e) {}
       if (!t) t = 'light';   // ברירת מחדל: מצב בהיר (מי שבחר כהה — הבחירה שלו נשמרת)
+      document.documentElement.dataset.themeMode = t;
+      if (t === 'system') t = window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';   // "לפי המכשיר"
       if (t === 'dark') { document.documentElement.classList.add('theme-dark'); var dc = document.getElementById('dark-css'); if (dc) dc.media = 'all'; }
     })();
   </script>
@@ -253,10 +255,11 @@
         
         <!-- כפתור אורח/מנהל + 3 אייקונים (לב, שעון, כדור הארץ) + סמל בטריה + כפתור הבית + פעמון התראות -->
         <div class="right-icons" style="display: flex; gap: 10px; align-items: center;">
-          <button id="theme-toggle-btn" class="notif-bell" onclick="toggleSiteTheme()" title="מצב בהיר / כהה" aria-label="מעבר בין מצב בהיר לכהה">
-            <svg class="tt-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z"/></svg>
-            <svg class="tt-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.6"/><path d="M12 3v1.6M12 19.4V21M5.6 5.6l1.1 1.1M17.3 17.3l1.1 1.1M3 12h1.6M19.4 12H21M5.6 18.4l1.1-1.1M17.3 6.7l1.1-1.1"/></svg>
-          </button>
+          <div id="theme-toggle-btn" class="theme-seg" role="radiogroup" aria-label="מצב תצוגה">
+            <button type="button" data-mode="system" onclick="setSiteTheme('system')" title="לפי המכשיר" aria-label="לפי המכשיר"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M12 16v4M8 20h8"/></svg></button>
+            <button type="button" data-mode="light" onclick="setSiteTheme('light')" title="מצב בהיר" aria-label="מצב בהיר"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.6"/><path d="M12 3v1.6M12 19.4V21M5.6 5.6l1.1 1.1M17.3 17.3l1.1 1.1M3 12h1.6M19.4 12H21M5.6 18.4l1.1-1.1M17.3 6.7l1.1-1.1"/></svg></button>
+            <button type="button" data-mode="dark" onclick="setSiteTheme('dark')" title="מצב כהה" aria-label="מצב כהה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z"/><path d="M18 3v4M16 5h4"/></svg></button>
+          </div>
           <button id="header-search-btn" class="notif-bell" onclick="openSiteSearch()" title="חיפוש באתר" aria-label="חיפוש באתר">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>
           </button>
@@ -1295,7 +1298,7 @@ html.theme-dark .pl-bar { background: #2a2f37; }
     try { if (localStorage.getItem('mtab_hidden') === '1') document.documentElement.classList.add('mtab-hidden'); } catch (e) {}
   </script>
   <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
-  <script type="module" src="./script.min.js?v=1883"></script>
+  <script type="module" src="./script.min.js?v=1884"></script>
   <script defer src="./a11y.js?v=1"></script>
 </body>
 </html>

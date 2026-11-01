@@ -28053,13 +28053,24 @@ if (mainContent) {
 
 // ---- מצב בהיר / כהה (הבחירה נשמרת בדפדפן) ----
 function toggleSiteTheme() {
-  const dark = !document.documentElement.classList.contains('theme-dark');
+  setSiteTheme(document.documentElement.classList.contains('theme-dark') ? 'light' : 'dark');
+}
+// מצב תצוגה: בהיר / כהה / לפי המכשיר (מתעדכן לבד כשהמכשיר עובר בין בהיר לכהה)
+function setSiteTheme(mode) {
+  if (!['light', 'dark', 'system'].includes(mode)) mode = 'light';
+  document.documentElement.dataset.themeMode = mode;
+  try { localStorage.setItem('site_theme', mode); } catch (e) {}
+  applySiteTheme();
+}
+function applySiteTheme() {
+  const mode = document.documentElement.dataset.themeMode || 'light';
+  const dark = mode === 'dark' || (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
   const dc = document.getElementById('dark-css'); if (dc) dc.media = 'all';   // קובץ המצב הכהה נטען לא-חוסם; מפעילים אותו כשעוברים לכהה
   document.documentElement.classList.toggle('theme-dark', dark);
-  try { localStorage.setItem('site_theme', dark ? 'dark' : 'light'); } catch (e) {}
   const meta = document.querySelector('meta[name="theme-color"]'); if (meta) meta.setAttribute('content', dark ? '#121418' : '#ffffff');
 }
-window.toggleSiteTheme = toggleSiteTheme;
+try { window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if (document.documentElement.dataset.themeMode === 'system') applySiteTheme(); }); } catch (e) {}
+Object.assign(window, { toggleSiteTheme, setSiteTheme });
 
 
 // ---- מובייל: הסרגל התחתון נעלם בגלילה למטה וחוזר בגלילה למעלה ----
@@ -28740,19 +28751,41 @@ window.pfGridFilter = pfGridFilter;
 function openPriceOffer(id, title, sellerUid, sellerName) {
   window.__offerItemId = id;
   if (!sellerUid) { if (typeof showCopyToast === 'function') showCopyToast('למוכר אין חשבון באתר — אפשר לפנות אליו באימייל'); return; }
+  // המחיר המבוקש (אם ידוע) קובע את טווח המחוון: 30%–120% ממנו, ברירת מחדל 85%
+  const it = typeof mktAll === 'function' ? mktAll().find(x => x.shId === id) : null;
+  const ask = it && it.price > 0 ? Math.round(it.price) : 0;
+  const lo = ask ? Math.max(1, Math.round(ask * .3)) : 10, hi = ask ? Math.round(ask * 1.2) : 2000;
+  const step = Math.max(1, Math.round((hi - lo) / 100)), def = ask ? Math.round(ask * .85) : 200;
+  window.__offerAsk = ask;
   let m = document.getElementById('offer-modal'); if (m) m.remove();
   m = document.createElement('div');
   m.id = 'offer-modal'; m.className = 'rp-modal';
   m.innerHTML = `<div class="rp-card" role="dialog" aria-label="הצעת מחיר">
       <div class="rp-head"><b>הצעת מחיר</b><button type="button" class="fo-panel-x" onclick="closePriceOffer()" aria-label="סגירה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
       ${title ? `<div class="rp-item">${escHtml(title)}</div>` : ''}
-      <label class="of-price"><span>₪</span><input id="offer-price" type="number" inputmode="numeric" min="1" max="10000000" placeholder="כמה תרצו להציע?"></label>
+      ${ask ? `<div class="of-ask">המחיר המבוקש: <b>₪${ask.toLocaleString('he-IL')}</b></div>` : ''}
+      <div class="of-slide"><input id="offer-range" type="range" min="${lo}" max="${hi}" step="${step}" value="${def}" oninput="offerSlide(this.value)" aria-label="סכום ההצעה">
+        <div class="of-slide-l"><span>₪${lo.toLocaleString('he-IL')}</span><b id="offer-pct">${ask ? Math.round(def / ask * 100) + '% מהמבוקש' : ''}</b><span>₪${hi.toLocaleString('he-IL')}</span></div></div>
+      <label class="of-price"><span>₪</span><input id="offer-price" type="number" inputmode="numeric" min="1" max="10000000" value="${def}" placeholder="כמה תרצו להציע?" oninput="offerSlideSync(this.value)"></label>
       <textarea id="offer-note" class="rp-note" rows="2" maxlength="300" placeholder="הודעה למוכר (לא חובה)"></textarea>
       <div class="rp-actions"><button type="button" class="pf-btn" onclick="closePriceOffer()">ביטול</button><button type="button" class="pf-btn rp-send" onclick="sendPriceOffer('${artEsc(title)}', '${artEsc(sellerUid)}', '${artEsc(sellerName)}')">שליחת ההצעה</button></div>
     </div>`;
   m.addEventListener('click', e => { if (e.target === m) closePriceOffer(); });
   document.body.appendChild(m);
   setTimeout(() => { const i = document.getElementById('offer-price'); if (i) i.focus(); }, 60);
+}
+// מחוון הצעת המחיר ושדה הסכום מסונכרנים — ומראים כמה אחוזים מהמחיר המבוקש
+function offerSlide(v) {
+  const inp = document.getElementById('offer-price'); if (inp) inp.value = v;
+  offerPct(v);
+}
+function offerSlideSync(v) {
+  const r = document.getElementById('offer-range'); if (r && v) r.value = v;
+  offerPct(v);
+}
+function offerPct(v) {
+  const el = document.getElementById('offer-pct'), ask = window.__offerAsk;
+  if (el && ask) el.textContent = Math.round(Number(v) / ask * 100) + '% מהמבוקש';
 }
 function closePriceOffer() { const m = document.getElementById('offer-modal'); if (m) m.remove(); }
 async function sendPriceOffer(title, sellerUid, sellerName) {
@@ -28776,7 +28809,7 @@ async function sendPriceOffer(title, sellerUid, sellerName) {
   offersTab = 'out';
   openOffersPanel();
 }
-Object.assign(window, { openPriceOffer, closePriceOffer, sendPriceOffer });
+Object.assign(window, { openPriceOffer, closePriceOffer, sendPriceOffer, offerSlide, offerSlideSync });
 
 
 // מוצר יד שניה בעמוד הגלריה: מחיר בולט + סוג ההצעה ומיקום (בסגנון הדף)
