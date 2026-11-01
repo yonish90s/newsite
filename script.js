@@ -1,6 +1,68 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, FacebookAuthProvider, OAuthProvider, TwitterAuthProvider, signOut, onAuthStateChanged, signInAnonymously, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, EmailAuthProvider, linkWithCredential, setPersistence, browserLocalPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getDatabase, ref, set, get, child, onValue, push, update, increment, runTransaction, onDisconnect } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getDatabase, ref, set as _dbSet, get as _dbGet, child, onValue as _dbOnValue, push as _dbPush, update as _dbUpdate, increment, runTransaction as _dbTransaction, onDisconnect } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+// הסתרת כל התוכן באתר, לכולם (גם למנהל). שום דבר לא נמחק מהמסד: קריאות מהענפים האלה חוזרות ריקות,
+// וכתיבות אליהם נחסמות כדי שמסך ריק לא ידרוס את התוכן האמיתי. להחזרת התוכן: false, בנייה וקידום ?v=
+const CONTENT_HIDDEN = true;
+const HIDDEN_PATH = /^website\/(media|communities|community_posts|forum_topics|forum_posts|news_posts|polls|poll_counts|poll_votes|ideas|questions|photo_albums|photo_comments|story_comments|products|rentals|deals|reposts|users\/[^/]+\/(likes_data|saved_galleries|watch_history))(\/|$)/;
+const dbPathOf = r => decodeURIComponent(new URL(r.toString()).pathname).replace(/^\/|\/$/g, '');
+const writeBlocked = path => path === 'website' || path === 'website/pages' || path.startsWith('website/pages/') || HIDDEN_PATH.test(path);
+// עמוד תוכן נשאר עם המעטפת שלו (לפיה האתר מזהה אותו), בלי הפריטים
+const emptyPageContent = c => {
+  const open = String(c || '').match(/^<div[^>]*data-(?:stories|photos)-json="[^"]*"[^>]*>/);
+  return open ? open[0].replace(/(data-(?:stories|photos)-json=")[^"]*"/, '$1%5B%5D"') + '</div>' : c;
+};
+function hideDbValue(path, v) {
+  if (v === null || v === undefined || HIDDEN_PATH.test(path)) return null;
+  if (typeof v !== 'object') return v;
+  if (path === 'website/pages') return (Array.isArray(v) ? v : Object.values(v)).map(p => (p && p.content) ? Object.assign({}, p, { content: emptyPageContent(p.content) }) : p);
+  if (path === 'website' || path === 'website/users' || /^website\/users\/[^/]+$/.test(path)) {
+    const out = {};
+    Object.keys(v).forEach(k => { const x = hideDbValue(path + '/' + k, v[k]); if (x !== null) out[k] = x; });
+    return out;
+  }
+  return v;
+}
+const needsHide = path => path === 'website' || path === 'website/pages' || path === 'website/users' || /^website\/users\/[^/]+$/.test(path);
+function fakeSnap(v, key) {
+  const has = v !== null && v !== undefined;
+  const kids = has && typeof v === 'object' ? Object.keys(v) : [];
+  return { key, val: () => (has ? v : null), exists: () => has, hasChildren: () => kids.length > 0, size: kids.length,
+    child: k => fakeSnap(has && typeof v === 'object' && v[k] !== undefined ? v[k] : null, k),
+    forEach: fn => { for (const k of kids) { if (fn(fakeSnap(v[k], k)) === true) return true; } return false; } };
+}
+const blockedNotice = () => { try { if (navigator.userActivation && navigator.userActivation.isActive && typeof showCopyToast === 'function') showCopyToast('התוכן באתר מוסתר כרגע — הפעולה לא נשמרה'); } catch (e) {} };
+const hideSnap = (r, sn) => { const path = dbPathOf(r); return needsHide(path) ? fakeSnap(hideDbValue(path, sn.val()), sn.key) : sn; };
+const get = !CONTENT_HIDDEN ? _dbGet : async r => {
+  const path = dbPathOf(r);
+  if (HIDDEN_PATH.test(path)) return fakeSnap(null, path.split('/').pop());
+  return hideSnap(r, await _dbGet(r));
+};
+const onValue = !CONTENT_HIDDEN ? _dbOnValue : (r, cb, ...rest) => {
+  const path = dbPathOf(r);
+  if (HIDDEN_PATH.test(path)) { queueMicrotask(() => cb(fakeSnap(null, path.split('/').pop()))); return () => {}; }
+  return _dbOnValue(r, sn => cb(hideSnap(r, sn)), ...rest);
+};
+const set = !CONTENT_HIDDEN ? _dbSet : async (r, v) => {
+  if (writeBlocked(dbPathOf(r))) { blockedNotice(); return; }
+  return _dbSet(r, v);
+};
+const update = !CONTENT_HIDDEN ? _dbUpdate : async (r, vals) => {
+  const path = dbPathOf(r), kept = {};
+  Object.keys(vals || {}).forEach(k => { if (!writeBlocked(path + '/' + k)) kept[k] = vals[k]; });
+  if (writeBlocked(path) && path !== 'website') { blockedNotice(); return; }
+  if (!Object.keys(kept).length) { blockedNotice(); return; }
+  return _dbUpdate(r, kept);
+};
+const push = !CONTENT_HIDDEN ? _dbPush : (r, ...rest) => {
+  if (rest.length && rest[0] !== undefined && writeBlocked(dbPathOf(r))) { blockedNotice(); return Promise.resolve(_dbPush(r)); }
+  return _dbPush(r, ...rest);
+};
+const runTransaction = !CONTENT_HIDDEN ? _dbTransaction : async (r, ...rest) => {
+  if (writeBlocked(dbPathOf(r))) { blockedNotice(); return { committed: false, snapshot: fakeSnap(null, null) }; }
+  return _dbTransaction(r, ...rest);
+};
 
 // מסך מלא (מצב מחשב) — מוגדר מוקדם כדי שבוני העמודים יוכלו לקרוא אותו
 let pageFullWidth = (function () {
@@ -23490,11 +23552,11 @@ function subscribeIdeas() {
   onValue(ref(db, 'website/ideas'), (snap) => {
     const val = snap.val();
     if (!val || !Object.keys(val).length) {
-      IDEAS_SAMPLES.forEach(item => {
+      if (!CONTENT_HIDDEN) IDEAS_SAMPLES.forEach(item => {
         set(ref(db, `website/ideas/${item.id}`), item);
       });
       ideasData = {};
-      IDEAS_SAMPLES.forEach(i => ideasData[i.id] = i);
+      if (!CONTENT_HIDDEN) IDEAS_SAMPLES.forEach(i => ideasData[i.id] = i);
     } else {
       ideasData = val;
     }
@@ -33053,7 +33115,7 @@ function usedAll() {
     unitTxt: x.priceUnit || '', city: x.region || '', owner: x.author || '', uid: x.authorId || '', t: Number(x.createdAt) || 0, img: x.image || (Array.isArray(x.images) && x.images[0]) || '',
     raw: x, images: (Array.isArray(x.images) ? x.images : []).filter(Boolean), desc: String(x.summary || x.body || '').trim(),
     specs: [x.loanPeriod ? 'תקופת השאלה: ' + x.loanPeriod : ''].concat(Array.isArray(x.loanTerms) ? x.loanTerms.filter(v => typeof v === 'string') : []).filter(Boolean).slice(0, 8) }));
-  return real.concat(real.length < 6 ? USED_DEMO : []);
+  return real.concat(!CONTENT_HIDDEN && real.length < 6 ? USED_DEMO : []);
 }
 function mktAll() { return rentAll().concat(usedAll()); }
 function mktGo(sec) {
@@ -33144,7 +33206,7 @@ function rentSubscribe() {
 }
 function rentAll() {
   const real = rentData || [];
-  const demo = RENT_DEMO.filter(d => !real.some(r => r.cat === d.cat));
+  const demo = CONTENT_HIDDEN ? [] : RENT_DEMO.filter(d => !real.some(r => r.cat === d.cat));
   return real.concat(demo);
 }
 function rentCatOf(id) { return RENT_CATS.find(c => c.id === id) || RENT_CATS[RENT_CATS.length - 1]; }
