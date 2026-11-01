@@ -31172,11 +31172,13 @@ function adSlotHTML(where) {
     if (!aside || !hdr) { root.classList.remove('fabs-top'); return; }
     const z = parseFloat(getComputedStyle(document.body).zoom) || 1;
     root.style.setProperty('--fab-right', Math.round((window.innerWidth - aside.getBoundingClientRect().right) / z) + 'px');
-    root.style.setProperty('--fab-top', Math.round((hdr.getBoundingClientRect().bottom + window.scrollY) / z + 14) + 'px');
+    // קבועים במסך: מתחת לכותרת כשהיא נראית, ובגלילה נשארים דבוקים ליד הקצה העליון
+    root.style.setProperty('--fab-top', Math.round(Math.max(0, hdr.getBoundingClientRect().bottom) / z + 14) + 'px');
     root.classList.add('fabs-top');
   };
   const queue = () => { if (!raf) raf = requestAnimationFrame(place); };
   window.addEventListener('resize', queue);
+  document.addEventListener('scroll', queue, { capture: true, passive: true });   // הגלילה קורית בתוך אזור התוכן, לא בחלון
   try { mq.addEventListener('change', queue); } catch (e) {}
   const start = () => { const mc = document.getElementById('mainContent'); if (mc) new MutationObserver(queue).observe(mc, { childList: true }); queue(); };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
