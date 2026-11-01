@@ -3127,23 +3127,17 @@ html.theme-dark .rn-calc input, html.theme-dark .rn-calc textarea, html.theme-da
 html.theme-dark .rn-sum { color: #d0d0d0 !important; }
 html.theme-dark .rn-sum .rn-tot { color: #ffffff !important; }
 html.theme-dark .rn-go { background: #e8823d !important; }
-html.theme-dark .rn-tile { border-inline-start: 1px solid #2a2a2a !important; background: #111111 !important; }
+html.theme-dark .rn-tiles { --tile-line: #2a2a2a !important; }
+html.theme-dark .rn-tile { background: #111111 !important; }
 html.theme-dark .rn-tile-img { background: #111111 !important; }
 html.theme-dark .rn-tile-t { color: #ffffff !important; }
 html.theme-dark .rn-tile-p { color: #ffffff !important; }
 html.theme-dark .rn-tile-p small { color: #d0d0d0 !important; }
 html.theme-dark .rn-tile-plus { border: 1px solid #2a2a2a !important; color: #ffffff !important; }
 html.theme-dark .rn-tile:hover .rn-tile-plus { background: #e8823d !important; border-color: #e8823d !important; }
-@media (min-width: 700px) {
-html.theme-dark .rn-tiles > .rn-tile:nth-child(2n+1) { border-inline-start-color: #2a2a2a !important; }
-}
 @media (min-width: 1100px) {
 html.theme-dark .rn-shelf-h { color: #ffffff !important; }
 html.theme-dark .rn-shelf-more { color: #e8823d !important; }
-html.theme-dark .rn-tiles > .rn-tile:nth-child(3n+1) { border-inline-start-color: #2a2a2a !important; }
-}
-@media (min-width: 1100px) and (max-width: 1399px) {
-html.theme-dark .rn-tiles > .rn-tile:nth-child(5n+1) { border-inline-start-color: #2a2a2a !important; }
 }
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet .ms-foot .ms-btn.rn-go { background: #e8823d !important; }
 html.theme-dark .inv-tabs { background: #111111 !important; }
@@ -4243,7 +4237,7 @@ html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .user-page .pf-tab.on { border-bottom-color: #f97316 !important; }
 html.theme-dark :is(.rn-shelf-h small, .rn-tile-p small) { color: #a8a8a8 !important; }
 html.theme-dark :is(.rn-tile, .rn-tile-img) { background: #111111 !important; }
-html.theme-dark .rn-tile { border-inline-start-color: #2a2a2a; }
+html.theme-dark .rn-tiles { --tile-line: #2a2a2a; }
 html.theme-dark .rn-tile-plus { border-color: #3a3a3a !important; }
 html.theme-dark .pf-au { color: #ffffff !important; }
 html.theme-dark .pf-st { color: #a8a8a8 !important; }

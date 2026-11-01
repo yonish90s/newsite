@@ -15622,10 +15622,10 @@ async function forumDeletePost(postId) {
 }
 window.forumDeletePost = forumDeletePost;
 
-// דף הבית בסגנון dribbble (מחשב): גריד גדול של כל התוכן, בלי עמודות צד.
+// דף הבית בסגנון dribbble (מחשב וטלפון): גריד גדול של כל התוכן, בלי עמודות צד.
 // כדי לחזור לעיצוב הקודם של דף הבית (שורות + עמודה צדדית) — לשנות ל-false
 const HOME_GRID = true;
-const homeGridOn = () => HOME_GRID && window.matchMedia('(min-width: 1100px)').matches;
+const homeGridOn = () => HOME_GRID;
 let homeGridSort = 'popular', _hgItems = [];
 function homeGridCardsHTML() {
   const t = x => Number(x.createdAt) || (typeof photoAlbumTime === 'function' ? photoAlbumTime(x) : 0) || 0;
@@ -15659,8 +15659,6 @@ function homeGridSetSort(v) {
   if (g) g.innerHTML = homeGridCardsHTML();
 }
 window.homeGridSetSort = homeGridSetSort;
-// מעבר בין מחשב לטלפון בזמן שדף הבית פתוח — בונים אותו מחדש בעיצוב המתאים
-try { window.matchMedia('(min-width: 1100px)').addEventListener('change', () => { if (HOME_GRID && typeof mainContent !== 'undefined' && mainContent && mainContent.querySelector('.home-feed-page') && typeof renderPage === 'function') renderPage(); }); } catch (e) {}
 function buildHomeFeedPage() {
   const all = (typeof getAllStoriesFromPages === 'function') ? getAllStoriesFromPages() : [];
   let comics = all.filter(s => s && s.__kind !== 'stories');
@@ -31049,6 +31047,27 @@ function glassBanner(o) {
       <img class="gbn-logo" src="./logo.png" alt="" width="40" height="40">
     </div><i class="gbn-bar" style="animation-duration:${ms}ms"></i>`;
   document.body.appendChild(el);
+  // מחשב: ההודעה מופיעה בתוך הכותרת — ברווח הריק שבין הלוגו לשורת החיפוש;
+  // כשאין שם מספיק מקום (מסך צר) — ממש מתחת לכותרת, מתחת ללוגו, כדי לא להסתיר את התפריט
+  try {
+    const hdr = document.querySelector('header.apple-nav'), logo = hdr && hdr.querySelector('.logo-area'), srch = hdr && hdr.querySelector('.hdr-search');
+    if (logo && srch && window.matchMedia('(min-width: 1100px)').matches) {
+      const z = parseFloat(getComputedStyle(document.body).zoom) || 1;
+      const lr = logo.getBoundingClientRect(), sr = srch.getBoundingClientRect(), hr = hdr.getBoundingClientRect();
+      const gap = lr.left - sr.right;
+      if (gap > 160 && hr.bottom > 20) {
+        el.style.width = Math.min(320, (gap - 24) / z) + 'px';
+        el.style.left = ((sr.right + lr.left) / 2) / z + 'px';
+        el.style.top = Math.max(4, (hr.top + hr.height / 2) / z - el.offsetHeight / 2) + 'px';
+      } else {
+        const w = Math.min(320, window.innerWidth / z - 40);
+        el.style.width = w + 'px';
+        el.style.left = (lr.right / z - w / 2) + 'px';
+        el.style.top = (Math.max(0, hr.bottom) / z + 10) + 'px';
+      }
+      el.classList.add('in-hdr');
+    }
+  } catch (e) {}
   let t = 0;
   // יציאה: הריבוע הולך וקטן ונעלם
   const close = () => { clearTimeout(t); if (el.classList.contains('out')) return; el.classList.add('out'); setTimeout(() => el.remove(), 560); };
@@ -31285,46 +31304,49 @@ Object.assign(window, { adsAdvertiseOpen, adsPack, adsPrev, adsPickImg, adsSubmi
 })();
 
 // ============================================================
-// מובייל: שורת הלשוניות של עמוד הבית ("בשבילך · במעקב · תמונות גולשים · קומיקס…") מופיעה בראש כל עמוד באתר,
-// והלשונית של העמוד הנוכחי מסומנת. בעמוד הבית עצמו — השורה המקורית. במחשב ללא שינוי.
+// שורת הלשוניות של עמוד הבית ("בשבילך · במעקב · תמונות גולשים · קומיקס…") מופיעה בראש כל עמוד באתר, והלשונית של
+// העמוד הנוכחי מסומנת; במחשב גם שורת "מה בא לך לשתף" מעליה. בעמוד הבית עצמו — השורה המקורית.
+// לא מופיעה בתוך מודעה / כתבה / פריט (שם רוצים רק את התוכן).
 // ============================================================
 function mTabsActive() {
   const mc = typeof mainContent !== 'undefined' && mainContent;
   const id = typeof activePageId !== 'undefined' ? activePageId : '';
-  const map = { 'page-ai': 'ai', 'page-secondhand-main': 'secondhand', 'page-forums-main': 'forums', 'page-news-main': 'news', 'page-communities-main': 'communities', 'page-stories-main': 'comics', 'page-stories-text': 'stories', 'page-feed-main': 'feed' };
+  const map = { 'page-ai': 'ai', 'page-secondhand-main': 'secondhand', 'page-rent-main': 'secondhand', 'page-forums-main': 'forums', 'page-news-main': 'news', 'page-communities-main': 'communities', 'page-stories-main': 'comics', 'page-stories-text': 'stories', 'page-feed-main': 'feed' };
   if (map[id]) return map[id];
   if (mc && mc.querySelector('.pfeed-page')) return 'feed';
-  if (mc && mc.querySelector('.photos-page[data-section="secondhand"]')) return 'secondhand';
+  if (mc && mc.querySelector('.photos-page[data-section="secondhand"], .rent-page')) return 'secondhand';
   if (mc && mc.querySelector('.photos-page[data-section="photos"]')) return 'photos';
   if (mc && mc.querySelector('.stories-page')) return 'comics';
   return '';
 }
 (function mTabsEverywhere() {
-  const mq = window.matchMedia('(max-width: 768px)');
+  const DETAIL = '.rn-det, .art-detail, .news-article, .story-page-view, .pd3-pagehead, .pd2-frame';
+  const desk = window.matchMedia('(min-width: 769px)');
   let q = 0;
   function sync() {
     q = 0;
     const mc = typeof mainContent !== 'undefined' && mainContent;
     if (!mc) return;
-    const cur = mc.querySelector(':scope > .hx-global');
-    if (!mq.matches || mc.querySelector('.hx-tabs:not(.hx-global)')) { if (cur) cur.remove(); return; }
-    const active = mTabsActive();
-    if (cur && cur.dataset.active === active && mc.firstElementChild === cur) return;
+    const cur = mc.querySelector(':scope > .site-top');
+    if (mc.querySelector('.hx-tabs:not(.hx-global)') || mc.querySelector(DETAIL)) { if (cur) cur.remove(); return; }
+    const active = mTabsActive(), mode = desk.matches ? 'd' : 'm';
+    if (cur && cur.dataset.active === active && cur.dataset.mode === mode && mc.firstElementChild === cur) return;
     if (cur) cur.remove();
-    const t = document.createElement('div');
-    t.innerHTML = homeChipsHTML(0, 0, 0, active, 'hx-global');
-    const nav = t.firstElementChild;
-    nav.dataset.active = active;
-    mc.prepend(nav);
-    const on = nav.querySelector('.hx-tab.on');
+    const top = document.createElement('div');
+    top.className = 'site-top';
+    top.dataset.active = active; top.dataset.mode = mode;
+    top.innerHTML = (mode === 'd' && typeof composerBarHTML === 'function' ? `<div class="cmp-wrap">${composerBarHTML()}</div>` : '') + homeChipsHTML(0, 0, 0, active || '-', 'hx-global');   // עמוד בלי לשונית משלו — אף לשונית לא מסומנת
+    mc.prepend(top);
+    const on = top.querySelector('.hx-tab.on');
     if (on) try { on.scrollIntoView({ block: 'nearest', inline: 'center' }); } catch (e) {}
   }
   const go = () => { if (!q) q = setTimeout(sync, 0); };
   const start = () => {
     const mc = typeof mainContent !== 'undefined' && mainContent;
     if (!mc) return setTimeout(start, 300);
-    new MutationObserver(go).observe(mc, { childList: true });
-    mq.addEventListener && mq.addEventListener('change', go);
+    // גם שינויים פנימיים (למשל פתיחת מודעה בתוך עמוד השוק) — כדי להסתיר/להחזיר את השורה
+    new MutationObserver(go).observe(mc, { childList: true, subtree: true });
+    desk.addEventListener && desk.addEventListener('change', go);
     go();
   };
   start();

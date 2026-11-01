@@ -707,7 +707,7 @@ html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .user-page .pf-tab.on { border-bottom-color: #f97316 !important; }
 html.theme-dark :is(.rn-shelf-h small, .rn-tile-p small) { color: #a8a8a8 !important; }
 html.theme-dark :is(.rn-tile, .rn-tile-img) { background: #111111 !important; }
-html.theme-dark .rn-tile { border-inline-start-color: #2a2a2a; }
+html.theme-dark .rn-tiles { --tile-line: #2a2a2a; }
 html.theme-dark .rn-tile-plus { border-color: #3a3a3a !important; }
 html.theme-dark .pf-au { color: #ffffff !important; }
 html.theme-dark .pf-st { color: #a8a8a8 !important; }
