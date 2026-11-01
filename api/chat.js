@@ -4,7 +4,7 @@
 //   OPENAI_API_KEY + OPENAI_MODEL   — ל-ChatGPT (OPENAI_MODEL = מזהה המודל שבחרתם)
 //   GEMINI_API_KEY + GEMINI_MODEL   — ל-Gemini
 // בלי מפתח — מוחזר 503 והאתר עובר למצב הדגמה.
-const ALLOWED_ORIGINS = [/^https:\/\/(www\.)?black1white00\.com$/, /^https:\/\/[a-z0-9-]+\.vercel\.app$/, /^http:\/\/localhost(:\d+)?$/];
+const ALLOWED_ORIGINS = [/^https:\/\/(www\.)?black1white00\.com$/, /^https:\/\/[a-z0-9-]+\.vercel\.app$/, /^https:\/\/newsite-f76e2\.(web\.app|firebaseapp\.com)$/, /^http:\/\/localhost(:\d+)?$/];
 const CLAUDE = { 'claude-opus-5-5': 'claude-opus-5-5', 'claude-sonnet-5-5': 'claude-sonnet-5-5', 'claude-haiku-5-5': 'claude-haiku-5-5' };
 const hits = new Map(); // הגבלת קצב פשוטה לכל כתובת IP
 
@@ -16,9 +16,12 @@ function limited(ip) {
 }
 
 module.exports = async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
   const origin = req.headers.origin || '';
   if (origin && !ALLOWED_ORIGINS.some(r => r.test(origin))) return res.status(403).json({ error: 'forbidden' });
+  // האתר מוגש גם מ-Firebase Hosting — שם הקריאה לכאן היא מכתובת אחרת, ולכן צריך אישור CORS
+  if (origin) { res.setHeader('Access-Control-Allow-Origin', origin); res.setHeader('Vary', 'Origin'); res.setHeader('Access-Control-Allow-Headers', 'content-type'); res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS'); }
+  if (req.method === 'OPTIONS') return res.status(204).end();
+  if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
   const ip = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim() || 'x';
   if (limited(ip)) return res.status(429).json({ error: 'too_many_requests' });
 

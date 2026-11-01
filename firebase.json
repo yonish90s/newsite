@@ -1,5 +1,96 @@
 {
   "database": {
     "rules": "database.rules.json"
+  },
+  "hosting": {
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      "database.rules.json",
+      "vercel.json",
+      "**/.*",
+      "**/node_modules/**",
+      "tools/**",
+      "api/**",
+      "**/*.md",
+      "script.js",
+      "style.css",
+      "dark.css"
+    ],
+    "headers": [
+      {
+        "source": "**",
+        "headers": [
+          {
+            "key": "X-Content-Type-Options",
+            "value": "nosniff"
+          },
+          {
+            "key": "X-Frame-Options",
+            "value": "DENY"
+          },
+          {
+            "key": "Content-Security-Policy",
+            "value": "frame-ancestors 'none'; object-src 'none'; base-uri 'self'"
+          },
+          {
+            "key": "Referrer-Policy",
+            "value": "strict-origin-when-cross-origin"
+          },
+          {
+            "key": "Permissions-Policy",
+            "value": "camera=(), microphone=(self), geolocation=(self), payment=()"
+          },
+          {
+            "key": "Strict-Transport-Security",
+            "value": "max-age=63072000; includeSubDomains; preload"
+          },
+          {
+            "key": "X-Robots-Tag",
+            "value": "noai, noimageai"
+          }
+        ]
+      },
+      {
+        "source": "**/*.@(js|css)",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=31536000, immutable"
+          }
+        ]
+      },
+      {
+        "source": "**/*.@(png|webp|jpg|jpeg|svg|ico)",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=604800, stale-while-revalidate=86400"
+          }
+        ]
+      },
+      {
+        "source": "/sw.js",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache, no-store, must-revalidate"
+          }
+        ]
+      },
+      {
+        "source": "/manifest.webmanifest",
+        "headers": [
+          {
+            "key": "Content-Type",
+            "value": "application/manifest+json"
+          },
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=3600"
+          }
+        ]
+      }
+    ]
   }
 }

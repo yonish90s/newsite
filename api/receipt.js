@@ -5,14 +5,17 @@
 // הגנה מפני שימוש לרעה: נשלח רק להזמנה אמיתית שנוצרה עכשיו (בודקים את website/order_stubs), עם הגבלת קצב.
 const crypto = require('crypto');
 const DB = 'https://newsite-f76e2-default-rtdb.firebaseio.com/website';
-const ALLOWED_ORIGINS = [/^https:\/\/(www\.)?black1white00\.com$/, /^https:\/\/[a-z0-9-]+\.vercel\.app$/, /^http:\/\/localhost(:\d+)?$/];
+const ALLOWED_ORIGINS = [/^https:\/\/(www\.)?black1white00\.com$/, /^https:\/\/[a-z0-9-]+\.vercel\.app$/, /^https:\/\/newsite-f76e2\.(web\.app|firebaseapp\.com)$/, /^http:\/\/localhost(:\d+)?$/];
 const hits = new Map();
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 
 module.exports = async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
   const origin = req.headers.origin || '';
   if (origin && !ALLOWED_ORIGINS.some(r => r.test(origin))) return res.status(403).json({ error: 'forbidden' });
+  // האתר מוגש גם מ-Firebase Hosting — שם הקריאה לכאן היא מכתובת אחרת, ולכן צריך אישור CORS
+  if (origin) { res.setHeader('Access-Control-Allow-Origin', origin); res.setHeader('Vary', 'Origin'); res.setHeader('Access-Control-Allow-Headers', 'content-type'); res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS'); }
+  if (req.method === 'OPTIONS') return res.status(204).end();
+  if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
   const key = process.env.RESEND_API_KEY, from = process.env.RECEIPT_FROM;
   if (!key || !from) return res.status(503).json({ error: 'not_configured' });
   const ip = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim() || 'x';

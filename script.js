@@ -8,6 +8,9 @@ let pageFullWidth = (function () {
 })();
 document.documentElement.classList.toggle('page-full-width', pageFullWidth);
 
+// פונקציות השרת (צ'אט AI, קבלות) רצות ב-Vercel. כשהאתר מוגש מ-Firebase Hosting הן נקראות מהדומיין הראשי
+const API_BASE = /\.(web\.app|firebaseapp\.com)$/.test(location.hostname) ? 'https://black1white00.com' : '';
+
 // הגדרות הפרויקט של Firebase
 const firebaseConfig = {
     apiKey: "AIzaSyCpVZS9qEnpPz-gyu12yD3FLiu3Lf-Tg04",
@@ -32429,7 +32432,7 @@ window.dmRichHTML = (t) => dmRichHTML(t);
 // downloads: קישורים לקבצי ההתקנה כשיהיו (ריק = "בקרוב"). המפתחות למודלים — במשתני הסביבה של Vercel (ראו api/chat.js).
 const AI_CONFIG = {
   mcpUrl: 'https://black1white00.com/api/mcp',
-  chatUrl: '/api/chat',
+  chatUrl: API_BASE + '/api/chat',
   downloads: { windows: '', mac: '', android: '', ios: '' }
 };
 const AI_MODELS = [
@@ -32574,7 +32577,7 @@ function receiptText(o) {
 function coMailStatus(t) { if (coState) coState.mailStatus = t; const el = document.getElementById('co-mail-st'); if (el) el.textContent = t; }
 async function receiptSendEmail(o) {
   try {
-    const r = await fetch('/api/receipt', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ no: o.no, email: o.email, order: { items: o.items.map(i => ({ name: i.name, price: i.price, qty: i.qty })), sub: o.sub, ship: o.ship, total: o.total, method: o.method, name: o.name, addr: o.addr, t: o.t } }) });
+    const r = await fetch(API_BASE + '/api/receipt', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ no: o.no, email: o.email, order: { items: o.items.map(i => ({ name: i.name, price: i.price, qty: i.qty })), sub: o.sub, ship: o.ship, total: o.total, method: o.method, name: o.name, addr: o.addr, t: o.t } }) });
     if (r.ok) coMailStatus('✓ הקבלה נשלחה ל-' + o.email);
     else coMailStatus('הופקה קבלה לדוגמה — לחצו "קבלה לדוגמה"');
   } catch (e) { coMailStatus('הופקה קבלה לדוגמה — לחצו "קבלה לדוגמה"'); }
@@ -33041,23 +33044,24 @@ function rentRender(gridOnly) {
   if (!el) return;
   const open = rentUI.open && rentFind(rentUI.open);
   if (gridOnly && !open) { const g = el.querySelector('.rn-grid'); if (g) g.innerHTML = rentGridHTML(); return; }
+  if (open && mainContent) { const stTop = mainContent.querySelector(':scope > .site-top'); if (stTop) stTop.remove(); }
   el.innerHTML = open ? rentDetailHTML(open) : rentViewHTML();
   if (open) {
-    requestAnimationFrame(rentStickFix); setTimeout(rentStickFix, 120);
+    rentStickFix(); requestAnimationFrame(rentStickFix); setTimeout(rentStickFix, 120);
     if (typeof subscribePhotoComments === 'function') subscribePhotoComments(rentCommentsKey(open));
-  }   // שוב אחרי שהשורה העליונה (שיתוף + לשוניות) יורדת מעמוד המודעה
+  }
 }
 // תגובות במודעה: מוצר יד 2 אמיתי משתף את התגובות עם עמוד המוצר המקורי; השכרה/אחסון — מפתח משלהן
 const rentCommentsKey = r => r.shId || ('rent_' + r.id);
 // עמוד מודעה במחשב: כרטיס המחיר נדבק בדיוק בגובה שבו הוא מתחיל — כך הוא לא זז בכלל כשגוללים
-// (הגלילה קורית בתוך אזור התוכן שמתחת לכותרת, לכן מודדים ביחס אליו)
+// (מודדים ב-offsetTop מול אזור הגלילה כדי ש-zoom של הדף או גלילה קיימת לא יזיזו את הכרטיס למטה)
 function rentStickFix() {
   const st = document.querySelector('.rent-page .rn-det-stick'), side = st && st.parentElement;
-  if (!st || !window.matchMedia('(min-width: 900px)').matches) return;
+  if (!st || !window.matchMedia('(min-width: 900px)').matches) { if (st) st.style.top = ''; return; }
   const sc = st.closest('main.center-content') || document.scrollingElement;
-  const z = parseFloat(getComputedStyle(document.body).zoom) || 1;
-  const top = side.getBoundingClientRect().top - sc.getBoundingClientRect().top + sc.scrollTop;
-  st.style.top = Math.max(0, Math.round(top / z)) + 'px';
+  let top = 0, n = side;
+  while (n && n !== sc) { top += n.offsetTop || 0; n = n.offsetParent; }
+  st.style.top = Math.max(0, Math.round(top)) + 'px';
 }
 window.addEventListener('resize', () => requestAnimationFrame(rentStickFix));
 try { window.matchMedia('(min-width: 1100px)').addEventListener('change', () => rentRender(true)); } catch (e) {}
@@ -33074,8 +33078,9 @@ function rentOpen(id) {
   const r = rentFind(id); if (!r) return;
   rentUI.open = id;
   if (!_rentPopping) { try { history.pushState({ rent: id }, ''); } catch (e) {} }
-  rentRender();
+  if (typeof mainContent !== 'undefined' && mainContent) mainContent.scrollTop = 0;
   try { window.scrollTo({ top: 0 }); } catch (e) {}
+  rentRender();
 }
 function rentBack() { if (history.state && history.state.rent) { history.back(); return; } rentUI.open = null; rentRender(); }
 window.addEventListener('popstate', (e) => {
@@ -33129,6 +33134,7 @@ function rentDetailHTML(r) {
         `}
         <section class="rn-det-rel"><h2>עוד בשוק</h2><div>${tags.map(([t, go]) => `<button type="button" onclick="${go}">${escHtml(t)}</button>`).join('')}</div></section>
         <section class="rn-det-cmts">${typeof photoCommentsSectionHTML === 'function' ? photoCommentsSectionHTML(rentCommentsKey(r)) : ''}</section>
+        ${more.length ? `<section class="rn-det-more"><h2>מוצרים נוספים</h2><div class="rn-tiles">${more.map(rentTileHTML).join('')}</div></section>` : ''}
       </div>
       ${r.raw ? `<aside class="rn-det-side"><div class="rn-det-stick rn-det-old art-pd3">${pd3BoxHTML(r.raw, true)}</div></aside>` : `
       <aside class="rn-det-side"><div class="rn-det-stick">
@@ -33153,8 +33159,7 @@ function rentDetailHTML(r) {
         <div class="rn-det-note"><b>${ic('<path d="M5 12.5l4.5 4.5L19 7.5"/>')}איך זה עובד</b><p>${r.kind === 'used' ? 'שולחים הצעה או שאלה, המוכר/ת עונה ומתאמים איסוף. משלמים ישירות למוכר/ת.' : `שולחים בקשה, בעל המודעה מאשר ומתאמים. עמלת שירות של ${Math.round(RENT_SITE_FEE * 100)}% לאתר.`}</p></div>
       </div></aside>
       `}
-    </div>
-    ${more.length ? `<section class="rn-det-more"><h2>מוצרים נוספים</h2><div class="rn-tiles">${more.map(rentTileHTML).join('')}</div></section>` : ''}`;
+    </div>`;
 }
 // גלריה בעמוד מודעה: לחיצה על תמונה קטנה מחליפה את הגדולה
 function rentDetPick(btn) {

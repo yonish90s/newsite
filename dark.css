@@ -3177,10 +3177,11 @@ html.theme-dark .rn-det-more h2 { color: #ffffff !important; }
 html.theme-dark .rn-det-about h2, html.theme-dark .rn-det-rel h2 { color: #ffffff !important; }
 html.theme-dark .rn-det-rel button { border: 1px solid #2a2a2a !important; background: #111111 !important; color: #ffffff !important; }
 html.theme-dark .rn-det-rel button:hover { border-color: #2a2a2a !important; }
-html.theme-dark .rn-det-card { background: #111111 !important; }
+html.theme-dark .rn-det-card { background: #111111 !important; color: #ffffff !important; }
 html.theme-dark .rn-det-buy .rn-det-price { color: #ffffff !important; }
 html.theme-dark .rn-det-chip { background: #111111 !important; }
 html.theme-dark .rn-det-facts { color: #ffffff !important; }
+html.theme-dark .rn-det-buy .rn-calc label { color: #ffffff !important; }
 html.theme-dark .rent-page .rn-det-btns .rn-go { background: #e8823d !important; }
 html.theme-dark .rent-page .rn-det-btns .rn-ask { border: 1px solid #2a2a2a !important; background: #111111 !important; color: #ffffff !important; }
 html.theme-dark .rent-page .rn-det-btns .rn-ask:hover { border-color: #2a2a2a !important; }
