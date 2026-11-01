@@ -15641,6 +15641,7 @@ function homeGridHTML(photos, comics, stories) {
   _hgItems = (photos || []).filter(ok).map(x => ({ x, kind: 'photo' }))
     .concat((comics || []).concat(stories || []).filter(ok).map(x => ({ x, kind: 'story' })));
   return `<section class="hg">
+    ${homeFlipHTML()}
     <div class="hg-top">
       <div class="promo-row aside">${promoTrialHTML('row')}${adSlotHTML('row')}</div>
       <label class="hg-sort"><select onchange="homeGridSetSort(this.value)" aria-label="מיון">${[['popular', 'פופולרי'], ['new', 'חדש']].map(([v, l]) => `<option value="${v}"${homeGridSort === v ? ' selected' : ''}>${l}</option>`).join('')}</select><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></label>
@@ -15656,6 +15657,69 @@ function homeSideToggle() {
   try { localStorage.setItem('home_side_open', on ? '1' : '0'); } catch (e) {}
 }
 window.homeSideToggle = homeSideToggle;
+// "זפזפ": קרוסלה של כרטיסים — אחד גדול באמצע והשכנים קטנים מאחוריו (כמו ב-Pinterest ששלח בעל האתר).
+// מעבירים בחצים, בגרירה/החלקה, במקשי החצים או בלחיצה על כרטיס בצד; לחיצה על הכרטיס האמצעי פותחת אותו
+function homeFlipHTML() {
+  const pop = x => (Number(x.likes) || 0) + (typeof photoGetViews === 'function' ? photoGetViews(x.id) : 0);
+  const list = _hgItems.slice().sort((a, b) => pop(b.x) - pop(a.x)).slice(0, 12);
+  if (list.length < 3) return '';
+  const img = x => ((x.images || []).find(Boolean)) || x.cover || x.image || '';
+  setTimeout(() => document.querySelectorAll('.hf:not([data-ready])').forEach(sec => { sec.dataset.ready = '1'; homeFlipSet(sec, 0); }), 0);
+  const arrow = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="${d}"/></svg>`;
+  return `<section class="hf" data-i="0" tabindex="0" aria-label="זפזפ בין התמונות" onkeydown="homeFlipKey(event)">
+    <div class="hf-stage">${list.map((i, k) => `<div class="hf-card" data-k="${k}" data-kind="${i.kind}" data-id="${escHtml(i.x.id)}" onclick="homeFlipClick(this)">
+      <span class="hf-img hr-img">${img(i.x) ? `<img src="${escHtml(img(i.x))}" alt="" loading="lazy" draggable="false">` : ''}</span>
+      <span class="hf-label">${escHtml(i.x.title || '')}</span>
+      <button type="button" class="hf-plus" aria-label="פתיחה" onclick="event.stopPropagation(); homeFlipOpen(this.closest('.hf-card'))">${arrow('M12 6v12M6 12h12')}</button>
+    </div>`).join('')}</div>
+    <button type="button" class="hf-nav hf-prev" onclick="homeFlipGo(this, -1)" aria-label="הקודם">${arrow('M9 6l6 6-6 6')}</button>
+    <button type="button" class="hf-nav hf-next" onclick="homeFlipGo(this, 1)" aria-label="הבא">${arrow('M15 6l-6 6 6 6')}</button>
+    <div class="hf-dots">${list.map((_, k) => `<i class="${k ? '' : 'on'}"></i>`).join('')}</div>
+  </section>`;
+}
+function homeFlipSet(sec, i) {
+  const cards = [...sec.querySelectorAll('.hf-card')];
+  i = (i + cards.length) % cards.length;
+  sec.dataset.i = i;
+  cards.forEach((c, k) => {
+    let d = k - i;
+    if (d > cards.length / 2) d -= cards.length;
+    if (d < -cards.length / 2) d += cards.length;
+    const a = Math.abs(d);
+    c.style.transform = `translateX(${-d * 52}%) scale(${a ? Math.max(.6, 1 - a * .17) : 1})`;
+    c.style.zIndex = 20 - a;
+    c.style.opacity = a > 2 ? 0 : 1;
+    c.classList.toggle('on', !d);
+    c.classList.toggle('far', a > 2);
+  });
+  sec.querySelectorAll('.hf-dots i').forEach((dot, k) => dot.classList.toggle('on', k === i));
+}
+function homeFlipGo(btn, step) { const sec = btn.closest('.hf'); homeFlipSet(sec, Number(sec.dataset.i) + step); }
+function homeFlipOpen(card) {
+  if (card.dataset.kind === 'photo') { homeOpenPhotos(); photoOpenDetail(card.dataset.id); } else storyOpenDetail(card.dataset.id);
+}
+function homeFlipClick(card) {
+  const sec = card.closest('.hf');
+  if (sec.dataset.dragged === '1') return;
+  if (card.classList.contains('on')) { homeFlipOpen(card); return; }
+  homeFlipSet(sec, Number(card.dataset.k));
+}
+function homeFlipKey(e) {
+  const sec = e.currentTarget;
+  if (e.key === 'ArrowLeft') { e.preventDefault(); homeFlipSet(sec, Number(sec.dataset.i) + 1); }
+  if (e.key === 'ArrowRight') { e.preventDefault(); homeFlipSet(sec, Number(sec.dataset.i) - 1); }
+}
+// גרירה/החלקה: שמאלה — לבא, ימינה — לקודם (כמו בעברית)
+(function homeFlipDrag() {
+  let sec = null, x0 = 0;
+  document.addEventListener('pointerdown', e => { const s = e.target.closest && e.target.closest('.hf'); if (!s || e.target.closest('.hf-nav, .hf-plus')) return; sec = s; x0 = e.clientX; sec.dataset.dragged = '0'; });
+  document.addEventListener('pointerup', e => {
+    if (!sec) return;
+    const dx = e.clientX - x0;
+    if (Math.abs(dx) > 40) { sec.dataset.dragged = '1'; homeFlipSet(sec, Number(sec.dataset.i) + (dx < 0 ? 1 : -1)); setTimeout(() => { if (sec) sec.dataset.dragged = '0'; sec = null; }, 0); } else sec = null;
+  });
+})();
+Object.assign(window, { homeFlipGo, homeFlipClick, homeFlipKey, homeFlipOpen });
 function homeGridSetSort(v) {
   homeGridSort = v === 'new' ? 'new' : 'popular';
   const g = document.querySelector('.home-feed-page .hg-grid');
