@@ -31107,6 +31107,27 @@ function adSlotHTML(where) {
     <button type="button" class="ad-own" onclick="adsAdvertiseOpen()">📣 <u>פרסמו אצלנו</u></button>
   </section>`;
 }
+// מחשב, דף הבית: הכפתורים הצפים (נגישות, צ'אט, הודעות) כאייקונים בראש העמוד — ממש מעל שורת הפרימיום בעמודה הצדדית
+(function fabsDock() {
+  const mq = window.matchMedia('(min-width: 1100px)');
+  const root = document.documentElement;
+  let raf = 0;
+  const place = () => {
+    raf = 0;
+    const aside = mq.matches && document.querySelector('.home-feed-page .home-aside');
+    const hdr = document.querySelector('header.apple-nav');
+    if (!aside || !hdr) { root.classList.remove('fabs-top'); return; }
+    const z = parseFloat(getComputedStyle(document.body).zoom) || 1;
+    root.style.setProperty('--fab-right', Math.round((window.innerWidth - aside.getBoundingClientRect().right) / z) + 'px');
+    root.style.setProperty('--fab-top', Math.round((hdr.getBoundingClientRect().bottom + window.scrollY) / z + 14) + 'px');
+    root.classList.add('fabs-top');
+  };
+  const queue = () => { if (!raf) raf = requestAnimationFrame(place); };
+  window.addEventListener('resize', queue);
+  try { mq.addEventListener('change', queue); } catch (e) {}
+  const start = () => { const mc = document.getElementById('mainContent'); if (mc) new MutationObserver(queue).observe(mc, { childList: true }); queue(); };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
 // החלפת המודעה במשבצת כל 9 שניות (רק כשיש יותר ממודעה אחת)
 setInterval(() => {
   const list = (typeof adsList !== 'undefined' && adsList) || [];
