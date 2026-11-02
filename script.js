@@ -932,6 +932,12 @@ function sanitizeToOnlyPhotosAndStories() {
   }
 }
 
+// נתונים חדשים הגיעו: בעמוד הראשי מעדכנים רק את השוק, כדי שהגולש לא יאבד את הגלילה או את המוצר שפתח
+function pageRefresh() {
+  if (HOME_MARKET && mainContent.querySelector('.home-feed-page .rent-page')) rentRender();
+  else renderPage();
+}
+
 // פונקציית אתחול מהירה (Instant 0ms First Paint)
 async function initSite() {
   try {
@@ -959,6 +965,10 @@ async function initSite() {
   renderPage();
   updateFABsVisibility();
   if (typeof trackVisit === 'function') { try { trackVisit(); } catch (e) {} }
+
+  // השוק בעמוד הראשי מוכן מיד: לא מחכים לנתונים מאחורי מסך הטעינה (קישור ישיר לפריט כן מחכה להם)
+  const bootActive = activePageId;
+  if (HOME_MARKET && !window.__deepLinkOpening && typeof window.hidePreloader === 'function') window.hidePreloader();
 
   // סנכרון ברקע מ-Firebase DB
   try {
@@ -990,7 +1000,7 @@ async function initSite() {
         || pages.find(p => p && p.id === 'page-photos-main')
         || pages.find(p => p && p.content && p.content.includes('data-section="photos"'))
         || pages.find(p => p && p.title && p.title.includes('תמונות'));
-      if (bootHomePage) {
+      if (bootHomePage && activePageId === bootActive) {   // גולש שכבר עבר לעמוד אחר נשאר בו
         activePageId = bootHomePage.id;
       }
       
@@ -1002,7 +1012,7 @@ async function initSite() {
       applyBackgrounds();
       renderSideMenu();
       renderTopNav();
-      renderPage();
+      pageRefresh();
     }
   } catch(e) {
     console.log('Firebase background sync complete');
@@ -23397,7 +23407,7 @@ onPublicSiteValue((data) => {
   if (changed) {
     renderSideMenu();
     renderTopNav();
-    renderPage();
+    pageRefresh();
     updateFABsVisibility();
   }
 });
@@ -26126,6 +26136,11 @@ function newsLoadRedditWidgets() {
 
 function triggerTwitterWidgetsRender() {
   setTimeout(newsLoadRedditWidgets, 80);
+  if (!window.twttr && !document.getElementById('twitter-wjs') && document.querySelector('blockquote.twitter-tweet')) {
+    const s = document.createElement('script');
+    s.id = 'twitter-wjs'; s.async = true; s.src = 'https://platform.twitter.com/widgets.js';
+    document.body.appendChild(s);   // כשהוא נטען הוא סורק את הדף בעצמו
+  }
   setTimeout(() => {
     try {
       if (window.twttr && window.twttr.widgets && typeof window.twttr.widgets.load === 'function') {
@@ -28086,7 +28101,7 @@ function setSiteTheme(mode) {
 function applySiteTheme() {
   const mode = document.documentElement.dataset.themeMode || 'light';
   const dark = mode === 'dark' || (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-  const dc = document.getElementById('dark-css'); if (dc) dc.media = 'all';   // קובץ המצב הכהה נטען לא-חוסם; מפעילים אותו כשעוברים לכהה
+  const dc = document.getElementById('dark-css'); if (dc) { if (!dc.getAttribute('href')) dc.href = dc.dataset.href; dc.media = 'all'; }   // קובץ המצב הכהה נטען לא-חוסם; מפעילים אותו כשעוברים לכהה
   document.documentElement.classList.toggle('theme-dark', dark);
   const meta = document.querySelector('meta[name="theme-color"]'); if (meta) meta.setAttribute('content', dark ? '#121418' : '#ffffff');
 }
@@ -33171,7 +33186,8 @@ function rentAgo(t) {
 }
 function rentThumb(r, big) {
   const c = rentCatOf(r.cat), g = r.g || ['#1f2937', '#4b5563'];
-  return r.img ? `<img src="${escHtml(r.img)}" alt="" loading="lazy">`
+  const src = !big && /^rent\/[^/]+\.jpg$/.test(r.img || '') ? r.img.replace('rent/', 'rent/t/') : r.img;   // בכרטיסים: גרסה קטנה של תמונות הדוגמה
+  return r.img ? `<img src="${escHtml(src)}" alt="" loading="lazy" decoding="async">`
     : `<span class="rn-ph" style="background:linear-gradient(140deg,${g[0]},${g[1]})"><b>${c.ic}</b>${big ? `<i>${escHtml(c.name)}</i>` : ''}</span>`;
 }
 function rentList() {

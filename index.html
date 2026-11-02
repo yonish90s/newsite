@@ -30,14 +30,18 @@
   <link rel="apple-touch-icon" href="/icon-192.png">
   <script>if ('serviceWorker' in navigator) window.addEventListener('load', function () { navigator.serviceWorker.register('/sw.js').catch(function () {}); });</script>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMDAgMTAwJz48cmVjdCB3aWR0aD0nMTAwJyBoZWlnaHQ9JzEwMCcgcng9JzI0JyBmaWxsPScjMWUxZTFmJy8+PGNpcmNsZSBjeD0nMzYnIGN5PSc1MCcgcj0nMTcnIGZpbGw9JyNmZmYnLz48Y2lyY2xlIGN4PSc2NCcgY3k9JzUwJyByPScxNycgZmlsbD0nI2ZmZicvPjxjaXJjbGUgY3g9JzQwJyBjeT0nNTInIHI9JzYnIGZpbGw9JyMxZTFlMWYnLz48Y2lyY2xlIGN4PSc2MCcgY3k9JzUyJyByPSc2JyBmaWxsPScjMWUxZTFmJy8+PC9zdmc+">
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://newsite-f76e2-default-rtdb.firebaseio.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="modulepreload" href="./script.min.js?v=1929">
   <!-- ספריית interact.js לגרירה ושינוי גודל (נטענת בדחייה למניעת עיכוב) -->
   <script defer src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
   <!-- ספריית localforage לשמירת תמונות -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
   <!-- קישור לקובץ העיצוב החיצוני (עם פרמטר למניעת שמירה במטמון) -->
-  <link rel="stylesheet" href="./style.min.css?v=2085">
-  <link rel="stylesheet" id="mono-css" href="./mono.min.css?v=19">
-  <link rel="stylesheet" id="dark-css" href="./dark.min.css?v=437" media="not all">
+  <link rel="stylesheet" href="./style.min.css?v=2086">
+  <link rel="stylesheet" id="mono-css" href="./mono.min.css?v=20">
+  <link rel="stylesheet" id="dark-css" data-href="./dark.min.css?v=438" media="not all">
   <script>
     // קישור ישיר לפריט (#p/…, #s/…, #n/…) — מסמנים מיד, כדי שהכתובת לא תימחק לפני שהפריט נפתח
     window.__deepLinkOpening = /^#[psn]\//.test(location.hash || '');
@@ -50,7 +54,7 @@
       if (!t) t = 'light';   // ברירת מחדל: מצב בהיר (מי שבחר כהה — הבחירה שלו נשמרת)
       document.documentElement.dataset.themeMode = t;
       if (t === 'system') t = window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';   // "לפי המכשיר"
-      if (t === 'dark') { document.documentElement.classList.add('theme-dark'); var dc = document.getElementById('dark-css'); if (dc) dc.media = 'all'; }
+      if (t === 'dark') { document.documentElement.classList.add('theme-dark'); var dc = document.getElementById('dark-css'); if (dc) { dc.href = dc.dataset.href; dc.media = 'all'; } }
     })();
   </script>
 </head>
@@ -361,7 +365,7 @@
 </div>
 <!-- WEBSITE PRELOADER — BLACK1WHITE00 LOGO (נבנה בקוד: חד בכל מסך) -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap">
+<link rel="stylesheet" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <div id="website-preloader" role="status" aria-label="האתר נטען">
   <div class="pl-card">
@@ -1298,8 +1302,7 @@ html.theme-dark .pl-bar { background: #2a2f37; }
     }
     try { if (localStorage.getItem('mtab_hidden') === '1') document.documentElement.classList.add('mtab-hidden'); } catch (e) {}
   </script>
-  <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
-  <script type="module" src="./script.min.js?v=1928"></script>
+  <script type="module" src="./script.min.js?v=1929"></script>
   <script defer src="./a11y.js?v=1"></script>
 </body>
 </html>
