@@ -33386,6 +33386,7 @@ function rentRender(gridOnly) {
   if (open) {
     rentStickFix(); requestAnimationFrame(rentStickFix); setTimeout(rentStickFix, 120);
     rentFitPage(); requestAnimationFrame(rentFitPage); setTimeout(rentFitPage, 120); setTimeout(rentFitPage, 700);
+    const bigImg = el.querySelector('.mk-pg .mp-img img'); if (bigImg) bigImg.addEventListener('load', rentFitImg);
     rentSellerLoad(open.uid); rentSgFill();
     if (typeof subscribePhotoComments === 'function') subscribePhotoComments(rentCommentsKey(open));
   }
@@ -33529,6 +33530,19 @@ function rentFitPage() {
   const bottom = Math.min(innerHeight, barTop, main ? main.getBoundingClientRect().bottom : innerHeight);
   const h = Math.floor((bottom - box.top - (main ? main.scrollTop * scale : 0) - scrollY) / scale) - 12;
   pg.style.setProperty('--mk-h', Math.max(320, innerWidth > 900 ? Math.min(h, 860) : h) + 'px');
+  rentFitImg();
+}
+// התמונה הראשית בלי שוליים: בגודל המדויק שנכנס, ובמחשב העמודה שלה ברוחב התמונה
+function rentFitImg() {
+  const pg = typeof mainContent !== 'undefined' && mainContent && mainContent.querySelector('.mk-pg');
+  const box = pg && pg.querySelector('.mp-img'), img = box && box.querySelector('img');
+  if (!img || !img.naturalWidth) return;
+  const wide = innerWidth > 900, rail = parseFloat(getComputedStyle(box).marginLeft) || 0;
+  const ratio = img.naturalWidth / img.naturalHeight, maxW = (wide ? pg.clientWidth * .58 : pg.clientWidth) - rail;
+  const w = Math.floor(Math.min(maxW, box.clientHeight * ratio));
+  img.style.setProperty('width', w + 'px', 'important');
+  img.style.setProperty('height', Math.floor(w / ratio) + 'px', 'important');
+  if (wide) pg.style.setProperty('--gal-w', w + rail + 'px'); else pg.style.removeProperty('--gal-w');
 }
 window.addEventListener('resize', rentFitPage);
 // שמירה ולייק במודעות דוגמה: סימון בדפדפן בלבד, כדי שהאייקון יישאר מלא
