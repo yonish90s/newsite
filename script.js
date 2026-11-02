@@ -15636,7 +15636,14 @@ function homeGridCardsHTML() {
   const list = _hgItems.slice().sort((a, b) => homeGridSort === 'new' ? t(b.x) - t(a.x) : pop(b.x) - pop(a.x) || t(b.x) - t(a.x));
   return list.length ? list.map(i => homeCardHTML(i.x, i.kind)).join('') : '<div class="hg-empty">עדיין אין כאן תוכן — היו הראשונים להעלות!</div>';
 }
+// העמוד הראשי מציג את השוק. להחזרת הקרוסלה ורשת התמונות: false
+const HOME_MARKET = true;
 function homeGridHTML(photos, comics, stories) {
+  if (HOME_MARKET) {
+    setTimeout(rentSubscribe, 0);
+    rentUI.open = null; rentUI.sec = 'all'; rentUI.cat = 'all';
+    return `<div class="rent-page" data-page-id="page-rent-main"><div class="rn-inner">${rentViewHTML()}</div></div>`;
+  }
   const ok = x => x && x.approved !== false && x.id;
   _hgItems = (photos || []).filter(ok).map(x => ({ x, kind: 'photo' }))
     .concat((comics || []).concat(stories || []).filter(ok).map(x => ({ x, kind: 'story' })));
@@ -33224,10 +33231,61 @@ function rentShelvesHTML(l) {
     </section>`;
   }).join('');
 }
+// גלילה אינסופית: מציגים מנה, והבאה נטענת כשמתקרבים לסוף הרשימה
+const RENT_BATCH = 15;
+let rentInfList = [], rentInfShown = 0, rentInfRaf = 0;
+function rentInfCheck() {
+  rentInfRaf = 0;
+  const end = document.querySelector('.rent-page .rn-more-end');
+  if (!end || end.getBoundingClientRect().top > window.innerHeight + 700) return;
+  const box = end.parentElement.querySelector('.mk-grid');
+  if (!box) return;
+  box.insertAdjacentHTML('beforeend', rentInfList.slice(rentInfShown, rentInfShown + RENT_BATCH).map(rentMiniHTML).join(''));
+  rentInfShown += RENT_BATCH;
+  if (rentInfShown >= rentInfList.length) end.remove();
+  else rentInfArm();
+}
+function rentInfArm() { if (!rentInfRaf) rentInfRaf = setTimeout(rentInfCheck, 80); }
+document.addEventListener('scroll', rentInfArm, { capture: true, passive: true });   // הגלילה קורית בתוך אזור התוכן, לא בחלון
+window.addEventListener('resize', rentInfArm);
+// מבנה השוק: מוצר נבחר (תמונה גדולה, תמונות קטנות ופרטים), ומתחתיו "מוצרים נוספים"
+function rentMiniHTML(x) {
+  return `<button type="button" class="mp-mini" onclick="rentOpen('${artEsc(x.id)}')"><span class="mp-mini-img">${rentThumb(x)}</span><b>${escHtml(x.title)}</b><small>${rentPriceShort(x)}</small></button>`;
+}
+function mkInfoHTML(r) {
+  const ck = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+  const desc = String(r.desc || '').trim();
+  const facts = (r.specs || []).concat(r.city ? [`איסוף ב${r.city}`] : [], r.kind === 'used' ? ['מתאמים ישירות עם המוכר/ת'] : []).filter(Boolean).slice(0, 4);
+  return `<span class="mp-pill">${escHtml(r.kind === 'used' ? (r.offer || 'יד 2') : rentCatOf(r.cat).name)}</span>
+    <h2 class="mk-title">${escHtml(r.title)}</h2>
+    ${desc ? `<p class="mk-desc">${escHtml(desc.length > 150 ? desc.slice(0, 147) + '…' : desc)}</p>` : ''}
+    <div class="mk-price">${rentPriceShort(r)}</div>
+    ${facts.length ? `<div class="mk-sep"></div><h3 class="mk-h3">מה חשוב לדעת</h3><ul class="mp-checks">${facts.map(x => `<li><span>${ck}</span>${escHtml(x)}</li>`).join('')}</ul>` : ''}
+    <button type="button" class="mk-go" onclick="rentOpen('${artEsc(r.id)}')">לעמוד המוצר</button>`;
+}
+function mkPick(i, btn) {
+  const r = rentInfList[i]; if (!r) return;
+  const big = document.querySelector('.rent-page .mk-big'), info = document.querySelector('.rent-page .mk-info');
+  if (big) { big.innerHTML = rentThumb(r, true); big.setAttribute('onclick', `rentOpen('${artEsc(r.id)}')`); }
+  if (info) info.innerHTML = mkInfoHTML(r);
+  btn.parentElement.querySelectorAll('button').forEach(b => b.classList.toggle('on', b === btn));
+}
+window.mkPick = mkPick;
 function rentGridHTML() {
   const l = rentList();
-  if (l.length && rentWide()) return rentShelvesHTML(l);
-  return l.length ? `<div class="rn-tiles">${l.map(rentTileHTML).join('')}</div>` : `<div class="rn-empty">אין עדיין מודעות כאן.<br><button type="button" class="rn-pub" onclick="mktPublish('${rentUI.sec}')">היו הראשונים לפרסם</button></div>`;
+  if (!l.length) return `<div class="rn-empty">אין עדיין מודעות כאן.<br><button type="button" class="rn-pub" onclick="mktPublish('${rentUI.sec}')">היו הראשונים לפרסם</button></div>`;
+  rentInfList = l; rentInfShown = RENT_BATCH;
+  setTimeout(rentInfArm, 0);
+  const f = l[0];
+  return `<section class="mk-top">
+      <div class="mk-gal">
+        <button type="button" class="mk-big" onclick="rentOpen('${artEsc(f.id)}')" aria-label="לעמוד המוצר">${rentThumb(f, true)}</button>
+        ${l.length > 1 ? `<div class="mk-thumbs">${l.slice(0, 6).map((x, i) => `<button type="button" class="${i ? '' : 'on'}" onclick="mkPick(${i}, this)" aria-label="${escHtml(x.title)}">${rentThumb(x)}</button>`).join('')}</div>` : ''}
+      </div>
+      <div class="mk-info">${mkInfoHTML(f)}</div>
+    </section>
+    <h2 class="mk-more-h">מוצרים נוספים</h2>
+    <div class="rn-tiles mk-grid">${l.slice(0, RENT_BATCH).map(rentMiniHTML).join('')}</div>${l.length > RENT_BATCH ? '<div class="rn-more-end" aria-hidden="true"></div>' : ''}`;
 }
 function rentViewHTML() {
   const all = mktAll();
@@ -33250,7 +33308,6 @@ function rentViewHTML() {
       <select class="rn-sel" onchange="rentSet('sort', this.value)" aria-label="מיון">${[['new', 'הכי חדש'], ['cheap', 'הכי זול'], ['rating', 'דירוג גבוה']].map(([v, t]) => `<option value="${v}"${rentUI.sort === v ? ' selected' : ''}>${t}</option>`).join('')}</select>
     </div>
     ${rentUI.sec === 'rent' ? `<nav class="rn-cats">${RENT_CATS.filter(c => !c.store).map(c => `<button type="button" class="rn-cat${rentUI.cat === c.id ? ' on' : ''}" onclick="rentSet('cat', '${c.id}')">${c.ic} ${c.name} <small>${count(c.id)}</small></button>`).join('')}</nav>` : ''}
-    ${rentIdeasHTML()}
     <div class="rn-grid">${rentGridHTML()}</div>
     <p class="rn-fine">איך זה עובד: בוחרים מודעה ← שולחים בקשה ← בעל המודעה מאשר ומתאמים. בהשכרה ובאחסון התשלום לבעל המודעה, ועמלת שירות של ${Math.round(RENT_SITE_FEE * 100)}% לאתר.<br><small>תמונות הדוגמה: Wikimedia Commons (רישיון חופשי)</small></p>`;
 }
