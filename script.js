@@ -33252,6 +33252,10 @@ window.addEventListener('resize', rentInfArm);
 function rentMiniHTML(x) {
   return `<button type="button" class="mp-mini" onclick="rentOpen('${artEsc(x.id)}')"><span class="mp-mini-img">${rentThumb(x)}</span><b>${escHtml(x.title)}</b><small>${rentPriceShort(x)}</small></button>`;
 }
+// כרטיס קטן בהצעות שבעמוד מוצר: תמונה, שם, מיקום, מחיר ודירוג המוכר אם יש
+function rentSuggHTML(x) {
+  return `<button type="button" class="mk-sg" onclick="rentOpen('${artEsc(x.id)}')"><span class="mk-sg-img">${rentThumb(x)}</span><b>${escHtml(x.title)}</b><small>${escHtml(x.city || (x.kind === 'used' ? (x.offer || 'יד 2') : rentCatOf(x.cat).name))}</small><small>${rentPriceShort(x)}${x.uid ? `<i data-sg-rate="${escHtml(x.uid)}"></i>` : ''}</small></button>`;
+}
 function rentGridHTML() {
   const l = rentList();
   if (!l.length) return `<div class="rn-empty">אין עדיין מודעות כאן.<br><button type="button" class="rn-pub" onclick="mktPublish('${rentUI.sec}')">היו הראשונים לפרסם</button></div>`;
@@ -33306,7 +33310,7 @@ function rentRender(gridOnly) {
   if (open) {
     rentStickFix(); requestAnimationFrame(rentStickFix); setTimeout(rentStickFix, 120);
     rentFitPage(); requestAnimationFrame(rentFitPage); setTimeout(rentFitPage, 120); setTimeout(rentFitPage, 700);
-    rentSellerLoad(open.uid);
+    new Set([open.uid].concat([...el.querySelectorAll('[data-sg-rate]')].map(x => x.dataset.sgRate))).forEach(rentSellerLoad);
     if (typeof subscribePhotoComments === 'function') subscribePhotoComments(rentCommentsKey(open));
   }
 }
@@ -33354,7 +33358,7 @@ function rentDetailHTML(r) {
   const ic = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
   const imgs = (r.images || []).length ? r.images : (r.img ? [r.img] : []);
   const saved = r.shId ? typeof photoIsSavedLocal === 'function' && photoIsSavedLocal(r.shId) : rentMarked('save', r.id);
-  const more = mktAll().filter(x => x.id !== r.id && mktSecOf(x) === sec).sort((a, b) => (b.cat === r.cat) - (a.cat === r.cat) || (b.t || 0) - (a.t || 0)).slice(0, 8);
+  const more = mktAll().filter(x => x.id !== r.id && mktSecOf(x) === sec).sort((a, b) => (b.cat === r.cat) - (a.cat === r.cat) || (b.t || 0) - (a.t || 0)).slice(0, 14);
   // הכפתור הראשי: מוצר יד 2 אמיתי — הצעת מחיר; דוגמת יד 2 — פנייה; השכרה/אחסון — בקשה
   const main = r.shId ? [`openPriceOffer('${artEsc(r.shId)}', '${artEsc(r.title || '')}', '${artEsc(r.uid || '')}', '${artEsc(r.owner || '')}')`, 'הצעת מחיר', '<path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.5"/>']
     : r.kind === 'used' ? [`rentRequest('${artEsc(r.id)}')`, r.offer === 'החלפה' ? 'הצעת החלפה' : r.offer === 'השאלה' ? 'בקשת השאלה' : 'פנייה למוכר', '<path d="M21 12a8 8 0 0 1-8 8H4l2.2-2.6A8 8 0 1 1 21 12z"/>']
@@ -33421,7 +33425,7 @@ function rentDetailHTML(r) {
         ${terms.length ? `<details class="mp-acc mk-terms"><summary>תקנון ההשאלה · ${terms.length} סעיפים</summary><ol class="pd-terms">${terms.map(x => `<li>${escHtml(x)}</li>`).join('')}</ol></details>` : ''}
       </div>
     </div>
-    ${more.length ? `<section class="mp-more"><h2>הצעות נוספות</h2><div class="rn-tiles mk-grid">${more.map(rentMiniHTML).join('')}</div></section>` : ''}
+    ${more.length ? `<section class="mp-more"><h2>הצעות נוספות</h2><div class="mk-sg-grid">${more.map(rentSuggHTML).join('')}</div></section>` : ''}
     <section class="rn-det-cmts pd-reviews mp-comments">${typeof photoCommentsSectionHTML === 'function' ? photoCommentsSectionHTML(rentCommentsKey(r)) : ''}</section>`;
 }
 // ביקורת על המוכר: ממוצע הדירוגים האמיתי מהענן
@@ -33436,6 +33440,7 @@ async function rentSellerLoad(uid) {
     const vals = Object.values(snap.exists() ? (snap.val() || {}) : {}).map(Number).filter(n => n >= 1 && n <= 5);
     const avg = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
     if (mainContent) mainContent.querySelectorAll(`.mk-rate[data-seller="${uid}"]`).forEach(el => { el.innerHTML = rentRateHTML(avg, vals.length); });
+    if (mainContent && vals.length) mainContent.querySelectorAll(`[data-sg-rate="${uid}"]`).forEach(el => { el.innerHTML = ` · <svg viewBox="0 0 24 24"><path d="M12 2.8l2.8 5.8 6.4.9-4.6 4.5 1.1 6.3L12 17.3l-5.7 3 1.1-6.3L2.8 9.5l6.4-.9z"/></svg> ${avg.toFixed(1)}`; });
   } catch (e) {}
 }
 // עמוד מוצר: התמונה נמתחת או מתכווצת כך שהכול נכנס בגובה המסך בלי לגלול
