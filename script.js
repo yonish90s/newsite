@@ -33403,11 +33403,18 @@ function rentDetailHTML(r) {
           </div>
         </div>
         <div class="mk-sep"></div>
-        <ul class="mk-feats">
-          ${feat('<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>', r.city ? `איסוף ב${r.city}` : 'מיקום בתיאום', r.kind === 'used' ? 'מתאמים ישירות עם המוכר/ת' : 'עמלת שירות ' + Math.round(RENT_SITE_FEE * 100) + '% לאתר')}
-          ${feat('<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>', owner, `פורסם ${rentAgo(r.t)}`)}
-          ${specs ? feat('<path d="M5 12.5l4.5 4.5L19 7.5"/>', 'פרטי המוצר', specs) : ''}
-        </ul>
+        <div class="mk-lower">
+          <div class="mk-accs">
+            <details class="mp-acc" name="mk-acc"${innerWidth > 900 ? ' open' : ''}><summary>תיאור</summary><p>${short ? escHtml(short) : 'אין תיאור למוצר הזה.'}</p></details>
+            <details class="mp-acc" name="mk-acc"><summary>ביקורות</summary><${rateTag} class="mk-rate" data-seller="${escHtml(r.uid || '')}">${rentRateHTML(0, 0)}</${rateTag.split(' ')[0]}></details>
+            <details class="mp-acc" name="mk-acc"><summary>פרטים</summary>${(r.specs || []).filter(Boolean).length ? `<ul>${r.specs.filter(Boolean).map(x => `<li>${escHtml(x)}</li>`).join('')}</ul>` : '<p>אין פרטים נוספים.</p>'}</details>
+          </div>
+          <ul class="mk-feats">
+            ${feat('<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>', r.city ? `איסוף ב${r.city}` : 'מיקום בתיאום', r.kind === 'used' ? 'מתאמים ישירות עם המוכר/ת' : 'עמלת שירות ' + Math.round(RENT_SITE_FEE * 100) + '% לאתר')}
+            ${feat('<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>', owner, `פורסם ${rentAgo(r.t)}`)}
+            ${specs ? feat('<path d="M5 12.5l4.5 4.5L19 7.5"/>', 'פרטי המוצר', specs) : ''}
+          </ul>
+        </div>
         ${terms.length ? `<details class="mp-acc mk-terms"><summary>תקנון ההשאלה · ${terms.length} סעיפים</summary><ol class="pd-terms">${terms.map(x => `<li>${escHtml(x)}</li>`).join('')}</ol></details>` : ''}
       </div>
       ${more.length ? `<section class="mp-more mk-side"><h2>הצעות נוספות</h2><div class="mp-more-row">${more.map(rentMiniHTML).join('')}</div></section>` : ''}
@@ -33424,8 +33431,8 @@ async function rentSellerLoad(uid) {
   try {
     const snap = await get(ref(db, `website/user_ratings/${uid}`));
     const vals = Object.values(snap.exists() ? (snap.val() || {}) : {}).map(Number).filter(n => n >= 1 && n <= 5);
-    const el = mainContent && mainContent.querySelector('.mk-rate');
-    if (el && el.dataset.seller === uid) el.innerHTML = rentRateHTML(vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0, vals.length);
+    const avg = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
+    if (mainContent) mainContent.querySelectorAll(`.mk-rate[data-seller="${uid}"]`).forEach(el => { el.innerHTML = rentRateHTML(avg, vals.length); });
   } catch (e) {}
 }
 // עמוד מוצר: התמונה נמתחת או מתכווצת כך שהכול נכנס בגובה המסך בלי לגלול
