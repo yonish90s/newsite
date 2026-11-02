@@ -33232,28 +33232,32 @@ function rentShelvesHTML(l) {
   }).join('');
 }
 // גלילה אינסופית: מציגים מנה, והבאה נטענת כשמתקרבים לסוף הרשימה
-const RENT_BATCH = 15;
+const RENT_BATCH = 21;
 let rentInfList = [], rentInfShown = 0, rentInfRaf = 0;
+// טוען פעם אחת את דירוג המוכר לכל כרטיס חדש שעל המסך
+function rentSgFill() {
+  const els = mainContent ? [...mainContent.querySelectorAll('[data-sg-rate]:not([data-done])')] : [];
+  els.forEach(el => { el.dataset.done = '1'; });
+  new Set(els.map(el => el.dataset.sgRate)).forEach(rentSellerLoad);
+}
 function rentInfCheck() {
   rentInfRaf = 0;
+  rentSgFill();
   const end = document.querySelector('.rent-page .rn-more-end');
   if (!end || end.getBoundingClientRect().top > window.innerHeight + 700) return;
   const box = end.parentElement.querySelector('.mk-grid');
   if (!box) return;
   box.insertAdjacentHTML('beforeend', rentInfList.slice(rentInfShown, rentInfShown + RENT_BATCH).map(rentMiniHTML).join(''));
   rentInfShown += RENT_BATCH;
+  rentSgFill();
   if (rentInfShown >= rentInfList.length) end.remove();
   else rentInfArm();
 }
 function rentInfArm() { if (!rentInfRaf) rentInfRaf = setTimeout(rentInfCheck, 80); }
 document.addEventListener('scroll', rentInfArm, { capture: true, passive: true });   // הגלילה קורית בתוך אזור התוכן, לא בחלון
 window.addEventListener('resize', rentInfArm);
-// כרטיס מוצר ברשימה: קובייה עם תמונה, שם ומחיר
+// כרטיס מוצר קטן בשוק ובהצעות: תמונה, שם, מיקום, מחיר ודירוג המוכר אם יש
 function rentMiniHTML(x) {
-  return `<button type="button" class="mp-mini" onclick="rentOpen('${artEsc(x.id)}')"><span class="mp-mini-img">${rentThumb(x)}</span><b>${escHtml(x.title)}</b><small>${rentPriceShort(x)}</small></button>`;
-}
-// כרטיס קטן בהצעות שבעמוד מוצר: תמונה, שם, מיקום, מחיר ודירוג המוכר אם יש
-function rentSuggHTML(x) {
   return `<button type="button" class="mk-sg" onclick="rentOpen('${artEsc(x.id)}')"><span class="mk-sg-img">${rentThumb(x)}</span><b>${escHtml(x.title)}</b><small>${escHtml(x.city || (x.kind === 'used' ? (x.offer || 'יד 2') : rentCatOf(x.cat).name))}</small><small>${rentPriceShort(x)}${x.uid ? `<i data-sg-rate="${escHtml(x.uid)}"></i>` : ''}</small></button>`;
 }
 function rentGridHTML() {
@@ -33261,7 +33265,7 @@ function rentGridHTML() {
   if (!l.length) return `<div class="rn-empty">אין עדיין מודעות כאן.<br><button type="button" class="rn-pub" onclick="mktPublish('${rentUI.sec}')">היו הראשונים לפרסם</button></div>`;
   rentInfList = l; rentInfShown = RENT_BATCH;
   setTimeout(rentInfArm, 0);
-  return `<div class="rn-tiles mk-grid">${l.slice(0, RENT_BATCH).map(rentMiniHTML).join('')}</div>${l.length > RENT_BATCH ? '<div class="rn-more-end" aria-hidden="true"></div>' : ''}`;
+  return `<div class="mk-sg-grid mk-grid">${l.slice(0, RENT_BATCH).map(rentMiniHTML).join('')}</div>${l.length > RENT_BATCH ? '<div class="rn-more-end" aria-hidden="true"></div>' : ''}`;
 }
 function rentViewHTML() {
   const all = mktAll();
@@ -33310,7 +33314,7 @@ function rentRender(gridOnly) {
   if (open) {
     rentStickFix(); requestAnimationFrame(rentStickFix); setTimeout(rentStickFix, 120);
     rentFitPage(); requestAnimationFrame(rentFitPage); setTimeout(rentFitPage, 120); setTimeout(rentFitPage, 700);
-    new Set([open.uid].concat([...el.querySelectorAll('[data-sg-rate]')].map(x => x.dataset.sgRate))).forEach(rentSellerLoad);
+    rentSellerLoad(open.uid); rentSgFill();
     if (typeof subscribePhotoComments === 'function') subscribePhotoComments(rentCommentsKey(open));
   }
 }
@@ -33425,7 +33429,7 @@ function rentDetailHTML(r) {
         ${terms.length ? `<details class="mp-acc mk-terms"><summary>תקנון ההשאלה · ${terms.length} סעיפים</summary><ol class="pd-terms">${terms.map(x => `<li>${escHtml(x)}</li>`).join('')}</ol></details>` : ''}
       </div>
     </div>
-    ${more.length ? `<section class="mp-more"><h2>הצעות נוספות</h2><div class="mk-sg-grid">${more.map(rentSuggHTML).join('')}</div></section>` : ''}
+    ${more.length ? `<section class="mp-more"><h2>הצעות נוספות</h2><div class="mk-sg-grid">${more.map(rentMiniHTML).join('')}</div></section>` : ''}
     <section class="rn-det-cmts pd-reviews mp-comments">${typeof photoCommentsSectionHTML === 'function' ? photoCommentsSectionHTML(rentCommentsKey(r)) : ''}</section>`;
 }
 // ביקורת על המוכר: ממוצע הדירוגים האמיתי מהענן
