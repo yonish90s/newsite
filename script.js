@@ -15759,6 +15759,7 @@ function homeGridHTML(photos, comics, stories) {
       </div>
       <div class="dr-hero-vis">${homeFlipHTML()}</div>
     </div>
+    <div class="dr-kinds"><button type="button" class="on" onclick="homeOpenPhotos()">${'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 9"/></svg>'}תמונות גולשים</button><button type="button" onclick="homeGo('stories')">${'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h14v16H5z"/><path d="M9 9h6M9 13h6"/></svg>'}סיפורים</button><button type="button" onclick="mktGo('all')">${'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l-1 12H7z"/><path d="M9 8a3 3 0 0 1 6 0"/></svg>'}השוק</button></div>
     <form class="dr-search" role="search" onsubmit="event.preventDefault(); homeHeroSearch(this)">
       <input type="search" placeholder="מה מחפשים היום?" aria-label="חיפוש באתר" autocomplete="off">
       <button type="submit" aria-label="חיפוש"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button>
@@ -15919,6 +15920,67 @@ function homeHeroSearch(form) {
   if (inp && q) { inp.value = q; siteSearchRender(q); }
 }
 Object.assign(window, { homeGridSetTag, homeHeroSearch });
+// כותרת בסגנון Dribbble: לוגו, תפריטים נפתחים וכניסה. כל מה שהיה בסרגל הצד, בלשוניות ובאייקונים עובר לתפריטים
+(function drHeader() {
+  if (!document.documentElement.classList.contains('dr-full')) return;
+  const chev = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
+  const MENUS = [
+    ['גלישה', [['בשבילך', 'goToHomePage()'], ['במעקב', 'openFeed()'], ['תמונות גולשים', "homeGo('photos')"], ['קומיקס', "homeGo('comics')"], ['סיפורים', "homeGo('stories')"]]],
+    ['השוק', [['הכל', "mktGo('all')"], ['יד 2', "mktGo('used')"], ['השכרת ציוד', "mktGo('rent')"], ['שטח לאחסון', "mktGo('store')"], ['החנות', "navigateToPage('page-products-main')"]]],
+    ['קהילה', [['קהילות', "navigateToPage('page-communities-main')"], ['פורומים', "navigateToPage('page-forums-main')"], ['חדשות', "navigateToPage('page-news-main')"], ['רעיונות', "navigateToPage('page-ideas-main')"], ['AI ותוכנה', "navigateToPage('page-ai')"]]],
+    ['עוד', [['פרסום מהיר', 'openQuickPublish()'], ['צ׳אט', "document.getElementById('global-chat-fab').click()"], ['הודעות', "document.getElementById('dm-pill').click()"], ['מנוי ושדרוגים', "navigateToPage('page-subscription-main')"], ['תמכו / השקיעו בנו', "investOpen('invest')"], ['שליחת ביקורת', 'feedbackOpen()']]]
+  ];
+  const build = () => {
+    const hdr = document.querySelector('header.apple-nav .apple-nav-content');
+    const ri = hdr && hdr.querySelector('.right-icons');
+    if (!ri || hdr.querySelector('.dr-nav')) return;
+    const nav = document.createElement('nav');
+    nav.className = 'dr-nav'; nav.setAttribute('aria-label', 'ניווט ראשי');
+    nav.innerHTML = MENUS.map(([name, items]) => `<div class="dr-nav-i"><button type="button" aria-haspopup="true">${name}${chev}</button><div class="dr-menu">${items.map(([t, f]) => `<button type="button" onclick="${f.replace(/"/g, '&quot;')}">${t}</button>`).join('')}</div></div>`).join('');
+    hdr.insertBefore(nav, ri);
+    // האייקונים עוברים לתפריט "עוד" (הפעולות שלהם נשארות כמו שהן)
+    const tools = document.createElement('div');
+    tools.className = 'dr-tools';
+    ['theme-toggle-btn', 'header-likes-btn', 'header-history-btn', 'offers-btn', 'battery-task-btn', 'header-lang-btn'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) { if (!el.title && el.getAttribute('aria-label')) el.title = el.getAttribute('aria-label'); tools.appendChild(el); }
+    });
+    const ask = ri.querySelector('.ask-hdr-btn'); if (ask) tools.appendChild(ask);
+    nav.lastElementChild.querySelector('.dr-menu').appendChild(tools);
+    nav.addEventListener('click', e => {
+      const i = e.target.closest('.dr-menu button') && e.target.closest('.dr-nav-i');
+      if (i) { i.classList.add('dr-shut'); if (document.activeElement) document.activeElement.blur(); setTimeout(() => i.classList.remove('dr-shut'), 350); }
+    });
+    // אורח: "הרשמה" ו"כניסה", כמו בכותרת של האתר
+    const mg = document.getElementById('manager-btn');
+    if (mg) {
+      const sign = document.createElement('button');
+      sign.type = 'button'; sign.className = 'dr-signup'; sign.textContent = 'הרשמה';
+      sign.onclick = () => { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); };
+      mg.parentNode.insertBefore(sign, mg);
+      const sync = () => document.documentElement.classList.toggle('dr-guest', mg.textContent.trim() === 'אורח');
+      new MutationObserver(sync).observe(mg, { childList: true, characterData: true, subtree: true });
+      sync();
+    }
+  };
+  // חיפוש בכותרת: בדף הבית רק אחרי שגוללים מעבר לחיפוש הגדול
+  let raf = 0;
+  const place = () => {
+    raf = 0;
+    const big = document.querySelector('.dr-search'), hdr = document.querySelector('header.apple-nav');
+    const top = !!big && !!hdr && big.offsetParent !== null && big.getBoundingClientRect().bottom > hdr.getBoundingClientRect().bottom;
+    document.documentElement.classList.toggle('dr-search-big', top);
+  };
+  const queue = () => { if (!raf) raf = requestAnimationFrame(place); };
+  document.addEventListener('scroll', queue, { capture: true, passive: true });
+  const start = () => {
+    build();
+    const mc = document.getElementById('mainContent');
+    if (mc) new MutationObserver(queue).observe(mc, { childList: true, subtree: false });
+    queue(); setTimeout(() => { build(); queue(); }, 1500);
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
 function buildHomeFeedPage() {
   const all = (typeof getAllStoriesFromPages === 'function') ? getAllStoriesFromPages() : [];
   let comics = all.filter(s => s && s.__kind !== 'stories');
@@ -31581,7 +31643,7 @@ function adSlotHTML(where) {
   let raf = 0;
   const place = () => {
     raf = 0;
-    const aside = mq.matches && document.querySelector('.home-feed-page:not(.home-grid) .home-aside, .home-feed-page .hg');
+    const aside = mq.matches && !root.classList.contains('dr-full') && document.querySelector('.home-feed-page:not(.home-grid) .home-aside, .home-feed-page .hg');
     const hdr = document.querySelector('header.apple-nav');
     if (!aside || !hdr) { root.classList.remove('fabs-top'); return; }
     const z = parseFloat(getComputedStyle(document.body).zoom) || 1;
