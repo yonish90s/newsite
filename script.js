@@ -32418,6 +32418,7 @@ function mediaIsHeavy(it) {
   if (!it || !it.id) return false;
   const imgs = Array.isArray(it.images) ? it.images.filter(Boolean) : [];
   const pgs = Array.isArray(it.pages) ? it.pages : [];
+  if ([it.image, it.cover].concat(imgs).some(v => typeof v === 'string' && v.startsWith('data:') && v.length > 60000)) return true;   // גם תמונה אחת גדולה לא נשמרת בעמוד
   return imgs.length > 1 || pgs.some(p => p && (typeof p === 'string' || p.type === 'image')) || (it.inlineImages && typeof it.inlineImages === 'object' && Object.keys(it.inlineImages).length > 0);
 }
 function mediaApply(it) {
@@ -32427,6 +32428,8 @@ function mediaApply(it) {
   if (Array.isArray(m.images)) it.images = m.images;
   if (Array.isArray(m.pages)) it.pages = m.pages;
   if (m.inlineImages) it.inlineImages = m.inlineImages;
+  if (m.image) it.image = m.image;
+  if (m.cover) it.cover = m.cover;
   delete it._media;
   return it;
 }
@@ -32480,13 +32483,16 @@ function mediaStripForSave(list) {
     let t = false;
     arr.forEach(it => {
       if (!mediaIsHeavy(it)) return;
-      const m = { images: Array.isArray(it.images) ? it.images : null, pages: Array.isArray(it.pages) ? it.pages : null, inlineImages: it.inlineImages || null };
+      const th = MEDIA[it.id] && MEDIA[it.id].thumb;   // גרסה קטנה שכבר נוצרה: היא זו שנשארת בעמוד
+      const m = { images: Array.isArray(it.images) ? it.images : null, pages: Array.isArray(it.pages) ? it.pages : null, inlineImages: it.inlineImages || null, image: th ? it.image || null : null, cover: th ? it.cover || null : null, thumb: th || null };
       const js = JSON.stringify(m);
       if (MEDIA_SAVED[it.id] !== js) { updates['media/' + it.id] = m; MEDIA_SAVED[it.id] = js; }
       MEDIA[it.id] = m;
       const first = (Array.isArray(it.images) ? it.images.find(Boolean) : '') || (Array.isArray(it.pages) ? ((it.pages.find(p => p && (typeof p === 'string' || p.type === 'image')) || {}).url || '') : '');
       const ni = Array.isArray(it.images) ? it.images.filter(Boolean).length : 0, np = Array.isArray(it.pages) ? it.pages.length : 0;
-      it.images = first ? [first] : [];
+      it.images = th ? [th] : first ? [first] : [];
+      if (th && it.image) it.image = th;
+      if (th && it.cover) it.cover = th;
       it.pages = [];
       delete it.inlineImages;
       it._media = { ni, np };
@@ -33437,6 +33443,8 @@ function rentOpen(id) {
   if (typeof mainContent !== 'undefined' && mainContent) mainContent.scrollTop = 0;
   try { window.scrollTo({ top: 0 }); } catch (e) {}
   rentRender();
+  // מוצר שהתמונות המלאות שלו נשמרות בנפרד: מציגים את הקטנה מיד ומחליפים כשהמלאה מגיעה
+  if (r.shId && r.raw && r.raw._media && !MEDIA[r.shId]) mediaEnsure(r.shId).then(() => { if (rentUI.open === id) rentRender(); });
 }
 function rentBack() { if (history.state && history.state.rent) { history.back(); return; } rentUI.open = null; rentRender(); }
 window.addEventListener('popstate', (e) => {
@@ -33449,7 +33457,8 @@ function rentDetailHTML(r) {
   const c = rentCalc(r, qty);
   const sec = mktSecOf(r);
   const ic = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
-  const imgs = (r.images || []).length ? r.images : (r.img ? [r.img] : []);
+  const full = r.shId && MEDIA[r.shId] && (MEDIA[r.shId].images || []).filter(Boolean);   // התמונות המלאות, אחרי שנטענו
+  const imgs = full && full.length ? full : (r.images || []).length ? r.images : (r.img ? [r.img] : []);
   const saved = r.shId ? typeof photoIsSavedLocal === 'function' && photoIsSavedLocal(r.shId) : rentMarked('save', r.id);
   const more = mktAll().filter(x => x.id !== r.id && mktSecOf(x) === sec).sort((a, b) => (b.cat === r.cat) - (a.cat === r.cat) || (b.t || 0) - (a.t || 0)).slice(0, 14);
   // הכפתור הראשי: מוצר יד 2 אמיתי — הצעת מחיר; דוגמת יד 2 — פנייה; השכרה/אחסון — בקשה
@@ -33471,7 +33480,7 @@ function rentDetailHTML(r) {
   return `<header class="mk-head"><button type="button" class="rn-back" onclick="rentBack()" aria-label="חזרה">→</button><h1>${escHtml(secName)}</h1></header>
     <div class="mp mk-pg">
       <div class="rn-det-gal mp-gal">
-        <div class="rn-det-img mp-img">${rentThumb(r, true)}</div>
+        <div class="rn-det-img mp-img">${rentThumb(full && full.length ? { ...r, img: full[0] } : r, true)}</div>
         ${imgs.length ? `<div class="mk-vthumbs">
           <button type="button" class="mk-varr" disabled onclick="rentDetStep(this, -1)" aria-label="התמונה הקודמת">${ic('<path d="M6 15l6-6 6 6"/>')}</button>
           <div class="mp-thumbs">${imgs.map((u, i) => `<button type="button" class="${i ? '' : 'on'}" onclick="rentDetPick(this)" aria-label="תמונה ${i + 1}"><img src="${escHtml(u)}" alt="" loading="lazy"></button>`).join('')}</div>
