@@ -33146,6 +33146,13 @@ function rentAll() {
   return real.concat(demo);
 }
 function rentCatOf(id) { return RENT_CATS.find(c => c.id === id) || RENT_CATS[RENT_CATS.length - 1]; }
+// מחיר קצר: מספר, שקל ויחידה — "100 ₪" או "100 ₪ לחודש"
+function rentPriceShort(r) {
+  if (r.offer === 'החלפה' && !r.price) return 'להחלפה';
+  if (r.priceTxt) return escHtml([r.priceTxt, r.unitTxt].filter(Boolean).join(' '));
+  const unit = r.kind === 'used' ? r.unitTxt : RENT_UNITS[r.unit];
+  return `${Number(r.price).toLocaleString('he-IL', { maximumFractionDigits: 2 })}&nbsp;₪${unit ? ' ' + escHtml(unit) : ''}`;
+}
 function rentPriceTxt(r) {
   if (r.kind === 'used') return r.offer === 'החלפה' && !r.price ? '🔁 להחלפה' : r.priceTxt ? `${escHtml(r.priceTxt)} <small>${escHtml(r.unitTxt || '')}</small>` : `₪${Number(r.price).toLocaleString('he-IL')} <small>${RENT_UNITS[r.unit] || ''}</small>`;
   return `₪${Number(r.price).toLocaleString('he-IL', { maximumFractionDigits: 2 })} <small>${RENT_UNITS[r.unit] || ''}${r.unit === 'kg' ? ` · ₪${(r.price / 10).toLocaleString('he-IL', { maximumFractionDigits: 1 })} ל-100 גרם` : ''}</small>`; }
@@ -33191,7 +33198,7 @@ function rentTileHTML(r) {
         <span role="button" tabindex="0" class="${liked ? 'on' : ''}"${r.shId ? ` data-like="${escHtml(r.shId)}"` : ''} aria-label="לייק" title="לייק" onclick="${stop}${r.shId ? `photoToggleLike('${sh}')` : demoMsg}">${ic(HEART)}</span>
       </span></span></span>
     <b class="rn-card-t">${escHtml(r.title)}</b>
-    <span class="rn-foot"><span class="rn-by" role="button" tabindex="0" title="לפרופיל" onclick="${stop}${author}"><i>${escHtml(owner.trim().charAt(0))}</i><b>${escHtml(owner)}</b></span><em class="rn-badge">${rentPriceTxt(r)}</em><span class="rn-stats">${stats}</span></span>
+    <span class="rn-foot"><span class="rn-by" role="button" tabindex="0" title="לפרופיל" onclick="${stop}${author}"><i>${escHtml(owner.trim().charAt(0))}</i><b>${escHtml(owner)}</b></span><em class="rn-badge">${rentPriceShort(r)}</em><span class="rn-stats">${stats}</span></span>
   </button>`;
 }
 function rentShelvesHTML(l) {
@@ -33352,7 +33359,7 @@ function rentDetailHTML(r) {
         <span class="mp-pill">${escHtml(r.kind === 'used' ? (r.offer || 'יד 2') : rentCatOf(r.cat).name)}</span>
         <h1 class="mp-title">${escHtml(r.title)}</h1>
         <button type="button" class="mp-by" onclick="${author}"><i>${escHtml(owner.trim().charAt(0))}</i><span><b>${escHtml(owner)}</b><small>פורסם ${rentAgo(r.t)}</small></span></button>
-        <div class="mp-price">${rentPriceTxt(r)}</div>
+        <div class="mp-price">${rentPriceShort(r)}</div>
         ${short ? `<p class="mp-lead">${escHtml(short.length > 160 ? short.slice(0, 157) + '…' : short)}</p>` : ''}
         ${opts.length ? `<div class="mp-opt-h"><b>כמה ${r.unit === 'kg' ? 'להדפיס' : escHtml(unitName) || 'יחידות'}?</b><small>${r.unit === 'kg' ? 'מינימום ' + Math.round(rentMin(r) * 1000) + ' גרם' : r.min > 1 ? 'מינימום ' + r.min : ''}</small></div>
         <div class="pd-opts mp-opts">${opts.map(v => `<button type="button" class="${v === qty ? 'on' : ''}" onclick="rentQtyPick('${artEsc(r.id)}', ${v}, this)">${escHtml(optLabel(v))}</button>`).join('')}</div>
@@ -33389,7 +33396,7 @@ function rentDetailHTML(r) {
       ${terms.length ? `<details class="mp-acc"><summary>תקנון ההשאלה · ${terms.length} סעיפים</summary><ol class="pd-terms">${terms.map(x => `<li>${escHtml(x)}</li>`).join('')}</ol></details>` : ''}
     </section>
     <section class="rn-det-cmts pd-reviews mp-comments">${typeof photoCommentsSectionHTML === 'function' ? photoCommentsSectionHTML(rentCommentsKey(r)) : ''}</section>
-    ${more.length ? `<section class="mp-more"><h2>מוצרים נוספים</h2><div class="mp-more-row">${more.map(x => `<button type="button" class="mp-mini" onclick="rentOpen('${artEsc(x.id)}')"><span class="mp-mini-img">${rentThumb(x)}</span><b>${escHtml(x.title)}</b><small>${rentPriceTxt(x)}</small></button>`).join('')}</div></section>` : ''}`;
+    ${more.length ? `<section class="mp-more"><h2>מוצרים נוספים</h2><div class="mp-more-row">${more.map(x => `<button type="button" class="mp-mini" onclick="rentOpen('${artEsc(x.id)}')"><span class="mp-mini-img">${rentThumb(x)}</span><b>${escHtml(x.title)}</b><small>${rentPriceShort(x)}</small></button>`).join('')}</div></section>` : ''}`;
 }
 // בחירת כמות מהירה בעמוד המודעה (כמו בחירת מידה) — ממלאת את הכמות ומעדכנת את המחיר
 function rentQtyPick(id, v, btn) {
