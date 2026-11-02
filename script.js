@@ -1,97 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, signInWithPopup, GoogleAuthProvider, FacebookAuthProvider, OAuthProvider, TwitterAuthProvider, signOut, onAuthStateChanged, signInAnonymously, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, EmailAuthProvider, linkWithCredential, setPersistence, browserLocalPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getDatabase, ref, set as _dbSet, get as _dbGet, child, onValue as _dbOnValue, push as _dbPush, update as _dbUpdate, increment, runTransaction as _dbTransaction, onDisconnect } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-
-// הסתרת כל התוכן באתר, לכולם (גם למנהל), והצגת תוכן לדוגמה במקומו. שום דבר לא נמחק מהמסד: קריאות מהענפים האלה לא מגיעות למסד,
-// וכתיבות אליהם נחסמות כדי שמסך ריק לא ידרוס את התוכן האמיתי. להחזרת התוכן: false, בנייה וקידום ?v=
-const CONTENT_HIDDEN = false;
-const HIDDEN_PATH = /^website\/(media|communities|community_posts|forum_topics|forum_posts|news_posts|polls|poll_counts|poll_votes|ideas|questions|photo_albums|photo_comments|story_comments|products|rentals|deals|reposts|item_likes|item_likers|photoBarCategories|storyCategories|users\/[^/]+\/(likes_data|saved_galleries|watch_history))(\/|$)/;
-if (CONTENT_HIDDEN) document.documentElement.classList.remove('adult-blur');   // אין מה לטשטש בזמן ההסתרה
-const dbPathOf = r => decodeURIComponent(new URL(r.toString()).pathname).replace(/^\/|\/$/g, '');
-const writeBlocked = path => path === 'website' || path === 'website/pages' || path.startsWith('website/pages/') || HIDDEN_PATH.test(path);
-// תוכן לדוגמה שמוצג בזמן ההסתרה. הוא חי רק בקוד ולא נכתב למסד
-const DEMO_AUTHOR = 'תוכן לדוגמה';
-const DEMO_T = Date.parse('2026-11-01T10:00:00Z');
-const DEMO_STORIES = [
-  ['המסע אל מעבר להרים', 'קבוצת חברים יוצאת לטיול שמשתבש בדרך הכי טובה.'],
-  ['השען מהרחוב הישן', 'שעון אחד קטן מתחיל ללכת לאחור, ומשם הכול משתנה.'],
-  ['המכתב שלא נשלח', 'מכתב ישן שנמצא במגירה מחזיר שתי חברות לשיחה אחת.'],
-  ['הכתבה האחרונה', 'כתב ותיק מקבל משימה אחרונה ומגלה שהסיפור קרוב לבית.']
-].map(([title, summary], i) => ({ id: 'demo-story' + (i + 1), title, summary, body: summary + '\n\nזהו טקסט לדוגמה בלבד.', author: DEMO_AUTHOR, category: 'כללי', categoryColor: '#2f7a48',
-  image: '', images: [], pages: [], link: '', linkedId: '', timestamp: '1.11.2026', createdAt: DEMO_T - i * 3600000, isAdult: false, likes: 0 }));
-const DEMO_COMMUNITIES = Object.fromEntries([['צילום', '📷', 'מקום לשתף תמונות ורעיונות'], ['טיולים', '🥾', 'מסלולים והמלצות'], ['בישול', '🍳', 'מתכונים וטיפים']].map(([name, icon, desc], i) =>
-  ['demo-c' + (i + 1), { id: 'demo-c' + (i + 1), name, icon, desc, createdAt: DEMO_T, createdBy: '', createdByName: DEMO_AUTHOR, items: {} }]));
-const DEMO_NEWS = Object.fromEntries([['האתר בהתחדשות', 'עיצוב חדש ותכנים חדשים בדרך.'], ['פינת הטיפים', 'כתבה לדוגמה עם כמה טיפים שימושיים.'], ['מה חדש השבוע', 'סיכום קצר לדוגמה של העדכונים האחרונים.']].map(([title, desc], i) =>
-  ['demo-n' + (i + 1), { title, desc, author: DEMO_AUTHOR, category: 'חדשות', createdAt: DEMO_T - i * 86400000, tweetUrl: '' }]));
-const DEMO_TOPICS = [['מה דעתכם על העיצוב החדש?', 'demo-t1'], ['הצעות לשיפור האתר', 'demo-t2']];
-const demoValue = path => {
-  if (path === 'website/communities') return DEMO_COMMUNITIES;
-  if (path === 'website/news_posts') return DEMO_NEWS;
-  if (path === 'website/forum_topics') return { gate: Object.fromEntries(DEMO_TOPICS.map(([title, id]) => [id, { title, name: DEMO_AUTHOR, uid: '', t: DEMO_T, replies: 0, lastT: DEMO_T, lastName: DEMO_AUTHOR }])) };
-  if (path === 'website/forum_topics/gate') return demoValue('website/forum_topics').gate;
-  const fp = path.match(/^website\/forum_posts\/(demo-t\d)$/);
-  if (fp) return { p1: { name: DEMO_AUTHOR, uid: '', t: DEMO_T, text: 'זהו דיון לדוגמה.' } };
-  return null;
-};
-// עמוד תוכן נשאר עם המעטפת שלו (לפיה האתר מזהה אותו), ובתוכה רק הפריטים לדוגמה
-const emptyPageContent = c => {
-  const open = String(c || '').match(/^<div[^>]*data-(?:stories|photos)-json="[^"]*"[^>]*>/);
-  if (!open) return c;
-  // בזמן ההסתרה אין תמונות באתר: רק סיפורים בטקסט. תמונות וקומיקס נשארים ריקים
-  const list = /data-story-kind="stories"/.test(open[0]) ? DEMO_STORIES : [];
-  return open[0].replace(/(data-(?:stories|photos)-json=")[^"]*"/, '$1' + encodeURIComponent(JSON.stringify(list)) + '"') + '</div>';
-};
-function hideDbValue(path, v) {
-  if (HIDDEN_PATH.test(path)) return demoValue(path);
-  if (v === null || v === undefined) return null;
-  if (typeof v !== 'object') return v;
-  if (path === 'website/pages') return (Array.isArray(v) ? v : Object.values(v)).map(p => (p && p.content) ? Object.assign({}, p, { content: emptyPageContent(p.content) }) : p);
-  if (path === 'website' || path === 'website/users' || /^website\/users\/[^/]+$/.test(path)) {
-    const out = {};
-    Object.keys(v).forEach(k => { const x = hideDbValue(path + '/' + k, v[k]); if (x !== null) out[k] = x; });
-    return out;
-  }
-  return v;
-}
-const needsHide = path => path === 'website' || path === 'website/pages' || path === 'website/users' || /^website\/users\/[^/]+$/.test(path);
-function fakeSnap(v, key) {
-  const has = v !== null && v !== undefined;
-  const kids = has && typeof v === 'object' ? Object.keys(v) : [];
-  return { key, val: () => (has ? v : null), exists: () => has, hasChildren: () => kids.length > 0, size: kids.length,
-    child: k => fakeSnap(has && typeof v === 'object' && v[k] !== undefined ? v[k] : null, k),
-    forEach: fn => { for (const k of kids) { if (fn(fakeSnap(v[k], k)) === true) return true; } return false; } };
-}
-const blockedNotice = () => { try { if (navigator.userActivation && navigator.userActivation.isActive && typeof showCopyToast === 'function') showCopyToast('התוכן באתר מוסתר כרגע — הפעולה לא נשמרה'); } catch (e) {} };
-const hideSnap = (r, sn) => { const path = dbPathOf(r); return needsHide(path) ? fakeSnap(hideDbValue(path, sn.val()), sn.key) : sn; };
-const get = !CONTENT_HIDDEN ? _dbGet : async r => {
-  const path = dbPathOf(r);
-  if (HIDDEN_PATH.test(path)) return fakeSnap(demoValue(path), path.split('/').pop());
-  return hideSnap(r, await _dbGet(r));
-};
-const onValue = !CONTENT_HIDDEN ? _dbOnValue : (r, cb, ...rest) => {
-  const path = dbPathOf(r);
-  if (HIDDEN_PATH.test(path)) { queueMicrotask(() => cb(fakeSnap(demoValue(path), path.split('/').pop()))); return () => {}; }
-  return _dbOnValue(r, sn => cb(hideSnap(r, sn)), ...rest);
-};
-const set = !CONTENT_HIDDEN ? _dbSet : async (r, v) => {
-  if (writeBlocked(dbPathOf(r))) { blockedNotice(); return; }
-  return _dbSet(r, v);
-};
-const update = !CONTENT_HIDDEN ? _dbUpdate : async (r, vals) => {
-  const path = dbPathOf(r), kept = {};
-  Object.keys(vals || {}).forEach(k => { if (!writeBlocked(path + '/' + k)) kept[k] = vals[k]; });
-  if (writeBlocked(path) && path !== 'website') { blockedNotice(); return; }
-  if (!Object.keys(kept).length) { blockedNotice(); return; }
-  return _dbUpdate(r, kept);
-};
-const push = !CONTENT_HIDDEN ? _dbPush : (r, ...rest) => {
-  if (rest.length && rest[0] !== undefined && writeBlocked(dbPathOf(r))) { blockedNotice(); return Promise.resolve(_dbPush(r)); }
-  return _dbPush(r, ...rest);
-};
-const runTransaction = !CONTENT_HIDDEN ? _dbTransaction : async (r, ...rest) => {
-  if (writeBlocked(dbPathOf(r))) { blockedNotice(); return { committed: false, snapshot: fakeSnap(null, null) }; }
-  return _dbTransaction(r, ...rest);
-};
+import { getAuth, signInWithPopup, GoogleAuthProvider, FacebookAuthProvider, signOut, onAuthStateChanged, signInAnonymously, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, EmailAuthProvider, linkWithCredential, setPersistence, browserLocalPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getDatabase, ref, set, get, child, onValue, push, update, increment, runTransaction, onDisconnect } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 // מסך מלא (מצב מחשב) — מוגדר מוקדם כדי שבוני העמודים יוכלו לקרוא אותו
 let pageFullWidth = (function () {
@@ -1023,19 +932,11 @@ function sanitizeToOnlyPhotosAndStories() {
   }
 }
 
-// מטמון של עמודים ריקים (או של תוכן הדוגמה) לא מציגים: הוא היה נותן מסך ריק עד שהנתונים מגיעים
-function pagesCacheUsable(list) {
-  if (!Array.isArray(list) || !list.length) return false;
-  const has = list.some(p => p && String(p.content || '').length > 4096);
-  return has && !list.some(p => p && /demo-(ph|story|comic)\d/.test(String(p.content || '')));
-}
-
 // פונקציית אתחול מהירה (Instant 0ms First Paint)
 async function initSite() {
-  let bootHasCache = false;
   try {
     const savedPages = await localforage.getItem('mySitePages_v3');
-    if (pagesCacheUsable(savedPages)) { pages = savedPages; bootHasCache = true; }
+    if (savedPages && savedPages.length) pages = savedPages;
 
     const savedBackgrounds = await localforage.getItem('mySiteBackgrounds_v3');
     if (savedBackgrounds) siteBackgrounds = savedBackgrounds;
@@ -1059,21 +960,16 @@ async function initSite() {
   updateFABsVisibility();
   if (typeof trackVisit === 'function') { try { trackVisit(); } catch (e) {} }
 
-  // יש תוכן שמור: מציגים אותו מיד, והנתונים החדשים מתעדכנים ברקע. בלי מטמון מחכים לנתונים מאחורי מסך הטעינה
-  const bootActive = activePageId;
-  if (bootHasCache && typeof window.hidePreloader === 'function') window.hidePreloader();
-
   // סנכרון ברקע מ-Firebase DB
   try {
     const data = await Promise.race([
       fetchPublicSiteData(),
       new Promise((_, reject) => setTimeout(
-        () => reject(new Error('Firebase boot fetch timed out')), bootHasCache ? 1500 : 8000
+        () => reject(new Error('Firebase boot fetch timed out')), 1500
       ))
     ]);
 
     if (Object.keys(data).length) {
-      const pagesBefore = bootHasCache ? JSON.stringify(pages) : '';
       if (data.pages && Array.isArray(data.pages)) { pages = data.pages; mediaHydratePages(pages); applyItemLikesToPages(pages, data.item_likes); }
       if (data.topNavPages && Array.isArray(data.topNavPages)) topNavPages = data.topNavPages;
       if (data.siteBackgrounds) siteBackgrounds = data.siteBackgrounds;
@@ -1094,13 +990,11 @@ async function initSite() {
         || pages.find(p => p && p.id === 'page-photos-main')
         || pages.find(p => p && p.content && p.content.includes('data-section="photos"'))
         || pages.find(p => p && p.title && p.title.includes('תמונות'));
-      if (bootHomePage && activePageId === bootActive) {   // גולש שכבר עבר לעמוד אחר נשאר בו
+      if (bootHomePage) {
         activePageId = bootHomePage.id;
       }
       
-      // אותו תוכן כמו במטמון: לא מציירים מחדש, כדי שהמסך לא יקפוץ
-      const pagesSame = !!pagesBefore && pagesBefore === JSON.stringify(pages);
-      if (!pagesSame) localforage.setItem('mySitePages_v3', pages);
+      localforage.setItem('mySitePages_v3', pages);
       localforage.setItem('myActivePage_v3', activePageId);
       localforage.setItem('mySiteTopNav_v3', topNavPages);
       localforage.setItem('mySiteBackgrounds_v3', siteBackgrounds);
@@ -1108,7 +1002,7 @@ async function initSite() {
       applyBackgrounds();
       renderSideMenu();
       renderTopNav();
-      if (!pagesSame) renderPage();
+      renderPage();
     }
   } catch(e) {
     console.log('Firebase background sync complete');
@@ -4270,32 +4164,34 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // שאר דרכי ההתחברות. ספק שעוד לא הופעל ב-Firebase (Authentication → Sign-in method) מוצג כ"בקרוב" —
-  // אחרי שמפעילים אותו שם, משנים כאן ל-true
-  const AUTH_READY = { facebook: false, apple: false, microsoft: false, x: false };
-  [['facebook', 'auth-facebook-login-btn', () => new FacebookAuthProvider(), 'Facebook'],
-   ['apple', 'auth-apple-login-btn', () => new OAuthProvider('apple.com'), 'Apple'],
-   ['microsoft', 'auth-microsoft-login-btn', () => new OAuthProvider('microsoft.com'), 'Microsoft'],
-   ['x', 'auth-x-login-btn', () => new TwitterAuthProvider(), 'X']].forEach(([key, id, make, name]) => {
-    const btn = document.getElementById(id);
-    if (!btn) return;
-    if (!AUTH_READY[key]) { btn.disabled = true; btn.classList.add('soon'); btn.querySelector('em').textContent = 'בקרוב'; return; }
-    btn.addEventListener('click', () => {
-      if (authModal) authModal.style.display = 'none';
-      signInWithPopup(auth, make())
-        .then(result => {
+  // התחברות / הרשמה עם פייסבוק
+  const authFacebookLoginBtn = document.getElementById('auth-facebook-login-btn');
+  if (authFacebookLoginBtn && authModal) {
+    authFacebookLoginBtn.addEventListener('click', () => {
+      authModal.style.display = 'none';
+      signInWithPopup(auth, new FacebookAuthProvider())
+        .then((result) => {
           const user = result.user;
           if (user.metadata && user.metadata.creationTime === user.metadata.lastSignInTime && typeof openSignupSteps === 'function') openSignupSteps();
           else if (typeof showCopyToast === 'function') showCopyToast('התחברת בהצלחה');
         })
-        .catch(error => {
-          console.error(name + ' login failed', error);
+        .catch((error) => {
+          console.error('facebook login failed', error);
           if (error && error.code === 'auth/popup-closed-by-user') return;
-          const msg = error && error.code === 'auth/account-exists-with-different-credential' ? 'כבר יש חשבון עם המייל הזה — התחברו בדרך שבה נרשמתם' : `ההתחברות עם ${name} נכשלה — נסו שוב`;
+          const msg = error && error.code === 'auth/operation-not-allowed' ? 'ההתחברות עם פייסבוק עוד לא הופעלה — נסו בינתיים עם Google'
+            : error && error.code === 'auth/account-exists-with-different-credential' ? 'כבר יש חשבון עם המייל הזה — התחברו עם Google'
+            : 'ההתחברות עם פייסבוק נכשלה — נסו שוב';
           if (typeof showCopyToast === 'function') showCopyToast(msg); else alert(msg);
         });
     });
-  });
+  }
+
+  const authMicrosoftLoginBtn = document.getElementById('auth-microsoft-login-btn');
+  if (authMicrosoftLoginBtn) {
+    authMicrosoftLoginBtn.addEventListener('click', () => {
+      alert("התחברות באמצעות Microsoft אינה פעילה כרגע. אנא השתמש בהתחברות באמצעות Google.");
+    });
+  }
 
   const authEmailSubmitBtn = document.getElementById('auth-email-submit-btn');
   if (authEmailSubmitBtn) {
@@ -6649,7 +6545,6 @@ let PHOTO_BAR_CATEGORIES = (function () {
   } catch (e) {}
   return ['תמונות גולשים', 'כלובון', 'תמונות גוף', 'לעסקים', 'כללי'];
 })();
-if (CONTENT_HIDDEN) { STORY_CATEGORIES = ['כללי']; PHOTO_BAR_CATEGORIES = ['תמונות גולשים', 'כללי']; }
 
 function savePhotoBarCategories() {
   try { localStorage.setItem('custom_photo_bar_categories', JSON.stringify(PHOTO_BAR_CATEGORIES)); } catch (e) {}
@@ -15734,38 +15629,21 @@ window.forumDeletePost = forumDeletePost;
 // כדי לחזור לעיצוב הקודם של דף הבית (שורות + עמודה צדדית) — לשנות ל-false
 const HOME_GRID = true;
 const homeGridOn = () => HOME_GRID;
-let homeGridSort = 'popular', homeGridTag = '', _hgItems = [];
+let homeGridSort = 'popular', _hgItems = [];
 function homeGridCardsHTML() {
   const t = x => Number(x.createdAt) || (typeof photoAlbumTime === 'function' ? photoAlbumTime(x) : 0) || 0;
   const pop = x => (Number(x.likes) || 0) + (typeof photoGetViews === 'function' ? photoGetViews(x.id) : 0);
-  const list = _hgItems.filter(i => !homeGridTag || i.x.category === homeGridTag).sort((a, b) => homeGridSort === 'new' ? t(b.x) - t(a.x) : pop(b.x) - pop(a.x) || t(b.x) - t(a.x));
+  const list = _hgItems.slice().sort((a, b) => homeGridSort === 'new' ? t(b.x) - t(a.x) : pop(b.x) - pop(a.x) || t(b.x) - t(a.x));
   return list.length ? list.map(i => homeCardHTML(i.x, i.kind)).join('') : '<div class="hg-empty">עדיין אין כאן תוכן — היו הראשונים להעלות!</div>';
 }
 function homeGridHTML(photos, comics, stories) {
   const ok = x => x && x.approved !== false && x.id;
   _hgItems = (photos || []).filter(ok).map(x => ({ x, kind: 'photo' }))
     .concat((comics || []).concat(stories || []).filter(ok).map(x => ({ x, kind: 'story' })));
-  const ck = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
-  const tags = [...new Set(_hgItems.map(i => i.x.category).filter(Boolean))].slice(0, 8);
-  setTimeout(homeHeroRotate, 0);
   return `<section class="hg">
-    <div class="dr-strip promo-row aside">${promoTrialHTML('row')}${adSlotHTML('row')}</div>
-    <div class="dr-hero">
-      <div class="dr-hero-tx">
-        <div class="dr-switch"><button type="button" class="on" onclick="homeOpenPhotos()">גלישה</button><button type="button" onclick="mktGo('all')">השוק</button></div>
-        <h1 class="dr-h1">הבית של הקהילה ל<span class="dr-word" id="dr-word">תמונות</span></h1>
-        <ul class="dr-list"><li>${ck}מעלים ומשתפים בחינם</li><li>${ck}גולשים בתוכן אמיתי של הקהילה</li><li>${ck}קונים, מוכרים ומשאילים בשוק</li></ul>
-        <button type="button" class="dr-cta" onclick="openQuickPublish()">להעלות עכשיו</button>
-      </div>
-      <div class="dr-hero-vis">${homeFlipHTML()}</div>
-    </div>
-    <div class="dr-kinds"><button type="button" class="on" onclick="homeOpenPhotos()">${'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 9"/></svg>'}תמונות גולשים</button><button type="button" onclick="homeGo('stories')">${'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h14v16H5z"/><path d="M9 9h6M9 13h6"/></svg>'}סיפורים</button><button type="button" onclick="mktGo('all')">${'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l-1 12H7z"/><path d="M9 8a3 3 0 0 1 6 0"/></svg>'}השוק</button></div>
-    <form class="dr-search" role="search" onsubmit="event.preventDefault(); homeHeroSearch(this)">
-      <input type="search" placeholder="מה מחפשים היום?" aria-label="חיפוש באתר" autocomplete="off">
-      <button type="submit" aria-label="חיפוש"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button>
-    </form>
+    ${homeFlipHTML()}
     <div class="hg-top">
-      <div class="dr-tags"><b>פופולרי:</b><button type="button" class="${homeGridTag ? '' : 'on'}" onclick="homeGridSetTag('', this)">הכל</button>${tags.map(t => `<button type="button" class="${homeGridTag === t ? 'on' : ''}" onclick="homeGridSetTag('${artEsc(t)}', this)">${escHtml(t)}</button>`).join('')}</div>
+      <div class="promo-row aside">${promoTrialHTML('row')}${adSlotHTML('row')}</div>
       <label class="hg-sort"><select onchange="homeGridSetSort(this.value)" aria-label="מיון">${[['popular', 'פופולרי'], ['new', 'חדש']].map(([v, l]) => `<option value="${v}"${homeGridSort === v ? ' selected' : ''}>${l}</option>`).join('')}</select><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></label>
     </div>
     <div class="hg-grid">${homeGridCardsHTML()}</div>
@@ -15783,9 +15661,9 @@ window.homeSideToggle = homeSideToggle;
 // מעבירים בחצים, בגרירה/החלקה, במקשי החצים או בלחיצה על כרטיס בצד; לחיצה על הכרטיס האמצעי פותחת אותו
 function homeFlipHTML() {
   const pop = x => (Number(x.likes) || 0) + (typeof photoGetViews === 'function' ? photoGetViews(x.id) : 0);
-  const img = x => ((x.images || []).find(Boolean)) || x.cover || x.image || '';
-  const list = _hgItems.filter(i => img(i.x)).sort((a, b) => pop(b.x) - pop(a.x)).slice(0, 12);   // קרוסלה רק של פריטים עם תמונה
+  const list = _hgItems.slice().sort((a, b) => pop(b.x) - pop(a.x)).slice(0, 12);
   if (list.length < 3) return '';
+  const img = x => ((x.images || []).find(Boolean)) || x.cover || x.image || '';
   setTimeout(() => document.querySelectorAll('.hf:not([data-ready])').forEach(sec => { sec.dataset.ready = '1'; homeFlipSet(sec, 0); }), 0);
   const arrow = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="${d}"/></svg>`;
   return `<section class="hf" data-i="0" tabindex="0" aria-label="זפזפ בין התמונות" onkeydown="homeFlipKey(event)">
@@ -15799,27 +15677,22 @@ function homeFlipHTML() {
     <div class="hf-dots">${list.map((_, k) => `<i class="${k ? '' : 'on'}"></i>`).join('')}</div>
   </section>`;
 }
-// מצייר את הקרוסלה במיקום p (יכול להיות שבר — בזמן שהאצבע גוררת, הקלפים זזים איתה)
-function homeFlipPaint(sec, p) {
-  const cards = [...sec.querySelectorAll('.hf-card')], n = cards.length;
-  const near = ((Math.round(p) % n) + n) % n;
+function homeFlipSet(sec, i) {
+  const cards = [...sec.querySelectorAll('.hf-card')];
+  i = (i + cards.length) % cards.length;
+  sec.dataset.i = i;
   cards.forEach((c, k) => {
-    let d = (((k - p) % n) + n) % n;
-    if (d > n / 2) d -= n;
+    let d = k - i;
+    if (d > cards.length / 2) d -= cards.length;
+    if (d < -cards.length / 2) d += cards.length;
     const a = Math.abs(d);
-    c.style.transform = `translateX(${-d * 52}%) scale(${Math.max(.6, 1 - a * .17)})`;
-    c.style.zIndex = Math.round(20 - a * 2);
-    c.style.opacity = Math.min(1, Math.max(0, 3 - a));
-    c.classList.toggle('on', k === near);
+    c.style.transform = `translateX(${-d * 52}%) scale(${a ? Math.max(.6, 1 - a * .17) : 1})`;
+    c.style.zIndex = 20 - a;
+    c.style.opacity = a > 2 ? 0 : 1;
+    c.classList.toggle('on', !d);
     c.classList.toggle('far', a > 2);
   });
-  sec.querySelectorAll('.hf-dots i').forEach((dot, k) => dot.classList.toggle('on', k === near));
-}
-function homeFlipSet(sec, i) {
-  const n = sec.querySelectorAll('.hf-card').length;
-  i = (i + n) % n;
-  sec.dataset.i = i;
-  homeFlipPaint(sec, i);
+  sec.querySelectorAll('.hf-dots i').forEach((dot, k) => dot.classList.toggle('on', k === i));
 }
 function homeFlipGo(btn, step) { const sec = btn.closest('.hf'); homeFlipSet(sec, Number(sec.dataset.i) + step); }
 function homeFlipOpen(card) {
@@ -15836,56 +15709,15 @@ function homeFlipKey(e) {
   if (e.key === 'ArrowLeft') { e.preventDefault(); homeFlipSet(sec, Number(sec.dataset.i) + 1); }
   if (e.key === 'ArrowRight') { e.preventDefault(); homeFlipSet(sec, Number(sec.dataset.i) - 1); }
 }
-// החלקה באצבע / גרירה בעכבר: הקלפים זזים עם היד. שמאלה — לבא, ימינה — לקודם (כמו בעברית)
+// גרירה/החלקה: שמאלה — לבא, ימינה — לקודם (כמו בעברית)
 (function homeFlipDrag() {
-  let sec = null, x0 = 0, y0 = 0, dx = 0, live = false;
-  const pos = () => {
-    const card = sec.querySelector('.hf-card');
-    return Number(sec.dataset.i) - dx / ((card ? card.offsetWidth : 300) * .52 || 1);
-  };
-  const end = commit => {
+  let sec = null, x0 = 0;
+  document.addEventListener('pointerdown', e => { const s = e.target.closest && e.target.closest('.hf'); if (!s || e.target.closest('.hf-nav, .hf-plus')) return; sec = s; x0 = e.clientX; sec.dataset.dragged = '0'; });
+  document.addEventListener('pointerup', e => {
     if (!sec) return;
-    const s = sec, start = Number(s.dataset.i);
-    if (live) {
-      s.classList.remove('hf-dragging');
-      let to = start;
-      if (commit) { to = Math.round(pos()); if (to === start && Math.abs(dx) > 40) to = start + (dx < 0 ? 1 : -1); }
-      homeFlipSet(s, to);
-      s.dataset.dragged = '1';   // הלחיצה שמגיעה אחרי ההחלקה לא פותחת את הקלף
-      setTimeout(() => { s.dataset.dragged = '0'; }, 400);
-    }
-    sec = null; live = false;
-  };
-  document.addEventListener('pointerdown', e => {
-    const s = e.target.closest && e.target.closest('.hf');
-    if (!s || e.button > 0 || e.target.closest('.hf-nav, .hf-plus')) return;
-    sec = s; x0 = e.clientX; y0 = e.clientY; dx = 0; live = false;
+    const dx = e.clientX - x0;
+    if (Math.abs(dx) > 40) { sec.dataset.dragged = '1'; homeFlipSet(sec, Number(sec.dataset.i) + (dx < 0 ? 1 : -1)); setTimeout(() => { if (sec) sec.dataset.dragged = '0'; sec = null; }, 0); } else sec = null;
   });
-  document.addEventListener('pointermove', e => {
-    if (!sec) return;
-    dx = e.clientX - x0;
-    const dy = e.clientY - y0;
-    if (!live) {
-      if (Math.abs(dy) > 10 && Math.abs(dy) > Math.abs(dx)) { sec = null; return; }   // גלילה של הדף למטה
-      if (Math.abs(dx) < 8) return;
-      live = true;
-      sec.classList.add('hf-dragging');
-      try { sec.setPointerCapture(e.pointerId); } catch (err) {}
-    }
-    homeFlipPaint(sec, pos());
-  });
-  document.addEventListener('pointerup', () => end(true));
-  document.addEventListener('pointercancel', () => end(false));
-  // משטח מגע במחשב: החלקה לצדדים בשתי אצבעות
-  let acc = 0, lock = 0;
-  document.addEventListener('wheel', e => {
-    const s = e.target.closest && e.target.closest('.hf');
-    if (!s || Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
-    e.preventDefault();
-    if (Date.now() < lock) return;
-    acc += e.deltaX;
-    if (Math.abs(acc) > 60) { homeFlipSet(s, Number(s.dataset.i) + (acc > 0 ? 1 : -1)); acc = 0; lock = Date.now() + 380; }
-  }, { passive: false });
 })();
 Object.assign(window, { homeFlipGo, homeFlipClick, homeFlipKey, homeFlipOpen });
 function homeGridSetSort(v) {
@@ -15894,93 +15726,6 @@ function homeGridSetSort(v) {
   if (g) g.innerHTML = homeGridCardsHTML();
 }
 window.homeGridSetSort = homeGridSetSort;
-function homeGridSetTag(t, btn) {
-  homeGridTag = t;
-  btn.parentElement.querySelectorAll('button').forEach(b => b.classList.toggle('on', b === btn));
-  const g = document.querySelector('.home-feed-page .hg-grid');
-  if (g) g.innerHTML = homeGridCardsHTML();
-}
-// המילה המתחלפת בכותרת הראשית של דף הבית
-let homeHeroTimer = null;
-function homeHeroRotate() {
-  if (homeHeroTimer || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
-  const words = ['תמונות', 'סיפורים', 'קומיקס', 'מוצרים'];
-  let i = 0;
-  homeHeroTimer = setInterval(() => {
-    const el = document.getElementById('dr-word');
-    if (!el) return;
-    i = (i + 1) % words.length;
-    el.classList.remove('in'); void el.offsetWidth; el.textContent = words[i]; el.classList.add('in');
-  }, 2600);
-}
-function homeHeroSearch(form) {
-  const q = form.querySelector('input').value.trim();
-  openSiteSearch();
-  const inp = document.getElementById('site-search-input');
-  if (inp && q) { inp.value = q; siteSearchRender(q); }
-}
-Object.assign(window, { homeGridSetTag, homeHeroSearch });
-// כותרת בסגנון Dribbble: לוגו, תפריטים נפתחים וכניסה. כל מה שהיה בסרגל הצד, בלשוניות ובאייקונים עובר לתפריטים
-(function drHeader() {
-  if (!document.documentElement.classList.contains('dr-full')) return;
-  const chev = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
-  const MENUS = [
-    ['גלישה', [['בשבילך', 'goToHomePage()'], ['במעקב', 'openFeed()'], ['תמונות גולשים', "homeGo('photos')"], ['קומיקס', "homeGo('comics')"], ['סיפורים', "homeGo('stories')"]]],
-    ['השוק', [['הכל', "mktGo('all')"], ['יד 2', "mktGo('used')"], ['השכרת ציוד', "mktGo('rent')"], ['שטח לאחסון', "mktGo('store')"], ['החנות', "navigateToPage('page-products-main')"]]],
-    ['קהילה', [['קהילות', "navigateToPage('page-communities-main')"], ['פורומים', "navigateToPage('page-forums-main')"], ['חדשות', "navigateToPage('page-news-main')"], ['רעיונות', "navigateToPage('page-ideas-main')"], ['AI ותוכנה', "navigateToPage('page-ai')"]]],
-    ['עוד', [['פרסום מהיר', 'openQuickPublish()'], ['צ׳אט', "document.getElementById('global-chat-fab').click()"], ['הודעות', "document.getElementById('dm-pill').click()"], ['מנוי ושדרוגים', "navigateToPage('page-subscription-main')"], ['תמכו / השקיעו בנו', "investOpen('invest')"], ['שליחת ביקורת', 'feedbackOpen()']]]
-  ];
-  const build = () => {
-    const hdr = document.querySelector('header.apple-nav .apple-nav-content');
-    const ri = hdr && hdr.querySelector('.right-icons');
-    if (!ri || hdr.querySelector('.dr-nav')) return;
-    const nav = document.createElement('nav');
-    nav.className = 'dr-nav'; nav.setAttribute('aria-label', 'ניווט ראשי');
-    nav.innerHTML = MENUS.map(([name, items]) => `<div class="dr-nav-i"><button type="button" aria-haspopup="true">${name}${chev}</button><div class="dr-menu">${items.map(([t, f]) => `<button type="button" onclick="${f.replace(/"/g, '&quot;')}">${t}</button>`).join('')}</div></div>`).join('');
-    hdr.insertBefore(nav, ri);
-    // האייקונים עוברים לתפריט "עוד" (הפעולות שלהם נשארות כמו שהן)
-    const tools = document.createElement('div');
-    tools.className = 'dr-tools';
-    ['theme-toggle-btn', 'header-likes-btn', 'header-history-btn', 'offers-btn', 'battery-task-btn', 'header-lang-btn'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) { if (!el.title && el.getAttribute('aria-label')) el.title = el.getAttribute('aria-label'); tools.appendChild(el); }
-    });
-    const ask = ri.querySelector('.ask-hdr-btn'); if (ask) tools.appendChild(ask);
-    nav.lastElementChild.querySelector('.dr-menu').appendChild(tools);
-    nav.addEventListener('click', e => {
-      const i = e.target.closest('.dr-menu button') && e.target.closest('.dr-nav-i');
-      if (i) { i.classList.add('dr-shut'); if (document.activeElement) document.activeElement.blur(); setTimeout(() => i.classList.remove('dr-shut'), 350); }
-    });
-    // אורח: "הרשמה" ו"כניסה", כמו בכותרת של האתר
-    const mg = document.getElementById('manager-btn');
-    if (mg) {
-      const sign = document.createElement('button');
-      sign.type = 'button'; sign.className = 'dr-signup'; sign.textContent = 'הרשמה';
-      sign.onclick = () => { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); };
-      mg.parentNode.insertBefore(sign, mg);
-      const sync = () => document.documentElement.classList.toggle('dr-guest', mg.textContent.trim() === 'אורח');
-      new MutationObserver(sync).observe(mg, { childList: true, characterData: true, subtree: true });
-      sync();
-    }
-  };
-  // חיפוש בכותרת: בדף הבית רק אחרי שגוללים מעבר לחיפוש הגדול
-  let raf = 0;
-  const place = () => {
-    raf = 0;
-    const big = document.querySelector('.dr-search'), hdr = document.querySelector('header.apple-nav');
-    const top = !!big && !!hdr && big.offsetParent !== null && big.getBoundingClientRect().bottom > hdr.getBoundingClientRect().bottom;
-    document.documentElement.classList.toggle('dr-search-big', top);
-  };
-  const queue = () => { if (!raf) raf = requestAnimationFrame(place); };
-  document.addEventListener('scroll', queue, { capture: true, passive: true });
-  const start = () => {
-    build();
-    const mc = document.getElementById('mainContent');
-    if (mc) new MutationObserver(queue).observe(mc, { childList: true, subtree: false });
-    queue(); setTimeout(() => { build(); queue(); }, 1500);
-  };
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
-})();
 function buildHomeFeedPage() {
   const all = (typeof getAllStoriesFromPages === 'function') ? getAllStoriesFromPages() : [];
   let comics = all.filter(s => s && s.__kind !== 'stories');
@@ -20505,7 +20250,6 @@ function toggleNotifications(e) {
   const panel = document.getElementById('notif-panel');
   if (!panel) return;
   if (panel.style.display === 'block') { panel.style.display = 'none'; return; }
-  const op = document.getElementById('ofp-panel'); if (op && op.classList.contains('ofp-drop')) op.remove();   // רק חלונית אחת פתוחה
   if (auth.currentUser && typeof subscribeMyDMs === 'function') subscribeMyDMs();
   panel.innerHTML = `<div class="notif-head">🔔 התראות</div><div class="notif-list">${notificationsHTML()}</div>`;
   panel.style.display = 'block';
@@ -23550,7 +23294,6 @@ onPublicSiteValue((data) => {
       // אם ההבדל היחיד הוא מוני לייקים — מעדכנים את הנתונים והמספרים במסך בלי לבנות את העמוד מחדש (בלי קפיצות ובלי תקיעה)
       const onlyLikes = (() => { try { const cur = JSON.parse(JSON.stringify(pages)); applyItemLikesToPages(cur, data.item_likes); return JSON.stringify(cur) === JSON.stringify(pList); } catch (e) { return false; } })();
       pages = pList;
-      try { localforage.setItem('mySitePages_v3', pages); } catch (e) {}   // גם כשהנתונים הגיעו באיחור המטמון מתעדכן
       if (onlyLikes) { try { likeCountsPaint(data.item_likes); } catch (e) {} }
       else changed = true;
     }
@@ -23748,7 +23491,7 @@ function subscribeIdeas() {
   onValue(ref(db, 'website/ideas'), (snap) => {
     const val = snap.val();
     if (!val || !Object.keys(val).length) {
-      if (!CONTENT_HIDDEN) IDEAS_SAMPLES.forEach(item => {
+      IDEAS_SAMPLES.forEach(item => {
         set(ref(db, `website/ideas/${item.id}`), item);
       });
       ideasData = {};
@@ -29020,9 +28763,10 @@ function openPriceOffer(id, title, sellerUid, sellerName) {
   m.innerHTML = `<div class="rp-card" role="dialog" aria-label="הצעת מחיר">
       <div class="rp-head"><b>הצעת מחיר</b><button type="button" class="fo-panel-x" onclick="closePriceOffer()" aria-label="סגירה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
       ${title ? `<div class="rp-item">${escHtml(title)}</div>` : ''}
-      <div class="of-bal"><span>ההצעה שלך${ask ? `<small>המחיר המבוקש ₪${ask.toLocaleString('he-IL')}</small>` : ''}</span><label class="of-price"><span>₪</span><input id="offer-price" type="number" inputmode="numeric" min="1" max="10000000" value="${def}" aria-label="סכום ההצעה" oninput="offerSlideSync(this.value)"></label></div>
-      <div class="of-slide"><input id="offer-range" type="range" min="${lo}" max="${hi}" step="${step}" value="${def}" style="--p:${Math.round((def - lo) / (hi - lo) * 100)}%" oninput="offerSlide(this.value)" aria-label="סכום ההצעה">
+      ${ask ? `<div class="of-ask">המחיר המבוקש: <b>₪${ask.toLocaleString('he-IL')}</b></div>` : ''}
+      <div class="of-slide"><input id="offer-range" type="range" min="${lo}" max="${hi}" step="${step}" value="${def}" oninput="offerSlide(this.value)" aria-label="סכום ההצעה">
         <div class="of-slide-l"><span>₪${lo.toLocaleString('he-IL')}</span><b id="offer-pct">${ask ? Math.round(def / ask * 100) + '% מהמבוקש' : ''}</b><span>₪${hi.toLocaleString('he-IL')}</span></div></div>
+      <label class="of-price"><span>₪</span><input id="offer-price" type="number" inputmode="numeric" min="1" max="10000000" value="${def}" placeholder="כמה תרצו להציע?" oninput="offerSlideSync(this.value)"></label>
       <textarea id="offer-note" class="rp-note" rows="2" maxlength="300" placeholder="הודעה למוכר (לא חובה)"></textarea>
       <div class="rp-actions"><button type="button" class="pf-btn" onclick="closePriceOffer()">ביטול</button><button type="button" class="pf-btn rp-send" onclick="sendPriceOffer('${artEsc(title)}', '${artEsc(sellerUid)}', '${artEsc(sellerName)}')">שליחת ההצעה</button></div>
     </div>`;
@@ -29040,8 +28784,7 @@ function offerSlideSync(v) {
   offerPct(v);
 }
 function offerPct(v) {
-  const el = document.getElementById('offer-pct'), ask = window.__offerAsk, r = document.getElementById('offer-range');
-  if (r) r.style.setProperty('--p', Math.min(100, Math.max(0, (Number(r.value) - Number(r.min)) / (Number(r.max) - Number(r.min)) * 100)) + '%');
+  const el = document.getElementById('offer-pct'), ask = window.__offerAsk;
   if (el && ask) el.textContent = Math.round(Number(v) / ask * 100) + '% מהמבוקש';
 }
 function closePriceOffer() { const m = document.getElementById('offer-modal'); if (m) m.remove(); }
@@ -29454,28 +29197,12 @@ function offerCounterSend(id) {
   closePriceOffer();
   offerUpdate(id, 'counter', price, note);
 }
-// הצעות נפתחות כמו ההתראות: חלונית קטנה שיורדת מתחת לכותרת (לחיצה נוספת או לחיצה בחוץ סוגרת)
-async function openOffersPanel(e) {
-  if (e && e.stopPropagation) e.stopPropagation();
-  const cur = document.getElementById('ofp-panel');
-  if (e && cur && cur.classList.contains('ofp-drop')) { cur.remove(); return; }
+async function openOffersPanel() {
   if (!auth.currentUser) { const ok = (typeof ensureGuestSignedIn === 'function') ? await ensureGuestSignedIn() : false; if (!ok) { openLiveChatLogin(); return; } }
   offersSubscribe();
-  closeSidePanels();
-  if (cur) cur.remove();
-  const np = document.getElementById('notif-panel'); if (np) np.style.display = 'none';
-  const p = document.createElement('div');
-  p.id = 'ofp-panel'; p.className = 'notif-panel ofp-drop'; p.style.display = 'block'; p.dataset.t = Date.now();
-  p.innerHTML = `<div class="notif-head">הצעות</div><div class="fo-panel-body ofp-drop-body">${ofpListHTML()}</div>`;
-  document.body.appendChild(p);
+  closeSidePanels('ofp-panel');
+  openSidePanel('ofp-panel', 'הצעות', ofpListHTML(), '');
 }
-// סגירה בלחיצה בחוץ — בשלב הלכידה, כי לחיצות על תמונות מטושטשות נעצרות לפני שמגיעות למסמך
-window.addEventListener('pointerdown', e => {
-  const p = document.getElementById('ofp-panel');
-  if (!p || !p.classList.contains('ofp-drop') || Date.now() - Number(p.dataset.t || 0) < 300) return;
-  const b = document.getElementById('offers-btn');
-  if (!p.contains(e.target) && !(b && b.contains(e.target)) && !e.target.closest('.rp-modal, #m-sheet')) p.remove();
-}, true);
 try { onAuthStateChanged(auth, u => { if (u) setTimeout(offersSubscribe, 300); }); } catch (e) {}
 Object.assign(window, { openOffersPanel, offersSetTab, offerDecide, offerCounter, offerCounterSend });
 
@@ -31028,7 +30755,7 @@ function homeCardHTML(x, kind) {
   const saved = typeof photoIsSavedLocal === 'function' && photoIsSavedLocal(x.id);
   const ic = d => `<svg viewBox="0 0 24 24" fill="currentColor">${d}</svg>`;
   return `<button type="button" class="hr-card" onclick="${open}" title="${escHtml(x.title || '')}">
-    <span class="hr-img${x.isAdult && !adultOk ? ' blur' : ''}">${src ? `<img src="${escHtml(src)}" alt="" loading="lazy">` : `<span class="hr-text"><b>${escHtml(x.title || '')}</b><small>${escHtml(x.summary || '')}</small></span>`}
+    <span class="hr-img${x.isAdult && !adultOk ? ' blur' : ''}">${src ? `<img src="${escHtml(src)}" alt="" loading="lazy">` : ''}
       ${x.category ? `<span class="hr-badge">${escHtml(x.category)}</span>` : ''}
       ${n > 1 ? `<span class="hr-count">${n} תמונות</span>` : ''}
       <span class="hr-hov"><b>${escHtml(x.title || '')}</b><span class="hr-hov-btns">
@@ -31321,7 +31048,7 @@ function likeCountsPaint(likes) {
 
 
 // ============================================================
-// תמונות מטושטשות כברירת מחדל. לחיצה על תמונה חושפת אותה.
+// תמונות מטושטשות כברירת מחדל. כפתור "18+" בכותרת → אישור גיל → התמונות מוצגות והכפתור נעלם (הבחירה נשמרת).
 // אפשר לחזור לטשטוש מתפריט ≡ → הגדרות ופרטיות.
 // ============================================================
 function adultBlurOn() { return document.documentElement.classList.contains('adult-blur'); }
@@ -31346,8 +31073,22 @@ function adultReveal() {
     document.body.appendChild(m);
   }
 }
-// כפתור ה-18+ הוסר מהכותרת: תמונה מטושטשת נחשפת בלחיצה עליה
-function adultBtnSync() {}
+function adultBtnSync() {
+  let b = document.getElementById('adult-btn');
+  if (!b) {
+    const hdr = document.querySelector('header.apple-nav'); if (!hdr) return;
+    b = document.createElement('button');
+    b.id = 'adult-btn'; b.type = 'button'; b.className = 'adult-btn';
+    b.setAttribute('aria-label', 'הצגת תמונות למבוגרים');
+    b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span>18+</span>';
+    b.addEventListener('click', adultReveal);
+    // מחשב: בתוך שורת האייקונים של הכותרת (ליד מצב כהה/חיפוש); מובייל: באמצע הכותרת
+    const pop = document.querySelector('header.apple-nav .right-icons .ri-pop');
+    if (pop && window.matchMedia('(min-width: 769px)').matches) { b.classList.add('in-icons'); pop.prepend(b); }
+    else hdr.appendChild(b);
+  }
+  b.hidden = !adultBlurOn();
+}
 Object.assign(window, { adultReveal, adultBlurSet, adultBlurToggle });
 Object.assign(UI_EN, { 'הצגת תמונות למבוגרים': 'Show adult images', 'אני מעל גיל 18 — הצג': "I'm over 18 — show", 'ביטול': 'Cancel', 'הצגת תמונות 18+': 'Show 18+ images', 'טשטוש תמונות 18+': 'Blur 18+ images' });
 (function () { const go = () => adultBtnSync(); if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go(); setTimeout(go, 1200); })();
@@ -31643,7 +31384,7 @@ function adSlotHTML(where) {
   let raf = 0;
   const place = () => {
     raf = 0;
-    const aside = mq.matches && !root.classList.contains('dr-full') && document.querySelector('.home-feed-page:not(.home-grid) .home-aside, .home-feed-page .hg');
+    const aside = mq.matches && document.querySelector('.home-feed-page:not(.home-grid) .home-aside, .home-feed-page .hg');
     const hdr = document.querySelector('header.apple-nav');
     if (!aside || !hdr) { root.classList.remove('fabs-top'); return; }
     const z = parseFloat(getComputedStyle(document.body).zoom) || 1;
@@ -32069,7 +31810,7 @@ const ASK_FAQ = [
   [/ריפוסט|שיתוף לפרופיל|לשתף/, 'ריפוסט (החץ ↪) משתף פריט לפרופיל שלך — העוקבים שלך יראו אותו. לחיצה ארוכה על החץ מראה מי שיתף.', null],
   [/מי עשה לייק|מי אהב|לייק/, 'לחיצה על הלב נותנת לייק. לחיצה ארוכה על הלב מראה מי עשה לייק.', ['הלייקים שלי', () => openLikesDrawer()]],
   [/שמיר|לשמור|שמורים/, 'לחיצה על הסימנייה שומרת פריט לאחר כך. אפשר לסדר שמורים בתיקיות.', ['השמורים שלי', () => openSavedModal()]],
-  [/18|טשטוש|מטושטש/, 'התמונות מטושטשות, ולחיצה על תמונה חושפת אותה.', null],
+  [/18|טשטוש|מטושטש/, 'התמונות מטושטשות עד שמאשרים גיל 18+ בכפתור שבראש המסך. האישור תקף לביקור הנוכחי.', null],
   [/כהה|בהיר|צבע/, 'מעבר בין מצב כהה לבהיר — באייקון השמש בכותרת, או כאן:', ['החלפת מצב', () => toggleSiteTheme()]],
   [/עוקב|לעקוב|מעקב/, 'לעקוב אחרי יוצר: "עקוב" בפרופיל שלו או בתפריט ⋯ של הפריט. מה שהם מפרסמים מופיע ב"במעקב".', ['הפיד שלי', () => openFeed()]],
   [/הודעה פרטית|לשלוח הודעה|לכתוב ל/, 'הודעה פרטית: בתפריט ⋯ של פריט ← "הודעה", או מחלון ההודעות.', ['ההודעות', () => openMessages()]],
@@ -32546,7 +32287,7 @@ function coPrice(p) { return Math.max(0, parseFloat(String(p.price || '').replac
 function productCheckout(id) { productsSubscribe(); coState = { items: [{ id, qty: 1 }], fromCart: false, ship: 'delivery', step: 'form' }; coRender(); }
 function cartCheckout() { productsSubscribe(); const c = cartGet(); if (!c.length) { showCopyToast('העגלה ריקה'); return; } coState = { items: c.map(x => ({ id: x.id, qty: x.qty })), fromCart: true, ship: 'delivery', step: 'form' }; coRender(); }
 // רק מחירים אמיתיים מהמסד: PRODUCTS_DEFAULT (לפני טעינה) הם בלי מחיר והזמנות נשמרו ב-₪0
-function coLines() { const list = (productsData || []).concat(mktCartItems()); return coState.items.map(x => ({ ...x, p: list.find(p => p.id === x.id) })).filter(x => x.p && coPrice(x.p) > 0); }
+function coLines() { const list = productsData || []; return coState.items.map(x => ({ ...x, p: list.find(p => p.id === x.id) })).filter(x => x.p && coPrice(x.p) > 0); }
 function coTotals() {
   const lines = coLines();
   const sub = lines.reduce((a, l) => a + coPrice(l.p) * l.qty, 0), ship = coState.ship === 'delivery' ? 25 : 0;
@@ -32732,55 +32473,28 @@ function mediaNeedsLoad() { return true; }
 // ============================================================
 // עגלת קניות (בדפדפן של הגולש) + כפתור עגלה בשורה העליונה
 // ============================================================
-// מוצרי הדוגמה בשוק נכנסים לעגלה כמו מוצרים רגילים. מודעה אמיתית של גולש ממשיכה בפנייה למוכר, כי התשלום כאן עוד הדגמה
-function mktBuyable(r) { return !!r && !!r.demo && !r.shId && coPrice(r) > 0 && !['החלפה', 'השאלה'].includes(r.offer); }
-function mktCartItems() {
-  if (typeof mktAll !== 'function') return [];
-  return mktAll().filter(mktBuyable).map(r => ({ id: 'mkt_' + r.id, name: r.title, price: r.price, image: r.img || (r.images || [])[0] || '', unit: (RENT_UNITS[r.unit] || '') }));
-}
-function cartCatalog() { return productsList().concat(mktCartItems()); }
-function mktCartAdd(id, qty) {
-  const key = 'mkt_' + id, c = cartGet(), it = c.find(x => x.id === key), n = Math.max(1, Math.round(Number(qty) || 1));
-  if (it) it.qty = Math.min(30, it.qty + n); else c.push({ id: key, qty: n });
-  cartSet(c);
-  const p = cartCatalog().find(x => x.id === key);
-  glassBanner({ title: 'נוסף לעגלה', sub: p ? p.name : '', icon: 'ok', btn: 'לעגלה', onBtn: () => cartOpen() });
-}
-window.mktCartAdd = mktCartAdd;
 function cartGet() { try { return (JSON.parse(localStorage.getItem('bw_cart') || '[]') || []).filter(x => x && x.id && x.qty > 0); } catch (e) { return []; } }
 function cartSet(c) { try { localStorage.setItem('bw_cart', JSON.stringify(c)); } catch (e) {} cartBadge(); if (document.getElementById('cart-panel')) cartRender(); }
 function cartAdd(id) {
   const c = cartGet(); const it = c.find(x => x.id === id);
   if (it) it.qty = Math.min(10, it.qty + 1); else c.push({ id, qty: 1 });
   cartSet(c);
-  const p = cartCatalog().find(x => x.id === id);
+  const p = productsList().find(x => x.id === id);
   glassBanner({ title: 'נוסף לעגלה', sub: p ? p.name : '', icon: 'ok', btn: 'לעגלה', onBtn: () => cartOpen() });
 }
 function cartQty(id, d) { const c = cartGet(); const it = c.find(x => x.id === id); if (!it) return; it.qty += d; cartSet(it.qty > 0 ? c : c.filter(x => x.id !== id)); }
 function cartCount() { return cartGet().reduce((a, x) => a + x.qty, 0); }
-function cartBadge() {
-  const n = cartCount();
-  document.querySelectorAll('.cart-hdr-n').forEach(b => { b.textContent = n || ''; b.hidden = !n; });
-  // בטלפון אין אייקון עגלה בכותרת: כפתור צף כשיש פריטים בעגלה
-  let f = document.getElementById('cart-fab');
-  if (!f && n) {
-    f = document.createElement('button');
-    f.id = 'cart-fab'; f.type = 'button'; f.setAttribute('onclick', 'cartOpen()'); f.setAttribute('aria-label', 'העגלה שלי');
-    f.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M3 4h2l2.6 12h11l2-8H6"/></svg><b></b>';
-    document.body.appendChild(f);
-  }
-  if (f) { f.hidden = !n; f.querySelector('b').textContent = n; }
-}
+function cartBadge() { const n = cartCount(); document.querySelectorAll('.cart-hdr-n').forEach(b => { b.textContent = n || ''; b.hidden = !n; }); }
 function cartRender() {
   const box = document.getElementById('cart-panel'); if (!box) return;
-  const list = cartCatalog(); const c = cartGet();
+  const list = productsList(); const c = cartGet();
   const lines = c.map(x => ({ ...x, p: list.find(p => p.id === x.id) })).filter(x => x.p);
   const sub = lines.reduce((a, l) => a + coPrice(l.p) * l.qty, 0);
   box.querySelector('.cart-body').innerHTML = lines.length ? lines.map(l => `<div class="cart-row">
       <span class="cart-th">${l.p.image ? `<img src="${escHtml(l.p.image)}" alt="">` : PRODUCT_ICON}</span>
-      <span class="cart-tx"><b>${escHtml(l.p.name || '')}</b><small>${coMoney(coPrice(l.p))}${l.p.unit ? ' ' + escHtml(l.p.unit) : ''}</small></span>
+      <span class="cart-tx"><b>${escHtml(l.p.name || '')}</b><small>${coMoney(coPrice(l.p))}</small></span>
       <span class="co-step"><button type="button" onclick="cartQty('${artEsc(l.id)}',-1)" aria-label="פחות">−</button><b>${l.qty}</b><button type="button" onclick="cartQty('${artEsc(l.id)}',1)" aria-label="יותר">+</button></span>
-    </div>`).join('') : `<div class="cart-empty">העגלה ריקה<br><button type="button" class="ms-btn" onclick="cartClose(); mktGo('all')">לשוק</button></div>`;
+    </div>`).join('') : `<div class="cart-empty">העגלה ריקה<br><button type="button" class="ms-btn" onclick="cartClose(); navigateToPage('page-products-main')">לחנות</button></div>`;
   box.querySelector('.cart-foot').innerHTML = lines.length ? `<div class="co-line co-total"><span>סה״כ (לפני משלוח)</span><span>${coMoney(sub)}</span></div><button type="button" class="ms-btn" onclick="cartClose(); cartCheckout()">לתשלום</button>` : '';
 }
 function cartOpen() {
@@ -33038,7 +32752,6 @@ Object.assign(window, { aiMcpTab, aiCopyText, AI_CONFIG_URL, aiDownload, aiSetMo
 // ============================================================
 async function sha256Hex(t) { const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t)); return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join(''); }
 async function orderSaveRemote(o) {
-  if (CONTENT_HIDDEN || o.items.every(i => String(i.id).startsWith('mkt_'))) return;   // קנייה של מוצרי דוגמה לא נשמרת במסד
   try {
     if (!auth.currentUser && typeof ensureGuestSignedIn === 'function') await ensureGuestSignedIn();
     const u = auth.currentUser; if (!u) return;
@@ -33315,7 +33028,6 @@ const USED_DEMO = [
   { id: 'u4', offer: 'השאלה', img: 'rent/u-bike.jpg', title: 'אופני עיר להשאלה לשבוע–חודש', price: 60, unit: 'month', city: 'תל אביב', owner: 'נטע קפלן', t: -80, desc: 'אופני עיר קלים ונוחים, עם מנעול. מתאים למי שמגיע לעיר לתקופה קצרה.', specs: ['כולל מנעול', 'פיקדון ₪300', 'תחזוקה כלולה'] }
 ].map(r => Object.assign({ demo: true, kind: 'used' }, r, { t: Date.now() + r.t * 3600e3 }));
 // מוצרי יד 2 אמיתיים — מגיעים מעמוד "מוצרי גולשים" (נשמרים בתוכן העמוד)
-const mktNoImg = list => CONTENT_HIDDEN ? list.map(r => Object.assign({}, r, { img: '', images: [] })) : list;
 function usedAll() {
   let raw = [];
   try {
@@ -33326,7 +33038,7 @@ function usedAll() {
     unitTxt: x.priceUnit || '', city: x.region || '', owner: x.author || '', uid: x.authorId || '', t: Number(x.createdAt) || 0, img: x.image || (Array.isArray(x.images) && x.images[0]) || '',
     raw: x, images: (Array.isArray(x.images) ? x.images : []).filter(Boolean), desc: String(x.summary || x.body || '').trim(),
     specs: [x.loanPeriod ? 'תקופת השאלה: ' + x.loanPeriod : ''].concat(Array.isArray(x.loanTerms) ? x.loanTerms.filter(v => typeof v === 'string') : []).filter(Boolean).slice(0, 8) }));
-  return mktNoImg(real.concat(real.length < 6 ? USED_DEMO : []));
+  return real.concat(real.length < 6 ? USED_DEMO : []);
 }
 function mktAll() { return rentAll().concat(usedAll()); }
 function mktGo(sec) {
@@ -33418,7 +33130,7 @@ function rentSubscribe() {
 function rentAll() {
   const real = rentData || [];
   const demo = RENT_DEMO.filter(d => !real.some(r => r.cat === d.cat));
-  return mktNoImg(real.concat(demo));
+  return real.concat(demo);
 }
 function rentCatOf(id) { return RENT_CATS.find(c => c.id === id) || RENT_CATS[RENT_CATS.length - 1]; }
 function rentPriceTxt(r) {
@@ -33450,7 +33162,7 @@ function rentTileHTML(r) {
     <span class="rn-tile-img">${rentThumb(r)}${r.demo ? '<em class="rn-demo">דוגמה</em>' : ''}</span>
     <b class="rn-tile-t">${escHtml(r.title)}</b>
     <span class="rn-tile-d">${escHtml([tag, r.city].filter(Boolean).join(' · '))}</span>
-    <span class="rn-tile-f"><span class="rn-tile-p">${rentPriceTxt(r)}</span><span class="rn-tile-plus"${mktBuyable(r) ? ` role="button" aria-label="הוספה לעגלה" title="הוספה לעגלה" onclick="event.stopPropagation(); mktCartAdd('${artEsc(r.id)}', ${rentMin(r)})"` : ' aria-hidden="true"'}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 6v12M6 12h12"/></svg></span></span>
+    <span class="rn-tile-f"><span class="rn-tile-p">${rentPriceTxt(r)}</span><span class="rn-tile-plus" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 6v12M6 12h12"/></svg></span></span>
   </button>`;
 }
 function rentShelvesHTML(l) {
@@ -33618,7 +33330,7 @@ function rentDetailHTML(r) {
         ${r.shId ? '' : `<textarea id="rn-note" class="pd-note-in" maxlength="250" rows="2" placeholder="${r.kind === 'used' ? 'היי, המוצר עדיין זמין? מתי אפשר לבוא לראות?' : 'מה רוצים לעשות, ומתי נוח לכם?'}"></textarea>`}
         <div class="pd-act">
           <button type="button" class="rn-ask pd-sec" onclick="${ask}">${r.shId ? 'הודעה למוכר' : 'שאלה למפרסם'}</button>
-          ${mktBuyable(r) ? `<button type="button" class="rn-go pd-main" onclick="mktCartAdd('${artEsc(r.id)}', (document.getElementById('rn-qty') || {}).value || 1)">הוספה לעגלה</button>` : `<button type="button" class="rn-go pd-main" onclick="${main[0]}">${main[1]}</button>`}
+          <button type="button" class="rn-go pd-main" onclick="${main[0]}">${main[1]}</button>
         </div>
         <div class="pd-rows">
           <button type="button" class="pd-row" onclick="${r.city ? `rentSet('city', '${artEsc(r.city)}')` : `mktGo('${sec}')`}"><span><b>${r.city ? 'איסוף ב' + escHtml(r.city) : 'מיקום בתיאום'}</b><small>${r.kind === 'used' ? 'מתאמים ישירות עם המוכר/ת' : 'עמלת שירות ' + Math.round(RENT_SITE_FEE * 100) + '% לאתר'}</small></span>${chev}</button>
