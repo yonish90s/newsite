@@ -15860,9 +15860,22 @@ function homeChipsHTML(photos, comics, stories, active, extraCls) {
   if (!tabs.includes(active) && HOME_TABS_ALL[active]) tabs.push(active);
   // מחוץ לעמוד הבית "בשבילך" מחזיר לבית
   const act = k => k === 'foryou' ? (extraCls ? 'goToHomePage()' : '') : HOME_TABS_ALL[k][1];
+  const ICON = { foryou: ['#ea4c89', '<path d="M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6-5.4-3-5.4 3 1.2-6-4.5-4.2 6.1-.7z"/>'],
+    feed: ['#2563eb', '<circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16 5a3.5 3.5 0 0 1 0 6.500M18 14.500c2 .8 3 2.8 3 5.5"/>'],
+    photos: ['#0d9488', '<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 9"/>'],
+    comics: ['#f97316', '<path d="M4 5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-8l-5 4v-4a2 2 0 0 1-1-2z"/><path d="M8 8h8M8 11h5"/>'],
+    stories: ['#7c3aed', '<path d="M4 5.500A2.5 2.5 0 0 1 6.5 3H20v15H6.500A2.5 2.5 0 0 0 4 20.500z"/><path d="M4 20.500A2.5 2.5 0 0 0 6.5 21H20v-3"/>'],
+    secondhand: ['#16a34a', '<path d="M6 8h12l-1 13H7z"/><path d="M9 8a3 3 0 0 1 6 0"/>'],
+    forums: ['#0284c7', '<path d="M21 12a8 8 0 0 1-8 8H4l2.2-2.600A8 8 0 1 1 21 12z"/>'],
+    news: ['#dc2626', '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h10M7 13h10M7 17h6"/>'],
+    communities: ['#db2777', '<circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/>'],
+    ai: ['#4f46e5', '<rect x="5" y="7" width="14" height="12" rx="3"/><path d="M12 3v4M9 12h.01M15 12h.01M9 16h6"/>'] };
+  const arrow = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="${d}"/></svg>`;
+  const scroll = dir => `event.stopPropagation(); this.parentElement.querySelector('.hxc-track').scrollBy({ left: ${dir}, behavior: 'smooth' })`;
   return `<nav class="hx-tabs${extraCls ? ' ' + extraCls : ''}" aria-label="לשוניות">
-      ${tabs.map(k => `<button type="button" class="hx-tab${k === active ? ' on' : ''}" ${act(k) ? `onclick="${act(k)}"` : ''}>${escHtml(HOME_TABS_ALL[k][0])}</button>`).join('')}
-            <button type="button" class="hx-more" onclick="event.stopPropagation(); this.parentElement.scrollBy({ left: -160, behavior: 'smooth' })" aria-label="עוד לשוניות"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
+      <button type="button" class="hxc-arr hxc-next" onclick="${scroll(280)}" aria-label="הקודם">${arrow('M9 6l6 6-6 6')}</button>
+      <div class="hxc-track">${tabs.map(k => { const ic = ICON[k] || ICON.foryou; return `<button type="button" class="hx-tab${k === active ? ' on' : ''}" ${act(k) ? `onclick="${act(k)}"` : ''}><span class="hxc-ic"><svg viewBox="0 0 24 24" fill="none" style="stroke:${ic[0]}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${ic[1]}</svg></span><span class="hxc-l">${escHtml(HOME_TABS_ALL[k][0])}</span></button>`; }).join('')}</div>
+      <button type="button" class="hxc-arr hxc-prev" onclick="${scroll(-280)}" aria-label="הבא">${arrow('M15 6l-6 6 6 6')}</button>
     </nav>`;
 }
 function homeTabsPicker() {
@@ -30664,7 +30677,7 @@ window.hcDot = hcDot;
   document.addEventListener('touchcancel', end, { passive: true });
 })();
 (function dragScroll() {
-  const SEL = '.hx-tabs, .hx-explore-row, .hc-track, .rec-mini, .pd2-thumbs, .story-page-thumbs';
+  const SEL = '.hxc-track, .hx-explore-row, .hc-track, .rec-mini, .pd2-thumbs, .story-page-thumbs';
   let el = null, x0 = 0, l0 = 0, moved = false;
   document.addEventListener('mousedown', e => {
     if (e.button !== 0) return;
