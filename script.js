@@ -33184,7 +33184,7 @@ function rentTileHTML(r) {
   const owner = r.owner || 'משתמש';
   const author = r.uid ? `cardOpenAuthor('${artEsc(r.uid)}', '${artEsc(owner)}')` : `showCopyToast('למשתמש הזה אין פרופיל באתר')`;
   return `<button type="button" class="rn-tile rn-card" onclick="rentOpen('${id}')">
-    <span class="rn-tile-img">${rentThumb(r)}${r.demo ? '<em class="rn-demo">דוגמה</em>' : ''}
+    <span class="rn-tile-img">${rentThumb(r)}
       <span class="rn-hov"><b>${escHtml(r.title)}</b><span class="rn-hov-btns">
         <span role="button" tabindex="0" aria-label="תגובות" title="תגובות" onclick="${stop}rentOpen('${id}')">${ic(CHAT)}</span>
         <span role="button" tabindex="0" class="${saved ? 'on' : ''}"${r.shId ? ` data-save="${escHtml(r.shId)}"` : ''} aria-label="שמירה" title="שמירה" onclick="${stop}${r.shId ? `photoToggleSave('${sh}')` : demoMsg}">${ic(SAVE)}</span>
@@ -33345,7 +33345,7 @@ function rentDetailHTML(r) {
   return `<nav class="pd-crumb"><button type="button" class="rn-back" onclick="rentBack()" aria-label="חזרה">→</button><a onclick="goToHomePage()">בית</a><i></i><a onclick="mktGo('${sec}')">השוק</a><i></i><a onclick="mktGo('${sec}')">${escHtml(secName)}</a></nav>
     <div class="mp">
       <div class="rn-det-gal mp-gal">
-        <div class="rn-det-img mp-img">${rentThumb(r, true)}${r.demo ? '<em class="rn-demo">דוגמה</em>' : ''}</div>
+        <div class="rn-det-img mp-img">${rentThumb(r, true)}</div>
         ${imgs.length > 1 ? `<div class="mp-thumbs">${imgs.map((u, i) => `<button type="button" class="${i ? '' : 'on'}" onclick="rentDetPick(this)" aria-label="תמונה ${i + 1}"><img src="${escHtml(u)}" alt="" loading="lazy"></button>`).join('')}</div>` : ''}
       </div>
       <div class="mp-info">
