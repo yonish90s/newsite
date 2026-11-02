@@ -33156,13 +33156,29 @@ function rentList() {
 }
 // מחשב: מדפים בסגנון free3d — כותרת קצרה ומתחתיה הרבה תמונות בשורות של 6
 const rentWide = () => { try { return window.matchMedia('(min-width: 1100px)').matches; } catch (e) { return false; } };
+// כרטיס בשוק: תמונה גדולה, בריחוף כותרת ושלושה כפתורים עגולים (תגובות, שמירה, לייק), ומתחת מוכר, מחיר ומונים
 function rentTileHTML(r) {
-  const sec = mktSecOf(r), tag = sec === 'used' ? r.offer : sec === 'store' ? 'אחסון' : 'השכרה';
-  return `<button type="button" class="rn-tile" onclick="rentOpen('${artEsc(r.id)}')">
-    <span class="rn-tile-img">${rentThumb(r)}${r.demo ? '<em class="rn-demo">דוגמה</em>' : ''}</span>
-    <b class="rn-tile-t">${escHtml(r.title)}</b>
-    <span class="rn-tile-d">${escHtml([tag, r.city].filter(Boolean).join(' · '))}</span>
-    <span class="rn-tile-f"><span class="rn-tile-p">${rentPriceTxt(r)}</span><span class="rn-tile-plus" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 6v12M6 12h12"/></svg></span></span>
+  const ic = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+  const CHAT = '<path d="M21 12a8 8 0 0 1-8 8H4l2.2-2.6A8 8 0 1 1 21 12z"/>', SAVE = '<path d="M6 4h12v17l-6-4.5L6 21z"/>', HEART = '<path d="M12 20.5s-8-4.9-8-10.9A4.6 4.6 0 0 1 12 6.6a4.6 4.6 0 0 1 8 3c0 6-8 10.9-8 10.9z"/>', EYE = '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>';
+  const stop = 'event.stopPropagation(); event.preventDefault(); ';
+  const id = artEsc(r.id), sh = r.shId ? artEsc(r.shId) : '';
+  const demoMsg = `showCopyToast('זו מודעת דוגמה')`;
+  const saved = r.shId && typeof photoIsSavedLocal === 'function' && photoIsSavedLocal(r.shId);
+  const liked = r.shId && typeof photoIsLikedLocal === 'function' && photoIsLikedLocal(r.shId);
+  const likes = r.shId ? Number((r.raw || {}).likes) || 0 : 0;
+  const views = r.shId && typeof photoGetViews === 'function' ? photoGetViews(r.shId) : 0;
+  const stats = r.shId ? `<span>${ic(HEART)}${likes}</span><span>${ic(EYE)}${views}</span>` : (r.rating ? `<span>★ ${Number(r.rating).toFixed(1)}</span>` : '');
+  const owner = r.owner || 'משתמש';
+  const author = r.uid ? `cardOpenAuthor('${artEsc(r.uid)}', '${artEsc(owner)}')` : `showCopyToast('למשתמש הזה אין פרופיל באתר')`;
+  return `<button type="button" class="rn-tile rn-card" onclick="rentOpen('${id}')">
+    <span class="rn-tile-img">${rentThumb(r)}${r.demo ? '<em class="rn-demo">דוגמה</em>' : ''}
+      <span class="rn-hov"><b>${escHtml(r.title)}</b><span class="rn-hov-btns">
+        <span role="button" tabindex="0" aria-label="תגובות" title="תגובות" onclick="${stop}rentOpen('${id}')">${ic(CHAT)}</span>
+        <span role="button" tabindex="0" class="${saved ? 'on' : ''}"${r.shId ? ` data-save="${escHtml(r.shId)}"` : ''} aria-label="שמירה" title="שמירה" onclick="${stop}${r.shId ? `photoToggleSave('${sh}')` : demoMsg}">${ic(SAVE)}</span>
+        <span role="button" tabindex="0" class="${liked ? 'on' : ''}"${r.shId ? ` data-like="${escHtml(r.shId)}"` : ''} aria-label="לייק" title="לייק" onclick="${stop}${r.shId ? `photoToggleLike('${sh}')` : demoMsg}">${ic(HEART)}</span>
+      </span></span></span>
+    <b class="rn-card-t">${escHtml(r.title)}</b>
+    <span class="rn-foot"><span class="rn-by" role="button" tabindex="0" title="לפרופיל" onclick="${stop}${author}"><i>${escHtml(owner.trim().charAt(0))}</i><b>${escHtml(owner)}</b></span><em class="rn-badge">${rentPriceTxt(r)}</em><span class="rn-stats">${stats}</span></span>
   </button>`;
 }
 function rentShelvesHTML(l) {
