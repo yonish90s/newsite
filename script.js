@@ -1023,11 +1023,19 @@ function sanitizeToOnlyPhotosAndStories() {
   }
 }
 
+// מטמון של עמודים ריקים (או של תוכן הדוגמה) לא מציגים: הוא היה נותן מסך ריק עד שהנתונים מגיעים
+function pagesCacheUsable(list) {
+  if (!Array.isArray(list) || !list.length) return false;
+  const has = list.some(p => p && String(p.content || '').length > 4096);
+  return has && !list.some(p => p && /demo-(ph|story|comic)\d/.test(String(p.content || '')));
+}
+
 // פונקציית אתחול מהירה (Instant 0ms First Paint)
 async function initSite() {
+  let bootHasCache = false;
   try {
     const savedPages = await localforage.getItem('mySitePages_v3');
-    if (savedPages && savedPages.length) pages = savedPages;
+    if (pagesCacheUsable(savedPages)) { pages = savedPages; bootHasCache = true; }
 
     const savedBackgrounds = await localforage.getItem('mySiteBackgrounds_v3');
     if (savedBackgrounds) siteBackgrounds = savedBackgrounds;
@@ -1051,16 +1059,21 @@ async function initSite() {
   updateFABsVisibility();
   if (typeof trackVisit === 'function') { try { trackVisit(); } catch (e) {} }
 
+  // יש תוכן שמור: מציגים אותו מיד, והנתונים החדשים מתעדכנים ברקע. בלי מטמון מחכים לנתונים מאחורי מסך הטעינה
+  const bootActive = activePageId;
+  if (bootHasCache && typeof window.hidePreloader === 'function') window.hidePreloader();
+
   // סנכרון ברקע מ-Firebase DB
   try {
     const data = await Promise.race([
       fetchPublicSiteData(),
       new Promise((_, reject) => setTimeout(
-        () => reject(new Error('Firebase boot fetch timed out')), 1500
+        () => reject(new Error('Firebase boot fetch timed out')), bootHasCache ? 1500 : 8000
       ))
     ]);
 
     if (Object.keys(data).length) {
+      const pagesBefore = bootHasCache ? JSON.stringify(pages) : '';
       if (data.pages && Array.isArray(data.pages)) { pages = data.pages; mediaHydratePages(pages); applyItemLikesToPages(pages, data.item_likes); }
       if (data.topNavPages && Array.isArray(data.topNavPages)) topNavPages = data.topNavPages;
       if (data.siteBackgrounds) siteBackgrounds = data.siteBackgrounds;
@@ -1081,11 +1094,13 @@ async function initSite() {
         || pages.find(p => p && p.id === 'page-photos-main')
         || pages.find(p => p && p.content && p.content.includes('data-section="photos"'))
         || pages.find(p => p && p.title && p.title.includes('תמונות'));
-      if (bootHomePage) {
+      if (bootHomePage && activePageId === bootActive) {   // גולש שכבר עבר לעמוד אחר נשאר בו
         activePageId = bootHomePage.id;
       }
       
-      localforage.setItem('mySitePages_v3', pages);
+      // אותו תוכן כמו במטמון: לא מציירים מחדש, כדי שהמסך לא יקפוץ
+      const pagesSame = !!pagesBefore && pagesBefore === JSON.stringify(pages);
+      if (!pagesSame) localforage.setItem('mySitePages_v3', pages);
       localforage.setItem('myActivePage_v3', activePageId);
       localforage.setItem('mySiteTopNav_v3', topNavPages);
       localforage.setItem('mySiteBackgrounds_v3', siteBackgrounds);
@@ -1093,7 +1108,7 @@ async function initSite() {
       applyBackgrounds();
       renderSideMenu();
       renderTopNav();
-      renderPage();
+      if (!pagesSame) renderPage();
     }
   } catch(e) {
     console.log('Firebase background sync complete');
@@ -23431,6 +23446,7 @@ onPublicSiteValue((data) => {
       // אם ההבדל היחיד הוא מוני לייקים — מעדכנים את הנתונים והמספרים במסך בלי לבנות את העמוד מחדש (בלי קפיצות ובלי תקיעה)
       const onlyLikes = (() => { try { const cur = JSON.parse(JSON.stringify(pages)); applyItemLikesToPages(cur, data.item_likes); return JSON.stringify(cur) === JSON.stringify(pList); } catch (e) { return false; } })();
       pages = pList;
+      try { localforage.setItem('mySitePages_v3', pages); } catch (e) {}   // גם כשהנתונים הגיעו באיחור המטמון מתעדכן
       if (onlyLikes) { try { likeCountsPaint(data.item_likes); } catch (e) {} }
       else changed = true;
     }
