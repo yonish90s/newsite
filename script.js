@@ -33391,8 +33391,8 @@ function rentDetailHTML(r) {
             <div class="rn-sum" id="rn-sum">${rentSumHTML(c)}</div></div>
         </div>`}
         <div class="mk-cta">
-          <button type="button" class="rn-go mp-main" onclick="${main[0]}">${main[1]}</button>
           <div class="mp-btns mk-acts">
+            ${btn(main[2], main[1], main[0], 'mk-go')}
             ${btn('<path d="M6 4h12v17l-6-4.5L6 21z"/>', 'שמירה', r.shId ? `photoToggleSave('${artEsc(r.shId)}')` : `rentMark(this, 'save', '${artEsc(r.id)}')`, saved ? 'on' : '', r.shId ? ` data-save="${escHtml(r.shId)}"` : '')}
             ${btn('<path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/>', 'אהבתי', r.shId ? `photoToggleLike('${artEsc(r.shId)}')` : `rentMark(this, 'like', '${artEsc(r.id)}')`, liked ? 'on' : '', r.shId ? ` data-like="${escHtml(r.shId)}"` : '')}
             ${r.shId ? btn('<path d="M21 12a8 8 0 0 1-8 8H4l2.2-2.6A8 8 0 1 1 21 12z"/>', 'הודעה למוכר', ask) : ''}
