@@ -33354,7 +33354,7 @@ function rentDetailHTML(r) {
   const ic = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
   const imgs = (r.images || []).length ? r.images : (r.img ? [r.img] : []);
   const saved = r.shId ? typeof photoIsSavedLocal === 'function' && photoIsSavedLocal(r.shId) : rentMarked('save', r.id);
-  const more = mktAll().filter(x => x.id !== r.id && mktSecOf(x) === sec).sort((a, b) => (b.cat === r.cat) - (a.cat === r.cat) || (b.t || 0) - (a.t || 0)).slice(0, 5);
+  const more = mktAll().filter(x => x.id !== r.id && mktSecOf(x) === sec).sort((a, b) => (b.cat === r.cat) - (a.cat === r.cat) || (b.t || 0) - (a.t || 0)).slice(0, 8);
   // הכפתור הראשי: מוצר יד 2 אמיתי — הצעת מחיר; דוגמת יד 2 — פנייה; השכרה/אחסון — בקשה
   const main = r.shId ? [`openPriceOffer('${artEsc(r.shId)}', '${artEsc(r.title || '')}', '${artEsc(r.uid || '')}', '${artEsc(r.owner || '')}')`, 'הצעת מחיר', '<path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.5"/>']
     : r.kind === 'used' ? [`rentRequest('${artEsc(r.id)}')`, r.offer === 'החלפה' ? 'הצעת החלפה' : r.offer === 'השאלה' ? 'בקשת השאלה' : 'פנייה למוכר', '<path d="M21 12a8 8 0 0 1-8 8H4l2.2-2.6A8 8 0 1 1 21 12z"/>']
@@ -33375,7 +33375,11 @@ function rentDetailHTML(r) {
     <div class="mp mk-pg">
       <div class="rn-det-gal mp-gal">
         <div class="rn-det-img mp-img">${rentThumb(r, true)}</div>
-        ${imgs.length > 1 ? `<div class="mp-thumbs">${imgs.map((u, i) => `<button type="button" class="${i ? '' : 'on'}" onclick="rentDetPick(this)" aria-label="תמונה ${i + 1}"><img src="${escHtml(u)}" alt="" loading="lazy"></button>`).join('')}</div>` : ''}
+        ${imgs.length ? `<div class="mk-vthumbs">
+          <button type="button" class="mk-varr" disabled onclick="rentDetStep(this, -1)" aria-label="התמונה הקודמת">${ic('<path d="M6 15l6-6 6 6"/>')}</button>
+          <div class="mp-thumbs">${imgs.map((u, i) => `<button type="button" class="${i ? '' : 'on'}" onclick="rentDetPick(this)" aria-label="תמונה ${i + 1}"><img src="${escHtml(u)}" alt="" loading="lazy"></button>`).join('')}</div>
+          <button type="button" class="mk-varr"${imgs.length > 1 ? '' : ' disabled'} onclick="rentDetStep(this, 1)" aria-label="התמונה הבאה">${ic('<path d="M6 9l6 6 6-6"/>')}</button>
+        </div>` : ''}
       </div>
       <div class="mp-info">
         <span class="mk-cat">${escHtml(r.kind === 'used' ? (r.offer || 'יד 2') : rentCatOf(r.cat).name)}</span>
@@ -33416,8 +33420,8 @@ function rentDetailHTML(r) {
         </div>
         ${terms.length ? `<details class="mp-acc mk-terms"><summary>תקנון ההשאלה · ${terms.length} סעיפים</summary><ol class="pd-terms">${terms.map(x => `<li>${escHtml(x)}</li>`).join('')}</ol></details>` : ''}
       </div>
-      ${more.length ? `<section class="mp-more mk-side"><h2>הצעות נוספות</h2><div class="mp-more-row">${more.map(rentMiniHTML).join('')}</div></section>` : ''}
     </div>
+    ${more.length ? `<section class="mp-more"><h2>הצעות נוספות</h2><div class="rn-tiles mk-grid">${more.map(rentMiniHTML).join('')}</div></section>` : ''}
     <section class="rn-det-cmts pd-reviews mp-comments">${typeof photoCommentsSectionHTML === 'function' ? photoCommentsSectionHTML(rentCommentsKey(r)) : ''}</section>`;
 }
 // ביקורת על המוכר: ממוצע הדירוגים האמיתי מהענן
@@ -33469,6 +33473,16 @@ function rentDetPick(btn) {
   const src = btn.querySelector('img') && btn.querySelector('img').getAttribute('src');
   if (big && src) big.setAttribute('src', src);
   btn.parentElement.querySelectorAll('button').forEach(b => b.classList.toggle('on', b === btn));
+  const v = btn.closest('.mk-vthumbs');
+  if (v) { const a = v.querySelectorAll('.mk-varr'); a[0].disabled = !btn.previousElementSibling; a[1].disabled = !btn.nextElementSibling; }
+}
+// החצים של עמודת התמונות הקטנות: עוברים לתמונה הקודמת או הבאה ודואגים שתיראה ברשימה
+function rentDetStep(arrow, dir) {
+  const list = arrow.parentElement.querySelector('.mp-thumbs'), cur = list.querySelector('.on');
+  const next = cur && (dir > 0 ? cur.nextElementSibling : cur.previousElementSibling);
+  if (!next) return;
+  rentDetPick(next);
+  list.scrollTop = next.offsetTop - list.offsetTop - (list.clientHeight - next.offsetHeight) / 2;
 }
 function rentSumHTML(c) {
   return `<span>שימוש <b>₪${c.sub.toLocaleString('he-IL')}</b></span><span>עמלת שירות <b>₪${c.fee.toLocaleString('he-IL')}</b></span><span class="rn-tot">סה״כ <b>₪${c.total.toLocaleString('he-IL')}</b></span>`;
@@ -33550,7 +33564,7 @@ async function rentPublish(btn) {
     glassBanner({ title: 'הציוד פורסם להשכרה', sub: rec.title, icon: 'ok', ms: 2400 });
   } catch (e) { btn.disabled = false; btn.textContent = 'פרסום'; showCopyToast('הפרסום נכשל — נסו שוב'); }
 }
-Object.assign(window, { mktGo, mktOpenUsed, mktPublish, rentBack, rentIdeaPick, rentDetPick, rentQtyStep, rentMark, buildRentPage, rentSet, rentOpen, rentCalcUpd, rentRequest, rentPublishOpen, rentPickImg, rentPublish });
+Object.assign(window, { mktGo, mktOpenUsed, mktPublish, rentBack, rentIdeaPick, rentDetPick, rentDetStep, rentQtyStep, rentMark, buildRentPage, rentSet, rentOpen, rentCalcUpd, rentRequest, rentPublishOpen, rentPickImg, rentPublish });
 
 // ============================================================
 // תמכו / השקיעו בנו: תרומה בכל סכום, או השקעה לפי שווי חברה ₪100,000 (עד 10% מוצעים).
