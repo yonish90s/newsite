@@ -33353,7 +33353,7 @@ function rentDetailHTML(r) {
   const sec = mktSecOf(r);
   const ic = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
   const imgs = (r.images || []).length ? r.images : (r.img ? [r.img] : []);
-  const saved = r.shId && typeof photoIsSavedLocal === 'function' && photoIsSavedLocal(r.shId);
+  const saved = r.shId ? typeof photoIsSavedLocal === 'function' && photoIsSavedLocal(r.shId) : rentMarked('save', r.id);
   const more = mktAll().filter(x => x.id !== r.id && mktSecOf(x) === sec).sort((a, b) => (b.cat === r.cat) - (a.cat === r.cat) || (b.t || 0) - (a.t || 0)).slice(0, 5);
   // הכפתור הראשי: מוצר יד 2 אמיתי — הצעת מחיר; דוגמת יד 2 — פנייה; השכרה/אחסון — בקשה
   const main = r.shId ? [`openPriceOffer('${artEsc(r.shId)}', '${artEsc(r.title || '')}', '${artEsc(r.uid || '')}', '${artEsc(r.owner || '')}')`, 'הצעת מחיר', '<path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.5"/>']
@@ -33364,8 +33364,7 @@ function rentDetailHTML(r) {
   const secName = MKT_SECS.find(x => x.id === sec).name;
   const short = String(r.desc || '').trim();
   const ask = `dmStartAboutGallery('${artEsc(r.uid || '')}', '${artEsc(r.owner || '')}', '${artEsc(r.shId || '')}')`;
-  const toast = `showCopyToast('זו מודעת דוגמה 🙂')`;
-  const liked = r.shId && typeof photoIsLikedLocal === 'function' && photoIsLikedLocal(r.shId);
+  const liked = r.shId ? typeof photoIsLikedLocal === 'function' && photoIsLikedLocal(r.shId) : rentMarked('like', r.id);
   const email = r.raw && String(r.raw.emailUrl || '').replace(/^mailto:/, '');
   const owner = r.owner || 'מפרסם/ת';
   const specs = (r.specs || []).filter(Boolean).join(' · ');
@@ -33393,10 +33392,10 @@ function rentDetailHTML(r) {
         </div>`}
         <div class="mk-cta">
           <button type="button" class="rn-go mp-main" onclick="${main[0]}">${main[1]}</button>
-          <button type="button" class="mk-go2" onclick="${r.shId ? ask : toast}">${r.shId ? 'הודעה למוכר' : 'שמירה'}</button>
           <div class="mp-btns mk-acts">
-            ${r.shId ? btn('<path d="M6 4h12v17l-6-4.5L6 21z"/>', 'שמירה', `photoToggleSave('${artEsc(r.shId)}')`, saved ? 'on' : '', ` data-save="${escHtml(r.shId)}"`) : ''}
-            ${btn('<path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/>', 'אהבתי', r.shId ? `photoToggleLike('${artEsc(r.shId)}')` : toast, liked ? 'on' : '', r.shId ? ` data-like="${escHtml(r.shId)}"` : '')}
+            ${btn('<path d="M6 4h12v17l-6-4.5L6 21z"/>', 'שמירה', r.shId ? `photoToggleSave('${artEsc(r.shId)}')` : `rentMark(this, 'save', '${artEsc(r.id)}')`, saved ? 'on' : '', r.shId ? ` data-save="${escHtml(r.shId)}"` : '')}
+            ${btn('<path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/>', 'אהבתי', r.shId ? `photoToggleLike('${artEsc(r.shId)}')` : `rentMark(this, 'like', '${artEsc(r.id)}')`, liked ? 'on' : '', r.shId ? ` data-like="${escHtml(r.shId)}"` : '')}
+            ${r.shId ? btn('<path d="M21 12a8 8 0 0 1-8 8H4l2.2-2.6A8 8 0 1 1 21 12z"/>', 'הודעה למוכר', ask) : ''}
             ${btn('<path d="M4 5h16v11H9l-5 4z"/>', 'תגובות', `document.querySelector('.mp-comments').scrollIntoView({ behavior: 'smooth' })`)}
             ${email ? btn('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>', 'מייל', `location.href='mailto:${artEsc(email)}'`) : ''}
             ${btn('<path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M16 7l-4-4-4 4M12 3v12"/>', 'שיתוף', `if(navigator.share){navigator.share({ title: document.title, url: location.href }).catch(function(){});}else{navigator.clipboard.writeText(location.href); showCopyToast('הקישור הועתק');}`)}
@@ -33447,6 +33446,15 @@ function rentFitPage() {
   pg.style.setProperty('--mk-h', Math.max(320, innerWidth > 900 ? Math.min(h, 860) : h) + 'px');
 }
 window.addEventListener('resize', rentFitPage);
+// שמירה ולייק במודעות דוגמה: סימון בדפדפן בלבד, כדי שהאייקון יישאר מלא
+function rentMarks() { try { return JSON.parse(localStorage.getItem('rent_marks') || '{}'); } catch (e) { return {}; } }
+function rentMarked(kind, id) { return !!rentMarks()[kind + ':' + id]; }
+function rentMark(btn, kind, id) {
+  const m = rentMarks(), k = kind + ':' + id;
+  if (m[k]) delete m[k]; else m[k] = 1;
+  try { localStorage.setItem('rent_marks', JSON.stringify(m)); } catch (e) {}
+  btn.classList.toggle('on', !!m[k]);
+}
 // כפתורי הפלוס והמינוס של הכמות בעמוד המודעה
 function rentQtyStep(id, dir) {
   const r = rentFind(id), inp = document.getElementById('rn-qty'), out = document.getElementById('rn-qty-v');
@@ -33542,7 +33550,7 @@ async function rentPublish(btn) {
     glassBanner({ title: 'הציוד פורסם להשכרה', sub: rec.title, icon: 'ok', ms: 2400 });
   } catch (e) { btn.disabled = false; btn.textContent = 'פרסום'; showCopyToast('הפרסום נכשל — נסו שוב'); }
 }
-Object.assign(window, { mktGo, mktOpenUsed, mktPublish, rentBack, rentIdeaPick, rentDetPick, rentQtyStep, buildRentPage, rentSet, rentOpen, rentCalcUpd, rentRequest, rentPublishOpen, rentPickImg, rentPublish });
+Object.assign(window, { mktGo, mktOpenUsed, mktPublish, rentBack, rentIdeaPick, rentDetPick, rentQtyStep, rentMark, buildRentPage, rentSet, rentOpen, rentCalcUpd, rentRequest, rentPublishOpen, rentPickImg, rentPublish });
 
 // ============================================================
 // תמכו / השקיעו בנו: תרומה בכל סכום, או השקעה לפי שווי חברה ₪100,000 (עד 10% מוצעים).
