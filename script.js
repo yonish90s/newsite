@@ -15734,21 +15734,37 @@ window.forumDeletePost = forumDeletePost;
 // כדי לחזור לעיצוב הקודם של דף הבית (שורות + עמודה צדדית) — לשנות ל-false
 const HOME_GRID = true;
 const homeGridOn = () => HOME_GRID;
-let homeGridSort = 'popular', _hgItems = [];
+let homeGridSort = 'popular', homeGridTag = '', _hgItems = [];
 function homeGridCardsHTML() {
   const t = x => Number(x.createdAt) || (typeof photoAlbumTime === 'function' ? photoAlbumTime(x) : 0) || 0;
   const pop = x => (Number(x.likes) || 0) + (typeof photoGetViews === 'function' ? photoGetViews(x.id) : 0);
-  const list = _hgItems.slice().sort((a, b) => homeGridSort === 'new' ? t(b.x) - t(a.x) : pop(b.x) - pop(a.x) || t(b.x) - t(a.x));
+  const list = _hgItems.filter(i => !homeGridTag || i.x.category === homeGridTag).sort((a, b) => homeGridSort === 'new' ? t(b.x) - t(a.x) : pop(b.x) - pop(a.x) || t(b.x) - t(a.x));
   return list.length ? list.map(i => homeCardHTML(i.x, i.kind)).join('') : '<div class="hg-empty">עדיין אין כאן תוכן — היו הראשונים להעלות!</div>';
 }
 function homeGridHTML(photos, comics, stories) {
   const ok = x => x && x.approved !== false && x.id;
   _hgItems = (photos || []).filter(ok).map(x => ({ x, kind: 'photo' }))
     .concat((comics || []).concat(stories || []).filter(ok).map(x => ({ x, kind: 'story' })));
+  const ck = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+  const tags = [...new Set(_hgItems.map(i => i.x.category).filter(Boolean))].slice(0, 8);
+  setTimeout(homeHeroRotate, 0);
   return `<section class="hg">
-    ${homeFlipHTML()}
+    <div class="dr-strip promo-row aside">${promoTrialHTML('row')}${adSlotHTML('row')}</div>
+    <div class="dr-hero">
+      <div class="dr-hero-tx">
+        <div class="dr-switch"><button type="button" class="on" onclick="homeOpenPhotos()">גלישה</button><button type="button" onclick="mktGo('all')">השוק</button></div>
+        <h1 class="dr-h1">הבית של הקהילה ל<span class="dr-word" id="dr-word">תמונות</span></h1>
+        <ul class="dr-list"><li>${ck}מעלים ומשתפים בחינם</li><li>${ck}גולשים בתוכן אמיתי של הקהילה</li><li>${ck}קונים, מוכרים ומשאילים בשוק</li></ul>
+        <button type="button" class="dr-cta" onclick="openQuickPublish()">להעלות עכשיו</button>
+      </div>
+      <div class="dr-hero-vis">${homeFlipHTML()}</div>
+    </div>
+    <form class="dr-search" role="search" onsubmit="event.preventDefault(); homeHeroSearch(this)">
+      <input type="search" placeholder="מה מחפשים היום?" aria-label="חיפוש באתר" autocomplete="off">
+      <button type="submit" aria-label="חיפוש"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button>
+    </form>
     <div class="hg-top">
-      <div class="promo-row aside">${promoTrialHTML('row')}${adSlotHTML('row')}</div>
+      <div class="dr-tags"><b>פופולרי:</b><button type="button" class="${homeGridTag ? '' : 'on'}" onclick="homeGridSetTag('', this)">הכל</button>${tags.map(t => `<button type="button" class="${homeGridTag === t ? 'on' : ''}" onclick="homeGridSetTag('${artEsc(t)}', this)">${escHtml(t)}</button>`).join('')}</div>
       <label class="hg-sort"><select onchange="homeGridSetSort(this.value)" aria-label="מיון">${[['popular', 'פופולרי'], ['new', 'חדש']].map(([v, l]) => `<option value="${v}"${homeGridSort === v ? ' selected' : ''}>${l}</option>`).join('')}</select><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></label>
     </div>
     <div class="hg-grid">${homeGridCardsHTML()}</div>
@@ -15877,6 +15893,32 @@ function homeGridSetSort(v) {
   if (g) g.innerHTML = homeGridCardsHTML();
 }
 window.homeGridSetSort = homeGridSetSort;
+function homeGridSetTag(t, btn) {
+  homeGridTag = t;
+  btn.parentElement.querySelectorAll('button').forEach(b => b.classList.toggle('on', b === btn));
+  const g = document.querySelector('.home-feed-page .hg-grid');
+  if (g) g.innerHTML = homeGridCardsHTML();
+}
+// המילה המתחלפת בכותרת הראשית של דף הבית
+let homeHeroTimer = null;
+function homeHeroRotate() {
+  if (homeHeroTimer || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
+  const words = ['תמונות', 'סיפורים', 'קומיקס', 'מוצרים'];
+  let i = 0;
+  homeHeroTimer = setInterval(() => {
+    const el = document.getElementById('dr-word');
+    if (!el) return;
+    i = (i + 1) % words.length;
+    el.classList.remove('in'); void el.offsetWidth; el.textContent = words[i]; el.classList.add('in');
+  }, 2600);
+}
+function homeHeroSearch(form) {
+  const q = form.querySelector('input').value.trim();
+  openSiteSearch();
+  const inp = document.getElementById('site-search-input');
+  if (inp && q) { inp.value = q; siteSearchRender(q); }
+}
+Object.assign(window, { homeGridSetTag, homeHeroSearch });
 function buildHomeFeedPage() {
   const all = (typeof getAllStoriesFromPages === 'function') ? getAllStoriesFromPages() : [];
   let comics = all.filter(s => s && s.__kind !== 'stories');
