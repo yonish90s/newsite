@@ -15662,6 +15662,7 @@ function homeSideToggle() {
   const d = document.querySelector('.home-feed-page .hg-drawer'); if (!d) return;
   const on = d.classList.toggle('open');
   try { localStorage.setItem('home_side_open', on ? '1' : '0'); } catch (e) {}
+  rentSideSync();
 }
 window.homeSideToggle = homeSideToggle;
 // "זפזפ": קרוסלה של כרטיסים — אחד גדול באמצע והשכנים קטנים מאחוריו (כמו ב-Pinterest ששלח בעל האתר).
@@ -15804,9 +15805,9 @@ function buildHomeFeedPage() {
       ${modBoxHTML()}
       ${homeGridHTML(photos, comics, stories)}
     </div>
-    <div class="hg-drawer${homeSideOpen() ? ' open' : ''}">
+    <div class="hg-drawer${homeSideOpen() && innerWidth > 900 ? ' open' : ''}">
       <button type="button" class="hg-drawer-tab" onclick="homeSideToggle()" aria-label="פתיחה / סגירה של העמודה הצדדית" title="עוד"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
-      ${homeAsideHTML()}
+      ${HOME_MARKET ? '<aside class="mk-fside" aria-label="קטגוריות וסינון"></aside>' : homeAsideHTML()}
     </div>
   </div>`;
   return `<div class="articles-page home-feed-page has-aside" data-page-id="page-home-feed">
@@ -33063,6 +33064,7 @@ function usedAll() {
 function mktAll() { return rentAll().concat(usedAll()); }
 function mktGo(sec) {
   rentUI.sec = sec || 'all'; rentUI.open = null; rentUI.cat = 'all';
+  Object.assign(rentUI, { offer: 'all', owner: 'all', min: null, max: null });
   if (typeof activePageId !== 'undefined' && activePageId === 'page-rent-main' && mainContent && mainContent.querySelector('.rent-page')) { rentRender(); try { window.scrollTo({ top: 0 }); } catch (e) {} return; }
   navigateToPage('page-rent-main');
 }
@@ -33136,7 +33138,7 @@ const RENT_DEMO = [
     desc: 'חניה מקורה בחניון פתוח של בניין, מתאימה גם לאחסון סירה קטנה או נגרר. שלט לשער כלול.', specs: ['מקורה', 'שלט לשער', 'ליד הכניסה'] }
 ].map(r => Object.assign({ demo: true }, r, { t: Date.now() + r.t * 3600e3 }));
 let rentData = null, rentUnsub = null;
-const rentUI = { sec: 'all', cat: 'all', q: '', city: 'all', sort: 'new' };
+const rentUI = { sec: 'all', cat: 'all', q: '', city: 'all', sort: 'new', offer: 'all', owner: 'all', min: null, max: null };
 function rentSubscribe() {
   if (rentUnsub) return;
   try {
@@ -33174,7 +33176,7 @@ function rentThumb(r, big) {
 }
 function rentList() {
   const q = rentUI.q.trim().toLowerCase();
-  let l = mktAll().filter(r => (rentUI.sec === 'all' || mktSecOf(r) === rentUI.sec) && (rentUI.sec !== 'rent' || rentUI.cat === 'all' || r.cat === rentUI.cat) && (rentUI.city === 'all' || r.city === rentUI.city)
+  let l = mktAll().filter(r => (rentUI.sec === 'all' || mktSecOf(r) === rentUI.sec) && (rentUI.sec !== 'rent' || rentUI.cat === 'all' || r.cat === rentUI.cat) && (rentUI.city === 'all' || r.city === rentUI.city) && (rentUI.offer === 'all' || r.offer === rentUI.offer) && (rentUI.owner === 'all' || r.owner === rentUI.owner) && (rentUI.min === null || (r.price > 0 && r.price >= rentUI.min && r.price <= rentUI.max))
     && (!q || [r.title, r.desc, r.city, r.owner].join(' ').toLowerCase().includes(q)));
   if (rentUI.sort === 'cheap') l.sort((a, b) => a.price - b.price);
   else if (rentUI.sort === 'rating') l.sort((a, b) => (b.rating || 0) - (a.rating || 0));
@@ -33300,11 +33302,81 @@ function rentIdeasHTML() {
     <div class="rn-ideas-row">${RENT_IDEAS.map(i => `<button type="button" class="rn-idea" onclick="rentSet('cat', '3d')"><span class="rn-sk">${rentIdeaSVG(i)}</span><b>${i.name}</b><small>~${i.g} גרם · ${i.h < 1 ? Math.round(i.h * 60) + ' דק׳' : i.h + ' שע׳'}</small><em>מ-₪${Math.max(1, rentIdeaPrice(i, low))}</em></button>`).join('')}</div></section>`;
 }
 function buildRentPage() {
+  Object.assign(rentUI, { offer: 'all', owner: 'all', min: null, max: null });   // סינון העמודה שבעמוד הראשי לא עובר לעמוד השוק
   setTimeout(rentSubscribe, 0);
   rentUI.open = null;
   return `<div class="rent-page" data-page-id="page-rent-main"><div class="rn-inner">${rentViewHTML()}</div></div>`;
 }
+// העמודה שנפתחת מהצד בעמוד הראשי: קטגוריות וסינון מהמודעות שבשוק
+function rentSideHTML() {
+  const all = mktAll();
+  const n = (list, f) => list.filter(f).length;
+  const row = (key, val, label, count) => `<button type="button" class="mk-f-row" data-f="${escHtml(key + ':' + val)}" onclick="rentSideSet('${key}', '${artEsc(val)}')"><span>${escHtml(label)}</span><small>(${count})</small></button>`;
+  const group = (title, body, open) => `<details class="mk-f-g"${open ? ' open' : ''}><summary>${escHtml(title)}</summary><div>${body}</div></details>`;
+  const top = (values, key, of) => [...new Set(values)].map(v => [v, n(all, r => of(r) === v)]).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([v, c]) => row(key, v, v, c)).join('');
+  const used = all.filter(r => mktSecOf(r) === 'used'), eq = all.filter(r => mktSecOf(r) === 'rent');
+  const prices = all.map(r => Number(r.price) || 0).filter(p => p > 0);
+  const top$ = Math.ceil(Math.max(0, ...prices) / 10) * 10 || 100, lo = rentUI.min === null ? 0 : rentUI.min, hi = rentUI.max === null ? top$ : rentUI.max;
+  return `<nav class="mk-f-path"><button type="button" onclick="rentSideSet('all', 'all')">בית</button> / <b>השוק</b></nav>
+    <h3 class="mk-f-h">קטגוריות</h3>
+    ${group('יד 2', row('sec', 'used', 'כל המוצרים', used.length) + [...new Set(used.map(r => r.offer).filter(Boolean))].map(o => row('offer', o, o, n(used, r => r.offer === o))).join(''), true)}
+    ${group('השכרת ציוד', RENT_CATS.filter(c => !c.store && c.id !== 'all').map(c => row('cat', c.id, c.name, n(eq, r => r.cat === c.id))).join(''), true)}
+    ${group('שטח לאחסון', row('sec', 'store', 'כל השטחים', n(all, r => mktSecOf(r) === 'store')), false)}
+    ${group('כל המוצרים', row('all', 'all', 'הכל', all.length), false)}
+    <h3 class="mk-f-h">סינון לפי</h3>
+    <section class="mk-f-s"><h4>מוכרים</h4>${top(all.map(r => r.owner).filter(Boolean), 'owner', r => r.owner)}</section>
+    <section class="mk-f-s"><h4>מחיר</h4>
+      <div class="mk-f-range" style="--a:${lo / top$ * 100}%;--b:${hi / top$ * 100}%">
+        <input type="range" id="mk-f-lo" min="0" max="${top$}" step="10" value="${lo}" oninput="rentSidePrice(this)" aria-label="מחיר מינימלי">
+        <input type="range" id="mk-f-hi" min="0" max="${top$}" step="10" value="${hi}" oninput="rentSidePrice(this)" aria-label="מחיר מקסימלי">
+      </div>
+      <div class="mk-f-price"><output id="mk-f-lo-v">${lo} ₪</output><i>—</i><output id="mk-f-hi-v">${hi} ₪</output><button type="button" onclick="rentSidePriceGo()">חיפוש</button></div>
+    </section>
+    <section class="mk-f-s"><h4>עיר</h4>${top(all.map(r => r.city).filter(Boolean), 'city', r => r.city)}</section>
+    <button type="button" class="mk-f-clear" onclick="rentSideSet('all', 'all')">ניקוי הסינון</button>`;
+}
+function rentSideSync() {
+  const box = document.querySelector('.mk-fside'); if (!box) return;
+  const n = String(mktAll().length);
+  if (box.dataset.n !== n) { box.dataset.n = n; box.innerHTML = rentSideHTML(); }
+  const on = { sec: rentUI.sec, cat: rentUI.cat, offer: rentUI.offer, owner: rentUI.owner, city: rentUI.city };
+  box.querySelectorAll('[data-f]').forEach(b => {
+    const [k, ...v] = b.dataset.f.split(':');
+    b.classList.toggle('on', k === 'all' ? rentUI.sec === 'all' && rentUI.cat === 'all' && rentUI.offer === 'all' : k === 'sec' ? on.sec === v.join(':') && on.offer === 'all' : on[k] === v.join(':'));
+  });
+}
+function rentSideSet(k, v) {
+  if (k === 'all') Object.assign(rentUI, { sec: 'all', cat: 'all', offer: 'all', owner: 'all', city: 'all', q: '', min: null, max: null });
+  else if (k === 'sec') Object.assign(rentUI, { sec: v, cat: 'all', offer: 'all' });
+  else if (k === 'cat') Object.assign(rentUI, { sec: 'rent', cat: v, offer: 'all' });
+  else if (k === 'offer') Object.assign(rentUI, { sec: 'used', cat: 'all', offer: v });
+  else rentUI[k] = rentUI[k] === v ? 'all' : v;
+  if (k === 'all') { const box = document.querySelector('.mk-fside'); if (box) box.dataset.n = ''; }
+  rentSideApply();
+}
+function rentSideApply() {
+  rentUI.open = null;
+  rentRender();
+  try { (mainContent.querySelector('.rent-page') || mainContent).scrollIntoView({ block: 'start' }); } catch (e) {}
+  if (innerWidth <= 900 && document.querySelector('.hg-drawer.open')) homeSideToggle();
+}
+// סליידר המחיר: שתי ידיות על אותו פס; הסינון עצמו בלחיצה על "חיפוש"
+function rentSidePrice(inp) {
+  const lo = document.getElementById('mk-f-lo'), hi = document.getElementById('mk-f-hi');
+  if (Number(lo.value) > Number(hi.value)) { if (inp === lo) hi.value = lo.value; else lo.value = hi.value; }
+  const box = lo.parentElement, top$ = Number(lo.max) || 1;
+  box.style.setProperty('--a', lo.value / top$ * 100 + '%');
+  box.style.setProperty('--b', hi.value / top$ * 100 + '%');
+  document.getElementById('mk-f-lo-v').textContent = lo.value + ' ₪';
+  document.getElementById('mk-f-hi-v').textContent = hi.value + ' ₪';
+}
+function rentSidePriceGo() {
+  rentUI.min = Number(document.getElementById('mk-f-lo').value);
+  rentUI.max = Number(document.getElementById('mk-f-hi').value);
+  rentSideApply();
+}
 function rentRender(gridOnly) {
+  rentSideSync();
   const el = typeof mainContent !== 'undefined' && mainContent && mainContent.querySelector('.rent-page .rn-inner');
   if (!el) return;
   const open = rentUI.open && rentFind(rentUI.open);
@@ -33573,7 +33645,7 @@ async function rentPublish(btn) {
     glassBanner({ title: 'הציוד פורסם להשכרה', sub: rec.title, icon: 'ok', ms: 2400 });
   } catch (e) { btn.disabled = false; btn.textContent = 'פרסום'; showCopyToast('הפרסום נכשל — נסו שוב'); }
 }
-Object.assign(window, { mktGo, mktOpenUsed, mktPublish, rentBack, rentIdeaPick, rentDetPick, rentDetStep, rentQtyStep, rentMark, buildRentPage, rentSet, rentOpen, rentCalcUpd, rentRequest, rentPublishOpen, rentPickImg, rentPublish });
+Object.assign(window, { mktGo, mktOpenUsed, mktPublish, rentBack, rentIdeaPick, rentSideSet, rentSidePrice, rentSidePriceGo, rentDetPick, rentDetStep, rentQtyStep, rentMark, buildRentPage, rentSet, rentOpen, rentCalcUpd, rentRequest, rentPublishOpen, rentPickImg, rentPublish });
 
 // ============================================================
 // תמכו / השקיעו בנו: תרומה בכל סכום, או השקעה לפי שווי חברה ₪100,000 (עד 10% מוצעים).
