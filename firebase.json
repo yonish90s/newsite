@@ -15,7 +15,8 @@
       "**/*.md",
       "script.js",
       "style.css",
-      "dark.css"
+      "dark.css",
+      "mono.css"
     ],
     "headers": [
       {

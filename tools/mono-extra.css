@@ -1,0 +1,13 @@
+/* המצב הבהיר בשחור-לבן: חוקים ידניים לצבעים שמגיעים מהקוד ולרקע האתר. BODY מוחלף בבורר חזק בזמן הבנייה */
+html:not(.theme-dark), BODY { background: #ffffff !important; background-image: none !important; }
+BODY::before, BODY::after { background: none !important; background-image: none !important; }
+BODY main.center-content { background: #ffffff !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; box-shadow: none !important; border-color: #ececec !important; }
+BODY header.apple-nav { background: #ffffff !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+BODY :is(.au-av, .fo-avatar) { background: #111111 !important; color: #ffffff !important; }
+BODY .rn-ph { background: #f2f2f2 !important; color: #111111 !important; filter: grayscale(1); }
+BODY :is(.hr-badge, .cg-badge) { background: #111111 !important; color: #ffffff !important; }
+BODY .hf-dots i.on { background: #111111 !important; }
+BODY .ng-hero-img { background: #f2f2f2 !important; background-image: none !important; }
+BODY .hxc-ic svg { stroke: #111111 !important; }
+BODY .hx-tabs, BODY .site-top .hx-tabs.hx-global { background: #f2f2f2 !important; background-image: none !important; }
+BODY .hx-tabs .hx-tab.on .hxc-ic { box-shadow: 0 0 0 3px #111111 !important; }
