@@ -33305,6 +33305,8 @@ function rentRender(gridOnly) {
   el.innerHTML = open ? rentDetailHTML(open) : rentViewHTML();
   if (open) {
     rentStickFix(); requestAnimationFrame(rentStickFix); setTimeout(rentStickFix, 120);
+    rentFitPage(); requestAnimationFrame(rentFitPage); setTimeout(rentFitPage, 120); setTimeout(rentFitPage, 700);
+    rentSellerLoad(open.uid);
     if (typeof subscribePhotoComments === 'function') subscribePhotoComments(rentCommentsKey(open));
   }
 }
@@ -33348,13 +33350,11 @@ window.addEventListener('popstate', (e) => {
 function rentDetailHTML(r) {
   const qty = rentMin(r);
   const c = rentCalc(r, qty);
-  const sec = mktSecOf(r), kind = r.kind === 'used' ? 'יד 2 · ' + (r.offer || '') : rentCatOf(r.cat).name;
+  const sec = mktSecOf(r);
   const ic = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
   const imgs = (r.images || []).length ? r.images : (r.img ? [r.img] : []);
   const saved = r.shId && typeof photoIsSavedLocal === 'function' && photoIsSavedLocal(r.shId);
   const more = mktAll().filter(x => x.id !== r.id && mktSecOf(x) === sec).sort((a, b) => (b.cat === r.cat) - (a.cat === r.cat) || (b.t || 0) - (a.t || 0)).slice(0, 5);
-  const star = on => `<svg class="${on ? 'on' : ''}" viewBox="0 0 24 24"><path d="M12 2.8l2.8 5.8 6.4.9-4.6 4.5 1.1 6.3L12 17.3l-5.7 3 1.1-6.3L2.8 9.5l6.4-.9z"/></svg>`;
-  const stars = n => [1, 2, 3, 4, 5].map(k => star(n >= k - .25)).join('');
   // הכפתור הראשי: מוצר יד 2 אמיתי — הצעת מחיר; דוגמת יד 2 — פנייה; השכרה/אחסון — בקשה
   const main = r.shId ? [`openPriceOffer('${artEsc(r.shId)}', '${artEsc(r.title || '')}', '${artEsc(r.uid || '')}', '${artEsc(r.owner || '')}')`, 'הצעת מחיר', '<path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.5"/>']
     : r.kind === 'used' ? [`rentRequest('${artEsc(r.id)}')`, r.offer === 'החלפה' ? 'הצעת החלפה' : r.offer === 'השאלה' ? 'בקשת השאלה' : 'פנייה למוכר', '<path d="M21 12a8 8 0 0 1-8 8H4l2.2-2.6A8 8 0 1 1 21 12z"/>']
@@ -33373,7 +33373,7 @@ function rentDetailHTML(r) {
   const liked = r.shId && typeof photoIsLikedLocal === 'function' && photoIsLikedLocal(r.shId);
   const email = r.raw && String(r.raw.emailUrl || '').replace(/^mailto:/, '');
   const owner = r.owner || 'מפרסם/ת';
-  const facts = [`פורסם ${rentAgo(r.t)} ע״י ${owner}`, kind, r.city ? `איסוף ב${r.city}` : 'מיקום בתיאום', r.kind === 'used' ? 'מתאמים ישירות עם המוכר/ת' : 'עמלת שירות ' + Math.round(RENT_SITE_FEE * 100) + '% לאתר'].concat(r.specs || []).filter(Boolean);
+  const facts = [`פורסם ${rentAgo(r.t)}`, r.city ? `איסוף ב${r.city}` : 'מיקום בתיאום', r.kind === 'used' ? 'מתאמים ישירות עם המוכר/ת' : 'עמלת שירות ' + Math.round(RENT_SITE_FEE * 100) + '% לאתר'].concat(r.specs || []).filter(Boolean);
   const checks = list => `<ul class="mp-checks">${list.map(x => `<li><span>${CK}</span>${escHtml(x)}</li>`).join('')}</ul>`;
   const btn = (icon, label, act, cls, attr) => `<button type="button" class="mp-btn${cls ? ' ' + cls : ''}"${attr || ''} onclick="${act}">${ic(icon)}<span>${label}</span></button>`;
   return `<header class="mk-head"><button type="button" class="rn-back" onclick="rentBack()" aria-label="חזרה">→</button><h1>${escHtml(secName)}</h1></header>
@@ -33385,7 +33385,8 @@ function rentDetailHTML(r) {
       <div class="mp-info">
         <span class="mp-pill">${escHtml(r.kind === 'used' ? (r.offer || 'יד 2') : rentCatOf(r.cat).name)}</span>
         <h2 class="mk-title">${escHtml(r.title)}</h2>
-        ${short ? `<p class="mk-desc">${escHtml(short)}</p>` : ''}
+        ${r.uid ? `<button type="button" class="mk-seller" onclick="openUserPage('${artEsc(r.uid)}', '${artEsc(owner)}')">` : '<div class="mk-seller">'}<i>${escHtml(owner.charAt(0))}</i><span><b>${escHtml(owner)}</b><small class="mk-rate" data-seller="${escHtml(r.uid || '')}">${rentRateHTML(0, 0)}</small></span>${r.uid ? '</button>' : '</div>'}
+        ${short ? `<p class="mk-desc" onclick="this.classList.toggle('open')">${escHtml(short)}</p>` : ''}
         <div class="mp-price">${rentPriceShort(r)}</div>
         ${opts.length ? `<div class="mp-opt-h"><b>כמה ${r.unit === 'kg' ? 'להדפיס' : escHtml(unitName) || 'יחידות'}?</b><small>${r.unit === 'kg' ? 'מינימום ' + Math.round(rentMin(r) * 1000) + ' גרם' : r.min > 1 ? 'מינימום ' + r.min : ''}</small></div>
         <div class="pd-opts mp-opts">${opts.map(v => `<button type="button" class="${v === qty ? 'on' : ''}" onclick="rentQtyPick('${artEsc(r.id)}', ${v}, this)">${escHtml(optLabel(v))}</button>`).join('')}</div>
@@ -33402,13 +33403,41 @@ function rentDetailHTML(r) {
           ${btn('<path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/>', 'אהבתי', r.shId ? `photoToggleLike('${artEsc(r.shId)}')` : toast, liked ? 'on' : '', r.shId ? ` data-like="${escHtml(r.shId)}"` : '')}
           ${r.shId ? btn('<path d="M21 12a8 8 0 0 1-8 8H4l2.2-2.6A8 8 0 1 1 21 12z"/>', 'הודעה', ask) : ''}
           ${email ? btn('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>', 'מייל', `location.href='mailto:${artEsc(email)}'`) : ''}
+          ${btn('<path d="M4 5h16v11H9l-5 4z"/>', 'תגובות', `document.querySelector('.mp-comments').scrollIntoView({ behavior: 'smooth' })`)}
           ${btn('<path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M16 7l-4-4-4 4M12 3v12"/>', 'שיתוף', `if(navigator.share){navigator.share({ title: document.title, url: location.href }).catch(function(){});}else{navigator.clipboard.writeText(location.href); showCopyToast('הקישור הועתק');}`)}
         </div>
       </div>
+      ${more.length ? `<section class="mp-more mk-side"><h2>הצעות נוספות</h2><div class="mp-more-row">${more.map(rentMiniHTML).join('')}</div></section>` : ''}
     </div>
-    ${more.length ? `<section class="mp-more"><h2>מוצרים נוספים</h2><div class="mp-more-row">${more.map(rentMiniHTML).join('')}</div></section>` : ''}
     <section class="rn-det-cmts pd-reviews mp-comments">${typeof photoCommentsSectionHTML === 'function' ? photoCommentsSectionHTML(rentCommentsKey(r)) : ''}</section>`;
 }
+// ביקורת על המוכר: ממוצע הדירוגים האמיתי מהענן
+function rentRateHTML(avg, count) {
+  if (!count) return 'אין עדיין ביקורות';
+  const star = on => `<svg class="${on ? 'on' : ''}" viewBox="0 0 24 24"><path d="M12 2.8l2.8 5.8 6.4.9-4.6 4.5 1.1 6.3L12 17.3l-5.7 3 1.1-6.3L2.8 9.5l6.4-.9z"/></svg>`;
+  return `<span class="mk-stars">${[1, 2, 3, 4, 5].map(k => star(avg >= k - .25)).join('')}</span>${avg.toFixed(1)} · ${count === 1 ? 'ביקורת אחת' : count + ' ביקורות'}`;
+}
+async function rentSellerLoad(uid) {
+  if (!uid) return;
+  try {
+    const snap = await get(ref(db, `website/user_ratings/${uid}`));
+    const vals = Object.values(snap.exists() ? (snap.val() || {}) : {}).map(Number).filter(n => n >= 1 && n <= 5);
+    const el = mainContent && mainContent.querySelector('.mk-rate');
+    if (el && el.dataset.seller === uid) el.innerHTML = rentRateHTML(vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0, vals.length);
+  } catch (e) {}
+}
+// עמוד מוצר: התמונה נמתחת או מתכווצת כך שהכול נכנס בגובה המסך בלי לגלול
+function rentFitPage() {
+  const pg = typeof mainContent !== 'undefined' && mainContent && mainContent.querySelector('.mk-pg');
+  if (!pg) return;
+  const main = pg.closest('main'), box = pg.getBoundingClientRect(), scale = box.width / pg.offsetWidth || 1;
+  const bar = document.querySelector('#photo-compose, .photo-compose');   // שורת התגובה הצפה בתחתית
+  const barTop = bar && bar.getClientRects().length ? bar.getBoundingClientRect().top : innerHeight;
+  const bottom = Math.min(innerHeight, barTop, main ? main.getBoundingClientRect().bottom : innerHeight);
+  const h = Math.floor((bottom - box.top - (main ? main.scrollTop * scale : 0) - scrollY) / scale) - 12;
+  pg.style.setProperty('--mk-h', Math.max(320, innerWidth > 900 ? Math.min(h, 860) : h) + 'px');
+}
+window.addEventListener('resize', rentFitPage);
 // בחירת כמות מהירה בעמוד המודעה (כמו בחירת מידה) — ממלאת את הכמות ומעדכנת את המחיר
 function rentQtyPick(id, v, btn) {
   const inp = document.getElementById('rn-qty'); if (!inp) return;
