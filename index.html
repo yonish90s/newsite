@@ -33,15 +33,15 @@
   <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://newsite-f76e2-default-rtdb.firebaseio.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="modulepreload" href="./script.min.js?v=1933">
+  <link rel="modulepreload" href="./script.min.js?v=1962">
   <!-- ספריית interact.js לגרירה ושינוי גודל (נטענת בדחייה למניעת עיכוב) -->
   <script defer src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
   <!-- ספריית localforage לשמירת תמונות -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
   <!-- קישור לקובץ העיצוב החיצוני (עם פרמטר למניעת שמירה במטמון) -->
-  <link rel="stylesheet" href="./style.min.css?v=2089">
-  <link rel="stylesheet" id="mono-css" href="./mono.min.css?v=24">
-  <link rel="stylesheet" id="dark-css" data-href="./dark.min.css?v=441" media="not all">
+  <link rel="stylesheet" href="./style.min.css?v=2127">
+  <link rel="stylesheet" id="mono-css" href="./mono.min.css?v=63">
+  <link rel="stylesheet" id="dark-css" data-href="./dark.min.css?v=480" media="not all">
   <script>
     // קישור ישיר לפריט (#p/…, #s/…, #n/…) — מסמנים מיד, כדי שהכתובת לא תימחק לפני שהפריט נפתח
     window.__deepLinkOpening = /^#[psn]\//.test(location.hash || '');
@@ -243,7 +243,7 @@
         
         <!-- מחשב: שורת חיפוש גדולה בכותרת (בסגנון dribbble) -->
         <form class="hdr-search" role="search" onsubmit="event.preventDefault(); hdrSearchGo();">
-          <input id="hdr-search-q" type="search" placeholder="מה מחפשים? תמונות, מוצרים, סיפורים..." autocomplete="off" aria-label="חיפוש באתר" oninput="this.closest('form').classList.toggle('has-q', !!this.value)">
+          <input id="hdr-search-q" type="search" placeholder="מה מחפשים? מוצרים, קומיקס..." autocomplete="off" aria-label="חיפוש באתר" oninput="this.closest('form').classList.toggle('has-q', !!this.value)">
           <button type="button" class="hdr-search-x" onclick="var i=document.getElementById('hdr-search-q'); i.value=''; i.focus(); this.closest('form').classList.remove('has-q');" aria-label="ניקוי">×</button>
           <button type="submit" class="hdr-search-go" aria-label="חיפוש"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg></button>
         </form>
@@ -251,7 +251,7 @@
         <!-- תפריט הניווט העליון המרכזי -->
         <nav class="nav-links" dir="ltr" style="display: flex; gap: 32px; align-items: center;">
           <a href="#" class="active-top-nav" data-page-id="page-photos-main">תמונות 🖼️</a>
-          <a href="#" data-page-id="page-stories-main">סיפורים</a>
+          <a href="#" data-page-id="page-stories-main">קומיקס</a>
           <a href="#" data-page-id="page-ideas-main">רעיונות 💡</a>
           <a href="#" data-page-id="page-news-main">חדשות 📰</a>
           <a href="#" data-page-id="page-communities-main">קהילה 👥</a>
@@ -282,12 +282,6 @@
               <rect x="2" y="6" width="16" height="12" rx="2.5" ry="2.5"></rect>
               <line x1="21" y1="11" x2="21" y2="13"></line>
               <rect id="battery-fill-rect" x="4.5" y="8.5" width="11" height="7" rx="1" fill="#ffffff" stroke="none"></rect>
-            </svg>
-          </button>
-          <button id="feed-btn" class="notif-bell" style="display:none" onclick="openFeed()" title="הפיד שלי — מי שאני עוקב">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-              <polyline points="9 22 9 12 15 12 15 22"></polyline>
             </svg>
           </button>
           <button id="offers-btn" class="notif-bell" onclick="openOffersPanel()" title="הצעות" aria-label="הצעות">
@@ -327,7 +321,6 @@
         <button id="btn-manage-pages" class="float-btn edit-float-btn" style="background: #555555; color: white;">ניהול עמודים 🗂️</button>
         <button id="btn-add-hidden-page" class="float-btn edit-float-btn" style="background: #111111; color: #ffffff;">+ דף מוסתר 🔒</button>
         <button id="btn-add-articles-page" class="float-btn edit-float-btn" style="background: #111111; color: #ffffff;">דף כתבות 📰</button>
-        <button id="btn-add-stories-page" class="float-btn edit-float-btn" style="background: #111111; color: #ffffff;">דף סיפורים 📖</button>
         <button id="btn-add-photos-page" class="float-btn edit-float-btn" style="background: #10b981; color: #262626;">דף תמונות 🖼️</button>
         <button id="btn-add-community-page" class="float-btn edit-float-btn" style="background: #111111; color: #ffffff;">דף קהילה 👥</button>
         <button id="btn-edit-mode" class="float-btn edit-float-btn">מצב עריכה ✏️</button>
@@ -493,49 +486,7 @@ html.theme-dark .pl-bar { background: #2a2f37; }
 </div>
 
 <!-- מודל הוספת סיפור -->
-<div id="story-modal" style="display:none; position:fixed; inset:0; background:rgba(0, 0, 0, 0.6); z-index:99999; align-items:center; justify-content:center; direction:rtl;">
-  <div style="background:#ffffff; border-radius:16px; padding:28px; width:90%; max-width:460px; max-height:85vh; overflow-y:auto; display:flex; flex-direction:column; gap:12px;">
-    <h3 id="story-modal-title" style="margin:0 0 4px; font-size:18px;">הוספת סיפור חדש</h3>
-    <label style="font-size:13px; font-weight:600;">כותרת <span style="color:red">*</span></label>
-    <input id="story-title" type="text" placeholder="כותרת הסיפור" style="padding:9px 12px; border:1px solid #dddddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
-    <label style="font-size:13px; font-weight:600;">תקציר</label>
-    <textarea id="story-summary" rows="3" placeholder="תיאור קצר של הסיפור..." style="padding:9px 12px; border:1px solid #dddddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box; resize:vertical;"></textarea>
-    <label style="font-size:13px; font-weight:600;">שם הכותב</label>
-    <input id="story-author" type="text" placeholder="שם הכותב" style="padding:9px 12px; border:1px solid #dddddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
-    <label style="font-size:13px; font-weight:600;">קטגוריה</label>
-    <select id="story-category" style="padding:9px 12px; border:1px solid #dddddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box; background:white;">
-      <option value="כללי">כללי</option>
-      <option value="עירום">עירום 🔞</option>
-    </select>
-    <label style="font-size:13px; font-weight:600;">תוכן הסיפור</label>
-    <textarea id="story-body" rows="6" placeholder="כתוב את תוכן הסיפור המלא כאן..." style="padding:9px 12px; border:1px solid #dddddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box; resize:vertical;"></textarea>
-    <label style="font-size:13px; font-weight:600;">🔗 שיוך לקומיקס/סיפור אחר — אופציונלי</label>
-    <select id="story-linked" style="padding:9px 12px; border:1px solid #dddddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box; background:white;">
-      <option value="">— ללא שיוך —</option>
-    </select>
-    <label style="font-size:13px; font-weight:600;">קישור חיצוני (URL) — אופציונלי</label>
-    <input id="story-link" type="url" placeholder="https://..." style="padding:9px 12px; border:1px solid #dddddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
-    <label style="font-size:13px; font-weight:600;">⭐ תמונת פרופיל (כריכה) — מופיעה על כרטיס הסיפור בלבד, לא בתוך הסיפור</label>
-    <div id="story-cover-box"></div>
-    <label style="font-size:13px; font-weight:600;">עמודי הסיפור — כל עמוד יכול להיות תמונה או טקסט. אפשר לשנות סדר ולהסיר. (הראשון הוא הראשי)</label>
-    <div id="story-images-editor" style="display:flex; flex-direction:column; gap:8px;"></div>
-    <div style="display:flex; gap:8px;">
-      <button id="story-add-image" type="button" style="flex:1; padding:9px 12px; border:1px dashed #bbbbbb; border-radius:8px; background:#f9f9f9; cursor:pointer; font-size:13px; text-align:center; font-weight:600;">🖼️ הוסף עמוד תמונה</button>
-      <button id="story-add-text" type="button" style="flex:1; padding:9px 12px; border:1px dashed #111111; border-radius:8px; background:rgba(0, 0, 0, 0.018); color:#262626; cursor:pointer; font-size:13px; text-align:center; font-weight:600;">📝 הוסף עמוד טקסט</button>
-    </div>
-    <div style="display:flex; align-items:center; gap:8px; background: rgba(0, 0, 0, 0.015); padding: 10px 12px; border-radius: 8px; border: 1px solid #e4e4e7; margin-top: 4px;">
-      <input type="checkbox" id="story-is-temporary" checked style="width: 18px; height: 18px; cursor: pointer; accent-color: #111111;">
-      <label for="story-is-temporary" style="font-size: 13px; font-weight: 700; color: #262626; cursor: pointer; display: flex; align-items: center; gap: 4px;">
-        ⏳ פג תוקף תוך 24 שעות (סיפור/קומיקס זמני)
-      </label>
-    </div>
 
-    <div style="display:flex; gap:10px; margin-top:4px;">
-      <button id="story-cancel" style="flex:1; padding:10px; border:1px solid #dddddd; border-radius:8px; background:#ffffff; cursor:pointer; font-size:14px;">ביטול</button>
-      <button id="story-save" style="flex:1; padding:10px; border:none; border-radius:8px; background:#111111; color:#ffffff; cursor:pointer; font-size:14px; font-weight:700;">שמור סיפור</button>
-    </div>
-  </div>
-</div>
 
 <!-- מודל ניהול קטגוריות סיפורים -->
 <div id="story-categories-modal" style="display:none; position:fixed; inset:0; background:rgba(0, 0, 0, 0.6); z-index:99999; align-items:center; justify-content:center; direction:rtl;">
@@ -828,32 +779,28 @@ html.theme-dark .pl-bar { background: #2a2f37; }
 </div>
 
 <!-- מודאל הוספת מוצר לחנות -->
-<div id="shop-modal" style="display:none; position:fixed; inset:0; background:rgba(0, 0, 0, 0.6); z-index:99999; align-items:center; justify-content:center; direction:rtl;">
-  <div style="background:#ffffff; border-radius:16px; padding:28px; width:90%; max-width:460px; max-height:85vh; overflow-y:auto; display:flex; flex-direction:column; gap:12px;">
-    <h3 style="margin:0 0 4px; font-size:18px;">הוספת מוצר חדש</h3>
-    <label style="font-size:13px; font-weight:600;">שם המוצר <span style="color:red">*</span></label>
-    <input id="shop-name" type="text" placeholder="שם המוצר" style="padding:9px 12px; border:1px solid #dddddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
-    <label style="font-size:13px; font-weight:600;">תווית קטנה (אופציונלי)</label>
-    <input id="shop-label" type="text" placeholder="למשל: חריטה חינם, מבצע" style="padding:9px 12px; border:1px solid #dddddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
-    <label style="font-size:13px; font-weight:600;">מחיר</label>
-    <input id="shop-price" type="text" placeholder="למשל: ₪999" style="padding:9px 12px; border:1px solid #dddddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
-    <label style="font-size:13px; font-weight:600;">קישור לרכישה (אופציונלי)</label>
-    <input id="shop-link" type="url" placeholder="https://..." style="padding:9px 12px; border:1px solid #dddddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
-    <label style="font-size:13px; font-weight:600;">תמונת מוצר</label>
-    <button id="shop-img-pick" style="padding:9px 12px; border:1px dashed #bbbbbb; border-radius:8px; background:#f9f9f9; cursor:pointer; font-size:13px; text-align:right;">לחץ לבחירת תמונה מהמחשב</button>
-    <img id="shop-img-preview" src="" alt="" style="display:none; max-height:140px; border-radius:8px; object-fit:contain; width:100%;">
-    <div style="display:flex; gap:10px; margin-top:4px;">
-      <button id="shop-cancel" style="flex:1; padding:10px; border:1px solid #dddddd; border-radius:8px; background:#ffffff; cursor:pointer; font-size:14px;">ביטול</button>
-      <button id="shop-save" style="flex:1; padding:10px; border:none; border-radius:8px; background:#111111; color:#ffffff; cursor:pointer; font-size:14px; font-weight:700;">שמור מוצר</button>
-    </div>
-  </div>
-</div>
+
 
 <div id="auth-modal" class="auth-modal-overlay">
   <div class="auth-modal-card au-card au-simple" role="dialog" aria-label="התחברות">
     <button id="auth-modal-close" class="au-close" aria-label="סגור">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
     </button>
+
+    <!-- צד התמונה: המנהל בוחר את התמונה -->
+    <aside class="au-side">
+      <h2>הכול מתחיל כאן</h2>
+      <ul>
+        <li>קומיקס של גולשים</li>
+        <li>השוק: יד 2, השכרת ציוד ואחסון</li>
+        <li>קהילה ופורומים בדיסקרטיות</li>
+      </ul>
+      <img class="au-side-img" alt="" hidden>
+      <div class="au-side-admin">
+        <label>החלפת תמונה<input type="file" accept="image/*" hidden onchange="loginImagePick(this)"></label>
+        <button type="button" onclick="loginImageRemove()">הסרה</button>
+      </div>
+    </aside>
 
     <!-- כרטיס מותג -->
     <div class="au-hero">
@@ -874,8 +821,8 @@ html.theme-dark .pl-bar { background: #2a2f37; }
       </svg>
     </div>
 
-    <h3 class="au-title" id="au-title">כניסה לאתר</h3>
-    <p class="au-sub" id="au-sub">התחברות או הרשמה בלחיצה אחת</p>
+    <h3 class="au-title" id="au-title">כניסה או הרשמה</h3>
+    <p class="au-sub" id="au-sub">המשיכו עם החשבון שלכם בלחיצה אחת</p>
 
     <form id="auth-username-form" class="au-form" onsubmit="event.preventDefault(); authUsernameLogin();" autocomplete="on">
       <label class="au-field">
@@ -907,6 +854,7 @@ html.theme-dark .pl-bar { background: #2a2f37; }
       <span>המשך עם Facebook</span>
     </button>
 
+    <button type="button" class="au-link au-mail-toggle" onclick="this.closest('.au-card').classList.add('au-form-on'); this.remove()">או בשם משתמש וסיסמה</button>
     <p class="au-switch" id="au-switch">אין לכם חשבון? <button type="button" class="au-link strong" onclick="authSetMode('signup')">הרשמה</button></p>
     <p class="au-terms">בהרשמה אתם מסכימים ל<a href="#" onclick="event.preventDefault(); openLegal('terms')">תנאי השימוש</a> ול<a href="#" onclick="event.preventDefault(); openLegal('privacy')">מדיניות הפרטיות</a>, ומאשרים שאתם מעל גיל 18.</p>
   </div>
@@ -1283,7 +1231,6 @@ html.theme-dark .pl-bar { background: #2a2f37; }
 
   <!-- מובייל: כפתורי X (סגירה) ונגישות בסרגל הטאבים התחתון + כפתור לפתיחתו מחדש -->
   <nav id="mtabs" class="mtabs" aria-label="ניווט ראשי">
-    <button type="button" class="mtab" data-tab="photos" onclick="homeOpenPhotos()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 9"/></svg><span>תמונות גולשים</span></button>
     <button type="button" class="mtab" data-tab="products" onclick="navigateToPage('page-secondhand-main')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14l-1.2 11.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg><span>מוצרי גולשים</span></button>
     <button type="button" class="mtab" data-tab="home" onclick="goToHomePage()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg><span>בית</span></button>
     <button type="button" class="mtab mtab-plus" data-tab="upload" onclick="openPhotoModal()" aria-label="העלאה"><span class="mtab-plus-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></button>
@@ -1302,7 +1249,7 @@ html.theme-dark .pl-bar { background: #2a2f37; }
     }
     try { if (localStorage.getItem('mtab_hidden') === '1') document.documentElement.classList.add('mtab-hidden'); } catch (e) {}
   </script>
-  <script type="module" src="./script.min.js?v=1933"></script>
+  <script type="module" src="./script.min.js?v=1962"></script>
   <script defer src="./a11y.js?v=1"></script>
 </body>
 </html>

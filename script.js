@@ -663,15 +663,6 @@ function setupComicsStoriesPages() {
     && !(p.content || '').includes('photos-page')
     && !(p.content || '').includes('photos-stories-feed'));
   if (comics && comics.title !== 'קומיקס') comics.title = 'קומיקס';
-  // 2. עמוד "סיפורים" חדש (טקסט) — יוצרים אם עדיין אין
-  if (!pages.some(p => p && p.id === 'page-stories-text') && typeof buildStoriesPage === 'function') {
-    pages.push({ id: 'page-stories-text', title: 'סיפורים', content: buildStoriesPage([], 'stories') });
-  }
-  // 3. עמוד "קומיקס" — אם אין אף עמוד קומיקס (העמוד הקודם אבד), יוצרים חדש ריק,
-  //    בנוי בדיוק כמו העמוד המקורי: id=page-stories-main, סוג 'comics', שלד buildStoriesPage.
-  if (!comics && !pages.some(p => p && p.id === 'page-stories-main') && typeof buildStoriesPage === 'function') {
-    pages.push({ id: 'page-stories-main', title: 'קומיקס', content: buildStoriesPage([], 'comics') });
-  }
 }
 
 function sanitizeToOnlyPhotosAndStories() {
@@ -693,7 +684,6 @@ function sanitizeToOnlyPhotosAndStories() {
   // כך המנהל יכול למחוק עמודים לצמיתות מבלי שהם ייווצרו מחדש בכל שמירה.
   if (pages.length === 0) {
     pages.push({ id: 'page-photos-main', title: 'תמונות 🖼️', content: typeof buildPhotosPage === 'function' ? buildPhotosPage(typeof PHOTOS_SAMPLES !== 'undefined' ? PHOTOS_SAMPLES : []) : '' });
-    pages.push({ id: 'page-stories-main', title: 'קומיקס', content: typeof buildStoriesPage === 'function' ? buildStoriesPage(typeof STORIES_SAMPLES !== 'undefined' ? STORIES_SAMPLES : [], 'comics') : '' });
     pages.push({ id: 'page-ideas-main', title: 'רעיונות 💡', content: '<div class="ideas-page" data-page-id="page-ideas-main"></div>' });
   }
 
@@ -831,16 +821,6 @@ function sanitizeToOnlyPhotosAndStories() {
   const _frPage = pages.find(p => p && p.id === 'page-friends-main');
   if (!_frPage) pages.push({ id: 'page-friends-main', title: 'חברים', content: _frContent });
   else { _frPage.content = _frContent; if (!_frPage.title) _frPage.title = 'חברים'; }
-  // עמוד "התאמות" (טינדר) — תמיד קיים, נבנה דינמית
-  const _tdContent = '<div class="tinder-page" data-page-id="page-tinder-main"></div>';
-  const _tdPage = pages.find(p => p && p.id === 'page-tinder-main');
-  if (!_tdPage) pages.push({ id: 'page-tinder-main', title: 'התאמות', content: _tdContent });
-  else { _tdPage.content = _tdContent; if (!_tdPage.title) _tdPage.title = 'התאמות'; }
-  // עמוד "Blind Date" — תמיד קיים, נבנה דינמית
-  const _bdContent = '<div class="blinddate-page" data-page-id="page-blinddate-main"></div>';
-  const _bdPage = pages.find(p => p && p.id === 'page-blinddate-main');
-  if (!_bdPage) pages.push({ id: 'page-blinddate-main', title: 'Blind Date', content: _bdContent });
-  else { _bdPage.content = _bdContent; if (!_bdPage.title) _bdPage.title = 'Blind Date'; }
   // עמוד "פורומים" — תמיד קיים, נבנה דינמית
   const _foContent = '<div class="forums-page" data-page-id="page-forums-main"></div>';
   const _foPage = pages.find(p => p && p.id === 'page-forums-main');
@@ -851,11 +831,6 @@ function sanitizeToOnlyPhotosAndStories() {
   const _plPage = pages.find(p => p && p.id === 'page-polls-main');
   if (!_plPage) pages.push({ id: 'page-polls-main', title: 'סקרים', content: _plContent });
   else { _plPage.content = _plContent; if (!_plPage.title) _plPage.title = 'סקרים'; }
-  // עמוד "מוצרים" — תמיד קיים, נבנה דינמית
-  const _prContent = '<div class="products-page" data-page-id="page-products-main"></div>';
-  const _prPage = pages.find(p => p && p.id === 'page-products-main');
-  if (!_prPage) pages.push({ id: 'page-products-main', title: 'מוצרים', content: _prContent });
-  else { _prPage.content = _prContent; if (!_prPage.title) _prPage.title = 'מוצרים'; }
 
   // עמוד "השכרת ציוד" — תמיד קיים, נבנה דינמית
   const _rnContent = '<div class="rent-page" data-page-id="page-rent-main"></div>';
@@ -1326,8 +1301,10 @@ function renderSideMenu() {
 }
 
 // פונקציה שמייצרת את התפריט העליון ומוסיפה לו מגה-תפריט
+const REMOVED_PAGES = ['page-stories-main', 'page-stories-text', 'page-requests-main', 'page-reviews-main', 'page-partnerships-main', 'page-photos-main', 'page-products-main', 'page-tinder-main', 'page-blinddate-main'];
 function renderTopNav() {
   if (!Array.isArray(topNavPages)) topNavPages = [];
+  topNavPages = topNavPages.filter(id => !REMOVED_PAGES.includes(id));
   const _ideasPTop = pages.find(p => p && p.id === 'page-ideas-main');
   if (_ideasPTop && !_ideasPTop.isHidden) {
     topNavPages = topNavPages.filter(id => id !== 'page-ideas-main');
@@ -1345,16 +1322,13 @@ function renderTopNav() {
     _shTop.title = 'מוצרי גולשים 🛒';
     const _phTop = pages.find(p => p && p.id === 'page-photos-main'); if (_phTop) _phTop.title = 'תמונות גולשים 🖼️';
     topNavPages = topNavPages.filter(id => id !== 'page-secondhand-main');
-    const _hi = topNavPages.indexOf('page-home-feed');
-    if (_hi >= 0) topNavPages.splice(_hi + 1, 0, 'page-secondhand-main'); else topNavPages.unshift('page-secondhand-main');
   }
   // "חדשות" תמיד במקום קבוע — האחרון בתפריט — כדי שלא יקפוץ בין רינדורים
   topNavPages = topNavPages.filter(id => id !== 'page-news-main');
   if (pages.some(p => p && p.id === 'page-news-main')) topNavPages.push('page-news-main');
-  // "השוק" תמיד צמוד ל"מוצרי גולשים", משמאל לו בתפריט (הסדר בתפריט מוצג הפוך)
+  // "מוצרי גולשים" אוחד בשוק: בתפריט רק "השוק", מיד אחרי הבית
   topNavPages = topNavPages.filter(id => id !== 'page-rent-main');
-  const _shIdx = topNavPages.indexOf('page-secondhand-main');
-  if (_shIdx > -1 && pages.some(p => p && p.id === 'page-rent-main')) topNavPages.splice(_shIdx, 0, 'page-rent-main');
+  if (pages.some(p => p && p.id === 'page-rent-main')) topNavPages.splice(topNavPages.indexOf('page-home-feed') + 1, 0, 'page-rent-main');
   navLinksContainer.innerHTML = ''; // מנקה את התפריט הסטטי מה-HTML
   
   topNavPages.forEach(pageId => {
@@ -1558,13 +1532,6 @@ function renderPage() {
     return;
   }
   // עמוד "הפיד שלי" — עמוד דינמי בפני עצמו (לא נשמר ברשימת העמודים)
-  if (activePageId === 'page-feed-main') {
-    if (typeof buildFeedPage === 'function') {
-      mainContent.innerHTML = buildFeedPage();
-      try { window.scrollTo(0, 0); } catch (e) {}
-      return;
-    }
-  }
   const currentPage = pages.find(p => p.id === activePageId); // מחפשים את העמוד ברשימה
 
   // הגנה: אם העמוד מוסתר והמשתמש הוא לא מנהל/עורך, מפנים אותו לעמוד גלוי.
@@ -1603,23 +1570,6 @@ function renderPage() {
     }
 
     // עמוד "התאמות" (טינדר) — נבנה דינמית
-    if (currentPage.id === 'page-tinder-main' || (currentPage.content || '').includes('tinder-page')) {
-      if (typeof buildTinderPage === 'function') {
-        mainContent.innerHTML = buildTinderPage();
-        try { window.scrollTo(0, 0); } catch (e) {}
-        return;
-      }
-    }
-
-    // עמוד "Blind Date" — נבנה דינמית
-    if (currentPage.id === 'page-blinddate-main' || (currentPage.content || '').includes('blinddate-page')) {
-      if (typeof buildBlindDatePage === 'function') {
-        mainContent.innerHTML = buildBlindDatePage();
-        try { window.scrollTo(0, 0); } catch (e) {}
-        return;
-      }
-    }
-
     // עמוד "סקרים" — מוצג כטאב בתוך הפורומים
     if (currentPage.id === 'page-polls-main' || (currentPage.content || '').includes('polls-page')) {
       if (typeof buildForumsPage === 'function') {
@@ -1640,14 +1590,6 @@ function renderPage() {
       }
     }
     // עמוד "מוצרים" — נבנה דינמית
-    if (currentPage.id === 'page-products-main' || (currentPage.content || '').includes('products-page')) {
-      if (typeof buildProductsPage === 'function') {
-        mainContent.innerHTML = buildProductsPage();
-        try { window.scrollTo(0, 0); } catch (e) {}
-        return;
-      }
-    }
-
     // עמוד "פורומים" — נבנה דינמית (רשימת פורומים / נושאים / שרשור)
     if (currentPage.id === 'page-forums-main' || (currentPage.content || '').includes('forums-page')) {
       if (typeof buildForumsPage === 'function') {
@@ -1768,16 +1710,6 @@ function renderPage() {
     }
 
     // עמוד סיפורים: בונים מחדש מהנתונים השמורים
-    // (מתעלמים מפיד הסיפורים שמוטמע בתחתית עמוד התמונות — .photos-stories-feed)
-    const storyPageEl = mainContent.querySelector('.stories-page:not(.photos-stories-feed)');
-    if (storyPageEl && typeof buildStoriesPage === 'function') {
-      let savedStories = [];
-      try { savedStories = JSON.parse(decodeURIComponent(storyPageEl.dataset.storiesJson)); } catch(e){}
-      const _sk = storyPageEl.getAttribute('data-story-kind') || 'comics';
-      // תמיד בונים מחדש (גם כשריק) כדי לשמור על הסוג (קומיקס/סיפורים) והתוויות
-      mainContent.innerHTML = buildStoriesPage(savedStories, _sk);
-    }
-
     // עמוד קורסים: בונים מחדש מהנתונים השמורים
     const coursePageEl = mainContent.querySelector('.courses-page');
     if (coursePageEl && typeof buildCoursesPage === 'function') {
@@ -1807,13 +1739,6 @@ function renderPage() {
       mainContent.innerHTML = buildCommunitiesPage();
     }
 
-    // עמוד חנות: בונים מחדש מהנתונים השמורים
-    const shopPageEl = mainContent.querySelector('.shop-page');
-    if (shopPageEl && typeof buildShopPage === 'function') {
-      let savedProds = [];
-      try { savedProds = JSON.parse(decodeURIComponent(shopPageEl.dataset.productsJson)); } catch(e){}
-      if (savedProds.length) mainContent.innerHTML = buildShopPage(savedProds);
-    }
 
     // המרת מיקומים (Migration): הפיכת טרנספורמציות ישנות למיקום אבסולוטי (left/top)
     // זה קריטי כדי שגלילת המסך (Scroll) תעבוד כשיש הרבה תוכן למטה
@@ -5739,161 +5664,25 @@ const SHOP_SAMPLES = [
   { id: 'p6', name: 'Apple Watch Series 10', label: 'רצועה חינם', price: '₪1,799', image: 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=600&q=80', link: '' }
 ];
 
-function buildShopPage(products) {
-  const cartSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>';
-  const cardsHTML = products.map(p => `
-    <div class="shop-card" ${p.link ? `onclick="window.open('${artEsc(p.link)}','_blank')"` : ''} style="${p.link ? 'cursor:pointer' : ''}">
-      <button class="shop-delete-btn" onclick="event.stopPropagation();shopDelete('${artEsc(p.id)}')">✕</button>
-      <div class="shop-card-img">
-        ${p.image ? `<img src="${escHtml(p.image)}" alt="">` : '<div class="shop-img-placeholder"></div>'}
-        <button class="shop-cart-btn" title="הוסף לסל" onclick="event.stopPropagation();shopAddToCart('${artEsc(p.id)}')">${cartSvg}<span class="shop-cart-plus">+</span></button>
-      </div>
-      <div class="shop-card-info">
-        ${p.label ? `<div class="shop-label">${escHtml(p.label)}</div>` : ''}
-        <h3 class="shop-name">${escHtml(p.name)}</h3>
-        <div class="shop-price">${escHtml(p.price || '')}</div>
-      </div>
-    </div>
-  `).join('');
 
-  const bestSellers = products.slice(0, 5);
-  const bestHTML = bestSellers.map((p, i) => `
-    <div class="shop-best-item" ${p.link ? `onclick="window.open('${artEsc(p.link)}','_blank')"` : ''} style="${p.link ? 'cursor:pointer' : ''}">
-      <span class="shop-best-num">${String(i+1).padStart(2,'0')}</span>
-      ${p.image ? `<img class="shop-best-img" src="${escHtml(p.image)}" alt="">` : ''}
-      <div class="shop-best-text">
-        <div class="shop-best-name">${escHtml(p.name)}</div>
-        <div class="shop-best-price">${escHtml(p.price || '')}</div>
-      </div>
-    </div>
-  `).join('');
-
-  const json = encodeURIComponent(JSON.stringify(products));
-  return `<div class="shop-page" data-products-json="${json}">
-    <div class="shop-inner">
-      <div class="shop-header">
-        <h1 class="shop-title">החנות</h1>
-        <p class="shop-subtitle">כל המוצרים שאתם אוהבים, במקום אחד.</p>
-      </div>
-      <div class="shop-search-wrap">
-        <input type="text" class="shop-search" placeholder="🔍 חיפוש מוצרים..." oninput="shopSearch(this.value)">
-      </div>
-      <div class="shop-layout">
-        <div class="shop-main">
-          <div class="shop-grid">${cardsHTML}</div>
-          <div class="shop-no-results" style="display:none">לא נמצאו מוצרים התואמים לחיפוש</div>
-          <button class="shop-add-btn" onclick="openShopModal()">+ הוסף מוצר חדש</button>
-        </div>
-        <div class="shop-sidebar">
-          <div class="shop-sidebar-box">
-            <div class="shop-sidebar-title">הנמכרות השבוע</div>
-            ${bestHTML}
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <button class="shop-cart-fab" onclick="shopToggleCart()" title="הסל שלי">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
-      <span class="shop-cart-count" style="display:none">0</span>
-    </button>
-    <div class="shop-cart-panel" style="display:none">
-      <div class="shop-cart-header"><span>הסל שלי</span><button onclick="shopToggleCart()" class="shop-cart-close">✕</button></div>
-      <div class="shop-cart-items"></div>
-      <div class="shop-cart-footer">
-        <div class="shop-cart-total"></div>
-        <button class="shop-cart-checkout" onclick="alert('תודה על הקנייה!')">מעבר לתשלום</button>
-      </div>
-    </div>
-  </div>`;
-}
 
 let shopCart = [];
 
-function shopAddToCart(id) {
-  const prods = shopGetProducts();
-  const p = prods.find(x => x.id === id);
-  if (!p) return;
-  const existing = shopCart.find(x => x.id === id);
-  if (existing) existing.qty++;
-  else shopCart.push({ id: p.id, name: p.name, price: p.price, image: p.image, qty: 1 });
-  shopRenderCart();
-  // אנימציית אישור קצרה
-  const fab = mainContent.querySelector('.shop-cart-fab');
-  if (fab) { fab.classList.add('shop-cart-bump'); setTimeout(() => fab.classList.remove('shop-cart-bump'), 300); }
-}
 
-function shopRemoveFromCart(id) {
-  shopCart = shopCart.filter(x => x.id !== id);
-  shopRenderCart();
-}
 
-function shopParsePrice(str) {
-  const n = parseFloat(String(str || '').replace(/[^\d.]/g, ''));
-  return isNaN(n) ? 0 : n;
-}
 
-function shopRenderCart() {
-  const count = shopCart.reduce((s, x) => s + x.qty, 0);
-  const countEl = mainContent.querySelector('.shop-cart-count');
-  if (countEl) { countEl.textContent = count; countEl.style.display = count ? 'flex' : 'none'; }
-  const itemsEl = mainContent.querySelector('.shop-cart-items');
-  if (itemsEl) {
-    if (!shopCart.length) {
-      itemsEl.innerHTML = '<div class="shop-cart-empty">הסל ריק</div>';
-    } else {
-      itemsEl.innerHTML = shopCart.map(x => `
-        <div class="shop-cart-row">
-          ${x.image ? `<img src="${escHtml(x.image)}" alt="">` : ''}
-          <div class="shop-cart-row-text">
-            <div class="shop-cart-row-name">${escHtml(x.name)}</div>
-            <div class="shop-cart-row-price">${escHtml(x.price || '')} ${x.qty > 1 ? '× ' + x.qty : ''}</div>
-          </div>
-          <button class="shop-cart-remove" onclick="shopRemoveFromCart('${artEsc(x.id)}')">✕</button>
-        </div>
-      `).join('');
-    }
-  }
-  const totalEl = mainContent.querySelector('.shop-cart-total');
-  if (totalEl) {
-    const total = shopCart.reduce((s, x) => s + shopParsePrice(x.price) * x.qty, 0);
-    totalEl.textContent = total ? ('סה"כ: ₪' + total.toLocaleString()) : '';
-  }
-}
 
-function shopToggleCart() {
-  const panel = mainContent.querySelector('.shop-cart-panel');
-  if (!panel) return;
-  panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
-  shopRenderCart();
-}
 
-function shopSearch(query) {
-  const q = (query || '').trim().toLowerCase();
-  const cards = mainContent.querySelectorAll('.shop-card');
-  let visible = 0;
-  cards.forEach(card => {
-    const txt = card.textContent.toLowerCase();
-    const match = !q || txt.includes(q);
-    card.style.display = match ? '' : 'none';
-    if (match) visible++;
-  });
-  const noRes = mainContent.querySelector('.shop-no-results');
-  if (noRes) noRes.style.display = visible === 0 ? 'block' : 'none';
-}
 
-function shopGetProducts() {
-  const container = mainContent.querySelector('.shop-page');
-  if (!container) return [];
-  try { return JSON.parse(decodeURIComponent(container.dataset.productsJson)); } catch(e){ return []; }
-}
 
-function shopDelete(id) {
-  if (!isEditMode) return;
-  const prods = shopGetProducts().filter(p => p.id !== id);
-  mainContent.innerHTML = buildShopPage(prods);
-  saveCurrentPageContent();
-}
+
+
+
+
+
+
+
+
 
 window.openCalculatorPage = function(pageId) {
   if (isEditMode) saveCurrentPageContent();
@@ -6402,61 +6191,21 @@ window.calculateEMValuation = function() {
 
 let shopImgData = '';
 
-function openShopModal() {
-  if (!isEditMode) return;
-  document.getElementById('shop-name').value = '';
-  document.getElementById('shop-label').value = '';
-  document.getElementById('shop-price').value = '';
-  document.getElementById('shop-link').value = '';
-  const preview = document.getElementById('shop-img-preview');
-  preview.style.display = 'none'; preview.src = '';
-  shopImgData = '';
-  document.getElementById('shop-img-pick').textContent = 'לחץ לבחירת תמונה מהמחשב';
-  document.getElementById('shop-modal').style.display = 'flex';
-}
 
-document.getElementById('shop-img-pick').addEventListener('click', () => {
-  const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
-  inp.onchange = e => {
-    const f = e.target.files[0]; if (!f) return;
-    artCompressImage(f).then(data => {
-      shopImgData = data;
-      const p = document.getElementById('shop-img-preview');
-      p.src = shopImgData; p.style.display = 'block';
-      document.getElementById('shop-img-pick').textContent = '✓ תמונה נבחרה';
-    });
-  };
-  inp.click();
-});
 
-document.getElementById('shop-cancel').addEventListener('click', () => {
-  document.getElementById('shop-modal').style.display = 'none';
-});
 
-document.getElementById('shop-save').addEventListener('click', () => {
-  const name = document.getElementById('shop-name').value.trim();
-  if (!name) { alert('חובה שם מוצר'); return; }
-  const prods = shopGetProducts();
-  prods.unshift({
-    id: 'p' + Date.now(),
-    name,
-    label: document.getElementById('shop-label').value.trim(),
-    price: document.getElementById('shop-price').value.trim(),
-    image: shopImgData,
-    link: document.getElementById('shop-link').value.trim()
-  });
-  mainContent.innerHTML = buildShopPage(prods);
-  saveCurrentPageContent();
-  document.getElementById('shop-modal').style.display = 'none';
-});
 
-window.buildShopPage = buildShopPage;
-window.shopDelete = shopDelete;
-window.openShopModal = openShopModal;
-window.shopSearch = shopSearch;
-window.shopAddToCart = shopAddToCart;
-window.shopRemoveFromCart = shopRemoveFromCart;
-window.shopToggleCart = shopToggleCart;
+
+
+
+
+
+
+
+
+
+
+
 
 // ============================================================
 // מערכת סיפורים (Stories System)
@@ -6691,17 +6440,7 @@ let storyGridCols = (function () {
 // קטגוריות בו-זמנית, וסיפור מוצג אם הקטגוריה שלו נמצאת באחת מהן.
 let selectedStoryCategories = new Set();
 
-// בורר גודל: 2 / 3 / 4 סיפורים בשורה. משנה את הגריד ושומר את הבחירה.
-function storySizeBarHTML() {
-  return '';   // בורר "גודל" הוסר לבקשת בעל האתר
-  // eslint-disable-next-line no-unreachable
-  return `
-    <div class="story-size-bar">
-      <span class="story-size-label">גודל</span>
-      ${[4, 3, 2].map(n => `<button type="button" class="story-size-btn${storyGridCols === n ? ' active' : ''}" onclick="storySetGridSize(${n})">${n}</button>`).join('')}
-    </div>
-  `;
-}
+
 
 function storySetGridSize(n) {
   if (![2, 3, 4].includes(n)) return;
@@ -6718,20 +6457,11 @@ function storySetGridSize(n) {
 }
 window.storySetGridSize = storySetGridSize;
 
-// כפתור "עוד" לסיפורים — מציג שורת גריד אחת, ובלחיצה חושף את הכל (כמו בתמונות)
-function storyRowMoreBtn(count, rowId) {
-  // כפתור "עוד" הוסר לבקשת המשתמש — כל הסיפורים מוצגים תמיד למטה
-  return '';
-}
 
 
-function storySetGeneralFilter(opt, btn) {
-  currentStoryGeneralFilter = opt;
-  const bar = btn.closest('.story-general-filter-bar');
-  if (bar) bar.querySelectorAll('.story-general-filter-btn').forEach(b => b.classList.toggle('active', b.textContent.trim() === opt));
-  if (typeof storyApplyFilters === 'function') storyApplyFilters();
-}
-window.storySetGeneralFilter = storySetGeneralFilter;
+
+
+
 
 // שורת סינון קטגוריות לסיפורים (בחירה יחידה)
 function storyCatIsActive(c) {
@@ -6828,503 +6558,15 @@ function storyApplyFilters() {
 }
 window.storyApplyFilters = storyApplyFilters;
 
-// כרטיס סיפור בודד — חולץ לפונקציה נפרדת כדי לשמש גם בעמוד הסיפורים
-// וגם כפיד "סיפורים" שנוסף בתחתית עמוד התמונות.
-function storyCardHTML(s, iconHint) {
-    const validImages = (s.images && s.images.length) ? s.images.filter(Boolean) : (s.image ? [s.image] : []);
-    const mainImg = s.cover || validImages[0] || s.image || '';
-    let miniThumbnailsHTML = '';
-    if (validImages.length <= 1) {
-      miniThumbnailsHTML = '<div class="photo-mini-thumbs-spacer" aria-hidden="true"></div>';
-    } else {
-      miniThumbnailsHTML = `
-        <div class="photo-mini-thumbs" style="display: flex; align-items: center; justify-content: center; gap: 4px; margin-top: 6px; width: 100%; direction: ltr;">
-          <div class="photo-mini-thumbs-list" style="display: flex; gap: 4px; justify-content: center; flex-wrap: wrap; flex: 1; min-width: 0;">
-            ${validImages.map((imgUrl, idx) => `
-              <div class="photo-mini-thumb" 
-                   onclick="event.stopPropagation(); photoSelectRowImage('${artEsc(s.id)}', '${artEsc(imgUrl)}', this)" 
-                   style="width: 22px; height: 22px; border-radius: 4px; overflow: hidden; cursor: pointer; border: 1.5px solid ${idx === 0 ? '#7c3aed' : '#ddd'}; transition: all 0.2s; background: #eeeeee; flex-shrink:0;">
-                <img src="${escHtml(imgUrl)}" style="width: 100%; height: 100%; object-fit: cover;">
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      `;
-    }
-    const isVerifiedStory = isUserVerified(s.authorId, s.author, s.verified || s.verifiedUser);
-    const verifiedBadgeHTML = isVerifiedStory ? verifiedSealHTML() : '';
-    const storyTime = photoAlbumTime(s);
-    const viewsCount = photoGetViews(s.id);
-    const likesCount = s.likes || 0;
-    const storyScore = likesCount + viewsCount;
-    const defaultIcon = iconHint || (s.id && s.id.includes('comic') ? '📖' : '✍️');
 
-    const cardLink = (url, label, iconPath, extraPath) => {
-      const svg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;"><path d="${iconPath}"/>${extraPath || ''}</svg>`;
-      if (url) {
-        if (label === 'אימייל') {
-          return `<button type="button" onclick="revealAndCopyEmail('${artEsc(url)}', this, event);" class="art-telegram-btn" title="לחץ לחשיפת והעתקת אימייל" aria-label="אימייל">${svg}</button>`;
-        }
-        return `<a href="${escHtml(safeUrl(url))}" target="_blank" onclick="event.stopPropagation();" class="art-telegram-btn" title="${label}" aria-label="${label}">${svg}</a>`;
-      }
-      return `<span class="art-telegram-btn is-disabled" onclick="event.stopPropagation();" aria-disabled="true" title="${label}">${svg}</span>`;
-    };
 
-    const isLikedCard = typeof photoIsLikedLocal === 'function' ? photoIsLikedLocal(s.id) : false;
-    const cardHeartOverlay = `
-      <button type="button" class="art-heart-overlay${isLikedCard ? ' liked' : ''}" onclick="event.stopPropagation(); photoToggleLike('${artEsc(s.id)}')" title="לייק" aria-label="לייק">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="${isLikedCard ? '#8b5cf6' : 'none'}" stroke="${isLikedCard ? '#8b5cf6' : '#ffffff'}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-        </svg>
-      </button>
-    `;
 
-    const isSavedCard = typeof photoIsSavedLocal === 'function' ? photoIsSavedLocal(s.id) : false;
-    const cardSaveBtnHTML = `
-      <button type="button" onclick="event.stopPropagation(); photoToggleSave('${artEsc(s.id)}')" class="art-telegram-btn art-save-btn${isSavedCard ? ' is-saved' : ''}" title="${isSavedCard ? 'הסר משמורים' : 'שמור לצפייה מאוחרת'}">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="${isSavedCard ? '#ffffff' : 'none'}" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
-          <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
-        </svg>
-      </button>
-    `;
 
-    const cardLinksHTML = `
-      <div class="photo-card-links">
-        ${cardStatsBtnsHTML(s, 'story')}
-        ${cardSaveBtnHTML}
-        ${cardLink(s.telegramUrl, 'טלגרם', 'M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z')}
-        ${cardLink(s.emailUrl, 'אימייל', 'M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z', '<polyline points="22,6 12,13 2,6"/>')}
-      ${cardMsgBtnHTML(s)}
-      ${cardFollowBtnHTML(s)}
-      ${cardReportBtnHTML(s.id, s.title)}
-      ${cardMoreBtnHTML()}
-      ${cardFollowHeadHTML(s)}
-      </div>
-    `;
+function storyOpenDetail() { navigateToPage('page-home-feed'); }   // הקומיקס והסיפורים הוסרו מהאתר
 
-    const scoreBadgeHTML = `
-      <div style="display:inline-flex; align-items:center; gap:8px; font-size:12px; color:#64748b; font-weight:700; margin-top:4px;">
-        ${viewsDistHTML(s.id, s.authorId)}
-        <span>·</span>
-        <span>❤️ ${likesCount} לייקים</span>
-      </div>
-    `;
 
-    return `
-      <div class="art-row" data-category="${escHtml(s.category || 'כללי')}" data-verified="${isVerifiedStory ? '1' : '0'}" data-time="${storyTime}" data-score="${storyScore}" data-search="${escHtml([s.title, s.summary, s.author, s.category].filter(Boolean).join(' '))}" onclick="storyOpenDetail('${artEsc(s.id)}')">
-        <div class="art-row-text photo-card-info">
-          <h3>${escHtml(s.title)}</h3>
-          ${(s.summary || s.desc) ? `<p class="card-desc">${escHtml(String(s.summary || s.desc).replace(/<[^>]+>/g, ' ').trim())}</p>` : ''}
-          <div class="art-row-meta" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-            <span class="photo-author-link art-row-author" onclick="event.stopPropagation(); if(typeof openUserPage==='function') openUserPage('${artEsc(s.authorId || '')}', '${artEsc(s.author || '')}')" style="cursor: pointer; color: #262626; text-decoration: underline; font-weight: 600;">${authorAvHTML(s)}${escHtml(s.author)}${verifiedBadgeHTML}</span>
-            <span class="art-row-sep">|</span>
-            <span>${escHtml(s.timestamp)}</span>
-            ${s.ageRange ? `<span class="art-row-sep">|</span><span>גיל ${escHtml(String(s.ageRange))}</span>` : ''}
-            ${isVerifiedStory ? `<span class="art-row-sep">|</span><span style="color:#111111; font-weight:700; display:inline-flex; align-items:center; gap:4px;">חשבון זה מאומת <span style="background:#dbeafe; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:10px;">✓</span></span>` : ''}
-          </div>
-          ${scoreBadgeHTML}
-          ${cardLinksHTML}
-        </div>
-        <div class="art-row-img-container" style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0;">
-          <div class="art-row-img-wrap" style="--bg-img: url('${mainImg || ''}');">
-            ${mainImg ? `<img src="${escHtml(mainImg)}" alt="">` : `<div class="art-row-img-placeholder" data-icon="${defaultIcon}"></div>`}
-            ${validImages.length > 1 ? `<div class="photo-count-badge">1 / ${validImages.length}</div>` : ''}
-            ${mainImg ? `<button class="art-zoom-btn" onclick="event.stopPropagation();artGalleryById('stories','${artEsc(s.id)}', this.closest('.art-row-img-wrap').querySelector('img') && this.closest('.art-row-img-wrap').querySelector('img').getAttribute('src'))" title="מסך מלא">⛶</button>` : ''}
-            ${cardHeartOverlay}
-            ${isEditMode ? `<button class="art-pin-btn" onclick="event.stopPropagation(); togglePinStory('${artEsc(s.id)}')" title="${s.pinned ? 'בטל נעץ' : 'נעץ בגריד'}" style="${s.pinned ? 'color:#ffd700;display:flex;' : ''}">${s.pinned ? '★' : '☆'}</button>` : ''}
-            ${(isEditMode || isAdmin()) ? `<button class="art-edit-btn" onclick="event.stopPropagation(); openStoryEditModal('${artEsc(s.id)}')" title="ערוך סיפור">✎</button>` : ''}
-            <button class="art-delete-btn" onclick="event.stopPropagation();storyDelete('${artEsc(s.id)}',this)">✕</button>
-          </div>
-          ${miniThumbnailsHTML}
-        </div>
-      </div>
-    `;
-}
 
-function buildStoriesPage(stories, storyKind) {
-  // storyKind: 'comics' (העמוד הישן, קומיקס/תמונות-סיפור) או 'stories' (סיפורי טקסט חדשים)
-  storyKind = (storyKind === 'stories') ? 'stories' : 'comics';
-  const kindLabel = storyKind === 'stories' ? 'סיפורים' : 'קומיקס';
-  const featured = stories.filter(s => s.pinned).slice(0, 3);
-  const popular = stories.slice(0, 5);
 
-  const featuredHTML = featured.map(s => `
-    <div class="art-featured-card" onclick="storyOpenDetail('${artEsc(s.id)}')">
-      <img src="${escHtml(s.image || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80')}" alt="">
-      <div class="art-featured-overlay"></div>
-      <div class="art-featured-info">
-        <span class="art-category-badge" style="background:${escHtml(s.categoryColor || '#8b5cf6')}">${escHtml(s.category)}</span>
-        <h3>${escHtml(s.title)}</h3>
-        ${(s.summary || s.desc) ? `<p class="card-desc">${escHtml(String(s.summary || s.desc).replace(/<[^>]+>/g, ' ').trim())}</p>` : ''}
-        <div class="art-featured-meta">${escHtml(s.author)} · ${escHtml(s.timestamp)}</div>
-      </div>
-    </div>
-  `).join('');
-
-  const listHTML = stories.map(storyCardHTML).join('');
-
-  const popularHTML = popular.map((s, i) => `
-    <div class="art-popular-item" onclick="storyOpenDetail('${artEsc(s.id)}')">
-      <span class="art-popular-num">${String(i+1).padStart(2,'0')}</span>
-      <div style="flex:1;font-size:13px;font-weight:600;line-height:1.4;color:#222222">${escHtml(s.title)}</div>
-    </div>
-  `).join('');
-
-  const json = encodeURIComponent(JSON.stringify(stories));
-  const _adultOn = (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('age_verified') === 'true');
-  return `<div class="articles-page stories-page story-cols-${storyKind === 'comics' ? 2 : storyGridCols}${photoImagesMode ? '' : ' text-mode'}" data-story-kind="${storyKind}" data-stories-json="${json}">
-    <div class="art-inner">
-      <div class="art-featured-grid">${featuredHTML}</div>
-      <div class="art-layout">
-        <div class="art-main">
-          <div class="pm-head">${contentSwitchHTML(storyKind)}</div>
-          ${composerBarHTML()}
-          <div class="art-search-wrap">
-            <input type="text" class="art-search" placeholder="🔍 חיפוש ${kindLabel}..." oninput="storySearch(this.value)">
-          </div>
-          ${storyCategoryBarHTML()}
-          ${photoFilterSectionHTML()}
-          <div class="view-toggles">
-            <label class="tgl tgl-desktop-only">
-              <span class="tgl-label">⛶ מסך מלא (הסתרת סרגלי הצד)</span>
-              <span class="tgl-switch"><input type="checkbox" ${pageFullWidth ? 'checked' : ''} onchange="togglePageFullWidth(this.checked)"><span class="tgl-slider"></span></span>
-            </label>
-          </div>
-          <div class="art-section-title-row">
-            <div class="art-section-title">כל ה${kindLabel}</div>
-            ${storyKind === 'comics' ? '' : storySizeBarHTML()}
-          </div>
-          <div class="art-rows photo-collapsible expanded" id="story-row-main">${listHTML}</div>
-          ${storyRowMoreBtn(stories.length, 'story-row-main')}
-          <div class="art-pagination" style="display:none"></div>
-          <div class="art-no-results" style="display:none">לא נמצאו ${kindLabel} התואמים לחיפוש</div>
-          <button class="art-add-btn" onclick="openStoryModal()" style="background:#111111; color:#ffffff;">+ הוסף ${storyKind === 'stories' ? 'סיפור' : 'קומיקס'} חדש</button>
-        </div>
-        <div class="art-sidebar art-sidebar-right">
-          ${(isAdmin() || isEditMode) ? `
-          <button onclick="openStoryModal()" style="background:#111111; width:100%; padding:12px 16px; border-radius:8px; border:none; color:#ffffff; font-weight:bold; font-size:14px; cursor:pointer; margin-bottom:16px;">+ הוסף סיפור חדש</button>
-          ` : ''}
-          ${buildSidebarTabs('', storyKind === 'comics' ? 'comics' : 'stories')}
-        </div>
-        ${buildLeftSidebarBox(popularHTML, 'stories')}
-      </div>
-    </div>
-  </div>`;
-}
-
-function storyOpenDetail(id) { return mediaGate(id, () => _storyOpenDetailImpl(id)); }
-function _storyOpenDetailImpl(id) {
-  if (typeof trackEvent === 'function') trackEvent('story_open');
-  window.__detailOpen = true; // מגן מפני רענון-רקע שיבעט מהעמוד הפנימי
-  window.__detailOpenPageId = activePageId; // שומר איזה עמוד פעיל כשנפתחה התצוגה הפנימית
-  const container = mainContent.querySelector('.stories-page');
-  const _srcKind = (container && container.getAttribute('data-story-kind')) || 'comics';
-  
-  let stories = [];
-  try {
-    if (container && container.dataset && container.dataset.storiesJson) {
-      stories = JSON.parse(decodeURIComponent(container.dataset.storiesJson));
-    }
-  } catch(e) {}
-  
-  let s = Array.isArray(stories) ? stories.find(x => x && x.id === id) : null;
-  if (!s) {
-    const all = (typeof getAllStoriesFromPages === 'function') ? getAllStoriesFromPages() : [];
-    s = all.find(x => x && x.id === id);
-    if (all && all.length) stories = all;
-  }
-  if (!s) {
-    const demos = (typeof _homeDemoComics === 'function' && typeof _homeDemoStories === 'function') 
-      ? _homeDemoComics().concat(_homeDemoStories()) : [];
-    s = demos.find(x => x && x.id === id);
-    if (s && !stories.length) stories = demos;
-  }
-  if (!s) return;
-  if (s) mediaApply(s);
-  if (typeof addToWatchHistory === 'function') addToWatchHistory({ ...s, type: 'story' });
-  try { recoTrack(s, 'view'); } catch (e) {}
-
-  const validImages = s.images ? s.images.filter(img => !!img) : (s.image ? [s.image] : []);
-
-  // עמודי הסיפור: תמונה או טקסט. אם אין pages — ממירים מהתמונות הישנות
-  // _src — מאיפה הגיע כל עמוד בנתונים, כדי שעריכה מתוך הדף תשמר למקום הנכון
-  let storyPagesArr = (s.pages && s.pages.length)
-    ? s.pages.map((p, i) => ({ ...((p && typeof p === 'object') ? p : { type: 'image', url: p }), _src: i }))
-    : validImages.map(u => ({ type: 'image', url: u }));
-
-  const _bodyText = (s.body || s.summary || '').trim();
-  // קומיקס (יש עמודי תמונה) — נפתח ישר בתמונה הראשונה. הטקסט מוצג כתיאור קצר מתחת לכותרת
-  // ולא כ"עמוד" נפרד לפני התמונות.
-  let _comicDesc = '';
-  const _isComic = storyPagesArr.some(p => p && p.type === 'image' && p.url);
-  if (_isComic) {
-    const _texts = storyPagesArr.filter(p => p && p.type === 'text').map(p => (p.text || '').trim()).filter(Boolean);
-    _comicDesc = _texts.length ? _texts.join('\n') : _bodyText;
-    storyPagesArr = storyPagesArr.filter(p => p && p.type !== 'text');
-  } else if (_bodyText && !storyPagesArr.some(p => p.type === 'text')) {
-    storyPagesArr.unshift({ type: 'text', text: _bodyText, _src: 'body' });
-  }
-  if (typeof splitStoryTextPages === 'function') storyPagesArr = splitStoryTextPages(storyPagesArr);
-  if (!storyPagesArr.length) {
-    storyPagesArr = [{ type: 'text', text: s.summary || s.title || 'סיפור', _src: 'body' }];
-  }
-
-  window.storyPagesData = storyPagesArr;
-  window.storyInlineImgs = { ...((s.inlineImages && typeof s.inlineImages === 'object') ? s.inlineImages : {}) };
-  window.currentStoryId = id;
-  window.currentStoryTitle = s.title || 'סיפור';
-
-  let _bmPage = 0;
-  try {
-    const _bms = JSON.parse(localStorage.getItem('story_bookmarks_v1') || '{}');
-    const _b = _bms[id];
-    const _p = (_b && typeof _b === 'object') ? _b.page : _b;
-    if (_p != null) {
-      const parsed = parseInt(_p, 10);
-      if (!isNaN(parsed) && parsed >= 0 && parsed < storyPagesArr.length) _bmPage = parsed;
-    }
-  } catch (e) {}
-  window.currentStoryPage = _bmPage;
-
-  // תמונות ממוזערות לכל עמוד
-  const thumbsHTML = storyPagesArr.map((pg, idx) => {
-    const inner = pg.type === 'text'
-      ? `<div class="story-thumb-text" style="width:100%; height:100%; font-size:9px; font-weight:700; padding:3px; overflow:hidden; box-sizing:border-box; background:#ffffff; color:#333333; text-align:center;">${escHtml(storyStripImgMarkers(pg.text).slice(0, 40))}</div>`
-      : `<img src="${escHtml(pg.url)}" style="width:100%; height:100%; object-fit:cover; display:block;">`;
-    return `<div class="story-page-thumb${idx === _bmPage ? ' active' : ''}" data-idx="${idx}" onclick="event.stopPropagation(); storyGoToPage(${idx})" style="width:54px; height:54px; border-radius:8px; overflow:hidden; cursor:pointer; border:2px solid ${idx === _bmPage ? '#7c3aed' : '#cbd5e1'}; flex-shrink:0; background:#ffffff;">${inner}</div>`;
-  }).join('');
-
-  const recommended = stories.filter(x => x && x.id !== id).slice(0, 3);
-  const recHTML = recommended.map(r => `
-    <div class="art-rec-card" onclick="event.stopPropagation(); storyOpenDetail('${artEsc(r.id)}')">
-      <div class="art-rec-img">
-        ${r.image ? `<img src="${escHtml(r.image)}" alt="">` : '<div class="art-card-img-placeholder"></div>'}
-        <span class="art-rec-badge art-category-badge" style="background:${escHtml(r.categoryColor || '#8b5cf6')}">${escHtml(r.category)}</span>
-      </div>
-      <div class="art-rec-text">
-        <h4>${escHtml(r.title)}</h4>
-        <div class="art-rec-meta">${escHtml(r.author)} · ${escHtml(r.timestamp)}</div>
-      </div>
-    </div>
-  `).join('');
-
-  const json = encodeURIComponent(JSON.stringify(stories));
-
-  // כפתור עריכה מתוך הסיפור — לבעלים במצב עריכה בלבד, ורק כשנפתח מעמוד סיפורים אמיתי
-  // (מעמוד הבית / מפיד התמונות השמירה הייתה דורסת את העמוד הלא-נכון)
-  const _canEditHere = isEditMode && activePageId !== 'page-home-feed' && container && !container.classList.contains('photos-stories-feed') && Array.isArray(stories) && stories.some(x => x && x.id === id);
-  const _editBtn = _canEditHere
-    ? `<button class="story-detail-edit-btn" onclick="event.stopPropagation(); storyInlineEditStart()">✎ עריכת הסיפור</button>`
-    : '';
-  window.storyInlineCtx = _canEditHere ? { id, isComic: _isComic, comicDesc: _comicDesc } : null;
-  window.__storyInlineEdit = false;
-  const _oldBar = document.getElementById('story-inline-bar');
-  if (_oldBar) _oldBar.remove();
-
-  // סיפור טקסט בלבד בעל עמוד יחיד
-  const isTextStory = storyPagesArr.length > 0 && storyPagesArr.every(p => p.type === 'text');
-  if (isTextStory && storyPagesArr.length === 1) {
-    const _fullText = storyPagesArr.map(p => p.text || '').join('\n\n');
-    // כל שורה היא פסקה, ושורה ריקה נשמרת כרווח — כמו שנכתב בעריכה
-    const _words = _fullText.split(/\s+/).filter(Boolean).length;
-    const _readMin = Math.max(1, Math.round(_words / 180));
-    const _tags = (Array.isArray(s.tags) && s.tags.length) ? s.tags : (s.category ? [s.category] : []);
-    const _tagChips = _tags.map(t => `<span class="story-article-tag">${escHtml(t)}</span>`).join('');
-    mainContent.innerHTML = `
-      <div class="art-detail articles-page stories-page story-article-page" data-story-kind="${_srcKind}" data-story-id="${id}" data-stories-json="${json}">
-        <div class="art-detail-inner">
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
-            <button class="art-back-btn" onclick="storyGoBack()" style="background:#f1f5f9; border:1px solid #cbd5e1; border-radius:8px; padding:6px 14px; font-weight:700; cursor:pointer;">חזרה לסיפורים</button>
-            ${_editBtn}
-          </div>
-          <article class="story-article" style="margin-top:16px;">
-            <h1 class="story-article-title">${escHtml(s.title || '')}</h1>
-            <div class="story-article-rule"></div>
-            <div class="story-article-meta" style="margin-bottom:14px; color:#64748b;">
-              <span class="au-line">${authorAvHTML(s)}<b>${escHtml(s.author || 'אנונימי')}</b></span>
-              <span class="sam-dot">·</span><span>${escHtml(s.timestamp || '')}</span>
-              <span class="sam-dot">·</span><span>${_readMin} דק׳ קריאה</span>
-            </div>
-            ${_tagChips ? `<div class="story-article-tags">${_tagChips}</div>` : ''}
-            ${storyLinkedChipHTML(s)}
-            <div class="story-article-body" id="story-article-body" style="font-size:17px; line-height:1.75; color:#1e293b;">${storyRichHTML(_fullText, window.storyInlineImgs, true)}</div>
-          </article>
-          ${(typeof storyCommentsSectionHTML === 'function') ? storyCommentsSectionHTML(id) : ''}
-          <div class="art-rec-section" style="margin-top:36px;">
-            <h3 style="margin:0 0 16px; font-size:17px; font-weight:800;">סיפורים נוספים שיעניינו אותך</h3>
-            <div class="art-rec-grid">${recHTML}</div>
-          </div>
-        </div>
-      </div>
-    `;
-    if (typeof subscribeStoryComments === 'function') subscribeStoryComments(id);
-    detailScrollTop();
-    return;
-  }
-
-  // קומיקס: תצוגת "מוצר" כמו בעמוד הגלריה — העמוד הנוכחי במסגרת צבעונית גדולה,
-  // ובצד כותרת, תיאור, ריבועי עמודים וכפתור. הניווט ממשיך לעבור דרך storyRenderPage.
-  if (_isComic) {
-    const _n = storyPagesArr.length;
-    const _tiles = storyPagesArr.map((pg, idx) => `
-      <button type="button" class="pshow-tile story-page-thumb${idx === _bmPage ? ' active' : ''}" data-idx="${idx}" style="--tint:${PSHOW_TINTS[idx % PSHOW_TINTS.length]}" onclick="event.stopPropagation(); storyGoToPage(${idx})" aria-label="עמוד ${idx + 1}">
-        <img src="${escHtml(pg.url)}" alt="" loading="lazy">
-      </button>`).join('');
-    mainContent.innerHTML = `
-      <div class="art-detail articles-page stories-page art-pd3 art-comic3" data-story-kind="${escHtml(_srcKind)}" data-story-id="${escHtml(id)}" data-stories-json="${json}">
-        <div class="art-detail-inner">
-          <h1 class="pd3-pagehead">קומיקס</h1>
-          <div class="pd2-toprow">
-            <button class="art-back-btn" onclick="storyGoBack()">חזרה לקומיקס</button>
-            <div class="pd2-topend">
-              ${_editBtn}
-              ${pd2ActionsHTML(s, 'comic')}
-              <span class="pd2-topcat" title="קטגוריה">${escHtml(s.category || 'כללי')}</span>
-            </div>
-          </div>
-
-          <div class="pshow pd-show comic-show">
-            <div class="pshow-stage">
-              <div class="pshow-frame" style="--tint:${PSHOW_TINTS[_bmPage % PSHOW_TINTS.length]}">
-                <div class="story-page-view" id="story-page-view"></div>
-                ${_n > 1 ? `
-                  <button type="button" class="pshow-arrow prev" onclick="event.stopPropagation(); storyNextPage()" aria-label="העמוד הבא"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
-                  <button type="button" class="pshow-arrow next" onclick="event.stopPropagation(); storyPrevPage()" aria-label="העמוד הקודם"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
-                ` : ''}
-              </div>
-              ${_n > 1 ? `<div class="pshow-dots">${storyPagesArr.map((_, i) => `<button type="button" class="pshow-dot${i === _bmPage ? ' active' : ''}" data-idx="${i}" onclick="storyGoToPage(${i})" aria-label="עמוד ${i + 1}"></button>`).join('')}</div>` : ''}
-            </div>
-
-            <div class="pshow-info pd2-info comic-info">
-              <div class="pd2-creator">
-                ${authorAvHTML(s)}
-                <div class="pd2-creator-txt" ${s.authorId || s.author ? `onclick="openUserPage('${artEsc(s.authorId || '')}','${artEsc(s.author || '')}')"` : ''}>
-                  <b>${escHtml(s.author || 'משתמש')}${isUserVerified(s.authorId, s.author, s.verified || s.verifiedUser) ? verifiedSealHTML(15) : ''}</b>
-                  <small>${escHtml(s.timestamp || '')}</small>
-                </div>
-                <div class="pd2-stats">
-                  ${viewsBadgeHTML(s.id)}
-                  ${_n > 1 ? `<span class="pd2-stats-sep" aria-hidden="true"></span><span class="pd2-pages" title="עמוד"><span id="story-page-counter">${_bmPage + 1} / ${_n}</span></span>` : ''}
-                </div>
-              </div>
-              <div class="pd2-acts-desk">${pd2ActionsHTML(s, 'comic')}</div>
-              <span class="pd3-badge">${escHtml(s.category || 'קומיקס')}</span>
-              <h1 class="pd2-title">${escHtml(s.title || '')}</h1>
-              ${_comicDesc ? `<div class="pshow-desc story-comic-desc">${storyRichHTML(_comicDesc, window.storyInlineImgs, false)}</div>` : ''}
-              ${_n > 1 ? `<div class="pshow-tiles">${_tiles}</div>` : ''}
-              <div class="pd3-feats-h">פרטים</div>
-              <ul class="pd3-feats">
-                <li><span class="pd3-fi">✓</span>פורסם ${escHtml(s.timestamp || '')}</li>
-                <li><span class="pd3-fi">✓</span>${_n || 1} עמודים</li>
-                ${s.category ? `<li><span class="pd3-fi">✓</span>${escHtml(s.category)}</li>` : ''}
-                ${isUserVerified(s.authorId, s.author, s.verified || s.verifiedUser) ? '<li><span class="pd3-fi">✓</span>חשבון מאומת</li>' : ''}
-              </ul>
-              <div class="pshow-line"></div>
-              <div class="pshow-actions">
-              ${storyLinkedChipHTML(s)}
-              <button type="button" class="pshow-cta" onclick="artGalleryById('stories', window.currentStoryId, document.querySelector('#story-page-view img') ? document.querySelector('#story-page-view img').getAttribute('src') : '')">קריאה במסך מלא</button>
-              </div>
-            </div>
-            <aside class="pd3-box comic-box">
-              <div class="pd3-box-card">
-                <div class="pd3-box-stat"><b>${s.likes || 0}</b> לייקים</div>
-                <div class="okb-wrap"><div class="okb-row">
-                  <button type="button" class="okb okb-super" onclick="artGalleryById('stories', window.currentStoryId, document.querySelector('#story-page-view img') ? document.querySelector('#story-page-view img').getAttribute('src') : '')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg><span>קריאה במסך מלא</span></button>
-                  <button type="button" class="okb okb-pass pd2-save${photoIsSavedLocal(s.id) ? ' is-saved' : ''}" onclick="photoToggleSave('${artEsc(s.id)}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><span>שמירה</span></button>
-                  <button type="button" class="okb okb-like${photoIsLikedLocal(s.id) ? ' on' : ''}" onclick="this.classList.toggle('on'); photoToggleLike('${artEsc(s.id)}')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg><span>אהבתי</span></button>
-                </div></div>
-                ${postBarHTML(s)}
-              </div>
-              <div class="pd3-trust"><b>✓ נבחר בקפידה</b><span>קומיקס שגולשים יצרו — אפשר לדרג, להגיב ולשתף.</span></div>
-            </aside>
-          </div>
-
-          ${(typeof storyCommentsSectionHTML === 'function') ? storyCommentsSectionHTML(id) : ''}
-
-          <div class="art-rec-section" style="margin-top:36px;">
-            <h3 style="margin:0 0 16px; font-size:17px; font-weight:800;">קומיקס נוסף שיעניין אותך</h3>
-            <div class="art-rec-grid">${recHTML}</div>
-          </div>
-        </div>
-      </div>
-    `;
-    if (typeof subscribeStoryComments === 'function') subscribeStoryComments(id);
-    storyRenderPage();
-    detailScrollTop();
-    return;
-  }
-
-  const viewerHTML = `
-    <div class="story-viewer" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:16px; padding:20px; margin-bottom:24px; box-shadow:0 4px 20px rgba(0, 0, 0, 0.04); position:relative;">
-      <div class="story-frame">
-        <div class="story-page-view" id="story-page-view" style="min-height:360px; background:#fafafa; border:1px solid #f0f0f0; border-radius:12px; display:flex; align-items:center; justify-content:center; overflow:hidden;"></div>
-      </div>
-      
-      ${storyPagesArr.length > 1 ? `
-      <div class="story-viewer-nav" style="display:flex; align-items:center; justify-content:center; gap:16px; margin-top:16px; direction:ltr;">
-        <button type="button" class="story-nav-btn" id="story-prev-btn" onclick="event.stopPropagation(); storyPrevPage()" title="הקודם" style="width:38px; height:38px; border-radius:50%; background:#111111; color:#ffffff; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center;">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-        </button>
-        
-        <div class="story-page-thumbs" style="display:flex; gap:8px; overflow-x:auto; padding:4px; max-width:80%;">${thumbsHTML}</div>
-        
-        <button type="button" class="story-nav-btn" id="story-next-btn" onclick="event.stopPropagation(); storyNextPage()" title="הבא" style="width:38px; height:38px; border-radius:50%; background:#111111; color:#ffffff; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center;">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-        </button>
-      </div>
-      <div class="story-page-counter" id="story-page-counter" style="text-align:center; color:#64748b; font-size:13px; font-weight:700; margin-top:8px;">${_bmPage + 1} / ${storyPagesArr.length}</div>
-      ` : ''}
-    </div>`;
-
-  mainContent.innerHTML = `
-    <div class="art-detail articles-page stories-page" data-story-kind="${escHtml(_srcKind)}" data-story-id="${escHtml(id)}" data-stories-json="${json}">
-      <div class="art-detail-inner">
-        <div class="story-detail-head" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
-          <button class="art-back-btn" onclick="storyGoBack()" style="background:#f1f5f9; border:1px solid #cbd5e1; border-radius:8px; padding:6px 14px; font-weight:700; cursor:pointer;">חזרה לסיפורים</button>
-          <div class="story-detail-titlewrap" style="text-align:center;">
-            <h1 class="art-detail-title" style="margin:0; font-size:22px; font-weight:900;">${escHtml(s.title || '')}</h1>
-            <div class="art-meta" style="margin-top:4px; font-size:13px; color:#64748b; display:flex; align-items:center; justify-content:center; gap:8px;">
-              <span class="art-category-badge" style="background:${escHtml(s.categoryColor || '#8b5cf6')}; padding:2px 8px; border-radius:4px; color:#262626; font-size:11px; font-weight:700;">${escHtml(s.category || 'כללי')}</span>
-              <span>${escHtml(s.author || '')}</span>
-              <span>·</span>
-              <span>${escHtml(s.timestamp || '')}</span>
-            </div>
-          </div>
-          <div style="min-width:100px; display:flex; justify-content:flex-end;">${_editBtn}</div>
-        </div>
-
-        ${storyLinkedChipHTML(s)}
-
-        ${_comicDesc ? `<div class="story-comic-desc" style="margin:0 0 16px; font-size:15px; line-height:1.6; color:#334155; text-align:right; white-space:pre-wrap; word-break:break-word;">${storyRichHTML(_comicDesc, window.storyInlineImgs, false)}</div>` : ''}
-
-        ${viewerHTML}
-
-        ${(typeof storyCommentsSectionHTML === 'function') ? storyCommentsSectionHTML(id) : ''}
-
-        <div class="art-rec-section" style="margin-top:36px;">
-          <h3 style="margin:0 0 16px; font-size:17px; font-weight:800;">סיפורים נוספים שיעניינו אותך</h3>
-          <div class="art-rec-grid">${recHTML}</div>
-        </div>
-      </div>
-    </div>
-  `;
-
-  if (typeof subscribeStoryComments === 'function') subscribeStoryComments(id);
-  storyRenderPage();
-  detailScrollTop();
-}
-
-// מציג את העמוד הנוכחי של הסיפור (תמונה או טקסט מודגש)
-// בקרת גודל טקסט בכתבת סיפור (קטן/בינוני/גדול)
-function storyArticleFont(level) {
-  const body = document.getElementById('story-article-body');
-  if (!body) return;
-  const sizes = ['17px', '20px', '24px'];
-  body.style.fontSize = sizes[level] || sizes[1];
-  const wrap = body.closest('.story-article');
-  if (wrap) wrap.querySelectorAll('.story-article-fontsize button').forEach((b, i) => b.classList.toggle('active', i === level));
-}
-window.storyArticleFont = storyArticleFont;
 
 function storyRenderPage() {
   const view = document.getElementById('story-page-view');
@@ -7401,41 +6643,11 @@ function storyGoToPage(i) {
 }
 window.storyGoToPage = storyGoToPage;
 
-// רמז גלילה: מציג "▼ גללו לעוד" כשיש תוכן להמשך ומסתיר בסוף
-function storyUpdateScrollHint() {
-  const view = document.getElementById('story-page-view');
-  const hint = document.getElementById('story-scroll-hint');
-  if (!view || !hint) return;
-  const hasMore = view.scrollHeight > view.clientHeight + 8;
-  const atTop = view.scrollTop <= 4;
-  // מציג את חץ הגלילה רק בראש העמוד (כשעדיין לא גללו) ויש תוכן להמשך;
-  // ברגע שגוללים מטה — נעלם.
-  hint.hidden = !(hasMore && atTop);
-}
-window.storyUpdateScrollHint = storyUpdateScrollHint;
 
-// סימון הנקודה שהקורא עצר בה — לוכד מילה/כמה מילים, נשמר ב"שמורים" וממשיך משם
-function storyBookmarkHere() {
-  const id = window.currentStoryId;
-  if (!id) return;
-  const arr = window.storyPagesData || [];
-  const pg = arr[window.currentStoryPage || 0];
-  let def = '';
-  if (pg && pg.type === 'text') def = (pg.text || '').trim().split(/\s+/).slice(0, 5).join(' ');
-  const snippet = prompt('לכד/י אות או כמה מילים מהמקום שעצרת — זה יופיע בשמורים כדי שתמצא/י בקלות:', def);
-  if (snippet === null) return; // בוטל
-  let bms = {};
-  try { bms = JSON.parse(localStorage.getItem('story_bookmarks_v1') || '{}'); } catch (e) {}
-  bms[id] = {
-    page: window.currentStoryPage || 0,
-    snippet: (snippet || '').trim().slice(0, 90),
-    title: window.currentStoryTitle || 'סיפור',
-    at: Date.now()
-  };
-  try { localStorage.setItem('story_bookmarks_v1', JSON.stringify(bms)); } catch (e) {}
-  if (typeof showCopyToast === 'function') showCopyToast('🔖 נשמר בשמורים! תמצא/י שם ותמשיך מכאן');
-}
-window.storyBookmarkHere = storyBookmarkHere;
+
+
+
+
 
 // פתיחת סיפור מסימנייה שבשמורים (חוזר לעמוד שסומן)
 function openStoryBookmark(id) {
@@ -7475,57 +6687,15 @@ function storyRemoveBookmark(id) {
 }
 window.storyRemoveBookmark = storyRemoveBookmark;
 
-function storyGoBack() {
-  window.__detailOpen = false;
-  // אם הגענו לפריט מעמוד הבית (שורות מתחלפות) — חוזרים לעמוד הבית ולא לעמוד סיפורים
-  if (activePageId === 'page-home-feed' && typeof renderPage === 'function') {
-    renderPage();
-    if (isEditMode) applyEditModeToContent();
-    return;
-  }
-  const container = mainContent.querySelector('.stories-page');
-  if (!container) return;
-  let stories = [];
-  try { stories = JSON.parse(decodeURIComponent(container.dataset.storiesJson)); } catch(e){}
-  mainContent.innerHTML = buildStoriesPage(stories, storyGetCurrentKind());
-  if (isEditMode) applyEditModeToContent();
-  window.scrollTo({ top: 0, behavior: 'instant' });
-}
 
-function storyGetStories() {
-  const container = mainContent.querySelector('.stories-page');
-  if (!container) return [];
-  try { return JSON.parse(decodeURIComponent(container.dataset.storiesJson)); } catch(e){ return []; }
-}
 
-// הסוג של עמוד הסיפורים הנוכחי (קומיקס/סיפורים). קריטי לשמור בבנייה-מחדש,
-// אחרת התוכן הופך ל"קומיקס" כברירת מחדל, מתנגש בעמוד הקומיקס, ומחיקת-הכפולים מוחקת אותו.
-function storyGetCurrentKind() {
-  try {
-    const el = mainContent.querySelector('.stories-page:not(.photos-stories-feed)');
-    return (el && el.getAttribute('data-story-kind')) || 'comics';
-  } catch (e) { return 'comics'; }
-}
 
-function storyDelete(id, el) {
-  if (!isEditMode && !isAdmin()) return; // המנהל מוחק כל תוכן, גם של גולשים
-  if (!confirm('האם למחוק סיפור זה?')) return;
-  removeItemFromStoredPages(id);
-  const onHome = !!mainContent.querySelector('.home-feed-page');
-  if (onHome) { if (typeof renderPage === 'function') renderPage(); return; }
-  const stories = storyGetStories().filter(s => s.id !== id);
-  mainContent.innerHTML = buildStoriesPage(stories, storyGetCurrentKind());
-  saveCurrentPageContent();
-}
 
-function storySearch(val) {
-  if (typeof logSearchQuery === 'function' && val) {
-    logSearchQuery(val, 'סיפורים');
-  }
-  // מאחד חיפוש + סינון קטגוריה; העימוד מציג את התוצאות
-  artPageState.stories = 1;
-  storyApplyFilters();
-}
+
+
+
+
+
 
 function storyNextPage() {
   const arr = window.storyPagesData || [];
@@ -7674,72 +6844,16 @@ function storyRemoveImage(i) {
 }
 window.storyRemoveImage = storyRemoveImage;
 
-function openStoryModal() {
-  if (!isEditMode) return;
-  syncStoryCategorySelect();
-  storyEditingId = null;
-  storyEditReturnToDetail = null;
-  const h = document.getElementById('story-modal-title');
-  if (h) h.textContent = 'הוספת סיפור חדש';
-  const saveBtn = document.getElementById('story-save');
-  if (saveBtn) saveBtn.textContent = 'שמור סיפור';
-  document.getElementById('story-title').value = '';
-  document.getElementById('story-summary').value = '';
-  document.getElementById('story-body').value = '';
-  document.getElementById('story-author').value = '';
-  if (document.getElementById('story-category')) document.getElementById('story-category').value = STORY_CATEGORIES[0] || 'כללי';
-  document.getElementById('story-link').value = '';
-  populateStoryLinkedSelect(null, '');
-  storyImageList = [];
-  renderStoryImagesEditor();
-  storyCoverImg = '';
-  renderStoryCoverBox();
-  document.getElementById('story-modal').style.display = 'flex';
-}
 
-// פותח את חלון הסיפור עם הנתונים הקיימים לעריכה (מנהל בלבד)
-function openStoryEditModal(id) { if (!mediaAllLoaded && mediaNeedsLoad()) { const _a = arguments; mediaLoadAll().then(() => _openStoryEditModalImpl.apply(null, _a)); return; } return _openStoryEditModalImpl.apply(null, arguments); }
-function _openStoryEditModalImpl(id) {
-  if (!isEditMode) return;
-  syncStoryCategorySelect();
-  const s = storyGetStories().find(x => x.id === id);
-  if (!s) return;
-  storyEditingId = id;
 
-  const h = document.getElementById('story-modal-title');
-  if (h) h.textContent = 'עריכת סיפור';
-  const saveBtn = document.getElementById('story-save');
-  if (saveBtn) saveBtn.textContent = 'עדכן סיפור';
 
-  document.getElementById('story-title').value = s.title || '';
-  document.getElementById('story-summary').value = s.summary || '';
-  document.getElementById('story-body').value = s.body || '';
-  document.getElementById('story-author').value = s.author || '';
-  if (document.getElementById('story-category')) document.getElementById('story-category').value = s.category || STORY_CATEGORIES[0] || 'כללי';
-  document.getElementById('story-link').value = s.link || '';
-  populateStoryLinkedSelect(id, s.linkedId || '');
 
-  // טוענים את העמודים הקיימים (תמונה/טקסט). אם אין pages — ממירים מהתמונות הישנות
-  if (s.pages && s.pages.length) {
-    storyImageList = s.pages.map(_storyNormalizePage);
-  } else {
-    storyImageList = ((s.images && s.images.length) ? s.images.filter(Boolean) : (s.image ? [s.image] : [])).map(u => ({ type: 'image', url: u }));
-  }
-  renderStoryImagesEditor();
-  storyCoverImg = s.cover || '';
-  renderStoryCoverBox();
 
-  document.getElementById('story-modal').style.display = 'flex';
-}
-window.openStoryEditModal = openStoryEditModal;
 
 // עריכה מתוך תצוגת הסיפור: אחרי השמירה חוזרים לאותו סיפור ולא לרשימה
 let storyEditReturnToDetail = null;
-function storyEditFromDetail(id) {
-  storyEditReturnToDetail = id;
-  openStoryEditModal(id);
-}
-window.storyEditFromDetail = storyEditFromDetail;
+
+
 
 // ============================================================
 // עריכה ישירה מתוך דף הסיפור (בעלים במצב עריכה)
@@ -7908,29 +7022,8 @@ function storyInlinePickImage(cb) {
   inp.click();
 }
 
-// מוסיף תמונה במקום הסמן (או בסוף הטקסט אם לא נבחר מקום)
-function storyInlineAddImage() {
-  if (!window.__storyInlineEdit) return;
-  let ta = window.__storyInlineLastTa;
-  if (!ta || !document.body.contains(ta) || !ta.__storyEd) {
-    const all = mainContent.querySelectorAll('.story-inline-blocks textarea');
-    ta = all[all.length - 1];
-  }
-  if (!ta || !ta.__storyEd) return;
-  const ed = ta.__storyEd, b = ta.__storyBlock;
-  // textarea זוכר את מיקום הסמן גם אחרי שהמיקוד עבר לכפתור
-  const pos = (window.__storyInlineLastTa === ta && typeof ta.selectionStart === 'number') ? ta.selectionStart : ta.value.length;
-  storyInlinePickImage(key => {
-    const i = ed.blocks.indexOf(b);
-    if (i < 0) return;
-    const before = b.text.slice(0, pos).replace(/\n$/, '');
-    const after = b.text.slice(pos).replace(/^\n/, '');
-    ed.blocks.splice(i, 1, { type: 'text', text: before }, { type: 'img', key }, { type: 'text', text: after });
-    _storyEdRender(ed);
-    _storyEdChanged(ed);
-  });
-}
-window.storyInlineAddImage = storyInlineAddImage;
+
+
 
 function storyInlineAutosize(ta) {
   if (!ta) return;
@@ -7939,160 +7032,19 @@ function storyInlineAutosize(ta) {
 }
 window.storyInlineAutosize = storyInlineAutosize;
 
-function storyInlineEditStart() {
-  const ctx = window.storyInlineCtx;
-  if (!ctx || !isEditMode) return;
-  const root = mainContent.querySelector('.art-detail');
-  if (!root) return;
-  window.__storyInlineEdit = true;
-  window.__storyInlineLastTa = null;
-  ctx.newImgs = {};
-  root.classList.add('story-inline-editing');
-  root.querySelectorAll('.story-detail-edit-btn').forEach(b => { b.style.display = 'none'; });
 
-  // כותרת — עריכה ישירה בשורה אחת
-  const h = root.querySelector('.story-article-title, .art-detail-title');
-  if (h) {
-    h.setAttribute('contenteditable', 'plaintext-only');
-    if (!h.isContentEditable) h.setAttribute('contenteditable', 'true');
-    h.classList.add('story-inline-field');
-    h.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); h.blur(); } });
-  }
 
-  // סיפור-כתבה (עמוד טקסט יחיד)
-  const body = root.querySelector('#story-article-body');
-  let focusTa = null;
-  if (body) {
-    const pg = (window.storyPagesData || [])[0];
-    body.innerHTML = '';
-    storyInlineBlockEditor(body, (pg && pg.text) || '', txt => { if (pg) { pg.text = txt; pg._edited = true; } }, 'story-inline-ta-article');
-    focusTa = body.querySelector('textarea');
-  }
 
-  // קומיקס — תיאור/טקסט מעל התמונות
-  if (ctx.isComic) {
-    let d = root.querySelector('.story-comic-desc');
-    if (!d) {
-      d = document.createElement('div');
-      d.className = 'story-comic-desc';
-      d.style.margin = '0 0 16px';
-      const v = root.querySelector('.story-viewer');
-      if (v) v.parentNode.insertBefore(d, v);
-    }
-    d.style.whiteSpace = 'normal';
-    d.innerHTML = '';
-    storyInlineBlockEditor(d, ctx.comicDesc || '', txt => { ctx.comicDesc = txt; ctx.descEdited = true; }, '');
-    focusTa = focusTa || d.querySelector('textarea');
-  }
 
-  // סיפור בכמה עמודים — העמוד הנוכחי הופך לשדה עריכה (גם במעבר בין עמודים)
-  storyRenderPage();
 
-  const bar = document.createElement('div');
-  bar.id = 'story-inline-bar';
-  bar.className = 'story-inline-bar';
-  bar.innerHTML = `
-    <span class="story-inline-hint">✎ Enter = שורה חדשה · שורה ריקה = רווח · התמונה נכנסת במקום הסמן</span>
-    <button type="button" class="sib-img" onclick="storyInlineAddImage()">🖼️ הוסף תמונה</button>
-    <button type="button" class="sib-save" onclick="storyInlineEditSave()">💾 שמור</button>
-    <button type="button" class="sib-cancel" onclick="storyInlineEditCancel()">ביטול</button>
-    <button type="button" class="sib-full" onclick="storyInlineOpenFull()">⚙️ תמונות והגדרות</button>`;
-  root.appendChild(bar);
 
-  root.querySelectorAll('.story-inline-ta').forEach(storyInlineAutosize);
-  if (focusTa) { try { focusTa.focus({ preventScroll: true }); } catch (e) {} }
-}
-window.storyInlineEditStart = storyInlineEditStart;
 
-// פותח מחדש את הסיפור ושומר על העמוד והגלילה הנוכחיים
-function _storyInlineReopen(id) {
-  const keepPage = window.currentStoryPage || 0;
-  const y = window.scrollY;
-  storyOpenDetail(id);
-  if (window.storyPagesData && keepPage < window.storyPagesData.length) {
-    window.currentStoryPage = keepPage;
-    storyRenderPage();
-  }
-  setTimeout(() => { try { window.scrollTo(0, y); } catch (e) {} }, 200);
-}
 
-function storyInlineEditCancel() {
-  const ctx = window.storyInlineCtx;
-  if (!ctx) return;
-  _storyInlineReopen(ctx.id);
-}
-window.storyInlineEditCancel = storyInlineEditCancel;
 
-function storyInlineEditSave() {
-  const ctx = window.storyInlineCtx;
-  if (!ctx || !isEditMode) return false;
-  const root = mainContent.querySelector('.art-detail');
-  const stories = storyGetStories();
-  const idx = stories.findIndex(x => x && x.id === ctx.id);
-  if (idx < 0) return false;
-  const s = { ...stories[idx] };
-  const isTextPage = p => p && typeof p === 'object' && p.type === 'text';
-  const clean = t => String(t || '').replace(/\s+$/, '');
 
-  const h = root && root.querySelector('.story-article-title, .art-detail-title');
-  if (h) {
-    const t = (h.textContent || '').replace(/\s+/g, ' ').trim();
-    if (t) s.title = t;
-  }
 
-  let pagesArr = Array.isArray(s.pages) ? s.pages.slice() : null;
-  (window.storyPagesData || []).forEach(pg => {
-    if (!pg || pg.type !== 'text' || !pg._edited) return;
-    const txt = clean(pg.text);
-    if (typeof pg._src === 'number' && pagesArr) {
-      const orig = pagesArr[pg._src];
-      pagesArr[pg._src] = { ...(isTextPage(orig) ? orig : {}), type: 'text', text: txt };
-    } else if (pg._src === 'body') {
-      s.body = txt;
-    }
-  });
 
-  if (ctx.isComic && ctx.descEdited) {
-    const txt = clean(ctx.comicDesc);
-    if (pagesArr && pagesArr.some(isTextPage)) {
-      // התיאור מוצג כחיבור של כל עמודי הטקסט — שומרים אותו כעמוד טקסט אחד
-      let placed = false;
-      pagesArr = pagesArr
-        .filter(p => !isTextPage(p) || (!placed && (placed = true)))
-        .map(p => isTextPage(p) ? { ...p, text: txt } : p);
-      if (!txt.trim()) s.body = '';
-    } else {
-      s.body = txt;
-    }
-  }
 
-  if (pagesArr) s.pages = pagesArr.filter(p => !(isTextPage(p) && !(p.text || '').trim()));
-
-  // תמונות בתוך הטקסט: מוסיפים חדשות ומנקים כאלה שנמחקו מהטקסט
-  const allImgs = { ...((s.inlineImages && typeof s.inlineImages === 'object') ? s.inlineImages : {}), ...(ctx.newImgs || {}) };
-  const allText = [s.body, s.summary].concat((s.pages || []).filter(isTextPage).map(p => p.text)).join('\n');
-  const used = {};
-  Object.keys(allImgs).forEach(k => { if (allText.includes('[[img:' + k + ']]')) used[k] = allImgs[k]; });
-  if (Object.keys(used).length) s.inlineImages = used; else delete s.inlineImages;
-
-  stories[idx] = s;
-  const kind = storyGetCurrentKind();
-  mainContent.innerHTML = buildStoriesPage(stories, kind);
-  saveCurrentPageContent();
-  _storyInlineReopen(ctx.id);
-  return true;
-}
-window.storyInlineEditSave = storyInlineEditSave;
-
-// מעבר לחלון העריכה המלא (תמונות, קטגוריה, קישורים) — קודם שומרים את מה שנערך בדף
-function storyInlineOpenFull() {
-  const ctx = window.storyInlineCtx;
-  if (!ctx) return;
-  const id = ctx.id;
-  if (storyInlineEditSave() === false) return;
-  storyEditFromDetail(id);
-}
-window.storyInlineOpenFull = storyInlineOpenFull;
 
 // הוספת תמונה חדשה לרשימה (בסוף)
 const storyAddImageBtn = document.getElementById('story-add-image');
@@ -8124,71 +7076,10 @@ if (storyAddTextBtn) {
   });
 }
 
-document.getElementById('story-cancel').addEventListener('click', () => {
-  storyEditingId = null;
-  storyEditReturnToDetail = null;
-  document.getElementById('story-modal').style.display = 'none';
-});
 
-document.getElementById('story-save').addEventListener('click', () => {
-  const title = document.getElementById('story-title').value.trim();
-  if (!title) { alert('חובה כותרת'); return; }
 
-  // עמודי הסיפור לפי הסדר בעורך (תמונה/טקסט). שומרים גם images/image לתאימות לאחור ולתצוגה בכרטיסים
-  let storyPages = storyImageList
-    .map(_storyNormalizePage)
-    .filter(p => p && ((p.type === 'image' && p.url) || (p.type === 'text' && (p.text || '').trim())));
-  // חלוקה אוטומטית: עמוד טקסט ארוך מתפצל לכמה עמודים (100 שורות → 5 עמודים)
-  if (typeof splitStoryTextPages === 'function') storyPages = splitStoryTextPages(storyPages);
-  const storyImages = storyPages.filter(p => p.type === 'image').map(p => p.url);
-  const firstImage = storyImages[0] || '';
 
-  const data = {
-    title,
-    summary: document.getElementById('story-summary').value.trim(),
-    body: document.getElementById('story-body').value.trim(),
-    author: document.getElementById('story-author').value.trim(),
-    category: document.getElementById('story-category').value.trim(),
-    categoryColor: '#8b5cf6',
-    image: storyCoverImg || firstImage,
-    cover: storyCoverImg,
-    images: storyImages,
-    pages: storyPages,
-    link: document.getElementById('story-link').value.trim(),
-    linkedId: (document.getElementById('story-linked') ? document.getElementById('story-linked').value.trim() : '')
-  };
 
-  const stories = storyGetStories();
-  if (storyEditingId) {
-    // עריכה: מעדכנים את הסיפור הקיים ושומרים id, תאריך ונעיצה
-    const idx = stories.findIndex(x => x.id === storyEditingId);
-    if (idx >= 0) stories[idx] = { ...stories[idx], ...data };
-    storyEditingId = null;
-  } else {
-    stories.unshift({ id: 's' + Date.now(), ...data, timestamp: new Date().toLocaleDateString('he-IL') });
-  }
-  mainContent.innerHTML = buildStoriesPage(stories, storyGetCurrentKind());
-  saveCurrentPageContent();
-  document.getElementById('story-modal').style.display = 'none';
-  const _backTo = storyEditReturnToDetail;
-  storyEditReturnToDetail = null;
-  if (_backTo && stories.some(x => x.id === _backTo)) storyOpenDetail(_backTo);
-});
-
-const btnAddStoriesPage = document.getElementById('btn-add-stories-page');
-if (btnAddStoriesPage) {
-  btnAddStoriesPage.addEventListener('click', () => {
-    const title = prompt('שם העמוד של הסיפורים:') || 'סיפורים';
-    const newId = 'page-' + Date.now();
-    pages.push({ id: newId, title: title.trim(), content: buildStoriesPage(STORIES_SAMPLES) });
-    topNavPages.push(newId);
-    activePageId = newId;
-    saveToStorage();
-    renderSideMenu();
-    renderTopNav();
-    renderPage();
-  });
-}
 
 const btnAddCommunityPage = document.getElementById('btn-add-community-page');
 if (btnAddCommunityPage) {
@@ -8920,6 +7811,52 @@ function openLiveChatLogin() {
 }
 window.openLiveChatLogin = openLiveChatLogin;
 
+// חלון הכניסה: נפתח פעם אחת בכל ביקור לאורח, והתמונה שבצד נבחרת על ידי המנהל (website/login_image)
+function loginImageShow(url) {
+  document.querySelectorAll('.au-side-img').forEach(i => { if (url) i.src = url; else i.removeAttribute('src'); i.hidden = !url; });
+  const c = document.querySelector('.au-side'); if (c) c.classList.toggle('has-img', !!url);
+}
+function loginImageLoad() { get(ref(db, 'website/login_image')).then(s => loginImageShow(s.val())).catch(() => {}); }
+function entryLoginOpen() { loginImageLoad(); const c = document.querySelector('.au-side'); if (c) c.classList.toggle('au-admin', isAdmin()); openLiveChatLogin(); }
+window.entryLoginOpen = entryLoginOpen;
+function loginImagePick(input) {
+  const file = input.files && input.files[0]; if (!file) return;
+  const url = URL.createObjectURL(file), img = new Image();
+  img.onload = async () => {
+    const k = Math.min(1, 1100 / Math.max(img.naturalWidth, img.naturalHeight)), c = document.createElement('canvas');
+    c.width = Math.round(img.naturalWidth * k); c.height = Math.round(img.naturalHeight * k);
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    URL.revokeObjectURL(url);
+    const data = c.toDataURL('image/jpeg', .8);
+    try { await set(ref(db, 'website/login_image'), data); loginImageShow(data); showCopyToast('התמונה נשמרה'); }
+    catch (e) { showCopyToast('לא הצלחנו לשמור את התמונה'); }
+  };
+  img.src = url;
+  input.value = '';
+}
+async function loginImageRemove() {
+  try { await set(ref(db, 'website/login_image'), null); loginImageShow(null); showCopyToast('התמונה הוסרה'); }
+  catch (e) { showCopyToast('לא הצלחנו להסיר את התמונה'); }
+}
+Object.assign(window, { loginImagePick, loginImageRemove });
+(function entryLoginWatch() {
+  const stop = onAuthStateChanged(auth, (user) => {
+    stop();
+    let seen = false;
+    try { seen = sessionStorage.getItem('entry_login_seen') === '1'; } catch (e) {}
+    if (seen) return;
+    const tryOpen = (left) => {
+      const u = auth.currentUser;
+      if (u && !u.isAnonymous) return;
+      const gate = document.getElementById('age-gate-overlay');
+      if (gate && getComputedStyle(gate).display !== 'none') { if (left > 0) setTimeout(() => tryOpen(left - 1), 400); return; }
+      try { sessionStorage.setItem('entry_login_seen', '1'); } catch (e) {}
+      entryLoginOpen();
+    };
+    tryOpen(600);
+  });
+})();
+
 async function sendLiveChatMessage() {
   const inp = document.getElementById('live-chat-input');
   if (!inp) return;
@@ -9026,11 +7963,8 @@ function qpBubble(role, html) {
   box.scrollTop = box.scrollHeight;
 }
 
-// עמוד טקסט מכיל את כל הסיפור (ללא חלוקה) — הטקסט הארוך פשוט נגלל בתוך המסגרת
-function splitStoryTextPages(arr) {
-  return arr || [];
-}
-window.splitStoryTextPages = splitStoryTextPages;
+
+
 
 // מזהה את סוג העמוד הנוכחי כדי שהפרסום המהיר יתאים אליו
 function qpCurrentSection() {
@@ -9324,16 +8258,6 @@ async function qpPublish() {
       if (!isAdminNow && typeof pushPendingSubmission === 'function') pushPendingSubmission(album);
       qpBubble('bot', '✅ המודעה פורסמה בהצלחה!' + (isAdminNow ? '' : '<br>ממתינה לאישור מנהל ותופיע בקרוב.'));
       setTimeout(() => { if (typeof renderPage === 'function') renderPage(); }, 2200);
-    } else if (qpData.pageSection === 'stories') {
-      // פרסום סיפור לעמוד הסיפורים
-      const stories = (typeof storyGetStories === 'function') ? storyGetStories() : [];
-      const st = Object.assign({}, album, { pages: album.images.map(u => ({ type: 'image', url: u })) });
-      stories.unshift(st);
-      if (typeof buildStoriesPage === 'function') mainContent.innerHTML = buildStoriesPage(stories, storyGetCurrentKind());
-      if (typeof saveCurrentPageContent === 'function') saveCurrentPageContent();
-      if (!isAdminNow && typeof pushPendingSubmission === 'function') pushPendingSubmission(st);
-      qpBubble('bot', '✅ הסיפור פורסם!' + (isAdminNow ? '' : '<br>הוא ממתין לאישור מנהל ויופיע בקרוב.'));
-      setTimeout(() => { const m = document.getElementById('quick-publish-modal'); if (m) m.style.display = 'none'; }, 2000);
     } else {
       // תמונות או מוצרי יד שניה — מתפרסם לעמוד הנוכחי לפי הסקשן
       const sec = (qpData.pageSection === 'secondhand') ? 'secondhand' : 'photos';
@@ -9977,19 +8901,11 @@ function buildSecondhandPage() {
 }
 window.buildSecondhandPage = buildSecondhandPage;
 
-// עמוד "שותפויות" — גריד באותו קונספט
-function buildPartnershipsPage() {
-  const albums = (typeof photoGetAlbums === 'function') ? photoGetAlbums() : [];
-  return buildPhotosPage(albums, 'partnerships');
-}
-window.buildPartnershipsPage = buildPartnershipsPage;
 
-// עמוד "ביקורת" — ביקורות על מוצרים/שירותים + תביעות ייצוגיות
-function buildReviewsPage() {
-  const albums = (typeof photoGetAlbums === 'function') ? photoGetAlbums() : [];
-  return buildPhotosPage(albums, 'reviews');
-}
-window.buildReviewsPage = buildReviewsPage;
+
+
+
+
 
 // ============================================================
 // עמוד "מידע" — לוח בקרה למנהל בלבד. משתמשים (רשומים ואורחים) שולחים
@@ -11728,6 +10644,8 @@ function buildSidebarTabs(savedHTML, pageType) {
 }
 
 function navigateToPage(pageId) {
+  // עמודים שהוסרו מהאתר; התוכן נשאר במסד. אישור העלאות נשאר פתוח למנהל דרך עמוד הניהול
+  if (REMOVED_PAGES.includes(pageId) && !(pageId === 'page-requests-main' && isAdmin())) pageId = 'page-home-feed';
   // מחשב: הפורומים נפתחים בחלון צד משמאל, בלי לעזוב את העמוד הנוכחי
   const _desk = !window.matchMedia('(max-width: 768px)').matches;
   // חדשות נפתחות כעמוד מלא (כדי שאפשר להיכנס לכתבה); רק המנוי נשאר בחלון צד
@@ -11773,9 +10691,7 @@ function sitePagesNavBoxHTML(section) {
 }
 function buildLeftSidebarBox(popularHTML, section) {
   const defaultNavItems = [
-    { id: 'page-photos-main', title: 'תמונות גולשים 🖼️' },
     { id: 'page-stories-main', title: 'קומיקס 💥' },
-    { id: 'page-stories-text', title: 'סיפורים 📖' },
     { id: 'page-ideas-main', title: 'רעיונות 💡' },
     { id: 'page-news-main', title: 'חדשות 📰' },
     { id: 'page-communities-main', title: 'קהילות 👥' },
@@ -12112,82 +11028,16 @@ function getAllStoriesFromPages() {
 }
 window.getAllStoriesFromPages = getAllStoriesFromPages;
 
-// ממלא את תפריט השיוך במודל הסיפור עם כל הסיפורים/הקומיקסים האחרים
-function populateStoryLinkedSelect(currentId, selectedId) {
-  const sel = document.getElementById('story-linked');
-  if (!sel) return;
-  const all = getAllStoriesFromPages().filter(s => s.id !== currentId);
-  let html = '<option value="">— ללא שיוך —</option>';
-  all.forEach(s => {
-    const kindLbl = s.__kind === 'stories' ? 'סיפור' : 'קומיקס';
-    const label = (s.title || 'ללא שם') + ' (' + kindLbl + ')';
-    html += `<option value="${escHtml(s.id)}"${s.id === selectedId ? ' selected' : ''}>${escHtml(label)}</option>`;
-  });
-  sel.innerHTML = html;
-  if (selectedId) sel.value = selectedId;
-}
-window.populateStoryLinkedSelect = populateStoryLinkedSelect;
 
-// פותח סיפור/קומיקס לפי id — גם אם הוא בעמוד אחר (מנווט לעמוד ואז פותח)
-function storyOpenLinked(id) {
-  try {
-    const all = getAllStoriesFromPages();
-    const target = all.find(s => s.id === id);
-    if (!target) { alert('הפריט המשויך לא נמצא'); return; }
-    // אם הפריט בעמוד הנוכחי — פשוט פותחים
-    const container = mainContent.querySelector('.stories-page');
-    let onSamePage = false;
-    if (container) {
-      try {
-        const cur = JSON.parse(decodeURIComponent(container.dataset.storiesJson || '%5B%5D'));
-        onSamePage = Array.isArray(cur) && cur.some(x => x && x.id === id);
-      } catch (e) {}
-    }
-    if (onSamePage) { window.__detailOpen = false; storyOpenDetail(id); return; }
-    // אחרת — מנווטים לעמוד היעד ואז פותחים
-    window.__detailOpen = false;
-    if (typeof navigateToPage === 'function') navigateToPage(target.__pageId);
-    setTimeout(() => { if (typeof storyOpenDetail === 'function') storyOpenDetail(id); }, 120);
-  } catch (e) {}
-}
-window.storyOpenLinked = storyOpenLinked;
 
-// בונה שבב-קישור לפריט המשויך (כולל reverse-lookup לדו-כיווניות)
-function storyLinkedChipHTML(s) {
-  try {
-    const all = getAllStoriesFromPages();
-    let linked = null;
-    if (s.linkedId) linked = all.find(x => x.id === s.linkedId);
-    // reverse: פריט אחר שמשויך לפריט הנוכחי
-    if (!linked) linked = all.find(x => x.linkedId === s.id);
-    if (!linked || linked.id === s.id) return '';
-    const kindLbl = linked.__kind === 'stories' ? 'הסיפור' : 'הקומיקס';
-    return `<div class="story-linked-chip" role="button" tabindex="0" onclick="storyOpenLinked('${artEsc(linked.id)}')">
-      לקריאת ${kindLbl}: <b>${escHtml(linked.title || '')}</b>
-    </div>`;
-  } catch (e) { return ''; }
-}
-window.storyLinkedChipHTML = storyLinkedChipHTML;
 
-function getStoriesFeedData() {
-  try {
-    if (typeof pages !== 'undefined' && Array.isArray(pages)) {
-      // מזהה עמוד הסיפורים דינמי באתר החי — מזהים לפי כותרת/תוכן, לא רק לפי id קבוע.
-      // חשוב: לא לתפוס את עמוד התמונות שמכיל את פיד הסיפורים (photos-page).
-      // פיד ה"קומיקס" בתחתית עמוד התמונות — מציג את עמוד הקומיקס (התוכן הוויזואלי),
-      // לא את עמוד הסיפורים החדש (page-stories-text) ולא את עמוד התמונות.
-      const sp = pages.find(p => p && p.id === 'page-stories-main')
-        || pages.find(p => p && p.title === 'קומיקס')
-        || pages.find(p => p && p.id !== 'page-stories-text' && p.content && p.content.includes('stories-page') && !p.content.includes('photos-page') && !p.content.includes('photos-stories-feed'))
-        || pages.find(p => p && p.title && p.title.includes('סיפורים'));
-      if (sp && sp.content) {
-        const m = sp.content.match(/data-stories-json="([^"]*)"/);
-        if (m) { const arr = JSON.parse(decodeURIComponent(m[1])); if (Array.isArray(arr)) return arr; }
-      }
-    }
-  } catch (e) {}
-  return (typeof STORIES_SAMPLES !== 'undefined') ? STORIES_SAMPLES : [];
-}
+
+
+
+
+
+
+
 
 // שולף את גלריות התמונות לעמוד הבית (מתוך עמוד התמונות), עם נפילה לדוגמאות אם ריק.
 function getPhotosForHome() {
@@ -12204,20 +11054,8 @@ function getPhotosForHome() {
   return (typeof PHOTOS_SAMPLES !== 'undefined' && Array.isArray(PHOTOS_SAMPLES)) ? PHOTOS_SAMPLES : [];
 }
 
-// דוגמאות תצוגה לעמוד הבית — מוצגות רק כשאין עדיין קומיקס/סיפורים אמיתיים,
-// כדי שהמבנה (שורה של כל סוג) ייראה. ברגע שמעלים תוכן אמיתי, הן נעלמות.
-function _homeDemoComics() {
-  return [
-    { id: 'demo-c1', title: 'קומיקס לדוגמה', author: 'הצוות', category: 'דוגמה', timestamp: 'עכשיו', images: ['https://picsum.photos/seed/comic1/400/300'], pages: [{ type: 'image', url: 'https://picsum.photos/seed/comic1/400/300' }] },
-    { id: 'demo-c2', title: 'עוד קומיקס לדוגמה', author: 'הצוות', category: 'דוגמה', timestamp: 'עכשיו', images: ['https://picsum.photos/seed/comic2/400/300'], pages: [{ type: 'image', url: 'https://picsum.photos/seed/comic2/400/300' }] }
-  ];
-}
-function _homeDemoStories() {
-  return [
-    { id: 'demo-t1', title: 'סיפור לדוגמה', author: 'הצוות', category: 'דוגמה', timestamp: 'עכשיו', pages: [{ type: 'text', text: 'זהו סיפור טקסט לדוגמה שמוצג בעמוד הבית עד שתעלה סיפורים אמיתיים.' }] },
-    { id: 'demo-t2', title: 'עוד סיפור לדוגמה', author: 'הצוות', category: 'דוגמה', timestamp: 'עכשיו', pages: [{ type: 'text', text: 'סיפור נוסף לדוגמה. אפשר להחליף אותו בתוכן אמיתי מעמוד הסיפורים.' }] }
-  ];
-}
+
+
 
 // עמוד הבית: שורה מכל סוג — תמונות, קומיקס, סיפורים.
 // התמונות בעטיפת .photos-page (photoOpenDetail), הקומיקס+סיפורים בעטיפת .stories-page
@@ -13756,320 +12594,45 @@ const BD_PREFS_KEY = 'bd_prefs';
 let bd = { state: 'intro', me: { g: '', want: 'all', city: '' }, adult: false, roomId: null, room: null, partner: null, ended: false, unsubQ: null, unsubR: null, error: '', rolling: false, planTimer: null };
 try { Object.assign(bd.me, JSON.parse(localStorage.getItem(BD_PREFS_KEY) || '{}')); } catch (e) {}
 
-function bdRegistered() { return auth.currentUser && !auth.currentUser.isAnonymous; }
-function bdMatches(meG, meWant, other) {
-  if (!other || other.status !== 'waiting' || other.room) return false;
-  if (!other.t || Date.now() - other.t > BD_STALE_MS) return false;
-  const iLikeThem = meWant === 'all' || meWant === other.g;
-  const theyLikeMe = other.want === 'all' || other.want === meG;
-  return iLikeThem && theyLikeMe;
-}
-function bdMyName() {
-  if (bdRegistered()) return String(liveChatUserName() || 'משתמש').slice(0, 30);
-  const el = document.getElementById('bd-name');
-  return String((el ? el.value : forumGuestName()) || '').trim().slice(0, 30);
-}
 
-// --- הגרלת המפגש ---
-// העיר: העיר שלה (אם אחד מהשניים אישה), אחרת העיר של מי שחיכה בתור
-function bdPlanCity(r) {
-  if (!r) return '';
-  if (r.aG === 'f' && r.bG !== 'f') return r.aCity || r.bCity;
-  if (r.bG === 'f' && r.aG !== 'f') return r.bCity || r.aCity;
-  return r.aCity || r.bCity;
-}
+
+
+
+
 const bdRestCache = {};
-async function bdFetchRestaurants(city) {
-  if (bdRestCache[city]) return bdRestCache[city];
-  const q = `[out:json][timeout:20];area["name"="${city}"]["boundary"="administrative"]->.a;nwr["amenity"="restaurant"]["name"](area.a);out center 150;`;
-  // שרת ראשי + שרת גיבוי (השרתים הציבוריים לפעמים עמוסים)
-  for (const host of ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter']) {
-  const ctl = new AbortController();
-  const timer = setTimeout(() => ctl.abort(), 12000);
-  try {
-    const res = await fetch(host, {
-      method: 'POST', signal: ctl.signal,
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'data=' + encodeURIComponent(q)
-    });
-    if (!res.ok) continue;
-    const d = await res.json();
-    const list = (d.elements || []).map(e => ({
-      name: String(e.tags.name || '').slice(0, 80),
-      street: String([e.tags['addr:street'], e.tags['addr:housenumber']].filter(Boolean).join(' ')).slice(0, 80),
-      cuisine: String(e.tags.cuisine || '').split(';')[0].slice(0, 30),
-      lat: e.lat || (e.center && e.center.lat) || 0, lon: e.lon || (e.center && e.center.lon) || 0
-    })).filter(x => x.name);
-    bdRestCache[city] = list;
-    return list;
-  } catch (e) { /* ננסה את השרת הבא */ } finally { clearTimeout(timer); }
-  }
-  return [];
-}
-function bdRandomEvening() {
-  const d = new Date();
-  d.setDate(d.getDate() + 1 + Math.floor(Math.random() * 6));       // מחר עד עוד 6 ימים
-  const slot = Math.floor(Math.random() * 7);                         // 19:00 … 22:00 בחצאי שעה
-  d.setHours(19 + Math.floor(slot / 2), (slot % 2) * 30, 0, 0);
-  return d.getTime();
-}
-async function bdRollPlan() {
-  const r = bd.room; if (!r || !bd.roomId || bd.rolling) return;
-  bd.rolling = true; bdRender();
-  const city = bdPlanCity(r);
-  const list = await bdFetchRestaurants(city);
-  const prev = r.plan && r.plan.name;
-  const pool = list.filter(x => x.name !== prev);
-  const pick = pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
-  const plan = {
-    round: ((r.plan && r.plan.round) || 0) + 1, city, when: bdRandomEvening(),
-    name: pick ? pick.name : `מסעדה לבחירתכם ב${city}`, street: pick ? pick.street : '', cuisine: pick ? pick.cuisine : '',
-    lat: pick ? pick.lat : 0, lon: pick ? pick.lon : 0, by: auth.currentUser.uid
-  };
-  try { await set(ref(db, `website/blind_rooms/${bd.roomId}/plan`), plan); } catch (e) { /* השני כבר הגריל — זה בסדר */ }
-  bd.rolling = false; bdRender();
-}
-async function bdApprove() {
-  if (!bd.roomId || !bd.room || !bd.room.plan) return;
-  try { await set(ref(db, `website/blind_rooms/${bd.roomId}/plan/ok/${auth.currentUser.uid}`), true); } catch (e) { alert('לא נשמר. נסו שוב.'); }
-}
-window.bdApprove = bdApprove;
-window.bdReroll = () => bdRollPlan();
-function bdWhenText(t) {
-  const d = new Date(t);
-  const day = d.toLocaleDateString('he-IL', { weekday: 'long' });
-  return `${day} ${d.getDate()}.${d.getMonth() + 1} · ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-}
-function bdMapsUrl(p) {
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.name + ' ' + p.city)}`;
-}
-function bdPlanCardHTML(p, compact) {
-  const pin = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>';
-  const clock = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
-  return `<div class="bd-plan${compact ? ' compact' : ''}">
-    <div class="bd-plan-row">${pin}<div><b>${escHtml(p.name)}</b><small>${escHtml([p.cuisine, p.street, p.city].filter(Boolean).join(' · '))}</small></div>
-      <a class="bd-plan-map" href="${escHtml(bdMapsUrl(p))}" target="_blank" rel="noopener">מפה</a></div>
-    <div class="bd-plan-row">${clock}<div><b>${escHtml(bdWhenText(p.when))}</b><small>ערב · פגישה ראשונה</small></div></div>
-  </div>`;
-}
 
-function buildBlindDatePage() {
-  return `<div class="blinddate-page" data-page-id="page-blinddate-main"><div class="bd-inner">${bdViewHTML()}</div></div>`;
-}
-function bdRender() {
-  const el = mainContent && mainContent.querySelector('.blinddate-page .bd-inner');
-  if (!el) return;
-  const keep = id => { const x = document.getElementById(id); return x ? x.value : null; };
-  const draft = keep('bd-input'), nameDraft = keep('bd-name');
-  el.innerHTML = bdViewHTML();
-  const d2 = document.getElementById('bd-input'); if (d2 && draft) d2.value = draft;
-  const n2 = document.getElementById('bd-name'); if (n2 && nameDraft !== null) n2.value = nameDraft;
-  const box = el.querySelector('.bd-msgs');
-  if (box) box.scrollTop = box.scrollHeight;
-}
 
-function bdViewHTML() {
-  const heart = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.6 2.8 4.5 6.7 4.5c2.2 0 3.6 1.2 5.3 3 1.7-1.8 3.1-3 5.3-3 3.9 0 5.8 4.1 4.3 7.3C19.5 16.4 12 21 12 21z"/></svg>';
-  if (bd.state === 'intro') {
-    const chip = (key, val, label) => `<button type="button" class="bd-chip${bd.me[key] === val ? ' on' : ''}" onclick="bdPick('${key}','${val}')">${label}</button>`;
-    const saved = bdRegistered() ? '' : forumGuestName();
-    const nameRow = bdRegistered() ? '' : (saved.length >= 2
-      ? `<div class="bd-row"><span>שם</span><div class="fo-guest-as" id="bd-name-wrap"><input type="hidden" id="bd-name" value="${escHtml(saved)}"><b>${escHtml(saved)}</b> <button type="button" class="fo-guest-change" onclick="forumGuestChangeName('bd-name')">שינוי</button></div></div>`
-      : `<div class="bd-row"><span>שם</span><div><input id="bd-name" class="bd-field" maxlength="30" placeholder="השם שלך"></div></div>`);
-    return `
-      <div class="bd-card bd-intro">
-        <div class="bd-logo">${heart}</div>
-        <h1>Blind Date</h1>
-        <p>יש התאמה? נפגשים. אנחנו מגרילים מסעדה בעיר ויום ושעה בערב — שניכם מאשרים, ורק אז נפתחת השיחה.</p>
-        ${nameRow}
-        <div class="bd-row"><span>אני</span><div>${chip('g', 'm', 'גבר')}${chip('g', 'f', 'אישה')}</div></div>
-        <div class="bd-row"><span>מחפש/ת</span><div>${chip('want', 'f', 'אישה')}${chip('want', 'm', 'גבר')}${chip('want', 'all', 'כולם')}</div></div>
-        <div class="bd-row"><span>עיר</span><div><select id="bd-city" class="bd-field" onchange="bdPick('city', this.value)">
-          <option value="">בחרו עיר</option>${BD_CITIES.map(c => `<option${bd.me.city === c ? ' selected' : ''}>${c}</option>`).join('')}</select></div></div>
-        <label class="bd-adult"><input type="checkbox" ${bd.adult ? 'checked' : ''} onchange="bdSetAdult(this.checked)"> אני מעל גיל 18 ומתחייב/ת להתנהגות מכבדת</label>
-        ${bd.error ? `<div class="bd-error">${escHtml(bd.error)}</div>` : ''}
-        <button type="button" class="bd-go" onclick="bdStart()">התחילו</button>
-        <small class="bd-note">פגישה ראשונה תמיד במקום ציבורי. ספרו לחבר/ה לאן אתם הולכים.</small>
-      </div>`;
-  }
-  if (bd.state === 'waiting') {
-    return `
-      <div class="bd-card bd-wait">
-        <div class="bd-radar"><span></span><span></span><span></span><div class="bd-logo">${heart}</div></div>
-        <h2>מחפשים לך התאמה...</h2>
-        <p>ברגע שמישהו/י מתאים/ה נכנס/ת — מגרילים לכם מקום ושעה. אפשר להשאיר את העמוד פתוח.</p>
-        <button type="button" class="bd-ghost" onclick="bdCancel()">ביטול</button>
-      </div>`;
-  }
-  const myUid = auth.currentUser ? auth.currentUser.uid : '';
-  const r = bd.room || {};
-  const p = r.plan;
-  const partnerName = (bd.partner && bd.partner.name) || 'גולש/ת';
-  const partnerUid = bd.partner && bd.partner.uid;
-  const ok = (p && p.ok) || {};
-  const agreed = p && ok[myUid] && partnerUid && ok[partnerUid];
-  const head = `<div class="bd-chat-head">
-        <span class="bd-avatar">${escHtml(String(partnerName).charAt(0))}</span>
-        <div><b>${escHtml(partnerName)}</b><small>${bd.ended ? 'המפגש בוטל' : agreed ? 'יש דייט! 🎉' : 'יש התאמה · קובעים מפגש'}</small></div>
-        <button type="button" class="bd-ghost small" onclick="bdNext()">${bd.ended ? 'חיפוש חדש' : 'יציאה'}</button>
-      </div>`;
-  // שלב 1: הגרלה ואישור המפגש
-  if (!agreed && !bd.ended) {
-    const body = !p || bd.rolling
-      ? `<div class="bd-rolling"><div class="bd-dice">🎲</div><b>מגרילים מסעדה ושעה${p ? ' חדשות' : ''}...</b></div>`
-      : `<p class="bd-plan-lead">${p.round > 1 ? `הגרלה מס׳ ${p.round} · ` : ''}כדי לדבר — קובעים להיפגש:</p>
-        ${bdPlanCardHTML(p)}
-        <div class="bd-plan-status">
-          <span class="${ok[myUid] ? 'yes' : ''}">את/ה ${ok[myUid] ? '✓ אישרת' : '· עוד לא'}</span>
-          <span class="${ok[partnerUid] ? 'yes' : ''}">${escHtml(partnerName)} ${ok[partnerUid] ? '✓ אישר/ה' : '· עוד לא'}</span>
-        </div>
-        ${ok[myUid] ? `<p class="bd-plan-wait">מחכים ש${escHtml(partnerName)} יאשר/תאשר...</p>
-          <button type="button" class="bd-ghost" onclick="bdReroll()">בעצם לא מתאים לי — הגרלה חוזרת</button>`
-        : `<div class="bd-plan-btns"><button type="button" class="bd-go" onclick="bdApprove()">✓ מאשר/ת, נפגשים</button>
-          <button type="button" class="bd-ghost" onclick="bdReroll()">🎲 לא מתאים — הגרלה חוזרת</button></div>`}`;
-    return `<div class="bd-card bd-chat">${head}<div class="bd-proposal">${body}</div></div>`;
-  }
-  // שלב 2: שניהם אישרו — השיחה פתוחה, והמפגש מוצמד למעלה
-  const msgs = Object.values(r.msgs || {}).filter(m => m && m.text).sort((a, b) => (a.t || 0) - (b.t || 0));
-  return `
-    <div class="bd-card bd-chat">
-      ${head}
-      ${p ? bdPlanCardHTML(p, true) : ''}
-      <div class="bd-msgs">
-        <div class="bd-sys">שניכם אישרתם — נתראה במפגש! עכשיו אפשר לדבר 👋</div>
-        ${msgs.map(m => `<div class="bd-msg${m.from === myUid ? ' mine' : ''}"><span>${escHtml(m.text)}</span></div>`).join('')}
-        ${bd.ended ? '<div class="bd-sys">השיחה הסתיימה.</div>' : ''}
-      </div>
-      ${bd.ended ? `<button type="button" class="bd-go" onclick="bdNext()">חפשו התאמה חדשה</button>` : `
-      <div class="bd-bar">
-        <input id="bd-input" maxlength="500" placeholder="כתבו הודעה..." onkeydown="if(event.key==='Enter'){event.preventDefault(); bdSend();}">
-        <button type="button" onclick="bdSend()" aria-label="שליחה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
-      </div>`}
-    </div>`;
-}
 
-function bdPick(key, val) {
-  bd.me[key] = val; bd.error = '';
-  try { localStorage.setItem(BD_PREFS_KEY, JSON.stringify(bd.me)); } catch (e) {}
-  bdRender();
-}
-window.bdPick = bdPick;
+
+
+
+
+
+
+
+
+
+
+
+
+
 window.bdSetAdult = v => { bd.adult = !!v; };
 
-function bdStopListeners() {
-  if (bd.unsubQ) { bd.unsubQ(); bd.unsubQ = null; }
-  if (bd.unsubR) { bd.unsubR(); bd.unsubR = null; }
-  if (bd.planTimer) { clearTimeout(bd.planTimer); bd.planTimer = null; }
-}
 
-async function bdStart() {
-  const name = bdMyName();
-  if (name.length < 2) { bd.error = 'כתבו שם (לפחות 2 תווים)'; bdRender(); return; }
-  if (!bd.me.g) { bd.error = 'בחרו "אני: גבר / אישה"'; bdRender(); return; }
-  if (!bd.me.city) { bd.error = 'בחרו עיר — שם נגריל את המסעדה'; bdRender(); return; }
-  if (!bd.adult) { bd.error = 'יש לאשר שאתם מעל גיל 18'; bdRender(); return; }
-  if (!auth.currentUser && !(await ensureGuestSignedIn())) { bd.error = 'לא ניתן להתחבר כרגע. נסו שוב.'; bdRender(); return; }
-  if (!bdRegistered()) { try { localStorage.setItem(FORUM_GUEST_KEY, name); } catch (e) {} }
-  const user = auth.currentUser;
-  bd.state = 'waiting'; bd.error = ''; bdRender();
-  try {
-    // 1. מחפשים מישהו שכבר מחכה ומתאים — קודם מאותה עיר, ובתוך זה הוותיק ביותר
-    const snap = await get(ref(db, 'website/blind_queue'));
-    const all = snap.exists() ? (snap.val() || {}) : {};
-    const candidates = Object.entries(all)
-      .filter(([uid, q]) => uid !== user.uid && bdMatches(bd.me.g, bd.me.want, q))
-      .sort((a, b) => ((a[1].city === bd.me.city ? 0 : 1) - (b[1].city === bd.me.city ? 0 : 1)) || ((a[1].t || 0) - (b[1].t || 0)));
-    for (const [otherUid, q] of candidates) {
-      const roomId = `r${Date.now()}_${user.uid.slice(0, 8)}`;
-      let claimed = false;
-      // "תופסים" את המחכה בטרנזקציה — כדי ששניים לא יתאימו לאותו אדם
-      await runTransaction(ref(db, `website/blind_queue/${otherUid}`), cur => {
-        if (!cur || cur.status !== 'waiting' || cur.room) return; // ביטול
-        claimed = true;
-        return Object.assign({}, cur, { status: 'matched', room: roomId, partner: user.uid, partnerName: name });
-      });
-      if (!claimed) continue;
-      await set(ref(db, `website/blind_rooms/${roomId}`), {
-        a: otherUid, b: user.uid, aName: q.name || 'גולש/ת', bName: name,
-        aG: q.g || '', bG: bd.me.g, aCity: q.city || bd.me.city, bCity: bd.me.city, t: Date.now()
-      });
-      bdJoinRoom(roomId, { uid: otherUid, name: q.name || 'גולש/ת' }, null, true);
-      return;
-    }
-    // 2. אין אף אחד — נכנסים לתור ומחכים שמישהו יתפוס אותנו
-    const myRef = ref(db, `website/blind_queue/${user.uid}`);
-    await set(myRef, { name, g: bd.me.g, want: bd.me.want, city: bd.me.city, t: Date.now(), status: 'waiting' });
-    try { onDisconnect(myRef).remove(); } catch (e) {}
-    bd.unsubQ = onValue(myRef, s => {
-      const q = s.val();
-      if (q && q.status === 'matched' && q.room && bd.state === 'waiting') {
-        bdJoinRoom(q.room, { uid: q.partner, name: q.partnerName || 'גולש/ת' }, myRef, false);
-      }
-    });
-  } catch (e) {
-    console.error('blind date failed', e);
-    bd.state = 'intro'; bd.error = 'משהו השתבש. נסו שוב.'; bdRender();
-  }
-}
-window.bdStart = bdStart;
 
-// queueRef: אצל מי שחיכה — החדר נוצר רגע אחרי ה"תפיסה", אז מחכים שיהיה קריא,
-// ורק אז מוחקים את הרשומה בתור (היא נדרשת לכללים בזמן יצירת החדר)
-// creator: מי שיצר את החדר מגריל את המפגש הראשון; אם לא הגריל תוך 10 שניות — השני מגריל
-async function bdJoinRoom(roomId, partner, queueRef, creator) {
-  bdStopListeners();
-  bd.state = 'chat'; bd.roomId = roomId; bd.partner = partner; bd.room = null; bd.ended = false; bd.rolling = false;
-  bdRender();
-  const roomRef = ref(db, `website/blind_rooms/${roomId}`);
-  if (queueRef) {
-    for (let i = 0; i < 20; i++) {
-      try { const s = await get(roomRef); if (s.exists()) break; } catch (e) {}
-      await new Promise(r => setTimeout(r, 500));
-    }
-    set(queueRef, null).catch(() => {});
-  }
-  if (bd.roomId !== roomId) return;
-  let first = true;
-  bd.unsubR = onValue(roomRef, s => {
-    bd.room = s.val() || {};
-    bd.ended = !!bd.room.ended;
-    if (first) {
-      first = false;
-      if (!bd.room.plan) {
-        if (creator) bdRollPlan();
-        else bd.planTimer = setTimeout(() => { if (bd.roomId === roomId && bd.room && !bd.room.plan) bdRollPlan(); }, 10000);
-      }
-    }
-    bdRender();
-  }, () => {});
-}
 
-async function bdSend() {
-  const inp = document.getElementById('bd-input');
-  const text = inp ? inp.value.trim() : '';
-  if (!text || !bd.roomId || bd.ended || !auth.currentUser) return;
-  inp.value = '';
-  try {
-    await set(push(ref(db, `website/blind_rooms/${bd.roomId}/msgs`)), { from: auth.currentUser.uid, text: text.slice(0, 500), t: Date.now() });
-  } catch (e) { inp.value = text; alert('ההודעה לא נשלחה'); }
-}
-window.bdSend = bdSend;
 
-async function bdLeaveRoom() {
-  if (bd.roomId && !bd.ended) { try { await set(ref(db, `website/blind_rooms/${bd.roomId}/ended`), true); } catch (e) {} }
-}
-async function bdCancel() {
-  bdStopListeners();
-  if (auth.currentUser) { try { await set(ref(db, `website/blind_queue/${auth.currentUser.uid}`), null); } catch (e) {} }
-  bd.state = 'intro'; bdRender();
-}
-window.bdCancel = bdCancel;
-async function bdNext() {
-  await bdLeaveRoom();
-  bdStopListeners();
-  bd.roomId = null; bd.partner = null; bd.room = null; bd.ended = false;
-  bd.state = 'intro'; bdRender();
-}
-window.bdNext = bdNext;
+
+
+
+
+
+
+
+
+
+
+
 
 // ============================================================
 // עמוד "התאמות" בסגנון טינדר — כרטיסי משתמשים, החלקה ימינה/שמאלה, התאמה הדדית פותחת צ'אט
@@ -14079,139 +12642,31 @@ let tdFilter = 'הכל';
 let tdHistory = [];          // לכפתור "חזרה"
 let tdDrag = null;
 
-function tdSeenKey() { const u = auth.currentUser; return 'tinder_seen_' + (u ? u.uid : 'guest'); }
-function tdSeen() { try { return JSON.parse(localStorage.getItem(tdSeenKey()) || '{}'); } catch (e) { return {}; } }
-function tdMarkSeen(uid, v) {
-  const s = tdSeen();
-  if (v === null) delete s[uid]; else s[uid] = v;
-  try { localStorage.setItem(tdSeenKey(), JSON.stringify(s)); } catch (e) {}
-}
 
-// פרופילים מתוך הגלריות שפורסמו: תמונה אחרונה, גיל, אזור, מין, מספר גלריות
-function tdProfiles() {
-  const me = auth.currentUser ? auth.currentUser.uid : '';
-  const by = {};
-  friendsAllItems().forEach(it => {
-    if (!it || !it.authorId || it.authorId === me || it.isStory || it.type === 'story') return;
-    const img = (it.images && it.images[0]) || it.image;
-    if (!img) return;
-    const t = Number(it.createdAt) || 0;
-    const p = by[it.authorId] || (by[it.authorId] = { uid: it.authorId, name: it.author || 'משתמש', count: 0, t: 0 });
-    p.count++;
-    if (t >= p.t) Object.assign(p, { t, img, age: it.ageRange || '', region: it.region || '', gender: it.category || '', adult: !!it.isAdult, verified: it.verified });
-  });
-  const seen = tdSeen();
-  return Object.values(by)
-    .filter(p => !seen[p.uid])
-    .filter(p => tdFilter === 'הכל' || p.gender === tdFilter)
-    .sort((a, b) => b.t - a.t);
-}
 
-function buildTinderPage() {
-  return `<div class="tinder-page" data-page-id="page-tinder-main"><div class="td-inner">${tdViewHTML()}</div></div>`;
-}
-function tdRender() {
-  const el = mainContent && mainContent.querySelector('.tinder-page .td-inner');
-  if (el) el.innerHTML = tdViewHTML();
-}
-function tdViewHTML() {
-  const list = tdProfiles();
-  const chips = ['הכל', 'אישה', 'גבר', 'זוג'].map(c => `<button type="button" class="td-chip${tdFilter === c ? ' on' : ''}" onclick="tdSetFilter('${c}')">${c === 'הכל' ? 'כולם' : c === 'אישה' ? 'נשים' : c === 'גבר' ? 'גברים' : 'זוגות'}</button>`).join('');
-  const top = list[0], next = list[1];
-  const card = (p, cls) => p ? `
-    <div class="td-card ${cls}" data-uid="${escHtml(p.uid)}">
-      <div class="td-photo${p.adult ? ' is-adult' : ''}" style="background-image:url('${escHtml(p.img)}')"></div>
-      <div class="td-stamp like">LIKE</div><div class="td-stamp nope">NOPE</div>
-      <div class="td-info">
-        <div class="td-name">${escHtml(p.name)}${p.age ? ` <span>${escHtml(String(p.age))}</span>` : ''}${isUserVerified(p.uid, p.name, p.verified) ? verifiedSealHTML(24) : ''}</div>
-        <div class="td-meta">${p.region ? `<span>📍 ${escHtml(p.region)}</span>` : ''}<span>${p.count} גלריות</span></div>
-        <button type="button" class="td-more" onclick="event.stopPropagation(); openUserPage('${artEsc(p.uid)}','${artEsc(p.name)}')" aria-label="לפרופיל">i</button>
-      </div>
-    </div>` : '';
-  const ico = (d) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
-  return `
-    <div class="td-head"><h1>התאמות</h1><div class="td-chips">${chips}</div></div>
-    <div class="td-stack">
-      ${top ? card(next, 'behind') + card(top, 'top') : `
-        <div class="td-empty">
-          <div class="td-empty-icon">${ico('<path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.6 2.8 4.5 6.7 4.5c2.2 0 3.6 1.2 5.3 3 1.7-1.8 3.1-3 5.3-3 3.9 0 5.8 4.1 4.3 7.3C19.5 16.4 12 21 12 21z"/>')}</div>
-          <b>אין כרגע עוד פרופילים</b><span>חזרו מאוחר יותר, או החליפו סינון</span>
-          <button type="button" class="td-reset" onclick="tdResetSeen()">להתחיל מחדש</button>
-        </div>`}
-    </div>
-    <div class="td-actions">
-      <button type="button" class="td-btn rewind" onclick="tdRewind()" ${tdHistory.length ? '' : 'disabled'} aria-label="חזרה">${ico('<path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/>')}</button>
-      <button type="button" class="td-btn nope" onclick="tdSwipe('nope')" ${top ? '' : 'disabled'} aria-label="לא">${ico('<path d="M6 6l12 12M18 6 6 18"/>')}</button>
-      <button type="button" class="td-btn super" onclick="tdSwipe('super')" ${top ? '' : 'disabled'} aria-label="סופר לייק"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5L2.5 9.4l6.6-.9z"/></svg></button>
-      <button type="button" class="td-btn like" onclick="tdSwipe('like')" ${top ? '' : 'disabled'} aria-label="לייק"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.6 2.8 4.5 6.7 4.5c2.2 0 3.6 1.2 5.3 3 1.7-1.8 3.1-3 5.3-3 3.9 0 5.8 4.1 4.3 7.3C19.5 16.4 12 21 12 21z"/></svg></button>
-      <button type="button" class="td-btn chat" onclick="tdChatTop()" ${top ? '' : 'disabled'} aria-label="הודעה">${ico('<path d="M4 5h16v11H9l-5 4z"/>')}</button>
-    </div>`;
-}
-function tdSetFilter(f) { tdFilter = f; tdRender(); }
-window.tdSetFilter = tdSetFilter;
-function tdResetSeen() { try { localStorage.removeItem(tdSeenKey()); } catch (e) {} tdHistory = []; tdRender(); }
-window.tdResetSeen = tdResetSeen;
-function tdChatTop() {
-  const c = mainContent.querySelector('.td-card.top');
-  if (!c) return;
-  const p = tdProfiles().find(x => x.uid === c.dataset.uid);
-  if (p && typeof dmStartWith === 'function') dmStartWith(p.uid, p.name);
-}
-window.tdChatTop = tdChatTop;
 
-async function tdSwipe(kind) {
-  const c = mainContent.querySelector('.td-card.top');
-  if (!c) return;
-  const uid = c.dataset.uid;
-  const p = tdProfiles().find(x => x.uid === uid);
-  if (kind !== 'nope' && !(auth.currentUser && !auth.currentUser.isAnonymous)) { openLiveChatLogin(); tdSnapBack(c); return; }
-  c.classList.add('fly', kind);
-  tdMarkSeen(uid, kind);
-  tdHistory.push(uid);
-  setTimeout(tdRender, 320);
-  if (kind === 'nope') return;
-  const me = auth.currentUser.uid;
-  try {
-    await set(ref(db, `website/tinder_likes/${me}/${uid}`), kind);
-    const back = await get(ref(db, `website/tinder_likes/${uid}/${me}`));
-    if (back.exists() && p) tdShowMatch(p);
-  } catch (e) { console.warn('tinder like failed', e); }
-}
-window.tdSwipe = tdSwipe;
 
-async function tdRewind() {
-  const uid = tdHistory.pop();
-  if (!uid) return;
-  const prev = tdSeen()[uid];
-  tdMarkSeen(uid, null);
-  if (prev && prev !== 'nope' && auth.currentUser) { try { await set(ref(db, `website/tinder_likes/${auth.currentUser.uid}/${uid}`), null); } catch (e) {} }
-  tdRender();
-}
-window.tdRewind = tdRewind;
 
-function tdShowMatch(p) {
-  const meName = liveChatUserName();
-  const ov = document.createElement('div');
-  ov.className = 'td-match';
-  ov.innerHTML = `
-    <div class="td-match-card">
-      <h2>It's a Match!</h2>
-      <p>את/ה ו-${escHtml(p.name)} אהבתם אחד את השני</p>
-      <div class="td-match-pics">
-        <span class="td-match-av" ${auth.currentUser ? `data-av-uid="${escHtml(auth.currentUser.uid)}"` : ''}>${escHtml(String(meName || '?').charAt(0))}</span>
-        <span class="td-match-av photo" style="background-image:url('${escHtml(p.img)}')"></span>
-      </div>
-      <button type="button" class="td-match-go">שלחו הודעה</button>
-      <button type="button" class="td-match-skip">להמשיך לגלוש</button>
-    </div>`;
-  document.body.appendChild(ov);
-  if (typeof avatarHydrate === 'function') avatarHydrate(ov);
-  ov.querySelector('.td-match-go').onclick = () => { ov.remove(); dmStartWith(p.uid, p.name); };
-  ov.querySelector('.td-match-skip').onclick = () => ov.remove();
-}
 
-// החלקה בגרירה (עכבר/מגע)
-function tdSnapBack(c) { c.style.transition = 'transform .3s ease'; c.style.transform = ''; c.classList.remove('dragging'); }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 document.addEventListener('pointerdown', (e) => {
   const c = e.target.closest && e.target.closest('.td-card.top');
   if (!c || e.target.closest('button')) return;
@@ -14228,15 +12683,7 @@ document.addEventListener('pointermove', (e) => {
   tdDrag.c.style.setProperty('--like', Math.max(0, Math.min(1, tdDrag.dx / 110)));
   tdDrag.c.style.setProperty('--nope', Math.max(0, Math.min(1, -tdDrag.dx / 110)));
 });
-document.addEventListener('pointerup', () => {
-  if (!tdDrag) return;
-  const { c, dx } = tdDrag;
-  tdDrag = null;
-  c.style.setProperty('--like', 0); c.style.setProperty('--nope', 0);
-  if (dx > 110) { c.style.transition = ''; c.style.transform = ''; tdSwipe('like'); }
-  else if (dx < -110) { c.style.transition = ''; c.style.transform = ''; tdSwipe('nope'); }
-  else tdSnapBack(c);
-});
+
 
 // ============================================================
 // עמוד "חברים" — טבלת תחרות: הכי הרבה פוסטים, הדירוג הגבוה, הכי הרבה נקודות
@@ -14581,11 +13028,8 @@ function productsSubscribe() {
   }, () => { productsData = []; productsRender(); });
 }
 
-function buildProductsPage() {
-  setTimeout(productsSubscribe, 0);
-  return `<div class="products-page" data-page-id="page-products-main"><div class="pr-inner">${productsViewHTML()}</div></div>`;
-}
-window.buildProductsPage = buildProductsPage;
+
+
 function productsRender() {
   const el = mainContent && mainContent.querySelector('.products-page .pr-inner');
   if (el) el.innerHTML = productsViewHTML();
@@ -15622,7 +14066,7 @@ function buildHomeFeedPage() {
   // --- קומיקס + סיפורים (עטיפה אחת) ---
   const combined = comics.concat(stories);
   const storiesJson = encodeURIComponent(JSON.stringify(combined));
-  const storyTiles = (items, iconHint) => items.slice(0, maxPerRow).map(s => storyCardHTML(s, iconHint));
+  const storyTiles = () => [];   // הקומיקס והסיפורים הוסרו מהאתר
   const storiesSection = `
     <div class="stories-page home-feed-stories story-cols-${cols}${photoImagesMode ? '' : ' text-mode'}" data-stories-json="${storiesJson}">
       ${trioCard('trio-comics', 'קומיקס', 'ציורים ורצועות קומיקס חדשים.', storyTiles(comics, '📖'), "homeOpenSection('page-stories-main')", 'לכל הקומיקס', 'מומלץ')}
@@ -15695,7 +14139,7 @@ function homeTabsGet() {
 }
 function homeChipsHTML(photos, comics, stories, active, extraCls) {
   active = active || 'foryou';
-  const tabs = ['foryou', 'feed', ...homeTabsGet()];
+  const tabs = ['foryou', ...homeTabsGet()].filter(k => !['feed', 'comics', 'stories', 'partnerships', 'reviews', 'requests', 'photos', 'products', 'store', 'tinder', 'blinddate'].includes(k));
   if (!tabs.includes(active) && HOME_TABS_ALL[active]) tabs.push(active);
   // מחוץ לעמוד הבית "בשבילך" מחזיר לבית
   const act = k => k === 'foryou' ? (extraCls ? 'goToHomePage()' : '') : HOME_TABS_ALL[k][1];
@@ -15739,7 +14183,7 @@ function homeCategoriesHTML(photos, comics, stories) {
   // צבעים בהירים (פסטל) — הטקסט והאייקון כהים בגוון של כל אריח
   const tiles = [
     ['photos', 'תמונות גולשים', '#ece8ff|#4c3bcf', homeCover(photos)], ['comics', 'קומיקס', '#ffe4ec|#b4235a', homeCover(comics)],
-    ['stories', 'סיפורים', '#ddf4ec|#11735a', homeCover(stories)], ['forums', 'פורומים', '#e3edfd|#1d4fb8'], ['friends', 'חברים', '#fff1d1|#9a5b00'],
+    ['forums', 'פורומים', '#e3edfd|#1d4fb8'], ['friends', 'חברים', '#fff1d1|#9a5b00'],
     ['blinddate', 'Blind Date', '#ffe1e1|#c0262d'], ['tinder', 'התאמות', '#f4e8ff|#7e3bc4'], ['products', 'מוצרים', '#dff3fd|#0b6aa1'],
     ['news', 'חדשות', '#eef0f3|#3f4652'], ['offers', 'הצעות', '#ffecd9|#b04a0f']
   ].filter(([k]) => ['photos', 'comics', 'stories', 'news', 'offers'].includes(k) || commFindPage(k));
@@ -15755,14 +14199,11 @@ function homeCategoriesHTML(photos, comics, stories) {
 // ===== סרגל אייקונים בצד שמאל (דסקטופ) =====
 const SIDE_RAIL_ITEMS = [
   ['home', 'בית', 'goToHomePage()', '<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>', true],
-  ['feed', 'הפיד שלי', 'openFeed()', '<path d="M4 6h16M4 12h16M4 18h10"/>', false],
   ['news', 'חדשות', "navigateToPage('page-news-main')", '<path d="M4 5h13v14H6a2 2 0 0 1-2-2z"/><path d="M17 9h3v8a2 2 0 0 1-2 2"/><path d="M8 9h5M8 13h5M8 17h3"/>', false],
   ['cats', 'קטגוריות', "navigateToPage('page-communities-main')", '<rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/>', true],
-  ['photos', 'תמונות גולשים', 'homeOpenPhotos()', '<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/>', false],
-  ['store', 'החנות', "navigateToPage('page-products-main')", '<path d="M5 8h14l-1.2 11.1a1 1 0 0 1-1 .9H7.2a1 1 0 0 1-1-.9z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/>', false],
   ['secondhand', 'השוק: יד 2, השכרה ואחסון', "mktGo('all')", '<path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.5"/>', false],
   ['invest', 'תמכו / השקיעו בנו', "investOpen('invest')", '<path d="M12 20.5s-7.5-4.6-9.2-9.3C1.7 8 3.6 4.5 7.1 4.5c2 0 3.4 1.1 4.9 2.9 1.5-1.8 2.9-2.9 4.9-2.9 3.5 0 5.4 3.5 4.3 6.7-1.7 4.7-9.2 9.3-9.2 9.3z"/>', false],
-  ['shop', 'מנוי ושדרוגים', "navigateToPage('page-subscription-main')", '<path d="M3 4h2l2.4 11.2a1 1 0 0 0 1 .8h9.2a1 1 0 0 0 1-.8L21 8H6.2"/><circle cx="9.5" cy="20" r="1.5"/><circle cx="17.5" cy="20" r="1.5"/>', false],
+  ['shop', 'העגלה שלי', "cartOpen()", '<path d="M3 4h2l2.4 11.2a1 1 0 0 0 1 .8h9.2a1 1 0 0 0 1-.8L21 8H6.2"/><circle cx="9.5" cy="20" r="1.5"/><circle cx="17.5" cy="20" r="1.5"/>', false],
 ];
 function sideRailHTML() {
   const u = auth.currentUser;
@@ -15771,7 +14212,7 @@ function sideRailHTML() {
       <svg viewBox="0 0 24 24" fill="${fill ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="${fill ? 0 : 2}" stroke-linecap="round" stroke-linejoin="round">${path}</svg></button>`;
   const adminBtn = (typeof isAdmin === 'function' && isAdmin()) ? btn(['stats', 'נתוני האתר (מנהל)', "adminOpenTab('stats')", '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>', false]) : '';
   return `${SIDE_RAIL_ITEMS.map(btn).join('')}${adminBtn}
-    <button type="button" class="srail-btn srail-me srail-fb" onclick="feedbackOpen()" aria-label="שליחת ביקורת — מה לשפר באתר" title="שליחת ביקורת — מה לשפר באתר">
+    <button type="button" hidden class="srail-btn srail-me srail-fb" onclick="feedbackOpen()" aria-label="שליחת ביקורת — מה לשפר באתר" title="שליחת ביקורת — מה לשפר באתר">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"/><path d="M12 7.6l1.2 2.5 2.7.4-2 1.9.5 2.7-2.4-1.3-2.4 1.3.5-2.7-2-1.9 2.7-.4z" fill="currentColor" stroke="none"/></svg><span>ביקורת</span></button>
     <button type="button" class="srail-btn srail-me" onclick="${reg ? `openUserPage('${artEsc(u.uid)}')` : 'openLiveChatLogin()'}" aria-label="${reg ? 'הפרופיל שלי' : 'התחברות'}">
       <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4.2"/><path d="M3.5 21a8.5 8.5 0 0 1 17 0z"/></svg><span>${reg ? 'פרופיל' : 'התחברות'}</span></button>`;
@@ -15797,27 +14238,13 @@ window.sideRailSync = sideRailSync;
 try { renderSideRail(); onAuthStateChanged(auth, () => renderSideRail()); } catch (e) {}
 
 function homeOpenSection(targetId) {
+  if (targetId === 'page-stories-text') { navigateToPage('page-home-feed'); return; }
   try {
     if (targetId === 'page-photos-main') {
       homeOpenPhotos();
       return;
     }
     let targetPage = (typeof pages !== 'undefined' && Array.isArray(pages)) ? pages.find(p => p && p.id === targetId) : null;
-    if (!targetPage && Array.isArray(pages)) {
-      if (targetId === 'page-stories-main') {
-        targetPage = pages.find(p => p && (p.title === 'קומיקס' || (p.content || '').includes('data-story-kind="comics"')));
-        if (!targetPage) {
-          targetPage = { id: 'page-stories-main', title: 'קומיקס', content: typeof buildStoriesPage === 'function' ? buildStoriesPage([], 'comics') : '' };
-          pages.push(targetPage);
-        }
-      } else if (targetId === 'page-stories-text') {
-        targetPage = pages.find(p => p && (p.title === 'סיפורים' || (p.content || '').includes('data-story-kind="stories"')));
-        if (!targetPage) {
-          targetPage = { id: 'page-stories-text', title: 'סיפורים', content: typeof buildStoriesPage === 'function' ? buildStoriesPage([], 'stories') : '' };
-          pages.push(targetPage);
-        }
-      }
-    }
     const finalId = targetPage ? targetPage.id : targetId;
     if (typeof navigateToPage === 'function') {
       navigateToPage(finalId);
@@ -15834,6 +14261,7 @@ window.homeOpenSection = homeOpenSection;
 
 // "פתח הכל" של שורת התמונות — מנווט לעמוד התמונות
 function homeOpenPhotos() {
+  navigateToPage('page-home-feed'); return;   // עמוד התמונות הוסר מהאתר; התוכן נשאר במסד
   try {
     let pp = (typeof pages !== 'undefined' && Array.isArray(pages))
       ? (pages.find(p => p && p.id === 'page-photos-main')
@@ -16865,7 +15293,7 @@ function _photoOpenDetailImpl(id) {
     mainContent.innerHTML = `
       <div class="art-detail articles-page photos-page art-pd3" data-photo-id="${id}" data-photos-json="${json}">
         <div class="art-detail-inner">
-          <h1 class="pd3-pagehead">${isSecondhand ? 'מוצרי גולשים' : 'תמונות גולשים'}</h1>
+          <h1 class="pd3-pagehead">${isSecondhand ? 'השוק' : 'תמונות גולשים'}</h1>
           <div class="pd2-toprow">
             <button class="art-back-btn" onclick="photoGoBack()">${isSecondhand ? 'חזרה למוצרים' : 'חזרה לגלריות'}</button>
             <div class="pd2-topend">
@@ -16909,7 +15337,7 @@ function _photoOpenDetailImpl(id) {
                 </div>
               </div>
               <div class="pd2-acts-desk">${pd2ActionsHTML(a, isSecondhand ? 'product' : '')}</div>
-              <span class="pd3-badge">${escHtml(a.category || (isSecondhand ? 'מוצרי גולשים' : 'תמונות גולשים'))}</span>
+              <span class="pd3-badge">${escHtml(a.category || (isSecondhand ? 'השוק' : 'תמונות גולשים'))}</span>
               <h1 class="pd2-title">${escHtml(a.title)}</h1>
 
               ${a.ageRange || a.region ? `<div class="pd2-opts">
@@ -17577,10 +16005,7 @@ function feedAllItems() {
   const photos = ((typeof photoGetAlbums === 'function') ? photoGetAlbums() : [])
     .filter(a => a && a.approved !== false && (!a.adminOnly || isAdminView) && (!a.expiresAt || a.expiresAt > now))
     .map(a => Object.assign({}, a, { __type: 'photo' }));
-  const stories = ((typeof getAllStoriesFromPages === 'function') ? getAllStoriesFromPages() : [])
-    .filter(s => s && s.approved !== false)
-    .map(s => Object.assign({}, s, { __type: s.__kind === 'stories' ? 'story' : 'comic' }));
-  return photos.concat(stories)
+  return photos
     .map(x => Object.assign(x, { __t: (typeof photoAlbumTime === 'function' ? photoAlbumTime(x) : 0) || 0 }))
     .sort((a, b) => b.__t - a.__t);
 }
@@ -17657,46 +16082,8 @@ function pfTab(name) {
 }
 window.pfTab = pfTab;
 
-// --- עמוד "הפיד שלי" ---
-function buildFeedPage() {
-  if (typeof subscribeMyFollows === 'function') { try { subscribeMyFollows(); } catch (e) {} }
-  const items = feedAllItems();
-  const json = encodeURIComponent(JSON.stringify(items.filter(x => x.__type === 'photo')));
-  const u = auth.currentUser;
-  const reg = u && !u.isAnonymous;
-  const follows = Object.keys(followedUids || {}).filter(k => followedUids[k]);
-  let body;
-  if (!reg) {
-    // אורח: רואה את הפיד של מנהל האתר
-    const siteFeed = feedRank(items.filter(x => typeof isSiteAdminAuthor === 'function' && isSiteAdminAuthor(x.authorId, x.author, x)));
-    body = postsListHTML('sitefeed', siteFeed, true, '<div class="pf-empty">עדיין אין פוסטים</div>');
-  } else {
-    const mineRaw = repostsMerge(items.filter(x => x.authorId && followedUids[x.authorId]), follows, items);
-    // כמו בפייסבוק: הפוסטים של מי שעוקבים אחריו מדורגים לפי רלוונטיות, ובין כל 3 נכנסת המלצה מיוצר אחר
-    const recs = feedRank(items.filter(x => x.authorId !== u.uid && !(x.authorId && followedUids[x.authorId])), { why: true }).slice(0, 30);
-    const mine = []; const ranked = feedRank(mineRaw);
-    ranked.forEach((x, i) => { mine.push(x); if (i % 3 === 2 && recs.length) mine.push(recs.shift()); });
-    if (ranked.length < 6) mine.push(...recs.splice(0, 12 - ranked.length));
-    // הצעות למעקב: היוצרים הפעילים ביותר שעוד לא עוקבים אחריהם
-    const counts = {};
-    items.forEach(x => {
-      if (!x.authorId || x.authorId === u.uid || followedUids[x.authorId] || (typeof isSiteAdminAuthor === 'function' && isSiteAdminAuthor(x.authorId, x.author, x))) return;
-      counts[x.authorId] = counts[x.authorId] || { x, n: 0 }; counts[x.authorId].n++;
-    });
-    const sugg = Object.values(counts).sort((a, b) => b.n - a.n).slice(0, 6);
-    const suggHTML = sugg.length ? `<section class="pfeed-sugg"><h3>מומלצים לעקוב</h3><div>${sugg.map(({ x, n }) => `
-        <div class="pfeed-sugg-item">${authorAvHTML(x)}<span onclick="openUserPage('${artEsc(x.authorId)}','${artEsc(x.author || '')}')"><b>${escHtml(x.author || 'משתמש')}</b><small>${n} העלאות</small></span>
-          <button type="button" onclick="toggleFollow('${artEsc(x.authorId)}','${artEsc(x.author || '')}', this)">עקבו</button></div>`).join('')}</div></section>` : '';
-    body = (follows.length ? '' : `<div class="pfeed-empty"><h2>עוד לא עוקבים אחרי אף אחד</h2><p>עקבו אחרי יוצרים שאהבתם, וההעלאות שלהם יופיעו כאן. בינתיים — המלצות שנבחרו בשבילכם 👇</p></div>`) +
-      suggHTML +
-      postsListHTML('feed', mine, true, '<div class="pf-empty">מי שאתם עוקבים אחריו עוד לא העלה כלום</div>');
-  }
-  return `<div class="user-page pfeed-page" data-photos-json="${json}"><div class="pfeed-inner">
-      ${composerBarHTML()}
-      ${body}
-    </div></div>`;
-}
-window.buildFeedPage = buildFeedPage;
+
+
 // ===== פרופיל משתמש: כותרת (תמונה, שם, @שם, תיאור, פרטים, עוקבים) =====
 function profileHandle(name) {
   return String(name || 'user').trim().toLowerCase().replace(/\s+/g, '');
@@ -18357,6 +16744,7 @@ window.goBackFromUserPage = goBackFromUserPage;
 
 // מעבר ישיר לעמוד התמונות (נקרא אחרי אישור ההסכמה בכניסה לאתר)
 function goToPhotosPage() {
+  navigateToPage('page-home-feed'); return;   // עמוד התמונות הוסר מהאתר
   try {
     const photoPage = pages.find(p => p && ((p.content || '').includes('photos-page') || (p.title || '').includes('תמונות')));
     if (photoPage) {
@@ -19084,12 +17472,12 @@ if (btnAddPhotosPage) {
   });
 }
 
-window.buildStoriesPage = buildStoriesPage;
-window.storyDelete = storyDelete;
-window.openStoryModal = openStoryModal;
-window.storySearch = storySearch;
+
+
+
+
 window.storyOpenDetail = storyOpenDetail;
-window.storyGoBack = storyGoBack;
+
 
 window.buildPhotosPage = buildPhotosPage;
 window.photoDelete = photoDelete;
@@ -19315,12 +17703,7 @@ async function _reqMutate(id, action) {
         } else {
           stories.unshift(targetItem);
         }
-        if (typeof buildStoriesPage === 'function') {
-          if (spObj) {
-            const _k = ((spObj.content || '').match(/data-story-kind="([^"]+)"/) || [])[1] || 'comics';
-            spObj.content = buildStoriesPage(stories, _k);
-          }
-        }
+        if (spObj) spObj.content = (spObj.content || '').replace(/data-stories-json="[^"]*"/, `data-stories-json="${encodeURIComponent(JSON.stringify(stories))}"`);
       } else {
         const existingIdx = albums.findIndex(a => a.id === id);
         if (existingIdx >= 0) {
@@ -20354,7 +18737,6 @@ function subscribeMyFollows() {
   followsSubscribed = true;
   onValue(ref(db, `website/user_follows/${u.uid}`), snap => {
     followedUids = snap.val() || {};
-    if (activePageId === 'page-feed-main' && typeof renderPage === 'function') renderPage();
   });
 }
 function isFollowing(uid) { return !!(uid && followedUids[uid]); }
@@ -20529,29 +18911,10 @@ window.photoCommentsSectionHTML = photoCommentsSectionHTML;
 let storyCommentsUnsub = null;
 let storyCommentsData = {};
 
-function subscribeStoryComments(storyId) {
-  if (storyCommentsUnsub) { storyCommentsUnsub(); storyCommentsUnsub = null; }
-  storyCommentsUnsub = onValue(ref(db, `website/story_comments/${storyId}`), snap => {
-    storyCommentsData = snap.val() || {};
-    const box = document.getElementById('story-comments-list');
-    if (box) box.innerHTML = storyCommentsListHTML();
-    const cnt = document.getElementById('story-comments-count');
-    if (cnt) cnt.textContent = Object.keys(storyCommentsData).length;
-    document.querySelectorAll('.pb-n').forEach(n => { n.textContent = Object.keys(storyCommentsData).length; });
-  });
-}
-window.subscribeStoryComments = subscribeStoryComments;
 
-function storyCommentsListHTML() {
-  const list = Object.values(storyCommentsData).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-  if (!list.length) return '<div class="pc-empty">אין תגובות עדיין. היו הראשונים להגיב!</div>';
-  return list.map(c => `
-    <div class="pc-comment">
-      <div class="pc-head">${escHtml(c.name || 'אורח')} · ${c.createdAt ? new Date(c.createdAt).toLocaleDateString('he-IL') : ''}</div>
-      ${c.text ? `<div class="pc-text">${escHtml(c.text)}</div>` : ''}
-      ${voiceCommentAudioHTML(c)}
-    </div>`).join('');
-}
+
+
+
 
 async function submitStoryComment(storyId) {
   const inp = document.getElementById('story-comment-input');
@@ -20566,16 +18929,8 @@ async function submitStoryComment(storyId) {
 }
 window.submitStoryComment = submitStoryComment;
 
-function storyCommentsSectionHTML(storyId) {
-  return `
-    <div class="pc-section">
-      <div class="pc-title">💬 תגובות (<span id="story-comments-count">0</span>)</div>
-      ${pcComposerHTML('story', storyId)}
-      <div class="pc-voice" id="story-voice-rec"></div>
-      <div id="story-comments-list">${storyCommentsListHTML()}</div>
-    </div>`;
-}
-window.storyCommentsSectionHTML = storyCommentsSectionHTML;
+
+
 
 // ---- תגובות קוליות (לתמונות ולסיפורים) ----
 // ההקלטה נשמרת כ-data URL בתוך התגובה עצמה (עד 60 שניות, ביטרייט נמוך)
@@ -20712,129 +19067,33 @@ let fbFeedObserver = null;
 
 
 
-function fbFeedPostCard(p) {
-  const img = (p.images && p.images[0]) ? p.images[0] : (p.image || '');
-  const verified = (typeof isUserVerified === 'function') ? isUserVerified(p.authorId, p.author, p.verified || p.verifiedUser) : false;
-  const vBadge = verified ? ` <span class="fb-verified" title="מאומת">✓</span>` : '';
-  const likes = p.likes || 0;
-  const kindTag = p._kind === 'idea' ? '💡 רעיון' : '';
-  return `
-    <div class="fb-post">
-      <div class="fb-post-head">
-        <div class="fb-post-avatar" onclick="openUserPage('${artEsc(p.authorId || '')}','${artEsc(p.author || '')}')">${img ? `<img src="${escHtml(img)}" alt="">` : '<span>👤</span>'}</div>
-        <div class="fb-post-meta">
-          <div class="fb-post-author" onclick="openUserPage('${artEsc(p.authorId || '')}','${artEsc(p.author || '')}')">${escHtml(p.author || 'משתמש')}${vBadge}</div>
-          <div class="fb-post-time">${escHtml(p.timestamp || '')}${kindTag ? ' · ' + kindTag : ''}</div>
-        </div>
-      </div>
-      ${p.title ? `<div class="fb-post-text">${escHtml(p.title)}</div>` : ''}
-      ${p.summary ? `<div class="fb-post-sub">${escHtml(p.summary)}</div>` : ''}
-      ${img ? `<div class="fb-post-img" onclick="fbFeedOpen('${artEsc(p.id)}','${p._kind}')"><img src="${escHtml(img)}" alt="" loading="lazy"></div>` : ''}
-      <div class="fb-post-stats"><span>❤️ ${likes}</span><span>👁️ ${(typeof photoGetViews === 'function' ? photoGetViews(p.id) : 0)}</span></div>
-      <div class="fb-post-actions">
-        <button onclick="fbFeedLike('${artEsc(p.id)}', this)">👍 אהבתי</button>
-        <button onclick="fbFeedOpen('${artEsc(p.id)}','${p._kind}')">💬 תגובה</button>
-        <button onclick="fbFeedOpen('${artEsc(p.id)}','${p._kind}')">↗️ שיתוף</button>
-      </div>
-    </div>`;
-}
 
-function fbFeedRenderBatch() {
-  const list = document.getElementById('fb-feed-list');
-  if (!list) return;
-  const isGuest = !auth.currentUser;
-  if (isGuest && fbFeedBatchesLoaded >= FB_GUEST_MAX_BATCHES) { fbFeedShowWall(); return; }
-  if (!fbFeedPosts.length) {
-    if (fbFeedObserver) { try { fbFeedObserver.disconnect(); } catch (e) {} }
-    if (!document.getElementById('fb-feed-end')) {
-      list.insertAdjacentHTML('beforeend', `<div id="fb-feed-end" class="fb-feed-end">אין תוכן להצגה עדיין.</div>`);
-    }
-    return;
-  }
-  // גלילה אינסופית: כשנגמר התוכן מתחילים מחדש עם ערבוב (כמו פיד חברתי)
-  if (fbFeedIndex >= fbFeedPosts.length) {
-    fbFeedIndex = 0;
-    for (let i = fbFeedPosts.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const t = fbFeedPosts[i]; fbFeedPosts[i] = fbFeedPosts[j]; fbFeedPosts[j] = t; }
-  }
-  const slice = fbFeedPosts.slice(fbFeedIndex, fbFeedIndex + FB_FEED_BATCH);
-  list.insertAdjacentHTML('beforeend', slice.map(fbFeedPostCard).join(''));
-  fbFeedIndex += FB_FEED_BATCH;
-  fbFeedBatchesLoaded++;
-}
 
-function fbFeedShowWall() {
-  if (fbFeedObserver) { try { fbFeedObserver.disconnect(); } catch (e) {} }
-  const list = document.getElementById('fb-feed-list');
-  if (!list || document.getElementById('fb-feed-wall')) return;
-  list.insertAdjacentHTML('beforeend', `
-    <div id="fb-feed-wall" class="fb-feed-wall">
-      <div class="fb-wall-icon">🔒</div>
-      <div class="fb-wall-title">רוצה לראות עוד?</div>
-      <div class="fb-wall-sub">הצטרפו בחינם כדי להמשיך לגלול, לראות את כל התוכן, לעקוב אחרי משתמשים ולפרסם בעצמכם.</div>
-      <button class="fb-wall-btn" onclick="openLiveChatLogin()">הרשמה / התחברות</button>
-    </div>`);
-}
 
-function fbFeedStopped() {
-  // נעצרנו? (קיר הרשמה הוצג, אין תוכן, או הגענו לסוף)
-  return !!document.getElementById('fb-feed-wall') || !!document.getElementById('fb-feed-end') || !fbFeedPosts.length;
-}
 
-function fbFeedMaybeLoad() {
-  const list = document.getElementById('fb-feed-list');
-  if (!list) { window.removeEventListener('scroll', fbFeedOnScroll); return; }
-  if (fbFeedStopped()) return;
-  const se = document.scrollingElement || document.documentElement;
-  if (se.scrollTop + se.clientHeight >= se.scrollHeight - 600) fbFeedRenderBatch();
-}
+
+
+
+
+
 
 let _fbScrollTick = false;
-function fbFeedOnScroll() {
-  if (_fbScrollTick) return;
-  _fbScrollTick = true;
-  requestAnimationFrame(() => { _fbScrollTick = false; fbFeedMaybeLoad(); });
-}
-window.fbFeedOnScroll = fbFeedOnScroll;
 
 
-function fbFeedCompose() {
-  if (!auth.currentUser) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
-  if (typeof openQuickPublish === 'function') openQuickPublish();
-}
-window.fbFeedCompose = fbFeedCompose;
 
-function fbFeedLike(id, btn) {
-  if (!auth.currentUser) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
-  if (typeof photoToggleLike === 'function') { try { photoToggleLike(id); } catch (e) {} }
-  if (btn) btn.classList.toggle('liked');
-}
-window.fbFeedLike = fbFeedLike;
 
-function fbFeedOpen(id, kind) {
-  if (kind === 'idea') {
-    if (typeof pages !== 'undefined') {
-      const ip = pages.find(p => p && (p.content || '').includes('ideas-page'));
-      if (ip) { window.__detailOpen = false; activePageId = ip.id; if (typeof renderTopNav === 'function') renderTopNav(); if (typeof renderPage === 'function') renderPage(); }
-    }
-    return;
-  }
-  if (typeof feedOpenGallery === 'function') feedOpenGallery(id);
-}
-window.fbFeedOpen = fbFeedOpen;
+
+
+
+
+
+
+
+
 
 
 // פותח את עמוד הפיד (מכפתור הבית בכותרת)
-function openFeed() {
-  // הפיד זמין גם לאורחים (מצב אורח) — אחרי כמה גלילות מוצג קיר הרשמה
-  if (auth.currentUser && typeof subscribeMyFollows === 'function') subscribeMyFollows();
-  if (isEditMode && typeof saveCurrentPageContent === 'function') saveCurrentPageContent();
-  window.__detailOpen = false;
-  activePageId = 'page-feed-main';
-  if (typeof renderSideMenu === 'function') renderSideMenu();
-  if (typeof renderTopNav === 'function') renderTopNav();
-  renderPage();
-  try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) {}
-}
+function openFeed() { goToHomePage(); }   // הפיד הוסר מהאתר — קישורים ישנים חוזרים לבית
 window.openFeed = openFeed;
 
 function feedOpenGallery(id) {
@@ -22261,16 +20520,7 @@ function togglePinArticle(id) {
   }
 }
 
-function togglePinStory(id) {
-  if (!isEditMode) return;
-  const stories = storyGetStories();
-  const story = stories.find(s => s.id === id);
-  if (story) {
-    story.pinned = !story.pinned;
-    mainContent.innerHTML = buildStoriesPage(stories, storyGetCurrentKind());
-    saveCurrentPageContent();
-  }
-}
+
 
 function togglePinPhoto(id) {
   if (!isEditMode) return;
@@ -22295,7 +20545,7 @@ function togglePinCourse(id) {
 }
 
 window.togglePinArticle = togglePinArticle;
-window.togglePinStory = togglePinStory;
+
 window.togglePinPhoto = togglePinPhoto;
 window.togglePinCourse = togglePinCourse;
 
@@ -22903,11 +21153,8 @@ onPublicSiteValue((data) => {
     // מוודאים שעמוד "קהילות" תמיד קיים (עם תוכן פלייסהולדר תקין)
     const _frp = pList.find(p => p && p.id === 'page-friends-main');
     if (!_frp) pList.push({ id: 'page-friends-main', title: 'חברים', content: '<div class="friends-page" data-page-id="page-friends-main"></div>' });
-    if (!pList.find(p => p && p.id === 'page-tinder-main')) pList.push({ id: 'page-tinder-main', title: 'התאמות', content: '<div class="tinder-page" data-page-id="page-tinder-main"></div>' });
-    if (!pList.find(p => p && p.id === 'page-blinddate-main')) pList.push({ id: 'page-blinddate-main', title: 'Blind Date', content: '<div class="blinddate-page" data-page-id="page-blinddate-main"></div>' });
     if (!pList.find(p => p && p.id === 'page-forums-main')) pList.push({ id: 'page-forums-main', title: 'פורומים', content: '<div class="forums-page" data-page-id="page-forums-main"></div>' });
     if (!pList.find(p => p && p.id === 'page-polls-main')) pList.push({ id: 'page-polls-main', title: 'סקרים', content: '<div class="polls-page" data-page-id="page-polls-main"></div>' });
-    if (!pList.find(p => p && p.id === 'page-products-main')) pList.push({ id: 'page-products-main', title: 'מוצרים', content: '<div class="products-page" data-page-id="page-products-main"></div>' });
     if (!pList.find(p => p && p.id === 'page-rent-main')) pList.push({ id: 'page-rent-main', title: 'השוק', content: '<div class="rent-page" data-page-id="page-rent-main"></div>' });
     const _cp = pList.find(p => p && p.id === 'page-communities-main');
     const _cpc = '<div class="communities-page" data-page-id="page-communities-main"></div>';
@@ -23024,10 +21271,7 @@ onPublicSiteValue((data) => {
     }
     // עמוד "מוצרי יד שניה" תמיד מופיע בתפריט העליון
     if (pages.some(p => p && p.id === 'page-secondhand-main') && !navs.includes('page-secondhand-main')) navs.push('page-secondhand-main');
-    // עמוד "שותפויות" תמיד מופיע בתפריט העליון
-    if (pages.some(p => p && p.id === 'page-partnerships-main') && !navs.includes('page-partnerships-main')) navs.push('page-partnerships-main');
     // עמוד "ביקורת" תמיד מופיע בתפריט העליון
-    if (pages.some(p => p && p.id === 'page-reviews-main') && !navs.includes('page-reviews-main')) navs.push('page-reviews-main');
     // עמודים כמו "שאלות גולשים", "הצעות", "תמונות" ו"סיפורים" הם עמודי צד בלבד (מוסרים מהתפריט העליון)
     navs = navs.filter(id => !isSideOnlyId(id));
     // מסירים מהתפריט את העמודים שהוסרו
@@ -23277,10 +21521,6 @@ function setSectionCategoryFilter(section, cat) {
     mainContent.innerHTML = buildCommunitiesPage();
   } else if (section === 'secondhand' && typeof buildSecondhandPage === 'function') {
     mainContent.innerHTML = buildSecondhandPage();
-  } else if (section === 'partnerships' && typeof buildPartnershipsPage === 'function') {
-    mainContent.innerHTML = buildPartnershipsPage();
-  } else if (section === 'reviews' && typeof buildReviewsPage === 'function') {
-    mainContent.innerHTML = buildReviewsPage();
   } else if (typeof buildPhotosPage === 'function' && typeof photoGetAlbums === 'function') {
     mainContent.innerHTML = buildPhotosPage(photoGetAlbums(), 'photos');
   }
@@ -23294,7 +21534,8 @@ function contentSwitchHTML(active) {
     stories: '<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5M9 8h6M9 11h6"/>',
     comics: '<path d="M4 5h16v11H9l-5 4z"/><path d="M9 9.5h6M9 12.5h4"/>'
   };
-  const tabs = [['photos', 'תמונות גולשים'], ['stories', 'סיפורים'], ['comics', 'קומיקס']].map(([k, label]) => {
+  if (active === 'comics') return '';   // אחרי הסרת התמונות והסיפורים אין בין מה לעבור
+  const tabs = [['comics', 'קומיקס']].map(([k, label]) => {
     const pg = commFindPage(k);
     if (!pg) return '';
     return `<button type="button" class="cs-tab${active === k ? ' on' : ''}" ${active === k ? 'aria-current="page"' : `onclick="navigateToPage('${artEsc(pg.id)}')"`}>
@@ -23613,14 +21854,8 @@ function communityShortcutsHTML() {
       </div>
     `;
   };
-  return card('תמונות גולשים', 'photos', findPage('photos'), 'linear-gradient(135deg,#7c3aed,#4c1d95)', 'גלריות מהקהילה', 'TOP')
-       + card('קומיקס', 'comics', findPage('comics'), 'linear-gradient(135deg,#8b5cf6,#6d28d9)')
-       + card('סיפורים', 'stories', findPage('stories'), 'linear-gradient(135deg,#0ea5e9,#0369a1)')
-       + card('פורומים', 'forums', findPage('forums'), 'linear-gradient(135deg,#a855f7,#7e22ce)')
-       + card('חברים', 'friends', findPage('friends'), 'linear-gradient(135deg,#52525b,#18181b)', 'הכירו גולשים חדשים')
-       + card('Blind Date', 'blind', findPage('blinddate'), 'linear-gradient(135deg,#3f3f46,#111111)', 'התאמה אקראית ודייט אמיתי', 'NEW')
-       + card('התאמות', 'match', findPage('tinder'), 'linear-gradient(135deg,#71717a,#27272a)', 'החליקו ומצאו התאמה', 'NEW')
-       + card('מוצרים', 'products', findPage('products'), 'linear-gradient(135deg,#f472b6,#be185d)');
+  return card('פורומים', 'forums', findPage('forums'), 'linear-gradient(135deg,#a855f7,#7e22ce)')
+       + card('חברים', 'friends', findPage('friends'), 'linear-gradient(135deg,#52525b,#18181b)', 'הכירו גולשים חדשים');
 }
 window.communityShortcutsHTML = communityShortcutsHTML;
 
@@ -25726,6 +23961,7 @@ async function submitNewsPost() {
     body,
     tweetUrl,
     author: authorName,
+    authorId: isAuthUser ? auth.currentUser.uid : '',
     createdAt: Date.now()
   };
 
@@ -25844,35 +24080,6 @@ function newsWhen(ts) {
   if (d.toDateString() === y.toDateString()) return `אתמול, ${time}`;
   return `${d.toLocaleDateString('he-IL', { day: 'numeric', month: 'short' })}, ${time}`;
 }
-function buildNewsCard(post, idx) {
-  const plat = newsPlatform(post.tweetUrl);
-  const tile = NEWS_PLATFORM_TILES[plat] || NEWS_PLATFORM_TILES.other;
-  const img = post.image && /^https?:\/\//i.test(post.image) ? safeUrl(post.image) : (/^data:image\//.test(post.image || '') ? post.image : '');
-  const thumb = img
-    ? `<img src="${escHtml(img)}" alt="" loading="lazy" onerror="this.parentNode.classList.add('nl-noimg'); this.remove();">`
-    : `<span class="nl-tile-icon">${tile.icon}</span>`;
-  const featured = idx === 0 && post.desc;
-  const delBtn = newsIsAdmin() ? `<button type="button" class="nl-del" onclick="event.stopPropagation(); deleteNewsPost('${artEsc(post.id)}')" title="מחיקת מבזק">מחיקה</button>` : '';
-  return `
-    <article class="nl-item" data-news-id="${escHtml(post.id || '')}">
-      <div class="nl-row" role="button" tabindex="0" onclick="newsOpenArticle('${artEsc(post.id || '')}')" onkeydown="if(event.key==='Enter'){newsOpenArticle('${artEsc(post.id || '')}')}">
-        <div class="nl-thumb${img ? '' : ' nl-noimg'}" style="--tile:${tile.bg}">${thumb}</div>
-        <div class="nl-body">
-          <h3 class="nl-title">${escHtml(post.title || '')}</h3>
-          <div class="nl-meta">
-            <span class="nl-author">${escHtml(post.author || 'עורך חדשות')}</span>
-            <span class="nl-sep" aria-hidden="true"></span>
-            <span class="nl-when">${escHtml(newsWhen(post.createdAt))}</span>
-            ${delBtn}
-          </div>
-          ${!featured && post.desc ? `<p class="nl-desc-sm">${escHtml(post.desc)}</p>` : ''}
-        </div>
-      </div>
-      ${featured ? `<p class="nl-desc">${escHtml(post.desc)}</p>` : ''}
-      <div class="nl-embed" hidden></div>
-    </article>`;
-}
-// לחיצה על ידיעה פותחת/סוגרת את הפוסט המקורי (X / רדיט / ...) מתחתיה
 function newsToggleEmbed(id) {
   const item = document.querySelector(`.nl-item[data-news-id="${CSS.escape(id)}"]`);
   if (!item) return;
@@ -25896,116 +24103,30 @@ window.newsToggleEmbed = newsToggleEmbed;
 function buildNewsPage() {
   subscribeNewsPosts();
   triggerTwitterWidgetsRender();
-
-  const categories = ['הכל', 'AI וטכנולוגיה', 'מבזקים שוטפים', 'כללי', 'פיתוח וקוד', 'עדכוני רשת'];
-
-  const filterTabs = categories.map(cat => {
-    const isAct = cat === newsCategoryFilter;
-    const bg = isAct ? 'background: #1d9bf0; color: #ffffff; border-color: #1d9bf0;' : 'background: #18181c; color: #a1a1aa; border-color: #2e2e38;';
-    return `
-      <button onclick="setNewsCategory('${artEsc(cat)}')" style="
-        ${bg}
-        border: 1px solid;
-        padding: 8px 16px;
-        border-radius: 999px;
-        font-size: 13px;
-        font-weight: 700;
-        cursor: pointer;
-        transition: all 0.2s;
-        white-space: nowrap;
-      ">${artEsc(cat)}</button>
-    `;
-  }).join('');
-
-  let filtered = (newsPostsData && newsPostsData.length > 0) ? newsPostsData : NEWS_DEFAULT_POSTS;
-
-  const postsListHtml = filtered.length > 0
-    ? filtered.map((p, i) => buildNewsCard(p, i)).join('')
-    : `
-      <div style="text-align: center; padding: 60px 20px; color: #818181; background: #ffffff; border-radius: 16px; border: 1px dashed #e7e7e7;">
-        <span style="font-size: 42px; display: block; margin-bottom: 12px;">📰</span>
-        <div style="font-size: 16px; font-weight: 700; color: #262626;">עוד אין מבזקים</div>
-        <div style="font-size: 13px; margin-top: 6px;">היה הראשון להעלות פוסט מעניין מ-X!</div>
-      </div>
-    `;
-
-  return `
-    <div class="news-page-container lk-news" style="
-      max-width: 1000px;
-      margin: 0 auto;
-      padding: 24px 16px 80px 16px;
-      direction: rtl;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans Hebrew', sans-serif;
-    ">
-      <!-- כותרת עמוד (בהשראת getlatka) -->
-      <header class="lk-head">
-        <nav class="lk-crumbs" aria-label="ניווט"><span>Black1White00</span><span>/</span><b>חדשות</b></nav>
-        <div class="lk-head-row">
-          <div><h1 class="lk-h1">חדשות ומבזקים</h1><p class="lk-sub">עדכונים, כתבות וסרטונים — כל מה שחם בקהילה ובעולם.</p></div>
-          ${newsIsAdmin() ? `<div class="lk-actions">${newsPostsData.length ? `<button onclick="deleteAllNewsPosts()" style="background: rgba(239,68,68,0.12); color:#f87171; border:1px solid rgba(239,68,68,0.35); padding: 11px 16px; border-radius: 12px; font-size: 14px; font-weight: 800; cursor: pointer;">מחיקת כל המבזקים</button>` : ''}<button type="button" class="lk-btn" onclick="openNewsAddModal()">+ הוספת עדכון</button></div>` : ''}
-        </div>
-        ${(() => { const L = (newsPostsData && newsPostsData.length) ? newsPostsData : []; const last = L.reduce((m, x) => Math.max(m, Number(x.createdAt) || 0), 0); const vids = L.filter(x => /(youtube\.com|youtu\.be)/.test(String(x.body || ''))).length;
-          return `<div class="lk-stats"><div><small>כתבות</small><b>${L.length}</b><span>בארכיון</span></div><div><small>עודכן לאחרונה</small><b>${last ? escHtml(newsWhen(last)) : '—'}</b><span>מתעדכן בזמן אמת</span></div><div><small>עם סרטון</small><b>${vids}</b><span>כתבות עם YouTube</span></div></div>`; })()}
-      </header>
-
-      <!-- סרגל סינון קטגוריות -->
-      <div style="
-        display: flex;
-        gap: 8px;
-        overflow-x: auto;
-        padding-bottom: 14px;
-        margin-bottom: 20px;
-        scrollbar-width: thin;
-      ">
-      </div>
-
-      ${filtered.length ? newsMagazineHTML(filtered) : `<div class="news-feed-list">${postsListHtml}</div>`}
-    </div>
-  `;
+  const list = (newsPostsData && newsPostsData.length) ? newsPostsData : NEWS_DEFAULT_POSTS;
+  const open = p => `newsOpenArticle('${artEsc(String(p.id || ''))}')`;
+  const top = list.slice(0, list.length >= 7 ? 3 : 0), rest = list.slice(top.length);   // מעט כתבות: הכול בתור אחד
+  const admin = newsIsAdmin();
+  return `<div class="news-page-container nx">
+    ${admin ? `<div class="nx-admin"><button type="button" onclick="openNewsAddModal()">+ כתבה חדשה</button>${newsPostsData.length ? '<button type="button" onclick="deleteAllNewsPosts()">מחיקת הכול</button>' : ''}</div>` : ''}
+    ${top.length ? `<section class="nx-top">${top.map(p => `<button type="button" class="nx-hero" onclick="${open(p)}">${newsThumbHTML(p, 'nx-hero-img')}<span class="nx-hero-t">${escHtml(p.title || '')}</span></button>`).join('')}</section>` : ''}
+    ${list.length ? `<section class="nx-list">${rest.map((p, n) => `<article class="nx-row">
+        <button type="button" class="nx-row-main" onclick="${open(p)}">${newsThumbHTML(p, 'nx-thumb')}<span><b>${escHtml(p.title || '')}</b>${newsMetaHTML(p)}</span></button>
+        ${n === 0 && p.desc ? `<p>${escHtml(p.desc)}</p>` : ''}
+        ${admin ? `<button type="button" class="nx-del" onclick="deleteNewsPost('${artEsc(String(p.id || ''))}')">מחיקה</button>` : ''}
+      </article>`).join('')}</section>` : '<p class="nx-empty">עדיין אין חדשות.</p>'}
+  </div>`;
+}
+function newsMetaHTML(p) {
+  return `<small class="nx-meta"><em>${escHtml(p.author || 'עורך חדשות')}</em><i>|</i>${escHtml(newsWhen(p.createdAt))}</small>`;
 }
 window.buildNewsPage = buildNewsPage;
 
-// ===== עמוד חדשות בסגנון מגזין (מבנה כמו gadgety): 3 ידיעות מובילות עם כותרת על התמונה,
-// טור ראשי — רשימת ידיעות (תמונה מימין, כותרת, כותב | תאריך) + רשת של שני כרטיסים גדולים, וטור צד משמאל =====
 function newsThumbHTML(post, cls) {
   const tile = NEWS_PLATFORM_TILES[newsPlatform(post.tweetUrl)] || NEWS_PLATFORM_TILES.other;
   const img = post.image && /^https?:\/\//i.test(post.image) ? safeUrl(post.image) : (/^data:image\//.test(post.image || '') ? post.image : '');
   return `<span class="${cls}${img ? '' : ' ng-noimg'}" style="--tile:${tile.bg}">${img ? `<img src="${escHtml(img)}" alt="" loading="lazy" onerror="this.parentNode.classList.add('ng-noimg'); this.remove();">` : `<span class="ng-ic">${tile.icon}</span>`}</span>`;
 }
-window.newsMagazineHTML = (...a) => newsMagazineHTML(...a);
-function newsMagazineHTML(list) {
-  const open = p => `newsOpenArticle('${artEsc(p.id || '')}')`;
-  const meta = p => `<span class="ng-meta"><span class="ng-author">${escHtml(p.author || 'עורך חדשות')}</span><i></i><span>${escHtml(newsWhen(p.createdAt))}</span></span>`;
-  const nTop = list.length >= 5 ? 3 : list.length >= 3 ? 1 : 0;   // מעט ידיעות — פחות מובילות, יותר רשימה
-  const top = list.slice(0, nTop), rest = list.slice(nTop);
-  const firstList = rest.slice(0, 4), grid = rest.slice(4, 6), more = rest.slice(6);
-  const topHTML = top.map(p => `<button type="button" class="ng-hero" onclick="${open(p)}">${newsThumbHTML(p, 'ng-hero-img')}<span class="ng-hero-cap">${escHtml(p.title || '')}</span></button>`).join('');
-  const gridHTML = grid.map(p => `<button type="button" class="ng-card" onclick="${open(p)}">${newsThumbHTML(p, 'ng-card-img')}<span class="ng-card-body"><b>${escHtml(p.title || '')}</b>${meta(p)}</span></button>`).join('');
-  const popular = list.slice(0, 5).map((p, i) => `<button type="button" class="ng-pop" onclick="${open(p)}"><span class="ng-pop-n">${i + 1}</span><span class="ng-pop-t">${escHtml(p.title || '')}</span></button>`).join('');
-  let comm = '';
-  try {
-    const img = x => x && (((x.images || []).find(Boolean)) || x.cover || x.image || '');
-    const ph = (typeof getPhotosForHome === 'function' ? getPhotosForHome() : []).filter(x => x && x.approved !== false && img(x)).slice(0, 3);
-    comm = ph.map(x => `<button type="button" class="ng-side-card" onclick="homeOpenPhotos(); photoOpenDetail('${artEsc(x.id)}')"><span class="ng-side-img"><img src="${escHtml(img(x))}" alt="" loading="lazy"></span><b>${escHtml(x.title || '')}</b><small>${escHtml(x.author || 'משתמש')}</small></button>`).join('');
-  } catch (e) {}
-  return `<div class="ng">
-    ${topHTML ? `<section class="ng-top" style="--n:${top.length}">${topHTML}</section>` : ''}
-    <div class="ng-layout">
-      <main class="ng-main">
-        <div class="news-feed-list">${firstList.map((p, i) => buildNewsCard(p, i)).join('')}</div>
-        ${gridHTML ? `<div class="ng-grid2">${gridHTML}</div>` : ''}
-        ${more.length ? `<div class="news-feed-list">${more.map((p, i) => buildNewsCard(p, i + 1)).join('')}</div>` : ''}
-      </main>
-      <aside class="ng-side">
-        <section class="ng-side-box"><h3>הכי נקראים</h3>${popular}</section>
-        ${comm ? `<section class="ng-side-box"><h3>מהקהילה</h3>${comm}</section>` : ''}
-      </aside>
-    </div>
-  </div>`;
-}
-
-
-
 // ==========================================
 // חיפוש באתר — אייקון בכותרת שנפתח לשורת חיפוש ברוחב מלא (גם במובייל)
 // מחפש בגלריות, קומיקס/סיפורים, קהילות, חדשות ועמודי האתר
@@ -26085,10 +24206,6 @@ function siteSearchCollect(q) {
     (albums || []).forEach(a => { if (a && a.id && hit(a.title, a.summary, a.category, a.author)) out.push({ kind: 'photo', label: 'גלריה', id: a.id, title: a.title || 'גלריה', sub: a.author || a.category || '', img: firstImg(a), adult: !!a.isAdult }); });
   } catch (e) {}
   try {
-    const stories = (typeof getStoriesFeedData === 'function') ? getStoriesFeedData() : [];
-    (stories || []).forEach(st => { if (st && st.id && hit(st.title, st.summary, st.desc, st.category, st.author)) out.push({ kind: 'story', label: 'קומיקס', id: st.id, title: st.title || 'קומיקס', sub: st.author || st.category || '', img: firstImg(st), adult: !!st.isAdult }); });
-  } catch (e) {}
-  try {
     Object.entries((typeof communitiesData !== 'undefined' && communitiesData) || {}).forEach(([id, c]) => {
       if (c && hit(c.title, c.name, c.summary, c.desc)) out.push({ kind: 'community', label: 'קהילה', id, title: c.title || c.name || 'קהילה', sub: c.summary || c.desc || '', img: firstImg(c) });
     });
@@ -26109,7 +24226,7 @@ function siteSearchCollect(q) {
       if (p && p.id && p.title && !p.hidden && hit(p.title)) out.push({ kind: 'page', label: 'עמוד', id: p.id, title: String(p.title).replace(/[\u{1F300}-\u{1FAFF}☀-➿️]/gu, '').trim(), sub: '', img: '' });
     });
   } catch (e) {}
-  return out;
+  return out.filter(o => !(o.kind === 'page' && (REMOVED_PAGES.includes(o.id) || o.id === 'page-feed-main')));
 }
 let siteSearchLast = [];
 // עיגולי סינון בחיפוש (אייקונים בלבד): תמונות · פורומים · סיפורים. בלי סימון = הכל
@@ -26117,7 +24234,6 @@ const siteSearchScope = new Set();
 const SS_SCOPES = [
   { id: 'photo', label: 'תמונות', icon: '<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 9"/>' },
   { id: 'forum', label: 'פורומים', icon: '<path d="M3 6.5A2.5 2.5 0 0 1 5.5 4h8A2.5 2.5 0 0 1 16 6.5v4a2.5 2.5 0 0 1-2.5 2.5H9l-3.5 3v-3A2.5 2.5 0 0 1 3 10.5z"/><path d="M16 8h2.5A2.5 2.5 0 0 1 21 10.5v4a2.5 2.5 0 0 1-2.5 2.5v3L15 17h-3.5A2.5 2.5 0 0 1 9 14.5V13"/>' },
-  { id: 'story', label: 'סיפורים וקומיקס', icon: '<path d="M2 5.5C4.5 4 7.5 4 12 6c4.5-2 7.5-2 10-.5V19c-2.5-1.5-5.5-1.5-10 .5-4.5-2-7.5-2-10-.5z"/><path d="M12 6v13.5"/>' },
 ];
 function siteSearchScopeHTML() {
   return `<div class="ss-scope" role="group" aria-label="היכן לחפש">${SS_SCOPES.map(sc => {
@@ -27541,13 +25657,11 @@ function buildSiteFooterHTML() {
     return `<li><a href="#" onclick="event.preventDefault(); navigateToPage('${pageId}')">${escHtml(cleanTitle(p.title) || fallback)}</a></li>`;
   };
   const contentLinks = [
-    link('page-photos-main', 'תמונות גולשים'), link('page-stories-main', 'סיפורים'),
-    link('page-ideas-main', 'רעיונות'), link('page-news-main', 'חדשות'), link('page-questions-main', 'שאלות גולשים'),
-    link('page-reviews-main', 'ביקורת')
+    link('page-ideas-main', 'רעיונות'), link('page-news-main', 'חדשות'), link('page-questions-main', 'שאלות גולשים')
   ].join('');
   const communityLinks = [
     link('page-communities-main', 'קהילה'), link('page-offers-main', 'הצעות'),
-    link('page-partnerships-main', 'שותפויות'), link('page-secondhand-main', 'מוצרי גולשים'),
+    link('page-rent-main', 'השוק'),
     link('page-subscription-main', 'מנוי')
   ].join('');
   const social = Object.keys(SITE_FOOTER_SOCIAL).filter(k => SITE_FOOTER_SOCIAL[k]).map(k => {
@@ -27828,10 +25942,9 @@ function mobileMenuHTML() {
   const nav = id => `navigateToPage('${id}')`;
   const pageAct = kind => { const p = (typeof commFindPage === 'function') ? commFindPage(kind) : null; return p ? nav(p.id) : ''; };
   const tiles = [
-    ['photos', 'תמונות גולשים', 'homeOpenPhotos()'], ['secondhand', 'מוצרי גולשים', nav('page-secondhand-main')], ['stories', 'סיפורים', "homeOpenSection('page-stories-text')"], ['comics', 'קומיקס', "homeOpenSection('page-stories-main')"],
-    ['forums', 'פורומים', pageAct('forums')], ['friends', 'חברים', pageAct('friends')], ['blinddate', 'Blind Date', pageAct('blinddate')],
-    ['tinder', 'התאמות', pageAct('tinder')], ['products', 'מוצרים', pageAct('products')], ['news', 'חדשות', nav('page-news-main')],
-    ['offers', 'הצעות', nav('page-offers-main')], ['feed', 'הפיד שלי', 'openFeed()'], ['saved', 'שמורים', 'openSavedModal()'],
+    ['secondhand', 'השוק', "mktGo('all')"],
+    ['forums', 'פורומים', pageAct('forums')], ['friends', 'חברים', pageAct('friends')], ['news', 'חדשות', nav('page-news-main')],
+    ['offers', 'הצעות', nav('page-offers-main')], ['saved', 'שמורים', 'openSavedModal()'],
     ['likes', 'הלייקים שלי', 'openLikesDrawer()'], ['history', 'היסטוריה', 'openHistoryDrawer()'], ['msgs', 'הודעות', 'openMessages()'], ['shop', 'שדרוגים', nav('page-subscription-main')]
   ].filter(t => t[2]);
   const shown = mnavMore ? tiles : tiles.slice(0, 8);
@@ -27857,7 +25970,7 @@ function mobileMenuHTML() {
   const listItem = ([k, label, act]) => `<button type="button" class="mnx-item" onclick="${go(act)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${MNAV_ICONS[k] || ''}</svg><span>${label}</span></button>`;
   const mainItems = [
     ['profile', 'פרופיל', reg ? `openUserPage('${artEsc(u.uid)}')` : 'openLiveChatLogin()'],
-    ['saved', 'שמורים', 'openSavedModal()'], ['feed', 'הפיד שלי', 'openFeed()'], ['msgs', 'הודעות', 'openMessages()'],
+    ['saved', 'שמורים', 'openSavedModal()'], ['msgs', 'הודעות', 'openMessages()'],
     ['deals', 'הצעות שלי', 'openOffersPanel()'], ['shop', 'מנוי ושדרוגים', nav('page-subscription-main')], ['history', 'היסטוריה', 'openHistoryDrawer()']
   ];
   return `<div class="mnav-backdrop" onclick="closeMobileMenu()"></div>
@@ -30251,7 +28364,7 @@ function adminTabBody() {
   if (adminTab === 'ads') return adsAdminHTML();
   if (adminTab === 'storage') { setTimeout(storageCalc, 0); return storageHTML(); }
   if (adminTab === 'assist') { setTimeout(askAdminLoad, 0); return '<div class="aska-page" id="aska-page"><div class="stor-loading">טוען…</div></div>'; }
-  return buildInfoPage();
+  return `<button type="button" class="adm-entry" onclick="entryLoginOpen()">חלון הכניסה: תצוגה ובחירת תמונה</button><button type="button" class="adm-entry" onclick="navigateToPage('page-requests-main')">העלאות שממתינות לאישור</button>${buildInfoPage()}`;
 }
 function buildAdminPage() {
   if (!(typeof isAdmin === 'function' && isAdmin())) return '<div class="admin-page"><div class="algo-locked">🔒 העמוד הזה זמין למנהל האתר בלבד</div></div>';
@@ -30478,7 +28591,6 @@ function homeRowsHTML(photos, comics, stories) {
     </section>`;
   };
   return row('תמונות גולשים', photos, 'photo', 'homeOpenPhotos()')
-    + row('סיפורים', stories, 'story', "homeOpenSection('page-stories-text')")
     + row('קומיקס', comics, 'story', "homeOpenSection('page-stories-main')");
 }
 Object.assign(UI_EN, { 'הכל': 'All' });
@@ -30508,63 +28620,27 @@ function newsOpenArticle(id) {
   try { if (typeof closeSidePanels === 'function') closeSidePanels(); } catch (e) {}
   const img = post.image && /^https?:\/\//i.test(post.image) ? safeUrl(post.image) : (/^data:image\//.test(post.image || '') ? post.image : '');
   const plat = newsPlatform(post.tweetUrl);
-  // נקודות עיקריות: התקציר מחולק למשפטים/שורות (עד 5)
-  const points = String(post.desc || '').split(/\n+|(?<=[.!?])\s+/).map(x => x.trim()).filter(x => x.length > 2).slice(0, 5);
-  const others = list.filter(p => String(p.id) !== String(id)).slice(0, 6);
-  // מבנה בהשראת getlatka: פירורי לחם, כותרת גדולה + כותרת משנה, שורת פרטים, קופסאות נתונים, תוכן העניינים בצד
-  const plain = (post.title || '') + ' ' + (post.desc || '') + ' ' + String(post.body || '').replace(/https?:\/\/\S+/g, ' ');
-  const mins = Math.max(1, Math.round(plain.split(/\s+/).filter(Boolean).length / 180));
-  const nYt = (String(post.body || '').match(/(youtube\.com\/(watch|shorts|embed)|youtu\.be\/)/g) || []).length;
-  const pub = post.createdAt ? new Date(post.createdAt) : null;
-  const toc = [
-    post.body && post.desc ? ['lk-lead', 'תקציר'] : null,
-    !post.body && points.length ? ['lk-points', 'נקודות עיקריות'] : null,
-    post.body ? ['lk-body', 'הכתבה'] : null,
-    nYt ? ['lk-video', nYt > 1 ? 'סרטונים' : 'סרטון'] : null,
-    post.tweetUrl ? ['lk-source', 'המקור'] : null,
-    others.length ? ['lk-more', 'עוד חדשות'] : null
-  ].filter(Boolean);
-  mainContent.innerHTML = `<div class="news-article lk" data-page-id="page-news-article" data-news-id="${escHtml(String(post.id))}">
-    <nav class="lk-crumbs" aria-label="ניווט"><button type="button" onclick="newsBackToList()">חדשות</button><span>/</span><span>${escHtml(post.category && post.category !== 'הכל' ? post.category : 'כתבה')}</span><span>/</span><b>${escHtml((post.title || '').slice(0, 40))}</b></nav>
-    <div class="lk-grid">
-    <article class="na">
-      <h1 class="na-title">${escHtml(post.title || '')}</h1>
-      ${post.body && post.desc ? `<p class="lk-sub" id="lk-lead">${escHtml(post.desc)}</p>` : ''}
-      <div class="na-meta"><span class="na-author">${escHtml(post.author || 'עורך חדשות')}</span><span class="na-sep" aria-hidden="true"></span><span class="na-when">${escHtml(newsWhen(post.createdAt))}</span>${plat && post.tweetUrl ? `<span class="na-sep" aria-hidden="true"></span><span>${escHtml(NEWS_PLATFORM_NAMES[plat] || '')}</span>` : ''}</div>
-      <div class="lk-stats">
-        <div><small>מחבר</small><b>${escHtml(post.author || 'עורך חדשות')}</b><span>Black1White00</span></div>
-        <div><small>פורסם</small><b>${pub ? escHtml(pub.toLocaleDateString('he-IL', { day: 'numeric', month: 'short' })) : '—'}</b><span>${pub ? escHtml(pub.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })) : ''}</span></div>
-        <div><small>זמן קריאה</small><b>${mins} דק׳</b><span>${nYt ? nYt + (nYt > 1 ? ' סרטונים' : ' סרטון') : 'טקסט בלבד'}</span></div>
+  const hasSrc = post.tweetUrl && /^https?:\/\//i.test(post.tweetUrl);
+  mainContent.innerHTML = `<div class="news-article nx nx-art" data-page-id="page-news-article" data-news-id="${escHtml(String(post.id))}">
+    <button type="button" class="nx-back" onclick="newsBackToList()">→ חדשות</button>
+    <h1>${escHtml(post.title || '')}</h1>
+    <div class="nx-by">
+      <div class="nx-by-who"><i>${escHtml(String(post.author || 'ע').trim().charAt(0))}</i><span><b>${escHtml(post.author || 'עורך חדשות')}</b><small>${escHtml(newsWhen(post.createdAt))}${post.authorId && (!auth.currentUser || auth.currentUser.uid !== post.authorId) ? `<button type="button" onclick="homeAsideFollow(this, '${artEsc(post.authorId)}', '${artEsc(post.author || '')}')">${typeof isFollowing === 'function' && isFollowing(post.authorId) ? 'עוקב/ת' : 'מעקב'}</button>` : ''}</small></span></div>
+      <div class="nx-by-acts">
+        <button type="button" class="nx-ic${rentMarked('news-like', post.id) ? ' on' : ''}" aria-label="אהבתי" title="אהבתי" onclick="rentMark(this, 'news-like', '${artEsc(String(post.id))}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/></svg></button>
+        <button type="button" class="nx-ic${rentMarked('news-save', post.id) ? ' on' : ''}" aria-label="שמירה" title="שמירה" onclick="rentMark(this, 'news-save', '${artEsc(String(post.id))}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M6 4h12v17l-6-4.5L6 21z"/></svg></button>
+        <button type="button" class="nx-touch" onclick="${post.authorId ? `dmStartWith('${artEsc(post.authorId)}', '${artEsc(post.author || '')}')` : 'dmOpenAdmin()'}">יצירת קשר</button>
       </div>
-      ${img ? `<div class="na-img"><img src="${escHtml(img)}" alt="" loading="lazy" onerror="this.parentNode.remove()"></div>` : ''}
-      ${!post.body && points.length ? `<section class="na-points" id="lk-points"><h2>נקודות עיקריות</h2><ul>${points.map(x => `<li>${escHtml(x)}</li>`).join('')}</ul></section>` : ''}
-      ${post.body ? `<div class="na-body" id="lk-body">${newsBodyHTML(post.body)}</div>` : ''}
-      ${post.tweetUrl ? `<div class="na-embed" id="lk-source">${newsEmbedHTML(post)}</div>
-        <a class="na-source" href="${escHtml(safeUrl(post.tweetUrl))}" target="_blank" rel="noopener noreferrer">לצפייה ב${plat === 'x' ? '-X' : NEWS_PLATFORM_NAMES[plat]} ›</a>` : ''}
-    </article>
-    ${toc.length > 1 ? `<aside class="lk-toc"><small>בכתבה</small>${toc.map(([id, l], i) => `<button type="button" data-to="${id}" class="${i ? '' : 'on'}" onclick="lkTocGo('${id}')">${l}</button>`).join('')}</aside>` : ''}
     </div>
-    ${others.length ? `<section class="na-more" id="lk-more"><h2>עוד חדשות</h2>${others.map((p, i) => buildNewsCard(p, i + 1)).join('')}</section>` : ''}
+    ${img ? `<img class="nx-art-img" src="${escHtml(img)}" alt="" onerror="this.remove()">` : ''}
+    ${post.desc ? `<p class="nx-lead">${escHtml(post.desc)}</p>` : ''}
+    ${post.body ? `<div class="nx-body">${newsBodyHTML(post.body)}</div>` : ''}
+    ${hasSrc ? `<div class="nx-embed">${newsEmbedHTML(post)}</div><a class="nx-src" href="${escHtml(safeUrl(post.tweetUrl))}" target="_blank" rel="noopener noreferrer">לצפייה ב${plat === 'x' ? '-X' : NEWS_PLATFORM_NAMES[plat]}</a>` : ''}
   </div>`;
-  const yt = mainContent.querySelector('.na-body .na-yt'); if (yt) yt.id = 'lk-video';
-  lkTocSpy();
   try { triggerTwitterWidgetsRender(); } catch (e) {}
-  try { window.scrollTo(0, 0); } catch (e) {}
+  try { window.scrollTo(0, 0); (mainContent.closest('main') || {}).scrollTop = 0; } catch (e) {}
   try { if (typeof hdrBackSync === 'function') hdrBackSync(); } catch (e) {}
 }
-// תוכן העניינים בכתבה: קפיצה לחלק + סימון החלק הנוכחי בזמן גלילה
-function lkTocGo(id) { const el = document.getElementById(id); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
-function lkTocSpy() {
-  if (window.__lkSpy) window.removeEventListener('scroll', window.__lkSpy);
-  const fn = () => {
-    const btns = [...document.querySelectorAll('.lk-toc button')]; if (!btns.length) { window.removeEventListener('scroll', fn); return; }
-    let cur = btns[0];
-    btns.forEach(b => { const el = document.getElementById(b.dataset.to); if (el && el.getBoundingClientRect().top < 160) cur = b; });
-    btns.forEach(b => b.classList.toggle('on', b === cur));
-  };
-  window.__lkSpy = fn; window.addEventListener('scroll', fn, { passive: true });
-}
-window.lkTocGo = lkTocGo;
 function newsBackToList() {
   if (typeof mainContent !== 'undefined' && mainContent) mainContent.innerHTML = buildNewsPage();
   try { window.scrollTo(0, 0); } catch (e) {}
@@ -31252,16 +29328,53 @@ function mTabsActive() {
 })();
 
 // ============================================================
+// שלושת הכפתורים הצפים (הודעות, צ'אט, נגישות) — במחשב יושבים מימין לשורת "מה בא לך לשתף".
+// עמוד בלי השורה — חוזרים לפינה הרגילה.
+// ============================================================
+(function composerFabs() {
+  const held = {};
+  let t = 0, a11yHome = null;
+  function sync() {
+    t = 0;
+    const mc = typeof mainContent !== 'undefined' && mainContent;
+    if (!mc) return;
+    const live = { dm: document.getElementById('dm-pill'), chat: document.getElementById('global-chat-fab'), a11y: document.querySelector('.a11y-launcher') };
+    Object.keys(live).forEach(k => { if (live[k]) held[k] = live[k]; });
+    if (held.a11y && !a11yHome && held.a11y.parentElement) a11yHome = held.a11y.parentElement;
+    const wrap = [...mc.querySelectorAll('.cmp-wrap')].find(w => w.offsetParent);
+    const btns = ['dm', 'chat', 'a11y'].map(k => held[k]).filter(Boolean);
+    if (wrap) {
+      let box = wrap.querySelector(':scope > .cmp-fabs');
+      if (!box) { box = document.createElement('div'); box.className = 'cmp-fabs'; wrap.appendChild(box); }
+      btns.forEach(b => { if (b.parentElement !== box) box.appendChild(b); });
+    } else {
+      btns.forEach(b => {
+        const home = b === held.a11y && a11yHome ? a11yHome : document.body;
+        if (b.parentElement !== home) home.appendChild(b);
+      });
+    }
+  }
+  const go = () => { if (!t) t = setTimeout(sync, 0); };
+  const start = () => {
+    const mc = typeof mainContent !== 'undefined' && mainContent;
+    if (!mc) return setTimeout(start, 300);
+    new MutationObserver(go).observe(mc, { childList: true, subtree: true });
+    new MutationObserver(go).observe(document.body, { childList: true });
+    window.addEventListener('resize', go);
+    go();
+  };
+  start();
+})();
+
+// ============================================================
 // פרסום מהיר עם "/" — בשורת "מה בא לך לשתף?" מקלידים / ונפתח תפריט (תמונות, מוצר, סיפור, פורום, הודעה)
 // עם תיאור באפור. חיצים + Enter או לחיצה. טקסט רגיל + Enter = פרסום תמונה עם הטקסט ככותרת.
 // ============================================================
 const SLASH_CMDS = [
   { g: 'up', k: 'photos', t: 'תמונות', d: 'העלאת גלריית תמונות', a: 'photo gallery תמונה גלריה', i: '<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="m21 16-5-5-9 9"/>' },
   { g: 'up', k: 'product', t: 'מוצר', d: 'פרסום מוצר יד שנייה למכירה', a: 'product sell מוצרים יד שניה', i: '<path d="M5 8h14l-1.2 11.1a1 1 0 0 1-1 .9H7.2a1 1 0 0 1-1-.9z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/>' },
-  { g: 'up', k: 'story', t: 'סיפור', d: 'כתיבת סיפור, כתבה או קומיקס', a: 'story comic קומיקס כתבה', i: '<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 1 6.5 18H20v3H6.5"/>' },
   { g: 'up', k: 'forum', t: 'פורום', d: 'פתיחת נושא חדש לדיון', a: 'forum thread דיון נושא', i: '<path d="M20.5 11.5a8 8 0 0 1-11.7 7.1L4 20l1.3-4.4A8 8 0 1 1 20.5 11.5z"/>' },
   { g: 'go', k: 'home', t: 'בית', d: 'חזרה לעמוד הבית', a: 'home', run: () => { goToHomePage(); }, i: '<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>' },
-  { g: 'go', k: 'feed', t: 'הפיד שלי', d: 'מה פרסמו מי שאני עוקב אחריהם', a: 'feed following', run: () => { openFeed(); }, i: '<path d="M4 6h16M4 12h16M4 18h10"/>' },
   { g: 'go', k: 'search', t: 'חיפוש', d: 'חיפוש בכל האתר', a: 'search find', run: () => { openSiteSearch(); }, i: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>' },
   { g: 'go', k: 'msgs', t: 'הודעות', d: 'השיחות הפרטיות שלי', a: 'messages dm צאט', run: () => { openMessages(); }, i: '<path d="M20.5 11.5a8 8 0 0 1-11.7 7.1L4 20l1.3-4.4A8 8 0 1 1 20.5 11.5z"/>' },
   { g: 'go', k: 'profile', t: 'הפרופיל שלי', d: 'הפרופיל והחשבון', a: 'profile account חשבון', run: () => { document.getElementById('manager-btn') && document.getElementById('manager-btn').click(); }, i: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>' },
@@ -31271,8 +29384,7 @@ const SLASH_CMDS = [
   { g: 'go', k: 'offers', t: 'הצעות', d: 'הצעות מחיר ועסקאות', a: 'offers deals עסקאות', run: () => { openOffersPanel(); }, i: '<path d="M20 12 12 20l-8-8V4h8z"/><circle cx="8.5" cy="8.5" r="1.3"/>' },
   { g: 'go', k: 'theme', t: 'מצב כהה / בהיר', d: 'החלפת צבעי האתר', a: 'theme dark light כהה בהיר', run: () => { toggleSiteTheme(); }, i: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>' },
   { g: 'go', k: 'gophotos', t: 'תמונות גולשים', d: 'מעבר לגלריות', a: 'photos gallery', run: () => { homeGo('photos'); }, i: '<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="m21 16-5-5-9 9"/>' },
-  { g: 'go', k: 'gocomics', t: 'קומיקס', d: 'מעבר לקומיקס', a: 'comics', run: () => { homeGo('comics'); }, i: '<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/>' },
-  { g: 'go', k: 'goproducts', t: 'מוצרי גולשים', d: 'מעבר למוצרים', a: 'products shop חנות', run: () => { navigateToPage('page-secondhand-main'); }, i: '<path d="M5 8h14l-1.2 11.1a1 1 0 0 1-1 .9H7.2a1 1 0 0 1-1-.9z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/>' },
+  { g: 'go', k: 'goproducts', t: 'השוק', d: 'מעבר לשוק', a: 'products shop חנות', run: () => { mktGo('all'); }, i: '<path d="M5 8h14l-1.2 11.1a1 1 0 0 1-1 .9H7.2a1 1 0 0 1-1-.9z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/>' },
   { g: 'go', k: 'goforums', t: 'פורומים', d: 'מעבר לפורומים', a: 'forums', run: () => { navigateToPage('page-forums-main'); }, i: '<path d="M20.5 11.5a8 8 0 0 1-11.7 7.1L4 20l1.3-4.4A8 8 0 1 1 20.5 11.5z"/>' },
   { g: 'go', k: 'gonews', t: 'חדשות', d: 'מעבר לחדשות', a: 'news', run: () => { navigateToPage('page-news-main'); }, i: '<path d="M4 5h13v14H6a2 2 0 0 1-2-2z"/><path d="M17 9h3v8a2 2 0 0 1-2 2"/>' },
   { g: 'go', k: 'gocomm', t: 'קהילות', d: 'מעבר לקהילות', a: 'communities', run: () => { navigateToPage('page-communities-main'); }, i: '<circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20a6 6 0 0 1 12 0M14 20a5 5 0 0 1 8-3.5"/>' },
@@ -31481,14 +29593,12 @@ window.storageCalc = storageCalc;
 // נפתח מכפתור "עוזר" בכותרת או Ctrl/⌘+K. בלי שרת — זיהוי לפי מילות מפתח.
 // ============================================================
 const ASK_GO = [
-  [/קומיקס|קומיקסים/, 'לקומיקס', () => homeGo('comics')],
   [/סיפור|סיפורים/, 'לסיפורים', () => homeGo('stories')],
-  [/מוצרי גולשים|מוצרים|יד שני|חנות|קניות/, 'למוצרי גולשים', () => navigateToPage('page-secondhand-main')],
+  [/מוצרי גולשים|מוצרים|יד שני|חנות|קניות/, 'לשוק', () => mktGo('all')],
   [/תמונות|גלרי/, 'לתמונות גולשים', () => homeGo('photos')],
   [/פורו[םמ]|דיונ/, 'לפורומים', () => navigateToPage('page-forums-main')],
   [/חדשות/, 'לחדשות', () => navigateToPage('page-news-main')],
   [/קהיל/, 'לקהילות', () => navigateToPage('page-communities-main')],
-  [/פיד|במעקב|עוקב אחרי/, 'לפיד שלך', () => openFeed()],
   [/הודע|צאט|צ'אט|שיחות/, 'להודעות', () => openMessages()],
   [/לייק|אהבתי/, 'ללייקים שלך', () => openLikesDrawer()],
   [/שמור/, 'לשמורים', () => openSavedModal()],
@@ -31513,7 +29623,7 @@ const ASK_FAQ = [
   [/שמיר|לשמור|שמורים/, 'לחיצה על הסימנייה שומרת פריט לאחר כך. אפשר לסדר שמורים בתיקיות.', ['השמורים שלי', () => openSavedModal()]],
   [/18|טשטוש|מטושטש/, 'התמונות מטושטשות עד שמאשרים גיל 18+ בכפתור שבראש המסך. האישור תקף לביקור הנוכחי.', null],
   [/כהה|בהיר|צבע/, 'מעבר בין מצב כהה לבהיר — באייקון השמש בכותרת, או כאן:', ['החלפת מצב', () => toggleSiteTheme()]],
-  [/עוקב|לעקוב|מעקב/, 'לעקוב אחרי יוצר: "עקוב" בפרופיל שלו או בתפריט ⋯ של הפריט. מה שהם מפרסמים מופיע ב"במעקב".', ['הפיד שלי', () => openFeed()]],
+  [/עוקב|לעקוב|מעקב/, 'לעקוב אחרי יוצר: "עקוב" בפרופיל שלו או בתפריט ⋯ של הפריט. מה שהם מפרסמים מופיע ב"במעקב".', null],
   [/הודעה פרטית|לשלוח הודעה|לכתוב ל/, 'הודעה פרטית: בתפריט ⋯ של פריט ← "הודעה", או מחלון ההודעות.', ['ההודעות', () => openMessages()]],
   [/סלש|\/|קיצור/, 'בשורת "מה בא לך לשתף?" מקלידים / ונפתח תפריט של העלאה מהירה וקיצורי דרך.', null],
   [/הצעת מחיר|להציע מחיר|מיקוח/, 'בעמוד של מוצר יש כפתור "הצעה" — שולחים הצעת מחיר למוכר וממשיכים במשא ומתן ב"הצעות".', ['ההצעות', () => openOffersPanel()]],
@@ -31555,9 +29665,9 @@ function askHistoryClear() {
 }
 // קיצורי דרך מהירים — שורה קבועה מעל שדה הכתיבה
 const ASK_QUICK = [
-  ['העלאת תמונה', () => slashStart('photos')], ['קומיקס', () => homeGo('comics')], ['הודעות', () => openMessages()],
+  ['העלאת תמונה', () => slashStart('photos')], ['הודעות', () => openMessages()],
   ['שמורים', () => openSavedModal()], ['לייקים', () => openLikesDrawer()], ['חיפוש', () => openSiteSearch()],
-  ['מוצרי גולשים', () => navigateToPage('page-secondhand-main')], ['מצב כהה/בהיר', () => toggleSiteTheme()]
+  ['השוק', () => mktGo('all')], ['מצב כהה/בהיר', () => toggleSiteTheme()]
 ];
 function askQuick(i) {
   const q = ASK_QUICK[i]; if (!q) return;
@@ -31830,16 +29940,8 @@ document.addEventListener('keydown', e => {
   setTimeout(safety, 900);
 })();
 
-// הזמנת מוצר מהחנות (בלי קישור חיצוני): פותח הודעה פרטית למנהל האתר עם פרטי ההזמנה
-async function productOrder(id) {
-  const p = productsList().find(x => x.id === id);
-  if (!p) return;
-  let admin = dmAdminUid || (localStorage.getItem('site_admin_uid') || '');
-  if (!admin) { try { admin = (await get(ref(db, 'website/admin_uid'))).val() || ''; } catch (e) {} }
-  const price = String(p.price || '').replace(/^₪/, '');
-  dmStartWith(admin, 'מנהל האתר', `שלום, אני רוצה להזמין: ${p.name}${price ? ` (₪${price})` : ''}. איך ממשיכים?`);
-}
-window.productOrder = productOrder;
+
+
 
 // כפתורי תיבת הפעולות מוצגים כאייקונים בלבד — השם נשמר כ-title / aria-label
 (function okbLabels() {
@@ -31986,9 +30088,9 @@ askKbSubscribe();
 let coState = null;
 function coPrice(p) { return Math.max(0, parseFloat(String(p.price || '').replace(/[^\d.]/g, '')) || 0); }
 function productCheckout(id) { productsSubscribe(); coState = { items: [{ id, qty: 1 }], fromCart: false, ship: 'delivery', step: 'form' }; coRender(); }
-function cartCheckout() { productsSubscribe(); const c = cartGet(); if (!c.length) { showCopyToast('העגלה ריקה'); return; } coState = { items: c.map(x => ({ id: x.id, qty: x.qty })), fromCart: true, ship: 'delivery', step: 'form' }; coRender(); }
+function cartCheckout() { productsSubscribe(); const c = cartGet().filter(x => !x.id.startsWith('mkt_sh_')); if (!c.length) { showCopyToast('אין בעגלה פריטים לתשלום'); return; } coState = { items: c.map(x => ({ id: x.id, qty: x.qty })), fromCart: true, ship: 'delivery', step: 'form' }; coRender(); }
 // רק מחירים אמיתיים מהמסד: PRODUCTS_DEFAULT (לפני טעינה) הם בלי מחיר והזמנות נשמרו ב-₪0
-function coLines() { const list = productsData || []; return coState.items.map(x => ({ ...x, p: list.find(p => p.id === x.id) })).filter(x => x.p && coPrice(x.p) > 0); }
+function coLines() { const list = (productsData || []).concat(mktCartItems()); return coState.items.map(x => ({ ...x, p: list.find(p => p.id === x.id) })).filter(x => x.p && coPrice(x.p) > 0); }
 function coTotals() {
   const lines = coLines();
   const sub = lines.reduce((a, l) => a + coPrice(l.p) * l.qty, 0), ship = coState.ship === 'delivery' ? 25 : 0;
@@ -32182,27 +30284,59 @@ function mediaNeedsLoad() { return true; }
 // ============================================================
 function cartGet() { try { return (JSON.parse(localStorage.getItem('bw_cart') || '[]') || []).filter(x => x && x.id && x.qty > 0); } catch (e) { return []; } }
 function cartSet(c) { try { localStorage.setItem('bw_cart', JSON.stringify(c)); } catch (e) {} cartBadge(); if (document.getElementById('cart-panel')) cartRender(); }
+// מודעות השוק בעגלה: השכרה ואחסון כולל עמלת השירות. מודעה של גולש נספרת בסכום, אבל התשלום עליה מול המוכר
+function mktCartable(r) { return !!r && Number(r.price) > 0 && !['החלפה', 'השאלה'].includes(r.offer); }
+function mktCartItems() {
+  if (typeof mktAll !== 'function') return [];
+  return mktAll().filter(mktCartable).map(r => ({ id: 'mkt_' + r.id, name: r.title, price: r.kind === 'used' ? Number(r.price) : Math.round(r.price * (1 + RENT_SITE_FEE) * 100) / 100, image: r.img || (r.images || [])[0] || '', unit: r.kind === 'used' ? (r.unitTxt || '') : (RENT_UNITS[r.unit] || ''), fee: r.kind !== 'used', seller: !!r.shId, rid: r.id, step: r.unit === 'kg' ? .1 : 1 }));
+}
+function cartCatalog() { return productsList().concat(mktCartItems()); }
+function rentCartAdd(id) {
+  const r = rentFind(id); if (!r) return;
+  const key = 'mkt_' + id, c = cartGet(), it = c.find(x => x.id === key), n = Math.max(rentMin(r), Number((document.getElementById('rn-qty') || {}).value) || 1);
+  if (it) it.qty = Math.round((it.qty + n) * 100) / 100; else c.push({ id: key, qty: n });
+  cartSet(c);
+  document.querySelectorAll('.mk-cart-add').forEach(b => b.classList.add('on'));
+  glassBanner({ title: 'נוסף לעגלה', sub: r.title, icon: 'ok', btn: 'לעגלה', onBtn: () => cartOpen() });
+}
+window.rentCartAdd = rentCartAdd;
 function cartAdd(id) {
   const c = cartGet(); const it = c.find(x => x.id === id);
   if (it) it.qty = Math.min(10, it.qty + 1); else c.push({ id, qty: 1 });
   cartSet(c);
-  const p = productsList().find(x => x.id === id);
+  const p = cartCatalog().find(x => x.id === id);
   glassBanner({ title: 'נוסף לעגלה', sub: p ? p.name : '', icon: 'ok', btn: 'לעגלה', onBtn: () => cartOpen() });
 }
-function cartQty(id, d) { const c = cartGet(); const it = c.find(x => x.id === id); if (!it) return; it.qty += d; cartSet(it.qty > 0 ? c : c.filter(x => x.id !== id)); }
-function cartCount() { return cartGet().reduce((a, x) => a + x.qty, 0); }
-function cartBadge() { const n = cartCount(); document.querySelectorAll('.cart-hdr-n').forEach(b => { b.textContent = n || ''; b.hidden = !n; }); }
+function cartQty(id, d) {
+  const c = cartGet(), it = c.find(x => x.id === id); if (!it) return;
+  const p = cartCatalog().find(x => x.id === id);
+  it.qty = Math.round((it.qty + d * ((p && p.step) || 1)) * 100) / 100;
+  cartSet(it.qty > 0 ? c : c.filter(x => x.id !== id));
+}
+function cartCount() { return cartGet().reduce((a, x) => a + Math.ceil(x.qty), 0); }
+function cartBadge() {
+  const n = cartCount();
+  document.querySelectorAll('.cart-hdr-n').forEach(b => { b.textContent = n || ''; b.hidden = !n; });
+  let f = document.getElementById('cart-fab');   // בטלפון: כפתור העגלה קבוע בשורה העליונה
+  if (!f) {
+    f = document.createElement('button');
+    f.id = 'cart-fab'; f.type = 'button'; f.setAttribute('onclick', 'cartOpen()'); f.setAttribute('aria-label', 'העגלה שלי');
+    f.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M3 4h2l2.6 12h11l2-8H6"/></svg><b></b>';
+    document.body.appendChild(f);
+  }
+  f.querySelector('b').textContent = n || '';
+}
 function cartRender() {
   const box = document.getElementById('cart-panel'); if (!box) return;
-  const list = productsList(); const c = cartGet();
+  const list = cartCatalog(); const c = cartGet();
   const lines = c.map(x => ({ ...x, p: list.find(p => p.id === x.id) })).filter(x => x.p);
   const sub = lines.reduce((a, l) => a + coPrice(l.p) * l.qty, 0);
   box.querySelector('.cart-body').innerHTML = lines.length ? lines.map(l => `<div class="cart-row">
       <span class="cart-th">${l.p.image ? `<img src="${escHtml(l.p.image)}" alt="">` : PRODUCT_ICON}</span>
-      <span class="cart-tx"><b>${escHtml(l.p.name || '')}</b><small>${coMoney(coPrice(l.p))}</small></span>
+      <span class="cart-tx"><b>${escHtml(l.p.name || '')}</b><small>${coMoney(coPrice(l.p))}${l.p.unit ? ' ' + escHtml(l.p.unit) : ''}${l.p.fee ? ' · כולל עמלה' : ''}</small>${l.p.seller ? `<button type="button" class="cart-seller" onclick="cartClose(); rentOpen('${artEsc(l.p.rid)}')">תשלום מול המוכר</button>` : ''}</span>
       <span class="co-step"><button type="button" onclick="cartQty('${artEsc(l.id)}',-1)" aria-label="פחות">−</button><b>${l.qty}</b><button type="button" onclick="cartQty('${artEsc(l.id)}',1)" aria-label="יותר">+</button></span>
-    </div>`).join('') : `<div class="cart-empty">העגלה ריקה<br><button type="button" class="ms-btn" onclick="cartClose(); navigateToPage('page-products-main')">לחנות</button></div>`;
-  box.querySelector('.cart-foot').innerHTML = lines.length ? `<div class="co-line co-total"><span>סה״כ (לפני משלוח)</span><span>${coMoney(sub)}</span></div><button type="button" class="ms-btn" onclick="cartClose(); cartCheckout()">לתשלום</button>` : '';
+    </div>`).join('') : `<div class="cart-empty">העגלה ריקה<br><button type="button" class="ms-btn" onclick="cartClose(); navigateToPage('page-rent-main')">לשוק</button></div>`;
+  box.querySelector('.cart-foot').innerHTML = lines.length ? `<div class="co-line co-total"><span>${lines.some(l => l.p.seller) ? 'סה״כ כולל מוכרים' : 'סה״כ (לפני משלוח)'}</span><span>${coMoney(sub)}</span></div><button type="button" class="ms-btn"${lines.every(l => l.p.seller) ? ' hidden' : ''} onclick="cartClose(); cartCheckout()">לתשלום</button>` : '';
 }
 function cartOpen() {
   let el = document.getElementById('cart-panel');
@@ -32747,7 +30881,8 @@ function usedAll() {
     specs: [x.loanPeriod ? 'תקופת השאלה: ' + x.loanPeriod : ''].concat(Array.isArray(x.loanTerms) ? x.loanTerms.filter(v => typeof v === 'string') : []).filter(Boolean).slice(0, 8) }));
   return real.concat(real.length < 6 ? USED_DEMO : []);
 }
-function mktAll() { return rentAll().concat(usedAll()); }
+let mktHidden = {};   // מודעות דוגמה שהמנהל הסיר (website/market_hidden)
+function mktAll() { return rentAll().concat(usedAll()).filter(r => !mktHidden[r.id]); }
 function mktGo(sec) {
   rentUI.sec = sec || 'all'; rentUI.open = null; rentUI.cat = 'all';
   Object.assign(rentUI, { offer: 'all', owner: 'all', min: null, max: null });
@@ -32832,6 +30967,8 @@ function rentSubscribe() {
       rentData = Object.entries(v).map(([id, r]) => Object.assign({ id }, r)).filter(r => r && r.title && r.active !== false);
       rentRender();
     }, () => { rentData = []; rentRender(); });
+    onValue(ref(db, 'website/market_hidden'), snap => { mktHidden = snap.val() || {}; rentRender(); }, () => {});
+    onAuthStateChanged(auth, () => { if (!rentUI.open) rentRender(); });   // המנהל רואה את האיקס אחרי ההתחברות
   } catch (e) { rentData = []; }
 }
 function rentAll() {
@@ -32896,9 +31033,35 @@ function rentInfCheck() {
 function rentInfArm() { if (!rentInfRaf) rentInfRaf = setTimeout(rentInfCheck, 80); }
 document.addEventListener('scroll', rentInfArm, { capture: true, passive: true });   // הגלילה קורית בתוך אזור התוכן, לא בחלון
 window.addEventListener('resize', rentInfArm);
+// סמל סוג המודעה בכרטיס: שקית לקנייה, חצים במעגל להשאלה או שימוש זמני, חצים נגדיים להחלפה
+function rentTypeIcon(r) {
+  const [label, d] = r.offer === 'החלפה' ? ['להחלפה', 'M4 8h13l-3-3M20 16H7l3 3']
+    : r.kind === 'used' && r.offer !== 'השאלה' ? ['לקנייה', 'M6 8h12l1 13H5zM9 8V6a3 3 0 0 1 6 0v2']
+    : ['להשאלה', 'M4 12a8 8 0 0 1 13.7-5.7L20 8.5V4M20 12a8 8 0 0 1-13.7 5.7L4 15.5V20'];
+  return `<span class="mk-sg-type" role="img" aria-label="${label}" title="${label}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${d}"/></svg></span>`;
+}
+// ריחוף על קובייה: כותרת ושלושה כפתורים עגולים (תגובות, שמירה, לייק). מודעת דוגמה נשמרת רק בדפדפן
+function rentHoverHTML(x) {
+  const ic = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${d}"/></svg>`;
+  const id = artEsc(x.id), sh = x.shId ? artEsc(x.shId) : '', stop = 'event.stopPropagation(); event.preventDefault(); ';
+  const saved = x.shId ? typeof photoIsSavedLocal === 'function' && photoIsSavedLocal(x.shId) : rentMarked('save', x.id);
+  const liked = x.shId ? typeof photoIsLikedLocal === 'function' && photoIsLikedLocal(x.shId) : rentMarked('like', x.id);
+  const b = (label, d, act, on, attr) => `<span role="button" tabindex="0" class="${on ? 'on' : ''}" aria-label="${label}" title="${label}"${attr || ''} onclick="${stop}${act}">${ic(d)}</span>`;
+  return `<span class="mk-sg-hov"><b>${escHtml(x.title)}</b><span class="mk-sg-hov-btns">
+    ${b('תגובות', 'M4 5h16v11H9l-5 4z', `rentOpenComments('${id}')`)}
+    ${b('שמירה', 'M6 4h12v17l-6-4.5L6 21z', sh ? `photoToggleSave('${sh}')` : `rentMark(this, 'save', '${id}')`, saved, sh ? ` data-save="${escHtml(x.shId)}"` : '')}
+    ${b('אהבתי', 'M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z', sh ? `photoToggleLike('${sh}')` : `rentMark(this, 'like', '${id}')`, liked, sh ? ` data-like="${escHtml(x.shId)}"` : '')}
+  </span></span>`;
+}
+function rentOpenComments(id) {
+  rentOpen(id);
+  setTimeout(() => { const c = document.querySelector('.mp-comments'); if (c) c.scrollIntoView({ behavior: 'smooth' }); }, 200);
+}
+window.rentOpenComments = rentOpenComments;
 // כרטיס מוצר קטן בשוק ובהצעות: תמונה, שם, מיקום, מחיר ודירוג המוכר אם יש
 function rentMiniHTML(x) {
-  return `<button type="button" class="mk-sg" onclick="rentOpen('${artEsc(x.id)}')"><span class="mk-sg-img">${rentThumb(x)}</span><b>${escHtml(x.title)}</b><small>${escHtml(x.city || (x.kind === 'used' ? (x.offer || 'יד 2') : rentCatOf(x.cat).name))}</small><small>${rentPriceShort(x)}${x.uid ? `<i data-sg-rate="${escHtml(x.uid)}"></i>` : ''}</small></button>`;
+  const del = isAdmin() ? `<span class="mk-sg-x" role="button" tabindex="0" aria-label="הסרת המודעה" title="הסרת המודעה" onclick="event.stopPropagation(); rentAdminDelete('${artEsc(x.id)}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></span>` : '';
+  return `<button type="button" class="mk-sg" onclick="rentOpen('${artEsc(x.id)}')"><span class="mk-sg-img">${rentThumb(x)}${del}${rentHoverHTML(x)}</span><b>${escHtml(x.title)}</b><small>${escHtml(x.city || (x.kind === 'used' ? (x.offer || 'יד 2') : rentCatOf(x.cat).name))}</small><small class="mk-sg-price">${rentTypeIcon(x)}${Number(x.price) > 0 ? `${Number(x.price).toLocaleString('he-IL', { maximumFractionDigits: 2 })}&nbsp;₪` : ''}${x.uid ? `<i data-sg-rate="${escHtml(x.uid)}"></i>` : ''}</small></button>`;
 }
 function rentGridHTML() {
   const l = rentList();
@@ -33017,6 +31180,8 @@ function rentRender(gridOnly) {
     rentStickFix(); requestAnimationFrame(rentStickFix); setTimeout(rentStickFix, 120);
     rentFitPage(); requestAnimationFrame(rentFitPage); setTimeout(rentFitPage, 120); setTimeout(rentFitPage, 700);
     const bigImg = el.querySelector('.mk-pg .mp-img img'); if (bigImg) bigImg.addEventListener('load', rentFitImg);
+    const bigBox = el.querySelector('.mk-pg .mp-img');
+    if (bigBox && window.ResizeObserver) new ResizeObserver(rentFitImg).observe(bigBox);   // פתיחה וסגירה של חלקים משנות את המקום שנשאר לתמונה
     rentSellerLoad(open.uid); rentSgFill(); rentRevLoad();
     if (typeof subscribePhotoComments === 'function') subscribePhotoComments(rentCommentsKey(open));
   }
@@ -33060,6 +31225,8 @@ window.addEventListener('popstate', (e) => {
   _rentPopping = true;
   try { const id = e.state && e.state.rent; if (id) rentOpen(id); else { rentUI.open = null; rentRender(); } } finally { _rentPopping = false; }
 });
+// סמל הפעולה הראשית: כרטיס אשראי מלא עם חץ מעוקל מעליו
+const RENT_PAY_ICON = '<g fill="currentColor" stroke="none"><path d="M6.6 8.2C9 4.7 13.3 3.6 17.3 5l.6-2.2 3.6 4.3-5.3 1.7.6-2.1C13.3 5.7 9.7 6.1 6.6 8.2z"/><g transform="rotate(-26 12 16)"><path d="M4.5 10.5h15A1.5 1.5 0 0 1 21 12v1H3v-1a1.5 1.5 0 0 1 1.5-1.5z"/><path fill-rule="evenodd" d="M3 14.8h18v6a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 20.8zM5 18.3v.9h5v-.9zM5 20v.9h3.5V20zM14.8 17.8a1.3 1.3 0 1 0 2.6 0 1.3 1.3 0 1 0-2.6 0z"/></g></g>';
 function rentDetailHTML(r) {
   const qty = rentMin(r);
   const sec = mktSecOf(r);
@@ -33069,9 +31236,9 @@ function rentDetailHTML(r) {
   const saved = r.shId ? typeof photoIsSavedLocal === 'function' && photoIsSavedLocal(r.shId) : rentMarked('save', r.id);
   const more = mktAll().filter(x => x.id !== r.id && mktSecOf(x) === sec).sort((a, b) => (b.cat === r.cat) - (a.cat === r.cat) || (b.t || 0) - (a.t || 0)).slice(0, 14);
   // הכפתור הראשי: מוצר יד 2 אמיתי — הצעת מחיר; דוגמת יד 2 — פנייה; השכרה/אחסון — בקשה
-  const main = r.shId ? [`openPriceOffer('${artEsc(r.shId)}', '${artEsc(r.title || '')}', '${artEsc(r.uid || '')}', '${artEsc(r.owner || '')}')`, 'הצעת מחיר', '<path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.5"/>']
-    : r.kind === 'used' ? [`rentRequest('${artEsc(r.id)}')`, r.offer === 'החלפה' ? 'הצעת החלפה' : r.offer === 'השאלה' ? 'בקשת השאלה' : 'פנייה למוכר', '<path d="M21 12a8 8 0 0 1-8 8H4l2.2-2.6A8 8 0 1 1 21 12z"/>']
-    : [`rentRequest('${artEsc(r.id)}')`, r.cat === 'storage' ? 'בקשת אחסון' : 'בקשת השכרה', '<path d="M6 7h12l-1 13H7z"/><path d="M9 7a3 3 0 0 1 6 0"/>'];
+  const main = r.shId ? [`openPriceOffer('${artEsc(r.shId)}', '${artEsc(r.title || '')}', '${artEsc(r.uid || '')}', '${artEsc(r.owner || '')}')`, 'הצעת מחיר', RENT_PAY_ICON]
+    : r.kind === 'used' ? [`rentRequest('${artEsc(r.id)}')`, r.offer === 'החלפה' ? 'הצעת החלפה' : r.offer === 'השאלה' ? 'בקשת השאלה' : 'פנייה למוכר', RENT_PAY_ICON]
+    : [`rentRequest('${artEsc(r.id)}')`, r.cat === 'storage' ? 'בקשת אחסון' : 'בקשת השכרה', RENT_PAY_ICON];
   const unitName = (RENT_UNITS[r.unit] || '').replace(/^ל/, '');
   const terms = r.raw && Array.isArray(r.raw.loanTerms) ? r.raw.loanTerms.filter(x => typeof x === 'string') : [];
   const secName = MKT_SECS.find(x => x.id === sec).name;
@@ -33082,6 +31249,7 @@ function rentDetailHTML(r) {
   const owner = r.owner || 'מפרסם/ת';
   const specs = (r.specs || []).filter(Boolean).join(' · ');
   const btn = (icon, label, act, cls, attr) => `<button type="button" class="mp-btn${cls ? ' ' + cls : ''}" title="${label}" aria-label="${label}"${attr || ''} onclick="${act}">${ic(icon)}</button>`;
+  const cartBtn = typeof mktCartable === 'function' && mktCartable(r) ? btn('<circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M3 4h2l2.6 12h11l2-8H6"/>', 'הוספה לעגלה', `rentCartAdd('${artEsc(r.id)}')`, 'mk-cart-add' + (cartGet().some(x => x.id === 'mkt_' + r.id) ? ' on' : '')) : '';
   const feat = (icon, title, sub) => `<li><span>${ic(icon)}</span><div><b>${escHtml(title)}</b>${sub ? `<small>${escHtml(sub)}</small>` : ''}</div></li>`;
   return `<header class="mk-head"><button type="button" class="rn-back" onclick="rentBack()" aria-label="חזרה">→</button><h1>${escHtml(secName)}</h1></header>
     <div class="mp mk-pg">
@@ -33099,23 +31267,34 @@ function rentDetailHTML(r) {
         ${short ? `<p class="mk-desc" onclick="this.classList.toggle('open')">${escHtml(short)}</p>` : ''}
         <button type="button" class="mk-rate" data-seller="${escHtml(r.uid || '')}" onclick="rentRevOpen()">${rentRateHTML(0, 0)}</button>
         <div class="mp-price">${rentPriceShort(r)}</div>
+        <div class="mk-buyrow"><div class="mk-buy">
         ${r.kind === 'used' ? '' : `<div class="mk-qty-h">כמות לפי ${escHtml(unitName || 'יחידה')}${r.unit === 'kg' ? ' · מינימום ' + Math.round(rentMin(r) * 1000) + ' גרם' : r.min > 1 ? ' · מינימום ' + r.min : ''}</div>
         <div class="mk-qty">
           <div class="mk-step"><button type="button" onclick="rentQtyStep('${artEsc(r.id)}', -1)" aria-label="פחות">−</button><b id="rn-qty-v">${qty}</b><button type="button" onclick="rentQtyStep('${artEsc(r.id)}', 1)" aria-label="יותר">+</button></div>
+          <div class="mp-btns mk-acts">${btn(main[2], main[1], main[0], 'mk-go')}${cartBtn}</div>
           <div class="rn-calc mp-calc"><input id="rn-qty" type="hidden" value="${qty}">
-            ${r.cat === 'storage' && r.unit !== 'month' ? `<label>לכמה חודשים?<input id="rn-months" type="number" min="1" value="1" inputmode="numeric" oninput="rentCalcUpd('${artEsc(r.id)}')"></label>` : ''}
           </div>
         </div>`}
         <div class="mk-cta">
           <div class="mp-btns mk-acts">
-            ${btn(main[2], main[1], main[0], 'mk-go')}
+            ${r.kind === 'used' ? btn(main[2], main[1], main[0], 'mk-go') + cartBtn : ''}
             ${btn('<path d="M6 4h12v17l-6-4.5L6 21z"/>', 'שמירה', r.shId ? `photoToggleSave('${artEsc(r.shId)}')` : `rentMark(this, 'save', '${artEsc(r.id)}')`, saved ? 'on' : '', r.shId ? ` data-save="${escHtml(r.shId)}"` : '')}
             ${btn('<path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/>', 'אהבתי', r.shId ? `photoToggleLike('${artEsc(r.shId)}')` : `rentMark(this, 'like', '${artEsc(r.id)}')`, liked ? 'on' : '', r.shId ? ` data-like="${escHtml(r.shId)}"` : '')}
             ${r.shId ? btn('<path d="M21 12a8 8 0 0 1-8 8H4l2.2-2.6A8 8 0 1 1 21 12z"/>', 'הודעה למוכר', ask) : ''}
             ${btn('<path d="M4 5h16v11H9l-5 4z"/>', 'תגובות', `document.querySelector('.mp-comments').scrollIntoView({ behavior: 'smooth' })`)}
             ${email ? btn('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>', 'מייל', `location.href='mailto:${artEsc(email)}'`) : ''}
             ${btn('<path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M16 7l-4-4-4 4M12 3v12"/>', 'שיתוף', `if(navigator.share){navigator.share({ title: document.title, url: location.href }).catch(function(){});}else{navigator.clipboard.writeText(location.href); showCopyToast('הקישור הועתק');}`)}
+            ${isAdmin() ? btn('<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/>', 'מחיקת המודעה (מנהל)', `rentAdminDelete('${artEsc(r.id)}')`) : ''}
           </div>
+        </div>
+        </div>
+          <details class="mp-acc mk-feats-acc" open><summary>מידע על המוצר</summary>
+          <ul class="mk-feats">
+            ${feat('<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>', r.city ? `איסוף ב${r.city}` : 'מיקום בתיאום', r.kind === 'used' ? 'מתאמים ישירות עם המוכר/ת' : 'עמלת שירות ' + Math.round(RENT_SITE_FEE * 100) + '% לאתר')}
+            ${feat('<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>', owner, `פורסם ${rentAgo(r.t)}`)}
+            ${specs ? feat('<path d="M5 12.5l4.5 4.5L19 7.5"/>', 'פרטי המוצר', specs) : ''}
+          </ul>
+          </details>
         </div>
         <div class="mk-sep"></div>
         <div class="mk-lower">
@@ -33133,11 +31312,6 @@ function rentDetailHTML(r) {
             </div></details>
             <details class="mp-acc"><summary>פרטים</summary>${(r.specs || []).filter(Boolean).length ? `<ul>${r.specs.filter(Boolean).map(x => `<li>${escHtml(x)}</li>`).join('')}</ul>` : '<p>אין פרטים נוספים.</p>'}</details>
           </div>
-          <ul class="mk-feats">
-            ${feat('<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>', r.city ? `איסוף ב${r.city}` : 'מיקום בתיאום', r.kind === 'used' ? 'מתאמים ישירות עם המוכר/ת' : 'עמלת שירות ' + Math.round(RENT_SITE_FEE * 100) + '% לאתר')}
-            ${feat('<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>', owner, `פורסם ${rentAgo(r.t)}`)}
-            ${specs ? feat('<path d="M5 12.5l4.5 4.5L19 7.5"/>', 'פרטי המוצר', specs) : ''}
-          </ul>
         </div>
         ${terms.length ? `<details class="mp-acc mk-terms"><summary>תקנון ההשאלה · ${terms.length} סעיפים</summary><ol class="pd-terms">${terms.map(x => `<li>${escHtml(x)}</li>`).join('')}</ol></details>` : ''}
       </div>
@@ -33235,13 +31409,21 @@ function rentFitPage() {
   const pg = typeof mainContent !== 'undefined' && mainContent && mainContent.querySelector('.mk-pg');
   if (!pg) return;
   const main = pg.closest('main'), box = pg.getBoundingClientRect(), scale = box.width / pg.offsetWidth || 1;
-  const bar = document.querySelector('#photo-compose, .photo-compose');   // שורת התגובה הצפה בתחתית
-  const barTop = bar && getComputedStyle(bar).position === 'fixed' && bar.getClientRects().length ? bar.getBoundingClientRect().top : innerHeight;
-  const bottom = Math.min(innerHeight, barTop, main ? main.getBoundingClientRect().bottom : innerHeight);
-  const h = Math.floor((bottom - box.top - (main ? main.scrollTop * scale : 0) - scrollY) / scale) - 12;
+  const bottom = Math.min(innerHeight, main ? main.getBoundingClientRect().bottom : innerHeight);
+  const more = main && main.querySelector('.mp-more');   // ההצעות נכנסות באותו מסך, מתחת למוצר
+  const h = Math.floor((bottom - box.top - (main ? main.scrollTop * scale : 0) - scrollY) / scale) - 12 - (more ? more.offsetHeight + 12 : 0);
   pg.style.setProperty('--mk-h', Math.max(320, innerWidth > 900 ? Math.min(h, 860) : h) + 'px');
   rentFitImg();
+  rentBarSync();
 }
+// שורת התגובה בעמוד מוצר מופיעה רק אחרי גלילה למטה (או כשאין לאן לגלול)
+function rentBarSync() {
+  const main = typeof mainContent !== 'undefined' && mainContent && mainContent.closest('main');
+  if (!main || !main.querySelector('.mk-pg')) return;
+  const noScroll = main.scrollHeight <= main.clientHeight + 40 && document.documentElement.scrollHeight <= innerHeight + 40;
+  document.documentElement.classList.toggle('mk-bar-on', noScroll || main.scrollTop > 60 || scrollY > 60);
+}
+document.addEventListener('scroll', rentBarSync, { capture: true, passive: true });
 // התמונה הראשית בלי שוליים: בגודל המדויק שנכנס, ובמחשב העמודה שלה ברוחב התמונה
 function rentFitImg() {
   const pg = typeof mainContent !== 'undefined' && mainContent && mainContent.querySelector('.mk-pg');
@@ -33256,14 +31438,51 @@ function rentFitImg() {
 }
 window.addEventListener('resize', rentFitPage);
 // שמירה ולייק במודעות דוגמה: סימון בדפדפן בלבד, כדי שהאייקון יישאר מלא
-function rentMarks() { try { return JSON.parse(localStorage.getItem('rent_marks') || '{}'); } catch (e) { return {}; } }
+function rentMarksKey() { const u = auth.currentUser; return u && !u.isAnonymous ? 'rent_marks_' + u.uid : 'rent_marks'; }
+function rentMarks() { try { return JSON.parse(localStorage.getItem(rentMarksKey()) || localStorage.getItem('rent_marks') || '{}'); } catch (e) { return {}; } }
 function rentMarked(kind, id) { return !!rentMarks()[kind + ':' + id]; }
 function rentMark(btn, kind, id) {
   const m = rentMarks(), k = kind + ':' + id;
   if (m[k]) delete m[k]; else m[k] = 1;
-  try { localStorage.setItem('rent_marks', JSON.stringify(m)); } catch (e) {}
+  try { localStorage.setItem(rentMarksKey(), JSON.stringify(m)); } catch (e) {}
   btn.classList.toggle('on', !!m[k]);
 }
+// אורח מתחיל כל כניסה מחדש בלי לייקים והיסטוריית צפייה; משתמש רשום שומר אותם
+try {
+  onAuthStateChanged(auth, u => {
+    if (u && !u.isAnonymous) return;
+    try {
+      if (sessionStorage.getItem('guest_reset')) return;
+      sessionStorage.setItem('guest_reset', '1');
+      ['guest_liked_galleries', 'watch_history_guest'].concat(u ? [`liked_galleries_${u.uid}`, `watch_history_${u.uid}`] : []).forEach(k => localStorage.removeItem(k));
+      const m = JSON.parse(localStorage.getItem('rent_marks') || '{}');
+      Object.keys(m).forEach(k => { if (/^(news-)?like:/.test(k)) delete m[k]; });
+      localStorage.setItem('rent_marks', JSON.stringify(m));
+    } catch (e) {}
+  });
+} catch (e) {}
+// המנהל מסיר מהשוק כל מודעה: של גולש נמחקת, ודוגמה (שהיא חלק מהקוד) מוסתרת לכולם
+async function rentAdminDelete(id) {
+  if (!isAdmin()) return;
+  const r = rentFind(id); if (!r) return;
+  if (!confirm(r.demo ? `להסיר מהשוק את מודעת הדוגמה "${r.title}"?` : `למחוק לצמיתות את המודעה "${r.title}" של ${r.owner || 'הגולש'}?`)) return;
+  try {
+    if (r.demo) {
+      await set(ref(db, `website/market_hidden/${r.id}`), true);
+    } else if (r.shId) {
+      removeItemFromStoredPages(r.shId);
+      await set(ref(db, `website/media/${r.shId}`), null);
+      delete MEDIA[r.shId];
+    } else {
+      await set(ref(db, `website/rentals/${r.id}`), null);
+    }
+    cartSet(cartGet().filter(x => x.id !== 'mkt_' + id));
+    if (rentUI.open === id) rentUI.open = null;
+    rentRender();
+    showCopyToast(r.demo ? 'המודעה הוסרה' : 'המודעה נמחקה');
+  } catch (e) { showCopyToast('לא הצלחנו להסיר את המודעה'); }
+}
+window.rentAdminDelete = rentAdminDelete;
 // כפתורי הפלוס והמינוס של הכמות בעמוד המודעה
 function rentQtyStep(id, dir) {
   const r = rentFind(id), inp = document.getElementById('rn-qty'), out = document.getElementById('rn-qty-v');

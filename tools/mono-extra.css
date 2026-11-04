@@ -16,3 +16,4 @@ BODY .mk-stars svg { fill: none !important; stroke: #e6a700 !important; }
 BODY .mk-stars svg.on { fill: #ffc107 !important; stroke: #e6a700 !important; }
 BODY .mk-rev-pick svg { fill: none !important; stroke: #e6a700 !important; }
 BODY :is(.mk-rev-pick button.on svg, .mk-rev-pick button:hover svg, .mk-rev-pick:hover button:has(~ button:hover) svg) { fill: #ffc107 !important; }
+BODY #auth-modal .au-social.au-fb svg path { fill: #1877f2 !important; }

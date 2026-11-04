@@ -23,6 +23,12 @@
       "promotedSites": {
         ".read": true
       },
+      "login_image": {
+        ".read": true
+      },
+      "market_hidden": {
+        ".read": true
+      },
       "socialLinks": {
         ".read": true
       },
