@@ -11,3 +11,8 @@ BODY .ng-hero-img { background: #f2f2f2 !important; background-image: none !impo
 BODY .hxc-ic svg { stroke: #111111 !important; }
 BODY .hx-tabs, BODY .site-top .hx-tabs.hx-global { background: #f2f2f2 !important; background-image: none !important; }
 BODY .hx-tabs .hx-tab.on .hxc-ic { box-shadow: 0 0 0 3px #111111 !important; }
+/* הכוכבים הם היוצא מן הכלל בשחור-לבן: צהובים */
+BODY .mk-stars svg { fill: none !important; stroke: #e6a700 !important; }
+BODY .mk-stars svg.on { fill: #ffc107 !important; stroke: #e6a700 !important; }
+BODY .mk-rev-pick svg { fill: none !important; stroke: #e6a700 !important; }
+BODY :is(.mk-rev-pick button.on svg, .mk-rev-pick button:hover svg, .mk-rev-pick:hover button:has(~ button:hover) svg) { fill: #ffc107 !important; }

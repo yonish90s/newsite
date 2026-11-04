@@ -250,6 +250,15 @@
           }
         }
       },
+      "seller_reviews": {
+        ".read": true,
+        "$targetUid": {
+          "$raterUid": {
+            ".write": "auth != null && ((auth.uid === $raterUid && $raterUid !== $targetUid && auth.provider !== 'anonymous') || (!newData.exists() && root.child('website/admin_uid').val() === auth.uid))",
+            ".validate": "!newData.exists() || (newData.hasChildren(['stars','t']) && newData.child('stars').isNumber() && newData.child('stars').val() >= 1 && newData.child('stars').val() <= 5 && newData.child('t').isNumber() && (!newData.child('text').exists() || (newData.child('text').isString() && newData.child('text').val().length <= 1000)) && (!newData.child('name').exists() || (newData.child('name').isString() && newData.child('name').val().length <= 80)))"
+          }
+        }
+      },
       "dms": {
         "$convId": {
           ".read": "auth != null && ($convId.beginsWith(auth.uid + '__') || $convId.endsWith('__' + auth.uid))",

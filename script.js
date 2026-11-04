@@ -934,6 +934,8 @@ function sanitizeToOnlyPhotosAndStories() {
 
 // נתונים חדשים הגיעו: בעמוד הראשי מעדכנים רק את השוק, כדי שהגולש לא יאבד את הגלילה או את המוצר שפתח
 function pageRefresh() {
+  const draft = mainContent.querySelector('.mk-rev-text');
+  if (draft && draft.value.trim()) return;   // גולש באמצע כתיבת ביקורת: לא מציירים מחדש
   if (HOME_MARKET && mainContent.querySelector('.home-feed-page .rent-page')) rentRender();
   else renderPage();
 }
@@ -33015,7 +33017,7 @@ function rentRender(gridOnly) {
     rentStickFix(); requestAnimationFrame(rentStickFix); setTimeout(rentStickFix, 120);
     rentFitPage(); requestAnimationFrame(rentFitPage); setTimeout(rentFitPage, 120); setTimeout(rentFitPage, 700);
     const bigImg = el.querySelector('.mk-pg .mp-img img'); if (bigImg) bigImg.addEventListener('load', rentFitImg);
-    rentSellerLoad(open.uid); rentSgFill();
+    rentSellerLoad(open.uid); rentSgFill(); rentRevLoad();
     if (typeof subscribePhotoComments === 'function') subscribePhotoComments(rentCommentsKey(open));
   }
 }
@@ -33060,7 +33062,6 @@ window.addEventListener('popstate', (e) => {
 });
 function rentDetailHTML(r) {
   const qty = rentMin(r);
-  const c = rentCalc(r, qty);
   const sec = mktSecOf(r);
   const ic = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
   const full = r.shId && MEDIA[r.shId] && (MEDIA[r.shId].images || []).filter(Boolean);   // התמונות המלאות, אחרי שנטענו
@@ -33082,7 +33083,6 @@ function rentDetailHTML(r) {
   const specs = (r.specs || []).filter(Boolean).join(' · ');
   const btn = (icon, label, act, cls, attr) => `<button type="button" class="mp-btn${cls ? ' ' + cls : ''}" title="${label}" aria-label="${label}"${attr || ''} onclick="${act}">${ic(icon)}</button>`;
   const feat = (icon, title, sub) => `<li><span>${ic(icon)}</span><div><b>${escHtml(title)}</b>${sub ? `<small>${escHtml(sub)}</small>` : ''}</div></li>`;
-  const rateTag = r.uid ? `button type="button" onclick="openUserPage('${artEsc(r.uid)}', '${artEsc(owner)}')"` : 'div';
   return `<header class="mk-head"><button type="button" class="rn-back" onclick="rentBack()" aria-label="חזרה">→</button><h1>${escHtml(secName)}</h1></header>
     <div class="mp mk-pg">
       <div class="rn-det-gal mp-gal">
@@ -33097,14 +33097,14 @@ function rentDetailHTML(r) {
         <span class="mk-cat">${escHtml(r.kind === 'used' ? (r.offer || 'יד 2') : rentCatOf(r.cat).name)}</span>
         <h2 class="mk-title">${escHtml(r.title)}</h2>
         ${short ? `<p class="mk-desc" onclick="this.classList.toggle('open')">${escHtml(short)}</p>` : ''}
-        <${rateTag} class="mk-rate" data-seller="${escHtml(r.uid || '')}">${rentRateHTML(0, 0)}</${rateTag.split(' ')[0]}>
+        <button type="button" class="mk-rate" data-seller="${escHtml(r.uid || '')}" onclick="rentRevOpen()">${rentRateHTML(0, 0)}</button>
         <div class="mp-price">${rentPriceShort(r)}</div>
         ${r.kind === 'used' ? '' : `<div class="mk-qty-h">כמות לפי ${escHtml(unitName || 'יחידה')}${r.unit === 'kg' ? ' · מינימום ' + Math.round(rentMin(r) * 1000) + ' גרם' : r.min > 1 ? ' · מינימום ' + r.min : ''}</div>
         <div class="mk-qty">
           <div class="mk-step"><button type="button" onclick="rentQtyStep('${artEsc(r.id)}', -1)" aria-label="פחות">−</button><b id="rn-qty-v">${qty}</b><button type="button" onclick="rentQtyStep('${artEsc(r.id)}', 1)" aria-label="יותר">+</button></div>
           <div class="rn-calc mp-calc"><input id="rn-qty" type="hidden" value="${qty}">
             ${r.cat === 'storage' && r.unit !== 'month' ? `<label>לכמה חודשים?<input id="rn-months" type="number" min="1" value="1" inputmode="numeric" oninput="rentCalcUpd('${artEsc(r.id)}')"></label>` : ''}
-            <div class="rn-sum" id="rn-sum">${rentSumHTML(c)}</div></div>
+          </div>
         </div>`}
         <div class="mk-cta">
           <div class="mp-btns mk-acts">
@@ -33120,9 +33120,18 @@ function rentDetailHTML(r) {
         <div class="mk-sep"></div>
         <div class="mk-lower">
           <div class="mk-accs">
-            <details class="mp-acc" name="mk-acc"${innerWidth > 900 ? ' open' : ''}><summary>תיאור</summary><p>${short ? escHtml(short) : 'אין תיאור למוצר הזה.'}</p></details>
-            <details class="mp-acc" name="mk-acc"><summary>ביקורות</summary><${rateTag} class="mk-rate" data-seller="${escHtml(r.uid || '')}">${rentRateHTML(0, 0)}</${rateTag.split(' ')[0]}></details>
-            <details class="mp-acc" name="mk-acc"><summary>פרטים</summary>${(r.specs || []).filter(Boolean).length ? `<ul>${r.specs.filter(Boolean).map(x => `<li>${escHtml(x)}</li>`).join('')}</ul>` : '<p>אין פרטים נוספים.</p>'}</details>
+            <details class="mp-acc"${innerWidth > 900 ? ' open' : ''}><summary>תיאור</summary><p>${short ? escHtml(short) : 'אין תיאור למוצר הזה.'}</p></details>
+            <details class="mp-acc" id="mk-rev-acc"><summary>ביקורות</summary><div class="mk-rev">
+              <div class="mk-rate" data-seller="${escHtml(r.uid || '')}">${rentRateHTML(0, 0)}</div>
+              ${r.uid ? `<button type="button" class="mk-rev-seller" onclick="openUserPage('${artEsc(r.uid)}', '${artEsc(owner)}')">לעמוד של ${escHtml(owner)}</button>` : ''}
+              <div class="mk-rev-list"></div>
+              <div class="mk-rev-form" data-id="${escHtml(r.id)}" data-uid="${escHtml(r.uid || '')}">
+                <div class="mk-rev-pick" role="group" aria-label="דירוג">${[1, 2, 3, 4, 5].map(n => `<button type="button" aria-label="${n} כוכבים" onclick="rentRevPick(this, ${n})">${RENT_STAR}</button>`).join('')}</div>
+                <textarea class="mk-rev-text" rows="2" maxlength="1000" placeholder="כתבו ביקורת על המוכר"></textarea>
+                <button type="button" class="mk-rev-send" onclick="rentRevSend(this)">שליחת ביקורת</button>
+              </div>
+            </div></details>
+            <details class="mp-acc"><summary>פרטים</summary>${(r.specs || []).filter(Boolean).length ? `<ul>${r.specs.filter(Boolean).map(x => `<li>${escHtml(x)}</li>`).join('')}</ul>` : '<p>אין פרטים נוספים.</p>'}</details>
           </div>
           <ul class="mk-feats">
             ${feat('<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>', r.city ? `איסוף ב${r.city}` : 'מיקום בתיאום', r.kind === 'used' ? 'מתאמים ישירות עם המוכר/ת' : 'עמלת שירות ' + Math.round(RENT_SITE_FEE * 100) + '% לאתר')}
@@ -33137,9 +33146,79 @@ function rentDetailHTML(r) {
     <section class="rn-det-cmts pd-reviews mp-comments">${typeof photoCommentsSectionHTML === 'function' ? photoCommentsSectionHTML(rentCommentsKey(r)) : ''}</section>`;
 }
 // ביקורת על המוכר: ממוצע הדירוגים האמיתי מהענן
+const RENT_STAR = '<svg viewBox="0 0 24 24"><path d="M12 2.8l2.8 5.8 6.4.9-4.6 4.5 1.1 6.3L12 17.3l-5.7 3 1.1-6.3L2.8 9.5l6.4-.9z"/></svg>';
+const rentStarsHTML = n => `<span class="mk-stars">${[1, 2, 3, 4, 5].map(k => RENT_STAR.replace('<svg', `<svg class="${n >= k - .25 ? 'on' : ''}"`)).join('')}</span>`;
 function rentRateHTML(avg, count) {
-  const star = on => `<svg class="${on ? 'on' : ''}" viewBox="0 0 24 24"><path d="M12 2.8l2.8 5.8 6.4.9-4.6 4.5 1.1 6.3L12 17.3l-5.7 3 1.1-6.3L2.8 9.5l6.4-.9z"/></svg>`;
-  return `<span class="mk-stars">${[1, 2, 3, 4, 5].map(k => star(count && avg >= k - .25)).join('')}</span>${count ? avg.toFixed(1) + ' ' : ''}(${!count ? 'אין עדיין ביקורות על המוכר' : count === 1 ? 'ביקורת אחת על המוכר' : count + ' ביקורות על המוכר'})`;
+  return `${rentStarsHTML(count ? avg : 0)}${count ? avg.toFixed(1) + ' ' : ''}(${!count ? 'אין עדיין ביקורות על המוכר' : count === 1 ? 'ביקורת אחת על המוכר' : count + ' ביקורות על המוכר'})`;
+}
+// כתיבת ביקורת: מוכר אמיתי נשמר במסד (גם בדירוג שלו); במודעת דוגמה הביקורת נשמרת רק בדפדפן
+function rentRevOpen() {
+  const acc = document.getElementById('mk-rev-acc'); if (!acc) return;
+  acc.open = true;
+  acc.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}
+function rentRevPick(btn, n) {
+  const box = btn.parentElement; box.dataset.n = n;
+  box.querySelectorAll('button').forEach((b, i) => b.classList.toggle('on', i < n));
+}
+const rentDemoRevs = id => { try { return JSON.parse(localStorage.getItem('rent_reviews_' + id) || '[]'); } catch (e) { return []; } };
+function rentRevListHTML(list) {
+  const me = auth.currentUser && auth.currentUser.uid;
+  return list.sort((a, b) => (b.t || 0) - (a.t || 0)).map(x => `<div class="mk-rev-item"><div><b>${escHtml(x.name || 'גולש/ת')}</b>${rentStarsHTML(Number(x.stars) || 0)}<small>${rentAgo(x.t)}</small>${x.rater && (x.rater === me || (typeof isAdmin === 'function' && isAdmin())) ? `<button type="button" onclick="rentRevDelete('${artEsc(x.rater)}')">מחיקה</button>` : ''}</div>${x.text ? `<p>${escHtml(x.text)}</p>` : ''}</div>`).join('');
+}
+async function rentRevLoad() {
+  const form = document.querySelector('.mk-rev-form'); if (!form) return;
+  const uid = form.dataset.uid, id = form.dataset.id;
+  let list = [];
+  if (!uid) list = rentDemoRevs(id);
+  else try { const v = (await get(ref(db, `website/seller_reviews/${uid}`))).val() || {}; list = Object.keys(v).map(k => ({ ...v[k], rater: k })); } catch (e) {}
+  const box = document.querySelector('.mk-rev-list');
+  if (!box || !box.isConnected || document.querySelector('.mk-rev-form') !== form) return;
+  box.innerHTML = rentRevListHTML(list);
+  if (!uid && list.length) { const avg = list.reduce((a, x) => a + Number(x.stars), 0) / list.length; document.querySelectorAll('.mk-rate').forEach(el => { el.innerHTML = rentRateHTML(avg, list.length); }); }
+  const me = auth.currentUser && auth.currentUser.uid;
+  const mine = uid && me && list.find(x => x.rater === me);
+  if (uid && uid === me) form.innerHTML = '<small>זו המודעה שלך, ואי אפשר לכתוב עליה ביקורת.</small>';
+  else if (mine) { form.querySelector('.mk-rev-text').value = mine.text || ''; const p = form.querySelector('.mk-rev-pick'); rentRevPick(p.children[0], Number(mine.stars) || 1); }
+}
+async function rentRevSend(btn) {
+  const form = btn.closest('.mk-rev-form'), n = Number(form.querySelector('.mk-rev-pick').dataset.n) || 0, text = form.querySelector('.mk-rev-text').value.trim();
+  if (!n) { showCopyToast('בחרו כמה כוכבים'); return; }
+  const uid = form.dataset.uid, id = form.dataset.id;
+  if (!uid) {
+    const list = rentDemoRevs(id);
+    list.push({ name: 'אני', stars: n, text, t: Date.now() });
+    try { localStorage.setItem('rent_reviews_' + id, JSON.stringify(list)); } catch (e) {}
+    form.querySelector('.mk-rev-text').value = '';
+    showCopyToast('מודעת דוגמה: הביקורת נשמרה רק בדפדפן שלך');
+    rentRevLoad();
+    return;
+  }
+  const u = auth.currentUser;
+  if (!u || u.isAnonymous) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); showCopyToast('התחברו כדי לכתוב ביקורת'); return; }
+  btn.disabled = true;
+  try {
+    await update(ref(db, 'website'), {
+      [`seller_reviews/${uid}/${u.uid}`]: { stars: n, text, name: (u.displayName || (u.email || '').split('@')[0] || 'גולש/ת').slice(0, 80), t: Date.now() },
+      [`user_ratings/${uid}/${u.uid}`]: n
+    });
+    showCopyToast('הביקורת נשמרה, תודה');
+    rentSellerLoad(uid);
+    rentRevLoad();
+  } catch (e) { showCopyToast('לא הצלחנו לשמור את הביקורת'); }
+  btn.disabled = false;
+}
+async function rentRevDelete(rater) {
+  const form = document.querySelector('.mk-rev-form'), uid = form && form.dataset.uid;
+  if (!uid || !confirm('למחוק את הביקורת?')) return;
+  try {
+    const paths = { [`seller_reviews/${uid}/${rater}`]: null };
+    if (auth.currentUser && auth.currentUser.uid === rater) paths[`user_ratings/${uid}/${rater}`] = null;   // הדירוג של גולש אחר נשאר בשליטתו
+    await update(ref(db, 'website'), paths);
+    form.querySelector('.mk-rev-text').value = '';
+    rentSellerLoad(uid);
+    rentRevLoad();
+  } catch (e) { showCopyToast('לא הצלחנו למחוק'); }
 }
 async function rentSellerLoad(uid) {
   if (!uid) return;
@@ -33290,7 +33369,7 @@ async function rentPublish(btn) {
     glassBanner({ title: 'הציוד פורסם להשכרה', sub: rec.title, icon: 'ok', ms: 2400 });
   } catch (e) { btn.disabled = false; btn.textContent = 'פרסום'; showCopyToast('הפרסום נכשל — נסו שוב'); }
 }
-Object.assign(window, { mktGo, mktOpenUsed, mktPublish, rentBack, rentIdeaPick, rentSideSet, rentSidePrice, rentSidePriceGo, rentDetPick, rentDetStep, rentQtyStep, rentMark, buildRentPage, rentSet, rentOpen, rentCalcUpd, rentRequest, rentPublishOpen, rentPickImg, rentPublish });
+Object.assign(window, { mktGo, mktOpenUsed, mktPublish, rentBack, rentIdeaPick, rentRevOpen, rentRevPick, rentRevSend, rentRevDelete, rentSideSet, rentSidePrice, rentSidePriceGo, rentDetPick, rentDetStep, rentQtyStep, rentMark, buildRentPage, rentSet, rentOpen, rentCalcUpd, rentRequest, rentPublishOpen, rentPickImg, rentPublish });
 
 // ============================================================
 // תמכו / השקיעו בנו: תרומה בכל סכום, או השקעה לפי שווי חברה ₪100,000 (עד 10% מוצעים).
