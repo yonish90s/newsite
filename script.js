@@ -7937,7 +7937,7 @@ function qpEnsureModal() {
       <header class="qp-head">
         <span class="qp-bot" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l1.9 4.6 4.6 1.9-4.6 1.9L12 15.5l-1.9-4.6L5.5 9l4.6-1.9z"/><path d="M18.5 14l.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9z" opacity=".7"/></svg></span>
         <div class="qp-title"><b>פרסום מהיר</b><small><i></i>זמין עכשיו · מוכן תוך 30 שניות</small></div>
-        <button type="button" class="qp-close" aria-label="סגירה" onclick="document.getElementById('quick-publish-modal').style.display='none'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+        <button type="button" class="qp-close" aria-label="סגירה" onclick="qpClose()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
       </header>
       <div id="qp-messages" class="qp-msgs"></div>
       <div class="qp-bar">
@@ -7967,6 +7967,11 @@ function qpBubble(role, html) {
 
 
 // מזהה את סוג העמוד הנוכחי כדי שהפרסום המהיר יתאים אליו
+function qpClose() {
+  document.getElementById('quick-publish-modal').style.display = 'none';
+  if (mainContent && mainContent.querySelector('.secondhand-page')) mktGo('all');   // ביטול העלאה מהלשונית — חוזרים לשוק
+}
+window.qpClose = qpClose;
 function qpCurrentSection() {
   if (typeof mainContent === 'undefined' || !mainContent) return 'photos';
   if (mainContent.querySelector('.secondhand-page')) return 'secondhand';
@@ -8226,6 +8231,7 @@ async function qpPublish() {
     priceUnit: qpData.priceUnit || '',
     loanPeriod: qpData.loanPeriod || '',
     loanTerms: (qpData.offerType === 'השאלה' && Array.isArray(qpData.loanTerms)) ? qpData.loanTerms.slice(0, 15) : [],
+    section: qpData.pageSection === 'secondhand' ? 'secondhand' : 'photos',
     approved: isAdminNow
   };
   try {
@@ -8268,7 +8274,10 @@ async function qpPublish() {
       if (!isAdminNow && typeof pushPendingSubmission === 'function') pushPendingSubmission(album);
       const what = sec === 'secondhand' ? 'המוצר פורסם' : 'המודעה פורסמה';
       qpBubble('bot', `✅ ${what} בהצלחה!` + (isAdminNow ? '' : '<br>ממתין לאישור מנהל ויופיע בקרוב.'));
-      setTimeout(() => { const m = document.getElementById('quick-publish-modal'); if (m) m.style.display = 'none'; }, 2000);
+      setTimeout(() => {
+        const m = document.getElementById('quick-publish-modal'); if (m) m.style.display = 'none';
+        if (sec === 'secondhand') mktGo('all');
+      }, 2000);
     }
   } catch (e) {
     console.error('quick publish failed', e);
@@ -14127,6 +14136,7 @@ const HOME_TABS_ALL = {
   comics: ['קומיקס', "homeGo('comics')"],
   stories: ['סיפורים', "homeGo('stories')"],
   secondhand: ['השוק', "mktGo('all')"],
+  upload: ['העלאה', "mktPublish('used')"],
   forums: ['פורומים', "navigateToPage('page-forums-main')"],
   news: ['חדשות', "navigateToPage('page-news-main')"],
   communities: ['קהילות', "navigateToPage('page-communities-main')"],
@@ -14149,6 +14159,7 @@ function homeChipsHTML(photos, comics, stories, active, extraCls) {
     comics: ['#f97316', '<path d="M4 5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-8l-5 4v-4a2 2 0 0 1-1-2z"/><path d="M8 8h8M8 11h5"/>'],
     stories: ['#7c3aed', '<path d="M4 5.500A2.5 2.5 0 0 1 6.5 3H20v15H6.500A2.5 2.5 0 0 0 4 20.500z"/><path d="M4 20.500A2.5 2.5 0 0 0 6.5 21H20v-3"/>'],
     secondhand: ['#16a34a', '<path d="M6 8h12l-1 13H7z"/><path d="M9 8a3 3 0 0 1 6 0"/>'],
+    upload: ['#111111', '<path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 15v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4"/>'],
     forums: ['#0284c7', '<path d="M21 12a8 8 0 0 1-8 8H4l2.2-2.600A8 8 0 1 1 21 12z"/>'],
     news: ['#dc2626', '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h10M7 13h10M7 17h6"/>'],
     communities: ['#db2777', '<circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/>'],
@@ -17704,6 +17715,13 @@ async function _reqMutate(id, action) {
           stories.unshift(targetItem);
         }
         if (spObj) spObj.content = (spObj.content || '').replace(/data-stories-json="[^"]*"/, `data-stories-json="${encodeURIComponent(JSON.stringify(stories))}"`);
+      } else if (targetItem.section === 'secondhand' && pages.some(p => p && p.id === 'page-secondhand-main')) {
+        // מודעה שהועלתה לשוק: נכנסת לרשימה של השוק ורק עכשיו מופיעה לכולם
+        const shObj = pages.find(p => p && p.id === 'page-secondhand-main');
+        let list = [];
+        try { list = JSON.parse(decodeURIComponent(((shObj.content || '').match(/data-photos-json="([^"]*)"/) || [])[1] || '%5B%5D')) || []; } catch (e) { list = []; }
+        if (!list.some(a => a && a.id === id)) list.unshift(targetItem);
+        shObj.content = shObj.content.replace(/data-photos-json="[^"]*"/, `data-photos-json="${encodeURIComponent(JSON.stringify(list))}"`);
       } else {
         const existingIdx = albums.findIndex(a => a.id === id);
         if (existingIdx >= 0) {
@@ -18860,8 +18878,10 @@ function pcCommenterName() {
 function pcComposerHTML(kind, id, editName) {
   const sid = artEsc(id);
   const saved = pcIsGuest() ? forumGuestName() : '';
+  const author = (() => { try { const a = (typeof window.__pcAuthor === 'function') ? window.__pcAuthor(kind, id) : ''; return a || ''; } catch (e) { return ''; } })();
+  const replying = author ? `<div class="pc-replying">מגיבים ל־<b>@${escHtml(author)}</b></div>` : '';
   if (pcIsGuest() && (saved.length < 2 || editName)) {
-    return `<div class="pc-compose" id="${kind}-compose"><div class="pc-row">
+    return `<div class="pc-compose" id="${kind}-compose">${replying}<div class="pc-row">
       <input id="${kind}-guest-first" class="pc-in" maxlength="30" placeholder="כתבו שם זמני כדי להגיב" value="${escHtml(editName ? saved : '')}" onkeydown="if(event.key==='Enter'){event.preventDefault(); pcSetGuestName('${kind}','${sid}');}">
       <button type="button" class="pc-go" onclick="pcSetGuestName('${kind}','${sid}')" aria-label="המשך">${PC_SEND_ICON}</button>
     </div></div>`;
@@ -18869,9 +18889,8 @@ function pcComposerHTML(kind, id, editName) {
   const submit = kind === 'photo' ? 'submitPhotoComment' : 'submitStoryComment';
   if (kind === 'photo') pcStars = 0;
   const meName = (auth.currentUser && !auth.currentUser.isAnonymous) ? ((auth.currentUser.displayName || (auth.currentUser.email || '').split('@')[0]) || '') : saved;
-  const author = (() => { try { const a = (typeof window.__pcAuthor === 'function') ? window.__pcAuthor(kind, id) : ''; return a || ''; } catch (e) { return ''; } })();
   return `<div class="pc-compose" id="${kind}-compose">
-    ${author ? `<div class="pc-replying">מגיבים ל־<b>@${escHtml(author)}</b></div>` : ''}
+    ${replying}
     <span class="pc-av" aria-hidden="true">${escHtml(String(meName || 'א').trim().charAt(0) || 'א')}</span>
     ${kind === 'photo' ? `<div class="pc-stars-row"><span>דירוג (לא חובה):</span><span class="pc-stars">${[1, 2, 3, 4, 5].map(n => `<i onclick="pcSetStars(${n})" role="button" aria-label="${n} כוכבים">${PD_STAR}</i>`).join('')}</span></div>` : ''}
     <div class="pc-row">
@@ -28175,7 +28194,7 @@ Object.assign(window, { forumMiniRename });
 
 // שם היוצר לשורת "מגיבים ל־@..." בתיבת התגובה
 window.__pcAuthor = function (kind, id) {
-  const sel = document.querySelector('.art-detail .pd2-creator-txt b, .art-detail .pd2-info .photo-author-link');
+  const sel = document.querySelector('.mk-seller-tx b, .art-detail .pd2-creator-txt b, .art-detail .pd2-info .photo-author-link');
   return sel ? sel.textContent.trim() : '';
 };
 
@@ -31184,6 +31203,7 @@ function rentRender(gridOnly) {
     if (bigBox && window.ResizeObserver) new ResizeObserver(rentFitImg).observe(bigBox);   // פתיחה וסגירה של חלקים משנות את המקום שנשאר לתמונה
     rentSellerLoad(open.uid); rentSgFill(); rentRevLoad();
     if (typeof subscribePhotoComments === 'function') subscribePhotoComments(rentCommentsKey(open));
+    pcRerender('photo', rentCommentsKey(open));   // אחרי שהעמוד בנוי: "מגיבים ל־@המוכר"
   }
 }
 // תגובות במודעה: מוצר יד 2 אמיתי משתף את התגובות עם עמוד המוצר המקורי; השכרה/אחסון — מפתח משלהן
@@ -31241,17 +31261,22 @@ function rentDetailHTML(r) {
     : [`rentRequest('${artEsc(r.id)}')`, r.cat === 'storage' ? 'בקשת אחסון' : 'בקשת השכרה', RENT_PAY_ICON];
   const unitName = (RENT_UNITS[r.unit] || '').replace(/^ל/, '');
   const terms = r.raw && Array.isArray(r.raw.loanTerms) ? r.raw.loanTerms.filter(x => typeof x === 'string') : [];
-  const secName = MKT_SECS.find(x => x.id === sec).name;
   const short = String(r.desc || '').trim();
   const ask = `dmStartAboutGallery('${artEsc(r.uid || '')}', '${artEsc(r.owner || '')}', '${artEsc(r.shId || '')}')`;
   const liked = r.shId ? typeof photoIsLikedLocal === 'function' && photoIsLikedLocal(r.shId) : rentMarked('like', r.id);
   const email = r.raw && String(r.raw.emailUrl || '').replace(/^mailto:/, '');
   const owner = r.owner || 'מפרסם/ת';
   const specs = (r.specs || []).filter(Boolean).join(' · ');
-  const btn = (icon, label, act, cls, attr) => `<button type="button" class="mp-btn${cls ? ' ' + cls : ''}" title="${label}" aria-label="${label}"${attr || ''} onclick="${act}">${ic(icon)}</button>`;
+  const WORD = { 'הצעת מחיר': 'הצעה', 'פנייה למוכר': 'פנייה', 'הצעת החלפה': 'החלפה', 'בקשת השאלה': 'השאלה', 'בקשת אחסון': 'אחסון', 'בקשת השכרה': 'השכרה', 'הוספה לעגלה': 'עגלה', 'הודעה למוכר': 'הודעה', 'מחיקת המודעה (מנהל)': 'מחיקה' };
+  const btn = (icon, label, act, cls, attr) => `<span class="mk-ic"><button type="button" class="mp-btn${cls ? ' ' + cls : ''}" title="${label}" aria-label="${label}"${attr || ''} onclick="${act}">${ic(icon)}</button><small>${WORD[label] || label}</small></span>`;
   const cartBtn = typeof mktCartable === 'function' && mktCartable(r) ? btn('<circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M3 4h2l2.6 12h11l2-8H6"/>', 'הוספה לעגלה', `rentCartAdd('${artEsc(r.id)}')`, 'mk-cart-add' + (cartGet().some(x => x.id === 'mkt_' + r.id) ? ' on' : '')) : '';
   const feat = (icon, title, sub) => `<li><span>${ic(icon)}</span><div><b>${escHtml(title)}</b>${sub ? `<small>${escHtml(sub)}</small>` : ''}</div></li>`;
-  return `<header class="mk-head"><button type="button" class="rn-back" onclick="rentBack()" aria-label="חזרה">→</button><h1>${escHtml(secName)}</h1></header>
+  const when = r.t ? new Date(r.t).toLocaleDateString('he-IL') : '';
+  const who = `${authorAvHTML({ author: owner, uid: r.uid || '' })}<span class="mk-seller-tx"><b>${escHtml(owner)}</b>${when ? `<small>${escHtml(when)}</small>` : ''}</span>`;
+  return `<header class="mk-head"><button type="button" class="rn-back" onclick="rentBack()" aria-label="חזרה">→</button>
+      ${r.uid ? `<button type="button" class="mk-seller" onclick="openUserPage('${artEsc(r.uid)}', '${artEsc(owner)}')">${who}</button>` : `<div class="mk-seller">${who}</div>`}
+      ${r.city ? `<span class="mk-city">${escHtml(r.city)}</span>` : ''}
+    </header>
     <div class="mp mk-pg">
       <div class="rn-det-gal mp-gal">
         <div class="rn-det-img mp-img">${rentThumb(full && full.length ? { ...r, img: full[0] } : r, true)}</div>
@@ -31299,7 +31324,7 @@ function rentDetailHTML(r) {
         <div class="mk-sep"></div>
         <div class="mk-lower">
           <div class="mk-accs">
-            <details class="mp-acc"${innerWidth > 900 ? ' open' : ''}><summary>תיאור</summary><p>${short ? escHtml(short) : 'אין תיאור למוצר הזה.'}</p></details>
+            <details class="mp-acc"><summary>תיאור</summary><p>${short ? escHtml(short) : 'אין תיאור למוצר הזה.'}</p></details>
             <details class="mp-acc" id="mk-rev-acc"><summary>ביקורות</summary><div class="mk-rev">
               <div class="mk-rate" data-seller="${escHtml(r.uid || '')}">${rentRateHTML(0, 0)}</div>
               ${r.uid ? `<button type="button" class="mk-rev-seller" onclick="openUserPage('${artEsc(r.uid)}', '${artEsc(owner)}')">לעמוד של ${escHtml(owner)}</button>` : ''}
@@ -31314,10 +31339,10 @@ function rentDetailHTML(r) {
           </div>
         </div>
         ${terms.length ? `<details class="mp-acc mk-terms"><summary>תקנון ההשאלה · ${terms.length} סעיפים</summary><ol class="pd-terms">${terms.map(x => `<li>${escHtml(x)}</li>`).join('')}</ol></details>` : ''}
+        <section class="rn-det-cmts pd-reviews mp-comments">${typeof photoCommentsSectionHTML === 'function' ? photoCommentsSectionHTML(rentCommentsKey(r)) : ''}</section>
       </div>
     </div>
-    ${more.length ? `<section class="mp-more"><h2>הצעות נוספות</h2><div class="mk-sg-grid">${more.map(rentMiniHTML).join('')}</div></section>` : ''}
-    <section class="rn-det-cmts pd-reviews mp-comments">${typeof photoCommentsSectionHTML === 'function' ? photoCommentsSectionHTML(rentCommentsKey(r)) : ''}</section>`;
+    ${more.length ? `<section class="mp-more"><h2>הצעות נוספות</h2><div class="mk-sg-grid">${more.map(rentMiniHTML).join('')}</div></section>` : ''}`;
 }
 // ביקורת על המוכר: ממוצע הדירוגים האמיתי מהענן
 const RENT_STAR = '<svg viewBox="0 0 24 24"><path d="M12 2.8l2.8 5.8 6.4.9-4.6 4.5 1.1 6.3L12 17.3l-5.7 3 1.1-6.3L2.8 9.5l6.4-.9z"/></svg>';
@@ -31414,16 +31439,7 @@ function rentFitPage() {
   const h = Math.floor((bottom - box.top - (main ? main.scrollTop * scale : 0) - scrollY) / scale) - 12 - (more ? more.offsetHeight + 12 : 0);
   pg.style.setProperty('--mk-h', Math.max(320, innerWidth > 900 ? Math.min(h, 860) : h) + 'px');
   rentFitImg();
-  rentBarSync();
 }
-// שורת התגובה בעמוד מוצר מופיעה רק אחרי גלילה למטה (או כשאין לאן לגלול)
-function rentBarSync() {
-  const main = typeof mainContent !== 'undefined' && mainContent && mainContent.closest('main');
-  if (!main || !main.querySelector('.mk-pg')) return;
-  const noScroll = main.scrollHeight <= main.clientHeight + 40 && document.documentElement.scrollHeight <= innerHeight + 40;
-  document.documentElement.classList.toggle('mk-bar-on', noScroll || main.scrollTop > 60 || scrollY > 60);
-}
-document.addEventListener('scroll', rentBarSync, { capture: true, passive: true });
 // התמונה הראשית בלי שוליים: בגודל המדויק שנכנס, ובמחשב העמודה שלה ברוחב התמונה
 function rentFitImg() {
   const pg = typeof mainContent !== 'undefined' && mainContent && mainContent.querySelector('.mk-pg');
@@ -31431,7 +31447,11 @@ function rentFitImg() {
   if (!img || !img.naturalWidth) return;
   const wide = innerWidth > 900, rail = parseFloat(getComputedStyle(box).marginLeft) || 0;
   const ratio = img.naturalWidth / img.naturalHeight, maxW = (wide ? pg.clientWidth * .58 : pg.clientWidth) - rail;
-  const w = Math.floor(Math.min(maxW, box.clientHeight * ratio));
+  const w = Math.floor(wide ? Math.min(maxW, box.clientHeight * ratio) : Math.min(maxW, innerHeight * .6 * ratio));
+  if (!wide) {   // בטלפון גובה המסגרת כגובה התמונה, בלי רווח מתחתיה
+    box.style.setProperty('height', Math.floor(w / ratio) + 'px', 'important');
+    const th = pg.querySelector('.mk-vthumbs'); if (th) th.style.setProperty('height', Math.floor(w / ratio) + 'px', 'important');
+  }
   img.style.setProperty('width', w + 'px', 'important');
   img.style.setProperty('height', Math.floor(w / ratio) + 'px', 'important');
   if (wide) pg.style.setProperty('--gal-w', w + rail + 'px'); else pg.style.removeProperty('--gal-w');
