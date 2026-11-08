@@ -1017,6 +1017,8 @@ const megaMenuContainer = { classList: { add: ()=>{}, remove: ()=>{} }, style: {
 
 function goToHomePage() {
   if (typeof pages === 'undefined') return;
+  // "בשבילך" הוא השוק: כל המודעות במקום אחד
+  if (typeof mktGo === 'function' && pages.some(p => p && p.id === 'page-rent-main')) { mktGo('all'); try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) {} return; }
   const homePage = pages.find(p => p && p.id === 'page-home-feed')
     || pages.find(p => p && p.id === 'page-photos-main')
     || pages.find(p => p && p.content && p.content.includes('data-section="photos"'))
@@ -1301,7 +1303,7 @@ function renderSideMenu() {
 }
 
 // פונקציה שמייצרת את התפריט העליון ומוסיפה לו מגה-תפריט
-const REMOVED_PAGES = ['page-stories-main', 'page-stories-text', 'page-requests-main', 'page-reviews-main', 'page-partnerships-main', 'page-photos-main', 'page-products-main', 'page-tinder-main', 'page-blinddate-main'];
+const REMOVED_PAGES = ['page-communities-main', 'page-ai', 'page-stories-main', 'page-stories-text', 'page-requests-main', 'page-reviews-main', 'page-partnerships-main', 'page-photos-main', 'page-products-main', 'page-tinder-main', 'page-blinddate-main'];
 function renderTopNav() {
   if (!Array.isArray(topNavPages)) topNavPages = [];
   topNavPages = topNavPages.filter(id => !REMOVED_PAGES.includes(id));
@@ -1328,7 +1330,6 @@ function renderTopNav() {
   if (pages.some(p => p && p.id === 'page-news-main')) topNavPages.push('page-news-main');
   // "מוצרי גולשים" אוחד בשוק: בתפריט רק "השוק", מיד אחרי הבית
   topNavPages = topNavPages.filter(id => id !== 'page-rent-main');
-  if (pages.some(p => p && p.id === 'page-rent-main')) topNavPages.splice(topNavPages.indexOf('page-home-feed') + 1, 0, 'page-rent-main');
   navLinksContainer.innerHTML = ''; // מנקה את התפריט הסטטי מה-HTML
   
   topNavPages.forEach(pageId => {
@@ -1532,6 +1533,7 @@ function renderPage() {
     return;
   }
   // עמוד "הפיד שלי" — עמוד דינמי בפני עצמו (לא נשמר ברשימת העמודים)
+  if (activePageId === 'page-home-feed' && pages.some(p => p && p.id === 'page-rent-main')) activePageId = 'page-rent-main';   // הבית הוא השוק
   const currentPage = pages.find(p => p.id === activePageId); // מחפשים את העמוד ברשימה
 
   // הגנה: אם העמוד מוסתר והמשתמש הוא לא מנהל/עורך, מפנים אותו לעמוד גלוי.
@@ -10655,6 +10657,7 @@ function buildSidebarTabs(savedHTML, pageType) {
 function navigateToPage(pageId) {
   // עמודים שהוסרו מהאתר; התוכן נשאר במסד. אישור העלאות נשאר פתוח למנהל דרך עמוד הניהול
   if (REMOVED_PAGES.includes(pageId) && !(pageId === 'page-requests-main' && isAdmin())) pageId = 'page-home-feed';
+  if (pageId === 'page-home-feed' && pages.some(p => p && p.id === 'page-rent-main')) { pageId = 'page-rent-main'; if (typeof rentUI !== 'undefined') Object.assign(rentUI, { sec: 'all', cat: 'all', open: null, seller: null }); }
   // מחשב: הפורומים נפתחים בחלון צד משמאל, בלי לעזוב את העמוד הנוכחי
   const _desk = !window.matchMedia('(max-width: 768px)').matches;
   // חדשות נפתחות כעמוד מלא (כדי שאפשר להיכנס לכתבה); רק המנוי נשאר בחלון צד
@@ -14149,7 +14152,7 @@ function homeTabsGet() {
 }
 function homeChipsHTML(photos, comics, stories, active, extraCls) {
   active = active || 'foryou';
-  const tabs = ['foryou', ...homeTabsGet()].filter(k => !['feed', 'comics', 'stories', 'partnerships', 'reviews', 'requests', 'photos', 'products', 'store', 'tinder', 'blinddate'].includes(k));
+  const tabs = ['foryou', ...homeTabsGet()].filter(k => !['secondhand', 'communities', 'ai', 'feed', 'comics', 'stories', 'partnerships', 'reviews', 'requests', 'photos', 'products', 'store', 'tinder', 'blinddate'].includes(k));
   if (!tabs.includes(active) && HOME_TABS_ALL[active]) tabs.push(active);
   // מחוץ לעמוד הבית "בשבילך" מחזיר לבית
   const act = k => k === 'foryou' ? (extraCls ? 'goToHomePage()' : '') : HOME_TABS_ALL[k][1];
@@ -14211,8 +14214,6 @@ function homeCategoriesHTML(photos, comics, stories) {
 const SIDE_RAIL_ITEMS = [
   ['home', 'בית', 'goToHomePage()', '<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>', true],
   ['news', 'חדשות', "navigateToPage('page-news-main')", '<path d="M4 5h13v14H6a2 2 0 0 1-2-2z"/><path d="M17 9h3v8a2 2 0 0 1-2 2"/><path d="M8 9h5M8 13h5M8 17h3"/>', false],
-  ['cats', 'קטגוריות', "navigateToPage('page-communities-main')", '<rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/>', true],
-  ['secondhand', 'השוק: יד 2, השכרה ואחסון', "mktGo('all')", '<path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.5"/>', false],
   ['invest', 'תמכו / השקיעו בנו', "investOpen('invest')", '<path d="M12 20.5s-7.5-4.6-9.2-9.3C1.7 8 3.6 4.5 7.1 4.5c2 0 3.4 1.1 4.9 2.9 1.5-1.8 2.9-2.9 4.9-2.9 3.5 0 5.4 3.5 4.3 6.7-1.7 4.7-9.2 9.3-9.2 9.3z"/>', false],
   ['shop', 'העגלה שלי', "cartOpen()", '<path d="M3 4h2l2.4 11.2a1 1 0 0 0 1 .8h9.2a1 1 0 0 0 1-.8L21 8H6.2"/><circle cx="9.5" cy="20" r="1.5"/><circle cx="17.5" cy="20" r="1.5"/>', false],
 ];
@@ -14246,7 +14247,7 @@ function renderSideRail() {
 function sideRailSync() {
   const el = document.getElementById('side-rail'); if (!el) return;
   const id = (typeof activePageId !== 'undefined' && activePageId) || '';
-  const map = { 'page-photos-main': 'photos', 'page-products-main': 'store', 'page-secondhand-main': 'secondhand', 'page-rent-main': 'secondhand', 'page-stats-main': 'stats', 'page-admin-main': 'stats', 'page-home-feed': 'home', 'page-feed-main': 'feed', 'page-communities-main': 'cats', 'page-subscription-main': 'shop', 'page-news-main': 'news' };
+  const map = { 'page-photos-main': 'photos', 'page-products-main': 'store', 'page-secondhand-main': 'home', 'page-rent-main': 'home', 'page-stats-main': 'stats', 'page-admin-main': 'stats', 'page-home-feed': 'home', 'page-feed-main': 'feed', 'page-communities-main': 'cats', 'page-subscription-main': 'shop', 'page-news-main': 'news' };
   el.querySelectorAll('.srail-btn').forEach(b => b.classList.toggle('on', b.dataset.rail === (map[id] || (id ? '' : 'home'))));
 }
 window.sideRailSync = sideRailSync;
@@ -15977,7 +15978,6 @@ function buildUserPageHTML(authorId, authorName) {
   window._upState.market = market;
   window._upState.posts = authorPosts;
   // במחשב פותחים על "נתונים" (קוביות הסטטיסטיקה), במובייל — על הפוסטים
-  setTimeout(() => { if (window.matchMedia('(min-width: 1024px)').matches && document.querySelector('.pf-tab[data-tab="dash"]')) pfTab('dash'); }, 0);
   setTimeout(pfDashRefresh, 1500); setTimeout(pfDashRefresh, 4000);
   window._upState.counts = window._upState.counts || null;
   return `
@@ -15986,21 +15986,13 @@ function buildUserPageHTML(authorId, authorName) {
       <button type="button" class="pf-back" onclick="goBackFromUserPage()">→ חזרה</button>
       <div class="pf-desk">
       <aside class="pf-side"><div id="user-page-head">${profileHeadHTML(window._upState)}${pfSideHTML(window._upState)}</div></aside>
-      <div class="pf-main">
-      <nav class="pf-tabs">
-        <button type="button" class="pf-tab" data-tab="dash" onclick="pfTab('dash')">נתונים</button>
-        <button type="button" class="pf-tab pf-desk-only" data-tab="overview" onclick="pfTab('overview')">סקירה</button>
-        <button type="button" class="pf-tab on" data-tab="posts" onclick="pfTab('posts')">פוסטים <b>${authorPosts.length}</b></button>
-        <button type="button" class="pf-tab" data-tab="gallery" onclick="pfTab('gallery')">גלריה <b>${authorAlbums.length}</b></button>
-        ${market.length ? `<button type="button" class="pf-tab" data-tab="market" onclick="pfTab('market')">יד 2 <b>${market.length}</b></button>` : ''}
-        <button type="button" class="pf-tab" data-tab="about" onclick="pfTab('about')">אודות</button>
-      </nav>
-      <div class="pf-panel" data-panel="dash" hidden>${pfDashHTML(window._upState, authorAlbums, market, authorPosts)}</div>
-      <div class="pf-panel" data-panel="overview" hidden>${pfOverviewHTML(authorAlbums, market, authorPosts)}</div>
-      <div class="pf-panel" data-panel="posts">${(() => { const mine = authorId ? mktSellerItems(authorId, authorName) : []; return mine.length ? `<section class="pf-mkt"><h3>מודעות בשוק</h3>${mktSellerGridHTML(mine, true)}</section>` : ''; })()}${pfGridHTML(authorPosts)}<div class="pf-list-mobile">${postsListHTML('profile', authorPosts, false)}</div></div>
-      <div class="pf-panel" data-panel="gallery" hidden>${profileUploadsHTML(authorAlbums)}</div>
-      ${market.length ? `<div class="pf-panel" data-panel="market" hidden><div class="pf-cards">${market.map(a => pfCardHTML(a, true)).join('')}</div></div>` : ''}
-      <div class="pf-panel" data-panel="about" hidden><div id="user-page-watch">${userWatchHTML(window._upState)}</div></div>
+      <div class="pf-main">${(() => {
+        const mine = authorId ? mktSellerItems(authorId, authorName) : [];
+        pfGridItems = authorPosts.filter(x => x.__repostBy);
+        return (mine.length ? `<section class="pf-mkt"><h3>מודעות בשוק</h3>${mktSellerGridHTML(mine, true)}</section>` : '')
+          + (pfGridItems.length ? `<section class="pf-mkt"><h3>שיתופים</h3><div class="pfg-grid">${pfGridCardsHTML('reposts')}</div></section>` : '')
+          + (!mine.length && !pfGridItems.length ? '<div class="pf-empty">עדיין אין מודעות</div>' : '');
+      })()}
       </div>
       </div>
     </div>
@@ -19402,7 +19394,7 @@ window.setPhotoHashtag = setPhotoHashtag;
 function openMSheet(title, bodyHTML, footHTML) {
   let el = document.getElementById('m-sheet');
   if (!el) { el = document.createElement('div'); el.id = 'm-sheet'; document.body.appendChild(el); }
-  el.classList.remove('adv-sheet');
+  el.classList.remove('adv-sheet', 'side-sheet');
   el.innerHTML = `
     <div class="ms-backdrop" onclick="closeMSheet()"></div>
     <div class="ms-panel" role="dialog" aria-label="${escHtml(title)}">
@@ -25683,8 +25675,8 @@ function buildSiteFooterHTML() {
     link('page-ideas-main', 'רעיונות'), link('page-news-main', 'חדשות'), link('page-questions-main', 'שאלות גולשים')
   ].join('');
   const communityLinks = [
-    link('page-communities-main', 'קהילה'), link('page-offers-main', 'הצעות'),
-    link('page-rent-main', 'השוק'),
+    link('page-offers-main', 'הצעות'),
+    
     link('page-subscription-main', 'מנוי')
   ].join('');
   const social = Object.keys(SITE_FOOTER_SOCIAL).filter(k => SITE_FOOTER_SOCIAL[k]).map(k => {
@@ -25905,7 +25897,7 @@ function toggleSiteTheme() {
 }
 // מצב תצוגה: בהיר / כהה / לפי המכשיר (מתעדכן לבד כשהמכשיר עובר בין בהיר לכהה)
 function setSiteTheme(mode) {
-  if (!['light', 'dark', 'system'].includes(mode)) mode = 'light';
+  mode = 'light';   // האתר במצב בהיר בלבד
   document.documentElement.dataset.themeMode = mode;
   try { localStorage.setItem('site_theme', mode); } catch (e) {}
   applySiteTheme();
@@ -25965,7 +25957,7 @@ function mobileMenuHTML() {
   const nav = id => `navigateToPage('${id}')`;
   const pageAct = kind => { const p = (typeof commFindPage === 'function') ? commFindPage(kind) : null; return p ? nav(p.id) : ''; };
   const tiles = [
-    ['secondhand', 'השוק', "mktGo('all')"],
+    
     ['forums', 'פורומים', pageAct('forums')], ['friends', 'חברים', pageAct('friends')], ['news', 'חדשות', nav('page-news-main')],
     ['offers', 'הצעות', nav('page-offers-main')], ['saved', 'שמורים', 'openSavedModal()'],
     ['likes', 'הלייקים שלי', 'openLikesDrawer()'], ['history', 'היסטוריה', 'openHistoryDrawer()'], ['msgs', 'הודעות', 'openMessages()'], ['shop', 'שדרוגים', nav('page-subscription-main')]
@@ -26021,7 +26013,6 @@ function mobileMenuHTML() {
         <button type="button" onclick="mnavGo(&quot;openLegal('a11y')&quot;)">הצהרת נגישות</button>
       </details>
       <details class="mnav-acc"><summary><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>הגדרות ופרטיות</summary>
-        <button type="button" onclick="toggleSiteTheme(); renderMobileMenu()">${dark ? 'מעבר למצב בהיר' : 'מעבר למצב כהה'}</button>
         <button type="button" onclick="mnavGo(&quot;openLegal('privacy')&quot;)">מדיניות פרטיות</button>
         <button type="button" onclick="mnavGo(&quot;openLegal('terms')&quot;)">תנאי שימוש</button>
         <button type="button" onclick="mnavGo(&quot;openLegal('mydata')&quot;)">המידע שלי</button>
@@ -29309,7 +29300,7 @@ Object.assign(window, { adsAdvertiseOpen, adsPack, adsPrev, adsPickImg, adsSubmi
 function mTabsActive() {
   const mc = typeof mainContent !== 'undefined' && mainContent;
   const id = typeof activePageId !== 'undefined' ? activePageId : '';
-  const map = { 'page-ai': 'ai', 'page-secondhand-main': 'secondhand', 'page-rent-main': 'secondhand', 'page-forums-main': 'forums', 'page-news-main': 'news', 'page-communities-main': 'communities', 'page-stories-main': 'comics', 'page-stories-text': 'stories', 'page-feed-main': 'feed' };
+  const map = { 'page-ai': 'ai', 'page-secondhand-main': 'secondhand', 'page-rent-main': 'foryou', 'page-forums-main': 'forums', 'page-news-main': 'news', 'page-communities-main': 'communities', 'page-stories-main': 'comics', 'page-stories-text': 'stories', 'page-feed-main': 'feed' };
   if (map[id]) return map[id];
   if (mc && mc.querySelector('.pfeed-page')) return 'feed';
   if (mc && mc.querySelector('.photos-page[data-section="secondhand"], .rent-page')) return 'secondhand';
@@ -29405,13 +29396,10 @@ const SLASH_CMDS = [
   { g: 'go', k: 'saved', t: 'שמורים', d: 'מה ששמרתי לאחר כך', a: 'saved bookmarks שמירה', run: () => { openSavedModal(); }, i: '<path d="M6 3h12v18l-6-4.5L6 21z"/>' },
   { g: 'go', k: 'history', t: 'היסטוריה', d: 'מה שצפיתי בו לאחרונה', a: 'history צפיות', run: () => { openHistoryDrawer(); }, i: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>' },
   { g: 'go', k: 'offers', t: 'הצעות', d: 'הצעות מחיר ועסקאות', a: 'offers deals עסקאות', run: () => { openOffersPanel(); }, i: '<path d="M20 12 12 20l-8-8V4h8z"/><circle cx="8.5" cy="8.5" r="1.3"/>' },
-  { g: 'go', k: 'theme', t: 'מצב כהה / בהיר', d: 'החלפת צבעי האתר', a: 'theme dark light כהה בהיר', run: () => { toggleSiteTheme(); }, i: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>' },
   { g: 'go', k: 'gophotos', t: 'תמונות גולשים', d: 'מעבר לגלריות', a: 'photos gallery', run: () => { homeGo('photos'); }, i: '<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="m21 16-5-5-9 9"/>' },
   { g: 'go', k: 'goproducts', t: 'השוק', d: 'מעבר לשוק', a: 'products shop חנות', run: () => { mktGo('all'); }, i: '<path d="M5 8h14l-1.2 11.1a1 1 0 0 1-1 .9H7.2a1 1 0 0 1-1-.9z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/>' },
   { g: 'go', k: 'goforums', t: 'פורומים', d: 'מעבר לפורומים', a: 'forums', run: () => { navigateToPage('page-forums-main'); }, i: '<path d="M20.5 11.5a8 8 0 0 1-11.7 7.1L4 20l1.3-4.4A8 8 0 1 1 20.5 11.5z"/>' },
   { g: 'go', k: 'gonews', t: 'חדשות', d: 'מעבר לחדשות', a: 'news', run: () => { navigateToPage('page-news-main'); }, i: '<path d="M4 5h13v14H6a2 2 0 0 1-2-2z"/><path d="M17 9h3v8a2 2 0 0 1-2 2"/>' },
-  { g: 'go', k: 'gocomm', t: 'קהילות', d: 'מעבר לקהילות', a: 'communities', run: () => { navigateToPage('page-communities-main'); }, i: '<circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20a6 6 0 0 1 12 0M14 20a5 5 0 0 1 8-3.5"/>' },
-  { g: 'go', k: 'goai', t: 'AI ותוכנה', d: 'הורדה, MCP וצ\'אט מודלים', a: 'ai mcp download מודל צאט הורדה', run: () => { navigateToPage('page-ai'); }, i: '<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6"/>' },
 ];
 function slashStart(k, text) {
   text = String(text || '').trim();
@@ -29621,7 +29609,6 @@ const ASK_GO = [
   [/תמונות|גלרי/, 'לתמונות גולשים', () => homeGo('photos')],
   [/פורו[םמ]|דיונ/, 'לפורומים', () => navigateToPage('page-forums-main')],
   [/חדשות/, 'לחדשות', () => navigateToPage('page-news-main')],
-  [/קהיל/, 'לקהילות', () => navigateToPage('page-communities-main')],
   [/הודע|צאט|צ'אט|שיחות/, 'להודעות', () => openMessages()],
   [/לייק|אהבתי/, 'ללייקים שלך', () => openLikesDrawer()],
   [/שמור/, 'לשמורים', () => openSavedModal()],
@@ -29629,7 +29616,6 @@ const ASK_GO = [
   [/הצעות|עסקאות|הצעת מחיר/, 'להצעות', () => openOffersPanel()],
   [/פרופיל|חשבון|התחבר/, 'לפרופיל', () => { const b = document.getElementById('manager-btn'); if (b) b.click(); }],
   [/מנהל|ניהול/, 'לעמוד המנהל', () => navigateToPage('page-admin-main')],
-  [/\bai\b|בינה מלאכותית|מודל|mcp|הורדה|תוכנה|אפליקציה/i, 'לעמוד AI ותוכנה', () => navigateToPage('page-ai')],
   [/בית|ראשי/, 'לעמוד הבית', () => goToHomePage()]
 ];
 const ASK_UP = [
@@ -29645,7 +29631,6 @@ const ASK_FAQ = [
   [/מי עשה לייק|מי אהב|לייק/, 'לחיצה על הלב נותנת לייק. לחיצה ארוכה על הלב מראה מי עשה לייק.', ['הלייקים שלי', () => openLikesDrawer()]],
   [/שמיר|לשמור|שמורים/, 'לחיצה על הסימנייה שומרת פריט לאחר כך. אפשר לסדר שמורים בתיקיות.', ['השמורים שלי', () => openSavedModal()]],
   [/18|טשטוש|מטושטש/, 'התמונות מטושטשות עד שמאשרים גיל 18+ בכפתור שבראש המסך. האישור תקף לביקור הנוכחי.', null],
-  [/כהה|בהיר|צבע/, 'מעבר בין מצב כהה לבהיר — באייקון השמש בכותרת, או כאן:', ['החלפת מצב', () => toggleSiteTheme()]],
   [/עוקב|לעקוב|מעקב/, 'לעקוב אחרי יוצר: "עקוב" בפרופיל שלו או בתפריט ⋯ של הפריט. מה שהם מפרסמים מופיע ב"במעקב".', null],
   [/הודעה פרטית|לשלוח הודעה|לכתוב ל/, 'הודעה פרטית: בתפריט ⋯ של פריט ← "הודעה", או מחלון ההודעות.', ['ההודעות', () => openMessages()]],
   [/סלש|\/|קיצור/, 'בשורת "מה בא לך לשתף?" מקלידים / ונפתח תפריט של העלאה מהירה וקיצורי דרך.', null],
@@ -29690,7 +29675,7 @@ function askHistoryClear() {
 const ASK_QUICK = [
   ['העלאת תמונה', () => slashStart('photos')], ['הודעות', () => openMessages()],
   ['שמורים', () => openSavedModal()], ['לייקים', () => openLikesDrawer()], ['חיפוש', () => openSiteSearch()],
-  ['השוק', () => mktGo('all')], ['מצב כהה/בהיר', () => toggleSiteTheme()]
+  ['השוק', () => mktGo('all')]
 ];
 function askQuick(i) {
   const q = ASK_QUICK[i]; if (!q) return;
@@ -31115,10 +31100,9 @@ function rentViewHTML() {
     ? `<details class="rn-pubmenu"><summary class="rn-pub">+ פרסום מודעה</summary><div>${MKT_SECS.slice(1).map(x => `<button type="button" onclick="mktPublish('${x.id}')">${x.ic} ${x.name}</button>`).join('')}</div></details>`
     : `<button type="button" class="rn-pub" onclick="mktPublish('${rentUI.sec}')">+ ${rentUI.sec === 'used' ? 'פרסום מוצר ליד 2' : rentUI.sec === 'store' ? 'פרסום שטח לאחסון' : 'פרסום ציוד להשכרה'}</button>`;
   return `<header class="rn-head">
-      <div><h1>השוק 🛒</h1><p>${escHtml(sec.sub || 'יד 2, השכרת ציוד ושטחי אחסון של גולשים — הכול במקום אחד.')}</p></div>
       ${pubBtn}
     </header>
-    <nav class="rn-secs">${MKT_SECS.map(x => `<button type="button" class="rn-sec${rentUI.sec === x.id ? ' on' : ''}" onclick="mktGo('${x.id}')"><span>${x.ic}</span>${x.name}<small>${secCount(x.id)}</small></button>`).join('')}</nav>
+    <nav class="rn-secs">${MKT_SECS.slice(0, 1).map(x => `<button type="button" class="rn-sec${rentUI.sec === x.id ? ' on' : ''}" onclick="mktGo('${x.id}')"><span>${x.ic}</span>${x.name}<small>${secCount(x.id)}</small></button>`).join('')}</nav>
     <div class="rn-bar">
       <input type="search" class="rn-q" placeholder="${rentUI.sec === 'store' ? 'איפה לאחסן? למשל: מחסן בתל אביב' : rentUI.sec === 'used' ? 'מה מחפשים? למשל: ספה, מקרר, אופניים' : 'מה צריך? למשל: מדפסת תלת מימד בתל אביב'}" value="${escHtml(rentUI.q)}" oninput="rentSet('q', this.value)">
       <select class="rn-sel" onchange="rentSet('city', this.value)" aria-label="עיר"><option value="all">כל הארץ</option>${cities.map(c => `<option${rentUI.city === c ? ' selected' : ''}>${escHtml(c)}</option>`).join('')}</select>
@@ -31658,6 +31642,7 @@ const invMoney = n => '₪' + Math.round(n).toLocaleString('he-IL');
 function investOpen(tab) {
   if (tab) invState.tab = tab;
   openMSheet('תמכו או השקיעו בנו', `<div class="inv" id="inv-box">${investBodyHTML()}</div>`, `<button type="button" class="ms-btn inv-go" onclick="investSend(this)">${invState.tab === 'invest' ? 'שליחת הבעת עניין' : 'אני רוצה לתרום'}</button>`);
+  const sh = document.getElementById('m-sheet'); if (sh) sh.classList.add('side-sheet');   // נפתח בצד ימין, כמו חלון השיחות
 }
 function investBodyHTML() {
   const v = INVEST_CFG.valuation, pct = invState.pct, amt = v * pct / 100;

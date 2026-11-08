@@ -33,15 +33,15 @@
   <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://newsite-f76e2-default-rtdb.firebaseio.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="modulepreload" href="./script.min.js?v=1974">
+  <link rel="modulepreload" href="./script.min.js?v=1979">
   <!-- ספריית interact.js לגרירה ושינוי גודל (נטענת בדחייה למניעת עיכוב) -->
   <script defer src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
   <!-- ספריית localforage לשמירת תמונות -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
   <!-- קישור לקובץ העיצוב החיצוני (עם פרמטר למניעת שמירה במטמון) -->
-  <link rel="stylesheet" href="./style.min.css?v=2138">
-  <link rel="stylesheet" id="mono-css" href="./mono.min.css?v=74">
-  <link rel="stylesheet" id="dark-css" data-href="./dark.min.css?v=491" media="not all">
+  <link rel="stylesheet" href="./style.min.css?v=2143">
+  <link rel="stylesheet" id="mono-css" href="./mono.min.css?v=79">
+  <link rel="stylesheet" id="dark-css" data-href="./dark.min.css?v=496" media="not all">
   <script>
     // קישור ישיר לפריט (#p/…, #s/…, #n/…) — מסמנים מיד, כדי שהכתובת לא תימחק לפני שהפריט נפתח
     window.__deepLinkOpening = /^#[psn]\//.test(location.hash || '');
@@ -50,8 +50,8 @@
     // מצב בהיר/כהה — נקבע לפני שהדף מצויר כדי שלא יהבהב (בחירה שמורה, אחרת בהיר)
     (function () {
       var t = null;
-      try { t = localStorage.getItem('site_theme'); } catch (e) {}
-      if (!t) t = 'light';   // ברירת מחדל: מצב בהיר (מי שבחר כהה — הבחירה שלו נשמרת)
+      t = 'light';   // האתר במצב בהיר בלבד
+      try { localStorage.removeItem('site_theme'); } catch (e) {}
       document.documentElement.dataset.themeMode = t;
       if (t === 'system') t = window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';   // "לפי המכשיר"
       if (t === 'dark') { document.documentElement.classList.add('theme-dark'); var dc = document.getElementById('dark-css'); if (dc) { dc.href = dc.dataset.href; dc.media = 'all'; } }
@@ -1249,7 +1249,7 @@ html.theme-dark .pl-bar { background: #2a2f37; }
     }
     try { if (localStorage.getItem('mtab_hidden') === '1') document.documentElement.classList.add('mtab-hidden'); } catch (e) {}
   </script>
-  <script type="module" src="./script.min.js?v=1974"></script>
+  <script type="module" src="./script.min.js?v=1979"></script>
   <script defer src="./a11y.js?v=1"></script>
 </body>
 </html>
