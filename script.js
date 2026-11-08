@@ -15997,7 +15997,7 @@ function buildUserPageHTML(authorId, authorName) {
       </nav>
       <div class="pf-panel" data-panel="dash" hidden>${pfDashHTML(window._upState, authorAlbums, market, authorPosts)}</div>
       <div class="pf-panel" data-panel="overview" hidden>${pfOverviewHTML(authorAlbums, market, authorPosts)}</div>
-      <div class="pf-panel" data-panel="posts">${pfGridHTML(authorPosts)}<div class="pf-list-mobile">${postsListHTML('profile', authorPosts, false)}</div></div>
+      <div class="pf-panel" data-panel="posts">${(() => { const mine = authorId ? mktSellerItems(authorId, authorName) : []; return mine.length ? `<section class="pf-mkt"><h3>מודעות בשוק</h3>${mktSellerGridHTML(mine, true)}</section>` : ''; })()}${pfGridHTML(authorPosts)}<div class="pf-list-mobile">${postsListHTML('profile', authorPosts, false)}</div></div>
       <div class="pf-panel" data-panel="gallery" hidden>${profileUploadsHTML(authorAlbums)}</div>
       ${market.length ? `<div class="pf-panel" data-panel="market" hidden><div class="pf-cards">${market.map(a => pfCardHTML(a, true)).join('')}</div></div>` : ''}
       <div class="pf-panel" data-panel="about" hidden><div id="user-page-watch">${userWatchHTML(window._upState)}</div></div>
@@ -30907,7 +30907,7 @@ function usedAll() {
 let mktHidden = {};   // מודעות דוגמה שהמנהל הסיר (website/market_hidden)
 function mktAll() { return rentAll().concat(usedAll()).filter(r => !mktHidden[r.id]); }
 function mktGo(sec) {
-  rentUI.sec = sec || 'all'; rentUI.open = null; rentUI.cat = 'all';
+  rentUI.sec = sec || 'all'; rentUI.open = null; rentUI.seller = null; rentUI.cat = 'all';
   Object.assign(rentUI, { offer: 'all', owner: 'all', min: null, max: null });
   if (typeof activePageId !== 'undefined' && activePageId === 'page-rent-main' && mainContent && mainContent.querySelector('.rent-page')) { rentRender(); try { window.scrollTo({ top: 0 }); } catch (e) {} return; }
   navigateToPage('page-rent-main');
@@ -31209,7 +31209,7 @@ function rentRender(gridOnly) {
   const open = rentUI.open && rentFind(rentUI.open);
   if (gridOnly && !open) { const g = el.querySelector('.rn-grid'); if (g) g.innerHTML = rentGridHTML(); return; }
   if (open && mainContent) { const stTop = mainContent.querySelector(':scope > .site-top'); if (stTop) stTop.remove(); }
-  el.innerHTML = open ? rentDetailHTML(open) : rentViewHTML();
+  el.innerHTML = open ? rentDetailHTML(open) : rentUI.seller ? rentSellerHTML(rentUI.seller) : rentViewHTML();
   if (open) {
     rentStickFix(); requestAnimationFrame(rentStickFix); setTimeout(rentStickFix, 120);
     rentFitPage(); requestAnimationFrame(rentFitPage); setTimeout(rentFitPage, 120); setTimeout(rentFitPage, 700);
@@ -31254,11 +31254,37 @@ function rentOpen(id) {
   // מוצר שהתמונות המלאות שלו נשמרות בנפרד: מציגים את הקטנה מיד ומחליפים כשהמלאה מגיעה
   if (r.shId && r.raw && r.raw._media && !MEDIA[r.shId]) mediaEnsure(r.shId).then(() => { if (rentUI.open === id) rentRender(); });
 }
-function rentBack() { if (history.state && history.state.rent) { history.back(); return; } rentUI.open = null; rentRender(); }
+function rentBack() { if (history.state && (history.state.rent || history.state.rentSeller)) { history.back(); return; } rentUI.open = null; rentUI.seller = null; rentRender(); }
+// כל המודעות של מוכר אחד (גם מוכר דוגמה בלי חשבון — לפי השם)
+function mktSellerItems(uid, name) { return mktAll().filter(r => uid ? r.uid === uid : (!r.uid && r.owner === name)); }
+function mktSellerGridHTML(list, anywhere) {
+  return `<div class="mk-sg-grid mk-grid">${list.map(x => anywhere ? rentMiniHTML(x).replace(/onclick="rentOpen\(/, 'onclick="mktOpenItem(') : rentMiniHTML(x)).join('')}</div>`;
+}
+function rentSellerHTML(sl) {
+  const list = mktSellerItems(sl.uid, sl.name);
+  const cities = [...new Set(list.map(r => r.city).filter(Boolean))];
+  return `<header class="mk-head"><button type="button" class="rn-back" onclick="rentBack()" aria-label="חזרה">→</button>
+      <div class="mk-seller">${authorAvHTML({ author: sl.name, uid: sl.uid || '' })}<span class="mk-seller-tx"><b>${escHtml(sl.name)}</b><small>${list.length === 1 ? 'מודעה אחת' : list.length + ' מודעות'}</small></span></div>
+      ${cities.length ? `<span class="mk-city">${escHtml(cities.join(' · '))}</span>` : ''}
+      ${sl.uid ? `<button type="button" class="mk-city mk-seller-pf" onclick="openUserPage('${artEsc(sl.uid)}', '${artEsc(sl.name)}')">לפרופיל</button>` : ''}
+    </header>
+    ${list.length ? mktSellerGridHTML(list) : '<div class="rn-empty">אין מודעות פעילות.</div>'}`;
+}
+function rentOpenSeller(uid, name) {
+  rentUI.seller = { uid: uid || '', name: name || '' }; rentUI.open = null;
+  if (!_rentPopping) { try { history.pushState({ rentSeller: rentUI.seller }, ''); } catch (e) {} }
+  if (typeof mainContent !== 'undefined' && mainContent) mainContent.scrollTop = 0;
+  try { window.scrollTo({ top: 0 }); } catch (e) {}
+  rentRender();
+}
+window.rentOpenSeller = rentOpenSeller;
 window.addEventListener('popstate', (e) => {
   if (!mainContent || !mainContent.querySelector('.rent-page')) return;
   _rentPopping = true;
-  try { const id = e.state && e.state.rent; if (id) rentOpen(id); else { rentUI.open = null; rentRender(); } } finally { _rentPopping = false; }
+  try {
+    const id = e.state && e.state.rent, sl = e.state && e.state.rentSeller;
+    if (id) rentOpen(id); else if (sl) rentOpenSeller(sl.uid, sl.name); else { rentUI.open = null; rentUI.seller = null; rentRender(); }
+  } finally { _rentPopping = false; }
 });
 // סמל הפעולה הראשית: כרטיס אשראי מלא עם חץ מעוקל מעליו
 const RENT_PAY_ICON = '<g fill="currentColor" stroke="none"><path d="M6.6 8.2C9 4.7 13.3 3.6 17.3 5l.6-2.2 3.6 4.3-5.3 1.7.6-2.1C13.3 5.7 9.7 6.1 6.6 8.2z"/><g transform="rotate(-26 12 16)"><path d="M4.5 10.5h15A1.5 1.5 0 0 1 21 12v1H3v-1a1.5 1.5 0 0 1 1.5-1.5z"/><path fill-rule="evenodd" d="M3 14.8h18v6a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 20.8zM5 18.3v.9h5v-.9zM5 20v.9h3.5V20zM14.8 17.8a1.3 1.3 0 1 0 2.6 0 1.3 1.3 0 1 0-2.6 0z"/></g></g>';
@@ -31291,7 +31317,7 @@ function rentDetailHTML(r) {
   const when = r.t ? new Date(r.t).toLocaleDateString('he-IL') : '';
   const who = `${authorAvHTML({ author: owner, uid: r.uid || '' })}<span class="mk-seller-tx"><b>${escHtml(owner)}</b>${when ? `<small>${escHtml(when)}</small>` : ''}</span>`;
   return `<header class="mk-head"><button type="button" class="rn-back" onclick="rentBack()" aria-label="חזרה">→</button>
-      ${r.uid ? `<button type="button" class="mk-seller" onclick="openUserPage('${artEsc(r.uid)}', '${artEsc(owner)}')">${who}</button>` : `<div class="mk-seller">${who}</div>`}
+      <button type="button" class="mk-seller" onclick="rentOpenSeller('${artEsc(r.uid || '')}', '${artEsc(owner)}')">${who}</button>
       ${r.city ? `<span class="mk-city">${escHtml(r.city)}</span>` : ''}
     </header>
     <div class="mp mk-pg">
