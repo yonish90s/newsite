@@ -7983,6 +7983,7 @@ function qpCurrentSection() {
 }
 
 function openQuickPublish(communityId, itemType) {
+  if (uploadBlockedNow()) return;
   // פרסום מהיר פתוח לכולם — גם למי שלא נרשם
   // הצ'אט בכרטיס של עמוד הבית משתמש באותם מזהים — סוגרים אותו לפני פתיחת החלון
   if (document.querySelector('.qu-chat-mode') && typeof quickUploadCloseChat === 'function') quickUploadCloseChat();
@@ -8193,6 +8194,7 @@ function qpAddImage() {
 window.qpAddImage = qpAddImage;
 
 async function qpPublish() {
+  if (uploadBlockedNow(true)) { qpBubble('bot', 'כבר העלית מודעה היום. אפשר להעלות מודעה אחת ביום, אז נסו שוב מחר.'); return; }
   qpBubble('bot', '⏳ מפרסם את התוכן...');
   const user = auth.currentUser;
   let nickname = 'משתמש', email = '', telegram = '';
@@ -8242,7 +8244,7 @@ async function qpPublish() {
       // פרסום לתוך קהילה: נשמר תחת website/communities/{id}/items
       album.approved = true;
       await set(ref(db, `website/communities/${qpData.communityId}/items/${album.id}`), album);
-      qpBubble('bot', `✅ ${isStory ? 'הסיפור' : 'התוכן'} פורסם/ה בקהילה בהצלחה!`);
+      uploadMarkToday(); qpBubble('bot', `✅ ${isStory ? 'הסיפור' : 'התוכן'} פורסם/ה בקהילה בהצלחה!`);
       const cid = qpData.communityId;
       setTimeout(() => {
         const m = document.getElementById('quick-publish-modal'); if (m) m.style.display = 'none';
@@ -8265,7 +8267,7 @@ async function qpPublish() {
       }
       if (typeof saveToStorage === 'function') saveToStorage();
       if (!isAdminNow && typeof pushPendingSubmission === 'function') pushPendingSubmission(album);
-      qpBubble('bot', '✅ המודעה פורסמה בהצלחה!' + (isAdminNow ? '' : '<br>ממתינה לאישור מנהל ותופיע בקרוב.'));
+      uploadMarkToday(); qpBubble('bot', '✅ המודעה פורסמה בהצלחה!' + (isAdminNow ? '' : '<br>ממתינה לאישור מנהל ותופיע בקרוב.'));
       setTimeout(() => { if (typeof renderPage === 'function') renderPage(); }, 2200);
     } else {
       // תמונות או מוצרי יד שניה — מתפרסם לעמוד הנוכחי לפי הסקשן
@@ -8281,7 +8283,7 @@ async function qpPublish() {
         shPage.content = shPage.content.replace(/data-photos-json="[^"]*"/, `data-photos-json="${encodeURIComponent(JSON.stringify(list))}"`);
         if (typeof saveToStorage === 'function') saveToStorage();
         if (!isAdminNow && typeof pushPendingSubmission === 'function') pushPendingSubmission(album);
-        qpBubble('bot', '✅ המוצר פורסם בהצלחה!' + (isAdminNow ? '' : '<br>ממתין לאישור מנהל ויופיע בקרוב.'));
+        uploadMarkToday(); qpBubble('bot', '✅ המוצר פורסם בהצלחה!' + (isAdminNow ? '' : '<br>ממתין לאישור מנהל ויופיע בקרוב.'));
         setTimeout(() => { const md = document.getElementById('quick-publish-modal'); if (md) md.style.display = 'none'; mktGo('all'); }, 2000);
         return;
       }
@@ -8291,7 +8293,7 @@ async function qpPublish() {
       if (typeof saveCurrentPageContent === 'function') saveCurrentPageContent();
       if (!isAdminNow && typeof pushPendingSubmission === 'function') pushPendingSubmission(album);
       const what = sec === 'secondhand' ? 'המוצר פורסם' : 'המודעה פורסמה';
-      qpBubble('bot', `✅ ${what} בהצלחה!` + (isAdminNow ? '' : '<br>ממתין לאישור מנהל ויופיע בקרוב.'));
+      uploadMarkToday(); qpBubble('bot', `✅ ${what} בהצלחה!` + (isAdminNow ? '' : '<br>ממתין לאישור מנהל ויופיע בקרוב.'));
       setTimeout(() => {
         const m = document.getElementById('quick-publish-modal'); if (m) m.style.display = 'none';
         if (sec === 'secondhand') mktGo('all');
@@ -30940,12 +30942,27 @@ function usedAll() {
   try {
     const pg = (typeof pages !== 'undefined' && Array.isArray(pages)) ? pages.find(x => x && x.id === 'page-secondhand-main') : null;
     const m = pg && (pg.content || '').match(/data-photos-json="([^"]*)"/);
-    raw = (m ? (JSON.parse(decodeURIComponent(m[1])) || []) : []).filter(x => x && x.id && x.title && x.approved !== false && !x.adminOnly); } catch (e) {}
+    raw = (m ? (JSON.parse(decodeURIComponent(m[1])) || []) : []).filter(x => x && x.id && x.title && x.approved !== false && !x.adminOnly && !mktExpired(x.createdAt)); } catch (e) {}
   const real = raw.map(x => ({ id: 'sh_' + x.id, shId: x.id, kind: 'used', offer: x.offerType || x.category || 'מכירה', title: x.title, price: parseFloat(String(x.price || '').replace(/[^\d.]/g, '')) || 0, priceTxt: x.price || '',
     unitTxt: x.priceUnit || '', city: x.region || '', owner: x.author || '', uid: x.authorId || '', t: Number(x.createdAt) || 0, img: x.image || (Array.isArray(x.images) && x.images[0]) || '',
     raw: x, images: (Array.isArray(x.images) ? x.images : []).filter(Boolean), desc: String(x.summary || x.body || '').trim(),
     specs: [x.loanPeriod ? 'תקופת השאלה: ' + x.loanPeriod : ''].concat(Array.isArray(x.loanTerms) ? x.loanTerms.filter(v => typeof v === 'string') : []).filter(Boolean).slice(0, 8) }));
   return real.concat(real.length < 6 ? USED_DEMO : []);
+}
+// מודעה של גולש מוסרת אחרי חודש: נעלמת מיד לכולם, ונמחקת לגמרי כשהמנהל נכנס לאתר
+const MKT_TTL = 30 * 864e5;
+const mktExpired = t => Number(t) > 1e12 && Date.now() - Number(t) > MKT_TTL;
+let mktPurged = false;
+function mktPurgeExpired() {
+  if (mktPurged || !(typeof isAdmin === 'function' && isAdmin()) || rentData === null || typeof pages === 'undefined' || !Array.isArray(pages)) return;
+  mktPurged = true;
+  try {
+    const pg = pages.find(x => x && x.id === 'page-secondhand-main');
+    const m = pg && (pg.content || '').match(/data-photos-json="([^"]*)"/);
+    const old = (m ? (JSON.parse(decodeURIComponent(m[1])) || []) : []).filter(x => x && x.id && mktExpired(x.createdAt));
+    old.forEach(x => { removeItemFromStoredPages(x.id); set(ref(db, `website/media/${x.id}`), null).catch(() => {}); });
+    (rentData || []).filter(r => mktExpired(r.t)).forEach(r => set(ref(db, `website/rentals/${r.id}`), null).catch(() => {}));
+  } catch (e) {}
 }
 let mktHidden = {};   // מודעות דוגמה שהמנהל הסיר (website/market_hidden)
 function mktAll() { return rentAll().concat(usedAll()).filter(r => !mktHidden[r.id]); }
@@ -30961,6 +30978,24 @@ function mktOpenUsed(shId) {
   try { navigateToPage('page-secondhand-main'); } finally { window.__shDirect = false; }
   setTimeout(() => { if (typeof photoOpenDetail === 'function') photoOpenDetail(shId); }, 80);
 }
+// מגבלת העלאה: מודעה אחת ביום לכל משתמש (המנהל פטור). נשמר בדפדפן, ואצל משתמש מחובר גם בחשבון
+const uploadToday = () => new Date().toLocaleDateString('en-CA');
+let uploadDayDB = '';
+function uploadBlockedNow(quiet) {
+  if (typeof isAdmin === 'function' && isAdmin()) return false;
+  let local = ''; try { local = localStorage.getItem('bw_upload_day') || ''; } catch (e) {}
+  if (local !== uploadToday() && uploadDayDB !== uploadToday()) return false;
+  if (!quiet) glassBanner({ title: 'כבר העלית מודעה היום', sub: 'אפשר להעלות מודעה אחת ביום. נסו שוב מחר.', icon: 'del', ms: 2600 });
+  return true;
+}
+function uploadMarkToday() {
+  if (typeof isAdmin === 'function' && isAdmin()) return;
+  const d = uploadToday(), u = auth.currentUser;
+  try { localStorage.setItem('bw_upload_day', d); } catch (e) {}
+  uploadDayDB = d;
+  if (u) set(ref(db, `website/upload_day/${u.uid}`), d).catch(() => {});
+}
+try { onAuthStateChanged(auth, async u => { uploadDayDB = ''; if (!u) return; try { uploadDayDB = (await get(ref(db, `website/upload_day/${u.uid}`))).val() || ''; } catch (e) {} }); } catch (e) {}
 function mktPublish(sec) {
   // לשונית העלאה: נפתח רק חלון השיחה, והעמוד מאחוריו נשאר כמו שהוא
   if (sec === 'used') { window.__qpSection = 'secondhand'; try { openQuickPublish(); } finally { window.__qpSection = ''; } return; }
@@ -31032,14 +31067,15 @@ function rentSubscribe() {
     rentUnsub = onValue(ref(db, 'website/rentals'), snap => {
       const v = snap.val() || {};
       rentData = Object.entries(v).map(([id, r]) => Object.assign({ id }, r)).filter(r => r && r.title && r.active !== false);
+      mktPurgeExpired();
       rentRender();
     }, () => { rentData = []; rentRender(); });
     onValue(ref(db, 'website/market_hidden'), snap => { mktHidden = snap.val() || {}; rentRender(); }, () => {});
-    onAuthStateChanged(auth, () => { if (!rentUI.open) rentRender(); });   // המנהל רואה את האיקס אחרי ההתחברות
+    onAuthStateChanged(auth, () => { mktPurgeExpired(); if (!rentUI.open) rentRender(); });   // המנהל רואה את האיקס אחרי ההתחברות
   } catch (e) { rentData = []; }
 }
 function rentAll() {
-  const real = rentData || [];
+  const real = (rentData || []).filter(r => !mktExpired(r.t));
   const demo = RENT_DEMO.filter(d => !real.some(r => r.cat === d.cat));
   return real.concat(demo);
 }
@@ -31712,6 +31748,7 @@ let rentForm = { img: '' };
 function rentPublishOpen(preCat) {
   const u = auth.currentUser;
   if (!u || u.isAnonymous) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); glassBanner({ title: 'כמעט שם', sub: 'התחברו כדי לפרסם ציוד להשכרה', icon: 'msg' }); return; }
+  if (uploadBlockedNow()) return;
   rentForm = { img: '' };
   const st = preCat === 'storage';
   openMSheet(st ? 'פרסום שטח לאחסון' : 'פרסום ציוד להשכרה', `<div class="rn-form">
@@ -31747,6 +31784,7 @@ async function rentPublish(btn) {
   btn.disabled = true; btn.textContent = 'מפרסם…';
   try {
     await set(push(ref(db, 'website/rentals')), rec);
+    uploadMarkToday();
     closeMSheet(); rentUI.cat = rec.cat; rentRender();
     if (typeof trackEvent === 'function') trackEvent('rent_publish');
     glassBanner({ title: 'הציוד פורסם להשכרה', sub: rec.title, icon: 'ok', ms: 2400 });
