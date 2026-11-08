@@ -31070,7 +31070,7 @@ function rentHoverHTML(x) {
   const saved = x.shId ? typeof photoIsSavedLocal === 'function' && photoIsSavedLocal(x.shId) : rentMarked('save', x.id);
   const liked = x.shId ? typeof photoIsLikedLocal === 'function' && photoIsLikedLocal(x.shId) : rentMarked('like', x.id);
   const b = (label, d, act, on, attr) => `<span role="button" tabindex="0" class="${on ? 'on' : ''}" aria-label="${label}" title="${label}"${attr || ''} onclick="${stop}${act}">${ic(d)}</span>`;
-  return `<span class="mk-sg-hov"><b>${escHtml(x.title)}</b><span class="mk-sg-hov-btns">
+  return `<span class="mk-sg-hov"><span class="mk-sg-hov-btns">
     ${b('תגובות', 'M4 5h16v11H9l-5 4z', `rentOpenComments('${id}')`)}
     ${b('שמירה', 'M6 4h12v17l-6-4.5L6 21z', sh ? `photoToggleSave('${sh}')` : `rentMark(this, 'save', '${id}')`, saved, sh ? ` data-save="${escHtml(x.shId)}"` : '')}
     ${b('אהבתי', 'M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z', sh ? `photoToggleLike('${sh}')` : `rentMark(this, 'like', '${id}')`, liked, sh ? ` data-like="${escHtml(x.shId)}"` : '')}
@@ -31308,6 +31308,7 @@ function rentDetailHTML(r) {
         <h2 class="mk-title">${escHtml(r.title)}</h2>
         ${short ? `<p class="mk-desc" onclick="this.classList.toggle('open')">${escHtml(short)}</p>` : ''}
         <button type="button" class="mk-rate" data-seller="${escHtml(r.uid || '')}" onclick="rentRevOpen()">${rentRateHTML(0, 0)}</button>
+        <ul class="mk-feats mk-pick">${feat('<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>', r.city ? `איסוף ב${r.city}` : 'מיקום בתיאום', r.kind === 'used' ? 'מתאמים ישירות עם המוכר/ת' : 'עמלת שירות ' + Math.round(RENT_SITE_FEE * 100) + '% לאתר')}</ul>
         <div class="mp-price">${rentPriceShort(r)}</div>
         <div class="mk-buyrow"><div class="mk-buy">
         ${r.kind === 'used' ? '' : `<div class="mk-qty-h">כמות לפי ${escHtml(unitName || 'יחידה')}${r.unit === 'kg' ? ' · מינימום ' + Math.round(rentMin(r) * 1000) + ' גרם' : r.min > 1 ? ' · מינימום ' + r.min : ''}</div>
@@ -31331,13 +31332,6 @@ function rentDetailHTML(r) {
           </div>
         </div>
         </div>
-          <details class="mp-acc mk-feats-acc" open><summary>מידע על המוצר</summary>
-          <ul class="mk-feats">
-            ${feat('<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>', r.city ? `איסוף ב${r.city}` : 'מיקום בתיאום', r.kind === 'used' ? 'מתאמים ישירות עם המוכר/ת' : 'עמלת שירות ' + Math.round(RENT_SITE_FEE * 100) + '% לאתר')}
-            ${feat('<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>', owner, `פורסם ${rentAgo(r.t)}`)}
-            ${specs ? feat('<path d="M5 12.5l4.5 4.5L19 7.5"/>', 'פרטי המוצר', specs) : ''}
-          </ul>
-          </details>
         </div>
         <div class="mk-sep"></div>
         <div class="mk-lower">
@@ -31464,7 +31458,7 @@ function rentFitImg() {
   const box = pg && pg.querySelector('.mp-img'), img = box && box.querySelector('img');
   if (!img || !img.naturalWidth) return;
   const wide = innerWidth > 900, rail = parseFloat(getComputedStyle(box).marginLeft) || 0;
-  const ratio = img.naturalWidth / img.naturalHeight, maxW = (wide ? pg.clientWidth * .58 : pg.clientWidth) - rail;
+  const ratio = 3 / 4, maxW = (wide ? pg.clientWidth * .58 : pg.clientWidth) - rail;
   const w = Math.floor(wide ? Math.min(maxW, box.clientHeight * ratio) : Math.min(maxW, innerHeight * .6 * ratio));
   if (!wide) {   // בטלפון גובה המסגרת כגובה התמונה, בלי רווח מתחתיה
     box.style.setProperty('height', Math.floor(w / ratio) + 'px', 'important');
