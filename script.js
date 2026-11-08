@@ -14219,15 +14219,19 @@ const SIDE_RAIL_ITEMS = [
 function sideRailHTML() {
   const u = auth.currentUser;
   const reg = u && !u.isAnonymous;
-  const btn = ([id, label, action, path, fill]) => `<button type="button" class="srail-btn" data-rail="${id}" onclick="${action}" aria-label="${label}" title="${label}">
-      <svg viewBox="0 0 24 24" fill="${fill ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="${fill ? 0 : 2}" stroke-linecap="round" stroke-linejoin="round">${path}</svg></button>`;
+  // כל הסמלים בקו דק; הסמל של העמוד הנוכחי (ומה שלוחצים עליו) מתמלא
+  const btn = ([id, label, action, path]) => `<button type="button" class="srail-btn" data-rail="${id}" onclick="srailTap(this); ${action}" aria-label="${label}" title="${label}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${path}</svg></button>`;
   const adminBtn = (typeof isAdmin === 'function' && isAdmin()) ? btn(['stats', 'נתוני האתר (מנהל)', "adminOpenTab('stats')", '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>', false]) : '';
   return `${SIDE_RAIL_ITEMS.map(btn).join('')}${adminBtn}
     <button type="button" hidden class="srail-btn srail-me srail-fb" onclick="feedbackOpen()" aria-label="שליחת ביקורת — מה לשפר באתר" title="שליחת ביקורת — מה לשפר באתר">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"/><path d="M12 7.6l1.2 2.5 2.7.4-2 1.9.5 2.7-2.4-1.3-2.4 1.3.5-2.7-2-1.9 2.7-.4z" fill="currentColor" stroke="none"/></svg><span>ביקורת</span></button>
-    <button type="button" class="srail-btn srail-me" onclick="${reg ? `openUserPage('${artEsc(u.uid)}')` : 'openLiveChatLogin()'}" aria-label="${reg ? 'הפרופיל שלי' : 'התחברות'}">
-      <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4.2"/><path d="M3.5 21a8.5 8.5 0 0 1 17 0z"/></svg><span>${reg ? 'פרופיל' : 'התחברות'}</span></button>`;
+    <button type="button" class="srail-btn srail-me" onclick="srailTap(this); ${reg ? `openUserPage('${artEsc(u.uid)}')` : 'openLiveChatLogin()'}" aria-label="${reg ? 'הפרופיל שלי' : 'התחברות'}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><circle cx="12" cy="8" r="4.2"/><path d="M3.5 21a8.5 8.5 0 0 1 17 0z"/></svg><span>${reg ? 'פרופיל' : 'התחברות'}</span></button>`;
 }
+// לחיצה על סמל בסרגל הצד: מתמלא לרגע (גם כשהוא פותח חלון ולא עמוד)
+function srailTap(b) { b.classList.add('tap'); setTimeout(() => b.classList.remove('tap'), 700); }
+window.srailTap = srailTap;
 function renderSideRail() {
   let el = document.getElementById('side-rail');
   if (!el) {
@@ -15962,7 +15966,7 @@ function buildUserPageHTML(authorId, authorName) {
     return isAuthor && a.approved !== false && (!a.adminOnly || _isAdminView) && (!a.expiresAt || a.expiresAt > now);
   });
   pfeedShown.profile = 0;
-  const authorPosts = repostsMerge(feedByAuthor(feedAllItems(), authorId, authorName), authorId ? [authorId] : [], feedAllItems());
+  const authorPosts = repostsMerge(feedByAuthor(feedAllItems(), authorId, authorName), authorId ? [authorId] : [], feedAllItems().concat(mktRepostItems()));
   const json = encodeURIComponent(JSON.stringify(albums));
   // מצב השעון של עמוד המשתמש — מתעדכן אחרי טעינת הפרופיל והדירוגים
   window._upState = { uid: authorId || '', name: authorName || 'משתמש', galleries: authorAlbums.length,
@@ -26563,7 +26567,7 @@ function pfGridCardsHTML(f) {
   return list.map(x => {
     const imgs = (Array.isArray(x.images) ? x.images.filter(Boolean) : []);
     if (!imgs.length && x.image) imgs.push(x.image);
-    const open = x.__type === 'photo' ? `photoOpenDetail('${artEsc(x.id)}')` : `storyOpenDetail('${artEsc(x.id)}')`;
+    const open = x.__type === 'market' ? `mktOpenItem('${artEsc(x.__mkt)}')` : x.__type === 'photo' ? `photoOpenDetail('${artEsc(x.id)}')` : `storyOpenDetail('${artEsc(x.id)}')`;
     const views = typeof photoGetViews === 'function' ? photoGetViews(x.id) : 0;
     const vtxt = typeof formatViews === 'function' ? formatViews(views) : views;
     const kindIc = x.__type === 'photo'
@@ -31072,6 +31076,17 @@ function rentHoverHTML(x) {
     ${b('אהבתי', 'M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z', sh ? `photoToggleLike('${sh}')` : `rentMark(this, 'like', '${id}')`, liked, sh ? ` data-like="${escHtml(x.shId)}"` : '')}
   </span></span>`;
 }
+// מודעות השוק בצורה שהפרופיל מציג — כדי שריפוסט של מודעה יופיע בפרופיל של מי ששיתף
+function mktRepostItems() {
+  return mktAll().map(r => ({ id: rentCommentsKey(r), __mkt: r.id, __type: 'market', title: r.title, author: r.owner, images: (r.images || []).filter(Boolean), image: r.img, createdAt: r.t }));
+}
+// פתיחת מודעה מכל מקום באתר (למשל מהפרופיל)
+function mktOpenItem(id) {
+  if (typeof activePageId !== 'undefined' && activePageId === 'page-rent-main' && mainContent && mainContent.querySelector('.rent-page')) { rentOpen(id); return; }
+  navigateToPage('page-rent-main');
+  setTimeout(() => rentOpen(id), 60);
+}
+window.mktOpenItem = mktOpenItem;
 function rentOpenComments(id) {
   rentOpen(id);
   setTimeout(() => { const c = document.querySelector('.mp-comments'); if (c) c.scrollIntoView({ behavior: 'smooth' }); }, 200);
@@ -31267,6 +31282,8 @@ function rentDetailHTML(r) {
   const email = r.raw && String(r.raw.emailUrl || '').replace(/^mailto:/, '');
   const owner = r.owner || 'מפרסם/ת';
   const specs = (r.specs || []).filter(Boolean).join(' · ');
+  subscribeReposts();
+  main[2] = '<rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19M6.5 15h4"/>';   // כרטיס בקו דק, כמו שאר הסמלים
   const WORD = { 'הצעת מחיר': 'הצעה', 'פנייה למוכר': 'פנייה', 'הצעת החלפה': 'החלפה', 'בקשת השאלה': 'השאלה', 'בקשת אחסון': 'אחסון', 'בקשת השכרה': 'השכרה', 'הוספה לעגלה': 'עגלה', 'הודעה למוכר': 'הודעה', 'מחיקת המודעה (מנהל)': 'מחיקה' };
   const btn = (icon, label, act, cls, attr) => `<span class="mk-ic"><button type="button" class="mp-btn${cls ? ' ' + cls : ''}" title="${label}" aria-label="${label}"${attr || ''} onclick="${act}">${ic(icon)}</button><small>${WORD[label] || label}</small></span>`;
   const cartBtn = typeof mktCartable === 'function' && mktCartable(r) ? btn('<circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M3 4h2l2.6 12h11l2-8H6"/>', 'הוספה לעגלה', `rentCartAdd('${artEsc(r.id)}')`, 'mk-cart-add' + (cartGet().some(x => x.id === 'mkt_' + r.id) ? ' on' : '')) : '';
@@ -31306,6 +31323,7 @@ function rentDetailHTML(r) {
             ${btn('<path d="M6 4h12v17l-6-4.5L6 21z"/>', 'שמירה', r.shId ? `photoToggleSave('${artEsc(r.shId)}')` : `rentMark(this, 'save', '${artEsc(r.id)}')`, saved ? 'on' : '', r.shId ? ` data-save="${escHtml(r.shId)}"` : '')}
             ${btn('<path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/>', 'אהבתי', r.shId ? `photoToggleLike('${artEsc(r.shId)}')` : `rentMark(this, 'like', '${artEsc(r.id)}')`, liked ? 'on' : '', r.shId ? ` data-like="${escHtml(r.shId)}"` : '')}
             ${r.shId ? btn('<path d="M21 12a8 8 0 0 1-8 8H4l2.2-2.6A8 8 0 1 1 21 12z"/>', 'הודעה למוכר', ask) : ''}
+            ${btn('<path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/>', 'ריפוסט', `toggleRepost('${artEsc(rentCommentsKey(r))}', this)`, 'pti-repost' + (repostIsMine(rentCommentsKey(r)) ? ' on' : ''), ` data-item="${escHtml(rentCommentsKey(r))}"`)}
             ${btn('<path d="M4 5h16v11H9l-5 4z"/>', 'תגובות', `document.querySelector('.mp-comments').scrollIntoView({ behavior: 'smooth' })`)}
             ${email ? btn('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>', 'מייל', `location.href='mailto:${artEsc(email)}'`) : ''}
             ${btn('<path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M16 7l-4-4-4 4M12 3v12"/>', 'שיתוף', `if(navigator.share){navigator.share({ title: document.title, url: location.href }).catch(function(){});}else{navigator.clipboard.writeText(location.href); showCopyToast('הקישור הועתק');}`)}
