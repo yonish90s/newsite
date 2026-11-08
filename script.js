@@ -7975,6 +7975,7 @@ function qpClose() {
 }
 window.qpClose = qpClose;
 function qpCurrentSection() {
+  if (window.__qpSection) return window.__qpSection;
   if (typeof mainContent === 'undefined' || !mainContent) return 'photos';
   if (mainContent.querySelector('.secondhand-page')) return 'secondhand';
   if (mainContent.querySelector('.stories-page')) return 'stories';
@@ -8269,6 +8270,21 @@ async function qpPublish() {
     } else {
       // תמונות או מוצרי יד שניה — מתפרסם לעמוד הנוכחי לפי הסקשן
       const sec = (qpData.pageSection === 'secondhand') ? 'secondhand' : 'photos';
+      // נפתח מלשונית ההעלאה: שומרים ישר לרשימת המוצרים, בלי לפתוח עמוד מאחורי החלון
+      const shPage = sec === 'secondhand' && !mainContent.querySelector('.secondhand-page') && Array.isArray(pages) && pages.find(p => p && p.id === 'page-secondhand-main');
+      if (shPage) {
+        let list = [];
+        const m = (shPage.content || '').match(/data-photos-json="([^"]*)"/);
+        if (m) { try { list = JSON.parse(decodeURIComponent(m[1])); } catch (e) {} }
+        if (!Array.isArray(list)) list = [];
+        list.unshift(album);
+        shPage.content = shPage.content.replace(/data-photos-json="[^"]*"/, `data-photos-json="${encodeURIComponent(JSON.stringify(list))}"`);
+        if (typeof saveToStorage === 'function') saveToStorage();
+        if (!isAdminNow && typeof pushPendingSubmission === 'function') pushPendingSubmission(album);
+        qpBubble('bot', '✅ המוצר פורסם בהצלחה!' + (isAdminNow ? '' : '<br>ממתין לאישור מנהל ויופיע בקרוב.'));
+        setTimeout(() => { const md = document.getElementById('quick-publish-modal'); if (md) md.style.display = 'none'; mktGo('all'); }, 2000);
+        return;
+      }
       const albums = photoGetAlbums();
       albums.unshift(album);
       mainContent.innerHTML = buildPhotosPage(albums, sec);
@@ -30946,7 +30962,8 @@ function mktOpenUsed(shId) {
   setTimeout(() => { if (typeof photoOpenDetail === 'function') photoOpenDetail(shId); }, 80);
 }
 function mktPublish(sec) {
-  if (sec === 'used') { window.__shDirect = true; try { navigateToPage('page-secondhand-main'); } finally { window.__shDirect = false; } setTimeout(() => { if (typeof openQuickPublish === 'function') openQuickPublish(); }, 120); return; }
+  // לשונית העלאה: נפתח רק חלון השיחה, והעמוד מאחוריו נשאר כמו שהוא
+  if (sec === 'used') { window.__qpSection = 'secondhand'; try { openQuickPublish(); } finally { window.__qpSection = ''; } return; }
   rentPublishOpen(sec === 'store' ? 'storage' : '');
 }
 const rentMin = r => Number(r.min) || (r.unit === 'kg' ? 0.1 : 1);
