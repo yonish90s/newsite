@@ -18183,6 +18183,23 @@ function _drawerCell(id, img, title) {
   </div>`;
 }
 
+// מודעות השוק שסומנו בלייק או נשמרו: שני ריבועים בשורה, 14 נכנסים בגובה החלון
+function mktMarkedItems(kind) {
+  if (typeof mktAll !== 'function') return [];
+  return mktAll().filter(r => r.shId ? (kind === 'like' ? photoIsLikedLocal(r.shId) : photoIsSavedLocal(r.shId)) : rentMarked(kind, r.id));
+}
+function mktFavGridHTML(list) {
+  return `<div class="mk-fav-grid">${list.map(r => { const img = r.img || (r.images || [])[0] || '';
+    return `<button type="button" class="mk-fav-cell" onclick="closeSavedModal(); mktOpenItem('${artEsc(r.id)}')" title="${escHtml(r.title || '')}">${img ? `<img src="${escHtml(img)}" alt="" loading="lazy">` : ''}<span>${escHtml(r.title || '')}</span></button>`; }).join('')}</div>`;
+}
+function mktFavFit() {
+  const body = document.querySelector('#saved-modal .saved-body'), g = body && body.querySelector('.mk-fav-grid');
+  if (!g) return;
+  const cs = getComputedStyle(body), gap = parseFloat(getComputedStyle(g).rowGap) || 8;
+  const h = body.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - (g.offsetTop - body.offsetTop - parseFloat(cs.paddingTop));
+  g.style.setProperty('--row', Math.max(60, Math.floor((h - 6 * gap) / 7)) + 'px');
+}
+window.addEventListener('resize', mktFavFit);
 function openSideDrawer(title, inner, headerExtra) {
   let modal = document.getElementById('saved-modal');
   if (!modal) { modal = document.createElement('div'); modal.id = 'saved-modal'; document.body.appendChild(modal); }
@@ -18199,13 +18216,19 @@ function openSideDrawer(title, inner, headerExtra) {
       <div class="saved-body">${inner}</div>
     </div>`;
   modal.style.display = 'flex';
+  const w = modal.querySelector('.saved-window');
+  if (w) w.classList.toggle('mk-fav-win', !!modal.querySelector('.mk-fav-grid'));
+  mktFavFit();
 }
 window.openSideDrawer = openSideDrawer;
 
 function openSavedModal() {
   const bmHTML = (typeof storyBookmarksHTML === 'function') ? storyBookmarksHTML() : '';
+  const mkt = mktMarkedItems('save');
   let galleriesHTML;
-  if (!auth.currentUser) {
+  if (mkt.length || !auth.currentUser) {
+    galleriesHTML = mkt.length ? mktFavGridHTML(mkt) : `<div class="saved-empty">אין מודעות שמורות עדיין.<br>לחצו על הסימנייה במודעה כדי לשמור.</div>`;
+  } else if (false) {
     galleriesHTML = `<div class="saved-empty">🔒 התחבר כדי לראות את הגלריות השמורות שלך</div>`;
   } else {
     let saved = photoGetSavedAlbums();
@@ -18232,8 +18255,8 @@ function photoGetLikedAlbums() {
   return albums.filter(a => map[a.id]);
 }
 function openLikesDrawer() {
-  const liked = photoGetLikedAlbums();
-  const inner = liked.length
+  const liked = photoGetLikedAlbums(), mkt = mktMarkedItems('like');
+  const inner = mkt.length ? mktFavGridHTML(mkt) : liked.length
     ? `<div class="saved-grid">${liked.map(a => _drawerCell(a.id, (a.images && a.images[0]) ? a.images[0] : a.image, a.title)).join('')}</div>`
     : `<div class="saved-empty">אין פריטים בלייקים עדיין.<br>לחצו על הלב בכרטיס כדי לסמן לייק.</div>`;
   openSideDrawer('❤️ הלייקים שלי', inner);
