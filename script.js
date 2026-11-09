@@ -16386,7 +16386,7 @@ function pfAboutHTML(st) {
   const p = st.profile || {}, uid = st.uid || '', me = auth.currentUser, own = !!(uid && me && me.uid === uid);
   const ic = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
   const row = (icon, html) => `<li><span class="pfa-ic">${ic(icon)}</span><span class="pfa-tx">${html}</span></li>`;
-  const mine = uid ? mktSellerItems(uid, st.name) : [];
+  const mine = uid || st.name ? mktSellerItems(uid, st.name) : [];
   const views = mine.reduce((a, r) => a + photoGetViews(rentCommentsKey(r)), 0);
   const where = [p.aboutCity, p.aboutRegion].filter(Boolean).join(', ');
   const tg = String(p.telegram || '').replace(/^@/, '').trim(), mail = String(p.email || '').trim();
@@ -31531,22 +31531,25 @@ function mktSellerGridHTML(list, anywhere) {
 function rentSellerHTML(sl) {
   const list = mktSellerItems(sl.uid, sl.name);
   const cities = [...new Set(list.map(r => r.city).filter(Boolean))];
-  const keys = list.map(rentCommentsKey), views = keys.reduce((a, k) => a + photoGetViews(k), 0);
-  const reps = list.filter(r => repostCount(rentCommentsKey(r)) > 0).length;
-  // נראה כמו פרופיל: תמונה גדולה, שם ועיר, שורת נתונים ולשוניות מעל המודעות
-  return `<div class="sl-pf">
-    <button type="button" class="rn-back sl-back" onclick="rentBack()" aria-label="חזרה">→</button>
-    <header class="sl-head">
-      <div class="sl-av">${authorAvHTML({ author: sl.name, uid: sl.uid || '' })}</div>
-      <div class="sl-id">
-        <h1>${escHtml(sl.name)}</h1>
-        ${cities.length ? `<small>${escHtml(cities.join(' · '))}</small>` : ''}
-        <div class="mk-rate" data-seller="${escHtml(sl.uid || '')}">${rentRateHTML(0, 0)}</div>
-      </div>
-    </header>
-    <div class="pf-stats"><span><b>${list.length.toLocaleString('he-IL')}</b> מודעות</span><span><b class="pf-views-sum" data-keys="${escHtml(keys.join(','))}">${formatViews(views)}</b> צפיות</span><span><b>${reps.toLocaleString('he-IL')}</b> שותפו</span></div>
-    <div class="pf-tabs2" role="tablist"><button type="button" class="on">הכל</button><button type="button" onclick="this.parentElement.firstElementChild.click()">${list.length} מודעות</button></div>
-    ${list.length ? mktSellerGridHTML(list) : '<div class="rn-empty">אין מודעות פעילות.</div>'}
+  const views = list.reduce((a, r) => a + photoGetViews(rentCommentsKey(r)), 0);
+  const st = { uid: sl.uid || '', name: sl.name, profile: { aboutCity: cities.join(' · ') } };
+  // אותו מבנה כמו פרופיל של משתמש: כותרת, לשוניות, ומתחת כרטיס פרטים לצד המודעות
+  return `<div class="pf-desk sl-desk">
+    <aside class="pf-side"><div id="user-page-head">
+      <section class="pf-head">
+        <div class="pf-top"><span class="pf-av-wrap">${authorAvHTML({ author: sl.name, uid: sl.uid || '' }).replace('class="au-av', 'class="pf-avatar au-av')}</span></div>
+        <h1 class="pf-name">${escHtml(sl.name)}</h1>
+        <div class="pf-counts"><span><b>${list.length}</b> ${list.length === 1 ? 'מודעה' : 'מודעות'}</span><span><b>${formatViews(views)}</b> צפיות</span></div>
+        ${cities.length ? `<div class="pf-facts"><span class="pf-fact">${escHtml(cities.join(' · '))}</span></div>` : ''}
+      </section>
+      <div class="pfs"><div class="pfs-btns"><button type="button" class="pfs-btn" onclick="rentBack()">חזרה לשוק</button></div></div>
+    </div></aside>
+    <div class="pf-main">
+      <div class="pf-tabs2" role="tablist"><button type="button" class="on">הכל</button><button type="button" onclick="this.parentElement.firstElementChild.click()">${list.length} מודעות</button></div>
+      <div class="pf-body"><aside class="pf-about">${pfAboutHTML(st)}</aside><div class="pf-feed">
+        ${list.length ? `<section class="pf-mkt"><h3>מודעות</h3>${mktSellerGridHTML(list)}</section>` : '<div class="pf-empty">אין מודעות פעילות.</div>'}
+      </div></div>
+    </div>
   </div>`;
 }
 function rentOpenSeller(uid, name) {
