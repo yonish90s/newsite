@@ -7540,6 +7540,7 @@ function refreshViewBadges() {
     if (b) b.textContent = formatViews(n);
     el.title = `${n.toLocaleString('he-IL')} צפיות`;
   });
+  document.querySelectorAll('.pf-views-sum[data-keys]').forEach(el => { el.textContent = formatViews(el.dataset.keys.split(',').filter(Boolean).reduce((a, k) => a + photoGetViews(k), 0)); });
 }
 
 function renderPhotoCard(p, options = {}) {
@@ -16007,9 +16008,13 @@ function buildUserPageHTML(authorId, authorName) {
       <div class="pf-main">${(() => {
         const mine = authorId ? mktSellerItems(authorId, authorName) : [];
         pfGridItems = authorPosts.filter(x => x.__repostBy);
-        return (mine.length ? `<section class="pf-mkt"><h3>מודעות בשוק</h3>${mktSellerGridHTML(mine, true)}</section>` : '')
-          + (pfGridItems.length ? `<section class="pf-mkt"><h3>שיתופים</h3><div class="pfg-grid">${pfGridCardsHTML('reposts')}</div></section>` : '')
-          + (!mine.length && !pfGridItems.length ? '<div class="pf-empty">עדיין אין מודעות</div>' : '');
+        // שורת נתונים: מודעות · צפיות · עוקבים · נעקבים, ומתחת לשוניות הכל / מודעות / ריפוסטים
+        const keys = mine.map(rentCommentsKey), views = keys.reduce((a, k) => a + photoGetViews(k), 0);
+        if (authorId) setTimeout(() => pfFollowFill(authorId), 0);
+        return `<div class="pf-stats"><span><b>${mine.length.toLocaleString('he-IL')}</b> מודעות</span><span><b class="pf-views-sum" data-keys="${escHtml(keys.join(','))}">${formatViews(views)}</b> צפיות</span><span><b id="pf-st-fol">—</b> עוקבים</span><span><b id="pf-st-fwg">—</b> נעקבים</span></div>
+          <div class="pf-tabs2" role="tablist"><button type="button" class="on" onclick="pfTab2(this, 'all')">הכל</button><button type="button" onclick="pfTab2(this, 'mkt')">${mine.length} מודעות</button><button type="button" onclick="pfTab2(this, 'rep')">${pfGridItems.length} ריפוסטים</button></div>`
+          + (mine.length ? `<section class="pf-mkt" data-pf="mkt"><h3>מודעות בשוק</h3>${mktSellerGridHTML(mine, true)}</section>` : '<div class="pf-empty" data-pf="mkt">עדיין אין מודעות</div>')
+          + (pfGridItems.length ? `<section class="pf-mkt" data-pf="rep"><h3>שיתופים</h3><div class="pfg-grid">${pfGridCardsHTML('reposts')}</div></section>` : '<div class="pf-empty" data-pf="rep" hidden>עדיין אין ריפוסטים</div>');
       })()}
       </div>
       </div>
@@ -16017,6 +16022,23 @@ function buildUserPageHTML(authorId, authorName) {
   </div>`;
 }
 
+function pfTab2(btn, t) {
+  btn.parentElement.querySelectorAll('button').forEach(b => b.classList.toggle('on', b === btn));
+  const main = btn.closest('.pf-main'); if (!main) return;
+  main.querySelectorAll('[data-pf]').forEach(el => {
+    const empty = el.classList.contains('pf-empty');
+    el.hidden = t === 'all' ? (empty && el.dataset.pf === 'rep') : el.dataset.pf !== t;
+  });
+}
+async function pfFollowFill(uid) {
+  try {
+    const v = (await get(ref(db, `website/follow_counts/${uid}`))).val() || {};
+    const f = document.getElementById('pf-st-fol'), g = document.getElementById('pf-st-fwg');
+    if (f) f.textContent = Math.max(0, Number(v.followers) || 0).toLocaleString('he-IL');
+    if (g) g.textContent = Math.max(0, Number(v.following) || 0).toLocaleString('he-IL');
+  } catch (e) {}
+}
+window.pfTab2 = pfTab2;
 // ============================================================
 // פוסטים בסגנון Ko-fi: כרטיס לכל העלאה (תמונות / סיפורים / קומיקס) + "טעינת עוד פוסטים".
 // משמש בפרופיל (לשונית "פוסטים") ובעמוד "הפיד שלי" (כל מה שהעלו מי שאני עוקב/ת אחריהם)
@@ -30365,7 +30387,7 @@ function cartQty(id, d) {
 // בחירת כמות בעגלה ובתשלום: אותה רשימה נפתחת כמו בעמוד המודעה
 function qtyOptsFor(p, cur) {
   const r = p && p.rid && typeof rentFind === 'function' ? rentFind(p.rid) : null, min = r ? rentMin(r) : 1;
-  const base = p && p.step && p.step < 1 ? [.1, .2, .3, .5, 1, 1.5, 2, 3, 4, 5] : Array.from({ length: 9 }, (_, i) => Math.ceil(min) + i);
+  const base = p && p.step && p.step < 1 ? [.1, .2, .3, .5, 1, 1.5, 2, 3, 4, 5] : Array.from({ length: 10 }, (_, i) => i + 1);
   return [...new Set(base.filter(x => x >= min).concat(cur > 0 ? [cur] : []))].sort((a, b) => a - b);
 }
 function qtyDDHTML(cur, opts, pick, remove) {
@@ -31001,7 +31023,7 @@ function mktPublish(sec) {
   if (sec === 'used') { window.__qpSection = 'secondhand'; try { openQuickPublish(); } finally { window.__qpSection = ''; } return; }
   rentPublishOpen(sec === 'store' ? 'storage' : '');
 }
-const rentMin = r => Number(r.min) || (r.unit === 'kg' ? 0.1 : 1);
+const rentMin = r => r.unit === 'kg' ? (Number(r.min) || 0.1) : 1;   // כמות ביחידות תמיד מ-1 (עד 10)
 // סקיצות: דברים שאפשר להדפיס בתלת מימד — משקל משוער (גרם) וזמן הדפסה, כדי לחשב מחיר לפי קילו
 const RENT_IDEAS = [
   { id: 'stand', name: 'מעמד לטלפון', g: 45, h: 2, svg: '<path d="M18 52h44M24 52l14-36h8l-6 36"/><path d="M38 16l16 26"/><path d="M50 42h8v10"/><path d="M28 47l3-8M33 47l3-8" opacity=".45"/>' },
@@ -31157,6 +31179,7 @@ function rentHoverHTML(x) {
     ${b('ביקורות', 'M12 2.8l2.8 5.8 6.4.9-4.6 4.5 1.1 6.3L12 17.3l-5.7 3 1.1-6.3L2.8 9.5l6.4-.9z', `rentOpenComments('${id}')`)}
     ${b('שמירה', 'M6 4h12v17l-6-4.5L6 21z', sh ? `photoToggleSave('${sh}')` : `rentMark(this, 'save', '${id}')`, saved, sh ? ` data-save="${escHtml(x.shId)}"` : '')}
     ${b('אהבתי', 'M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z', sh ? `photoToggleLike('${sh}')` : `rentMark(this, 'like', '${id}')`, liked, sh ? ` data-like="${escHtml(x.shId)}"` : '')}
+    ${b('דיווח', 'M5 21V4M5 4h11l-2 4 2 4H5', `openReportContent('${artEsc(rk)}', '${artEsc(x.title || '')}')`)}
   </span></span>`;
 }
 // מודעות השוק בצורה שהפרופיל מציג — כדי שריפוסט של מודעה יופיע בפרופיל של מי ששיתף
@@ -31178,7 +31201,7 @@ window.rentOpenComments = rentOpenComments;
 // כרטיס מוצר קטן בשוק ובהצעות: תמונה, שם, מיקום, מחיר ודירוג המוכר אם יש
 function rentMiniHTML(x) {
   const del = isAdmin() ? `<span class="mk-sg-x" role="button" tabindex="0" aria-label="הסרת המודעה" title="הסרת המודעה" onclick="event.stopPropagation(); rentAdminDelete('${artEsc(x.id)}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></span>` : '';
-  return `<button type="button" class="mk-sg" onclick="rentOpen('${artEsc(x.id)}')"><span class="mk-sg-img">${rentThumb(x)}${del}${rentHoverHTML(x)}</span><b>${escHtml(x.title)}</b><small>${escHtml(x.city || (x.kind === 'used' ? (x.offer || 'יד 2') : rentCatOf(x.cat).name))}</small><small class="mk-sg-price">${rentTypeIcon(x)}${Number(x.price) > 0 ? `${Number(x.price).toLocaleString('he-IL', { maximumFractionDigits: 2 })}&nbsp;₪` : ''}${x.uid ? `<i data-sg-rate="${escHtml(x.uid)}"></i>` : ''}</small></button>`;
+  return `<button type="button" class="mk-sg" onclick="rentOpen('${artEsc(x.id)}')"><span class="mk-sg-img">${rentThumb(x)}${del}${viewsBadgeHTML(rentCommentsKey(x), 'mk-sg-views')}${rentHoverHTML(x)}</span><b>${escHtml(x.title)}</b><small>${escHtml(x.city || (x.kind === 'used' ? (x.offer || 'יד 2') : rentCatOf(x.cat).name))}</small><small class="mk-sg-price">${rentTypeIcon(x)}${Number(x.price) > 0 ? `${Number(x.price).toLocaleString('he-IL', { maximumFractionDigits: 2 })}&nbsp;₪` : ''}${x.uid ? `<i data-sg-rate="${escHtml(x.uid)}"></i>` : ''}</small></button>`;
 }
 function rentGridHTML() {
   const l = rentList();
@@ -31329,6 +31352,7 @@ let _rentPopping = false;
 function rentOpen(id) {
   const r = rentFind(id); if (!r) return;
   rentUI.open = id;
+  photoIncrementViews(rentCommentsKey(r));   // צפייה אחת ביום לכל גולש
   if (!_rentPopping) { try { history.pushState({ rent: id }, ''); } catch (e) {} }
   if (typeof mainContent !== 'undefined' && mainContent) mainContent.scrollTop = 0;
   try { window.scrollTo({ top: 0 }); } catch (e) {}
@@ -31345,14 +31369,26 @@ function mktSellerGridHTML(list, anywhere) {
 function rentSellerHTML(sl) {
   const list = mktSellerItems(sl.uid, sl.name);
   const cities = [...new Set(list.map(r => r.city).filter(Boolean))];
-  return `<header class="mk-head"><button type="button" class="rn-back" onclick="rentBack()" aria-label="חזרה">→</button>
-      <div class="mk-seller">${authorAvHTML({ author: sl.name, uid: sl.uid || '' })}<span class="mk-seller-tx"><b>${escHtml(sl.name)}</b><small>${list.length === 1 ? 'מודעה אחת' : list.length + ' מודעות'}</small></span></div>
-      ${cities.length ? `<span class="mk-city">${escHtml(cities.join(' · '))}</span>` : ''}
-      ${sl.uid ? `<button type="button" class="mk-city mk-seller-pf" onclick="openUserPage('${artEsc(sl.uid)}', '${artEsc(sl.name)}')">לפרופיל</button>` : ''}
+  const keys = list.map(rentCommentsKey), views = keys.reduce((a, k) => a + photoGetViews(k), 0);
+  const reps = list.filter(r => repostCount(rentCommentsKey(r)) > 0).length;
+  // נראה כמו פרופיל: תמונה גדולה, שם ועיר, שורת נתונים ולשוניות מעל המודעות
+  return `<div class="sl-pf">
+    <button type="button" class="rn-back sl-back" onclick="rentBack()" aria-label="חזרה">→</button>
+    <header class="sl-head">
+      <div class="sl-av">${authorAvHTML({ author: sl.name, uid: sl.uid || '' })}</div>
+      <div class="sl-id">
+        <h1>${escHtml(sl.name)}</h1>
+        ${cities.length ? `<small>${escHtml(cities.join(' · '))}</small>` : ''}
+        <div class="mk-rate" data-seller="${escHtml(sl.uid || '')}">${rentRateHTML(0, 0)}</div>
+      </div>
     </header>
-    ${list.length ? mktSellerGridHTML(list) : '<div class="rn-empty">אין מודעות פעילות.</div>'}`;
+    <div class="pf-stats"><span><b>${list.length.toLocaleString('he-IL')}</b> מודעות</span><span><b class="pf-views-sum" data-keys="${escHtml(keys.join(','))}">${formatViews(views)}</b> צפיות</span><span><b>${reps.toLocaleString('he-IL')}</b> שותפו</span></div>
+    <div class="pf-tabs2" role="tablist"><button type="button" class="on">הכל</button><button type="button" onclick="this.parentElement.firstElementChild.click()">${list.length} מודעות</button></div>
+    ${list.length ? mktSellerGridHTML(list) : '<div class="rn-empty">אין מודעות פעילות.</div>'}
+  </div>`;
 }
 function rentOpenSeller(uid, name) {
+  if (uid && typeof openUserPage === 'function') { openUserPage(uid, name); return; }   // מוכר עם חשבון: לפרופיל האמיתי שלו
   rentUI.seller = { uid: uid || '', name: name || '' }; rentUI.open = null;
   if (!_rentPopping) { try { history.pushState({ rentSeller: rentUI.seller }, ''); } catch (e) {} }
   if (typeof mainContent !== 'undefined' && mainContent) mainContent.scrollTop = 0;
@@ -31636,7 +31672,7 @@ window.rentAdminDelete = rentAdminDelete;
 function rentQtyOpts(r) {
   const m = rentMin(r);
   if (r.unit === 'kg') return [...new Set([m, .5, 1, 1.5, 2, 3, 4, 5].filter(x => x >= m))].sort((a, b) => a - b);
-  return Array.from({ length: 9 }, (_, i) => m + i);
+  return Array.from({ length: 10 }, (_, i) => i + 1);
 }
 function rentQtySelHTML(r, qty, unitName) {
   const hint = r.unit === 'kg' ? 'ק״ג' : unitName && r.kind !== 'used' ? 'לפי ' + unitName : '';
@@ -31660,8 +31696,10 @@ function rentQtyMenu(btn, force) {
   if (!open) { if (list.parentElement === document.body) btn.after(list); return; }
   document.body.appendChild(list);
   // הרשימה צפה מעל הכול, כדי שלא תיחתך בתוך העגלה; נפתחת למעלה כשאין מקום למטה
-  const b = btn.getBoundingClientRect(), h = Math.min(list.scrollHeight, 300), up = innerHeight - b.bottom < h + 8 && b.top > innerHeight - b.bottom;
-  Object.assign(list.style, { position: 'fixed', left: b.left + 'px', width: Math.max(b.width, 96) + 'px', minWidth: '0', top: (up ? Math.max(8, b.top - h - 4) : b.bottom + 4) + 'px', maxHeight: (up ? Math.min(300, b.top - 12) : Math.min(300, innerHeight - b.bottom - 12)) + 'px' });
+  // באתר יש zoom על ה-body בחלק מגדלי המסך: מיקום שנמדד במסך מחולק בו, אחרת הרשימה קופצת הצידה
+  const z = parseFloat(getComputedStyle(document.body).zoom) || 1;
+  const b = btn.getBoundingClientRect(), h = Math.min(list.scrollHeight * z, 300 * z), up = innerHeight - b.bottom < h + 8 && b.top > innerHeight - b.bottom;
+  Object.assign(list.style, { position: 'fixed', left: b.left / z + 'px', width: Math.max(b.width / z, 96) + 'px', minWidth: '0', top: (up ? Math.max(8, b.top - h - 4) : b.bottom + 4) / z + 'px', maxHeight: (up ? Math.min(300 * z, b.top - 12) : Math.min(300 * z, innerHeight - b.bottom - 12)) / z + 'px' });
   list.style.setProperty('position', 'fixed', 'important');
   list.style.setProperty('top', list.style.top, 'important');
   list.style.setProperty('inset-inline-start', 'auto', 'important');
