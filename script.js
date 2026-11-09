@@ -31523,35 +31523,9 @@ function rentDetailHTML(r) {
   const feat = (icon, title, sub) => `<li><span>${ic(icon)}</span><div><b>${escHtml(title)}</b>${sub ? `<small>${escHtml(sub)}</small>` : ''}</div></li>`;
   const when = r.t ? new Date(r.t).toLocaleDateString('he-IL') : '';
   const who = `${authorAvHTML({ author: owner, uid: r.uid || '' })}<span class="mk-seller-tx"><b>${escHtml(owner)}</b>${when ? `<small>${escHtml(when)}</small>` : ''}</span>`;
-  return `<header class="mk-head"><button type="button" class="rn-back" onclick="rentBack()" aria-label="חזרה">→</button>
-      <button type="button" class="mk-seller" onclick="rentOpenSeller('${artEsc(r.uid || '')}', '${artEsc(owner)}')">${who}</button>
-      ${r.city ? `<span class="mk-city">${escHtml(r.city)}</span>` : ''}
-    </header>
-    <div class="mp mk-pg">
-      <div class="rn-det-gal mp-gal">
-        <div class="rn-det-img mp-img">${rentThumb(full && full.length ? { ...r, img: full[0] } : r, true)}</div>
-        ${imgs.length ? `<div class="mk-vthumbs">
-          <button type="button" class="mk-varr" disabled onclick="rentDetStep(this, -1)" aria-label="התמונה הקודמת">${ic('<path d="M6 15l6-6 6 6"/>')}</button>
-          <div class="mp-thumbs">${imgs.map((u, i) => `<button type="button" class="${i ? '' : 'on'}" onclick="rentDetPick(this)" aria-label="תמונה ${i + 1}"><img src="${escHtml(u)}" alt="" loading="lazy"></button>`).join('')}</div>
-          <button type="button" class="mk-varr"${imgs.length > 1 ? '' : ' disabled'} onclick="rentDetStep(this, 1)" aria-label="התמונה הבאה">${ic('<path d="M6 9l6 6 6-6"/>')}</button>
-        </div>` : ''}
-      </div>
-      <div class="mp-info">
-        <span class="mk-cat">${escHtml(r.kind === 'used' ? (r.offer || 'יד 2') : rentCatOf(r.cat).name)}</span>
-        <h2 class="mk-title">${escHtml(r.title)}</h2>
-        ${short ? `<p class="mk-desc" onclick="this.classList.toggle('open')">${escHtml(short)}</p>` : ''}
-        <button type="button" class="mk-rate" data-seller="${escHtml(r.uid || '')}" onclick="rentRevOpen()">${rentRateHTML(0, 0)}</button>
-        <ul class="mk-feats mk-pick">${feat('<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>', r.city ? `איסוף ב${r.city}` : 'מיקום בתיאום', r.kind === 'used' ? 'מתאמים ישירות עם המוכר/ת' : 'עמלת שירות ' + Math.round(RENT_SITE_FEE * 100) + '% לאתר')}</ul>
-        <div class="mp-price">${rentPriceShort(r)}</div>
-        ${r.kind === 'used' && !cartBtn ? '' : `<div class="mk-qrow">${rentQtySelHTML(r, qty, unitName)}</div>`}
-        <div class="mk-buyrow"><div class="mk-buy">
-        ${r.kind === 'used' ? `<input id="rn-qty" type="hidden" value="${qty}">` : `<div class="mk-qty">
-          <div class="mp-btns mk-acts">${btn(main[2], main[1], main[0], 'mk-go')}${cartBtn}</div>
-          <div class="rn-calc mp-calc"><input id="rn-qty" type="hidden" value="${qty}"></div>
-        </div>`}
-        <div class="mk-cta">
-          <div class="mp-btns mk-acts">
-            ${r.kind === 'used' ? btn(main[2], main[1], main[0], 'mk-go') + cartBtn : ''}
+  // כל הכפתורים חוץ מ"הוסף לסל" — מתחת לתמונה, מימין
+  const galActs = `<div class="mp-btns mk-acts mk-galacts">
+            ${btn(main[2], main[1], main[0], 'mk-go')}
             ${btn('<path d="M6 4h12v17l-6-4.5L6 21z"/>', 'שמירה', r.shId ? `photoToggleSave('${artEsc(r.shId)}')` : `rentMark(this, 'save', '${artEsc(r.id)}')`, saved ? 'on' : '', r.shId ? ` data-save="${escHtml(r.shId)}"` : '')}
             ${btn('<path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/>', 'אהבתי', r.shId ? `photoToggleLike('${artEsc(r.shId)}')` : `rentMark(this, 'like', '${artEsc(r.id)}')`, liked ? 'on' : '', r.shId ? ` data-like="${escHtml(r.shId)}"` : '')}
             ${r.shId ? btn('<path d="M21 12a8 8 0 0 1-8 8H4l2.2-2.6A8 8 0 1 1 21 12z"/>', 'הודעה למוכר', ask) : ''}
@@ -31560,6 +31534,35 @@ function rentDetailHTML(r) {
             ${email ? btn('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>', 'מייל', `location.href='mailto:${artEsc(email)}'`) : ''}
             ${btn('<path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M16 7l-4-4-4 4M12 3v12"/>', 'שיתוף', `if(navigator.share){navigator.share({ title: document.title, url: location.href }).catch(function(){});}else{navigator.clipboard.writeText(location.href); showCopyToast('הקישור הועתק');}`)}
             ${isAdmin() ? btn('<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/>', 'מחיקת המודעה (מנהל)', `rentAdminDelete('${artEsc(r.id)}')`) : ''}
+          </div>`;
+  return `<header class="mk-head"><button type="button" class="rn-back" onclick="rentBack()" aria-label="חזרה">→</button>
+      <button type="button" class="mk-seller" onclick="rentOpenSeller('${artEsc(r.uid || '')}', '${artEsc(owner)}')">${who}</button>
+      ${r.city ? `<span class="mk-city">${escHtml(r.city)}</span>` : ''}
+    </header>
+    <div class="mk-head-rate"><button type="button" class="mk-rate" data-seller="${escHtml(r.uid || '')}" onclick="rentRevOpen()">${rentRateHTML(0, 0)}</button></div>
+    <div class="mp mk-pg">
+      <div class="rn-det-gal mp-gal">
+        <div class="rn-det-img mp-img">${rentThumb(full && full.length ? { ...r, img: full[0] } : r, true)}</div>
+        ${imgs.length ? `<div class="mk-vthumbs">
+          <button type="button" class="mk-varr" disabled onclick="rentDetStep(this, -1)" aria-label="התמונה הקודמת">${ic('<path d="M6 15l6-6 6 6"/>')}</button>
+          <div class="mp-thumbs">${imgs.map((u, i) => `<button type="button" class="${i ? '' : 'on'}" onclick="rentDetPick(this)" aria-label="תמונה ${i + 1}"><img src="${escHtml(u)}" alt="" loading="lazy"></button>`).join('')}</div>
+          <button type="button" class="mk-varr"${imgs.length > 1 ? '' : ' disabled'} onclick="rentDetStep(this, 1)" aria-label="התמונה הבאה">${ic('<path d="M6 9l6 6 6-6"/>')}</button>
+        </div>` : ''}
+        ${galActs}
+      </div>
+      <div class="mp-info">
+        <span class="mk-cat">${escHtml(r.kind === 'used' ? (r.offer || 'יד 2') : rentCatOf(r.cat).name)}</span>
+        <h2 class="mk-title">${escHtml(r.title)}</h2>
+        <div class="mp-price">${rentPriceShort(r)}</div>
+        ${r.kind === 'used' && !cartBtn ? '' : `<div class="mk-qrow">${rentQtySelHTML(r, qty, unitName)}</div>`}
+        <div class="mk-buyrow"><div class="mk-buy">
+        ${r.kind === 'used' ? `<input id="rn-qty" type="hidden" value="${qty}">` : `<div class="mk-qty">
+          <div class="mp-btns mk-acts">${cartBtn}</div>
+          <div class="rn-calc mp-calc"><input id="rn-qty" type="hidden" value="${qty}"></div>
+        </div>`}
+        <div class="mk-cta">
+          <div class="mp-btns mk-acts">
+            ${r.kind === 'used' ? cartBtn : ''}
           </div>
         </div>
         </div>
@@ -31567,8 +31570,7 @@ function rentDetailHTML(r) {
         <div class="mk-sep"></div>
         <div class="mk-lower">
           <div class="mk-accs">
-            <details class="mp-acc"><summary>תיאור</summary><p>${short ? escHtml(short) : 'אין תיאור למוצר הזה.'}</p></details>
-            <details class="mp-acc"><summary>פרטים</summary>${(r.specs || []).filter(Boolean).length ? `<ul>${r.specs.filter(Boolean).map(x => `<li>${escHtml(x)}</li>`).join('')}</ul>` : '<p>אין פרטים נוספים.</p>'}</details>
+            <details class="mp-acc"><summary>פרטים</summary>${short ? `<p>${escHtml(short)}</p>` : ''}${(r.specs || []).filter(Boolean).length ? `<ul>${r.specs.filter(Boolean).map(x => `<li>${escHtml(x)}</li>`).join('')}</ul>` : ''}${!short && !(r.specs || []).filter(Boolean).length ? '<p>אין פרטים נוספים.</p>' : ''}</details>
           </div>
         </div>
         ${terms.length ? `<details class="mp-acc mk-terms"><summary>תקנון ההשאלה · ${terms.length} סעיפים</summary><ol class="pd-terms">${terms.map(x => `<li>${escHtml(x)}</li>`).join('')}</ol></details>` : ''}

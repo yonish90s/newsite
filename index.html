@@ -33,15 +33,15 @@
   <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://newsite-f76e2-default-rtdb.firebaseio.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="modulepreload" href="./script.min.js?v=1990">
+  <link rel="modulepreload" href="./script.min.js?v=1992">
   <!-- ספריית interact.js לגרירה ושינוי גודל (נטענת בדחייה למניעת עיכוב) -->
   <script defer src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
   <!-- ספריית localforage לשמירת תמונות -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
   <!-- קישור לקובץ העיצוב החיצוני (עם פרמטר למניעת שמירה במטמון) -->
-  <link rel="stylesheet" href="./style.min.css?v=2154">
-  <link rel="stylesheet" id="mono-css" href="./mono.min.css?v=90">
-  <link rel="stylesheet" id="dark-css" data-href="./dark.min.css?v=507" media="not all">
+  <link rel="stylesheet" href="./style.min.css?v=2156">
+  <link rel="stylesheet" id="mono-css" href="./mono.min.css?v=92">
+  <link rel="stylesheet" id="dark-css" data-href="./dark.min.css?v=509" media="not all">
   <script>
     // קישור ישיר לפריט (#p/…, #s/…, #n/…) — מסמנים מיד, כדי שהכתובת לא תימחק לפני שהפריט נפתח
     window.__deepLinkOpening = /^#[psn]\//.test(location.hash || '');
@@ -241,7 +241,7 @@
         
         <!-- מחשב: שורת חיפוש גדולה בכותרת (בסגנון dribbble) -->
         <form class="hdr-search" role="search" onsubmit="event.preventDefault(); hdrSearchGo();">
-          <input id="hdr-search-q" type="search" placeholder="מה מחפשים? מוצרים, קומיקס..." autocomplete="off" aria-label="חיפוש באתר" oninput="this.closest('form').classList.toggle('has-q', !!this.value)">
+          <input id="hdr-search-q" type="search" placeholder="מחפשים מוצר כלשהו" autocomplete="off" aria-label="חיפוש באתר" oninput="this.closest('form').classList.toggle('has-q', !!this.value)">
           <button type="button" class="hdr-search-x" onclick="var i=document.getElementById('hdr-search-q'); i.value=''; i.focus(); this.closest('form').classList.remove('has-q');" aria-label="ניקוי">×</button>
           <button type="submit" class="hdr-search-go" aria-label="חיפוש"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg></button>
         </form>
@@ -1247,7 +1247,7 @@ html.theme-dark .pl-bar { background: #2a2f37; }
     }
     try { if (localStorage.getItem('mtab_hidden') === '1') document.documentElement.classList.add('mtab-hidden'); } catch (e) {}
   </script>
-  <script type="module" src="./script.min.js?v=1990"></script>
+  <script type="module" src="./script.min.js?v=1992"></script>
   <script defer src="./a11y.js?v=1"></script>
 </body>
 </html>
