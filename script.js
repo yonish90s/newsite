@@ -13196,21 +13196,8 @@ window.productsDelete = productsDelete;
 // עמוד "פורומים" — קטגוריות → פורום (רשימת נושאים) → נושא (הודעות ותגובות)
 // נתונים: website/forum_topics/{forumId}/{topicId}, website/forum_posts/{topicId}/{postId}
 // ============================================================
-const FORUM_CATEGORIES = [
-  { title: 'הקהילה', forums: [
-    { id: 'gate', title: 'שער הקהילה', sub: 'היכרות, ברכות והודעות לכולם' },
-    { id: 'suggestions', title: 'הצעות לשיפור האתר', sub: 'רעיונות, באגים ובקשות' },
-    { id: 'qa', title: 'שאלות ותשובות', sub: 'שאלו את הקהילה כל דבר' }
-  ]},
-  { title: 'יצירה ותוכן', forums: [
-    { id: 'photos', title: 'תמונות וצילום', sub: 'טיפים, ציוד ופידבק על תמונות' },
-    { id: 'comics', title: 'קומיקס ואיור', sub: 'ציור, סגנונות וכלים' },
-    { id: 'stories', title: 'סיפורים וכתיבה', sub: 'כתיבה, רעיונות וביקורת על סיפורים' }
-  ]},
-  { title: 'כללי', forums: [
-    { id: 'offtopic', title: 'אוף טופיק', sub: 'כל מה שלא מתאים במקום אחר' }
-  ]}
-];
+// הפורומים אופסו: אין פורומים מובנים, המנהל מוסיף פורומים בעצמו (website/forum_config)
+const FORUM_CATEGORIES = [];
 const FORUM_BY_ID = {};
 FORUM_CATEGORIES.forEach(c => c.forums.forEach(f => { FORUM_BY_ID[f.id] = f; }));
 
@@ -13421,7 +13408,7 @@ function forumIndexHTML() {
       </section>
     </aside>`;
   return `<div class="fi-layout">
-      <div class="fi-main-col">${catsHTML}
+      <div class="fi-main-col">${catsHTML || `<div class="rn-empty">עדיין אין פורומים${admin ? '.<br>הוסיפו את הפורום הראשון בכפתור למטה.' : '.'}</div>`}
         ${admin ? `<button type="button" class="fo-admin-add" onclick="forumAdminAdd()">+ פורום חדש</button>` : ''}
       </div>
       ${side}
@@ -26114,7 +26101,6 @@ function mobileMenuHTML() {
         <button type="button" onclick="mnavGo(&quot;openLegal('privacy')&quot;)">מדיניות פרטיות</button>
         <button type="button" onclick="mnavGo(&quot;openLegal('terms')&quot;)">תנאי שימוש</button>
         <button type="button" onclick="mnavGo(&quot;openLegal('mydata')&quot;)">המידע שלי</button>
-        <button type="button" onclick="adultBlurToggle(); renderMobileMenu()">${document.documentElement.classList.contains('adult-blur') ? 'הצגת תמונות 18+' : 'טשטוש תמונות 18+'}</button>
       </details>
       <div class="mnav-social">${typeof footerSocialRowHTML === 'function' ? footerSocialRowHTML() : ''}</div>
     </aside>`;
@@ -28942,6 +28928,7 @@ function likeCountsPaint(likes) {
 // ============================================================
 function adultBlurOn() { return document.documentElement.classList.contains('adult-blur'); }
 function adultBlurSet(on) {
+  on = false;   // אין טשטוש תמונות באתר בכלל
   document.documentElement.classList.toggle('adult-blur', on);
   try { if (!on) sessionStorage.setItem('age_verified', 'true'); localStorage.removeItem('show_adult'); } catch (e) {}   // לא נשמר — בכל כניסה מחדש התמונות מטושטשות
   adultBtnSync();
@@ -31053,6 +31040,71 @@ function uploadMarkToday() {
   if (u) set(ref(db, `website/upload_day/${u.uid}`), d).catch(() => {});
 }
 try { onAuthStateChanged(auth, async u => { uploadDayDB = ''; if (!u) return; try { uploadDayDB = (await get(ref(db, `website/upload_day/${u.uid}`))).val() || ''; } catch (e) {} }); } catch (e) {}
+// חלון "פרסום מודעה": תמונות, כותרת ומחיר. עובר באותו מסלול כמו ההעלאה בשיחה (אישור מנהל, מודעה אחת ביום)
+let mkPub = { images: [] };
+function mkPubOpen() {
+  if (uploadBlockedNow()) return;
+  mkPub = { images: [] };
+  let m = document.getElementById('mkpub-modal');
+  if (m) m.remove();
+  m = document.createElement('div'); m.id = 'mkpub-modal'; m.className = 'mkpub-modal';
+  m.innerHTML = `<div class="mkpub-card" role="dialog" aria-modal="true" aria-label="פרסום מודעה">
+    <div class="mkpub-head"><b>פרסום מודעה</b><button type="button" class="mkpub-x" onclick="mkPubClose()" aria-label="סגירה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <label class="mkpub-l">תמונות <small>(עד 5)</small></label>
+    <div class="mkpub-imgs" id="mkpub-imgs"></div>
+    <label class="mkpub-l" for="mkpub-title">כותרת</label>
+    <input id="mkpub-title" class="mkpub-in" maxlength="120" placeholder="מה מוכרים?">
+    <label class="mkpub-l" for="mkpub-price">מחיר</label>
+    <div class="mkpub-price"><input id="mkpub-price" class="mkpub-in" type="number" min="0" step="1" inputmode="numeric" placeholder="0"><span>₪</span></div>
+    <p class="mkpub-err" id="mkpub-err" hidden></p>
+    <button type="button" class="mkpub-go" id="mkpub-go" onclick="mkPubSend()">פרסום</button>
+    ${typeof isAdmin === 'function' && isAdmin() ? '' : '<small class="mkpub-note">המודעה תופיע בשוק אחרי אישור מנהל.</small>'}
+  </div>`;
+  m.addEventListener('click', e => { if (e.target === m) mkPubClose(); });
+  document.body.appendChild(m);
+  mkPubImgs();
+  setTimeout(() => { const t = document.getElementById('mkpub-title'); if (t) t.focus(); }, 50);
+}
+function mkPubClose() { const m = document.getElementById('mkpub-modal'); if (m) m.remove(); }
+function mkPubImgs() {
+  const box = document.getElementById('mkpub-imgs'); if (!box) return;
+  box.innerHTML = mkPub.images.map((u, i) => `<span class="mkpub-th"><img src="${escHtml(u)}" alt=""><button type="button" onclick="mkPubDel(${i})" aria-label="הסרת התמונה">×</button></span>`).join('')
+    + (mkPub.images.length < 5 ? `<button type="button" class="mkpub-add" onclick="mkPubAdd()" aria-label="הוספת תמונה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>` : '');
+}
+function mkPubDel(i) { mkPub.images.splice(i, 1); mkPubImgs(); }
+function mkPubAdd() {
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = 'image/*'; inp.multiple = true;
+  inp.onchange = async () => {
+    for (const f of [...inp.files].slice(0, 5 - mkPub.images.length)) {
+      const data = typeof artCompressImage === 'function' ? await artCompressImage(f) : '';
+      if (data) mkPub.images.push(data);
+    }
+    mkPubImgs();
+  };
+  inp.click();
+}
+async function mkPubSend() {
+  const title = (document.getElementById('mkpub-title').value || '').trim(), price = Number(document.getElementById('mkpub-price').value);
+  const err = document.getElementById('mkpub-err'), go = document.getElementById('mkpub-go');
+  const fail = t => { err.textContent = t; err.hidden = false; };
+  if (!mkPub.images.length) return fail('צריך להוסיף לפחות תמונה אחת');
+  if (title.length < 2) return fail('צריך לכתוב כותרת');
+  if (!(price >= 0) || document.getElementById('mkpub-price').value === '') return fail('צריך לכתוב מחיר');
+  err.hidden = true; go.disabled = true; go.textContent = 'מפרסם…';
+  // משתמשים במסלול הפרסום הקיים: ממלאים את נתוני השיחה ומפרסמים מאחורי הקלעים
+  qpEnsureModal();
+  document.getElementById('qp-messages').innerHTML = '';
+  qpData = { title, images: mkPub.images.slice(0, 5), summary: '', communityId: null, type: 'photo', pageSection: 'secondhand', isProduct: true, tags: {}, tagIndex: 0, price: String(price), offerType: 'מכירה', region: '' };
+  await qpPublish();
+  const out = document.getElementById('qp-messages').innerText || '';
+  const qm = document.getElementById('quick-publish-modal'); if (qm) qm.style.display = 'none';
+  if (/✅/.test(out)) {
+    mkPubClose();
+    glassBanner({ title: 'המודעה פורסמה', sub: typeof isAdmin === 'function' && isAdmin() ? title : 'תופיע בשוק אחרי אישור מנהל', icon: 'ok', ms: 2600 });
+  } else { go.disabled = false; go.textContent = 'פרסום'; fail(/מחר/.test(out) ? 'כבר העלית מודעה היום. אפשר להעלות מודעה אחת ביום.' : 'הפרסום נכשל. נסו שוב.'); }
+}
+Object.assign(window, { mkPubOpen, mkPubClose, mkPubAdd, mkPubDel, mkPubSend });
 function mktPublish(sec) {
   // לשונית העלאה: נפתח רק חלון השיחה, והעמוד מאחוריו נשאר כמו שהוא
   if (sec === 'used') { window.__qpSection = 'secondhand'; try { openQuickPublish(); } finally { window.__qpSection = ''; } return; }
@@ -31242,7 +31294,7 @@ function rentMiniHTML(x) {
 }
 function rentGridHTML() {
   const l = rentList();
-  if (!l.length) return `<div class="rn-empty">אין עדיין מודעות כאן.<br><button type="button" class="rn-pub" onclick="mktPublish('${rentUI.sec}')">היו הראשונים לפרסם</button></div>`;
+  if (!l.length) return `<div class="rn-empty">אין עדיין מודעות כאן.<br><button type="button" class="rn-pub" onclick="mkPubOpen()">היו הראשונים לפרסם</button></div>`;
   rentInfList = l; rentInfShown = RENT_BATCH;
   setTimeout(rentInfArm, 0);
   return `<div class="mk-sg-grid mk-grid">${l.slice(0, RENT_BATCH).map(rentMiniHTML).join('')}</div>${l.length > RENT_BATCH ? '<div class="rn-more-end" aria-hidden="true"></div>' : ''}`;
@@ -31255,8 +31307,8 @@ function rentViewHTML() {
   const secCount = id => id === 'all' ? all.length : all.filter(r => mktSecOf(r) === id).length;
   const sec = MKT_SECS.find(x => x.id === rentUI.sec) || MKT_SECS[0];
   const pubBtn = rentUI.sec === 'all'
-    ? `<details class="rn-pubmenu"><summary class="rn-pub">+ פרסום מודעה</summary><div>${MKT_SECS.slice(1).map(x => `<button type="button" onclick="mktPublish('${x.id}')">${x.ic} ${x.name}</button>`).join('')}</div></details>`
-    : `<button type="button" class="rn-pub" onclick="mktPublish('${rentUI.sec}')">+ ${rentUI.sec === 'used' ? 'פרסום מוצר ליד 2' : rentUI.sec === 'store' ? 'פרסום שטח לאחסון' : 'פרסום ציוד להשכרה'}</button>`;
+    ? `<button type="button" class="rn-pub" onclick="mkPubOpen()">+ פרסום מודעה</button>`
+    : `<button type="button" class="rn-pub" onclick="mkPubOpen()">+ פרסום מודעה</button>`;
   return `<header class="rn-head">
       ${pubBtn}
     </header>
@@ -31465,7 +31517,7 @@ function rentDetailHTML(r) {
   const specs = (r.specs || []).filter(Boolean).join(' · ');
   subscribeReposts();
   main[2] = '<rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19M6.5 15h4"/>';   // כרטיס בקו דק, כמו שאר הסמלים
-  const WORD = { 'הצעת מחיר': 'הצעה', 'פנייה למוכר': 'פנייה', 'הצעת החלפה': 'החלפה', 'בקשת השאלה': 'השאלה', 'בקשת אחסון': 'אחסון', 'בקשת השכרה': 'השכרה', 'הוספה לעגלה': 'עגלה', 'הודעה למוכר': 'הודעה', 'מחיקת המודעה (מנהל)': 'מחיקה' };
+  const WORD = { 'הצעת מחיר': 'הצעה', 'פנייה למוכר': 'פנייה', 'הצעת החלפה': 'החלפה', 'בקשת השאלה': 'השאלה', 'בקשת אחסון': 'אחסון', 'בקשת השכרה': 'השכרה', 'הוספה לעגלה': 'הוסף לסל', 'הודעה למוכר': 'הודעה', 'מחיקת המודעה (מנהל)': 'מחיקה' };
   const btn = (icon, label, act, cls, attr) => `<span class="mk-ic"><button type="button" class="mp-btn${cls ? ' ' + cls : ''}" title="${label}" aria-label="${label}"${attr || ''} onclick="${act}">${ic(icon)}</button><small>${WORD[label] || label}</small></span>`;
   const cartBtn = typeof mktCartable === 'function' && mktCartable(r) ? btn('<circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M3 4h2l2.6 12h11l2-8H6"/>', 'הוספה לעגלה', `rentCartAdd('${artEsc(r.id)}')`, 'mk-cart-add' + (cartGet().some(x => x.id === 'mkt_' + r.id) ? ' on' : '')) : '';
   const feat = (icon, title, sub) => `<li><span>${ic(icon)}</span><div><b>${escHtml(title)}</b>${sub ? `<small>${escHtml(sub)}</small>` : ''}</div></li>`;
