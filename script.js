@@ -30425,7 +30425,49 @@ function cartSetQty(id, n) {
 function coSetQty(i, n) { coKeep(); const it = coState.items[i]; if (!it) return; it.qty = n; coRender(); }
 function ckSetQty(i, n) { ckKeep(); const it = coState.items[i]; if (!it) return; it.qty = n; ckRender(); }
 Object.assign(window, { cartSetQty, coSetQty, ckSetQty });
-function cartCount() { return cartGet().reduce((a, x) => a + Math.ceil(x.qty), 0); }
+function cartCount() { return cartGet().reduce((a, x) => a + Math.ceil(x.qty), 0) + rentListGet().length; }
+// רשימת ההשכרות: כמו הסל — נשמרת בדפדפן ולא צריך להיות מחובר; רק שליחת הבקשות למשכירים דורשת התחברות
+function rentListGet() { try { return (JSON.parse(localStorage.getItem('bw_rentlist') || '[]') || []).filter(x => x && x.id && x.qty > 0); } catch (e) { return []; } }
+function rentListSet(l) { try { localStorage.setItem('bw_rentlist', JSON.stringify(l)); } catch (e) {} cartBadge(); if (document.getElementById('cart-panel')) cartRender(); }
+function rentListAdd(id) {
+  const r = rentFind(id); if (!r) return;
+  const l = rentListGet(), it = l.find(x => x.id === id), n = Math.max(rentMin(r), Number((document.getElementById('rn-qty') || {}).value) || 1);
+  if (it) it.qty = n; else l.push({ id, qty: n, t: Date.now() });
+  rentListSet(l);
+  document.querySelectorAll('.mk-rent-add').forEach(b => b.classList.add('on'));
+  glassBanner({ title: 'נוסף לרשימת ההשכרות', sub: r.title, icon: 'ok', btn: 'לרשימה', onBtn: () => cartOpen('rent') });
+}
+function rentListQty(id, n) { const l = rentListGet(), it = l.find(x => x.id === id); if (!it) return; it.qty = n; rentListSet(n > 0 ? l : l.filter(x => x.id !== id)); }
+function rentListRender(box) {
+  const lines = rentListGet().map(x => ({ ...x, r: rentFind(x.id) })).filter(x => x.r);
+  const sum = lines.reduce((a, l) => a + rentCalc(l.r, l.qty).total, 0);
+  box.querySelector('.cart-body').innerHTML = lines.length ? lines.map(l => `<div class="cart-row">
+      <span class="cart-th">${l.r.img ? `<img src="${escHtml(l.r.img)}" alt="">` : PRODUCT_ICON}</span>
+      <span class="cart-tx"><b>${escHtml(l.r.title || '')}</b><small>${escHtml(rentPriceShort(l.r).replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' '))} · ${escHtml(l.r.owner || '')}</small></span>
+      ${qtyDDHTML(l.qty, [...new Set(rentQtyOpts(l.r).concat([l.qty]))].sort((a, b) => a - b), n => `rentListQty('${artEsc(l.id)}',${n})`, `rentListQty('${artEsc(l.id)}',0)`)}
+    </div>`).join('') : `<div class="cart-empty">אין עדיין השכרות ברשימה<br><button type="button" class="ms-btn" onclick="cartClose(); mktGo('all')">לשוק</button></div>`;
+  box.querySelector('.cart-foot').innerHTML = lines.length ? `<div class="co-line co-total"><span>סה״כ משוער (כולל עמלה)</span><span>${coMoney(sum)}</span></div><button type="button" class="ms-btn" onclick="rentListSend(this)">שליחת בקשות השכרה</button>` : '';
+}
+async function rentListSend(btn) {
+  const u = auth.currentUser;
+  if (!u || u.isAnonymous) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); glassBanner({ title: 'כמעט שם', sub: 'התחברו כדי לשלוח את הבקשות למשכירים. הרשימה נשמרת.', icon: 'msg' }); return; }
+  const lines = rentListGet().map(x => ({ ...x, r: rentFind(x.id) })).filter(x => x.r && x.r.uid !== u.uid);
+  if (!lines.length) return;
+  btn.disabled = true;
+  let sent = 0;
+  for (const l of lines) {
+    const c = rentCalc(l.r, l.qty);
+    try {
+      if (!l.r.demo) await offerRecord({ kind: 'rent', toUid: l.r.uid, toName: l.r.owner, itemId: 'rent_' + l.r.id, title: l.r.title, price: c.total, note: `${l.qty} ${RENT_UNITS[l.r.unit] || ''} · שימוש ₪${c.sub} + עמלה ₪${c.fee}` });
+      sent++;
+    } catch (e) {}
+  }
+  if (typeof trackEvent === 'function') trackEvent('rent_request');
+  rentListSet([]);
+  glassBanner({ title: sent === 1 ? 'בקשת ההשכרה נשלחה' : `${sent} בקשות השכרה נשלחו`, sub: 'המשכירים יקבלו אותן בהצעות שלהם', icon: 'ok', ms: 2600 });
+}
+function cartSetTab(t) { cartTab = t; cartRender(); }
+Object.assign(window, { rentListAdd, rentListQty, rentListSend, cartSetTab });
 function cartBadge() {
   const n = cartCount();
   document.querySelectorAll('.cart-hdr-n').forEach(b => { b.textContent = n || ''; b.hidden = !n; });
@@ -30440,6 +30482,9 @@ function cartBadge() {
 }
 function cartRender() {
   const box = document.getElementById('cart-panel'); if (!box) return;
+  const tabs = box.querySelector('.cart-tabs'), rn = rentListGet().length, cn = cartGet().length;
+  if (tabs) tabs.innerHTML = `<button type="button" class="${cartTab === 'cart' ? 'on' : ''}" onclick="cartSetTab('cart')">סל קניות${cn ? ` (${cn})` : ''}</button><button type="button" class="${cartTab === 'rent' ? 'on' : ''}" onclick="cartSetTab('rent')">השכרות${rn ? ` (${rn})` : ''}</button>`;
+  if (cartTab === 'rent') return rentListRender(box);
   const list = cartCatalog(); const c = cartGet();
   const lines = c.map(x => ({ ...x, p: list.find(p => p.id === x.id) })).filter(x => x.p);
   const sub = lines.reduce((a, l) => a + coPrice(l.p) * l.qty, 0);
@@ -30450,13 +30495,15 @@ function cartRender() {
     </div>`).join('') : `<div class="cart-empty">העגלה ריקה<br><button type="button" class="ms-btn" onclick="cartClose(); navigateToPage('page-rent-main')">לשוק</button></div>`;
   box.querySelector('.cart-foot').innerHTML = lines.length ? `<div class="co-line co-total"><span>${lines.some(l => l.p.seller) ? 'סה״כ כולל מוכרים' : 'סה״כ (לפני משלוח)'}</span><span>${coMoney(sub)}</span></div><button type="button" class="ms-btn"${lines.every(l => l.p.seller) ? ' hidden' : ''} onclick="cartClose(); cartCheckout()">לתשלום</button>` : '';
 }
-function cartOpen() {
+let cartTab = 'cart';   // 'cart' — סל קניות · 'rent' — רשימת ההשכרות
+function cartOpen(tab) {
+  if (tab === 'cart' || tab === 'rent') cartTab = tab;
   let el = document.getElementById('cart-panel');
   if (!el) {
     el = document.createElement('div'); el.id = 'cart-panel';
     el.innerHTML = `<div class="ask-backdrop" onclick="cartClose()"></div><section class="ask-card cart-card" role="dialog" aria-label="העגלה שלי">
       <header class="ask-head"><b>העגלה שלי</b><button type="button" class="ask-hb" onclick="cartClose(); ordersOpen()" title="ההזמנות שלי" aria-label="ההזמנות שלי"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg></button><button type="button" class="ask-hb" onclick="cartClose()" aria-label="סגירה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header>
-      <div class="cart-body ask-msgs"></div><div class="cart-foot"></div></section>`;
+      <div class="cart-tabs" role="tablist"></div><div class="cart-body ask-msgs"></div><div class="cart-foot"></div></section>`;
     document.body.appendChild(el);
   }
   cartRender();
@@ -31506,7 +31553,7 @@ function rentDetailHTML(r) {
   // הכפתור הראשי: מוצר יד 2 אמיתי — הצעת מחיר; דוגמת יד 2 — פנייה; השכרה/אחסון — בקשה
   const main = r.shId ? [`openPriceOffer('${artEsc(r.shId)}', '${artEsc(r.title || '')}', '${artEsc(r.uid || '')}', '${artEsc(r.owner || '')}')`, 'הצעת מחיר', RENT_PAY_ICON]
     : r.kind === 'used' ? [`rentRequest('${artEsc(r.id)}')`, r.offer === 'החלפה' ? 'הצעת החלפה' : r.offer === 'השאלה' ? 'בקשת השאלה' : 'פנייה למוכר', RENT_PAY_ICON]
-    : [`rentRequest('${artEsc(r.id)}')`, r.cat === 'storage' ? 'בקשת אחסון' : 'בקשת השכרה', RENT_PAY_ICON];
+    : [`rentListAdd('${artEsc(r.id)}')`, r.cat === 'storage' ? 'בקשת אחסון' : 'בקשת השכרה', RENT_PAY_ICON];
   const unitName = (RENT_UNITS[r.unit] || '').replace(/^ל/, '');
   const terms = r.raw && Array.isArray(r.raw.loanTerms) ? r.raw.loanTerms.filter(x => typeof x === 'string') : [];
   const short = String(r.desc || '').trim();
@@ -31525,7 +31572,7 @@ function rentDetailHTML(r) {
   const who = `${authorAvHTML({ author: owner, uid: r.uid || '' })}<span class="mk-seller-tx"><b>${escHtml(owner)}</b>${when ? `<small>${escHtml(when)}</small>` : ''}</span>`;
   // כל הכפתורים חוץ מ"הוסף לסל" — מתחת לתמונה, מימין
   const galActs = `<div class="mp-btns mk-acts mk-galacts">
-            ${btn(main[2], main[1], main[0], 'mk-go')}
+            ${btn(main[2], main[1], main[0], 'mk-go' + (!r.shId && r.kind !== 'used' ? ' mk-rent-add' + (rentListGet().some(x => x.id === r.id) ? ' on' : '') : ''))}
             ${btn('<path d="M6 4h12v17l-6-4.5L6 21z"/>', 'שמירה', r.shId ? `photoToggleSave('${artEsc(r.shId)}')` : `rentMark(this, 'save', '${artEsc(r.id)}')`, saved ? 'on' : '', r.shId ? ` data-save="${escHtml(r.shId)}"` : '')}
             ${btn('<path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/>', 'אהבתי', r.shId ? `photoToggleLike('${artEsc(r.shId)}')` : `rentMark(this, 'like', '${artEsc(r.id)}')`, liked ? 'on' : '', r.shId ? ` data-like="${escHtml(r.shId)}"` : '')}
             ${r.shId ? btn('<path d="M21 12a8 8 0 0 1-8 8H4l2.2-2.6A8 8 0 1 1 21 12z"/>', 'הודעה למוכר', ask) : ''}
