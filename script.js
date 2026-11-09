@@ -16002,11 +16002,13 @@ function buildUserPageHTML(authorId, authorName) {
         pfGridItems = authorPosts.filter(x => x.__repostBy);
         // שורת נתונים: מודעות · צפיות · עוקבים · נעקבים, ומתחת לשוניות הכל / מודעות / ריפוסטים
         const keys = mine.map(rentCommentsKey), views = keys.reduce((a, k) => a + photoGetViews(k), 0);
-        if (authorId) setTimeout(() => pfFollowFill(authorId), 0);
+        if (authorId) setTimeout(() => { pfFollowFill(authorId); if (typeof rentSellerLoad === 'function') rentSellerLoad(authorId); }, 0);
         return `<div class="pf-stats"><span><b>${mine.length.toLocaleString('he-IL')}</b> מודעות</span><span><b class="pf-views-sum" data-keys="${escHtml(keys.join(','))}">${formatViews(views)}</b> צפיות</span><span><b id="pf-st-fol">—</b> עוקבים</span><span><b id="pf-st-fwg">—</b> נעקבים</span></div>
-          <div class="pf-tabs2" role="tablist"><button type="button" class="on" onclick="pfTab2(this, 'all')">הכל</button><button type="button" onclick="pfTab2(this, 'mkt')">${mine.length} מודעות</button><button type="button" onclick="pfTab2(this, 'rep')">${pfGridItems.length} ריפוסטים</button></div>`
+          <div class="pf-tabs2" role="tablist"><button type="button" class="on" onclick="pfTab2(this, 'all')">הכל</button><button type="button" onclick="pfTab2(this, 'mkt')">${mine.length} מודעות</button><button type="button" onclick="pfTab2(this, 'rep')">${pfGridItems.length} ריפוסטים</button></div>
+          <div class="pf-body"><aside class="pf-about" id="pf-about">${pfAboutHTML(window._upState)}</aside><div class="pf-feed">`
           + (mine.length ? `<section class="pf-mkt" data-pf="mkt"><h3>מודעות בשוק</h3>${mktSellerGridHTML(mine, true)}</section>` : '<div class="pf-empty" data-pf="mkt">עדיין אין מודעות</div>')
-          + (pfGridItems.length ? `<section class="pf-mkt" data-pf="rep"><h3>שיתופים</h3><div class="pfg-grid">${pfGridCardsHTML('reposts')}</div></section>` : '<div class="pf-empty" data-pf="rep" hidden>עדיין אין ריפוסטים</div>');
+          + (pfGridItems.length ? `<section class="pf-mkt" data-pf="rep"><h3>שיתופים</h3><div class="pfg-grid">${pfGridCardsHTML('reposts')}</div></section>` : '<div class="pf-empty" data-pf="rep" hidden>עדיין אין ריפוסטים</div>')
+          + '</div></div>';
       })()}
       </div>
       </div>
@@ -16166,8 +16168,8 @@ function profileHeadHTML(st) {
       ${bio ? `<p class="pf-bio">${escHtml(bio)}</p>` : (isOwn ? `<button type="button" class="pf-bio-add" onclick="profileEditBio()">+ הוסיפו כמה מילים עליכם</button>` : '')}
       ${facts ? `<div class="pf-facts">${facts}</div>` : ''}
       <div class="pf-counts">
-        <span><b>${c.following != null ? num(c.following) : '—'}</b> עוקב/ת</span>
         <span><b>${c.followers != null ? num(c.followers) : '—'}</b> עוקבים</span>
+        <span>במעקב אחר&nbsp;<b>${c.following != null ? num(c.following) : '—'}</b></span>
         <span><b>${num(totalViews)}</b> צפיות</span>
       </div>
     </section>`;
@@ -16375,6 +16377,30 @@ function pfOverviewHTML(albums, market, posts) {
 function profileRenderHead() {
   const el = document.getElementById('user-page-head');
   if (el && window._upState) { el.innerHTML = profileHeadHTML(window._upState) + pfSideHTML(window._upState); if (typeof avatarHydrate === 'function') avatarHydrate(el); }
+  const ab = document.getElementById('pf-about');
+  if (ab && window._upState) { ab.innerHTML = pfAboutHTML(window._upState); if (window._upState.uid && typeof rentSellerLoad === 'function') rentSellerLoad(window._upState.uid); }
+}
+// כרטיס "פרטים" בפרופיל: דירוג, מקום, מודעות וצפיות, ופרטים ליצירת קשר
+function pfAboutHTML(st) {
+  st = st || {};
+  const p = st.profile || {}, uid = st.uid || '', me = auth.currentUser, own = !!(uid && me && me.uid === uid);
+  const ic = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+  const row = (icon, html) => `<li><span class="pfa-ic">${ic(icon)}</span><span class="pfa-tx">${html}</span></li>`;
+  const mine = uid ? mktSellerItems(uid, st.name) : [];
+  const views = mine.reduce((a, r) => a + photoGetViews(rentCommentsKey(r)), 0);
+  const where = [p.aboutCity, p.aboutRegion].filter(Boolean).join(', ');
+  const tg = String(p.telegram || '').replace(/^@/, '').trim(), mail = String(p.email || '').trim();
+  const contact = [
+    !own && uid ? row('<path d="M21 12a8 8 0 0 1-8 8H4l2.2-2.6A8 8 0 1 1 21 12z"/>', `<button type="button" class="pfa-link" onclick="dmStartWith('${artEsc(uid)}','${artEsc(st.name || '')}')">שליחת הודעה</button>`) : '',
+    mail ? row('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>', `<a class="pfa-link" href="mailto:${escHtml(mail)}" dir="ltr">${escHtml(mail)}</a>`) : '',
+    tg ? row('<path d="M21 4 3 11l6 2 2 6 3-4 5 4z"/>', `<a class="pfa-link" href="https://t.me/${escHtml(encodeURIComponent(tg))}" target="_blank" rel="noopener" dir="ltr">@${escHtml(tg)}</a>`) : ''
+  ].join('');
+  return `<section class="pfa-card"><h3>פרטים</h3><ul>
+      ${row('<path d="M12 2.8l2.8 5.8 6.4.9-4.6 4.5 1.1 6.3L12 17.3l-5.7 3 1.1-6.3L2.8 9.5l6.4-.9z"/>', `<span class="mk-rate" data-seller="${escHtml(uid)}">${rentRateHTML(0, 0)}</span>`)}
+      ${where ? row('<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>', escHtml(where)) : ''}
+      ${row('<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/>', `${mine.length === 1 ? 'מודעה אחת' : mine.length + ' מודעות'} · ${formatViews(views)} צפיות`)}
+    </ul>
+    ${contact ? `<h3>פרטים ליצירת קשר</h3><ul>${contact}</ul>` : ''}</section>`;
 }
 async function profileLoadCounts(uid) {
   if (!uid) return;
