@@ -1436,6 +1436,13 @@ function renderTopNav() {
     
     navLinksContainer.appendChild(a);
   });
+  // פרופיל ופיד — אחרי "בית"
+  [['פרופיל', () => { const u = auth.currentUser; if (u && !u.isAnonymous) openUserPage(u.uid); else if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); }], ['פיד', () => mktFeedOpen()]].forEach(([t, go]) => {
+    const a = document.createElement('a');
+    a.href = '#'; a.textContent = t; a.className = 'nav-x';
+    a.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); window.__detailOpen = false; go(); });
+    navLinksContainer.appendChild(a);
+  });
 }
 
 // אזור הקליטה (Drop Zone) בתפריט העליון
@@ -12507,7 +12514,7 @@ Object.assign(window, { obNext, obBack, obClose, obPickPhoto, obBuildAvatar, obC
 // --- עורך הדמות ---
 let avEdit = null;
 let avTab = 'sex';
-const AV_TABS = [['sex', 'מין ותפקיד'], ['skin', 'צבע עור'], ['hair', 'שיער'], ['eyes', 'עיניים'], ['beard', 'זקן']];
+const AV_TABS = [['sex', 'מין'], ['skin', 'צבע עור'], ['hair', 'שיער'], ['eyes', 'עיניים'], ['beard', 'זקן']];
 function avOptionsHTML() {
   // כל אפשרות מוצגת כדמות קטנה + שם
   const shapes = (key, names, label) => `
@@ -12519,9 +12526,7 @@ function avOptionsHTML() {
       <div class="av-group"><div class="av-group-title">מין</div><div class="av-sex">
         ${[1, 2].map(i => `<button type="button" class="av-sex-btn${avEdit.g === i ? ' on' : ''}" onclick="avSet('g',${i}); avSet('r',0)"><b>${AV_SEX_SIGN[i]}</b><span>${AV_SEX_NAMES[i]}</span></button>`).join('')}
       </div></div>
-      ${avEdit.g ? `<div class="av-group"><div class="av-group-title">תפקיד</div><div class="av-roles">
-        ${[1, 2].map(i => `<button type="button" class="av-role-btn${avEdit.r === i ? ' on' : ''}" onclick="avSet('r',${i})">${AV_ROLE_NAMES[avEdit.g][i]}</button>`).join('')}
-      </div></div>` : ''}`;
+`;
     case 'skin': return shapes('s', AV_SKIN_NAMES, 'צבע עור');
     case 'hair': return shapes('h', AV_HAIR_NAMES, 'תסרוקת') + shapes('hc', AV_HAIR_C_NAMES, 'צבע שיער');
     case 'eyes': return shapes('ec', AV_EYE_C_NAMES, 'צבע עיניים');
@@ -16147,7 +16152,7 @@ function profileHeadHTML(st) {
   const num = (n) => (typeof formatViews === 'function' ? formatViews(n || 0) : String(n || 0));
   const totalViews = (st.uploads || []).reduce((sum, a) => sum + (typeof photoGetViews === 'function' ? photoGetViews(a.id) : 0), 0);
   const av = (typeof avNormalize === 'function') ? avNormalize(profile.avatar) : {};
-  const role = av.g && av.r && typeof AV_ROLE_NAMES !== 'undefined' ? AV_ROLE_NAMES[av.g][av.r] : '';
+  const role = '';   // התפקיד הוסר מהפרופיל
   const sex = av.g && typeof AV_SEX_NAMES !== 'undefined' ? AV_SEX_NAMES[av.g] : '';
   const where = [profile.aboutCity, profile.aboutRegion].filter(Boolean).join(', ');
   const facts = [
@@ -16766,9 +16771,7 @@ function userWatchHTML(st) {
         <div class="uw-details">
           ${(() => {
             const av = avNormalize(profile.avatar);
-            const role = av.g && av.r ? AV_ROLE_NAMES[av.g][av.r] : '';
-            return row('#ea580c', 'מין', av.g ? `<span class="uw-sex g${av.g}"><b>${AV_SEX_SIGN[av.g]}</b>${AV_SEX_NAMES[av.g]}</span>` : none)
-              + row('#e11d48', 'תפקיד', role ? `<span class="uw-role">${escHtml(role)}</span>` : none);
+            return row('#ea580c', 'מין', av.g ? `<span class="uw-sex g${av.g}"><b>${AV_SEX_SIGN[av.g]}</b>${AV_SEX_NAMES[av.g]}</span>` : none);
           })()}
           ${row('#ffd60a', 'מאיפה', where ? `<span class="uw-text">${escHtml(where)}</span>` : none)}
           ${row('#64d2ff', 'טלגרם', tg ? `<a class="uw-link" href="https://t.me/${encodeURIComponent(tg)}" target="_blank" rel="noopener" dir="ltr">@${escHtml(tg)}</a>` : none)}
@@ -18228,6 +18231,38 @@ function mktMarkedItems(kind) {
   if (typeof mktAll !== 'function') return [];
   return mktAll().filter(r => r.shId ? (kind === 'like' ? photoIsLikedLocal(r.shId) : photoIsSavedLocal(r.shId)) : rentMarked(kind, r.id));
 }
+// הפיד: מה שאני ומי שאני עוקב/ת אחריהם העלינו ושיתפנו, מהחדש לישן
+async function mktFeedOpen() {
+  const u = auth.currentUser;
+  if (!u || u.isAnonymous) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); if (typeof showCopyToast === 'function') showCopyToast('התחברו כדי לראות את הפיד'); return; }
+  if (typeof mainContent === 'undefined' || !mainContent) return;
+  mainContent.innerHTML = '<div class="fd-page"><h1 class="fd-h">הפיד</h1><div class="rn-empty">טוען…</div></div>';
+  try { window.scrollTo(0, 0); } catch (e) {}
+  let follows = {}, reps = {};
+  try { follows = (await get(ref(db, `website/user_follows/${u.uid}`))).val() || {}; } catch (e) {}
+  try { reps = (await get(ref(db, 'website/reposts'))).val() || {}; } catch (e) {}
+  if (!mainContent.querySelector('.fd-page')) return;   // הגולש עבר לעמוד אחר בינתיים
+  const who = new Set([u.uid].concat(Object.keys(follows)));
+  const all = mktAll(), byKey = {};
+  all.forEach(r => { byKey[rentCommentsKey(r)] = r; });
+  const items = [];
+  all.forEach(r => { if (r.uid && who.has(r.uid)) items.push({ r, uid: r.uid, name: r.owner, act: 'העלה/תה', at: r.t || 0 }); });
+  Object.entries(reps).forEach(([k, m]) => { const r = byKey[k]; if (!r || !m) return; Object.entries(m).forEach(([uid, v]) => { if (who.has(uid)) items.push({ r, uid, name: (v && v.name) || (uid === u.uid ? 'אני' : 'גולש/ת'), act: 'שיתף/ה', at: (v && v.at) || 0 }); }); });
+  items.sort((a, b) => b.at - a.at);
+  const me = x => x.uid === u.uid;
+  const cards = list => list.length ? `<div class="mk-sg-grid mk-grid fd-grid">${list.map(x => `<div class="fd-item"><button type="button" class="fd-by" onclick="openUserPage('${artEsc(x.uid)}', '${artEsc(x.name)}')">${authorAvHTML({ author: x.name, uid: x.uid })}<span><b>${escHtml(me(x) ? 'אני' : x.name)}</b> ${x.act}</span></button>${rentMiniHTML(x.r).replace(/onclick="rentOpen\(/, 'onclick="mktOpenItem(')}</div>`).join('')}</div>`
+    : '<div class="rn-empty">עדיין אין כאן כלום.<br>עקבו אחרי מוכרים כדי לראות מה הם מעלים ומשתפים.</div>';
+  const mine = items.filter(me), theirs = items.filter(x => !me(x));
+  mainContent.innerHTML = `<div class="fd-page"><h1 class="fd-h">הפיד</h1>
+    <div class="pf-tabs2" role="tablist"><button type="button" class="on" onclick="fdTab(this, 'all')">הכל</button><button type="button" onclick="fdTab(this, 'them')">${theirs.length} ממי שאני עוקב/ת</button><button type="button" onclick="fdTab(this, 'me')">${mine.length} שלי</button></div>
+    <div data-fd="all">${cards(items)}</div><div data-fd="them" hidden>${cards(theirs)}</div><div data-fd="me" hidden>${cards(mine)}</div></div>`;
+  if (typeof avatarHydrate === 'function') avatarHydrate(mainContent);
+}
+function fdTab(btn, t) {
+  btn.parentElement.querySelectorAll('button').forEach(b => b.classList.toggle('on', b === btn));
+  document.querySelectorAll('.fd-page [data-fd]').forEach(el => { el.hidden = el.dataset.fd !== t; });
+}
+Object.assign(window, { mktFeedOpen, fdTab });
 function mktFavGridHTML(list) {
   return `<div class="mk-fav-grid">${list.map(r => { const img = r.img || (r.images || [])[0] || '';
     return `<button type="button" class="mk-fav-cell" onclick="closeSavedModal(); mktOpenItem('${artEsc(r.id)}')" title="${escHtml(r.title || '')}">${img ? `<img src="${escHtml(img)}" alt="" loading="lazy">` : ''}<span>${escHtml(r.title || '')}</span></button>`; }).join('')}</div>`;
@@ -31116,9 +31151,11 @@ function rentAgo(t) {
   const m = Math.max(1, Math.round((Date.now() - (t || 0)) / 6e4));
   return m < 60 ? `לפני ${m} דק׳` : m < 1440 ? `לפני ${Math.round(m / 60)} שע׳` : `לפני ${Math.round(m / 1440)} ימים`;
 }
+// תמונות הדוגמה הוחלפו בגרסה חדה יותר — הגרסה בכתובת עוקפת את המטמון של הדפדפן
+[USED_DEMO, RENT_DEMO].forEach(l => l.forEach(d => { if (/^rent\/[^/?]+\.jpg$/.test(d.img || '')) d.img += '?v=2'; if (Array.isArray(d.images)) d.images = d.images.map(u => /^rent\/[^/?]+\.jpg$/.test(u || '') ? u + '?v=2' : u); }));
 function rentThumb(r, big) {
   const c = rentCatOf(r.cat), g = r.g || ['#1f2937', '#4b5563'];
-  const src = !big && /^rent\/[^/]+\.jpg$/.test(r.img || '') ? r.img.replace('rent/', 'rent/t/') : r.img;   // בכרטיסים: גרסה קטנה של תמונות הדוגמה
+  const src = !big && /^rent\/[^/?]+\.jpg(\?v=\d+)?$/.test(r.img || '') ? r.img.replace('rent/', 'rent/t/') : r.img;   // בכרטיסים: גרסה קטנה של תמונות הדוגמה
   return r.img ? `<img src="${escHtml(src)}" alt="" loading="lazy" decoding="async">`
     : `<span class="rn-ph" style="background:linear-gradient(140deg,${g[0]},${g[1]})"><b>${c.ic}</b>${big ? `<i>${escHtml(c.name)}</i>` : ''}</span>`;
 }
