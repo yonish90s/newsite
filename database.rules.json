@@ -677,6 +677,21 @@
           ".write": "auth != null && !data.exists() && $id.matches(/^BW-[0-9]{6}$/)",
           ".validate": "newData.hasChildren(['h','t']) && newData.child('h').isString() && newData.child('h').val().length === 64 && newData.child('t').isNumber() && newData.child('t').val() <= now + 60000"
         }
+      },
+      "market_stock": {
+        ".read": true,
+        "$uid": {
+          ".write": "auth != null && auth.uid === $uid && auth.token.firebase.sign_in_provider !== 'anonymous'",
+          "$itemId": {
+            ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100000"
+          }
+        }
+      },
+      "wallets": {
+        "$uid": {
+          ".read": "auth != null && auth.uid === $uid",
+          ".write": false
+        }
       }
     }
   }

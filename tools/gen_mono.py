@@ -124,5 +124,5 @@ def inline_rules():
 
 css = re.sub(r'/\*.*?\*/', '', open(os.path.join(ROOT, 'style.css'), encoding='utf8').read(), flags=re.S)
 extra = open(os.path.join(ROOT, 'tools', 'mono-extra.css'), encoding='utf8').read()
-extra = extra.replace('BODY', 'html:not(.theme-dark) body' + ':not(#_)' * 240)
+extra = extra.replace('BODY', 'html:not(.theme-dark) body' + ':not(#_)' * 1000)
 open(os.path.join(ROOT, 'mono.css'), 'w', encoding='utf8').write(walk(css) + '\n' + inline_rules() + '\n' + extra)

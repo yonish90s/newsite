@@ -7,10 +7,11 @@
 import re, os
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PAGE, CARD, SURF, SURF2, RAISE = '#0a0a0a', '#111111', '#111111', '#1c1c1c', '#242424'
-BORDER = '#2a2a2a'
-TEXT, TEXT2, MUTED = '#ffffff', '#d0d0d0', '#9a9a9a'
-ACC = '#262626'
+# כהה בגוון כחלחל-שחור (כמו באינסטגרם/גיטהאב): רקע כמעט שחור, משטחים מעט בהירים יותר
+PAGE, CARD, SURF, SURF2, RAISE = '#0c1014', '#12171d', '#12171d', '#1a2028', '#232a33'
+BORDER = '#262d36'
+TEXT, TEXT2, MUTED = '#f5f5f5', '#c9ced6', '#a8a8a8'
+ACC = '#1f262f'
 ORANGE = '#e4202b'   # הדגש במצב כהה: אדום (שחור-אדום) במקום הוורוד
 
 
@@ -48,7 +49,7 @@ def map_bg(c):
     L, C = lum(r, g, b), chroma(r, g, b)
     if is_pink(r, g, b): return ORANGE if a >= 1 else f'rgba(228, 32, 43, {fa(a)})'
     if a < 1:
-        if L > 0.8: return f'rgba(17, 17, 17, {fa(a)})'
+        if L > 0.8: return f'rgba(18, 23, 29, {fa(a)})'
         if L < 0.3 and a < 0.3 and C < 0.2: return f'rgba(255, 255, 255, {fa(a * 0.9)})'
         return None
     if C > 0.16:

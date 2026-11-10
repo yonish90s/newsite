@@ -3,17 +3,85 @@ html:not(.theme-dark), BODY { background: #ffffff !important; background-image: 
 BODY::before, BODY::after { background: none !important; background-image: none !important; }
 BODY main.center-content { background: #ffffff !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; box-shadow: none !important; border-color: #ececec !important; }
 BODY header.apple-nav { background: #ffffff !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
-BODY :is(.au-av, .fo-avatar) { background: #111111 !important; color: #ffffff !important; }
+BODY :is(.au-av, .fo-avatar) { background: var(--av, #111111) !important; color: #ffffff !important; }
 BODY .rn-ph { background: #f2f2f2 !important; color: #111111 !important; filter: grayscale(1); }
 BODY :is(.hr-badge, .cg-badge) { background: #111111 !important; color: #ffffff !important; }
 BODY .hf-dots i.on { background: #111111 !important; }
 BODY .ng-hero-img { background: #f2f2f2 !important; background-image: none !important; }
 BODY .hxc-ic svg { stroke: #111111 !important; }
-BODY .hx-tabs, BODY .site-top .hx-tabs.hx-global { background: #f2f2f2 !important; background-image: none !important; }
-BODY .hx-tabs .hx-tab.on .hxc-ic { box-shadow: 0 0 0 3px #111111 !important; }
+BODY .hx-tabs, BODY .site-top .hx-tabs.hx-global { background: linear-gradient(100deg, #f1f9f6, #eaf6f0 55%, #f3faf3) !important; border-color: #dcede6 !important; }
 /* הכוכבים הם היוצא מן הכלל בשחור-לבן: צהובים */
 BODY .mk-stars svg { fill: none !important; stroke: #e6a700 !important; }
 BODY .mk-stars svg.on { fill: #ffc107 !important; stroke: #e6a700 !important; }
 BODY .mk-rev-pick svg { fill: none !important; stroke: #e6a700 !important; }
 BODY :is(.mk-rev-pick button.on svg, .mk-rev-pick button:hover svg, .mk-rev-pick:hover button:has(~ button:hover) svg) { fill: #ffc107 !important; }
 BODY #auth-modal .au-social.au-fb svg path { fill: #1877f2 !important; }
+
+/* מצב בהיר: דגש ירוק בהיר (כמו כפתור "הרשמה" בהשראה) לכפתורים הראשיים ולבחירה */
+BODY .rent-page .rn-pub, BODY .mkpub-go, BODY .cart-foot .ms-btn, BODY .hdr-pill-up { background: #47a093 !important; color: #fff !important; border-color: #47a093 !important; }
+BODY .rent-page .rn-pub:hover, BODY .mkpub-go:hover { background: #3c8c80 !important; }
+BODY .rent-page :is(.rn-sort, .rn-tag).on, BODY .mk-dtags .rn-tag:hover { background: #47a093 !important; color: #fff !important; border-color: #47a093 !important; }
+BODY .rent-page .rn-tag:hover { color: #2f7d72 !important; }
+BODY .pfs-follow { color: #2f8f82 !important; }
+BODY .mk-stock { color: #2f8f82 !important; }
+BODY .mk-stock.low { color: #b45309 !important; }
+BODY .mk-stock.out { color: #c62828 !important; }
+BODY .hdr-pill-sub svg, BODY .wallet-pill svg { color: #d4a017 !important; }
+BODY .srch-cta { background: linear-gradient(90deg, #f4fbf8, #eefaf1 60%, #f7fdf4) !important; }
+BODY .srch-cta-ic { background: #47a093 !important; color: #fff !important; }
+
+/* ראש האתר והלשוניות בירוק החדש: מה שחשוב בולט (חיפוש, כניסה, הלשונית הפעילה), השאר שקט */
+BODY header .hdr-search-go { background: #47a093 !important; color: #fff !important; }
+BODY header .hdr-search-go:hover { background: #3c8c80 !important; }
+BODY header form.hdr-search:focus-within { border-color: #47a093 !important; box-shadow: 0 0 0 3px rgba(71,160,147,.16) !important; }
+BODY header #manager-btn.manager-btn { background: #47a093 !important; color: #fff !important; border-color: #47a093 !important; }
+BODY header #manager-btn.manager-btn:hover { background: #3c8c80 !important; }
+BODY header .cart-hdr-n { background: #47a093 !important; color: #fff !important; }
+BODY header .notif-bell { background: transparent !important; border-color: transparent !important; color: #555 !important; box-shadow: none !important; }
+BODY header .notif-bell:hover { background: #eef6f4 !important; color: #2f7d72 !important; }
+BODY header .nav-links a { color: #555 !important; }
+BODY header .nav-links a:hover { color: #2f7d72 !important; }
+BODY .hx-tabs .hx-tab.on .hxc-ic { border-color: #47a093 !important; box-shadow: 0 0 0 3px #47a093 !important; color: #2f7d72 !important; }
+BODY .hx-tabs .hx-tab.on .hxc-ic svg { stroke: #2f7d72 !important; }
+BODY .hx-tabs .hx-tab.on { color: #2f7d72 !important; }
+BODY .hx-tabs .hx-tab:hover .hxc-ic { background: #eef6f4 !important; }
+BODY .wallet-pill b { color: #2f7d72 !important; }
+BODY .rent-page .rn-fbtn.on { background: #47a093 !important; color: #fff !important; border-color: #47a093 !important; }
+BODY .rn-fpanel .mk-f-row.on { background: #e8f4f1 !important; color: #2f7d72 !important; }
+BODY .rn-fpanel .mk-f-row.on::before { border-color: #47a093 !important; background: radial-gradient(circle, #47a093 0 4px, #fff 5px) !important; }
+BODY .rn-fpanel .mk-f-range { --acc: #47a093; }
+BODY .rn-fpanel .mk-f-clear { color: #2f7d72 !important; border-color: #47a093 !important; }
+BODY .mk-sg > .mk-sg-meta .mk-sg-price { background: #eef6f4 !important; color: #2f7d72 !important; }
+BODY .rent-page .rn-geo { color: #2f7d72 !important; border-color: #b9d9d2 !important; }
+BODY .rent-page .rn-geo.on { border-color: #47a093 !important; background: #eef6f4 !important; }
+BODY .mk-sg .mk-sg-city.km { color: #2f7d72 !important; }
+BODY .mk-sg > b.mk-sg-title .mk-sg-more { color: #2f7d72 !important; }
+/* שורת האזורים (בשבילך, העלאה, פורומים, חדשות) — רקע ירוק בהיר */
+BODY .hx-tabs.hx-global { background: linear-gradient(100deg, #f1f9f6, #eaf6f0 55%, #f3faf3) !important; border-color: #dcede6 !important; }
+BODY .hx-tabs.hx-global .hxc-ic { background: #fff !important; }
+BODY .hx-tabs.hx-global .hxc-ic svg { stroke: #2f7d72 !important; }
+BODY .hx-tabs.hx-global .hx-tab { color: #3c5e58 !important; }
+BODY .hx-tabs.hx-global :is(.hxc-arrow, .hxc-nav, button[class*="arr"]) { background: #fff !important; }
+/* שורת "מה בא לך לשתף?" — ברורה: רקע לבן, מסגרת ברורה, טקסט כהה יותר, ואייקון התמונה בולט */
+BODY .cmp-bar { background: #fff !important; border: 1.5px solid #cfe3dd !important; box-shadow: 0 2px 10px rgba(47,125,114,.08) !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+BODY .cmp-bar:focus-within { border-color: #47a093 !important; box-shadow: 0 0 0 3px rgba(71,160,147,.16) !important; }
+BODY .cmp-bar .cmp-input { color: #111 !important; }
+BODY .cmp-bar .cmp-input::placeholder { color: #555 !important; opacity: 1 !important; }
+BODY .cmp-bar .cmp-ic { background: #eef6f4 !important; color: #2f7d72 !important; opacity: 1 !important; border-color: transparent !important; }
+BODY .cmp-bar .cmp-ic:hover { background: #47a093 !important; color: #fff !important; }
+BODY .cmp-bar .cmp-ic svg, BODY .cmp-bar .cmp-ic svg * { stroke: currentColor !important; opacity: 1 !important; }
+BODY .cmp-bar .au-av.cmp-av { background: #47a093 !important; color: #fff !important; }
+/* חלון הכניסה: הצד הכהה — ירוק בהיר, וטקסט ירוק כהה כדי שיהיה קריא */
+BODY #auth-modal .au-side { background: linear-gradient(160deg, #e9f6f1, #d9efe7 60%, #cfe9df) !important; color: #1f5c53 !important; }
+BODY #auth-modal .au-side h2 { color: #17473f !important; }
+BODY #auth-modal .au-side li { color: #2a6b61 !important; }
+BODY #auth-modal .au-side li::before, BODY #auth-modal .au-side li svg { color: #47a093 !important; border-color: #47a093 !important; stroke: #47a093 !important; }
+BODY #auth-modal .au-close { background: #fff !important; color: #2f7d72 !important; }
+/* לוגו ירוק (העיניים על ריבוע ירוק) וכפתור הניקוד בגווני הירוק */
+BODY header .logo-area { background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%20150%20150%27%3E%3Crect%20width%3D%27150%27%20height%3D%27150%27%20rx%3D%2734%27%20fill%3D%27%2347a093%27/%3E%3Ccircle%20cx%3D%2751%27%20cy%3D%2775%27%20r%3D%2722%27%20fill%3D%27%23fff%27/%3E%3Ccircle%20cx%3D%2799%27%20cy%3D%2775%27%20r%3D%2722%27%20fill%3D%27%23fff%27/%3E%3Ccircle%20cx%3D%2755%27%20cy%3D%2775%27%20r%3D%2711%27%20fill%3D%27%2317473f%27/%3E%3Ccircle%20cx%3D%2795%27%20cy%3D%2775%27%20r%3D%2711%27%20fill%3D%27%2317473f%27/%3E%3C/svg%3E") center / 20px 20px no-repeat !important; }
+BODY header .logo-area #main-logo { visibility: hidden !important; }
+BODY .wallet-pill { background: #f4fbf8 !important; border-color: #cfe3dd !important; box-shadow: 0 2px 10px rgba(47,125,114,.08) !important; }
+BODY .wallet-pill:hover { background: #e8f4f1 !important; }
+BODY .wallet-pill svg { color: #47a093 !important; }
+BODY .wallet-pill b { color: #2f7d72 !important; }
+BODY .wallet-pill small { color: #3c6e66 !important; }

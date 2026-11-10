@@ -57,7 +57,7 @@ window.alert = function(message) {
       .custom-alert-card {
         background: rgba(255, 255, 255, 0.95);
         border: 1px solid rgba(255, 255, 255, 0.25);
-        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15), 0 0 120px rgba(124, 58, 237, 0.05);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15), 0 0 120px rgba(71, 160, 147, 0.05);
         border-radius: 28px;
         width: 100%;
         max-width: 360px;
@@ -77,13 +77,13 @@ window.alert = function(message) {
         width: 72px;
         height: 72px;
         border-radius: 50%;
-        background: rgba(124, 58, 237, 0.08);
+        background: rgba(71, 160, 147, 0.08);
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #7c3aed;
+        color: #47a093;
         font-size: 34px;
-        box-shadow: inset 0 2px 10px rgba(124, 58, 237, 0.1), 0 8px 20px rgba(124, 58, 237, 0.05);
+        box-shadow: inset 0 2px 10px rgba(71, 160, 147, 0.1), 0 8px 20px rgba(71, 160, 147, 0.05);
         margin-bottom: 4px;
       }
       .custom-alert-message {
@@ -95,7 +95,7 @@ window.alert = function(message) {
         white-space: pre-line;
       }
       .custom-alert-btn {
-        background: #7c3aed;
+        background: #47a093;
         color: white;
         border: none;
         border-radius: 50px;
@@ -105,11 +105,11 @@ window.alert = function(message) {
         cursor: pointer;
         width: 100%;
         transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
-        box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
+        box-shadow: 0 4px 15px rgba(71, 160, 147, 0.3);
       }
       .custom-alert-btn:hover {
-        background: #5b21b6;
-        box-shadow: 0 6px 20px rgba(124, 58, 237, 0.45);
+        background: #3c8c80;
+        box-shadow: 0 6px 20px rgba(71, 160, 147, 0.45);
       }
       .custom-alert-btn:active {
         transform: scale(0.98);
@@ -8244,6 +8244,7 @@ async function qpPublish() {
     tags: qpData.tags || {},
     price: qpData.price || '',
     priceUnit: qpData.priceUnit || '',
+    stock: Number.isFinite(qpData.stock) ? qpData.stock : null,
     loanPeriod: qpData.loanPeriod || '',
     loanTerms: (qpData.offerType === 'השאלה' && Array.isArray(qpData.loanTerms)) ? qpData.loanTerms.slice(0, 15) : [],
     section: qpData.pageSection === 'secondhand' ? 'secondhand' : 'photos',
@@ -12344,7 +12345,8 @@ window.avatarSVG = avatarSVG;
 
 // --- מטמון דמויות לפי משתמש + "הידרציה" של עיגולי שם ---
 // עיגול תמונת פרופיל ליד שם המעלה: מנהל האתר — הלוגו; משתמש — הדמות שלו (נטענת ב-avatarHydrate), ובינתיים האות הראשונה
-const AU_COLORS = ['#18181b', '#3f3f46', '#52525b', '#27272a', '#71717a', '#44403c', '#1f2937', '#374151'];
+// צבע קבוע לכל משתמש (לפי השם/המזהה) — עיגולי הפרופיל צבעוניים
+const AU_COLORS = ['#47a093', '#e4572e', '#4a6cf7', '#f2a03d', '#9b5de5', '#e5487b', '#2a9d8f', '#3a86ff', '#f15bb5', '#43aa8b', '#ff7f50', '#6d6875'];
 function authorAvHTML(item) {
   if (!item) return '';
   const uid = item.authorId || item.uid || '';
@@ -13984,6 +13986,7 @@ function fbSideHTML() {
     [ic('linear-gradient(135deg,#34d399,#059669)', '<path d="M21 12a8 8 0 0 1-8 8H4l2.2-2.6A8 8 0 1 1 21 12z"/>'), 'הודעות', 'openMessages()'],
     [ic('linear-gradient(135deg,#fbbf24,#f97316)', '<circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M3 4h2l2.6 12h11l2-8H6"/>'), 'סל הקניות', "cartOpen('cart')"],
     [ic('linear-gradient(135deg,#f472b6,#db2777)', '<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/>'), 'השכרות', "cartOpen('rent')"],
+    [ic('linear-gradient(135deg,#2dd4bf,#0d9488)', '<path d="M3 7l9-4 9 4-9 4z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/>'), 'ניהול מלאי', 'mkStockOpen()'],
     [ic('linear-gradient(135deg,#60a5fa,#4338ca)', '<path d="M20 12 12 20 4 12V4h8z"/><circle cx="8.5" cy="8.5" r="1.5"/>'), 'הצעות שלי', 'openOffersPanel()'],
     [ic('linear-gradient(135deg,#94a3b8,#475569)', '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'), 'היסטוריה', 'openHistoryDrawer()']
   ];
@@ -13996,12 +13999,45 @@ function fbSideHTML() {
   const more = (id, n) => `<button type="button" class="fbs-row fbs-more" onclick="this.closest('.fbs-group').classList.toggle('all')">${ic('#e4e6eb', '<path d="M6 9l6 6 6-6"/>').replace('stroke="#fff"', 'stroke="#111"')}<span class="fbs-more-t">עוד</span><span class="fbs-less-t">פחות</span></button>`;
   return `<div class="fbs">
     <button type="button" class="fbs-row fbs-me" onclick="${me}">${reg ? authorAvHTML({ author: name, uid: u.uid }) : ic('#111', '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>')}<span>${escHtml(name)}</span></button>
-    <div class="fbs-group">${items.map((x, i) => item(...x).replace('class="fbs-row"', `class="fbs-row${i >= 7 ? ' fbs-extra' : ''}"`)).join('')}${items.length > 7 ? more() : ''}</div>
+    <div class="fbs-group">${items.map((x, i) => item(...x).replace('class="fbs-row"', `class="fbs-row${i >= 8 ? ' fbs-extra' : ''}"`)).join('')}${items.length > 8 ? more() : ''}</div>
     <div class="fbs-sep"></div>
     <h4 class="fbs-h">קיצורי הדרך שלך</h4>
     <div class="fbs-group">${scs.map((x, i) => sc(x).replace('class="fbs-row fbs-sc"', `class="fbs-row fbs-sc${i >= 5 ? ' fbs-extra' : ''}"`)).join('')}${scs.length > 5 ? more() : ''}</div>
+    <div class="fbs-sep"></div>
+    ${pfSuggestHTML()}
   </div>`;
 }
+// הצעות לפרופילים (כמו באינסטגרם): המשתמש למעלה, ומתחת מוכרים מהשוק שעוד לא עוקבים אחריהם
+function pfSuggestHTML(all) {
+  const u = auth.currentUser, reg = !!(u && !u.isAnonymous);
+  const name = reg ? ((typeof liveChatUserName === 'function' && liveChatUserName()) || u.displayName || 'משתמש') : '';
+  const seen = new Set(), list = [];
+  mktAll().slice().sort((a, b) => !!b.uid - !!a.uid || (b.t || 0) - (a.t || 0)).forEach(r => {
+    const key = r.uid || 'n:' + r.owner;
+    if (!r.owner || seen.has(key) || (reg && r.uid === u.uid) || (r.uid && isFollowing(r.uid))) return;
+    seen.add(key);
+    const items = mktSellerItems(r.uid || '', r.owner);
+    list.push({ uid: r.uid || '', name: r.owner, sub: [items.length === 1 ? 'מודעה אחת' : items.length + ' מודעות', r.city].filter(Boolean).join(' · ') });
+  });
+  if (!list.length) return '';
+  const row = x => `<div class="pfs-row">
+      <button type="button" class="pfs-who" onclick="rentOpenSeller('${artEsc(x.uid)}', '${artEsc(x.name)}')">${authorAvHTML({ author: x.name, uid: x.uid })}<span><b>${escHtml(x.name)}</b><small>${escHtml(x.sub || 'מוצע בשבילך')}</small></span></button>
+      ${x.uid ? `<button type="button" class="pfs-follow" onclick="pfSuggestFollow(this, '${artEsc(x.uid)}', '${artEsc(x.name)}')">מעקב</button>` : `<button type="button" class="pfs-follow" onclick="rentOpenSeller('', '${artEsc(x.name)}')">צפייה</button>`}
+    </div>`;
+  return `<section class="pfs${all ? ' all' : ''}">
+    ${reg ? `<div class="pfs-me"><button type="button" class="pfs-who" onclick="openUserPage('${artEsc(u.uid)}')">${authorAvHTML({ author: name, uid: u.uid })}<span><b>${escHtml(typeof profileHandle === 'function' ? profileHandle(name) : name)}</b><small>${escHtml(name)}</small></span></button></div>` : ''}
+    <div class="pfs-h"><b>הצעות בשבילך</b>${list.length > 5 ? `<button type="button" onclick="this.closest('.pfs').classList.toggle('all')"><span class="pfs-more">לכל ההצעות</span><span class="pfs-less">פחות</span></button>` : ''}</div>
+    ${list.slice(0, 12).map((x, i) => row(x).replace('class="pfs-row"', `class="pfs-row${i >= 5 ? ' pfs-extra' : ''}"`)).join('')}
+  </section>`;
+}
+async function pfSuggestFollow(btn, uid, name) {
+  const u = auth.currentUser;
+  if (!u || u.isAnonymous) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
+  await toggleFollow(uid, name, null);
+  const on = isFollowing(uid);
+  btn.textContent = on ? 'במעקב' : 'מעקב'; btn.classList.toggle('on', on);
+}
+window.pfSuggestFollow = pfSuggestFollow;
 function fbSideGo(k, v) {
   if (typeof activePageId !== 'undefined' && activePageId !== 'page-rent-main' && !document.querySelector('.rent-page')) { navigateToPage('page-rent-main'); setTimeout(() => rentSideSet(k, v), 80); return; }
   rentSideSet(k, v);
@@ -24287,18 +24323,41 @@ function buildNewsPage() {
   triggerTwitterWidgetsRender();
   const list = (newsPostsData && newsPostsData.length) ? newsPostsData : NEWS_DEFAULT_POSTS;
   const open = p => `newsOpenArticle('${artEsc(String(p.id || ''))}')`;
-  const top = list.slice(0, list.length >= 7 ? 3 : 0), rest = list.slice(top.length);   // מעט כתבות: הכול בתור אחד
   const admin = newsIsAdmin();
-  return `<div class="news-page-container nx">
+  // אותו מבנה כמו השוק: רשת כרטיסים — תמונה, שורת כותב | תאריך, שורת כפתורים עם מספרים, והכותרת בקטן
+  return `<div class="news-page-container nx nx-grid">
     ${admin ? `<div class="nx-admin"><button type="button" onclick="openNewsAddModal()">+ כתבה חדשה</button>${newsPostsData.length ? '<button type="button" onclick="deleteAllNewsPosts()">מחיקת הכול</button>' : ''}</div>` : ''}
-    ${top.length ? `<section class="nx-top">${top.map(p => `<button type="button" class="nx-hero" onclick="${open(p)}">${newsThumbHTML(p, 'nx-hero-img')}<span class="nx-hero-t">${escHtml(p.title || '')}</span></button>`).join('')}</section>` : ''}
-    ${list.length ? `<section class="nx-list">${rest.map((p, n) => `<article class="nx-row">
-        <button type="button" class="nx-row-main" onclick="${open(p)}">${newsThumbHTML(p, 'nx-thumb')}<span><b>${escHtml(p.title || '')}</b>${newsMetaHTML(p)}</span></button>
-        ${n === 0 && p.desc ? `<p>${escHtml(p.desc)}</p>` : ''}
-        ${admin ? `<button type="button" class="nx-del" onclick="deleteNewsPost('${artEsc(String(p.id || ''))}')">מחיקה</button>` : ''}
-      </article>`).join('')}</section>` : '<p class="nx-empty">עדיין אין חדשות.</p>'}
+    ${list.length ? `<div class="mk-sg-grid mk-grid">${list.map(p => newsCardHTML(p, open(p), admin)).join('')}</div>` : '<p class="nx-empty">עדיין אין חדשות.</p>'}
   </div>`;
 }
+function newsCardHTML(p, act, admin) {
+  const id = String(p.id || ''), key = 'news_' + id.replace(/[.#$\[\]\/]/g, '_'), stop = 'event.stopPropagation(); event.preventDefault(); ';
+  const ic = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${d}"/></svg>`;
+  const cnt = k => `<i class="pti-n mk-n" data-likes-n="${escHtml(k)}">${Number(itemLikesData[k]) || 0}</i>`;
+  const b = (label, d, a, on, cls, extra, attr) => `<span role="button" tabindex="0" class="${cls || ''}${on ? ' on' : ''}" aria-label="${label}" title="${label}"${attr || ''} onclick="${stop}${a}">${ic(d)}${extra || ''}</span>`;
+  subscribeReposts();
+  const author = p.author || 'עורך חדשות';
+  return `<div class="mk-sg nx-card" role="button" tabindex="0" onclick="${act}">
+    <span class="mk-sg-img">${newsThumbHTML(p, 'nx-cthumb')}${admin ? `<button type="button" class="nx-cdel" onclick="${stop}deleteNewsPost('${artEsc(id)}')">מחיקה</button>` : ''}</span>
+    <span class="mk-sg-meta"><span class="mk-sg-who">${authorAvHTML({ author, uid: p.authorId || '' })}<b>${escHtml(author)}</b></span><small class="mk-sg-city">${escHtml(newsWhen(p.createdAt))}</small></span>
+    <span class="mk-sg-acts"><span class="mk-sg-hov"><span class="mk-sg-hov-btns">
+      ${b('לייק', 'M7 10v11H3V10zM7 10l4-8a2.5 2.5 0 0 1 3 2.6L13.5 9H19a2 2 0 0 1 2 2.3l-1.4 8A2 2 0 0 1 17.6 21H7', `newsMark(this, 'like', '${artEsc(key)}')`, rentMarked('news-like', key), '', cnt(key))}
+      ${b('ריפוסט', 'M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3', `toggleRepost('${artEsc(key)}', this)`, repostIsMine(key), 'pti-repost', `<i class="pti-n mk-n">${repostCount(key)}</i>`, ` data-item="${escHtml(key)}"`)}
+      ${b('שמירה', 'M6 4h12v17l-6-4.5L6 21z', `newsMark(this, 'save', '${artEsc(key)}')`, rentMarked('news-save', key), '', cnt('sv_' + key))}
+      ${b('דיווח', 'M5 21V4M5 4h11l-2 4 2 4H5', `openReportContent('${artEsc(key)}', '${artEsc(p.title || '')}')`, false, '', cnt('rp_' + key))}
+    </span></span></span>
+    <b class="mk-sg-title">${escHtml(p.title || '')}</b>
+  </div>`;
+}
+// לייק ושמירה לכתבה: סימון בדפדפן + מונה ציבורי (כמו בכרטיסי השוק)
+function newsMark(btn, kind, key) {
+  const m = rentMarks(), k = 'news-' + kind + ':' + key;
+  if (m[k]) delete m[k]; else m[k] = 1;
+  try { localStorage.setItem(rentMarksKey(), JSON.stringify(m)); } catch (e) {}
+  btn.classList.toggle('on', !!m[k]);
+  mkCountBump(kind === 'save' ? 'sv_' + key : key, m[k] ? 1 : -1);
+}
+window.newsMark = newsMark;
 function newsMetaHTML(p) {
   return `<small class="nx-meta"><em>${escHtml(p.author || 'עורך חדשות')}</em><i>|</i>${escHtml(newsWhen(p.createdAt))}</small>`;
 }
@@ -24350,8 +24409,67 @@ function openSiteSearch() {
 }
 window.openSiteSearch = openSiteSearch;
 // חיפוש מהשורה בכותרת (מחשב): פותח את החיפוש הרגיל עם מה שהוקלד
+// חלון החיפוש שנפתח מתחת לשורת החיפוש: חיפושים אחרונים, פופולרי עכשיו, קטגוריות עם תמונה, ובסוף "פרסום מודעה"
+const SRCH_KEY = 'bw_recent_q';
+function srchRecent() { try { return JSON.parse(localStorage.getItem(SRCH_KEY) || '[]').filter(x => typeof x === 'string').slice(0, 8); } catch (e) { return []; } }
+function srchRemember(q) { q = String(q || '').trim().slice(0, 40); if (!q) return; try { localStorage.setItem(SRCH_KEY, JSON.stringify([q, ...srchRecent().filter(x => x !== q)].slice(0, 8))); } catch (e) {} }
+function srchPanelHTML() {
+  const ic = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+  const rec = srchRecent(), all = typeof mktAll === 'function' ? mktAll() : [];
+  // פופולרי: שתי המילים הראשונות של המודעות הנצפות ביותר
+  const trend = [...new Set(all.slice().sort((a, b) => photoGetViews(rentCommentsKey(b)) - photoGetViews(rentCommentsKey(a))).map(r => String(r.title || '').split(/\s+[—–-]\s+|,/)[0].split(/\s+/).slice(0, 2).join(' ')).filter(Boolean))].slice(0, 8);
+  const thumb = list => { const r = list.find(x => x.img); return r ? rentThumb(r) : ''; };
+  const cats = [['sec', 'used', 'יד 2', all.filter(r => mktSecOf(r) === 'used')], ...RENT_CATS.filter(c => !c.store && c.id !== 'all').map(c => ['cat', c.id, c.name, all.filter(r => mktSecOf(r) === 'rent' && r.cat === c.id)]), ['sec', 'store', 'אחסון', all.filter(r => mktSecOf(r) === 'store')]].filter(x => x[3].length);
+  const chip = (icon, t, act) => `<button type="button" class="srch-chip" onmousedown="event.preventDefault()" onclick="${act}">${ic(icon)}${escHtml(t)}</button>`;
+  return `${rec.length ? `<div class="srch-h"><b>חיפושים אחרונים</b><button type="button" onmousedown="event.preventDefault()" onclick="srchClear()">ניקוי</button></div>
+      <div class="srch-row">${rec.map(q => chip('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>', q, `srchRun('${artEsc(q)}')`)).join('')}</div>` : ''}
+    ${trend.length ? `<div class="srch-h"><b>פופולרי עכשיו</b></div>
+      <div class="srch-row">${trend.map(q => chip('<path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/>', q, `srchRun('${artEsc(q)}')`)).join('')}</div>` : ''}
+    <div class="srch-h"><b>קטגוריות</b></div>
+    <div class="srch-row">${cats.map(([k, v, t, l]) => `<button type="button" class="srch-cat" onmousedown="event.preventDefault()" onclick="srchClose(); fbSideGo('${k}', '${artEsc(v)}')"><span class="srch-cat-img">${thumb(l)}</span><b>${escHtml(t)}</b></button>`).join('')}</div>
+    <button type="button" class="srch-cta" onmousedown="event.preventDefault()" onclick="srchClose(); mkPubOpen()"><span class="srch-cta-ic">${ic('<path d="M12 5v14M5 12h14"/>')}</span><span><b>יש לך משהו למכור או להשכיר?</b><small>מעלים תמונה, כותרת ומחיר — והמודעה בשוק.</small></span>${ic('<path d="M15 6l-6 6 6 6"/>')}</button>`;
+}
+function srchOpen() {
+  const f = document.querySelector('form.hdr-search'); if (!f) return;
+  let p = document.getElementById('srch-panel');
+  if (!p) { p = document.createElement('div'); p.id = 'srch-panel'; p.className = 'srch-panel'; document.body.appendChild(p); }
+  p.innerHTML = srchPanelHTML();
+  const r = f.getBoundingClientRect(), z = parseFloat(getComputedStyle(document.body).zoom) || 1;
+  p.style.top = Math.round((r.bottom + 8) / z) + 'px';
+  p.style.right = Math.round((innerWidth - r.right) / z) + 'px';
+  p.style.width = Math.round(Math.max(r.width, 560) / z) + 'px';
+  p.classList.add('show');
+}
+function srchClose() { const p = document.getElementById('srch-panel'); if (p) p.classList.remove('show'); }
+function srchClear() { try { localStorage.removeItem(SRCH_KEY); } catch (e) {} srchOpen(); }
+// חיפוש: עוברים לשוק ומסננים לפי מה שהוקלד
+function srchRun(q) {
+  q = String(q || '').trim();
+  const inp = document.getElementById('hdr-search-q'); if (inp) { inp.value = q; inp.closest('form').classList.toggle('has-q', !!q); inp.blur(); }
+  srchClose();
+  if (!q) return;
+  srchRemember(q);
+  rentUI.q = q;
+  if (typeof activePageId !== 'undefined' && activePageId === 'page-rent-main' && mainContent && mainContent.querySelector('.rent-page')) { rentUI.open = null; rentUI.seller = null; rentRender(); }
+  else { navigateToPage('page-rent-main'); setTimeout(() => { rentUI.q = q; rentRender(); }, 80); }
+  try { window.scrollTo({ top: 0 }); } catch (e) {}
+}
+(function srchWire() {
+  const go = () => {
+    const inp = document.getElementById('hdr-search-q'); if (!inp) return setTimeout(go, 400);
+    inp.addEventListener('focus', srchOpen);
+    inp.addEventListener('click', srchOpen);
+    inp.addEventListener('blur', () => setTimeout(srchClose, 120));
+    inp.addEventListener('keydown', e => { if (e.key === 'Escape') { srchClose(); inp.blur(); } });
+    window.addEventListener('resize', () => { if (document.querySelector('#srch-panel.show')) srchOpen(); });
+  };
+  go();
+})();
+Object.assign(window, { srchRun, srchClose, srchClear });
 function hdrSearchGo() {
-  const q = String((document.getElementById('hdr-search-q') || {}).value || '').trim();
+  const q0 = String((document.getElementById('hdr-search-q') || {}).value || '').trim();
+  if (q0) { srchRun(q0); return; }
+  const q = q0;
   openSiteSearch();
   const inp = document.getElementById('site-search-input');
   if (inp && q) { inp.value = q; siteSearchRender(q); }
@@ -27140,7 +27258,7 @@ function ofpListHTML() {
     };
     return `<div class="ofc${myTurn ? ' turn' : ''}">
       <span class="ofc-av" style="--av:${typeof forumAvColor === 'function' ? forumAvColor({ uid: otherUid, name: other }) : '#555'}" ${otherUid ? `onclick="openUserPage('${artEsc(otherUid)}','${artEsc(other)}')"` : ''}>${escHtml(String(other).trim().charAt(0) || '?')}</span>
-      <div class="ofc-main" ${o.itemId ? `onclick="closeSidePanel('ofp-panel'); photoOpenDetail('${artEsc(o.itemId)}')"` : ''}>
+      <div class="ofc-main" ${o.itemId ? `onclick="ofpClose(); closeSidePanel('ofp-panel'); photoOpenDetail('${artEsc(o.itemId)}')"` : ''}>
         <b class="ofc-name">${escHtml(other)}</b>
         <span class="ofc-sub">${escHtml(sub)}</span>
         <span class="ofc-st"><i class="${st.cls}"></i>${myTurn ? 'הצעה ממתינה לתשובה שלך' : escHtml(st.label)}${when ? ' · ' + escHtml(when) : ''}${lastNote ? ' · ' + escHtml(lastNote) : ''}</span>
@@ -27159,7 +27277,15 @@ function ofpListHTML() {
     ${offersTab === 'orders' ? `<div class="ofp-list">${orders.length ? orders.map(o => orderTrackHTML(o, me)).join('') : orderTrackHTML(null, me) + '<div class="pf-empty">עדיין אין הזמנות — הצעה שאושרה הופכת להזמנה עם מעקב משלוח</div>'}</div>` : `<div class="ofp-list">${list.length ? list.map(row).join('') : `${ofpDemoCardHTML()}<div class="pf-empty">${offersTab === 'in' ? 'עדיין לא קיבלת הצעות — פרסמו מוצר במוצרי גולשים' : 'עדיין לא שלחת הצעות'}</div>`}</div>`}
   </div>`;
 }
-function offersRerender() { const b = document.querySelector('#ofp-panel .fo-panel-body'); if (b) b.innerHTML = ofpListHTML(); }
+function offersRerender() {
+  const b = document.querySelector('#ofp-panel .fo-panel-body'); if (b) b.innerHTML = ofpListHTML();
+  const c = document.getElementById('ofp-cart'); if (!c) return;
+  const me = auth.currentUser ? auth.currentUser.uid : '', all = Object.values(offersMap);
+  const n = { in: all.filter(o => o.toUid === me).length, out: all.filter(o => o.fromUid === me).length, orders: all.filter(o => o.status === 'accepted' || o.status === 'signed').length };
+  c.querySelector('.cart-tabs').innerHTML = [['in', 'התקבלו'], ['out', 'נשלחו'], ['orders', 'הזמנות']].map(([t, l]) => `<button type="button" class="${offersTab === t ? 'on' : ''}" onclick="offersSetTab('${t}')">${l}${n[t] ? ` (${n[t]})` : ''}</button>`).join('');
+  const body = c.querySelector('.cart-body'); body.innerHTML = ofpListHTML();
+  const dup = body.querySelector('.pfg-tabs'); if (dup) dup.remove();   // הלשוניות כבר בראש החלון
+}
 function offersSetTab(t) { offersTab = t; offersRerender(); }
 async function offerUpdate(id, status, price, note) {
   const u = auth.currentUser; const o = offersMap[id]; if (!u || !o) return;
@@ -27215,8 +27341,21 @@ async function openOffersPanel() {
   if (!auth.currentUser) { const ok = (typeof ensureGuestSignedIn === 'function') ? await ensureGuestSignedIn() : false; if (!ok) { openLiveChatLogin(); return; } }
   offersSubscribe();
   closeSidePanels('ofp-panel');
-  openSidePanel('ofp-panel', 'הצעות', ofpListHTML(), '');
+  // נפתח בחלון כמו העגלה: כותרת, לשוניות, ורשימה
+  let el = document.getElementById('ofp-cart');
+  if (!el) {
+    el = document.createElement('div'); el.id = 'ofp-cart';
+    el.innerHTML = `<div class="ask-backdrop" onclick="ofpClose()"></div><section class="ask-card cart-card" role="dialog" aria-label="הצעות">
+      <header class="ask-head"><b>הצעות</b><button type="button" class="ask-hb" onclick="ofpClose()" aria-label="סגירה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></header>
+      <div class="cart-tabs" role="tablist"></div><div class="cart-body ask-msgs"></div></section>`;
+    document.body.appendChild(el);
+  }
+  offersRerender();
+  requestAnimationFrame(() => el.classList.add('show'));
+  setTimeout(() => el.classList.add('show'), 30);
 }
+function ofpClose() { const el = document.getElementById('ofp-cart'); if (el) el.classList.remove('show'); }
+window.ofpClose = ofpClose;
 try { onAuthStateChanged(auth, u => { if (u) setTimeout(offersSubscribe, 300); }); } catch (e) {}
 Object.assign(window, { openOffersPanel, offersSetTab, offerDecide, offerCounter, offerCounterSend });
 
@@ -28912,6 +29051,11 @@ function deepLinkSync() {
     b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>';
     b.addEventListener('click', () => { if (typeof openPhotoModal === 'function') openPhotoModal(); });
     document.body.appendChild(b);
+    // מובייל: בראש העמוד שני כפתורים — "מנוי" ו"העלאה" (מחליפים את ה-+)
+    const pills = document.createElement('div');
+    pills.id = 'hdr-pills'; pills.className = 'hdr-pills';
+    pills.innerHTML = `<button type="button" class="hdr-pill hdr-pill-sub" onclick="navigateToPage('page-subscription-main')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 8l4.5 3.5L12 5l4.5 6.5L21 8l-2 11H5z"/></svg>מנוי</button><button type="button" class="hdr-pill hdr-pill-up" onclick="if (typeof openPhotoModal === 'function') openPhotoModal()">העלאה</button>`;
+    document.body.appendChild(pills);
   };
   if (document.body) add(); else document.addEventListener('DOMContentLoaded', add);
 })();
@@ -29522,6 +29666,60 @@ function mTabsActive() {
 // שלושת הכפתורים הצפים (הודעות, צ'אט, נגישות) — במחשב יושבים מימין לשורת "מה בא לך לשתף".
 // עמוד בלי השורה — חוזרים לפינה הרגילה.
 // ============================================================
+// ניקוד: כל נקודה שווה שקל, ובה משלמים באתר. היתרה נשמרת ב-website/wallets/{uid}/balance —
+// רק השרת מוסיף לה (אחרי הפקדה דרך חברת סליקה), ולכן מהדפדפן היא נקראת בלבד. ההפקדה עצמה עוד לא פעילה
+let walletBalance = 0, walletUid = '', walletUnsub = null;
+function walletPillEl() {
+  const b = document.createElement('button');
+  b.type = 'button'; b.id = 'wallet-pill'; b.className = 'wallet-pill';
+  b.setAttribute('onclick', 'walletOpen()'); b.title = 'הניקוד שלי — כל נקודה שווה שקל'; b.setAttribute('aria-label', 'הניקוד שלי');
+  walletPillPaint(b);
+  return b;
+}
+function walletPillPaint(b) {
+  b = b || document.getElementById('wallet-pill'); if (!b) return;
+  b.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6.5" rx="7" ry="3"/><path d="M5 6.5v5c0 1.7 3.1 3 7 3s7-1.3 7-3v-5"/><path d="M5 11.5v5c0 1.7 3.1 3 7 3s7-1.3 7-3v-5"/></svg><b>${walletBalance.toLocaleString('he-IL')}</b><small>ניקוד</small>`;
+}
+function walletWatch() {
+  const u = auth.currentUser, uid = u && !u.isAnonymous ? u.uid : '';
+  if (uid === walletUid) return;
+  if (walletUnsub) { try { walletUnsub(); } catch (e) {} walletUnsub = null; }
+  walletUid = uid; walletBalance = 0; walletPillPaint();
+  if (!uid) return;
+  try {
+    walletUnsub = onValue(ref(db, `website/wallets/${uid}/balance`), snap => {
+      walletBalance = Math.max(0, Number(snap.val()) || 0);
+      walletPillPaint();
+      if (document.getElementById('wallet-modal')) walletOpen(true);
+    }, () => {});
+  } catch (e) {}
+}
+try { onAuthStateChanged(auth, walletWatch); } catch (e) {}
+function walletOpen(refresh) {
+  const u = auth.currentUser;
+  if (!refresh && (!u || u.isAnonymous)) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
+  let m = document.getElementById('wallet-modal');
+  if (!m) {
+    if (refresh) return;
+    m = document.createElement('div'); m.id = 'wallet-modal'; m.className = 'mkpub-modal';
+    m.addEventListener('click', e => { if (e.target === m) walletClose(); });
+    document.body.appendChild(m);
+  }
+  const amounts = [50, 100, 200, 500];
+  m.innerHTML = `<div class="mkpub-card wallet-card" role="dialog" aria-modal="true" aria-label="הניקוד שלי">
+    <div class="mkpub-head"><b>הניקוד שלי</b><button type="button" class="mkpub-x" onclick="walletClose()" aria-label="סגירה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <div class="wallet-bal"><b>${walletBalance.toLocaleString('he-IL')}</b><span>ניקוד</span><small>= ${walletBalance.toLocaleString('he-IL')} ₪</small></div>
+    <p class="wallet-note">כל נקודה שווה שקל אחד. בניקוד משלמים על מוצרים, השכרות ושירותים באתר. כדי לקבל ניקוד מפקידים כסף.</p>
+    <label class="mkpub-l">הפקדה</label>
+    <div class="wallet-amts">${amounts.map(a => `<button type="button" disabled>${a} ₪</button>`).join('')}</div>
+    <button type="button" class="mkpub-go" disabled>הפקדה — בקרוב</button>
+    <small class="mkpub-note">ההפקדה תיפתח בקרוב.</small>
+    <label class="mkpub-l">תנועות</label>
+    <div class="wallet-empty">עדיין אין תנועות.</div>
+  </div>`;
+}
+function walletClose() { const m = document.getElementById('wallet-modal'); if (m) m.remove(); }
+Object.assign(window, { walletOpen, walletClose });
 (function composerFabs() {
   const held = {};
   let t = 0, a11yHome = null;
@@ -29533,13 +29731,15 @@ function mTabsActive() {
     Object.keys(live).forEach(k => { if (live[k]) held[k] = live[k]; });
     if (held.a11y && !a11yHome && held.a11y.parentElement) a11yHome = held.a11y.parentElement;
     const wrap = [...mc.querySelectorAll('.cmp-wrap')].find(w => w.offsetParent);
-    const btns = ['dm', 'chat', 'a11y'].map(k => held[k]).filter(Boolean);
+    if (!held.wallet) held.wallet = walletPillEl();
+    const btns = ['dm', 'chat', 'a11y', 'wallet'].map(k => held[k]).filter(Boolean);
     if (wrap) {
       let box = wrap.querySelector(':scope > .cmp-fabs');
       if (!box) { box = document.createElement('div'); box.className = 'cmp-fabs'; wrap.appendChild(box); }
       btns.forEach(b => { if (b.parentElement !== box) box.appendChild(b); });
     } else {
       btns.forEach(b => {
+        if (b === held.wallet) { b.remove(); return; }   // הניקוד מופיע רק לצד השורה
         const home = b === held.a11y && a11yHome ? a11yHome : document.body;
         if (b.parentElement !== home) home.appendChild(b);
       });
@@ -30470,7 +30670,103 @@ function mediaNeedsLoad() { return true; }
 function cartGet() { try { return (JSON.parse(localStorage.getItem('bw_cart') || '[]') || []).filter(x => x && x.id && x.qty > 0); } catch (e) { return []; } }
 function cartSet(c) { try { localStorage.setItem('bw_cart', JSON.stringify(c)); } catch (e) {} cartBadge(); if (document.getElementById('cart-panel')) cartRender(); }
 // מודעות השוק בעגלה: השכרה ואחסון כולל עמלת השירות. מודעה של גולש נספרת בסכום, אבל התשלום עליה מול המוכר
-function mktCartable(r) { return !!r && Number(r.price) > 0 && !['החלפה', 'השאלה'].includes(r.offer); }
+// מלאי: המוכר קובע כמה יחידות יש לו. הכמות העדכנית נשמרת ב-website/market_stock/{uid}/{מזהה המודעה} (רק המוכר כותב),
+// ואם לא עודכנה — הכמות שנכתבה בפרסום. בלי מלאי מוגדר — אין הגבלה
+let mktStockData = {}, mktStockSub = false;
+function mktStockSubscribe() {
+  if (mktStockSub) return; mktStockSub = true;
+  try {
+    onValue(ref(db, 'website/market_stock'), snap => {
+      mktStockData = snap.val() || {};
+      if (typeof mainContent !== 'undefined' && mainContent && mainContent.querySelector('.rent-page') && !document.querySelector('body > .mk-qlist:not([hidden])')) { try { rentRender(); } catch (e) {} }
+      if (document.getElementById('mkstock-modal')) mkStockRender();
+    });
+  } catch (e) {}
+}
+function mktStock(r) {
+  if (!r) return null;
+  mktStockSubscribe();
+  const o = r.uid && mktStockData[r.uid] ? mktStockData[r.uid][r.id] : undefined;
+  if (typeof o === 'number') return Math.max(0, o);
+  return typeof r.stock === 'number' ? Math.max(0, r.stock) : null;
+}
+const mktSoldOut = r => mktStock(r) === 0;
+function mktStockLineHTML(r) {
+  const n = mktStock(r), me = auth.currentUser, own = !!(r.uid && me && me.uid === r.uid);
+  const manage = own ? `<button type="button" class="mk-stock-mng" onclick="mkStockOpen()">ניהול מלאי</button>` : '';
+  if (n === null) return own ? `<div class="mk-stock">${manage}</div>` : '';
+  const txt = n === 0 ? 'אזל מהמלאי' : r.unit === 'kg' ? `${n} ק״ג במלאי` : n === 1 ? 'נותרה יחידה אחת במלאי' : `נותרו ${n} במלאי`;
+  return `<div class="mk-stock${n === 0 ? ' out' : n <= 3 ? ' low' : ''}"><span>${txt}</span>${manage}</div>`;
+}
+// חלון "ניהול מלאי": כל המודעות שלי, ולכל אחת כמה יש במלאי
+function mkStockOpen() {
+  const u = auth.currentUser;
+  if (!u || u.isAnonymous) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
+  mktStockSubscribe();
+  let m = document.getElementById('mkstock-modal'); if (m) m.remove();
+  m = document.createElement('div'); m.id = 'mkstock-modal'; m.className = 'mkpub-modal';
+  m.innerHTML = `<div class="mkpub-card mkstock-card" role="dialog" aria-modal="true" aria-label="ניהול מלאי">
+    <div class="mkpub-head"><b>ניהול מלאי</b><button type="button" class="mkpub-x" onclick="mkStockClose()" aria-label="סגירה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <small class="mkstock-note">כמה יחידות יש לך מכל מוצר. כשהמלאי נגמר המודעה מסומנת "אזל" ואי אפשר להוסיף אותה לסל. שדה ריק — ללא הגבלה.</small>
+    <div class="mkstock-list" id="mkstock-list"></div>
+    <p class="mkpub-err" id="mkstock-err" hidden></p>
+    <button type="button" class="mkpub-go" id="mkstock-go" onclick="mkStockSave()">שמירה</button>
+  </div>`;
+  m.addEventListener('click', e => { if (e.target === m) mkStockClose(); });
+  document.body.appendChild(m);
+  mkStockRender();
+}
+function mkStockRender() {
+  const box = document.getElementById('mkstock-list'), u = auth.currentUser; if (!box || !u) return;
+  if (box.contains(document.activeElement)) return;   // לא מוחקים מה שהמוכר באמצע להקליד
+  const mine = mktAll().filter(r => r.uid === u.uid);
+  box.innerHTML = mine.length ? mine.map(r => {
+    const n = mktStock(r), kg = r.unit === 'kg';
+    return `<div class="mkstock-row" data-id="${escHtml(r.id)}">
+      <span class="mkstock-img">${rentThumb(r)}</span>
+      <span class="mkstock-tx"><b>${escHtml(r.title)}</b><small>${n === null ? 'ללא הגבלה' : n === 0 ? 'אזל מהמלאי' : (kg ? n + ' ק״ג' : n + ' יחידות')}</small></span>
+      <span class="mkstock-ctl">
+        <button type="button" onclick="mkStockStep(this, -1)" aria-label="פחות">−</button>
+        <input type="number" min="0" step="${kg ? '0.1' : '1'}" inputmode="decimal" value="${n === null ? '' : n}" placeholder="∞" aria-label="כמות במלאי">
+        <button type="button" onclick="mkStockStep(this, 1)" aria-label="עוד">+</button>
+      </span>
+    </div>`;
+  }).join('') : '<div class="mkstock-empty">עדיין אין לך מודעות בשוק.</div>';
+  const go = document.getElementById('mkstock-go'); if (go) go.hidden = !mine.length;
+}
+function mkStockStep(btn, d) {
+  const inp = btn.parentElement.querySelector('input'), step = Number(inp.step) || 1;
+  inp.value = Math.max(0, Math.round(((Number(inp.value) || 0) + d * step) * 10) / 10);
+}
+async function mkStockSave() {
+  const u = auth.currentUser, err = document.getElementById('mkstock-err'), go = document.getElementById('mkstock-go');
+  if (!u || u.isAnonymous) return;
+  const upd = {};
+  let bad = false;
+  document.querySelectorAll('#mkstock-list .mkstock-row').forEach(row => {
+    const v = row.querySelector('input').value.trim();
+    if (v === '') { upd[row.dataset.id] = null; return; }
+    const n = Math.round(Number(v) * 10) / 10;
+    if (!(n >= 0 && n <= 100000)) { bad = true; return; }
+    upd[row.dataset.id] = n;
+  });
+  if (bad) { err.textContent = 'אחת הכמויות לא תקינה'; err.hidden = false; return; }
+  err.hidden = true; go.disabled = true; go.textContent = 'שומר…';
+  try {
+    await update(ref(db, `website/market_stock/${u.uid}`), upd);
+    mktStockData[u.uid] = Object.assign({}, mktStockData[u.uid] || {}, upd);
+    mkStockClose();
+    glassBanner({ title: 'המלאי עודכן', icon: 'ok', ms: 2000 });
+    try { rentRender(); } catch (e) {}
+  } catch (e) {
+    console.error('stock save failed', e);
+    go.disabled = false; go.textContent = 'שמירה';
+    err.textContent = 'השמירה נכשלה. נסו שוב.'; err.hidden = false;
+  }
+}
+function mkStockClose() { const m = document.getElementById('mkstock-modal'); if (m) m.remove(); }
+Object.assign(window, { mkStockOpen, mkStockClose, mkStockSave, mkStockStep });
+function mktCartable(r) { return !!r && Number(r.price) > 0 && !['החלפה', 'השאלה'].includes(r.offer) && !mktSoldOut(r); }
 function mktCartItems() {
   if (typeof mktAll !== 'function') return [];
   return mktAll().filter(mktCartable).map(r => ({ id: 'mkt_' + r.id, name: r.title, price: r.kind === 'used' ? Number(r.price) : Math.round(r.price * (1 + RENT_SITE_FEE) * 100) / 100, image: r.img || (r.images || [])[0] || '', unit: r.kind === 'used' ? (r.unitTxt || '') : (RENT_UNITS[r.unit] || ''), fee: r.kind !== 'used', seller: !!r.shId, rid: r.id, step: r.unit === 'kg' ? .1 : 1 }));
@@ -30479,6 +30775,9 @@ function cartCatalog() { return productsList().concat(mktCartItems()); }
 function rentCartAdd(id) {
   const r = rentFind(id); if (!r) return;
   const key = 'mkt_' + id, c = cartGet(), it = c.find(x => x.id === key), n = Math.max(rentMin(r), Number((document.getElementById('rn-qty') || {}).value) || 1);
+  const stock = mktStock(r);
+  if (stock === 0) { glassBanner({ title: 'אזל מהמלאי', sub: r.title, icon: 'del' }); return; }
+  if (stock !== null && (it ? it.qty : 0) + n > stock) { glassBanner({ title: `נשארו רק ${stock} במלאי`, sub: 'אי אפשר להוסיף יותר ממה שיש', icon: 'del' }); return; }
   if (it) it.qty = Math.round((it.qty + n) * 100) / 100; else c.push({ id: key, qty: n });
   cartSet(c);
   document.querySelectorAll('.mk-cart-add').forEach(b => b.classList.add('on'));
@@ -30583,10 +30882,22 @@ function cartRender() {
   box.querySelector('.cart-body').innerHTML = lines.length ? lines.map(l => `<div class="cart-row">
       <span class="cart-th">${l.p.image ? `<img src="${escHtml(l.p.image)}" alt="">` : PRODUCT_ICON}</span>
       <span class="cart-tx"><b>${escHtml(l.p.name || '')}</b><small>${coMoney(coPrice(l.p))}${l.p.unit ? ' ' + escHtml(l.p.unit) : ''}${l.p.fee ? ' · כולל עמלה' : ''}</small>${l.p.seller ? `<button type="button" class="cart-seller" onclick="cartClose(); rentOpen('${artEsc(l.p.rid)}')">תשלום מול המוכר</button>` : ''}</span>
-      ${qtyDDHTML(l.qty, qtyOptsFor(l.p, l.qty), n => `cartSetQty('${artEsc(l.id)}',${n})`, `cartSetQty('${artEsc(l.id)}',0)`)}
-    </div>`).join('') : `<div class="cart-empty">העגלה ריקה<br><button type="button" class="ms-btn" onclick="cartClose(); navigateToPage('page-rent-main')">לשוק</button></div>`;
+      <span class="cart-side">${qtyDDHTML(l.qty, qtyOptsFor(l.p, l.qty), n => `cartSetQty('${artEsc(l.id)}',${n})`, `cartSetQty('${artEsc(l.id)}',0)`)}
+      <button type="button" class="cart-del" onclick="cartSetQty('${artEsc(l.id)}',0)" title="הסרה מהסל" aria-label="הסרה מהסל"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/></svg>הסרה</button></span>
+    </div>`).join('') + `<button type="button" class="cart-clear" onclick="cartClearAll(this)">ניקוי הסל</button>` : `<div class="cart-empty">העגלה ריקה<br><button type="button" class="ms-btn" onclick="cartClose(); navigateToPage('page-rent-main')">לשוק</button></div>`;
   box.querySelector('.cart-foot').innerHTML = lines.length ? `<div class="co-line co-total"><span>${lines.some(l => l.p.seller) ? 'סה״כ כולל מוכרים' : 'סה״כ (לפני משלוח)'}</span><span>${coMoney(sub)}</span></div><button type="button" class="ms-btn"${lines.every(l => l.p.seller) ? ' hidden' : ''} onclick="cartClose(); cartCheckout()">לתשלום</button>` : '';
 }
+// ניקוי כל הסל: לחיצה ראשונה מבקשת אישור, שנייה מרוקנת
+function cartClearAll(btn) {
+  if (!btn.classList.contains('sure')) {
+    btn.classList.add('sure'); btn.textContent = 'לרוקן את כל הסל? לחצו שוב';
+    setTimeout(() => { if (btn.isConnected) { btn.classList.remove('sure'); btn.textContent = 'ניקוי הסל'; } }, 3500);
+    return;
+  }
+  cartSet([]);
+  glassBanner({ title: 'הסל רוקן', icon: 'del', ms: 1800 });
+}
+window.cartClearAll = cartClearAll;
 let cartTab = 'cart';   // 'cart' — סל קניות · 'rent' — רשימת ההשכרות
 function cartOpen(tab) {
   if (tab === 'cart' || tab === 'rent') cartTab = tab;
@@ -31127,7 +31438,7 @@ function usedAll() {
     const m = pg && (pg.content || '').match(/data-photos-json="([^"]*)"/);
     raw = (m ? (JSON.parse(decodeURIComponent(m[1])) || []) : []).filter(x => x && x.id && x.title && x.approved !== false && !x.adminOnly && !mktExpired(x.createdAt)); } catch (e) {}
   const real = raw.map(x => ({ id: 'sh_' + x.id, shId: x.id, kind: 'used', offer: x.offerType || x.category || 'מכירה', title: x.title, price: parseFloat(String(x.price || '').replace(/[^\d.]/g, '')) || 0, priceTxt: x.price || '',
-    unitTxt: x.priceUnit || '', city: x.region || '', owner: x.author || '', uid: x.authorId || '', t: Number(x.createdAt) || 0, img: x.image || (Array.isArray(x.images) && x.images[0]) || '',
+    unitTxt: x.priceUnit || '', city: x.region || '', owner: x.author || '', uid: x.authorId || '', t: Number(x.createdAt) || 0, stock: Number.isFinite(Number(x.stock)) && x.stock !== null && x.stock !== '' ? Number(x.stock) : null, img: x.image || (Array.isArray(x.images) && x.images[0]) || '',
     raw: x, images: (Array.isArray(x.images) ? x.images : []).filter(Boolean), desc: String(x.summary || x.body || '').trim(),
     specs: [x.loanPeriod ? 'תקופת השאלה: ' + x.loanPeriod : ''].concat(Array.isArray(x.loanTerms) ? x.loanTerms.filter(v => typeof v === 'string') : []).filter(Boolean).slice(0, 8) }));
   return real.concat(real.length < 6 ? USED_DEMO : []);
@@ -31195,6 +31506,8 @@ function mkPubOpen() {
     <input id="mkpub-title" class="mkpub-in" maxlength="120" placeholder="מה מוכרים?">
     <label class="mkpub-l" for="mkpub-price">מחיר</label>
     <div class="mkpub-price"><input id="mkpub-price" class="mkpub-in" type="number" min="0" step="1" inputmode="numeric" placeholder="0"><span>₪</span></div>
+    <label class="mkpub-l" for="mkpub-stock">כמה יחידות יש לך במלאי? <small>(לא חובה)</small></label>
+    <input id="mkpub-stock" class="mkpub-in" type="number" min="0" step="1" inputmode="numeric" placeholder="ריק = ללא הגבלה">
     <p class="mkpub-err" id="mkpub-err" hidden></p>
     <button type="button" class="mkpub-go" id="mkpub-go" onclick="mkPubSend()">פרסום</button>
     ${typeof isAdmin === 'function' && isAdmin() ? '' : '<small class="mkpub-note">המודעה תופיע בשוק אחרי אישור מנהל.</small>'}
@@ -31230,11 +31543,13 @@ async function mkPubSend() {
   if (!mkPub.images.length) return fail('צריך להוסיף לפחות תמונה אחת');
   if (title.length < 2) return fail('צריך לכתוב כותרת');
   if (!(price >= 0) || document.getElementById('mkpub-price').value === '') return fail('צריך לכתוב מחיר');
+  const stockTxt = (document.getElementById('mkpub-stock') || {}).value || '', stock = stockTxt === '' ? null : Math.floor(Number(stockTxt));
+  if (stock !== null && !(stock >= 0 && stock <= 100000)) return fail('כמות המלאי לא תקינה');
   err.hidden = true; go.disabled = true; go.textContent = 'מפרסם…';
   // משתמשים במסלול הפרסום הקיים: ממלאים את נתוני השיחה ומפרסמים מאחורי הקלעים
   qpEnsureModal();
   document.getElementById('qp-messages').innerHTML = '';
-  qpData = { title, images: mkPub.images.slice(0, 5), summary: '', communityId: null, type: 'photo', pageSection: 'secondhand', isProduct: true, tags: {}, tagIndex: 0, price: String(price), offerType: 'מכירה', region: '' };
+  qpData = { title, images: mkPub.images.slice(0, 5), summary: '', communityId: null, type: 'photo', pageSection: 'secondhand', isProduct: true, tags: {}, tagIndex: 0, price: String(price), offerType: 'מכירה', region: '', stock };
   await qpPublish();
   const out = document.getElementById('qp-messages').innerText || '';
   const qm = document.getElementById('quick-publish-modal'); if (qm) qm.style.display = 'none';
@@ -31357,6 +31672,7 @@ function rentList() {
   const views = r => photoGetViews(rentCommentsKey(r));
   if (rentUI.sort === 'cheap') l.sort((a, b) => a.price - b.price);
   else if (rentUI.sort === 'popular') l.sort((a, b) => views(b) - views(a));
+  else if (rentUI.sort === 'near' && mkGeo) { const d = r => { const k = mkKmTo(r.city); return k === null ? 1e9 : k; }; l.sort((a, b) => d(a) - d(b)); }
   else if (rentUI.sort === 'trend') { const sc = r => views(r) / ((Date.now() - (r.t || 0)) / 864e5 + 2); l.sort((a, b) => sc(b) - sc(a)); }
   else if (rentUI.sort === 'rating') l.sort((a, b) => (b.rating || 0) - (a.rating || 0));
   else l.sort((a, b) => (b.t || 0) - (a.t || 0));
@@ -31368,7 +31684,17 @@ const rentWide = () => { try { return window.matchMedia('(min-width: 1100px)').m
 const RENT_BATCH = 21;
 let rentInfList = [], rentInfShown = 0, rentInfRaf = 0;
 // טוען פעם אחת את דירוג המוכר לכל כרטיס חדש שעל המסך
+// שם מודעה ארוך שנחתך: מופיע "עוד" שפותח את השם המלא
+function mkTitleMore() {
+  document.querySelectorAll('.mk-sg-title:not([data-chk])').forEach(b => {
+    const t = b.querySelector('.mk-sg-tt'); if (!t || !t.clientWidth) return;
+    b.dataset.chk = '1';
+    b.classList.toggle('has-more', t.scrollWidth > t.clientWidth + 1);
+  });
+}
+window.addEventListener('resize', () => { document.querySelectorAll('.mk-sg-title[data-chk]:not(.open)').forEach(b => b.removeAttribute('data-chk')); mkTitleMore(); });
 function rentSgFill() {
+  requestAnimationFrame(mkTitleMore);
   const els = mainContent ? [...mainContent.querySelectorAll('[data-sg-rate]:not([data-done])')] : [];
   els.forEach(el => { el.dataset.done = '1'; });
   new Set(els.map(el => el.dataset.sgRate)).forEach(rentSellerLoad);
@@ -31397,6 +31723,52 @@ function rentTypeIcon(r) {
   return `<span class="mk-sg-type" role="img" aria-label="${label}" title="${label}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${d}"/></svg></span>`;
 }
 // ריחוף על קובייה: כותרת ושלושה כפתורים עגולים (תגובות, שמירה, לייק). מודעת דוגמה נשמרת רק בדפדפן
+// מרחק מהמשתמש: מיקום משוער של כל עיר/אזור, והמיקום של המשתמש נשמר רק בדפדפן שלו (אחרי שהפעיל מיקום)
+const CITY_GEO = {
+  'תל אביב': [32.0853, 34.7818], 'תל אביב-יפו': [32.0853, 34.7818], 'יפו': [32.0504, 34.7522], 'רמת גן': [32.0684, 34.8248], 'גבעתיים': [32.0722, 34.8089], 'בני ברק': [32.0807, 34.8338],
+  'פתח תקווה': [32.0871, 34.8875], 'ראשון לציון': [31.9730, 34.7925], 'חולון': [32.0158, 34.7874], 'בת ים': [32.0171, 34.7454], 'הרצליה': [32.1624, 34.8447], 'רעננה': [32.1848, 34.8713],
+  'כפר סבא': [32.1782, 34.9076], 'הוד השרון': [32.1500, 34.8889], 'נתניה': [32.3215, 34.8532], 'כפר יונה': [32.3167, 34.9353], 'רמת השרון': [32.1460, 34.8394], 'ראש העין': [32.0956, 34.9566],
+  'מודיעין': [31.8980, 35.0104], 'רחובות': [31.8928, 34.8113], 'נס ציונה': [31.9293, 34.7987], 'לוד': [31.9516, 34.8953], 'רמלה': [31.9293, 34.8722], 'יבנה': [31.8780, 34.7395],
+  'אשדוד': [31.8044, 34.6553], 'אשקלון': [31.6688, 34.5743], 'באר שבע': [31.2520, 34.7915], 'אילת': [29.5577, 34.9519], 'ירושלים': [31.7683, 35.2137], 'בית שמש': [31.7470, 34.9881],
+  'חיפה': [32.7940, 34.9896], 'קריות': [32.8380, 35.0850], 'עכו': [32.9281, 35.0820], 'נהריה': [33.0058, 35.0947], 'חדרה': [32.4340, 34.9196], 'זכרון יעקב': [32.5714, 34.9520],
+  'עפולה': [32.6070, 35.2890], 'נצרת': [32.6996, 35.3035], 'טבריה': [32.7922, 35.5312], 'צפת': [32.9646, 35.4960], 'כרמיאל': [32.9190, 35.2950], 'אריאל': [32.1061, 35.1874],
+  'צפון': [32.80, 35.30], 'מרכז': [32.08, 34.85], 'דרום': [31.25, 34.79], 'שרון': [32.25, 34.88], 'שפלה': [31.85, 34.85]
+};
+let mkGeo = (() => { try { const g = JSON.parse(localStorage.getItem('bw_geo') || 'null'); return g && isFinite(g.lat) && isFinite(g.lng) ? g : null; } catch (e) { return null; } })();
+function mkKmTo(city) {
+  const c = mkGeo && CITY_GEO[String(city || '').trim()]; if (!c) return null;
+  const R = 6371, rad = d => d * Math.PI / 180, dLat = rad(c[0] - mkGeo.lat), dLng = rad(c[1] - mkGeo.lng);
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(rad(mkGeo.lat)) * Math.cos(rad(c[0])) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+// בכרטיס: כמה ק״מ ממך (כשהמיקום פעיל), אחרת שם העיר
+function mkWhereTxt(r) {
+  const km = mkKmTo(r.city);
+  if (km !== null) return km < 1 ? 'פחות מק״מ' : Math.round(km).toLocaleString('he-IL') + ' ק״מ';
+  return r.city || (r.kind === 'used' ? (r.offer || 'יד 2') : rentCatOf(r.cat).name);
+}
+// הפעלת מיקום: הדפדפן שואל את המשתמש, ואז כל הכרטיסים מראים מרחק. לחיצה נוספת מכבה
+function mkGeoToggle() {
+  if (mkGeo) {
+    mkGeo = null; try { localStorage.removeItem('bw_geo'); } catch (e) {}
+    if (rentUI.sort === 'near') rentUI.sort = 'new';
+    rentRender(); return;
+  }
+  if (!navigator.geolocation) { glassBanner({ title: 'הדפדפן לא תומך במיקום', icon: 'del' }); return; }
+  navigator.geolocation.getCurrentPosition(pos => {
+    mkGeo = { lat: Math.round(pos.coords.latitude * 1000) / 1000, lng: Math.round(pos.coords.longitude * 1000) / 1000 };   // מעוגל — מספיק לק״מ
+    try { localStorage.setItem('bw_geo', JSON.stringify(mkGeo)); } catch (e) {}
+    rentUI.sort = 'near';
+    rentRender();
+    glassBanner({ title: 'המיקום הופעל', sub: 'המודעות מסודרות מהקרובה ביותר', icon: 'ok', ms: 2200 });
+  }, () => glassBanner({ title: 'לא קיבלנו גישה למיקום', sub: 'אפשר לאשר מיקום בהגדרות הדפדפן', icon: 'del', ms: 2600 }), { enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 });
+}
+window.mkGeoToggle = mkGeoToggle;
+// במובייל: שורה אחת מתחת לתמונה — המשתמש, צפיות ולייקים בקטן, והמחיר
+function mkMobStatHTML(x) {
+  const rk = rentCommentsKey(x), lk = x.shId || rk, sv = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+  return `<small class="mk-sg-mstat"><span>${sv('<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>')}${formatViews(photoGetViews(rk))}</span><span>${sv('<path d="M7 10v11H3V10zM7 10l4-8a2.5 2.5 0 0 1 3 2.6L13.5 9H19a2 2 0 0 1 2 2.3l-1.4 8A2 2 0 0 1 17.6 21H7"/>')}<i data-likes-n="${escHtml(lk)}">${Number(itemLikesData[lk]) || 0}</i></span></small>`;
+}
 function rentHoverHTML(x) {
   const ic = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${d}"/></svg>`;
   const id = artEsc(x.id), sh = x.shId ? artEsc(x.shId) : '', stop = 'event.stopPropagation(); event.preventDefault(); ';
@@ -31407,6 +31779,7 @@ function rentHoverHTML(x) {
   subscribeReposts();
   const cnt = (n, attr) => `<i class="pti-n mk-n"${attr || ''}>${n}</i>`;
   return `<span class="mk-sg-hov"><span class="mk-sg-hov-btns">
+    ${b('הוספה לסל', 'M12 5v14M5 12h14', mktCartable(x) ? `rentCartAdd('${id}')` : `rentOpen('${id}')`, false, '', 'mk-sg-plus')}
     ${b('לייק', 'M7 10v11H3V10zM7 10l4-8a2.5 2.5 0 0 1 3 2.6L13.5 9H19a2 2 0 0 1 2 2.3l-1.4 8A2 2 0 0 1 17.6 21H7', sh ? `photoToggleLike('${sh}')` : `rentMark(this, 'like', '${id}')`, liked, sh ? ` data-like="${escHtml(x.shId)}"` : '', '', cnt(Number(itemLikesData[likeId]) || 0, ` data-likes-n="${escHtml(likeId)}"`))}
     ${b('ריפוסט', 'M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3', `toggleRepost('${artEsc(rk)}', this)`, repostIsMine(rk), ` data-item="${escHtml(rk)}"`, 'pti-repost', cnt(repostCount(rk)))}
     ${b('שמירה', 'M6 4h12v17l-6-4.5L6 21z', `mkCountBump('${artEsc(svKey)}', this.classList.contains('on') ? -1 : 1); ` + (sh ? `photoToggleSave('${sh}')` : `rentMark(this, 'save', '${id}')`), saved, sh ? ` data-save="${escHtml(x.shId)}"` : '', '', cnt(Number(itemLikesData[svKey]) || 0, ` data-likes-n="${escHtml(svKey)}"`))}
@@ -31432,8 +31805,8 @@ window.rentOpenComments = rentOpenComments;
 // כרטיס מוצר קטן בשוק ובהצעות: תמונה, שם, מיקום, מחיר ודירוג המוכר אם יש
 function rentMiniHTML(x) {
   const del = isAdmin() ? `<span class="mk-sg-x" role="button" tabindex="0" aria-label="הסרת המודעה" title="הסרת המודעה" onclick="event.stopPropagation(); rentAdminDelete('${artEsc(x.id)}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></span>` : '';
-  // כרטיס: תמונה ביחס 4:3, מתחתיה שורה: המוכר | העיר | המחיר, שורת כפתורים קטנה (לייק, שיתוף, שמירה, דיווח) ובסוף שם המודעה בקטן
-  return `<button type="button" class="mk-sg" onclick="rentOpen('${artEsc(x.id)}')"><span class="mk-sg-img">${rentThumb(x)}${del}</span><span class="mk-sg-meta"><span class="mk-sg-who" role="button" tabindex="0" onclick="event.stopPropagation(); rentOpenSeller('${artEsc(x.uid || '')}', '${artEsc(x.owner || '')}')">${authorAvHTML({ author: x.owner || '?', uid: x.uid || '' })}<b>${escHtml(x.owner || '')}</b></span><small class="mk-sg-city">${escHtml(x.city || (x.kind === 'used' ? (x.offer || 'יד 2') : rentCatOf(x.cat).name))}</small><small class="mk-sg-price">${rentTypeIcon(x)}${Number(x.price) > 0 ? `${Number(x.price).toLocaleString('he-IL', { maximumFractionDigits: 2 })}&nbsp;₪` : ''}${x.uid ? `<i data-sg-rate="${escHtml(x.uid)}"></i>` : ''}</small></span><span class="mk-sg-acts">${rentHoverHTML(x)}</span><b class="mk-sg-title">${escHtml(x.title)}</b></button>`;
+  // כרטיס: למעלה שורה: המוכר | העיר | המחיר, מתחתיה תמונה ביחס 4:3; מתחת שורת כפתורים קטנה (לייק, שיתוף, שמירה, דיווח) ובסוף שם המודעה בקטן
+  return `<button type="button" class="mk-sg" onclick="rentOpen('${artEsc(x.id)}')"><span class="mk-sg-meta"><span class="mk-sg-who" role="button" tabindex="0" onclick="event.stopPropagation(); rentOpenSeller('${artEsc(x.uid || '')}', '${artEsc(x.owner || '')}')">${authorAvHTML({ author: x.owner || '?', uid: x.uid || '' })}<b>${escHtml(x.owner || '')}</b></span><small class="mk-sg-city${mkKmTo(x.city) !== null ? ' km' : ''}">${escHtml(mkWhereTxt(x))}</small>${mkMobStatHTML(x)}<small class="mk-sg-price">${rentTypeIcon(x)}${Number(x.price) > 0 ? `${Number(x.price).toLocaleString('he-IL', { maximumFractionDigits: 2 })}&nbsp;₪` : ''}${x.uid ? `<i data-sg-rate="${escHtml(x.uid)}"></i>` : ''}</small></span><span class="mk-sg-img">${rentThumb(x)}${del}${mktSoldOut(x) ? '<i class="mk-sg-out">אזל</i>' : ''}</span><span class="mk-sg-acts">${rentHoverHTML(x)}</span><b class="mk-sg-title"><span class="mk-sg-tt">${escHtml(x.title)}</span><span class="mk-sg-more" role="button" tabindex="0" onclick="event.stopPropagation(); event.preventDefault(); this.parentElement.classList.toggle('open')"><span>עוד</span><span>פחות</span></span></b></button>`;
 }
 function rentGridHTML() {
   const l = rentList();
@@ -31460,11 +31833,16 @@ function rentViewHTML() {
     ['popular', 'פופולרי', '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'],
     ['cheap', 'הכי זול', '<path d="M20 12 12 20 4 12V4h8z"/><circle cx="8.5" cy="8.5" r="1.5"/>']
   ];
+  if (mkGeo) sorts.push(['near', 'הכי קרוב', '<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>']);
   const tags = [['sec', 'used', 'יד2'], ['offer', 'מכירה', 'מכירה'], ['offer', 'החלפה', 'החלפה'], ['offer', 'השאלה', 'השאלה'], ['sec', 'rent', 'השכרה'],
     ...RENT_CATS.filter(c => !c.store && c.id !== 'all').map(c => ['cat', c.id, c.name.replace(/\s+/g, '_')]), ['sec', 'store', 'אחסון']];
   const tagOn = (k, v) => k === 'sec' ? rentUI.sec === v && rentUI.cat === 'all' && rentUI.offer === 'all' : rentUI[k] === v;
+  const total = rentList().length;
   return `<header class="rn-head">
       ${pubBtn}
+      <span class="rn-count">${total.toLocaleString('he-IL')} ${total === 1 ? 'מודעה' : 'מודעות'}</span>
+      <button type="button" class="rn-fbtn${rentFilterOpen() ? ' on' : ''}" onclick="rentFilterToggle()" aria-label="סינון וקטגוריות"><span class="rn-fbtn-t">סינון</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg></button>
+      <button type="button" class="rn-geo${mkGeo ? ' on' : ''}" onclick="mkGeoToggle()" title="${mkGeo ? 'כיבוי המיקום' : 'הצגת המרחק מכל מודעה'}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>${mkGeo ? 'המיקום פעיל' : 'הפעלת מיקום'}</button>
       <nav class="rn-sorts" aria-label="מיון">${sorts.map(([v, t, d]) => `<button type="button" class="rn-sort${rentUI.sort === v ? ' on' : ''}" onclick="rentSet('sort', '${v}')">${sv(d)}${t}</button>`).join('')}</nav>
       <nav class="rn-tags" aria-label="האשטאגים">${tags.map(([k, v, t]) => `<button type="button" class="rn-tag${tagOn(k, v) ? ' on' : ''}" onclick="rentTag('${k}', '${artEsc(v)}')">#${escHtml(t)}</button>`).join('')}</nav>
     </header>
@@ -31475,12 +31853,17 @@ function rentViewHTML() {
       <select class="rn-sel" onchange="rentSet('sort', this.value)" aria-label="מיון">${[['new', 'הכי חדש'], ['cheap', 'הכי זול'], ['rating', 'דירוג גבוה']].map(([v, t]) => `<option value="${v}"${rentUI.sort === v ? ' selected' : ''}>${t}</option>`).join('')}</select>
     </div>
     ${rentUI.sec === 'rent' ? `<nav class="rn-cats">${RENT_CATS.filter(c => !c.store).map(c => `<button type="button" class="rn-cat${rentUI.cat === c.id ? ' on' : ''}" onclick="rentSet('cat', '${c.id}')">${c.ic} ${c.name} <small>${count(c.id)}</small></button>`).join('')}</nav>` : ''}
-    <div class="rn-grid">${rentGridHTML()}</div>
+    <div class="rn-layout${rentFilterOpen() ? ' f-open' : ''}">
+      <aside class="mk-fside rn-fpanel" aria-label="סינון"></aside>
+      <div class="rn-grid">${rentGridHTML()}</div>
+    </div>
     <p class="rn-fine">איך זה עובד: בוחרים מודעה ← שולחים בקשה ← בעל המודעה מאשר ומתאמים. בהשכרה ובאחסון התשלום לבעל המודעה, ועמלת שירות של ${Math.round(RENT_SITE_FEE * 100)}% לאתר.<br><small>תמונות הדוגמה: Wikimedia Commons (רישיון חופשי)</small></p>`;
 }
 function buildRentPage() {
   Object.assign(rentUI, { offer: 'all', owner: 'all', min: null, max: null });   // סינון העמודה שבעמוד הראשי לא עובר לעמוד השוק
   setTimeout(rentSubscribe, 0);
+  setTimeout(() => { rentSideSync(); mkTitleMore(); }, 0);
+  setTimeout(mkTitleMore, 900);
   rentUI.open = null;
   return `<div class="rent-page" data-page-id="page-rent-main"><div class="rn-inner">${rentViewHTML()}</div></div>`;
 }
@@ -31494,7 +31877,8 @@ function rentSideHTML() {
   const used = all.filter(r => mktSecOf(r) === 'used'), eq = all.filter(r => mktSecOf(r) === 'rent');
   const prices = all.map(r => Number(r.price) || 0).filter(p => p > 0);
   const top$ = Math.ceil(Math.max(0, ...prices) / 10) * 10 || 100, lo = rentUI.min === null ? 0 : rentUI.min, hi = rentUI.max === null ? top$ : rentUI.max;
-  return `<nav class="mk-f-path"><button type="button" onclick="rentSideSet('all', 'all')">בית</button> / <b>השוק</b></nav>
+  return `<div class="rn-fp-head"><b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>סינון</b><button type="button" onclick="rentFilterToggle()" aria-label="סגירת הסינון">✕</button></div>
+    <nav class="mk-f-path"><button type="button" onclick="rentSideSet('all', 'all')">בית</button> / <b>השוק</b></nav>
     <h3 class="mk-f-h">קטגוריות</h3>
     ${group('יד 2', row('sec', 'used', 'כל המוצרים', used.length) + [...new Set(used.map(r => r.offer).filter(Boolean))].map(o => row('offer', o, o, n(used, r => r.offer === o))).join(''), true)}
     ${group('השכרת ציוד', RENT_CATS.filter(c => !c.store && c.id !== 'all').map(c => row('cat', c.id, c.name, n(eq, r => r.cat === c.id))).join(''), true)}
@@ -31582,14 +31966,30 @@ function rentSidePriceGo() {
   rentUI.max = Number(document.getElementById('mk-f-hi').value);
   rentSideApply();
 }
+// חלון צד של סינון בשוק (מחשב): נפתח ונסגר מכפתור "סינון"; המצב נשמר בדפדפן. במובייל הכפתור פותח את התפריט
+function rentFilterOpen() { try { return localStorage.getItem('bw_mk_filter') !== '0'; } catch (e) { return true; } }
+function rentFilterToggle() {
+  if (innerWidth <= 760) { openMobileMenu(); return; }
+  const lay = document.querySelector('.rent-page .rn-layout'); if (!lay) return;
+  const on = lay.classList.toggle('f-open');
+  try { localStorage.setItem('bw_mk_filter', on ? '1' : '0'); } catch (e) {}
+  document.querySelectorAll('.rent-page .rn-fbtn').forEach(b => b.classList.toggle('on', on));
+  if (on) rentSideSync();
+}
+window.rentFilterToggle = rentFilterToggle;
 function rentRender(gridOnly) {
   rentSideSync();
   const el = typeof mainContent !== 'undefined' && mainContent && mainContent.querySelector('.rent-page .rn-inner');
   if (!el) return;
   const open = rentUI.open && rentFind(rentUI.open);
-  if (gridOnly && !open) { const g = el.querySelector('.rn-grid'); if (g) g.innerHTML = rentGridHTML(); return; }
+  if (gridOnly && !open) {
+    const g = el.querySelector('.rn-grid'); if (g) g.innerHTML = rentGridHTML();
+    const n = el.querySelector('.rn-count'), t = rentList().length; if (n) n.textContent = `${t.toLocaleString('he-IL')} ${t === 1 ? 'מודעה' : 'מודעות'}`;
+    return;
+  }
   if (open && mainContent) { const stTop = mainContent.querySelector(':scope > .site-top'); if (stTop) stTop.remove(); }
   el.innerHTML = open ? rentDetailHTML(open) : rentUI.seller ? rentSellerHTML(rentUI.seller) : rentViewHTML();
+  if (!open && !rentUI.seller) { rentSideSync(); requestAnimationFrame(mkTitleMore); }
   if (open) {
     rentStickFix(); requestAnimationFrame(rentStickFix); setTimeout(rentStickFix, 120);
     rentFitPage(); requestAnimationFrame(rentFitPage); setTimeout(rentFitPage, 120); setTimeout(rentFitPage, 700);
@@ -31649,7 +32049,7 @@ function rentSellerHTML(sl) {
   const views = list.reduce((a, r) => a + photoGetViews(rentCommentsKey(r)), 0);
   const st = { uid: sl.uid || '', name: sl.name, profile: { aboutCity: cities.join(' · '), ...(DEMO_SELLER_CONTACT[sl.name] || {}) } };
   // אותו מבנה כמו פרופיל של משתמש: כותרת, לשוניות, ומתחת כרטיס פרטים לצד המודעות
-  return `<div class="pf-desk sl-desk">
+  return `${crumbsHTML([['בית', 'goToHomePage()'], ['השוק', "mktGo('all')"], [sl.name, '']])}<div class="pf-desk sl-desk">
     <aside class="pf-side"><div id="user-page-head">
       <section class="pf-head">
         <div class="pf-top"><span class="pf-av-wrap">${authorAvHTML({ author: sl.name, uid: sl.uid || '' }).replace('class="au-av', 'class="pf-avatar au-av')}</span></div>
@@ -31657,7 +32057,6 @@ function rentSellerHTML(sl) {
         <div class="pf-counts"><span><b>${list.length}</b> ${list.length === 1 ? 'מודעה' : 'מודעות'}</span><span><b>${formatViews(views)}</b> צפיות</span></div>
         ${cities.length ? `<div class="pf-facts"><span class="pf-fact">${escHtml(cities.join(' · '))}</span></div>` : ''}
       </section>
-      <div class="pfs"><div class="pfs-btns"><button type="button" class="pfs-btn" onclick="rentBack()">חזרה לשוק</button></div></div>
     </div></aside>
     <div class="pf-main">
       <div class="pf-tabs2" role="tablist"><button type="button" class="on">הכל</button><button type="button" onclick="this.parentElement.firstElementChild.click()">${list.length} מודעות</button></div>
@@ -31710,7 +32109,7 @@ function rentDetailHTML(r) {
   main[2] = '<rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19M6.5 15h4"/>';   // כרטיס בקו דק, כמו שאר הסמלים
   const WORD = { 'הצעת מחיר': 'הצעה', 'פנייה למוכר': 'פנייה', 'הצעת החלפה': 'החלפה', 'בקשת השאלה': 'השאלה', 'בקשת אחסון': 'אחסון', 'בקשת השכרה': 'השכרה', 'הוספה לעגלה': 'הוסף לסל', 'הודעה למוכר': 'הודעה', 'מחיקת המודעה (מנהל)': 'מחיקה' };
   const btn = (icon, label, act, cls, attr) => `<span class="mk-ic"><button type="button" class="mp-btn${cls ? ' ' + cls : ''}" title="${label}" aria-label="${label}"${attr || ''} onclick="${act}">${ic(icon)}</button><small>${WORD[label] || label}</small></span>`;
-  const cartBtn = typeof mktCartable === 'function' && mktCartable(r) ? btn('<circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M3 4h2l2.6 12h11l2-8H6"/>', 'הוספה לעגלה', `rentCartAdd('${artEsc(r.id)}')`, 'mk-cart-add' + (cartGet().some(x => x.id === 'mkt_' + r.id) ? ' on' : '')) : '';
+  const cartBtn = typeof mktCartable === 'function' && mktCartable(r) ? btn('<path d="M12 5v14M5 12h14"/>', 'הוספה לעגלה', `rentCartAdd('${artEsc(r.id)}')`, 'mk-cart-add' + (cartGet().some(x => x.id === 'mkt_' + r.id) ? ' on' : '')) : '';
   const feat = (icon, title, sub) => `<li><span>${ic(icon)}</span><div><b>${escHtml(title)}</b>${sub ? `<small>${escHtml(sub)}</small>` : ''}</div></li>`;
   const when = r.t ? new Date(r.t).toLocaleDateString('he-IL') : '';
   const who = `${authorAvHTML({ author: owner, uid: r.uid || '' })}<span class="mk-seller-tx"><b>${escHtml(owner)}</b>${when ? `<small>${escHtml(when)}</small>` : ''}</span>`;
@@ -31730,7 +32129,7 @@ function rentDetailHTML(r) {
   const sideIds = new Set(more.map(x => x.id));
   const side = more.concat(mktAll().filter(x => x.id !== r.id && !sideIds.has(x.id)).sort((a, b) => (b.t || 0) - (a.t || 0))).slice(0, 20);
   const sideHTML = side.map(x => `<button type="button" class="mk-wi" onclick="rentOpen('${artEsc(x.id)}')"><span class="mk-wi-img">${rentThumb(x)}</span><span class="mk-wi-tx"><b>${escHtml(x.title)}</b><small>${escHtml(x.owner || '')}</small><small>${[x.city, Number(x.price) > 0 ? Number(x.price).toLocaleString('he-IL', { maximumFractionDigits: 2 }) + ' ₪' : ''].filter(Boolean).map(escHtml).join(' · ')}</small></span></button>`).join('');
-  return `<div class="mk-watch"><div class="mk-wmain"><header class="mk-head"><button type="button" class="rn-back" onclick="rentBack()" aria-label="חזרה">→</button>
+  return `<div class="mk-watch"><div class="mk-wmain">${crumbsHTML([['בית', 'goToHomePage()'], ['השוק', "mktGo('all')"], [r.title, '']])}<header class="mk-head"><button type="button" class="rn-back" onclick="rentBack()" aria-label="חזרה">→</button>
       <button type="button" class="mk-seller" onclick="rentOpenSeller('${artEsc(r.uid || '')}', '${artEsc(owner)}')">${who}</button>
       ${r.city ? `<span class="mk-city">${escHtml(r.city)}</span>` : ''}
     </header>
@@ -31750,7 +32149,8 @@ function rentDetailHTML(r) {
         <span class="mk-cat">${escHtml(r.kind === 'used' ? (r.offer || 'יד 2') : rentCatOf(r.cat).name)}</span>
         <h2 class="mk-title">${escHtml(r.title)}</h2>
         <div class="mp-price">${rentPriceShort(r)}</div>
-        ${r.kind === 'used' && !cartBtn ? '' : `<div class="mk-qrow">${rentQtySelHTML(r, qty, unitName)}</div>`}
+        ${mktStockLineHTML(r)}
+        ${(r.kind === 'used' && !cartBtn) || mktSoldOut(r) ? '' : `<div class="mk-qrow">${rentQtySelHTML(r, qty, unitName)}</div>`}
         <div class="mk-buyrow"><div class="mk-buy">
         ${r.kind === 'used' ? `<input id="rn-qty" type="hidden" value="${qty}">` : `<div class="mk-qty">
           <div class="mp-btns mk-acts">${cartBtn}</div>
@@ -31788,6 +32188,11 @@ function rentDetailHTML(r) {
     </div>
     </div><aside class="mk-wside" aria-label="מודעות נוספות">${sideHTML}</aside></div>
     ${more.length ? `<section class="mp-more"><h2>הצעות נוספות</h2><div class="mk-sg-grid">${more.map(rentMiniHTML).join('')}</div></section>` : ''}`;
+}
+// פירורי לחם: בית › השוק › ... › הדף הנוכחי. כל פריט חוץ מהאחרון לחיץ
+function crumbsHTML(items) {
+  const sep = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>';
+  return `<nav class="crumbs" aria-label="מיקום באתר">${items.map(([t, act], i) => i === items.length - 1 ? `<span aria-current="page">${escHtml(t)}</span>` : `<button type="button" onclick="${act}">${escHtml(t)}</button>${sep}`).join('')}</nav>`;
 }
 // ביקורת על המוכר: ממוצע הדירוגים האמיתי מהענן
 const RENT_STAR = '<svg viewBox="0 0 24 24"><path d="M12 2.8l2.8 5.8 6.4.9-4.6 4.5 1.1 6.3L12 17.3l-5.7 3 1.1-6.3L2.8 9.5l6.4-.9z"/></svg>';
@@ -31972,9 +32377,10 @@ async function rentAdminDelete(id) {
 window.rentAdminDelete = rentAdminDelete;
 // בחירת כמות: כפתור עם רשימה נפתחת, והכמות הנבחרת מסומנת ב-✓
 function rentQtyOpts(r) {
-  const m = rentMin(r);
-  if (r.unit === 'kg') return [...new Set([m, .5, 1, 1.5, 2, 3, 4, 5].filter(x => x >= m))].sort((a, b) => a - b);
-  return Array.from({ length: 10 }, (_, i) => i + 1);
+  const m = rentMin(r), st = typeof mktStock === 'function' ? mktStock(r) : null;
+  const cap = l => st === null ? l : l.filter(x => x <= st);
+  if (r.unit === 'kg') return cap([...new Set([m, .5, 1, 1.5, 2, 3, 4, 5].filter(x => x >= m))].sort((a, b) => a - b));
+  return cap(Array.from({ length: 10 }, (_, i) => i + 1));
 }
 function rentQtySelHTML(r, qty, unitName) {
   const hint = r.unit === 'kg' ? 'ק״ג' : unitName && r.kind !== 'used' ? 'לפי ' + unitName : '';
