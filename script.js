@@ -357,7 +357,9 @@ function onPublicSiteValue(cb) {
 
 // לייקים נשמרים בנפרד (website/item_likes/{id}) כי גולשים לא כותבים ל-pages.
 // מעדכנים את מוני הלייקים בתוך נתוני העמודים לפי הערכים האלה.
+var itemLikesData = {};   // מוני הלייקים לפי מזהה — גם למודעות השוק שאינן עמוד
 function applyItemLikesToPages(pageList, likes) {
+  if (likes && typeof likes === 'object') itemLikesData = likes;
   if (!likes || !Array.isArray(pageList)) return false;
   let changed = false;
   pageList.forEach(p => {
@@ -9960,6 +9962,7 @@ function buildSidebarAboutMeSectionHTML() {
       set_('pf-about-region', v.aboutRegion); set_('pf-about-city', v.aboutCity);
       set_('pf-about-likes', v.aboutLikes); set_('pf-about-dislikes', v.aboutDislikes);
       set_('pf-about-telegram', v.telegram); set_('pf-about-email', v.email);
+      set_('pf-about-phone', v.phone); set_('pf-about-website', v.website);
     }).catch(() => {});
   }
   const fld = 'width:100%; box-sizing:border-box; padding:7px 10px; border:1.5px solid #cbd5e1; border-radius:8px; font-size:13px; font-family:inherit; outline:none; background:#ffffff;';
@@ -9985,6 +9988,10 @@ function buildSidebarAboutMeSectionHTML() {
       <input id="pf-about-telegram" type="text" dir="ltr" maxlength="40" placeholder="@username" value="${escHtml(p.telegram || '')}" style="${fld} text-align:left;">
       <div style="${lbl}">✉️ מייל</div>
       <input id="pf-about-email" type="email" dir="ltr" maxlength="80" placeholder="example@mail.com" value="${escHtml(p.email || '')}" style="${fld} text-align:left;">
+      <div style="${lbl}">📞 טלפון</div>
+      <input id="pf-about-phone" type="tel" dir="ltr" maxlength="20" placeholder="050-0000000" value="${escHtml(p.phone || '')}" style="${fld} text-align:left;">
+      <div style="${lbl}">🌐 אתר</div>
+      <input id="pf-about-website" type="url" dir="ltr" maxlength="100" placeholder="www.example.com" value="${escHtml(p.website || '')}" style="${fld} text-align:left;">
       <div style="${lbl}">💚 מה אני אוהב/ת</div>
       <textarea id="pf-about-likes" rows="2" maxlength="500" placeholder="מופרד בפסיקים, לדוגמה: ..., ..." style="${fld} resize:vertical;">${escHtml(p.aboutLikes || '')}</textarea>
       <div style="${lbl}">🚫 מה אני לא אוהב/ת</div>
@@ -10006,8 +10013,14 @@ async function saveAboutMe() {
     aboutLikes: aboutSplitTags(val('pf-about-likes')).join(', '),
     aboutDislikes: aboutSplitTags(val('pf-about-dislikes')).join(', '),
     telegram: val('pf-about-telegram').slice(0, 40),
-    email: val('pf-about-email').slice(0, 80)
+    email: val('pf-about-email').slice(0, 80),
+    phone: val('pf-about-phone').replace(/[^\d+\- ]/g, '').slice(0, 20),
+    website: val('pf-about-website').slice(0, 100)
   };
+  if (data.website && !/^(https?:\/\/)?[\w-]+(\.[\w-]+)+(\/\S*)?$/i.test(data.website)) {
+    if (typeof showCopyToast === 'function') showCopyToast('כתובת האתר לא תקינה');
+    return;
+  }
   if (data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
     if (typeof showCopyToast === 'function') showCopyToast('כתובת המייל לא תקינה');
     return;
@@ -13956,9 +13969,48 @@ function homeGridHTML(photos, comics, stories) {
 }
 // העמודה הצדדית בגריד: מגירה נשלפת מימין, סגורה כברירת מחדל כדי שיראו את כל התמונות
 const homeSideOpen = () => { try { return localStorage.getItem('home_side_open') === '1'; } catch (e) { return false; } };
+// העמודה שנפתחת מהצד: תפריט בסגנון פייסבוק — המשתמש, קישורים עם אייקונים צבעוניים, וקיצורי דרך לקטגוריות השוק
+function fbSideHTML() {
+  const u = auth.currentUser, reg = !!(u && !u.isAnonymous);
+  const name = reg ? ((typeof liveChatUserName === 'function' && liveChatUserName()) || u.displayName || 'הפרופיל שלי') : 'התחברות';
+  const me = reg ? `openUserPage('${artEsc(u.uid)}')` : 'openLiveChatLogin()';
+  const ic = (bg, d) => `<span class="fbs-ic" style="background:${bg}"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg></span>`;
+  const item = (icon, label, act) => `<button type="button" class="fbs-row" onclick="${act}">${icon}<span>${label}</span></button>`;
+  const items = [
+    [ic('linear-gradient(135deg,#4f9cf9,#2563eb)', '<path d="M4 11h16M4 6h16M4 16h10"/>'), 'פיד', 'mktFeedOpen()'],
+    [ic('linear-gradient(135deg,#38bdf8,#0ea5e9)', '<circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0"/><circle cx="17" cy="9" r="2.5"/><path d="M15.5 14.2A5 5 0 0 1 21 19"/>'), 'עוקבים ובמעקב', me],
+    [ic('linear-gradient(135deg,#a78bfa,#7c3aed)', '<path d="M6 4h12v17l-6-4.5L6 21z"/>'), 'שמורים', 'openSavedModal()'],
+    [ic('linear-gradient(135deg,#fb7185,#e11d48)', '<path d="M7 10v11H3V10zM7 10l4-8a2.5 2.5 0 0 1 3 2.6L13.5 9H19a2 2 0 0 1 2 2.3l-1.4 8A2 2 0 0 1 17.6 21H7"/>'), 'לייקים', 'openLikesDrawer()'],
+    [ic('linear-gradient(135deg,#34d399,#059669)', '<path d="M21 12a8 8 0 0 1-8 8H4l2.2-2.6A8 8 0 1 1 21 12z"/>'), 'הודעות', 'openMessages()'],
+    [ic('linear-gradient(135deg,#fbbf24,#f97316)', '<circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M3 4h2l2.6 12h11l2-8H6"/>'), 'סל הקניות', "cartOpen('cart')"],
+    [ic('linear-gradient(135deg,#f472b6,#db2777)', '<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/>'), 'השכרות', "cartOpen('rent')"],
+    [ic('linear-gradient(135deg,#60a5fa,#4338ca)', '<path d="M20 12 12 20 4 12V4h8z"/><circle cx="8.5" cy="8.5" r="1.5"/>'), 'הצעות שלי', 'openOffersPanel()'],
+    [ic('linear-gradient(135deg,#94a3b8,#475569)', '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'), 'היסטוריה', 'openHistoryDrawer()']
+  ];
+  // קיצורי דרך: כל אזור וקטגוריה בשוק, עם תמונה של מודעה ממנו; לחיצה מסננת את השוק
+  const all = mktAll(), thumb = list => { const r = list.find(x => x.img); return r ? rentThumb(r) : '<span class="fbs-sc-ph"></span>'; };
+  const scs = [['sec', 'used', 'יד 2', all.filter(r => mktSecOf(r) === 'used')], ['sec', 'rent', 'השכרת ציוד', all.filter(r => mktSecOf(r) === 'rent')],
+    ...RENT_CATS.filter(c => !c.store && c.id !== 'all').map(c => ['cat', c.id, c.name, all.filter(r => mktSecOf(r) === 'rent' && r.cat === c.id)]),
+    ['sec', 'store', 'שטח לאחסון', all.filter(r => mktSecOf(r) === 'store')]].filter(x => x[3].length);
+  const sc = ([k, v, label, list]) => `<button type="button" class="fbs-row fbs-sc" onclick="fbSideGo('${k}', '${artEsc(v)}')"><span class="fbs-sc-img">${thumb(list)}</span><span>${escHtml(label)}</span></button>`;
+  const more = (id, n) => `<button type="button" class="fbs-row fbs-more" onclick="this.closest('.fbs-group').classList.toggle('all')">${ic('#e4e6eb', '<path d="M6 9l6 6 6-6"/>').replace('stroke="#fff"', 'stroke="#111"')}<span class="fbs-more-t">עוד</span><span class="fbs-less-t">פחות</span></button>`;
+  return `<div class="fbs">
+    <button type="button" class="fbs-row fbs-me" onclick="${me}">${reg ? authorAvHTML({ author: name, uid: u.uid }) : ic('#111', '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>')}<span>${escHtml(name)}</span></button>
+    <div class="fbs-group">${items.map((x, i) => item(...x).replace('class="fbs-row"', `class="fbs-row${i >= 7 ? ' fbs-extra' : ''}"`)).join('')}${items.length > 7 ? more() : ''}</div>
+    <div class="fbs-sep"></div>
+    <h4 class="fbs-h">קיצורי הדרך שלך</h4>
+    <div class="fbs-group">${scs.map((x, i) => sc(x).replace('class="fbs-row fbs-sc"', `class="fbs-row fbs-sc${i >= 5 ? ' fbs-extra' : ''}"`)).join('')}${scs.length > 5 ? more() : ''}</div>
+  </div>`;
+}
+function fbSideGo(k, v) {
+  if (typeof activePageId !== 'undefined' && activePageId !== 'page-rent-main' && !document.querySelector('.rent-page')) { navigateToPage('page-rent-main'); setTimeout(() => rentSideSet(k, v), 80); return; }
+  rentSideSet(k, v);
+}
+window.fbSideGo = fbSideGo;
 function homeSideToggle() {
   const d = document.querySelector('.home-feed-page .hg-drawer'); if (!d) return;
   const on = d.classList.toggle('open');
+  const fb = on && d.querySelector('.fb-side'); if (fb) fb.innerHTML = fbSideHTML();
   try { localStorage.setItem('home_side_open', on ? '1' : '0'); } catch (e) {}
   rentSideSync();
 }
@@ -14105,7 +14157,7 @@ function buildHomeFeedPage() {
     </div>
     <div class="hg-drawer${homeSideOpen() && innerWidth > 900 ? ' open' : ''}">
       <button type="button" class="hg-drawer-tab" onclick="homeSideToggle()" aria-label="פתיחה / סגירה של העמודה הצדדית" title="עוד"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
-      ${HOME_MARKET ? '<aside class="mk-fside" aria-label="קטגוריות וסינון"></aside>' : homeAsideHTML()}
+      ${HOME_MARKET ? `<aside class="fb-side" aria-label="תפריט">${fbSideHTML()}</aside>` : homeAsideHTML()}
     </div>
   </div>`;
   return `<div class="articles-page home-feed-page has-aside" data-page-id="page-home-feed">
@@ -16390,14 +16442,18 @@ function pfAboutHTML(st) {
   const views = mine.reduce((a, r) => a + photoGetViews(rentCommentsKey(r)), 0);
   const where = [p.aboutCity, p.aboutRegion].filter(Boolean).join(', ');
   const tg = String(p.telegram || '').replace(/^@/, '').trim(), mail = String(p.email || '').trim();
+  const phone = String(p.phone || '').trim(), tel = phone.replace(/[^\d+]/g, '');
+  const site = String(p.website || '').trim(), siteUrl = /^https?:\/\//i.test(site) ? site : (site ? 'https://' + site : '');
   const contact = [
     !own && uid ? row('<path d="M21 12a8 8 0 0 1-8 8H4l2.2-2.6A8 8 0 1 1 21 12z"/>', `<button type="button" class="pfa-link" onclick="dmStartWith('${artEsc(uid)}','${artEsc(st.name || '')}')">שליחת הודעה</button>`) : '',
     mail ? row('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>', `<a class="pfa-link" href="mailto:${escHtml(mail)}" dir="ltr">${escHtml(mail)}</a>`) : '',
-    tg ? row('<path d="M21 4 3 11l6 2 2 6 3-4 5 4z"/>', `<a class="pfa-link" href="https://t.me/${escHtml(encodeURIComponent(tg))}" target="_blank" rel="noopener" dir="ltr">@${escHtml(tg)}</a>`) : ''
+    tg ? row('<path d="M21 4 3 11l6 2 2 6 3-4 5 4z"/>', `<a class="pfa-link" href="https://t.me/${escHtml(encodeURIComponent(tg))}" target="_blank" rel="noopener" dir="ltr">@${escHtml(tg)}</a>`) : '',
+    tel ? row('<path d="M5 3h4l2 5-2.5 1.5a11 11 0 0 0 6 6L16 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2z"/>', `<a class="pfa-link" href="tel:${escHtml(tel)}" dir="ltr">${escHtml(phone)}</a>`) : '',
+    where ? row('<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>', `<a class="pfa-link" href="https://www.google.com/maps/search/${escHtml(encodeURIComponent(where))}" target="_blank" rel="noopener">${escHtml(where)}</a>`) : '',
+    siteUrl ? row('<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>', `<a class="pfa-link" href="${escHtml(safeUrl(siteUrl))}" target="_blank" rel="noopener nofollow" dir="ltr">${escHtml(site.replace(/^https?:\/\//i, '').replace(/\/$/, ''))}</a>`) : ''
   ].join('');
   return `<section class="pfa-card"><h3>פרטים</h3><ul>
       ${row('<path d="M12 2.8l2.8 5.8 6.4.9-4.6 4.5 1.1 6.3L12 17.3l-5.7 3 1.1-6.3L2.8 9.5l6.4-.9z"/>', `<span class="mk-rate" data-seller="${escHtml(uid)}">${rentRateHTML(0, 0)}</span>`)}
-      ${where ? row('<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>', escHtml(where)) : ''}
       ${row('<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/>', `${mine.length === 1 ? 'מודעה אחת' : mine.length + ' מודעות'} · ${formatViews(views)} צפיות`)}
     </ul>
     ${contact ? `<h3>פרטים ליצירת קשר</h3><ul>${contact}</ul>` : ''}</section>`;
@@ -26131,7 +26187,16 @@ function mobileMenuHTML() {
       <div class="mnav-social">${typeof footerSocialRowHTML === 'function' ? footerSocialRowHTML() : ''}</div>
     </aside>`;
 }
-function renderMobileMenu() { const m = document.getElementById('mnav'); if (m) { m.innerHTML = mobileMenuHTML(); if (typeof avatarHydrate === 'function') avatarHydrate(m); } }
+// התפריט שנפתח מהצד (☰): בסגנון פייסבוק — המשתמש, קישורים עם אייקונים צבעוניים וקיצורי דרך; לחיצה על שורה סוגרת את התפריט
+function renderMobileMenu() {
+  const m = document.getElementById('mnav'); if (!m) return;
+  m.innerHTML = `<div class="mnav-backdrop" onclick="closeMobileMenu()"></div>
+    <aside class="mnav-panel fbs-panel" role="dialog" aria-label="תפריט" onclick="if (event.target.closest('.fbs-row:not(.fbs-more)')) closeMobileMenu()">
+      <button type="button" class="mnav-x fbs-x" onclick="closeMobileMenu()" aria-label="סגירה">✕</button>
+      ${fbSideHTML()}
+    </aside>`;
+  if (typeof avatarHydrate === 'function') avatarHydrate(m);
+}
 function openMobileMenu() {
   let m = document.getElementById('mnav');
   if (!m) { m = document.createElement('div'); m.id = 'mnav'; m.className = 'mnav'; document.body.appendChild(m); }
@@ -26318,6 +26383,7 @@ async function sendReportContent(id, title) {
       uid: auth.currentUser ? auth.currentUser.uid : '', at: Date.now()
     });
     closeReportContent();
+    mkCountBump('rp_' + String(id || ''), 1);
     if (typeof showCopyToast === 'function') showCopyToast('תודה — הדיווח נשלח למנהל האתר ויטופל בהקדם');
   } catch (e) {
     console.error('report failed', e);
@@ -26474,7 +26540,7 @@ function repostBtnHTML(id) {
 function repostSyncBtn(b) {
   const id = b.dataset.item, n = repostCount(id), on = repostIsMine(id);
   b.classList.toggle('on', on);
-  const nb = b.querySelector('.pti-n, .pc-n'); if (nb) nb.textContent = n || '';
+  const nb = b.querySelector('.pti-n, .pc-n'); if (nb) nb.textContent = n || (nb.classList.contains('mk-n') ? '0' : '');
 }
 async function toggleRepost(id, btn) {
   const u = auth.currentUser;
@@ -31288,7 +31354,10 @@ function rentList() {
   const q = rentUI.q.trim().toLowerCase();
   let l = mktAll().filter(r => (rentUI.sec === 'all' || mktSecOf(r) === rentUI.sec) && (rentUI.sec !== 'rent' || rentUI.cat === 'all' || r.cat === rentUI.cat) && (rentUI.city === 'all' || r.city === rentUI.city) && (rentUI.offer === 'all' || r.offer === rentUI.offer) && (rentUI.owner === 'all' || r.owner === rentUI.owner) && (rentUI.min === null || (r.price > 0 && r.price >= rentUI.min && r.price <= rentUI.max))
     && (!q || [r.title, r.desc, r.city, r.owner].join(' ').toLowerCase().includes(q)));
+  const views = r => photoGetViews(rentCommentsKey(r));
   if (rentUI.sort === 'cheap') l.sort((a, b) => a.price - b.price);
+  else if (rentUI.sort === 'popular') l.sort((a, b) => views(b) - views(a));
+  else if (rentUI.sort === 'trend') { const sc = r => views(r) / ((Date.now() - (r.t || 0)) / 864e5 + 2); l.sort((a, b) => sc(b) - sc(a)); }
   else if (rentUI.sort === 'rating') l.sort((a, b) => (b.rating || 0) - (a.rating || 0));
   else l.sort((a, b) => (b.t || 0) - (a.t || 0));
   return l;
@@ -31333,15 +31402,15 @@ function rentHoverHTML(x) {
   const id = artEsc(x.id), sh = x.shId ? artEsc(x.shId) : '', stop = 'event.stopPropagation(); event.preventDefault(); ';
   const saved = x.shId ? typeof photoIsSavedLocal === 'function' && photoIsSavedLocal(x.shId) : rentMarked('save', x.id);
   const liked = x.shId ? typeof photoIsLikedLocal === 'function' && photoIsLikedLocal(x.shId) : rentMarked('like', x.id);
-  const b = (label, d, act, on, attr, cls) => `<span role="button" tabindex="0" class="${cls ? cls + ' ' : ''}${on ? 'on' : ''}" aria-label="${label}" title="${label}"${attr || ''} onclick="${stop}${act}">${ic(d)}</span>`;
-  const rk = rentCommentsKey(x);
+  const b = (label, d, act, on, attr, cls, extra) => `<span role="button" tabindex="0" class="${cls ? cls + ' ' : ''}${on ? 'on' : ''}" aria-label="${label}" title="${label}"${attr || ''} onclick="${stop}${act}">${ic(d)}${extra || ''}</span>`;
+  const rk = rentCommentsKey(x), likeId = x.shId || rk, svKey = 'sv_' + rk, rpKey = 'rp_' + rk;
   subscribeReposts();
+  const cnt = (n, attr) => `<i class="pti-n mk-n"${attr || ''}>${n}</i>`;
   return `<span class="mk-sg-hov"><span class="mk-sg-hov-btns">
-    ${b('ריפוסט', 'M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3', `toggleRepost('${artEsc(rk)}', this)`, repostIsMine(rk), ` data-item="${escHtml(rk)}"`, 'pti-repost')}
-    ${b('ביקורות', 'M12 2.8l2.8 5.8 6.4.9-4.6 4.5 1.1 6.3L12 17.3l-5.7 3 1.1-6.3L2.8 9.5l6.4-.9z', `rentOpenComments('${id}')`)}
-    ${b('שמירה', 'M6 4h12v17l-6-4.5L6 21z', sh ? `photoToggleSave('${sh}')` : `rentMark(this, 'save', '${id}')`, saved, sh ? ` data-save="${escHtml(x.shId)}"` : '')}
-    ${b('אהבתי', 'M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z', sh ? `photoToggleLike('${sh}')` : `rentMark(this, 'like', '${id}')`, liked, sh ? ` data-like="${escHtml(x.shId)}"` : '')}
-    ${b('דיווח', 'M5 21V4M5 4h11l-2 4 2 4H5', `openReportContent('${artEsc(rk)}', '${artEsc(x.title || '')}')`)}
+    ${b('לייק', 'M7 10v11H3V10zM7 10l4-8a2.5 2.5 0 0 1 3 2.6L13.5 9H19a2 2 0 0 1 2 2.3l-1.4 8A2 2 0 0 1 17.6 21H7', sh ? `photoToggleLike('${sh}')` : `rentMark(this, 'like', '${id}')`, liked, sh ? ` data-like="${escHtml(x.shId)}"` : '', '', cnt(Number(itemLikesData[likeId]) || 0, ` data-likes-n="${escHtml(likeId)}"`))}
+    ${b('ריפוסט', 'M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3', `toggleRepost('${artEsc(rk)}', this)`, repostIsMine(rk), ` data-item="${escHtml(rk)}"`, 'pti-repost', cnt(repostCount(rk)))}
+    ${b('שמירה', 'M6 4h12v17l-6-4.5L6 21z', `mkCountBump('${artEsc(svKey)}', this.classList.contains('on') ? -1 : 1); ` + (sh ? `photoToggleSave('${sh}')` : `rentMark(this, 'save', '${id}')`), saved, sh ? ` data-save="${escHtml(x.shId)}"` : '', '', cnt(Number(itemLikesData[svKey]) || 0, ` data-likes-n="${escHtml(svKey)}"`))}
+    ${b('דיווח', 'M5 21V4M5 4h11l-2 4 2 4H5', `openReportContent('${artEsc(rk)}', '${artEsc(x.title || '')}')`, false, '', '', cnt(Number(itemLikesData[rpKey]) || 0, ` data-likes-n="${escHtml(rpKey)}"`))}
   </span></span>`;
 }
 // מודעות השוק בצורה שהפרופיל מציג — כדי שריפוסט של מודעה יופיע בפרופיל של מי ששיתף
@@ -31363,8 +31432,8 @@ window.rentOpenComments = rentOpenComments;
 // כרטיס מוצר קטן בשוק ובהצעות: תמונה, שם, מיקום, מחיר ודירוג המוכר אם יש
 function rentMiniHTML(x) {
   const del = isAdmin() ? `<span class="mk-sg-x" role="button" tabindex="0" aria-label="הסרת המודעה" title="הסרת המודעה" onclick="event.stopPropagation(); rentAdminDelete('${artEsc(x.id)}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></span>` : '';
-  // כרטיס: שם ועיר, תמונה ביחס 4:3, ומיד מתחתיה שורת המוכר (תמונה ושם) עם המחיר משמאל
-  return `<button type="button" class="mk-sg" onclick="rentOpen('${artEsc(x.id)}')"><b>${escHtml(x.title)}</b><small>${escHtml(x.city || (x.kind === 'used' ? (x.offer || 'יד 2') : rentCatOf(x.cat).name))}</small><span class="mk-sg-img">${rentThumb(x)}${del}${rentHoverHTML(x)}</span><span class="mk-sg-meta"><span class="mk-sg-who" role="button" tabindex="0" onclick="event.stopPropagation(); rentOpenSeller('${artEsc(x.uid || '')}', '${artEsc(x.owner || '')}')">${authorAvHTML({ author: x.owner || '?', uid: x.uid || '' })}<b>${escHtml(x.owner || '')}</b></span><small class="mk-sg-price">${rentTypeIcon(x)}${Number(x.price) > 0 ? `${Number(x.price).toLocaleString('he-IL', { maximumFractionDigits: 2 })}&nbsp;₪` : ''}${x.uid ? `<i data-sg-rate="${escHtml(x.uid)}"></i>` : ''}</small></span></button>`;
+  // כרטיס: תמונה ביחס 4:3, מתחתיה שורה: המוכר | העיר | המחיר, שורת כפתורים קטנה (לייק, שיתוף, שמירה, דיווח) ובסוף שם המודעה בקטן
+  return `<button type="button" class="mk-sg" onclick="rentOpen('${artEsc(x.id)}')"><span class="mk-sg-img">${rentThumb(x)}${del}</span><span class="mk-sg-meta"><span class="mk-sg-who" role="button" tabindex="0" onclick="event.stopPropagation(); rentOpenSeller('${artEsc(x.uid || '')}', '${artEsc(x.owner || '')}')">${authorAvHTML({ author: x.owner || '?', uid: x.uid || '' })}<b>${escHtml(x.owner || '')}</b></span><small class="mk-sg-city">${escHtml(x.city || (x.kind === 'used' ? (x.offer || 'יד 2') : rentCatOf(x.cat).name))}</small><small class="mk-sg-price">${rentTypeIcon(x)}${Number(x.price) > 0 ? `${Number(x.price).toLocaleString('he-IL', { maximumFractionDigits: 2 })}&nbsp;₪` : ''}${x.uid ? `<i data-sg-rate="${escHtml(x.uid)}"></i>` : ''}</small></span><span class="mk-sg-acts">${rentHoverHTML(x)}</span><b class="mk-sg-title">${escHtml(x.title)}</b></button>`;
 }
 function rentGridHTML() {
   const l = rentList();
@@ -31383,8 +31452,21 @@ function rentViewHTML() {
   const pubBtn = rentUI.sec === 'all'
     ? `<button type="button" class="rn-pub" onclick="mkPubOpen()">+ פרסום מודעה</button>`
     : `<button type="button" class="rn-pub" onclick="mkPubOpen()">+ פרסום מודעה</button>`;
+  // שורת הכותרת: פרסום מודעה, מיון (חם / חדש / פופולרי / הכי זול) והאשטאגים שמסננים את המודעות
+  const sv = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+  const sorts = [
+    ['trend', 'חם עכשיו', '<path d="M12 22c4 0 7-2.7 7-7 0-4-3-6-4-9-1.5 2-2 3.5-2 5-1.5-1-2.5-3-2.5-5C7 8 5 11 5 15c0 4.3 3 7 7 7z"/>'],
+    ['new', 'חדש', '<path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v5h-5"/><path d="M12 8v4l3 2"/>'],
+    ['popular', 'פופולרי', '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'],
+    ['cheap', 'הכי זול', '<path d="M20 12 12 20 4 12V4h8z"/><circle cx="8.5" cy="8.5" r="1.5"/>']
+  ];
+  const tags = [['sec', 'used', 'יד2'], ['offer', 'מכירה', 'מכירה'], ['offer', 'החלפה', 'החלפה'], ['offer', 'השאלה', 'השאלה'], ['sec', 'rent', 'השכרה'],
+    ...RENT_CATS.filter(c => !c.store && c.id !== 'all').map(c => ['cat', c.id, c.name.replace(/\s+/g, '_')]), ['sec', 'store', 'אחסון']];
+  const tagOn = (k, v) => k === 'sec' ? rentUI.sec === v && rentUI.cat === 'all' && rentUI.offer === 'all' : rentUI[k] === v;
   return `<header class="rn-head">
       ${pubBtn}
+      <nav class="rn-sorts" aria-label="מיון">${sorts.map(([v, t, d]) => `<button type="button" class="rn-sort${rentUI.sort === v ? ' on' : ''}" onclick="rentSet('sort', '${v}')">${sv(d)}${t}</button>`).join('')}</nav>
+      <nav class="rn-tags" aria-label="האשטאגים">${tags.map(([k, v, t]) => `<button type="button" class="rn-tag${tagOn(k, v) ? ' on' : ''}" onclick="rentTag('${k}', '${artEsc(v)}')">#${escHtml(t)}</button>`).join('')}</nav>
     </header>
     <nav class="rn-secs">${MKT_SECS.slice(0, 1).map(x => `<button type="button" class="rn-sec${rentUI.sec === x.id ? ' on' : ''}" onclick="mktGo('${x.id}')"><span>${x.ic}</span>${x.name}<small>${secCount(x.id)}</small></button>`).join('')}</nav>
     <div class="rn-bar">
@@ -31439,6 +31521,36 @@ function rentSideSync() {
     const [k, ...v] = b.dataset.f.split(':');
     b.classList.toggle('on', k === 'all' ? rentUI.sec === 'all' && rentUI.cat === 'all' && rentUI.offer === 'all' : k === 'sec' ? on.sec === v.join(':') && on.offer === 'all' : on[k] === v.join(':'));
   });
+}
+// האשטאגים של מודעה אחת (בעמוד המודעה): האזור, סוג ההצעה או הקטגוריה, והעיר
+function mkItemTags(r) {
+  const sec = mktSecOf(r), t = [];
+  if (sec === 'used') { t.push(['sec', 'used', 'יד2']); if (r.offer) t.push(['offer', r.offer, r.offer]); }
+  else if (sec === 'store') t.push(['sec', 'store', 'אחסון']);
+  else { t.push(['sec', 'rent', 'השכרה']); const c = rentCatOf(r.cat); if (c && c.id !== 'all') t.push(['cat', c.id, c.name]); }
+  if (r.city) t.push(['city', r.city, r.city]);
+  return t.map(([k, v, n]) => [k, v, String(n).replace(/\s+/g, '_')]);
+}
+// מעמוד המודעה: חזרה לשוק מסוננת לפי ההאשטאג
+function mkTagGo(k, v) {
+  Object.assign(rentUI, { sec: 'all', cat: 'all', offer: 'all', city: 'all' });
+  if (k === 'sec') rentUI.sec = v;
+  else if (k === 'cat') Object.assign(rentUI, { sec: 'rent', cat: v });
+  else if (k === 'offer') Object.assign(rentUI, { sec: 'used', offer: v });
+  else if (k === 'city') rentUI.city = v;
+  rentUI.open = null; rentUI.seller = null;
+  rentRender();
+  try { window.scrollTo(0, 0); } catch (e) {}
+}
+// לחיצה על האשטאג מסננת לפיו; לחיצה נוספת מחזירה את כל המודעות
+function rentTag(k, v) {
+  const on = k === 'sec' ? rentUI.sec === v && rentUI.cat === 'all' && rentUI.offer === 'all' : rentUI[k] === v;
+  if (on) Object.assign(rentUI, { sec: 'all', cat: 'all', offer: 'all' });
+  else if (k === 'sec') Object.assign(rentUI, { sec: v, cat: 'all', offer: 'all' });
+  else if (k === 'cat') Object.assign(rentUI, { sec: 'rent', cat: v, offer: 'all' });
+  else Object.assign(rentUI, { sec: 'used', cat: 'all', offer: v });
+  rentUI.open = null;
+  rentRender();
 }
 function rentSideSet(k, v) {
   if (k === 'all') Object.assign(rentUI, { sec: 'all', cat: 'all', offer: 'all', owner: 'all', city: 'all', q: '', min: null, max: null });
@@ -31529,11 +31641,13 @@ function mktSellerItems(uid, name) { return mktAll().filter(r => uid ? r.uid ===
 function mktSellerGridHTML(list, anywhere) {
   return `<div class="mk-sg-grid mk-grid">${list.map(x => anywhere ? rentMiniHTML(x).replace(/onclick="rentOpen\(/, 'onclick="mktOpenItem(') : rentMiniHTML(x)).join('')}</div>`;
 }
+// פרטי קשר לדוגמה למוכר דוגמה אחד — כדי לראות איך נראה כרטיס "פרטים ליצירת קשר" מלא
+const DEMO_SELLER_CONTACT = { 'רון כהן': { phone: '03-555-0123', email: 'ron.cohen@example.com', telegram: 'ron_cohen_demo', aboutRegion: 'מרכז', website: 'www.example.com' } };
 function rentSellerHTML(sl) {
   const list = mktSellerItems(sl.uid, sl.name);
   const cities = [...new Set(list.map(r => r.city).filter(Boolean))];
   const views = list.reduce((a, r) => a + photoGetViews(rentCommentsKey(r)), 0);
-  const st = { uid: sl.uid || '', name: sl.name, profile: { aboutCity: cities.join(' · ') } };
+  const st = { uid: sl.uid || '', name: sl.name, profile: { aboutCity: cities.join(' · '), ...(DEMO_SELLER_CONTACT[sl.name] || {}) } };
   // אותו מבנה כמו פרופיל של משתמש: כותרת, לשוניות, ומתחת כרטיס פרטים לצד המודעות
   return `<div class="pf-desk sl-desk">
     <aside class="pf-side"><div id="user-page-head">
@@ -31612,7 +31726,11 @@ function rentDetailHTML(r) {
             ${btn('<path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M16 7l-4-4-4 4M12 3v12"/>', 'שיתוף', `if(navigator.share){navigator.share({ title: document.title, url: location.href }).catch(function(){});}else{navigator.clipboard.writeText(location.href); showCopyToast('הקישור הועתק');}`)}
             ${isAdmin() ? btn('<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/>', 'מחיקת המודעה (מנהל)', `rentAdminDelete('${artEsc(r.id)}')`) : ''}
           </div>`;
-  return `<header class="mk-head"><button type="button" class="rn-back" onclick="rentBack()" aria-label="חזרה">→</button>
+  // במחשב: בעמודה משמאל שאר המודעות
+  const sideIds = new Set(more.map(x => x.id));
+  const side = more.concat(mktAll().filter(x => x.id !== r.id && !sideIds.has(x.id)).sort((a, b) => (b.t || 0) - (a.t || 0))).slice(0, 20);
+  const sideHTML = side.map(x => `<button type="button" class="mk-wi" onclick="rentOpen('${artEsc(x.id)}')"><span class="mk-wi-img">${rentThumb(x)}</span><span class="mk-wi-tx"><b>${escHtml(x.title)}</b><small>${escHtml(x.owner || '')}</small><small>${[x.city, Number(x.price) > 0 ? Number(x.price).toLocaleString('he-IL', { maximumFractionDigits: 2 }) + ' ₪' : ''].filter(Boolean).map(escHtml).join(' · ')}</small></span></button>`).join('');
+  return `<div class="mk-watch"><div class="mk-wmain"><header class="mk-head"><button type="button" class="rn-back" onclick="rentBack()" aria-label="חזרה">→</button>
       <button type="button" class="mk-seller" onclick="rentOpenSeller('${artEsc(r.uid || '')}', '${artEsc(owner)}')">${who}</button>
       ${r.city ? `<span class="mk-city">${escHtml(r.city)}</span>` : ''}
     </header>
@@ -31628,6 +31746,7 @@ function rentDetailHTML(r) {
         ${galActs}
       </div>
       <div class="mp-info">
+        <div class="mk-toprow"><div class="mk-topmain">
         <span class="mk-cat">${escHtml(r.kind === 'used' ? (r.offer || 'יד 2') : rentCatOf(r.cat).name)}</span>
         <h2 class="mk-title">${escHtml(r.title)}</h2>
         <div class="mp-price">${rentPriceShort(r)}</div>
@@ -31643,6 +31762,9 @@ function rentDetailHTML(r) {
           </div>
         </div>
         </div>
+        </div>
+        </div>
+        <aside class="mk-dtags" aria-label="האשטאגים">${mkItemTags(r).map(([k, v, t]) => `<button type="button" class="rn-tag" onclick="mkTagGo('${k}', '${artEsc(v)}')">#${escHtml(t)}</button>`).join('')}</aside>
         </div>
         <div class="mk-sep"></div>
         <div class="mk-lower">
@@ -31664,6 +31786,7 @@ function rentDetailHTML(r) {
         </section>
       </div>
     </div>
+    </div><aside class="mk-wside" aria-label="מודעות נוספות">${sideHTML}</aside></div>
     ${more.length ? `<section class="mp-more"><h2>הצעות נוספות</h2><div class="mk-sg-grid">${more.map(rentMiniHTML).join('')}</div></section>` : ''}`;
 }
 // ביקורת על המוכר: ממוצע הדירוגים האמיתי מהענן
@@ -31794,11 +31917,22 @@ window.addEventListener('resize', rentFitPage);
 function rentMarksKey() { const u = auth.currentUser; return u && !u.isAnonymous ? 'rent_marks_' + u.uid : 'rent_marks'; }
 function rentMarks() { try { return JSON.parse(localStorage.getItem(rentMarksKey()) || localStorage.getItem('rent_marks') || '{}'); } catch (e) { return {}; } }
 function rentMarked(kind, id) { return !!rentMarks()[kind + ':' + id]; }
+// מונה ציבורי לכפתורי הכרטיס (לייק / שמירה / דיווח) — נשמר ב-website/item_likes ומתעדכן מיד על המסך
+function mkCountBump(key, d) {
+  if (!key) return;
+  itemLikesData[key] = Math.max(0, (Number(itemLikesData[key]) || 0) + d);
+  document.querySelectorAll('[data-likes-n]').forEach(n => { if (n.dataset.likesN === key) n.textContent = itemLikesData[key]; });
+  try { runTransaction(ref(db, `website/item_likes/${key}`), cur => Math.max(0, (typeof cur === 'number' ? cur : 0) + d)).catch(() => {}); } catch (e) {}
+}
+window.mkCountBump = mkCountBump;
 function rentMark(btn, kind, id) {
   const m = rentMarks(), k = kind + ':' + id;
   if (m[k]) delete m[k]; else m[k] = 1;
   try { localStorage.setItem(rentMarksKey(), JSON.stringify(m)); } catch (e) {}
   btn.classList.toggle('on', !!m[k]);
+  // לייק למודעה נספר לכולם ב-website/item_likes (כמו לייק לתמונה)
+  const r = kind === 'like' && typeof rentFind === 'function' && rentFind(id);
+  if (r) mkCountBump(rentCommentsKey(r), m[k] ? 1 : -1);
 }
 // אורח מתחיל כל כניסה מחדש בלי לייקים והיסטוריית צפייה; משתמש רשום שומר אותם
 try {
@@ -31996,7 +32130,7 @@ async function rentPublish(btn) {
     glassBanner({ title: 'הציוד פורסם להשכרה', sub: rec.title, icon: 'ok', ms: 2400 });
   } catch (e) { btn.disabled = false; btn.textContent = 'פרסום'; showCopyToast('הפרסום נכשל — נסו שוב'); }
 }
-Object.assign(window, { mktGo, mktOpenUsed, mktPublish, rentBack, rentIdeaPick, rentRevOpen, rentRevWrite, rentRevPick, rentRevSend, rentRevDelete, rentSideSet, rentSidePrice, rentSidePriceGo, rentDetPick, rentDetStep, rentQtyStep, rentMark, buildRentPage, rentSet, rentOpen, rentCalcUpd, rentRequest, rentPublishOpen, rentPickImg, rentPublish });
+Object.assign(window, { rentTag, mkTagGo, mktGo, mktOpenUsed, mktPublish, rentBack, rentIdeaPick, rentRevOpen, rentRevWrite, rentRevPick, rentRevSend, rentRevDelete, rentSideSet, rentSidePrice, rentSidePriceGo, rentDetPick, rentDetStep, rentQtyStep, rentMark, buildRentPage, rentSet, rentOpen, rentCalcUpd, rentRequest, rentPublishOpen, rentPickImg, rentPublish });
 
 // ============================================================
 // תמכו / השקיעו בנו: תרומה בכל סכום, או השקעה לפי שווי חברה ₪100,000 (עד 10% מוצעים).
