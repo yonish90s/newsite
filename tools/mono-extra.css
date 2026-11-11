@@ -78,8 +78,6 @@ BODY #auth-modal .au-side li { color: #2a6b61 !important; }
 BODY #auth-modal .au-side li::before, BODY #auth-modal .au-side li svg { color: #47a093 !important; border-color: #47a093 !important; stroke: #47a093 !important; }
 BODY #auth-modal .au-close { background: #fff !important; color: #2f7d72 !important; }
 /* לוגו ירוק (העיניים על ריבוע ירוק) וכפתור הניקוד בגווני הירוק */
-BODY header .logo-area { background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%20150%20150%27%3E%3Crect%20width%3D%27150%27%20height%3D%27150%27%20rx%3D%2734%27%20fill%3D%27%2347a093%27/%3E%3Ccircle%20cx%3D%2751%27%20cy%3D%2775%27%20r%3D%2722%27%20fill%3D%27%23fff%27/%3E%3Ccircle%20cx%3D%2799%27%20cy%3D%2775%27%20r%3D%2722%27%20fill%3D%27%23fff%27/%3E%3Ccircle%20cx%3D%2755%27%20cy%3D%2775%27%20r%3D%2711%27%20fill%3D%27%2317473f%27/%3E%3Ccircle%20cx%3D%2795%27%20cy%3D%2775%27%20r%3D%2711%27%20fill%3D%27%2317473f%27/%3E%3C/svg%3E") center / 20px 20px no-repeat !important; }
-BODY header .logo-area #main-logo { visibility: hidden !important; }
 BODY .wallet-pill { background: #f4fbf8 !important; border-color: #cfe3dd !important; box-shadow: 0 2px 10px rgba(47,125,114,.08) !important; }
 BODY .wallet-pill:hover { background: #e8f4f1 !important; }
 BODY .wallet-pill svg { color: #47a093 !important; }
@@ -107,3 +105,31 @@ BODY .mk-sg-badge.b-biz { background: #47a093 !important; color: #ffffff !import
 BODY .mk-sg.is-biz { outline: 2px solid #47a093 !important; background: #f6fbfa !important; }
 BODY .mk-sg.is-biz .mk-sg-who b { color: #2f7d72 !important; }
 BODY .mk-sg .mk-sg-who .biz-ic { color: #47a093 !important; }
+/* הצעות: הכפתורים והסכום בצבע גם במצב בהיר */
+BODY .ofx-b.ok { background: #22a06b !important; color: #ffffff !important; }
+BODY .ofx-b.deal { background: #f59e0b !important; color: #ffffff !important; }
+BODY .ofx-b.no { background: #e5352b !important; color: #ffffff !important; }
+BODY .ofx-amt.in { color: #22a06b !important; }
+BODY .ofx-av { background: var(--av, #47a093) !important; color: #ffffff !important; }
+BODY .au-av.au-av-demo, BODY .ofx-av.has-av { background: transparent !important; }
+/* הודעת הצעה: צבעי העיגול ושדה הסכום גם במצב בהיר */
+BODY #glass-banner.gbn-ok .gbn-ic { color: #34c759 !important; box-shadow: inset 0 0 0 3px #34c759 !important; }
+BODY #glass-banner.gbn-no .gbn-ic { color: #ff453a !important; box-shadow: inset 0 0 0 3px #ff453a !important; }
+BODY #glass-banner.gbn-deal .gbn-ic { color: #ff9f0a !important; box-shadow: inset 0 0 0 3px #ff9f0a !important; }
+BODY #glass-banner .gbn-in button { background: #ff9f0a !important; color: #1c1c1e !important; }
+BODY .ofx-more { color: #2f7d72 !important; }
+BODY .ofx-haggle { background: #fff7eb !important; border-color: #fcd9a4 !important; }
+BODY .ofx-haggle label { border-color: #f59e0b !important; }
+BODY .ofx-haggle label span { color: #b45309 !important; }
+BODY .ofx-haggle .ofx-h-send { background: #f59e0b !important; color: #ffffff !important; }
+/* כרטיס: קנייה ומשא ומתן בצבע גם במצב בהיר */
+BODY .mk-sg .mk-sg-acts .mk-act2 > .mk-a-buy { background: #22a06b !important; color: #ffffff !important; }
+BODY .mk-sg .mk-sg-acts .mk-act2 > .mk-a-deal { background: #f59e0b !important; color: #ffffff !important; }
+BODY .mk-sg .mk-haggle { background: #fff7eb !important; border-color: #fcd9a4 !important; }
+BODY .mk-sg .mk-haggle label { border-color: #f59e0b !important; }
+BODY .mk-sg .mk-haggle .mk-h-ok { background: #22a06b !important; color: #fff !important; }
+BODY .mk-sg .mk-haggle .mk-h-no { background: #e5352b !important; color: #fff !important; }
+BODY header .cart-hdr-n.is-sum { background: none !important; color: #2f7d72 !important; }
+BODY header .cart-hdr-btn:has(.cart-hdr-n.is-sum:not([hidden])) { background: #eef6f4 !important; }
+BODY .mk-sg .mk-sg-acts .mk-act2 > .mk-sg-title, BODY .mk-sg .mk-sg-acts .mk-act2 > .mk-sg-title .mk-sg-tt { color: #1f2937 !important; }
+@media (max-width: 760px) { BODY .rent-page .mk-sg .mk-sg-acts { display: block !important; } }

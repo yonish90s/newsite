@@ -12335,16 +12335,17 @@ function avNormalize(cfg) {
   return out;
 }
 
-function avatarSVG(cfg) {
+function avatarSVG(cfg, look) {
   const c = avNormalize(cfg);
   const skin = AV_SKIN[c.s], hair = AV_HAIR_C[c.hc], eye = AV_EYE_C[c.ec];
   const shade = 'rgba(0,0,0,.14)';
   const P = [];
-  P.push(`<circle cx="50" cy="50" r="50" fill="#7c3aed"/>`);
+  look = look || {};
+  P.push(`<circle cx="50" cy="50" r="50" fill="${look.bg || '#7c3aed'}"/>`);
   // שיער ארוך — מאחורי הראש
   if (c.h === 2) P.push(`<path d="M26 44 C24 24 37 16 50 16 C63 16 76 24 74 44 L76 78 C70 82 65 76 65 66 L35 66 C35 76 30 82 24 78Z" fill="${hair}"/>`);
   // גוף וצוואר
-  P.push(`<path d="M14 100 C16 82 31 76 50 76 C69 76 84 82 86 100Z" fill="#f97316"/>`);
+  P.push(`<path d="M14 100 C16 82 31 76 50 76 C69 76 84 82 86 100Z" fill="${look.shirt || '#f97316'}"/>`);
   P.push(`<path d="M42 77 Q50 83 58 77" fill="none" stroke="rgba(0,0,0,.15)" stroke-width="2.5" stroke-linecap="round"/>`);
   P.push(`<path d="M43 62 L43 76 Q50 80 57 76 L57 62Z" fill="${skin}"/><path d="M43 66 Q50 72 57 66 L57 62 L43 62Z" fill="${shade}"/>`);
   // אוזניים וראש
@@ -12372,7 +12373,13 @@ function avatarSVG(cfg) {
   P.push(`<path d="M44.5 63.5 Q50 67 55.5 63.5" fill="none" stroke="#7a2e2e" stroke-width="2" stroke-linecap="round"/>`);
   // לחיים
   P.push(`<ellipse cx="35.5" cy="56" rx="3.4" ry="2.2" fill="#ff7a8a" opacity=".22"/><ellipse cx="64.5" cy="56" rx="3.4" ry="2.2" fill="#ff7a8a" opacity=".22"/>`);
-  return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs><clipPath id="avc"><circle cx="50" cy="50" r="50"/></clipPath></defs><g clip-path="url(#avc)">${P.join('')}</g></svg>`;
+  // משקפיים (בדמויות הדוגמה)
+  if (look.glasses) P.push(`<g fill="rgba(255,255,255,.18)" stroke="${look.glasses}" stroke-width="2.2"><rect x="33.5" y="42" width="15" height="11" rx="5"/><rect x="51.5" y="42" width="15" height="11" rx="5"/></g><path d="M48.5 46.5 Q50 45.2 51.5 46.5 M33.5 46 L28.5 44.5 M66.5 46 L71.5 44.5" fill="none" stroke="${look.glasses}" stroke-width="2" stroke-linecap="round"/>`);
+  // כובע (בדמויות הדוגמה)
+  if (look.hat) P.push(`<path d="M26 36 C26 20 37 12 50 12 C63 12 74 20 74 36Z" fill="${look.hat}"/><path d="M20 37 Q50 29 80 37 Q80 41 76 41 Q50 35 24 41 Q20 41 20 37Z" fill="${look.hat}"/><path d="M26 36 Q50 30 74 36" fill="none" stroke="rgba(0,0,0,.18)" stroke-width="2"/>`);
+  const bg = P.shift();   // הרקע נשאר במקום; בזום רק הדמות מוגדלת כדי שהפנים ימלאו את העיגול
+  const body = look.zoom ? `<g transform="translate(50 50) scale(${look.zoom}) translate(-50 -46)">${P.join('')}</g>` : P.join('');
+  return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs><clipPath id="avc"><circle cx="50" cy="50" r="50"/></clipPath></defs><g clip-path="url(#avc)">${bg}${body}</g></svg>`;
 }
 window.avatarSVG = avatarSVG;
 
@@ -12380,6 +12387,17 @@ window.avatarSVG = avatarSVG;
 // עיגול תמונת פרופיל ליד שם המעלה: מנהל האתר — הלוגו; משתמש — הדמות שלו (נטענת ב-avatarHydrate), ובינתיים האות הראשונה
 // צבע קבוע לכל משתמש (לפי השם/המזהה) — עיגולי הפרופיל צבעוניים
 const AU_COLORS = ['#47a093', '#e4572e', '#4a6cf7', '#f2a03d', '#9b5de5', '#e5487b', '#2a9d8f', '#3a86ff', '#f15bb5', '#43aa8b', '#ff7f50', '#6d6875'];
+// דמות מצוירת קבועה לכל שם (פרופילי הדוגמה): צבע עור, שיער, עיניים, זקן, משקפיים וכובע נגזרים מהשם
+const AV_DEMO_BG = ['#e5e7eb', '#e8d5c0', '#dbeafe', '#dcfce7', '#fde68a', '#fbcfe8', '#e9d5ff', '#cffafe'];
+const AV_DEMO_SHIRT = ['#47a093', '#4a6cf7', '#e4572e', '#f2a03d', '#9b5de5', '#334155', '#e5487b', '#2a9d8f'];
+function demoAvatarSVG(name) {
+  let h = 0; for (const ch of String(name)) h = (h * 131 + ch.charCodeAt(0)) >>> 0;
+  const pick = (n, k) => Math.floor(h / k) % n;
+  const cfg = { s: pick(3, 1), h: pick(3, 3) === 0 ? 1 : pick(3, 3), hc: pick(4, 9), ec: pick(4, 36), f: pick(5, 144) > 2 ? pick(3, 144) : 0, g: 0, r: 0 };
+  const look = { bg: AV_DEMO_BG[pick(8, 720)], shirt: AV_DEMO_SHIRT[pick(8, 5760)], glasses: pick(3, 46080) === 0 ? ['#e5352b', '#111827', '#8b5e3c'][pick(3, 7)] : '', hat: pick(6, 138240) === 0 ? ['#c2410c', '#1e3a8a', '#47a093'][pick(3, 11)] : '', zoom: 1.22 };
+  return avatarSVG(cfg, look);
+}
+window.demoAvatarSVG = demoAvatarSVG;
 function authorAvHTML(item) {
   if (!item) return '';
   const uid = item.authorId || item.uid || '';
@@ -12387,6 +12405,8 @@ function authorAvHTML(item) {
   if (typeof isSiteAdminAuthor === 'function' && isSiteAdminAuthor(uid, name, item)) return '<span class="au-av au-av-site"><img src="./logo.png" alt=""></span>';
   let h = 0; for (const ch of (uid || name)) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
   const okUid = /^[A-Za-z0-9_-]{10,}$/.test(uid);
+  // בלי משתמש אמיתי (פרופילי דוגמה): דמות מצוירת במקום האות
+  if (!uid && name && name !== '?') return `<span class="au-av has-av au-av-demo" style="--av:${AU_COLORS[h % AU_COLORS.length]}">${demoAvatarSVG(name)}</span>`;
   return `<span class="au-av"${okUid ? ` data-av-uid="${escHtml(uid)}"` : ''} style="--av:${AU_COLORS[h % AU_COLORS.length]}">${escHtml(name.charAt(0) || '?')}</span>`;
 }
 window.authorAvHTML = authorAvHTML;
@@ -16120,14 +16140,16 @@ function buildUserPageHTML(authorId, authorName) {
       <aside class="pf-side"><div id="user-page-head">${profileHeadHTML(window._upState)}${pfSideHTML(window._upState)}</div></aside>
       <div class="pf-main">${(() => {
         const mine = authorId ? mktSellerItems(authorId, authorName) : [];
+        const own = !!(authorId && auth.currentUser && auth.currentUser.uid === authorId);
         pfGridItems = authorPosts.filter(x => x.__repostBy);
         // שורת נתונים: מודעות · צפיות · עוקבים · נעקבים, ומתחת לשוניות הכל / מודעות / ריפוסטים
         const keys = mine.map(rentCommentsKey), views = keys.reduce((a, k) => a + photoGetViews(k), 0);
         if (authorId) setTimeout(() => { pfFollowFill(authorId); if (typeof rentSellerLoad === 'function') rentSellerLoad(authorId); }, 0);
         return `<div class="pf-stats"><span><b>${mine.length.toLocaleString('he-IL')}</b> מודעות</span><span><b class="pf-views-sum" data-keys="${escHtml(keys.join(','))}">${formatViews(views)}</b> צפיות</span><span><b id="pf-st-fol">—</b> עוקבים</span><span><b id="pf-st-fwg">—</b> נעקבים</span></div>
-          <div class="pf-tabs2" role="tablist"><button type="button" class="on" onclick="pfTab2(this, 'all')">הכל</button><button type="button" onclick="pfTab2(this, 'mkt')">${mine.length} מודעות</button><button type="button" onclick="pfTab2(this, 'rep')">${pfGridItems.length} ריפוסטים</button></div>
+          <div class="pf-tabs2" role="tablist"><button type="button" class="on" onclick="pfTab2(this, 'all')">הכל</button><button type="button" onclick="pfTab2(this, 'mkt')">${mine.length} מודעות</button><button type="button" onclick="pfTab2(this, 'rep')">${pfGridItems.length} ריפוסטים</button><button type="button" class="pf-tab-about" onclick="pfTab2(this, 'about')">פרטים</button>${own ? `<button type="button" onclick="pfTab2(this, 'offers')">הצעות שקיבלתי</button>` : ''}</div>
           <div class="pf-body"><aside class="pf-about" id="pf-about">${pfAboutHTML(window._upState)}</aside><div class="pf-feed">`
           + (mine.length ? `<section class="pf-mkt" data-pf="mkt"><h3>מודעות בשוק</h3>${mktSellerGridHTML(mine, true)}</section>` : '<div class="pf-empty" data-pf="mkt">עדיין אין מודעות</div>')
+          + (own ? `<section class="pf-mkt pf-offers" data-pf="offers" hidden><h3>הצעות שקיבלתי מלקוחות</h3><div class="pf-offers-feed">${offersFeedHTML('in')}</div></section>` : '')
           + (pfGridItems.length ? `<section class="pf-mkt" data-pf="rep"><h3>שיתופים</h3><div class="pfg-grid">${pfGridCardsHTML('reposts')}</div></section>` : '<div class="pf-empty" data-pf="rep" hidden>עדיין אין ריפוסטים</div>')
           + '</div></div>';
       })()}
@@ -16140,9 +16162,11 @@ function buildUserPageHTML(authorId, authorName) {
 function pfTab2(btn, t) {
   btn.parentElement.querySelectorAll('button').forEach(b => b.classList.toggle('on', b === btn));
   const main = btn.closest('.pf-main'); if (!main) return;
+  main.dataset.tab = t;   // "פרטים" (במובייל): מציג רק את כרטיס הפרטים
+  if (t === 'about') return;
   main.querySelectorAll('[data-pf]').forEach(el => {
     const empty = el.classList.contains('pf-empty');
-    el.hidden = t === 'all' ? (empty && el.dataset.pf === 'rep') : el.dataset.pf !== t;
+    el.hidden = t === 'all' ? ((empty && el.dataset.pf === 'rep') || el.dataset.pf === 'offers') : el.dataset.pf !== t;
   });
 }
 async function pfFollowFill(uid) {
@@ -26994,8 +27018,8 @@ function offerPct(v) {
   if (el && ask) el.textContent = Math.round(Number(v) / ask * 100) + '% מהמבוקש';
 }
 function closePriceOffer() { const m = document.getElementById('offer-modal'); if (m) m.remove(); }
-async function sendPriceOffer(title, sellerUid, sellerName) {
-  const price = Math.round(Number((document.getElementById('offer-price') || {}).value));
+async function sendPriceOffer(title, sellerUid, sellerName, priceArg, quiet) {
+  const price = Math.round(Number(priceArg != null ? priceArg : (document.getElementById('offer-price') || {}).value));
   if (!price || price < 1) { if (typeof showCopyToast === 'function') showCopyToast('נא לכתוב מחיר'); const i = document.getElementById('offer-price'); if (i) i.focus(); return; }
   const note = String((document.getElementById('offer-note') || {}).value || '').trim();
   const text = `שלום! הצעת מחיר ל"${String(title || '').slice(0, 100)}": ₪${price.toLocaleString('he-IL')}${note ? '\n' + note : ''}`;
@@ -27011,6 +27035,7 @@ async function sendPriceOffer(title, sellerUid, sellerName) {
       await update(ref(db, `website/user_dms/${sellerUid}/${convId}`), { otherUid: u.uid, otherName: dmName(), lastText: text.slice(0, 60), lastTime: now, unread: true });
     }
   } catch (e) {}
+  if (quiet) return;
   showCopyToast('ההצעה נשלחה — אפשר לעקוב אחריה ב"הצעות"');
   offersTab = 'out';
   openOffersPanel();
@@ -27304,6 +27329,78 @@ function offersBadge() {
   b.textContent = n > 9 ? '9+' : String(n); b.style.display = n ? '' : 'none';
 }
 var offersTab = 'in';
+// הצעות בסגנון רשימת העברות: למעלה כרטיס "ממתינות לתשובה", ומתחת היסטוריה לפי ימים (היום / אתמול / תאריך)
+const OFX_IC = {
+  no: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>',
+  deal: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h11M4 7l3-3M4 7l3 3"/><path d="M20 17H9M20 17l-3-3M20 17l-3 3"/></svg>',
+  ok: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>'
+};
+const ofxTime = t => { try { return new Date(t).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }); } catch (e) { return ''; } };
+function ofxDay(t) {
+  const d = new Date(t), now = new Date(), day = x => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const diff = Math.round((day(now) - day(d)) / 864e5);
+  return diff <= 0 ? 'היום' : diff === 1 ? 'אתמול' : d.toLocaleDateString('he-IL', { day: 'numeric', month: 'long' });
+}
+// שורה אחת: תמונת פרופיל | שם ומתחת סטטוס · מוצר · שעה | סכום, ומתחתיו כפתורים קטנים או סטטוס
+function ofxRowHTML(o, me, demo) {
+  const mine = o.fromUid === me, other = mine ? (o.toName || 'משתמש') : (o.fromName || 'אורח'), otherUid = mine ? o.toUid : o.fromUid;
+  const t = o.updatedAt || o.at || 0, myTurn = demo ? o.status === 'pending' : offersMyTurn(o);
+  const act = (kind, label, fn) => `<button type="button" class="ofx-b ${kind}" title="${label}" aria-label="${label}" onclick="event.stopPropagation(); ${fn}">${OFX_IC[kind]}</button>`;
+  const dm = "showCopyToast('זו הצעה לדוגמה — כך תיראה הצעה אמיתית')";
+  const dmAct = k => `ofxDemo('${k}', '${artEsc(o.id)}', '${artEsc(o.title || '')}', ${Number(o.price) || 0})`;
+  const verb = o.status === 'accepted' || o.status === 'signed' ? 'אושרה' : o.status === 'rejected' ? 'נדחתה' : o.status === 'counter' ? 'הצעה נגדית' : mine ? 'נשלחה' : 'התקבלה';
+  const sub = [verb, o.title || '', t ? ofxTime(t) : ''].filter(Boolean).join(' · ');
+  const amt = o.price ? `₪${Number(o.price).toLocaleString('he-IL')}` : '';
+  const end = myTurn
+    ? `<span class="ofx-acts">${act('no', 'דחייה', demo ? dmAct('no') : `offerDecide('${artEsc(o.id)}','rejected')`)}${act('deal', 'הצעה נגדית', demo ? dmAct('deal') : `offerCounter('${artEsc(o.id)}')`)}${act('ok', 'אישור', demo ? dmAct('ok') : `offerDecide('${artEsc(o.id)}','accepted')`)}</span>`
+    : o.status === 'pending' || o.status === 'counter' ? `<span class="ofx-chip">${OFX_IC.clock}ממתינה</span>` : '';
+  const amtCls = o.status === 'accepted' || o.status === 'signed' ? ' in' : o.status === 'rejected' ? ' off' : '';
+  const open = demo ? dm : o.itemId ? `ofpClose(); photoOpenDetail('${artEsc(o.itemId)}')` : '';
+  return `<div class="ofx-row" data-oid="${escHtml(o.id || '')}"${open ? ` role="button" tabindex="0" onclick="${open}"` : ''}>
+    <span class="ofx-av${demo ? ' has-av' : ''}" style="--av:${typeof forumAvColor === 'function' ? forumAvColor({ uid: otherUid || '', name: other }) : '#47a093'}">${demo ? demoAvatarSVG(other) : escHtml(String(other).trim().charAt(0) || '?')}</span>
+    <span class="ofx-tx"><b>${escHtml(other)}${demo ? ' <em class="ofc-demo-tag">דוגמה</em>' : ''}</b><small>${escHtml(sub)}</small></span>
+    <span class="ofx-end">${amt ? `<b class="ofx-amt${amtCls}">${amtCls === ' in' && !mine ? '+' : ''}${amt}</b>` : ''}${end}</span>
+  </div>`;
+}
+// מה שנעשה בהצעות הדוגמה (אישור / ביטול / הצעה נגדית) — רק בזיכרון, כדי לראות איך הרשימה מתנהגת
+const ofxDemoState = {};
+let ofxAll = false;   // "עוד": כל ההיסטוריה או רק ההתחלה
+const OFX_HIST_LIM = 3;
+function ofxToggleAll() { ofxAll = !ofxAll; offersRerender(); }
+// אחרי פעולה: השורה נעלמת בעדינות מ"ממתינות" ועוברת להיסטוריה
+function ofxFadeOut(id, then) {
+  const rows = document.querySelectorAll(`.ofx-card .ofx-row[data-oid="${CSS.escape(id)}"]`);
+  rows.forEach(r => r.classList.add('ofx-gone'));
+  setTimeout(then, rows.length ? 280 : 0);
+}
+const OFX_DEMO = () => { const n = Date.now(), h = 36e5; return [
+  { id: 'd1', fromName: 'דניאל', fromUid: '', toUid: '_me', title: "נינטנדו סוויץ'", price: 850, status: 'pending', at: n - 5 * 6e4 },
+  { id: 'd2', fromName: 'מיכל אברהם', fromUid: '', toUid: '_me', title: 'ספה תלת-מושבית', price: 1100, status: 'accepted', at: n - 2 * h },
+  { id: 'd3', fromName: 'יוסי לוי', fromUid: '', toUid: '_me', title: 'אופני עיר', price: 300, status: 'rejected', at: n - 26 * h },
+  { id: 'd4', fromName: 'נועה כהן', fromUid: '', toUid: '_me', title: 'מקרר Panasonic', price: 1350, status: 'accepted', at: n - 30 * h }
+]; };
+function offersFeedHTML(tab) {
+  const me = auth.currentUser ? auth.currentUser.uid : '';
+  const all = Object.values(offersMap);
+  let list = all.filter(o => (tab === 'out' ? o.fromUid : o.toUid) === me && me);
+  const demo = !list.length && tab !== 'out';
+  if (demo) list = OFX_DEMO().map(o => Object.assign({}, o, ofxDemoState[o.id] || {}));
+  const meId = demo ? '_me' : me, at = o => o.updatedAt || o.at || 0;
+  // ממתינות = רק מה שמחכה לתשובה שלי; כל השאר (כולל הצעה נגדית ששלחתי) — בהיסטוריה
+  const turn = o => demo ? o.status === 'pending' : offersMyTurn(o);
+  const open = list.filter(turn).sort((a, b) => at(b) - at(a));
+  const done = list.filter(o => !turn(o)).sort((a, b) => at(b) - at(a));
+  if (!list.length) return `<div class="pf-empty">${tab === 'out' ? 'עדיין לא שלחת הצעות' : 'עדיין לא קיבלת הצעות'}</div>`;
+  let days = '', last = '';
+  done.slice(0, ofxAll ? done.length : OFX_HIST_LIM).forEach(o => { const d = ofxDay(at(o)); if (d !== last) { days += `<div class="ofx-day">${escHtml(d)}</div>`; last = d; } days += ofxRowHTML(o, meId, demo); });
+  if (done.length > OFX_HIST_LIM) days += `<button type="button" class="ofx-more" onclick="ofxToggleAll()">${ofxAll ? 'פחות' : `עוד ${done.length - OFX_HIST_LIM} עסקאות`}</button>`;
+  return `<div class="ofx">
+    ${open.length ? `<div class="ofx-h"><h4>${tab === 'out' ? 'מחכות לתשובה' : 'ממתינות לתשובה שלך'}</h4><small>${open.length}</small></div><div class="ofx-card">${open.map(o => ofxRowHTML(o, meId, demo)).join('')}</div>` : ''}
+    ${done.length ? `<div class="ofx-h"><h4>היסטוריית הצעות</h4><small>${done.length}</small></div><div class="ofx-list">${days}</div>` : ''}
+    ${demo ? '<p class="ofx-note">כך תיראה הרשימה כשיתחילו להגיע הצעות מלקוחות</p>' : ''}
+  </div>`;
+}
 function ofpListHTML() {
   const u = auth.currentUser, me = u ? u.uid : '';
   const all = Object.values(offersMap);
@@ -27348,10 +27445,11 @@ function ofpListHTML() {
   return `<div class="ofp">
     <div class="ofp-stats">${stat('מחכות לתשובה שלי', waiting)}${stat('הצעות שקיבלתי', inList.length)}${stat('ממוצע הצעה', avg ? '₪' + avg.toLocaleString('he-IL') : '—')}</div>
     <nav class="pfg-tabs"><button type="button" class="pfg-tab${offersTab === 'in' ? ' on' : ''}" onclick="offersSetTab('in')"><b>${inList.length}</b> התקבלו</button><button type="button" class="pfg-tab${offersTab === 'out' ? ' on' : ''}" onclick="offersSetTab('out')"><b>${outList.length}</b> נשלחו</button><button type="button" class="pfg-tab${offersTab === 'orders' ? ' on' : ''}" onclick="offersSetTab('orders')"><b>${orders.length}</b> הזמנות</button></nav>
-    ${offersTab === 'orders' ? `<div class="ofp-list">${orders.length ? orders.map(o => orderTrackHTML(o, me)).join('') : orderTrackHTML(null, me) + '<div class="pf-empty">עדיין אין הזמנות — הצעה שאושרה הופכת להזמנה עם מעקב משלוח</div>'}</div>` : `<div class="ofp-list">${list.length ? list.map(row).join('') : `${ofpDemoCardHTML()}<div class="pf-empty">${offersTab === 'in' ? 'עדיין לא קיבלת הצעות — פרסמו מוצר במוצרי גולשים' : 'עדיין לא שלחת הצעות'}</div>`}</div>`}
+    ${offersTab === 'orders' ? `<div class="ofp-list">${orders.length ? orders.map(o => orderTrackHTML(o, me)).join('') : orderTrackHTML(null, me) + '<div class="pf-empty">עדיין אין הזמנות — הצעה שאושרה הופכת להזמנה עם מעקב משלוח</div>'}</div>` : offersFeedHTML(offersTab)}
   </div>`;
 }
 function offersRerender() {
+  pfOffersRefresh();
   const b = document.querySelector('#ofp-panel .fo-panel-body'); if (b) b.innerHTML = ofpListHTML();
   const c = document.getElementById('ofp-cart'); if (!c) return;
   const me = auth.currentUser ? auth.currentUser.uid : '', all = Object.values(offersMap);
@@ -27360,6 +27458,8 @@ function offersRerender() {
   const body = c.querySelector('.cart-body'); body.innerHTML = ofpListHTML();
   const dup = body.querySelector('.pfg-tabs'); if (dup) dup.remove();   // הלשוניות כבר בראש החלון
 }
+// לשונית "הצעות" בפרופיל שלי מתעדכנת יחד עם החלון
+function pfOffersRefresh() { document.querySelectorAll('.pf-offers-feed').forEach(el => { el.innerHTML = offersFeedHTML('in'); }); }
 function offersSetTab(t) { offersTab = t; offersRerender(); }
 async function offerUpdate(id, status, price, note) {
   const u = auth.currentUser; const o = offersMap[id]; if (!u || !o) return;
@@ -27374,7 +27474,7 @@ async function offerUpdate(id, status, price, note) {
     const msg = status === 'accepted' ? `✅ אישרתי את ההצעה על "${o.title}"${o.price ? ` — ₪${Number(o.price).toLocaleString('he-IL')}` : ''}`
       : status === 'rejected' ? `❌ דחיתי את ההצעה על "${o.title}"`
       : `🟡 הצעה נגדית על "${o.title}"${price ? `: ₪${Number(price).toLocaleString('he-IL')}` : ''}${note ? ` — ${note}` : ''}`;
-    showCopyToast(status === 'accepted' ? 'ההצעה אושרה' : status === 'rejected' ? 'ההצעה נדחתה' : 'ההצעה הנגדית נשלחה');
+    offerBanner(status, o.title, status === 'counter' ? price : o.price);
     // עדכון גם בהודעה פרטית
     try {
       const convId = dmConvId(u.uid, other);
@@ -27384,14 +27484,61 @@ async function offerUpdate(id, status, price, note) {
     } catch (e) {}
   } catch (e) { console.error(e); showCopyToast('לא הצלחנו לעדכן — נסו שוב'); }
 }
+// הודעה בראש המסך עם עיגול: ✓ ירוק לאישור, ✗ אדום לביטול, ⇄ כתום להצעה נגדית
+function offerBanner(status, title, price) {
+  const p = Number(price) > 0 ? ' · ₪' + Number(price).toLocaleString('he-IL') : '';
+  const map = { accepted: ['העסקה אושרה', 'ok'], rejected: ['ההצעה בוטלה', 'no'], counter: ['הצעה נגדית נשלחה', 'deal'] };
+  const [t, ic] = map[status] || map.accepted;
+  glassBanner({ title: t, sub: (title || '') + p, icon: ic, cls: 'gbn-' + ic, ms: 2600 });
+}
+// התמקחות: למעלה רק הודעה שההצעה הושהתה; שדה הסכום החדש נפתח מתחת להצעה עצמה ברשימה
+const ofxHaggleCb = {};
+function offerHaggle(title, price, onSend, id) {
+  glassBanner({ title: 'ההצעה הושהתה', sub: 'כתבו למטה את הסכום החדש' + (Number(price) > 0 ? ' · עכשיו ₪' + Number(price).toLocaleString('he-IL') : ''), icon: 'deal', cls: 'gbn-deal', ms: 2600 });
+  const rows = id ? document.querySelectorAll(`.ofx-card .ofx-row[data-oid="${CSS.escape(id)}"]`) : [];
+  if (!rows.length) { const v = Math.round(Number(prompt('הסכום החדש (₪)', Number(price) > 0 ? Math.round(price) : '')) || 0); if (v > 0) onSend(v); return; }
+  ofxHaggleCb[id] = onSend;
+  rows.forEach(row => {
+    const old = row.nextElementSibling; if (old && old.classList.contains('ofx-haggle')) old.remove();
+    row.classList.add('ofx-paused');
+    row.insertAdjacentHTML('afterend', `<form class="ofx-haggle" data-oid="${escHtml(id)}" onsubmit="event.preventDefault(); ofxHaggleSend(this)">
+      <label><span>₪</span><input type="number" inputmode="numeric" min="1" step="1" placeholder="הסכום החדש" value="${Number(price) > 0 ? Math.round(price) : ''}" aria-label="הסכום החדש"></label>
+      <button type="submit" class="ofx-h-send">שליחה</button>
+      <button type="button" class="ofx-h-cancel" onclick="ofxHaggleCancel(this)">ביטול</button>
+    </form>`);
+    const inp = row.nextElementSibling.querySelector('input');
+    setTimeout(() => { try { inp.focus(); inp.select(); } catch (e) {} }, 60);
+  });
+}
+function ofxHaggleSend(form) {
+  const id = form.dataset.oid, inp = form.querySelector('input'), v = Math.round(Number(inp.value));
+  if (!(v > 0)) { form.classList.add('shake'); setTimeout(() => form.classList.remove('shake'), 400); inp.focus(); return; }
+  const cb = ofxHaggleCb[id]; delete ofxHaggleCb[id];
+  form.remove();
+  if (cb) cb(v);
+}
+function ofxHaggleCancel(btn) {
+  const form = btn.closest('.ofx-haggle'); if (!form) return;
+  delete ofxHaggleCb[form.dataset.oid];
+  const row = form.previousElementSibling; if (row) row.classList.remove('ofx-paused');
+  form.remove();
+}
+// כפתורי ההצעות לדוגמה: אותן הודעות, בלי לשמור כלום
+function ofxDemo(kind, id, title, price) {
+  const done = (st, p) => ofxFadeOut(id, () => { ofxDemoState[id] = { status: st, price: p, updatedAt: Date.now() }; offersRerender(); });
+  if (kind === 'deal') offerHaggle(title, price, v => { done('counter', v); offerBanner('counter', title + ' (דוגמה)', v); }, id);
+  else { done(kind === 'ok' ? 'accepted' : 'rejected', price); offerBanner(kind === 'ok' ? 'accepted' : 'rejected', title + ' (דוגמה)', price); }
+}
 function offerDecide(id, status) {
   const o = offersMap[id]; if (!o) return;
   if (status === 'rejected' && !confirm('לדחות את ההצעה?')) return;
+  ofxFadeOut(id, () => {});
   offerUpdate(id, status, o.price, '');
 }
-// שינוי: מחיר משלי, או שינוי סעיף (בהשאלה)
+// שינוי: מחיר משלי (שדה בתוך ההודעה), או שינוי סעיף בהשאלה (חלון מלא)
 function offerCounter(id) {
   const o = offersMap[id]; if (!o) return;
+  if (o.kind !== 'loan') { offerHaggle(o.title, o.price, v => { ofxFadeOut(id, () => {}); offerUpdate(id, 'counter', v, ''); }, id); return; }
   let m = document.getElementById('offer-modal'); if (m) m.remove();
   m = document.createElement('div'); m.id = 'offer-modal'; m.className = 'rp-modal';
   m.innerHTML = `<div class="rp-card" role="dialog" aria-label="הצעה נגדית">
@@ -27431,7 +27578,7 @@ async function openOffersPanel() {
 function ofpClose() { const el = document.getElementById('ofp-cart'); if (el) el.classList.remove('show'); }
 window.ofpClose = ofpClose;
 try { onAuthStateChanged(auth, u => { if (u) setTimeout(offersSubscribe, 300); }); } catch (e) {}
-Object.assign(window, { openOffersPanel, offersSetTab, offerDecide, offerCounter, offerCounterSend });
+Object.assign(window, { openOffersPanel, offersSetTab, offerDecide, offerCounter, offerCounterSend, ofxDemo, offerHaggle, ofxToggleAll, ofxHaggleSend, ofxHaggleCancel });
 
 
 // תפריט צד (מובייל): מספר העוקבים והנעקבים
@@ -29405,6 +29552,8 @@ document.addEventListener('click', e => {
 // ============================================================
 const GB_ICONS = {
   ok: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  no: '<path d="M7 7l10 10M17 7L7 17"/>',
+  deal: '<path d="M4 8h12M4 8l3-3M4 8l3 3"/><path d="M20 16H8M20 16l-3-3M20 16l-3 3"/>',
   mail: '<rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 7l8.5 6 8.5-6"/>',
   del: '<path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/>',
   warn: '<circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5v.01"/>',
@@ -29429,7 +29578,7 @@ function glassBanner(o) {
       ${o.btn ? `<button type="button" class="gbn-btn">${escHtml(o.btn)}</button>` : ''}
       <button type="button" class="gbn-x" aria-label="סגירה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
       <img class="gbn-logo" src="./logo.png" alt="" width="40" height="40">
-    </div><i class="gbn-bar" style="animation-duration:${ms}ms"></i>`;
+    </div>${o.input ? `<form class="gbn-in"><label><span>₪</span><input type="number" inputmode="numeric" min="1" step="1" placeholder="${escHtml(o.input.placeholder || 'הסכום החדש')}" value="${escHtml(o.input.value || '')}" aria-label="הסכום החדש"></label><button type="submit">${escHtml(o.input.btn || 'שליחה')}</button></form>` : ''}<i class="gbn-bar" style="animation-duration:${ms}ms"></i>`;
   document.body.appendChild(el);
   // מחשב: ההודעה מופיעה בתוך הכותרת — ברווח הריק שבין הלוגו לשורת החיפוש;
   // כשאין שם מספיק מקום (מסך צר) — ממש מתחת לכותרת, מתחת ללוגו, כדי לא להסתיר את התפריט
@@ -29455,16 +29604,24 @@ function glassBanner(o) {
   let t = 0;
   // יציאה: הריבוע הולך וקטן ונעלם
   const close = () => { clearTimeout(t); if (el.classList.contains('out')) return; el.classList.add('out'); setTimeout(() => el.remove(), 560); };
-  const arm = () => { clearTimeout(t); t = setTimeout(close, ms); };
+  const arm = () => { clearTimeout(t); if (o.input) return; t = setTimeout(close, ms); };
   el.querySelector('.gbn-x').onclick = e => { e.stopPropagation(); close(); };
   const b = el.querySelector('.gbn-btn');
   if (b) b.onclick = e => { e.stopPropagation(); close(); try { o.onBtn && o.onBtn(); } catch (er) {} };
-  el.onclick = () => { close(); if (o.onBtn) { try { o.onBtn(); } catch (er) {} } };   // לחיצה על הגלולה סוגרת אותה
+  el.onclick = () => { if (o.input) return; close(); if (o.onBtn) { try { o.onBtn(); } catch (er) {} } };   // לחיצה על הגלולה סוגרת אותה
+  // שדה סכום (התמקחות): לא נסגר מעצמו; שליחה מחזירה את הסכום
+  const fm = el.querySelector('.gbn-in');
+  if (fm) {
+    el.classList.add('has-in');
+    const inp = fm.querySelector('input');
+    fm.onsubmit = e => { e.preventDefault(); const v = Math.round(Number(inp.value)); if (!(v > 0)) { inp.focus(); el.classList.add('shake'); setTimeout(() => el.classList.remove('shake'), 400); return; } close(); try { o.input.onSubmit && o.input.onSubmit(v); } catch (er) {} };
+    setTimeout(() => { try { inp.focus(); inp.select(); } catch (er) {} }, 80);
+  }
   // כשמחזיקים/מרחפים — לא נסגר, ופס הזמן עוצר
   el.addEventListener('pointerenter', () => { clearTimeout(t); el.classList.add('hold'); });
   el.addEventListener('pointerleave', () => { el.classList.remove('hold'); const bar = el.querySelector('.gbn-bar'); bar.style.animation = 'none'; void bar.offsetWidth; bar.style.animation = ''; arm(); });
   requestAnimationFrame(() => el.classList.add('show'));
-  arm();
+  if (!o.input) arm();
   window.__gbnAt = Date.now();
 }
 window.glassBanner = glassBanner;
@@ -30983,9 +31140,14 @@ async function rentListSend(btn) {
 }
 function cartSetTab(t) { cartTab = t; cartRender(); }
 Object.assign(window, { rentListAdd, rentListQty, rentListSend, cartSetTab });
+// הסכום שבסל (כמו בשורת הסה״כ בחלון העגלה)
+function cartSum() {
+  try { const list = cartCatalog(); return cartGet().reduce((a, x) => { const p = list.find(q => q.id === x.id); return a + (p ? coPrice(p) * x.qty : 0); }, 0); } catch (e) { return 0; }
+}
 function cartBadge() {
-  const n = cartCount();
-  document.querySelectorAll('.cart-hdr-n').forEach(b => { b.textContent = n || ''; b.hidden = !n; });
+  const n = cartCount(), sum = Math.round(cartSum());
+  // בכפתור העגלה בכותרת: הסכום שבסל (בלי סכום — מספר הפריטים)
+  document.querySelectorAll('.cart-hdr-n').forEach(b => { b.textContent = sum > 0 ? '₪' + sum.toLocaleString('he-IL') : (n || ''); b.classList.toggle('is-sum', sum > 0); b.hidden = !n; });
   let f = document.getElementById('cart-fab');   // בטלפון: כפתור העגלה קבוע בשורה העליונה
   if (!f) {
     f = document.createElement('button');
@@ -30993,7 +31155,8 @@ function cartBadge() {
     f.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M3 4h2l2.6 12h11l2-8H6"/></svg><b></b>';
     document.body.appendChild(f);
   }
-  f.querySelector('b').textContent = n || '';
+  f.querySelector('b').textContent = sum > 0 ? '₪' + sum.toLocaleString('he-IL') : (n || '');
+  f.classList.toggle('is-sum', sum > 0);
 }
 function cartRender() {
   const box = document.getElementById('cart-panel'); if (!box) return;
@@ -31047,7 +31210,7 @@ function cartClose() { const el = document.getElementById('cart-panel'); if (el)
     b.type = 'button'; b.className = sb.className + ' cart-hdr-btn'; b.title = 'העגלה שלי'; b.setAttribute('aria-label', 'העגלה שלי');
     b.setAttribute('onclick', 'cartOpen()');
     b.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M3 4h2l2.4 11.2a1 1 0 0 0 1 .8h9.4a1 1 0 0 0 1-.8L20.5 8H6.2"/></svg><i class="cart-hdr-n" hidden></i>';
-    sb.parentNode.insertBefore(b, sb);
+    sb.parentNode.insertBefore(b, sb.parentNode.firstChild);   // העגלה ראשונה בשורה = הכי מימין
     cartBadge();
     return true;
   };
@@ -31577,7 +31740,7 @@ const mktLinkHost = u => String(u || '').replace(/^https?:\/\//i, '').replace(/^
 const USED_DEMO = [
   { id: 'u1', offer: 'מכירה', img: 'rent/u-sofa.jpg', title: 'ספה תלת-מושבית מעור, במצב מצוין', price: 1200, city: 'גבעתיים', owner: 'הילה רוזן', t: -5, desc: 'ספה נוחה מעור שחור, 3 מושבים. בלי קרעים, מבית ללא בעלי חיים. איסוף עצמי מקומה 2 עם מעלית.', specs: ['רוחב 2.1 מ׳', 'עור אמיתי', 'איסוף עצמי'] },
   { id: 'u2', offer: 'מכירה', img: 'rent/u-fridge.jpg', title: 'מקרר Panasonic דו-דלתי, 4 שנים', price: 1450, city: 'חולון', owner: 'שמעון לוי', t: -22, desc: 'מקרר שקט וחסכוני, מקפיא למטה. עובר דירה ולכן מוכר. אפשר לבוא לראות שעובד.', specs: ['320 ליטר', 'No Frost', 'הובלה בתיאום'] },
-  { id: 'u3', offer: 'החלפה', img: 'rent/u-guitar.jpg', title: 'גיטרה חשמלית Gibson Les Paul — להחלפה בקלידים', price: 0, city: 'חיפה', owner: 'עומר נחום', t: -54, desc: 'גיטרה במצב מצוין עם תיק קשיח. מחפש להחליף בקלידים / סינתיסייזר באותה רמה.', specs: ['כולל תיק קשיח', 'מיתרים חדשים', 'החלפה בלבד'] },
+  { id: 'u3', offer: 'החלפה', img: 'rent/u-guitar.jpg', title: 'גיטרה Gibson Les Paul להחלפה', price: 0, city: 'חיפה', owner: 'עומר נחום', t: -54, desc: 'גיטרה במצב מצוין עם תיק קשיח. מחפש להחליף בקלידים / סינתיסייזר באותה רמה.', specs: ['כולל תיק קשיח', 'מיתרים חדשים', 'החלפה בלבד'] },
   { id: 'u4', offer: 'השאלה', img: 'rent/u-bike.jpg', title: 'אופני עיר להשאלה לשבוע–חודש', price: 60, unit: 'month', city: 'תל אביב', owner: 'נטע קפלן', t: -80, desc: 'אופני עיר קלים ונוחים, עם מנעול. מתאים למי שמגיע לעיר לתקופה קצרה.', specs: ['כולל מנעול', 'פיקדון ₪300', 'תחזוקה כלולה'] }
 ].map(r => Object.assign({ demo: true, kind: 'used' }, r, { t: Date.now() + r.t * 3600e3 }));
 // דוגמאות לעסקים (מוצגות כשיש מעט עסקים אמיתיים)
@@ -31585,22 +31748,22 @@ const BIZ_DEMO = [
   { id: 'bz1', img: 'rent/biz-bakery.svg', bizName: 'מאפיית השכונה', title: 'מגש מאפים לאירוע — 40 יחידות', price: 180, link: 'https://example.com/bakery', city: 'הרצליה', owner: 'מאפיית השכונה', t: -4, desc: 'קרואסונים, בורקסים ומאפים מתוקים, טריים מהבוקר. משלוח עד הבית באזור השרון.', specs: ['40 יחידות', 'משלוח בשרון', 'הזמנה יום מראש'] },
   { id: 'bz2', img: 'rent/biz-phone.svg', bizName: 'מעבדת פיקס-טק', title: 'החלפת מסך לאייפון — באותו יום', price: 390, link: 'https://example.com/fixtech', city: 'תל אביב', owner: 'מעבדת פיקס-טק', t: -10, desc: 'מסך איכותי עם אחריות לחצי שנה. מגיעים בבוקר, אוספים אחר הצהריים.', specs: ['אחריות 6 חודשים', 'תוך 3 שעות', 'כל הדגמים'] },
   { id: 'bz3', img: 'rent/biz-wood.svg', bizName: 'נגריית עץ ושורש', title: 'שולחן אוכל מעץ מלא לפי מידה', price: 3200, link: '', city: 'קריית אתא', owner: 'נגריית עץ ושורש', t: -28, desc: 'שולחנות מעץ אלון ואגוז, בעבודת יד. בוחרים מידה, גוון ורגליים.', specs: ['עץ מלא', 'לפי מידה', 'אספקה תוך 3 שבועות'] },
-  { id: 'bz4', img: 'rent/biz-print.svg', bizName: 'דפוס הצבע', title: 'הדפסת 500 כרטיסי ביקור כולל עיצוב', price: 150, link: 'https://example.com/print', city: 'ירושלים', owner: 'דפוס הצבע', t: -48, desc: 'כרטיסי ביקור על נייר עבה, עם עיצוב בחינם. מוכן תוך יומיים.', specs: ['500 יחידות', 'עיצוב חינם', 'מוכן תוך יומיים'] }
+  { id: 'bz4', img: 'rent/biz-print.svg', bizName: 'דפוס הצבע', title: '500 כרטיסי ביקור כולל עיצוב', price: 150, link: 'https://example.com/print', city: 'ירושלים', owner: 'דפוס הצבע', t: -48, desc: 'כרטיסי ביקור על נייר עבה, עם עיצוב בחינם. מוכן תוך יומיים.', specs: ['500 יחידות', 'עיצוב חינם', 'מוכן תוך יומיים'] }
 ].map(r => Object.assign({ demo: true, kind: 'used', offer: 'עסק' }, r, { t: Date.now() + r.t * 3600e3 }));
 // דוגמאות לפרויקטים של גולשים (מוצגות כשיש מעט פרויקטים אמיתיים)
 const PROJ_DEMO = [
   { id: 'pj1', pd: 'web', pk: 'site', img: 'rent/proj-shop.svg', title: 'חנות אונליין לקרמיקה שבניתי לבד', price: 0, link: 'https://example.com/ceramics', city: 'רמת גן', owner: 'נועה ברק', t: -3, desc: 'אתר חנות מלא: קטלוג, עגלה ותשלום. בניתי ב-HTML, CSS ו-JavaScript, עם מסד נתונים ב-Firebase. אשמח לשמוע מה אתם חושבים.', specs: ['HTML / CSS / JS', 'Firebase', 'מותאם לנייד'] },
   { id: 'pj2', pd: 'sport', pk: 'site', img: 'rent/proj-blog.svg', title: 'בלוג טיולים בארץ — מסלולים ומפות', price: 0, link: 'https://example.com/trails', city: 'ירושלים', owner: 'אלון שגיא', t: -14, desc: 'בלוג שאני כותב כבר שנה, עם מסלולי הליכה, מפות ותמונות. פתוח לשיתופי פעולה.', specs: ['WordPress', '120 מסלולים', 'מפות אינטראקטיביות'] },
-  { id: 'pj3', pd: 'apps', pk: 'app', img: 'rent/proj-app.svg', title: 'אפליקציה לניהול קניות משותפות לבית', price: 0, link: 'https://example.com/shoplist', city: 'באר שבע', owner: 'דנה אור', t: -30, desc: 'רשימת קניות שכל בני הבית מעדכנים יחד בזמן אמת. מחפשת אנשים שינסו ויגידו מה חסר.', specs: ['React Native', 'אנדרואיד ו-iPhone', 'חינם'] },
-  { id: 'pj4', pd: 'd3', pk: '3d', img: 'rent/proj-3d-vase.svg', title: 'אגרטל Low-Poly — קובץ להדפסה בתלת מימד', price: 25, link: 'https://example.com/vase-stl', city: 'חיפה', owner: 'מאיה לוי', t: -8, desc: 'מודל שעיצבתי ב-Blender. מגיע כקובץ STL מוכן להדפסה, בלי תמיכות. אפשר גם להזמין מודפס.', specs: ['Blender', 'קובץ STL', 'גובה 18 ס״מ'] },
-  { id: 'pj5', pd: 'edu', pk: '3d', img: 'rent/proj-3d-gears.svg', title: 'מנגנון גלגלי שיניים שעובד — מודפס כולו', price: 0, link: '', city: 'תל אביב', owner: 'רון כהן', t: -20, desc: 'פרויקט לימודי: מנגנון שמסתובב בלי ברגים, מודפס בחלק אחד. הקבצים חינם למי שרוצה.', specs: ['Fusion 360', 'PLA', 'הדפסה ב-6 שעות'] },
+  { id: 'pj3', pd: 'apps', pk: 'app', img: 'rent/proj-app.svg', title: 'אפליקציה לקניות משותפות לבית', price: 0, link: 'https://example.com/shoplist', city: 'באר שבע', owner: 'דנה אור', t: -30, desc: 'רשימת קניות שכל בני הבית מעדכנים יחד בזמן אמת. מחפשת אנשים שינסו ויגידו מה חסר.', specs: ['React Native', 'אנדרואיד ו-iPhone', 'חינם'] },
+  { id: 'pj4', pd: 'd3', pk: '3d', img: 'rent/proj-3d-vase.svg', title: 'אגרטל Low-Poly להדפסה', price: 25, link: 'https://example.com/vase-stl', city: 'חיפה', owner: 'מאיה לוי', t: -8, desc: 'מודל שעיצבתי ב-Blender. מגיע כקובץ STL מוכן להדפסה, בלי תמיכות. אפשר גם להזמין מודפס.', specs: ['Blender', 'קובץ STL', 'גובה 18 ס״מ'] },
+  { id: 'pj5', pd: 'edu', pk: '3d', img: 'rent/proj-3d-gears.svg', title: 'מנגנון גלגלי שיניים מודפס', price: 0, link: '', city: 'תל אביב', owner: 'רון כהן', t: -20, desc: 'פרויקט לימודי: מנגנון שמסתובב בלי ברגים, מודפס בחלק אחד. הקבצים חינם למי שרוצה.', specs: ['Fusion 360', 'PLA', 'הדפסה ב-6 שעות'] },
   { id: 'pj6', pd: 'home', pk: '3d', img: 'rent/proj-3d-house.svg', title: 'הדמיית בית בתלת מימד ללקוח', price: 0, link: 'https://example.com/house-3d', city: 'נתניה', owner: 'עומר נחום', t: -44, desc: 'הדמיה של בית פרטי שהכנתי לאדריכלית. מקבל עבודות דומות.', specs: ['SketchUp', 'רינדור', 'מקבל הזמנות'] }
   ,{ id: 'pj7', pd: 'elec', pk: 'other', img: 'rent/proj-elec-lamp.svg', title: 'מנורת LED חכמה שנדלקת מהטלפון', price: 90, link: '', city: 'פתח תקווה', owner: 'יואב מזרחי', t: -5, desc: 'בניתי מנורה עם ESP32 ופס לדים. מדליקים, משנים צבע ומתזמנים מהטלפון דרך ה-Wi-Fi של הבית. אפשר להזמין אחת מוכנה.', specs: ['ESP32', 'לדים WS2812', 'גוף מודפס בתלת מימד'] },
   { id: 'pj8', pd: 'garden', pk: 'other', img: 'rent/proj-garden.svg', title: 'בקר השקיה שבודק לחות באדמה', price: 0, link: 'https://example.com/smart-water', city: 'רחובות', owner: 'שירה גולן', t: -12, desc: 'חיישן לחות + ברז חשמלי: הגינה מושקית רק כשהאדמה יבשה. חוסך בערך 40% מים. השרטוטים והקוד פתוחים לכולם.', specs: ['Arduino', 'חיישן לחות', 'קוד פתוח'] },
   { id: 'pj9', pd: 'energy', pk: 'other', img: 'rent/proj-solar.svg', title: 'מטען סולארי מתקפל לטיולים', price: 140, link: '', city: 'מצפה רמון', owner: 'איתי רז', t: -26, desc: 'פאנל סולארי קטן עם סוללה, נטען ביום ומטעין טלפון בלילה. בניתי לטיולים במדבר ועכשיו מכין גם לאחרים.', specs: ['10W', 'סוללה 10,000mAh', 'USB-C'] },
   { id: 'pj10', pd: 'games', pk: 'app', img: 'rent/proj-game.svg', title: 'משחק פלטפורמה שבניתי ב-Unity', price: 0, link: 'https://example.com/pixel-jump', city: 'אשדוד', owner: 'עידו פרץ', t: -9, desc: 'משחק קפיצות עם 12 שלבים, גרפיקה בסגנון פיקסלים ומוזיקה שהלחנתי. רץ בדפדפן, אשמח לשמוע מה דעתכם.', specs: ['Unity', '12 שלבים', 'רץ בדפדפן'] },
-  { id: 'pj11', pd: 'toys', pk: '3d', img: 'rent/proj-boardgame.svg', title: 'משחק קופסה משפחתי — כל החלקים מודפסים', price: 120, link: '', city: 'כפר סבא', owner: 'מיכל דהן', t: -36, desc: 'משחק אסטרטגיה ל-2–4 שחקנים שהמצאתי עם הילדים. לוח, כלים וקוביות — הכול מודפס בתלת מימד.', specs: ['2–4 שחקנים', 'גיל 8+', 'PLA צבעוני'] },
-  { id: 'pj12', pd: 'health', pk: '3d', img: 'rent/proj-health.svg', title: 'פותחן צנצנות לאנשים עם כוח יד מוגבל', price: 35, link: '', city: 'חדרה', owner: 'אבי שושן', t: -50, desc: 'עיצבתי לסבתא שלי פותחן שנצמד לשיש ופותח צנצנת ביד אחת. מדפיס לכל מי שצריך במחיר החומר.', specs: ['ביד אחת', 'נצמד לשיש', 'מותאם לכל גודל צנצנת'] }
+  { id: 'pj11', pd: 'toys', pk: '3d', img: 'rent/proj-boardgame.svg', title: 'משחק קופסה משפחתי מודפס', price: 120, link: '', city: 'כפר סבא', owner: 'מיכל דהן', t: -36, desc: 'משחק אסטרטגיה ל-2–4 שחקנים שהמצאתי עם הילדים. לוח, כלים וקוביות — הכול מודפס בתלת מימד.', specs: ['2–4 שחקנים', 'גיל 8+', 'PLA צבעוני'] },
+  { id: 'pj12', pd: 'health', pk: '3d', img: 'rent/proj-health.svg', title: 'פותחן צנצנות ביד אחת', price: 35, link: '', city: 'חדרה', owner: 'אבי שושן', t: -50, desc: 'עיצבתי לסבתא שלי פותחן שנצמד לשיש ופותח צנצנת ביד אחת. מדפיס לכל מי שצריך במחיר החומר.', specs: ['ביד אחת', 'נצמד לשיש', 'מותאם לכל גודל צנצנת'] }
 ].map(r => Object.assign({ demo: true, kind: 'used', offer: 'פרויקט' }, r, { t: Date.now() + r.t * 3600e3 }));
 // מוצרי יד 2 אמיתיים — מגיעים מעמוד "מוצרי גולשים" (נשמרים בתוכן העמוד)
 function usedAll() {
@@ -31692,7 +31855,7 @@ function mkPubOpen() {
     <label class="mkpub-l">תמונות <small>(עד 5)</small></label>
     <div class="mkpub-imgs" id="mkpub-imgs"></div>
     <label class="mkpub-l" for="mkpub-title">כותרת</label>
-    <input id="mkpub-title" class="mkpub-in" maxlength="120" placeholder="מה מוכרים?">
+    <input id="mkpub-title" class="mkpub-in" maxlength="32" placeholder="מה מוכרים?" oninput="mkPubTitleCount(this)"><small class="mkpub-cnt" id="mkpub-title-cnt">0 / 32</small>
     <div class="mkpub-proj mkpub-biz">
       <label class="mkpub-l" for="mkpub-desc">כמה מילים <small>(לא חובה)</small></label>
       <textarea id="mkpub-desc" class="mkpub-in" rows="3" maxlength="1000" placeholder="מה בנית, במה השתמשת, ומה תשמח לקבל"></textarea>
@@ -31715,6 +31878,10 @@ function mkPubOpen() {
   setTimeout(() => { const t = document.getElementById('mkpub-title'); if (t) t.focus(); }, 50);
 }
 function mkPubClose() { const m = document.getElementById('mkpub-modal'); if (m) m.remove(); }
+// כותרת קצרה (עד 32 תווים, בערך 5 מילים) — כדי שתיכנס בשורה של הכרטיס
+const MKPUB_TITLE_MAX = 32;
+function mkPubTitleCount(inp) { const c = document.getElementById('mkpub-title-cnt'); if (c) { c.textContent = `${inp.value.length} / ${MKPUB_TITLE_MAX}`; c.classList.toggle('full', inp.value.length >= MKPUB_TITLE_MAX); } }
+window.mkPubTitleCount = mkPubTitleCount;
 // מוצר או פרויקט: בפרויקט מופיעים סוג, תיאור וקישור, ואין מלאי
 function mkPubType(t) {
   mkPub.type = t === 'proj' || t === 'biz' ? t : 'sale';
@@ -31755,6 +31922,7 @@ async function mkPubSend() {
   const fail = t => { err.textContent = t; err.hidden = false; };
   if (!mkPub.images.length) return fail('צריך להוסיף לפחות תמונה אחת');
   if (title.length < 2) return fail('צריך לכתוב כותרת');
+  if (title.length > MKPUB_TITLE_MAX) return fail(`הכותרת ארוכה מדי — עד ${MKPUB_TITLE_MAX} תווים`);
   const priceTxt = document.getElementById('mkpub-price').value;
   if (priceTxt !== '' && !(price >= 0)) return fail('המחיר לא תקין');
   const proj = mkPub.type === 'proj', biz = mkPub.type === 'biz';
@@ -31804,45 +31972,45 @@ const rentIdeaSVG = i => `<svg viewBox="0 0 80 60" fill="none" stroke="currentCo
 const RENT_SITE_FEE = 0.05;   // עמלת האתר על כל השכרה (5%), מוצגת לשוכר בפירוט המחיר
 // דוגמאות: ציוד אצל גולשים (מוצגות בכל קטגוריה כל עוד אין בה מודעות אמיתיות). תמונות: Wikimedia Commons, בתיקייה rent/
 const RENT_DEMO = [
-  { id: 'd1', cat: '3d', img: 'rent/p3d-farm.jpg', title: 'חוות 4 מדפסות Prusa — הרבה חלקים במקביל', price: 320, unit: 'kg', min: 0.05, city: 'תל אביב', owner: 'רון כהן', rating: 4.9, reviews: 38, t: -2,
+  { id: 'd1', cat: '3d', img: 'rent/p3d-farm.jpg', title: 'חוות 4 מדפסות Prusa', price: 320, unit: 'kg', min: 0.05, city: 'תל אביב', owner: 'רון כהן', rating: 4.9, reviews: 38, t: -2,
     desc: 'ארבע מדפסות שעובדות במקביל, אז גם הזמנה של עשרות חלקים מוכנה מהר. שולחים קובץ STL/3MF, אני מדפיס ומתאם איסוף.', specs: ['25×21×21 ס״מ לכל מדפסת', 'PLA / PETG / TPU', 'אספקה: 1–2 ימים'] },
-  { id: 'd2', cat: '3d', img: 'rent/p3d-prusa-mk2.jpg', title: 'Prusa i3 MK3 — הדפסה בסדנה, כולל הדרכה', price: 260, unit: 'kg', min: 0.1, city: 'חיפה', owner: 'מאיה לוי', rating: 4.8, reviews: 21, t: -6,
+  { id: 'd2', cat: '3d', img: 'rent/p3d-prusa-mk2.jpg', title: 'Prusa i3 MK3 בסדנה עם הדרכה', price: 260, unit: 'kg', min: 0.1, city: 'חיפה', owner: 'מאיה לוי', rating: 4.8, reviews: 21, t: -6,
     desc: 'באים לסדנה ומדפיסים בעצמכם. בפעם הראשונה — חצי שעה הדרכה בחינם. פילמנט PLA כלול במחיר.', specs: ['25×21×21 ס״מ', 'PLA כלול, PETG בתוספת', 'חניה חינם ליד הסדנה'] },
-  { id: 'd3', cat: '3d', img: 'rent/p3d-resin.jpg', title: 'Elegoo Mars — הדפסת שרף לפרטים קטנים', price: 900, unit: 'kg', min: 0.02, city: 'ירושלים', owner: 'דניאל אברהם', rating: 5.0, reviews: 12, t: -26,
+  { id: 'd3', cat: '3d', img: 'rent/p3d-resin.jpg', title: 'Elegoo Mars — הדפסת שרף', price: 900, unit: 'kg', min: 0.02, city: 'ירושלים', owner: 'דניאל אברהם', rating: 5.0, reviews: 12, t: -26,
     desc: 'הדפסת שרף לפרטים קטנים במיוחד: מיניאטורות, תכשיטים ודגמים. כולל שטיפה וייבוש UV.', specs: ['רזולוציה גבוהה', 'שרף אפור / שקוף', 'עד 12×7×15 ס״מ'] },
-  { id: 'd4', cat: '3d', img: 'rent/p3d-imprimante.jpg', title: 'Creality Ender 3 — הדפסה זולה לפי קילו', price: 190, unit: 'kg', min: 0.1, city: 'ראשון לציון', owner: 'אלון מזרחי', rating: 4.6, reviews: 17, t: -48,
+  { id: 'd4', cat: '3d', img: 'rent/p3d-imprimante.jpg', title: 'Creality Ender 3 — לפי קילו', price: 190, unit: 'kg', min: 0.1, city: 'ראשון לציון', owner: 'אלון מזרחי', rating: 4.6, reviews: 17, t: -48,
     desc: 'הדרך הכי זולה להדפיס: מעמדים, קופסאות, חלקי חילוף לבית. אפשר גם משלוח עד הבית.', specs: ['22×22×25 ס״מ', 'PLA / PETG', 'משלוח בתוספת ₪25'] },
-  { id: 'd5', cat: '3d', img: 'rent/p3d-prusa-metal.jpg', title: 'מדפסת Prusa i3 (מסגרת מתכת) — השכרה הביתה', price: 90, unit: 'day', min: 2, city: 'באר שבע', owner: 'נועה פרץ', rating: 4.7, reviews: 9, t: -72,
+  { id: 'd5', cat: '3d', img: 'rent/p3d-prusa-metal.jpg', title: 'מדפסת Prusa i3 להשכרה הביתה', price: 90, unit: 'day', min: 2, city: 'באר שבע', owner: 'נועה פרץ', rating: 4.7, reviews: 9, t: -72,
     desc: 'לוקחים את המדפסת הביתה ליומיים ומעלה. מגיעה מכוילת, עם 1 ק״ג PLA ומדריך קצר.', specs: ['כולל 1 ק״ג PLA', 'פיקדון ₪500 שמוחזר', 'הדרכה בטלפון'] },
-  { id: 'd6', cat: '3d', img: 'rent/p3d-shields.jpg', title: 'הדפסה סדרתית — מחזיקים, ווים וחלקים קטנים', price: 290, unit: 'kg', min: 0.05, city: 'נתניה', owner: 'עידו שלום', rating: 4.9, reviews: 44, t: -120,
+  { id: 'd6', cat: '3d', img: 'rent/p3d-shields.jpg', title: 'הדפסה סדרתית של חלקים קטנים', price: 290, unit: 'kg', min: 0.05, city: 'נתניה', owner: 'עידו שלום', rating: 4.9, reviews: 44, t: -120,
     desc: 'מחזיקי מפתחות, ווים לקיר, חלקי חילוף קטנים. שולחים קובץ או בוחרים דגם מוכן — מוכן תוך כמה שעות.', specs: ['עד 18×18×18 ס״מ', 'PLA במגוון צבעים', 'איסוף עצמי'] },
-  { id: 'p1', cat: 'printer', img: 'rent/laser.jpg', title: 'מדפסת לייזר Brother — שחור-לבן מהיר', price: 0.4, unit: 'page', min: 10, city: 'פתח תקווה', owner: 'שירה גולן', rating: 4.8, reviews: 63, t: -3,
+  { id: 'p1', cat: 'printer', img: 'rent/laser.jpg', title: 'מדפסת לייזר Brother מהירה', price: 0.4, unit: 'page', min: 10, city: 'פתח תקווה', owner: 'שירה גולן', rating: 4.8, reviews: 63, t: -3,
     desc: 'שולחים PDF במייל או בוואטסאפ, ואוספים מהלובי תוך שעה. מושלם לעבודות, חוזים וטפסים.', specs: ['A4 שחור-לבן', 'דו-צדדי', 'נייר כלול'] },
-  { id: 'p2', cat: 'printer', img: 'rent/mfp.jpg', title: 'מכונת צילום משרדית Ricoh — צבע, סריקה ו-A3', price: 1.5, unit: 'page', min: 5, city: 'תל אביב', owner: 'משרד שחר', rating: 4.7, reviews: 29, t: -20,
+  { id: 'p2', cat: 'printer', img: 'rent/mfp.jpg', title: 'מכונת צילום Ricoh בצבע', price: 1.5, unit: 'page', min: 5, city: 'תל אביב', owner: 'משרד שחר', rating: 4.7, reviews: 29, t: -20,
     desc: 'מכונה משרדית גדולה: הדפסה בצבע, A3, סריקה למייל וכריכה. אפשר להגיע ולהדפיס בעצמכם בשעות המשרד.', specs: ['צבע / שחור-לבן', 'A4 ו-A3', 'סריקה למייל'] },
-  { id: 'p3', cat: 'printer', img: 'rent/inkjet.jpg', title: 'מדפסת צבע Epson — תמונות ועבודות לבית ספר', price: 1, unit: 'page', min: 1, city: 'מודיעין', owner: 'אבי דהן', rating: 4.5, reviews: 14, t: -50,
+  { id: 'p3', cat: 'printer', img: 'rent/inkjet.jpg', title: 'מדפסת צבע Epson לתמונות', price: 1, unit: 'page', min: 1, city: 'מודיעין', owner: 'אבי דהן', rating: 4.5, reviews: 14, t: -50,
     desc: 'הדפסת תמונות ועבודות צבעוניות לילדים. גם נייר צילום מבריק בתוספת קטנה.', specs: ['צבע מלא', 'נייר צילום ₪2', 'איסוף מהבית'] },
-  { id: 't1', cat: 'tools', img: 'rent/drill.jpg', title: 'מברגה-מקדחה נטענת Panasonic + סט ביטים', price: 35, unit: 'day', min: 1, city: 'תל אביב', owner: 'יוסי ברק', rating: 4.9, reviews: 52, t: -1,
+  { id: 't1', cat: 'tools', img: 'rent/drill.jpg', title: 'מברגה נטענת Panasonic + ביטים', price: 35, unit: 'day', min: 1, city: 'תל אביב', owner: 'יוסי ברק', rating: 4.9, reviews: 52, t: -1,
     desc: 'לתליית מדפים, תמונות והרכבת רהיטים. מגיעה עם 2 סוללות טעונות, סט ביטים ומקדחים לקיר.', specs: ['2 סוללות', 'מקדחים לבטון ולעץ', 'פיקדון ₪200'] },
-  { id: 't2', cat: 'tools', img: 'rent/washer.jpg', title: 'מכונת שטיפה בלחץ — לחצר, לרכב ולמרפסת', price: 90, unit: 'day', min: 1, city: 'אשדוד', owner: 'מוטי אזולאי', rating: 4.6, reviews: 18, t: -30,
+  { id: 't2', cat: 'tools', img: 'rent/washer.jpg', title: 'מכונת שטיפה בלחץ לחצר ולרכב', price: 90, unit: 'day', min: 1, city: 'אשדוד', owner: 'מוטי אזולאי', rating: 4.6, reviews: 18, t: -30,
     desc: 'מנקה אבנים, דקים, רכב ומרפסות בקלות. כולל צינור 10 מ׳ וראש סיבובי.', specs: ['צינור 10 מ׳', 'ראש סיבובי', 'פיקדון ₪300'] },
   { id: 'c1', cat: 'photo', img: 'rent/camera.jpg', title: 'מצלמת Nikon D850 + עדשה 24-70', price: 180, unit: 'day', min: 1, city: 'רמת גן', owner: 'ליאור צילום', rating: 5.0, reviews: 27, t: -8,
     desc: 'מצלמה מקצועית לאירועים, צילומי מוצר ופורטרטים. כוללת 2 סוללות, כרטיס 128GB ותיק.', specs: ['45 מגה-פיקסל', 'עדשה 24-70 f/2.8', 'פיקדון ₪2,000'] },
   { id: 'c2', cat: 'photo', img: 'rent/projector.jpg', title: 'מקרן לערבי סרטים, מצגות ואירועים', price: 80, unit: 'day', min: 1, city: 'הרצליה', owner: 'גל אורן', rating: 4.8, reviews: 33, t: -40,
     desc: 'מקרן בהיר עם כבל HDMI ומסך נייד 100 אינץ׳. מתאים לסרט בחצר או למצגת במשרד.', specs: ['Full HD', 'מסך 100 אינץ׳ בתוספת ₪30', 'רמקול בלוטות׳ כלול'] },
-  { id: 'o1', cat: 'other', img: 'rent/sewing.jpg', title: 'מכונת תפירה — לתיקונים, קיצורים ותחפושות', price: 30, unit: 'day', min: 1, city: 'כפר סבא', owner: 'רותי שמש', rating: 4.7, reviews: 11, t: -96,
+  { id: 'o1', cat: 'other', img: 'rent/sewing.jpg', title: 'מכונת תפירה לתיקונים', price: 30, unit: 'day', min: 1, city: 'כפר סבא', owner: 'רותי שמש', rating: 4.7, reviews: 11, t: -96,
     desc: 'מכונה וותיקה ואמינה שעובדת מצוין. כולל חוטים בסיסיים ושיעור קצר אם צריך.', specs: ['חוטים כלולים', 'הדרכה של 15 דק׳', 'איסוף עצמי'] },
-  { id: 's1', cat: 'storage', img: 'rent/s-units.jpg', title: 'יחידת אחסון סגורה 4 מ״ר — גישה 24/7', price: 55, unit: 'm2', min: 2, city: 'ראשון לציון', owner: 'מחסני השכונה', rating: 4.8, reviews: 41, t: -4,
+  { id: 's1', cat: 'storage', img: 'rent/s-units.jpg', title: 'יחידת אחסון 4 מ״ר, גישה 24/7', price: 55, unit: 'm2', min: 2, city: 'ראשון לציון', owner: 'מחסני השכונה', rating: 4.8, reviews: 41, t: -4,
     desc: 'יחידה נעולה במבנה מקורה עם מצלמות. אתם מחזיקים את המפתח ונכנסים מתי שרוצים. מתאים לרהיטים בזמן מעבר דירה.', specs: ['גישה 24/7', 'מצלמות אבטחה', 'עגלות להעמסה'] },
-  { id: 's2', cat: 'storage', img: 'rent/s-attic.jpg', title: 'עליית גג יבשה — מקום לארגזים ומזוודות', price: 25, unit: 'box', min: 3, city: 'רעננה', owner: 'משפחת כרמי', rating: 4.9, reviews: 12, t: -18,
+  { id: 's2', cat: 'storage', img: 'rent/s-attic.jpg', title: 'עליית גג יבשה לארגזים', price: 25, unit: 'box', min: 3, city: 'רעננה', owner: 'משפחת כרמי', rating: 4.9, reviews: 12, t: -18,
     desc: 'עליית גג נקייה ויבשה בבית פרטי. מאחסנים לכם ארגזים, מזוודות וקישוטי חג. מתאמים הגעה מראש.', specs: ['יבש ומאוורר', 'עד 20 ארגזים', 'גישה בתיאום'] },
   { id: 's3', cat: 'storage', img: 'rent/s-container.jpg', title: 'מכולה 20 רגל בחצר — לציוד גדול', price: 650, unit: 'month', min: 1, city: 'כפר יונה', owner: 'אבי חקלאי', rating: 4.6, reviews: 8, t: -36,
     desc: 'מכולה שלמה רק לכם, בחצר סגורה עם שער. מתאימה לציוד בנייה, רהיטים או מלאי של עסק קטן.', specs: ['15 מ״ר', 'גישה ברכב עד הדלת', 'מנעול שלכם'] },
-  { id: 's4', cat: 'storage', img: 'rent/s-shelves.jpg', title: 'מדף בחדר אחסון — למשחקים, ספרים וציוד קטן', price: 15, unit: 'box', min: 1, city: 'פתח תקווה', owner: 'דנה שושן', rating: 4.7, reviews: 19, t: -60,
+  { id: 's4', cat: 'storage', img: 'rent/s-shelves.jpg', title: 'מדף בחדר אחסון לציוד קטן', price: 15, unit: 'box', min: 1, city: 'פתח תקווה', owner: 'דנה שושן', rating: 4.7, reviews: 19, t: -60,
     desc: 'מקום על מדף בחדר אחסון בבניין. מתאים לכמה ארגזים או משחקים שאין להם מקום בבית.', specs: ['ארגז עד 60×40 ס״מ', 'מקורה ונעול', 'גישה בערבים'] },
-  { id: 's5', cat: 'storage', img: 'rent/s-boxes.jpg', title: 'אחסון ארגזים בזמן מעבר דירה — כולל איסוף', price: 20, unit: 'box', min: 5, city: 'ירושלים', owner: 'עברנו בקלות', rating: 4.8, reviews: 57, t: -90,
+  { id: 's5', cat: 'storage', img: 'rent/s-boxes.jpg', title: 'אחסון ארגזים במעבר דירה', price: 20, unit: 'box', min: 5, city: 'ירושלים', owner: 'עברנו בקלות', rating: 4.8, reviews: 57, t: -90,
     desc: 'אוספים מכם את הארגזים, מאחסנים במחסן יבש ומחזירים לדירה החדשה. מחיר לארגז לחודש, האיסוף בתוספת.', specs: ['איסוף והחזרה ₪150', 'ביטוח בסיסי', 'מינימום 5 ארגזים'] },
-  { id: 's6', cat: 'storage', img: 'rent/s-parking.jpg', title: 'חניה מקורה פנויה — לרכב, אופנוע או נגרר', price: 300, unit: 'month', min: 1, city: 'חיפה', owner: 'יעקב פרידמן', rating: 4.5, reviews: 6, t: -130,
+  { id: 's6', cat: 'storage', img: 'rent/s-parking.jpg', title: 'חניה מקורה פנויה לרכב', price: 300, unit: 'month', min: 1, city: 'חיפה', owner: 'יעקב פרידמן', rating: 4.5, reviews: 6, t: -130,
     desc: 'חניה מקורה בחניון פתוח של בניין, מתאימה גם לאחסון סירה קטנה או נגרר. שלט לשער כלול.', specs: ['מקורה', 'שלט לשער', 'ליד הכניסה'] }
 ].map(r => Object.assign({ demo: true }, r, { t: Date.now() + r.t * 3600e3 }));
 let rentData = null, rentUnsub = null;
@@ -32003,14 +32171,58 @@ function rentHoverHTML(x) {
   const rk = rentCommentsKey(x), likeId = x.shId || rk, svKey = 'sv_' + rk, rpKey = 'rp_' + rk;
   subscribeReposts();
   const cnt = (n, attr) => `<i class="pti-n mk-n"${attr || ''}>${n}</i>`;
-  return `<span class="mk-sg-hov"><span class="mk-sg-hov-btns">
-    ${b('הוספה לסל', 'M12 5v14M5 12h14', mktCartable(x) ? `rentCartAdd('${id}')` : `rentOpen('${id}')`, false, '', 'mk-sg-plus')}
+  // בכרטיס: קנייה (ירוק) ומשא ומתן (כתום) גלויים; לייק, ריפוסט, שמירה ודיווח — בתוך "⋯"
+  const buy = mktCartable(x) ? `rentCartAdd('${id}')` : `rentOpen('${id}')`;
+  return `<span class="mk-sg-hov mk-act2">
+    <span role="button" tabindex="0" class="mk-a-buy" aria-label="קנייה" title="קנייה" onclick="${stop}${buy}">${ic('M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.5L21 8H6')}</span>
+    <span role="button" tabindex="0" class="mk-a-deal" aria-label="משא ומתן" title="משא ומתן — הצעת מחיר" onclick="${stop}mkCardHaggle(this, '${id}')">${ic('M4 7h12M4 7l3-3M4 7l3 3M20 17H8M20 17l-3-3M20 17l-3 3')}</span>
+    <span role="button" tabindex="0" class="mk-a-dots" aria-label="עוד פעולות" title="עוד" aria-expanded="false" onclick="${stop}mkMoreToggle(this)"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="18" cy="12" r="1.8"/></svg></span>
+    <span class="mk-sg-hov-btns mk-a-pop">
     ${b('לייק', 'M7 10v11H3V10zM7 10l4-8a2.5 2.5 0 0 1 3 2.6L13.5 9H19a2 2 0 0 1 2 2.3l-1.4 8A2 2 0 0 1 17.6 21H7', sh ? `photoToggleLike('${sh}')` : `rentMark(this, 'like', '${id}')`, liked, sh ? ` data-like="${escHtml(x.shId)}"` : '', '', cnt(Number(itemLikesData[likeId]) || 0, ` data-likes-n="${escHtml(likeId)}"`))}
     ${b('ריפוסט', 'M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3', `toggleRepost('${artEsc(rk)}', this)`, repostIsMine(rk), ` data-item="${escHtml(rk)}"`, 'pti-repost', cnt(repostCount(rk)))}
     ${b('שמירה', 'M6 4h12v17l-6-4.5L6 21z', `mkCountBump('${artEsc(svKey)}', this.classList.contains('on') ? -1 : 1); ` + (sh ? `photoToggleSave('${sh}')` : `rentMark(this, 'save', '${id}')`), saved, sh ? ` data-save="${escHtml(x.shId)}"` : '', '', cnt(Number(itemLikesData[svKey]) || 0, ` data-likes-n="${escHtml(svKey)}"`))}
     ${b('דיווח', 'M5 21V4M5 4h11l-2 4 2 4H5', `openReportContent('${artEsc(rk)}', '${artEsc(x.title || '')}')`, false, '', '', cnt(Number(itemLikesData[rpKey]) || 0, ` data-likes-n="${escHtml(rpKey)}"`))}
   </span></span>`;
 }
+// משא ומתן מהכרטיס: מתחת לשורת הכפתורים נפתח שדה עם הסכום שאני מציע (85% מהמחיר כהתחלה)
+function mkCardHaggle(btn, id) {
+  const card = btn.closest('.mk-sg'); if (!card) return;
+  const old = card.querySelector('.mk-haggle'); if (old) { old.remove(); return; }
+  document.querySelectorAll('.mk-sg .mk-haggle').forEach(f => f.remove());
+  const r = mktAll().find(x => x.id === id); if (!r) return;
+  const start = Number(r.price) > 0 ? Math.max(1, Math.round(r.price * .85)) : '';
+  const acts = card.querySelector('.mk-sg-acts');
+  acts.insertAdjacentHTML('afterend', `<form class="mk-haggle" onclick="event.stopPropagation()" onsubmit="event.preventDefault(); mkCardHaggleSend(this, '${artEsc(id)}')">
+    <label><span>₪</span><input type="number" inputmode="numeric" min="1" step="1" value="${start}" placeholder="הסכום שלי" aria-label="הסכום שאני מציע"></label>
+    <button type="submit" class="mk-h-ok" aria-label="שליחת ההצעה" title="שליחת ההצעה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
+    <button type="button" class="mk-h-no" aria-label="ביטול" title="ביטול" onclick="this.closest('.mk-haggle').remove()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M7 7l10 10M17 7L7 17"/></svg></button>
+  </form>`);
+  const inp = card.querySelector('.mk-haggle input');
+  setTimeout(() => { try { inp.focus(); inp.select(); } catch (e) {} }, 40);
+}
+async function mkCardHaggleSend(form, id) {
+  const inp = form.querySelector('input'), v = Math.round(Number(inp.value));
+  if (!(v > 0)) { form.classList.add('shake'); setTimeout(() => form.classList.remove('shake'), 400); inp.focus(); return; }
+  const r = mktAll().find(x => x.id === id); if (!r) return;
+  if (!(r.shId && r.uid)) { form.remove(); glassBanner({ title: 'ההצעה נשלחה (דוגמה)', sub: (r.title || '') + ' · ₪' + v.toLocaleString('he-IL'), icon: 'deal', cls: 'gbn-deal', ms: 2600 }); return; }
+  const u = auth.currentUser;
+  if (!u || (typeof isRegisteredUser === 'function' && !isRegisteredUser())) { glassBanner({ title: 'צריך להתחבר', sub: 'כדי לשלוח הצעת מחיר', icon: 'warn', ms: 2600 }); if (typeof entryLoginOpen === 'function') entryLoginOpen(); return; }
+  if (u.uid === r.uid) { glassBanner({ title: 'זו המודעה שלך', icon: 'warn', ms: 2200 }); return; }
+  form.remove();
+  window.__offerItemId = r.shId;
+  await sendPriceOffer(r.title || '', r.uid, r.owner || '', v, true);
+  glassBanner({ title: 'ההצעה נשלחה', sub: (r.title || '') + ' · ₪' + v.toLocaleString('he-IL'), icon: 'deal', cls: 'gbn-deal', ms: 2600 });
+}
+window.mkCardHaggle = mkCardHaggle; window.mkCardHaggleSend = mkCardHaggleSend;
+// "⋯" בכרטיס: פותח/סוגר את הלייק, הריפוסט, השמירה והדיווח. לחיצה בכל מקום אחר סוגרת
+function mkMoreToggle(btn) {
+  const box = btn.closest('.mk-act2'); if (!box) return;
+  const open = !box.classList.contains('open');
+  document.querySelectorAll('.mk-act2.open').forEach(x => { x.classList.remove('open'); const d = x.querySelector('.mk-a-dots'); if (d) d.setAttribute('aria-expanded', 'false'); });
+  if (open) { box.classList.add('open'); btn.setAttribute('aria-expanded', 'true'); }
+}
+document.addEventListener('click', e => { if (!e.target.closest || !e.target.closest('.mk-act2')) document.querySelectorAll('.mk-act2.open').forEach(x => x.classList.remove('open')); });
+window.mkMoreToggle = mkMoreToggle;
 // מודעות השוק בצורה שהפרופיל מציג — כדי שריפוסט של מודעה יופיע בפרופיל של מי ששיתף
 function mktRepostItems() {
   return mktAll().map(r => ({ id: rentCommentsKey(r), __mkt: r.id, __type: 'market', title: r.title, author: r.owner, images: (r.images || []).filter(Boolean), image: r.img, createdAt: r.t }));
@@ -32035,7 +32247,7 @@ function rentMiniHTML(x) {
   // בידול: עסק — מסגרת ירוקה, תג "עסק" וסמל חנות ליד שם העסק; יד 2 — תג אפור
   const sec = mktSecOf(x), biz = sec === 'biz';
   const badge = biz ? `<i class="mk-sg-badge b-biz">${BIZ_IC}עסק</i>` : sec === 'used' ? '<i class="mk-sg-badge b-used">יד 2</i>' : '';
-  return `<button type="button" class="mk-sg${biz ? ' is-biz' : sec === 'used' ? ' is-used' : ''}" onclick="rentOpen('${artEsc(x.id)}')"><span class="mk-sg-meta"><span class="mk-sg-who" role="button" tabindex="0" onclick="event.stopPropagation(); rentOpenSeller('${artEsc(x.uid || '')}', '${artEsc(x.owner || '')}')">${authorAvHTML({ author: mktWho(x) || '?', uid: x.uid || '' })}<b>${biz ? BIZ_IC : ''}${escHtml(mktWho(x))}</b></span><small class="mk-sg-city${mkKmTo(x.city) !== null ? ' km' : ''}">${escHtml(mkWhereTxt(x))}</small>${mkMobStatHTML(x)}<small class="mk-sg-price">${rentTypeIcon(x)}${Number(x.price) > 0 ? `${Number(x.price).toLocaleString('he-IL', { maximumFractionDigits: 2 })}&nbsp;₪` : mktIsProj(x) ? escHtml((PROJ_SUB[x.pd] || {}).name || PROJ_KINDS[x.pk] || 'פרויקט') : ''}${x.uid ? `<i data-sg-rate="${escHtml(x.uid)}"></i>` : ''}</small></span><span class="mk-sg-img">${rentThumb(x)}${badge}${del}${mktSoldOut(x) ? '<i class="mk-sg-out">אזל</i>' : ''}</span><span class="mk-sg-acts">${rentHoverHTML(x)}</span><b class="mk-sg-title"><span class="mk-sg-tt">${escHtml(x.title)}</span><span class="mk-sg-more" role="button" tabindex="0" onclick="event.stopPropagation(); event.preventDefault(); this.parentElement.classList.toggle('open')"><span>עוד</span><span>פחות</span></span></b></button>`;
+  return `<div role="button" tabindex="0" class="mk-sg${biz ? ' is-biz' : sec === 'used' ? ' is-used' : ''}" data-id="${escHtml(x.id)}" onclick="rentOpen('${artEsc(x.id)}')" onkeydown="if((event.key==='Enter'||event.key===' ')&&event.target===this){event.preventDefault();this.click();}"><span class="mk-sg-meta"><span class="mk-sg-who" role="button" tabindex="0" onclick="event.stopPropagation(); rentOpenSeller('${artEsc(x.uid || '')}', '${artEsc(x.owner || '')}')">${authorAvHTML({ author: mktWho(x) || '?', uid: x.uid || '' })}<b>${biz ? BIZ_IC : ''}${escHtml(mktWho(x))}</b></span><small class="mk-sg-city${mkKmTo(x.city) !== null ? ' km' : ''}">${escHtml(mkWhereTxt(x))}</small>${mkMobStatHTML(x)}<small class="mk-sg-price">${rentTypeIcon(x)}${Number(x.price) > 0 ? `${Number(x.price).toLocaleString('he-IL', { maximumFractionDigits: 2 })}&nbsp;₪` : mktIsProj(x) ? escHtml((PROJ_SUB[x.pd] || {}).name || PROJ_KINDS[x.pk] || 'פרויקט') : ''}${x.uid ? `<i data-sg-rate="${escHtml(x.uid)}"></i>` : ''}</small></span><span class="mk-sg-img">${rentThumb(x)}${badge}${del}${mktSoldOut(x) ? '<i class="mk-sg-out">אזל</i>' : ''}</span><span class="mk-sg-acts">${rentHoverHTML(x).replace('<span role="button" tabindex="0" class="mk-a-dots"', () => `<b class="mk-sg-title"><span class="mk-sg-tt">${escHtml(x.title)}</span><span class="mk-sg-more" role="button" tabindex="0" onclick="event.stopPropagation(); event.preventDefault(); this.parentElement.classList.toggle('open')"><span>עוד</span><span>פחות</span></span></b><span role="button" tabindex="0" class="mk-a-dots"`)}</span></div>`;
 }
 function rentGridHTML() {
   const l = rentList();
@@ -32207,6 +32419,7 @@ function rentSideSet(k, v) {
   rentSideApply();
 }
 function rentSideApply() {
+  if (document.body.classList.contains('m-filter')) rentFilterMobile(false);   // במובייל: אחרי בחירה המגירה נסגרת
   rentUI.open = null;
   rentRender();
   try { (mainContent.querySelector('.rent-page') || mainContent).scrollIntoView({ block: 'start' }); } catch (e) {}
@@ -32229,8 +32442,18 @@ function rentSidePriceGo() {
 }
 // חלון צד של סינון בשוק (מחשב): נפתח ונסגר מכפתור "סינון"; המצב נשמר בדפדפן. במובייל הכפתור פותח את התפריט
 function rentFilterOpen() { try { return localStorage.getItem('bw_mk_filter') !== '0'; } catch (e) { return true; } }
+// במובייל: הסינון סגור, ונפתח כמגירה מהצד מעל העמוד (עם רקע כהה שסוגר בלחיצה)
+function rentFilterMobile(open) {
+  const on = open === undefined ? !document.body.classList.contains('m-filter') : !!open;
+  document.body.classList.toggle('m-filter', on);
+  let bd = document.getElementById('m-filter-bd');
+  if (on && !bd) { bd = document.createElement('div'); bd.id = 'm-filter-bd'; bd.onclick = () => rentFilterMobile(false); document.body.appendChild(bd); }
+  if (!on && bd) bd.remove();
+  if (on) rentSideSync();
+}
+window.rentFilterMobile = rentFilterMobile;
 function rentFilterToggle() {
-  if (innerWidth <= 760) { openMobileMenu(); return; }
+  if (innerWidth <= 760) { rentFilterMobile(); return; }
   const lay = document.querySelector('.rent-page .rn-layout'); if (!lay) return;
   const on = lay.classList.toggle('f-open');
   try { localStorage.setItem('bw_mk_filter', on ? '1' : '0'); } catch (e) {}
@@ -32326,7 +32549,7 @@ function rentSellerHTML(sl) {
       </section>
     </div></aside>
     <div class="pf-main">
-      <div class="pf-tabs2" role="tablist"><button type="button" class="on">הכל</button><button type="button" onclick="this.parentElement.firstElementChild.click()">${list.length} מודעות</button></div>
+      <div class="pf-tabs2" role="tablist"><button type="button" class="on" onclick="pfTab2(this, 'all')">הכל</button><button type="button" onclick="pfTab2(this, 'all')">${list.length} מודעות</button><button type="button" class="pf-tab-about" onclick="pfTab2(this, 'about')">פרטים</button></div>
       <div class="pf-body"><aside class="pf-about">${pfAboutHTML(st)}</aside><div class="pf-feed">
         ${list.length ? `<section class="pf-mkt"><h3>מודעות</h3>${mktSellerGridHTML(list)}</section>` : '<div class="pf-empty">אין מודעות פעילות.</div>'}
       </div></div>

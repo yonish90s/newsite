@@ -31,15 +31,15 @@
   <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://newsite-f76e2-default-rtdb.firebaseio.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="modulepreload" href="./script.min.js?v=2045">
+  <link rel="modulepreload" href="./script.min.js?v=2060">
   <!-- ספריית interact.js לגרירה ושינוי גודל (נטענת בדחייה למניעת עיכוב) -->
   <script defer src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
   <!-- ספריית localforage לשמירת תמונות -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
   <!-- קישור לקובץ העיצוב החיצוני (עם פרמטר למניעת שמירה במטמון) -->
-  <link rel="stylesheet" href="./style.min.css?v=2216">
-  <link rel="stylesheet" id="mono-css" href="./mono.min.css?v=122">
-  <link rel="stylesheet" id="dark-css" data-href="./dark.min.css?v=536" media="not all">
+  <link rel="stylesheet" href="./style.min.css?v=2236">
+  <link rel="stylesheet" id="mono-css" href="./mono.min.css?v=133">
+  <link rel="stylesheet" id="dark-css" data-href="./dark.min.css?v=547" media="not all">
   <script>
     // קישור ישיר לפריט (#p/…, #s/…, #n/…) — מסמנים מיד, כדי שהכתובת לא תימחק לפני שהפריט נפתח
     window.__deepLinkOpening = /^#[psn]\//.test(location.hash || '');
@@ -234,7 +234,7 @@
         <button type="button" id="hdr-back" class="hdr-back" onclick="hdrBack()" aria-label="חזרה" title="חזרה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
         <!-- לוגו האתר -->
         <div class="logo-area" style="cursor: pointer;" title="לוגו האתר - חזרה לדף הבית" onclick="if(typeof goToHomePage === 'function') goToHomePage();">
-          <img id="main-logo" src="./logo.png" alt="לוגו" style="height: 20px; display: block; cursor: pointer;">
+          <img id="main-logo" src="./logo-eyes.svg?v=1" alt="לוגו" style="height: 22px; width: auto; display: block; cursor: pointer;">
         </div>
         
         <!-- מחשב: שורת חיפוש גדולה בכותרת (בסגנון dribbble) -->
@@ -1245,7 +1245,7 @@ html.theme-dark .pl-bar { background: #2a2f37; }
     }
     try { if (localStorage.getItem('mtab_hidden') === '1') document.documentElement.classList.add('mtab-hidden'); } catch (e) {}
   </script>
-  <script type="module" src="./script.min.js?v=2045"></script>
+  <script type="module" src="./script.min.js?v=2060"></script>
   <script defer src="./a11y.js?v=1"></script>
 </body>
 </html>
