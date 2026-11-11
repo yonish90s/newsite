@@ -7114,7 +7114,7 @@ if (btnAddCommunityPage) {
 // של כמה מגה-בייט הופך למחרוזת ענקית שמנפחת את הבלוב, מאיטה את האתר,
 // גורמת לו לקרוס, ולעיתים נכשלת בכתיבה ל-Firebase — ואז ההעלאה גם לא
 // מגיעה למכשירים אחרים. דחיסה לרוחב/גובה סביר ואיכות JPEG חוסכת פי 10-20.
-function artCompressImage(file, maxDim = 1600, quality = 0.82) {
+function artCompressImage(file, maxDim = 2560, quality = 0.92) {
   return new Promise((resolve) => {
     if (!file) { resolve(''); return; }
     const reader = new FileReader();
@@ -7135,6 +7135,7 @@ function artCompressImage(file, maxDim = 1600, quality = 0.82) {
           const canvas = document.createElement('canvas');
           canvas.width = w; canvas.height = h;
           const ctx = canvas.getContext('2d');
+          ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
           ctx.drawImage(img, 0, 0, w, h);
           const out = canvas.toDataURL('image/jpeg', quality);
           // אם משום מה היצוא גדול מהמקור, עדיף לשמור את המקור
@@ -7835,11 +7836,11 @@ function loginImagePick(input) {
   const file = input.files && input.files[0]; if (!file) return;
   const url = URL.createObjectURL(file), img = new Image();
   img.onload = async () => {
-    const k = Math.min(1, 1100 / Math.max(img.naturalWidth, img.naturalHeight)), c = document.createElement('canvas');
+    const k = Math.min(1, 2200 / Math.max(img.naturalWidth, img.naturalHeight)), c = document.createElement('canvas');
     c.width = Math.round(img.naturalWidth * k); c.height = Math.round(img.naturalHeight * k);
     c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
     URL.revokeObjectURL(url);
-    const data = c.toDataURL('image/jpeg', .8);
+    const data = c.toDataURL('image/jpeg', .92);
     try { await set(ref(db, 'website/login_image'), data); loginImageShow(data); showCopyToast('התמונה נשמרה'); }
     catch (e) { showCopyToast('לא הצלחנו לשמור את התמונה'); }
   };
@@ -12478,7 +12479,7 @@ function obPickPhoto(input) {
     const S = 256, c = document.createElement('canvas'); c.width = c.height = S;
     const side = Math.min(img.width, img.height);
     c.getContext('2d').drawImage(img, (img.width - side) / 2, (img.height - side) / 2, side, side, 0, 0, S, S);
-    ob.photo = c.toDataURL('image/jpeg', 0.82); ob.err = ''; URL.revokeObjectURL(img.src); obRender();
+    ob.photo = c.toDataURL('image/jpeg', 0.92); ob.err = ''; URL.revokeObjectURL(img.src); obRender();
   };
   img.onerror = () => { ob.err = 'לא הצלחנו לקרוא את התמונה'; obRender(); };
   img.src = URL.createObjectURL(file);
@@ -31661,7 +31662,7 @@ function rentAgo(t) {
 [USED_DEMO, RENT_DEMO].forEach(l => l.forEach(d => { if (/^rent\/[^/?]+\.jpg$/.test(d.img || '')) d.img += '?v=2'; if (Array.isArray(d.images)) d.images = d.images.map(u => /^rent\/[^/?]+\.jpg$/.test(u || '') ? u + '?v=2' : u); }));
 function rentThumb(r, big) {
   const c = rentCatOf(r.cat), g = r.g || ['#1f2937', '#4b5563'];
-  const src = !big && /^rent\/[^/?]+\.jpg(\?v=\d+)?$/.test(r.img || '') ? r.img.replace('rent/', 'rent/t/') : r.img;   // בכרטיסים: גרסה קטנה של תמונות הדוגמה
+  const src = r.img;   // תמיד התמונה המלאה — איכות גבוהה גם בכרטיסים
   return r.img ? `<img src="${escHtml(src)}" alt="" loading="lazy" decoding="async">`
     : `<span class="rn-ph" style="background:linear-gradient(140deg,${g[0]},${g[1]})"><b>${c.ic}</b>${big ? `<i>${escHtml(c.name)}</i>` : ''}</span>`;
 }
