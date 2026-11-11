@@ -7114,7 +7114,17 @@ if (btnAddCommunityPage) {
 // של כמה מגה-בייט הופך למחרוזת ענקית שמנפחת את הבלוב, מאיטה את האתר,
 // גורמת לו לקרוס, ולעיתים נכשלת בכתיבה ל-Firebase — ואז ההעלאה גם לא
 // מגיעה למכשירים אחרים. דחיסה לרוחב/גובה סביר ואיכות JPEG חוסכת פי 10-20.
-function artCompressImage(file, maxDim = 2560, quality = 0.92) {
+// שמירה ב-WebP: אותה איכות בעין בקובץ קטן ב-25–35% מ-JPEG. דפדפן שלא יודע ליצור WebP נשאר עם JPEG
+let canWebp = null;
+function canvasToBest(canvas, quality) {
+  if (canWebp !== false) {
+    const w = canvas.toDataURL('image/webp', Math.min(1, quality - 0.02));
+    canWebp = w.startsWith('data:image/webp');
+    if (canWebp) return w;
+  }
+  return canvas.toDataURL('image/jpeg', quality);
+}
+function artCompressImage(file, maxDim = 2048, quality = 0.92) {
   return new Promise((resolve) => {
     if (!file) { resolve(''); return; }
     const reader = new FileReader();
@@ -7137,7 +7147,7 @@ function artCompressImage(file, maxDim = 2560, quality = 0.92) {
           const ctx = canvas.getContext('2d');
           ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
           ctx.drawImage(img, 0, 0, w, h);
-          const out = canvas.toDataURL('image/jpeg', quality);
+          const out = canvasToBest(canvas, quality);
           // אם משום מה היצוא גדול מהמקור, עדיף לשמור את המקור
           resolve(out && out.length < src.length ? out : src);
         } catch (e) {
@@ -7840,7 +7850,7 @@ function loginImagePick(input) {
     c.width = Math.round(img.naturalWidth * k); c.height = Math.round(img.naturalHeight * k);
     c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
     URL.revokeObjectURL(url);
-    const data = c.toDataURL('image/jpeg', .92);
+    const data = canvasToBest(c, .92);
     try { await set(ref(db, 'website/login_image'), data); loginImageShow(data); showCopyToast('התמונה נשמרה'); }
     catch (e) { showCopyToast('לא הצלחנו לשמור את התמונה'); }
   };
@@ -12501,7 +12511,7 @@ function obPickPhoto(input) {
     const S = 256, c = document.createElement('canvas'); c.width = c.height = S;
     const side = Math.min(img.width, img.height);
     c.getContext('2d').drawImage(img, (img.width - side) / 2, (img.height - side) / 2, side, side, 0, 0, S, S);
-    ob.photo = c.toDataURL('image/jpeg', 0.92); ob.err = ''; URL.revokeObjectURL(img.src); obRender();
+    ob.photo = canvasToBest(c, 0.92); ob.err = ''; URL.revokeObjectURL(img.src); obRender();
   };
   img.onerror = () => { ob.err = 'לא הצלחנו לקרוא את התמונה'; obRender(); };
   img.src = URL.createObjectURL(file);
@@ -30673,6 +30683,7 @@ function mediaLoadAll() {
     const v = snap.val() || {};
     Object.keys(v).forEach(id => { MEDIA[id] = v[id]; MEDIA_SAVED[id] = JSON.stringify(v[id]); });
     mediaAllLoaded = true;
+    setTimeout(storagePurgeOldest, 3000);
     if (Array.isArray(pages)) { mediaHydratePages(pages); try { if (typeof renderPage === 'function' && !window.__detailOpen) renderPage(); } catch (e) {} }
   }).catch(() => { mediaAllLoading = null; });
   return mediaAllLoading;
@@ -30720,6 +30731,55 @@ function mediaStripForSave(list) {
   return out;
 }
 Object.assign(window, { mediaLoadAll });
+
+// ============================================================
+// מקום במסד הנתונים: כשהתוכן עובר את התקרה, הפריטים הכי ישנים (עם התמונות שלהם) נמחקים אוטומטית
+// עד שחוזרים מתחת ליעד — כמו מצלמת אבטחה. רץ פעם אחת בביקור, אצל המנהל בלבד, אחרי שכל המדיה נטענה.
+// הגודל נמדד באורך ה-JSON של העמודים, המדיה, הקהילות וההשכרות (התמונות הן רוב המשקל).
+// ============================================================
+const STORE_CAP = 900e6, STORE_TARGET = 800e6;   // מסד הנתונים בחינם: 1GB
+let storagePurged = false;
+const itemAge = (it, t) => { const n = Number(t); if (n > 1e12) return n; const m = String((it && it.id) || '').match(/\d{13}/); return m ? Number(m[0]) : 0; };
+async function storagePurgeOldest() {
+  if (storagePurged || !mediaAllLoaded || !(typeof isAdmin === 'function' && isAdmin()) || !Array.isArray(pages)) return;
+  storagePurged = true;
+  try {
+    const len = v => { try { return JSON.stringify(v || null).length; } catch (e) { return 0; } };
+    const comms = (await get(ref(db, 'website/communities'))).val() || {};
+    const rentals = (await get(ref(db, 'website/rentals'))).val() || {};
+    const stored = (await get(ref(db, 'website/pages'))).val() || [];   // כמו שנשמר בענן (אצל המנהל העמודים בזיכרון כוללים גם את המדיה)
+    let total = len(stored) + len(MEDIA) + len(comms) + len(rentals);
+    if (total <= STORE_CAP) return;
+    // כל הפריטים עם הגיל והמשקל שלהם
+    const all = [];
+    mediaEachList(Array.isArray(stored) ? stored : Object.values(stored), arr => { arr.forEach(it => { if (it && it.id) all.push({ kind: 'page', id: it.id, t: itemAge(it, it.createdAt), size: len(it) + len(MEDIA[it.id]) }); }); return false; });
+    Object.entries(comms).forEach(([cid, c]) => Object.entries((c && c.items) || {}).forEach(([id, it]) => all.push({ kind: 'comm', cid, id, t: itemAge({ id }, it && it.createdAt), size: len(it) })));
+    Object.entries(rentals).forEach(([id, r]) => all.push({ kind: 'rent', id, t: itemAge({ id }, r && r.t), size: len(r) }));
+    const old = all.filter(x => x.t > 0).sort((a, b) => a.t - b.t);
+    const gone = [];
+    for (const x of old) { if (total <= STORE_TARGET) break; gone.push(x); total -= x.size; }
+    if (!gone.length) return;
+    // מוחקים בבת אחת: מהעמודים (שמירה אחת), ומהמדיה, הקהילות וההשכרות (עדכון אחד)
+    const ids = new Set(gone.filter(x => x.kind === 'page').map(x => x.id)), upd = {};
+    if (ids.size) {
+      pages.forEach(p => {
+        if (!p || !p.content) return;
+        p.content = p.content.replace(/data-(photos|stories)-json="([^"]*)"/g, (full, kind, enc) => {
+          let arr; try { arr = JSON.parse(decodeURIComponent(enc)); } catch (e) { return full; }
+          if (!Array.isArray(arr)) return full;
+          const next = arr.filter(x => !(x && ids.has(x.id)));
+          return next.length === arr.length ? full : `data-${kind}-json="${encodeURIComponent(JSON.stringify(next))}"`;
+        });
+      });
+      ids.forEach(id => { upd['media/' + id] = null; upd['pending_submissions/' + id] = null; delete MEDIA[id]; delete MEDIA_SAVED[id]; });
+    }
+    gone.forEach(x => { if (x.kind === 'comm') upd[`communities/${x.cid}/items/${x.id}`] = null; else if (x.kind === 'rent') upd['rentals/' + x.id] = null; });
+    if (Object.keys(upd).length) await update(ref(db, 'website'), upd);
+    if (ids.size) saveToStorage();
+    console.info('storage purge: removed', gone.length, 'oldest items');
+    if (typeof glassBanner === 'function') glassBanner({ title: `נמחקו ${gone.length} פריטים ישנים`, sub: 'המקום במסד הנתונים התמלא — הפריטים הכי ישנים נמחקו כדי לפנות מקום', icon: 'del', ms: 4200 });
+  } catch (e) { console.error('storage purge failed', e); }
+}
 
 function mediaNeedsLoad() { return true; }
 // המנהל מתחבר → טוענים את כל המדיה ברקע (כדי שעריכה ושמירה יעבדו על הנתונים המלאים)
