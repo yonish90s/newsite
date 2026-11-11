@@ -85,3 +85,19 @@ BODY .wallet-pill:hover { background: #e8f4f1 !important; }
 BODY .wallet-pill svg { color: #47a093 !important; }
 BODY .wallet-pill b { color: #2f7d72 !important; }
 BODY .wallet-pill small { color: #3c6e66 !important; }
+/* פרסום פרויקט, קישור פרויקט ורשתות בפרופיל — בירוק */
+BODY .mkpub-type { background: #f1f5f4 !important; }
+BODY .mkpub-type button.on { background: #ffffff !important; color: #2f7d72 !important; }
+BODY .mkpub-kinds button.on { border-color: #47a093 !important; background: #eef6f4 !important; color: #2f7d72 !important; }
+BODY .mk-plink { color: #2f7d72 !important; }
+BODY .pfa-net { background: #f4fbf8 !important; border-color: #d8e6e2 !important; color: #1e293b !important; }
+BODY .pfa-net:hover { border-color: #47a093 !important; }
+BODY .pfa-net svg { color: #47a093 !important; }
+BODY .pfa-net-tg svg { color: #229ed9 !important; }
+BODY .pfa-net-wa svg { color: #25d366 !important; }
+BODY .pfa-net-fb svg { color: #1877f2 !important; }
+BODY .pfa-net-ig svg { color: #e1306c !important; }
+BODY .pfa-net-yt svg { color: #ff0000 !important; }
+BODY .pfa-net-dc svg { color: #5865f2 !important; }
+BODY .pfa-net-li svg { color: #0a66c2 !important; }
+BODY .pfa-net-x svg, BODY .pfa-net-tt svg { color: #111111 !important; }

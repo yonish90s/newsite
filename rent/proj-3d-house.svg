@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600"><defs><radialGradient id="g" cx="50%" cy="40%" r="70%"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#dbeee9"/></radialGradient></defs>
+<rect width="800" height="600" fill="url(#g)"/><ellipse cx="400" cy="470" rx="230" ry="46" fill="#000" opacity=".08"/>
+<polygon points="250,320 400,240 550,320 400,400" fill="#cfe3dd"/>
+<polygon points="250,320 400,400 400,470 250,390" fill="#9cc7bd"/><polygon points="550,320 400,400 400,470 550,390" fill="#7fb3a7"/>
+<polygon points="300,300 420,240 500,280 380,340" fill="#ffffff"/>
+<polygon points="300,300 380,340 380,250 300,210" fill="#f1f5f9"/><polygon points="380,340 500,280 500,190 380,250" fill="#e2e8f0"/>
+<polygon points="300,210 380,250 500,190 420,150" fill="#47a093"/>
+<rect x="320" y="250" width="22" height="34" fill="#94a3b8" transform="skewY(26.5)"/><rect x="420" y="40" width="26" height="30" fill="#94a3b8" transform="skewY(-26.5)"/>
+<circle cx="520" cy="350" r="22" fill="#43aa8b"/><circle cx="280" cy="350" r="16" fill="#43aa8b"/></svg>
