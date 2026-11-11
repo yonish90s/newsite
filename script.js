@@ -8247,6 +8247,7 @@ async function qpPublish() {
     priceUnit: qpData.priceUnit || '',
     stock: Number.isFinite(qpData.stock) ? qpData.stock : null,
     link: qpData.link || '',
+    bizName: qpData.bizName || '',
     projectKind: qpData.projectKind || '',
     projectArea: qpData.projectArea || '',
     loanPeriod: qpData.loanPeriod || '',
@@ -31484,12 +31485,16 @@ const MKT_SECS = [
   { id: 'used', name: 'יד 2', ic: '🛒', sub: 'קונים, מוכרים, מחליפים ומשאילים' },
   { id: 'rent', name: 'השכרת ציוד', ic: '🔧', sub: 'מדפסות, תלת מימד וכלי עבודה — משלמים על השימוש' },
   { id: 'store', name: 'שטח לאחסון', ic: '📦', sub: 'מחסן, חדר או חניה פנויים — מאחסנים חפצים אצל מישהו קרוב' },
-  { id: 'proj', name: 'פרויקטים', ic: '🧩', sub: 'אתרים, אפליקציות ועבודות תלת מימד שגולשים בנו' }
+  { id: 'proj', name: 'פרויקטים', ic: '🧩', sub: 'אתרים, אפליקציות ועבודות תלת מימד שגולשים בנו' },
+  { id: 'biz', name: 'עסקים', ic: '🏪', sub: 'חנויות ובעלי מקצוע — מוצרים חדשים ושירותים' }
 ];
-const mktSecOf = r => r.kind === 'used' ? (r.offer === 'פרויקט' ? 'proj' : 'used') : r.cat === 'storage' ? 'store' : 'rent';
+const mktSecOf = r => r.kind === 'used' ? (r.offer === 'פרויקט' ? 'proj' : r.offer === 'עסק' ? 'biz' : 'used') : r.cat === 'storage' ? 'store' : 'rent';
 // פרויקטים: גולשים מציגים מה שהם בונים — אתר, אפליקציה או עבודת תלת מימד. מחיר לא חובה
 const PROJ_KINDS = { site: 'אתר', app: 'אפליקציה', '3d': 'תלת מימד', other: 'אחר' };
 const mktIsProj = r => !!r && r.offer === 'פרויקט';
+const mktIsBiz = r => !!r && r.offer === 'עסק';
+// מי מפרסם: בעסק — שם העסק, ביד 2 — שם הגולש
+const mktWho = r => (mktIsBiz(r) && r.bizName) || r.owner || '';
 // תחומי הפרויקטים: קבוצה ראשית (מוצרים פיזיים / דיגיטל / פנאי / חינוך ובריאות) ובתוכה התחום שהפרויקט פותר
 const PROJ_AREAS = [
   { id: 'phys', name: 'מוצרים פיזיים', ic: '🔌', subs: [['elec', 'חשמל ואלקטרוניקה'], ['home', 'בית ומטבח'], ['tools', 'כלים ותיקונים'], ['car', 'רכב ותחבורה'], ['garden', 'גינה וחקלאות'], ['energy', 'אנרגיה וסביבה']] },
@@ -31515,6 +31520,13 @@ const USED_DEMO = [
   { id: 'u3', offer: 'החלפה', img: 'rent/u-guitar.jpg', title: 'גיטרה חשמלית Gibson Les Paul — להחלפה בקלידים', price: 0, city: 'חיפה', owner: 'עומר נחום', t: -54, desc: 'גיטרה במצב מצוין עם תיק קשיח. מחפש להחליף בקלידים / סינתיסייזר באותה רמה.', specs: ['כולל תיק קשיח', 'מיתרים חדשים', 'החלפה בלבד'] },
   { id: 'u4', offer: 'השאלה', img: 'rent/u-bike.jpg', title: 'אופני עיר להשאלה לשבוע–חודש', price: 60, unit: 'month', city: 'תל אביב', owner: 'נטע קפלן', t: -80, desc: 'אופני עיר קלים ונוחים, עם מנעול. מתאים למי שמגיע לעיר לתקופה קצרה.', specs: ['כולל מנעול', 'פיקדון ₪300', 'תחזוקה כלולה'] }
 ].map(r => Object.assign({ demo: true, kind: 'used' }, r, { t: Date.now() + r.t * 3600e3 }));
+// דוגמאות לעסקים (מוצגות כשיש מעט עסקים אמיתיים)
+const BIZ_DEMO = [
+  { id: 'bz1', img: 'rent/biz-bakery.svg', bizName: 'מאפיית השכונה', title: 'מגש מאפים לאירוע — 40 יחידות', price: 180, link: 'https://example.com/bakery', city: 'הרצליה', owner: 'מאפיית השכונה', t: -4, desc: 'קרואסונים, בורקסים ומאפים מתוקים, טריים מהבוקר. משלוח עד הבית באזור השרון.', specs: ['40 יחידות', 'משלוח בשרון', 'הזמנה יום מראש'] },
+  { id: 'bz2', img: 'rent/biz-phone.svg', bizName: 'מעבדת פיקס-טק', title: 'החלפת מסך לאייפון — באותו יום', price: 390, link: 'https://example.com/fixtech', city: 'תל אביב', owner: 'מעבדת פיקס-טק', t: -10, desc: 'מסך איכותי עם אחריות לחצי שנה. מגיעים בבוקר, אוספים אחר הצהריים.', specs: ['אחריות 6 חודשים', 'תוך 3 שעות', 'כל הדגמים'] },
+  { id: 'bz3', img: 'rent/biz-wood.svg', bizName: 'נגריית עץ ושורש', title: 'שולחן אוכל מעץ מלא לפי מידה', price: 3200, link: '', city: 'קריית אתא', owner: 'נגריית עץ ושורש', t: -28, desc: 'שולחנות מעץ אלון ואגוז, בעבודת יד. בוחרים מידה, גוון ורגליים.', specs: ['עץ מלא', 'לפי מידה', 'אספקה תוך 3 שבועות'] },
+  { id: 'bz4', img: 'rent/biz-print.svg', bizName: 'דפוס הצבע', title: 'הדפסת 500 כרטיסי ביקור כולל עיצוב', price: 150, link: 'https://example.com/print', city: 'ירושלים', owner: 'דפוס הצבע', t: -48, desc: 'כרטיסי ביקור על נייר עבה, עם עיצוב בחינם. מוכן תוך יומיים.', specs: ['500 יחידות', 'עיצוב חינם', 'מוכן תוך יומיים'] }
+].map(r => Object.assign({ demo: true, kind: 'used', offer: 'עסק' }, r, { t: Date.now() + r.t * 3600e3 }));
 // דוגמאות לפרויקטים של גולשים (מוצגות כשיש מעט פרויקטים אמיתיים)
 const PROJ_DEMO = [
   { id: 'pj1', pd: 'web', pk: 'site', img: 'rent/proj-shop.svg', title: 'חנות אונליין לקרמיקה שבניתי לבד', price: 0, link: 'https://example.com/ceramics', city: 'רמת גן', owner: 'נועה ברק', t: -3, desc: 'אתר חנות מלא: קטלוג, עגלה ותשלום. בניתי ב-HTML, CSS ו-JavaScript, עם מסד נתונים ב-Firebase. אשמח לשמוע מה אתם חושבים.', specs: ['HTML / CSS / JS', 'Firebase', 'מותאם לנייד'] },
@@ -31539,11 +31551,11 @@ function usedAll() {
     raw = (m ? (JSON.parse(decodeURIComponent(m[1])) || []) : []).filter(x => x && x.id && x.title && x.approved !== false && !x.adminOnly && !mktExpired(x.createdAt)); } catch (e) {}
   const real = raw.map(x => ({ id: 'sh_' + x.id, shId: x.id, kind: 'used', offer: x.offerType || x.category || 'מכירה', title: x.title, price: parseFloat(String(x.price || '').replace(/[^\d.]/g, '')) || 0, priceTxt: x.price || '',
     unitTxt: x.priceUnit || '', city: x.region || '', owner: x.author || '', uid: x.authorId || '', t: Number(x.createdAt) || 0, stock: Number.isFinite(Number(x.stock)) && x.stock !== null && x.stock !== '' ? Number(x.stock) : null, img: x.image || (Array.isArray(x.images) && x.images[0]) || '',
-    link: mktLinkUrl(x.link), pk: PROJ_KINDS[x.projectKind] ? x.projectKind : '', pd: PROJ_SUB[x.projectArea] ? x.projectArea : '',
+    bizName: String(x.bizName || '').slice(0, 60), link: mktLinkUrl(x.link), pk: PROJ_KINDS[x.projectKind] ? x.projectKind : '', pd: PROJ_SUB[x.projectArea] ? x.projectArea : '',
     raw: x, images: (Array.isArray(x.images) ? x.images : []).filter(Boolean), desc: String(x.summary || x.body || '').trim(),
     specs: [x.loanPeriod ? 'תקופת השאלה: ' + x.loanPeriod : ''].concat(Array.isArray(x.loanTerms) ? x.loanTerms.filter(v => typeof v === 'string') : []).filter(Boolean).slice(0, 8) }));
-  const realProj = real.filter(mktIsProj).length;
-  return real.concat(real.length - realProj < 6 ? USED_DEMO : [], realProj < 4 ? PROJ_DEMO : []);
+  const realProj = real.filter(mktIsProj).length, realBiz = real.filter(mktIsBiz).length;
+  return real.concat(real.length - realProj - realBiz < 6 ? USED_DEMO : [], realBiz < 4 ? BIZ_DEMO : [], realProj < 4 ? PROJ_DEMO : []);
 }
 // מודעה של גולש מוסרת אחרי חודש: נעלמת מיד לכולם, ונמחקת לגמרי כשהמנהל נכנס לאתר
 const MKT_TTL = 30 * 864e5;
@@ -31603,7 +31615,8 @@ function mkPubOpen() {
   m.innerHTML = `<div class="mkpub-card" role="dialog" aria-modal="true" aria-label="פרסום מודעה">
     <div class="mkpub-head"><b>פרסום מודעה</b><button type="button" class="mkpub-x" onclick="mkPubClose()" aria-label="סגירה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
     <div class="mkpub-type" role="group" aria-label="מה מפרסמים">
-      <button type="button" class="on" data-t="sale" onclick="mkPubType('sale')">מוצר</button>
+      <button type="button" class="on" data-t="sale" onclick="mkPubType('sale')">יד 2</button>
+      <button type="button" data-t="biz" onclick="mkPubType('biz')">עסק</button>
       <button type="button" data-t="proj" onclick="mkPubType('proj')">פרויקט שבניתי</button>
     </div>
     <div class="mkpub-proj">
@@ -31612,12 +31625,16 @@ function mkPubOpen() {
       <label class="mkpub-l">איך הוא בנוי</label>
       <div class="mkpub-kinds" role="group" aria-label="סוג הפרויקט">${Object.keys(PROJ_KINDS).map(k => `<button type="button" data-k="${k}"${k === 'site' ? ' class="on"' : ''} onclick="mkPubKind('${k}')">${PROJ_KINDS[k]}</button>`).join('')}</div>
     </div>
+    <div class="mkpub-biz">
+      <label class="mkpub-l" for="mkpub-bizname">שם העסק</label>
+      <input id="mkpub-bizname" class="mkpub-in" maxlength="60" placeholder="למשל: מאפיית השכונה">
+    </div>
     <label class="mkpub-l">תמונות <small>(עד 5)</small></label>
     <div class="mkpub-imgs" id="mkpub-imgs"></div>
     <label class="mkpub-l" for="mkpub-title">כותרת</label>
     <input id="mkpub-title" class="mkpub-in" maxlength="120" placeholder="מה מוכרים?">
-    <div class="mkpub-proj">
-      <label class="mkpub-l" for="mkpub-desc">כמה מילים על הפרויקט <small>(לא חובה)</small></label>
+    <div class="mkpub-proj mkpub-biz">
+      <label class="mkpub-l" for="mkpub-desc">כמה מילים <small>(לא חובה)</small></label>
       <textarea id="mkpub-desc" class="mkpub-in" rows="3" maxlength="1000" placeholder="מה בנית, במה השתמשת, ומה תשמח לקבל"></textarea>
       <label class="mkpub-l" for="mkpub-link">קישור <small>(לא חובה)</small></label>
       <input id="mkpub-link" class="mkpub-in" type="url" dir="ltr" maxlength="200" placeholder="www.my-project.com">
@@ -31640,11 +31657,14 @@ function mkPubOpen() {
 function mkPubClose() { const m = document.getElementById('mkpub-modal'); if (m) m.remove(); }
 // מוצר או פרויקט: בפרויקט מופיעים סוג, תיאור וקישור, ואין מלאי
 function mkPubType(t) {
-  mkPub.type = t === 'proj' ? 'proj' : 'sale';
+  mkPub.type = t === 'proj' || t === 'biz' ? t : 'sale';
   const c = document.querySelector('#mkpub-modal .mkpub-card'); if (!c) return;
   c.classList.toggle('is-proj', mkPub.type === 'proj');
+  c.classList.toggle('is-biz', mkPub.type === 'biz');
   c.querySelectorAll('.mkpub-type button').forEach(b => b.classList.toggle('on', b.dataset.t === mkPub.type));
-  const ti = document.getElementById('mkpub-title'); if (ti) ti.placeholder = mkPub.type === 'proj' ? 'איך קוראים לפרויקט?' : 'מה מוכרים?';
+  const ti = document.getElementById('mkpub-title'); if (ti) ti.placeholder = mkPub.type === 'proj' ? 'איך קוראים לפרויקט?' : mkPub.type === 'biz' ? 'מה העסק מציע?' : 'מה מוכרים?';
+  const de = document.getElementById('mkpub-desc'); if (de) de.placeholder = mkPub.type === 'biz' ? 'על המוצר או השירות, שעות פעילות, משלוחים' : 'מה בנית, במה השתמשת, ומה תשמח לקבל';
+  const li = document.getElementById('mkpub-link'); if (li) li.placeholder = mkPub.type === 'biz' ? 'www.my-business.co.il' : 'www.my-project.com';
 }
 function mkPubKind(k) {
   if (!PROJ_KINDS[k]) return;
@@ -31677,10 +31697,12 @@ async function mkPubSend() {
   if (title.length < 2) return fail('צריך לכתוב כותרת');
   const priceTxt = document.getElementById('mkpub-price').value;
   if (priceTxt !== '' && !(price >= 0)) return fail('המחיר לא תקין');
-  const proj = mkPub.type === 'proj';
-  const linkTxt = proj ? ((document.getElementById('mkpub-link') || {}).value || '').trim() : '', link = mktLinkUrl(linkTxt);
+  const proj = mkPub.type === 'proj', biz = mkPub.type === 'biz';
+  const bizName = biz ? ((document.getElementById('mkpub-bizname') || {}).value || '').trim().slice(0, 60) : '';
+  if (biz && bizName.length < 2) return fail('צריך לכתוב את שם העסק');
+  const linkTxt = proj || biz ? ((document.getElementById('mkpub-link') || {}).value || '').trim() : '', link = mktLinkUrl(linkTxt);
   if (linkTxt && !link) return fail('הקישור לא תקין');
-  const desc = proj ? ((document.getElementById('mkpub-desc') || {}).value || '').trim().slice(0, 1000) : '';
+  const desc = proj || biz ? ((document.getElementById('mkpub-desc') || {}).value || '').trim().slice(0, 1000) : '';
   const area = proj ? (document.getElementById('mkpub-area') || {}).value || '' : '';
   if (proj && !PROJ_SUB[area]) return fail('צריך לבחור תחום לפרויקט');
   const stockTxt = proj ? '' : (document.getElementById('mkpub-stock') || {}).value || '', stock = stockTxt === '' ? null : Math.floor(Number(stockTxt));
@@ -31689,8 +31711,8 @@ async function mkPubSend() {
   // משתמשים במסלול הפרסום הקיים: ממלאים את נתוני השיחה ומפרסמים מאחורי הקלעים
   qpEnsureModal();
   document.getElementById('qp-messages').innerHTML = '';
-  qpData = { title, images: mkPub.images.slice(0, 5), summary: desc, communityId: null, type: 'photo', pageSection: 'secondhand', isProduct: true, tags: {}, tagIndex: 0, price: priceTxt === '' ? '' : String(price), offerType: proj ? 'פרויקט' : 'מכירה', region: '', stock,
-    link: proj ? link : '', projectKind: proj ? mkPub.pk : '', projectArea: proj ? area : '' };
+  qpData = { title, images: mkPub.images.slice(0, 5), summary: desc, communityId: null, type: 'photo', pageSection: 'secondhand', isProduct: true, tags: {}, tagIndex: 0, price: priceTxt === '' ? '' : String(price), offerType: proj ? 'פרויקט' : biz ? 'עסק' : 'מכירה', region: '', stock,
+    link: proj || biz ? link : '', bizName, projectKind: proj ? mkPub.pk : '', projectArea: proj ? area : '' };
   await qpPublish();
   const out = document.getElementById('qp-messages').innerText || '';
   const qm = document.getElementById('quick-publish-modal'); if (qm) qm.style.display = 'none';
@@ -31811,7 +31833,7 @@ function rentThumb(r, big) {
 function rentList() {
   const q = rentUI.q.trim().toLowerCase();
   let l = mktAll().filter(r => (rentUI.sec === 'all' || mktSecOf(r) === rentUI.sec) && (rentUI.sec !== 'rent' || rentUI.cat === 'all' || r.cat === rentUI.cat) && (rentUI.city === 'all' || r.city === rentUI.city) && (rentUI.offer === 'all' || r.offer === rentUI.offer) && (rentUI.owner === 'all' || r.owner === rentUI.owner) && (rentUI.min === null || (r.price > 0 && r.price >= rentUI.min && r.price <= rentUI.max)) && (rentUI.pk === 'all' || r.pk === rentUI.pk) && (rentUI.pa === 'all' || projAreaOf(r) === rentUI.pa) && (rentUI.pd === 'all' || r.pd === rentUI.pd)
-    && (!q || [r.title, r.desc, r.city, r.owner, PROJ_KINDS[r.pk] || '', (PROJ_SUB[r.pd] || {}).name || '', projAreaName(projAreaOf(r))].join(' ').toLowerCase().includes(q)));
+    && (!q || [r.title, r.desc, r.city, r.owner, r.bizName || '', PROJ_KINDS[r.pk] || '', (PROJ_SUB[r.pd] || {}).name || '', projAreaName(projAreaOf(r))].join(' ').toLowerCase().includes(q)));
   const views = r => photoGetViews(rentCommentsKey(r));
   if (rentUI.sort === 'cheap') l.sort((a, b) => a.price - b.price);
   else if (rentUI.sort === 'popular') l.sort((a, b) => views(b) - views(a));
@@ -31946,10 +31968,14 @@ function rentOpenComments(id) {
 }
 window.rentOpenComments = rentOpenComments;
 // כרטיס מוצר קטן בשוק ובהצעות: תמונה, שם, מיקום, מחיר ודירוג המוכר אם יש
+const BIZ_IC = '<svg class="biz-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1.5-5h15L21 9"/><path d="M3 9a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0"/><path d="M5 12v8h14v-8M10 20v-5h4v5"/></svg>';
 function rentMiniHTML(x) {
   const del = isAdmin() ? `<span class="mk-sg-x" role="button" tabindex="0" aria-label="הסרת המודעה" title="הסרת המודעה" onclick="event.stopPropagation(); rentAdminDelete('${artEsc(x.id)}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></span>` : '';
   // כרטיס: למעלה שורה: המוכר | העיר | המחיר, מתחתיה תמונה ביחס 4:3; מתחת שורת כפתורים קטנה (לייק, שיתוף, שמירה, דיווח) ובסוף שם המודעה בקטן
-  return `<button type="button" class="mk-sg" onclick="rentOpen('${artEsc(x.id)}')"><span class="mk-sg-meta"><span class="mk-sg-who" role="button" tabindex="0" onclick="event.stopPropagation(); rentOpenSeller('${artEsc(x.uid || '')}', '${artEsc(x.owner || '')}')">${authorAvHTML({ author: x.owner || '?', uid: x.uid || '' })}<b>${escHtml(x.owner || '')}</b></span><small class="mk-sg-city${mkKmTo(x.city) !== null ? ' km' : ''}">${escHtml(mkWhereTxt(x))}</small>${mkMobStatHTML(x)}<small class="mk-sg-price">${rentTypeIcon(x)}${Number(x.price) > 0 ? `${Number(x.price).toLocaleString('he-IL', { maximumFractionDigits: 2 })}&nbsp;₪` : mktIsProj(x) ? escHtml((PROJ_SUB[x.pd] || {}).name || PROJ_KINDS[x.pk] || 'פרויקט') : ''}${x.uid ? `<i data-sg-rate="${escHtml(x.uid)}"></i>` : ''}</small></span><span class="mk-sg-img">${rentThumb(x)}${del}${mktSoldOut(x) ? '<i class="mk-sg-out">אזל</i>' : ''}</span><span class="mk-sg-acts">${rentHoverHTML(x)}</span><b class="mk-sg-title"><span class="mk-sg-tt">${escHtml(x.title)}</span><span class="mk-sg-more" role="button" tabindex="0" onclick="event.stopPropagation(); event.preventDefault(); this.parentElement.classList.toggle('open')"><span>עוד</span><span>פחות</span></span></b></button>`;
+  // בידול: עסק — מסגרת ירוקה, תג "עסק" וסמל חנות ליד שם העסק; יד 2 — תג אפור
+  const sec = mktSecOf(x), biz = sec === 'biz';
+  const badge = biz ? `<i class="mk-sg-badge b-biz">${BIZ_IC}עסק</i>` : sec === 'used' ? '<i class="mk-sg-badge b-used">יד 2</i>' : '';
+  return `<button type="button" class="mk-sg${biz ? ' is-biz' : sec === 'used' ? ' is-used' : ''}" onclick="rentOpen('${artEsc(x.id)}')"><span class="mk-sg-meta"><span class="mk-sg-who" role="button" tabindex="0" onclick="event.stopPropagation(); rentOpenSeller('${artEsc(x.uid || '')}', '${artEsc(x.owner || '')}')">${authorAvHTML({ author: mktWho(x) || '?', uid: x.uid || '' })}<b>${biz ? BIZ_IC : ''}${escHtml(mktWho(x))}</b></span><small class="mk-sg-city${mkKmTo(x.city) !== null ? ' km' : ''}">${escHtml(mkWhereTxt(x))}</small>${mkMobStatHTML(x)}<small class="mk-sg-price">${rentTypeIcon(x)}${Number(x.price) > 0 ? `${Number(x.price).toLocaleString('he-IL', { maximumFractionDigits: 2 })}&nbsp;₪` : mktIsProj(x) ? escHtml((PROJ_SUB[x.pd] || {}).name || PROJ_KINDS[x.pk] || 'פרויקט') : ''}${x.uid ? `<i data-sg-rate="${escHtml(x.uid)}"></i>` : ''}</small></span><span class="mk-sg-img">${rentThumb(x)}${badge}${del}${mktSoldOut(x) ? '<i class="mk-sg-out">אזל</i>' : ''}</span><span class="mk-sg-acts">${rentHoverHTML(x)}</span><b class="mk-sg-title"><span class="mk-sg-tt">${escHtml(x.title)}</span><span class="mk-sg-more" role="button" tabindex="0" onclick="event.stopPropagation(); event.preventDefault(); this.parentElement.classList.toggle('open')"><span>עוד</span><span>פחות</span></span></b></button>`;
 }
 function rentGridHTML() {
   const l = rentList();
@@ -31977,7 +32003,7 @@ function rentViewHTML() {
     ['cheap', 'הכי זול', '<path d="M20 12 12 20 4 12V4h8z"/><circle cx="8.5" cy="8.5" r="1.5"/>']
   ];
   if (mkGeo) sorts.push(['near', 'הכי קרוב', '<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>']);
-  const tags = [['sec', 'used', 'יד2'], ['offer', 'מכירה', 'מכירה'], ['offer', 'החלפה', 'החלפה'], ['offer', 'השאלה', 'השאלה'], ['sec', 'rent', 'השכרה'],
+  const tags = [['sec', 'used', 'יד2'], ['sec', 'biz', 'עסקים'], ['offer', 'מכירה', 'מכירה'], ['offer', 'החלפה', 'החלפה'], ['offer', 'השאלה', 'השאלה'], ['sec', 'rent', 'השכרה'],
     ...RENT_CATS.filter(c => !c.store && c.id !== 'all').map(c => ['cat', c.id, c.name.replace(/\s+/g, '_')]), ['sec', 'store', 'אחסון'],
     ['sec', 'proj', 'פרויקטים'], ['pd', 'elec', 'חשמל'], ['pa', 'phys', 'מוצרים_פיזיים'], ['pa', 'fun', 'פנאי'], ['pk', '3d', 'תלת_מימד']];
   const tagOn = (k, v) => k === 'sec' ? rentUI.sec === v && rentUI.cat === 'all' && rentUI.offer === 'all' && rentUI.pk === 'all' && rentUI.pa === 'all' : rentUI[k] === v;
@@ -32042,6 +32068,7 @@ function rentSideHTML() {
     <nav class="mk-f-path"><button type="button" onclick="rentSideSet('all', 'all')">בית</button> / <b>השוק</b></nav>
     <h3 class="mk-f-h">קטגוריות</h3>
     ${group('יד 2', row('sec', 'used', 'כל המוצרים', used.length) + [...new Set(used.map(r => r.offer).filter(Boolean))].map(o => row('offer', o, o, n(used, r => r.offer === o))).join(''), true)}
+    ${group('עסקים', row('sec', 'biz', 'כל העסקים', n(all, r => mktSecOf(r) === 'biz')), true)}
     ${group('השכרת ציוד', RENT_CATS.filter(c => !c.store && c.id !== 'all').map(c => row('cat', c.id, c.name, n(eq, r => r.cat === c.id))).join(''), true)}
     ${group('פרויקטים', row('sec', 'proj', 'כל הפרויקטים', n(all, r => mktSecOf(r) === 'proj')) + PROJ_AREAS.map(a => row('pa', a.id, a.name, n(all, r => mktSecOf(r) === 'proj' && projAreaOf(r) === a.id)) + a.subs.map(([id, name]) => [id, name, n(all, r => mktSecOf(r) === 'proj' && r.pd === id)]).filter(x => x[2]).map(([id, name, c]) => row('pd', id, '· ' + name, c)).join('')).join(''), true)}
     ${group('שטח לאחסון', row('sec', 'store', 'כל השטחים', n(all, r => mktSecOf(r) === 'store')), false)}
@@ -32072,6 +32099,7 @@ function rentSideSync() {
 function mkItemTags(r) {
   const sec = mktSecOf(r), t = [];
   if (sec === 'proj') { t.push(['sec', 'proj', 'פרויקטים']); if (projAreaOf(r)) t.push(['pa', projAreaOf(r), projAreaName(projAreaOf(r))]); if (r.pd) t.push(['pd', r.pd, PROJ_SUB[r.pd].name]); if (r.pk) t.push(['pk', r.pk, PROJ_KINDS[r.pk]]); }
+  else if (sec === 'biz') t.push(['sec', 'biz', 'עסקים']);
   else if (sec === 'used') { t.push(['sec', 'used', 'יד2']); if (r.offer) t.push(['offer', r.offer, r.offer]); }
   else if (sec === 'store') t.push(['sec', 'store', 'אחסון']);
   else { t.push(['sec', 'rent', 'השכרה']); const c = rentCatOf(r.cat); if (c && c.id !== 'all') t.push(['cat', c.id, c.name]); }
@@ -32273,8 +32301,8 @@ function rentDetailHTML(r) {
   const saved = r.shId ? typeof photoIsSavedLocal === 'function' && photoIsSavedLocal(r.shId) : rentMarked('save', r.id);
   const more = mktAll().filter(x => x.id !== r.id && mktSecOf(x) === sec).sort((a, b) => (b.cat === r.cat) - (a.cat === r.cat) || (b.t || 0) - (a.t || 0)).slice(0, 14);
   // הכפתור הראשי: מוצר יד 2 אמיתי — הצעת מחיר; דוגמת יד 2 — פנייה; השכרה/אחסון — בקשה
-  const projLink = mktIsProj(r) ? mktLinkUrl(r.link) : '';
-  const main = projLink ? [`window.open('${artEsc(projLink)}', '_blank', 'noopener')`, 'צפייה בפרויקט', '']
+  const projLink = mktIsProj(r) || mktIsBiz(r) ? mktLinkUrl(r.link) : '';
+  const main = projLink ? [`window.open('${artEsc(projLink)}', '_blank', 'noopener')`, mktIsBiz(r) ? 'לאתר העסק' : 'צפייה בפרויקט', '']
     : mktIsProj(r) && r.shId ? [`dmStartAboutGallery('${artEsc(r.uid || '')}', '${artEsc(r.owner || '')}', '${artEsc(r.shId)}')`, 'הודעה ליוצר', '']
     : r.shId ? [`openPriceOffer('${artEsc(r.shId)}', '${artEsc(r.title || '')}', '${artEsc(r.uid || '')}', '${artEsc(r.owner || '')}')`, 'הצעת מחיר', RENT_PAY_ICON]
     : r.kind === 'used' ? [`rentRequest('${artEsc(r.id)}')`, r.offer === 'החלפה' ? 'הצעת החלפה' : r.offer === 'השאלה' ? 'בקשת השאלה' : 'פנייה למוכר', RENT_PAY_ICON]
@@ -32285,12 +32313,12 @@ function rentDetailHTML(r) {
   const ask = `dmStartAboutGallery('${artEsc(r.uid || '')}', '${artEsc(r.owner || '')}', '${artEsc(r.shId || '')}')`;
   const liked = r.shId ? typeof photoIsLikedLocal === 'function' && photoIsLikedLocal(r.shId) : rentMarked('like', r.id);
   const email = r.raw && String(r.raw.emailUrl || '').replace(/^mailto:/, '');
-  const owner = r.owner || 'מפרסם/ת';
+  const owner = mktWho(r) || 'מפרסם/ת';
   const specs = (r.specs || []).filter(Boolean).join(' · ');
   subscribeReposts();
   main[2] = projLink ? '<path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>'
     : '<rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19M6.5 15h4"/>';   // כרטיס בקו דק, כמו שאר הסמלים
-  const WORD = { 'הצעת מחיר': 'הצעה', 'פנייה למוכר': 'פנייה', 'הצעת החלפה': 'החלפה', 'בקשת השאלה': 'השאלה', 'בקשת אחסון': 'אחסון', 'בקשת השכרה': 'השכרה', 'הוספה לעגלה': 'הוסף לסל', 'הודעה למוכר': 'הודעה', 'מחיקת המודעה (מנהל)': 'מחיקה', 'צפייה בפרויקט': 'צפייה', 'הודעה ליוצר': 'הודעה' };
+  const WORD = { 'הצעת מחיר': 'הצעה', 'פנייה למוכר': 'פנייה', 'הצעת החלפה': 'החלפה', 'בקשת השאלה': 'השאלה', 'בקשת אחסון': 'אחסון', 'בקשת השכרה': 'השכרה', 'הוספה לעגלה': 'הוסף לסל', 'הודעה למוכר': 'הודעה', 'מחיקת המודעה (מנהל)': 'מחיקה', 'צפייה בפרויקט': 'צפייה', 'הודעה ליוצר': 'הודעה', 'לאתר העסק': 'לאתר' };
   const btn = (icon, label, act, cls, attr) => `<span class="mk-ic"><button type="button" class="mp-btn${cls ? ' ' + cls : ''}" title="${label}" aria-label="${label}"${attr || ''} onclick="${act}">${ic(icon)}</button><small>${WORD[label] || label}</small></span>`;
   const cartBtn = typeof mktCartable === 'function' && mktCartable(r) ? btn('<path d="M12 5v14M5 12h14"/>', 'הוספה לעגלה', `rentCartAdd('${artEsc(r.id)}')`, 'mk-cart-add' + (cartGet().some(x => x.id === 'mkt_' + r.id) ? ' on' : '')) : '';
   const feat = (icon, title, sub) => `<li><span>${ic(icon)}</span><div><b>${escHtml(title)}</b>${sub ? `<small>${escHtml(sub)}</small>` : ''}</div></li>`;
@@ -32329,7 +32357,7 @@ function rentDetailHTML(r) {
       </div>
       <div class="mp-info">
         <div class="mk-toprow"><div class="mk-topmain">
-        <span class="mk-cat">${escHtml(mktIsProj(r) ? ['פרויקט', projAreaName(projAreaOf(r)), (PROJ_SUB[r.pd] || {}).name].filter(Boolean).join(' · ') : r.kind === 'used' ? (r.offer || 'יד 2') : rentCatOf(r.cat).name)}</span>
+        <span class="mk-cat">${escHtml(mktIsBiz(r) ? 'עסק' : mktIsProj(r) ? ['פרויקט', projAreaName(projAreaOf(r)), (PROJ_SUB[r.pd] || {}).name].filter(Boolean).join(' · ') : r.kind === 'used' ? (r.offer || 'יד 2') : rentCatOf(r.cat).name)}</span>
         <h2 class="mk-title">${escHtml(r.title)}</h2>
         ${rentPriceShort(r) ? `<div class="mp-price">${rentPriceShort(r)}</div>` : ''}
         ${projLink ? `<a class="mk-plink" href="${escHtml(projLink)}" target="_blank" rel="noopener nofollow ugc" dir="ltr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>${escHtml(mktLinkHost(projLink))}</a>` : ''}

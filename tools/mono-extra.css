@@ -103,3 +103,7 @@ BODY .pfa-net-li svg { color: #0a66c2 !important; }
 BODY .pfa-net-x svg, BODY .pfa-net-tt svg { color: #111111 !important; }
 BODY .pj-subs .rn-cat { background: #f6faf9 !important; }
 BODY .pj-areas .rn-cat.on, BODY .pj-subs .rn-cat.on { background: #47a093 !important; border-color: #47a093 !important; color: #ffffff !important; }
+BODY .mk-sg-badge.b-biz { background: #47a093 !important; color: #ffffff !important; }
+BODY .mk-sg.is-biz { outline: 2px solid #47a093 !important; background: #f6fbfa !important; }
+BODY .mk-sg.is-biz .mk-sg-who b { color: #2f7d72 !important; }
+BODY .mk-sg .mk-sg-who .biz-ic { color: #47a093 !important; }
