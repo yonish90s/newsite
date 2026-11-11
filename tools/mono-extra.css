@@ -133,3 +133,13 @@ BODY header .cart-hdr-n.is-sum { background: none !important; color: #2f7d72 !im
 BODY header .cart-hdr-btn:has(.cart-hdr-n.is-sum:not([hidden])) { background: #eef6f4 !important; }
 BODY .mk-sg .mk-sg-acts .mk-act2 > .mk-sg-title, BODY .mk-sg .mk-sg-acts .mk-act2 > .mk-sg-title .mk-sg-tt { color: #1f2937 !important; }
 @media (max-width: 760px) { BODY .rent-page .mk-sg .mk-sg-acts { display: block !important; } }
+/* פעולות מהירות, רשת פרטי קשר וכרטיס האתר בטלפון — בירוק */
+BODY .pfq-c { background: #47a093 !important; color: #ffffff !important; }
+BODY .pfa-card ul .pfa-ic { background: #eef6f4 !important; color: #47a093 !important; border-color: #dcebe7 !important; }
+BODY .pfa-gc { background: #e6f2f0 !important; color: #47a093 !important; }
+BODY .pfa-gi { color: #2f4858 !important; }
+BODY .pfa-msg { background: #47a093 !important; color: #ffffff !important; }
+BODY #app-promo { background: #3f4749 !important; color: #ffffff !important; }
+BODY #app-promo .ap-tx b { color: #7fd1c4 !important; }
+BODY #app-promo .ap-have { background: #e8ebeb !important; color: #2b3335 !important; }
+BODY #app-promo .ap-later { background: #363d3f !important; color: #ffffff !important; }

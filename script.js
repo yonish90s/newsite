@@ -16317,7 +16317,7 @@ function profileHeadHTML(st) {
         <span>במעקב אחר&nbsp;<b>${c.following != null ? num(c.following) : '—'}</b></span>
         <span><b>${num(totalViews)}</b> צפיות</span>
       </div>
-    </section>`;
+    </section>${pfQuickHTML(st)}`;
 }
 // רשת ההעלאות של המשתמש — ריבועים עם כותרת וצפיות
 function profileUploadsHTML(albums) {
@@ -16558,14 +16558,46 @@ function pfNetUrl(v, base) {
   const h = v.replace(/^@/, '').replace(/[^\w.]/g, '');
   return h ? base + h : '';
 }
-function pfNetsHTML(p) {
-  const nets = [
+function pfNetsList(p) {
+  return [
     ['x', 'טוויטר / X', pfNetUrl(p.twitter, 'https://x.com/')],
     ['fb', 'פייסבוק', pfNetUrl(p.facebook, 'https://facebook.com/')],
     ['ig', 'אינסטגרם', pfNetUrl(p.instagram, 'https://instagram.com/')]
   ].filter(x => x[2]).concat((Array.isArray(p.links) ? p.links : []).map(x => x && mktLinkUrl(x.u) ? [pfNetOf(x.u), String(x.t || mktLinkHost(x.u)), mktLinkUrl(x.u)] : null).filter(Boolean)).slice(0, 12);
+}
+function pfNetsHTML(p) {
+  const nets = pfNetsList(p);
   if (!nets.length) return '';
   return `<h3>רשתות וקבוצות</h3><div class="pfa-nets">${nets.map(([k, t, u]) => `<a class="pfa-net pfa-net-${k}" href="${escHtml(u)}" target="_blank" rel="noopener nofollow ugc" title="${escHtml(mktLinkHost(u))}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${PF_NET_IC[k] || PF_NET_IC.link}</svg><span>${escHtml(t)}</span></a>`).join('')}</div>`;
+}
+// שורת פעולות מהירות מתחת לכותרת הפרופיל: עיגולים ירוקים עם סמל ושם (הודעה, טלפון, אתר, רשתות)
+const PFQ_IC = {
+  msg: '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M8.5 11h7M8.5 14h4"/>',
+  tel: '<path d="M5 3h4l2 5-2.5 1.5a11 11 0 0 0 6 6L16 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2z"/>',
+  nav: '<path d="M3 11l18-8-8 18-2-8z"/>',
+  web: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>',
+  share: '<path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M16 7l-4-4-4 4M12 3v12"/>',
+  mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
+  pin: '<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
+  shop: '<path d="M3 9l1.5-5h15L21 9"/><path d="M3 9a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0"/><path d="M5 12v8h14v-8"/>'
+};
+function pfQuickHTML(st) {
+  st = st || {};
+  const p = st.profile || {}, uid = st.uid || '', me = auth.currentUser, own = !!(uid && me && me.uid === uid);
+  const ic = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+  const phone = String(p.phone || '').trim(), tel = phone.replace(/[^\d+]/g, '');
+  const where = [p.aboutCity, p.aboutRegion].filter(Boolean).join(', ');
+  const site = mktLinkUrl(p.website);
+  const items = [];
+  const a = (key, label, attrs, icon) => items.push(`<a class="pfq-b pfq-${key}" ${attrs}><span class="pfq-c">${ic(icon || PFQ_IC[key] || PF_NET_IC[key] || PF_NET_IC.link)}</span><small>${escHtml(label)}</small></a>`);
+  if (uid && !own) a('msg', 'הודעה', `href="#" onclick="event.preventDefault(); dmStartWith('${artEsc(uid)}','${artEsc(st.name || '')}')"`);
+  if (tel) a('tel', phone, `href="tel:${escHtml(tel)}" dir="ltr"`);
+  if (site) a('web', 'אתר', `href="${escHtml(site)}" target="_blank" rel="noopener nofollow ugc"`);
+  [['fb', 'פייסבוק', pfNetUrl(p.facebook, 'https://facebook.com/')], ['ig', 'אינסטגרם', pfNetUrl(p.instagram, 'https://instagram.com/')], ['x', 'טוויטר', pfNetUrl(p.twitter, 'https://x.com/')]]
+    .forEach(([k, l, u]) => { if (u) a(k, l, `href="${escHtml(u)}" target="_blank" rel="noopener nofollow ugc"`); });
+  const tg = String(p.telegram || '').replace(/^@/, '').trim();
+  if (tg) a('tg', 'טלגרם', `href="https://t.me/${escHtml(encodeURIComponent(tg))}" target="_blank" rel="noopener"`);
+  return items.length ? `<nav class="pfq" aria-label="פעולות מהירות">${items.slice(0, 8).join('')}</nav>` : '';
 }
 function pfAboutHTML(st) {
   st = st || {};
@@ -16586,11 +16618,21 @@ function pfAboutHTML(st) {
     where ? row('<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>', `<a class="pfa-link" href="https://www.google.com/maps/search/${escHtml(encodeURIComponent(where))}" target="_blank" rel="noopener">${escHtml(where)}</a>`) : '',
     siteUrl ? row('<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>', `<a class="pfa-link" href="${escHtml(safeUrl(siteUrl))}" target="_blank" rel="noopener nofollow" dir="ltr">${escHtml(site.replace(/^https?:\/\//i, '').replace(/\/$/, ''))}</a>`) : ''
   ].join('');
+  // פרטי קשר ורשתות: רשת של עיגולים עם סמל ושם מתחת
+  const g = [];
+  const gi = (icon, label, attrs, cls) => g.push(`<a class="pfa-gi${cls ? ' ' + cls : ''}" ${attrs}><span class="pfa-gc">${ic(icon)}</span><small>${escHtml(label)}</small></a>`);
+  if (mail) gi(PFQ_IC.mail, mail, `href="mailto:${escHtml(mail)}" dir="ltr"`);
+  if (tel) gi(PFQ_IC.tel, phone, `href="tel:${escHtml(tel)}" dir="ltr"`);
+  if (where) gi(PFQ_IC.pin, where, `href="https://www.google.com/maps/search/${escHtml(encodeURIComponent(where))}" target="_blank" rel="noopener"`);
+  if (siteUrl) gi(PFQ_IC.web, site.replace(/^https?:\/\//i, '').replace(/\/$/, ''), `href="${escHtml(safeUrl(siteUrl))}" target="_blank" rel="noopener nofollow" dir="ltr"`);
+  if (tg) gi(PF_NET_IC.tg, '@' + tg, `href="https://t.me/${escHtml(encodeURIComponent(tg))}" target="_blank" rel="noopener" dir="ltr"`, 'pfa-net-tg');
+  pfNetsList(p).forEach(([k, t, u]) => gi(PF_NET_IC[k] || PF_NET_IC.link, t, `href="${escHtml(u)}" target="_blank" rel="noopener nofollow ugc"`, 'pfa-net-' + k));
+  const grid = g.length ? `<h3>פרטים ליצירת קשר</h3><div class="pfa-grid">${g.join('')}</div>` : '';
   return `<section class="pfa-card"><h3>פרטים</h3><ul>
       ${row('<path d="M12 2.8l2.8 5.8 6.4.9-4.6 4.5 1.1 6.3L12 17.3l-5.7 3 1.1-6.3L2.8 9.5l6.4-.9z"/>', `<span class="mk-rate" data-seller="${escHtml(uid)}">${rentRateHTML(0, 0)}</span>`)}
       ${row('<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/>', `${mine.length === 1 ? 'מודעה אחת' : mine.length + ' מודעות'} · ${formatViews(views)} צפיות`)}
     </ul>
-    ${contact ? `<h3>פרטים ליצירת קשר</h3><ul>${contact}</ul>` : ''}${pfNetsHTML(p)}</section>`;
+    ${grid}${!uid || own ? '' : `<button type="button" class="pfa-msg" onclick="dmStartWith('${artEsc(uid)}','${artEsc(st.name || '')}')">${ic(PFQ_IC.msg)}שליחת הודעה</button>`}</section>`;
 }
 async function profileLoadCounts(uid) {
   if (!uid) return;
@@ -32546,7 +32588,7 @@ function rentSellerHTML(sl) {
         <h1 class="pf-name">${escHtml(sl.name)}</h1>
         <div class="pf-counts"><span><b>${list.length}</b> ${list.length === 1 ? 'מודעה' : 'מודעות'}</span><span><b>${formatViews(views)}</b> צפיות</span></div>
         ${cities.length ? `<div class="pf-facts"><span class="pf-fact">${escHtml(cities.join(' · '))}</span></div>` : ''}
-      </section>
+      </section>${pfQuickHTML(st)}
     </div></aside>
     <div class="pf-main">
       <div class="pf-tabs2" role="tablist"><button type="button" class="on" onclick="pfTab2(this, 'all')">הכל</button><button type="button" onclick="pfTab2(this, 'all')">${list.length} מודעות</button><button type="button" class="pf-tab-about" onclick="pfTab2(this, 'about')">פרטים</button></div>
@@ -32641,20 +32683,16 @@ function rentDetailHTML(r) {
       <div class="mp-info">
         <div class="mk-toprow"><div class="mk-topmain">
         <span class="mk-cat">${escHtml(mktIsBiz(r) ? 'עסק' : mktIsProj(r) ? ['פרויקט', projAreaName(projAreaOf(r)), (PROJ_SUB[r.pd] || {}).name].filter(Boolean).join(' · ') : r.kind === 'used' ? (r.offer || 'יד 2') : rentCatOf(r.cat).name)}</span>
-        <h2 class="mk-title">${escHtml(r.title)}</h2>
-        ${rentPriceShort(r) ? `<div class="mp-price">${rentPriceShort(r)}</div>` : ''}
+        <div class="mk-tprow"><h2 class="mk-title">${escHtml(r.title)}</h2>${rentPriceShort(r) ? `<div class="mp-price">${rentPriceShort(r)}</div>` : ''}</div>
         ${projLink ? `<a class="mk-plink" href="${escHtml(projLink)}" target="_blank" rel="noopener nofollow ugc" dir="ltr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>${escHtml(mktLinkHost(projLink))}</a>` : ''}
         ${mktStockLineHTML(r)}
-        ${(r.kind === 'used' && !cartBtn) || mktSoldOut(r) ? '' : `<div class="mk-qrow">${rentQtySelHTML(r, qty, unitName)}</div>`}
+        ${(r.kind === 'used' && !cartBtn) || mktSoldOut(r) ? '' : `<div class="mk-qrow">${rentQtySelHTML(r, qty, unitName)}${cartBtn ? `<div class="mp-btns mk-acts mk-qcart">${cartBtn}</div>` : ''}</div>`}
         <div class="mk-buyrow"><div class="mk-buy">
         ${r.kind === 'used' ? `<input id="rn-qty" type="hidden" value="${qty}">` : `<div class="mk-qty">
-          <div class="mp-btns mk-acts">${cartBtn}</div>
           <div class="rn-calc mp-calc"><input id="rn-qty" type="hidden" value="${qty}"></div>
         </div>`}
         <div class="mk-cta">
-          <div class="mp-btns mk-acts">
-            ${r.kind === 'used' ? cartBtn : ''}
-          </div>
+          <div class="mp-btns mk-acts"></div>
         </div>
         </div>
         </div>
@@ -32668,6 +32706,7 @@ function rentDetailHTML(r) {
           </div>
         </div>
         ${terms.length ? `<details class="mp-acc mk-terms"><summary>תקנון ההשאלה · ${terms.length} סעיפים</summary><ol class="pd-terms">${terms.map(x => `<li>${escHtml(x)}</li>`).join('')}</ol></details>` : ''}
+        ${more.length ? `<section class="mp-more mp-more-m"><h2>הצעות נוספות</h2><div class="mk-sg-grid">${more.map(rentMiniHTML).join('')}</div></section>` : ''}
         <section class="mk-reviews" id="mk-reviews">
           <div class="mk-rv-head"><b class="mk-rv-count">אין עדיין ביקורות</b><span class="mk-rv-avg"></span>
             ${r.uid && auth.currentUser && auth.currentUser.uid === r.uid ? '' : `<button type="button" class="mk-rv-write" onclick="rentRevWrite()">כתיבת ביקורת</button>`}</div>
@@ -32682,7 +32721,7 @@ function rentDetailHTML(r) {
       </div>
     </div>
     </div><aside class="mk-wside" aria-label="מודעות נוספות">${sideHTML}</aside></div>
-    ${more.length ? `<section class="mp-more"><h2>הצעות נוספות</h2><div class="mk-sg-grid">${more.map(rentMiniHTML).join('')}</div></section>` : ''}`;
+    ${more.length ? `<section class="mp-more mp-more-d"><h2>הצעות נוספות</h2><div class="mk-sg-grid">${more.map(rentMiniHTML).join('')}</div></section>` : ''}`;
 }
 // פירורי לחם: בית › השוק › ... › הדף הנוכחי. כל פריט חוץ מהאחרון לחיץ
 function crumbsHTML(items) {
@@ -33218,3 +33257,36 @@ async function feedbackSend(btn) {
   } catch (e) { btn.disabled = false; btn.textContent = 'שליחת הביקורת'; showCopyToast('השליחה נכשלה — נסו שוב'); }
 }
 Object.assign(window, { feedbackOpen, feedbackStar, feedbackTopic, feedbackSend });
+
+// ============================================================
+// כרטיס "האתר בטלפון": במחשב, פעם אחת אחרי חצי דקה — קוד QR שפותח את האתר בטלפון (ומשם מוסיפים למסך הבית).
+// "יש לי" — לא יופיע שוב; "לא כרגע" — יחזור אחרי שבוע. לא מופיע בטלפון או כשהאתר כבר פתוח כאפליקציה
+// ============================================================
+(function appPromo() {
+  const KEY = 'bw_app_promo';
+  const standalone = () => { try { return matchMedia('(display-mode: standalone)').matches || navigator.standalone; } catch (e) { return false; } };
+  const due = () => { let v = ''; try { v = localStorage.getItem(KEY) || ''; } catch (e) { return false; } return v !== 'have' && !(Number(v) > Date.now()); };
+  function close(mode) {
+    try { localStorage.setItem(KEY, mode === 'have' ? 'have' : String(Date.now() + 7 * 864e5)); } catch (e) {}
+    const el = document.getElementById('app-promo'); if (!el) return;
+    el.classList.remove('show'); setTimeout(() => el.remove(), 300);
+  }
+  function show() {
+    if (document.getElementById('app-promo') || standalone() || !due() || innerWidth < 900 || document.hidden) return;
+    const el = document.createElement('div');
+    el.id = 'app-promo'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'האתר בטלפון');
+    el.innerHTML = `<div class="ap-tx">
+        <b>עדיין אין לך את האתר בטלפון?</b>
+        <p>רוצה לקבל הצעות ולראות מודעות חדשות מכל מקום?</p>
+        <p class="ap-hint">סרקו את הקוד במצלמה של הטלפון &gt;&gt;</p>
+        <div class="ap-btns"><button type="button" class="ap-have">יש לי</button><button type="button" class="ap-later">לא כרגע, תודה</button></div>
+      </div>
+      <div class="ap-qr"><i></i><i></i><i></i><i></i><span><img src="./qr-site.svg?v=1" alt="קוד QR לאתר" width="120" height="120"></span></div>`;
+    el.querySelector('.ap-have').onclick = () => close('have');
+    el.querySelector('.ap-later').onclick = () => close('later');
+    document.body.appendChild(el);
+    requestAnimationFrame(() => el.classList.add('show'));
+  }
+  setTimeout(show, 30000);
+  window.appPromoShow = () => { try { localStorage.removeItem(KEY); } catch (e) {} show(); };
+})();
