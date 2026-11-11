@@ -101,3 +101,5 @@ BODY .pfa-net-yt svg { color: #ff0000 !important; }
 BODY .pfa-net-dc svg { color: #5865f2 !important; }
 BODY .pfa-net-li svg { color: #0a66c2 !important; }
 BODY .pfa-net-x svg, BODY .pfa-net-tt svg { color: #111111 !important; }
+BODY .pj-subs .rn-cat { background: #f6faf9 !important; }
+BODY .pj-areas .rn-cat.on, BODY .pj-subs .rn-cat.on { background: #47a093 !important; border-color: #47a093 !important; color: #ffffff !important; }

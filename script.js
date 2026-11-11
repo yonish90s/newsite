@@ -8248,6 +8248,7 @@ async function qpPublish() {
     stock: Number.isFinite(qpData.stock) ? qpData.stock : null,
     link: qpData.link || '',
     projectKind: qpData.projectKind || '',
+    projectArea: qpData.projectArea || '',
     loanPeriod: qpData.loanPeriod || '',
     loanTerms: (qpData.offerType === 'השאלה' && Array.isArray(qpData.loanTerms)) ? qpData.loanTerms.slice(0, 15) : [],
     section: qpData.pageSection === 'secondhand' ? 'secondhand' : 'photos',
@@ -31489,6 +31490,17 @@ const mktSecOf = r => r.kind === 'used' ? (r.offer === 'פרויקט' ? 'proj' :
 // פרויקטים: גולשים מציגים מה שהם בונים — אתר, אפליקציה או עבודת תלת מימד. מחיר לא חובה
 const PROJ_KINDS = { site: 'אתר', app: 'אפליקציה', '3d': 'תלת מימד', other: 'אחר' };
 const mktIsProj = r => !!r && r.offer === 'פרויקט';
+// תחומי הפרויקטים: קבוצה ראשית (מוצרים פיזיים / דיגיטל / פנאי / חינוך ובריאות) ובתוכה התחום שהפרויקט פותר
+const PROJ_AREAS = [
+  { id: 'phys', name: 'מוצרים פיזיים', ic: '🔌', subs: [['elec', 'חשמל ואלקטרוניקה'], ['home', 'בית ומטבח'], ['tools', 'כלים ותיקונים'], ['car', 'רכב ותחבורה'], ['garden', 'גינה וחקלאות'], ['energy', 'אנרגיה וסביבה']] },
+  { id: 'digi', name: 'דיגיטל', ic: '💻', subs: [['web', 'אתרים'], ['apps', 'אפליקציות'], ['ai', 'בינה מלאכותית ואוטומציה'], ['biz', 'כלים לעסקים']] },
+  { id: 'fun', name: 'פנאי', ic: '🎲', subs: [['d3', 'יצירות תלת מימד'], ['games', 'משחקים'], ['toys', 'צעצועים ומשחקי קופסה'], ['sport', 'ספורט וטיולים'], ['music', 'מוזיקה'], ['art', 'אמנות ועיצוב'], ['photo', 'צילום ווידאו']] },
+  { id: 'life', name: 'חינוך ובריאות', ic: '🎓', subs: [['edu', 'לימוד וחינוך'], ['health', 'בריאות ונגישות'], ['comm', 'קהילה והתנדבות']] }
+];
+const PROJ_SUB = {};
+PROJ_AREAS.forEach(a => a.subs.forEach(([id, name]) => { PROJ_SUB[id] = { name, area: a.id }; }));
+const projAreaOf = r => (PROJ_SUB[r && r.pd] || {}).area || '';
+const projAreaName = id => (PROJ_AREAS.find(a => a.id === id) || {}).name || '';
 // קישור של מודעה: רק http/https
 function mktLinkUrl(u) {
   u = String(u || '').trim(); if (!u) return '';
@@ -31505,12 +31517,18 @@ const USED_DEMO = [
 ].map(r => Object.assign({ demo: true, kind: 'used' }, r, { t: Date.now() + r.t * 3600e3 }));
 // דוגמאות לפרויקטים של גולשים (מוצגות כשיש מעט פרויקטים אמיתיים)
 const PROJ_DEMO = [
-  { id: 'pj1', pk: 'site', img: 'rent/proj-shop.svg', title: 'חנות אונליין לקרמיקה שבניתי לבד', price: 0, link: 'https://example.com/ceramics', city: 'רמת גן', owner: 'נועה ברק', t: -3, desc: 'אתר חנות מלא: קטלוג, עגלה ותשלום. בניתי ב-HTML, CSS ו-JavaScript, עם מסד נתונים ב-Firebase. אשמח לשמוע מה אתם חושבים.', specs: ['HTML / CSS / JS', 'Firebase', 'מותאם לנייד'] },
-  { id: 'pj2', pk: 'site', img: 'rent/proj-blog.svg', title: 'בלוג טיולים בארץ — מסלולים ומפות', price: 0, link: 'https://example.com/trails', city: 'ירושלים', owner: 'אלון שגיא', t: -14, desc: 'בלוג שאני כותב כבר שנה, עם מסלולי הליכה, מפות ותמונות. פתוח לשיתופי פעולה.', specs: ['WordPress', '120 מסלולים', 'מפות אינטראקטיביות'] },
-  { id: 'pj3', pk: 'app', img: 'rent/proj-app.svg', title: 'אפליקציה לניהול קניות משותפות לבית', price: 0, link: 'https://example.com/shoplist', city: 'באר שבע', owner: 'דנה אור', t: -30, desc: 'רשימת קניות שכל בני הבית מעדכנים יחד בזמן אמת. מחפשת אנשים שינסו ויגידו מה חסר.', specs: ['React Native', 'אנדרואיד ו-iPhone', 'חינם'] },
-  { id: 'pj4', pk: '3d', img: 'rent/proj-3d-vase.svg', title: 'אגרטל Low-Poly — קובץ להדפסה בתלת מימד', price: 25, link: 'https://example.com/vase-stl', city: 'חיפה', owner: 'מאיה לוי', t: -8, desc: 'מודל שעיצבתי ב-Blender. מגיע כקובץ STL מוכן להדפסה, בלי תמיכות. אפשר גם להזמין מודפס.', specs: ['Blender', 'קובץ STL', 'גובה 18 ס״מ'] },
-  { id: 'pj5', pk: '3d', img: 'rent/proj-3d-gears.svg', title: 'מנגנון גלגלי שיניים שעובד — מודפס כולו', price: 0, link: '', city: 'תל אביב', owner: 'רון כהן', t: -20, desc: 'פרויקט לימודי: מנגנון שמסתובב בלי ברגים, מודפס בחלק אחד. הקבצים חינם למי שרוצה.', specs: ['Fusion 360', 'PLA', 'הדפסה ב-6 שעות'] },
-  { id: 'pj6', pk: '3d', img: 'rent/proj-3d-house.svg', title: 'הדמיית בית בתלת מימד ללקוח', price: 0, link: 'https://example.com/house-3d', city: 'נתניה', owner: 'עומר נחום', t: -44, desc: 'הדמיה של בית פרטי שהכנתי לאדריכלית. מקבל עבודות דומות.', specs: ['SketchUp', 'רינדור', 'מקבל הזמנות'] }
+  { id: 'pj1', pd: 'web', pk: 'site', img: 'rent/proj-shop.svg', title: 'חנות אונליין לקרמיקה שבניתי לבד', price: 0, link: 'https://example.com/ceramics', city: 'רמת גן', owner: 'נועה ברק', t: -3, desc: 'אתר חנות מלא: קטלוג, עגלה ותשלום. בניתי ב-HTML, CSS ו-JavaScript, עם מסד נתונים ב-Firebase. אשמח לשמוע מה אתם חושבים.', specs: ['HTML / CSS / JS', 'Firebase', 'מותאם לנייד'] },
+  { id: 'pj2', pd: 'sport', pk: 'site', img: 'rent/proj-blog.svg', title: 'בלוג טיולים בארץ — מסלולים ומפות', price: 0, link: 'https://example.com/trails', city: 'ירושלים', owner: 'אלון שגיא', t: -14, desc: 'בלוג שאני כותב כבר שנה, עם מסלולי הליכה, מפות ותמונות. פתוח לשיתופי פעולה.', specs: ['WordPress', '120 מסלולים', 'מפות אינטראקטיביות'] },
+  { id: 'pj3', pd: 'apps', pk: 'app', img: 'rent/proj-app.svg', title: 'אפליקציה לניהול קניות משותפות לבית', price: 0, link: 'https://example.com/shoplist', city: 'באר שבע', owner: 'דנה אור', t: -30, desc: 'רשימת קניות שכל בני הבית מעדכנים יחד בזמן אמת. מחפשת אנשים שינסו ויגידו מה חסר.', specs: ['React Native', 'אנדרואיד ו-iPhone', 'חינם'] },
+  { id: 'pj4', pd: 'd3', pk: '3d', img: 'rent/proj-3d-vase.svg', title: 'אגרטל Low-Poly — קובץ להדפסה בתלת מימד', price: 25, link: 'https://example.com/vase-stl', city: 'חיפה', owner: 'מאיה לוי', t: -8, desc: 'מודל שעיצבתי ב-Blender. מגיע כקובץ STL מוכן להדפסה, בלי תמיכות. אפשר גם להזמין מודפס.', specs: ['Blender', 'קובץ STL', 'גובה 18 ס״מ'] },
+  { id: 'pj5', pd: 'edu', pk: '3d', img: 'rent/proj-3d-gears.svg', title: 'מנגנון גלגלי שיניים שעובד — מודפס כולו', price: 0, link: '', city: 'תל אביב', owner: 'רון כהן', t: -20, desc: 'פרויקט לימודי: מנגנון שמסתובב בלי ברגים, מודפס בחלק אחד. הקבצים חינם למי שרוצה.', specs: ['Fusion 360', 'PLA', 'הדפסה ב-6 שעות'] },
+  { id: 'pj6', pd: 'home', pk: '3d', img: 'rent/proj-3d-house.svg', title: 'הדמיית בית בתלת מימד ללקוח', price: 0, link: 'https://example.com/house-3d', city: 'נתניה', owner: 'עומר נחום', t: -44, desc: 'הדמיה של בית פרטי שהכנתי לאדריכלית. מקבל עבודות דומות.', specs: ['SketchUp', 'רינדור', 'מקבל הזמנות'] }
+  ,{ id: 'pj7', pd: 'elec', pk: 'other', img: 'rent/proj-elec-lamp.svg', title: 'מנורת LED חכמה שנדלקת מהטלפון', price: 90, link: '', city: 'פתח תקווה', owner: 'יואב מזרחי', t: -5, desc: 'בניתי מנורה עם ESP32 ופס לדים. מדליקים, משנים צבע ומתזמנים מהטלפון דרך ה-Wi-Fi של הבית. אפשר להזמין אחת מוכנה.', specs: ['ESP32', 'לדים WS2812', 'גוף מודפס בתלת מימד'] },
+  { id: 'pj8', pd: 'garden', pk: 'other', img: 'rent/proj-garden.svg', title: 'בקר השקיה שבודק לחות באדמה', price: 0, link: 'https://example.com/smart-water', city: 'רחובות', owner: 'שירה גולן', t: -12, desc: 'חיישן לחות + ברז חשמלי: הגינה מושקית רק כשהאדמה יבשה. חוסך בערך 40% מים. השרטוטים והקוד פתוחים לכולם.', specs: ['Arduino', 'חיישן לחות', 'קוד פתוח'] },
+  { id: 'pj9', pd: 'energy', pk: 'other', img: 'rent/proj-solar.svg', title: 'מטען סולארי מתקפל לטיולים', price: 140, link: '', city: 'מצפה רמון', owner: 'איתי רז', t: -26, desc: 'פאנל סולארי קטן עם סוללה, נטען ביום ומטעין טלפון בלילה. בניתי לטיולים במדבר ועכשיו מכין גם לאחרים.', specs: ['10W', 'סוללה 10,000mAh', 'USB-C'] },
+  { id: 'pj10', pd: 'games', pk: 'app', img: 'rent/proj-game.svg', title: 'משחק פלטפורמה שבניתי ב-Unity', price: 0, link: 'https://example.com/pixel-jump', city: 'אשדוד', owner: 'עידו פרץ', t: -9, desc: 'משחק קפיצות עם 12 שלבים, גרפיקה בסגנון פיקסלים ומוזיקה שהלחנתי. רץ בדפדפן, אשמח לשמוע מה דעתכם.', specs: ['Unity', '12 שלבים', 'רץ בדפדפן'] },
+  { id: 'pj11', pd: 'toys', pk: '3d', img: 'rent/proj-boardgame.svg', title: 'משחק קופסה משפחתי — כל החלקים מודפסים', price: 120, link: '', city: 'כפר סבא', owner: 'מיכל דהן', t: -36, desc: 'משחק אסטרטגיה ל-2–4 שחקנים שהמצאתי עם הילדים. לוח, כלים וקוביות — הכול מודפס בתלת מימד.', specs: ['2–4 שחקנים', 'גיל 8+', 'PLA צבעוני'] },
+  { id: 'pj12', pd: 'health', pk: '3d', img: 'rent/proj-health.svg', title: 'פותחן צנצנות לאנשים עם כוח יד מוגבל', price: 35, link: '', city: 'חדרה', owner: 'אבי שושן', t: -50, desc: 'עיצבתי לסבתא שלי פותחן שנצמד לשיש ופותח צנצנת ביד אחת. מדפיס לכל מי שצריך במחיר החומר.', specs: ['ביד אחת', 'נצמד לשיש', 'מותאם לכל גודל צנצנת'] }
 ].map(r => Object.assign({ demo: true, kind: 'used', offer: 'פרויקט' }, r, { t: Date.now() + r.t * 3600e3 }));
 // מוצרי יד 2 אמיתיים — מגיעים מעמוד "מוצרי גולשים" (נשמרים בתוכן העמוד)
 function usedAll() {
@@ -31521,7 +31539,7 @@ function usedAll() {
     raw = (m ? (JSON.parse(decodeURIComponent(m[1])) || []) : []).filter(x => x && x.id && x.title && x.approved !== false && !x.adminOnly && !mktExpired(x.createdAt)); } catch (e) {}
   const real = raw.map(x => ({ id: 'sh_' + x.id, shId: x.id, kind: 'used', offer: x.offerType || x.category || 'מכירה', title: x.title, price: parseFloat(String(x.price || '').replace(/[^\d.]/g, '')) || 0, priceTxt: x.price || '',
     unitTxt: x.priceUnit || '', city: x.region || '', owner: x.author || '', uid: x.authorId || '', t: Number(x.createdAt) || 0, stock: Number.isFinite(Number(x.stock)) && x.stock !== null && x.stock !== '' ? Number(x.stock) : null, img: x.image || (Array.isArray(x.images) && x.images[0]) || '',
-    link: mktLinkUrl(x.link), pk: PROJ_KINDS[x.projectKind] ? x.projectKind : '',
+    link: mktLinkUrl(x.link), pk: PROJ_KINDS[x.projectKind] ? x.projectKind : '', pd: PROJ_SUB[x.projectArea] ? x.projectArea : '',
     raw: x, images: (Array.isArray(x.images) ? x.images : []).filter(Boolean), desc: String(x.summary || x.body || '').trim(),
     specs: [x.loanPeriod ? 'תקופת השאלה: ' + x.loanPeriod : ''].concat(Array.isArray(x.loanTerms) ? x.loanTerms.filter(v => typeof v === 'string') : []).filter(Boolean).slice(0, 8) }));
   const realProj = real.filter(mktIsProj).length;
@@ -31546,7 +31564,7 @@ let mktHidden = {};   // מודעות דוגמה שהמנהל הסיר (website/
 function mktAll() { return rentAll().concat(usedAll()).filter(r => !mktHidden[r.id]); }
 function mktGo(sec) {
   rentUI.sec = sec || 'all'; rentUI.open = null; rentUI.seller = null; rentUI.cat = 'all';
-  Object.assign(rentUI, { offer: 'all', owner: 'all', min: null, max: null, pk: 'all' });
+  Object.assign(rentUI, { offer: 'all', owner: 'all', min: null, max: null, pk: 'all', pa: 'all', pd: 'all' });
   if (typeof activePageId !== 'undefined' && activePageId === 'page-rent-main' && mainContent && mainContent.querySelector('.rent-page')) { rentRender(); try { window.scrollTo({ top: 0 }); } catch (e) {} return; }
   navigateToPage('page-rent-main');
 }
@@ -31589,7 +31607,9 @@ function mkPubOpen() {
       <button type="button" data-t="proj" onclick="mkPubType('proj')">פרויקט שבניתי</button>
     </div>
     <div class="mkpub-proj">
-      <label class="mkpub-l">סוג הפרויקט</label>
+      <label class="mkpub-l" for="mkpub-area">תחום — מה הפרויקט פותר?</label>
+      <select id="mkpub-area" class="mkpub-in"><option value="">בחירת תחום</option>${PROJ_AREAS.map(a => `<optgroup label="${a.ic} ${a.name}">${a.subs.map(([id, name]) => `<option value="${id}">${name}</option>`).join('')}</optgroup>`).join('')}</select>
+      <label class="mkpub-l">איך הוא בנוי</label>
       <div class="mkpub-kinds" role="group" aria-label="סוג הפרויקט">${Object.keys(PROJ_KINDS).map(k => `<button type="button" data-k="${k}"${k === 'site' ? ' class="on"' : ''} onclick="mkPubKind('${k}')">${PROJ_KINDS[k]}</button>`).join('')}</div>
     </div>
     <label class="mkpub-l">תמונות <small>(עד 5)</small></label>
@@ -31661,6 +31681,8 @@ async function mkPubSend() {
   const linkTxt = proj ? ((document.getElementById('mkpub-link') || {}).value || '').trim() : '', link = mktLinkUrl(linkTxt);
   if (linkTxt && !link) return fail('הקישור לא תקין');
   const desc = proj ? ((document.getElementById('mkpub-desc') || {}).value || '').trim().slice(0, 1000) : '';
+  const area = proj ? (document.getElementById('mkpub-area') || {}).value || '' : '';
+  if (proj && !PROJ_SUB[area]) return fail('צריך לבחור תחום לפרויקט');
   const stockTxt = proj ? '' : (document.getElementById('mkpub-stock') || {}).value || '', stock = stockTxt === '' ? null : Math.floor(Number(stockTxt));
   if (stock !== null && !(stock >= 0 && stock <= 100000)) return fail('כמות המלאי לא תקינה');
   err.hidden = true; go.disabled = true; go.textContent = 'מפרסם…';
@@ -31668,7 +31690,7 @@ async function mkPubSend() {
   qpEnsureModal();
   document.getElementById('qp-messages').innerHTML = '';
   qpData = { title, images: mkPub.images.slice(0, 5), summary: desc, communityId: null, type: 'photo', pageSection: 'secondhand', isProduct: true, tags: {}, tagIndex: 0, price: priceTxt === '' ? '' : String(price), offerType: proj ? 'פרויקט' : 'מכירה', region: '', stock,
-    link: proj ? link : '', projectKind: proj ? mkPub.pk : '' };
+    link: proj ? link : '', projectKind: proj ? mkPub.pk : '', projectArea: proj ? area : '' };
   await qpPublish();
   const out = document.getElementById('qp-messages').innerText || '';
   const qm = document.getElementById('quick-publish-modal'); if (qm) qm.style.display = 'none';
@@ -31742,7 +31764,7 @@ const RENT_DEMO = [
     desc: 'חניה מקורה בחניון פתוח של בניין, מתאימה גם לאחסון סירה קטנה או נגרר. שלט לשער כלול.', specs: ['מקורה', 'שלט לשער', 'ליד הכניסה'] }
 ].map(r => Object.assign({ demo: true }, r, { t: Date.now() + r.t * 3600e3 }));
 let rentData = null, rentUnsub = null;
-const rentUI = { sec: 'all', cat: 'all', q: '', city: 'all', sort: 'new', offer: 'all', owner: 'all', min: null, max: null, pk: 'all' };
+const rentUI = { sec: 'all', cat: 'all', q: '', city: 'all', sort: 'new', offer: 'all', owner: 'all', min: null, max: null, pk: 'all', pa: 'all', pd: 'all' };
 function rentSubscribe() {
   if (rentUnsub) return;
   try {
@@ -31788,8 +31810,8 @@ function rentThumb(r, big) {
 }
 function rentList() {
   const q = rentUI.q.trim().toLowerCase();
-  let l = mktAll().filter(r => (rentUI.sec === 'all' || mktSecOf(r) === rentUI.sec) && (rentUI.sec !== 'rent' || rentUI.cat === 'all' || r.cat === rentUI.cat) && (rentUI.city === 'all' || r.city === rentUI.city) && (rentUI.offer === 'all' || r.offer === rentUI.offer) && (rentUI.owner === 'all' || r.owner === rentUI.owner) && (rentUI.min === null || (r.price > 0 && r.price >= rentUI.min && r.price <= rentUI.max)) && (rentUI.pk === 'all' || r.pk === rentUI.pk)
-    && (!q || [r.title, r.desc, r.city, r.owner, PROJ_KINDS[r.pk] || ''].join(' ').toLowerCase().includes(q)));
+  let l = mktAll().filter(r => (rentUI.sec === 'all' || mktSecOf(r) === rentUI.sec) && (rentUI.sec !== 'rent' || rentUI.cat === 'all' || r.cat === rentUI.cat) && (rentUI.city === 'all' || r.city === rentUI.city) && (rentUI.offer === 'all' || r.offer === rentUI.offer) && (rentUI.owner === 'all' || r.owner === rentUI.owner) && (rentUI.min === null || (r.price > 0 && r.price >= rentUI.min && r.price <= rentUI.max)) && (rentUI.pk === 'all' || r.pk === rentUI.pk) && (rentUI.pa === 'all' || projAreaOf(r) === rentUI.pa) && (rentUI.pd === 'all' || r.pd === rentUI.pd)
+    && (!q || [r.title, r.desc, r.city, r.owner, PROJ_KINDS[r.pk] || '', (PROJ_SUB[r.pd] || {}).name || '', projAreaName(projAreaOf(r))].join(' ').toLowerCase().includes(q)));
   const views = r => photoGetViews(rentCommentsKey(r));
   if (rentUI.sort === 'cheap') l.sort((a, b) => a.price - b.price);
   else if (rentUI.sort === 'popular') l.sort((a, b) => views(b) - views(a));
@@ -31927,7 +31949,7 @@ window.rentOpenComments = rentOpenComments;
 function rentMiniHTML(x) {
   const del = isAdmin() ? `<span class="mk-sg-x" role="button" tabindex="0" aria-label="הסרת המודעה" title="הסרת המודעה" onclick="event.stopPropagation(); rentAdminDelete('${artEsc(x.id)}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></span>` : '';
   // כרטיס: למעלה שורה: המוכר | העיר | המחיר, מתחתיה תמונה ביחס 4:3; מתחת שורת כפתורים קטנה (לייק, שיתוף, שמירה, דיווח) ובסוף שם המודעה בקטן
-  return `<button type="button" class="mk-sg" onclick="rentOpen('${artEsc(x.id)}')"><span class="mk-sg-meta"><span class="mk-sg-who" role="button" tabindex="0" onclick="event.stopPropagation(); rentOpenSeller('${artEsc(x.uid || '')}', '${artEsc(x.owner || '')}')">${authorAvHTML({ author: x.owner || '?', uid: x.uid || '' })}<b>${escHtml(x.owner || '')}</b></span><small class="mk-sg-city${mkKmTo(x.city) !== null ? ' km' : ''}">${escHtml(mkWhereTxt(x))}</small>${mkMobStatHTML(x)}<small class="mk-sg-price">${rentTypeIcon(x)}${Number(x.price) > 0 ? `${Number(x.price).toLocaleString('he-IL', { maximumFractionDigits: 2 })}&nbsp;₪` : mktIsProj(x) ? escHtml(PROJ_KINDS[x.pk] || 'פרויקט') : ''}${x.uid ? `<i data-sg-rate="${escHtml(x.uid)}"></i>` : ''}</small></span><span class="mk-sg-img">${rentThumb(x)}${del}${mktSoldOut(x) ? '<i class="mk-sg-out">אזל</i>' : ''}</span><span class="mk-sg-acts">${rentHoverHTML(x)}</span><b class="mk-sg-title"><span class="mk-sg-tt">${escHtml(x.title)}</span><span class="mk-sg-more" role="button" tabindex="0" onclick="event.stopPropagation(); event.preventDefault(); this.parentElement.classList.toggle('open')"><span>עוד</span><span>פחות</span></span></b></button>`;
+  return `<button type="button" class="mk-sg" onclick="rentOpen('${artEsc(x.id)}')"><span class="mk-sg-meta"><span class="mk-sg-who" role="button" tabindex="0" onclick="event.stopPropagation(); rentOpenSeller('${artEsc(x.uid || '')}', '${artEsc(x.owner || '')}')">${authorAvHTML({ author: x.owner || '?', uid: x.uid || '' })}<b>${escHtml(x.owner || '')}</b></span><small class="mk-sg-city${mkKmTo(x.city) !== null ? ' km' : ''}">${escHtml(mkWhereTxt(x))}</small>${mkMobStatHTML(x)}<small class="mk-sg-price">${rentTypeIcon(x)}${Number(x.price) > 0 ? `${Number(x.price).toLocaleString('he-IL', { maximumFractionDigits: 2 })}&nbsp;₪` : mktIsProj(x) ? escHtml((PROJ_SUB[x.pd] || {}).name || PROJ_KINDS[x.pk] || 'פרויקט') : ''}${x.uid ? `<i data-sg-rate="${escHtml(x.uid)}"></i>` : ''}</small></span><span class="mk-sg-img">${rentThumb(x)}${del}${mktSoldOut(x) ? '<i class="mk-sg-out">אזל</i>' : ''}</span><span class="mk-sg-acts">${rentHoverHTML(x)}</span><b class="mk-sg-title"><span class="mk-sg-tt">${escHtml(x.title)}</span><span class="mk-sg-more" role="button" tabindex="0" onclick="event.stopPropagation(); event.preventDefault(); this.parentElement.classList.toggle('open')"><span>עוד</span><span>פחות</span></span></b></button>`;
 }
 function rentGridHTML() {
   const l = rentList();
@@ -31957,8 +31979,8 @@ function rentViewHTML() {
   if (mkGeo) sorts.push(['near', 'הכי קרוב', '<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>']);
   const tags = [['sec', 'used', 'יד2'], ['offer', 'מכירה', 'מכירה'], ['offer', 'החלפה', 'החלפה'], ['offer', 'השאלה', 'השאלה'], ['sec', 'rent', 'השכרה'],
     ...RENT_CATS.filter(c => !c.store && c.id !== 'all').map(c => ['cat', c.id, c.name.replace(/\s+/g, '_')]), ['sec', 'store', 'אחסון'],
-    ['sec', 'proj', 'פרויקטים'], ['pk', 'site', 'אתרים'], ['pk', '3d', 'תלת_מימד']];
-  const tagOn = (k, v) => k === 'sec' ? rentUI.sec === v && rentUI.cat === 'all' && rentUI.offer === 'all' && rentUI.pk === 'all' : rentUI[k] === v;
+    ['sec', 'proj', 'פרויקטים'], ['pd', 'elec', 'חשמל'], ['pa', 'phys', 'מוצרים_פיזיים'], ['pa', 'fun', 'פנאי'], ['pk', '3d', 'תלת_מימד']];
+  const tagOn = (k, v) => k === 'sec' ? rentUI.sec === v && rentUI.cat === 'all' && rentUI.offer === 'all' && rentUI.pk === 'all' && rentUI.pa === 'all' : rentUI[k] === v;
   const total = rentList().length;
   return `<header class="rn-head">
       ${pubBtn}
@@ -31974,6 +31996,7 @@ function rentViewHTML() {
       <select class="rn-sel" onchange="rentSet('city', this.value)" aria-label="עיר"><option value="all">כל הארץ</option>${cities.map(c => `<option${rentUI.city === c ? ' selected' : ''}>${escHtml(c)}</option>`).join('')}</select>
       <select class="rn-sel" onchange="rentSet('sort', this.value)" aria-label="מיון">${[['new', 'הכי חדש'], ['cheap', 'הכי זול'], ['rating', 'דירוג גבוה']].map(([v, t]) => `<option value="${v}"${rentUI.sort === v ? ' selected' : ''}>${t}</option>`).join('')}</select>
     </div>
+    ${rentUI.sec === 'proj' ? projNavHTML() : ''}
     ${rentUI.sec === 'rent' ? `<nav class="rn-cats">${RENT_CATS.filter(c => !c.store).map(c => `<button type="button" class="rn-cat${rentUI.cat === c.id ? ' on' : ''}" onclick="rentSet('cat', '${c.id}')">${c.ic} ${c.name} <small>${count(c.id)}</small></button>`).join('')}</nav>` : ''}
     <div class="rn-layout${rentFilterOpen() ? ' f-open' : ''}">
       <aside class="mk-fside rn-fpanel" aria-label="סינון"></aside>
@@ -31981,6 +32004,22 @@ function rentViewHTML() {
     </div>
     <p class="rn-fine">איך זה עובד: בוחרים מודעה ← שולחים בקשה ← בעל המודעה מאשר ומתאמים. בהשכרה ובאחסון התשלום לבעל המודעה, ועמלת שירות של ${Math.round(RENT_SITE_FEE * 100)}% לאתר.<br><small>תמונות הדוגמה: Wikimedia Commons (רישיון חופשי)</small></p>`;
 }
+// פרויקטים: שורת קבוצות (מוצרים פיזיים / דיגיטל / פנאי / חינוך ובריאות), ומתחתיה התחומים של הקבוצה שנבחרה
+function projNavHTML() {
+  const proj = mktAll().filter(r => mktSecOf(r) === 'proj');
+  const na = id => proj.filter(r => projAreaOf(r) === id).length, nd = id => proj.filter(r => r.pd === id).length;
+  const area = PROJ_AREAS.find(a => a.id === rentUI.pa);
+  return `<nav class="rn-cats pj-areas" aria-label="תחומים"><button type="button" class="rn-cat${rentUI.pa === 'all' ? ' on' : ''}" onclick="projSet('pa', 'all')">כל הפרויקטים <small>${proj.length}</small></button>${PROJ_AREAS.map(a => `<button type="button" class="rn-cat${rentUI.pa === a.id ? ' on' : ''}" onclick="projSet('pa', '${a.id}')">${a.ic} ${a.name} <small>${na(a.id)}</small></button>`).join('')}</nav>
+    ${area ? `<nav class="rn-cats pj-subs" aria-label="תת קטגוריות"><button type="button" class="rn-cat${rentUI.pd === 'all' ? ' on' : ''}" onclick="projSet('pa', '${area.id}')">הכל ב${area.name}</button>${area.subs.map(([id, name]) => `<button type="button" class="rn-cat${rentUI.pd === id ? ' on' : ''}" onclick="projSet('pd', '${id}')">${name} <small>${nd(id)}</small></button>`).join('')}</nav>` : ''}`;
+}
+function projSet(k, v) {
+  Object.assign(rentUI, { sec: 'proj', cat: 'all', offer: 'all', pk: 'all' });
+  if (k === 'pd' && PROJ_SUB[v]) Object.assign(rentUI, { pa: PROJ_SUB[v].area, pd: v });
+  else Object.assign(rentUI, { pa: PROJ_AREAS.some(a => a.id === v) ? v : 'all', pd: 'all' });
+  rentUI.open = null; rentUI.seller = null;
+  rentRender();
+}
+window.projSet = projSet;
 function buildRentPage() {
   Object.assign(rentUI, { offer: 'all', owner: 'all', min: null, max: null });   // סינון העמודה שבעמוד הראשי לא עובר לעמוד השוק
   setTimeout(rentSubscribe, 0);
@@ -32004,7 +32043,7 @@ function rentSideHTML() {
     <h3 class="mk-f-h">קטגוריות</h3>
     ${group('יד 2', row('sec', 'used', 'כל המוצרים', used.length) + [...new Set(used.map(r => r.offer).filter(Boolean))].map(o => row('offer', o, o, n(used, r => r.offer === o))).join(''), true)}
     ${group('השכרת ציוד', RENT_CATS.filter(c => !c.store && c.id !== 'all').map(c => row('cat', c.id, c.name, n(eq, r => r.cat === c.id))).join(''), true)}
-    ${group('פרויקטים', row('sec', 'proj', 'כל הפרויקטים', n(all, r => mktSecOf(r) === 'proj')) + Object.keys(PROJ_KINDS).map(k => [k, n(all, r => mktSecOf(r) === 'proj' && r.pk === k)]).filter(x => x[1]).map(([k, c]) => row('pk', k, PROJ_KINDS[k], c)).join(''), true)}
+    ${group('פרויקטים', row('sec', 'proj', 'כל הפרויקטים', n(all, r => mktSecOf(r) === 'proj')) + PROJ_AREAS.map(a => row('pa', a.id, a.name, n(all, r => mktSecOf(r) === 'proj' && projAreaOf(r) === a.id)) + a.subs.map(([id, name]) => [id, name, n(all, r => mktSecOf(r) === 'proj' && r.pd === id)]).filter(x => x[2]).map(([id, name, c]) => row('pd', id, '· ' + name, c)).join('')).join(''), true)}
     ${group('שטח לאחסון', row('sec', 'store', 'כל השטחים', n(all, r => mktSecOf(r) === 'store')), false)}
     ${group('כל המוצרים', row('all', 'all', 'הכל', all.length), false)}
     <h3 class="mk-f-h">סינון לפי</h3>
@@ -32023,16 +32062,16 @@ function rentSideSync() {
   const box = document.querySelector('.mk-fside'); if (!box) return;
   const n = String(mktAll().length);
   if (box.dataset.n !== n) { box.dataset.n = n; box.innerHTML = rentSideHTML(); }
-  const on = { sec: rentUI.sec, cat: rentUI.cat, offer: rentUI.offer, owner: rentUI.owner, city: rentUI.city, pk: rentUI.pk };
+  const on = { sec: rentUI.sec, cat: rentUI.cat, offer: rentUI.offer, owner: rentUI.owner, city: rentUI.city, pk: rentUI.pk, pa: rentUI.pa, pd: rentUI.pd };
   box.querySelectorAll('[data-f]').forEach(b => {
     const [k, ...v] = b.dataset.f.split(':');
-    b.classList.toggle('on', k === 'all' ? rentUI.sec === 'all' && rentUI.cat === 'all' && rentUI.offer === 'all' : k === 'sec' ? on.sec === v.join(':') && on.offer === 'all' && on.pk === 'all' : on[k] === v.join(':'));
+    b.classList.toggle('on', k === 'all' ? rentUI.sec === 'all' && rentUI.cat === 'all' && rentUI.offer === 'all' : k === 'sec' ? on.sec === v.join(':') && on.offer === 'all' && on.pk === 'all' && on.pa === 'all' : on[k] === v.join(':'));
   });
 }
 // האשטאגים של מודעה אחת (בעמוד המודעה): האזור, סוג ההצעה או הקטגוריה, והעיר
 function mkItemTags(r) {
   const sec = mktSecOf(r), t = [];
-  if (sec === 'proj') { t.push(['sec', 'proj', 'פרויקטים']); if (r.pk) t.push(['pk', r.pk, PROJ_KINDS[r.pk]]); }
+  if (sec === 'proj') { t.push(['sec', 'proj', 'פרויקטים']); if (projAreaOf(r)) t.push(['pa', projAreaOf(r), projAreaName(projAreaOf(r))]); if (r.pd) t.push(['pd', r.pd, PROJ_SUB[r.pd].name]); if (r.pk) t.push(['pk', r.pk, PROJ_KINDS[r.pk]]); }
   else if (sec === 'used') { t.push(['sec', 'used', 'יד2']); if (r.offer) t.push(['offer', r.offer, r.offer]); }
   else if (sec === 'store') t.push(['sec', 'store', 'אחסון']);
   else { t.push(['sec', 'rent', 'השכרה']); const c = rentCatOf(r.cat); if (c && c.id !== 'all') t.push(['cat', c.id, c.name]); }
@@ -32041,9 +32080,11 @@ function mkItemTags(r) {
 }
 // מעמוד המודעה: חזרה לשוק מסוננת לפי ההאשטאג
 function mkTagGo(k, v) {
-  Object.assign(rentUI, { sec: 'all', cat: 'all', offer: 'all', city: 'all', pk: 'all' });
+  Object.assign(rentUI, { sec: 'all', cat: 'all', offer: 'all', city: 'all', pk: 'all', pa: 'all', pd: 'all' });
   if (k === 'sec') rentUI.sec = v;
   else if (k === 'pk') Object.assign(rentUI, { sec: 'proj', pk: v });
+  else if (k === 'pa') Object.assign(rentUI, { sec: 'proj', pa: v });
+  else if (k === 'pd' && PROJ_SUB[v]) Object.assign(rentUI, { sec: 'proj', pa: PROJ_SUB[v].area, pd: v });
   else if (k === 'cat') Object.assign(rentUI, { sec: 'rent', cat: v });
   else if (k === 'offer') Object.assign(rentUI, { sec: 'used', offer: v });
   else if (k === 'city') rentUI.city = v;
@@ -32053,20 +32094,23 @@ function mkTagGo(k, v) {
 }
 // לחיצה על האשטאג מסננת לפיו; לחיצה נוספת מחזירה את כל המודעות
 function rentTag(k, v) {
-  const on = k === 'sec' ? rentUI.sec === v && rentUI.cat === 'all' && rentUI.offer === 'all' && rentUI.pk === 'all' : rentUI[k] === v;
-  rentUI.pk = 'all';
+  const on = k === 'sec' ? rentUI.sec === v && rentUI.cat === 'all' && rentUI.offer === 'all' && rentUI.pk === 'all' && rentUI.pa === 'all' : rentUI[k] === v;
+  Object.assign(rentUI, { pk: 'all', pa: 'all', pd: 'all' });
   if (on) Object.assign(rentUI, { sec: 'all', cat: 'all', offer: 'all' });
   else if (k === 'sec') Object.assign(rentUI, { sec: v, cat: 'all', offer: 'all' });
   else if (k === 'cat') Object.assign(rentUI, { sec: 'rent', cat: v, offer: 'all' });
   else if (k === 'pk') Object.assign(rentUI, { sec: 'proj', cat: 'all', offer: 'all', pk: v });
+  else if (k === 'pa' || k === 'pd') { Object.assign(rentUI, { cat: 'all', offer: 'all' }); projSet(k, v); return; }
   else Object.assign(rentUI, { sec: 'used', cat: 'all', offer: v });
   rentUI.open = null;
   rentRender();
 }
 function rentSideSet(k, v) {
-  if (k !== 'owner' && k !== 'city') rentUI.pk = 'all';
+  if (k !== 'owner' && k !== 'city') Object.assign(rentUI, { pk: 'all', pa: 'all', pd: 'all' });
   if (k === 'all') Object.assign(rentUI, { sec: 'all', cat: 'all', offer: 'all', owner: 'all', city: 'all', q: '', min: null, max: null });
   else if (k === 'pk') Object.assign(rentUI, { sec: 'proj', cat: 'all', offer: 'all', pk: v });
+  else if (k === 'pa') Object.assign(rentUI, { sec: 'proj', cat: 'all', offer: 'all', pa: v });
+  else if (k === 'pd' && PROJ_SUB[v]) Object.assign(rentUI, { sec: 'proj', cat: 'all', offer: 'all', pa: PROJ_SUB[v].area, pd: v });
   else if (k === 'sec') Object.assign(rentUI, { sec: v, cat: 'all', offer: 'all' });
   else if (k === 'cat') Object.assign(rentUI, { sec: 'rent', cat: v, offer: 'all' });
   else if (k === 'offer') Object.assign(rentUI, { sec: 'used', cat: 'all', offer: v });
@@ -32285,7 +32329,7 @@ function rentDetailHTML(r) {
       </div>
       <div class="mp-info">
         <div class="mk-toprow"><div class="mk-topmain">
-        <span class="mk-cat">${escHtml(mktIsProj(r) ? 'פרויקט' + (r.pk ? ' · ' + PROJ_KINDS[r.pk] : '') : r.kind === 'used' ? (r.offer || 'יד 2') : rentCatOf(r.cat).name)}</span>
+        <span class="mk-cat">${escHtml(mktIsProj(r) ? ['פרויקט', projAreaName(projAreaOf(r)), (PROJ_SUB[r.pd] || {}).name].filter(Boolean).join(' · ') : r.kind === 'used' ? (r.offer || 'יד 2') : rentCatOf(r.cat).name)}</span>
         <h2 class="mk-title">${escHtml(r.title)}</h2>
         ${rentPriceShort(r) ? `<div class="mp-price">${rentPriceShort(r)}</div>` : ''}
         ${projLink ? `<a class="mk-plink" href="${escHtml(projLink)}" target="_blank" rel="noopener nofollow ugc" dir="ltr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>${escHtml(mktLinkHost(projLink))}</a>` : ''}
