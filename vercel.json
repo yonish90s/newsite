@@ -90,7 +90,7 @@
         {
           "type": "header",
           "key": "user-agent",
-          "value": ".*(GPTBot|ChatGPT-User|OAI-SearchBot|ClaudeBot|Claude-Web|Claude-User|Claude-SearchBot|anthropic-ai|CCBot|PerplexityBot|Perplexity-User|Bytespider|Amazonbot|meta-externalagent|Meta-ExternalFetcher|FacebookBot|Diffbot|cohere-ai|cohere-training-data-crawler|YouBot|Timpibot|ImagesiftBot|omgili|omgilibot|AI2Bot|Ai2Bot-Dolma|DuckAssistBot|MistralAI-User|PanguBot|Kangaroo Bot|Webzio-Extended|img2dataset|VelenPublicWebCrawler|Scrapy|ICC-Crawler|Novellum|QualifiedBot|SemrushBot-OCOB|TikTokSpider|Brightbot|iaskspider|PhindBot|Andibot|Factset_spyderbot|FirecrawlAgent|Crawlspace|Bigsur\\.ai|EchoboxBot|Devin|LinerBot).*"
+          "value": ".*(GPTBot|ClaudeBot|Claude-Web|anthropic-ai|CCBot|Bytespider|Amazonbot|meta-externalagent|Meta-ExternalFetcher|FacebookBot|Diffbot|cohere-ai|cohere-training-data-crawler|YouBot|Timpibot|ImagesiftBot|omgili|omgilibot|AI2Bot|Ai2Bot-Dolma|PanguBot|Kangaroo Bot|Webzio-Extended|img2dataset|VelenPublicWebCrawler|Scrapy|ICC-Crawler|Novellum|QualifiedBot|SemrushBot-OCOB|TikTokSpider|Brightbot|iaskspider|PhindBot|Andibot|Factset_spyderbot|FirecrawlAgent|Crawlspace|Bigsur\\.ai|EchoboxBot|Devin|LinerBot).*"
         }
       ],
       "destination": "/ai-blocked.html",

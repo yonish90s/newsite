@@ -144,3 +144,13 @@ BODY #app-promo .ap-tx b { color: #7fd1c4 !important; }
 BODY #app-promo .ap-have { background: #e8ebeb !important; color: #2b3335 !important; }
 BODY #app-promo .ap-later { background: #363d3f !important; color: #ffffff !important; }
 BODY .mk-sg.is-biz { outline: none !important; background: inherit !important; }
+BODY .nofunds-ic { background: #fdecea !important; color: #e5352b !important; }
+BODY .nofunds-rows .miss { background: #fff5f4 !important; color: #b42318 !important; }
+BODY .nofunds-go { background: #47a093 !important; color: #ffffff !important; }
+BODY .qp-agent-btn.go { background: #47a093 !important; border-color: #47a093 !important; color: #ffffff !important; }
+BODY .oc-b.hot, BODY .ct-go { background: #47a093 !important; border-color: #47a093 !important; color: #ffffff !important; }
+BODY .oc-chip.ok { background: #e7f6ee !important; color: #15803d !important; }
+BODY .oc-chip.wait { background: #fff4e5 !important; color: #b45309 !important; }
+BODY .ct-pad.has { border-color: #47a093 !important; }
+BODY .ct-signed { background: #f4fbf8 !important; }
+BODY .ct-card, BODY .ct-card .ct-head b, BODY .ct-doc, BODY .ct-l, BODY .ct-agree, BODY .ct-signed b, BODY .ct-text, BODY .ct-in { color: #111827 !important; }

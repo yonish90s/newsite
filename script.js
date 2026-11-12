@@ -8033,6 +8033,8 @@ function openQuickPublish(communityId, itemType) {
 
 function qpSelectType(type) {
   qpData.type = type;
+  // מוצר בשוק: סוכן ה-AI מנהל את השיחה (אם הוא זמין בשרת); אחרת — השאלות הקבועות
+  if (qpData.isProduct && !qpData.communityId && qpAgentOn()) { qpAgentStart(); return; }
   qpStep = 'title';
   const label = qpData.isProduct ? 'המוצר' : (type === 'story' ? 'הסיפור' : 'המודעה / התמונה');
   const intro = qpData.isProduct ? 'שלום! 🛒 בוא נפרסם מוצר יד שניה.<br>' : '';
@@ -8046,6 +8048,7 @@ function qpHandleSend() {
   const inp = document.getElementById('qp-input');
   if (!inp) return;
   const text = inp.value.trim();
+  if (qpStep === 'agent') { if (text) { inp.value = ''; qpAgentSend(text); } return; }
 
   if (qpStep === 'title') {
     if (!text) return;
@@ -8207,12 +8210,94 @@ function qpAddImage() {
       if (!data) return;
       qpData.images.push(data);
       qpBubble('user', `<img src="${escHtml(data)}" style="width:130px; height:95px; object-fit:cover; border-radius:8px; display:block;">`);
+      if (qpStep === 'agent') { qpAgentSend(`(הוספתי תמונה — יש עכשיו ${qpData.images.length})`, true); return; }
       qpBubble('bot', `נוספה תמונה (${qpData.images.length}/5). הוסף עוד, או כתוב <b>המשך</b> לפרסום.`);
     });
   };
   inp.click();
 }
 window.qpAddImage = qpAddImage;
+
+// ============================================================
+// סוכן AI לפרסום ושירות לקוחות (api/agent.js). בלי מפתח בשרת — חוזרים לשאלות הקבועות, וזוכרים את זה לביקור הנוכחי
+// ============================================================
+let qpAgent = { msgs: [], draft: {}, busy: false };
+const QP_OFFER = { sale: 'מכירה', swap: 'החלפה', loan: 'השאלה' };
+function qpAgentOn() { try { return sessionStorage.getItem('bw_agent_off') !== '1'; } catch (e) { return true; } }
+function qpAgentStart() {
+  qpAgent = { msgs: [], draft: {}, busy: false };
+  qpStep = 'agent';
+  const greet = 'היי! אני העוזר של שיתוף רעיונות 🤖<br>ספרו לי מה רוצים לפרסם — מוצר יד 2, עסק או פרויקט שבניתם — ואני אבנה איתכם את המודעה.<br><small>אפשר גם לשאול כל שאלה על האתר.</small>';
+  qpBubble('bot', greet);
+  qpAgent.msgs.push({ role: 'assistant', content: 'היי! אני העוזר של שיתוף רעיונות. ספרו לי מה רוצים לפרסם — מוצר יד 2, עסק או פרויקט שבניתם — ואני אבנה איתכם את המודעה. אפשר גם לשאול כל שאלה על האתר.' });
+  setTimeout(() => { const i = document.getElementById('qp-input'); if (i) i.focus(); }, 100);
+}
+// הסוכן לא זמין: עוברים לשאלות הקבועות, וההודעה הראשונה של הגולש הופכת לכותרת
+function qpAgentFallback(firstText) {
+  try { sessionStorage.setItem('bw_agent_off', '1'); } catch (e) {}
+  qpStep = 'title';
+  qpBubble('bot', 'נמשיך בשאלות קצרות 🙂');
+  if (firstText && !/^\(/.test(firstText)) {
+    const i = document.getElementById('qp-input'), mine = document.querySelectorAll('#qp-messages .qp-row.me');
+    if (i) { if (mine.length) mine[mine.length - 1].remove(); i.value = firstText; qpHandleSend(); return; }   // ההודעה מוצגת שוב כתשובה לשאלת הכותרת
+  }
+  qpBubble('bot', 'מה כותרת המוצר שברצונך לפרסם?');
+}
+async function qpAgentSend(text, silent) {
+  if (qpAgent.busy) return;
+  if (!silent) qpBubble('user', escHtml(text));
+  qpAgent.msgs.push({ role: 'user', content: String(text).slice(0, 2000) });
+  qpAgent.busy = true;
+  const box = document.getElementById('qp-messages');
+  const typing = document.createElement('div'); typing.className = 'qp-row bot qp-typing'; typing.innerHTML = '<div class="qp-bubble"><i></i><i></i><i></i></div>';
+  if (box) { box.appendChild(typing); box.scrollTop = box.scrollHeight; }
+  let j = null, status = 0;
+  try {
+    const r = await fetch(API_BASE + '/api/agent', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ messages: qpAgent.msgs, draft: qpAgent.draft, images: qpData.images.length }) });
+    status = r.status; j = await r.json().catch(() => null);
+  } catch (e) {}
+  typing.remove(); qpAgent.busy = false;
+  if (status === 503 || status === 404 || !j) { qpAgent.msgs.pop(); qpAgentFallback(qpAgent.msgs.filter(m => m.role === 'user').length ? '' : text); return; }
+  if (status === 429) { qpBubble('bot', 'יותר מדי הודעות ברגע אחד 🙂 חכו דקה ונמשיך.'); qpAgent.msgs.pop(); return; }
+  if (status !== 200) { qpBubble('bot', 'משהו השתבש אצלי. נסו לכתוב שוב.'); qpAgent.msgs.pop(); return; }
+  Object.assign(qpAgent.draft, j.draft || {});
+  const reply = String(j.reply || '').trim() || 'הבנתי.';
+  qpAgent.msgs.push({ role: 'assistant', content: reply });
+  qpBubble('bot', escHtml(reply).replace(/\n/g, '<br>'));
+  if (j.handoff) qpBubble('bot', `<button type="button" class="qp-agent-btn" onclick="qpAgentHandoff()">שליחת הודעה למנהל האתר</button>`);
+  if (j.ready) qpAgentSummary();
+}
+// סיכום הטיוטה עם כפתור פרסום — הגולש מחליט
+function qpAgentSummary() {
+  const d = qpAgent.draft, kind = d.type === 'biz' ? 'עסק' : d.type === 'proj' ? 'פרויקט' : 'יד 2 · ' + (QP_OFFER[d.offer] || 'מכירה');
+  const row = (k, v) => v ? `<div><span>${k}</span><b>${escHtml(String(v))}</b></div>` : '';
+  qpBubble('bot', `<div class="qp-agent-sum">${row('סוג', kind)}${row('כותרת', d.title)}${row('שם העסק', d.bizName)}${row('תחום', d.area && PROJ_SUB[d.area] ? PROJ_SUB[d.area].name : '')}${row('מחיר', d.price ? '₪' + Number(d.price).toLocaleString('he-IL') : 'ללא מחיר')}${row('עיר', d.city)}${row('תמונות', qpData.images.length)}${d.desc ? `<p>${escHtml(d.desc)}</p>` : ''}</div>
+    <div class="qp-agent-acts"><button type="button" class="qp-agent-btn go" onclick="qpAgentPublish()">פרסום</button><button type="button" class="qp-agent-btn" onclick="document.getElementById('qp-input').focus()">לשנות משהו</button></div>`);
+}
+function qpAgentPublish() {
+  const d = qpAgent.draft;
+  if (!qpData.images.length) { qpBubble('bot', 'צריך לפחות תמונה אחת — הוסיפו בכפתור + 🙂'); return; }
+  if (!d.title) { qpBubble('bot', 'חסרה כותרת למודעה.'); return; }
+  if (d.type === 'biz' && !d.bizName) { qpBubble('bot', 'חסר שם העסק.'); return; }
+  if (d.type === 'proj' && !PROJ_SUB[d.area]) { qpBubble('bot', 'צריך לבחור תחום לפרויקט.'); return; }
+  const vid = youtubeVideoId(d.video || '');
+  Object.assign(qpData, {
+    title: String(d.title).slice(0, MKPUB_TITLE_MAX), summary: String(d.desc || '').slice(0, 1000), price: Number(d.price) > 0 ? String(Math.round(d.price)) : '',
+    offerType: d.type === 'biz' ? 'עסק' : d.type === 'proj' ? 'פרויקט' : (QP_OFFER[d.offer] || 'מכירה'), region: String(d.city || '').slice(0, 40),
+    link: d.type === 'sale' ? '' : mktLinkUrl(d.link), bizName: d.type === 'biz' ? String(d.bizName).slice(0, 60) : '',
+    projectKind: d.type === 'proj' && PROJ_KINDS[d.kind] ? d.kind : '', projectArea: d.type === 'proj' ? d.area : '', video: vid ? 'https://youtu.be/' + vid : ''
+  });
+  qpStep = 'done';
+  qpPublish();
+}
+async function qpAgentHandoff() {
+  let admin = (typeof dmAdminUid !== 'undefined' && dmAdminUid) || '';
+  if (!admin) { try { admin = (await get(ref(db, 'website/admin_uid'))).val() || ''; } catch (e) {} }
+  const last = qpAgent.msgs.filter(m => m.role === 'user').map(m => m.content).slice(-3).join('\n');
+  qpClose();
+  if (typeof dmStartWith === 'function') dmStartWith(admin, 'מנהל האתר', last.slice(0, 500));
+}
+Object.assign(window, { qpAgentPublish, qpAgentHandoff });
 
 async function qpPublish() {
   if (uploadBlockedNow(true)) { qpBubble('bot', 'כבר העלית מודעה היום. אפשר להעלות מודעה אחת ביום, אז נסו שוב מחר.'); return; }
@@ -8258,6 +8343,7 @@ async function qpPublish() {
     stock: Number.isFinite(qpData.stock) ? qpData.stock : null,
     link: qpData.link || '',
     bizName: qpData.bizName || '',
+    video: qpData.video || '',
     projectKind: qpData.projectKind || '',
     projectArea: qpData.projectArea || '',
     loanPeriod: qpData.loanPeriod || '',
@@ -27487,7 +27573,7 @@ function ofpListHTML() {
   return `<div class="ofp">
     <div class="ofp-stats">${stat('מחכות לתשובה שלי', waiting)}${stat('הצעות שקיבלתי', inList.length)}${stat('ממוצע הצעה', avg ? '₪' + avg.toLocaleString('he-IL') : '—')}</div>
     <nav class="pfg-tabs"><button type="button" class="pfg-tab${offersTab === 'in' ? ' on' : ''}" onclick="offersSetTab('in')"><b>${inList.length}</b> התקבלו</button><button type="button" class="pfg-tab${offersTab === 'out' ? ' on' : ''}" onclick="offersSetTab('out')"><b>${outList.length}</b> נשלחו</button><button type="button" class="pfg-tab${offersTab === 'orders' ? ' on' : ''}" onclick="offersSetTab('orders')"><b>${orders.length}</b> הזמנות</button></nav>
-    ${offersTab === 'orders' ? `<div class="ofp-list">${orders.length ? orders.map(o => orderTrackHTML(o, me)).join('') : orderTrackHTML(null, me) + '<div class="pf-empty">עדיין אין הזמנות — הצעה שאושרה הופכת להזמנה עם מעקב משלוח</div>'}</div>` : offersFeedHTML(offersTab)}
+    ${offersTab === 'orders' ? `<div class="ofp-list">${orders.length ? orders.map(o => orderCardHTML(o, me)).join('') : orderCardHTML(null, me) + '<div class="pf-empty">עדיין אין הזמנות — הצעה שאושרה הופכת להזמנה עם חוזה ומעקב משלוח</div>'}</div>` : offersFeedHTML(offersTab)}
   </div>`;
 }
 function offersRerender() {
@@ -28922,6 +29008,146 @@ function orderTrackHTML(o, me) {
     </div>
   </div>`;
 }
+// ============================================================
+// כרטיס הזמנה: שורת תמונות של הפריטים, כפתורים (חוזה / קנייה חוזרת / החזרה) ומתחת מעקב המשלוח.
+// חוזה: המוכר מנסח (מתבנית), הקונה קורא וחותם באצבע או בעכבר. נשמר בתוך העסקה: website/deals/{id}/contract
+//   = { text, by, at, signerName, sig (תמונת החתימה), signedAt }
+// ============================================================
+const DEMO_ORDER = () => ({ id: 'demo', demo: true, title: "נינטנדו סוויץ'", price: 850, fromName: 'דניאל', toName: 'את/ה', fromUid: 'buyer', toUid: '_me', itemId: '', updatedAt: Date.now() - 3600e3, ship: { stage: 2, t: { 0: Date.now() - 3600e3 * 26, 1: Date.now() - 3600e3 * 20, 2: Date.now() - 3600e3 * 2 } } });
+let demoContract = null;   // חוזה בהזמנה לדוגמה — רק בזיכרון
+function dealImages(o) {
+  const it = o && o.itemId && typeof mktAll === 'function' ? mktAll().find(x => x.shId === o.itemId || x.id === o.itemId) : null;
+  return it ? [it.img].concat(it.images || []).filter((u, i, a) => u && a.indexOf(u) === i).slice(0, 6) : [];
+}
+function orderCardHTML(o, me) {
+  const demo = !o;
+  if (demo) { o = DEMO_ORDER(); me = '_me'; o.contract = demoContract; }
+  const seller = o.toUid === me;
+  const c = o.contract || null, signed = !!(c && c.sig);
+  const imgs = demo ? ['rent/u-guitar.jpg?v=2', 'rent/camera.jpg?v=2', 'rent/projector.jpg?v=2'] : dealImages(o);
+  const id = artEsc(o.id);
+  const cLabel = signed ? 'החוזה החתום' : demo && c ? 'לחתום כקונה (דוגמה)' : seller ? (c ? 'עריכת החוזה' : 'ניסוח חוזה') : (c ? 'חתימה על החוזה' : 'ממתין לחוזה');
+  const cState = signed ? '<span class="oc-chip ok">נחתם ✓</span>' : c ? `<span class="oc-chip wait">${seller ? 'מחכה לחתימת הקונה' : 'מחכה לחתימה שלך'}</span>` : '';
+  const again = demo ? "showCopyToast('זו הזמנה לדוגמה')" : o.itemId ? `ofpClose(); photoOpenDetail('${artEsc(o.itemId)}')` : '';
+  const other = seller ? o.fromUid : o.toUid, otherName = seller ? (o.fromName || 'קונה') : (o.toName || 'מוכר');
+  const ret = demo ? "showCopyToast('זו הזמנה לדוגמה')" : `ofpClose(); dmStartWith('${artEsc(other)}', '${artEsc(otherName)}', '${artEsc('בקשה להחזרה / החזר כספי על "' + (o.title || '') + '"')}')`;
+  return `<section class="oc">
+    <div class="oc-head"><b>${imgs.length || 1} ${imgs.length === 1 ? 'פריט' : 'פריטים'}</b><span>${escHtml(o.title || 'הזמנה')}${o.price ? ` · ₪${Number(o.price).toLocaleString('he-IL')}` : ''}</span>${cState}</div>
+    ${imgs.length ? `<div class="oc-imgs">${imgs.map(u => `<span><img src="${escHtml(u)}" alt="" loading="lazy"></span>`).join('')}</div>` : ''}
+    <div class="oc-btns">
+      <button type="button" class="oc-b${!seller && c && !signed ? ' hot' : ''}" ${!seller && !c ? 'disabled' : ''} onclick="contractOpen('${id}')">${cLabel}</button>
+      ${again ? `<button type="button" class="oc-b" onclick="${again}">קנייה חוזרת</button>` : ''}
+      <button type="button" class="oc-b" onclick="${ret}">החזרה / החזר</button>
+    </div>
+    ${orderTrackHTML(demo ? null : o, me)}
+  </section>`;
+}
+function contractTemplate(o) {
+  const d = new Date().toLocaleDateString('he-IL');
+  return `הסכם מכר
+
+תאריך: ${d}
+המוכר/ת: ${o.toName || ''}
+הקונה: ${o.fromName || ''}
+
+1. הפריט: ${o.title || ''}
+2. המחיר המוסכם: ₪${Number(o.price || 0).toLocaleString('he-IL')}, כולל מע"מ אם חל.
+3. מסירה: איסוף עצמי / משלוח עד הבית — בתוך 7 ימים מיום החתימה.
+4. מצב הפריט: כפי שתואר במודעה ובתמונות. הקונה רשאי/ת לבדוק את הפריט בעת המסירה.
+5. החזרה: ניתן להחזיר תוך 14 יום אם הפריט אינו תואם את התיאור, בתיאום עם המוכר/ת.
+6. אחריות: ללא אחריות נוספת מעבר לאמור בהסכם זה.
+
+בחתימתו/ה מאשר/ת הקונה שקרא/ה את ההסכם ומסכים/ה לתנאיו.`;
+}
+function contractOpen(id) {
+  const demo = id === 'demo';
+  const o = demo ? Object.assign(DEMO_ORDER(), { contract: demoContract }) : offersMap[id];
+  const u = auth.currentUser, me = demo ? '_me' : u && u.uid;
+  if (!o || (!demo && !me)) return;
+  // בדוגמה: קודם מנסחים כמוכר, ואחרי השליחה מנסים לחתום כקונה
+  const c = o.contract || null, signed = !!(c && c.sig), seller = demo ? !c : o.toUid === me;
+  let m = document.getElementById('contract-modal'); if (m) m.remove();
+  m = document.createElement('div'); m.id = 'contract-modal'; m.className = 'ct-modal';
+  const head = `<div class="ct-head"><b>${signed ? 'החוזה החתום' : seller ? 'ניסוח חוזה' : 'חתימה על החוזה'}</b><button type="button" class="ct-x" onclick="contractClose()" aria-label="סגירה">✕</button></div>
+    <div class="ct-sub">${escHtml(o.title || '')}${o.price ? ` · ₪${Number(o.price).toLocaleString('he-IL')}` : ''} · ${seller ? 'אל ' + escHtml(o.fromName || 'הקונה') : 'מאת ' + escHtml(o.toName || 'המוכר')}${demo ? ' · דוגמה' : ''}</div>`;
+  let body;
+  if (signed) body = `<div class="ct-doc">${escHtml(c.text).replace(/\n/g, '<br>')}</div>
+      <div class="ct-signed"><img src="${escHtml(c.sig)}" alt="חתימה"><div><b>${escHtml(c.signerName || '')}</b><small>נחתם ב-${new Date(c.signedAt).toLocaleString('he-IL')}</small></div></div>
+      <div class="ct-acts"><button type="button" class="ct-go" onclick="contractPrint()">הדפסה / שמירה כ-PDF</button></div>`;
+  else if (seller) body = `<label class="ct-l" for="ct-text">נסחו את תנאי העסקה — הקונה יקבל את החוזה לחתימה</label>
+      <textarea id="ct-text" class="ct-text" rows="14" maxlength="4000">${escHtml(c ? c.text : contractTemplate(o))}</textarea>
+      <div class="ct-acts"><button type="button" class="ct-go" onclick="contractSave('${artEsc(o.id)}')">${c ? 'עדכון ושליחה לקונה' : 'שליחה לקונה לחתימה'}</button></div>`;
+  else body = `<div class="ct-doc">${escHtml(c.text).replace(/\n/g, '<br>')}</div>
+      <label class="ct-l" for="ct-name">שם מלא</label><input id="ct-name" class="ct-in" maxlength="60" value="${escHtml(o.fromName || '')}">
+      <label class="ct-l">חתימה <small>(באצבע או בעכבר)</small></label>
+      <div class="ct-pad"><canvas id="ct-pad" width="560" height="160"></canvas><button type="button" class="ct-clear" onclick="contractPadClear()">ניקוי</button></div>
+      <label class="ct-agree"><input type="checkbox" id="ct-ok"> קראתי את ההסכם ואני מסכים/ה לתנאיו</label>
+      <div class="ct-acts"><button type="button" class="ct-go" onclick="contractSign('${artEsc(o.id)}')">חתימה</button></div>`;
+  m.innerHTML = `<div class="ct-card" role="dialog" aria-modal="true" aria-label="חוזה">${head}${body}</div>`;
+  m.addEventListener('click', e => { if (e.target === m) contractClose(); });
+  document.body.appendChild(m);
+  if (!signed && !seller) contractPadInit();
+}
+function contractClose() { const m = document.getElementById('contract-modal'); if (m) m.remove(); }
+let ctPadDirty = false;
+function contractPadInit() {
+  const c = document.getElementById('ct-pad'); if (!c) return;
+  const ctx = c.getContext('2d'); ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = '#111827';
+  ctPadDirty = false; let drawing = false;
+  const pos = e => { const r = c.getBoundingClientRect(), p = e.touches ? e.touches[0] : e; return { x: (p.clientX - r.left) * c.width / r.width, y: (p.clientY - r.top) * c.height / r.height }; };
+  const down = e => { drawing = true; const p = pos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); e.preventDefault(); };
+  const move = e => { if (!drawing) return; const p = pos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); ctPadDirty = true; c.parentElement.classList.add('has'); e.preventDefault(); };
+  const up = () => { drawing = false; };
+  c.addEventListener('pointerdown', down); c.addEventListener('pointermove', move); window.addEventListener('pointerup', up, { once: false });
+  c.style.touchAction = 'none';
+}
+function contractPadClear() { const c = document.getElementById('ct-pad'); if (!c) return; c.getContext('2d').clearRect(0, 0, c.width, c.height); ctPadDirty = false; c.parentElement.classList.remove('has'); }
+// הודעה פרטית לצד השני בעסקה
+async function dealNotify(o, text) {
+  const u = auth.currentUser; if (!u || !o) return;
+  const other = o.fromUid === u.uid ? o.toUid : o.fromUid, otherName = o.fromUid === u.uid ? o.toName : o.fromName, now = Date.now();
+  try {
+    const convId = dmConvId(u.uid, other);
+    await push(ref(db, `website/dms/${convId}/messages`), { from: u.uid, fromName: dmName(), text: text.slice(0, 1000), timestamp: now });
+    await update(ref(db, `website/user_dms/${u.uid}/${convId}`), { otherUid: other, otherName: otherName || '', lastText: text.slice(0, 60), lastTime: now, unread: false });
+    await update(ref(db, `website/user_dms/${other}/${convId}`), { otherUid: u.uid, otherName: dmName(), lastText: text.slice(0, 60), lastTime: now, unread: true });
+  } catch (e) {}
+}
+async function contractSave(id) {
+  const text = ((document.getElementById('ct-text') || {}).value || '').trim().slice(0, 4000);
+  if (text.length < 20) { showCopyToast('החוזה קצר מדי'); return; }
+  if (id === 'demo') { demoContract = { text, by: '_me', at: Date.now() }; contractClose(); offersRerender(); glassBanner({ title: 'החוזה נשלח לקונה (דוגמה)', sub: 'עכשיו אפשר לראות איך הקונה חותם', icon: 'ok', ms: 2600 }); return; }
+  const o = offersMap[id], u = auth.currentUser; if (!o || !u || o.toUid !== u.uid) return;
+  if (o.contract && o.contract.sig) { showCopyToast('החוזה כבר נחתם — אי אפשר לשנות'); return; }
+  try {
+    await update(ref(db, `website/deals/${id}`), { contract: { text, by: u.uid, at: Date.now() }, updatedAt: Date.now() });
+    dealNotify(o, `📄 שלחתי לך חוזה לחתימה על "${o.title}". אפשר לחתום בהצעות ← הזמנות.`);
+    contractClose(); glassBanner({ title: 'החוזה נשלח לקונה', sub: o.title || '', icon: 'ok', ms: 2400 });
+  } catch (e) { showCopyToast('לא הצלחנו לשמור את החוזה'); }
+}
+async function contractSign(id) {
+  const name = ((document.getElementById('ct-name') || {}).value || '').trim().slice(0, 60);
+  if (name.length < 2) { showCopyToast('נא לכתוב שם מלא'); return; }
+  if (!ctPadDirty) { showCopyToast('נא לחתום בתיבה'); return; }
+  if (!(document.getElementById('ct-ok') || {}).checked) { showCopyToast('נא לאשר שקראת את ההסכם'); return; }
+  const c = document.getElementById('ct-pad'), t = document.createElement('canvas');
+  t.width = 280; t.height = 80; const x = t.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, t.width, t.height); x.drawImage(c, 0, 0, t.width, t.height);
+  const sig = t.toDataURL('image/jpeg', 0.7);
+  if (id === 'demo') { demoContract = Object.assign({}, demoContract, { sig, signerName: name, signedAt: Date.now() }); contractClose(); offersRerender(); glassBanner({ title: 'החוזה נחתם (דוגמה)', icon: 'ok', cls: 'gbn-ok', ms: 2400 }); return; }
+  const o = offersMap[id], u = auth.currentUser; if (!o || !u || o.fromUid !== u.uid || !o.contract) return;
+  try {
+    await update(ref(db, `website/deals/${id}/contract`), { sig, signerName: name, signedAt: Date.now() });
+    dealNotify(o, `✍️ חתמתי על החוזה ל"${o.title}".`);
+    contractClose(); glassBanner({ title: 'החוזה נחתם', sub: o.title || '', icon: 'ok', cls: 'gbn-ok', ms: 2400 });
+  } catch (e) { showCopyToast('לא הצלחנו לשמור את החתימה'); }
+}
+function contractPrint() {
+  const card = document.querySelector('#contract-modal .ct-card'); if (!card) return;
+  const w = window.open('', '_blank'); if (!w) return;
+  w.document.write(`<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><title>חוזה</title><style>body{font-family:Arial,sans-serif;max-width:680px;margin:30px auto;line-height:1.7;color:#111}.ct-x,.ct-acts{display:none}.ct-signed img{height:70px;border-bottom:1px solid #999}</style></head><body>${card.innerHTML}</body></html>`);
+  w.document.close(); w.focus(); setTimeout(() => w.print(), 300);
+}
+Object.assign(window, { contractOpen, contractClose, contractSave, contractSign, contractPadClear, contractPrint });
 async function orderShipAdvance(id) {
   const o = offersMap[id]; const u = auth.currentUser;
   if (!o || !u || o.toUid !== u.uid) return;
@@ -29968,6 +30194,37 @@ function walletWatch() {
   } catch (e) {}
 }
 try { onAuthStateChanged(auth, walletWatch); } catch (e) {}
+// לפני עסקה: יש מספיק ניקוד בארנק? אם לא — חלון "אין מספיק כסף" עם היתרה, הסכום ומה חסר
+function walletCanPay(total) {
+  total = Math.round(Number(total) || 0);
+  if (total <= 0) return true;
+  const u = auth.currentUser;
+  if (!u || u.isAnonymous) { glassBanner({ title: 'צריך להתחבר כדי לשלם', sub: 'התשלום מתבצע מהארנק שבחשבון', icon: 'warn', ms: 3200 }); if (typeof entryLoginOpen === 'function') entryLoginOpen(); return false; }
+  walletWatch();
+  if (walletBalance >= total) return true;
+  walletNoFunds(total);
+  return false;
+}
+function walletNoFunds(total) {
+  const miss = Math.max(0, total - walletBalance), f = n => '₪' + Math.round(n).toLocaleString('he-IL');
+  let m = document.getElementById('nofunds-modal'); if (m) m.remove();
+  m = document.createElement('div'); m.id = 'nofunds-modal'; m.className = 'nofunds-modal';
+  m.innerHTML = `<div class="nofunds-card" role="alertdialog" aria-label="אין מספיק כסף בארנק">
+      <span class="nofunds-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="3"/><path d="M3 10h18M16 14.5h2"/><path d="M8 3.5l8 0"/></svg></span>
+      <b class="nofunds-t">אין לך מספיק כסף בארנק</b>
+      <p class="nofunds-s">כדי לבצע את העסקה צריך להוסיף ${f(miss)}</p>
+      <div class="nofunds-rows">
+        <div><span>יש לך</span><b>${f(walletBalance)}</b></div>
+        <div><span>לתשלום</span><b>${f(total)}</b></div>
+        <div class="miss"><span>חסר</span><b>${f(miss)}</b></div>
+      </div>
+      <button type="button" class="nofunds-go" onclick="document.getElementById('nofunds-modal').remove(); walletOpen()">להפקדה לארנק</button>
+      <button type="button" class="nofunds-x" onclick="document.getElementById('nofunds-modal').remove()">סגירה</button>
+    </div>`;
+  m.addEventListener('click', e => { if (e.target === m) m.remove(); });
+  document.body.appendChild(m);
+}
+window.walletNoFunds = walletNoFunds;
 function walletOpen(refresh) {
   const u = auth.currentUser;
   if (!refresh && (!u || u.isAnonymous)) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
@@ -30720,9 +30977,9 @@ function askAdminCopyInfo() {
 Object.assign(window, { askAdminAnswer, askAdminDismiss, askAdminAdd, askAdminDel, askAdminSaveNotes, askAdminCopyInfo });
 askKbSubscribe();
 
-// כותרת הלשונית בדפדפן לפי העמוד הנוכחי ("חדשות · Black1White00")
+// כותרת הלשונית בדפדפן לפי העמוד הנוכחי ("חדשות · שיתוף רעיונות")
 (function pageTitles() {
-  const BASE = 'Black1White00 — תמונות, קומיקס וקהילה';
+  const BASE = 'שיתוף רעיונות — קהילה ושוק של גולשים';
   const clean = t => String(t || '').replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}🔒]/gu, '').replace(/\s+/g, ' ').trim();
   let last = '';
   const sync = () => {
@@ -30730,9 +30987,9 @@ askKbSubscribe();
     const det = mc && mc.querySelector('.art-detail .pd2-title, .art-detail h1, .news-article .na-title');
     const pg = (typeof pages !== 'undefined' && Array.isArray(pages)) ? pages.find(p => p && p.id === activePageId) : null;
     let t = BASE;
-    if (activePageId === 'page-ai') t = 'AI ותוכנה · Black1White00';
-    else if (det && det.textContent.trim()) t = clean(det.textContent).slice(0, 60) + ' · Black1White00';
-    else if (pg && pg.id !== 'page-home-feed' && clean(pg.title)) t = clean(pg.title) + ' · Black1White00';
+    if (activePageId === 'page-ai') t = 'AI ותוכנה · שיתוף רעיונות';
+    else if (det && det.textContent.trim()) t = clean(det.textContent).slice(0, 60) + ' · שיתוף רעיונות';
+    else if (pg && pg.id !== 'page-home-feed' && clean(pg.title)) t = clean(pg.title) + ' · שיתוף רעיונות';
     if (t !== last) { last = t; document.title = t; }
   };
   let q = 0;
@@ -30813,6 +31070,8 @@ function coPay(btn) {
   if (miss) { showCopyToast('חסר: ' + miss[1]); const el = document.getElementById('co-' + miss[0]); if (el) el.focus(); return; }
   if (!/^[0-9+\-\s]{7,20}$/.test(coState.phone.trim())) { showCopyToast('מספר הטלפון לא תקין'); return; }
   if (!/^[^\s@]{1,64}@[^\s@]{1,100}\.[a-z]{2,}$/i.test(String(coState.email || '').trim())) { showCopyToast('כתובת האימייל לא תקינה'); const el = document.getElementById('co-email'); if (el) el.focus(); return; }
+  // התשלום מהארנק (ניקוד = שקלים): בלי מספיק ניקוד — אין עסקה, ומראים כמה חסר
+  if (!walletCanPay(coTotals().total)) return;
   btn.disabled = true; btn.classList.add('busy'); btn.textContent = 'מעבד תשלום…';
   setTimeout(() => {
     coState.step = 'done'; coState.orderNo = 'BW-' + String(Date.now()).slice(-6);
@@ -31816,7 +32075,7 @@ function usedAll() {
     raw = (m ? (JSON.parse(decodeURIComponent(m[1])) || []) : []).filter(x => x && x.id && x.title && x.approved !== false && !x.adminOnly && !mktExpired(x.createdAt)); } catch (e) {}
   const real = raw.map(x => ({ id: 'sh_' + x.id, shId: x.id, kind: 'used', offer: x.offerType || x.category || 'מכירה', title: x.title, price: parseFloat(String(x.price || '').replace(/[^\d.]/g, '')) || 0, priceTxt: x.price || '',
     unitTxt: x.priceUnit || '', city: x.region || '', owner: x.author || '', uid: x.authorId || '', t: Number(x.createdAt) || 0, stock: Number.isFinite(Number(x.stock)) && x.stock !== null && x.stock !== '' ? Number(x.stock) : null, img: x.image || (Array.isArray(x.images) && x.images[0]) || '',
-    bizName: String(x.bizName || '').slice(0, 60), link: mktLinkUrl(x.link), pk: PROJ_KINDS[x.projectKind] ? x.projectKind : '', pd: PROJ_SUB[x.projectArea] ? x.projectArea : '',
+    bizName: String(x.bizName || '').slice(0, 60), video: youtubeVideoId(x.video), link: mktLinkUrl(x.link), pk: PROJ_KINDS[x.projectKind] ? x.projectKind : '', pd: PROJ_SUB[x.projectArea] ? x.projectArea : '',
     raw: x, images: (Array.isArray(x.images) ? x.images : []).filter(Boolean), desc: String(x.summary || x.body || '').trim(),
     specs: [x.loanPeriod ? 'תקופת השאלה: ' + x.loanPeriod : ''].concat(Array.isArray(x.loanTerms) ? x.loanTerms.filter(v => typeof v === 'string') : []).filter(Boolean).slice(0, 8) }));
   const realProj = real.filter(mktIsProj).length, realBiz = real.filter(mktIsBiz).length;
@@ -31906,6 +32165,8 @@ function mkPubOpen() {
     </div>
     <label class="mkpub-l" for="mkpub-price">מחיר <small>(לא חובה)</small></label>
     <div class="mkpub-price"><input id="mkpub-price" class="mkpub-in" type="number" min="0" step="1" inputmode="numeric" placeholder="ריק = ללא מחיר"><span>₪</span></div>
+    <label class="mkpub-l" for="mkpub-video">סרטון יוטיוב <small>(לא חובה — כדי שיראו את המוצר או האתר בפעולה)</small></label>
+    <input id="mkpub-video" class="mkpub-in" type="url" dir="ltr" maxlength="200" placeholder="https://youtu.be/...">
     <div class="mkpub-sale">
       <label class="mkpub-l" for="mkpub-stock">כמה יחידות יש לך במלאי? <small>(לא חובה)</small></label>
       <input id="mkpub-stock" class="mkpub-in" type="number" min="0" step="1" inputmode="numeric" placeholder="ריק = ללא הגבלה">
@@ -31974,6 +32235,8 @@ async function mkPubSend() {
   if (linkTxt && !link) return fail('הקישור לא תקין');
   const desc = proj || biz ? ((document.getElementById('mkpub-desc') || {}).value || '').trim().slice(0, 1000) : '';
   const area = proj ? (document.getElementById('mkpub-area') || {}).value || '' : '';
+  const videoTxt = ((document.getElementById('mkpub-video') || {}).value || '').trim(), videoId = youtubeVideoId(videoTxt);
+  if (videoTxt && !videoId) return fail('הקישור ליוטיוב לא תקין');
   if (proj && !PROJ_SUB[area]) return fail('צריך לבחור תחום לפרויקט');
   const stockTxt = proj ? '' : (document.getElementById('mkpub-stock') || {}).value || '', stock = stockTxt === '' ? null : Math.floor(Number(stockTxt));
   if (stock !== null && !(stock >= 0 && stock <= 100000)) return fail('כמות המלאי לא תקינה');
@@ -31982,7 +32245,7 @@ async function mkPubSend() {
   qpEnsureModal();
   document.getElementById('qp-messages').innerHTML = '';
   qpData = { title, images: mkPub.images.slice(0, 5), summary: desc, communityId: null, type: 'photo', pageSection: 'secondhand', isProduct: true, tags: {}, tagIndex: 0, price: priceTxt === '' ? '' : String(price), offerType: proj ? 'פרויקט' : biz ? 'עסק' : 'מכירה', region: '', stock,
-    link: proj || biz ? link : '', bizName, projectKind: proj ? mkPub.pk : '', projectArea: proj ? area : '' };
+    link: proj || biz ? link : '', bizName, video: videoId ? 'https://youtu.be/' + videoId : '', projectKind: proj ? mkPub.pk : '', projectArea: proj ? area : '' };
   await qpPublish();
   const out = document.getElementById('qp-messages').innerText || '';
   const qm = document.getElementById('quick-publish-modal'); if (qm) qm.style.display = 'none';
@@ -32702,7 +32965,8 @@ function rentDetailHTML(r) {
         <div class="mk-sep"></div>
         <div class="mk-lower">
           <div class="mk-accs">
-            <details class="mp-acc"><summary>פרטים</summary>${short ? `<p>${escHtml(short)}</p>` : ''}${(r.specs || []).filter(Boolean).length ? `<ul>${r.specs.filter(Boolean).map(x => `<li>${escHtml(x)}</li>`).join('')}</ul>` : ''}${!short && !(r.specs || []).filter(Boolean).length ? '<p>אין פרטים נוספים.</p>' : ''}</details>
+            <details class="mp-acc mk-det-open" open><summary onclick="event.preventDefault()">פרטים</summary>${short ? `<p>${escHtml(short)}</p>` : ''}${(r.specs || []).filter(Boolean).length ? `<ul>${r.specs.filter(Boolean).map(x => `<li>${escHtml(x)}</li>`).join('')}</ul>` : ''}${!short && !(r.specs || []).filter(Boolean).length ? '<p>אין פרטים נוספים.</p>' : ''}</details>
+            ${r.video && /^[\w-]{11}$/.test(r.video) ? `<section class="mk-video"><h3>סרטון</h3><div class="mk-video-frame"><iframe src="https://www.youtube-nocookie.com/embed/${r.video}?rel=0" title="סרטון — ${escHtml(r.title || '')}" loading="lazy" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div></section>` : ''}
           </div>
         </div>
         ${terms.length ? `<details class="mp-acc mk-terms"><summary>תקנון ההשאלה · ${terms.length} סעיפים</summary><ol class="pd-terms">${terms.map(x => `<li>${escHtml(x)}</li>`).join('')}</ol></details>` : ''}
