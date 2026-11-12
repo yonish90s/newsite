@@ -143,3 +143,4 @@ BODY #app-promo { background: #3f4749 !important; color: #ffffff !important; }
 BODY #app-promo .ap-tx b { color: #7fd1c4 !important; }
 BODY #app-promo .ap-have { background: #e8ebeb !important; color: #2b3335 !important; }
 BODY #app-promo .ap-later { background: #363d3f !important; color: #ffffff !important; }
+BODY .mk-sg.is-biz { outline: none !important; background: inherit !important; }
