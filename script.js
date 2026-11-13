@@ -33627,7 +33627,7 @@ const BUY_SYN = {
 };
 const BUY_FILL = /^(?:אני\s+)?(?:רוצה|מחפש[תים]?|צריכ?[הים]?|מעוניינ?[תים]?|תמצא|תמצאי|מצא|תחפש|תחפשי|חפש|תביא|תביאי|תשיג|תשיגי|יש|אפשר|בא\s+לי)?(?:\s+(?:לי|לנו))?\s*(?:לקנות|לרכוש|קניית|קנייה של|למצוא|לחפש)?\s*(?:לי\s+)?(?:את\s+)?/;
 // ביטויי מחיר: "עד 1000", "עד מחיר 1000", "עד מחיר של 1,000 ש״ח", "מתחת ל-1000", "פחות מ-1000", "בתקציב 1000", "עד אלף"
-const BUY_PRICE_RX = /(?:עד|מתחת\s+ל-?|פחות\s+מ-?|לא\s+יותר\s+מ-?|מקסימום|תקציב(?:\s+של)?|בתקציב(?:\s+של)?|בסביבות|בערך)\s*(?:מחיר\s*(?:של\s*)?)?(?:₪\s*)?([\d.,]+\s*(?:אלף|k)?|אלף|אלפיים|מאה|מאתיים|חמש\s*מאות)\s*(?:₪|שח|ש״ח|שקל(?:ים)?|ש\"ח)?/i;
+const BUY_PRICE_RX = /(?:עד|ע׳|ע'|ע(?=\s*\d)|מתחת\s+ל-?|פחות\s+מ-?|לא\s+יותר\s+מ-?|מקסימום|תקציב(?:\s+של)?|בתקציב(?:\s+של)?|בסביבות|בערך)\s*(?:מחיר\s*(?:של\s*)?)?(?:₪\s*)?([\d.,]+\s*(?:אלף|k)?|אלף|אלפיים|מאה|מאתיים|חמש\s*מאות)\s*(?:₪|שח|ש״ח|שקל(?:ים)?|ש\"ח)?/i;
 const BUY_WORDNUM = { 'אלף': 1000, 'אלפיים': 2000, 'מאה': 100, 'מאתיים': 200, 'חמש מאות': 500, 'חמשמאות': 500 };
 let buyLog = [], buyActs = [], buyBusy = false;
 let buyWants = (() => { try { return JSON.parse(localStorage.getItem('buy_wants') || '[]') || []; } catch (e) { return []; } })();
@@ -33643,8 +33643,13 @@ function buyParse(text) {
   let t = String(text || '').replace(/[״"']/g, '').trim();
   // תקציב כללי בסוף המשפט ("… עד 3,000 ₪")
   const gm = t.match(new RegExp(BUY_PRICE_RX.source + '\\s*$', 'i'));
-  const global = gm ? buyNum(gm[1]) : 0;
+  let global = gm ? buyNum(gm[1]) : 0;
   if (gm) t = t.slice(0, gm.index).trim();
+  // מספר לבד בסוף ("מנורת לד 100", "ספה 1200 ש״ח") = תקציב — אלא אם הוא חלק מהמוצר (13 אינץ, 128GB, iPhone 13)
+  if (!global) {
+    const bm = t.match(/\s(\d[\d,]{1,6})\s*(₪|שח|ש״ח|שקל(?:ים)?)?\s*$/);
+    if (bm && (bm[2] || Number(bm[1].replace(/,/g, '')) >= 50) && !/(אינץ|inch|gb|tb|ג׳יגה|מ״מ|ס״מ|וואט|w)\s*$/i.test(t.slice(0, bm.index))) { global = Number(bm[1].replace(/,/g, '')); t = t.slice(0, bm.index).trim(); }
+  }
   t = t.replace(BUY_FILL, '').replace(/^(לשכור|להשכיר|לשאול)\s+/, '');
   const parts = t.split(/\s*(?:,|;|\+|\sוגם\s|\sועוד\s|\s(?=ו[א-ת]{2,}))\s*/).map(p => p.replace(/^ו(?=[א-ת]{2,})/, '').trim()).filter(Boolean);
   const cities = typeof CITY_GEO !== 'undefined' ? Object.keys(CITY_GEO) : [];
@@ -33653,8 +33658,10 @@ function buyParse(text) {
     const pm = p.match(BUY_PRICE_RX) || p.match(/(?:ב-?|במחיר\s+(?:של\s+)?)\s*₪?\s*([\d.,]+\s*(?:אלף|k)?)\s*(?:₪|שח|ש״ח|שקל(?:ים)?)/i);
     const max = pm ? buyNum(pm[1]) : global;
     let q = pm ? p.replace(pm[0], '') : p;
-    const city = cities.find(c => q.includes(c)) || '';
-    if (city) q = q.replace(new RegExp('\\s*ב?' + city), '');
+    // עיר — רק כמילה שלמה ("בתל אביב", "חיפה"), לא חלק ממילה ("יפו" בתוך "אייפון")
+    const cityRx = c => new RegExp('(^|\\s)[בו]?' + c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?=\\s|$|[,.])');
+    const city = cities.slice().sort((a, b) => b.length - a.length).find(c => cityRx(c).test(q)) || '';
+    if (city) q = q.replace(cityRx(city), ' ');
     // מילות מילוי שאינן המוצר
     q = q.replace(/(^|\s)(מחיר|במחיר|שקל|שקלים|ש״ח|שח|₪|בערך|בבקשה|לי|את|טוב|טובה|זול|זולה|משהו|איזה|איזשהו|איזשהי)(?=\s|$)/g, ' ').replace(/\s+/g, ' ').trim();
     return { q, max, city, rent };
@@ -33686,6 +33693,7 @@ const BUY_CONCEPTS = {
   drill: ['מברגה', 'מקדחה', 'drill', 'makita', 'מקיטה', 'dewalt', 'bosch'],
   furniture: ['שולחן', 'כיסא', 'כסא', 'ארון', 'מיטה', 'שידה', 'מדף', 'table', 'chair'],
   projector: ['מקרן', 'מקרנים', 'projector', 'epson eh', 'benq', 'optoma'],
+  kitchen: ['כלי מטבח', 'מטבח', 'סיר', 'סירים', 'מחבת', 'טוסטר', 'מיקסר', 'בלנדר', 'קומקום', 'מיקרוגל', 'מכונת קפה', 'airfryer', 'סיר טיגון', 'נינג׳ה'],
   lamp: ['מנורה', 'מנורות', 'מנורת לילה', 'אהיל', 'תאורה', 'פנס', 'lamp', 'light', 'led', 'לד', 'נורה', 'נורות', 'פס לד', 'strip'],
   watch: ['שעון', 'שעונים', 'apple watch', 'smartwatch', 'garmin']
 };
@@ -33848,6 +33856,20 @@ function buyMatch(item) {
     }).filter(x => x.fit !== 'far' && x.offer > 0)
     .sort((a, b) => (a.fit === 'in' ? 0 : 1) - (b.fit === 'in' ? 0 : 1) || b.score - a.score || (a.r.price || 0) - (b.r.price || 0)).slice(0, 4);
 }
+// חיפוש רך כשלא נמצא כלום: מספיק סוג משותף או מילה אחת משותפת (עם סבלנות לשגיאות) — כדי תמיד להציע משהו
+function buyLoose(item) {
+  const qw = buyWords(item.q).filter(w => w.length > 1), qc = buyConceptsIn(qw).set;
+  if (!qw.length) return [];
+  const all = (typeof mktAll === 'function' ? mktAll() : []).filter(r => r && r.title && r.price > 0 && r.offer !== 'החלפה');
+  return all.map(r => {
+    const tw = buyWords(r.title), dw = buyWords([r.desc, r.bizName].join(' '));
+    const rc = buyConceptsIn(tw.concat(dw)).set;
+    let sc = [...qc].some(k => rc.has(k)) ? 6 : 0;
+    qw.forEach(w => { if (tw.some(x => buyWordLike(x, w))) sc += 3; else if (dw.some(x => buyWordLike(x, w))) sc += 1; });
+    if (item.max && r.price <= item.max) sc += 2;
+    return sc >= 3 ? { r, score: sc, offer: item.max && r.price > item.max ? item.max : r.price, fit: item.max && r.price > item.max ? 'near' : 'in' } : null;
+  }).filter(Boolean).sort((a, b) => b.score - a.score || a.r.price - b.r.price).slice(0, 3);
+}
 function buyCardHTML(m, ai) {
   const r = m.r, img = r.img || (r.images && r.images[0]) || '';
   const tag = m.fit === 'in' ? '<em class="by-fit in">בתקציב</em>' : '<em class="by-fit near">מעל התקציב — נציע פחות</em>';
@@ -33893,7 +33915,11 @@ async function buyHandle(text) {
       // אין בתקציב/בכלל: מראים את הכי קרובים מאותו סוג (גם מעל התקציב), ושומרים כמבוקש
       const near = buyMatch(Object.assign({}, it, { max: 0 })).slice(0, 3);
       html += near.length ? `<p class="by-none">אין כרגע ${escHtml(it.q)}${it.max ? ` עד ${buyMoney(it.max)}` : ''}. הכי קרוב שמצאתי:</p>${near.map(m => buyCardHTML(Object.assign(m, { fit: 'near', offer: it.max || m.offer }), buyAct(async () => { if (buyNeedLogin()) return; const st = await buySendOffer(m, note); buySay('bot', st === 'sent' ? `✅ שלחתי הצעה של <b>${buyMoney(m.offer)}</b> על "${escHtml(m.r.title)}".` : `✅ (מודעת דוגמה) הצעה של ${buyMoney(m.offer)} על "${escHtml(m.r.title)}".`); }))).join('')}<p class="by-none">שמרתי גם מעקב — כשתעלה מודעה בתקציב אקפיץ לך התראה.</p>`
-        : `<p class="by-none">אין כרגע ${escHtml(it.q)} בשוק. שמרתי את זה כ"מבוקש" — כשתעלה מודעה מתאימה אקפיץ לך התראה.</p>`;
+        : (() => {
+          const loose = buyLoose(it);
+          return loose.length ? `<p class="by-none">אין כרגע בדיוק ${escHtml(it.q)}. אולי אחד מאלה יתאים:</p>${loose.map(m => buyCardHTML(m, buyAct(async () => { if (buyNeedLogin()) return; const st = await buySendOffer(m, note); buySay('bot', st === 'sent' ? `✅ שלחתי הצעה של <b>${buyMoney(m.offer)}</b> על "${escHtml(m.r.title)}".` : `✅ (מודעת דוגמה) הצעה של ${buyMoney(m.offer)} על "${escHtml(m.r.title)}".`); }))).join('')}<p class="by-none">שמרתי גם מעקב — כשתעלה מודעה מתאימה אקפיץ לך התראה.</p>`
+            : `<p class="by-none">אין כרגע ${escHtml(it.q)} בשוק. שמרתי את זה כ"מבוקש" — כשתעלה מודעה מתאימה אקפיץ לך התראה.<br>רוצה לנסות במילים אחרות? למשל סוג המוצר בלבד ("מנורה", "מחשב").</p>`;
+        })();
       if (!buyWants.some(w => w.q === it.q)) buyWants.push(Object.assign({ t: Date.now(), seen: [] }, it));
     } else {
       found += ms.length;
@@ -33920,7 +33946,7 @@ async function buyHandle(text) {
     document.querySelectorAll('#by-msgs .by-offer').forEach(b => { b.disabled = true; b.textContent = 'נשלח ✓'; });
     buySay('bot', `✅ שלחתי ${sent} הצעות מחיר למוכרים${demo ? ` (ועוד ${demo} למודעות דוגמה)` : ''}. כשמישהו יענה — זה יופיע ב"הצעות" ותקבלו התראה.<br><button type="button" class="by-link" onclick="openOffersPanel()">לצפייה בהצעות</button>`);
   }) : -1;
-  buySay('bot', `${found ? `מצאתי <b>${found}</b> מודעות מתאימות. אפשר לשלוח הצעה לכל אחת, או לכולן בבת אחת:` : 'עדיין אין מודעות מתאימות.'}${html}${allIdx >= 0 ? `<button type="button" class="by-all" onclick="buyDo(${allIdx})">שלחו הצעות לכל ה-${best.length}${best !== sendAll ? ' שבתקציב' : ''}</button>` : ''}`);
+  buySay('bot', `${found ? `מצאתי <b>${found}</b> מודעות מתאימות. אפשר לשלוח הצעה לכל אחת, או לכולן בבת אחת:` : 'לא מצאתי התאמה מדויקת — הנה מה שהכי קרוב:'}${html}${allIdx >= 0 ? `<button type="button" class="by-all" onclick="buyDo(${allIdx})">שלחו הצעות לכל ה-${best.length}${best !== sendAll ? ' שבתקציב' : ''}</button>` : ''}`);
 }
 // ---- עגלה דרך הצ'אט: "תוסיף לעגלה 2 נרות ריחניים", "תכניס לסל את הספה", "מה בעגלה?", "תזמין" ----
 const BUY_NUMW = { 'אחד': 1, 'אחת': 1, 'שני': 2, 'שתי': 2, 'שניים': 2, 'שתיים': 2, 'זוג': 2, 'שלוש': 3, 'שלושה': 3, 'ארבע': 4, 'ארבעה': 4, 'חמש': 5, 'חמישה': 5, 'שש': 6, 'שישה': 6, 'עשר': 10, 'עשרה': 10 };
