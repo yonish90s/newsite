@@ -1503,6 +1503,15 @@ html:not(.theme-dark) body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#
 html:not(.theme-dark) #buy-dock .by-cart { border: 1px solid #d4d4d4; }
 html:not(.theme-dark) #buy-dock .by-cart.on { background: #f7f7f7; border-color: #d8d8d8; color: #111111; }
 }
+@media (min-width: 901px) {
+html:not(.theme-dark) #buy-dock .by-chip { color: #111111; }
+html:not(.theme-dark) #buy-dock .by-chip:hover { border-color: #d4d4d4; }
+html:not(.theme-dark) #buy-dock .by-yes { background: #111111; }
+html:not(.theme-dark) #buy-dock .by-no { border: 1px solid #d4d4d4; color: #111111; }
+}
+@media (min-width: 901px) {
+html:not(.theme-dark) #buy-dock .by-more { color: #111111; }
+}
 html:not(.theme-dark) [style*="border:1.5px solid #e2e8f0"], html:not(.theme-dark) [style*="border: 1.5px solid #e2e8f0"] { border: 1.5px solid #e7e7e7 !important; }
 html:not(.theme-dark) [style*="color:#1e293b"], html:not(.theme-dark) [style*="color: #1e293b"] { color: #111111 !important; }
 html:not(.theme-dark) [style*="background:#dc2626"], html:not(.theme-dark) [style*="background: #dc2626"] { background: #111111 !important; }

@@ -34156,6 +34156,49 @@ function buyClearHandle(q) {
   if (/תזכור/.test(q)) { buyRems = []; buyRemsSave(); buySay('bot', '🗑️ מחקתי את כל התזכורות.'); }
   else { buyWants = []; buyWantsSave(); buySay('bot', '🗑️ הפסקתי את כל המעקבים אחרי מבוקשים.'); }
 }
+// ---- פקודות מהירות: לחיצה אחת מריצה פקודה (או ממלאת אותה בשורה להשלמה) ----
+// 5 פקודות עיקריות גלויות, השאר מאחורי "עוד" — כדי שלא יהיה עמוס
+const BUY_CHIPS = [
+  ['🛒', 'מה בעגלה', 'מה בעגלה'],
+  ['🗑️', 'לאפס עגלה', 'תאפס את העגלה'],
+  ['💳', 'להזמנה', 'תזמין'],
+  ['🤝', 'ההצעות שלי', 'ההצעות שלי'],
+  ['💰', 'מודעות עד 200', 'תראה לי מודעות עד 200'],
+  ['🔔', 'המבוקשים שלי', 'מה המבוקשים שלי'],
+  ['⏰', 'התזכורות שלי', 'מה התזכורות שלי'],
+  ['🏠', 'מוצרים לבית', 'מוצרים לבית'],
+  ['📱', 'אלקטרוניקה', 'אלקטרוניקה']
+];
+const BUY_CHIPS_MAIN = 5;
+function buyChipsHTML(all) {
+  const list = all ? BUY_CHIPS : BUY_CHIPS.slice(0, BUY_CHIPS_MAIN);
+  return list.map(([ic, label], i) => `<button type="button" class="by-chip" onmousedown="event.preventDefault()" onclick="buyChip(${i})">${ic} ${escHtml(label)}</button>`).join('')
+    + (all ? '' : `<button type="button" class="by-chip by-more" onmousedown="event.preventDefault()" onclick="buyChipsMore()">עוד ⌄</button>`);
+}
+function buyChipsMore() { const ch = document.getElementById('by-chips'); if (ch) { ch.innerHTML = buyChipsHTML(true); ch.classList.add('all'); } }
+function buyChip(i) {
+  const c = BUY_CHIPS[i]; if (!c) return;
+  const inp = document.getElementById('by-q'); if (!inp) return;
+  inp.value = c[2]; buySend();
+}
+function buyCartClearAsk() {
+  const c = cartGet();
+  if (!c.length) { buySay('bot', 'העגלה כבר ריקה 🙂'); return; }
+  const n = c.reduce((a, x) => a + x.qty, 0);
+  const yes = buyAct(() => { cartSet([]); buySay('bot', '🗑️ איפסתי את העגלה — היא ריקה עכשיו.'); document.querySelectorAll('#by-msgs .by-confirm button').forEach(b => b.disabled = true); });
+  const no = buyAct(() => { buySay('bot', 'בסדר, העגלה נשארה כמו שהיא.'); document.querySelectorAll('#by-msgs .by-confirm button').forEach(b => b.disabled = true); });
+  buySay('bot', `לאפס את העגלה? יש בה ${n} פריטים.<div class="by-confirm"><button type="button" class="by-yes" onclick="buyDo(${yes})">כן, לאפס</button><button type="button" class="by-no" onclick="buyDo(${no})">ביטול</button></div>`);
+}
+function buyCartRemove(text) {
+  const q = buyCartStrip(text.replace(/(^|\s)(תוריד|תורידי|הורד|להוריד|תסיר|תסירי|הסר|להסיר|תמחק|תמחקי|מחק|לבטל|תבטל)(?=\s|$)/g, ' ').replace(/(^|\s)(מה|מ|את|לי)(?=\s|$)/g, ' ')).replace(/(^|\s)מ?ה?(עגלה|סל)(?=\s|$)/g, ' ').replace(/\s+/g, ' ').trim();
+  const c = cartGet(); if (!c.length) { buySay('bot', 'העגלה ריקה.'); return; }
+  const cat = typeof cartCatalog === 'function' ? cartCatalog() : [];
+  const rows = c.map(x => ({ x, p: cat.find(y => y.id === x.id) || {} })).map(o => ({ ...o, title: o.p.name || o.p.title || '' }));
+  const hit = q ? rows.filter(o => buyScoreListing(q, { title: o.title, desc: o.p.desc || '' }) !== null || buyWords(o.title).some(w => buyWords(q).some(v => buyWordLike(w, v)))) : [];
+  if (!hit.length) { buySay('bot', `לא מצאתי "${escHtml(q)}" בעגלה. ${buyCartSummary()}`); return; }
+  cartSet(c.filter(x => !hit.some(o => o.x.id === x.id)));
+  buySay('bot', `🗑️ הורדתי מהעגלה: <b>${hit.map(o => escHtml(o.title)).join(', ')}</b>.<br>${buyCartSummary()}`);
+}
 async function buySend(ev) {
   if (ev) ev.preventDefault();
   const inp = document.getElementById('by-q'); const q = inp ? inp.value.trim() : '';
@@ -34167,7 +34210,11 @@ async function buySend(ev) {
   await new Promise(r => setTimeout(r, 450));
   buyBusy = false;
   try {
-    if (/^(מה|תראה|תראי|תציג|הצג)(\s|$).*(עגלה|סל)|^(ה?עגלה|ה?סל)( שלי)?$/.test(q)) buySay('bot', buyCartSummary());
+    if (/(תאפס|תאפסי|לאפס|אפס|תרוקן|תרוקני|לרוקן|רוקן|תנקה|תנקי|לנקות|נקה)(\s|$).*(עגלה|סל)|^(תמחק|תמחקי|מחק)(\s+לי)?(\s+את)?\s+(כל\s+)?ה?(עגלה|סל)/.test(q)) buyCartClearAsk();
+    else if (/^(תוריד|תורידי|הורד|להוריד|תסיר|תסירי|הסר|תמחק|תמחקי|מחק)(\s|$).*(עגלה|סל)/.test(q)) buyCartRemove(q);
+    else if (/^(ההצעות שלי|מה ההצעות|הצעות)|^(מה|תראה|תציג).*(ההצעות|הצעות) שלי/.test(q)) { buySay('bot', 'פותח את ההצעות שלך…'); if (typeof openOffersPanel === 'function') openOffersPanel(); }
+    else if (/^(עזרה|מה אתה יודע|מה את יודעת|פקודות|מה אפשר)/.test(q)) buySay('bot', `אפשר ללחוץ על פקודה, או פשוט לכתוב — למשל: <b>תמצא לי ספה עד 1000</b>, <b>תוסיף לעגלה 2 נרות</b>, <b>תזכיר לי מחר ב-10…</b><div class="by-chips in-msg">${buyChipsHTML(true)}</div>`);
+    else if (/^(מה|תראה|תראי|תציג|הצג)(\s|$).*(עגלה|סל)|^(ה?עגלה|ה?סל)( שלי)?$/.test(q)) buySay('bot', buyCartSummary());
     else if (/^(תמחק|תמחקי|מחק|תבטל|תבטלי|בטל)(\s|$).*(תזכור|מבוקש|מעקב)/.test(q)) buyClearHandle(q);
     else if (/^(מה|אילו|תראה|תציג)(\s|$).*(תזכורות|מבוקשים|במעקב|עוקב בשביל)/.test(q)) buyListHandle(q);
     else if (BUY_REM_RX.test(q)) buyRemHandle(q);
@@ -34206,15 +34253,17 @@ function buyWatch() {
     d.id = 'buy-dock';
     d.innerHTML = `<div class="by-panel">
         <header class="by-head"><b>🛍️ סוכן קנייה</b><span>כתבו מה תרצו ועד כמה — אמצא ואשלח הצעות</span><button type="button" class="by-x" onclick="buyClear()" title="שיחה חדשה" aria-label="שיחה חדשה">↺</button><button type="button" class="by-x" onclick="buyToggle(false)" aria-label="מזעור">⌄</button></header>
+        <div class="by-chips" id="by-chips"></div>
         <div class="by-msgs" id="by-msgs"></div>
       </div>
       <form class="by-bar" onsubmit="buySend(event)">
-        <input id="by-q" autocomplete="off" maxlength="300" placeholder="מה תרצו לקנות? למשל: אקסבוקס עד 3,000 ₪ · או: תוסיף לעגלה 2 נרות ריחניים" onfocus="buyLog.length && buyToggle(true)">
+        <input id="by-q" autocomplete="off" maxlength="300" placeholder="כתבו מה תרצו — למשל: תמצא לי ספה עד 1000" onfocus="buyToggle(true)">
         <button type="submit" class="by-go" aria-label="שליחה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4z"/></svg></button>
       </form>`;
     document.body.appendChild(d);
+    const ch = document.getElementById('by-chips'); if (ch) ch.innerHTML = buyChipsHTML();
   };
   const start = () => { build(); setInterval(buyRemTick, 30000); setTimeout(buyRemTick, 3000); setInterval(buyWatch, 120000); setTimeout(buyWatch, 15000); setTimeout(() => { if (typeof productsSubscribe === 'function') productsSubscribe(); }, 4000); };
   if (document.body) start(); else document.addEventListener('DOMContentLoaded', start);
 })();
-Object.assign(window, { buyScoreListing, buySend, buyDo, buyToggle, buyClear, buyLog, buyCartBtn });
+Object.assign(window, { buyChip, buyChipsMore, buyScoreListing, buySend, buyDo, buyToggle, buyClear, buyLog, buyCartBtn });

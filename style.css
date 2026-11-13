@@ -19914,3 +19914,21 @@ html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not
 .srch-panel .ss-people-row { padding: 4px 2px 10px; }
 .srch-panel .ss-ru { width: 86px; }
 .srch-panel .ss-ru .au-av { width: 60px !important; height: 60px !important; font-size: 22px !important; }
+@media (min-width: 901px) {
+  #buy-dock.open .by-panel { display: flex; }
+  #buy-dock .by-chips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 8px 12px; border-bottom: 1px solid #f0f0f0; flex: none; }
+  #buy-dock .by-chips.in-msg { flex-wrap: wrap; overflow: visible; padding: 8px 0 0; border: 0; }
+  #buy-dock .by-chip { flex: none; height: 30px; padding: 0 11px; border-radius: 999px; border: 1px solid #e5e7eb; background: #f9fafb; color: #111827; font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+  #buy-dock .by-chip:hover { background: #f3f4f6; border-color: #d1d5db; }
+  #buy-dock .by-chip.fill { border-style: dashed; }
+  #buy-dock .by-msgs:empty { display: none; }
+  #buy-dock .by-confirm { display: flex; gap: 8px; margin-top: 8px; }
+  #buy-dock .by-confirm button { height: 34px; padding: 0 14px; border-radius: 10px; font: inherit; font-size: 13px; font-weight: 800; cursor: pointer; }
+  #buy-dock .by-yes { border: 0; background: #dc2626; color: #ffffff; }
+  #buy-dock .by-no { border: 1px solid #d1d5db; background: #ffffff; color: #111827; }
+  #buy-dock .by-confirm button:disabled { opacity: .45; cursor: default; }
+}
+@media (min-width: 901px) {
+  #buy-dock .by-chips.all { flex-wrap: wrap; overflow: visible; }
+  #buy-dock .by-more { background: transparent; border-style: dashed; color: #4b5563; }
+}
