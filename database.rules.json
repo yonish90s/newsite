@@ -210,6 +210,28 @@
           "$day": {
             ".write": "$day.length <= 12 && newData.isNumber() && newData.val() === (data.exists() ? data.val() : 0) + 1"
           }
+        },
+        "clicks_daily": {
+          ".read": true,
+          "$day": {
+            "$key": {
+              ".write": "$day.length <= 12 && $key.length <= 40 && newData.isNumber() && newData.val() > (data.exists() ? data.val() : 0) && newData.val() <= (data.exists() ? data.val() : 0) + 200"
+            }
+          }
+        },
+        "cart_daily": {
+          ".read": true,
+          "$day": {
+            "$key": {
+              ".write": "$day.length <= 12 && $key.length <= 40 && newData.isNumber() && newData.val() > (data.exists() ? data.val() : 0) && newData.val() <= (data.exists() ? data.val() : 0) + 200"
+            }
+          }
+        },
+        "cart_names": {
+          ".read": true,
+          "$key": {
+            ".write": "$key.length <= 40 && newData.isString() && newData.val().length <= 80"
+          }
         }
       },
       "handles": {

@@ -29265,7 +29265,7 @@ function adminPageNormalize(list) {
 var adminTab;
 function adminTabBody() {
   if (!adminTab) { try { adminTab = localStorage.getItem('adm_tab') || 'info'; } catch (e) { adminTab = 'info'; } }
-  if (adminTab === 'stats') { setTimeout(adminCountriesLoad, 0); return buildStatsPage() + '<section class="adm-cc" id="adm-cc"><h2>כניסות לפי מדינה</h2><div class="adm-cc-body">טוען…</div></section>' + `<section class="adm-watch"><h2>הנתונים שלי ונתוני האתר</h2><div class="hw-stats-wrap">${homeWatchHTML()}</div></section>` + `<section class="adm-watch adm-today"><h2>היום באתר</h2><div class="adm-home-hero">${homeWelcomeHeroHTML()}</div></section>`; }
+  if (adminTab === 'stats') { setTimeout(adminCountriesLoad, 0); setTimeout(perfLoad, 0); return perfSectionHTML() + buildStatsPage() + '<section class="adm-cc" id="adm-cc"><h2>כניסות לפי מדינה</h2><div class="adm-cc-body">טוען…</div></section>' + `<section class="adm-watch"><h2>הנתונים שלי ונתוני האתר</h2><div class="hw-stats-wrap">${homeWatchHTML()}</div></section>` + `<section class="adm-watch adm-today"><h2>היום באתר</h2><div class="adm-home-hero">${homeWelcomeHeroHTML()}</div></section>`; }
   if (adminTab === 'algo') return buildAlgoPage();
   if (adminTab === 'stock') return stockPageHTML();
   if (adminTab === 'ads') return adsAdminHTML();
@@ -31451,6 +31451,7 @@ function rentCartAdd(id) {
   if (stock !== null && (it ? it.qty : 0) + n > stock) { glassBanner({ title: `נשארו רק ${stock} במלאי`, sub: 'אי אפשר להוסיף יותר ממה שיש', icon: 'del' }); return; }
   if (it) it.qty = Math.round((it.qty + n) * 100) / 100; else c.push({ id: key, qty: n });
   cartSet(c);
+  if (typeof perfTrackCart === 'function') perfTrackCart(key, r.title, n);
   document.querySelectorAll('.mk-cart-add').forEach(b => b.classList.add('on'));
   glassBanner({ title: 'נוסף לעגלה', sub: r.title, icon: 'ok', btn: 'לעגלה', onBtn: () => cartOpen() });
 }
@@ -31460,6 +31461,7 @@ function cartAdd(id) {
   if (it) it.qty = Math.min(10, it.qty + 1); else c.push({ id, qty: 1 });
   cartSet(c);
   const p = cartCatalog().find(x => x.id === id);
+  if (typeof perfTrackCart === 'function') perfTrackCart(id, p && (p.name || p.title), 1);
   glassBanner({ title: 'נוסף לעגלה', sub: p ? p.name : '', icon: 'ok', btn: 'לעגלה', onBtn: () => cartOpen() });
 }
 function cartQty(id, d) {
@@ -34130,14 +34132,14 @@ function buyCartAddItem(r, n) {
   if (r._prod) {
     const it = c.find(x => x.id === r.id);
     if (it) it.qty = Math.min(10, it.qty + n); else c.push({ id: r.id, qty: Math.min(10, n) });
-    cartSet(c); return 'ok';
+    cartSet(c); if (typeof perfTrackCart === 'function') perfTrackCart(r.id, r.title, n); return 'ok';
   }
   const key = 'mkt_' + r.id, it = c.find(x => x.id === key);
   const stock = typeof mktStock === 'function' ? mktStock(r) : null;
   if (stock === 0) return 'out';
   if (stock !== null && (it ? it.qty : 0) + n > stock) return 'stock:' + stock;
   if (it) it.qty = Math.round((it.qty + n) * 100) / 100; else c.push({ id: key, qty: n });
-  cartSet(c); return 'ok';
+  cartSet(c); if (typeof perfTrackCart === 'function') perfTrackCart(key, r.title, n); return 'ok';
 }
 function buyCartCandidates(q, rentOk, max) {
   const prods = (typeof productsList === 'function' ? productsList() : []).filter(p => p && p.name && (typeof coPrice !== 'function' || coPrice(p) > 0))
@@ -34418,3 +34420,102 @@ function buyWatch() {
   if (document.body) start(); else document.addEventListener('DOMContentLoaded', start);
 })();
 Object.assign(window, { buyChip, buyChipsMore, buyScoreListing, buySend, buyDo, buyToggle, buyClear, buyLog, buyCartBtn });
+
+
+// ============================================================
+// מעקב: לחיצות על כפתורים והוספות לעגלה לפי מוצר — מצטבר בדפדפן ונשלח כל כמה שניות במכה אחת
+// website/analytics/clicks_daily/{day}/{key}, cart_daily/{day}/{key}, cart_names/{key} = שם המוצר
+// ============================================================
+const perfKey = t => String(t || '').trim().replace(/[.#$\[\]\/\u0000-\u001f]/g, '_').replace(/\s+/g, ' ').slice(0, 40);
+let perfQ = { clicks: {}, cart: {}, names: {} }, perfT = 0;
+function perfFlush() {
+  perfT = 0;
+  if (typeof analyticsAllowed === 'function' && !analyticsAllowed()) { perfQ = { clicks: {}, cart: {}, names: {} }; return; }
+  const day = _analyticsDayKey(), upd = {};
+  Object.entries(perfQ.clicks).forEach(([k, n]) => { upd[`clicks_daily/${day}/${k}`] = increment(n); });
+  Object.entries(perfQ.cart).forEach(([k, n]) => { upd[`cart_daily/${day}/${k}`] = increment(n); });
+  Object.entries(perfQ.names).forEach(([k, n]) => { upd[`cart_names/${k}`] = n; });
+  perfQ = { clicks: {}, cart: {}, names: {} };
+  if (Object.keys(upd).length) try { update(ref(db, 'website/analytics'), upd).catch(() => {}); } catch (e) {}
+}
+const perfSoon = () => { if (!perfT) perfT = setTimeout(perfFlush, 5000); };
+function perfTrackCart(id, title, n) {
+  const k = perfKey(id); if (!k) return;
+  perfQ.cart[k] = (perfQ.cart[k] || 0) + Math.max(1, Math.round(Number(n) || 1));
+  if (title) perfQ.names[k] = String(title).slice(0, 80);
+  perfSoon();
+}
+window.perfTrackCart = perfTrackCart;
+// כל לחיצה על כפתור/קישור: השם שלו (aria-label / title / הטקסט)
+document.addEventListener('click', e => {
+  const b = e.target.closest && e.target.closest('button, [role="button"], a, .srail-btn');
+  if (!b || b.closest('#perf, .adm-tabs')) return;
+  const label = perfKey(b.getAttribute('aria-label') || b.getAttribute('title') || (b.innerText || '').split('\n')[0]);
+  if (!label || label.length < 2 || /^[\d\s₪.,×x+-]+$/.test(label)) return;
+  perfQ.clicks[label] = (perfQ.clicks[label] || 0) + 1;
+  perfSoon();
+}, true);
+window.addEventListener('pagehide', perfFlush);
+
+// ---- דשבורד "ביצועים" במנהל (כמו Search Console): טווח, ריבועי סיכום, גרף יומי, ולמטה הכפתורים ומוצרי העגלה ----
+let perfState = { range: 28, on: ['visits', 'pv'], data: null };
+const PERF_SERIES = [
+  { id: 'visits', name: 'כניסות לאתר', color: '#4285f4' },
+  { id: 'pv', name: 'צפיות בעמודים', color: '#5e35b1' },
+  { id: 'clicks', name: 'לחיצות על כפתורים', color: '#00897b' },
+  { id: 'cart', name: 'הוספות לעגלה', color: '#e8710a' }
+];
+function perfSectionHTML() { return `<section class="perf" id="perf"><div class="perf-head"><h2>ביצועים</h2></div><div class="perf-body">טוען נתונים…</div></section>`; }
+async function perfLoad() {
+  const g = p => get(ref(db, 'website/analytics/' + p)).then(s => s.val() || {}).catch(() => ({}));
+  const [ev, pv, daily, clicks, cart, names] = await Promise.all([g('events_daily'), g('daily_pv'), g('daily'), g('clicks_daily'), g('cart_daily'), g('cart_names')]);
+  perfState.data = { ev, pv, daily, clicks, cart, names };
+  perfRender();
+}
+function perfDays(n) { const out = []; for (let i = n - 1; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); out.push(_analyticsDayKey(d)); } return out; }
+function perfSeries(id, days) {
+  const D = perfState.data || {}, sum = o => Object.values(o || {}).reduce((a, n) => a + (Number(n) || 0), 0);
+  return days.map(d => id === 'visits' ? (Number((D.ev[d] || {}).visit_session) || Number(D.daily[d]) || 0)
+    : id === 'pv' ? Number(D.pv[d]) || 0 : id === 'clicks' ? sum(D.clicks[d]) : sum(D.cart[d]));
+}
+function perfFmt(n) { return n >= 1e6 ? (n / 1e6).toFixed(1) + 'M' : n >= 1e4 ? (n / 1e3).toFixed(1) + 'K' : Math.round(n).toLocaleString('he-IL'); }
+function perfChartSVG(days) {
+  const W = 900, H = 260, L = 44, R = 44, T = 16, B = 30, on = PERF_SERIES.filter(x => perfState.on.includes(x.id));
+  if (!on.length) return '<div class="perf-empty">בחרו נתון להצגה בגרף</div>';
+  const xs = i => L + (days.length < 2 ? 0 : i * (W - L - R) / (days.length - 1));
+  let svg = '', axes = '';
+  on.forEach((sr, si) => {
+    const v = perfSeries(sr.id, days), max = Math.max(4, ...v), top = Math.ceil(max / 4) * 4;
+    const ys = n => T + (H - T - B) * (1 - n / top);
+    svg += `<polyline fill="none" stroke="${sr.color}" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round" points="${v.map((n, i) => xs(i).toFixed(1) + ',' + ys(n).toFixed(1)).join(' ')}"/>`;
+    if (si < 2) for (let k = 0; k <= 4; k++) { const val = top * k / 4, y = ys(val);
+      if (si === 0) axes += `<line x1="${L}" x2="${W - R}" y1="${y}" y2="${y}" stroke="#e6e8eb"/>`;
+      axes += `<text x="${si === 0 ? W - R + 8 : L - 8}" y="${y + 4}" text-anchor="${si === 0 ? 'start' : 'end'}" fill="${sr.color}" font-size="11">${perfFmt(val)}</text>`; }
+  });
+  const step = Math.max(1, Math.ceil(days.length / 8));
+  days.forEach((d, i) => { if (i % step === 0 || i === days.length - 1) axes += `<text x="${xs(i)}" y="${H - 8}" text-anchor="middle" fill="#6b7280" font-size="11">${d.slice(8)}/${d.slice(5, 7)}</text>`; });
+  return `<svg class="perf-chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" direction="ltr">${axes}${svg}</svg>`;
+}
+function perfTop(obj, days, n) {
+  const tot = {}; days.forEach(d => Object.entries(obj[d] || {}).forEach(([k, v]) => { tot[k] = (tot[k] || 0) + (Number(v) || 0); }));
+  return Object.entries(tot).sort((a, b) => b[1] - a[1]).slice(0, n || 10);
+}
+function perfRender() {
+  const box = document.querySelector('#perf .perf-body'); if (!box || !perfState.data) return;
+  const days = perfDays(perfState.range), D = perfState.data;
+  const ranges = [[1, 'היום'], [7, '7 ימים'], [28, '28 ימים'], [90, '3 חודשים']];
+  const tiles = PERF_SERIES.map(sr => { const on = perfState.on.includes(sr.id), tot = perfSeries(sr.id, days).reduce((a, n) => a + n, 0);
+    return `<button type="button" class="perf-tile${on ? ' on' : ''}" style="--c:${sr.color}" onclick="perfToggle('${sr.id}')"><span class="perf-chk">${on ? '✓' : ''}</span><small>${sr.name}</small><b>${perfFmt(tot)}</b></button>`; }).join('');
+  const clicks = perfTop(D.clicks, days, 10), cart = perfTop(D.cart, days, 10);
+  const maxC = clicks.length ? clicks[0][1] : 1, maxK = cart.length ? cart[0][1] : 1;
+  const row = (label, n, max, color) => `<div class="perf-row"><span class="perf-row-l">${escHtml(label)}</span><span class="perf-bar"><i style="width:${Math.max(4, n / max * 100)}%;background:${color}"></i></span><b>${n.toLocaleString('he-IL')}</b></div>`;
+  box.innerHTML = `<div class="perf-ranges">${ranges.map(([n, t]) => `<button type="button" class="${perfState.range === n ? 'on' : ''}" onclick="perfRange(${n})">${t}</button>`).join('')}<button type="button" class="perf-ref" onclick="perfLoad()" title="רענון">↻</button></div>
+    <div class="perf-card"><div class="perf-tiles">${tiles}</div>${perfChartSVG(days)}</div>
+    <div class="perf-two">
+      <div class="perf-list"><h3>הכפתורים הכי לחוצים</h3>${clicks.length ? clicks.map(([k, n]) => row(k, n, maxC, '#00897b')).join('') : '<div class="perf-empty">עוד אין לחיצות בטווח הזה — המעקב התחיל עכשיו</div>'}</div>
+      <div class="perf-list"><h3>מה הכי הוסיפו לעגלה</h3>${cart.length ? cart.map(([k, n]) => row(D.names[k] || k, n, maxK, '#e8710a')).join('') : '<div class="perf-empty">עוד אין הוספות לעגלה בטווח הזה</div>'}</div>
+    </div>`;
+}
+function perfRange(n) { perfState.range = n; perfRender(); }
+function perfToggle(id) { const i = perfState.on.indexOf(id); if (i >= 0) perfState.on.splice(i, 1); else perfState.on.push(id); perfRender(); }
+Object.assign(window, { perfLoad, perfRange, perfToggle, perfSectionHTML });
