@@ -33751,6 +33751,7 @@ function buyWords(t) {
     if (w.length > 3 && /^[הובלמשכ][א-ת]/.test(w)) out.push(buyNormWord(w.slice(1)));     // אות שימוש: "למחשב", "המחשב"
     if (w.length > 4 && /^(וה|של|מה|לה|בה|כש|וב|ול)/.test(w)) out.push(buyNormWord(w.slice(2)));
     if (/^[א-ת]{4,}ת$/.test(w)) out.push(buyNormWord(w.slice(0, -1) + 'ה'));        // סמיכות: "מנורת" → "מנורה", "מכונת" → "מכונה"
+    if (/^[א-ת]{3,}י$/.test(w)) out.push(buyNormWord(w.slice(0, -1)));                 // סמיכות ברבים: "שמני עיסוי" → "שמן", "כלי" → "כל"
     return out;
   });
 }
@@ -33890,7 +33891,7 @@ function buyMatch(item) {
       return Object.assign(x, { offer, fit });
     }).filter(x => x.fit !== 'far' && x.offer > 0)
     .sort((a, b) => (a.fit === 'in' ? 0 : 1) - (b.fit === 'in' ? 0 : 1) || b.score - a.score || (a.r.price || 0) - (b.r.price || 0))
-    .filter(x => item.q !== '*' || x.fit === 'in').slice(0, item.q === '*' || buyTopicsIn(buyWords(item.q)).set.size ? 8 : 4);
+    .filter(x => item.q !== '*' || (x.fit === 'in' && Number(x.r.price) > 0)).slice(0, item.q === '*' || buyTopicsIn(buyWords(item.q)).set.size ? 8 : 4);
 }
 // חיפוש רך כשלא נמצא כלום: מספיק סוג משותף או מילה אחת משותפת (עם סבלנות לשגיאות) — כדי תמיד להציע משהו
 function buyLoose(item) {
@@ -33947,6 +33948,16 @@ async function buyHandle(text) {
   items.forEach(it => {
     const ms = buyMatch(it);
     html += `<div class="by-item"><div class="by-item-h"><b>${it.q === '*' ? 'כל המודעות' : escHtml(it.q)}</b>${it.max ? `<small>עד ${buyMoney(it.max)}</small>` : ''}${it.city ? `<small>📍 ${escHtml(it.city)}</small>` : ''}</div>`;
+    if (!ms.length && !it.rent && it.q !== '*') {
+      // אין למכירה — אבל יש להשכרה? מראים את זה במקום "אין"
+      const rentMs = buyMatch(Object.assign({}, it, { rent: true }));
+      if (rentMs.length) {
+        found += rentMs.length;
+        html += `<p class="by-none">אין ${escHtml(it.q)} למכירה כרגע, אבל יש להשכרה:</p>`;
+        rentMs.forEach(m => { sendAll.push(m); html += buyCardHTML(m, buyAct(async () => { if (buyNeedLogin()) return; const st = await buySendOffer(m, note); buySay('bot', st === 'sent' ? `✅ שלחתי בקשה ל${escHtml(m.r.owner || 'משכיר')} על "${escHtml(m.r.title)}".` : `✅ (מודעת דוגמה) בקשה על "${escHtml(m.r.title)}".`); })); });
+        html += '</div>'; return;
+      }
+    }
     if (!ms.length) {
       // אין בתקציב/בכלל: מראים את הכי קרובים מאותו סוג (גם מעל התקציב), ושומרים כמבוקש
       const near = buyMatch(Object.assign({}, it, { max: 0 })).slice(0, 3);
@@ -34003,12 +34014,14 @@ function buyCartAddItem(r, n) {
   if (it) it.qty = Math.round((it.qty + n) * 100) / 100; else c.push({ id: key, qty: n });
   cartSet(c); return 'ok';
 }
-function buyCartCandidates(q, rentOk) {
+function buyCartCandidates(q, rentOk, max) {
   const prods = (typeof productsList === 'function' ? productsList() : []).filter(p => p && p.name && (typeof coPrice !== 'function' || coPrice(p) > 0))
     .map(p => ({ _prod: true, id: p.id, title: p.name, price: typeof coPrice === 'function' ? coPrice(p) : Number(p.price) || 0, img: p.image || '', desc: p.desc || '', owner: 'החנות' }));
-  const mk = (typeof mktAll === 'function' ? mktAll() : []).filter(r => r && r.title && r.price > 0 && r.offer !== 'החלפה' && (rentOk || ['used', 'biz', 'proj'].includes(mktSecOf(r))));
-  return prods.concat(mk).map(r => { const sc = buyScoreListing(q, r); return sc === null ? null : { r, score: sc + (r._prod ? .5 : 0) }; })
-    .filter(Boolean).sort((a, b) => b.score - a.score || a.r.price - b.r.price).slice(0, 4);
+  // כל השוק (גם השכרה ואחסון) — מה שלקנייה קודם, אלא אם ביקשו לשכור
+  const mk = (typeof mktAll === 'function' ? mktAll() : []).filter(r => r && r.title && r.price > 0 && r.offer !== 'החלפה');
+  const isRent = r => !r._prod && ['rent', 'store'].includes(mktSecOf(r));
+  return prods.concat(mk).map(r => { const sc = buyScoreListing(q, r); return sc === null ? null : { r, score: sc + (r._prod ? .5 : 0) - (isRent(r) && !rentOk ? 2 : 0), rent: isRent(r), over: max && r.price > max }; })
+    .filter(Boolean).filter(x => !x.over).sort((a, b) => b.score - a.score || a.r.price - b.r.price).slice(0, 4);
 }
 function buyCartBtn(id, btn) {
   const r = rentFind(id); if (!r) return;
@@ -34023,29 +34036,42 @@ function buyCartSummary() {
   const rows = c.map(x => { const p = cat.find(y => y.id === x.id) || {}; const pr = Number(p.price) || (typeof coPrice === 'function' && p.price ? coPrice(p) : 0); tot += pr * x.qty; return `<li>${escHtml(p.name || p.title || 'פריט')} × ${x.qty}${pr ? ` — ${buyMoney(pr * x.qty)}` : ''}</li>`; });
   return `בעגלה עכשיו:<ul class="by-list">${rows.join('')}</ul>${tot ? `<b>סה״כ בערך ${buyMoney(tot)}</b><br>` : ''}<button type="button" class="by-link" onclick="cartOpen()">לפתיחת העגלה</button> · <button type="button" class="by-link" onclick="cartCheckout()">להזמנה</button>`;
 }
+// הוספה לעגלה: אותו מפענח של כל הבקשות (buyParse — מחיר, עיר, מילות מילוי), ובנוסף כמות
+function buyQtyOf(q) {
+  // כמות = מספר קטן (1–50) או מילה ("שניים"); מספר עם יחידה (13 אינץ, 128GB) הוא חלק מהמוצר
+  let n = 1;
+  const mn = q.match(/(?:^|\s)(\d{1,2})\s*(?:יח(?:ידות)?|x|×|פעמים)?(?=\s|$)/) || q.match(/[x×]\s*(\d{1,2})(?=\s|$)/);
+  if (mn && Number(mn[1]) >= 1 && Number(mn[1]) <= 50 && !/^\s*(אינץ|inch|gb|tb|ג׳יגה|מ״מ|ס״מ|ליטר|וואט|w)/i.test(q.slice(mn.index + mn[0].length))) { n = Number(mn[1]); q = q.replace(mn[0], ' '); }
+  else { const w = q.split(/\s+/).find(x => BUY_NUMW[x]); if (w) { n = BUY_NUMW[w]; q = q.replace(new RegExp('(^|\\s)' + w + '(?=\\s|$)'), ' '); } }
+  return { n, q: q.replace(/\s+/g, ' ').trim() };
+}
+function buyCartPickHTML(title, cs, n) {
+  return `<div class="by-item"><div class="by-item-h"><b>${escHtml(title)}</b><small>איזה מהם להוסיף?</small></div>${cs.map(c => `<div class="by-card"><button type="button" class="by-card-main" onclick="${c.r._prod ? `navigateToPage('page-products-main')` : `rentOpen('${artEsc(c.r.id)}')`}">${c.r.img ? `<img src="${escHtml(c.r.img)}" alt="" loading="lazy">` : '<span class="by-noimg">🛍️</span>'}<span class="by-card-tx"><b>${escHtml(c.r.title)}</b><small>${buyMoney(c.r.price)}${c.rent ? ` ${escHtml((RENT_UNITS[c.r.unit] || '').trim())} · להשכרה` : ''} · ${escHtml(c.r.city || c.r.owner || '')}</small></span></button><div class="by-card-acts"><button type="button" class="by-offer" onclick="buyDo(${buyAct(() => { const st = buyCartAddItem(c.r, n); buySay('bot', st === 'ok' ? `🛒 נוסף: <b>${escHtml(c.r.title)}</b> × ${n}` : 'אי אפשר להוסיף — אין מספיק במלאי'); })})">הוסף × ${n}</button></div></div>`).join('')}</div>`;
+}
 function buyCartHandle(text) {
   const rentOk = /לשכור|להשכיר|השכרה/.test(text);
-  let t = buyCartStrip(text).replace(/^(בבקשה|אפשר|תוכל|תוכלי)\s+/, '').replace(/(^|\s)(בבקשה|לי|את|גם)(?=\s|$)/g, ' ').replace(/(^|\s)ה(?=[א-ת]{3,})/g, '$1').replace(/\s+/g, ' ').trim();
-  const parts = t.split(/\s*(?:,|;|\+|\sוגם\s|\s(?=ו[א-ת]{2,}))\s*/).map(p => p.replace(/^ו(?=[א-ת]{2,})/, '').trim()).filter(Boolean);
-  if (!parts.length) { buySay('bot', 'מה להוסיף לעגלה? למשל: <b>תוסיף לעגלה 2 נרות ריחניים</b>'); return; }
+  const items = buyParse(buyCartStrip(text));
+  if (!items.length) { buySay('bot', 'מה להוסיף לעגלה? למשל: <b>תוסיף לעגלה 2 נרות ריחניים</b>'); return; }
   let html = '', added = [];
-  parts.forEach(p => {
-    let n = 1;
-    const mn = p.match(/(?:^|\s)(\d+(?:\.\d+)?)\s*(?:יח(?:ידות)?|x|×)?(?=\s|$)/) || p.match(/[x×]\s*(\d+)/);
-    if (mn) { n = Number(mn[1]); p = p.replace(mn[0], ' '); }
-    else { const w = p.split(/\s+/).find(x => BUY_NUMW[x]); if (w) { n = BUY_NUMW[w]; p = p.replace(new RegExp('(^|\\s)' + w + '(?=\\s|$)'), ' '); } }
-    p = p.replace(/\s+/g, ' ').trim();
-    const cs = buyCartCandidates(p, rentOk);
-    if (!cs.length) { html += `<p class="by-none">לא מצאתי "${escHtml(p)}" לקנייה באתר.</p>`; return; }
+  items.forEach(it => {
+    const { n, q } = buyQtyOf(it.q === '*' ? '' : it.q);
+    if (!q) return;
+    const cs = buyCartCandidates(q, rentOk, it.max);
+    if (!cs.length) {
+      // אין בדיוק / אין בתקציב — מציעים את הכי קרובים (גם מעל התקציב), עם כפתור הוספה
+      const near = buyCartCandidates(q, true, 0);
+      const loose = near.length ? near : buyLoose({ q, max: it.max }).map(m => ({ r: m.r, score: m.score, rent: ['rent', 'store'].includes(mktSecOf(m.r)) }));
+      html += loose.length ? `<p class="by-none">${near.length && it.max ? `אין ${escHtml(q)} עד ${buyMoney(it.max)}` : `אין בדיוק "${escHtml(q)}"`} — הכי קרוב שמצאתי:</p>${buyCartPickHTML(q, loose.slice(0, 3), n)}` : `<p class="by-none">אין כרגע "${escHtml(q)}" באתר. אפשר לכתוב <b>תודיע לי כשיעלה ${escHtml(q)}</b> ואתריע כשיהיה.</p>`;
+      return;
+    }
     const top = cs[0], second = cs[1];
     if (!second || top.score > second.score) {
       const st = buyCartAddItem(top.r, n);
-      html += st === 'ok' ? `<p class="by-ok">🛒 נוסף: <b>${escHtml(top.r.title)}</b> × ${n} — ${buyMoney(top.r.price * n)}</p>` : `<p class="by-none">${escHtml(top.r.title)}: ${st === 'out' ? 'אזל מהמלאי' : 'נשארו רק ' + st.split(':')[1] + ' במלאי'}</p>`;
+      html += st === 'ok' ? `<p class="by-ok">🛒 נוסף: <b>${escHtml(top.r.title)}</b> × ${n} — ${buyMoney(top.r.price * n)}${top.rent ? ` <small>(${escHtml((RENT_UNITS[top.r.unit] || '').trim())} · להשכרה)</small>` : ''}</p>` : `<p class="by-none">${escHtml(top.r.title)}: ${st === 'out' ? 'אזל מהמלאי' : 'נשארו רק ' + st.split(':')[1] + ' במלאי'}</p>`;
       if (st === 'ok') added.push(top.r);
-    } else {
-      html += `<div class="by-item"><div class="by-item-h"><b>${escHtml(p)}</b><small>איזה מהם להוסיף?</small></div>${cs.map(c => `<div class="by-card"><button type="button" class="by-card-main" onclick="${c.r._prod ? `navigateToPage('page-products-main')` : `rentOpen('${artEsc(c.r.id)}')`}">${c.r.img ? `<img src="${escHtml(c.r.img)}" alt="" loading="lazy">` : '<span class="by-noimg">🛍️</span>'}<span class="by-card-tx"><b>${escHtml(c.r.title)}</b><small>${buyMoney(c.r.price)} · ${escHtml(c.r.city || c.r.owner || '')}</small></span></button><div class="by-card-acts"><button type="button" class="by-offer" onclick="buyDo(${buyAct(() => { const st = buyCartAddItem(c.r, n); buySay('bot', st === 'ok' ? `🛒 נוסף: <b>${escHtml(c.r.title)}</b> × ${n}` : 'אי אפשר להוסיף — אין מספיק במלאי'); })})">הוסף × ${n}</button></div></div>`).join('')}</div>`;
-    }
+    } else html += buyCartPickHTML(q, cs, n);
   });
+  if (!html) { buySay('bot', 'מה להוסיף לעגלה? למשל: <b>תוסיף לעגלה 2 נרות ריחניים</b>'); return; }
   buySay('bot', html + (added.length ? `<button type="button" class="by-all" onclick="cartOpen()">לעגלה (${cartGet().reduce((a, x) => a + x.qty, 0)} פריטים)</button>` : ''));
 }
 // ---- מעקב ותזכורות דרך הצ'אט ----
