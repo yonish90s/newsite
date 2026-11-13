@@ -32402,7 +32402,7 @@ function rentInfCheck() {
   rentSgFill();
   const end = document.querySelector('.rent-page .rn-more-end');
   if (!end || end.getBoundingClientRect().top > window.innerHeight + 700) return;
-  const box = end.parentElement.querySelector('.mk-grid');
+  const box = end.parentElement.querySelector('.mk-grid:not(.mk-gold .mk-grid)');
   if (!box) return;
   box.insertAdjacentHTML('beforeend', rentInfList.slice(rentInfShown, rentInfShown + RENT_BATCH).map(rentMiniHTML).join(''));
   rentInfShown += RENT_BATCH;
@@ -32554,12 +32554,32 @@ function rentMiniHTML(x) {
   const badge = biz ? `<i class="mk-sg-badge b-biz">${BIZ_IC}עסק</i>` : sec === 'used' ? '<i class="mk-sg-badge b-used">יד 2</i>' : '';
   return `<div role="button" tabindex="0" class="mk-sg${biz ? ' is-biz' : sec === 'used' ? ' is-used' : ''}" data-id="${escHtml(x.id)}" onclick="rentOpen('${artEsc(x.id)}')" onkeydown="if((event.key==='Enter'||event.key===' ')&&event.target===this){event.preventDefault();this.click();}"><span class="mk-sg-meta"><span class="mk-sg-who" role="button" tabindex="0" title="${escHtml(mktWho(x))}" aria-label="${escHtml(mktWho(x))}" onclick="event.stopPropagation(); rentOpenSeller('${artEsc(x.uid || '')}', '${artEsc(x.owner || '')}')">${authorAvHTML({ author: mktWho(x) || '?', uid: x.uid || '' })}<b>${biz ? BIZ_IC : ''}${escHtml(mktWho(x))}</b></span><small class="mk-sg-city${mkKmTo(x.city) !== null ? ' km' : ''}">${escHtml(mkWhereTxt(x))}</small>${mkMobStatHTML(x)}<small class="mk-sg-price">${rentTypeIcon(x)}${Number(x.price) > 0 ? `${Number(x.price).toLocaleString('he-IL', { maximumFractionDigits: 2 })}&nbsp;₪` : mktIsProj(x) ? escHtml((PROJ_SUB[x.pd] || {}).name || PROJ_KINDS[x.pk] || 'פרויקט') : ''}${x.uid ? `<i data-sg-rate="${escHtml(x.uid)}"></i>` : ''}</small></span><span class="mk-sg-img">${rentThumb(x)}${badge}${del}${mktSoldOut(x) ? '<i class="mk-sg-out">אזל</i>' : ''}</span><span class="mk-sg-acts">${rentHoverHTML(x).replace('<span role="button" tabindex="0" class="mk-a-dots"', () => `<b class="mk-sg-title"><span class="mk-sg-tt">${escHtml(x.title)}</span><span class="mk-sg-more" role="button" tabindex="0" onclick="event.stopPropagation(); event.preventDefault(); this.parentElement.classList.toggle('open')"><span>עוד</span><span>פחות</span></span></b><span role="button" tabindex="0" class="mk-a-dots"`)}</span></div>`;
 }
+// שורת הזהב: משאירים בה בדיוק כמה כרטיסים שנכנסים בשורה אחת; העודפים חוזרים לראש הגריד הרגיל
+function mkGoldFit() {
+  const g = document.querySelector('.rent-page .mk-gold .mk-grid'), main = document.querySelector('.rent-page .mk-grid:not(.mk-gold .mk-grid)');
+  if (!g) return;
+  const cols = (getComputedStyle(main || g).gridTemplateColumns || '').split(' ').filter(Boolean).length || 2;
+  const extra = [...g.children].slice(cols);
+  if (main && extra.length) main.prepend(...extra);
+}
+window.addEventListener('resize', () => { clearTimeout(window.__mkGoldT); window.__mkGoldT = setTimeout(mkGoldFit, 200); });
 function rentGridHTML() {
   const l = rentList();
   if (!l.length) return `<div class="rn-empty">אין עדיין מודעות כאן.<br><button type="button" class="rn-pub" onclick="mkPubOpen()">היו הראשונים לפרסם</button></div>`;
-  rentInfList = l; rentInfShown = RENT_BATCH;
+  // שורת זהב: השורה הראשונה — עסקים בקידום ממומן (מסומנים sponsored / promoUntil קודם, אחר כך שאר העסקים).
+  // כמה נכנסים בשורה אחת: 7 במחשב רחב, 5 במחשב קטן, 2 במובייל — והם לא חוזרים בגריד שמתחת
+  const cols = window.matchMedia('(max-width: 900px)').matches ? 2 : 9;   // מועמדים; אחרי הציור משאירים רק כמה שנכנסים בשורה
+  const promoted = r => r.sponsored || (r.promoUntil && r.promoUntil > Date.now());
+  const gold = l.filter(mktIsBiz).sort((a, b) => (promoted(b) ? 1 : 0) - (promoted(a) ? 1 : 0)).slice(0, cols);
+  const goldIds = new Set(gold.map(r => r.id));
+  const rest = gold.length ? l.filter(r => !goldIds.has(r.id)) : l;
+  rentInfList = rest; rentInfShown = RENT_BATCH;
   setTimeout(rentInfArm, 0);
-  return `<div class="mk-sg-grid mk-grid">${l.slice(0, RENT_BATCH).map(rentMiniHTML).join('')}</div>${l.length > RENT_BATCH ? '<div class="rn-more-end" aria-hidden="true"></div>' : ''}`;
+  setTimeout(mkGoldFit, 0);
+  const goldHTML = gold.length ? `<section class="mk-gold" aria-label="עסקים בקידום ממומן">
+      <header class="mk-gold-head"><b>⭐ עסקים מקודמים</b><button type="button" class="mk-gold-cta" onclick="typeof adsAdvertiseOpen === 'function' && adsAdvertiseOpen()">קדמו את העסק שלכם</button></header>
+      <div class="mk-sg-grid mk-grid">${gold.map(rentMiniHTML).join('')}</div></section>` : '';
+  return `${goldHTML}<div class="mk-sg-grid mk-grid">${rest.slice(0, RENT_BATCH).map(rentMiniHTML).join('')}</div>${rest.length > RENT_BATCH ? '<div class="rn-more-end" aria-hidden="true"></div>' : ''}`;
 }
 function rentViewHTML() {
   const all = mktAll();
