@@ -33625,7 +33625,7 @@ const BUY_SYN = {
   'ספה': ['ספה', 'סלון', 'כורסה'], 'מקרר': ['מקרר', 'fridge'], 'אופניים': ['אופניים', 'אופני', 'bike'], 'מצלמה': ['מצלמה', 'camera', 'nikon', 'canon', 'sony'],
   'מדפסת': ['מדפסת', 'printer', 'תלת מימד', 'prusa', 'bambu']
 };
-const BUY_FILL = /^(?:אני\s+)?(?:רוצה|מחפש[תים]?|צריכ?[הים]?|מעוניינ?[תים]?|תמצא|תמצאי|מצא|תחפש|תחפשי|חפש|תביא|תביאי|תשיג|תשיגי|יש|אפשר|בא\s+לי)?(?:\s+(?:לי|לנו))?\s*(?:לקנות|לרכוש|קניית|קנייה של|למצוא|לחפש)?\s*(?:לי\s+)?(?:את\s+)?/;
+const BUY_FILL = /^(?:אני\s+)?(?:תראה|תראי|הראה|הצג|תציג|רוצה|מחפש[תים]?|צריכ?[הים]?|מעוניינ?[תים]?|תמצא|תמצאי|מצא|תחפש|תחפשי|חפש|תביא|תביאי|תשיג|תשיגי|יש|אפשר|בא\s+לי)?(?:\s+(?:לי|לנו))?\s*(?:לקנות|לרכוש|קניית|קנייה של|למצוא|לחפש)?\s*(?:לי\s+)?(?:את\s+)?/;
 // ביטויי מחיר: "עד 1000", "עד מחיר 1000", "עד מחיר של 1,000 ש״ח", "מתחת ל-1000", "פחות מ-1000", "בתקציב 1000", "עד אלף"
 const BUY_PRICE_RX = /(?:עד|ע׳|ע'|ע(?=\s*\d)|מתחת\s+ל-?|פחות\s+מ-?|לא\s+יותר\s+מ-?|מקסימום|תקציב(?:\s+של)?|בתקציב(?:\s+של)?|בסביבות|בערך)\s*(?:מחיר\s*(?:של\s*)?)?(?:₪\s*)?([\d.,]+\s*(?:אלף|k)?|אלף|אלפיים|מאה|מאתיים|חמש\s*מאות)\s*(?:₪|שח|ש״ח|שקל(?:ים)?|ש\"ח)?/i;
 const BUY_WORDNUM = { 'אלף': 1000, 'אלפיים': 2000, 'מאה': 100, 'מאתיים': 200, 'חמש מאות': 500, 'חמשמאות': 500 };
@@ -33654,7 +33654,8 @@ function buyParse(text) {
   const parts = t.split(/\s*(?:,|;|\+|\sוגם\s|\sועוד\s|\s(?=ו[א-ת]{2,}))\s*/).map(p => p.replace(/^ו(?=[א-ת]{2,})/, '').trim()).filter(Boolean);
   const cities = typeof CITY_GEO !== 'undefined' ? Object.keys(CITY_GEO) : [];
   const rent = /לשכור|להשכיר|השכרה|לשימוש|להשאיל|השאלה/.test(text);
-  return parts.map(p => {
+  if (!parts.length && global) parts.push('');
+  const items = parts.map(p => {
     const pm = p.match(BUY_PRICE_RX) || p.match(/(?:ב-?|במחיר\s+(?:של\s+)?)\s*₪?\s*([\d.,]+\s*(?:אלף|k)?)\s*(?:₪|שח|ש״ח|שקל(?:ים)?)/i);
     const max = pm ? buyNum(pm[1]) : global;
     let q = pm ? p.replace(pm[0], '') : p;
@@ -33664,8 +33665,11 @@ function buyParse(text) {
     if (city) q = q.replace(cityRx(city), ' ');
     // מילות מילוי שאינן המוצר
     q = q.replace(/(^|\s)(מחיר|במחיר|שקל|שקלים|ש״ח|שח|₪|בערך|בבקשה|לי|את|טוב|טובה|זול|זולה|משהו|איזה|איזשהו|איזשהי)(?=\s|$)/g, ' ').replace(/\s+/g, ' ').trim();
+    q = q.replace(/(^|\s)(מודעות|מודעה|דברים|כל|כלשהם|כלשהן|מה|ש|שיש|שווה|שווים|לראות|תראה|תראי|הצג|הציגי)(?=\s|$)/g, ' ').replace(/\s+/g, ' ').trim();
     return { q, max, city, rent };
-  }).filter(x => x.q.length > 1);
+  }).filter(x => x.q.length > 1 || (x.max && !x.q));
+  // "תראה לי מודעות עד 200" — בלי מוצר מסוים: כל מה שבתקציב
+  return items.map(x => x.q ? x : Object.assign(x, { q: '*' }));
 }
 // ---- מנוע התאמה מדויק ----
 // 1) מילון סוגי מוצרים: כל סוג = מילים, כינויים, מותגים ודגמים (עברית + אנגלית). הבקשה והמודעה מתורגמות לסוגים,
@@ -33697,6 +33701,27 @@ const BUY_CONCEPTS = {
   lamp: ['מנורה', 'מנורות', 'מנורת לילה', 'אהיל', 'תאורה', 'פנס', 'lamp', 'light', 'led', 'לד', 'נורה', 'נורות', 'פס לד', 'strip'],
   watch: ['שעון', 'שעונים', 'apple watch', 'smartwatch', 'garmin']
 };
+// נושאים רחבים = כמה סוגים יחד: "מוצרים לבית", "אלקטרוניקה", "גיימינג"
+const BUY_TOPICS_RAW = [
+  [['מוצרים לבית', 'מוצרי בית', 'לבית', 'לדירה', 'בית', 'הבית', 'ריהוט', 'רהיטים', 'עיצוב הבית'], ['sofa', 'fridge', 'washer', 'furniture', 'kitchen', 'lamp', 'tv']],
+  [['אלקטרוניקה', 'אלקטרוני', 'גאדג׳טים', 'גאדג\'טים', 'גאדגטים', 'טכנולוגיה', 'מוצרי חשמל', 'חשמל'], ['computer', 'phone', 'tablet', 'tv', 'monitor', 'headphones', 'camera', 'console', 'watch']],
+  [['גיימינג', 'גיימרים', 'משחקים', 'משחקי מחשב', 'gaming'], ['console', 'computer']],
+  [['מטבח', 'למטבח', 'מוצרי מטבח'], ['kitchen', 'fridge']],
+  [['מוזיקה', 'כלי נגינה', 'סאונד'], ['guitar', 'keyboard_music', 'headphones']],
+  [['צילום', 'לצלם'], ['camera']],
+  [['כלי עבודה', 'כלים', 'שיפוצים', 'תיקונים', 'עבודות בית'], ['drill']],
+  [['ספורט', 'רכיבה', 'כושר'], ['bike']],
+  [['הדפסה', 'להדפיס'], ['printer', 'printer3d']]
+];
+let BUY_TOPICS = null;
+function buyTopicsIn(words) {
+  if (!BUY_TOPICS) BUY_TOPICS = BUY_TOPICS_RAW.map(([ws, concepts]) => [ws.map(w => buyWordsPrimary(w)), concepts]);
+  const set = new Set(), hits = new Set();
+  BUY_TOPICS.forEach(([phrases, concepts]) => phrases.forEach(ph => {
+    if (ph.length && ph.every(w => words.some(x => x === w || (w.length > 3 && buyWordLike(x, w))))) { concepts.forEach(c => set.add(c)); ph.forEach(w => hits.add(w)); }
+  }));
+  return { set, hits };
+}
 // מילים כלליות של סוג (כל מחשב הוא "מחשב"). מילה מהמילון שאינה כללית = מותג/דגם ("מקבוק", "אייפון") — חובה שתופיע במודעה
 const BUY_GENERIC = new Set(['מחשב', 'מחשבים', 'לפטופ', 'לפטופים', 'laptop', 'notebook', 'pc', 'נייד', 'שולחני', 'גיימינג', 'קונסולה', 'קונסולות', 'טלפון', 'טלפונים', 'פלאפון', 'סלולרי', 'סמארטפון', 'smartphone', 'טאבלט', 'טאבלטים', 'tablet', 'טלוויזיה', 'טלויזיה', 'tv', 'מסך', 'מסכים', 'מוניטור', 'monitor', 'אוזניות', 'headphones', 'earbuds', 'מצלמה', 'מצלמות', 'camera', 'מדפסת', 'מדפסות', 'printer', 'תלת', 'מימד', '3d', 'ספה', 'ספות', 'כורסה', 'כורסאות', 'סלון', 'sofa', 'couch', 'מקרר', 'מקררים', 'fridge', 'refrigerator', 'מקפיא', 'מכונת', 'כביסה', 'מייבש', 'washing', 'machine', 'אופניים', 'אופני', 'bike', 'bicycle', 'קורקינט', 'סקוטר', 'גיטרה', 'גיטרות', 'guitar', 'קלידים', 'פסנתר', 'אורגן', 'מברגה', 'מקדחה', 'drill', 'שולחן', 'כיסא', 'כסא', 'ארון', 'מיטה', 'שידה', 'מדף', 'table', 'chair', 'שעון', 'שעונים', 'smartwatch', 'צילום', 'לייזר', 'דיו'].map(w => buyNormWord(w)));
 // מותג → הסוג העיקרי שלו. מודעה עם המותג ובלי מילת סוג מקבלת את הסוג הזה ("Dell Latitude 5420" = מחשב).
@@ -33786,7 +33811,14 @@ function buyIsAccessory(title, concepts) {
 }
 // ציון התאמה של מודעה לבקשה: null = לא מתאים
 function buyScoreListing(query, r) {
-  const qw = buyWords(query), qc = buyConceptsIn(qw);
+  if (query === '*') return 1;                                   // "כל המודעות עד סכום מסוים"
+  const qw = buyWords(query), qc = buyConceptsIn(qw), qt = buyTopicsIn(qw);
+  const topicOnly = qt.set.size && !qc.set.size;
+  const conceptHits = new Set(qc.hits);
+  qt.set.forEach(k => qc.set.add(k)); qt.hits.forEach(w => qc.hits.add(w));
+  // מילים "מקוריות" של הבקשה (בלי הצורות המקוצרות) — רק הן יכולות להיות חובה
+  const qPrim = buyWordsPrimary(query);
+  const covered = w => [...qc.hits].some(h => buyWords(w).includes(h) || buyWordLike(w, h));
   const wantAcc = qw.some(w => BUY_ACCESSORY.some(a => buyWordLike(w, buyNormWord(a))));
   const tw = buyWords(r.title), dw = buyWords([r.desc, r.bizName, (r.specs || []).join(' '), r.cat && typeof rentCatOf === 'function' ? rentCatOf(r.cat).name : ''].join(' '));
   const tc = buyConceptsIn(tw).set, dc = buyConceptsIn(tw.concat(dw)).set;
@@ -33813,19 +33845,22 @@ function buyScoreListing(query, r) {
     if (!inAll) return null;
     // מותג/דגם שביקשו ("מקבוק", "אייפון", "dell") חייב להופיע במודעה
     const all0 = tw.concat(dw);
-    for (const w of qc.hits) if (!BUY_GENERIC.has(w) && qw.some(x => buyWordLike(x, w)) && !buyAliasesOf(w).some(a => all0.some(x => buyWordLike(x, a)))) return null;
+    for (const w of conceptHits) if (!BUY_GENERIC.has(w) && qw.some(x => buyWordLike(x, w)) && !buyAliasesOf(w).some(a => all0.some(x => buyWordLike(x, a)))) return null;
     // שם העצם הראשון קובע מה המוצר — בבקשה ובמודעה: "שולחן מחשב" הוא שולחן, "תיק למחשב" הוא תיק
-    const qh = buyHeadOf(qw), th = buyHeadOf(tw);
+    const qh = topicOnly ? '' : buyHeadOf(qw), th = buyHeadOf(tw);
     if (qh && th && qh !== th) return null;
+    if (topicOnly && th.startsWith('acc:')) return null;
+    if (topicOnly && th && !qc.set.has(th)) return null;                       // בנושא: המוצר עצמו (שם העצם הראשון) צריך להיות מהנושא
     score += inTitle ? 10 : 4;
     if (!wantAcc && buyIsAccessory(r.title, tc)) return null;                   // "תיק למחשב" כשביקשו מחשב
   }
   // שאר המילים: מותגים/דגמים — חובה; מילות תיאור — בונוס
-  const rest = qw.filter(w => w.length > 1 && !qc.hits.has(w) && !buyBrandsIn([w]).length && !BUY_QUALIFIERS.map(buyNormWord).includes(w) && !(typeof ASK_STOP !== 'undefined' && ASK_STOP.has(w)));
+  const rest = qPrim.filter(w => w.length > 1 && !covered(w) && !buyBrandsIn([w]).length && !BUY_QUALIFIERS.map(buyNormWord).includes(w) && !(typeof ASK_STOP !== 'undefined' && ASK_STOP.has(w)));
   const all = tw.concat(dw);
   for (const w of rest) {
-    if (tw.some(x => buyWordLike(x, w))) score += 3;
-    else if (all.some(x => buyWordLike(x, w))) score += 1;
+    const forms = buyWords(w);
+    if (tw.some(x => forms.some(f => buyWordLike(x, f)))) score += 3;
+    else if (all.some(x => forms.some(f => buyWordLike(x, f)))) score += 1;
     else if (!qc.set.size || /[a-z0-9]/.test(w)) return null;                 // מילה שאין לה סוג (או מותג באנגלית) — חייבת להופיע
   }
   qw.filter(w => BUY_QUALIFIERS.map(buyNormWord).includes(w)).forEach(w => {
@@ -33854,7 +33889,8 @@ function buyMatch(item) {
       const fit = !item.max || !p || p <= item.max ? 'in' : item.max >= p * 0.6 ? 'near' : 'far';
       return Object.assign(x, { offer, fit });
     }).filter(x => x.fit !== 'far' && x.offer > 0)
-    .sort((a, b) => (a.fit === 'in' ? 0 : 1) - (b.fit === 'in' ? 0 : 1) || b.score - a.score || (a.r.price || 0) - (b.r.price || 0)).slice(0, 4);
+    .sort((a, b) => (a.fit === 'in' ? 0 : 1) - (b.fit === 'in' ? 0 : 1) || b.score - a.score || (a.r.price || 0) - (b.r.price || 0))
+    .filter(x => item.q !== '*' || x.fit === 'in').slice(0, item.q === '*' || buyTopicsIn(buyWords(item.q)).set.size ? 8 : 4);
 }
 // חיפוש רך כשלא נמצא כלום: מספיק סוג משותף או מילה אחת משותפת (עם סבלנות לשגיאות) — כדי תמיד להציע משהו
 function buyLoose(item) {
@@ -33910,7 +33946,7 @@ async function buyHandle(text) {
   let found = 0, html = '', sendAll = [];
   items.forEach(it => {
     const ms = buyMatch(it);
-    html += `<div class="by-item"><div class="by-item-h"><b>${escHtml(it.q)}</b>${it.max ? `<small>עד ${buyMoney(it.max)}</small>` : ''}${it.city ? `<small>📍 ${escHtml(it.city)}</small>` : ''}</div>`;
+    html += `<div class="by-item"><div class="by-item-h"><b>${it.q === '*' ? 'כל המודעות' : escHtml(it.q)}</b>${it.max ? `<small>עד ${buyMoney(it.max)}</small>` : ''}${it.city ? `<small>📍 ${escHtml(it.city)}</small>` : ''}</div>`;
     if (!ms.length) {
       // אין בתקציב/בכלל: מראים את הכי קרובים מאותו סוג (גם מעל התקציב), ושומרים כמבוקש
       const near = buyMatch(Object.assign({}, it, { max: 0 })).slice(0, 3);
@@ -33920,7 +33956,7 @@ async function buyHandle(text) {
           return loose.length ? `<p class="by-none">אין כרגע בדיוק ${escHtml(it.q)}. אולי אחד מאלה יתאים:</p>${loose.map(m => buyCardHTML(m, buyAct(async () => { if (buyNeedLogin()) return; const st = await buySendOffer(m, note); buySay('bot', st === 'sent' ? `✅ שלחתי הצעה של <b>${buyMoney(m.offer)}</b> על "${escHtml(m.r.title)}".` : `✅ (מודעת דוגמה) הצעה של ${buyMoney(m.offer)} על "${escHtml(m.r.title)}".`); }))).join('')}<p class="by-none">שמרתי גם מעקב — כשתעלה מודעה מתאימה אקפיץ לך התראה.</p>`
             : `<p class="by-none">אין כרגע ${escHtml(it.q)} בשוק. שמרתי את זה כ"מבוקש" — כשתעלה מודעה מתאימה אקפיץ לך התראה.<br>רוצה לנסות במילים אחרות? למשל סוג המוצר בלבד ("מנורה", "מחשב").</p>`;
         })();
-      if (!buyWants.some(w => w.q === it.q)) buyWants.push(Object.assign({ t: Date.now(), seen: [] }, it));
+      if (it.q !== '*' && !buyWants.some(w => w.q === it.q)) buyWants.push(Object.assign({ t: Date.now(), seen: [] }, it));
     } else {
       found += ms.length;
       ms.forEach(m => {
