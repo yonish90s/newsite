@@ -1478,6 +1478,23 @@ html:not(.theme-dark) body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#
 html:not(.theme-dark) body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .mk-gold::after { background: linear-gradient(90deg, rgba(165,165,165,0) 0%, #a5a5a5 18%, #c2c2c2 50%, #a5a5a5 82%, rgba(165,165,165,0) 100%); }
 html:not(.theme-dark) body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .mk-gold .mk-sg { outline: 1px solid rgba(161,161,161,0.45) !important; }
 html:not(.theme-dark) body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .mk-gold .mk-sg::after { color: #9b9b9b; }
+@media (min-width: 901px) {
+html:not(.theme-dark) .by-head span { color: #727272; }
+html:not(.theme-dark) .by-x { color: #727272; }
+html:not(.theme-dark) .by-m.me { background: #111111; }
+html:not(.theme-dark) .by-m.bot { color: #111111; }
+html:not(.theme-dark) .by-typing i { background: #a2a2a2; }
+html:not(.theme-dark) .by-item-h small { color: #727272; }
+html:not(.theme-dark) .by-none { color: #727272; }
+html:not(.theme-dark) .by-card-tx small { color: #727272; }
+html:not(.theme-dark) .by-fit.in { color: #666666; }
+html:not(.theme-dark) .by-fit.near { color: #686868; }
+html:not(.theme-dark) .by-offer { background: #111111; }
+html:not(.theme-dark) .by-offer:disabled { background: #f7f7f7; color: #111111; }
+html:not(.theme-dark) .by-all { background: #949494; }
+html:not(.theme-dark) .by-link { color: #7b7b7b; }
+html:not(.theme-dark) .by-go { background: #111111; }
+}
 html:not(.theme-dark) [style*="border:1.5px solid #e2e8f0"], html:not(.theme-dark) [style*="border: 1.5px solid #e2e8f0"] { border: 1.5px solid #e7e7e7 !important; }
 html:not(.theme-dark) [style*="color:#1e293b"], html:not(.theme-dark) [style*="color: #1e293b"] { color: #111111 !important; }
 html:not(.theme-dark) [style*="background:#dc2626"], html:not(.theme-dark) [style*="background: #dc2626"] { background: #111111 !important; }

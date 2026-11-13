@@ -33574,3 +33574,191 @@ Object.assign(window, { feedbackOpen, feedbackStar, feedbackTopic, feedbackSend 
   setTimeout(show, 30000);
   window.appPromoShow = () => { try { localStorage.removeItem(KEY); } catch (e) {} show(); };
 })();
+
+// ============================================================
+// סוכן קנייה — שיחה פתוחה בתחתית האתר (במחשב). כותבים "אני רוצה לקנות אקסבוקס ומחשב נייד עד 3,000 ₪",
+// הסוכן מפרק לפריטים ולתקציב, מחפש בשוק, מציע מחיר לכל מודעה ושולח הצעות מחיר למוכרים (website/deals).
+// מה שלא נמצא — נשמר כ"מבוקש", ומודעה מתאימה שעולה בהמשך מקפיצה התראה.
+// ============================================================
+const BUY_SYN = {
+  'אקסבוקס': ['xbox', 'אקס בוקס', 'אקסבוקס'], 'xbox': ['xbox', 'אקסבוקס'],
+  'פלייסטיישן': ['playstation', 'ps5', 'ps4', 'פלייסטיישן', 'סוני'], 'ps5': ['ps5', 'playstation', 'פלייסטיישן'],
+  'נינטנדו': ['nintendo', 'switch', 'סוויץ', 'נינטנדו'], 'קונסולה': ['xbox', 'ps5', 'playstation', 'nintendo', 'קונסולה', 'אקסבוקס', 'פלייסטיישן'],
+  'מחשב': ['מחשב', 'לפטופ', 'laptop', 'macbook', 'מקבוק', 'pc', 'dell', 'lenovo', 'asus', 'hp'], 'לפטופ': ['לפטופ', 'laptop', 'מחשב נייד', 'macbook'],
+  'טלפון': ['טלפון', 'אייפון', 'iphone', 'סמסונג', 'galaxy', 'פלאפון'], 'אייפון': ['iphone', 'אייפון'],
+  'מסך': ['מסך', 'monitor', 'טלוויזיה', 'tv'], 'טלוויזיה': ['טלוויזיה', 'tv', 'מסך'], 'אוזניות': ['אוזניות', 'airpods', 'headphones'],
+  'ספה': ['ספה', 'סלון', 'כורסה'], 'מקרר': ['מקרר', 'fridge'], 'אופניים': ['אופניים', 'אופני', 'bike'], 'מצלמה': ['מצלמה', 'camera', 'nikon', 'canon', 'sony'],
+  'מדפסת': ['מדפסת', 'printer', 'תלת מימד', 'prusa', 'bambu']
+};
+const BUY_FILL = /^(אני\s+)?(רוצה|מחפש[תים]?|צריכ?[הים]?|מעוניינ?[תים]?)?\s*(לקנות|לרכוש|קניית|קנייה של|תמצא לי|תמצאי לי|תביא לי)?\s*/;
+let buyLog = [], buyActs = [], buyBusy = false;
+let buyWants = (() => { try { return JSON.parse(localStorage.getItem('buy_wants') || '[]') || []; } catch (e) { return []; } })();
+const buyMoney = n => '₪' + Math.round(n).toLocaleString('he-IL');
+function buyNum(s) {
+  const m = String(s).match(/([\d.,]+)\s*(אלף|k|K)?/); if (!m) return 0;
+  let n = parseFloat(m[1].replace(/,/g, '')) || 0; if (m[2]) n *= 1000; return n;
+}
+// מפרק בקשה לפריטים: כל פריט עם מילות חיפוש, תקציב (שלו או הכללי) ופרטים נוספים
+function buyParse(text) {
+  let t = String(text || '').replace(/[״"']/g, '').trim();
+  const gm = t.match(/(?:עד|תקציב(?:\s+של)?|מקסימום|לא יותר מ-?)\s*₪?\s*([\d.,]+\s*(?:אלף|k)?)\s*(?:₪|שח|ש״ח|שקל(?:ים)?)?\s*$/i);
+  const global = gm ? buyNum(gm[1]) : 0;
+  if (gm) t = t.slice(0, gm.index).trim();
+  t = t.replace(BUY_FILL, '').replace(/^(לשכור|להשכיר|לשאול)\s+/, '');
+  const parts = t.split(/\s*(?:,|;|\+|\sוגם\s|\sועוד\s|\s(?=ו[א-ת]{2,}))\s*/).map(p => p.replace(/^ו(?=[א-ת]{2,})/, '').trim()).filter(Boolean);
+  const cities = typeof CITY_GEO !== 'undefined' ? Object.keys(CITY_GEO) : [];
+  const rent = /לשכור|להשכיר|השכרה|לשימוש|להשאיל|השאלה/.test(text);
+  return parts.map(p => {
+    const pm = p.match(/(?:עד|ב-?|במחיר\s+של)\s*₪?\s*([\d.,]+\s*(?:אלף|k)?)\s*(?:₪|שח|ש״ח|שקל(?:ים)?)?/i);
+    const max = pm ? buyNum(pm[1]) : global;
+    let q = pm ? p.replace(pm[0], '') : p;
+    const city = cities.find(c => q.includes(c)) || '';
+    if (city) q = q.replace(new RegExp('\\s*ב?' + city), '');
+    q = q.replace(/\s+/g, ' ').trim();
+    return { q, max, city, rent };
+  }).filter(x => x.q.length > 1);
+}
+// כל מילה בבקשה = קבוצה (המילה, הצורות שלה ומילים נרדפות). מודעה מתאימה רק אם יש בה משהו מכל קבוצה
+function buyGroups(q) {
+  return askTokens(q).map(forms => {
+    const g = new Set(forms);
+    Object.entries(BUY_SYN).forEach(([k, v]) => { if (forms.includes(askNorm(k))) v.forEach(x => askTokens(x).flat().forEach(y => g.add(y))); });
+    return [...g];
+  });
+}
+function buyMatch(item) {
+  const groups = buyGroups(item.q); if (!groups.length) return [];
+  // קנייה: יד 2 ועסקים. השכרה/אחסון — רק כשמבקשים לשכור
+  const all = (typeof mktAll === 'function' ? mktAll() : []).filter(r => r && r.title && r.offer !== 'החלפה' && r.offer !== 'פרויקט' && (item.rent || ['used', 'biz'].includes(mktSecOf(r))));
+  const hit = (set, g) => g.some(w => set.has(w) || [...set].some(h => h.length > 3 && w.length > 3 && (h.startsWith(w) || w.startsWith(h))));
+  return all.map(r => {
+    const title = new Set(askTokens(r.title).flat());
+    const hay = new Set(askTokens([r.title, r.desc, r.bizName, (r.specs || []).join(' '), r.cat && typeof rentCatOf === 'function' ? rentCatOf(r.cat).name : ''].join(' ')).flat());
+    if (!groups.every(g => hit(hay, g))) return null;
+    return { r, score: groups.filter(g => hit(title, g)).length };
+  }).filter(x => x && (!item.city || x.r.city === item.city))
+    .map(x => {
+      const p = Number(x.r.price) || 0;
+      const offer = !p ? (item.max || 0) : !item.max || p <= item.max ? p : item.max;
+      const fit = !item.max || !p || p <= item.max ? 'in' : item.max >= p * 0.6 ? 'near' : 'far';
+      return Object.assign(x, { offer, fit });
+    }).filter(x => x.fit !== 'far' && x.offer > 0)
+    .sort((a, b) => (a.fit === 'in' ? 0 : 1) - (b.fit === 'in' ? 0 : 1) || b.score - a.score || (a.r.price || 0) - (b.r.price || 0)).slice(0, 4);
+}
+function buyCardHTML(m, ai) {
+  const r = m.r, img = r.img || (r.images && r.images[0]) || '';
+  const tag = m.fit === 'in' ? '<em class="by-fit in">בתקציב</em>' : '<em class="by-fit near">מעל התקציב — נציע פחות</em>';
+  return `<div class="by-card" data-id="${escHtml(r.id)}">
+    <button type="button" class="by-card-main" onclick="rentOpen('${artEsc(r.id)}')">${img ? `<img src="${escHtml(img)}" alt="" loading="lazy">` : '<span class="by-noimg">🛍️</span>'}
+      <span class="by-card-tx"><b>${escHtml(r.title)}</b><small>${r.price ? buyMoney(r.price) : 'מחיר לא צוין'} · ${escHtml(r.city || r.owner || '')}${r.demo ? ' · דוגמה' : ''}</small>${tag}</span></button>
+    <button type="button" class="by-offer" onclick="buyDo(${ai})">הצעה ${buyMoney(m.offer)}</button>
+  </div>`;
+}
+async function buySendOffer(m, note) {
+  const r = m.r;
+  if (r.demo || !r.uid) return 'demo';
+  const u = auth.currentUser;
+  if (u && r.uid === u.uid) return 'mine';
+  await offerRecord({ kind: 'price', toUid: r.uid, toName: r.owner || '', itemId: r.shId || r.id, title: r.title, price: Math.round(m.offer), note: String(note || '').slice(0, 280) });
+  return 'sent';
+}
+function buyNeedLogin() {
+  const u = auth.currentUser;
+  if (u && !u.isAnonymous) return false;
+  buySay('bot', 'כדי לשלוח הצעות בשמך צריך להתחבר — זה לוקח שנייה. אחרי ההתחברות אמשיך מאותו מקום.');
+  if (typeof openLiveChatLogin === 'function') openLiveChatLogin();
+  return true;
+}
+function buySay(who, html, extra) { buyLog.push(Object.assign({ who, html, t: Date.now() }, extra || {})); buyRender(); }
+function buyRender() {
+  const box = document.getElementById('by-msgs'); if (!box) return;
+  box.innerHTML = buyLog.map(m => `<div class="by-m ${m.who}">${m.html}</div>`).join('') + (buyBusy ? '<div class="by-m bot by-typing"><i></i><i></i><i></i></div>' : '');
+  box.scrollTop = box.scrollHeight;
+  const bar = document.getElementById('buy-dock'); if (bar) bar.classList.toggle('has-msgs', buyLog.length > 0);
+}
+function buyDo(i) { const f = buyActs[i]; if (f) f(); }
+function buyAct(f) { buyActs.push(f); return buyActs.length - 1; }
+async function buyHandle(text) {
+  const items = buyParse(text);
+  if (!items.length) { buySay('bot', 'כתבו מה תרצו לקנות ועד איזה מחיר. למשל: <b>אקסבוקס ומחשב נייד עד 3,000 ₪</b>'); return; }
+  const note = 'הצעה דרך סוכן הקנייה' + (text.length < 200 ? ': "' + text + '"' : '');
+  let found = 0, html = '', sendAll = [];
+  items.forEach(it => {
+    const ms = buyMatch(it);
+    html += `<div class="by-item"><div class="by-item-h"><b>${escHtml(it.q)}</b>${it.max ? `<small>עד ${buyMoney(it.max)}</small>` : ''}${it.city ? `<small>📍 ${escHtml(it.city)}</small>` : ''}</div>`;
+    if (!ms.length) {
+      html += `<p class="by-none">לא מצאתי כרגע. שמרתי את זה כ"מבוקש" — כשתעלה מודעה מתאימה אקפיץ לך התראה.</p>`;
+      if (!buyWants.some(w => w.q === it.q)) buyWants.push(Object.assign({ t: Date.now(), seen: [] }, it));
+    } else {
+      found += ms.length;
+      ms.forEach(m => {
+        const ai = buyAct(async () => {
+          if (buyNeedLogin()) return;
+          const st = await buySendOffer(m, note);
+          buySay('bot', st === 'sent' ? `✅ שלחתי ל${escHtml(m.r.owner || 'מוכר')} הצעה של <b>${buyMoney(m.offer)}</b> על "${escHtml(m.r.title)}". התשובה תגיע ל"הצעות".`
+            : st === 'mine' ? 'זו מודעה שלך 🙂' : `✅ (מודעת דוגמה) הצעה של ${buyMoney(m.offer)} על "${escHtml(m.r.title)}" — במודעה אמיתית היא נשלחת למוכר.`);
+          const c = document.querySelector(`#by-msgs .by-card[data-id="${CSS.escape(m.r.id)}"] .by-offer`); if (c) { c.disabled = true; c.textContent = 'נשלח ✓'; }
+        });
+        sendAll.push(m);
+        html += buyCardHTML(m, ai);
+      });
+    }
+    html += '</div>';
+  });
+  try { localStorage.setItem('buy_wants', JSON.stringify(buyWants.slice(-20))); } catch (e) {}
+  const best = sendAll.filter(m => m.fit === 'in').length ? sendAll.filter(m => m.fit === 'in') : sendAll;
+  const allIdx = best.length > 1 ? buyAct(async () => {
+    if (buyNeedLogin()) return;
+    let sent = 0, demo = 0;
+    for (const m of best) { const st = await buySendOffer(m, note); if (st === 'sent') sent++; else if (st === 'demo') demo++; }
+    document.querySelectorAll('#by-msgs .by-offer').forEach(b => { b.disabled = true; b.textContent = 'נשלח ✓'; });
+    buySay('bot', `✅ שלחתי ${sent} הצעות מחיר למוכרים${demo ? ` (ועוד ${demo} למודעות דוגמה)` : ''}. כשמישהו יענה — זה יופיע ב"הצעות" ותקבלו התראה.<br><button type="button" class="by-link" onclick="openOffersPanel()">לצפייה בהצעות</button>`);
+  }) : -1;
+  buySay('bot', `${found ? `מצאתי <b>${found}</b> מודעות מתאימות. אפשר לשלוח הצעה לכל אחת, או לכולן בבת אחת:` : 'עדיין אין מודעות מתאימות.'}${html}${allIdx >= 0 ? `<button type="button" class="by-all" onclick="buyDo(${allIdx})">שלחו הצעות לכל ה-${best.length}${best !== sendAll ? ' שבתקציב' : ''}</button>` : ''}`);
+}
+async function buySend(ev) {
+  if (ev) ev.preventDefault();
+  const inp = document.getElementById('by-q'); const q = inp ? inp.value.trim() : '';
+  if (!q || buyBusy) return;
+  inp.value = '';
+  buySay('me', escHtml(q));
+  document.getElementById('buy-dock').classList.add('open');
+  buyBusy = true; buyRender();
+  await new Promise(r => setTimeout(r, 450));
+  buyBusy = false;
+  try { await buyHandle(q); } catch (e) { buySay('bot', 'משהו השתבש — נסו שוב בעוד רגע.'); }
+}
+function buyToggle(force) { const d = document.getElementById('buy-dock'); if (d) d.classList.toggle('open', force !== undefined ? force : !d.classList.contains('open')); }
+function buyClear() { buyLog = []; buyActs = []; buyRender(); }
+// בדיקה חוזרת של "מבוקשים": מודעה חדשה שמתאימה — התראה עם קפיצה אליה
+function buyWatch() {
+  if (!buyWants.length || typeof mktAll !== 'function') return;
+  let changed = false;
+  buyWants.forEach(w => {
+    buyMatch(w).forEach(m => {
+      if (w.seen.includes(m.r.id) || m.r.demo) return;
+      w.seen.push(m.r.id); changed = true;
+      glassBanner({ title: 'נמצא: ' + w.q, sub: `${m.r.title} · ${m.r.price ? buyMoney(m.r.price) : ''}`, icon: 'ok', btn: 'לצפייה', onBtn: () => rentOpen(m.r.id), ms: 7000 });
+    });
+  });
+  if (changed) try { localStorage.setItem('buy_wants', JSON.stringify(buyWants.slice(-20))); } catch (e) {}
+}
+(function buyDockInit() {
+  const build = () => {
+    if (document.getElementById('buy-dock')) return;
+    const d = document.createElement('div');
+    d.id = 'buy-dock';
+    d.innerHTML = `<div class="by-panel">
+        <header class="by-head"><b>🛍️ סוכן קנייה</b><span>כתבו מה תרצו ועד כמה — אמצא ואשלח הצעות</span><button type="button" class="by-x" onclick="buyClear()" title="שיחה חדשה" aria-label="שיחה חדשה">↺</button><button type="button" class="by-x" onclick="buyToggle(false)" aria-label="מזעור">⌄</button></header>
+        <div class="by-msgs" id="by-msgs"></div>
+      </div>
+      <form class="by-bar" onsubmit="buySend(event)">
+        <input id="by-q" autocomplete="off" maxlength="300" placeholder="מה תרצו לקנות? למשל: אקסבוקס ומחשב נייד עד 3,000 ₪" onfocus="buyLog.length && buyToggle(true)">
+        <button type="submit" class="by-go" aria-label="שליחה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4z"/></svg></button>
+      </form>`;
+    document.body.appendChild(d);
+  };
+  const start = () => { build(); setInterval(buyWatch, 120000); setTimeout(buyWatch, 15000); };
+  if (document.body) start(); else document.addEventListener('DOMContentLoaded', start);
+})();
+Object.assign(window, { buySend, buyDo, buyToggle, buyClear, buyLog });
