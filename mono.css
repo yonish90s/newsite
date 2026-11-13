@@ -1512,6 +1512,11 @@ html:not(.theme-dark) #buy-dock .by-no { border: 1px solid #d4d4d4; color: #1111
 @media (min-width: 901px) {
 html:not(.theme-dark) #buy-dock .by-more { color: #111111; }
 }
+html:not(.theme-dark) .bw-coin { filter: drop-shadow(0 1px 1.5px rgba(17,17,17,0.35)); }
+html:not(.theme-dark) body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .wallet-bal .bw-coin { filter: drop-shadow(0 4px 10px rgba(143,143,143,0.45)); }
+html:not(.theme-dark) .bw-rate { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35), 0 2px 6px rgba(17,17,17,0.25); }
+html:not(.theme-dark) .bw-rate .bw-star svg { filter: drop-shadow(0 1px 1px rgba(17,17,17,0.35)); }
+html:not(.theme-dark) body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .uw-star.bw-star-btn svg { filter: drop-shadow(0 1px 1px rgba(17,17,17,0.35)); }
 html:not(.theme-dark) [style*="border:1.5px solid #e2e8f0"], html:not(.theme-dark) [style*="border: 1.5px solid #e2e8f0"] { border: 1.5px solid #e7e7e7 !important; }
 html:not(.theme-dark) [style*="color:#1e293b"], html:not(.theme-dark) [style*="color: #1e293b"] { color: #111111 !important; }
 html:not(.theme-dark) [style*="background:#dc2626"], html:not(.theme-dark) [style*="background: #dc2626"] { background: #111111 !important; }

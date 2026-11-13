@@ -12965,7 +12965,7 @@ function friendsBoardsHTML() {
   const loading = friendsRatings === null;
   return `
     ${friendsBoardHTML('posts', 'הכי הרבה פוסטים', 'תמונות, קומיקס וסיפורים שפורסמו', byPosts, u => n(u.posts))}
-    ${friendsBoardHTML('rating', 'הדירוג הגבוה ביותר', loading ? 'טוען דירוגים...' : 'ממוצע הכוכבים מהגולשים', byRating, u => `<span class="fr-stars">★</span> ${u.avg.toFixed(1)} <small>(${n(u.rCount)})</small>`)}
+    ${friendsBoardHTML('rating', 'הדירוג הגבוה ביותר', loading ? 'טוען דירוגים...' : 'ממוצע הכוכבים מהגולשים', byRating, u => `${bwStarsHTML(u.avg, { small: true, num: true })} <small>(${n(u.rCount)})</small>`)}
     ${friendsBoardHTML('points', 'הכי הרבה נקודות', 'הטבלה הראשית של התחרות', byPoints, u => n(u.points))}`;
 }
 
@@ -13851,7 +13851,7 @@ function forumTopicHTML() {
           <dl class="fo-author-stats">
             <div><dt>פוסטים:</dt><dd>${Number(st.posts || 0).toLocaleString('he-IL')}</dd></div>
             <div><dt>נקודות:</dt><dd>${Number(st.points || 0).toLocaleString('he-IL')}</dd></div>
-            <div><dt>דירוג:</dt><dd>${st.rCount ? '★ ' + Number(st.avg).toFixed(1) : '—'}</dd></div>
+            <div><dt>דירוג:</dt><dd>${st.rCount ? bwStarsHTML(st.avg, { small: true, num: true }) : '—'}</dd></div>
           </dl>
         </aside>
         <div class="fo-post-main">
@@ -17064,7 +17064,7 @@ function userWatchHTML(st) {
   const isOwn = !!(st.uid && auth.currentUser && !auth.currentUser.isAnonymous && auth.currentUser.uid === st.uid);
   const filled = r.myRating || Math.round(avg);
   const stars = [1, 2, 3, 4, 5].map(n =>
-    `<button type="button" class="uw-star${n <= filled ? ' on' : ''}" onclick="rateUserStars('${artEsc(st.uid || '')}', ${n})" title="דרג ${n} כוכבים">★</button>`).join('');
+    `<button type="button" class="uw-star bw-star-btn${n <= filled ? ' on' : ''}" onclick="rateUserStars('${artEsc(st.uid || '')}', ${n})" title="דרג ${n} כוכבים"><svg viewBox="0 0 24 24" fill="url(#bws-gold)"><use href="#bw-star"/></svg></button>`).join('');
   const row = (color, label, value) => `<div class="uw-row"><span class="uw-label">${label}</span><div class="uw-val">${value}</div></div>`;
   return `
     <div class="up-watch">
@@ -17092,7 +17092,7 @@ function userWatchHTML(st) {
         </div>
         ${isOwn ? `
         <div class="uw-rate own">
-          <div class="uw-stars static">${[1, 2, 3, 4, 5].map(n => `<span class="uw-star${n <= Math.round(avg) ? ' on' : ''}">★</span>`).join('')}</div>
+          <div class="uw-stars static">${bwStarsHTML(avg, { num: true })}</div>
           <small>${r.count ? `הדירוג שלך מאחרים: <b>${avg}</b>/5 (${r.count})` : 'עוד לא דירגו אותך'}</small>
         </div>` : `
         <div class="uw-rate">
@@ -19223,9 +19223,63 @@ function subscribePhotoComments(albumId) {
 window.subscribePhotoComments = subscribePhotoComments;
 
 // ---- ביקורות על גלריה: ממוצע כוכבים, התפלגות וכרטיסי ביקורת (מתוך תגובות עם כוכבים) ----
+// ---- גרפיקה משותפת: מטבע זהב עם סמל האתר חרוט, וכוכבי דירוג זהב בתלת מימד ----
+// ההגדרות (מעברי צבע) נטענות פעם אחת לעמוד, וכל מטבע/כוכב משתמש בהן ב-<use>
+(function bwGfxSprite() {
+  const add = () => {
+    if (document.getElementById('bw-gfx')) return;
+    const d = document.createElement('div');
+    d.id = 'bw-gfx'; d.setAttribute('aria-hidden', 'true');
+    d.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden';
+    d.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0"><defs>
+      <radialGradient id="bwc-face" cx="38%" cy="32%" r="75%"><stop offset="0" stop-color="#fff6c4"/><stop offset=".35" stop-color="#f7d462"/><stop offset=".75" stop-color="#d9a21e"/><stop offset="1" stop-color="#a8740c"/></radialGradient>
+      <linearGradient id="bwc-rim" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe9a0"/><stop offset=".5" stop-color="#c9900f"/><stop offset="1" stop-color="#7a5306"/></linearGradient>
+      <linearGradient id="bwc-in" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e9b83a"/><stop offset="1" stop-color="#fbe08a"/></linearGradient>
+      <linearGradient id="bwc-eng" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a5e08"/><stop offset="1" stop-color="#b98516"/></linearGradient>
+      <symbol id="bw-coin" viewBox="0 0 64 64">
+        <ellipse cx="32" cy="35" rx="29" ry="28" fill="#7a5306" opacity=".55"/>
+        <circle cx="32" cy="32" r="29" fill="url(#bwc-rim)"/>
+        <circle cx="32" cy="32" r="24.5" fill="url(#bwc-in)"/>
+        <circle cx="32" cy="32" r="23" fill="url(#bwc-face)"/>
+        <g stroke-linecap="round" fill="none">
+          <path d="M21.6 21.5 32 45" stroke="#fff4c2" stroke-width="7.4" opacity=".7" transform="translate(.7 .9)"/>
+          <path d="M42.4 21.5 32 45" stroke="#fff4c2" stroke-width="7.4" opacity=".7" transform="translate(.7 .9)"/>
+          <path d="M21.6 21.5 32 45" stroke="url(#bwc-eng)" stroke-width="7"/>
+          <path d="M42.4 21.5 32 45" stroke="url(#bwc-eng)" stroke-width="7"/>
+        </g>
+        <circle cx="32.7" cy="23" r="3.6" fill="#fff4c2" opacity=".7"/>
+        <circle cx="32" cy="22.2" r="3.4" fill="url(#bwc-eng)"/>
+        <path d="M14 22a20 20 0 0 1 14-11" stroke="#fffbe6" stroke-width="2.4" stroke-linecap="round" fill="none" opacity=".75"/>
+      </symbol>
+      <linearGradient id="bws-gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff3b0"/><stop offset=".45" stop-color="#f6c945"/><stop offset="1" stop-color="#d9930f"/></linearGradient>
+      <linearGradient id="bws-dim" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff6df"/><stop offset="1" stop-color="#f1d79a"/></linearGradient>
+      <symbol id="bw-star" viewBox="0 0 24 24"><path d="M12 2.6l2.85 5.95 6.45.82-4.72 4.45 1.2 6.43L12 17.1l-5.78 3.15 1.2-6.43L2.7 9.37l6.45-.82z" stroke="#b9780a" stroke-width=".9" stroke-linejoin="round"/><path d="M12 4.6l2.1 4.4 4.7.6" stroke="#fffbe8" stroke-width="1.1" stroke-linecap="round" fill="none" opacity=".8"/></symbol>
+    </defs></svg>`;
+    document.body.appendChild(d);
+  };
+  if (document.body) add(); else document.addEventListener('DOMContentLoaded', add);
+})();
+// מטבע אחד (גודל בפיקסלים)
+function bwCoinHTML(size) { return `<svg class="bw-coin" width="${size || 22}" height="${size || 22}" viewBox="0 0 64 64" aria-hidden="true"><use href="#bw-coin"/></svg>`; }
+// דירוג עד 5: כוכבי זהב על רקע שמאדים ככל שהציון קרוב ל-5 (כתום ← אדום)
+function bwRateBg(v) {
+  const t = Math.max(0, Math.min(1, (Number(v) - 1) / 4));
+  const h1 = Math.round(32 - 30 * t), h2 = Math.round(22 - 22 * t), l = Math.round(56 - 10 * t);
+  return `linear-gradient(180deg, hsl(${h1} 92% ${l + 6}%), hsl(${h2} 88% ${l - 4}%))`;
+}
+function bwStarsHTML(v, opts) {
+  v = Number(v) || 0; opts = opts || {};
+  const stars = [1, 2, 3, 4, 5].map(i => {
+    const fill = Math.max(0, Math.min(1, v - (i - 1)));
+    const pct = fill >= .75 ? 100 : fill >= .25 ? 50 : 0;
+    return `<i class="bw-star" style="--fill:${pct}%"><svg viewBox="0 0 24 24" class="dim" fill="url(#bws-dim)"><use href="#bw-star"/></svg><svg viewBox="0 0 24 24" class="on" fill="url(#bws-gold)"><use href="#bw-star"/></svg></i>`;
+  }).join('');
+  return `<span class="bw-rate${opts.small ? ' sm' : ''}" style="background:${bwRateBg(v)}" title="${v ? v.toFixed(1) + ' מתוך 5' : 'אין דירוג עדיין'}" aria-label="דירוג ${v ? v.toFixed(1) : 0} מתוך 5">${stars}${opts.num && v ? `<b>${v.toFixed(1)}</b>` : ''}</span>`;
+}
+window.bwStarsHTML = bwStarsHTML; window.bwCoinHTML = bwCoinHTML;
 const PD_STAR = '<svg viewBox="0 0 24 24"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17.2l-5.7 3.1 1.2-6.4L2.8 9.5l6.4-.8z"/></svg>';
 function pdStarsHTML(v) {
-  return `<span class="pd2-stars">${[1, 2, 3, 4, 5].map(i => `<i class="${v >= i - 0.25 ? 'on' : v >= i - 0.75 ? 'half' : ''}">${PD_STAR}</i>`).join('')}</span>`;
+  return `<span class="pd2-stars">${bwStarsHTML(v, { small: true })}</span>`;
 }
 function pdReviewStats() {
   const list = Object.values(photoCommentsData || {}).filter(c => c && Number(c.stars) >= 1 && Number(c.stars) <= 5);
@@ -30212,7 +30266,7 @@ function walletPillEl() {
 }
 function walletPillPaint(b) {
   b = b || document.getElementById('wallet-pill'); if (!b) return;
-  b.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6.5" rx="7" ry="3"/><path d="M5 6.5v5c0 1.7 3.1 3 7 3s7-1.3 7-3v-5"/><path d="M5 11.5v5c0 1.7 3.1 3 7 3s7-1.3 7-3v-5"/></svg><b>${walletBalance.toLocaleString('he-IL')}</b><small>ניקוד</small>`;
+  b.innerHTML = `${bwCoinHTML(20)}<b>${walletBalance.toLocaleString('he-IL')}</b><small>ניקוד</small>`;
 }
 function walletWatch() {
   const u = auth.currentUser, uid = u && !u.isAnonymous ? u.uid : '';
@@ -30273,7 +30327,7 @@ function walletOpen(refresh) {
   const amounts = [50, 100, 200, 500];
   m.innerHTML = `<div class="mkpub-card wallet-card" role="dialog" aria-modal="true" aria-label="הניקוד שלי">
     <div class="mkpub-head"><b>הניקוד שלי</b><button type="button" class="mkpub-x" onclick="walletClose()" aria-label="סגירה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
-    <div class="wallet-bal"><b>${walletBalance.toLocaleString('he-IL')}</b><span>ניקוד</span><small>= ${walletBalance.toLocaleString('he-IL')} ₪</small></div>
+    <div class="wallet-bal">${bwCoinHTML(44)}<b>${walletBalance.toLocaleString('he-IL')}</b><span>ניקוד</span><small>= ${walletBalance.toLocaleString('he-IL')} ₪</small></div>
     <p class="wallet-note">כל נקודה שווה שקל אחד. בניקוד משלמים על מוצרים, השכרות ושירותים באתר. כדי לקבל ניקוד מפקידים כסף.</p>
     <label class="mkpub-l">הפקדה</label>
     <div class="wallet-amts">${amounts.map(a => `<button type="button" disabled>${a} ₪</button>`).join('')}</div>
