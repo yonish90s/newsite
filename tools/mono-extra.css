@@ -166,3 +166,7 @@ BODY .mk-sg .mk-sg-acts .mk-act2 > :is(.mk-a-buy, .mk-a-deal):hover { background
 /* דשבורד הביצועים: שומרים על הצבעים של הגרף והריבועים */
 BODY .perf-tile.on { background: var(--c) !important; color: #ffffff !important; }
 BODY .perf-ranges button.on { background: #d3e3fd !important; color: #0b57d0 !important; }
+/* סרטון מומלץ: הכרטיס הכהה נשאר כהה גם במצב השחור-לבן */
+BODY .hv { background: #1a1a1b !important; color: #e8e8e8 !important; }
+BODY .hv-title { color: #ffffff !important; }
+BODY .hv-nsfw { color: #ff4f8b !important; border-color: #ff4f8b !important; }
