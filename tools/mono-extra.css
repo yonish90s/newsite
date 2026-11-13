@@ -154,9 +154,6 @@ BODY .oc-chip.wait { background: #fff4e5 !important; color: #b45309 !important; 
 BODY .ct-pad.has { border-color: #47a093 !important; }
 BODY .ct-signed { background: #f4fbf8 !important; }
 BODY .ct-card, BODY .ct-card .ct-head b, BODY .ct-doc, BODY .ct-l, BODY .ct-agree, BODY .ct-signed b, BODY .ct-text, BODY .ct-in { color: #111827 !important; }
-/* שורת הזהב בשוק נשארת זהב גם במצב השחור-לבן */
-BODY .mk-gold { background: linear-gradient(135deg, #fff8e1 0%, #fdecc0 55%, #f8dc8f 100%) !important; border: 1.5px solid #e2b23c !important; box-shadow: 0 6px 20px rgba(196, 140, 20, .18) !important; }
-BODY .mk-gold-head b { color: #7a5200 !important; }
-BODY .mk-gold-cta { background: linear-gradient(135deg, #c8901a, #e8b53a) !important; color: #ffffff !important; }
-BODY .mk-gold .mk-sg { outline: 2px solid #d4a017 !important; outline-offset: -2px !important; background: #fffdf5 !important; }
-BODY .mk-gold .mk-sg-badge.b-biz { background: linear-gradient(135deg, #c8901a, #e8b53a) !important; color: #ffffff !important; }
+/* שורת העסקים המקודמים: קו זהב דק וכיתוב "ממומן" נשארים בצבע גם במצב השחור-לבן */
+BODY .mk-gold .mk-sg { outline: 1px solid rgba(201, 160, 60, .45) !important; outline-offset: 2px !important; }
+BODY .mk-gold .mk-sg::after { color: #b89a52 !important; }
