@@ -158,3 +158,5 @@ BODY .ct-card, BODY .ct-card .ct-head b, BODY .ct-doc, BODY .ct-l, BODY .ct-agre
 BODY .mk-gold .mk-sg { outline: 1px solid rgba(201, 160, 60, .45) !important; outline-offset: 2px !important; }
 BODY .mk-gold .mk-sg::after { color: #b89a52 !important; }
 BODY .mk-gold::after { background: linear-gradient(90deg, rgba(212, 165, 40, 0) 0%, #d4a528 18%, #e9c25a 50%, #d4a528 82%, rgba(212, 165, 40, 0) 100%) !important; }
+BODY #buy-dock .by-bar input { color: #111111 !important; -webkit-text-fill-color: #111111 !important; background: transparent !important; box-shadow: none !important; border: 0 !important; }
+BODY #buy-dock .by-bar input::placeholder { color: #4b5563 !important; -webkit-text-fill-color: #4b5563 !important; opacity: 1 !important; }
