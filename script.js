@@ -24639,7 +24639,10 @@ window.openSiteSearch = openSiteSearch;
 const SRCH_KEY = 'bw_recent_q';
 function srchRecent() { try { return JSON.parse(localStorage.getItem(SRCH_KEY) || '[]').filter(x => typeof x === 'string').slice(0, 8); } catch (e) { return []; } }
 function srchRemember(q) { q = String(q || '').trim().slice(0, 40); if (!q) return; try { localStorage.setItem(SRCH_KEY, JSON.stringify([q, ...srchRecent().filter(x => x !== q)].slice(0, 8))); } catch (e) {} }
-function srchPanelHTML() {
+function srchPanelHTML(q) {
+  q = String(q || '').trim().toLowerCase();
+  const ppl = q.length > 1 && typeof ssFindUsers === 'function' ? ssFindUsers(q) : [];
+  const recentPpl = !q && typeof ssRecentGet === 'function' ? ssRecentGet().filter(x => x.uid).slice(0, 8) : [];
   const ic = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
   const rec = srchRecent(), all = typeof mktAll === 'function' ? mktAll() : [];
   // פופולרי: שתי המילים הראשונות של המודעות הנצפות ביותר
@@ -24647,7 +24650,8 @@ function srchPanelHTML() {
   const thumb = list => { const r = list.find(x => x.img); return r ? rentThumb(r) : ''; };
   const cats = [['sec', 'used', 'יד 2', all.filter(r => mktSecOf(r) === 'used')], ...RENT_CATS.filter(c => !c.store && c.id !== 'all').map(c => ['cat', c.id, c.name, all.filter(r => mktSecOf(r) === 'rent' && r.cat === c.id)]), ['sec', 'store', 'אחסון', all.filter(r => mktSecOf(r) === 'store')]].filter(x => x[3].length);
   const chip = (icon, t, act) => `<button type="button" class="srch-chip" onmousedown="event.preventDefault()" onclick="${act}">${ic(icon)}${escHtml(t)}</button>`;
-  return `${rec.length ? `<div class="srch-h"><b>חיפושים אחרונים</b><button type="button" onmousedown="event.preventDefault()" onclick="srchClear()">ניקוי</button></div>
+  const pplHTML = ppl.length ? `<div class="srch-h"><b>אנשים</b></div>${ssPeopleRowHTML(ppl)}` : recentPpl.length ? `<div class="srch-h"><b>אנשים שחיפשת</b></div>${ssPeopleRowHTML(recentPpl)}` : '';
+  return `${pplHTML}${rec.length ? `<div class="srch-h"><b>חיפושים אחרונים</b><button type="button" onmousedown="event.preventDefault()" onclick="srchClear()">ניקוי</button></div>
       <div class="srch-row">${rec.map(q => chip('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>', q, `srchRun('${artEsc(q)}')`)).join('')}</div>` : ''}
     ${trend.length ? `<div class="srch-h"><b>פופולרי עכשיו</b></div>
       <div class="srch-row">${trend.map(q => chip('<path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/>', q, `srchRun('${artEsc(q)}')`)).join('')}</div>` : ''}
@@ -24659,7 +24663,8 @@ function srchOpen() {
   const f = document.querySelector('form.hdr-search'); if (!f) return;
   let p = document.getElementById('srch-panel');
   if (!p) { p = document.createElement('div'); p.id = 'srch-panel'; p.className = 'srch-panel'; document.body.appendChild(p); }
-  p.innerHTML = srchPanelHTML();
+  p.innerHTML = srchPanelHTML((document.getElementById('hdr-search-q') || {}).value);
+  if (typeof avatarHydrate === 'function') avatarHydrate(p);
   const r = f.getBoundingClientRect(), z = parseFloat(getComputedStyle(document.body).zoom) || 1;
   p.style.top = Math.round((r.bottom + 8) / z) + 'px';
   p.style.right = Math.round((innerWidth - r.right) / z) + 'px';
@@ -24686,6 +24691,7 @@ function srchRun(q) {
     inp.addEventListener('focus', srchOpen);
     inp.addEventListener('click', srchOpen);
     inp.addEventListener('blur', () => setTimeout(srchClose, 120));
+    inp.addEventListener('input', () => { clearTimeout(window.__srchT); window.__srchT = setTimeout(srchOpen, 120); });
     inp.addEventListener('keydown', e => { if (e.key === 'Escape') { srchClose(); inp.blur(); } });
     window.addEventListener('resize', () => { if (document.querySelector('#srch-panel.show')) srchOpen(); });
   };
@@ -24811,7 +24817,7 @@ function siteSearchRender(raw) {
       </button>`;
   }).join('');
   const people = siteSearchScope.size ? [] : ssFindUsers(q);
-  const peopleHTML = people.length ? `<div class="ss-sec-title">אנשים</div>${people.map(p => `<button type="button" class="ss-user" onclick="ssOpenUser('${artEsc(p.uid)}','${artEsc(p.name)}')">${authorAvHTML({ authorId: p.uid, author: p.name })}<span class="ss-text"><span class="ss-title">${escHtml(p.name)}</span><span class="ss-sub" dir="ltr">@${escHtml(typeof profileHandle === 'function' ? profileHandle(p.name) : p.name)}${p.n ? ` · ${p.n} העלאות` : ''}</span></span></button>`).join('')}<div class="ss-sec-title">תוכן</div>` : '';
+  const peopleHTML = people.length ? `<div class="ss-sec-title">אנשים</div>${ssPeopleRowHTML(people)}` : '';
   box.innerHTML = `<div class="ss-panel">${siteSearchScopeHTML()}${peopleHTML}${rows || (people.length ? '' : `<div class="ss-hint">לא נמצאו תוצאות עבור "${escHtml(raw.trim())}"</div>`)}</div>`;
   if (typeof avatarHydrate === 'function') avatarHydrate(box);
 }
@@ -27786,15 +27792,42 @@ function ssRecentHTML() {
 }
 function ssFillQuery(q) { const inp = document.getElementById('site-search-input'); if (inp) { inp.value = q; inp.focus(); } siteSearchRender(q); }
 function ssUseQuery(q) { ssRecentAdd({ q }); ssFillQuery(q); }
-function ssOpenUser(uid, name) { ssRecentAdd({ uid, name }); closeSiteSearch(); if (typeof openUserPage === 'function') openUserPage(uid, name); }
+// שורת אנשים בסגנון X: עיגולי תמונה גדולים, שם ומתחתיו @handle
+// ספריית אנשים: website/people/{uid} = { name, t } — כל משתמש רשום כותב רק את עצמו, כולם קוראים (בשביל החיפוש)
+let ssPeople = null, ssPeopleSub = false;
+function ssPeopleSubscribe() {
+  if (ssPeopleSub) return; ssPeopleSub = true;
+  try { onValue(ref(db, 'website/people'), snap => { ssPeople = snap.val() || {}; }, () => { ssPeople = {}; }); } catch (e) {}
+}
+function ssPeopleRegister(u) {
+  try {
+    if (!u || u.isAnonymous) return;
+    const name = String((typeof liveChatUserName === 'function' && liveChatUserName()) || u.displayName || '').trim().slice(0, 60);
+    if (!name) return;
+    const k = 'people_reg_' + u.uid;
+    if (localStorage.getItem(k) === name) return;
+    set(ref(db, `website/people/${u.uid}`), { name, t: Date.now() }).then(() => { try { localStorage.setItem(k, name); } catch (e) {} }).catch(() => {});
+  } catch (e) {}
+}
+try { onAuthStateChanged(auth, u => setTimeout(() => ssPeopleRegister(u), 2500)); } catch (e) {}
+setTimeout(ssPeopleSubscribe, 3000);
+function ssPeopleRowHTML(list) {
+  return `<div class="ss-recent-users ss-people-row">${list.map(u => `<button type="button" class="ss-ru" onmousedown="event.preventDefault()" onclick="ssOpenUser('${artEsc(u.uid)}','${artEsc(u.name || '')}')">${authorAvHTML({ authorId: u.uid, author: u.name })}<b>${escHtml(u.name || '')}</b><small dir="ltr">${u.demo ? 'מוכר לדוגמה' : '@' + escHtml(typeof profileHandle === 'function' ? profileHandle(u.name || '') : (u.name || ''))}</small></button>`).join('')}</div>`;
+}
+function ssOpenUser(uid, name) {
+  if (!uid) { if (typeof srchClose === 'function') srchClose(); closeSiteSearch(); if (typeof rentOpenSeller === 'function') rentOpenSeller('', name); return; }   // מוכר לדוגמה: המודעות שלו בשוק
+  ssRecentAdd({ uid, name }); if (typeof srchClose === 'function') srchClose(); closeSiteSearch(); if (typeof openUserPage === 'function') openUserPage(uid, name); }
 // משתמשים: מכל מי שהעלה תוכן, כתב בפורום או ש"אני עוקב/ת" אחריו
 function ssFindUsers(q) {
   const map = {};
-  const add = (uid, name, n) => {
-    if (!uid || !name || !/^[A-Za-z0-9_-]{10,}$/.test(uid)) return;
-    if (!map[uid]) map[uid] = { uid, name: String(name), n: 0 };
-    map[uid].n += n || 0;
+  const add = (uid, name, n, demo) => {
+    if (!name || (!demo && (!uid || !/^[A-Za-z0-9_-]{10,}$/.test(uid)))) return;
+    const k = uid || 'n:' + name;
+    if (!map[k]) map[k] = { uid: uid || '', name: String(name), n: 0, demo: !!demo };
+    map[k].n += n || 0;
   };
+  // ספריית האנשים הציבורית (כל משתמש רשום מופיע בה עם השם שלו)
+  try { Object.entries(ssPeople || {}).forEach(([uid, v]) => add(uid, v && v.name, 0)); } catch (e) {}
   // כל התוכן מכל העמודים (תמונות, קומיקס, סיפורים, יד שניה…)
   try {
     ((typeof pages !== 'undefined' && Array.isArray(pages)) ? pages : []).forEach(pg => {
@@ -27806,10 +27839,12 @@ function ssFindUsers(q) {
   } catch (e) {}
   try { Object.values((typeof forumTopics !== 'undefined' && forumTopics) || {}).forEach(m => Object.values(m || {}).forEach(t => { if (t && !t.anon) add(t.uid, t.name, 0); })); } catch (e) {}
   try { Object.entries((typeof followedUids !== 'undefined' && followedUids) || {}).forEach(([uid, v]) => add(uid, v && v.name, 0)); } catch (e) {}
+  // מוכרים ועסקים בשוק
+  try { (typeof mktAll === 'function' ? mktAll() : []).forEach(r => { if (!r) return; const who = (typeof mktWho === 'function' && mktWho(r)) || r.owner; if (r.uid && !r.demo) add(r.uid, who, 1); else if (r.demo && who) add('', who, 1, true); }); } catch (e) {}
   return Object.values(map).filter(u => u.name.toLowerCase().includes(q) || (typeof profileHandle === 'function' && profileHandle(u.name).toLowerCase().includes(q)))
-    .sort((a, b) => b.n - a.n).slice(0, 6);
+    .sort((a, b) => (a.demo ? 1 : 0) - (b.demo ? 1 : 0) || b.n - a.n).slice(0, 12);
 }
-Object.assign(window, { ssRecentClear, ssFillQuery, ssUseQuery, ssOpenUser });
+Object.assign(window, { ssRecentClear, ssFillQuery, ssUseQuery, ssOpenUser, ssFindUsers });
 
 
 // ============================================================

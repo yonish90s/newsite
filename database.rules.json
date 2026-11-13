@@ -653,6 +653,13 @@
           ".validate": "newData.hasChildren(['t','uid','text']) && newData.child('uid').val() === auth.uid && newData.child('t').isNumber() && newData.child('t').val() <= now + 60000 && newData.child('text').isString() && newData.child('text').val().length <= 800 && (!newData.child('stars').exists() || newData.child('stars').isNumber() && newData.child('stars').val() >= 1 && newData.child('stars').val() <= 5) && (!newData.child('topic').exists() || newData.child('topic').isString() && newData.child('topic').val().length <= 30) && (!newData.child('contact').exists() || newData.child('contact').isString() && newData.child('contact').val().length <= 120) && (!newData.child('name').exists() || newData.child('name').isString() && newData.child('name').val().length <= 60) && (!newData.child('page').exists() || newData.child('page').isString() && newData.child('page').val().length <= 60)"
         }
       },
+      "people": {
+        ".read": true,
+        "$uid": {
+          ".write": "auth != null && auth.uid === $uid && auth.token.firebase.sign_in_provider !== 'anonymous'",
+          ".validate": "!newData.exists() || (newData.hasChildren(['name','t']) && newData.child('name').isString() && newData.child('name').val().length >= 1 && newData.child('name').val().length <= 60 && newData.child('t').isNumber() && newData.child('t').val() <= now + 60000)"
+        }
+      },
       "assistant_kb": {
         ".read": true
       },
