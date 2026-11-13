@@ -48,9 +48,9 @@
   <!-- ספריית localforage לשמירת תמונות -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
   <!-- קישור לקובץ העיצוב החיצוני (עם פרמטר למניעת שמירה במטמון) -->
-  <link rel="stylesheet" href="./style.min.css?v=2277">
-  <link rel="stylesheet" id="mono-css" href="./mono.min.css?v=156">
-  <link rel="stylesheet" id="dark-css" data-href="./dark.min.css?v=567" media="not all">
+  <link rel="stylesheet" href="./style.min.css?v=2278">
+  <link rel="stylesheet" id="mono-css" href="./mono.min.css?v=157">
+  <link rel="stylesheet" id="dark-css" data-href="./dark.min.css?v=568" media="not all">
   <script>
     // קישור ישיר לפריט (#p/…, #s/…, #n/…) — מסמנים מיד, כדי שהכתובת לא תימחק לפני שהפריט נפתח
     window.__deepLinkOpening = /^#[psn]\//.test(location.hash || '');
@@ -803,6 +803,44 @@ html.theme-dark .pl-bar { background: #2a2f37; }
         <li>קהילה ופורומים בדיסקרטיות</li>
       </ul>
       <img class="au-side-img" alt="" hidden>
+      <!-- מבצע: מעלים ומרוויחים מטבעות — דמות מטבע מצוירת וגשם מטבעות -->
+      <div class="au-coins">
+        <svg class="au-coins-art" viewBox="0 0 260 210" aria-hidden="true">
+          <g class="auc-rain">
+            <svg x="18" y="14" width="30" height="30" viewBox="0 0 64 64"><use href="#bw-coin"/></svg>
+            <svg x="206" y="6" width="36" height="36" viewBox="0 0 64 64"><use href="#bw-coin"/></svg>
+            <svg x="40" y="104" width="24" height="24" viewBox="0 0 64 64"><use href="#bw-coin"/></svg>
+            <svg x="214" y="96" width="26" height="26" viewBox="0 0 64 64"><use href="#bw-coin"/></svg>
+          </g>
+          <g fill="#f7c948"><path d="M64 52l3 8 8 3-8 3-3 8-3-8-8-3 8-3z"/><path d="M196 62l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/><path d="M182 150l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" fill="#ffffff" opacity=".8"/></g>
+          <ellipse cx="130" cy="196" rx="54" ry="8" fill="#000" opacity=".12"/>
+          <!-- רגליים ונעליים -->
+          <path d="M112 166v18M148 166v18" stroke="#7a5306" stroke-width="7" stroke-linecap="round"/>
+          <ellipse cx="106" cy="188" rx="14" ry="7" fill="#e5484d"/><ellipse cx="154" cy="188" rx="14" ry="7" fill="#e5484d"/>
+          <!-- ידיים: אחת מנופפת, אחת מחזיקה מטבע קטן -->
+          <path d="M80 112c-16-6-24-22-22-36" stroke="#c9900f" stroke-width="8" stroke-linecap="round" fill="none"/>
+          <circle cx="58" cy="74" r="8" fill="#ffd66b" stroke="#c9900f" stroke-width="2.5"/>
+          <path d="M180 116c14 2 24 12 26 24" stroke="#c9900f" stroke-width="8" stroke-linecap="round" fill="none"/>
+          <svg x="194" y="126" width="34" height="34" viewBox="0 0 64 64"><use href="#bw-coin"/></svg>
+          <!-- גוף: המטבע של האתר -->
+          <circle cx="130" cy="111" r="62" fill="#7a5306" opacity=".45"/>
+          <circle cx="130" cy="108" r="62" fill="url(#bwc-rim)"/>
+          <circle cx="130" cy="108" r="52" fill="url(#bwc-in)"/>
+          <circle cx="130" cy="108" r="49" fill="url(#bwc-face)"/>
+          <path d="M92 86a44 44 0 0 1 30-24" stroke="#fffbe6" stroke-width="5" stroke-linecap="round" fill="none" opacity=".7"/>
+          <!-- פנים -->
+          <g transform="translate(130 104)">
+            <ellipse cx="-17" cy="-8" rx="9" ry="11" fill="#fff"/><ellipse cx="17" cy="-8" rx="9" ry="11" fill="#fff"/>
+            <circle cx="-15" cy="-6" r="5" fill="#2b1d06"/><circle cx="19" cy="-6" r="5" fill="#2b1d06"/>
+            <circle cx="-13" cy="-9" r="1.8" fill="#fff"/><circle cx="21" cy="-9" r="1.8" fill="#fff"/>
+            <ellipse cx="-30" cy="10" rx="7" ry="4.5" fill="#f28c6a" opacity=".55"/><ellipse cx="30" cy="10" rx="7" ry="4.5" fill="#f28c6a" opacity=".55"/>
+            <path d="M-14 12c6 12 22 12 28 0" fill="#7a2b12" stroke="#5a1f0c" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M-6 18c4 3 8 3 12 0" stroke="#f28c6a" stroke-width="3" stroke-linecap="round" fill="none"/>
+          </g>
+        </svg>
+        <h3>באו תעלו — ותזכו במטבעות! 🪙</h3>
+        <p>כל העלאה, מכירה ותגובה צוברת לכם מטבעות לארנק.</p>
+      </div>
       <div class="au-side-admin">
         <label>החלפת תמונה<input type="file" accept="image/*" hidden onchange="loginImagePick(this)"></label>
         <button type="button" onclick="loginImageRemove()">הסרה</button>

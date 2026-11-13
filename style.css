@@ -19954,3 +19954,19 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_
 html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .uw-star.bw-star-btn svg { width: 100%; height: 100%; filter: drop-shadow(0 1px 1px rgba(120, 50, 0, .35)); }
 html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .uw-star.bw-star-btn.on, html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .uw-stars:not(.static):hover .uw-star.bw-star-btn { filter: none; }
 html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .uw-stars:not(.static) .uw-star.bw-star-btn:hover ~ .uw-star.bw-star-btn { filter: grayscale(1) opacity(.35); }
+
+/* חלון הכניסה: "באו תעלו ותזכו במטבעות" עם דמות מטבע מצוירת */
+html body .au-coins { display: none; }
+@media (min-width: 769px) {
+  html body .au-side .au-coins { position: absolute; z-index: 1; left: 0; right: 0; bottom: 34px; display: flex; flex-direction: column; align-items: center; text-align: center; padding: 0 30px; }
+  html body .au-side-img:not([hidden]) ~ .au-coins { display: none; }
+  html body .au-coins-art { width: min(300px, 88%); height: auto; overflow: visible; }
+  html body .au-coins-art .auc-rain > svg { animation: aucFloat 3.2s ease-in-out infinite; }
+  html body .au-coins-art .auc-rain > svg:nth-child(2) { animation-delay: -.8s; }
+  html body .au-coins-art .auc-rain > svg:nth-child(3) { animation-delay: -1.6s; }
+  html body .au-coins-art .auc-rain > svg:nth-child(4) { animation-delay: -2.4s; }
+  html body .au-coins h3 { margin: 10px 0 6px; font-size: 22px; font-weight: 900; line-height: 1.25; color: inherit; }
+  html body .au-coins p { margin: 0; font-size: 14.5px; line-height: 1.5; opacity: .85; color: inherit; }
+}
+@keyframes aucFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+@media (prefers-reduced-motion: reduce) { html body .au-coins-art .auc-rain > svg { animation: none; } }
