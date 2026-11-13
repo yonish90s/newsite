@@ -33044,7 +33044,7 @@ function rentDetailHTML(r) {
     <div class="mk-head-rate"><button type="button" class="mk-rate" data-seller="${escHtml(r.uid || '')}" onclick="rentRevOpen()">${rentRateHTML(0, 0)}</button></div>
     <div class="mp mk-pg">
       <div class="rn-det-gal mp-gal">
-        <div class="rn-det-img mp-img">${rentThumb(full && full.length ? { ...r, img: full[0] } : r, true)}</div>
+        <div class="rn-det-img mp-img" onclick="mkZoomOpen(this)">${rentThumb(full && full.length ? { ...r, img: full[0] } : r, true)}<button type="button" class="mk-zoom-btn" onclick="event.stopPropagation(); mkZoomOpen(this.parentElement)" aria-label="הגדלת התמונה" title="הגדלה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V5a1 1 0 0 1 1-1h4M15 4h4a1 1 0 0 1 1 1v4M20 15v4a1 1 0 0 1-1 1h-4M9 20H5a1 1 0 0 1-1-1v-4"/></svg></button></div>
         ${imgs.length ? `<div class="mk-vthumbs">
           <button type="button" class="mk-varr" disabled onclick="rentDetStep(this, -1)" aria-label="התמונה הקודמת">${ic('<path d="M6 15l6-6 6 6"/>')}</button>
           <div class="mp-thumbs">${imgs.map((u, i) => `<button type="button" class="${i ? '' : 'on'}" onclick="rentDetPick(this)" aria-label="תמונה ${i + 1}"><img src="${escHtml(u)}" alt="" loading="lazy"></button>`).join('')}</div>
@@ -33345,6 +33345,77 @@ function rentQtyStep(id, dir) {
   rentCalcUpd(id);
 }
 // גלריה בעמוד מודעה: לחיצה על תמונה קטנה מחליפה את הגדולה
+// ---- הגדלת התמונה הראשית במודעה: מסך מלא, זום בגלגלת/צביטה/לחיצה כפולה, גרירה, חצים ומקלדת ----
+let mkZ = null;
+function mkZoomOpen(box) {
+  const gal = box.closest('.rn-det-gal') || box;
+  const cur = box.querySelector('img'); if (!cur) return;
+  if (document.documentElement.classList.contains('adult-blur') && !box.classList.contains('unblur')) return;   // תמונה מוסתרת — קודם חושפים
+  const list = [...gal.querySelectorAll('.mp-thumbs img')].map(i => i.getAttribute('src'));
+  const srcs = list.length ? list : [cur.getAttribute('src')];
+  const i0 = Math.max(0, srcs.indexOf(cur.getAttribute('src')));
+  let el = document.getElementById('mk-zoom'); if (el) el.remove();
+  el = document.createElement('div'); el.id = 'mk-zoom'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'תמונה מוגדלת');
+  const ic = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+  el.innerHTML = `<div class="mz-stage"><img class="mz-img" alt="" draggable="false"></div>
+    <button type="button" class="mz-x" onclick="mkZoomClose()" aria-label="סגירה">${ic('<path d="M6 6l12 12M18 6 6 18"/>')}</button>
+    <div class="mz-tools"><button type="button" onclick="mkZoomBy(1.5)" aria-label="הגדלה">${ic('<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M11 8v6M8 11h6"/>')}</button><button type="button" onclick="mkZoomBy(1/1.5)" aria-label="הקטנה">${ic('<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M8 11h6"/>')}</button><button type="button" onclick="mkZoomReset()" aria-label="גודל רגיל">${ic('<path d="M4 9V5a1 1 0 0 1 1-1h4M15 4h4a1 1 0 0 1 1 1v4M20 15v4a1 1 0 0 1-1 1h-4M9 20H5a1 1 0 0 1-1-1v-4"/>')}</button><span class="mz-n"></span></div>
+    ${srcs.length > 1 ? `<button type="button" class="mz-nav mz-prev" onclick="mkZoomGo(-1)" aria-label="הקודמת">${ic('<path d="M9 6l6 6-6 6"/>')}</button><button type="button" class="mz-nav mz-next" onclick="mkZoomGo(1)" aria-label="הבאה">${ic('<path d="M15 6l-6 6 6 6"/>')}</button>` : ''}`;
+  document.body.appendChild(el);
+  document.documentElement.classList.add('mz-open');
+  mkZ = { srcs, i: i0, s: 1, x: 0, y: 0, el };
+  const stage = el.querySelector('.mz-stage'), img = el.querySelector('.mz-img');
+  let drag = null, pinch = null;
+  const pts = new Map();
+  stage.addEventListener('wheel', e => { e.preventDefault(); mkZoomBy(e.deltaY < 0 ? 1.15 : 1 / 1.15, e.clientX, e.clientY); }, { passive: false });
+  stage.addEventListener('dblclick', e => { if (mkZ.s > 1) mkZoomReset(); else mkZoomBy(2.5, e.clientX, e.clientY); });
+  stage.addEventListener('pointerdown', e => { pts.set(e.pointerId, e); stage.setPointerCapture(e.pointerId);
+    if (pts.size === 2) { const [a, b] = [...pts.values()]; pinch = { d: Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY), s: mkZ.s }; drag = null; }
+    else drag = { x: e.clientX, y: e.clientY, ox: mkZ.x, oy: mkZ.y, moved: false }; });
+  stage.addEventListener('pointermove', e => { if (!pts.has(e.pointerId)) return; pts.set(e.pointerId, e);
+    if (pinch && pts.size === 2) { const [a, b] = [...pts.values()]; mkZ.s = Math.min(6, Math.max(1, pinch.s * Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY) / pinch.d)); mkZoomApply(); return; }
+    if (drag) { const dx = e.clientX - drag.x, dy = e.clientY - drag.y; if (Math.abs(dx) + Math.abs(dy) > 4) drag.moved = true;
+      if (mkZ.s > 1) { mkZ.x = drag.ox + dx; mkZ.y = drag.oy + dy; mkZoomApply(); } } });
+  const up = e => { pts.delete(e.pointerId);
+    if (drag && !drag.moved && mkZ.s === 1 && e.target === stage) mkZoomClose();                  // לחיצה על הרקע סוגרת
+    else if (drag && drag.moved && mkZ.s === 1 && srcs.length > 1 && Math.abs(e.clientX - drag.x) > 60) mkZoomGo(e.clientX < drag.x ? 1 : -1);   // החלקה בין תמונות
+    if (pts.size < 2) pinch = null; if (!pts.size) drag = null; };
+  stage.addEventListener('pointerup', up); stage.addEventListener('pointercancel', up);
+  mkZoomShow();
+}
+function mkZoomShow() {
+  if (!mkZ) return;
+  const img = mkZ.el.querySelector('.mz-img');
+  img.src = mkZ.srcs[mkZ.i]; mkZ.s = 1; mkZ.x = 0; mkZ.y = 0; mkZoomApply();
+  const n = mkZ.el.querySelector('.mz-n'); if (n) n.textContent = mkZ.srcs.length > 1 ? `${mkZ.i + 1} / ${mkZ.srcs.length}` : '';
+}
+function mkZoomApply() {
+  if (!mkZ) return;
+  if (mkZ.s <= 1.001) { mkZ.s = 1; mkZ.x = 0; mkZ.y = 0; }
+  const img = mkZ.el.querySelector('.mz-img');
+  img.style.transform = `translate(${mkZ.x}px, ${mkZ.y}px) scale(${mkZ.s})`;
+  mkZ.el.classList.toggle('zoomed', mkZ.s > 1);
+}
+function mkZoomBy(f, cx, cy) {
+  if (!mkZ) return;
+  const old = mkZ.s, ns = Math.min(6, Math.max(1, old * f));
+  if (cx !== undefined) {                                          // הזום ממוקד בנקודה שעליה העכבר / האצבעות
+    const r = mkZ.el.querySelector('.mz-stage').getBoundingClientRect();
+    const px = cx - (r.left + r.width / 2), py = cy - (r.top + r.height / 2);
+    mkZ.x = px - (px - mkZ.x) * ns / old; mkZ.y = py - (py - mkZ.y) * ns / old;
+  }
+  mkZ.s = ns; mkZoomApply();
+}
+function mkZoomReset() { if (!mkZ) return; mkZ.s = 1; mkZoomApply(); }
+function mkZoomGo(d) { if (!mkZ || mkZ.srcs.length < 2) return; mkZ.i = (mkZ.i + d + mkZ.srcs.length) % mkZ.srcs.length; mkZoomShow(); }
+function mkZoomClose() { const el = document.getElementById('mk-zoom'); if (el) el.remove(); document.documentElement.classList.remove('mz-open'); mkZ = null; }
+document.addEventListener('keydown', e => {
+  if (!mkZ) return;
+  if (e.key === 'Escape') mkZoomClose();
+  else if (e.key === 'ArrowLeft') mkZoomGo(1); else if (e.key === 'ArrowRight') mkZoomGo(-1);
+  else if (e.key === '+' || e.key === '=') mkZoomBy(1.4); else if (e.key === '-') mkZoomBy(1 / 1.4);
+});
+Object.assign(window, { mkZoomOpen, mkZoomClose, mkZoomBy, mkZoomReset, mkZoomGo });
 function rentDetPick(btn) {
   const big = btn.closest('.rn-det-gal') && btn.closest('.rn-det-gal').querySelector('.rn-det-img img');
   const src = btn.querySelector('img') && btn.querySelector('img').getAttribute('src');
