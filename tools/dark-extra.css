@@ -976,3 +976,4 @@ html.theme-dark #buy-dock .by-m.bot { background: #1f1f1f !important; color: #ff
 html.theme-dark #buy-dock .by-m.me, html.theme-dark #buy-dock .by-go, html.theme-dark #buy-dock .by-offer:not(:disabled) { background: #ffffff !important; color: #111111 !important; }
 html.theme-dark #buy-dock .by-head { border-color: #262626 !important; }
 html.theme-dark #buy-dock :is(.by-head span, .by-card-tx small, .by-none, .by-item-h small) { color: #a8a8a8 !important; }
+html.theme-dark #buy-dock .by-cart { background: #1f1f1f !important; border-color: #3a3a3a !important; color: #ffffff !important; }

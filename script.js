@@ -33651,7 +33651,7 @@ function buyCardHTML(m, ai) {
   return `<div class="by-card" data-id="${escHtml(r.id)}">
     <button type="button" class="by-card-main" onclick="rentOpen('${artEsc(r.id)}')">${img ? `<img src="${escHtml(img)}" alt="" loading="lazy">` : '<span class="by-noimg">🛍️</span>'}
       <span class="by-card-tx"><b>${escHtml(r.title)}</b><small>${r.price ? buyMoney(r.price) : 'מחיר לא צוין'} · ${escHtml(r.city || r.owner || '')}${r.demo ? ' · דוגמה' : ''}</small>${tag}</span></button>
-    <button type="button" class="by-offer" onclick="buyDo(${ai})">הצעה ${buyMoney(m.offer)}</button>
+    <div class="by-card-acts"><button type="button" class="by-offer" onclick="buyDo(${ai})">הצעה ${buyMoney(m.offer)}</button>${m.r.price ? `<button type="button" class="by-cart" onclick="buyCartBtn('${artEsc(m.r.id)}', this)" title="הוספה לעגלה במחיר המלא" aria-label="הוספה לעגלה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l1 13H5zM9 8V6a3 3 0 0 1 6 0v2"/></svg></button>` : ''}</div>
   </div>`;
 }
 async function buySendOffer(m, note) {
@@ -33716,6 +33716,185 @@ async function buyHandle(text) {
   }) : -1;
   buySay('bot', `${found ? `מצאתי <b>${found}</b> מודעות מתאימות. אפשר לשלוח הצעה לכל אחת, או לכולן בבת אחת:` : 'עדיין אין מודעות מתאימות.'}${html}${allIdx >= 0 ? `<button type="button" class="by-all" onclick="buyDo(${allIdx})">שלחו הצעות לכל ה-${best.length}${best !== sendAll ? ' שבתקציב' : ''}</button>` : ''}`);
 }
+// ---- עגלה דרך הצ'אט: "תוסיף לעגלה 2 נרות ריחניים", "תכניס לסל את הספה", "מה בעגלה?", "תזמין" ----
+const BUY_NUMW = { 'אחד': 1, 'אחת': 1, 'שני': 2, 'שתי': 2, 'שניים': 2, 'שתיים': 2, 'זוג': 2, 'שלוש': 3, 'שלושה': 3, 'ארבע': 4, 'ארבעה': 4, 'חמש': 5, 'חמישה': 5, 'שש': 6, 'שישה': 6, 'עשר': 10, 'עשרה': 10 };
+const BUY_CART_VERB = '(?:תוסיף|תוסיפי|הוסף|הוסיפי|להוסיף|תכניס|תכניסי|הכנס|להכניס|תשים|שים|תשימי|לשים)';
+const BUY_CART_RX = new RegExp(BUY_CART_VERB + '(?:\\s|$).*(?:עגלה|סל)|^(?:לעגלה|לסל)(?:\\s|$)');
+const buyCartStrip = t => t.replace(new RegExp('(^|\\s)' + BUY_CART_VERB + '(?=\\s|$)', 'g'), ' ').replace(/(^|\s)[לב]?(?:עגלת הקניות|עגלה|סל הקניות|סל)(?=\s|$|[,.:])/g, ' ')
+function buyCartAddItem(r, n) {
+  const c = cartGet();
+  if (r._prod) {
+    const it = c.find(x => x.id === r.id);
+    if (it) it.qty = Math.min(10, it.qty + n); else c.push({ id: r.id, qty: Math.min(10, n) });
+    cartSet(c); return 'ok';
+  }
+  const key = 'mkt_' + r.id, it = c.find(x => x.id === key);
+  const stock = typeof mktStock === 'function' ? mktStock(r) : null;
+  if (stock === 0) return 'out';
+  if (stock !== null && (it ? it.qty : 0) + n > stock) return 'stock:' + stock;
+  if (it) it.qty = Math.round((it.qty + n) * 100) / 100; else c.push({ id: key, qty: n });
+  cartSet(c); return 'ok';
+}
+function buyCartCandidates(q, rentOk) {
+  const groups = buyGroups(q); if (!groups.length) return [];
+  const hit = (set, g) => g.some(w => set.has(w) || [...set].some(h => h.length > 3 && w.length > 3 && (h.startsWith(w) || w.startsWith(h))));
+  const prods = (typeof productsList === 'function' ? productsList() : []).filter(p => p && p.name && (typeof coPrice !== 'function' || coPrice(p) > 0))
+    .map(p => ({ _prod: true, id: p.id, title: p.name, price: typeof coPrice === 'function' ? coPrice(p) : Number(p.price) || 0, img: p.image || '', desc: p.desc || '', owner: 'החנות' }));
+  const mk = (typeof mktAll === 'function' ? mktAll() : []).filter(r => r && r.title && r.price > 0 && r.offer !== 'החלפה' && r.offer !== 'פרויקט' && (rentOk || ['used', 'biz'].includes(mktSecOf(r))));
+  return prods.concat(mk).map(r => {
+    const hay = new Set(askTokens([r.title, r.desc, r.bizName].join(' ')).flat()), title = new Set(askTokens(r.title).flat());
+    return groups.every(g => hit(hay, g)) ? { r, score: groups.filter(g => hit(title, g)).length + (r._prod ? .5 : 0) } : null;
+  }).filter(Boolean).sort((a, b) => b.score - a.score || a.r.price - b.r.price).slice(0, 4);
+}
+function buyCartBtn(id, btn) {
+  const r = rentFind(id); if (!r) return;
+  const st = buyCartAddItem(r, Math.max(1, rentMin(r)));
+  if (st === 'ok') { btn.classList.add('on'); btn.disabled = true; buySay('bot', `🛒 הוספתי לעגלה: <b>${escHtml(r.title)}</b>. <button type="button" class="by-link" onclick="cartOpen()">לעגלה</button>`); }
+  else buySay('bot', st === 'out' ? 'המוצר אזל מהמלאי.' : `נשארו רק ${st.split(':')[1]} במלאי.`);
+}
+function buyCartSummary() {
+  const c = cartGet(); if (!c.length) return 'העגלה ריקה כרגע.';
+  const cat = typeof cartCatalog === 'function' ? cartCatalog() : [];
+  let tot = 0;
+  const rows = c.map(x => { const p = cat.find(y => y.id === x.id) || {}; const pr = Number(p.price) || (typeof coPrice === 'function' && p.price ? coPrice(p) : 0); tot += pr * x.qty; return `<li>${escHtml(p.name || p.title || 'פריט')} × ${x.qty}${pr ? ` — ${buyMoney(pr * x.qty)}` : ''}</li>`; });
+  return `בעגלה עכשיו:<ul class="by-list">${rows.join('')}</ul>${tot ? `<b>סה״כ בערך ${buyMoney(tot)}</b><br>` : ''}<button type="button" class="by-link" onclick="cartOpen()">לפתיחת העגלה</button> · <button type="button" class="by-link" onclick="cartCheckout()">להזמנה</button>`;
+}
+function buyCartHandle(text) {
+  const rentOk = /לשכור|להשכיר|השכרה/.test(text);
+  let t = buyCartStrip(text).replace(/^(בבקשה|אפשר|תוכל|תוכלי)\s+/, '').replace(/(^|\s)(בבקשה|לי|את|גם)(?=\s|$)/g, ' ').replace(/(^|\s)ה(?=[א-ת]{3,})/g, '$1').replace(/\s+/g, ' ').trim();
+  const parts = t.split(/\s*(?:,|;|\+|\sוגם\s|\s(?=ו[א-ת]{2,}))\s*/).map(p => p.replace(/^ו(?=[א-ת]{2,})/, '').trim()).filter(Boolean);
+  if (!parts.length) { buySay('bot', 'מה להוסיף לעגלה? למשל: <b>תוסיף לעגלה 2 נרות ריחניים</b>'); return; }
+  let html = '', added = [];
+  parts.forEach(p => {
+    let n = 1;
+    const mn = p.match(/(?:^|\s)(\d+(?:\.\d+)?)\s*(?:יח(?:ידות)?|x|×)?(?=\s|$)/) || p.match(/[x×]\s*(\d+)/);
+    if (mn) { n = Number(mn[1]); p = p.replace(mn[0], ' '); }
+    else { const w = p.split(/\s+/).find(x => BUY_NUMW[x]); if (w) { n = BUY_NUMW[w]; p = p.replace(new RegExp('(^|\\s)' + w + '(?=\\s|$)'), ' '); } }
+    p = p.replace(/\s+/g, ' ').trim();
+    const cs = buyCartCandidates(p, rentOk);
+    if (!cs.length) { html += `<p class="by-none">לא מצאתי "${escHtml(p)}" לקנייה באתר.</p>`; return; }
+    const top = cs[0], second = cs[1];
+    if (!second || top.score > second.score) {
+      const st = buyCartAddItem(top.r, n);
+      html += st === 'ok' ? `<p class="by-ok">🛒 נוסף: <b>${escHtml(top.r.title)}</b> × ${n} — ${buyMoney(top.r.price * n)}</p>` : `<p class="by-none">${escHtml(top.r.title)}: ${st === 'out' ? 'אזל מהמלאי' : 'נשארו רק ' + st.split(':')[1] + ' במלאי'}</p>`;
+      if (st === 'ok') added.push(top.r);
+    } else {
+      html += `<div class="by-item"><div class="by-item-h"><b>${escHtml(p)}</b><small>איזה מהם להוסיף?</small></div>${cs.map(c => `<div class="by-card"><button type="button" class="by-card-main" onclick="${c.r._prod ? `navigateToPage('page-products-main')` : `rentOpen('${artEsc(c.r.id)}')`}">${c.r.img ? `<img src="${escHtml(c.r.img)}" alt="" loading="lazy">` : '<span class="by-noimg">🛍️</span>'}<span class="by-card-tx"><b>${escHtml(c.r.title)}</b><small>${buyMoney(c.r.price)} · ${escHtml(c.r.city || c.r.owner || '')}</small></span></button><div class="by-card-acts"><button type="button" class="by-offer" onclick="buyDo(${buyAct(() => { const st = buyCartAddItem(c.r, n); buySay('bot', st === 'ok' ? `🛒 נוסף: <b>${escHtml(c.r.title)}</b> × ${n}` : 'אי אפשר להוסיף — אין מספיק במלאי'); })})">הוסף × ${n}</button></div></div>`).join('')}</div>`;
+    }
+  });
+  buySay('bot', html + (added.length ? `<button type="button" class="by-all" onclick="cartOpen()">לעגלה (${cartGet().reduce((a, x) => a + x.qty, 0)} פריטים)</button>` : ''));
+}
+// ---- מעקב ותזכורות דרך הצ'אט ----
+// "תזכיר לי מחר ב-10 להתקשר למוכר", "תזכיר לי בעוד 20 דקות לבדוק את ההצעה", "תודיע לי כשיעלה אקסבוקס עד 1,500",
+// "תעקוב אחרי רון כהן", "תשמור לי את כל הספות", "מה המבוקשים שלי", "מה התזכורות שלי", "תמחק את התזכורות"
+let buyRems = (() => { try { return JSON.parse(localStorage.getItem('buy_rems') || '[]') || []; } catch (e) { return []; } })();
+const buyRemsSave = () => { try { localStorage.setItem('buy_rems', JSON.stringify(buyRems.slice(-30))); } catch (e) {} };
+const buyWantsSave = () => { try { localStorage.setItem('buy_wants', JSON.stringify(buyWants.slice(-20))); } catch (e) {} };
+const BUY_REM_RX = /^(תזכיר|תזכירי|הזכר|להזכיר|תזכורת)(\s|$)/;
+const BUY_WANT_RX = /^(תודיע|תודיעי|תתריע|תתריעי|תעדכן|תעדכני|תגיד|תגידי)(\s+לי)?\s+(כש|אם\s)/;
+const BUY_FOLLOW_RX = /^(תעקוב|תעקבי|לעקוב|עקוב)(\s+אחרי|\s+אחר)?(\s|$)/;
+const BUY_SAVE_RX = /^(תשמור|תשמרי|שמור|לשמור)(\s+לי)?(\s|$)/;
+function buyWhen(t) {
+  const now = new Date(); let m;
+  if ((m = t.match(/בעוד\s+(\d+|חצי|רבע)?\s*(דקות|דקה|שעות|שעה|ימים|יום)/))) {
+    const n = m[1] === 'חצי' ? .5 : m[1] === 'רבע' ? .25 : Number(m[1]) || 1;
+    const ms = /דק/.test(m[2]) ? 6e4 : /שע/.test(m[2]) ? 36e5 : 864e5;
+    return { at: Date.now() + n * ms, used: m[0] };
+  }
+  const tm = t.match(/(?:ב-?|בשעה\s+)(\d{1,2})(?::(\d{2}))?(?=\s|$)/);
+  const day = /מחרתיים/.test(t) ? 2 : /מחר/.test(t) ? 1 : 0;
+  if (tm || day) {
+    const d = new Date(now); d.setDate(d.getDate() + day);
+    if (tm) d.setHours(Number(tm[1]), Number(tm[2] || 0), 0, 0); else d.setHours(9, 0, 0, 0);
+    if (!day && d.getTime() <= Date.now()) d.setDate(d.getDate() + 1);
+    const used = [tm && tm[0], (t.match(/מחרתיים|מחר|היום/) || [])[0]].filter(Boolean);
+    return { at: d.getTime(), used };
+  }
+  return null;
+}
+function buyWhenTxt(at) {
+  const d = new Date(at), today = new Date(), tom = new Date(); tom.setDate(tom.getDate() + 1);
+  const hm = d.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+  return d.toDateString() === today.toDateString() ? `היום ב-${hm}` : d.toDateString() === tom.toDateString() ? `מחר ב-${hm}` : `${d.toLocaleDateString('he-IL')} ב-${hm}`;
+}
+function buyRemHandle(text) {
+  const w = buyWhen(text);
+  if (!w) { buySay('bot', 'מתי להזכיר? למשל: <b>תזכיר לי מחר ב-10 להתקשר למוכר</b> או <b>בעוד 20 דקות</b>'); return; }
+  let what = text.replace(BUY_REM_RX, ' ');
+  [].concat(w.used).forEach(u => { what = what.replace(u, ' '); });
+  what = what.replace(/(^|\s)(לי|את|ש|ל|בבקשה)(?=\s|$)/g, ' ').replace(/\s+/g, ' ').trim() || 'תזכורת';
+  buyRems.push({ id: Date.now().toString(36), at: w.at, text: what.slice(0, 160) });
+  buyRemsSave();
+  try { if (window.Notification && Notification.permission === 'default') Notification.requestPermission(); } catch (e) {}
+  buySay('bot', `⏰ אזכיר לך <b>${buyWhenTxt(w.at)}</b>: ${escHtml(what)}<br><small>התזכורת קופצת באתר (וגם כהתראה בדפדפן, אם אישרת) כשהאתר פתוח.</small>`);
+}
+function buyRemTick() {
+  const due = buyRems.filter(r => r.at <= Date.now());
+  if (!due.length) return;
+  buyRems = buyRems.filter(r => r.at > Date.now()); buyRemsSave();
+  due.forEach(r => {
+    glassBanner({ title: '⏰ תזכורת', sub: r.text, icon: 'msg', ms: 12000 });
+    buySay('bot', `⏰ <b>תזכורת:</b> ${escHtml(r.text)}`);
+    try { if (window.Notification && Notification.permission === 'granted') new Notification('תזכורת', { body: r.text, icon: './logo.png' }); } catch (e) {}
+  });
+}
+function buyWantHandle(text) {
+  const t = text.replace(BUY_WANT_RX, ' ').trim().replace(/^(יעלה|תעלה|יהיה|תהיה|יש|מישהו\s+יפרסם|מישהו\s+מוכר)(\s|$)/, ' ').trim();
+  const items = buyParse(t);
+  if (!items.length) { buySay('bot', 'על מה להודיע? למשל: <b>תודיע לי כשיעלה אקסבוקס עד 1,500</b>'); return; }
+  items.forEach(it => { if (!buyWants.some(w => w.q === it.q)) buyWants.push(Object.assign({ t: Date.now(), seen: [] }, it)); });
+  buyWantsSave();
+  const now = items.map(it => [it, buyMatch(it)]);
+  buySay('bot', `🔔 שמרתי מעקב: ${items.map(it => `<b>${escHtml(it.q)}</b>${it.max ? ` עד ${buyMoney(it.max)}` : ''}`).join(', ')}. כשתעלה מודעה מתאימה — תקפוץ התראה.${now.some(([, m]) => m.length) ? '<br>כבר עכשיו יש התאמות: ' + now.filter(([, m]) => m.length).map(([it, m]) => `<button type="button" class="by-link" onclick="rentOpen('${artEsc(m[0].r.id)}')">${escHtml(m[0].r.title)}</button>`).join(' · ') : ''}`);
+}
+async function buyFollowHandle(text) {
+  const name = text.replace(BUY_FOLLOW_RX, ' ').replace(/(^|\s)(את|המוכר|המוכרת|העסק|של)(?=\s|$)/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!name) { buySay('bot', 'אחרי מי לעקוב? למשל: <b>תעקוב אחרי רון כהן</b>'); return; }
+  const lc = name.toLowerCase();
+  const sellers = [], seen = new Set();
+  (typeof mktAll === 'function' ? mktAll() : []).forEach(r => {
+    const who = (typeof mktWho === 'function' ? mktWho(r) : r.owner) || '';
+    const key = r.uid || who;
+    if (!who || (!r.uid && !r.demo) || seen.has(key)) return;
+    if (who.toLowerCase().includes(lc) || r.title.toLowerCase().includes(lc)) { seen.add(key); sellers.push({ uid: r.uid, name: who, demo: r.demo || !r.uid }); }
+  });
+  if (!sellers.length) { buySay('bot', `לא מצאתי מוכר בשם "${escHtml(name)}". אפשר לכתוב חלק מהשם או את שם המוצר שלו.`); return; }
+  const s = sellers[0];
+  if (s.demo) { buySay('bot', `✅ (מוכר לדוגמה) הייתי עוקב אחרי <b>${escHtml(s.name)}</b> — אצל מוכר אמיתי תקבלו עדכון על כל מודעה חדשה שלו.`); return; }
+  if (typeof isFollowing === 'function' && isFollowing(s.uid)) { buySay('bot', `כבר עוקבים אחרי <b>${escHtml(s.name)}</b> ✓`); return; }
+  if (buyNeedLogin()) return;
+  try { await toggleFollow(s.uid, s.name, document.createElement('button')); buySay('bot', `✅ עכשיו עוקבים אחרי <b>${escHtml(s.name)}</b> — מודעות חדשות שלו יופיעו בפיד.`); }
+  catch (e) { buySay('bot', 'לא הצלחתי לעקוב — נסו שוב.'); }
+}
+function buySaveHandle(text) {
+  const q = text.replace(BUY_SAVE_RX, ' ').replace(/(^|\s)(את|כל|ה?כל|בבקשה)(?=\s|$)/g, ' ').replace(/(^|\s)ה(?=[א-ת]{3,})/g, '$1').replace(/\s+/g, ' ').trim();
+  const items = buyParse(q);
+  if (!items.length) { buySay('bot', 'מה לשמור? למשל: <b>תשמור לי את כל הספות</b>'); return; }
+  let saved = [];
+  items.forEach(it => {
+    const groups = buyGroups(it.q.replace(/ות$/, 'ה').replace(/ים$/, ''));
+    const hit = (set, g) => g.some(w => set.has(w) || [...set].some(h => h.length > 3 && w.length > 3 && (h.startsWith(w) || w.startsWith(h))));
+    (typeof mktAll === 'function' ? mktAll() : []).forEach(r => {
+      const hay = new Set(askTokens([r.title, r.desc].join(' ')).flat());
+      if (!groups.length || !groups.every(g => hit(hay, g)) || (it.max && r.price > it.max)) return;
+      if (r.shId) { if (!photoIsSavedLocal(r.shId)) photoToggleSave(r.shId); }
+      else { const k = rentMarksKey(), m = rentMarks(); m['save:' + r.id] = 1; try { localStorage.setItem(k, JSON.stringify(m)); } catch (e) {} }
+      saved.push(r);
+    });
+  });
+  buySay('bot', saved.length ? `🔖 שמרתי ${saved.length} מודעות: ${saved.slice(0, 6).map(r => escHtml(r.title)).join(' · ')}${saved.length > 6 ? '…' : ''}<br><button type="button" class="by-link" onclick="openSavedModal()">לשמורים</button>` : 'לא מצאתי מודעות כאלה לשמור.');
+}
+function buyListHandle(q) {
+  if (/תזכור/.test(q)) {
+    buySay('bot', buyRems.length ? `⏰ התזכורות שלך:<ul class="by-list">${buyRems.sort((a, b) => a.at - b.at).map(r => `<li>${buyWhenTxt(r.at)} — ${escHtml(r.text)}</li>`).join('')}</ul>` : 'אין תזכורות פתוחות.');
+  } else {
+    buySay('bot', buyWants.length ? `🔔 אני עוקב בשבילך אחרי:<ul class="by-list">${buyWants.map(w => `<li>${escHtml(w.q)}${w.max ? ` עד ${buyMoney(w.max)}` : ''}${w.city ? ` · ${escHtml(w.city)}` : ''}</li>`).join('')}</ul>` : 'אין כרגע מבוקשים במעקב.');
+  }
+}
+function buyClearHandle(q) {
+  if (/תזכור/.test(q)) { buyRems = []; buyRemsSave(); buySay('bot', '🗑️ מחקתי את כל התזכורות.'); }
+  else { buyWants = []; buyWantsSave(); buySay('bot', '🗑️ הפסקתי את כל המעקבים אחרי מבוקשים.'); }
+}
 async function buySend(ev) {
   if (ev) ev.preventDefault();
   const inp = document.getElementById('by-q'); const q = inp ? inp.value.trim() : '';
@@ -33726,7 +33905,23 @@ async function buySend(ev) {
   buyBusy = true; buyRender();
   await new Promise(r => setTimeout(r, 450));
   buyBusy = false;
-  try { await buyHandle(q); } catch (e) { buySay('bot', 'משהו השתבש — נסו שוב בעוד רגע.'); }
+  try {
+    if (/^(מה|תראה|תראי|תציג|הצג)(\s|$).*(עגלה|סל)|^(ה?עגלה|ה?סל)( שלי)?$/.test(q)) buySay('bot', buyCartSummary());
+    else if (/^(תמחק|תמחקי|מחק|תבטל|תבטלי|בטל)(\s|$).*(תזכור|מבוקש|מעקב)/.test(q)) buyClearHandle(q);
+    else if (/^(מה|אילו|תראה|תציג)(\s|$).*(תזכורות|מבוקשים|במעקב|עוקב בשביל)/.test(q)) buyListHandle(q);
+    else if (BUY_REM_RX.test(q)) buyRemHandle(q);
+    else if (BUY_WANT_RX.test(q)) buyWantHandle(q);
+    else if (BUY_FOLLOW_RX.test(q)) await buyFollowHandle(q);
+    else if (BUY_SAVE_RX.test(q)) buySaveHandle(q);
+    else if (/^(תזמין|תזמיני|להזמין|הזמן|לקופה|תשלם|לתשלום)(\s|$)/.test(q)) { if (!cartGet().length) buySay('bot', 'העגלה ריקה — קודם נוסיף משהו.'); else { buySay('bot', 'פותח את ההזמנה — את התשלום מאשרים בעצמכם.'); if (typeof cartCheckout === 'function') cartCheckout(); } }
+    else if (BUY_CART_RX.test(q)) {
+      // מוצרי החנות נטענים מהמסד — מחכים להם רגע לפני החיפוש
+      if (typeof productsSubscribe === 'function') productsSubscribe();
+      for (let i = 0; i < 25 && typeof productsData !== 'undefined' && !productsData; i++) await new Promise(r => setTimeout(r, 120));
+      buyCartHandle(q);
+    }
+    else await buyHandle(q);
+  } catch (e) { buySay('bot', 'משהו השתבש — נסו שוב בעוד רגע.'); }
 }
 function buyToggle(force) { const d = document.getElementById('buy-dock'); if (d) d.classList.toggle('open', force !== undefined ? force : !d.classList.contains('open')); }
 function buyClear() { buyLog = []; buyActs = []; buyRender(); }
@@ -33753,12 +33948,12 @@ function buyWatch() {
         <div class="by-msgs" id="by-msgs"></div>
       </div>
       <form class="by-bar" onsubmit="buySend(event)">
-        <input id="by-q" autocomplete="off" maxlength="300" placeholder="מה תרצו לקנות? למשל: אקסבוקס ומחשב נייד עד 3,000 ₪" onfocus="buyLog.length && buyToggle(true)">
+        <input id="by-q" autocomplete="off" maxlength="300" placeholder="מה תרצו לקנות? למשל: אקסבוקס עד 3,000 ₪ · או: תוסיף לעגלה 2 נרות ריחניים" onfocus="buyLog.length && buyToggle(true)">
         <button type="submit" class="by-go" aria-label="שליחה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4z"/></svg></button>
       </form>`;
     document.body.appendChild(d);
   };
-  const start = () => { build(); setInterval(buyWatch, 120000); setTimeout(buyWatch, 15000); };
+  const start = () => { build(); setInterval(buyRemTick, 30000); setTimeout(buyRemTick, 3000); setInterval(buyWatch, 120000); setTimeout(buyWatch, 15000); setTimeout(() => { if (typeof productsSubscribe === 'function') productsSubscribe(); }, 4000); };
   if (document.body) start(); else document.addEventListener('DOMContentLoaded', start);
 })();
-Object.assign(window, { buySend, buyDo, buyToggle, buyClear, buyLog });
+Object.assign(window, { buySend, buyDo, buyToggle, buyClear, buyLog, buyCartBtn });
