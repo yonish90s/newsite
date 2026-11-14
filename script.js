@@ -18943,11 +18943,16 @@ async function mktFeedOpen() {
       <button type="button" class="fd-sg-who" onclick="${r.uid ? `openUserPage('${artEsc(r.uid)}', '${artEsc(r.owner)}')` : `rentOpenSeller('', '${artEsc(r.owner)}')`}">${authorAvHTML({ author: r.owner, uid: r.uid || '' })}<b>${escHtml(r.owner)}</b><small>${escHtml(r.city || '')}</small></button>
       <button type="button" class="fd-sg-go" onclick="mkCardFollow(this, '${artEsc(r.uid || '')}', '${artEsc(r.owner)}'); setTimeout(mktFeedOpen, 250)">${IG_FOLLOW_IC}מעקב</button></div>`).join('')}</div></section>` : '';
   const mine = items.filter(me), theirs = items.filter(x => !me(x));
+  // הפיד מחולק: מה שאנשים העלו, ומה ששיתפו (ריפוסטים)
+  const ups = theirs.filter(x => x.act !== 'שיתף/ה'), reps2 = theirs.filter(x => x.act === 'שיתף/ה');
+  const sec = (title, sub, list, empty) => `<section class="fd-sec"><header class="fd-sec-h"><h2>${title} <small>${list.length}</small></h2><span>${sub}</span></header>${list.length ? cards(list) : `<div class="fd-sec-empty">${empty}</div>`}</section>`;
+  const upsHTML = sec('העלאות', 'מודעות ופוסטים חדשים של מי שאתם עוקבים אחריהם', ups, 'עדיין אין העלאות ממי שאתם עוקבים אחריהם');
+  const repHTML = sec('ריפוסטים', 'מודעות שהם שיתפו מאחרים', reps2, 'עדיין אין ריפוסטים ממי שאתם עוקבים אחריהם');
   mainContent.innerHTML = `<div class="fd-page"><h1 class="fd-h">הפיד</h1>
     ${guest ? `<div class="fd-guest">👋 אתם גולשים כאורחים — המעקבים נשמרים במכשיר הזה. <button type="button" onclick="openLiveChatLogin()">התחברו</button> כדי לשמור אותם בחשבון ולקבל התראות.</div>` : ''}
     ${suggHTML}
-    <div class="pf-tabs2" role="tablist"><button type="button" class="on" onclick="fdTab(this, 'all')">הכל</button><button type="button" onclick="fdTab(this, 'them')">${theirs.length} ממי שאני עוקב/ת</button>${guest ? '' : `<button type="button" onclick="fdTab(this, 'me')">${mine.length} שלי</button>`}</div>
-    <div data-fd="all">${cards(items)}</div><div data-fd="them" hidden>${cards(theirs)}</div><div data-fd="me" hidden>${cards(mine)}</div></div>`;
+    <div class="pf-tabs2" role="tablist"><button type="button" class="on" onclick="fdTab(this, 'all')">הכל</button><button type="button" onclick="fdTab(this, 'ups')">העלאות <small>${ups.length}</small></button><button type="button" onclick="fdTab(this, 'reps')">ריפוסטים <small>${reps2.length}</small></button>${guest ? '' : `<button type="button" onclick="fdTab(this, 'me')">שלי <small>${mine.length}</small></button>`}</div>
+    <div data-fd="all">${theirs.length ? upsHTML + repHTML : cards([])}</div><div data-fd="ups" hidden>${upsHTML}</div><div data-fd="reps" hidden>${repHTML}</div><div data-fd="me" hidden>${cards(mine)}</div></div>`;
   if (typeof avatarHydrate === 'function') avatarHydrate(mainContent);
 }
 function fdTab(btn, t) {
