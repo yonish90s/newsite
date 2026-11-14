@@ -14584,7 +14584,7 @@ function sideRailHTML() {
           ${tile('store', 'אחסון', "mktGo('store')", { t: 'חדש' })}${tile('proj', 'פרויקטים', "mktGo('proj')")}
           ${tile('biz', 'עסקים', "mktGo('biz')")}${tile('news', 'חדשות', "navigateToPage('page-news-main')")}</div>`)}
         ${grp('assets', 'שלי', `<div class="xr-list">
-          ${row('cart', 'העגלה שלי', 'cartOpen()')}${row('wallet', 'הקניות שלי', 'myShopOpen(\'hist\')')}${row('saved', 'הרשימה שלי', 'myShopOpen(\'list\')')}${row('chat', 'הודעות', 'openMessages()')}
+          ${row('news', 'הפיד שלי', 'mktFeedOpen()')}${row('cart', 'העגלה שלי', 'cartOpen()')}${row('wallet', 'הקניות שלי', 'myShopOpen(\'hist\')')}${row('saved', 'הרשימה שלי', 'myShopOpen(\'list\')')}${row('chat', 'הודעות', 'openMessages()')}
           ${reg ? row('wallet', 'הארנק', 'walletOpen()') + row('char', 'הדמות שלי', 'chOpen()') + row('phone', 'אימות טלפון', 'phoneVerifyOpen()', u.phoneNumber ? null : { t: 'SMS', c: 'soft' }) : ''}</div>`)}
         ${grp('inspire', 'קהילה', `<div class="xr-list">
           ${row('photos', 'תמונות גולשים', "homeGo('photos')")}${row('comics', 'קומיקס', "homeGo('comics')")}${row('forums', 'פורומים', "homeGo('forums')")}
@@ -18907,28 +18907,46 @@ function myShopWantDel(i) { if (typeof buyWants === 'undefined') return; buyWant
 Object.assign(window, { myShopOpen, myShopAgain, myShopWantDel });
 // הפיד: מה שאני ומי שאני עוקב/ת אחריהם העלינו ושיתפנו, מהחדש לישן
 async function mktFeedOpen() {
-  const u = auth.currentUser;
-  if (!u || u.isAnonymous) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); if (typeof showCopyToast === 'function') showCopyToast('התחברו כדי לראות את הפיד'); return; }
+  const u = auth.currentUser, guest = !u || u.isAnonymous;
   if (typeof mainContent === 'undefined' || !mainContent) return;
   mainContent.innerHTML = '<div class="fd-page"><h1 class="fd-h">הפיד</h1><div class="rn-empty">טוען…</div></div>';
   try { window.scrollTo(0, 0); } catch (e) {}
   let follows = {}, reps = {};
-  try { follows = (await get(ref(db, `website/user_follows/${u.uid}`))).val() || {}; } catch (e) {}
+  if (guest) follows = guestFollowsGet();
+  else try { follows = (await get(ref(db, `website/user_follows/${u.uid}`))).val() || {}; } catch (e) {}
   try { reps = (await get(ref(db, 'website/reposts'))).val() || {}; } catch (e) {}
   if (!mainContent.querySelector('.fd-page')) return;   // הגולש עבר לעמוד אחר בינתיים
-  const who = new Set([u.uid].concat(Object.keys(follows)));
+  const myUid = guest ? '' : u.uid;
+  const who = new Set((myUid ? [myUid] : []).concat(Object.keys(follows)));
+  let demo = {}; try { demo = JSON.parse(localStorage.getItem('demo_follows') || '{}') || {}; } catch (e) {}
   const all = mktAll(), byKey = {};
   all.forEach(r => { byKey[rentCommentsKey(r)] = r; });
   const items = [];
-  all.forEach(r => { if (r.uid && who.has(r.uid)) items.push({ r, uid: r.uid, name: r.owner, act: 'העלה/תה', at: r.t || 0 }); });
-  Object.entries(reps).forEach(([k, m]) => { const r = byKey[k]; if (!r || !m) return; Object.entries(m).forEach(([uid, v]) => { if (who.has(uid)) items.push({ r, uid, name: (v && v.name) || (uid === u.uid ? 'אני' : 'גולש/ת'), act: 'שיתף/ה', at: (v && v.at) || 0 }); }); });
+  all.forEach(r => {
+    if (r.uid && who.has(r.uid)) items.push({ r, uid: r.uid, name: r.owner, act: 'העלה/תה', at: r.t || 0 });
+    else if (!r.uid && demo[igDemoKeyOf(r.owner)]) items.push({ r, uid: '', name: r.owner, act: 'העלה/תה', at: r.t || 0 });
+  });
+  Object.entries(reps).forEach(([k, m]) => { const r = byKey[k]; if (!r || !m) return; Object.entries(m).forEach(([uid, v]) => { if (who.has(uid)) items.push({ r, uid, name: (v && v.name) || (uid === myUid ? 'אני' : (follows[uid] && follows[uid].name) || 'גולש/ת'), act: 'שיתף/ה', at: (v && v.at) || 0 }); }); });
   items.sort((a, b) => b.at - a.at);
-  const me = x => x.uid === u.uid;
-  const cards = list => list.length ? `<div class="mk-sg-grid mk-grid fd-grid">${list.map(x => `<div class="fd-item"><button type="button" class="fd-by" onclick="openUserPage('${artEsc(x.uid)}', '${artEsc(x.name)}')">${authorAvHTML({ author: x.name, uid: x.uid })}<span><b>${escHtml(me(x) ? 'אני' : x.name)}</b> ${x.act}</span></button>${rentMiniHTML(x.r).replace(/onclick="rentOpen\(/, 'onclick="mktOpenItem(')}</div>`).join('')}</div>`
+  const me = x => !!myUid && x.uid === myUid;
+  const by = x => x.uid ? `openUserPage('${artEsc(x.uid)}', '${artEsc(x.name)}')` : `rentOpenSeller('', '${artEsc(x.name)}')`;
+  const cards = list => list.length ? `<div class="mk-sg-grid mk-grid fd-grid">${list.map(x => `<div class="fd-item"><button type="button" class="fd-by" onclick="${by(x)}">${authorAvHTML({ author: x.name, uid: x.uid })}<span><b>${escHtml(me(x) ? 'אני' : x.name)}</b> ${x.act}</span></button>${rentMiniHTML(x.r)}</div>`).join('')}</div>`
     : '<div class="rn-empty">עדיין אין כאן כלום.<br>עקבו אחרי מוכרים כדי לראות מה הם מעלים ומשתפים.</div>';
+  // הצעות למי לעקוב: מוכרים פעילים שעוד לא במעקב
+  const seen = new Set(), sugg = [];
+  all.slice().sort((a, b) => (b.t || 0) - (a.t || 0)).forEach(r => {
+    const key = r.uid || igDemoKeyOf(r.owner); if (!r.owner || seen.has(key) || (myUid && r.uid === myUid)) return; seen.add(key);
+    if (r.uid ? who.has(r.uid) : demo[igDemoKeyOf(r.owner)]) return;
+    sugg.push(r);
+  });
+  const suggHTML = sugg.length ? `<section class="fd-sugg"><h2>מוכרים שכדאי לעקוב אחריהם</h2><div class="fd-sugg-row">${sugg.slice(0, 12).map(r => `<div class="fd-sg">
+      <button type="button" class="fd-sg-who" onclick="${r.uid ? `openUserPage('${artEsc(r.uid)}', '${artEsc(r.owner)}')` : `rentOpenSeller('', '${artEsc(r.owner)}')`}">${authorAvHTML({ author: r.owner, uid: r.uid || '' })}<b>${escHtml(r.owner)}</b><small>${escHtml(r.city || '')}</small></button>
+      <button type="button" class="fd-sg-go" onclick="mkCardFollow(this, '${artEsc(r.uid || '')}', '${artEsc(r.owner)}'); setTimeout(mktFeedOpen, 250)">${IG_FOLLOW_IC}מעקב</button></div>`).join('')}</div></section>` : '';
   const mine = items.filter(me), theirs = items.filter(x => !me(x));
   mainContent.innerHTML = `<div class="fd-page"><h1 class="fd-h">הפיד</h1>
-    <div class="pf-tabs2" role="tablist"><button type="button" class="on" onclick="fdTab(this, 'all')">הכל</button><button type="button" onclick="fdTab(this, 'them')">${theirs.length} ממי שאני עוקב/ת</button><button type="button" onclick="fdTab(this, 'me')">${mine.length} שלי</button></div>
+    ${guest ? `<div class="fd-guest">👋 אתם גולשים כאורחים — המעקבים נשמרים במכשיר הזה. <button type="button" onclick="openLiveChatLogin()">התחברו</button> כדי לשמור אותם בחשבון ולקבל התראות.</div>` : ''}
+    ${suggHTML}
+    <div class="pf-tabs2" role="tablist"><button type="button" class="on" onclick="fdTab(this, 'all')">הכל</button><button type="button" onclick="fdTab(this, 'them')">${theirs.length} ממי שאני עוקב/ת</button>${guest ? '' : `<button type="button" onclick="fdTab(this, 'me')">${mine.length} שלי</button>`}</div>
     <div data-fd="all">${cards(items)}</div><div data-fd="them" hidden>${cards(theirs)}</div><div data-fd="me" hidden>${cards(mine)}</div></div>`;
   if (typeof avatarHydrate === 'function') avatarHydrate(mainContent);
 }
@@ -19564,17 +19582,41 @@ function subscribeMyFollows() {
   followsSubscribed = true;
   onValue(ref(db, `website/user_follows/${u.uid}`), snap => {
     followedUids = snap.val() || {};
+    // מעקבים שנעשו כאורח עוברים לחשבון (פעם אחת)
+    if (!u.isAnonymous) {
+      const g = guestFollowsGet(), add = Object.entries(g).filter(([k]) => k !== u.uid && !followedUids[k]);
+      if (Object.keys(g).length) guestFollowsSet({});
+      add.forEach(([k, v]) => {
+        const rec = { name: String((v && v.name) || ''), since: (v && v.since) || Date.now() };
+        set(ref(db, `website/user_follows/${u.uid}/${k}`), rec).catch(() => {});
+        set(ref(db, `website/follow_counts/${k}/followers`), increment(1)).catch(() => {});
+        set(ref(db, `website/follow_counts/${u.uid}/following`), increment(1)).catch(() => {});
+      });
+      if (add.length && typeof showCopyToast === 'function') showCopyToast(`${add.length} מעקבים מהמכשיר נשמרו בחשבון`);
+    }
     publicFollowsSync();
   });
 }
-function isFollowing(uid) { return !!(uid && followedUids[uid]); }
+// אורח (לא מחובר): המעקבים נשמרים במכשיר, ועוברים לחשבון כשהוא מתחבר
+function guestFollowsGet() { try { return JSON.parse(localStorage.getItem('guest_follows') || '{}') || {}; } catch (e) { return {}; } }
+function guestFollowsSet(m) { try { localStorage.setItem('guest_follows', JSON.stringify(m)); } catch (e) {} }
+const isGuestNow = () => { const u = auth.currentUser; return !u || u.isAnonymous; };
+function isFollowing(uid) { return !!(uid && (followedUids[uid] || (isGuestNow() && guestFollowsGet()[uid]))); }
 window.isFollowing = isFollowing;
 
 async function toggleFollow(uid, name, btn) {
   // מעקב אחרי מנהל האתר — לפי המזהה האמיתי שלו
   if (isSiteAdminAuthor(uid, name)) { const a = siteAdminUid(); if (!a) { if (typeof showCopyToast === 'function') showCopyToast('נסו שוב בעוד רגע'); return; } uid = a; name = 'מנהל האתר'; }
   const u = auth.currentUser;
-  if (!u) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
+  if (!u || u.isAnonymous) {
+    if (!uid || (u && uid === u.uid)) return;
+    const m = guestFollowsGet(), on = !m[uid];
+    if (on) m[uid] = { name: name || '', since: Date.now() }; else delete m[uid];
+    guestFollowsSet(m);
+    if (btn) { btn.textContent = on ? '✓ עוקב' : '➕ עקוב'; btn.classList.toggle('following', on); }
+    if (typeof showCopyToast === 'function') showCopyToast(on ? `במעקב אחרי ${name || 'המשתמש'} — נשמר במכשיר. התחברו כדי לשמור בחשבון` : 'הפסקת לעקוב');
+    return;
+  }
   if (!uid || uid === u.uid) { if (typeof showCopyToast === 'function') showCopyToast('אי אפשר לעקוב אחרי עצמך 🙂'); return; }
   const path = `website/user_follows/${u.uid}/${uid}`;
   const willFollow = !followedUids[uid];
@@ -33094,7 +33136,6 @@ function mkFollowOn(x) { return x.uid ? (typeof isFollowing === 'function' && is
 async function mkCardFollow(el, uid, name) {
   const u = auth.currentUser;
   if (uid) {
-    if (!u || u.isAnonymous) { openLiveChatLogin(); return; }
     await toggleFollow(uid, name, null);
   } else {
     let m = {}; try { m = JSON.parse(localStorage.getItem('demo_follows') || '{}') || {}; } catch (e) {}

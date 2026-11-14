@@ -245,3 +245,7 @@ BODY .pcm-like.on { color: #e8a317 !important; }
 BODY .pcm-like.on svg path { fill: #f5b301 !important; stroke: #e8a317 !important; }
 BODY .pcm-del { color: #b42318 !important; }
 BODY .mk-sg .mk-a-follow.on { color: #47a093 !important; }
+
+BODY .fd-sg-go { background: #47a093 !important; color: #fff !important; }
+BODY .fd-guest { background: #f4faf8 !important; border-color: #d5ebe6 !important; }
+BODY .fd-guest button { color: #2f7d72 !important; }
