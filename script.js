@@ -19684,6 +19684,17 @@ window.subscribePhotoComments = subscribePhotoComments;
         <circle cx="32" cy="22.2" r="3.4" fill="url(#bwc-eng)"/>
         <path d="M14 22a20 20 0 0 1 14-11" stroke="#fffbe6" stroke-width="2.4" stroke-linecap="round" fill="none" opacity=".75"/>
       </symbol>
+      <linearGradient id="bwt-body" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe9a0"/><stop offset=".45" stop-color="#f3c94a"/><stop offset="1" stop-color="#d49a16"/></linearGradient>
+      <symbol id="bw-ticket" viewBox="0 0 64 40">
+        <path d="M6 4h52a2 2 0 0 1 2 2v8a6 6 0 0 0 0 12v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8a6 6 0 0 0 0-12V6a2 2 0 0 1 2-2z" fill="#9a6a08" transform="translate(0 1.6)" opacity=".5"/>
+        <path d="M6 4h52a2 2 0 0 1 2 2v8a6 6 0 0 0 0 12v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8a6 6 0 0 0 0-12V6a2 2 0 0 1 2-2z" fill="url(#bwt-body)" stroke="#b9800f" stroke-width="1.2"/>
+        <path d="M44 7v26" stroke="#a87410" stroke-width="1.6" stroke-dasharray="2.6 2.6" opacity=".8"/>
+        <circle cx="24" cy="20" r="11" fill="#fff3c4" opacity=".55"/>
+        <g stroke-linecap="round" fill="none" stroke="#8a5e08" stroke-width="3.4"><path d="M18.6 15 24 27.4"/><path d="M29.4 15 24 27.4"/></g>
+        <circle cx="24" cy="14.3" r="1.9" fill="#8a5e08"/>
+        <path d="M50 14.5l1.1 2.3 2.5.3-1.8 1.7.5 2.5-2.3-1.2-2.3 1.2.5-2.5-1.8-1.7 2.5-.3z" fill="#8a5e08" opacity=".85"/>
+        <path d="M9 9.5h12" stroke="#fffbe6" stroke-width="1.8" stroke-linecap="round" opacity=".8"/>
+      </symbol>
       <linearGradient id="bws-gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff3b0"/><stop offset=".45" stop-color="#f6c945"/><stop offset="1" stop-color="#d9930f"/></linearGradient>
       <linearGradient id="bws-dim" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff6df"/><stop offset="1" stop-color="#f1d79a"/></linearGradient>
       <symbol id="bw-star" viewBox="0 0 24 24"><path d="M12 2.6l2.85 5.95 6.45.82-4.72 4.45 1.2 6.43L12 17.1l-5.78 3.15 1.2-6.43L2.7 9.37l6.45-.82z" stroke="#b9780a" stroke-width=".9" stroke-linejoin="round"/><path d="M12 4.6l2.1 4.4 4.7.6" stroke="#fffbe8" stroke-width="1.1" stroke-linecap="round" fill="none" opacity=".8"/></symbol>
@@ -19693,6 +19704,7 @@ window.subscribePhotoComments = subscribePhotoComments;
   if (document.body) add(); else document.addEventListener('DOMContentLoaded', add);
 })();
 // מטבע אחד (גודל בפיקסלים)
+function bwTicketHTML(w) { const h = Math.round((w || 30) * 40 / 64); return `<svg class="bw-ticket" width="${w || 30}" height="${h}" viewBox="0 0 64 40" aria-hidden="true"><use href="#bw-ticket"/></svg>`; }
 function bwCoinHTML(size) { return `<svg class="bw-coin" width="${size || 22}" height="${size || 22}" viewBox="0 0 64 64" aria-hidden="true"><use href="#bw-coin"/></svg>`; }
 // דירוג עד 5: כוכבי זהב על רקע שמאדים ככל שהציון קרוב ל-5 (כתום ← אדום)
 function bwRateBg(v) {
@@ -30712,6 +30724,34 @@ function walletPillEl() {
   walletPillPaint(b);
   return b;
 }
+// כרטיסי הגרלה: כל הזמנה באתר = כרטיס אחד (נספר מההזמנות שבמכשיר)
+function ticketCount() { try { return (typeof ordersGet === 'function' ? ordersGet() : []).length; } catch (e) { return 0; } }
+function ticketPillEl() {
+  const b = document.createElement('button');
+  b.type = 'button'; b.id = 'ticket-pill'; b.className = 'wallet-pill ticket-pill';
+  b.setAttribute('onclick', 'ticketOpen()'); b.title = 'כרטיסי ההגרלה שלי'; b.setAttribute('aria-label', 'כרטיסי ההגרלה שלי');
+  ticketPillPaint(b);
+  return b;
+}
+function ticketPillPaint(b) {
+  b = b || document.getElementById('ticket-pill'); if (!b) return;
+  b.innerHTML = `${bwTicketHTML(30)}<b>${ticketCount().toLocaleString('he-IL')}</b><small>הגרלה</small>`;
+}
+function ticketOpen() {
+  let m = document.getElementById('ticket-modal'); if (m) m.remove();
+  const n = ticketCount();
+  m = document.createElement('div'); m.id = 'ticket-modal'; m.className = 'mkpub-modal';
+  m.innerHTML = `<div class="mkpub-card ticket-card" role="dialog" aria-modal="true" aria-label="כרטיסי ההגרלה שלי">
+    <div class="mkpub-head"><b>כרטיסי ההגרלה שלי</b><button type="button" class="mkpub-x" onclick="document.getElementById('ticket-modal').remove()" aria-label="סגירה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <div class="ticket-big">${bwTicketHTML(120)}<b>${n.toLocaleString('he-IL')}</b><span>${n === 1 ? 'כרטיס אחד' : 'כרטיסים'}</span></div>
+    <ul class="ticket-how"><li><b>🛒 כל הזמנה באתר</b><span>= כרטיס הגרלה אחד</span></li><li><b>🎟️ יותר כרטיסים</b><span>= יותר סיכויים לזכות</span></li></ul>
+    <p class="ticket-note">פרטי ההגרלה הקרובה והפרסים יפורסמו כאן בקרוב.</p>
+    <button type="button" class="mkpub-go" onclick="document.getElementById('ticket-modal').remove(); goToHomePage()">לשוק — לצבור כרטיסים</button>
+  </div>`;
+  m.addEventListener('click', e => { if (e.target === m) m.remove(); });
+  document.body.appendChild(m);
+}
+window.ticketOpen = ticketOpen;
 function walletPillPaint(b) {
   b = b || document.getElementById('wallet-pill'); if (!b) return;
   b.innerHTML = `${bwCoinHTML(20)}<b>${walletBalance.toLocaleString('he-IL')}</b><small>ניקוד</small>`;
@@ -30799,14 +30839,15 @@ Object.assign(window, { walletOpen, walletClose });
     if (held.a11y && !a11yHome && held.a11y.parentElement) a11yHome = held.a11y.parentElement;
     const wrap = [...mc.querySelectorAll('.cmp-wrap')].find(w => w.offsetParent);
     if (!held.wallet) held.wallet = walletPillEl();
-    const btns = ['dm', 'chat', 'a11y', 'wallet'].map(k => held[k]).filter(Boolean);
+    if (!held.ticket) held.ticket = ticketPillEl(); else ticketPillPaint(held.ticket);
+    const btns = ['dm', 'chat', 'a11y', 'wallet', 'ticket'].map(k => held[k]).filter(Boolean);
     if (wrap) {
       let box = wrap.querySelector(':scope > .cmp-fabs');
       if (!box) { box = document.createElement('div'); box.className = 'cmp-fabs'; wrap.appendChild(box); }
       btns.forEach(b => { if (b.parentElement !== box) box.appendChild(b); });
     } else {
       btns.forEach(b => {
-        if (b === held.wallet) { b.remove(); return; }   // הניקוד מופיע רק לצד השורה
+        if (b === held.wallet || b === held.ticket) { b.remove(); return; }   // הניקוד וההגרלה מופיעים רק לצד השורה
         const home = b === held.a11y && a11yHome ? a11yHome : document.body;
         if (b.parentElement !== home) home.appendChild(b);
       });
@@ -31787,7 +31828,12 @@ function mediaNeedsLoad() { return true; }
 // עגלת קניות (בדפדפן של הגולש) + כפתור עגלה בשורה העליונה
 // ============================================================
 function cartGet() { try { return (JSON.parse(localStorage.getItem('bw_cart') || '[]') || []).filter(x => x && x.id && x.qty > 0); } catch (e) { return []; } }
-function cartSet(c) { try { localStorage.setItem('bw_cart', JSON.stringify(c)); } catch (e) {} cartBadge(); if (document.getElementById('cart-panel')) cartRender(); }
+function cartSet(c) { try { localStorage.setItem('bw_cart', JSON.stringify(c)); } catch (e) {} cartBadge(); if (document.getElementById('cart-panel')) cartRender(); cartIconsSync(c); }
+// סמל העגלה בכרטיסים נצבע ירוק כשהמוצר בעגלה
+function cartIconsSync(c) {
+  const ids = new Set((c || cartGet()).map(x => x.id));
+  document.querySelectorAll('.mk-a-buy[data-cart]').forEach(b => { const on = ids.has(b.dataset.cart); b.classList.toggle('in-cart', on); b.title = on ? 'בעגלה' : 'קנייה'; });
+}
 // מודעות השוק בעגלה: השכרה ואחסון כולל עמלת השירות. מודעה של גולש נספרת בסכום, אבל התשלום עליה מול המוכר
 // מלאי: המוכר קובע כמה יחידות יש לו. הכמות העדכנית נשמרת ב-website/market_stock/{uid}/{מזהה המודעה} (רק המוכר כותב),
 // ואם לא עודכנה — הכמות שנכתבה בפרסום. בלי מלאי מוגדר — אין הגבלה
@@ -32061,7 +32107,7 @@ function cartClose() { const el = document.getElementById('cart-panel'); if (el)
 // ההזמנות שלי + קבלה בסגנון מעקב משלוח (שלבים, זמן אספקה, כתובת, פריטים, מספר הזמנה)
 // ============================================================
 function ordersGet() { try { return JSON.parse(localStorage.getItem('bw_orders') || '[]') || []; } catch (e) { return []; } }
-function ordersAdd(o) { const list = ordersGet(); list.unshift(o); try { localStorage.setItem('bw_orders', JSON.stringify(list.slice(0, 50))); } catch (e) {} }
+function ordersAdd(o) { const list = ordersGet(); list.unshift(o); try { localStorage.setItem('bw_orders', JSON.stringify(list.slice(0, 50))); } catch (e) {} if (typeof ticketPillPaint === 'function') ticketPillPaint(); }
 const ORDER_STEPS = ['הוזמן', 'אושר', 'נארז', 'נשלח'];
 function orderStep(o) { const min = (Date.now() - o.t) / 60000; return min < 2 ? 1 : min < 60 ? 2 : min < 24 * 60 ? 3 : 4; }   // הדגמה: מתקדם עם הזמן
 function orderEta(o) {
@@ -33125,7 +33171,7 @@ function rentHoverHTML(x) {
   // בכרטיס: קנייה (ירוק) ומשא ומתן (כתום) גלויים; לייק, ריפוסט, שמירה ודיווח — בתוך "⋯"
   const buy = mktCartable(x) ? `rentCartAdd('${id}')` : `rentOpen('${id}')`;
   return `<span class="mk-sg-hov mk-act2">
-    <span role="button" tabindex="0" class="mk-a-buy" aria-label="קנייה" title="קנייה" onclick="${stop}${buy}">${ic('M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.5L21 8H6')}</span>
+    <span role="button" tabindex="0" class="mk-a-buy${cartGet().some(c => c.id === 'mkt_' + x.id) ? ' in-cart' : ''}" data-cart="mkt_${escHtml(x.id)}" aria-label="קנייה" title="קנייה" onclick="${stop}${buy}">${ic('M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.5L21 8H6')}</span>
     <span role="button" tabindex="0" class="mk-a-deal" aria-label="משא ומתן" title="משא ומתן — הצעת מחיר" onclick="${stop}mkCardHaggle(this, '${id}')">${ic('M4 7h12M4 7l3-3M4 7l3 3M20 17H8M20 17l-3-3M20 17l-3 3')}</span>
     ${(() => { const fon = mkFollowOn(x), me = auth.currentUser && x.uid && auth.currentUser.uid === x.uid; return me ? '' : `<span role="button" tabindex="0" class="mk-a-follow${fon ? ' on' : ''}" data-fol="${escHtml(x.uid || igDemoKeyOf(x.owner))}" aria-label="${fon ? 'במעקב אחרי ' : 'מעקב אחרי '}${escHtml(x.owner || 'המוכר')}" title="${fon ? 'במעקב — לחצו להפסקה' : 'מעקב אחרי ' + escHtml(x.owner || 'המוכר')}" onclick="${stop}mkCardFollow(this, '${artEsc(x.uid || '')}', '${artEsc(x.owner || '')}')">${fon ? IG_FOLLOWING_IC : IG_FOLLOW_IC}</span>`; })()}
     <span role="button" tabindex="0" class="mk-a-dots" aria-label="עוד פעולות" title="עוד" aria-expanded="false" onclick="${stop}mkMoreToggle(this)"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="18" cy="12" r="1.8"/></svg></span>
@@ -33684,7 +33730,7 @@ function rentDetailHTML(r) {
     <div class="mp mk-pg">
       <div class="rn-det-gal mp-gal">
         <div class="rn-det-img mp-img" onclick="mkZoomOpen(this)">${rentThumb(full && full.length ? { ...r, img: full[0] } : r, true)}<button type="button" class="mk-zoom-btn" onclick="event.stopPropagation(); mkZoomOpen(this.parentElement)" aria-label="הגדלת התמונה" title="הגדלה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V5a1 1 0 0 1 1-1h4M15 4h4a1 1 0 0 1 1 1v4M20 15v4a1 1 0 0 1-1 1h-4M9 20H5a1 1 0 0 1-1-1v-4"/></svg></button></div>
-        ${imgs.length > 1 ? `<div class="mk-vthumbs bb-thumbs${imgs.length > 7 ? ' has-more' : ''}">
+        ${imgs.length ? `<div class="mk-vthumbs bb-thumbs${imgs.length > 7 ? ' has-more' : ''}">
           <div class="mp-thumbs">${imgs.map((u, i) => `<button type="button" class="${i ? '' : 'on'}${i >= 6 && imgs.length > 7 ? ' bb-extra' : ''}" onclick="rentDetPick(this)" aria-label="תמונה ${i + 1}"><img src="${escHtml(u)}" alt="" loading="lazy"></button>`).join('')}${imgs.length > 7 ? `<button type="button" class="bb-more" onclick="this.closest('.bb-thumbs').classList.add('open')" aria-label="עוד ${imgs.length - 6} תמונות"><b>+${imgs.length - 6}</b><small>עוד</small></button>` : ''}</div>
           ${r.video && /^[\w-]{11}$/.test(r.video) ? `<button type="button" class="bb-tile-act" onclick="document.querySelector('.mk-video')?.scrollIntoView({ behavior: 'smooth', block: 'center' })">${ic('<circle cx="12" cy="12" r="9"/><path d="M10 8.5l5 3.5-5 3.5z"/>')}<small>סרטון</small></button>` : ''}
           <button type="button" class="bb-tile-act" onclick="rentRevOpen()">${ic('<path d="M12 2.8l2.8 5.8 6.4.9-4.6 4.5 1.1 6.3L12 17.3l-5.7 3 1.1-6.3L2.8 9.5l6.4-.9z"/>')}<small>ביקורות</small></button>
