@@ -34543,3 +34543,20 @@ function perfRender() {
 function perfRange(n) { perfState.range = n; perfRender(); }
 function perfToggle(id) { const i = perfState.on.indexOf(id); if (i >= 0) perfState.on.splice(i, 1); else perfState.on.push(id); perfRender(); }
 Object.assign(window, { perfLoad, perfRange, perfToggle, perfSectionHTML });
+
+// ============================================================
+// מובייל: כפתורי הכרטיס (עגלה, משא ומתן, ⋯) מוסתרים. לחיצה ראשונה על כרטיס מציגה אותם, לחיצה שנייה נכנסת למודעה
+// ============================================================
+(function mkTapActs() {
+  const mobile = () => window.matchMedia('(max-width: 900px)').matches;
+  window.addEventListener('click', e => {
+    if (!mobile()) return;
+    const card = e.target.closest && e.target.closest('.mk-sg');
+    if (!card) { document.querySelectorAll('.mk-sg.acts-on').forEach(c => c.classList.remove('acts-on')); return; }
+    if (card.classList.contains('acts-on')) return;                       // כבר פתוח — הלחיצה ממשיכה כרגיל (כניסה / כפתור)
+    if (e.target.closest('.mk-sg-acts button, .mk-sg-acts [role="button"]')) return;
+    e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
+    document.querySelectorAll('.mk-sg.acts-on').forEach(c => c.classList.remove('acts-on'));
+    card.classList.add('acts-on');
+  }, true);
+})();
