@@ -186,3 +186,16 @@ BODY #u-wheel .uw-back { background: rgba(10, 10, 10, .72) !important; }
 BODY .bill { background: #fbfaf8 !important; color: #111111 !important; }
 BODY #pv-modal .pv-boxes.bad .pv-b { border-color: #c9828a !important; background: #fbecee !important; }
 BODY #pv-modal .pv-err { color: #a3454f !important; }
+/* סרגל הצד, חלון ההעלאה ומסגרות התמונות — בהיר עם הירוק של האתר */
+BODY #side-rail.xrail { background: #ffffff !important; border-color: #e6e9eb !important; color: #1f2933 !important; }
+BODY #side-rail .xr-badge { background: #47a093 !important; color: #fff !important; }
+BODY #side-rail .xr-badge.soft { background: none !important; color: #47a093 !important; }
+BODY #side-rail :is(.xr-card, .xr-tile) { background: #f6f8f8 !important; border-color: #e8ecee !important; }
+BODY #side-rail .xr-ci { background: #e8f2f0 !important; color: #47a093 !important; }
+BODY #side-rail :is(.xr-nb.on, .xr-home.on, .xr-nb:hover, .xr-row:hover, .xr-card:hover, .xr-tile:hover) { background: #eef3f2 !important; }
+BODY .hc-box, BODY .hc-menu, BODY .hc-chip { background: #ffffff !important; border-color: #e3e7e9 !important; }
+BODY .hc-in, BODY .hc-mode, BODY .hc-menu button, BODY .hc-chip { color: #1f2933 !important; }
+BODY :is(.hc-plus, .hc-mic) { background: #f2f5f5 !important; color: #1f2933 !important; }
+BODY .hc-go, BODY .hc-mic.rec { background: #47a093 !important; color: #fff !important; }
+BODY .hc-box::after { background: linear-gradient(180deg, transparent, #47a093, transparent) !important; }
+BODY .rent-page .mk-sg .mk-sg-img { background: linear-gradient(160deg, #f7f9f9, #eef2f2) !important; border-color: #e3e7e9 !important; }

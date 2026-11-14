@@ -14480,18 +14480,108 @@ const SIDE_RAIL_ITEMS = [
   ['invest', 'תמכו / השקיעו בנו', "investOpen('invest')", '<path d="M12 20.5s-7.5-4.6-9.2-9.3C1.7 8 3.6 4.5 7.1 4.5c2 0 3.4 1.1 4.9 2.9 1.5-1.8 2.9-2.9 4.9-2.9 3.5 0 5.4 3.5 4.3 6.7-1.7 4.7-9.2 9.3-9.2 9.3z"/>', false],
   ['shop', 'העגלה שלי', "cartOpen()", '<path d="M3 4h2l2.4 11.2a1 1 0 0 0 1 .8h9.2a1 1 0 0 0 1-.8L21 8H6.2"/><circle cx="9.5" cy="20" r="1.5"/><circle cx="17.5" cy="20" r="1.5"/>', false],
 ];
+// סרגל צד בסגנון "סוויטה": מצב צר (סמל + שם) ומצב רחב עם קבוצות שנפתחות ונסגרות
+const XR_IC = {
+  toggle: '<rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/>',
+  home: '<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" fill="currentColor"/>',
+  agent: '<path d="M4 18c0-4 3-7 7-7s7 3 7 7v2H4z" fill="currentColor"/><circle cx="11" cy="7" r="3.4" fill="currentColor"/><path d="M19 2.5l.8 1.8 1.8.8-1.8.8-.8 1.8-.8-1.8-1.8-.8 1.8-.8z" fill="currentColor"/>',
+  tools: '<path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z" fill="currentColor"/><path d="M19 15l.9 2.1 2.1.9-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z" fill="currentColor"/><path d="M5 2.5l.6 1.4 1.4.6-1.4.6L5 6.5l-.6-1.4L3 4.5l1.4-.6z" fill="currentColor"/>',
+  assets: '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v1H3z" fill="currentColor"/><path d="M2.5 11.5h19l-1.6 7.2a2 2 0 0 1-2 1.6H6.1a2 2 0 0 1-2-1.6z" fill="currentColor"/>',
+  inspire: '<rect x="9" y="3" width="11" height="15" rx="3" fill="currentColor"/><rect x="4" y="7" width="9" height="14" rx="3" fill="currentColor" stroke="var(--xr-bg)" stroke-width="2"/>',
+  pinned: '<rect x="3" y="3" width="8" height="8" rx="2" fill="currentColor"/><rect x="3" y="13" width="8" height="8" rx="2" fill="currentColor"/><rect x="13" y="13" width="8" height="8" rx="2" fill="currentColor"/><path d="M17 2.5l3.2 3.2-3.2 3.2-3.2-3.2z" fill="currentColor"/>',
+  chat: '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"/>',
+  wheel: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path d="M12 3v6M12 15v6M3 12h6M15 12h6"/>',
+  used: '<path d="M6 8h12l1 13H5zM9 8V6a3 3 0 0 1 6 0v2"/>',
+  rent: '<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.4 2.4-2.6-.4-.4-2.6z"/>',
+  store: '<path d="M3 8l9-5 9 5v12H3z"/><path d="M7 20v-7h10v7M7 16h10"/>',
+  proj: '<path d="M9 3H5a2 2 0 0 0-2 2v4h3a2 2 0 1 1 0 4H3v4a2 2 0 0 0 2 2h4v-3a2 2 0 1 1 4 0v3h4a2 2 0 0 0 2-2v-4h-1a2 2 0 1 1 0-4h1V5a2 2 0 0 0-2-2h-4v1a2 2 0 1 1-4 0z"/>',
+  biz: '<path d="M4 9l1.5-5h13L20 9M4 9v11h16V9M4 9h16M9 20v-6h6v6"/>',
+  news: '<path d="M4 5h13v14H6a2 2 0 0 1-2-2z"/><path d="M17 9h3v8a2 2 0 0 1-2 2M8 9h5M8 13h5M8 17h3"/>',
+  cart: '<path d="M3 4h2l2.4 11.2a1 1 0 0 0 1 .8h9.2a1 1 0 0 0 1-.8L21 8H6.2"/><circle cx="9.5" cy="20" r="1.5"/><circle cx="17.5" cy="20" r="1.5"/>',
+  saved: '<path d="M6 4h12v17l-6-4.5L6 21z"/>',
+  wallet: '<ellipse cx="12" cy="7" rx="7" ry="3"/><path d="M5 7v5c0 1.7 3.1 3 7 3s7-1.3 7-3V7M5 12v5c0 1.7 3.1 3 7 3s7-1.3 7-3v-5"/>',
+  char: '<circle cx="12" cy="12" r="9"/><path d="M8.5 14.5a4.5 4.5 0 0 0 7 0"/>',
+  phone: '<rect x="7" y="2" width="10" height="20" rx="2.5"/><path d="M10.5 18h3"/>',
+  photos: '<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/>',
+  comics: '<rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 12h9M12 3v18"/>',
+  forums: '<path d="M4 4h12v9H8l-4 3z"/><path d="M8 17h8l4 3v-9h-2"/>',
+  friends: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/>',
+  offers: '<path d="M20 12l-8 8-9-9V3h8z"/><circle cx="7.5" cy="7.5" r="1.5"/>',
+  invest: '<path d="M12 20.5s-7.5-4.6-9.2-9.3C1.7 8 3.6 4.5 7.1 4.5c2 0 3.4 1.1 4.9 2.9 1.5-1.8 2.9-2.9 4.9-2.9 3.5 0 5.4 3.5 4.3 6.7-1.7 4.7-9.2 9.3-9.2 9.3z"/>',
+  fb: '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"/><path d="M12 7.6l1.2 2.5 2.7.4-2 1.9.5 2.7-2.4-1.3-2.4 1.3.5-2.7-2-1.9 2.7-.4z" fill="currentColor" stroke="none"/>',
+  stats: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+  user: '<circle cx="12" cy="8" r="4.2"/><path d="M3.5 21a8.5 8.5 0 0 1 17 0z"/>'
+};
+const xrSvg = (k, w) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w || 1.9}" stroke-linecap="round" stroke-linejoin="round">${XR_IC[k] || ''}</svg>`;
+function xrState() { try { return JSON.parse(localStorage.getItem('xr_state') || '{}'); } catch (e) { return {}; } }
+function xrSave(st) { try { localStorage.setItem('xr_state', JSON.stringify(st)); } catch (e) {} }
+function xrToggle(force) {
+  const st = xrState(); st.open = force !== undefined ? !!force : !st.open; xrSave(st);
+  const el = document.getElementById('side-rail'); if (el) el.classList.toggle('xr-open', st.open);
+}
+function xrSec(id, ev) {
+  const st = xrState(); st.shut = st.shut || {}; st.shut[id] = !st.shut[id]; xrSave(st);
+  const g = document.querySelector(`#side-rail .xr-grp[data-g="${id}"]`); if (g) g.classList.toggle('shut', st.shut[id]);
+}
+// לחיצה על קבוצה בסרגל הצר: פותחת את הסרגל הרחב וגוללת לקבוצה
+function xrJump(id) {
+  xrToggle(true); const st = xrState(); if (st.shut && st.shut[id]) xrSec(id);
+  setTimeout(() => { const g = document.querySelector(`#side-rail .xr-grp[data-g="${id}"]`); if (g) g.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }, 60);
+}
+function xrGo(js) { if (window.matchMedia('(max-width: 1279px)').matches) xrToggle(false); try { (new Function(js))(); } catch (e) { console.warn(e); } }
+window.xrToggle = xrToggle; window.xrSec = xrSec; window.xrJump = xrJump; window.xrGo = xrGo;
 function sideRailHTML() {
   const u = auth.currentUser;
   const reg = u && !u.isAnonymous;
-  // כל הסמלים בקו דק; הסמל של העמוד הנוכחי (ומה שלוחצים עליו) מתמלא
-  const btn = ([id, label, action, path]) => `<button type="button" class="srail-btn" data-rail="${id}" onclick="srailTap(this); ${action}" aria-label="${label}" title="${label}">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${path}</svg></button>`;
-  const adminBtn = (typeof isAdmin === 'function' && isAdmin()) ? btn(['stats', 'נתוני האתר (מנהל)', "adminOpenTab('stats')", '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>', false]) : '';
-  return `${SIDE_RAIL_ITEMS.map(btn).join('')}${adminBtn}
-    <button type="button" hidden class="srail-btn srail-me srail-fb" onclick="feedbackOpen()" aria-label="שליחת ביקורת — מה לשפר באתר" title="שליחת ביקורת — מה לשפר באתר">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"/><path d="M12 7.6l1.2 2.5 2.7.4-2 1.9.5 2.7-2.4-1.3-2.4 1.3.5-2.7-2-1.9 2.7-.4z" fill="currentColor" stroke="none"/></svg><span>ביקורת</span></button>
-    <button type="button" class="srail-btn srail-me" onclick="srailTap(this); ${reg ? `openUserPage('${artEsc(u.uid)}')` : 'openLiveChatLogin()'}" aria-label="${reg ? 'הפרופיל שלי' : 'התחברות'}">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><circle cx="12" cy="8" r="4.2"/><path d="M3.5 21a8.5 8.5 0 0 1 17 0z"/></svg><span>${reg ? 'פרופיל' : 'התחברות'}</span></button>`;
+  const st = xrState(), shut = st.shut || {};
+  const admin = typeof isAdmin === 'function' && isAdmin();
+  const prof = reg && typeof liveChatUserName === 'function' ? liveChatUserName() : '';
+  const me = reg ? `openUserPage('${artEsc(u.uid)}')` : 'openLiveChatLogin()';
+  const go = js => `xrGo(&quot;${String(js).replace(/"/g, '&quot;')}&quot;)`;
+  const badge = b => b ? `<em class="xr-badge${b.c ? ' ' + b.c : ''}">${b.t}</em>` : '';
+  // מצב צר
+  const nb = (rail, ic, label, js, cls) => `<button type="button" class="xr-nb${cls ? ' ' + cls : ''}" ${rail ? `data-rail="${rail}"` : ''} onclick="srailTap(this); ${js}" title="${label}" aria-label="${label}">${xrSvg(ic, 2)}<span>${label}</span></button>`;
+  const narrow = `<div class="xr-narrow">
+      <button type="button" class="xr-tg" onclick="xrToggle()" title="פתיחת התפריט" aria-label="פתיחת התפריט">${xrSvg('toggle', 1.8)}</button>
+      ${nb('home', 'home', 'בית', 'goToHomePage()')}
+      ${nb('', 'agent', 'עוזרים', "xrJump('agents')")}
+      ${nb('', 'tools', 'השוק', "xrJump('tools')")}
+      ${nb('', 'assets', 'שלי', "xrJump('assets')")}
+      ${nb('', 'inspire', 'קהילה', "xrJump('inspire')")}
+      <i class="xr-sep"></i>
+      ${nb('', 'pinned', 'עוד', "xrJump('more')")}
+      ${admin ? nb('stats', 'stats', 'נתונים', "adminOpenTab('stats')") : ''}
+      <button type="button" class="xr-nb xr-me srail-me" onclick="srailTap(this); ${me}" aria-label="${reg ? 'הפרופיל שלי' : 'התחברות'}">${reg ? `<span class="au-av xr-av" data-av-uid="${escHtml(u.uid)}">${escHtml(String(prof || '?').trim().charAt(0) || '?')}</span>` : xrSvg('user', 2)}<span>${reg ? 'פרופיל' : 'התחברות'}</span></button>
+    </div>`;
+  // מצב רחב
+  const grp = (id, title, body) => `<div class="xr-grp${shut[id] ? ' shut' : ''}" data-g="${id}"><button type="button" class="xr-gh" onclick="xrSec('${id}')"><svg class="xr-car" viewBox="0 0 10 10"><path d="M2 3.5h6L5 7z" fill="currentColor"/></svg>${title}</button><div class="xr-gb">${body}</div></div>`;
+  const card = (ic, t, js) => `<button type="button" class="xr-card" onclick="${go(js)}"><span class="xr-ci">${xrSvg(ic)}</span><b>${t}</b></button>`;
+  const tile = (ic, t, js, b) => `<button type="button" class="xr-tile" onclick="${go(js)}">${xrSvg(ic)}<b>${t}</b>${badge(b)}</button>`;
+  const row = (ic, t, js, b) => `<button type="button" class="xr-row" onclick="${go(js)}">${xrSvg(ic, 1.6)}<span>${t}</span>${badge(b)}</button>`;
+  const wide = `<div class="xr-wide">
+      <div class="xr-top">
+        <button type="button" class="xr-brand" onclick="${go('goToHomePage()')}"><img src="./logo.png" alt=""><b>שיתוף רעיונות</b></button>
+        <button type="button" class="xr-tg" onclick="xrToggle(false)" title="סגירת התפריט" aria-label="סגירת התפריט">${xrSvg('toggle', 1.8)}</button>
+      </div>
+      <div class="xr-scroll">
+        <button type="button" class="xr-row xr-home" data-rail="home" onclick="${go('goToHomePage()')}">${xrSvg('home', 1.6).replace('fill="currentColor"', 'fill="none"')}<span>בית</span></button>
+        ${grp('agents', 'עוזרים', `<div class="xr-cards">${card('agent', 'צ׳אט קניות', 'buyToggle(true)')}${reg ? card('wheel', 'הגלגל שלי', 'uwOpen()') : card('user', 'התחברות', 'openLiveChatLogin()')}</div>`)}
+        ${grp('tools', 'השוק', `<div class="xr-tiles">
+          ${tile('used', 'יד 2', "mktGo('used')")}${tile('rent', 'השכרה', "mktGo('rent')")}
+          ${tile('store', 'אחסון', "mktGo('store')", { t: 'חדש' })}${tile('proj', 'פרויקטים', "mktGo('proj')")}
+          ${tile('biz', 'עסקים', "mktGo('biz')")}${tile('news', 'חדשות', "navigateToPage('page-news-main')")}</div>`)}
+        ${grp('assets', 'שלי', `<div class="xr-list">
+          ${row('cart', 'העגלה שלי', 'cartOpen()')}${row('saved', 'שמורים', 'openSavedModal()')}${row('chat', 'הודעות', 'openMessages()')}
+          ${reg ? row('wallet', 'הארנק', 'walletOpen()') + row('char', 'הדמות שלי', 'chOpen()') + row('phone', 'אימות טלפון', 'phoneVerifyOpen()', u.phoneNumber ? null : { t: 'SMS', c: 'soft' }) : ''}</div>`)}
+        ${grp('inspire', 'קהילה', `<div class="xr-list">
+          ${row('photos', 'תמונות גולשים', "homeGo('photos')")}${row('comics', 'קומיקס', "homeGo('comics')")}${row('forums', 'פורומים', "homeGo('forums')")}
+          ${row('friends', 'חברים', "homeGo('friends')")}${row('offers', 'הצעות', "homeGo('offers')")}</div>`)}
+        ${grp('more', 'עוד', `<div class="xr-list">
+          ${row('invest', 'תמכו / השקיעו בנו', "investOpen('invest')", { t: '10%' })}${row('fb', 'שליחת ביקורת', 'feedbackOpen()')}
+          ${admin ? row('stats', 'נתוני האתר', "adminOpenTab('stats')") : ''}</div>`)}
+      </div>
+    </div>`;
+  return narrow + wide;
 }
 // לחיצה על סמל בסרגל הצד: מתמלא לרגע (גם כשהוא פותח חלון ולא עמוד)
 function srailTap(b) { b.classList.add('tap'); setTimeout(() => b.classList.remove('tap'), 700); }
@@ -14500,7 +14590,7 @@ function renderSideRail() {
   let el = document.getElementById('side-rail');
   if (!el) {
     el = document.createElement('nav');
-    el.id = 'side-rail'; el.className = 'srail'; el.setAttribute('aria-label', 'ניווט מהיר');
+    el.id = 'side-rail'; el.className = 'xrail' + (xrState().open ? ' xr-open' : ''); el.setAttribute('aria-label', 'ניווט מהיר');
     document.body.appendChild(el);
     document.documentElement.classList.add('has-srail');
   }
@@ -14511,7 +14601,7 @@ function sideRailSync() {
   const el = document.getElementById('side-rail'); if (!el) return;
   const id = (typeof activePageId !== 'undefined' && activePageId) || '';
   const map = { 'page-photos-main': 'photos', 'page-products-main': 'store', 'page-secondhand-main': 'home', 'page-rent-main': 'home', 'page-stats-main': 'stats', 'page-admin-main': 'stats', 'page-home-feed': 'home', 'page-feed-main': 'feed', 'page-communities-main': 'cats', 'page-subscription-main': 'shop', 'page-news-main': 'news' };
-  el.querySelectorAll('.srail-btn').forEach(b => b.classList.toggle('on', b.dataset.rail === (map[id] || (id ? '' : 'home'))));
+  el.querySelectorAll('[data-rail]').forEach(b => b.classList.toggle('on', b.dataset.rail === (map[id] || (id ? '' : 'home'))));
 }
 window.sideRailSync = sideRailSync;
 try { renderSideRail(); onAuthStateChanged(auth, () => renderSideRail()); } catch (e) {}
@@ -32707,6 +32797,59 @@ function rentGridHTML() {
       <div class="mk-sg-grid mk-grid">${gold.map(rentMiniHTML).join('')}</div></section>` : '';
   return `${goldHTML}<div class="mk-sg-grid mk-grid">${rest.slice(0, RENT_BATCH).map(rentMiniHTML).join('')}</div>${rest.length > RENT_BATCH ? '<div class="rn-more-end" aria-hidden="true"></div>' : ''}`;
 }
+// חלון "העלאה" גדול בראש דף הבית: כותבים מה מחפשים או מה מפרסמים, בוחרים מצב ושולחים
+let hcMode = 'buy';
+const HC_MODES = { buy: ['חיפוש וקנייה', 'מחפש/ת מברגה עד 300 ש״ח, אקסבוקס, מחשב נייד…'], sell: ['פרסום מודעה', 'מה תרצו למכור, להשכיר או להשאיל? למשל: מדפסת תלת מימד להשכרה…'] };
+function homeComposerHTML() {
+  const ic = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+  const chip = (d, t, js) => `<button type="button" class="hc-chip" onclick="${js}">${ic(d)}${t}</button>`;
+  return `<section class="hc-wrap" aria-label="העלאה וחיפוש">
+    <form class="hc-box" onsubmit="hcSend(event)">
+      <textarea id="hc-in" class="hc-in" rows="2" placeholder="${HC_MODES[hcMode][1]}" onkeydown="if(event.key==='Enter'&&!event.shiftKey){hcSend(event)}"></textarea>
+      <div class="hc-bar">
+        <button type="button" class="hc-plus" onclick="mkPubOpen()" title="פרסום מודעה עם תמונות" aria-label="פרסום מודעה עם תמונות">${ic('<path d="M12 5v14M5 12h14"/>')}</button>
+        <div class="hc-dd"><button type="button" class="hc-mode" onclick="this.parentNode.classList.toggle('open')"><span id="hc-mode-t">${HC_MODES[hcMode][0]}</span>${ic('<path d="M6 9l6 6 6-6"/>')}</button>
+          <div class="hc-menu">${Object.entries(HC_MODES).map(([k, [t]]) => `<button type="button" onclick="hcSetMode('${k}')">${t}</button>`).join('')}</div></div>
+        <span class="hc-sp"></span>
+        <button type="button" class="hc-mic" onclick="hcMic(this)" title="הקלטה קולית" aria-label="הקלטה קולית">${ic('<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>')}</button>
+        <button type="submit" class="hc-go" aria-label="שליחה">${ic('<path d="M12 19V5M5 12l7-7 7 7"/>')}</button>
+      </div>
+    </form>
+    <div class="hc-chips">
+      ${chip('<path d="M6 8h12l1 13H5zM9 8V6a3 3 0 0 1 6 0v2"/>', 'פרסום מודעה', 'mkPubOpen()')}
+      ${chip('<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.4 2.4-2.6-.4-.4-2.6z"/>', 'השכרת ציוד', "rentPublishOpen()")}
+      ${chip('<path d="M3 8l9-5 9 5v12H3z"/><path d="M7 20v-7h10v7"/>', 'שטח לאחסון', "rentPublishOpen('storage')")}
+      <button type="button" class="hc-chip" onclick="xrJump('tools')">עוד</button>
+    </div>
+  </section>`;
+}
+function hcSetMode(k) {
+  hcMode = k; const t = document.getElementById('hc-mode-t'); if (t) t.textContent = HC_MODES[k][0];
+  const i = document.getElementById('hc-in'); if (i) { i.placeholder = HC_MODES[k][1]; i.focus(); }
+  document.querySelectorAll('.hc-dd.open').forEach(d => d.classList.remove('open'));
+}
+function hcSend(ev) {
+  if (ev) ev.preventDefault();
+  const i = document.getElementById('hc-in'); const q = i ? i.value.trim() : '';
+  if (!q) { if (i) i.focus(); return; }
+  if (hcMode === 'sell') {
+    i.value = ''; mkPubOpen();
+    setTimeout(() => { const t = document.getElementById('mkpub-title'); if (t) { t.value = q.slice(0, 32); t.dispatchEvent(new Event('input')); } }, 80);
+    return;
+  }
+  const b = document.getElementById('by-q'); if (!b) return;
+  i.value = ''; b.value = q; buySend();
+}
+function hcMic(btn) {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { showCopyToast('הדפדפן לא תומך בהקלטה קולית'); return; }
+  const r = new SR(); r.lang = 'he-IL'; r.interimResults = true; btn.classList.add('rec');
+  r.onresult = e => { const i = document.getElementById('hc-in'); if (i) i.value = [...e.results].map(x => x[0].transcript).join(''); };
+  r.onend = () => btn.classList.remove('rec'); r.onerror = () => btn.classList.remove('rec');
+  try { r.start(); } catch (e) { btn.classList.remove('rec'); }
+}
+window.hcSend = hcSend; window.hcSetMode = hcSetMode; window.hcMic = hcMic;
+document.addEventListener('click', e => { if (!e.target.closest('.hc-dd')) document.querySelectorAll('.hc-dd.open').forEach(d => d.classList.remove('open')); });
 function rentViewHTML() {
   const all = mktAll();
   const cities = [...new Set(all.map(r => r.city).filter(Boolean))].sort();
@@ -32731,7 +32874,7 @@ function rentViewHTML() {
     ['sec', 'proj', 'פרויקטים'], ['pd', 'elec', 'חשמל'], ['pa', 'phys', 'מוצרים_פיזיים'], ['pa', 'fun', 'פנאי'], ['pk', '3d', 'תלת_מימד']];
   const tagOn = (k, v) => k === 'sec' ? rentUI.sec === v && rentUI.cat === 'all' && rentUI.offer === 'all' && rentUI.pk === 'all' && rentUI.pa === 'all' : rentUI[k] === v;
   const total = rentList().length;
-  return `<header class="rn-head">
+  return `${rentUI.sec === 'all' && !rentUI.open && !rentUI.seller ? homeComposerHTML() : ''}<header class="rn-head">
       ${pubBtn}
       <span class="rn-count">${total.toLocaleString('he-IL')} ${total === 1 ? 'מודעה' : 'מודעות'}</span>
       <button type="button" class="rn-fbtn${rentFilterOpen() ? ' on' : ''}" onclick="rentFilterToggle()" aria-label="סינון וקטגוריות"><span class="rn-fbtn-t">סינון</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg></button>
