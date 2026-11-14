@@ -33555,7 +33555,9 @@ function rentDetailHTML(r) {
         </div>
         ${terms.length ? `<details class="mp-acc mk-terms"><summary>תקנון ההשאלה · ${terms.length} סעיפים</summary><ol class="pd-terms">${terms.map(x => `<li>${escHtml(x)}</li>`).join('')}</ol></details>` : ''}
         ${more.length ? `<section class="mp-more mp-more-m"><h2>הצעות נוספות</h2><div class="mk-sg-grid">${more.map(rentMiniHTML).join('')}</div></section>` : ''}
-        <section class="mk-reviews" id="mk-reviews">
+      </div>
+    </div>
+        <section class="mk-reviews mk-reviews-wide" id="mk-reviews">
           <div class="mk-rv-head"><b class="mk-rv-count">אין עדיין ביקורות</b><span class="mk-rv-avg"></span>
             ${r.uid && auth.currentUser && auth.currentUser.uid === r.uid ? '' : `<button type="button" class="mk-rv-write" onclick="rentRevWrite()">כתיבת ביקורת</button>`}</div>
           <div class="mk-rev-form" hidden data-id="${escHtml(r.id)}" data-uid="${escHtml(r.uid || '')}">
@@ -33566,8 +33568,6 @@ function rentDetailHTML(r) {
           <div class="mk-rev-list"></div>
           <button type="button" class="mk-rv-all bb-allbtn" hidden onclick="this.parentElement.classList.add('all'); this.hidden = true">לכל הביקורות</button>
         </section>
-      </div>
-    </div>
     </div><aside class="mk-wside" aria-label="מודעות נוספות">${sideHTML}</aside></div>
     ${more.length ? `<section class="mp-more mp-more-d"><h2>הצעות נוספות</h2><div class="mk-sg-grid">${more.map(rentMiniHTML).join('')}</div></section>` : ''}`;
 }
