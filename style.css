@@ -20318,3 +20318,14 @@ html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not
   html body #side-rail .xr-scroll { padding: 6px 12px 18px; }
   html body #side-rail .xr-narrow { padding-top: 16px; gap: 8px; }
 }
+/* סמלי סרגל הצד בירוק של האתר; הפריט הפעיל ברקע ירקרק */
+@media (min-width: 1100px) {
+  html body #side-rail .xr-nb svg, html body #side-rail .xr-tg svg, html body #side-rail .xr-row svg, html body #side-rail .xr-tile svg { color: #47a093; }
+  html body #side-rail .xr-nb > span { color: #3d4650; }
+  html body #side-rail :is(.xr-nb.on, .xr-home.on) { background: #e6f3f0; }
+  html body #side-rail :is(.xr-nb.on, .xr-home.on) > span { color: #2f7d72; }
+  html body #side-rail :is(.xr-nb:hover, .xr-row:hover, .xr-tile:hover, .xr-card:hover) { background: #eef7f5; }
+  html.theme-dark body #side-rail :is(.xr-nb, .xr-tg, .xr-row, .xr-tile) svg { color: #6cc3b5; }
+  html.theme-dark body #side-rail .xr-nb > span { color: #c9ccd1; }
+  html.theme-dark body #side-rail :is(.xr-nb.on, .xr-home.on, .xr-nb:hover, .xr-row:hover, .xr-tile:hover, .xr-card:hover) { background: #1f2a28; }
+}
