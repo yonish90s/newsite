@@ -20165,3 +20165,24 @@ html.ch-open, html.ch-open body { overflow: hidden !important; }
 .bill-tot{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;padding-top:12px;margin-top:6px;border-top:1px dashed #d6d1c8}
 .bill-tot .bill-big{font-size:46px;font-weight:900;letter-spacing:-1.5px;line-height:1;font-variant-numeric:tabular-nums}
 .bill-note{margin-top:14px;font-size:11.5px;color:#8a8a8a;text-align:center}
+
+/* אימות טלפון — קוביות קוד בסגנון נקי */
+#pv-modal { position: fixed; inset: 0; z-index: 2147483450; display: grid; place-items: center; padding: 16px; background: rgba(15, 15, 15, .45); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); direction: rtl; }
+#pv-modal .pv-card { position: relative; width: min(420px, 100%); box-sizing: border-box; padding: 30px 24px 24px; border-radius: 22px; background: #faf6f5; text-align: center; box-shadow: 0 20px 50px rgba(0, 0, 0, .25); color: #1b1b1b; }
+#pv-modal .pv-x { position: absolute; top: 12px; left: 12px; width: 34px; height: 34px; border: 0; border-radius: 50%; background: rgba(0, 0, 0, .06); cursor: pointer; font-size: 15px; }
+#pv-modal h3 { margin: 0 0 6px; font-size: 26px; font-weight: 800; }
+#pv-modal .pv-sub { margin: 0 0 18px; font-size: 14px; color: #6b6b6b; }
+#pv-modal .pv-phone { width: 100%; box-sizing: border-box; height: 52px; padding: 0 16px; border-radius: 14px; border: 1.5px solid #d9cfcc; background: #ffffff; font: inherit; font-size: 20px; text-align: center; letter-spacing: 1px; }
+#pv-modal .pv-go { margin-top: 14px; width: 100%; height: 50px; border: 0; border-radius: 14px; background: #1b1b1b; color: #ffffff; font: inherit; font-size: 16px; font-weight: 800; cursor: pointer; }
+#pv-modal .pv-go:disabled { opacity: .6; }
+#pv-modal .pv-boxes { display: flex; justify-content: center; gap: 8px; }
+#pv-modal .pv-b { width: 48px; height: 58px; box-sizing: border-box; border-radius: 12px; border: 2px solid #cfc4c1; background: #ffffff; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 28px; font-weight: 700; text-align: center; color: #1b1b1b; outline: none; transition: border-color .15s, box-shadow .15s; }
+#pv-modal .pv-b:focus { border-color: #1b1b1b; box-shadow: 0 0 0 3px rgba(27, 27, 27, .12); }
+#pv-modal .pv-b:nth-child(3) { margin-right: 10px; }
+#pv-modal .pv-boxes.bad .pv-b { border-color: #c9828a; background: #fbecee; animation: pvShake .35s; }
+#pv-modal .pv-err { min-height: 18px; margin: 12px 0 0; font-size: 13.5px; color: #a3454f; }
+#pv-modal .pv-links { display: flex; justify-content: center; gap: 18px; margin-top: 12px; }
+#pv-modal .pv-links button { border: 0; background: none; font: inherit; font-size: 13.5px; font-weight: 700; color: #1b1b1b; text-decoration: underline; cursor: pointer; }
+#pv-modal .pv-links button:disabled { color: #9a9a9a; text-decoration: none; cursor: default; }
+@keyframes pvShake { 0%, 100% { transform: none; } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+@media (max-width: 420px) { #pv-modal .pv-b { width: 42px; height: 52px; font-size: 24px; } }

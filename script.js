@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, signInWithPopup, GoogleAuthProvider, FacebookAuthProvider, signOut, onAuthStateChanged, signInAnonymously, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, EmailAuthProvider, linkWithCredential, setPersistence, browserLocalPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider, FacebookAuthProvider, signOut, onAuthStateChanged, signInAnonymously, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, EmailAuthProvider, linkWithCredential, setPersistence, browserLocalPersistence, browserSessionPersistence, RecaptchaVerifier, linkWithPhoneNumber } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getDatabase, ref, set, get, child, onValue, push, update, increment, runTransaction, onDisconnect } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 // מסך מלא (מצב מחשב) — מוגדר מוקדם כדי שבוני העמודים יוכלו לקרוא אותו
@@ -34784,7 +34784,8 @@ function uwItems(u) {
     { t: 'העגלה', d: cart ? `${cart} פריטים` : 'ריקה', i: ic('<path d="M6 8h12l1 13H5zM9 8V6a3 3 0 0 1 6 0v2"/>'), go: () => cartOpen() },
     { t: 'שמורים', d: `${saved} מודעות`, i: ic('<path d="M6 4h12v17l-6-4.5L6 21z"/>'), go: () => openSavedModal() },
     { t: 'הודעות', d: 'שיחות והצעות', i: ic('<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"/>'), go: () => openMessages() },
-    { t: 'הדמות שלי', d: 'עיצוב הדמות', i: ic('<circle cx="12" cy="5" r="2.6"/><path d="M8 22v-7l-2-4 3-3h6l3 3-2 4v7"/>'), go: () => chOpen() }
+    { t: 'הדמות שלי', d: 'עיצוב הדמות', i: ic('<circle cx="12" cy="5" r="2.6"/><path d="M8 22v-7l-2-4 3-3h6l3 3-2 4v7"/>'), go: () => chOpen() },
+    { t: u.phoneNumber ? 'טלפון מאומת' : 'אימות טלפון', d: u.phoneNumber ? u.phoneNumber.replace(/^\+972/, '0') : 'קוד ב-SMS', i: ic('<rect x="7" y="2" width="10" height="20" rx="2.5"/><path d="M10.5 18h3"/>'), go: () => phoneVerifyOpen() }
   ];
 }
 let uwSel = 0, uwList = [];
@@ -34861,3 +34862,108 @@ document.addEventListener('keydown', e => {
   document.addEventListener('contextmenu', e => { if (e.target.closest && e.target.closest(SEL) && !fine()) e.preventDefault(); }, true);
 })();
 Object.assign(window, { uwOpen, uwClose });
+
+
+// ============================================================
+// אימות טלפון ב-SMS (Firebase Phone Auth): מזינים מספר → מגיע קוד בן 6 ספרות → מזינים בשש קוביות.
+// המספר מקושר לחשבון (linkWithPhoneNumber) ונשמר בפרופיל כמאומת. דורש להפעיל "Phone" ב-Firebase Console → Authentication.
+// ============================================================
+let pv = null;
+function pvNorm(p) {
+  p = String(p || '').replace(/[^\d+]/g, '');
+  if (p.startsWith('00')) p = '+' + p.slice(2);
+  if (p.startsWith('0')) p = '+972' + p.slice(1);
+  if (!p.startsWith('+')) p = '+972' + p;
+  return /^\+\d{9,15}$/.test(p) ? p : '';
+}
+const pvPretty = p => String(p || '').replace(/^\+972/, '0').replace(/^(\d{3})(\d{3})(\d+)$/, '$1-$2-$3');
+function phoneVerifyOpen(preview) {
+  const u = auth.currentUser;
+  if (typeof preview === 'string') {                     // תצוגה מקדימה של מסך הקוד (בלי שליחה)
+    pv = { step: 'code', phone: pvNorm(preview), err: '', busy: false, conf: null, left: 30, preview: true };
+    let m = document.getElementById('pv-modal'); if (m) m.remove();
+    m = document.createElement('div'); m.id = 'pv-modal'; document.body.appendChild(m); pvRender(); return;
+  }
+  if (!u || u.isAnonymous) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
+  if (u.phoneNumber) { glassBanner({ title: 'הטלפון כבר מאומת ✓', sub: pvPretty(u.phoneNumber), icon: 'ok' }); return; }
+  pv = { step: 'phone', phone: '', err: '', busy: false, conf: null, left: 0 };
+  let m = document.getElementById('pv-modal'); if (m) m.remove();
+  m = document.createElement('div'); m.id = 'pv-modal';
+  m.addEventListener('click', e => { if (e.target === m) pvClose(); });
+  document.body.appendChild(m);
+  pvRender();
+}
+function pvRender() {
+  const m = document.getElementById('pv-modal'); if (!m || !pv) return;
+  if (pv.step === 'phone') {
+    m.innerHTML = `<div class="pv-card" role="dialog" aria-label="אימות טלפון">
+      <button type="button" class="pv-x" onclick="pvClose()" aria-label="סגירה">✕</button>
+      <h3>אימות טלפון</h3><p class="pv-sub">נשלח אליך קוד בן 6 ספרות ב-SMS</p>
+      <input id="pv-phone" class="pv-phone" type="tel" inputmode="tel" dir="ltr" placeholder="050-123-4567" value="${escHtml(pv.phone)}" autocomplete="tel" onkeydown="if(event.key==='Enter')pvSend()">
+      ${pv.err ? `<p class="pv-err">${escHtml(pv.err)}</p>` : ''}
+      <button type="button" class="pv-go" onclick="pvSend()" ${pv.busy ? 'disabled' : ''}>${pv.busy ? 'שולח…' : 'שליחת קוד'}</button>
+      <div id="pv-captcha"></div></div>`;
+    setTimeout(() => { const i = document.getElementById('pv-phone'); if (i) i.focus(); }, 30);
+    return;
+  }
+  m.innerHTML = `<div class="pv-card" role="dialog" aria-label="הזנת קוד">
+    <button type="button" class="pv-x" onclick="pvClose()" aria-label="סגירה">✕</button>
+    <h3>הזינו את הקוד</h3><p class="pv-sub">נשלח אל&nbsp;<span dir="ltr">${escHtml(pvPretty(pv.phone))}</span></p>
+    <div class="pv-boxes${pv.err ? ' bad' : ''}" dir="ltr">${[0, 1, 2, 3, 4, 5].map(i => `<input class="pv-b" inputmode="numeric" maxlength="1" autocomplete="${i ? 'off' : 'one-time-code'}" data-i="${i}" aria-label="ספרה ${i + 1}">`).join('')}</div>
+    <p class="pv-err">${pv.err ? escHtml(pv.err) : ''}</p>
+    <div class="pv-links"><button type="button" onclick="pvBack()">שינוי מספר</button><button type="button" id="pv-resend" onclick="pvSend(true)" ${pv.left > 0 ? 'disabled' : ''}>${pv.left > 0 ? `שליחה שוב בעוד ${pv.left}` : 'שליחה שוב'}</button></div>
+    <div id="pv-captcha"></div></div>`;
+  const boxes = [...m.querySelectorAll('.pv-b')];
+  boxes.forEach((b, i) => {
+    b.addEventListener('input', () => {
+      const v = b.value.replace(/\D/g, '');
+      if (v.length > 1) { v.slice(0, 6).split('').forEach((d, k) => { if (boxes[k]) boxes[k].value = d; }); }   // הדבקה של כל הקוד
+      else b.value = v;
+      if (pv.err) { pv.err = ''; m.querySelector('.pv-boxes').classList.remove('bad'); m.querySelector('.pv-err').textContent = ''; }
+      const code = boxes.map(x => x.value).join('');
+      if (code.length === 6) pvConfirm(code);
+      else if (b.value && boxes[i + 1]) boxes[i + 1].focus();
+    });
+    b.addEventListener('keydown', e => { if (e.key === 'Backspace' && !b.value && boxes[i - 1]) { boxes[i - 1].focus(); boxes[i - 1].value = ''; } });
+  });
+  setTimeout(() => boxes[0] && boxes[0].focus(), 30);
+}
+async function pvSend(resend) {
+  if (!pv || pv.busy) return;
+  if (!resend) { const v = (document.getElementById('pv-phone') || {}).value; pv.phone = pvNorm(v); if (!pv.phone) { pv.err = 'מספר הטלפון לא תקין'; pvRender(); return; } }
+  pv.busy = true; pv.err = ''; if (!resend) pvRender();
+  try {
+    if (pv.verifier) try { pv.verifier.clear(); } catch (e) {}
+    pv.verifier = new RecaptchaVerifier(auth, 'pv-captcha', { size: 'invisible' });
+    pv.conf = await linkWithPhoneNumber(auth.currentUser, pv.phone, pv.verifier);
+    pv.step = 'code'; pv.busy = false; pv.left = 30;
+    clearInterval(pv.t); pv.t = setInterval(() => { if (!pv) return; pv.left = Math.max(0, pv.left - 1); const b = document.getElementById('pv-resend'); if (b) { b.disabled = pv.left > 0; b.textContent = pv.left > 0 ? `שליחה שוב בעוד ${pv.left}` : 'שליחה שוב'; } }, 1000);
+    pvRender();
+  } catch (e) {
+    pv.busy = false;
+    const c = e && e.code || '';
+    pv.err = c === 'auth/operation-not-allowed' ? 'אימות ב-SMS עוד לא הופעל באתר' : c === 'auth/invalid-phone-number' ? 'מספר הטלפון לא תקין'
+      : c === 'auth/too-many-requests' ? 'יותר מדי ניסיונות — נסו שוב מאוחר יותר' : c === 'auth/credential-already-in-use' || c === 'auth/account-exists-with-different-credential' ? 'המספר הזה כבר מחובר לחשבון אחר'
+      : c === 'auth/provider-already-linked' ? 'כבר יש טלפון מאומת בחשבון' : 'לא הצלחנו לשלוח קוד — נסו שוב';
+    pv.step = 'phone'; pvRender();
+  }
+}
+async function pvConfirm(code) {
+  if (pv && pv.preview) { pv.err = 'קוד שגוי'; const m = document.getElementById('pv-modal'); m.querySelector('.pv-boxes').classList.add('bad'); m.querySelector('.pv-err').textContent = pv.err; return; }
+  if (!pv || !pv.conf || pv.busy) return;
+  pv.busy = true;
+  try {
+    const res = await pv.conf.confirm(code);
+    try { await update(ref(db, `website/users/${res.user.uid}/profile`), { phoneVerified: true }); } catch (e) {}
+    const ph = pv.phone; pvClose();
+    glassBanner({ title: 'הטלפון אומת ✓', sub: pvPretty(ph), icon: 'ok', ms: 2600 });
+  } catch (e) {
+    pv.busy = false;
+    pv.err = e && e.code === 'auth/code-expired' ? 'הקוד פג תוקף — שלחו שוב' : 'קוד שגוי';
+    const m = document.getElementById('pv-modal'); if (!m) return;
+    m.querySelector('.pv-boxes').classList.add('bad'); m.querySelector('.pv-err').textContent = pv.err;
+  }
+}
+function pvBack() { if (!pv) return; pv.step = 'phone'; pv.err = ''; pvRender(); }
+function pvClose() { if (pv) { clearInterval(pv.t); if (pv.verifier) try { pv.verifier.clear(); } catch (e) {} } pv = null; const m = document.getElementById('pv-modal'); if (m) m.remove(); }
+Object.assign(window, { phoneVerifyOpen, pvSend, pvBack, pvClose });

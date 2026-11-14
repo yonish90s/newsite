@@ -184,3 +184,5 @@ BODY #u-wheel .uw-glow { stroke: #d4f04a !important; }
 BODY #u-wheel .uw-core { stroke: rgba(212, 240, 74, .55) !important; }
 BODY #u-wheel .uw-back { background: rgba(10, 10, 10, .72) !important; }
 BODY .bill { background: #fbfaf8 !important; color: #111111 !important; }
+BODY #pv-modal .pv-boxes.bad .pv-b { border-color: #c9828a !important; background: #fbecee !important; }
+BODY #pv-modal .pv-err { color: #a3454f !important; }

@@ -3989,6 +3989,16 @@ html.theme-dark .bill-rows { border-bottom: 1px dashed #262d36 !important; }
 html.theme-dark .bill-sub { color: #c9ced6 !important; }
 html.theme-dark .bill-tot { border-top: 1px dashed #262d36 !important; }
 html.theme-dark .bill-note { color: #a8a8a8 !important; }
+html.theme-dark #pv-modal .pv-card { background: #12171d !important; color: #f5f5f5 !important; }
+html.theme-dark #pv-modal .pv-x { background: rgba(255, 255, 255, 0.054) !important; }
+html.theme-dark #pv-modal .pv-sub { color: #c9ced6 !important; }
+html.theme-dark #pv-modal .pv-phone { border: 1.5px solid #262d36 !important; background: #12171d !important; }
+html.theme-dark #pv-modal .pv-go { background: #1f262f !important; }
+html.theme-dark #pv-modal .pv-b { border: 2px solid #262d36 !important; background: #12171d !important; color: #f5f5f5 !important; }
+html.theme-dark #pv-modal .pv-b:focus { border-color: #5b6472 !important; }
+html.theme-dark #pv-modal .pv-boxes.bad .pv-b { background: #1a2028 !important; }
+html.theme-dark #pv-modal .pv-links button { color: #f5f5f5 !important; }
+html.theme-dark #pv-modal .pv-links button:disabled { color: #a8a8a8 !important; }
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #f5f5f5 !important; }
 html.theme-dark [style*="color:#111111"] { color: #f5f5f5 !important; }
