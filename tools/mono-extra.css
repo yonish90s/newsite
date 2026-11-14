@@ -170,3 +170,10 @@ BODY .perf-ranges button.on { background: #d3e3fd !important; color: #0b57d0 !im
 BODY .hv { background: #1a1a1b !important; color: #e8e8e8 !important; }
 BODY .hv-title { color: #ffffff !important; }
 BODY .hv-nsfw { color: #ff4f8b !important; border-color: #ff4f8b !important; }
+/* יוצר הדמות: צבעי הליים והרקע נשארים */
+BODY #ch-maker { background: #cfeaf7 !important; }
+BODY #ch-maker :is(.ch-gender button.on, .ch-arc button.on .ch-ic, .ch-opt .ch-ok, .ch-save) { background: #d4f04a !important; color: #111111 !important; }
+BODY #ch-maker :is(.ch-gender small, .ch-colors small) { color: #d4f04a !important; }
+BODY #ch-maker .ch-arc button.on b { background: #d4f04a !important; color: #111111 !important; }
+BODY #ch-maker .ch-opt.on { border-color: #d4f04a !important; background: rgba(212, 240, 74, .12) !important; }
+BODY #ch-maker .ch-arc::before { border-color: rgba(212, 240, 74, .85) !important; }

@@ -12696,6 +12696,7 @@ function avRenderEditor() {
   m.querySelector('.av-options').innerHTML = avOptionsHTML();
 }
 function openAvatarEditor() {
+  if (typeof chOpen === 'function') { chOpen(); return; }
   const user = auth.currentUser;
   if (!user || user.isAnonymous) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
   avEdit = avNormalize(avatarCache[user.uid] || AV_DEFAULT);
@@ -34560,3 +34561,198 @@ Object.assign(window, { perfLoad, perfRange, perfToggle, perfSectionHTML });
     card.classList.add('acts-on');
   }, true);
 })();
+
+// ============================================================
+// יוצר הדמות בסגנון משחק: דמות מלאה באמצע נוף, מתג אישה/גבר למעלה, תפריט קשת ממוספר משמאל
+// (גוף · פנים · עיניים · אף · שפתיים · אוזניים · שיער · זקן · עור) ורשת אפשרויות מימין.
+// נשמר ב-website/users/{uid}/profile/character, ובנוסף מתורגם לדמות העגולה הקיימת (profile/avatar)
+// ============================================================
+const CH_SKIN = ['#f8d9c4', '#eec19d', '#d7a074', '#b97a4f', '#8a5636', '#5a3824'];
+const CH_HAIR_C = ['#1f1610', '#6b3e1f', '#a8662f', '#e0b45a', '#c2541d', '#9ca3af', '#ece4d6'];
+const CH_EYE_C = ['#6b4423', '#3b82f6', '#2f9e5b', '#1a1a1a', '#8b6f47'];
+const CH_SHIRT = { 1: '#5b6b3c', 2: '#2f3442' };
+const CH_DEF = { g: 1, sk: 1, b: 1, fs: 0, es: 0, ec: 0, n: 0, l: 0, e: 1, hs: 1, hc: 0, bd: 0 };
+const CH_CATS = [
+  { k: 'b', name: 'גוף', ic: '<circle cx="12" cy="5" r="2.6"/><path d="M8 22v-7l-2-4 3-3h6l3 3-2 4v7"/>', opts: ['רזה', 'דק', 'אתלטי', 'חזק', 'רחב'] },
+  { k: 'fs', name: 'פנים', ic: '<ellipse cx="12" cy="12" rx="7" ry="9"/><circle cx="9.5" cy="10.5" r=".8" fill="currentColor"/><circle cx="14.5" cy="10.5" r=".8" fill="currentColor"/><path d="M9.5 15q2.5 2 5 0"/>', opts: ['אובלי', 'עגול', 'מרובע', 'לב'] },
+  { k: 'es', name: 'עיניים', ic: '<path d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>', opts: ['עגולות', 'שקדיות', 'צרות'], color: ['ec', CH_EYE_C] },
+  { k: 'n', name: 'אף', ic: '<path d="M12 4c-1 5-3 9-3 12a3 3 0 0 0 6 0"/>', opts: ['קטן', 'ישר', 'רחב'] },
+  { k: 'l', name: 'שפתיים', ic: '<path d="M3 12q4-4 9-1 5-3 9 1-4 6-9 6t-9-6z"/><path d="M3 12q9 3 18 0"/>', opts: ['דקות', 'מלאות', 'חיוך'] },
+  { k: 'e', name: 'אוזניים', ic: '<path d="M8 20c-2-1-2-4 0-6 3-3 2-6 2-8a5 5 0 0 1 9 2c0 4-5 5-5 9 0 2-3 4-6 3z"/>', opts: ['קטנות', 'רגילות', 'גדולות'] },
+  { k: 'hs', name: 'שיער', ic: '<path d="M4 14C4 7 8 3 12 3s8 4 8 11c-2-4-5-6-8-6s-6 2-8 6z"/>', opts: ['קירח', 'קצר', 'מתולתל', 'ארוך', 'קוקו', 'פוני'], color: ['hc', CH_HAIR_C] },
+  { k: 'bd', name: 'זקן', ic: '<path d="M5 9c0 7 3 12 7 12s7-5 7-12c-2 3-4 4-7 4S7 12 5 9z"/>', opts: ['בלי', 'שפם', 'זיפים', 'זקן מלא'], male: true },
+  { k: 'sk', name: 'עור', ic: '<circle cx="12" cy="12" r="8"/><path d="M8 12a4 4 0 0 1 8 0" />', opts: ['1', '2', '3', '4', '5', '6'], swatch: CH_SKIN }
+];
+function chNorm(c) {
+  const o = Object.assign({}, CH_DEF, c || {});
+  const lim = { g: 3, sk: CH_SKIN.length, b: 5, fs: 4, es: 3, ec: CH_EYE_C.length, n: 3, l: 3, e: 3, hs: 6, hc: CH_HAIR_C.length, bd: 4 };
+  Object.keys(lim).forEach(k => { const v = Number(o[k]); o[k] = Number.isInteger(v) && v >= 0 && v < lim[k] ? v : CH_DEF[k]; });
+  if (o.g === 0) o.g = 1;
+  return o;
+}
+// דמות מלאה (viewBox 200×360). opts.head = רק ראש וכתפיים (לריבועי האפשרויות של הפנים)
+function charSVG(cfg, opts) {
+  const c = chNorm(cfg); opts = opts || {};
+  const F = c.g === 2, skin = CH_SKIN[c.sk], hair = CH_HAIR_C[c.hc], eye = CH_EYE_C[c.ec];
+  const sh = 'rgba(0,0,0,.14)', ink = '#3f2534';
+  const W = [[24, 20, 9], [27, 22, 10], [32, 23, 12], [37, 26, 14], [41, 31, 15]][c.b];   // חצי רוחב כתפיים, מותניים, עובי זרוע
+  const sw = F ? W[0] - 4 : W[0], ww = F ? W[1] - 3 : W[1], hip = F ? W[1] + 4 : W[1] + 1, arm = F ? W[2] - 2 : W[2];
+  const P = [];
+  P.push(`<ellipse cx="100" cy="346" rx="${sw + 18}" ry="8" fill="rgba(0,0,0,.22)"/>`);
+  // שיער ארוך מאחורי הגוף
+  if (c.hs === 3) P.push(`<path d="M70 66 C66 40 80 30 100 30 C120 30 134 40 130 66 L134 150 C120 158 80 158 66 150Z" fill="${hair}"/>`);
+  // רגליים ונעליים
+  const lg = Math.max(11, ww * .55);
+  P.push(`<path d="M${100 - hip} 212 L${100 - 4} 212 L${100 - 6} 334 L${100 - 6 - lg} 334 Z" fill="${F ? '#3b4252' : '#6b5a3e'}"/>`);
+  P.push(`<path d="M${100 + 4} 212 L${100 + hip} 212 L${100 + 6 + lg} 334 L${100 + 6} 334 Z" fill="${F ? '#3b4252' : '#6b5a3e'}"/>`);
+  P.push(`<path d="M${100 - 8 - lg} 332 h${lg + 4} q2 12 -2 12 h-${lg + 6} q-4 0 0 -12z" fill="${skin}"/><path d="M${100 + 4} 332 h${lg + 4} q4 12 0 12 h-${lg + 6} q-4 0 2 -12z" fill="${skin}"/>`);
+  // זרועות (מאחורי הגוף)
+  const ax = 100 - sw, bx = 100 + sw;
+  P.push(`<path d="M${ax + 4} 124 Q${ax - arm} 160 ${ax - arm / 2} 222" stroke="${skin}" stroke-width="${arm}" stroke-linecap="round" fill="none"/>`);
+  P.push(`<path d="M${bx - 4} 124 Q${bx + arm} 160 ${bx + arm / 2} 222" stroke="${skin}" stroke-width="${arm}" stroke-linecap="round" fill="none"/>`);
+  if (c.b >= 2) P.push(`<path d="M${ax - arm * .6} 150 q4 6 8 0 M${bx + arm * .6} 150 q-4 6 -8 0" stroke="${sh}" stroke-width="2" fill="none" stroke-linecap="round"/>`);
+  // גוף (חולצה)
+  P.push(`<path d="M${100 - sw} 122 Q${100 - sw - 2} 118 ${100 - sw + 8} 114 L${100 + sw - 8} 114 Q${100 + sw + 2} 118 ${100 + sw} 122 L${100 + ww + (F ? 0 : 2)} 180 Q${100 + hip + 2} 200 ${100 + hip} 216 L${100 - hip} 216 Q${100 - hip - 2} 200 ${100 - ww - (F ? 0 : 2)} 180 Z" fill="${CH_SHIRT[c.g]}"/>`);
+  P.push(`<path d="M${100 - hip} 210 L${100 + hip} 210" stroke="rgba(0,0,0,.25)" stroke-width="3"/>`);
+  if (F) P.push(`<path d="M${100 - sw + 10} 116 Q100 140 ${100 + sw - 10} 116" fill="${skin}"/>`);
+  else P.push(`<path d="M92 114 Q100 124 108 114" fill="${skin}"/>`);
+  // צוואר
+  P.push(`<path d="M92 92 L92 116 Q100 121 108 116 L108 92Z" fill="${skin}"/><path d="M92 98 Q100 106 108 98 L108 92 L92 92Z" fill="${sh}"/>`);
+  // אוזניים
+  const er = [[4, 6], [5, 7.5], [6.5, 9.5]][c.e];
+  P.push(`<ellipse cx="73" cy="66" rx="${er[0]}" ry="${er[1]}" fill="${skin}"/><ellipse cx="127" cy="66" rx="${er[0]}" ry="${er[1]}" fill="${skin}"/>`);
+  // צורת הפנים
+  const face = [
+    `<ellipse cx="100" cy="62" rx="27" ry="33" fill="${skin}"/>`,
+    `<ellipse cx="100" cy="64" rx="30" ry="30" fill="${skin}"/>`,
+    `<path d="M73 46 Q73 30 100 30 Q127 30 127 46 L127 76 Q127 94 100 95 Q73 94 73 76Z" fill="${skin}"/>`,
+    `<path d="M72 50 Q72 30 100 30 Q128 30 128 50 Q128 74 100 96 Q72 74 72 50Z" fill="${skin}"/>`][c.fs];
+  P.push(face);
+  // זקן
+  if (!F && c.bd === 2) P.push(`<path d="M76 70 Q78 92 100 95 Q122 92 124 70 Q120 82 100 84 Q80 82 76 70Z" fill="${hair}" opacity=".35"/>`);
+  if (!F && c.bd === 3) P.push(`<path d="M74 64 Q74 96 100 100 Q126 96 126 64 Q122 78 114 80 Q108 81 100 78 Q92 81 86 80 Q78 78 74 64Z" fill="${hair}"/>`);
+  if (!F && c.bd >= 1 && c.bd !== 2) P.push(`<path d="M88 76 Q94 72 100 75 Q106 72 112 76 Q106 78 100 77 Q94 78 88 76Z" fill="${hair}"/>`);
+  // שיער מלפנים
+  const hs = c.hs;
+  if (hs === 1) P.push(`<path d="M72 56 C70 34 84 26 100 26 C116 26 130 34 128 56 C125 46 122 42 116 40 C108 37 92 37 84 40 C78 42 75 46 72 56Z" fill="${hair}"/>`);
+  if (hs === 2) P.push(`<g fill="${hair}">${[[78, 40], [88, 32], [100, 29], [112, 32], [122, 40], [74, 50], [126, 50], [84, 38], [116, 38], [100, 36]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="9"/>`).join('')}</g>`);
+  if (hs === 3) P.push(`<path d="M71 60 C68 34 84 26 100 26 C116 26 132 34 129 60 C126 44 116 38 100 38 C86 38 76 44 71 60Z" fill="${hair}"/>`);
+  if (hs === 4) P.push(`<path d="M72 54 C70 34 84 26 100 26 C116 26 130 34 128 54 C124 42 114 37 100 37 C86 37 76 42 72 54Z" fill="${hair}"/><path d="M122 36 Q144 44 138 78 Q134 60 124 52Z" fill="${hair}"/><circle cx="125" cy="38" r="5" fill="#e5484d"/>`);
+  if (hs === 5) P.push(`<path d="M71 58 C68 32 86 25 102 26 C118 27 132 36 129 58 C126 48 122 44 118 42 L104 52 L102 40 L88 50 L86 42 C80 46 74 50 71 58Z" fill="${hair}"/>`);
+  // גבות
+  const brow = hs === 0 ? '#6b4f3a' : hair;
+  P.push(`<path d="M84 52 Q90 49 96 51.5 M104 51.5 Q110 49 116 52" fill="none" stroke="${brow}" stroke-width="${F ? 2 : 2.8}" stroke-linecap="round"/>`);
+  // עיניים
+  const ey = [[5.2, 4.2], [6, 3.4], [6, 2.2]][c.es];
+  P.push(`<ellipse cx="90" cy="60" rx="${ey[0]}" ry="${ey[1]}" fill="#fff"/><ellipse cx="110" cy="60" rx="${ey[0]}" ry="${ey[1]}" fill="#fff"/>`);
+  const ir = Math.min(3, ey[1] * .8 + .4);
+  P.push(`<circle cx="90.4" cy="60.2" r="${ir}" fill="${eye}"/><circle cx="110.4" cy="60.2" r="${ir}" fill="${eye}"/><circle cx="90.4" cy="60.2" r="${ir * .45}" fill="#0b0b0b"/><circle cx="110.4" cy="60.2" r="${ir * .45}" fill="#0b0b0b"/><circle cx="91.3" cy="59.2" r=".7" fill="#fff"/><circle cx="111.3" cy="59.2" r=".7" fill="#fff"/>`);
+  P.push(`<path d="M${90 - ey[0] - .4} 59 Q90 ${60 - ey[1] - 1.4} ${90 + ey[0] + .4} 59 M${110 - ey[0] - .4} 59 Q110 ${60 - ey[1] - 1.4} ${110 + ey[0] + .4} 59" fill="none" stroke="${ink}" stroke-width="${F ? 1.8 : 1.3}" stroke-linecap="round" opacity=".8"/>`);
+  // אף
+  P.push([`<path d="M100 63 Q98.6 69 100 70 Q101.4 70 102 69" fill="none" stroke="rgba(0,0,0,.3)" stroke-width="1.4" stroke-linecap="round"/>`,
+    `<path d="M99.5 58 L98 70 Q100 72 102.5 70.5" fill="none" stroke="rgba(0,0,0,.3)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>`,
+    `<path d="M100 60 Q97 68 95 70 Q100 74 105 70 Q103 68 100 60" fill="none" stroke="rgba(0,0,0,.3)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>`][c.n]);
+  // שפתיים
+  const lipC = F ? '#c2416b' : '#a3524f';
+  P.push([`<path d="M93 80 Q100 82 107 80" fill="none" stroke="${lipC}" stroke-width="1.8" stroke-linecap="round"/>`,
+    `<path d="M92 79 Q96 76.5 100 78 Q104 76.5 108 79 Q104 84.5 100 84.5 Q96 84.5 92 79Z" fill="${lipC}"/><path d="M92 79 Q100 80.5 108 79" stroke="rgba(0,0,0,.25)" stroke-width=".8" fill="none"/>`,
+    `<path d="M91 78 Q100 87 109 78 Q100 82 91 78Z" fill="#7a2e2e"/><path d="M93.5 79.5 Q100 81.5 106.5 79.5 L106 80.5 Q100 82.5 94 80.5Z" fill="#fff"/>`][c.l]);
+  // לחיים
+  P.push(`<ellipse cx="83" cy="71" rx="4" ry="2.4" fill="#ff7a8a" opacity=".22"/><ellipse cx="117" cy="71" rx="4" ry="2.4" fill="#ff7a8a" opacity=".22"/>`);
+  const vb = opts.head ? '58 18 84 110' : '0 0 200 360';
+  return `<svg class="ch-svg" viewBox="${vb}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${P.join('')}</svg>`;
+}
+window.charSVG = charSVG;
+// תרגום לדמות העגולה הישנה (עיגולי פרופיל באתר)
+function chToAvatar(c) {
+  return avNormalize({ s: c.sk <= 1 ? 0 : c.sk <= 3 ? 1 : 2, h: c.hs === 0 ? 0 : [3, 4].includes(c.hs) ? 2 : 1, hc: Math.min(3, c.hc), ec: Math.min(3, c.ec), f: c.g === 2 ? 0 : [0, 1, 1, 2][c.bd], g: c.g, r: 0 });
+}
+let chEdit = null, chCat = 0;
+const CH_BG = `<svg class="ch-scene" viewBox="0 0 1200 700" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+  <defs><linearGradient id="chSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7cc4f2"/><stop offset=".65" stop-color="#cfeaf7"/><stop offset="1" stop-color="#f3ead6"/></linearGradient>
+  <linearGradient id="chLake" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8fc3c8"/><stop offset="1" stop-color="#5f9ea8"/></linearGradient></defs>
+  <rect width="1200" height="700" fill="url(#chSky)"/>
+  <path d="M380 420 L600 180 L700 260 L760 230 L900 420Z" fill="#6f7f8f"/><path d="M560 220 L600 180 L640 222 L620 232 L600 214 L580 236Z" fill="#e9eef2"/>
+  <path d="M0 430 Q150 380 300 420 T600 410 T900 400 T1200 420 V700 H0Z" fill="#5d8a4a"/>
+  <path d="M120 470 Q420 440 760 470 Q1000 490 1200 470 V560 Q900 600 600 580 T0 560Z" fill="url(#chLake)" opacity=".9"/>
+  <path d="M0 560 Q300 540 600 570 T1200 560 V700 H0Z" fill="#c9b48e"/>
+  ${[[60, 420, 1.2], [180, 400, .9], [1040, 410, 1.1], [1150, 430, .8], [960, 420, .7]].map(([x, y, s]) => `<g transform="translate(${x} ${y}) scale(${s})"><rect x="-4" y="-90" width="8" height="90" fill="#5b4632"/><path d="M0 -150 L40 -90 L-40 -90Z M0 -120 L50 -60 L-50 -60Z" fill="#2f5d3a"/></g>`).join('')}
+</svg>`;
+function chOpen(force) {
+  const u = auth.currentUser;
+  if (!force && (!u || u.isAnonymous)) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
+  const cached = u && typeof avatarCache !== 'undefined' && avatarCache[u.uid] || null;
+  if (u && !u.isAnonymous) get(ref(db, `website/users/${u.uid}/profile/character`)).then(s => { chEdit = chNorm(s.val() || (cached ? { g: cached.g || 1, hc: cached.hc, ec: cached.ec, sk: [1, 3, 5][cached.s || 0], hs: [0, 1, 3][cached.h || 1], bd: [0, 1, 3][cached.f || 0] } : null)); chRender(); }).catch(() => {});
+  chEdit = chNorm(null); chCat = 0;
+  let m = document.getElementById('ch-maker'); if (m) m.remove();
+  m = document.createElement('div'); m.id = 'ch-maker'; m.setAttribute('role', 'dialog'); m.setAttribute('aria-label', 'עיצוב הדמות שלי');
+  m.innerHTML = `${CH_BG}<div class="ch-ui">
+      <button type="button" class="ch-x" onclick="chClose()" aria-label="סגירה">✕</button>
+      <div class="ch-gender"><small>מין</small><div><button type="button" data-g="2" onclick="chSet('g',2)">♀ אישה</button><button type="button" data-g="1" onclick="chSet('g',1)">♂ גבר</button></div></div>
+      <nav class="ch-arc" aria-label="קטגוריות"></nav>
+      <div class="ch-hero"></div>
+      <aside class="ch-panel"><header><button type="button" onclick="chStep(-1)" aria-label="הקודם">‹</button><b class="ch-pt"></b><button type="button" onclick="chStep(1)" aria-label="הבא">›</button></header><div class="ch-grid"></div><div class="ch-colors"></div></aside>
+      <div class="ch-actions"><button type="button" class="ch-rand" onclick="chRandom()">🎲 אקראי</button><button type="button" class="ch-save" onclick="chSave()">שמירת הדמות</button></div>
+    </div>`;
+  document.body.appendChild(m);
+  document.documentElement.classList.add('ch-open');
+  chRender();
+}
+function chCats() { return CH_CATS.filter(c => !(c.male && chEdit.g === 2)); }
+function chRender() {
+  const m = document.getElementById('ch-maker'); if (!m || !chEdit) return;
+  const cats = chCats(); if (chCat >= cats.length) chCat = 0;
+  const cat = cats[chCat];
+  m.querySelectorAll('.ch-gender button').forEach(b => b.classList.toggle('on', Number(b.dataset.g) === chEdit.g));
+  m.querySelector('.ch-arc').innerHTML = cats.map((c, i) => `<button type="button" class="${i === chCat ? 'on' : ''}" style="--i:${i};--n:${cats.length}" onclick="chSetCat(${i})"><span class="ch-num">${i + 1}</span><span class="ch-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${c.ic}</svg></span><b>${c.name}</b></button>`).join('');
+  m.querySelector('.ch-hero').innerHTML = charSVG(chEdit);
+  m.querySelector('.ch-pt').textContent = cat.name;
+  const head = !['b', 'sk'].includes(cat.k);
+  m.querySelector('.ch-grid').innerHTML = cat.opts.map((nm, i) => {
+    const on = chEdit[cat.k] === i, prev = Object.assign({}, chEdit, { [cat.k]: i });
+    return `<button type="button" class="ch-opt${on ? ' on' : ''}" onclick="chSet('${cat.k}',${i})"><span class="ch-n">${i + 1}</span>${on ? '<span class="ch-ok">✓</span>' : ''}${cat.swatch ? `<span class="ch-sw" style="background:${cat.swatch[i]}"></span>` : charSVG(prev, { head })}<small>${cat.swatch ? '' : nm}</small></button>`;
+  }).join('');
+  const col = cat.color;
+  m.querySelector('.ch-colors').innerHTML = col ? `<small>צבע</small><div>${col[1].map((cc, i) => `<button type="button" class="${chEdit[col[0]] === i ? 'on' : ''}" style="background:${cc}" onclick="chSet('${col[0]}',${i})" aria-label="צבע ${i + 1}"></button>`).join('')}</div>` : '';
+}
+function chSet(k, v) { chEdit[k] = v; if (k === 'g' && v === 2) chEdit.bd = 0; chRender(); }
+function chSetCat(i) { chCat = i; chRender(); }
+function chStep(d) { const n = chCats().length; chCat = (chCat + d + n) % n; chRender(); }
+function chRandom() {
+  const r = n => Math.floor(Math.random() * n);
+  chEdit = chNorm({ g: chEdit.g, sk: r(6), b: r(5), fs: r(4), es: r(3), ec: r(CH_EYE_C.length), n: r(3), l: r(3), e: r(3), hs: r(6), hc: r(CH_HAIR_C.length), bd: chEdit.g === 2 ? 0 : r(4) });
+  chRender();
+}
+function chClose() {
+  const m = document.getElementById('ch-maker'); if (m) m.remove();
+  document.documentElement.classList.remove('ch-open');
+  try { const u = auth.currentUser; if (u) localStorage.setItem('ch_seen_' + u.uid, '1'); } catch (e) {}
+  if (typeof ob !== 'undefined' && ob && ob.waitAvatar) { ob.waitAvatar = false; const o = document.getElementById('ob-modal'); if (o) o.style.display = 'flex'; if (typeof obRender === 'function') obRender(); }
+}
+async function chSave() {
+  const u = auth.currentUser; if (!u || u.isAnonymous || !chEdit) return;
+  const btn = document.querySelector('#ch-maker .ch-save'); if (btn) { btn.disabled = true; btn.textContent = 'שומר…'; }
+  const cfg = chNorm(chEdit), av = chToAvatar(cfg);
+  try {
+    await update(ref(db, `website/users/${u.uid}/profile`), { character: cfg, avatar: av });
+    if (typeof avatarCache !== 'undefined') { avatarCache[u.uid] = av; if (typeof avatarRefresh === 'function') avatarRefresh(u.uid); }
+    try { const prev = JSON.parse(localStorage.getItem(`user_profile_${u.uid}`) || '{}'); localStorage.setItem(`user_profile_${u.uid}`, JSON.stringify(Object.assign(prev, { avatar: av, character: cfg }))); } catch (e) {}
+    chClose();
+    glassBanner({ title: 'הדמות נשמרה! 🎉', sub: 'כך יראו אותך באתר', icon: 'ok', ms: 2600 });
+  } catch (e) { if (btn) { btn.disabled = false; btn.textContent = 'שמירת הדמות'; } showCopyToast('השמירה נכשלה, נסו שוב'); }
+}
+Object.assign(window, { chOpen, chClose, chSet, chSetCat, chStep, chRandom, chSave });
+// כל הכפתורים הקיימים של "עיצוב הדמות" פותחים עכשיו את היוצר החדש
+window.openAvatarEditor = () => chOpen();
+// משתמש רשום שנכנס בפעם הראשונה ועוד לא עיצב דמות — היוצר נפתח פעם אחת
+try {
+  onAuthStateChanged(auth, u => {
+    if (!u || u.isAnonymous) return;
+    try { if (localStorage.getItem('ch_seen_' + u.uid)) return; } catch (e) { return; }
+    setTimeout(() => {
+      if (document.getElementById('ch-maker') || document.querySelector('#ob-modal[style*="flex"], #auth-modal.open')) return;
+      get(ref(db, `website/users/${u.uid}/profile/character`)).then(s => { if (!s.exists()) chOpen(); else try { localStorage.setItem('ch_seen_' + u.uid, '1'); } catch (e) {} }).catch(() => {});
+    }, 2500);
+  });
+} catch (e) {}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.getElementById('ch-maker')) chClose(); });
