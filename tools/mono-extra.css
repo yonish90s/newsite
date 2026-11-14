@@ -232,3 +232,9 @@ BODY .bl-like.on { color: #47a093 !important; }
 BODY .bl-adm.rd-del { color: #b42318 !important; }
 BODY #u-wheel .uw-out { color: #ffb4b4 !important; border-color: rgba(255,120,120,.45) !important; background: rgba(40,20,20,.65) !important; }
 BODY #u-wheel .uw-out:hover { background: #b42318 !important; color: #fff !important; }
+
+BODY .mk-wi-bar { background: #47a093 !important; }
+BODY .mk-wi-play { color: #47a093 !important; }
+BODY .mk-wi.cur { background: #e9f4f1 !important; }
+BODY .mk-wi.cur .mk-wi-tx small:first-of-type { color: #2f7d72 !important; }
+BODY .mk-wi-price { background: rgba(17,24,39,.78) !important; color: #fff !important; }
