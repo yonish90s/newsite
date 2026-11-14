@@ -18946,17 +18946,58 @@ function dmUpdateBadge() {
     b.style.display = n > 0 ? 'inline-flex' : 'none';
   });
   const nb = document.getElementById('notif-badge');
-  if (nb) { nb.textContent = n > 0 ? n : ''; nb.style.display = n > 0 ? 'inline-flex' : 'none'; }
+  const all = n + (typeof ntUnread === 'function' ? ntUnread() : 0);
+  if (nb) { nb.textContent = all > 0 ? (all > 9 ? '9+' : all) : ''; nb.style.display = all > 0 ? 'inline-flex' : 'none'; }
   const panel = document.getElementById('notif-panel');
   if (panel && panel.style.display === 'block') { const list = panel.querySelector('.notif-list'); if (list) list.innerHTML = notificationsHTML(); }
 }
 
+// ---- מרכז התראות: מבוקש שנמצא, הצעה חדשה — בפעמון + התראת מערכת (טלפון / מחשב) ----
+const NT_KEY = 'nt_log';
+function ntList() { try { return JSON.parse(localStorage.getItem(NT_KEY) || '[]') || []; } catch (e) { return []; } }
+function ntSave(l) { try { localStorage.setItem(NT_KEY, JSON.stringify(l.slice(0, 40))); } catch (e) {} }
+function ntUnread() { return ntList().filter(x => !x.read).length; }
+function ntAsk() { try { if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission().then(() => {}).catch(() => {}); } catch (e) {} }
+function ntGo(i) {
+  const l = ntList(), x = l[i]; if (!x) return;
+  x.read = true; ntSave(l); dmUpdateBadge();
+  const p = document.getElementById('notif-panel'); if (p) p.style.display = 'none';
+  if (x.kind === 'want' && x.ref) rentOpen(x.ref);
+  else if (x.kind === 'offer' && typeof openOffersPanel === 'function') openOffersPanel();
+}
+// item = { kind: 'want'|'offer', title, sub, ref, key }
+function ntSeen(key, add) {
+  let seen = []; try { seen = JSON.parse(localStorage.getItem('nt_seen') || '[]') || []; } catch (e) {}
+  if (!add) return seen.includes(key);
+  if (!seen.includes(key)) { seen.push(key); try { localStorage.setItem('nt_seen', JSON.stringify(seen.slice(-300))); } catch (e) {} }
+  return true;
+}
+function ntPush(item) {
+  const l = ntList();
+  if (item.key && (ntSeen(item.key) || l.some(x => x.key === item.key))) return;
+  if (item.key) ntSeen(item.key, true);
+  l.unshift(Object.assign({ t: Date.now(), read: false }, item)); ntSave(l);
+  dmUpdateBadge();
+  try {
+    if ('Notification' in window && Notification.permission === 'granted') {
+      const n = new Notification(item.title, { body: item.sub || '', icon: '/icon-192.png?v=2', tag: item.key || undefined, lang: 'he', dir: 'rtl' });
+      n.onclick = () => { try { window.focus(); } catch (e) {} ntGo(ntList().findIndex(x => x.key === item.key)); n.close(); };
+    }
+  } catch (e) {}
+  try { if (typeof playNotifSound === 'function') playNotifSound(); } catch (e) {}
+}
+window.ntGo = ntGo; window.ntAsk = ntAsk; window.ntPush = ntPush;
 // ---- פעמון התראות (בהדר ליד "אורח") — מציג הודעות שלא נקראו ----
 function notificationsHTML() {
   if (!auth.currentUser) return '<div class="notif-empty">התחבר כדי לראות התראות</div>';
   const unread = Object.entries(dmConversations || {}).filter(([id, c]) => c && c.unread).sort((a, b) => (b[1].lastTime || 0) - (a[1].lastTime || 0));
-  if (!unread.length) return '<div class="notif-empty">אין התראות חדשות 🔔</div>';
-  return unread.map(([cid, c]) => `
+  const nts = ntList().map((x, i) => [x, i]).filter(([x]) => !x.read || Date.now() - x.t < 3 * 864e5).slice(0, 12);
+  if (!unread.length && !nts.length) return '<div class="notif-empty">אין התראות חדשות 🔔</div>';
+  return nts.map(([x, i]) => `
+    <div class="notif-item${x.read ? ' read' : ''}" onclick="ntGo(${i})">
+      <div class="notif-item-title">${x.kind === 'offer' ? '🤝' : '🔔'} ${escHtml(x.title)}</div>
+      <div class="notif-item-sub">${escHtml(String(x.sub || '').slice(0, 60))}</div>
+    </div>`).join('') + unread.map(([cid, c]) => `
     <div class="notif-item" onclick="notifOpen('${artEsc(cid)}','${artEsc(c.otherUid || '')}','${artEsc(c.otherName || '')}')">
       <div class="notif-item-title">💬 הודעה מ${escHtml(c.otherName || 'משתמש')}</div>
       <div class="notif-item-sub">${escHtml((c.lastText || '').slice(0, 42))}</div>
@@ -27617,6 +27658,7 @@ function offersSubscribe() {
         offersItemUnsubs[id] = onValue(ref(db, `website/deals/${id}`), s2 => {
           const v = s2.val();
           if (v) offersMap[id] = Object.assign({ id }, v); else delete offersMap[id];
+          if (v) offerNotify(id, v);
           offersBadge(); offersRerender();
         }, () => {});
       });
@@ -27624,6 +27666,17 @@ function offersSubscribe() {
     }, () => {});
   } catch (e) {}
 }
+// הצעה חדשה (או הצעה נגדית) שמחכה לתשובה שלי — התראה פעם אחת לכל שלב. בכניסה הראשונה לא מציפים בהצעות ישנות
+function offerNotify(id, v) {
+  const u = auth.currentUser; if (!u || !offersMyTurn(Object.assign({ id }, v))) return;
+  const step = (Array.isArray(v.history) ? v.history.length : Object.keys(v.history || {}).length) || 1;
+  const key = 'o:' + id + ':' + step;
+  let seeded = false; try { seeded = !!localStorage.getItem('nt_offers_seeded_' + u.uid); } catch (e) {}
+  if (!seeded && Date.now() - (v.updatedAt || v.at || 0) > 10 * 60e3) { ntSeen(key, true); return; }
+  const who = v.lastBy === v.fromUid ? (v.fromName || 'מישהו') : (v.toName || 'המוכר');
+  ntPush({ kind: 'offer', key, title: v.status === 'counter' ? `הצעה נגדית מ${who}` : `${who} שלח/ה לך הצעה`, sub: `${v.title || ''}${v.price ? ' · ₪' + Number(v.price).toLocaleString('he-IL') : ''}${v.note ? ' · ' + v.note : ''}` });
+}
+try { onAuthStateChanged(auth, u => { if (u && !u.isAnonymous) setTimeout(() => { try { localStorage.setItem('nt_offers_seeded_' + u.uid, '1'); } catch (e) {} }, 20000); }); } catch (e) {}
 function offersMyTurn(o) {
   const u = auth.currentUser;
   return !!(u && o && (o.status === 'pending' || o.status === 'counter') && o.lastBy !== u.uid);
@@ -34377,7 +34430,7 @@ async function buyHandle(text) {
           return loose.length ? `<p class="by-none">אין כרגע בדיוק ${escHtml(it.q)}. אולי אחד מאלה יתאים:</p>${loose.map(m => buyCardHTML(m, buyAct(async () => { if (buyNeedLogin()) return; const st = await buySendOffer(m, note); buySay('bot', st === 'sent' ? `✅ שלחתי הצעה של <b>${buyMoney(m.offer)}</b> על "${escHtml(m.r.title)}".` : `✅ (מודעת דוגמה) הצעה של ${buyMoney(m.offer)} על "${escHtml(m.r.title)}".`); }))).join('')}<p class="by-none">שמרתי גם מעקב — כשתעלה מודעה מתאימה אקפיץ לך התראה.</p>`
             : `<p class="by-none">אין כרגע ${escHtml(it.q)} בשוק. שמרתי את זה כ"מבוקש" — כשתעלה מודעה מתאימה אקפיץ לך התראה.<br>רוצה לנסות במילים אחרות? למשל סוג המוצר בלבד ("מנורה", "מחשב").</p>`;
         })();
-      if (it.q !== '*' && !buyWants.some(w => w.q === it.q)) buyWants.push(Object.assign({ t: Date.now(), seen: [] }, it));
+      buyWantAdd(it);
     } else {
       found += ms.length;
       ms.forEach(m => {
@@ -34489,9 +34542,13 @@ function buyCartHandle(text) {
 // "תעקוב אחרי רון כהן", "תשמור לי את כל הספות", "מה המבוקשים שלי", "מה התזכורות שלי", "תמחק את התזכורות"
 let buyRems = (() => { try { return JSON.parse(localStorage.getItem('buy_rems') || '[]') || []; } catch (e) { return []; } })();
 const buyRemsSave = () => { try { localStorage.setItem('buy_rems', JSON.stringify(buyRems.slice(-30))); } catch (e) {} };
+// "מישהו יעלה מצלמה" / "שמישהו מפרסם ספה" → "מצלמה" / "ספה"
+const BUY_WHO_RX = /(?:^|\s)ש?(?:מישהו|מישהי|מישו)?\s*(?:יעלה|תעלה|יעלו|מעלה|מעלים|יפרסם|תפרסם|יפרסמו|מפרסם|מפרסמת|מפרסמים|ימכור|תמכור|מוכר|מוכרת|יציע|תציע|מציע)(?:\s+(?:פה|כאן|באתר|לאתר|מודעה(?:\s+(?:של|על))?))?(?=\s|$)/g;
+const buyWantClean = q => String(q || '').replace(BUY_WHO_RX, ' ').replace(/(?:^|\s)ש?(?:מישהו|מישהי)(?=\s|$)/g, ' ').replace(/\s+/g, ' ').trim();
+const buyWantAdd = (it, seen) => { const q = buyWantClean(it.q); if (!q || q === '*' || buyWants.some(w => w.q === q && (w.max || 0) === (it.max || 0))) return; buyWants.push(Object.assign({ t: Date.now(), seen: seen || [] }, it, { q })); };
 const buyWantsSave = () => { try { localStorage.setItem('buy_wants', JSON.stringify(buyWants.slice(-20))); } catch (e) {} };
 const BUY_REM_RX = /^(תזכיר|תזכירי|הזכר|להזכיר|תזכורת)(\s|$)/;
-const BUY_WANT_RX = /^(תודיע|תודיעי|תתריע|תתריעי|תעדכן|תעדכני|תגיד|תגידי)(\s+לי)?\s+(כש|אם\s)/;
+const BUY_WANT_RX = /^(?:(?:אני\s+)?(?:רוצה|רוצָה|מבקש|מבקשת)\s+(?:לקבל\s+)?(?:התראה|הודעה)|(?:תשלח|תשלחי|שלח|שלחי)\s+(?:לי\s+)?(?:התראה|הודעה)|התראה|תודיע|תודיעי|תתריע|תתריעי|תעדכן|תעדכני|תגיד|תגידי)(\s+לי)?\s+(כש|אם\s|ברגע\s+ש)/;
 const BUY_FOLLOW_RX = /^(תעקוב|תעקבי|לעקוב|עקוב)(\s+אחרי|\s+אחר)?(\s|$)/;
 const BUY_SAVE_RX = /^(תשמור|תשמרי|שמור|לשמור)(\s+לי)?(\s|$)/;
 function buyWhen(t) {
@@ -34539,13 +34596,15 @@ function buyRemTick() {
   });
 }
 function buyWantHandle(text) {
-  const t = text.replace(BUY_WANT_RX, ' ').trim().replace(/^(יעלה|תעלה|יהיה|תהיה|יש|מישהו\s+יפרסם|מישהו\s+מוכר)(\s|$)/, ' ').trim();
+  const t = text.replace(BUY_WANT_RX, ' ').trim()
+    .replace(/^(?:ש?(?:מישהו|מישהי|מישו)\s+)?(?:יעלה|תעלה|יעלו|יפרסם|תפרסם|יפרסמו|ימכור|תמכור|מוכר|מוכרת|יהיה|תהיה|יהיו|יש|תגיע|יגיע)(?:\s+(?:פה|כאן|באתר|לאתר|מודעה\s+(?:של|על)?))?(\s|$)/, ' ').trim();
   const items = buyParse(t);
   if (!items.length) { buySay('bot', 'על מה להודיע? למשל: <b>תודיע לי כשיעלה אקסבוקס עד 1,500</b>'); return; }
-  items.forEach(it => { if (!buyWants.some(w => w.q === it.q)) buyWants.push(Object.assign({ t: Date.now(), seen: [] }, it)); });
-  buyWantsSave();
+  // מודעות שכבר קיימות עכשיו לא ייחשבו "חדשות" — ההתראה רק על מה שיעלה מעכשיו
+  items.forEach(it => buyWantAdd(it, buyMatch(Object.assign({}, it, { q: buyWantClean(it.q) })).map(m => m.r.id)));
+  buyWantsSave(); ntAsk();
   const now = items.map(it => [it, buyMatch(it)]);
-  buySay('bot', `🔔 שמרתי מעקב: ${items.map(it => `<b>${escHtml(it.q)}</b>${it.max ? ` עד ${buyMoney(it.max)}` : ''}`).join(', ')}. כשתעלה מודעה מתאימה — תקפוץ התראה.${now.some(([, m]) => m.length) ? '<br>כבר עכשיו יש התאמות: ' + now.filter(([, m]) => m.length).map(([it, m]) => `<button type="button" class="by-link" onclick="rentOpen('${artEsc(m[0].r.id)}')">${escHtml(m[0].r.title)}</button>`).join(' · ') : ''}`);
+  buySay('bot', `🔔 שמרתי מעקב: ${items.map(it => `<b>${escHtml(buyWantClean(it.q))}</b>${it.max ? ` עד ${buyMoney(it.max)}` : ''}`).join(', ')}. כשתעלה מודעה מתאימה תקבלו התראה בפעמון 🔔 וגם בטלפון/במחשב (אם אישרתם התראות).${now.some(([, m]) => m.length) ? '<br>כבר עכשיו יש התאמות: ' + now.filter(([, m]) => m.length).map(([it, m]) => `<button type="button" class="by-link" onclick="rentOpen('${artEsc(m[0].r.id)}')">${escHtml(m[0].r.title)}</button>`).join(' · ') : ''}`);
 }
 async function buyFollowHandle(text) {
   const name = text.replace(BUY_FOLLOW_RX, ' ').replace(/(^|\s)(את|המוכר|המוכרת|העסק|של)(?=\s|$)/g, ' ').replace(/\s+/g, ' ').trim();
@@ -34678,6 +34737,7 @@ function buyWatch() {
       if (w.seen.includes(m.r.id) || m.r.demo) return;
       w.seen.push(m.r.id); changed = true;
       glassBanner({ title: 'נמצא: ' + w.q, sub: `${m.r.title} · ${m.r.price ? buyMoney(m.r.price) : ''}`, icon: 'ok', btn: 'לצפייה', onBtn: () => rentOpen(m.r.id), ms: 7000 });
+      ntPush({ kind: 'want', key: 'w:' + m.r.id, ref: m.r.id, title: `עלתה מודעה שחיפשת: ${w.q}${w.max ? ' עד ' + buyMoney(w.max) : ''}`, sub: `${m.r.title}${m.r.price ? ' · ' + buyMoney(m.r.price) : ''}${m.r.city ? ' · ' + m.r.city : ''}` });
     });
   });
   if (changed) try { localStorage.setItem('buy_wants', JSON.stringify(buyWants.slice(-20))); } catch (e) {}
@@ -34699,7 +34759,7 @@ function buyWatch() {
     document.body.appendChild(d);
     const ch = document.getElementById('by-chips'); if (ch) ch.innerHTML = buyChipsHTML();
   };
-  const start = () => { build(); setInterval(buyRemTick, 30000); setTimeout(buyRemTick, 3000); setInterval(buyWatch, 120000); setTimeout(buyWatch, 15000); setTimeout(() => { if (typeof productsSubscribe === 'function') productsSubscribe(); }, 4000); };
+  const start = () => { build(); setInterval(buyRemTick, 30000); setTimeout(buyRemTick, 3000); setInterval(buyWatch, 60000); setTimeout(buyWatch, 8000); setTimeout(() => { if (typeof productsSubscribe === 'function') productsSubscribe(); }, 4000); };
   if (document.body) start(); else document.addEventListener('DOMContentLoaded', start);
 })();
 Object.assign(window, { buyChip, buyChipsMore, buyScoreListing, buySend, buyDo, buyToggle, buyClear, buyLog, buyCartBtn });
