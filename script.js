@@ -32673,7 +32673,8 @@ function rentAgo(t) {
 [USED_DEMO, RENT_DEMO].forEach(l => l.forEach(d => { if (/^rent\/[^/?]+\.jpg$/.test(d.img || '')) d.img += '?v=2'; if (Array.isArray(d.images)) d.images = d.images.map(u => /^rent\/[^/?]+\.jpg$/.test(u || '') ? u + '?v=2' : u); }));
 function rentThumb(r, big) {
   const c = rentCatOf(r.cat), g = r.g || ['#1f2937', '#4b5563'];
-  const src = r.img;   // תמיד התמונה המלאה — איכות גבוהה גם בכרטיסים
+  // בכרטיסים: עותק מוקטן (720px — חד גם במסך רטינה) של תמונות הדוגמה, פי 5 פחות משקל; בעמוד המודעה המלאה
+  const src = !big && /^(\.\/)?rent\/[^/]+\.jpg/.test(r.img || '') ? String(r.img).replace(/rent\//, 'rent/t/') : r.img;
   return r.img ? `<img src="${escHtml(src)}" alt="" loading="lazy" decoding="async">`
     : `<span class="rn-ph" style="background:linear-gradient(140deg,${g[0]},${g[1]})"><b>${c.ic}</b>${big ? `<i>${escHtml(c.name)}</i>` : ''}</span>`;
 }

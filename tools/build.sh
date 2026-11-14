@@ -18,6 +18,8 @@ for f in ['style.min.css', 'dark.min.css', 'mono.min.css']:
     s = re.sub(r'(?::not\(#_\)){2,}', lambda m: ':not(' + '#_' * m.group(0).count('#_') + ')', s)
     open(f, 'w', encoding='utf8').write(s)
 "
+# מקטין את שרשראות העדיפות לסולם צפוף (אותו חוק גובר, הרבה פחות עבודה לדפדפן)
+python3 tools/css_spec.py
 python3 tools/css_purge.py
 # גודל קבצי האתר (מה שעולה לורסל) — מוצג למנהל בלשונית "אחסון"
 python3 -c "
