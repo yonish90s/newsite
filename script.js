@@ -33080,6 +33080,7 @@ function rentHoverHTML(x) {
   return `<span class="mk-sg-hov mk-act2">
     <span role="button" tabindex="0" class="mk-a-buy" aria-label="קנייה" title="קנייה" onclick="${stop}${buy}">${ic('M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.5L21 8H6')}</span>
     <span role="button" tabindex="0" class="mk-a-deal" aria-label="משא ומתן" title="משא ומתן — הצעת מחיר" onclick="${stop}mkCardHaggle(this, '${id}')">${ic('M4 7h12M4 7l3-3M4 7l3 3M20 17H8M20 17l-3-3M20 17l-3 3')}</span>
+    ${(() => { const fon = mkFollowOn(x), me = auth.currentUser && x.uid && auth.currentUser.uid === x.uid; return me ? '' : `<span role="button" tabindex="0" class="mk-a-follow${fon ? ' on' : ''}" data-fol="${escHtml(x.uid || igDemoKeyOf(x.owner))}" aria-label="${fon ? 'במעקב אחרי ' : 'מעקב אחרי '}${escHtml(x.owner || 'המוכר')}" title="${fon ? 'במעקב — לחצו להפסקה' : 'מעקב אחרי ' + escHtml(x.owner || 'המוכר')}" onclick="${stop}mkCardFollow(this, '${artEsc(x.uid || '')}', '${artEsc(x.owner || '')}')">${fon ? IG_FOLLOWING_IC : IG_FOLLOW_IC}</span>`; })()}
     <span role="button" tabindex="0" class="mk-a-dots" aria-label="עוד פעולות" title="עוד" aria-expanded="false" onclick="${stop}mkMoreToggle(this)"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="18" cy="12" r="1.8"/></svg></span>
     <span class="mk-sg-hov-btns mk-a-pop">
     ${b('לייק', 'M7 10v11H3V10zM7 10l4-8a2.5 2.5 0 0 1 3 2.6L13.5 9H19a2 2 0 0 1 2 2.3l-1.4 8A2 2 0 0 1 17.6 21H7', sh ? `photoToggleLike('${sh}')` : `rentMark(this, 'like', '${id}')`, liked, sh ? ` data-like="${escHtml(x.shId)}"` : '', '', cnt(Number(itemLikesData[likeId]) || 0, ` data-likes-n="${escHtml(likeId)}"`))}
@@ -33088,6 +33089,24 @@ function rentHoverHTML(x) {
     ${b('דיווח', 'M5 21V4M5 4h11l-2 4 2 4H5', `openReportContent('${artEsc(rk)}', '${artEsc(x.title || '')}')`, false, '', '', cnt(Number(itemLikesData[rpKey]) || 0, ` data-likes-n="${escHtml(rpKey)}"`))}
   </span></span>`;
 }
+// מעקב אחרי המוכר ישר מהכרטיס (מוכר לדוגמה — נשמר רק בדפדפן)
+function mkFollowOn(x) { return x.uid ? (typeof isFollowing === 'function' && isFollowing(x.uid)) : igDemoFollowing(igDemoKeyOf(x.owner)); }
+async function mkCardFollow(el, uid, name) {
+  const u = auth.currentUser;
+  if (uid) {
+    if (!u || u.isAnonymous) { openLiveChatLogin(); return; }
+    await toggleFollow(uid, name, null);
+  } else {
+    let m = {}; try { m = JSON.parse(localStorage.getItem('demo_follows') || '{}') || {}; } catch (e) {}
+    const k = igDemoKeyOf(name); m[k] = !m[k]; if (!m[k]) delete m[k];
+    try { localStorage.setItem('demo_follows', JSON.stringify(m)); } catch (e) {}
+    showCopyToast(m[k] ? 'במעקב אחרי ' + name + ' (מוכר לדוגמה — נשמר רק אצלך)' : 'הפסקת לעקוב אחרי ' + name);
+  }
+  const on = uid ? isFollowing(uid) : igDemoFollowing(igDemoKeyOf(name)), key = uid || igDemoKeyOf(name);
+  // כל הכרטיסים של אותו מוכר מתעדכנים יחד
+  document.querySelectorAll(`.mk-a-follow[data-fol="${CSS.escape(key)}"]`).forEach(b => { b.classList.toggle('on', on); b.innerHTML = on ? IG_FOLLOWING_IC : IG_FOLLOW_IC; b.title = on ? 'במעקב — לחצו להפסקה' : 'מעקב אחרי ' + name; });
+}
+window.mkCardFollow = mkCardFollow;
 // משא ומתן מהכרטיס: מתחת לשורת הכפתורים נפתח שדה עם הסכום שאני מציע (85% מהמחיר כהתחלה)
 function mkCardHaggle(btn, id) {
   const card = btn.closest('.mk-sg'); if (!card) return;

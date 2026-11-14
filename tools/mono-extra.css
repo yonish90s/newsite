@@ -244,3 +244,4 @@ BODY .ig-follow.on, BODY .pcm-login { color: #2f7d72 !important; border-color: #
 BODY .pcm-like.on { color: #e8a317 !important; }
 BODY .pcm-like.on svg path { fill: #f5b301 !important; stroke: #e8a317 !important; }
 BODY .pcm-del { color: #b42318 !important; }
+BODY .mk-sg .mk-a-follow.on { color: #47a093 !important; }
