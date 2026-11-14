@@ -34754,17 +34754,23 @@ async function chSave() {
 Object.assign(window, { chOpen, chClose, chSet, chSetCat, chStep, chRandom, chSave });
 // כל הכפתורים הקיימים של "עיצוב הדמות" פותחים עכשיו את היוצר החדש
 window.openAvatarEditor = () => chOpen();
-// משתמש רשום שנכנס בפעם הראשונה ועוד לא עיצב דמות — היוצר נפתח פעם אחת
-try {
-  onAuthStateChanged(auth, u => {
-    if (!u || u.isAnonymous) return;
-    try { if (localStorage.getItem('ch_seen_' + u.uid)) return; } catch (e) { return; }
-    setTimeout(() => {
-      if (document.getElementById('ch-maker') || document.querySelector('#ob-modal[style*="flex"], #auth-modal.open')) return;
-      get(ref(db, `website/users/${u.uid}/profile/character`)).then(s => { if (!s.exists()) chOpen(); else try { localStorage.setItem('ch_seen_' + u.uid, '1'); } catch (e) {} }).catch(() => {});
-    }, 2500);
-  });
-} catch (e) {}
+// עריכת הדמות נפתחת רק בלחיצה על הדמות עצמה (לא נפתחת לבד)
+document.addEventListener('click', e => {
+  const u = auth.currentUser; if (!u || u.isAnonymous) return;
+  const el = e.target.closest && e.target.closest('.pf-avatar, .uw-avatar, .pf-av-prev, #u-wheel .uw-center .uw-av');
+  if (!el) return;
+  const own = el.closest('#u-wheel') || el.getAttribute('data-av-uid') === u.uid;
+  if (!own) return;
+  e.preventDefault(); e.stopPropagation();
+  if (el.closest('#u-wheel') && typeof uwClose === 'function') uwClose();
+  chOpen();
+}, true);
+(function chOwnMark() {
+  const mark = () => { const u = auth.currentUser; if (!u || u.isAnonymous) return;
+    document.querySelectorAll('.pf-avatar, .uw-avatar, .pf-av-prev').forEach(el => { if (el.getAttribute('data-av-uid') === u.uid && !el.classList.contains('ch-own')) { el.classList.add('ch-own'); el.title = 'לחצו לעריכת הדמות'; } }); };
+  let q = 0; const sch = () => { if (q) return; q = setTimeout(() => { q = 0; mark(); }, 400); };
+  try { new MutationObserver(sch).observe(document.body, { childList: true, subtree: true }); } catch (e) {}
+})();
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.getElementById('ch-maker')) chClose(); });
 
 // ============================================================

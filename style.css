@@ -20186,3 +20186,6 @@ html.ch-open, html.ch-open body { overflow: hidden !important; }
 #pv-modal .pv-links button:disabled { color: #9a9a9a; text-decoration: none; cursor: default; }
 @keyframes pvShake { 0%, 100% { transform: none; } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
 @media (max-width: 420px) { #pv-modal .pv-b { width: 42px; height: 52px; font-size: 24px; } }
+/* הדמות של המשתמש עצמו — לחיצה פותחת עריכה */
+.ch-own, #u-wheel .uw-center .uw-av { cursor: pointer; position: relative; transition: transform .15s, box-shadow .15s; }
+.ch-own:hover, #u-wheel .uw-center .uw-av:hover { transform: scale(1.04); box-shadow: 0 0 0 3px rgba(200,255,60,.55); }
