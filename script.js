@@ -14090,7 +14090,7 @@ function homeGridCardsHTML() {
 }
 // סרטון מומלץ בעמוד הבית — בסגנון Reddit: כרטיס כהה, רקע מטושטש מהתמונה, והנגן הרשמי של RedGIFs באמצע (אנכי 9:16).
 // הנגן נטען רק כשלוחצים (מהיר, ולא מנגן לבד). במצב 18+ — התמונה מטושטשת עד הלחיצה.
-const HOME_VIDEO = { id: 'seriousmediumorchidhornbill', title: 'סרטון מומלץ', author: 'הקהילה', poster: 'https://media.redgifs.com/SeriousMediumorchidHornbill-poster.jpg' };
+const HOME_VIDEO = null;   // אין סרטון מומלץ כרגע. להוספה: { id, title, author, poster }
 function homeVideoHTML() {
   const v = HOME_VIDEO; if (!v || !v.id) return '';
   return `<article class="hv" aria-label="${escHtml(v.title)}">
@@ -32720,7 +32720,7 @@ function rentViewHTML() {
     ['sec', 'proj', 'פרויקטים'], ['pd', 'elec', 'חשמל'], ['pa', 'phys', 'מוצרים_פיזיים'], ['pa', 'fun', 'פנאי'], ['pk', '3d', 'תלת_מימד']];
   const tagOn = (k, v) => k === 'sec' ? rentUI.sec === v && rentUI.cat === 'all' && rentUI.offer === 'all' && rentUI.pk === 'all' && rentUI.pa === 'all' : rentUI[k] === v;
   const total = rentList().length;
-  return `${rentUI.sec === 'all' && !rentUI.q && !rentUI.seller && !rentUI.open && typeof homeVideoHTML === 'function' ? homeVideoHTML() : ''}<header class="rn-head">
+  return `<header class="rn-head">
       ${pubBtn}
       <span class="rn-count">${total.toLocaleString('he-IL')} ${total === 1 ? 'מודעה' : 'מודעות'}</span>
       <button type="button" class="rn-fbtn${rentFilterOpen() ? ' on' : ''}" onclick="rentFilterToggle()" aria-label="סינון וקטגוריות"><span class="rn-fbtn-t">סינון</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg></button>
