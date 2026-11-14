@@ -208,3 +208,8 @@ BODY #side-rail :is(.xr-nb.on, .xr-home.on) > span { color: #2f7d72 !important; 
 BODY #side-rail :is(.xr-nb:hover, .xr-row:hover, .xr-tile:hover, .xr-card:hover) { background: #eef7f5 !important; }
 BODY .mkpub-auto { background: #f4faf8 !important; border-color: #b9dcd6 !important; }
 BODY :is(.mkpub-auto-h, .mkpub-ht) { color: #2f7d72 !important; }
+BODY .msh-stats b, BODY :is(.msh-card small, .msh-want small, .msh-tab.on small) { color: #2f7d72 !important; }
+BODY .msh-stats > div { background: #f6faf9 !important; border-color: #e3efec !important; }
+BODY :is(.msh-acts button:last-child, .msh-empty button, .msh-cart em) { background: #47a093 !important; color: #fff !important; border-color: #47a093 !important; }
+BODY .msh-tab.on { border-bottom-color: #47a093 !important; }
+BODY :is(.msh-cart svg, .msh-thumbs span, .msh-empty svg) { color: #47a093 !important; }

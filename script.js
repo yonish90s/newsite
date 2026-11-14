@@ -14573,7 +14573,7 @@ function sideRailHTML() {
           ${tile('store', 'אחסון', "mktGo('store')", { t: 'חדש' })}${tile('proj', 'פרויקטים', "mktGo('proj')")}
           ${tile('biz', 'עסקים', "mktGo('biz')")}${tile('news', 'חדשות', "navigateToPage('page-news-main')")}</div>`)}
         ${grp('assets', 'שלי', `<div class="xr-list">
-          ${row('cart', 'העגלה שלי', 'cartOpen()')}${row('saved', 'שמורים', 'openSavedModal()')}${row('chat', 'הודעות', 'openMessages()')}
+          ${row('cart', 'העגלה שלי', 'cartOpen()')}${row('wallet', 'הקניות שלי', 'myShopOpen(\'hist\')')}${row('saved', 'הרשימה שלי', 'myShopOpen(\'list\')')}${row('chat', 'הודעות', 'openMessages()')}
           ${reg ? row('wallet', 'הארנק', 'walletOpen()') + row('char', 'הדמות שלי', 'chOpen()') + row('phone', 'אימות טלפון', 'phoneVerifyOpen()', u.phoneNumber ? null : { t: 'SMS', c: 'soft' }) : ''}</div>`)}
         ${grp('inspire', 'קהילה', `<div class="xr-list">
           ${row('photos', 'תמונות גולשים', "homeGo('photos')")}${row('comics', 'קומיקס', "homeGo('comics')")}${row('forums', 'פורומים', "homeGo('forums')")}
@@ -18679,6 +18679,68 @@ function mktMarkedItems(kind) {
   if (typeof mktAll !== 'function') return [];
   return mktAll().filter(r => r.shId ? (kind === 'like' ? photoIsLikedLocal(r.shId) : photoIsSavedLocal(r.shId)) : rentMarked(kind, r.id));
 }
+// ===== דף "הקניות שלי": סיכום, היסטוריית קניות (הזמנות + עסקאות שנסגרו) והרשימה שלי (שמורים + מבוקשים במעקב) =====
+let myShopTab = 'hist';
+function myShopOpen(tab) {
+  if (tab) myShopTab = tab;
+  if (typeof mainContent === 'undefined' || !mainContent) return;
+  if (typeof offersSubscribe === 'function') try { offersSubscribe(); } catch (e) {}
+  mainContent.innerHTML = `<div class="msh-page" data-page-id="page-myshop">${myShopHTML()}</div>`;
+  try { window.scrollTo(0, 0); } catch (e) {}
+  if (typeof sideRailSync === 'function') sideRailSync();
+}
+function myShopHTML() {
+  const u = auth.currentUser;
+  const orders = typeof ordersGet === 'function' ? ordersGet() : [];
+  const deals = Object.values(typeof offersMap === 'object' ? offersMap : {}).filter(o => u && o.fromUid === u.uid && (o.status === 'accepted' || o.status === 'signed'));
+  const spent = orders.reduce((a, o) => a + (Number(o.total) || 0), 0) + deals.reduce((a, o) => a + (Number(o.price) || 0), 0);
+  const nItems = orders.reduce((a, o) => a + (o.items || []).reduce((b, i) => b + (Number(i.qty) || 1), 0), 0) + deals.length;
+  const saved = typeof mktMarkedItems === 'function' ? mktMarkedItems('save') : [];
+  const wants = typeof buyWants !== 'undefined' ? buyWants : [];
+  const cartN = (typeof cartGet === 'function' ? cartGet() : []).reduce((a, x) => a + (x.qty || 0), 0);
+  const money = n => '₪' + Math.round(n).toLocaleString('he-IL');
+  const date = t => new Date(t || 0).toLocaleDateString('he-IL', { day: 'numeric', month: 'short', year: 'numeric' });
+  const ic = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+  // היסטוריה: הזמנות מהחנות + עסקאות יד 2 שנסגרו, מהחדש לישן
+  const hist = orders.map(o => ({ t: o.t, o })).concat(deals.map(d => ({ t: d.updatedAt || d.at, d }))).sort((a, b) => (b.t || 0) - (a.t || 0));
+  const orderRow = o => `<article class="msh-row">
+      <div class="msh-thumbs">${(o.items || []).slice(0, 4).map(i => `<span title="${escHtml(i.name)}">${i.image ? `<img src="${escHtml(i.image)}" alt="" loading="lazy">` : ic('<path d="M6 8h12l1 13H5zM9 8V6a3 3 0 0 1 6 0v2"/>')}${i.qty > 1 ? `<em>${i.qty}</em>` : ''}</span>`).join('')}</div>
+      <div class="msh-main"><b>${escHtml((o.items || []).map(i => i.name).join(', ').slice(0, 90))}</b>
+        <small>${date(o.t)} · הזמנה <span dir="ltr">${escHtml(o.no)}</span> · ${o.method === 'pickup' ? 'איסוף עצמי' : 'משלוח'}${typeof orderEta === 'function' ? ' · ' + escHtml(orderEta(o)) : ''}</small></div>
+      <div class="msh-side"><b class="msh-sum">${money(o.total || 0)}</b>
+        <div class="msh-acts"><button type="button" onclick="receiptDocOpen('${artEsc(o.no)}')">קבלה</button><button type="button" onclick="myShopAgain('${artEsc(o.no)}')">לקנות שוב</button></div></div>
+    </article>`;
+  const dealRow = d => `<article class="msh-row">
+      <div class="msh-thumbs"><span>${ic('<path d="M4 7h11M4 7l3-3M4 7l3 3"/><path d="M20 17H9M20 17l-3-3M20 17l-3 3"/>')}</span></div>
+      <div class="msh-main"><b>${escHtml(d.title || 'עסקה')}</b><small>${date(d.updatedAt || d.at)} · עסקה עם ${escHtml(d.toName || 'המוכר')} · ${d.status === 'signed' ? 'נחתם' : 'אושר'}</small></div>
+      <div class="msh-side"><b class="msh-sum">${d.price ? money(d.price) : '—'}</b><div class="msh-acts"><button type="button" onclick="openOffersPanel()">לעסקה</button></div></div>
+    </article>`;
+  const histHTML = hist.length ? hist.map(x => x.o ? orderRow(x.o) : dealRow(x.d)).join('')
+    : `<div class="msh-empty">${ic('<path d="M6 8h12l1 13H5zM9 8V6a3 3 0 0 1 6 0v2"/>')}<b>עוד אין קניות</b><span>כשתזמינו מהשוק או תסגרו עסקה — היא תופיע כאן עם הקבלה.</span><button type="button" onclick="goToHomePage()">לשוק</button></div>`;
+  const savedHTML = saved.length ? `<div class="msh-grid">${saved.map(r => `<button type="button" class="msh-card" onclick="rentOpen('${artEsc(r.id)}')"><span class="msh-ci">${typeof rentThumb === 'function' ? rentThumb(r) : ''}</span><b>${escHtml(r.title)}</b><small>${r.price ? money(r.price) : 'ללא מחיר'}${r.city ? ' · ' + escHtml(r.city) : ''}</small></button>`).join('')}</div>`
+    : '<p class="msh-none">אין מודעות שמורות. לחצו על הסימנייה במודעה כדי לשמור אותה כאן.</p>';
+  const wantsHTML = wants.length ? `<div class="msh-wants">${wants.map((w, i) => `<span class="msh-want">🔔 ${escHtml(w.q)}${w.max ? ` <small>עד ${money(w.max)}</small>` : ''}<button type="button" onclick="myShopWantDel(${i})" aria-label="הפסקת מעקב">×</button></span>`).join('')}</div>`
+    : '<p class="msh-none">אין מבוקשים במעקב. כתבו לסוכן: <b>תודיע לי כשמישהו יעלה מצלמה עד 1000</b></p>';
+  const tab = (id, t, n) => `<button type="button" class="msh-tab${myShopTab === id ? ' on' : ''}" onclick="myShopOpen('${id}')">${t}<small>${n}</small></button>`;
+  return `<header class="msh-head"><div><h1>הקניות שלי</h1><p>כל מה שקניתם, הקבלות והרשימה שלכם במקום אחד</p></div>
+      <button type="button" class="msh-cart" onclick="cartOpen()">${ic('<path d="M3 4h2l2.4 11.2a1 1 0 0 0 1 .8h9.2a1 1 0 0 0 1-.8L21 8H6.2"/><circle cx="9.5" cy="20" r="1.5"/><circle cx="17.5" cy="20" r="1.5"/>')}העגלה${cartN ? ` <em>${cartN}</em>` : ''}</button></header>
+    <section class="msh-stats">
+      <div><small>הזמנות ועסקאות</small><b>${hist.length}</b></div>
+      <div><small>סה״כ שילמתם</small><b>${money(spent)}</b></div>
+      <div><small>פריטים</small><b>${nItems}</b></div>
+      <div><small>ברשימה</small><b>${saved.length + wants.length}</b></div>
+    </section>
+    <nav class="msh-tabs">${tab('hist', 'היסטוריית קניות', hist.length)}${tab('list', 'הרשימה שלי', saved.length + wants.length)}</nav>
+    ${myShopTab === 'hist' ? `<section class="msh-list">${histHTML}</section>${orders.length ? '<p class="msh-note">ההזמנות נשמרות במכשיר הזה. קבלה נשלחה גם למייל שהזנתם בהזמנה.</p>' : ''}`
+      : `<section class="msh-sec"><h2>שמורים <small>${saved.length}</small></h2>${savedHTML}</section><section class="msh-sec"><h2>מבוקשים במעקב <small>${wants.length}</small></h2>${wantsHTML}</section>`}`;
+}
+function myShopAgain(no) {
+  const o = (typeof ordersGet === 'function' ? ordersGet() : []).find(x => x.no === no); if (!o) return;
+  (o.items || []).forEach(i => { for (let k = 0; k < (Number(i.qty) || 1); k++) cartAdd(i.id); });
+  if (typeof showCopyToast === 'function') showCopyToast('הפריטים נוספו לעגלה'); myShopOpen();
+}
+function myShopWantDel(i) { if (typeof buyWants === 'undefined') return; buyWants.splice(i, 1); try { localStorage.setItem('buy_wants', JSON.stringify(buyWants.slice(-20))); } catch (e) {} myShopOpen('list'); }
+Object.assign(window, { myShopOpen, myShopAgain, myShopWantDel });
 // הפיד: מה שאני ומי שאני עוקב/ת אחריהם העלינו ושיתפנו, מהחדש לישן
 async function mktFeedOpen() {
   const u = auth.currentUser;
@@ -31754,7 +31816,7 @@ function cartOpen(tab) {
   if (!el) {
     el = document.createElement('div'); el.id = 'cart-panel';
     el.innerHTML = `<div class="ask-backdrop" onclick="cartClose()"></div><section class="ask-card cart-card" role="dialog" aria-label="העגלה שלי">
-      <header class="ask-head"><b>העגלה שלי</b><button type="button" class="ask-hb" onclick="cartClose(); ordersOpen()" title="ההזמנות שלי" aria-label="ההזמנות שלי"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg></button><button type="button" class="ask-hb" onclick="cartClose()" aria-label="סגירה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header>
+      <header class="ask-head"><b>העגלה שלי</b><button type="button" class="ask-hb" onclick="cartClose(); myShopOpen('hist')" title="הקניות שלי" aria-label="ההזמנות שלי"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg></button><button type="button" class="ask-hb" onclick="cartClose()" aria-label="סגירה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header>
       <div class="cart-tabs" role="tablist"></div><div class="cart-body ask-msgs"></div><div class="cart-foot"></div></section>`;
     document.body.appendChild(el);
   }
@@ -34708,6 +34770,7 @@ async function buySend(ev) {
     if (/(תאפס|תאפסי|לאפס|אפס|תרוקן|תרוקני|לרוקן|רוקן|תנקה|תנקי|לנקות|נקה)(\s|$).*(עגלה|סל)|^(תמחק|תמחקי|מחק)(\s+לי)?(\s+את)?\s+(כל\s+)?ה?(עגלה|סל)/.test(q)) buyCartClearAsk();
     else if (/^(תוריד|תורידי|הורד|להוריד|תסיר|תסירי|הסר|תמחק|תמחקי|מחק)(\s|$).*(עגלה|סל)/.test(q)) buyCartRemove(q);
     else if (/^(ההצעות שלי|מה ההצעות|הצעות)|^(מה|תראה|תציג).*(ההצעות|הצעות) שלי/.test(q)) { buySay('bot', 'פותח את ההצעות שלך…'); if (typeof openOffersPanel === 'function') openOffersPanel(); }
+    else if (/(היסטורי(ת|ה)\s+(ה)?קניות|ה?הזמנות\s+שלי|ה?קניות\s+שלי|מה\s+קניתי|הרשימה\s+שלי)/.test(q)) { const list = /רשימה/.test(q); buySay('bot', list ? 'פותח את הרשימה שלך…' : 'פותח את היסטוריית הקניות שלך…'); myShopOpen(list ? 'list' : 'hist'); }
     else if (/^(עזרה|מה אתה יודע|מה את יודעת|פקודות|מה אפשר)/.test(q)) buySay('bot', `אפשר ללחוץ על פקודה, או פשוט לכתוב — למשל: <b>תמצא לי ספה עד 1000</b>, <b>תוסיף לעגלה 2 נרות</b>, <b>תזכיר לי מחר ב-10…</b><div class="by-chips in-msg">${buyChipsHTML(true)}</div>`);
     else if (/^(מה|תראה|תראי|תציג|הצג)(\s|$).*(עגלה|סל)|^(ה?עגלה|ה?סל)( שלי)?$/.test(q)) buySay('bot', buyCartSummary());
     else if (/^(תמחק|תמחקי|מחק|תבטל|תבטלי|בטל)(\s|$).*(תזכור|מבוקש|מעקב)/.test(q)) buyClearHandle(q);
