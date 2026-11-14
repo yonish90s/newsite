@@ -31892,15 +31892,30 @@ Object.assign(window, { receiptShare });
 // קבלה לדוגמה — מסמך קבלה מעוצב (כמו שיישלח במייל): צפייה, הדפסה ושמירה כ-PDF
 // ============================================================
 const RECEIPT_BIZ = { name: 'Black1White00', site: 'black1white00.com', note: 'מסמך לדוגמה — תשלום הדגמה, לא בוצע חיוב.' };
+// קבלה בסגנון "חשבון": כרטיס נקי, תוויות קטנות באותיות מונו משמאל, שם בולט באמצע, סכום מימין, וסה״כ ענק בתחתית
+const BILL_CSS = `.bill{max-width:560px;margin:auto;padding:22px 24px 18px;border-radius:18px;background:#fbfaf8;border:1px solid #e7e3dc;color:#111;font-family:inherit;direction:rtl}
+.bill-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding-bottom:14px;border-bottom:1px dashed #d6d1c8}
+.bill-h b{font-size:24px;font-weight:900;letter-spacing:-.3px}.bill-mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11.5px;letter-spacing:1.4px;color:#6b6b6b;text-transform:uppercase}
+.bill-to{display:flex;flex-wrap:wrap;gap:4px 14px;padding:10px 0 4px;font-size:12.5px;color:#555}
+.bill-row{display:grid;grid-template-columns:88px 1fr auto;align-items:baseline;gap:12px;padding:11px 0}
+.bill-row b{font-size:17px;font-weight:800}.bill-row .bill-amt{font-size:18px;font-weight:900;font-variant-numeric:tabular-nums}.bill-row .bill-amt.soft{font-size:13px;font-weight:600;color:#6b6b6b}
+.bill-rows{padding:4px 0 6px;border-bottom:1px dashed #d6d1c8}
+.bill-sub{display:flex;justify-content:space-between;padding:6px 0;font-size:13.5px;color:#444}
+.bill-tot{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;padding-top:12px;margin-top:6px;border-top:1px dashed #d6d1c8}
+.bill-tot .bill-big{font-size:46px;font-weight:900;letter-spacing:-1.5px;line-height:1;font-variant-numeric:tabular-nums}
+.bill-note{margin-top:14px;font-size:11.5px;color:#8a8a8a;text-align:center}`;
 function receiptDocHTML(o) {
-  const d = new Date(o.t);
-  const rows = o.items.map(i => `<tr><td>${escHtml(i.name)}</td><td>${i.qty}</td><td>₪${Number(i.price).toLocaleString('he-IL')}</td><td>₪${(i.price * i.qty).toLocaleString('he-IL')}</td></tr>`).join('');
-  return `<div class="rd">
-    <div class="rd-top"><div><b class="rd-biz">${RECEIPT_BIZ.name}</b><small>${RECEIPT_BIZ.site}</small></div><div class="rd-meta"><b>קבלה</b><small>מס׳ <span dir="ltr">${escHtml(o.no)}</span></small><small>${d.toLocaleDateString('he-IL')} · ${d.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}</small></div></div>
-    <div class="rd-to"><small>לכבוד</small><b>${escHtml(o.name || '')}</b><span dir="ltr">${escHtml(o.email || '')}</span><span dir="ltr">${escHtml(o.phone || '')}</span>${o.addr ? `<span>${escHtml(o.addr)}</span>` : ''}</div>
-    <table class="rd-t"><thead><tr><th>פריט</th><th>כמות</th><th>מחיר</th><th>סה״כ</th></tr></thead><tbody>${rows}</tbody></table>
-    <div class="rd-sum"><div><span>סכום ביניים</span><span>₪${Number(o.sub).toLocaleString('he-IL')}</span></div><div><span>${o.method === 'pickup' ? 'איסוף עצמי' : 'משלוח'}</span><span>${o.ship ? '₪' + o.ship : 'חינם'}</span></div><div class="rd-total"><span>סה״כ לתשלום</span><span>₪${Number(o.total).toLocaleString('he-IL')}</span></div><div><span>אמצעי תשלום</span><span>כרטיס בדיקה ‎•••• 4242</span></div></div>
-    <p class="rd-note">${RECEIPT_BIZ.note}</p>
+  const d = new Date(o.t), m = n => '₪' + Number(n || 0).toLocaleString('he-IL', { maximumFractionDigits: 2 });
+  const rows = o.items.map(i => `<div class="bill-row"><span class="bill-mono">× ${i.qty}</span><b>${escHtml(i.name)}</b><span class="bill-amt">${m(i.price * i.qty)}</span></div>`).join('')
+    + `<div class="bill-row"><span class="bill-mono">${o.method === 'pickup' ? 'איסוף' : 'משלוח'}</span><b>${o.method === 'pickup' ? 'איסוף עצמי' : 'משלוח עד הבית'}</b><span class="bill-amt${o.ship ? '' : ' soft'}">${o.ship ? m(o.ship) : 'חינם'}</span></div>`;
+  return `<div class="bill rd">
+    <div class="bill-h"><b>קבלה</b><span class="bill-mono" dir="ltr">${escHtml(o.no)} · ${d.toLocaleDateString('he-IL')}</span></div>
+    <div class="bill-to"><span><span class="bill-mono">לכבוד</span> ${escHtml(o.name || '')}</span>${o.phone ? `<span dir="ltr">${escHtml(o.phone)}</span>` : ''}${o.email ? `<span dir="ltr">${escHtml(o.email)}</span>` : ''}${o.addr ? `<span>${escHtml(o.addr)}</span>` : ''}</div>
+    <div class="bill-rows">${rows}</div>
+    ${o.disc ? `<div class="bill-sub"><span>הנחה</span><span>−${m(o.disc)}</span></div>` : ''}
+    ${o.vat ? `<div class="bill-sub"><span>מתוכו מע״מ</span><span>${m(o.vat)}</span></div>` : ''}
+    <div class="bill-tot"><span class="bill-mono">סה״כ לתשלום</span><span class="bill-big">${m(o.total)}</span></div>
+    <p class="bill-note">${escHtml(RECEIPT_BIZ.name)} · ${escHtml(RECEIPT_BIZ.site)} · ${escHtml(RECEIPT_BIZ.note)}</p>
   </div>`;
 }
 function receiptDocOpen(no) {
@@ -31912,16 +31927,11 @@ function receiptPrint(no) {
   const w = window.open('', '_blank');
   if (!w) { showCopyToast('אפשרו חלונות קופצים כדי להדפיס'); return; }
   w.document.write(`<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><title>קבלה ${escHtml(o.no)}</title><style>
-    body{font-family:Arial,Helvetica,sans-serif;color:#111;margin:32px;}
-    .rd{max-width:640px;margin:auto}.rd-top{display:flex;justify-content:space-between;border-bottom:2px solid #111;padding-bottom:14px;margin-bottom:16px}
-    .rd-biz{font-size:22px}.rd small,.rd-meta small{display:block;color:#666;font-size:12px}.rd-meta{text-align:left}.rd-meta b{font-size:18px}
-    .rd-to{display:flex;flex-direction:column;gap:2px;margin-bottom:16px;font-size:14px}.rd-to small{color:#666}
-    .rd-t{width:100%;border-collapse:collapse;font-size:14px}.rd-t th,.rd-t td{padding:8px 4px;border-bottom:1px solid #ddd;text-align:right}.rd-t th{background:#f4f4f4}
-    .rd-sum{margin-top:12px;font-size:14px}.rd-sum div{display:flex;justify-content:space-between;padding:4px 0}.rd-total{font-weight:bold;font-size:16px;border-top:2px solid #111;margin-top:4px;padding-top:8px!important}
-    .rd-note{margin-top:20px;color:#888;font-size:12px}</style></head><body>${receiptDocHTML(o)}<script>window.onload=function(){window.print()}<\/script></body></html>`);
+    body{font-family:Arial,Helvetica,sans-serif;color:#111;margin:32px;background:#fff}
+    ${BILL_CSS}</style></head><body>${receiptDocHTML(o)}<script>window.onload=function(){window.print()}<\/script></body></html>`);
   w.document.close();
 }
-Object.assign(window, { receiptDocOpen, receiptPrint });
+Object.assign(window, { receiptDocOpen, receiptPrint, receiptDocHTML });
 
 // ============================================================
 // מנהל: "עדכוני רוכשים" — שיחה נעוצה בחלון ההודעות עם כל הקניות בזמן אמת,
