@@ -16374,6 +16374,92 @@ function publicFollowsSync() {
   set(ref(db, `website/public_follows/${u.uid}`), Object.keys(out).length ? out : null).catch(() => {});
 }
 window.mdFollowingLoad = mdFollowingLoad;
+// ===== כרטיס נתונים (פוסטים · עוקבים · במעקב) עם סמל מעקב, ותגובות על פרופיל =====
+const IG_FOLLOW_IC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="4"/><path d="M2.5 21a6.5 6.5 0 0 1 13 0"/><path d="M19 8v6M16 11h6"/></svg>';
+const IG_FOLLOWING_IC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="4"/><path d="M2.5 21a6.5 6.5 0 0 1 13 0"/><path d="M16 11.5l2 2 4-4"/></svg>';
+function igCardHTML(o) {
+  // o = { uid, name, posts, views, isOwn, following, demoKey }
+  const fol = o.uid ? `<b id="ig-fol">—</b>` : `<b id="ig-fol">${igDemoFollowers(o.demoKey)}</b>`;
+  const fwg = o.uid ? `<b id="ig-fwg">—</b>` : '<b>0</b>';
+  const followBtn = o.isOwn ? '' : `<button type="button" class="ig-follow${o.following ? ' on' : ''}" onclick="${o.uid ? `profileToggleFollow('${artEsc(o.uid)}','${artEsc(o.name)}')` : `igDemoFollow('${artEsc(o.demoKey)}', this)`}" title="${o.following ? 'במעקב — לחצו להפסקה' : 'מעקב'}" aria-label="${o.following ? 'במעקב' : 'מעקב'}">${o.following ? IG_FOLLOWING_IC : IG_FOLLOW_IC}<span>${o.following ? 'במעקב' : 'מעקב'}</span></button>`;
+  if (o.uid) setTimeout(() => igFill(o.uid), 0);
+  return `<div class="ig-row"><section class="ig-card">
+      <span class="ig-av">${authorAvHTML({ author: o.name, uid: o.uid || '' })}</span>
+      <div class="ig-main"><div class="ig-top"><b class="ig-name">${escHtml(o.name)}</b>${followBtn}</div>
+        <div class="ig-stats"><span><b>${Number(o.posts || 0).toLocaleString('he-IL')}</b><small>פוסטים</small></span><span>${fol}<small>עוקבים</small></span><span>${fwg}<small>במעקב</small></span></div></div>
+    </section><section class="ig-side"><b>${typeof formatViews === 'function' ? formatViews(o.views || 0) : (o.views || 0)}</b><small>צפיות</small></section></div>`;
+}
+async function igFill(uid) {
+  try {
+    const v = (await get(ref(db, `website/follow_counts/${uid}`))).val() || {};
+    const f = document.getElementById('ig-fol'), g = document.getElementById('ig-fwg');
+    if (f) f.textContent = Math.max(0, Number(v.followers) || 0).toLocaleString('he-IL');
+    if (g) g.textContent = Math.max(0, Number(v.following) || 0).toLocaleString('he-IL');
+  } catch (e) {}
+}
+// מוכר לדוגמה (בלי חשבון): מעקב נשמר רק בדפדפן
+const igDemoKeyOf = name => 'demo_' + String(name || '').replace(/[.#$\[\]\/\s]+/g, '_').slice(0, 60);
+function igDemoFollowing(key) { try { return !!JSON.parse(localStorage.getItem('demo_follows') || '{}')[key]; } catch (e) { return false; } }
+function igDemoFollowers(key) { return igDemoFollowing(key) ? 1 : 0; }
+function igDemoFollow(key, btn) {
+  let m = {}; try { m = JSON.parse(localStorage.getItem('demo_follows') || '{}') || {}; } catch (e) {}
+  m[key] = !m[key]; if (!m[key]) delete m[key];
+  try { localStorage.setItem('demo_follows', JSON.stringify(m)); } catch (e) {}
+  const on = !!m[key];
+  btn.classList.toggle('on', on); btn.innerHTML = (on ? IG_FOLLOWING_IC : IG_FOLLOW_IC) + `<span>${on ? 'במעקב' : 'מעקב'}</span>`;
+  const f = document.getElementById('ig-fol'); if (f) f.textContent = on ? '1' : '0';
+  showCopyToast(on ? 'במעקב — מוכר לדוגמה, נשמר רק אצלך' : 'הפסקת לעקוב');
+}
+// --- תגובות על פרופיל: website/profile_comments/{key}/{id} = { uid, name, text, t, likes: { uid: true } }
+const PCM_THUMB = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v11H4a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1z"/><path d="M7 10l4-7a2.5 2.5 0 0 1 2.5 2.9L13 10h6.2a2 2 0 0 1 2 2.3l-1.3 7A2 2 0 0 1 17.9 21H7"/></svg>';
+let pcmData = {}, pcmKey = '';
+function pcmSectionHTML(key) {
+  pcmKey = key; pcmData = {};
+  setTimeout(() => pcmLoad(key), 0);
+  const u = auth.currentUser, reg = u && !u.isAnonymous;
+  return `<section class="pcm" id="pcm"><h3>תגובות <small id="pcm-n"></small></h3>
+    ${reg ? `<form class="pcm-form" onsubmit="pcmSend(event)"><span class="pcm-me">${authorAvHTML({ author: (typeof liveChatUserName === 'function' && liveChatUserName()) || u.displayName || 'אני', uid: u.uid })}</span><input id="pcm-in" maxlength="500" placeholder="כתבו תגובה…" autocomplete="off"><button type="submit">שליחה</button></form>`
+      : `<button type="button" class="pcm-login" onclick="openLiveChatLogin()">התחברו כדי להגיב</button>`}
+    <div class="pcm-list" id="pcm-list"><div class="pcm-empty">טוען תגובות…</div></div></section>`;
+}
+async function pcmLoad(key) {
+  try { pcmData = (await get(ref(db, `website/profile_comments/${key}`))).val() || {}; } catch (e) { pcmData = {}; }
+  if (pcmKey === key) pcmRender();
+}
+function pcmRender() {
+  const box = document.getElementById('pcm-list'); if (!box) return;
+  const me = auth.currentUser && auth.currentUser.uid;
+  const ago = t => { const m = Math.floor((Date.now() - t) / 60e3); return m < 1 ? 'עכשיו' : m < 60 ? `לפני ${m} ד׳` : m < 1440 ? `לפני ${Math.floor(m / 60)} ש׳` : m < 43200 ? `לפני ${Math.floor(m / 1440)} ימים` : new Date(t).toLocaleDateString('he-IL'); };
+  const list = Object.entries(pcmData).filter(([, c]) => c && c.text).map(([id, c]) => Object.assign({ id }, c)).sort((a, b) => (b.t || 0) - (a.t || 0));
+  const n = document.getElementById('pcm-n'); if (n) n.textContent = list.length ? '· ' + list.length.toLocaleString('he-IL') : '';
+  box.innerHTML = list.length ? list.map(c => {
+    const likes = Object.keys(c.likes || {}).length, liked = !!(me && c.likes && c.likes[me]);
+    return `<div class="pcm-c">${authorAvHTML({ author: c.name || 'משתמש', uid: c.uid || '' })}<div class="pcm-b">
+      <div class="pcm-h"><b onclick="openUserPage('${artEsc(c.uid || '')}','${artEsc(c.name || '')}')">${escHtml(c.name || 'משתמש')}</b><small>${ago(c.t || 0)}</small></div>
+      <p>${escHtml(c.text)}</p>
+      <div class="pcm-a"><button type="button" class="pcm-like${liked ? ' on' : ''}" onclick="pcmLike('${artEsc(c.id)}')">${PCM_THUMB}<span>${likes || ''}</span></button>${me && (c.uid === me || pcmKey === me || (typeof isAdmin === 'function' && isAdmin())) ? `<button type="button" class="pcm-del" onclick="pcmDel('${artEsc(c.id)}')">מחיקה</button>` : ''}</div></div></div>`;
+  }).join('') : '<div class="pcm-empty">עדיין אין תגובות — היו הראשונים להגיב</div>';
+  if (typeof avatarHydrate === 'function') avatarHydrate(box);
+}
+async function pcmSend(ev) {
+  if (ev) ev.preventDefault();
+  const u = auth.currentUser; if (!u || u.isAnonymous) { openLiveChatLogin(); return; }
+  const inp = document.getElementById('pcm-in'), text = (inp.value || '').trim().slice(0, 500); if (!text) return;
+  const rec = { uid: u.uid, name: String((typeof liveChatUserName === 'function' && liveChatUserName()) || u.displayName || 'משתמש').slice(0, 60), text, t: Date.now() };
+  try { const r = push(ref(db, `website/profile_comments/${pcmKey}`)); await set(r, rec); pcmData[r.key] = rec; inp.value = ''; pcmRender(); }
+  catch (e) { showCopyToast('לא הצלחנו לשמור את התגובה'); }
+}
+async function pcmLike(id) {
+  const u = auth.currentUser; if (!u || u.isAnonymous) { openLiveChatLogin(); return; }
+  const c = pcmData[id]; if (!c) return;
+  const on = !(c.likes && c.likes[u.uid]);
+  try { await set(ref(db, `website/profile_comments/${pcmKey}/${id}/likes/${u.uid}`), on ? true : null); c.likes = Object.assign({}, c.likes); if (on) c.likes[u.uid] = true; else delete c.likes[u.uid]; pcmRender(); } catch (e) {}
+}
+async function pcmDel(id) {
+  if (!confirm('למחוק את התגובה?')) return;
+  try { await set(ref(db, `website/profile_comments/${pcmKey}/${id}`), null); delete pcmData[id]; pcmRender(); } catch (e) { showCopyToast('לא הצלחנו למחוק'); }
+}
+Object.assign(window, { igDemoFollow, pcmSend, pcmLike, pcmDel });
 function buildUserPageHTML(authorId, authorName) {
   const albums = photoGetAlbums();
   const _isAdminView = (typeof isAdmin === 'function' && isAdmin()) || (typeof isEditMode !== 'undefined' && isEditMode);
@@ -16406,6 +16492,10 @@ function buildUserPageHTML(authorId, authorName) {
       <div class="pf-desk md-prof">
       <aside class="pf-side md-side"><div id="user-page-head">${mdSideHTML(window._upState)}</div></aside>
       <div class="pf-main"><h1 class="md-name" id="md-name">${escHtml(window._upState.name)}${window._upState.verified ? verifiedSealHTML(26) : ''}</h1>${(() => {
+        const mineAll = authorId ? mktSellerItems(authorId, authorName) : [];
+        const ownMe = !!(authorId && auth.currentUser && auth.currentUser.uid === authorId);
+        return `<div id="ig-wrap">${igCardHTML({ uid: authorId || '', name: authorName || 'משתמש', posts: mineAll.length + authorAlbums.length, views: mineAll.reduce((a, r) => a + photoGetViews(rentCommentsKey(r)), 0), isOwn: ownMe, following: authorId && typeof isFollowing === 'function' && isFollowing(authorId) })}</div>`;
+      })()}${(() => {
         const mine = authorId ? mktSellerItems(authorId, authorName) : [];
         const own = !!(authorId && auth.currentUser && auth.currentUser.uid === authorId);
         pfGridItems = authorPosts.filter(x => x.__repostBy);
@@ -16418,6 +16508,7 @@ function buildUserPageHTML(authorId, authorName) {
           + (mine.length ? `<section class="pf-mkt" data-pf="mkt"><h3>מודעות בשוק</h3>${mktSellerGridHTML(mine, true)}</section>` : '<div class="pf-empty" data-pf="mkt">עדיין אין מודעות</div>')
           + (own ? `<section class="pf-mkt pf-offers" data-pf="offers" hidden><h3>הצעות שקיבלתי מלקוחות</h3><div class="pf-offers-feed">${offersFeedHTML('in')}</div></section>` : '')
           + (pfGridItems.length ? `<section class="pf-mkt" data-pf="rep"><h3>שיתופים</h3><div class="pfg-grid">${pfGridCardsHTML('reposts')}</div></section>` : '<div class="pf-empty" data-pf="rep" hidden>עדיין אין ריפוסטים</div>')
+          + (authorId ? pcmSectionHTML(authorId) : '')
           + '</div></div>';
       })()}
       </div>
@@ -16794,6 +16885,9 @@ function profileRenderHead() {
     if (typeof avatarHydrate === 'function') avatarHydrate(el);
     const nm = document.getElementById('md-name'); if (nm) nm.innerHTML = escHtml(window._upState.name) + (window._upState.verified ? verifiedSealHTML(26) : '');
     const bn = document.getElementById('md-banner'); if (bn) bn.innerHTML = mdBannerHTML(window._upState);
+    const ig = document.querySelector('#ig-wrap .ig-follow'), st0 = window._upState;
+    if (ig && st0.uid) { const on = typeof isFollowing === 'function' && isFollowing(st0.uid); ig.classList.toggle('on', on); ig.innerHTML = (on ? IG_FOLLOWING_IC : IG_FOLLOW_IC) + `<span>${on ? 'במעקב' : 'מעקב'}</span>`; igFill(st0.uid); }
+    const nmc = document.querySelector('#ig-wrap .ig-name'); if (nmc) nmc.textContent = st0.name;
   }
   const ab = document.getElementById('pf-about');
   if (ab && window._upState) { ab.innerHTML = pfAboutHTML(window._upState); if (window._upState.uid && typeof rentSellerLoad === 'function') rentSellerLoad(window._upState.uid); }
@@ -33438,9 +33532,11 @@ function rentSellerHTML(sl) {
       </section>${pfQuickHTML(st)}
     </div></aside>
     <div class="pf-main">
+      ${igCardHTML({ uid: '', name: sl.name, posts: list.length, views, isOwn: false, following: igDemoFollowing(igDemoKeyOf(sl.name)), demoKey: igDemoKeyOf(sl.name) })}
       <div class="pf-tabs2" role="tablist"><button type="button" class="on" onclick="pfTab2(this, 'all')">הכל</button><button type="button" onclick="pfTab2(this, 'all')">${list.length} מודעות</button><button type="button" class="pf-tab-about" onclick="pfTab2(this, 'about')">פרטים</button></div>
       <div class="pf-body"><aside class="pf-about">${pfAboutHTML(st)}</aside><div class="pf-feed">
         ${list.length ? `<section class="pf-mkt"><h3>מודעות</h3>${mktSellerGridHTML(list)}</section>` : '<div class="pf-empty">אין מודעות פעילות.</div>'}
+        ${pcmSectionHTML(igDemoKeyOf(sl.name))}
       </div></div>
     </div>
   </div>`;

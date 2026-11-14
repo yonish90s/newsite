@@ -730,6 +730,24 @@
             ".validate": "newData.hasChildren(['name','t']) && newData.child('name').isString() && newData.child('name').val().length <= 80 && newData.child('t').isNumber() && $target !== $uid"
           }
         }
+      },
+      "profile_comments": {
+        "$key": {
+          ".read": true,
+          "$id": {
+            ".write": "auth != null && auth.token.firebase.sign_in_provider !== 'anonymous' && ((!data.exists() && newData.child('uid').val() === auth.uid) || (data.exists() && !newData.exists() && (data.child('uid').val() === auth.uid || root.child('website/admin_uid').val() === auth.uid || ('profile_' + auth.uid) === $key || auth.uid === $key)))",
+            ".validate": "!newData.exists() || (newData.hasChildren(['uid','name','text','t']) && newData.child('text').isString() && newData.child('text').val().length >= 1 && newData.child('text').val().length <= 500 && newData.child('name').isString() && newData.child('name').val().length <= 60 && newData.child('t').isNumber())",
+            "likes": {
+              "$uid": {
+                ".write": "auth != null && auth.uid === $uid && auth.token.firebase.sign_in_provider !== 'anonymous'",
+                ".validate": "newData.val() === true"
+              }
+            },
+            "$other": {
+              ".validate": "$other === 'uid' || $other === 'name' || $other === 'text' || $other === 't'"
+            }
+          }
+        }
       }
     }
   }
