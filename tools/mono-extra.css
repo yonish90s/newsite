@@ -177,3 +177,9 @@ BODY #ch-maker :is(.ch-gender small, .ch-colors small) { color: #d4f04a !importa
 BODY #ch-maker .ch-arc button.on b { background: #d4f04a !important; color: #111111 !important; }
 BODY #ch-maker .ch-opt.on { border-color: #d4f04a !important; background: rgba(212, 240, 74, .12) !important; }
 BODY #ch-maker .ch-arc::before { border-color: rgba(212, 240, 74, .85) !important; }
+/* גלגל המשתמש: הליים נשאר */
+BODY #u-wheel .uw-t { color: #d4f04a !important; }
+BODY #u-wheel .uw-seg.on path { fill: #d4f04a !important; stroke: #d4f04a !important; }
+BODY #u-wheel .uw-glow { stroke: #d4f04a !important; }
+BODY #u-wheel .uw-core { stroke: rgba(212, 240, 74, .55) !important; }
+BODY #u-wheel .uw-back { background: rgba(10, 10, 10, .72) !important; }

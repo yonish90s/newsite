@@ -3976,6 +3976,10 @@ html.theme-dark #ch-maker .ch-opt .ch-ok { background: color-mix(in srgb, #d4f04
 html.theme-dark #ch-maker .ch-opt.on { background: rgba(18, 23, 29, 0.12) !important; }
 html.theme-dark #ch-maker .ch-colors button { border: 2px solid rgba(255, 255, 255, 0.1) !important; }
 html.theme-dark #ch-maker .ch-save { background: color-mix(in srgb, #d4f04a 22%, #12171d) !important; color: #f5f5f5 !important; }
+html.theme-dark #u-wheel .uw-seg path { fill: rgba(236, 238, 241, 0.82) !important; }
+html.theme-dark #u-wheel .uw-seg.on .uw-n { fill: #f5f5f5 !important; }
+html.theme-dark #u-wheel .uw-seg.on .uw-ic { color: #f5f5f5 !important; }
+html.theme-dark #u-wheel .uw-core { fill: #f5f5f5 !important; }
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #f5f5f5 !important; }
 html.theme-dark [style*="color:#111111"] { color: #f5f5f5 !important; }

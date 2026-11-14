@@ -34756,3 +34756,98 @@ try {
   });
 } catch (e) {}
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.getElementById('ch-maker')) chClose(); });
+
+// ============================================================
+// גלגל המשתמש (כמו גלגל נשק במשחק): 6 פלחים ממוספרים סביב הדמות, עם פרטי המשתמש במרכז.
+// במחשב — לחיצה אחת על עיגול הפרופיל / כפתור הפרופיל; במובייל — לחיצה ארוכה. לחיצה קצרה במובייל נשארת כרגיל.
+// ============================================================
+function uwUser() { const u = auth.currentUser; return u && !u.isAnonymous ? u : null; }
+function uwItems(u) {
+  const name = (typeof liveChatUserName === 'function' && liveChatUserName()) || u.displayName || 'אני';
+  const cart = (typeof cartGet === 'function' ? cartGet() : []).reduce((a, x) => a + (x.qty || 0), 0);
+  const saved = typeof mktMarkedItems === 'function' ? mktMarkedItems('save').length : 0;
+  const bal = typeof walletBalance !== 'undefined' ? walletBalance : 0;
+  const ic = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+  return [
+    { t: 'הפרופיל שלי', d: '@' + (typeof profileHandle === 'function' ? profileHandle(name) : name), i: ic('<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>'), go: () => openUserPage(u.uid, name) },
+    { t: 'הארנק', d: `${bal.toLocaleString('he-IL')} מטבעות`, i: ic('<ellipse cx="12" cy="7" rx="7" ry="3"/><path d="M5 7v5c0 1.7 3.1 3 7 3s7-1.3 7-3V7M5 12v5c0 1.7 3.1 3 7 3s7-1.3 7-3v-5"/>'), go: () => walletOpen() },
+    { t: 'העגלה', d: cart ? `${cart} פריטים` : 'ריקה', i: ic('<path d="M6 8h12l1 13H5zM9 8V6a3 3 0 0 1 6 0v2"/>'), go: () => cartOpen() },
+    { t: 'שמורים', d: `${saved} מודעות`, i: ic('<path d="M6 4h12v17l-6-4.5L6 21z"/>'), go: () => openSavedModal() },
+    { t: 'הודעות', d: 'שיחות והצעות', i: ic('<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"/>'), go: () => openMessages() },
+    { t: 'הדמות שלי', d: 'עיצוב הדמות', i: ic('<circle cx="12" cy="5" r="2.6"/><path d="M8 22v-7l-2-4 3-3h6l3 3-2 4v7"/>'), go: () => chOpen() }
+  ];
+}
+let uwSel = 0, uwList = [];
+function uwOpen(preview) {
+  const u = uwUser() || (preview && typeof preview === 'object' ? preview : null); if (!u) return false;   // preview — לתצוגה מקדימה בלבד
+  uwList = uwItems(u); uwSel = 0;
+  let w = document.getElementById('u-wheel'); if (w) w.remove();
+  w = document.createElement('div'); w.id = 'u-wheel'; w.setAttribute('role', 'dialog'); w.setAttribute('aria-label', 'התפריט שלי');
+  const n = uwList.length, R1 = 74, R2 = 152, gap = 2.2;
+  const pt = (r, a) => [200 + r * Math.sin(a * Math.PI / 180), 200 - r * Math.cos(a * Math.PI / 180)];
+  const seg = (i) => {
+    const a0 = i * 360 / n - 180 / n + gap, a1 = (i + 1) * 360 / n - 180 / n - gap;
+    const [x1, y1] = pt(R2, a0), [x2, y2] = pt(R2, a1), [x3, y3] = pt(R1, a1), [x4, y4] = pt(R1, a0);
+    const [cx, cy] = pt((R1 + R2) / 2, i * 360 / n), [nx, ny] = pt(R2 - 16, a0 + 9);
+    return `<g class="uw-seg" data-i="${i}" tabindex="0" role="button" aria-label="${uwList[i].t}">
+      <path d="M${x1} ${y1} A${R2} ${R2} 0 0 1 ${x2} ${y2} L${x3} ${y3} A${R1} ${R1} 0 0 0 ${x4} ${y4}Z"/>
+      <text x="${nx}" y="${ny}" class="uw-n">${i + 1}</text>
+      <foreignObject x="${cx - 18}" y="${cy - 18}" width="36" height="36"><div class="uw-ic">${uwList[i].i}</div></foreignObject></g>`;
+  };
+  const prof = (typeof avatarCache !== 'undefined' && avatarCache[u.uid]) || null;
+  w.innerHTML = `<div class="uw-back"></div><div class="uw-wrap">
+      <svg class="uw-ring" viewBox="0 0 400 400"><path class="uw-glow" d=""/>${uwList.map((_, i) => seg(i)).join('')}<circle cx="200" cy="200" r="64" class="uw-core"/></svg>
+      <div class="uw-center"><span class="uw-av">${prof ? avatarSVG(prof) : (typeof authorAvHTML === 'function' ? authorAvHTML({ authorId: u.uid, author: u.displayName || '' }) : '')}</span><b class="uw-t"></b><small class="uw-d"></small></div>
+      <div class="uw-hint">בחרו פעולה · Esc לסגירה</div></div>`;
+  document.body.appendChild(w);
+  if (typeof avatarHydrate === 'function') avatarHydrate(w);
+  w.querySelector('.uw-back').onclick = uwClose;
+  w.querySelectorAll('.uw-seg').forEach(g => {
+    const i = Number(g.dataset.i);
+    g.addEventListener('pointerenter', () => uwPick(i));
+    g.addEventListener('click', () => uwGo(i));
+  });
+  uwPick(0);
+  requestAnimationFrame(() => w.classList.add('show'));
+  return true;
+}
+function uwPick(i) {
+  uwSel = i;
+  const w = document.getElementById('u-wheel'); if (!w) return;
+  w.querySelectorAll('.uw-seg').forEach(g => g.classList.toggle('on', Number(g.dataset.i) === i));
+  w.querySelector('.uw-t').textContent = uwList[i].t; w.querySelector('.uw-d').textContent = uwList[i].d;
+  // קשת זוהרת מעל הפלח הנבחר
+  const n = uwList.length, a0 = i * 360 / n - 180 / n + 4, a1 = (i + 1) * 360 / n - 180 / n - 4, R = 166;
+  const p = a => [200 + R * Math.sin(a * Math.PI / 180), 200 - R * Math.cos(a * Math.PI / 180)];
+  const [x1, y1] = p(a0), [x2, y2] = p(a1);
+  w.querySelector('.uw-glow').setAttribute('d', `M${x1} ${y1} A${R} ${R} 0 0 1 ${x2} ${y2}`);
+}
+function uwGo(i) { const it = uwList[i]; uwClose(); if (it) try { it.go(); } catch (e) {} }
+function uwClose() { const w = document.getElementById('u-wheel'); if (w) { w.classList.remove('show'); setTimeout(() => w.remove(), 160); } }
+document.addEventListener('keydown', e => {
+  if (!document.getElementById('u-wheel')) return;
+  if (e.key === 'Escape') uwClose();
+  else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') uwPick((uwSel + 1) % uwList.length);
+  else if (e.key === 'ArrowRight' || e.key === 'ArrowUp') uwPick((uwSel - 1 + uwList.length) % uwList.length);
+  else if (e.key === 'Enter') uwGo(uwSel);
+  else if (/^[1-9]$/.test(e.key) && Number(e.key) <= uwList.length) uwGo(Number(e.key) - 1);
+});
+// חיבור: כפתור הפרופיל בכותרת ועיגול הפרופיל בסרגל הצד
+(function uwWire() {
+  const SEL = '#manager-btn, .srail-me:not(.srail-fb)';
+  const fine = () => window.matchMedia('(pointer: fine)').matches && !window.matchMedia('(max-width: 900px)').matches;
+  let lp = 0, lpFired = false;
+  document.addEventListener('click', e => {
+    const b = e.target.closest && e.target.closest(SEL); if (!b || !uwUser()) return;
+    if (lpFired) { lpFired = false; e.preventDefault(); e.stopImmediatePropagation(); return; }   // אחרי לחיצה ארוכה — לא מפעילים גם את הלחיצה הרגילה
+    if (fine()) { e.preventDefault(); e.stopImmediatePropagation(); uwOpen(); }
+  }, true);
+  document.addEventListener('pointerdown', e => {
+    const b = e.target.closest && e.target.closest(SEL); if (!b || fine() || !uwUser()) return;
+    lpFired = false; clearTimeout(lp);
+    lp = setTimeout(() => { lpFired = true; if (navigator.vibrate) try { navigator.vibrate(15); } catch (er) {} uwOpen(); }, 480);
+  }, true);
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => document.addEventListener(ev, () => clearTimeout(lp), true));
+  document.addEventListener('contextmenu', e => { if (e.target.closest && e.target.closest(SEL) && !fine()) e.preventDefault(); }, true);
+})();
+Object.assign(window, { uwOpen, uwClose });
