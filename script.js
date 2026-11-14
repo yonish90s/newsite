@@ -13712,29 +13712,39 @@ function rdVotes(p, myUid, pill) {
     </span>`;
 }
 function rdNameAttr(p) { return (p.uid && !p.guest) ? `onclick="openUserPage('${artEsc(p.uid)}','${artEsc(p.name || '')}')"` : ''; }
+// תגובות בסגנון אתרי וידאו: תמונה בצד, שם אפור + תאריך, טקסט, לייק עם מספר ו"הגב", תגית "יוצר/ת" למי שפתח את הדיון,
+// "היוצר/ת אהב/ה" כשפותח הדיון סימן לייק, ותשובות מקוננות עם "עוד תשובות ▼" / "הסתרה ▲"
+let rdOpUid = '';
+const BL_LIKE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v11H4a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1z"/><path d="M7 10l4-7a2.5 2.5 0 0 1 2.5 2.9L13 10h6.2a2 2 0 0 1 2 2.3l-1.3 7A2 2 0 0 1 17.9 21H7"/></svg>';
+const BL_REPLY = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="13" rx="4"/><path d="M8 11.5h.01M12 11.5h.01M16 11.5h.01" stroke-width="2.6"/></svg>';
 function rdCommentHTML(p, admin, myUid, kids, depth) {
   const open = forumOpenThreads.has(p.id);
   const childList = kids[p.id] || [];
   const countAll = (id) => (kids[id] || []).reduce((n, c) => n + 1 + countAll(c.id), 0);
   const total = countAll(p.id);
+  const likes = Object.keys(p.likes || {}).length, liked = !!(myUid && p.likes && p.likes[myUid]);
+  const creator = !!(rdOpUid && p.uid && p.uid === rdOpUid && !p.guest);
+  const creatorLiked = !!(rdOpUid && p.likes && p.likes[rdOpUid] && p.uid !== rdOpUid);
+  const date = p.t ? new Date(p.t).toLocaleDateString('he-IL', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
   return `
-    <div class="rd-cmt${depth ? ' nested' : ''}">
-      <div class="rd-cmt-head">
-        ${rdAvatar(p)}
-        <b class="rd-cmt-name" ${rdNameAttr(p)}>${escHtml(p.name || 'משתמש')}</b>${!p.guest && p.uid && isUserVerified(p.uid, p.name) ? verifiedSealHTML(13) : ''}${p.guest ? '<span class="rd-tag">אורח</span>' : ''}
-        <span class="rd-dot">•</span><span class="rd-time">${escHtml(rdTimeAgo(p.t))}</span>
-      </div>
-      <div class="rd-cmt-body">
-        <div class="rd-text">${escHtml(p.text || '').replace(/\n/g, '<br>')}</div>
-        <div class="rd-actions">
-          <button type="button" class="rd-act rd-reply" onclick="forumStartReply('${artEsc(p.id)}')" aria-label="תגובה" title="תגובה">${FORUM_REPLY_ICO}</button>
-          ${rdVotes(p, myUid)}
-          ${admin ? `<button type="button" class="rd-act" onclick="forumAdminEditPost('${artEsc(p.id)}')">עריכה</button><button type="button" class="rd-act rd-del" onclick="forumDeletePost('${artEsc(p.id)}')">מחיקה</button>` : ''}
+    <div class="rd-cmt bl-cmt${depth ? ' nested' : ''}">
+      ${rdAvatar(p, 'bl-av')}
+      <div class="bl-main">
+        <div class="bl-head">
+          <b class="rd-cmt-name bl-name" ${rdNameAttr(p)}>${escHtml(p.name || 'משתמש')}</b>${!p.guest && p.uid && isUserVerified(p.uid, p.name) ? verifiedSealHTML(13) : ''}${creator ? '<span class="bl-creator">יוצר/ת</span>' : ''}${p.guest ? '<span class="rd-tag">אורח</span>' : ''}
+          <span class="bl-date" title="${escHtml(rdTimeAgo(p.t))}">${escHtml(date)}</span>
         </div>
+        <div class="rd-text bl-text">${escHtml(p.text || '').replace(/\n/g, '<br>')}</div>
+        <div class="bl-acts">
+          <button type="button" class="bl-like${liked ? ' on' : ''}" onclick="forumToggleLike('${artEsc(p.id)}')" aria-label="לייק">${BL_LIKE}<span>${likes ? forumFmtCount(likes) : ''}</span></button>
+          <button type="button" class="bl-reply" onclick="forumStartReply('${artEsc(p.id)}')">${BL_REPLY}<span>הגב</span></button>
+          ${admin ? `<button type="button" class="bl-adm" onclick="forumAdminEditPost('${artEsc(p.id)}')">עריכה</button><button type="button" class="bl-adm rd-del" onclick="forumDeletePost('${artEsc(p.id)}')">מחיקה</button>` : ''}
+        </div>
+        ${creatorLiked ? '<span class="bl-liked">היוצר/ת אהב/ה את זה</span>' : ''}
         ${childList.length ? (open
-          ? `<div class="rd-children">${childList.map(c => rdCommentHTML(c, admin, myUid, kids, depth + 1)).join('')}</div>
-             <button type="button" class="rd-more" onclick="forumToggleThread('${artEsc(p.id)}')">${RD_MINUS}<span>הסתרת תגובות</span></button>`
-          : `<button type="button" class="rd-more" onclick="forumToggleThread('${artEsc(p.id)}')">${RD_PLUS}<span>${total === 1 ? 'עוד תגובה אחת' : `עוד ${total} תגובות`}</span></button>`) : ''}
+          ? `<div class="rd-children bl-children">${childList.map(c => rdCommentHTML(c, admin, myUid, kids, depth + 1)).join('')}</div>
+             <button type="button" class="bl-fold" onclick="forumToggleThread('${artEsc(p.id)}')">הסתרה <i>▲</i></button>`
+          : `<button type="button" class="bl-fold" onclick="forumToggleThread('${artEsc(p.id)}')">${total === 1 ? 'תשובה אחת' : `עוד ${total} תשובות`} <i>▼</i></button>`) : ''}
       </div>
     </div>`;
 }
@@ -13756,6 +13766,7 @@ function forumTopicMobileHTML(f, t, posts, admin, myUid) {
   const byId = {};
   list.forEach(p => { byId[p.id] = p; });
   const op = list[0] || null;
+  rdOpUid = op && !op.guest ? (op.uid || '') : '';
   // עץ תגובות: ילדים לפי replyTo (תגובה ישירה לפוסט הפותח = תגובה ראשית)
   const kids = {}, tops = [];
   list.slice(1).forEach(p => {
@@ -16311,6 +16322,58 @@ window.confirmSelfiePhotoUpload = confirmSelfiePhotoUpload;
 // ============================================================
 // עמוד משתמש מלא (במקום מודל "עמוד בתוך עמוד") — כל הגלריות שהעלה, בגריד כמו בתמונות
 // ============================================================
+// ===== פרופיל בסגנון מגזין: באנר, שם גדול ולשוניות, וכרטיס צד עם עוקבים, ביו, כפתור מעקב ורשימת "במעקב" =====
+function mdBannerHTML(st) {
+  st = st || {};
+  const p = st.profile || {};
+  if (p.banner && /^https:\/\//.test(p.banner)) return `<img src="${escHtml(p.banner)}" alt="">`;
+  const imgs = (st.market || []).map(a => (Array.isArray(a.images) ? a.images.find(Boolean) : '') || a.image).filter(Boolean)
+    .concat((st.uploads || []).map(a => (Array.isArray(a.images) ? a.images.find(Boolean) : '') || a.image).filter(Boolean)).slice(0, 4);
+  if (imgs.length) return `<div class="md-collage n${imgs.length}">${imgs.map(u => `<img src="${escHtml(u)}" alt="" loading="lazy">`).join('')}</div><span class="md-banner-name">${escHtml(st.name || '')}</span>`;
+  return `<span class="md-banner-name">${escHtml(st.name || '')}</span>`;
+}
+function mdSideHTML(st) {
+  st = st || {};
+  const me = auth.currentUser, uid = st.uid || '', name = st.name || 'משתמש';
+  const isOwn = !!(uid && me && !me.isAnonymous && me.uid === uid);
+  const following = uid && typeof isFollowing === 'function' && isFollowing(uid);
+  const bio = String((st.profile || {}).bio || '').trim();
+  const c = st.counts || {};
+  const msg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"/></svg>';
+  if (uid) setTimeout(() => mdFollowingLoad(uid, isOwn), 0);
+  return `<div class="md-card">
+      <span class="pf-avatar md-av" ${uid ? `data-av-uid="${escHtml(uid)}"` : ''}>${escHtml(String(name).trim().charAt(0) || '?')}</span>
+      <b class="md-sname">${escHtml(name)}${st.verified ? verifiedSealHTML(18) : ''}</b>
+      <span class="md-fols"><b id="md-fol">${c.followers != null ? Number(c.followers).toLocaleString('he-IL') : '—'}</b> עוקבים</span>
+      ${bio ? `<p class="md-bio">${escHtml(bio)}</p>` : isOwn ? `<button type="button" class="md-bio-add" onclick="profileEditBio()">+ הוסיפו כמה מילים עליכם</button>` : ''}
+      <div class="md-btns">${isOwn
+        ? `<button type="button" class="md-pill" onclick="profileEditBio()">עריכת פרופיל</button><button type="button" class="md-pill ghost" onclick="chOpen()">הדמות שלי</button>`
+        : uid ? `<button type="button" class="md-pill${following ? ' on' : ''}" onclick="profileToggleFollow('${artEsc(uid)}','${artEsc(name)}')">${following ? 'במעקב ✓' : 'מעקב'}</button><button type="button" class="md-ic" onclick="dmStartWith('${artEsc(uid)}','${artEsc(name)}')" title="שליחת הודעה" aria-label="שליחת הודעה">${msg}</button>` : ''}</div>
+    </div>
+    <section class="md-fwg" id="md-fwg" hidden><h3>במעקב</h3><div class="md-fwg-list" id="md-fwg-list"></div></section>`;
+}
+async function mdFollowingLoad(uid, isOwn) {
+  let map = null;
+  if (isOwn && typeof followedUids === 'object' && Object.keys(followedUids).length) map = followedUids;
+  if (!map) { try { map = (await get(ref(db, `website/public_follows/${uid}`))).val(); } catch (e) { map = null; } }
+  const box = document.getElementById('md-fwg-list'), sec = document.getElementById('md-fwg');
+  if (!box || !sec || !window._upState || window._upState.uid !== uid) return;
+  const list = Object.entries(map || {}).filter(([k, v]) => v && k !== uid).map(([k, v]) => ({ uid: k, name: String(v.name || 'משתמש'), t: Number(v.since || v.t) || 0 })).sort((a, b) => b.t - a.t);
+  if (!list.length) { sec.hidden = true; return; }
+  sec.hidden = false;
+  const row = x => `<div class="md-fw"><button type="button" class="md-fw-who" onclick="openUserPage('${artEsc(x.uid)}','${artEsc(x.name)}')">${authorAvHTML({ author: x.name, uid: x.uid })}<span>${escHtml(x.name)}</span></button><button type="button" class="md-fw-more" onclick="openUserPage('${artEsc(x.uid)}','${artEsc(x.name)}')" aria-label="לפרופיל">•••</button></div>`;
+  box.innerHTML = list.slice(0, 5).map(row).join('') + (list.length > 5 ? `<button type="button" class="md-fw-all" onclick="this.parentElement.innerHTML = this.dataset.all" data-all="${escHtml(list.map(row).join(''))}">לכל ה-${list.length}</button>` : '');
+  if (typeof avatarHydrate === 'function') avatarHydrate(box);
+}
+// רשימת "במעקב" ציבורית: כל גולש מפרסם את מי שהוא עוקב אחריו (שם + זמן), כדי שיופיע בפרופיל שלו
+function publicFollowsSync() {
+  const u = auth.currentUser; if (!u || u.isAnonymous || publicFollowsSync.done === u.uid) return;
+  publicFollowsSync.done = u.uid;
+  const out = {};
+  Object.entries(followedUids || {}).forEach(([k, v]) => { if (v) out[k] = { name: String(v.name || '').slice(0, 80), t: Number(v.since) || Date.now() }; });
+  set(ref(db, `website/public_follows/${u.uid}`), Object.keys(out).length ? out : null).catch(() => {});
+}
+window.mdFollowingLoad = mdFollowingLoad;
 function buildUserPageHTML(authorId, authorName) {
   const albums = photoGetAlbums();
   const _isAdminView = (typeof isAdmin === 'function' && isAdmin()) || (typeof isEditMode !== 'undefined' && isEditMode);
@@ -16339,9 +16402,10 @@ function buildUserPageHTML(authorId, authorName) {
   <div class="articles-page photos-page user-page photo-cols-${typeof photoGridCols !== 'undefined' ? photoGridCols : 4}" data-photos-json="${json}">
     <div class="art-inner pf-inner">
       <button type="button" class="pf-back" onclick="goBackFromUserPage()">→ חזרה</button>
-      <div class="pf-desk">
-      <aside class="pf-side"><div id="user-page-head">${profileHeadHTML(window._upState)}${pfSideHTML(window._upState)}</div></aside>
-      <div class="pf-main">${(() => {
+      <div class="md-banner" id="md-banner">${mdBannerHTML(window._upState)}</div>
+      <div class="pf-desk md-prof">
+      <aside class="pf-side md-side"><div id="user-page-head">${mdSideHTML(window._upState)}</div></aside>
+      <div class="pf-main"><h1 class="md-name" id="md-name">${escHtml(window._upState.name)}${window._upState.verified ? verifiedSealHTML(26) : ''}</h1>${(() => {
         const mine = authorId ? mktSellerItems(authorId, authorName) : [];
         const own = !!(authorId && auth.currentUser && auth.currentUser.uid === authorId);
         pfGridItems = authorPosts.filter(x => x.__repostBy);
@@ -16349,7 +16413,7 @@ function buildUserPageHTML(authorId, authorName) {
         const keys = mine.map(rentCommentsKey), views = keys.reduce((a, k) => a + photoGetViews(k), 0);
         if (authorId) setTimeout(() => { pfFollowFill(authorId); if (typeof rentSellerLoad === 'function') rentSellerLoad(authorId); }, 0);
         return `<div class="pf-stats"><span><b>${mine.length.toLocaleString('he-IL')}</b> מודעות</span><span><b class="pf-views-sum" data-keys="${escHtml(keys.join(','))}">${formatViews(views)}</b> צפיות</span><span><b id="pf-st-fol">—</b> עוקבים</span><span><b id="pf-st-fwg">—</b> נעקבים</span></div>
-          <div class="pf-tabs2" role="tablist"><button type="button" class="on" onclick="pfTab2(this, 'all')">הכל</button><button type="button" onclick="pfTab2(this, 'mkt')">${mine.length} מודעות</button><button type="button" onclick="pfTab2(this, 'rep')">${pfGridItems.length} ריפוסטים</button><button type="button" class="pf-tab-about" onclick="pfTab2(this, 'about')">פרטים</button>${own ? `<button type="button" onclick="pfTab2(this, 'offers')">הצעות שקיבלתי</button>` : ''}</div>
+          <div class="pf-tabs2 md-tabs" role="tablist"><button type="button" class="on" onclick="pfTab2(this, 'all')">בית</button><button type="button" onclick="pfTab2(this, 'mkt')">מודעות <small>${mine.length}</small></button><button type="button" onclick="pfTab2(this, 'rep')">ריפוסטים <small>${pfGridItems.length}</small></button>${own ? `<button type="button" onclick="pfTab2(this, 'offers')">פעילות</button>` : ''}<button type="button" class="pf-tab-about" onclick="pfTab2(this, 'about')">אודות</button></div>
           <div class="pf-body"><aside class="pf-about" id="pf-about">${pfAboutHTML(window._upState)}</aside><div class="pf-feed">`
           + (mine.length ? `<section class="pf-mkt" data-pf="mkt"><h3>מודעות בשוק</h3>${mktSellerGridHTML(mine, true)}</section>` : '<div class="pf-empty" data-pf="mkt">עדיין אין מודעות</div>')
           + (own ? `<section class="pf-mkt pf-offers" data-pf="offers" hidden><h3>הצעות שקיבלתי מלקוחות</h3><div class="pf-offers-feed">${offersFeedHTML('in')}</div></section>` : '')
@@ -16375,7 +16439,8 @@ function pfTab2(btn, t) {
 async function pfFollowFill(uid) {
   try {
     const v = (await get(ref(db, `website/follow_counts/${uid}`))).val() || {};
-    const f = document.getElementById('pf-st-fol'), g = document.getElementById('pf-st-fwg');
+    const f = document.getElementById('pf-st-fol'), g = document.getElementById('pf-st-fwg'), mf = document.getElementById('md-fol');
+    if (mf) mf.textContent = Math.max(0, Number(v.followers) || 0).toLocaleString('he-IL');
     if (f) f.textContent = Math.max(0, Number(v.followers) || 0).toLocaleString('he-IL');
     if (g) g.textContent = Math.max(0, Number(v.following) || 0).toLocaleString('he-IL');
   } catch (e) {}
@@ -16724,7 +16789,12 @@ function pfOverviewHTML(albums, market, posts) {
 }
 function profileRenderHead() {
   const el = document.getElementById('user-page-head');
-  if (el && window._upState) { el.innerHTML = profileHeadHTML(window._upState) + pfSideHTML(window._upState); if (typeof avatarHydrate === 'function') avatarHydrate(el); }
+  if (el && window._upState) {
+    el.innerHTML = el.closest('.md-side') ? mdSideHTML(window._upState) : profileHeadHTML(window._upState) + pfSideHTML(window._upState);
+    if (typeof avatarHydrate === 'function') avatarHydrate(el);
+    const nm = document.getElementById('md-name'); if (nm) nm.innerHTML = escHtml(window._upState.name) + (window._upState.verified ? verifiedSealHTML(26) : '');
+    const bn = document.getElementById('md-banner'); if (bn) bn.innerHTML = mdBannerHTML(window._upState);
+  }
   const ab = document.getElementById('pf-about');
   if (ab && window._upState) { ab.innerHTML = pfAboutHTML(window._upState); if (window._upState.uid && typeof rentSellerLoad === 'function') rentSellerLoad(window._upState.uid); }
 }
@@ -19400,6 +19470,7 @@ function subscribeMyFollows() {
   followsSubscribed = true;
   onValue(ref(db, `website/user_follows/${u.uid}`), snap => {
     followedUids = snap.val() || {};
+    publicFollowsSync();
   });
 }
 function isFollowing(uid) { return !!(uid && followedUids[uid]); }
@@ -19416,6 +19487,7 @@ async function toggleFollow(uid, name, btn) {
   try {
     if (willFollow) { await set(ref(db, path), { name: name || '', since: Date.now() }); followedUids[uid] = { name: name || '', since: Date.now() }; }
     else { await set(ref(db, path), null); delete followedUids[uid]; }
+    set(ref(db, `website/public_follows/${u.uid}/${uid}`), willFollow ? { name: String(name || '').slice(0, 80), t: Date.now() } : null).catch(() => {});
     // מונים ציבוריים של עוקבים/נעקבים לעמוד הפרופיל (לא חוסם אם הכלל עוד לא פורסם)
     const step = increment(willFollow ? 1 : -1);
     set(ref(db, `website/follow_counts/${uid}/followers`), step).catch(() => {});
@@ -19543,10 +19615,13 @@ function photoCommentsListHTML() {
   const list = Object.values(photoCommentsData).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
   if (!list.length) return '<div class="pc-empty">אין תגובות עדיין. היו הראשונים להגיב!</div>';
   return list.map(c => `
-    <div class="pc-comment">
-      <div class="pc-head">${escHtml(c.name || 'אורח')} · ${c.createdAt ? new Date(c.createdAt).toLocaleDateString('he-IL') : ''}${Number(c.stars) ? ' ' + pdStarsHTML(Number(c.stars)) : ''}</div>
-      ${c.text ? `<div class="pc-text">${escHtml(c.text)}</div>` : ''}
-      ${voiceCommentAudioHTML(c)}
+    <div class="pc-comment bl-cmt">
+      ${typeof authorAvHTML === 'function' ? authorAvHTML({ author: c.name || 'אורח', uid: c.uid || '' }).replace('class="au-av', 'class="bl-av au-av') : ''}
+      <div class="bl-main">
+        <div class="bl-head"><b class="bl-name">${escHtml(c.name || 'אורח')}</b><span class="bl-date">${c.createdAt ? new Date(c.createdAt).toLocaleDateString('he-IL', { day: 'numeric', month: 'short', year: 'numeric' }) : ''}</span>${Number(c.stars) ? ' ' + pdStarsHTML(Number(c.stars)) : ''}</div>
+        ${c.text ? `<div class="pc-text bl-text">${escHtml(c.text)}</div>` : ''}
+        ${voiceCommentAudioHTML(c)}
+      </div>
     </div>`).join('');
 }
 
@@ -33445,10 +33520,10 @@ function rentDetailHTML(r) {
     <div class="mp mk-pg">
       <div class="rn-det-gal mp-gal">
         <div class="rn-det-img mp-img" onclick="mkZoomOpen(this)">${rentThumb(full && full.length ? { ...r, img: full[0] } : r, true)}<button type="button" class="mk-zoom-btn" onclick="event.stopPropagation(); mkZoomOpen(this.parentElement)" aria-label="הגדלת התמונה" title="הגדלה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V5a1 1 0 0 1 1-1h4M15 4h4a1 1 0 0 1 1 1v4M20 15v4a1 1 0 0 1-1 1h-4M9 20H5a1 1 0 0 1-1-1v-4"/></svg></button></div>
-        ${imgs.length ? `<div class="mk-vthumbs">
-          <button type="button" class="mk-varr" disabled onclick="rentDetStep(this, -1)" aria-label="התמונה הקודמת">${ic('<path d="M6 15l6-6 6 6"/>')}</button>
-          <div class="mp-thumbs">${imgs.map((u, i) => `<button type="button" class="${i ? '' : 'on'}" onclick="rentDetPick(this)" aria-label="תמונה ${i + 1}"><img src="${escHtml(u)}" alt="" loading="lazy"></button>`).join('')}</div>
-          <button type="button" class="mk-varr"${imgs.length > 1 ? '' : ' disabled'} onclick="rentDetStep(this, 1)" aria-label="התמונה הבאה">${ic('<path d="M6 9l6 6 6-6"/>')}</button>
+        ${imgs.length > 1 ? `<div class="mk-vthumbs bb-thumbs${imgs.length > 7 ? ' has-more' : ''}">
+          <div class="mp-thumbs">${imgs.map((u, i) => `<button type="button" class="${i ? '' : 'on'}${i >= 6 && imgs.length > 7 ? ' bb-extra' : ''}" onclick="rentDetPick(this)" aria-label="תמונה ${i + 1}"><img src="${escHtml(u)}" alt="" loading="lazy"></button>`).join('')}${imgs.length > 7 ? `<button type="button" class="bb-more" onclick="this.closest('.bb-thumbs').classList.add('open')" aria-label="עוד ${imgs.length - 6} תמונות"><b>+${imgs.length - 6}</b><small>עוד</small></button>` : ''}</div>
+          ${r.video && /^[\w-]{11}$/.test(r.video) ? `<button type="button" class="bb-tile-act" onclick="document.querySelector('.mk-video')?.scrollIntoView({ behavior: 'smooth', block: 'center' })">${ic('<circle cx="12" cy="12" r="9"/><path d="M10 8.5l5 3.5-5 3.5z"/>')}<small>סרטון</small></button>` : ''}
+          <button type="button" class="bb-tile-act" onclick="rentRevOpen()">${ic('<path d="M12 2.8l2.8 5.8 6.4.9-4.6 4.5 1.1 6.3L12 17.3l-5.7 3 1.1-6.3L2.8 9.5l6.4-.9z"/>')}<small>ביקורות</small></button>
         </div>` : ''}
         ${galActs}
       </div>
@@ -33489,7 +33564,7 @@ function rentDetailHTML(r) {
             <button type="button" class="mk-rev-send" onclick="rentRevSend(this)">שליחת ביקורת</button>
           </div>
           <div class="mk-rev-list"></div>
-          <button type="button" class="mk-rv-all" hidden onclick="this.parentElement.classList.add('all'); this.hidden = true">לכל הביקורות</button>
+          <button type="button" class="mk-rv-all bb-allbtn" hidden onclick="this.parentElement.classList.add('all'); this.hidden = true">לכל הביקורות</button>
         </section>
       </div>
     </div>
@@ -33523,9 +33598,34 @@ function rentRevPick(btn, n) {
 const rentDemoRevs = id => { try { return JSON.parse(localStorage.getItem('rent_reviews_' + id) || '[]'); } catch (e) { return []; } };
 function rentRevListHTML(list) {
   const me = auth.currentUser && auth.currentUser.uid;
-  return list.sort((a, b) => (b.t || 0) - (a.t || 0)).map((x, i) => `<div class="mk-rev-item${i >= 4 ? ' mk-rv-more' : ''}">
-    <div class="mk-rv-who">${authorAvHTML({ author: x.name || 'גולש/ת', uid: x.rater || '' })}<b>${escHtml(x.name || 'גולש/ת')}</b>${x.t ? `<small>${new Date(x.t).toLocaleDateString('he-IL', { day: 'numeric', month: 'short', year: 'numeric' })}</small>` : ''}${x.rater && (x.rater === me || (typeof isAdmin === 'function' && isAdmin())) ? `<button type="button" onclick="rentRevDelete('${artEsc(x.rater)}')">מחיקה</button>` : ''}</div>
-    ${rentStarsHTML(Number(x.stars) || 0)}${x.text ? `<p>${escHtml(x.text)}</p>` : ''}</div>`).join('');
+  if (!list.length) return '';
+  // כרטיסי ביקורת בשורה נגללת: כוכבים, כותרת (המשפט הראשון), תגיות, טקסט מקוצר עם "עוד", ומי כתב ומתי
+  const ago = t => { const d = Math.floor((Date.now() - t) / 864e5); return d < 1 ? 'היום' : d === 1 ? 'אתמול' : d < 30 ? `לפני ${d} ימים` : d < 60 ? 'לפני חודש' : d < 365 ? `לפני ${Math.floor(d / 30)} חודשים` : `לפני ${Math.floor(d / 365) === 1 ? 'שנה' : Math.floor(d / 365) + ' שנים'}`; };
+  const card = x => {
+    const text = String(x.text || '').trim(), m = text.match(/^(.{6,70}?[.!?…]|.{1,60}(?=\s|$))/);
+    const title = m && text.length > 25 ? m[1].replace(/[.…]$/, '') : '';
+    const body = title ? text.slice(m[1].length).trim() : text;
+    const stars = Number(x.stars) || 0;
+    const pills = [
+      x.rater && typeof isUserVerified === 'function' && isUserVerified(x.rater, x.name) ? 'גולש/ת מאומת/ת' : '',
+      x.rater ? 'חבר/ה באתר' : '',
+      x.t && Date.now() - x.t < 14 * 864e5 ? 'חדש' : '',
+      stars >= 5 ? 'ממליץ/ה בחום' : stars <= 2 && stars ? 'חוויה פחות טובה' : ''
+    ].filter(Boolean).slice(0, 3);
+    return `<article class="bb-rev">
+      ${rentStarsHTML(stars)}
+      <h4>${escHtml(title || (stars ? `דירוג ${stars} מתוך 5` : 'ביקורת'))}</h4>
+      ${pills.length ? `<div class="bb-pills">${pills.map(t => `<span>${t}</span>`).join('')}</div>` : ''}
+      ${body ? `<p class="bb-rev-tx">${escHtml(body)}</p>${body.length > 160 ? `<button type="button" class="bb-rev-more" onclick="this.closest('.bb-rev').classList.toggle('open'); this.textContent = this.closest('.bb-rev').classList.contains('open') ? 'פחות' : 'עוד'">עוד</button>` : ''}` : ''}
+      <footer>${authorAvHTML({ author: x.name || 'גולש/ת', uid: x.rater || '' })}<span>פורסם ${x.t ? ago(x.t) : ''} ע״י <b>${escHtml(x.name || 'גולש/ת')}</b></span>${x.rater && (x.rater === me || (typeof isAdmin === 'function' && isAdmin())) ? `<button type="button" class="bb-rev-del" onclick="rentRevDelete('${artEsc(x.rater)}')">מחיקה</button>` : ''}</footer>
+    </article>`;
+  };
+  const sorted = list.slice().sort((a, b) => (b.t || 0) - (a.t || 0));
+  const n = sorted.length, avg = sorted.reduce((a, x) => a + (Number(x.stars) || 0), 0) / n;
+  const dist = [5, 4, 3, 2, 1].map(k => [k, sorted.filter(x => Math.round(Number(x.stars) || 0) === k).length]);
+  return `<div class="bb-revsum"><div class="bb-avg"><b>${avg.toFixed(1)}</b>${rentStarsHTML(avg)}<small>${n === 1 ? 'ביקורת אחת' : n.toLocaleString('he-IL') + ' ביקורות'}</small></div>
+      <div class="bb-dist">${dist.map(([k, c]) => `<div><span>${k} ★</span><i><em style="width:${n ? Math.round(c / n * 100) : 0}%"></em></i><small>${c}</small></div>`).join('')}</div></div>
+    <div class="bb-revrow"><div class="bb-revtrack">${sorted.map(card).join('')}</div>${n > 2 ? `<button type="button" class="bb-revnext" onclick="const t=this.previousElementSibling; t.scrollBy({ left: -t.clientWidth * .8, behavior: 'smooth' })" aria-label="הביקורות הבאות"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>` : ''}</div>`;
 }
 async function rentRevLoad() {
   const form = document.querySelector('.mk-rev-form'); if (!form) return;
@@ -33540,7 +33640,7 @@ async function rentRevLoad() {
   if (sec) {
     sec.querySelector('.mk-rv-count').textContent = !list.length ? 'אין עדיין ביקורות' : list.length === 1 ? 'ביקורת אחת' : list.length.toLocaleString('he-IL') + ' ביקורות';
     sec.querySelector('.mk-rv-avg').innerHTML = list.length ? `<b>${avg.toFixed(1)}</b>${rentStarsHTML(avg)}` : '';
-    sec.querySelector('.mk-rv-all').hidden = list.length <= 4 || sec.classList.contains('all');
+    sec.querySelector('.mk-rv-all').hidden = list.length <= 2 || sec.classList.contains('all');
   }
   if (!uid && list.length) { const avg = list.reduce((a, x) => a + Number(x.stars), 0) / list.length; document.querySelectorAll('.mk-rate').forEach(el => { el.innerHTML = rentRateHTML(avg, list.length); }); }
   const me = auth.currentUser && auth.currentUser.uid;
@@ -33822,7 +33922,7 @@ function rentDetPick(btn) {
   if (big && src) big.setAttribute('src', src);
   btn.parentElement.querySelectorAll('button').forEach(b => b.classList.toggle('on', b === btn));
   const v = btn.closest('.mk-vthumbs');
-  if (v) { const a = v.querySelectorAll('.mk-varr'); a[0].disabled = !btn.previousElementSibling; a[1].disabled = !btn.nextElementSibling; }
+  if (v) { const a = v.querySelectorAll('.mk-varr'); if (a.length === 2) { a[0].disabled = !btn.previousElementSibling; a[1].disabled = !btn.nextElementSibling; } }
 }
 // החצים של עמודת התמונות הקטנות: עוברים לתמונה הקודמת או הבאה ודואגים שתיראה ברשימה
 function rentDetStep(arrow, dir) {

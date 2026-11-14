@@ -721,6 +721,15 @@
           ".read": "auth != null && auth.uid === $uid",
           ".write": false
         }
+      },
+      "public_follows": {
+        "$uid": {
+          ".read": true,
+          ".write": "auth != null && auth.uid === $uid && auth.token.firebase.sign_in_provider !== 'anonymous'",
+          "$target": {
+            ".validate": "newData.hasChildren(['name','t']) && newData.child('name').isString() && newData.child('name').val().length <= 80 && newData.child('t').isNumber() && $target !== $uid"
+          }
+        }
       }
     }
   }
