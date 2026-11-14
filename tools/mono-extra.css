@@ -199,3 +199,6 @@ BODY :is(.hc-plus, .hc-mic) { background: #f2f5f5 !important; color: #1f2933 !im
 BODY .hc-go, BODY .hc-mic.rec { background: #47a093 !important; color: #fff !important; }
 BODY .hc-box::after { background: linear-gradient(180deg, transparent, #47a093, transparent) !important; }
 BODY .rent-page .mk-sg .mk-sg-img { background: linear-gradient(160deg, #f7f9f9, #eef2f2) !important; border-color: #e3e7e9 !important; }
+BODY .hc-box { box-shadow: none !important; border-color: #eceff1 !important; background: #fbfcfc !important; }
+BODY .hc-chip { background: #fbfcfc !important; border-color: #eceff1 !important; color: #4b5560 !important; }
+BODY .hc-mode { color: #5b6570 !important; }
