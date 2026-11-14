@@ -230,3 +230,5 @@ BODY .bb-rev-del { color: #b42318 !important; }
 BODY .bl-creator { background: #6aa9f5 !important; color: #fff !important; }
 BODY .bl-like.on { color: #47a093 !important; }
 BODY .bl-adm.rd-del { color: #b42318 !important; }
+BODY #u-wheel .uw-out { color: #ffb4b4 !important; border-color: rgba(255,120,120,.45) !important; background: rgba(40,20,20,.65) !important; }
+BODY #u-wheel .uw-out:hover { background: #b42318 !important; color: #fff !important; }

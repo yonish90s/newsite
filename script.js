@@ -35249,6 +35249,14 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.g
 // במחשב — לחיצה אחת על עיגול הפרופיל / כפתור הפרופיל; במובייל — לחיצה ארוכה. לחיצה קצרה במובייל נשארת כרגיל.
 // ============================================================
 function uwUser() { const u = auth.currentUser; return u && !u.isAnonymous ? u : null; }
+// יציאה מהמשתמש מתוך הגלגל
+async function uwLogout() {
+  uwClose();
+  try { await signOut(auth); } catch (e) { showCopyToast('היציאה נכשלה, נסו שוב'); return; }
+  if (typeof goToHomePage === 'function') goToHomePage();
+  if (typeof glassBanner === 'function') glassBanner({ title: 'יצאת מהמשתמש', sub: 'אפשר להתחבר שוב מכפתור הפרופיל', icon: 'ok', ms: 2600 }); else showCopyToast('יצאת מהמשתמש');
+}
+window.uwLogout = uwLogout;
 function uwItems(u) {
   const name = (typeof liveChatUserName === 'function' && liveChatUserName()) || u.displayName || 'אני';
   const cart = (typeof cartGet === 'function' ? cartGet() : []).reduce((a, x) => a + (x.qty || 0), 0);
@@ -35286,6 +35294,7 @@ function uwOpen(preview) {
   w.innerHTML = `<div class="uw-back"></div><div class="uw-wrap">
       <svg class="uw-ring" viewBox="0 0 400 400"><path class="uw-glow" d=""/>${uwList.map((_, i) => seg(i)).join('')}<circle cx="200" cy="200" r="64" class="uw-core"/></svg>
       <div class="uw-center"><span class="uw-av">${prof ? avatarSVG(prof) : (typeof authorAvHTML === 'function' ? authorAvHTML({ authorId: u.uid, author: u.displayName || '' }) : '')}</span><b class="uw-t"></b><small class="uw-d"></small></div>
+      <button type="button" class="uw-out" onclick="uwLogout()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="M10 17l-5-5 5-5M5 12h11"/></svg>יציאה מהמשתמש</button>
       <div class="uw-hint">בחרו פעולה · Esc לסגירה</div></div>`;
   document.body.appendChild(w);
   if (typeof avatarHydrate === 'function') avatarHydrate(w);
