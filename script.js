@@ -33704,6 +33704,42 @@ function hcMic(btn) {
 }
 window.hcSend = hcSend; window.hcSetMode = hcSetMode; window.hcMic = hcMic;
 document.addEventListener('click', e => { if (!e.target.closest('.hc-dd')) document.querySelectorAll('.hc-dd.open').forEach(d => d.classList.remove('open')); });
+// עיגולי מחלקות מתחת להאשטאגים: איור קריקטורה בשחור-לבן בתוך עיגול, לחיצה מסננת לפי המחלקה
+const DEPT_ART = {
+  phones: '<rect x="19" y="8" width="26" height="46" rx="5" fill="#fff"/><rect x="23" y="14" width="18" height="30" rx="2" fill="#e6e6e6"/><circle cx="32" cy="49" r="2.4" fill="#111"/><path d="M28 11h8"/>',
+  computers: '<rect x="12" y="13" width="40" height="26" rx="3" fill="#fff"/><rect x="16" y="17" width="32" height="18" rx="1.5" fill="#e6e6e6"/><path d="M6 45h52l-4 6H10z" fill="#fff"/><path d="M27 45h10"/>',
+  gaming: '<path d="M14 24h36c5 0 8 5 8 11 0 9-5 14-9 14-5 0-6-6-10-6H25c-4 0-5 6-10 6-4 0-9-5-9-14 0-6 3-11 8-11z" fill="#fff"/><path d="M20 31v8M16 35h8"/><circle cx="43" cy="32" r="2.4" fill="#111"/><circle cx="48" cy="37" r="2.4" fill="#111"/>',
+  electronics: '<rect x="10" y="14" width="44" height="30" rx="4" fill="#fff"/><rect x="15" y="19" width="34" height="20" rx="2" fill="#e6e6e6"/><path d="M24 52h16M32 44v8"/><path d="M27 8l5 6 5-6"/>',
+  photo: '<rect x="8" y="20" width="48" height="30" rx="6" fill="#fff"/><path d="M22 20l4-7h12l4 7" fill="#fff"/><circle cx="32" cy="35" r="10" fill="#e6e6e6"/><circle cx="32" cy="35" r="5" fill="#fff"/><circle cx="48" cy="27" r="2" fill="#111"/>',
+  tools: '<path d="M14 50 36 28" stroke-width="7"/><path d="M14 50 36 28" stroke="#fff" stroke-width="3"/><path d="M34 16c4-6 13-6 16 0l-6 6 2 4 4 2 6-6c4 5 1 14-7 16-4 1-7 0-9-2" fill="#fff"/>',
+  print3d: '<rect x="10" y="10" width="44" height="44" rx="4" fill="#fff"/><path d="M10 20h44"/><rect x="26" y="20" width="12" height="7" fill="#e6e6e6"/><path d="M32 27v6"/><path d="M22 46c2-8 18-8 20 0z" fill="#e6e6e6"/><path d="M16 46h32"/>',
+  furniture: '<path d="M20 10h24v22H20z" fill="#fff"/><path d="M24 14h16"/><path d="M16 32h32v7H16z" fill="#e6e6e6"/><path d="M19 39v15M45 39v15M23 39v10M41 39v10"/>',
+  home: '<path d="M12 30 32 13l20 17" fill="none"/><path d="M17 27v24h30V27" fill="#fff"/><rect x="27" y="36" width="10" height="15" fill="#e6e6e6"/><path d="M42 18v-6h5v10"/>',
+  fashion: '<path d="M24 10l-12 7 5 10 5-3v28h20V24l5 3 5-10-12-7c-1 4-4 6-8 6s-7-2-8-6z" fill="#fff"/><path d="M32 22v30" stroke-dasharray="2 4"/>',
+  sport: '<circle cx="32" cy="32" r="21" fill="#fff"/><path d="M32 21l9 6-3 10H26l-3-10z" fill="#e6e6e6"/><path d="M32 11v10M41 27l10-4M38 37l6 9M26 37l-6 9M23 27l-10-4"/>',
+  kids: '<circle cx="23" cy="20" r="6" fill="#fff"/><circle cx="41" cy="20" r="6" fill="#fff"/><circle cx="32" cy="35" r="15" fill="#fff"/><circle cx="27" cy="33" r="1.8" fill="#111"/><circle cx="37" cy="33" r="1.8" fill="#111"/><ellipse cx="32" cy="40" rx="5" ry="3.5" fill="#e6e6e6"/>',
+  vehicles: '<path d="M8 40v-8l6-10h28l10 10h4v8z" fill="#fff"/><path d="M18 24l-3 8h14v-8zM33 24v8h13l-7-8z" fill="#e6e6e6"/><circle cx="18" cy="42" r="5" fill="#fff"/><circle cx="46" cy="42" r="5" fill="#fff"/>',
+  books: '<path d="M10 14c8-3 15-2 22 3v35c-7-5-14-6-22-3z" fill="#fff"/><path d="M54 14c-8-3-15-2-22 3v35c7-5 14-6 22-3z" fill="#e6e6e6"/><path d="M15 22c4-1 8-1 12 1M15 29c4-1 8-1 12 1"/>',
+  music: '<path d="M36 10l14 4v6l-14-4z" fill="#111"/><path d="M36 10v32"/><ellipse cx="29" cy="44" rx="8" ry="6" fill="#fff"/><path d="M20 20c-3 3-3 8 0 11" stroke-width="2"/>',
+  garden: '<path d="M18 38h28l-4 16H22z" fill="#fff"/><path d="M32 38V22"/><path d="M32 28c-8 0-12-6-12-12 7 0 12 4 12 12zM32 24c0-7 5-12 12-12 0 7-4 12-12 12z" fill="#e6e6e6"/>',
+  pets: '<ellipse cx="32" cy="40" rx="12" ry="10" fill="#fff"/><circle cx="18" cy="26" r="5" fill="#fff"/><circle cx="27" cy="18" r="5" fill="#fff"/><circle cx="37" cy="18" r="5" fill="#fff"/><circle cx="46" cy="26" r="5" fill="#fff"/>',
+  services: '<path d="M12 26 32 14l20 12" fill="none"/><path d="M14 26h36v26H14z" fill="#fff"/><path d="M14 26c3 4 6 4 9 0 3 4 6 4 9 0 3 4 6 4 9 0 3 4 6 4 9 0" fill="#e6e6e6"/><rect x="27" y="38" width="10" height="14" fill="#e6e6e6"/>',
+  other: '<path d="M10 22 32 12l22 10v24L32 56 10 46z" fill="#fff"/><path d="M10 22l22 10 22-10M32 32v24"/><path d="M21 17l22 10" stroke-dasharray="3 3"/>'
+};
+function deptCirclesHTML() {
+  if (typeof MKT_DEPTS === 'undefined') return '';
+  const all = mktAll(), n = id => all.filter(r => r.dept === id).length;
+  const list = MKT_DEPTS.map(d => [d, n(d.id)]).sort((a, b) => (b[1] > 0) - (a[1] > 0));
+  const on = rentUI.dept && rentUI.dept !== 'all' ? rentUI.dept : '';
+  const c = ([d, k]) => `<button type="button" class="dc${on === d.id ? ' on' : ''}${k ? '' : ' empty'}" onclick="deptPick('${d.id}')" aria-pressed="${on === d.id}"><span class="dc-ring"><svg viewBox="0 0 64 64" fill="none" stroke="#111" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">${DEPT_ART[d.id] || DEPT_ART.other}</svg>${k ? `<em>${k}</em>` : ''}</span><b>${escHtml(d.name)}</b></button>`;
+  return `<nav class="dc-row" aria-label="מחלקות">${on ? `<button type="button" class="dc dc-all" onclick="deptPick('')"><span class="dc-ring"><svg viewBox="0 0 64 64" fill="none" stroke="#111" stroke-width="2.6" stroke-linecap="round"><rect x="14" y="14" width="15" height="15" rx="3" fill="#fff"/><rect x="35" y="14" width="15" height="15" rx="3" fill="#e6e6e6"/><rect x="14" y="35" width="15" height="15" rx="3" fill="#e6e6e6"/><rect x="35" y="35" width="15" height="15" rx="3" fill="#fff"/></svg></span><b>הכל</b></button>` : ''}${list.map(c).join('')}</nav>`;
+}
+function deptPick(id) {
+  rentUI.dept = !id || rentUI.dept === id ? 'all' : id;
+  rentUI.open = null;
+  rentRender();
+}
+window.deptPick = deptPick;
 function rentViewHTML() {
   const all = mktAll();
   const cities = [...new Set(all.map(r => r.city).filter(Boolean))].sort();
@@ -33735,6 +33771,7 @@ function rentViewHTML() {
       <button type="button" class="rn-geo${mkGeo ? ' on' : ''}" onclick="mkGeoToggle()" title="${mkGeo ? 'כיבוי המיקום' : 'הצגת המרחק מכל מודעה'}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>${mkGeo ? 'המיקום פעיל' : 'הפעלת מיקום'}</button>
       <nav class="rn-sorts" aria-label="מיון">${sorts.map(([v, t, d]) => `<button type="button" class="rn-sort${rentUI.sort === v ? ' on' : ''}" onclick="rentSet('sort', '${v}')">${sv(d)}${t}</button>`).join('')}</nav>
       <nav class="rn-tags" aria-label="האשטאגים">${tags.map(([k, v, t]) => `<button type="button" class="rn-tag${tagOn(k, v) ? ' on' : ''}" onclick="rentTag('${k}', '${artEsc(v)}')">#${escHtml(t)}</button>`).join('')}</nav>
+      ${deptCirclesHTML()}
     </header>
     <nav class="rn-secs">${MKT_SECS.slice(0, 1).map(x => `<button type="button" class="rn-sec${rentUI.sec === x.id ? ' on' : ''}" onclick="mktGo('${x.id}')"><span>${x.ic}</span>${x.name}<small>${secCount(x.id)}</small></button>`).join('')}</nav>
     <div class="rn-bar">

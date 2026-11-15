@@ -294,3 +294,5 @@ BODY :is(.shop-price, .shop-bal b) { color: #a8740c !important; }
 BODY .shop-bal { background: #fffaf0 !important; border-color: #f0dfb4 !important; }
 BODY .shop-card.owned { background: #f4faf8 !important; border-color: #cfe5e0 !important; }
 BODY .shop-own, BODY .shop-head p button { color: #2f7d72 !important; }
+BODY .dc.on .dc-ring { box-shadow: 3px 3px 0 #47a093 !important; }
+BODY .dc.on .dc-ring em { background: #47a093 !important; }
