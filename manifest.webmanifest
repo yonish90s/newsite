@@ -1,7 +1,7 @@
 {
   "name": "שיתוף רעיונות",
   "short_name": "שיתוף רעיונות",
-  "description": "תמונות, קומיקס וקהילה",
+  "description": "השוק של הגולשים: יד 2, השכרת ציוד, אחסון, פרויקטים וקהילה",
   "lang": "he",
   "dir": "rtl",
   "start_url": "/",
@@ -10,7 +10,70 @@
   "background_color": "#111111",
   "theme_color": "#111111",
   "icons": [
-    { "src": "/icon-192.png?v=2", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-    { "src": "/icon-512.png?v=2", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    {
+      "src": "/icon-192.png?v=2",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png?v=2",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "id": "/",
+  "categories": [
+    "shopping",
+    "social",
+    "lifestyle"
+  ],
+  "orientation": "portrait",
+  "shortcuts": [
+    {
+      "name": "פרסום מודעה",
+      "short_name": "פרסום",
+      "url": "/?go=publish",
+      "icons": [
+        {
+          "src": "/icon-192.png?v=2",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "הפיד שלי",
+      "short_name": "פיד",
+      "url": "/?go=feed",
+      "icons": [
+        {
+          "src": "/icon-192.png?v=2",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "חנות הנקודות",
+      "short_name": "חנות",
+      "url": "/?go=shop",
+      "icons": [
+        {
+          "src": "/icon-192.png?v=2",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "הקניות שלי",
+      "short_name": "הקניות",
+      "url": "/?go=orders",
+      "icons": [
+        {
+          "src": "/icon-192.png?v=2",
+          "sizes": "192x192"
+        }
+      ]
+    }
   ]
 }

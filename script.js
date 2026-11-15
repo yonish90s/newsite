@@ -14591,7 +14591,7 @@ function sideRailHTML() {
           ${row('photos', 'תמונות גולשים', "homeGo('photos')")}${row('comics', 'קומיקס', "homeGo('comics')")}${row('forums', 'פורומים', "homeGo('forums')")}
           ${row('friends', 'חברים', "homeGo('friends')")}${row('offers', 'הצעות', "homeGo('offers')")}</div>`)}
         ${grp('more', 'עוד', `<div class="xr-list">
-          ${row('invest', 'תמכו / השקיעו בנו', "investOpen('invest')", { t: '10%' })}${row('fb', 'שליחת ביקורת', 'feedbackOpen()')}
+          ${window.matchMedia && window.matchMedia('(display-mode: standalone)').matches ? '' : row('phone', 'התקנת האפליקציה', 'appInstall()', { t: 'חדש' })}${row('invest', 'תמכו / השקיעו בנו', "investOpen('invest')", { t: '10%' })}${row('fb', 'שליחת ביקורת', 'feedbackOpen()')}
           ${admin ? row('stats', 'נתוני האתר', "adminOpenTab('stats')") : ''}</div>`)}
       </div>
     </div>`;
@@ -32641,7 +32641,29 @@ function aiInit() {
 }
 function aiCopyText(t) { try { navigator.clipboard.writeText(t); showCopyToast('הועתק'); } catch (e) {} }
 let aiInstallEvt = null;
-window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); aiInstallEvt = e; });
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault(); aiInstallEvt = e;
+  // הצעה עדינה להתקין את האפליקציה — פעם אחת למכשיר, אחרי שהגולש כבר הסתובב קצת
+  try { if (localStorage.getItem('app_offer_seen')) return; } catch (e2) { return; }
+  setTimeout(() => {
+    if (!aiInstallEvt || document.getElementById('app-offer')) return;
+    try { localStorage.setItem('app_offer_seen', '1'); } catch (e3) {}
+    const b = document.createElement('div'); b.id = 'app-offer';
+    b.innerHTML = `<img src="/icon-192.png?v=2" alt=""><div><b>שיתוף רעיונות — כאפליקציה</b><small>פתיחה מהירה מהמסך הראשי, בלי דפדפן</small></div><button type="button" class="go" onclick="appInstall()">התקנה</button><button type="button" class="x" onclick="this.parentElement.remove()" aria-label="סגירה">✕</button>`;
+    document.body.appendChild(b);
+  }, 25000);
+});
+window.addEventListener('appinstalled', () => { const b = document.getElementById('app-offer'); if (b) b.remove(); aiInstallEvt = null; });
+function appInstall() { const b = document.getElementById('app-offer'); if (b) b.remove(); aiDownload('pwa'); }
+window.appInstall = appInstall;
+// קיצורי דרך מהאייקון של האפליקציה (?go=...)
+(function appShortcut() {
+  let go = ''; try { go = new URLSearchParams(location.search).get('go') || ''; } catch (e) {}
+  if (!go) return;
+  try { history.replaceState(null, '', location.pathname); } catch (e) {}
+  const run = () => { try { ({ publish: () => mkPubOpen(), feed: () => mktFeedOpen(), shop: () => shopPageOpen(), orders: () => myShopOpen('hist') })[go]?.(); } catch (e) {} };
+  setTimeout(run, 2200);
+})();
 function aiDownload(os) {
   if (os === 'pwa') {
     if (aiInstallEvt) { aiInstallEvt.prompt(); aiInstallEvt = null; return; }
