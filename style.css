@@ -21040,3 +21040,39 @@ html body #app-offer .go { font: inherit; font-weight: 800; font-size: 14px; pad
 html body #app-offer .x { border: 0; background: none; color: #8a929b; cursor: pointer; font-size: 14px; }
 html.theme-dark body #app-offer { background: #17181b; border-color: #2b2d31; }
 html.theme-dark body #app-offer b { color: #f1f1f3; }
+
+/* ===== דף ההצעות: "מה אתה צריך?" + הצעות מתאימות מהשוק ===== */
+html body .rq { margin: 0 0 14px; display: grid; gap: 10px; direction: rtl; }
+html body .rq-form { padding: 12px; border-radius: 16px; background: #f4faf8; border: 1px solid #d5ebe6; display: grid; gap: 8px; }
+html body .rq-form > b { font-size: 15px; color: #111827; }
+html body .rq-row { display: flex; gap: 8px; flex-wrap: wrap; }
+html body .rq-row > input { flex: 1 1 180px; min-width: 0; font: inherit; font-size: 14px; padding: 9px 12px; border-radius: 10px; border: 1px solid #cfe5e0; background: #fff; }
+html body .rq-max { display: flex; align-items: center; gap: 4px; padding: 0 10px; border-radius: 10px; border: 1px solid #cfe5e0; background: #fff; flex: 0 0 120px; }
+html body .rq-max span { font-size: 13px; color: #6b7280; white-space: nowrap; }
+html body .rq-max input { width: 100%; min-width: 0; border: 0; outline: 0; font: inherit; font-size: 14px; padding: 9px 0; background: none; }
+html body .rq-row button { font: inherit; font-weight: 800; font-size: 14px; padding: 9px 16px; border-radius: 10px; border: 0; background: #47a093; color: #fff; cursor: pointer; }
+html body .rq-hint { margin: 0; font-size: 13px; color: #6b7280; text-align: center; }
+html body .rq-g { border: 1px solid #e6e9eb; border-radius: 14px; background: #fff; overflow: hidden; }
+html body .rq-g > header { display: flex; align-items: center; gap: 8px; padding: 9px 12px; background: #f8faf9; border-bottom: 1px solid #eef1f2; }
+html body .rq-g > header span { flex: 1; min-width: 0; font-size: 14px; color: #374151; }
+html body .rq-g > header small { font-size: 12px; color: #2f7d72; font-weight: 700; white-space: nowrap; }
+html body .rq-x { border: 0; background: none; color: #8a929b; cursor: pointer; font-size: 13px; }
+html body .rq-list { display: grid; }
+html body .rq-off { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-top: 1px solid #f2f4f5; }
+html body .rq-off:first-child { border-top: 0; }
+html body .rq-img { width: 58px; height: 46px; flex: none; border: 0; padding: 0; border-radius: 8px; overflow: hidden; cursor: pointer; background: #f2f5f5; }
+html body .rq-img img, html body .rq-img .rn-ph { width: 100%; height: 100%; object-fit: cover; display: grid; place-items: center; }
+html body .rq-tx { flex: 1; min-width: 0; cursor: pointer; display: flex; flex-direction: column; }
+html body .rq-tx b { font-size: 13.5px; color: #111827; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+html body .rq-tx small { font-size: 12px; color: #6b7280; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+html body .rq-end { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex: none; }
+html body .rq-price { font-size: 14px; font-weight: 800; color: #2f7d72; }
+html body .rq-btns { display: flex; gap: 4px; }
+html body .rq-btns button { font: inherit; font-size: 11.5px; font-weight: 700; padding: 4px 9px; border-radius: 999px; border: 1px solid #cfe5e0; background: #fff; color: #2f7d72; cursor: pointer; white-space: nowrap; }
+html body .rq-btns button.deal { background: #e9a23b; border-color: #e9a23b; color: #fff; }
+html body .rq-btns button.cart { background: #47a093; border-color: #47a093; color: #fff; }
+html body .rq-more { display: block; width: 100%; border: 0; border-top: 1px solid #f2f4f5; background: #fbfcfc; padding: 8px; font: inherit; font-size: 13px; font-weight: 700; color: #2f7d72; cursor: pointer; }
+html.theme-dark body .rq-form { background: #16201e; border-color: #23322f; }
+html.theme-dark body :is(.rq-g, .rq-row > input, .rq-max) { background: #17181b; border-color: #2b2d31; color: #f1f1f3; }
+html.theme-dark body .rq-g > header { background: #1c1d20; border-color: #2b2d31; }
+html.theme-dark body :is(.rq-form > b, .rq-tx b, .rq-g > header span) { color: #f1f1f3; }

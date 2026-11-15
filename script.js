@@ -28162,6 +28162,47 @@ function offersFeedHTML(tab) {
     ${demo ? '<p class="ofx-note">כך תיראה הרשימה כשיתחילו להגיע הצעות מלקוחות</p>' : ''}
   </div>`;
 }
+// ===== "מה אתה צריך ועד כמה?" בדף ההצעות: הבקשה נשמרת, ומודעות מתאימות מוצגות כהצעות (ומגיעה התראה על חדשות) =====
+function reqBoxHTML() {
+  const wants = (typeof buyWants !== 'undefined' ? buyWants : []).slice().reverse().slice(0, 6);
+  const money = n => '₪' + Math.round(n).toLocaleString('he-IL');
+  const card = m => { const r = m.r; const can = typeof mktCartable === 'function' && mktCartable(r);
+    return `<div class="rq-off">
+      <button type="button" class="rq-img" onclick="ofpClose(); rentOpen('${artEsc(r.id)}')">${typeof rentThumb === 'function' ? rentThumb(r) : ''}</button>
+      <div class="rq-tx" onclick="ofpClose(); rentOpen('${artEsc(r.id)}')"><b>${escHtml(r.title)}</b><small>${escHtml(r.owner || '')}${r.city ? ' · ' + escHtml(r.city) : ''}</small></div>
+      <div class="rq-end"><b class="rq-price">${r.price ? money(r.price) : '—'}</b>
+        <div class="rq-btns">${r.shId && r.uid ? `<button type="button" class="deal" title="הצעת מחיר" onclick="openPriceOffer('${artEsc(r.shId)}', '${artEsc(r.title || '')}', '${artEsc(r.uid)}', '${artEsc(r.owner || '')}')">הצעה</button>` : ''}${can ? `<button type="button" class="cart" title="הוספה לעגלה" onclick="rentCartAdd('${artEsc(r.id)}')">+ עגלה</button>` : ''}<button type="button" class="view" onclick="ofpClose(); rentOpen('${artEsc(r.id)}')">צפייה</button></div></div>
+    </div>`; };
+  const group = (w) => {
+    let ms = []; try { ms = typeof buyMatch === 'function' ? buyMatch(w) : []; } catch (e) {}
+    const i = buyWants.indexOf(w);
+    return `<section class="rq-g"><header><span>🔍 <b>${escHtml(w.q === '*' ? 'כל דבר' : w.q)}</b>${w.max ? ` · עד ${money(w.max)}` : ''}</span><small>${ms.length ? `${ms.length} הצעות` : 'מחפש… נודיע כשתעלה מודעה מתאימה'}</small><button type="button" class="rq-x" onclick="reqDel(${i})" aria-label="מחיקת הבקשה">✕</button></header>
+      ${ms.length ? `<div class="rq-list">${ms.slice(0, 4).map(card).join('')}</div>${ms.length > 4 ? `<button type="button" class="rq-more" onclick="ofpClose(); mktGo('all'); setTimeout(() => { rentSet('q', '${artEsc(w.q === '*' ? '' : w.q)}'); }, 200)">לכל ${ms.length} ההצעות</button>` : ''}` : ''}</section>`;
+  };
+  return `<div class="rq">
+    <form class="rq-form" onsubmit="reqSend(event)"><b>מה אתה צריך?</b>
+      <div class="rq-row"><input id="rq-q" maxlength="80" placeholder="למשל: מברגה נטענת, ספה, מדפסת תלת מימד…" autocomplete="off" required>
+      <label class="rq-max"><span>עד ₪</span><input id="rq-max" type="number" min="0" step="1" inputmode="numeric" placeholder="מחיר"></label>
+      <button type="submit">מצא לי הצעות</button></div></form>
+    ${wants.length ? wants.map(group).join('') : '<p class="rq-hint">כתבו מה אתם מחפשים ועד כמה — נביא לכאן הצעות מהשוק, ונודיע כשתעלה מודעה חדשה שמתאימה.</p>'}
+  </div>`;
+}
+function reqSend(ev) {
+  if (ev) ev.preventDefault();
+  const q = (document.getElementById('rq-q') || {}).value || '', max = Number((document.getElementById('rq-max') || {}).value) || 0;
+  if (!q.trim() || typeof buyParse !== 'function') return;
+  const items = buyParse(q.trim() + (max ? ' עד ' + max : ''));
+  const it = items[0] || { q: q.trim(), max };
+  if (max) it.max = max;
+  const seen = (typeof buyMatch === 'function' ? buyMatch(it) : []).map(m => m.r.id);
+  buyWantAdd(it, seen); buyWantsSave();
+  if (typeof ntAsk === 'function') ntAsk();
+  if (typeof offersRerender === 'function') offersRerender();
+  const n = seen.length;
+  showCopyToast(n ? `נמצאו ${n} הצעות — ונודיע על חדשות` : 'שמרנו — נודיע כשתעלה מודעה מתאימה');
+}
+function reqDel(i) { if (typeof buyWants === 'undefined' || !buyWants[i]) return; buyWants.splice(i, 1); buyWantsSave(); if (typeof offersRerender === 'function') offersRerender(); }
+Object.assign(window, { reqSend, reqDel });
 function ofpListHTML() {
   const u = auth.currentUser, me = u ? u.uid : '';
   const all = Object.values(offersMap);
@@ -28204,6 +28245,7 @@ function ofpListHTML() {
     </div>`;
   };
   return `<div class="ofp">
+    ${reqBoxHTML()}
     <div class="ofp-stats">${stat('מחכות לתשובה שלי', waiting)}${stat('הצעות שקיבלתי', inList.length)}${stat('ממוצע הצעה', avg ? '₪' + avg.toLocaleString('he-IL') : '—')}</div>
     <nav class="pfg-tabs"><button type="button" class="pfg-tab${offersTab === 'in' ? ' on' : ''}" onclick="offersSetTab('in')"><b>${inList.length}</b> התקבלו</button><button type="button" class="pfg-tab${offersTab === 'out' ? ' on' : ''}" onclick="offersSetTab('out')"><b>${outList.length}</b> נשלחו</button><button type="button" class="pfg-tab${offersTab === 'orders' ? ' on' : ''}" onclick="offersSetTab('orders')"><b>${orders.length}</b> הזמנות</button></nav>
     ${offersTab === 'orders' ? `<div class="ofp-list">${orders.length ? orders.map(o => orderCardHTML(o, me)).join('') : orderCardHTML(null, me) + '<div class="pf-empty">עדיין אין הזמנות — הצעה שאושרה הופכת להזמנה עם חוזה ומעקב משלוח</div>'}</div>` : offersFeedHTML(offersTab)}
