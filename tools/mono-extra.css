@@ -289,3 +289,8 @@ BODY .orb-path span.done { background: #47a093 !important; color: #fff !importan
 BODY .orb-path span.cur { color: #2f7d72 !important; box-shadow: 0 0 0 2px #47a093 !important; }
 BODY .orb-path span.big { background: linear-gradient(180deg, #ffe08a, #e0a91c) !important; color: #6b4a06 !important; }
 BODY .orb-prog i { background: linear-gradient(90deg, #47a093, #7cc4b7) !important; }
+BODY :is(.shop-buy:not(.short), .shop-tag, .pk-badge) { background: #47a093 !important; color: #fff !important; }
+BODY :is(.shop-price, .shop-bal b) { color: #a8740c !important; }
+BODY .shop-bal { background: #fffaf0 !important; border-color: #f0dfb4 !important; }
+BODY .shop-card.owned { background: #f4faf8 !important; border-color: #cfe5e0 !important; }
+BODY .shop-own, BODY .shop-head p button { color: #2f7d72 !important; }

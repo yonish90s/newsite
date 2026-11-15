@@ -1439,7 +1439,7 @@ function renderTopNav() {
     navLinksContainer.appendChild(a);
   });
   // פרופיל ופיד — אחרי "בית"
-  [['פרופיל', () => { const u = auth.currentUser; if (u && !u.isAnonymous) openUserPage(u.uid); else if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); }], ['פיד', () => mktFeedOpen()]].forEach(([t, go]) => {
+  [['פרופיל', () => { const u = auth.currentUser; if (u && !u.isAnonymous) openUserPage(u.uid); else if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); }], ['פיד', () => mktFeedOpen()], ['חנות', () => shopPageOpen()]].forEach(([t, go]) => {
     const a = document.createElement('a');
     a.href = '#'; a.textContent = t; a.className = 'nav-x';
     a.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); window.__detailOpen = false; go(); });
@@ -16391,6 +16391,7 @@ function igCardHTML(o) {
 }
 async function igFill(uid) {
   try {
+    get(ref(db, `website/raffle/plays/${uid}/perks`)).then(sn => { const p = sn.val() || {}; const av = document.querySelector('.ig-card .ig-av'); if (av) av.classList.toggle('pk-frame', !!p.frame); const nm = document.querySelector('.ig-card .ig-name'); if (nm && !nm.querySelector('.pk-badge, .pk-crown')) nm.insertAdjacentHTML('beforeend', perksMarkHTML(p)); }).catch(() => {});
     const v = (await get(ref(db, `website/follow_counts/${uid}`))).val() || {};
     const f = document.getElementById('ig-fol'), g = document.getElementById('ig-fwg');
     if (f) f.textContent = Math.max(0, Number(v.followers) || 0).toLocaleString('he-IL');
@@ -30841,14 +30842,27 @@ const ORB_STAGES = 50;
 const orbKey = () => { const u = auth.currentUser; return 'orb_' + (u && !u.isAnonymous ? u.uid : 'guest'); };
 function orbLocal() { try { return JSON.parse(localStorage.getItem(orbKey()) || '{}') || {}; } catch (e) { return {}; } }
 function orbLocalSet(v) { try { localStorage.setItem(orbKey(), JSON.stringify(v)); } catch (e) {} }
-function ticketEarned() { try { return 1 + (typeof ordersGet === 'function' ? ordersGet() : []).length; } catch (e) { return 1; } }
+function ticketEarned() { let bought = 0; try { bought = Number((orbStats().perks || {}).ticket) || 0; } catch (e) {} try { return 1 + bought + (typeof ordersGet === 'function' ? ordersGet() : []).length; } catch (e) { return 1 + bought; } }
 function orbStats() {
   const u = auth.currentUser, uid = u && !u.isAnonymous ? u.uid : '';
   let remote = null; try { remote = uid && rfData && rfData.plays && rfData.plays[uid] ? rfData.plays[uid] : null; } catch (e) {}
   const loc = orbLocal();
-  const used = Math.max(Number(loc.used) || 0, remote ? Number(remote.used) || 0 : 0), points = Math.max(Number(loc.points) || 0, remote ? Number(remote.points) || 0 : 0);
-  const wins = Math.max(Number(loc.wins) || 0, remote ? Number(remote.wins) || 0 : 0);
-  return { used, points, wins, uid, stage: Math.min(ORB_STAGES, wins + 1) };
+  // הרשומה החדשה יותר קובעת (כדי שקנייה בחנות תוריד נקודות ולא "תחזור")
+  const src = remote && (Number(remote.t) || 0) > (Number(loc.t) || 0) ? remote : loc;
+  const used = Number(src.used) || 0, points = Math.max(0, Number(src.points) || 0), wins = Number(src.wins) || 0;
+  return { used, points, wins, uid, perks: Object.assign({}, src.perks || {}), stage: Math.min(ORB_STAGES, wins + 1) };
+}
+// שמירת מצב המשחק/החנות — במכשיר, ולמשתמש מחובר גם במסד (בשביל הדירוג)
+function orbSave(next) {
+  next.t = Date.now(); orbLocalSet(next);
+  const u = auth.currentUser;
+  if (u && !u.isAnonymous && next.used >= 1) {
+    const name = String((typeof liveChatUserName === 'function' && liveChatUserName()) || u.displayName || 'משתמש').slice(0, 60);
+    const rec = { used: next.used, points: next.points, wins: next.wins || 0, name, t: next.t };
+    if (next.perks && Object.keys(next.perks).length) rec.perks = next.perks;
+    set(ref(db, `website/raffle/plays/${u.uid}`), rec).catch(() => {});
+    try { if (rfData && rfData.plays) rfData.plays[u.uid] = rec; } catch (e) {}
+  }
 }
 function ticketCount() { return Math.max(0, ticketEarned() - orbStats().used); }
 function ticketPillEl() {
@@ -30932,8 +30946,8 @@ function raffleRender() {
       ${admin ? `<form class="rf-add" onsubmit="rfCandAdd(event)"><b>הוספת מועמד (מנהל)</b><input id="rf-cn" maxlength="60" placeholder="שם המועמד" required><input id="rf-cd" maxlength="300" placeholder="כמה מילים (לא חובה)"><button type="button" class="rf-imgbtn" onclick="rfPickImg('rf-cimg', this)">תמונה</button><input type="hidden" id="rf-cimg"><button type="submit">הוספה</button></form>` : ''}`;
   } else if (rfTab === 'rank') {
     const st = orbStats();
-    const list = Object.entries(rfData.plays || {}).filter(([, v]) => v && Number(v.points) > 0).map(([uid, v]) => ({ uid, name: v.name || 'משתמש', points: Number(v.points) || 0, used: Number(v.used) || 0 })).sort((a, b) => b.points - a.points).slice(0, 20);
-    body = `<div class="orb-rank">${list.length ? list.map((x, i) => `<div class="orb-rrow${x.uid === st.uid ? ' mine' : ''}"><span class="orb-rpos">${i < 3 ? ['🥇', '🥈', '🥉'][i] : i + 1}</span>${authorAvHTML({ author: x.name, uid: x.uid })}<b>${escHtml(x.name)}</b><small>${x.used} משחקים</small><em>${x.points.toLocaleString('he-IL')} נק׳</em></div>`).join('') : '<div class="rf-empty">עדיין אין שחקנים בדירוג — היו הראשונים!</div>'}</div>
+    const list = Object.entries(rfData.plays || {}).filter(([, v]) => v && Number(v.points) > 0).map(([uid, v]) => ({ uid, name: v.name || 'משתמש', points: Number(v.points) || 0, used: Number(v.used) || 0, perks: v.perks || {} })).sort((a, b) => b.points - a.points).slice(0, 20);
+    body = `<div class="orb-rank">${list.length ? list.map((x, i) => `<div class="orb-rrow${x.uid === st.uid ? ' mine' : ''}"><span class="orb-rpos">${i < 3 ? ['🥇', '🥈', '🥉'][i] : i + 1}</span><span class="${x.perks && x.perks.frame ? 'pk-frame' : ''}">${authorAvHTML({ author: x.name, uid: x.uid })}</span><b>${escHtml(x.name)}${perksMarkHTML(x.perks)}</b><small>${x.used} משחקים</small><em>${x.points.toLocaleString('he-IL')} נק׳</em></div>`).join('') : '<div class="rf-empty">עדיין אין שחקנים בדירוג — היו הראשונים!</div>'}</div>
       ${st.uid ? '' : '<p class="rf-note"><button type="button" class="rf-login" onclick="openLiveChatLogin()">התחברו</button> כדי שהנקודות שלכם ייכנסו לדירוג.</p>'}`;
   } else {
     body = `<div class="orb-game">${orbGameHTML()}</div>`;
@@ -30983,13 +30997,8 @@ async function orbPick(i) {
   await new Promise(r => setTimeout(r, 350));
   orbGame.pick = i; orbGame.done = true;
   const r = orbGame.res[i], st = orbStats();
-  const next = { used: st.used + 1, points: st.points + (r === 'red' ? 0 : r), wins: Math.min(ORB_STAGES, st.wins + (r === 'red' ? 0 : 1)) };
-  orbLocalSet(next);
-  const u = auth.currentUser;
-  if (u && !u.isAnonymous) {
-    const name = String((typeof liveChatUserName === 'function' && liveChatUserName()) || u.displayName || 'משתמש').slice(0, 60);
-    set(ref(db, `website/raffle/plays/${u.uid}`), { used: next.used, points: next.points, wins: next.wins, name, t: Date.now() }).catch(() => {});
-  }
+  const next = { used: st.used + 1, points: st.points + (r === 'red' ? 0 : r), wins: Math.min(ORB_STAGES, st.wins + (r === 'red' ? 0 : 1)), perks: st.perks };
+  orbSave(next);
   if (typeof ticketPillPaint === 'function') ticketPillPaint();
   if (r !== 'red' && next.wins > st.wins && typeof showCopyToast === 'function') showCopyToast(next.wins >= ORB_STAGES ? '🏁 סיימת את כל 50 השלבים!' : `עלית לשלב ${next.wins + 1}!`);
   orbRefresh();
@@ -31018,6 +31027,55 @@ function orbPopRender() {
   p.innerHTML = `<div class="orb-pop-h"><b>כדורי המזל</b><button type="button" onclick="orbPopClose(); raffleOpen('rank')">🏅 דירוג</button><button type="button" onclick="orbPopClose(); raffleOpen('prizes')">🏆 פרסים</button><button type="button" class="x" onclick="orbPopClose()" aria-label="סגירה">✕</button></div><div class="orb-game">${orbGameHTML()}</div>`;
 }
 Object.assign(window, { orbPick, orbAgain, orbPopOpen, orbPopClose });
+// ===== חנות הנקודות: קונים עם נקודות כדורי המזל =====
+const SHOP_ITEMS = [
+  { k: 'ticket', n: 1, price: 30, t: 'כרטיס הגרלה', d: 'עוד סיבוב בכדורי המזל', ic: 'ticket' },
+  { k: 'ticket', n: 3, price: 75, t: 'חבילת 3 כרטיסים', d: 'שלושה סיבובים במחיר מוזל', ic: 'ticket3', tag: 'משתלם' },
+  { k: 'badge', n: 1, price: 80, t: 'תג "אספן"', d: 'תג ירוק ליד השם בדירוג ובפרופיל', ic: 'badge', once: true },
+  { k: 'frame', n: 1, price: 120, t: 'מסגרת זהב', d: 'מסגרת זהב לתמונת הפרופיל', ic: 'frame', once: true },
+  { k: 'crown', n: 1, price: 200, t: 'כתר', d: 'כתר ליד השם בדירוג — לגדולים באמת', ic: 'crown', once: true, tag: 'נדיר' }
+];
+function shopIcon(ic) {
+  if (ic === 'ticket') return bwTicketHTML(64);
+  if (ic === 'ticket3') return `<span class="shop-stack">${bwTicketHTML(52)}${bwTicketHTML(52)}${bwTicketHTML(52)}</span>`;
+  if (ic === 'badge') return '<svg viewBox="0 0 48 48" width="56" height="56"><path d="M24 4l5 4 6-1 2 6 5 4-2 6 2 6-5 4-2 6-6-1-5 4-5-4-6 1-2-6-5-4 2-6-2-6 5-4 2-6 6 1z" fill="#47a093"/><path d="M16 24l6 6 11-12" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  if (ic === 'frame') return '<svg viewBox="0 0 48 48" width="58" height="58"><circle cx="24" cy="24" r="20" fill="none" stroke="url(#bwc-rim)" stroke-width="5"/><circle cx="24" cy="20" r="6" fill="#c9d1d8"/><path d="M12 36c2-6 7-8 12-8s10 2 12 8" fill="#c9d1d8"/></svg>';
+  return '<svg viewBox="0 0 48 48" width="58" height="58"><path d="M6 36 9 14l9 9 6-13 6 13 9-9 3 22z" fill="url(#bwc-face)" stroke="#a87410" stroke-width="2" stroke-linejoin="round"/><rect x="6" y="36" width="36" height="5" rx="2" fill="#d9a21e"/><circle cx="24" cy="25" r="2.6" fill="#d63a3a"/></svg>';
+}
+function shopPageOpen() {
+  if (typeof mainContent === 'undefined' || !mainContent) return;
+  mainContent.innerHTML = `<div class="shop-page">${shopPageHTML()}</div>`;
+  try { window.scrollTo(0, 0); } catch (e) {}
+}
+function shopPageHTML() {
+  const st = orbStats(), perks = st.perks || {};
+  const card = (it, i) => {
+    const owned = it.once && perks[it.k], can = st.points >= it.price;
+    return `<article class="shop-card${owned ? ' owned' : ''}">${it.tag ? `<em class="shop-tag">${it.tag}</em>` : ''}
+      <div class="shop-art">${shopIcon(it.ic)}</div><b>${escHtml(it.t)}</b><small>${escHtml(it.d)}</small>
+      <div class="shop-foot"><span class="shop-price">${bwCoinHTML(18)}${it.price}</span>
+        ${owned ? '<span class="shop-own">יש לך ✓</span>' : `<button type="button" class="shop-buy${can ? '' : ' short'}" onclick="shopBuy(${i})">${can ? 'קנייה' : `חסרות ${it.price - st.points}`}</button>`}</div></article>`;
+  };
+  return `<header class="shop-head"><div><h1>חנות הנקודות</h1><p>קונים עם הנקודות שזוכים בהן ב<button type="button" onclick="orbPopOpen()">כדורי המזל</button></p></div>
+      <div class="shop-bal">${bwCoinHTML(30)}<b>${st.points.toLocaleString('he-IL')}</b><small>נקודות</small></div></header>
+    <div class="shop-grid">${SHOP_ITEMS.map(card).join('')}</div>
+    <p class="shop-note">אין מספיק נקודות? שחקו בכדורי המזל — כל זכייה מוסיפה נקודות. כרטיס מתנה לכל גולש, ועוד כרטיס על כל הזמנה.</p>`;
+}
+function shopBuy(i) {
+  const it = SHOP_ITEMS[i]; if (!it) return;
+  const st = orbStats(), perks = Object.assign({}, st.perks || {});
+  if (it.once && perks[it.k]) return;
+  if (st.points < it.price) { showCopyToast(`חסרות ${it.price - st.points} נקודות — שחקו בכדורי המזל`); return; }
+  if (!confirm(`לקנות "${it.t}" ב-${it.price} נקודות?`)) return;
+  perks[it.k] = (Number(perks[it.k]) || 0) + it.n;
+  orbSave({ used: st.used, points: st.points - it.price, wins: st.wins, perks });
+  if (typeof ticketPillPaint === 'function') ticketPillPaint();
+  if (typeof glassBanner === 'function') glassBanner({ title: 'נקנה!', sub: it.t, icon: 'ok', ms: 2200 }); else showCopyToast('נקנה: ' + it.t);
+  const pg = document.querySelector('.shop-page'); if (pg) pg.innerHTML = shopPageHTML();
+}
+// סימני החנות ליד שם בדירוג/בפרופיל
+function perksMarkHTML(perks) { perks = perks || {}; return `${perks.crown ? '<span class="pk-crown" title="כתר">👑</span>' : ''}${perks.badge ? '<span class="pk-badge" title="אספן">אספן</span>' : ''}`; }
+Object.assign(window, { shopPageOpen, shopBuy });
 async function rfVote(id) {
   const u = auth.currentUser; if (!u || u.isAnonymous) { openLiveChatLogin(); return; }
   const same = rfData.votes[u.uid] === id;
