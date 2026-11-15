@@ -81,6 +81,19 @@
           "value": "no-store"
         }
       ]
+    },
+    {
+      "source": "/well-known/assetlinks.json",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        }
+      ]
     }
   ],
   "redirects": [
@@ -95,6 +108,12 @@
       ],
       "destination": "/ai-blocked.html",
       "permanent": false
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/.well-known/assetlinks.json",
+      "destination": "/well-known/assetlinks.json"
     }
   ]
 }

@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "com.black1white00.app",
+        "sha256_cert_fingerprints": ["87:75:AA:78:7B:BF:0C:B0:80:B8:4A:80:CC:37:97:26:3F:8D:72:6C:93:E7:F4:32:7E:2F:2E:38:37:1A:1D:E7"]
+      }
+    }]
