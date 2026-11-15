@@ -14428,7 +14428,7 @@ function homeTabsGet() {
 }
 function homeChipsHTML(photos, comics, stories, active, extraCls) {
   active = active || 'foryou';
-  const tabs = ['foryou', ...homeTabsGet()].filter(k => !['secondhand', 'communities', 'ai', 'feed', 'comics', 'stories', 'partnerships', 'reviews', 'requests', 'photos', 'products', 'store', 'tinder', 'blinddate'].includes(k));
+  const tabs = ['foryou', ...homeTabsGet()].filter(k => !['upload', 'secondhand', 'communities', 'ai', 'feed', 'comics', 'stories', 'partnerships', 'reviews', 'requests', 'photos', 'products', 'store', 'tinder', 'blinddate'].includes(k));
   if (!tabs.includes(active) && HOME_TABS_ALL[active]) tabs.push(active);
   // מחוץ לעמוד הבית "בשבילך" מחזיר לבית
   const act = k => k === 'foryou' ? (extraCls ? 'goToHomePage()' : '') : HOME_TABS_ALL[k][1];
