@@ -748,6 +748,27 @@
             }
           }
         }
+      },
+      "raffle": {
+        ".read": true,
+        "prizes": {
+          ".write": "auth != null && root.child('website/admin_uid').val() === auth.uid",
+          "$place": {
+            ".validate": "$place.matches(/^[123]$/) && newData.child('title').isString() && newData.child('title').val().length >= 1 && newData.child('title').val().length <= 80 && (!newData.child('value').exists() || newData.child('value').isNumber()) && (!newData.child('img').exists() || (newData.child('img').isString() && newData.child('img').val().length <= 400000))"
+          }
+        },
+        "candidates": {
+          ".write": "auth != null && root.child('website/admin_uid').val() === auth.uid",
+          "$id": {
+            ".validate": "newData.child('name').isString() && newData.child('name').val().length >= 1 && newData.child('name').val().length <= 60 && newData.child('t').isNumber() && (!newData.child('desc').exists() || (newData.child('desc').isString() && newData.child('desc').val().length <= 300)) && (!newData.child('img').exists() || (newData.child('img').isString() && newData.child('img').val().length <= 400000))"
+          }
+        },
+        "votes": {
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid && auth.token.firebase.sign_in_provider !== 'anonymous'",
+            ".validate": "newData.isString() && root.child('website/raffle/candidates/' + newData.val()).exists()"
+          }
+        }
       }
     }
   }

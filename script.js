@@ -30729,7 +30729,7 @@ function ticketCount() { try { return (typeof ordersGet === 'function' ? ordersG
 function ticketPillEl() {
   const b = document.createElement('button');
   b.type = 'button'; b.id = 'ticket-pill'; b.className = 'wallet-pill ticket-pill';
-  b.setAttribute('onclick', 'ticketOpen()'); b.title = 'כרטיסי ההגרלה שלי'; b.setAttribute('aria-label', 'כרטיסי ההגרלה שלי');
+  b.setAttribute('onclick', "raffleOpen('tickets')"); b.title = 'כרטיסי ההגרלה שלי'; b.setAttribute('aria-label', 'כרטיסי ההגרלה שלי');
   ticketPillPaint(b);
   return b;
 }
@@ -30752,6 +30752,103 @@ function ticketOpen() {
   document.body.appendChild(m);
 }
 window.ticketOpen = ticketOpen;
+// ===== ההגרלה: פרסים למקום 1/2/3 (המנהל קובע) ומועמדים שהגולשים מצביעים עליהם =====
+// website/raffle/prizes/{1|2|3} = { title, img, value } · website/raffle/candidates/{id} = { name, desc, img, t } · website/raffle/votes/{uid} = candidateId
+const RF_PLACES = [['1', 'מקום ראשון', '🥇'], ['2', 'מקום שני', '🥈'], ['3', 'מקום שלישי', '🥉']];
+const RF_TROPHY = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8.5 20h7M10 17h4"/></svg>';
+let rfTab = 'prizes', rfData = { prizes: {}, candidates: {}, votes: {} }, rfUnsub = null;
+function prizePillEl() {
+  const b = document.createElement('button');
+  b.type = 'button'; b.id = 'prize-pill'; b.className = 'wallet-pill prize-pill';
+  b.setAttribute('onclick', "raffleOpen('prizes')"); b.title = 'פרסים והצבעה'; b.setAttribute('aria-label', 'פרסים והצבעה');
+  b.innerHTML = `<span class="prize-ic">${RF_TROPHY}</span><small>פרסים</small>`;
+  return b;
+}
+function raffleOpen(tab) {
+  if (tab) rfTab = tab;
+  let m = document.getElementById('raffle-modal');
+  if (!m) {
+    m = document.createElement('div'); m.id = 'raffle-modal'; m.className = 'mkpub-modal';
+    m.addEventListener('click', e => { if (e.target === m) raffleClose(); });
+    document.body.appendChild(m);
+    try {
+      rfUnsub = onValue(ref(db, 'website/raffle'), snap => { const v = snap.val() || {}; rfData = { prizes: v.prizes || {}, candidates: v.candidates || {}, votes: v.votes || {} }; raffleRender(); }, () => raffleRender());
+    } catch (e) { raffleRender(); }
+  }
+  raffleRender();
+}
+function raffleClose() { const m = document.getElementById('raffle-modal'); if (m) m.remove(); if (rfUnsub) { try { rfUnsub(); } catch (e) {} rfUnsub = null; } }
+function rfCounts() { const c = {}; Object.values(rfData.votes || {}).forEach(id => { if (typeof id === 'string') c[id] = (c[id] || 0) + 1; }); return c; }
+function raffleRender() {
+  const m = document.getElementById('raffle-modal'); if (!m) return;
+  const admin = typeof isAdmin === 'function' && isAdmin();
+  const u = auth.currentUser, me = u && !u.isAnonymous ? u.uid : '';
+  const tab = (id, t) => `<button type="button" class="${rfTab === id ? 'on' : ''}" onclick="raffleOpen('${id}')">${t}</button>`;
+  let body = '';
+  if (rfTab === 'prizes') {
+    body = `<div class="rf-prizes">${RF_PLACES.map(([k, t, ic]) => { const p = rfData.prizes[k] || {};
+      return `<article class="rf-prize p${k}"><span class="rf-medal">${ic}</span><div class="rf-pimg">${p.img ? `<img src="${escHtml(p.img)}" alt="">` : RF_TROPHY}</div>
+        <div class="rf-ptx"><small>${t}</small><b>${escHtml(p.title || 'יפורסם בקרוב')}</b>${p.value ? `<span>שווי ₪${Number(p.value).toLocaleString('he-IL')}</span>` : ''}</div>
+        ${admin ? `<button type="button" class="rf-edit" onclick="rfPrizeEdit('${k}')">עריכה</button>` : ''}</article>`; }).join('')}</div>
+      <p class="rf-note">כל הזמנה באתר = כרטיס הגרלה. הזוכים במקום הראשון, השני והשלישי מקבלים את הפרסים.</p>`;
+  } else if (rfTab === 'vote') {
+    const cnt = rfCounts(), total = Object.values(cnt).reduce((a, b) => a + b, 0);
+    const list = Object.entries(rfData.candidates || {}).filter(([, c]) => c && c.name).map(([id, c]) => Object.assign({ id, n: cnt[id] || 0 }, c)).sort((a, b) => b.n - a.n || (a.t || 0) - (b.t || 0));
+    const mine = me ? rfData.votes[me] : '';
+    const av = c => c.img ? `<img src="${escHtml(c.img)}" alt="">` : `<span>${escHtml(String(c.name).trim().charAt(0) || '?')}</span>`;
+    const top = list.slice(0, 3);
+    const podium = top.length ? `<div class="rf-podium">${[1, 0, 2].map(i => top[i] ? `<div class="rf-pod p${i + 1}"><div class="rf-pav">${av(top[i])}<em>${RF_PLACES[i][2]}</em></div><b>${escHtml(top[i].name)}</b><small>${top[i].n} קולות</small><div class="rf-step"><span>${i + 1}</span></div></div>` : '<div class="rf-pod empty"></div>').join('')}</div>` : '';
+    body = `${podium}<div class="rf-cands">${list.length ? list.map((c, i) => { const pct = total ? Math.round(c.n / total * 100) : 0;
+      return `<div class="rf-cand${mine === c.id ? ' mine' : ''}"><span class="rf-rank">${i + 1}</span><div class="rf-cav">${av(c)}</div>
+        <div class="rf-cmain"><b>${escHtml(c.name)}</b>${c.desc ? `<small>${escHtml(c.desc)}</small>` : ''}<div class="rf-bar"><i style="width:${pct}%"></i></div><small class="rf-num">${c.n} קולות · ${pct}%</small></div>
+        <button type="button" class="rf-vote${mine === c.id ? ' on' : ''}" onclick="rfVote('${artEsc(c.id)}')">${mine === c.id ? 'הצבעת ✓' : 'הצבעה'}</button>
+        ${admin ? `<button type="button" class="rf-del" onclick="rfCandDel('${artEsc(c.id)}')" aria-label="מחיקת מועמד">✕</button>` : ''}</div>`; }).join('') : '<div class="rf-empty">עדיין אין מועמדים — הם יופיעו כאן בקרוב.</div>'}</div>
+      <p class="rf-note">${me ? 'אפשר להצביע למועמד אחד, ולהחליף את ההצבעה בכל רגע.' : '<button type="button" class="rf-login" onclick="openLiveChatLogin()">התחברו</button> כדי להצביע.'} ${total ? `סה״כ ${total} קולות.` : ''}</p>
+      ${admin ? `<form class="rf-add" onsubmit="rfCandAdd(event)"><b>הוספת מועמד (מנהל)</b><input id="rf-cn" maxlength="60" placeholder="שם המועמד" required><input id="rf-cd" maxlength="300" placeholder="כמה מילים (לא חובה)"><button type="button" class="rf-imgbtn" onclick="rfPickImg('rf-cimg', this)">תמונה</button><input type="hidden" id="rf-cimg"><button type="submit">הוספה</button></form>` : ''}`;
+  } else {
+    const n = ticketCount();
+    body = `<div class="ticket-big">${bwTicketHTML(120)}<b>${n.toLocaleString('he-IL')}</b><span>${n === 1 ? 'כרטיס אחד' : 'כרטיסים'}</span></div>
+      <ul class="ticket-how"><li><b>🛒 כל הזמנה באתר</b><span>= כרטיס הגרלה אחד</span></li><li><b>🎟️ יותר כרטיסים</b><span>= יותר סיכויים לזכות</span></li></ul>`;
+  }
+  m.innerHTML = `<div class="mkpub-card rf-card" role="dialog" aria-modal="true" aria-label="ההגרלה">
+    <div class="mkpub-head"><b>ההגרלה</b><button type="button" class="mkpub-x" onclick="raffleClose()" aria-label="סגירה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <nav class="rf-tabs">${tab('prizes', '🏆 פרסים')}${tab('vote', '🗳️ מועמדים')}${tab('tickets', '🎟️ הכרטיסים שלי')}</nav>${body}</div>`;
+}
+async function rfVote(id) {
+  const u = auth.currentUser; if (!u || u.isAnonymous) { openLiveChatLogin(); return; }
+  const same = rfData.votes[u.uid] === id;
+  try { await set(ref(db, `website/raffle/votes/${u.uid}`), same ? null : id); showCopyToast(same ? 'ההצבעה בוטלה' : 'הצבעת! תודה'); } catch (e) { showCopyToast('לא הצלחנו לשמור את ההצבעה'); }
+}
+function rfPickImg(hid, btn) {
+  const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
+  inp.onchange = async () => { const f = inp.files[0]; if (!f) return; const d = typeof artCompressImage === 'function' ? await artCompressImage(f, 600, 0.8) : ''; if (d && d.length < 380000) { document.getElementById(hid).value = d; btn.textContent = 'תמונה ✓'; } };
+  inp.click();
+}
+async function rfCandAdd(ev) {
+  ev.preventDefault();
+  const name = document.getElementById('rf-cn').value.trim().slice(0, 60), desc = document.getElementById('rf-cd').value.trim().slice(0, 300), img = document.getElementById('rf-cimg').value;
+  if (!name) return;
+  try { await set(push(ref(db, 'website/raffle/candidates')), Object.assign({ name, t: Date.now() }, desc ? { desc } : {}, img ? { img } : {})); showCopyToast('המועמד נוסף'); } catch (e) { showCopyToast('לא הצלחנו להוסיף (כללי המסד?)'); }
+}
+async function rfCandDel(id) {
+  if (!confirm('למחוק את המועמד? הקולות שלו יימחקו מהספירה.')) return;
+  try { await set(ref(db, `website/raffle/candidates/${id}`), null); } catch (e) { showCopyToast('לא הצלחנו למחוק'); }
+}
+function rfPrizeEdit(k) {
+  const p = rfData.prizes[k] || {};
+  const card = document.querySelector(`.rf-prize.p${k}`); if (!card) return;
+  card.innerHTML = `<form class="rf-pform" onsubmit="rfPrizeSave(event, '${k}')"><b>${RF_PLACES[+k - 1][2]} ${RF_PLACES[+k - 1][1]}</b>
+    <input id="rf-pt${k}" maxlength="80" placeholder="שם הפרס" value="${escHtml(p.title || '')}" required><input id="rf-pv${k}" type="number" min="0" placeholder="שווי ב-₪ (לא חובה)" value="${escHtml(String(p.value || ''))}">
+    <button type="button" class="rf-imgbtn" onclick="rfPickImg('rf-pi${k}', this)">${p.img ? 'החלפת תמונה' : 'תמונה'}</button><input type="hidden" id="rf-pi${k}" value="">
+    <div class="rf-pbtns"><button type="submit">שמירה</button>${p.title ? `<button type="button" class="ghost" onclick="rfPrizeClear('${k}')">ניקוי</button>` : ''}<button type="button" class="ghost" onclick="raffleRender()">ביטול</button></div></form>`;
+}
+async function rfPrizeSave(ev, k) {
+  ev.preventDefault();
+  const p = rfData.prizes[k] || {}, title = document.getElementById('rf-pt' + k).value.trim().slice(0, 80), value = Number(document.getElementById('rf-pv' + k).value) || 0, img = document.getElementById('rf-pi' + k).value || p.img || '';
+  try { await set(ref(db, `website/raffle/prizes/${k}`), Object.assign({ title }, value ? { value } : {}, img ? { img } : {})); showCopyToast('הפרס נשמר'); } catch (e) { showCopyToast('לא הצלחנו לשמור (כללי המסד?)'); }
+}
+async function rfPrizeClear(k) { try { await set(ref(db, `website/raffle/prizes/${k}`), null); } catch (e) {} }
+Object.assign(window, { raffleOpen, raffleClose, raffleRender, rfVote, rfPickImg, rfCandAdd, rfCandDel, rfPrizeEdit, rfPrizeSave, rfPrizeClear });
 function walletPillPaint(b) {
   b = b || document.getElementById('wallet-pill'); if (!b) return;
   b.innerHTML = `${bwCoinHTML(20)}<b>${walletBalance.toLocaleString('he-IL')}</b><small>ניקוד</small>`;
@@ -30840,14 +30937,15 @@ Object.assign(window, { walletOpen, walletClose });
     const wrap = [...mc.querySelectorAll('.cmp-wrap')].find(w => w.offsetParent);
     if (!held.wallet) held.wallet = walletPillEl();
     if (!held.ticket) held.ticket = ticketPillEl(); else ticketPillPaint(held.ticket);
-    const btns = ['dm', 'chat', 'a11y', 'wallet', 'ticket'].map(k => held[k]).filter(Boolean);
+    if (!held.prize) held.prize = prizePillEl();
+    const btns = ['dm', 'chat', 'a11y', 'wallet', 'ticket', 'prize'].map(k => held[k]).filter(Boolean);
     if (wrap) {
       let box = wrap.querySelector(':scope > .cmp-fabs');
       if (!box) { box = document.createElement('div'); box.className = 'cmp-fabs'; wrap.appendChild(box); }
       btns.forEach(b => { if (b.parentElement !== box) box.appendChild(b); });
     } else {
       btns.forEach(b => {
-        if (b === held.wallet || b === held.ticket) { b.remove(); return; }   // הניקוד וההגרלה מופיעים רק לצד השורה
+        if (b === held.wallet || b === held.ticket || b === held.prize) { b.remove(); return; }   // הניקוד וההגרלה מופיעים רק לצד השורה
         const home = b === held.a11y && a11yHome ? a11yHome : document.body;
         if (b.parentElement !== home) home.appendChild(b);
       });

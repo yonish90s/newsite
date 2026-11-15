@@ -256,3 +256,15 @@ BODY .mk-sg .mk-sg-acts .mk-act2 > .mk-a-buy.in-cart svg { stroke: #fff !importa
 BODY .ticket-pill { background: #fffaf0 !important; border-color: #f0dfb4 !important; }
 BODY .ticket-pill b, BODY .ticket-big b { color: #a8740c !important; }
 BODY .ticket-how li { background: #fffaf0 !important; border-color: #f0dfb4 !important; }
+
+BODY .prize-pill .prize-ic { background: linear-gradient(180deg, #ffe08a, #e0a91c) !important; color: #6b4a06 !important; }
+BODY .prize-pill small { color: #2f7d72 !important; }
+BODY .rf-prize.p1 { background: linear-gradient(90deg, #fff8e1, #fff) !important; border-color: #f1d98a !important; }
+BODY .rf-prize.p3 { background: linear-gradient(90deg, #fbefe6, #fff) !important; border-color: #ecd1bd !important; }
+BODY .rf-pod.p1 .rf-step { background: linear-gradient(180deg, #f3c94a, #d49a16) !important; }
+BODY .rf-pod.p3 .rf-step { background: linear-gradient(180deg, #e3a77b, #c07a45) !important; }
+BODY .rf-pod.p1 .rf-pav { border-color: #f3c94a !important; }
+BODY :is(.rf-bar i, .rf-vote:not(.on), .rf-pbtns button:not(.ghost), .rf-add button[type=submit]) { background: #47a093 !important; color: #fff !important; }
+BODY :is(.rf-vote.on, .rf-edit, .rf-imgbtn, .rf-ptx span, .rf-login) { color: #2f7d72 !important; }
+BODY .rf-cand.mine { border-color: #47a093 !important; background: #f4faf8 !important; }
+BODY .rf-pimg { color: #b98516 !important; }
