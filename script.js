@@ -4844,6 +4844,7 @@ function buildSiteDefaultTogglesBar() {
 window.buildSiteDefaultTogglesBar = buildSiteDefaultTogglesBar;
 
 function buildAgeFilterSidebarBox() {
+  return '';   // הוסר: אין יותר תוכן למבוגרים באתר
   const isVerified = typeof sessionStorage !== 'undefined' && sessionStorage.getItem('age_verified') === 'true';
   
   return `
@@ -14474,7 +14475,7 @@ function homeCategoriesHTML(photos, comics, stories) {
   const tiles = [
     ['photos', 'תמונות גולשים', '#ece8ff|#4c3bcf', homeCover(photos)], ['comics', 'קומיקס', '#ffe4ec|#b4235a', homeCover(comics)],
     ['forums', 'פורומים', '#e3edfd|#1d4fb8'], ['friends', 'חברים', '#fff1d1|#9a5b00'],
-    ['blinddate', 'Blind Date', '#ffe1e1|#c0262d'], ['tinder', 'התאמות', '#f4e8ff|#7e3bc4'], ['products', 'מוצרים', '#dff3fd|#0b6aa1'],
+    ['products', 'מוצרים', '#dff3fd|#0b6aa1'],
     ['news', 'חדשות', '#eef0f3|#3f4652'], ['offers', 'הצעות', '#ffecd9|#b04a0f']
   ].filter(([k]) => ['photos', 'comics', 'stories', 'news', 'offers'].includes(k) || commFindPage(k));
   const iconKey = { blinddate: 'blind', tinder: 'match' };
@@ -16469,7 +16470,7 @@ function buildUserPageHTML(authorId, authorName) {
     const matchesId = authorId && a.authorId === authorId;
     const matchesName = a.author && authorName && a.author.toLowerCase() === String(authorName).toLowerCase();
     const isAuthor = (a.authorId && authorId) ? matchesId : matchesName;
-    return isAuthor && a.approved !== false && (!a.adminOnly || _isAdminView) && (!a.expiresAt || a.expiresAt > now);
+    return isAuthor && !a.isAdult && a.approved !== false && (!a.adminOnly || _isAdminView) && (!a.expiresAt || a.expiresAt > now);
   });
   pfeedShown.profile = 0;
   const authorPosts = repostsMerge(feedByAuthor(feedAllItems(), authorId, authorName), authorId ? [authorId] : [], feedAllItems().concat(mktRepostItems()));
@@ -16549,7 +16550,7 @@ function feedAllItems() {
   const isAdminView = (typeof isAdmin === 'function' && isAdmin()) || (typeof isEditMode !== 'undefined' && isEditMode);
   const now = Date.now();
   const photos = ((typeof photoGetAlbums === 'function') ? photoGetAlbums() : [])
-    .filter(a => a && a.approved !== false && (!a.adminOnly || isAdminView) && (!a.expiresAt || a.expiresAt > now))
+    .filter(a => a && !a.isAdult && a.approved !== false && (!a.adminOnly || isAdminView) && (!a.expiresAt || a.expiresAt > now))
     .map(a => Object.assign({}, a, { __type: 'photo' }));
   return photos
     .map(x => Object.assign(x, { __t: (typeof photoAlbumTime === 'function' ? photoAlbumTime(x) : 0) || 0 }))
@@ -17219,6 +17220,7 @@ function kinksRadarHTML(kinks) {
 let kEdit = [];
 let sEdit = seekNormalize();
 function openKinksEditor() {
+  return;   // הוסר מהאתר (תוכן מיני — לא מותר בחנויות האפליקציות)
   const user = auth.currentUser;
   if (!user || user.isAnonymous) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
   const st = window._upState;
@@ -18033,8 +18035,8 @@ document.getElementById('photo-save').addEventListener('click', async () => {
   const isTemporary = tempInp ? tempInp.checked : false;
   const newExpiresAt = isTemporary ? (Date.now() + 24 * 60 * 60 * 1000) : null;
 
-  const adultInp = document.getElementById('photo-is-adult');
-  const isAdult = adultInp ? adultInp.checked : false;
+  // תוכן למבוגרים הוסר מהאתר (דרישות חנויות האפליקציות) — לא נשמר יותר כתוכן 18+
+  const isAdult = false;
 
   const adminOnlyInp = document.getElementById('photo-admin-only');
   const adminOnly = adminOnlyInp ? adminOnlyInp.checked : false;
@@ -29186,9 +29188,7 @@ function homeExploreHTML() {
     ['forums', 'פורומים', 'לדבר, לשאול ולהכיר', 'linear-gradient(135deg,#93c5fd,#6366f1)'],
     ['comics', 'קומיקס', 'ציורים ורצועות', 'linear-gradient(135deg,#a7f3d0,#14b8a6)'],
     ['stories', 'סיפורים', 'קצרים ומאמרים', 'linear-gradient(135deg,#fda4af,#e11d48)'],
-    ['friends', 'חברים', 'הכירו גולשים חדשים', 'linear-gradient(135deg,#c4b5fd,#7c3aed)'],
-    ['blind', 'Blind Date', 'התאמה ודייט אמיתי', 'linear-gradient(135deg,#f0abfc,#db2777)'],
-    ['match', 'התאמות', 'החליקו ומצאו התאמה', 'linear-gradient(135deg,#fecaca,#ef4444)']
+    ['friends', 'חברים', 'הכירו גולשים חדשים', 'linear-gradient(135deg,#c4b5fd,#7c3aed)']
   ];
   const pageKey = { products: 'products', blind: 'blinddate', match: 'tinder' };
   const cards = items.map(([k, title, sub, grad]) => {
@@ -30836,13 +30836,18 @@ function walletPillEl() {
   walletPillPaint(b);
   return b;
 }
-// כרטיסי הגרלה: כל הזמנה באתר = כרטיס אחד (נספר מההזמנות שבמכשיר)
-// כרטיסים: כרטיס אחד מתנה לכל גולש + כרטיס על כל הזמנה, פחות מה שכבר שוחק
+// כרטיסים: כרטיס מתנה + כרטיס חינם ביום, פחות מה שכבר שוחק
 const ORB_STAGES = 50;
 const orbKey = () => { const u = auth.currentUser; return 'orb_' + (u && !u.isAnonymous ? u.uid : 'guest'); };
 function orbLocal() { try { return JSON.parse(localStorage.getItem(orbKey()) || '{}') || {}; } catch (e) { return {}; } }
 function orbLocalSet(v) { try { localStorage.setItem(orbKey(), JSON.stringify(v)); } catch (e) {} }
-function ticketEarned() { let bought = 0; try { bought = Number((orbStats().perks || {}).ticket) || 0; } catch (e) {} try { return 1 + bought + (typeof ordersGet === 'function' ? ordersGet() : []).length; } catch (e) { return 1 + bought; } }
+// כרטיסים בלי שום קנייה: כרטיס מתנה, ועוד כרטיס חינם בכל יום (מהיום הראשון שנכנסו). אפשר גם לקנות בנקודות המשחק
+function ticketEarned() {
+  let bought = 0; try { bought = Number((orbStats().perks || {}).ticket) || 0; } catch (e) {}
+  let first = 0; try { first = Number(localStorage.getItem('orb_first')) || 0; if (!first) { first = Date.now(); localStorage.setItem('orb_first', String(first)); } } catch (e) { first = Date.now(); }
+  const days = Math.max(0, Math.floor((Date.now() - first) / 864e5));
+  return 1 + days + bought;
+}
 function orbStats() {
   const u = auth.currentUser, uid = u && !u.isAnonymous ? u.uid : '';
   let remote = null; try { remote = uid && rfData && rfData.plays && rfData.plays[uid] ? rfData.plays[uid] : null; } catch (e) {}
@@ -30883,7 +30888,7 @@ function ticketOpen() {
   m.innerHTML = `<div class="mkpub-card ticket-card" role="dialog" aria-modal="true" aria-label="כרטיסי ההגרלה שלי">
     <div class="mkpub-head"><b>כרטיסי ההגרלה שלי</b><button type="button" class="mkpub-x" onclick="document.getElementById('ticket-modal').remove()" aria-label="סגירה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
     <div class="ticket-big">${bwTicketHTML(120)}<b>${n.toLocaleString('he-IL')}</b><span>${n === 1 ? 'כרטיס אחד' : 'כרטיסים'}</span></div>
-    <ul class="ticket-how"><li><b>🛒 כל הזמנה באתר</b><span>= כרטיס הגרלה אחד</span></li><li><b>🎟️ יותר כרטיסים</b><span>= יותר סיכויים לזכות</span></li></ul>
+    <ul class="ticket-how"><li><b>🎁 כל יום</b><span>= כרטיס חינם</span></li><li><b>🎟️ יותר כרטיסים</b><span>= יותר סיכויים לזכות</span></li></ul>
     <p class="ticket-note">פרטי ההגרלה הקרובה והפרסים יפורסמו כאן בקרוב.</p>
     <button type="button" class="mkpub-go" onclick="document.getElementById('ticket-modal').remove(); goToHomePage()">לשוק — לצבור כרטיסים</button>
   </div>`;
@@ -30929,7 +30934,7 @@ function raffleRender() {
       return `<article class="rf-prize p${k}"><span class="rf-medal">${ic}</span><div class="rf-pimg">${p.img ? `<img src="${escHtml(p.img)}" alt="">` : RF_TROPHY}</div>
         <div class="rf-ptx"><small>${t}</small><b>${escHtml(p.title || 'יפורסם בקרוב')}</b>${p.value ? `<span>שווי ₪${Number(p.value).toLocaleString('he-IL')}</span>` : ''}</div>
         ${admin ? `<button type="button" class="rf-edit" onclick="rfPrizeEdit('${k}')">עריכה</button>` : ''}</article>`; }).join('')}</div>
-      <p class="rf-note">כל הזמנה באתר = כרטיס הגרלה. הזוכים במקום הראשון, השני והשלישי מקבלים את הפרסים.</p>`;
+      <p class="rf-note">ההשתתפות חינם — כרטיס מתנה ועוד כרטיס בכל יום, בלי צורך לקנות. הזוכים במקום הראשון, השני והשלישי מקבלים את הפרסים.</p>`;
   } else if (rfTab === 'vote') {
     const cnt = rfCounts(), total = Object.values(cnt).reduce((a, b) => a + b, 0);
     const list = Object.entries(rfData.candidates || {}).filter(([, c]) => c && c.name).map(([id, c]) => Object.assign({ id, n: cnt[id] || 0 }, c)).sort((a, b) => b.n - a.n || (a.t || 0) - (b.t || 0));
@@ -30975,7 +30980,7 @@ function orbGameHTML() {
     <div class="orb-prog"><i style="width:${Math.round(Math.min(st.wins, ORB_STAGES) / ORB_STAGES * 100)}%"></i></div></div>`;
   const head = path + `<div class="orb-head"><span class="orb-tk">${bwTicketHTML(34)}<b>${n}</b><small>${n === 1 ? 'כרטיס' : 'כרטיסים'}</small></span><span class="orb-pts">${bwCoinHTML(22)}<b>${st.points.toLocaleString('he-IL')}</b><small>נקודות</small></span></div>`;
   if (!orbGame && n > 0) orbNewRound();
-  if (!orbGame) return head + `<div class="orb-empty">${bwTicketHTML(90)}<b>נגמרו הכרטיסים</b><span>כל הזמנה באתר = כרטיס נוסף</span><button type="button" class="rf-vote" onclick="raffleClose(); goToHomePage()">לשוק</button></div>`;
+  if (!orbGame) return head + `<div class="orb-empty">${bwTicketHTML(90)}<b>נגמרו הכרטיסים</b><span>מחר מחכה לכם כרטיס חינם חדש</span><button type="button" class="rf-vote" onclick="raffleClose(); goToHomePage()">לשוק</button></div>`;
   const g = orbGame;
   const orb = (i) => {
     const r = g.res[i], open = g.done, picked = g.pick === i;
@@ -30988,7 +30993,7 @@ function orbGameHTML() {
     : `<div class="orb-msg win"><b>זכית ב-${r} נקודות! 🎉</b><span>הנקודות נכנסו לדירוג</span></div>`;
   const again = g.done ? (n > 0 ? `<button type="button" class="orb-again" onclick="orbAgain()">עוד סיבוב · ${n} ${n === 1 ? 'כרטיס' : 'כרטיסים'}</button>` : `<button type="button" class="orb-again ghost" onclick="raffleOpen('rank')">לדירוג</button>`) : '';
   return head + `<div class="orb-row">${[0, 1, 2, 3].map(orb).join('')}</div>${msg}${again}
-    <p class="rf-note">🎁 כל גולש מקבל כרטיס אחד מתנה, ועל כל הזמנה באתר — עוד כרטיס.</p>`;
+    <p class="rf-note">🎁 כרטיס מתנה לכל גולש, ועוד כרטיס חינם בכל יום — בלי צורך לקנות.</p>`;
 }
 async function orbPick(i) {
   if (!orbGame || orbGame.done || ticketCount() < 1) return;
@@ -31059,7 +31064,7 @@ function shopPageHTML() {
   return `<header class="shop-head"><div><h1>חנות הנקודות</h1><p>קונים עם הנקודות שזוכים בהן ב<button type="button" onclick="orbPopOpen()">כדורי המזל</button></p></div>
       <div class="shop-bal">${bwCoinHTML(30)}<b>${st.points.toLocaleString('he-IL')}</b><small>נקודות</small></div></header>
     <div class="shop-grid">${SHOP_ITEMS.map(card).join('')}</div>
-    <p class="shop-note">אין מספיק נקודות? שחקו בכדורי המזל — כל זכייה מוסיפה נקודות. כרטיס מתנה לכל גולש, ועוד כרטיס על כל הזמנה.</p>`;
+    <p class="shop-note">אין מספיק נקודות? שחקו בכדורי המזל — כל זכייה מוסיפה נקודות. כרטיס מתנה לכל גולש, ועוד כרטיס חינם בכל יום.</p>`;
 }
 function shopBuy(i) {
   const it = SHOP_ITEMS[i]; if (!it) return;
@@ -33091,7 +33096,7 @@ function usedAll() {
   try {
     const pg = (typeof pages !== 'undefined' && Array.isArray(pages)) ? pages.find(x => x && x.id === 'page-secondhand-main') : null;
     const m = pg && (pg.content || '').match(/data-photos-json="([^"]*)"/);
-    raw = (m ? (JSON.parse(decodeURIComponent(m[1])) || []) : []).filter(x => x && x.id && x.title && x.approved !== false && !x.adminOnly && !mktExpired(x.createdAt)); } catch (e) {}
+    raw = (m ? (JSON.parse(decodeURIComponent(m[1])) || []) : []).filter(x => x && x.id && x.title && !x.isAdult && x.approved !== false && !x.adminOnly && !mktExpired(x.createdAt)); } catch (e) {}
   const real = raw.map(x => ({ id: 'sh_' + x.id, shId: x.id, kind: 'used', offer: x.offerType || x.category || 'מכירה', title: x.title, price: parseFloat(String(x.price || '').replace(/[^\d.]/g, '')) || 0, priceTxt: x.price || '',
     unitTxt: x.priceUnit || '', city: x.region || '', owner: x.author || '', uid: x.authorId || '', t: Number(x.createdAt) || 0, stock: Number.isFinite(Number(x.stock)) && x.stock !== null && x.stock !== '' ? Number(x.stock) : null, img: x.image || (Array.isArray(x.images) && x.images[0]) || '',
     bizName: String(x.bizName || '').slice(0, 60), video: youtubeVideoId(x.video), link: mktLinkUrl(x.link), pk: PROJ_KINDS[x.projectKind] ? x.projectKind : '', pd: PROJ_SUB[x.projectArea] ? x.projectArea : '',
