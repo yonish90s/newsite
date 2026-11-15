@@ -27652,6 +27652,7 @@ function openPriceOffer(id, title, sellerUid, sellerName) {
         <div class="of-slide-l"><span>₪${lo.toLocaleString('he-IL')}</span><b id="offer-pct">${ask ? Math.round(def / ask * 100) + '% מהמבוקש' : ''}</b><span>₪${hi.toLocaleString('he-IL')}</span></div></div>
       <label class="of-price"><span>₪</span><input id="offer-price" type="number" inputmode="numeric" min="1" max="10000000" value="${def}" placeholder="כמה תרצו להציע?" oninput="offerSlideSync(this.value)"></label>
       <textarea id="offer-note" class="rp-note" rows="2" maxlength="300" placeholder="הודעה למוכר (לא חובה)"></textarea>
+      ${dealShareFormHTML('of')}
       <div class="rp-actions"><button type="button" class="pf-btn" onclick="closePriceOffer()">ביטול</button><button type="button" class="pf-btn rp-send" onclick="sendPriceOffer('${artEsc(title)}', '${artEsc(sellerUid)}', '${artEsc(sellerName)}')">שליחת ההצעה</button></div>
     </div>`;
   m.addEventListener('click', e => { if (e.target === m) closePriceOffer(); });
@@ -27678,7 +27679,7 @@ async function sendPriceOffer(title, sellerUid, sellerName, priceArg, quiet) {
   const note = String((document.getElementById('offer-note') || {}).value || '').trim();
   const text = `שלום! הצעת מחיר ל"${String(title || '').slice(0, 100)}": ₪${price.toLocaleString('he-IL')}${note ? '\n' + note : ''}`;
   closePriceOffer();
-  await offerRecord({ kind: 'price', toUid: sellerUid, toName: sellerName, itemId: window.__offerItemId || '', title, price, note });
+  await offerRecord({ kind: 'price', toUid: sellerUid, toName: sellerName, itemId: window.__offerItemId || '', title, price, note, share: dealShareRead('of') });
   // הודעה פרטית קצרה למוכר, ופתיחת מרכז ההצעות (שם רואים את הסטטוס ומתמקחים)
   try {
     const u = auth.currentUser;
@@ -27947,7 +27948,7 @@ async function offerRecord(o) {
     const status = o.kind === 'loan' ? 'signed' : 'pending';
     const rec = { kind: o.kind || 'price', itemId: String(o.itemId || '').slice(0, 80), title: String(o.title || '').slice(0, 120), price: Number(o.price) || 0,
       note: String(o.note || '').slice(0, 300), fromUid: u.uid, fromName: String(fromName).slice(0, 60), toUid: o.toUid, toName: String(o.toName || '').slice(0, 60),
-      at: now, status, lastBy: u.uid, updatedAt: now,
+      at: now, status, lastBy: u.uid, updatedAt: now, ...(o.share && Object.keys(o.share).length ? { share_from: o.share } : {}),
       history: [{ by: u.uid, name: String(fromName).slice(0, 60), action: o.kind === 'loan' ? 'signed' : 'offer', price: Number(o.price) || 0, note: String(o.note || '').slice(0, 300), at: now }] };
     await set(ref(db, `website/deals/${id}`), rec);
     await set(ref(db, `website/offers_idx/${u.uid}/${id}`), true);
@@ -28009,6 +28010,85 @@ function ofxDay(t) {
   return diff <= 0 ? 'היום' : diff === 1 ? 'אתמול' : d.toLocaleDateString('he-IL', { day: 'numeric', month: 'long' });
 }
 // שורה אחת: תמונת פרופיל | שם ומתחת סטטוס · מוצר · שעה | סכום, ומתחתיו כפתורים קטנים או סטטוס
+// ===== פרטי עסקה: לחיצה על הצעה פותחת חלון עם הפרטים, ומה שכל צד בחר לחשוף (טלפון, כתובת) =====
+// deals/{id}/share_from = מה שהשולח חשף, deals/{id}/share_to = מה שהמקבל חשף. רק שני הצדדים יכולים לקרוא עסקה
+function dealShareSaved() { try { return JSON.parse(localStorage.getItem('deal_share') || '{}') || {}; } catch (e) { return {}; } }
+function dealShareFormHTML(pfx) {
+  const v = dealShareSaved();
+  return `<div class="dl-share"><b>לחשוף לצד השני <small>(רק הוא יראה, ורק בעסקה הזו)</small></b>
+    <label><input type="checkbox" id="${pfx}-sh-ph"${v.phone ? ' checked' : ''}><span>📞 טלפון</span><input type="tel" id="${pfx}-ph" dir="ltr" maxlength="20" placeholder="050-0000000" value="${escHtml(v.phone || '')}"></label>
+    <label><input type="checkbox" id="${pfx}-sh-ad"${v.addr ? ' checked' : ''}><span>📍 כתובת</span><input type="text" id="${pfx}-ad" maxlength="120" placeholder="רחוב, עיר" value="${escHtml(v.addr || '')}"></label></div>`;
+}
+function dealShareRead(pfx) {
+  const g = id => document.getElementById(id), out = {};
+  const ph = (g(pfx + '-ph') || {}).value, ad = (g(pfx + '-ad') || {}).value;
+  if (g(pfx + '-sh-ph') && g(pfx + '-sh-ph').checked && ph && ph.trim()) out.phone = ph.trim().replace(/[^\d+\- ]/g, '').slice(0, 20);
+  if (g(pfx + '-sh-ad') && g(pfx + '-sh-ad').checked && ad && ad.trim()) out.addr = ad.trim().slice(0, 120);
+  try { localStorage.setItem('deal_share', JSON.stringify({ phone: (ph || '').trim(), addr: (ad || '').trim() })); } catch (e) {}
+  return out;
+}
+const DEAL_DEMO_SHARE = { m1: { phone: '050-1234567', addr: 'הרצל 12, תל אביב' }, m2: { phone: '052-7654321' }, m3: { addr: 'ביאליק 5, רמת גן' }, d1: { phone: '050-1234567', addr: 'הרצל 12, תל אביב' } };
+function dealDetailOpen(id, demo) {
+  const me = auth.currentUser ? auth.currentUser.uid : '';
+  let o = demo ? (CMP_OFX_DEMO().concat(typeof OFX_DEMO === 'function' ? OFX_DEMO() : []).find(x => x.id === id)) : (offersMap[id] || null);
+  if (!o) return;
+  if (demo) o = Object.assign({}, o, (typeof ofxDemoState === 'object' && ofxDemoState[id]) || {}, { share_from: DEAL_DEMO_SHARE[id] || null });
+  const mine = !demo && o.fromUid === me;
+  const other = mine ? (o.toName || 'משתמש') : (o.fromName || 'משתמש'), otherUid = mine ? o.toUid : o.fromUid;
+  const theirShare = (mine ? o.share_to : o.share_from) || null, myShare = (mine ? o.share_from : o.share_to) || null;
+  const kindName = { price: 'הצעת מחיר', loan: 'השאלה', rent: 'השכרה' }[o.kind] || (/השאלה/.test(o.title || '') ? 'השאלה' : /החלפה/.test(o.title || '') ? 'החלפה' : 'מכירה');
+  const st = { pending: 'ממתינה לתשובה', counter: 'הצעה נגדית', accepted: 'אושרה ✓', rejected: 'נדחתה', signed: 'נחתמה ✓' }[o.status] || o.status;
+  const when = t => t ? new Date(t).toLocaleString('he-IL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
+  const tel = p => String(p || '').replace(/[^\d+]/g, ''), wa = p => { const d = tel(p).replace(/^0/, '972').replace(/^\+/, ''); return `https://wa.me/${d}`; };
+  const contact = theirShare && (theirShare.phone || theirShare.addr) ? `<div class="dl-contact">
+      ${theirShare.phone ? `<div class="dl-c"><span>📞</span><div><small>טלפון</small><b dir="ltr">${escHtml(theirShare.phone)}</b></div><a class="dl-cbtn" href="tel:${escHtml(tel(theirShare.phone))}">חיוג</a><a class="dl-cbtn wa" href="${escHtml(wa(theirShare.phone))}" target="_blank" rel="noopener">וואטסאפ</a></div>` : ''}
+      ${theirShare.addr ? `<div class="dl-c"><span>📍</span><div><small>כתובת</small><b>${escHtml(theirShare.addr)}</b></div><a class="dl-cbtn" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(theirShare.addr)}" target="_blank" rel="noopener">מפה</a><a class="dl-cbtn" href="https://waze.com/ul?q=${encodeURIComponent(theirShare.addr)}" target="_blank" rel="noopener">Waze</a></div>` : ''}
+    </div>` : `<div class="dl-none">${escHtml(other)} עוד לא חשף/ה טלפון או כתובת בעסקה הזו.</div>`;
+  const hist = Array.isArray(o.history) ? o.history : Object.values(o.history || {});
+  const turn = demo ? o.status === 'pending' : offersMyTurn(o);
+  const act = (k, l, fn) => `<button type="button" class="dl-act ${k}" onclick="${fn}">${l}</button>`;
+  const acts = turn ? (demo
+    ? act('no', 'דחייה', `dealDetailClose(); ofxDemo('no', '${artEsc(id)}', '${artEsc(o.title || '')}', ${Number(o.price) || 0})`) + act('deal', 'הצעה נגדית', `dealDetailClose(); ofxDemo('deal', '${artEsc(id)}', '${artEsc(o.title || '')}', ${Number(o.price) || 0})`) + act('ok', 'אישור', `dealDetailClose(); ofxDemo('ok', '${artEsc(id)}', '${artEsc(o.title || '')}', ${Number(o.price) || 0})`)
+    : act('no', 'דחייה', `dealDetailClose(); offerDecide('${artEsc(id)}','rejected')`) + act('deal', 'הצעה נגדית', `dealDetailClose(); offerCounter('${artEsc(id)}')`) + act('ok', 'אישור', `dealDetailClose(); offerDecide('${artEsc(id)}','accepted')`)) : '';
+  let m = document.getElementById('deal-modal'); if (m) m.remove();
+  m = document.createElement('div'); m.id = 'deal-modal'; m.className = 'mkpub-modal';
+  m.innerHTML = `<div class="mkpub-card dl-card" role="dialog" aria-modal="true" aria-label="פרטי העסקה">
+    <div class="mkpub-head"><b>פרטי העסקה</b><button type="button" class="mkpub-x" onclick="dealDetailClose()" aria-label="סגירה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <div class="dl-who"><span class="dl-av">${demo && typeof demoAvatarSVG === 'function' ? demoAvatarSVG(other) : (typeof authorAvHTML === 'function' ? authorAvHTML({ author: other, uid: otherUid || '' }) : '')}</span>
+      <div><b>${escHtml(other)}${demo ? ' <em class="ofc-demo-tag">דוגמה</em>' : ''}</b><small>${mine ? 'שלחת הצעה' : 'שלח/ה לך הצעה'} · ${escHtml(when(o.at))}</small></div>
+      ${otherUid && !demo ? `<button type="button" class="dl-prof" onclick="dealDetailClose(); openUserPage('${artEsc(otherUid)}','${artEsc(other)}')">לפרופיל</button>` : ''}</div>
+    <div class="dl-grid">
+      <div><small>סוג</small><b>${escHtml(kindName)}</b></div>
+      <div><small>מחיר</small><b>${o.price ? '₪' + Number(o.price).toLocaleString('he-IL') : '—'}</b></div>
+      <div class="wide"><small>פריט</small><b>${escHtml(o.title || '—')}</b></div>
+      <div><small>סטטוס</small><b class="dl-st ${escHtml(o.status || '')}">${escHtml(st)}</b></div>
+      <div><small>עודכן</small><b>${escHtml(when(o.updatedAt || o.at))}</b></div>
+      ${o.note ? `<div class="wide"><small>הודעה</small><b class="dl-note">${escHtml(o.note)}</b></div>` : ''}
+    </div>
+    <h4 class="dl-h">פרטים ש${escHtml(other)} חשף/ה</h4>${contact}
+    ${demo ? '' : `<h4 class="dl-h">מה אני חושף/ת בעסקה הזו</h4><div class="dl-mine">${dealShareFormHTML('dl').replace(/<b>לחשוף לצד השני[\s\S]*?<\/b>/, '')}<button type="button" class="dl-save" onclick="dealShareSave('${artEsc(id)}', ${mine ? 'true' : 'false'})">${myShare && (myShare.phone || myShare.addr) ? 'עדכון' : 'חשיפה'}</button>
+      ${myShare && (myShare.phone || myShare.addr) ? `<small class="dl-mine-now">כרגע חשוף: ${[myShare.phone ? 'טלפון' : '', myShare.addr ? 'כתובת' : ''].filter(Boolean).join(' + ')} · <button type="button" onclick="dealShareSave('${artEsc(id)}', ${mine ? 'true' : 'false'}, true)">הסתרה</button></small>` : ''}</div>`}
+    ${hist.length > 1 ? `<h4 class="dl-h">היסטוריה</h4><ol class="dl-hist">${hist.slice(-6).map(h => `<li><b>${escHtml(h.name || '')}</b> ${escHtml({ offer: 'הציע/ה', counter: 'הצעה נגדית', accepted: 'אישר/ה', rejected: 'דחה/תה', signed: 'חתם/ה' }[h.action] || h.action || '')}${h.price ? ' · ₪' + Number(h.price).toLocaleString('he-IL') : ''}<small>${escHtml(when(h.at))}</small></li>`).join('')}</ol>` : ''}
+    ${acts ? `<div class="dl-acts">${acts}</div>` : ''}
+  </div>`;
+  m.addEventListener('click', e => { if (e.target === m) dealDetailClose(); });
+  document.body.appendChild(m);
+  if (!demo) {
+    // מה שאני כבר חשפתי — מסומן בטופס
+    const set1 = (idq, v) => { const el = document.getElementById(idq); if (el && v) el.value = v; };
+    if (myShare) { set1('dl-ph', myShare.phone); set1('dl-ad', myShare.addr); const a = document.getElementById('dl-sh-ph'), b = document.getElementById('dl-sh-ad'); if (a) a.checked = !!myShare.phone; if (b) b.checked = !!myShare.addr; }
+  }
+  if (typeof avatarHydrate === 'function') avatarHydrate(m);
+}
+function dealDetailClose() { const m = document.getElementById('deal-modal'); if (m) m.remove(); }
+async function dealShareSave(id, mine, hide) {
+  const key = mine ? 'share_from' : 'share_to', val = hide ? null : dealShareRead('dl');
+  try { await update(ref(db, `website/deals/${id}`), { [key]: val && Object.keys(val).length ? val : null, updatedAt: Date.now() }); showCopyToast(hide || !val || !Object.keys(val).length ? 'הפרטים הוסתרו' : 'הפרטים נחשפו לצד השני'); }
+  catch (e) { showCopyToast('לא הצלחנו לשמור'); return; }
+  if (offersMap[id]) { offersMap[id][key] = val && Object.keys(val).length ? val : null; }
+  dealDetailOpen(id, false);
+}
+Object.assign(window, { dealDetailOpen, dealDetailClose, dealShareSave });
 function ofxRowHTML(o, me, demo) {
   const mine = o.fromUid === me, other = mine ? (o.toName || 'משתמש') : (o.fromName || 'אורח'), otherUid = mine ? o.toUid : o.fromUid;
   const t = o.updatedAt || o.at || 0, myTurn = demo ? o.status === 'pending' : offersMyTurn(o);
@@ -28022,7 +28102,7 @@ function ofxRowHTML(o, me, demo) {
     ? `<span class="ofx-acts">${act('no', 'דחייה', demo ? dmAct('no') : `offerDecide('${artEsc(o.id)}','rejected')`)}${act('deal', 'הצעה נגדית', demo ? dmAct('deal') : `offerCounter('${artEsc(o.id)}')`)}${act('ok', 'אישור', demo ? dmAct('ok') : `offerDecide('${artEsc(o.id)}','accepted')`)}</span>`
     : o.status === 'pending' || o.status === 'counter' ? `<span class="ofx-chip">${OFX_IC.clock}ממתינה</span>` : '';
   const amtCls = o.status === 'accepted' || o.status === 'signed' ? ' in' : o.status === 'rejected' ? ' off' : '';
-  const open = demo ? dm : o.itemId ? `ofpClose(); photoOpenDetail('${artEsc(o.itemId)}')` : '';
+  const open = `dealDetailOpen('${artEsc(o.id || '')}', ${demo ? 'true' : 'false'})`;
   return `<div class="ofx-row" data-oid="${escHtml(o.id || '')}"${open ? ` role="button" tabindex="0" onclick="${open}"` : ''}>
     <span class="ofx-av${demo ? ' has-av' : ''}" style="--av:${typeof forumAvColor === 'function' ? forumAvColor({ uid: otherUid || '', name: other }) : '#47a093'}">${demo ? demoAvatarSVG(other) : escHtml(String(other).trim().charAt(0) || '?')}</span>
     <span class="ofx-tx"><b>${escHtml(other)}${demo ? ' <em class="ofc-demo-tag">דוגמה</em>' : ''}</b><small>${escHtml(sub)}</small></span>
