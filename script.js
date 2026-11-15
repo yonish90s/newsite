@@ -27069,6 +27069,23 @@ Object.assign(window, { openMobileMenu, closeMobileMenu, renderMobileMenu, mnavT
 // ============================================================
 // שורת "מה בא לך לשתף?" (מחשב) — העלאה מהירה מתוך העמוד
 // ============================================================
+// הצעות קטנות משמאל לשורת השיתוף: הצעות אמיתיות שמחכות לתשובה שלי, ואם אין מספיק — דוגמאות (מכירה, השאלה, מכירה, החלפה)
+const CMP_OFX_DEMO = () => { const n = Date.now(), m = 6e4; return [
+  { id: 'm1', fromName: 'דניאל', fromUid: '', toUid: '_me', title: "מכירה · נינטנדו סוויץ'", price: 850, status: 'pending', at: n - 5 * m },
+  { id: 'm2', fromName: 'רוני שמש', fromUid: '', toUid: '_me', title: 'השאלה · מקדחה לסופ״ש', price: 40, status: 'pending', at: n - 22 * m },
+  { id: 'm3', fromName: 'מיכל אברהם', fromUid: '', toUid: '_me', title: 'מכירה · אופני עיר', price: 420, status: 'pending', at: n - 64 * m },
+  { id: 'm4', fromName: 'אלון', fromUid: '', toUid: '_me', title: 'החלפה · אקסבוקס ב-PS4', price: 0, status: 'pending', at: n - 130 * m }
+]; };
+function cmpOffersInner() {
+  const u = auth.currentUser, me = u ? u.uid : '';
+  if (u && !u.isAnonymous && typeof offersSubscribe === 'function') try { offersSubscribe(); } catch (e) {}
+  const real = Object.values(typeof offersMap === 'object' ? offersMap : {}).filter(o => typeof offersMyTurn === 'function' && offersMyTurn(o)).sort((a, b) => (b.updatedAt || b.at || 0) - (a.updatedAt || a.at || 0)).slice(0, 4);
+  const demo = CMP_OFX_DEMO().map(o => Object.assign({}, o, (typeof ofxDemoState === 'object' && ofxDemoState[o.id]) || {})).filter(o => o.status === 'pending').slice(0, Math.max(0, 4 - real.length));
+  const rows = real.map(o => ofxRowHTML(o, me, false)).concat(demo.map(o => ofxRowHTML(o, '_me', true)));
+  if (!rows.length) return '';
+  return `<div class="cmp-ofx ofx-card">${rows.join('')}</div>`;
+}
+function cmpOffersRefresh() { document.querySelectorAll('.cmp-ofx-wrap').forEach(el => { el.innerHTML = cmpOffersInner(); }); }
 function composerBarHTML() {
   const u = auth.currentUser, reg = u && !u.isAnonymous;
   const name = reg ? ((typeof liveChatUserName === 'function' && liveChatUserName()) || '') : '';
@@ -27077,6 +27094,7 @@ function composerBarHTML() {
   return `<div class="cmp-bar">
     <span class="au-av cmp-av"${reg ? ` data-av-uid="${escHtml(u.uid)}"` : ''}>${escHtml((first || 'א').charAt(0))}</span>
     <span class="cmp-wrapf"><input type="text" class="cmp-input cmp-field" maxlength="120" autocomplete="off" enterkeyhint="send" aria-label="פרסום מהיר" placeholder="מה בא לך לשתף${first ? ', ' + escHtml(first) : ''}? הקלידו / להעלאה מהירה"></span>
+    <div class="cmp-ofx-wrap" aria-label="הצעות שקיבלת">${cmpOffersInner()}</div>
     <div class="cmp-icons">
       ${ic('pic', 'תמונות', 'composerPhoto()', '<g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="m21 16-5-5-9 9"/></g>')}
     </div>
@@ -28098,6 +28116,7 @@ function ofpListHTML() {
 }
 function offersRerender() {
   pfOffersRefresh();
+  if (typeof cmpOffersRefresh === 'function') cmpOffersRefresh();
   const b = document.querySelector('#ofp-panel .fo-panel-body'); if (b) b.innerHTML = ofpListHTML();
   const c = document.getElementById('ofp-cart'); if (!c) return;
   const me = auth.currentUser ? auth.currentUser.uid : '', all = Object.values(offersMap);
