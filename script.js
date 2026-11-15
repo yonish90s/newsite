@@ -33798,7 +33798,12 @@ const DEPT_ART = {
 // שורת סינון מתחת לעיגולים: כותרת קטנה באפור + הבחירה בירוק, תיבות סימון, איפוס, ומיון בצד
 function filterBarHTML() {
   const all = mktAll(), cities = [...new Set(all.map(r => r.city).filter(Boolean))].sort();
-  const sel = (label, key, opts) => `<label class="fb-f"><small>${label}</small><span class="fb-sel"><select onchange="fbSet('${key}', this.value)">${opts.map(([v, t]) => `<option value="${escHtml(String(v))}"${String(rentUI[key]) === String(v) ? ' selected' : ''}>${escHtml(t)}</option>`).join('')}</select></span></label>`;
+  // תפריט נפתח בעיצוב האתר (במקום התפריט של מערכת ההפעלה)
+  const sel = (label, key, opts) => {
+    const cur = opts.find(([v]) => String(rentUI[key]) === String(v)) || opts[0];
+    return `<div class="fb-f"><small>${label}</small><button type="button" class="fb-dd" aria-haspopup="listbox" aria-expanded="false" onclick="fbDdOpen(this, '${key}')">${escHtml(cur[1])}</button>
+      <div class="fb-menu" role="listbox" hidden>${opts.map(([v, t]) => `<button type="button" role="option" class="${String(rentUI[key]) === String(v) ? 'on' : ''}" aria-selected="${String(rentUI[key]) === String(v)}" onclick="fbDdPick('${key}', '${artEsc(String(v))}')">${escHtml(t)}</button>`).join('')}</div></div>`;
+  };
   const chk = (key, t) => `<label class="fb-c"><input type="checkbox"${rentUI[key] ? ' checked' : ''} onchange="fbSet('${key}', this.checked)"><span>${t}</span></label>`;
   const D = 864e5;
   const sorts = [['trend', 'חם עכשיו'], ['new', 'החדשים'], ['popular', 'הפופולריים'], ['cheap', 'הכי זול']].concat(typeof mkGeo !== 'undefined' && mkGeo ? [['near', 'הכי קרוב']] : []);
@@ -33814,6 +33819,23 @@ function filterBarHTML() {
     ${sel('מיון לפי', 'sort', sorts)}
   </div>`;
 }
+function fbDdClose() { document.querySelectorAll('.fb-menu').forEach(m => { m.hidden = true; }); document.querySelectorAll('.fb-dd[aria-expanded="true"]').forEach(b => b.setAttribute('aria-expanded', 'false')); }
+function fbDdOpen(btn, key) {
+  const menu = btn.nextElementSibling, open = !menu.hidden;
+  fbDdClose(); if (open) return;
+  menu.hidden = false; btn.setAttribute('aria-expanded', 'true');
+  const on = menu.querySelector('.on') || menu.querySelector('button'); if (on) on.focus({ preventScroll: true });
+}
+function fbDdPick(key, v) { fbDdClose(); fbSet(key, key === 'since' ? Number(v) : v); }
+document.addEventListener('mousedown', e => { if (!e.target.closest || !e.target.closest('.fb-f')) fbDdClose(); });
+document.addEventListener('keydown', e => {
+  const m = e.target.closest && e.target.closest('.fb-menu'); if (!m) { if (e.key === 'Escape') fbDdClose(); return; }
+  const items = [...m.querySelectorAll('button')], i = items.indexOf(document.activeElement);
+  if (e.key === 'ArrowDown') { e.preventDefault(); (items[i + 1] || items[0]).focus(); }
+  else if (e.key === 'ArrowUp') { e.preventDefault(); (items[i - 1] || items[items.length - 1]).focus(); }
+  else if (e.key === 'Escape') { fbDdClose(); const b = m.previousElementSibling; if (b) b.focus(); }
+});
+Object.assign(window, { fbDdOpen, fbDdPick });
 function fbSet(k, v) {
   if (k === 'since') v = Number(v) || 0;
   if (k === 'sec') { rentUI.cat = 'all'; rentUI.pk = 'all'; rentUI.pa = 'all'; rentUI.pd = 'all'; }
