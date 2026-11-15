@@ -20937,3 +20937,42 @@ html body .orb-rrow em { font-style: normal; font-weight: 800; color: #a8740c; f
 html body .rf-tabs button { font-size: 12.5px !important; padding: 8px 4px !important; }
 html.theme-dark body .orb-rrow { background: #17181b; border-color: #2b2d31; }
 html.theme-dark body :is(.orb-rrow b, .orb-head b, .orb-empty b) { color: #f1f1f3; }
+
+/* המשחק בחלון קטן מתחת לכפתור "הגרלה" — מהיר וקומפקטי */
+html body #orb-pop { position: fixed; z-index: 3000; width: 340px; max-width: calc(100vw - 20px); background: #fff; border: 1px solid #e6e9eb; border-radius: 18px; box-shadow: 0 18px 40px rgba(17,24,39,.16); padding: 10px 12px 12px; direction: rtl; animation: orbPopIn .16s ease-out; }
+html body #orb-pop::before { content: ''; position: absolute; top: -7px; left: calc(var(--ax, 50%) - 7px); width: 12px; height: 12px; background: #fff; border-left: 1px solid #e6e9eb; border-top: 1px solid #e6e9eb; transform: rotate(45deg); }
+@keyframes orbPopIn { from { opacity: 0; transform: translateY(-6px) scale(.98); } }
+html body .orb-pop-h { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+html body .orb-pop-h b { flex: 1; font-size: 15px; font-weight: 800; color: #111827; }
+html body .orb-pop-h button { font: inherit; font-size: 12px; font-weight: 700; padding: 4px 9px; border-radius: 999px; border: 1px solid #e3e7e9; background: #fff; color: #374151; cursor: pointer; }
+html body .orb-pop-h button.x { border: 0; font-size: 14px; color: #8a929b; padding: 4px 6px; }
+html body #orb-pop .orb-row { gap: 6px; padding: 8px 0 2px; }
+html body #orb-pop .orb { padding: 3px; border-radius: 14px; }
+html body #orb-pop .orb-win b { font-size: 16px; }
+html body #orb-pop .orb-win .bw-coin { width: 24px; height: 24px; }
+html body #orb-pop .orb-head { margin: 0 0 4px; }
+html body #orb-pop .orb-head > span { padding: 3px 10px; }
+html body #orb-pop .orb-head b { font-size: 15px; }
+html body #orb-pop .orb-ask { font-size: 13px; margin: 2px 0 0; }
+html body #orb-pop .orb-msg { padding: 7px; margin: 6px 0 0; }
+html body #orb-pop .orb-msg b { font-size: 15px; }
+html body #orb-pop .orb-again { padding: 8px 18px; font-size: 13.5px; margin-top: 8px; }
+html body #orb-pop .rf-note { font-size: 11.5px; margin-top: 8px; }
+html body .orb.shake { animation: orbShake .35s ease-in-out !important; }
+html body .orb.open { animation: orbPop .25s ease-out; }
+/* 50 שלבים */
+html body .orb-stage { margin: 0 0 8px; }
+html body .orb-stage-t { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+html body .orb-stage-t b { font-size: 14px; color: #111827; }
+html body .orb-stage-t small { font-size: 11.5px; color: #8a929b; }
+html body .orb-path { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; margin: 6px 0 5px; }
+html body .orb-path span { aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; font-size: 10.5px; font-weight: 800; background: #eef1f2; color: #8a929b; }
+html body .orb-path span.done { background: #47a093; color: #fff; }
+html body .orb-path span.cur { background: #fff; color: #2f7d72; box-shadow: 0 0 0 2px #47a093; animation: orbCur 1.2s ease-in-out infinite; }
+html body .orb-path span.big { background: linear-gradient(180deg, #ffe08a, #e0a91c); color: #6b4a06; }
+html body .orb-path span.big.done { box-shadow: 0 0 0 2px #47a093; }
+@keyframes orbCur { 50% { transform: scale(1.12); } }
+html body .orb-prog { height: 5px; border-radius: 999px; background: #eef1f2; overflow: hidden; }
+html body .orb-prog i { display: block; height: 100%; background: linear-gradient(90deg, #47a093, #7cc4b7); border-radius: 999px; }
+html.theme-dark body #orb-pop, html.theme-dark body #orb-pop::before { background: #17181b; border-color: #2b2d31; }
+html.theme-dark body :is(.orb-pop-h b, .orb-stage-t b) { color: #f1f1f3; }

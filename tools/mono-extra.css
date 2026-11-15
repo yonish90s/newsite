@@ -285,3 +285,7 @@ BODY :is(.orb-win b, .orb-rrow em) { color: #a8740c !important; }
 BODY .orb-head > span { background: #fffaf0 !important; border-color: #f0dfb4 !important; }
 BODY .orb-head .orb-pts { background: #f4faf8 !important; border-color: #d5ebe6 !important; }
 BODY .orb-rrow.mine { border-color: #47a093 !important; background: #f4faf8 !important; }
+BODY .orb-path span.done { background: #47a093 !important; color: #fff !important; }
+BODY .orb-path span.cur { color: #2f7d72 !important; box-shadow: 0 0 0 2px #47a093 !important; }
+BODY .orb-path span.big { background: linear-gradient(180deg, #ffe08a, #e0a91c) !important; color: #6b4a06 !important; }
+BODY .orb-prog i { background: linear-gradient(90deg, #47a093, #7cc4b7) !important; }

@@ -30837,6 +30837,7 @@ function walletPillEl() {
 }
 // כרטיסי הגרלה: כל הזמנה באתר = כרטיס אחד (נספר מההזמנות שבמכשיר)
 // כרטיסים: כרטיס אחד מתנה לכל גולש + כרטיס על כל הזמנה, פחות מה שכבר שוחק
+const ORB_STAGES = 50;
 const orbKey = () => { const u = auth.currentUser; return 'orb_' + (u && !u.isAnonymous ? u.uid : 'guest'); };
 function orbLocal() { try { return JSON.parse(localStorage.getItem(orbKey()) || '{}') || {}; } catch (e) { return {}; } }
 function orbLocalSet(v) { try { localStorage.setItem(orbKey(), JSON.stringify(v)); } catch (e) {} }
@@ -30846,13 +30847,14 @@ function orbStats() {
   let remote = null; try { remote = uid && rfData && rfData.plays && rfData.plays[uid] ? rfData.plays[uid] : null; } catch (e) {}
   const loc = orbLocal();
   const used = Math.max(Number(loc.used) || 0, remote ? Number(remote.used) || 0 : 0), points = Math.max(Number(loc.points) || 0, remote ? Number(remote.points) || 0 : 0);
-  return { used, points, uid };
+  const wins = Math.max(Number(loc.wins) || 0, remote ? Number(remote.wins) || 0 : 0);
+  return { used, points, wins, uid, stage: Math.min(ORB_STAGES, wins + 1) };
 }
 function ticketCount() { return Math.max(0, ticketEarned() - orbStats().used); }
 function ticketPillEl() {
   const b = document.createElement('button');
   b.type = 'button'; b.id = 'ticket-pill'; b.className = 'wallet-pill ticket-pill';
-  b.setAttribute('onclick', "raffleOpen('tickets')"); b.title = 'כרטיסי ההגרלה שלי'; b.setAttribute('aria-label', 'כרטיסי ההגרלה שלי');
+  b.setAttribute('onclick', 'orbPopOpen()'); b.title = 'כדורי המזל — המשחק'; b.setAttribute('aria-label', 'כרטיסי ההגרלה שלי');
   ticketPillPaint(b);
   return b;
 }
@@ -30934,7 +30936,7 @@ function raffleRender() {
     body = `<div class="orb-rank">${list.length ? list.map((x, i) => `<div class="orb-rrow${x.uid === st.uid ? ' mine' : ''}"><span class="orb-rpos">${i < 3 ? ['🥇', '🥈', '🥉'][i] : i + 1}</span>${authorAvHTML({ author: x.name, uid: x.uid })}<b>${escHtml(x.name)}</b><small>${x.used} משחקים</small><em>${x.points.toLocaleString('he-IL')} נק׳</em></div>`).join('') : '<div class="rf-empty">עדיין אין שחקנים בדירוג — היו הראשונים!</div>'}</div>
       ${st.uid ? '' : '<p class="rf-note"><button type="button" class="rf-login" onclick="openLiveChatLogin()">התחברו</button> כדי שהנקודות שלכם ייכנסו לדירוג.</p>'}`;
   } else {
-    body = orbGameHTML();
+    body = `<div class="orb-game">${orbGameHTML()}</div>`;
   }
   m.innerHTML = `<div class="mkpub-card rf-card" role="dialog" aria-modal="true" aria-label="ההגרלה">
     <div class="mkpub-head"><b>ההגרלה</b><button type="button" class="mkpub-x" onclick="raffleClose()" aria-label="סגירה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
@@ -30952,7 +30954,12 @@ function orbNewRound() {
 }
 function orbGameHTML() {
   const n = ticketCount(), st = orbStats();
-  const head = `<div class="orb-head"><span class="orb-tk">${bwTicketHTML(34)}<b>${n}</b><small>${n === 1 ? 'כרטיס' : 'כרטיסים'}</small></span><span class="orb-pts">${bwCoinHTML(22)}<b>${st.points.toLocaleString('he-IL')}</b><small>נקודות</small></span></div>`;
+  const stg = st.stage, done50 = st.wins >= ORB_STAGES;
+  const win0 = Math.max(1, Math.min(ORB_STAGES - 9, stg - 4));
+  const path = `<div class="orb-stage"><div class="orb-stage-t"><b>${done50 ? '🏁 סיימת את כל 50 השלבים!' : `שלב ${stg} מתוך ${ORB_STAGES}`}</b><small>כל זכייה מקדמת שלב</small></div>
+    <div class="orb-path">${Array.from({ length: 10 }, (_, k) => win0 + k).map(k => `<span class="${k < stg || done50 ? 'done' : k === stg ? 'cur' : ''}${k % 10 === 0 ? ' big' : ''}">${k % 10 === 0 ? '★' : k}</span>`).join('')}</div>
+    <div class="orb-prog"><i style="width:${Math.round(Math.min(st.wins, ORB_STAGES) / ORB_STAGES * 100)}%"></i></div></div>`;
+  const head = path + `<div class="orb-head"><span class="orb-tk">${bwTicketHTML(34)}<b>${n}</b><small>${n === 1 ? 'כרטיס' : 'כרטיסים'}</small></span><span class="orb-pts">${bwCoinHTML(22)}<b>${st.points.toLocaleString('he-IL')}</b><small>נקודות</small></span></div>`;
   if (!orbGame && n > 0) orbNewRound();
   if (!orbGame) return head + `<div class="orb-empty">${bwTicketHTML(90)}<b>נגמרו הכרטיסים</b><span>כל הזמנה באתר = כרטיס נוסף</span><button type="button" class="rf-vote" onclick="raffleClose(); goToHomePage()">לשוק</button></div>`;
   const g = orbGame;
@@ -30971,23 +30978,46 @@ function orbGameHTML() {
 }
 async function orbPick(i) {
   if (!orbGame || orbGame.done || ticketCount() < 1) return;
-  const el = document.querySelectorAll('#raffle-modal .orb')[i];
-  if (el) { el.classList.add('shake'); document.querySelectorAll('#raffle-modal .orb').forEach(b => { b.disabled = true; }); }
-  await new Promise(r => setTimeout(r, 900));
+  const orbs = document.querySelectorAll('.orb-game .orb'), el = orbs[i];
+  if (el) { el.classList.add('shake'); orbs.forEach(b => { b.disabled = true; }); }
+  await new Promise(r => setTimeout(r, 350));
   orbGame.pick = i; orbGame.done = true;
   const r = orbGame.res[i], st = orbStats();
-  const next = { used: st.used + 1, points: st.points + (r === 'red' ? 0 : r) };
+  const next = { used: st.used + 1, points: st.points + (r === 'red' ? 0 : r), wins: Math.min(ORB_STAGES, st.wins + (r === 'red' ? 0 : 1)) };
   orbLocalSet(next);
   const u = auth.currentUser;
   if (u && !u.isAnonymous) {
     const name = String((typeof liveChatUserName === 'function' && liveChatUserName()) || u.displayName || 'משתמש').slice(0, 60);
-    set(ref(db, `website/raffle/plays/${u.uid}`), { used: next.used, points: next.points, name, t: Date.now() }).catch(() => {});
+    set(ref(db, `website/raffle/plays/${u.uid}`), { used: next.used, points: next.points, wins: next.wins, name, t: Date.now() }).catch(() => {});
   }
   if (typeof ticketPillPaint === 'function') ticketPillPaint();
-  raffleRender();
+  if (r !== 'red' && next.wins > st.wins && typeof showCopyToast === 'function') showCopyToast(next.wins >= ORB_STAGES ? '🏁 סיימת את כל 50 השלבים!' : `עלית לשלב ${next.wins + 1}!`);
+  orbRefresh();
+  // סיבוב חדש מתחיל לבד אם נשארו כרטיסים — לחיצה אחת לכל סיבוב
+  if (ticketCount() > 0) { const g = orbGame; setTimeout(() => { if (orbGame === g) { orbGame = null; orbRefresh(); } }, 1300); }
 }
-function orbAgain() { orbGame = null; raffleRender(); }
-Object.assign(window, { orbPick, orbAgain });
+function orbAgain() { orbGame = null; orbRefresh(); }
+function orbRefresh() { if (document.getElementById('orb-pop')) orbPopRender(); if (document.getElementById('raffle-modal')) raffleRender(); }
+// החלון הקטן של המשחק — נפתח מתחת לכפתור "הגרלה"
+function orbPopOpen() {
+  let p = document.getElementById('orb-pop');
+  if (p) { p.remove(); return; }
+  p = document.createElement('div'); p.id = 'orb-pop'; p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', 'כדורי המזל');
+  document.body.appendChild(p);
+  orbPopRender();
+  const place = () => { const b = document.getElementById('ticket-pill'), el = document.getElementById('orb-pop'); if (!b || !el) return; const z = parseFloat(getComputedStyle(document.body).zoom) || 1, r = b.getBoundingClientRect(), w = el.offsetWidth * z; const left = Math.max(10, Math.min(window.innerWidth - w - 10, r.left + r.width / 2 - w / 2)); el.style.top = ((r.bottom + 10) / z) + 'px'; el.style.left = (left / z) + 'px'; el.style.setProperty('--ax', ((r.left + r.width / 2 - left) / z) + 'px'); };
+  place(); requestAnimationFrame(place);
+  setTimeout(() => document.addEventListener('mousedown', orbPopOutside, true), 0);
+  window.addEventListener('resize', place); window.addEventListener('scroll', place, true);
+  p._place = place;
+}
+function orbPopOutside(e) { const p = document.getElementById('orb-pop'); if (!p) { document.removeEventListener('mousedown', orbPopOutside, true); return; } if (!p.contains(e.target) && !e.target.closest('#ticket-pill')) orbPopClose(); }
+function orbPopClose() { const p = document.getElementById('orb-pop'); if (p) { if (p._place) { window.removeEventListener('resize', p._place); window.removeEventListener('scroll', p._place, true); } p.remove(); } document.removeEventListener('mousedown', orbPopOutside, true); }
+function orbPopRender() {
+  const p = document.getElementById('orb-pop'); if (!p) return;
+  p.innerHTML = `<div class="orb-pop-h"><b>כדורי המזל</b><button type="button" onclick="orbPopClose(); raffleOpen('rank')">🏅 דירוג</button><button type="button" onclick="orbPopClose(); raffleOpen('prizes')">🏆 פרסים</button><button type="button" class="x" onclick="orbPopClose()" aria-label="סגירה">✕</button></div><div class="orb-game">${orbGameHTML()}</div>`;
+}
+Object.assign(window, { orbPick, orbAgain, orbPopOpen, orbPopClose });
 async function rfVote(id) {
   const u = auth.currentUser; if (!u || u.isAnonymous) { openLiveChatLogin(); return; }
   const same = rfData.votes[u.uid] === id;
