@@ -33439,7 +33439,7 @@ const RENT_DEMO = [
     desc: 'חניה מקורה בחניון פתוח של בניין, מתאימה גם לאחסון סירה קטנה או נגרר. שלט לשער כלול.', specs: ['מקורה', 'שלט לשער', 'ליד הכניסה'] }
 ].map(r => Object.assign({ demo: true }, r, { t: Date.now() + r.t * 3600e3 }));
 let rentData = null, rentUnsub = null;
-const rentUI = { sec: 'all', cat: 'all', q: '', city: 'all', sort: 'new', offer: 'all', owner: 'all', min: null, max: null, pk: 'all', pa: 'all', pd: 'all', dept: 'all' };
+const rentUI = { sec: 'all', cat: 'all', q: '', city: 'all', sort: 'new', offer: 'all', owner: 'all', min: null, max: null, pk: 'all', pa: 'all', pd: 'all', dept: 'all', since: 0, fPrice: false, fStock: false, fPhoto: false, fVideo: false };
 function rentSubscribe() {
   if (rentUnsub) return;
   try {
@@ -33486,7 +33486,7 @@ function rentThumb(r, big) {
 }
 function rentList() {
   const q = rentUI.q.trim().toLowerCase();
-  let l = mktAll().filter(r => (rentUI.dept === 'all' || r.dept === rentUI.dept) && (rentUI.sec === 'all' || mktSecOf(r) === rentUI.sec) && (rentUI.sec !== 'rent' || rentUI.cat === 'all' || r.cat === rentUI.cat) && (rentUI.city === 'all' || r.city === rentUI.city) && (rentUI.offer === 'all' || r.offer === rentUI.offer) && (rentUI.owner === 'all' || r.owner === rentUI.owner) && (rentUI.min === null || (r.price > 0 && r.price >= rentUI.min && r.price <= rentUI.max)) && (rentUI.pk === 'all' || r.pk === rentUI.pk) && (rentUI.pa === 'all' || projAreaOf(r) === rentUI.pa) && (rentUI.pd === 'all' || r.pd === rentUI.pd)
+  let l = mktAll().filter(r => (rentUI.dept === 'all' || r.dept === rentUI.dept) && (!rentUI.since || (r.t && r.t >= Date.now() - rentUI.since)) && (!rentUI.fPrice || r.price > 0) && (!rentUI.fStock || !mktSoldOut(r)) && (!rentUI.fPhoto || !!r.img) && (!rentUI.fVideo || !!r.video) && (rentUI.sec === 'all' || mktSecOf(r) === rentUI.sec) && (rentUI.sec !== 'rent' || rentUI.cat === 'all' || r.cat === rentUI.cat) && (rentUI.city === 'all' || r.city === rentUI.city) && (rentUI.offer === 'all' || r.offer === rentUI.offer) && (rentUI.owner === 'all' || r.owner === rentUI.owner) && (rentUI.min === null || (r.price > 0 && r.price >= rentUI.min && r.price <= rentUI.max)) && (rentUI.pk === 'all' || r.pk === rentUI.pk) && (rentUI.pa === 'all' || projAreaOf(r) === rentUI.pa) && (rentUI.pd === 'all' || r.pd === rentUI.pd)
     && (!q || [r.title, r.desc, r.city, r.owner, r.bizName || '', (MKT_DEPT[r.dept] || {}).name || '', (r.htags || []).join(' ').replace(/_/g, ' '), PROJ_KINDS[r.pk] || '', (PROJ_SUB[r.pd] || {}).name || '', projAreaName(projAreaOf(r))].join(' ').toLowerCase().includes(q)));
   const views = r => photoGetViews(rentCommentsKey(r));
   if (rentUI.sort === 'cheap') l.sort((a, b) => a.price - b.price);
@@ -33795,6 +33795,36 @@ const DEPT_ART = {
   services: '<path d="M12 26 32 14l20 12" fill="none"/><path d="M14 26h36v26H14z" fill="#fff"/><path d="M14 26c3 4 6 4 9 0 3 4 6 4 9 0 3 4 6 4 9 0 3 4 6 4 9 0" fill="#e6e6e6"/><rect x="27" y="38" width="10" height="14" fill="#e6e6e6"/>',
   other: '<path d="M10 22 32 12l22 10v24L32 56 10 46z" fill="#fff"/><path d="M10 22l22 10 22-10M32 32v24"/><path d="M21 17l22 10" stroke-dasharray="3 3"/>'
 };
+// שורת סינון מתחת לעיגולים: כותרת קטנה באפור + הבחירה בירוק, תיבות סימון, איפוס, ומיון בצד
+function filterBarHTML() {
+  const all = mktAll(), cities = [...new Set(all.map(r => r.city).filter(Boolean))].sort();
+  const sel = (label, key, opts) => `<label class="fb-f"><small>${label}</small><span class="fb-sel"><select onchange="fbSet('${key}', this.value)">${opts.map(([v, t]) => `<option value="${escHtml(String(v))}"${String(rentUI[key]) === String(v) ? ' selected' : ''}>${escHtml(t)}</option>`).join('')}</select></span></label>`;
+  const chk = (key, t) => `<label class="fb-c"><input type="checkbox"${rentUI[key] ? ' checked' : ''} onchange="fbSet('${key}', this.checked)"><span>${t}</span></label>`;
+  const D = 864e5;
+  const sorts = [['trend', 'חם עכשיו'], ['new', 'החדשים'], ['popular', 'הפופולריים'], ['cheap', 'הכי זול']].concat(typeof mkGeo !== 'undefined' && mkGeo ? [['near', 'הכי קרוב']] : []);
+  const dirty = rentUI.sec !== 'all' || rentUI.since || rentUI.offer !== 'all' || rentUI.city !== 'all' || rentUI.fPrice || rentUI.fStock || rentUI.fPhoto || rentUI.fVideo || (rentUI.dept && rentUI.dept !== 'all');
+  return `<div class="fb-bar" role="group" aria-label="סינון">
+    ${sel('קטגוריה', 'sec', MKT_SECS.map(x => [x.id, x.id === 'all' ? 'כל הקטגוריות' : x.name]))}
+    ${sel('תאריך', 'since', [[0, 'כל הזמנים'], [D, '24 שעות'], [7 * D, 'השבוע'], [30 * D, 'החודש']])}
+    ${sel('סוג הצעה', 'offer', [['all', 'הכל'], ['מכירה', 'מכירה'], ['השאלה', 'השאלה'], ['החלפה', 'החלפה']])}
+    ${sel('עיר', 'city', [['all', 'כל הערים']].concat(cities.map(c => [c, c])))}
+    <div class="fb-others"><small>עוד</small><div>${chk('fPrice', 'עם מחיר')}${chk('fStock', 'במלאי')}${chk('fPhoto', 'עם תמונות')}${chk('fVideo', 'עם סרטון')}</div></div>
+    ${dirty ? '<button type="button" class="fb-reset" onclick="fbReset()">איפוס</button>' : ''}
+    <span class="fb-sp"></span>
+    ${sel('מיון לפי', 'sort', sorts)}
+  </div>`;
+}
+function fbSet(k, v) {
+  if (k === 'since') v = Number(v) || 0;
+  if (k === 'sec') { rentUI.cat = 'all'; rentUI.pk = 'all'; rentUI.pa = 'all'; rentUI.pd = 'all'; }
+  rentUI[k] = v; rentUI.open = null;
+  rentRender();
+}
+function fbReset() {
+  Object.assign(rentUI, { sec: 'all', cat: 'all', since: 0, offer: 'all', city: 'all', owner: 'all', dept: 'all', pk: 'all', pa: 'all', pd: 'all', fPrice: false, fStock: false, fPhoto: false, fVideo: false, min: null, max: null, open: null });
+  rentRender();
+}
+Object.assign(window, { fbSet, fbReset });
 function deptCirclesHTML() {
   if (typeof MKT_DEPTS === 'undefined') return '';
   const all = mktAll(), n = id => all.filter(r => r.dept === id).length;
@@ -33841,6 +33871,7 @@ function rentViewHTML() {
       <nav class="rn-sorts" aria-label="מיון">${sorts.map(([v, t, d]) => `<button type="button" class="rn-sort${rentUI.sort === v ? ' on' : ''}" onclick="rentSet('sort', '${v}')">${sv(d)}${t}</button>`).join('')}</nav>
       <nav class="rn-tags" aria-label="האשטאגים">${tags.map(([k, v, t]) => `<button type="button" class="rn-tag${tagOn(k, v) ? ' on' : ''}" onclick="rentTag('${k}', '${artEsc(v)}')">#${escHtml(t)}</button>`).join('')}</nav>
       ${deptCirclesHTML()}
+      ${filterBarHTML()}
     </header>
     <nav class="rn-secs">${MKT_SECS.slice(0, 1).map(x => `<button type="button" class="rn-sec${rentUI.sec === x.id ? ' on' : ''}" onclick="mktGo('${x.id}')"><span>${x.ic}</span>${x.name}<small>${secCount(x.id)}</small></button>`).join('')}</nav>
     <div class="rn-bar">
