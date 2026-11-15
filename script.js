@@ -19695,6 +19695,18 @@ window.subscribePhotoComments = subscribePhotoComments;
         <path d="M50 14.5l1.1 2.3 2.5.3-1.8 1.7.5 2.5-2.3-1.2-2.3 1.2.5-2.5-1.8-1.7 2.5-.3z" fill="#8a5e08" opacity=".85"/>
         <path d="M9 9.5h12" stroke="#fffbe6" stroke-width="1.8" stroke-linecap="round" opacity=".8"/>
       </symbol>
+      <radialGradient id="bwo-body" cx="36%" cy="30%" r="75%"><stop offset="0" stop-color="#b8eadf"/><stop offset=".35" stop-color="#5fb8a9"/><stop offset=".8" stop-color="#2f7d72"/><stop offset="1" stop-color="#1d5a52"/></radialGradient>
+      <radialGradient id="bwo-med" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#fff3b8"/><stop offset=".55" stop-color="#f3c94a"/><stop offset="1" stop-color="#b9800f"/></radialGradient>
+      <symbol id="bw-orb" viewBox="0 0 64 64">
+        <ellipse cx="32" cy="60" rx="17" ry="3.2" fill="#0f3a35" opacity=".22"/>
+        <circle cx="32" cy="30" r="26" fill="url(#bwo-body)"/>
+        <path d="M9 34c6 9 40 9 46 0" fill="none" stroke="#bfe8de" stroke-width="2" opacity=".55"/>
+        <circle cx="32" cy="31" r="11.5" fill="url(#bwo-med)" stroke="#a87410" stroke-width="1.2"/>
+        <g stroke-linecap="round" fill="none" stroke="#7a5306" stroke-width="3"><path d="M27 26.5 32 37"/><path d="M37 26.5 32 37"/></g>
+        <circle cx="32" cy="24.6" r="1.6" fill="#7a5306"/>
+        <ellipse cx="22" cy="17" rx="7" ry="4.5" fill="#fff" opacity=".55" transform="rotate(-30 22 17)"/>
+        <path d="M49 12l1 2.2 2.2 1-2.2 1-1 2.2-1-2.2-2.2-1 2.2-1z" fill="#fff6c4"/>
+      </symbol>
       <linearGradient id="bws-gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff3b0"/><stop offset=".45" stop-color="#f6c945"/><stop offset="1" stop-color="#d9930f"/></linearGradient>
       <linearGradient id="bws-dim" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff6df"/><stop offset="1" stop-color="#f1d79a"/></linearGradient>
       <symbol id="bw-star" viewBox="0 0 24 24"><path d="M12 2.6l2.85 5.95 6.45.82-4.72 4.45 1.2 6.43L12 17.1l-5.78 3.15 1.2-6.43L2.7 9.37l6.45-.82z" stroke="#b9780a" stroke-width=".9" stroke-linejoin="round"/><path d="M12 4.6l2.1 4.4 4.7.6" stroke="#fffbe8" stroke-width="1.1" stroke-linecap="round" fill="none" opacity=".8"/></symbol>
@@ -30824,7 +30836,19 @@ function walletPillEl() {
   return b;
 }
 // כרטיסי הגרלה: כל הזמנה באתר = כרטיס אחד (נספר מההזמנות שבמכשיר)
-function ticketCount() { try { return (typeof ordersGet === 'function' ? ordersGet() : []).length; } catch (e) { return 0; } }
+// כרטיסים: כרטיס אחד מתנה לכל גולש + כרטיס על כל הזמנה, פחות מה שכבר שוחק
+const orbKey = () => { const u = auth.currentUser; return 'orb_' + (u && !u.isAnonymous ? u.uid : 'guest'); };
+function orbLocal() { try { return JSON.parse(localStorage.getItem(orbKey()) || '{}') || {}; } catch (e) { return {}; } }
+function orbLocalSet(v) { try { localStorage.setItem(orbKey(), JSON.stringify(v)); } catch (e) {} }
+function ticketEarned() { try { return 1 + (typeof ordersGet === 'function' ? ordersGet() : []).length; } catch (e) { return 1; } }
+function orbStats() {
+  const u = auth.currentUser, uid = u && !u.isAnonymous ? u.uid : '';
+  let remote = null; try { remote = uid && rfData && rfData.plays && rfData.plays[uid] ? rfData.plays[uid] : null; } catch (e) {}
+  const loc = orbLocal();
+  const used = Math.max(Number(loc.used) || 0, remote ? Number(remote.used) || 0 : 0), points = Math.max(Number(loc.points) || 0, remote ? Number(remote.points) || 0 : 0);
+  return { used, points, uid };
+}
+function ticketCount() { return Math.max(0, ticketEarned() - orbStats().used); }
 function ticketPillEl() {
   const b = document.createElement('button');
   b.type = 'button'; b.id = 'ticket-pill'; b.className = 'wallet-pill ticket-pill';
@@ -30855,7 +30879,7 @@ window.ticketOpen = ticketOpen;
 // website/raffle/prizes/{1|2|3} = { title, img, value } · website/raffle/candidates/{id} = { name, desc, img, t } · website/raffle/votes/{uid} = candidateId
 const RF_PLACES = [['1', 'מקום ראשון', '🥇'], ['2', 'מקום שני', '🥈'], ['3', 'מקום שלישי', '🥉']];
 const RF_TROPHY = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8.5 20h7M10 17h4"/></svg>';
-let rfTab = 'prizes', rfData = { prizes: {}, candidates: {}, votes: {} }, rfUnsub = null;
+let rfTab = 'prizes', rfData = { prizes: {}, candidates: {}, votes: {}, plays: {} }, rfUnsub = null;
 function prizePillEl() {
   const b = document.createElement('button');
   b.type = 'button'; b.id = 'prize-pill'; b.className = 'wallet-pill prize-pill';
@@ -30871,7 +30895,7 @@ function raffleOpen(tab) {
     m.addEventListener('click', e => { if (e.target === m) raffleClose(); });
     document.body.appendChild(m);
     try {
-      rfUnsub = onValue(ref(db, 'website/raffle'), snap => { const v = snap.val() || {}; rfData = { prizes: v.prizes || {}, candidates: v.candidates || {}, votes: v.votes || {} }; raffleRender(); }, () => raffleRender());
+      rfUnsub = onValue(ref(db, 'website/raffle'), snap => { const v = snap.val() || {}; rfData = { prizes: v.prizes || {}, candidates: v.candidates || {}, votes: v.votes || {}, plays: v.plays || {} }; raffleRender(); }, () => raffleRender());
     } catch (e) { raffleRender(); }
   }
   raffleRender();
@@ -30904,15 +30928,66 @@ function raffleRender() {
         ${admin ? `<button type="button" class="rf-del" onclick="rfCandDel('${artEsc(c.id)}')" aria-label="מחיקת מועמד">✕</button>` : ''}</div>`; }).join('') : '<div class="rf-empty">עדיין אין מועמדים — הם יופיעו כאן בקרוב.</div>'}</div>
       <p class="rf-note">${me ? 'אפשר להצביע למועמד אחד, ולהחליף את ההצבעה בכל רגע.' : '<button type="button" class="rf-login" onclick="openLiveChatLogin()">התחברו</button> כדי להצביע.'} ${total ? `סה״כ ${total} קולות.` : ''}</p>
       ${admin ? `<form class="rf-add" onsubmit="rfCandAdd(event)"><b>הוספת מועמד (מנהל)</b><input id="rf-cn" maxlength="60" placeholder="שם המועמד" required><input id="rf-cd" maxlength="300" placeholder="כמה מילים (לא חובה)"><button type="button" class="rf-imgbtn" onclick="rfPickImg('rf-cimg', this)">תמונה</button><input type="hidden" id="rf-cimg"><button type="submit">הוספה</button></form>` : ''}`;
+  } else if (rfTab === 'rank') {
+    const st = orbStats();
+    const list = Object.entries(rfData.plays || {}).filter(([, v]) => v && Number(v.points) > 0).map(([uid, v]) => ({ uid, name: v.name || 'משתמש', points: Number(v.points) || 0, used: Number(v.used) || 0 })).sort((a, b) => b.points - a.points).slice(0, 20);
+    body = `<div class="orb-rank">${list.length ? list.map((x, i) => `<div class="orb-rrow${x.uid === st.uid ? ' mine' : ''}"><span class="orb-rpos">${i < 3 ? ['🥇', '🥈', '🥉'][i] : i + 1}</span>${authorAvHTML({ author: x.name, uid: x.uid })}<b>${escHtml(x.name)}</b><small>${x.used} משחקים</small><em>${x.points.toLocaleString('he-IL')} נק׳</em></div>`).join('') : '<div class="rf-empty">עדיין אין שחקנים בדירוג — היו הראשונים!</div>'}</div>
+      ${st.uid ? '' : '<p class="rf-note"><button type="button" class="rf-login" onclick="openLiveChatLogin()">התחברו</button> כדי שהנקודות שלכם ייכנסו לדירוג.</p>'}`;
   } else {
-    const n = ticketCount();
-    body = `<div class="ticket-big">${bwTicketHTML(120)}<b>${n.toLocaleString('he-IL')}</b><span>${n === 1 ? 'כרטיס אחד' : 'כרטיסים'}</span></div>
-      <ul class="ticket-how"><li><b>🛒 כל הזמנה באתר</b><span>= כרטיס הגרלה אחד</span></li><li><b>🎟️ יותר כרטיסים</b><span>= יותר סיכויים לזכות</span></li></ul>`;
+    body = orbGameHTML();
   }
   m.innerHTML = `<div class="mkpub-card rf-card" role="dialog" aria-modal="true" aria-label="ההגרלה">
     <div class="mkpub-head"><b>ההגרלה</b><button type="button" class="mkpub-x" onclick="raffleClose()" aria-label="סגירה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
-    <nav class="rf-tabs">${tab('prizes', '🏆 פרסים')}${tab('vote', '🗳️ מועמדים')}${tab('tickets', '🎟️ הכרטיסים שלי')}</nav>${body}</div>`;
+    <nav class="rf-tabs">${tab('prizes', '🏆 פרסים')}${tab('vote', '🗳️ מועמדים')}${tab('tickets', '🎟️ משחק')}${tab('rank', '🏅 דירוג')}</nav>${body}</div>`;
 }
+// ===== משחק "כדורי המזל": כרטיס אחד = בחירת כדור מתוך 4. שלושה נותנים נקודות, ואחד מסתיר קלף אדום (הפסד) =====
+let orbGame = null;   // { res: [...4], pick: i, done }
+const ORB_PRIZES = [10, 25, 50];
+const orbSvg = () => '<svg class="orb-svg" viewBox="0 0 64 64" aria-hidden="true"><use href="#bw-orb"/></svg>';
+const ORB_RED = '<svg class="orb-red" viewBox="0 0 48 64" aria-hidden="true"><rect x="5" y="4" width="38" height="56" rx="6" fill="#d63a3a" stroke="#9e2020" stroke-width="2"/><rect x="10" y="9" width="28" height="46" rx="4" fill="none" stroke="#ff8a8a" stroke-width="1.5" opacity=".7"/><path d="M17 26l14 14M31 26 17 40" stroke="#fff" stroke-width="4" stroke-linecap="round"/></svg>';
+function orbNewRound() {
+  const res = ORB_PRIZES.slice().concat(['red']);
+  for (let i = res.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [res[i], res[j]] = [res[j], res[i]]; }
+  orbGame = { res, pick: -1, done: false };
+}
+function orbGameHTML() {
+  const n = ticketCount(), st = orbStats();
+  const head = `<div class="orb-head"><span class="orb-tk">${bwTicketHTML(34)}<b>${n}</b><small>${n === 1 ? 'כרטיס' : 'כרטיסים'}</small></span><span class="orb-pts">${bwCoinHTML(22)}<b>${st.points.toLocaleString('he-IL')}</b><small>נקודות</small></span></div>`;
+  if (!orbGame && n > 0) orbNewRound();
+  if (!orbGame) return head + `<div class="orb-empty">${bwTicketHTML(90)}<b>נגמרו הכרטיסים</b><span>כל הזמנה באתר = כרטיס נוסף</span><button type="button" class="rf-vote" onclick="raffleClose(); goToHomePage()">לשוק</button></div>`;
+  const g = orbGame;
+  const orb = (i) => {
+    const r = g.res[i], open = g.done, picked = g.pick === i;
+    const face = !open ? orbSvg() : r === 'red' ? ORB_RED : `<span class="orb-win">${bwCoinHTML(36)}<b>+${r}</b></span>`;
+    return `<button type="button" class="orb${open ? ' open' : ''}${picked ? ' picked' : ''}${open && r === 'red' ? ' red' : ''}" style="--d:${i * .25}s" ${open ? 'disabled' : `onclick="orbPick(${i})"`} aria-label="כדור ${i + 1}">${face}</button>`;
+  };
+  const r = g.done ? g.res[g.pick] : null;
+  const msg = !g.done ? `<p class="orb-ask">בחרו כדור אחד — <b>כרטיס אחד</b> לכל בחירה</p>`
+    : r === 'red' ? `<div class="orb-msg lose"><b>קלף אדום! 🟥</b><span>הפעם הפסדת — בהצלחה בפעם הבאה</span></div>`
+    : `<div class="orb-msg win"><b>זכית ב-${r} נקודות! 🎉</b><span>הנקודות נכנסו לדירוג</span></div>`;
+  const again = g.done ? (n > 0 ? `<button type="button" class="orb-again" onclick="orbAgain()">עוד סיבוב · ${n} ${n === 1 ? 'כרטיס' : 'כרטיסים'}</button>` : `<button type="button" class="orb-again ghost" onclick="raffleOpen('rank')">לדירוג</button>`) : '';
+  return head + `<div class="orb-row">${[0, 1, 2, 3].map(orb).join('')}</div>${msg}${again}
+    <p class="rf-note">🎁 כל גולש מקבל כרטיס אחד מתנה, ועל כל הזמנה באתר — עוד כרטיס.</p>`;
+}
+async function orbPick(i) {
+  if (!orbGame || orbGame.done || ticketCount() < 1) return;
+  const el = document.querySelectorAll('#raffle-modal .orb')[i];
+  if (el) { el.classList.add('shake'); document.querySelectorAll('#raffle-modal .orb').forEach(b => { b.disabled = true; }); }
+  await new Promise(r => setTimeout(r, 900));
+  orbGame.pick = i; orbGame.done = true;
+  const r = orbGame.res[i], st = orbStats();
+  const next = { used: st.used + 1, points: st.points + (r === 'red' ? 0 : r) };
+  orbLocalSet(next);
+  const u = auth.currentUser;
+  if (u && !u.isAnonymous) {
+    const name = String((typeof liveChatUserName === 'function' && liveChatUserName()) || u.displayName || 'משתמש').slice(0, 60);
+    set(ref(db, `website/raffle/plays/${u.uid}`), { used: next.used, points: next.points, name, t: Date.now() }).catch(() => {});
+  }
+  if (typeof ticketPillPaint === 'function') ticketPillPaint();
+  raffleRender();
+}
+function orbAgain() { orbGame = null; raffleRender(); }
+Object.assign(window, { orbPick, orbAgain });
 async function rfVote(id) {
   const u = auth.currentUser; if (!u || u.isAnonymous) { openLiveChatLogin(); return; }
   const same = rfData.votes[u.uid] === id;

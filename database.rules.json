@@ -768,6 +768,12 @@
             ".write": "auth != null && auth.uid === $uid && auth.token.firebase.sign_in_provider !== 'anonymous'",
             ".validate": "newData.isString() && root.child('website/raffle/candidates/' + newData.val()).exists()"
           }
+        },
+        "plays": {
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid && auth.token.firebase.sign_in_provider !== 'anonymous'",
+            ".validate": "newData.hasChildren(['used','points','name']) && newData.child('used').isNumber() && newData.child('used').val() >= 1 && newData.child('used').val() <= 10000 && (!data.exists() || newData.child('used').val() >= data.child('used').val()) && newData.child('points').isNumber() && newData.child('points').val() >= 0 && newData.child('points').val() <= newData.child('used').val() * 50 && newData.child('name').isString() && newData.child('name').val().length <= 60"
+          }
         }
       }
     }

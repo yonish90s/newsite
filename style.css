@@ -20894,3 +20894,46 @@ html body .dl-act.ok { background: #3f9a6b; }
 html.theme-dark body .dl-grid > div, html.theme-dark body .dl-share { background: #1c1d20; border-color: #2b2d31; }
 html.theme-dark body :is(.dl-who b, .dl-grid b, .dl-h, .dl-c b, .dl-share > b) { color: #f1f1f3; }
 html.theme-dark body .dl-c { background: #16201e; border-color: #23322f; }
+
+/* ===== משחק כדורי המזל ===== */
+html body .orb-head { display: flex; justify-content: center; gap: 10px; margin: 0 0 14px; }
+html body .orb-head > span { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 999px; border: 1px solid #f0dfb4; background: #fffaf0; }
+html body .orb-head .orb-pts { border-color: #d5ebe6; background: #f4faf8; }
+html body .orb-head b { font-size: 18px; font-weight: 800; color: #111827; }
+html body .orb-head small { font-size: 12.5px; color: #6b7280; }
+html body .orb-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 14px 4px 6px; }
+html body .orb { position: relative; aspect-ratio: 1; border: 0; background: radial-gradient(circle at 50% 70%, #eef7f4, transparent 70%); border-radius: 20px; cursor: pointer; display: grid; place-items: center; padding: 6px; animation: orbFloat 2.4s ease-in-out infinite; animation-delay: var(--d); transition: transform .15s; }
+html body .orb:hover:not(:disabled) { transform: translateY(-4px) scale(1.06); }
+html body .orb .orb-svg { width: 100%; height: 100%; filter: drop-shadow(0 6px 10px rgba(29,90,82,.25)); }
+html body .orb.shake { animation: orbShake .9s ease-in-out; }
+html body .orb.open { animation: orbPop .45s ease-out; cursor: default; }
+html body .orb.open:not(.picked) { opacity: .45; transform: scale(.88); }
+html body .orb.picked { background: radial-gradient(circle, #fff7d6, transparent 72%); }
+html body .orb.picked.red { background: radial-gradient(circle, #ffe1e1, transparent 72%); }
+html body .orb-red { width: 70%; height: 90%; filter: drop-shadow(0 6px 10px rgba(158,32,32,.3)); transform: rotate(-6deg); }
+html body .orb-win { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+html body .orb-win b { font-size: 22px; font-weight: 900; color: #a8740c; }
+@keyframes orbFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+@keyframes orbShake { 0%, 100% { transform: rotate(0); } 15% { transform: rotate(-14deg); } 30% { transform: rotate(12deg); } 45% { transform: rotate(-10deg); } 60% { transform: rotate(8deg); } 75% { transform: rotate(-4deg) scale(1.08); } }
+@keyframes orbPop { 0% { transform: scale(.6); opacity: 0; } 70% { transform: scale(1.12); } 100% { transform: scale(1); opacity: 1; } }
+html body .orb-ask { text-align: center; font-size: 14.5px; color: #374151; margin: 6px 0 0; }
+html body .orb-msg { display: flex; flex-direction: column; align-items: center; gap: 2px; margin: 8px 0 4px; padding: 12px; border-radius: 14px; }
+html body .orb-msg b { font-size: 18px; }
+html body .orb-msg span { font-size: 13px; color: #6b7280; }
+html body .orb-msg.win { background: #fffaf0; border: 1px solid #f0dfb4; color: #8a5a00; }
+html body .orb-msg.lose { background: #fff1f1; border: 1px solid #f3c2c2; color: #b42318; }
+html body .orb-again { display: block; margin: 10px auto 0; font: inherit; font-weight: 800; font-size: 15px; padding: 11px 26px; border-radius: 999px; border: 0; background: #47a093; color: #fff; cursor: pointer; }
+html body .orb-again.ghost { background: #fff; color: #2f7d72; border: 1px solid #cfe5e0; }
+html body .orb-empty { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 20px; color: #6b7280; text-align: center; }
+html body .orb-empty b { font-size: 17px; color: #111827; }
+html body .orb-rank { display: grid; gap: 6px; max-height: 50vh; overflow-y: auto; }
+html body .orb-rrow { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 12px; border: 1px solid #e6e9eb; background: #fff; }
+html body .orb-rrow.mine { border-color: #47a093; background: #f4faf8; }
+html body .orb-rpos { width: 26px; text-align: center; font-weight: 800; color: #8a929b; font-size: 15px; }
+html body .orb-rrow .au-av { width: 32px !important; height: 32px !important; min-width: 32px !important; border-radius: 50% !important; font-size: 13px !important; }
+html body .orb-rrow b { flex: 1; min-width: 0; font-size: 14.5px; color: #111827; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+html body .orb-rrow small { font-size: 12px; color: #8a929b; }
+html body .orb-rrow em { font-style: normal; font-weight: 800; color: #a8740c; font-size: 14px; }
+html body .rf-tabs button { font-size: 12.5px !important; padding: 8px 4px !important; }
+html.theme-dark body .orb-rrow { background: #17181b; border-color: #2b2d31; }
+html.theme-dark body :is(.orb-rrow b, .orb-head b, .orb-empty b) { color: #f1f1f3; }
