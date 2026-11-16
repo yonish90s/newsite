@@ -33053,6 +33053,9 @@ const USED_DEMO = [
 ].map(r => Object.assign({ demo: true, kind: 'used' }, r, { t: Date.now() + r.t * 3600e3 }));
 // דוגמאות לעסקים (מוצגות כשיש מעט עסקים אמיתיים)
 const BIZ_DEMO = [
+  { id: 'bz8', img: 'rent/biz-phone.svg', hv: { p: 'er', id: 'nwU5bccY' }, sponsored: true, bizName: 'סטודיו אלבום', title: 'מודעת וידאו — אלבום בצפייה ישירה', price: 220, link: 'https://www.erome.com/a/nwU5bccY', city: 'תל אביב', owner: 'סטודיו אלבום', t: -0.2, desc: 'מודעה עם סרטון שרץ ישירות בתוך המודעה.', specs: ['וידאו חי', 'מסך מלא', 'איכות HD'] },
+  { id: 'bz7', img: 'rent/biz-phone.svg', hv: { p: 'ph', id: '6ad1d8195baa2' }, sponsored: true, bizName: 'סטודיו וידאו', title: 'מודעת וידאו — צפייה ישירה', price: 290, link: 'https://www.pornhub.com/view_video.php?viewkey=6ad1d8195baa2', city: 'תל אביב', owner: 'סטודיו וידאו', t: -0.5, desc: 'מודעה עם סרטון שרץ ישירות בתוך המודעה.', specs: ['וידאו חי', 'מסך מלא', 'איכות HD'] },
+  { id: 'bz6', img: 'rent/biz-phone.svg', hv: { p: 'rg', id: 'leafycompetenttortoise' }, sponsored: true, bizName: 'סטודיו מדיה', title: 'מודעת וידאו — סרטון בפעולה', price: 250, link: 'https://www.redgifs.com/watch/leafycompetenttortoise', city: 'תל אביב', owner: 'סטודיו מדיה', t: -1, desc: 'מודעה עם סרטון שרץ ישירות בתוך המודעה.', specs: ['וידאו חי', 'מסך מלא', 'איכות HD'] },
   { id: 'bz1', img: 'rent/biz-bakery.svg', bizName: 'מאפיית השכונה', title: 'מגש מאפים לאירוע — 40 יחידות', price: 180, link: 'https://example.com/bakery', city: 'הרצליה', owner: 'מאפיית השכונה', t: -4, desc: 'קרואסונים, בורקסים ומאפים מתוקים, טריים מהבוקר. משלוח עד הבית באזור השרון.', specs: ['40 יחידות', 'משלוח בשרון', 'הזמנה יום מראש'] },
   { id: 'bz2', img: 'rent/biz-phone.svg', hv: { p: 'yt', id: 'UTA7ak0ZxA0' }, bizName: 'מעבדת פיקס-טק', title: 'החלפת מסך לאייפון — באותו יום', price: 390, link: 'https://example.com/fixtech', city: 'תל אביב', owner: 'מעבדת פיקס-טק', t: -10, desc: 'מסך איכותי עם אחריות לחצי שנה. מגיעים בבוקר, אוספים אחר הצהריים.', specs: ['אחריות 6 חודשים', 'תוך 3 שעות', 'כל הדגמים'] },
   { id: 'bz5', img: 'rent/biz-phone.svg', hv: { p: 'ody', path: '@prophoneyoutube:b/how-to-huawei-p-smart-2019-screen:5' }, bizName: 'מעבדת פרו-פון', title: 'החלפת מסך ל-Huawei — סרטון מהמעבדה', price: 260, link: '', city: 'חיפה', owner: 'מעבדת פרו-פון', t: -14, desc: 'כך נראית החלפת מסך אצלנו, מההתחלה ועד הסוף. מסך מקורי, אחריות לשלושה חודשים.', specs: ['אחריות 3 חודשים', 'תוך שעתיים', 'Huawei ו-Samsung'] },
@@ -33472,10 +33475,13 @@ function rentAgo(t) {
 function mkVideoParse(raw) {
   let u; try { u = new URL(String(raw || '').trim()); } catch (e) { return null; }
   if (!/^https?:$/.test(u.protocol)) return null;
-  const h = u.hostname.replace(/^(www\.|m\.|mobile\.)/, '').toLowerCase(), path = u.pathname, m = rx => path.match(rx);
+  const h = u.hostname.replace(/^(www\.|m\.|mobile\.|v3\.)/, '').toLowerCase(), path = u.pathname, m = rx => path.match(rx);
   let x;
   const yt = youtubeVideoId(u.href); if (yt) return { p: 'yt', id: yt };
   if (/\.(mp4|webm|ogv|ogg|mov|m4v)$/i.test(path) && u.protocol === 'https:') return { p: 'file', url: u.href.slice(0, 400) };
+  if (h === 'redgifs.com' && (x = m(/^\/(?:watch|ifr|gifs\/detail)\/([a-z0-9_-]{4,60})/i))) return { p: 'rg', id: x[1].toLowerCase() };
+  if ((h === 'pornhub.com' || h.endsWith('.pornhub.com')) && (x = (u.searchParams.get('viewkey') || '').match(/^([a-z0-9]{8,25})$/i) || m(/^\/embed\/([a-z0-9]{8,25})/i))) return { p: 'ph', id: x[1].toLowerCase() };
+  if ((h === 'erome.com' || h.endsWith('.erome.com')) && (x = m(/^\/(?:a|e)\/([a-zA-Z0-9_-]{4,25})/))) return { p: 'er', id: x[1] };
   if (h === 'odysee.com' && path.length > 2 && !path.startsWith('/$/')) return { p: 'ody', path: decodeURIComponent(path.slice(1)).slice(0, 200) };
   if (h === 'odysee.com' && (x = m(/^\/\$\/embed\/(.+)$/))) return { p: 'ody', path: decodeURIComponent(x[1]).slice(0, 200) };
   if ((h === 'vimeo.com' && (x = m(/^\/(?:.*\/)?(\d{6,12})/))) || (h === 'player.vimeo.com' && (x = m(/^\/video\/(\d{6,12})/)))) return { p: 'vimeo', id: x[1] };
@@ -33494,6 +33500,9 @@ window.mkVideoParse = mkVideoParse;
 function mkHeroVideoSrc(hv, big, sound) {
   if (!hv) return '';
   const ok = rx => rx.test(String(hv.id || ''));
+  if (hv.p === 'rg' && ok(/^[a-z0-9_-]{4,60}$/i)) return `https://www.redgifs.com/ifr/${encodeURIComponent(hv.id.toLowerCase())}`;
+  if (hv.p === 'ph' && ok(/^[a-z0-9]{8,25}$/i)) return `https://www.pornhub.com/embed/${encodeURIComponent(hv.id.toLowerCase())}`;
+  if (hv.p === 'er' && ok(/^[a-zA-Z0-9_-]{4,25}$/)) return `https://www.erome.com/e/${encodeURIComponent(hv.id)}`;
   if (hv.p === 'yt' && ok(/^[\w-]{11}$/)) {
     const q = new URLSearchParams({ autoplay: '1', mute: sound ? '0' : '1', loop: '1', playlist: hv.id, controls: big ? '1' : '0', rel: '0', playsinline: '1', iv_load_policy: '3', disablekb: big ? '0' : '1', fs: big ? '1' : '0', modestbranding: '1', cc_load_policy: '0' });
     return `https://www.youtube-nocookie.com/embed/${hv.id}?${q}`;
@@ -33511,32 +33520,14 @@ function mkHeroVideoSrc(hv, big, sound) {
   if (hv.p === 'gd' && ok(/^[\w-]{20,60}$/)) return `https://drive.google.com/file/d/${hv.id}/preview`;
   return '';
 }
-// מציגים תמונה עם כפתור ▶ — הסרטון מתחיל רק כשלוחצים (בעמוד המודעה). תמונה: של המודעה, או של הסרטון ביוטיוב
-const MKHV_PLAY = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg>';
-function mkHeroPoster(r) {
-  const hv = r.hv || {};
-  if (hv.p === 'yt' && /^[\w-]{11}$/.test(hv.id || '') && !(r.img && !/\.svg(\?|$)/.test(r.img))) return `https://i.ytimg.com/vi/${hv.id}/hqdefault.jpg`;
-  return r.img || '';
-}
 function mkHeroVideoHTML(r, big) {
   const hv = r.hv; if (!hv) return '';
   const file = hv.p === 'file' && /^https:\/\/[^\s"'<>]+$/.test(hv.url || '');
-  const src = file ? hv.url : mkHeroVideoSrc(hv, true, false);   // מתחיל בשקט (דפדפנים חוסמים ניגון עם קול); הצליל נפתח מהנגן if (!src) return '';
-  const poster = mkHeroPoster(r);
-  const img = poster ? `<img src="${escHtml(poster)}" alt="" loading="lazy" decoding="async">` : '<span class="mk-hv-blank"></span>';
-  if (!big) return `${img}<i class="mk-hv-play" aria-hidden="true">${MKHV_PLAY}</i>`;
-  return `${img}<button type="button" class="mk-hv-play big" aria-label="הפעלת הסרטון" data-src="${escHtml(src)}" data-file="${file ? 1 : ''}" data-title="${escHtml(r.title || 'סרטון')}" onclick="event.stopPropagation(); mkHvPlay(this)">${MKHV_PLAY}</button>`;
+  const src = file ? hv.url : mkHeroVideoSrc(hv, big, false);
+  if (!src) return '';
+  if (file) return `<span class="mk-hv${big ? ' big' : ''}"><video src="${escHtml(src)}" autoplay muted loop playsinline${big ? ' controls' : ''}></video></span>`;
+  return `<span class="mk-hv${big ? ' big' : ''}"><iframe src="${escHtml(src)}" title="${escHtml(r.title || 'סרטון')}" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen scrolling="no" referrerpolicy="strict-origin-when-cross-origin"${big ? '' : ' tabindex="-1"'}></iframe></span>`;
 }
-function mkHvPlay(btn) {
-  const box = btn.parentElement, src = btn.dataset.src; if (!box || !src) return;
-  const w = document.createElement('span'); w.className = 'mk-hv big';
-  if (btn.dataset.file) { const v = document.createElement('video'); v.src = src; v.autoplay = true; v.muted = true; v.controls = true; v.playsInline = true; v.loop = true; w.appendChild(v); }
-  else { const f = document.createElement('iframe'); f.src = src; f.title = btn.dataset.title || 'סרטון'; f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen'; f.allowFullscreen = true; f.referrerPolicy = 'strict-origin-when-cross-origin'; w.appendChild(f); }
-  box.querySelectorAll(':scope > img, :scope > .mk-hv-blank, :scope > .mk-hv-play').forEach(e => e.remove());
-  box.prepend(w);
-  box.removeAttribute('onclick');
-}
-window.mkHvPlay = mkHvPlay;
 function rentThumb(r, big) {
   if (r.hv) { const h = mkHeroVideoHTML(r, big); if (h) return h; }
   const c = rentCatOf(r.cat), g = r.g || ['#1f2937', '#4b5563'];
@@ -33547,7 +33538,7 @@ function rentThumb(r, big) {
 }
 function rentList() {
   const q = rentUI.q.trim().toLowerCase();
-  let l = mktAll().filter(r => (rentUI.dept === 'all' || r.dept === rentUI.dept) && (!rentUI.since || (r.t && r.t >= Date.now() - rentUI.since)) && (!rentUI.fPrice || r.price > 0) && (!rentUI.fStock || !mktSoldOut(r)) && (!rentUI.fPhoto || !!r.img) && (!rentUI.fVideo || !!r.video) && (rentUI.sec === 'all' || mktSecOf(r) === rentUI.sec) && (rentUI.sec !== 'rent' || rentUI.cat === 'all' || r.cat === rentUI.cat) && (rentUI.city === 'all' || r.city === rentUI.city) && (rentUI.offer === 'all' || r.offer === rentUI.offer) && (rentUI.owner === 'all' || r.owner === rentUI.owner) && (rentUI.min === null || (r.price > 0 && r.price >= rentUI.min && r.price <= rentUI.max)) && (rentUI.pk === 'all' || r.pk === rentUI.pk) && (rentUI.pa === 'all' || projAreaOf(r) === rentUI.pa) && (rentUI.pd === 'all' || r.pd === rentUI.pd)
+  let l = mktAll().filter(r => (rentUI.dept === 'all' || r.dept === rentUI.dept) && (!rentUI.since || (r.t && r.t >= Date.now() - rentUI.since)) && (!rentUI.fPrice || r.price > 0) && (!rentUI.fStock || !mktSoldOut(r)) && (!rentUI.fPhoto || !!r.img) && (!rentUI.fVideo || !!(r.hv || r.video)) && (rentUI.sec === 'all' || mktSecOf(r) === rentUI.sec) && (rentUI.sec !== 'rent' || rentUI.cat === 'all' || r.cat === rentUI.cat) && (rentUI.city === 'all' || r.city === rentUI.city) && (rentUI.offer === 'all' || r.offer === rentUI.offer) && (rentUI.owner === 'all' || r.owner === rentUI.owner) && (rentUI.min === null || (r.price > 0 && r.price >= rentUI.min && r.price <= rentUI.max)) && (rentUI.pk === 'all' || r.pk === rentUI.pk) && (rentUI.pa === 'all' || projAreaOf(r) === rentUI.pa) && (rentUI.pd === 'all' || r.pd === rentUI.pd)
     && (!q || [r.title, r.desc, r.city, r.owner, r.bizName || '', (MKT_DEPT[r.dept] || {}).name || '', (r.htags || []).join(' ').replace(/_/g, ' '), PROJ_KINDS[r.pk] || '', (PROJ_SUB[r.pd] || {}).name || '', projAreaName(projAreaOf(r))].join(' ').toLowerCase().includes(q)));
   const views = r => photoGetViews(rentCommentsKey(r));
   if (rentUI.sort === 'cheap') l.sort((a, b) => a.price - b.price);
@@ -34472,7 +34463,7 @@ function rentDetailHTML(r) {
     <div class="mk-head-rate"><button type="button" class="mk-rate" data-seller="${escHtml(r.uid || '')}" onclick="rentRevOpen()">${rentRateHTML(0, 0)}</button></div>
     <div class="mp mk-pg">
       <div class="rn-det-gal mp-gal">
-        <div class="rn-det-img mp-img" onclick="mkZoomOpen(this)">${rentThumb(full && full.length ? { ...r, img: full[0] } : r, true)}<button type="button" class="mk-zoom-btn" onclick="event.stopPropagation(); mkZoomOpen(this.parentElement)" aria-label="הגדלת התמונה" title="הגדלה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V5a1 1 0 0 1 1-1h4M15 4h4a1 1 0 0 1 1 1v4M20 15v4a1 1 0 0 1-1 1h-4M9 20H5a1 1 0 0 1-1-1v-4"/></svg></button></div>
+        <div class="rn-det-img mp-img"${r.hv ? '' : ' onclick="mkZoomOpen(this)"'}>${rentThumb(full && full.length ? { ...r, img: full[0] } : r, true)}${r.hv ? '' : '<button type="button" class="mk-zoom-btn" onclick="event.stopPropagation(); mkZoomOpen(this.parentElement)" aria-label="הגדלת התמונה" title="הגדלה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V5a1 1 0 0 1 1-1h4M15 4h4a1 1 0 0 1 1 1v4M20 15v4a1 1 0 0 1-1 1h-4M9 20H5a1 1 0 0 1-1-1v-4"/></svg></button>'}</div>
         ${imgs.length ? `<div class="mk-vthumbs bb-thumbs${imgs.length > 7 ? ' has-more' : ''}">
           <div class="mp-thumbs">${imgs.map((u, i) => `<button type="button" class="${i ? '' : 'on'}${i >= 6 && imgs.length > 7 ? ' bb-extra' : ''}" onclick="rentDetPick(this)" aria-label="תמונה ${i + 1}"><img src="${escHtml(u)}" alt="" loading="lazy"></button>`).join('')}${imgs.length > 7 ? `<button type="button" class="bb-more" onclick="this.closest('.bb-thumbs').classList.add('open')" aria-label="עוד ${imgs.length - 6} תמונות"><b>+${imgs.length - 6}</b><small>עוד</small></button>` : ''}</div>
           ${r.video && /^[\w-]{11}$/.test(r.video) ? `<button type="button" class="bb-tile-act" onclick="document.querySelector('.mk-video')?.scrollIntoView({ behavior: 'smooth', block: 'center' })">${ic('<circle cx="12" cy="12" r="9"/><path d="M10 8.5l5 3.5-5 3.5z"/>')}<small>סרטון</small></button>` : ''}
@@ -34664,17 +34655,19 @@ function rentFitPage() {
 // התמונה הראשית בלי שוליים: בגודל המדויק שנכנס, ובמחשב העמודה שלה ברוחב התמונה
 function rentFitImg() {
   const pg = typeof mainContent !== 'undefined' && mainContent && mainContent.querySelector('.mk-pg');
-  const box = pg && pg.querySelector('.mp-img'), img = box && box.querySelector('img');
-  if (!img || !img.naturalWidth) return;
+  const box = pg && pg.querySelector('.mp-img'), img = box && box.querySelector('img'), hv = box && box.querySelector('.mk-hv');
+  if (!box || (!hv && (!img || !img.naturalWidth))) return;
   const wide = innerWidth > 900, rail = parseFloat(getComputedStyle(box).marginLeft) || 0;
   const ratio = 3 / 4, maxW = (wide ? pg.clientWidth * .58 : pg.clientWidth) - rail;
-  const w = Math.floor(wide ? Math.min(maxW, box.clientHeight * ratio) : Math.min(maxW, innerHeight * .6 * ratio));
+  const w = Math.floor(wide ? Math.min(maxW, (box.clientHeight || 560) * ratio) : Math.min(maxW, innerHeight * .6 * ratio));
+  const h = Math.floor(w / ratio);
   if (!wide) {   // בטלפון גובה המסגרת כגובה התמונה, בלי רווח מתחתיה
-    box.style.setProperty('height', Math.floor(w / ratio) + 'px', 'important');
-    const th = pg.querySelector('.mk-vthumbs'); if (th) th.style.setProperty('height', Math.floor(w / ratio) + 'px', 'important');
+    box.style.setProperty('height', h + 'px', 'important');
+    const th = pg.querySelector('.mk-vthumbs'); if (th) th.style.setProperty('height', h + 'px', 'important');
   }
-  img.style.setProperty('width', w + 'px', 'important');
-  img.style.setProperty('height', Math.floor(w / ratio) + 'px', 'important');
+  const target = hv || img;
+  target.style.setProperty('width', w + 'px', 'important');
+  target.style.setProperty('height', h + 'px', 'important');
   if (wide) pg.style.setProperty('--gal-w', w + rail + 'px'); else pg.style.removeProperty('--gal-w');
 }
 window.addEventListener('resize', rentFitPage);
