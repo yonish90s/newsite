@@ -36202,7 +36202,7 @@ Object.assign(window, { phoneVerifyOpen, pvSend, pvBack, pvClose });
         <button type="button" class="mt-circ mt-ai" onclick="mtCompose()" aria-label="חיפוש וקנייה חכמים" aria-expanded="false">${ic('<path d="M12 3l1.9 4.6L18.5 9.5l-4.6 1.9L12 16l-1.9-4.6L5.5 9.5l4.6-1.9z"/><path d="M18.5 15l.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9z"/>')}</button>
         <button type="button" class="mt-circ" onclick="mkPubOpen()" aria-label="פרסום מודעה">${ic('<path d="M12 5v14M5 12h14"/>')}</button>
       </div>
-      <nav class="mt-tabs"><button type="button" data-t="home" onclick="mtTab('home')">בית</button><button type="button" data-t="feed" onclick="mtTab('feed')">במעקב</button></nav>`;
+      <nav class="mt-tabs"><button type="button" data-t="home" onclick="mtTab('home')">בית</button><button type="button" data-t="feed" onclick="mtTab('feed')">במעקב</button><span class="mt-count" aria-live="polite"></span></nav>`;
     document.body.appendChild(el);
     document.documentElement.classList.add('has-mtop');
     mtSync();
@@ -36219,6 +36219,8 @@ function mtSync() {
   const el = document.getElementById('m-top'); if (!el) return;
   const feed = !!document.querySelector('.fd-page'), home = !feed && !!document.querySelector('.rent-page') && !(typeof rentUI !== 'undefined' && (rentUI.open || rentUI.seller));
   el.querySelectorAll('.mt-tabs button').forEach(b => b.classList.toggle('on', (b.dataset.t === 'feed' && feed) || (b.dataset.t === 'home' && home)));
+  const c = el.querySelector('.mt-count');
+  if (c) { let n = -1; if (home) { try { n = rentList().length; } catch (e) {} } c.textContent = n >= 0 ? `${n.toLocaleString('he-IL')} ${n === 1 ? 'מודעה' : 'מודעות'}` : ''; }
 }
 function mtTab(t) {
   if (t === 'feed') { mktFeedOpen(); }
