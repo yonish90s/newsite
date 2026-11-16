@@ -14103,30 +14103,6 @@ function homeGridCardsHTML() {
   const list = _hgItems.slice().sort((a, b) => homeGridSort === 'new' ? t(b.x) - t(a.x) : pop(b.x) - pop(a.x) || t(b.x) - t(a.x));
   return list.length ? list.map(i => homeCardHTML(i.x, i.kind)).join('') : '<div class="hg-empty">עדיין אין כאן תוכן — היו הראשונים להעלות!</div>';
 }
-// סרטון מומלץ בעמוד הבית — בסגנון Reddit: כרטיס כהה, רקע מטושטש מהתמונה, והנגן הרשמי של RedGIFs באמצע (אנכי 9:16).
-// הנגן נטען רק כשלוחצים (מהיר, ולא מנגן לבד). במצב 18+ — התמונה מטושטשת עד הלחיצה.
-const HOME_VIDEO = null;   // אין סרטון מומלץ כרגע. להוספה: { id, title, author, poster }
-function homeVideoHTML() {
-  const v = HOME_VIDEO; if (!v || !v.id) return '';
-  return `<article class="hv" aria-label="${escHtml(v.title)}">
-    <header class="hv-top"><span class="hv-av">🎬</span><b>${escHtml(v.author)}</b><span class="hv-nsfw">18+</span></header>
-    <h3 class="hv-title">${escHtml(v.title)}</h3>
-    <div class="hv-media" data-id="${escHtml(v.id)}" role="button" tabindex="0" aria-label="הפעלת הסרטון" onclick="homeVideoPlay(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();homeVideoPlay(this)}">
-      <img class="hv-bg" src="${escHtml(v.poster)}" alt="" aria-hidden="true">
-      <div class="hv-stage"><img class="hv-poster" src="${escHtml(v.poster)}" alt=""></div>
-      <span class="hv-big"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.4-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg></span>
-      <span class="hv-cover"><b>תוכן למבוגרים</b><small>לחצו כדי לצפות</small></span>
-    </div>
-  </article>`;
-}
-function homeVideoPlay(m) {
-  if (!m || m.classList.contains('playing')) return;
-  if (document.documentElement.classList.contains('adult-blur') && !m.classList.contains('revealed')) { m.classList.add('revealed'); return; }
-  m.classList.add('playing', 'revealed');
-  const st = m.querySelector('.hv-stage');
-  st.innerHTML = `<iframe src="https://www.redgifs.com/ifr/${encodeURIComponent(m.dataset.id)}" title="סרטון" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen scrolling="no"></iframe>`;
-}
-window.homeVideoPlay = homeVideoPlay;
 // העמוד הראשי מציג את השוק. להחזרת הקרוסלה ורשת התמונות: false
 const HOME_MARKET = true;
 function homeGridHTML(photos, comics, stories) {
