@@ -36182,3 +36182,43 @@ async function pvConfirm(code) {
 function pvBack() { if (!pv) return; pv.step = 'phone'; pv.err = ''; pvRender(); }
 function pvClose() { if (pv) { clearInterval(pv.t); if (pv.verifier) try { pv.verifier.clear(); } catch (e) {} } pv = null; const m = document.getElementById('pv-modal'); if (m) m.remove(); }
 Object.assign(window, { phoneVerifyOpen, pvSend, pvBack, pvClose });
+
+// ===== סרגל עליון במובייל (בסגנון אפליקציות): ☰ · חיפוש עם הלוגו · + פרסום, ומתחת לשוניות "בית" / "במעקב" =====
+(function mobileTopBar() {
+  const MQ = window.matchMedia('(max-width: 700px)');
+  const ic = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+  function build() {
+    if (document.getElementById('m-top')) return;
+    const el = document.createElement('div'); el.id = 'm-top';
+    el.innerHTML = `<div class="mt-row">
+        <button type="button" class="mt-circ" onclick="mtMenu()" aria-label="תפריט">${ic('<path d="M4 7h16M4 12h16M4 17h16"/>')}</button>
+        <button type="button" class="mt-search" onclick="mtSearch()" aria-label="חיפוש באתר"><img src="./logo.png" alt=""><span>חיפוש בשוק</span></button>
+        <button type="button" class="mt-circ" onclick="mkPubOpen()" aria-label="פרסום מודעה">${ic('<path d="M12 5v14M5 12h14"/>')}</button>
+      </div>
+      <nav class="mt-tabs"><button type="button" data-t="home" onclick="mtTab('home')">בית</button><button type="button" data-t="feed" onclick="mtTab('feed')">במעקב</button></nav>`;
+    document.body.appendChild(el);
+    document.documentElement.classList.add('has-mtop');
+    mtSync();
+  }
+  function tear() { const el = document.getElementById('m-top'); if (el) el.remove(); document.documentElement.classList.remove('has-mtop'); }
+  const apply = () => { if (MQ.matches) build(); else tear(); };
+  try { MQ.addEventListener('change', apply); } catch (e) { MQ.addListener(apply); }
+  if (document.body) apply(); else document.addEventListener('DOMContentLoaded', apply);
+  // הלשונית הפעילה מתעדכנת לפי מה שמוצג
+  let q = 0;
+  try { new MutationObserver(() => { if (q) return; q = setTimeout(() => { q = 0; mtSync(); }, 150); }).observe(document.body, { childList: true, subtree: true }); } catch (e) {}
+})();
+function mtSync() {
+  const el = document.getElementById('m-top'); if (!el) return;
+  const feed = !!document.querySelector('.fd-page'), home = !feed && !!document.querySelector('.rent-page') && !(typeof rentUI !== 'undefined' && (rentUI.open || rentUI.seller));
+  el.querySelectorAll('.mt-tabs button').forEach(b => b.classList.toggle('on', (b.dataset.t === 'feed' && feed) || (b.dataset.t === 'home' && home)));
+}
+function mtTab(t) {
+  if (t === 'feed') { mktFeedOpen(); }
+  else { if (typeof fbReset === 'function' && typeof rentUI !== 'undefined') Object.assign(rentUI, { open: null, seller: null }); goToHomePage(); }
+  try { window.scrollTo({ top: 0 }); } catch (e) {}
+  setTimeout(mtSync, 200);
+}
+function mtMenu() { const b = document.getElementById('mnav-btn'); if (b) b.click(); }
+function mtSearch() { const b = document.getElementById('header-search-btn'); if (b) b.click(); }
+Object.assign(window, { mtTab, mtMenu, mtSearch, mtSync });
