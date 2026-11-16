@@ -33171,7 +33171,7 @@ function usedAll() {
     raw = (m ? (JSON.parse(decodeURIComponent(m[1])) || []) : []).filter(x => x && x.id && x.title && !x.isAdult && x.approved !== false && !x.adminOnly && !mktExpired(x.createdAt)); } catch (e) {}
   const real = raw.map(x => ({ id: 'sh_' + x.id, shId: x.id, kind: 'used', offer: x.offerType || x.category || 'מכירה', title: x.title, price: parseFloat(String(x.price || '').replace(/[^\d.]/g, '')) || 0, priceTxt: x.price || '',
     unitTxt: x.priceUnit || '', city: x.region || '', owner: x.author || '', uid: x.authorId || '', t: Number(x.createdAt) || 0, stock: Number.isFinite(Number(x.stock)) && x.stock !== null && x.stock !== '' ? Number(x.stock) : null, img: x.image || (Array.isArray(x.images) && x.images[0]) || '',
-    bizName: String(x.bizName || '').slice(0, 60), video: youtubeVideoId(x.video), link: mktLinkUrl(x.link), pk: PROJ_KINDS[x.projectKind] ? x.projectKind : '', pd: PROJ_SUB[x.projectArea] ? x.projectArea : '',
+    bizName: String(x.bizName || '').slice(0, 60), video: '', hv: mkVideoParse(x.video), link: mktLinkUrl(x.link), pk: PROJ_KINDS[x.projectKind] ? x.projectKind : '', pd: PROJ_SUB[x.projectArea] ? x.projectArea : '',
     raw: x, images: (Array.isArray(x.images) ? x.images : []).filter(Boolean), desc: String(x.summary || x.body || '').trim(),
     specs: [x.loanPeriod ? 'תקופת השאלה: ' + x.loanPeriod : ''].concat(Array.isArray(x.loanTerms) ? x.loanTerms.filter(v => typeof v === 'string') : []).filter(Boolean).slice(0, 8) }));
   const realProj = real.filter(mktIsProj).length, realBiz = real.filter(mktIsBiz).length;
@@ -33273,8 +33273,8 @@ function mkPubOpen() {
     </div>
     <label class="mkpub-l" for="mkpub-price">מחיר <small>(לא חובה)</small></label>
     <div class="mkpub-price"><input id="mkpub-price" class="mkpub-in" oninput="mkPubAuto()" type="number" min="0" step="1" inputmode="numeric" placeholder="ריק = ללא מחיר"><span>₪</span></div>
-    <label class="mkpub-l" for="mkpub-video">סרטון יוטיוב <small>(לא חובה — כדי שיראו את המוצר או האתר בפעולה)</small></label>
-    <input id="mkpub-video" class="mkpub-in" type="url" dir="ltr" maxlength="200" placeholder="https://youtu.be/...">
+    <label class="mkpub-l" for="mkpub-video">סרטון <small>(לא חובה — קישור מכל אתר: יוטיוב, טיקטוק, אינסטגרם, פייסבוק, וימאו, אודיסי, דיילימושן, או קובץ וידאו. יוצג במקום התמונה)</small></label>
+    <input id="mkpub-video" class="mkpub-in" type="url" dir="ltr" maxlength="400" placeholder="הדביקו קישור לסרטון…">
     <div class="mkpub-sale">
       <label class="mkpub-l" for="mkpub-stock">כמה יחידות יש לך במלאי? <small>(לא חובה)</small></label>
       <input id="mkpub-stock" class="mkpub-in" type="number" min="0" step="1" inputmode="numeric" placeholder="ריק = ללא הגבלה">
@@ -33362,8 +33362,8 @@ async function mkPubSend() {
   if (linkTxt && !link) return fail('הקישור לא תקין');
   const desc = proj || biz ? ((document.getElementById('mkpub-desc') || {}).value || '').trim().slice(0, 1000) : '';
   const area = proj ? (document.getElementById('mkpub-area') || {}).value || '' : '';
-  const videoTxt = ((document.getElementById('mkpub-video') || {}).value || '').trim(), videoId = youtubeVideoId(videoTxt);
-  if (videoTxt && !videoId) return fail('הקישור ליוטיוב לא תקין');
+  const videoTxt = ((document.getElementById('mkpub-video') || {}).value || '').trim(), videoHv = videoTxt ? mkVideoParse(videoTxt) : null;
+  if (videoTxt && !videoHv) return fail('אי אפשר להציג סרטון מהקישור הזה — נסו קישור ישיר לסרטון (יוטיוב, טיקטוק, אינסטגרם, פייסבוק, וימאו, אודיסי) או לקובץ וידאו');
   if (proj && !PROJ_SUB[area]) return fail('צריך לבחור תחום לפרויקט');
   const stockTxt = proj ? '' : (document.getElementById('mkpub-stock') || {}).value || '', stock = stockTxt === '' ? null : Math.floor(Number(stockTxt));
   if (stock !== null && !(stock >= 0 && stock <= 100000)) return fail('כמות המלאי לא תקינה');
@@ -33372,7 +33372,7 @@ async function mkPubSend() {
   qpEnsureModal();
   document.getElementById('qp-messages').innerHTML = '';
   qpData = { title, images: mkPub.images.slice(0, 5), summary: desc, communityId: null, type: 'photo', pageSection: 'secondhand', isProduct: true, tags: {}, tagIndex: 0, price: priceTxt === '' ? '' : String(price), offerType: proj ? 'פרויקט' : biz ? 'עסק' : 'מכירה', region: '', stock,
-    link: proj || biz ? link : '', bizName, video: videoId ? 'https://youtu.be/' + videoId : '', projectKind: proj ? mkPub.pk : '', projectArea: proj ? area : '' };
+    link: proj || biz ? link : '', bizName, video: videoHv ? videoTxt.slice(0, 400) : '', projectKind: proj ? mkPub.pk : '', projectArea: proj ? area : '' };
   { const a = mkPubAutoCalc(); qpData.dept = a.dept; qpData.hashtags = a.tags; }
   await qpPublish();
   const out = document.getElementById('qp-messages').innerText || '';
@@ -33492,19 +33492,75 @@ function rentAgo(t) {
 [USED_DEMO, RENT_DEMO].forEach(l => l.forEach(d => { if (/^rent\/[^/?]+\.jpg$/.test(d.img || '')) d.img += '?v=2'; if (Array.isArray(d.images)) d.images = d.images.map(u => /^rent\/[^/?]+\.jpg$/.test(u || '') ? u + '?v=2' : u); }));
 // ===== ניסוי: סרטון במקום התמונה של המודעה (יוטיוב / אודיסי) — מנגן בשקט ובלולאה, עם כמה שפחות כפתורים של הנגן =====
 // בכרטיסים הסרטון רק "חי" ברקע (בלי לחיצות — הלחיצה פותחת את המודעה); בעמוד המודעה אפשר לשלוט בו
-function mkHeroVideoSrc(hv, big) {
+// קישור לסרטון מכל אתר נפוץ → { p, id } שאפשר להציג במקום התמונה. אתר שלא מאפשר הטמעה = null
+function mkVideoParse(raw) {
+  let u; try { u = new URL(String(raw || '').trim()); } catch (e) { return null; }
+  if (!/^https?:$/.test(u.protocol)) return null;
+  const h = u.hostname.replace(/^(www\.|m\.|mobile\.)/, '').toLowerCase(), path = u.pathname, m = rx => path.match(rx);
+  let x;
+  const yt = youtubeVideoId(u.href); if (yt) return { p: 'yt', id: yt };
+  if (/\.(mp4|webm|ogv|ogg|mov|m4v)$/i.test(path) && u.protocol === 'https:') return { p: 'file', url: u.href.slice(0, 400) };
+  if (h === 'odysee.com' && path.length > 2 && !path.startsWith('/$/')) return { p: 'ody', path: decodeURIComponent(path.slice(1)).slice(0, 200) };
+  if (h === 'odysee.com' && (x = m(/^\/\$\/embed\/(.+)$/))) return { p: 'ody', path: decodeURIComponent(x[1]).slice(0, 200) };
+  if ((h === 'vimeo.com' && (x = m(/^\/(?:.*\/)?(\d{6,12})/))) || (h === 'player.vimeo.com' && (x = m(/^\/video\/(\d{6,12})/)))) return { p: 'vimeo', id: x[1] };
+  if ((h === 'dailymotion.com' && (x = m(/^\/(?:embed\/)?video\/([a-z0-9]{5,12})/i))) || (h === 'dai.ly' && (x = m(/^\/([a-z0-9]{5,12})/i)))) return { p: 'dm', id: x[1] };
+  if (h === 'tiktok.com' && (x = m(/\/video\/(\d{8,25})/))) return { p: 'tt', id: x[1] };
+  if (h === 'streamable.com' && (x = m(/^\/(?:e\/)?([a-z0-9]{4,12})$/i))) return { p: 'stb', id: x[1] };
+  if (h === 'instagram.com' && (x = m(/^\/(?:[\w.]+\/)?(reel|reels|p|tv)\/([\w-]{5,40})/))) return { p: 'ig', id: x[2] };
+  if ((h === 'facebook.com' && /\/(videos|watch|reel)\b|\/share\/v\//.test(path + u.search)) || h === 'fb.watch') return { p: 'fb', url: u.href.slice(0, 300) };
+  if (h === 'rumble.com' && (x = m(/^\/embed\/([a-z0-9]{4,12})/i))) return { p: 'rmb', id: x[1] };
+  if (h === 'bitchute.com' && (x = m(/^\/(?:video|embed)\/([\w-]{6,20})/))) return { p: 'btc', id: x[1] };
+  if (h === 'loom.com' && (x = m(/^\/(?:share|embed)\/([a-f0-9]{20,40})/))) return { p: 'loom', id: x[1] };
+  if (h === 'drive.google.com' && (x = m(/^\/file\/d\/([\w-]{20,60})/))) return { p: 'gd', id: x[1] };
+  return null;
+}
+window.mkVideoParse = mkVideoParse;
+function mkHeroVideoSrc(hv, big, sound) {
   if (!hv) return '';
-  if (hv.p === 'yt' && /^[\w-]{11}$/.test(hv.id || '')) {
-    const q = new URLSearchParams({ autoplay: '1', mute: '1', loop: '1', playlist: hv.id, controls: big ? '1' : '0', rel: '0', playsinline: '1', iv_load_policy: '3', disablekb: big ? '0' : '1', fs: big ? '1' : '0', modestbranding: '1', cc_load_policy: '0' });
+  const ok = rx => rx.test(String(hv.id || ''));
+  if (hv.p === 'yt' && ok(/^[\w-]{11}$/)) {
+    const q = new URLSearchParams({ autoplay: '1', mute: sound ? '0' : '1', loop: '1', playlist: hv.id, controls: big ? '1' : '0', rel: '0', playsinline: '1', iv_load_policy: '3', disablekb: big ? '0' : '1', fs: big ? '1' : '0', modestbranding: '1', cc_load_policy: '0' });
     return `https://www.youtube-nocookie.com/embed/${hv.id}?${q}`;
   }
-  if (hv.p === 'ody' && /^[@\w.:\-/]+$/.test(hv.path || '')) return `https://odysee.com/$/embed/${encodeURIComponent(hv.path)}`;   // פרמטרים של ניגון אוטומטי שוברים את הנגן של אודיסי
+  if (hv.p === 'ody' && /^[@\w.:\-/ ]+$/.test(hv.path || '')) return `https://odysee.com/$/embed/${encodeURIComponent(hv.path)}`;   // פרמטרים של ניגון אוטומטי שוברים את הנגן של אודיסי
+  if (hv.p === 'vimeo' && ok(/^\d{6,12}$/)) return `https://player.vimeo.com/video/${hv.id}?autoplay=1&muted=${sound ? 0 : 1}&loop=1&title=0&byline=0&portrait=0&dnt=1${big ? '' : '&controls=0'}`;
+  if (hv.p === 'dm' && ok(/^[a-z0-9]{5,12}$/i)) return `https://geo.dailymotion.com/player.html?video=${hv.id}&autoplay=1&mute=true&loop=true`;
+  if (hv.p === 'tt' && ok(/^\d{8,25}$/)) return `https://www.tiktok.com/player/v1/${hv.id}?autoplay=1&loop=1&muted=1&music_info=0&description=0&rel=0&native_context_menu=0&closed_caption=0${big ? '' : '&controls=0&progress_bar=0&play_button=0&volume_control=0&fullscreen_button=0&timestamp=0'}`;
+  if (hv.p === 'stb' && ok(/^[a-z0-9]{4,12}$/i)) return `https://streamable.com/e/${hv.id}?autoplay=1&muted=1&loop=1&nocontrols=${big ? 0 : 1}`;
+  if (hv.p === 'ig' && ok(/^[\w-]{5,40}$/)) return `https://www.instagram.com/reel/${hv.id}/embed`;
+  if (hv.p === 'fb' && /^https:\/\/(www\.|m\.)?(facebook\.com|fb\.watch)\//.test(hv.url || '')) return `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(hv.url)}&autoplay=true&mute=true&show_text=false`;
+  if (hv.p === 'rmb' && ok(/^[a-z0-9]{4,12}$/i)) return `https://rumble.com/embed/${hv.id}/?autoplay=2&muted=1`;
+  if (hv.p === 'btc' && ok(/^[\w-]{6,20}$/)) return `https://www.bitchute.com/embed/${hv.id}/`;
+  if (hv.p === 'loom' && ok(/^[a-f0-9]{20,40}$/)) return `https://www.loom.com/embed/${hv.id}?autoplay=1&muted=1&hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true`;
+  if (hv.p === 'gd' && ok(/^[\w-]{20,60}$/)) return `https://drive.google.com/file/d/${hv.id}/preview`;
   return '';
 }
-function mkHeroVideoHTML(r, big) {
-  const src = mkHeroVideoSrc(r.hv, big); if (!src) return '';
-  return `<span class="mk-hv${big ? ' big' : ''}"><iframe src="${escHtml(src)}" title="${escHtml(r.title || 'סרטון')}"${r.hv.p === 'yt' ? ' loading="lazy"' : ''} allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" tabindex="-1"></iframe></span>`;
+// מציגים תמונה עם כפתור ▶ — הסרטון מתחיל רק כשלוחצים (בעמוד המודעה). תמונה: של המודעה, או של הסרטון ביוטיוב
+const MKHV_PLAY = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg>';
+function mkHeroPoster(r) {
+  const hv = r.hv || {};
+  if (hv.p === 'yt' && /^[\w-]{11}$/.test(hv.id || '') && !(r.img && !/\.svg(\?|$)/.test(r.img))) return `https://i.ytimg.com/vi/${hv.id}/hqdefault.jpg`;
+  return r.img || '';
 }
+function mkHeroVideoHTML(r, big) {
+  const hv = r.hv; if (!hv) return '';
+  const file = hv.p === 'file' && /^https:\/\/[^\s"'<>]+$/.test(hv.url || '');
+  const src = file ? hv.url : mkHeroVideoSrc(hv, true, false);   // מתחיל בשקט (דפדפנים חוסמים ניגון עם קול); הצליל נפתח מהנגן if (!src) return '';
+  const poster = mkHeroPoster(r);
+  const img = poster ? `<img src="${escHtml(poster)}" alt="" loading="lazy" decoding="async">` : '<span class="mk-hv-blank"></span>';
+  if (!big) return `${img}<i class="mk-hv-play" aria-hidden="true">${MKHV_PLAY}</i>`;
+  return `${img}<button type="button" class="mk-hv-play big" aria-label="הפעלת הסרטון" data-src="${escHtml(src)}" data-file="${file ? 1 : ''}" data-title="${escHtml(r.title || 'סרטון')}" onclick="event.stopPropagation(); mkHvPlay(this)">${MKHV_PLAY}</button>`;
+}
+function mkHvPlay(btn) {
+  const box = btn.parentElement, src = btn.dataset.src; if (!box || !src) return;
+  const w = document.createElement('span'); w.className = 'mk-hv big';
+  if (btn.dataset.file) { const v = document.createElement('video'); v.src = src; v.autoplay = true; v.muted = true; v.controls = true; v.playsInline = true; v.loop = true; w.appendChild(v); }
+  else { const f = document.createElement('iframe'); f.src = src; f.title = btn.dataset.title || 'סרטון'; f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen'; f.allowFullscreen = true; f.referrerPolicy = 'strict-origin-when-cross-origin'; w.appendChild(f); }
+  box.querySelectorAll(':scope > img, :scope > .mk-hv-blank, :scope > .mk-hv-play').forEach(e => e.remove());
+  box.prepend(w);
+  box.removeAttribute('onclick');
+}
+window.mkHvPlay = mkHvPlay;
 function rentThumb(r, big) {
   if (r.hv) { const h = mkHeroVideoHTML(r, big); if (h) return h; }
   const c = rentCatOf(r.cat), g = r.g || ['#1f2937', '#4b5563'];
