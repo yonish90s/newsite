@@ -36191,7 +36191,7 @@ Object.assign(window, { phoneVerifyOpen, pvSend, pvBack, pvClose });
     const el = document.createElement('div'); el.id = 'm-top';
     el.innerHTML = `<div class="mt-row">
         <button type="button" class="mt-circ" onclick="mtMenu()" aria-label="תפריט">${ic('<path d="M4 7h16M4 12h16M4 17h16"/>')}</button>
-        <button type="button" class="mt-search" onclick="mtSearch()" aria-label="חיפוש באתר"><img src="./logo.png" alt=""><span>חיפוש בשוק</span></button>
+        <div class="mt-search"><button type="button" class="mt-logo" onclick="mtTab('home')" aria-label="לדף הבית"><img src="./logo.png" alt=""></button><button type="button" class="mt-q" onclick="mtSearch()" aria-label="חיפוש באתר">חיפוש בשוק</button></div>
         <button type="button" class="mt-circ" onclick="mkPubOpen()" aria-label="פרסום מודעה">${ic('<path d="M12 5v14M5 12h14"/>')}</button>
       </div>
       <nav class="mt-tabs"><button type="button" data-t="home" onclick="mtTab('home')">בית</button><button type="button" data-t="feed" onclick="mtTab('feed')">במעקב</button></nav>`;
