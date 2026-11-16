@@ -36192,6 +36192,7 @@ Object.assign(window, { phoneVerifyOpen, pvSend, pvBack, pvClose });
     el.innerHTML = `<div class="mt-row">
         <button type="button" class="mt-circ" onclick="mtMenu()" aria-label="תפריט">${ic('<path d="M4 7h16M4 12h16M4 17h16"/>')}</button>
         <div class="mt-search"><button type="button" class="mt-logo" onclick="mtTab('home')" aria-label="לדף הבית"><img src="./logo.png" alt=""></button><button type="button" class="mt-q" onclick="mtSearch()" aria-label="חיפוש באתר">חיפוש בשוק</button></div>
+        <button type="button" class="mt-circ mt-ai" onclick="mtCompose()" aria-label="חיפוש וקנייה חכמים" aria-expanded="false">${ic('<path d="M12 3l1.9 4.6L18.5 9.5l-4.6 1.9L12 16l-1.9-4.6L5.5 9.5l4.6-1.9z"/><path d="M18.5 15l.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9z"/>')}</button>
         <button type="button" class="mt-circ" onclick="mkPubOpen()" aria-label="פרסום מודעה">${ic('<path d="M12 5v14M5 12h14"/>')}</button>
       </div>
       <nav class="mt-tabs"><button type="button" data-t="home" onclick="mtTab('home')">בית</button><button type="button" data-t="feed" onclick="mtTab('feed')">במעקב</button></nav>`;
@@ -36218,6 +36219,17 @@ function mtTab(t) {
   try { window.scrollTo({ top: 0 }); } catch (e) {}
   setTimeout(mtSync, 200);
 }
+// העיגול השחור: פותח/סוגר את חלון "חיפוש וקנייה" (במובייל הוא מוסתר עד שלוחצים)
+function mtCompose() {
+  const on = document.documentElement.classList.toggle('hc-open');
+  const b = document.querySelector('#m-top .mt-ai'); if (b) b.setAttribute('aria-expanded', String(on));
+  if (on) {
+    if (!document.querySelector('.hc-wrap')) { mtTab('home'); setTimeout(mtCompose2, 600); return; }
+    mtCompose2();
+  }
+}
+function mtCompose2() { const w = document.querySelector('.hc-wrap'); if (!w) return; try { w.scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch (e) {} setTimeout(() => { const i = document.getElementById('hc-in'); if (i) i.focus(); }, 250); }
+window.mtCompose = mtCompose;
 function mtMenu() { const b = document.getElementById('mnav-btn'); if (b) b.click(); }
 function mtSearch() { const b = document.getElementById('header-search-btn'); if (b) b.click(); }
 Object.assign(window, { mtTab, mtMenu, mtSearch, mtSync });
