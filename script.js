@@ -1439,7 +1439,7 @@ function renderTopNav() {
     navLinksContainer.appendChild(a);
   });
   // פרופיל ופיד — אחרי "בית"
-  [['פרופיל', () => { const u = auth.currentUser; if (u && !u.isAnonymous) openUserPage(u.uid); else if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); }], ['פיד', () => mktFeedOpen()], ['חנות', () => shopPageOpen()]].forEach(([t, go]) => {
+  [['פרופיל', () => { const u = auth.currentUser; if (u && !u.isAnonymous) openUserPage(u.uid); else if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); }], ['פיד', () => mktFeedOpen()], ['חנות', () => shopPageOpen()], ['עסקאות', () => dlsOpen()]].concat(isAdmin() ? [['אישור פוסטים', () => apvOpen()]] : []).forEach(([t, go]) => {
     const a = document.createElement('a');
     a.href = '#'; a.textContent = t; a.className = 'nav-x';
     a.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); window.__detailOpen = false; go(); });
@@ -28137,7 +28137,7 @@ const OFX_HIST_LIM = 3;
 function ofxToggleAll() { ofxAll = !ofxAll; offersRerender(); }
 // אחרי פעולה: השורה נעלמת בעדינות מ"ממתינות" ועוברת להיסטוריה
 function ofxFadeOut(id, then) {
-  const rows = document.querySelectorAll(`.ofx-card .ofx-row[data-oid="${CSS.escape(id)}"]`);
+  const rows = document.querySelectorAll(`.ofx-card .ofx-row[data-oid="${CSS.escape(id)}"], .dls-sq[data-oid="${CSS.escape(id)}"]`);
   rows.forEach(r => r.classList.add('ofx-gone'));
   setTimeout(then, rows.length ? 280 : 0);
 }
@@ -28259,6 +28259,7 @@ function ofpListHTML() {
 }
 function offersRerender() {
   pfOffersRefresh();
+  try { dlsRefresh(); dlsTabPaint(); } catch (e) {}
   if (typeof cmpOffersRefresh === 'function') cmpOffersRefresh();
   const b = document.querySelector('#ofp-panel .fo-panel-body'); if (b) b.innerHTML = ofpListHTML();
   const c = document.getElementById('ofp-cart'); if (!c) return;
@@ -33454,6 +33455,7 @@ function rentSubscribe() {
       rentData = Object.entries(v).map(([id, r]) => Object.assign({ id }, r)).filter(r => r && r.title && r.active !== false);
       mktPurgeExpired();
       rentRender();
+      try { apvRefresh(); } catch (e) {}
     }, () => { rentData = []; rentRender(); });
     onValue(ref(db, 'website/market_hidden'), snap => { mktHidden = snap.val() || {}; rentRender(); }, () => {});
     onAuthStateChanged(auth, () => { mktPurgeExpired(); if (!rentUI.open) rentRender(); });   // המנהל רואה את האיקס אחרי ההתחברות
@@ -33621,6 +33623,117 @@ function rentHoverHTML(x) {
     ${b('דיווח', 'M5 21V4M5 4h11l-2 4 2 4H5', `openReportContent('${artEsc(rk)}', '${artEsc(x.title || '')}')`, false, '', '', cnt(Number(itemLikesData[rpKey]) || 0, ` data-likes-n="${escHtml(rpKey)}"`))}
   </span></span>`;
 }
+// ===== דף "עסקאות" (לכל המשתמשים, גם במובייל): ריבועים עם ההצעות — דחייה / משא ומתן / אישור =====
+let dlsTab = 'in';
+function dlsList() {
+  const u = auth.currentUser, me = u && !u.isAnonymous ? u.uid : '';
+  let list = me ? Object.values(offersMap).filter(o => (dlsTab === 'out' ? o.fromUid : o.toUid) === me) : [];
+  const demo = !list.length && dlsTab === 'in';
+  if (demo) list = OFX_DEMO().map(o => Object.assign({}, o, ofxDemoState[o.id] || {}));
+  const turn = o => demo ? o.status === 'pending' : offersMyTurn(o), at = o => o.updatedAt || o.at || 0;
+  list.sort((a, b) => (turn(b) - turn(a)) || (at(b) - at(a)));
+  return { list, demo, me: demo ? '_me' : me, turn };
+}
+function dlsSqHTML(o, me, demo, myTurn) {
+  const mine = o.fromUid === me, other = mine ? (o.toName || 'משתמש') : (o.fromName || 'אורח'), otherUid = mine ? o.toUid : o.fromUid;
+  const img = demo ? ({ d2: 'rent/u-sofa.jpg?v=2', d3: 'rent/u-bike.jpg?v=2', d4: 'rent/u-fridge.jpg?v=2' })[o.id] || '' : (dealImages(o)[0] || '');
+  const st = o.status === 'accepted' || o.status === 'signed' ? ['אושרה', 'ok'] : o.status === 'rejected' ? ['נדחתה', 'no'] : o.status === 'counter' ? ['הצעה נגדית', 'deal'] : [myTurn ? 'ממתינה לך' : 'ממתינה', 'wait'];
+  const act = (kind, label, fn) => `<button type="button" class="dls-b ${kind}" title="${label}" aria-label="${label}" onclick="event.stopPropagation(); ${fn}">${OFX_IC[kind]}</button>`;
+  const dmAct = k => `ofxDemo('${k}', '${artEsc(o.id)}', '${artEsc(o.title || '')}', ${Number(o.price) || 0})`;
+  const btns = myTurn ? `<span class="dls-acts">${act('no', 'דחייה', demo ? dmAct('no') : `offerDecide('${artEsc(o.id)}','rejected')`)}${act('deal', 'משא ומתן', demo ? dmAct('deal') : `offerCounter('${artEsc(o.id)}')`)}${act('ok', 'אישור', demo ? dmAct('ok') : `offerDecide('${artEsc(o.id)}','accepted')`)}</span>` : '';
+  const initial = escHtml(String(o.title || other).trim().charAt(0) || '?');
+  return `<div class="dls-sq${myTurn ? ' turn' : ''}" data-oid="${escHtml(o.id || '')}" role="button" tabindex="0" onclick="dealDetailOpen('${artEsc(o.id || '')}', ${demo ? 'true' : 'false'})">
+    <span class="dls-img" style="--av:${typeof forumAvColor === 'function' ? forumAvColor({ uid: otherUid || '', name: other }) : '#47a093'}">${img ? `<img src="${escHtml(img)}" alt="" loading="lazy" onerror="this.remove()">` : ''}<i>${initial}</i>
+      ${o.price ? `<b class="dls-price">₪${Number(o.price).toLocaleString('he-IL')}</b>` : ''}<em class="dls-st ${st[1]}">${st[0]}</em>${demo ? '<em class="dls-demo">דוגמה</em>' : ''}</span>
+    <span class="dls-tx"><b>${escHtml(o.title || 'הצעה')}</b><small>${mine ? 'אל' : 'מאת'} ${escHtml(other)} · ${escHtml(ofxDay(o.updatedAt || o.at || 0))}</small></span>
+    ${btns}
+  </div>`;
+}
+function dlsHTML() {
+  const { list, demo, me, turn } = dlsList();
+  const u = auth.currentUser, guest = !u || u.isAnonymous;
+  const n = list.filter(turn).length;
+  return `<h1 class="fd-h">עסקאות</h1>
+    <nav class="dls-tabs"><button type="button" class="${dlsTab === 'in' ? 'on' : ''}" onclick="dlsSetTab('in')">התקבלו</button><button type="button" class="${dlsTab === 'out' ? 'on' : ''}" onclick="dlsSetTab('out')">נשלחו</button>${n && !demo ? `<small>${n} מחכות לתשובה שלך</small>` : ''}</nav>
+    ${guest ? `<p class="dls-note">התחברו כדי לקבל ולשלוח הצעות. <button type="button" onclick="openLiveChatLogin()">התחברות</button></p>` : ''}
+    ${list.length ? `<div class="dls-grid">${list.map(o => dlsSqHTML(o, me, demo, turn(o))).join('')}</div>` : `<div class="rn-empty">${dlsTab === 'out' ? 'עדיין לא שלחת הצעות.<br>בכל מודעה יש כפתור משא ומתן.' : 'עדיין לא קיבלת הצעות.'}</div>`}
+    ${demo ? '<p class="dls-note">כך ייראו ההצעות כשיתחילו להגיע מלקוחות</p>' : ''}`;
+}
+function dlsOpen() {
+  if (typeof mainContent === 'undefined' || !mainContent) return;
+  try { offersSubscribe(); } catch (e) {}
+  window.__detailOpen = false;
+  mainContent.innerHTML = `<div class="dls-page">${dlsHTML()}</div>`;
+  try { window.scrollTo(0, 0); } catch (e) {}
+  setTimeout(() => { try { mtSync(); } catch (e) {} }, 50);
+}
+function dlsRefresh() { const el = document.querySelector('.dls-page'); if (el) el.innerHTML = dlsHTML(); }
+function dlsSetTab(t) { dlsTab = t; dlsRefresh(); }
+function dlsTabPaint() {
+  const i = document.querySelector('#m-top .mt-dls-n'); if (!i) return;
+  const n = Object.values(offersMap || {}).filter(offersMyTurn).length;
+  i.textContent = n ? (n > 9 ? '9+' : String(n)) : '';
+}
+Object.assign(window, { dlsOpen, dlsSetTab });
+// ===== אישור פוסטים (למנהל בלבד): כל מודעה שגולש העלה + בקשות תוכן ממתינות =====
+// המודעות נשארות באתר; כאן המנהל עובר על כל אחת — "אישור" מוציא אותה מהתור, "הסרה" מוחקת אותה
+let apvReviewed = null, apvSub = false;
+function apvLocal() { try { return JSON.parse(localStorage.getItem('apv_reviewed') || '{}') || {}; } catch (e) { return {}; } }
+function apvMap() { return Object.assign({}, apvLocal(), apvReviewed || {}); }
+function apvSubscribe() {
+  if (apvSub || !isAdmin()) return; apvSub = true;
+  try { onValue(ref(db, 'website/market_reviewed'), snap => { apvReviewed = snap.val() || {}; apvRefresh(); }, () => { apvReviewed = {}; }); } catch (e) {}
+  try { rentSubscribe(); } catch (e) {}
+  try { subscribePendingSubmissions(); } catch (e) {}
+}
+function apvQueue() {
+  const done = apvMap();
+  return (rentData || []).filter(r => r && !r.demo && !done[r.id]).sort((a, b) => (b.t || 0) - (a.t || 0));
+}
+function apvPendingCount() { try { return pendingRequestsAll().length; } catch (e) { return 0; } }
+function apvTabPaint() {
+  const b = document.querySelector('#m-top .mt-apv'); if (!b) return;
+  const on = isAdmin(); b.hidden = !on; if (!on) return;
+  apvSubscribe();
+  const n = apvQueue().length + apvPendingCount(), i = b.querySelector('.mt-apv-n');
+  if (i) i.textContent = n ? (n > 99 ? '99+' : String(n)) : '';
+}
+function apvRowHTML(r) {
+  const img = r.img || (r.images || [])[0] || '';
+  return `<div class="apv-row" data-id="${escHtml(r.id)}">
+    <button type="button" class="apv-th" onclick="rentOpen('${artEsc(r.id)}')" aria-label="פתיחת המודעה">${img ? `<img src="${escHtml(img)}" alt="" loading="lazy">` : PRODUCT_ICON}</button>
+    <span class="apv-tx" onclick="rentOpen('${artEsc(r.id)}')"><b>${escHtml(r.title || 'ללא כותרת')}</b><small>${escHtml(r.owner || 'גולש')} · ${rentAgo(r.t)}${Number(r.price) > 0 ? ' · ₪' + Number(r.price).toLocaleString('he-IL') : ''}</small>${r.desc ? `<em>${escHtml(String(r.desc).slice(0, 140))}</em>` : ''}</span>
+    <span class="apv-act"><button type="button" class="apv-ok" onclick="apvOk('${artEsc(r.id)}')" aria-label="אישור">✓</button><button type="button" class="apv-no" onclick="apvDel('${artEsc(r.id)}')" aria-label="הסרה">✕</button></span>
+  </div>`;
+}
+function apvHTML() {
+  const q = apvQueue(), pend = apvPendingCount();
+  return `<h1 class="fd-h">אישור פוסטים <small>${q.length + pend}</small></h1>
+    ${pend ? `<h2 class="apv-h">תוכן שממתין לפרסום (${pend})</h2><div id="pending-requests-list">${pendingRequestsListHTML()}</div>` : ''}
+    <h2 class="apv-h">מודעות חדשות של גולשים (${q.length})${q.length > 1 ? `<button type="button" class="apv-all" onclick="apvOkAll()">אישור הכל</button>` : ''}</h2>
+    ${q.length ? `<div class="apv-list">${q.map(apvRowHTML).join('')}</div>` : '<div class="rn-empty">אין מודעות שממתינות לבדיקה 🎉</div>'}`;
+}
+function apvOpen() {
+  if (!isAdmin()) return;
+  if (typeof mainContent === 'undefined' || !mainContent) return;
+  apvSubscribe();
+  window.__detailOpen = false;
+  mainContent.innerHTML = `<div class="apv-page">${apvHTML()}</div>`;
+  try { window.scrollTo(0, 0); } catch (e) {}
+  setTimeout(() => { try { mtSync(); } catch (e) {} }, 50);
+}
+function apvRefresh() { const el = document.querySelector('.apv-page'); if (el) el.innerHTML = apvHTML(); apvTabPaint(); }
+async function apvMark(ids) {
+  const m = apvLocal(); ids.forEach(id => { m[id] = Date.now(); });
+  try { localStorage.setItem('apv_reviewed', JSON.stringify(m)); } catch (e) {}
+  const up = {}; ids.forEach(id => { up[id] = Date.now(); });
+  try { await update(ref(db, 'website/market_reviewed'), up); } catch (e) {}
+  apvRefresh();
+}
+function apvOk(id) { const row = document.querySelector(`.apv-row[data-id="${CSS.escape(id)}"]`); if (row) row.classList.add('gone'); setTimeout(() => apvMark([id]), 180); }
+function apvOkAll() { const q = apvQueue(); if (q.length && confirm(`לאשר את כל ${q.length} המודעות?`)) apvMark(q.map(r => r.id)); }
+async function apvDel(id) { await rentAdminDelete(id); setTimeout(apvRefresh, 300); }
+Object.assign(window, { apvOpen, apvOk, apvOkAll, apvDel });
 // מעקב אחרי המוכר ישר מהכרטיס (מוכר לדוגמה — נשמר רק בדפדפן)
 function mkFollowOn(x) { return x.uid ? (typeof isFollowing === 'function' && isFollowing(x.uid)) : igDemoFollowing(igDemoKeyOf(x.owner)); }
 async function mkCardFollow(el, uid, name) {
@@ -36257,7 +36370,7 @@ Object.assign(window, { phoneVerifyOpen, pvSend, pvBack, pvClose });
         <button type="button" class="mt-circ mt-ai" onclick="mtCompose()" aria-label="חיפוש וקנייה חכמים" aria-expanded="false">${ic('<path d="M12 3l1.9 4.6L18.5 9.5l-4.6 1.9L12 16l-1.9-4.6L5.5 9.5l4.6-1.9z"/><path d="M18.5 15l.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9z"/>')}</button>
         <button type="button" class="mt-circ" onclick="mkPubOpen()" aria-label="פרסום מודעה">${ic('<path d="M12 5v14M5 12h14"/>')}</button>
       </div>
-      <nav class="mt-tabs"><button type="button" data-t="home" onclick="mtTab('home')">בית</button><button type="button" data-t="feed" onclick="mtTab('feed')">במעקב</button><span class="mt-count" aria-live="polite"></span></nav>`;
+      <nav class="mt-tabs"><button type="button" data-t="home" onclick="mtTab('home')">בית</button><button type="button" data-t="feed" onclick="mtTab('feed')">במעקב</button><button type="button" data-t="deals" class="mt-dls" onclick="mtTab('deals')">עסקאות<i class="mt-apv-n mt-dls-n"></i></button><button type="button" data-t="apv" class="mt-apv" hidden onclick="mtTab('apv')">אישור<i class="mt-apv-n"></i></button><span class="mt-count" aria-live="polite"></span></nav>`;
     document.body.appendChild(el);
     document.documentElement.classList.add('has-mtop');
     mtSync();
@@ -36293,13 +36406,17 @@ try { onAuthStateChanged(auth, () => setTimeout(mtMePaint, 300)); } catch (e) {}
 function mtSync() {
   mtMePaint();
   const el = document.getElementById('m-top'); if (!el) return;
-  const feed = !!document.querySelector('.fd-page'), home = !feed && !!document.querySelector('.rent-page') && !(typeof rentUI !== 'undefined' && (rentUI.open || rentUI.seller));
-  el.querySelectorAll('.mt-tabs button').forEach(b => b.classList.toggle('on', (b.dataset.t === 'feed' && feed) || (b.dataset.t === 'home' && home)));
+  const dls = !!document.querySelector('.dls-page'), apv = !!document.querySelector('.apv-page'), feed = !apv && !dls && !!document.querySelector('.fd-page'), home = !feed && !apv && !dls && !!document.querySelector('.rent-page') && !(typeof rentUI !== 'undefined' && (rentUI.open || rentUI.seller));
+  el.querySelectorAll('.mt-tabs button').forEach(b => b.classList.toggle('on', (b.dataset.t === 'feed' && feed) || (b.dataset.t === 'home' && home) || (b.dataset.t === 'apv' && apv) || (b.dataset.t === 'deals' && dls)));
+  dlsTabPaint();
+  apvTabPaint();
   const c = el.querySelector('.mt-count');
   if (c) { let n = -1; if (home) { try { n = rentList().length; } catch (e) {} } c.textContent = n >= 0 ? `${n.toLocaleString('he-IL')} ${n === 1 ? 'מודעה' : 'מודעות'}` : ''; }
 }
 function mtTab(t) {
   if (t === 'feed') { mktFeedOpen(); }
+  else if (t === 'apv') { apvOpen(); }
+  else if (t === 'deals') { dlsOpen(); }
   else { if (typeof fbReset === 'function' && typeof rentUI !== 'undefined') Object.assign(rentUI, { open: null, seller: null }); goToHomePage(); }
   try { window.scrollTo({ top: 0 }); } catch (e) {}
   setTimeout(mtSync, 200);
