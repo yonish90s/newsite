@@ -18909,6 +18909,12 @@ function myShopAgain(no) {
 function myShopWantDel(i) { if (typeof buyWants === 'undefined') return; buyWants.splice(i, 1); try { localStorage.setItem('buy_wants', JSON.stringify(buyWants.slice(-20))); } catch (e) {} myShopOpen('list'); }
 Object.assign(window, { myShopOpen, myShopAgain, myShopWantDel });
 // הפיד: מה שאני ומי שאני עוקב/ת אחריהם העלינו ושיתפנו, מהחדש לישן
+function fdHidden() { try { return JSON.parse(localStorage.getItem('fd_sugg_hide') || '{}') || {}; } catch (e) { return {}; } }
+function fdHide(key, btn) {
+  const m = fdHidden(); m[key] = 1; try { localStorage.setItem('fd_sugg_hide', JSON.stringify(m)); } catch (e) {}
+  const card = btn && btn.closest('.fd-sg'); if (card) { card.style.transition = 'opacity .18s, transform .18s'; card.style.opacity = '0'; card.style.transform = 'scale(.9)'; setTimeout(() => { const row = card.parentElement; card.remove(); if (row && !row.children.length) { const sec = row.closest('.fd-sugg'); if (sec) sec.remove(); } }, 180); }
+}
+window.fdHide = fdHide;
 async function mktFeedOpen() {
   const u = auth.currentUser, guest = !u || u.isAnonymous;
   if (typeof mainContent === 'undefined' || !mainContent) return;
@@ -18940,9 +18946,10 @@ async function mktFeedOpen() {
   all.slice().sort((a, b) => (b.t || 0) - (a.t || 0)).forEach(r => {
     const key = r.uid || igDemoKeyOf(r.owner); if (!r.owner || seen.has(key) || (myUid && r.uid === myUid)) return; seen.add(key);
     if (r.uid ? who.has(r.uid) : demo[igDemoKeyOf(r.owner)]) return;
+    if (fdHidden()[key]) return;   // גולש שסגר את ההצעה הזו (✕)
     sugg.push(r);
   });
-  const suggHTML = sugg.length ? `<section class="fd-sugg"><h2>מוכרים שכדאי לעקוב אחריהם</h2><div class="fd-sugg-row">${sugg.slice(0, 12).map(r => `<div class="fd-sg">
+  const suggHTML = sugg.length ? `<section class="fd-sugg"><h2>מוכרים שכדאי לעקוב אחריהם</h2><div class="fd-sugg-row">${sugg.slice(0, 12).map(r => `<div class="fd-sg"><button type="button" class="fd-sg-x" onclick="fdHide('${artEsc(r.uid || igDemoKeyOf(r.owner))}', this)" aria-label="הסתרת ההצעה">✕</button>
       <button type="button" class="fd-sg-who" onclick="${r.uid ? `openUserPage('${artEsc(r.uid)}', '${artEsc(r.owner)}')` : `rentOpenSeller('', '${artEsc(r.owner)}')`}">${authorAvHTML({ author: r.owner, uid: r.uid || '' })}<b>${escHtml(r.owner)}</b><small>${escHtml(r.city || '')}</small></button>
       <button type="button" class="fd-sg-go" onclick="mkCardFollow(this, '${artEsc(r.uid || '')}', '${artEsc(r.owner)}'); setTimeout(mktFeedOpen, 250)">${IG_FOLLOW_IC}מעקב</button></div>`).join('')}</div></section>` : '';
   const mine = items.filter(me), theirs = items.filter(x => !me(x));
