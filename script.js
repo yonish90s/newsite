@@ -33852,7 +33852,7 @@ function deptCirclesHTML() {
   const all = mktAll(), n = id => all.filter(r => r.dept === id).length;
   const list = MKT_DEPTS.map(d => [d, n(d.id)]).sort((a, b) => (b[1] > 0) - (a[1] > 0));
   const on = rentUI.dept && rentUI.dept !== 'all' ? rentUI.dept : '';
-  const c = ([d, k]) => `<button type="button" class="dc${on === d.id ? ' on' : ''}${k ? '' : ' empty'}" onclick="deptPick('${d.id}')" aria-pressed="${on === d.id}"><span class="dc-ring"><svg viewBox="0 0 64 64" fill="none" stroke="#111" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">${DEPT_ART[d.id] || DEPT_ART.other}</svg>${k ? `<em>${k}</em>` : ''}</span><b>${escHtml(d.name)}</b></button>`;
+  const c = ([d, k]) => `<button type="button" class="dc${on === d.id ? ' on' : ''}${k ? '' : ' empty'}" onclick="deptPick('${d.id}')" aria-pressed="${on === d.id}" aria-label="${escHtml(d.name)}${k ? ' · ' + k : ''}" title="${escHtml(d.name)}"><span class="dc-ring"><svg viewBox="0 0 64 64" fill="none" stroke="#111" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">${DEPT_ART[d.id] || DEPT_ART.other}</svg>${k ? `<em>${k}</em>` : ''}</span><b>${escHtml(d.name)}</b></button>`;
   return `<nav class="dc-row" aria-label="מחלקות">${on ? `<button type="button" class="dc dc-all" onclick="deptPick('')"><span class="dc-ring"><svg viewBox="0 0 64 64" fill="none" stroke="#111" stroke-width="2.6" stroke-linecap="round"><rect x="14" y="14" width="15" height="15" rx="3" fill="#fff"/><rect x="35" y="14" width="15" height="15" rx="3" fill="#e6e6e6"/><rect x="14" y="35" width="15" height="15" rx="3" fill="#e6e6e6"/><rect x="35" y="35" width="15" height="15" rx="3" fill="#fff"/></svg></span><b>הכל</b></button>` : ''}${list.map(c).join('')}</nav>`;
 }
 function deptPick(id) {
