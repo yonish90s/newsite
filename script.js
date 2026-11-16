@@ -18952,7 +18952,6 @@ async function mktFeedOpen() {
   const upsHTML = sec('העלאות', 'מודעות ופוסטים חדשים של מי שאתם עוקבים אחריהם', ups, 'עדיין אין העלאות ממי שאתם עוקבים אחריהם');
   const repHTML = sec('ריפוסטים', 'מודעות שהם שיתפו מאחרים', reps2, 'עדיין אין ריפוסטים ממי שאתם עוקבים אחריהם');
   mainContent.innerHTML = `<div class="fd-page"><h1 class="fd-h">הפיד</h1>
-    ${guest ? `<div class="fd-guest">👋 אתם גולשים כאורחים — המעקבים נשמרים במכשיר הזה. <button type="button" onclick="openLiveChatLogin()">התחברו</button> כדי לשמור אותם בחשבון ולקבל התראות.</div>` : ''}
     ${suggHTML}
     <div class="pf-tabs2" role="tablist"><button type="button" class="on" onclick="fdTab(this, 'all')">הכל</button><button type="button" onclick="fdTab(this, 'ups')">העלאות <small>${ups.length}</small></button><button type="button" onclick="fdTab(this, 'reps')">ריפוסטים <small>${reps2.length}</small></button>${guest ? '' : `<button type="button" onclick="fdTab(this, 'me')">שלי <small>${mine.length}</small></button>`}</div>
     <div data-fd="all">${theirs.length ? upsHTML + repHTML : cards([])}</div><div data-fd="ups" hidden>${upsHTML}</div><div data-fd="reps" hidden>${repHTML}</div><div data-fd="me" hidden>${cards(mine)}</div></div>`;
@@ -33697,6 +33696,7 @@ function rentMiniHTML(x) {
 function mkGoldFit() {
   const g = document.querySelector('.rent-page .mk-gold .mk-grid'), main = document.querySelector('.rent-page .mk-grid:not(.mk-gold .mk-grid)');
   if (!g) return;
+  if (window.matchMedia('(max-width: 900px)').matches) return;   // במובייל השורה נגללת — לא מעבירים לגריד
   const cols = (getComputedStyle(main || g).gridTemplateColumns || '').split(' ').filter(Boolean).length || 2;
   const extra = [...g.children].slice(cols);
   if (main && extra.length) main.prepend(...extra);
@@ -33707,7 +33707,7 @@ function rentGridHTML() {
   if (!l.length) return `<div class="rn-empty">אין עדיין מודעות כאן.<br><button type="button" class="rn-pub" onclick="mkPubOpen()">היו הראשונים לפרסם</button></div>`;
   // שורת זהב: השורה הראשונה — עסקים בקידום ממומן (מסומנים sponsored / promoUntil קודם, אחר כך שאר העסקים).
   // כמה נכנסים בשורה אחת: 7 במחשב רחב, 5 במחשב קטן, 2 במובייל — והם לא חוזרים בגריד שמתחת
-  const cols = window.matchMedia('(max-width: 900px)').matches ? 2 : 9;   // מועמדים; אחרי הציור משאירים רק כמה שנכנסים בשורה
+  const cols = window.matchMedia('(max-width: 900px)').matches ? 12 : 9;   // במובייל: כולם בשורה שנגללת הצידה; במחשב — מועמדים, ואחרי הציור משאירים כמה שנכנסים בשורה
   const promoted = r => r.sponsored || (r.promoUntil && r.promoUntil > Date.now());
   const gold = l.filter(mktIsBiz).sort((a, b) => (promoted(b) ? 1 : 0) - (promoted(a) ? 1 : 0)).slice(0, cols);
   const goldIds = new Set(gold.map(r => r.id));
@@ -33892,9 +33892,8 @@ function rentViewHTML() {
       <button type="button" class="rn-geo${mkGeo ? ' on' : ''}" onclick="mkGeoToggle()" title="${mkGeo ? 'כיבוי המיקום' : 'הצגת המרחק מכל מודעה'}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>${mkGeo ? 'המיקום פעיל' : 'הפעלת מיקום'}</button>
       <nav class="rn-sorts" aria-label="מיון">${sorts.map(([v, t, d]) => `<button type="button" class="rn-sort${rentUI.sort === v ? ' on' : ''}" onclick="rentSet('sort', '${v}')">${sv(d)}${t}</button>`).join('')}</nav>
       <nav class="rn-tags" aria-label="האשטאגים">${tags.map(([k, v, t]) => `<button type="button" class="rn-tag${tagOn(k, v) ? ' on' : ''}" onclick="rentTag('${k}', '${artEsc(v)}')">#${escHtml(t)}</button>`).join('')}</nav>
-      ${deptCirclesHTML()}
-      ${filterBarHTML()}
-    </header>
+
+    </header>${deptCirclesHTML()}${filterBarHTML()}
     <nav class="rn-secs">${MKT_SECS.slice(0, 1).map(x => `<button type="button" class="rn-sec${rentUI.sec === x.id ? ' on' : ''}" onclick="mktGo('${x.id}')"><span>${x.ic}</span>${x.name}<small>${secCount(x.id)}</small></button>`).join('')}</nav>
     <div class="rn-bar">
       <input type="search" class="rn-q" placeholder="${rentUI.sec === 'store' ? 'איפה לאחסן? למשל: מחסן בתל אביב' : rentUI.sec === 'used' ? 'מה מחפשים? למשל: ספה, מקרר, אופניים' : 'מה צריך? למשל: מדפסת תלת מימד בתל אביב'}" value="${escHtml(rentUI.q)}" oninput="rentSet('q', this.value)">
