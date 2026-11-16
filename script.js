@@ -33636,15 +33636,17 @@ function dlsList() {
 }
 function dlsSqHTML(o, me, demo, myTurn) {
   const mine = o.fromUid === me, other = mine ? (o.toName || 'משתמש') : (o.fromName || 'אורח'), otherUid = mine ? o.toUid : o.fromUid;
+  const it = !demo && o.itemId && typeof mktAll === 'function' ? mktAll().find(x => x.shId === o.itemId || x.id === o.itemId) : null;
   const img = demo ? ({ d2: 'rent/u-sofa.jpg?v=2', d3: 'rent/u-bike.jpg?v=2', d4: 'rent/u-fridge.jpg?v=2' })[o.id] || '' : (dealImages(o)[0] || '');
   const st = o.status === 'accepted' || o.status === 'signed' ? ['אושרה', 'ok'] : o.status === 'rejected' ? ['נדחתה', 'no'] : o.status === 'counter' ? ['הצעה נגדית', 'deal'] : [myTurn ? 'ממתינה לך' : 'ממתינה', 'wait'];
   const act = (kind, label, fn) => `<button type="button" class="dls-b ${kind}" title="${label}" aria-label="${label}" onclick="event.stopPropagation(); ${fn}">${OFX_IC[kind]}</button>`;
   const dmAct = k => `ofxDemo('${k}', '${artEsc(o.id)}', '${artEsc(o.title || '')}', ${Number(o.price) || 0})`;
   const btns = myTurn ? `<span class="dls-acts">${act('no', 'דחייה', demo ? dmAct('no') : `offerDecide('${artEsc(o.id)}','rejected')`)}${act('deal', 'משא ומתן', demo ? dmAct('deal') : `offerCounter('${artEsc(o.id)}')`)}${act('ok', 'אישור', demo ? dmAct('ok') : `offerDecide('${artEsc(o.id)}','accepted')`)}</span>` : '';
-  const initial = escHtml(String(o.title || other).trim().charAt(0) || '?');
+  const was = it && Number(it.price) > 0 && Number(it.price) !== Number(o.price) ? `<s class="mk-was">₪${Number(it.price).toLocaleString('he-IL')}</s>` : '';
+  const av = demo && typeof demoAvatarSVG === 'function' ? `<span class="au-av has-av">${demoAvatarSVG(other)}</span>` : authorAvHTML({ author: other, uid: otherUid || '' });
   return `<div class="dls-sq${myTurn ? ' turn' : ''}" data-oid="${escHtml(o.id || '')}" role="button" tabindex="0" onclick="dealDetailOpen('${artEsc(o.id || '')}', ${demo ? 'true' : 'false'})">
-    <span class="dls-img" style="--av:${typeof forumAvColor === 'function' ? forumAvColor({ uid: otherUid || '', name: other }) : '#47a093'}">${img ? `<img src="${escHtml(img)}" alt="" loading="lazy" onerror="this.remove()">` : ''}<i>${initial}</i>
-      ${o.price ? `<b class="dls-price">₪${Number(o.price).toLocaleString('he-IL')}</b>` : ''}<em class="dls-st ${st[1]}">${st[0]}</em>${demo ? '<em class="dls-demo">דוגמה</em>' : ''}</span>
+    <span class="dls-meta"><span class="dls-who" title="${escHtml(other)}">${av}</span>${o.price ? `<b class="dls-price">${was}₪${Number(o.price).toLocaleString('he-IL')}</b>` : ''}<em class="dls-st ${st[1]}">${st[0]}</em></span>
+    <span class="dls-img">${img ? `<img src="${escHtml(img)}" alt="" loading="lazy" onerror="this.remove()">` : ''}<i style="--av:${typeof forumAvColor === 'function' ? forumAvColor({ uid: otherUid || '', name: other }) : '#47a093'}">${escHtml(String(o.title || other).trim().charAt(0) || '?')}</i>${demo ? '<em class="dls-demo">דוגמה</em>' : ''}</span>
     <span class="dls-tx"><b>${escHtml(o.title || 'הצעה')}</b><small>${mine ? 'אל' : 'מאת'} ${escHtml(other)} · ${escHtml(ofxDay(o.updatedAt || o.at || 0))}</small></span>
     ${btns}
   </div>`;

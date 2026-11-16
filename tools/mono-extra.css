@@ -326,8 +326,16 @@ BODY .mk-sg .mk-sg-acts .mk-act2 > .mk-a-rep.on { color: #17a34a !important; }
 BODY .apv-page .apv-ok, BODY .apv-page .apv-all { background: #16a34a !important; color: #ffffff !important; }
 BODY #m-top .mt-tabs .mt-apv .mt-apv-n { background: #e0245e !important; color: #ffffff !important; }
 
-BODY .dls-page .dls-b.no, BODY .dls-page .dls-st.no { background: #dc2626 !important; color: #ffffff !important; }
-BODY .dls-page .dls-b.deal, BODY .dls-page .dls-st.deal, BODY .dls-page .dls-st.wait { background: #f59e0b !important; color: #ffffff !important; }
-BODY .dls-page .dls-b.ok, BODY .dls-page .dls-st.ok { background: #16a34a !important; color: #ffffff !important; }
-BODY .dls-page .dls-sq.turn { border-color: #f59e0b !important; box-shadow: 0 0 0 1px #f59e0b !important; }
+BODY .dls-page .dls-b.no { background: #dc2626 !important; color: #ffffff !important; }
+BODY .dls-page .dls-b.deal { background: #f59e0b !important; color: #ffffff !important; }
+BODY .dls-page .dls-b.ok { background: #16a34a !important; color: #ffffff !important; }
 BODY #m-top .mt-tabs .mt-dls .mt-apv-n { background: #f59e0b !important; color: #ffffff !important; }
+
+BODY #glass-banner { background: rgba(255, 255, 255, .55) !important; -webkit-backdrop-filter: blur(18px) saturate(1.6) !important; backdrop-filter: blur(18px) saturate(1.6) !important; color: #111111 !important; border: 1px solid rgba(255, 255, 255, .7) !important; }
+BODY #glass-banner .gbn-txt b { color: #111111 !important; }
+BODY #glass-banner .gbn-txt small, BODY #glass-banner .gbn-x { color: #3f3f3f !important; }
+BODY .dls-page .dls-price { background: #eef6f4 !important; color: #2f7d72 !important; }
+BODY .dls-page .dls-st.ok { background: #e8f6ee !important; color: #15803d !important; }
+BODY .dls-page .dls-st.no { background: #fdecec !important; color: #b91c1c !important; }
+BODY .dls-page .dls-st.deal, BODY .dls-page .dls-st.wait { background: #fef3e2 !important; color: #b45309 !important; }
+BODY .dls-page .dls-sq.turn .dls-img { border-color: #f59e0b !important; box-shadow: 0 0 0 1px #f59e0b !important; }
