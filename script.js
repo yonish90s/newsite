@@ -33078,7 +33078,8 @@ const USED_DEMO = [
 // דוגמאות לעסקים (מוצגות כשיש מעט עסקים אמיתיים)
 const BIZ_DEMO = [
   { id: 'bz1', img: 'rent/biz-bakery.svg', bizName: 'מאפיית השכונה', title: 'מגש מאפים לאירוע — 40 יחידות', price: 180, link: 'https://example.com/bakery', city: 'הרצליה', owner: 'מאפיית השכונה', t: -4, desc: 'קרואסונים, בורקסים ומאפים מתוקים, טריים מהבוקר. משלוח עד הבית באזור השרון.', specs: ['40 יחידות', 'משלוח בשרון', 'הזמנה יום מראש'] },
-  { id: 'bz2', img: 'rent/biz-phone.svg', bizName: 'מעבדת פיקס-טק', title: 'החלפת מסך לאייפון — באותו יום', price: 390, link: 'https://example.com/fixtech', city: 'תל אביב', owner: 'מעבדת פיקס-טק', t: -10, desc: 'מסך איכותי עם אחריות לחצי שנה. מגיעים בבוקר, אוספים אחר הצהריים.', specs: ['אחריות 6 חודשים', 'תוך 3 שעות', 'כל הדגמים'] },
+  { id: 'bz2', img: 'rent/biz-phone.svg', hv: { p: 'yt', id: 'UTA7ak0ZxA0' }, bizName: 'מעבדת פיקס-טק', title: 'החלפת מסך לאייפון — באותו יום', price: 390, link: 'https://example.com/fixtech', city: 'תל אביב', owner: 'מעבדת פיקס-טק', t: -10, desc: 'מסך איכותי עם אחריות לחצי שנה. מגיעים בבוקר, אוספים אחר הצהריים.', specs: ['אחריות 6 חודשים', 'תוך 3 שעות', 'כל הדגמים'] },
+  { id: 'bz5', img: 'rent/biz-phone.svg', hv: { p: 'ody', path: '@prophoneyoutube:b/how-to-huawei-p-smart-2019-screen:5' }, bizName: 'מעבדת פרו-פון', title: 'החלפת מסך ל-Huawei — סרטון מהמעבדה', price: 260, link: '', city: 'חיפה', owner: 'מעבדת פרו-פון', t: -14, desc: 'כך נראית החלפת מסך אצלנו, מההתחלה ועד הסוף. מסך מקורי, אחריות לשלושה חודשים.', specs: ['אחריות 3 חודשים', 'תוך שעתיים', 'Huawei ו-Samsung'] },
   { id: 'bz3', img: 'rent/biz-wood.svg', bizName: 'נגריית עץ ושורש', title: 'שולחן אוכל מעץ מלא לפי מידה', price: 3200, link: '', city: 'קריית אתא', owner: 'נגריית עץ ושורש', t: -28, desc: 'שולחנות מעץ אלון ואגוז, בעבודת יד. בוחרים מידה, גוון ורגליים.', specs: ['עץ מלא', 'לפי מידה', 'אספקה תוך 3 שבועות'] },
   { id: 'bz4', img: 'rent/biz-print.svg', bizName: 'דפוס הצבע', title: '500 כרטיסי ביקור כולל עיצוב', price: 150, link: 'https://example.com/print', city: 'ירושלים', owner: 'דפוס הצבע', t: -48, desc: 'כרטיסי ביקור על נייר עבה, עם עיצוב בחינם. מוכן תוך יומיים.', specs: ['500 יחידות', 'עיצוב חינם', 'מוכן תוך יומיים'] }
 ].map(r => Object.assign({ demo: true, kind: 'used', offer: 'עסק' }, r, { t: Date.now() + r.t * 3600e3 }));
@@ -33489,7 +33490,23 @@ function rentAgo(t) {
 }
 // תמונות הדוגמה הוחלפו בגרסה חדה יותר — הגרסה בכתובת עוקפת את המטמון של הדפדפן
 [USED_DEMO, RENT_DEMO].forEach(l => l.forEach(d => { if (/^rent\/[^/?]+\.jpg$/.test(d.img || '')) d.img += '?v=2'; if (Array.isArray(d.images)) d.images = d.images.map(u => /^rent\/[^/?]+\.jpg$/.test(u || '') ? u + '?v=2' : u); }));
+// ===== ניסוי: סרטון במקום התמונה של המודעה (יוטיוב / אודיסי) — מנגן בשקט ובלולאה, עם כמה שפחות כפתורים של הנגן =====
+// בכרטיסים הסרטון רק "חי" ברקע (בלי לחיצות — הלחיצה פותחת את המודעה); בעמוד המודעה אפשר לשלוט בו
+function mkHeroVideoSrc(hv, big) {
+  if (!hv) return '';
+  if (hv.p === 'yt' && /^[\w-]{11}$/.test(hv.id || '')) {
+    const q = new URLSearchParams({ autoplay: '1', mute: '1', loop: '1', playlist: hv.id, controls: big ? '1' : '0', rel: '0', playsinline: '1', iv_load_policy: '3', disablekb: big ? '0' : '1', fs: big ? '1' : '0', modestbranding: '1', cc_load_policy: '0' });
+    return `https://www.youtube-nocookie.com/embed/${hv.id}?${q}`;
+  }
+  if (hv.p === 'ody' && /^[@\w.:\-/]+$/.test(hv.path || '')) return `https://odysee.com/$/embed/${encodeURIComponent(hv.path)}`;   // פרמטרים של ניגון אוטומטי שוברים את הנגן של אודיסי
+  return '';
+}
+function mkHeroVideoHTML(r, big) {
+  const src = mkHeroVideoSrc(r.hv, big); if (!src) return '';
+  return `<span class="mk-hv${big ? ' big' : ''}"><iframe src="${escHtml(src)}" title="${escHtml(r.title || 'סרטון')}"${r.hv.p === 'yt' ? ' loading="lazy"' : ''} allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" tabindex="-1"></iframe></span>`;
+}
 function rentThumb(r, big) {
+  if (r.hv) { const h = mkHeroVideoHTML(r, big); if (h) return h; }
   const c = rentCatOf(r.cat), g = r.g || ['#1f2937', '#4b5563'];
   // בכרטיסים: עותק מוקטן (720px — חד גם במסך רטינה) של תמונות הדוגמה, פי 5 פחות משקל; בעמוד המודעה המלאה
   const src = !big && /^(\.\/)?rent\/[^/]+\.jpg/.test(r.img || '') ? String(r.img).replace(/rent\//, 'rent/t/') : r.img;
