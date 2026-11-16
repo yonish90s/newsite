@@ -26755,7 +26755,7 @@ function buildSiteFooterHTML() {
         </div>
         <div class="site-footer-bottom">
           <img src="./logo.png" alt="" class="site-footer-logo">
-          <span>© ${year} כל הזכויות שמורות.</span>
+          <span>© ${year} כל הזכויות שמורות.</span><small class="ft-credit">תמונות הדוגמה: Wikimedia Commons</small>
           ${footerSocialRowHTML()}
         </div>
       </div>
@@ -33906,7 +33906,7 @@ function rentViewHTML() {
       <aside class="mk-fside rn-fpanel" aria-label="סינון"></aside>
       <div class="rn-grid">${rentGridHTML()}</div>
     </div>
-    <p class="rn-fine">איך זה עובד: בוחרים מודעה ← שולחים בקשה ← בעל המודעה מאשר ומתאמים. בהשכרה ובאחסון התשלום לבעל המודעה, ועמלת שירות של ${Math.round(RENT_SITE_FEE * 100)}% לאתר.<br><small>תמונות הדוגמה: Wikimedia Commons (רישיון חופשי)</small></p>`;
+    `;
 }
 // פרויקטים: שורת קבוצות (מוצרים פיזיים / דיגיטל / פנאי / חינוך ובריאות), ומתחתיה התחומים של הקבוצה שנבחרה
 function projNavHTML() {
