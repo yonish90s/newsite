@@ -34176,6 +34176,13 @@ function rentOpenSeller(uid, name) {
   if (!_rentPopping) { try { history.pushState({ rentSeller: rentUI.seller }, ''); } catch (e) {} }
   if (typeof mainContent !== 'undefined' && mainContent) mainContent.scrollTop = 0;
   try { window.scrollTo({ top: 0 }); } catch (e) {}
+  // מחוץ לשוק (פיד, פרופיל...): קודם עוברים לשוק ואז מציגים את דף המוכר
+  if (!(typeof mainContent !== 'undefined' && mainContent && mainContent.querySelector('.rent-page .rn-inner'))) {
+    const sl = rentUI.seller;
+    navigateToPage('page-rent-main');
+    setTimeout(() => { rentUI.seller = sl; rentUI.open = null; rentRender(); try { window.scrollTo({ top: 0 }); } catch (e) {} }, 120);
+    return;
+  }
   rentRender();
 }
 window.rentOpenSeller = rentOpenSeller;
