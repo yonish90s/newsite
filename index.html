@@ -48,8 +48,8 @@
   <!-- ספריית localforage לשמירת תמונות -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
   <!-- קישור לקובץ העיצוב החיצוני (עם פרמטר למניעת שמירה במטמון) -->
-  <link rel="stylesheet" href="./style.min.css?v=2359">
-  <link rel="stylesheet" id="mono-css" href="./mono.min.css?v=242">
+  <link rel="stylesheet" href="./style.min.css?v=2360">
+  <link rel="stylesheet" id="mono-css" href="./mono.min.css?v=243">
   <link rel="stylesheet" id="dark-css" data-href="./dark.min.css?v=604" media="not all">
   <script>
     // קישור ישיר לפריט (#p/…, #s/…, #n/…) — מסמנים מיד, כדי שהכתובת לא תימחק לפני שהפריט נפתח
@@ -1195,24 +1195,20 @@ html.theme-dark .pl-bar { background: #2a2f37; }
     </div>
   </div>
   <script>
-    // מוצג בכל טעינה של האתר; הבחירה נשמרת כדי לכבד "לא מאשר/ת" בסטטיסטיקות
+    // מוצג עד שהגולש בוחר; הבחירה נשמרת (גם "לא מאשר/ת" — כדי לכבד אותה בסטטיסטיקות)
     function cookieChoose(v) {
       try { localStorage.setItem('cookie_consent', v); } catch (e) {}
       var b = document.getElementById('cookie-bar');
-      if (b) { b.classList.remove('show'); setTimeout(function () { b.style.display = 'none'; }, 400); }
+      if (b) { b.classList.remove('show'); setTimeout(function () { b.style.display = 'none'; b.hidden = true; }, 400); }
     }
     function cookieOpenPolicy() { var p = document.getElementById('cookie-policy'); if (p) p.style.display = 'flex'; }
     function maybeShowCookieBanner() {
+      // מי שכבר בחר (מאשר/ת או לא) — לא רואה את הבאנר שוב. מי שעוד לא בחר — הבאנר נשאר עד שבוחרים
+      var c = ''; try { c = localStorage.getItem('cookie_consent') || ''; } catch (e) {}
+      if (c) return;
       setTimeout(function () {
         var b = document.getElementById('cookie-bar'); if (!b) return;
         b.style.display = ''; b.classList.add('show');
-        // אם לא לחצו כלום — הבאנר יורד לבד אחרי 2 שניות (בלי לשמור הסכמה: סטטיסטיקות נשארות כבויות עד "אישור").
-        // ריחוף/נגיעה בבאנר עוצרים את הספירה, כדי לא להעלים אותו באמצע קריאה
-        var t = setTimeout(function () { b.classList.remove('show'); setTimeout(function () { if (!b.classList.contains('show')) b.style.display = 'none'; }, 400); }, 2000);
-        var stop = function () { clearTimeout(t); };
-        b.addEventListener('mouseenter', stop, { once: true });
-        b.addEventListener('touchstart', stop, { once: true, passive: true });
-        b.addEventListener('focusin', stop, { once: true });
       }, 900);
     }
     window.maybeShowCookieBanner = maybeShowCookieBanner;
