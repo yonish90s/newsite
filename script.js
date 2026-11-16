@@ -32347,7 +32347,7 @@ Object.assign(window, { mkStockOpen, mkStockClose, mkStockSave, mkStockStep });
 function mktCartable(r) { return !!r && Number(r.price) > 0 && !['החלפה', 'השאלה'].includes(r.offer) && !mktSoldOut(r); }
 function mktCartItems() {
   if (typeof mktAll !== 'function') return [];
-  return mktAll().filter(mktCartable).map(r => ({ id: 'mkt_' + r.id, name: r.title, price: r.kind === 'used' ? Number(r.price) : Math.round(r.price * (1 + RENT_SITE_FEE) * 100) / 100, image: r.img || (r.images || [])[0] || '', unit: r.kind === 'used' ? (r.unitTxt || '') : (RENT_UNITS[r.unit] || ''), fee: r.kind !== 'used', seller: !!r.shId, rid: r.id, step: r.unit === 'kg' ? .1 : 1 }));
+  return mktAll().filter(mktCartable).map(r => ({ id: 'mkt_' + r.id, name: r.title, price: r.kind === 'used' ? mktDiscP(r.price) : Math.round(mktDiscP(r.price) * (1 + RENT_SITE_FEE) * 100) / 100, was: r.kind === 'used' ? Number(r.price) : Math.round(r.price * (1 + RENT_SITE_FEE) * 100) / 100, image: r.img || (r.images || [])[0] || '', unit: r.kind === 'used' ? (r.unitTxt || '') : (RENT_UNITS[r.unit] || ''), fee: r.kind !== 'used', seller: !!r.shId, rid: r.id, step: r.unit === 'kg' ? .1 : 1 }));
 }
 function cartCatalog() { return productsList().concat(mktCartItems()); }
 function rentCartAdd(id) {
@@ -32414,7 +32414,7 @@ function rentListRender(box) {
   const sum = lines.reduce((a, l) => a + rentCalc(l.r, l.qty).total, 0);
   box.querySelector('.cart-body').innerHTML = lines.length ? lines.map(l => `<div class="cart-row">
       <span class="cart-th">${l.r.img ? `<img src="${escHtml(l.r.img)}" alt="">` : PRODUCT_ICON}</span>
-      <span class="cart-tx"><b>${escHtml(l.r.title || '')}</b><small>${escHtml(rentPriceShort(l.r).replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' '))} · ${escHtml(l.r.owner || '')}</small></span>
+      <span class="cart-tx"><b>${escHtml(l.r.title || '')}</b><small>${escHtml(rentPriceShort(l.r).replace(/<s[^>]*>.*?<\/s>/g, '').replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' '))} · ${escHtml(l.r.owner || '')}</small></span>
       ${qtyDDHTML(l.qty, [...new Set(rentQtyOpts(l.r).concat([l.qty]))].sort((a, b) => a - b), n => `rentListQty('${artEsc(l.id)}',${n})`, `rentListQty('${artEsc(l.id)}',0)`)}
     </div>`).join('') : `<div class="cart-empty">אין עדיין השכרות ברשימה<br><button type="button" class="ms-btn" onclick="cartClose(); mktGo('all')">לשוק</button></div>`;
   box.querySelector('.cart-foot').innerHTML = lines.length ? `<div class="co-line co-total"><span>סה״כ משוער (כולל עמלה)</span><span>${coMoney(sum)}</span></div><button type="button" class="ms-btn" onclick="rentListSend(this)">שליחת בקשות השכרה</button>` : '';
@@ -33466,17 +33466,21 @@ function rentAll() {
 }
 function rentCatOf(id) { return RENT_CATS.find(c => c.id === id) || RENT_CATS[RENT_CATS.length - 1]; }
 // מחיר קצר: מספר, שקל ויחידה — "100 ₪" או "100 ₪ לחודש"
+// הנחה של 20% על כל המוצרים באתר — המחיר המקורי מוצג עם קו, והמחיר אחרי ההנחה הוא מה שמשלמים
+const MKT_DISC = 0.2;
+function mktDiscP(p) { return Math.round(Number(p) * (1 - MKT_DISC) * 100) / 100; }
+function mktWasHTML(p) { return Number(p) > 0 ? `<s class="mk-was">₪${Number(p).toLocaleString('he-IL', { maximumFractionDigits: 2 })}</s>` : ''; }
 function rentPriceShort(r) {
   if (r.offer === 'החלפה' && !r.price) return 'להחלפה';
   if (r.kind === 'used' && !(Number(r.price) > 0) && !r.priceTxt) return mktIsProj(r) ? '' : 'ללא מחיר';
   if (r.priceTxt) return escHtml([r.priceTxt, r.unitTxt].filter(Boolean).join(' '));
   const unit = r.kind === 'used' ? r.unitTxt : RENT_UNITS[r.unit];
-  return `${Number(r.price).toLocaleString('he-IL', { maximumFractionDigits: 2 })}&nbsp;₪${unit ? ' ' + escHtml(unit) : ''}`;
+  return `${mktDiscP(r.price).toLocaleString('he-IL', { maximumFractionDigits: 2 })}&nbsp;₪${unit ? ' ' + escHtml(unit) : ''} ${mktWasHTML(r.price)}`;
 }
 function rentPriceTxt(r) {
   if (r.kind === 'used' && !(Number(r.price) > 0) && !r.priceTxt && r.offer !== 'החלפה') return mktIsProj(r) ? '' : 'ללא מחיר';
-  if (r.kind === 'used') return r.offer === 'החלפה' && !r.price ? '🔁 להחלפה' : r.priceTxt ? `${escHtml(r.priceTxt)} <small>${escHtml(r.unitTxt || '')}</small>` : `₪${Number(r.price).toLocaleString('he-IL')} <small>${RENT_UNITS[r.unit] || ''}</small>`;
-  return `₪${Number(r.price).toLocaleString('he-IL', { maximumFractionDigits: 2 })} <small>${RENT_UNITS[r.unit] || ''}${r.unit === 'kg' ? ` · ₪${(r.price / 10).toLocaleString('he-IL', { maximumFractionDigits: 1 })} ל-100 גרם` : ''}</small>`; }
+  if (r.kind === 'used') return r.offer === 'החלפה' && !r.price ? '🔁 להחלפה' : r.priceTxt ? `${escHtml(r.priceTxt)} <small>${escHtml(r.unitTxt || '')}</small>` : `₪${mktDiscP(r.price).toLocaleString('he-IL', { maximumFractionDigits: 2 })} ${mktWasHTML(r.price)} <small>${RENT_UNITS[r.unit] || ''}</small>`;
+  return `₪${mktDiscP(r.price).toLocaleString('he-IL', { maximumFractionDigits: 2 })} ${mktWasHTML(r.price)} <small>${RENT_UNITS[r.unit] || ''}${r.unit === 'kg' ? ` · ₪${(mktDiscP(r.price) / 10).toLocaleString('he-IL', { maximumFractionDigits: 1 })} ל-100 גרם` : ''}</small>`; }
 function rentAgo(t) {
   const m = Math.max(1, Math.round((Date.now() - (t || 0)) / 6e4));
   return m < 60 ? `לפני ${m} דק׳` : m < 1440 ? `לפני ${Math.round(m / 60)} שע׳` : `לפני ${Math.round(m / 1440)} ימים`;
@@ -33609,10 +33613,10 @@ function rentHoverHTML(x) {
     <span role="button" tabindex="0" class="mk-a-buy${cartGet().some(c => c.id === 'mkt_' + x.id) ? ' in-cart' : ''}" data-cart="mkt_${escHtml(x.id)}" aria-label="קנייה" title="קנייה" onclick="${stop}${buy}">${ic('M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.5L21 8H6')}</span>
     <span role="button" tabindex="0" class="mk-a-deal" aria-label="משא ומתן" title="משא ומתן — הצעת מחיר" onclick="${stop}mkCardHaggle(this, '${id}')">${ic('M4 7h12M4 7l3-3M4 7l3 3M20 17H8M20 17l-3-3M20 17l-3 3')}</span>
     ${(() => { const fon = mkFollowOn(x), me = auth.currentUser && x.uid && auth.currentUser.uid === x.uid; return me ? '' : `<span role="button" tabindex="0" class="mk-a-follow${fon ? ' on' : ''}" data-fol="${escHtml(x.uid || igDemoKeyOf(x.owner))}" aria-label="${fon ? 'במעקב אחרי ' : 'מעקב אחרי '}${escHtml(x.owner || 'המוכר')}" title="${fon ? 'במעקב — לחצו להפסקה' : 'מעקב אחרי ' + escHtml(x.owner || 'המוכר')}" onclick="${stop}mkCardFollow(this, '${artEsc(x.uid || '')}', '${artEsc(x.owner || '')}')">${fon ? IG_FOLLOWING_IC : IG_FOLLOW_IC}</span>`; })()}
+    ${b('לייק', 'M7 10v11H3V10zM7 10l4-8a2.5 2.5 0 0 1 3 2.6L13.5 9H19a2 2 0 0 1 2 2.3l-1.4 8A2 2 0 0 1 17.6 21H7', (sh ? `photoToggleLike('${sh}')` : `rentMark(this, 'like', '${id}'); likersWrite('${artEsc(likeId)}', this.classList.contains('on'))`), liked, ` data-people="like" data-pid="${escHtml(likeId)}"` + (sh ? ` data-like="${escHtml(x.shId)}"` : ''), 'mk-a-like', cnt(Number(itemLikesData[likeId]) || '', ` data-likes-n="${escHtml(likeId)}"`))}
+    ${b('ריפוסט', 'M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3', `toggleRepost('${artEsc(rk)}', this)`, repostIsMine(rk), ` data-item="${escHtml(rk)}" data-people="rep" data-pid="${escHtml(rk)}"`, 'pti-repost mk-a-rep', cnt(repostCount(rk) || ''))}
     <span role="button" tabindex="0" class="mk-a-dots" aria-label="עוד פעולות" title="עוד" aria-expanded="false" onclick="${stop}mkMoreToggle(this)"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="18" cy="12" r="1.8"/></svg></span>
     <span class="mk-sg-hov-btns mk-a-pop">
-    ${b('לייק', 'M7 10v11H3V10zM7 10l4-8a2.5 2.5 0 0 1 3 2.6L13.5 9H19a2 2 0 0 1 2 2.3l-1.4 8A2 2 0 0 1 17.6 21H7', sh ? `photoToggleLike('${sh}')` : `rentMark(this, 'like', '${id}')`, liked, sh ? ` data-like="${escHtml(x.shId)}"` : '', '', cnt(Number(itemLikesData[likeId]) || 0, ` data-likes-n="${escHtml(likeId)}"`))}
-    ${b('ריפוסט', 'M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3', `toggleRepost('${artEsc(rk)}', this)`, repostIsMine(rk), ` data-item="${escHtml(rk)}"`, 'pti-repost', cnt(repostCount(rk)))}
     ${b('שמירה', 'M6 4h12v17l-6-4.5L6 21z', `mkCountBump('${artEsc(svKey)}', this.classList.contains('on') ? -1 : 1); ` + (sh ? `photoToggleSave('${sh}')` : `rentMark(this, 'save', '${id}')`), saved, sh ? ` data-save="${escHtml(x.shId)}"` : '', '', cnt(Number(itemLikesData[svKey]) || 0, ` data-likes-n="${escHtml(svKey)}"`))}
     ${b('דיווח', 'M5 21V4M5 4h11l-2 4 2 4H5', `openReportContent('${artEsc(rk)}', '${artEsc(x.title || '')}')`, false, '', '', cnt(Number(itemLikesData[rpKey]) || 0, ` data-likes-n="${escHtml(rpKey)}"`))}
   </span></span>`;
@@ -33634,13 +33638,56 @@ async function mkCardFollow(el, uid, name) {
   document.querySelectorAll(`.mk-a-follow[data-fol="${CSS.escape(key)}"]`).forEach(b => { b.classList.toggle('on', on); b.innerHTML = on ? IG_FOLLOWING_IC : IG_FOLLOW_IC; b.title = on ? 'במעקב — לחצו להפסקה' : 'מעקב אחרי ' + name; });
 }
 window.mkCardFollow = mkCardFollow;
+// ===== מי עשה לייק / ריפוסט: לחיצה ארוכה (מובייל) או מעבר עכבר (מחשב) =====
+async function peopleMap(kind, id) {
+  if (kind === 'rep') { try { subscribeReposts(); } catch (e) {} return (typeof repostsData === 'object' && repostsData[id]) || {}; }
+  try { return (await get(ref(db, `website/item_likers/${id}`))).val() || {}; } catch (e) { return {}; }
+}
+let pplTip = null, pplTimer = 0;
+function pplTipClose() { clearTimeout(pplTimer); if (pplTip) { pplTip.remove(); pplTip = null; } }
+async function pplTipOpen(el) {
+  const kind = el.dataset.people, id = el.dataset.pid; if (!kind || !id) return;
+  const map = await peopleMap(kind, id);
+  if (!el.matches(':hover')) return;
+  const rows = Object.values(map || {}).filter(v => v && typeof v === 'object').sort((a, b) => (b.at || 0) - (a.at || 0));
+  pplTipClose();
+  const t = document.createElement('div'); t.className = 'ppl-tip';
+  t.innerHTML = `<b>${kind === 'rep' ? 'שיתפו' : 'אהבו'}</b>${rows.length ? rows.slice(0, 8).map(v => `<span>${escHtml(String(v.name || 'משתמש'))}</span>`).join('') + (rows.length > 8 ? `<em>ועוד ${rows.length - 8}</em>` : '') : `<em>${kind === 'rep' ? 'עוד אף אחד לא שיתף' : 'עוד אין שמות'}</em>`}`;
+  document.body.appendChild(t); pplTip = t;
+  const z = parseFloat(getComputedStyle(document.body).zoom) || 1, r = el.getBoundingClientRect(), w = t.offsetWidth * z, h = t.offsetHeight * z;
+  const left = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2)), top = r.top - h - 8 > 8 ? r.top - h - 8 : r.bottom + 8;
+  t.style.left = (left / z) + 'px'; t.style.top = (top / z) + 'px';
+}
+(function peopleHooks() {
+  const fine = () => window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  document.addEventListener('mouseover', e => {
+    if (!fine()) return;
+    const el = e.target.closest && e.target.closest('[data-people]'); if (!el) return;
+    clearTimeout(pplTimer); pplTimer = setTimeout(() => pplTipOpen(el), 350);
+  });
+  document.addEventListener('mouseout', e => {
+    const el = e.target.closest && e.target.closest('[data-people]'); if (!el) return;
+    if (e.relatedTarget && el.contains(e.relatedTarget)) return;
+    pplTipClose();
+  });
+  // מובייל: לחיצה ארוכה פותחת את הרשימה, ולא מפעילה לייק/ריפוסט
+  let lp = 0, fired = false;
+  document.addEventListener('pointerdown', e => {
+    const el = e.target.closest && e.target.closest('[data-people]'); if (!el || fine()) return;
+    fired = false; clearTimeout(lp);
+    lp = setTimeout(() => { fired = true; try { navigator.vibrate && navigator.vibrate(15); } catch (er) {} if (el.dataset.people === 'rep') repostersOpen(el.dataset.pid); else likersOpen(el.dataset.pid); }, 480);
+  }, true);
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => document.addEventListener(ev, () => clearTimeout(lp), true));
+  document.addEventListener('click', e => { if (fired && e.target.closest && e.target.closest('[data-people]')) { e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation(); fired = false; } }, true);
+  document.addEventListener('contextmenu', e => { if (e.target.closest && e.target.closest('[data-people]')) e.preventDefault(); });
+})();
 // משא ומתן מהכרטיס: מתחת לשורת הכפתורים נפתח שדה עם הסכום שאני מציע (85% מהמחיר כהתחלה)
 function mkCardHaggle(btn, id) {
   const card = btn.closest('.mk-sg'); if (!card) return;
   const old = card.querySelector('.mk-haggle'); if (old) { old.remove(); return; }
   document.querySelectorAll('.mk-sg .mk-haggle').forEach(f => f.remove());
   const r = mktAll().find(x => x.id === id); if (!r) return;
-  const start = Number(r.price) > 0 ? Math.max(1, Math.round(r.price * .85)) : '';
+  const start = Number(r.price) > 0 ? Math.max(1, Math.round(mktDiscP(r.price) * .85)) : '';
   const acts = card.querySelector('.mk-sg-acts');
   acts.insertAdjacentHTML('afterend', `<form class="mk-haggle" onclick="event.stopPropagation()" onsubmit="event.preventDefault(); mkCardHaggleSend(this, '${artEsc(id)}')">
     <label><span>₪</span><input type="number" inputmode="numeric" min="1" step="1" value="${start}" placeholder="הסכום שלי" aria-label="הסכום שאני מציע"></label>
@@ -33697,7 +33744,7 @@ function rentMiniHTML(x) {
   // בידול: עסק — מסגרת ירוקה, תג "עסק" וסמל חנות ליד שם העסק; יד 2 — תג אפור
   const sec = mktSecOf(x), biz = sec === 'biz';
   const badge = biz ? `<i class="mk-sg-badge b-biz">${BIZ_IC}עסק</i>` : sec === 'used' ? '<i class="mk-sg-badge b-used">יד 2</i>' : '';
-  return `<div role="button" tabindex="0" class="mk-sg${biz ? ' is-biz' : sec === 'used' ? ' is-used' : ''}" data-id="${escHtml(x.id)}" onclick="rentOpen('${artEsc(x.id)}')" onkeydown="if((event.key==='Enter'||event.key===' ')&&event.target===this){event.preventDefault();this.click();}"><span class="mk-sg-meta"><span class="mk-sg-who" role="button" tabindex="0" title="${escHtml(mktWho(x))}" aria-label="${escHtml(mktWho(x))}" onclick="event.stopPropagation(); rentOpenSeller('${artEsc(x.uid || '')}', '${artEsc(x.owner || '')}')">${authorAvHTML({ author: mktWho(x) || '?', uid: x.uid || '' })}<b>${biz ? BIZ_IC : ''}${escHtml(mktWho(x))}</b></span><small class="mk-sg-city${mkKmTo(x.city) !== null ? ' km' : ''}">${escHtml(mkWhereTxt(x))}</small>${mkMobStatHTML(x)}<small class="mk-sg-price">${rentTypeIcon(x)}${Number(x.price) > 0 ? `${Number(x.price).toLocaleString('he-IL', { maximumFractionDigits: 2 })}&nbsp;₪` : mktIsProj(x) ? escHtml((PROJ_SUB[x.pd] || {}).name || PROJ_KINDS[x.pk] || 'פרויקט') : ''}${x.uid ? `<i data-sg-rate="${escHtml(x.uid)}"></i>` : ''}</small></span><span class="mk-sg-img">${rentThumb(x)}${badge}${del}${mktSoldOut(x) ? '<i class="mk-sg-out">אזל</i>' : ''}</span><span class="mk-sg-acts">${rentHoverHTML(x).replace('<span role="button" tabindex="0" class="mk-a-dots"', () => `<b class="mk-sg-title"><span class="mk-sg-tt">${escHtml(x.title)}</span><span class="mk-sg-more" role="button" tabindex="0" onclick="event.stopPropagation(); event.preventDefault(); this.parentElement.classList.toggle('open')"><span>עוד</span><span>פחות</span></span></b><span role="button" tabindex="0" class="mk-a-dots"`)}</span></div>`;
+  return `<div role="button" tabindex="0" class="mk-sg${biz ? ' is-biz' : sec === 'used' ? ' is-used' : ''}" data-id="${escHtml(x.id)}" onclick="rentOpen('${artEsc(x.id)}')" onkeydown="if((event.key==='Enter'||event.key===' ')&&event.target===this){event.preventDefault();this.click();}"><span class="mk-sg-meta"><span class="mk-sg-who" role="button" tabindex="0" title="${escHtml(mktWho(x))}" aria-label="${escHtml(mktWho(x))}" onclick="event.stopPropagation(); rentOpenSeller('${artEsc(x.uid || '')}', '${artEsc(x.owner || '')}')">${authorAvHTML({ author: mktWho(x) || '?', uid: x.uid || '' })}<b>${biz ? BIZ_IC : ''}${escHtml(mktWho(x))}</b></span><small class="mk-sg-city${mkKmTo(x.city) !== null ? ' km' : ''}">${escHtml(mkWhereTxt(x))}</small>${mkMobStatHTML(x)}<small class="mk-sg-price">${rentTypeIcon(x)}${Number(x.price) > 0 ? `${mktDiscP(x.price).toLocaleString('he-IL', { maximumFractionDigits: 2 })}&nbsp;₪${mktWasHTML(x.price)}` : mktIsProj(x) ? escHtml((PROJ_SUB[x.pd] || {}).name || PROJ_KINDS[x.pk] || 'פרויקט') : ''}${x.uid ? `<i data-sg-rate="${escHtml(x.uid)}"></i>` : ''}</small></span><span class="mk-sg-img">${rentThumb(x)}${badge}${del}${mktSoldOut(x) ? '<i class="mk-sg-out">אזל</i>' : ''}</span><span class="mk-sg-acts">${rentHoverHTML(x).replace('<span role="button" tabindex="0" class="mk-a-dots"', () => `<b class="mk-sg-title"><span class="mk-sg-tt">${escHtml(x.title)}</span><span class="mk-sg-more" role="button" tabindex="0" onclick="event.stopPropagation(); event.preventDefault(); this.parentElement.classList.toggle('open')"><span>עוד</span><span>פחות</span></span></b><span role="button" tabindex="0" class="mk-a-dots"`)}</span></div>`;
 }
 // שורת הזהב: משאירים בה בדיוק כמה כרטיסים שנכנסים בשורה אחת; העודפים חוזרים לראש הגריד הרגיל
 function mkGoldFit() {
@@ -34122,7 +34169,7 @@ function rentSet(k, v) { rentUI[k] = v; rentUI.open = null; if (k === 'cat' && v
 function rentFind(id) { return mktAll().find(r => r.id === id); }
 function rentCalc(r, qty) {
   const months = r.cat === 'storage' && r.unit !== 'month' ? Math.max(1, Math.round(Number((document.getElementById('rn-months') || {}).value) || 1)) : 1;
-  const sub = Math.round(r.price * qty * months * 100) / 100, fee = Math.round(sub * RENT_SITE_FEE * 100) / 100;
+  const sub = Math.round(mktDiscP(r.price) * qty * months * 100) / 100, fee = Math.round(sub * RENT_SITE_FEE * 100) / 100;
   return { sub, fee, total: Math.round((sub + fee) * 100) / 100 };
 }
 // עמוד מודעה מלא (לא חלון קופץ): נפתח בתוך עמוד ההשכרה, עם "חזרה" וכפתור אחורה של הדפדפן
@@ -35434,7 +35481,7 @@ function buyCartHandle(text) {
     const top = cs[0], second = cs[1];
     if (!second || top.score > second.score) {
       const st = buyCartAddItem(top.r, n);
-      html += st === 'ok' ? `<p class="by-ok">🛒 נוסף: <b>${escHtml(top.r.title)}</b> × ${n} — ${buyMoney(top.r.price * n)}${top.rent ? ` <small>(${escHtml((RENT_UNITS[top.r.unit] || '').trim())} · להשכרה)</small>` : ''}</p>` : `<p class="by-none">${escHtml(top.r.title)}: ${st === 'out' ? 'אזל מהמלאי' : 'נשארו רק ' + st.split(':')[1] + ' במלאי'}</p>`;
+      html += st === 'ok' ? `<p class="by-ok">🛒 נוסף: <b>${escHtml(top.r.title)}</b> × ${n} — ${buyMoney(mktDiscP(top.r.price) * n)}${top.rent ? ` <small>(${escHtml((RENT_UNITS[top.r.unit] || '').trim())} · להשכרה)</small>` : ''}</p>` : `<p class="by-none">${escHtml(top.r.title)}: ${st === 'out' ? 'אזל מהמלאי' : 'נשארו רק ' + st.split(':')[1] + ' במלאי'}</p>`;
       if (st === 'ok') added.push(top.r);
     } else html += buyCartPickHTML(q, cs, n);
   });
