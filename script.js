@@ -25100,7 +25100,7 @@ function newsThumbHTML(post, cls) {
 let siteSearchTimer = 0;
 function siteSearchEnsureDom() {
   if (document.getElementById('site-search')) return;
-  const header = document.querySelector('header') || document.body;
+  const header = document.body;
   const bar = document.createElement('div');
   bar.id = 'site-search';
   bar.className = 'ss-bar';
@@ -33930,29 +33930,26 @@ function rentGridHTML() {
       <div class="mk-sg-grid mk-grid">${gold.map(rentMiniHTML).join('')}</div></section>` : '';
   return `${goldHTML}<div class="mk-sg-grid mk-grid">${rest.slice(0, RENT_BATCH).map(rentMiniHTML).join('')}</div>${rest.length > RENT_BATCH ? '<div class="rn-more-end" aria-hidden="true"></div>' : ''}`;
 }
-// חלון "העלאה" גדול בראש דף הבית: כותבים מה מחפשים או מה מפרסמים, בוחרים מצב ושולחים
+// שורת חיפוש ופעולות מהירות בראש דף הבית (בסגנון Spotlight: גלולת חיפוש מימין ו-4 עיגולי פעולה/סינון משמאל)
 let hcMode = 'buy';
-const HC_MODES = { buy: ['חיפוש וקנייה', 'מחפש/ת מברגה עד 300 ש״ח, אקסבוקס, מחשב נייד…'], sell: ['פרסום מודעה', 'מה תרצו למכור, להשכיר או להשאיל? למשל: מדפסת תלת מימד להשכרה…'] };
+const HC_MODES = { buy: ['חיפוש וקנייה', 'חיפוש בשוק — מוצרים, עסקים, השכרת ציוד…'], sell: ['פרסום מודעה', 'מה תרצו למכור, להשכיר או להשאיל? למשל: מדפסת תלת מימד להשכרה…'] };
 function homeComposerHTML() {
   const ic = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
-  const chip = (d, t, js) => `<button type="button" class="hc-chip" onclick="${js}">${ic(d)}${t}</button>`;
-  return `<section class="hc-wrap" aria-label="העלאה וחיפוש">
-    <form class="hc-box" onsubmit="hcSend(event)">
-      <textarea id="hc-in" class="hc-in" rows="2" placeholder="${HC_MODES[hcMode][1]}" onkeydown="if(event.key==='Enter'&&!event.shiftKey){hcSend(event)}"></textarea>
-      <div class="hc-bar">
-        <button type="button" class="hc-plus" onclick="mkPubOpen()" title="פרסום מודעה עם תמונות" aria-label="פרסום מודעה עם תמונות">${ic('<path d="M12 5v14M5 12h14"/>')}</button>
-        <div class="hc-dd"><button type="button" class="hc-mode" onclick="this.parentNode.classList.toggle('open')"><span id="hc-mode-t">${HC_MODES[hcMode][0]}</span>${ic('<path d="M6 9l6 6 6-6"/>')}</button>
-          <div class="hc-menu">${Object.entries(HC_MODES).map(([k, [t]]) => `<button type="button" onclick="hcSetMode('${k}')">${t}</button>`).join('')}</div></div>
-        <span class="hc-sp"></span>
-        <button type="button" class="hc-mic" onclick="hcMic(this)" title="הקלטה קולית" aria-label="הקלטה קולית">${ic('<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>')}</button>
-        <button type="submit" class="hc-go" aria-label="שליחה">${ic('<path d="M12 19V5M5 12l7-7 7 7"/>')}</button>
-      </div>
+  const q = String((typeof rentUI !== 'undefined' && rentUI.q) || '');
+  const sec = (typeof rentUI !== 'undefined' && rentUI.sec) || 'all';
+  const circ = (d, label, js, cls) => `<button type="button" class="sp-circ${cls ? ' ' + cls : ''}" onclick="${js}" title="${label}" aria-label="${label}">${ic(d)}<span class="sp-tip">${label}</span></button>`;
+  return `<section class="hc-wrap sp-bar" aria-label="חיפוש ופעולות מהירות">
+    <form class="hc-box sp-pill${q ? ' has-q' : ''}" role="search" onsubmit="hcSend(event)">
+      <span class="sp-mag" aria-hidden="true">${ic('<circle cx="11" cy="11" r="7"/><path d="M20 20l-4.35-4.35"/>')}</span>
+      <input id="hc-in" class="hc-in sp-input" type="search" value="${escHtml(q)}" placeholder="${HC_MODES[hcMode][1]}" autocomplete="off" enterkeyhint="search" aria-label="חיפוש בשוק" oninput="hcInput(this.value)" onkeydown="if(event.key==='Escape'){hcClear()}">
+      <button type="button" class="sp-clear" onclick="hcClear()" aria-label="ניקוי חיפוש" title="ניקוי">✕</button>
+      <button type="button" class="hc-mic sp-mic" onclick="hcMic(this)" title="חיפוש קולי" aria-label="חיפוש קולי">${ic('<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>')}</button>
     </form>
-    <div class="hc-chips">
-      ${chip('<path d="M6 8h12l1 13H5zM9 8V6a3 3 0 0 1 6 0v2"/>', 'פרסום מודעה', 'mkPubOpen()')}
-      ${chip('<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.4 2.4-2.6-.4-.4-2.6z"/>', 'השכרת ציוד', "rentPublishOpen()")}
-      ${chip('<path d="M3 8l9-5 9 5v12H3z"/><path d="M7 20v-7h10v7"/>', 'שטח לאחסון', "rentPublishOpen('storage')")}
-      <button type="button" class="hc-chip" onclick="xrJump('tools')">עוד</button>
+    <div class="sp-acts" role="group" aria-label="סינון ופעולות מהירות">
+      ${circ('<path d="M6 8h12l1 12H5z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>', 'יד 2 ומוצרים', "rentTag('sec', 'used')", sec === 'used' ? 'on' : '')}
+      ${circ('<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>', 'עסקים וחנויות', "rentTag('sec', 'biz')", 'sp-circ-teal' + (sec === 'biz' ? ' on' : ''))}
+      ${circ('<path d="M12 3 3 8l9 5 9-5-9-5z"/><path d="m3 14 9 5 9-5"/>', 'השכרת ציוד', "rentTag('sec', 'rent')", sec === 'rent' ? 'on' : '')}
+      ${circ('<rect x="8" y="3" width="12" height="15" rx="2.5"/><path d="M16 18v1a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/><path d="M14 8v5M11.5 10.5h5"/>', 'פרסום מודעה', 'mkPubOpen()', '')}
     </div>
   </section>`;
 }
@@ -33960,6 +33957,23 @@ function hcSetMode(k) {
   hcMode = k; const t = document.getElementById('hc-mode-t'); if (t) t.textContent = HC_MODES[k][0];
   const i = document.getElementById('hc-in'); if (i) { i.placeholder = HC_MODES[k][1]; i.focus(); }
   document.querySelectorAll('.hc-dd.open').forEach(d => d.classList.remove('open'));
+}
+function hcInput(v) {
+  const q = String(v || '');
+  ['hc-in', 'hdr-search-q', 'mt-search-q'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el.value !== q) el.value = q;
+  });
+  document.querySelectorAll('.sp-pill, form.hdr-search, #m-top .mt-search').forEach(f => f.classList.toggle('has-q', !!q.trim()));
+  if (typeof rentSet === 'function') rentSet('q', q);
+}
+function hcClear() {
+  hcInput('');
+  const a = document.activeElement;
+  if (!a || !a.matches('#hc-in, #hdr-search-q, #mt-search-q')) {
+    const i = document.getElementById('hc-in') || document.getElementById('mt-search-q') || document.getElementById('hdr-search-q');
+    if (i) i.focus();
+  }
 }
 function hcSend(ev) {
   if (ev) ev.preventDefault();
@@ -33970,18 +33984,18 @@ function hcSend(ev) {
     setTimeout(() => { const t = document.getElementById('mkpub-title'); if (t) { t.value = q.slice(0, 32); t.dispatchEvent(new Event('input')); } }, 80);
     return;
   }
-  const b = document.getElementById('by-q'); if (!b) return;
-  i.value = ''; b.value = q; buySend();
+  if (typeof srchRemember === 'function') srchRemember(q);
+  hcInput(q);
 }
 function hcMic(btn) {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) { showCopyToast('הדפדפן לא תומך בהקלטה קולית'); return; }
   const r = new SR(); r.lang = 'he-IL'; r.interimResults = true; btn.classList.add('rec');
-  r.onresult = e => { const i = document.getElementById('hc-in'); if (i) i.value = [...e.results].map(x => x[0].transcript).join(''); };
+  r.onresult = e => { const tx = [...e.results].map(x => x[0].transcript).join(''); hcInput(tx); };
   r.onend = () => btn.classList.remove('rec'); r.onerror = () => btn.classList.remove('rec');
   try { r.start(); } catch (e) { btn.classList.remove('rec'); }
 }
-window.hcSend = hcSend; window.hcSetMode = hcSetMode; window.hcMic = hcMic;
+Object.assign(window, { hcSend, hcSetMode, hcMic, hcInput, hcClear });
 document.addEventListener('click', e => { if (!e.target.closest('.hc-dd')) document.querySelectorAll('.hc-dd.open').forEach(d => d.classList.remove('open')); });
 // עיגולי מחלקות מתחת להאשטאגים: איור קריקטורה בשחור-לבן בתוך עיגול, לחיצה מסננת לפי המחלקה
 const DEPT_ART = {
@@ -34095,7 +34109,7 @@ function rentViewHTML() {
     ['sec', 'proj', 'פרויקטים'], ['pd', 'elec', 'חשמל'], ['pa', 'phys', 'מוצרים_פיזיים'], ['pa', 'fun', 'פנאי'], ['pk', '3d', 'תלת_מימד']];
   const tagOn = (k, v) => k === 'sec' ? rentUI.sec === v && rentUI.cat === 'all' && rentUI.offer === 'all' && rentUI.pk === 'all' && rentUI.pa === 'all' : rentUI[k] === v;
   const total = rentList().length;
-  return `${rentUI.sec === 'all' && !rentUI.open && !rentUI.seller ? homeComposerHTML() : ''}<header class="rn-head">
+  return `${!rentUI.open && !rentUI.seller ? homeComposerHTML() : ''}<header class="rn-head">
       ${pubBtn}
       <span class="rn-count">${total.toLocaleString('he-IL')} ${total === 1 ? 'מודעה' : 'מודעות'}</span>
       <button type="button" class="rn-fbtn${rentFilterOpen() ? ' on' : ''}" onclick="rentFilterToggle()" aria-label="סינון וקטגוריות"><span class="rn-fbtn-t">סינון</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg></button>
@@ -36434,11 +36448,15 @@ Object.assign(window, { phoneVerifyOpen, pvSend, pvBack, pvClose });
     if (document.getElementById('m-top')) return;
     const el = document.createElement('div'); el.id = 'm-top';
     el.innerHTML = `<div class="mt-row">
-        <button type="button" class="mt-circ" onclick="mtMenu()" aria-label="תפריט">${ic('<path d="M4 7h16M4 12h16M4 17h16"/>')}</button>
+        <div class="mt-search${typeof rentUI !== 'undefined' && rentUI.q ? ' has-q' : ''}">
+          <span class="mt-mag" aria-hidden="true">${ic('<circle cx="11" cy="11" r="7"/><path d="M20 20l-4.35-4.35"/>')}</span>
+          <input id="mt-search-q" type="search" class="mt-q-in" placeholder="חיפוש בשוק..." value="${escHtml((typeof rentUI !== 'undefined' && rentUI.q) || '')}" autocomplete="off" enterkeyhint="search" aria-label="חיפוש בשוק" oninput="hcInput(this.value)" onkeydown="if(event.key==='Escape'){hcClear()} else if(event.key==='Enter'){event.preventDefault(); this.blur();}">
+          <button type="button" class="mt-q-x" onclick="hcClear()" aria-label="ניקוי חיפוש">✕</button>
+        </div>
+        <button type="button" class="mt-circ mt-circ-teal" onclick="rentFilterToggle()" aria-label="קטגוריות וסינון" title="קטגוריות וסינון">${ic('<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>')}</button>
+        <button type="button" class="mt-circ" onclick="mtMenu()" aria-label="תפריט וניווט" title="תפריט">${ic('<path d="M12 3 3 8l9 5 9-5-9-5z"/><path d="m3 14 9 5 9-5"/>')}</button>
+        <button type="button" class="mt-circ" onclick="mkPubOpen()" aria-label="פרסום מודעה" title="פרסום מודעה">${ic('<rect x="8" y="3" width="12" height="15" rx="2.5"/><path d="M16 18v1a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/><path d="M14 8v5M11.5 10.5h5"/>')}</button>
         <button type="button" class="mt-circ mt-me" onclick="mtMe()" aria-label="המשתמש שלי"></button>
-        <div class="mt-search"><button type="button" class="mt-logo" onclick="mtTab('home')" aria-label="לדף הבית"><img src="./logo.png" alt=""></button><button type="button" class="mt-q" onclick="mtSearch()" aria-label="חיפוש באתר">חיפוש בשוק</button></div>
-        <button type="button" class="mt-circ mt-ai" onclick="mtCompose()" aria-label="חיפוש וקנייה חכמים" aria-expanded="false">${ic('<path d="M12 3l1.9 4.6L18.5 9.5l-4.6 1.9L12 16l-1.9-4.6L5.5 9.5l4.6-1.9z"/><path d="M18.5 15l.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9z"/>')}</button>
-        <button type="button" class="mt-circ" onclick="mkPubOpen()" aria-label="פרסום מודעה">${ic('<path d="M12 5v14M5 12h14"/>')}</button>
       </div>
       <nav class="mt-tabs"><button type="button" data-t="home" onclick="mtTab('home')">בית</button><button type="button" data-t="feed" onclick="mtTab('feed')">במעקב</button><button type="button" data-t="deals" class="mt-dls" onclick="mtTab('deals')">עסקאות<i class="mt-apv-n mt-dls-n"></i></button><button type="button" data-t="apv" class="mt-apv" hidden onclick="mtTab('apv')">אישור<i class="mt-apv-n"></i></button><span class="mt-count" aria-live="polite"></span></nav>`;
     document.body.appendChild(el);
