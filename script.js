@@ -33053,6 +33053,9 @@ const USED_DEMO = [
 ].map(r => Object.assign({ demo: true, kind: 'used' }, r, { t: Date.now() + r.t * 3600e3 }));
 // דוגמאות לעסקים (מוצגות כשיש מעט עסקים אמיתיים)
 const BIZ_DEMO = [
+  { id: 'bz8', img: 'rent/biz-bakery.svg', hv: { p: 'er', id: 'nwU5bccY' }, sponsored: true, bizName: 'סטודיו אלבום', title: 'מודעת וידאו — אלבום בצפייה ישירה', price: 220, link: 'https://www.erome.com/a/nwU5bccY', city: 'תל אביב', owner: 'סטודיו אלבום', t: -0.2, desc: 'מודעה עם סרטון שרץ ישירות בתוך המודעה.', specs: ['וידאו חי', 'מסך מלא', 'איכות HD'] },
+  { id: 'bz7', img: 'rent/biz-bakery.svg', hv: { p: 'ph', id: '6ad1d8195baa2' }, sponsored: true, bizName: 'סטודיו וידאו', title: 'מודעת וידאו — צפייה ישירה', price: 290, link: 'https://www.pornhub.com/view_video.php?viewkey=6ad1d8195baa2', city: 'תל אביב', owner: 'סטודיו וידאו', t: -0.5, desc: 'מודעה עם סרטון שרץ ישירות בתוך המודעה.', specs: ['וידאו חי', 'מסך מלא', 'איכות HD'] },
+  { id: 'bz6', img: 'rent/biz-bakery.svg', hv: { p: 'rg', id: 'leafycompetenttortoise' }, sponsored: true, bizName: 'סטודיו מדיה', title: 'מודעת וידאו — סרטון בפעולה', price: 250, link: 'https://www.redgifs.com/watch/leafycompetenttortoise', city: 'תל אביב', owner: 'סטודיו מדיה', t: -1, desc: 'מודעה עם סרטון שרץ ישירות בתוך המודעה.', specs: ['וידאו חי', 'מסך מלא', 'איכות HD'] },
   { id: 'bz1', img: 'rent/biz-bakery.svg', bizName: 'מאפיית השכונה', title: 'מגש מאפים לאירוע — 40 יחידות', price: 180, link: 'https://example.com/bakery', city: 'הרצליה', owner: 'מאפיית השכונה', t: -4, desc: 'קרואסונים, בורקסים ומאפים מתוקים, טריים מהבוקר. משלוח עד הבית באזור השרון.', specs: ['40 יחידות', 'משלוח בשרון', 'הזמנה יום מראש'] },
   { id: 'bz2', img: 'rent/biz-phone.svg', hv: { p: 'yt', id: 'UTA7ak0ZxA0' }, bizName: 'מעבדת פיקס-טק', title: 'החלפת מסך לאייפון — באותו יום', price: 390, link: 'https://example.com/fixtech', city: 'תל אביב', owner: 'מעבדת פיקס-טק', t: -10, desc: 'מסך איכותי עם אחריות לחצי שנה. מגיעים בבוקר, אוספים אחר הצהריים.', specs: ['אחריות 6 חודשים', 'תוך 3 שעות', 'כל הדגמים'] },
   { id: 'bz5', img: 'rent/biz-phone.svg', hv: { p: 'ody', path: '@prophoneyoutube:b/how-to-huawei-p-smart-2019-screen:5' }, bizName: 'מעבדת פרו-פון', title: 'החלפת מסך ל-Huawei — סרטון מהמעבדה', price: 260, link: '', city: 'חיפה', owner: 'מעבדת פרו-פון', t: -14, desc: 'כך נראית החלפת מסך אצלנו, מההתחלה ועד הסוף. מסך מקורי, אחריות לשלושה חודשים.', specs: ['אחריות 3 חודשים', 'תוך שעתיים', 'Huawei ו-Samsung'] },
@@ -33249,7 +33252,7 @@ function mkPubOpen() {
     </div>
     <label class="mkpub-l" for="mkpub-price">מחיר <small>(לא חובה)</small></label>
     <div class="mkpub-price"><input id="mkpub-price" class="mkpub-in" oninput="mkPubAuto()" type="number" min="0" step="1" inputmode="numeric" placeholder="ריק = ללא מחיר"><span>₪</span></div>
-    <label class="mkpub-l" for="mkpub-video">סרטון <small>(לא חובה — קישור מיוטיוב, טיקטוק, אינסטגרם, פייסבוק, וימאו, אודיסי, דיילימושן או קובץ וידאו. בלוח המודעות תוצג התמונה שלכם, והסרטון יתנגן כשנכנסים למודעה)</small></label>
+    <label class="mkpub-l" for="mkpub-video">סרטון <small>(לא חובה — קישור מכל אתר: יוטיוב, טיקטוק, אינסטגרם, פייסבוק, וימאו, אודיסי, דיילימושן, או קובץ וידאו. יוצג במקום התמונה)</small></label>
     <input id="mkpub-video" class="mkpub-in" type="url" dir="ltr" maxlength="400" placeholder="הדביקו קישור לסרטון…">
     <div class="mkpub-sale">
       <label class="mkpub-l" for="mkpub-stock">כמה יחידות יש לך במלאי? <small>(לא חובה)</small></label>
@@ -33326,7 +33329,7 @@ async function mkPubSend() {
   const title = (document.getElementById('mkpub-title').value || '').trim(), price = Number(document.getElementById('mkpub-price').value);
   const err = document.getElementById('mkpub-err'), go = document.getElementById('mkpub-go');
   const fail = t => { err.textContent = t; err.hidden = false; };
-  if (!mkPub.images.length) return fail(((document.getElementById('mkpub-video') || {}).value || '').trim() ? 'מודעה עם סרטון צריכה גם תמונה — התמונה מוצגת בלוח המודעות, והסרטון מתנגן כשנכנסים למודעה' : 'צריך להוסיף לפחות תמונה אחת');
+  if (!mkPub.images.length) return fail('צריך להוסיף לפחות תמונה אחת');
   if (title.length < 2) return fail('צריך לכתוב כותרת');
   if (title.length > MKPUB_TITLE_MAX) return fail(`הכותרת ארוכה מדי — עד ${MKPUB_TITLE_MAX} תווים`);
   const priceTxt = document.getElementById('mkpub-price').value;
@@ -33476,6 +33479,9 @@ function mkVideoParse(raw) {
   let x;
   const yt = youtubeVideoId(u.href); if (yt) return { p: 'yt', id: yt };
   if (/\.(mp4|webm|ogv|ogg|mov|m4v)$/i.test(path) && u.protocol === 'https:') return { p: 'file', url: u.href.slice(0, 400) };
+  if (h === 'redgifs.com' && (x = m(/^\/(?:watch|ifr|gifs\/detail)\/([a-z0-9_-]{4,60})/i))) return { p: 'rg', id: x[1].toLowerCase() };
+  if ((h === 'pornhub.com' || h.endsWith('.pornhub.com')) && (x = (u.searchParams.get('viewkey') || '').match(/^([a-z0-9]{8,25})$/i) || m(/^\/embed\/([a-z0-9]{8,25})/i))) return { p: 'ph', id: x[1].toLowerCase() };
+  if ((h === 'erome.com' || h.endsWith('.erome.com')) && (x = m(/^\/(?:a|e)\/([a-zA-Z0-9_-]{4,25})/))) return { p: 'er', id: x[1] };
   if (h === 'odysee.com' && path.length > 2 && !path.startsWith('/$/')) return { p: 'ody', path: decodeURIComponent(path.slice(1)).slice(0, 200) };
   if (h === 'odysee.com' && (x = m(/^\/\$\/embed\/(.+)$/))) return { p: 'ody', path: decodeURIComponent(x[1]).slice(0, 200) };
   if ((h === 'vimeo.com' && (x = m(/^\/(?:.*\/)?(\d{6,12})/))) || (h === 'player.vimeo.com' && (x = m(/^\/video\/(\d{6,12})/)))) return { p: 'vimeo', id: x[1] };
@@ -33494,6 +33500,9 @@ window.mkVideoParse = mkVideoParse;
 function mkHeroVideoSrc(hv, big, sound) {
   if (!hv) return '';
   const ok = rx => rx.test(String(hv.id || ''));
+  if (hv.p === 'rg' && ok(/^[a-z0-9_-]{4,60}$/i)) return `https://www.redgifs.com/ifr/${encodeURIComponent(hv.id.toLowerCase())}`;
+  if (hv.p === 'ph' && ok(/^[a-z0-9]{8,25}$/i)) return `https://www.pornhub.com/embed/${encodeURIComponent(hv.id.toLowerCase())}`;
+  if (hv.p === 'er' && ok(/^[a-zA-Z0-9_-]{4,25}$/)) return `https://www.erome.com/e/${encodeURIComponent(hv.id)}`;
   if (hv.p === 'yt' && ok(/^[\w-]{11}$/)) {
     const q = new URLSearchParams({ autoplay: '1', mute: sound ? '0' : '1', loop: '1', playlist: hv.id, controls: big ? '1' : '0', rel: '0', playsinline: '1', iv_load_policy: '3', disablekb: big ? '0' : '1', fs: big ? '1' : '0', modestbranding: '1', cc_load_policy: '0' });
     return `https://www.youtube-nocookie.com/embed/${hv.id}?${q}`;
@@ -34705,7 +34714,6 @@ async function rentAdminDelete(id) {
   try {
     if (r.demo) {
       await set(ref(db, `website/market_hidden/${r.id}`), true);
-      mktHidden[r.id] = true;   // נעלמת מיד גם אצלי, בלי לחכות לעדכון מהשרת
     } else if (r.shId) {
       removeItemFromStoredPages(r.shId);
       await set(ref(db, `website/media/${r.shId}`), null);
