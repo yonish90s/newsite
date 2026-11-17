@@ -1439,7 +1439,7 @@ function renderTopNav() {
     navLinksContainer.appendChild(a);
   });
   // פרופיל ופיד — אחרי "בית"
-  [['פרופיל', () => { const u = auth.currentUser; if (u && !u.isAnonymous) openUserPage(u.uid); else if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); }], ['פיד', () => mktFeedOpen()], ['חנות', () => shopPageOpen()], ['עסקאות', () => dlsOpen()]].concat(isAdmin() ? [['אישור פוסטים', () => apvOpen()]] : []).forEach(([t, go]) => {
+  [['פרופיל', () => { const u = auth.currentUser; if (u && !u.isAnonymous) openUserPage(u.uid); else if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); }], ['פיד', () => mktFeedOpen()], ['חנות', () => shopPageOpen()], ['עסקאות', () => dlsOpen()], ['ספרייה', () => libOpen()]].concat(isAdmin() ? [['אישור פוסטים', () => apvOpen()]] : []).forEach(([t, go]) => {
     const a = document.createElement('a');
     a.href = '#'; a.textContent = t; a.className = 'nav-x';
     a.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); window.__detailOpen = false; go(); });
@@ -33664,6 +33664,109 @@ function rentHoverHTML(x) {
     ${b('דיווח', 'M5 21V4M5 4h11l-2 4 2 4H5', `openReportContent('${artEsc(rk)}', '${artEsc(x.title || '')}')`, false, '', '', cnt(Number(itemLikesData[rpKey]) || 0, ` data-likes-n="${escHtml(rpKey)}"`))}
   </span></span>`;
 }
+// ===== ספריית מודעות: עמוד כהה בסגנון ספריית סדרות — "10 המובילות היום" עם מספרים גדולים, ושורות של כרטיסים גבוהים =====
+function libScore(r) {
+  let n = 0; try { n += Number(itemLikesData[rentCommentsKey(r)]) || 0; } catch (e) {}
+  try { if (r.shId && typeof photoGetViews === 'function') n += (photoGetViews(r.shId) || 0) / 5; } catch (e) {}
+  if (r.sponsored) n += 3;
+  const ageH = Math.max(1, (Date.now() - (r.t || 0)) / 36e5);
+  return n + 24 / ageH;   // מודעה חדשה מקבלת דחיפה קטנה
+}
+function libPoster(r) {
+  const src = r.img || (r.images || [])[0] || '';
+  return src ? `<img src="${escHtml(src)}" alt="" loading="lazy" decoding="async">` : (typeof rentThumb === 'function' ? rentThumb(r) : '');
+}
+function libSub(r) {
+  const p = Number(r.price) > 0 ? '₪' + mktDiscP(r.price).toLocaleString('he-IL', { maximumFractionDigits: 2 }) : '';
+  return [mktWho(r), r.city || '', p].filter(Boolean).map(escHtml).join(' • ');
+}
+function libCardHTML(r, extra) {
+  return `<button type="button" class="lib-card${extra ? ' ' + extra : ''}" onclick="rentOpen('${artEsc(r.id)}')" aria-label="${escHtml(r.title)}">
+    <span class="lib-poster">${libPoster(r)}${r.hv ? '<i class="lib-play" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></i>' : ''}${Date.now() - (r.t || 0) < 3 * 864e5 ? '<em class="lib-new">חדש</em>' : ''}</span>
+    <b class="lib-t">${escHtml(r.title)}</b><small class="lib-s">${libSub(r)}</small>
+  </button>`;
+}
+function libRowHTML(id, title, html) {
+  return `<section class="lib-row"><header><h2>${title}</h2><span class="lib-arrows"><button type="button" class="lib-all" onclick="mktGo('all')">הכל</button><button type="button" onclick="libScroll('${id}', 1)" aria-label="הקודם">‹</button><button type="button" onclick="libScroll('${id}', -1)" aria-label="הבא">›</button></span></header><div class="lib-track" id="${id}">${html}</div></section>`;
+}
+function libHTML() {
+  const all = mktAll().filter(r => r && r.title && !r.isAdult && !(r.hv && ['rg', 'ph', 'er'].includes(r.hv.p)));   // הספרייה לא מציגה מודעות עם הטמעות מאתרי מבוגרים
+  const top = all.slice().sort((a, b) => libScore(b) - libScore(a)).slice(0, 10);
+  const fresh = all.slice().sort((a, b) => (b.t || 0) - (a.t || 0)).slice(0, 20);
+  const biz = all.filter(mktIsBiz).sort((a, b) => libScore(b) - libScore(a)).slice(0, 20);
+  const vids = all.filter(r => r.hv).slice(0, 20);
+  const topHTML = top.map((r, i) => `<div class="lib-top${i ? '' : ' first'}"><b class="lib-n" aria-hidden="true">${i + 1}</b>${libCardHTML(r, i ? '' : 'hl')}</div>`).join('');
+  const hero = top.slice(0, 6);
+  const heroHTML = hero.length ? `<section class="lib-hero" data-i="0">${hero.map((r, i) => {
+      const d = (typeof MKT_DEPTS !== 'undefined' && MKT_DEPTS.find(x => x.id === r.dept)) || null;
+      const src = r.img || (r.images || [])[0] || '';
+      return `<article class="lib-slide${i ? '' : ' on'}" aria-hidden="${i ? 'true' : 'false'}">
+        ${src ? `<img class="lib-slide-bg" src="${escHtml(src)}" alt="" loading="${i ? 'lazy' : 'eager'}">` : ''}
+        <div class="lib-slide-tx">
+          <p class="lib-slide-meta">${d ? `<em>${escHtml(d.name)}</em>` : ''}<span>${escHtml(mktWho(r) || '')}${r.city ? ' • ' + escHtml(r.city) : ''}</span></p>
+          <h1>${escHtml(r.title)}</h1>
+          ${r.desc ? `<p class="lib-slide-desc">${escHtml(String(r.desc).slice(0, 140))}</p>` : ''}
+          <div class="lib-slide-btns"><button type="button" class="lib-go" onclick="rentOpen('${artEsc(r.id)}')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg>${r.hv ? 'לצפייה בסרטון' : 'לצפייה במודעה'}</button>${d ? `<button type="button" class="lib-more" onclick="libDept('${d.id}')">עוד ב${escHtml(d.name)}</button>` : ''}${Number(r.price) > 0 ? `<b class="lib-price">₪${mktDiscP(r.price).toLocaleString('he-IL', { maximumFractionDigits: 2 })}</b>` : ''}</div>
+        </div></article>`; }).join('')}
+      ${hero.length > 1 ? `<nav class="lib-dots"><button type="button" class="lib-arr" onclick="libHero(-1)" aria-label="הקודם">›</button>${hero.map((_, i) => `<button type="button" class="lib-dot${i ? '' : ' on'}" onclick="libHero(0, ${i})" aria-label="מודעה ${i + 1}"></button>`).join('')}<button type="button" class="lib-arr" onclick="libHero(1)" aria-label="הבא">‹</button></nav>` : ''}
+    </section>` : '';
+  const depts = typeof MKT_DEPTS !== 'undefined' ? MKT_DEPTS.filter(d => all.some(r => r.dept === d.id)) : [];
+  const circHTML = depts.length ? `<nav class="lib-circs" aria-label="מחלקות">${depts.map(d => `<button type="button" class="lib-circ" onclick="libDept('${d.id}')"><span><svg viewBox="0 0 64 64" fill="none" stroke="#111" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">${(typeof DEPT_ART !== 'undefined' && (DEPT_ART[d.id] || DEPT_ART.other)) || ''}</svg></span><b>${escHtml(d.name)}</b></button>`).join('')}</nav>` : '';
+  return `<header class="lib-head"><span class="lib-brand"><img src="./logo.png" alt=""><b>ספרייה</b></span><button type="button" class="lib-cta" onclick="mkPubOpen()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>פרסום מודעה</button></header>
+    ${heroHTML}${circHTML}
+    ${top.length ? libRowHTML('lib-top', 'טרנדי <span>עכשיו</span> — 10 המובילות בישראל היום', topHTML) : ''}
+    ${fresh.length ? libRowHTML('lib-new', 'נוספו לאחרונה', fresh.map(r => libCardHTML(r)).join('')) : ''}
+    ${vids.length ? libRowHTML('lib-vid', 'מודעות עם סרטון', vids.map(r => libCardHTML(r)).join('')) : ''}
+    ${biz.length ? libRowHTML('lib-biz', 'עסקים מובילים', biz.map(r => libCardHTML(r)).join('')) : ''}`;
+}
+function libOpen() {
+  if (typeof mainContent === 'undefined' || !mainContent) return;
+  try { rentSubscribe(); } catch (e) {}
+  window.__detailOpen = false;
+  mainContent.innerHTML = `<div class="lib-page">${libSideHTML()}<div class="lib-main">${libHTML()}</div></div>`;
+  clearInterval(libTimer); libTimer = setInterval(() => libHero(1), 6500);
+  try { window.scrollTo(0, 0); } catch (e) {}
+}
+let libTimer = 0;
+function libHero(step, to) {
+  const h = document.querySelector('.lib-page .lib-hero'); if (!h) { clearInterval(libTimer); return; }
+  const sl = h.querySelectorAll('.lib-slide'), dots = h.querySelectorAll('.lib-dot'); if (!sl.length) return;
+  const cur = Number(h.dataset.i) || 0, n = typeof to === 'number' ? to : (cur + step + sl.length) % sl.length;
+  h.dataset.i = n;
+  sl.forEach((e, i) => { e.classList.toggle('on', i === n); e.setAttribute('aria-hidden', i === n ? 'false' : 'true'); });
+  dots.forEach((e, i) => e.classList.toggle('on', i === n));
+  if (typeof to === 'number' || step) { clearInterval(libTimer); libTimer = setInterval(() => libHero(1), 6500); }
+}
+function libDept(id) { try { goToHomePage(); } catch (e) {} setTimeout(() => { try { rentUI.dept = 'all'; deptPick(id); } catch (e) {} }, 350); }
+// תפריט צד של הספרייה: יצירה (העלאת תמונה/מודעה), גלו, ספרייה, צ׳אט, עסקאות · שדרוג · התחברות, הרשמה, דיסקורד
+function libSideHTML() {
+  const ic = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+  const u = auth.currentUser, reg = u && !u.isAnonymous;
+  const it = (label, d, act, cls) => `<button type="button" class="lib-nav${cls ? ' ' + cls : ''}" onclick="${act}">${ic(d)}<span>${label}</span></button>`;
+  return `<aside class="lib-side">
+    <button type="button" class="lib-logo" onclick="goToHomePage()" aria-label="לדף הבית"><img src="./logo.png" alt=""><b>ספרייה</b></button>
+    ${it('יצירה', '<path d="M12 5v14M5 12h14"/>', 'mkPubOpen()', 'create')}
+    <hr>
+    ${it('גלו', '<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>', "mktGo('all')")}
+    ${it('ספרייה', '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 3l4 4 4-4"/>', 'libOpen()', 'on')}
+    ${it('צ׳אט', '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/>', 'openMessages()')}
+    ${it('עסקאות', '<path d="M4 7h11M4 7l3-3M4 7l3 3M20 17H9M20 17l-3-3M20 17l-3 3"/>', 'dlsOpen()')}
+    ${it('חנות', '<path d="M4 9h16l-1 11H5zM8 9V7a4 4 0 0 1 8 0v2"/>', 'shopPageOpen()')}
+    <span class="lib-sp"></span>
+    ${it('שדרוג', '<path d="M3 8l4 4 5-7 5 7 4-4-2 11H5z"/>', "navigateToPage('page-subscription-main')", 'up')}
+    <hr>
+    ${reg ? it('הפרופיל שלי', '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>', `openUserPage('${artEsc(u.uid)}')`) : it('התחברות', '<path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l5-5-5-5M15 12H3"/>', 'openLiveChatLogin()') + it('הרשמה', '<circle cx="10" cy="8" r="4"/><path d="M3 21a7 7 0 0 1 14 0M19 8v6M16 11h6"/>', 'openLiveChatLogin()')}
+    ${it('דיסקורד', '<path d="M8 7.5a14 14 0 0 1 8 0M7 17c3 1.4 7 1.4 10 0"/><path d="M6.5 7.5C4.5 10 4 13 4 16c1.5 1.5 3 2.2 4.5 2.5l1-2M17.5 7.5c2 2.5 2.5 5.5 2.5 8.5-1.5 1.5-3 2.2-4.5 2.5l-1-2"/><circle cx="9.5" cy="12.5" r="1.2" fill="currentColor"/><circle cx="14.5" cy="12.5" r="1.2" fill="currentColor"/>', 'libDiscord()')}
+  </aside>`;
+}
+function libDiscord() {
+  const u = (typeof SOCIAL_LINKS !== 'undefined' && SOCIAL_LINKS.discord) || '';
+  if (u && !/^https:\/\/discord\.gg\/?$/.test(u)) { window.open(u, '_blank', 'noopener'); return; }
+  showCopyToast('עוד לא הוגדר קישור לשרת הדיסקורד' + (isAdmin() ? ' — אפשר להגדיר בעריכת קישורי הרשתות' : ''));
+}
+window.libDiscord = libDiscord;
+function libScroll(id, dir) { const t = document.getElementById(id); if (t) t.scrollBy({ left: dir * t.clientWidth * .8, behavior: 'smooth' }); }
+Object.assign(window, { libOpen, libScroll, libHero, libDept });
 // ===== דף "עסקאות" (לכל המשתמשים, גם במובייל): ריבועים עם ההצעות — דחייה / משא ומתן / אישור =====
 let dlsTab = 'in';
 function dlsList() {
