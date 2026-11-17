@@ -33755,19 +33755,22 @@ function libHTML() {
   const vids = all.filter(r => r.hv).slice(0, 20);
   const topHTML = top.map((r, i) => `<div class="lib-top${i ? '' : ' first'}"><b class="lib-n" aria-hidden="true">${i + 1}</b>${libCardHTML(r, i ? '' : 'hl', true)}</div>`).join('');
   const hero = top.slice(0, 6);
-  const heroHTML = hero.length ? `<section class="lib-hero" data-i="0">${hero.map((r, i) => {
-      const d = (typeof MKT_DEPTS !== 'undefined' && MKT_DEPTS.find(x => x.id === r.dept)) || null;
-      const src = r.img || (r.images || [])[0] || '';
-      return `<article class="lib-slide${i ? '' : ' on'}" aria-hidden="${i ? 'true' : 'false'}">
-        ${src ? `<img class="lib-slide-bg" src="${escHtml(src)}" alt="" loading="${i ? 'lazy' : 'eager'}">` : ''}
-        <div class="lib-slide-tx">
-          <p class="lib-slide-meta">${d ? `<em>${escHtml(d.name)}</em>` : ''}<span>${escHtml(mktWho(r) || '')}${r.city ? ' • ' + escHtml(r.city) : ''}</span></p>
-          <h1>${escHtml(r.title)}</h1>
-          ${r.desc ? `<p class="lib-slide-desc">${escHtml(String(r.desc).slice(0, 140))}</p>` : ''}
-          <div class="lib-slide-btns"><button type="button" class="lib-go" onclick="rentOpen('${artEsc(r.id)}')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg>${r.hv ? 'לצפייה בסרטון' : 'לצפייה במודעה'}</button>${d ? `<button type="button" class="lib-more" onclick="libDept('${d.id}')">עוד ב${escHtml(d.name)}</button>` : ''}${Number(r.price) > 0 ? `<b class="lib-price">₪${mktDiscP(r.price).toLocaleString('he-IL', { maximumFractionDigits: 2 })}</b>` : ''}</div>
-        </div></article>`; }).join('')}
-      ${hero.length > 1 ? `<nav class="lib-dots"><button type="button" class="lib-arr" onclick="libHero(-1)" aria-label="הקודם">›</button>${hero.map((_, i) => `<button type="button" class="lib-dot${i ? '' : ' on'}" onclick="libHero(0, ${i})" aria-label="מודעה ${i + 1}"></button>`).join('')}<button type="button" class="lib-arr" onclick="libHero(1)" aria-label="הבא">‹</button></nav>` : ''}
-    </section>` : '';
+  // באנר עליון: תמונות "ברוכים הבאים" מתחלפות, רק עם נקודות (בלי טקסט של מודעה ובלי חצים)
+  const art = k => (typeof DEPT_ART !== 'undefined' && DEPT_ART[k]) || '';
+  const ico = (k, cls) => `<i class="lib-wi ${cls}"><svg viewBox="0 0 64 64" fill="none" stroke="#111" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">${art(k)}</svg></i>`;
+  const W = [
+    { t: 'ברוכים הבאים', s: 'לשיתוף רעיונות — השוק של הגולשים', act: 'mktGo(\'all\')', ic: ['phones', 'computers', 'tools', 'music'] },
+    { t: 'קונים, מוכרים ומשכירים', s: 'הכל במקום אחד — יד 2, השכרה, עסקים ופרויקטים', act: 'mktGo(\'all\')', ic: ['gaming', 'electronics', 'furniture', 'kids'] },
+    { t: 'מפרסמים בחינם', s: 'מעלים תמונה, כותבים מחיר — והמודעה באוויר תוך דקה', act: 'mkPubOpen()', ic: ['print3d', 'garden', 'services', 'home'] },
+    { t: 'מצאו מה שאתם צריכים', s: 'כתבו מה אתם מחפשים ועד כמה — ונביא לכם הצעות', act: 'mtCompose ? mtCompose() : mktGo(\'all\')', ic: ['phones', 'tools', 'electronics', 'gaming'] }
+  ];
+  const heroHTML = `<section class="lib-hero lib-welcome" data-i="0">${W.map((w, i) => `<article class="lib-slide lib-wel w${i}${i ? '' : ' on'}" aria-hidden="${i ? 'true' : 'false'}" role="button" tabindex="0" onclick="${w.act}" aria-label="${escHtml(w.t)}">
+        <span class="lib-wel-glow"></span>${w.ic.map((k, j) => ico(k, 'p' + j)).join('')}
+        <img class="lib-wel-logo" src="./logo.png" alt="">
+        <b class="lib-wel-t">${escHtml(w.t)}</b><span class="lib-wel-s">${escHtml(w.s)}</span>
+      </article>`).join('')}
+      <nav class="lib-dots">${W.map((_, i) => `<button type="button" class="lib-dot${i ? '' : ' on'}" onclick="event.stopPropagation(); libHero(0, ${i})" aria-label="תמונה ${i + 1}"></button>`).join('')}</nav>
+    </section>`;
   const depts = typeof MKT_DEPTS !== 'undefined' ? MKT_DEPTS.filter(d => base.some(r => r.dept === d.id)) : [];
   const circHTML = depts.length ? `<nav class="lib-circs" aria-label="מחלקות">${depts.map(d => `<button type="button" class="lib-circ" onclick="libDept('${d.id}')"><span><svg viewBox="0 0 64 64" fill="none" stroke="#111" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">${(typeof DEPT_ART !== 'undefined' && (DEPT_ART[d.id] || DEPT_ART.other)) || ''}</svg></span><b>${escHtml(d.name)}</b></button>`).join('')}</nav>` : '';
   return `<header class="lib-head"><span class="lib-brand"><img src="./logo.png" alt=""><b>ספרייה</b></span><button type="button" class="lib-cta" onclick="mkPubOpen()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>פרסום מודעה</button></header>
