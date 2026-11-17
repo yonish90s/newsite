@@ -57,7 +57,7 @@ window.alert = function(message) {
       .custom-alert-card {
         background: rgba(255, 255, 255, 0.95);
         border: 1px solid rgba(255, 255, 255, 0.25);
-        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15), 0 0 120px rgba(71, 160, 147, 0.05);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15), 0 0 120px rgba(139, 92, 246, 0.05);
         border-radius: 28px;
         width: 100%;
         max-width: 360px;
@@ -77,13 +77,13 @@ window.alert = function(message) {
         width: 72px;
         height: 72px;
         border-radius: 50%;
-        background: rgba(71, 160, 147, 0.08);
+        background: rgba(139, 92, 246, 0.08);
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #47a093;
+        color: #8b5cf6;
         font-size: 34px;
-        box-shadow: inset 0 2px 10px rgba(71, 160, 147, 0.1), 0 8px 20px rgba(71, 160, 147, 0.05);
+        box-shadow: inset 0 2px 10px rgba(139, 92, 246, 0.1), 0 8px 20px rgba(139, 92, 246, 0.05);
         margin-bottom: 4px;
       }
       .custom-alert-message {
@@ -95,7 +95,7 @@ window.alert = function(message) {
         white-space: pre-line;
       }
       .custom-alert-btn {
-        background: #47a093;
+        background: #8b5cf6;
         color: white;
         border: none;
         border-radius: 50px;
@@ -105,11 +105,11 @@ window.alert = function(message) {
         cursor: pointer;
         width: 100%;
         transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
-        box-shadow: 0 4px 15px rgba(71, 160, 147, 0.3);
+        box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
       }
       .custom-alert-btn:hover {
-        background: #3c8c80;
-        box-shadow: 0 6px 20px rgba(71, 160, 147, 0.45);
+        background: #7c3aed;
+        box-shadow: 0 6px 20px rgba(139, 92, 246, 0.45);
       }
       .custom-alert-btn:active {
         transform: scale(0.98);
@@ -1017,8 +1017,11 @@ const navLinksContainer = document.querySelector('.nav-links'); // התפריט 
 // מגה-מנו הוסר לחלוטין
 const megaMenuContainer = { classList: { add: ()=>{}, remove: ()=>{} }, style: {}, innerHTML: '' };
 
+// דף הבית הוא הספרייה (באנר, 10 המובילות, שורות). להחזרת השוק כדף הבית: false
+const HOME_LIBRARY = true;
 function goToHomePage() {
   if (typeof pages === 'undefined') return;
+  if (HOME_LIBRARY && typeof libOpen === 'function') { window.__mktWanted = false; try { if (typeof rentUI !== 'undefined') Object.assign(rentUI, { open: null, seller: null }); } catch (e) {} activePageId = 'page-rent-main'; try { renderTopNav(); } catch (e) {} libOpen(); return; }
   // "בשבילך" הוא השוק: כל המודעות במקום אחד
   if (typeof mktGo === 'function' && pages.some(p => p && p.id === 'page-rent-main')) { mktGo('all'); try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) {} return; }
   const homePage = pages.find(p => p && p.id === 'page-home-feed')
@@ -1594,6 +1597,11 @@ function renderPage() {
 
     // עמוד "השכרת ציוד" — נבנה דינמית
     if (currentPage.id === 'page-rent-main' || (currentPage.content || '').includes('rent-page')) {
+      // בכניסה הראשונה לאתר (בלי קישור ישיר למודעה/פעולה) — דף הבית הוא הספרייה
+      // דף הבית הוא הספרייה — עד שהגולש בוחר במפורש את השוק (גלו / השוק / מחלקה / מודעה)
+      if (HOME_LIBRARY && !window.__mktWanted && typeof libOpen === 'function' && !/[?&](go|item|rent|p)=/.test(location.search) && !location.hash) {
+        if (typeof rentUI === 'undefined' || !(rentUI.open || rentUI.seller)) { libOpen(); return; }
+      }
       if (typeof buildRentPage === 'function') {
         mainContent.innerHTML = buildRentPage();
         try { window.scrollTo(0, 0); } catch (e) {}
@@ -5229,7 +5237,7 @@ function openEventRegistrantsAdminModal() {
     <div style="background:#ffffff; border-radius:20px; padding:24px; width:95%; max-width:720px; max-height:85vh; display:flex; flex-direction:column; box-shadow:0 25px 50px rgba(0, 0, 0, 0.25); border:1px solid #cbd5e1; direction:rtl;">
       <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #059669; padding-bottom:12px; margin-bottom:16px;">
         <div>
-          <h3 style="margin:0; font-size:19px; font-weight:900; color:#065f46; display:flex; align-items:center; gap:8px;">
+          <h3 style="margin:0; font-size:19px; font-weight:900; color:#34008e; display:flex; align-items:center; gap:8px;">
             <span>📋 רשימת נרשמים לאירוע</span>
           </h3>
           <div style="font-size:13px; color:#475569; margin-top:2px;">
@@ -9021,7 +9029,7 @@ function statsBodyHTML() {
     <div class="st-verdict ${verdict[0]}"><b>${verdict[1]}</b><span>${verdict[2]}</span></div>
     <div class="st-grid">
       ${statsCard('users', 'גולשים פעילים', '#4f46e5', sum(act), sum(actP), act, '', `ביקורים ייחודיים · ${n} ימים`)}
-      ${statsCard('ret', 'משתמשים חוזרים', '#0d9488', sum(ret), sum(retP), ret)}
+      ${statsCard('ret', 'משתמשים חוזרים', '#4800c4', sum(ret), sum(retP), ret)}
       ${statsCard('ret', 'אחוז חזרה', '#0891b2', retRate, retRateP, rateSeries, '%', 'מתוך הגולשים — כמה חזרו שוב')}
       ${statsCard('plus', 'גולשים חדשים', '#111111', sum(nw), sum(nwP), nw)}
       ${statsCard('eye', 'צפיות בעמודים', '#7c3aed', sum(pv), sum(pvP), pv)}
@@ -12475,15 +12483,15 @@ window.avatarSVG = avatarSVG;
 // --- מטמון דמויות לפי משתמש + "הידרציה" של עיגולי שם ---
 // עיגול תמונת פרופיל ליד שם המעלה: מנהל האתר — הלוגו; משתמש — הדמות שלו (נטענת ב-avatarHydrate), ובינתיים האות הראשונה
 // צבע קבוע לכל משתמש (לפי השם/המזהה) — עיגולי הפרופיל צבעוניים
-const AU_COLORS = ['#47a093', '#e4572e', '#4a6cf7', '#f2a03d', '#9b5de5', '#e5487b', '#2a9d8f', '#3a86ff', '#f15bb5', '#43aa8b', '#ff7f50', '#6d6875'];
+const AU_COLORS = ['#8b5cf6', '#e4572e', '#4a6cf7', '#f2a03d', '#9b5de5', '#e5487b', '#580cda', '#3a86ff', '#f15bb5', '#43aa8b', '#ff7f50', '#6d6875'];
 // דמות מצוירת קבועה לכל שם (פרופילי הדוגמה): צבע עור, שיער, עיניים, זקן, משקפיים וכובע נגזרים מהשם
 const AV_DEMO_BG = ['#e5e7eb', '#e8d5c0', '#dbeafe', '#dcfce7', '#fde68a', '#fbcfe8', '#e9d5ff', '#cffafe'];
-const AV_DEMO_SHIRT = ['#47a093', '#4a6cf7', '#e4572e', '#f2a03d', '#9b5de5', '#334155', '#e5487b', '#2a9d8f'];
+const AV_DEMO_SHIRT = ['#8b5cf6', '#4a6cf7', '#e4572e', '#f2a03d', '#9b5de5', '#334155', '#e5487b', '#580cda'];
 function demoAvatarSVG(name) {
   let h = 0; for (const ch of String(name)) h = (h * 131 + ch.charCodeAt(0)) >>> 0;
   const pick = (n, k) => Math.floor(h / k) % n;
   const cfg = { s: pick(3, 1), h: pick(3, 3) === 0 ? 1 : pick(3, 3), hc: pick(4, 9), ec: pick(4, 36), f: pick(5, 144) > 2 ? pick(3, 144) : 0, g: 0, r: 0 };
-  const look = { bg: AV_DEMO_BG[pick(8, 720)], shirt: AV_DEMO_SHIRT[pick(8, 5760)], glasses: pick(3, 46080) === 0 ? ['#e5352b', '#111827', '#8b5e3c'][pick(3, 7)] : '', hat: pick(6, 138240) === 0 ? ['#c2410c', '#1e3a8a', '#47a093'][pick(3, 11)] : '', zoom: 1.22 };
+  const look = { bg: AV_DEMO_BG[pick(8, 720)], shirt: AV_DEMO_SHIRT[pick(8, 5760)], glasses: pick(3, 46080) === 0 ? ['#e5352b', '#111827', '#8b5e3c'][pick(3, 7)] : '', hat: pick(6, 138240) === 0 ? ['#c2410c', '#1e3a8a', '#8b5cf6'][pick(3, 11)] : '', zoom: 1.22 };
   return avatarSVG(cfg, look);
 }
 window.demoAvatarSVG = demoAvatarSVG;
@@ -12511,7 +12519,7 @@ if (typeof mainContent !== 'undefined' && mainContent) {
 const avatarCache = {};      // uid → config | null (אין דמות)
 const avatarPending = new Set();
 // עיגול פרופיל בלי תמונה: צבע קבוע לכל משתמש (לפי האות/השם), כדי שיהיה ברור ושונה
-const AV_LETTER_COLORS = ['#e8823d', '#3b82f6', '#10b981', '#8b5cf6', '#ef4444', '#14b8a6', '#f59e0b', '#ec4899', '#6366f1', '#84cc16'];
+const AV_LETTER_COLORS = ['#e8823d', '#3b82f6', '#10b981', '#8b5cf6', '#ef4444', '#5600eb', '#f59e0b', '#ec4899', '#6366f1', '#84cc16'];
 function avatarLetterColors(root) {
   (root || document).querySelectorAll('.au-av:not(.au-av-site):not([data-avc])').forEach(el => {
     const key = (el.getAttribute('data-av-uid') || '') + (el.textContent || '').trim();
@@ -12931,7 +12939,7 @@ function friendsStats() {
   }));
 }
 
-const FRIENDS_AVATAR_COLORS = ['#ec4899', '#8b5cf6', '#f59e0b', '#10b981', '#3b82f6', '#ef4444', '#14b8a6', '#f97316'];
+const FRIENDS_AVATAR_COLORS = ['#ec4899', '#8b5cf6', '#f59e0b', '#10b981', '#3b82f6', '#ef4444', '#5600eb', '#f97316'];
 function friendsAvatar(u) {
   const s = String(u.name || '?');
   let h = 0; for (const ch of String(u.key)) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
@@ -14106,6 +14114,12 @@ function homeGridCardsHTML() {
 // העמוד הראשי מציג את השוק. להחזרת הקרוסלה ורשת התמונות: false
 const HOME_MARKET = true;
 function homeGridHTML(photos, comics, stories) {
+  if (HOME_MARKET && HOME_LIBRARY && !window.__mktWanted && typeof libHTML === 'function' && !(rentUI.open || rentUI.seller)) {
+    setTimeout(rentSubscribe, 0);
+    setTimeout(() => { clearInterval(libTimer); libTimer = setInterval(() => libHero(1), 6500); try { mtSync(); } catch (e) {} }, 0);
+    let h = ''; try { h = libHTML(); } catch (e) { h = ''; }   // אם הספרייה עוד לא מוכנה (בטעינה מוקדמת) — נופלים לשוק
+    if (h) return `<div class="lib-page"><div class="lib-main">${h}</div></div>`;
+  }
   if (HOME_MARKET) {
     setTimeout(rentSubscribe, 0);
     rentUI.open = null; rentUI.sec = 'all'; rentUI.cat = 'all';
@@ -14140,7 +14154,7 @@ function fbSideHTML() {
     [ic('linear-gradient(135deg,#34d399,#059669)', '<path d="M21 12a8 8 0 0 1-8 8H4l2.2-2.6A8 8 0 1 1 21 12z"/>'), 'הודעות', 'openMessages()'],
     [ic('linear-gradient(135deg,#fbbf24,#f97316)', '<circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M3 4h2l2.6 12h11l2-8H6"/>'), 'סל הקניות', "cartOpen('cart')"],
     [ic('linear-gradient(135deg,#f472b6,#db2777)', '<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/>'), 'השכרות', "cartOpen('rent')"],
-    [ic('linear-gradient(135deg,#2dd4bf,#0d9488)', '<path d="M3 7l9-4 9 4-9 4z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/>'), 'ניהול מלאי', 'mkStockOpen()'],
+    [ic('linear-gradient(135deg,#6f1bff,#4800c4)', '<path d="M3 7l9-4 9 4-9 4z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/>'), 'ניהול מלאי', 'mkStockOpen()'],
     [ic('linear-gradient(135deg,#60a5fa,#4338ca)', '<path d="M20 12 12 20 4 12V4h8z"/><circle cx="8.5" cy="8.5" r="1.5"/>'), 'הצעות שלי', 'openOffersPanel()'],
     [ic('linear-gradient(135deg,#94a3b8,#475569)', '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'), 'היסטוריה', 'openHistoryDrawer()']
   ];
@@ -14411,7 +14425,7 @@ function homeChipsHTML(photos, comics, stories, active, extraCls) {
   const act = k => k === 'foryou' ? (extraCls ? 'goToHomePage()' : '') : HOME_TABS_ALL[k][1];
   const ICON = { foryou: ['#ea4c89', '<path d="M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6-5.4-3-5.4 3 1.2-6-4.5-4.2 6.1-.7z"/>'],
     feed: ['#2563eb', '<circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16 5a3.5 3.5 0 0 1 0 6.500M18 14.500c2 .8 3 2.8 3 5.5"/>'],
-    photos: ['#0d9488', '<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 9"/>'],
+    photos: ['#4800c4', '<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 9"/>'],
     comics: ['#f97316', '<path d="M4 5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-8l-5 4v-4a2 2 0 0 1-1-2z"/><path d="M8 8h8M8 11h5"/>'],
     stories: ['#7c3aed', '<path d="M4 5.500A2.5 2.5 0 0 1 6.5 3H20v15H6.500A2.5 2.5 0 0 0 4 20.500z"/><path d="M4 20.500A2.5 2.5 0 0 0 6.5 21H20v-3"/>'],
     secondhand: ['#16a34a', '<path d="M6 8h12l-1 13H7z"/><path d="M9 8a3 3 0 0 1 6 0"/>'],
@@ -19283,7 +19297,7 @@ if (typeof document !== 'undefined') {
 // ===== חלון הודעות בסגנון טלגרם: רשימה ← שיחה (מימין בדסקטופ, מסך מלא במובייל) =====
 const DM_AVATAR_GRADS = [
   ['#ff885e', '#ff516a'], ['#ffcd6a', '#ffa85c'], ['#82b1ff', '#665fff'], ['#a0de7e', '#54cb68'],
-  ['#53edd6', '#28c9b7'], ['#72d5fd', '#2a9ef1'], ['#e0a2f3', '#d669ed']
+  ['#8741ff', '#660dff'], ['#72d5fd', '#2a9ef1'], ['#e0a2f3', '#d669ed']
 ];
 function dmAvatarHTML(name, key, extraClass) {
   const nm = String(name || '?').trim();
@@ -19700,12 +19714,12 @@ window.subscribePhotoComments = subscribePhotoComments;
         <path d="M50 14.5l1.1 2.3 2.5.3-1.8 1.7.5 2.5-2.3-1.2-2.3 1.2.5-2.5-1.8-1.7 2.5-.3z" fill="#8a5e08" opacity=".85"/>
         <path d="M9 9.5h12" stroke="#fffbe6" stroke-width="1.8" stroke-linecap="round" opacity=".8"/>
       </symbol>
-      <radialGradient id="bwo-body" cx="36%" cy="30%" r="75%"><stop offset="0" stop-color="#b8eadf"/><stop offset=".35" stop-color="#5fb8a9"/><stop offset=".8" stop-color="#2f7d72"/><stop offset="1" stop-color="#1d5a52"/></radialGradient>
+      <radialGradient id="bwo-body" cx="36%" cy="30%" r="75%"><stop offset="0" stop-color="#c7aaf8"/><stop offset=".35" stop-color="#8659d5"/><stop offset=".8" stop-color="#7c3aed"/><stop offset="1" stop-color="#3e108e"/></radialGradient>
       <radialGradient id="bwo-med" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#fff3b8"/><stop offset=".55" stop-color="#f3c94a"/><stop offset="1" stop-color="#b9800f"/></radialGradient>
       <symbol id="bw-orb" viewBox="0 0 64 64">
-        <ellipse cx="32" cy="60" rx="17" ry="3.2" fill="#0f3a35" opacity=".22"/>
+        <ellipse cx="32" cy="60" rx="17" ry="3.2" fill="#2c0570" opacity=".22"/>
         <circle cx="32" cy="30" r="26" fill="url(#bwo-body)"/>
-        <path d="M9 34c6 9 40 9 46 0" fill="none" stroke="#bfe8de" stroke-width="2" opacity=".55"/>
+        <path d="M9 34c6 9 40 9 46 0" fill="none" stroke="#cbb4f3" stroke-width="2" opacity=".55"/>
         <circle cx="32" cy="31" r="11.5" fill="url(#bwo-med)" stroke="#a87410" stroke-width="1.2"/>
         <g stroke-linecap="round" fill="none" stroke="#7a5306" stroke-width="3"><path d="M27 26.5 32 37"/><path d="M37 26.5 32 37"/></g>
         <circle cx="32" cy="24.6" r="1.6" fill="#7a5306"/>
@@ -28121,7 +28135,7 @@ function ofxRowHTML(o, me, demo) {
   const amtCls = o.status === 'accepted' || o.status === 'signed' ? ' in' : o.status === 'rejected' ? ' off' : '';
   const open = `dealDetailOpen('${artEsc(o.id || '')}', ${demo ? 'true' : 'false'})`;
   return `<div class="ofx-row" data-oid="${escHtml(o.id || '')}"${open ? ` role="button" tabindex="0" onclick="${open}"` : ''}>
-    <span class="ofx-av${demo ? ' has-av' : ''}" style="--av:${typeof forumAvColor === 'function' ? forumAvColor({ uid: otherUid || '', name: other }) : '#47a093'}">${demo ? demoAvatarSVG(other) : escHtml(String(other).trim().charAt(0) || '?')}</span>
+    <span class="ofx-av${demo ? ' has-av' : ''}" style="--av:${typeof forumAvColor === 'function' ? forumAvColor({ uid: otherUid || '', name: other }) : '#8b5cf6'}">${demo ? demoAvatarSVG(other) : escHtml(String(other).trim().charAt(0) || '?')}</span>
     <span class="ofx-tx"><b>${escHtml(other)}${demo ? ' <em class="ofc-demo-tag">דוגמה</em>' : ''}</b><small>${escHtml(sub)}</small></span>
     <span class="ofx-end">${amt ? `<b class="ofx-amt${amtCls}">${amtCls === ' in' && !mine ? '+' : ''}${amt}</b>` : ''}${end}</span>
   </div>`;
@@ -29231,7 +29245,7 @@ function homeExploreHTML() {
     ['photos', 'תמונות גולשים', 'גלריות מהקהילה', 'linear-gradient(135deg,#f9a8c4,#c084fc)'],
     ['products', 'מוצרי גולשים', 'קנייה, מכירה והשאלה', 'linear-gradient(135deg,#fcd34d,#f97316)'],
     ['forums', 'פורומים', 'לדבר, לשאול ולהכיר', 'linear-gradient(135deg,#93c5fd,#6366f1)'],
-    ['comics', 'קומיקס', 'ציורים ורצועות', 'linear-gradient(135deg,#a7f3d0,#14b8a6)'],
+    ['comics', 'קומיקס', 'ציורים ורצועות', 'linear-gradient(135deg,#a7f3d0,#5600eb)'],
     ['stories', 'סיפורים', 'קצרים ומאמרים', 'linear-gradient(135deg,#fda4af,#e11d48)'],
     ['friends', 'חברים', 'הכירו גולשים חדשים', 'linear-gradient(135deg,#c4b5fd,#7c3aed)']
   ];
@@ -31088,7 +31102,7 @@ const SHOP_ITEMS = [
 function shopIcon(ic) {
   if (ic === 'ticket') return bwTicketHTML(64);
   if (ic === 'ticket3') return `<span class="shop-stack">${bwTicketHTML(52)}${bwTicketHTML(52)}${bwTicketHTML(52)}</span>`;
-  if (ic === 'badge') return '<svg viewBox="0 0 48 48" width="56" height="56"><path d="M24 4l5 4 6-1 2 6 5 4-2 6 2 6-5 4-2 6-6-1-5 4-5-4-6 1-2-6-5-4 2-6-2-6 5-4 2-6 6 1z" fill="#47a093"/><path d="M16 24l6 6 11-12" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  if (ic === 'badge') return '<svg viewBox="0 0 48 48" width="56" height="56"><path d="M24 4l5 4 6-1 2 6 5 4-2 6 2 6-5 4-2 6-6-1-5 4-5-4-6 1-2-6-5-4 2-6-2-6 5-4 2-6 6 1z" fill="#8b5cf6"/><path d="M16 24l6 6 11-12" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   if (ic === 'frame') return '<svg viewBox="0 0 48 48" width="58" height="58"><circle cx="24" cy="24" r="20" fill="none" stroke="url(#bwc-rim)" stroke-width="5"/><circle cx="24" cy="20" r="6" fill="#c9d1d8"/><path d="M12 36c2-6 7-8 12-8s10 2 12 8" fill="#c9d1d8"/></svg>';
   return '<svg viewBox="0 0 48 48" width="58" height="58"><path d="M6 36 9 14l9 9 6-13 6 13 9-9 3 22z" fill="url(#bwc-face)" stroke="#a87410" stroke-width="2" stroke-linejoin="round"/><rect x="6" y="36" width="36" height="5" rx="2" fill="#d9a21e"/><circle cx="24" cy="25" r="2.6" fill="#d63a3a"/></svg>';
 }
@@ -33202,6 +33216,7 @@ let mktHidden = (() => { try { return JSON.parse(localStorage.getItem('bw_mkt_hi
 function mktHideSave() { try { localStorage.setItem('bw_mkt_hidden', JSON.stringify(mktHidden)); } catch (e) {} }
 function mktAll() { return rentAll().concat(usedAll()).filter(r => !mktHidden[r.id]); }
 function mktGo(sec) {
+  window.__mktWanted = true;   // בחירה מפורשת בשוק — לא מחזירים לספרייה
   rentUI.sec = sec || 'all'; rentUI.open = null; rentUI.seller = null; rentUI.cat = 'all';
   Object.assign(rentUI, { offer: 'all', owner: 'all', min: null, max: null, pk: 'all', pa: 'all', pd: 'all', dept: 'all' });
   if (typeof activePageId !== 'undefined' && activePageId === 'page-rent-main' && mainContent && mainContent.querySelector('.rent-page')) { rentRender(); try { window.scrollTo({ top: 0 }); } catch (e) {} return; }
@@ -33457,6 +33472,7 @@ function rentSubscribe() {
       mktPurgeExpired();
       rentRender();
       try { apvRefresh(); } catch (e) {}
+      try { libRefresh(); } catch (e) {}
     }, () => { rentData = []; rentRender(); });
     onValue(ref(db, 'website/market_hidden'), snap => { mktHidden = Object.assign({}, mktHidden, snap.val() || {}); mktHideSave(); rentRender(); }, () => {});
     onAuthStateChanged(auth, () => { mktPurgeExpired(); if (!rentUI.open) rentRender(); });   // המנהל רואה את האיקס אחרי ההתחברות
@@ -33780,7 +33796,7 @@ function libHero(step, to) {
   dots.forEach((e, i) => e.classList.toggle('on', i === n));
   if (typeof to === 'number' || step) { clearInterval(libTimer); libTimer = setInterval(() => libHero(1), 6500); }
 }
-function libDept(id) { try { goToHomePage(); } catch (e) {} setTimeout(() => { try { rentUI.dept = 'all'; deptPick(id); } catch (e) {} }, 350); }
+function libDept(id) { try { mktGo('all'); } catch (e) {} setTimeout(() => { try { rentUI.dept = 'all'; deptPick(id); } catch (e) {} }, 350); }
 // תפריט צד של הספרייה: יצירה (העלאת תמונה/מודעה), גלו, ספרייה, צ׳אט, עסקאות · שדרוג · התחברות, הרשמה, דיסקורד
 function libSideHTML() {
   const ic = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
@@ -33855,6 +33871,12 @@ function libDdOpen(btn, key) {
   setTimeout(() => document.addEventListener('click', libDdOutside, true), 0);
 }
 Object.assign(window, { libSet, libDdOpen });
+function libRefresh() {
+  const m = document.querySelector('.lib-page .lib-main'); if (!m || document.querySelector('.lib-menu')) return;
+  const h = m.querySelector('.lib-hero'), i = h ? Number(h.dataset.i) || 0 : 0;
+  m.innerHTML = libHTML();
+  if (i) libHero(0, i);
+}
 function libScroll(id, dir) { const t = document.getElementById(id); if (t) t.scrollBy({ left: dir * t.clientWidth * .8, behavior: 'smooth' }); }
 Object.assign(window, { libOpen, libScroll, libHero, libDept });
 // ===== דף "עסקאות" (לכל המשתמשים, גם במובייל): ריבועים עם ההצעות — דחייה / משא ומתן / אישור =====
@@ -33880,7 +33902,7 @@ function dlsSqHTML(o, me, demo, myTurn) {
   const av = demo && typeof demoAvatarSVG === 'function' ? `<span class="au-av has-av">${demoAvatarSVG(other)}</span>` : authorAvHTML({ author: other, uid: otherUid || '' });
   return `<div class="dls-sq${myTurn ? ' turn' : ''}" data-oid="${escHtml(o.id || '')}" role="button" tabindex="0" onclick="dealDetailOpen('${artEsc(o.id || '')}', ${demo ? 'true' : 'false'})">
     <span class="dls-meta"><span class="dls-who" title="${escHtml(other)}">${av}</span>${o.price ? `<b class="dls-price">${was}₪${Number(o.price).toLocaleString('he-IL')}</b>` : ''}<em class="dls-st ${st[1]}">${st[0]}</em></span>
-    <span class="dls-img">${img ? `<img src="${escHtml(img)}" alt="" loading="lazy" onerror="this.remove()">` : ''}<i style="--av:${typeof forumAvColor === 'function' ? forumAvColor({ uid: otherUid || '', name: other }) : '#47a093'}">${escHtml(String(o.title || other).trim().charAt(0) || '?')}</i>${demo ? '<em class="dls-demo">דוגמה</em>' : ''}</span>
+    <span class="dls-img">${img ? `<img src="${escHtml(img)}" alt="" loading="lazy" onerror="this.remove()">` : ''}<i style="--av:${typeof forumAvColor === 'function' ? forumAvColor({ uid: otherUid || '', name: other }) : '#8b5cf6'}">${escHtml(String(o.title || other).trim().charAt(0) || '?')}</i>${demo ? '<em class="dls-demo">דוגמה</em>' : ''}</span>
     <span class="dls-tx"><b>${escHtml(o.title || 'הצעה')}</b><small>${mine ? 'אל' : 'מאת'} ${escHtml(other)} · ${escHtml(ofxDay(o.updatedAt || o.at || 0))}</small></span>
     ${btns}
   </div>`;
@@ -34568,6 +34590,7 @@ function rentOpen(id) {
   try { window.scrollTo({ top: 0 }); } catch (e) {}
   // מחוץ לשוק (ספרייה, פיד, עסקאות...): קודם עוברים לשוק ואז פותחים את המודעה
   if (!(typeof mainContent !== 'undefined' && mainContent && mainContent.querySelector('.rent-page .rn-inner'))) {
+    window.__mktWanted = true;
     navigateToPage('page-rent-main');
     setTimeout(() => { rentUI.open = id; rentUI.seller = null; rentRender(); try { window.scrollTo({ top: 0 }); } catch (e) {} }, 120);
     return;
@@ -36153,7 +36176,7 @@ let perfState = { range: 28, on: ['visits', 'pv'], data: null };
 const PERF_SERIES = [
   { id: 'visits', name: 'כניסות לאתר', color: '#4285f4' },
   { id: 'pv', name: 'צפיות בעמודים', color: '#5e35b1' },
-  { id: 'clicks', name: 'לחיצות על כפתורים', color: '#00897b' },
+  { id: 'clicks', name: 'לחיצות על כפתורים', color: '#4000ae' },
   { id: 'cart', name: 'הוספות לעגלה', color: '#e8710a' }
 ];
 function perfSectionHTML() { return `<section class="perf" id="perf"><div class="perf-head"><h2>ביצועים</h2></div><div class="perf-body">טוען נתונים…</div></section>`; }
@@ -36203,7 +36226,7 @@ function perfRender() {
   box.innerHTML = `<div class="perf-ranges">${ranges.map(([n, t]) => `<button type="button" class="${perfState.range === n ? 'on' : ''}" onclick="perfRange(${n})">${t}</button>`).join('')}<button type="button" class="perf-ref" onclick="perfLoad()" title="רענון">↻</button></div>
     <div class="perf-card"><div class="perf-tiles">${tiles}</div>${perfChartSVG(days)}</div>
     <div class="perf-two">
-      <div class="perf-list"><h3>הכפתורים הכי לחוצים</h3>${clicks.length ? clicks.map(([k, n]) => row(k, n, maxC, '#00897b')).join('') : '<div class="perf-empty">עוד אין לחיצות בטווח הזה — המעקב התחיל עכשיו</div>'}</div>
+      <div class="perf-list"><h3>הכפתורים הכי לחוצים</h3>${clicks.length ? clicks.map(([k, n]) => row(k, n, maxC, '#4000ae')).join('') : '<div class="perf-empty">עוד אין לחיצות בטווח הזה — המעקב התחיל עכשיו</div>'}</div>
       <div class="perf-list"><h3>מה הכי הוסיפו לעגלה</h3>${cart.length ? cart.map(([k, n]) => row(D.names[k] || k, n, maxK, '#e8710a')).join('') : '<div class="perf-empty">עוד אין הוספות לעגלה בטווח הזה</div>'}</div>
     </div>`;
 }
@@ -36693,7 +36716,7 @@ try { onAuthStateChanged(auth, () => setTimeout(mtMePaint, 300)); } catch (e) {}
 function mtSync() {
   mtMePaint();
   const el = document.getElementById('m-top'); if (!el) return;
-  const dls = !!document.querySelector('.dls-page'), apv = !!document.querySelector('.apv-page'), feed = !apv && !dls && !!document.querySelector('.fd-page'), home = !feed && !apv && !dls && !!document.querySelector('.rent-page') && !(typeof rentUI !== 'undefined' && (rentUI.open || rentUI.seller));
+  const dls = !!document.querySelector('.dls-page'), apv = !!document.querySelector('.apv-page'), feed = !apv && !dls && !!document.querySelector('.fd-page'), home = !feed && !apv && !dls && (!!document.querySelector('.lib-page') || (!!document.querySelector('.rent-page') && !(typeof rentUI !== 'undefined' && (rentUI.open || rentUI.seller))));
   el.querySelectorAll('.mt-tabs button').forEach(b => b.classList.toggle('on', (b.dataset.t === 'feed' && feed) || (b.dataset.t === 'home' && home) || (b.dataset.t === 'apv' && apv) || (b.dataset.t === 'deals' && dls)));
   dlsTabPaint();
   apvTabPaint();
