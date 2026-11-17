@@ -34566,6 +34566,12 @@ function rentOpen(id) {
   if (!_rentPopping) { try { history.pushState({ rent: id }, ''); } catch (e) {} }
   if (typeof mainContent !== 'undefined' && mainContent) mainContent.scrollTop = 0;
   try { window.scrollTo({ top: 0 }); } catch (e) {}
+  // מחוץ לשוק (ספרייה, פיד, עסקאות...): קודם עוברים לשוק ואז פותחים את המודעה
+  if (!(typeof mainContent !== 'undefined' && mainContent && mainContent.querySelector('.rent-page .rn-inner'))) {
+    navigateToPage('page-rent-main');
+    setTimeout(() => { rentUI.open = id; rentUI.seller = null; rentRender(); try { window.scrollTo({ top: 0 }); } catch (e) {} }, 120);
+    return;
+  }
   rentRender();
   // מוצר שהתמונות המלאות שלו נשמרות בנפרד: מציגים את הקטנה מיד ומחליפים כשהמלאה מגיעה (אלא אם מתנגן סרטון)
   if (r.shId && r.raw && r.raw._media && !MEDIA[r.shId]) mediaEnsure(r.shId).then(() => { if (rentUI.open === id && !r.hv) rentRender(); });
