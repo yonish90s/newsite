@@ -14416,16 +14416,12 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_) .pc-row .pc-who { flex: none; 
 }
 
 /* ===== מחשב: האתר בקנה מידה קומפקטי (כמו זום 67% בכרום) — לא גדול מדי ===== */
-@media (min-width: 1100px) and (max-width: 1999px) {
+@media (min-width: 901px) and (max-width: 1999px) {
   :root { --page-zoom: .75; }
   body { zoom: .75; }
   .main-layout { height: calc(100vh / .75); }
 }
-/* מצב עריכה (גרירת רכיבים): בלי הקטנה — כדי שהגרירה תהיה מדויקת */
-@media (min-width: 1100px) and (max-width: 1999px) {
-  body.edit-mode { zoom: 1 !important; }
-  body.edit-mode .main-layout { height: 100vh !important; }
-}
+/* מצב מנהל (edit-mode): אותו קנה מידה קומפקטי כמו לכל הגולשים — המנהל ביקש שיהיה נעים ולא מגושם */
 
 
 /* ===== מחשב: עמוד פריט בפרופורציות של פוסט בטוויטר — עמודה אחת ממורכזת, טקסט מעל התמונה, תגובות מתחת ===== */
