@@ -1442,7 +1442,7 @@ function renderTopNav() {
     navLinksContainer.appendChild(a);
   });
   // פרופיל ופיד — אחרי "בית"
-  [['פרופיל', () => { const u = auth.currentUser; if (u && !u.isAnonymous) openUserPage(u.uid); else if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); }], ['פיד', () => mktFeedOpen()], ['חנות', () => shopPageOpen()], ['עסקאות', () => dlsOpen()], ['ספרייה', () => libOpen()]].concat(isAdmin() ? [['אישור פוסטים', () => apvOpen()]] : []).forEach(([t, go]) => {
+  [['פרופיל', () => { const u = auth.currentUser; if (u && !u.isAnonymous) openUserPage(u.uid); else if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); }], ['פיד', () => mktFeedOpen()], ['חנות', () => shopPageOpen()], ['עסקאות', () => dlsOpen()], ['ספרייה', () => libOpen()], ['פורומים', () => navigateToPage('page-forums-main')], ['חדשות', () => navigateToPage('page-news-main')]].concat(isAdmin() ? [['אישור פוסטים', () => apvOpen()]] : []).forEach(([t, go]) => {
     const a = document.createElement('a');
     a.href = '#'; a.textContent = t; a.className = 'nav-x';
     a.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); window.__detailOpen = false; go(); });
