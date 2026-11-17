@@ -381,3 +381,17 @@ BODY .lib-page .lib-n { color: #f7f5fc !important; -webkit-text-stroke-color: #b
 BODY .lib-page .lib-top.first .lib-n { -webkit-text-stroke-color: #8b3dff !important; }
 BODY .lib-page .lib-poster { background: #ece8f5 !important; }
 BODY .lib-page .lib-card:hover .lib-poster, BODY .lib-page .lib-card.hl .lib-poster { box-shadow: 0 0 0 2px #8b3dff, 0 12px 28px rgba(139, 61, 255, .22) !important; }
+
+BODY .lib-page .lib-name, BODY .lib-page .lib-meta { color: #ffffff !important; }
+BODY .lib-page .lib-name i { color: rgba(255, 255, 255, .62) !important; }
+BODY .lib-page .lib-b.hot { background: linear-gradient(90deg, #fb923c, #f43f5e) !important; color: #ffffff !important; }
+BODY .lib-page .lib-b.new { background: rgba(46, 16, 82, .85) !important; border-color: #a855f7 !important; color: #ffffff !important; }
+BODY .lib-page .lib-b.vid { background: rgba(0, 0, 0, .55) !important; color: #ffffff !important; }
+
+BODY .lib-page .lib-dd, BODY .lib-page .lib-viewall { background: #ffffff !important; color: #1a1428 !important; border-color: #e3dcf2 !important; }
+BODY .lib-page .lib-dd.on { background: #8b3dff !important; border-color: #8b3dff !important; color: #ffffff !important; }
+BODY .lib-page .lib-chip { background: #efeaf8 !important; color: #3d3550 !important; }
+BODY .lib-page .lib-chip.on { background: #1a1428 !important; color: #ffffff !important; }
+BODY .lib-page .lib-menu { background: #ffffff !important; }
+BODY .lib-page .lib-menu button { color: #1a1428 !important; }
+BODY .lib-page .lib-menu button.on { color: #6d28d9 !important; }

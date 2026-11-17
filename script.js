@@ -33680,22 +33680,44 @@ function libSub(r) {
   const p = Number(r.price) > 0 ? '₪' + mktDiscP(r.price).toLocaleString('he-IL', { maximumFractionDigits: 2 }) : '';
   return [mktWho(r), r.city || '', p].filter(Boolean).map(escHtml).join(' • ');
 }
+// כרטיס בסגנון "פוסטר": על התמונה למטה — שם המודעה גדול ולידו המחיר באפור, סמל מיקום ועיר, לייקים וצפיות; למעלה תגיות "טרנדי" / "חדש"
+const libFmt = n => { try { return new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 }).format(n); } catch (e) { return String(n); } };
+// בספרייה מציגים את כרטיס השוק הרגיל (תמונה במסגרת, מוכר, עיר, מחיר עם הנחה, ושורת פעולות) — בגודל של כרטיס בשוק
 function libCardHTML(r, extra) {
+  return `<div class="lib-mk${extra ? ' ' + extra : ''}">${rentMiniHTML(r)}</div>`;
+}
+function libPosterCardHTML(r, extra, trending) {
+  const likes = Number(itemLikesData[rentCommentsKey(r)]) || 0;
+  let views = 0; try { if (r.shId && typeof photoGetViews === 'function') views = photoGetViews(r.shId) || 0; } catch (e) {}
+  const price = Number(r.price) > 0 ? '₪' + mktDiscP(r.price).toLocaleString('he-IL', { maximumFractionDigits: 2 }) : '';
+  const isNew = Date.now() - (r.t || 0) < 3 * 864e5;
+  const pin = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>';
+  const heart = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 20.5l-1.4-1.3C5.4 14.5 2 11.4 2 7.6 2 4.5 4.4 2 7.5 2c1.7 0 3.4.8 4.5 2.1C13.1 2.8 14.8 2 16.5 2 19.6 2 22 4.5 22 7.6c0 3.8-3.4 6.9-8.6 11.6z"/></svg>';
+  const eye = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+  const badges = (trending ? '<em class="lib-b hot"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c1 3.5 5 5.5 5 10.5A5 5 0 0 1 7 12.5c0-2 1-3.5 2-4.5.3 1.6 1.2 2.6 2.2 2.8C10.6 8 11 5 12 2z"/></svg>טרנדי</em>' : '') + (isNew ? '<em class="lib-b new">חדש</em>' : '') + (r.hv ? '<em class="lib-b vid">סרטון</em>' : '');
   return `<button type="button" class="lib-card${extra ? ' ' + extra : ''}" onclick="rentOpen('${artEsc(r.id)}')" aria-label="${escHtml(r.title)}">
-    <span class="lib-poster">${libPoster(r)}${r.hv ? '<i class="lib-play" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></i>' : ''}${Date.now() - (r.t || 0) < 3 * 864e5 ? '<em class="lib-new">חדש</em>' : ''}</span>
-    <b class="lib-t">${escHtml(r.title)}</b><small class="lib-s">${libSub(r)}</small>
+    <span class="lib-poster">${libPoster(r)}
+      ${badges ? `<span class="lib-badges">${badges}</span>` : ''}
+      ${r.hv ? '<i class="lib-play" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></i>' : ''}
+      <span class="lib-ov">
+        <b class="lib-name"><span class="lib-nm">${escHtml(r.title)}</span>${price ? ` <i>${price}</i>` : ''}</b>
+        <span class="lib-meta">${r.city ? `<span class="lib-loc">${pin}${escHtml(r.city)}</span>` : `<span class="lib-loc">${escHtml(mktWho(r))}</span>`}<span class="lib-st">${heart}${libFmt(likes)}${views ? `<span>${eye}${libFmt(views)}</span>` : ''}</span></span>
+      </span>
+    </span>
   </button>`;
 }
 function libRowHTML(id, title, html) {
   return `<section class="lib-row"><header><h2>${title}</h2><span class="lib-arrows"><button type="button" class="lib-all" onclick="mktGo('all')">הכל</button><button type="button" onclick="libScroll('${id}', 1)" aria-label="הקודם">‹</button><button type="button" onclick="libScroll('${id}', -1)" aria-label="הבא">›</button></span></header><div class="lib-track" id="${id}">${html}</div></section>`;
 }
 function libHTML() {
-  const all = mktAll().filter(r => r && r.title && !r.isAdult && !(r.hv && ['rg', 'ph', 'er'].includes(r.hv.p)));   // הספרייה לא מציגה מודעות עם הטמעות מאתרי מבוגרים
+  const base = mktAll().filter(r => r && r.title && !r.isAdult && !(r.hv && ['rg', 'ph', 'er'].includes(r.hv.p)));   // הספרייה לא מציגה מודעות עם הטמעות מאתרי מבוגרים
+  const all = base.filter(r => (libF.dept === 'all' || r.dept === libF.dept) && LIB_TYPES[libF.type].f(r));
+  const filtered = libF.dept !== 'all' || libF.type !== 'all' || libF.sort !== 'pop';
   const top = all.slice().sort((a, b) => libScore(b) - libScore(a)).slice(0, 10);
   const fresh = all.slice().sort((a, b) => (b.t || 0) - (a.t || 0)).slice(0, 20);
   const biz = all.filter(mktIsBiz).sort((a, b) => libScore(b) - libScore(a)).slice(0, 20);
   const vids = all.filter(r => r.hv).slice(0, 20);
-  const topHTML = top.map((r, i) => `<div class="lib-top${i ? '' : ' first'}"><b class="lib-n" aria-hidden="true">${i + 1}</b>${libCardHTML(r, i ? '' : 'hl')}</div>`).join('');
+  const topHTML = top.map((r, i) => `<div class="lib-top${i ? '' : ' first'}"><b class="lib-n" aria-hidden="true">${i + 1}</b>${libCardHTML(r, i ? '' : 'hl', true)}</div>`).join('');
   const hero = top.slice(0, 6);
   const heroHTML = hero.length ? `<section class="lib-hero" data-i="0">${hero.map((r, i) => {
       const d = (typeof MKT_DEPTS !== 'undefined' && MKT_DEPTS.find(x => x.id === r.dept)) || null;
@@ -33710,14 +33732,15 @@ function libHTML() {
         </div></article>`; }).join('')}
       ${hero.length > 1 ? `<nav class="lib-dots"><button type="button" class="lib-arr" onclick="libHero(-1)" aria-label="הקודם">›</button>${hero.map((_, i) => `<button type="button" class="lib-dot${i ? '' : ' on'}" onclick="libHero(0, ${i})" aria-label="מודעה ${i + 1}"></button>`).join('')}<button type="button" class="lib-arr" onclick="libHero(1)" aria-label="הבא">‹</button></nav>` : ''}
     </section>` : '';
-  const depts = typeof MKT_DEPTS !== 'undefined' ? MKT_DEPTS.filter(d => all.some(r => r.dept === d.id)) : [];
+  const depts = typeof MKT_DEPTS !== 'undefined' ? MKT_DEPTS.filter(d => base.some(r => r.dept === d.id)) : [];
   const circHTML = depts.length ? `<nav class="lib-circs" aria-label="מחלקות">${depts.map(d => `<button type="button" class="lib-circ" onclick="libDept('${d.id}')"><span><svg viewBox="0 0 64 64" fill="none" stroke="#111" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">${(typeof DEPT_ART !== 'undefined' && (DEPT_ART[d.id] || DEPT_ART.other)) || ''}</svg></span><b>${escHtml(d.name)}</b></button>`).join('')}</nav>` : '';
   return `<header class="lib-head"><span class="lib-brand"><img src="./logo.png" alt=""><b>ספרייה</b></span><button type="button" class="lib-cta" onclick="mkPubOpen()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>פרסום מודעה</button></header>
-    ${heroHTML}${circHTML}
+    ${filtered ? '' : heroHTML}${libBarHTML(depts)}
+    ${filtered ? `<section class="lib-row lib-res"><header><h2>${all.length} תוצאות</h2></header>${all.length ? `<div class="lib-grid">${all.slice().sort(LIB_SORTS[libF.sort].f).map(r => libCardHTML(r)).join('')}</div>` : '<div class="lib-empty">אין מודעות שמתאימות לסינון הזה</div>'}</section>` : `
     ${top.length ? libRowHTML('lib-top', 'טרנדי <span>עכשיו</span> — 10 המובילות בישראל היום', topHTML) : ''}
     ${fresh.length ? libRowHTML('lib-new', 'נוספו לאחרונה', fresh.map(r => libCardHTML(r)).join('')) : ''}
     ${vids.length ? libRowHTML('lib-vid', 'מודעות עם סרטון', vids.map(r => libCardHTML(r)).join('')) : ''}
-    ${biz.length ? libRowHTML('lib-biz', 'עסקים מובילים', biz.map(r => libCardHTML(r)).join('')) : ''}`;
+    ${biz.length ? libRowHTML('lib-biz', 'עסקים מובילים', biz.map(r => libCardHTML(r)).join('')) : ''}`}`;
 }
 function libOpen() {
   if (typeof mainContent === 'undefined' || !mainContent) return;
@@ -33765,6 +33788,53 @@ function libDiscord() {
   showCopyToast('עוד לא הוגדר קישור לשרת הדיסקורד' + (isAdmin() ? ' — אפשר להגדיר בעריכת קישורי הרשתות' : ''));
 }
 window.libDiscord = libDiscord;
+// שורת סינון בסגנון "גלולות": תפריטים נפתחים (סוג, מיון), קטגוריות כצ׳יפים, "עוד" ו"הכל"
+const LIB_TYPES = {
+  all: { n: 'כל הסוגים', f: () => true },
+  used: { n: 'יד 2', f: r => r.kind === 'used' && !mktIsBiz(r) && !mktIsProj(r) },
+  rent: { n: 'השכרה', f: r => r.kind !== 'used' },
+  biz: { n: 'עסקים', f: r => mktIsBiz(r) },
+  proj: { n: 'פרויקטים', f: r => mktIsProj(r) }
+};
+const LIB_SORTS = {
+  pop: { n: 'פופולרי', f: (a, b) => libScore(b) - libScore(a) },
+  new: { n: 'הכי חדש', f: (a, b) => (b.t || 0) - (a.t || 0) },
+  cheap: { n: 'הכי זול', f: (a, b) => (Number(a.price) || 1e12) - (Number(b.price) || 1e12) },
+  pricey: { n: 'הכי יקר', f: (a, b) => (Number(b.price) || 0) - (Number(a.price) || 0) }
+};
+const libF = { dept: 'all', type: 'all', sort: 'pop' };
+function libBarHTML(depts) {
+  const chev = '<svg class="lib-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
+  const dd = (key, label, icon, on) => `<button type="button" class="lib-dd${on ? ' on' : ''}" onclick="libDdOpen(this, '${key}')" aria-haspopup="menu">${icon}<span>${escHtml(label)}</span>${chev}</button>`;
+  const icType = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h16l-1 11H5zM8 9V7a4 4 0 0 1 8 0v2"/></svg>';
+  const icSort = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c1 3.5 5 5.5 5 10.5A5 5 0 0 1 7 12.5c0-2 1-3.5 2-4.5.3 1.6 1.2 2.6 2.2 2.8C10.6 8 11 5 12 2z"/></svg>';
+  const shown = depts.slice(0, 8), more = depts.slice(8);
+  const chip = (id, name) => `<button type="button" class="lib-chip${libF.dept === id ? ' on' : ''}" onclick="libSet('dept', '${id}')">${escHtml(name)}</button>`;
+  const moreOn = more.some(d => d.id === libF.dept);
+  return `<nav class="lib-bar" aria-label="סינון">
+    <span class="lib-dds">${dd('type', LIB_TYPES[libF.type].n, icType, libF.type !== 'all')}${dd('sort', LIB_SORTS[libF.sort].n, icSort, false)}</span>
+    <span class="lib-chips">${chip('all', 'הכל')}${shown.map(d => chip(d.id, d.name)).join('')}${more.length ? `<button type="button" class="lib-chip lib-more-chip${moreOn ? ' on' : ''}" onclick="libDdOpen(this, 'dept')">${moreOn ? escHtml(more.find(d => d.id === libF.dept).name) : 'עוד'}${chev}</button>` : ''}</span>
+    <button type="button" class="lib-viewall" onclick="mktGo('all')">לכל המודעות</button>
+  </nav>`;
+}
+function libSet(k, v) { libF[k] = v; libDdClose(); const m = document.querySelector('.lib-page .lib-main'); if (m) { m.innerHTML = libHTML(); clearInterval(libTimer); libTimer = setInterval(() => libHero(1), 6500); } }
+function libDdClose() { document.querySelectorAll('.lib-menu').forEach(e => e.remove()); document.removeEventListener('click', libDdOutside, true); }
+function libDdOutside(e) { if (!e.target.closest('.lib-menu') && !e.target.closest('.lib-dd, .lib-more-chip')) libDdClose(); }
+function libDdOpen(btn, key) {
+  const was = document.querySelector(`.lib-menu[data-k="${key}"]`); libDdClose(); if (was) return;
+  let opts;
+  if (key === 'type') opts = Object.entries(LIB_TYPES).map(([k, v]) => [k, v.n]);
+  else if (key === 'sort') opts = Object.entries(LIB_SORTS).map(([k, v]) => [k, v.n]);
+  else { const all = mktAll(); opts = (typeof MKT_DEPTS !== 'undefined' ? MKT_DEPTS : []).filter(d => all.some(r => r.dept === d.id)).slice(8).map(d => [d.id, d.name]); }
+  const cur = libF[key];
+  const m = document.createElement('div'); m.className = 'lib-menu'; m.dataset.k = key; m.setAttribute('role', 'menu');
+  m.innerHTML = opts.map(([k, n]) => `<button type="button" role="menuitemradio" aria-checked="${k === cur}" class="${k === cur ? 'on' : ''}" onclick="libSet('${key}', '${k}')"><span>${escHtml(n)}</span>${k === cur ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>' : ''}</button>`).join('');
+  const page = btn.closest('.lib-page') || document.body; page.appendChild(m);
+  const z = parseFloat(getComputedStyle(document.body).zoom) || 1, r = btn.getBoundingClientRect(), pr = page.getBoundingClientRect();
+  m.style.top = ((r.bottom - pr.top) / z + 6) + 'px'; m.style.right = ((pr.right - r.right) / z) + 'px';
+  setTimeout(() => document.addEventListener('click', libDdOutside, true), 0);
+}
+Object.assign(window, { libSet, libDdOpen });
 function libScroll(id, dir) { const t = document.getElementById(id); if (t) t.scrollBy({ left: dir * t.clientWidth * .8, behavior: 'smooth' }); }
 Object.assign(window, { libOpen, libScroll, libHero, libDept });
 // ===== דף "עסקאות" (לכל המשתמשים, גם במובייל): ריבועים עם ההצעות — דחייה / משא ומתן / אישור =====
