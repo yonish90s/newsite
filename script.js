@@ -34103,7 +34103,7 @@ function rentViewHTML() {
       <nav class="rn-sorts" aria-label="מיון">${sorts.map(([v, t, d]) => `<button type="button" class="rn-sort${rentUI.sort === v ? ' on' : ''}" onclick="rentSet('sort', '${v}')">${sv(d)}${t}</button>`).join('')}</nav>
       <nav class="rn-tags" aria-label="האשטאגים">${tags.map(([k, v, t]) => `<button type="button" class="rn-tag${tagOn(k, v) ? ' on' : ''}" onclick="rentTag('${k}', '${artEsc(v)}')">#${escHtml(t)}</button>`).join('')}</nav>
 
-    </header>${deptCirclesHTML()}${filterBarHTML()}
+    </header>${deptCirclesHTML()}${filterBarHTML()}${subPromoBannerHTML()}
     <nav class="rn-secs">${MKT_SECS.slice(0, 1).map(x => `<button type="button" class="rn-sec${rentUI.sec === x.id ? ' on' : ''}" onclick="mktGo('${x.id}')"><span>${x.ic}</span>${x.name}<small>${secCount(x.id)}</small></button>`).join('')}</nav>
     <div class="rn-bar">
       <input type="search" class="rn-q" placeholder="${rentUI.sec === 'store' ? 'איפה לאחסן? למשל: מחסן בתל אביב' : rentUI.sec === 'used' ? 'מה מחפשים? למשל: ספה, מקרר, אופניים' : 'מה צריך? למשל: מדפסת תלת מימד בתל אביב'}" value="${escHtml(rentUI.q)}" oninput="rentSet('q', this.value)">
@@ -34118,6 +34118,28 @@ function rentViewHTML() {
     </div>
     `;
 }
+// כרטיס הצטרפות למנוי עם כפתור סגירה (✕)
+function subPromoBannerHTML() {
+  if (window.__subPromoClosed) return '';
+  return `<section class="sub-promo-card" role="region" aria-label="הצטרפות למנוי">
+    <button type="button" class="sub-promo-x" onclick="event.stopPropagation(); subPromoClose(this)" aria-label="סגירה" title="סגירה">✕</button>
+    <div class="sub-promo-glow" aria-hidden="true"></div>
+    <div class="sub-promo-body">
+      <h3 class="sub-promo-title">אל תפספסו <span>הצטרפות למנוי</span></h3>
+      <p class="sub-promo-sub">גלישה ללא פרסומות, קידום מודעות בראש הלוח וגישה לכל הפיצ׳רים המתקדמים באתר.</p>
+      <button type="button" class="sub-promo-cta" onclick="subPromoGo()">הצטרפות למנוי</button>
+    </div>
+  </section>`;
+}
+function subPromoClose(btn) {
+  window.__subPromoClosed = true;
+  const el = btn && btn.closest ? btn.closest('.sub-promo-card') : document.querySelector('.sub-promo-card');
+  if (el) el.remove();
+}
+function subPromoGo() {
+  if (typeof navigateToPage === 'function') navigateToPage('page-subscription-main');
+}
+Object.assign(window, { subPromoClose, subPromoGo });
 // פרויקטים: שורת קבוצות (מוצרים פיזיים / דיגיטל / פנאי / חינוך ובריאות), ומתחתיה התחומים של הקבוצה שנבחרה
 function projNavHTML() {
   const proj = mktAll().filter(r => mktSecOf(r) === 'proj');

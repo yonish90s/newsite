@@ -336,3 +336,11 @@ BODY .dls-page .dls-st.ok { background: #e8f6ee !important; color: #15803d !impo
 BODY .dls-page .dls-st.no { background: #fdecec !important; color: #b91c1c !important; }
 BODY .dls-page .dls-st.deal, BODY .dls-page .dls-st.wait { background: #fef3e2 !important; color: #b45309 !important; }
 BODY .dls-page .dls-sq.turn .dls-img { border-color: #f59e0b !important; box-shadow: 0 0 0 1px #f59e0b !important; }
+BODY .sub-promo-card { background: radial-gradient(120% 90% at 22% 105%, rgba(255, 118, 48, .55) 0%, rgba(214, 58, 36, .26) 36%, rgba(12, 16, 28, 0) 70%), radial-gradient(80% 60% at 75% 110%, rgba(255, 168, 76, .35) 0%, rgba(12, 16, 28, 0) 65%), linear-gradient(165deg, #0b101b 0%, #070a12 60%, #150d0c 100%) !important; border-color: rgba(255, 255, 255, .14) !important; color: #ffffff !important; }
+BODY .sub-promo-glow { background: radial-gradient(ellipse 65% 28% at 28% 100%, rgba(255, 180, 110, .48) 0%, rgba(255, 94, 43, .2) 45%, transparent 75%), linear-gradient(115deg, transparent 45%, rgba(255, 120, 60, .18) 68%, rgba(255, 200, 140, .32) 82%, transparent 95%) !important; }
+BODY .sub-promo-title { color: #ffffff !important; }
+BODY .sub-promo-title span { color: #ff5c39 !important; }
+BODY .sub-promo-sub { color: rgba(255, 255, 255, .84) !important; }
+BODY .sub-promo-cta { background: linear-gradient(135deg, #ff732b 0%, #ff3b2f 100%) !important; color: #ffffff !important; box-shadow: 0 6px 18px rgba(255, 68, 43, .38) !important; }
+BODY .sub-promo-x { background: rgba(255, 255, 255, .08) !important; color: rgba(255, 255, 255, .78) !important; }
+BODY .sub-promo-x:hover { background: rgba(255, 255, 255, .18) !important; color: #ffffff !important; }
