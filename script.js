@@ -8277,16 +8277,16 @@ function qpAgentSummary() {
 }
 function qpAgentPublish() {
   const d = qpAgent.draft;
-  if (!qpData.images.length) { qpBubble('bot', 'צריך לפחות תמונה אחת — הוסיפו בכפתור + 🙂'); return; }
+  if (!qpData.images.length) { qpBubble('bot', d.video ? 'מודעה עם קישור לסרטון חייבת גם תמונה שתוצג בלוח המודעות — הוסיפו תמונה בכפתור + 🙂' : 'צריך לפחות תמונה אחת — הוסיפו בכפתור + 🙂'); return; }
   if (!d.title) { qpBubble('bot', 'חסרה כותרת למודעה.'); return; }
   if (d.type === 'biz' && !d.bizName) { qpBubble('bot', 'חסר שם העסק.'); return; }
   if (d.type === 'proj' && !PROJ_SUB[d.area]) { qpBubble('bot', 'צריך לבחור תחום לפרויקט.'); return; }
-  const vid = youtubeVideoId(d.video || '');
+  const vhv = typeof mkVideoParse === 'function' ? mkVideoParse(d.video || '') : null;
   Object.assign(qpData, {
     title: String(d.title).slice(0, MKPUB_TITLE_MAX), summary: String(d.desc || '').slice(0, 1000), price: Number(d.price) > 0 ? String(Math.round(d.price)) : '',
     offerType: d.type === 'biz' ? 'עסק' : d.type === 'proj' ? 'פרויקט' : (QP_OFFER[d.offer] || 'מכירה'), region: String(d.city || '').slice(0, 40),
     link: d.type === 'sale' ? '' : mktLinkUrl(d.link), bizName: d.type === 'biz' ? String(d.bizName).slice(0, 60) : '',
-    projectKind: d.type === 'proj' && PROJ_KINDS[d.kind] ? d.kind : '', projectArea: d.type === 'proj' ? d.area : '', video: vid ? 'https://youtu.be/' + vid : ''
+    projectKind: d.type === 'proj' && PROJ_KINDS[d.kind] ? d.kind : '', projectArea: d.type === 'proj' ? d.area : '', video: vhv ? String(d.video || '').trim().slice(0, 400) : ''
   });
   qpStep = 'done';
   qpPublish();
@@ -33178,7 +33178,8 @@ function mktPurgeExpired() {
     (rentData || []).filter(r => mktExpired(r.t)).forEach(r => set(ref(db, `website/rentals/${r.id}`), null).catch(() => {}));
   } catch (e) {}
 }
-let mktHidden = {};   // מודעות דוגמה שהמנהל הסיר (website/market_hidden)
+let mktHidden = (() => { try { return JSON.parse(localStorage.getItem('bw_mkt_hidden') || '{}') || {}; } catch (e) { return {}; } })();   // מודעות שהמנהל הסיר (website/market_hidden + שמירה מקומית)
+function mktHideSave() { try { localStorage.setItem('bw_mkt_hidden', JSON.stringify(mktHidden)); } catch (e) {} }
 function mktAll() { return rentAll().concat(usedAll()).filter(r => !mktHidden[r.id]); }
 function mktGo(sec) {
   rentUI.sec = sec || 'all'; rentUI.open = null; rentUI.seller = null; rentUI.cat = 'all';
@@ -33252,7 +33253,7 @@ function mkPubOpen() {
     </div>
     <label class="mkpub-l" for="mkpub-price">מחיר <small>(לא חובה)</small></label>
     <div class="mkpub-price"><input id="mkpub-price" class="mkpub-in" oninput="mkPubAuto()" type="number" min="0" step="1" inputmode="numeric" placeholder="ריק = ללא מחיר"><span>₪</span></div>
-    <label class="mkpub-l" for="mkpub-video">סרטון <small>(לא חובה — קישור מכל אתר: יוטיוב, טיקטוק, אינסטגרם, פייסבוק, וימאו, אודיסי, דיילימושן, או קובץ וידאו. יוצג במקום התמונה)</small></label>
+    <label class="mkpub-l" for="mkpub-video">סרטון <small>(לא חובה — קישור מכל אתר. בלוח המודעות תוצג התמונה שהעליתם, והסרטון מהקישור יתנגן כשנכנסים למודעה)</small></label>
     <input id="mkpub-video" class="mkpub-in" type="url" dir="ltr" maxlength="400" placeholder="הדביקו קישור לסרטון…">
     <div class="mkpub-sale">
       <label class="mkpub-l" for="mkpub-stock">כמה יחידות יש לך במלאי? <small>(לא חובה)</small></label>
@@ -33329,7 +33330,7 @@ async function mkPubSend() {
   const title = (document.getElementById('mkpub-title').value || '').trim(), price = Number(document.getElementById('mkpub-price').value);
   const err = document.getElementById('mkpub-err'), go = document.getElementById('mkpub-go');
   const fail = t => { err.textContent = t; err.hidden = false; };
-  if (!mkPub.images.length) return fail('צריך להוסיף לפחות תמונה אחת');
+  if (!mkPub.images.length) return fail(((document.getElementById('mkpub-video') || {}).value || '').trim() ? 'מודעה עם קישור לסרטון חייבת גם תמונה — התמונה מוצגת בלוח המודעות, והסרטון מתנגן כשנכנסים למודעה' : 'צריך להוסיף לפחות תמונה אחת');
   if (title.length < 2) return fail('צריך לכתוב כותרת');
   if (title.length > MKPUB_TITLE_MAX) return fail(`הכותרת ארוכה מדי — עד ${MKPUB_TITLE_MAX} תווים`);
   const priceTxt = document.getElementById('mkpub-price').value;
@@ -33437,7 +33438,7 @@ function rentSubscribe() {
       rentRender();
       try { apvRefresh(); } catch (e) {}
     }, () => { rentData = []; rentRender(); });
-    onValue(ref(db, 'website/market_hidden'), snap => { mktHidden = snap.val() || {}; rentRender(); }, () => {});
+    onValue(ref(db, 'website/market_hidden'), snap => { mktHidden = Object.assign({}, mktHidden, snap.val() || {}); mktHideSave(); rentRender(); }, () => {});
     onAuthStateChanged(auth, () => { mktPurgeExpired(); if (!rentUI.open) rentRender(); });   // המנהל רואה את האיקס אחרי ההתחברות
   } catch (e) { rentData = []; }
 }
@@ -34337,8 +34338,8 @@ function rentOpen(id) {
   if (typeof mainContent !== 'undefined' && mainContent) mainContent.scrollTop = 0;
   try { window.scrollTo({ top: 0 }); } catch (e) {}
   rentRender();
-  // מוצר שהתמונות המלאות שלו נשמרות בנפרד: מציגים את הקטנה מיד ומחליפים כשהמלאה מגיעה
-  if (r.shId && r.raw && r.raw._media && !MEDIA[r.shId]) mediaEnsure(r.shId).then(() => { if (rentUI.open === id) rentRender(); });
+  // מוצר שהתמונות המלאות שלו נשמרות בנפרד: מציגים את הקטנה מיד ומחליפים כשהמלאה מגיעה (אלא אם מתנגן סרטון)
+  if (r.shId && r.raw && r.raw._media && !MEDIA[r.shId]) mediaEnsure(r.shId).then(() => { if (rentUI.open === id && !r.hv) rentRender(); });
 }
 function rentBack() { if (history.state && (history.state.rent || history.state.rentSeller)) { history.back(); return; } rentUI.open = null; rentUI.seller = null; rentRender(); }
 // כל המודעות של מוכר אחד (גם מוכר דוגמה בלי חשבון — לפי השם)
@@ -34711,21 +34712,24 @@ async function rentAdminDelete(id) {
   if (!isAdmin()) return;
   const r = rentFind(id); if (!r) return;
   if (!confirm(r.demo ? `להסיר מהשוק את מודעת הדוגמה "${r.title}"?` : `למחוק לצמיתות את המודעה "${r.title}" של ${r.owner || 'הגולש'}?`)) return;
+  mktHidden[r.id] = true;
+  if (r.shId) mktHidden['sh_' + r.shId] = true;
+  mktHideSave();
+  document.querySelectorAll(`.mk-sg[data-id="${CSS.escape(id)}"]`).forEach(el => el.remove());
+  cartSet(cartGet().filter(x => x.id !== 'mkt_' + id));
+  if (rentUI.open === id) rentUI.open = null;
+  rentRender();
+  showCopyToast(r.demo ? 'המודעה הוסרה' : 'המודעה נמחקה');
   try {
-    if (r.demo) {
-      await set(ref(db, `website/market_hidden/${r.id}`), true);
-    } else if (r.shId) {
+    await set(ref(db, `website/market_hidden/${r.id}`), true).catch(() => {});
+    if (r.shId) {
       removeItemFromStoredPages(r.shId);
-      await set(ref(db, `website/media/${r.shId}`), null);
+      await set(ref(db, `website/media/${r.shId}`), null).catch(() => {});
       delete MEDIA[r.shId];
-    } else {
-      await set(ref(db, `website/rentals/${r.id}`), null);
+    } else if (!r.demo) {
+      await set(ref(db, `website/rentals/${r.id}`), null).catch(() => {});
     }
-    cartSet(cartGet().filter(x => x.id !== 'mkt_' + id));
-    if (rentUI.open === id) rentUI.open = null;
-    rentRender();
-    showCopyToast(r.demo ? 'המודעה הוסרה' : 'המודעה נמחקה');
-  } catch (e) { showCopyToast('לא הצלחנו להסיר את המודעה'); }
+  } catch (e) {}
 }
 window.rentAdminDelete = rentAdminDelete;
 // בחירת כמות: כפתור עם רשימה נפתחת, והכמות הנבחרת מסומנת ב-✓
@@ -35982,7 +35986,7 @@ Object.assign(window, { perfLoad, perfRange, perfToggle, perfSectionHTML });
     const card = e.target.closest && e.target.closest('.mk-sg');
     if (!card) { document.querySelectorAll('.mk-sg.acts-on').forEach(c => c.classList.remove('acts-on')); return; }
     if (card.classList.contains('acts-on')) return;                       // כבר פתוח — הלחיצה ממשיכה כרגיל (כניסה / כפתור)
-    if (e.target.closest('.mk-sg-acts button, .mk-sg-acts [role="button"]')) return;
+    if (e.target.closest('.mk-sg-x, .mk-sg-acts button, .mk-sg-acts [role="button"]')) return;
     e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
     document.querySelectorAll('.mk-sg.acts-on').forEach(c => c.classList.remove('acts-on'));
     card.classList.add('acts-on');
