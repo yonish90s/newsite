@@ -399,3 +399,6 @@ BODY .lib-page .lib-menu button.on { color: #6d28d9 !important; }
 BODY #app-promo .ap-qr i { display: none !important; }
 
 BODY .lib-page .lib-top:hover .lib-n, BODY .lib-page .lib-top:focus-within .lib-n, BODY .lib-page .lib-top:has(.acts-on) .lib-n { color: #8b3dff !important; -webkit-text-stroke-color: #8b3dff !important; }
+
+BODY #side-rail .xr-nb.xr-create { color: #ffffff !important; background: #8b3dff !important; }
+BODY #side-rail .xr-nb.xr-up { color: #7c3aed !important; }

@@ -14472,6 +14472,15 @@ const SIDE_RAIL_ITEMS = [
 ];
 // סרגל צד בסגנון "סוויטה": מצב צר (סמל + שם) ומצב רחב עם קבוצות שנפתחות ונסגרות
 const XR_IC = {
+  create: '<path d="M12 5v14M5 12h14"/>',
+  explore: '<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>',
+  library: '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 3l4 4 4-4"/>',
+  chat: '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/>',
+  deals: '<path d="M4 7h11M4 7l3-3M4 7l3 3M20 17H9M20 17l-3-3M20 17l-3 3"/>',
+  shop: '<path d="M4 9h16l-1 11H5zM8 9V7a4 4 0 0 1 8 0v2"/>',
+  upgrade: '<path d="M3 8l4 4 5-7 5 7 4-4-2 11H5z"/>',
+  signup: '<circle cx="10" cy="8" r="4"/><path d="M3 21a7 7 0 0 1 14 0M19 8v6M16 11h6"/>',
+  discord: '<path d="M8 7.5a14 14 0 0 1 8 0M7 17c3 1.4 7 1.4 10 0"/><path d="M6.5 7.5C4.5 10 4 13 4 16c1.5 1.5 3 2.2 4.5 2.5l1-2M17.5 7.5c2 2.5 2.5 5.5 2.5 8.5-1.5 1.5-3 2.2-4.5 2.5l-1-2"/><circle cx="9.5" cy="12.5" r="1.2" fill="currentColor"/><circle cx="14.5" cy="12.5" r="1.2" fill="currentColor"/>',
   toggle: '<rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/>',
   home: '<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" fill="currentColor"/>',
   agent: '<path d="M4 18c0-4 3-7 7-7s7 3 7 7v2H4z" fill="currentColor"/><circle cx="11" cy="7" r="3.4" fill="currentColor"/><path d="M19 2.5l.8 1.8 1.8.8-1.8.8-.8 1.8-.8-1.8-1.8-.8 1.8-.8z" fill="currentColor"/>',
@@ -14534,6 +14543,13 @@ function sideRailHTML() {
   const narrow = `<div class="xr-narrow">
       <button type="button" class="xr-tg" onclick="xrToggle()" title="פתיחת התפריט" aria-label="פתיחת התפריט">${xrSvg('toggle', 1.8)}</button>
       ${nb('home', 'home', 'בית', 'goToHomePage()')}
+      ${nb('', 'create', 'יצירה', 'mkPubOpen()', 'xr-create')}
+      ${nb('', 'explore', 'גלו', "mktGo('all')")}
+      ${nb('lib', 'library', 'ספרייה', 'libOpen()')}
+      ${nb('', 'chat', 'צ׳אט', 'openMessages()')}
+      ${nb('', 'deals', 'עסקאות', 'dlsOpen()')}
+      ${nb('', 'shop', 'חנות', 'shopPageOpen()')}
+      <i class="xr-sep"></i>
       ${nb('', 'agent', 'עוזרים', "xrJump('agents')")}
       ${nb('', 'tools', 'השוק', "xrJump('tools')")}
       ${nb('', 'assets', 'שלי', "xrJump('assets')")}
@@ -14541,6 +14557,10 @@ function sideRailHTML() {
       <i class="xr-sep"></i>
       ${nb('', 'pinned', 'עוד', "xrJump('more')")}
       ${admin ? nb('stats', 'stats', 'נתונים', "adminOpenTab('stats')") : ''}
+      <span class="xr-fill"></span>
+      ${nb('', 'upgrade', 'שדרוג', "navigateToPage('page-subscription-main')", 'xr-up')}
+      ${nb('', 'discord', 'דיסקורד', 'libDiscord()')}
+      ${reg ? '' : nb('', 'signup', 'הרשמה', 'openLiveChatLogin()', 'xr-signup')}
       <button type="button" class="xr-nb xr-me srail-me" onclick="srailTap(this); ${me}" aria-label="${reg ? 'הפרופיל שלי' : 'התחברות'}">${reg ? `<span class="au-av xr-av" data-av-uid="${escHtml(u.uid)}">${escHtml(String(prof || '?').trim().charAt(0) || '?')}</span>` : xrSvg('user', 2)}<span>${reg ? 'פרופיל' : 'התחברות'}</span></button>
     </div>`;
   // מצב רחב
@@ -33746,7 +33766,7 @@ function libOpen() {
   if (typeof mainContent === 'undefined' || !mainContent) return;
   try { rentSubscribe(); } catch (e) {}
   window.__detailOpen = false;
-  mainContent.innerHTML = `<div class="lib-page">${libSideHTML()}<div class="lib-main">${libHTML()}</div></div>`;
+  mainContent.innerHTML = `<div class="lib-page"><div class="lib-main">${libHTML()}</div></div>`;
   clearInterval(libTimer); libTimer = setInterval(() => libHero(1), 6500);
   try { window.scrollTo(0, 0); } catch (e) {}
 }
