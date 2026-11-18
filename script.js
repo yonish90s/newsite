@@ -18973,6 +18973,7 @@ async function mktFeedOpen() {
   const upsHTML = sec('העלאות', 'מודעות ופוסטים חדשים של מי שאתם עוקבים אחריהם', ups, 'עדיין אין העלאות ממי שאתם עוקבים אחריהם');
   const repHTML = sec('ריפוסטים', 'מודעות שהם שיתפו מאחרים', reps2, 'עדיין אין ריפוסטים ממי שאתם עוקבים אחריהם');
   mainContent.innerHTML = `<div class="fd-page"><h1 class="fd-h">הפיד</h1>
+    ${typeof storiesBarHTML === 'function' ? storiesBarHTML() : ''}
     ${suggHTML}
     <div class="pf-tabs2" role="tablist"><button type="button" class="on" onclick="fdTab(this, 'all')">הכל</button><button type="button" onclick="fdTab(this, 'ups')">העלאות <small>${ups.length}</small></button><button type="button" onclick="fdTab(this, 'reps')">ריפוסטים <small>${reps2.length}</small></button>${guest ? '' : `<button type="button" onclick="fdTab(this, 'me')">שלי <small>${mine.length}</small></button>`}</div>
     <div data-fd="all">${theirs.length ? upsHTML + repHTML : cards([])}</div><div data-fd="ups" hidden>${upsHTML}</div><div data-fd="reps" hidden>${repHTML}</div><div data-fd="me" hidden>${cards(mine)}</div></div>`;
@@ -33928,6 +33929,7 @@ function libHTML() {
   const depts = typeof MKT_DEPTS !== 'undefined' ? MKT_DEPTS.filter(d => base.some(r => r.dept === d.id)) : [];
   const circHTML = depts.length ? `<nav class="lib-circs" aria-label="מחלקות">${depts.map(d => `<button type="button" class="lib-circ" onclick="libDept('${d.id}')"><span><svg viewBox="0 0 64 64" fill="none" stroke="#111" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">${(typeof DEPT_ART !== 'undefined' && (DEPT_ART[d.id] || DEPT_ART.other)) || ''}</svg></span><b>${escHtml(d.name)}</b></button>`).join('')}</nav>` : '';
   return `<header class="lib-head"><span class="lib-brand"><img src="./logo.png?v=2" alt=""><b>ספרייה</b></span><button type="button" class="lib-cta" onclick="mkPubOpen()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>פרסום מודעה</button></header>
+    ${typeof storiesBarHTML === 'function' ? storiesBarHTML() : ''}
     ${filtered ? '' : heroHTML}${libBarHTML(depts)}
     ${filtered ? `<section class="lib-row lib-res"><header><h2>${all.length} תוצאות</h2></header>${all.length ? `<div class="lib-grid">${all.slice().sort(LIB_SORTS[libF.sort].f).map(r => libCardHTML(r)).join('')}</div>` : '<div class="lib-empty">אין מודעות שמתאימות לסינון הזה</div>'}</section>` : `
     ${top.length ? libRowHTML('lib-top', 'המובילים', topHTML) : ''}
@@ -34164,6 +34166,7 @@ async function mkCardFollow(el, uid, name) {
   const on = uid ? isFollowing(uid) : igDemoFollowing(igDemoKeyOf(name)), key = uid || igDemoKeyOf(name);
   // כל הכרטיסים של אותו מוכר מתעדכנים יחד
   document.querySelectorAll(`.mk-a-follow[data-fol="${CSS.escape(key)}"]`).forEach(b => { b.classList.toggle('on', on); b.innerHTML = on ? IG_FOLLOWING_IC : IG_FOLLOW_IC; b.title = on ? 'במעקב — לחצו להפסקה' : 'מעקב אחרי ' + name; });
+  if (typeof storiesRefreshDOM === 'function') storiesRefreshDOM();
 }
 window.mkCardFollow = mkCardFollow;
 // ===== מי עשה לייק / ריפוסט: לחיצה ארוכה (מובייל) או מעבר עכבר (מחשב) =====
@@ -34481,7 +34484,7 @@ function rentViewHTML() {
     ['sec', 'proj', 'פרויקטים'], ['pd', 'elec', 'חשמל'], ['pa', 'phys', 'מוצרים_פיזיים'], ['pa', 'fun', 'פנאי'], ['pk', '3d', 'תלת_מימד']];
   const tagOn = (k, v) => k === 'sec' ? rentUI.sec === v && rentUI.cat === 'all' && rentUI.offer === 'all' && rentUI.pk === 'all' && rentUI.pa === 'all' : rentUI[k] === v;
   const total = rentList().length;
-  return `${!rentUI.open && !rentUI.seller ? homeComposerHTML() : ''}<header class="rn-head">
+  return `${!rentUI.open && !rentUI.seller ? (typeof storiesBarHTML === 'function' ? storiesBarHTML() : '') + homeComposerHTML() : ''}<header class="rn-head">
       ${pubBtn}
       <span class="rn-count">${total.toLocaleString('he-IL')} ${total === 1 ? 'מודעה' : 'מודעות'}</span>
       <button type="button" class="rn-fbtn${rentFilterOpen() ? ' on' : ''}" onclick="rentFilterToggle()" aria-label="סינון וקטגוריות"><span class="rn-fbtn-t">סינון</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg></button>
@@ -36929,3 +36932,436 @@ window.mtCompose = mtCompose;
 function mtMenu() { const b = document.getElementById('mnav-btn'); if (b) b.click(); }
 function mtSearch() { const b = document.getElementById('header-search-btn'); if (b) b.click(); }
 Object.assign(window, { mtTab, mtMenu, mtSearch, mtSync });
+
+// ============================================================
+// סטוריז ל-24 שעות בלבד (Instagram Stories):
+// - העלאת תמונות לסטורי ("הסטורי שלך" עם כפתור +)
+// - צפייה בסטורי של מי שאני עוקב/ת אחריו (עיגולים בגודל מלא עם טבעת צבעונית)
+// - כשאין עוקבים (או לצד העוקבים): הצעות לסטורי בעיגולים קטנים יותר מעיגולי הסטורי הרגילים
+// - מחיקה אוטומטית מלאה אחרי 24 שעות (מ-Firebase ומ-localStorage) כדי לא לתפוס זיכרון באתר
+// ============================================================
+const STORY_TTL = 24 * 60 * 60 * 1000;   // 24 שעות בדיוק
+const STORY_STEP_MS = 5000;
+let userStoriesMap = {}, storiesSubbed = false, storyUpState = { imgs: [] }, stViewer = null;
+
+function storyIsExpired(t) {
+  const n = Number(t) || 0;
+  return !n || (Date.now() - n >= STORY_TTL);
+}
+function storyGuestList() {
+  try {
+    const raw = JSON.parse(localStorage.getItem('bw_guest_stories') || '[]') || [];
+    const valid = raw.filter(s => s && s.id && s.img && !storyIsExpired(s.t));
+    if (valid.length !== raw.length) {
+      if (valid.length) localStorage.setItem('bw_guest_stories', JSON.stringify(valid));
+      else localStorage.removeItem('bw_guest_stories');
+    }
+    return valid;
+  } catch (e) { return []; }
+}
+function storySeenMap() {
+  try {
+    const raw = JSON.parse(localStorage.getItem('bw_stories_seen') || '{}') || {};
+    let dirty = false;
+    Object.keys(raw).forEach(k => { if (storyIsExpired(raw[k])) { delete raw[k]; dirty = true; } });
+    if (dirty) {
+      if (Object.keys(raw).length) localStorage.setItem('bw_stories_seen', JSON.stringify(raw));
+      else localStorage.removeItem('bw_stories_seen');
+    }
+    return raw;
+  } catch (e) { return {}; }
+}
+function storyMarkSeen(id) {
+  if (!id) return;
+  const m = storySeenMap();
+  m[id] = Date.now();
+  try { localStorage.setItem('bw_stories_seen', JSON.stringify(m)); } catch (e) {}
+}
+// מחיקה מוחלטת מ-Firebase ומזיכרון הדפדפן לכל סטורי שעברו עליו 24 שעות
+function storyPurgeExpired() {
+  try { storyGuestList(); storySeenMap(); } catch (e) {}
+  Object.entries(userStoriesMap || {}).forEach(([uid, bucket]) => {
+    if (!bucket || typeof bucket !== 'object') return;
+    Object.entries(bucket).forEach(([sid, s]) => {
+      if (!s || storyIsExpired(s.t)) {
+        delete bucket[sid];
+        try { set(ref(db, `website/user_stories/${uid}/${sid}`), null).catch(() => {}); } catch (e) {}
+      }
+    });
+  });
+}
+function storiesSubscribe() {
+  if (storiesSubbed) return;
+  storiesSubbed = true;
+  try {
+    onValue(ref(db, 'website/user_stories'), snap => {
+      userStoriesMap = snap.val() || {};
+      storyPurgeExpired();
+      storiesRefreshDOM();
+    }, () => {});
+  } catch (e) {}
+  setInterval(() => { storyPurgeExpired(); storiesRefreshDOM(); }, 5 * 60 * 1000);
+}
+// סטוריז לדוגמה של מוכרים באתר (משתמשים בקבצי התמונות הקיימים באתר — 0 זיכרון במסד הנתונים)
+function storyDemoGroups() {
+  const now = Date.now(), H = 3600 * 1000;
+  const raw = [
+    { owner: 'נועה לוי', city: 'תל אביב', items: [{ id: 'dm_noa_1', img: 'rent/u-camera.jpg?v=2', caption: 'מצלמת Nikon D850 במצב נדיר 📸', t: now - 2 * H }, { id: 'dm_noa_2', img: 'rent/u-Watch.jpg?v=2', caption: 'שעון חכם כמעט חדש לגמרי ✨', t: now - 1.2 * H }] },
+    { owner: 'אלון כהן', city: 'רמת גן', items: [{ id: 'dm_alon_1', img: 'rent/u-ps5.jpg?v=2', caption: 'פלייסטיישן 5 עם שני שלטים 🎮', t: now - 3.5 * H }] },
+    { owner: 'מאפיית השכונה', city: 'תל אביב', items: [{ id: 'dm_bak_1', img: 'rent/biz-bakery.svg', caption: 'מאפים חמים מהתנור כל בוקר 🥐', t: now - 4 * H }] },
+    { owner: 'דניאל מזרחי', city: 'חיפה', items: [{ id: 'dm_dan_1', img: 'rent/u-guitar.jpg?v=2', caption: 'גיטרה אקוסטית עם נרתיק מרופד 🎸', t: now - 6 * H }] },
+    { owner: 'מאיה שפירא', city: 'הרצליה', items: [{ id: 'dm_maya_1', img: 'rent/u-espresso.jpg?v=2', caption: 'מכונת אספרסו מקצועית לבית ☕', t: now - 8 * H }] },
+    { owner: 'רון אברהם', city: 'ראשון לציון', items: [{ id: 'dm_ron_1', img: 'rent/u-drone.jpg?v=2', caption: 'רחפן DJI עם סוללות נוספות 🚁', t: now - 11 * H }] }
+  ];
+  return raw.map(g => ({
+    key: 'demo_' + igDemoKeyOf(g.owner),
+    uid: '',
+    name: g.owner,
+    demo: true,
+    items: g.items.map(it => Object.assign({}, it, { name: g.owner, uid: '' })),
+    lastT: Math.max(...g.items.map(i => i.t))
+  }));
+}
+function storiesBuildGroups() {
+  storyPurgeExpired();
+  const u = auth.currentUser, reg = u && !u.isAnonymous, myUid = reg ? u.uid : '';
+  const myName = reg ? String((typeof liveChatUserName === 'function' && liveChatUserName()) || u.displayName || 'אני') : 'הסטורי שלך';
+  const mineMap = {};
+  if (myUid && userStoriesMap[myUid]) {
+    Object.entries(userStoriesMap[myUid]).forEach(([sid, s]) => {
+      if (s && s.img && !storyIsExpired(s.t)) mineMap[sid] = Object.assign({ id: sid, uid: myUid, name: s.name || myName }, s);
+    });
+  }
+  storyGuestList().forEach(s => { mineMap[s.id] = Object.assign({ uid: myUid, name: myName }, s); });
+  const mine = Object.values(mineMap).sort((a, b) => (a.t || 0) - (b.t || 0));
+
+  const followed = [], suggested = [];
+  const seen = storySeenMap();
+  const isFolUser = (uid, name) => uid ? (typeof isFollowing === 'function' && isFollowing(uid)) : (typeof igDemoFollowing === 'function' && igDemoFollowing(igDemoKeyOf(name)));
+
+  // משתמשים אמיתיים שהעלו סטורי ב-24 השעות האחרונות
+  Object.entries(userStoriesMap || {}).forEach(([uid, bucket]) => {
+    if (!bucket || typeof bucket !== 'object' || uid === myUid) return;
+    const list = Object.entries(bucket).map(([sid, s]) => s && s.img && !storyIsExpired(s.t) ? Object.assign({ id: sid, uid }, s) : null).filter(Boolean).sort((a, b) => (a.t || 0) - (b.t || 0));
+    if (!list.length) return;
+    const name = list[list.length - 1].name || 'גולש/ת';
+    const grp = { key: 'u_' + uid, uid, name, demo: false, items: list, lastT: list[list.length - 1].t || 0 };
+    grp.allSeen = list.every(it => !!seen[it.id]);
+    if (isFolUser(uid, name)) followed.push(grp);
+    else suggested.push(grp);
+  });
+
+  // מוכרים לדוגמה (אם עוקבים אחריהם — מופיעים בסטורי הרגיל; אם לא — מופיעים בהצעות לסטורי בעיגולים קטנים יותר)
+  storyDemoGroups().forEach(grp => {
+    grp.allSeen = grp.items.every(it => !!seen[it.id]);
+    if (isFolUser('', grp.name)) followed.push(grp);
+    else suggested.push(grp);
+  });
+
+  const sortFn = (a, b) => (Number(a.allSeen) - Number(b.allSeen)) || (b.lastT - a.lastT);
+  followed.sort(sortFn);
+  suggested.sort(sortFn);
+  return { mine, myName, myUid, followed, suggested, seen };
+}
+function storyCircleHTML(g, isSugg) {
+  const last = g.items[g.items.length - 1] || {};
+  const thumb = last.img ? `<img src="${escHtml(last.img)}" alt="${escHtml(g.name)}" loading="lazy">` : authorAvHTML({ author: g.name, uid: g.uid || '' });
+  const cnt = g.items.length > 1 ? `<em class="st-cnt">${g.items.length}</em>` : '';
+  return `<button type="button" class="st-item${isSugg ? ' st-sugg' : ''}${g.allSeen ? ' seen' : ''}" onclick="storyOpen('${artEsc(g.key)}')" title="${escHtml(g.name)} — סטורי (24 שעות)" aria-label="${escHtml(g.name)}">
+    <span class="st-ring"><span class="st-av">${thumb}</span>${cnt}</span>
+    <b class="st-name">${escHtml(g.name)}</b>
+  </button>`;
+}
+function storiesBarHTML() {
+  storiesSubscribe();
+  const { mine, myName, myUid, followed, suggested, seen } = storiesBuildGroups();
+  const mineSeen = mine.length > 0 && mine.every(it => !!seen[it.id]);
+  const lastMine = mine[mine.length - 1];
+  const myAv = lastMine && lastMine.img
+    ? `<img src="${escHtml(lastMine.img)}" alt="הסטורי שלך">`
+    : (myUid ? authorAvHTML({ author: myName, uid: myUid }) : '<span class="st-blank-av"></span>');
+  const mineClick = mine.length ? "storyOpen('__mine__')" : 'storyUploadOpen()';
+  const mineHTML = `<div class="st-item st-mine${mine.length ? ' has-story' : ''}${mineSeen ? ' seen' : ''}" role="button" tabindex="0" onclick="${mineClick}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();${mineClick};}" aria-label="הסטורי שלך">
+    <span class="st-ring"><span class="st-av">${myAv}</span>
+      <button type="button" class="st-plus" onclick="event.stopPropagation(); storyUploadOpen()" aria-label="העלאת תמונה לסטורי (24 שעות)" title="העלאת סטורי ל-24 שעות">+</button>
+    </span>
+    <b class="st-name">הסטורי שלך</b>
+  </div>`;
+  const folHTML = followed.map(g => storyCircleHTML(g, false)).join('');
+  // הצעות לסטורי: מופיעות בעיגולים קטנים יותר מעיגול הסטורי הרגיל (במיוחד כשאין עוקבים או להשלמת השורה)
+  const suggHTML = suggested.length ? `<div class="st-sugg-group" aria-label="הצעות לסטורי">
+    <span class="st-sugg-label">${followed.length ? 'הצעות' : 'הצעות לסטורי'}</span>
+    <div class="st-sugg-list">${suggested.map(g => storyCircleHTML(g, true)).join('')}</div>
+  </div>` : '';
+  return `<section class="st-bar" aria-label="סטוריז ל-24 שעות"><div class="st-track">${mineHTML}${folHTML}${suggHTML}</div></section>`;
+}
+function storiesRefreshDOM() {
+  const bars = document.querySelectorAll('.st-bar');
+  if (!bars.length) return;
+  const html = storiesBarHTML();
+  bars.forEach(b => {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    if (tmp.firstElementChild) b.replaceWith(tmp.firstElementChild);
+  });
+  if (typeof avatarHydrate === 'function') avatarHydrate(document.body);
+}
+window.storiesBarHTML = storiesBarHTML;
+window.storiesRefreshDOM = storiesRefreshDOM;
+
+// ===== העלאת תמונות לסטורי (נמחק אוטומטית אחרי 24 שעות) =====
+function storyUploadOpen() {
+  storyUpState = { imgs: [] };
+  let m = document.getElementById('st-up-modal');
+  if (m) m.remove();
+  m = document.createElement('div');
+  m.id = 'st-up-modal';
+  m.className = 'st-up-modal';
+  m.innerHTML = `<div class="st-up-card" role="dialog" aria-modal="true" aria-label="העלאת סטורי ל-24 שעות">
+    <header class="st-up-head">
+      <b>העלאת סטורי</b>
+      <button type="button" class="st-up-x" onclick="storyUploadClose()" aria-label="סגירה">✕</button>
+    </header>
+    <p class="st-up-note">⏱ התמונות יוצגו בסטורי למשך <b>24 שעות בלבד</b> למי שעוקב אחריך, ולאחר מכן יימחקו לחלוטין מהאתר כדי לא לתפוס זיכרון.</p>
+    <div class="st-up-imgs" id="st-up-imgs"></div>
+    <input id="st-up-cap" class="st-up-cap" type="text" maxlength="140" placeholder="הוסיפו כיתוב לתמונה (לא חובה)…">
+    <p class="st-up-err" id="st-up-err" hidden></p>
+    <button type="button" class="st-up-go" id="st-up-go" onclick="storyUploadSend()">פרסום לסטורי (24 שעות)</button>
+  </div>`;
+  m.addEventListener('click', e => { if (e.target === m) storyUploadClose(); });
+  document.body.appendChild(m);
+  storyUploadPaint();
+  // פותח מיד בחירת תמונה לנוחות מקסימלית
+  setTimeout(storyUploadPick, 60);
+}
+function storyUploadClose() {
+  const m = document.getElementById('st-up-modal');
+  if (m) m.remove();
+}
+function storyUploadPaint() {
+  const box = document.getElementById('st-up-imgs');
+  if (!box) return;
+  box.innerHTML = storyUpState.imgs.map((src, i) => `<span class="st-up-th"><img src="${escHtml(src)}" alt=""><button type="button" onclick="storyUploadDel(${i})" aria-label="הסרה">✕</button></span>`).join('')
+    + (storyUpState.imgs.length < 5 ? `<button type="button" class="st-up-add" onclick="storyUploadPick()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg><span>בחירת תמונה</span></button>` : '');
+}
+function storyUploadDel(i) {
+  storyUpState.imgs.splice(i, 1);
+  storyUploadPaint();
+}
+function storyUploadPick() {
+  const inp = document.createElement('input');
+  inp.type = 'file';
+  inp.accept = 'image/*';
+  inp.multiple = true;
+  inp.onchange = async () => {
+    const files = [...(inp.files || [])].slice(0, 5 - storyUpState.imgs.length);
+    for (const f of files) {
+      const data = typeof artCompressImage === 'function' ? await artCompressImage(f, 960, 0.74) : '';
+      if (data && data.length <= 390000) storyUpState.imgs.push(data);
+    }
+    storyUploadPaint();
+  };
+  inp.click();
+}
+async function storyUploadSend() {
+  const err = document.getElementById('st-up-err'), go = document.getElementById('st-up-go');
+  if (!storyUpState.imgs.length) {
+    if (err) { err.textContent = 'בחרו לפחות תמונה אחת להעלאה לסטורי'; err.hidden = false; }
+    return;
+  }
+  const cap = ((document.getElementById('st-up-cap') || {}).value || '').trim().slice(0, 140);
+  if (go) { go.disabled = true; go.textContent = 'מעלה סטורי…'; }
+  const u = auth.currentUser, reg = u && !u.isAnonymous;
+  const uid = reg ? u.uid : '';
+  const name = reg ? String((typeof liveChatUserName === 'function' && liveChatUserName()) || u.displayName || 'אני').slice(0, 60) : 'הסטורי שלי';
+  const now = Date.now();
+  const created = storyUpState.imgs.map((img, idx) => ({
+    id: 'st_' + (now + idx) + '_' + Math.random().toString(36).slice(2, 6),
+    uid,
+    name,
+    img,
+    caption: cap,
+    t: now + idx
+  }));
+  // שמירה מקומית (נמחקת אוטומטית אחרי 24 שעות)
+  try {
+    const prev = storyGuestList();
+    localStorage.setItem('bw_guest_stories', JSON.stringify(prev.concat(created).slice(-12)));
+  } catch (e) {}
+  // למשתמש מחובר — סנכרון ל-Firebase כדי שכל העוקבים יראו את הסטורי ל-24 שעות
+  if (reg) {
+    for (const s of created) {
+      const payload = { uid: s.uid, name: s.name, img: s.img, t: s.t };
+      if (s.caption) payload.caption = s.caption;
+      try { await set(ref(db, `website/user_stories/${uid}/${s.id}`), payload); } catch (e) {}
+    }
+  }
+  storyUploadClose();
+  storiesRefreshDOM();
+  if (typeof glassBanner === 'function') glassBanner({ title: 'הסטורי עלה ל-24 שעות! ✨', sub: 'יימחק אוטומטית מהאתר אחרי 24 שעות', icon: 'ok', ms: 2600 });
+}
+Object.assign(window, { storyUploadOpen, storyUploadClose, storyUploadPick, storyUploadDel, storyUploadSend });
+
+// ===== נגן סטורי במסך מלא (עם פסי התקדמות, מעבר אוטומטי, כפתור מעקב ומחיקה) =====
+function storyAllOrderedGroups() {
+  const { mine, myName, myUid, followed, suggested } = storiesBuildGroups();
+  const list = [];
+  if (mine.length) list.push({ key: '__mine__', uid: myUid, name: 'הסטורי שלך (' + myName + ')', isMine: true, items: mine });
+  followed.forEach(g => list.push(Object.assign({ isMine: false, isSugg: false }, g)));
+  suggested.forEach(g => list.push(Object.assign({ isMine: false, isSugg: true }, g)));
+  return list;
+}
+function storyOpen(key) {
+  const groups = storyAllOrderedGroups();
+  const gi = groups.findIndex(g => g.key === key);
+  if (gi < 0) { if (key === '__mine__') storyUploadOpen(); return; }
+  const g = groups[gi], seen = storySeenMap();
+  const firstUnseen = g.items.findIndex(it => !seen[it.id]);
+  stViewer = { groups, gi, ii: firstUnseen >= 0 ? firstUnseen : 0, timer: 0, paused: false, startAt: 0, elapsed: 0 };
+  let v = document.getElementById('story-viewer');
+  if (v) v.remove();
+  v = document.createElement('div');
+  v.id = 'story-viewer';
+  v.className = 'stv-overlay';
+  v.setAttribute('role', 'dialog');
+  v.setAttribute('aria-modal', 'true');
+  v.setAttribute('aria-label', 'צפייה בסטורי');
+  v.addEventListener('click', e => { if (e.target === v) storyViewerClose(); });
+  document.body.appendChild(v);
+  storyViewerRender();
+}
+function storyViewerClose() {
+  if (stViewer && stViewer.timer) clearTimeout(stViewer.timer);
+  stViewer = null;
+  const v = document.getElementById('story-viewer');
+  if (v) v.remove();
+  storiesRefreshDOM();
+}
+function storyAgoTxt(t) {
+  const m = Math.max(1, Math.round((Date.now() - (Number(t) || Date.now())) / 60000));
+  if (m < 60) return `לפני ${m} דק׳`;
+  const h = Math.round(m / 60);
+  return `לפני ${h} שע׳ · נותרו ${Math.max(1, 24 - h)} שע׳`;
+}
+function storyViewerRender() {
+  const v = document.getElementById('story-viewer');
+  if (!v || !stViewer) return;
+  clearTimeout(stViewer.timer);
+  const g = stViewer.groups[stViewer.gi];
+  if (!g || !g.items.length) { storyViewerClose(); return; }
+  if (stViewer.ii >= g.items.length) stViewer.ii = 0;
+  const item = g.items[stViewer.ii];
+  storyMarkSeen(item.id);
+
+  const canDel = g.isMine || (!g.demo && typeof isAdmin === 'function' && isAdmin());
+  const folOn = !g.isMine && (g.uid ? (typeof isFollowing === 'function' && isFollowing(g.uid)) : (typeof igDemoFollowing === 'function' && igDemoFollowing(igDemoKeyOf(g.name))));
+  const barsHTML = g.items.map((it, idx) => `<span class="stv-bar${idx < stViewer.ii ? ' done' : idx === stViewer.ii ? ' cur' : ''}"><i></i></span>`).join('');
+
+  v.innerHTML = `<div class="stv-frame" onpointerdown="storyPause(true)" onpointerup="storyPause(false)" onpointercancel="storyPause(false)">
+    <div class="stv-bars">${barsHTML}</div>
+    <header class="stv-head" onpointerdown="event.stopPropagation()">
+      <div class="stv-who">
+        <span class="stv-av">${authorAvHTML({ author: g.name, uid: g.uid || '' })}</span>
+        <div class="stv-meta">
+          <b>${escHtml(g.isMine ? 'הסטורי שלך' : g.name)}${g.isSugg && !folOn ? '<em class="stv-sugg-pill">הצעה</em>' : ''}</b>
+          <small>${escHtml(storyAgoTxt(item.t))}</small>
+        </div>
+      </div>
+      <div class="stv-actions">
+        ${!g.isMine ? `<button type="button" class="stv-fol${folOn ? ' on' : ''}" onclick="storyToggleFollow()">${folOn ? 'במעקב ✓' : '+ מעקב'}</button>` : `<button type="button" class="stv-add" onclick="storyViewerClose(); storyUploadOpen()" title="הוספת תמונה לסטורי">+ תמונה</button>`}
+        ${canDel ? `<button type="button" class="stv-del" onclick="storyDeleteCurrent()" title="מחיקת התמונה מהסטורי" aria-label="מחיקה">🗑</button>` : ''}
+        <button type="button" class="stv-close" onclick="storyViewerClose()" aria-label="סגירה">✕</button>
+      </div>
+    </header>
+    <div class="stv-stage">
+      <img class="stv-img" src="${escHtml(item.img)}" alt="${escHtml(item.caption || g.name)}">
+      ${item.caption ? `<div class="stv-cap">${escHtml(item.caption)}</div>` : ''}
+      <button type="button" class="stv-nav stv-prev" onpointerdown="event.stopPropagation()" onclick="event.stopPropagation(); storyStep(-1)" aria-label="הקודם">‹</button>
+      <button type="button" class="stv-nav stv-next" onpointerdown="event.stopPropagation()" onclick="event.stopPropagation(); storyStep(1)" aria-label="הבא">›</button>
+    </div>
+  </div>`;
+  if (typeof avatarHydrate === 'function') avatarHydrate(v);
+  stViewer.startAt = Date.now();
+  stViewer.elapsed = 0;
+  stViewer.paused = false;
+  stViewer.timer = setTimeout(() => storyStep(1), STORY_STEP_MS);
+}
+function storyPause(p) {
+  if (!stViewer) return;
+  const curBar = document.querySelector('#story-viewer .stv-bar.cur i');
+  if (p && !stViewer.paused) {
+    stViewer.paused = true;
+    clearTimeout(stViewer.timer);
+    stViewer.elapsed += Date.now() - stViewer.startAt;
+    if (curBar) curBar.style.animationPlayState = 'paused';
+  } else if (!p && stViewer.paused) {
+    stViewer.paused = false;
+    stViewer.startAt = Date.now();
+    if (curBar) curBar.style.animationPlayState = 'running';
+    const rem = Math.max(400, STORY_STEP_MS - stViewer.elapsed);
+    stViewer.timer = setTimeout(() => storyStep(1), rem);
+  }
+}
+function storyStep(dir) {
+  if (!stViewer) return;
+  const g = stViewer.groups[stViewer.gi];
+  if (!g) { storyViewerClose(); return; }
+  const nextIi = stViewer.ii + dir;
+  if (nextIi >= 0 && nextIi < g.items.length) {
+    stViewer.ii = nextIi;
+    storyViewerRender();
+    return;
+  }
+  const nextGi = stViewer.gi + (dir > 0 ? 1 : -1);
+  if (nextGi >= 0 && nextGi < stViewer.groups.length) {
+    stViewer.gi = nextGi;
+    const ng = stViewer.groups[nextGi];
+    stViewer.ii = dir > 0 ? 0 : Math.max(0, ng.items.length - 1);
+    storyViewerRender();
+    return;
+  }
+  storyViewerClose();
+}
+async function storyToggleFollow() {
+  if (!stViewer) return;
+  const g = stViewer.groups[stViewer.gi];
+  if (!g || g.isMine) return;
+  await mkCardFollow(null, g.uid || '', g.name || '');
+  storyViewerRender();
+  storiesRefreshDOM();
+}
+async function storyDeleteCurrent() {
+  if (!stViewer) return;
+  const g = stViewer.groups[stViewer.gi];
+  if (!g) return;
+  const item = g.items[stViewer.ii];
+  if (!item) return;
+  try {
+    const rest = storyGuestList().filter(s => s.id !== item.id);
+    if (rest.length) localStorage.setItem('bw_guest_stories', JSON.stringify(rest));
+    else localStorage.removeItem('bw_guest_stories');
+  } catch (e) {}
+  if (item.uid && item.id) {
+    try {
+      if (userStoriesMap[item.uid]) delete userStoriesMap[item.uid][item.id];
+      await set(ref(db, `website/user_stories/${item.uid}/${item.id}`), null);
+    } catch (e) {}
+  }
+  g.items.splice(stViewer.ii, 1);
+  if (!g.items.length) {
+    storyViewerClose();
+    if (typeof showCopyToast === 'function') showCopyToast('הסטורי נמחק לחלוטין מהאתר');
+    return;
+  }
+  if (stViewer.ii >= g.items.length) stViewer.ii = g.items.length - 1;
+  storyViewerRender();
+  storiesRefreshDOM();
+  if (typeof showCopyToast === 'function') showCopyToast('התמונה נמחקה מהסטורי');
+}
+document.addEventListener('keydown', e => {
+  if (!stViewer) return;
+  if (e.key === 'Escape') storyViewerClose();
+  else if (e.key === 'ArrowLeft') storyStep(1);
+  else if (e.key === 'ArrowRight') storyStep(-1);
+});
+Object.assign(window, { storyOpen, storyViewerClose, storyStep, storyPause, storyToggleFollow, storyDeleteCurrent });

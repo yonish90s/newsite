@@ -459,3 +459,13 @@ BODY #m-top .mt-circ:not(.mt-me) { display: none !important; }
 BODY .lib-page .lib-welcome { display: none !important; }
 BODY .ssx-item .ssx-ic { border: 3px solid transparent !important; background: linear-gradient(#ffffff, #ffffff) padding-box, linear-gradient(45deg, #ffb347, #ff4d8d 45%, #a855f7) border-box !important; padding: 3px !important; box-sizing: border-box !important; }
 BODY .hc-wrap.sp-bar { display: none !important; }
+
+BODY .st-ring { background: linear-gradient(#ffffff, #ffffff) padding-box, linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%) border-box !important; }
+BODY .st-item.seen .st-ring { background: linear-gradient(#ffffff, #ffffff) padding-box, linear-gradient(45deg, #d4d4d8, #a1a1aa) border-box !important; }
+BODY .st-plus:hover, BODY .st-cnt { background: #dc2743 !important; color: #ffffff !important; }
+BODY .st-sugg-label { color: #8b5cf6 !important; background: #f3effd !important; }
+BODY .st-up-note { background: #fdf4ff !important; border-color: #f5d0fe !important; color: #4b5563 !important; }
+BODY .st-up-add { border-color: #c084fc !important; background: #faf5ff !important; color: #7e22ce !important; }
+BODY .st-up-go { background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%) !important; color: #ffffff !important; }
+BODY .stv-sugg-pill { background: rgba(139, 92, 246, .85) !important; color: #ffffff !important; }
+BODY .stv-fol.on { background: rgba(34, 197, 94, .32) !important; border-color: rgba(74, 222, 128, .7) !important; color: #ffffff !important; }

@@ -784,6 +784,15 @@
         "$id": {
           ".validate": "newData.isNumber()"
         }
+      },
+      "user_stories": {
+        ".read": true,
+        "$uid": {
+          "$storyId": {
+            ".write": "(auth != null && auth.uid === $uid) || (!newData.exists() && data.exists() && (data.child('t').val() < now - 86400000 || (auth != null && (root.child('website/admin_uid').val() === auth.uid || auth.token.email === 'yoni98321@gmail.com'))))",
+            ".validate": "!newData.exists() || (newData.hasChildren(['uid','name','img','t']) && newData.child('uid').val() === $uid && newData.child('name').isString() && newData.child('name').val().length <= 60 && newData.child('img').isString() && newData.child('img').val().length <= 400000 && newData.child('img').val().beginsWith('data:image/') && newData.child('t').isNumber() && newData.child('t').val() <= now + 60000 && (!newData.child('caption').exists() || (newData.child('caption').isString() && newData.child('caption').val().length <= 160)))"
+          }
+        }
       }
     }
   }
