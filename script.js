@@ -25402,6 +25402,13 @@ function ssxPostHTML(r) {
       <span class="ssx-acts"><span>${ic('<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/>')}</span><span>${ic('<path d="M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3"/>')}${repostCount(rentCommentsKey(r)) || ''}</span><span>${ic('<path d="M12 20.5l-1.4-1.3C5.4 14.5 2 11.4 2 7.6 2 4.5 4.4 2 7.5 2c1.7 0 3.4.8 4.5 2.1C13.1 2.8 14.8 2 16.5 2 19.6 2 22 4.5 22 7.6c0 3.8-3.4 6.9-8.6 11.6z"/>')}${likes ? fmt(likes) : ''}</span><span>${ic('<path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/>')}${views ? fmt(views) : ''}</span></span>
     </span></button>`;
 }
+// מודעה בתוצאות החיפוש: כמו שורת אדם — עיגול עם טבעת צבעונית (תמונת המודעה), שם, ומתחת מחיר · עיר, וכפתור "למודעה"
+function ssxItemHTML(r) {
+  const src = r.img || (r.images || [])[0] || '';
+  const price = Number(r.price) > 0 ? '₪' + mktDiscP(r.price).toLocaleString('he-IL', { maximumFractionDigits: 2 }) : '';
+  const sub = [price, r.city || '', (typeof mktWho === 'function' && mktWho(r)) || r.owner || ''].filter(Boolean).map(escHtml).join(' · ');
+  return `<button type="button" class="ssx-person ssx-item" onclick="closeSiteSearch(); rentOpen('${artEsc(r.id)}')"><span class="ssx-av ring"><span class="ssx-ic">${src ? `<img src="${escHtml(src)}" alt="" loading="lazy">` : rentThumb(r)}${r.hv ? '<i class="ssx-play">▶</i>' : ''}</span></span><span class="ssx-pm"><b>${escHtml(r.title)}</b><small>${sub}</small></span><span class="ssx-pbtn">למודעה</span></button>`;
+}
 function ssxPersonHTML(u) {
   const h = typeof profileHandle === 'function' ? profileHandle(u.name) : '';
   return `<button type="button" class="ssx-person" onclick="ssOpenUser('${artEsc(u.uid)}','${artEsc(u.name || '')}')"><span class="ssx-av ring">${authorAvHTML({ authorId: u.uid, author: u.name })}</span><span class="ssx-pm"><b>${escHtml(u.name)}</b><small dir="ltr">${u.demo ? 'מוכר לדוגמה' : '@' + escHtml(h)}</small></span><span class="ssx-pbtn">פרופיל</span></button>`;
@@ -25414,12 +25421,12 @@ function ssxHTML(q, raw) {
   let body = '';
   if (ssxTab === 'top') {
     body = (people.length ? `<div class="ssx-sec"><div class="ssx-sec-h"><b>אנשים</b>${people.length > 3 ? `<button type="button" onclick="ssxSetTab('people')">הצג הכל</button>` : ''}</div>${people.slice(0, 3).map(ssxPersonHTML).join('')}</div>` : '')
-      + pop.slice(0, 20).map(ssxPostHTML).join('')
+      + (pop.length ? `<div class="ssx-sec"><div class="ssx-sec-h"><b>מודעות</b>${pop.length > 8 ? `<button type="button" onclick="ssxSetTab('latest')">הצג הכל</button>` : ''}</div>${pop.slice(0, 8).map(ssxItemHTML).join('')}</div>` : '')
       + (ssxOther.length ? `<div class="ssx-sec"><div class="ssx-sec-h"><b>עוד באתר</b></div>${ssxOther.map((it, i) => `<button type="button" class="ss-item" onclick="siteSearchOpen(${i})"><span class="ss-text"><span class="ss-title">${escHtml(it.title)}</span>${it.sub ? `<span class="ss-sub">${escHtml(String(it.sub).slice(0, 90))}</span>` : ''}</span><span class="ss-kind">${it.label}</span></button>`).join('')}</div>` : '');
     if (!body) body = empty();
-  } else if (ssxTab === 'latest') body = L.slice().sort((a, b) => (b.t || 0) - (a.t || 0)).map(ssxPostHTML).join('') || empty();
+  } else if (ssxTab === 'latest') body = L.slice().sort((a, b) => (b.t || 0) - (a.t || 0)).map(ssxItemHTML).join('') || empty();
   else if (ssxTab === 'people') body = people.map(ssxPersonHTML).join('') || empty('לא נמצאו אנשים');
-  else if (ssxTab === 'videos') body = L.filter(r => r.hv).map(ssxPostHTML).join('') || empty('אין סרטונים לחיפוש הזה');
+  else if (ssxTab === 'videos') body = L.filter(r => r.hv).map(ssxItemHTML).join('') || empty('אין סרטונים לחיפוש הזה');
   else body = (() => { const ph = L.filter(r => r.img || (r.images || [])[0]); return ph.length ? `<div class="ssx-grid">${ph.map(r => `<button type="button" onclick="closeSiteSearch(); rentOpen('${artEsc(r.id)}')"><img src="${escHtml(r.img || r.images[0])}" alt="" loading="lazy"></button>`).join('')}</div>` : empty('אין תמונות לחיפוש הזה'); })();
   const nf = (ssxF.from !== 'any') + (ssxF.date !== 'any') + ssxF.near;
   document.querySelectorAll('.ss-fbtn').forEach(b => b.classList.toggle('on', nf > 0));
@@ -25437,7 +25444,17 @@ function ssxEmptyHTML() {
   const person = u => `<button type="button" class="ssx-rc" onclick="ssOpenUser('${artEsc(u.uid)}','${artEsc(u.name || '')}')"><span class="ssx-rci ring">${authorAvHTML({ authorId: u.uid, author: u.name || '?' })}</span><b>${escHtml(u.name || '')}${ver[u.uid] ? '<i class="ssx-ver">✓</i>' : ''}</b><small dir="ltr">@${escHtml(typeof profileHandle === 'function' ? profileHandle(u.name) : '')}</small></button>`;
   const word = q => `<button type="button" class="ssx-rc" onclick="ssUseQuery('${artEsc(q)}')"><span class="ssx-rci ring q">${thumb(q)}</span><b>${escHtml(q)}</b><small>חיפוש</small></button>`;
   const items = ppl.map(person).join('') + words.map(word).join('');
-  return `<div class="ss-panel ssx ssx-empty">${items ? `<div class="ssx-rh"><b>חיפושים אחרונים</b><button type="button" class="ssx-rclear" onclick="ssxRecentClearAll()" aria-label="ניקוי החיפושים האחרונים">✕</button></div><div class="ssx-rrow">${items}</div>` : '<div class="ss-hint">חפשו אנשים, מודעות, פורומים וחדשות</div>'}</div>`;
+  // אין חיפושים אחרונים — מציעים: מוכרים בולטים ומודעות פופולריות, באותם עיגולים
+  let sug = '';
+  if (!items) {
+    const sellers = {}; all.forEach(r => { const n = (typeof mktWho === 'function' && mktWho(r)) || r.owner; if (!n) return; const k = r.uid || 'n:' + n; sellers[k] = sellers[k] || { uid: r.uid || '', name: n, c: 0 }; sellers[k].c++; });
+    const topSellers = Object.values(sellers).sort((a, b) => b.c - a.c).slice(0, 5);
+    const topItems = all.filter(r => r.img).sort((a, b) => (typeof libScore === 'function' ? libScore(b) - libScore(a) : 0)).slice(0, 6);
+    const seller = u => `<button type="button" class="ssx-rc" onclick="ssOpenUser('${artEsc(u.uid)}','${artEsc(u.name)}')"><span class="ssx-rci ring">${authorAvHTML({ authorId: u.uid, author: u.name })}</span><b>${escHtml(u.name)}</b><small>${u.c} מודעות</small></button>`;
+    const item = r => `<button type="button" class="ssx-rc" onclick="closeSiteSearch(); rentOpen('${artEsc(r.id)}')"><span class="ssx-rci ring q">${rentThumb(r)}</span><b>${escHtml(r.title)}</b><small>${Number(r.price) > 0 ? '₪' + mktDiscP(r.price).toLocaleString('he-IL', { maximumFractionDigits: 2 }) : escHtml(r.city || '')}</small></button>`;
+    sug = `<div class="ssx-rh"><b>הצעות בשבילך</b></div><div class="ssx-rrow">${topItems.map(item).join('')}</div>${topSellers.length ? `<div class="ssx-rh"><b>מוכרים בולטים</b></div><div class="ssx-rrow">${topSellers.map(seller).join('')}</div>` : ''}`;
+  }
+  return `<div class="ss-panel ssx ssx-empty">${items ? `<div class="ssx-rh"><b>חיפושים אחרונים</b><button type="button" class="ssx-rclear" onclick="ssxRecentClearAll()" aria-label="ניקוי החיפושים האחרונים">✕</button></div><div class="ssx-rrow">${items}</div>` : sug || '<div class="ss-hint">חפשו אנשים, מודעות, פורומים וחדשות</div>'}</div>`;
 }
 function ssxRecentClearAll() { ssRecentSet([]); try { localStorage.removeItem(SRCH_KEY); } catch (e) {} ssxRerender(); }
 window.ssxRecentClearAll = ssxRecentClearAll;

@@ -456,3 +456,4 @@ BODY #buy-dock { display: none !important; }
 BODY .lib-page .lib-n { display: none !important; }
 BODY #m-top .mt-circ:not(.mt-me) { display: none !important; }
 BODY .lib-page .lib-welcome { display: none !important; }
+BODY .ssx-item .ssx-ic { border: 3px solid transparent !important; background: linear-gradient(#ffffff, #ffffff) padding-box, linear-gradient(45deg, #ffb347, #ff4d8d 45%, #a855f7) border-box !important; padding: 3px !important; box-sizing: border-box !important; }
