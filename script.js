@@ -14543,6 +14543,8 @@ function xrJump(id) {
 }
 function xrGo(js) { if (window.matchMedia('(max-width: 1279px)').matches) xrToggle(false); try { (new Function(js))(); } catch (e) { console.warn(e); } }
 window.xrToggle = xrToggle; window.xrSec = xrSec; window.xrJump = xrJump; window.xrGo = xrGo;
+// הסרגל בצד: רק בית, יצירה, ולמטה שדרוג / דיסקורד / התחברות. להחזרת כל הפריטים (גלו, ספרייה, צ׳אט, עסקאות, חנות, עוזרים, השוק, שלי, קהילה, עוד): true
+const RAIL_FULL = false;
 function sideRailHTML() {
   const u = auth.currentUser;
   const reg = u && !u.isAnonymous;
@@ -14558,6 +14560,7 @@ function sideRailHTML() {
       <button type="button" class="xr-tg" onclick="xrToggle()" title="פתיחת התפריט" aria-label="פתיחת התפריט">${xrSvg('toggle', 1.8)}</button>
       ${nb('home', 'home', 'בית', 'goToHomePage()')}
       ${nb('', 'create', 'יצירה', 'mkPubOpen()', 'xr-create')}
+      ${RAIL_FULL ? `
       ${nb('', 'explore', 'גלו', "mktGo('all')")}
       ${nb('lib', 'library', 'ספרייה', 'libOpen()')}
       ${nb('', 'chat', 'צ׳אט', 'openMessages()')}
@@ -14570,6 +14573,7 @@ function sideRailHTML() {
       ${nb('', 'inspire', 'קהילה', "xrJump('inspire')")}
       <i class="xr-sep"></i>
       ${nb('', 'pinned', 'עוד', "xrJump('more')")}
+      ` : ''}
       ${admin ? nb('stats', 'stats', 'נתונים', "adminOpenTab('stats')") : ''}
       <span class="xr-fill"></span>
       ${nb('', 'upgrade', 'שדרוג', "navigateToPage('page-subscription-main')", 'xr-up')}
