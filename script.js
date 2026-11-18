@@ -30156,9 +30156,8 @@ window.hcDot = hcDot;
     const dy = e.touches[0].clientY - sy;
     if (horiz === null && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) horiz = Math.abs(dx) > Math.abs(dy);
     if (!horiz) return;
-    if (e.cancelable) e.preventDefault();
     const i = img(); if (i) i.style.transform = `translateX(${dx * 0.6}px)`;
-  }, { passive: false });
+  }, { passive: true });
   const end = () => {
     if (!el) return;
     const target = el, go = horiz && Math.abs(dx) >= 40;
@@ -34954,7 +34953,7 @@ function rentDetailHTML(r) {
     <div class="mk-head-rate"><button type="button" class="mk-rate" data-seller="${escHtml(r.uid || '')}" onclick="rentRevOpen()">${rentRateHTML(0, 0)}</button></div><div class="mk-inv" data-like="${escHtml(r.shId || rentCommentsKey(r))}" data-rep="${escHtml(rentCommentsKey(r))}"${r.id === 'c1' ? ' data-demo="1"' : ''} hidden></div>
     <div class="mp mk-pg">
       <div class="rn-det-gal mp-gal">
-        <div class="rn-det-img mp-img${!r.hv && imgs.length > 1 ? ' is-carousel' : ''}" data-idx="0"${r.hv ? '' : (imgs.length > 1 ? '' : ' onclick="mkZoomOpen(this)"')}>${r.hv || !imgs.length ? rentThumb(full && full.length ? { ...r, img: full[0] } : r, true) : `<div class="mp-slides" dir="ltr" onscroll="mpSlideSync(this)">${imgs.map((u, i) => `<div class="mp-slide" data-idx="${i}" onclick="mkZoomOpen(this.closest('.mp-img'), ${i})"><img src="${escHtml(u)}" alt="${escHtml(r.title || '')} — תמונה ${i + 1}" loading="${i ? 'lazy' : 'eager'}" decoding="async"></div>`).join('')}</div>${imgs.length > 1 ? `<span class="mp-cnt" dir="ltr">1/${imgs.length}</span>` : ''}`}${r.hv ? '' : '<button type="button" class="mk-zoom-btn" onclick="event.stopPropagation(); mkZoomOpen(this.parentElement)" aria-label="הגדלת התמונה" title="הגדלה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V5a1 1 0 0 1 1-1h4M15 4h4a1 1 0 0 1 1 1v4M20 15v4a1 1 0 0 1-1 1h-4M9 20H5a1 1 0 0 1-1-1v-4"/></svg></button>'}</div>
+        <div class="rn-det-img mp-img${!r.hv && imgs.length > 1 ? ' is-carousel' : ''}" data-idx="0"${r.hv ? '' : (imgs.length > 1 ? '' : ' ondblclick="mkZoomOpen(this)" ontouchend="mkTapZoom(event, this)"')}>${r.hv || !imgs.length ? rentThumb(full && full.length ? { ...r, img: full[0] } : r, true) : `<div class="mp-slides" dir="ltr" onscroll="mpSlideSync(this)">${imgs.map((u, i) => `<div class="mp-slide" data-idx="${i}" ondblclick="mkZoomOpen(this.closest('.mp-img'), ${i})" ontouchend="mkTapZoom(event, this.closest('.mp-img'), ${i})"><img src="${escHtml(u)}" alt="${escHtml(r.title || '')} — תמונה ${i + 1}" loading="${i ? 'lazy' : 'eager'}" decoding="async"></div>`).join('')}</div>${imgs.length > 1 ? `<span class="mp-cnt" dir="ltr">1/${imgs.length}</span>` : ''}`}</div>
         ${!r.hv && imgs.length > 1 ? `<div class="mp-dots" dir="ltr" role="tablist" aria-label="תמונות המודעה">${imgs.map((_, i) => `<button type="button" class="mp-dot${i ? '' : ' on'}" onclick="mpSlideGo(this, ${i})" aria-label="תמונה ${i + 1} מתוך ${imgs.length}"></button>`).join('')}</div>` : ''}
         ${imgs.length ? `<div class="mk-vthumbs bb-thumbs${imgs.length > 7 ? ' has-more' : ''}">
           <div class="mp-thumbs">${imgs.map((u, i) => `<button type="button" class="${i ? '' : 'on'}${i >= 6 && imgs.length > 7 ? ' bb-extra' : ''}" onclick="rentDetPick(this)" aria-label="תמונה ${i + 1}"><img src="${escHtml(u)}" alt="" loading="lazy"></button>`).join('')}${imgs.length > 7 ? `<button type="button" class="bb-more" onclick="this.closest('.bb-thumbs').classList.add('open')" aria-label="עוד ${imgs.length - 6} תמונות"><b>+${imgs.length - 6}</b><small>עוד</small></button>` : ''}</div>
@@ -35273,7 +35272,7 @@ function rentQtyMenu(btn, force) {
   list.style.setProperty('left', list.style.left, 'important');
   list.style.setProperty('max-height', list.style.maxHeight, 'important');
 }
-window.addEventListener('scroll', e => { if (!(e.target.closest && e.target.closest('.mk-qlist'))) qtyListsClose(); }, true);
+window.addEventListener('scroll', e => { if (!(e.target.closest && e.target.closest('.mk-qlist'))) qtyListsClose(); }, { capture: true, passive: true });
 function rentQtyPick(id, n) {
   const inp = document.getElementById('rn-qty'), out = document.getElementById('rn-qty-v');
   if (!inp || !out) return;
@@ -35367,6 +35366,13 @@ document.addEventListener('keydown', e => {
   else if (e.key === 'ArrowLeft') mkZoomGo(1); else if (e.key === 'ArrowRight') mkZoomGo(-1);
   else if (e.key === '+' || e.key === '=') mkZoomBy(1.4); else if (e.key === '-') mkZoomBy(1 / 1.4);
 });
+let _mkLastTap = 0;
+function mkTapZoom(e, box, idx) {
+  const now = Date.now();
+  if (now - _mkLastTap < 320) { _mkLastTap = 0; e.preventDefault(); mkZoomOpen(box, idx); }
+  else _mkLastTap = now;
+}
+window.mkTapZoom = mkTapZoom;
 Object.assign(window, { mkZoomOpen, mkZoomClose, mkZoomBy, mkZoomReset, mkZoomGo });
 function mpSlideSync(track) {
   if (!track) return;
@@ -36947,6 +36953,7 @@ Object.assign(window, { phoneVerifyOpen, pvSend, pvBack, pvClose });
     if (document.getElementById('m-top')) return;
     const el = document.createElement('div'); el.id = 'm-top';
     el.innerHTML = `<div class="mt-row">
+        <button type="button" class="mt-circ mt-home" onclick="mtTab('home')" aria-label="חזרה לעמוד הראשי" title="עמוד ראשי">${ic('<path d="M5 12h14M13 6l6 6-6 6"/>')}</button>
         <div class="mt-search${typeof rentUI !== 'undefined' && rentUI.q ? ' has-q' : ''}">
           <span class="mt-mag" aria-hidden="true">${ic('<circle cx="11" cy="11" r="7"/><path d="M20 20l-4.35-4.35"/>')}</span>
           <input id="mt-search-q" type="search" class="mt-q-in" readonly onclick="openSiteSearch()" onfocus="this.blur(); openSiteSearch()" placeholder="חיפוש..." value="${escHtml((typeof rentUI !== 'undefined' && rentUI.q) || '')}" autocomplete="off" enterkeyhint="search" aria-label="חיפוש בשוק" oninput="hcInput(this.value)" onkeydown="if(event.key==='Escape'){hcClear()} else if(event.key==='Enter'){event.preventDefault(); this.blur();}">
@@ -37217,7 +37224,7 @@ function storyUploadOpen() {
     <div class="st-up-imgs" id="st-up-imgs"></div>
     <input id="st-up-cap" class="st-up-cap" type="text" maxlength="140" placeholder="הוסיפו כיתוב לתמונה (לא חובה)…">
     <p class="st-up-err" id="st-up-err" hidden></p>
-    <button type="button" class="st-up-go" id="st-up-go" onclick="storyUploadSend()">פרסום לסטורי (24 שעות)</button>
+    <button type="button" class="st-up-go" id="st-up-go" onclick="storyUploadSend()">פרסם</button>
   </div>`;
   m.addEventListener('click', e => { if (e.target === m) storyUploadClose(); });
   document.body.appendChild(m);
@@ -37367,8 +37374,8 @@ function storyViewerRender() {
     <div class="stv-stage">
       <img class="stv-img" src="${escHtml(item.img)}" alt="${escHtml(item.caption || g.name)}">
       ${item.caption ? `<div class="stv-cap">${escHtml(item.caption)}</div>` : ''}
-      <button type="button" class="stv-nav stv-prev" onpointerdown="event.stopPropagation()" onclick="event.stopPropagation(); storyStep(-1)" aria-label="הקודם">‹</button>
-      <button type="button" class="stv-nav stv-next" onpointerdown="event.stopPropagation()" onclick="event.stopPropagation(); storyStep(1)" aria-label="הבא">›</button>
+      <button type="button" class="stv-nav stv-prev" onpointerdown="event.stopPropagation()" onclick="event.stopPropagation(); storyStep(-1)" aria-label="הקודם"></button>
+      <button type="button" class="stv-nav stv-next" onpointerdown="event.stopPropagation()" onclick="event.stopPropagation(); storyStep(1)" aria-label="הבא"></button>
     </div>
   </div>`;
   if (typeof avatarHydrate === 'function') avatarHydrate(v);
