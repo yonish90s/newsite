@@ -2,23 +2,17 @@
   <defs>
     <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#ffffff"/>
-      <stop offset="1" stop-color="#eef3f1"/>
+      <stop offset="1" stop-color="#f1ecfc"/>
     </linearGradient>
-    <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#5cc2b2"/>
-      <stop offset="1" stop-color="#2f7d72"/>
+    <linearGradient id="ink" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#b794ff"/>
+      <stop offset="1" stop-color="#7c3aed"/>
     </linearGradient>
-    <linearGradient id="g2" x1="1" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#3a4452"/>
-      <stop offset="1" stop-color="#111827"/>
-    </linearGradient>
+    <filter id="soft" x="-30%" y="-60%" width="160%" height="220%">
+      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#7c3aed" flood-opacity=".22"/>
+    </filter>
   </defs>
-  <rect x="16" y="16" width="480" height="480" rx="112" fill="url(#tile)"/>
-  <rect x="16" y="16" width="480" height="480" rx="112" fill="none" stroke="#000" stroke-opacity=".06" stroke-width="4"/>
-  <!-- V הפוך (A הפוכה): שני פסים עבים ומעוגלים שנפגשים למטה -->
-  <path d="M150 136 L256 380" stroke="url(#g2)" stroke-width="78" stroke-linecap="round" fill="none"/>
-  <path d="M362 136 L256 380" stroke="url(#g1)" stroke-width="78" stroke-linecap="round" fill="none"/>
-  <!-- נקודה (עין) מעל — קשר ללוגו העיניים -->
-  <circle cx="256" cy="150" r="34" fill="#47a093"/>
-  <circle cx="264" cy="142" r="11" fill="#ffffff"/>
+  <rect x="8" y="8" width="496" height="496" rx="116" fill="url(#tile)"/>
+  <rect x="9.5" y="9.5" width="493" height="493" rx="114.5" fill="none" stroke="#e6defa" stroke-width="3"/>
+  <path filter="url(#soft)" d="M256 256 C 222 206, 178 186, 146 190 C 108 195, 88 226, 88 256 C 88 286, 108 317, 146 322 C 178 326, 222 306, 256 256 C 290 206, 334 186, 366 190 C 404 195, 424 226, 424 256 C 424 286, 404 317, 366 322 C 334 326, 290 306, 256 256 Z" fill="none" stroke="url(#ink)" stroke-width="46" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

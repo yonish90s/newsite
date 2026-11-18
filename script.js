@@ -12499,7 +12499,7 @@ function authorAvHTML(item) {
   if (!item) return '';
   const uid = item.authorId || item.uid || '';
   const name = String(item.author || item.name || '').trim();
-  if (typeof isSiteAdminAuthor === 'function' && isSiteAdminAuthor(uid, name, item)) return '<span class="au-av au-av-site"><img src="./logo.png" alt=""></span>';
+  if (typeof isSiteAdminAuthor === 'function' && isSiteAdminAuthor(uid, name, item)) return '<span class="au-av au-av-site"><img src="./logo.png?v=2" alt=""></span>';
   let h = 0; for (const ch of (uid || name)) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
   const okUid = /^[A-Za-z0-9_-]{10,}$/.test(uid);
   // בלי משתמש אמיתי (פרופילי דוגמה): דמות מצוירת במקום האות
@@ -12603,7 +12603,7 @@ function obRender() {
       <label class="ob-lbl">על עצמי<textarea id="ob-bio" rows="5" maxlength="300" placeholder="הציגו את עצמכם כדי שאחרים יכירו אתכם…">${escHtml(ob.bio)}</textarea></label>`;
   }
   m.innerHTML = `<div class="ob-wrap">
-      <img class="ob-logo" src="./logo.png" alt="">
+      <img class="ob-logo" src="./logo.png?v=2" alt="">
       <div class="ob-card" role="dialog" aria-modal="true">
         <div class="ob-top">${ob.step > 1 ? `<button type="button" class="ob-back" onclick="obBack()" aria-label="חזרה">›</button>` : '<span></span>'}<div class="ob-dots">${dots}</div><button type="button" class="ob-skip" onclick="obClose()">דלגו</button></div>
         ${body}
@@ -14588,7 +14588,7 @@ function sideRailHTML() {
   const row = (ic, t, js, b) => `<button type="button" class="xr-row" onclick="${go(js)}">${xrSvg(ic, 1.6)}<span>${t}</span>${badge(b)}</button>`;
   const wide = `<div class="xr-wide">
       <div class="xr-top">
-        <button type="button" class="xr-brand" onclick="${go('goToHomePage()')}"><img src="./logo.png" alt=""><b>שיתוף רעיונות</b></button>
+        <button type="button" class="xr-brand" onclick="${go('goToHomePage()')}"><img src="./logo.png?v=2" alt=""><b>שיתוף רעיונות</b></button>
         <button type="button" class="xr-tg" onclick="xrToggle(false)" title="סגירת התפריט" aria-label="סגירת התפריט">${xrSvg('toggle', 1.8)}</button>
       </div>
       <div class="xr-scroll">
@@ -19385,7 +19385,7 @@ async function openMessages() {
       <section class="tg-view tg-list-view">
         <header class="tg-head">
           <button type="button" class="tg-round" onclick="closeMessages()" aria-label="סגירה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
-          <span class="tg-head-title"><img class="tg-logo" src="./logo.png" alt="">הודעות</span>
+          <span class="tg-head-title"><img class="tg-logo" src="./logo.png?v=2" alt="">הודעות</span>
           <button type="button" class="tg-round tg-expand" onclick="dmToggleExpand()" aria-label="הגדלה / הקטנה" title="הגדלה / הקטנה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M10 20H4v-6M20 4l-6 6M4 20l6-6"/></svg></button>
         </header>
         <div class="tg-search">
@@ -26910,7 +26910,7 @@ function buildSiteFooterHTML() {
           </div>
         </div>
         <div class="site-footer-bottom">
-          <img src="./logo.png" alt="" class="site-footer-logo">
+          <img src="./logo.png?v=2" alt="" class="site-footer-logo">
           <span>© ${year} כל הזכויות שמורות.</span><small class="ft-credit">תמונות הדוגמה: Wikimedia Commons</small>
           ${footerSocialRowHTML()}
         </div>
@@ -30704,7 +30704,7 @@ function glassBanner(o) {
       <span class="gbn-txt"><b>${escHtml(o.title || '')}</b>${o.sub ? `<small>${escHtml(o.sub)}</small>` : ''}</span>
       ${o.btn ? `<button type="button" class="gbn-btn">${escHtml(o.btn)}</button>` : ''}
       <button type="button" class="gbn-x" aria-label="סגירה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
-      <img class="gbn-logo" src="./logo.png" alt="" width="40" height="40">
+      <img class="gbn-logo" src="./logo.png?v=2" alt="" width="40" height="40">
     </div>${o.input ? `<form class="gbn-in"><label><span>₪</span><input type="number" inputmode="numeric" min="1" step="1" placeholder="${escHtml(o.input.placeholder || 'הסכום החדש')}" value="${escHtml(o.input.value || '')}" aria-label="הסכום החדש"></label><button type="submit">${escHtml(o.input.btn || 'שליחה')}</button></form>` : ''}<i class="gbn-bar" style="animation-duration:${ms}ms"></i>`;
   document.body.appendChild(el);
   // מחשב: ההודעה מופיעה בתוך הכותרת — ברווח הריק שבין הלוגו לשורת החיפוש;
@@ -33920,14 +33920,14 @@ function libHTML() {
   ];
   const heroHTML = `<section class="lib-hero lib-welcome" data-i="0">${W.map((w, i) => `<article class="lib-slide lib-wel w${i}${i ? '' : ' on'}" aria-hidden="${i ? 'true' : 'false'}" role="button" tabindex="0" onclick="${w.act}" aria-label="${escHtml(w.t)}">
         <span class="lib-wel-glow"></span>${w.ic.map((k, j) => ico(k, 'p' + j)).join('')}
-        <img class="lib-wel-logo" src="./logo.png" alt="">
+        <img class="lib-wel-logo" src="./logo.png?v=2" alt="">
         <b class="lib-wel-t">${escHtml(w.t)}</b><span class="lib-wel-s">${escHtml(w.s)}</span>
       </article>`).join('')}
       <nav class="lib-dots">${W.map((_, i) => `<button type="button" class="lib-dot${i ? '' : ' on'}" onclick="event.stopPropagation(); libHero(0, ${i})" aria-label="תמונה ${i + 1}"></button>`).join('')}</nav>
     </section>`;
   const depts = typeof MKT_DEPTS !== 'undefined' ? MKT_DEPTS.filter(d => base.some(r => r.dept === d.id)) : [];
   const circHTML = depts.length ? `<nav class="lib-circs" aria-label="מחלקות">${depts.map(d => `<button type="button" class="lib-circ" onclick="libDept('${d.id}')"><span><svg viewBox="0 0 64 64" fill="none" stroke="#111" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">${(typeof DEPT_ART !== 'undefined' && (DEPT_ART[d.id] || DEPT_ART.other)) || ''}</svg></span><b>${escHtml(d.name)}</b></button>`).join('')}</nav>` : '';
-  return `<header class="lib-head"><span class="lib-brand"><img src="./logo.png" alt=""><b>ספרייה</b></span><button type="button" class="lib-cta" onclick="mkPubOpen()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>פרסום מודעה</button></header>
+  return `<header class="lib-head"><span class="lib-brand"><img src="./logo.png?v=2" alt=""><b>ספרייה</b></span><button type="button" class="lib-cta" onclick="mkPubOpen()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>פרסום מודעה</button></header>
     ${filtered ? '' : heroHTML}${libBarHTML(depts)}
     ${filtered ? `<section class="lib-row lib-res"><header><h2>${all.length} תוצאות</h2></header>${all.length ? `<div class="lib-grid">${all.slice().sort(LIB_SORTS[libF.sort].f).map(r => libCardHTML(r)).join('')}</div>` : '<div class="lib-empty">אין מודעות שמתאימות לסינון הזה</div>'}</section>` : `
     ${top.length ? libRowHTML('lib-top', 'המובילים', topHTML) : ''}
@@ -33960,7 +33960,7 @@ function libSideHTML() {
   const u = auth.currentUser, reg = u && !u.isAnonymous;
   const it = (label, d, act, cls) => `<button type="button" class="lib-nav${cls ? ' ' + cls : ''}" onclick="${act}">${ic(d)}<span>${label}</span></button>`;
   return `<aside class="lib-side">
-    <button type="button" class="lib-logo" onclick="goToHomePage()" aria-label="לדף הבית"><img src="./logo.png" alt=""><b>ספרייה</b></button>
+    <button type="button" class="lib-logo" onclick="goToHomePage()" aria-label="לדף הבית"><img src="./logo.png?v=2" alt=""><b>ספרייה</b></button>
     ${it('יצירה', '<path d="M12 5v14M5 12h14"/>', 'mkPubOpen()', 'create')}
     <hr>
     ${it('גלו', '<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>', "mktGo('all')")}
@@ -36119,7 +36119,7 @@ function buyRemTick() {
   due.forEach(r => {
     glassBanner({ title: '⏰ תזכורת', sub: r.text, icon: 'msg', ms: 12000 });
     buySay('bot', `⏰ <b>תזכורת:</b> ${escHtml(r.text)}`);
-    try { if (window.Notification && Notification.permission === 'granted') new Notification('תזכורת', { body: r.text, icon: './logo.png' }); } catch (e) {}
+    try { if (window.Notification && Notification.permission === 'granted') new Notification('תזכורת', { body: r.text, icon: './logo.png?v=2' }); } catch (e) {}
   });
 }
 function buyWantHandle(text) {
