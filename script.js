@@ -33719,7 +33719,22 @@ function libSub(r) {
 // כרטיס בסגנון "פוסטר": על התמונה למטה — שם המודעה גדול ולידו המחיר באפור, סמל מיקום ועיר, לייקים וצפיות; למעלה תגיות "טרנדי" / "חדש"
 const libFmt = n => { try { return new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 }).format(n); } catch (e) { return String(n); } };
 // בספרייה מציגים את כרטיס השוק הרגיל (תמונה במסגרת, מוכר, עיר, מחיר עם הנחה, ושורת פעולות) — בגודל של כרטיס בשוק
+// מודעה אחת בסגנון כרטיס "אפליקציית אוכל": כרטיס לבן ועגול, לב למעלה, תמונת מוצר גדולה, שם, מחיר ודירוג ⭐
+const LIB_STYLE_ID = 'c1';   // מצלמת Nikon D850
+function libStyleCardHTML(r, extra) {
+  const liked = rentMarked('like', r.id);
+  const price = Number(r.price) > 0 ? '₪' + mktDiscP(r.price).toLocaleString('he-IL', { maximumFractionDigits: 2 }) : '';
+  const unit = r.kind === 'used' ? '' : (RENT_UNITS[r.unit] || '');
+  const src = r.img || (r.images || [])[0] || '';
+  return `<div class="lib-mk lib-food${extra ? ' ' + extra : ''}"><div class="lf-card" role="button" tabindex="0" onclick="rentOpen('${artEsc(r.id)}')" aria-label="${escHtml(r.title)}">
+    <span role="button" tabindex="0" class="lf-heart${liked ? ' on' : ''}" aria-label="לייק" onclick="event.stopPropagation(); rentMark(this, 'like', '${artEsc(r.id)}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.5l-1.4-1.3C5.4 14.5 2 11.4 2 7.6 2 4.5 4.4 2 7.5 2c1.7 0 3.4.8 4.5 2.1C13.1 2.8 14.8 2 16.5 2 19.6 2 22 4.5 22 7.6c0 3.8-3.4 6.9-8.6 11.6z"/></svg></span>
+    <span class="lf-img">${src ? `<img src="${escHtml(src)}" alt="" loading="lazy">` : rentThumb(r)}</span>
+    <b class="lf-t">${escHtml(r.title)}</b>
+    <span class="lf-row"><b class="lf-p">${price}${unit ? ` <small>${escHtml(unit)}</small>` : ''}</b>${r.rating ? `<span class="lf-r"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.8l2.8 5.8 6.4.9-4.6 4.5 1.1 6.3L12 17.3l-5.7 3 1.1-6.3L2.8 9.5l6.4-.9z"/></svg>${Number(r.rating).toFixed(1)}</span>` : ''}</span>
+  </div></div>`;
+}
 function libCardHTML(r, extra) {
+  if (r && r.id === LIB_STYLE_ID) return libStyleCardHTML(r, extra);
   return `<div class="lib-mk${extra ? ' ' + extra : ''}">${rentMiniHTML(r)}</div>`;
 }
 function libPosterCardHTML(r, extra, trending) {

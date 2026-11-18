@@ -429,3 +429,8 @@ BODY #side-rail :is(.xr-nb.on, .xr-home.on) > span { color: #262626 !important; 
 BODY #side-rail .xr-nb.xr-create { background: #262626 !important; color: #ffffff !important; }
 BODY #side-rail .xr-nb.xr-create svg { color: #ffffff !important; }
 BODY #side-rail .xr-nb.xr-up { color: #262626 !important; }
+
+BODY .lib-page .lf-card { background: #ffffff !important; }
+BODY .lib-page .lf-t, BODY .lib-page .lf-p, BODY .lib-page .lf-heart { color: #1a1428 !important; }
+BODY .lib-page .lf-heart.on { color: #e0245e !important; }
+BODY .lib-page .lf-r svg { color: #f5b301 !important; }
