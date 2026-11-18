@@ -14355,6 +14355,7 @@ function buildHomeFeedPage() {
   if (homeGridOn()) return `<div class="articles-page home-feed-page home-grid" data-page-id="page-home-feed">
     <div class="art-inner">
       <div class="cmp-wrap">${composerBarHTML()}</div>
+      ${typeof storiesBarHTML === 'function' ? storiesBarHTML() : ''}
       ${homeChipsHTML(photos, comics, stories)}
       ${modBoxHTML()}
       ${homeGridHTML(photos, comics, stories)}
@@ -14368,6 +14369,7 @@ function buildHomeFeedPage() {
     ${homeAsideHTML()}
     <div class="art-inner">
       <div class="cmp-wrap">${composerBarHTML()}</div>
+      ${typeof storiesBarHTML === 'function' ? storiesBarHTML() : ''}
       ${homeChipsHTML(photos, comics, stories)}
       ${modBoxHTML()}
       ${homeHeroCarouselHTML(photos, comics, stories)}
@@ -18973,7 +18975,6 @@ async function mktFeedOpen() {
   const upsHTML = sec('העלאות', 'מודעות ופוסטים חדשים של מי שאתם עוקבים אחריהם', ups, 'עדיין אין העלאות ממי שאתם עוקבים אחריהם');
   const repHTML = sec('ריפוסטים', 'מודעות שהם שיתפו מאחרים', reps2, 'עדיין אין ריפוסטים ממי שאתם עוקבים אחריהם');
   mainContent.innerHTML = `<div class="fd-page"><h1 class="fd-h">הפיד</h1>
-    ${typeof storiesBarHTML === 'function' ? storiesBarHTML() : ''}
     ${suggHTML}
     <div class="pf-tabs2" role="tablist"><button type="button" class="on" onclick="fdTab(this, 'all')">הכל</button><button type="button" onclick="fdTab(this, 'ups')">העלאות <small>${ups.length}</small></button><button type="button" onclick="fdTab(this, 'reps')">ריפוסטים <small>${reps2.length}</small></button>${guest ? '' : `<button type="button" onclick="fdTab(this, 'me')">שלי <small>${mine.length}</small></button>`}</div>
     <div data-fd="all">${theirs.length ? upsHTML + repHTML : cards([])}</div><div data-fd="ups" hidden>${upsHTML}</div><div data-fd="reps" hidden>${repHTML}</div><div data-fd="me" hidden>${cards(mine)}</div></div>`;
@@ -31004,8 +31005,9 @@ function mTabsActive() {
     const top = document.createElement('div');
     top.className = 'site-top';
     top.dataset.active = active; top.dataset.mode = mode;
-    top.innerHTML = (mode === 'd' && typeof composerBarHTML === 'function' ? `<div class="cmp-wrap">${composerBarHTML()}</div>` : '') + homeChipsHTML(0, 0, 0, active || '-', 'hx-global');   // עמוד בלי לשונית משלו — אף לשונית לא מסומנת
+    top.innerHTML = (mode === 'd' && typeof composerBarHTML === 'function' ? `<div class="cmp-wrap">${composerBarHTML()}</div>` : '') + (typeof storiesBarHTML === 'function' ? storiesBarHTML() : '') + homeChipsHTML(0, 0, 0, active || '-', 'hx-global');   // עמוד בלי לשונית משלו — אף לשונית לא מסומנת
     mc.prepend(top);
+    if (typeof avatarHydrate === 'function') avatarHydrate(top);
     const on = top.querySelector('.hx-tab.on');
     if (on) try { on.scrollIntoView({ block: 'nearest', inline: 'center' }); } catch (e) {}
   }
@@ -33945,7 +33947,6 @@ function libHTML() {
   const depts = typeof MKT_DEPTS !== 'undefined' ? MKT_DEPTS.filter(d => base.some(r => r.dept === d.id)) : [];
   const circHTML = depts.length ? `<nav class="lib-circs" aria-label="מחלקות">${depts.map(d => `<button type="button" class="lib-circ" onclick="libDept('${d.id}')"><span><svg viewBox="0 0 64 64" fill="none" stroke="#111" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">${(typeof DEPT_ART !== 'undefined' && (DEPT_ART[d.id] || DEPT_ART.other)) || ''}</svg></span><b>${escHtml(d.name)}</b></button>`).join('')}</nav>` : '';
   return `<header class="lib-head"><span class="lib-brand"><img src="./logo.png?v=2" alt=""><b>ספרייה</b></span><button type="button" class="lib-cta" onclick="mkPubOpen()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>פרסום מודעה</button></header>
-    ${typeof storiesBarHTML === 'function' ? storiesBarHTML() : ''}
     ${filtered ? '' : heroHTML}${libBarHTML(depts)}
     ${filtered ? `<section class="lib-row lib-res"><header><h2>${all.length} תוצאות</h2></header>${all.length ? `<div class="lib-grid">${all.slice().sort(LIB_SORTS[libF.sort].f).map(r => libCardHTML(r)).join('')}</div>` : '<div class="lib-empty">אין מודעות שמתאימות לסינון הזה</div>'}</section>` : `
     ${top.length ? libRowHTML('lib-top', 'המובילים', topHTML) : ''}
@@ -34500,7 +34501,7 @@ function rentViewHTML() {
     ['sec', 'proj', 'פרויקטים'], ['pd', 'elec', 'חשמל'], ['pa', 'phys', 'מוצרים_פיזיים'], ['pa', 'fun', 'פנאי'], ['pk', '3d', 'תלת_מימד']];
   const tagOn = (k, v) => k === 'sec' ? rentUI.sec === v && rentUI.cat === 'all' && rentUI.offer === 'all' && rentUI.pk === 'all' && rentUI.pa === 'all' : rentUI[k] === v;
   const total = rentList().length;
-  return `${!rentUI.open && !rentUI.seller ? (typeof storiesBarHTML === 'function' ? storiesBarHTML() : '') + homeComposerHTML() : ''}<header class="rn-head">
+  return `${!rentUI.open && !rentUI.seller ? homeComposerHTML() : ''}<header class="rn-head">
       ${pubBtn}
       <span class="rn-count">${total.toLocaleString('he-IL')} ${total === 1 ? 'מודעה' : 'מודעות'}</span>
       <button type="button" class="rn-fbtn${rentFilterOpen() ? ' on' : ''}" onclick="rentFilterToggle()" aria-label="סינון וקטגוריות"><span class="rn-fbtn-t">סינון</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg></button>
@@ -37002,13 +37003,13 @@ Object.assign(window, { mtTab, mtMenu, mtSearch, mtSync });
 // - כשאין עוקבים (או לצד העוקבים): הצעות לסטורי בעיגולים קטנים יותר מעיגולי הסטורי הרגילים
 // - מחיקה אוטומטית מלאה אחרי 24 שעות (מ-Firebase ומ-localStorage) כדי לא לתפוס זיכרון באתר
 // ============================================================
-const STORY_TTL = 24 * 60 * 60 * 1000;   // 24 שעות בדיוק
-const STORY_STEP_MS = 5000;
-let userStoriesMap = {}, storiesSubbed = false, storyUpState = { imgs: [] }, stViewer = null;
+var STORY_TTL = 24 * 60 * 60 * 1000;   // 24 שעות בדיוק
+var STORY_STEP_MS = 5000;
+var userStoriesMap = {}, storiesSubbed = false, storyUpState = { imgs: [] }, stViewer = null;
 
 function storyIsExpired(t) {
-  const n = Number(t) || 0;
-  return !n || (Date.now() - n >= STORY_TTL);
+  const n = Number(t) || 0, ttl = STORY_TTL || 86400000;
+  return !n || (Date.now() - n >= ttl);
 }
 function storyGuestList() {
   try {
