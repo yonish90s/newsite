@@ -36812,7 +36812,7 @@ Object.assign(window, { phoneVerifyOpen, pvSend, pvBack, pvClose });
     el.innerHTML = `<div class="mt-row">
         <div class="mt-search${typeof rentUI !== 'undefined' && rentUI.q ? ' has-q' : ''}">
           <span class="mt-mag" aria-hidden="true">${ic('<circle cx="11" cy="11" r="7"/><path d="M20 20l-4.35-4.35"/>')}</span>
-          <input id="mt-search-q" type="search" class="mt-q-in" placeholder="חיפוש בשוק..." value="${escHtml((typeof rentUI !== 'undefined' && rentUI.q) || '')}" autocomplete="off" enterkeyhint="search" aria-label="חיפוש בשוק" oninput="hcInput(this.value)" onkeydown="if(event.key==='Escape'){hcClear()} else if(event.key==='Enter'){event.preventDefault(); this.blur();}">
+          <input id="mt-search-q" type="search" class="mt-q-in" readonly onclick="openSiteSearch()" onfocus="this.blur(); openSiteSearch()" placeholder="חיפוש..." value="${escHtml((typeof rentUI !== 'undefined' && rentUI.q) || '')}" autocomplete="off" enterkeyhint="search" aria-label="חיפוש בשוק" oninput="hcInput(this.value)" onkeydown="if(event.key==='Escape'){hcClear()} else if(event.key==='Enter'){event.preventDefault(); this.blur();}">
           <button type="button" class="mt-q-x" onclick="hcClear()" aria-label="ניקוי חיפוש">✕</button>
         </div>
         <button type="button" class="mt-circ mt-circ-teal" onclick="rentFilterToggle()" aria-label="קטגוריות וסינון" title="קטגוריות וסינון">${ic('<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>')}</button>
