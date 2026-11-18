@@ -10034,16 +10034,18 @@ async function saveUserNickname() {
 }
 window.saveUserNickname = saveUserNickname;
 
-// תג "משתמש מאומת" — חותם כחול עם וי לבן, אחיד בכל האתר
+// תג "משתמש מאומת" — חותם כחול בהיר עם וי לבן, אחיד בכל האתר
 const VERIFIED_SEAL_PATH = 'M12.00 0.80 L14.48 2.73 L17.60 2.30 L18.79 5.21 L21.70 6.40 L21.27 9.52 L23.20 12.00 L21.27 14.48 L21.70 17.60 L18.79 18.79 L17.60 21.70 L14.48 21.27 L12.00 23.20 L9.52 21.27 L6.40 21.70 L5.21 18.79 L2.30 17.60 L2.73 14.48 L0.80 12.00 L2.73 9.52 L2.30 6.40 L5.21 5.21 L6.40 2.30 L9.52 2.73Z';
+const DEMO_VERIFIED_NAMES = new Set(['נועה לוי', 'דניאל מזרחי', 'מאפיית השכונה', 'רוני שמש', 'רון', 'יעל', 'מאיה שפירא', 'עומר נחום', 'הילה רוזן']);
 function verifiedSealHTML(size) {
   const px = size || 19;
-  return ` <span class="verified-seal" title="משתמש מאומת" aria-label="משתמש מאומת" style="width:${px}px;height:${px}px"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="${VERIFIED_SEAL_PATH}" fill="#7f90a6"/><path d="M7.4 12.3l3.1 3.1 6.1-6.3" fill="none" stroke="#151a22" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
+  return ` <span class="verified-seal" title="משתמש מאומת" aria-label="משתמש מאומת" style="width:${px}px;height:${px}px"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="${VERIFIED_SEAL_PATH}" fill="#60a5fa"/><path d="M7.4 12.3l3.1 3.1 6.1-6.3" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
 }
 window.verifiedSealHTML = verifiedSealHTML;
 
 function isUserVerified(authorId, authorName, itemVerified) {
   if (itemVerified === true || itemVerified === 'true' || itemVerified === 1) return true;
+  if (authorName && DEMO_VERIFIED_NAMES.has(String(authorName).trim())) return true;
   const user = auth.currentUser;
   if (user) {
     if ((authorId && authorId === user.uid) || (authorName && (user.displayName === authorName || (user.email && user.email.split('@')[0] === authorName)))) {
@@ -33976,6 +33978,7 @@ function libHTML() {
     ${filtered ? '' : heroHTML}${libBarHTML(depts)}
     ${filtered ? `<section class="lib-row lib-res"><header><h2>${all.length} תוצאות</h2></header>${all.length ? `<div class="lib-grid">${all.slice().sort(LIB_SORTS[libF.sort].f).map(r => libCardHTML(r)).join('')}</div>` : '<div class="lib-empty">אין מודעות שמתאימות לסינון הזה</div>'}</section>` : `
     ${top.length ? libRowHTML('lib-top', 'המובילים', topHTML) : ''}
+    ${typeof eventsSectionHTML === 'function' ? eventsSectionHTML() : ''}
     ${fresh.length ? libRowHTML('lib-new', 'נוספו לאחרונה', fresh.map(r => libCardHTML(r)).join('')) : ''}
     ${vids.length ? libRowHTML('lib-vid', 'מודעות עם סרטון', vids.map(r => libCardHTML(r)).join('')) : ''}
     ${biz.length ? libRowHTML('lib-biz', 'עסקים מובילים', biz.map(r => libCardHTML(r)).join('')) : ''}`}`;
@@ -34319,7 +34322,7 @@ function rentMiniHTML(x) {
   // בידול: עסק — מסגרת ירוקה, תג "עסק" וסמל חנות ליד שם העסק; יד 2 — תג אפור
   const sec = mktSecOf(x), biz = sec === 'biz';
   const badge = biz ? `<i class="mk-sg-badge b-biz">${BIZ_IC}עסק</i>` : sec === 'used' ? '<i class="mk-sg-badge b-used">יד 2</i>' : '';
-  return `<div role="button" tabindex="0" class="mk-sg${biz ? ' is-biz' : sec === 'used' ? ' is-used' : ''}" data-id="${escHtml(x.id)}" onclick="rentOpen('${artEsc(x.id)}')" onkeydown="if((event.key==='Enter'||event.key===' ')&&event.target===this){event.preventDefault();this.click();}"><span class="mk-sg-meta"><span class="mk-sg-who" role="button" tabindex="0" title="${escHtml(mktWho(x))}" aria-label="${escHtml(mktWho(x))}" onclick="event.stopPropagation(); rentOpenSeller('${artEsc(x.uid || '')}', '${artEsc(x.owner || '')}')">${authorAvHTML({ author: mktWho(x) || '?', uid: x.uid || '' })}<b>${biz ? BIZ_IC : ''}${escHtml(mktWho(x))}</b></span><small class="mk-sg-city${mkKmTo(x.city) !== null ? ' km' : ''}">${escHtml(mkWhereTxt(x))}</small>${mkMobStatHTML(x)}<small class="mk-sg-price">${rentTypeIcon(x)}${Number(x.price) > 0 ? `${mktDiscP(x.price).toLocaleString('he-IL', { maximumFractionDigits: 2 })}&nbsp;₪${mktWasHTML(x.price)}` : mktIsProj(x) ? escHtml((PROJ_SUB[x.pd] || {}).name || PROJ_KINDS[x.pk] || 'פרויקט') : ''}${x.uid ? `<i data-sg-rate="${escHtml(x.uid)}"></i>` : ''}</small></span><span class="mk-sg-img">${rentThumb(x)}${badge}${del}${mktSoldOut(x) ? '<i class="mk-sg-out">אזל</i>' : ''}</span><span class="mk-sg-acts">${rentHoverHTML(x).replace('<span role="button" tabindex="0" class="mk-a-dots"', () => `<b class="mk-sg-title"><span class="mk-sg-tt">${escHtml(x.title)}</span><span class="mk-sg-more" role="button" tabindex="0" onclick="event.stopPropagation(); event.preventDefault(); this.parentElement.classList.toggle('open')"><span>עוד</span><span>פחות</span></span></b><span role="button" tabindex="0" class="mk-a-dots"`)}</span></div>`;
+  return `<div role="button" tabindex="0" class="mk-sg${biz ? ' is-biz' : sec === 'used' ? ' is-used' : ''}" data-id="${escHtml(x.id)}" onclick="rentOpen('${artEsc(x.id)}')" onkeydown="if((event.key==='Enter'||event.key===' ')&&event.target===this){event.preventDefault();this.click();}"><span class="mk-sg-meta"><span class="mk-sg-who" role="button" tabindex="0" title="${escHtml(mktWho(x))}" aria-label="${escHtml(mktWho(x))}" onclick="event.stopPropagation(); rentOpenSeller('${artEsc(x.uid || '')}', '${artEsc(x.owner || '')}')">${authorAvHTML({ author: mktWho(x) || '?', uid: x.uid || '' })}<b>${biz ? BIZ_IC : ''}${escHtml(mktWho(x))}${isUserVerified(x.uid || '', mktWho(x), x.verified) ? verifiedSealHTML(13) : ''}</b></span><small class="mk-sg-city${mkKmTo(x.city) !== null ? ' km' : ''}">${escHtml(mkWhereTxt(x))}</small>${mkMobStatHTML(x)}<small class="mk-sg-price">${rentTypeIcon(x)}${Number(x.price) > 0 ? `${mktDiscP(x.price).toLocaleString('he-IL', { maximumFractionDigits: 2 })}&nbsp;₪${mktWasHTML(x.price)}` : mktIsProj(x) ? escHtml((PROJ_SUB[x.pd] || {}).name || PROJ_KINDS[x.pk] || 'פרויקט') : ''}${x.uid ? `<i data-sg-rate="${escHtml(x.uid)}"></i>` : ''}</small></span><span class="mk-sg-img">${rentThumb(x)}${badge}${del}${mktSoldOut(x) ? '<i class="mk-sg-out">אזל</i>' : ''}</span><span class="mk-sg-acts">${rentHoverHTML(x).replace('<span role="button" tabindex="0" class="mk-a-dots"', () => `<b class="mk-sg-title"><span class="mk-sg-tt">${escHtml(x.title)}</span><span class="mk-sg-more" role="button" tabindex="0" onclick="event.stopPropagation(); event.preventDefault(); this.parentElement.classList.toggle('open')"><span>עוד</span><span>פחות</span></span></b><span role="button" tabindex="0" class="mk-a-dots"`)}</span></div>`;
 }
 // שורת הזהב: משאירים בה בדיוק כמה כרטיסים שנכנסים בשורה אחת; העודפים חוזרים לראש הגריד הרגיל
 function mkGoldFit() {
@@ -34534,7 +34537,6 @@ function rentViewHTML() {
       <button type="button" class="rn-fbtn${rentFilterOpen() ? ' on' : ''}" onclick="rentFilterToggle()" aria-label="סינון וקטגוריות"><span class="rn-fbtn-t">סינון</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg></button>
       <button type="button" class="rn-geo${mkGeo ? ' on' : ''}" onclick="mkGeoToggle()" title="${mkGeo ? 'כיבוי המיקום' : 'הצגת המרחק מכל מודעה'}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>${mkGeo ? 'המיקום פעיל' : 'הפעלת מיקום'}</button>
       <nav class="rn-sorts" aria-label="מיון">${sorts.map(([v, t, d]) => `<button type="button" class="rn-sort${rentUI.sort === v ? ' on' : ''}" onclick="rentSet('sort', '${v}')">${sv(d)}${t}</button>`).join('')}</nav>
-      <nav class="rn-tags" aria-label="האשטאגים">${tags.map(([k, v, t]) => `<button type="button" class="rn-tag${tagOn(k, v) ? ' on' : ''}" onclick="rentTag('${k}', '${artEsc(v)}')">#${escHtml(t)}</button>`).join('')}</nav>
 
     </header>${deptCirclesHTML()}${filterBarHTML()}${subPromoBannerHTML()}
     <nav class="rn-secs">${MKT_SECS.slice(0, 1).map(x => `<button type="button" class="rn-sec${rentUI.sec === x.id ? ' on' : ''}" onclick="mktGo('${x.id}')"><span>${x.ic}</span>${x.name}<small>${secCount(x.id)}</small></button>`).join('')}</nav>
@@ -34947,7 +34949,7 @@ function rentDetailHTML(r) {
   const wiRow = (x, cur) => `<button type="button" class="mk-wi${cur ? ' cur' : ''}" ${cur ? 'aria-current="true"' : `onclick="rentOpen('${artEsc(x.id)}')"`}>${cur ? '<i class="mk-wi-play" aria-hidden="true">▶</i>' : ''}<span class="mk-wi-img">${rentThumb(x)}${wiPrice(x) ? `<em class="mk-wi-price">${wiPrice(x)}</em>` : ''}<i class="mk-wi-bar" style="width:${cur ? 100 : 18 + (x.title.length * 7) % 70}%"></i></span><span class="mk-wi-tx"><b>${escHtml(x.title)}</b><small>${escHtml(x.owner || '')}</small>${x.city ? `<small class="mk-wi-city">${escHtml(x.city)}</small>` : ''}</span></button>`;
   const sideHTML = `<header class="mk-wi-head"><div><b>עוד ב${escHtml(sec === 'used' ? 'יד 2' : sec === 'biz' ? 'עסקים' : sec === 'proj' ? 'פרויקטים' : sec === 'store' ? 'אחסון' : 'השכרה')}</b><small>${side.length} מודעות · לפי המודעה הזו</small></div><button type="button" class="mk-wi-x" onclick="rentBack()" aria-label="סגירה">✕</button></header><div class="mk-wi-list">${wiRow(r, true)}${side.map(x => wiRow(x, false)).join('')}</div>`;
   return `<div class="mk-watch"><div class="mk-wmain"><header class="mk-head"><button type="button" class="rn-back" onclick="rentBack()" aria-label="חזרה">→</button>
-      <button type="button" class="mk-seller" onclick="rentOpenSeller('${artEsc(r.uid || '')}', '${artEsc(owner)}')">${who}</button>
+      <button type="button" class="mk-seller" onclick="rentOpenSeller('${artEsc(r.uid || '')}', '${artEsc(owner)}')">${who}${isUserVerified(r.uid || '', owner, r.verified) ? verifiedSealHTML(15) : ''}</button>
       ${r.city ? `<span class="mk-city">${escHtml(r.city)}</span>` : ''}
     </header>
     <div class="mk-head-rate"><button type="button" class="mk-rate" data-seller="${escHtml(r.uid || '')}" onclick="rentRevOpen()">${rentRateHTML(0, 0)}</button></div><div class="mk-inv" data-like="${escHtml(r.shId || rentCommentsKey(r))}" data-rep="${escHtml(rentCommentsKey(r))}"${r.id === 'c1' ? ' data-demo="1"' : ''} hidden></div>
@@ -34979,7 +34981,6 @@ function rentDetailHTML(r) {
         </div>
         </div>
         </div>
-        <aside class="mk-dtags" aria-label="האשטאגים">${mkItemTags(r).map(([k, v, t]) => `<button type="button" class="rn-tag" onclick="mkTagGo('${k}', '${artEsc(v)}')">#${escHtml(t)}</button>`).join('')}</aside>
         </div>
         <div class="mk-sep"></div>
         <div class="mk-lower">
@@ -37168,7 +37169,7 @@ function storyCircleHTML(g, isSugg) {
   const cnt = g.items.length > 1 ? `<em class="st-cnt">${g.items.length}</em>` : '';
   return `<button type="button" class="st-item${isSugg ? ' st-sugg' : ''}${g.allSeen ? ' seen' : ''}" onclick="storyOpen('${artEsc(g.key)}')" title="${escHtml(g.name)} — סטורי (24 שעות)" aria-label="${escHtml(g.name)}">
     <span class="st-ring"><span class="st-av">${thumb}</span>${cnt}</span>
-    <b class="st-name">${escHtml(g.name)}</b>
+    <b class="st-name">${escHtml(g.name)}${typeof isUserVerified === 'function' && isUserVerified(g.uid || '', g.name || '') ? verifiedSealHTML(11) : ''}</b>
   </button>`;
 }
 function storiesBarHTML() {
@@ -37463,3 +37464,103 @@ document.addEventListener('keydown', e => {
   else if (e.key === 'ArrowRight') storyStep(-1);
 });
 Object.assign(window, { storyOpen, storyViewerClose, storyStep, storyPause, storyToggleFollow, storyDeleteCurrent });
+
+// ===== אירועים סביבך (כרטיסי אירועים + עיגולי משתתפים חופפים + דוגמה אחת) =====
+const EV_DEMO = [
+  {
+    id: 'ev_demo_1',
+    demo: true,
+    cat: 'מפגש קהילתי',
+    title: 'ערב סרטים ויצירה בגינה',
+    when: 'יום חמישי 20/11 · 20:00',
+    where: 'מתחם התחנה · תל אביב יפו',
+    img: 'rent/t/projector.jpg?v=2',
+    people: [{ name: 'נועה לוי' }, { name: 'אלון כהן' }, { name: 'מאיה שפירא' }]
+  }
+];
+function evJoinedMap() { try { return JSON.parse(localStorage.getItem('bw_events_join') || '{}') || {}; } catch (e) { return {}; } }
+function evUserList() { try { return JSON.parse(localStorage.getItem('bw_events_custom') || '[]') || []; } catch (e) { return []; } }
+function evCardHTML(ev) {
+  const joined = !!evJoinedMap()[ev.id];
+  const u = auth.currentUser, reg = u && !u.isAnonymous;
+  const myName = reg ? String((typeof liveChatUserName === 'function' && liveChatUserName()) || u.displayName || 'אני') : 'אני';
+  const basePeople = Array.isArray(ev.people) ? ev.people.slice() : [];
+  if (joined) basePeople.unshift({ name: myName, uid: reg ? u.uid : '' });
+  const shown = basePeople.slice(0, 3);
+  const stack = shown.map(p => `<span class="ev-av">${typeof authorAvHTML === 'function' ? authorAvHTML({ author: p.name || 'משתתף', uid: p.uid || '' }) : `<span class="au-av">${escHtml((p.name || 'מ').charAt(0))}</span>`}</span>`).join('');
+  const total = basePeople.length;
+  return `<article class="ev-card" data-ev-id="${escHtml(ev.id)}">
+    <div class="ev-img"><img src="${escHtml(ev.img || 'rent/t/projector.jpg?v=2')}" alt="${escHtml(ev.title)}" loading="lazy" decoding="async">${ev.demo ? '<span class="ev-demo-tag">דוגמה</span>' : ''}</div>
+    <div class="ev-body">
+      <span class="ev-cat">${escHtml(ev.cat || 'אירוע')}</span>
+      <h3 class="ev-title">${escHtml(ev.title)}</h3>
+      <p class="ev-meta">${escHtml(ev.when)}</p>
+      <p class="ev-meta ev-where">${escHtml(ev.where)}</p>
+      <div class="ev-who">
+        <span class="ev-stack">${stack}</span>
+        <span class="ev-cnt">${total.toLocaleString('he-IL')} משתתפים</span>
+      </div>
+      <button type="button" class="ev-btn${joined ? ' on' : ''}" onclick="evToggleJoin('${artEsc(ev.id)}')">${joined ? 'משתתף/ת ✓' : 'השתתפות באירוע'}</button>
+    </div>
+  </article>`;
+}
+function eventsSectionHTML() {
+  const list = evUserList().concat(EV_DEMO);
+  return `<section class="lib-row ev-sec" aria-label="אירועים סביבך">
+    <header>
+      <h2>אירועים סביבך</h2>
+      <button type="button" class="lib-all ev-add-btn" onclick="evAddOpen()">+ הוספת אירוע</button>
+    </header>
+    <div class="ev-track">${list.map(evCardHTML).join('')}</div>
+  </section>`;
+}
+function evRefreshDOM() {
+  const cur = document.querySelector('.ev-sec');
+  if (!cur) return;
+  const tmp = document.createElement('div');
+  tmp.innerHTML = eventsSectionHTML();
+  if (tmp.firstElementChild) {
+    cur.replaceWith(tmp.firstElementChild);
+    if (typeof avatarHydrate === 'function') avatarHydrate(document.querySelector('.ev-sec'));
+  }
+}
+function evToggleJoin(id) {
+  const m = evJoinedMap();
+  const on = !m[id];
+  if (on) m[id] = true; else delete m[id];
+  try { localStorage.setItem('bw_events_join', JSON.stringify(m)); } catch (e) {}
+  evRefreshDOM();
+  if (typeof showCopyToast === 'function') showCopyToast(on ? 'נרשמת להשתתפות באירוע' : 'בוטלה ההשתתפות באירוע');
+}
+function evAddOpen() {
+  let m = document.getElementById('ev-add-modal');
+  if (m) m.remove();
+  m = document.createElement('div');
+  m.id = 'ev-add-modal'; m.className = 'st-up-modal';
+  m.innerHTML = `<div class="st-up-card" role="dialog" aria-modal="true" aria-label="הוספת אירוע">
+    <header class="st-up-head"><b>אירוע חדש סביבך</b><button type="button" class="st-up-x" onclick="document.getElementById('ev-add-modal')?.remove()" aria-label="סגירה">✕</button></header>
+    <input id="ev-in-title" class="st-up-cap" type="text" maxlength="70" placeholder="שם האירוע (למשל: מפגש שכונתי)">
+    <input id="ev-in-cat" class="st-up-cap" type="text" maxlength="30" placeholder="סוג האירוע (למשל: הופעה / סדנה / ספורט)">
+    <input id="ev-in-when" class="st-up-cap" type="text" maxlength="40" placeholder="מתי? (למשל: יום שישי 21/11 · 19:30)">
+    <input id="ev-in-where" class="st-up-cap" type="text" maxlength="50" placeholder="איפה? (למשל: פארק הירקון · תל אביב)">
+    <button type="button" class="st-up-go" onclick="evAddSave()">פרסם אירוע</button>
+  </div>`;
+  m.addEventListener('click', e => { if (e.target === m) m.remove(); });
+  document.body.appendChild(m);
+}
+function evAddSave() {
+  const title = ((document.getElementById('ev-in-title') || {}).value || '').trim();
+  if (!title) { if (typeof showCopyToast === 'function') showCopyToast('כתבו שם לאירוע'); return; }
+  const cat = ((document.getElementById('ev-in-cat') || {}).value || '').trim() || 'אירוע קהילתי';
+  const when = ((document.getElementById('ev-in-when') || {}).value || '').trim() || 'השבוע · 20:00';
+  const where = ((document.getElementById('ev-in-where') || {}).value || '').trim() || 'באזור שלך';
+  const u = auth.currentUser, reg = u && !u.isAnonymous;
+  const myName = reg ? String((typeof liveChatUserName === 'function' && liveChatUserName()) || u.displayName || 'אני') : 'מארגן/ת';
+  const list = evUserList();
+  list.unshift({ id: 'ev_' + Date.now(), demo: false, cat, title, when, where, img: 'rent/t/camera.jpg?v=2', people: [{ name: myName, uid: reg ? u.uid : '' }] });
+  try { localStorage.setItem('bw_events_custom', JSON.stringify(list.slice(0, 10))); } catch (e) {}
+  document.getElementById('ev-add-modal')?.remove();
+  evRefreshDOM();
+  if (typeof showCopyToast === 'function') showCopyToast('האירוע פורסם!');
+}
+Object.assign(window, { eventsSectionHTML, evToggleJoin, evAddOpen, evAddSave });
