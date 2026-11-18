@@ -248,8 +248,8 @@ BODY .fd-guest { background: #f4faf8 !important; border-color: #dcd3ed !importan
 BODY .fd-guest button { color: #7c3aed !important; }
 
 BODY .fd-sec-h h2 small { background: #eae5f4 !important; color: #7c3aed !important; }
-BODY .mk-sg .mk-sg-acts .mk-act2 > .mk-a-buy.in-cart { color: #fff !important; background: #8b5cf6 !important; border-color: #8b5cf6 !important; }
-BODY .mk-sg .mk-sg-acts .mk-act2 > .mk-a-buy.in-cart svg { stroke: #fff !important; color: #fff !important; }
+BODY .mk-sg .mk-sg-acts .mk-act2 > .mk-a-buy.in-cart { color: #111111 !important; background: transparent !important; border-color: transparent !important; }
+BODY .mk-sg .mk-sg-acts .mk-act2 > .mk-a-buy.in-cart svg { stroke: #111111 !important; color: #111111 !important; fill: #111111 !important; }
 BODY .ticket-pill { background: #fffaf0 !important; border-color: #f0dfb4 !important; }
 BODY .ticket-pill b, BODY .ticket-big b { color: #a8740c !important; }
 BODY .ticket-how li { background: #fffaf0 !important; border-color: #f0dfb4 !important; }
@@ -317,8 +317,9 @@ BODY #m-top .mt-count { color: #7c3aed !important; }
 BODY #m-top .mt-me.guest span { color: #7c3aed !important; }
 
 BODY s.mk-was { color: #8a8a8a !important; text-decoration: line-through !important; }
-BODY .mk-sg .mk-sg-acts .mk-act2 > .mk-a-like.on { color: #e0245e !important; }
-BODY .mk-sg .mk-sg-acts .mk-act2 > .mk-a-rep.on { color: #17a34a !important; }
+BODY .mk-sg .mk-sg-acts .mk-act2 > .mk-a-like.on { color: #111111 !important; }
+BODY .mk-sg .mk-sg-acts .mk-act2 > .mk-a-like.on svg { fill: #111111 !important; }
+BODY .mk-sg .mk-sg-acts .mk-act2 > .mk-a-rep.on { color: #111111 !important; }
 
 BODY .apv-page .apv-ok, BODY .apv-page .apv-all { background: #16a34a !important; color: #ffffff !important; }
 BODY #m-top .mt-tabs .mt-apv .mt-apv-n { background: #e0245e !important; color: #ffffff !important; }
