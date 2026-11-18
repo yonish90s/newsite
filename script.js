@@ -34756,6 +34756,30 @@ function rentOpen(id) {
   // מוצר שהתמונות המלאות שלו נשמרות בנפרד: מציגים את הקטנה מיד ומחליפים כשהמלאה מגיעה (אלא אם מתנגן סרטון)
   if (r.shId && r.raw && r.raw._media && !MEDIA[r.shId]) mediaEnsure(r.shId).then(() => { if (rentUI.open === id && !r.hv) rentRender(); });
 }
+// "משתמשים מעורבים": עיגולי פרופיל חופפים של מי שעשה לייק או שיתף, ומספר. לחיצה פותחת את הרשימה
+async function mkInvFill(el) {
+  if (!el || el.dataset.done) return; el.dataset.done = '1';
+  const likeId = el.dataset.like, rk = el.dataset.rep, people = {};
+  try { const v = (await get(ref(db, `website/item_likers/${likeId}`))).val() || {}; Object.entries(v).forEach(([uid, x]) => { if (x && typeof x === 'object') people[uid] = { name: x.name || 'משתמש', at: x.at || 0, uid }; }); } catch (e) {}
+  try { subscribeReposts(); Object.entries((repostsData || {})[rk] || {}).forEach(([uid, x]) => { if (!people[uid]) people[uid] = { name: (x && x.name) || 'משתמש', at: (x && x.at) || 0, uid }; }); } catch (e) {}
+  const list = Object.values(people).sort((a, b) => b.at - a.at);
+  const n = Math.max(list.length, (Number(itemLikesData[likeId]) || 0) + (repostCount(rk) || 0));
+  if (!n) return;
+  window.__mkInv = window.__mkInv || {}; window.__mkInv[likeId] = people;
+  el.innerHTML = `<button type="button" class="mk-inv-btn" onclick="mkInvOpen('${artEsc(likeId)}')"><span class="mk-inv-stack">${list.slice(0, 3).map(p => `<span class="mk-inv-av">${authorAvHTML({ authorId: p.uid, author: p.name })}</span>`).join('') || '<span class="mk-inv-av mk-inv-ph">♥</span>'}</span><span class="mk-inv-tx"><b>${n.toLocaleString('he-IL')}</b> ${n === 1 ? 'משתמש מעורב' : 'משתמשים מעורבים'}${list[0] ? ` · ${escHtml(list[0].name)}${n > 1 ? ' ועוד' : ''}` : ''}</span></button>`;
+  el.hidden = false;
+  try { avatarHydrate(el); } catch (e) {}
+}
+function mkInvOpen(likeId) {
+  const map = (window.__mkInv || {})[likeId] || {};
+  openMSheet('משתמשים מעורבים', typeof peopleListHTML === 'function' ? peopleListHTML(map, 'עדיין אין כאן שמות') : '');
+  try { avatarHydrate(document.getElementById('m-sheet')); } catch (e) {}
+}
+window.mkInvOpen = mkInvOpen;
+(function mkInvWatch() {
+  let t = 0;
+  try { new MutationObserver(() => { if (t) return; t = setTimeout(() => { t = 0; document.querySelectorAll('.mk-inv:not([data-done])').forEach(mkInvFill); }, 120); }).observe(document.body, { childList: true, subtree: true }); } catch (e) {}
+})();
 function rentBack() { if (history.state && (history.state.rent || history.state.rentSeller)) { history.back(); return; } rentUI.open = null; rentUI.seller = null; rentRender(); }
 // כל המודעות של מוכר אחד (גם מוכר דוגמה בלי חשבון — לפי השם)
 function mktSellerItems(uid, name) { return mktAll().filter(r => uid ? r.uid === uid : (!r.uid && r.owner === name)); }
@@ -34876,7 +34900,7 @@ function rentDetailHTML(r) {
       <button type="button" class="mk-seller" onclick="rentOpenSeller('${artEsc(r.uid || '')}', '${artEsc(owner)}')">${who}</button>
       ${r.city ? `<span class="mk-city">${escHtml(r.city)}</span>` : ''}
     </header>
-    <div class="mk-head-rate"><button type="button" class="mk-rate" data-seller="${escHtml(r.uid || '')}" onclick="rentRevOpen()">${rentRateHTML(0, 0)}</button></div>
+    <div class="mk-head-rate"><button type="button" class="mk-rate" data-seller="${escHtml(r.uid || '')}" onclick="rentRevOpen()">${rentRateHTML(0, 0)}</button></div><div class="mk-inv" data-like="${escHtml(r.shId || rentCommentsKey(r))}" data-rep="${escHtml(rentCommentsKey(r))}" hidden></div>
     <div class="mp mk-pg">
       <div class="rn-det-gal mp-gal">
         <div class="rn-det-img mp-img"${r.hv ? '' : ' onclick="mkZoomOpen(this)"'}>${rentThumb(full && full.length ? { ...r, img: full[0] } : r, true)}${r.hv ? '' : '<button type="button" class="mk-zoom-btn" onclick="event.stopPropagation(); mkZoomOpen(this.parentElement)" aria-label="הגדלת התמונה" title="הגדלה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V5a1 1 0 0 1 1-1h4M15 4h4a1 1 0 0 1 1 1v4M20 15v4a1 1 0 0 1-1 1h-4M9 20H5a1 1 0 0 1-1-1v-4"/></svg></button>'}</div>
