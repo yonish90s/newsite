@@ -452,3 +452,4 @@ BODY .sub-promo-card { display: none !important; }
 BODY .lib-page .lib-bar { display: none !important; }
 BODY .lib-page .lib-welcome :is(.lib-wel-logo, .lib-wel-t, .lib-wel-s, .lib-wi, .lib-dots) { display: none !important; }
 BODY .lib-page .lib-arrows button:not(.lib-all) { display: none !important; }
+BODY #buy-dock { display: none !important; }
