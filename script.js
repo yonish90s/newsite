@@ -25143,11 +25143,13 @@ function siteSearchEnsureDom() {
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
     </button>
     <div class="ss-field">
+      <svg class="ss-mag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
       <input id="site-search-input" type="search" placeholder="חיפוש" autocomplete="off" enterkeyhint="search" aria-label="חיפוש באתר"
         oninput="siteSearchInput(this.value)" onkeydown="if(event.key==='Escape'){closeSiteSearch()} else if(event.key==='Enter'){event.preventDefault(); siteSearchOpenFirst()}">
       <button type="button" class="ss-clear" onclick="siteSearchClear()" aria-label="ניקוי">✕</button>
     </div>
-    <button type="button" class="ss-fbtn" onclick="ssxFilterOpen()" aria-label="סינון" title="סינון"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg></button>`;
+    <button type="button" class="ss-fbtn" onclick="ssxFilterOpen()" aria-label="סינון" title="סינון"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg></button>
+    <button type="button" class="ss-cancel" onclick="closeSiteSearch()">ביטול</button>`;
   header.appendChild(bar);
   const res = document.createElement('div');
   res.id = 'site-search-results';
@@ -25331,7 +25333,7 @@ function siteSearchRender(raw) {
   if (clr) clr.style.visibility = q ? 'visible' : 'hidden';
   if (!q) {
     siteSearchLast = [];
-    box.innerHTML = `<div class="ss-panel">${siteSearchScopeHTML()}${ssRecentHTML() || '<div class="ss-hint">חפשו אנשים, גלריות, פורומים, סיפורים, קהילות וחדשות</div>'}</div>`;
+    box.innerHTML = ssxEmptyHTML();
     if (typeof avatarHydrate === 'function') avatarHydrate(box);
     return;
   }
@@ -25421,6 +25423,20 @@ function ssxHTML(q, raw) {
     ${nf ? `<div class="ssx-active">${ssxF.from !== 'any' ? `<span>${SSX_FROM[ssxF.from]}</span>` : ''}${ssxF.date !== 'any' ? `<span>${SSX_DATE[ssxF.date]}</span>` : ''}${ssxF.near ? '<span>קרוב אליי</span>' : ''}<button type="button" onclick="ssxReset(true)">איפוס</button></div>` : ''}
     <div class="ssx-body">${body}</div></div>`;
 }
+// מסך פתיחת החיפוש (כמו ב-X): "חיפושים אחרונים" עם ✕, ועיגולים גדולים — אנשים (טבעת צבעונית, שם ו-@) ומילים שחיפשת
+function ssxEmptyHTML() {
+  const rec = ssRecentGet(), ppl = rec.filter(x => x.uid).slice(0, 10);
+  const words = [...new Set(rec.filter(x => x.q).map(x => x.q).concat(typeof srchRecent === 'function' ? srchRecent() : []))].slice(0, 10);
+  const all = typeof mktAll === 'function' ? mktAll() : [];
+  const thumb = q => { const r = all.find(x => x.img && String(x.title || '').toLowerCase().includes(String(q).toLowerCase())); return r ? rentThumb(r) : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>'; };
+  const ver = window.verifiedUsersMap || {};
+  const person = u => `<button type="button" class="ssx-rc" onclick="ssOpenUser('${artEsc(u.uid)}','${artEsc(u.name || '')}')"><span class="ssx-rci ring">${authorAvHTML({ authorId: u.uid, author: u.name || '?' })}</span><b>${escHtml(u.name || '')}${ver[u.uid] ? '<i class="ssx-ver">✓</i>' : ''}</b><small dir="ltr">@${escHtml(typeof profileHandle === 'function' ? profileHandle(u.name) : '')}</small></button>`;
+  const word = q => `<button type="button" class="ssx-rc" onclick="ssUseQuery('${artEsc(q)}')"><span class="ssx-rci ring q">${thumb(q)}</span><b>${escHtml(q)}</b><small>חיפוש</small></button>`;
+  const items = ppl.map(person).join('') + words.map(word).join('');
+  return `<div class="ss-panel ssx ssx-empty">${items ? `<div class="ssx-rh"><b>חיפושים אחרונים</b><button type="button" class="ssx-rclear" onclick="ssxRecentClearAll()" aria-label="ניקוי החיפושים האחרונים">✕</button></div><div class="ssx-rrow">${items}</div>` : '<div class="ss-hint">חפשו אנשים, מודעות, פורומים וחדשות</div>'}</div>`;
+}
+function ssxRecentClearAll() { ssRecentSet([]); try { localStorage.removeItem(SRCH_KEY); } catch (e) {} ssxRerender(); }
+window.ssxRecentClearAll = ssxRecentClearAll;
 function ssxRerender() { const inp = document.getElementById('site-search-input'); siteSearchRender(inp ? inp.value : ''); }
 function ssxSetTab(t) { ssxTab = t; ssxRerender(); const b = document.getElementById('site-search-results'); if (b) b.scrollTop = 0; }
 // חלון הסינון מלמטה (כמו ב-X): מאת · תאריך פרסום · קרוב אליי · איפוס / חיפוש
