@@ -33909,7 +33909,7 @@ function libHTML() {
   return `<header class="lib-head"><span class="lib-brand"><img src="./logo.png" alt=""><b>ספרייה</b></span><button type="button" class="lib-cta" onclick="mkPubOpen()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>פרסום מודעה</button></header>
     ${filtered ? '' : heroHTML}${libBarHTML(depts)}
     ${filtered ? `<section class="lib-row lib-res"><header><h2>${all.length} תוצאות</h2></header>${all.length ? `<div class="lib-grid">${all.slice().sort(LIB_SORTS[libF.sort].f).map(r => libCardHTML(r)).join('')}</div>` : '<div class="lib-empty">אין מודעות שמתאימות לסינון הזה</div>'}</section>` : `
-    ${top.length ? libRowHTML('lib-top', 'טרנדי <span>עכשיו</span> — 10 המובילות בישראל היום', topHTML) : ''}
+    ${top.length ? libRowHTML('lib-top', 'המובילים', topHTML) : ''}
     ${fresh.length ? libRowHTML('lib-new', 'נוספו לאחרונה', fresh.map(r => libCardHTML(r)).join('')) : ''}
     ${vids.length ? libRowHTML('lib-vid', 'מודעות עם סרטון', vids.map(r => libCardHTML(r)).join('')) : ''}
     ${biz.length ? libRowHTML('lib-biz', 'עסקים מובילים', biz.map(r => libCardHTML(r)).join('')) : ''}`}`;
