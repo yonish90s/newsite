@@ -449,3 +449,4 @@ BODY .ss-field input { background: #f2f2f3 !important; }
 
 BODY .dc-row { display: none !important; }
 BODY .sub-promo-card { display: none !important; }
+BODY .lib-page .lib-bar { display: none !important; }
