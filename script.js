@@ -914,16 +914,21 @@ function pageRefresh() {
   const draft = mainContent.querySelector('.mk-rev-text');
   if (draft && draft.value.trim()) return;   // גולש באמצע כתיבת ביקורת: לא מציירים מחדש
   if (HOME_MARKET && mainContent.querySelector('.home-feed-page .rent-page')) rentRender();
+  else if (HOME_LIBRARY && mainContent.querySelector('.lib-page') && typeof libRefresh === 'function') libRefresh();
   else renderPage();
 }
 
 // פונקציית אתחול מהירה (Instant 0ms First Paint)
 async function initSite() {
   try {
-    const savedPages = await localforage.getItem('mySitePages_v3');
+    const [savedPages, savedBackgrounds] = await Promise.race([
+      Promise.all([
+        localforage.getItem('mySitePages_v3').catch(() => null),
+        localforage.getItem('mySiteBackgrounds_v3').catch(() => null)
+      ]),
+      new Promise(res => setTimeout(() => res([null, null]), 120))
+    ]);
     if (savedPages && savedPages.length) pages = savedPages;
-
-    const savedBackgrounds = await localforage.getItem('mySiteBackgrounds_v3');
     if (savedBackgrounds) siteBackgrounds = savedBackgrounds;
     applyBackgrounds();
   } catch (localErr) {}
@@ -945,9 +950,9 @@ async function initSite() {
   updateFABsVisibility();
   if (typeof trackVisit === 'function') { try { trackVisit(); } catch (e) {} }
 
-  // השוק בעמוד הראשי מוכן מיד: לא מחכים לנתונים מאחורי מסך הטעינה (קישור ישיר לפריט כן מחכה להם)
+  // השוק / הספרייה בעמוד הראשי מוכנים מיד: לא מחכים לנתונים מאחורי מסך הטעינה (קישור ישיר לפריט כן מחכה להם)
   const bootActive = activePageId;
-  if (HOME_MARKET && !window.__deepLinkOpening && typeof window.hidePreloader === 'function') window.hidePreloader();
+  if ((HOME_MARKET || HOME_LIBRARY) && !window.__deepLinkOpening && typeof window.hidePreloader === 'function') window.hidePreloader();
 
   // סנכרון ברקע מ-Firebase DB
   try {
@@ -959,7 +964,12 @@ async function initSite() {
     ]);
 
     if (Object.keys(data).length) {
-      if (data.pages && Array.isArray(data.pages)) { pages = data.pages; mediaHydratePages(pages); applyItemLikesToPages(pages, data.item_likes); }
+      if (data.pages && Array.isArray(data.pages)) {
+        window.__lastRawPages = JSON.stringify(data.pages);
+        pages = data.pages;
+        mediaHydratePages(pages);
+        applyItemLikesToPages(pages, data.item_likes);
+      }
       if (data.topNavPages && Array.isArray(data.topNavPages)) topNavPages = data.topNavPages;
       if (data.siteBackgrounds) siteBackgrounds = data.siteBackgrounds;
       if (data.promotedSites) {
@@ -27377,15 +27387,15 @@ function fitOneLine(el) {
     el.style.fontSize = fs + 'px';
   }
 }
-let _fitTimer = null;
+let _fitTimer = 0;
 function fitOneLineAll() {
-  clearTimeout(_fitTimer);
-  _fitTimer = setTimeout(() => document.querySelectorAll(FIT_ONE_LINE_SEL).forEach(fitOneLine), 60);
+  if (_fitTimer) return;
+  _fitTimer = setTimeout(() => { _fitTimer = 0; document.querySelectorAll(FIT_ONE_LINE_SEL).forEach(fitOneLine); }, 100);
 }
-new MutationObserver(muts => {
-  if (muts.some(m => [...m.addedNodes].some(n => n.nodeType === 1 && (n.matches(FIT_ONE_LINE_SEL) || n.querySelector(FIT_ONE_LINE_SEL))))) fitOneLineAll();
+new MutationObserver(() => {
+  if (!_fitTimer) fitOneLineAll();
 }).observe(document.body, { childList: true, subtree: true });
-window.addEventListener('resize', fitOneLineAll);
+window.addEventListener('resize', fitOneLineAll, { passive: true });
 fitOneLineAll();
 
 
@@ -28974,11 +28984,16 @@ let pgGridRaf = 0;
 window.addEventListener('scroll', () => { if (pgGridRaf) return; pgGridRaf = requestAnimationFrame(() => { pgGridRaf = 0; pgGridOnScroll(); }); }, { passive: true });
 window.addEventListener('resize', pgGridApply);
 (function pgGridWatch() {
-  let lastRow = null;
+  let lastRow = null, q = 0;
   const obs = new MutationObserver(() => {
-    const row = document.querySelector('.photos-page[data-section="photos"] #photo-row-1');
-    if (row !== lastRow) { lastRow = row; pgLimit = 4; }
-    pgGridApply();
+    if (q) return;
+    q = requestAnimationFrame(() => {
+      q = 0;
+      const row = document.querySelector('.photos-page[data-section="photos"] #photo-row-1');
+      if (!row) { lastRow = null; return; }
+      if (row !== lastRow) { lastRow = row; pgLimit = 4; }
+      pgGridApply();
+    });
   });
   const start = () => obs.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'data-art-match'] });
   if (document.body) start(); else document.addEventListener('DOMContentLoaded', start);
@@ -29438,7 +29453,8 @@ Object.assign(window, { hdrBack });
 document.addEventListener('pointerdown', e => {
   const b = e.target.closest && e.target.closest('button, .pti, .art-telegram-btn, .mtab, [role="button"]');
   if (!b) return;
-  b.classList.remove('tap-pop'); void b.offsetWidth; b.classList.add('tap-pop');
+  if (b.classList.contains('tap-pop')) { b.classList.remove('tap-pop'); void b.offsetWidth; }
+  b.classList.add('tap-pop');
   setTimeout(() => b.classList.remove('tap-pop'), 260);
 }, { passive: true });
 
@@ -30495,14 +30511,18 @@ function likeCountsPaint(likes) {
     if (reduce) return;
     const mc = document.getElementById('mainContent'); if (!mc) return;
     const first = mc.firstElementChild;
-    if (first && first !== lastPage) { lastPage = first; first.classList.remove('mc-in'); void first.offsetWidth; first.classList.add('mc-in'); }
+    if (first && first !== lastPage) {
+      lastPage = first;
+      if (first.classList.contains('mc-in')) { first.classList.remove('mc-in'); void first.offsetWidth; }
+      first.classList.add('mc-in');
+    }
   };
   let t = 0;
   const run = () => { t = 0; scan(); pageFade(); };
   const start = () => {
     document.documentElement.classList.add('img-fade');
     run();
-    new MutationObserver(() => { if (!t) t = setTimeout(run, 0); }).observe(document.body, { childList: true, subtree: true });
+    new MutationObserver(() => { if (!t) t = requestAnimationFrame(run); }).observe(document.body, { childList: true, subtree: true });
   };
   if (document.body) start(); else document.addEventListener('DOMContentLoaded', start);
 })();
@@ -30661,6 +30681,7 @@ window.repostersToggle = repostersToggle;
   let q = 0;
   let late = 0;
   new MutationObserver(() => {
+    if (!mq.matches) return;
     clearTimeout(late); late = setTimeout(scan, 450);   // נתוני הקומיקס מגיעים רגע אחרי הציור
     if (q) return; q = requestAnimationFrame(() => { q = 0; scan(); });
   }).observe(document.body, { childList: true, subtree: true });
@@ -31011,6 +31032,7 @@ function mTabsActive() {
     const on = top.querySelector('.hx-tab.on');
     if (on) try { on.scrollIntoView({ block: 'nearest', inline: 'center' }); } catch (e) {}
   }
+  window.__mTabsSync = sync;
   const go = () => { if (!q) q = setTimeout(sync, 0); };
   const start = () => {
     const mc = typeof mainContent !== 'undefined' && mainContent;
@@ -32750,7 +32772,7 @@ function dmRichHTML(text) {
     });
   };
   let q = 0;
-  new MutationObserver(() => { clearTimeout(q); q = setTimeout(run, 120); }).observe(document.body, { childList: true, subtree: true });
+  new MutationObserver(() => { if (!document.documentElement.classList.contains('adult-blur')) return; clearTimeout(q); q = setTimeout(run, 120); }).observe(document.body, { childList: true, subtree: true });
   run();
 })();
 window.dmRichHTML = (t) => dmRichHTML(t);
@@ -33318,11 +33340,15 @@ function mktAutoTags(r) {
   return tags;
 }
 window.mktAutoDept = mktAutoDept; window.mktAutoTags = mktAutoTags;
+let _usedCache = { src: null, at: 0, out: null };
 function usedAll() {
+  const pg = (typeof pages !== 'undefined' && Array.isArray(pages)) ? pages.find(x => x && x.id === 'page-secondhand-main') : null;
+  const src = pg ? pg.content || '' : '';
+  const now = Date.now();
+  if (_usedCache.out && _usedCache.src === src && now - _usedCache.at < 30000) return _usedCache.out;
   let raw = [];
   try {
-    const pg = (typeof pages !== 'undefined' && Array.isArray(pages)) ? pages.find(x => x && x.id === 'page-secondhand-main') : null;
-    const m = pg && (pg.content || '').match(/data-photos-json="([^"]*)"/);
+    const m = src.match(/data-photos-json="([^"]*)"/);
     raw = (m ? (JSON.parse(decodeURIComponent(m[1])) || []) : []).filter(x => x && x.id && x.title && !x.isAdult && x.approved !== false && !x.adminOnly && !mktExpired(x.createdAt)); } catch (e) {}
   const real = raw.map(x => ({ id: 'sh_' + x.id, shId: x.id, kind: 'used', offer: x.offerType || x.category || 'מכירה', title: x.title, price: parseFloat(String(x.price || '').replace(/[^\d.]/g, '')) || 0, priceTxt: x.price || '',
     unitTxt: x.priceUnit || '', city: x.region || '', owner: x.author || '', uid: x.authorId || '', t: Number(x.createdAt) || 0, stock: Number.isFinite(Number(x.stock)) && x.stock !== null && x.stock !== '' ? Number(x.stock) : null, img: x.image || (Array.isArray(x.images) && x.images[0]) || '',
@@ -33337,6 +33363,7 @@ function usedAll() {
     r.dept = MKT_DEPT[saved] ? saved : mktIsBiz(r) && mktAutoDept(r.title, r.desc) === 'other' ? 'services' : mktAutoDept(r.title, (r.desc || '') + ' ' + (r.bizName || ''));
     r.htags = Array.isArray(r.raw && r.raw.hashtags) && r.raw.hashtags.length ? r.raw.hashtags.filter(t => typeof t === 'string').slice(0, 7) : mktAutoTags(r);
   });
+  _usedCache = { src, at: now, out };
   return out;
 }
 // מודעה של גולש מוסרת אחרי חודש: נעלמת מיד לכולם, ונמחקת לגמרי כשהמנהל נכנס לאתר
@@ -33959,6 +33986,7 @@ function libOpen() {
   try { rentSubscribe(); } catch (e) {}
   window.__detailOpen = false;
   mainContent.innerHTML = `<div class="lib-page"><div class="lib-main">${libHTML()}</div></div>`;
+  if (typeof window.__mTabsSync === 'function') { try { window.__mTabsSync(); } catch (e) {} }
   clearInterval(libTimer); libTimer = setInterval(() => libHero(1), 6500);
   try { window.scrollTo(0, 0); } catch (e) {}
 }
@@ -35614,7 +35642,7 @@ Object.assign(window, { investOpen, investTab, investAmt, investPct, investSend 
     if ((e.key === 'Enter' || e.key === ' ') && e.target.classList && e.target.classList.contains('uni-tap')) { e.preventDefault(); const w = e.target.closest(WRAPS); if (w) reveal(w); }
   }, true);
   let q = 0;
-  new MutationObserver(() => { clearTimeout(q); q = setTimeout(run, 150); }).observe(document.body, { childList: true, subtree: true });
+  new MutationObserver(() => { if (!on()) return; clearTimeout(q); q = setTimeout(run, 150); }).observe(document.body, { childList: true, subtree: true });
   new MutationObserver(run).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
   window.addEventListener('hashchange', () => setTimeout(run, 60));
   run();

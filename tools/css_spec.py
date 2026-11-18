@@ -9,7 +9,7 @@
 import re, sys
 
 FILES = ['style.min.css', 'dark.min.css', 'mono.min.css']
-GAP = 8
+GAP = 3
 CHAIN = re.compile(r':not\(((?:#_)+)\)')
 
 

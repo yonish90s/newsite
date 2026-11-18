@@ -6,10 +6,13 @@ import glob, re, subprocess, sys
 
 DB = 'https://newsite-f76e2-default-rtdb.firebaseio.com/website/%s.json'
 try:
-    stored = ''.join(subprocess.check_output(['curl', '-sf', '--max-time', '60', DB % k]).decode() for k in ['pages', 'navHTML', 'topNavPages'])
-except Exception as e:
-    print('css_purge: skipped,', e)
-    sys.exit(0)
+    stored = ''.join(subprocess.check_output(['curl', '-sf', '--max-time', '15', DB % k]).decode() for k in ['pages', 'navHTML', 'topNavPages'])
+except Exception:
+    try:
+        stored = subprocess.check_output(['git', 'show', '0ac720a:style.min.css']).decode()
+    except Exception as e:
+        print('css_purge: skipped,', e)
+        sys.exit(0)
 code = stored + ''.join(open(f, encoding='utf8').read() for f in ['script.js', 'a11y.js'] + glob.glob('*.html') + glob.glob('api/*.js'))
 words = set(re.findall(r'[A-Za-z_][\w-]*', code))
 prefixes = tuple(set(re.findall(r'''[\s'"`.]([A-Za-z][\w-]*)(?:\$\{|['"`]\s*\+)''', code)))

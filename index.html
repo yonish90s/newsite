@@ -37,20 +37,23 @@
   <meta name="theme-color" content="#111111">
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="apple-touch-icon" href="/icon-192.png?v=3">
-  <script>if ('serviceWorker' in navigator) window.addEventListener('load', function () { navigator.serviceWorker.register('/sw.js').catch(function () {}); });</script>
+  <script>if ('serviceWorker' in navigator) window.addEventListener('load', function () { navigator.serviceWorker.register('/sw.js?v=2').catch(function () {}); });</script>
   <link rel="icon" type="image/svg+xml" href="/icon-site.svg?v=2">
   <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://newsite-f76e2-default-rtdb.firebaseio.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="modulepreload" href="./script.min.js?v=2225">
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js" crossorigin>
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js" crossorigin>
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js" crossorigin>
+  <link rel="modulepreload" href="./script.min.js?v=2226">
   <!-- ספריית interact.js לגרירה ושינוי גודל (נטענת בדחייה למניעת עיכוב) -->
   <script defer src="https://cdn.jsdelivr.net/npm/interactjs@1.10.28/dist/interact.min.js"></script>
   <!-- ספריית localforage לשמירת תמונות -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
   <!-- קישור לקובץ העיצוב החיצוני (עם פרמטר למניעת שמירה במטמון) -->
-  <link rel="stylesheet" href="./style.min.css?v=2419">
-  <link rel="stylesheet" id="mono-css" href="./mono.min.css?v=284">
-  <link rel="stylesheet" id="dark-css" data-href="./dark.min.css?v=612" media="not all">
+  <link rel="stylesheet" href="./style.min.css?v=2420">
+  <link rel="stylesheet" id="mono-css" href="./mono.min.css?v=285">
+  <link rel="stylesheet" id="dark-css" data-href="./dark.min.css?v=613" media="not all">
   <script>
     // קישור ישיר לפריט (#p/…, #s/…, #n/…) — מסמנים מיד, כדי שהכתובת לא תימחק לפני שהפריט נפתח
     window.__deepLinkOpening = /^#[psn]\//.test(location.hash || '');
@@ -67,7 +70,7 @@
 </head>
 <body class="light-mode">
   <!-- שער אישור גיל (Age Gate Overlay) -->
-  <div id="age-gate-overlay" style="display: flex; position: fixed; inset: 0; z-index: 1000000; background-color: #f4f4f4; font-family: system-ui, -apple-system, sans-serif; align-items: center; justify-content: center; overflow-y: auto; direction: rtl; padding: 20px;">
+  <div id="age-gate-overlay" style="display: none; position: fixed; inset: 0; z-index: 1000000; background-color: #f4f4f4; font-family: system-ui, -apple-system, sans-serif; align-items: center; justify-content: center; overflow-y: auto; direction: rtl; padding: 20px;">
     <style>
       #age-gate-overlay {
         --gate-bg: #f4f4f4;
@@ -140,7 +143,8 @@
     <script>
       (function() {
         if (sessionStorage.getItem('age_verified') === 'true') {
-          document.write('<style>#age-gate-overlay { display: none !important; }</style>');
+          var ag = document.getElementById('age-gate-overlay');
+          if (ag) ag.style.display = 'none';
         } else {
           document.documentElement.classList.add('age-not-verified');
         }
@@ -381,7 +385,7 @@
   position: fixed; inset: 0; z-index: 9999999;
   display: grid; place-items: center;
   background: #ffffff;
-  transition: opacity 0.4s ease, visibility 0.4s ease;
+  transition: opacity 0.15s ease, visibility 0.15s ease;
 }
 html.theme-dark #website-preloader { background: #111111; }
 .pl-card { background: none !important; box-shadow: none !important; border: 0 !important; display: flex; flex-direction: column; align-items: center; gap: 18px; animation: pl-in .5s cubic-bezier(.2, .8, .2, 1) both; }
@@ -407,7 +411,7 @@ html.theme-dark .pl-bar { background: #2a2f37; }
     if (preloader) {
       preloader.style.opacity = '0';
       preloader.style.visibility = 'hidden';
-      setTimeout(() => preloader.remove(), 400);
+      setTimeout(() => preloader.remove(), 160);
     }
   }
   window.hidePreloader = hidePreloader;
@@ -416,7 +420,7 @@ html.theme-dark .pl-bar { background: #2a2f37; }
   let preloaderSafetyTimer = null;
   function armPreloaderSafety() {
     if (preloaderSafetyTimer) return;
-    preloaderSafetyTimer = setTimeout(hidePreloader, 4500);
+    preloaderSafetyTimer = setTimeout(hidePreloader, 2500);
   }
   window.armPreloaderSafety = armPreloaderSafety;
 
@@ -1302,7 +1306,7 @@ html.theme-dark .pl-bar { background: #2a2f37; }
     </ul>
     <p>ההצטרפות חינם. מפרסמים מודעה או פרויקט בכמה שניות, ומקבלים הצעות מגולשים.</p>
   </section>
-  <script type="module" src="./script.min.js?v=2225"></script>
+  <script type="module" src="./script.min.js?v=2226"></script>
   <script defer src="./a11y.js?v=1"></script>
 </body>
 </html>

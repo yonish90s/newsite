@@ -473,3 +473,7 @@ BODY .stv-fol.on { background: rgba(34, 197, 94, .32) !important; border-color: 
 BODY .mk-pg .mp-img .mp-cnt { background: rgba(18, 18, 24, .74) !important; color: #ffffff !important; }
 BODY .mk-pg .mp-dots .mp-dot { background: #c4c4cc !important; }
 BODY .mk-pg .mp-dots .mp-dot.on { background: #6366f1 !important; }
+
+/* מהירות תגובה למגע וגלילה מהירה */
+button, a, [role="button"], input, select, textarea, .mk-sg, .st-item, .lib-card { touch-action: manipulation; }
+.rn-grid > .mk-sg { content-visibility: auto; contain-intrinsic-size: auto 320px; }
