@@ -434,3 +434,11 @@ BODY .lib-page .lf-card { background: #ffffff !important; }
 BODY .lib-page .lf-t, BODY .lib-page .lf-p, BODY .lib-page .lf-heart { color: #1a1428 !important; }
 BODY .lib-page .lf-heart.on { color: #e0245e !important; }
 BODY .lib-page .lf-r svg { color: #f5b301 !important; }
+
+BODY .ss-ru .au-av, BODY .ssx-av.ring .au-av, BODY .srch-ci.ring { border: 3px solid transparent !important; background: linear-gradient(#ffffff, #ffffff) padding-box, linear-gradient(45deg, #ffb347, #ff4d8d 45%, #a855f7) border-box !important; padding: 3px !important; box-sizing: border-box !important; }
+BODY .ssx-tabs button.on { border-bottom-color: #8b5cf6 !important; color: #111111 !important; }
+BODY .ssx-active span { background: #f1edfd !important; color: #5b21b6 !important; }
+BODY .ssx-ver { background: #1d9bf0 !important; color: #ffffff !important; }
+BODY #ssx-sheet .ssx-radio.on { border-color: #8b5cf6 !important; }
+BODY #ssx-sheet .ssx-tgl.on { background: #8b5cf6 !important; }
+BODY .ss-fbtn.on { color: #8b5cf6 !important; }
