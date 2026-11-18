@@ -34762,11 +34762,14 @@ async function mkInvFill(el) {
   const likeId = el.dataset.like, rk = el.dataset.rep, people = {};
   try { const v = (await get(ref(db, `website/item_likers/${likeId}`))).val() || {}; Object.entries(v).forEach(([uid, x]) => { if (x && typeof x === 'object') people[uid] = { name: x.name || 'משתמש', at: x.at || 0, uid }; }); } catch (e) {}
   try { subscribeReposts(); Object.entries((repostsData || {})[rk] || {}).forEach(([uid, x]) => { if (!people[uid]) people[uid] = { name: (x && x.name) || 'משתמש', at: (x && x.at) || 0, uid }; }); } catch (e) {}
-  const list = Object.values(people).sort((a, b) => b.at - a.at);
-  const n = Math.max(list.length, (Number(itemLikesData[likeId]) || 0) + (repostCount(rk) || 0));
+  let list = Object.values(people).sort((a, b) => b.at - a.at);
+  let n = Math.max(list.length, (Number(itemLikesData[likeId]) || 0) + (repostCount(rk) || 0));
+  // מודעה לדוגמה (מצלמת Nikon): מראים איך זה נראה עם משתמשים מעורבים
+  const demo = !n && el.dataset.demo;
+  if (demo) { list = ['דנה כהן', 'יוסי לוי', 'מיכל אברהם', 'נועה כץ', 'רון שמש'].map((name, i) => ({ name, uid: '', at: Date.now() - i * 36e5 })); list.forEach(p => { people['demo_' + p.name] = p; }); n = 24; }
   if (!n) return;
   window.__mkInv = window.__mkInv || {}; window.__mkInv[likeId] = people;
-  el.innerHTML = `<button type="button" class="mk-inv-btn" onclick="mkInvOpen('${artEsc(likeId)}')"><span class="mk-inv-stack">${list.slice(0, 3).map(p => `<span class="mk-inv-av">${authorAvHTML({ authorId: p.uid, author: p.name })}</span>`).join('') || '<span class="mk-inv-av mk-inv-ph">♥</span>'}</span><span class="mk-inv-tx"><b>${n.toLocaleString('he-IL')}</b> ${n === 1 ? 'משתמש מעורב' : 'משתמשים מעורבים'}${list[0] ? ` · ${escHtml(list[0].name)}${n > 1 ? ' ועוד' : ''}` : ''}</span></button>`;
+  el.innerHTML = `<button type="button" class="mk-inv-btn" onclick="mkInvOpen('${artEsc(likeId)}')"><span class="mk-inv-stack">${list.slice(0, 3).map(p => `<span class="mk-inv-av">${authorAvHTML({ authorId: p.uid, author: p.name })}</span>`).join('') || '<span class="mk-inv-av mk-inv-ph">♥</span>'}</span><span class="mk-inv-tx"><b>${n.toLocaleString('he-IL')}</b> ${n === 1 ? 'משתמש מעורב' : 'משתמשים מעורבים'}${list[0] ? ` · ${escHtml(list[0].name)}${n > 1 ? ' ועוד' : ''}` : ''}${demo ? ' <em class="mk-inv-demo">דוגמה</em>' : ''}</span></button>`;
   el.hidden = false;
   try { avatarHydrate(el); } catch (e) {}
 }
@@ -34900,7 +34903,7 @@ function rentDetailHTML(r) {
       <button type="button" class="mk-seller" onclick="rentOpenSeller('${artEsc(r.uid || '')}', '${artEsc(owner)}')">${who}</button>
       ${r.city ? `<span class="mk-city">${escHtml(r.city)}</span>` : ''}
     </header>
-    <div class="mk-head-rate"><button type="button" class="mk-rate" data-seller="${escHtml(r.uid || '')}" onclick="rentRevOpen()">${rentRateHTML(0, 0)}</button></div><div class="mk-inv" data-like="${escHtml(r.shId || rentCommentsKey(r))}" data-rep="${escHtml(rentCommentsKey(r))}" hidden></div>
+    <div class="mk-head-rate"><button type="button" class="mk-rate" data-seller="${escHtml(r.uid || '')}" onclick="rentRevOpen()">${rentRateHTML(0, 0)}</button></div><div class="mk-inv" data-like="${escHtml(r.shId || rentCommentsKey(r))}" data-rep="${escHtml(rentCommentsKey(r))}"${r.id === 'c1' ? ' data-demo="1"' : ''} hidden></div>
     <div class="mp mk-pg">
       <div class="rn-det-gal mp-gal">
         <div class="rn-det-img mp-img"${r.hv ? '' : ' onclick="mkZoomOpen(this)"'}>${rentThumb(full && full.length ? { ...r, img: full[0] } : r, true)}${r.hv ? '' : '<button type="button" class="mk-zoom-btn" onclick="event.stopPropagation(); mkZoomOpen(this.parentElement)" aria-label="הגדלת התמונה" title="הגדלה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V5a1 1 0 0 1 1-1h4M15 4h4a1 1 0 0 1 1 1v4M20 15v4a1 1 0 0 1-1 1h-4M9 20H5a1 1 0 0 1-1-1v-4"/></svg></button>'}</div>
