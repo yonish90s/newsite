@@ -33644,8 +33644,24 @@ function rentAgo(t) {
   const m = Math.max(1, Math.round((Date.now() - (t || 0)) / 6e4));
   return m < 60 ? `לפני ${m} דק׳` : m < 1440 ? `לפני ${Math.round(m / 60)} שע׳` : `לפני ${Math.round(m / 1440)} ימים`;
 }
-// תמונות הדוגמה הוחלפו בגרסה חדה יותר — הגרסה בכתובת עוקפת את המטמון של הדפדפן
-[USED_DEMO, RENT_DEMO].forEach(l => l.forEach(d => { if (/^rent\/[^/?]+\.jpg$/.test(d.img || '')) d.img += '?v=2'; if (Array.isArray(d.images)) d.images = d.images.map(u => /^rent\/[^/?]+\.jpg$/.test(u || '') ? u + '?v=2' : u); }));
+// תמונות הדוגמה הוחלפו בגרסה חדה יותר — הגרסה בכתובת עוקפת את המטמון של הדפדפן, ולכל מודעת דוגמה יש גלריית תמונות להחלקה (Swipe)
+const DEMO_EXTRA_POOL = {
+  '3d': ['rent/p3d-farm.jpg', 'rent/p3d-prusa-mk2.jpg', 'rent/p3d-resin.jpg', 'rent/p3d-imprimante.jpg', 'rent/p3d-prusa-metal.jpg', 'rent/p3d-shields.jpg'],
+  printer: ['rent/laser.jpg', 'rent/mfp.jpg', 'rent/inkjet.jpg', 'rent/p3d-imprimante.jpg'],
+  tools: ['rent/drill.jpg', 'rent/washer.jpg', 'rent/sewing.jpg', 'rent/p3d-prusa-metal.jpg'],
+  photo: ['rent/camera.jpg', 'rent/projector.jpg', 'rent/p3d-resin.jpg', 'rent/laser.jpg', 'rent/mfp.jpg'],
+  other: ['rent/sewing.jpg', 'rent/drill.jpg', 'rent/washer.jpg', 'rent/camera.jpg'],
+  storage: ['rent/s-units.jpg', 'rent/s-attic.jpg', 'rent/s-container.jpg', 'rent/s-shelves.jpg', 'rent/s-boxes.jpg', 'rent/s-parking.jpg'],
+  used: ['rent/u-sofa.jpg', 'rent/u-fridge.jpg', 'rent/u-guitar.jpg', 'rent/u-bike.jpg', 'rent/camera.jpg']
+};
+[USED_DEMO, RENT_DEMO].forEach(l => l.forEach(d => {
+  if (!Array.isArray(d.images) || d.images.length < 2) {
+    const pool = DEMO_EXTRA_POOL[d.cat] || DEMO_EXTRA_POOL.used;
+    d.images = [d.img, ...pool.filter(x => x !== d.img)].filter(Boolean).slice(0, 5);
+  }
+  if (/^rent\/[^/?]+\.jpg$/.test(d.img || '')) d.img += '?v=2';
+  if (Array.isArray(d.images)) d.images = d.images.map(u => /^rent\/[^/?]+\.jpg$/.test(u || '') ? u + '?v=2' : u);
+}));
 // ===== ניסוי: סרטון במקום התמונה של המודעה (יוטיוב / אודיסי) — מנגן בשקט ובלולאה, עם כמה שפחות כפתורים של הנגן =====
 // בכרטיסים הסרטון רק "חי" ברקע (בלי לחיצות — הלחיצה פותחת את המודעה); בעמוד המודעה אפשר לשלוט בו
 // קישור לסרטון מכל אתר נפוץ → { p, id } שאפשר להציג במקום התמונה. אתר שלא מאפשר הטמעה = null
@@ -34909,7 +34925,8 @@ function rentDetailHTML(r) {
     <div class="mk-head-rate"><button type="button" class="mk-rate" data-seller="${escHtml(r.uid || '')}" onclick="rentRevOpen()">${rentRateHTML(0, 0)}</button></div><div class="mk-inv" data-like="${escHtml(r.shId || rentCommentsKey(r))}" data-rep="${escHtml(rentCommentsKey(r))}"${r.id === 'c1' ? ' data-demo="1"' : ''} hidden></div>
     <div class="mp mk-pg">
       <div class="rn-det-gal mp-gal">
-        <div class="rn-det-img mp-img"${r.hv ? '' : ' onclick="mkZoomOpen(this)"'}>${rentThumb(full && full.length ? { ...r, img: full[0] } : r, true)}${r.hv ? '' : '<button type="button" class="mk-zoom-btn" onclick="event.stopPropagation(); mkZoomOpen(this.parentElement)" aria-label="הגדלת התמונה" title="הגדלה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V5a1 1 0 0 1 1-1h4M15 4h4a1 1 0 0 1 1 1v4M20 15v4a1 1 0 0 1-1 1h-4M9 20H5a1 1 0 0 1-1-1v-4"/></svg></button>'}</div>
+        <div class="rn-det-img mp-img${!r.hv && imgs.length > 1 ? ' is-carousel' : ''}" data-idx="0"${r.hv ? '' : (imgs.length > 1 ? '' : ' onclick="mkZoomOpen(this)"')}>${r.hv || !imgs.length ? rentThumb(full && full.length ? { ...r, img: full[0] } : r, true) : `<div class="mp-slides" dir="ltr" onscroll="mpSlideSync(this)">${imgs.map((u, i) => `<div class="mp-slide" data-idx="${i}" onclick="mkZoomOpen(this.closest('.mp-img'), ${i})"><img src="${escHtml(u)}" alt="${escHtml(r.title || '')} — תמונה ${i + 1}" loading="${i ? 'lazy' : 'eager'}" decoding="async"></div>`).join('')}</div>${imgs.length > 1 ? `<span class="mp-cnt" dir="ltr">1/${imgs.length}</span>` : ''}`}${r.hv ? '' : '<button type="button" class="mk-zoom-btn" onclick="event.stopPropagation(); mkZoomOpen(this.parentElement)" aria-label="הגדלת התמונה" title="הגדלה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V5a1 1 0 0 1 1-1h4M15 4h4a1 1 0 0 1 1 1v4M20 15v4a1 1 0 0 1-1 1h-4M9 20H5a1 1 0 0 1-1-1v-4"/></svg></button>'}</div>
+        ${!r.hv && imgs.length > 1 ? `<div class="mp-dots" dir="ltr" role="tablist" aria-label="תמונות המודעה">${imgs.map((_, i) => `<button type="button" class="mp-dot${i ? '' : ' on'}" onclick="mpSlideGo(this, ${i})" aria-label="תמונה ${i + 1} מתוך ${imgs.length}"></button>`).join('')}</div>` : ''}
         ${imgs.length ? `<div class="mk-vthumbs bb-thumbs${imgs.length > 7 ? ' has-more' : ''}">
           <div class="mp-thumbs">${imgs.map((u, i) => `<button type="button" class="${i ? '' : 'on'}${i >= 6 && imgs.length > 7 ? ' bb-extra' : ''}" onclick="rentDetPick(this)" aria-label="תמונה ${i + 1}"><img src="${escHtml(u)}" alt="" loading="lazy"></button>`).join('')}${imgs.length > 7 ? `<button type="button" class="bb-more" onclick="this.closest('.bb-thumbs').classList.add('open')" aria-label="עוד ${imgs.length - 6} תמונות"><b>+${imgs.length - 6}</b><small>עוד</small></button>` : ''}</div>
           ${r.video && /^[\w-]{11}$/.test(r.video) ? `<button type="button" class="bb-tile-act" onclick="document.querySelector('.mk-video')?.scrollIntoView({ behavior: 'smooth', block: 'center' })">${ic('<circle cx="12" cy="12" r="9"/><path d="M10 8.5l5 3.5-5 3.5z"/>')}<small>סרטון</small></button>` : ''}
@@ -35101,19 +35118,27 @@ function rentFitPage() {
 // התמונה הראשית בלי שוליים: בגודל המדויק שנכנס, ובמחשב העמודה שלה ברוחב התמונה
 function rentFitImg() {
   const pg = typeof mainContent !== 'undefined' && mainContent && mainContent.querySelector('.mk-pg');
-  const box = pg && pg.querySelector('.mp-img'), img = box && box.querySelector('img'), hv = box && box.querySelector('.mk-hv');
-  if (!box || (!hv && (!img || !img.naturalWidth))) return;
-  const wide = innerWidth > 900, rail = parseFloat(getComputedStyle(box).marginLeft) || 0;
+  const box = pg && pg.querySelector('.mp-img'), img = box && box.querySelector('img'), hv = box && box.querySelector('.mk-hv'), slides = box && box.querySelector('.mp-slides');
+  if (!box || (!hv && !slides && (!img || !img.naturalWidth))) return;
+  const wide = innerWidth > 900, rail = wide ? (parseFloat(getComputedStyle(box).marginLeft) || 0) : 0;
   const ratio = 3 / 4, maxW = (wide ? pg.clientWidth * .58 : pg.clientWidth) - rail;
-  const w = Math.floor(wide ? Math.min(maxW, (box.clientHeight || 560) * ratio) : Math.min(maxW, innerHeight * .6 * ratio));
+  const w = Math.floor(wide ? Math.min(maxW, (box.clientHeight || 560) * ratio) : maxW);
   const h = Math.floor(w / ratio);
-  if (!wide) {   // בטלפון גובה המסגרת כגובה התמונה, בלי רווח מתחתיה
+  if (!wide) {   // בטלפון גובה המסגרת כגובה התמונה, לרוחב מלא להחלקה נוחה
+    box.style.setProperty('width', '100%', 'important');
     box.style.setProperty('height', h + 'px', 'important');
     const th = pg.querySelector('.mk-vthumbs'); if (th) th.style.setProperty('height', h + 'px', 'important');
+  } else if (slides) {
+    box.style.setProperty('width', w + 'px', 'important');
+    box.style.setProperty('height', h + 'px', 'important');
   }
-  const target = hv || img;
-  target.style.setProperty('width', w + 'px', 'important');
-  target.style.setProperty('height', h + 'px', 'important');
+  if (!slides) {
+    const target = hv || img;
+    if (target) {
+      target.style.setProperty('width', w + 'px', 'important');
+      target.style.setProperty('height', h + 'px', 'important');
+    }
+  }
   if (wide) pg.style.setProperty('--gal-w', w + rail + 'px'); else pg.style.removeProperty('--gal-w');
 }
 window.addEventListener('resize', rentFitPage);
@@ -35242,13 +35267,17 @@ function rentQtyStep(id, dir) {
 // גלריה בעמוד מודעה: לחיצה על תמונה קטנה מחליפה את הגדולה
 // ---- הגדלת התמונה הראשית במודעה: מסך מלא, זום בגלגלת/צביטה/לחיצה כפולה, גרירה, חצים ומקלדת ----
 let mkZ = null;
-function mkZoomOpen(box) {
+function mkZoomOpen(box, startIdx) {
+  if (!box) return;
   const gal = box.closest('.rn-det-gal') || box;
   const cur = box.querySelector('img'); if (!cur) return;
   if (document.documentElement.classList.contains('adult-blur') && !box.classList.contains('unblur')) return;   // תמונה מוסתרת — קודם חושפים
-  const list = [...gal.querySelectorAll('.mp-thumbs img')].map(i => i.getAttribute('src'));
+  const slideImgs = [...box.querySelectorAll('.mp-slide img')].map(i => i.getAttribute('src')).filter(Boolean);
+  const list = slideImgs.length ? slideImgs : [...gal.querySelectorAll('.mp-thumbs img')].map(i => i.getAttribute('src'));
   const srcs = list.length ? list : [cur.getAttribute('src')];
-  const i0 = Math.max(0, srcs.indexOf(cur.getAttribute('src')));
+  const i0 = typeof startIdx === 'number' ? Math.max(0, Math.min(srcs.length - 1, startIdx))
+    : box.dataset && box.dataset.idx !== undefined ? Math.max(0, Math.min(srcs.length - 1, Number(box.dataset.idx) || 0))
+    : Math.max(0, srcs.indexOf(cur.getAttribute('src')));
   let el = document.getElementById('mk-zoom'); if (el) el.remove();
   el = document.createElement('div'); el.id = 'mk-zoom'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'תמונה מוגדלת');
   const ic = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
@@ -35311,11 +35340,44 @@ document.addEventListener('keydown', e => {
   else if (e.key === '+' || e.key === '=') mkZoomBy(1.4); else if (e.key === '-') mkZoomBy(1 / 1.4);
 });
 Object.assign(window, { mkZoomOpen, mkZoomClose, mkZoomBy, mkZoomReset, mkZoomGo });
+function mpSlideSync(track) {
+  if (!track) return;
+  const w = track.clientWidth || 1;
+  const slides = track.querySelectorAll('.mp-slide');
+  const total = slides.length;
+  if (total < 2) return;
+  const idx = Math.max(0, Math.min(total - 1, Math.round(track.scrollLeft / w)));
+  const box = track.closest('.mp-img'), gal = track.closest('.rn-det-gal') || document;
+  if (box) {
+    box.dataset.idx = String(idx);
+    const cnt = box.querySelector('.mp-cnt');
+    if (cnt) cnt.textContent = `${idx + 1}/${total}`;
+  }
+  gal.querySelectorAll('.mp-dots .mp-dot').forEach((d, i) => d.classList.toggle('on', i === idx));
+  gal.querySelectorAll('.mp-thumbs button:not(.bb-more)').forEach((b, i) => b.classList.toggle('on', i === idx));
+}
+function mpSlideGo(el, idx) {
+  const gal = (el && el.closest && el.closest('.rn-det-gal')) || document;
+  const track = gal.querySelector('.mp-slides');
+  if (!track) return;
+  const w = track.clientWidth || 1;
+  track.scrollTo({ left: idx * w, behavior: 'smooth' });
+}
+window.mpSlideSync = mpSlideSync;
+window.mpSlideGo = mpSlideGo;
 function rentDetPick(btn) {
-  const big = btn.closest('.rn-det-gal') && btn.closest('.rn-det-gal').querySelector('.rn-det-img img');
-  const src = btn.querySelector('img') && btn.querySelector('img').getAttribute('src');
-  if (big && src) big.setAttribute('src', src);
-  btn.parentElement.querySelectorAll('button').forEach(b => b.classList.toggle('on', b === btn));
+  const gal = btn.closest('.rn-det-gal');
+  const buttons = [...btn.parentElement.querySelectorAll('button:not(.bb-more)')];
+  const idx = buttons.indexOf(btn);
+  const track = gal && gal.querySelector('.mp-slides');
+  if (track && idx >= 0) {
+    mpSlideGo(btn, idx);
+  } else {
+    const big = gal && gal.querySelector('.rn-det-img img');
+    const src = btn.querySelector('img') && btn.querySelector('img').getAttribute('src');
+    if (big && src) big.setAttribute('src', src);
+  }
+  buttons.forEach(b => b.classList.toggle('on', b === btn));
   const v = btn.closest('.mk-vthumbs');
   if (v) { const a = v.querySelectorAll('.mk-varr'); if (a.length === 2) { a[0].disabled = !btn.previousElementSibling; a[1].disabled = !btn.nextElementSibling; } }
 }
@@ -37006,12 +37068,12 @@ function storiesSubscribe() {
 function storyDemoGroups() {
   const now = Date.now(), H = 3600 * 1000;
   const raw = [
-    { owner: 'נועה לוי', city: 'תל אביב', items: [{ id: 'dm_noa_1', img: 'rent/u-camera.jpg?v=2', caption: 'מצלמת Nikon D850 במצב נדיר 📸', t: now - 2 * H }, { id: 'dm_noa_2', img: 'rent/u-Watch.jpg?v=2', caption: 'שעון חכם כמעט חדש לגמרי ✨', t: now - 1.2 * H }] },
-    { owner: 'אלון כהן', city: 'רמת גן', items: [{ id: 'dm_alon_1', img: 'rent/u-ps5.jpg?v=2', caption: 'פלייסטיישן 5 עם שני שלטים 🎮', t: now - 3.5 * H }] },
+    { owner: 'נועה לוי', city: 'תל אביב', items: [{ id: 'dm_noa_1', img: 'rent/camera.jpg?v=2', caption: 'מצלמת Nikon D850 במצב נדיר 📸', t: now - 2 * H }, { id: 'dm_noa_2', img: 'rent/projector.jpg?v=2', caption: 'מקרן Full HD לערבי סרטים ✨', t: now - 1.2 * H }] },
+    { owner: 'אלון כהן', city: 'רמת גן', items: [{ id: 'dm_alon_1', img: 'rent/u-sofa.jpg?v=2', caption: 'ספה תלת-מושבית מעור במצב מצוין 🛋️', t: now - 3.5 * H }] },
     { owner: 'מאפיית השכונה', city: 'תל אביב', items: [{ id: 'dm_bak_1', img: 'rent/biz-bakery.svg', caption: 'מאפים חמים מהתנור כל בוקר 🥐', t: now - 4 * H }] },
-    { owner: 'דניאל מזרחי', city: 'חיפה', items: [{ id: 'dm_dan_1', img: 'rent/u-guitar.jpg?v=2', caption: 'גיטרה אקוסטית עם נרתיק מרופד 🎸', t: now - 6 * H }] },
-    { owner: 'מאיה שפירא', city: 'הרצליה', items: [{ id: 'dm_maya_1', img: 'rent/u-espresso.jpg?v=2', caption: 'מכונת אספרסו מקצועית לבית ☕', t: now - 8 * H }] },
-    { owner: 'רון אברהם', city: 'ראשון לציון', items: [{ id: 'dm_ron_1', img: 'rent/u-drone.jpg?v=2', caption: 'רחפן DJI עם סוללות נוספות 🚁', t: now - 11 * H }] }
+    { owner: 'דניאל מזרחי', city: 'חיפה', items: [{ id: 'dm_dan_1', img: 'rent/u-guitar.jpg?v=2', caption: 'גיטרה Gibson Les Paul עם נרתיק קשיח 🎸', t: now - 6 * H }] },
+    { owner: 'מאיה שפירא', city: 'הרצליה', items: [{ id: 'dm_maya_1', img: 'rent/p3d-farm.jpg?v=2', caption: 'הדפסות תלת מימד מוכנות תוך יום 🧊', t: now - 8 * H }] },
+    { owner: 'רון אברהם', city: 'ראשון לציון', items: [{ id: 'dm_ron_1', img: 'rent/u-bike.jpg?v=2', caption: 'אופני עיר קלים ונוחים 🚲', t: now - 11 * H }] }
   ];
   return raw.map(g => ({
     key: 'demo_' + igDemoKeyOf(g.owner),
