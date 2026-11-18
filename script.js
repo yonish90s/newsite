@@ -31026,7 +31026,7 @@ function mTabsActive() {
     const top = document.createElement('div');
     top.className = 'site-top';
     top.dataset.active = active; top.dataset.mode = mode;
-    top.innerHTML = (mode === 'd' && typeof composerBarHTML === 'function' ? `<div class="cmp-wrap">${composerBarHTML()}</div>` : '') + (typeof storiesBarHTML === 'function' ? storiesBarHTML() : '') + homeChipsHTML(0, 0, 0, active || '-', 'hx-global');   // עמוד בלי לשונית משלו — אף לשונית לא מסומנת
+    top.innerHTML = (mode === 'd' && typeof composerBarHTML === 'function' ? `<div class="cmp-wrap">${composerBarHTML()}</div>` : '') + (typeof storiesBarHTML === 'function' ? storiesBarHTML() : '');
     mc.prepend(top);
     if (typeof avatarHydrate === 'function') avatarHydrate(top);
     const on = top.querySelector('.hx-tab.on');
@@ -35312,8 +35312,7 @@ function mkZoomOpen(box, startIdx) {
   const ic = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
   el.innerHTML = `<div class="mz-stage"><img class="mz-img" alt="" draggable="false"></div>
     <button type="button" class="mz-x" onclick="mkZoomClose()" aria-label="סגירה">${ic('<path d="M6 6l12 12M18 6 6 18"/>')}</button>
-    <div class="mz-tools"><button type="button" onclick="mkZoomBy(1.5)" aria-label="הגדלה">${ic('<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M11 8v6M8 11h6"/>')}</button><button type="button" onclick="mkZoomBy(1/1.5)" aria-label="הקטנה">${ic('<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M8 11h6"/>')}</button><button type="button" onclick="mkZoomReset()" aria-label="גודל רגיל">${ic('<path d="M4 9V5a1 1 0 0 1 1-1h4M15 4h4a1 1 0 0 1 1 1v4M20 15v4a1 1 0 0 1-1 1h-4M9 20H5a1 1 0 0 1-1-1v-4"/>')}</button><span class="mz-n"></span></div>
-    ${srcs.length > 1 ? `<button type="button" class="mz-nav mz-prev" onclick="mkZoomGo(-1)" aria-label="הקודמת">${ic('<path d="M9 6l6 6-6 6"/>')}</button><button type="button" class="mz-nav mz-next" onclick="mkZoomGo(1)" aria-label="הבאה">${ic('<path d="M15 6l-6 6 6 6"/>')}</button>` : ''}`;
+    <div class="mz-tools"><button type="button" onclick="mkZoomBy(1.5)" aria-label="הגדלה">${ic('<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M11 8v6M8 11h6"/>')}</button><button type="button" onclick="mkZoomBy(1/1.5)" aria-label="הקטנה">${ic('<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M8 11h6"/>')}</button><button type="button" onclick="mkZoomReset()" aria-label="גודל רגיל">${ic('<path d="M4 9V5a1 1 0 0 1 1-1h4M15 4h4a1 1 0 0 1 1 1v4M20 15v4a1 1 0 0 1-1 1h-4M9 20H5a1 1 0 0 1-1-1v-4"/>')}</button><span class="mz-n"></span></div>`;
   document.body.appendChild(el);
   document.documentElement.classList.add('mz-open');
   mkZ = { srcs, i: i0, s: 1, x: 0, y: 0, el };
@@ -37091,18 +37090,19 @@ function storiesSubscribe() {
       storiesRefreshDOM();
     }, () => {});
   } catch (e) {}
+  try { onAuthStateChanged(auth, () => setTimeout(storiesRefreshDOM, 100)); } catch (e) {}
   setInterval(() => { storyPurgeExpired(); storiesRefreshDOM(); }, 5 * 60 * 1000);
 }
 // סטוריז לדוגמה של מוכרים באתר (משתמשים בקבצי התמונות הקיימים באתר — 0 זיכרון במסד הנתונים)
 function storyDemoGroups() {
   const now = Date.now(), H = 3600 * 1000;
   const raw = [
-    { owner: 'נועה לוי', city: 'תל אביב', items: [{ id: 'dm_noa_1', img: 'rent/camera.jpg?v=2', caption: 'מצלמת Nikon D850 במצב נדיר 📸', t: now - 2 * H }, { id: 'dm_noa_2', img: 'rent/projector.jpg?v=2', caption: 'מקרן Full HD לערבי סרטים ✨', t: now - 1.2 * H }] },
-    { owner: 'אלון כהן', city: 'רמת גן', items: [{ id: 'dm_alon_1', img: 'rent/u-sofa.jpg?v=2', caption: 'ספה תלת-מושבית מעור במצב מצוין 🛋️', t: now - 3.5 * H }] },
+    { owner: 'נועה לוי', city: 'תל אביב', items: [{ id: 'dm_noa_1', img: 'rent/t/camera.jpg?v=2', caption: 'מצלמת Nikon D850 במצב נדיר 📸', t: now - 2 * H }, { id: 'dm_noa_2', img: 'rent/t/projector.jpg?v=2', caption: 'מקרן Full HD לערבי סרטים ✨', t: now - 1.2 * H }] },
+    { owner: 'אלון כהן', city: 'רמת גן', items: [{ id: 'dm_alon_1', img: 'rent/t/u-sofa.jpg?v=2', caption: 'ספה תלת-מושבית מעור במצב מצוין 🛋️', t: now - 3.5 * H }] },
     { owner: 'מאפיית השכונה', city: 'תל אביב', items: [{ id: 'dm_bak_1', img: 'rent/biz-bakery.svg', caption: 'מאפים חמים מהתנור כל בוקר 🥐', t: now - 4 * H }] },
-    { owner: 'דניאל מזרחי', city: 'חיפה', items: [{ id: 'dm_dan_1', img: 'rent/u-guitar.jpg?v=2', caption: 'גיטרה Gibson Les Paul עם נרתיק קשיח 🎸', t: now - 6 * H }] },
-    { owner: 'מאיה שפירא', city: 'הרצליה', items: [{ id: 'dm_maya_1', img: 'rent/p3d-farm.jpg?v=2', caption: 'הדפסות תלת מימד מוכנות תוך יום 🧊', t: now - 8 * H }] },
-    { owner: 'רון אברהם', city: 'ראשון לציון', items: [{ id: 'dm_ron_1', img: 'rent/u-bike.jpg?v=2', caption: 'אופני עיר קלים ונוחים 🚲', t: now - 11 * H }] }
+    { owner: 'דניאל מזרחי', city: 'חיפה', items: [{ id: 'dm_dan_1', img: 'rent/t/u-guitar.jpg?v=2', caption: 'גיטרה Gibson Les Paul עם נרתיק קשיח 🎸', t: now - 6 * H }] },
+    { owner: 'מאיה שפירא', city: 'הרצליה', items: [{ id: 'dm_maya_1', img: 'rent/t/p3d-farm.jpg?v=2', caption: 'הדפסות תלת מימד מוכנות תוך יום 🧊', t: now - 8 * H }] },
+    { owner: 'רון אברהם', city: 'ראשון לציון', items: [{ id: 'dm_ron_1', img: 'rent/t/u-bike.jpg?v=2', caption: 'אופני עיר קלים ונוחים 🚲', t: now - 11 * H }] }
   ];
   return raw.map(g => ({
     key: 'demo_' + igDemoKeyOf(g.owner),
@@ -37155,8 +37155,9 @@ function storiesBuildGroups() {
   return { mine, myName, myUid, followed, suggested, seen };
 }
 function storyCircleHTML(g, isSugg) {
-  const last = g.items[g.items.length - 1] || {};
-  const thumb = last.img ? `<img src="${escHtml(last.img)}" alt="${escHtml(g.name)}" loading="lazy">` : authorAvHTML({ author: g.name, uid: g.uid || '' });
+  const thumb = typeof authorAvHTML === 'function'
+    ? authorAvHTML({ authorId: g.uid || '', uid: g.uid || '', author: g.name })
+    : `<span class="au-av">${escHtml((g.name || '?').charAt(0))}</span>`;
   const cnt = g.items.length > 1 ? `<em class="st-cnt">${g.items.length}</em>` : '';
   return `<button type="button" class="st-item${isSugg ? ' st-sugg' : ''}${g.allSeen ? ' seen' : ''}" onclick="storyOpen('${artEsc(g.key)}')" title="${escHtml(g.name)} — סטורי (24 שעות)" aria-label="${escHtml(g.name)}">
     <span class="st-ring"><span class="st-av">${thumb}</span>${cnt}</span>
@@ -37167,10 +37168,9 @@ function storiesBarHTML() {
   storiesSubscribe();
   const { mine, myName, myUid, followed, suggested, seen } = storiesBuildGroups();
   const mineSeen = mine.length > 0 && mine.every(it => !!seen[it.id]);
-  const lastMine = mine[mine.length - 1];
-  const myAv = lastMine && lastMine.img
-    ? `<img src="${escHtml(lastMine.img)}" alt="הסטורי שלך">`
-    : (myUid ? authorAvHTML({ author: myName, uid: myUid }) : '<span class="st-blank-av"></span>');
+  const myAv = typeof authorAvHTML === 'function'
+    ? authorAvHTML({ authorId: myUid, uid: myUid, author: myUid ? myName : 'אני' })
+    : `<span class="au-av">א</span>`;
   const mineClick = mine.length ? "storyOpen('__mine__')" : 'storyUploadOpen()';
   const mineHTML = `<div class="st-item st-mine${mine.length ? ' has-story' : ''}${mineSeen ? ' seen' : ''}" role="button" tabindex="0" onclick="${mineClick}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();${mineClick};}" aria-label="הסטורי שלך">
     <span class="st-ring"><span class="st-av">${myAv}</span>

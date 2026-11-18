@@ -474,6 +474,10 @@ BODY .mk-pg .mp-img .mp-cnt { background: rgba(18, 18, 24, .74) !important; colo
 BODY .mk-pg .mp-dots .mp-dot { background: #c4c4cc !important; }
 BODY .mk-pg .mp-dots .mp-dot.on { background: #6366f1 !important; }
 
+BODY .mk-sg.acts-on, BODY .lib-page .lib-mk.hl > .mk-sg { outline: none !important; }
+BODY .mk-sg .mk-sg-acts .mk-act2 > .mk-a-follow { background: transparent !important; color: #111111 !important; }
+BODY .mk-sg .mk-a-follow.on { color: #8b5cf6 !important; }
+
 /* מהירות תגובה למגע וגלילה מהירה */
 button, a, [role="button"], input, select, textarea, .mk-sg, .st-item, .lib-card { touch-action: manipulation; }
 .rn-grid > .mk-sg { content-visibility: auto; contain-intrinsic-size: auto 320px; }
