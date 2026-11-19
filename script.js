@@ -34904,7 +34904,7 @@ function rentSellerHTML(sl) {
   const views = list.reduce((a, r) => a + photoGetViews(rentCommentsKey(r)), 0);
   const st = { uid: sl.uid || '', name: sl.name, profile: { aboutCity: cities.join(' · '), ...(DEMO_SELLER_CONTACT[sl.name] || {}) } };
   // אותו מבנה כמו פרופיל של משתמש: כותרת, לשוניות, ומתחת כרטיס פרטים לצד המודעות
-  return `${crumbsHTML([['בית', 'goToHomePage()'], ['השוק', "mktGo('all')"], [sl.name, '']])}<div class="pf-desk sl-desk">
+  return `<div class="pf-desk sl-desk">
     <aside class="pf-side"><div id="user-page-head">
       <section class="pf-head">
         <div class="pf-top"><span class="pf-av-wrap">${authorAvHTML({ author: sl.name, uid: sl.uid || '' }).replace('class="au-av', 'class="pf-avatar au-av')}</span></div>
