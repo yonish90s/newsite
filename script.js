@@ -34038,6 +34038,8 @@ function twPostHTML(r) {
   const src = r.img || (r.images || [])[0] || '';
   const media = src ? `<div class="tw-media"><img src="${escHtml(src)}" alt="${escHtml(r.title)}" loading="lazy" decoding="async"></div>` : `<div class="tw-media tw-media-th">${rentThumb(r)}</div>`;
   const when = r.t ? new Date(r.t).toLocaleDateString('he-IL') : '';
+  const desc = String(r.desc || '').trim();
+  const descHTML = desc ? `<span class="tw-desc-wrap"><small class="tw-desc">${escHtml(desc)}</small>${desc.length > 75 ? `<button type="button" class="tw-more" onclick="event.stopPropagation(); const w=this.parentElement; w.classList.toggle('open'); this.textContent=w.classList.contains('open')?'פחות':'עוד'">עוד</button>` : ''}</span>` : '';
   return `<article class="tw-post" role="button" tabindex="0" data-id="${escHtml(r.id)}" onclick="rentOpen('${artEsc(r.id)}')" onkeydown="if((event.key==='Enter'||event.key===' ')&&event.target===this){event.preventDefault();this.click();}">
     <div class="tw-av" onclick="event.stopPropagation(); rentOpenSeller('${artEsc(r.uid || '')}', '${artEsc(r.owner || '')}')">${authorAvHTML({ author: mktWho(r) || '?', uid: r.uid || '' })}</div>
     <div class="tw-main">
@@ -34047,7 +34049,7 @@ function twPostHTML(r) {
         <span class="tw-meta">${escHtml([mkWhereTxt(r), when].filter(Boolean).join(' · '))}</span>
         ${price}
       </header>
-      <div class="tw-text"><b>${escHtml(r.title)}</b>${r.desc ? `<small>${escHtml(String(r.desc).trim().slice(0, 140))}</small>` : ''}</div>
+      <div class="tw-text"><b>${escHtml(r.title)}</b>${descHTML}</div>
       ${media}
       <div class="tw-acts mk-sg-acts">${rentHoverHTML(r)}</div>
     </div>
