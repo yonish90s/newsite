@@ -16410,13 +16410,25 @@ function igCardHTML(o) {
   // o = { uid, name, posts, views, isOwn, following, demoKey }
   const fol = o.uid ? `<b id="ig-fol">—</b>` : `<b id="ig-fol">${igDemoFollowers(o.demoKey)}</b>`;
   const fwg = o.uid ? `<b id="ig-fwg">—</b>` : '<b>0</b>';
-  const followBtn = o.isOwn ? '' : `<button type="button" class="ig-follow${o.following ? ' on' : ''}" onclick="${o.uid ? `profileToggleFollow('${artEsc(o.uid)}','${artEsc(o.name)}')` : `igDemoFollow('${artEsc(o.demoKey)}', this)`}" title="${o.following ? 'במעקב — לחצו להפסקה' : 'מעקב'}" aria-label="${o.following ? 'במעקב' : 'מעקב'}">${o.following ? IG_FOLLOWING_IC : IG_FOLLOW_IC}<span>${o.following ? 'במעקב' : 'מעקב'}</span></button>`;
+  const ver = typeof isUserVerified === 'function' && isUserVerified(o.uid || '', o.name || '') ? verifiedSealHTML(14) : '';
+  const followBtn = o.isOwn ? '' : `<button type="button" class="ig-follow${o.following ? ' on' : ''}" onclick="${o.uid ? `profileToggleFollow('${artEsc(o.uid)}','${artEsc(o.name)}')` : `igDemoFollow('${artEsc(o.demoKey)}', this)`}">${o.following ? 'במעקב' : 'מעקב'}</button>`;
+  const msgBtn = o.isOwn ? '' : `<button type="button" class="ig-msg-btn" onclick="openMessages()">הודעה</button>`;
   if (o.uid) setTimeout(() => igFill(o.uid), 0);
-  return `<div class="ig-row"><section class="ig-card">
-      <span class="ig-av">${authorAvHTML({ author: o.name, uid: o.uid || '' })}</span>
-      <div class="ig-main"><div class="ig-top"><b class="ig-name">${escHtml(o.name)}</b>${followBtn}</div>
-        <div class="ig-stats"><span><b>${Number(o.posts || 0).toLocaleString('he-IL')}</b><small>פוסטים</small></span><span>${fol}<small>עוקבים</small></span><span>${fwg}<small>במעקב</small></span></div></div>
-    </section><section class="ig-side"><b>${typeof formatViews === 'function' ? formatViews(o.views || 0) : (o.views || 0)}</b><small>צפיות</small></section></div>`;
+  return `<section class="ig-prof">
+    <div class="ig-p-top">
+      <span class="ig-p-av">${authorAvHTML({ author: o.name, uid: o.uid || '' })}</span>
+      <div class="ig-p-info">
+        <div class="ig-p-name"><b class="ig-name">${escHtml(o.name)}</b>${ver}</div>
+        <div class="ig-p-stats">
+          <div><b>${Number(o.posts || 0).toLocaleString('he-IL')}</b><small>פוסטים</small></div>
+          <div>${fol}<small>עוקבים</small></div>
+          <div>${fwg}<small>במעקב</small></div>
+        </div>
+      </div>
+    </div>
+    <div class="ig-p-bio"><span>${typeof formatViews === 'function' ? formatViews(o.views || 0) : (o.views || 0)} צפיות בפרופיל</span></div>
+    ${o.isOwn ? '' : `<div class="ig-p-acts">${followBtn}${msgBtn}</div>`}
+  </section>`;
 }
 async function igFill(uid) {
   try {
@@ -20367,7 +20379,7 @@ window.setPhotoHashtag = setPhotoHashtag;
 function openMSheet(title, bodyHTML, footHTML) {
   let el = document.getElementById('m-sheet');
   if (!el) { el = document.createElement('div'); el.id = 'm-sheet'; document.body.appendChild(el); }
-  el.classList.remove('adv-sheet', 'side-sheet', 'pl-sheet');
+  el.classList.remove('adv-sheet', 'side-sheet', 'pl-sheet', 'ig-cmt-sheet');
   el.innerHTML = `
     <div class="ms-backdrop" onclick="closeMSheet()"></div>
     <div class="ms-panel" role="dialog" aria-label="${escHtml(title)}">
@@ -30681,6 +30693,65 @@ window.repostersOpen = repostersOpen;
 window.repostersToggle = repostersToggle;
 window.followersOpen = followersOpen;
 window.followersSheetToggle = followersSheetToggle;
+let igCmtMap = {};
+async function igCommentsOpen(key, title) {
+  openMSheet('תגובות', '<div class="ms-empty">טוען תגובות…</div>');
+  document.getElementById('m-sheet')?.classList.add('ig-cmt-sheet');
+  let map = {};
+  try { map = (await get(ref(db, `website/photo_comments/${key}`))).val() || {}; } catch (e) {}
+  igCmtMap = map;
+  igCommentsRender(key);
+}
+function igCommentsRender(key) {
+  const body = document.querySelector('#m-sheet .ms-body'); if (!body) return;
+  const rows = Object.entries(igCmtMap || {}).filter(([, c]) => c && c.text).sort((a, b) => (b[1].t || 0) - (a[1].t || 0));
+  const ago = t => { const d = Math.floor((Date.now() - (t || 0)) / 864e5); return d < 1 ? 'היום' : d + ' ימים'; };
+  const heart = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.5l-1.4-1.3C5.4 14.5 2 11.4 2 7.6 2 4.5 4.4 2 7.5 2c1.7 0 3.4.8 4.5 2.1C13.1 2.8 14.8 2 16.5 2 19.6 2 22 4.5 22 7.6c0 3.8-3.4 6.9-8.6 11.6z"/></svg>';
+  const listHTML = rows.length ? rows.map(([cid, c]) => {
+    const nm = String(c.name || c.author || 'משתמש');
+    const likes = Number(c.likes) || 0;
+    return `<div class="igc-row">
+      <span class="igc-av">${authorAvHTML({ author: nm, uid: c.uid || '' })}</span>
+      <div class="igc-main">
+        <div class="igc-top"><b>${escHtml(nm)}</b><small>${ago(c.t)}</small></div>
+        <div class="igc-tx">${escHtml(c.text)}</div>
+        <button type="button" class="igc-rep" onclick="const i=document.getElementById('igc-in'); if(i){ i.value='@${artEsc(nm)} '; i.focus(); }">תגובה</button>
+      </div>
+      <button type="button" class="igc-like" onclick="this.classList.toggle('on'); const s=this.querySelector('small'); s.textContent=Number(s.textContent||0)+(this.classList.contains('on')?1:-1)||''">${heart}<small>${likes || ''}</small></button>
+    </div>`;
+  }).join('') : '<div class="ms-empty">עדיין אין תגובות — כתבו ראשונים!</div>';
+  const emojis = ['❤️', '🙌', '🔥', '👏', '😢', '😍', '😮', '😂'];
+  const u = auth.currentUser;
+  const myAv = authorAvHTML({ author: (u && (u.displayName || 'אני')) || 'אורח', uid: (u && u.uid) || '' });
+  body.innerHTML = `<div class="igc-list">${listHTML}</div>
+    <div class="igc-dock">
+      <div class="igc-emojis">${emojis.map(e => `<button type="button" onclick="const i=document.getElementById('igc-in'); if(i){ i.value+=this.textContent; i.focus(); }">${e}</button>`).join('')}</div>
+      <form class="igc-form" onsubmit="event.preventDefault(); igCommentSend('${artEsc(key)}')">
+        <span class="igc-me">${myAv}</span>
+        <input id="igc-in" type="text" maxlength="500" placeholder="מה דעתך על זה?" autocomplete="off">
+        <button type="submit" class="igc-send">שליחה</button>
+      </form>
+    </div>`;
+  try { avatarLetterColors(body); if (typeof avatarHydrate === 'function') avatarHydrate(body); } catch (e) {}
+}
+async function igCommentSend(key) {
+  const inp = document.getElementById('igc-in');
+  const text = (inp ? inp.value : '').trim();
+  if (!text) return;
+  const u = auth.currentUser;
+  if (!u) { if (typeof ensureGuestSignedIn === 'function') await ensureGuestSignedIn(); }
+  const cur = auth.currentUser;
+  const name = String((typeof liveChatUserName === 'function' && liveChatUserName()) || (cur && cur.displayName) || 'אורח').slice(0, 60);
+  const rec = { uid: cur ? cur.uid : '', name, text, t: Date.now() };
+  try {
+    const r = push(ref(db, `website/photo_comments/${key}`));
+    await set(r, rec);
+    igCmtMap[r.key] = rec;
+    if (inp) inp.value = '';
+    igCommentsRender(key);
+  } catch (e) { if (typeof showCopyToast === 'function') showCopyToast('לא הצלחנו לשמור את התגובה'); }
+}
+window.igCommentsOpen = igCommentsOpen; window.igCommentSend = igCommentSend;
 (function likeLongPress() {
   const SEL = '.art-like-btn, .pti-like, .hr-like, .pti-repost[data-item]';
   let timer = 0, fired = false, sx = 0, sy = 0;
@@ -33941,17 +34012,14 @@ function rentHoverHTML(x) {
   const cnt = (n, attr) => `<i class="pti-n mk-n"${attr || ''}>${n}</i>`;
   // בכרטיס: קנייה (ירוק) ומשא ומתן (כתום) גלויים; לייק, ריפוסט, שמירה ודיווח — בתוך "⋯"
   const buy = mktCartable(x) ? `rentCartAdd('${id}')` : `rentOpen('${id}')`;
-  return `<span class="mk-sg-hov mk-act2">
-    <span role="button" tabindex="0" class="mk-a-buy${cartGet().some(c => c.id === 'mkt_' + x.id) ? ' in-cart' : ''}" data-cart="mkt_${escHtml(x.id)}" aria-label="קנייה" title="קנייה" onclick="${stop}${buy}">${ic('M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.5L21 8H6')}</span>
-    <span role="button" tabindex="0" class="mk-a-deal" aria-label="משא ומתן" title="משא ומתן — הצעת מחיר" onclick="${stop}mkCardHaggle(this, '${id}')">${ic('M4 7h12M4 7l3-3M4 7l3 3M20 17H8M20 17l-3-3M20 17l-3 3')}</span>
-    ${(() => { const fon = mkFollowOn(x), me = auth.currentUser && x.uid && auth.currentUser.uid === x.uid; return me ? '' : `<span role="button" tabindex="0" class="mk-a-follow${fon ? ' on' : ''}" data-fol="${escHtml(x.uid || igDemoKeyOf(x.owner))}" data-people="fol" data-fuid="${escHtml(x.uid || '')}" data-fname="${escHtml(x.owner || '')}" aria-label="${fon ? 'במעקב אחרי ' : 'מעקב אחרי '}${escHtml(x.owner || 'המוכר')}" title="${fon ? 'במעקב — לחצו להפסקה (לחיצה ארוכה לעוקבים)' : 'מעקב אחרי ' + escHtml(x.owner || 'המוכר') + ' (לחיצה ארוכה לעוקבים)'}" onclick="${stop}mkCardFollow(this, '${artEsc(x.uid || '')}', '${artEsc(x.owner || '')}')">${fon ? IG_FOLLOWING_IC : IG_FOLLOW_IC}</span>`; })()}
-    ${b('לייק', 'M7 10v11H3V10zM7 10l4-8a2.5 2.5 0 0 1 3 2.6L13.5 9H19a2 2 0 0 1 2 2.3l-1.4 8A2 2 0 0 1 17.6 21H7', (sh ? `photoToggleLike('${sh}')` : `rentMark(this, 'like', '${id}'); likersWrite('${artEsc(likeId)}', this.classList.contains('on'))`), liked, ` data-people="like" data-pid="${escHtml(likeId)}" data-iid="${escHtml(x.id)}"` + (sh ? ` data-like="${escHtml(x.shId)}"` : ''), 'mk-a-like', cnt(Number(itemLikesData[likeId]) || '', ` data-likes-n="${escHtml(likeId)}"`))}
+  return `<span class="mk-sg-hov mk-act2 ig-act2">
+    ${b('לייק', 'M12 20.5l-1.4-1.3C5.4 14.5 2 11.4 2 7.6 2 4.5 4.4 2 7.5 2c1.7 0 3.4.8 4.5 2.1C13.1 2.8 14.8 2 16.5 2 19.6 2 22 4.5 22 7.6c0 3.8-3.4 6.9-8.6 11.6z', (sh ? `photoToggleLike('${sh}')` : `rentMark(this, 'like', '${id}'); likersWrite('${artEsc(likeId)}', this.classList.contains('on'))`), liked, ` data-people="like" data-pid="${escHtml(likeId)}" data-iid="${escHtml(x.id)}"` + (sh ? ` data-like="${escHtml(x.shId)}"` : ''), 'mk-a-like', cnt(Number(itemLikesData[likeId]) || '', ` data-likes-n="${escHtml(likeId)}"`))}
+    ${b('תגובות', 'M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z', `igCommentsOpen('${artEsc(rk)}', '${artEsc(x.title || '')}')`, false, '', 'mk-a-cmt')}
     ${b('ריפוסט', 'M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3', `toggleRepost('${artEsc(rk)}', this)`, repostIsMine(rk), ` data-item="${escHtml(rk)}" data-people="rep" data-pid="${escHtml(rk)}"`, 'pti-repost mk-a-rep', cnt(repostCount(rk) || ''))}
-    <span role="button" tabindex="0" class="mk-a-dots" aria-label="עוד פעולות" title="עוד" aria-expanded="false" onclick="${stop}mkMoreToggle(this)"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="18" cy="12" r="1.8"/></svg></span>
-    <span class="mk-sg-hov-btns mk-a-pop">
-    ${b('שמירה', 'M6 4h12v17l-6-4.5L6 21z', `mkCountBump('${artEsc(svKey)}', this.classList.contains('on') ? -1 : 1); ` + (sh ? `photoToggleSave('${sh}')` : `rentMark(this, 'save', '${id}')`), saved, sh ? ` data-save="${escHtml(x.shId)}"` : '', '', cnt(Number(itemLikesData[svKey]) || 0, ` data-likes-n="${escHtml(svKey)}"`))}
-    ${b('דיווח', 'M5 21V4M5 4h11l-2 4 2 4H5', `openReportContent('${artEsc(rk)}', '${artEsc(x.title || '')}')`, false, '', '', cnt(Number(itemLikesData[rpKey]) || 0, ` data-likes-n="${escHtml(rpKey)}"`))}
-  </span></span>`;
+    ${b('שיתוף', 'M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z', `if(navigator.share){navigator.share({title:'${artEsc(x.title||'')}',url:location.href}).catch(()=>{});}else{navigator.clipboard.writeText(location.href);showCopyToast('הקישור הועתק');}`, false, '', 'mk-a-share')}
+    <span role="button" tabindex="0" class="mk-a-deal" aria-label="משא ומתן" title="משא ומתן — הצעת מחיר" onclick="${stop}mkCardHaggle(this, '${id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><circle cx="7.5" cy="7.5" r="1.2"/></svg></span>
+    ${b('שמירה', 'M6 4h12v17l-6-4.5L6 21z', `mkCountBump('${artEsc(svKey)}', this.classList.contains('on') ? -1 : 1); ` + (sh ? `photoToggleSave('${sh}')` : `rentMark(this, 'save', '${id}')`), saved, sh ? ` data-save="${escHtml(x.shId)}"` : '', 'mk-a-save')}
+  </span>`;
 }
 // ===== ספריית מודעות: עמוד כהה בסגנון ספריית סדרות — "10 המובילות היום" עם מספרים גדולים, ושורות של כרטיסים גבוהים =====
 function libScore(r) {

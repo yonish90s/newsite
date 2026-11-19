@@ -4719,6 +4719,30 @@ html.theme-dark.theme-dark .tw-media { border-color: rgba(255, 255, 255, 0.1) !i
 html.theme-dark body .tg-panel.tg-show-thread .tg-thread-view { background: #12171d !important; }
 html.theme-dark.theme-dark body .tg-panel.tg-show-thread .tg-thread-view { background: #1f262f !important; }
 html.theme-dark body .ssx-fbtn.on { background: #1a2028 !important; color: #f5f5f5 !important; }
+html.theme-dark body .ig-act2 > :is(.mk-a-like, .mk-a-cmt, .mk-a-rep, .mk-a-share, .mk-a-deal, .mk-a-save) { color: #f5f5f5 !important; }
+html.theme-dark body .ig-act2 .mk-n { color: #f5f5f5 !important; }
+html.theme-dark body .ig-act2 > .mk-a-like.on svg { fill: #e4202b !important; stroke: #e4202b !important; }
+html.theme-dark body .ig-act2 > .mk-a-save.on svg { fill: #f5f5f5 !important; }
+html.theme-dark .igc-top b { color: #f5f5f5 !important; }
+html.theme-dark .igc-top small { color: #c9ced6 !important; }
+html.theme-dark .igc-tx { color: #f5f5f5 !important; }
+html.theme-dark .igc-rep { color: #c9ced6 !important; }
+html.theme-dark .igc-like { color: #c9ced6 !important; }
+html.theme-dark .igc-like.on svg { fill: #e4202b !important; stroke: #e4202b !important; }
+html.theme-dark .igc-dock { border-top: 1px solid rgba(255, 255, 255, 0.064) !important; background: #12171d !important; }
+html.theme-dark .igc-form input { border: 1px solid #262d36 !important; background: #12171d !important; }
+html.theme-dark .igc-send { color: #e4202b !important; }
+html.theme-dark.theme-dark .igc-dock { background: #1f262f !important; border-top-color: rgba(255, 255, 255, 0.1) !important; }
+html.theme-dark.theme-dark .igc-form input { background: #1f262f !important; }
+html.theme-dark .ig-prof { background: #12171d !important; border: 1px solid rgba(255, 255, 255, 0.056) !important; }
+html.theme-dark .ig-p-name { color: #f5f5f5 !important; }
+html.theme-dark .ig-p-stats b { color: #f5f5f5 !important; }
+html.theme-dark .ig-p-stats small { color: #c9ced6 !important; }
+html.theme-dark .ig-p-bio { color: #c9ced6 !important; }
+html.theme-dark .ig-p-acts .ig-follow { background: #e4202b !important; }
+html.theme-dark .ig-p-acts .ig-follow.on, html.theme-dark .ig-p-acts .ig-msg-btn { background: #12171d !important; color: #f5f5f5 !important; }
+html.theme-dark.theme-dark .ig-prof { background: #1f262f !important; border-color: rgba(255, 255, 255, 0.1) !important; }
+html.theme-dark.theme-dark .ig-p-acts .ig-follow.on, html.theme-dark.theme-dark .ig-p-acts .ig-msg-btn { background: #1f262f !important; }
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #f5f5f5 !important; }
 html.theme-dark [style*="color:#111111"] { color: #f5f5f5 !important; }

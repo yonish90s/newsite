@@ -2119,6 +2119,23 @@ html:not(.theme-dark) .tw-text b { color: #111111; }
 html:not(.theme-dark) .tw-text small { color: #111111; }
 html:not(.theme-dark) .tw-more { color: #111111; }
 html:not(.theme-dark) body .ssx-fbtn.on { color: #111111 !important; }
+html:not(.theme-dark) body .ig-act2 > :is(.mk-a-like, .mk-a-cmt, .mk-a-rep, .mk-a-share, .mk-a-deal, .mk-a-save) { color: #111111 !important; }
+html:not(.theme-dark) body .ig-act2 .mk-n { color: #111111 !important; }
+html:not(.theme-dark) body .ig-act2 > .mk-a-like.on svg { fill: #777777 !important; stroke: #777777 !important; }
+html:not(.theme-dark) body .ig-act2 > .mk-a-save.on svg { fill: #111111 !important; }
+html:not(.theme-dark) .igc-top b { color: #111111; }
+html:not(.theme-dark) .igc-top small { color: #727272; }
+html:not(.theme-dark) .igc-tx { color: #111111; }
+html:not(.theme-dark) .igc-rep { color: #727272; }
+html:not(.theme-dark) .igc-like { color: #727272; }
+html:not(.theme-dark) .igc-like.on svg { fill: #777777; stroke: #777777; }
+html:not(.theme-dark) .igc-send { color: #7a7a7a; }
+html:not(.theme-dark) .ig-p-name { color: #111111; }
+html:not(.theme-dark) .ig-p-stats b { color: #111111; }
+html:not(.theme-dark) .ig-p-stats small { color: #111111; }
+html:not(.theme-dark) .ig-p-bio { color: #111111; }
+html:not(.theme-dark) .ig-p-acts .ig-follow { background: #7a7a7a !important; }
+html:not(.theme-dark) .ig-p-acts .ig-follow.on,html:not(.theme-dark) .ig-p-acts .ig-msg-btn { color: #111111 !important; }
 html:not(.theme-dark) [style*="border:1.5px solid #e2e8f0"], html:not(.theme-dark) [style*="border: 1.5px solid #e2e8f0"] { border: 1.5px solid #e7e7e7 !important; }
 html:not(.theme-dark) [style*="color:#1e293b"], html:not(.theme-dark) [style*="color: #1e293b"] { color: #111111 !important; }
 html:not(.theme-dark) [style*="background:#dc2626"], html:not(.theme-dark) [style*="background: #dc2626"] { background: #111111 !important; }
