@@ -19347,28 +19347,48 @@ let dmSearchQuery = '';
 function dmSearch(q) { dmSearchQuery = String(q || '').trim().toLowerCase(); dmRefreshList(); }
 window.dmSearch = dmSearch;
 
+let dmFilterTab = 'primary';
+function dmArchGet() { try { return JSON.parse(localStorage.getItem('bw_dm_arch') || '{}') || {}; } catch (e) { return {}; } }
+function dmArchToggle(cid) {
+  const m = dmArchGet();
+  if (m[cid]) delete m[cid]; else m[cid] = true;
+  try { localStorage.setItem('bw_dm_arch', JSON.stringify(m)); } catch (e) {}
+  dmRefreshList();
+  if (typeof showCopyToast === 'function') showCopyToast(m[cid] ? 'השיחה הועברה לארכיון' : 'השיחה הוחזרה מהארכיון');
+}
+function dmSetTab(t) {
+  dmFilterTab = t || 'primary';
+  document.querySelectorAll('#messages-modal .tg-pill').forEach(b => b.classList.toggle('on', b.dataset.t === dmFilterTab));
+  dmRefreshList();
+}
+window.dmArchToggle = dmArchToggle; window.dmSetTab = dmSetTab;
 function dmConvListHTML() {
   const isAdminUser = (typeof isAdmin === 'function' && isAdmin());
   const _act = (typeof dmActiveConv === 'object' && dmActiveConv) ? dmActiveConv.convId : '';
   const q = dmSearchQuery;
   const match = (...parts) => !q || parts.some(p => String(p || '').toLowerCase().includes(q));
   // שיחה נעוצה עם מנהל האתר בראש הרשימה (לכל מי שאינו המנהל)
-  const pinned = (isAdminUser || !match('מנהל האתר', 'צוות')) ? '' : `
+  const arch = dmArchGet();
+  const isArch = dmFilterTab === 'archive';
+  const pinnedShow = !isArch && !arch['_admin'] && dmFilterTab !== 'requests';
+  const pinned = (!pinnedShow || isAdminUser || !match('מנהל האתר', 'צוות')) ? '' : `
     <div class="tg-row tg-row-pinned" onclick="dmOpenAdmin()">
       <div class="tg-avatar">${typeof authorAvHTML === 'function' ? authorAvHTML({ author: 'מנהל האתר', uid: dmAdminUid || '' }) : ''}</div>
       <div class="tg-row-main">
         <div class="tg-row-top"><span class="tg-row-name">מנהל האתר</span><span class="tg-row-pin" title="נעוץ"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M14.5 2.5 21.5 9.5 19.4 10.2 15.6 14 15.2 18.6 13.8 20 9.9 16.1 4.4 21.6 2.4 21.6 2.4 19.6 7.9 14.1 4 10.2 5.4 8.8 10 8.4 13.8 4.6z"/></svg></span></div>
       </div>
     </div>`;
-  const buyers = (isAdminUser && typeof buyersRowHTML === 'function' && match('עדכוני רוכשים', 'הזמנות', 'קניות')) ? buyersRowHTML() : '';
+  const buyers = (!isArch && isAdminUser && typeof buyersRowHTML === 'function' && match('עדכוני רוכשים', 'הזמנות', 'קניות')) ? buyersRowHTML() : '';
   const adminUid = dmAdminUid;
   const list = Object.entries(dmConversations || {})
     .filter(([cid, c]) => c && !(adminUid && c.otherUid === adminUid)) // לא לשכפל את שיחת המנהל
+    .filter(([cid]) => isArch ? !!arch[cid] : !arch[cid])
     .filter(([cid, c]) => match(c.otherName, c.lastText))
     .sort((a, b) => (b[1].lastTime || 0) - (a[1].lastTime || 0));
   if (!list.length) {
-    return buyers + pinned + (q ? '<div class="tg-empty">לא נמצאו שיחות</div>' : '');
+    return buyers + pinned + (q ? '<div class="tg-empty">לא נמצאו שיחות</div>' : isArch ? '<div class="tg-empty">אין שיחות בארכיון</div>' : '');
   }
+  const archIc = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8M10 12h4"/></svg>';
   return buyers + pinned + list.map(([cid, c]) => {
     const nm = c.otherName || 'משתמש';
     return `
@@ -19378,6 +19398,7 @@ function dmConvListHTML() {
         <div class="tg-row-top"><span class="tg-row-name">${escHtml(nm)}</span><span class="tg-row-time">${dmListTime(c.lastTime)}</span></div>
         <div class="tg-row-bottom"><span class="tg-row-last">${escHtml((c.lastText || '').slice(0, 80))}</span>${c.unread ? '<span class="tg-unread">●</span>' : ''}</div>
       </div>
+      <button type="button" class="tg-arch-btn" onclick="event.stopPropagation(); dmArchToggle('${artEsc(cid)}')" title="${isArch ? 'החזרה מהארכיון' : 'העברה לארכיון'}" aria-label="${isArch ? 'החזרה מהארכיון' : 'העברה לארכיון'}">${archIc}</button>
     </div>`;
   }).join('');
 }
@@ -19410,6 +19431,12 @@ async function openMessages() {
         <div class="tg-search">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
           <input type="search" placeholder="חיפוש" oninput="dmSearch(this.value)" aria-label="חיפוש שיחות">
+        </div>
+        <div class="tg-pills" role="tablist" aria-label="סינון שיחות">
+          <button type="button" class="tg-pill${dmFilterTab === 'primary' ? ' on' : ''}" data-t="primary" onclick="dmSetTab('primary')">ראשי</button>
+          <button type="button" class="tg-pill${dmFilterTab === 'requests' ? ' on' : ''}" data-t="requests" onclick="dmSetTab('requests')">בקשות</button>
+          <button type="button" class="tg-pill${dmFilterTab === 'general' ? ' on' : ''}" data-t="general" onclick="dmSetTab('general')">כללי</button>
+          <button type="button" class="tg-pill${dmFilterTab === 'archive' ? ' on' : ''}" data-t="archive" onclick="dmSetTab('archive')">ארכיון</button>
         </div>
         ${dmGuestBannerHTML()}
         <div class="tg-list" id="dm-conv-list">${dmConvListHTML()}</div>
@@ -27107,18 +27134,20 @@ function toggleSiteTheme() {
 }
 // מצב תצוגה: בהיר / כהה / לפי המכשיר (מתעדכן לבד כשהמכשיר עובר בין בהיר לכהה)
 function setSiteTheme(mode) {
-  mode = 'light';   // האתר במצב בהיר בלבד
+  if (mode !== 'light' && mode !== 'dark' && mode !== 'system') mode = 'dark';
   document.documentElement.dataset.themeMode = mode;
   try { localStorage.setItem('site_theme', mode); } catch (e) {}
   applySiteTheme();
 }
 function applySiteTheme() {
-  const mode = document.documentElement.dataset.themeMode || 'light';
+  const mode = document.documentElement.dataset.themeMode || 'dark';
   const dark = mode === 'dark' || (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-  const dc = document.getElementById('dark-css'); if (dc) { if (!dc.getAttribute('href')) dc.href = dc.dataset.href; dc.media = 'all'; }   // קובץ המצב הכהה נטען לא-חוסם; מפעילים אותו כשעוברים לכהה
+  const dc = document.getElementById('dark-css'); if (dc) { if (!dc.getAttribute('href')) dc.href = dc.dataset.href; dc.media = dark ? 'all' : 'not all'; }
   document.documentElement.classList.toggle('theme-dark', dark);
-  const meta = document.querySelector('meta[name="theme-color"]'); if (meta) meta.setAttribute('content', dark ? '#121418' : '#ffffff');
+  document.body?.classList.toggle('light-mode', !dark);
+  const meta = document.querySelector('meta[name="theme-color"]'); if (meta) meta.setAttribute('content', dark ? '#0f1115' : '#ffffff');
 }
+applySiteTheme();
 try { window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if (document.documentElement.dataset.themeMode === 'system') applySiteTheme(); }); } catch (e) {}
 Object.assign(window, { toggleSiteTheme, setSiteTheme });
 
@@ -37151,6 +37180,7 @@ Object.assign(window, { phoneVerifyOpen, pvSend, pvBack, pvClose });
           <button type="button" class="mt-circ mt-pub" onclick="mkPubOpen()" aria-label="העלאת מודעה" title="העלאת מודעה">${ic('<rect x="3" y="3" width="18" height="18" rx="5"/><path d="M12 8v8M8 12h8"/>')}</button>
           <button type="button" class="mt-circ mt-srch" onclick="openSiteSearch()" aria-label="חיפוש באתר" title="חיפוש">${ic('<circle cx="11" cy="11" r="7"/><path d="M20 20l-4.35-4.35"/>')}</button>
           <button type="button" class="mt-circ mt-dm" onclick="openMessages()" aria-label="הודעות בין משתמשים" title="הודעות">${ic('<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>')}</button>
+          <button type="button" class="mt-circ mt-theme" onclick="toggleSiteTheme()" aria-label="מצב כהה / בהיר" title="מצב כהה / בהיר">${ic('<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>')}</button>
         </div>
         <button type="button" class="mt-circ mt-me" onclick="mtMe()" aria-label="המשתמש שלי"></button>
       </div>

@@ -2136,6 +2136,9 @@ html:not(.theme-dark) .ig-p-stats small { color: #111111; }
 html:not(.theme-dark) .ig-p-bio { color: #111111; }
 html:not(.theme-dark) .ig-p-acts .ig-follow { background: #7a7a7a !important; }
 html:not(.theme-dark) .ig-p-acts .ig-follow.on,html:not(.theme-dark) .ig-p-acts .ig-msg-btn { color: #111111 !important; }
+html:not(.theme-dark) .tg-pill { color: #111111; }
+html:not(.theme-dark) .tg-pill.on { background: #111111; border-color: #111111; }
+html:not(.theme-dark) .tg-arch-btn { color: #a2a2a2; }
 html:not(.theme-dark) [style*="border:1.5px solid #e2e8f0"], html:not(.theme-dark) [style*="border: 1.5px solid #e2e8f0"] { border: 1.5px solid #e7e7e7 !important; }
 html:not(.theme-dark) [style*="color:#1e293b"], html:not(.theme-dark) [style*="color: #1e293b"] { color: #111111 !important; }
 html:not(.theme-dark) [style*="background:#dc2626"], html:not(.theme-dark) [style*="background: #dc2626"] { background: #111111 !important; }
