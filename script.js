@@ -30598,8 +30598,7 @@ function peopleListHTML(map, emptyText) {
     const nm = String(v.name || 'משתמש');
     const realUid = (v.demo || String(uid).startsWith('demo_')) ? '' : uid;
     const av = typeof authorAvHTML === 'function' ? authorAvHTML({ author: nm, uid: realUid }) : `<span class="au-av pl-av">${escHtml(nm.trim().charAt(0) || '?')}</span>`;
-    const dt = v.at ? `<span class="pl-t">${escHtml(new Date(v.at).toLocaleDateString('he-IL'))}</span>` : '';
-    const inner = `${av}<span class="pl-name">${escHtml(nm)}</span>${dt}`;
+    const inner = `${av}<span class="pl-name">${escHtml(nm)}</span>`;
     return `<button type="button" class="pl-row" onclick="closeMSheet(); if(typeof rentOpenSeller==='function') rentOpenSeller('${artEsc(realUid)}', '${artEsc(nm)}')">${inner}</button>`;
   }).join('')}</div>`;
 }
