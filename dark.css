@@ -4652,6 +4652,13 @@ html.theme-dark .ev-btn { background: #12171d !important; color: #f5f5f5 !import
 html.theme-dark .ev-btn:hover { background: #1a2028 !important; }
 html.theme-dark .ev-btn.on { background: #1f262f !important; }
 html.theme-dark.theme-dark .ev-card { background: #1f262f !important; }
+html.theme-dark .ev-det-hero img { background: #12171d !important; }
+html.theme-dark .ev-det-hero-tx b { color: #f5f5f5 !important; }
+html.theme-dark .ev-det-hero-tx small { color: #c9ced6 !important; }
+html.theme-dark .ev-det-box { background: #12171d !important; }
+html.theme-dark .ev-det-box small { color: #c9ced6 !important; }
+html.theme-dark .ev-det-box b { color: #f5f5f5 !important; }
+html.theme-dark.theme-dark .ev-det-box { background: #1f262f !important; }
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #f5f5f5 !important; }
 html.theme-dark [style*="color:#111111"] { color: #f5f5f5 !important; }

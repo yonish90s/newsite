@@ -37487,18 +37487,16 @@ function evCardHTML(ev) {
   const shown = basePeople.slice(0, 3);
   const stack = shown.map(p => `<span class="ev-av">${typeof authorAvHTML === 'function' ? authorAvHTML({ author: p.name || 'משתתף', uid: p.uid || '' }) : `<span class="au-av">${escHtml((p.name || 'מ').charAt(0))}</span>`}</span>`).join('');
   const total = basePeople.length;
-  return `<article class="ev-card" data-ev-id="${escHtml(ev.id)}">
+  return `<article class="ev-card" data-ev-id="${escHtml(ev.id)}" role="button" tabindex="0" onclick="evOpenDetails('${artEsc(ev.id)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();evOpenDetails('${artEsc(ev.id)}');}">
     <div class="ev-img"><img src="${escHtml(ev.img || 'rent/t/projector.jpg?v=2')}" alt="${escHtml(ev.title)}" loading="lazy" decoding="async">${ev.demo ? '<span class="ev-demo-tag">דוגמה</span>' : ''}</div>
     <div class="ev-body">
       <span class="ev-cat">${escHtml(ev.cat || 'אירוע')}</span>
       <h3 class="ev-title">${escHtml(ev.title)}</h3>
-      <p class="ev-meta">${escHtml(ev.when)}</p>
-      <p class="ev-meta ev-where">${escHtml(ev.where)}</p>
       <div class="ev-who">
         <span class="ev-stack">${stack}</span>
         <span class="ev-cnt">${total.toLocaleString('he-IL')} משתתפים</span>
       </div>
-      <button type="button" class="ev-btn${joined ? ' on' : ''}" onclick="evToggleJoin('${artEsc(ev.id)}')">${joined ? 'משתתף/ת ✓' : 'השתתפות באירוע'}</button>
+      <button type="button" class="ev-btn${joined ? ' on' : ''}" onclick="event.stopPropagation(); evToggleJoin('${artEsc(ev.id)}')">${joined ? 'משתתף/ת ✓' : 'השתתפות באירוע'}</button>
     </div>
   </article>`;
 }
@@ -37528,7 +37526,39 @@ function evToggleJoin(id) {
   if (on) m[id] = true; else delete m[id];
   try { localStorage.setItem('bw_events_join', JSON.stringify(m)); } catch (e) {}
   evRefreshDOM();
+  if (document.getElementById('ev-det-modal')) evOpenDetails(id);
   if (typeof showCopyToast === 'function') showCopyToast(on ? 'נרשמת להשתתפות באירוע' : 'בוטלה ההשתתפות באירוע');
+}
+function evOpenDetails(id) {
+  const ev = evUserList().concat(EV_DEMO).find(x => x.id === id);
+  if (!ev) return;
+  const joined = !!evJoinedMap()[ev.id];
+  const u = auth.currentUser, reg = u && !u.isAnonymous;
+  const myName = reg ? String((typeof liveChatUserName === 'function' && liveChatUserName()) || u.displayName || 'אני') : 'אני';
+  const basePeople = Array.isArray(ev.people) ? ev.people.slice() : [];
+  if (joined) basePeople.unshift({ name: myName, uid: reg ? u.uid : '' });
+  const stack = basePeople.slice(0, 5).map(p => `<span class="ev-av">${typeof authorAvHTML === 'function' ? authorAvHTML({ author: p.name || 'משתתף', uid: p.uid || '' }) : `<span class="au-av">${escHtml((p.name || 'מ').charAt(0))}</span>`}</span>`).join('');
+  let m = document.getElementById('ev-det-modal');
+  if (m) m.remove();
+  m = document.createElement('div');
+  m.id = 'ev-det-modal'; m.className = 'st-up-modal';
+  m.innerHTML = `<div class="st-up-card ev-det-card" role="dialog" aria-modal="true" aria-label="פרטי האירוע">
+    <header class="st-up-head"><b>פרטי האירוע</b><button type="button" class="st-up-x" onclick="document.getElementById('ev-det-modal')?.remove()" aria-label="סגירה">✕</button></header>
+    <div class="ev-det-hero">
+      <img src="${escHtml(ev.img || 'rent/t/projector.jpg?v=2')}" alt="${escHtml(ev.title)}">
+      <div class="ev-det-hero-tx"><b>${escHtml(ev.title)}</b>${ev.demo ? '<small>דוגמה</small>' : ''}</div>
+    </div>
+    <div class="ev-det-grid">
+      <div class="ev-det-box"><small>סוג</small><b>${escHtml(ev.cat || 'אירוע')}</b></div>
+      <div class="ev-det-box"><small>מתי</small><b>${escHtml(ev.when || '')}</b></div>
+      <div class="ev-det-box full"><small>מיקום</small><b>${escHtml(ev.where || '')}</b></div>
+      <div class="ev-det-box full"><small>משתתפים</small><div class="ev-who"><span class="ev-stack">${stack}</span><span class="ev-cnt">${basePeople.length.toLocaleString('he-IL')} משתתפים</span></div></div>
+    </div>
+    <button type="button" class="ev-btn ev-det-btn${joined ? ' on' : ''}" onclick="evToggleJoin('${artEsc(ev.id)}')">${joined ? 'משתתף/ת באירוע ✓' : 'השתתפות באירוע'}</button>
+  </div>`;
+  m.addEventListener('click', e => { if (e.target === m) m.remove(); });
+  document.body.appendChild(m);
+  if (typeof avatarHydrate === 'function') avatarHydrate(m);
 }
 function evAddOpen() {
   let m = document.getElementById('ev-add-modal');
@@ -37561,4 +37591,4 @@ function evAddSave() {
   evRefreshDOM();
   if (typeof showCopyToast === 'function') showCopyToast('האירוע פורסם!');
 }
-Object.assign(window, { eventsSectionHTML, evToggleJoin, evAddOpen, evAddSave });
+Object.assign(window, { eventsSectionHTML, evToggleJoin, evOpenDetails, evAddOpen, evAddSave });

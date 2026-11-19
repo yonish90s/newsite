@@ -2080,6 +2080,10 @@ html:not(.theme-dark) .ev-meta { color: #111111; }
 html:not(.theme-dark) .ev-where { color: #727272; }
 html:not(.theme-dark) .ev-cnt { color: #111111; }
 html:not(.theme-dark) .ev-btn { color: #111111; }
+html:not(.theme-dark) .ev-det-hero-tx b { color: #111111; }
+html:not(.theme-dark) .ev-det-hero-tx small { color: #727272; }
+html:not(.theme-dark) .ev-det-box small { color: #727272; }
+html:not(.theme-dark) .ev-det-box b { color: #111111; }
 html:not(.theme-dark) [style*="border:1.5px solid #e2e8f0"], html:not(.theme-dark) [style*="border: 1.5px solid #e2e8f0"] { border: 1.5px solid #e7e7e7 !important; }
 html:not(.theme-dark) [style*="color:#1e293b"], html:not(.theme-dark) [style*="color: #1e293b"] { color: #111111 !important; }
 html:not(.theme-dark) [style*="background:#dc2626"], html:not(.theme-dark) [style*="background: #dc2626"] { background: #111111 !important; }
