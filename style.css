@@ -22534,6 +22534,10 @@ html.theme-dark .tw-text small, html.theme-dark .tw-more { color: #f4f4f5; }
 .tw-media { width: 100%; border-radius: 16px; overflow: hidden; border: 1px solid rgba(0, 0, 0, .08); background: #f8fafc; }
 .tw-media img { width: 100%; max-height: 440px; object-fit: cover; display: block; }
 .tw-acts .mk-act2 { justify-content: space-between; padding-top: 4px; }
+html body .tw-post .tw-acts { display: block !important; opacity: 1 !important; visibility: visible !important; position: static !important; margin-top: 4px !important; padding: 0 !important; }
+html body .tw-post .tw-acts .mk-act2 { display: flex !important; align-items: center !important; justify-content: space-between !important; gap: 6px !important; width: 100% !important; }
+html body .tw-post .tw-acts .mk-act2 > :is(.mk-a-buy, .mk-a-deal, .mk-a-like, .mk-a-rep, .mk-a-follow, .mk-a-dots) { display: inline-flex !important; align-items: center !important; justify-content: center !important; opacity: 1 !important; visibility: visible !important; }
+html body .tw-post .tw-acts svg { width: 17px !important; height: 17px !important; }
 html.theme-dark .tw-post { border-bottom-color: rgba(255, 255, 255, .1); }
 html.theme-dark .tw-who, html.theme-dark .tw-text b { color: #f4f4f5; }
 html.theme-dark .tw-meta, html.theme-dark .tw-text small { color: #a1a1aa; }
