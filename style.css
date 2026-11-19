@@ -22533,3 +22533,7 @@ html.theme-dark .tw-post { border-bottom-color: rgba(255, 255, 255, .1); }
 html.theme-dark .tw-who, html.theme-dark .tw-text b { color: #f4f4f5; }
 html.theme-dark .tw-meta, html.theme-dark .tw-text small { color: #a1a1aa; }
 html.theme-dark .tw-media { border-color: rgba(255, 255, 255, .1); background: #18181b; }
+/* מניעת חפיפה בין רשימת השיחות לכותרת השיחה הפעילה (שקיפות .tg-view) */
+html body .tg-panel.tg-show-thread .tg-list-view { opacity: 0 !important; pointer-events: none !important; visibility: hidden !important; }
+html body .tg-panel.tg-show-thread .tg-thread-view { background: #ffffff !important; z-index: 2 !important; }
+html.theme-dark body .tg-panel.tg-show-thread .tg-thread-view { background: #14151a !important; }
