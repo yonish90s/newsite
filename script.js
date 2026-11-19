@@ -33920,7 +33920,6 @@ function libStyleCardHTML(r, extra) {
   </div></div>`;
 }
 function libCardHTML(r, extra) {
-  if (r && r.id === LIB_STYLE_ID) return libStyleCardHTML(r, extra);
   return `<div class="lib-mk${extra ? ' ' + extra : ''}">${rentMiniHTML(r)}</div>`;
 }
 function libPosterCardHTML(r, extra, trending) {
@@ -36520,17 +36519,7 @@ Object.assign(window, { perfLoad, perfRange, perfToggle, perfSectionHTML });
 // מובייל: כפתורי הכרטיס (עגלה, משא ומתן, ⋯) מוסתרים. לחיצה ראשונה על כרטיס מציגה אותם, לחיצה שנייה נכנסת למודעה
 // ============================================================
 (function mkTapActs() {
-  const mobile = () => window.matchMedia('(max-width: 900px)').matches;
-  window.addEventListener('click', e => {
-    if (!mobile()) return;
-    const card = e.target.closest && e.target.closest('.mk-sg');
-    if (!card) { document.querySelectorAll('.mk-sg.acts-on').forEach(c => c.classList.remove('acts-on')); return; }
-    if (card.classList.contains('acts-on')) return;                       // כבר פתוח — הלחיצה ממשיכה כרגיל (כניסה / כפתור)
-    if (e.target.closest('.mk-sg-x, .mk-sg-acts button, .mk-sg-acts [role="button"]')) return;
-    e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
-    document.querySelectorAll('.mk-sg.acts-on').forEach(c => c.classList.remove('acts-on'));
-    card.classList.add('acts-on');
-  }, true);
+  // הכפתורים מוצגים כעת באופן קבוע מתחת לכותרת — לחיצה על הכרטיס נכנסת מיד למודעה
 })();
 
 // ============================================================
