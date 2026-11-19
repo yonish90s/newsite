@@ -18946,7 +18946,7 @@ window.fdHide = fdHide;
 async function mktFeedOpen() {
   const u = auth.currentUser, guest = !u || u.isAnonymous;
   if (typeof mainContent === 'undefined' || !mainContent) return;
-  mainContent.innerHTML = '<div class="fd-page"><h1 class="fd-h">הפיד</h1><div class="rn-empty">טוען…</div></div>';
+  mainContent.innerHTML = '<div class="fd-page"><div class="rn-empty">טוען…</div></div>';
   try { window.scrollTo(0, 0); } catch (e) {}
   let follows = {}, reps = {};
   if (guest) follows = guestFollowsGet();
@@ -18977,7 +18977,7 @@ async function mktFeedOpen() {
     if (fdHidden()[key]) return;   // גולש שסגר את ההצעה הזו (✕)
     sugg.push(r);
   });
-  const suggHTML = sugg.length ? `<section class="fd-sugg"><h2>מוכרים שכדאי לעקוב אחריהם</h2><div class="fd-sugg-row">${sugg.slice(0, 12).map(r => `<div class="fd-sg"><button type="button" class="fd-sg-x" onclick="fdHide('${artEsc(r.uid || igDemoKeyOf(r.owner))}', this)" aria-label="הסתרת ההצעה">✕</button>
+  const suggHTML = sugg.length ? `<section class="fd-sugg"><div class="fd-sugg-row">${sugg.slice(0, 12).map(r => `<div class="fd-sg"><button type="button" class="fd-sg-x" onclick="fdHide('${artEsc(r.uid || igDemoKeyOf(r.owner))}', this)" aria-label="הסתרת ההצעה">✕</button>
       <button type="button" class="fd-sg-who" onclick="${r.uid ? `openUserPage('${artEsc(r.uid)}', '${artEsc(r.owner)}')` : `rentOpenSeller('', '${artEsc(r.owner)}')`}">${authorAvHTML({ author: r.owner, uid: r.uid || '' })}<b>${escHtml(r.owner)}</b><small>${escHtml(r.city || '')}</small></button>
       <button type="button" class="fd-sg-go" onclick="mkCardFollow(this, '${artEsc(r.uid || '')}', '${artEsc(r.owner)}'); setTimeout(mktFeedOpen, 250)">${IG_FOLLOW_IC}מעקב</button></div>`).join('')}</div></section>` : '';
   const mine = items.filter(me), theirs = items.filter(x => !me(x));
@@ -18986,7 +18986,7 @@ async function mktFeedOpen() {
   const sec = (title, sub, list, empty) => `<section class="fd-sec"><header class="fd-sec-h"><h2>${title} <small>${list.length}</small></h2><span>${sub}</span></header>${list.length ? cards(list) : `<div class="fd-sec-empty">${empty}</div>`}</section>`;
   const upsHTML = sec('העלאות', 'מודעות ופוסטים חדשים של מי שאתם עוקבים אחריהם', ups, 'עדיין אין העלאות ממי שאתם עוקבים אחריהם');
   const repHTML = sec('ריפוסטים', 'מודעות שהם שיתפו מאחרים', reps2, 'עדיין אין ריפוסטים ממי שאתם עוקבים אחריהם');
-  mainContent.innerHTML = `<div class="fd-page"><h1 class="fd-h">הפיד</h1>
+  mainContent.innerHTML = `<div class="fd-page">
     ${suggHTML}
     <div class="pf-tabs2" role="tablist"><button type="button" class="on" onclick="fdTab(this, 'all')">הכל</button><button type="button" onclick="fdTab(this, 'ups')">העלאות <small>${ups.length}</small></button><button type="button" onclick="fdTab(this, 'reps')">ריפוסטים <small>${reps2.length}</small></button>${guest ? '' : `<button type="button" onclick="fdTab(this, 'me')">שלי <small>${mine.length}</small></button>`}</div>
     <div data-fd="all">${theirs.length ? upsHTML + repHTML : cards([])}</div><div data-fd="ups" hidden>${upsHTML}</div><div data-fd="reps" hidden>${repHTML}</div><div data-fd="me" hidden>${cards(mine)}</div></div>`;
@@ -31012,7 +31012,7 @@ function mTabsActive() {
   return '';
 }
 (function mTabsEverywhere() {
-  const DETAIL = '.rn-det, .art-detail, .news-article, .story-page-view, .pd3-pagehead, .pd2-frame';
+  const DETAIL = '.rn-det, .mk-watch, .mk-pg, .art-detail, .news-article, .story-page-view, .pd3-pagehead, .pd2-frame';
   const desk = window.matchMedia('(min-width: 769px)');
   let q = 0;
   function sync() {
@@ -34322,7 +34322,7 @@ function rentMiniHTML(x) {
   // בידול: עסק — מסגרת ירוקה, תג "עסק" וסמל חנות ליד שם העסק; יד 2 — תג אפור
   const sec = mktSecOf(x), biz = sec === 'biz';
   const badge = biz ? `<i class="mk-sg-badge b-biz">${BIZ_IC}עסק</i>` : sec === 'used' ? '<i class="mk-sg-badge b-used">יד 2</i>' : '';
-  return `<div role="button" tabindex="0" class="mk-sg${biz ? ' is-biz' : sec === 'used' ? ' is-used' : ''}" data-id="${escHtml(x.id)}" onclick="rentOpen('${artEsc(x.id)}')" onkeydown="if((event.key==='Enter'||event.key===' ')&&event.target===this){event.preventDefault();this.click();}"><span class="mk-sg-meta"><span class="mk-sg-who" role="button" tabindex="0" title="${escHtml(mktWho(x))}" aria-label="${escHtml(mktWho(x))}" onclick="event.stopPropagation(); rentOpenSeller('${artEsc(x.uid || '')}', '${artEsc(x.owner || '')}')">${authorAvHTML({ author: mktWho(x) || '?', uid: x.uid || '' })}<b>${biz ? BIZ_IC : ''}${escHtml(mktWho(x))}${isUserVerified(x.uid || '', mktWho(x), x.verified) ? verifiedSealHTML(13) : ''}</b></span><small class="mk-sg-city${mkKmTo(x.city) !== null ? ' km' : ''}">${escHtml(mkWhereTxt(x))}</small>${mkMobStatHTML(x)}<small class="mk-sg-price">${rentTypeIcon(x)}${Number(x.price) > 0 ? `${mktDiscP(x.price).toLocaleString('he-IL', { maximumFractionDigits: 2 })}&nbsp;₪${mktWasHTML(x.price)}` : mktIsProj(x) ? escHtml((PROJ_SUB[x.pd] || {}).name || PROJ_KINDS[x.pk] || 'פרויקט') : ''}${x.uid ? `<i data-sg-rate="${escHtml(x.uid)}"></i>` : ''}</small></span><span class="mk-sg-img">${rentThumb(x)}${badge}${del}${mktSoldOut(x) ? '<i class="mk-sg-out">אזל</i>' : ''}</span><span class="mk-sg-acts">${rentHoverHTML(x).replace('<span role="button" tabindex="0" class="mk-a-dots"', () => `<b class="mk-sg-title"><span class="mk-sg-tt">${escHtml(x.title)}</span><span class="mk-sg-more" role="button" tabindex="0" onclick="event.stopPropagation(); event.preventDefault(); this.parentElement.classList.toggle('open')"><span>עוד</span><span>פחות</span></span></b><span role="button" tabindex="0" class="mk-a-dots"`)}</span></div>`;
+  return `<div role="button" tabindex="0" class="mk-sg${biz ? ' is-biz' : sec === 'used' ? ' is-used' : ''}" data-id="${escHtml(x.id)}" onclick="rentOpen('${artEsc(x.id)}')" onkeydown="if((event.key==='Enter'||event.key===' ')&&event.target===this){event.preventDefault();this.click();}"><span class="mk-sg-meta"><span class="mk-sg-who" role="button" tabindex="0" title="${escHtml(mktWho(x))}" aria-label="${escHtml(mktWho(x))}" onclick="event.stopPropagation(); rentOpenSeller('${artEsc(x.uid || '')}', '${artEsc(x.owner || '')}')">${isUserVerified(x.uid || '', mktWho(x), x.verified) ? verifiedSealHTML(13) : ''}${authorAvHTML({ author: mktWho(x) || '?', uid: x.uid || '' })}<b>${biz ? BIZ_IC : ''}${escHtml(mktWho(x))}</b></span><small class="mk-sg-city${mkKmTo(x.city) !== null ? ' km' : ''}">${escHtml(mkWhereTxt(x))}</small>${mkMobStatHTML(x)}<small class="mk-sg-price">${rentTypeIcon(x)}${Number(x.price) > 0 ? `${mktDiscP(x.price).toLocaleString('he-IL', { maximumFractionDigits: 2 })}&nbsp;₪${mktWasHTML(x.price)}` : mktIsProj(x) ? escHtml((PROJ_SUB[x.pd] || {}).name || PROJ_KINDS[x.pk] || 'פרויקט') : ''}${x.uid ? `<i data-sg-rate="${escHtml(x.uid)}"></i>` : ''}</small></span><span class="mk-sg-img">${rentThumb(x)}${badge}${del}${mktSoldOut(x) ? '<i class="mk-sg-out">אזל</i>' : ''}</span><span class="mk-sg-acts">${rentHoverHTML(x).replace('<span role="button" tabindex="0" class="mk-a-dots"', () => `<b class="mk-sg-title"><span class="mk-sg-tt">${escHtml(x.title)}</span><span class="mk-sg-more" role="button" tabindex="0" onclick="event.stopPropagation(); event.preventDefault(); this.parentElement.classList.toggle('open')"><span>עוד</span><span>פחות</span></span></b><span role="button" tabindex="0" class="mk-a-dots"`)}</span></div>`;
 }
 // שורת הזהב: משאירים בה בדיוק כמה כרטיסים שנכנסים בשורה אחת; העודפים חוזרים לראש הגריד הרגיל
 function mkGoldFit() {
@@ -34949,7 +34949,7 @@ function rentDetailHTML(r) {
   const wiRow = (x, cur) => `<button type="button" class="mk-wi${cur ? ' cur' : ''}" ${cur ? 'aria-current="true"' : `onclick="rentOpen('${artEsc(x.id)}')"`}>${cur ? '<i class="mk-wi-play" aria-hidden="true">▶</i>' : ''}<span class="mk-wi-img">${rentThumb(x)}${wiPrice(x) ? `<em class="mk-wi-price">${wiPrice(x)}</em>` : ''}<i class="mk-wi-bar" style="width:${cur ? 100 : 18 + (x.title.length * 7) % 70}%"></i></span><span class="mk-wi-tx"><b>${escHtml(x.title)}</b><small>${escHtml(x.owner || '')}</small>${x.city ? `<small class="mk-wi-city">${escHtml(x.city)}</small>` : ''}</span></button>`;
   const sideHTML = `<header class="mk-wi-head"><div><b>עוד ב${escHtml(sec === 'used' ? 'יד 2' : sec === 'biz' ? 'עסקים' : sec === 'proj' ? 'פרויקטים' : sec === 'store' ? 'אחסון' : 'השכרה')}</b><small>${side.length} מודעות · לפי המודעה הזו</small></div><button type="button" class="mk-wi-x" onclick="rentBack()" aria-label="סגירה">✕</button></header><div class="mk-wi-list">${wiRow(r, true)}${side.map(x => wiRow(x, false)).join('')}</div>`;
   return `<div class="mk-watch"><div class="mk-wmain"><header class="mk-head"><button type="button" class="rn-back" onclick="rentBack()" aria-label="חזרה">→</button>
-      <button type="button" class="mk-seller" onclick="rentOpenSeller('${artEsc(r.uid || '')}', '${artEsc(owner)}')">${who}${isUserVerified(r.uid || '', owner, r.verified) ? verifiedSealHTML(15) : ''}</button>
+      <button type="button" class="mk-seller" onclick="rentOpenSeller('${artEsc(r.uid || '')}', '${artEsc(owner)}')">${isUserVerified(r.uid || '', owner, r.verified) ? verifiedSealHTML(15) : ''}${who}</button>
       ${r.city ? `<span class="mk-city">${escHtml(r.city)}</span>` : ''}
     </header>
     <div class="mk-head-rate"><button type="button" class="mk-rate" data-seller="${escHtml(r.uid || '')}" onclick="rentRevOpen()">${rentRateHTML(0, 0)}</button></div><div class="mk-inv" data-like="${escHtml(r.shId || rentCommentsKey(r))}" data-rep="${escHtml(rentCommentsKey(r))}"${r.id === 'c1' ? ' data-demo="1"' : ''} hidden></div>
@@ -35016,7 +35016,7 @@ function crumbsHTML(items) {
 const RENT_STAR = '<svg viewBox="0 0 24 24"><path d="M12 2.8l2.8 5.8 6.4.9-4.6 4.5 1.1 6.3L12 17.3l-5.7 3 1.1-6.3L2.8 9.5l6.4-.9z"/></svg>';
 const rentStarsHTML = n => `<span class="mk-stars">${[1, 2, 3, 4, 5].map(k => RENT_STAR.replace('<svg', `<svg class="${n >= k - .25 ? 'on' : ''}"`)).join('')}</span>`;
 function rentRateHTML(avg, count) {
-  return `${rentStarsHTML(count ? avg : 0)}${count ? avg.toFixed(1) + ' ' : ''}(${!count ? 'אין עדיין ביקורות על המוכר' : count === 1 ? 'ביקורת אחת על המוכר' : count + ' ביקורות על המוכר'})`;
+  return count ? `${rentStarsHTML(avg)}${avg.toFixed(1)} (${count === 1 ? 'ביקורת אחת על המוכר' : count + ' ביקורות על המוכר'})` : rentStarsHTML(0);
 }
 // כתיבת ביקורת: מוכר אמיתי נשמר במסד (גם בדירוג שלו); במודעת דוגמה הביקורת נשמרת רק בדפדפן
 function rentRevOpen() {
@@ -37169,7 +37169,7 @@ function storyCircleHTML(g, isSugg) {
   const cnt = g.items.length > 1 ? `<em class="st-cnt">${g.items.length}</em>` : '';
   return `<button type="button" class="st-item${isSugg ? ' st-sugg' : ''}${g.allSeen ? ' seen' : ''}" onclick="storyOpen('${artEsc(g.key)}')" title="${escHtml(g.name)} — סטורי (24 שעות)" aria-label="${escHtml(g.name)}">
     <span class="st-ring"><span class="st-av">${thumb}</span>${cnt}</span>
-    <b class="st-name">${escHtml(g.name)}${typeof isUserVerified === 'function' && isUserVerified(g.uid || '', g.name || '') ? verifiedSealHTML(11) : ''}</b>
+    <b class="st-name">${typeof isUserVerified === 'function' && isUserVerified(g.uid || '', g.name || '') ? verifiedSealHTML(11) : ''}${escHtml(g.name)}</b>
   </button>`;
 }
 function storiesBarHTML() {

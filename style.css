@@ -22279,11 +22279,13 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_
 }
 
 /* גלילה חלקה ללא תקיעות במובייל ובמחשב */
-html, body, .main-content { -webkit-overflow-scrolling: touch; }
+html, body, .main-content { -webkit-overflow-scrolling: touch; scroll-behavior: auto !important; }
 html body #m-top { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; background: rgba(255, 255, 255, .98) !important; }
 html.theme-dark body #m-top { background: rgba(20, 20, 24, .98) !important; }
+.lib-page { will-change: scroll-position; }
 .lib-page .lib-track, .st-track { scroll-snap-type: none !important; touch-action: pan-x pan-y !important; -webkit-overflow-scrolling: touch !important; overscroll-behavior-x: contain !important; }
 .lib-page .lib-row, .st-bar { contain: layout style; }
+.lib-page .lib-mk, .ev-card { contain: layout style; }
 .pshow-frame, #story-page-view { touch-action: pan-y; }
 
 /* ===== אירועים סביבך ===== */
@@ -22332,3 +22334,21 @@ html.theme-dark .ev-cnt { color: #e4e4e7 !important; }
 html.theme-dark .ev-btn { background: #2b2d35 !important; color: #f4f4f5 !important; }
 html.theme-dark .ev-btn.on { background: #8b5cf6 !important; color: #ffffff !important; }
 .rn-tags, .mk-dtags, .mkpub-htags, .art-row-tags, .pd2-tags, .pd3-tags, .art-hashtags { display: none !important; }
+.mk-sg-who .verified-seal, .mk-seller .verified-seal { flex: none !important; margin: 0 0 0 2px !important; }
+.fd-page { padding-top: 2px !important; }
+.fd-sugg { margin-top: 0 !important; }
+.site-top:has(+ .fd-page) > .st-bar { margin-bottom: 6px !important; }
+@media (max-width: 900px) {
+  .fd-sugg-row { gap: 7px !important; }
+  .fd-sg { flex: 0 0 84px !important; width: 84px !important; min-width: 0 !important; padding: 7px 5px !important; border-radius: 12px !important; gap: 3px !important; }
+  .fd-sg-x { width: 16px !important; height: 16px !important; font-size: 9px !important; top: 4px !important; left: 4px !important; }
+  .fd-sg-who .au-av { width: 28px !important; height: 28px !important; min-width: 28px !important; font-size: 11px !important; }
+  .fd-sg-who b { font-size: 10.5px !important; line-height: 1.2 !important; }
+  .fd-sg-who small { font-size: 9px !important; }
+  .fd-sg-go { height: 22px !important; padding: 0 8px !important; font-size: 10px !important; gap: 3px !important; }
+  .fd-sg-go svg { width: 10px !important; height: 10px !important; }
+}
+
+html body #mainContent:has(> .lib-page) { min-height: 0 !important; height: auto !important; padding-bottom: 0 !important; }
+html body .lib-page { min-height: 0 !important; height: auto !important; padding-bottom: 12px !important; }
+html body .site-footer { margin-top: 8px !important; }
