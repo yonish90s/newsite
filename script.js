@@ -34010,7 +34010,7 @@ function libPosterCardHTML(r, extra, trending) {
 function libRowHTML(id, title, html) {
   return `<section class="lib-row"><header><h2>${title}</h2><span class="lib-arrows"><button type="button" class="lib-all" onclick="mktGo('all')">הכל</button><button type="button" onclick="libScroll('${id}', 1)" aria-label="הקודם">‹</button><button type="button" onclick="libScroll('${id}', -1)" aria-label="הבא">›</button></span></header><div class="lib-track" id="${id}">${html}</div></section>`;
 }
-function homeViewGet() { try { return localStorage.getItem('bw_home_view') === 'twitter' ? 'twitter' : 'cards'; } catch (e) { return 'cards'; } }
+function homeViewGet() { try { return localStorage.getItem('bw_home_view') === 'cards' ? 'cards' : 'twitter'; } catch (e) { return 'twitter'; } }
 function homeViewSync() {
   const m = homeViewGet();
   document.documentElement.classList.toggle('tw-feed', m === 'twitter');
