@@ -22371,12 +22371,13 @@ html body .site-footer { margin-top: 8px !important; }
 .ev-det-btn { width: 100%; padding: 11px 14px !important; font-size: 14.5px !important; border-radius: 14px !important; margin-top: 0 !important; }
 html.theme-dark .ev-det-hero-tx b, html.theme-dark .ev-det-box b { color: #f4f4f5 !important; }
 html.theme-dark .ev-det-box { background: #23242b !important; }
-html body .mk-sg .mk-sg-img { margin-bottom: 3px !important; }
+html body .mk-sg > .mk-sg-meta { margin-bottom: 0 !important; padding-bottom: 0 !important; }
+html body .mk-sg .mk-sg-img { margin-top: 0 !important; margin-bottom: 2px !important; }
 html body .mk-sg .mk-sg-acts { margin-top: 2px !important; padding-top: 0 !important; }
 html body .mk-sg .mk-sg-acts .mk-act2 { flex-wrap: wrap !important; justify-content: space-around !important; row-gap: 2px !important; }
 html body .mk-sg .mk-sg-acts .mk-act2 > .mk-sg-title { display: flex !important; order: -1 !important; flex: 0 0 100% !important; width: 100% !important; margin-bottom: 1px !important; }
-html body .mk-sg > .mk-sg-title { display: flex !important; width: 100% !important; margin: 1px 0 3px !important; padding: 0 2px !important; font-weight: 700 !important; color: #1f2937 !important; text-align: right !important; }
-html body .mk-sg > .mk-sg-title .mk-sg-tt { font-size: 11.5px !important; line-height: 1.25 !important; min-height: 2.5em !important; display: -webkit-box !important; -webkit-line-clamp: 2 !important; -webkit-box-orient: vertical !important; overflow: hidden !important; text-align: right !important; }
+html body .mk-sg > .mk-sg-title { display: flex !important; width: 100% !important; margin: 0 0 2px !important; padding: 0 2px !important; font-weight: 700 !important; color: #1f2937 !important; text-align: right !important; }
+html body .mk-sg > .mk-sg-title .mk-sg-tt { font-size: 11.5px !important; line-height: 1.2 !important; min-height: 0 !important; display: -webkit-box !important; -webkit-line-clamp: 2 !important; -webkit-box-orient: vertical !important; overflow: hidden !important; text-align: right !important; }
 html body .mk-sg > .mk-sg-title .mk-sg-more { display: none !important; }
 html.theme-dark body .mk-sg > .mk-sg-title, html.theme-dark body .mk-sg > .mk-sg-title .mk-sg-tt { color: #f4f4f5 !important; }
 html body .mk-sg .mk-sg-acts .mk-act2 > :is(.mk-a-buy, .mk-a-deal, .mk-a-like, .mk-a-rep, .mk-a-follow, .mk-a-dots) { display: inline-flex !important; }
@@ -22397,3 +22398,20 @@ html.theme-dark button.pl-row { border-bottom-color: rgba(255, 255, 255, .08); }
 html.theme-dark button.pl-row:hover { background: rgba(255, 255, 255, .06); }
 /* הסתרת שורת הסטורי כשנמצאים בעמוד פרופיל */
 html body:has(.pf-desk, #user-page-head) .st-bar { display: none !important; }
+/* הקטנת כרטיסי העסקאות/הצעות (dls-sq) בסגנון הכרטיס הקומפקטי של השוק, ובמיוחד כפתורי הפעולה העגולים */
+html body .dls-page .dls-grid { grid-template-columns: repeat(auto-fill, minmax(158px, 1fr)) !important; gap: 10px !important; }
+@media (max-width: 700px) {
+  html body .dls-page .dls-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 8px !important; }
+}
+html body .dls-page .dls-sq { padding: 7px 8px 8px !important; border-radius: 14px !important; gap: 4px !important; }
+html body .dls-page .dls-meta { gap: 4px !important; margin-bottom: 0 !important; }
+html body .dls-page .dls-who .au-av { width: 22px !important; height: 22px !important; min-width: 22px !important; font-size: 10px !important; }
+html body .dls-page .dls-price { padding: 2px 7px !important; font-size: 11px !important; }
+html body .dls-page .dls-st { padding: 2px 7px !important; font-size: 10.5px !important; }
+html body .dls-page .dls-img { height: 96px !important; border-radius: 10px !important; }
+html body .dls-page .dls-tx { gap: 1px !important; }
+html body .dls-page .dls-tx b { font-size: 11.5px !important; line-height: 1.2 !important; }
+html body .dls-page .dls-tx small { font-size: 10px !important; }
+html body .dls-page .dls-acts { gap: 6px !important; padding-top: 2px !important; }
+html body .dls-page .dls-b { width: 26px !important; height: 26px !important; min-width: 26px !important; padding: 0 !important; }
+html body .dls-page .dls-b svg { width: 13px !important; height: 13px !important; }
