@@ -25418,7 +25418,9 @@ function ssxItemHTML(r) {
 }
 function ssxPersonHTML(u) {
   const h = typeof profileHandle === 'function' ? profileHandle(u.name) : '';
-  return `<button type="button" class="ssx-person" onclick="ssOpenUser('${artEsc(u.uid)}','${artEsc(u.name || '')}')"><span class="ssx-av ring">${authorAvHTML({ authorId: u.uid, author: u.name })}</span><span class="ssx-pm"><b>${escHtml(u.name)}</b><small dir="ltr">${u.demo ? 'מוכר לדוגמה' : '@' + escHtml(h)}</small></span><span class="ssx-pbtn">פרופיל</span></button>`;
+  const fon = u.uid ? (typeof isFollowing === 'function' && isFollowing(u.uid)) : (typeof igDemoFollowing === 'function' && igDemoFollowing(igDemoKeyOf(u.name || '')));
+  const key = u.uid || (typeof igDemoKeyOf === 'function' ? igDemoKeyOf(u.name || '') : u.name || '');
+  return `<button type="button" class="ssx-person" onclick="ssOpenUser('${artEsc(u.uid)}','${artEsc(u.name || '')}')"><span class="ssx-av ring">${authorAvHTML({ authorId: u.uid, author: u.name })}</span><span class="ssx-pm"><b>${escHtml(u.name)}</b><small dir="ltr">${u.demo ? 'מוכר לדוגמה' : '@' + escHtml(h)}</small></span><span role="button" tabindex="0" class="ssx-pbtn ssx-fbtn${fon ? ' on' : ''}" data-fol="${escHtml(key)}" onclick="event.stopPropagation(); event.preventDefault(); mkCardFollow(this, '${artEsc(u.uid || '')}', '${artEsc(u.name || '')}')">${fon ? 'במעקב ✓' : '+ מעקב'}</span></button>`;
 }
 function ssxHTML(q, raw) {
   const L = ssxListings(q), people = ssFindUsers(q);
@@ -34322,6 +34324,7 @@ async function mkCardFollow(el, uid, name) {
   const on = uid ? isFollowing(uid) : igDemoFollowing(igDemoKeyOf(name)), key = uid || igDemoKeyOf(name);
   // כל הכרטיסים של אותו מוכר מתעדכנים יחד
   document.querySelectorAll(`.mk-a-follow[data-fol="${CSS.escape(key)}"]`).forEach(b => { b.classList.toggle('on', on); b.innerHTML = on ? IG_FOLLOWING_IC : IG_FOLLOW_IC; b.title = on ? 'במעקב — לחצו להפסקה' : 'מעקב אחרי ' + name; });
+  document.querySelectorAll(`.ssx-fbtn[data-fol="${CSS.escape(key)}"]`).forEach(b => { b.classList.toggle('on', on); b.textContent = on ? 'במעקב ✓' : '+ מעקב'; });
   if (typeof storiesRefreshDOM === 'function') storiesRefreshDOM();
 }
 window.mkCardFollow = mkCardFollow;
