@@ -4702,6 +4702,19 @@ html.theme-dark .yt-rev-head small { color: #c9ced6 !important; }
 html.theme-dark .yt-rev-tx { color: #f5f5f5 !important; }
 html.theme-dark .yt-rev-btn { color: #c9ced6 !important; }
 html.theme-dark .yt-rev-btn.on { color: #e4202b !important; }
+html.theme-dark .tw-view-sw { background: #12171d !important; }
+html.theme-dark .tw-vbtn { color: #c9ced6 !important; }
+html.theme-dark .tw-vbtn.on { background: #12171d !important; color: #f5f5f5 !important; }
+html.theme-dark.theme-dark .tw-view-sw { background: #1f262f !important; }
+html.theme-dark .tw-post { border-bottom: 1px solid rgba(255, 255, 255, 0.064) !important; }
+html.theme-dark .tw-who { color: #f5f5f5 !important; }
+html.theme-dark .tw-meta { color: #c9ced6 !important; }
+html.theme-dark .tw-head .mk-sg-price { background: #1a2028 !important; color: #e4202b !important; }
+html.theme-dark .tw-text b { color: #f5f5f5 !important; }
+html.theme-dark .tw-text small { color: #c9ced6 !important; }
+html.theme-dark .tw-media { border: 1px solid rgba(255, 255, 255, 0.064) !important; background: #12171d !important; }
+html.theme-dark.theme-dark .tw-post { border-bottom-color: rgba(255, 255, 255, 0.1) !important; }
+html.theme-dark.theme-dark .tw-media { border-color: rgba(255, 255, 255, 0.1) !important; background: #1f262f !important; }
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #f5f5f5 !important; }
 html.theme-dark [style*="color:#111111"] { color: #f5f5f5 !important; }

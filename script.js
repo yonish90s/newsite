@@ -34011,6 +34011,50 @@ function libPosterCardHTML(r, extra, trending) {
 function libRowHTML(id, title, html) {
   return `<section class="lib-row"><header><h2>${title}</h2><span class="lib-arrows"><button type="button" class="lib-all" onclick="mktGo('all')">הכל</button><button type="button" onclick="libScroll('${id}', 1)" aria-label="הקודם">‹</button><button type="button" onclick="libScroll('${id}', -1)" aria-label="הבא">›</button></span></header><div class="lib-track" id="${id}">${html}</div></section>`;
 }
+function homeViewGet() { try { return localStorage.getItem('bw_home_view') === 'twitter' ? 'twitter' : 'cards'; } catch (e) { return 'cards'; } }
+function homeViewSync() {
+  const m = homeViewGet();
+  document.documentElement.classList.toggle('tw-feed', m === 'twitter');
+  document.querySelectorAll('.tw-vbtn').forEach(b => b.classList.toggle('on', b.dataset.v === m));
+}
+function setHomeView(m) {
+  const mode = m === 'twitter' ? 'twitter' : 'cards';
+  try { localStorage.setItem('bw_home_view', mode); } catch (e) {}
+  homeViewSync();
+  const libMain = document.querySelector('.lib-page .lib-main');
+  if (libMain && typeof libHTML === 'function') {
+    libMain.innerHTML = libHTML();
+    if (typeof avatarHydrate === 'function') avatarHydrate(libMain);
+  }
+}
+function homeViewSwHTML() {
+  return `<div class="tw-view-sw" role="group" aria-label="בחירת תצוגה">
+    <button type="button" class="tw-vbtn${homeViewGet() === 'cards' ? ' on' : ''}" data-v="cards" onclick="setHomeView('cards')" title="תצוגת כרטיסים" aria-label="תצוגת כרטיסים"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></button>
+    <button type="button" class="tw-vbtn${homeViewGet() === 'twitter' ? ' on' : ''}" data-v="twitter" onclick="setHomeView('twitter')" title="תצוגת פיד (כמו טוויטר)" aria-label="תצוגת פיד"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M7 9h10M7 13h6"/></svg></button>
+  </div>`;
+}
+function twPostHTML(r) {
+  const sec = mktSecOf(r), biz = sec === 'biz';
+  const price = Number(r.price) > 0 ? `<small class="mk-sg-price">${rentTypeIcon(r)}${mktDiscP(r.price).toLocaleString('he-IL', { maximumFractionDigits: 2 })}&nbsp;₪${mktWasHTML(r.price)}</small>` : '';
+  const src = r.img || (r.images || [])[0] || '';
+  const media = src ? `<div class="tw-media"><img src="${escHtml(src)}" alt="${escHtml(r.title)}" loading="lazy" decoding="async"></div>` : `<div class="tw-media tw-media-th">${rentThumb(r)}</div>`;
+  const when = r.t ? new Date(r.t).toLocaleDateString('he-IL') : '';
+  return `<article class="tw-post" role="button" tabindex="0" data-id="${escHtml(r.id)}" onclick="rentOpen('${artEsc(r.id)}')" onkeydown="if((event.key==='Enter'||event.key===' ')&&event.target===this){event.preventDefault();this.click();}">
+    <div class="tw-av" onclick="event.stopPropagation(); rentOpenSeller('${artEsc(r.uid || '')}', '${artEsc(r.owner || '')}')">${authorAvHTML({ author: mktWho(r) || '?', uid: r.uid || '' })}</div>
+    <div class="tw-main">
+      <header class="tw-head">
+        <b class="tw-who" onclick="event.stopPropagation(); rentOpenSeller('${artEsc(r.uid || '')}', '${artEsc(r.owner || '')}')">${biz ? BIZ_IC : ''}${escHtml(mktWho(r))}</b>
+        ${isUserVerified(r.uid || '', mktWho(r), r.verified) ? verifiedSealHTML(13) : ''}
+        <span class="tw-meta">${escHtml([mkWhereTxt(r), when].filter(Boolean).join(' · '))}</span>
+        ${price}
+      </header>
+      <div class="tw-text"><b>${escHtml(r.title)}</b>${r.desc ? `<small>${escHtml(String(r.desc).trim().slice(0, 140))}</small>` : ''}</div>
+      ${media}
+      <div class="tw-acts mk-sg-acts">${rentHoverHTML(r)}</div>
+    </div>
+  </article>`;
+}
+window.setHomeView = setHomeView; window.homeViewGet = homeViewGet;
 function libHTML() {
   const base = mktAll().filter(r => r && r.title && !r.isAdult && !(r.hv && ['rg', 'ph', 'er'].includes(r.hv.p)));   // הספרייה לא מציגה מודעות עם הטמעות מאתרי מבוגרים
   const all = base.filter(r => (libF.dept === 'all' || r.dept === libF.dept) && LIB_TYPES[libF.type].f(r));
@@ -34039,14 +34083,15 @@ function libHTML() {
     </section>`;
   const depts = typeof MKT_DEPTS !== 'undefined' ? MKT_DEPTS.filter(d => base.some(r => r.dept === d.id)) : [];
   const circHTML = depts.length ? `<nav class="lib-circs" aria-label="מחלקות">${depts.map(d => `<button type="button" class="lib-circ" onclick="libDept('${d.id}')"><span><svg viewBox="0 0 64 64" fill="none" stroke="#111" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">${(typeof DEPT_ART !== 'undefined' && (DEPT_ART[d.id] || DEPT_ART.other)) || ''}</svg></span><b>${escHtml(d.name)}</b></button>`).join('')}</nav>` : '';
-  return `<header class="lib-head"><span class="lib-brand"><img src="./logo.png?v=2" alt=""><b>ספרייה</b></span><button type="button" class="lib-cta" onclick="mkPubOpen()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>פרסום מודעה</button></header>
+  return `<header class="lib-head"><span class="lib-brand"><img src="./logo.png?v=2" alt=""><b>ספרייה</b></span>${homeViewSwHTML()}<button type="button" class="lib-cta" onclick="mkPubOpen()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>פרסום מודעה</button></header>
+    ${homeViewGet() === 'twitter' ? `<div class="tw-feed-list">${all.slice().sort((a, b) => libScore(b) - libScore(a)).slice(0, 40).map(twPostHTML).join('')}</div>` : `
     ${filtered ? '' : heroHTML}${libBarHTML(depts)}
     ${filtered ? `<section class="lib-row lib-res"><header><h2>${all.length} תוצאות</h2></header>${all.length ? `<div class="lib-grid">${all.slice().sort(LIB_SORTS[libF.sort].f).map(r => libCardHTML(r)).join('')}</div>` : '<div class="lib-empty">אין מודעות שמתאימות לסינון הזה</div>'}</section>` : `
     ${top.length ? libRowHTML('lib-top', 'המובילים', topHTML) : ''}
     ${typeof eventsSectionHTML === 'function' ? eventsSectionHTML() : ''}
     ${fresh.length ? libRowHTML('lib-new', 'נוספו לאחרונה', fresh.map(r => libCardHTML(r)).join('')) : ''}
     ${vids.length ? libRowHTML('lib-vid', 'מודעות עם סרטון', vids.map(r => libCardHTML(r)).join('')) : ''}
-    ${biz.length ? libRowHTML('lib-biz', 'עסקים מובילים', biz.map(r => libCardHTML(r)).join('')) : ''}`}`;
+    ${biz.length ? libRowHTML('lib-biz', 'עסקים מובילים', biz.map(r => libCardHTML(r)).join('')) : ''}`}`}`;
 }
 function libOpen() {
   if (typeof mainContent === 'undefined' || !mainContent) return;
@@ -37033,7 +37078,7 @@ Object.assign(window, { phoneVerifyOpen, pvSend, pvBack, pvClose });
         </div>
         <button type="button" class="mt-circ mt-me" onclick="mtMe()" aria-label="המשתמש שלי"></button>
       </div>
-      <nav class="mt-tabs"><button type="button" data-t="home" onclick="mtTab('home')">בית</button><button type="button" data-t="feed" onclick="mtTab('feed')">במעקב</button><button type="button" data-t="deals" class="mt-dls" onclick="mtTab('deals')">עסקאות<i class="mt-apv-n mt-dls-n"></i></button><button type="button" data-t="apv" class="mt-apv" hidden onclick="mtTab('apv')">אישור<i class="mt-apv-n"></i></button><span class="mt-count" aria-live="polite"></span></nav>`;
+      <nav class="mt-tabs"><button type="button" data-t="home" onclick="mtTab('home')">בית</button><button type="button" data-t="feed" onclick="mtTab('feed')">במעקב</button><button type="button" data-t="deals" class="mt-dls" onclick="mtTab('deals')">עסקאות<i class="mt-apv-n mt-dls-n"></i></button><button type="button" data-t="apv" class="mt-apv" hidden onclick="mtTab('apv')">אישור<i class="mt-apv-n"></i></button>${homeViewSwHTML()}<span class="mt-count" aria-live="polite"></span></nav>`;
     document.body.appendChild(el);
     document.documentElement.classList.add('has-mtop');
     mtSync();
