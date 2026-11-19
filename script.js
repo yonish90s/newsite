@@ -19343,10 +19343,9 @@ function dmConvListHTML() {
   // שיחה נעוצה עם מנהל האתר בראש הרשימה (לכל מי שאינו המנהל)
   const pinned = (isAdminUser || !match('מנהל האתר', 'צוות')) ? '' : `
     <div class="tg-row tg-row-pinned" onclick="dmOpenAdmin()">
-      <div class="tg-avatar tg-avatar-admin"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 8.5 7.5 12 12 5l4.5 7L21 8.5 19 18H5z"/><rect x="5" y="19.2" width="14" height="2" rx="1"/></svg></div>
+      <div class="tg-avatar">${typeof authorAvHTML === 'function' ? authorAvHTML({ author: 'מנהל האתר', uid: dmAdminUid || '' }) : ''}</div>
       <div class="tg-row-main">
-        <div class="tg-row-top"><span class="tg-row-name">מנהל האתר <span class="tg-verified" title="רשמי">✓</span></span><span class="tg-row-pin" title="נעוץ"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M14.5 2.5 21.5 9.5 19.4 10.2 15.6 14 15.2 18.6 13.8 20 9.9 16.1 4.4 21.6 2.4 21.6 2.4 19.6 7.9 14.1 4 10.2 5.4 8.8 10 8.4 13.8 4.6z"/></svg></span></div>
-        <div class="tg-row-last">שלחו הודעה לצוות האתר</div>
+        <div class="tg-row-top"><span class="tg-row-name">מנהל האתר</span><span class="tg-row-pin" title="נעוץ"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M14.5 2.5 21.5 9.5 19.4 10.2 15.6 14 15.2 18.6 13.8 20 9.9 16.1 4.4 21.6 2.4 21.6 2.4 19.6 7.9 14.1 4 10.2 5.4 8.8 10 8.4 13.8 4.6z"/></svg></span></div>
       </div>
     </div>`;
   const buyers = (isAdminUser && typeof buyersRowHTML === 'function' && match('עדכוני רוכשים', 'הזמנות', 'קניות')) ? buyersRowHTML() : '';
@@ -19356,7 +19355,7 @@ function dmConvListHTML() {
     .filter(([cid, c]) => match(c.otherName, c.lastText))
     .sort((a, b) => (b[1].lastTime || 0) - (a[1].lastTime || 0));
   if (!list.length) {
-    return buyers + pinned + `<div class="tg-empty">${q ? 'לא נמצאו שיחות' : 'אין עוד שיחות.<br>אפשר לשלוח הודעה ליוצר מדף של גלריה.'}</div>`;
+    return buyers + pinned + (q ? '<div class="tg-empty">לא נמצאו שיחות</div>' : '');
   }
   return buyers + pinned + list.map(([cid, c]) => {
     const nm = c.otherName || 'משתמש';
@@ -19372,12 +19371,7 @@ function dmConvListHTML() {
 }
 
 function dmGuestBannerHTML() {
-  const u = auth.currentUser;
-  if (!u || !u.isAnonymous) return '';
-  return `<div class="tg-guest">
-      <span>אתם גולשים כאורח. כדי לשמור את השיחות גם במכשיר אחר —</span>
-      <button type="button" onclick="openLiveChatLogin()">הרשמה מהירה</button>
-    </div>`;
+  return '';
 }
 
 async function openMessages() {
@@ -30613,15 +30607,13 @@ function plHeadActHTML(on, onLabel, offLabel, sub, onclickJs) {
   return `<div class="pl-head-act"><button type="button" class="pl-act-btn${on ? ' on' : ''}" onclick="${onclickJs}">${on ? onLabel : offLabel}</button><div class="pl-sub">${escHtml(sub)}</div></div>`;
 }
 async function likersOpen(id, itemId, shId) {
-  const liked = shId ? (typeof photoIsLikedLocal === 'function' && photoIsLikedLocal(shId)) : (itemId ? rentMarked('like', itemId) : false);
-  const head = plHeadActHTML(liked, 'אהבתי ✓ · ביטול לייק', 'לייק למודעה', 'משתמשים שעשו לייק למודעה הזו', `likersSheetToggle('${artEsc(id)}', '${artEsc(itemId || '')}', '${artEsc(shId || '')}')`);
-  openMSheet('לייקים', `${head}<div class="ms-empty">טוען…</div>`);
+  openMSheet('לייקים', '<div class="ms-empty">טוען…</div>');
   document.getElementById('m-sheet')?.classList.add('pl-sheet');
   let map = {};
   try { map = (await get(ref(db, `website/item_likers/${id}`))).val() || {}; } catch (e) {}
   map = plWithSamples(map, 'like_' + id);
   const body = document.querySelector('#m-sheet .ms-body');
-  if (body) body.innerHTML = `${head}${peopleListHTML(map, 'עדיין אין כאן משתמשים שעשו לייק.')}`;
+  if (body) body.innerHTML = peopleListHTML(map, 'עדיין אין כאן משתמשים שעשו לייק.');
   try { avatarLetterColors(body); if (typeof avatarHydrate === 'function') avatarHydrate(body); } catch (e) {}
 }
 async function likersSheetToggle(likeId, itemId, shId) {
@@ -30638,10 +30630,8 @@ async function likersSheetToggle(likeId, itemId, shId) {
 }
 function repostersOpen(id) {
   try { subscribeReposts(); } catch (e) {}
-  const mine = repostIsMine(id);
-  const head = plHeadActHTML(mine, 'משותף בפרופיל שלי ✓ · ביטול', 'שיתוף לפרופיל שלי', 'משתמשים ששיתפו את המודעה הזו בפרופיל שלהם', `repostersToggle('${artEsc(id)}')`);
   const map = plWithSamples((repostsData || {})[id], 'rep_' + id);
-  openMSheet('שיתופים (ריפוסט)', `${head}${peopleListHTML(map, 'עוד אף אחד לא שיתף את זה.')}`);
+  openMSheet('שיתופים (ריפוסט)', peopleListHTML(map, 'עוד אף אחד לא שיתף את זה.'));
   document.getElementById('m-sheet')?.classList.add('pl-sheet');
   try { const b = document.querySelector('#m-sheet .ms-body'); avatarLetterColors(b); if (typeof avatarHydrate === 'function') avatarHydrate(b); } catch (e) {}
 }
@@ -30653,8 +30643,7 @@ async function repostersToggle(id) {
 async function followersOpen(uid, name) {
   const labelName = name || 'המוכר';
   const on = uid ? isFollowing(uid) : (typeof igDemoFollowing === 'function' && igDemoFollowing(igDemoKeyOf(labelName)));
-  const head = plHeadActHTML(on, `במעקב אחרי ${escHtml(labelName)} ✓ · הפסקת מעקב`, `מעקב אחרי ${escHtml(labelName)}`, `משתמשים שעוקבים אחרי ${labelName}`, `followersSheetToggle('${artEsc(uid || '')}', '${artEsc(labelName)}')`);
-  openMSheet('חברים ועוקבים', `${head}<div class="ms-empty">טוען…</div>`);
+  openMSheet('חברים ועוקבים', '<div class="ms-empty">טוען…</div>');
   document.getElementById('m-sheet')?.classList.add('pl-sheet');
   let map = {};
   if (uid) {
@@ -30678,7 +30667,7 @@ async function followersOpen(uid, name) {
   }
   map = plWithSamples(map, 'fol_' + (uid || labelName));
   const body = document.querySelector('#m-sheet .ms-body');
-  if (body) body.innerHTML = `${head}${peopleListHTML(map, 'עדיין אין עוקבים להצגה.')}`;
+  if (body) body.innerHTML = peopleListHTML(map, 'עדיין אין עוקבים להצגה.');
   try { avatarLetterColors(body); if (typeof avatarHydrate === 'function') avatarHydrate(body); } catch (e) {}
 }
 async function followersSheetToggle(uid, name) {
@@ -34340,36 +34329,49 @@ async function pplTipOpen(el) {
   document.addEventListener('click', e => { if (fired && e.target.closest && e.target.closest('[data-people]')) { e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation(); fired = false; } }, true);
   document.addEventListener('contextmenu', e => { if (e.target.closest && e.target.closest('[data-people]')) e.preventDefault(); });
 })();
-// משא ומתן מהכרטיס: מתחת לשורת הכפתורים נפתח שדה עם הסכום שאני מציע (85% מהמחיר כהתחלה)
+// משא ומתן מהכרטיס: פותח חלון עם סליידר נקי למתיחת סכום ההצעה
 function mkCardHaggle(btn, id) {
-  const card = btn.closest('.mk-sg'); if (!card) return;
-  const old = card.querySelector('.mk-haggle'); if (old) { old.remove(); return; }
-  document.querySelectorAll('.mk-sg .mk-haggle').forEach(f => f.remove());
   const r = mktAll().find(x => x.id === id); if (!r) return;
-  const start = Number(r.price) > 0 ? Math.max(1, Math.round(mktDiscP(r.price) * .85)) : '';
-  const acts = card.querySelector('.mk-sg-acts');
-  acts.insertAdjacentHTML('afterend', `<form class="mk-haggle" onclick="event.stopPropagation()" onsubmit="event.preventDefault(); mkCardHaggleSend(this, '${artEsc(id)}')">
-    <label><span>₪</span><input type="number" inputmode="numeric" min="1" step="1" value="${start}" placeholder="הסכום שלי" aria-label="הסכום שאני מציע"></label>
-    <button type="submit" class="mk-h-ok" aria-label="שליחת ההצעה" title="שליחת ההצעה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
-    <button type="button" class="mk-h-no" aria-label="ביטול" title="ביטול" onclick="this.closest('.mk-haggle').remove()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M7 7l10 10M17 7L7 17"/></svg></button>
-  </form>`);
-  const inp = card.querySelector('.mk-haggle input');
-  setTimeout(() => { try { inp.focus(); inp.select(); } catch (e) {} }, 40);
+  const base = Number(r.price) > 0 ? Math.round(mktDiscP(r.price)) : 500;
+  const minP = Math.max(1, Math.round(base * 0.2));
+  const maxP = Math.max(minP + 10, Math.round(base * 1.5));
+  const start = Math.max(minP, Math.min(maxP, Math.round(base * 0.85)));
+  const pct = Math.round(((start - minP) / Math.max(1, maxP - minP)) * 100);
+  openMSheet('הצעת מחיר', `<div class="mk-sl-wrap">
+    <div class="mk-sl-title">${escHtml(r.title || 'מודעה')}</div>
+    <div class="mk-sl-lbl"><i class="mk-sl-dot"></i><span>הסכום שאני מציע</span></div>
+    <div class="mk-sl-row">
+      <div class="mk-sl-track-wrap">
+        <input id="mk-sl-in" type="range" class="mk-sl-range" min="${minP}" max="${maxP}" step="1" value="${start}" style="--p:${pct}%" oninput="mkSliderSync(this.value, ${minP}, ${maxP})" aria-label="בחירת סכום ההצעה">
+      </div>
+      <div class="mk-sl-val" id="mk-sl-val">₪${start.toLocaleString('he-IL')}</div>
+    </div>
+    <div class="mk-sl-bounds"><span>₪${minP.toLocaleString('he-IL')}</span><span>מחיר מבוקש: ₪${base.toLocaleString('he-IL')}</span><span>₪${maxP.toLocaleString('he-IL')}</span></div>
+    <button type="button" class="mk-sl-send" onclick="mkSliderSend('${artEsc(id)}')">שליחת הצעה · <b id="mk-sl-btn-v">₪${start.toLocaleString('he-IL')}</b></button>
+  </div>`);
 }
-async function mkCardHaggleSend(form, id) {
-  const inp = form.querySelector('input'), v = Math.round(Number(inp.value));
-  if (!(v > 0)) { form.classList.add('shake'); setTimeout(() => form.classList.remove('shake'), 400); inp.focus(); return; }
+function mkSliderSync(val, minP, maxP) {
+  const v = Math.round(Number(val)) || minP;
+  const pct = Math.max(0, Math.min(100, Math.round(((v - minP) / Math.max(1, maxP - minP)) * 100)));
+  const r = document.getElementById('mk-sl-in'); if (r) r.style.setProperty('--p', pct + '%');
+  const txt = '₪' + v.toLocaleString('he-IL');
+  const el = document.getElementById('mk-sl-val'); if (el) el.textContent = txt;
+  const b = document.getElementById('mk-sl-btn-v'); if (b) b.textContent = txt;
+}
+async function mkSliderSend(id) {
+  const inp = document.getElementById('mk-sl-in'), v = Math.round(Number(inp ? inp.value : 0));
+  if (!(v > 0)) return;
   const r = mktAll().find(x => x.id === id); if (!r) return;
-  if (!(r.shId && r.uid)) { form.remove(); glassBanner({ title: 'ההצעה נשלחה (דוגמה)', sub: (r.title || '') + ' · ₪' + v.toLocaleString('he-IL'), icon: 'deal', cls: 'gbn-deal', ms: 2600 }); return; }
+  closeMSheet();
+  if (!(r.shId && r.uid)) { glassBanner({ title: 'ההצעה נשלחה (דוגמה)', sub: (r.title || '') + ' · ₪' + v.toLocaleString('he-IL'), icon: 'deal', cls: 'gbn-deal', ms: 2600 }); return; }
   const u = auth.currentUser;
   if (!u || (typeof isRegisteredUser === 'function' && !isRegisteredUser())) { glassBanner({ title: 'צריך להתחבר', sub: 'כדי לשלוח הצעת מחיר', icon: 'warn', ms: 2600 }); if (typeof entryLoginOpen === 'function') entryLoginOpen(); return; }
   if (u.uid === r.uid) { glassBanner({ title: 'זו המודעה שלך', icon: 'warn', ms: 2200 }); return; }
-  form.remove();
   window.__offerItemId = r.shId;
   await sendPriceOffer(r.title || '', r.uid, r.owner || '', v, true);
   glassBanner({ title: 'ההצעה נשלחה', sub: (r.title || '') + ' · ₪' + v.toLocaleString('he-IL'), icon: 'deal', cls: 'gbn-deal', ms: 2600 });
 }
-window.mkCardHaggle = mkCardHaggle; window.mkCardHaggleSend = mkCardHaggleSend;
+window.mkCardHaggle = mkCardHaggle; window.mkSliderSync = mkSliderSync; window.mkSliderSend = mkSliderSend;
 // "⋯" בכרטיס: פותח/סוגר את הלייק, הריפוסט, השמירה והדיווח. לחיצה בכל מקום אחר סוגרת
 function mkMoreToggle(btn) {
   const box = btn.closest('.mk-act2'); if (!box) return;
@@ -35009,17 +35011,15 @@ function rentDetailHTML(r) {
   const feat = (icon, title, sub) => `<li><span>${ic(icon)}</span><div><b>${escHtml(title)}</b>${sub ? `<small>${escHtml(sub)}</small>` : ''}</div></li>`;
   const when = r.t ? new Date(r.t).toLocaleDateString('he-IL') : '';
   const who = `${authorAvHTML({ author: owner, uid: r.uid || '' })}<span class="mk-seller-tx"><b>${escHtml(owner)}</b>${when ? `<small>${escHtml(when)}</small>` : ''}</span>`;
-  // כל הכפתורים חוץ מ"הוסף לסל" — מתחת לתמונה, מימין
-  const galActs = `<div class="mp-btns mk-acts mk-galacts">
-            ${mktIsProj(r) && !projLink && !r.shId ? '' : btn(main[2], main[1], main[0], 'mk-go' + (!r.shId && r.kind !== 'used' ? ' mk-rent-add' + (rentListGet().some(x => x.id === r.id) ? ' on' : '') : ''))}
-            ${btn('<path d="M6 4h12v17l-6-4.5L6 21z"/>', 'שמירה', r.shId ? `photoToggleSave('${artEsc(r.shId)}')` : `rentMark(this, 'save', '${artEsc(r.id)}')`, saved ? 'on' : '', r.shId ? ` data-save="${escHtml(r.shId)}"` : '')}
-            ${btn('<path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/>', 'אהבתי', r.shId ? `photoToggleLike('${artEsc(r.shId)}')` : `rentMark(this, 'like', '${artEsc(r.id)}'); likersWrite('${artEsc(rentCommentsKey(r))}', this.classList.contains('on'))`, liked ? 'on' : '', ` data-people="like" data-pid="${escHtml(r.shId || rentCommentsKey(r))}" data-iid="${escHtml(r.id)}"` + (r.shId ? ` data-like="${escHtml(r.shId)}"` : ''))}
-            ${r.shId ? btn('<path d="M21 12a8 8 0 0 1-8 8H4l2.2-2.6A8 8 0 1 1 21 12z"/>', 'הודעה למוכר', ask) : ''}
-            ${btn('<path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3"/>', 'ריפוסט', `toggleRepost('${artEsc(rentCommentsKey(r))}', this)`, 'pti-repost' + (repostIsMine(rentCommentsKey(r)) ? ' on' : ''), ` data-item="${escHtml(rentCommentsKey(r))}" data-people="rep" data-pid="${escHtml(rentCommentsKey(r))}"`)}
-            ${btn('<path d="M12 2.8l2.8 5.8 6.4.9-4.6 4.5 1.1 6.3L12 17.3l-5.7 3 1.1-6.3L2.8 9.5l6.4-.9z"/>', 'ביקורות', 'rentRevOpen()')}
-            ${email ? btn('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>', 'מייל', `location.href='mailto:${artEsc(email)}'`) : ''}
-            ${btn('<path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M16 7l-4-4-4 4M12 3v12"/>', 'שיתוף', `if(navigator.share){navigator.share({ title: document.title, url: location.href }).catch(function(){});}else{navigator.clipboard.writeText(location.href); showCopyToast('הקישור הועתק');}`)}
-            ${isAdmin() ? btn('<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/>', 'מחיקת המודעה (מנהל)', `rentAdminDelete('${artEsc(r.id)}')`) : ''}
+  // כל הכפתורים חוץ מ"הוסף לסל" — מתחת לתמונה, מימין (ריבועים מעוגלים בסגנון YouTube: ביקורות עם מספר, שמירה, הודעה, ריפוסט — ללא שיתוף, אהבתי והשכרה)
+  const pill = (icon, label, act, cls, attr, extra) => `<button type="button" class="mk-pill-btn${cls ? ' ' + cls : ''}" title="${label}" aria-label="${label}"${attr || ''} onclick="${act}">${ic(icon)}<span>${label}</span>${extra || ''}</button>`;
+  const galActs = `<div class="mp-btns mk-acts mk-galacts mk-pills-row">
+            ${pill('<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>', 'ביקורות', 'rentRevOpen()', 'mk-pill-rev', '', '<b class="mk-rev-num">0</b>')}
+            ${pill('<path d="M6 4h12v17l-6-4.5L6 21z"/>', 'שמירה', r.shId ? `photoToggleSave('${artEsc(r.shId)}')` : `rentMark(this, 'save', '${artEsc(r.id)}')`, saved ? 'on' : '', r.shId ? ` data-save="${escHtml(r.shId)}"` : '')}
+            ${r.shId ? pill('<path d="M21 12a8 8 0 0 1-8 8H4l2.2-2.6A8 8 0 1 1 21 12z"/>', 'הודעה', ask) : ''}
+            ${pill('<path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3"/>', 'ריפוסט', `toggleRepost('${artEsc(rentCommentsKey(r))}', this)`, 'pti-repost' + (repostIsMine(rentCommentsKey(r)) ? ' on' : ''), ` data-item="${escHtml(rentCommentsKey(r))}" data-people="rep" data-pid="${escHtml(rentCommentsKey(r))}"`)}
+            ${email ? pill('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>', 'מייל', `location.href='mailto:${artEsc(email)}'`) : ''}
+            ${isAdmin() ? pill('<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/>', 'מחיקה', `rentAdminDelete('${artEsc(r.id)}')`) : ''}
           </div>`;
   // במחשב: בעמודה משמאל שאר המודעות
   const sideIds = new Set(more.map(x => x.id));
@@ -35115,25 +35115,25 @@ const rentDemoRevs = id => { try { return JSON.parse(localStorage.getItem('rent_
 function rentRevListHTML(list) {
   const me = auth.currentUser && auth.currentUser.uid;
   if (!list.length) return '';
-  // כרטיסי ביקורת בשורה נגללת: כוכבים, כותרת (המשפט הראשון), תגיות, טקסט מקוצר עם "עוד", ומי כתב ומתי
+  // שורות ביקורת נקיות בסגנון תגובות (אווטאר, שם + זמן, טקסט, כפתור לייק + תגובה)
   const ago = t => { const d = Math.floor((Date.now() - t) / 864e5); return d < 1 ? 'היום' : d === 1 ? 'אתמול' : d < 30 ? `לפני ${d} ימים` : d < 60 ? 'לפני חודש' : d < 365 ? `לפני ${Math.floor(d / 30)} חודשים` : `לפני ${Math.floor(d / 365) === 1 ? 'שנה' : Math.floor(d / 365) + ' שנים'}`; };
+  const thumbIc = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v11H3V10zM7 10l4-8a2.5 2.5 0 0 1 3 2.6L13.5 9H19a2 2 0 0 1 2 2.3l-1.4 8A2 2 0 0 1 17.6 21H7"/></svg>';
+  const repIc = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
   const card = x => {
-    const text = String(x.text || '').trim(), m = text.match(/^(.{6,70}?[.!?…]|.{1,60}(?=\s|$))/);
-    const title = m && text.length > 25 ? m[1].replace(/[.…]$/, '') : '';
-    const body = title ? text.slice(m[1].length).trim() : text;
+    const text = String(x.text || '').trim();
     const stars = Number(x.stars) || 0;
-    const pills = [
-      x.rater && typeof isUserVerified === 'function' && isUserVerified(x.rater, x.name) ? 'גולש/ת מאומת/ת' : '',
-      x.rater ? 'חבר/ה באתר' : '',
-      x.t && Date.now() - x.t < 14 * 864e5 ? 'חדש' : '',
-      stars >= 5 ? 'ממליץ/ה בחום' : stars <= 2 && stars ? 'חוויה פחות טובה' : ''
-    ].filter(Boolean).slice(0, 3);
-    return `<article class="bb-rev">
-      ${rentStarsHTML(stars)}
-      <h4>${escHtml(title || (stars ? `דירוג ${stars} מתוך 5` : 'ביקורת'))}</h4>
-      ${pills.length ? `<div class="bb-pills">${pills.map(t => `<span>${t}</span>`).join('')}</div>` : ''}
-      ${body ? `<p class="bb-rev-tx">${escHtml(body)}</p>${body.length > 160 ? `<button type="button" class="bb-rev-more" onclick="this.closest('.bb-rev').classList.toggle('open'); this.textContent = this.closest('.bb-rev').classList.contains('open') ? 'פחות' : 'עוד'">עוד</button>` : ''}` : ''}
-      <footer>${authorAvHTML({ author: x.name || 'גולש/ת', uid: x.rater || '' })}<span>פורסם ${x.t ? ago(x.t) : ''} ע״י <b>${escHtml(x.name || 'גולש/ת')}</b></span>${x.rater && (x.rater === me || (typeof isAdmin === 'function' && isAdmin())) ? `<button type="button" class="bb-rev-del" onclick="rentRevDelete('${artEsc(x.rater)}')">מחיקה</button>` : ''}</footer>
+    const likes = Number(x.likes) || 0;
+    return `<article class="yt-rev">
+      <span class="yt-rev-av">${authorAvHTML({ author: x.name || 'גולש/ת', uid: x.rater || '' })}</span>
+      <div class="yt-rev-main">
+        <div class="yt-rev-head"><b>${escHtml(x.name || 'גולש/ת')}</b><small>${x.t ? ago(x.t) : ''}</small>${stars ? `<span class="yt-rev-st">★ ${stars}</span>` : ''}</div>
+        <p class="yt-rev-tx">${escHtml(text || (stars ? `דירוג ${stars} מתוך 5` : ''))}</p>
+        <div class="yt-rev-acts">
+          <button type="button" class="yt-rev-btn" onclick="this.classList.toggle('on'); const s=this.querySelector('span'); s.textContent=Number(s.textContent||0)+(this.classList.contains('on')?1:-1)||''">${thumbIc}<span>${likes || ''}</span></button>
+          <button type="button" class="yt-rev-btn" onclick="rentRevWrite()">${repIc}<span>תגובה</span></button>
+          ${x.rater && (x.rater === me || (typeof isAdmin === 'function' && isAdmin())) ? `<button type="button" class="bb-rev-del" onclick="rentRevDelete('${artEsc(x.rater)}')">מחיקה</button>` : ''}
+        </div>
+      </div>
     </article>`;
   };
   const sorted = list.slice().sort((a, b) => (b.t || 0) - (a.t || 0));
@@ -35141,7 +35141,7 @@ function rentRevListHTML(list) {
   const dist = [5, 4, 3, 2, 1].map(k => [k, sorted.filter(x => Math.round(Number(x.stars) || 0) === k).length]);
   return `<div class="bb-revsum"><div class="bb-avg"><b>${avg.toFixed(1)}</b>${rentStarsHTML(avg)}<small>${n === 1 ? 'ביקורת אחת' : n.toLocaleString('he-IL') + ' ביקורות'}</small></div>
       <div class="bb-dist">${dist.map(([k, c]) => `<div><span>${k} ★</span><i><em style="width:${n ? Math.round(c / n * 100) : 0}%"></em></i><small>${c}</small></div>`).join('')}</div></div>
-    <div class="bb-revrow"><div class="bb-revtrack">${sorted.map(card).join('')}</div>${n > 2 ? `<button type="button" class="bb-revnext" onclick="const t=this.previousElementSibling; t.scrollBy({ left: -t.clientWidth * .8, behavior: 'smooth' })" aria-label="הביקורות הבאות"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>` : ''}</div>`;
+    <div class="yt-rev-list">${sorted.map(card).join('')}</div>`;
 }
 async function rentRevLoad() {
   const form = document.querySelector('.mk-rev-form'); if (!form) return;
@@ -35158,6 +35158,7 @@ async function rentRevLoad() {
     sec.querySelector('.mk-rv-avg').innerHTML = list.length ? `<b>${avg.toFixed(1)}</b>${rentStarsHTML(avg)}` : '';
     sec.querySelector('.mk-rv-all').hidden = list.length <= 2 || sec.classList.contains('all');
   }
+  document.querySelectorAll('.mk-rev-num').forEach(el => { el.textContent = list.length.toLocaleString('he-IL'); });
   if (!uid && list.length) { const avg = list.reduce((a, x) => a + Number(x.stars), 0) / list.length; document.querySelectorAll('.mk-rate').forEach(el => { el.innerHTML = rentRateHTML(avg, list.length); }); }
   const me = auth.currentUser && auth.currentUser.uid;
   const mine = uid && me && list.find(x => x.rater === me);
@@ -37553,19 +37554,24 @@ function evCardHTML(ev) {
   const myName = reg ? String((typeof liveChatUserName === 'function' && liveChatUserName()) || u.displayName || 'אני') : 'אני';
   const basePeople = Array.isArray(ev.people) ? ev.people.slice() : [];
   if (joined) basePeople.unshift({ name: myName, uid: reg ? u.uid : '' });
-  const shown = basePeople.slice(0, 3);
-  const stack = shown.map(p => `<span class="ev-av">${typeof authorAvHTML === 'function' ? authorAvHTML({ author: p.name || 'משתתף', uid: p.uid || '' }) : `<span class="au-av">${escHtml((p.name || 'מ').charAt(0))}</span>`}</span>`).join('');
+  const host = basePeople[0] || { name: 'מארגן', uid: '' };
+  const rings = ['#bbf7d0', '#fbcfe8', '#fde68a', '#c4b5fd', '#bae6fd'];
+  const shown = basePeople.slice(0, 5);
+  const stack = shown.map((p, i) => `<span class="ev-av ev-av-ring" style="--ring:${rings[i % rings.length]}">${typeof authorAvHTML === 'function' ? authorAvHTML({ author: p.name || 'משתתף', uid: p.uid || '' }) : `<span class="au-av">${escHtml((p.name || 'מ').charAt(0))}</span>`}</span>`).join('');
   const total = basePeople.length;
-  return `<article class="ev-card" data-ev-id="${escHtml(ev.id)}" role="button" tabindex="0" onclick="evOpenDetails('${artEsc(ev.id)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();evOpenDetails('${artEsc(ev.id)}');}">
-    <div class="ev-img"><img src="${escHtml(ev.img || 'rent/t/projector.jpg?v=2')}" alt="${escHtml(ev.title)}" loading="lazy" decoding="async"></div>
-    <div class="ev-body">
-      <span class="ev-cat">${escHtml(ev.cat || 'אירוע')}</span>
+  return `<article class="ev-card ev-blue" data-ev-id="${escHtml(ev.id)}" role="button" tabindex="0" onclick="evOpenDetails('${artEsc(ev.id)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();evOpenDetails('${artEsc(ev.id)}');}">
+    <div class="ev-top">
+      <span class="ev-host">${typeof authorAvHTML === 'function' ? authorAvHTML({ author: host.name || 'מארגן', uid: host.uid || '' }) : ''}<b>${escHtml(host.name || 'אירוע')}</b></span>
+      <span class="ev-info-i" aria-hidden="true">i</span>
+    </div>
+    <div class="ev-mid">
+      <span class="ev-cat-pill">${escHtml(ev.cat || 'אירוע')}</span>
       <h3 class="ev-title">${escHtml(ev.title)}</h3>
-      <div class="ev-who">
-        <span class="ev-stack">${stack}</span>
-        <span class="ev-cnt">${total.toLocaleString('he-IL')} משתתפים</span>
-      </div>
-      <button type="button" class="ev-btn${joined ? ' on' : ''}" onclick="event.stopPropagation(); evToggleJoin('${artEsc(ev.id)}')">${joined ? 'משתתף/ת ✓' : 'השתתפות באירוע'}</button>
+      <small class="ev-sub">${escHtml([ev.when, ev.where].filter(Boolean).join(' · '))}</small>
+    </div>
+    <div class="ev-bot">
+      <div class="ev-avatars">${stack}</div>
+      <button type="button" class="ev-join-pill${joined ? ' on' : ''}" onclick="event.stopPropagation(); evToggleJoin('${artEsc(ev.id)}')">${joined ? 'משתתף/ת ✓' : `+ הצטרפות (${total})`}</button>
     </div>
   </article>`;
 }

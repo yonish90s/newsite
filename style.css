@@ -22430,7 +22430,78 @@ html body .ig-stats small { font-size: 9.5px !important; }
 html body .ig-side { padding: 6px 10px !important; border-radius: 14px !important; min-width: 54px !important; }
 html body .ig-side b { font-size: 13px !important; }
 html body .ig-side small { font-size: 9.5px !important; }
-/* חלון פרופילים (לייקים / ריפוסט / חברים) על כל המסך */
-html body #m-sheet.pl-sheet { align-items: stretch !important; justify-content: stretch !important; padding: 0 !important; }
-html body #m-sheet.pl-sheet .ms-panel { width: 100vw !important; max-width: 100vw !important; height: 100dvh !important; max-height: 100dvh !important; border-radius: 0 !important; margin: 0 !important; }
+/* חלון פרופילים (לייקים / ריפוסט / חברים) על כל המסך — צמוד עד למעלה וכותרת קטנה */
+html body #m-sheet.pl-sheet { position: fixed !important; inset: 0 !important; align-items: stretch !important; justify-content: stretch !important; padding: 0 !important; }
+html body #m-sheet.pl-sheet .ms-panel { position: fixed !important; inset: 0 !important; width: 100% !important; max-width: 100% !important; height: 100% !important; max-height: 100% !important; border-radius: 0 !important; margin: 0 !important; transform: none !important; }
+html body #m-sheet.pl-sheet .ms-head { padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 10px !important; min-height: 0 !important; }
+html body #m-sheet.pl-sheet .ms-title { font-size: 15px !important; font-weight: 700 !important; }
 html body #m-sheet.pl-sheet .ms-body { flex: 1 !important; overflow-y: auto !important; padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)) !important; }
+/* 1) כפתורי מודעה בסגנון ריבוע-גלולה מעוגל (ביקורות עם מספר, שמירה, הודעה, ריפוסט) */
+html body .mk-pills-row { display: flex !important; flex-wrap: wrap !important; align-items: center !important; gap: 8px !important; }
+html body .mk-pill-btn { display: inline-flex !important; align-items: center !important; gap: 7px !important; height: 38px !important; padding: 0 14px !important; border-radius: 10px !important; border: 1px solid rgba(0, 0, 0, .08) !important; background: #f3f4f6 !important; color: #111827 !important; font: inherit !important; font-size: 13.5px !important; font-weight: 600 !important; cursor: pointer !important; transition: background .15s ease !important; }
+html body .mk-pill-btn svg { width: 17px !important; height: 17px !important; flex: none !important; }
+html body .mk-pill-btn b { font-weight: 700 !important; color: #6b7280 !important; }
+html body .mk-pill-btn.on { background: #111827 !important; color: #ffffff !important; border-color: #111827 !important; }
+html.theme-dark body .mk-pill-btn { background: #27272a !important; color: #f4f4f5 !important; border-color: rgba(255, 255, 255, .08) !important; }
+html.theme-dark body .mk-pill-btn b { color: #a1a1aa !important; }
+html.theme-dark body .mk-pill-btn.on { background: #f4f4f5 !important; color: #111827 !important; }
+
+/* 2) אירועים סביבך בסגנון כרטיס כחול מעוגל עם שורת אווטארים צבעונית */
+html body .ev-card.ev-blue { background: linear-gradient(150deg, #60a5fa 0%, #3b82f6 52%, #2563eb 100%) !important; border: 0 !important; border-radius: 24px !important; padding: 14px 16px 16px !important; color: #ffffff !important; display: flex !important; flex-direction: column !important; justify-content: space-between !important; gap: 12px !important; min-height: 205px !important; box-shadow: 0 10px 26px rgba(37, 99, 235, .22) !important; overflow: hidden !important; }
+html body .ev-blue .ev-top { display: flex !important; align-items: center !important; justify-content: space-between !important; gap: 8px !important; }
+html body .ev-blue .ev-host { display: inline-flex !important; align-items: center !important; gap: 7px !important; font-size: 13px !important; font-weight: 600 !important; color: rgba(255, 255, 255, .95) !important; }
+html body .ev-blue .ev-host .au-av { width: 26px !important; height: 26px !important; min-width: 26px !important; border: 1.5px solid rgba(255, 255, 255, .6) !important; font-size: 11px !important; }
+html body .ev-blue .ev-info-i { width: 26px !important; height: 26px !important; border-radius: 50% !important; display: grid !important; place-items: center !important; background: rgba(255, 255, 255, .22) !important; color: #ffffff !important; font-size: 12px !important; font-weight: 700 !important; font-style: italic !important; flex: none !important; }
+html body .ev-blue .ev-mid { display: flex !important; flex-direction: column !important; align-items: center !important; text-align: center !important; gap: 6px !important; padding: 2px 4px !important; }
+html body .ev-blue .ev-cat-pill { display: inline-flex !important; align-items: center !important; padding: 3px 12px !important; border-radius: 999px !important; border: 1px solid rgba(255, 255, 255, .35) !important; background: rgba(255, 255, 255, .14) !important; font-size: 11px !important; font-weight: 600 !important; color: #ffffff !important; }
+html body .ev-blue .ev-title { margin: 0 !important; font-size: 19px !important; line-height: 1.2 !important; font-weight: 800 !important; color: #ffffff !important; }
+html body .ev-blue .ev-sub { font-size: 11.5px !important; color: rgba(255, 255, 255, .86) !important; }
+html body .ev-blue .ev-bot { display: flex !important; flex-direction: column !important; align-items: center !important; gap: 10px !important; }
+html body .ev-blue .ev-avatars { display: flex !important; align-items: center !important; justify-content: center !important; gap: 6px !important; flex-wrap: nowrap !important; }
+html body .ev-blue .ev-av-ring { width: 38px !important; height: 38px !important; border-radius: 50% !important; padding: 2px !important; background: var(--ring, #bbf7d0) !important; border: 2px solid rgba(255, 255, 255, .75) !important; display: grid !important; place-items: center !important; margin: 0 !important; box-shadow: 0 3px 10px rgba(0, 0, 0, .12) !important; }
+html body .ev-blue .ev-av-ring .au-av { width: 100% !important; height: 100% !important; min-width: 0 !important; border: 0 !important; }
+html body .ev-blue .ev-join-pill { border: 0 !important; border-radius: 999px !important; padding: 6px 14px !important; background: rgba(255, 255, 255, .22) !important; backdrop-filter: blur(6px) !important; color: #ffffff !important; font: inherit !important; font-size: 12px !important; font-weight: 700 !important; cursor: pointer !important; }
+html body .ev-blue .ev-join-pill.on { background: #ffffff !important; color: #1d4ed8 !important; }
+@media (max-width: 700px) {
+  html body .ev-track { gap: 10px !important; }
+  html body .ev-card.ev-blue { flex: 0 0 76vw !important; min-width: 245px !important; max-width: 300px !important; min-height: 192px !important; }
+  html body .ev-blue .ev-av-ring { width: 34px !important; height: 34px !important; }
+}
+
+/* 3) חלון הצעת מחיר עם סליידר נקי */
+.mk-sl-wrap { display: flex; flex-direction: column; gap: 14px; padding: 4px 2px 8px; }
+.mk-sl-title { font-size: 15px; font-weight: 700; color: #111827; }
+.mk-sl-lbl { display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: #4b5563; font-weight: 600; }
+.mk-sl-dot { width: 10px; height: 10px; border-radius: 50%; background: #3b82f6; flex: none; }
+.mk-sl-row { display: flex; align-items: center; gap: 12px; }
+.mk-sl-track-wrap { flex: 1; min-width: 0; display: flex; align-items: center; height: 36px; }
+.mk-sl-range { -webkit-appearance: none; appearance: none; width: 100%; height: 2px; border-radius: 999px; outline: none; cursor: pointer; background: linear-gradient(to left, #111827 var(--p, 50%), #e5e7eb var(--p, 50%)); }
+.mk-sl-range::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 8px; height: 22px; border-radius: 999px; background: #ffffff; border: 2px solid #111827; box-shadow: 0 1px 4px rgba(0, 0, 0, .18); cursor: pointer; }
+.mk-sl-range::-moz-range-thumb { width: 8px; height: 22px; border-radius: 999px; background: #ffffff; border: 2px solid #111827; box-shadow: 0 1px 4px rgba(0, 0, 0, .18); cursor: pointer; }
+.mk-sl-val { flex: none; min-width: 74px; text-align: center; padding: 7px 12px; border-radius: 10px; background: #f8fafc; border: 1px solid #e5e7eb; font-size: 15px; font-weight: 700; color: #111827; }
+.mk-sl-bounds { display: flex; justify-content: space-between; font-size: 11.5px; color: #6b7280; }
+.mk-sl-send { width: 100%; height: 46px; border: 0; border-radius: 12px; background: #111827; color: #ffffff; font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; }
+html.theme-dark .mk-sl-title, html.theme-dark .mk-sl-val { color: #f4f4f5; }
+html.theme-dark .mk-sl-lbl, html.theme-dark .mk-sl-bounds { color: #a1a1aa; }
+html.theme-dark .mk-sl-val { background: #1f2028; border-color: #32333f; }
+html.theme-dark .mk-sl-range { background: linear-gradient(to left, #f4f4f5 var(--p, 50%), #3f3f46 var(--p, 50%)); }
+html.theme-dark .mk-sl-range::-webkit-slider-thumb { background: #18181b; border-color: #f4f4f5; }
+html.theme-dark .mk-sl-send { background: #f4f4f5; color: #111827; }
+
+/* 4) תגובות וביקורות בסגנון שורות נקיות (ללא מסגרות כבדות) */
+.yt-rev-list { display: flex; flex-direction: column; gap: 16px; margin-top: 12px; }
+.yt-rev { display: flex; align-items: flex-start; gap: 12px; padding: 4px 0; }
+.yt-rev-av .au-av { width: 38px !important; height: 38px !important; min-width: 38px !important; }
+.yt-rev-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.yt-rev-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px; }
+.yt-rev-head b { font-weight: 600; color: #111827; }
+.yt-rev-head small { color: #6b7280; font-size: 12px; }
+.yt-rev-st { font-size: 11.5px; color: #f59e0b; font-weight: 700; }
+.yt-rev-tx { margin: 0; font-size: 14px; line-height: 1.45; color: #1f2937; white-space: pre-wrap; word-break: break-word; }
+.yt-rev-acts { display: flex; align-items: center; gap: 14px; margin-top: 2px; }
+.yt-rev-btn { display: inline-flex; align-items: center; gap: 5px; background: transparent; border: 0; padding: 3px 0; font: inherit; font-size: 12.5px; color: #6b7280; cursor: pointer; }
+.yt-rev-btn svg { width: 15px; height: 15px; }
+.yt-rev-btn.on { color: #2563eb; font-weight: 600; }
+html.theme-dark .yt-rev-head b, html.theme-dark .yt-rev-tx { color: #f4f4f5; }
+html.theme-dark .yt-rev-head small, html.theme-dark .yt-rev-btn { color: #a1a1aa; }
+html body .pc-item { background: transparent !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; padding: 8px 0 !important; }
