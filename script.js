@@ -34992,7 +34992,7 @@ function rentDetailHTML(r) {
       </div>
     </div>
         <section class="mk-reviews mk-reviews-wide" id="mk-reviews">
-          <div class="mk-rv-head"><b class="mk-rv-count">אין עדיין ביקורות</b><span class="mk-rv-avg"></span>
+          <div class="mk-rv-head"><b class="mk-rv-count"></b><span class="mk-rv-avg"></span>
             ${r.uid && auth.currentUser && auth.currentUser.uid === r.uid ? '' : `<button type="button" class="mk-rv-write" onclick="rentRevWrite()">כתיבת ביקורת</button>`}</div>
           <div class="mk-rev-form" hidden data-id="${escHtml(r.id)}" data-uid="${escHtml(r.uid || '')}">
             <div class="mk-rev-pick" role="group" aria-label="דירוג">${[1, 2, 3, 4, 5].map(n => `<button type="button" aria-label="${n} כוכבים" onclick="rentRevPick(this, ${n})">${RENT_STAR}</button>`).join('')}</div>
@@ -35072,7 +35072,7 @@ async function rentRevLoad() {
   box.innerHTML = rentRevListHTML(list);
   const avg = list.length ? list.reduce((a, x) => a + (Number(x.stars) || 0), 0) / list.length : 0, sec = box.closest('.mk-reviews');
   if (sec) {
-    sec.querySelector('.mk-rv-count').textContent = !list.length ? 'אין עדיין ביקורות' : list.length === 1 ? 'ביקורת אחת' : list.length.toLocaleString('he-IL') + ' ביקורות';
+    sec.querySelector('.mk-rv-count').textContent = !list.length ? '' : list.length === 1 ? 'ביקורת אחת' : list.length.toLocaleString('he-IL') + ' ביקורות';
     sec.querySelector('.mk-rv-avg').innerHTML = list.length ? `<b>${avg.toFixed(1)}</b>${rentStarsHTML(avg)}` : '';
     sec.querySelector('.mk-rv-all').hidden = list.length <= 2 || sec.classList.contains('all');
   }
