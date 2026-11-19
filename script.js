@@ -34117,9 +34117,7 @@ function dlsHTML() {
   const { list, demo, me, turn } = dlsList();
   const u = auth.currentUser, guest = !u || u.isAnonymous;
   const n = list.filter(turn).length;
-  return `<h1 class="fd-h">עסקאות</h1>
-    <nav class="dls-tabs"><button type="button" class="${dlsTab === 'in' ? 'on' : ''}" onclick="dlsSetTab('in')">התקבלו</button><button type="button" class="${dlsTab === 'out' ? 'on' : ''}" onclick="dlsSetTab('out')">נשלחו</button>${n && !demo ? `<small>${n} מחכות לתשובה שלך</small>` : ''}</nav>
-    ${guest ? `<p class="dls-note">התחברו כדי לקבל ולשלוח הצעות. <button type="button" onclick="openLiveChatLogin()">התחברות</button></p>` : ''}
+  return `<nav class="dls-tabs"><button type="button" class="${dlsTab === 'in' ? 'on' : ''}" onclick="dlsSetTab('in')">התקבלו</button><button type="button" class="${dlsTab === 'out' ? 'on' : ''}" onclick="dlsSetTab('out')">נשלחו</button>${n && !demo ? `<small>${n} מחכות לתשובה שלך</small>` : ''}</nav>
     ${list.length ? `<div class="dls-grid">${list.map(o => dlsSqHTML(o, me, demo, turn(o))).join('')}</div>` : `<div class="rn-empty">${dlsTab === 'out' ? 'עדיין לא שלחת הצעות.<br>בכל מודעה יש כפתור משא ומתן.' : 'עדיין לא קיבלת הצעות.'}</div>`}
     ${demo ? '<p class="dls-note">כך ייראו ההצעות כשיתחילו להגיע מלקוחות</p>' : ''}`;
 }
