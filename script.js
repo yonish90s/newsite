@@ -30604,7 +30604,7 @@ async function likersOpen(id, itemId, shId) {
   try { map = (await get(ref(db, `website/item_likers/${id}`))).val() || {}; } catch (e) {}
   const body = document.querySelector('#m-sheet .ms-body');
   if (body) body.innerHTML = `${head}${peopleListHTML(map, 'עדיין אין כאן משתמשים שעשו לייק.')}`;
-  try { avatarLetterColors(body); } catch (e) {}
+  try { avatarLetterColors(body); if (typeof avatarHydrate === 'function') avatarHydrate(body); } catch (e) {}
 }
 async function likersSheetToggle(likeId, itemId, shId) {
   if (shId && typeof photoToggleLike === 'function') {
@@ -30623,7 +30623,7 @@ function repostersOpen(id) {
   const mine = repostIsMine(id);
   const head = plHeadActHTML(mine, 'משותף בפרופיל שלי ✓ · ביטול', 'שיתוף לפרופיל שלי', 'משתמשים ששיתפו את המודעה הזו בפרופיל שלהם', `repostersToggle('${artEsc(id)}')`);
   openMSheet('שיתופים (ריפוסט)', `${head}${peopleListHTML((repostsData || {})[id], 'עוד אף אחד לא שיתף את זה.')}`);
-  try { avatarLetterColors(document.querySelector('#m-sheet .ms-body')); } catch (e) {}
+  try { const b = document.querySelector('#m-sheet .ms-body'); avatarLetterColors(b); if (typeof avatarHydrate === 'function') avatarHydrate(b); } catch (e) {}
 }
 async function repostersToggle(id) {
   await toggleRepost(id, null);
@@ -30657,7 +30657,7 @@ async function followersOpen(uid, name) {
   }
   const body = document.querySelector('#m-sheet .ms-body');
   if (body) body.innerHTML = `${head}${peopleListHTML(map, 'עדיין אין עוקבים להצגה.')}`;
-  try { avatarLetterColors(body); } catch (e) {}
+  try { avatarLetterColors(body); if (typeof avatarHydrate === 'function') avatarHydrate(body); } catch (e) {}
 }
 async function followersSheetToggle(uid, name) {
   await mkCardFollow(null, uid, name);
@@ -33932,9 +33932,9 @@ function rentHoverHTML(x) {
   return `<span class="mk-sg-hov mk-act2">
     <span role="button" tabindex="0" class="mk-a-buy${cartGet().some(c => c.id === 'mkt_' + x.id) ? ' in-cart' : ''}" data-cart="mkt_${escHtml(x.id)}" aria-label="קנייה" title="קנייה" onclick="${stop}${buy}">${ic('M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.5L21 8H6')}</span>
     <span role="button" tabindex="0" class="mk-a-deal" aria-label="משא ומתן" title="משא ומתן — הצעת מחיר" onclick="${stop}mkCardHaggle(this, '${id}')">${ic('M4 7h12M4 7l3-3M4 7l3 3M20 17H8M20 17l-3-3M20 17l-3 3')}</span>
-    ${(() => { const fon = mkFollowOn(x), me = auth.currentUser && x.uid && auth.currentUser.uid === x.uid; return me ? '' : `<span role="button" tabindex="0" class="mk-a-follow${fon ? ' on' : ''}" data-fol="${escHtml(x.uid || igDemoKeyOf(x.owner))}" aria-label="${fon ? 'במעקב אחרי ' : 'מעקב אחרי '}${escHtml(x.owner || 'המוכר')}" title="${fon ? 'במעקב — לחצו לצפייה בעוקבים' : 'מעקב ועוקבים של ' + escHtml(x.owner || 'המוכר')}" onclick="${stop}followersOpen('${artEsc(x.uid || '')}', '${artEsc(x.owner || '')}')">${fon ? IG_FOLLOWING_IC : IG_FOLLOW_IC}</span>`; })()}
-    ${b('לייק', 'M7 10v11H3V10zM7 10l4-8a2.5 2.5 0 0 1 3 2.6L13.5 9H19a2 2 0 0 1 2 2.3l-1.4 8A2 2 0 0 1 17.6 21H7', `likersOpen('${artEsc(likeId)}', '${id}', '${sh}')`, liked, ` data-people="like" data-pid="${escHtml(likeId)}"` + (sh ? ` data-like="${escHtml(x.shId)}"` : ''), 'mk-a-like', cnt(Number(itemLikesData[likeId]) || '', ` data-likes-n="${escHtml(likeId)}"`))}
-    ${b('ריפוסט', 'M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3', `repostersOpen('${artEsc(rk)}')`, repostIsMine(rk), ` data-item="${escHtml(rk)}" data-people="rep" data-pid="${escHtml(rk)}"`, 'pti-repost mk-a-rep', cnt(repostCount(rk) || ''))}
+    ${(() => { const fon = mkFollowOn(x), me = auth.currentUser && x.uid && auth.currentUser.uid === x.uid; return me ? '' : `<span role="button" tabindex="0" class="mk-a-follow${fon ? ' on' : ''}" data-fol="${escHtml(x.uid || igDemoKeyOf(x.owner))}" data-people="fol" data-fuid="${escHtml(x.uid || '')}" data-fname="${escHtml(x.owner || '')}" aria-label="${fon ? 'במעקב אחרי ' : 'מעקב אחרי '}${escHtml(x.owner || 'המוכר')}" title="${fon ? 'במעקב — לחצו להפסקה (לחיצה ארוכה לעוקבים)' : 'מעקב אחרי ' + escHtml(x.owner || 'המוכר') + ' (לחיצה ארוכה לעוקבים)'}" onclick="${stop}mkCardFollow(this, '${artEsc(x.uid || '')}', '${artEsc(x.owner || '')}')">${fon ? IG_FOLLOWING_IC : IG_FOLLOW_IC}</span>`; })()}
+    ${b('לייק', 'M7 10v11H3V10zM7 10l4-8a2.5 2.5 0 0 1 3 2.6L13.5 9H19a2 2 0 0 1 2 2.3l-1.4 8A2 2 0 0 1 17.6 21H7', (sh ? `photoToggleLike('${sh}')` : `rentMark(this, 'like', '${id}'); likersWrite('${artEsc(likeId)}', this.classList.contains('on'))`), liked, ` data-people="like" data-pid="${escHtml(likeId)}" data-iid="${escHtml(x.id)}"` + (sh ? ` data-like="${escHtml(x.shId)}"` : ''), 'mk-a-like', cnt(Number(itemLikesData[likeId]) || '', ` data-likes-n="${escHtml(likeId)}"`))}
+    ${b('ריפוסט', 'M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3', `toggleRepost('${artEsc(rk)}', this)`, repostIsMine(rk), ` data-item="${escHtml(rk)}" data-people="rep" data-pid="${escHtml(rk)}"`, 'pti-repost mk-a-rep', cnt(repostCount(rk) || ''))}
     <span role="button" tabindex="0" class="mk-a-dots" aria-label="עוד פעולות" title="עוד" aria-expanded="false" onclick="${stop}mkMoreToggle(this)"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="18" cy="12" r="1.8"/></svg></span>
     <span class="mk-sg-hov-btns mk-a-pop">
     ${b('שמירה', 'M6 4h12v17l-6-4.5L6 21z', `mkCountBump('${artEsc(svKey)}', this.classList.contains('on') ? -1 : 1); ` + (sh ? `photoToggleSave('${sh}')` : `rentMark(this, 'save', '${id}')`), saved, sh ? ` data-save="${escHtml(x.shId)}"` : '', '', cnt(Number(itemLikesData[svKey]) || 0, ` data-likes-n="${escHtml(svKey)}"`))}
@@ -34276,7 +34276,7 @@ async function peopleMap(kind, id) {
 let pplTip = null, pplTimer = 0;
 function pplTipClose() { clearTimeout(pplTimer); if (pplTip) { pplTip.remove(); pplTip = null; } }
 async function pplTipOpen(el) {
-  const kind = el.dataset.people, id = el.dataset.pid; if (!kind || !id) return;
+  const kind = el.dataset.people, id = el.dataset.pid; if (!kind || !id || kind === 'fol') return;
   const map = await peopleMap(kind, id);
   if (!el.matches(':hover')) return;
   const rows = Object.values(map || {}).filter(v => v && typeof v === 'object').sort((a, b) => (b.at || 0) - (a.at || 0));
@@ -34300,13 +34300,20 @@ async function pplTipOpen(el) {
     if (e.relatedTarget && el.contains(e.relatedTarget)) return;
     pplTipClose();
   });
-  // מובייל: לחיצה ארוכה פותחת את הרשימה, ולא מפעילה לייק/ריפוסט
-  let lp = 0, fired = false;
+  // לחיצה ארוכה פותחת את רשימת הפרופילים (במובייל ובמחשב), לחיצה קצרה מבצעת לייק/ריפוסט/מעקב
+  let lp = 0, fired = false, sx = 0, sy = 0;
   document.addEventListener('pointerdown', e => {
-    const el = e.target.closest && e.target.closest('[data-people]'); if (!el || fine()) return;
-    fired = false; clearTimeout(lp);
-    lp = setTimeout(() => { fired = true; try { navigator.vibrate && navigator.vibrate(15); } catch (er) {} if (el.dataset.people === 'rep') repostersOpen(el.dataset.pid); else likersOpen(el.dataset.pid); }, 480);
+    const el = e.target.closest && e.target.closest('[data-people]'); if (!el) return;
+    fired = false; clearTimeout(lp); sx = e.clientX; sy = e.clientY;
+    lp = setTimeout(() => {
+      fired = true;
+      try { navigator.vibrate && navigator.vibrate(15); } catch (er) {}
+      if (el.dataset.people === 'rep') repostersOpen(el.dataset.pid);
+      else if (el.dataset.people === 'fol') followersOpen(el.dataset.fuid || '', el.dataset.fname || '');
+      else likersOpen(el.dataset.pid, el.dataset.iid || '', el.dataset.like || '');
+    }, 480);
   }, true);
+  document.addEventListener('pointermove', e => { if (lp && Math.hypot(e.clientX - sx, e.clientY - sy) > 10) clearTimeout(lp); }, true);
   ['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => document.addEventListener(ev, () => clearTimeout(lp), true));
   document.addEventListener('click', e => { if (fired && e.target.closest && e.target.closest('[data-people]')) { e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation(); fired = false; } }, true);
   document.addEventListener('contextmenu', e => { if (e.target.closest && e.target.closest('[data-people]')) e.preventDefault(); });
@@ -34984,9 +34991,9 @@ function rentDetailHTML(r) {
   const galActs = `<div class="mp-btns mk-acts mk-galacts">
             ${mktIsProj(r) && !projLink && !r.shId ? '' : btn(main[2], main[1], main[0], 'mk-go' + (!r.shId && r.kind !== 'used' ? ' mk-rent-add' + (rentListGet().some(x => x.id === r.id) ? ' on' : '') : ''))}
             ${btn('<path d="M6 4h12v17l-6-4.5L6 21z"/>', 'שמירה', r.shId ? `photoToggleSave('${artEsc(r.shId)}')` : `rentMark(this, 'save', '${artEsc(r.id)}')`, saved ? 'on' : '', r.shId ? ` data-save="${escHtml(r.shId)}"` : '')}
-            ${btn('<path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/>', 'אהבתי', `likersOpen('${artEsc(r.shId || rentCommentsKey(r))}', '${artEsc(r.id)}', '${artEsc(r.shId || '')}')`, liked ? 'on' : '', r.shId ? ` data-like="${escHtml(r.shId)}"` : '')}
+            ${btn('<path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/>', 'אהבתי', r.shId ? `photoToggleLike('${artEsc(r.shId)}')` : `rentMark(this, 'like', '${artEsc(r.id)}'); likersWrite('${artEsc(rentCommentsKey(r))}', this.classList.contains('on'))`, liked ? 'on' : '', ` data-people="like" data-pid="${escHtml(r.shId || rentCommentsKey(r))}" data-iid="${escHtml(r.id)}"` + (r.shId ? ` data-like="${escHtml(r.shId)}"` : ''))}
             ${r.shId ? btn('<path d="M21 12a8 8 0 0 1-8 8H4l2.2-2.6A8 8 0 1 1 21 12z"/>', 'הודעה למוכר', ask) : ''}
-            ${btn('<path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/>', 'ריפוסט', `repostersOpen('${artEsc(rentCommentsKey(r))}')`, 'pti-repost' + (repostIsMine(rentCommentsKey(r)) ? ' on' : ''), ` data-item="${escHtml(rentCommentsKey(r))}"`)}
+            ${btn('<path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3"/>', 'ריפוסט', `toggleRepost('${artEsc(rentCommentsKey(r))}', this)`, 'pti-repost' + (repostIsMine(rentCommentsKey(r)) ? ' on' : ''), ` data-item="${escHtml(rentCommentsKey(r))}" data-people="rep" data-pid="${escHtml(rentCommentsKey(r))}"`)}
             ${btn('<path d="M12 2.8l2.8 5.8 6.4.9-4.6 4.5 1.1 6.3L12 17.3l-5.7 3 1.1-6.3L2.8 9.5l6.4-.9z"/>', 'ביקורות', 'rentRevOpen()')}
             ${email ? btn('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>', 'מייל', `location.href='mailto:${artEsc(email)}'`) : ''}
             ${btn('<path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M16 7l-4-4-4 4M12 3v12"/>', 'שיתוף', `if(navigator.share){navigator.share({ title: document.title, url: location.href }).catch(function(){});}else{navigator.clipboard.writeText(location.href); showCopyToast('הקישור הועתק');}`)}
