@@ -10036,7 +10036,7 @@ window.saveUserNickname = saveUserNickname;
 
 // תג "משתמש מאומת" — חותם כחול בהיר עם וי לבן, אחיד בכל האתר
 const VERIFIED_SEAL_PATH = 'M12.00 0.80 L14.48 2.73 L17.60 2.30 L18.79 5.21 L21.70 6.40 L21.27 9.52 L23.20 12.00 L21.27 14.48 L21.70 17.60 L18.79 18.79 L17.60 21.70 L14.48 21.27 L12.00 23.20 L9.52 21.27 L6.40 21.70 L5.21 18.79 L2.30 17.60 L2.73 14.48 L0.80 12.00 L2.73 9.52 L2.30 6.40 L5.21 5.21 L6.40 2.30 L9.52 2.73Z';
-const DEMO_VERIFIED_NAMES = new Set(['נועה לוי', 'דניאל מזרחי', 'מאפיית השכונה', 'רוני שמש', 'רון', 'יעל', 'מאיה שפירא', 'עומר נחום', 'הילה רוזן']);
+const DEMO_VERIFIED_NAMES = new Set(['נועה לוי', 'דניאל מזרחי', 'מאפיית השכונה', 'רוני שמש', 'רון', 'יעל', 'מאיה שפירא', 'עומר נחום', 'הילה רוזן', 'שמעון לוי', 'יוסי ברק', 'סטודיו מדיה', 'סטודיו וידאו', 'סטודיו אלבום', 'מעבדת פיקס-טק', 'נגריית עץ ושורש', 'דפוס הצבע', 'רון אברהם', 'מיכל אברהם', 'אלון כהן']);
 function verifiedSealHTML(size) {
   const px = size || 19;
   return ` <span class="verified-seal" title="משתמש מאומת" aria-label="משתמש מאומת" style="width:${px}px;height:${px}px"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="${VERIFIED_SEAL_PATH}" fill="#60a5fa"/><path d="M7.4 12.3l3.1 3.1 6.1-6.3" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
@@ -18978,7 +18978,7 @@ async function mktFeedOpen() {
     sugg.push(r);
   });
   const suggHTML = sugg.length ? `<section class="fd-sugg"><div class="fd-sugg-row">${sugg.slice(0, 12).map(r => `<div class="fd-sg"><button type="button" class="fd-sg-x" onclick="fdHide('${artEsc(r.uid || igDemoKeyOf(r.owner))}', this)" aria-label="הסתרת ההצעה">✕</button>
-      <button type="button" class="fd-sg-who" onclick="${r.uid ? `openUserPage('${artEsc(r.uid)}', '${artEsc(r.owner)}')` : `rentOpenSeller('', '${artEsc(r.owner)}')`}">${authorAvHTML({ author: r.owner, uid: r.uid || '' })}<b>${escHtml(r.owner)}</b><small>${escHtml(r.city || '')}</small></button>
+      <button type="button" class="fd-sg-who" onclick="${r.uid ? `openUserPage('${artEsc(r.uid)}', '${artEsc(r.owner)}')` : `rentOpenSeller('', '${artEsc(r.owner)}')`}">${typeof isUserVerified === 'function' && isUserVerified(r.uid || '', r.owner || '') ? verifiedSealHTML(11) : ''}${authorAvHTML({ author: r.owner, uid: r.uid || '' })}<b>${escHtml(r.owner)}</b><small>${escHtml(r.city || '')}</small></button>
       <button type="button" class="fd-sg-go" onclick="mkCardFollow(this, '${artEsc(r.uid || '')}', '${artEsc(r.owner)}'); setTimeout(mktFeedOpen, 250)">${IG_FOLLOW_IC}מעקב</button></div>`).join('')}</div></section>` : '';
   const mine = items.filter(me), theirs = items.filter(x => !me(x));
   // הפיד מחולק: מה שאנשים העלו, ומה ששיתפו (ריפוסטים)
@@ -37362,7 +37362,7 @@ function storyViewerRender() {
       <div class="stv-who">
         <span class="stv-av">${authorAvHTML({ author: g.name, uid: g.uid || '' })}</span>
         <div class="stv-meta">
-          <b>${escHtml(g.isMine ? 'הסטורי שלך' : g.name)}${g.isSugg && !folOn ? '<em class="stv-sugg-pill">הצעה</em>' : ''}</b>
+          <b>${!g.isMine && typeof isUserVerified === 'function' && isUserVerified(g.uid || '', g.name || '') ? verifiedSealHTML(14) : ''}${escHtml(g.isMine ? 'הסטורי שלך' : g.name)}${g.isSugg && !folOn ? '<em class="stv-sugg-pill">הצעה</em>' : ''}</b>
           <small>${escHtml(storyAgoTxt(item.t))}</small>
         </div>
       </div>
