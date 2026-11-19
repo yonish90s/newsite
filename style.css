@@ -22355,7 +22355,7 @@ html body .fd-sg-go svg { width: 10px !important; height: 10px !important; }
 html body #mainContent:has(> .lib-page) { min-height: 0 !important; height: auto !important; padding-bottom: 0 !important; }
 html body .lib-page { min-height: 0 !important; height: auto !important; padding-bottom: 12px !important; }
 html body .site-footer { margin-top: 8px !important; }
-@media (max-width: 700px) { html.has-mtop body .mk-watch { padding-top: calc(env(safe-area-inset-top, 0px) + 76px) !important; } }
+@media (max-width: 700px) { html.has-mtop body .mk-watch { padding-top: calc(env(safe-area-inset-top, 0px) + 52px) !important; } }
 .ev-card { cursor: pointer; }
 .ev-det-card { gap: 14px !important; }
 .ev-det-hero { display: flex; align-items: center; gap: 12px; }
