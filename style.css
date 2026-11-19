@@ -22519,10 +22519,12 @@ html.theme-dark .tw-vbtn.on { background: #3f3f46; color: #ffffff; }
 .tw-av { flex: none; }
 .tw-av .au-av { width: 40px !important; height: 40px !important; min-width: 40px !important; }
 .tw-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
-.tw-head { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 13.5px; }
-.tw-who { font-weight: 700; color: #111827; }
-.tw-meta { font-size: 12px; color: #6b7280; }
-.tw-head .mk-sg-price { margin-inline-start: auto; padding: 2px 9px; border-radius: 999px; background: #f1edf7; color: #7c3aed; font-size: 12.5px; font-weight: 700; }
+.tw-head { display: flex; align-items: center; gap: 5px; flex-wrap: nowrap; font-size: 13px; min-width: 0; }
+.tw-who { font-weight: 700; color: #111827; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.tw-who .biz-ic { width: 13px !important; height: 13px !important; flex: none !important; opacity: .75; }
+.tw-meta { font-size: 11.5px; color: #6b7280; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 0 1 auto; }
+.tw-head .mk-sg-price { margin-inline-start: auto; padding: 2px 8px; border-radius: 999px; background: #f1edf7; color: #7c3aed; font-size: 11.5px; font-weight: 700; white-space: nowrap; flex: none; display: inline-flex; align-items: center; gap: 3px; }
+.tw-head .mk-sg-price svg { width: 12px !important; height: 12px !important; flex: none !important; }
 .tw-text { display: flex; flex-direction: column; gap: 2px; }
 .tw-text b { font-size: 15px; line-height: 1.35; color: #111827; font-weight: 600; }
 .tw-text small { font-size: 13px; color: #111827; line-height: 1.4; }
