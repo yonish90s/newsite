@@ -22352,3 +22352,4 @@ html.theme-dark .ev-btn.on { background: #8b5cf6 !important; color: #ffffff !imp
 html body #mainContent:has(> .lib-page) { min-height: 0 !important; height: auto !important; padding-bottom: 0 !important; }
 html body .lib-page { min-height: 0 !important; height: auto !important; padding-bottom: 12px !important; }
 html body .site-footer { margin-top: 8px !important; }
+@media (max-width: 700px) { html.has-mtop body .mk-watch { padding-top: calc(env(safe-area-inset-top, 0px) + 76px) !important; } }
