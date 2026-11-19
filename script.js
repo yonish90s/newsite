@@ -16538,7 +16538,6 @@ function buildUserPageHTML(authorId, authorName) {
           + (mine.length ? `<section class="pf-mkt" data-pf="mkt"><h3>מודעות בשוק</h3>${mktSellerGridHTML(mine, true)}</section>` : '<div class="pf-empty" data-pf="mkt">עדיין אין מודעות</div>')
           + (own ? `<section class="pf-mkt pf-offers" data-pf="offers" hidden><h3>הצעות שקיבלתי מלקוחות</h3><div class="pf-offers-feed">${offersFeedHTML('in')}</div></section>` : '')
           + (pfGridItems.length ? `<section class="pf-mkt" data-pf="rep"><h3>שיתופים</h3><div class="pfg-grid">${pfGridCardsHTML('reposts')}</div></section>` : '<div class="pf-empty" data-pf="rep" hidden>עדיין אין ריפוסטים</div>')
-          + (authorId ? pcmSectionHTML(authorId) : '')
           + '</div></div>';
       })()}
       </div>
@@ -25131,7 +25130,7 @@ function newsMark(btn, kind, key) {
   const m = rentMarks(), k = 'news-' + kind + ':' + key;
   if (m[k]) delete m[k]; else m[k] = 1;
   try { localStorage.setItem(rentMarksKey(), JSON.stringify(m)); } catch (e) {}
-  btn.classList.toggle('on', !!m[k]);
+  if (btn) btn.classList.toggle('on', !!m[k]);
   mkCountBump(kind === 'save' ? 'sv_' + key : key, m[k] ? 1 : -1);
 }
 window.newsMark = newsMark;
@@ -30588,22 +30587,42 @@ function peopleListHTML(map, emptyText) {
   if (!rows.length) return `<div class="ms-empty">${emptyText}</div>`;
   return `<div class="pl-list">${rows.map(([uid, v]) => {
     const nm = String(v.name || 'משתמש');
-    return `<div class="pl-row"><span class="au-av pl-av">${escHtml(nm.trim().charAt(0) || '?')}</span><span class="pl-name">${escHtml(nm)}</span><span class="pl-t">${v.at ? escHtml(new Date(v.at).toLocaleDateString('he-IL')) : ''}</span></div>`;
+    const av = typeof authorAvHTML === 'function' ? authorAvHTML({ author: nm, uid }) : `<span class="au-av pl-av">${escHtml(nm.trim().charAt(0) || '?')}</span>`;
+    const dt = v.at ? `<span class="pl-t">${escHtml(new Date(v.at).toLocaleDateString('he-IL'))}</span>` : '';
+    const inner = `${av}<span class="pl-name">${escHtml(nm)}</span>${dt}`;
+    return uid ? `<button type="button" class="pl-row" onclick="closeMSheet(); if(typeof rentOpenSeller==='function') rentOpenSeller('${artEsc(uid)}', '${artEsc(nm)}')">${inner}</button>` : `<div class="pl-row">${inner}</div>`;
   }).join('')}</div>`;
 }
-async function likersOpen(id) {
-  openMSheet('מי עשה לייק', '<div class="ms-empty">טוען…</div>');
+function plHeadActHTML(on, onLabel, offLabel, sub, onclickJs) {
+  return `<div class="pl-head-act"><button type="button" class="pl-act-btn${on ? ' on' : ''}" onclick="${onclickJs}">${on ? onLabel : offLabel}</button><div class="pl-sub">${escHtml(sub)}</div></div>`;
+}
+async function likersOpen(id, itemId, shId) {
+  const liked = shId ? (typeof photoIsLikedLocal === 'function' && photoIsLikedLocal(shId)) : (itemId ? rentMarked('like', itemId) : false);
+  const head = plHeadActHTML(liked, 'אהבתי ✓ · ביטול לייק', 'לייק למודעה', 'משתמשים שעשו לייק למודעה הזו', `likersSheetToggle('${artEsc(id)}', '${artEsc(itemId || '')}', '${artEsc(shId || '')}')`);
+  openMSheet('לייקים', `${head}<div class="ms-empty">טוען…</div>`);
   let map = {};
   try { map = (await get(ref(db, `website/item_likers/${id}`))).val() || {}; } catch (e) {}
   const body = document.querySelector('#m-sheet .ms-body');
-  if (body) body.innerHTML = peopleListHTML(map, 'עדיין אין כאן שמות של מי שעשה לייק.');
+  if (body) body.innerHTML = `${head}${peopleListHTML(map, 'עדיין אין כאן משתמשים שעשו לייק.')}`;
   try { avatarLetterColors(body); } catch (e) {}
+}
+async function likersSheetToggle(likeId, itemId, shId) {
+  if (shId && typeof photoToggleLike === 'function') {
+    await photoToggleLike(shId);
+  } else if (itemId) {
+    const btns = document.querySelectorAll(`.mk-sg[data-id="${CSS.escape(itemId)}"] .mk-a-like`);
+    rentMark(btns[0] || null, 'like', itemId);
+    const on = rentMarked('like', itemId);
+    btns.forEach(b => b.classList.toggle('on', on));
+    await likersWrite(likeId, on);
+  }
+  if (document.getElementById('m-sheet')?.classList.contains('show')) likersOpen(likeId, itemId, shId);
 }
 function repostersOpen(id) {
   try { subscribeReposts(); } catch (e) {}
   const mine = repostIsMine(id);
-  openMSheet('מי שיתף', peopleListHTML((repostsData || {})[id], 'עוד אף אחד לא שיתף את זה.'),
-    `<button type="button" class="ms-btn${mine ? ' ghost' : ''}" onclick="repostersToggle('${artEsc(id)}')">${mine ? 'ביטול השיתוף שלי' : 'שיתוף לפרופיל שלי'}</button>`);
+  const head = plHeadActHTML(mine, 'משותף בפרופיל שלי ✓ · ביטול', 'שיתוף לפרופיל שלי', 'משתמשים ששיתפו את המודעה הזו בפרופיל שלהם', `repostersToggle('${artEsc(id)}')`);
+  openMSheet('שיתופים (ריפוסט)', `${head}${peopleListHTML((repostsData || {})[id], 'עוד אף אחד לא שיתף את זה.')}`);
   try { avatarLetterColors(document.querySelector('#m-sheet .ms-body')); } catch (e) {}
 }
 async function repostersToggle(id) {
@@ -30611,9 +30630,45 @@ async function repostersToggle(id) {
   document.querySelectorAll(`.pti-repost[data-item="${CSS.escape(id)}"]`).forEach(b => { try { repostSyncBtn(b); } catch (e) {} });
   if (document.getElementById('m-sheet')?.classList.contains('show')) repostersOpen(id);
 }
+async function followersOpen(uid, name) {
+  const labelName = name || 'המוכר';
+  const on = uid ? isFollowing(uid) : (typeof igDemoFollowing === 'function' && igDemoFollowing(igDemoKeyOf(labelName)));
+  const head = plHeadActHTML(on, `במעקב אחרי ${escHtml(labelName)} ✓ · הפסקת מעקב`, `מעקב אחרי ${escHtml(labelName)}`, `משתמשים שעוקבים אחרי ${labelName}`, `followersSheetToggle('${artEsc(uid || '')}', '${artEsc(labelName)}')`);
+  openMSheet('חברים ועוקבים', `${head}<div class="ms-empty">טוען…</div>`);
+  let map = {};
+  if (uid) {
+    try {
+      const all = (await get(ref(db, 'website/public_follows'))).val() || {};
+      const entries = Object.entries(all).filter(([, targets]) => targets && typeof targets === 'object' && targets[uid]).slice(0, 40);
+      await Promise.all(entries.map(async ([fUid, targets]) => {
+        let nm = 'משתמש';
+        try {
+          const p = (await get(ref(db, `website/users/${fUid}/profile`))).val();
+          if (p && (p.nickname || p.handle)) nm = String(p.nickname || p.handle);
+        } catch (e) {}
+        map[fUid] = { name: nm, at: Number(targets[uid].t) || 0 };
+      }));
+    } catch (e) {}
+  }
+  const u = auth.currentUser;
+  if (on && u && !u.isAnonymous && !map[u.uid]) {
+    const myName = (typeof liveChatUserName === 'function' && liveChatUserName()) || u.displayName || 'אני';
+    map[u.uid] = { name: myName, at: Date.now() };
+  }
+  const body = document.querySelector('#m-sheet .ms-body');
+  if (body) body.innerHTML = `${head}${peopleListHTML(map, 'עדיין אין עוקבים להצגה.')}`;
+  try { avatarLetterColors(body); } catch (e) {}
+}
+async function followersSheetToggle(uid, name) {
+  await mkCardFollow(null, uid, name);
+  if (document.getElementById('m-sheet')?.classList.contains('show')) followersOpen(uid, name);
+}
 window.likersOpen = likersOpen;
+window.likersSheetToggle = likersSheetToggle;
 window.repostersOpen = repostersOpen;
 window.repostersToggle = repostersToggle;
+window.followersOpen = followersOpen;
+window.followersSheetToggle = followersSheetToggle;
 (function likeLongPress() {
   const SEL = '.art-like-btn, .pti-like, .hr-like, .pti-repost[data-item]';
   let timer = 0, fired = false, sx = 0, sy = 0;
@@ -33877,9 +33932,9 @@ function rentHoverHTML(x) {
   return `<span class="mk-sg-hov mk-act2">
     <span role="button" tabindex="0" class="mk-a-buy${cartGet().some(c => c.id === 'mkt_' + x.id) ? ' in-cart' : ''}" data-cart="mkt_${escHtml(x.id)}" aria-label="קנייה" title="קנייה" onclick="${stop}${buy}">${ic('M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.5L21 8H6')}</span>
     <span role="button" tabindex="0" class="mk-a-deal" aria-label="משא ומתן" title="משא ומתן — הצעת מחיר" onclick="${stop}mkCardHaggle(this, '${id}')">${ic('M4 7h12M4 7l3-3M4 7l3 3M20 17H8M20 17l-3-3M20 17l-3 3')}</span>
-    ${(() => { const fon = mkFollowOn(x), me = auth.currentUser && x.uid && auth.currentUser.uid === x.uid; return me ? '' : `<span role="button" tabindex="0" class="mk-a-follow${fon ? ' on' : ''}" data-fol="${escHtml(x.uid || igDemoKeyOf(x.owner))}" aria-label="${fon ? 'במעקב אחרי ' : 'מעקב אחרי '}${escHtml(x.owner || 'המוכר')}" title="${fon ? 'במעקב — לחצו להפסקה' : 'מעקב אחרי ' + escHtml(x.owner || 'המוכר')}" onclick="${stop}mkCardFollow(this, '${artEsc(x.uid || '')}', '${artEsc(x.owner || '')}')">${fon ? IG_FOLLOWING_IC : IG_FOLLOW_IC}</span>`; })()}
-    ${b('לייק', 'M7 10v11H3V10zM7 10l4-8a2.5 2.5 0 0 1 3 2.6L13.5 9H19a2 2 0 0 1 2 2.3l-1.4 8A2 2 0 0 1 17.6 21H7', (sh ? `photoToggleLike('${sh}')` : `rentMark(this, 'like', '${id}'); likersWrite('${artEsc(likeId)}', this.classList.contains('on'))`), liked, ` data-people="like" data-pid="${escHtml(likeId)}"` + (sh ? ` data-like="${escHtml(x.shId)}"` : ''), 'mk-a-like', cnt(Number(itemLikesData[likeId]) || '', ` data-likes-n="${escHtml(likeId)}"`))}
-    ${b('ריפוסט', 'M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3', `toggleRepost('${artEsc(rk)}', this)`, repostIsMine(rk), ` data-item="${escHtml(rk)}" data-people="rep" data-pid="${escHtml(rk)}"`, 'pti-repost mk-a-rep', cnt(repostCount(rk) || ''))}
+    ${(() => { const fon = mkFollowOn(x), me = auth.currentUser && x.uid && auth.currentUser.uid === x.uid; return me ? '' : `<span role="button" tabindex="0" class="mk-a-follow${fon ? ' on' : ''}" data-fol="${escHtml(x.uid || igDemoKeyOf(x.owner))}" aria-label="${fon ? 'במעקב אחרי ' : 'מעקב אחרי '}${escHtml(x.owner || 'המוכר')}" title="${fon ? 'במעקב — לחצו לצפייה בעוקבים' : 'מעקב ועוקבים של ' + escHtml(x.owner || 'המוכר')}" onclick="${stop}followersOpen('${artEsc(x.uid || '')}', '${artEsc(x.owner || '')}')">${fon ? IG_FOLLOWING_IC : IG_FOLLOW_IC}</span>`; })()}
+    ${b('לייק', 'M7 10v11H3V10zM7 10l4-8a2.5 2.5 0 0 1 3 2.6L13.5 9H19a2 2 0 0 1 2 2.3l-1.4 8A2 2 0 0 1 17.6 21H7', `likersOpen('${artEsc(likeId)}', '${id}', '${sh}')`, liked, ` data-people="like" data-pid="${escHtml(likeId)}"` + (sh ? ` data-like="${escHtml(x.shId)}"` : ''), 'mk-a-like', cnt(Number(itemLikesData[likeId]) || '', ` data-likes-n="${escHtml(likeId)}"`))}
+    ${b('ריפוסט', 'M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3', `repostersOpen('${artEsc(rk)}')`, repostIsMine(rk), ` data-item="${escHtml(rk)}" data-people="rep" data-pid="${escHtml(rk)}"`, 'pti-repost mk-a-rep', cnt(repostCount(rk) || ''))}
     <span role="button" tabindex="0" class="mk-a-dots" aria-label="עוד פעולות" title="עוד" aria-expanded="false" onclick="${stop}mkMoreToggle(this)"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="18" cy="12" r="1.8"/></svg></span>
     <span class="mk-sg-hov-btns mk-a-pop">
     ${b('שמירה', 'M6 4h12v17l-6-4.5L6 21z', `mkCountBump('${artEsc(svKey)}', this.classList.contains('on') ? -1 : 1); ` + (sh ? `photoToggleSave('${sh}')` : `rentMark(this, 'save', '${id}')`), saved, sh ? ` data-save="${escHtml(x.shId)}"` : '', '', cnt(Number(itemLikesData[svKey]) || 0, ` data-likes-n="${escHtml(svKey)}"`))}
@@ -34319,7 +34374,7 @@ function rentMiniHTML(x) {
   // בידול: עסק — מסגרת ירוקה, תג "עסק" וסמל חנות ליד שם העסק; יד 2 — תג אפור
   const sec = mktSecOf(x), biz = sec === 'biz';
   const badge = biz ? `<i class="mk-sg-badge b-biz">${BIZ_IC}עסק</i>` : sec === 'used' ? '<i class="mk-sg-badge b-used">יד 2</i>' : '';
-  return `<div role="button" tabindex="0" class="mk-sg${biz ? ' is-biz' : sec === 'used' ? ' is-used' : ''}" data-id="${escHtml(x.id)}" onclick="rentOpen('${artEsc(x.id)}')" onkeydown="if((event.key==='Enter'||event.key===' ')&&event.target===this){event.preventDefault();this.click();}"><span class="mk-sg-meta"><span class="mk-sg-who" role="button" tabindex="0" title="${escHtml(mktWho(x))}" aria-label="${escHtml(mktWho(x))}" onclick="event.stopPropagation(); rentOpenSeller('${artEsc(x.uid || '')}', '${artEsc(x.owner || '')}')">${isUserVerified(x.uid || '', mktWho(x), x.verified) ? verifiedSealHTML(13) : ''}${authorAvHTML({ author: mktWho(x) || '?', uid: x.uid || '' })}<b>${biz ? BIZ_IC : ''}${escHtml(mktWho(x))}</b></span><small class="mk-sg-city${mkKmTo(x.city) !== null ? ' km' : ''}">${escHtml(mkWhereTxt(x))}</small>${mkMobStatHTML(x)}<small class="mk-sg-price">${rentTypeIcon(x)}${Number(x.price) > 0 ? `${mktDiscP(x.price).toLocaleString('he-IL', { maximumFractionDigits: 2 })}&nbsp;₪${mktWasHTML(x.price)}` : mktIsProj(x) ? escHtml((PROJ_SUB[x.pd] || {}).name || PROJ_KINDS[x.pk] || 'פרויקט') : ''}${x.uid ? `<i data-sg-rate="${escHtml(x.uid)}"></i>` : ''}</small></span><span class="mk-sg-img">${rentThumb(x)}${badge}${del}${mktSoldOut(x) ? '<i class="mk-sg-out">אזל</i>' : ''}</span><span class="mk-sg-acts">${rentHoverHTML(x).replace('<span role="button" tabindex="0" class="mk-a-dots"', () => `<b class="mk-sg-title"><span class="mk-sg-tt">${escHtml(x.title)}</span><span class="mk-sg-more" role="button" tabindex="0" onclick="event.stopPropagation(); event.preventDefault(); this.parentElement.classList.toggle('open')"><span>עוד</span><span>פחות</span></span></b><span role="button" tabindex="0" class="mk-a-dots"`)}</span></div>`;
+  return `<div role="button" tabindex="0" class="mk-sg${biz ? ' is-biz' : sec === 'used' ? ' is-used' : ''}" data-id="${escHtml(x.id)}" onclick="rentOpen('${artEsc(x.id)}')" onkeydown="if((event.key==='Enter'||event.key===' ')&&event.target===this){event.preventDefault();this.click();}"><span class="mk-sg-meta"><span class="mk-sg-who" role="button" tabindex="0" title="${escHtml(mktWho(x))}" aria-label="${escHtml(mktWho(x))}" onclick="event.stopPropagation(); rentOpenSeller('${artEsc(x.uid || '')}', '${artEsc(x.owner || '')}')">${isUserVerified(x.uid || '', mktWho(x), x.verified) ? verifiedSealHTML(13) : ''}${authorAvHTML({ author: mktWho(x) || '?', uid: x.uid || '' })}<b>${biz ? BIZ_IC : ''}${escHtml(mktWho(x))}</b></span><small class="mk-sg-city${mkKmTo(x.city) !== null ? ' km' : ''}">${escHtml(mkWhereTxt(x))}</small>${mkMobStatHTML(x)}<small class="mk-sg-price">${rentTypeIcon(x)}${Number(x.price) > 0 ? `${mktDiscP(x.price).toLocaleString('he-IL', { maximumFractionDigits: 2 })}&nbsp;₪${mktWasHTML(x.price)}` : mktIsProj(x) ? escHtml((PROJ_SUB[x.pd] || {}).name || PROJ_KINDS[x.pk] || 'פרויקט') : ''}${x.uid ? `<i data-sg-rate="${escHtml(x.uid)}"></i>` : ''}</small></span><b class="mk-sg-title"><span class="mk-sg-tt">${escHtml(x.title)}</span><span class="mk-sg-more" role="button" tabindex="0" onclick="event.stopPropagation(); event.preventDefault(); this.parentElement.classList.toggle('open')"><span>עוד</span><span>פחות</span></span></b><span class="mk-sg-img">${rentThumb(x)}${badge}${del}${mktSoldOut(x) ? '<i class="mk-sg-out">אזל</i>' : ''}</span><span class="mk-sg-acts">${rentHoverHTML(x)}</span></div>`;
 }
 // שורת הזהב: משאירים בה בדיוק כמה כרטיסים שנכנסים בשורה אחת; העודפים חוזרים לראש הגריד הרגיל
 function mkGoldFit() {
@@ -34863,7 +34918,6 @@ function rentSellerHTML(sl) {
       <div class="pf-tabs2" role="tablist"><button type="button" class="on" onclick="pfTab2(this, 'all')">הכל</button><button type="button" onclick="pfTab2(this, 'all')">${list.length} מודעות</button><button type="button" class="pf-tab-about" onclick="pfTab2(this, 'about')">פרטים</button></div>
       <div class="pf-body"><aside class="pf-about">${pfAboutHTML(st)}</aside><div class="pf-feed">
         ${list.length ? `<section class="pf-mkt"><h3>מודעות</h3>${mktSellerGridHTML(list)}</section>` : '<div class="pf-empty">אין מודעות פעילות.</div>'}
-        ${pcmSectionHTML(igDemoKeyOf(sl.name))}
       </div></div>
     </div>
   </div>`;
@@ -34930,9 +34984,9 @@ function rentDetailHTML(r) {
   const galActs = `<div class="mp-btns mk-acts mk-galacts">
             ${mktIsProj(r) && !projLink && !r.shId ? '' : btn(main[2], main[1], main[0], 'mk-go' + (!r.shId && r.kind !== 'used' ? ' mk-rent-add' + (rentListGet().some(x => x.id === r.id) ? ' on' : '') : ''))}
             ${btn('<path d="M6 4h12v17l-6-4.5L6 21z"/>', 'שמירה', r.shId ? `photoToggleSave('${artEsc(r.shId)}')` : `rentMark(this, 'save', '${artEsc(r.id)}')`, saved ? 'on' : '', r.shId ? ` data-save="${escHtml(r.shId)}"` : '')}
-            ${btn('<path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/>', 'אהבתי', r.shId ? `photoToggleLike('${artEsc(r.shId)}')` : `rentMark(this, 'like', '${artEsc(r.id)}')`, liked ? 'on' : '', r.shId ? ` data-like="${escHtml(r.shId)}"` : '')}
+            ${btn('<path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/>', 'אהבתי', `likersOpen('${artEsc(r.shId || rentCommentsKey(r))}', '${artEsc(r.id)}', '${artEsc(r.shId || '')}')`, liked ? 'on' : '', r.shId ? ` data-like="${escHtml(r.shId)}"` : '')}
             ${r.shId ? btn('<path d="M21 12a8 8 0 0 1-8 8H4l2.2-2.6A8 8 0 1 1 21 12z"/>', 'הודעה למוכר', ask) : ''}
-            ${btn('<path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/>', 'ריפוסט', `toggleRepost('${artEsc(rentCommentsKey(r))}', this)`, 'pti-repost' + (repostIsMine(rentCommentsKey(r)) ? ' on' : ''), ` data-item="${escHtml(rentCommentsKey(r))}"`)}
+            ${btn('<path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/>', 'ריפוסט', `repostersOpen('${artEsc(rentCommentsKey(r))}')`, 'pti-repost' + (repostIsMine(rentCommentsKey(r)) ? ' on' : ''), ` data-item="${escHtml(rentCommentsKey(r))}"`)}
             ${btn('<path d="M12 2.8l2.8 5.8 6.4.9-4.6 4.5 1.1 6.3L12 17.3l-5.7 3 1.1-6.3L2.8 9.5l6.4-.9z"/>', 'ביקורות', 'rentRevOpen()')}
             ${email ? btn('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>', 'מייל', `location.href='mailto:${artEsc(email)}'`) : ''}
             ${btn('<path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M16 7l-4-4-4 4M12 3v12"/>', 'שיתוף', `if(navigator.share){navigator.share({ title: document.title, url: location.href }).catch(function(){});}else{navigator.clipboard.writeText(location.href); showCopyToast('הקישור הועתק');}`)}
@@ -35184,7 +35238,7 @@ function rentMark(btn, kind, id) {
   const m = rentMarks(), k = kind + ':' + id;
   if (m[k]) delete m[k]; else m[k] = 1;
   try { localStorage.setItem(rentMarksKey(), JSON.stringify(m)); } catch (e) {}
-  btn.classList.toggle('on', !!m[k]);
+  if (btn) btn.classList.toggle('on', !!m[k]);
   // לייק למודעה נספר לכולם ב-website/item_likes (כמו לייק לתמונה)
   const r = kind === 'like' && typeof rentFind === 'function' && rentFind(id);
   if (r) mkCountBump(rentCommentsKey(r), m[k] ? 1 : -1);
@@ -36942,14 +36996,11 @@ Object.assign(window, { phoneVerifyOpen, pvSend, pvBack, pvClose });
     const el = document.createElement('div'); el.id = 'm-top';
     el.innerHTML = `<div class="mt-row">
         <button type="button" class="mt-circ mt-home" onclick="mtTab('home')" aria-label="חזרה לעמוד הראשי" title="עמוד ראשי">${ic('<path d="M5 12h14M13 6l6 6-6 6"/>')}</button>
-        <div class="mt-search${typeof rentUI !== 'undefined' && rentUI.q ? ' has-q' : ''}">
-          <span class="mt-mag" aria-hidden="true">${ic('<circle cx="11" cy="11" r="7"/><path d="M20 20l-4.35-4.35"/>')}</span>
-          <input id="mt-search-q" type="search" class="mt-q-in" readonly onclick="openSiteSearch()" onfocus="this.blur(); openSiteSearch()" placeholder="חיפוש..." value="${escHtml((typeof rentUI !== 'undefined' && rentUI.q) || '')}" autocomplete="off" enterkeyhint="search" aria-label="חיפוש בשוק" oninput="hcInput(this.value)" onkeydown="if(event.key==='Escape'){hcClear()} else if(event.key==='Enter'){event.preventDefault(); this.blur();}">
-          <button type="button" class="mt-q-x" onclick="hcClear()" aria-label="ניקוי חיפוש">✕</button>
+        <div class="mt-acts">
+          <button type="button" class="mt-circ mt-pub" onclick="mkPubOpen()" aria-label="העלאת מודעה" title="העלאת מודעה">${ic('<rect x="3" y="3" width="18" height="18" rx="5"/><path d="M12 8v8M8 12h8"/>')}</button>
+          <button type="button" class="mt-circ mt-srch" onclick="openSiteSearch()" aria-label="חיפוש באתר" title="חיפוש">${ic('<circle cx="11" cy="11" r="7"/><path d="M20 20l-4.35-4.35"/>')}</button>
+          <button type="button" class="mt-circ mt-dm" onclick="openMessages()" aria-label="הודעות בין משתמשים" title="הודעות">${ic('<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>')}</button>
         </div>
-        <button type="button" class="mt-circ mt-circ-teal" onclick="rentFilterToggle()" aria-label="קטגוריות וסינון" title="קטגוריות וסינון">${ic('<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>')}</button>
-        <button type="button" class="mt-circ" onclick="mtMenu()" aria-label="תפריט וניווט" title="תפריט">${ic('<path d="M12 3 3 8l9 5 9-5-9-5z"/><path d="m3 14 9 5 9-5"/>')}</button>
-        <button type="button" class="mt-circ" onclick="mkPubOpen()" aria-label="פרסום מודעה" title="פרסום מודעה">${ic('<rect x="8" y="3" width="12" height="15" rx="2.5"/><path d="M16 18v1a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/><path d="M14 8v5M11.5 10.5h5"/>')}</button>
         <button type="button" class="mt-circ mt-me" onclick="mtMe()" aria-label="המשתמש שלי"></button>
       </div>
       <nav class="mt-tabs"><button type="button" data-t="home" onclick="mtTab('home')">בית</button><button type="button" data-t="feed" onclick="mtTab('feed')">במעקב</button><button type="button" data-t="deals" class="mt-dls" onclick="mtTab('deals')">עסקאות<i class="mt-apv-n mt-dls-n"></i></button><button type="button" data-t="apv" class="mt-apv" hidden onclick="mtTab('apv')">אישור<i class="mt-apv-n"></i></button><span class="mt-count" aria-live="polite"></span></nav>`;
