@@ -22342,16 +22342,15 @@ html.theme-dark .ev-btn.on { background: #8b5cf6 !important; color: #ffffff !imp
 .fd-page { padding-top: 2px !important; }
 .fd-sugg { margin-top: 0 !important; }
 .site-top:has(+ .fd-page) > .st-bar { margin-bottom: 6px !important; }
-@media (max-width: 900px) {
-  .fd-sugg-row { gap: 7px !important; }
-  .fd-sg { flex: 0 0 84px !important; width: 84px !important; min-width: 0 !important; padding: 7px 5px !important; border-radius: 12px !important; gap: 3px !important; }
-  .fd-sg-x { width: 16px !important; height: 16px !important; font-size: 9px !important; top: 4px !important; left: 4px !important; }
-  .fd-sg-who .au-av { width: 28px !important; height: 28px !important; min-width: 28px !important; font-size: 11px !important; }
-  .fd-sg-who b { font-size: 10.5px !important; line-height: 1.2 !important; }
-  .fd-sg-who small { font-size: 9px !important; }
-  .fd-sg-go { height: 22px !important; padding: 0 8px !important; font-size: 10px !important; gap: 3px !important; }
-  .fd-sg-go svg { width: 10px !important; height: 10px !important; }
-}
+html body .fd-sugg-row { gap: 7px !important; }
+html body .fd-sg { flex: 0 0 78px !important; width: 78px !important; min-width: 0 !important; padding: 7px 5px 6px !important; border-radius: 12px !important; gap: 4px !important; }
+html body .fd-sg-x { width: 15px !important; height: 15px !important; font-size: 8.5px !important; top: 4px !important; right: 4px !important; left: auto !important; }
+html body .fd-sg-who { gap: 2px !important; }
+html body .fd-sg-who .au-av { width: 28px !important; height: 28px !important; min-width: 28px !important; font-size: 11px !important; }
+html body .fd-sg-who b { font-size: 10.5px !important; line-height: 1.2 !important; }
+html body .fd-sg-who small { font-size: 9px !important; }
+html body .fd-sg-go { height: 20px !important; padding: 0 7px !important; font-size: 10px !important; gap: 3px !important; }
+html body .fd-sg-go svg { width: 10px !important; height: 10px !important; }
 
 html body #mainContent:has(> .lib-page) { min-height: 0 !important; height: auto !important; padding-bottom: 0 !important; }
 html body .lib-page { min-height: 0 !important; height: auto !important; padding-bottom: 12px !important; }
