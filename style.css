@@ -22430,3 +22430,7 @@ html body .ig-stats small { font-size: 9.5px !important; }
 html body .ig-side { padding: 6px 10px !important; border-radius: 14px !important; min-width: 54px !important; }
 html body .ig-side b { font-size: 13px !important; }
 html body .ig-side small { font-size: 9.5px !important; }
+/* חלון פרופילים (לייקים / ריפוסט / חברים) על כל המסך */
+html body #m-sheet.pl-sheet { align-items: stretch !important; justify-content: stretch !important; padding: 0 !important; }
+html body #m-sheet.pl-sheet .ms-panel { width: 100vw !important; max-width: 100vw !important; height: 100dvh !important; max-height: 100dvh !important; border-radius: 0 !important; margin: 0 !important; }
+html body #m-sheet.pl-sheet .ms-body { flex: 1 !important; overflow-y: auto !important; padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)) !important; }

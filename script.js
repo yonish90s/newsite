@@ -20373,7 +20373,7 @@ window.setPhotoHashtag = setPhotoHashtag;
 function openMSheet(title, bodyHTML, footHTML) {
   let el = document.getElementById('m-sheet');
   if (!el) { el = document.createElement('div'); el.id = 'm-sheet'; document.body.appendChild(el); }
-  el.classList.remove('adv-sheet', 'side-sheet');
+  el.classList.remove('adv-sheet', 'side-sheet', 'pl-sheet');
   el.innerHTML = `
     <div class="ms-backdrop" onclick="closeMSheet()"></div>
     <div class="ms-panel" role="dialog" aria-label="${escHtml(title)}">
@@ -30582,15 +30582,31 @@ function likersWrite(id, on) {
   const name = (typeof liveChatUserName === 'function' && liveChatUserName()) || u.displayName || (u.isAnonymous ? 'אורח' : 'משתמש');
   try { set(ref(db, `website/item_likers/${id}/${u.uid}`), on ? { at: Date.now(), name: String(name).slice(0, 60) } : null).catch(() => {}); } catch (e) {}
 }
+const PL_SAMPLES = ['נועה לוי', 'דניאל כהן', 'מאיה אברהם', 'יוסי ברק', 'אלון כץ', 'רוני גולן', 'עדי מזרחי'];
+function plWithSamples(map, seed) {
+  const out = Object.assign({}, map || {});
+  const realCount = Object.values(out).filter(v => v && typeof v === 'object').length;
+  if (realCount >= 3) return out;
+  let h = 0; const s = String(seed || 'x');
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  const now = Date.now();
+  for (let i = 0; i < 5; i++) {
+    const name = PL_SAMPLES[(h + i) % PL_SAMPLES.length];
+    const key = 'demo_' + name;
+    if (!out[key]) out[key] = { name, at: now - (i + 1) * 36e5 * 5, demo: true };
+  }
+  return out;
+}
 function peopleListHTML(map, emptyText) {
   const rows = Object.entries(map || {}).filter(([, v]) => v && typeof v === 'object').sort((x, y) => (y[1].at || 0) - (x[1].at || 0));
   if (!rows.length) return `<div class="ms-empty">${emptyText}</div>`;
   return `<div class="pl-list">${rows.map(([uid, v]) => {
     const nm = String(v.name || 'משתמש');
-    const av = typeof authorAvHTML === 'function' ? authorAvHTML({ author: nm, uid }) : `<span class="au-av pl-av">${escHtml(nm.trim().charAt(0) || '?')}</span>`;
+    const realUid = (v.demo || String(uid).startsWith('demo_')) ? '' : uid;
+    const av = typeof authorAvHTML === 'function' ? authorAvHTML({ author: nm, uid: realUid }) : `<span class="au-av pl-av">${escHtml(nm.trim().charAt(0) || '?')}</span>`;
     const dt = v.at ? `<span class="pl-t">${escHtml(new Date(v.at).toLocaleDateString('he-IL'))}</span>` : '';
     const inner = `${av}<span class="pl-name">${escHtml(nm)}</span>${dt}`;
-    return uid ? `<button type="button" class="pl-row" onclick="closeMSheet(); if(typeof rentOpenSeller==='function') rentOpenSeller('${artEsc(uid)}', '${artEsc(nm)}')">${inner}</button>` : `<div class="pl-row">${inner}</div>`;
+    return `<button type="button" class="pl-row" onclick="closeMSheet(); if(typeof rentOpenSeller==='function') rentOpenSeller('${artEsc(realUid)}', '${artEsc(nm)}')">${inner}</button>`;
   }).join('')}</div>`;
 }
 function plHeadActHTML(on, onLabel, offLabel, sub, onclickJs) {
@@ -30600,8 +30616,10 @@ async function likersOpen(id, itemId, shId) {
   const liked = shId ? (typeof photoIsLikedLocal === 'function' && photoIsLikedLocal(shId)) : (itemId ? rentMarked('like', itemId) : false);
   const head = plHeadActHTML(liked, 'אהבתי ✓ · ביטול לייק', 'לייק למודעה', 'משתמשים שעשו לייק למודעה הזו', `likersSheetToggle('${artEsc(id)}', '${artEsc(itemId || '')}', '${artEsc(shId || '')}')`);
   openMSheet('לייקים', `${head}<div class="ms-empty">טוען…</div>`);
+  document.getElementById('m-sheet')?.classList.add('pl-sheet');
   let map = {};
   try { map = (await get(ref(db, `website/item_likers/${id}`))).val() || {}; } catch (e) {}
+  map = plWithSamples(map, 'like_' + id);
   const body = document.querySelector('#m-sheet .ms-body');
   if (body) body.innerHTML = `${head}${peopleListHTML(map, 'עדיין אין כאן משתמשים שעשו לייק.')}`;
   try { avatarLetterColors(body); if (typeof avatarHydrate === 'function') avatarHydrate(body); } catch (e) {}
@@ -30622,7 +30640,9 @@ function repostersOpen(id) {
   try { subscribeReposts(); } catch (e) {}
   const mine = repostIsMine(id);
   const head = plHeadActHTML(mine, 'משותף בפרופיל שלי ✓ · ביטול', 'שיתוף לפרופיל שלי', 'משתמשים ששיתפו את המודעה הזו בפרופיל שלהם', `repostersToggle('${artEsc(id)}')`);
-  openMSheet('שיתופים (ריפוסט)', `${head}${peopleListHTML((repostsData || {})[id], 'עוד אף אחד לא שיתף את זה.')}`);
+  const map = plWithSamples((repostsData || {})[id], 'rep_' + id);
+  openMSheet('שיתופים (ריפוסט)', `${head}${peopleListHTML(map, 'עוד אף אחד לא שיתף את זה.')}`);
+  document.getElementById('m-sheet')?.classList.add('pl-sheet');
   try { const b = document.querySelector('#m-sheet .ms-body'); avatarLetterColors(b); if (typeof avatarHydrate === 'function') avatarHydrate(b); } catch (e) {}
 }
 async function repostersToggle(id) {
@@ -30635,6 +30655,7 @@ async function followersOpen(uid, name) {
   const on = uid ? isFollowing(uid) : (typeof igDemoFollowing === 'function' && igDemoFollowing(igDemoKeyOf(labelName)));
   const head = plHeadActHTML(on, `במעקב אחרי ${escHtml(labelName)} ✓ · הפסקת מעקב`, `מעקב אחרי ${escHtml(labelName)}`, `משתמשים שעוקבים אחרי ${labelName}`, `followersSheetToggle('${artEsc(uid || '')}', '${artEsc(labelName)}')`);
   openMSheet('חברים ועוקבים', `${head}<div class="ms-empty">טוען…</div>`);
+  document.getElementById('m-sheet')?.classList.add('pl-sheet');
   let map = {};
   if (uid) {
     try {
@@ -30655,6 +30676,7 @@ async function followersOpen(uid, name) {
     const myName = (typeof liveChatUserName === 'function' && liveChatUserName()) || u.displayName || 'אני';
     map[u.uid] = { name: myName, at: Date.now() };
   }
+  map = plWithSamples(map, 'fol_' + (uid || labelName));
   const body = document.querySelector('#m-sheet .ms-body');
   if (body) body.innerHTML = `${head}${peopleListHTML(map, 'עדיין אין עוקבים להצגה.')}`;
   try { avatarLetterColors(body); if (typeof avatarHydrate === 'function') avatarHydrate(body); } catch (e) {}
@@ -34162,7 +34184,7 @@ function dlsSqHTML(o, me, demo, myTurn) {
   const av = demo && typeof demoAvatarSVG === 'function' ? `<span class="au-av has-av">${demoAvatarSVG(other)}</span>` : authorAvHTML({ author: other, uid: otherUid || '' });
   return `<div class="dls-sq${myTurn ? ' turn' : ''}" data-oid="${escHtml(o.id || '')}" role="button" tabindex="0" onclick="dealDetailOpen('${artEsc(o.id || '')}', ${demo ? 'true' : 'false'})">
     <span class="dls-meta"><span class="dls-who" title="${escHtml(other)}">${av}</span>${o.price ? `<b class="dls-price">${was}₪${Number(o.price).toLocaleString('he-IL')}</b>` : ''}<em class="dls-st ${st[1]}">${st[0]}</em></span>
-    <span class="dls-img">${img ? `<img src="${escHtml(img)}" alt="" loading="lazy" onerror="this.remove()">` : ''}<i style="--av:${typeof forumAvColor === 'function' ? forumAvColor({ uid: otherUid || '', name: other }) : '#8b5cf6'}">${escHtml(String(o.title || other).trim().charAt(0) || '?')}</i>${demo ? '<em class="dls-demo">דוגמה</em>' : ''}</span>
+    <span class="dls-img">${img ? `<img src="${escHtml(img)}" alt="" loading="lazy" onerror="this.remove()">` : ''}<i style="--av:${typeof forumAvColor === 'function' ? forumAvColor({ uid: otherUid || '', name: other }) : '#8b5cf6'}">${escHtml(String(o.title || other).trim().charAt(0) || '?')}</i></span>
     <span class="dls-tx"><b>${escHtml(o.title || 'הצעה')}</b><small>${mine ? 'אל' : 'מאת'} ${escHtml(other)} · ${escHtml(ofxDay(o.updatedAt || o.at || 0))}</small></span>
     ${btns}
   </div>`;
@@ -34380,7 +34402,7 @@ function rentMiniHTML(x) {
   // כרטיס: למעלה שורה: המוכר | העיר | המחיר, מתחתיה תמונה ביחס 4:3; מתחת שורת כפתורים קטנה (לייק, שיתוף, שמירה, דיווח) ובסוף שם המודעה בקטן
   // בידול: עסק — מסגרת ירוקה, תג "עסק" וסמל חנות ליד שם העסק; יד 2 — תג אפור
   const sec = mktSecOf(x), biz = sec === 'biz';
-  const badge = biz ? `<i class="mk-sg-badge b-biz">${BIZ_IC}עסק</i>` : sec === 'used' ? '<i class="mk-sg-badge b-used">יד 2</i>' : '';
+  const badge = '';
   return `<div role="button" tabindex="0" class="mk-sg${biz ? ' is-biz' : sec === 'used' ? ' is-used' : ''}" data-id="${escHtml(x.id)}" onclick="rentOpen('${artEsc(x.id)}')" onkeydown="if((event.key==='Enter'||event.key===' ')&&event.target===this){event.preventDefault();this.click();}"><span class="mk-sg-meta"><span class="mk-sg-who" role="button" tabindex="0" title="${escHtml(mktWho(x))}" aria-label="${escHtml(mktWho(x))}" onclick="event.stopPropagation(); rentOpenSeller('${artEsc(x.uid || '')}', '${artEsc(x.owner || '')}')">${isUserVerified(x.uid || '', mktWho(x), x.verified) ? verifiedSealHTML(13) : ''}${authorAvHTML({ author: mktWho(x) || '?', uid: x.uid || '' })}<b>${biz ? BIZ_IC : ''}${escHtml(mktWho(x))}</b></span><small class="mk-sg-city${mkKmTo(x.city) !== null ? ' km' : ''}">${escHtml(mkWhereTxt(x))}</small>${mkMobStatHTML(x)}<small class="mk-sg-price">${rentTypeIcon(x)}${Number(x.price) > 0 ? `${mktDiscP(x.price).toLocaleString('he-IL', { maximumFractionDigits: 2 })}&nbsp;₪${mktWasHTML(x.price)}` : mktIsProj(x) ? escHtml((PROJ_SUB[x.pd] || {}).name || PROJ_KINDS[x.pk] || 'פרויקט') : ''}${x.uid ? `<i data-sg-rate="${escHtml(x.uid)}"></i>` : ''}</small></span><b class="mk-sg-title"><span class="mk-sg-tt">${escHtml(x.title)}</span><span class="mk-sg-more" role="button" tabindex="0" onclick="event.stopPropagation(); event.preventDefault(); this.parentElement.classList.toggle('open')"><span>עוד</span><span>פחות</span></span></b><span class="mk-sg-img">${rentThumb(x)}${badge}${del}${mktSoldOut(x) ? '<i class="mk-sg-out">אזל</i>' : ''}</span><span class="mk-sg-acts">${rentHoverHTML(x)}</span></div>`;
 }
 // שורת הזהב: משאירים בה בדיוק כמה כרטיסים שנכנסים בשורה אחת; העודפים חוזרים לראש הגריד הרגיל
@@ -37535,7 +37557,7 @@ function evCardHTML(ev) {
   const stack = shown.map(p => `<span class="ev-av">${typeof authorAvHTML === 'function' ? authorAvHTML({ author: p.name || 'משתתף', uid: p.uid || '' }) : `<span class="au-av">${escHtml((p.name || 'מ').charAt(0))}</span>`}</span>`).join('');
   const total = basePeople.length;
   return `<article class="ev-card" data-ev-id="${escHtml(ev.id)}" role="button" tabindex="0" onclick="evOpenDetails('${artEsc(ev.id)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();evOpenDetails('${artEsc(ev.id)}');}">
-    <div class="ev-img"><img src="${escHtml(ev.img || 'rent/t/projector.jpg?v=2')}" alt="${escHtml(ev.title)}" loading="lazy" decoding="async">${ev.demo ? '<span class="ev-demo-tag">דוגמה</span>' : ''}</div>
+    <div class="ev-img"><img src="${escHtml(ev.img || 'rent/t/projector.jpg?v=2')}" alt="${escHtml(ev.title)}" loading="lazy" decoding="async"></div>
     <div class="ev-body">
       <span class="ev-cat">${escHtml(ev.cat || 'אירוע')}</span>
       <h3 class="ev-title">${escHtml(ev.title)}</h3>
