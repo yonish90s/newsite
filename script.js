@@ -34049,18 +34049,16 @@ function twPostHTML(r) {
   const desc = String(r.desc || '').trim();
   const descHTML = desc ? `<span class="tw-desc-wrap"><small class="tw-desc">${escHtml(desc)}</small>${desc.length > 75 ? `<button type="button" class="tw-more" onclick="event.stopPropagation(); const w=this.parentElement; w.classList.toggle('open'); this.textContent=w.classList.contains('open')?'פחות':'עוד'">עוד</button>` : ''}</span>` : '';
   return `<article class="tw-post" role="button" tabindex="0" data-id="${escHtml(r.id)}" onclick="rentOpen('${artEsc(r.id)}')" onkeydown="if((event.key==='Enter'||event.key===' ')&&event.target===this){event.preventDefault();this.click();}">
-    <div class="tw-av" onclick="event.stopPropagation(); rentOpenSeller('${artEsc(r.uid || '')}', '${artEsc(r.owner || '')}')">${authorAvHTML({ author: mktWho(r) || '?', uid: r.uid || '' })}</div>
-    <div class="tw-main">
-      <header class="tw-head">
-        <b class="tw-who" onclick="event.stopPropagation(); rentOpenSeller('${artEsc(r.uid || '')}', '${artEsc(r.owner || '')}')">${biz ? BIZ_IC : ''}${escHtml(mktWho(r))}</b>
-        ${isUserVerified(r.uid || '', mktWho(r), r.verified) ? verifiedSealHTML(13) : ''}
-        <span class="tw-meta">${escHtml([mkWhereTxt(r), when].filter(Boolean).join(' · '))}</span>
-        ${price}
-      </header>
-      <div class="tw-text"><b>${escHtml(r.title)}</b>${descHTML}</div>
-      ${media}
-      <div class="tw-acts mk-sg-acts">${rentHoverHTML(r)}</div>
-    </div>
+    <header class="tw-head">
+      <div class="tw-av" onclick="event.stopPropagation(); rentOpenSeller('${artEsc(r.uid || '')}', '${artEsc(r.owner || '')}')">${authorAvHTML({ author: mktWho(r) || '?', uid: r.uid || '' })}</div>
+      <b class="tw-who" onclick="event.stopPropagation(); rentOpenSeller('${artEsc(r.uid || '')}', '${artEsc(r.owner || '')}')">${biz ? BIZ_IC : ''}${escHtml(mktWho(r))}</b>
+      ${isUserVerified(r.uid || '', mktWho(r), r.verified) ? verifiedSealHTML(13) : ''}
+      <span class="tw-meta">${escHtml([mkWhereTxt(r), when].filter(Boolean).join(' · '))}</span>
+      ${price}
+    </header>
+    <div class="tw-text"><b>${escHtml(r.title)}</b>${descHTML}</div>
+    ${media}
+    <div class="tw-acts mk-sg-acts">${rentHoverHTML(r)}</div>
   </article>`;
 }
 window.setHomeView = setHomeView; window.homeViewGet = homeViewGet;
