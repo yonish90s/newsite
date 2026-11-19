@@ -16418,7 +16418,7 @@ function igCardHTML(o) {
     <div class="ig-p-top">
       <span class="ig-p-av">${authorAvHTML({ author: o.name, uid: o.uid || '' })}</span>
       <div class="ig-p-info">
-        <div class="ig-p-name"><b class="ig-name">${escHtml(o.name)}</b>${ver}</div>
+        <div class="ig-p-name">${ver}<b class="ig-name">${escHtml(o.name)}</b></div>
         <div class="ig-p-stats">
           <div><b>${Number(o.posts || 0).toLocaleString('he-IL')}</b><small>פוסטים</small></div>
           <div>${fol}<small>עוקבים</small></div>
@@ -34147,9 +34147,9 @@ function twPostHTML(r) {
   const descHTML = desc ? `<span class="tw-desc-wrap"><small class="tw-desc">${escHtml(desc)}</small>${desc.length > 75 ? `<button type="button" class="tw-more" onclick="event.stopPropagation(); const w=this.parentElement; w.classList.toggle('open'); this.textContent=w.classList.contains('open')?'פחות':'עוד'">עוד</button>` : ''}</span>` : '';
   return `<article class="tw-post" role="button" tabindex="0" data-id="${escHtml(r.id)}" onclick="rentOpen('${artEsc(r.id)}')" onkeydown="if((event.key==='Enter'||event.key===' ')&&event.target===this){event.preventDefault();this.click();}">
     <header class="tw-head">
+      ${isUserVerified(r.uid || '', mktWho(r), r.verified) ? verifiedSealHTML(13) : ''}
       <div class="tw-av" onclick="event.stopPropagation(); rentOpenSeller('${artEsc(r.uid || '')}', '${artEsc(r.owner || '')}')">${authorAvHTML({ author: mktWho(r) || '?', uid: r.uid || '' })}</div>
       <b class="tw-who" onclick="event.stopPropagation(); rentOpenSeller('${artEsc(r.uid || '')}', '${artEsc(r.owner || '')}')">${biz ? BIZ_IC : ''}${escHtml(mktWho(r))}</b>
-      ${isUserVerified(r.uid || '', mktWho(r), r.verified) ? verifiedSealHTML(13) : ''}
       <span class="tw-meta">${escHtml([mkWhereTxt(r), when].filter(Boolean).join(' · '))}</span>
       ${price}
     </header>

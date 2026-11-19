@@ -22631,6 +22631,9 @@ html.theme-dark body :is(.tw-who, .tw-text b, .tw-text small, .tw-more, .mk-sg-t
 html.theme-dark body :is(.tw-meta, .ig-p-stats small, .ig-p-bio, .igc-top small, .igc-rep, .ssx-pm small, .mt-tabs button) { color: #d4d4d8 !important; }
 html.theme-dark body :is(.mk-sg, .ig-prof, .ms-panel, .tg-panel, .tg-view) { background: #14161b !important; color: #ffffff !important; }
 html.theme-dark body #m-top .mt-circ { background: #1f222a !important; color: #ffffff !important; border-color: rgba(255, 255, 255, .12) !important; }
+html.theme-dark body :is(.ig-act2 > .mk-a-like.on svg, .igc-like.on svg, .art-like-btn.liked svg, .pti-like.on svg, .hr-like.on svg) { fill: #ffffff !important; stroke: #ffffff !important; color: #ffffff !important; }
+html.theme-dark body :is(.mt-apv-n, .st-badge, .mk-sg-out, .dls-st.no, .dls-b.no, .tg-unread) { background: #ffffff !important; color: #111827 !important; border-color: #ffffff !important; }
+html.theme-dark body :is(.tg-unread) { background: transparent !important; color: #ffffff !important; }
 /* הקטנת שורת המוכר העליונה בדף המודעה (.mk-watch .mk-head) ב-70% — דקה וקומפקטית */
 html body .mk-watch .mk-head { padding: 2px 0 !important; gap: 6px !important; min-height: 0 !important; margin-bottom: 4px !important; }
 html body .mk-watch .mk-head .mk-seller { gap: 5px !important; }
