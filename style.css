@@ -22922,11 +22922,17 @@ html body:not(#_):not(#_):not(#_) #m-sheet.rep-top-sheet .ms-panel {
   animation: repDropDown .2s ease-out !important;
 }
 @keyframes repDropDown { from { transform: translateY(-24px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-.rep-top-box { display: flex; flex-direction: column; gap: 10px; padding: 6px 0 10px; }
-.rep-go-btn { align-self: flex-start; height: 36px; padding: 0 16px; border-radius: 8px; border: 0; background: #ec4899; color: #ffffff; font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; }
+.rep-top-box { display: flex; flex-direction: column; gap: 6px; padding: 4px 0 6px; }
+.rep-go-btn { align-self: flex-start; height: 26px !important; padding: 0 11px !important; border-radius: 7px !important; border: 0; background: #ec4899; color: #ffffff; font: inherit; font-size: 11px !important; font-weight: 700; cursor: pointer; }
 .rep-go-btn.on { background: #3f3f46; color: #ffffff; }
-.rep-sub { margin: 0; font-size: 13px; color: #6b7280; }
+.rep-sub { margin: 0; font-size: 10.5px !important; color: #6b7280; }
 html.theme-dark .rep-sub { color: #a1a1aa; }
+html body:not(#_):not(#_) #m-sheet.rep-top-sheet .ms-head { padding: 8px 12px !important; min-height: 0 !important; }
+html body:not(#_):not(#_) #m-sheet.rep-top-sheet .ms-title { font-size: 13px !important; }
+html body:not(#_):not(#_) #m-sheet.rep-top-sheet .ms-x { width: 24px !important; height: 24px !important; font-size: 12px !important; }
+html body:not(#_):not(#_) #m-sheet.rep-top-sheet .pl-row { padding: 5px 4px !important; gap: 8px !important; min-height: 0 !important; }
+html body:not(#_):not(#_) #m-sheet.rep-top-sheet .pl-row .au-av { width: 22px !important; height: 22px !important; min-width: 22px !important; font-size: 9px !important; }
+html body:not(#_):not(#_) #m-sheet.rep-top-sheet .pl-row :is(.pl-name, b, span) { font-size: 11.5px !important; }
 
 /* מסך העלאה בסגנון X/Twitter ובחירת קהל יעד */
 html body:not(#_):not(#_) .mkpub-modal.mkpub-xmode { padding: 0 !important; align-items: stretch !important; }
