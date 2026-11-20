@@ -2151,6 +2151,20 @@ html:not(.theme-dark) .au-stk-5 { background: #808080; }
 html:not(.theme-dark) body .lib-theme { color: #111111; }
 html:not(.theme-dark) .mkpub-sched-sw button.on { background: #111111; border-color: #111111; }
 html:not(.theme-dark) .mkpub-sched-presets button { color: #111111; }
+html:not(.theme-dark) .ig-p-acts .ig-dash-btn { background: #111111 !important; }
+html:not(.theme-dark) .ua-crumb { color: #727272; }
+html:not(.theme-dark) .ua-head-sub { color: #727272; }
+html:not(.theme-dark) .ua-new-btn,html:not(.theme-dark) .ua-login-btn { background: #808080; }
+html:not(.theme-dark) .ua-kpi small { color: #727272; }
+html:not(.theme-dark) .ua-kpi b.g { color: #808080; }
+html:not(.theme-dark) .ua-card-t { color: #111111; }
+html:not(.theme-dark) .ua-donut span small { color: #727272; }
+html:not(.theme-dark) .ua-leg-row small { color: #727272; }
+html:not(.theme-dark) .ua-filters button.on { background: #111111; border-color: #111111; }
+html:not(.theme-dark) .ua-item-info small { color: #727272; }
+html:not(.theme-dark) .ua-badge-sched { background: #a7a7a7; }
+html:not(.theme-dark) .ua-item-val { color: #808080; }
+html:not(.theme-dark) .ua-empty,html:not(.theme-dark) .ua-empty-sm { color: #727272; }
 html:not(.theme-dark) [style*="border:1.5px solid #e2e8f0"], html:not(.theme-dark) [style*="border: 1.5px solid #e2e8f0"] { border: 1.5px solid #e7e7e7 !important; }
 html:not(.theme-dark) [style*="color:#1e293b"], html:not(.theme-dark) [style*="color: #1e293b"] { color: #111111 !important; }
 html:not(.theme-dark) [style*="background:#dc2626"], html:not(.theme-dark) [style*="background: #dc2626"] { background: #111111 !important; }

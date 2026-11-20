@@ -16428,7 +16428,7 @@ function igCardHTML(o) {
       </div>
     </div>
     <div class="ig-p-bio"><span>${typeof formatViews === 'function' ? formatViews(o.views || 0) : (o.views || 0)} צפיות בפרופיל</span></div>
-    ${o.isOwn ? '' : `<div class="ig-p-acts">${followBtn}${msgBtn}</div>`}
+    ${o.isOwn ? `<div class="ig-p-acts"><button type="button" class="ig-dash-btn" onclick="openUserAnalytics()">📊 לוח בקרה וניתוח נתונים</button></div>` : `<div class="ig-p-acts">${followBtn}${msgBtn}</div>`}
   </section>`;
 }
 async function igFill(uid) {
@@ -37234,7 +37234,7 @@ Object.assign(window, { phoneVerifyOpen, pvSend, pvBack, pvClose });
         </div>
         <button type="button" class="mt-circ mt-me" onclick="mtMe()" aria-label="המשתמש שלי"></button>
       </div>
-      <nav class="mt-tabs"><button type="button" data-t="home" onclick="mtTab('home')">בית</button><button type="button" data-t="feed" onclick="mtTab('feed')">במעקב</button><button type="button" data-t="deals" class="mt-dls" onclick="mtTab('deals')">עסקאות<i class="mt-apv-n mt-dls-n"></i></button><button type="button" data-t="apv" class="mt-apv" hidden onclick="mtTab('apv')">אישור<i class="mt-apv-n"></i></button><span class="mt-count" aria-live="polite"></span></nav>`;
+      <nav class="mt-tabs"><button type="button" data-t="home" onclick="mtTab('home')">בית</button><button type="button" data-t="feed" onclick="mtTab('feed')">במעקב</button><button type="button" data-t="deals" class="mt-dls" onclick="mtTab('deals')">עסקאות<i class="mt-apv-n mt-dls-n"></i></button><button type="button" data-t="dash" onclick="mtTab('dash')">לוח בקרה</button><button type="button" data-t="apv" class="mt-apv" hidden onclick="mtTab('apv')">אישור<i class="mt-apv-n"></i></button><span class="mt-count" aria-live="polite"></span></nav>`;
     document.body.appendChild(el);
     document.documentElement.classList.add('has-mtop');
     mtSync();
@@ -37270,8 +37270,8 @@ try { onAuthStateChanged(auth, () => setTimeout(mtMePaint, 300)); } catch (e) {}
 function mtSync() {
   mtMePaint();
   const el = document.getElementById('m-top'); if (!el) return;
-  const dls = !!document.querySelector('.dls-page'), apv = !!document.querySelector('.apv-page'), feed = !apv && !dls && !!document.querySelector('.fd-page'), home = !feed && !apv && !dls && (!!document.querySelector('.lib-page') || (!!document.querySelector('.rent-page') && !(typeof rentUI !== 'undefined' && (rentUI.open || rentUI.seller))));
-  el.querySelectorAll('.mt-tabs button').forEach(b => b.classList.toggle('on', (b.dataset.t === 'feed' && feed) || (b.dataset.t === 'home' && home) || (b.dataset.t === 'apv' && apv) || (b.dataset.t === 'deals' && dls)));
+  const dls = !!document.querySelector('.dls-page'), apv = !!document.querySelector('.apv-page'), dash = !!document.querySelector('.ua-page'), feed = !apv && !dls && !dash && !!document.querySelector('.fd-page'), home = !feed && !apv && !dls && !dash && (!!document.querySelector('.lib-page') || (!!document.querySelector('.rent-page') && !(typeof rentUI !== 'undefined' && (rentUI.open || rentUI.seller))));
+  el.querySelectorAll('.mt-tabs button').forEach(b => b.classList.toggle('on', (b.dataset.t === 'feed' && feed) || (b.dataset.t === 'home' && home) || (b.dataset.t === 'apv' && apv) || (b.dataset.t === 'deals' && dls) || (b.dataset.t === 'dash' && dash)));
   dlsTabPaint();
   apvTabPaint();
   const c = el.querySelector('.mt-count');
@@ -37281,6 +37281,7 @@ function mtTab(t) {
   if (t === 'feed') { mktFeedOpen(); }
   else if (t === 'apv') { apvOpen(); }
   else if (t === 'deals') { dlsOpen(); }
+  else if (t === 'dash') { openUserAnalytics(); }
   else { if (typeof fbReset === 'function' && typeof rentUI !== 'undefined') Object.assign(rentUI, { open: null, seller: null }); goToHomePage(); }
   try { window.scrollTo({ top: 0 }); } catch (e) {}
   setTimeout(mtSync, 200);
@@ -37868,3 +37869,212 @@ function evAddSave() {
   if (typeof showCopyToast === 'function') showCopyToast('האירוע פורסם!');
 }
 Object.assign(window, { eventsSectionHTML, evToggleJoin, evOpenDetails, evAddOpen, evAddSave });
+
+// ===== דף ניהול וניתוח נתונים אישי לכל משתמש =====
+let _uaState = { q: '', filter: 'all', followers: 0, following: 0, profViews: 0, items: [] };
+function _uaCollectUserAds(uid, name) {
+  const now = Date.now(), seen = new Set(), out = [];
+  const pushItem = (raw, isRent) => {
+    if (!raw) return;
+    const id = String(raw.id || '');
+    if (!id || seen.has(id)) return;
+    const matches = (uid && (raw.authorId === uid || raw.uid === uid)) || (name && (raw.author === name || raw.owner === name));
+    if (!matches) return;
+    seen.add(id);
+    const key = isRent ? (typeof rentCommentsKey === 'function' ? rentCommentsKey(raw) : id) : id;
+    const views = typeof photoGetViews === 'function' ? (photoGetViews(key) || 0) : 0;
+    const likes = Number((typeof itemLikesData !== 'undefined' && itemLikesData[key]) || 0);
+    const comments = Array.isArray(typeof commentsData !== 'undefined' && commentsData[key]) ? commentsData[key].length : 0;
+    const pubAt = Number(raw.publishAt) || 0;
+    const scheduled = pubAt > now;
+    out.push({
+      id,
+      openId: isRent ? id : ('sh_' + id),
+      title: String(raw.title || 'מודעה ללא כותרת'),
+      img: raw.img || raw.image || (Array.isArray(raw.images) && raw.images[0]) || '',
+      price: raw.price ? Number(String(raw.price).replace(/[^\d.]/g, '')) || 0 : 0,
+      views,
+      likes,
+      comments,
+      score: views + likes * 3 + comments * 4,
+      scheduled,
+      publishAt: pubAt,
+      createdAt: Number(raw.createdAt || raw.t) || 0
+    });
+  };
+  try {
+    if (typeof pages !== 'undefined' && Array.isArray(pages)) {
+      pages.forEach(p => {
+        const m = ((p && p.content) || '').match(/data-photos-json="([^"]*)"/);
+        if (m) {
+          try { (JSON.parse(decodeURIComponent(m[1])) || []).forEach(x => pushItem(x, false)); } catch (e) {}
+        }
+      });
+    }
+  } catch (e) {}
+  try { if (typeof rentList === 'function') (rentList() || []).forEach(r => pushItem(r, true)); } catch (e) {}
+  return out;
+}
+function _uaDonutBg(parts) {
+  const total = parts.reduce((s, p) => s + p.val, 0);
+  if (!total) return 'conic-gradient(#e5e7eb 0 100%)';
+  let acc = 0;
+  const stops = parts.map(p => {
+    const start = (acc / total) * 100;
+    acc += p.val;
+    const end = (acc / total) * 100;
+    return `${p.color} ${start.toFixed(1)}% ${end.toFixed(1)}%`;
+  });
+  return `conic-gradient(${stops.join(', ')})`;
+}
+function _uaRenderList() {
+  const host = document.getElementById('ua-list-host');
+  if (!host) return;
+  const q = (_uaState.q || '').trim().toLowerCase();
+  let list = _uaState.items.filter(x => {
+    if (_uaState.filter === 'live' && x.scheduled) return false;
+    if (_uaState.filter === 'sched' && !x.scheduled) return false;
+    if (q && !x.title.toLowerCase().includes(q)) return false;
+    return true;
+  });
+  if (_uaState.filter === 'likes') list = list.slice().sort((a, b) => b.likes - a.likes || b.views - a.views);
+  else list = list.slice().sort((a, b) => b.views - a.views || b.createdAt - a.createdAt);
+  if (!list.length) {
+    host.innerHTML = `<div class="ua-empty">אין מודעות שתואמות לסינון הנוכחי.</div>`;
+    return;
+  }
+  host.innerHTML = list.map(x => `
+    <button type="button" class="ua-item" onclick="if(typeof rentOpen==='function') rentOpen('${artEsc(x.openId)}')">
+      <span class="ua-item-th">${x.img ? `<img src="${escHtml(x.img)}" alt="">` : '📦'}</span>
+      <span class="ua-item-info">
+        <b>${escHtml(x.title)}${x.scheduled ? `<em class="ua-badge-sched">מתוזמנת · ${new Date(x.publishAt).toLocaleString('he-IL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</em>` : ''}</b>
+        <small>${x.views.toLocaleString('he-IL')} צפיות · ${x.likes.toLocaleString('he-IL')} לייקים · ${x.comments.toLocaleString('he-IL')} תגובות</small>
+      </span>
+      <span class="ua-item-val">${x.price ? `₪${x.price.toLocaleString('he-IL')}` : '—'}</span>
+    </button>`).join('');
+}
+function uaSetFilter(f) {
+  _uaState.filter = f;
+  document.querySelectorAll('.ua-filters button').forEach(b => b.classList.toggle('on', b.dataset.f === f));
+  _uaRenderList();
+}
+function uaSearch(val) {
+  _uaState.q = val;
+  _uaRenderList();
+}
+function _uaDraw() {
+  const host = document.querySelector('.ua-page');
+  if (!host) return;
+  const u = auth.currentUser, reg = u && !u.isAnonymous;
+  if (!reg) {
+    host.innerHTML = `<div class="ua-shell ua-guest">
+      <div class="ua-crumb">ניהול פרופיל / לוח בקרה</div>
+      <h2>התחברו כדי לצפות בנתוני הפרופיל שלכם</h2>
+      <p>כאן תוכלו לראות כמה צפו לכם בפרופיל, אילו מודעות מביאות הכי הרבה תנועה, ולעקוב אחרי מודעות מתוזמנות.</p>
+      <button type="button" class="ua-login-btn" onclick="if(typeof openLiveChatLogin==='function') openLiveChatLogin()">כניסה או הרשמה</button>
+    </div>`;
+    return;
+  }
+  const name = (typeof liveChatUserName === 'function' && liveChatUserName()) || u.displayName || 'משתמש';
+  const ver = typeof isUserVerified === 'function' && isUserVerified(u.uid, name) ? verifiedSealHTML(15) : '';
+  const items = _uaState.items;
+  const totalAdViews = items.reduce((s, x) => s + x.views, 0);
+  const totalLikes = items.reduce((s, x) => s + x.likes, 0);
+  const totalComments = items.reduce((s, x) => s + x.comments, 0);
+  const profViews = _uaState.profViews || Math.max(totalAdViews, items.length * 4);
+  const schedCount = items.filter(x => x.scheduled).length;
+  const palette = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ef4444', '#64748b'];
+  const topAds = items.slice().sort((a, b) => b.views - a.views).slice(0, 5);
+  const topTotal = topAds.reduce((s, x) => s + Math.max(1, x.views), 0);
+  const topParts = topAds.map((x, i) => ({ val: Math.max(1, x.views), color: palette[i % palette.length], item: x }));
+  const topPct = topParts.length && topTotal ? Math.round((topParts[0].val / topTotal) * 100) : 0;
+  const engParts = [
+    { label: 'צפיות במודעות', val: totalAdViews, color: '#3b82f6' },
+    { label: 'צפיות בפרופיל', val: profViews, color: '#10b981' },
+    { label: 'לייקים', val: totalLikes, color: '#f59e0b' },
+    { label: 'תגובות', val: totalComments, color: '#8b5cf6' }
+  ];
+  const engTotal = engParts.reduce((s, p) => s + p.val, 0);
+  const topEngPct = engTotal ? Math.round((Math.max(...engParts.map(p => p.val)) / engTotal) * 100) : 0;
+  host.innerHTML = `<div class="ua-shell">
+    <div class="ua-crumb">ניהול פרופיל / לוח בקרה וניתוח נתונים</div>
+    <div class="ua-card ua-head-card">
+      <div class="ua-head-row">
+        <span class="ua-av">${typeof authorAvHTML === 'function' ? authorAvHTML({ author: name, uid: u.uid }) : '👤'}</span>
+        <div class="ua-head-meta">
+          <div class="ua-head-name"><b>${escHtml(name)}</b>${ver}</div>
+          <div class="ua-head-sub">${items.length} מודעות · ${schedCount} מתוזמנות · ${_uaState.followers} עוקבים</div>
+          <div class="ua-tags"><span>פרופיל פעיל</span><span>ניתוח בזמן אמת</span>${schedCount ? `<span>${schedCount} בתזמון</span>` : ''}</div>
+        </div>
+        <button type="button" class="ua-new-btn" onclick="if(typeof mkPubOpen==='function') mkPubOpen()">+ מודעה חדשה</button>
+      </div>
+    </div>
+    <div class="ua-kpis">
+      <div class="ua-kpi"><small>צפיות בפרופיל</small><b class="g">${profViews.toLocaleString('he-IL')}</b></div>
+      <div class="ua-kpi"><small>צפיות במודעות</small><b class="g">${totalAdViews.toLocaleString('he-IL')}</b></div>
+      <div class="ua-kpi"><small>עוקבים</small><b>${_uaState.followers.toLocaleString('he-IL')}</b></div>
+      <div class="ua-kpi"><small>לייקים ותגובות</small><b>${(totalLikes + totalComments).toLocaleString('he-IL')}</b></div>
+    </div>
+    <div class="ua-charts">
+      <div class="ua-card ua-chart-card">
+        <div class="ua-card-t">ביצועים לפי מודעה</div>
+        <div class="ua-donut-wrap">
+          <div class="ua-donut" style="background:${_uaDonutBg(topParts)}"><span><b>${topPct}%</b><small>מובילה</small></span></div>
+          <div class="ua-legend">
+            ${topParts.length ? topParts.map(p => `<div class="ua-leg-row"><i style="background:${p.color}"></i><span class="ua-leg-nm">${escHtml(p.item.title)}</span><b>${p.item.views.toLocaleString('he-IL')}</b><small>${topTotal ? Math.round((p.val / topTotal) * 100) : 0}%</small></div>`).join('') : '<div class="ua-empty-sm">עוד אין מודעות לניתוח</div>'}
+          </div>
+        </div>
+      </div>
+      <div class="ua-card ua-chart-card">
+        <div class="ua-card-t">התפלגות אינטראקציות</div>
+        <div class="ua-donut-wrap">
+          <div class="ua-donut" style="background:${_uaDonutBg(engParts)}"><span><b>${topEngPct}%</b><small>נתח ראשי</small></span></div>
+          <div class="ua-legend">
+            ${engParts.map(p => `<div class="ua-leg-row"><i style="background:${p.color}"></i><span class="ua-leg-nm">${p.label}</span><b>${p.val.toLocaleString('he-IL')}</b><small>${engTotal ? Math.round((p.val / engTotal) * 100) : 0}%</small></div>`).join('')}
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="ua-card ua-table-card">
+      <div class="ua-search-bar">
+        <input id="ua-q" type="search" placeholder="חיפוש במודעות שלך…" oninput="uaSearch(this.value)">
+      </div>
+      <div class="ua-filters">
+        <button type="button" class="on" data-f="all" onclick="uaSetFilter('all')">הכל (${items.length})</button>
+        <button type="button" data-f="live" onclick="uaSetFilter('live')">פעילות (${items.length - schedCount})</button>
+        <button type="button" data-f="sched" onclick="uaSetFilter('sched')">מתוזמנות (${schedCount})</button>
+        <button type="button" data-f="likes" onclick="uaSetFilter('likes')">הכי אהובות</button>
+      </div>
+      <div id="ua-list-host" class="ua-list"></div>
+    </div>
+  </div>`;
+  if (typeof avatarHydrate === 'function') avatarHydrate(host);
+  _uaRenderList();
+}
+async function openUserAnalytics() {
+  if (typeof mainContent === 'undefined' || !mainContent) return;
+  window.__detailOpen = false;
+  mainContent.innerHTML = `<div class="ua-page"></div>`;
+  try { window.scrollTo(0, 0); } catch (e) {}
+  setTimeout(() => { try { mtSync(); } catch (e) {} }, 50);
+  const u = auth.currentUser, reg = u && !u.isAnonymous;
+  if (reg) {
+    const name = (typeof liveChatUserName === 'function' && liveChatUserName()) || u.displayName || 'משתמש';
+    _uaState = { q: '', filter: 'all', followers: 0, following: 0, profViews: 0, items: _uaCollectUserAds(u.uid, name) };
+    _uaDraw();
+    try {
+      const [fcSnap, pvSnap] = await Promise.all([
+        get(ref(db, `website/follow_counts/${u.uid}`)),
+        get(ref(db, `website/profile_views/${u.uid}`))
+      ]);
+      const fc = fcSnap.val() || {};
+      _uaState.followers = Math.max(0, Number(fc.followers) || 0);
+      _uaState.following = Math.max(0, Number(fc.following) || 0);
+      _uaState.profViews = Math.max(0, Number(pvSnap.val()) || 0);
+      _uaDraw();
+    } catch (e) {}
+  } else {
+    _uaDraw();
+  }
+}
+Object.assign(window, { openUserAnalytics, uaSetFilter, uaSearch });
