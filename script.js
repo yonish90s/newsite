@@ -35387,7 +35387,7 @@ function rentDetailHTML(r) {
   const galActs = `<div class="mp-btns mk-acts mk-galacts mk-pills-row">
             ${stepperHTML}
             ${pill('<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>', 'ביקורות', 'rentRevOpen()', 'mk-pill-rev', '', '<b class="mk-rev-num">0</b>')}
-            ${pill('<circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/>', 'פרטים', "const l=document.querySelector('.mk-lower'); if(l){ const show=l.hidden; l.hidden=!show; this.classList.toggle('on', show); if(show) l.scrollIntoView({behavior:'smooth', block:'nearest'}); }", 'mk-pill-det')}
+            ${pill('<circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/>', 'פרטים', "const l=document.querySelector('.mk-lower'); if(l){ l.hidden=false; this.classList.add('on'); setTimeout(()=>l.scrollIntoView({behavior:'smooth', block:'start'}), 20); }", 'mk-pill-det')}
             ${r.shId ? pill('<path d="M21 12a8 8 0 0 1-8 8H4l2.2-2.6A8 8 0 1 1 21 12z"/>', 'הודעה', ask) : ''}
             ${pill('<path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3"/>', 'ריפוסט', `repostersOpen('${artEsc(rentCommentsKey(r))}')`, 'pti-repost' + (repostIsMine(rentCommentsKey(r)) ? ' on' : ''), ` data-item="${escHtml(rentCommentsKey(r))}" data-people="rep" data-pid="${escHtml(rentCommentsKey(r))}"`)}
             ${pill('<path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M17 11h6"/>', 'הצטרף', `adJoinToggle('${artEsc(r.id)}')`, adIsJoined(r.id) ? 'on' : '', ` data-join-btn="${escHtml(r.id)}"`)}
