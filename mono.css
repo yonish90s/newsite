@@ -2173,6 +2173,9 @@ html:not(.theme-dark) .mk-stepper.has-qty .mk-stp-ctrl { border-color: #111111; 
 html:not(.theme-dark) .mk-stp-hint { color: #727272; }
 html:not(.theme-dark) body:not(#_):not(#_):not(#_) .ig-act2 > .mk-a-join.on { color: #111111 !important; }
 html:not(.theme-dark) .mk-pill-btn.on { border-color: #111111 !important; color: #111111 !important; }
+html:not(.theme-dark) .rep-go-btn { background: #828282; }
+html:not(.theme-dark) .rep-go-btn.on { background: #111111; }
+html:not(.theme-dark) .rep-sub { color: #727272; }
 html:not(.theme-dark) [style*="border:1.5px solid #e2e8f0"], html:not(.theme-dark) [style*="border: 1.5px solid #e2e8f0"] { border: 1.5px solid #e7e7e7 !important; }
 html:not(.theme-dark) [style*="color:#1e293b"], html:not(.theme-dark) [style*="color: #1e293b"] { color: #111111 !important; }
 html:not(.theme-dark) [style*="background:#dc2626"], html:not(.theme-dark) [style*="background: #dc2626"] { background: #111111 !important; }

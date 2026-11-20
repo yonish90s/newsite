@@ -4812,6 +4812,8 @@ html.theme-dark .mk-stp-hint { color: #c9ced6 !important; }
 html.theme-dark .ad-j-av .au-av { border: 1.5px solid #262d36 !important; }
 html.theme-dark body:not(#_):not(#_):not(#_) .ig-act2 > .mk-a-join.on { color: #e4202b !important; }
 html.theme-dark .mk-pill-btn.on { border-color: #e4202b !important; color: #e4202b !important; }
+html.theme-dark .rep-go-btn { background: #e4202b !important; }
+html.theme-dark .rep-sub { color: #c9ced6 !important; }
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #f5f5f5 !important; }
 html.theme-dark [style*="color:#111111"] { color: #f5f5f5 !important; }

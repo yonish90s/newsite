@@ -22438,8 +22438,10 @@ html body #m-sheet.pl-sheet .ms-head { padding: calc(10px + env(safe-area-inset-
 html body #m-sheet.pl-sheet .ms-title { font-size: 15px !important; font-weight: 700 !important; }
 html body #m-sheet.pl-sheet .ms-body { flex: 1 !important; overflow-y: auto !important; padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)) !important; }
 /* 1) כפתורי מודעה בסגנון ריבוע-גלולה מעוגל (ביקורות עם מספר, שמירה, הודעה, ריפוסט) */
-html body .mk-pills-row { display: flex !important; flex-wrap: wrap !important; align-items: center !important; gap: 8px !important; }
-html body .mk-pill-btn { display: inline-flex !important; align-items: center !important; gap: 7px !important; height: 38px !important; padding: 0 14px !important; border-radius: 10px !important; border: 1px solid rgba(0, 0, 0, .08) !important; background: #f3f4f6 !important; color: #111827 !important; font: inherit !important; font-size: 13.5px !important; font-weight: 600 !important; cursor: pointer !important; transition: background .15s ease !important; }
+html body .mk-pills-row { display: flex !important; flex-wrap: nowrap !important; align-items: center !important; gap: 8px !important; overflow-x: auto !important; scrollbar-width: none !important; }
+html body .mk-pills-row::-webkit-scrollbar { display: none; }
+html body .mk-pills-row .mk-stepper { flex: none !important; flex-wrap: nowrap !important; margin-inline-end: 12px !important; }
+html body .mk-pill-btn { flex: none !important; white-space: nowrap !important; display: inline-flex !important; align-items: center !important; gap: 7px !important; height: 36px !important; padding: 0 13px !important; border-radius: 10px !important; border: 1px solid rgba(0, 0, 0, .08) !important; background: #f3f4f6 !important; color: #111827 !important; font: inherit !important; font-size: 13px !important; font-weight: 600 !important; cursor: pointer !important; transition: background .15s ease !important; }
 html body .mk-pill-btn svg { width: 17px !important; height: 17px !important; flex: none !important; }
 html body .mk-pill-btn b { font-weight: 700 !important; color: #6b7280 !important; }
 html body .mk-pill-btn.on { background: #111827 !important; color: #ffffff !important; border-color: #111827 !important; }
@@ -22580,8 +22582,11 @@ html.theme-dark body .ig-act2 .mk-n { color: #f4f4f5 !important; }
 html.theme-dark body .ig-act2 > .mk-a-save.on svg { fill: #f4f4f5 !important; }
 
 /* חלון תגובות בסגנון אינסטגרם */
-html body #m-sheet.ig-cmt-sheet .ms-panel { max-width: 520px !important; border-radius: 20px 20px 0 0 !important; }
-html body #m-sheet.ig-cmt-sheet .ms-head { justify-content: center !important; position: relative !important; }
+html body #m-sheet.ig-cmt-sheet .ms-panel { max-width: 520px !important; border-radius: 20px 20px 0 0 !important; transition: height .22s ease, max-height .22s ease, border-radius .2s ease !important; }
+html body #m-sheet.ig-cmt-sheet.igc-full .ms-panel { height: 100dvh !important; max-height: 100dvh !important; max-width: 100% !important; border-radius: 0 !important; padding-top: env(safe-area-inset-top, 0px) !important; }
+.igc-grab { display: flex; justify-content: center; align-items: center; padding: 8px 0 2px; cursor: grab; touch-action: none; flex: none; }
+.igc-grab i { width: 38px; height: 4px; border-radius: 999px; background: rgba(128, 128, 128, .38); display: block; }
+html body #m-sheet.ig-cmt-sheet .ms-head { justify-content: center !important; position: relative !important; touch-action: none; }
 html body #m-sheet.ig-cmt-sheet .ms-x { position: absolute !important; left: 12px !important; }
 html body #m-sheet.ig-cmt-sheet .ms-body { display: flex !important; flex-direction: column !important; padding: 0 !important; }
 .igc-list { flex: 1; overflow-y: auto; padding: 8px 16px; display: flex; flex-direction: column; gap: 14px; }
@@ -22865,3 +22870,58 @@ html.theme-dark .mk-stp-hint { color: #a1a1aa; }
 html body:not(#_):not(#_):not(#_) .ig-act2 > .mk-a-join.on { color: #7c3aed !important; }
 html.theme-dark body:not(#_):not(#_):not(#_) .ig-act2 > .mk-a-join.on { color: #a78bfa !important; }
 .mk-pill-btn.on { border-color: #7c3aed !important; color: #7c3aed !important; }
+
+/* מובייל: הקטנת אזור הפרטים במודעה כך שהכול ייכנס בפריים הראשון בלי גלילה */
+@media (max-width: 700px) {
+  html body:not(#_):not(#_) .mk-watch { padding: 4px 10px 12px !important; }
+  html body:not(#_):not(#_) .mk-watch .mp.mk-pg { gap: 4px !important; }
+  html body:not(#_):not(#_) .mk-watch .rn-det-gal.mp-gal { gap: 4px !important; }
+  html body:not(#_):not(#_) .mk-watch .rn-det-img.mp-img { max-height: 36vh !important; min-height: 160px !important; border-radius: 12px !important; }
+  html body:not(#_):not(#_) .mk-watch .mp-dots { margin: 2px 0 !important; gap: 4px !important; }
+  html body:not(#_):not(#_) .mk-watch .mp-dot { width: 5px !important; height: 5px !important; }
+  html body:not(#_):not(#_) .mk-watch .mk-vthumbs { gap: 4px !important; }
+  html body:not(#_):not(#_) .mk-watch .mp-thumbs button { width: 34px !important; height: 34px !important; border-radius: 7px !important; }
+  html body:not(#_):not(#_) .mk-watch .mk-pills-row { gap: 5px !important; margin: 2px 0 !important; flex-wrap: nowrap !important; overflow-x: auto !important; }
+  html body:not(#_):not(#_) .mk-watch .mk-pill-btn { height: 26px !important; padding: 0 9px !important; font-size: 11px !important; gap: 4px !important; border-radius: 8px !important; white-space: nowrap !important; }
+  html body:not(#_):not(#_) .mk-watch .mk-pill-btn svg { width: 12px !important; height: 12px !important; }
+  html body:not(#_):not(#_) .mk-watch .mp-info { gap: 3px !important; padding: 2px 0 !important; }
+  html body:not(#_):not(#_) .mk-watch .mk-cat { font-size: 10.5px !important; line-height: 1.1 !important; }
+  html body:not(#_):not(#_) .mk-watch .mk-tprow { gap: 6px !important; margin: 0 !important; }
+  html body:not(#_):not(#_) .mk-watch .mk-title { font-size: 14px !important; line-height: 1.2 !important; margin: 0 !important; }
+  html body:not(#_):not(#_) .mk-watch .mp-price { font-size: 13px !important; line-height: 1.2 !important; }
+  html body:not(#_):not(#_) .mk-watch .mk-qrow { margin: 2px 0 !important; }
+  html body:not(#_):not(#_) .mk-watch .mk-stp-ctrl { height: 28px !important; border-radius: 8px !important; }
+  html body:not(#_):not(#_) .mk-watch .mk-stp-btn { width: 28px !important; font-size: 15px !important; }
+  html body:not(#_):not(#_) .mk-watch .mk-stp-val { min-width: 24px !important; font-size: 13px !important; }
+  html body:not(#_):not(#_) .mk-watch .mk-qsel-l, html body:not(#_):not(#_) .mk-watch .mk-stp-hint { font-size: 11px !important; }
+  html body:not(#_):not(#_) .mk-watch .mk-cta { margin-top: 2px !important; }
+  html body:not(#_):not(#_) .mk-watch .mk-cta .mp-btn { width: 34px !important; height: 34px !important; }
+  html body:not(#_):not(#_) .mk-watch .mk-cta .mk-ic small { font-size: 10px !important; }
+}
+
+/* סרגל עליון #m-top דק יותר */
+html body:not(#_):not(#_):not(#_) #m-top { padding-top: calc(3px + env(safe-area-inset-top, 0px)) !important; padding-bottom: 3px !important; }
+html body:not(#_):not(#_):not(#_) #m-top .mt-row { gap: 5px !important; min-height: 0 !important; }
+html body:not(#_):not(#_):not(#_) #m-top .mt-acts { gap: 6px !important; }
+html body:not(#_):not(#_):not(#_) #m-top .mt-circ { width: 26px !important; height: 26px !important; min-width: 26px !important; }
+html body:not(#_):not(#_):not(#_) #m-top .mt-circ svg { width: 13px !important; height: 13px !important; }
+html body:not(#_):not(#_):not(#_) #m-top .mt-me { font-size: 9px !important; }
+html body:not(#_):not(#_):not(#_) #m-top .mt-tabs { margin-top: 2px !important; }
+html body:not(#_):not(#_):not(#_) #m-top .mt-tabs button { padding: 2px 0 !important; font-size: 11.5px !important; }
+
+/* חלון ריפוסט שנפתח מלמעלה עם כפתור פעולה ורשימת משתמשים */
+html body:not(#_):not(#_):not(#_) #m-sheet.rep-top-sheet { align-items: flex-start !important; justify-content: center !important; padding-top: 0 !important; }
+html body:not(#_):not(#_):not(#_) #m-sheet.rep-top-sheet .ms-panel {
+  border-radius: 0 0 20px 20px !important;
+  max-width: 480px !important;
+  width: 100% !important;
+  max-height: 82dvh !important;
+  padding-top: env(safe-area-inset-top, 0px) !important;
+  animation: repDropDown .2s ease-out !important;
+}
+@keyframes repDropDown { from { transform: translateY(-24px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.rep-top-box { display: flex; flex-direction: column; gap: 10px; padding: 6px 0 10px; }
+.rep-go-btn { align-self: flex-start; height: 36px; padding: 0 16px; border-radius: 8px; border: 0; background: #ec4899; color: #ffffff; font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; }
+.rep-go-btn.on { background: #3f3f46; color: #ffffff; }
+.rep-sub { margin: 0; font-size: 13px; color: #6b7280; }
+html.theme-dark .rep-sub { color: #a1a1aa; }

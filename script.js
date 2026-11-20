@@ -20407,7 +20407,7 @@ window.setPhotoHashtag = setPhotoHashtag;
 function openMSheet(title, bodyHTML, footHTML) {
   let el = document.getElementById('m-sheet');
   if (!el) { el = document.createElement('div'); el.id = 'm-sheet'; document.body.appendChild(el); }
-  el.classList.remove('adv-sheet', 'side-sheet', 'pl-sheet', 'ig-cmt-sheet');
+  el.classList.remove('adv-sheet', 'side-sheet', 'pl-sheet', 'ig-cmt-sheet', 'rep-top-sheet');
   el.innerHTML = `
     <div class="ms-backdrop" onclick="closeMSheet()"></div>
     <div class="ms-panel" role="dialog" aria-label="${escHtml(title)}">
@@ -30674,10 +30674,21 @@ async function likersSheetToggle(likeId, itemId, shId) {
 function repostersOpen(id) {
   try { subscribeReposts(); } catch (e) {}
   const map = plWithSamples((repostsData || {})[id], 'rep_' + id);
-  openMSheet('שיתופים (ריפוסט)', peopleListHTML(map, 'עוד אף אחד לא שיתף את זה.'));
-  document.getElementById('m-sheet')?.classList.add('pl-sheet');
+  const on = repostIsMine(id);
+  const bodyHTML = `<div class="rep-top-box">
+    <button type="button" class="rep-go-btn${on ? ' on' : ''}" onclick="repostersDoToggle('${artEsc(id)}')">${on ? 'הסרת ריפוסט מהפרופיל' : 'ריפוסט לפרופיל שלי'}</button>
+    <p class="rep-sub">משתמשים שביצעו ריפוסט לפרופיל שלהם</p>
+  </div>${peopleListHTML(map, 'עוד אף אחד לא שיתף את זה.')}`;
+  openMSheet('ריפוסט מודעה', bodyHTML);
+  const sh = document.getElementById('m-sheet');
+  if (sh) sh.classList.add('pl-sheet', 'rep-top-sheet');
   try { const b = document.querySelector('#m-sheet .ms-body'); avatarLetterColors(b); if (typeof avatarHydrate === 'function') avatarHydrate(b); } catch (e) {}
 }
+async function repostersDoToggle(id) {
+  await toggleRepost(id, null);
+  repostersOpen(id);
+}
+window.repostersDoToggle = repostersDoToggle;
 async function repostersToggle(id) {
   await toggleRepost(id, null);
   document.querySelectorAll(`.pti-repost[data-item="${CSS.escape(id)}"]`).forEach(b => { try { repostSyncBtn(b); } catch (e) {} });
@@ -30726,7 +30737,37 @@ window.followersSheetToggle = followersSheetToggle;
 let igCmtMap = {};
 async function igCommentsOpen(key, title) {
   openMSheet('תגובות', '<div class="ms-empty">טוען תגובות…</div>');
-  document.getElementById('m-sheet')?.classList.add('ig-cmt-sheet');
+  const sh = document.getElementById('m-sheet');
+  if (sh) {
+    sh.classList.add('ig-cmt-sheet');
+    sh.classList.remove('igc-full');
+    const panel = sh.querySelector('.ms-panel'), head = sh.querySelector('.ms-head');
+    if (panel && head && !panel.querySelector('.igc-grab')) {
+      const grab = document.createElement('div');
+      grab.className = 'igc-grab';
+      grab.setAttribute('role', 'button');
+      grab.setAttribute('tabindex', '0');
+      grab.setAttribute('aria-label', 'משיכה למעלה למסך מלא');
+      grab.innerHTML = '<i></i>';
+      panel.prepend(grab);
+      let sy = 0, moved = false;
+      const start = y => { sy = y; moved = false; };
+      const move = y => {
+        const dy = y - sy;
+        if (Math.abs(dy) > 12) moved = true;
+        if (dy < -36) sh.classList.add('igc-full');
+        else if (dy > 48) {
+          if (sh.classList.contains('igc-full')) sh.classList.remove('igc-full');
+          else if (dy > 85 && typeof closeMSheet === 'function') closeMSheet();
+        }
+      };
+      [grab, head].forEach(el => {
+        el.addEventListener('touchstart', e => { if (e.touches[0]) start(e.touches[0].clientY); }, { passive: true });
+        el.addEventListener('touchmove', e => { if (e.touches[0]) move(e.touches[0].clientY); }, { passive: true });
+      });
+      grab.addEventListener('click', () => { if (!moved) sh.classList.toggle('igc-full'); });
+    }
+  }
   let map = {};
   try { map = (await get(ref(db, `website/photo_comments/${key}`))).val() || {}; } catch (e) {}
   igCmtMap = map;
@@ -30750,12 +30791,10 @@ function igCommentsRender(key) {
       <button type="button" class="igc-like" onclick="this.classList.toggle('on'); const s=this.querySelector('small'); s.textContent=Number(s.textContent||0)+(this.classList.contains('on')?1:-1)||''">${heart}<small>${likes || ''}</small></button>
     </div>`;
   }).join('') : '<div class="ms-empty">עדיין אין תגובות — כתבו ראשונים!</div>';
-  const emojis = ['❤️', '🙌', '🔥', '👏', '😢', '😍', '😮', '😂'];
   const u = auth.currentUser;
   const myAv = authorAvHTML({ author: (u && (u.displayName || 'אני')) || 'אורח', uid: (u && u.uid) || '' });
   body.innerHTML = `<div class="igc-list">${listHTML}</div>
     <div class="igc-dock">
-      <div class="igc-emojis">${emojis.map(e => `<button type="button" onclick="const i=document.getElementById('igc-in'); if(i){ i.value+=this.textContent; i.focus(); }">${e}</button>`).join('')}</div>
       <form class="igc-form" onsubmit="event.preventDefault(); igCommentSend('${artEsc(key)}')">
         <span class="igc-me">${myAv}</span>
         <input id="igc-in" type="text" maxlength="500" placeholder="מה דעתך על זה?" autocomplete="off">
@@ -34162,7 +34201,7 @@ function rentHoverHTML(x) {
   return `<span class="mk-sg-hov mk-act2 ig-act2">
     ${b('לייק', 'M12 20.5l-1.4-1.3C5.4 14.5 2 11.4 2 7.6 2 4.5 4.4 2 7.5 2c1.7 0 3.4.8 4.5 2.1C13.1 2.8 14.8 2 16.5 2 19.6 2 22 4.5 22 7.6c0 3.8-3.4 6.9-8.6 11.6z', (sh ? `photoToggleLike('${sh}')` : `rentMark(this, 'like', '${id}'); likersWrite('${artEsc(likeId)}', this.classList.contains('on'))`), liked, ` data-people="like" data-pid="${escHtml(likeId)}" data-iid="${escHtml(x.id)}"` + (sh ? ` data-like="${escHtml(x.shId)}"` : ''), 'mk-a-like', cnt(Number(itemLikesData[likeId]) || '', ` data-likes-n="${escHtml(likeId)}"`))}
     ${b('תגובות', 'M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z', `igCommentsOpen('${artEsc(rk)}', '${artEsc(x.title || '')}')`, false, '', 'mk-a-cmt')}
-    ${b('ריפוסט', 'M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3', `toggleRepost('${artEsc(rk)}', this)`, repostIsMine(rk), ` data-item="${escHtml(rk)}" data-people="rep" data-pid="${escHtml(rk)}"`, 'pti-repost mk-a-rep', cnt(repostCount(rk) || ''))}
+    ${b('ריפוסט', 'M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3', `repostersOpen('${artEsc(rk)}')`, repostIsMine(rk), ` data-item="${escHtml(rk)}" data-people="rep" data-pid="${escHtml(rk)}"`, 'pti-repost mk-a-rep', cnt(repostCount(rk) || ''))}
     ${b('שיתוף', 'M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z', `if(navigator.share){navigator.share({title:'${artEsc(x.title||'')}',url:location.href}).catch(()=>{});}else{navigator.clipboard.writeText(location.href);showCopyToast('הקישור הועתק');}`, false, '', 'mk-a-share')}
     <span role="button" tabindex="0" class="mk-a-deal" aria-label="משא ומתן" title="משא ומתן — הצעת מחיר" onclick="${stop}mkCardHaggle(this, '${id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><circle cx="7.5" cy="7.5" r="1.2"/></svg></span>
     ${b('הצטרף', 'M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M8.5 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM20 8v6M17 11h6', `adJoinToggle('${id}')`, adIsJoined(x.id), ` data-join-btn="${escHtml(x.id)}"`, 'mk-a-join')}
@@ -35283,11 +35322,26 @@ function rentDetailHTML(r) {
   const who = `${authorAvHTML({ author: owner, uid: r.uid || '' })}<span class="mk-seller-tx"><b>${escHtml(owner)}</b>${when ? `<small>${escHtml(when)}</small>` : ''}</span>`;
   // כל הכפתורים חוץ מ"הוסף לסל" — מתחת לתמונה, מימין (ריבועים מעוגלים בסגנון YouTube: ביקורות עם מספר, שמירה, הודעה, ריפוסט — ללא שיתוף, אהבתי והשכרה)
   const pill = (icon, label, act, cls, attr, extra) => `<button type="button" class="mk-pill-btn${cls ? ' ' + cls : ''}" title="${label}" aria-label="${label}"${attr || ''} onclick="${act}">${ic(icon)}<span>${label}</span>${extra || ''}</button>`;
+  const stepperHTML = (r.kind === 'used' && !cartBtn) || mktSoldOut(r) ? '' : (() => {
+    const curCart = cartBtn ? ((cartGet().find(x => x.id === 'mkt_' + r.id) || {}).qty || 0) : qty;
+    const hint = r.unit === 'kg' ? 'ק״ג' : unitName && r.kind !== 'used' ? 'לפי ' + unitName : '';
+    const stepFn = cartBtn ? `rentCartStep('${artEsc(r.id)}', ` : `rentQtyStep('${artEsc(r.id)}', `;
+    return `<div class="mk-stepper${curCart > 0 ? ' has-qty' : ''}">
+      <span class="mk-qsel-l">כמות</span>
+      <div class="mk-stp-ctrl" role="group" aria-label="בחירת כמות">
+        <button type="button" class="mk-stp-btn mk-stp-plus" onclick="${stepFn}1)" aria-label="הוסף">+</button>
+        <b id="rn-qty-v" class="mk-stp-val">${curCart}</b>
+        <button type="button" class="mk-stp-btn mk-stp-minus" onclick="${stepFn}-1)" aria-label="הפחת והסר"${curCart <= 0 ? ' disabled' : ''}>−</button>
+      </div>
+      ${hint ? `<small class="mk-stp-hint">${escHtml(hint)}</small>` : ''}
+    </div>`;
+  })();
   const galActs = `<div class="mp-btns mk-acts mk-galacts mk-pills-row">
+            ${stepperHTML}
             ${pill('<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>', 'ביקורות', 'rentRevOpen()', 'mk-pill-rev', '', '<b class="mk-rev-num">0</b>')}
             ${pill('<path d="M6 4h12v17l-6-4.5L6 21z"/>', 'שמירה', r.shId ? `photoToggleSave('${artEsc(r.shId)}')` : `rentMark(this, 'save', '${artEsc(r.id)}')`, saved ? 'on' : '', r.shId ? ` data-save="${escHtml(r.shId)}"` : '')}
             ${r.shId ? pill('<path d="M21 12a8 8 0 0 1-8 8H4l2.2-2.6A8 8 0 1 1 21 12z"/>', 'הודעה', ask) : ''}
-            ${pill('<path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3"/>', 'ריפוסט', `toggleRepost('${artEsc(rentCommentsKey(r))}', this)`, 'pti-repost' + (repostIsMine(rentCommentsKey(r)) ? ' on' : ''), ` data-item="${escHtml(rentCommentsKey(r))}" data-people="rep" data-pid="${escHtml(rentCommentsKey(r))}"`)}
+            ${pill('<path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3"/>', 'ריפוסט', `repostersOpen('${artEsc(rentCommentsKey(r))}')`, 'pti-repost' + (repostIsMine(rentCommentsKey(r)) ? ' on' : ''), ` data-item="${escHtml(rentCommentsKey(r))}" data-people="rep" data-pid="${escHtml(rentCommentsKey(r))}"`)}
             ${pill('<path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M17 11h6"/>', 'הצטרף', `adJoinToggle('${artEsc(r.id)}')`, adIsJoined(r.id) ? 'on' : '', ` data-join-btn="${escHtml(r.id)}"`)}
             ${email ? pill('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>', 'מייל', `location.href='mailto:${artEsc(email)}'`) : ''}
             ${isAdmin() ? pill('<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/>', 'מחיקה', `rentAdminDelete('${artEsc(r.id)}')`) : ''}
@@ -35320,20 +35374,6 @@ function rentDetailHTML(r) {
         <div class="mk-tprow"><h2 class="mk-title">${escHtml(r.title)}</h2>${rentPriceShort(r) ? `<div class="mp-price">${rentPriceShort(r)}</div>` : ''}</div>
         ${projLink ? `<a class="mk-plink" href="${escHtml(projLink)}" target="_blank" rel="noopener nofollow ugc" dir="ltr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>${escHtml(mktLinkHost(projLink))}</a>` : ''}
         ${mktStockLineHTML(r)}
-        ${(r.kind === 'used' && !cartBtn) || mktSoldOut(r) ? '' : (() => {
-          const curCart = cartBtn ? ((cartGet().find(x => x.id === 'mkt_' + r.id) || {}).qty || 0) : qty;
-          const hint = r.unit === 'kg' ? 'ק״ג' : unitName && r.kind !== 'used' ? 'לפי ' + unitName : '';
-          const stepFn = cartBtn ? `rentCartStep('${artEsc(r.id)}', ` : `rentQtyStep('${artEsc(r.id)}', `;
-          return `<div class="mk-qrow"><div class="mk-stepper${curCart > 0 ? ' has-qty' : ''}">
-            <span class="mk-qsel-l">כמות</span>
-            <div class="mk-stp-ctrl" role="group" aria-label="בחירת כמות">
-              <button type="button" class="mk-stp-btn mk-stp-plus" onclick="${stepFn}1)" aria-label="הוסף">+</button>
-              <b id="rn-qty-v" class="mk-stp-val">${curCart}</b>
-              <button type="button" class="mk-stp-btn mk-stp-minus" onclick="${stepFn}-1)" aria-label="הפחת והסר"${curCart <= 0 ? ' disabled' : ''}>−</button>
-            </div>
-            ${hint ? `<small class="mk-stp-hint">${escHtml(hint)}</small>` : ''}
-          </div></div>`;
-        })()}
         <div class="mk-buyrow"><div class="mk-buy">
         ${r.kind === 'used' ? `<input id="rn-qty" type="hidden" value="${qty}">` : `<div class="mk-qty">
           <div class="rn-calc mp-calc"><input id="rn-qty" type="hidden" value="${qty}"></div>
