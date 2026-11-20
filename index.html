@@ -61,7 +61,7 @@
     (function () {
       var t = null;
       try { t = localStorage.getItem('site_theme'); } catch (e) {}
-      if (t !== 'light' && t !== 'dark' && t !== 'system') t = 'dark';
+      if (t !== 'light' && t !== 'dark' && t !== 'system') t = 'light';
       document.documentElement.dataset.themeMode = t;
       if (t === 'system') t = window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';   // "לפי המכשיר"
       if (t === 'dark') { document.documentElement.classList.add('theme-dark'); var dc = document.getElementById('dark-css'); if (dc) { dc.href = dc.dataset.href; dc.media = 'all'; } }
@@ -1337,7 +1337,7 @@ html.theme-dark .pl-bar { background: #2a2f37; }
     </ul>
     <p>ההצטרפות חינם. מפרסמים מודעה או פרויקט בכמה שניות, ומקבלים הצעות מגולשים.</p>
   </section>
-  <script type="module" src="./script.min.js?v=2269"></script>
+  <script type="module" src="./script.min.js?v=2270"></script>
   <script defer src="./a11y.js?v=1"></script>
 </body>
 </html>

@@ -27135,13 +27135,13 @@ function toggleSiteTheme() {
 }
 // מצב תצוגה: בהיר / כהה / לפי המכשיר (מתעדכן לבד כשהמכשיר עובר בין בהיר לכהה)
 function setSiteTheme(mode) {
-  if (mode !== 'light' && mode !== 'dark' && mode !== 'system') mode = 'dark';
+  if (mode !== 'light' && mode !== 'dark' && mode !== 'system') mode = 'light';
   document.documentElement.dataset.themeMode = mode;
   try { localStorage.setItem('site_theme', mode); } catch (e) {}
   applySiteTheme();
 }
 function applySiteTheme() {
-  const mode = document.documentElement.dataset.themeMode || 'dark';
+  const mode = document.documentElement.dataset.themeMode || 'light';
   const dark = mode === 'dark' || (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
   const dc = document.getElementById('dark-css'); if (dc) { if (!dc.getAttribute('href')) dc.href = dc.dataset.href; dc.media = dark ? 'all' : 'not all'; }
   document.documentElement.classList.toggle('theme-dark', dark);
