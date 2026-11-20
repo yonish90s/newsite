@@ -22517,13 +22517,15 @@ html.theme-dark .tw-vbtn.on { background: #3f3f46; color: #ffffff; }
 .tw-feed-list { max-width: 620px; margin: 0 auto; display: flex; flex-direction: column; }
 .tw-post { display: flex; flex-direction: column; gap: 6px; padding: 12px; border-bottom: 1px solid rgba(0, 0, 0, .08); cursor: pointer; }
 .tw-av { flex: none; }
-.tw-av .au-av { width: 24px !important; height: 24px !important; min-width: 24px !important; font-size: 10px !important; }
-.tw-head { display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; font-size: 11.5px; min-width: 0; width: 100%; padding: 1px 0; }
-.tw-who { font-weight: 700; color: #111827; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; font-size: 11.5px; }
-.tw-who .biz-ic { width: 11px !important; height: 11px !important; flex: none !important; opacity: .75; }
-.tw-meta { font-size: 10px; color: #6b7280; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 0 1 auto; margin-inline-start: 2px; }
-.tw-head .mk-sg-price { margin-inline-start: auto; padding: 1px 6px; border-radius: 999px; background: #f1edf7; color: #7c3aed; font-size: 10px; font-weight: 700; white-space: nowrap; flex: none; display: inline-flex; align-items: center; gap: 3px; }
-.tw-head .mk-sg-price svg { width: 10px !important; height: 10px !important; flex: none !important; }
+.tw-av .au-av { width: 18px !important; height: 18px !important; min-width: 18px !important; font-size: 8px !important; }
+.tw-head { display: flex !important; align-items: center !important; gap: 4px !important; flex-wrap: nowrap !important; font-size: 9.5px !important; min-width: 0 !important; width: 100% !important; padding: 0 !important; overflow: hidden !important; }
+.tw-head .verified-seal { width: 9px !important; height: 9px !important; flex: none !important; }
+.tw-who { font-weight: 700; color: #111827; display: inline-flex; align-items: center; gap: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 0 1 auto; min-width: 0; font-size: 9.5px !important; }
+.tw-who .biz-ic { width: 9px !important; height: 9px !important; flex: none !important; opacity: .75; }
+.tw-meta { font-size: 8.5px !important; color: #6b7280; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1 1 0; min-width: 0; margin-inline-start: 0; }
+.tw-head .mk-sg-price { margin-inline-start: auto; padding: 1px 5px !important; border-radius: 999px; background: #f1edf7; color: #7c3aed; font-size: 8.5px !important; font-weight: 700; white-space: nowrap; flex: none; display: inline-flex; align-items: center; gap: 2px; }
+.tw-head .mk-sg-price svg { width: 8px !important; height: 8px !important; flex: none !important; }
+.tw-head .mk-sg-price .mk-was { font-size: 8px !important; }
 .tw-text { display: flex; flex-direction: column; gap: 2px; }
 .tw-text b { font-size: 15px; line-height: 1.35; color: #111827; font-weight: 600; }
 .tw-text small { font-size: 13px; color: #111827; line-height: 1.4; }
@@ -22563,12 +22565,13 @@ html body .ssx-pbtn { padding: 5px 12px !important; font-size: 11.5px !important
 html body .ssx-fbtn.on { background: #e5e7eb !important; color: #111827 !important; }
 html.theme-dark body .ssx-fbtn.on { background: #3f3f46 !important; color: #f4f4f5 !important; }
 
-/* שורת אייקונים בסגנון אינסטגרם (לייק, תגובה, ריפוסט, שיתוף, משא ומתן, שמירה) */
-html body .ig-act2 { display: flex !important; align-items: center !important; justify-content: flex-start !important; gap: 14px !important; width: 100% !important; padding: 2px 0 !important; }
-html body .ig-act2 > :is(.mk-a-like, .mk-a-cmt, .mk-a-rep, .mk-a-share, .mk-a-deal, .mk-a-save) { display: inline-flex !important; align-items: center !important; gap: 4px !important; background: transparent !important; border: 0 !important; padding: 2px !important; color: #111827 !important; cursor: pointer !important; }
-html body .ig-act2 > .mk-a-save { margin-inline-start: auto !important; }
-html body .ig-act2 svg { width: 20px !important; height: 20px !important; stroke-width: 1.8 !important; }
-html body .ig-act2 .mk-n { font-style: normal !important; font-size: 13px !important; font-weight: 600 !important; color: #111827 !important; }
+/* שורת אייקונים בסגנון אינסטגרם (לייק, תגובה, ריפוסט, שיתוף, משא ומתן, שמירה) — גודל וסגנון אחיד לפי אייקון התגית */
+html body:not(#_):not(#_):not(#_) .ig-act2 { display: flex !important; align-items: center !important; justify-content: flex-start !important; gap: 10px !important; width: 100% !important; padding: 2px 0 !important; }
+html body:not(#_):not(#_):not(#_) .ig-act2 > :is(.mk-a-like, .mk-a-cmt, .mk-a-rep, .mk-a-share, .mk-a-deal, .mk-a-save) { display: inline-flex !important; align-items: center !important; gap: 3px !important; background: transparent !important; border: 0 !important; padding: 2px !important; color: #111827 !important; cursor: pointer !important; }
+html body:not(#_):not(#_):not(#_) .ig-act2 > .mk-a-save { margin-inline-start: auto !important; }
+html body:not(#_):not(#_):not(#_) .ig-act2 svg { width: 15px !important; height: 15px !important; min-width: 15px !important; min-height: 15px !important; stroke-width: 1.75 !important; }
+html body:not(#_):not(#_):not(#_) .ig-act2 svg :is(path, circle, rect, polygon, line, polyline) { stroke-width: 1.75 !important; }
+html body:not(#_):not(#_):not(#_) .ig-act2 .mk-n { font-style: normal !important; font-size: 11.5px !important; font-weight: 600 !important; color: #111827 !important; }
 html body .ig-act2 > .mk-a-like.on svg { fill: #ef4444 !important; stroke: #ef4444 !important; }
 html body .ig-act2 > .mk-a-save.on svg { fill: #111827 !important; }
 html.theme-dark body .ig-act2 > :is(.mk-a-like, .mk-a-cmt, .mk-a-rep, .mk-a-share, .mk-a-deal, .mk-a-save),

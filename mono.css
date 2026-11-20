@@ -2119,8 +2119,8 @@ html:not(.theme-dark) .tw-text b { color: #111111; }
 html:not(.theme-dark) .tw-text small { color: #111111; }
 html:not(.theme-dark) .tw-more { color: #111111; }
 html:not(.theme-dark) body .ssx-fbtn.on { color: #111111 !important; }
-html:not(.theme-dark) body .ig-act2 > :is(.mk-a-like, .mk-a-cmt, .mk-a-rep, .mk-a-share, .mk-a-deal, .mk-a-save) { color: #111111 !important; }
-html:not(.theme-dark) body .ig-act2 .mk-n { color: #111111 !important; }
+html:not(.theme-dark) body:not(#_):not(#_):not(#_) .ig-act2 > :is(.mk-a-like, .mk-a-cmt, .mk-a-rep, .mk-a-share, .mk-a-deal, .mk-a-save) { color: #111111 !important; }
+html:not(.theme-dark) body:not(#_):not(#_):not(#_) .ig-act2 .mk-n { color: #111111 !important; }
 html:not(.theme-dark) body .ig-act2 > .mk-a-like.on svg { fill: #777777 !important; stroke: #777777 !important; }
 html:not(.theme-dark) body .ig-act2 > .mk-a-save.on svg { fill: #111111 !important; }
 html:not(.theme-dark) .igc-top b { color: #111111; }
