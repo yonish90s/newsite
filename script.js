@@ -37408,21 +37408,23 @@ function storiesBuildGroups() {
   const seen = storySeenMap();
   const isFolUser = (uid, name) => uid ? (typeof isFollowing === 'function' && isFollowing(uid)) : (typeof igDemoFollowing === 'function' && igDemoFollowing(igDemoKeyOf(name)));
 
-  // משתמשים אמיתיים שהעלו סטורי ב-24 השעות האחרונות
+  // משתמשים אמיתיים שהעלו סטורי ב-24 השעות האחרונות (רק כאלה שעדיין לא נצפו)
   Object.entries(userStoriesMap || {}).forEach(([uid, bucket]) => {
     if (!bucket || typeof bucket !== 'object' || uid === myUid) return;
-    const list = Object.entries(bucket).map(([sid, s]) => s && s.img && !storyIsExpired(s.t) ? Object.assign({ id: sid, uid }, s) : null).filter(Boolean).sort((a, b) => (a.t || 0) - (b.t || 0));
+    const list = Object.entries(bucket).map(([sid, s]) => s && s.img && !storyIsExpired(s.t) ? Object.assign({ id: sid, uid }, s) : null).filter(Boolean).filter(it => !seen[it.id]).sort((a, b) => (a.t || 0) - (b.t || 0));
     if (!list.length) return;
     const name = list[list.length - 1].name || 'גולש/ת';
-    const grp = { key: 'u_' + uid, uid, name, demo: false, items: list, lastT: list[list.length - 1].t || 0 };
-    grp.allSeen = list.every(it => !!seen[it.id]);
+    const grp = { key: 'u_' + uid, uid, name, demo: false, items: list, lastT: list[list.length - 1].t || 0, allSeen: false };
     if (isFolUser(uid, name)) followed.push(grp);
     else suggested.push(grp);
   });
 
   // מוכרים לדוגמה (אם עוקבים אחריהם — מופיעים בסטורי הרגיל; אם לא — מופיעים בהצעות לסטורי בעיגולים קטנים יותר)
   storyDemoGroups().forEach(grp => {
-    grp.allSeen = grp.items.every(it => !!seen[it.id]);
+    grp.items = grp.items.filter(it => !seen[it.id]);
+    if (!grp.items.length) return;
+    grp.allSeen = false;
+    grp.lastT = Math.max(...grp.items.map(i => i.t));
     if (isFolUser('', grp.name)) followed.push(grp);
     else suggested.push(grp);
   });
