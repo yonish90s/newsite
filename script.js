@@ -35303,7 +35303,7 @@ function rentDetailHTML(r) {
       <button type="button" class="mk-seller" onclick="rentOpenSeller('${artEsc(r.uid || '')}', '${artEsc(owner)}')">${isUserVerified(r.uid || '', owner, r.verified) ? verifiedSealHTML(15) : ''}${who}</button>
       ${r.city ? `<span class="mk-city">${escHtml(r.city)}</span>` : ''}
     </header>
-    <div class="mk-head-rate"><button type="button" class="mk-rate" data-seller="${escHtml(r.uid || '')}" onclick="rentRevOpen()">${rentRateHTML(0, 0)}</button></div><div class="mk-inv" data-like="${escHtml(r.shId || rentCommentsKey(r))}" data-rep="${escHtml(rentCommentsKey(r))}"${r.id === 'c1' ? ' data-demo="1"' : ''} hidden></div>
+    <div class="mk-head-rate"><button type="button" class="mk-rate" data-seller="${escHtml(r.uid || '')}" onclick="rentRevOpen()">${rentRateHTML(0, 0)}</button></div>
     <div class="mp mk-pg">
       <div class="rn-det-gal mp-gal">
         <div class="rn-det-img mp-img${!r.hv && imgs.length > 1 ? ' is-carousel' : ''}" data-idx="0"${r.hv ? '' : (imgs.length > 1 ? '' : ' ondblclick="mkZoomOpen(this)" ontouchend="mkTapZoom(event, this)"')}>${r.hv || !imgs.length ? rentThumb(full && full.length ? { ...r, img: full[0] } : r, true) : `<div class="mp-slides" dir="ltr" onscroll="mpSlideSync(this)">${imgs.map((u, i) => `<div class="mp-slide" data-idx="${i}" ondblclick="mkZoomOpen(this.closest('.mp-img'), ${i})" ontouchend="mkTapZoom(event, this.closest('.mp-img'), ${i})"><img src="${escHtml(u)}" alt="${escHtml(r.title || '')} — תמונה ${i + 1}" loading="${i ? 'lazy' : 'eager'}" decoding="async"></div>`).join('')}</div>${imgs.length > 1 ? `<span class="mp-cnt" dir="ltr">1/${imgs.length}</span>` : ''}`}<span class="ad-join-avs" data-join-avs="${escHtml(r.id)}">${adJoinAvsHTML(r.id)}</span></div>
