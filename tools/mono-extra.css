@@ -455,8 +455,8 @@ BODY .lib-page .lib-welcome :is(.lib-wel-logo, .lib-wel-t, .lib-wel-s, .lib-wi, 
 BODY .lib-page .lib-arrows button:not(.lib-all) { display: none !important; }
 BODY #buy-dock { display: none !important; }
 BODY .lib-page .lib-n { display: none !important; }
-BODY #m-top .mt-circ:not(.mt-me):not(.mt-home):not(.mt-pub):not(.mt-srch):not(.mt-dm):not(.mt-theme) { display: none !important; }
-BODY #m-top .mt-circ:is(.mt-pub, .mt-srch, .mt-dm, .mt-theme) { display: grid !important; place-items: center !important; background: #f3f4f6 !important; border-color: #e5e7eb !important; color: #111827 !important; }
+BODY #m-top .mt-circ:not(.mt-me):not(.mt-home):not(.mt-pub):not(.mt-srch):not(.mt-dm):not(.mt-theme):not(.mt-cart) { display: none !important; }
+BODY #m-top .mt-circ:is(.mt-pub, .mt-srch, .mt-dm, .mt-theme, .mt-cart) { display: grid !important; place-items: center !important; background: #f3f4f6 !important; border-color: #e5e7eb !important; color: #111827 !important; }
 BODY #m-top .mt-circ.mt-home { background: #f4faf8 !important; border-color: #d6cde7 !important; color: #7c3aed !important; }
 BODY .lib-page .lib-welcome { display: none !important; }
 BODY .ssx-item .ssx-ic { border: 3px solid transparent !important; background: linear-gradient(#ffffff, #ffffff) padding-box, linear-gradient(45deg, #ffb347, #ff4d8d 45%, #a855f7) border-box !important; padding: 3px !important; box-sizing: border-box !important; }
