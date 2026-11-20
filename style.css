@@ -22887,9 +22887,9 @@ html.theme-dark body:not(#_):not(#_):not(#_) .ig-act2 > .mk-a-join.on { color: #
   html body:not(#_):not(#_) .mk-watch .mk-pill-btn svg { width: 12px !important; height: 12px !important; }
   html body:not(#_):not(#_) .mk-watch .mp-info { gap: 3px !important; padding: 2px 0 !important; }
   html body:not(#_):not(#_) .mk-watch .mk-cat { font-size: 10.5px !important; line-height: 1.1 !important; }
-  html body:not(#_):not(#_) .mk-watch .mk-tprow { gap: 6px !important; margin: 0 !important; }
-  html body:not(#_):not(#_) .mk-watch .mk-title { font-size: 14px !important; line-height: 1.2 !important; margin: 0 !important; }
-  html body:not(#_):not(#_) .mk-watch .mp-price { font-size: 13px !important; line-height: 1.2 !important; }
+  html body:not(#_):not(#_) .mk-watch .mk-tprow { display: flex !important; align-items: center !important; justify-content: space-between !important; flex-wrap: nowrap !important; gap: 6px !important; margin: 0 !important; width: 100% !important; }
+  html body:not(#_):not(#_) .mk-watch .mk-title { font-size: clamp(10.5px, 3.1vw, 12.5px) !important; font-weight: 800 !important; line-height: 1.2 !important; margin: 0 !important; flex: 1 1 auto !important; min-width: 0 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+  html body:not(#_):not(#_) .mk-watch .mp-price { font-size: 11.5px !important; font-weight: 800 !important; line-height: 1.2 !important; flex: none !important; white-space: nowrap !important; }
   html body:not(#_):not(#_) .mk-watch .mk-qrow { margin: 2px 0 !important; }
   html body:not(#_):not(#_) .mk-watch .mk-stp-ctrl { height: 28px !important; border-radius: 8px !important; }
   html body:not(#_):not(#_) .mk-watch .mk-stp-btn { width: 28px !important; font-size: 15px !important; }
