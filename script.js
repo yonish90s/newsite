@@ -18990,7 +18990,7 @@ async function mktFeedOpen() {
     sugg.push(r);
   });
   const suggHTML = sugg.length ? `<section class="fd-sugg"><div class="fd-sugg-row">${sugg.slice(0, 12).map(r => `<div class="fd-sg"><button type="button" class="fd-sg-x" onclick="fdHide('${artEsc(r.uid || igDemoKeyOf(r.owner))}', this)" aria-label="הסתרת ההצעה">✕</button>
-      <button type="button" class="fd-sg-who" onclick="${r.uid ? `openUserPage('${artEsc(r.uid)}', '${artEsc(r.owner)}')` : `rentOpenSeller('', '${artEsc(r.owner)}')`}">${typeof isUserVerified === 'function' && isUserVerified(r.uid || '', r.owner || '') ? verifiedSealHTML(11) : ''}${authorAvHTML({ author: r.owner, uid: r.uid || '' })}<b>${escHtml(r.owner)}</b><small>${escHtml(r.city || '')}</small></button>
+      <button type="button" class="fd-sg-who" onclick="${r.uid ? `openUserPage('${artEsc(r.uid)}', '${artEsc(r.owner)}')` : `rentOpenSeller('', '${artEsc(r.owner)}')`}">${authorAvHTML({ author: r.owner, uid: r.uid || '' })}<b>${escHtml(r.owner)}${typeof isUserVerified === 'function' && isUserVerified(r.uid || '', r.owner || '') ? verifiedSealHTML(8) : ''}</b><small>${escHtml(r.city || '')}</small></button>
       <button type="button" class="fd-sg-go" onclick="mkCardFollow(this, '${artEsc(r.uid || '')}', '${artEsc(r.owner)}'); setTimeout(mktFeedOpen, 250)">${IG_FOLLOW_IC}מעקב</button></div>`).join('')}</div></section>` : '';
   const mine = items.filter(me), theirs = items.filter(x => !me(x));
   // הפיד מחולק: מה שאנשים העלו, ומה ששיתפו (ריפוסטים)
@@ -32706,7 +32706,39 @@ function rentCartAdd(id) {
   document.querySelectorAll('.mk-cart-add').forEach(b => b.classList.add('on'));
   glassBanner({ title: 'נוסף לעגלה', sub: r.title, icon: 'ok', btn: 'לעגלה', onBtn: () => cartOpen() });
 }
+function rentCartStep(id, dir) {
+  const r = rentFind(id); if (!r) return;
+  const key = 'mkt_' + id, c = cartGet(), idx = c.findIndex(x => x.id === key);
+  const cur = idx >= 0 ? (Number(c[idx].qty) || 0) : 0;
+  const minQ = rentMin(r), step = r.unit === 'kg' ? (minQ < 1 ? minQ : 0.1) : 1;
+  let next = cur === 0 && dir > 0 ? minQ : Math.round((cur + dir * step) * 100) / 100;
+  if (dir < 0 && next < minQ) next = 0;
+  const stock = mktStock(r);
+  if (dir > 0 && stock === 0) { glassBanner({ title: 'אזל מהמלאי', sub: r.title, icon: 'del' }); return; }
+  if (dir > 0 && stock !== null && next > stock) { glassBanner({ title: `נשארו רק ${stock} במלאי`, sub: 'אי אפשר להוסיף יותר ממה שיש', icon: 'del' }); return; }
+  if (next <= 0) {
+    if (idx >= 0) c.splice(idx, 1);
+    next = 0;
+  } else if (idx >= 0) {
+    c[idx].qty = next;
+  } else {
+    c.push({ id: key, qty: next });
+  }
+  cartSet(c);
+  if (dir > 0 && cur === 0 && typeof perfTrackCart === 'function') perfTrackCart(key, r.title, next);
+  const out = document.getElementById('rn-qty-v'), inp = document.getElementById('rn-qty');
+  if (out) out.textContent = next;
+  if (inp) inp.value = next || minQ;
+  const stp = out && out.closest('.mk-stepper');
+  if (stp) {
+    stp.classList.toggle('has-qty', next > 0);
+    const minus = stp.querySelector('.mk-stp-minus');
+    if (minus) minus.disabled = next <= 0;
+  }
+  rentCalcUpd(id);
+}
 window.rentCartAdd = rentCartAdd;
+window.rentCartStep = rentCartStep;
 function cartAdd(id) {
   const c = cartGet(); const it = c.find(x => x.id === id);
   if (it) it.qty = Math.min(10, it.qty + 1); else c.push({ id, qty: 1 });
@@ -34080,6 +34112,42 @@ function mkMobStatHTML(x) {
   const rk = rentCommentsKey(x), lk = x.shId || rk, sv = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
   return `<small class="mk-sg-mstat"><span>${sv('<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>')}${formatViews(photoGetViews(rk))}</span><span>${sv('<path d="M7 10v11H3V10zM7 10l4-8a2.5 2.5 0 0 1 3 2.6L13.5 9H19a2 2 0 0 1 2 2.3l-1.4 8A2 2 0 0 1 17.6 21H7"/>')}<i data-likes-n="${escHtml(lk)}">${Number(itemLikesData[lk]) || 0}</i></span></small>`;
 }
+function adJoinsMap() {
+  try { return JSON.parse(localStorage.getItem('bw_ad_joins') || '{}') || {}; } catch (e) { return {}; }
+}
+function adJoinMe() {
+  const u = auth.currentUser, reg = u && !u.isAnonymous;
+  const uid = reg ? u.uid : 'guest_me';
+  const name = reg ? String((typeof liveChatUserName === 'function' && liveChatUserName()) || u.displayName || 'אני') : 'אני';
+  return { uid, name };
+}
+function adIsJoined(id) {
+  const me = adJoinMe().uid;
+  return (adJoinsMap()[id] || []).some(p => p && p.uid === me);
+}
+function adJoinAvsHTML(id) {
+  const list = adJoinsMap()[id] || [];
+  if (!list.length) return '';
+  return list.slice(0, 5).map(p => `<span class="ad-j-av" title="${escHtml(p.name || '')}">${typeof authorAvHTML === 'function' ? authorAvHTML({ author: p.name || '?', uid: p.uid === 'guest_me' ? '' : (p.uid || '') }) : escHtml((p.name || '?').charAt(0))}</span>`).join('')
+    + (list.length > 5 ? `<span class="ad-j-more">+${list.length - 5}</span>` : '');
+}
+function adJoinToggle(id) {
+  const m = adJoinsMap(), me = adJoinMe(), list = Array.isArray(m[id]) ? m[id].slice() : [];
+  const idx = list.findIndex(p => p && p.uid === me.uid);
+  const on = idx < 0;
+  if (on) list.push(me); else list.splice(idx, 1);
+  if (list.length) m[id] = list; else delete m[id];
+  try { localStorage.setItem('bw_ad_joins', JSON.stringify(m)); } catch (e) {}
+  document.querySelectorAll(`[data-join-btn="${CSS.escape(id)}"]`).forEach(b => b.classList.toggle('on', on));
+  const html = adJoinAvsHTML(id);
+  document.querySelectorAll(`[data-join-avs="${CSS.escape(id)}"]`).forEach(el => {
+    el.innerHTML = html;
+    if (typeof avatarHydrate === 'function') avatarHydrate(el);
+  });
+  if (typeof showCopyToast === 'function') showCopyToast(on ? 'הצטרפת למודעה' : 'ביטלת הצטרפות למודעה');
+}
+window.adJoinToggle = adJoinToggle;
+
 function rentHoverHTML(x) {
   const ic = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${d}"/></svg>`;
   const id = artEsc(x.id), sh = x.shId ? artEsc(x.shId) : '', stop = 'event.stopPropagation(); event.preventDefault(); ';
@@ -34097,6 +34165,7 @@ function rentHoverHTML(x) {
     ${b('ריפוסט', 'M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3', `toggleRepost('${artEsc(rk)}', this)`, repostIsMine(rk), ` data-item="${escHtml(rk)}" data-people="rep" data-pid="${escHtml(rk)}"`, 'pti-repost mk-a-rep', cnt(repostCount(rk) || ''))}
     ${b('שיתוף', 'M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z', `if(navigator.share){navigator.share({title:'${artEsc(x.title||'')}',url:location.href}).catch(()=>{});}else{navigator.clipboard.writeText(location.href);showCopyToast('הקישור הועתק');}`, false, '', 'mk-a-share')}
     <span role="button" tabindex="0" class="mk-a-deal" aria-label="משא ומתן" title="משא ומתן — הצעת מחיר" onclick="${stop}mkCardHaggle(this, '${id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><circle cx="7.5" cy="7.5" r="1.2"/></svg></span>
+    ${b('הצטרף', 'M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M8.5 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM20 8v6M17 11h6', `adJoinToggle('${id}')`, adIsJoined(x.id), ` data-join-btn="${escHtml(x.id)}"`, 'mk-a-join')}
     ${b('שמירה', 'M6 4h12v17l-6-4.5L6 21z', `mkCountBump('${artEsc(svKey)}', this.classList.contains('on') ? -1 : 1); ` + (sh ? `photoToggleSave('${sh}')` : `rentMark(this, 'save', '${id}')`), saved, sh ? ` data-save="${escHtml(x.shId)}"` : '', 'mk-a-save')}
   </span>`;
 }
@@ -34192,7 +34261,7 @@ function twPostHTML(r) {
   const sec = mktSecOf(r), biz = sec === 'biz';
   const price = Number(r.price) > 0 ? `<small class="mk-sg-price">${rentTypeIcon(r)}${mktDiscP(r.price).toLocaleString('he-IL', { maximumFractionDigits: 2 })}&nbsp;₪${mktWasHTML(r.price)}</small>` : '';
   const src = r.img || (r.images || [])[0] || '';
-  const media = src ? `<div class="tw-media"><img src="${escHtml(src)}" alt="${escHtml(r.title)}" loading="lazy" decoding="async"></div>` : `<div class="tw-media tw-media-th">${rentThumb(r)}</div>`;
+  const media = src ? `<div class="tw-media"><img src="${escHtml(src)}" alt="${escHtml(r.title)}" loading="lazy" decoding="async"><span class="ad-join-avs" data-join-avs="${escHtml(r.id)}">${adJoinAvsHTML(r.id)}</span></div>` : `<div class="tw-media tw-media-th">${rentThumb(r)}<span class="ad-join-avs" data-join-avs="${escHtml(r.id)}">${adJoinAvsHTML(r.id)}</span></div>`;
   const when = r.t ? new Date(r.t).toLocaleDateString('he-IL') : '';
   const desc = String(r.desc || '').trim();
   const descHTML = desc ? `<span class="tw-desc-wrap"><small class="tw-desc">${escHtml(desc)}</small>${desc.length > 75 ? `<button type="button" class="tw-more" onclick="event.stopPropagation(); const w=this.parentElement; w.classList.toggle('open'); this.textContent=w.classList.contains('open')?'פחות':'עוד'">עוד</button>` : ''}</span>` : '';
@@ -34606,7 +34675,7 @@ function rentMiniHTML(x) {
   // בידול: עסק — מסגרת ירוקה, תג "עסק" וסמל חנות ליד שם העסק; יד 2 — תג אפור
   const sec = mktSecOf(x), biz = sec === 'biz';
   const badge = '';
-  return `<div role="button" tabindex="0" class="mk-sg${biz ? ' is-biz' : sec === 'used' ? ' is-used' : ''}" data-id="${escHtml(x.id)}" onclick="rentOpen('${artEsc(x.id)}')" onkeydown="if((event.key==='Enter'||event.key===' ')&&event.target===this){event.preventDefault();this.click();}"><span class="mk-sg-meta"><span class="mk-sg-who" role="button" tabindex="0" title="${escHtml(mktWho(x))}" aria-label="${escHtml(mktWho(x))}" onclick="event.stopPropagation(); rentOpenSeller('${artEsc(x.uid || '')}', '${artEsc(x.owner || '')}')">${isUserVerified(x.uid || '', mktWho(x), x.verified) ? verifiedSealHTML(13) : ''}${authorAvHTML({ author: mktWho(x) || '?', uid: x.uid || '' })}<b>${biz ? BIZ_IC : ''}${escHtml(mktWho(x))}</b></span><small class="mk-sg-city${mkKmTo(x.city) !== null ? ' km' : ''}">${escHtml(mkWhereTxt(x))}</small>${mkMobStatHTML(x)}<small class="mk-sg-price">${rentTypeIcon(x)}${Number(x.price) > 0 ? `${mktDiscP(x.price).toLocaleString('he-IL', { maximumFractionDigits: 2 })}&nbsp;₪${mktWasHTML(x.price)}` : mktIsProj(x) ? escHtml((PROJ_SUB[x.pd] || {}).name || PROJ_KINDS[x.pk] || 'פרויקט') : ''}${x.uid ? `<i data-sg-rate="${escHtml(x.uid)}"></i>` : ''}</small></span><b class="mk-sg-title"><span class="mk-sg-tt">${escHtml(x.title)}</span><span class="mk-sg-more" role="button" tabindex="0" onclick="event.stopPropagation(); event.preventDefault(); this.parentElement.classList.toggle('open')"><span>עוד</span><span>פחות</span></span></b><span class="mk-sg-img">${rentThumb(x)}${badge}${del}${mktSoldOut(x) ? '<i class="mk-sg-out">אזל</i>' : ''}</span><span class="mk-sg-acts">${rentHoverHTML(x)}</span></div>`;
+  return `<div role="button" tabindex="0" class="mk-sg${biz ? ' is-biz' : sec === 'used' ? ' is-used' : ''}" data-id="${escHtml(x.id)}" onclick="rentOpen('${artEsc(x.id)}')" onkeydown="if((event.key==='Enter'||event.key===' ')&&event.target===this){event.preventDefault();this.click();}"><span class="mk-sg-meta"><span class="mk-sg-who" role="button" tabindex="0" title="${escHtml(mktWho(x))}" aria-label="${escHtml(mktWho(x))}" onclick="event.stopPropagation(); rentOpenSeller('${artEsc(x.uid || '')}', '${artEsc(x.owner || '')}')">${isUserVerified(x.uid || '', mktWho(x), x.verified) ? verifiedSealHTML(13) : ''}${authorAvHTML({ author: mktWho(x) || '?', uid: x.uid || '' })}<b>${biz ? BIZ_IC : ''}${escHtml(mktWho(x))}</b></span><small class="mk-sg-city${mkKmTo(x.city) !== null ? ' km' : ''}">${escHtml(mkWhereTxt(x))}</small>${mkMobStatHTML(x)}<small class="mk-sg-price">${rentTypeIcon(x)}${Number(x.price) > 0 ? `${mktDiscP(x.price).toLocaleString('he-IL', { maximumFractionDigits: 2 })}&nbsp;₪${mktWasHTML(x.price)}` : mktIsProj(x) ? escHtml((PROJ_SUB[x.pd] || {}).name || PROJ_KINDS[x.pk] || 'פרויקט') : ''}${x.uid ? `<i data-sg-rate="${escHtml(x.uid)}"></i>` : ''}</small></span><b class="mk-sg-title"><span class="mk-sg-tt">${escHtml(x.title)}</span><span class="mk-sg-more" role="button" tabindex="0" onclick="event.stopPropagation(); event.preventDefault(); this.parentElement.classList.toggle('open')"><span>עוד</span><span>פחות</span></span></b><span class="mk-sg-img">${rentThumb(x)}${badge}${del}${mktSoldOut(x) ? '<i class="mk-sg-out">אזל</i>' : ''}<span class="ad-join-avs" data-join-avs="${escHtml(x.id)}">${adJoinAvsHTML(x.id)}</span></span><span class="mk-sg-acts">${rentHoverHTML(x)}</span></div>`;
 }
 // שורת הזהב: משאירים בה בדיוק כמה כרטיסים שנכנסים בשורה אחת; העודפים חוזרים לראש הגריד הרגיל
 function mkGoldFit() {
@@ -35219,6 +35288,7 @@ function rentDetailHTML(r) {
             ${pill('<path d="M6 4h12v17l-6-4.5L6 21z"/>', 'שמירה', r.shId ? `photoToggleSave('${artEsc(r.shId)}')` : `rentMark(this, 'save', '${artEsc(r.id)}')`, saved ? 'on' : '', r.shId ? ` data-save="${escHtml(r.shId)}"` : '')}
             ${r.shId ? pill('<path d="M21 12a8 8 0 0 1-8 8H4l2.2-2.6A8 8 0 1 1 21 12z"/>', 'הודעה', ask) : ''}
             ${pill('<path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3"/>', 'ריפוסט', `toggleRepost('${artEsc(rentCommentsKey(r))}', this)`, 'pti-repost' + (repostIsMine(rentCommentsKey(r)) ? ' on' : ''), ` data-item="${escHtml(rentCommentsKey(r))}" data-people="rep" data-pid="${escHtml(rentCommentsKey(r))}"`)}
+            ${pill('<path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M17 11h6"/>', 'הצטרף', `adJoinToggle('${artEsc(r.id)}')`, adIsJoined(r.id) ? 'on' : '', ` data-join-btn="${escHtml(r.id)}"`)}
             ${email ? pill('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>', 'מייל', `location.href='mailto:${artEsc(email)}'`) : ''}
             ${isAdmin() ? pill('<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/>', 'מחיקה', `rentAdminDelete('${artEsc(r.id)}')`) : ''}
           </div>`;
@@ -35236,12 +35306,11 @@ function rentDetailHTML(r) {
     <div class="mk-head-rate"><button type="button" class="mk-rate" data-seller="${escHtml(r.uid || '')}" onclick="rentRevOpen()">${rentRateHTML(0, 0)}</button></div><div class="mk-inv" data-like="${escHtml(r.shId || rentCommentsKey(r))}" data-rep="${escHtml(rentCommentsKey(r))}"${r.id === 'c1' ? ' data-demo="1"' : ''} hidden></div>
     <div class="mp mk-pg">
       <div class="rn-det-gal mp-gal">
-        <div class="rn-det-img mp-img${!r.hv && imgs.length > 1 ? ' is-carousel' : ''}" data-idx="0"${r.hv ? '' : (imgs.length > 1 ? '' : ' ondblclick="mkZoomOpen(this)" ontouchend="mkTapZoom(event, this)"')}>${r.hv || !imgs.length ? rentThumb(full && full.length ? { ...r, img: full[0] } : r, true) : `<div class="mp-slides" dir="ltr" onscroll="mpSlideSync(this)">${imgs.map((u, i) => `<div class="mp-slide" data-idx="${i}" ondblclick="mkZoomOpen(this.closest('.mp-img'), ${i})" ontouchend="mkTapZoom(event, this.closest('.mp-img'), ${i})"><img src="${escHtml(u)}" alt="${escHtml(r.title || '')} — תמונה ${i + 1}" loading="${i ? 'lazy' : 'eager'}" decoding="async"></div>`).join('')}</div>${imgs.length > 1 ? `<span class="mp-cnt" dir="ltr">1/${imgs.length}</span>` : ''}`}</div>
+        <div class="rn-det-img mp-img${!r.hv && imgs.length > 1 ? ' is-carousel' : ''}" data-idx="0"${r.hv ? '' : (imgs.length > 1 ? '' : ' ondblclick="mkZoomOpen(this)" ontouchend="mkTapZoom(event, this)"')}>${r.hv || !imgs.length ? rentThumb(full && full.length ? { ...r, img: full[0] } : r, true) : `<div class="mp-slides" dir="ltr" onscroll="mpSlideSync(this)">${imgs.map((u, i) => `<div class="mp-slide" data-idx="${i}" ondblclick="mkZoomOpen(this.closest('.mp-img'), ${i})" ontouchend="mkTapZoom(event, this.closest('.mp-img'), ${i})"><img src="${escHtml(u)}" alt="${escHtml(r.title || '')} — תמונה ${i + 1}" loading="${i ? 'lazy' : 'eager'}" decoding="async"></div>`).join('')}</div>${imgs.length > 1 ? `<span class="mp-cnt" dir="ltr">1/${imgs.length}</span>` : ''}`}<span class="ad-join-avs" data-join-avs="${escHtml(r.id)}">${adJoinAvsHTML(r.id)}</span></div>
         ${!r.hv && imgs.length > 1 ? `<div class="mp-dots" dir="ltr" role="tablist" aria-label="תמונות המודעה">${imgs.map((_, i) => `<button type="button" class="mp-dot${i ? '' : ' on'}" onclick="mpSlideGo(this, ${i})" aria-label="תמונה ${i + 1} מתוך ${imgs.length}"></button>`).join('')}</div>` : ''}
         ${imgs.length ? `<div class="mk-vthumbs bb-thumbs${imgs.length > 7 ? ' has-more' : ''}">
           <div class="mp-thumbs">${imgs.map((u, i) => `<button type="button" class="${i ? '' : 'on'}${i >= 6 && imgs.length > 7 ? ' bb-extra' : ''}" onclick="rentDetPick(this)" aria-label="תמונה ${i + 1}"><img src="${escHtml(u)}" alt="" loading="lazy"></button>`).join('')}${imgs.length > 7 ? `<button type="button" class="bb-more" onclick="this.closest('.bb-thumbs').classList.add('open')" aria-label="עוד ${imgs.length - 6} תמונות"><b>+${imgs.length - 6}</b><small>עוד</small></button>` : ''}</div>
           ${r.video && /^[\w-]{11}$/.test(r.video) ? `<button type="button" class="bb-tile-act" onclick="document.querySelector('.mk-video')?.scrollIntoView({ behavior: 'smooth', block: 'center' })">${ic('<circle cx="12" cy="12" r="9"/><path d="M10 8.5l5 3.5-5 3.5z"/>')}<small>סרטון</small></button>` : ''}
-          <button type="button" class="bb-tile-act" onclick="rentRevOpen()">${ic('<path d="M12 2.8l2.8 5.8 6.4.9-4.6 4.5 1.1 6.3L12 17.3l-5.7 3 1.1-6.3L2.8 9.5l6.4-.9z"/>')}<small>ביקורות</small></button>
         </div>` : ''}
         ${galActs}
       </div>
@@ -35251,7 +35320,20 @@ function rentDetailHTML(r) {
         <div class="mk-tprow"><h2 class="mk-title">${escHtml(r.title)}</h2>${rentPriceShort(r) ? `<div class="mp-price">${rentPriceShort(r)}</div>` : ''}</div>
         ${projLink ? `<a class="mk-plink" href="${escHtml(projLink)}" target="_blank" rel="noopener nofollow ugc" dir="ltr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>${escHtml(mktLinkHost(projLink))}</a>` : ''}
         ${mktStockLineHTML(r)}
-        ${(r.kind === 'used' && !cartBtn) || mktSoldOut(r) ? '' : `<div class="mk-qrow">${rentQtySelHTML(r, qty, unitName)}${cartBtn ? `<div class="mp-btns mk-acts mk-qcart">${cartBtn}</div>` : ''}</div>`}
+        ${(r.kind === 'used' && !cartBtn) || mktSoldOut(r) ? '' : (() => {
+          const curCart = cartBtn ? ((cartGet().find(x => x.id === 'mkt_' + r.id) || {}).qty || 0) : qty;
+          const hint = r.unit === 'kg' ? 'ק״ג' : unitName && r.kind !== 'used' ? 'לפי ' + unitName : '';
+          const stepFn = cartBtn ? `rentCartStep('${artEsc(r.id)}', ` : `rentQtyStep('${artEsc(r.id)}', `;
+          return `<div class="mk-qrow"><div class="mk-stepper${curCart > 0 ? ' has-qty' : ''}">
+            <span class="mk-qsel-l">כמות</span>
+            <div class="mk-stp-ctrl" role="group" aria-label="בחירת כמות">
+              <button type="button" class="mk-stp-btn mk-stp-plus" onclick="${stepFn}1)" aria-label="הוסף">+</button>
+              <b id="rn-qty-v" class="mk-stp-val">${curCart}</b>
+              <button type="button" class="mk-stp-btn mk-stp-minus" onclick="${stepFn}-1)" aria-label="הפחת והסר"${curCart <= 0 ? ' disabled' : ''}>−</button>
+            </div>
+            ${hint ? `<small class="mk-stp-hint">${escHtml(hint)}</small>` : ''}
+          </div></div>`;
+        })()}
         <div class="mk-buyrow"><div class="mk-buy">
         ${r.kind === 'used' ? `<input id="rn-qty" type="hidden" value="${qty}">` : `<div class="mk-qty">
           <div class="rn-calc mp-calc"><input id="rn-qty" type="hidden" value="${qty}"></div>

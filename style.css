@@ -22342,15 +22342,16 @@ html.theme-dark .ev-btn.on { background: #8b5cf6 !important; color: #ffffff !imp
 .fd-page { padding-top: 2px !important; }
 .fd-sugg { margin-top: 0 !important; }
 .site-top:has(+ .fd-page) > .st-bar { margin-bottom: 6px !important; }
-html body .fd-sugg-row { gap: 7px !important; }
-html body .fd-sg { flex: 0 0 78px !important; width: 78px !important; min-width: 0 !important; padding: 7px 5px 6px !important; border-radius: 12px !important; gap: 4px !important; }
-html body .fd-sg-x { width: 15px !important; height: 15px !important; font-size: 8.5px !important; top: 4px !important; right: 4px !important; left: auto !important; }
-html body .fd-sg-who { gap: 2px !important; }
-html body .fd-sg-who .au-av { width: 28px !important; height: 28px !important; min-width: 28px !important; font-size: 11px !important; }
-html body .fd-sg-who b { font-size: 10.5px !important; line-height: 1.2 !important; }
-html body .fd-sg-who small { font-size: 9px !important; }
-html body .fd-sg-go { height: 20px !important; padding: 0 7px !important; font-size: 10px !important; gap: 3px !important; }
-html body .fd-sg-go svg { width: 10px !important; height: 10px !important; }
+html body:not(#_):not(#_):not(#_) .fd-sugg .fd-sugg-row { gap: 5px !important; align-items: stretch !important; }
+html body:not(#_):not(#_):not(#_) .fd-sugg .fd-sg { flex: 0 0 58px !important; width: 58px !important; min-width: 0 !important; padding: 5px 4px 5px !important; border-radius: 10px !important; gap: 3px !important; display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: space-between !important; }
+html body:not(#_):not(#_):not(#_) .fd-sugg .fd-sg-x { width: 12px !important; height: 12px !important; font-size: 7px !important; top: 3px !important; right: 3px !important; left: auto !important; }
+html body:not(#_):not(#_):not(#_) .fd-sugg .fd-sg-who { display: flex !important; flex-direction: column !important; align-items: center !important; gap: 1px !important; width: 100% !important; }
+html body:not(#_):not(#_):not(#_) .fd-sugg .fd-sg-who .au-av { width: 20px !important; height: 20px !important; min-width: 20px !important; font-size: 8.5px !important; }
+html body:not(#_):not(#_):not(#_) .fd-sugg .fd-sg-who b { font-size: 8.5px !important; line-height: 1.15 !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 2px !important; max-width: 100% !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+html body:not(#_):not(#_):not(#_) .fd-sugg .fd-sg-who b .verified-seal { width: 8px !important; height: 8px !important; flex: none !important; }
+html body:not(#_):not(#_):not(#_) .fd-sugg .fd-sg-who small { font-size: 7.5px !important; line-height: 1.1 !important; min-height: 9px !important; }
+html body:not(#_):not(#_):not(#_) .fd-sugg .fd-sg-go { height: 16px !important; padding: 0 5px !important; font-size: 8px !important; gap: 2px !important; margin-top: auto !important; }
+html body:not(#_):not(#_):not(#_) .fd-sugg .fd-sg-go svg { width: 8px !important; height: 8px !important; }
 
 html body #mainContent:has(> .lib-page) { min-height: 0 !important; height: auto !important; padding-bottom: 0 !important; }
 html body .lib-page { min-height: 0 !important; height: auto !important; padding-bottom: 12px !important; }
@@ -22567,14 +22568,14 @@ html.theme-dark body .ssx-fbtn.on { background: #3f3f46 !important; color: #f4f4
 
 /* שורת אייקונים בסגנון אינסטגרם (לייק, תגובה, ריפוסט, שיתוף, משא ומתן, שמירה) — גודל וסגנון אחיד לפי אייקון התגית */
 html body:not(#_):not(#_):not(#_) .ig-act2 { display: flex !important; align-items: center !important; justify-content: flex-start !important; gap: 10px !important; width: 100% !important; padding: 2px 0 !important; }
-html body:not(#_):not(#_):not(#_) .ig-act2 > :is(.mk-a-like, .mk-a-cmt, .mk-a-rep, .mk-a-share, .mk-a-deal, .mk-a-save) { display: inline-flex !important; align-items: center !important; gap: 3px !important; background: transparent !important; border: 0 !important; padding: 2px !important; color: #111827 !important; cursor: pointer !important; }
+html body:not(#_):not(#_):not(#_) .ig-act2 > :is(.mk-a-like, .mk-a-cmt, .mk-a-rep, .mk-a-share, .mk-a-deal, .mk-a-join, .mk-a-save) { display: inline-flex !important; align-items: center !important; gap: 3px !important; background: transparent !important; border: 0 !important; padding: 2px !important; color: #111827 !important; cursor: pointer !important; }
 html body:not(#_):not(#_):not(#_) .ig-act2 > .mk-a-save { margin-inline-start: auto !important; }
 html body:not(#_):not(#_):not(#_) .ig-act2 svg { width: 15px !important; height: 15px !important; min-width: 15px !important; min-height: 15px !important; stroke-width: 1.75 !important; }
 html body:not(#_):not(#_):not(#_) .ig-act2 svg :is(path, circle, rect, polygon, line, polyline) { stroke-width: 1.75 !important; }
 html body:not(#_):not(#_):not(#_) .ig-act2 .mk-n { font-style: normal !important; font-size: 11.5px !important; font-weight: 600 !important; color: #111827 !important; }
 html body .ig-act2 > .mk-a-like.on svg { fill: #ef4444 !important; stroke: #ef4444 !important; }
 html body .ig-act2 > .mk-a-save.on svg { fill: #111827 !important; }
-html.theme-dark body .ig-act2 > :is(.mk-a-like, .mk-a-cmt, .mk-a-rep, .mk-a-share, .mk-a-deal, .mk-a-save),
+html.theme-dark body .ig-act2 > :is(.mk-a-like, .mk-a-cmt, .mk-a-rep, .mk-a-share, .mk-a-deal, .mk-a-join, .mk-a-save),
 html.theme-dark body .ig-act2 .mk-n { color: #f4f4f5 !important; }
 html.theme-dark body .ig-act2 > .mk-a-save.on svg { fill: #f4f4f5 !important; }
 
@@ -22822,3 +22823,41 @@ html.theme-dark .ua-item-info small { color: #a1a1aa; }
 .ua-empty, .ua-empty-sm { font-size: 13px; color: #6b7280; padding: 14px 4px; text-align: center; }
 .ua-guest { background: #ffffff; border-radius: 18px; padding: 24px; border: 1px solid rgba(0, 0, 0, .08); align-items: flex-start; }
 html.theme-dark .ua-guest { background: #181a20; border-color: rgba(255, 255, 255, .09); }
+
+/* בוחר כמות פלוס/מינוס (מתחיל מאפס) */
+.mk-stepper { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.mk-stp-ctrl { display: inline-flex; align-items: center; border: 1.5px solid rgba(0, 0, 0, .14); border-radius: 12px; overflow: hidden; background: #ffffff; height: 36px; }
+html.theme-dark .mk-stp-ctrl { border-color: rgba(255, 255, 255, .18); background: #1e2028; }
+.mk-stp-btn { width: 36px; height: 100%; border: 0; background: transparent; color: #111827; font: inherit; font-size: 18px; font-weight: 700; cursor: pointer; display: grid; place-items: center; transition: background .15s; }
+.mk-stp-btn:hover:not(:disabled) { background: rgba(0, 0, 0, .06); }
+.mk-stp-btn:disabled { opacity: .35; cursor: default; }
+html.theme-dark .mk-stp-btn { color: #ffffff; }
+html.theme-dark .mk-stp-btn:hover:not(:disabled) { background: rgba(255, 255, 255, .1); }
+.mk-stp-val { min-width: 34px; text-align: center; font-size: 15px; font-weight: 800; color: #111827; padding: 0 4px; }
+html.theme-dark .mk-stp-val { color: #ffffff; }
+.mk-stepper.has-qty .mk-stp-ctrl { border-color: #7c3aed; }
+.mk-stp-hint { font-size: 12px; color: #6b7280; }
+html.theme-dark .mk-stp-hint { color: #a1a1aa; }
+
+/* אייקון הצטרפות למודעה + רצועת אווטארים בפינה הימנית התחתונה של תמונת המודעה */
+.tw-media, .mk-sg-img, .mp-img { position: relative; }
+.ad-join-avs {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 5px;
+  border-radius: 6px;
+  background: rgba(24, 24, 27, .72);
+  backdrop-filter: blur(4px);
+  pointer-events: none;
+}
+.ad-join-avs:empty { display: none !important; }
+.ad-j-av .au-av { width: 22px !important; height: 22px !important; min-width: 22px !important; font-size: 9.5px !important; border: 1.5px solid #ffffff !important; box-shadow: 0 1px 3px rgba(0, 0, 0, .25); }
+.ad-j-more { font-size: 10px; font-weight: 800; color: #ffffff; padding: 0 3px; }
+html body:not(#_):not(#_):not(#_) .ig-act2 > .mk-a-join.on { color: #7c3aed !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) .ig-act2 > .mk-a-join.on { color: #a78bfa !important; }
+.mk-pill-btn.on { border-color: #7c3aed !important; color: #7c3aed !important; }

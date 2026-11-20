@@ -2119,7 +2119,7 @@ html:not(.theme-dark) .tw-text b { color: #111111; }
 html:not(.theme-dark) .tw-text small { color: #111111; }
 html:not(.theme-dark) .tw-more { color: #111111; }
 html:not(.theme-dark) body .ssx-fbtn.on { color: #111111 !important; }
-html:not(.theme-dark) body:not(#_):not(#_):not(#_) .ig-act2 > :is(.mk-a-like, .mk-a-cmt, .mk-a-rep, .mk-a-share, .mk-a-deal, .mk-a-save) { color: #111111 !important; }
+html:not(.theme-dark) body:not(#_):not(#_):not(#_) .ig-act2 > :is(.mk-a-like, .mk-a-cmt, .mk-a-rep, .mk-a-share, .mk-a-deal, .mk-a-join, .mk-a-save) { color: #111111 !important; }
 html:not(.theme-dark) body:not(#_):not(#_):not(#_) .ig-act2 .mk-n { color: #111111 !important; }
 html:not(.theme-dark) body .ig-act2 > .mk-a-like.on svg { fill: #777777 !important; stroke: #777777 !important; }
 html:not(.theme-dark) body .ig-act2 > .mk-a-save.on svg { fill: #111111 !important; }
@@ -2165,6 +2165,12 @@ html:not(.theme-dark) .ua-item-info small { color: #727272; }
 html:not(.theme-dark) .ua-badge-sched { background: #a7a7a7; }
 html:not(.theme-dark) .ua-item-val { color: #808080; }
 html:not(.theme-dark) .ua-empty,html:not(.theme-dark) .ua-empty-sm { color: #727272; }
+html:not(.theme-dark) .mk-stp-btn { color: #111111; }
+html:not(.theme-dark) .mk-stp-val { color: #111111; }
+html:not(.theme-dark) .mk-stepper.has-qty .mk-stp-ctrl { border-color: #111111; }
+html:not(.theme-dark) .mk-stp-hint { color: #727272; }
+html:not(.theme-dark) body:not(#_):not(#_):not(#_) .ig-act2 > .mk-a-join.on { color: #111111 !important; }
+html:not(.theme-dark) .mk-pill-btn.on { border-color: #111111 !important; color: #111111 !important; }
 html:not(.theme-dark) [style*="border:1.5px solid #e2e8f0"], html:not(.theme-dark) [style*="border: 1.5px solid #e2e8f0"] { border: 1.5px solid #e7e7e7 !important; }
 html:not(.theme-dark) [style*="color:#1e293b"], html:not(.theme-dark) [style*="color: #1e293b"] { color: #111111 !important; }
 html:not(.theme-dark) [style*="background:#dc2626"], html:not(.theme-dark) [style*="background: #dc2626"] { background: #111111 !important; }
