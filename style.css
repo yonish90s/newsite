@@ -22898,8 +22898,9 @@ html.theme-dark body:not(#_):not(#_):not(#_) .ig-act2 > .mk-a-join.on { color: #
   html body:not(#_):not(#_) .mk-watch .mk-cta .mk-ic small { font-size: 10px !important; }
 }
 
-/* סרגל עליון #m-top דק יותר */
-html body:not(#_):not(#_):not(#_) #m-top { padding-top: calc(3px + env(safe-area-inset-top, 0px)) !important; padding-bottom: 3px !important; }
+/* סרגל עליון #m-top דק יותר ונעלם בגלילה למטה */
+html body:not(#_):not(#_):not(#_) #m-top { padding-top: calc(3px + env(safe-area-inset-top, 0px)) !important; padding-bottom: 3px !important; transition: transform .22s ease, opacity .18s ease !important; }
+html.mtabs-away body:not(#_):not(#_):not(#_) #m-top { transform: translateY(-120%) !important; opacity: 0 !important; pointer-events: none !important; }
 html body:not(#_):not(#_):not(#_) #m-top .mt-row { gap: 5px !important; min-height: 0 !important; }
 html body:not(#_):not(#_):not(#_) #m-top .mt-acts { gap: 6px !important; }
 html body:not(#_):not(#_):not(#_) #m-top .mt-circ { width: 26px !important; height: 26px !important; min-width: 26px !important; }
