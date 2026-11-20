@@ -2176,6 +2176,17 @@ html:not(.theme-dark) .mk-pill-btn.on { border-color: #111111 !important; color:
 html:not(.theme-dark) .rep-go-btn { background: #828282; }
 html:not(.theme-dark) .rep-go-btn.on { background: #111111; }
 html:not(.theme-dark) .rep-sub { color: #727272; }
+html:not(.theme-dark) body:not(#_):not(#_) .mkpub-xcard { color: #111111 !important; }
+html:not(.theme-dark) .mkpub-xpost { background: #7f7f7f !important; }
+html:not(.theme-dark) .mkpub-aud-pill { border: 1px solid rgba(127,127,127,0.45); background: rgba(127,127,127,0.08); color: #7f7f7f; }
+html:not(.theme-dark) .mkpub-xreply { color: #7f7f7f; }
+html:not(.theme-dark) .mkpub-xbar button { color: #7f7f7f; }
+html:not(.theme-dark) .mkpub-aud-panel { color: #111111; }
+html:not(.theme-dark) .mkpub-aud-lbl { color: #727272; }
+html:not(.theme-dark) .mkpub-aud-ic { background: rgba(127,127,127,0.12); }
+html:not(.theme-dark) .mkpub-aud-tx small { color: #727272; }
+html:not(.theme-dark) .mkpub-aud-row.on .mkpub-aud-rad { border-color: #7f7f7f; background: #7f7f7f; }
+html:not(.theme-dark) .mkpub-aud-empty { color: #727272; }
 html:not(.theme-dark) [style*="border:1.5px solid #e2e8f0"], html:not(.theme-dark) [style*="border: 1.5px solid #e2e8f0"] { border: 1.5px solid #e7e7e7 !important; }
 html:not(.theme-dark) [style*="color:#1e293b"], html:not(.theme-dark) [style*="color: #1e293b"] { color: #111111 !important; }
 html:not(.theme-dark) [style*="background:#dc2626"], html:not(.theme-dark) [style*="background: #dc2626"] { background: #111111 !important; }

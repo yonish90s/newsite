@@ -33659,72 +33659,123 @@ try { onAuthStateChanged(auth, async u => { uploadDayDB = ''; if (!u) return; tr
 let mkPub = { images: [] };
 function mkPubOpen() {
   if (uploadBlockedNow()) return;
-  mkPub = { images: [], type: 'sale', pk: 'site' };
+  mkPub = { images: [], type: 'sale', pk: 'site', communityId: null, scheduled: false };
   let m = document.getElementById('mkpub-modal');
   if (m) m.remove();
-  m = document.createElement('div'); m.id = 'mkpub-modal'; m.className = 'mkpub-modal';
-  m.innerHTML = `<div class="mkpub-card" role="dialog" aria-modal="true" aria-label="פרסום מודעה">
-    <div class="mkpub-head"><b>פרסום מודעה</b><button type="button" class="mkpub-x" onclick="mkPubClose()" aria-label="סגירה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
-    <div class="mkpub-type" role="group" aria-label="מה מפרסמים">
-      <button type="button" class="on" data-t="sale" onclick="mkPubType('sale')">יד 2</button>
-      <button type="button" data-t="biz" onclick="mkPubType('biz')">עסק</button>
-      <button type="button" data-t="proj" onclick="mkPubType('proj')">פרויקט שבניתי</button>
+  const u = auth.currentUser, reg = u && !u.isAnonymous;
+  const myName = reg ? String((typeof liveChatUserName === 'function' && liveChatUserName()) || u.displayName || 'אני') : 'אורח';
+  const myAv = typeof authorAvHTML === 'function' ? authorAvHTML({ author: myName, uid: reg ? u.uid : '' }) : '<span class="au-av">א</span>';
+  m = document.createElement('div'); m.id = 'mkpub-modal'; m.className = 'mkpub-modal mkpub-xmode';
+  m.innerHTML = `<div class="mkpub-card mkpub-xcard" role="dialog" aria-modal="true" aria-label="פרסום מודעה">
+    <div class="mkpub-xtop">
+      <button type="button" class="mkpub-xcancel" onclick="mkPubClose()">ביטול</button>
+      <button type="button" class="mkpub-go mkpub-xpost" id="mkpub-go" onclick="mkPubSend()">פרסום</button>
     </div>
-    <div class="mkpub-proj">
-      <label class="mkpub-l" for="mkpub-area">תחום — מה הפרויקט פותר?</label>
-      <select id="mkpub-area" class="mkpub-in"><option value="">בחירת תחום</option>${PROJ_AREAS.map(a => `<optgroup label="${a.ic} ${a.name}">${a.subs.map(([id, name]) => `<option value="${id}">${name}</option>`).join('')}</optgroup>`).join('')}</select>
-      <label class="mkpub-l">איך הוא בנוי</label>
-      <div class="mkpub-kinds" role="group" aria-label="סוג הפרויקט">${Object.keys(PROJ_KINDS).map(k => `<button type="button" data-k="${k}"${k === 'site' ? ' class="on"' : ''} onclick="mkPubKind('${k}')">${PROJ_KINDS[k]}</button>`).join('')}</div>
+    <div class="mkpub-xwho">
+      <span class="mkpub-xav">${myAv}</span>
+      <button type="button" id="mkpub-aud-btn" class="mkpub-aud-pill" onclick="mkPubAudienceOpen()"><span>כולם · השוק</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></button>
     </div>
-    <div class="mkpub-biz">
-      <label class="mkpub-l" for="mkpub-bizname">שם העסק</label>
-      <input id="mkpub-bizname" class="mkpub-in" maxlength="60" placeholder="למשל: מאפיית השכונה">
+    <div class="mkpub-xcompose">
+      <input id="mkpub-title" class="mkpub-xtitle" maxlength="32" placeholder="כותרת המודעה…" oninput="mkPubTitleCount(this); mkPubAuto()">
+      <textarea id="mkpub-desc" class="mkpub-xbody" oninput="mkPubAuto()" rows="3" maxlength="1000" placeholder="מה קורה? תארו מה מוכרים או משתפים…"></textarea>
+      <small class="mkpub-cnt" id="mkpub-title-cnt">0 / 32</small>
+      <div class="mkpub-imgs" id="mkpub-imgs"></div>
     </div>
-    <label class="mkpub-l">תמונות <small>(עד 5)</small></label>
-    <div class="mkpub-imgs" id="mkpub-imgs"></div>
-    <label class="mkpub-l" for="mkpub-title">כותרת</label>
-    <input id="mkpub-title" class="mkpub-in" maxlength="32" placeholder="מה מוכרים?" oninput="mkPubTitleCount(this); mkPubAuto()"><small class="mkpub-cnt" id="mkpub-title-cnt">0 / 32</small>
     <div class="mkpub-auto" id="mkpub-auto" hidden>
       <div class="mkpub-auto-h"><span>✨ סיווג אוטומטי</span>
         <select id="mkpub-dept" class="mkpub-dept" onchange="mkPub.deptManual = this.value; mkPubAuto()" aria-label="מחלקה">${MKT_DEPTS.map(d => `<option value="${d.id}">${d.ic} ${d.name}</option>`).join('')}</select></div>
       <div class="mkpub-htags" id="mkpub-htags"></div>
     </div>
-    <div class="mkpub-proj mkpub-biz">
-      <label class="mkpub-l" for="mkpub-desc">כמה מילים <small>(לא חובה)</small></label>
-      <textarea id="mkpub-desc" class="mkpub-in" oninput="mkPubAuto()" rows="3" maxlength="1000" placeholder="מה בנית, במה השתמשת, ומה תשמח לקבל"></textarea>
-      <label class="mkpub-l" for="mkpub-link">קישור <small>(לא חובה)</small></label>
-      <input id="mkpub-link" class="mkpub-in" type="url" dir="ltr" maxlength="200" placeholder="www.my-project.com">
+    <div id="mkpub-pane-meta" class="mkpub-xp" hidden>
+      <div class="mkpub-type" role="group" aria-label="מה מפרסמים">
+        <button type="button" class="on" data-t="sale" onclick="mkPubType('sale')">יד 2</button>
+        <button type="button" data-t="biz" onclick="mkPubType('biz')">עסק</button>
+        <button type="button" data-t="proj" onclick="mkPubType('proj')">פרויקט</button>
+      </div>
+      <div class="mkpub-proj">
+        <select id="mkpub-area" class="mkpub-in"><option value="">בחירת תחום פרויקט</option>${PROJ_AREAS.map(a => `<optgroup label="${a.ic} ${a.name}">${a.subs.map(([id, name]) => `<option value="${id}">${name}</option>`).join('')}</optgroup>`).join('')}</select>
+        <div class="mkpub-kinds" role="group" aria-label="סוג הפרויקט">${Object.keys(PROJ_KINDS).map(k => `<button type="button" data-k="${k}"${k === 'site' ? ' class="on"' : ''} onclick="mkPubKind('${k}')">${PROJ_KINDS[k]}</button>`).join('')}</div>
+      </div>
+      <div class="mkpub-biz">
+        <input id="mkpub-bizname" class="mkpub-in" maxlength="60" placeholder="שם העסק (למשל: מאפיית השכונה)">
+      </div>
+      <div class="mkpub-xrow2">
+        <div class="mkpub-price"><input id="mkpub-price" class="mkpub-in" oninput="mkPubAuto()" type="number" min="0" step="1" inputmode="numeric" placeholder="מחיר (אופציונלי)"><span>₪</span></div>
+        <input id="mkpub-stock" class="mkpub-in mkpub-sale" type="number" min="0" step="1" inputmode="numeric" placeholder="מלאי (ריק = ∞)">
+      </div>
     </div>
-    <label class="mkpub-l" for="mkpub-price">מחיר <small>(לא חובה)</small></label>
-    <div class="mkpub-price"><input id="mkpub-price" class="mkpub-in" oninput="mkPubAuto()" type="number" min="0" step="1" inputmode="numeric" placeholder="ריק = ללא מחיר"><span>₪</span></div>
-    <label class="mkpub-l" for="mkpub-video">סרטון <small>(לא חובה — קישור מכל אתר. בלוח המודעות תוצג התמונה שהעליתם, והסרטון מהקישור יתנגן כשנכנסים למודעה)</small></label>
-    <input id="mkpub-video" class="mkpub-in" type="url" dir="ltr" maxlength="400" placeholder="הדביקו קישור לסרטון…">
-    <div class="mkpub-sale">
-      <label class="mkpub-l" for="mkpub-stock">כמה יחידות יש לך במלאי? <small>(לא חובה)</small></label>
-      <input id="mkpub-stock" class="mkpub-in" type="number" min="0" step="1" inputmode="numeric" placeholder="ריק = ללא הגבלה">
-    </div>
-    <label class="mkpub-l">מתי להעלות את המודעה?</label>
-    <div class="mkpub-sched-sw" role="group" aria-label="תזמון פרסום">
-      <button type="button" class="on" data-s="now" onclick="mkPubSchedMode(false)">פרסם עכשיו</button>
-      <button type="button" data-s="later" onclick="mkPubSchedMode(true)">תזמון מועד</button>
+    <div id="mkpub-pane-link" class="mkpub-xp" hidden>
+      <input id="mkpub-video" class="mkpub-in" type="url" dir="ltr" maxlength="400" placeholder="קישור לסרטון (אופציונלי)…">
+      <input id="mkpub-link" class="mkpub-in mkpub-proj mkpub-biz" type="url" dir="ltr" maxlength="200" placeholder="קישור לאתר (אופציונלי)…">
     </div>
     <div class="mkpub-sched-box" id="mkpub-sched-box" hidden>
       <div class="mkpub-sched-presets">
         <button type="button" onclick="mkPubSchedPreset(1)">בעוד שעה</button>
         <button type="button" onclick="mkPubSchedPreset('tom9')">מחר 09:00</button>
         <button type="button" onclick="mkPubSchedPreset('tom18')">מחר 18:00</button>
+        <button type="button" onclick="mkPubSchedMode(false)">ביטול תזמון</button>
       </div>
       <input id="mkpub-sched" class="mkpub-in" type="datetime-local" dir="ltr">
     </div>
     <p class="mkpub-err" id="mkpub-err" hidden></p>
-    <button type="button" class="mkpub-go" id="mkpub-go" onclick="mkPubSend()">פרסום</button>
-    ${typeof isAdmin === 'function' && isAdmin() ? '' : '<small class="mkpub-note">המודעה תופיע בשוק אחרי אישור מנהל.</small>'}
+    <div class="mkpub-xreply">🌐 כולם יכולים להגיב</div>
+    <div class="mkpub-xbar" role="toolbar" aria-label="אפשרויות פרסום">
+      <button type="button" onclick="mkPubAdd()" title="הוספת תמונה" aria-label="הוספת תמונה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></button>
+      <button type="button" onclick="mkPubTogglePane('meta')" title="מחיר, סוג ומלאי" aria-label="מחיר, סוג ומלאי"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><circle cx="7.5" cy="7.5" r="1.2"/></svg></button>
+      <button type="button" id="mkpub-tb-sched" onclick="mkPubSchedMode(!mkPub.scheduled)" title="תזמון פרסום" aria-label="תזמון פרסום"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></button>
+      <button type="button" onclick="mkPubTogglePane('link')" title="קישור או סרטון" aria-label="קישור או סרטון"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button>
+    </div>
   </div>`;
   m.addEventListener('click', e => { if (e.target === m) mkPubClose(); });
   document.body.appendChild(m);
+  if (typeof avatarHydrate === 'function') avatarHydrate(m);
   mkPubImgs();
   setTimeout(() => { const t = document.getElementById('mkpub-title'); if (t) t.focus(); }, 50);
 }
+function mkPubTogglePane(which) {
+  const el = document.getElementById('mkpub-pane-' + which);
+  if (el) el.hidden = !el.hidden;
+}
+function mkPubAudienceOpen() {
+  let sh = document.getElementById('mkpub-aud-sheet');
+  if (sh) sh.remove();
+  const comms = typeof communitiesData !== 'undefined' ? Object.values(communitiesData || {}) : [];
+  sh = document.createElement('div');
+  sh.id = 'mkpub-aud-sheet';
+  sh.className = 'mkpub-aud-sheet';
+  sh.innerHTML = `<div class="mkpub-aud-panel" role="dialog" aria-modal="true" aria-label="בחירת קהל לפרסום">
+    <header class="mkpub-aud-head"><b>בחירת יעד פרסום</b><button type="button" onclick="this.closest('.mkpub-aud-sheet').remove()" aria-label="סגירה">✕</button></header>
+    <button type="button" class="mkpub-aud-row${!mkPub.communityId ? ' on' : ''}" onclick="mkPubAudiencePick(null, 'כולם · השוק')">
+      <span class="mkpub-aud-ic">🌐</span>
+      <span class="mkpub-aud-tx"><b>כולם</b><small>השוק הראשי — גלוי לכולם</small></span>
+      <i class="mkpub-aud-rad"></i>
+    </button>
+    <div class="mkpub-aud-lbl">הקהילות שלי</div>
+    <div class="mkpub-aud-list">
+      ${comms.length ? comms.map(c => {
+        const cid = String(c.id || '');
+        const cnt = c.members ? Object.keys(c.members).length : (Number(c.memberCount) || 0);
+        const av = c.image ? `<img src="${escHtml(c.image)}" alt="">` : escHtml((c.name || '?').charAt(0));
+        return `<button type="button" class="mkpub-aud-row${mkPub.communityId === cid ? ' on' : ''}" onclick="mkPubAudiencePick('${artEsc(cid)}', '${artEsc(c.name || 'קהילה')}')">
+          <span class="mkpub-aud-ic sq">${av}</span>
+          <span class="mkpub-aud-tx"><b>${escHtml(c.name || 'קהילה')}</b><small>${cnt ? cnt.toLocaleString('he-IL') + ' חברים' : 'קהילה'}</small></span>
+          <i class="mkpub-aud-rad"></i>
+        </button>`;
+      }).join('') : '<div class="mkpub-aud-empty">עוד אין קהילות זמינות</div>'}
+    </div>
+  </div>`;
+  sh.addEventListener('click', e => { if (e.target === sh) sh.remove(); });
+  document.body.appendChild(sh);
+}
+function mkPubAudiencePick(cid, label) {
+  mkPub.communityId = cid || null;
+  const btn = document.getElementById('mkpub-aud-btn');
+  if (btn) { const sp = btn.querySelector('span'); if (sp) sp.textContent = label || 'כולם · השוק'; }
+  document.getElementById('mkpub-aud-sheet')?.remove();
+}
+window.mkPubTogglePane = mkPubTogglePane;
+window.mkPubAudienceOpen = mkPubAudienceOpen;
+window.mkPubAudiencePick = mkPubAudiencePick;
 function mkPubClose() { const m = document.getElementById('mkpub-modal'); if (m) m.remove(); }
 // כותרת קצרה (עד 32 תווים, בערך 5 מילים) — כדי שתיכנס בשורה של הכרטיס
 const MKPUB_TITLE_MAX = 32;
@@ -33843,7 +33894,7 @@ async function mkPubSend() {
   // משתמשים במסלול הפרסום הקיים: ממלאים את נתוני השיחה ומפרסמים מאחורי הקלעים
   qpEnsureModal();
   document.getElementById('qp-messages').innerHTML = '';
-  qpData = { title, images: mkPub.images.slice(0, 5), summary: desc, communityId: null, type: 'photo', pageSection: 'secondhand', isProduct: true, tags: {}, tagIndex: 0, price: priceTxt === '' ? '' : String(price), offerType: proj ? 'פרויקט' : biz ? 'עסק' : 'מכירה', region: '', stock, publishAt,
+  qpData = { title, images: mkPub.images.slice(0, 5), summary: desc, communityId: mkPub.communityId || null, type: 'photo', pageSection: 'secondhand', isProduct: true, tags: {}, tagIndex: 0, price: priceTxt === '' ? '' : String(price), offerType: proj ? 'פרויקט' : biz ? 'עסק' : 'מכירה', region: '', stock, publishAt,
     link: proj || biz ? link : '', bizName, video: videoHv ? videoTxt.slice(0, 400) : '', projectKind: proj ? mkPub.pk : '', projectArea: proj ? area : '' };
   { const a = mkPubAutoCalc(); qpData.dept = a.dept; qpData.hashtags = a.tags; }
   await qpPublish();
