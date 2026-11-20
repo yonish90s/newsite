@@ -32799,17 +32799,25 @@ function qtyOptsFor(p, cur) {
   return [...new Set(base.filter(x => x >= min).concat(cur > 0 ? [cur] : []))].sort((a, b) => a - b);
 }
 function qtyDDHTML(cur, opts, pick, remove) {
-  const tick = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
-  return `<div class="mk-qdd"><button type="button" class="mk-qbtn" aria-haspopup="listbox" aria-expanded="false" aria-label="כמות" onclick="rentQtyMenu(this)"><b>${cur}</b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
-    <ul class="mk-qlist" role="listbox" hidden>${opts.map(n => `<li role="option" aria-selected="${n === cur}" onclick="${pick(n)}">${n}${tick}</li>`).join('')}${remove ? `<li role="option" class="mk-qrm" onclick="${remove}">הסרה</li>` : ''}</ul></div>`;
+  const list = Array.isArray(opts) && opts.length ? opts : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+  const idx = list.findIndex(x => x >= cur);
+  const nextUp = idx >= 0 && idx + 1 < list.length ? list[idx + 1] : Math.round((cur + 1) * 100) / 100;
+  const prevDown = idx > 0 ? list[idx - 1] : 0;
+  const plusAct = pick(nextUp);
+  const minusAct = prevDown > 0 ? pick(prevDown) : (remove || pick(0));
+  return `<div class="mk-stepper has-qty"><div class="mk-stp-ctrl" role="group" aria-label="בחירת כמות">
+    <button type="button" class="mk-stp-btn mk-stp-plus" onclick="${plusAct}" aria-label="הוסף">+</button>
+    <b class="mk-stp-val">${cur}</b>
+    <button type="button" class="mk-stp-btn mk-stp-minus" onclick="${minusAct}" aria-label="הפחת והסר"${cur <= 0 ? ' disabled' : ''}>−</button>
+  </div></div>`;
 }
 function cartSetQty(id, n) {
   const c = cartGet(), it = c.find(x => x.id === id); if (!it) return;
   it.qty = n;
   cartSet(n > 0 ? c : c.filter(x => x.id !== id));
 }
-function coSetQty(i, n) { coKeep(); const it = coState.items[i]; if (!it) return; it.qty = n; coRender(); }
-function ckSetQty(i, n) { ckKeep(); const it = coState.items[i]; if (!it) return; it.qty = n; ckRender(); }
+function coSetQty(i, n) { coKeep(); const it = coState.items[i]; if (!it) return; if (n <= 0) coState.items.splice(i, 1); else it.qty = n; coRender(); }
+function ckSetQty(i, n) { ckKeep(); const it = coState.items[i]; if (!it) return; if (n <= 0) coState.items.splice(i, 1); else it.qty = n; ckRender(); }
 Object.assign(window, { cartSetQty, coSetQty, ckSetQty });
 function cartCount() { return cartGet().reduce((a, x) => a + Math.ceil(x.qty), 0) + rentListGet().length; }
 // רשימת ההשכרות: כמו הסל — נשמרת בדפדפן ולא צריך להיות מחובר; רק שליחת הבקשות למשכירים דורשת התחברות
