@@ -27146,7 +27146,7 @@ function applySiteTheme() {
   const dc = document.getElementById('dark-css'); if (dc) { if (!dc.getAttribute('href')) dc.href = dc.dataset.href; dc.media = dark ? 'all' : 'not all'; }
   document.documentElement.classList.toggle('theme-dark', dark);
   document.body?.classList.toggle('light-mode', !dark);
-  const meta = document.querySelector('meta[name="theme-color"]'); if (meta) meta.setAttribute('content', dark ? '#0f1115' : '#ffffff');
+  const meta = document.querySelector('meta[name="theme-color"]'); if (meta) meta.setAttribute('content', dark ? '#000000' : '#ffffff');
 }
 applySiteTheme();
 try { window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if (document.documentElement.dataset.themeMode === 'system') applySiteTheme(); }); } catch (e) {}

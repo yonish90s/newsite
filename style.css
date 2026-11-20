@@ -22986,3 +22986,43 @@ html.theme-dark .mkpub-aud-row.on .mkpub-aud-rad { box-shadow: inset 0 0 0 4px #
   html body:not(#_):not(#_) .mk-pill-det { display: none !important; }
   html body:not(#_):not(#_) .mk-lower[hidden] { display: block !important; }
 }
+
+/* מצב כהה בסגנון אינסטגרם: רקע שחור (#000000), כתב לבן (#f5f5f5) וגדלי טקסט תואמים לאינסטגרם */
+html.theme-dark,
+html.theme-dark body,
+html.theme-dark body:not(#_):not(#_):not(#_) :is(#mainContent, .site-top, .site-header, .rent-page, .lib-page, .fd-page, .ua-page, .mk-watch, .st-bar, #m-top, .tg-panel, .tg-view, .ms-panel, .mkpub-xcard, .mkpub-aud-panel, .mk-sg, .tw-post, .ig-prof, .ua-card, .ua-kpi, .ua-guest, .igc-dock, .cart-drawer) {
+  background: #000000 !important;
+  background-color: #000000 !important;
+}
+html.theme-dark body,
+html.theme-dark body:not(#_):not(#_):not(#_) :is(h1, h2, h3, h4, p, span, b, strong, a, label, li, summary, input, textarea, select, button) {
+  color: #f5f5f5 !important;
+}
+html.theme-dark body:not(#_):not(#_):not(#_) :is(.tw-who, .mk-sg-who b, .igc-top b, .tg-row-name, .mk-title, .tw-text b) {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  line-height: 1.35 !important;
+}
+html.theme-dark body:not(#_):not(#_):not(#_) :is(.tw-text small, .tw-desc, .igc-tx, .mk-accs p, .mk-accs li) {
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  line-height: 1.4 !important;
+  color: #f5f5f5 !important;
+}
+html.theme-dark body:not(#_):not(#_):not(#_) :is(.tw-meta, .mk-sg-city, .igc-top small, .tg-row-time, .mk-seller-tx small) {
+  font-size: 12px !important;
+  font-weight: 400 !important;
+  color: #a8a8a8 !important;
+}
+html.theme-dark body:not(#_):not(#_):not(#_) .ig-act2 .mk-n {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: #f5f5f5 !important;
+}
+html.theme-dark body:not(#_):not(#_):not(#_) :is(.mt-apv-n, .st-badge, .mk-sg-out, .dls-st.no, .dls-b.no, .ig-dash-btn, .ua-filters button.on, .mkpub-sched-sw button.on, .mk-pill-btn.on) {
+  color: #111827 !important;
+}
+html.theme-dark body:not(#_):not(#_):not(#_) .mk-watch .mk-head .mk-rate svg { color: #fbbf24 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) .ig-act2 > .mk-a-like.on svg { color: #ef4444 !important; fill: #ef4444 !important; stroke: #ef4444 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) .verified-seal,
+html.theme-dark body:not(#_):not(#_):not(#_) .verified-seal * { color: #38bdf8 !important; }
