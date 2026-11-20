@@ -22604,19 +22604,21 @@ html.theme-dark .igc-top b, html.theme-dark .igc-tx { color: #f4f4f5; }
 html.theme-dark .igc-dock { background: #14151a; border-top-color: rgba(255, 255, 255, .1); }
 html.theme-dark .igc-form input { background: #27272a; border-color: #3f3f46; color: #f4f4f5; }
 
-/* פרופיל בסגנון אינסטגרם */
-.ig-prof { display: flex; flex-direction: column; gap: 10px; padding: 10px 14px 14px; background: #ffffff; border-radius: 16px; border: 1px solid rgba(0, 0, 0, .07); margin-bottom: 10px; }
-.ig-p-top { display: flex; align-items: center; gap: 16px; }
-.ig-p-av .au-av { width: 72px !important; height: 72px !important; min-width: 72px !important; font-size: 26px !important; }
-.ig-p-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
-.ig-p-name { display: flex; align-items: center; gap: 5px; font-size: 16px; font-weight: 800; color: #111827; }
-.ig-p-stats { display: flex; align-items: center; justify-content: space-between; gap: 8px; max-width: 260px; }
+/* פרופיל בסגנון אינסטגרם (מוקטן בחצי) */
+.ig-prof { display: flex; flex-direction: column; gap: 5px; padding: 6px 9px 8px; background: #ffffff; border-radius: 12px; border: 1px solid rgba(0, 0, 0, .07); margin-bottom: 6px; }
+.ig-p-top { display: flex; align-items: center; gap: 9px; }
+.ig-p-av .au-av { width: 38px !important; height: 38px !important; min-width: 38px !important; font-size: 14px !important; }
+.ig-p-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.ig-p-name { display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 800; color: #111827; line-height: 1.15; }
+.ig-p-name .verified-seal { width: 11px !important; height: 11px !important; }
+.ig-p-stats { display: flex; align-items: center; justify-content: space-between; gap: 6px; max-width: 170px; }
 .ig-p-stats div { display: flex; flex-direction: column; align-items: flex-start; }
-.ig-p-stats b { font-size: 15px; font-weight: 800; color: #111827; line-height: 1.15; }
-.ig-p-stats small { font-size: 12px; color: #4b5563; }
-.ig-p-bio { font-size: 12.5px; color: #4b5563; }
-.ig-p-acts { display: flex; gap: 8px; }
-.ig-p-acts .ig-follow, .ig-p-acts .ig-msg-btn { flex: 1; height: 34px !important; border-radius: 10px !important; border: 0 !important; font: inherit !important; font-size: 13.5px !important; font-weight: 700 !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; }
+.ig-p-stats b { font-size: 11px; font-weight: 800; color: #111827; line-height: 1.1; }
+.ig-p-stats small { font-size: 9.5px; color: #4b5563; line-height: 1.1; }
+.ig-p-bio { font-size: 10px; color: #4b5563; line-height: 1.2; }
+.ig-p-acts { display: flex; gap: 6px; }
+.ig-p-acts .ig-follow, .ig-p-acts .ig-msg-btn { flex: 1; height: 22px !important; border-radius: 7px !important; border: 0 !important; font: inherit !important; font-size: 10.5px !important; font-weight: 700 !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 4px !important; }
+.ig-p-acts .ig-follow svg { width: 11px !important; height: 11px !important; }
 .ig-p-acts .ig-follow { background: #3b82f6 !important; color: #ffffff !important; }
 .ig-p-acts .ig-follow.on, .ig-p-acts .ig-msg-btn { background: #f3f4f6 !important; color: #111827 !important; }
 html.theme-dark .ig-prof { background: #18181b; border-color: rgba(255, 255, 255, .1); }
@@ -22661,6 +22663,71 @@ html body .tg-list .tg-row-main { border-bottom: 0 !important; padding: 6px 0 !i
 .tg-arch-btn svg { width: 16px; height: 16px; }
 .tg-arch-btn:hover { background: rgba(128, 128, 128, .14); color: #ffffff; }
 
+/* עיצוב מסך כניסה בסגנון מפה ומדבקות מותאם לאתר */
+html body:not(#_):not(#_):not(#_) #auth-modal .au-card.au-simple {
+  background: linear-gradient(180deg, #faf7f2 0%, #f5efe6 100%) !important;
+  color: #1c1917 !important;
+  padding: 20px 18px 18px !important;
+  gap: 10px !important;
+  max-width: 420px !important;
+  border-radius: 26px !important;
+  overflow-y: auto !important;
+}
+html.theme-dark body:not(#_):not(#_):not(#_) #auth-modal .au-card.au-simple {
+  background: linear-gradient(180deg, #16181f 0%, #101217 100%) !important;
+  color: #f4f4f5 !important;
+  border: 1px solid rgba(255, 255, 255, .09) !important;
+}
+.au-map-hero { display: flex; flex-direction: column; gap: 10px; padding-top: 8px; }
+.au-map-head { text-align: right; padding: 0 4px; }
+.au-map-kicker { display: flex; flex-direction: column; line-height: 1.02; font-size: 27px; font-weight: 900; letter-spacing: -.02em; }
+.au-map-kicker em { font-style: italic; color: #4d6b3c; font-family: Georgia, 'Times New Roman', serif; font-weight: 700; }
+html.theme-dark .au-map-kicker em { color: #86efac; }
+.au-map-kicker span { display: inline-flex; align-items: center; gap: 6px; }
+.au-sparks { width: 28px; height: 22px; flex: none; }
+.au-map-desc { margin: 6px 0 0; font-size: 13px; line-height: 1.45; color: #57534e; }
+html.theme-dark .au-map-desc { color: #a1a1aa; }
+.au-map-canvas {
+  position: relative;
+  height: 162px;
+  border-radius: 20px;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 45%, rgba(255, 255, 255, .92) 0%, rgba(246, 239, 228, .96) 100%);
+  border: 1.5px solid rgba(0, 0, 0, .06);
+  color: #78716c;
+}
+html.theme-dark .au-map-canvas {
+  background: radial-gradient(circle at 50% 45%, #1e212b 0%, #14161d 100%);
+  border-color: rgba(255, 255, 255, .08);
+  color: #94a3b8;
+}
+.au-map-bg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.au-stk {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #ffffff;
+  border: 2.5px solid #ffffff;
+  box-shadow: 0 5px 14px rgba(0, 0, 0, .16);
+  white-space: nowrap;
+}
+.au-stk-1 { top: 14px; right: 14px; background: #ef4444; transform: rotate(2deg); }
+.au-stk-2 { top: 20px; left: 14px; background: #f59e0b; transform: rotate(-3deg); }
+.au-stk-3 { bottom: 48px; right: 16px; background: #0ea5e9; transform: rotate(-2deg); }
+.au-stk-4 { bottom: 44px; left: 16px; background: #7c3aed; transform: rotate(2.5deg); }
+.au-stk-5 { bottom: 10px; left: 50%; transform: translateX(-50%) rotate(-1deg); background: #10b981; }
+html body:not(#_):not(#_):not(#_) #auth-modal .au-card.au-simple .au-title { font-size: 19px !important; margin: 2px 0 0 !important; text-align: center !important; }
+html body:not(#_):not(#_):not(#_) #auth-modal .au-card.au-simple .au-sub { display: none !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) #auth-modal .au-card.au-simple .au-title,
+html.theme-dark body:not(#_):not(#_):not(#_) #auth-modal .au-card.au-simple .au-mail-toggle,
+html.theme-dark body:not(#_):not(#_):not(#_) #auth-modal .au-card.au-simple .au-terms { color: #e4e4e7 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_) #auth-modal .au-card.au-simple .au-close { background: rgba(255, 255, 255, .14) !important; color: #ffffff !important; }
+
 /* מצב כהה: החלפת כל הטקסט והאייקונים האדומים ב-#m-top ללבן והצגת כפתור הבהירות */
 html.theme-dark body #m-top .mt-circ,
 html.theme-dark body #m-top .mt-circ *,
@@ -22674,3 +22741,16 @@ html body #m-top .mt-circ.mt-theme { display: grid !important; }
 html body .lib-theme { width: 36px; height: 36px; border-radius: 999px; border: 1px solid rgba(0, 0, 0, .12); background: #f3f4f6; color: #111827; display: grid; place-items: center; cursor: pointer; flex: none; transition: background .15s, border-color .15s; }
 html body .lib-theme svg { width: 17px; height: 17px; }
 html.theme-dark body .lib-theme { background: #26272c !important; border-color: #363840 !important; color: #ffffff !important; }
+
+/* תזמון מודעה בטופס הפרסום */
+.mkpub-sched-sw { display: flex; gap: 8px; margin-bottom: 6px; }
+.mkpub-sched-sw button { flex: 1; height: 34px; border-radius: 10px; border: 1px solid rgba(0, 0, 0, .12); background: transparent; color: inherit; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.mkpub-sched-sw button.on { background: #111827; color: #ffffff; border-color: #111827; }
+html.theme-dark .mkpub-sched-sw button { border-color: rgba(255, 255, 255, .16); color: #e4e4e7; }
+html.theme-dark .mkpub-sched-sw button.on { background: #ffffff; color: #111827; border-color: #ffffff; }
+.mkpub-sched-box { display: flex; flex-direction: column; gap: 8px; padding: 10px; border-radius: 12px; background: rgba(0, 0, 0, .035); margin-bottom: 4px; }
+.mkpub-sched-box[hidden] { display: none !important; }
+html.theme-dark .mkpub-sched-box { background: rgba(255, 255, 255, .05); }
+.mkpub-sched-presets { display: flex; gap: 6px; flex-wrap: wrap; }
+.mkpub-sched-presets button { padding: 5px 10px; border-radius: 999px; border: 1px solid rgba(0, 0, 0, .12); background: #ffffff; color: #111827; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+html.theme-dark .mkpub-sched-presets button { background: #27272a; border-color: rgba(255, 255, 255, .14); color: #f4f4f5; }

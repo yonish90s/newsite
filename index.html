@@ -51,9 +51,9 @@
   <!-- ספריית localforage לשמירת תמונות -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
   <!-- קישור לקובץ העיצוב החיצוני (עם פרמטר למניעת שמירה במטמון) -->
-  <link rel="stylesheet" href="./style.min.css?v=2469">
-  <link rel="stylesheet" id="mono-css" href="./mono.min.css?v=309">
-  <link rel="stylesheet" id="dark-css" data-href="./dark.min.css?v=662" media="not all">
+  <link rel="stylesheet" href="./style.min.css?v=2472">
+  <link rel="stylesheet" id="mono-css" href="./mono.min.css?v=312">
+  <link rel="stylesheet" id="dark-css" data-href="./dark.min.css?v=665" media="not all">
   <script>
     // קישור ישיר לפריט (#p/…, #s/…, #n/…) — מסמנים מיד, כדי שהכתובת לא תימחק לפני שהפריט נפתח
     window.__deepLinkOpening = /^#[psn]\//.test(location.hash || '');
@@ -870,6 +870,37 @@ html.theme-dark .pl-bar { background: #2a2f37; }
       </svg>
     </div>
 
+    <!-- איור מפה ומדבקות בסגנון עריכה מותאם לאתר -->
+    <div class="au-map-hero" aria-hidden="true">
+      <div class="au-map-head">
+        <div class="au-map-kicker">
+          <b>כל השכונה</b>
+          <span><em>במפה אחת</em><svg class="au-sparks" viewBox="0 0 36 28" fill="none"><path d="M4 22 14 14M10 26l16-6M6 12 10 3" stroke="#84cc16" stroke-width="3.2" stroke-linecap="round"/></svg></span>
+        </div>
+        <p class="au-map-desc">השכרה, יד 2, אחסון ודילים קרובים לבית — קונים, משכירים ומדברים ישירות.</p>
+      </div>
+      <div class="au-map-canvas">
+        <svg class="au-map-bg" viewBox="0 0 360 190" preserveAspectRatio="xMidYMid slice">
+          <rect width="360" height="190" fill="none"/>
+          <path d="M-10 42 Q 95 28 180 62 T 370 48" stroke="currentColor" stroke-opacity=".09" stroke-width="8" fill="none"/>
+          <path d="M-10 120 Q 110 95 210 132 T 370 110" stroke="currentColor" stroke-opacity=".09" stroke-width="6" fill="none"/>
+          <path d="M72 -10 L 96 200 M 185 -10 L 165 200 M 278 -10 L 298 200" stroke="currentColor" stroke-opacity=".07" stroke-width="5" fill="none"/>
+          <path d="M22 152 C 70 112, 130 148, 178 96 S 276 58, 330 82" stroke="#eab308" stroke-opacity=".42" stroke-width="2.5" stroke-dasharray="5 5" fill="none"/>
+          <path d="M126 62 C 154 44, 212 48, 224 78 C 234 104, 204 134, 166 128 C 134 122, 108 86, 126 62 Z" fill="#86efac" fill-opacity=".35"/>
+          <path d="M242 122 C 266 108, 304 114, 314 136 C 322 154, 294 174, 266 168 C 242 162, 228 138, 242 122 Z" fill="#93c5fd" fill-opacity=".32"/>
+          <g transform="translate(180 86)">
+            <path d="M0-20c-8 0-14 6-14 14 0 10 14 23 14 23s14-13 14-23c0-8-6-14-14-14z" fill="#ef4444" stroke="#ffffff" stroke-width="2.5"/>
+            <circle cx="0" cy="-6" r="4.5" fill="#ffffff"/>
+          </g>
+        </svg>
+        <span class="au-stk au-stk-1">📍 תל אביב</span>
+        <span class="au-stk au-stk-2">📷 השכרת ציוד</span>
+        <span class="au-stk au-stk-3">🏷️ יד 2 קרוב</span>
+        <span class="au-stk au-stk-4">📦 אחסון בטוח</span>
+        <span class="au-stk au-stk-5">💬 צ׳אט ישיר</span>
+      </div>
+    </div>
+
     <h3 class="au-title" id="au-title">כניסה או הרשמה</h3>
     <p class="au-sub" id="au-sub">המשיכו עם החשבון שלכם בלחיצה אחת</p>
 
@@ -1306,7 +1337,7 @@ html.theme-dark .pl-bar { background: #2a2f37; }
     </ul>
     <p>ההצטרפות חינם. מפרסמים מודעה או פרויקט בכמה שניות, ומקבלים הצעות מגולשים.</p>
   </section>
-  <script type="module" src="./script.min.js?v=2266"></script>
+  <script type="module" src="./script.min.js?v=2267"></script>
   <script defer src="./a11y.js?v=1"></script>
 </body>
 </html>

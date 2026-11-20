@@ -8349,8 +8349,9 @@ async function qpPublish() {
     region: qpData.region || '',
     offerType: qpData.offerType || '',
     categoryColor: isStory ? '#8b5cf6' : (qpData.isProduct ? '#7c3aed' : '#10b981'),
-    timestamp: new Date().toLocaleDateString('he-IL'),
-    createdAt: Date.now(),
+    timestamp: new Date(Number(qpData.publishAt) > Date.now() ? Number(qpData.publishAt) : Date.now()).toLocaleDateString('he-IL'),
+    createdAt: Number(qpData.publishAt) > Date.now() ? Number(qpData.publishAt) : Date.now(),
+    publishAt: Number(qpData.publishAt) > Date.now() ? Number(qpData.publishAt) : null,
     telegramUrl: telegram ? ('https://t.me/' + telegram) : '',
     emailUrl: email ? ('mailto:' + email) : '',
     isAdult: false,
@@ -33517,7 +33518,7 @@ function usedAll() {
   let raw = [];
   try {
     const m = src.match(/data-photos-json="([^"]*)"/);
-    raw = (m ? (JSON.parse(decodeURIComponent(m[1])) || []) : []).filter(x => x && x.id && x.title && !x.isAdult && x.approved !== false && !x.adminOnly && !mktExpired(x.createdAt)); } catch (e) {}
+    raw = (m ? (JSON.parse(decodeURIComponent(m[1])) || []) : []).filter(x => x && x.id && x.title && !x.isAdult && x.approved !== false && !x.adminOnly && !mktExpired(x.createdAt) && (!x.publishAt || Number(x.publishAt) <= now)); } catch (e) {}
   const real = raw.map(x => ({ id: 'sh_' + x.id, shId: x.id, kind: 'used', offer: x.offerType || x.category || 'מכירה', title: x.title, price: parseFloat(String(x.price || '').replace(/[^\d.]/g, '')) || 0, priceTxt: x.price || '',
     unitTxt: x.priceUnit || '', city: x.region || '', owner: x.author || '', uid: x.authorId || '', t: Number(x.createdAt) || 0, stock: Number.isFinite(Number(x.stock)) && x.stock !== null && x.stock !== '' ? Number(x.stock) : null, img: x.image || (Array.isArray(x.images) && x.images[0]) || '',
     bizName: String(x.bizName || '').slice(0, 60), video: '', hv: mkVideoParse(x.video), link: mktLinkUrl(x.link), pk: PROJ_KINDS[x.projectKind] ? x.projectKind : '', pd: PROJ_SUB[x.projectArea] ? x.projectArea : '',
@@ -33631,6 +33632,19 @@ function mkPubOpen() {
       <label class="mkpub-l" for="mkpub-stock">כמה יחידות יש לך במלאי? <small>(לא חובה)</small></label>
       <input id="mkpub-stock" class="mkpub-in" type="number" min="0" step="1" inputmode="numeric" placeholder="ריק = ללא הגבלה">
     </div>
+    <label class="mkpub-l">מתי להעלות את המודעה?</label>
+    <div class="mkpub-sched-sw" role="group" aria-label="תזמון פרסום">
+      <button type="button" class="on" data-s="now" onclick="mkPubSchedMode(false)">פרסם עכשיו</button>
+      <button type="button" data-s="later" onclick="mkPubSchedMode(true)">תזמון מועד</button>
+    </div>
+    <div class="mkpub-sched-box" id="mkpub-sched-box" hidden>
+      <div class="mkpub-sched-presets">
+        <button type="button" onclick="mkPubSchedPreset(1)">בעוד שעה</button>
+        <button type="button" onclick="mkPubSchedPreset('tom9')">מחר 09:00</button>
+        <button type="button" onclick="mkPubSchedPreset('tom18')">מחר 18:00</button>
+      </div>
+      <input id="mkpub-sched" class="mkpub-in" type="datetime-local" dir="ltr">
+    </div>
     <p class="mkpub-err" id="mkpub-err" hidden></p>
     <button type="button" class="mkpub-go" id="mkpub-go" onclick="mkPubSend()">פרסום</button>
     ${typeof isAdmin === 'function' && isAdmin() ? '' : '<small class="mkpub-note">המודעה תופיע בשוק אחרי אישור מנהל.</small>'}
@@ -33697,7 +33711,35 @@ function mkPubAuto() {
   if (ht) ht.innerHTML = tags.map(t => `<button type="button" class="mkpub-ht" onclick="mkPubTagOff('${artEsc(t)}')" title="הסרה">#${escHtml(t)}<i>×</i></button>`).join('');
 }
 function mkPubTagOff(t) { mkPub.tagOff = (mkPub.tagOff || []).concat(t); mkPubAuto(); }
-window.mkPubAuto = mkPubAuto; window.mkPubTagOff = mkPubTagOff;
+function _mkFmtDtLocal(ts) {
+  const d = new Date(ts);
+  const p = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+function mkPubSchedMode(on) {
+  mkPub.scheduled = !!on;
+  const box = document.getElementById('mkpub-sched-box');
+  if (box) box.hidden = !mkPub.scheduled;
+  document.querySelectorAll('#mkpub-modal .mkpub-sched-sw button').forEach(b => b.classList.toggle('on', (b.dataset.s === 'later') === mkPub.scheduled));
+  const inp = document.getElementById('mkpub-sched');
+  if (inp) {
+    inp.min = _mkFmtDtLocal(Date.now() + 60000);
+    if (mkPub.scheduled && !inp.value) inp.value = _mkFmtDtLocal(Date.now() + 3600000);
+  }
+  const go = document.getElementById('mkpub-go');
+  if (go) go.textContent = mkPub.scheduled ? 'תזמון מודעה' : 'פרסום';
+}
+function mkPubSchedPreset(kind) {
+  const inp = document.getElementById('mkpub-sched'); if (!inp) return;
+  const d = new Date();
+  if (kind === 1) d.setTime(Date.now() + 3600000);
+  else {
+    d.setDate(d.getDate() + 1);
+    d.setHours(kind === 'tom9' ? 9 : 18, 0, 0, 0);
+  }
+  inp.value = _mkFmtDtLocal(d.getTime());
+}
+window.mkPubAuto = mkPubAuto; window.mkPubTagOff = mkPubTagOff; window.mkPubSchedMode = mkPubSchedMode; window.mkPubSchedPreset = mkPubSchedPreset;
 async function mkPubSend() {
   const title = (document.getElementById('mkpub-title').value || '').trim(), price = Number(document.getElementById('mkpub-price').value);
   const err = document.getElementById('mkpub-err'), go = document.getElementById('mkpub-go');
@@ -33719,11 +33761,18 @@ async function mkPubSend() {
   if (proj && !PROJ_SUB[area]) return fail('צריך לבחור תחום לפרויקט');
   const stockTxt = proj ? '' : (document.getElementById('mkpub-stock') || {}).value || '', stock = stockTxt === '' ? null : Math.floor(Number(stockTxt));
   if (stock !== null && !(stock >= 0 && stock <= 100000)) return fail('כמות המלאי לא תקינה');
-  err.hidden = true; go.disabled = true; go.textContent = 'מפרסם…';
+  let publishAt = null;
+  if (mkPub.scheduled) {
+    const rawSched = (document.getElementById('mkpub-sched') || {}).value || '';
+    const ts = rawSched ? new Date(rawSched).getTime() : 0;
+    if (!Number.isFinite(ts) || ts <= Date.now() + 30000) return fail('יש לבחור תאריך ושעה עתידיים לתזמון המודעה');
+    publishAt = ts;
+  }
+  err.hidden = true; go.disabled = true; go.textContent = publishAt ? 'מתזמן…' : 'מפרסם…';
   // משתמשים במסלול הפרסום הקיים: ממלאים את נתוני השיחה ומפרסמים מאחורי הקלעים
   qpEnsureModal();
   document.getElementById('qp-messages').innerHTML = '';
-  qpData = { title, images: mkPub.images.slice(0, 5), summary: desc, communityId: null, type: 'photo', pageSection: 'secondhand', isProduct: true, tags: {}, tagIndex: 0, price: priceTxt === '' ? '' : String(price), offerType: proj ? 'פרויקט' : biz ? 'עסק' : 'מכירה', region: '', stock,
+  qpData = { title, images: mkPub.images.slice(0, 5), summary: desc, communityId: null, type: 'photo', pageSection: 'secondhand', isProduct: true, tags: {}, tagIndex: 0, price: priceTxt === '' ? '' : String(price), offerType: proj ? 'פרויקט' : biz ? 'עסק' : 'מכירה', region: '', stock, publishAt,
     link: proj || biz ? link : '', bizName, video: videoHv ? videoTxt.slice(0, 400) : '', projectKind: proj ? mkPub.pk : '', projectArea: proj ? area : '' };
   { const a = mkPubAutoCalc(); qpData.dept = a.dept; qpData.hashtags = a.tags; }
   await qpPublish();
@@ -33731,8 +33780,9 @@ async function mkPubSend() {
   const qm = document.getElementById('quick-publish-modal'); if (qm) qm.style.display = 'none';
   if (/✅/.test(out)) {
     mkPubClose();
-    glassBanner({ title: 'המודעה פורסמה', sub: typeof isAdmin === 'function' && isAdmin() ? title : 'תופיע בשוק אחרי אישור מנהל', icon: 'ok', ms: 2600 });
-  } else { go.disabled = false; go.textContent = 'פרסום'; fail(/מחר/.test(out) ? 'כבר העלית מודעה היום. אפשר להעלות מודעה אחת ביום.' : 'הפרסום נכשל. נסו שוב.'); }
+    const whenTxt = publishAt ? `תעלה ב־${new Date(publishAt).toLocaleString('he-IL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}` : (typeof isAdmin === 'function' && isAdmin() ? title : 'תופיע בשוק אחרי אישור מנהל');
+    glassBanner({ title: publishAt ? 'המודעה תוזמנה' : 'המודעה פורסמה', sub: whenTxt, icon: 'ok', ms: 3000 });
+  } else { go.disabled = false; go.textContent = publishAt ? 'תזמון מודעה' : 'פרסום'; fail(/מחר/.test(out) ? 'כבר העלית מודעה היום. אפשר להעלות מודעה אחת ביום.' : 'הפרסום נכשל. נסו שוב.'); }
 }
 Object.assign(window, { mkPubOpen, mkPubClose, mkPubAdd, mkPubDel, mkPubSend, mkPubType, mkPubKind });
 function mktPublish(sec) {
