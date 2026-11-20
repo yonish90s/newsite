@@ -22872,7 +22872,7 @@ html.theme-dark body:not(#_):not(#_):not(#_) .ig-act2 > .mk-a-join.on { color: #
 
 /* מובייל: הקטנת אזור הפרטים במודעה כך שהכול ייכנס בפריים הראשון בלי גלילה */
 @media (max-width: 700px) {
-  html body:not(#_):not(#_) .mk-watch { padding: 4px 10px 12px !important; }
+  html body:not(#_):not(#_) .mk-watch { padding: calc(64px + env(safe-area-inset-top, 0px)) 10px 12px !important; }
   html body:not(#_):not(#_) .mk-watch .mp.mk-pg { gap: 4px !important; }
   html body:not(#_):not(#_) .mk-watch .rn-det-gal.mp-gal { gap: 4px !important; }
   html body:not(#_):not(#_) .mk-watch .rn-det-img.mp-img { max-height: 36vh !important; min-height: 160px !important; border-radius: 12px !important; }
