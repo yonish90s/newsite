@@ -35324,16 +35324,13 @@ function rentDetailHTML(r) {
   const pill = (icon, label, act, cls, attr, extra) => `<button type="button" class="mk-pill-btn${cls ? ' ' + cls : ''}" title="${label}" aria-label="${label}"${attr || ''} onclick="${act}">${ic(icon)}<span>${label}</span>${extra || ''}</button>`;
   const stepperHTML = (r.kind === 'used' && !cartBtn) || mktSoldOut(r) ? '' : (() => {
     const curCart = cartBtn ? ((cartGet().find(x => x.id === 'mkt_' + r.id) || {}).qty || 0) : qty;
-    const hint = r.unit === 'kg' ? 'ק״ג' : unitName && r.kind !== 'used' ? 'לפי ' + unitName : '';
     const stepFn = cartBtn ? `rentCartStep('${artEsc(r.id)}', ` : `rentQtyStep('${artEsc(r.id)}', `;
     return `<div class="mk-stepper${curCart > 0 ? ' has-qty' : ''}">
-      <span class="mk-qsel-l">כמות</span>
       <div class="mk-stp-ctrl" role="group" aria-label="בחירת כמות">
         <button type="button" class="mk-stp-btn mk-stp-plus" onclick="${stepFn}1)" aria-label="הוסף">+</button>
         <b id="rn-qty-v" class="mk-stp-val">${curCart}</b>
         <button type="button" class="mk-stp-btn mk-stp-minus" onclick="${stepFn}-1)" aria-label="הפחת והסר"${curCart <= 0 ? ' disabled' : ''}>−</button>
       </div>
-      ${hint ? `<small class="mk-stp-hint">${escHtml(hint)}</small>` : ''}
     </div>`;
   })();
   const galActs = `<div class="mp-btns mk-acts mk-galacts mk-pills-row">

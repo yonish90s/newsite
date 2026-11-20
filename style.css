@@ -22438,11 +22438,10 @@ html body #m-sheet.pl-sheet .ms-head { padding: calc(10px + env(safe-area-inset-
 html body #m-sheet.pl-sheet .ms-title { font-size: 15px !important; font-weight: 700 !important; }
 html body #m-sheet.pl-sheet .ms-body { flex: 1 !important; overflow-y: auto !important; padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)) !important; }
 /* 1) כפתורי מודעה בסגנון ריבוע-גלולה מעוגל (ביקורות עם מספר, שמירה, הודעה, ריפוסט) */
-html body .mk-pills-row { display: flex !important; flex-wrap: nowrap !important; align-items: center !important; gap: 8px !important; overflow-x: auto !important; scrollbar-width: none !important; }
-html body .mk-pills-row::-webkit-scrollbar { display: none; }
-html body .mk-pills-row .mk-stepper { flex: none !important; flex-wrap: nowrap !important; margin-inline-end: 12px !important; }
-html body .mk-pill-btn { flex: none !important; white-space: nowrap !important; display: inline-flex !important; align-items: center !important; gap: 7px !important; height: 36px !important; padding: 0 13px !important; border-radius: 10px !important; border: 1px solid rgba(0, 0, 0, .08) !important; background: #f3f4f6 !important; color: #111827 !important; font: inherit !important; font-size: 13px !important; font-weight: 600 !important; cursor: pointer !important; transition: background .15s ease !important; }
-html body .mk-pill-btn svg { width: 17px !important; height: 17px !important; flex: none !important; }
+html body .mk-pills-row { display: flex !important; flex-wrap: nowrap !important; align-items: center !important; justify-content: space-between !important; gap: 4px !important; width: 100% !important; overflow: hidden !important; }
+html body .mk-pills-row .mk-stepper { flex: none !important; flex-wrap: nowrap !important; margin-inline-end: 4px !important; }
+html body .mk-pill-btn { flex: 0 1 auto !important; min-width: 0 !important; white-space: nowrap !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 3px !important; height: 22px !important; padding: 0 7px !important; border-radius: 7px !important; border: 1px solid rgba(0, 0, 0, .08) !important; background: #f3f4f6 !important; color: #111827 !important; font: inherit !important; font-size: 10px !important; font-weight: 600 !important; cursor: pointer !important; transition: background .15s ease !important; }
+html body .mk-pill-btn svg { width: 10px !important; height: 10px !important; flex: none !important; }
 html body .mk-pill-btn b { font-weight: 700 !important; color: #6b7280 !important; }
 html body .mk-pill-btn.on { background: #111827 !important; color: #ffffff !important; border-color: #111827 !important; }
 html.theme-dark body .mk-pill-btn { background: #27272a !important; color: #f4f4f5 !important; border-color: rgba(255, 255, 255, .08) !important; }
@@ -22666,7 +22665,7 @@ html.theme-dark body .mk-watch .mk-head, html.theme-dark body .mk-watch .mk-head
 .tg-pills { display: flex; align-items: center; gap: 8px; padding: 4px 16px 10px; overflow-x: auto; scrollbar-width: none; flex: none; }
 .tg-pills::-webkit-scrollbar { display: none; }
 .tg-pill { height: 32px; padding: 0 14px; border-radius: 999px; border: 1px solid rgba(0, 0, 0, .12); background: transparent; color: #111827; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; flex: none; }
-.tg-pill.on { background: #111827; color: #ffffff; border-color: #111827; }
+html body:not(#_):not(#_):not(#_) .tg-pills .tg-pill.on { background: #111827 !important; color: #ffffff !important; border-color: #111827 !important; }
 html.theme-dark .tg-pill { border-color: rgba(255, 255, 255, .16); color: #ffffff; }
 html.theme-dark .tg-pill.on { background: #27272f; border-color: #3f3f46; color: #ffffff; }
 html body .tg-list .tg-row { padding: 6px 16px !important; }
@@ -22833,16 +22832,16 @@ html.theme-dark .ua-item-info small { color: #a1a1aa; }
 .ua-guest { background: #ffffff; border-radius: 18px; padding: 24px; border: 1px solid rgba(0, 0, 0, .08); align-items: flex-start; }
 html.theme-dark .ua-guest { background: #181a20; border-color: rgba(255, 255, 255, .09); }
 
-/* בוחר כמות פלוס/מינוס (מתחיל מאפס) */
-.mk-stepper { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.mk-stp-ctrl { display: inline-flex; align-items: center; border: 1.5px solid rgba(0, 0, 0, .14); border-radius: 12px; overflow: hidden; background: #ffffff; height: 36px; }
+/* בוחר כמות פלוס/מינוס מוקטן בחצי (מתחיל מאפס) */
+.mk-stepper { display: flex; align-items: center; gap: 4px; flex-wrap: nowrap; }
+.mk-stp-ctrl { display: inline-flex; align-items: center; border: 1px solid rgba(0, 0, 0, .14); border-radius: 7px; overflow: hidden; background: #ffffff; height: 22px !important; }
 html.theme-dark .mk-stp-ctrl { border-color: rgba(255, 255, 255, .18); background: #1e2028; }
-.mk-stp-btn { width: 36px; height: 100%; border: 0; background: transparent; color: #111827; font: inherit; font-size: 18px; font-weight: 700; cursor: pointer; display: grid; place-items: center; transition: background .15s; }
+.mk-stp-btn { width: 20px !important; height: 100%; border: 0; background: transparent; color: #111827; font: inherit; font-size: 12px !important; font-weight: 700; cursor: pointer; display: grid; place-items: center; padding: 0 !important; transition: background .15s; }
 .mk-stp-btn:hover:not(:disabled) { background: rgba(0, 0, 0, .06); }
 .mk-stp-btn:disabled { opacity: .35; cursor: default; }
 html.theme-dark .mk-stp-btn { color: #ffffff; }
 html.theme-dark .mk-stp-btn:hover:not(:disabled) { background: rgba(255, 255, 255, .1); }
-.mk-stp-val { min-width: 34px; text-align: center; font-size: 15px; font-weight: 800; color: #111827; padding: 0 4px; }
+.mk-stp-val { min-width: 16px !important; text-align: center; font-size: 11px !important; font-weight: 800; color: #111827; padding: 0 2px !important; }
 html.theme-dark .mk-stp-val { color: #ffffff; }
 .mk-stepper.has-qty .mk-stp-ctrl { border-color: #7c3aed; }
 .mk-stp-hint { font-size: 12px; color: #6b7280; }
