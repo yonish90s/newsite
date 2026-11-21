@@ -34433,7 +34433,7 @@ function rentThumb(r, big) {
   const c = rentCatOf(r.cat), g = r.g || ['#1f2937', '#4b5563'];
   // בכרטיסים: עותק מוקטן (720px — חד גם במסך רטינה) של תמונות הדוגמה, פי 5 פחות משקל; בעמוד המודעה המלאה
   const src = !big && /^(\.\/)?rent\/[^/]+\.jpg/.test(r.img || '') ? String(r.img).replace(/rent\//, 'rent/t/') : r.img;
-  return r.img ? `<img src="${escHtml(src)}" alt="" loading="lazy" decoding="async">`
+  return r.img ? `<img src="${escHtml(src)}" alt="" loading="eager" decoding="async">`
     : `<span class="rn-ph" style="background:linear-gradient(140deg,${g[0]},${g[1]})"><b>${c.ic}</b>${big ? `<i>${escHtml(c.name)}</i>` : ''}</span>`;
 }
 function rentList() {
@@ -34451,9 +34451,9 @@ function rentList() {
 }
 // מחשב: מדפים בסגנון free3d — כותרת קצרה ומתחתיה הרבה תמונות בשורות של 6
 const rentWide = () => { try { return window.matchMedia('(min-width: 1100px)').matches; } catch (e) { return false; } };
-// גלילה אינסופית: מציגים מנה, והבאה נטענת כשמתקרבים לסוף הרשימה
-const RENT_BATCH = 21;
-let rentInfList = [], rentInfShown = 0, rentInfRaf = 0;
+// גלילה אינסופית: טעינה מוקדמת של מנות גדולות כדי שגלילה מהירה במובייל לא תיעצר על מסך ריק
+const RENT_BATCH = 60;
+let rentInfList = [], rentInfShown = 0, rentInfRaf = 0, rentInfObs = null;
 // טוען פעם אחת את דירוג המוכר לכל כרטיס חדש שעל המסך
 // שם מודעה ארוך שנחתך: מופיע "עוד" שפותח את השם המלא
 function mkTitleMore() {
@@ -34474,16 +34474,26 @@ function rentInfCheck() {
   rentInfRaf = 0;
   rentSgFill();
   const end = document.querySelector('.rent-page .rn-more-end');
-  if (!end || end.getBoundingClientRect().top > window.innerHeight + 700) return;
+  if (!end) return;
+  if (typeof IntersectionObserver !== 'undefined') {
+    if (!rentInfObs) {
+      rentInfObs = new IntersectionObserver(entries => {
+        if (entries.some(e => e.isIntersecting)) rentInfArm();
+      }, { rootMargin: '2200px 0px' });
+    }
+    rentInfObs.disconnect();
+    rentInfObs.observe(end);
+  }
+  if (end.getBoundingClientRect().top > window.innerHeight + 2200) return;
   const box = end.parentElement.querySelector('.mk-grid:not(.mk-gold .mk-grid)');
   if (!box) return;
   box.insertAdjacentHTML('beforeend', rentInfList.slice(rentInfShown, rentInfShown + RENT_BATCH).map(rentMiniHTML).join(''));
   rentInfShown += RENT_BATCH;
   rentSgFill();
-  if (rentInfShown >= rentInfList.length) end.remove();
+  if (rentInfShown >= rentInfList.length) { end.remove(); if (rentInfObs) rentInfObs.disconnect(); }
   else rentInfArm();
 }
-function rentInfArm() { if (!rentInfRaf) rentInfRaf = setTimeout(rentInfCheck, 80); }
+function rentInfArm() { if (!rentInfRaf) rentInfRaf = requestAnimationFrame(rentInfCheck); }
 document.addEventListener('scroll', rentInfArm, { capture: true, passive: true });   // הגלילה קורית בתוך אזור התוכן, לא בחלון
 window.addEventListener('resize', rentInfArm);
 // סמל סוג המודעה בכרטיס: שקית לקנייה, חצים במעגל להשאלה או שימוש זמני, חצים נגדיים להחלפה
