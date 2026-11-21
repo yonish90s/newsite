@@ -23834,4 +23834,46 @@ html body:not(#_):not(#_):not(#_) .dls-tabs button.on.has-new {
   html body:not(#_):not(#_):not(#_) .bb-revsum .bb-dist > div > i {
     height: 4px !important;
   }
+
+  /* הקטנת קופסת טווח חודשים בחצי במובייל */
+  html body:not(#_):not(#_):not(#_) .svd-range-box {
+    margin: 0 0 8px !important;
+    padding: 6px 10px !important;
+    border-radius: 10px !important;
+  }
+  html body:not(#_):not(#_):not(#_) .svd-range-top {
+    margin-bottom: 4px !important;
+    gap: 6px !important;
+  }
+  html body:not(#_):not(#_):not(#_) .svd-range-label {
+    font-size: 10px !important;
+  }
+  html body:not(#_):not(#_):not(#_) .svd-range-val {
+    font-size: 10px !important;
+    padding: 2px 7px !important;
+    border-radius: 6px !important;
+  }
+  html body:not(#_):not(#_):not(#_) .svd-dual {
+    height: 16px !important;
+  }
+  html body:not(#_):not(#_):not(#_) .svd-track {
+    height: 3.5px !important;
+  }
+  html body:not(#_):not(#_):not(#_) .svd-dual input[type="range"] {
+    height: 16px !important;
+  }
+  html body:not(#_):not(#_):not(#_) .svd-dual input[type="range"]::-webkit-slider-thumb {
+    width: 13px !important;
+    height: 13px !important;
+    border-width: 2px !important;
+  }
+  html body:not(#_):not(#_):not(#_) .svd-dual input[type="range"]::-moz-range-thumb {
+    width: 13px !important;
+    height: 13px !important;
+    border-width: 2px !important;
+  }
+  html body:not(#_):not(#_):not(#_) .svd-range-ends {
+    margin-top: 2px !important;
+    font-size: 9px !important;
+  }
 }
