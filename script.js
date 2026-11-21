@@ -28586,6 +28586,14 @@ async function offerRecord(o) {
     await set(ref(db, `website/offers_idx/${u.uid}/${id}`), true);
     await set(ref(db, `website/offers_idx/${o.toUid}/${id}`), true);
     offersMap[id] = Object.assign({ id }, rec);
+    if (o.itemId) {
+      try {
+        const m = typeof rentMarks === 'function' ? rentMarks() : {};
+        m['deal:' + o.itemId] = 1;
+        if (typeof rentMarksKey === 'function') localStorage.setItem(rentMarksKey(), JSON.stringify(m));
+        document.querySelectorAll(`.mk-a-deal[data-deal-id="${CSS.escape(String(o.itemId))}"], .mk-a-deal[data-deal-sh="${CSS.escape(String(o.itemId))}"]`).forEach(el => el.classList.add('on'));
+      } catch (e) {}
+    }
     offersBadge(); offersRerender();
   } catch (e) { console.warn('offer record failed', e); }
 }
@@ -34673,11 +34681,27 @@ function adJoinToggle(id) {
 }
 window.adJoinToggle = adJoinToggle;
 
+(function ensureBwIgGrad() {
+  try {
+    if (document.getElementById('bw-ig-grad-svg')) return;
+    const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    s.id = 'bw-ig-grad-svg';
+    s.setAttribute('width', '0'); s.setAttribute('height', '0');
+    s.setAttribute('aria-hidden', 'true');
+    s.style.cssText = 'position:absolute;width:0;height:0;pointer-events:none;overflow:hidden';
+    s.innerHTML = '<defs><linearGradient id="bw-ig-grad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#8b5cf6"/><stop offset="50%" stop-color="#ec4899"/><stop offset="100%" stop-color="#ef4444"/></linearGradient></defs>';
+    if (document.body) document.body.appendChild(s);
+    else document.addEventListener('DOMContentLoaded', () => document.body && document.body.appendChild(s), { once: true });
+  } catch (e) {}
+})();
 function rentHoverHTML(x) {
   const ic = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${d}"/></svg>`;
   const id = artEsc(x.id), sh = x.shId ? artEsc(x.shId) : '', stop = 'event.stopPropagation(); event.preventDefault(); ';
   const saved = x.shId ? typeof photoIsSavedLocal === 'function' && photoIsSavedLocal(x.shId) : rentMarked('save', x.id);
   const liked = x.shId ? typeof photoIsLikedLocal === 'function' && photoIsLikedLocal(x.shId) : rentMarked('like', x.id);
+  const shared = rentMarked('share', x.id);
+  const myUid = auth.currentUser ? auth.currentUser.uid : '';
+  const offered = rentMarked('deal', x.id) || (x.shId && rentMarked('deal', x.shId)) || (myUid && Object.values(typeof offersMap === 'object' ? offersMap : {}).some(o => o && o.fromUid === myUid && (o.itemId === x.id || (x.shId && o.itemId === x.shId))));
   const b = (label, d, act, on, attr, cls, extra) => `<span role="button" tabindex="0" class="${cls ? cls + ' ' : ''}${on ? 'on' : ''}" aria-label="${label}" title="${label}"${attr || ''} onclick="${stop}${act}">${ic(d)}${extra || ''}</span>`;
   const rk = rentCommentsKey(x), likeId = x.shId || rk, svKey = 'sv_' + rk, rpKey = 'rp_' + rk;
   subscribeReposts();
@@ -34688,8 +34712,8 @@ function rentHoverHTML(x) {
     ${b('לייק', 'M12 20.5l-1.4-1.3C5.4 14.5 2 11.4 2 7.6 2 4.5 4.4 2 7.5 2c1.7 0 3.4.8 4.5 2.1C13.1 2.8 14.8 2 16.5 2 19.6 2 22 4.5 22 7.6c0 3.8-3.4 6.9-8.6 11.6z', (sh ? `photoToggleLike('${sh}')` : `rentMark(this, 'like', '${id}'); likersWrite('${artEsc(likeId)}', this.classList.contains('on'))`), liked, ` data-people="like" data-pid="${escHtml(likeId)}" data-iid="${escHtml(x.id)}"` + (sh ? ` data-like="${escHtml(x.shId)}"` : ''), 'mk-a-like', cnt(Number(itemLikesData[likeId]) || '', ` data-likes-n="${escHtml(likeId)}"`))}
     ${b('תגובות', 'M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z', `igCommentsOpen('${artEsc(rk)}', '${artEsc(x.title || '')}')`, false, '', 'mk-a-cmt')}
     ${b('ריפוסט', 'M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3', `repostersOpen('${artEsc(rk)}')`, repostIsMine(rk), ` data-item="${escHtml(rk)}" data-people="rep" data-pid="${escHtml(rk)}"`, 'pti-repost mk-a-rep', cnt(repostCount(rk) || ''))}
-    ${b('שיתוף', 'M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z', `if(navigator.share){navigator.share({title:'${artEsc(x.title||'')}',url:location.href}).catch(()=>{});}else{navigator.clipboard.writeText(location.href);showCopyToast('הקישור הועתק');}`, false, '', 'mk-a-share')}
-    <span role="button" tabindex="0" class="mk-a-deal" aria-label="משא ומתן" title="משא ומתן — הצעת מחיר" onclick="${stop}mkCardHaggle(this, '${id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><circle cx="7.5" cy="7.5" r="1.2"/></svg></span>
+    ${b('שיתוף', 'M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z', `if(!this.classList.contains('on'))rentMark(this,'share','${id}');if(navigator.share){navigator.share({title:'${artEsc(x.title||'')}',url:location.href}).catch(()=>{});}else{navigator.clipboard.writeText(location.href);showCopyToast('הקישור הועתק');}`, shared, '', 'mk-a-share')}
+    <span role="button" tabindex="0" class="mk-a-deal${offered ? ' on' : ''}" data-deal-id="${escHtml(x.id)}"${x.shId ? ` data-deal-sh="${escHtml(x.shId)}"` : ''} aria-label="משא ומתן" title="משא ומתן — הצעת מחיר" onclick="${stop}mkCardHaggle(this, '${id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><circle cx="7.5" cy="7.5" r="1.2"/></svg></span>
     ${b('הצטרף', 'M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M8.5 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM20 8v6M17 11h6', `adJoinToggle('${id}')`, adIsJoined(x.id), ` data-join-btn="${escHtml(x.id)}"`, 'mk-a-join')}
     ${b('שמירה', 'M6 4h12v17l-6-4.5L6 21z', `mkCountBump('${artEsc(svKey)}', this.classList.contains('on') ? -1 : 1); ` + (sh ? `photoToggleSave('${sh}')` : `rentMark(this, 'save', '${id}')`), saved, sh ? ` data-save="${escHtml(x.shId)}"` : '', 'mk-a-save')}
   </span>`;

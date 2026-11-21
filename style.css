@@ -23441,3 +23441,23 @@ html.theme-dark .fd-top-row > .fd-sugg { border-color: rgba(255, 255, 255, 0.14)
 .tg-msg-cancel { background: #ffffff; color: #111827; }
 html.theme-dark .tg-msg-del { background: #1c1c1e; color: #f87171; border: 1px solid rgba(255, 255, 255, 0.08); }
 html.theme-dark .tg-msg-cancel { background: #1c1c1e; color: #f5f5f5; border: 1px solid rgba(255, 255, 255, 0.08); }
+
+
+/* צביעת גרדיאנט (סגול-ורוד-אדום) לאייקונים פעילים: לייק, שמירה, ריפוסט, שיתוף והצעה */
+html body .mk-act2 :is(.mk-a-like, .pti-like, .mk-a-save).on svg,
+html body .mk-pill-save.on svg {
+  fill: url(#bw-ig-grad) !important;
+  stroke: url(#bw-ig-grad) !important;
+}
+html body .mk-act2 :is(.mk-a-rep, .pti-repost, .mk-a-share, .mk-a-deal, .mk-a-join).on svg,
+html body .mk-pills-row .pti-repost.on svg {
+  stroke: url(#bw-ig-grad) !important;
+  fill: none !important;
+}
+html body .mk-act2 :is(.mk-a-like, .mk-a-rep, .pti-repost).on .pti-n {
+  background: linear-gradient(90deg, #8b5cf6, #ec4899, #ef4444) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  font-weight: 700 !important;
+}
