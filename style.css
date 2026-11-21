@@ -9782,7 +9782,19 @@ html.tg-open, html.tg-open body { overflow: hidden; }
 .tg-msg.mine .tg-bubble { background: linear-gradient(180deg, #111111, #111111); color: #ffffff; border-bottom-right-radius: 6px; }
 .tg-msg.theirs .tg-bubble { background: #f0f0f0; color: #262626; border-bottom-left-radius: 6px; }
 .tg-text { white-space: pre-wrap; }
-.tg-msg-time { margin-inline-start: auto; font-size: 11px; color: rgba(38, 38, 38, 0.55); direction: ltr; }
+.tg-msg-time { margin-inline-start: auto; font-size: 11px; color: rgba(38, 38, 38, 0.55); direction: ltr; display: inline-flex; align-items: center; gap: 3px; }
+.tg-msg.mine .tg-msg-time { color: rgba(255, 255, 255, 0.65); }
+.tg-tick { font-size: 11px; line-height: 1; letter-spacing: -2px; padding-inline-end: 2px; }
+.tg-tick.read { color: #38bdf8; font-weight: 700; }
+.tg-thread-sub.is-typing { color: #22c55e; font-weight: 600; }
+.tg-typing-bubble { padding: 10px 14px !important; display: inline-flex !important; align-items: center; gap: 4px; min-height: 32px; }
+.tg-typing-bubble i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: 0.45; display: block; animation: tgTypingDot 1.2s infinite ease-in-out; }
+.tg-typing-bubble i:nth-child(2) { animation-delay: 0.18s; }
+.tg-typing-bubble i:nth-child(3) { animation-delay: 0.36s; }
+@keyframes tgTypingDot {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-4px); opacity: 1; }
+}
 .tg-compose {
   flex: none; display: flex; align-items: center; gap: 8px;
   padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 0px)); background: #ffffff; border-top: 1px solid rgba(38, 38, 38, 0.06);

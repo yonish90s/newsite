@@ -19159,7 +19159,14 @@ let dmConvSeen = false;
 let dmConvSubscribed = false;
 let dmActiveConv = null;
 let dmThreadUnsub = null;
+let dmReadUnsub = null;
+let dmTypingUnsub = null;
 let dmThreadMessages = [];
+let dmOtherReadAt = 0;
+let dmOtherTyping = false;
+let dmTypingExpireTimer = 0;
+let dmTypingClearTimer = 0;
+let dmLastTypingSent = 0;
 let dmAdminUid = '';
 
 function dmConvId(a, b) { return [a, b].sort().join('__'); }
@@ -19497,19 +19504,85 @@ function dmPillRender() {
 window.dmPillRender = dmPillRender;
 try { dmPillRender(); onAuthStateChanged(auth, u => { if (u) { try { subscribeMyDMs(); } catch (e) {} } dmPillRender(); }); } catch (e) {}
 
+function dmStopTyping() {
+  if (dmTypingClearTimer) { clearTimeout(dmTypingClearTimer); dmTypingClearTimer = 0; }
+  dmLastTypingSent = 0;
+  const u = auth.currentUser;
+  if (u && dmActiveConv && dmActiveConv.convId) {
+    try { set(ref(db, `website/dms/${dmActiveConv.convId}/typing/${u.uid}`), null).catch(() => {}); } catch (e) {}
+  }
+}
+
+function dmCleanupThread() {
+  dmStopTyping();
+  if (dmThreadUnsub) { try { dmThreadUnsub(); } catch (e) {} dmThreadUnsub = null; }
+  if (dmReadUnsub) { try { dmReadUnsub(); } catch (e) {} dmReadUnsub = null; }
+  if (dmTypingUnsub) { try { dmTypingUnsub(); } catch (e) {} dmTypingUnsub = null; }
+  if (dmTypingExpireTimer) { clearTimeout(dmTypingExpireTimer); dmTypingExpireTimer = 0; }
+  dmOtherReadAt = 0;
+  dmOtherTyping = false;
+  dmActiveConv = null;
+}
+
+function dmHandleTyping() {
+  const u = auth.currentUser;
+  if (!u || !dmActiveConv || !dmActiveConv.convId) return;
+  const inp = document.getElementById('dm-input');
+  const hasText = !!(inp && inp.value.trim().length > 0);
+  if (!hasText) { dmStopTyping(); return; }
+  const now = Date.now();
+  if (now - dmLastTypingSent > 1800) {
+    dmLastTypingSent = now;
+    try { set(ref(db, `website/dms/${dmActiveConv.convId}/typing/${u.uid}`), now).catch(() => {}); } catch (e) {}
+  }
+  if (dmTypingClearTimer) clearTimeout(dmTypingClearTimer);
+  dmTypingClearTimer = setTimeout(() => { dmStopTyping(); }, 3500);
+}
+window.dmHandleTyping = dmHandleTyping;
+
+function dmUpdateTypingUI() {
+  const sub = document.querySelector('#dm-main .tg-thread-sub');
+  if (sub) {
+    sub.textContent = dmOtherTyping ? 'מקליד/ה…' : 'הודעה פרטית';
+    sub.classList.toggle('is-typing', !!dmOtherTyping);
+  }
+  const box = document.getElementById('dm-messages');
+  if (!box) return;
+  const old = box.querySelector('.tg-typing-row');
+  if (dmOtherTyping) {
+    const nearBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 90;
+    if (!old) {
+      const row = document.createElement('div');
+      row.className = 'tg-msg theirs tg-typing-row';
+      row.innerHTML = '<div class="tg-bubble tg-typing-bubble" aria-label="מקליד"><i></i><i></i><i></i></div>';
+      box.appendChild(row);
+    }
+    if (nearBottom) box.scrollTop = box.scrollHeight;
+  } else if (old) {
+    old.remove();
+  }
+}
+
+function dmRenderThread(scrollToBottom) {
+  const box = document.getElementById('dm-messages');
+  if (!box) return;
+  const nearBottom = scrollToBottom || (box.scrollHeight - box.scrollTop - box.clientHeight < 90);
+  box.innerHTML = dmMessagesHTML();
+  dmUpdateTypingUI();
+  if (nearBottom) box.scrollTop = box.scrollHeight;
+}
+
 function closeMessages() {
   const m = document.getElementById('messages-modal');
   if (m) { m.classList.remove('show'); setTimeout(() => { if (!m.classList.contains('show')) m.style.display = 'none'; }, 220); }
   document.documentElement.classList.remove('tg-open');
-  if (dmThreadUnsub) { dmThreadUnsub(); dmThreadUnsub = null; }
-  dmActiveConv = null;
+  dmCleanupThread();
 }
 window.closeMessages = closeMessages;
 
 // חזרה מהשיחה לרשימת השיחות
 function dmShowList() {
-  if (dmThreadUnsub) { dmThreadUnsub(); dmThreadUnsub = null; }
-  dmActiveConv = null;
+  dmCleanupThread();
   dmRefreshList();
   const panel = document.querySelector('.tg-panel');
   if (panel) panel.classList.remove('tg-show-thread');
@@ -19533,7 +19606,7 @@ async function dmShowLoadingThread(name) {
 
 // פתיחת שיחה: מחליפה את הרשימה (כמו בטלגרם)
 async function dmOpenConv(convId, otherUid, otherName, prefill) {
-  if (dmThreadUnsub) { dmThreadUnsub(); dmThreadUnsub = null; }
+  dmCleanupThread();
   // אם חלון ההודעות לא פתוח — פותחים אותו קודם
   if (!document.getElementById('dm-main')) await openMessages();
   dmActiveConv = { convId, otherUid, otherName };
@@ -19553,17 +19626,48 @@ async function dmOpenConv(convId, otherUid, otherName, prefill) {
     <div class="tg-attach-prev" id="dm-attach-prev"></div>
     <div class="tg-compose">
       <button type="button" class="tg-plus" onclick="dmOpenAttach()" aria-label="צירוף תמונה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
-      <textarea id="dm-input" rows="1" maxlength="1000" placeholder="הודעה" autocomplete="off" oninput="dmAutoGrow(this)" onkeydown="if(event.key==='Enter' && !event.shiftKey && window.innerWidth > 768){event.preventDefault(); dmSendCurrent();}"></textarea>
+      <textarea id="dm-input" rows="1" maxlength="1000" placeholder="הודעה" autocomplete="off" oninput="dmAutoGrow(this); dmHandleTyping()" onkeydown="if(event.key==='Enter' && !event.shiftKey && window.innerWidth > 768){event.preventDefault(); dmSendCurrent();}"></textarea>
       <button type="button" class="tg-send" onclick="dmSendCurrent()" aria-label="שליחה"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.4 20.4 21 12 3.4 3.6 3.4 10l12.6 2-12.6 2z"/></svg></button>
     </div>`;
-  // מסמנים כנקרא
-  const u = auth.currentUser;
-  if (u) { try { update(ref(db, `website/user_dms/${u.uid}/${convId}`), { unread: false }).catch(() => {}); } catch (e) {} }
+  const markReadNow = () => {
+    const u = auth.currentUser;
+    if (!u || !dmActiveConv || dmActiveConv.convId !== convId) return;
+    try { update(ref(db, `website/user_dms/${u.uid}/${convId}`), { unread: false }).catch(() => {}); } catch (e) {}
+    try { set(ref(db, `website/dms/${convId}/read/${u.uid}`), Date.now()).catch(() => {}); } catch (e) {}
+  };
+  markReadNow();
+  if (otherUid) {
+    dmReadUnsub = onValue(ref(db, `website/dms/${convId}/read/${otherUid}`), snap => {
+      const ts = Number(snap.val()) || 0;
+      if (ts !== dmOtherReadAt) {
+        dmOtherReadAt = ts;
+        dmRenderThread(false);
+      }
+    });
+    dmTypingUnsub = onValue(ref(db, `website/dms/${convId}/typing/${otherUid}`), snap => {
+      const ts = Number(snap.val()) || 0;
+      const age = Date.now() - ts;
+      if (dmTypingExpireTimer) { clearTimeout(dmTypingExpireTimer); dmTypingExpireTimer = 0; }
+      const active = ts > 0 && age < 6000;
+      if (active !== dmOtherTyping) {
+        dmOtherTyping = active;
+        dmUpdateTypingUI();
+      }
+      if (active) {
+        dmTypingExpireTimer = setTimeout(() => {
+          dmOtherTyping = false;
+          dmUpdateTypingUI();
+        }, Math.max(200, 6000 - age));
+      }
+    });
+  }
+  let initialLoad = true;
   dmThreadUnsub = onValue(ref(db, `website/dms/${convId}/messages`), snap => {
     const val = snap.val() || {};
     dmThreadMessages = Object.values(val).sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
-    const box = document.getElementById('dm-messages');
-    if (box) { box.innerHTML = dmMessagesHTML(); box.scrollTop = box.scrollHeight; }
+    dmRenderThread(initialLoad);
+    initialLoad = false;
+    markReadNow();
   }, () => {
     const box = document.getElementById('dm-messages');
     if (box) box.innerHTML = '<div class="tg-empty">לא ניתן לטעון את השיחה כרגע</div>';
@@ -19584,8 +19688,10 @@ function dmMessagesHTML() {
     const day = m.timestamp ? new Date(m.timestamp).toLocaleDateString('he-IL', { day: 'numeric', month: 'long' }) : '';
     const sep = day && day !== lastDay ? `<div class="tg-day"><span>${escHtml(day)}</span></div>` : '';
     lastDay = day || lastDay;
+    const isRead = mine && dmOtherReadAt > 0 && (m.timestamp || 0) <= dmOtherReadAt;
+    const tickHTML = mine ? ` <span class="tg-tick${isRead ? ' read' : ''}" title="${isRead ? 'נקרא' : 'נשלח'}">${isRead ? '✓✓' : '✓'}</span>` : '';
     return `${sep}<div class="tg-msg ${mine ? 'mine' : 'theirs'}">
-      <div class="tg-bubble${m.img ? ' has-img' : ''}">${m.img && /^data:image\/(jpeg|png|webp|gif);base64,/.test(m.img) ? `<img class="tg-img" src="${escHtml(m.img)}" alt="" loading="lazy" onclick="dmViewImg(this.src)">` : ''}${m.text ? `${dmRichHTML(m.text)}` : ''}<span class="tg-msg-time">${dmTime(m.timestamp)}${mine ? ' ✓' : ''}</span></div>
+      <div class="tg-bubble${m.img ? ' has-img' : ''}">${m.img && /^data:image\/(jpeg|png|webp|gif);base64,/.test(m.img) ? `<img class="tg-img" src="${escHtml(m.img)}" alt="" loading="lazy" onclick="dmViewImg(this.src)">` : ''}${m.text ? `${dmRichHTML(m.text)}` : ''}<span class="tg-msg-time">${dmTime(m.timestamp)}${tickHTML}</span></div>
     </div>`;
   }).join('');
 }
@@ -19600,6 +19706,7 @@ async function dmSendCurrent() {
   if (!text && !imgs.length) return;
   inp.value = '';
   dmAutoGrow(inp);
+  dmStopTyping();
   window.__dmAttach = []; dmRenderAttach();
   const { convId, otherUid, otherName } = dmActiveConv;
   const now = Date.now();

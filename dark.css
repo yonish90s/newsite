@@ -1300,6 +1300,7 @@ html.theme-dark .tg-day span { background: rgba(255, 255, 255, 0.072) !important
 html.theme-dark .tg-msg.mine .tg-bubble { background: linear-gradient(180deg, #121212, #121212) !important; }
 html.theme-dark .tg-msg.theirs .tg-bubble { background: #000000 !important; color: #f5f5f5 !important; }
 html.theme-dark .tg-msg-time { color: rgba(236, 238, 241, 0.55) !important; }
+html.theme-dark .tg-tick.read { color: #ffffff !important; }
 html.theme-dark .tg-compose { background: #000000 !important; border-top: 1px solid rgba(255, 255, 255, 0.048) !important; }
 html.theme-dark .tg-compose input { border: 1px solid rgba(255, 255, 255, 0.08) !important; background: #000000 !important; color: #f5f5f5 !important; }
 html.theme-dark .tg-send { background: #121212 !important; }
