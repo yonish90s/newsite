@@ -23574,3 +23574,39 @@ html body:not(#_):not(#_) .fd-top-row > .st-bar .st-item.st-sugg .st-ring {
 html.theme-dark #m-top .mt-count.is-cart-sum {
   color: #4ade80 !important;
 }
+
+
+/* פרופיל משתמש: ריווח לסטטיסטיקות + כפתורי מעקב והודעה אחידים עם מסגרת לבנה */
+html body:not(#_):not(#_):not(#_):not(#_) .ig-prof .ig-p-stats {
+  margin-top: 12px !important;
+  gap: 18px !important;
+}
+html body:not(#_):not(#_):not(#_):not(#_) .ig-prof .ig-p-acts {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 10px !important;
+  margin-top: 14px !important;
+}
+html body:not(#_):not(#_):not(#_):not(#_) .ig-prof .ig-p-acts :is(.ig-follow, .ig-msg-btn) {
+  width: 100% !important;
+  height: 38px !important;
+  min-height: 38px !important;
+  padding: 0 12px !important;
+  font-family: inherit !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  border-radius: 10px !important;
+  border: 1.5px solid #111111 !important;
+  background: transparent !important;
+  color: #111111 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+}
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .ig-prof .ig-p-acts :is(.ig-follow, .ig-msg-btn) {
+  border-color: #ffffff !important;
+  color: #ffffff !important;
+  background: transparent !important;
+}

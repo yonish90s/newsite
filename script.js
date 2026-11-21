@@ -16427,7 +16427,6 @@ function igCardHTML(o) {
         </div>
       </div>
     </div>
-    <div class="ig-p-bio"><span>${typeof formatViews === 'function' ? formatViews(o.views || 0) : (o.views || 0)} צפיות בפרופיל</span></div>
     ${o.isOwn ? `<div class="ig-p-acts"><button type="button" class="ig-dash-btn" onclick="openUserAnalytics()">📊 לוח בקרה וניתוח נתונים</button></div>` : `<div class="ig-p-acts">${followBtn}${msgBtn}</div>`}
   </section>`;
 }
