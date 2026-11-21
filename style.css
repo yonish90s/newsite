@@ -23655,3 +23655,12 @@ html.theme-dark .svd-range-val {
 }
 .svd-range-ends { display: flex; justify-content: space-between; margin-top: 6px; font-size: 11px; color: #6b7280; }
 html.theme-dark .svd-range-ends { color: #a1a1aa; }
+
+
+/* סינון תאריכים בעמוד הבית */
+.lib-page .home-date-tabs,
+.lib-page .svd-range-box {
+  max-width: 620px;
+  margin-inline: auto;
+}
+.lib-page .home-date-tabs { margin-bottom: 10px; }

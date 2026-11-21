@@ -34877,6 +34877,68 @@ function twPostHTML(r) {
   </article>`;
 }
 window.setHomeView = setHomeView; window.homeViewGet = homeViewGet;
+let homeDateTab = 'all', homeDateFrom = 6, homeDateTo = 12;
+function homeDateFilter(list) {
+  if (homeDateTab === 'all') return list;
+  const now = Date.now();
+  const lo = Math.min(homeDateFrom, homeDateTo), hi = Math.max(homeDateFrom, homeDateTo);
+  const startMs = homeDateTab === 'week' ? now - 7 * 864e5
+    : homeDateTab === 'month' ? now - 30 * 864e5
+    : svdMonthBounds(lo).start;
+  const endMs = homeDateTab === 'range' ? svdMonthBounds(hi).end : Infinity;
+  return list.filter(r => {
+    const t = Number(r && r.t) || now;
+    return t >= startMs && t <= endMs;
+  });
+}
+function homeDateBarHTML() {
+  const tab = (id, label) => `<button type="button" class="${homeDateTab === id ? 'on' : ''}" onclick="homeDateSetTab('${id}')">${label}</button>`;
+  let rangeHTML = '';
+  if (homeDateTab === 'range') {
+    const lo = Math.min(homeDateFrom, homeDateTo), hi = Math.max(homeDateFrom, homeDateTo);
+    const bLo = svdMonthBounds(lo), bHi = svdMonthBounds(hi);
+    const p1 = (lo / 12) * 100, p2 = (hi / 12) * 100;
+    rangeHTML = `<div class="svd-range-box">
+      <div class="svd-range-top">
+        <span class="svd-range-label">טווח חודשים</span>
+        <b class="svd-range-val" id="home-range-val">${escHtml(bLo.label)} — ${escHtml(bHi.label)}</b>
+      </div>
+      <div class="svd-dual" dir="ltr">
+        <div class="svd-track"><div class="svd-fill" id="home-fill" style="left:${p1}%;width:${Math.max(0, p2 - p1)}%"></div></div>
+        <input type="range" min="0" max="12" step="1" value="${homeDateFrom}" aria-label="מחודש" oninput="homeDateRangeInput(0, this.value)">
+        <input type="range" min="0" max="12" step="1" value="${homeDateTo}" aria-label="עד חודש" oninput="homeDateRangeInput(1, this.value)">
+      </div>
+      <div class="svd-range-ends" dir="ltr"><small>${escHtml(svdMonthBounds(0).label)}</small><small>${escHtml(svdMonthBounds(12).label)}</small></div>
+    </div>`;
+  }
+  return `<nav class="dls-tabs svd-tabs home-date-tabs">${tab('all', 'הכל')}${tab('week', 'השבוע')}${tab('month', 'החודש')}${tab('range', 'לפי חודשים')}</nav>${rangeHTML}`;
+}
+function homeDateFeedHTML(baseList) {
+  const filtered = homeDateFilter(baseList).slice().sort((a, b) => libScore(b) - libScore(a)).slice(0, 40);
+  return filtered.length ? filtered.map(twPostHTML).join('') : '<div class="rn-empty">אין מודעות בטווח התאריכים שנבחר.</div>';
+}
+function homeDateSetTab(t) {
+  homeDateTab = t;
+  const libMain = document.querySelector('.lib-page .lib-main');
+  if (libMain) { libMain.innerHTML = libHTML(); if (typeof avatarHydrate === 'function') avatarHydrate(libMain); }
+}
+function homeDateRangeInput(which, val) {
+  const v = Math.max(0, Math.min(12, Math.round(Number(val) || 0)));
+  if (which === 0) homeDateFrom = v; else homeDateTo = v;
+  const lo = Math.min(homeDateFrom, homeDateTo), hi = Math.max(homeDateFrom, homeDateTo);
+  const fill = document.getElementById('home-fill');
+  if (fill) { fill.style.left = (lo / 12) * 100 + '%'; fill.style.width = ((hi - lo) / 12) * 100 + '%'; }
+  const valEl = document.getElementById('home-range-val');
+  if (valEl) valEl.textContent = `${svdMonthBounds(lo).label} — ${svdMonthBounds(hi).label}`;
+  const box = document.getElementById('home-tw-list');
+  if (box && typeof mktAll === 'function') {
+    const base = mktAll().filter(r => r && r.title && !r.isAdult && !(r.hv && ['rg', 'ph', 'er'].includes(r.hv.p)));
+    const all = base.filter(r => (libF.dept === 'all' || r.dept === libF.dept) && LIB_TYPES[libF.type].f(r));
+    box.innerHTML = homeDateFeedHTML(all);
+    if (typeof avatarHydrate === 'function') avatarHydrate(box);
+  }
+}
+Object.assign(window, { homeDateSetTab, homeDateRangeInput });
 function libHTML() {
   const base = mktAll().filter(r => r && r.title && !r.isAdult && !(r.hv && ['rg', 'ph', 'er'].includes(r.hv.p)));   // הספרייה לא מציגה מודעות עם הטמעות מאתרי מבוגרים
   const all = base.filter(r => (libF.dept === 'all' || r.dept === libF.dept) && LIB_TYPES[libF.type].f(r));
@@ -34906,7 +34968,7 @@ function libHTML() {
   const depts = typeof MKT_DEPTS !== 'undefined' ? MKT_DEPTS.filter(d => base.some(r => r.dept === d.id)) : [];
   const circHTML = depts.length ? `<nav class="lib-circs" aria-label="מחלקות">${depts.map(d => `<button type="button" class="lib-circ" onclick="libDept('${d.id}')"><span><svg viewBox="0 0 64 64" fill="none" stroke="#111" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">${(typeof DEPT_ART !== 'undefined' && (DEPT_ART[d.id] || DEPT_ART.other)) || ''}</svg></span><b>${escHtml(d.name)}</b></button>`).join('')}</nav>` : '';
   return `<header class="lib-head"><span class="lib-brand"><img src="./logo.png?v=2" alt=""><b>ספרייה</b></span><button type="button" class="lib-theme" onclick="toggleSiteTheme()" title="בהיר / כהה" aria-label="בהיר / כהה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg></button><button type="button" class="lib-cta" onclick="mkPubOpen()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>פרסום מודעה</button></header>
-    ${homeViewGet() === 'twitter' ? `<div class="tw-feed-list">${all.slice().sort((a, b) => libScore(b) - libScore(a)).slice(0, 40).map(twPostHTML).join('')}</div>` : `
+    ${homeViewGet() === 'twitter' ? `${homeDateBarHTML()}<div class="tw-feed-list" id="home-tw-list">${homeDateFeedHTML(all)}</div>` : `
     ${filtered ? '' : heroHTML}${libBarHTML(depts)}
     ${filtered ? `<section class="lib-row lib-res"><header><h2>${all.length} תוצאות</h2></header>${all.length ? `<div class="lib-grid">${all.slice().sort(LIB_SORTS[libF.sort].f).map(r => libCardHTML(r)).join('')}</div>` : '<div class="lib-empty">אין מודעות שמתאימות לסינון הזה</div>'}</section>` : `
     ${top.length ? libRowHTML('lib-top', 'המובילים', topHTML) : ''}
