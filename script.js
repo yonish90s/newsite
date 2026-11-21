@@ -19499,6 +19499,7 @@ function dmPillRender() {
     ${recent.length ? `<span class="dm-pill-avs">${recent.map(c => `<span class="dm-pill-av" data-av-uid="${escHtml(c.otherUid)}">${dmAvatarHTML(c.otherName || '?', c.otherUid)}</span>`).join('')}</span>` : ''}
     ${n ? `<b class="dm-pill-badge">${n}</b>` : ''}`;
   if (typeof avatarHydrate === 'function') avatarHydrate(el);
+  try { if (typeof mtSync === 'function') mtSync(); } catch (e) {}
 }
 window.dmPillRender = dmPillRender;
 try { dmPillRender(); onAuthStateChanged(auth, u => { if (u) { try { subscribeMyDMs(); } catch (e) {} } dmPillRender(); }); } catch (e) {}
@@ -37992,7 +37993,7 @@ Object.assign(window, { phoneVerifyOpen, pvSend, pvBack, pvClose });
         </div>
         <button type="button" class="mt-circ mt-me" onclick="mtMe()" aria-label="המשתמש שלי"></button>
       </div>
-      <nav class="mt-tabs"><button type="button" data-t="home" onclick="mtTab('home')">בית</button><button type="button" data-t="feed" onclick="mtTab('feed')">במעקב</button><button type="button" data-t="deals" class="mt-dls" onclick="mtTab('deals')">עסקאות<i class="mt-apv-n mt-dls-n"></i></button><button type="button" data-t="dash" onclick="mtTab('dash')">לוח בקרה</button><button type="button" data-t="apv" class="mt-apv" hidden onclick="mtTab('apv')">אישור<i class="mt-apv-n"></i></button><span class="mt-count" aria-live="polite"></span></nav>`;
+      <nav class="mt-tabs"><button type="button" data-t="home" onclick="mtTab('home')">בית</button><button type="button" data-t="feed" onclick="mtTab('feed')">במעקב</button><button type="button" data-t="deals" class="mt-dls" onclick="mtTab('deals')">עסקאות<i class="mt-apv-n mt-dls-n"></i></button><button type="button" data-t="dash" onclick="mtTab('dash')">לוח בקרה</button><button type="button" data-t="saved" onclick="mtTab('saved')">שמורים</button><button type="button" data-t="apv" class="mt-apv" hidden onclick="mtTab('apv')">אישור<i class="mt-apv-n"></i></button><span class="mt-count" aria-live="polite"></span></nav>`;
     document.body.appendChild(el);
     document.documentElement.classList.add('has-mtop');
     mtSync();
@@ -38060,6 +38061,10 @@ function mtSync() {
   el.querySelectorAll('.mt-tabs button').forEach(b => b.classList.toggle('on', (b.dataset.t === 'feed' && feed) || (b.dataset.t === 'home' && home) || (b.dataset.t === 'apv' && apv) || (b.dataset.t === 'deals' && dls) || (b.dataset.t === 'dash' && dash)));
   dlsTabPaint();
   apvTabPaint();
+  const cartEl = el.querySelector('.mt-cart');
+  if (cartEl) cartEl.classList.toggle('has-items', (typeof cartCount === 'function' ? cartCount() : 0) > 0);
+  const dmEl = el.querySelector('.mt-dm');
+  if (dmEl) dmEl.classList.toggle('has-unread', (typeof dmUnreadCount === 'function' ? dmUnreadCount() : 0) > 0);
   const c = el.querySelector('.mt-count');
   if (c) {
     const sum = typeof cartSum === 'function' ? Math.round(cartSum()) : 0;
@@ -38083,6 +38088,7 @@ function mtTab(t) {
   else if (t === 'apv') { apvOpen(); }
   else if (t === 'deals') { dlsOpen(); }
   else if (t === 'dash') { openUserAnalytics(); }
+  else if (t === 'saved') { if (typeof openSavedModal === 'function') openSavedModal(); }
   else { if (typeof fbReset === 'function' && typeof rentUI !== 'undefined') Object.assign(rentUI, { open: null, seller: null }); goToHomePage(); }
   try { window.scrollTo({ top: 0 }); } catch (e) {}
   setTimeout(mtSync, 200);

@@ -23454,13 +23454,6 @@ html body:not(#_):not(#_):not(#_):not(#_) #mainContent .mk-pills-row .pti-repost
   stroke: url(#bw-ig-grad) !important;
   fill: none !important;
 }
-html body:not(#_):not(#_):not(#_):not(#_) #mainContent .mk-act2 :is(.mk-a-like, .mk-a-rep, .pti-repost).on .pti-n {
-  background: linear-gradient(90deg, #8b5cf6, #ec4899, #ef4444) !important;
-  -webkit-background-clip: text !important;
-  background-clip: text !important;
-  -webkit-text-fill-color: transparent !important;
-  font-weight: 700 !important;
-}
 
 
 /* כפתור "לתשלום" בעגלה גדול פי 2 על כל רוחב המסך */
@@ -23609,4 +23602,12 @@ html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .ig-prof .ig-p-acts :is(.ig
   border-color: #ffffff !important;
   color: #ffffff !important;
   background: transparent !important;
+}
+
+
+/* צביעת אייקון העגלה כשיש פריטים ואייקון ההודעות כשיש הודעה שלא נקראה */
+html body:not(#_):not(#_):not(#_):not(#_) #m-top .mt-cart.has-items svg,
+html body:not(#_):not(#_):not(#_):not(#_) #m-top .mt-dm.has-unread svg {
+  stroke: url(#bw-ig-grad) !important;
+  color: #ec4899 !important;
 }
