@@ -19001,8 +19001,7 @@ async function mktFeedOpen() {
   const topRowHTML = `<div class="fd-top-row${suggHTML ? ' has-sugg' : ''}">${typeof storiesBarHTML === 'function' ? storiesBarHTML() : ''}${suggHTML}</div>`;
   mainContent.innerHTML = `<div class="fd-page">
     ${topRowHTML}
-    <div class="pf-tabs2" role="tablist"><button type="button" class="on" onclick="fdTab(this, 'all')">הכל</button><button type="button" onclick="fdTab(this, 'ups')">העלאות <small>${ups.length}</small></button><button type="button" onclick="fdTab(this, 'reps')">ריפוסטים <small>${reps2.length}</small></button>${guest ? '' : `<button type="button" onclick="fdTab(this, 'me')">שלי <small>${mine.length}</small></button>`}</div>
-    <div data-fd="all">${theirs.length ? upsHTML + repHTML : cards([])}</div><div data-fd="ups" hidden>${upsHTML}</div><div data-fd="reps" hidden>${repHTML}</div><div data-fd="me" hidden>${cards(mine)}</div></div>`;
+    <div data-fd="all">${theirs.length ? upsHTML + repHTML : cards([])}</div></div>`;
   if (typeof avatarHydrate === 'function') avatarHydrate(mainContent);
 }
 function fdTab(btn, t) {
