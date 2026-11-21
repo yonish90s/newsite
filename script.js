@@ -33298,8 +33298,8 @@ function cartBadge() {
 }
 function cartRender() {
   const box = document.getElementById('cart-panel'); if (!box) return;
-  const tabs = box.querySelector('.cart-tabs'), rn = rentListGet().length, cn = cartGet().length;
-  if (tabs) tabs.innerHTML = `<button type="button" class="${cartTab === 'cart' ? 'on' : ''}" onclick="cartSetTab('cart')">סל קניות${cn ? ` (${cn})` : ''}</button><button type="button" class="${cartTab === 'rent' ? 'on' : ''}" onclick="cartSetTab('rent')">השכרות${rn ? ` (${rn})` : ''}</button>`;
+  const tabs = box.querySelector('.cart-tabs');
+  if (tabs) tabs.remove();
   if (cartTab === 'rent') return rentListRender(box);
   const list = cartCatalog(); const c = cartGet();
   const lines = c.map(x => ({ ...x, p: list.find(p => p.id === x.id) })).filter(x => x.p);
@@ -33331,7 +33331,7 @@ function cartOpen(tab) {
     el = document.createElement('div'); el.id = 'cart-panel';
     el.innerHTML = `<div class="ask-backdrop" onclick="cartClose()"></div><section class="ask-card cart-card" role="dialog" aria-label="העגלה שלי">
       <header class="ask-head"><b>העגלה שלי</b><button type="button" class="ask-hb" onclick="cartClose(); myShopOpen('hist')" title="הקניות שלי" aria-label="ההזמנות שלי"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg></button><button type="button" class="ask-hb" onclick="cartClose()" aria-label="סגירה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header>
-      <div class="cart-tabs" role="tablist"></div><div class="cart-body ask-msgs"></div><div class="cart-foot"></div></section>`;
+      <div class="cart-body ask-msgs"></div><div class="cart-foot"></div></section>`;
     document.body.appendChild(el);
   }
   cartRender();
