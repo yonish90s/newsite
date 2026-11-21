@@ -83,7 +83,7 @@ def map_fg(c):
 def map_border(c):
     r, g, b, a = parse(c)
     L, C = lum(r, g, b), chroma(r, g, b)
-    if is_pink(r, g, b): return ORANGE if a >= 1 else f'rgba(228, 32, 43, {fa(a)})'
+    if is_pink(r, g, b): return '#ffffff' if a >= 1 else f'rgba(255, 255, 255, {fa(a)})'   # מסגרת בצבע הדגש → לבנה, לא אדומה
     if C > 0.16: return None
     if a < 1:
         if L < 0.35: return f'rgba(255, 255, 255, {fa(min(1, a * 0.8))})'
