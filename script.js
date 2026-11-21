@@ -33163,11 +33163,14 @@ function rentCartAdd(id) {
 }
 function rentCartStep(id, dir) {
   const r = rentFind(id); if (!r) return;
+  const out = document.getElementById('rn-qty-v'), inp = document.getElementById('rn-qty');
+  const dispCur = out ? (Number(out.textContent) || 0) : 0;
+  if (dir < 0 && dispCur <= 0) return;
   const key = 'mkt_' + id, c = cartGet(), idx = c.findIndex(x => x.id === key);
   const cur = idx >= 0 ? (Number(c[idx].qty) || 0) : 0;
   const minQ = rentMin(r), step = r.unit === 'kg' ? (minQ < 1 ? minQ : 0.1) : 1;
-  let next = cur === 0 && dir > 0 ? minQ : Math.round((cur + dir * step) * 100) / 100;
-  if (dir < 0 && next < minQ) next = 0;
+  const dispNext = Math.max(0, Math.round((dispCur + dir * step) * 100) / 100);
+  let next = Math.max(0, Math.round((cur + dir * step) * 100) / 100);
   const stock = mktStock(r);
   if (dir > 0 && stock === 0) { glassBanner({ title: 'אזל מהמלאי', sub: r.title, icon: 'del' }); return; }
   if (dir > 0 && stock !== null && next > stock) { glassBanner({ title: `נשארו רק ${stock} במלאי`, sub: 'אי אפשר להוסיף יותר ממה שיש', icon: 'del' }); return; }
@@ -33181,14 +33184,13 @@ function rentCartStep(id, dir) {
   }
   cartSet(c);
   if (dir > 0 && cur === 0 && typeof perfTrackCart === 'function') perfTrackCart(key, r.title, next);
-  const out = document.getElementById('rn-qty-v'), inp = document.getElementById('rn-qty');
-  if (out) out.textContent = next;
-  if (inp) inp.value = next || minQ;
+  if (out) out.textContent = dispNext;
+  if (inp) inp.value = dispNext || minQ;
   const stp = out && out.closest('.mk-stepper');
   if (stp) {
-    stp.classList.toggle('has-qty', next > 0);
+    stp.classList.toggle('has-qty', dispNext > 0);
     const minus = stp.querySelector('.mk-stp-minus');
-    if (minus) minus.disabled = next <= 0;
+    if (minus) minus.disabled = dispNext <= 0;
   }
   rentCalcUpd(id);
 }
@@ -35876,13 +35878,13 @@ function rentDetailHTML(r) {
   // כל הכפתורים חוץ מ"הוסף לסל" — מתחת לתמונה, מימין (ריבועים מעוגלים בסגנון YouTube: ביקורות עם מספר, שמירה, הודעה, ריפוסט — ללא שיתוף, אהבתי והשכרה)
   const pill = (icon, label, act, cls, attr, extra) => `<button type="button" class="mk-pill-btn${cls ? ' ' + cls : ''}" title="${label}" aria-label="${label}"${attr || ''} onclick="${act}">${ic(icon)}<span>${label}</span>${extra || ''}</button>`;
   const stepperHTML = (r.kind === 'used' && !cartBtn) || mktSoldOut(r) ? '' : (() => {
-    const curCart = cartBtn ? ((cartGet().find(x => x.id === 'mkt_' + r.id) || {}).qty || 0) : qty;
+    const curCart = 0;
     const stepFn = cartBtn ? `rentCartStep('${artEsc(r.id)}', ` : `rentQtyStep('${artEsc(r.id)}', `;
-    return `<div class="mk-stepper${curCart > 0 ? ' has-qty' : ''}">
+    return `<div class="mk-stepper">
       <div class="mk-stp-ctrl" role="group" aria-label="בחירת כמות">
         <button type="button" class="mk-stp-btn mk-stp-plus" onclick="${stepFn}1)" aria-label="הוסף">+</button>
         <b id="rn-qty-v" class="mk-stp-val">${curCart}</b>
-        <button type="button" class="mk-stp-btn mk-stp-minus" onclick="${stepFn}-1)" aria-label="הפחת והסר"${curCart <= 0 ? ' disabled' : ''}>−</button>
+        <button type="button" class="mk-stp-btn mk-stp-minus" onclick="${stepFn}-1)" aria-label="הפחת והסר" disabled>−</button>
       </div>
     </div>`;
   })();
@@ -36247,8 +36249,15 @@ Object.assign(window, { rentQtyMenu, rentQtyPick });
 function rentQtyStep(id, dir) {
   const r = rentFind(id), inp = document.getElementById('rn-qty'), out = document.getElementById('rn-qty-v');
   if (!r || !inp || !out) return;
-  const q = Math.max(rentMin(r), Math.round(((Number(inp.value) || 0) + dir * (r.unit === 'kg' ? .1 : 1)) * 100) / 100);
-  inp.value = q; out.textContent = q;
+  const cur = Number(out.textContent) || 0;
+  const q = Math.max(0, Math.round((cur + dir * (r.unit === 'kg' ? .1 : 1)) * 100) / 100);
+  inp.value = q || rentMin(r); out.textContent = q;
+  const stp = out.closest('.mk-stepper');
+  if (stp) {
+    stp.classList.toggle('has-qty', q > 0);
+    const minus = stp.querySelector('.mk-stp-minus');
+    if (minus) minus.disabled = q <= 0;
+  }
   rentCalcUpd(id);
 }
 // גלריה בעמוד מודעה: לחיצה על תמונה קטנה מחליפה את הגדולה
