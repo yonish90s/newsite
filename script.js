@@ -28488,6 +28488,7 @@ async function offerRecord(o) {
   try {
     if (!auth.currentUser && typeof ensureGuestSignedIn === 'function') await ensureGuestSignedIn();
     const u = auth.currentUser; if (!u || !o.toUid) return;
+    offersSubscribe();
     const id = push(ref(db, 'website/deals')).key;
     const fromName = (typeof liveChatUserName === 'function' && liveChatUserName()) || u.displayName || 'אורח';
     const now = Date.now();
@@ -28499,11 +28500,16 @@ async function offerRecord(o) {
     await set(ref(db, `website/deals/${id}`), rec);
     await set(ref(db, `website/offers_idx/${u.uid}/${id}`), true);
     await set(ref(db, `website/offers_idx/${o.toUid}/${id}`), true);
+    offersMap[id] = Object.assign({ id }, rec);
+    offersBadge(); offersRerender();
   } catch (e) { console.warn('offer record failed', e); }
 }
 function offersSubscribe() {
   const u = auth.currentUser;
   if (!u || offersSubUid === u.uid) return;
+  Object.values(offersItemUnsubs).forEach(unsub => { try { if (typeof unsub === 'function') unsub(); } catch (e) {} });
+  offersItemUnsubs = {};
+  offersMap = {};
   offersSubUid = u.uid;
   try {
     onValue(ref(db, `website/offers_idx/${u.uid}`), snap => {
@@ -34858,7 +34864,7 @@ Object.assign(window, { libOpen, libScroll, libHero, libDept });
 // ===== דף "עסקאות" (לכל המשתמשים, גם במובייל): ריבועים עם ההצעות — דחייה / משא ומתן / אישור =====
 let dlsTab = 'in';
 function dlsList() {
-  const u = auth.currentUser, me = u && !u.isAnonymous ? u.uid : '';
+  const u = auth.currentUser, me = u ? u.uid : '';
   let list = me ? Object.values(offersMap).filter(o => (dlsTab === 'out' ? o.fromUid : o.toUid) === me) : [];
   const demo = !list.length && dlsTab === 'in';
   if (demo) list = OFX_DEMO().map(o => Object.assign({}, o, ofxDemoState[o.id] || {}));
