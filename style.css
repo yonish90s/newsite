@@ -22994,9 +22994,11 @@ html.theme-dark .mkpub-aud-row.on .mkpub-aud-rad { box-shadow: inset 0 0 0 4px #
 /* מצב כהה בסגנון אינסטגרם: רקע שחור (#000000), כתב לבן (#f5f5f5) וגדלי טקסט תואמים לאינסטגרם */
 html.theme-dark,
 html.theme-dark body,
-html.theme-dark body:not(#_):not(#_):not(#_) :is(#mainContent, .site-top, .site-header, .rent-page, .lib-page, .fd-page, .ua-page, .mk-watch, .st-bar, #m-top, .tg-panel, .tg-view, .ms-panel, .mkpub-xcard, .mkpub-aud-panel, .mk-sg, .tw-post, .ig-prof, .ua-card, .ua-kpi, .ua-guest, .igc-dock, .cart-drawer) {
+html.theme-dark body:not(#_):not(#_):not(#_) :is(#mainContent, .site-top, .site-header, .rent-page, .lib-page, .fd-page, .ua-page, .mk-watch, .st-bar, #m-top, #messages-modal, #messages-modal .tg-panel, #messages-modal .tg-list-view, #messages-modal .tg-thread-view, #messages-modal .tg-head, #messages-modal .tg-list, #messages-modal .tg-compose, .tg-panel, .tg-view, .ms-panel, .mkpub-xcard, .mkpub-aud-panel, .mk-sg, .tw-post, .ig-prof, .ua-card, .ua-kpi, .ua-guest, .igc-dock, .cart-drawer) {
   background: #000000 !important;
   background-color: #000000 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 html.theme-dark body,
 html.theme-dark body:not(#_):not(#_):not(#_) :is(h1, h2, h3, h4, p, span, b, strong, a, label, li, summary, input, textarea, select, button) {
