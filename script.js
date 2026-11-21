@@ -35346,8 +35346,35 @@ function mkOfferSheetSubmit() {
 }
 window.mkOfferSheetOpen = mkOfferSheetOpen; window.mkOfferSheetSubmit = mkOfferSheetSubmit;
 
-function mkCardHaggle(btn, id) {
+async function mkCardHaggle(btn, id) {
   const r = mktAll().find(x => x.id === id); if (!r) return;
+  if (btn && btn.classList.contains('on')) {
+    try {
+      const ds = (typeof demoSentOffersGet === 'function' ? demoSentOffersGet() : []).filter(x => x.itemId !== id && (!r.shId || x.itemId !== r.shId));
+      localStorage.setItem('bw_demo_sent_offers', JSON.stringify(ds));
+    } catch (e) {}
+    try {
+      const m = typeof rentMarks === 'function' ? rentMarks() : {};
+      delete m['deal:' + id];
+      if (r.shId) delete m['deal:' + r.shId];
+      if (typeof rentMarksKey === 'function') localStorage.setItem(rentMarksKey(), JSON.stringify(m));
+    } catch (e) {}
+    try {
+      const u = auth.currentUser;
+      if (u && typeof offersMap === 'object') {
+        const matches = Object.values(offersMap).filter(o => o && o.fromUid === u.uid && (o.itemId === id || (r.shId && o.itemId === r.shId)) && (o.status === 'pending' || o.status === 'counter'));
+        for (const o of matches) {
+          await update(ref(db, `website/deals/${o.id}`), { status: 'rejected', lastBy: u.uid, updatedAt: Date.now() }).catch(() => {});
+          delete offersMap[o.id];
+        }
+      }
+    } catch (e) {}
+    document.querySelectorAll(`.mk-a-deal[data-deal-id="${CSS.escape(String(id))}"]${r.shId ? `, .mk-a-deal[data-deal-sh="${CSS.escape(String(r.shId))}"]` : ''}`).forEach(el => el.classList.remove('on'));
+    if (typeof offersBadge === 'function') offersBadge();
+    if (typeof offersRerender === 'function') offersRerender();
+    glassBanner({ title: 'ההצעה בוטלה', sub: r.title || '', icon: 'del', ms: 2000 });
+    return;
+  }
   const base = Number(r.price) > 0 ? Math.round(mktDiscP(r.price)) : 500;
   mkOfferSheetOpen(r.title || 'מודעה', base, async v => {
     if (!(r.shId && r.uid)) {
