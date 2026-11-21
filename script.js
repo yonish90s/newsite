@@ -12500,11 +12500,11 @@ const AU_COLORS = ['#8b5cf6', '#e4572e', '#4a6cf7', '#f2a03d', '#9b5de5', '#e548
 // דמות מצוירת קבועה לכל שם (פרופילי הדוגמה): צבע עור, שיער, עיניים, זקן, משקפיים וכובע נגזרים מהשם
 const AV_DEMO_BG = ['#e5e7eb', '#e8d5c0', '#dbeafe', '#dcfce7', '#fde68a', '#fbcfe8', '#e9d5ff', '#cffafe'];
 const AV_DEMO_SHIRT = ['#8b5cf6', '#4a6cf7', '#e4572e', '#f2a03d', '#9b5de5', '#334155', '#e5487b', '#580cda'];
-function demoAvatarSVG(name) {
+function demoAvatarSVG(name, full) {
   let h = 0; for (const ch of String(name)) h = (h * 131 + ch.charCodeAt(0)) >>> 0;
   const pick = (n, k) => Math.floor(h / k) % n;
   const cfg = { s: pick(3, 1), h: pick(3, 3) === 0 ? 1 : pick(3, 3), hc: pick(4, 9), ec: pick(4, 36), f: pick(5, 144) > 2 ? pick(3, 144) : 0, g: 0, r: 0 };
-  const look = { bg: AV_DEMO_BG[pick(8, 720)], shirt: AV_DEMO_SHIRT[pick(8, 5760)], glasses: pick(3, 46080) === 0 ? ['#e5352b', '#111827', '#8b5e3c'][pick(3, 7)] : '', hat: pick(6, 138240) === 0 ? ['#c2410c', '#1e3a8a', '#8b5cf6'][pick(3, 11)] : '', zoom: 1.22 };
+  const look = { bg: AV_DEMO_BG[pick(8, 720)], shirt: AV_DEMO_SHIRT[pick(8, 5760)], glasses: pick(3, 46080) === 0 ? ['#e5352b', '#111827', '#8b5e3c'][pick(3, 7)] : '', hat: pick(6, 138240) === 0 ? ['#c2410c', '#1e3a8a', '#8b5cf6'][pick(3, 11)] : '', zoom: full ? 0 : 1.22 };   // full: כל הפנים בתוך העיגול, בלי זום
   return avatarSVG(cfg, look);
 }
 window.demoAvatarSVG = demoAvatarSVG;
@@ -37460,7 +37460,11 @@ function mtMePaint() {
   if (b.dataset.who === (reg ? u.uid + '|' + name : 'guest')) return;
   b.dataset.who = reg ? u.uid + '|' + name : 'guest';
   b.classList.toggle('guest', !reg);
-  b.innerHTML = reg ? authorAvHTML({ author: name, uid: u.uid }) : '<span>אורח</span>';
+  // תמונת הפרופיל; אם אין — דמות רנדומלית (קבועה לאותו משתמש/דפדפן) שרואים בה את כל הפנים
+  let seed = reg ? u.uid : '';
+  if (!reg) { try { seed = localStorage.getItem('mt_guest_face') || ''; if (!seed) { seed = 'g' + Math.random().toString(36).slice(2, 10); localStorage.setItem('mt_guest_face', seed); } } catch (e) { seed = 'guest'; } }
+  const face = typeof demoAvatarSVG === 'function' ? demoAvatarSVG(seed, true) : '';
+  b.innerHTML = `<span class="au-av has-av mt-face"${reg && /^[A-Za-z0-9_-]{10,}$/.test(u.uid) ? ` data-av-uid="${escHtml(u.uid)}"` : ''}>${face}</span>`;
   b.setAttribute('aria-label', reg ? 'המשתמש שלי — ' + name : 'אורח — התחברות'); b.title = reg ? name : 'אורח';
   if (reg && typeof avatarHydrate === 'function') avatarHydrate(b);
 }
