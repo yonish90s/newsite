@@ -23785,3 +23785,53 @@ html body:not(#_):not(#_):not(#_) .dls-tabs button.on.has-new {
   border-color: transparent !important;
   color: #ffffff !important;
 }
+
+/* הקטנת סיכום הדירוג (bb-revsum) בחצי במובייל */
+@media (max-width: 768px) {
+  html body:not(#_):not(#_):not(#_) .bb-revsum {
+    gap: 12px !important;
+    margin: 6px 0 10px !important;
+    flex-wrap: nowrap !important;
+  }
+  html body:not(#_):not(#_):not(#_) .bb-revsum .bb-avg {
+    gap: 1px !important;
+    flex: 0 0 auto !important;
+  }
+  html body:not(#_):not(#_):not(#_) .bb-revsum .bb-avg > b {
+    font-size: 20px !important;
+    line-height: 1 !important;
+  }
+  html body:not(#_):not(#_):not(#_) .bb-revsum .bb-avg .mk-stars,
+  html body:not(#_):not(#_):not(#_) .bb-revsum .bb-avg .bb-stars {
+    font-size: 10px !important;
+    gap: 1px !important;
+  }
+  html body:not(#_):not(#_):not(#_) .bb-revsum .bb-avg svg {
+    width: 10px !important;
+    height: 10px !important;
+  }
+  html body:not(#_):not(#_):not(#_) .bb-revsum .bb-avg > small {
+    font-size: 10px !important;
+  }
+  html body:not(#_):not(#_):not(#_) .bb-revsum .bb-dist {
+    gap: 2px !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+  }
+  html body:not(#_):not(#_):not(#_) .bb-revsum .bb-dist > div {
+    gap: 6px !important;
+    font-size: 10px !important;
+    line-height: 1.2 !important;
+  }
+  html body:not(#_):not(#_):not(#_) .bb-revsum .bb-dist > div > span {
+    font-size: 10px !important;
+    min-width: 22px !important;
+  }
+  html body:not(#_):not(#_):not(#_) .bb-revsum .bb-dist > div > small {
+    font-size: 10px !important;
+    min-width: 12px !important;
+  }
+  html body:not(#_):not(#_):not(#_) .bb-revsum .bb-dist > div > i {
+    height: 4px !important;
+  }
+}
