@@ -495,3 +495,4 @@ BODY .rn-tags, BODY .mk-dtags, BODY .mkpub-htags, BODY .art-row-tags, BODY .pd2-
 .rn-grid > .mk-sg { content-visibility: auto; contain-intrinsic-size: auto 320px; }
 
 BODY .ssx-rci.plain.plain, BODY .ssx-qi.plain.plain, BODY .ssx-item.ssx-item .ssx-ic, BODY .ss-ru:not(.has-st) .au-av.au-av, BODY .ssx-person .ssx-av:not(.has-st) .au-av.au-av, BODY .srch-circ .srch-ci.ring.ring { border: 1px solid #dbdbdb !important; background: #fafafa !important; padding: 0 !important; }
+@media (max-width: 900px) { BODY .hdr-pills :is(.hdr-pill-sub, .hdr-pill-up) { display: none !important; } }
