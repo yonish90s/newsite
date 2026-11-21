@@ -33340,7 +33340,7 @@ function cartOpen(tab) {
   if (!el) {
     el = document.createElement('div'); el.id = 'cart-panel';
     el.innerHTML = `<div class="ask-backdrop" onclick="cartClose()"></div><section class="ask-card cart-card" role="dialog" aria-label="העגלה שלי">
-      <header class="ask-head"><b>העגלה שלי</b><button type="button" class="ask-hb" onclick="cartClose(); myShopOpen('hist')" title="הקניות שלי" aria-label="ההזמנות שלי"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg></button><button type="button" class="ask-hb" onclick="cartClose()" aria-label="סגירה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header>
+      <header class="ask-head"><b>העגלה שלי</b><button type="button" class="ask-hb" onclick="cartClose()" aria-label="סגירה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header>
       <div class="cart-body ask-msgs"></div><div class="cart-foot"></div></section>`;
     document.body.appendChild(el);
   }
