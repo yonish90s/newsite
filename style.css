@@ -23393,9 +23393,18 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_
   #mainContent, .rent-page { -webkit-overflow-scrolling: touch; }
   .lib-page { will-change: auto !important; }
   html.img-fade .rent-page .mk-sg-img img,
-  html.img-fade .lib-page .mk-sg-img img { opacity: 1 !important; transition: none !important; }
+  html.img-fade .lib-page .mk-sg-img img,
+  html.img-fade :is(.tw-strip, .mp-slides, .hc-slide, .mk-gold) img { opacity: 1 !important; transition: none !important; }
   .rent-page .mk-sg, .rent-page .mk-sg-img { transform: translateZ(0); backface-visibility: hidden; }
   .rent-page :is(.rn-head, .mk-gold-head, .mk-sg, .mk-sg-acts, .mk-sg-img) { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
   .mk-sg-img { background: #f3f4f6; }
   html.theme-dark .mk-sg-img { background: #141414; }
+  :is(.tw-strip, .mp-slides, .hc-track, .mk-gold .mk-grid, .st-bar, .dc-row, .cr-row, .qu-hero-row) {
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-x pan-y !important;
+    overscroll-behavior-x: contain;
+    scroll-behavior: auto !important;
+  }
+  .tw-media.tw-multi .tw-strip img,
+  .mp-slides .mp-slide { scroll-snap-stop: normal !important; transform: translateZ(0); }
 }
