@@ -33697,12 +33697,8 @@ function mkPubOpen() {
   m = document.createElement('div'); m.id = 'mkpub-modal'; m.className = 'mkpub-modal mkpub-xmode';
   m.innerHTML = `<div class="mkpub-card mkpub-xcard" role="dialog" aria-modal="true" aria-label="פרסום מודעה">
     <div class="mkpub-xtop">
-      <button type="button" class="mkpub-xcancel" onclick="mkPubClose()">ביטול</button>
+      <button type="button" class="mkpub-xcancel mkpub-xclose" onclick="mkPubClose()" aria-label="סגירה" title="סגירה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
       <button type="button" class="mkpub-go mkpub-xpost" id="mkpub-go" onclick="mkPubSend()">פרסום</button>
-    </div>
-    <div class="mkpub-xwho">
-      <span class="mkpub-xav">${myAv}</span>
-      <button type="button" id="mkpub-aud-btn" class="mkpub-aud-pill" onclick="mkPubAudienceOpen()"><span>כולם · השוק</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></button>
     </div>
     <div class="mkpub-xcompose">
       <input id="mkpub-title" class="mkpub-xtitle" maxlength="32" placeholder="כותרת המודעה…" oninput="mkPubTitleCount(this); mkPubAuto()">
@@ -33747,7 +33743,10 @@ function mkPubOpen() {
       <input id="mkpub-sched" class="mkpub-in" type="datetime-local" dir="ltr">
     </div>
     <p class="mkpub-err" id="mkpub-err" hidden></p>
-    <div class="mkpub-xreply">🌐 כולם יכולים להגיב</div>
+    <div class="mkpub-xreply mkpub-xwho">
+      <span class="mkpub-xav">${myAv}</span>
+      <button type="button" id="mkpub-aud-btn" class="mkpub-aud-pill" onclick="mkPubAudienceOpen()"><span>כולם · השוק</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></button>
+    </div>
     <div class="mkpub-xbar" role="toolbar" aria-label="אפשרויות פרסום">
       <button type="button" onclick="mkPubAdd()" title="הוספת תמונה" aria-label="הוספת תמונה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></button>
       <button type="button" onclick="mkPubTogglePane('meta')" title="מחיר, סוג ומלאי" aria-label="מחיר, סוג ומלאי"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><circle cx="7.5" cy="7.5" r="1.2"/></svg></button>
@@ -37427,6 +37426,7 @@ Object.assign(window, { phoneVerifyOpen, pvSend, pvBack, pvClose });
   const ic = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
   function build() {
     if (document.getElementById('m-top')) return;
+    // (☰ בשורה העליונה פותח את mtSettingsOpen: מצב תצוגה והגדרות משתמש)
     const el = document.createElement('div'); el.id = 'm-top';
     el.innerHTML = `<div class="mt-row">
         <button type="button" class="mt-circ mt-home" onclick="mtTab('home')" aria-label="חזרה לעמוד הראשי" title="עמוד ראשי">${ic('<path d="M5 12h14M13 6l6 6-6 6"/>')}</button>
@@ -37434,7 +37434,7 @@ Object.assign(window, { phoneVerifyOpen, pvSend, pvBack, pvClose });
           <button type="button" class="mt-circ mt-pub" onclick="mkPubOpen()" aria-label="העלאת מודעה" title="העלאת מודעה">${ic('<rect x="3" y="3" width="18" height="18" rx="5"/><path d="M12 8v8M8 12h8"/>')}</button>
           <button type="button" class="mt-circ mt-srch" onclick="openSiteSearch()" aria-label="חיפוש באתר" title="חיפוש">${ic('<circle cx="11" cy="11" r="7"/><path d="M20 20l-4.35-4.35"/>')}</button>
           <button type="button" class="mt-circ mt-dm" onclick="openMessages()" aria-label="הודעות בין משתמשים" title="הודעות">${ic('<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>')}</button>
-          <button type="button" class="mt-circ mt-theme" onclick="toggleSiteTheme()" aria-label="מצב כהה / בהיר" title="מצב כהה / בהיר">${ic('<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>')}</button>
+          <button type="button" class="mt-circ mt-theme" onclick="mtSettingsOpen()" aria-label="תפריט: מצב תצוגה והגדרות משתמש" title="תפריט">${ic('<path d="M4 7h16M4 12h16M4 17h16"/>')}</button>
           <button type="button" class="mt-circ mt-cart" onclick="cartOpen()" aria-label="עגלה" title="עגלה">${ic('<circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>')}</button>
         </div>
         <button type="button" class="mt-circ mt-me" onclick="mtMe()" aria-label="המשתמש שלי"></button>
@@ -37471,6 +37471,30 @@ function mtMe() {
   openUserPage(u.uid);
 }
 window.mtMe = mtMe;
+// ☰ בשורה העליונה במובייל: מצב תצוגה (בהיר / כהה / לפי המכשיר) והגדרות משתמש
+function mtSettingsHTML() {
+  const mode = document.documentElement.dataset.themeMode || 'light';
+  const u = auth.currentUser, reg = u && !u.isAnonymous;
+  const ic = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+  const seg = (m, label, d) => `<button type="button" class="mts-seg-b${mode === m ? ' on' : ''}" onclick="setSiteTheme('${m}'); mtSettingsRefresh()">${ic(d)}<span>${label}</span></button>`;
+  const row = (label, d, act, cls) => `<button type="button" class="mts-row${cls ? ' ' + cls : ''}" onclick="closeMSheet(); ${act}">${ic(d)}<span>${label}</span></button>`;
+  const name = reg ? String((typeof liveChatUserName === 'function' && liveChatUserName()) || u.displayName || 'החשבון שלי') : '';
+  return `<div class="mts">
+    <div class="mts-h">מצב תצוגה</div>
+    <div class="mts-seg">${seg('light', 'בהיר', '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>')}${seg('dark', 'כהה', '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>')}${seg('system', 'לפי המכשיר', '<rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M11 18h2"/>')}</div>
+    <div class="mts-h">${reg ? escHtml(name) : 'המשתמש'}</div>
+    ${reg
+      ? row('הפרופיל שלי', '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>', `openUserPage('${artEsc(u.uid)}')`)
+        + row('עריכת פרופיל', '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>', `openUserPage('${artEsc(u.uid)}'); setTimeout(() => { try { profileEditBio(); } catch (e) {} }, 700)`)
+        + row('הודעות', '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/>', 'openMessages()')
+        + row('עסקאות', '<path d="M4 7h11M4 7l3-3M4 7l3 3M20 17H9M20 17l-3-3M20 17l-3 3"/>', 'dlsOpen()')
+        + row('יציאה מהחשבון', '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>', 'uwLogout()', 'danger')
+      : row('התחברות / הרשמה', '<path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/>', 'openLiveChatLogin()')}
+  </div>`;
+}
+function mtSettingsOpen() { openMSheet('תפריט', mtSettingsHTML()); }
+function mtSettingsRefresh() { const b = document.querySelector('#m-sheet .ms-body'); if (b) b.innerHTML = mtSettingsHTML(); }
+Object.assign(window, { mtSettingsOpen, mtSettingsRefresh });
 try { onAuthStateChanged(auth, () => setTimeout(mtMePaint, 300)); } catch (e) {}
 function mtSync() {
   mtMePaint();
