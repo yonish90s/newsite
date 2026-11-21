@@ -19859,7 +19859,7 @@ async function dmOpenConv(convId, otherUid, otherName, prefill) {
   let initialLoad = true;
   dmThreadUnsub = onValue(ref(db, `website/dms/${convId}/messages`), snap => {
     const val = snap.val() || {};
-    dmThreadMessages = Object.values(val).sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+    dmThreadMessages = Object.entries(val).map(([id, m]) => Object.assign({ _id: id }, m)).sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
     dmRenderThread(initialLoad);
     initialLoad = false;
     markReadNow();
@@ -19867,12 +19867,97 @@ async function dmOpenConv(convId, otherUid, otherName, prefill) {
     const box = document.getElementById('dm-messages');
     if (box) box.innerHTML = '<div class="tg-empty">לא ניתן לטעון את השיחה כרגע</div>';
   });
+  dmBindMsgLongPress();
   setTimeout(() => {
     const i = document.getElementById('dm-input');
     if (i) { if (prefill) i.value = prefill; dmAutoGrow(i); if (window.innerWidth > 768) i.focus(); }
   }, 80);
 }
 window.dmOpenConv = dmOpenConv;
+
+function dmCloseMsgMenu() {
+  const m = document.getElementById('dm-msg-menu');
+  if (m) m.remove();
+  document.querySelectorAll('.tg-bubble.is-held').forEach(b => b.classList.remove('is-held'));
+}
+window.dmCloseMsgMenu = dmCloseMsgMenu;
+
+async function dmDeleteMsg(msgId) {
+  dmCloseMsgMenu();
+  const u = auth.currentUser;
+  if (!u || !dmActiveConv || !dmActiveConv.convId || !msgId) return;
+  const { convId, otherUid, otherName } = dmActiveConv;
+  try {
+    await set(ref(db, `website/dms/${convId}/messages/${msgId}`), null);
+    const rem = dmThreadMessages.filter(x => x._id !== msgId);
+    const last = rem[rem.length - 1];
+    const lastText = !last ? '' : last.audio ? '🎤 הודעה קולית' : last.img ? '📷 תמונה' : String(last.text || '').slice(0, 60);
+    const lastTime = last ? (last.timestamp || Date.now()) : Date.now();
+    await update(ref(db, `website/user_dms/${u.uid}/${convId}`), { otherUid, otherName, lastText, lastTime }).catch(() => {});
+    if (otherUid) await update(ref(db, `website/user_dms/${otherUid}/${convId}`), { otherUid: u.uid, otherName: dmName(), lastText, lastTime }).catch(() => {});
+    if (typeof showCopyToast === 'function') showCopyToast('ההודעה נמחקה');
+  } catch (e) {
+    console.error('dm delete failed', e);
+    if (typeof showCopyToast === 'function') showCopyToast('לא ניתן למחוק את ההודעה');
+  }
+}
+window.dmDeleteMsg = dmDeleteMsg;
+
+function dmOpenMsgMenu(msgId, bubble) {
+  dmCloseMsgMenu();
+  if (!msgId) return;
+  if (bubble) bubble.classList.add('is-held');
+  const host = document.querySelector('#messages-modal .tg-panel') || document.body;
+  const menu = document.createElement('div');
+  menu.id = 'dm-msg-menu';
+  menu.className = 'tg-msg-menu';
+  menu.innerHTML = `<div class="tg-msg-menu-bg" onclick="dmCloseMsgMenu()"></div>
+    <div class="tg-msg-sheet" role="dialog" aria-label="אפשרויות הודעה">
+      <button type="button" class="tg-msg-del" onclick="dmDeleteMsg('${artEsc(msgId)}')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6"/></svg>
+        <span>מחיקת הודעה</span>
+      </button>
+      <button type="button" class="tg-msg-cancel" onclick="dmCloseMsgMenu()">ביטול</button>
+    </div>`;
+  host.appendChild(menu);
+}
+
+function dmBindMsgLongPress() {
+  const box = document.getElementById('dm-messages');
+  if (!box || box._lpBound) return;
+  box._lpBound = true;
+  let timer = 0, sx = 0, sy = 0;
+  const clear = () => { if (timer) { clearTimeout(timer); timer = 0; } };
+  box.addEventListener('touchstart', e => {
+    clear();
+    const row = e.target && e.target.closest ? e.target.closest('.tg-msg[data-mine="1"]') : null;
+    const bubble = row && row.querySelector('.tg-bubble');
+    if (!row || !bubble || !row.dataset.mid) return;
+    if (e.target.closest('button, a')) return;
+    const t = e.touches && e.touches[0];
+    if (!t) return;
+    sx = t.clientX; sy = t.clientY;
+    timer = setTimeout(() => {
+      timer = 0;
+      try { if (navigator.vibrate) navigator.vibrate(25); } catch (err) {}
+      dmOpenMsgMenu(row.dataset.mid, bubble);
+    }, 450);
+  }, { passive: true });
+  box.addEventListener('touchmove', e => {
+    if (!timer) return;
+    const t = e.touches && e.touches[0];
+    if (!t || Math.abs(t.clientX - sx) > 10 || Math.abs(t.clientY - sy) > 10) clear();
+  }, { passive: true });
+  box.addEventListener('touchend', clear, { passive: true });
+  box.addEventListener('touchcancel', clear, { passive: true });
+  box.addEventListener('contextmenu', e => {
+    const row = e.target && e.target.closest ? e.target.closest('.tg-msg[data-mine="1"]') : null;
+    const bubble = row && row.querySelector('.tg-bubble');
+    if (!row || !bubble || !row.dataset.mid) return;
+    e.preventDefault();
+    dmOpenMsgMenu(row.dataset.mid, bubble);
+  });
+}
 
 function dmMessagesHTML() {
   const myUid = auth.currentUser ? auth.currentUser.uid : '';
@@ -19887,7 +19972,7 @@ function dmMessagesHTML() {
     const tickHTML = mine ? ` <span class="tg-tick${isRead ? ' read' : ''}" title="${isRead ? 'נקרא' : 'נשלח'}">${isRead ? '✓✓' : '✓'}</span>` : '';
     const hasAudio = !!(m.audio && /^data:audio\/(webm|ogg|mp4|mpeg|mp3|wav|aac|x-m4a)(;codecs=[^;]+)?;base64,/.test(m.audio));
     const voiceHTML = hasAudio ? `<div class="tg-voice" data-dur="${Number(m.audioDur || 0)}"><button type="button" class="tg-voice-play" onclick="dmToggleVoicePlay(this)" aria-label="הפעלת הודעה קולית"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.14v14l11-7-11-7z"/></svg></button><div class="tg-voice-track" onclick="dmSeekVoice(event, this)"><div class="tg-voice-fill"></div></div><span class="tg-voice-dur">${dmRecFmt(Number(m.audioDur || 0))}</span><audio preload="metadata" src="${escHtml(m.audio)}"></audio></div>` : '';
-    return `${sep}<div class="tg-msg ${mine ? 'mine' : 'theirs'}">
+    return `${sep}<div class="tg-msg ${mine ? 'mine' : 'theirs'}" data-mid="${escHtml(m._id || '')}" data-mine="${mine ? '1' : '0'}">
       <div class="tg-bubble${m.img ? ' has-img' : ''}${hasAudio ? ' has-voice' : ''}">${m.img && /^data:image\/(jpeg|png|webp|gif);base64,/.test(m.img) ? `<img class="tg-img" src="${escHtml(m.img)}" alt="" loading="lazy" onclick="dmViewImg(this.src)">` : ''}${voiceHTML}${m.text ? `${dmRichHTML(m.text)}` : ''}<span class="tg-msg-time">${dmTime(m.timestamp)}${tickHTML}</span></div>
     </div>`;
   }).join('');

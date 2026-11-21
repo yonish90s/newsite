@@ -293,7 +293,7 @@
           ".read": "auth != null && ($convId.beginsWith(auth.uid + '__') || $convId.endsWith('__' + auth.uid))",
           "messages": {
             "$msgId": {
-              ".write": "auth != null && !data.exists() && ($convId.beginsWith(auth.uid + '__') || $convId.endsWith('__' + auth.uid))",
+              ".write": "auth != null && ($convId.beginsWith(auth.uid + '__') || $convId.endsWith('__' + auth.uid)) && ((!data.exists() && newData.exists()) || (data.exists() && !newData.exists() && data.child('from').val() === auth.uid))",
               ".validate": "newData.child('from').val() === auth.uid && newData.child('text').isString() && newData.child('text').val().length <= 1000 && (!newData.child('img').exists() || (newData.child('img').isString() && newData.child('img').val().matches(/^data:image\\/(jpeg|png|webp|gif);base64,/) && newData.child('img').val().length <= 400000)) && (!newData.child('audio').exists() || (newData.child('audio').isString() && newData.child('audio').val().matches(/^data:audio\\/(webm|ogg|mp4|mpeg|mp3|wav|aac|x-m4a)(;codecs=[^;]+)?;base64,/) && newData.child('audio').val().length <= 900000)) && (!newData.child('audioDur').exists() || (newData.child('audioDur').isNumber() && newData.child('audioDur').val() >= 0 && newData.child('audioDur').val() <= 300))"
             }
           },
