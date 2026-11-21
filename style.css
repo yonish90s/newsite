@@ -23408,3 +23408,21 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_
   .tw-media.tw-multi .tw-strip img,
   .mp-slides .mp-slide { scroll-snap-stop: normal !important; transform: translateZ(0); }
 }
+
+
+/* שורה עליונה ב"במעקב": סטורי והצעות מעקב חצי-חצי באותה שורה ובאותו גובה */
+#mainContent:has(> .fd-page .fd-top-row) > .site-top > .st-bar { display: none !important; }
+.fd-top-row { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; margin: 0 0 12px; align-items: stretch; }
+.fd-top-row.has-sugg { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.fd-top-row > .st-bar { margin: 0 !important; min-width: 0; height: 100%; display: flex; align-items: center; }
+.fd-top-row > .fd-sugg { margin: 0 !important; min-width: 0; height: 100%; display: flex; align-items: center; border-radius: 18px; border: 1px solid #e6e9eb; background: #ffffff; padding: 6px 8px; overflow: hidden; box-sizing: border-box; }
+html.theme-dark .fd-top-row > .fd-sugg { border-color: rgba(255, 255, 255, 0.14); background: #121212; }
+.fd-top-row .fd-sugg-row { padding: 0 !important; gap: 6px !important; width: 100%; align-items: center; -webkit-overflow-scrolling: touch; touch-action: pan-x pan-y; }
+.fd-top-row .fd-sugg .fd-sg { width: 72px !important; min-width: 72px !important; flex: 0 0 72px !important; padding: 5px 4px 4px !important; gap: 3px !important; border-radius: 12px !important; position: relative; }
+.fd-top-row .fd-sugg .fd-sg-who { gap: 2px !important; }
+.fd-top-row .fd-sugg .fd-sg-who .au-av { width: 28px !important; height: 28px !important; min-width: 28px !important; font-size: 11px !important; }
+.fd-top-row .fd-sugg .fd-sg-who b { font-size: 10.5px !important; line-height: 1.15 !important; }
+.fd-top-row .fd-sugg .fd-sg-who small { display: none !important; }
+.fd-top-row .fd-sugg .fd-sg-go { font-size: 10px !important; padding: 2px 7px !important; gap: 2px !important; }
+.fd-top-row .fd-sugg .fd-sg-go svg { width: 10px !important; height: 10px !important; }
+.fd-top-row .fd-sugg .fd-sg-x { width: 15px !important; height: 15px !important; font-size: 9px !important; top: 3px !important; left: 3px !important; }

@@ -18952,7 +18952,7 @@ Object.assign(window, { myShopOpen, myShopAgain, myShopWantDel });
 function fdHidden() { try { return JSON.parse(localStorage.getItem('fd_sugg_hide') || '{}') || {}; } catch (e) { return {}; } }
 function fdHide(key, btn) {
   const m = fdHidden(); m[key] = 1; try { localStorage.setItem('fd_sugg_hide', JSON.stringify(m)); } catch (e) {}
-  const card = btn && btn.closest('.fd-sg'); if (card) { card.style.transition = 'opacity .18s, transform .18s'; card.style.opacity = '0'; card.style.transform = 'scale(.9)'; setTimeout(() => { const row = card.parentElement; card.remove(); if (row && !row.children.length) { const sec = row.closest('.fd-sugg'); if (sec) sec.remove(); } }, 180); }
+  const card = btn && btn.closest('.fd-sg'); if (card) { card.style.transition = 'opacity .18s, transform .18s'; card.style.opacity = '0'; card.style.transform = 'scale(.9)'; setTimeout(() => { const row = card.parentElement; card.remove(); if (row && !row.children.length) { const sec = row.closest('.fd-sugg'); const topRow = sec && sec.closest('.fd-top-row'); if (sec) sec.remove(); if (topRow) topRow.classList.remove('has-sugg'); } }, 180); }
 }
 window.fdHide = fdHide;
 async function mktFeedOpen() {
@@ -18998,8 +18998,9 @@ async function mktFeedOpen() {
   const sec = (title, sub, list, empty) => `<section class="fd-sec"><header class="fd-sec-h"><h2>${title} <small>${list.length}</small></h2><span>${sub}</span></header>${list.length ? cards(list) : `<div class="fd-sec-empty">${empty}</div>`}</section>`;
   const upsHTML = sec('העלאות', 'מודעות ופוסטים חדשים של מי שאתם עוקבים אחריהם', ups, 'עדיין אין העלאות ממי שאתם עוקבים אחריהם');
   const repHTML = sec('ריפוסטים', 'מודעות שהם שיתפו מאחרים', reps2, 'עדיין אין ריפוסטים ממי שאתם עוקבים אחריהם');
+  const topRowHTML = `<div class="fd-top-row${suggHTML ? ' has-sugg' : ''}">${typeof storiesBarHTML === 'function' ? storiesBarHTML() : ''}${suggHTML}</div>`;
   mainContent.innerHTML = `<div class="fd-page">
-    ${suggHTML}
+    ${topRowHTML}
     <div class="pf-tabs2" role="tablist"><button type="button" class="on" onclick="fdTab(this, 'all')">הכל</button><button type="button" onclick="fdTab(this, 'ups')">העלאות <small>${ups.length}</small></button><button type="button" onclick="fdTab(this, 'reps')">ריפוסטים <small>${reps2.length}</small></button>${guest ? '' : `<button type="button" onclick="fdTab(this, 'me')">שלי <small>${mine.length}</small></button>`}</div>
     <div data-fd="all">${theirs.length ? upsHTML + repHTML : cards([])}</div><div data-fd="ups" hidden>${upsHTML}</div><div data-fd="reps" hidden>${repHTML}</div><div data-fd="me" hidden>${cards(mine)}</div></div>`;
   if (typeof avatarHydrate === 'function') avatarHydrate(mainContent);
