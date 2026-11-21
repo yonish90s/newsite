@@ -660,6 +660,17 @@
           }
         }
       },
+      "ad_viewers": {
+        "$ownerUid": {
+          ".read": "auth != null && auth.uid === $ownerUid",
+          "$itemId": {
+            "$viewerUid": {
+              ".write": "auth != null && auth.uid === $viewerUid",
+              ".validate": "!newData.exists() || (newData.hasChildren(['at','name']) && newData.child('at').isNumber() && newData.child('name').isString() && newData.child('name').val().length <= 60 && (!newData.child('title').exists() || (newData.child('title').isString() && newData.child('title').val().length <= 120)))"
+            }
+          }
+        }
+      },
       "ads": {
         ".read": true
       },

@@ -35607,10 +35607,25 @@ function rentCalc(r, qty) {
 }
 // עמוד מודעה מלא (לא חלון קופץ): נפתח בתוך עמוד ההשכרה, עם "חזרה" וכפתור אחורה של הדפדפן
 let _rentPopping = false;
+function recordAdViewer(r) {
+  try {
+    const u = auth.currentUser;
+    if (!u || !r || !r.uid || r.uid === u.uid || r.demo) return;
+    const itemId = String(r.shId || r.id || '').replace(/[.#$\[\]\/]/g, '_').slice(0, 80);
+    if (!itemId) return;
+    const name = (typeof liveChatUserName === 'function' && liveChatUserName()) || u.displayName || (u.isAnonymous ? 'אורח' : 'משתמש');
+    set(ref(db, `website/ad_viewers/${r.uid}/${itemId}/${u.uid}`), {
+      name: String(name).slice(0, 60),
+      title: String(r.title || '').slice(0, 120),
+      at: Date.now()
+    }).catch(() => {});
+  } catch (e) {}
+}
 function rentOpen(id) {
   const r = rentFind(id); if (!r) return;
   rentUI.open = id;
   photoIncrementViews(rentCommentsKey(r));   // צפייה אחת ביום לכל גולש
+  recordAdViewer(r);
   if (!_rentPopping) { try { history.pushState({ rent: id }, ''); } catch (e) {} }
   if (typeof mainContent !== 'undefined' && mainContent) mainContent.scrollTop = 0;
   try { window.scrollTo({ top: 0 }); } catch (e) {}
@@ -38634,6 +38649,20 @@ function _uaDraw() {
         </div>
       </div>
     </div>
+    <div class="ua-card ua-viewers-card">
+      <div class="ua-card-t">מי הסתכל במודעות שלך (${(_uaState.viewers || []).length})</div>
+      <div class="ua-list">
+        ${(_uaState.viewers && _uaState.viewers.length) ? _uaState.viewers.slice(0, 40).map(v => `
+          <button type="button" class="ua-item" onclick="if(typeof openUserProfileModal==='function') openUserProfileModal('${artEsc(v.uid)}','${artEsc(v.name)}')">
+            <span class="ua-viewer-av">${typeof authorAvHTML === 'function' ? authorAvHTML({ author: v.name, uid: v.uid }) : '👤'}</span>
+            <span class="ua-item-info">
+              <b>${escHtml(v.name)}</b>
+              <small>צפה ב־${escHtml(v.title || 'מודעה')}${v.at && typeof rentAgo === 'function' ? ' · ' + escHtml(rentAgo(v.at)) : ''}</small>
+            </span>
+            <span class="ua-item-val">צפה</span>
+          </button>`).join('') : '<div class="ua-empty">עדיין לא נרשמו צופים מזוהים במודעות שלך.</div>'}
+      </div>
+    </div>
     <div class="ua-card ua-table-card">
       <div class="ua-search-bar">
         <input id="ua-q" type="search" placeholder="חיפוש במודעות שלך…" oninput="uaSearch(this.value)">
@@ -38659,17 +38688,29 @@ async function openUserAnalytics() {
   const u = auth.currentUser, reg = u && !u.isAnonymous;
   if (reg) {
     const name = (typeof liveChatUserName === 'function' && liveChatUserName()) || u.displayName || 'משתמש';
-    _uaState = { q: '', filter: 'all', followers: 0, following: 0, profViews: 0, items: _uaCollectUserAds(u.uid, name) };
+    _uaState = { q: '', filter: 'all', followers: 0, following: 0, profViews: 0, viewers: [], items: _uaCollectUserAds(u.uid, name) };
     _uaDraw();
     try {
-      const [fcSnap, pvSnap] = await Promise.all([
+      const [fcSnap, pvSnap, vwSnap] = await Promise.all([
         get(ref(db, `website/follow_counts/${u.uid}`)),
-        get(ref(db, `website/profile_views/${u.uid}`))
+        get(ref(db, `website/profile_views/${u.uid}`)),
+        get(ref(db, `website/ad_viewers/${u.uid}`))
       ]);
       const fc = fcSnap.val() || {};
       _uaState.followers = Math.max(0, Number(fc.followers) || 0);
       _uaState.following = Math.max(0, Number(fc.following) || 0);
       _uaState.profViews = Math.max(0, Number(pvSnap.val()) || 0);
+      const vwRaw = vwSnap.val() || {};
+      const vwList = [];
+      Object.entries(vwRaw).forEach(([itemId, byUser]) => {
+        if (!byUser || typeof byUser !== 'object') return;
+        Object.entries(byUser).forEach(([vUid, info]) => {
+          if (!info || typeof info !== 'object') return;
+          vwList.push({ uid: vUid, itemId, name: info.name || 'משתמש', title: info.title || 'מודעה', at: Number(info.at) || 0 });
+        });
+      });
+      vwList.sort((a, b) => b.at - a.at);
+      _uaState.viewers = vwList;
       _uaDraw();
     } catch (e) {}
   } else {
