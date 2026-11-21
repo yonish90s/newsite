@@ -33698,6 +33698,10 @@ function mkPubOpen() {
   m.innerHTML = `<div class="mkpub-card mkpub-xcard" role="dialog" aria-modal="true" aria-label="פרסום מודעה">
     <div class="mkpub-xtop">
       <button type="button" class="mkpub-xcancel mkpub-xclose" onclick="mkPubClose()" aria-label="סגירה" title="סגירה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      <div class="mkpub-xwho mkpub-xwho-mid">
+        <span class="mkpub-xav">${myAv}</span>
+        <button type="button" id="mkpub-aud-btn" class="mkpub-aud-pill" onclick="mkPubAudienceOpen()"><span>כולם · השוק</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></button>
+      </div>
       <button type="button" class="mkpub-go mkpub-xpost" id="mkpub-go" onclick="mkPubSend()">פרסום</button>
     </div>
     <div class="mkpub-xcompose">
@@ -33743,10 +33747,6 @@ function mkPubOpen() {
       <input id="mkpub-sched" class="mkpub-in" type="datetime-local" dir="ltr">
     </div>
     <p class="mkpub-err" id="mkpub-err" hidden></p>
-    <div class="mkpub-xreply mkpub-xwho">
-      <span class="mkpub-xav">${myAv}</span>
-      <button type="button" id="mkpub-aud-btn" class="mkpub-aud-pill" onclick="mkPubAudienceOpen()"><span>כולם · השוק</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></button>
-    </div>
     <div class="mkpub-xbar" role="toolbar" aria-label="אפשרויות פרסום">
       <button type="button" onclick="mkPubAdd()" title="הוספת תמונה" aria-label="הוספת תמונה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></button>
       <button type="button" onclick="mkPubTogglePane('meta')" title="מחיר, סוג ומלאי" aria-label="מחיר, סוג ומלאי"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><circle cx="7.5" cy="7.5" r="1.2"/></svg></button>
