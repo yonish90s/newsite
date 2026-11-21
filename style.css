@@ -23068,7 +23068,7 @@ html body:not(#_):not(#_):not(#_):not(#_) .dls-page .dls-sq {
 }
 html body:not(#_):not(#_):not(#_):not(#_) .dls-page .dls-sq:last-child { border-bottom: 0 !important; }
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .dls-page .dls-sq { border-bottom-color: rgba(255, 255, 255, .12) !important; }
-html body:not(#_):not(#_):not(#_):not(#_) .dls-page .dls-img {
+html body #mainContent .dls-page .dls-img {
   position: relative !important;
   flex: 0 0 60px !important;
   width: 60px !important;
@@ -23082,13 +23082,16 @@ html body:not(#_):not(#_):not(#_):not(#_) .dls-page .dls-img {
   margin: 0 !important;
   padding: 0 !important;
 }
-html body:not(#_):not(#_):not(#_):not(#_) .dls-page .dls-img > img,
-html body:not(#_):not(#_):not(#_):not(#_) .dls-page .dls-img > i {
+html body #mainContent .dls-page .dls-img > img,
+html body #mainContent .dls-page .dls-img > i {
   position: relative !important;
   inset: auto !important;
   border-radius: 14px !important;
   width: 60px !important;
+  min-width: 60px !important;
+  max-width: 60px !important;
   height: 60px !important;
+  max-height: 60px !important;
   object-fit: cover !important;
   display: flex !important;
   align-items: center !important;

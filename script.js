@@ -28558,7 +28558,7 @@ function ofxHaggleCancel(btn) {
 // כפתורי ההצעות לדוגמה: אותן הודעות, בלי לשמור כלום
 function ofxDemo(kind, id, title, price) {
   const done = (st, p) => ofxFadeOut(id, () => { ofxDemoState[id] = { status: st, price: p, updatedAt: Date.now() }; offersRerender(); });
-  if (kind === 'deal') offerHaggle(title, price, v => { done('counter', v); offerBanner('counter', title + ' (דוגמה)', v); }, id);
+  if (kind === 'deal') mkOfferSheetOpen(title, price, v => { done('counter', v); offerBanner('counter', title + ' (דוגמה)', v); }, 'הצעה נגדית');
   else { done(kind === 'ok' ? 'accepted' : 'rejected', price); offerBanner(kind === 'ok' ? 'accepted' : 'rejected', title + ' (דוגמה)', price); }
 }
 function offerDecide(id, status) {
@@ -28570,7 +28570,7 @@ function offerDecide(id, status) {
 // שינוי: מחיר משלי (שדה בתוך ההודעה), או שינוי סעיף בהשאלה (חלון מלא)
 function offerCounter(id) {
   const o = offersMap[id]; if (!o) return;
-  if (o.kind !== 'loan') { offerHaggle(o.title, o.price, v => { ofxFadeOut(id, () => {}); offerUpdate(id, 'counter', v, ''); }, id); return; }
+  if (o.kind !== 'loan') { mkOfferSheetOpen(o.title, o.price, v => { ofxFadeOut(id, () => {}); offerUpdate(id, 'counter', v, ''); }, 'הצעה נגדית'); return; }
   let m = document.getElementById('offer-modal'); if (m) m.remove();
   m = document.createElement('div'); m.id = 'offer-modal'; m.className = 'rp-modal';
   m.innerHTML = `<div class="rp-card" role="dialog" aria-label="הצעה נגדית">
@@ -34734,15 +34734,16 @@ async function pplTipOpen(el) {
   document.addEventListener('contextmenu', e => { if (e.target.closest && e.target.closest('[data-people]')) e.preventDefault(); });
 })();
 // משא ומתן מהכרטיס: פותח חלון עם סליידר נקי למתיחת סכום ההצעה
-function mkCardHaggle(btn, id) {
-  const r = mktAll().find(x => x.id === id); if (!r) return;
-  const base = Number(r.price) > 0 ? Math.round(mktDiscP(r.price)) : 500;
+let _mkOfferCb = null;
+function mkOfferSheetOpen(title, basePrice, onSend, heading) {
+  const base = Number(basePrice) > 0 ? Math.round(Number(basePrice)) : 500;
   const minP = Math.max(1, Math.round(base * 0.2));
   const maxP = Math.max(minP + 10, Math.round(base * 1.5));
   const start = Math.max(minP, Math.min(maxP, Math.round(base * 0.85)));
   const pct = Math.round(((start - minP) / Math.max(1, maxP - minP)) * 100);
-  openMSheet('הצעת מחיר', `<div class="mk-sl-wrap">
-    <div class="mk-sl-title">${escHtml(r.title || 'מודעה')}</div>
+  _mkOfferCb = typeof onSend === 'function' ? onSend : null;
+  openMSheet(heading || 'הצעת מחיר', `<div class="mk-sl-wrap">
+    <div class="mk-sl-title">${escHtml(title || 'מודעה')}</div>
     <div class="mk-sl-lbl"><i class="mk-sl-dot"></i><span>הסכום שאני מציע</span></div>
     <div class="mk-sl-row">
       <div class="mk-sl-track-wrap">
@@ -34751,8 +34752,30 @@ function mkCardHaggle(btn, id) {
       <div class="mk-sl-val" id="mk-sl-val">₪${start.toLocaleString('he-IL')}</div>
     </div>
     <div class="mk-sl-bounds"><span>₪${minP.toLocaleString('he-IL')}</span><span>מחיר מבוקש: ₪${base.toLocaleString('he-IL')}</span><span>₪${maxP.toLocaleString('he-IL')}</span></div>
-    <button type="button" class="mk-sl-send" onclick="mkSliderSend('${artEsc(id)}')">שליחת הצעה · <b id="mk-sl-btn-v">₪${start.toLocaleString('he-IL')}</b></button>
+    <button type="button" class="mk-sl-send" onclick="mkOfferSheetSubmit()">שליחת הצעה · <b id="mk-sl-btn-v">₪${start.toLocaleString('he-IL')}</b></button>
   </div>`);
+}
+function mkOfferSheetSubmit() {
+  const inp = document.getElementById('mk-sl-in'), v = Math.round(Number(inp ? inp.value : 0));
+  if (!(v > 0)) return;
+  const cb = _mkOfferCb; _mkOfferCb = null;
+  closeMSheet();
+  if (cb) cb(v);
+}
+window.mkOfferSheetOpen = mkOfferSheetOpen; window.mkOfferSheetSubmit = mkOfferSheetSubmit;
+
+function mkCardHaggle(btn, id) {
+  const r = mktAll().find(x => x.id === id); if (!r) return;
+  const base = Number(r.price) > 0 ? Math.round(mktDiscP(r.price)) : 500;
+  mkOfferSheetOpen(r.title || 'מודעה', base, async v => {
+    if (!(r.shId && r.uid)) { glassBanner({ title: 'ההצעה נשלחה (דוגמה)', sub: (r.title || '') + ' · ₪' + v.toLocaleString('he-IL'), icon: 'deal', cls: 'gbn-deal', ms: 2600 }); return; }
+    const u = auth.currentUser;
+    if (!u || (typeof isRegisteredUser === 'function' && !isRegisteredUser())) { glassBanner({ title: 'צריך להתחבר', sub: 'כדי לשלוח הצעת מחיר', icon: 'warn', ms: 2600 }); if (typeof entryLoginOpen === 'function') entryLoginOpen(); return; }
+    if (u.uid === r.uid) { glassBanner({ title: 'זו המודעה שלך', icon: 'warn', ms: 2200 }); return; }
+    window.__offerItemId = r.shId;
+    await sendPriceOffer(r.title || '', r.uid, r.owner || '', v, true);
+    glassBanner({ title: 'ההצעה נשלחה', sub: (r.title || '') + ' · ₪' + v.toLocaleString('he-IL'), icon: 'deal', cls: 'gbn-deal', ms: 2600 });
+  }, 'הצעת מחיר');
 }
 function mkSliderSync(val, minP, maxP) {
   const v = Math.round(Number(val)) || minP;
