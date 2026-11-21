@@ -25456,11 +25456,22 @@ function ssxItemHTML(r) {
   const sub = [price, r.city || '', (typeof mktWho === 'function' && mktWho(r)) || r.owner || ''].filter(Boolean).map(escHtml).join(' · ');
   return `<button type="button" class="ssx-person ssx-item" onclick="closeSiteSearch(); rentOpen('${artEsc(r.id)}')"><span class="ssx-av ring"><span class="ssx-ic">${src ? `<img src="${escHtml(src)}" alt="" loading="lazy">` : rentThumb(r)}${r.hv ? '<i class="ssx-play">▶</i>' : ''}</span></span><span class="ssx-pm"><b>${escHtml(r.title)}</b><small>${sub}</small></span><span class="ssx-pbtn">למודעה</span></button>`;
 }
+// טבעת הסטורי בחיפוש: רק סביב מי שיש לו סטורי שעוד לא ראית. לחיצה על העיגול פותחת את הסטורי
+function ssStoryKey(uid, name) {
+  try {
+    if (typeof storiesBuildGroups !== 'function') return '';
+    const { followed, suggested } = storiesBuildGroups();
+    const g = followed.concat(suggested).find(g => g && g.items && g.items.length && ((uid && g.uid === uid) || (!uid && !g.uid && g.name === name)));
+    return g ? g.key : '';
+  } catch (e) { return ''; }
+}
+function ssStoryClick(key) { return key ? ` role="button" title="צפייה בסטורי" onclick="event.stopPropagation(); event.preventDefault(); closeSiteSearch(); if (typeof srchClose === 'function') srchClose(); storyOpen('${artEsc(key)}')"` : ''; }
 function ssxPersonHTML(u) {
   const h = typeof profileHandle === 'function' ? profileHandle(u.name) : '';
   const fon = u.uid ? (typeof isFollowing === 'function' && isFollowing(u.uid)) : (typeof igDemoFollowing === 'function' && igDemoFollowing(igDemoKeyOf(u.name || '')));
   const key = u.uid || (typeof igDemoKeyOf === 'function' ? igDemoKeyOf(u.name || '') : u.name || '');
-  return `<button type="button" class="ssx-person" onclick="ssOpenUser('${artEsc(u.uid)}','${artEsc(u.name || '')}')"><span class="ssx-av ring">${authorAvHTML({ authorId: u.uid, author: u.name })}</span><span class="ssx-pm"><b>${escHtml(u.name)}</b><small dir="ltr">${u.demo ? 'מוכר לדוגמה' : '@' + escHtml(h)}</small></span><span role="button" tabindex="0" class="ssx-pbtn ssx-fbtn${fon ? ' on' : ''}" data-fol="${escHtml(key)}" onclick="event.stopPropagation(); event.preventDefault(); mkCardFollow(this, '${artEsc(u.uid || '')}', '${artEsc(u.name || '')}')">${fon ? 'במעקב ✓' : '+ מעקב'}</span></button>`;
+  const sk = ssStoryKey(u.uid, u.name);
+  return `<button type="button" class="ssx-person" onclick="ssOpenUser('${artEsc(u.uid)}','${artEsc(u.name || '')}')"><span class="ssx-av${sk ? ' ring has-st' : ''}"${ssStoryClick(sk)}>${authorAvHTML({ authorId: u.uid, author: u.name })}</span><span class="ssx-pm"><b>${escHtml(u.name)}</b><small dir="ltr">${u.demo ? 'מוכר לדוגמה' : '@' + escHtml(h)}</small></span><span role="button" tabindex="0" class="ssx-pbtn ssx-fbtn${fon ? ' on' : ''}" data-fol="${escHtml(key)}" onclick="event.stopPropagation(); event.preventDefault(); mkCardFollow(this, '${artEsc(u.uid || '')}', '${artEsc(u.name || '')}')">${fon ? 'במעקב ✓' : '+ מעקב'}</span></button>`;
 }
 function ssxHTML(q, raw) {
   const L = ssxListings(q), people = ssFindUsers(q);
@@ -25486,25 +25497,35 @@ function ssxHTML(q, raw) {
 // מסך פתיחת החיפוש (כמו ב-X): "חיפושים אחרונים" עם ✕, ועיגולים גדולים — אנשים (טבעת צבעונית, שם ו-@) ומילים שחיפשת
 function ssxEmptyHTML() {
   const rec = ssRecentGet(), ppl = rec.filter(x => x.uid).slice(0, 10);
-  const words = [...new Set(rec.filter(x => x.q).map(x => x.q).concat(typeof srchRecent === 'function' ? srchRecent() : []))].slice(0, 10);
+  // מילים שחיפשת: בלי אות בודדת ובלי התחלות של מילה שכבר חיפשת (ג → גיטרה)
+  const raw = [...new Set(rec.filter(x => x.q).map(x => String(x.q).trim()).concat(typeof srchRecent === 'function' ? srchRecent() : []))].filter(q => q.length >= 2);
+  const words = raw.filter((q, i) => !raw.some((o, j) => j !== i && o.length > q.length && o.startsWith(q))).slice(0, 8);
   const all = typeof mktAll === 'function' ? mktAll() : [];
   const thumb = q => { const r = all.find(x => x.img && String(x.title || '').toLowerCase().includes(String(q).toLowerCase())); return r ? rentThumb(r) : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>'; };
   const ver = window.verifiedUsersMap || {};
-  const person = u => `<button type="button" class="ssx-rc" onclick="ssOpenUser('${artEsc(u.uid)}','${artEsc(u.name || '')}')"><span class="ssx-rci ring">${authorAvHTML({ authorId: u.uid, author: u.name || '?' })}</span><b>${escHtml(u.name || '')}${ver[u.uid] ? '<i class="ssx-ver">✓</i>' : ''}</b><small dir="ltr">@${escHtml(typeof profileHandle === 'function' ? profileHandle(u.name) : '')}</small></button>`;
-  const word = q => `<button type="button" class="ssx-rc" onclick="ssUseQuery('${artEsc(q)}')"><span class="ssx-rci ring q">${thumb(q)}</span><b>${escHtml(q)}</b><small>חיפוש</small></button>`;
-  const items = ppl.map(person).join('') + words.map(word).join('');
+  const person = u => { const sk = ssStoryKey(u.uid, u.name); return `<button type="button" class="ssx-rc" onclick="ssOpenUser('${artEsc(u.uid)}','${artEsc(u.name || '')}')"><span class="ssx-rci${sk ? ' ring has-st' : ' plain'}"${ssStoryClick(sk)}>${authorAvHTML({ authorId: u.uid, author: u.name || '?' })}</span><b>${escHtml(u.name || '')}${ver[u.uid] ? '<i class="ssx-ver">✓</i>' : ''}</b><small dir="ltr">@${escHtml(typeof profileHandle === 'function' ? profileHandle(u.name) : '')}</small></button>`; };
+  // כל מילה בשורה משלה (כמו רשימה): עיגול עם תמונה, המילה, ו-✕ להסרה
+  const word = q => `<div class="ssx-qrow"><button type="button" class="ssx-qmain" onclick="ssUseQuery('${artEsc(q)}')"><span class="ssx-qi plain">${thumb(q)}</span><span class="ssx-qt"><b>${escHtml(q)}</b><small>חיפוש אחרון</small></span></button><button type="button" class="ssx-qx" onclick="ssxRecentRemove('${artEsc(q)}')" aria-label="הסרה">✕</button></div>`;
+  const items = (ppl.length ? `<div class="ssx-rrow">${ppl.map(person).join('')}</div>` : '') + (words.length ? `<div class="ssx-qlist">${words.map(word).join('')}</div>` : '');
   // אין חיפושים אחרונים — מציעים: מוכרים בולטים ומודעות פופולריות, באותם עיגולים
   let sug = '';
   if (!items) {
     const sellers = {}; all.forEach(r => { const n = (typeof mktWho === 'function' && mktWho(r)) || r.owner; if (!n) return; const k = r.uid || 'n:' + n; sellers[k] = sellers[k] || { uid: r.uid || '', name: n, c: 0 }; sellers[k].c++; });
     const topSellers = Object.values(sellers).sort((a, b) => b.c - a.c).slice(0, 5);
     const topItems = all.filter(r => r.img).sort((a, b) => (typeof libScore === 'function' ? libScore(b) - libScore(a) : 0)).slice(0, 6);
-    const seller = u => `<button type="button" class="ssx-rc" onclick="ssOpenUser('${artEsc(u.uid)}','${artEsc(u.name)}')"><span class="ssx-rci ring">${authorAvHTML({ authorId: u.uid, author: u.name })}</span><b>${escHtml(u.name)}</b><small>${u.c} מודעות</small></button>`;
-    const item = r => `<button type="button" class="ssx-rc" onclick="closeSiteSearch(); rentOpen('${artEsc(r.id)}')"><span class="ssx-rci ring q">${rentThumb(r)}</span><b>${escHtml(r.title)}</b><small>${Number(r.price) > 0 ? '₪' + mktDiscP(r.price).toLocaleString('he-IL', { maximumFractionDigits: 2 }) : escHtml(r.city || '')}</small></button>`;
-    sug = `<div class="ssx-rh"><b>הצעות בשבילך</b></div><div class="ssx-rrow">${topItems.map(item).join('')}</div>${topSellers.length ? `<div class="ssx-rh"><b>מוכרים בולטים</b></div><div class="ssx-rrow">${topSellers.map(seller).join('')}</div>` : ''}`;
+    // כל הצעה בשורה משלה: עיגול, שם, ומתחת מחיר / מספר מודעות
+    const seller = u => { const sk = ssStoryKey(u.uid, u.name); return `<div class="ssx-qrow"><button type="button" class="ssx-qmain" onclick="ssOpenUser('${artEsc(u.uid)}','${artEsc(u.name)}')"><span class="ssx-qi${sk ? ' ring has-st' : ' plain'}"${ssStoryClick(sk)}>${authorAvHTML({ authorId: u.uid, author: u.name })}</span><span class="ssx-qt"><b>${escHtml(u.name)}</b><small>${u.c} מודעות</small></span></button></div>`; };
+    const item = r => `<div class="ssx-qrow"><button type="button" class="ssx-qmain" onclick="closeSiteSearch(); rentOpen('${artEsc(r.id)}')"><span class="ssx-qi plain">${rentThumb(r)}</span><span class="ssx-qt"><b>${escHtml(r.title)}</b><small>${Number(r.price) > 0 ? '₪' + mktDiscP(r.price).toLocaleString('he-IL', { maximumFractionDigits: 2 }) : escHtml(r.city || '')}</small></span></button></div>`;
+    sug = `<div class="ssx-rh"><b>הצעות בשבילך</b></div><div class="ssx-qlist">${topItems.map(item).join('')}</div>${topSellers.length ? `<div class="ssx-rh"><b>מוכרים בולטים</b></div><div class="ssx-qlist">${topSellers.map(seller).join('')}</div>` : ''}`;
   }
-  return `<div class="ss-panel ssx ssx-empty">${items ? `<div class="ssx-rh"><b>חיפושים אחרונים</b><button type="button" class="ssx-rclear" onclick="ssxRecentClearAll()" aria-label="ניקוי החיפושים האחרונים">✕</button></div><div class="ssx-rrow">${items}</div>` : sug || '<div class="ss-hint">חפשו אנשים, מודעות, פורומים וחדשות</div>'}</div>`;
+  return `<div class="ss-panel ssx ssx-empty">${items ? `<div class="ssx-rh"><b>חיפושים אחרונים</b><button type="button" class="ssx-rclear" onclick="ssxRecentClearAll()" aria-label="ניקוי החיפושים האחרונים">✕</button></div>${items}` : sug || '<div class="ss-hint">חפשו אנשים, מודעות, פורומים וחדשות</div>'}</div>`;
 }
+function ssxRecentRemove(q) {
+  ssRecentSet(ssRecentGet().filter(x => !x.q || String(x.q).trim() !== q));
+  try { localStorage.setItem(SRCH_KEY, JSON.stringify(srchRecent().filter(x => x !== q))); } catch (e) {}
+  ssxRerender();
+}
+window.ssxRecentRemove = ssxRecentRemove;
 function ssxRecentClearAll() { ssRecentSet([]); try { localStorage.removeItem(SRCH_KEY); } catch (e) {} ssxRerender(); }
 window.ssxRecentClearAll = ssxRecentClearAll;
 function ssxRerender() { const inp = document.getElementById('site-search-input'); siteSearchRender(inp ? inp.value : ''); }
@@ -28689,7 +28710,7 @@ function ssPeopleRegister(u) {
 try { onAuthStateChanged(auth, u => setTimeout(() => ssPeopleRegister(u), 2500)); } catch (e) {}
 setTimeout(ssPeopleSubscribe, 3000);
 function ssPeopleRowHTML(list) {
-  return `<div class="ss-recent-users ss-people-row">${list.map(u => `<button type="button" class="ss-ru" onmousedown="event.preventDefault()" onclick="ssOpenUser('${artEsc(u.uid)}','${artEsc(u.name || '')}')">${authorAvHTML({ authorId: u.uid, author: u.name })}<b>${escHtml(u.name || '')}</b><small dir="ltr">${u.demo ? 'מוכר לדוגמה' : '@' + escHtml(typeof profileHandle === 'function' ? profileHandle(u.name || '') : (u.name || ''))}</small></button>`).join('')}</div>`;
+  return `<div class="ss-recent-users ss-people-row">${list.map(u => { const sk = ssStoryKey(u.uid, u.name); return `<button type="button" class="ss-ru${sk ? ' has-st' : ''}" onmousedown="event.preventDefault()" onclick="ssOpenUser('${artEsc(u.uid)}','${artEsc(u.name || '')}')"><span class="ss-ru-av"${ssStoryClick(sk)}>${authorAvHTML({ authorId: u.uid, author: u.name })}</span><b>${escHtml(u.name || '')}</b><small dir="ltr">${u.demo ? 'מוכר לדוגמה' : '@' + escHtml(typeof profileHandle === 'function' ? profileHandle(u.name || '') : (u.name || ''))}</small></button>`; }).join('')}</div>`;
 }
 function ssOpenUser(uid, name) {
   if (!uid) { if (typeof srchClose === 'function') srchClose(); closeSiteSearch(); if (typeof rentOpenSeller === 'function') rentOpenSeller('', name); return; }   // מוכר לדוגמה: המודעות שלו בשוק
