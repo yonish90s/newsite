@@ -2208,6 +2208,7 @@ html:not(.theme-dark) body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#
 html:not(.theme-dark) .tg-msg-del { color: #777777; }
 html:not(.theme-dark) .tg-msg-cancel { color: #111111; }
 html:not(.theme-dark) body:not(#_):not(#_):not(#_):not(#_) #mainContent .mk-act2 :is(.mk-a-like, .mk-a-rep, .pti-repost).on .pti-n { background: linear-gradient(90deg, #7c7c7c, #828282, #777777) !important; }
+html:not(.theme-dark) body:not(#_):not(#_):not(#_):not(#_) #mainContent .tw-head .mk-sg-price { color: #6f6f6f !important; background: rgba(111,111,111,0.12) !important; }
 html:not(.theme-dark) [style*="border:1.5px solid #e2e8f0"], html:not(.theme-dark) [style*="border: 1.5px solid #e2e8f0"] { border: 1.5px solid #e7e7e7 !important; }
 html:not(.theme-dark) [style*="color:#1e293b"], html:not(.theme-dark) [style*="color: #1e293b"] { color: #111111 !important; }
 html:not(.theme-dark) [style*="background:#dc2626"], html:not(.theme-dark) [style*="background: #dc2626"] { background: #111111 !important; }
