@@ -38707,18 +38707,9 @@ function uaSearch(val) {
 function _uaDraw() {
   const host = document.querySelector('.ua-page');
   if (!host) return;
-  const u = auth.currentUser, reg = u && !u.isAnonymous;
-  if (!reg) {
-    host.innerHTML = `<div class="ua-shell ua-guest">
-      <div class="ua-crumb">ניהול פרופיל / לוח בקרה</div>
-      <h2>התחברו כדי לצפות בנתוני הפרופיל שלכם</h2>
-      <p>כאן תוכלו לראות כמה צפו לכם בפרופיל, אילו מודעות מביאות הכי הרבה תנועה, ולעקוב אחרי מודעות מתוזמנות.</p>
-      <button type="button" class="ua-login-btn" onclick="if(typeof openLiveChatLogin==='function') openLiveChatLogin()">כניסה או הרשמה</button>
-    </div>`;
-    return;
-  }
-  const name = (typeof liveChatUserName === 'function' && liveChatUserName()) || u.displayName || 'משתמש';
-  const ver = typeof isUserVerified === 'function' && isUserVerified(u.uid, name) ? verifiedSealHTML(15) : '';
+  const u = auth.currentUser, reg = u && !u.isAnonymous, uid = u ? u.uid : '';
+  const name = (typeof liveChatUserName === 'function' && liveChatUserName()) || (u && u.displayName) || 'אורח';
+  const ver = uid && typeof isUserVerified === 'function' && isUserVerified(uid, name) ? verifiedSealHTML(15) : '';
   const items = _uaState.items;
   const totalAdViews = items.reduce((s, x) => s + x.views, 0);
   const totalLikes = items.reduce((s, x) => s + x.likes, 0);
@@ -38742,7 +38733,7 @@ function _uaDraw() {
     <div class="ua-crumb">ניהול פרופיל / לוח בקרה וניתוח נתונים</div>
     <div class="ua-card ua-head-card">
       <div class="ua-head-row">
-        <span class="ua-av">${typeof authorAvHTML === 'function' ? authorAvHTML({ author: name, uid: u.uid }) : '👤'}</span>
+        <span class="ua-av">${typeof authorAvHTML === 'function' ? authorAvHTML({ author: name, uid }) : '👤'}</span>
         <div class="ua-head-meta">
           <div class="ua-head-name"><b>${escHtml(name)}</b>${ver}</div>
           <div class="ua-head-sub">${items.length} מודעות · ${schedCount} מתוזמנות · ${_uaState.followers} עוקבים</div>
@@ -38813,16 +38804,16 @@ async function openUserAnalytics() {
   mainContent.innerHTML = `<div class="ua-page"></div>`;
   try { window.scrollTo(0, 0); } catch (e) {}
   setTimeout(() => { try { mtSync(); } catch (e) {} }, 50);
-  const u = auth.currentUser, reg = u && !u.isAnonymous;
-  if (reg) {
-    const name = (typeof liveChatUserName === 'function' && liveChatUserName()) || u.displayName || 'משתמש';
-    _uaState = { q: '', filter: 'all', followers: 0, following: 0, profViews: 0, viewers: [], items: _uaCollectUserAds(u.uid, name) };
-    _uaDraw();
+  const u = auth.currentUser, uid = u ? u.uid : '';
+  const name = (typeof liveChatUserName === 'function' && liveChatUserName()) || (u && u.displayName) || 'אורח';
+  _uaState = { q: '', filter: 'all', followers: 0, following: 0, profViews: 0, viewers: [], items: uid ? _uaCollectUserAds(uid, name) : [] };
+  _uaDraw();
+  if (uid) {
     try {
       const [fcSnap, pvSnap, vwSnap] = await Promise.all([
-        get(ref(db, `website/follow_counts/${u.uid}`)),
-        get(ref(db, `website/profile_views/${u.uid}`)),
-        get(ref(db, `website/ad_viewers/${u.uid}`))
+        get(ref(db, `website/follow_counts/${uid}`)),
+        get(ref(db, `website/profile_views/${uid}`)),
+        get(ref(db, `website/ad_viewers/${uid}`))
       ]);
       const fc = fcSnap.val() || {};
       _uaState.followers = Math.max(0, Number(fc.followers) || 0);
@@ -38841,8 +38832,6 @@ async function openUserAnalytics() {
       _uaState.viewers = vwList;
       _uaDraw();
     } catch (e) {}
-  } else {
-    _uaDraw();
   }
 }
 Object.assign(window, { openUserAnalytics, uaSetFilter, uaSearch });
