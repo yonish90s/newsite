@@ -38208,7 +38208,7 @@ Object.assign(window, { phoneVerifyOpen, pvSend, pvBack, pvClose });
         </div>
         <button type="button" class="mt-circ mt-me" onclick="mtMe()" aria-label="המשתמש שלי"></button>
       </div>
-      <nav class="mt-tabs"><button type="button" data-t="home" onclick="mtTab('home')">בית</button><button type="button" data-t="feed" onclick="mtTab('feed')">במעקב</button><button type="button" data-t="deals" class="mt-dls" onclick="mtTab('deals')">עסקאות<i class="mt-apv-n mt-dls-n"></i></button><button type="button" data-t="dash" onclick="mtTab('dash')">לוח בקרה</button><button type="button" data-t="saved" onclick="mtTab('saved')">שמורים</button><button type="button" data-t="other" onclick="mtTab('other')">אחר</button><button type="button" data-t="apv" class="mt-apv" hidden onclick="mtTab('apv')">אישור<i class="mt-apv-n"></i></button><span class="mt-count" aria-live="polite"></span></nav>`;
+      <nav class="mt-tabs"><button type="button" data-t="home" onclick="mtTab('home')">בית</button><button type="button" data-t="feed" onclick="mtTab('feed')">במעקב</button><button type="button" data-t="deals" class="mt-dls" onclick="mtTab('deals')">עסקאות<i class="mt-apv-n mt-dls-n"></i></button><button type="button" data-t="dash" onclick="mtTab('dash')">בקרה</button><button type="button" data-t="saved" onclick="mtTab('saved')">שמורים</button><button type="button" data-t="other" onclick="mtTab('other')">אחר</button><button type="button" data-t="apv" class="mt-apv" hidden onclick="mtTab('apv')">אישור<i class="mt-apv-n"></i></button><span class="mt-count" aria-live="polite"></span></nav>`;
     document.body.appendChild(el);
     document.documentElement.classList.add('has-mtop');
     mtSync();
