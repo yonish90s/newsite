@@ -51,7 +51,7 @@
   <!-- ספריית localforage לשמירת תמונות -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
   <!-- קישור לקובץ העיצוב החיצוני (עם פרמטר למניעת שמירה במטמון) -->
-  <link rel="stylesheet" href="./style.min.css?v=2502">
+  <link rel="stylesheet" href="./style.min.css?v=2503">
   <link rel="stylesheet" id="mono-css" href="./mono.min.css?v=337">
   <link rel="stylesheet" id="dark-css" data-href="./dark.min.css?v=697" media="not all">
   <script>
@@ -61,7 +61,8 @@
     (function () {
       var t = null;
       try { t = localStorage.getItem('site_theme'); } catch (e) {}
-      if (t !== 'light' && t !== 'dark' && t !== 'system') t = 'light';
+      // בלי בחירה שמורה: במובייל כהה כברירת מחדל, במחשב בהיר
+      if (t !== 'light' && t !== 'dark' && t !== 'system') t = (window.matchMedia && matchMedia('(max-width: 900px)').matches) ? 'dark' : 'light';
       document.documentElement.dataset.themeMode = t;
       if (t === 'system') t = window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';   // "לפי המכשיר"
       if (t === 'dark') { document.documentElement.classList.add('theme-dark'); var dc = document.getElementById('dark-css'); if (dc) { dc.href = dc.dataset.href; dc.media = 'all'; } }
