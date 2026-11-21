@@ -28673,12 +28673,45 @@ function dealShareRead(pfx) {
   return out;
 }
 const DEAL_DEMO_SHARE = { m1: { phone: '050-1234567', addr: 'הרצל 12, תל אביב' }, m2: { phone: '052-7654321' }, m3: { addr: 'ביאליק 5, רמת גן' }, d1: { phone: '050-1234567', addr: 'הרצל 12, תל אביב' } };
+function demoSentOffersGet() {
+  try { const a = JSON.parse(localStorage.getItem('bw_demo_sent_offers') || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; }
+}
+function demoSentOfferAdd(r, price) {
+  if (!r) return;
+  const now = Date.now();
+  const list = demoSentOffersGet();
+  list.unshift({
+    id: 'demo_out_' + now + '_' + Math.random().toString(36).slice(2, 6),
+    kind: 'price',
+    itemId: String(r.id || ''),
+    title: String(r.title || 'מודעה'),
+    price: Number(price) || 0,
+    img: String(r.img || (r.images && r.images[0]) || ''),
+    fromUid: '_me',
+    fromName: 'אני',
+    toUid: 'demo_' + (r.owner || 'seller'),
+    toName: String(r.owner || 'מוכר'),
+    at: now,
+    updatedAt: now,
+    status: 'pending',
+    lastBy: '_me',
+    demo: true
+  });
+  try { localStorage.setItem('bw_demo_sent_offers', JSON.stringify(list.slice(0, 40))); } catch (e) {}
+  try {
+    const m = typeof rentMarks === 'function' ? rentMarks() : {};
+    if (r.id) m['deal:' + r.id] = 1;
+    if (typeof rentMarksKey === 'function') localStorage.setItem(rentMarksKey(), JSON.stringify(m));
+    document.querySelectorAll(`.mk-a-deal[data-deal-id="${CSS.escape(String(r.id))}"]`).forEach(el => el.classList.add('on'));
+  } catch (e) {}
+  if (typeof offersRerender === 'function') offersRerender();
+}
 function dealDetailOpen(id, demo) {
   const me = auth.currentUser ? auth.currentUser.uid : '';
-  let o = demo ? (CMP_OFX_DEMO().concat(typeof OFX_DEMO === 'function' ? OFX_DEMO() : []).find(x => x.id === id)) : (offersMap[id] || null);
+  let o = demo ? (CMP_OFX_DEMO().concat(typeof OFX_DEMO === 'function' ? OFX_DEMO() : [], demoSentOffersGet()).find(x => x.id === id)) : (offersMap[id] || null);
   if (!o) return;
   if (demo) o = Object.assign({}, o, (typeof ofxDemoState === 'object' && ofxDemoState[id]) || {}, { share_from: DEAL_DEMO_SHARE[id] || null });
-  const mine = !demo && o.fromUid === me;
+  const mine = demo ? (o.fromUid === '_me' || (me && o.fromUid === me)) : o.fromUid === me;
   const other = mine ? (o.toName || 'משתמש') : (o.fromName || 'משתמש'), otherUid = mine ? o.toUid : o.fromUid;
   const theirShare = (mine ? o.share_to : o.share_from) || null, myShare = (mine ? o.share_from : o.share_to) || null;
   const kindName = { price: 'הצעת מחיר', loan: 'השאלה', rent: 'השכרה' }[o.kind] || (/השאלה/.test(o.title || '') ? 'השאלה' : /החלפה/.test(o.title || '') ? 'החלפה' : 'מכירה');
@@ -34987,23 +35020,25 @@ let dlsTab = 'in';
 function dlsList() {
   const u = auth.currentUser, me = u ? u.uid : '';
   let list = me ? Object.values(offersMap).filter(o => (dlsTab === 'out' ? o.fromUid : o.toUid) === me) : [];
+  if (dlsTab === 'out' && typeof demoSentOffersGet === 'function') list = demoSentOffersGet().concat(list);
   const demo = !list.length && dlsTab === 'in';
   if (demo) list = OFX_DEMO().map(o => Object.assign({}, o, ofxDemoState[o.id] || {}));
-  const turn = o => demo ? o.status === 'pending' : offersMyTurn(o), at = o => o.updatedAt || o.at || 0;
+  const turn = o => demo ? o.status === 'pending' : (o.demo ? false : offersMyTurn(o)), at = o => o.updatedAt || o.at || 0;
   list.sort((a, b) => (turn(b) - turn(a)) || (at(b) - at(a)));
   return { list, demo, me: demo ? '_me' : me, turn };
 }
 function dlsSqHTML(o, me, demo, myTurn) {
-  const mine = o.fromUid === me, other = mine ? (o.toName || 'משתמש') : (o.fromName || 'אורח'), otherUid = mine ? o.toUid : o.fromUid;
-  const it = !demo && o.itemId && typeof mktAll === 'function' ? mktAll().find(x => x.shId === o.itemId || x.id === o.itemId) : null;
-  const img = demo ? ({ d2: 'rent/u-sofa.jpg?v=2', d3: 'rent/u-bike.jpg?v=2', d4: 'rent/u-fridge.jpg?v=2' })[o.id] || '' : (dealImages(o)[0] || '');
+  const isDemo = demo || !!o.demo;
+  const mine = o.fromUid === me || o.fromUid === '_me', other = mine ? (o.toName || 'משתמש') : (o.fromName || 'אורח'), otherUid = mine ? o.toUid : o.fromUid;
+  const it = !isDemo && o.itemId && typeof mktAll === 'function' ? mktAll().find(x => x.shId === o.itemId || x.id === o.itemId) : null;
+  const img = o.img || (demo ? ({ d2: 'rent/u-sofa.jpg?v=2', d3: 'rent/u-bike.jpg?v=2', d4: 'rent/u-fridge.jpg?v=2' })[o.id] || '' : (dealImages(o)[0] || ''));
   const st = o.status === 'accepted' || o.status === 'signed' ? ['אושרה', 'ok'] : o.status === 'rejected' ? ['נדחתה', 'no'] : o.status === 'counter' ? ['הצעה נגדית', 'deal'] : [myTurn ? 'ממתינה לך' : 'ממתינה', 'wait'];
   const act = (kind, label, fn) => `<button type="button" class="dls-b ${kind}" title="${label}" aria-label="${label}" onclick="event.stopPropagation(); ${fn}">${OFX_IC[kind]}</button>`;
   const dmAct = k => `ofxDemo('${k}', '${artEsc(o.id)}', '${artEsc(o.title || '')}', ${Number(o.price) || 0})`;
   const btns = myTurn ? `<span class="dls-acts">${act('no', 'דחייה', demo ? dmAct('no') : `offerDecide('${artEsc(o.id)}','rejected')`)}${act('deal', 'משא ומתן', demo ? dmAct('deal') : `offerCounter('${artEsc(o.id)}')`)}${act('ok', 'אישור', demo ? dmAct('ok') : `offerDecide('${artEsc(o.id)}','accepted')`)}</span>` : '';
   const was = it && Number(it.price) > 0 && Number(it.price) !== Number(o.price) ? `<s class="mk-was">₪${Number(it.price).toLocaleString('he-IL')}</s>` : '';
-  const av = demo && typeof demoAvatarSVG === 'function' ? `<span class="au-av has-av">${demoAvatarSVG(other)}</span>` : authorAvHTML({ author: other, uid: otherUid || '' });
-  return `<div class="dls-sq${myTurn ? ' turn' : ''}" data-oid="${escHtml(o.id || '')}" role="button" tabindex="0" onclick="dealDetailOpen('${artEsc(o.id || '')}', ${demo ? 'true' : 'false'})">
+  const av = isDemo && typeof demoAvatarSVG === 'function' ? `<span class="au-av has-av">${demoAvatarSVG(other)}</span>` : authorAvHTML({ author: other, uid: otherUid || '' });
+  return `<div class="dls-sq${myTurn ? ' turn' : ''}" data-oid="${escHtml(o.id || '')}" role="button" tabindex="0" onclick="dealDetailOpen('${artEsc(o.id || '')}', ${isDemo ? 'true' : 'false'})">
     <span class="dls-img">${img ? `<img src="${escHtml(img)}" alt="" loading="lazy" onerror="this.remove()">` : ''}<i style="--av:${typeof forumAvColor === 'function' ? forumAvColor({ uid: otherUid || '', name: other }) : '#8b5cf6'}">${escHtml(String(o.title || other).trim().charAt(0) || '?')}</i><span class="dls-who" title="${escHtml(other)}">${av}</span></span>
     <span class="dls-mid">
       <span class="dls-tx"><b>${escHtml(o.title || 'הצעה')}</b><small>${mine ? 'אל' : 'מאת'} ${escHtml(other)} · ${escHtml(ofxDay(o.updatedAt || o.at || 0))}</small></span>
@@ -35199,9 +35234,14 @@ function mkCardHaggle(btn, id) {
   const r = mktAll().find(x => x.id === id); if (!r) return;
   const base = Number(r.price) > 0 ? Math.round(mktDiscP(r.price)) : 500;
   mkOfferSheetOpen(r.title || 'מודעה', base, async v => {
-    if (!(r.shId && r.uid)) { glassBanner({ title: 'ההצעה נשלחה (דוגמה)', sub: (r.title || '') + ' · ₪' + v.toLocaleString('he-IL'), icon: 'deal', cls: 'gbn-deal', ms: 2600 }); return; }
+    if (!(r.shId && r.uid)) {
+      demoSentOfferAdd(r, v);
+      glassBanner({ title: 'ההצעה נשלחה', sub: (r.title || '') + ' · ₪' + v.toLocaleString('he-IL'), icon: 'deal', cls: 'gbn-deal', ms: 2600 });
+      return;
+    }
+    if (!auth.currentUser && typeof ensureGuestSignedIn === 'function') await ensureGuestSignedIn();
     const u = auth.currentUser;
-    if (!u || (typeof isRegisteredUser === 'function' && !isRegisteredUser())) { glassBanner({ title: 'צריך להתחבר', sub: 'כדי לשלוח הצעת מחיר', icon: 'warn', ms: 2600 }); if (typeof entryLoginOpen === 'function') entryLoginOpen(); return; }
+    if (!u) { glassBanner({ title: 'צריך להתחבר', sub: 'כדי לשלוח הצעת מחיר', icon: 'warn', ms: 2600 }); if (typeof entryLoginOpen === 'function') entryLoginOpen(); return; }
     if (u.uid === r.uid) { glassBanner({ title: 'זו המודעה שלך', icon: 'warn', ms: 2200 }); return; }
     window.__offerItemId = r.shId;
     await sendPriceOffer(r.title || '', r.uid, r.owner || '', v, true);
@@ -35221,9 +35261,14 @@ async function mkSliderSend(id) {
   if (!(v > 0)) return;
   const r = mktAll().find(x => x.id === id); if (!r) return;
   closeMSheet();
-  if (!(r.shId && r.uid)) { glassBanner({ title: 'ההצעה נשלחה (דוגמה)', sub: (r.title || '') + ' · ₪' + v.toLocaleString('he-IL'), icon: 'deal', cls: 'gbn-deal', ms: 2600 }); return; }
+  if (!(r.shId && r.uid)) {
+    demoSentOfferAdd(r, v);
+    glassBanner({ title: 'ההצעה נשלחה', sub: (r.title || '') + ' · ₪' + v.toLocaleString('he-IL'), icon: 'deal', cls: 'gbn-deal', ms: 2600 });
+    return;
+  }
+  if (!auth.currentUser && typeof ensureGuestSignedIn === 'function') await ensureGuestSignedIn();
   const u = auth.currentUser;
-  if (!u || (typeof isRegisteredUser === 'function' && !isRegisteredUser())) { glassBanner({ title: 'צריך להתחבר', sub: 'כדי לשלוח הצעת מחיר', icon: 'warn', ms: 2600 }); if (typeof entryLoginOpen === 'function') entryLoginOpen(); return; }
+  if (!u) { glassBanner({ title: 'צריך להתחבר', sub: 'כדי לשלוח הצעת מחיר', icon: 'warn', ms: 2600 }); if (typeof entryLoginOpen === 'function') entryLoginOpen(); return; }
   if (u.uid === r.uid) { glassBanner({ title: 'זו המודעה שלך', icon: 'warn', ms: 2200 }); return; }
   window.__offerItemId = r.shId;
   await sendPriceOffer(r.title || '', r.uid, r.owner || '', v, true);
