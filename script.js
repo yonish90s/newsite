@@ -34819,7 +34819,7 @@ function twStripGo(btn, dir) {
 window.twStripDots = twStripDots; window.twStripGo = twStripGo;
 function twPostHTML(r) {
   const sec = mktSecOf(r), biz = sec === 'biz';
-  const price = Number(r.price) > 0 ? `<small class="mk-sg-price">${rentTypeIcon(r)}${mktDiscP(r.price).toLocaleString('he-IL', { maximumFractionDigits: 2 })}&nbsp;₪${mktWasHTML(r.price)}</small>` : '';
+  const price = Number(r.price) > 0 ? `<small class="mk-sg-price">${mktDiscP(r.price).toLocaleString('he-IL', { maximumFractionDigits: 2 })}&nbsp;₪${mktWasHTML(r.price)}</small>` : '';
   const src = r.img || (r.images || [])[0] || '';
   // כמה תמונות: מזפזפים בהחלקה (scroll-snap), עם נקודות וחצים קטנים; לחיצה רגילה עדיין פותחת את המודעה
   const imgs = [...new Set([r.img, ...(r.images || [])].filter(x => typeof x === 'string' && x))].slice(0, 10);
