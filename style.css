@@ -23762,3 +23762,26 @@ html body:not(#_):not(#_) #mainContent:has(> .lib-page) > .site-top > .st-bar .s
 html body:not(#_):not(#_) #mainContent:has(> .lib-page) > .site-top > .st-bar .st-item.st-sugg .st-name {
   font-size: 9.5px !important;
 }
+
+/* צביעת טאב עסקאות וכפתורי התקבלו / נשלחו כשיש עסקה נכנסת שממתינה לתגובה */
+html body:not(#_):not(#_):not(#_) #m-top .mt-tabs .mt-dls.has-deals {
+  background: linear-gradient(135deg, #8b5cf6, #ec4899, #ef4444);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: #ec4899 !important;
+  font-weight: 800 !important;
+}
+html body:not(#_):not(#_):not(#_) #m-top .mt-tabs .mt-dls.has-deals .mt-apv-n {
+  -webkit-text-fill-color: #ffffff;
+}
+html body:not(#_):not(#_):not(#_) .dls-tabs button.has-new {
+  border-color: #ec4899 !important;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.16), rgba(236, 72, 153, 0.2)) !important;
+  color: #ec4899 !important;
+  font-weight: 800 !important;
+}
+html body:not(#_):not(#_):not(#_) .dls-tabs button.on.has-new {
+  background: linear-gradient(135deg, #8b5cf6, #ec4899, #ef4444) !important;
+  border-color: transparent !important;
+  color: #ffffff !important;
+}

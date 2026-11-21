@@ -28636,9 +28636,10 @@ function offersMyTurn(o) {
   return !!(u && o && (o.status === 'pending' || o.status === 'counter') && o.lastBy !== u.uid);
 }
 function offersBadge() {
-  const b = document.getElementById('offers-badge'); if (!b) return;
+  const b = document.getElementById('offers-badge');
   const n = Object.values(offersMap).filter(offersMyTurn).length;   // הצעות שמחכות לתשובה שלי
-  b.textContent = n > 9 ? '9+' : String(n); b.style.display = n ? '' : 'none';
+  if (b) { b.textContent = n > 9 ? '9+' : String(n); b.style.display = n ? '' : 'none'; }
+  try { if (typeof dlsTabPaint === 'function') dlsTabPaint(); } catch (e) {}
 }
 var offersTab = 'in';
 // הצעות בסגנון רשימת העברות: למעלה כרטיס "ממתינות לתשובה", ומתחת היסטוריה לפי ימים (היום / אתמול / תאריך)
@@ -35113,9 +35114,12 @@ function dlsSqHTML(o, me, demo, myTurn) {
 }
 function dlsHTML() {
   const { list, demo, me, turn } = dlsList();
-  const u = auth.currentUser, guest = !u || u.isAnonymous;
+  const u = auth.currentUser, uid = u ? u.uid : '';
+  const allOffers = Object.values(offersMap || {});
+  const inHas = !!(uid && allOffers.some(o => o && o.toUid === uid && offersMyTurn(o)));
+  const outHas = !!(uid && allOffers.some(o => o && o.fromUid === uid && offersMyTurn(o)));
   const n = list.filter(turn).length;
-  return `<nav class="dls-tabs"><button type="button" class="${dlsTab === 'in' ? 'on' : ''}" onclick="dlsSetTab('in')">התקבלו</button><button type="button" class="${dlsTab === 'out' ? 'on' : ''}" onclick="dlsSetTab('out')">נשלחו</button>${n && !demo ? `<small>${n} מחכות לתשובה שלך</small>` : ''}</nav>
+  return `<nav class="dls-tabs"><button type="button" class="${dlsTab === 'in' ? 'on' : ''}${inHas ? ' has-new' : ''}" onclick="dlsSetTab('in')">התקבלו</button><button type="button" class="${dlsTab === 'out' ? 'on' : ''}${outHas ? ' has-new' : ''}" onclick="dlsSetTab('out')">נשלחו</button>${n && !demo ? `<small>${n} מחכות לתשובה שלך</small>` : ''}</nav>
     ${list.length ? `<div class="dls-grid">${list.map(o => dlsSqHTML(o, me, demo, turn(o))).join('')}</div>` : `<div class="rn-empty">${dlsTab === 'out' ? 'עדיין לא שלחת הצעות.<br>בכל מודעה יש כפתור משא ומתן.' : 'עדיין לא קיבלת הצעות.'}</div>`}
     ${demo ? '<p class="dls-note">כך ייראו ההצעות כשיתחילו להגיע מלקוחות</p>' : ''}`;
 }
@@ -35130,9 +35134,11 @@ function dlsOpen() {
 function dlsRefresh() { const el = document.querySelector('.dls-page'); if (el) el.innerHTML = dlsHTML(); }
 function dlsSetTab(t) { dlsTab = t; dlsRefresh(); }
 function dlsTabPaint() {
-  const i = document.querySelector('#m-top .mt-dls-n'); if (!i) return;
+  const i = document.querySelector('#m-top .mt-dls-n');
+  const btn = document.querySelector('#m-top .mt-tabs .mt-dls');
   const n = Object.values(offersMap || {}).filter(offersMyTurn).length;
-  i.textContent = n ? (n > 9 ? '9+' : String(n)) : '';
+  if (i) i.textContent = n ? (n > 9 ? '9+' : String(n)) : '';
+  if (btn) btn.classList.toggle('has-deals', n > 0);
 }
 Object.assign(window, { dlsOpen, dlsSetTab });
 // ===== דף "שמורים": מסודר בשורות כמו לוח עסקאות + סינון לפי השבוע / החודש / טווח חודשים =====
