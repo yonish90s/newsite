@@ -23464,15 +23464,27 @@ html body:not(#_):not(#_):not(#_):not(#_) #mainContent .mk-act2 :is(.mk-a-like, 
 
 
 /* כפתור "לתשלום" בעגלה גדול פי 2 על כל רוחב המסך */
-html body #cart-panel .cart-foot { padding: 12px 12px calc(14px + env(safe-area-inset-bottom, 0px)) !important; }
+@media (max-width: 900px) {
+  html body #cart-panel .cart-card {
+    inset: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+  }
+}
+html body #cart-panel .cart-foot { padding: 12px 0 0 !important; gap: 10px !important; }
+html body #cart-panel .cart-foot .co-total { padding: 0 16px !important; }
 html body #cart-panel .cart-foot .ms-btn {
   width: 100% !important;
-  min-height: 58px !important;
-  height: 58px !important;
-  padding: 14px 20px !important;
-  font-size: 19px !important;
+  min-height: 64px !important;
+  height: calc(64px + env(safe-area-inset-bottom, 0px)) !important;
+  padding: 14px 20px calc(14px + env(safe-area-inset-bottom, 0px)) !important;
+  font-size: 20px !important;
   font-weight: 800 !important;
-  border-radius: 16px !important;
+  border-radius: 0 !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
