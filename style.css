@@ -23516,3 +23516,50 @@ html.theme-dark body:not(#_):not(#_):not(#_):not(#_) #mainContent .tw-head .mk-s
   color: #4ade80 !important;
   background: rgba(74, 222, 128, 0.14) !important;
 }
+
+
+/* התאמת גודל ופרופורציות של פס הסטורי לפס המעקב באותה שורה */
+html body:not(#_):not(#_) .fd-top-row > .st-bar {
+  padding: 6px 8px !important;
+  border-radius: 18px !important;
+  height: 100% !important;
+  box-sizing: border-box !important;
+  align-self: stretch !important;
+}
+html body:not(#_):not(#_) .fd-top-row > .fd-sugg {
+  height: 100% !important;
+  align-self: stretch !important;
+}
+html body:not(#_):not(#_) .fd-top-row > .st-bar .st-track {
+  padding: 0 !important;
+  gap: 8px !important;
+  align-items: center !important;
+  width: 100%;
+}
+html body:not(#_):not(#_) .fd-top-row > .st-bar .st-item {
+  width: 54px !important;
+  gap: 3px !important;
+}
+html body:not(#_):not(#_) .fd-top-row > .st-bar .st-ring {
+  width: 42px !important;
+  height: 42px !important;
+  padding: 2px !important;
+  border-width: 2px !important;
+}
+html body:not(#_):not(#_) .fd-top-row > .st-bar .st-name {
+  font-size: 10.5px !important;
+  line-height: 1.15 !important;
+}
+html body:not(#_):not(#_) .fd-top-row > .st-bar .st-plus {
+  width: 16px !important;
+  height: 16px !important;
+  font-size: 11px !important;
+}
+html body:not(#_):not(#_) .fd-top-row > .st-bar .st-item.st-sugg {
+  width: 44px !important;
+  gap: 2px !important;
+}
+html body:not(#_):not(#_) .fd-top-row > .st-bar .st-item.st-sugg .st-ring {
+  width: 34px !important;
+  height: 34px !important;
+}

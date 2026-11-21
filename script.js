@@ -28964,7 +28964,8 @@ const ofxHaggleCb = {};
 function offerHaggle(title, price, onSend, id) {
   glassBanner({ title: 'ההצעה הושהתה', sub: 'כתבו למטה את הסכום החדש' + (Number(price) > 0 ? ' · עכשיו ₪' + Number(price).toLocaleString('he-IL') : ''), icon: 'deal', cls: 'gbn-deal', ms: 2600 });
   const rows = id ? document.querySelectorAll(`.ofx-card .ofx-row[data-oid="${CSS.escape(id)}"]`) : [];
-  if (!rows.length) { const v = Math.round(Number(prompt('הסכום החדש (₪)', Number(price) > 0 ? Math.round(price) : '')) || 0); if (v > 0) onSend(v); return; }
+  // בעמוד העסקאות (שורות) — החלון עם הסליידר, במקום חלון הדפדפן
+  if (!rows.length) { if (typeof mkOfferSheetOpen === 'function') { mkOfferSheetOpen(title, price, onSend, 'הצעת מחיר'); return; } const v = Math.round(Number(prompt('הסכום החדש (₪)', Number(price) > 0 ? Math.round(price) : '')) || 0); if (v > 0) onSend(v); return; }
   ofxHaggleCb[id] = onSend;
   rows.forEach(row => {
     const old = row.nextElementSibling; if (old && old.classList.contains('ofx-haggle')) old.remove();
