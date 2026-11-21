@@ -496,6 +496,10 @@ html:not(.theme-dark) .tg-verified { background: #7f7f7f; }
 html:not(.theme-dark) .tg-unread { color: #7f7f7f; }
 html:not(.theme-dark) .tg-tick.read { color: #9c9c9c; }
 html:not(.theme-dark) .tg-thread-sub.is-typing { color: #898989; }
+html:not(.theme-dark) .tg-rec-cancel { border: 1px solid rgba(119,119,119,0.25); background: rgba(119,119,119,0.1); color: #777777; }
+html:not(.theme-dark) .tg-rec-live { background: rgba(119,119,119,0.08); color: #777777; }
+html:not(.theme-dark) .tg-rec-dot { background: #777777; }
+html:not(.theme-dark) .tg-voice-fill { background: #9c9c9c; }
 html:not(.theme-dark) .auth-or { color: rgba(161,161,161,0.9); }
 html:not(.theme-dark) .auth-or::before,html:not(.theme-dark) .auth-or::after { background: rgba(161,161,161,0.3); }
 html:not(.theme-dark) .auth-up-input { border: 1px solid rgba(161,161,161,0.35); }

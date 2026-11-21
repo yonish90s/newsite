@@ -19513,7 +19513,196 @@ function dmStopTyping() {
   }
 }
 
+let dmRec = null;
+let dmVoicePlaying = null;
+
+function dmRecFmt(sec) {
+  const s = Math.max(0, Math.floor(sec || 0));
+  return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+}
+
+function dmSetRecUI(active) {
+  const bar = document.getElementById('dm-rec-bar');
+  const comp = document.getElementById('dm-compose');
+  if (comp) comp.classList.toggle('is-recording', !!active);
+  if (bar) bar.style.display = active ? 'flex' : 'none';
+}
+
+function dmStopRecStream() {
+  if (!dmRec) return;
+  if (dmRec.timer) { clearInterval(dmRec.timer); dmRec.timer = 0; }
+  if (dmRec.stream) {
+    try { dmRec.stream.getTracks().forEach(t => t.stop()); } catch (e) {}
+    dmRec.stream = null;
+  }
+}
+
+function dmCancelVoice() {
+  if (dmRec) {
+    dmRec.canceled = true;
+    try { if (dmRec.recorder && dmRec.recorder.state !== 'inactive') dmRec.recorder.stop(); } catch (e) {}
+    dmStopRecStream();
+    dmRec = null;
+  }
+  dmSetRecUI(false);
+}
+window.dmCancelVoice = dmCancelVoice;
+
+async function dmStartVoice() {
+  const u = auth.currentUser;
+  if (!u || !dmActiveConv) return;
+  if (dmRec) return;
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || typeof MediaRecorder === 'undefined') {
+    if (typeof showCopyToast === 'function') showCopyToast('הדפדפן לא תומך בהקלטה קולית');
+    return;
+  }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const types = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus'];
+    const mimeType = types.find(t => { try { return MediaRecorder.isTypeSupported(t); } catch (e) { return false; } }) || '';
+    const opts = mimeType ? { mimeType, audioBitsPerSecond: 24000 } : { audioBitsPerSecond: 24000 };
+    let recorder;
+    try { recorder = new MediaRecorder(stream, opts); } catch (e) { recorder = new MediaRecorder(stream); }
+    const chunks = [];
+    const startedAt = Date.now();
+    const convSnap = { ...dmActiveConv };
+    dmRec = { recorder, stream, chunks, startedAt, timer: 0, canceled: false, convSnap };
+    recorder.ondataavailable = e => { if (e.data && e.data.size > 0) chunks.push(e.data); };
+    recorder.onstop = async () => {
+      const rec = dmRec;
+      dmStopRecStream();
+      dmRec = null;
+      dmSetRecUI(false);
+      if (!rec || rec.canceled || !chunks.length) return;
+      const durSec = Math.max(1, Math.round((Date.now() - rec.startedAt) / 1000));
+      const blob = new Blob(chunks, { type: recorder.mimeType || mimeType || 'audio/webm' });
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const dataUrl = String(reader.result || '');
+        if (!/^data:audio\/(webm|ogg|mp4|mpeg|mp3|wav|aac|x-m4a)(;codecs=[^;]+)?;base64,/.test(dataUrl)) {
+          if (typeof showCopyToast === 'function') showCopyToast('פורמט שמע לא נתמך');
+          return;
+        }
+        if (dataUrl.length > 890000) {
+          if (typeof showCopyToast === 'function') showCopyToast('ההודעה הקולית ארוכה מדי');
+          return;
+        }
+        const curU = auth.currentUser;
+        if (!curU || !rec.convSnap) return;
+        const { convId, otherUid, otherName } = rec.convSnap;
+        const now = Date.now();
+        const myName = dmName();
+        try {
+          await push(ref(db, `website/dms/${convId}/messages`), { from: curU.uid, fromName: myName, text: '', audio: dataUrl, audioDur: durSec, timestamp: now });
+          if (typeof trackEvent === 'function') trackEvent('dm_send');
+          const last = '🎤 הודעה קולית';
+          await update(ref(db, `website/user_dms/${curU.uid}/${convId}`), { otherUid, otherName, lastText: last, lastTime: now, unread: false });
+          await update(ref(db, `website/user_dms/${otherUid}/${convId}`), { otherUid: curU.uid, otherName: myName, lastText: last, lastTime: now, unread: true });
+        } catch (e) {
+          console.error('dm voice send failed', e);
+          if (typeof showCopyToast === 'function') showCopyToast('שגיאה בשליחת ההודעה הקולית');
+        }
+      };
+      reader.readAsDataURL(blob);
+    };
+    recorder.start(250);
+    dmSetRecUI(true);
+    const tEl = document.getElementById('dm-rec-timer');
+    if (tEl) tEl.textContent = '0:00';
+    dmRec.timer = setInterval(() => {
+      if (!dmRec) return;
+      const sec = Math.floor((Date.now() - dmRec.startedAt) / 1000);
+      const el = document.getElementById('dm-rec-timer');
+      if (el) el.textContent = dmRecFmt(sec);
+      if (sec >= 60) dmSendVoice();
+    }, 250);
+  } catch (e) {
+    console.error('mic error', e);
+    if (typeof showCopyToast === 'function') showCopyToast('יש לאשר גישה למיקרופון כדי לשלוח הודעה קולית');
+    dmSetRecUI(false);
+  }
+}
+window.dmStartVoice = dmStartVoice;
+
+function dmSendVoice() {
+  if (!dmRec || dmRec.canceled) return;
+  try {
+    if (dmRec.recorder && dmRec.recorder.state !== 'inactive') dmRec.recorder.stop();
+    else { dmStopRecStream(); dmRec = null; dmSetRecUI(false); }
+  } catch (e) {
+    dmCancelVoice();
+  }
+}
+window.dmSendVoice = dmSendVoice;
+
+function dmVoiceResetBtn(wrap) {
+  if (!wrap) return;
+  wrap.classList.remove('playing');
+  const btn = wrap.querySelector('.tg-voice-play');
+  if (btn) btn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.14v14l11-7-11-7z"/></svg>';
+}
+
+function dmToggleVoicePlay(btn) {
+  const wrap = btn && btn.closest('.tg-voice');
+  const audio = wrap && wrap.querySelector('audio');
+  if (!wrap || !audio) return;
+  if (dmVoicePlaying && dmVoicePlaying !== audio) {
+    try { dmVoicePlaying.pause(); } catch (e) {}
+    dmVoiceResetBtn(dmVoicePlaying.closest('.tg-voice'));
+  }
+  if (audio.paused) {
+    dmVoicePlaying = audio;
+    wrap.classList.add('playing');
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>';
+    if (!audio._bound) {
+      audio._bound = true;
+      audio.addEventListener('timeupdate', () => {
+        const dur = (audio.duration && isFinite(audio.duration)) ? audio.duration : Number(wrap.dataset.dur || 0);
+        const pct = dur > 0 ? Math.min(100, (audio.currentTime / dur) * 100) : 0;
+        const fill = wrap.querySelector('.tg-voice-fill');
+        const dEl = wrap.querySelector('.tg-voice-dur');
+        if (fill) fill.style.width = pct + '%';
+        if (dEl) dEl.textContent = dmRecFmt(audio.currentTime);
+      });
+      audio.addEventListener('ended', () => {
+        dmVoiceResetBtn(wrap);
+        const fill = wrap.querySelector('.tg-voice-fill');
+        const dEl = wrap.querySelector('.tg-voice-dur');
+        if (fill) fill.style.width = '0%';
+        if (dEl) dEl.textContent = dmRecFmt(Number(wrap.dataset.dur || audio.duration || 0));
+        if (dmVoicePlaying === audio) dmVoicePlaying = null;
+      });
+    }
+    audio.play().catch(() => { dmVoiceResetBtn(wrap); });
+  } else {
+    audio.pause();
+    dmVoiceResetBtn(wrap);
+    if (dmVoicePlaying === audio) dmVoicePlaying = null;
+  }
+}
+window.dmToggleVoicePlay = dmToggleVoicePlay;
+
+function dmSeekVoice(e, track) {
+  const wrap = track && track.closest('.tg-voice');
+  const audio = wrap && wrap.querySelector('audio');
+  if (!wrap || !audio) return;
+  const dur = (audio.duration && isFinite(audio.duration)) ? audio.duration : Number(wrap.dataset.dur || 0);
+  if (!dur) return;
+  const r = track.getBoundingClientRect();
+  const ratio = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+  audio.currentTime = ratio * dur;
+  const fill = wrap.querySelector('.tg-voice-fill');
+  if (fill) fill.style.width = (ratio * 100) + '%';
+}
+window.dmSeekVoice = dmSeekVoice;
+
 function dmCleanupThread() {
+  dmCancelVoice();
+  if (dmVoicePlaying) {
+    try { dmVoicePlaying.pause(); } catch (e) {}
+    dmVoiceResetBtn(dmVoicePlaying.closest('.tg-voice'));
+    dmVoicePlaying = null;
+  }
   dmStopTyping();
   if (dmThreadUnsub) { try { dmThreadUnsub(); } catch (e) {} dmThreadUnsub = null; }
   if (dmReadUnsub) { try { dmReadUnsub(); } catch (e) {} dmReadUnsub = null; }
@@ -19624,10 +19813,16 @@ async function dmOpenConv(convId, otherUid, otherName, prefill) {
     </header>
     <div class="tg-messages" id="dm-messages"><div class="tg-empty">טוען…</div></div>
     <div class="tg-attach-prev" id="dm-attach-prev"></div>
-    <div class="tg-compose">
+    <div class="tg-compose" id="dm-compose">
       <button type="button" class="tg-plus" onclick="dmOpenAttach()" aria-label="צירוף תמונה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
       <textarea id="dm-input" rows="1" maxlength="1000" placeholder="הודעה" autocomplete="off" oninput="dmAutoGrow(this); dmHandleTyping()" onkeydown="if(event.key==='Enter' && !event.shiftKey && window.innerWidth > 768){event.preventDefault(); dmSendCurrent();}"></textarea>
+      <button type="button" class="tg-mic" id="dm-mic-btn" onclick="dmStartVoice()" aria-label="הקלטת הודעה קולית" title="הודעה קולית"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 17v4M8 21h8"/></svg></button>
       <button type="button" class="tg-send" onclick="dmSendCurrent()" aria-label="שליחה"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.4 20.4 21 12 3.4 3.6 3.4 10l12.6 2-12.6 2z"/></svg></button>
+      <div class="tg-rec-bar" id="dm-rec-bar" style="display:none">
+        <button type="button" class="tg-rec-cancel" onclick="dmCancelVoice()" aria-label="ביטול הקלטה" title="ביטול"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+        <span class="tg-rec-live"><i class="tg-rec-dot"></i><span id="dm-rec-timer">0:00</span><small>מקליט…</small></span>
+        <button type="button" class="tg-send tg-rec-send" onclick="dmSendVoice()" aria-label="שליחת הודעה קולית"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.4 20.4 21 12 3.4 3.6 3.4 10l12.6 2-12.6 2z"/></svg></button>
+      </div>
     </div>`;
   const markReadNow = () => {
     const u = auth.currentUser;
@@ -19690,8 +19885,10 @@ function dmMessagesHTML() {
     lastDay = day || lastDay;
     const isRead = mine && dmOtherReadAt > 0 && (m.timestamp || 0) <= dmOtherReadAt;
     const tickHTML = mine ? ` <span class="tg-tick${isRead ? ' read' : ''}" title="${isRead ? 'נקרא' : 'נשלח'}">${isRead ? '✓✓' : '✓'}</span>` : '';
+    const hasAudio = !!(m.audio && /^data:audio\/(webm|ogg|mp4|mpeg|mp3|wav|aac|x-m4a)(;codecs=[^;]+)?;base64,/.test(m.audio));
+    const voiceHTML = hasAudio ? `<div class="tg-voice" data-dur="${Number(m.audioDur || 0)}"><button type="button" class="tg-voice-play" onclick="dmToggleVoicePlay(this)" aria-label="הפעלת הודעה קולית"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.14v14l11-7-11-7z"/></svg></button><div class="tg-voice-track" onclick="dmSeekVoice(event, this)"><div class="tg-voice-fill"></div></div><span class="tg-voice-dur">${dmRecFmt(Number(m.audioDur || 0))}</span><audio preload="metadata" src="${escHtml(m.audio)}"></audio></div>` : '';
     return `${sep}<div class="tg-msg ${mine ? 'mine' : 'theirs'}">
-      <div class="tg-bubble${m.img ? ' has-img' : ''}">${m.img && /^data:image\/(jpeg|png|webp|gif);base64,/.test(m.img) ? `<img class="tg-img" src="${escHtml(m.img)}" alt="" loading="lazy" onclick="dmViewImg(this.src)">` : ''}${m.text ? `${dmRichHTML(m.text)}` : ''}<span class="tg-msg-time">${dmTime(m.timestamp)}${tickHTML}</span></div>
+      <div class="tg-bubble${m.img ? ' has-img' : ''}${hasAudio ? ' has-voice' : ''}">${m.img && /^data:image\/(jpeg|png|webp|gif);base64,/.test(m.img) ? `<img class="tg-img" src="${escHtml(m.img)}" alt="" loading="lazy" onclick="dmViewImg(this.src)">` : ''}${voiceHTML}${m.text ? `${dmRichHTML(m.text)}` : ''}<span class="tg-msg-time">${dmTime(m.timestamp)}${tickHTML}</span></div>
     </div>`;
   }).join('');
 }

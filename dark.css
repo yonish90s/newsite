@@ -1301,6 +1301,19 @@ html.theme-dark .tg-msg.mine .tg-bubble { background: linear-gradient(180deg, #1
 html.theme-dark .tg-msg.theirs .tg-bubble { background: #000000 !important; color: #f5f5f5 !important; }
 html.theme-dark .tg-msg-time { color: rgba(236, 238, 241, 0.55) !important; }
 html.theme-dark .tg-tick.read { color: #ffffff !important; }
+html.theme-dark .tg-mic { border: 1px solid #262626 !important; background: #000000 !important; color: #f5f5f5 !important; }
+html.theme-dark .tg-rec-cancel { border: 1px solid rgba(255, 255, 255, 0.25) !important; background: rgba(228, 32, 43, 0.1) !important; color: #ffffff !important; }
+html.theme-dark .tg-rec-live { background: rgba(228, 32, 43, 0.08) !important; color: #ffffff !important; }
+html.theme-dark .tg-rec-dot { background: #e4202b !important; }
+html.theme-dark .tg-voice-play { background: rgba(18, 23, 29, 0.16) !important; }
+html.theme-dark .tg-msg.theirs .tg-voice-play { background: rgba(255, 255, 255, 0.072) !important; }
+html.theme-dark .tg-voice-track { background: rgba(18, 23, 29, 0.22) !important; }
+html.theme-dark .tg-msg.theirs .tg-voice-track { background: rgba(255, 255, 255, 0.126) !important; }
+html.theme-dark .tg-voice-fill { background: #e4202b !important; }
+html.theme-dark.theme-dark .tg-tick.read { color: #ffffff !important; }
+html.theme-dark.theme-dark .tg-mic { border: 1px solid #737373 !important; background: #121212 !important; }
+html.theme-dark.theme-dark .tg-msg.theirs .tg-voice-play { background: rgba(18, 23, 29, 0.14) !important; }
+html.theme-dark.theme-dark .tg-msg.theirs .tg-voice-track { background: rgba(18, 23, 29, 0.2) !important; }
 html.theme-dark .tg-compose { background: #000000 !important; border-top: 1px solid rgba(255, 255, 255, 0.048) !important; }
 html.theme-dark .tg-compose input { border: 1px solid rgba(255, 255, 255, 0.08) !important; background: #000000 !important; color: #f5f5f5 !important; }
 html.theme-dark .tg-send { background: #121212 !important; }
