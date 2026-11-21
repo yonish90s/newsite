@@ -34146,10 +34146,9 @@ function mkPubOpen() {
       <button type="button" class="mkpub-go mkpub-xpost" id="mkpub-go" onclick="mkPubSend()">פרסום</button>
     </div>
     <div class="mkpub-xcompose">
-      <input id="mkpub-title" class="mkpub-xtitle" maxlength="32" placeholder="כותרת המודעה…" oninput="mkPubTitleCount(this); mkPubAuto()">
+      <input id="mkpub-title" class="mkpub-xtitle" maxlength="32" placeholder="כותרת המודעה…" oninput="mkPubAuto()">
       <textarea id="mkpub-desc" class="mkpub-xbody" oninput="mkPubAuto()" rows="3" maxlength="1000" placeholder="מה קורה? תארו מה מוכרים או משתפים…"></textarea>
-      <small class="mkpub-cnt" id="mkpub-title-cnt">0 / 32</small>
-      <div class="mkpub-imgs" id="mkpub-imgs"></div>
+      <div class="mkpub-imgs" id="mkpub-imgs" hidden></div>
     </div>
     <div class="mkpub-auto" id="mkpub-auto" hidden>
       <div class="mkpub-auto-h"><span>✨ סיווג אוטומטי</span>
@@ -34268,8 +34267,8 @@ function mkPubKind(k) {
 }
 function mkPubImgs() {
   const box = document.getElementById('mkpub-imgs'); if (!box) return;
-  box.innerHTML = mkPub.images.map((u, i) => `<span class="mkpub-th"><img src="${escHtml(u)}" alt=""><button type="button" onclick="mkPubDel(${i})" aria-label="הסרת התמונה">×</button></span>`).join('')
-    + (mkPub.images.length < 5 ? `<button type="button" class="mkpub-add" onclick="mkPubAdd()" aria-label="הוספת תמונה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>` : '');
+  box.hidden = !mkPub.images.length;
+  box.innerHTML = mkPub.images.map((u, i) => `<span class="mkpub-th"><img src="${escHtml(u)}" alt=""><button type="button" onclick="mkPubDel(${i})" aria-label="הסרת התמונה">×</button></span>`).join('');
 }
 function mkPubDel(i) { mkPub.images.splice(i, 1); mkPubImgs(); }
 function mkPubAdd() {
