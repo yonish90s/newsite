@@ -18979,7 +18979,7 @@ async function mktFeedOpen() {
   items.sort((a, b) => b.at - a.at);
   const me = x => !!myUid && x.uid === myUid;
   const by = x => x.uid ? `openUserPage('${artEsc(x.uid)}', '${artEsc(x.name)}')` : `rentOpenSeller('', '${artEsc(x.name)}')`;
-  const cards = list => list.length ? `<div class="mk-sg-grid mk-grid fd-grid">${list.map(x => `<div class="fd-item"><button type="button" class="fd-by" onclick="${by(x)}">${authorAvHTML({ author: x.name, uid: x.uid })}<span><b>${escHtml(me(x) ? 'אני' : x.name)}</b> ${x.act}</span></button>${rentMiniHTML(x.r)}</div>`).join('')}</div>`
+  const cards = list => list.length ? `<div class="tw-feed-list fd-tw-feed">${list.map(x => `<div class="fd-item">${x.act === 'שיתף/ה' ? `<button type="button" class="fd-by" onclick="${by(x)}">${authorAvHTML({ author: x.name, uid: x.uid })}<span><b>${escHtml(me(x) ? 'אני' : x.name)}</b> ${x.act}</span></button>` : ''}${typeof twPostHTML === 'function' ? twPostHTML(x.r) : rentMiniHTML(x.r)}</div>`).join('')}</div>`
     : '<div class="rn-empty">עדיין אין כאן כלום.<br>עקבו אחרי מוכרים כדי לראות מה הם מעלים ומשתפים.</div>';
   // הצעות למי לעקוב: מוכרים פעילים שעוד לא במעקב
   const seen = new Set(), sugg = [];
@@ -19001,7 +19001,7 @@ async function mktFeedOpen() {
   const topRowHTML = `<div class="fd-top-row${suggHTML ? ' has-sugg' : ''}">${typeof storiesBarHTML === 'function' ? storiesBarHTML() : ''}${suggHTML}</div>`;
   mainContent.innerHTML = `<div class="fd-page">
     ${topRowHTML}
-    <div data-fd="all">${theirs.length ? upsHTML + repHTML : cards([])}</div></div>`;
+    <div data-fd="all">${cards(theirs)}</div></div>`;
   if (typeof avatarHydrate === 'function') avatarHydrate(mainContent);
 }
 function fdTab(btn, t) {
