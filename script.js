@@ -34375,11 +34375,25 @@ function homeViewSwHTML() {
     <button type="button" class="tw-vbtn${homeViewGet() === 'twitter' ? ' on' : ''}" data-v="twitter" onclick="setHomeView('twitter')" title="תצוגת פיד (כמו טוויטר)" aria-label="תצוגת פיד"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M7 9h10M7 13h6"/></svg></button>
   </div>`;
 }
+// גלריה בכרטיס הפיד: מעדכן נקודות לפי המיקום, וחצים עוברים תמונה (גם ב-RTL, שבו scrollLeft שלילי)
+function twStripDots(strip) {
+  const w = strip.clientWidth || 1, i = Math.round(Math.abs(strip.scrollLeft) / w);
+  strip.parentElement.querySelectorAll('.tw-dots i').forEach((d, k) => d.classList.toggle('on', k === i));
+}
+function twStripGo(btn, dir) {
+  const strip = btn.parentElement.querySelector('.tw-strip'); if (!strip) return;
+  const rtl = getComputedStyle(strip).direction === 'rtl';
+  strip.scrollBy({ left: (rtl ? -1 : 1) * dir * strip.clientWidth, behavior: 'smooth' });
+}
+window.twStripDots = twStripDots; window.twStripGo = twStripGo;
 function twPostHTML(r) {
   const sec = mktSecOf(r), biz = sec === 'biz';
   const price = Number(r.price) > 0 ? `<small class="mk-sg-price">${rentTypeIcon(r)}${mktDiscP(r.price).toLocaleString('he-IL', { maximumFractionDigits: 2 })}&nbsp;₪${mktWasHTML(r.price)}</small>` : '';
   const src = r.img || (r.images || [])[0] || '';
-  const media = src ? `<div class="tw-media"><img src="${escHtml(src)}" alt="${escHtml(r.title)}" loading="lazy" decoding="async"><span class="ad-join-avs" data-join-avs="${escHtml(r.id)}">${adJoinAvsHTML(r.id)}</span></div>` : `<div class="tw-media tw-media-th">${rentThumb(r)}<span class="ad-join-avs" data-join-avs="${escHtml(r.id)}">${adJoinAvsHTML(r.id)}</span></div>`;
+  // כמה תמונות: מזפזפים בהחלקה (scroll-snap), עם נקודות וחצים קטנים; לחיצה רגילה עדיין פותחת את המודעה
+  const imgs = [...new Set([r.img, ...(r.images || [])].filter(x => typeof x === 'string' && x))].slice(0, 10);
+  const strip = imgs.length > 1 ? `<div class="tw-strip" onscroll="twStripDots(this)">${imgs.map((s, i) => `<img src="${escHtml(s)}" alt="${escHtml(r.title)}${i ? ' ' + (i + 1) : ''}" loading="lazy" decoding="async">`).join('')}</div>    <span class="tw-dots">${imgs.map((_, i) => `<i${i ? '' : ' class="on"'}></i>`).join('')}</span>` : '';
+  const media = strip ? `<div class="tw-media tw-multi">${strip}<span class="ad-join-avs" data-join-avs="${escHtml(r.id)}">${adJoinAvsHTML(r.id)}</span></div>` : src ? `<div class="tw-media"><img src="${escHtml(src)}" alt="${escHtml(r.title)}" loading="lazy" decoding="async"><span class="ad-join-avs" data-join-avs="${escHtml(r.id)}">${adJoinAvsHTML(r.id)}</span></div>` : `<div class="tw-media tw-media-th">${rentThumb(r)}<span class="ad-join-avs" data-join-avs="${escHtml(r.id)}">${adJoinAvsHTML(r.id)}</span></div>`;
   const when = r.t ? new Date(r.t).toLocaleDateString('he-IL') : '';
   const desc = String(r.desc || '').trim();
   const descHTML = desc ? `<span class="tw-desc-wrap"><small class="tw-desc">${escHtml(desc)}</small>${desc.length > 75 ? `<button type="button" class="tw-more" onclick="event.stopPropagation(); const w=this.parentElement; w.classList.toggle('open'); this.textContent=w.classList.contains('open')?'פחות':'עוד'">עוד</button>` : ''}</span>` : '';
@@ -35269,7 +35283,14 @@ function rentOpen(id) {
   if (!(typeof mainContent !== 'undefined' && mainContent && mainContent.querySelector('.rent-page .rn-inner'))) {
     window.__mktWanted = true;
     navigateToPage('page-rent-main');
-    setTimeout(() => { rentUI.open = id; rentUI.seller = null; rentRender(); try { window.scrollTo({ top: 0 }); } catch (e) {} }, 120);
+    // מציירים את המודעה מיד (לפני שהדפדפן מצייר את רשת השוק) — בלי הבהוב של עמוד אחר
+    rentUI.open = id; rentUI.seller = null;
+    if (mainContent && mainContent.querySelector('.rent-page .rn-inner')) rentRender();
+    setTimeout(() => {
+      try { window.scrollTo({ top: 0 }); } catch (e) {}
+      if (rentUI.open === id && mainContent && mainContent.querySelector('.rent-page :is(.mk-watch, .rn-det)')) return;   // כבר מוצגת
+      rentUI.open = id; rentUI.seller = null; rentRender();
+    }, 120);
     return;
   }
   rentRender();
@@ -35350,8 +35371,16 @@ function rentOpenSeller(uid, name) {
   // מחוץ לשוק (פיד, פרופיל...): קודם עוברים לשוק ואז מציגים את דף המוכר
   if (!(typeof mainContent !== 'undefined' && mainContent && mainContent.querySelector('.rent-page .rn-inner'))) {
     const sl = rentUI.seller;
+    window.__mktWanted = true;
     navigateToPage('page-rent-main');
-    setTimeout(() => { rentUI.seller = sl; rentUI.open = null; rentRender(); try { window.scrollTo({ top: 0 }); } catch (e) {} }, 120);
+    // דף המוכר מצויר מיד, בלי הבהוב של רשת השוק
+    rentUI.seller = sl; rentUI.open = null;
+    if (mainContent && mainContent.querySelector('.rent-page .rn-inner')) rentRender();
+    setTimeout(() => {
+      try { window.scrollTo({ top: 0 }); } catch (e) {}
+      if (rentUI.seller === sl && mainContent && mainContent.querySelector('.rent-page .sl-desk')) return;   // כבר מוצג
+      rentUI.seller = sl; rentUI.open = null; rentRender();
+    }, 120);
     return;
   }
   rentRender();
