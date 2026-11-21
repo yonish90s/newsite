@@ -34573,10 +34573,12 @@ function dlsSqHTML(o, me, demo, myTurn) {
   const was = it && Number(it.price) > 0 && Number(it.price) !== Number(o.price) ? `<s class="mk-was">₪${Number(it.price).toLocaleString('he-IL')}</s>` : '';
   const av = demo && typeof demoAvatarSVG === 'function' ? `<span class="au-av has-av">${demoAvatarSVG(other)}</span>` : authorAvHTML({ author: other, uid: otherUid || '' });
   return `<div class="dls-sq${myTurn ? ' turn' : ''}" data-oid="${escHtml(o.id || '')}" role="button" tabindex="0" onclick="dealDetailOpen('${artEsc(o.id || '')}', ${demo ? 'true' : 'false'})">
-    <span class="dls-meta"><span class="dls-who" title="${escHtml(other)}">${av}</span>${o.price ? `<b class="dls-price">${was}₪${Number(o.price).toLocaleString('he-IL')}</b>` : ''}<em class="dls-st ${st[1]}">${st[0]}</em></span>
-    <span class="dls-img">${img ? `<img src="${escHtml(img)}" alt="" loading="lazy" onerror="this.remove()">` : ''}<i style="--av:${typeof forumAvColor === 'function' ? forumAvColor({ uid: otherUid || '', name: other }) : '#8b5cf6'}">${escHtml(String(o.title || other).trim().charAt(0) || '?')}</i></span>
-    <span class="dls-tx"><b>${escHtml(o.title || 'הצעה')}</b><small>${mine ? 'אל' : 'מאת'} ${escHtml(other)} · ${escHtml(ofxDay(o.updatedAt || o.at || 0))}</small></span>
-    ${btns}
+    <span class="dls-img">${img ? `<img src="${escHtml(img)}" alt="" loading="lazy" onerror="this.remove()">` : ''}<i style="--av:${typeof forumAvColor === 'function' ? forumAvColor({ uid: otherUid || '', name: other }) : '#8b5cf6'}">${escHtml(String(o.title || other).trim().charAt(0) || '?')}</i><span class="dls-who" title="${escHtml(other)}">${av}</span></span>
+    <span class="dls-mid">
+      <span class="dls-tx"><b>${escHtml(o.title || 'הצעה')}</b><small>${mine ? 'אל' : 'מאת'} ${escHtml(other)} · ${escHtml(ofxDay(o.updatedAt || o.at || 0))}</small></span>
+      ${btns}
+    </span>
+    <span class="dls-meta">${o.price ? `<b class="dls-price">${was}₪${Number(o.price).toLocaleString('he-IL')}</b>` : ''}<em class="dls-st ${st[1]}">${st[0]}</em></span>
   </div>`;
 }
 function dlsHTML() {
