@@ -33339,6 +33339,7 @@ function cartBadge() {
   }
   f.querySelector('b').textContent = sum > 0 ? '₪' + sum.toLocaleString('he-IL') : (n || '');
   f.classList.toggle('is-sum', sum > 0);
+  try { if (typeof mtSync === 'function') mtSync(); } catch (e) {}
 }
 function cartRender() {
   const box = document.getElementById('cart-panel'); if (!box) return;
@@ -38061,7 +38062,22 @@ function mtSync() {
   dlsTabPaint();
   apvTabPaint();
   const c = el.querySelector('.mt-count');
-  if (c) { let n = -1; if (home) { try { n = rentList().length; } catch (e) {} } c.textContent = n >= 0 ? `${n.toLocaleString('he-IL')} ${n === 1 ? 'מודעה' : 'מודעות'}` : ''; }
+  if (c) {
+    const sum = typeof cartSum === 'function' ? Math.round(cartSum()) : 0;
+    if (sum > 0) {
+      c.textContent = '₪' + sum.toLocaleString('he-IL');
+      c.classList.add('is-cart-sum');
+      c.onclick = () => { if (typeof cartOpen === 'function') cartOpen(); };
+      c.title = 'לפתיחת העגלה';
+    } else {
+      c.classList.remove('is-cart-sum');
+      c.onclick = null;
+      c.title = '';
+      let n = -1;
+      if (home) { try { n = rentList().length; } catch (e) {} }
+      c.textContent = n >= 0 ? `${n.toLocaleString('he-IL')} ${n === 1 ? 'מודעה' : 'מודעות'}` : '';
+    }
+  }
 }
 function mtTab(t) {
   if (t === 'feed') { mktFeedOpen(); }

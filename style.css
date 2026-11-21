@@ -23563,3 +23563,14 @@ html body:not(#_):not(#_) .fd-top-row > .st-bar .st-item.st-sugg .st-ring {
   width: 34px !important;
   height: 34px !important;
 }
+
+
+/* סכום העגלה בשורה העליונה במקום ספירת המודעות */
+#m-top .mt-count.is-cart-sum {
+  color: #16a34a !important;
+  font-weight: 800 !important;
+  cursor: pointer;
+}
+html.theme-dark #m-top .mt-count.is-cart-sum {
+  color: #4ade80 !important;
+}
