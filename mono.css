@@ -2210,6 +2210,12 @@ html:not(.theme-dark) .tg-msg-cancel { color: #111111; }
 html:not(.theme-dark) body:not(#_):not(#_):not(#_):not(#_) #mainContent .tw-head .mk-sg-price { color: #6f6f6f !important; background: rgba(111,111,111,0.12) !important; }
 html:not(.theme-dark) #m-top .mt-count.is-cart-sum { color: #6f6f6f !important; }
 html:not(.theme-dark) body:not(#_):not(#_):not(#_):not(#_) #m-top .mt-cart.has-items svg,html:not(.theme-dark) body:not(#_):not(#_):not(#_):not(#_) #m-top .mt-dm.has-unread svg { color: #828282 !important; }
+html:not(.theme-dark) .svd-rm { color: #727272; }
+html:not(.theme-dark) .svd-rm:hover { color: #777777; border-color: rgba(119,119,119,0.4); }
+html:not(.theme-dark) .svd-range-label { color: #727272; }
+html:not(.theme-dark) .svd-range-val { background: rgba(124,124,124,0.1); border: 1px solid rgba(124,124,124,0.25); color: #111111; }
+html:not(.theme-dark) .svd-fill { background: linear-gradient(90deg, #777777, #828282, #7c7c7c); }
+html:not(.theme-dark) .svd-range-ends { color: #727272; }
 html:not(.theme-dark) [style*="border:1.5px solid #e2e8f0"], html:not(.theme-dark) [style*="border: 1.5px solid #e2e8f0"] { border: 1.5px solid #e7e7e7 !important; }
 html:not(.theme-dark) [style*="color:#1e293b"], html:not(.theme-dark) [style*="color: #1e293b"] { color: #111111 !important; }
 html:not(.theme-dark) [style*="background:#dc2626"], html:not(.theme-dark) [style*="background: #dc2626"] { background: #111111 !important; }

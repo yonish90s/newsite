@@ -4912,6 +4912,18 @@ html.theme-dark.theme-dark.theme-dark body:not(#_):not(#_):not(#_) #m-sheet.ig-c
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .ig-prof .ig-p-acts :is(.ig-follow, .ig-msg-btn) { border: 1.5px solid #737373 !important; color: #f5f5f5 !important; }
 html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_) .ig-prof .ig-p-acts :is(.ig-follow, .ig-msg-btn) { border-color: #262626 !important; }
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_) #m-top .mt-cart.has-items svg, html.theme-dark body:not(#_):not(#_):not(#_):not(#_) #m-top .mt-dm.has-unread svg { color: #ffffff !important; }
+html.theme-dark .svd-rm { border: 1px solid rgba(255, 255, 255, 0.08) !important; color: #a8a8a8 !important; }
+html.theme-dark .svd-rm:hover { color: #ffffff !important; border-color: rgba(255, 255, 255, 0.4) !important; }
+html.theme-dark.theme-dark .svd-rm { border-color: rgba(255, 255, 255, 0.1) !important; }
+html.theme-dark .svd-range-box { background: #000000 !important; border: 1px solid #262626 !important; }
+html.theme-dark.theme-dark .svd-range-box { background: #121212 !important; border-color: rgba(255, 255, 255, 0.1) !important; }
+html.theme-dark .svd-range-label { color: #a8a8a8 !important; }
+html.theme-dark .svd-range-val { color: #f5f5f5 !important; }
+html.theme-dark.theme-dark .svd-range-val { background: rgba(228, 32, 43, 0.12) !important; border-color: rgba(255, 255, 255, 0.1) !important; }
+html.theme-dark .svd-fill { background: linear-gradient(90deg, #e4202b, #e4202b, #8b5cf6) !important; }
+html.theme-dark .svd-dual input[type="range"]::-webkit-slider-thumb { background: #121212 !important; border: 3px solid #262626 !important; }
+html.theme-dark .svd-dual input[type="range"]::-moz-range-thumb { background: #121212 !important; border: 3px solid #262626 !important; }
+html.theme-dark .svd-range-ends { color: #a8a8a8 !important; }
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #f5f5f5 !important; }
 html.theme-dark [style*="color:#111111"] { color: #f5f5f5 !important; }

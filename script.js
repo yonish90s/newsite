@@ -18806,7 +18806,7 @@ function photoToggleSave(id, btnEl) {
 
   const isNowSaved = !saved[id];
   if (isNowSaved) {
-    saved[id] = true;
+    saved[id] = Date.now();
   } else {
     delete saved[id];
   }
@@ -25551,7 +25551,7 @@ function newsCardHTML(p, act, admin) {
 // לייק ושמירה לכתבה: סימון בדפדפן + מונה ציבורי (כמו בכרטיסי השוק)
 function newsMark(btn, kind, key) {
   const m = rentMarks(), k = 'news-' + kind + ':' + key;
-  if (m[k]) delete m[k]; else m[k] = 1;
+  if (m[k]) delete m[k]; else m[k] = Date.now();
   try { localStorage.setItem(rentMarksKey(), JSON.stringify(m)); } catch (e) {}
   if (btn) btn.classList.toggle('on', !!m[k]);
   mkCountBump(kind === 'save' ? 'sv_' + key : key, m[k] ? 1 : -1);
@@ -35073,6 +35073,120 @@ function dlsTabPaint() {
   i.textContent = n ? (n > 9 ? '9+' : String(n)) : '';
 }
 Object.assign(window, { dlsOpen, dlsSetTab });
+// ===== דף "שמורים": מסודר בשורות כמו לוח עסקאות + סינון לפי השבוע / החודש / טווח חודשים =====
+let svdTab = 'all', svdFrom = 6, svdTo = 12;
+function svdSavedAt(r) {
+  if (!r) return Date.now();
+  try {
+    if (r.shId) {
+      const u = auth.currentUser, localKey = u ? `saved_galleries_${u.uid}` : 'guest_saved_galleries';
+      const s = JSON.parse(localStorage.getItem(localKey) || '{}');
+      const v = s[r.shId];
+      if (typeof v === 'number' && v > 1000) return v;
+    } else if (typeof rentMarks === 'function') {
+      const v = rentMarks()['save:' + r.id];
+      if (typeof v === 'number' && v > 1000) return v;
+    }
+  } catch (e) {}
+  return Number(r.t) || Date.now();
+}
+function svdMonthBounds(step) {
+  const now = new Date();
+  const monthsAgo = 12 - Math.max(0, Math.min(12, Number(step) || 0));
+  const d = new Date(now.getFullYear(), now.getMonth() - monthsAgo, 1);
+  return {
+    start: new Date(d.getFullYear(), d.getMonth(), 1).getTime(),
+    end: new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999).getTime(),
+    label: d.toLocaleDateString('he-IL', { month: 'short', year: 'numeric' })
+  };
+}
+function svdList() {
+  const raw = typeof mktMarkedItems === 'function' ? mktMarkedItems('save') : [];
+  const now = Date.now();
+  const lo = Math.min(svdFrom, svdTo), hi = Math.max(svdFrom, svdTo);
+  const startMs = svdTab === 'week' ? now - 7 * 864e5
+    : svdTab === 'month' ? now - 30 * 864e5
+    : svdTab === 'range' ? svdMonthBounds(lo).start : 0;
+  const endMs = svdTab === 'range' ? svdMonthBounds(hi).end : Infinity;
+  return raw.map(r => Object.assign({}, r, { _savedAt: svdSavedAt(r) }))
+    .filter(r => r._savedAt >= startMs && r._savedAt <= endMs)
+    .sort((a, b) => b._savedAt - a._savedAt);
+}
+function svdRowHTML(r) {
+  const who = (typeof mktWho === 'function' && mktWho(r)) || r.owner || 'משתמש';
+  const img = r.img || (r.images && r.images[0]) || '';
+  const price = Number(r.price) > 0 ? `<b class="dls-price">₪${Number(typeof mktDiscP === 'function' ? mktDiscP(r.price) : r.price).toLocaleString('he-IL', { maximumFractionDigits: 2 })}</b>` : '';
+  const av = typeof authorAvHTML === 'function' ? authorAvHTML({ author: who, uid: r.uid || '' }) : '';
+  const when = typeof ofxDay === 'function' ? ofxDay(r._savedAt) : '';
+  return `<div class="dls-sq svd-row" data-id="${escHtml(r.id || '')}" role="button" tabindex="0" onclick="rentOpen('${artEsc(r.id || '')}')">
+    <span class="dls-img">${img ? `<img src="${escHtml(img)}" alt="" loading="lazy" onerror="this.remove()">` : ''}<i style="--av:${typeof forumAvColor === 'function' ? forumAvColor({ uid: r.uid || '', name: who }) : '#8b5cf6'}">${escHtml(String(r.title || who).trim().charAt(0) || '?')}</i><span class="dls-who" title="${escHtml(who)}">${av}</span></span>
+    <span class="dls-mid">
+      <span class="dls-tx"><b>${escHtml(r.title || 'מודעה')}</b><small>מאת ${escHtml(who)}${when ? ' · ' + escHtml(when) : ''}</small></span>
+    </span>
+    <span class="dls-meta">${price}<button type="button" class="svd-rm" title="הסרה משמורים" aria-label="הסרה משמורים" onclick="event.stopPropagation(); svdRemove('${artEsc(r.id || '')}', '${artEsc(r.shId || '')}')">✕</button></span>
+  </div>`;
+}
+function svdRangeHTML() {
+  if (svdTab !== 'range') return '';
+  const lo = Math.min(svdFrom, svdTo), hi = Math.max(svdFrom, svdTo);
+  const bLo = svdMonthBounds(lo), bHi = svdMonthBounds(hi);
+  const p1 = (lo / 12) * 100, p2 = (hi / 12) * 100;
+  return `<div class="svd-range-box">
+    <div class="svd-range-top">
+      <span class="svd-range-label">טווח חודשים</span>
+      <b class="svd-range-val" id="svd-range-val">${escHtml(bLo.label)} — ${escHtml(bHi.label)}</b>
+    </div>
+    <div class="svd-dual" dir="ltr">
+      <div class="svd-track"><div class="svd-fill" id="svd-fill" style="left:${p1}%;width:${Math.max(0, p2 - p1)}%"></div></div>
+      <input type="range" min="0" max="12" step="1" value="${svdFrom}" aria-label="מחודש" oninput="svdRangeInput(0, this.value)">
+      <input type="range" min="0" max="12" step="1" value="${svdTo}" aria-label="עד חודש" oninput="svdRangeInput(1, this.value)">
+    </div>
+    <div class="svd-range-ends" dir="ltr"><small>${escHtml(svdMonthBounds(0).label)}</small><small>${escHtml(svdMonthBounds(12).label)}</small></div>
+  </div>`;
+}
+function svdHTML() {
+  const list = svdList();
+  const tab = (id, label) => `<button type="button" class="${svdTab === id ? 'on' : ''}" onclick="svdSetTab('${id}')">${label}</button>`;
+  return `<nav class="dls-tabs svd-tabs">${tab('all', 'הכל')}${tab('week', 'השבוע')}${tab('month', 'החודש')}${tab('range', 'לפי חודשים')}</nav>
+    ${svdRangeHTML()}
+    <div id="svd-list-host">${list.length ? `<div class="dls-grid svd-grid">${list.map(svdRowHTML).join('')}</div>` : '<div class="rn-empty">אין מודעות שמורות בטווח שנבחר.<br>לחצו על הסימנייה במודעה כדי לשמור.</div>'}</div>`;
+}
+function svdOpen() {
+  if (typeof mainContent === 'undefined' || !mainContent) return;
+  window.__detailOpen = false;
+  mainContent.innerHTML = `<div class="dls-page svd-page">${svdHTML()}</div>`;
+  try { window.scrollTo(0, 0); } catch (e) {}
+  setTimeout(() => { try { mtSync(); } catch (e) {} }, 50);
+}
+function svdRefresh(onlyList) {
+  if (onlyList) {
+    const host = document.getElementById('svd-list-host');
+    if (host) {
+      const list = svdList();
+      host.innerHTML = list.length ? `<div class="dls-grid svd-grid">${list.map(svdRowHTML).join('')}</div>` : '<div class="rn-empty">אין מודעות שמורות בטווח שנבחר.<br>לחצו על הסימנייה במודעה כדי לשמור.</div>';
+      return;
+    }
+  }
+  const el = document.querySelector('.svd-page');
+  if (el) el.innerHTML = svdHTML();
+}
+function svdSetTab(t) { svdTab = t; svdRefresh(false); }
+function svdRangeInput(which, val) {
+  const v = Math.max(0, Math.min(12, Math.round(Number(val) || 0)));
+  if (which === 0) svdFrom = v; else svdTo = v;
+  const lo = Math.min(svdFrom, svdTo), hi = Math.max(svdFrom, svdTo);
+  const fill = document.getElementById('svd-fill');
+  if (fill) { fill.style.left = (lo / 12) * 100 + '%'; fill.style.width = ((hi - lo) / 12) * 100 + '%'; }
+  const valEl = document.getElementById('svd-range-val');
+  if (valEl) valEl.textContent = `${svdMonthBounds(lo).label} — ${svdMonthBounds(hi).label}`;
+  svdRefresh(true);
+}
+function svdRemove(id, shId) {
+  if (shId && typeof photoToggleSave === 'function') photoToggleSave(shId);
+  else if (id && typeof rentMark === 'function') rentMark(null, 'save', id);
+  svdRefresh(true);
+}
+Object.assign(window, { svdOpen, svdSetTab, svdRangeInput, svdRemove });
 // ===== אישור פוסטים (למנהל בלבד): כל מודעה שגולש העלה + בקשות תוכן ממתינות =====
 // המודעות נשארות באתר; כאן המנהל עובר על כל אחת — "אישור" מוציא אותה מהתור, "הסרה" מוחקת אותה
 let apvReviewed = null, apvSub = false;
@@ -36216,7 +36330,7 @@ function mkCountBump(key, d) {
 window.mkCountBump = mkCountBump;
 function rentMark(btn, kind, id) {
   const m = rentMarks(), k = kind + ':' + id;
-  if (m[k]) delete m[k]; else m[k] = 1;
+  if (m[k]) delete m[k]; else m[k] = Date.now();
   try { localStorage.setItem(rentMarksKey(), JSON.stringify(m)); } catch (e) {}
   if (btn) btn.classList.toggle('on', !!m[k]);
   // לייק למודעה נספר לכולם ב-website/item_likes (כמו לייק לתמונה)
@@ -38057,8 +38171,8 @@ try { onAuthStateChanged(auth, () => setTimeout(mtMePaint, 300)); } catch (e) {}
 function mtSync() {
   mtMePaint();
   const el = document.getElementById('m-top'); if (!el) return;
-  const dls = !!document.querySelector('.dls-page'), apv = !!document.querySelector('.apv-page'), dash = !!document.querySelector('.ua-page'), feed = !apv && !dls && !dash && !!document.querySelector('.fd-page'), home = !feed && !apv && !dls && !dash && (!!document.querySelector('.lib-page') || (!!document.querySelector('.rent-page') && !(typeof rentUI !== 'undefined' && (rentUI.open || rentUI.seller))));
-  el.querySelectorAll('.mt-tabs button').forEach(b => b.classList.toggle('on', (b.dataset.t === 'feed' && feed) || (b.dataset.t === 'home' && home) || (b.dataset.t === 'apv' && apv) || (b.dataset.t === 'deals' && dls) || (b.dataset.t === 'dash' && dash)));
+  const svd = !!document.querySelector('.svd-page'), dls = !svd && !!document.querySelector('.dls-page'), apv = !!document.querySelector('.apv-page'), dash = !!document.querySelector('.ua-page'), feed = !svd && !apv && !dls && !dash && !!document.querySelector('.fd-page'), home = !svd && !feed && !apv && !dls && !dash && (!!document.querySelector('.lib-page') || (!!document.querySelector('.rent-page') && !(typeof rentUI !== 'undefined' && (rentUI.open || rentUI.seller))));
+  el.querySelectorAll('.mt-tabs button').forEach(b => b.classList.toggle('on', (b.dataset.t === 'feed' && feed) || (b.dataset.t === 'home' && home) || (b.dataset.t === 'apv' && apv) || (b.dataset.t === 'deals' && dls) || (b.dataset.t === 'dash' && dash) || (b.dataset.t === 'saved' && svd)));
   dlsTabPaint();
   apvTabPaint();
   const cartEl = el.querySelector('.mt-cart');
@@ -38088,7 +38202,7 @@ function mtTab(t) {
   else if (t === 'apv') { apvOpen(); }
   else if (t === 'deals') { dlsOpen(); }
   else if (t === 'dash') { openUserAnalytics(); }
-  else if (t === 'saved') { if (typeof openSavedModal === 'function') openSavedModal(); }
+  else if (t === 'saved') { if (typeof svdOpen === 'function') svdOpen(); }
   else { if (typeof fbReset === 'function' && typeof rentUI !== 'undefined') Object.assign(rentUI, { open: null, seller: null }); goToHomePage(); }
   try { window.scrollTo({ top: 0 }); } catch (e) {}
   setTimeout(mtSync, 200);
