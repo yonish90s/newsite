@@ -35932,6 +35932,8 @@ function recordAdViewer(r) {
 }
 function rentOpen(id) {
   const r = rentFind(id); if (!r) return;
+  if (document.querySelector('.lib-page')) window.__rentFromHome = true;
+  else if (document.querySelector('.rent-page .rn-inner')) window.__rentFromHome = false;
   rentUI.open = id;
   photoIncrementViews(rentCommentsKey(r));   // צפייה אחת ביום לכל גולש
   recordAdViewer(r);
@@ -35983,7 +35985,11 @@ window.mkInvOpen = mkInvOpen;
   let t = 0;
   try { new MutationObserver(() => { if (t) return; t = setTimeout(() => { t = 0; document.querySelectorAll('.mk-inv:not([data-done])').forEach(mkInvFill); }, 120); }).observe(document.body, { childList: true, subtree: true }); } catch (e) {}
 })();
-function rentBack() { if (history.state && (history.state.rent || history.state.rentSeller)) { history.back(); return; } rentUI.open = null; rentUI.seller = null; rentRender(); }
+function rentBack() {
+  if (window.__rentFromHome) { window.__rentFromHome = false; if (typeof goToHomePage === 'function') { goToHomePage(); return; } }
+  if (history.state && (history.state.rent || history.state.rentSeller)) { history.back(); return; }
+  rentUI.open = null; rentUI.seller = null; rentRender();
+}
 // כל המודעות של מוכר אחד (גם מוכר דוגמה בלי חשבון — לפי השם)
 function mktSellerItems(uid, name) { return mktAll().filter(r => uid ? r.uid === uid : (!r.uid && r.owner === name)); }
 function mktSellerGridHTML(list, anywhere) {
@@ -38134,7 +38140,7 @@ Object.assign(window, { phoneVerifyOpen, pvSend, pvBack, pvClose });
         </div>
         <button type="button" class="mt-circ mt-me" onclick="mtMe()" aria-label="המשתמש שלי"></button>
       </div>
-      <nav class="mt-tabs"><button type="button" data-t="home" onclick="mtTab('home')">בית</button><button type="button" data-t="feed" onclick="mtTab('feed')">במעקב</button><button type="button" data-t="deals" class="mt-dls" onclick="mtTab('deals')">עסקאות<i class="mt-apv-n mt-dls-n"></i></button><button type="button" data-t="dash" onclick="mtTab('dash')">לוח בקרה</button><button type="button" data-t="saved" onclick="mtTab('saved')">שמורים</button><button type="button" data-t="apv" class="mt-apv" hidden onclick="mtTab('apv')">אישור<i class="mt-apv-n"></i></button><span class="mt-count" aria-live="polite"></span></nav>`;
+      <nav class="mt-tabs"><button type="button" data-t="home" onclick="mtTab('home')">בית</button><button type="button" data-t="feed" onclick="mtTab('feed')">במעקב</button><button type="button" data-t="deals" class="mt-dls" onclick="mtTab('deals')">עסקאות<i class="mt-apv-n mt-dls-n"></i></button><button type="button" data-t="dash" onclick="mtTab('dash')">לוח בקרה</button><button type="button" data-t="saved" onclick="mtTab('saved')">שמורים</button><button type="button" data-t="other" onclick="mtTab('other')">אחר</button><button type="button" data-t="apv" class="mt-apv" hidden onclick="mtTab('apv')">אישור<i class="mt-apv-n"></i></button><span class="mt-count" aria-live="polite"></span></nav>`;
     document.body.appendChild(el);
     document.documentElement.classList.add('has-mtop');
     mtSync();
@@ -38198,8 +38204,8 @@ try { onAuthStateChanged(auth, () => setTimeout(mtMePaint, 300)); } catch (e) {}
 function mtSync() {
   mtMePaint();
   const el = document.getElementById('m-top'); if (!el) return;
-  const svd = !!document.querySelector('.svd-page'), dls = !svd && !!document.querySelector('.dls-page'), apv = !!document.querySelector('.apv-page'), dash = !!document.querySelector('.ua-page'), feed = !svd && !apv && !dls && !dash && !!document.querySelector('.fd-page'), home = !svd && !feed && !apv && !dls && !dash && (!!document.querySelector('.lib-page') || (!!document.querySelector('.rent-page') && !(typeof rentUI !== 'undefined' && (rentUI.open || rentUI.seller))));
-  el.querySelectorAll('.mt-tabs button').forEach(b => b.classList.toggle('on', (b.dataset.t === 'feed' && feed) || (b.dataset.t === 'home' && home) || (b.dataset.t === 'apv' && apv) || (b.dataset.t === 'deals' && dls) || (b.dataset.t === 'dash' && dash) || (b.dataset.t === 'saved' && svd)));
+  const svd = !!document.querySelector('.svd-page'), dls = !svd && !!document.querySelector('.dls-page'), apv = !!document.querySelector('.apv-page'), dash = !!document.querySelector('.ua-page'), feed = !svd && !apv && !dls && !dash && !!document.querySelector('.fd-page'), other = !svd && !apv && !dls && !dash && !feed && !!document.querySelector('.rent-page') && !(typeof rentUI !== 'undefined' && (rentUI.open || rentUI.seller)), home = !svd && !feed && !apv && !dls && !dash && !other && !!document.querySelector('.lib-page');
+  el.querySelectorAll('.mt-tabs button').forEach(b => b.classList.toggle('on', (b.dataset.t === 'feed' && feed) || (b.dataset.t === 'home' && home) || (b.dataset.t === 'apv' && apv) || (b.dataset.t === 'deals' && dls) || (b.dataset.t === 'dash' && dash) || (b.dataset.t === 'saved' && svd) || (b.dataset.t === 'other' && other)));
   dlsTabPaint();
   apvTabPaint();
   const cartEl = el.querySelector('.mt-cart');
@@ -38230,6 +38236,7 @@ function mtTab(t) {
   else if (t === 'deals') { dlsOpen(); }
   else if (t === 'dash') { openUserAnalytics(); }
   else if (t === 'saved') { if (typeof svdOpen === 'function') svdOpen(); }
+  else if (t === 'other') { window.__mktWanted = true; window.__rentFromHome = false; if (typeof rentUI !== 'undefined') Object.assign(rentUI, { open: null, seller: null }); if (typeof navigateToPage === 'function') navigateToPage('page-rent-main'); }
   else { if (typeof fbReset === 'function' && typeof rentUI !== 'undefined') Object.assign(rentUI, { open: null, seller: null }); goToHomePage(); }
   try { window.scrollTo({ top: 0 }); } catch (e) {}
   setTimeout(mtSync, 200);
