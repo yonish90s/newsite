@@ -23477,3 +23477,19 @@ html body #cart-panel .cart-foot .ms-btn {
   align-items: center !important;
   justify-content: center !important;
 }
+
+
+/* חלון תגובות: מסך מלא ושחור כהה אמיתי במצב כהה */
+html.theme-dark.theme-dark body:not(#_):not(#_):not(#_) #m-sheet.ig-cmt-sheet .ms-panel,
+html.theme-dark.theme-dark body:not(#_):not(#_):not(#_) #m-sheet.ig-cmt-sheet .ms-head,
+html.theme-dark.theme-dark body:not(#_):not(#_):not(#_) #m-sheet.ig-cmt-sheet .ms-body,
+html.theme-dark.theme-dark body:not(#_):not(#_):not(#_) #m-sheet.ig-cmt-sheet .igc-list,
+html.theme-dark.theme-dark body:not(#_):not(#_):not(#_) #m-sheet.ig-cmt-sheet .igc-dock {
+  background: #000000 !important;
+  background-color: #000000 !important;
+}
+html.theme-dark.theme-dark body:not(#_):not(#_):not(#_) #m-sheet.ig-cmt-sheet .igc-form input {
+  background: #121212 !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+}

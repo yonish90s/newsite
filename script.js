@@ -31163,8 +31163,7 @@ async function igCommentsOpen(key, title) {
   openMSheet('תגובות', '<div class="ms-empty">טוען תגובות…</div>');
   const sh = document.getElementById('m-sheet');
   if (sh) {
-    sh.classList.add('ig-cmt-sheet');
-    sh.classList.remove('igc-full');
+    sh.classList.add('ig-cmt-sheet', 'igc-full');
     const panel = sh.querySelector('.ms-panel'), head = sh.querySelector('.ms-head');
     if (panel && head && !panel.querySelector('.igc-grab')) {
       const grab = document.createElement('div');
@@ -31199,7 +31198,7 @@ async function igCommentsOpen(key, title) {
 }
 function igCommentsRender(key) {
   const body = document.querySelector('#m-sheet .ms-body'); if (!body) return;
-  const rows = Object.entries(igCmtMap || {}).filter(([, c]) => c && c.text).sort((a, b) => (b[1].t || 0) - (a[1].t || 0));
+  const rows = Object.entries(igCmtMap || {}).filter(([, c]) => c && c.text).sort((a, b) => (b[1].t || b[1].createdAt || 0) - (a[1].t || a[1].createdAt || 0));
   const ago = t => { const d = Math.floor((Date.now() - (t || 0)) / 864e5); return d < 1 ? 'היום' : d + ' ימים'; };
   const heart = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.5l-1.4-1.3C5.4 14.5 2 11.4 2 7.6 2 4.5 4.4 2 7.5 2c1.7 0 3.4.8 4.5 2.1C13.1 2.8 14.8 2 16.5 2 19.6 2 22 4.5 22 7.6c0 3.8-3.4 6.9-8.6 11.6z"/></svg>';
   const listHTML = rows.length ? rows.map(([cid, c]) => {
@@ -31208,7 +31207,7 @@ function igCommentsRender(key) {
     return `<div class="igc-row">
       <span class="igc-av">${authorAvHTML({ author: nm, uid: c.uid || '' })}</span>
       <div class="igc-main">
-        <div class="igc-top"><b>${escHtml(nm)}</b><small>${ago(c.t)}</small></div>
+        <div class="igc-top"><b>${escHtml(nm)}</b><small>${ago(c.t || c.createdAt)}</small></div>
         <div class="igc-tx">${escHtml(c.text)}</div>
         <button type="button" class="igc-rep" onclick="const i=document.getElementById('igc-in'); if(i){ i.value='@${artEsc(nm)} '; i.focus(); }">תגובה</button>
       </div>
@@ -31235,7 +31234,8 @@ async function igCommentSend(key) {
   if (!u) { if (typeof ensureGuestSignedIn === 'function') await ensureGuestSignedIn(); }
   const cur = auth.currentUser;
   const name = String((typeof liveChatUserName === 'function' && liveChatUserName()) || (cur && cur.displayName) || 'אורח').slice(0, 60);
-  const rec = { uid: cur ? cur.uid : '', name, text, t: Date.now() };
+  const now = Date.now();
+  const rec = { uid: cur ? cur.uid : '', name, text, t: now, createdAt: now };
   try {
     const r = push(ref(db, `website/photo_comments/${key}`));
     await set(r, rec);
