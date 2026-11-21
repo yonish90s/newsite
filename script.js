@@ -25511,8 +25511,8 @@ function ssxEmptyHTML() {
   let sug = '';
   if (!items) {
     const sellers = {}; all.forEach(r => { const n = (typeof mktWho === 'function' && mktWho(r)) || r.owner; if (!n) return; const k = r.uid || 'n:' + n; sellers[k] = sellers[k] || { uid: r.uid || '', name: n, c: 0 }; sellers[k].c++; });
-    const topSellers = Object.values(sellers).sort((a, b) => b.c - a.c).slice(0, 5);
-    const topItems = all.filter(r => r.img).sort((a, b) => (typeof libScore === 'function' ? libScore(b) - libScore(a) : 0)).slice(0, 6);
+    const topSellers = Object.values(sellers).sort((a, b) => b.c - a.c).slice(0, 2);
+    const topItems = all.filter(r => r.img).sort((a, b) => (typeof libScore === 'function' ? libScore(b) - libScore(a) : 0)).slice(0, 2);
     // כל הצעה בשורה משלה: עיגול, שם, ומתחת מחיר / מספר מודעות
     const seller = u => { const sk = ssStoryKey(u.uid, u.name); return `<div class="ssx-qrow"><button type="button" class="ssx-qmain" onclick="ssOpenUser('${artEsc(u.uid)}','${artEsc(u.name)}')"><span class="ssx-qi${sk ? ' ring has-st' : ' plain'}"${ssStoryClick(sk)}>${authorAvHTML({ authorId: u.uid, author: u.name })}</span><span class="ssx-qt"><b>${escHtml(u.name)}</b><small>${u.c} מודעות</small></span></button></div>`; };
     const item = r => `<div class="ssx-qrow"><button type="button" class="ssx-qmain" onclick="closeSiteSearch(); rentOpen('${artEsc(r.id)}')"><span class="ssx-qi plain">${rentThumb(r)}</span><span class="ssx-qt"><b>${escHtml(r.title)}</b><small>${Number(r.price) > 0 ? '₪' + mktDiscP(r.price).toLocaleString('he-IL', { maximumFractionDigits: 2 }) : escHtml(r.city || '')}</small></span></button></div>`;
