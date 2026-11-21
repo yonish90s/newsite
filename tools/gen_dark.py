@@ -8,10 +8,11 @@ import re, os
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # כהה בגוון כחלחל-שחור (כמו באינסטגרם/גיטהאב): רקע כמעט שחור, משטחים מעט בהירים יותר
-PAGE, CARD, SURF, SURF2, RAISE = '#0c1014', '#12171d', '#12171d', '#1a2028', '#232a33'
-BORDER = '#262d36'
-TEXT, TEXT2, MUTED = '#f5f5f5', '#c9ced6', '#a8a8a8'
-ACC = '#1f262f'
+# כמו באינסטגרם: רקע שחור לגמרי, משטחים שחורים, קווים #262626, טקסט #f5f5f5 ומשני #a8a8a8
+PAGE, CARD, SURF, SURF2, RAISE = '#000000', '#000000', '#000000', '#121212', '#262626'
+BORDER = '#262626'
+TEXT, TEXT2, MUTED = '#f5f5f5', '#a8a8a8', '#a8a8a8'
+ACC = '#121212'
 ORANGE = '#e4202b'   # הדגש במצב כהה: אדום (שחור-אדום) במקום הוורוד
 
 
@@ -89,7 +90,7 @@ def map_border(c):
         if L > 0.8: return 'rgba(255, 255, 255, 0.1)'
         return None
     if L > 0.7: return BORDER
-    if L < 0.16: return '#5b6472'
+    if L < 0.16: return '#737373'
     return None
 
 
