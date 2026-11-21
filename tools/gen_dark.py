@@ -67,7 +67,7 @@ def map_bg(c):
 def map_fg(c):
     r, g, b, a = parse(c)
     L, C = lum(r, g, b), chroma(r, g, b)
-    if is_pink(r, g, b): return ORANGE if a >= 1 else f'rgba(228, 32, 43, {fa(a)})'
+    if is_pink(r, g, b): return '#ffffff' if a >= 1 else f'rgba(255, 255, 255, {fa(a)})'   # טקסט בצבע הדגש → לבן (כמו באינסטגרם), לא אדום
     if C > 0.2:
         if L < 0.35: return f'color-mix(in srgb, {c} 55%, white)'   # צבע כהה (טקסט אריח) → בהיר יותר
         return None
