@@ -4833,12 +4833,12 @@ html.theme-dark.theme-dark, html.theme-dark.theme-dark body, html.theme-dark.the
 html.theme-dark.theme-dark body:not(#_):not(#_):not(#_) :is(.mt-apv-n, .st-badge, .mk-sg-out, .dls-st.no, .dls-b.no, .ig-dash-btn, .ua-filters button.on, .mkpub-sched-sw button.on, .mk-pill-btn.on) { color: #f5f5f5 !important; }
 html.theme-dark.theme-dark body:not(#_):not(#_):not(#_) .ig-act2 > .mk-a-like.on svg { color: #ffffff !important; fill: #ffffff !important; stroke: #ffffff !important; }
 html.theme-dark.theme-dark body:not(#_):not(#_):not(#_) .verified-seal, html.theme-dark.theme-dark body:not(#_):not(#_):not(#_) .verified-seal * { color: #ffffff !important; }
-html.theme-dark body:not(#_):not(#_):not(#_) .dls-page .dls-grid { background: #000000 !important; border: 1px solid rgba(255, 255, 255, 0.064) !important; }
-html.theme-dark.theme-dark body:not(#_):not(#_):not(#_) .dls-page .dls-grid { background: #121212 !important; border-color: rgba(255, 255, 255, 0.1) !important; }
-html.theme-dark body:not(#_):not(#_):not(#_) .dls-page .dls-sq { border-bottom: 1px solid rgba(255, 255, 255, 0.056) !important; }
-html.theme-dark.theme-dark body:not(#_):not(#_):not(#_) .dls-page .dls-sq { border-bottom-color: rgba(255, 255, 255, 0.1) !important; }
-html.theme-dark body:not(#_):not(#_):not(#_) .dls-page .dls-img .dls-who .au-av { border: 2px solid #262626 !important; }
-html.theme-dark.theme-dark body:not(#_):not(#_):not(#_) .dls-page .dls-img .dls-who .au-av { border-color: #737373 !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .dls-page .dls-grid { background: #000000 !important; border: 1px solid rgba(255, 255, 255, 0.064) !important; }
+html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_) .dls-page .dls-grid { background: #121212 !important; border-color: rgba(255, 255, 255, 0.1) !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .dls-page .dls-sq { border-bottom: 1px solid rgba(255, 255, 255, 0.056) !important; }
+html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_) .dls-page .dls-sq { border-bottom-color: rgba(255, 255, 255, 0.1) !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .dls-page .dls-img .dls-who .au-av { border: 2px solid #262626 !important; }
+html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_) .dls-page .dls-img .dls-who .au-av { border-color: #737373 !important; }
 html.theme-dark body:not(#_):not(#_):not(#_) .dls-page .dls-price { background: #121212 !important; color: #ffffff !important; }
 html.theme-dark.theme-dark body:not(#_):not(#_):not(#_) .dls-page .dls-price { background: rgba(228, 32, 43, 0.22) !important; }
 html.theme-dark body:not(#_):not(#_):not(#_) .dls-page .dls-b.no { background: linear-gradient(135deg, #e4202b, #e4202b) !important; }
