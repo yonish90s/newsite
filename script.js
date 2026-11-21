@@ -35975,7 +35975,7 @@ function crumbsHTML(items) {
 const RENT_STAR = '<svg viewBox="0 0 24 24"><path d="M12 2.8l2.8 5.8 6.4.9-4.6 4.5 1.1 6.3L12 17.3l-5.7 3 1.1-6.3L2.8 9.5l6.4-.9z"/></svg>';
 const rentStarsHTML = n => `<span class="mk-stars">${[1, 2, 3, 4, 5].map(k => RENT_STAR.replace('<svg', `<svg class="${n >= k - .25 ? 'on' : ''}"`)).join('')}</span>`;
 function rentRateHTML(avg, count) {
-  return count ? `${rentStarsHTML(avg)}${avg.toFixed(1)} (${count === 1 ? 'ביקורת אחת על המוכר' : count + ' ביקורות על המוכר'})` : rentStarsHTML(0);
+  return rentStarsHTML(count ? avg : 0);
 }
 // כתיבת ביקורת: מוכר אמיתי נשמר במסד (גם בדירוג שלו); במודעת דוגמה הביקורת נשמרת רק בדפדפן
 function rentRevOpen() {
