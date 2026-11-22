@@ -22468,11 +22468,11 @@ html body .ig-side { padding: 6px 10px !important; border-radius: 14px !importan
 html body .ig-side b { font-size: 13px !important; }
 html body .ig-side small { font-size: 9.5px !important; }
 /* חלון פרופילים (לייקים / ריפוסט / חברים) על כל המסך — צמוד עד למעלה וכותרת קטנה */
-html body #m-sheet.pl-sheet { position: fixed !important; inset: 0 !important; align-items: stretch !important; justify-content: stretch !important; padding: 0 !important; }
-html body #m-sheet.pl-sheet .ms-panel { position: fixed !important; inset: 0 !important; width: 100% !important; max-width: 100% !important; height: 100% !important; max-height: 100% !important; border-radius: 0 !important; margin: 0 !important; transform: none !important; }
-html body #m-sheet.pl-sheet .ms-head { padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 10px !important; min-height: 0 !important; }
-html body #m-sheet.pl-sheet .ms-title { font-size: 15px !important; font-weight: 700 !important; }
-html body #m-sheet.pl-sheet .ms-body { flex: 1 !important; overflow-y: auto !important; padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)) !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet.pl-sheet { position: fixed !important; inset: 0 !important; align-items: stretch !important; justify-content: stretch !important; padding: 0 !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet.pl-sheet .ms-panel { position: fixed !important; top: 0 !important; right: 0 !important; bottom: 0 !important; left: 0 !important; inset: 0 !important; width: 100% !important; max-width: 100% !important; height: 100dvh !important; max-height: 100dvh !important; border-radius: 0 !important; margin: 0 !important; transform: none !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet.pl-sheet .ms-head { padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 10px !important; min-height: 0 !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet.pl-sheet .ms-title { font-size: 15px !important; font-weight: 700 !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) #m-sheet.pl-sheet .ms-body { flex: 1 !important; overflow-y: auto !important; padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)) !important; }
 /* 1) כפתורי מודעה בסגנון ריבוע-גלולה מעוגל (ביקורות עם מספר, שמירה, הודעה, ריפוסט) */
 html body .mk-pills-row { display: flex !important; flex-wrap: nowrap !important; align-items: center !important; justify-content: space-between !important; gap: 4px !important; width: 100% !important; overflow: hidden !important; }
 html body .mk-pills-row .mk-stepper { flex: none !important; flex-wrap: nowrap !important; margin-inline-end: 4px !important; }
