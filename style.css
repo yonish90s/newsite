@@ -23723,56 +23723,58 @@ body.dark .lib-page .home-date-tabs button.on {
 }
 
 /* הקטנת רצועת הסטורי בחצי בעמוד הבית */
-html body:not(#_):not(#_) #mainContent:has(> .lib-page) > .site-top > .st-bar {
-  padding: 6px 10px !important;
+html body:not(#_):not(#_) #mainContent:has(.lib-page) .site-top > .st-bar {
+  padding: 5px 10px !important;
   border-radius: 14px !important;
   margin-bottom: 8px !important;
+  min-height: 0 !important;
+  height: auto !important;
 }
-html body:not(#_):not(#_) #mainContent:has(> .lib-page) > .site-top > .st-bar .st-track {
+html body:not(#_):not(#_) #mainContent:has(.lib-page) .site-top > .st-bar .st-track {
   padding: 0 !important;
-  gap: 10px !important;
+  gap: 8px !important;
   align-items: center !important;
 }
-html body:not(#_):not(#_) #mainContent:has(> .lib-page) > .site-top > .st-bar .st-item {
-  width: 48px !important;
-  gap: 3px !important;
+html body:not(#_):not(#_) #mainContent:has(.lib-page) .site-top > .st-bar .st-item {
+  width: 44px !important;
+  gap: 2px !important;
 }
-html body:not(#_):not(#_) #mainContent:has(> .lib-page) > .site-top > .st-bar .st-ring {
-  width: 38px !important;
-  height: 38px !important;
-  padding: 2px !important;
+html body:not(#_):not(#_) #mainContent:has(.lib-page) .site-top > .st-bar .st-ring {
+  width: 34px !important;
+  height: 34px !important;
+  padding: 1.5px !important;
   border-width: 2px !important;
 }
-html body:not(#_):not(#_) #mainContent:has(> .lib-page) > .site-top > .st-bar .st-name {
-  font-size: 10px !important;
+html body:not(#_):not(#_) #mainContent:has(.lib-page) .site-top > .st-bar .st-name {
+  font-size: 9.5px !important;
   line-height: 1.15 !important;
 }
-html body:not(#_):not(#_) #mainContent:has(> .lib-page) > .site-top > .st-bar .st-plus {
-  width: 15px !important;
-  height: 15px !important;
-  font-size: 10px !important;
+html body:not(#_):not(#_) #mainContent:has(.lib-page) .site-top > .st-bar .st-plus {
+  width: 14px !important;
+  height: 14px !important;
+  font-size: 9.5px !important;
   border-width: 1.5px !important;
 }
-html body:not(#_):not(#_) #mainContent:has(> .lib-page) > .site-top > .st-bar .st-sugg-group {
+html body:not(#_):not(#_) #mainContent:has(.lib-page) .site-top > .st-bar .st-sugg-group {
   gap: 8px !important;
   padding-inline-start: 10px !important;
 }
-html body:not(#_):not(#_) #mainContent:has(> .lib-page) > .site-top > .st-bar .st-sugg-label {
+html body:not(#_):not(#_) #mainContent:has(.lib-page) .site-top > .st-bar .st-sugg-label {
   font-size: 9.5px !important;
   padding: 2px 7px !important;
 }
-html body:not(#_):not(#_) #mainContent:has(> .lib-page) > .site-top > .st-bar .st-item.st-sugg {
-  width: 40px !important;
+html body:not(#_):not(#_) #mainContent:has(.lib-page) .site-top > .st-bar .st-item.st-sugg {
+  width: 38px !important;
   gap: 2px !important;
 }
-html body:not(#_):not(#_) #mainContent:has(> .lib-page) > .site-top > .st-bar .st-item.st-sugg .st-ring {
-  width: 32px !important;
-  height: 32px !important;
+html body:not(#_):not(#_) #mainContent:has(.lib-page) .site-top > .st-bar .st-item.st-sugg .st-ring {
+  width: 30px !important;
+  height: 30px !important;
   padding: 1.5px !important;
   border-width: 1.5px !important;
 }
-html body:not(#_):not(#_) #mainContent:has(> .lib-page) > .site-top > .st-bar .st-item.st-sugg .st-name {
-  font-size: 9.5px !important;
+html body:not(#_):not(#_) #mainContent:has(.lib-page) .site-top > .st-bar .st-item.st-sugg .st-name {
+  font-size: 9px !important;
 }
 
 /* צביעת טאב עסקאות וכפתורי התקבלו / נשלחו כשיש עסקה נכנסת שממתינה לתגובה */
