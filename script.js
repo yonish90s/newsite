@@ -36282,21 +36282,23 @@ function rentRevListHTML(list) {
   // שורות ביקורת נקיות בסגנון תגובות (אווטאר, שם + זמן, טקסט, כפתור לייק + תגובה)
   const ago = t => { const d = Math.floor((Date.now() - t) / 864e5); return d < 1 ? 'היום' : d === 1 ? 'אתמול' : d < 30 ? `לפני ${d} ימים` : d < 60 ? 'לפני חודש' : d < 365 ? `לפני ${Math.floor(d / 30)} חודשים` : `לפני ${Math.floor(d / 365) === 1 ? 'שנה' : Math.floor(d / 365) + ' שנים'}`; };
   const thumbIc = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v11H3V10zM7 10l4-8a2.5 2.5 0 0 1 3 2.6L13.5 9H19a2 2 0 0 1 2 2.3l-1.4 8A2 2 0 0 1 17.6 21H7"/></svg>';
-  const repIc = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
+  const repIc = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5v0a5.5 5.5 0 0 1-5.5 5.5H11"/></svg>';
   const card = x => {
     const text = String(x.text || '').trim();
     const stars = Number(x.stars) || 0;
     const likes = Number(x.likes) || 0;
     return `<article class="yt-rev">
-      <span class="yt-rev-av">${authorAvHTML({ author: x.name || 'גולש/ת', uid: x.rater || '' })}</span>
-      <div class="yt-rev-main">
-        <div class="yt-rev-head"><b>${escHtml(x.name || 'גולש/ת')}</b><small>${x.t ? ago(x.t) : ''}</small>${stars ? `<span class="yt-rev-st">★ ${stars}</span>` : ''}</div>
-        <p class="yt-rev-tx">${escHtml(text || (stars ? `דירוג ${stars} מתוך 5` : ''))}</p>
-        <div class="yt-rev-acts">
-          <button type="button" class="yt-rev-btn" onclick="this.classList.toggle('on'); const s=this.querySelector('span'); s.textContent=Number(s.textContent||0)+(this.classList.contains('on')?1:-1)||''">${thumbIc}<span>${likes || ''}</span></button>
-          <button type="button" class="yt-rev-btn" onclick="rentRevWrite()">${repIc}<span>תגובה</span></button>
-          ${x.rater && (x.rater === me || (typeof isAdmin === 'function' && isAdmin())) ? `<button type="button" class="bb-rev-del" onclick="rentRevDelete('${artEsc(x.rater)}')">מחיקה</button>` : ''}
-        </div>
+      <div class="yt-rev-head">
+        <span class="yt-rev-av">${authorAvHTML({ author: x.name || 'גולש/ת', uid: x.rater || '' })}</span>
+        <b>${escHtml(x.name || 'גולש/ת')}</b>
+        ${x.t ? `<span class="yt-rev-dot">•</span><small>${ago(x.t)}</small>` : ''}
+        ${stars ? rentStarsHTML(stars) : ''}
+      </div>
+      <p class="yt-rev-tx">${escHtml(text || (stars ? `דירוג ${stars} מתוך 5` : ''))}</p>
+      <div class="yt-rev-acts">
+        ${x.rater && (x.rater === me || (typeof isAdmin === 'function' && isAdmin())) ? `<button type="button" class="bb-rev-del" onclick="rentRevDelete('${artEsc(x.rater)}')">מחיקה</button>` : ''}
+        <button type="button" class="yt-rev-btn" onclick="rentRevWrite()">${repIc}<span>תגובה</span></button>
+        <button type="button" class="yt-rev-btn" onclick="this.classList.toggle('on'); const s=this.querySelector('span'); s.textContent=Number(s.textContent||0)+(this.classList.contains('on')?1:-1)||''">${thumbIc}<span>${likes || ''}</span></button>
       </div>
     </article>`;
   };

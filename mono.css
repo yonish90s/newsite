@@ -2113,6 +2113,7 @@ html:not(.theme-dark) .mk-sl-bounds { color: #727272; }
 html:not(.theme-dark) .mk-sl-send { background: linear-gradient(135deg, #111111 0%, #828282 100%) !important; box-shadow: 0 6px 20px rgba(17,17,17,0.36); }
 html:not(.theme-dark) .mk-sl-send:hover { box-shadow: 0 8px 24px rgba(130,130,130,0.42); }
 html:not(.theme-dark) .yt-rev-head b { color: #111111; }
+html:not(.theme-dark) .yt-rev-head .yt-rev-dot { color: #a2a2a2; }
 html:not(.theme-dark) .yt-rev-head small { color: #727272; }
 html:not(.theme-dark) .yt-rev-st { color: #a7a7a7; }
 html:not(.theme-dark) .yt-rev-tx { color: #111111; }
