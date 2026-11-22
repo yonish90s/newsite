@@ -39499,6 +39499,7 @@ async function dmMeetOpen() {
       <button type="button" data-c="restaurant" onclick="dmMeetSetCat('restaurant')">🍽️ מסעדות</button>
       <button type="button" data-c="cafe" onclick="dmMeetSetCat('cafe')">☕ בתי קפה</button>
       <button type="button" data-c="park" onclick="dmMeetSetCat('park')">🌳 פארקים</button>
+      <button type="button" data-c="random" onclick="dmMeetRandomPlace()">🎲 רנדומלי</button>
     </div>
     <div id="dm-meet-map" class="tg-meet-map"><div class="tg-empty">טוען מפה…</div></div>
     <div class="tg-meet-foot">
@@ -39666,6 +39667,45 @@ function dmMeetSetCat(c) {
   document.querySelectorAll('#dm-meet-cats button').forEach(b => b.classList.toggle('on', b.dataset.c === _dmMeetState.cat));
   dmMeetLoadPlaces();
 }
+const _DM_MEET_FALLBACK_PLACES = [
+  { lat: 32.0642, lng: 34.7697, name: 'קפה נועה, תל אביב', ic: '☕' },
+  { lat: 32.0809, lng: 34.7745, name: 'קפה לנדוור, דיזנגוף', ic: '☕' },
+  { lat: 32.0804, lng: 34.7806, name: 'תולעת ספרים, כיכר רבין', ic: '☕' },
+  { lat: 32.0928, lng: 34.7834, name: 'קפה בוקה, יהודה המכבי', ic: '☕' },
+  { lat: 32.0992, lng: 34.7925, name: 'פארק הירקון, תל אביב', ic: '🌳' },
+  { lat: 32.0734, lng: 34.7736, name: 'גן מאיר, תל אביב', ic: '🌳' },
+  { lat: 32.0722, lng: 34.7872, name: 'פארק שרונה, תל אביב', ic: '🌳' },
+  { lat: 32.0588, lng: 34.7695, name: 'פארק המסילה, תל אביב', ic: '🌳' }
+];
+async function dmMeetRandomPlace() {
+  document.querySelectorAll('#dm-meet-cats button').forEach(b => b.classList.toggle('on', b.dataset.c === 'random'));
+  const map = _dmMeetState.map;
+  let pool = (_dmMeetState.cafeParkPool || []).slice();
+  if (!pool.length && map) {
+    const c = map.getCenter();
+    const q = `[out:json][timeout:8];(nwr["amenity"="cafe"](around:1600,${c.lat.toFixed(5)},${c.lng.toFixed(5)});nwr["leisure"="park"](around:1600,${c.lat.toFixed(5)},${c.lng.toFixed(5)}););out center 40;`;
+    try {
+      const r = await fetch('https://overpass-api.de/api/interpreter?data=' + encodeURIComponent(q));
+      const j = await r.json();
+      pool = (j && j.elements || []).map(el => {
+        const lat = el.lat || (el.center && el.center.lat), lng = el.lon || (el.center && el.center.lon);
+        const tags = el.tags || {};
+        const ic = tags.leisure === 'park' ? '🌳' : '☕';
+        const name = tags['name:he'] || tags.name || (tags.leisure === 'park' ? 'פארק' : 'בית קפה');
+        return (lat && lng) ? { lat, lng, name, ic } : null;
+      }).filter(Boolean);
+      if (pool.length) _dmMeetState.cafeParkPool = pool;
+    } catch (e) {}
+  }
+  if (!pool.length) pool = _DM_MEET_FALLBACK_PLACES;
+  const filtered = pool.length > 1 ? pool.filter(p => Math.abs(p.lat - _dmMeetState.lat) > 0.0002 || Math.abs(p.lng - _dmMeetState.lng) > 0.0002) : pool;
+  const list = filtered.length ? filtered : pool;
+  const pick = list[Math.floor(Math.random() * list.length)];
+  if (!pick) return;
+  if (map) map.setView([pick.lat, pick.lng], 15);
+  _dmMeetSetPoint(pick.lat, pick.lng, `${pick.ic} ${pick.name}`);
+  if (typeof showCopyToast === 'function') showCopyToast(`🎲 נבחר: ${pick.ic} ${pick.name}`);
+}
 async function dmMeetLoadPlaces() {
   const map = _dmMeetState.map, layer = _dmMeetState.poiLayer;
   if (!map || !layer || !window.L) return;
@@ -39680,6 +39720,7 @@ async function dmMeetLoadPlaces() {
     const j = await r.json();
     if (_dmMeetState.map !== map) return;
     layer.clearLayers();
+    const cafePark = [];
     (j && j.elements || []).slice(0, 35).forEach(el => {
       const lat = el.lat || (el.center && el.center.lat), lng = el.lon || (el.center && el.center.lon);
       const tags = el.tags || {};
@@ -39687,11 +39728,13 @@ async function dmMeetLoadPlaces() {
       if (!lat || !lng) return;
       const kind = tags.leisure === 'park' ? 'park' : tags.amenity === 'cafe' ? 'cafe' : 'rest';
       const ic = kind === 'park' ? '🌳' : kind === 'cafe' ? '☕' : '🍽️';
+      if (kind === 'park' || kind === 'cafe') cafePark.push({ lat, lng, name, ic });
       const icon = window.L.divIcon({ className: `tg-poi-pin is-${kind}`, html: `<span>${ic}</span>`, iconSize: [28, 28], iconAnchor: [14, 14] });
       const mk = window.L.marker([lat, lng], { icon }).addTo(layer);
       mk.bindTooltip(escHtml(name), { direction: 'top', offset: [0, -10] });
       mk.on('click', () => _dmMeetSetPoint(lat, lng, `${ic} ${name}`));
     });
+    if (cafePark.length) _dmMeetState.cafeParkPool = cafePark;
   } catch (e) {}
 }
-Object.assign(window, { dmMeetOpen, dmMeetClose, dmMeetSearch, dmMeetUseMyLoc, dmMeetSend, dmMeetSetCat, dmMeetLoadPlaces, dmMeetDecide, dmMeetCounter, dmSubscribeMeetups, dmMeetupsListHTML });
+Object.assign(window, { dmMeetOpen, dmMeetClose, dmMeetSearch, dmMeetUseMyLoc, dmMeetSend, dmMeetSetCat, dmMeetRandomPlace, dmMeetLoadPlaces, dmMeetDecide, dmMeetCounter, dmSubscribeMeetups, dmMeetupsListHTML });
