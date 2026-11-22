@@ -23021,15 +23021,15 @@ html.theme-dark body:not(#_):not(#_):not(#_) .ig-act2 > .mk-a-join.on { color: #
 }
 
 /* סרגל עליון #m-top דק יותר ונעלם בגלילה למטה */
-html body:not(#_):not(#_):not(#_) #m-top { padding-top: calc(3px + env(safe-area-inset-top, 0px)) !important; padding-bottom: 3px !important; transition: transform .22s ease, opacity .18s ease !important; }
+html body:not(#_):not(#_):not(#_) #m-top { padding-top: calc(6px + env(safe-area-inset-top, 0px)) !important; padding-bottom: 6px !important; transition: transform .22s ease, opacity .18s ease !important; }
 html.mtabs-away body:not(#_):not(#_):not(#_) #m-top { transform: translateY(-120%) !important; opacity: 0 !important; pointer-events: none !important; }
-html body:not(#_):not(#_):not(#_) #m-top .mt-row { gap: 5px !important; min-height: 0 !important; }
-html body:not(#_):not(#_):not(#_) #m-top .mt-acts { gap: 6px !important; }
-html body:not(#_):not(#_):not(#_) #m-top .mt-circ { width: 26px !important; height: 26px !important; min-width: 26px !important; }
-html body:not(#_):not(#_):not(#_) #m-top .mt-circ svg { width: 13px !important; height: 13px !important; }
-html body:not(#_):not(#_):not(#_) #m-top .mt-me { font-size: 9px !important; }
-html body:not(#_):not(#_):not(#_) #m-top .mt-tabs { margin-top: 2px !important; }
-html body:not(#_):not(#_):not(#_) #m-top .mt-tabs button { padding: 2px 0 !important; font-size: 11.5px !important; }
+html body:not(#_):not(#_):not(#_) #m-top .mt-row { gap: 8px !important; min-height: 44px !important; }
+html body:not(#_):not(#_):not(#_) #m-top .mt-acts { gap: 9px !important; }
+html body:not(#_):not(#_):not(#_) #m-top .mt-circ { width: 39px !important; height: 39px !important; min-width: 39px !important; }
+html body:not(#_):not(#_):not(#_) #m-top .mt-circ svg { width: 20px !important; height: 20px !important; }
+html body:not(#_):not(#_):not(#_) #m-top .mt-me { font-size: 13.5px !important; }
+html body:not(#_):not(#_):not(#_) #m-top .mt-tabs { margin-top: 4px !important; }
+html body:not(#_):not(#_):not(#_) #m-top .mt-tabs button { padding: 4px 0 !important; font-size: 14px !important; }
 
 /* חלון ריפוסט שנפתח מלמעלה עם כפתור פעולה ורשימת משתמשים */
 html body:not(#_):not(#_):not(#_) #m-sheet.rep-top-sheet { align-items: flex-start !important; justify-content: center !important; padding-top: 0 !important; }
