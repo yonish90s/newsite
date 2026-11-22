@@ -19997,12 +19997,11 @@ function dmMessagesHTML() {
       const tx = Math.floor(((lng + 180) / 360) * n);
       const lr = lat * Math.PI / 180;
       const ty = Math.floor((1 - Math.log(Math.tan(lr) + 1 / Math.cos(lr)) / Math.PI) / 2 * n);
-      const dark = document.documentElement.classList.contains('theme-dark');
-      const tileUrl = `https://${dark ? 'a.basemaps.cartocdn.com/dark_all' : 'a.basemaps.cartocdn.com/rastertiles/voyager'}/${z}/${tx}/${ty}@2x.png`;
-      const appleUrl = `https://maps.apple.com/?ll=${lat.toFixed(6)},${lng.toFixed(6)}&q=${encodeURIComponent(mt.label || 'נקודת מפגש')}`;
-      return `<a class="tg-meet-card" href="${escHtml(appleUrl)}" target="_blank" rel="noopener">
+      const tileUrl = `https://mt1.google.com/vt/lyrs=m&x=${tx}&y=${ty}&z=${z}&hl=he`;
+      const gmapsUrl = `https://www.google.com/maps/search/?api=1&query=${lat.toFixed(6)},${lng.toFixed(6)}`;
+      return `<a class="tg-meet-card" href="${escHtml(gmapsUrl)}" target="_blank" rel="noopener">
         <span class="tg-meet-thumb"><img src="${escHtml(tileUrl)}" alt="" loading="lazy"><i class="tg-meet-pin">📍</i></span>
-        <span class="tg-meet-info"><b>📍 ${escHtml(mt.label || 'נקודת מפגש')}</b>${mt.when ? `<small>🕒 ${escHtml(mt.when)}</small>` : ''}<em>פתח במפות אפל</em></span>
+        <span class="tg-meet-info"><b>📍 ${escHtml(mt.label || 'נקודת מפגש')}</b>${mt.when ? `<small>🕒 ${escHtml(mt.when)}</small>` : ''}<em>פתח במפות גוגל</em></span>
       </a>`;
     })() : '';
     return `${sep}<div class="tg-msg ${mine ? 'mine' : 'theirs'}" data-mid="${escHtml(m._id || '')}" data-mine="${mine ? '1' : '0'}">
@@ -39400,7 +39399,7 @@ async function _dmMeetSetPoint(lat, lng, label) {
   const lbl = document.getElementById('dm-meet-lbl');
   if (lbl) lbl.textContent = _dmMeetState.label || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
   const apple = document.getElementById('dm-meet-apple');
-  if (apple) apple.href = `https://maps.apple.com/?ll=${lat.toFixed(6)},${lng.toFixed(6)}&q=${encodeURIComponent(_dmMeetState.label || 'נקודת מפגש')}`;
+  if (apple) apple.href = `https://www.google.com/maps/search/?api=1&query=${lat.toFixed(6)},${lng.toFixed(6)}`;
   if (_dmMeetState.map && window.L) {
     if (!_dmMeetState.marker) _dmMeetState.marker = window.L.marker([lat, lng]).addTo(_dmMeetState.map);
     else _dmMeetState.marker.setLatLng([lat, lng]);
@@ -39425,7 +39424,7 @@ async function dmMeetOpen() {
   pop.className = 'tg-meet-pop';
   pop.innerHTML = `<div class="tg-meet-head">
       <b>קביעת מקום פגישה</b>
-      <a id="dm-meet-apple" class="tg-meet-apple-lnk" href="https://maps.apple.com/?ll=32.0853,34.7818" target="_blank" rel="noopener">מפות אפל ↗</a>
+      <a id="dm-meet-apple" class="tg-meet-apple-lnk" href="https://www.google.com/maps/search/?api=1&query=32.0853,34.7818" target="_blank" rel="noopener">מפות גוגל ↗</a>
       <button type="button" onclick="dmMeetClose()" aria-label="סגירה">✕</button>
     </div>
     <form class="tg-meet-search" onsubmit="event.preventDefault(); dmMeetSearch()">
@@ -39446,8 +39445,7 @@ async function dmMeetOpen() {
     if (!box) return;
     box.innerHTML = '';
     const map = L.map(box, { zoomControl: false, attributionControl: false }).setView([_dmMeetState.lat, _dmMeetState.lng], 14);
-    const dark = document.documentElement.classList.contains('theme-dark');
-    L.tileLayer(`https://{s}.basemaps.cartocdn.com/${dark ? 'dark_all' : 'rastertiles/voyager'}/{z}/{x}/{y}{r}.png`, { maxZoom: 19 }).addTo(map);
+    L.tileLayer('https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=he', { subdomains: '0123', maxZoom: 20 }).addTo(map);
     _dmMeetState.map = map;
     _dmMeetState.marker = L.marker([_dmMeetState.lat, _dmMeetState.lng]).addTo(map);
     map.on('click', e => { if (e && e.latlng) _dmMeetSetPoint(e.latlng.lat, e.latlng.lng); });
