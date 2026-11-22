@@ -2223,6 +2223,14 @@ html:not(.theme-dark) .lib-page .home-date-tabs button.on::after { background: #
 html:not(.theme-dark) body:not(#_):not(#_):not(#_) #m-top .mt-tabs .mt-dls.has-deals { background: linear-gradient(135deg, #7c7c7c, #828282, #777777); color: #828282 !important; }
 html:not(.theme-dark) body:not(#_):not(#_):not(#_) .dls-tabs button.has-new { border-color: #828282 !important; background: linear-gradient(135deg, rgba(124,124,124,0.16), rgba(130,130,130,0.2)) !important; color: #828282 !important; }
 html:not(.theme-dark) body:not(#_):not(#_):not(#_) .dls-tabs button.on.has-new { background: linear-gradient(135deg, #7c7c7c, #828282, #777777) !important; }
+html:not(.theme-dark) .prf-title { color: #111111; }
+html:not(.theme-dark) .prf-row span { color: #111111; }
+html:not(.theme-dark) .prf-row input { color: #111111; }
+html:not(.theme-dark) .prf-save { background: linear-gradient(135deg, #7c7c7c, #828282); }
+html:not(.theme-dark) .prf-ver-badge.req { color: #777777; background: rgba(119,119,119,0.14); }
+html:not(.theme-dark) .prf-ver-badge.wait { color: #a7a7a7; background: rgba(167,167,167,0.14); }
+html:not(.theme-dark) .prf-ver-badge.ok { color: #808080; background: rgba(128,128,128,0.14); }
+html:not(.theme-dark) .prf-ver-btn { border: 1px solid rgba(124,124,124,0.45); background: rgba(124,124,124,0.12); color: #7c7c7c; }
 html:not(.theme-dark) [style*="border:1.5px solid #e2e8f0"], html:not(.theme-dark) [style*="border: 1.5px solid #e2e8f0"] { border: 1.5px solid #e7e7e7 !important; }
 html:not(.theme-dark) [style*="color:#1e293b"], html:not(.theme-dark) [style*="color: #1e293b"] { color: #111111 !important; }
 html:not(.theme-dark) [style*="background:#dc2626"], html:not(.theme-dark) [style*="background: #dc2626"] { background: #111111 !important; }

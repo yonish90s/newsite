@@ -12553,6 +12553,7 @@ function avatarHydrate(root) {
       el.setAttribute('data-av-done', '1');
       const av = avatarCache[uid];
       if (av) { el.innerHTML = av.__photo ? `<img src="${escHtml(av.__photo)}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%">` : avatarSVG(av); el.classList.add('has-av'); }
+      else { el.innerHTML = demoAvatarSVG(uid || el.textContent || 'user'); el.classList.add('has-av'); }
     } else need.add(uid);
   });
   need.forEach(uid => {
@@ -12773,19 +12774,25 @@ function avRandom() {
 }
 window.avRandom = avRandom;
 async function saveAvatar() {
+  if (!auth.currentUser && typeof ensureGuestSignedIn === 'function') {
+    try { await ensureGuestSignedIn(); } catch (e) {}
+  }
   const user = auth.currentUser;
-  if (!user || user.isAnonymous || !avEdit) return;
+  if (!user || !avEdit) return;
   const cfg = avNormalize(avEdit);
   try {
-    await update(ref(db, `website/users/${user.uid}/profile`), { avatar: cfg });
     try {
       const prev = JSON.parse(localStorage.getItem(`user_profile_${user.uid}`) || '{}');
       localStorage.setItem(`user_profile_${user.uid}`, JSON.stringify(Object.assign(prev, { avatar: cfg })));
     } catch (e) {}
+    if (!user.isAnonymous) await update(ref(db, `website/users/${user.uid}/profile`), { avatar: cfg });
     avatarCache[user.uid] = cfg;
     avatarRefresh(user.uid);
     const st = window._upState;
     if (st && st.uid === user.uid) { st.profile = Object.assign({}, st.profile || {}, { avatar: cfg }); if (typeof userWatchRender === 'function') userWatchRender(); }
+    if (document.querySelector('.prf-page') && typeof _detailsLoadLocal === 'function' && typeof _detailsRender === 'function') {
+      _detailsRender(_detailsLoadLocal());
+    }
     closeAvatarEditor();
     if (typeof showCopyToast === 'function') showCopyToast('הדמות נשמרה!');
   } catch (e) {
@@ -17015,7 +17022,7 @@ function pfAboutHTML(st) {
   const mine = uid || st.name ? mktSellerItems(uid, st.name) : [];
   const views = mine.reduce((a, r) => a + photoGetViews(rentCommentsKey(r)), 0);
   const where = [p.aboutCity, p.aboutRegion].filter(Boolean).join(', ');
-  const tg = String(p.telegram || '').replace(/^@/, '').trim(), mail = String(p.email || '').trim();
+  const tg = String(p.telegram || '').replace(/^https?:\/\/(t\.me|telegram\.me)\//i, '').replace(/^@/, '').trim(), mail = String(p.email || '').trim();
   const phone = String(p.phone || '').trim(), tel = phone.replace(/[^\d+]/g, '');
   const site = String(p.website || '').trim(), siteUrl = /^https?:\/\//i.test(site) ? site : (site ? 'https://' + site : '');
   const contact = [
@@ -17039,6 +17046,8 @@ function pfAboutHTML(st) {
   return `<section class="pfa-card"><h3>פרטים</h3><ul>
       ${row('<path d="M12 2.8l2.8 5.8 6.4.9-4.6 4.5 1.1 6.3L12 17.3l-5.7 3 1.1-6.3L2.8 9.5l6.4-.9z"/>', `<span class="mk-rate" data-seller="${escHtml(uid)}">${rentRateHTML(0, 0)}</span>`)}
       ${row('<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/>', `${mine.length === 1 ? 'מודעה אחת' : mine.length + ' מודעות'} · ${formatViews(views)} צפיות`)}
+      ${p.nickname ? row('<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>', escHtml(p.nickname)) : ''}
+      ${p.age ? row('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>', `בן/בת ${escHtml(String(p.age))}`) : ''}
     </ul>
     ${grid}${!uid || own ? '' : `<button type="button" class="pfa-msg" onclick="dmStartWith('${artEsc(uid)}','${artEsc(st.name || '')}')">${ic(PFQ_IC.msg)}שליחת הודעה</button>`}</section>`;
 }
@@ -17138,8 +17147,12 @@ async function openUserPage(authorId, authorName) {
   userWatchLoadRatings(authorId);
   try {
     const snap = await get(ref(db, `website/users/${authorId}/profile`));
-    if (!snap.exists()) return;
-    const profile = snap.val();
+    const remote = snap.exists() ? (snap.val() || {}) : {};
+    let localP = {};
+    if (auth.currentUser && auth.currentUser.uid === authorId) {
+      try { localP = JSON.parse(localStorage.getItem(`user_profile_${authorId}`) || '{}') || {}; } catch (e) {}
+    }
+    const profile = { ...remote, ...localP };
     const st = window._upState;
     if (st && st.uid === authorId) {
       st.profile = profile;
@@ -18988,6 +19001,7 @@ async function mktFeedOpen() {
     if (fdHidden()[key]) return;   // גולש שסגר את ההצעה הזו (✕)
     sugg.push(r);
   });
+  for (let i = sugg.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [sugg[i], sugg[j]] = [sugg[j], sugg[i]]; }
   const suggHTML = sugg.length ? `<section class="fd-sugg"><div class="fd-sugg-row">${sugg.slice(0, 12).map(r => `<div class="fd-sg"><button type="button" class="fd-sg-x" onclick="fdHide('${artEsc(r.uid || igDemoKeyOf(r.owner))}', this)" aria-label="הסתרת ההצעה">✕</button>
       <button type="button" class="fd-sg-who" onclick="${r.uid ? `openUserPage('${artEsc(r.uid)}', '${artEsc(r.owner)}')` : `rentOpenSeller('', '${artEsc(r.owner)}')`}">${authorAvHTML({ author: r.owner, uid: r.uid || '' })}<b>${escHtml(r.owner)}${typeof isUserVerified === 'function' && isUserVerified(r.uid || '', r.owner || '') ? verifiedSealHTML(8) : ''}</b><small>${escHtml(r.city || '')}</small></button>
       <button type="button" class="fd-sg-go" onclick="mkCardFollow(this, '${artEsc(r.uid || '')}', '${artEsc(r.owner)}'); setTimeout(mktFeedOpen, 250)">${IG_FOLLOW_IC}מעקב</button></div>`).join('')}</div></section>` : '';
@@ -19794,8 +19808,9 @@ async function dmShowLoadingThread(name) {
 }
 
 // פתיחת שיחה: מחליפה את הרשימה (כמו בטלגרם)
-async function dmOpenConv(convId, otherUid, otherName, prefill) {
+async function dmOpenConv(convId, otherUid, otherName, prefill, refObj) {
   dmCleanupThread();
+  window.__dmRef = refObj && refObj.img ? refObj : null;
   // אם חלון ההודעות לא פתוח — פותחים אותו קודם
   if (!document.getElementById('dm-main')) await openMessages();
   dmActiveConv = { convId, otherUid, otherName };
@@ -19869,6 +19884,7 @@ async function dmOpenConv(convId, otherUid, otherName, prefill) {
   });
   dmBindMsgLongPress();
   setTimeout(() => {
+    try { dmRenderAttach(); } catch (e) {}
     const i = document.getElementById('dm-input');
     if (i) { if (prefill) i.value = prefill; dmAutoGrow(i); if (window.innerWidth > 768) i.focus(); }
   }, 80);
@@ -19972,8 +19988,10 @@ function dmMessagesHTML() {
     const tickHTML = mine ? ` <span class="tg-tick${isRead ? ' read' : ''}" title="${isRead ? 'נקרא' : 'נשלח'}">${isRead ? '✓✓' : '✓'}</span>` : '';
     const hasAudio = !!(m.audio && /^data:audio\/(webm|ogg|mp4|mpeg|mp3|wav|aac|x-m4a)(;codecs=[^;]+)?;base64,/.test(m.audio));
     const voiceHTML = hasAudio ? `<div class="tg-voice" data-dur="${Number(m.audioDur || 0)}"><button type="button" class="tg-voice-play" onclick="dmToggleVoicePlay(this)" aria-label="הפעלת הודעה קולית"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.14v14l11-7-11-7z"/></svg></button><div class="tg-voice-track" onclick="dmSeekVoice(event, this)"><div class="tg-voice-fill"></div></div><span class="tg-voice-dur">${dmRecFmt(Number(m.audioDur || 0))}</span><audio preload="metadata" src="${escHtml(m.audio)}"></audio></div>` : '';
+    const refOk = !!(m.refImg && (/^data:image\/(jpeg|png|webp|gif);base64,/.test(m.refImg) || /^https?:\/\//i.test(m.refImg) || /^[a-z0-9_.\-\/]+(\?.*)?$/i.test(m.refImg)));
+    const refHTML = refOk ? `<img class="tg-ref-img" src="${escHtml(m.refImg)}" alt="" loading="lazy" onclick="dmViewImg(this.src)">` : '';
     return `${sep}<div class="tg-msg ${mine ? 'mine' : 'theirs'}" data-mid="${escHtml(m._id || '')}" data-mine="${mine ? '1' : '0'}">
-      <div class="tg-bubble${m.img ? ' has-img' : ''}${hasAudio ? ' has-voice' : ''}">${m.img && /^data:image\/(jpeg|png|webp|gif);base64,/.test(m.img) ? `<img class="tg-img" src="${escHtml(m.img)}" alt="" loading="lazy" onclick="dmViewImg(this.src)">` : ''}${voiceHTML}${m.text ? `${dmRichHTML(m.text)}` : ''}<span class="tg-msg-time">${dmTime(m.timestamp)}${tickHTML}</span></div>
+      <div class="tg-bubble${m.img ? ' has-img' : ''}${hasAudio ? ' has-voice' : ''}${refOk ? ' has-ref' : ''}">${refHTML}${m.img && /^data:image\/(jpeg|png|webp|gif);base64,/.test(m.img) ? `<img class="tg-img" src="${escHtml(m.img)}" alt="" loading="lazy" onclick="dmViewImg(this.src)">` : ''}${voiceHTML}${m.text ? `${dmRichHTML(m.text)}` : ''}<span class="tg-msg-time">${dmTime(m.timestamp)}${tickHTML}</span></div>
     </div>`;
   }).join('');
 }
@@ -19985,11 +20003,12 @@ async function dmSendCurrent() {
   if (!inp) return;
   const text = inp.value.trim();
   const imgs = (window.__dmAttach || []).slice();
-  if (!text && !imgs.length) return;
+  const refObj = window.__dmRef && window.__dmRef.img ? window.__dmRef : null;
+  if (!text && !imgs.length && !refObj) return;
   inp.value = '';
   dmAutoGrow(inp);
   dmStopTyping();
-  window.__dmAttach = []; dmRenderAttach();
+  window.__dmAttach = []; window.__dmRef = null; dmRenderAttach();
   const { convId, otherUid, otherName } = dmActiveConv;
   const now = Date.now();
   const myName = dmName();
@@ -19997,7 +20016,11 @@ async function dmSendCurrent() {
     for (let k = 0; k < imgs.length; k++) {
       await push(ref(db, `website/dms/${convId}/messages`), { from: u.uid, fromName: myName, text: '', img: imgs[k], timestamp: now + k });
     }
-    if (text) await push(ref(db, `website/dms/${convId}/messages`), { from: u.uid, fromName: myName, text: text.slice(0, 1000), timestamp: now + imgs.length });
+    if (text || refObj) {
+      const msgRec = { from: u.uid, fromName: myName, text: text.slice(0, 1000), timestamp: now + imgs.length };
+      if (refObj) msgRec.refImg = refObj.img;
+      await push(ref(db, `website/dms/${convId}/messages`), msgRec);
+    }
     if (typeof trackEvent === 'function') trackEvent('dm_send');
     const last = text ? text.slice(0, 60) : '📷 תמונה';
     await update(ref(db, `website/user_dms/${u.uid}/${convId}`), { otherUid, otherName, lastText: last, lastTime: now, unread: false });
@@ -20010,7 +20033,7 @@ async function dmSendCurrent() {
 window.dmSendCurrent = dmSendCurrent;
 
 // התחלת שיחה עם משתמש (למשל מדף גלריה)
-async function dmStartWith(otherUid, otherName, prefill) {
+async function dmStartWith(otherUid, otherName, prefill, refObj) {
   if (!auth.currentUser) {
     const ok = (typeof ensureGuestSignedIn === 'function') ? await ensureGuestSignedIn() : false;
     if (!ok) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
@@ -20019,19 +20042,20 @@ async function dmStartWith(otherUid, otherName, prefill) {
   if (!otherUid) { if (typeof showCopyToast === 'function') showCopyToast('לא ניתן לשלוח הודעה למשתמש זה'); return; }
   if (otherUid === u.uid) { if (typeof showCopyToast === 'function') showCopyToast('זו המודעה שלך 🙂'); return; }
   await openMessages();
-  dmOpenConv(dmConvId(u.uid, otherUid), otherUid, otherName || 'משתמש', prefill);
+  dmOpenConv(dmConvId(u.uid, otherUid), otherUid, otherName || 'משתמש', prefill, refObj);
 }
 window.dmStartWith = dmStartWith;
 
 // התחלת שיחה עם התייחסות לגלריה מסוימת (מדף התמונה)
 function dmStartAboutGallery(otherUid, otherName, albumId) {
-  let prefill = '';
+  let refObj = null;
   try {
     const albums = (typeof photoGetAlbums === 'function') ? photoGetAlbums() : [];
     const a = albums.find(x => String(x.id) === String(albumId));
-    if (a && a.title) prefill = `שלום! פנייה לגבי הגלריה: "${String(a.title).slice(0, 120)}"\n${location.origin}/#p/${a.id}`;
+    const img = a ? ((a.images && a.images[0]) || a.image || '') : '';
+    if (img) refObj = { img, id: a.id };
   } catch (e) {}
-  dmStartWith(otherUid, otherName || 'משתמש', prefill);
+  dmStartWith(otherUid, otherName || 'משתמש', '', refObj);
 }
 window.dmStartAboutGallery = dmStartAboutGallery;
 
@@ -27546,12 +27570,15 @@ function toggleSiteTheme() {
 // מצב תצוגה: בהיר / כהה / לפי המכשיר (מתעדכן לבד כשהמכשיר עובר בין בהיר לכהה)
 function setSiteTheme(mode) {
   if (mode !== 'light' && mode !== 'dark' && mode !== 'system') mode = 'light';
+  window.__deskThemeManual = true;
   document.documentElement.dataset.themeMode = mode;
   try { localStorage.setItem('site_theme', mode); } catch (e) {}
   applySiteTheme();
 }
 function applySiteTheme() {
-  const mode = document.documentElement.dataset.themeMode || 'light';
+  const isMob = window.matchMedia ? window.matchMedia('(max-width: 900px)').matches : window.innerWidth <= 900;
+  let mode = document.documentElement.dataset.themeMode || (isMob ? 'dark' : 'light');
+  if (!isMob && !window.__deskThemeManual) mode = 'light';
   const dark = mode === 'dark' || (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
   const dc = document.getElementById('dark-css'); if (dc) { if (!dc.getAttribute('href')) dc.href = dc.dataset.href; dc.media = dark ? 'all' : 'not all'; }
   document.documentElement.classList.toggle('theme-dark', dark);
@@ -27559,6 +27586,7 @@ function applySiteTheme() {
   const meta = document.querySelector('meta[name="theme-color"]'); if (meta) meta.setAttribute('content', dark ? '#000000' : '#ffffff');
 }
 applySiteTheme();
+try { window.matchMedia('(max-width: 900px)').addEventListener('change', () => { window.__deskThemeManual = false; applySiteTheme(); }); } catch (e) {}
 try { window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if (document.documentElement.dataset.themeMode === 'system') applySiteTheme(); }); } catch (e) {}
 Object.assign(window, { toggleSiteTheme, setSiteTheme });
 
@@ -28449,16 +28477,20 @@ function cardMsgBtnHTML(x) {
   return `<button type="button" class="art-telegram-btn art-msg-btn" onclick="event.stopPropagation(); messageUploader('${artEsc(x.id || '')}', '${artEsc(x.title || '')}', '${artEsc(x.authorId || '')}', '${artEsc(x.author || '')}')" title="הודעה למעלה" aria-label="הודעה למעלה"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg></button>`;
 }
 async function messageUploader(id, title, authorId, author) {
-  const t = String(title || '').slice(0, 100);
+  let refObj = null;
+  try {
+    const it = (typeof mktAll === 'function' ? mktAll() : []).find(x => x && (String(x.id) === String(id) || String(x.shId) === String(id)));
+    const img = it ? (it.img || (it.images && it.images[0]) || it.image || '') : '';
+    if (img) refObj = { img, id };
+  } catch (e) {}
   if (authorId) {
-    return dmStartWith(authorId, author || 'משתמש', t ? `שלום! לגבי "${t}": ` : 'שלום! ');
+    return dmStartWith(authorId, author || 'משתמש', '', refObj);
   }
-  // אין חשבון מקושר — שולחים למנהל האתר עם פרטי הפריט
+  // אין חשבון מקושר — שולחים למנהל האתר עם התמונה הקטנה של הפריט
   let a = (typeof siteAdminUid === 'function') ? siteAdminUid() : '';
   if (!a) { try { const snap = await get(ref(db, 'website/admin_uid')); a = snap.val() || ''; if (a) localStorage.setItem('site_admin_uid', a); } catch (e) {} }
   if (!a) { if (typeof showCopyToast === 'function') showCopyToast('לא ניתן לשלוח הודעה כרגע'); return; }
-  if (typeof showCopyToast === 'function') showCopyToast('מי שהעלה פרסם כאורח — ההודעה תגיע למנהל האתר שיעביר אותה');
-  return dmStartWith(a, 'מנהל האתר', `הודעה עבור ${author || 'מי שהעלה'} — לגבי "${t}" (מזהה ${id}): `);
+  return dmStartWith(a, 'מנהל האתר', '', refObj);
 }
 window.messageUploader = messageUploader;
 
@@ -29221,16 +29253,19 @@ async function dmAttachFiles(files) {
 function dmRenderAttach() {
   const box = document.getElementById('dm-attach-prev'); if (!box) return;
   const a = window.__dmAttach || [];
-  box.innerHTML = a.map((src, i) => `<span class="tg-prev"><img src="${src}" alt=""><button type="button" onclick="dmRemoveAttach(${i})" aria-label="הסרה">✕</button></span>`).join('');
-  box.classList.toggle('on', a.length > 0);
+  const refObj = window.__dmRef && window.__dmRef.img ? window.__dmRef : null;
+  const refHTML = refObj ? `<span class="tg-prev tg-ref-prev"><img src="${escHtml(refObj.img)}" alt=""><button type="button" onclick="dmRemoveRef()" aria-label="הסרה">✕</button></span>` : '';
+  box.innerHTML = refHTML + a.map((src, i) => `<span class="tg-prev"><img src="${src}" alt=""><button type="button" onclick="dmRemoveAttach(${i})" aria-label="הסרה">✕</button></span>`).join('');
+  box.classList.toggle('on', a.length > 0 || !!refObj);
 }
+function dmRemoveRef() { window.__dmRef = null; dmRenderAttach(); }
 function dmRemoveAttach(i) { (window.__dmAttach || []).splice(i, 1); dmRenderAttach(); }
 function dmViewImg(src) {
   const v = document.createElement('div'); v.className = 'tg-viewer';
   v.innerHTML = `<img src="${src}" alt="">`; v.onclick = () => v.remove();
   document.body.appendChild(v);
 }
-Object.assign(window, { dmOpenAttach, dmCloseAttach, dmAttachFiles, dmRemoveAttach, dmViewImg });
+Object.assign(window, { dmOpenAttach, dmCloseAttach, dmAttachFiles, dmRemoveAttach, dmRemoveRef, dmViewImg });
 
 
 // ============================================================
@@ -34881,8 +34916,17 @@ function homeViewSwHTML() {
 }
 // גלריה בכרטיס הפיד: מעדכן נקודות לפי המיקום, וחצים עוברים תמונה (גם ב-RTL, שבו scrollLeft שלילי)
 function twStripDots(strip) {
-  const w = strip.clientWidth || 1, i = Math.round(Math.abs(strip.scrollLeft) / w);
-  strip.parentElement.querySelectorAll('.tw-dots i').forEach((d, k) => d.classList.toggle('on', k === i));
+  if (!strip) return;
+  strip._swipedAt = Date.now();
+  if (strip._raf) return;
+  strip._raf = requestAnimationFrame(() => {
+    strip._raf = 0;
+    const w = strip.clientWidth || 1, i = Math.round(Math.abs(strip.scrollLeft) / w);
+    if (strip._lastI === i) return;
+    strip._lastI = i;
+    const dots = strip.parentElement && strip.parentElement.querySelectorAll('.tw-dots i');
+    if (dots) dots.forEach((d, k) => d.classList.toggle('on', k === i));
+  });
 }
 function twStripGo(btn, dir) {
   const strip = btn.parentElement.querySelector('.tw-strip'); if (!strip) return;
@@ -34901,7 +34945,7 @@ function twPostHTML(r) {
   const when = r.t ? new Date(r.t).toLocaleDateString('he-IL') : '';
   const desc = String(r.desc || '').trim();
   const descHTML = desc ? `<span class="tw-desc-wrap"><small class="tw-desc">${escHtml(desc)}</small>${desc.length > 75 ? `<button type="button" class="tw-more" onclick="event.stopPropagation(); const w=this.parentElement; w.classList.toggle('open'); this.textContent=w.classList.contains('open')?'פחות':'עוד'">עוד</button>` : ''}</span>` : '';
-  return `<article class="tw-post" role="button" tabindex="0" data-id="${escHtml(r.id)}" onclick="rentOpen('${artEsc(r.id)}')" onkeydown="if((event.key==='Enter'||event.key===' ')&&event.target===this){event.preventDefault();this.click();}">
+  return `<article class="tw-post" role="button" tabindex="0" data-id="${escHtml(r.id)}" onclick="const st=this.querySelector('.tw-strip'); if(st&&st._swipedAt&&Date.now()-st._swipedAt<280)return; rentOpen('${artEsc(r.id)}')" onkeydown="if((event.key==='Enter'||event.key===' ')&&event.target===this){event.preventDefault();this.click();}">
     <header class="tw-head">
       ${isUserVerified(r.uid || '', mktWho(r), r.verified) ? verifiedSealHTML(13) : ''}
       <div class="tw-av" onclick="event.stopPropagation(); rentOpenSeller('${artEsc(r.uid || '')}', '${artEsc(r.owner || '')}')">${authorAvHTML({ author: mktWho(r) || '?', uid: r.uid || '' })}</div>
@@ -34949,10 +34993,15 @@ function homeDateBarHTML() {
       <div class="svd-range-ends" dir="ltr"><small>${escHtml(svdMonthBounds(0).label)}</small><small>${escHtml(svdMonthBounds(12).label)}</small></div>
     </div>`;
   }
-  return `<nav class="dls-tabs svd-tabs home-date-tabs">${tab('all', 'הכל')}${tab('week', 'השבוע')}${tab('month', 'החודש')}${tab('range', 'לפי חודשים')}</nav>${rangeHTML}`;
+  return `<nav class="dls-tabs svd-tabs home-date-tabs">${tab('all', 'הכל')}${tab('week', 'השבוע')}${tab('month', 'החודש')}${tab('range', 'לפי חודשים')}<button type="button" class="home-date-saved" onclick="if(typeof svdOpen==='function')svdOpen()">שמורים</button></nav>${rangeHTML}`;
 }
 function homeDateFeedHTML(baseList) {
-  const filtered = homeDateFilter(baseList).slice().sort((a, b) => libScore(b) - libScore(a)).slice(0, 40);
+  const arr = homeDateFilter(baseList).slice();
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  const filtered = arr.slice(0, 40);
   return filtered.length ? filtered.map(twPostHTML).join('') : '<div class="rn-empty">אין מודעות בטווח התאריכים שנבחר.</div>';
 }
 function homeDateSetTab(t) {
@@ -35156,7 +35205,9 @@ function dlsHTML() {
   const inHas = !!(uid && allOffers.some(o => o && o.toUid === uid && offersMyTurn(o)));
   const outHas = !!(uid && allOffers.some(o => o && o.fromUid === uid && offersMyTurn(o)));
   const n = list.filter(turn).length;
-  return `<nav class="dls-tabs"><button type="button" class="${dlsTab === 'in' ? 'on' : ''}${inHas ? ' has-new' : ''}" onclick="dlsSetTab('in')">התקבלו</button><button type="button" class="${dlsTab === 'out' ? 'on' : ''}${outHas ? ' has-new' : ''}" onclick="dlsSetTab('out')">נשלחו</button>${n && !demo ? `<small>${n} מחכות לתשובה שלך</small>` : ''}</nav>
+  const tabs = `<nav class="dls-tabs"><button type="button" class="${dlsTab === 'in' ? 'on' : ''}${inHas ? ' has-new' : ''}" onclick="dlsSetTab('in')">התקבלו</button><button type="button" class="${dlsTab === 'out' ? 'on' : ''}${outHas ? ' has-new' : ''}" onclick="dlsSetTab('out')">נשלחו</button><button type="button" class="${dlsTab === 'dash' ? 'on' : ''}" onclick="dlsSetTab('dash')">בקרה</button>${dlsTab !== 'dash' && n && !demo ? `<small>${n} מחכות לתשובה שלך</small>` : ''}</nav>`;
+  if (dlsTab === 'dash') return `${tabs}<div class="ua-page" id="dls-dash-host"></div>`;
+  return `${tabs}
     ${list.length ? `<div class="dls-grid">${list.map(o => dlsSqHTML(o, me, demo, turn(o))).join('')}</div>` : `<div class="rn-empty">${dlsTab === 'out' ? 'עדיין לא שלחת הצעות.<br>בכל מודעה יש כפתור משא ומתן.' : 'עדיין לא קיבלת הצעות.'}</div>`}
     ${demo ? '<p class="dls-note">כך ייראו ההצעות כשיתחילו להגיע מלקוחות</p>' : ''}`;
 }
@@ -35165,10 +35216,11 @@ function dlsOpen() {
   try { offersSubscribe(); } catch (e) {}
   window.__detailOpen = false;
   mainContent.innerHTML = `<div class="dls-page">${dlsHTML()}</div>`;
+  if (dlsTab === 'dash' && typeof openUserAnalytics === 'function') openUserAnalytics('#dls-dash-host');
   try { window.scrollTo(0, 0); } catch (e) {}
   setTimeout(() => { try { mtSync(); } catch (e) {} }, 50);
 }
-function dlsRefresh() { const el = document.querySelector('.dls-page'); if (el) el.innerHTML = dlsHTML(); }
+function dlsRefresh() { const el = document.querySelector('.dls-page'); if (el) { el.innerHTML = dlsHTML(); if (dlsTab === 'dash' && typeof openUserAnalytics === 'function') openUserAnalytics('#dls-dash-host'); } }
 function dlsSetTab(t) { dlsTab = t; dlsRefresh(); }
 function dlsTabPaint() {
   const i = document.querySelector('#m-top .mt-dls-n');
@@ -35828,6 +35880,11 @@ window.projSet = projSet;
 function buildRentPage() {
   Object.assign(rentUI, { offer: 'all', owner: 'all', min: null, max: null });   // סינון העמודה שבעמוד הראשי לא עובר לעמוד השוק
   setTimeout(rentSubscribe, 0);
+  const open = rentUI.open && rentFind(rentUI.open);
+  if (open) {
+    setTimeout(() => { if (rentUI.open === open.id) rentRender(); }, 0);
+    return `<div class="rent-page" data-page-id="page-rent-main"><div class="rn-inner">${rentDetailHTML(open)}</div></div>`;
+  }
   setTimeout(() => { rentSideSync(); mkTitleMore(); }, 0);
   setTimeout(mkTitleMore, 900);
   rentUI.open = null;
@@ -36048,10 +36105,11 @@ function rentOpen(id) {
   // מחוץ לשוק (ספרייה, פיד, עסקאות...): קודם עוברים לשוק ואז פותחים את המודעה
   if (!(typeof mainContent !== 'undefined' && mainContent && mainContent.querySelector('.rent-page .rn-inner'))) {
     window.__mktWanted = true;
-    navigateToPage('page-rent-main');
-    // מציירים את המודעה מיד (לפני שהדפדפן מצייר את רשת השוק) — בלי הבהוב של עמוד אחר
     rentUI.open = id; rentUI.seller = null;
-    if (mainContent && mainContent.querySelector('.rent-page .rn-inner')) rentRender();
+    navigateToPage('page-rent-main');
+    if (mainContent && mainContent.querySelector('.rent-page .rn-inner') && !mainContent.querySelector('.rent-page :is(.mk-watch, .rn-det)')) {
+      rentUI.open = id; rentUI.seller = null; rentRender();
+    }
     setTimeout(() => {
       try { window.scrollTo({ top: 0 }); } catch (e) {}
       if (rentUI.open === id && mainContent && mainContent.querySelector('.rent-page :is(.mk-watch, .rn-det)')) return;   // כבר מוצגת
@@ -38247,7 +38305,7 @@ Object.assign(window, { phoneVerifyOpen, pvSend, pvBack, pvClose });
         </div>
         <button type="button" class="mt-circ mt-me" onclick="mtMe()" aria-label="המשתמש שלי"></button>
       </div>
-      <nav class="mt-tabs"><button type="button" data-t="home" onclick="mtTab('home')">בית</button><button type="button" data-t="feed" onclick="mtTab('feed')">במעקב</button><button type="button" data-t="deals" class="mt-dls" onclick="mtTab('deals')">עסקאות<i class="mt-apv-n mt-dls-n"></i></button><button type="button" data-t="dash" onclick="mtTab('dash')">בקרה</button><button type="button" data-t="saved" onclick="mtTab('saved')">שמורים</button><button type="button" data-t="other" onclick="mtTab('other')">אחר</button><button type="button" data-t="apv" class="mt-apv" hidden onclick="mtTab('apv')">אישור<i class="mt-apv-n"></i></button><span class="mt-count" aria-live="polite"></span></nav>`;
+      <nav class="mt-tabs"><button type="button" data-t="home" onclick="mtTab('home')">בית</button><button type="button" data-t="feed" onclick="mtTab('feed')">במעקב</button><button type="button" data-t="deals" class="mt-dls" onclick="mtTab('deals')">עסקאות<i class="mt-apv-n mt-dls-n"></i></button><button type="button" data-t="saved" onclick="mtTab('saved')">שמורים</button><button type="button" data-t="other" onclick="mtTab('other')">אחר</button><button type="button" data-t="details" onclick="mtTab('details')">אישי</button><button type="button" data-t="apv" class="mt-apv" hidden onclick="mtTab('apv')">אישור<i class="mt-apv-n"></i></button><span class="mt-count" aria-live="polite"></span></nav>`;
     document.body.appendChild(el);
     document.documentElement.classList.add('has-mtop');
     mtSync();
@@ -38311,8 +38369,15 @@ try { onAuthStateChanged(auth, () => setTimeout(mtMePaint, 300)); } catch (e) {}
 function mtSync() {
   mtMePaint();
   const el = document.getElementById('m-top'); if (!el) return;
-  const svd = !!document.querySelector('.svd-page'), dls = !svd && !!document.querySelector('.dls-page'), apv = !!document.querySelector('.apv-page'), dash = !!document.querySelector('.ua-page'), feed = !svd && !apv && !dls && !dash && !!document.querySelector('.fd-page'), other = !svd && !apv && !dls && !dash && !feed && !!document.querySelector('.rent-page') && !(typeof rentUI !== 'undefined' && (rentUI.open || rentUI.seller)), home = !svd && !feed && !apv && !dls && !dash && !other && !!document.querySelector('.lib-page');
-  el.querySelectorAll('.mt-tabs button').forEach(b => b.classList.toggle('on', (b.dataset.t === 'feed' && feed) || (b.dataset.t === 'home' && home) || (b.dataset.t === 'apv' && apv) || (b.dataset.t === 'deals' && dls) || (b.dataset.t === 'dash' && dash) || (b.dataset.t === 'saved' && svd) || (b.dataset.t === 'other' && other)));
+  const prf = !!document.querySelector('.prf-page');
+  const svd = !prf && !!document.querySelector('.svd-page'), dls = !prf && !svd && !!document.querySelector('.dls-page'), apv = !prf && !!document.querySelector('.apv-page'), dash = !prf && !!document.querySelector('.ua-page'), feed = !prf && !svd && !apv && !dls && !dash && !!document.querySelector('.fd-page'), other = !prf && !svd && !apv && !dls && !dash && !feed && !!document.querySelector('.rent-page') && !(typeof rentUI !== 'undefined' && (rentUI.open || rentUI.seller)), home = !prf && !svd && !feed && !apv && !dls && !dash && !other && !!document.querySelector('.lib-page');
+  el.querySelectorAll('.mt-tabs button').forEach(b => b.classList.toggle('on', (b.dataset.t === 'feed' && feed) || (b.dataset.t === 'home' && home) || (b.dataset.t === 'apv' && apv) || (b.dataset.t === 'deals' && dls) || (b.dataset.t === 'dash' && dash) || (b.dataset.t === 'saved' && svd) || (b.dataset.t === 'other' && other) || (b.dataset.t === 'details' && prf)));
+  const homeBtn = el.querySelector('.mt-home');
+  if (homeBtn) {
+    const hideBack = home || feed || dls || svd || other || prf || apv;
+    homeBtn.style.visibility = hideBack ? 'hidden' : '';
+    homeBtn.style.pointerEvents = hideBack ? 'none' : '';
+  }
   dlsTabPaint();
   apvTabPaint();
   const cartEl = el.querySelector('.mt-cart');
@@ -38343,6 +38408,7 @@ function mtTab(t) {
   else if (t === 'deals') { dlsOpen(); }
   else if (t === 'dash') { openUserAnalytics(); }
   else if (t === 'saved') { if (typeof svdOpen === 'function') svdOpen(); }
+  else if (t === 'details') { if (typeof detailsOpen === 'function') detailsOpen(); }
   else if (t === 'other') { window.__mktWanted = true; window.__rentFromHome = false; if (typeof rentUI !== 'undefined') Object.assign(rentUI, { open: null, seller: null }); if (typeof navigateToPage === 'function') navigateToPage('page-rent-main'); }
   else { if (typeof fbReset === 'function' && typeof rentUI !== 'undefined') Object.assign(rentUI, { open: null, seller: null }); goToHomePage(); }
   try { window.scrollTo({ top: 0 }); } catch (e) {}
@@ -38521,10 +38587,12 @@ function storiesBarHTML() {
     <b class="st-name">הסטורי שלך</b>
   </div>`;
   const folHTML = followed.map(g => storyCircleHTML(g, false)).join('');
-  // הצעות לסטורי: מופיעות בעיגולים קטנים יותר מעיגול הסטורי הרגיל (במיוחד כשאין עוקבים או להשלמת השורה)
-  const suggHTML = suggested.length ? `<div class="st-sugg-group" aria-label="הצעות לסטורי">
+  // הצעות לסטורי: מופיעות בעיגולים קטנים יותר מעיגול הסטורי הרגיל בסדר רנדומלי
+  const suggShuf = suggested.slice();
+  for (let i = suggShuf.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [suggShuf[i], suggShuf[j]] = [suggShuf[j], suggShuf[i]]; }
+  const suggHTML = suggShuf.length ? `<div class="st-sugg-group" aria-label="הצעות לסטורי">
     <span class="st-sugg-label">${followed.length ? 'הצעות' : 'הצעות לסטורי'}</span>
-    <div class="st-sugg-list">${suggested.map(g => storyCircleHTML(g, true)).join('')}</div>
+    <div class="st-sugg-list">${suggShuf.map(g => storyCircleHTML(g, true)).join('')}</div>
   </div>` : '';
   return `<section class="st-bar" aria-label="סטוריז ל-24 שעות"><div class="st-track">${mineHTML}${folHTML}${suggHTML}</div></section>`;
 }
@@ -39026,8 +39094,8 @@ function uaSearch(val) {
   _uaState.q = val;
   _uaRenderList();
 }
-function _uaDraw() {
-  const host = document.querySelector('.ua-page');
+function _uaDraw(targetSel) {
+  const host = document.querySelector(targetSel || '#dls-dash-host') || document.querySelector('.ua-page');
   if (!host) return;
   const u = auth.currentUser, reg = u && !u.isAnonymous, uid = u ? u.uid : '';
   const name = (typeof liveChatUserName === 'function' && liveChatUserName()) || (u && u.displayName) || 'אורח';
@@ -39053,17 +39121,6 @@ function _uaDraw() {
   const topEngPct = engTotal ? Math.round((Math.max(...engParts.map(p => p.val)) / engTotal) * 100) : 0;
   host.innerHTML = `<div class="ua-shell">
     <div class="ua-crumb">ניהול פרופיל / לוח בקרה וניתוח נתונים</div>
-    <div class="ua-card ua-head-card">
-      <div class="ua-head-row">
-        <span class="ua-av">${typeof authorAvHTML === 'function' ? authorAvHTML({ author: name, uid }) : '👤'}</span>
-        <div class="ua-head-meta">
-          <div class="ua-head-name"><b>${escHtml(name)}</b>${ver}</div>
-          <div class="ua-head-sub">${items.length} מודעות · ${schedCount} מתוזמנות · ${_uaState.followers} עוקבים</div>
-          <div class="ua-tags"><span>פרופיל פעיל</span><span>ניתוח בזמן אמת</span>${schedCount ? `<span>${schedCount} בתזמון</span>` : ''}</div>
-        </div>
-        <button type="button" class="ua-new-btn" onclick="if(typeof mkPubOpen==='function') mkPubOpen()">+ מודעה חדשה</button>
-      </div>
-    </div>
     <div class="ua-kpis">
       <div class="ua-kpi"><small>צפיות בפרופיל</small><b class="g">${profViews.toLocaleString('he-IL')}</b></div>
       <div class="ua-kpi"><small>צפיות במודעות</small><b class="g">${totalAdViews.toLocaleString('he-IL')}</b></div>
@@ -39104,32 +39161,22 @@ function _uaDraw() {
           </button>`).join('') : '<div class="ua-empty">עדיין לא נרשמו צופים מזוהים במודעות שלך.</div>'}
       </div>
     </div>
-    <div class="ua-card ua-table-card">
-      <div class="ua-search-bar">
-        <input id="ua-q" type="search" placeholder="חיפוש במודעות שלך…" oninput="uaSearch(this.value)">
-      </div>
-      <div class="ua-filters">
-        <button type="button" class="on" data-f="all" onclick="uaSetFilter('all')">הכל (${items.length})</button>
-        <button type="button" data-f="live" onclick="uaSetFilter('live')">פעילות (${items.length - schedCount})</button>
-        <button type="button" data-f="sched" onclick="uaSetFilter('sched')">מתוזמנות (${schedCount})</button>
-        <button type="button" data-f="likes" onclick="uaSetFilter('likes')">הכי אהובות</button>
-      </div>
-      <div id="ua-list-host" class="ua-list"></div>
-    </div>
   </div>`;
   if (typeof avatarHydrate === 'function') avatarHydrate(host);
-  _uaRenderList();
 }
-async function openUserAnalytics() {
-  if (typeof mainContent === 'undefined' || !mainContent) return;
-  window.__detailOpen = false;
-  mainContent.innerHTML = `<div class="ua-page"></div>`;
-  try { window.scrollTo(0, 0); } catch (e) {}
-  setTimeout(() => { try { mtSync(); } catch (e) {} }, 50);
+async function openUserAnalytics(targetSel) {
+  const host = targetSel ? document.querySelector(targetSel) : null;
+  if (!host) {
+    if (typeof mainContent === 'undefined' || !mainContent) return;
+    window.__detailOpen = false;
+    mainContent.innerHTML = `<div class="ua-page"></div>`;
+    try { window.scrollTo(0, 0); } catch (e) {}
+    setTimeout(() => { try { mtSync(); } catch (e) {} }, 50);
+  }
   const u = auth.currentUser, uid = u ? u.uid : '';
   const name = (typeof liveChatUserName === 'function' && liveChatUserName()) || (u && u.displayName) || 'אורח';
   _uaState = { q: '', filter: 'all', followers: 0, following: 0, profViews: 0, viewers: [], items: uid ? _uaCollectUserAds(uid, name) : [] };
-  _uaDraw();
+  _uaDraw(targetSel);
   if (uid) {
     try {
       const [fcSnap, pvSnap, vwSnap] = await Promise.all([
@@ -39152,8 +39199,159 @@ async function openUserAnalytics() {
       });
       vwList.sort((a, b) => b.at - a.at);
       _uaState.viewers = vwList;
-      _uaDraw();
+      _uaDraw(targetSel);
     } catch (e) {}
   }
 }
 Object.assign(window, { openUserAnalytics, uaSetFilter, uaSearch });
+
+// ===== דף פרטים: הגדרת שם משתמש, מקום מגורים, גיל וטלגרם — שורה לכל פרט =====
+function _detailsLoadLocal() {
+  const u = auth.currentUser;
+  const k = u ? `user_profile_${u.uid}` : 'guest_profile';
+  let p = {};
+  try { p = JSON.parse(localStorage.getItem(k) || '{}') || {}; } catch (e) {}
+  if (!p.nickname && u && u.displayName) p.nickname = u.displayName;
+  return p;
+}
+function _detailsRender(p) {
+  const host = document.querySelector('.prf-page');
+  if (!host) return;
+  p = p || {};
+  const u = auth.currentUser;
+  const uid = u ? u.uid : '';
+  const avCfg = p.avatar || (uid && typeof avatarCache !== 'undefined' ? avatarCache[uid] : null);
+  const avHTML = avCfg && !avCfg.__photo && typeof avatarSVG === 'function'
+    ? avatarSVG(avCfg)
+    : (avCfg && avCfg.__photo ? `<img src="${escHtml(avCfg.__photo)}" alt="">` : (typeof demoAvatarSVG === 'function' ? demoAvatarSVG(uid || p.nickname || 'guest') : ''));
+  const verified = !!(p.verified || p.verificationStatus === 'approved' || (u && typeof isUserVerified === 'function' && isUserVerified(u.uid, p.nickname || u.displayName || '')));
+  const pending = !verified && p.verificationStatus === 'pending';
+  const verHTML = verified
+    ? `<span class="prf-ver-badge ok">✓ מאומת</span>`
+    : pending
+      ? `<span class="prf-ver-badge wait">⏳ נשלח למנהל</span><button type="button" class="prf-ver-btn" onclick="detailsUploadId()">שליחה מחדש</button>`
+      : `<span class="prf-ver-badge req">דרוש אימות</span><button type="button" class="prf-ver-btn" onclick="detailsUploadId()">שליחת תעודת זהות למנהל</button>`;
+  host.innerHTML = `<form class="prf-card" onsubmit="event.preventDefault(); detailsSave()">
+    <h2 class="prf-title">אישי</h2>
+    <div class="prf-row"><span>הדמות שלי</span><div class="prf-ver-act"><span class="prf-av-box">${avHTML}</span><button type="button" class="prf-ver-btn" onclick="if(typeof openAvatarEditor==='function')openAvatarEditor()">בניית דמות</button><button type="button" class="prf-ver-btn" onclick="detailsRandomAvatar()">רנדומלי</button></div></div>
+    <label class="prf-row"><span>שם משתמש</span><input id="prf-nick" type="text" maxlength="40" placeholder="שם משתמש…" value="${escHtml(p.nickname || '')}"></label>
+    <label class="prf-row"><span>מקום מגורים</span><input id="prf-city" type="text" maxlength="60" placeholder="עיר / מקום מגורים…" value="${escHtml(p.aboutCity || '')}"></label>
+    <label class="prf-row"><span>בן כמה אני</span><input id="prf-age" type="number" min="1" max="120" inputmode="numeric" placeholder="גיל…" value="${escHtml(p.age ? String(p.age) : '')}"></label>
+    <label class="prf-row"><span>טלגרם</span><input id="prf-tg" type="text" dir="ltr" maxlength="80" placeholder="@username" value="${escHtml(p.telegram || '')}"></label>
+    <div class="prf-row prf-ver-row"><span>אימות ת״ז</span><div class="prf-ver-act">${verHTML}</div></div>
+    <button type="submit" class="prf-save">שמירה</button>
+  </form>`;
+}
+function detailsUploadId() {
+  const inp = document.createElement('input');
+  inp.type = 'file';
+  inp.accept = 'image/*';
+  inp.onchange = async () => {
+    const f = inp.files && inp.files[0];
+    if (!f) return;
+    const data = typeof artCompressImage === 'function' ? await artCompressImage(f) : '';
+    if (!data) { if (typeof showCopyToast === 'function') showCopyToast('לא הצלחנו לקרוא את התמונה'); return; }
+    if (!auth.currentUser && typeof ensureGuestSignedIn === 'function') {
+      try { await ensureGuestSignedIn(); } catch (e) {}
+    }
+    const u = auth.currentUser;
+    const uid = u ? u.uid : '';
+    const k = u ? `user_profile_${uid}` : 'guest_profile';
+    let p = {};
+    try { p = JSON.parse(localStorage.getItem(k) || '{}') || {}; } catch (e) {}
+    p.verificationStatus = 'pending';
+    p.verified = false;
+    try { localStorage.setItem(k, JSON.stringify(p)); } catch (e) {}
+    if (uid && typeof db !== 'undefined') {
+      const displayName = p.nickname || (typeof liveChatUserName === 'function' ? liveChatUserName() : '') || (u && u.displayName) || 'משתמש';
+      try {
+        await set(ref(db, `website/verification_requests/${uid}`), {
+          uid,
+          displayName,
+          email: (u && u.email) || '',
+          photo: data,
+          type: 'id_card',
+          status: 'pending',
+          timestamp: Date.now()
+        });
+        await update(ref(db, `website/users/${uid}/profile`), { verificationStatus: 'pending' });
+      } catch (e) { console.error('id verification upload failed', e); }
+    }
+    _detailsRender(p);
+    if (typeof showCopyToast === 'function') showCopyToast('✓ תעודת הזהות נשלחה לאימות מנהל');
+  };
+  inp.click();
+}
+window.detailsUploadId = detailsUploadId;
+async function detailsRandomAvatar() {
+  const r = n => Math.floor(Math.random() * n);
+  const cfg = {
+    s: r(typeof AV_SKIN !== 'undefined' ? AV_SKIN.length : 3),
+    h: r(typeof AV_HAIR_NAMES !== 'undefined' ? AV_HAIR_NAMES.length : 5),
+    hc: r(typeof AV_HAIR_C !== 'undefined' ? AV_HAIR_C.length : 4),
+    ec: r(typeof AV_EYE_C !== 'undefined' ? AV_EYE_C.length : 4),
+    f: r(typeof AV_BEARD_NAMES !== 'undefined' ? AV_BEARD_NAMES.length : 3),
+    g: r(2),
+    r: r(2)
+  };
+  const u = auth.currentUser;
+  const k = u ? `user_profile_${u.uid}` : 'guest_profile';
+  let p = {};
+  try { p = JSON.parse(localStorage.getItem(k) || '{}') || {}; } catch (e) {}
+  p.avatar = cfg;
+  try { localStorage.setItem(k, JSON.stringify(p)); } catch (e) {}
+  if (u && typeof avatarCache !== 'undefined') {
+    avatarCache[u.uid] = cfg;
+    if (typeof avatarRefresh === 'function') avatarRefresh(u.uid);
+    if (!u.isAnonymous) { try { await update(ref(db, `website/users/${u.uid}/profile`), { avatar: cfg }); } catch (e) {} }
+  }
+  _detailsRender(p);
+  if (typeof showCopyToast === 'function') showCopyToast('🎲 הוגרלה דמות חדשה');
+}
+window.detailsRandomAvatar = detailsRandomAvatar;
+async function detailsOpen() {
+  if (typeof mainContent === 'undefined' || !mainContent) return;
+  window.__detailOpen = false;
+  mainContent.innerHTML = `<div class="prf-page"></div>`;
+  try { window.scrollTo(0, 0); } catch (e) {}
+  setTimeout(() => { try { mtSync(); } catch (e) {} }, 50);
+  const local = _detailsLoadLocal();
+  _detailsRender(local);
+  const u = auth.currentUser;
+  if (u && !u.isAnonymous) {
+    try {
+      const snap = await get(ref(db, `website/users/${u.uid}/profile`));
+      const remote = snap.val() || {};
+      if (remote && typeof remote === 'object') {
+        const merged = { ...local, ...remote };
+        try { localStorage.setItem(`user_profile_${u.uid}`, JSON.stringify(merged)); } catch (e) {}
+        if (document.querySelector('.prf-page')) _detailsRender(merged);
+      }
+    } catch (e) {}
+  }
+}
+async function detailsSave() {
+  const val = id => ((document.getElementById(id) || {}).value || '').trim();
+  const nickname = val('prf-nick').slice(0, 40);
+  const aboutCity = val('prf-city').slice(0, 60);
+  const ageRaw = val('prf-age');
+  const age = ageRaw ? Math.max(1, Math.min(120, Math.round(Number(ageRaw)))) : '';
+  const telegram = val('prf-tg').slice(0, 80);
+  const u = auth.currentUser;
+  const k = u ? `user_profile_${u.uid}` : 'guest_profile';
+  let p = {};
+  try { p = JSON.parse(localStorage.getItem(k) || '{}') || {}; } catch (e) {}
+  const next = { ...p, nickname, aboutCity, age, telegram };
+  try { localStorage.setItem(k, JSON.stringify(next)); } catch (e) {}
+  if (u && !u.isAnonymous) {
+    try {
+      await update(ref(db, `website/users/${u.uid}/profile`), { nickname, aboutCity, age, telegram });
+      if (nickname && typeof updateProfile === 'function' && u.displayName !== nickname) {
+        try { await updateProfile(u, { displayName: nickname }); } catch (e) {}
+      }
+    } catch (e) {}
+  }
+  try { if (typeof mtSync === 'function') mtSync(); } catch (e) {}
+  if (typeof showCopyToast === 'function') showCopyToast('✓ הפרטים נשמרו');
+}
+Object.assign(window, { detailsOpen, detailsSave });

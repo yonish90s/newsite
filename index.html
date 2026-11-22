@@ -59,10 +59,12 @@
     window.__deepLinkOpening = /^#[psn]\//.test(location.hash || '');
     // מצב בהיר/כהה — נקבע לפני שהדף מצויר כדי שלא יהבהב (בחירה שמורה, אחרת בהיר)
     (function () {
-      var t = null;
-      try { t = localStorage.getItem('site_theme'); } catch (e) {}
-      // בלי בחירה שמורה: במובייל כהה כברירת מחדל, במחשב בהיר
-      if (t !== 'light' && t !== 'dark' && t !== 'system') t = (window.matchMedia && matchMedia('(max-width: 900px)').matches) ? 'dark' : 'light';
+      var isMob = window.matchMedia && matchMedia('(max-width: 900px)').matches;
+      var t = 'light';
+      if (isMob) {
+        try { t = localStorage.getItem('site_theme'); } catch (e) {}
+        if (t !== 'light' && t !== 'dark' && t !== 'system') t = 'dark';
+      }
       document.documentElement.dataset.themeMode = t;
       if (t === 'system') t = window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';   // "לפי המכשיר"
       if (t === 'dark') { document.documentElement.classList.add('theme-dark'); var dc = document.getElementById('dark-css'); if (dc) { dc.href = dc.dataset.href; dc.media = 'all'; } }
