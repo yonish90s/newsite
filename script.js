@@ -20031,11 +20031,13 @@ function dmMessagesHTML() {
       const myTurn = (st === 'pending' || st === 'counter') && mt.lastBy !== myUid;
       const stTxt = st === 'accepted' ? '✓ אושרה' : st === 'rejected' ? '✕ נדחתה' : st === 'counter' ? (myTurn ? '⇄ הצעה נגדית — ממתין לך' : '⇄ הצעה נגדית נשלחה') : (myTurn ? '⏳ ממתין לתשובה שלך' : '⏳ ממתין לאישור');
       const stCls = st === 'accepted' ? 'ok' : st === 'rejected' ? 'no' : st === 'counter' ? 'deal' : 'wait';
-      const actsHTML = myTurn ? `<div class="tg-meet-acts">
-        <button type="button" class="tg-mb ok" onclick="dmMeetDecide('${artEsc(m._id || '')}','accepted')">✓ אישור</button>
-        <button type="button" class="tg-mb deal" onclick="dmMeetCounter('${artEsc(m._id || '')}')">⇄ משא ומתן</button>
-        <button type="button" class="tg-mb no" onclick="dmMeetDecide('${artEsc(m._id || '')}','rejected')">✕ דחייה</button>
-      </div>` : '';
+      const actsHTML = (st === 'rejected' || st === 'accepted')
+        ? `<div class="tg-meet-acts"><button type="button" class="tg-mb deal" onclick="dmMeetCounter('${artEsc(m._id || '')}')">⇄ הצעה מחודשת</button></div>`
+        : `<div class="tg-meet-acts">
+            <button type="button" class="tg-mb ok" onclick="dmMeetDecide('${artEsc(m._id || '')}','accepted')">✓ אישור</button>
+            <button type="button" class="tg-mb deal" onclick="dmMeetCounter('${artEsc(m._id || '')}')">⇄ משא ומתן</button>
+            <button type="button" class="tg-mb no" onclick="dmMeetDecide('${artEsc(m._id || '')}','rejected')">✕ דחייה</button>
+          </div>`;
       const dtObj = mt.dtVal ? new Date(mt.dtVal) : (mt.whenTs ? new Date(mt.whenTs) : null);
       const okDt = dtObj && !isNaN(dtObj.getTime());
       const dateStr = okDt ? dtObj.toLocaleDateString('he-IL', { day: 'numeric', month: 'short' }) : (mt.when ? String(mt.when).split(',')[0] : '—');
@@ -33542,8 +33544,8 @@ function cartRender() {
       <span class="cart-tx"><b>${escHtml(l.p.name || '')}</b><small>${coMoney(coPrice(l.p))}${l.p.unit ? ' ' + escHtml(l.p.unit) : ''}${l.p.fee ? ' · כולל עמלה' : ''}</small>${l.p.seller ? `<button type="button" class="cart-seller" onclick="cartClose(); rentOpen('${artEsc(l.p.rid)}')">תשלום מול המוכר</button>` : ''}</span>
       <span class="cart-side">${qtyDDHTML(l.qty, qtyOptsFor(l.p, l.qty), n => `cartSetQty('${artEsc(l.id)}',${n})`, `cartSetQty('${artEsc(l.id)}',0)`)}
       <button type="button" class="cart-del" onclick="cartSetQty('${artEsc(l.id)}',0)" title="הסרה מהסל" aria-label="הסרה מהסל"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/></svg>הסרה</button></span>
-    </div>`).join('') + `<button type="button" class="cart-clear" onclick="cartClearAll(this)">ניקוי הסל</button>` : `<div class="cart-empty">העגלה ריקה<br><button type="button" class="ms-btn" onclick="cartClose(); navigateToPage('page-rent-main')">לשוק</button></div>`;
-  box.querySelector('.cart-foot').innerHTML = lines.length ? `<div class="co-line co-total"><span>${lines.some(l => l.p.seller) ? 'סה״כ כולל מוכרים' : 'סה״כ (לפני משלוח)'}</span><span>${coMoney(sub)}</span></div><button type="button" class="ms-btn"${lines.every(l => l.p.seller) ? ' hidden' : ''} onclick="cartClose(); cartCheckout()">לתשלום</button>` : '';
+    </div>`).join('') : `<div class="cart-empty">העגלה ריקה<br><button type="button" class="ms-btn" onclick="cartClose(); navigateToPage('page-rent-main')">לשוק</button></div>`;
+  box.querySelector('.cart-foot').innerHTML = lines.length ? `<div class="co-line co-total"><span>${lines.some(l => l.p.seller) ? 'סה״כ כולל מוכרים' : 'סה״כ (לפני משלוח)'}</span><span>${coMoney(sub)}</span></div><div class="cart-foot-acts"><button type="button" class="ms-btn"${lines.every(l => l.p.seller) ? ' hidden' : ''} onclick="cartClose(); cartCheckout()">לתשלום</button><button type="button" class="cart-clear-half" onclick="cartClearAll(this)">ניקוי הסל</button></div>` : '';
 }
 // ניקוי כל הסל: לחיצה ראשונה מבקשת אישור, שנייה מרוקנת
 function cartClearAll(btn) {
@@ -35220,22 +35222,6 @@ function twStripGo(btn, dir) {
   strip.scrollBy({ left: (rtl ? -1 : 1) * dir * strip.clientWidth, behavior: 'smooth' });
 }
 window.twStripDots = twStripDots; window.twStripGo = twStripGo;
-function adTrendHTML(r) {
-  if (!r) return '';
-  let pct = Number(r.trend);
-  if (!Number.isFinite(pct)) {
-    const key = String(r.id || r.title || '');
-    let h = 0;
-    for (let i = 0; i < key.length; i++) h = ((h * 31) + key.charCodeAt(i)) | 0;
-    const likes = Number((typeof itemLikesData === 'object' && itemLikesData[rentCommentsKey(r)]) || 0);
-    const up = likes > 0 || (Math.abs(h) % 10) >= 3;
-    const mag = (1.5 + (Math.abs(h) % 190) / 10).toFixed(1);
-    pct = up ? Number(mag) : -Number(mag);
-  }
-  const up = pct >= 0;
-  const txt = `${up ? '↗' : '↘'} ${up ? '+' : ''}${pct.toFixed(1)}%`;
-  return `<span class="ad-trend ${up ? 'up' : 'down'}" title="${up ? 'בעלייה' : 'בירידה'}">${txt}</span>`;
-}
 function twPostHTML(r) {
   const sec = mktSecOf(r), biz = sec === 'biz';
   const price = Number(r.price) > 0 ? `<small class="mk-sg-price">${mktDiscP(r.price).toLocaleString('he-IL', { maximumFractionDigits: 2 })}&nbsp;₪${mktWasHTML(r.price)}</small>` : '';
@@ -35253,7 +35239,7 @@ function twPostHTML(r) {
       <div class="tw-av" onclick="event.stopPropagation(); rentOpenSeller('${artEsc(r.uid || '')}', '${artEsc(r.owner || '')}')">${authorAvHTML({ author: mktWho(r) || '?', uid: r.uid || '' })}</div>
       <b class="tw-who" onclick="event.stopPropagation(); rentOpenSeller('${artEsc(r.uid || '')}', '${artEsc(r.owner || '')}')">${biz ? BIZ_IC : ''}${escHtml(mktWho(r))}</b>
       <span class="tw-meta">${escHtml([mkWhereTxt(r), when].filter(Boolean).join(' · '))}</span>
-      ${price}${adTrendHTML(r)}
+      ${price}
     </header>
     <div class="tw-text"><b>${escHtml(r.title)}</b>${descHTML}</div>
     ${media}
@@ -35928,7 +35914,7 @@ function rentMiniHTML(x) {
   // בידול: עסק — מסגרת ירוקה, תג "עסק" וסמל חנות ליד שם העסק; יד 2 — תג אפור
   const sec = mktSecOf(x), biz = sec === 'biz';
   const badge = '';
-  return `<div role="button" tabindex="0" class="mk-sg${biz ? ' is-biz' : sec === 'used' ? ' is-used' : ''}" data-id="${escHtml(x.id)}" onclick="rentOpen('${artEsc(x.id)}')" onkeydown="if((event.key==='Enter'||event.key===' ')&&event.target===this){event.preventDefault();this.click();}"><span class="mk-sg-meta"><span class="mk-sg-who" role="button" tabindex="0" title="${escHtml(mktWho(x))}" aria-label="${escHtml(mktWho(x))}" onclick="event.stopPropagation(); rentOpenSeller('${artEsc(x.uid || '')}', '${artEsc(x.owner || '')}')">${isUserVerified(x.uid || '', mktWho(x), x.verified) ? verifiedSealHTML(13) : ''}${authorAvHTML({ author: mktWho(x) || '?', uid: x.uid || '' })}<b>${biz ? BIZ_IC : ''}${escHtml(mktWho(x))}</b></span><small class="mk-sg-city${mkKmTo(x.city) !== null ? ' km' : ''}">${escHtml(mkWhereTxt(x))}</small>${mkMobStatHTML(x)}<small class="mk-sg-price">${rentTypeIcon(x)}${Number(x.price) > 0 ? `${mktDiscP(x.price).toLocaleString('he-IL', { maximumFractionDigits: 2 })}&nbsp;₪${mktWasHTML(x.price)}` : mktIsProj(x) ? escHtml((PROJ_SUB[x.pd] || {}).name || PROJ_KINDS[x.pk] || 'פרויקט') : ''}${x.uid ? `<i data-sg-rate="${escHtml(x.uid)}"></i>` : ''}${adTrendHTML(x)}</small></span><b class="mk-sg-title"><span class="mk-sg-tt">${escHtml(x.title)}</span><span class="mk-sg-more" role="button" tabindex="0" onclick="event.stopPropagation(); event.preventDefault(); this.parentElement.classList.toggle('open')"><span>עוד</span><span>פחות</span></span></b><span class="mk-sg-img">${rentThumb(x)}${badge}${del}${mktSoldOut(x) ? '<i class="mk-sg-out">אזל</i>' : ''}<span class="ad-join-avs" data-join-avs="${escHtml(x.id)}">${adJoinAvsHTML(x.id)}</span></span><span class="mk-sg-acts">${rentHoverHTML(x)}</span></div>`;
+  return `<div role="button" tabindex="0" class="mk-sg${biz ? ' is-biz' : sec === 'used' ? ' is-used' : ''}" data-id="${escHtml(x.id)}" onclick="rentOpen('${artEsc(x.id)}')" onkeydown="if((event.key==='Enter'||event.key===' ')&&event.target===this){event.preventDefault();this.click();}"><span class="mk-sg-meta"><span class="mk-sg-who" role="button" tabindex="0" title="${escHtml(mktWho(x))}" aria-label="${escHtml(mktWho(x))}" onclick="event.stopPropagation(); rentOpenSeller('${artEsc(x.uid || '')}', '${artEsc(x.owner || '')}')">${isUserVerified(x.uid || '', mktWho(x), x.verified) ? verifiedSealHTML(13) : ''}${authorAvHTML({ author: mktWho(x) || '?', uid: x.uid || '' })}<b>${biz ? BIZ_IC : ''}${escHtml(mktWho(x))}</b></span><small class="mk-sg-city${mkKmTo(x.city) !== null ? ' km' : ''}">${escHtml(mkWhereTxt(x))}</small>${mkMobStatHTML(x)}<small class="mk-sg-price">${rentTypeIcon(x)}${Number(x.price) > 0 ? `${mktDiscP(x.price).toLocaleString('he-IL', { maximumFractionDigits: 2 })}&nbsp;₪${mktWasHTML(x.price)}` : mktIsProj(x) ? escHtml((PROJ_SUB[x.pd] || {}).name || PROJ_KINDS[x.pk] || 'פרויקט') : ''}${x.uid ? `<i data-sg-rate="${escHtml(x.uid)}"></i>` : ''}</small></span><b class="mk-sg-title"><span class="mk-sg-tt">${escHtml(x.title)}</span><span class="mk-sg-more" role="button" tabindex="0" onclick="event.stopPropagation(); event.preventDefault(); this.parentElement.classList.toggle('open')"><span>עוד</span><span>פחות</span></span></b><span class="mk-sg-img">${rentThumb(x)}${badge}${del}${mktSoldOut(x) ? '<i class="mk-sg-out">אזל</i>' : ''}<span class="ad-join-avs" data-join-avs="${escHtml(x.id)}">${adJoinAvsHTML(x.id)}</span></span><span class="mk-sg-acts">${rentHoverHTML(x)}</span></div>`;
 }
 // שורת הזהב: משאירים בה בדיוק כמה כרטיסים שנכנסים בשורה אחת; העודפים חוזרים לראש הגריד הרגיל
 function mkGoldFit() {
@@ -38620,12 +38606,16 @@ Object.assign(window, { phoneVerifyOpen, pvSend, pvBack, pvClose });
           <button type="button" class="mt-circ mt-pub" onclick="mkPubOpen()" aria-label="העלאת מודעה" title="העלאת מודעה">${ic('<rect x="3" y="3" width="18" height="18" rx="5"/><path d="M12 8v8M8 12h8"/>')}</button>
           <button type="button" class="mt-circ mt-srch" onclick="openSiteSearch()" aria-label="חיפוש באתר" title="חיפוש">${ic('<circle cx="11" cy="11" r="7"/><path d="M20 20l-4.35-4.35"/>')}</button>
           <button type="button" class="mt-circ mt-dm" onclick="openMessages()" aria-label="הודעות בין משתמשים" title="הודעות">${ic('<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>')}</button>
+          <button type="button" class="mt-circ mt-notif" onclick="mtNotifOpen()" aria-label="התראות" title="התראות">${ic('<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>')}</button>
           <button type="button" class="mt-circ mt-cart" onclick="cartOpen()" aria-label="עגלה" title="עגלה">${ic('<circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>')}</button>
           <button type="button" class="mt-circ mt-sets" onclick="mtSettingsOpen()" aria-label="הגדרות" title="הגדרות">${ic('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>')}</button>
           <button type="button" class="mt-circ mt-filter" onclick="homeDateFilterOpen()" aria-label="סינון לפי זמן" title="סינון">${ic('<line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/>')}</button>
           <button type="button" class="mt-circ mt-theme" onclick="mtToggleActs()" aria-label="הצגת כפתורים בשורה העליונה" title="עוד כפתורים">${ic('<path d="M4 7h16M4 12h16M4 17h16"/>')}</button>
         </div>
-        <button type="button" class="mt-circ mt-me" onclick="mtMe()" aria-label="המשתמש שלי"></button>
+        <div class="mt-left-brand">
+          <button type="button" class="mt-brand-txt" dir="ltr" onclick="mtTab('home')" aria-label="blackwhite">black<span>white</span></button>
+          <button type="button" class="mt-circ mt-me" onclick="mtMe()" aria-label="המשתמש שלי"></button>
+        </div>
       </div>
       <nav class="mt-tabs"><button type="button" data-t="home" onclick="mtTab('home')">בית</button><button type="button" data-t="feed" onclick="mtTab('feed')">במעקב</button><button type="button" data-t="deals" class="mt-dls" onclick="mtTab('deals')">עסקאות<i class="mt-apv-n mt-dls-n"></i></button><button type="button" data-t="saved" onclick="mtTab('saved')">שמורים</button><button type="button" data-t="other" onclick="mtTab('other')">אחר</button><button type="button" data-t="details" onclick="mtTab('details')">אישי</button><button type="button" data-t="apv" class="mt-apv" hidden onclick="mtTab('apv')">אישור<i class="mt-apv-n"></i></button><span class="mt-count" aria-live="polite"></span></nav>`;
     document.body.appendChild(el);
@@ -38684,6 +38674,13 @@ function mtSettingsHTML() {
       : row('התחברות / הרשמה', '<path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/>', 'openLiveChatLogin()')}
   </div>`;
 }
+function mtNotifOpen() {
+  if (auth.currentUser && typeof subscribeMyDMs === 'function') subscribeMyDMs();
+  if (typeof openMSheet === 'function' && typeof notificationsHTML === 'function') {
+    openMSheet('התראות', `<div class="notif-list">${notificationsHTML()}</div>`);
+  }
+}
+window.mtNotifOpen = mtNotifOpen;
 function mtToggleActs() {
   const el = document.getElementById('m-top');
   if (el) el.classList.toggle('mt-expanded');
@@ -38702,7 +38699,7 @@ function mtSync() {
   const homeBtn = el.querySelector('.mt-home');
   if (homeBtn) {
     const hideBack = home || feed || dls || svd || other || prf || apv;
-    homeBtn.style.visibility = hideBack ? 'hidden' : '';
+    homeBtn.style.display = hideBack ? 'none' : '';
     homeBtn.style.pointerEvents = hideBack ? 'none' : '';
   }
   dlsTabPaint();
@@ -38921,8 +38918,25 @@ function storiesBarHTML() {
     <span class="st-sugg-label">${followed.length ? 'הצעות' : 'הצעות לסטורי'}</span>
     <div class="st-sugg-list">${suggShuf.map(g => storyCircleHTML(g, true)).join('')}</div>
   </div>` : '';
-  return `<section class="st-bar" aria-label="סטוריז ל-24 שעות"><div class="st-track">${mineHTML}${folHTML}${suggHTML}</div></section>`;
+  const openCls = window._stBarOpen ? ' is-open' : '';
+  const cnt = (mine.length ? 1 : 0) + followed.length + suggShuf.length;
+  return `<section class="st-bar${openCls}" aria-label="סטוריז ל-24 שעות">
+    <button type="button" class="st-toggle" onclick="stBarToggle(this)">
+      <span class="st-toggle-l"><b>סטוריז</b>${cnt ? ` <small>(${cnt})</small>` : ''}</span>
+      <span class="st-toggle-r">${window._stBarOpen ? 'סגור ▲' : 'פתח ▼'}</span>
+    </button>
+    <div class="st-track">${mineHTML}${folHTML}${suggHTML}</div>
+  </section>`;
 }
+function stBarToggle(btn) {
+  const bar = btn && btn.closest('.st-bar');
+  if (!bar) return;
+  window._stBarOpen = !bar.classList.contains('is-open');
+  bar.classList.toggle('is-open', window._stBarOpen);
+  const r = btn.querySelector('.st-toggle-r');
+  if (r) r.textContent = window._stBarOpen ? 'סגור ▲' : 'פתח ▼';
+}
+window.stBarToggle = stBarToggle;
 function storiesRefreshDOM() {
   const bars = document.querySelectorAll('.st-bar');
   if (!bars.length) return;

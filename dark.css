@@ -1300,7 +1300,6 @@ html.theme-dark .tg-day span { background: rgba(255, 255, 255, 0.072) !important
 html.theme-dark .tg-msg.mine .tg-bubble { background: linear-gradient(180deg, #121212, #121212) !important; }
 html.theme-dark .tg-msg.theirs .tg-bubble { background: #000000 !important; color: #f5f5f5 !important; }
 html.theme-dark .tg-msg-time { color: rgba(236, 238, 241, 0.55) !important; }
-html.theme-dark .tg-tick.read { color: #ffffff !important; }
 html.theme-dark .tg-mic { border: 1px solid #262626 !important; background: #000000 !important; color: #f5f5f5 !important; }
 html.theme-dark .tg-rec-cancel { border: 1px solid rgba(255, 255, 255, 0.25) !important; background: rgba(228, 32, 43, 0.1) !important; color: #ffffff !important; }
 html.theme-dark .tg-rec-live { background: rgba(228, 32, 43, 0.08) !important; color: #ffffff !important; }
@@ -1310,7 +1309,6 @@ html.theme-dark .tg-msg.theirs .tg-voice-play { background: rgba(255, 255, 255, 
 html.theme-dark .tg-voice-track { background: rgba(18, 23, 29, 0.22) !important; }
 html.theme-dark .tg-msg.theirs .tg-voice-track { background: rgba(255, 255, 255, 0.126) !important; }
 html.theme-dark .tg-voice-fill { background: #e4202b !important; }
-html.theme-dark.theme-dark .tg-tick.read { color: #ffffff !important; }
 html.theme-dark.theme-dark .tg-mic { border: 1px solid #737373 !important; background: #121212 !important; }
 html.theme-dark.theme-dark .tg-msg.theirs .tg-voice-play { background: rgba(18, 23, 29, 0.14) !important; }
 html.theme-dark.theme-dark .tg-msg.theirs .tg-voice-track { background: rgba(18, 23, 29, 0.2) !important; }
@@ -4918,6 +4916,7 @@ html.theme-dark .tg-msg-del { background: #000000 !important; color: #ffffff !im
 html.theme-dark .tg-msg-cancel { background: #000000 !important; color: #f5f5f5 !important; }
 html.theme-dark.theme-dark .tg-msg-del { background: #121212 !important; color: #ffffff !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; }
 html.theme-dark.theme-dark .tg-msg-cancel { background: #121212 !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; }
+html.theme-dark body #cart-panel .cart-foot .cart-clear-half { background: #121212 !important; color: #ffffff !important; border-inline-start: 1px solid rgba(255, 255, 255, 0.1) !important; }
 html.theme-dark.theme-dark.theme-dark body:not(#_):not(#_):not(#_) #m-sheet.ig-cmt-sheet .ms-panel, html.theme-dark.theme-dark.theme-dark body:not(#_):not(#_):not(#_) #m-sheet.ig-cmt-sheet .ms-head, html.theme-dark.theme-dark.theme-dark body:not(#_):not(#_):not(#_) #m-sheet.ig-cmt-sheet .ms-body, html.theme-dark.theme-dark.theme-dark body:not(#_):not(#_):not(#_) #m-sheet.ig-cmt-sheet .igc-list, html.theme-dark.theme-dark.theme-dark body:not(#_):not(#_):not(#_) #m-sheet.ig-cmt-sheet .igc-dock { background: #121212 !important; background-color: #121212 !important; }
 html.theme-dark.theme-dark.theme-dark body:not(#_):not(#_):not(#_) #m-sheet.ig-cmt-sheet .igc-form input { background: #121212 !important; border-color: rgba(255, 255, 255, 0.1) !important; }
 html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .ig-prof .ig-p-acts :is(.ig-follow, .ig-msg-btn) { border: 1.5px solid #737373 !important; color: #f5f5f5 !important; }
@@ -4998,8 +4997,6 @@ html.theme-dark.theme-dark .wdp-head-mo { color: #ffffff !important; }
 html.theme-dark.theme-dark .wdp-bar { background: rgba(18, 23, 29, 0.1) !important; }
 html.theme-dark.theme-dark .wdp-item { color: #a8a8a8 !important; }
 html.theme-dark.theme-dark .wdp-btn.ok { background: #000000 !important; color: #f5f5f5 !important; }
-html.theme-dark .ad-trend.down { background: rgba(228, 32, 43, 0.13) !important; color: color-mix(in srgb, #dc2626 55%, white) !important; }
-html.theme-dark.theme-dark .ad-trend.down { background: rgba(228, 32, 43, 0.22) !important; color: #ffffff !important; }
 html.theme-dark body:not(#_):not(#_):not(#_) #m-top .mt-filter.is-filtered { border-color: #ffffff !important; color: #ffffff !important; }
 html.theme-dark .hdf-opt { border: 1px solid rgba(255, 255, 255, 0.064) !important; background: #000000 !important; color: #f5f5f5 !important; }
 html.theme-dark .hdf-opt.on { border-color: #ffffff !important; background: rgba(228, 32, 43, 0.08) !important; }
@@ -5020,6 +5017,7 @@ html.theme-dark .pro-pill { background: linear-gradient(135deg, #121212, #121212
 html.theme-dark .pro-plan { background: rgba(18, 23, 29, 0.07) !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; }
 html.theme-dark .pro-cta { background: linear-gradient(135deg, #121212 0%, #121212 100%) !important; color: #f5f5f5 !important; }
 html.theme-dark .pro-more-in { background: rgba(18, 23, 29, 0.05) !important; }
+html.theme-dark .mt-brand-txt { color: #f5f5f5 !important; }
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #f5f5f5 !important; }
 html.theme-dark [style*="color:#111111"] { color: #f5f5f5 !important; }
