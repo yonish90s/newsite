@@ -31194,7 +31194,21 @@ window.repostersToggle = repostersToggle;
 window.followersOpen = followersOpen;
 window.followersSheetToggle = followersSheetToggle;
 let igCmtMap = {};
+let igReplyTo = null;
+function igCommentReply(cid, nm) {
+  igReplyTo = cid ? { id: cid, name: nm || '' } : null;
+  const bar = document.getElementById('igc-reply-bar');
+  if (bar) {
+    bar.hidden = !igReplyTo;
+    const lbl = bar.querySelector('span');
+    if (lbl) lbl.textContent = igReplyTo ? `תגובה ל־${igReplyTo.name}` : '';
+  }
+  const i = document.getElementById('igc-in');
+  if (i) i.focus();
+}
+window.igCommentReply = igCommentReply;
 async function igCommentsOpen(key, title) {
+  igReplyTo = null;
   openMSheet('תגובות', '<div class="ms-empty">טוען תגובות…</div>');
   const sh = document.getElementById('m-sheet');
   if (sh) {
@@ -31233,26 +31247,48 @@ async function igCommentsOpen(key, title) {
 }
 function igCommentsRender(key) {
   const body = document.querySelector('#m-sheet .ms-body'); if (!body) return;
-  const rows = Object.entries(igCmtMap || {}).filter(([, c]) => c && c.text).sort((a, b) => (b[1].t || b[1].createdAt || 0) - (a[1].t || a[1].createdAt || 0));
-  const ago = t => { const d = Math.floor((Date.now() - (t || 0)) / 864e5); return d < 1 ? 'היום' : d + ' ימים'; };
+  const allRows = Object.entries(igCmtMap || {}).filter(([, c]) => c && c.text);
+  const byId = Object.fromEntries(allRows);
+  const timeOf = c => c.t || c.createdAt || 0;
+  const roots = allRows.filter(([, c]) => !c.parentId || !byId[c.parentId]).sort((a, b) => timeOf(b[1]) - timeOf(a[1]));
+  const childrenMap = {};
+  allRows.forEach(([cid, c]) => {
+    if (c.parentId && byId[c.parentId]) {
+      let rootId = c.parentId;
+      while (byId[rootId] && byId[rootId].parentId && byId[byId[rootId].parentId]) rootId = byId[rootId].parentId;
+      (childrenMap[rootId] = childrenMap[rootId] || []).push([cid, c]);
+    }
+  });
+  Object.values(childrenMap).forEach(arr => arr.sort((a, b) => timeOf(a[1]) - timeOf(b[1])));
+  const ago = t => { const d = Math.floor((Date.now() - (t || 0)) / 864e5); return d < 1 ? 'היום' : d === 1 ? 'אתמול' : `לפני ${d} ימים`; };
   const heart = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.5l-1.4-1.3C5.4 14.5 2 11.4 2 7.6 2 4.5 4.4 2 7.5 2c1.7 0 3.4.8 4.5 2.1C13.1 2.8 14.8 2 16.5 2 19.6 2 22 4.5 22 7.6c0 3.8-3.4 6.9-8.6 11.6z"/></svg>';
-  const listHTML = rows.length ? rows.map(([cid, c]) => {
+  const repIc = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5v0a5.5 5.5 0 0 1-5.5 5.5H11"/></svg>';
+  const rowHTML = ([cid, c]) => {
     const nm = String(c.name || c.author || 'משתמש');
     const likes = Number(c.likes) || 0;
     return `<div class="igc-row">
-      <span class="igc-av">${authorAvHTML({ author: nm, uid: c.uid || '' })}</span>
-      <div class="igc-main">
-        <div class="igc-top"><b>${escHtml(nm)}</b><small>${ago(c.t || c.createdAt)}</small></div>
-        <div class="igc-tx">${escHtml(c.text)}</div>
-        <button type="button" class="igc-rep" onclick="const i=document.getElementById('igc-in'); if(i){ i.value='@${artEsc(nm)} '; i.focus(); }">תגובה</button>
+      <div class="igc-top">
+        <span class="igc-av">${authorAvHTML({ author: nm, uid: c.uid || '' })}</span>
+        <b>${escHtml(nm)}</b>
+        <span class="igc-dot">•</span>
+        <small>${ago(timeOf(c))}</small>
       </div>
-      <button type="button" class="igc-like" onclick="this.classList.toggle('on'); const s=this.querySelector('small'); s.textContent=Number(s.textContent||0)+(this.classList.contains('on')?1:-1)||''">${heart}<small>${likes || ''}</small></button>
+      <div class="igc-tx">${escHtml(c.text)}</div>
+      <div class="igc-acts">
+        <button type="button" class="igc-rep" onclick="igCommentReply('${artEsc(cid)}','${artEsc(nm)}')">${repIc}<span>תגובה</span></button>
+        <button type="button" class="igc-like" onclick="this.classList.toggle('on'); const s=this.querySelector('small'); s.textContent=Number(s.textContent||0)+(this.classList.contains('on')?1:-1)||''">${heart}<small>${likes || ''}</small></button>
+      </div>
     </div>`;
+  };
+  const listHTML = roots.length ? roots.map(([cid, c]) => {
+    const kids = childrenMap[cid] || [];
+    return `<div class="igc-thread">${rowHTML([cid, c])}${kids.length ? `<div class="igc-replies">${kids.map(rowHTML).join('')}</div>` : ''}</div>`;
   }).join('') : '<div class="ms-empty">עדיין אין תגובות — כתבו ראשונים!</div>';
   const u = auth.currentUser;
   const myAv = authorAvHTML({ author: (u && (u.displayName || 'אני')) || 'אורח', uid: (u && u.uid) || '' });
   body.innerHTML = `<div class="igc-list">${listHTML}</div>
     <div class="igc-dock">
+      <div class="igc-reply-bar" id="igc-reply-bar"${igReplyTo ? '' : ' hidden'}><span>${igReplyTo ? `תגובה ל־${escHtml(igReplyTo.name)}` : ''}</span><button type="button" onclick="igCommentReply(null)" aria-label="ביטול">×</button></div>
       <form class="igc-form" onsubmit="event.preventDefault(); igCommentSend('${artEsc(key)}')">
         <span class="igc-me">${myAv}</span>
         <input id="igc-in" type="text" maxlength="500" placeholder="מה דעתך על זה?" autocomplete="off">
@@ -31271,10 +31307,12 @@ async function igCommentSend(key) {
   const name = String((typeof liveChatUserName === 'function' && liveChatUserName()) || (cur && cur.displayName) || 'אורח').slice(0, 60);
   const now = Date.now();
   const rec = { uid: cur ? cur.uid : '', name, text, t: now, createdAt: now };
+  if (igReplyTo && igReplyTo.id) rec.parentId = igReplyTo.id;
   try {
     const r = push(ref(db, `website/photo_comments/${key}`));
     await set(r, rec);
     igCmtMap[r.key] = rec;
+    igReplyTo = null;
     if (inp) inp.value = '';
     igCommentsRender(key);
   } catch (e) { if (typeof showCopyToast === 'function') showCopyToast('לא הצלחנו לשמור את התגובה'); }

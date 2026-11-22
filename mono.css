@@ -2133,11 +2133,13 @@ html:not(.theme-dark) body:not(#_):not(#_):not(#_) .ig-act2 .mk-n { color: #1111
 html:not(.theme-dark) body .ig-act2 > .mk-a-like.on svg { fill: #777777 !important; stroke: #777777 !important; }
 html:not(.theme-dark) body .ig-act2 > .mk-a-save.on svg { fill: #111111 !important; }
 html:not(.theme-dark) .igc-top b { color: #111111; }
+html:not(.theme-dark) .igc-dot { color: #a2a2a2; }
 html:not(.theme-dark) .igc-top small { color: #727272; }
 html:not(.theme-dark) .igc-tx { color: #111111; }
-html:not(.theme-dark) .igc-rep { color: #727272; }
-html:not(.theme-dark) .igc-like { color: #727272; }
+html:not(.theme-dark) .igc-rep,html:not(.theme-dark) .igc-like { color: #727272; }
+html:not(.theme-dark) .igc-like.on { color: #777777; }
 html:not(.theme-dark) .igc-like.on svg { fill: #777777; stroke: #777777; }
+html:not(.theme-dark) .igc-reply-bar { color: #727272; }
 html:not(.theme-dark) .igc-send { color: #7a7a7a; }
 html:not(.theme-dark) .ig-p-name { color: #111111; }
 html:not(.theme-dark) .ig-p-stats b { color: #111111; }
