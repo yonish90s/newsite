@@ -35224,8 +35224,10 @@ function homeDateFilter(list) {
   if (homeDateTab === 'all') return list;
   const now = Date.now();
   const lo = Math.min(homeDateFrom, homeDateTo), hi = Math.max(homeDateFrom, homeDateTo);
-  const startMs = homeDateTab === 'week' ? now - 7 * 864e5
+  const startMs = homeDateTab === 'day' ? now - 864e5
+    : homeDateTab === 'week' ? now - 7 * 864e5
     : homeDateTab === 'month' ? now - 30 * 864e5
+    : homeDateTab === 'year' ? now - 365 * 864e5
     : svdMonthBounds(lo).start;
   const endMs = homeDateTab === 'range' ? svdMonthBounds(hi).end : Infinity;
   return list.filter(r => {
@@ -35266,9 +35268,25 @@ function homeDateFeedHTML(baseList) {
 }
 function homeDateSetTab(t) {
   homeDateTab = t;
+  document.querySelectorAll('#m-top .mt-filter').forEach(b => b.classList.toggle('is-filtered', homeDateTab !== 'all'));
   const libMain = document.querySelector('.lib-page .lib-main');
   if (libMain) { libMain.innerHTML = libHTML(); if (typeof avatarHydrate === 'function') avatarHydrate(libMain); }
 }
+function homeDateFilterOpen() {
+  const opts = [
+    ['all', 'הכל', 'כל המודעות'],
+    ['day', 'מהיום', '24 השעות האחרונות'],
+    ['week', 'מהשבוע', '7 הימים האחרונים'],
+    ['month', 'מהחודש', '30 הימים האחרונים'],
+    ['year', 'מהשנה', 'השנה האחרונה']
+  ];
+  const body = `<div class="hdf-list">${opts.map(([id, lbl, sub]) => `<button type="button" class="hdf-opt${homeDateTab === id ? ' on' : ''}" onclick="homeDateSetTab('${id}'); closeMSheet();">
+    <span class="hdf-tx"><b>${lbl}</b><small>${sub}</small></span>
+    <span class="hdf-chk">${homeDateTab === id ? '✓' : ''}</span>
+  </button>`).join('')}</div>`;
+  if (typeof openMSheet === 'function') openMSheet('סינון בעמוד הבית', body);
+}
+window.homeDateFilterOpen = homeDateFilterOpen;
 function homeDateRangeInput(which, val) {
   const v = Math.max(0, Math.min(12, Math.round(Number(val) || 0)));
   if (which === 0) homeDateFrom = v; else homeDateTo = v;
@@ -38560,8 +38578,10 @@ Object.assign(window, { phoneVerifyOpen, pvSend, pvBack, pvClose });
           <button type="button" class="mt-circ mt-pub" onclick="mkPubOpen()" aria-label="העלאת מודעה" title="העלאת מודעה">${ic('<rect x="3" y="3" width="18" height="18" rx="5"/><path d="M12 8v8M8 12h8"/>')}</button>
           <button type="button" class="mt-circ mt-srch" onclick="openSiteSearch()" aria-label="חיפוש באתר" title="חיפוש">${ic('<circle cx="11" cy="11" r="7"/><path d="M20 20l-4.35-4.35"/>')}</button>
           <button type="button" class="mt-circ mt-dm" onclick="openMessages()" aria-label="הודעות בין משתמשים" title="הודעות">${ic('<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>')}</button>
-          <button type="button" class="mt-circ mt-theme" onclick="mtSettingsOpen()" aria-label="תפריט: מצב תצוגה והגדרות משתמש" title="תפריט">${ic('<path d="M4 7h16M4 12h16M4 17h16"/>')}</button>
           <button type="button" class="mt-circ mt-cart" onclick="cartOpen()" aria-label="עגלה" title="עגלה">${ic('<circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>')}</button>
+          <button type="button" class="mt-circ mt-sets" onclick="mtSettingsOpen()" aria-label="הגדרות" title="הגדרות">${ic('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>')}</button>
+          <button type="button" class="mt-circ mt-filter" onclick="homeDateFilterOpen()" aria-label="סינון לפי זמן" title="סינון">${ic('<line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/>')}</button>
+          <button type="button" class="mt-circ mt-theme" onclick="mtToggleActs()" aria-label="הצגת כפתורים בשורה העליונה" title="עוד כפתורים">${ic('<path d="M4 7h16M4 12h16M4 17h16"/>')}</button>
         </div>
         <button type="button" class="mt-circ mt-me" onclick="mtMe()" aria-label="המשתמש שלי"></button>
       </div>
@@ -38622,6 +38642,11 @@ function mtSettingsHTML() {
       : row('התחברות / הרשמה', '<path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/>', 'openLiveChatLogin()')}
   </div>`;
 }
+function mtToggleActs() {
+  const el = document.getElementById('m-top');
+  if (el) el.classList.toggle('mt-expanded');
+}
+window.mtToggleActs = mtToggleActs;
 function mtSettingsOpen() { openMSheet('תפריט', mtSettingsHTML()); }
 function mtSettingsRefresh() { const b = document.querySelector('#m-sheet .ms-body'); if (b) b.innerHTML = mtSettingsHTML(); }
 Object.assign(window, { mtSettingsOpen, mtSettingsRefresh });

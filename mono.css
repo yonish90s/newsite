@@ -2269,6 +2269,11 @@ html:not(.theme-dark) .wdp-btn.cancel { color: #111111; }
 html:not(.theme-dark) .wdp-btn.ok { background: #111111; }
 html:not(.theme-dark) .ad-trend.up { background: rgba(128,128,128,0.14); color: #666666; }
 html:not(.theme-dark) .ad-trend.down { background: rgba(119,119,119,0.13); color: #111111; }
+html:not(.theme-dark) body:not(#_):not(#_):not(#_) #m-top .mt-filter.is-filtered { border-color: #7a7a7a !important; color: #7a7a7a !important; }
+html:not(.theme-dark) .hdf-opt { color: #111111; }
+html:not(.theme-dark) .hdf-opt.on { border-color: #111111; background: rgba(17,17,17,0.08); }
+html:not(.theme-dark) .hdf-tx small { color: #727272; }
+html:not(.theme-dark) .hdf-chk { color: #111111; }
 html:not(.theme-dark) [style*="border:1.5px solid #e2e8f0"], html:not(.theme-dark) [style*="border: 1.5px solid #e2e8f0"] { border: 1.5px solid #e7e7e7 !important; }
 html:not(.theme-dark) [style*="color:#1e293b"], html:not(.theme-dark) [style*="color: #1e293b"] { color: #111111 !important; }
 html:not(.theme-dark) [style*="background:#dc2626"], html:not(.theme-dark) [style*="background: #dc2626"] { background: #111111 !important; }
