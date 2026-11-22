@@ -23943,12 +23943,27 @@ html body:not(#_):not(#_):not(#_):not(#_) .tg-compose {
   padding: 4px 8px calc(4px + env(safe-area-inset-bottom, 0px)) !important;
   align-items: center !important;
 }
-html body:not(#_):not(#_):not(#_):not(#_) .tg-compose :is(.tg-plus, .tg-mic, .tg-send) {
+html body:not(#_):not(#_):not(#_):not(#_) .tg-compose :is(.tg-plus, .tg-mic, .tg-send, .tg-meet) {
   width: 24px !important;
   height: 24px !important;
   min-width: 24px !important;
+  flex: none;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
 }
-html body:not(#_):not(#_):not(#_):not(#_) .tg-compose :is(.tg-plus, .tg-mic, .tg-send) svg {
+html body:not(#_):not(#_):not(#_):not(#_) .tg-compose .tg-meet {
+  border: 1px solid #e6e8ec;
+  background: #f4f5f7;
+  color: #111111;
+}
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_) .tg-compose .tg-meet {
+  border-color: #3a414c;
+  background: #1c1c1c;
+  color: #eceef1;
+}
+html body:not(#_):not(#_):not(#_):not(#_) .tg-compose :is(.tg-plus, .tg-mic, .tg-send, .tg-meet) svg {
   width: 12px !important;
   height: 12px !important;
 }
@@ -24154,3 +24169,170 @@ html.theme-dark .prf-av-box {
   display: block;
   object-fit: cover;
 }
+
+/* חלונית מפה לקביעת פגישה בצ'אט + כרטיס פגישה */
+.tg-meet-pop {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 52px;
+  z-index: 40;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 18px;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.22);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+html.theme-dark .tg-meet-pop {
+  background: #16171d;
+  border-color: rgba(255, 255, 255, 0.14);
+}
+.tg-meet-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+}
+.tg-meet-head b { flex: 1; color: #111827; }
+html.theme-dark .tg-meet-head b { color: #f4f4f5; }
+.tg-meet-apple-lnk {
+  font-size: 12px;
+  font-weight: 700;
+  color: #3b82f6;
+  text-decoration: none;
+}
+.tg-meet-head button {
+  border: 0;
+  background: transparent;
+  color: #6b7280;
+  font-size: 16px;
+  cursor: pointer;
+}
+.tg-meet-search {
+  display: flex;
+  gap: 6px;
+}
+.tg-meet-search input {
+  flex: 1;
+  min-width: 0;
+  height: 32px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  padding: 0 10px;
+  font: inherit;
+  font-size: 13px;
+  background: #f9fafb;
+  color: #111827;
+}
+html.theme-dark .tg-meet-search input {
+  background: #22232b;
+  border-color: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+}
+.tg-meet-search button {
+  border: 0;
+  border-radius: 10px;
+  padding: 0 10px;
+  background: #111827;
+  color: #ffffff;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+html.theme-dark .tg-meet-search button {
+  background: #27272a;
+}
+.tg-meet-map {
+  width: 100%;
+  height: 190px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: #e5e7eb;
+}
+html.theme-dark .tg-meet-map {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: #111115;
+}
+.tg-meet-foot {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.tg-meet-lbl {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #374151;
+}
+html.theme-dark .tg-meet-lbl { color: #e4e4e7; }
+.tg-meet-when {
+  height: 32px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  padding: 0 10px;
+  font: inherit;
+  font-size: 13px;
+  background: #f9fafb;
+  color: #111827;
+}
+html.theme-dark .tg-meet-when {
+  background: #22232b;
+  border-color: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+}
+.tg-meet-go {
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #8b5cf6, #ec4899);
+  color: #ffffff;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.tg-meet-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-decoration: none;
+  color: inherit;
+  width: 210px;
+  max-width: 100%;
+}
+.tg-meet-thumb {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 120px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #e5e7eb;
+}
+.tg-meet-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.tg-meet-pin {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -85%);
+  font-style: normal;
+  font-size: 22px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.45));
+}
+.tg-meet-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.tg-meet-info b { font-size: 13px; }
+.tg-meet-info small { font-size: 11.5px; opacity: 0.8; }
+.tg-meet-info em { font-style: normal; font-size: 11.5px; font-weight: 700; color: #3b82f6; }

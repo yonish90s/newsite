@@ -19830,6 +19830,7 @@ async function dmOpenConv(convId, otherUid, otherName, prefill, refObj) {
     <div class="tg-attach-prev" id="dm-attach-prev"></div>
     <div class="tg-compose" id="dm-compose">
       <button type="button" class="tg-plus" onclick="dmOpenAttach()" aria-label="צירוף תמונה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+      <button type="button" class="tg-meet" onclick="dmMeetOpen()" aria-label="קביעת פגישה על המפה" title="פגישה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg></button>
       <textarea id="dm-input" rows="1" maxlength="1000" placeholder="הודעה" autocomplete="off" oninput="dmAutoGrow(this); dmHandleTyping()" onkeydown="if(event.key==='Enter' && !event.shiftKey && window.innerWidth > 768){event.preventDefault(); dmSendCurrent();}"></textarea>
       <button type="button" class="tg-mic" id="dm-mic-btn" onclick="dmStartVoice()" aria-label="הקלטת הודעה קולית" title="הודעה קולית"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 17v4M8 21h8"/></svg></button>
       <button type="button" class="tg-send" onclick="dmSendCurrent()" aria-label="שליחה"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.4 20.4 21 12 3.4 3.6 3.4 10l12.6 2-12.6 2z"/></svg></button>
@@ -19990,8 +19991,22 @@ function dmMessagesHTML() {
     const voiceHTML = hasAudio ? `<div class="tg-voice" data-dur="${Number(m.audioDur || 0)}"><button type="button" class="tg-voice-play" onclick="dmToggleVoicePlay(this)" aria-label="הפעלת הודעה קולית"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.14v14l11-7-11-7z"/></svg></button><div class="tg-voice-track" onclick="dmSeekVoice(event, this)"><div class="tg-voice-fill"></div></div><span class="tg-voice-dur">${dmRecFmt(Number(m.audioDur || 0))}</span><audio preload="metadata" src="${escHtml(m.audio)}"></audio></div>` : '';
     const refOk = !!(m.refImg && (/^data:image\/(jpeg|png|webp|gif);base64,/.test(m.refImg) || /^https?:\/\//i.test(m.refImg) || /^[a-z0-9_.\-\/]+(\?.*)?$/i.test(m.refImg)));
     const refHTML = refOk ? `<img class="tg-ref-img" src="${escHtml(m.refImg)}" alt="" loading="lazy" onclick="dmViewImg(this.src)">` : '';
+    const mt = m.meetup && Number.isFinite(Number(m.meetup.lat)) && Number.isFinite(Number(m.meetup.lng)) ? m.meetup : null;
+    const meetHTML = mt ? (() => {
+      const lat = Number(mt.lat), lng = Number(mt.lng), z = 15, n = Math.pow(2, z);
+      const tx = Math.floor(((lng + 180) / 360) * n);
+      const lr = lat * Math.PI / 180;
+      const ty = Math.floor((1 - Math.log(Math.tan(lr) + 1 / Math.cos(lr)) / Math.PI) / 2 * n);
+      const dark = document.documentElement.classList.contains('theme-dark');
+      const tileUrl = `https://${dark ? 'a.basemaps.cartocdn.com/dark_all' : 'a.basemaps.cartocdn.com/rastertiles/voyager'}/${z}/${tx}/${ty}@2x.png`;
+      const appleUrl = `https://maps.apple.com/?ll=${lat.toFixed(6)},${lng.toFixed(6)}&q=${encodeURIComponent(mt.label || 'נקודת מפגש')}`;
+      return `<a class="tg-meet-card" href="${escHtml(appleUrl)}" target="_blank" rel="noopener">
+        <span class="tg-meet-thumb"><img src="${escHtml(tileUrl)}" alt="" loading="lazy"><i class="tg-meet-pin">📍</i></span>
+        <span class="tg-meet-info"><b>📍 ${escHtml(mt.label || 'נקודת מפגש')}</b>${mt.when ? `<small>🕒 ${escHtml(mt.when)}</small>` : ''}<em>פתח במפות אפל</em></span>
+      </a>`;
+    })() : '';
     return `${sep}<div class="tg-msg ${mine ? 'mine' : 'theirs'}" data-mid="${escHtml(m._id || '')}" data-mine="${mine ? '1' : '0'}">
-      <div class="tg-bubble${m.img ? ' has-img' : ''}${hasAudio ? ' has-voice' : ''}${refOk ? ' has-ref' : ''}">${refHTML}${m.img && /^data:image\/(jpeg|png|webp|gif);base64,/.test(m.img) ? `<img class="tg-img" src="${escHtml(m.img)}" alt="" loading="lazy" onclick="dmViewImg(this.src)">` : ''}${voiceHTML}${m.text ? `${dmRichHTML(m.text)}` : ''}<span class="tg-msg-time">${dmTime(m.timestamp)}${tickHTML}</span></div>
+      <div class="tg-bubble${m.img ? ' has-img' : ''}${hasAudio ? ' has-voice' : ''}${refOk ? ' has-ref' : ''}${mt ? ' has-meet' : ''}">${refHTML}${meetHTML}${m.img && /^data:image\/(jpeg|png|webp|gif);base64,/.test(m.img) ? `<img class="tg-img" src="${escHtml(m.img)}" alt="" loading="lazy" onclick="dmViewImg(this.src)">` : ''}${voiceHTML}${m.text ? `${dmRichHTML(m.text)}` : ''}<span class="tg-msg-time">${dmTime(m.timestamp)}${tickHTML}</span></div>
     </div>`;
   }).join('');
 }
@@ -39355,3 +39370,128 @@ async function detailsSave() {
   if (typeof showCopyToast === 'function') showCopyToast('✓ הפרטים נשמרו');
 }
 Object.assign(window, { detailsOpen, detailsSave });
+
+// ===== קביעת פגישה על מפה (סגנון Apple Maps) מתוך הצ'אט =====
+let _dmMeetState = { lat: 32.0853, lng: 34.7818, label: 'תל אביב', map: null, marker: null };
+function _dmLoadLeaflet() {
+  if (window.L) return Promise.resolve(window.L);
+  return new Promise((res, rej) => {
+    if (!document.getElementById('leaflet-css')) {
+      const lnk = document.createElement('link');
+      lnk.id = 'leaflet-css'; lnk.rel = 'stylesheet';
+      lnk.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+      document.head.appendChild(lnk);
+    }
+    const sc = document.createElement('script');
+    sc.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    sc.onload = () => res(window.L);
+    sc.onerror = rej;
+    document.head.appendChild(sc);
+  });
+}
+function dmMeetClose() {
+  const el = document.getElementById('dm-meet-pop');
+  if (el) el.remove();
+  if (_dmMeetState.map) { try { _dmMeetState.map.remove(); } catch (e) {} _dmMeetState.map = null; _dmMeetState.marker = null; }
+}
+async function _dmMeetSetPoint(lat, lng, label) {
+  _dmMeetState.lat = lat; _dmMeetState.lng = lng;
+  if (label) _dmMeetState.label = label;
+  const lbl = document.getElementById('dm-meet-lbl');
+  if (lbl) lbl.textContent = _dmMeetState.label || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+  const apple = document.getElementById('dm-meet-apple');
+  if (apple) apple.href = `https://maps.apple.com/?ll=${lat.toFixed(6)},${lng.toFixed(6)}&q=${encodeURIComponent(_dmMeetState.label || 'נקודת מפגש')}`;
+  if (_dmMeetState.map && window.L) {
+    if (!_dmMeetState.marker) _dmMeetState.marker = window.L.marker([lat, lng]).addTo(_dmMeetState.map);
+    else _dmMeetState.marker.setLatLng([lat, lng]);
+  }
+  if (!label) {
+    try {
+      const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=he`);
+      const j = await r.json();
+      const name = j && (j.name || (j.address && [j.address.road, j.address.city || j.address.town || j.address.village].filter(Boolean).join(', ')) || j.display_name);
+      if (name) {
+        _dmMeetState.label = String(name).split(',').slice(0, 2).join(', ').trim();
+        if (lbl) lbl.textContent = _dmMeetState.label;
+      }
+    } catch (e) {}
+  }
+}
+async function dmMeetOpen() {
+  if (document.getElementById('dm-meet-pop')) { dmMeetClose(); return; }
+  const host = document.getElementById('dm-main') || document.body;
+  const pop = document.createElement('div');
+  pop.id = 'dm-meet-pop';
+  pop.className = 'tg-meet-pop';
+  pop.innerHTML = `<div class="tg-meet-head">
+      <b>קביעת מקום פגישה</b>
+      <a id="dm-meet-apple" class="tg-meet-apple-lnk" href="https://maps.apple.com/?ll=32.0853,34.7818" target="_blank" rel="noopener">מפות אפל ↗</a>
+      <button type="button" onclick="dmMeetClose()" aria-label="סגירה">✕</button>
+    </div>
+    <form class="tg-meet-search" onsubmit="event.preventDefault(); dmMeetSearch()">
+      <input id="dm-meet-q" type="text" placeholder="חיפוש כתובת או מקום…">
+      <button type="submit">חפש</button>
+      <button type="button" onclick="dmMeetUseMyLoc()" title="המיקום שלי">📍</button>
+    </form>
+    <div id="dm-meet-map" class="tg-meet-map"><div class="tg-empty">טוען מפה…</div></div>
+    <div class="tg-meet-foot">
+      <span id="dm-meet-lbl" class="tg-meet-lbl">לחצו על המפה לבחירת מקום</span>
+      <input id="dm-meet-when" class="tg-meet-when" type="text" maxlength="40" placeholder="יום / שעה (אופציונלי)">
+      <button type="button" class="tg-meet-go" onclick="dmMeetSend()">שליחת פגישה</button>
+    </div>`;
+  host.appendChild(pop);
+  try {
+    const L = await _dmLoadLeaflet();
+    const box = document.getElementById('dm-meet-map');
+    if (!box) return;
+    box.innerHTML = '';
+    const map = L.map(box, { zoomControl: false, attributionControl: false }).setView([_dmMeetState.lat, _dmMeetState.lng], 14);
+    const dark = document.documentElement.classList.contains('theme-dark');
+    L.tileLayer(`https://{s}.basemaps.cartocdn.com/${dark ? 'dark_all' : 'rastertiles/voyager'}/{z}/{x}/{y}{r}.png`, { maxZoom: 19 }).addTo(map);
+    _dmMeetState.map = map;
+    _dmMeetState.marker = L.marker([_dmMeetState.lat, _dmMeetState.lng]).addTo(map);
+    map.on('click', e => { if (e && e.latlng) _dmMeetSetPoint(e.latlng.lat, e.latlng.lng); });
+    setTimeout(() => map.invalidateSize(), 80);
+  } catch (e) {
+    const box = document.getElementById('dm-meet-map');
+    if (box) box.innerHTML = '<div class="tg-empty">לא ניתן לטעון מפה כרגע</div>';
+  }
+}
+async function dmMeetSearch() {
+  const q = ((document.getElementById('dm-meet-q') || {}).value || '').trim();
+  if (!q) return;
+  try {
+    const r = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&accept-language=he&q=${encodeURIComponent(q)}`);
+    const arr = await r.json();
+    if (arr && arr[0]) {
+      const lat = Number(arr[0].lat), lng = Number(arr[0].lon);
+      const label = String(arr[0].display_name || q).split(',').slice(0, 2).join(', ').trim();
+      if (_dmMeetState.map) _dmMeetState.map.setView([lat, lng], 15);
+      _dmMeetSetPoint(lat, lng, label);
+    } else if (typeof showCopyToast === 'function') showCopyToast('לא נמצא מקום מתאים');
+  } catch (e) {}
+}
+function dmMeetUseMyLoc() {
+  if (!navigator.geolocation) return;
+  navigator.geolocation.getCurrentPosition(pos => {
+    const lat = pos.coords.latitude, lng = pos.coords.longitude;
+    if (_dmMeetState.map) _dmMeetState.map.setView([lat, lng], 15);
+    _dmMeetSetPoint(lat, lng);
+  });
+}
+async function dmMeetSend() {
+  const u = auth.currentUser;
+  if (!u || !dmActiveConv) return;
+  const when = ((document.getElementById('dm-meet-when') || {}).value || '').trim().slice(0, 40);
+  const meetup = { lat: _dmMeetState.lat, lng: _dmMeetState.lng, label: _dmMeetState.label || 'נקודת מפגש', when };
+  dmMeetClose();
+  const { convId, otherUid, otherName } = dmActiveConv;
+  const now = Date.now(), myName = dmName();
+  try {
+    await push(ref(db, `website/dms/${convId}/messages`), { from: u.uid, fromName: myName, text: '', meetup, timestamp: now });
+    const last = `📍 פגישה: ${meetup.label}`.slice(0, 60);
+    await update(ref(db, `website/user_dms/${u.uid}/${convId}`), { otherUid, otherName, lastText: last, lastTime: now, unread: false });
+    await update(ref(db, `website/user_dms/${otherUid}/${convId}`), { otherUid: u.uid, otherName: myName, lastText: last, lastTime: now, unread: true });
+  } catch (e) { if (typeof showCopyToast === 'function') showCopyToast('שגיאה בשליחת הפגישה'); }
+}
+Object.assign(window, { dmMeetOpen, dmMeetClose, dmMeetSearch, dmMeetUseMyLoc, dmMeetSend });

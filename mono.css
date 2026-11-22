@@ -2231,6 +2231,15 @@ html:not(.theme-dark) .prf-ver-badge.req { color: #777777; background: rgba(119,
 html:not(.theme-dark) .prf-ver-badge.wait { color: #a7a7a7; background: rgba(167,167,167,0.14); }
 html:not(.theme-dark) .prf-ver-badge.ok { color: #808080; background: rgba(128,128,128,0.14); }
 html:not(.theme-dark) .prf-ver-btn { border: 1px solid rgba(124,124,124,0.45); background: rgba(124,124,124,0.12); color: #7c7c7c; }
+html:not(.theme-dark) .tg-meet-head b { color: #111111; }
+html:not(.theme-dark) .tg-meet-apple-lnk { color: #7a7a7a; }
+html:not(.theme-dark) .tg-meet-head button { color: #727272; }
+html:not(.theme-dark) .tg-meet-search input { color: #111111; }
+html:not(.theme-dark) .tg-meet-search button { background: #111111; }
+html:not(.theme-dark) .tg-meet-lbl { color: #111111; }
+html:not(.theme-dark) .tg-meet-when { color: #111111; }
+html:not(.theme-dark) .tg-meet-go { background: linear-gradient(135deg, #7c7c7c, #828282); }
+html:not(.theme-dark) .tg-meet-info em { color: #7a7a7a; }
 html:not(.theme-dark) [style*="border:1.5px solid #e2e8f0"], html:not(.theme-dark) [style*="border: 1.5px solid #e2e8f0"] { border: 1.5px solid #e7e7e7 !important; }
 html:not(.theme-dark) [style*="color:#1e293b"], html:not(.theme-dark) [style*="color: #1e293b"] { color: #111111 !important; }
 html:not(.theme-dark) [style*="background:#dc2626"], html:not(.theme-dark) [style*="background: #dc2626"] { background: #111111 !important; }
