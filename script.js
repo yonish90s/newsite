@@ -35197,6 +35197,22 @@ function twStripGo(btn, dir) {
   strip.scrollBy({ left: (rtl ? -1 : 1) * dir * strip.clientWidth, behavior: 'smooth' });
 }
 window.twStripDots = twStripDots; window.twStripGo = twStripGo;
+function adTrendHTML(r) {
+  if (!r) return '';
+  let pct = Number(r.trend);
+  if (!Number.isFinite(pct)) {
+    const key = String(r.id || r.title || '');
+    let h = 0;
+    for (let i = 0; i < key.length; i++) h = ((h * 31) + key.charCodeAt(i)) | 0;
+    const likes = Number((typeof itemLikesData === 'object' && itemLikesData[rentCommentsKey(r)]) || 0);
+    const up = likes > 0 || (Math.abs(h) % 10) >= 3;
+    const mag = (1.5 + (Math.abs(h) % 190) / 10).toFixed(1);
+    pct = up ? Number(mag) : -Number(mag);
+  }
+  const up = pct >= 0;
+  const txt = `${up ? '↗' : '↘'} ${up ? '+' : ''}${pct.toFixed(1)}%`;
+  return `<span class="ad-trend ${up ? 'up' : 'down'}" title="${up ? 'בעלייה' : 'בירידה'}">${txt}</span>`;
+}
 function twPostHTML(r) {
   const sec = mktSecOf(r), biz = sec === 'biz';
   const price = Number(r.price) > 0 ? `<small class="mk-sg-price">${mktDiscP(r.price).toLocaleString('he-IL', { maximumFractionDigits: 2 })}&nbsp;₪${mktWasHTML(r.price)}</small>` : '';
@@ -35214,7 +35230,7 @@ function twPostHTML(r) {
       <div class="tw-av" onclick="event.stopPropagation(); rentOpenSeller('${artEsc(r.uid || '')}', '${artEsc(r.owner || '')}')">${authorAvHTML({ author: mktWho(r) || '?', uid: r.uid || '' })}</div>
       <b class="tw-who" onclick="event.stopPropagation(); rentOpenSeller('${artEsc(r.uid || '')}', '${artEsc(r.owner || '')}')">${biz ? BIZ_IC : ''}${escHtml(mktWho(r))}</b>
       <span class="tw-meta">${escHtml([mkWhereTxt(r), when].filter(Boolean).join(' · '))}</span>
-      ${price}
+      ${price}${adTrendHTML(r)}
     </header>
     <div class="tw-text"><b>${escHtml(r.title)}</b>${descHTML}</div>
     ${media}
@@ -35871,7 +35887,7 @@ function rentMiniHTML(x) {
   // בידול: עסק — מסגרת ירוקה, תג "עסק" וסמל חנות ליד שם העסק; יד 2 — תג אפור
   const sec = mktSecOf(x), biz = sec === 'biz';
   const badge = '';
-  return `<div role="button" tabindex="0" class="mk-sg${biz ? ' is-biz' : sec === 'used' ? ' is-used' : ''}" data-id="${escHtml(x.id)}" onclick="rentOpen('${artEsc(x.id)}')" onkeydown="if((event.key==='Enter'||event.key===' ')&&event.target===this){event.preventDefault();this.click();}"><span class="mk-sg-meta"><span class="mk-sg-who" role="button" tabindex="0" title="${escHtml(mktWho(x))}" aria-label="${escHtml(mktWho(x))}" onclick="event.stopPropagation(); rentOpenSeller('${artEsc(x.uid || '')}', '${artEsc(x.owner || '')}')">${isUserVerified(x.uid || '', mktWho(x), x.verified) ? verifiedSealHTML(13) : ''}${authorAvHTML({ author: mktWho(x) || '?', uid: x.uid || '' })}<b>${biz ? BIZ_IC : ''}${escHtml(mktWho(x))}</b></span><small class="mk-sg-city${mkKmTo(x.city) !== null ? ' km' : ''}">${escHtml(mkWhereTxt(x))}</small>${mkMobStatHTML(x)}<small class="mk-sg-price">${rentTypeIcon(x)}${Number(x.price) > 0 ? `${mktDiscP(x.price).toLocaleString('he-IL', { maximumFractionDigits: 2 })}&nbsp;₪${mktWasHTML(x.price)}` : mktIsProj(x) ? escHtml((PROJ_SUB[x.pd] || {}).name || PROJ_KINDS[x.pk] || 'פרויקט') : ''}${x.uid ? `<i data-sg-rate="${escHtml(x.uid)}"></i>` : ''}</small></span><b class="mk-sg-title"><span class="mk-sg-tt">${escHtml(x.title)}</span><span class="mk-sg-more" role="button" tabindex="0" onclick="event.stopPropagation(); event.preventDefault(); this.parentElement.classList.toggle('open')"><span>עוד</span><span>פחות</span></span></b><span class="mk-sg-img">${rentThumb(x)}${badge}${del}${mktSoldOut(x) ? '<i class="mk-sg-out">אזל</i>' : ''}<span class="ad-join-avs" data-join-avs="${escHtml(x.id)}">${adJoinAvsHTML(x.id)}</span></span><span class="mk-sg-acts">${rentHoverHTML(x)}</span></div>`;
+  return `<div role="button" tabindex="0" class="mk-sg${biz ? ' is-biz' : sec === 'used' ? ' is-used' : ''}" data-id="${escHtml(x.id)}" onclick="rentOpen('${artEsc(x.id)}')" onkeydown="if((event.key==='Enter'||event.key===' ')&&event.target===this){event.preventDefault();this.click();}"><span class="mk-sg-meta"><span class="mk-sg-who" role="button" tabindex="0" title="${escHtml(mktWho(x))}" aria-label="${escHtml(mktWho(x))}" onclick="event.stopPropagation(); rentOpenSeller('${artEsc(x.uid || '')}', '${artEsc(x.owner || '')}')">${isUserVerified(x.uid || '', mktWho(x), x.verified) ? verifiedSealHTML(13) : ''}${authorAvHTML({ author: mktWho(x) || '?', uid: x.uid || '' })}<b>${biz ? BIZ_IC : ''}${escHtml(mktWho(x))}</b></span><small class="mk-sg-city${mkKmTo(x.city) !== null ? ' km' : ''}">${escHtml(mkWhereTxt(x))}</small>${mkMobStatHTML(x)}<small class="mk-sg-price">${rentTypeIcon(x)}${Number(x.price) > 0 ? `${mktDiscP(x.price).toLocaleString('he-IL', { maximumFractionDigits: 2 })}&nbsp;₪${mktWasHTML(x.price)}` : mktIsProj(x) ? escHtml((PROJ_SUB[x.pd] || {}).name || PROJ_KINDS[x.pk] || 'פרויקט') : ''}${x.uid ? `<i data-sg-rate="${escHtml(x.uid)}"></i>` : ''}${adTrendHTML(x)}</small></span><b class="mk-sg-title"><span class="mk-sg-tt">${escHtml(x.title)}</span><span class="mk-sg-more" role="button" tabindex="0" onclick="event.stopPropagation(); event.preventDefault(); this.parentElement.classList.toggle('open')"><span>עוד</span><span>פחות</span></span></b><span class="mk-sg-img">${rentThumb(x)}${badge}${del}${mktSoldOut(x) ? '<i class="mk-sg-out">אזל</i>' : ''}<span class="ad-join-avs" data-join-avs="${escHtml(x.id)}">${adJoinAvsHTML(x.id)}</span></span><span class="mk-sg-acts">${rentHoverHTML(x)}</span></div>`;
 }
 // שורת הזהב: משאירים בה בדיוק כמה כרטיסים שנכנסים בשורה אחת; העודפים חוזרים לראש הגריד הרגיל
 function mkGoldFit() {

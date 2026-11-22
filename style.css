@@ -24619,3 +24619,8 @@ html.theme-dark .wdp-item { color: #6b7280; }
 html.theme-dark .wdp-item.is-sel { color: #ffffff; }
 html.theme-dark .wdp-btn.cancel { background: #2c2c2e; color: #f5f5f7; }
 html.theme-dark .wdp-btn.ok { background: #ffffff; color: #111827; }
+.ad-trend { display: inline-flex; align-items: center; gap: 3px; padding: 2px 7px; border-radius: 999px; font-size: 11px; font-weight: 800; line-height: 1.25; white-space: nowrap; direction: ltr; margin-inline-start: 5px; }
+.ad-trend.up { background: rgba(16, 185, 129, .14); color: #059669; }
+.ad-trend.down { background: rgba(239, 68, 68, .13); color: #dc2626; }
+html.theme-dark .ad-trend.up { background: rgba(16, 185, 129, .22); color: #34d399; }
+html.theme-dark .ad-trend.down { background: rgba(239, 68, 68, .22); color: #f87171; }

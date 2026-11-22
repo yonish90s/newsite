@@ -5014,6 +5014,8 @@ html.theme-dark.theme-dark .wdp-head-mo { color: #ffffff !important; }
 html.theme-dark.theme-dark .wdp-bar { background: rgba(18, 23, 29, 0.1) !important; }
 html.theme-dark.theme-dark .wdp-item { color: #a8a8a8 !important; }
 html.theme-dark.theme-dark .wdp-btn.ok { background: #000000 !important; color: #f5f5f5 !important; }
+html.theme-dark .ad-trend.down { background: rgba(228, 32, 43, 0.13) !important; color: color-mix(in srgb, #dc2626 55%, white) !important; }
+html.theme-dark.theme-dark .ad-trend.down { background: rgba(228, 32, 43, 0.22) !important; color: #ffffff !important; }
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #f5f5f5 !important; }
 html.theme-dark [style*="color:#111111"] { color: #f5f5f5 !important; }
