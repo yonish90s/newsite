@@ -24336,3 +24336,54 @@ html.theme-dark .tg-meet-when {
 .tg-meet-info b { font-size: 13px; }
 .tg-meet-info small { font-size: 11.5px; opacity: 0.8; }
 .tg-meet-info em { font-style: normal; font-size: 11.5px; font-weight: 700; color: #3b82f6; }
+.tg-meet-cats {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tg-meet-cats button {
+  flex: none;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  color: #374151;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.tg-meet-cats button.on {
+  border-color: #8b5cf6;
+  background: rgba(139, 92, 246, 0.14);
+  color: #7c3aed;
+}
+html.theme-dark .tg-meet-cats button {
+  background: #22232b;
+  border-color: rgba(255, 255, 255, 0.14);
+  color: #e4e4e7;
+}
+html.theme-dark .tg-meet-cats button.on {
+  border-color: #c4b5fd;
+  background: rgba(139, 92, 246, 0.28);
+  color: #ffffff;
+}
+.tg-poi-pin {
+  background: transparent;
+  border: 0;
+}
+.tg-poi-pin span {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid #ef4444;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
+  font-size: 13px;
+}
+.tg-poi-pin.is-cafe span { border-color: #f59e0b; }
+.tg-poi-pin.is-park span { border-color: #10b981; }

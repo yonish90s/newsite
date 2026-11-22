@@ -39428,10 +39428,16 @@ async function dmMeetOpen() {
       <button type="button" onclick="dmMeetClose()" aria-label="סגירה">✕</button>
     </div>
     <form class="tg-meet-search" onsubmit="event.preventDefault(); dmMeetSearch()">
-      <input id="dm-meet-q" type="text" placeholder="חיפוש כתובת או מקום…">
+      <input id="dm-meet-q" type="text" placeholder="חיפוש כתובת, מסעדה, קפה או פארק…">
       <button type="submit">חפש</button>
       <button type="button" onclick="dmMeetUseMyLoc()" title="המיקום שלי">📍</button>
     </form>
+    <div class="tg-meet-cats" id="dm-meet-cats">
+      <button type="button" class="on" data-c="all" onclick="dmMeetSetCat('all')">הכל</button>
+      <button type="button" data-c="restaurant" onclick="dmMeetSetCat('restaurant')">🍽️ מסעדות</button>
+      <button type="button" data-c="cafe" onclick="dmMeetSetCat('cafe')">☕ בתי קפה</button>
+      <button type="button" data-c="park" onclick="dmMeetSetCat('park')">🌳 פארקים</button>
+    </div>
     <div id="dm-meet-map" class="tg-meet-map"><div class="tg-empty">טוען מפה…</div></div>
     <div class="tg-meet-foot">
       <span id="dm-meet-lbl" class="tg-meet-lbl">לחצו על המפה לבחירת מקום</span>
@@ -39447,9 +39453,12 @@ async function dmMeetOpen() {
     const map = L.map(box, { zoomControl: false, attributionControl: false }).setView([_dmMeetState.lat, _dmMeetState.lng], 14);
     L.tileLayer('https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=he', { subdomains: '0123', maxZoom: 20 }).addTo(map);
     _dmMeetState.map = map;
+    _dmMeetState.cat = 'all';
+    _dmMeetState.poiLayer = L.layerGroup().addTo(map);
     _dmMeetState.marker = L.marker([_dmMeetState.lat, _dmMeetState.lng]).addTo(map);
     map.on('click', e => { if (e && e.latlng) _dmMeetSetPoint(e.latlng.lat, e.latlng.lng); });
-    setTimeout(() => map.invalidateSize(), 80);
+    map.on('moveend', () => { clearTimeout(_dmMeetState.poiT); _dmMeetState.poiT = setTimeout(dmMeetLoadPlaces, 350); });
+    setTimeout(() => { map.invalidateSize(); dmMeetLoadPlaces(); }, 100);
   } catch (e) {
     const box = document.getElementById('dm-meet-map');
     if (box) box.innerHTML = '<div class="tg-empty">לא ניתן לטעון מפה כרגע</div>';
@@ -39492,4 +39501,37 @@ async function dmMeetSend() {
     await update(ref(db, `website/user_dms/${otherUid}/${convId}`), { otherUid: u.uid, otherName: myName, lastText: last, lastTime: now, unread: true });
   } catch (e) { if (typeof showCopyToast === 'function') showCopyToast('שגיאה בשליחת הפגישה'); }
 }
-Object.assign(window, { dmMeetOpen, dmMeetClose, dmMeetSearch, dmMeetUseMyLoc, dmMeetSend });
+function dmMeetSetCat(c) {
+  _dmMeetState.cat = c || 'all';
+  document.querySelectorAll('#dm-meet-cats button').forEach(b => b.classList.toggle('on', b.dataset.c === _dmMeetState.cat));
+  dmMeetLoadPlaces();
+}
+async function dmMeetLoadPlaces() {
+  const map = _dmMeetState.map, layer = _dmMeetState.poiLayer;
+  if (!map || !layer || !window.L) return;
+  const c = map.getCenter(), cat = _dmMeetState.cat || 'all';
+  const parts = [];
+  if (cat === 'all' || cat === 'restaurant') parts.push(`nwr["amenity"="restaurant"](around:1200,${c.lat.toFixed(5)},${c.lng.toFixed(5)});`);
+  if (cat === 'all' || cat === 'cafe') parts.push(`nwr["amenity"="cafe"](around:1200,${c.lat.toFixed(5)},${c.lng.toFixed(5)});`);
+  if (cat === 'all' || cat === 'park') parts.push(`nwr["leisure"="park"](around:1200,${c.lat.toFixed(5)},${c.lng.toFixed(5)});`);
+  const q = `[out:json][timeout:10];(${parts.join('')});out center 35;`;
+  try {
+    const r = await fetch('https://overpass-api.de/api/interpreter?data=' + encodeURIComponent(q));
+    const j = await r.json();
+    if (_dmMeetState.map !== map) return;
+    layer.clearLayers();
+    (j && j.elements || []).slice(0, 35).forEach(el => {
+      const lat = el.lat || (el.center && el.center.lat), lng = el.lon || (el.center && el.center.lon);
+      const tags = el.tags || {};
+      const name = tags['name:he'] || tags.name || (tags.leisure === 'park' ? 'פארק' : tags.amenity === 'cafe' ? 'בית קפה' : 'מסעדה');
+      if (!lat || !lng) return;
+      const kind = tags.leisure === 'park' ? 'park' : tags.amenity === 'cafe' ? 'cafe' : 'rest';
+      const ic = kind === 'park' ? '🌳' : kind === 'cafe' ? '☕' : '🍽️';
+      const icon = window.L.divIcon({ className: `tg-poi-pin is-${kind}`, html: `<span>${ic}</span>`, iconSize: [28, 28], iconAnchor: [14, 14] });
+      const mk = window.L.marker([lat, lng], { icon }).addTo(layer);
+      mk.bindTooltip(escHtml(name), { direction: 'top', offset: [0, -10] });
+      mk.on('click', () => _dmMeetSetPoint(lat, lng, `${ic} ${name}`));
+    });
+  } catch (e) {}
+}
+Object.assign(window, { dmMeetOpen, dmMeetClose, dmMeetSearch, dmMeetUseMyLoc, dmMeetSend, dmMeetSetCat, dmMeetLoadPlaces });

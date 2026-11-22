@@ -2240,6 +2240,11 @@ html:not(.theme-dark) .tg-meet-lbl { color: #111111; }
 html:not(.theme-dark) .tg-meet-when { color: #111111; }
 html:not(.theme-dark) .tg-meet-go { background: linear-gradient(135deg, #7c7c7c, #828282); }
 html:not(.theme-dark) .tg-meet-info em { color: #7a7a7a; }
+html:not(.theme-dark) .tg-meet-cats button { color: #111111; }
+html:not(.theme-dark) .tg-meet-cats button.on { border-color: #7c7c7c; background: rgba(124,124,124,0.14); color: #111111; }
+html:not(.theme-dark) .tg-poi-pin span { border: 2px solid #777777; }
+html:not(.theme-dark) .tg-poi-pin.is-cafe span { border-color: #a7a7a7; }
+html:not(.theme-dark) .tg-poi-pin.is-park span { border-color: #808080; }
 html:not(.theme-dark) [style*="border:1.5px solid #e2e8f0"], html:not(.theme-dark) [style*="border: 1.5px solid #e2e8f0"] { border: 1.5px solid #e7e7e7 !important; }
 html:not(.theme-dark) [style*="color:#1e293b"], html:not(.theme-dark) [style*="color: #1e293b"] { color: #111111 !important; }
 html:not(.theme-dark) [style*="background:#dc2626"], html:not(.theme-dark) [style*="background: #dc2626"] { background: #111111 !important; }
