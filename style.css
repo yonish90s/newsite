@@ -23926,3 +23926,27 @@ html body:not(#_):not(#_):not(#_) :is(
   font-size: 15px !important;
   line-height: 1.4 !important;
 }
+
+/* הקטנת שורת הכתיבה בצ'אט (.tg-compose) בחצי */
+html body:not(#_):not(#_):not(#_):not(#_) .tg-compose {
+  gap: 5px !important;
+  padding: 4px 8px calc(4px + env(safe-area-inset-bottom, 0px)) !important;
+  align-items: center !important;
+}
+html body:not(#_):not(#_):not(#_):not(#_) .tg-compose :is(.tg-plus, .tg-mic, .tg-send) {
+  width: 24px !important;
+  height: 24px !important;
+  min-width: 24px !important;
+}
+html body:not(#_):not(#_):not(#_):not(#_) .tg-compose :is(.tg-plus, .tg-mic, .tg-send) svg {
+  width: 12px !important;
+  height: 12px !important;
+}
+html body:not(#_):not(#_):not(#_):not(#_) .tg-compose :is(textarea#dm-input, input) {
+  height: 26px !important;
+  min-height: 26px !important;
+  padding: 3px 10px !important;
+  border-radius: 13px !important;
+  font-size: 13px !important;
+  line-height: 1.35 !important;
+}
