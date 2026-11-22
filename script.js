@@ -20011,10 +20011,28 @@ function dmMessagesHTML() {
         <button type="button" class="tg-mb deal" onclick="dmMeetCounter('${artEsc(m._id || '')}')">⇄ משא ומתן</button>
         <button type="button" class="tg-mb no" onclick="dmMeetDecide('${artEsc(m._id || '')}','rejected')">✕ דחייה</button>
       </div>` : '';
+      const dtObj = mt.dtVal ? new Date(mt.dtVal) : (mt.whenTs ? new Date(mt.whenTs) : null);
+      const okDt = dtObj && !isNaN(dtObj.getTime());
+      const dateStr = okDt ? dtObj.toLocaleDateString('he-IL', { day: 'numeric', month: 'short' }) : (mt.when ? String(mt.when).split(',')[0] : '—');
+      const timeStr = okDt ? dtObj.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }) : '—';
+      const subStr = okDt ? dtObj.toLocaleDateString('he-IL', { weekday: 'short', day: 'numeric', month: 'short' }) + ' · ' + timeStr : (mt.when || 'מיקום במפה');
+      const rawLbl = String(mt.label || 'נקודת מפגש').trim();
+      const icoM = rawLbl.match(/^([☕🌳🍽️📍])\s*/);
+      const ico = icoM ? icoM[1] : '📍';
+      const cleanLbl = icoM ? rawLbl.slice(icoM[0].length) : rawLbl;
       return `<div class="tg-meet-wrap">
         <a class="tg-meet-card" href="${escHtml(gmapsUrl)}" target="_blank" rel="noopener">
-          <span class="tg-meet-thumb"><img src="${escHtml(tileUrl)}" alt="" loading="lazy"><i class="tg-meet-pin">📍</i></span>
-          <span class="tg-meet-info"><b>📍 ${escHtml(mt.label || 'נקודת מפגש')}</b>${mt.when ? `<small>🕒 ${escHtml(mt.when)}</small>` : ''}<em class="tg-meet-st ${stCls}">${stTxt}</em></span>
+          <div class="tg-meet-top">
+            <span class="tg-meet-ico">${ico}</span>
+            <span class="tg-meet-headtxt"><b>${escHtml(cleanLbl || 'נקודת מפגש')}</b><small>${escHtml(subStr)}</small></span>
+            <em class="tg-meet-st ${stCls}">${stTxt}</em>
+          </div>
+          <span class="tg-meet-thumb"><img src="${escHtml(tileUrl)}" alt="" loading="lazy"><span class="tg-meet-dot"></span></span>
+          <div class="tg-meet-stats">
+            <div><span>תאריך</span><b>${escHtml(dateStr)}</b></div>
+            <div><span>שעה</span><b>${escHtml(timeStr)}</b></div>
+            <div><span>מקום</span><b>${escHtml(cleanLbl || 'מפה')}</b></div>
+          </div>
         </a>
         ${actsHTML}
       </div>`;

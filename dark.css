@@ -4967,8 +4967,11 @@ html.theme-dark .tg-meet-lbl { color: #a8a8a8 !important; }
 html.theme-dark .tg-meet-when { border: 1px solid #262626 !important; background: #000000 !important; color: #f5f5f5 !important; }
 html.theme-dark.theme-dark .tg-meet-when { background: #121212 !important; border-color: rgba(255, 255, 255, 0.1) !important; }
 html.theme-dark .tg-meet-go { background: linear-gradient(135deg, #8b5cf6, #e4202b) !important; }
+html.theme-dark .tg-meet-card { background: #000000 !important; color: #f5f5f5 !important; border: 1px solid rgba(255, 255, 255, 0.048) !important; }
+html.theme-dark.theme-dark .tg-meet-card { background: #121212 !important; border-color: rgba(255, 255, 255, 0.1) !important; }
+html.theme-dark .tg-meet-ico { background: #000000 !important; }
 html.theme-dark .tg-meet-thumb { background: #121212 !important; }
-html.theme-dark .tg-meet-info em { color: #ffffff !important; }
+html.theme-dark .tg-meet-dot { background: #e4202b !important; border: 3px solid #262626 !important; }
 html.theme-dark .tg-meet-cats button { border: 1px solid #262626 !important; background: #000000 !important; color: #a8a8a8 !important; }
 html.theme-dark .tg-meet-cats button.on { color: #ffffff !important; }
 html.theme-dark.theme-dark .tg-meet-cats button { background: #121212 !important; border-color: rgba(255, 255, 255, 0.1) !important; }

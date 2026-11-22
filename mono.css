@@ -2239,7 +2239,8 @@ html:not(.theme-dark) .tg-meet-search button { background: #111111; }
 html:not(.theme-dark) .tg-meet-lbl { color: #111111; }
 html:not(.theme-dark) .tg-meet-when { color: #111111; }
 html:not(.theme-dark) .tg-meet-go { background: linear-gradient(135deg, #7c7c7c, #828282); }
-html:not(.theme-dark) .tg-meet-info em { color: #7a7a7a; }
+html:not(.theme-dark) .tg-meet-card { color: #111111; }
+html:not(.theme-dark) .tg-meet-dot { background: #111111; box-shadow: 0 2px 8px rgba(17,17,17,0.45); }
 html:not(.theme-dark) .tg-meet-cats button { color: #111111; }
 html:not(.theme-dark) .tg-meet-cats button.on { border-color: #7c7c7c; background: rgba(124,124,124,0.14); color: #111111; }
 html:not(.theme-dark) .tg-poi-pin span { border: 2px solid #777777; }
