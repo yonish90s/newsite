@@ -24419,3 +24419,30 @@ html.theme-dark .tg-meet-cats button.on {
 .tg-meet-pill.no { background: rgba(239, 68, 68, 0.16); }
 .tg-meet-pill.deal { background: rgba(245, 158, 11, 0.16); }
 .ad-j-click { display: inline-flex; align-items: center; cursor: pointer; pointer-events: auto; }
+.pl-sub { margin-inline-start: auto; font-size: 12px; font-weight: 600; opacity: .68; white-space: nowrap; }
+.tg-meet-dt-btn { display: flex; align-items: center; justify-content: space-between; text-align: start; cursor: pointer; }
+.wdp-back { position: fixed; inset: 0; z-index: 100050; background: rgba(0, 0, 0, .48); display: flex; align-items: center; justify-content: center; padding: 16px; }
+.wdp-card { width: min(340px, 92vw); background: #ffffff; color: #111827; border-radius: 22px; padding: 16px; box-shadow: 0 20px 54px rgba(0, 0, 0, .24); direction: rtl; }
+.wdp-box { display: flex; align-items: center; justify-content: space-between; gap: 8px; border: 1.5px solid #111827; border-radius: 12px; padding: 10px 14px; margin-bottom: 12px; font-size: 14px; font-weight: 600; color: #4b5563; }
+.wdp-box svg { width: 18px; height: 18px; flex: none; color: #374151; }
+.wdp-head-mo { color: #2563eb; font-size: 15px; font-weight: 700; padding: 0 6px 8px; display: flex; align-items: center; gap: 4px; }
+.wdp-wheels { position: relative; display: flex; align-items: center; justify-content: center; gap: 4px; height: 180px; overflow: hidden; user-select: none; }
+.wdp-bar { position: absolute; left: 4px; right: 4px; top: 50%; transform: translateY(-50%); height: 36px; border-radius: 10px; background: rgba(0, 0, 0, .06); pointer-events: none; }
+.wdp-col { flex: 1; height: 180px; overflow-y: auto; scroll-snap-type: y mandatory; scrollbar-width: none; -webkit-overflow-scrolling: touch; padding: 72px 0; box-sizing: border-box; }
+.wdp-col::-webkit-scrollbar { display: none; }
+.wdp-col.is-wide { flex: 1.45; }
+.wdp-item { height: 36px; line-height: 36px; text-align: center; scroll-snap-align: center; font-size: 15px; font-weight: 500; color: #9ca3af; cursor: pointer; white-space: nowrap; }
+.wdp-item.is-sel { color: #111827; font-weight: 700; font-size: 16.5px; }
+.wdp-acts { display: flex; gap: 10px; margin-top: 14px; }
+.wdp-btn { flex: 1; height: 42px; border-radius: 12px; border: 0; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+.wdp-btn.cancel { background: #f3f4f6; color: #111827; }
+.wdp-btn.ok { background: #111827; color: #ffffff; }
+html.theme-dark .wdp-card { background: #1c1c1e; color: #f5f5f7; border: 1px solid rgba(255, 255, 255, .1); }
+html.theme-dark .wdp-box { border-color: rgba(255, 255, 255, .28); color: #d1d5db; }
+html.theme-dark .wdp-box svg { color: #d1d5db; }
+html.theme-dark .wdp-head-mo { color: #60a5fa; }
+html.theme-dark .wdp-bar { background: rgba(255, 255, 255, .1); }
+html.theme-dark .wdp-item { color: #6b7280; }
+html.theme-dark .wdp-item.is-sel { color: #ffffff; }
+html.theme-dark .wdp-btn.cancel { background: #2c2c2e; color: #f5f5f7; }
+html.theme-dark .wdp-btn.ok { background: #ffffff; color: #111827; }

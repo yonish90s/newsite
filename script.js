@@ -31165,7 +31165,7 @@ function peopleListHTML(map, emptyText) {
     const nm = String(v.name || 'משתמש');
     const realUid = (v.demo || String(uid).startsWith('demo_')) ? '' : uid;
     const av = typeof authorAvHTML === 'function' ? authorAvHTML({ author: nm, uid: realUid }) : `<span class="au-av pl-av">${escHtml(nm.trim().charAt(0) || '?')}</span>`;
-    const inner = `${av}<span class="pl-name">${escHtml(nm)}</span>`;
+    const inner = `${av}<span class="pl-name">${escHtml(nm)}</span>${v.sub ? `<span class="pl-sub">${escHtml(v.sub)}</span>` : ''}`;
     return `<button type="button" class="pl-row" onclick="closeMSheet(); if(typeof rentOpenSeller==='function') rentOpenSeller('${artEsc(realUid)}', '${artEsc(nm)}')">${inner}</button>`;
   }).join('')}</div>`;
 }
@@ -34839,12 +34839,121 @@ async function adFlashAvs(id, kind, key, shId) {
     }, 3000);
   }
 }
+function openWheelDatePicker(opts) {
+  const o = opts || {};
+  const old = document.getElementById('wdp-back');
+  if (old) old.remove();
+  const base = o.initialDate && !isNaN(o.initialDate.getTime()) ? o.initialDate : new Date();
+  const MONTHS = ['ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני', 'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'];
+  const y0 = Math.min(base.getFullYear(), new Date().getFullYear());
+  const YEARS = [y0 - 1, y0, y0 + 1, y0 + 2];
+  const DAYS = Array.from({ length: 31 }, (_, i) => i + 1);
+  const TIMES = [];
+  if (o.withTime) {
+    for (let h = 8; h <= 23; h++) {
+      TIMES.push(`${String(h).padStart(2, '0')}:00`, `${String(h).padStart(2, '0')}:30`);
+    }
+  }
+  let selD = base.getDate(), selM = base.getMonth(), selY = base.getFullYear();
+  let selT = o.withTime ? `${String(base.getHours()).padStart(2, '0')}:${base.getMinutes() >= 30 ? '30' : '00'}` : '';
+  if (o.withTime && !TIMES.includes(selT)) selT = '19:00';
+
+  const back = document.createElement('div');
+  back.id = 'wdp-back';
+  back.className = 'wdp-back';
+  back.innerHTML = `<div class="wdp-card" role="dialog" aria-label="${escHtml(o.title || 'בחירת תאריך')}">
+    <div class="wdp-box">
+      <span id="wdp-preview">${escHtml(o.title || 'בחירת תאריך')}</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    </div>
+    <div class="wdp-head-mo" id="wdp-head-mo">${MONTHS[selM]} ${selY} ⌄</div>
+    <div class="wdp-wheels">
+      <div class="wdp-bar"></div>
+      <div class="wdp-col" data-k="d">${DAYS.map(d => `<div class="wdp-item" data-v="${d}">${d}</div>`).join('')}</div>
+      <div class="wdp-col is-wide" data-k="m">${MONTHS.map((m, i) => `<div class="wdp-item" data-v="${i}">${m}</div>`).join('')}</div>
+      <div class="wdp-col" data-k="y">${YEARS.map(y => `<div class="wdp-item" data-v="${y}">${y}</div>`).join('')}</div>
+      ${o.withTime ? `<div class="wdp-col" data-k="t">${TIMES.map(t => `<div class="wdp-item" data-v="${t}">${t}</div>`).join('')}</div>` : ''}
+    </div>
+    <div class="wdp-acts">
+      <button type="button" class="wdp-btn cancel" id="wdp-cancel">ביטול</button>
+      <button type="button" class="wdp-btn ok" id="wdp-ok">אישור</button>
+    </div>
+  </div>`;
+  document.body.appendChild(back);
+
+  const IH = 36;
+  const syncUI = () => {
+    const maxD = new Date(selY, selM + 1, 0).getDate();
+    if (selD > maxD) selD = maxD;
+    const hm = document.getElementById('wdp-head-mo');
+    if (hm) hm.textContent = `${MONTHS[selM]} ${selY} ⌄`;
+    const pv = document.getElementById('wdp-preview');
+    if (pv) pv.textContent = `${selD} ב${MONTHS[selM]} ${selY}${o.withTime && selT ? ' · ' + selT : ''}`;
+    back.querySelectorAll('.wdp-col').forEach(col => {
+      const k = col.dataset.k;
+      const cur = k === 'd' ? String(selD) : k === 'm' ? String(selM) : k === 'y' ? String(selY) : selT;
+      col.querySelectorAll('.wdp-item').forEach(it => it.classList.toggle('is-sel', it.dataset.v === cur));
+    });
+  };
+  const setColVal = (col, val, smooth) => {
+    const items = Array.from(col.querySelectorAll('.wdp-item'));
+    const idx = Math.max(0, items.findIndex(it => it.dataset.v === String(val)));
+    col.scrollTo({ top: idx * IH, behavior: smooth ? 'smooth' : 'auto' });
+  };
+  back.querySelectorAll('.wdp-col').forEach(col => {
+    const k = col.dataset.k;
+    let st = 0;
+    col.addEventListener('scroll', () => {
+      clearTimeout(st);
+      st = setTimeout(() => {
+        const items = col.querySelectorAll('.wdp-item');
+        const idx = Math.max(0, Math.min(items.length - 1, Math.round(col.scrollTop / IH)));
+        const v = items[idx] ? items[idx].dataset.v : '';
+        if (k === 'd') selD = Number(v);
+        else if (k === 'm') selM = Number(v);
+        else if (k === 'y') selY = Number(v);
+        else if (k === 't') selT = v;
+        syncUI();
+      }, 60);
+    }, { passive: true });
+    col.querySelectorAll('.wdp-item').forEach(it => {
+      it.addEventListener('click', () => {
+        const v = it.dataset.v;
+        if (k === 'd') selD = Number(v);
+        else if (k === 'm') selM = Number(v);
+        else if (k === 'y') selY = Number(v);
+        else if (k === 't') selT = v;
+        setColVal(col, v, true);
+        syncUI();
+      });
+    });
+  });
+  setColVal(back.querySelector('[data-k="d"]'), selD, false);
+  setColVal(back.querySelector('[data-k="m"]'), selM, false);
+  setColVal(back.querySelector('[data-k="y"]'), selY, false);
+  if (o.withTime) setColVal(back.querySelector('[data-k="t"]'), selT, false);
+  syncUI();
+
+  const close = () => back.remove();
+  back.addEventListener('click', e => { if (e.target === back) close(); });
+  document.getElementById('wdp-cancel').onclick = close;
+  document.getElementById('wdp-ok').onclick = () => {
+    const maxD = new Date(selY, selM + 1, 0).getDate();
+    const d = Math.min(selD, maxD);
+    const isoDate = `${selY}-${String(selM + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    const dtVal = o.withTime && selT ? `${isoDate}T${selT}` : `${isoDate}T19:00`;
+    const label = `${d} ב${MONTHS[selM]} ${selY}${o.withTime && selT ? ' · ' + selT : ''}`;
+    close();
+    if (typeof o.onConfirm === 'function') o.onConfirm({ date: new Date(dtVal), isoDate, dtVal, label });
+  };
+}
+window.openWheelDatePicker = openWheelDatePicker;
 function adFlashClick(id, kind, key, shId) {
   if (kind === 'like' && typeof likersOpen === 'function') { likersOpen(key, id, shId); return; }
   if (kind === 'rep' && typeof repostersOpen === 'function') { repostersOpen(key); return; }
   if (kind === 'join') {
     const map = {};
-    (adJoinsMap()[id] || []).forEach(p => { if (p) map[p.uid || p.name] = { name: p.name || 'משתמש', uid: p.uid === 'guest_me' ? '' : (p.uid || '') }; });
+    (adJoinsMap()[id] || []).forEach(p => { if (p) map[p.uid || p.name] = { name: p.name || 'משתמש', uid: p.uid === 'guest_me' ? '' : (p.uid || ''), sub: p.dateLabel || '' }; });
     if (typeof openMSheet === 'function' && typeof peopleListHTML === 'function') {
       openMSheet('חברים שהצטרפו', peopleListHTML(map, 'עדיין אין חברים שהצטרפו.'));
       document.getElementById('m-sheet')?.classList.add('pl-sheet');
@@ -34854,14 +34963,30 @@ function adFlashClick(id, kind, key, shId) {
 function adJoinToggle(id) {
   const m = adJoinsMap(), me = adJoinMe(), list = Array.isArray(m[id]) ? m[id].slice() : [];
   const idx = list.findIndex(p => p && p.uid === me.uid);
-  const on = idx < 0;
-  if (on) list.push(me); else list.splice(idx, 1);
-  if (list.length) m[id] = list; else delete m[id];
-  try { localStorage.setItem('bw_ad_joins', JSON.stringify(m)); } catch (e) {}
-  document.querySelectorAll(`[data-join-btn="${CSS.escape(id)}"]`).forEach(b => b.classList.toggle('on', on));
-  if (on) adFlashAvs(id, 'join');
-  else document.querySelectorAll(`[data-join-avs="${CSS.escape(id)}"]`).forEach(el => { el.innerHTML = ''; });
-  if (typeof showCopyToast === 'function') showCopyToast(on ? 'הצטרפת למודעה' : 'ביטלת הצטרפות למודעה');
+  if (idx >= 0) {
+    list.splice(idx, 1);
+    if (list.length) m[id] = list; else delete m[id];
+    try { localStorage.setItem('bw_ad_joins', JSON.stringify(m)); } catch (e) {}
+    document.querySelectorAll(`[data-join-btn="${CSS.escape(id)}"]`).forEach(b => b.classList.remove('on'));
+    document.querySelectorAll(`[data-join-avs="${CSS.escape(id)}"]`).forEach(el => { el.innerHTML = ''; });
+    if (typeof showCopyToast === 'function') showCopyToast('ביטלת הגעה למקום');
+    return;
+  }
+  openWheelDatePicker({
+    title: 'מתי אני במסעדה?',
+    withTime: false,
+    onConfirm: ({ isoDate, label }) => {
+      const m2 = adJoinsMap(), me2 = adJoinMe(), list2 = Array.isArray(m2[id]) ? m2[id].slice() : [];
+      const idx2 = list2.findIndex(p => p && p.uid === me2.uid);
+      const entry = { ...me2, date: isoDate, dateLabel: label };
+      if (idx2 >= 0) list2[idx2] = entry; else list2.push(entry);
+      m2[id] = list2;
+      try { localStorage.setItem('bw_ad_joins', JSON.stringify(m2)); } catch (e) {}
+      document.querySelectorAll(`[data-join-btn="${CSS.escape(id)}"]`).forEach(b => b.classList.add('on'));
+      adFlashAvs(id, 'join');
+      if (typeof showCopyToast === 'function') showCopyToast(`✓ נקבע תאריך: ${label}`);
+    }
+  });
 }
 window.adJoinToggle = adJoinToggle; window.adFlashAvs = adFlashAvs; window.adFlashClick = adFlashClick;
 
@@ -39504,7 +39629,8 @@ async function dmMeetOpen() {
     <div id="dm-meet-map" class="tg-meet-map"><div class="tg-empty">טוען מפה…</div></div>
     <div class="tg-meet-foot">
       <input id="dm-meet-lbl" class="tg-meet-when" type="text" maxlength="80" placeholder="שם המקום (אפשר לערוך)…" value="${escHtml(_dmMeetState.label || '')}">
-      <input id="dm-meet-dt" class="tg-meet-when" type="datetime-local" aria-label="יום ושעה" value="${escHtml(_dmMeetState.dtVal || '')}">
+      <button type="button" id="dm-meet-dt-btn" class="tg-meet-when tg-meet-dt-btn" onclick="dmMeetPickDate()"><span>${escHtml(_dmMeetState.dtLabel || 'בחירת תאריך ושעה…')}</span><span>📅</span></button>
+      <input id="dm-meet-dt" type="hidden" value="${escHtml(_dmMeetState.dtVal || '')}">
       <button type="button" class="tg-meet-go" onclick="dmMeetSend()">${_dmMeetState.counterMsgId ? 'שליחת הצעה נגדית' : 'שליחת פגישה'}</button>
     </div>`;
   host.appendChild(pop);
@@ -39737,4 +39863,19 @@ async function dmMeetLoadPlaces() {
     if (cafePark.length) _dmMeetState.cafeParkPool = cafePark;
   } catch (e) {}
 }
-Object.assign(window, { dmMeetOpen, dmMeetClose, dmMeetSearch, dmMeetUseMyLoc, dmMeetSend, dmMeetSetCat, dmMeetRandomPlace, dmMeetLoadPlaces, dmMeetDecide, dmMeetCounter, dmSubscribeMeetups, dmMeetupsListHTML });
+function dmMeetPickDate() {
+  openWheelDatePicker({
+    title: 'בחירת תאריך ושעה לפגישה',
+    withTime: true,
+    initialDate: _dmMeetState.dtVal ? new Date(_dmMeetState.dtVal) : new Date(),
+    onConfirm: ({ dtVal, label }) => {
+      _dmMeetState.dtVal = dtVal;
+      _dmMeetState.dtLabel = label;
+      const inp = document.getElementById('dm-meet-dt');
+      if (inp) inp.value = dtVal;
+      const btn = document.getElementById('dm-meet-dt-btn');
+      if (btn) btn.innerHTML = `<span>${escHtml(label)}</span><span>📅</span>`;
+    }
+  });
+}
+Object.assign(window, { dmMeetOpen, dmMeetClose, dmMeetSearch, dmMeetUseMyLoc, dmMeetSend, dmMeetPickDate, dmMeetSetCat, dmMeetRandomPlace, dmMeetLoadPlaces, dmMeetDecide, dmMeetCounter, dmSubscribeMeetups, dmMeetupsListHTML });

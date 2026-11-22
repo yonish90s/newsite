@@ -2255,6 +2255,14 @@ html:not(.theme-dark) .tg-mb.no { background: #777777; }
 html:not(.theme-dark) .tg-meet-pill.ok { background: rgba(128,128,128,0.16); }
 html:not(.theme-dark) .tg-meet-pill.no { background: rgba(119,119,119,0.16); }
 html:not(.theme-dark) .tg-meet-pill.deal { background: rgba(167,167,167,0.16); }
+html:not(.theme-dark) .wdp-card { color: #111111; }
+html:not(.theme-dark) .wdp-box { border: 1.5px solid #111111; color: #111111; }
+html:not(.theme-dark) .wdp-box svg { color: #111111; }
+html:not(.theme-dark) .wdp-head-mo { color: #111111; }
+html:not(.theme-dark) .wdp-item { color: #a2a2a2; }
+html:not(.theme-dark) .wdp-item.is-sel { color: #111111; }
+html:not(.theme-dark) .wdp-btn.cancel { color: #111111; }
+html:not(.theme-dark) .wdp-btn.ok { background: #111111; }
 html:not(.theme-dark) [style*="border:1.5px solid #e2e8f0"], html:not(.theme-dark) [style*="border: 1.5px solid #e2e8f0"] { border: 1.5px solid #e7e7e7 !important; }
 html:not(.theme-dark) [style*="color:#1e293b"], html:not(.theme-dark) [style*="color: #1e293b"] { color: #111111 !important; }
 html:not(.theme-dark) [style*="background:#dc2626"], html:not(.theme-dark) [style*="background: #dc2626"] { background: #111111 !important; }
