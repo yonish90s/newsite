@@ -19384,6 +19384,7 @@ function dmSetTab(t) {
 }
 window.dmArchToggle = dmArchToggle; window.dmSetTab = dmSetTab;
 function dmConvListHTML() {
+  if (dmFilterTab === 'meetups') return typeof dmMeetupsListHTML === 'function' ? dmMeetupsListHTML() : '';
   const isAdminUser = (typeof isAdmin === 'function' && isAdmin());
   const _act = (typeof dmActiveConv === 'object' && dmActiveConv) ? dmActiveConv.convId : '';
   const q = dmSearchQuery;
@@ -19435,6 +19436,7 @@ async function openMessages() {
     if (!ok) { if (typeof openLiveChatLogin === 'function') openLiveChatLogin(); return; }
   }
   subscribeMyDMs();
+  if (typeof dmSubscribeMeetups === 'function') dmSubscribeMeetups();
   let modal = document.getElementById('messages-modal');
   if (!modal) { modal = document.createElement('div'); modal.id = 'messages-modal'; document.body.appendChild(modal); }
   dmSearchQuery = '';
@@ -19458,6 +19460,7 @@ async function openMessages() {
           <button type="button" class="tg-pill${dmFilterTab === 'requests' ? ' on' : ''}" data-t="requests" onclick="dmSetTab('requests')">בקשות</button>
           <button type="button" class="tg-pill${dmFilterTab === 'general' ? ' on' : ''}" data-t="general" onclick="dmSetTab('general')">כללי</button>
           <button type="button" class="tg-pill${dmFilterTab === 'archive' ? ' on' : ''}" data-t="archive" onclick="dmSetTab('archive')">ארכיון</button>
+          <button type="button" class="tg-pill${dmFilterTab === 'meetups' ? ' on' : ''}" data-t="meetups" onclick="dmSetTab('meetups')">פגישות</button>
         </div>
         ${dmGuestBannerHTML()}
         <div class="tg-list" id="dm-conv-list">${dmConvListHTML()}</div>
@@ -19999,10 +20002,22 @@ function dmMessagesHTML() {
       const ty = Math.floor((1 - Math.log(Math.tan(lr) + 1 / Math.cos(lr)) / Math.PI) / 2 * n);
       const tileUrl = `https://mt1.google.com/vt/lyrs=m&x=${tx}&y=${ty}&z=${z}&hl=he`;
       const gmapsUrl = `https://www.google.com/maps/search/?api=1&query=${lat.toFixed(6)},${lng.toFixed(6)}`;
-      return `<a class="tg-meet-card" href="${escHtml(gmapsUrl)}" target="_blank" rel="noopener">
-        <span class="tg-meet-thumb"><img src="${escHtml(tileUrl)}" alt="" loading="lazy"><i class="tg-meet-pin">📍</i></span>
-        <span class="tg-meet-info"><b>📍 ${escHtml(mt.label || 'נקודת מפגש')}</b>${mt.when ? `<small>🕒 ${escHtml(mt.when)}</small>` : ''}<em>פתח במפות גוגל</em></span>
-      </a>`;
+      const st = mt.status || 'pending';
+      const myTurn = (st === 'pending' || st === 'counter') && mt.lastBy !== myUid;
+      const stTxt = st === 'accepted' ? '✓ אושרה' : st === 'rejected' ? '✕ נדחתה' : st === 'counter' ? (myTurn ? '⇄ הצעה נגדית — ממתין לך' : '⇄ הצעה נגדית נשלחה') : (myTurn ? '⏳ ממתין לתשובה שלך' : '⏳ ממתין לאישור');
+      const stCls = st === 'accepted' ? 'ok' : st === 'rejected' ? 'no' : st === 'counter' ? 'deal' : 'wait';
+      const actsHTML = myTurn ? `<div class="tg-meet-acts">
+        <button type="button" class="tg-mb ok" onclick="dmMeetDecide('${artEsc(m._id || '')}','accepted')">✓ אישור</button>
+        <button type="button" class="tg-mb deal" onclick="dmMeetCounter('${artEsc(m._id || '')}')">⇄ משא ומתן</button>
+        <button type="button" class="tg-mb no" onclick="dmMeetDecide('${artEsc(m._id || '')}','rejected')">✕ דחייה</button>
+      </div>` : '';
+      return `<div class="tg-meet-wrap">
+        <a class="tg-meet-card" href="${escHtml(gmapsUrl)}" target="_blank" rel="noopener">
+          <span class="tg-meet-thumb"><img src="${escHtml(tileUrl)}" alt="" loading="lazy"><i class="tg-meet-pin">📍</i></span>
+          <span class="tg-meet-info"><b>📍 ${escHtml(mt.label || 'נקודת מפגש')}</b>${mt.when ? `<small>🕒 ${escHtml(mt.when)}</small>` : ''}<em class="tg-meet-st ${stCls}">${stTxt}</em></span>
+        </a>
+        ${actsHTML}
+      </div>`;
     })() : '';
     return `${sep}<div class="tg-msg ${mine ? 'mine' : 'theirs'}" data-mid="${escHtml(m._id || '')}" data-mine="${mine ? '1' : '0'}">
       <div class="tg-bubble${m.img ? ' has-img' : ''}${hasAudio ? ' has-voice' : ''}${refOk ? ' has-ref' : ''}${mt ? ' has-meet' : ''}">${refHTML}${meetHTML}${m.img && /^data:image\/(jpeg|png|webp|gif);base64,/.test(m.img) ? `<img class="tg-img" src="${escHtml(m.img)}" alt="" loading="lazy" onclick="dmViewImg(this.src)">` : ''}${voiceHTML}${m.text ? `${dmRichHTML(m.text)}` : ''}<span class="tg-msg-time">${dmTime(m.timestamp)}${tickHTML}</span></div>
@@ -39440,9 +39455,9 @@ async function dmMeetOpen() {
     </div>
     <div id="dm-meet-map" class="tg-meet-map"><div class="tg-empty">טוען מפה…</div></div>
     <div class="tg-meet-foot">
-      <span id="dm-meet-lbl" class="tg-meet-lbl">לחצו על המפה לבחירת מקום</span>
-      <input id="dm-meet-when" class="tg-meet-when" type="text" maxlength="40" placeholder="יום / שעה (אופציונלי)">
-      <button type="button" class="tg-meet-go" onclick="dmMeetSend()">שליחת פגישה</button>
+      <span id="dm-meet-lbl" class="tg-meet-lbl">${escHtml(_dmMeetState.label || 'לחצו על המפה לבחירת מקום')}</span>
+      <input id="dm-meet-dt" class="tg-meet-when" type="datetime-local" value="${escHtml(_dmMeetState.dtVal || '')}">
+      <button type="button" class="tg-meet-go" onclick="dmMeetSend()">${_dmMeetState.counterMsgId ? 'שליחת הצעה נגדית' : 'שליחת פגישה'}</button>
     </div>`;
   host.appendChild(pop);
   try {
@@ -39489,17 +39504,113 @@ function dmMeetUseMyLoc() {
 async function dmMeetSend() {
   const u = auth.currentUser;
   if (!u || !dmActiveConv) return;
-  const when = ((document.getElementById('dm-meet-when') || {}).value || '').trim().slice(0, 40);
-  const meetup = { lat: _dmMeetState.lat, lng: _dmMeetState.lng, label: _dmMeetState.label || 'נקודת מפגש', when };
-  dmMeetClose();
+  const dtEl = document.getElementById('dm-meet-dt');
+  const dtRaw = dtEl ? dtEl.value : '';
+  const whenTs = dtRaw ? new Date(dtRaw).getTime() : 0;
+  const when = dtRaw ? new Date(dtRaw).toLocaleString('he-IL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
   const { convId, otherUid, otherName } = dmActiveConv;
   const now = Date.now(), myName = dmName();
+  const isCounter = !!_dmMeetState.counterMsgId;
+  const meetId = _dmMeetState.counterMeetId || ('m_' + now + '_' + Math.random().toString(36).slice(2, 6));
+  const meetup = {
+    id: meetId,
+    convId,
+    lat: _dmMeetState.lat,
+    lng: _dmMeetState.lng,
+    label: _dmMeetState.label || 'נקודת מפגש',
+    when,
+    whenTs: whenTs || now,
+    dtVal: dtRaw,
+    status: isCounter ? 'counter' : 'pending',
+    lastBy: u.uid,
+    fromUid: _dmMeetState.fromUid || u.uid,
+    fromName: _dmMeetState.fromName || myName,
+    toUid: _dmMeetState.toUid || otherUid,
+    toName: _dmMeetState.toName || otherName,
+    updatedAt: now
+  };
+  const oldMsgId = _dmMeetState.counterMsgId;
+  _dmMeetState.counterMsgId = null; _dmMeetState.counterMeetId = null; _dmMeetState.dtVal = '';
+  dmMeetClose();
   try {
-    await push(ref(db, `website/dms/${convId}/messages`), { from: u.uid, fromName: myName, text: '', meetup, timestamp: now });
-    const last = `📍 פגישה: ${meetup.label}`.slice(0, 60);
+    if (isCounter && oldMsgId) {
+      await update(ref(db, `website/dms/${convId}/messages/${oldMsgId}/meetup`), meetup);
+    } else {
+      await push(ref(db, `website/dms/${convId}/messages`), { from: u.uid, fromName: myName, text: '', meetup, timestamp: now });
+    }
+    await set(ref(db, `website/user_meetups/${u.uid}/${meetId}`), meetup);
+    if (otherUid) await set(ref(db, `website/user_meetups/${otherUid}/${meetId}`), meetup);
+    const last = `${isCounter ? '⇄ הצעת פגישה' : '📍 פגישה'}: ${meetup.label}`.slice(0, 60);
     await update(ref(db, `website/user_dms/${u.uid}/${convId}`), { otherUid, otherName, lastText: last, lastTime: now, unread: false });
     await update(ref(db, `website/user_dms/${otherUid}/${convId}`), { otherUid: u.uid, otherName: myName, lastText: last, lastTime: now, unread: true });
   } catch (e) { if (typeof showCopyToast === 'function') showCopyToast('שגיאה בשליחת הפגישה'); }
+}
+async function dmMeetDecide(msgId, status) {
+  const u = auth.currentUser;
+  if (!u || !dmActiveConv || !msgId) return;
+  const msg = (dmThreadMessages || []).find(m => m && m._id === msgId);
+  if (!msg || !msg.meetup) return;
+  const { convId, otherUid } = dmActiveConv;
+  const next = Object.assign({}, msg.meetup, { status, lastBy: u.uid, updatedAt: Date.now() });
+  try {
+    await update(ref(db, `website/dms/${convId}/messages/${msgId}/meetup`), { status, lastBy: u.uid, updatedAt: next.updatedAt });
+    if (next.id) {
+      await set(ref(db, `website/user_meetups/${u.uid}/${next.id}`), next);
+      if (otherUid) await set(ref(db, `website/user_meetups/${otherUid}/${next.id}`), next);
+    }
+    if (typeof showCopyToast === 'function') showCopyToast(status === 'accepted' ? '✓ הפגישה אושרה!' : '✕ הפגישה נדחתה');
+  } catch (e) {}
+}
+function dmMeetCounter(msgId) {
+  const msg = (dmThreadMessages || []).find(m => m && m._id === msgId);
+  if (!msg || !msg.meetup) return;
+  const mt = msg.meetup;
+  _dmMeetState.lat = Number(mt.lat) || 32.0853;
+  _dmMeetState.lng = Number(mt.lng) || 34.7818;
+  _dmMeetState.label = mt.label || 'נקודת מפגש';
+  _dmMeetState.dtVal = mt.dtVal || '';
+  _dmMeetState.counterMsgId = msgId;
+  _dmMeetState.counterMeetId = mt.id || '';
+  _dmMeetState.fromUid = mt.fromUid || '';
+  _dmMeetState.fromName = mt.fromName || '';
+  _dmMeetState.toUid = mt.toUid || '';
+  _dmMeetState.toName = mt.toName || '';
+  dmMeetOpen();
+}
+let dmMeetupsMap = {}, _dmMeetSubUid = '', _dmMeetUnsub = null;
+function dmSubscribeMeetups() {
+  const u = auth.currentUser;
+  if (!u || _dmMeetSubUid === u.uid) return;
+  if (_dmMeetUnsub) { try { _dmMeetUnsub(); } catch (e) {} _dmMeetUnsub = null; }
+  _dmMeetSubUid = u.uid;
+  try {
+    _dmMeetUnsub = onValue(ref(db, `website/user_meetups/${u.uid}`), snap => {
+      dmMeetupsMap = snap.val() || {};
+      if (dmFilterTab === 'meetups') dmRefreshList();
+    });
+  } catch (e) {}
+}
+function dmMeetupsListHTML() {
+  const u = auth.currentUser, myUid = u ? u.uid : '';
+  const arr = Object.values(dmMeetupsMap || {}).filter(Boolean).sort((a, b) => (a.whenTs || a.updatedAt || 0) - (b.whenTs || b.updatedAt || 0));
+  if (!arr.length) return '<div class="tg-empty">עדיין אין פגישות.<br>פתחו שיחה ולחצו על כפתור המיקום 📍 לקביעת פגישה.</div>';
+  return arr.map(mt => {
+    const otherUid = mt.fromUid === myUid ? mt.toUid : mt.fromUid;
+    const otherName = mt.fromUid === myUid ? (mt.toName || 'משתמש') : (mt.fromName || 'משתמש');
+    const st = mt.status || 'pending';
+    const myTurn = (st === 'pending' || st === 'counter') && mt.lastBy !== myUid;
+    const stTxt = st === 'accepted' ? 'אושרה ✓' : st === 'rejected' ? 'נדחתה ✕' : st === 'counter' ? (myTurn ? 'הצעה נגדית' : 'ממתין') : (myTurn ? 'ממתין לך' : 'ממתינה');
+    const stCls = st === 'accepted' ? 'ok' : st === 'rejected' ? 'no' : st === 'counter' ? 'deal' : 'wait';
+    const gmapsUrl = `https://www.google.com/maps/search/?api=1&query=${Number(mt.lat).toFixed(6)},${Number(mt.lng).toFixed(6)}`;
+    return `<div class="tg-row tg-meet-row" onclick="dmOpenConv('${artEsc(mt.convId || dmConvId(myUid, otherUid))}','${artEsc(otherUid || '')}','${artEsc(otherName)}')">
+      ${dmAvatarHTML(otherName, otherUid)}
+      <div class="tg-row-main">
+        <div class="tg-row-top"><span class="tg-row-name">${escHtml(otherName)}</span><span class="tg-meet-pill ${stCls}">${stTxt}</span></div>
+        <div class="tg-row-bottom"><span class="tg-row-last">📍 ${escHtml(mt.label || 'נקודת מפגש')}${mt.when ? ' · 🕒 ' + escHtml(mt.when) : ''}</span></div>
+      </div>
+      <a class="tg-arch-btn" href="${escHtml(gmapsUrl)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="פתח במפות גוגל" aria-label="מפות גוגל">↗</a>
+    </div>`;
+  }).join('');
 }
 function dmMeetSetCat(c) {
   _dmMeetState.cat = c || 'all';
@@ -39534,4 +39645,4 @@ async function dmMeetLoadPlaces() {
     });
   } catch (e) {}
 }
-Object.assign(window, { dmMeetOpen, dmMeetClose, dmMeetSearch, dmMeetUseMyLoc, dmMeetSend, dmMeetSetCat, dmMeetLoadPlaces });
+Object.assign(window, { dmMeetOpen, dmMeetClose, dmMeetSearch, dmMeetUseMyLoc, dmMeetSend, dmMeetSetCat, dmMeetLoadPlaces, dmMeetDecide, dmMeetCounter, dmSubscribeMeetups, dmMeetupsListHTML });

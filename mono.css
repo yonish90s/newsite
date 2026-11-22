@@ -2245,6 +2245,16 @@ html:not(.theme-dark) .tg-meet-cats button.on { border-color: #7c7c7c; backgroun
 html:not(.theme-dark) .tg-poi-pin span { border: 2px solid #777777; }
 html:not(.theme-dark) .tg-poi-pin.is-cafe span { border-color: #a7a7a7; }
 html:not(.theme-dark) .tg-poi-pin.is-park span { border-color: #808080; }
+html:not(.theme-dark) .tg-meet-st.ok,html:not(.theme-dark) .tg-meet-pill.ok { color: #808080; }
+html:not(.theme-dark) .tg-meet-st.no,html:not(.theme-dark) .tg-meet-pill.no { color: #777777; }
+html:not(.theme-dark) .tg-meet-st.deal,html:not(.theme-dark) .tg-meet-pill.deal { color: #a7a7a7; }
+html:not(.theme-dark) .tg-meet-st.wait,html:not(.theme-dark) .tg-meet-pill.wait { color: #727272; }
+html:not(.theme-dark) .tg-mb.ok { background: #808080; }
+html:not(.theme-dark) .tg-mb.deal { background: #a7a7a7; }
+html:not(.theme-dark) .tg-mb.no { background: #777777; }
+html:not(.theme-dark) .tg-meet-pill.ok { background: rgba(128,128,128,0.16); }
+html:not(.theme-dark) .tg-meet-pill.no { background: rgba(119,119,119,0.16); }
+html:not(.theme-dark) .tg-meet-pill.deal { background: rgba(167,167,167,0.16); }
 html:not(.theme-dark) [style*="border:1.5px solid #e2e8f0"], html:not(.theme-dark) [style*="border: 1.5px solid #e2e8f0"] { border: 1.5px solid #e7e7e7 !important; }
 html:not(.theme-dark) [style*="color:#1e293b"], html:not(.theme-dark) [style*="color: #1e293b"] { color: #111111 !important; }
 html:not(.theme-dark) [style*="background:#dc2626"], html:not(.theme-dark) [style*="background: #dc2626"] { background: #111111 !important; }
