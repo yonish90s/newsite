@@ -57,7 +57,7 @@ window.alert = function(message) {
       .custom-alert-card {
         background: rgba(255, 255, 255, 0.95);
         border: 1px solid rgba(255, 255, 255, 0.25);
-        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15), 0 0 120px rgba(139, 92, 246, 0.05);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15), 0 0 120px rgba(255, 79, 94, 0.05);
         border-radius: 28px;
         width: 100%;
         max-width: 360px;
@@ -77,13 +77,13 @@ window.alert = function(message) {
         width: 72px;
         height: 72px;
         border-radius: 50%;
-        background: rgba(139, 92, 246, 0.08);
+        background: rgba(255, 79, 94, 0.08);
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #8b5cf6;
+        color: #ff4f5e;
         font-size: 34px;
-        box-shadow: inset 0 2px 10px rgba(139, 92, 246, 0.1), 0 8px 20px rgba(139, 92, 246, 0.05);
+        box-shadow: inset 0 2px 10px rgba(255, 79, 94, 0.1), 0 8px 20px rgba(255, 79, 94, 0.05);
         margin-bottom: 4px;
       }
       .custom-alert-message {
@@ -95,7 +95,7 @@ window.alert = function(message) {
         white-space: pre-line;
       }
       .custom-alert-btn {
-        background: #8b5cf6;
+        background: #ff4f5e;
         color: white;
         border: none;
         border-radius: 50px;
@@ -105,11 +105,11 @@ window.alert = function(message) {
         cursor: pointer;
         width: 100%;
         transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
-        box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+        box-shadow: 0 4px 15px rgba(255, 79, 94, 0.3);
       }
       .custom-alert-btn:hover {
-        background: #7c3aed;
-        box-shadow: 0 6px 20px rgba(139, 92, 246, 0.45);
+        background: #e63946;
+        box-shadow: 0 6px 20px rgba(255, 79, 94, 0.45);
       }
       .custom-alert-btn:active {
         transform: scale(0.98);
@@ -6247,7 +6247,7 @@ const STORIES_SAMPLES = [
     title: 'המסע אל מעבר להרי החושך',
     summary: 'סיפור הרפתקאות מרתק על קבוצת חוקרים צעירים שיצאה למצוא את העיר האבודה בצפון הרחוק.',
     body: 'הרוח נשבה בעוצמה כאשר עמדנו בפתח המערה הגדולה...\n\nזה היה המסע שהתכוננו אליו במשך שנים. ידענו שהדרך תהיה קשה ומאתגרת, אך איש מאיתנו לא תיאר לעצמו מה באמת מחכה לנו שם.\n\nלאחר שבועיים של טיפוס מפרך, מצאנו את עצמנו מול חומות אבן עתיקות שאיש לא ראה מזה אלפי שנים.',
-    author: 'יואב דרור', category: 'הרפתקאות', categoryColor: '#8b5cf6', timestamp: 'היום, 14:00',
+    author: 'יואב דרור', category: 'הרפתקאות', categoryColor: '#ff4f5e', timestamp: 'היום, 14:00',
     image: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&q=80', link: '', verified: true
   },
   {
@@ -6636,7 +6636,7 @@ function storyRenderPage() {
     const tIdx = Number(t.dataset.idx);
     const isActive = (tIdx === idx);
     t.classList.toggle('active', isActive);
-    t.style.borderColor = isActive ? '#7c3aed' : '#cbd5e1';
+    t.style.borderColor = isActive ? '#e63946' : '#cbd5e1';
   });
 
   // תצוגת קומיקס: נקודות + צבע המסגרת לפי העמוד
@@ -6791,7 +6791,7 @@ function renderStoryImagesEditor() {
         ${pg.type === 'image' ? `<button type="button" onclick="storyMakeCover(${i})" title="הפוך לתמונת פרופיל של הסיפור (תוסר מתוך הסיפור)" style="border:1px solid #111111; color:#111111; background:#f8f8f8; border-radius:5px; height:26px; padding:0 6px; cursor:pointer; font-size:11px; font-weight:800; white-space:nowrap;">⭐ לכריכה</button>` : ''}
         <button type="button" onclick="storyRemoveImage(${i})" title="הסר עמוד" style="border:1px solid #fca5a5; color:#dc2626; background:#ffffff; border-radius:5px; width:26px; height:26px; cursor:pointer; font-size:12px;">✕</button>
       </div>`;
-    const badge = `<span style="background:${pg.type === 'text' ? '#8b5cf6' : '#111111'}; color:#262626; font-size:10px; font-weight:800; padding:2px 8px; border-radius:6px;">עמוד ${i + 1} · ${pg.type === 'text' ? 'טקסט 📝' : 'תמונה 🖼️'}</span>`;
+    const badge = `<span style="background:${pg.type === 'text' ? '#ff4f5e' : '#111111'}; color:#262626; font-size:10px; font-weight:800; padding:2px 8px; border-radius:6px;">עמוד ${i + 1} · ${pg.type === 'text' ? 'טקסט 📝' : 'תמונה 🖼️'}</span>`;
     const _ln = (pg.type === 'text') ? (pg.text || '').split('\n').length : 0;
     const _over = _ln > STORY_MAX_LINES;
     const _cntTxt = _over ? (_ln + ' שורות · יתחלק אוטומטית ל-' + Math.ceil(_ln / STORY_MAX_LINES) + ' עמודים') : (_ln + ' / ' + STORY_MAX_LINES + ' שורות');
@@ -7289,7 +7289,7 @@ const PHOTOS_SAMPLES = [
       'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=800&q=80',
       'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80'
     ],
-    author: 'סטודיו אופק', category: 'אתר תדמית', categoryColor: '#8b5cf6', timestamp: 'עודכן היום', verified: true
+    author: 'סטודיו אופק', category: 'אתר תדמית', categoryColor: '#ff4f5e', timestamp: 'עודכן היום', verified: true
   },
   {
     id: 'ph2',
@@ -7605,7 +7605,7 @@ function renderPhotoCard(p, options = {}) {
           ${validImages.map((imgUrl, idx) => `
             <div class="photo-mini-thumb"
                  onclick="event.stopPropagation(); photoSelectRowImage('${artEsc(p.id)}', '${artEsc(imgUrl)}', this)"
-                 style="width: 22px; height: 22px; border-radius: 4px; overflow: hidden; cursor: pointer; border: 1.5px solid ${idx === 0 ? '#7c3aed' : '#ddd'}; transition: all 0.2s; background: #eeeeee; flex-shrink:0;">
+                 style="width: 22px; height: 22px; border-radius: 4px; overflow: hidden; cursor: pointer; border: 1.5px solid ${idx === 0 ? '#e63946' : '#ddd'}; transition: all 0.2s; background: #eeeeee; flex-shrink:0;">
               <img src="${escHtml(imgUrl)}" style="width: 100%; height: 100%; object-fit: cover;">
             </div>
           `).join('')}
@@ -7643,14 +7643,14 @@ function renderPhotoCard(p, options = {}) {
   // לב מוטבע בפינת התמונה (כמו בהפניה) — מחליף את כפתור הלייק בשורת הכפתורים
   const cardHeartOverlay = `
     <button type="button" class="art-heart-overlay${isLikedCard ? ' liked' : ''}" onclick="event.stopPropagation(); photoToggleLike('${artEsc(p.id)}')" title="לייק לגלריה זו" aria-label="לייק">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="${isLikedCard ? '#8b5cf6' : 'none'}" stroke="${isLikedCard ? '#8b5cf6' : '#ffffff'}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="${isLikedCard ? '#ff4f5e' : 'none'}" stroke="${isLikedCard ? '#ff4f5e' : '#ffffff'}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
       </svg>
     </button>
   `;
   const cardLikeBtnHTML = `
-    <button type="button" onclick="event.stopPropagation(); photoToggleLike('${artEsc(p.id)}')" class="art-telegram-btn" title="לייק לגלריה זו" style="display: inline-flex; align-items: center; background: #2f2f2f; color: ${isLikedCard ? '#8b5cf6' : '#ffffff'}; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: bold; gap: 6px; border: 1px solid rgba(38, 38, 38, 0.1); cursor: pointer; transition: all 0.2s;">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="${isLikedCard ? '#8b5cf6' : 'none'}" stroke="${isLikedCard ? '#8b5cf6' : 'currentColor'}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+    <button type="button" onclick="event.stopPropagation(); photoToggleLike('${artEsc(p.id)}')" class="art-telegram-btn" title="לייק לגלריה זו" style="display: inline-flex; align-items: center; background: #2f2f2f; color: ${isLikedCard ? '#ff4f5e' : '#ffffff'}; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: bold; gap: 6px; border: 1px solid rgba(38, 38, 38, 0.1); cursor: pointer; transition: all 0.2s;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="${isLikedCard ? '#ff4f5e' : 'none'}" stroke="${isLikedCard ? '#ff4f5e' : 'currentColor'}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
         <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
       </svg>
       <span>${likesCount}</span>
@@ -7813,7 +7813,7 @@ function liveChatMessagesHTML() {
     const time = m.timestamp ? new Date(m.timestamp).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }) : '';
     return `
       <div style="display:flex; flex-direction:column; align-items:${mine ? 'flex-start' : 'flex-end'}; max-width:100%;">
-        <div style="max-width:85%; background:${mine ? '#7c3aed' : '#f1f5f9'}; color:${mine ? '#fff' : '#0f172a'}; padding:7px 11px; border-radius:12px; ${mine ? 'border-bottom-right-radius:4px;' : 'border-bottom-left-radius:4px;'} font-size:13px; line-height:1.4; word-break:break-word;">
+        <div style="max-width:85%; background:${mine ? '#e63946' : '#f1f5f9'}; color:${mine ? '#fff' : '#0f172a'}; padding:7px 11px; border-radius:12px; ${mine ? 'border-bottom-right-radius:4px;' : 'border-bottom-left-radius:4px;'} font-size:13px; line-height:1.4; word-break:break-word;">
           ${!mine ? `<div style="font-size:11px; font-weight:800; color:#262626; margin-bottom:2px;">${escHtml(m.name || 'אורח')}</div>` : ''}
           <div>${escHtml(m.text || '')}</div>
         </div>
@@ -8348,7 +8348,7 @@ async function qpPublish() {
     ageRange: '',
     region: qpData.region || '',
     offerType: qpData.offerType || '',
-    categoryColor: isStory ? '#8b5cf6' : (qpData.isProduct ? '#7c3aed' : '#10b981'),
+    categoryColor: isStory ? '#ff4f5e' : (qpData.isProduct ? '#e63946' : '#10b981'),
     timestamp: new Date(Number(qpData.publishAt) > Date.now() ? Number(qpData.publishAt) : Date.now()).toLocaleDateString('he-IL'),
     createdAt: Number(qpData.publishAt) > Date.now() ? Number(qpData.publishAt) : Date.now(),
     publishAt: Number(qpData.publishAt) > Date.now() ? Number(qpData.publishAt) : null,
@@ -8468,7 +8468,7 @@ function communitiesListHTML() {
   if (!list.length) {
     return '<div style="grid-column:1 / -1; text-align:center; color:#94a3b8; font-size:13px; padding:16px 8px;">אין קהילות עדיין.<br>צרו את הראשונה!</div>';
   }
-  const colors = ['#000000', '#ea580c', '#7c3aed', '#000000'];
+  const colors = ['#000000', '#ea580c', '#e63946', '#000000'];
   const isEd = (typeof isAdmin === 'function' && isAdmin()) || (typeof isEditMode !== 'undefined' && isEditMode);
 
   return list.map((c, index) => {
@@ -8744,8 +8744,8 @@ function buildCommunityPageHTML(community) {
   const tabBtnsHTML = `
     <div style="display:flex; gap:8px; margin-bottom:16px; border-bottom:1.5px solid #e2e8f0; padding-bottom:10px; direction:rtl;">
       <button onclick="communitySetTab('all')" style="padding:6px 14px; border-radius:8px; border:none; font-size:13px; font-weight:800; cursor:pointer; background:${communityActiveTab === 'all' ? '#0f172a' : '#f1f5f9'}; color:${communityActiveTab === 'all' ? '#fff' : '#475569'};">🌐 הכל (${filtered.length})</button>
-      <button onclick="communitySetTab('photos')" style="padding:6px 14px; border-radius:8px; border:none; font-size:13px; font-weight:800; cursor:pointer; background:${communityActiveTab === 'photos' ? '#7c3aed' : '#f1f5f9'}; color:${communityActiveTab === 'photos' ? '#fff' : '#475569'};">📸 תמונות (${photos.length})</button>
-      <button onclick="communitySetTab('stories')" style="padding:6px 14px; border-radius:8px; border:none; font-size:13px; font-weight:800; cursor:pointer; background:${communityActiveTab === 'stories' ? '#8b5cf6' : '#f1f5f9'}; color:${communityActiveTab === 'stories' ? '#fff' : '#475569'};">📖 סיפורים (${stories.length})</button>
+      <button onclick="communitySetTab('photos')" style="padding:6px 14px; border-radius:8px; border:none; font-size:13px; font-weight:800; cursor:pointer; background:${communityActiveTab === 'photos' ? '#e63946' : '#f1f5f9'}; color:${communityActiveTab === 'photos' ? '#fff' : '#475569'};">📸 תמונות (${photos.length})</button>
+      <button onclick="communitySetTab('stories')" style="padding:6px 14px; border-radius:8px; border:none; font-size:13px; font-weight:800; cursor:pointer; background:${communityActiveTab === 'stories' ? '#ff4f5e' : '#f1f5f9'}; color:${communityActiveTab === 'stories' ? '#fff' : '#475569'};">📖 סיפורים (${stories.length})</button>
     </div>
   `;
 
@@ -9043,7 +9043,7 @@ function statsBodyHTML() {
       ${statsCard('ret', 'משתמשים חוזרים', '#4800c4', sum(ret), sum(retP), ret)}
       ${statsCard('ret', 'אחוז חזרה', '#0891b2', retRate, retRateP, rateSeries, '%', 'מתוך הגולשים — כמה חזרו שוב')}
       ${statsCard('plus', 'גולשים חדשים', '#111111', sum(nw), sum(nwP), nw)}
-      ${statsCard('eye', 'צפיות בעמודים', '#7c3aed', sum(pv), sum(pvP), pv)}
+      ${statsCard('eye', 'צפיות בעמודים', '#e63946', sum(pv), sum(pvP), pv)}
       ${statsCard('up', 'העלאות חדשות', '#ea580c', sum(up), sum(upP), up, '', 'גלריות, סיפורים וקומיקס')}
       ${statsCard('heart', 'פעולות מעורבות', '#e11d48', sum(eng), sum(engP), eng, '', 'לייקים, שמירות, תגובות והודעות')}
       ${statsCard('spark', 'ביקורים עם פעולה', '#16a34a', engRate, engRateP, cur.map((d, i) => act[i] ? Math.min(100, ev[i] / act[i] * 100) : 0), '%', 'כמה מהביקורים לא נטשו')}
@@ -9282,16 +9282,16 @@ function buildInfoPage() {
     <div style="margin-bottom:24px;">
       <div style="font-size:16px; font-weight:900; color:#0f172a; margin-bottom:12px;">📊 נתוני האתר <span style="font-size:12px; color:#94a3b8; font-weight:700;">(מתעדכן בזמן אמת)</span></div>
       <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:12px; margin-bottom:14px;">
-        ${kpi('an-today', 'כניסות היום', '👥', '#7c3aed')}
-        ${kpi('an-month', 'כניסות החודש', '📅', '#7c3aed')}
+        ${kpi('an-today', 'כניסות היום', '👥', '#e63946')}
+        ${kpi('an-month', 'כניסות החודש', '📅', '#e63946')}
         ${kpi('an-total', 'סה״כ כניסות', '🚪', '#0f172a')}
         ${kpi('an-pageviews', 'צפיות בעמודים', '👁️', '#0f172a')}
         ${kpi('an-users', 'משתמשים רשומים', '🧑‍🤝‍🧑', '#111111')}
         ${kpi('an-active24', 'פעילים ב-24 שעות', '🟢', '#16a34a')}
         ${kpi('an-active30', 'פעילים ב-30 יום', '📈', '#16a34a')}
-        ${kpi('an-galleries', 'גלריות', '🖼️', '#8b5cf6')}
-        ${kpi('an-stories', 'סיפורים', '📖', '#8b5cf6')}
-        ${kpi('an-products', 'מוצרי יד שניה', '🛒', '#8b5cf6')}
+        ${kpi('an-galleries', 'גלריות', '🖼️', '#ff4f5e')}
+        ${kpi('an-stories', 'סיפורים', '📖', '#ff4f5e')}
+        ${kpi('an-products', 'מוצרי יד שניה', '🛒', '#ff4f5e')}
         ${kpi('an-communities', 'קהילות', '👥', '#f59e0b')}
         ${kpi('an-questions', 'שאלות גולשים', '❓', '#f59e0b')}
         ${kpi('an-likes', 'סה״כ לייקים', '❤️', '#ef4444')}
@@ -10799,7 +10799,7 @@ function buildSidebarTabs(savedHTML, pageType) {
     { id: 'community', label: '👥 קהילה',  html: sitePagesNavBoxHTML(pageType) },
     { id: 'chat',      label: '💬 צ׳אט',   html: buildLiveChatBox() },
     { id: 'publish',   label: '🤖 פרסום',  html: `
-      <div class="art-sidebar-box" style="text-align:center; padding:18px; border:1.5px solid #c4b5fd; background:#faf8ff; border-radius:12px;">
+      <div class="art-sidebar-box" style="text-align:center; padding:18px; border:1.5px solid #ff99a2; background:#faf8ff; border-radius:12px;">
         <div style="font-size:15px; font-weight:900; color:#262626; margin-bottom:6px;">🤖 פרסום מודעה מהיר</div>
         <div style="font-size:12px; color:#64748b; margin-bottom:12px; line-height:1.45;">עוזר מונחה שיפרסם עבורך מודעה חדשה בצ׳אט תוך 30 שניות</div>
         <button onclick="openQuickPublish()" style="width:100%; background:linear-gradient(135deg,#111111,#111111); color:#ffffff; border:none; border-radius:10px; padding:12px; font-size:14px; font-weight:800; cursor:pointer; box-shadow:0 3px 10px rgba(0, 0, 0, 0.15);">🤖 צ׳אט מהיר לפרסום מודעה</button>
@@ -12052,7 +12052,7 @@ async function quickUploadFinalSubmit() {
         author: authorName,
         authorId: user ? user.uid : '',
         category: st.category || 'כללי',
-        categoryColor: '#7c3aed',
+        categoryColor: '#e63946',
         timestamp: nowStamp,
         createdAt: Date.now(),
         telegramUrl: quTelegram ? ('https://t.me/' + quTelegram) : '',
@@ -12095,7 +12095,7 @@ async function quickUploadFinalSubmit() {
         author: authorName,
         authorId: user ? user.uid : '',
         category: st.category || (isComics ? 'קומיקס' : 'סיפורים'),
-        categoryColor: isComics ? '#8b5cf6' : '#0ea5e9',
+        categoryColor: isComics ? '#ff4f5e' : '#0ea5e9',
         image: firstImg,
         images: st.images || [],
         pages: storyPages,
@@ -12451,7 +12451,7 @@ function avatarSVG(cfg, look) {
   const shade = 'rgba(0,0,0,.14)';
   const P = [];
   look = look || {};
-  P.push(`<circle cx="50" cy="50" r="50" fill="${look.bg || '#7c3aed'}"/>`);
+  P.push(`<circle cx="50" cy="50" r="50" fill="${look.bg || '#e63946'}"/>`);
   // שיער ארוך — מאחורי הראש
   if (c.h === 2) P.push(`<path d="M26 44 C24 24 37 16 50 16 C63 16 76 24 74 44 L76 78 C70 82 65 76 65 66 L35 66 C35 76 30 82 24 78Z" fill="${hair}"/>`);
   // גוף וצוואר
@@ -12496,15 +12496,15 @@ window.avatarSVG = avatarSVG;
 // --- מטמון דמויות לפי משתמש + "הידרציה" של עיגולי שם ---
 // עיגול תמונת פרופיל ליד שם המעלה: מנהל האתר — הלוגו; משתמש — הדמות שלו (נטענת ב-avatarHydrate), ובינתיים האות הראשונה
 // צבע קבוע לכל משתמש (לפי השם/המזהה) — עיגולי הפרופיל צבעוניים
-const AU_COLORS = ['#8b5cf6', '#e4572e', '#4a6cf7', '#f2a03d', '#9b5de5', '#e5487b', '#580cda', '#3a86ff', '#f15bb5', '#43aa8b', '#ff7f50', '#6d6875'];
+const AU_COLORS = ['#ff4f5e', '#e4572e', '#4a6cf7', '#f2a03d', '#9b5de5', '#e5487b', '#580cda', '#3a86ff', '#f15bb5', '#43aa8b', '#ff7f50', '#6d6875'];
 // דמות מצוירת קבועה לכל שם (פרופילי הדוגמה): צבע עור, שיער, עיניים, זקן, משקפיים וכובע נגזרים מהשם
 const AV_DEMO_BG = ['#e5e7eb', '#e8d5c0', '#dbeafe', '#dcfce7', '#fde68a', '#fbcfe8', '#e9d5ff', '#cffafe'];
-const AV_DEMO_SHIRT = ['#8b5cf6', '#4a6cf7', '#e4572e', '#f2a03d', '#9b5de5', '#334155', '#e5487b', '#580cda'];
+const AV_DEMO_SHIRT = ['#ff4f5e', '#4a6cf7', '#e4572e', '#f2a03d', '#9b5de5', '#334155', '#e5487b', '#580cda'];
 function demoAvatarSVG(name, full) {
   let h = 0; for (const ch of String(name)) h = (h * 131 + ch.charCodeAt(0)) >>> 0;
   const pick = (n, k) => Math.floor(h / k) % n;
   const cfg = { s: pick(3, 1), h: pick(3, 3) === 0 ? 1 : pick(3, 3), hc: pick(4, 9), ec: pick(4, 36), f: pick(5, 144) > 2 ? pick(3, 144) : 0, g: 0, r: 0 };
-  const look = { bg: AV_DEMO_BG[pick(8, 720)], shirt: AV_DEMO_SHIRT[pick(8, 5760)], glasses: pick(3, 46080) === 0 ? ['#e5352b', '#111827', '#8b5e3c'][pick(3, 7)] : '', hat: pick(6, 138240) === 0 ? ['#c2410c', '#1e3a8a', '#8b5cf6'][pick(3, 11)] : '', zoom: full ? 0 : 1.22 };   // full: כל הפנים בתוך העיגול, בלי זום
+  const look = { bg: AV_DEMO_BG[pick(8, 720)], shirt: AV_DEMO_SHIRT[pick(8, 5760)], glasses: pick(3, 46080) === 0 ? ['#e5352b', '#111827', '#8b5e3c'][pick(3, 7)] : '', hat: pick(6, 138240) === 0 ? ['#c2410c', '#1e3a8a', '#ff4f5e'][pick(3, 11)] : '', zoom: full ? 0 : 1.22 };   // full: כל הפנים בתוך העיגול, בלי זום
   return avatarSVG(cfg, look);
 }
 window.demoAvatarSVG = demoAvatarSVG;
@@ -12532,7 +12532,7 @@ if (typeof mainContent !== 'undefined' && mainContent) {
 const avatarCache = {};      // uid → config | null (אין דמות)
 const avatarPending = new Set();
 // עיגול פרופיל בלי תמונה: צבע קבוע לכל משתמש (לפי האות/השם), כדי שיהיה ברור ושונה
-const AV_LETTER_COLORS = ['#e8823d', '#3b82f6', '#10b981', '#8b5cf6', '#ef4444', '#5600eb', '#f59e0b', '#ec4899', '#6366f1', '#84cc16'];
+const AV_LETTER_COLORS = ['#e8823d', '#3b82f6', '#10b981', '#ff4f5e', '#ef4444', '#5600eb', '#f59e0b', '#ec4899', '#6366f1', '#84cc16'];
 function avatarLetterColors(root) {
   (root || document).querySelectorAll('.au-av:not(.au-av-site):not([data-avc])').forEach(el => {
     const key = (el.getAttribute('data-av-uid') || '') + (el.textContent || '').trim();
@@ -12959,7 +12959,7 @@ function friendsStats() {
   }));
 }
 
-const FRIENDS_AVATAR_COLORS = ['#ec4899', '#8b5cf6', '#f59e0b', '#10b981', '#3b82f6', '#ef4444', '#5600eb', '#f97316'];
+const FRIENDS_AVATAR_COLORS = ['#ec4899', '#ff4f5e', '#f59e0b', '#10b981', '#3b82f6', '#ef4444', '#5600eb', '#f97316'];
 function friendsAvatar(u) {
   const s = String(u.name || '?');
   let h = 0; for (const ch of String(u.key)) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
@@ -14169,7 +14169,7 @@ function fbSideHTML() {
   const items = [
     [ic('linear-gradient(135deg,#4f9cf9,#2563eb)', '<path d="M4 11h16M4 6h16M4 16h10"/>'), 'פיד', 'mktFeedOpen()'],
     [ic('linear-gradient(135deg,#38bdf8,#0ea5e9)', '<circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0"/><circle cx="17" cy="9" r="2.5"/><path d="M15.5 14.2A5 5 0 0 1 21 19"/>'), 'עוקבים ובמעקב', me],
-    [ic('linear-gradient(135deg,#a78bfa,#7c3aed)', '<path d="M6 4h12v17l-6-4.5L6 21z"/>'), 'שמורים', 'openSavedModal()'],
+    [ic('linear-gradient(135deg,#a78bfa,#e63946)', '<path d="M6 4h12v17l-6-4.5L6 21z"/>'), 'שמורים', 'openSavedModal()'],
     [ic('linear-gradient(135deg,#fb7185,#e11d48)', '<path d="M7 10v11H3V10zM7 10l4-8a2.5 2.5 0 0 1 3 2.6L13.5 9H19a2 2 0 0 1 2 2.3l-1.4 8A2 2 0 0 1 17.6 21H7"/>'), 'לייקים', 'openLikesDrawer()'],
     [ic('linear-gradient(135deg,#34d399,#059669)', '<path d="M21 12a8 8 0 0 1-8 8H4l2.2-2.6A8 8 0 1 1 21 12z"/>'), 'הודעות', 'openMessages()'],
     [ic('linear-gradient(135deg,#fbbf24,#f97316)', '<circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M3 4h2l2.6 12h11l2-8H6"/>'), 'סל הקניות', "cartOpen('cart')"],
@@ -14449,7 +14449,7 @@ function homeChipsHTML(photos, comics, stories, active, extraCls) {
     feed: ['#2563eb', '<circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16 5a3.5 3.5 0 0 1 0 6.500M18 14.500c2 .8 3 2.8 3 5.5"/>'],
     photos: ['#4800c4', '<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 9"/>'],
     comics: ['#f97316', '<path d="M4 5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-8l-5 4v-4a2 2 0 0 1-1-2z"/><path d="M8 8h8M8 11h5"/>'],
-    stories: ['#7c3aed', '<path d="M4 5.500A2.5 2.5 0 0 1 6.5 3H20v15H6.500A2.5 2.5 0 0 0 4 20.500z"/><path d="M4 20.500A2.5 2.5 0 0 0 6.5 21H20v-3"/>'],
+    stories: ['#e63946', '<path d="M4 5.500A2.5 2.5 0 0 1 6.5 3H20v15H6.500A2.5 2.5 0 0 0 4 20.500z"/><path d="M4 20.500A2.5 2.5 0 0 0 6.5 21H20v-3"/>'],
     secondhand: ['#16a34a', '<path d="M6 8h12l-1 13H7z"/><path d="M9 8a3 3 0 0 1 6 0"/>'],
     upload: ['#111111', '<path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 15v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4"/>'],
     forums: ['#0284c7', '<path d="M21 12a8 8 0 0 1-8 8H4l2.2-2.600A8 8 0 1 1 21 12z"/>'],
@@ -14766,7 +14766,7 @@ function buildPhotosPage(albums, section) {
     const budget = localStorage.getItem(`like_budget_${user.uid}`) || '5';
     budgetHTML = `
       <div class="art-sidebar-box" style="border: 1px solid #e4e4e7; background: rgba(0, 0, 0, 0.006); display: flex; align-items: center; gap: 12px; padding: 16px; border-radius: 12px;">
-        <span style="font-size: 24px; filter: drop-shadow(0 2px 4px rgba(124, 58, 237,0.2));">❤️</span>
+        <span style="font-size: 24px; filter: drop-shadow(0 2px 4px rgba(230, 57, 70,0.2));">❤️</span>
         <div style="text-align: right;">
           <div style="font-size: 13px; font-weight: 800; color: #262626; margin-bottom: 2px;">יתרת הלייקים שלך: ${budget}</div>
           <div style="font-size: 11px; color: #777777; font-weight: 500;">מצטברים 5 לייקים נוספים בכל יום!</div>
@@ -15538,7 +15538,7 @@ function _photoOpenDetailImpl(id) {
 
   // יצירת ריבועי דפדוף (Thumbnails)
   const thumbnailsHTML = validImages.map((imgUrl, idx) => `
-    <div class="photo-thumb-square" onclick="photoSelectImage('${artEsc(imgUrl)}', this)" style="width:60px; height:60px; border-radius:8px; overflow:hidden; cursor:pointer; border:2.5px solid ${idx === 0 ? '#7c3aed' : '#ddd'}; transition:all 0.2s; flex-shrink:0;">
+    <div class="photo-thumb-square" onclick="photoSelectImage('${artEsc(imgUrl)}', this)" style="width:60px; height:60px; border-radius:8px; overflow:hidden; cursor:pointer; border:2.5px solid ${idx === 0 ? '#e63946' : '#ddd'}; transition:all 0.2s; flex-shrink:0;">
       <img src="${escHtml(imgUrl)}" style="width:100%; height:100%; object-fit:cover;">
     </div>
   `).join('');
@@ -15669,8 +15669,8 @@ function _photoOpenDetailImpl(id) {
                 ${a.authorId && !isSiteAdminAuthor(a.authorId, a.author, a) ? `<button onclick="toggleFollow('${artEsc(a.authorId)}','${artEsc(a.author || '')}', this)" class="follow-btn${isFollowing(a.authorId) ? ' following' : ''}">${isFollowing(a.authorId) ? '✓ עוקב' : '➕ עקוב'}</button>` : ''}
                 <span>·</span>
                 <span>${escHtml(a.timestamp)}</span>
-                <button onclick="photoToggleLike('${artEsc(a.id)}')" class="photo-like-btn" style="background: ${photoIsLikedLocal(a.id) ? '#ede9fe' : '#ffffff'}; border: 1.5px solid ${photoIsLikedLocal(a.id) ? '#7c3aed' : '#e2e8f0'}; cursor: pointer; color: ${photoIsLikedLocal(a.id) ? '#7c3aed' : '#1e293b'}; display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 8px; transition: all 0.2s; font-weight: 700; font-size: 13px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="${photoIsLikedLocal(a.id) ? '#7c3aed' : 'none'}" stroke="${photoIsLikedLocal(a.id) ? '#7c3aed' : '#7c3aed'}" stroke-width="2.5"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                <button onclick="photoToggleLike('${artEsc(a.id)}')" class="photo-like-btn" style="background: ${photoIsLikedLocal(a.id) ? '#ede9fe' : '#ffffff'}; border: 1.5px solid ${photoIsLikedLocal(a.id) ? '#e63946' : '#e2e8f0'}; cursor: pointer; color: ${photoIsLikedLocal(a.id) ? '#e63946' : '#1e293b'}; display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 8px; transition: all 0.2s; font-weight: 700; font-size: 13px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="${photoIsLikedLocal(a.id) ? '#e63946' : 'none'}" stroke="${photoIsLikedLocal(a.id) ? '#e63946' : '#e63946'}" stroke-width="2.5"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
                   <span>${a.likes || 0} לייקים</span>
                 </button>
                 <button onclick="photoToggleSave('${artEsc(a.id)}')" class="photo-save-btn" style="background: rgba(0, 0, 0, 0.05); border: 1px solid #dddddd; cursor: pointer; color: #000000; display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; font-weight: bold; font-size: 13px;">
@@ -15813,7 +15813,7 @@ function photoSelectImage(imgUrl, el) {
   squares.forEach(sq => {
     sq.style.borderColor = '#ddd';
   });
-  el.style.borderColor = '#7c3aed';
+  el.style.borderColor = '#e63946';
 }
 
 function photoSelectRowImage(albumId, imgUrl, thumbEl) {
@@ -15831,7 +15831,7 @@ function photoSelectRowImage(albumId, imgUrl, thumbEl) {
     thumbs.forEach(t => {
       t.style.borderColor = '#ddd';
     });
-    thumbEl.style.borderColor = '#7c3aed';
+    thumbEl.style.borderColor = '#e63946';
     // עדכון מונה התמונות שעל גבי התמונה (למשל "2 / 5")
     const badge = container.querySelector('.photo-count-badge');
     if (badge && thumbs.length) {
@@ -15847,7 +15847,7 @@ function photoStepImageInContainer(container, dir) {
   if (!container) return;
   const thumbs = Array.from(container.querySelectorAll('.photo-mini-thumb'));
   if (thumbs.length < 2) return;
-  let currentIndex = thumbs.findIndex(t => t.style.borderColor === 'rgb(225, 29, 72)' || t.style.borderColor === '#7c3aed');
+  let currentIndex = thumbs.findIndex(t => t.style.borderColor === 'rgb(225, 29, 72)' || t.style.borderColor === '#e63946');
   if (currentIndex === -1) currentIndex = 0;
   const newIndex = (currentIndex + dir + thumbs.length) % thumbs.length;
   thumbs[newIndex].click();
@@ -15968,7 +15968,7 @@ function photoCardCarouselSync(sc) {
   const badge = container.querySelector('.photo-count-badge');
   if (badge) badge.textContent = (idx + 1) + ' / ' + total;
   container.querySelectorAll('.photo-mini-thumb').forEach((t, i) => {
-    t.style.borderColor = (i === idx) ? '#7c3aed' : '#ddd';
+    t.style.borderColor = (i === idx) ? '#e63946' : '#ddd';
   });
 }
 window.photoCardCarouselSync = photoCardCarouselSync;
@@ -15991,7 +15991,7 @@ function photoStepDetailImage(dir, btnEl) {
   const container = btnEl.closest('.art-detail') || document;
   const thumbs = Array.from(container.querySelectorAll('.photo-thumb-square'));
   if (!thumbs.length) return;
-  let currentIndex = thumbs.findIndex(t => t.style.borderColor === 'rgb(225, 29, 72)' || t.style.borderColor === '#7c3aed');
+  let currentIndex = thumbs.findIndex(t => t.style.borderColor === 'rgb(225, 29, 72)' || t.style.borderColor === '#e63946');
   if (currentIndex === -1) currentIndex = 0;
   let newIndex = (currentIndex + dir + thumbs.length) % thumbs.length;
   thumbs[newIndex].click();
@@ -18149,7 +18149,7 @@ document.getElementById('photo-save').addEventListener('click', async () => {
       ...photoSizeFields(),
       region: (document.getElementById('photo-region') || {}).value || '',
       ..._shFields,
-      categoryColor: _isShSave ? '#7c3aed' : '#10b981',
+      categoryColor: _isShSave ? '#e63946' : '#10b981',
       timestamp: new Date().toLocaleDateString('he-IL'),
       createdAt: Date.now(),
       telegramUrl: telegramInput,
@@ -18668,8 +18668,8 @@ function _photoToggleLikeImpl(id) {
       btn.classList.toggle('liked', isNowLiked);
       const svg = btn.querySelector('svg');
       if (svg) {
-        svg.setAttribute('fill', isNowLiked ? '#8b5cf6' : 'none');
-        svg.setAttribute('stroke', isNowLiked ? '#8b5cf6' : '#ffffff');
+        svg.setAttribute('fill', isNowLiked ? '#ff4f5e' : 'none');
+        svg.setAttribute('stroke', isNowLiked ? '#ff4f5e' : '#ffffff');
       }
     }
   });
@@ -18680,12 +18680,12 @@ function _photoToggleLikeImpl(id) {
     const onclickAttr = btn.getAttribute('onclick') || '';
     if (onclickAttr.includes(id)) {
       btn.style.background = isNowLiked ? '#ede9fe' : '#ffffff';
-      btn.style.borderColor = isNowLiked ? '#7c3aed' : '#e2e8f0';
-      btn.style.color = isNowLiked ? '#7c3aed' : '#1e293b';
+      btn.style.borderColor = isNowLiked ? '#e63946' : '#e2e8f0';
+      btn.style.color = isNowLiked ? '#e63946' : '#1e293b';
       const svg = btn.querySelector('svg');
       if (svg) {
-        svg.setAttribute('fill', isNowLiked ? '#7c3aed' : 'none');
-        svg.setAttribute('stroke', '#7c3aed');
+        svg.setAttribute('fill', isNowLiked ? '#e63946' : 'none');
+        svg.setAttribute('stroke', '#e63946');
       }
       const span = btn.querySelector('span');
       if (span) {
@@ -18700,11 +18700,11 @@ function _photoToggleLikeImpl(id) {
     const onclickAttr = btn.getAttribute('onclick') || '';
     if (onclickAttr.includes(id) && onclickAttr.includes('photoToggleLike')) {
       btn.classList.toggle('liked', isNowLiked);
-      btn.style.color = isNowLiked ? '#8b5cf6' : '#ffffff';
+      btn.style.color = isNowLiked ? '#ff4f5e' : '#ffffff';
       const svg = btn.querySelector('svg');
       if (svg) {
-        svg.setAttribute('fill', isNowLiked ? '#8b5cf6' : 'none');
-        svg.setAttribute('stroke', isNowLiked ? '#8b5cf6' : 'currentColor');
+        svg.setAttribute('fill', isNowLiked ? '#ff4f5e' : 'none');
+        svg.setAttribute('stroke', isNowLiked ? '#ff4f5e' : 'currentColor');
       }
       // המספר מתעדכן ב-likeCountsBump (מהמספר שבמסך)
     }
@@ -20178,7 +20178,7 @@ window.subscribePhotoComments = subscribePhotoComments;
         <path d="M50 14.5l1.1 2.3 2.5.3-1.8 1.7.5 2.5-2.3-1.2-2.3 1.2.5-2.5-1.8-1.7 2.5-.3z" fill="#8a5e08" opacity=".85"/>
         <path d="M9 9.5h12" stroke="#fffbe6" stroke-width="1.8" stroke-linecap="round" opacity=".8"/>
       </symbol>
-      <radialGradient id="bwo-body" cx="36%" cy="30%" r="75%"><stop offset="0" stop-color="#c7aaf8"/><stop offset=".35" stop-color="#8659d5"/><stop offset=".8" stop-color="#7c3aed"/><stop offset="1" stop-color="#3e108e"/></radialGradient>
+      <radialGradient id="bwo-body" cx="36%" cy="30%" r="75%"><stop offset="0" stop-color="#c7aaf8"/><stop offset=".35" stop-color="#8659d5"/><stop offset=".8" stop-color="#e63946"/><stop offset="1" stop-color="#3e108e"/></radialGradient>
       <radialGradient id="bwo-med" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#fff3b8"/><stop offset=".55" stop-color="#f3c94a"/><stop offset="1" stop-color="#b9800f"/></radialGradient>
       <symbol id="bw-orb" viewBox="0 0 64 64">
         <ellipse cx="32" cy="60" rx="17" ry="3.2" fill="#2c0570" opacity=".22"/>
@@ -22824,7 +22824,7 @@ const IDEAS_SAMPLES = [
     summary: 'אפשרות להחלפה בלחיצת כפתור למצב כהה ונעים לעיניים בשעות הלילה לחיסכון בסוללה ונוחות צפייה.',
     desc: 'הצעה להוסיף מתג בסרגל העליון שמשנה את צבעי הרקע לכהים ואת הטקסטים לבהירים לחיסכון בסוללה ונוחות צפייה בחשיכה.',
     category: 'כללי',
-    categoryColor: '#8b5cf6',
+    categoryColor: '#ff4f5e',
     author: 'מנהל האתר',
     authorId: 'admin_yoni',
     verified: true,
@@ -22862,7 +22862,7 @@ const IDEAS_SAMPLES = [
     summary: 'אזור ייעודי בתוך כל קהילה שבו חברים יכולים לשאול שאלות ולקבל תשובות מהקהילה.',
     desc: 'מתן אפשרות לחברי הקהילה להעלות שאלות, להצביע לתשובות הטובות ביותר ולסמן תשובה נבחרת כפתרון.',
     category: 'כללי',
-    categoryColor: '#7c3aed',
+    categoryColor: '#e63946',
     author: 'דניאל מ.',
     authorId: 'sample3',
     verified: false,
@@ -23080,8 +23080,8 @@ function sectionCategoryBarHTML(section) {
     ? `<button type="button" onclick="openCategoriesModal('photos')" style="padding:8px 16px; border-radius:999px; border:1px dashed #111111; background:rgba(0, 0, 0, 0.03); color:#262626; font-size:14px; font-weight:700; cursor:pointer;">✏️ ניהול קטגוריות</button>`
     : '';
   const active = getSectionCategoryFilter(section);
-  const activeBg = isPhotos ? '#8b5cf6' : '#111111';
-  const activeShadow = isPhotos ? '0 4px 14px rgba(139,92,246,0.35)' : '0 4px 14px rgba(59,130,246,0.35)';
+  const activeBg = isPhotos ? '#ff4f5e' : '#111111';
+  const activeShadow = isPhotos ? '0 4px 14px rgba(255,79,94,0.35)' : '0 4px 14px rgba(59,130,246,0.35)';
   return `
     <div class="section-category-bar" style="display:flex; gap:10px; align-items:center; margin-bottom:16px; flex-wrap:wrap; padding:6px 0;">
       ${cats.map(c => {
@@ -23295,7 +23295,7 @@ function communityShortcutsHTML() {
       </div>
     `;
   };
-  return card('פורומים', 'forums', findPage('forums'), 'linear-gradient(135deg,#a855f7,#7e22ce)')
+  return card('פורומים', 'forums', findPage('forums'), 'linear-gradient(135deg,#ff6673,#7e22ce)')
        + card('חברים', 'friends', findPage('friends'), 'linear-gradient(135deg,#52525b,#18181b)', 'הכירו גולשים חדשים');
 }
 window.communityShortcutsHTML = communityShortcutsHTML;
@@ -26871,7 +26871,7 @@ function crmOpenCustomer(uid) {
     document.body.appendChild(m);
   }
   const tasks = Object.entries(CRM.data.crm.tasks).filter(([, t]) => t.uid === uid).map(([id, t]) => Object.assign({ id }, t)).sort((a, b) => (a.done - b.done) || ((a.due || 0) - (b.due || 0)));
-  const evColor = { join: '#2563eb', chat: '#7c3aed', verify: '#0891b2', submit: '#7c3aed', event: '#d97706', comment: '#16a34a', upload: '#7c3aed', question: '#d97706', offer: '#7c3aed', search: '#64748b' };
+  const evColor = { join: '#2563eb', chat: '#e63946', verify: '#0891b2', submit: '#e63946', event: '#d97706', comment: '#16a34a', upload: '#e63946', question: '#d97706', offer: '#e63946', search: '#64748b' };
   const info = [
     ['אימייל', c.email], ['טלגרם', c.telegram ? '@' + c.telegram.replace(/^@/, '') : ''], ['טלפון', c.phone], ['גיל', c.age], ['מיקום', c.location],
     ['הצטרפות', crmFmtDate(c.firstSeen)], ['פעילות אחרונה', crmAgo(c.lastSeen)], ['כניסות', c.logins ? crmNum(c.logins) : ''],
@@ -28815,7 +28815,7 @@ function ofxRowHTML(o, me, demo) {
   const amtCls = o.status === 'accepted' || o.status === 'signed' ? ' in' : o.status === 'rejected' ? ' off' : '';
   const open = `dealDetailOpen('${artEsc(o.id || '')}', ${demo ? 'true' : 'false'})`;
   return `<div class="ofx-row" data-oid="${escHtml(o.id || '')}"${open ? ` role="button" tabindex="0" onclick="${open}"` : ''}>
-    <span class="ofx-av${demo ? ' has-av' : ''}" style="--av:${typeof forumAvColor === 'function' ? forumAvColor({ uid: otherUid || '', name: other }) : '#8b5cf6'}">${demo ? demoAvatarSVG(other) : escHtml(String(other).trim().charAt(0) || '?')}</span>
+    <span class="ofx-av${demo ? ' has-av' : ''}" style="--av:${typeof forumAvColor === 'function' ? forumAvColor({ uid: otherUid || '', name: other }) : '#ff4f5e'}">${demo ? demoAvatarSVG(other) : escHtml(String(other).trim().charAt(0) || '?')}</span>
     <span class="ofx-tx"><b>${escHtml(other)}${demo ? ' <em class="ofc-demo-tag">דוגמה</em>' : ''}</b><small>${escHtml(sub)}</small></span>
     <span class="ofx-end">${amt ? `<b class="ofx-amt${amtCls}">${amtCls === ' in' && !mine ? '+' : ''}${amt}</b>` : ''}${end}</span>
   </div>`;
@@ -29936,7 +29936,7 @@ function homeExploreHTML() {
     ['forums', 'פורומים', 'לדבר, לשאול ולהכיר', 'linear-gradient(135deg,#93c5fd,#6366f1)'],
     ['comics', 'קומיקס', 'ציורים ורצועות', 'linear-gradient(135deg,#a7f3d0,#5600eb)'],
     ['stories', 'סיפורים', 'קצרים ומאמרים', 'linear-gradient(135deg,#fda4af,#e11d48)'],
-    ['friends', 'חברים', 'הכירו גולשים חדשים', 'linear-gradient(135deg,#c4b5fd,#7c3aed)']
+    ['friends', 'חברים', 'הכירו גולשים חדשים', 'linear-gradient(135deg,#ff99a2,#e63946)']
   ];
   const pageKey = { products: 'products', blind: 'blinddate', match: 'tinder' };
   const cards = items.map(([k, title, sub, grad]) => {
@@ -32006,7 +32006,7 @@ const SHOP_ITEMS = [
 function shopIcon(ic) {
   if (ic === 'ticket') return bwTicketHTML(64);
   if (ic === 'ticket3') return `<span class="shop-stack">${bwTicketHTML(52)}${bwTicketHTML(52)}${bwTicketHTML(52)}</span>`;
-  if (ic === 'badge') return '<svg viewBox="0 0 48 48" width="56" height="56"><path d="M24 4l5 4 6-1 2 6 5 4-2 6 2 6-5 4-2 6-6-1-5 4-5-4-6 1-2-6-5-4 2-6-2-6 5-4 2-6 6 1z" fill="#8b5cf6"/><path d="M16 24l6 6 11-12" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  if (ic === 'badge') return '<svg viewBox="0 0 48 48" width="56" height="56"><path d="M24 4l5 4 6-1 2 6 5 4-2 6 2 6-5 4-2 6-6-1-5 4-5-4-6 1-2-6-5-4 2-6-2-6 5-4 2-6 6 1z" fill="#ff4f5e"/><path d="M16 24l6 6 11-12" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   if (ic === 'frame') return '<svg viewBox="0 0 48 48" width="58" height="58"><circle cx="24" cy="24" r="20" fill="none" stroke="url(#bwc-rim)" stroke-width="5"/><circle cx="24" cy="20" r="6" fill="#c9d1d8"/><path d="M12 36c2-6 7-8 12-8s10 2 12 8" fill="#c9d1d8"/></svg>';
   return '<svg viewBox="0 0 48 48" width="58" height="58"><path d="M6 36 9 14l9 9 6-13 6 13 9-9 3 22z" fill="url(#bwc-face)" stroke="#a87410" stroke-width="2" stroke-linejoin="round"/><rect x="6" y="36" width="36" height="5" rx="2" fill="#d9a21e"/><circle cx="24" cy="25" r="2.6" fill="#d63a3a"/></svg>';
 }
@@ -34797,7 +34797,7 @@ window.adJoinToggle = adJoinToggle;
     s.setAttribute('width', '0'); s.setAttribute('height', '0');
     s.setAttribute('aria-hidden', 'true');
     s.style.cssText = 'position:absolute;width:0;height:0;pointer-events:none;overflow:hidden';
-    s.innerHTML = '<defs><linearGradient id="bw-ig-grad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#8b5cf6"/><stop offset="50%" stop-color="#ec4899"/><stop offset="100%" stop-color="#ef4444"/></linearGradient></defs>';
+    s.innerHTML = '<defs><linearGradient id="bw-ig-grad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#ff4f5e"/><stop offset="50%" stop-color="#ec4899"/><stop offset="100%" stop-color="#ef4444"/></linearGradient></defs>';
     if (document.body) document.body.appendChild(s);
     else document.addEventListener('DOMContentLoaded', () => document.body && document.body.appendChild(s), { once: true });
   } catch (e) {}
@@ -35190,7 +35190,7 @@ function dlsSqHTML(o, me, demo, myTurn) {
   const was = it && Number(it.price) > 0 && Number(it.price) !== Number(o.price) ? `<s class="mk-was">₪${Number(it.price).toLocaleString('he-IL')}</s>` : '';
   const av = isDemo && typeof demoAvatarSVG === 'function' ? `<span class="au-av has-av">${demoAvatarSVG(other)}</span>` : authorAvHTML({ author: other, uid: otherUid || '' });
   return `<div class="dls-sq${myTurn ? ' turn' : ''}" data-oid="${escHtml(o.id || '')}" role="button" tabindex="0" onclick="dealDetailOpen('${artEsc(o.id || '')}', ${isDemo ? 'true' : 'false'})">
-    <span class="dls-img">${img ? `<img src="${escHtml(img)}" alt="" loading="lazy" onerror="this.remove()">` : ''}<i style="--av:${typeof forumAvColor === 'function' ? forumAvColor({ uid: otherUid || '', name: other }) : '#8b5cf6'}">${escHtml(String(o.title || other).trim().charAt(0) || '?')}</i><span class="dls-who" title="${escHtml(other)}">${av}</span></span>
+    <span class="dls-img">${img ? `<img src="${escHtml(img)}" alt="" loading="lazy" onerror="this.remove()">` : ''}<i style="--av:${typeof forumAvColor === 'function' ? forumAvColor({ uid: otherUid || '', name: other }) : '#ff4f5e'}">${escHtml(String(o.title || other).trim().charAt(0) || '?')}</i><span class="dls-who" title="${escHtml(other)}">${av}</span></span>
     <span class="dls-mid">
       <span class="dls-tx"><b>${escHtml(o.title || 'הצעה')}</b><small>${mine ? 'אל' : 'מאת'} ${escHtml(other)} · ${escHtml(ofxDay(o.updatedAt || o.at || 0))}</small></span>
       ${btns}
@@ -35276,7 +35276,7 @@ function svdRowHTML(r) {
   const av = typeof authorAvHTML === 'function' ? authorAvHTML({ author: who, uid: r.uid || '' }) : '';
   const when = typeof ofxDay === 'function' ? ofxDay(r._savedAt) : '';
   return `<div class="dls-sq svd-row" data-id="${escHtml(r.id || '')}" role="button" tabindex="0" onclick="rentOpen('${artEsc(r.id || '')}')">
-    <span class="dls-img">${img ? `<img src="${escHtml(img)}" alt="" loading="lazy" onerror="this.remove()">` : ''}<i style="--av:${typeof forumAvColor === 'function' ? forumAvColor({ uid: r.uid || '', name: who }) : '#8b5cf6'}">${escHtml(String(r.title || who).trim().charAt(0) || '?')}</i><span class="dls-who" title="${escHtml(who)}">${av}</span></span>
+    <span class="dls-img">${img ? `<img src="${escHtml(img)}" alt="" loading="lazy" onerror="this.remove()">` : ''}<i style="--av:${typeof forumAvColor === 'function' ? forumAvColor({ uid: r.uid || '', name: who }) : '#ff4f5e'}">${escHtml(String(r.title || who).trim().charAt(0) || '?')}</i><span class="dls-who" title="${escHtml(who)}">${av}</span></span>
     <span class="dls-mid">
       <span class="dls-tx"><b>${escHtml(r.title || 'מודעה')}</b><small>מאת ${escHtml(who)}${when ? ' · ' + escHtml(when) : ''}</small></span>
     </span>
@@ -38889,7 +38889,7 @@ function evCardHTML(ev) {
   const basePeople = Array.isArray(ev.people) ? ev.people.slice() : [];
   if (joined) basePeople.unshift({ name: myName, uid: reg ? u.uid : '' });
   const host = basePeople[0] || { name: 'מארגן', uid: '' };
-  const rings = ['#bbf7d0', '#fbcfe8', '#fde68a', '#c4b5fd', '#bae6fd'];
+  const rings = ['#bbf7d0', '#fbcfe8', '#fde68a', '#ff99a2', '#bae6fd'];
   const shown = basePeople.slice(0, 5);
   const stack = shown.map((p, i) => `<span class="ev-av ev-av-ring" style="--ring:${rings[i % rings.length]}">${typeof authorAvHTML === 'function' ? authorAvHTML({ author: p.name || 'משתתף', uid: p.uid || '' }) : `<span class="au-av">${escHtml((p.name || 'מ').charAt(0))}</span>`}</span>`).join('');
   const total = basePeople.length;
@@ -39106,7 +39106,7 @@ function _uaDraw(targetSel) {
   const totalComments = items.reduce((s, x) => s + x.comments, 0);
   const profViews = _uaState.profViews || Math.max(totalAdViews, items.length * 4);
   const schedCount = items.filter(x => x.scheduled).length;
-  const palette = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ef4444', '#64748b'];
+  const palette = ['#10b981', '#3b82f6', '#f59e0b', '#ff4f5e', '#ef4444', '#64748b'];
   const topAds = items.slice().sort((a, b) => b.views - a.views).slice(0, 5);
   const topTotal = topAds.reduce((s, x) => s + Math.max(1, x.views), 0);
   const topParts = topAds.map((x, i) => ({ val: Math.max(1, x.views), color: palette[i % palette.length], item: x }));
@@ -39115,7 +39115,7 @@ function _uaDraw(targetSel) {
     { label: 'צפיות במודעות', val: totalAdViews, color: '#3b82f6' },
     { label: 'צפיות בפרופיל', val: profViews, color: '#10b981' },
     { label: 'לייקים', val: totalLikes, color: '#f59e0b' },
-    { label: 'תגובות', val: totalComments, color: '#8b5cf6' }
+    { label: 'תגובות', val: totalComments, color: '#ff4f5e' }
   ];
   const engTotal = engParts.reduce((s, p) => s + p.val, 0);
   const topEngPct = engTotal ? Math.round((Math.max(...engParts.map(p => p.val)) / engTotal) * 100) : 0;
