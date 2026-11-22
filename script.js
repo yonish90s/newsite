@@ -33470,13 +33470,32 @@ function cartRender() {
   const list = cartCatalog(); const c = cartGet();
   const lines = c.map(x => ({ ...x, p: list.find(p => p.id === x.id) })).filter(x => x.p);
   const sub = lines.reduce((a, l) => a + coPrice(l.p) * l.qty, 0);
-  box.querySelector('.cart-body').innerHTML = lines.length ? lines.map(l => `<div class="cart-row">
+  const cnt = lines.reduce((a, l) => a + (l.qty || 1), 0);
+  box.querySelector('.cart-body').innerHTML = lines.length ? `
+    <div class="co-sec-head"><b>סל קניות · ${cnt} פריטים</b><button type="button" class="co-clear-lnk" onclick="cartClearAll(this)">ניקוי</button></div>
+    <div class="co-items-list">${lines.map(l => `<div class="cart-row co-row">
       <span class="cart-th">${l.p.image ? `<img src="${escHtml(l.p.image)}" alt="">` : PRODUCT_ICON}</span>
-      <span class="cart-tx"><b>${escHtml(l.p.name || '')}</b><small>${coMoney(coPrice(l.p))}${l.p.unit ? ' ' + escHtml(l.p.unit) : ''}${l.p.fee ? ' · כולל עמלה' : ''}</small>${l.p.seller ? `<button type="button" class="cart-seller" onclick="cartClose(); rentOpen('${artEsc(l.p.rid)}')">תשלום מול המוכר</button>` : ''}</span>
-      <span class="cart-side">${qtyDDHTML(l.qty, qtyOptsFor(l.p, l.qty), n => `cartSetQty('${artEsc(l.id)}',${n})`, `cartSetQty('${artEsc(l.id)}',0)`)}
-      <button type="button" class="cart-del" onclick="cartSetQty('${artEsc(l.id)}',0)" title="הסרה מהסל" aria-label="הסרה מהסל"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/></svg>הסרה</button></span>
-    </div>`).join('') + `<button type="button" class="cart-clear" onclick="cartClearAll(this)">ניקוי הסל</button>` : `<div class="cart-empty">העגלה ריקה<br><button type="button" class="ms-btn" onclick="cartClose(); navigateToPage('page-rent-main')">לשוק</button></div>`;
-  box.querySelector('.cart-foot').innerHTML = lines.length ? `<div class="co-line co-total"><span>${lines.some(l => l.p.seller) ? 'סה״כ כולל מוכרים' : 'סה״כ (לפני משלוח)'}</span><span>${coMoney(sub)}</span></div><button type="button" class="ms-btn"${lines.every(l => l.p.seller) ? ' hidden' : ''} onclick="cartClose(); cartCheckout()">לתשלום</button>` : '';
+      <span class="cart-tx">
+        <b>${escHtml(l.p.name || '')}</b>
+        <small class="co-qty-line">
+          <button type="button" class="co-qbtn" onclick="cartSetQty('${artEsc(l.id)}',${l.qty - 1})" aria-label="הפחתה">−</button>
+          <span>× ${l.qty}</span>
+          <button type="button" class="co-qbtn" onclick="cartSetQty('${artEsc(l.id)}',${l.qty + 1})" aria-label="הוספה">+</button>
+          ${l.p.unit ? `· ${escHtml(l.p.unit)}` : ''}
+        </small>
+        ${l.p.seller ? `<button type="button" class="cart-seller" onclick="cartClose(); rentOpen('${artEsc(l.p.rid)}')">תשלום מול המוכר</button>` : ''}
+      </span>
+      <span class="co-row-price">${coMoney(coPrice(l.p) * l.qty)}</span>
+    </div>`).join('')}</div>
+    <div class="co-pay-row"><span>💳 תשלום מאובטח</span><small>כרטיס / העברה</small></div>
+  ` : `<div class="cart-empty">העגלה ריקה<br><button type="button" class="ms-btn" onclick="cartClose(); navigateToPage('page-rent-main')">לשוק</button></div>`;
+  box.querySelector('.cart-foot').innerHTML = lines.length ? `
+    <div class="co-sum-box">
+      <div class="co-line"><span>סכום ביניים</span><span>${coMoney(sub)}</span></div>
+      <div class="co-line"><span>משלוח</span><span>חינם</span></div>
+      <div class="co-line co-total"><b>${lines.some(l => l.p.seller) ? 'סה״כ כולל מוכרים' : 'סה״כ'}</b><b>${coMoney(sub)}</b></div>
+    </div>
+    <button type="button" class="ms-btn co-pay-btn"${lines.every(l => l.p.seller) ? ' hidden' : ''} onclick="cartClose(); cartCheckout()">תשלום ${coMoney(sub)}</button>` : '';
 }
 // ניקוי כל הסל: לחיצה ראשונה מבקשת אישור, שנייה מרוקנת
 function cartClearAll(btn) {
