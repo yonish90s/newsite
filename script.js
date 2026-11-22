@@ -25093,16 +25093,58 @@ function shopRowHTML(f) {
       <span class="shop-item-price">+${shopMoney(f.price)}</span>
     </button>`;
 }
+function proStartTrial() {
+  SHOP_FEATURES.forEach(f => shopSel.add(f.id));
+  shopSave();
+  shopGo('checkout');
+}
+window.proStartTrial = proStartTrial;
 function shopListHTML() {
-  return `
-    ${shopTopHTML('שדרוגים', '')}
-    <div class="shop-intro"><b>משלמים רק על מה שרוצים</b><span>בלי מנוי · תשלום חד־פעמי לכל שדרוג</span></div>
-    ${SHOP_GROUPS.map(g => `
-      <section class="shop-sec">
-        <h2>${g.title} <span class="shop-opt">אופציונלי</span></h2>
-        ${SHOP_FEATURES.filter(f => f.g === g.id).map(shopRowHTML).join('')}
-      </section>`).join('')}
-    ${shopBarHTML()}`;
+  const proTotal = SHOP_FEATURES.reduce((s, f) => s + f.price, 0);
+  return `<div class="pro-wall">
+    <div class="pro-top">
+      <button type="button" class="pro-back" onclick="if(typeof navigateToPage==='function')navigateToPage('page-rent-main')" aria-label="חזרה">→</button>
+      <button type="button" class="pro-skip" onclick="if(typeof navigateToPage==='function')navigateToPage('page-rent-main')">דלג</button>
+    </div>
+    <div class="pro-deck" aria-hidden="true">
+      <div class="pro-card is-left">
+        <div class="pro-orb is-red"><i></i><i></i></div>
+        <b>@VIP</b><small>גלישה ללא פרסומות</small>
+      </div>
+      <div class="pro-card is-mid">
+        <span class="pro-lock">🔒</span>
+        <div class="pro-orb is-main"><i></i><i></i></div>
+        <b>@Pro</b><small>גישה מלאה להכול</small>
+      </div>
+      <div class="pro-card is-right">
+        <div class="pro-orb is-green"><i></i><i></i></div>
+        <b>@Boost</b><small>חשיפה וקידום</small>
+      </div>
+    </div>
+    <div class="pro-badge-row"><span class="pro-pill">💎 PRO</span><span>שדרוגים</span></div>
+    <h1 class="pro-h1">יותר אפשרויות.<br>יותר יתרונות.</h1>
+    <p class="pro-sub">גישה מלאה לכל הכלים, השדרוגים והטבות הקהילה.</p>
+    <div class="pro-plan" onclick="proStartTrial()">
+      <div class="pro-plan-tx"><b>Pro</b><small>גישה לכל פיצ׳רי ה-PRO באתר</small></div>
+      <div class="pro-plan-pr"><b>${shopMoney(proTotal)}</b><span> / לחודש</span></div>
+    </div>
+    <button type="button" class="pro-cta" onclick="proStartTrial()">התחל 3 ימי ניסיון בחינם <span>‹</span></button>
+    <div class="pro-legal">
+      <a href="#" onclick="event.preventDefault(); openLegal('terms')">תנאי שימוש</a>
+      <span>|</span>
+      <a href="#" onclick="event.preventDefault(); openLegal('privacy')">מדיניות פרטיות</a>
+    </div>
+    <details class="pro-more">
+      <summary>בחירת שדרוגים בודדים (${shopSel.size})</summary>
+      <div class="pro-more-in">
+        ${SHOP_GROUPS.map(g => `<section class="shop-sec">
+          <h2>${g.title} <span class="shop-opt">אופציונלי</span></h2>
+          ${SHOP_FEATURES.filter(f => f.g === g.id).map(shopRowHTML).join('')}
+        </section>`).join('')}
+        ${shopBarHTML()}
+      </div>
+    </details>
+  </div>`;
 }
 function shopCheckoutHTML() {
   const items = shopItems();

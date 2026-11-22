@@ -2274,6 +2274,13 @@ html:not(.theme-dark) .hdf-opt { color: #111111; }
 html:not(.theme-dark) .hdf-opt.on { border-color: #111111; background: rgba(17,17,17,0.08); }
 html:not(.theme-dark) .hdf-tx small { color: #727272; }
 html:not(.theme-dark) .hdf-chk { color: #111111; }
+html:not(.theme-dark) .pro-wall { background: radial-gradient(circle at 50% 18%, #111111 0%, #0b0b0e 65%); }
+html:not(.theme-dark) .pro-card { background: linear-gradient(180deg, rgba(17,17,17,0.92) 0%, rgba(17,17,17,0.96) 100%); }
+html:not(.theme-dark) .pro-orb.is-main { background: radial-gradient(circle at 30% 25%, #dadada 0%, #111111 48%, #111111 100%); }
+html:not(.theme-dark) .pro-orb.is-red { background: radial-gradient(circle at 35% 30%, #a8a8a8 0%, #111111 70%, #111111 100%); }
+html:not(.theme-dark) .pro-orb.is-green { background: radial-gradient(circle at 35% 30%, #c8c8c8 0%, #6f6f6f 70%, #111111 100%); }
+html:not(.theme-dark) .pro-pill { background: linear-gradient(135deg, #e3e3e3, #e2e2e2); color: #111111; }
+html:not(.theme-dark) .pro-cta { background: linear-gradient(135deg, #e8e8e8 0%, #e5e5e5 100%); color: #111111; }
 html:not(.theme-dark) [style*="border:1.5px solid #e2e8f0"], html:not(.theme-dark) [style*="border: 1.5px solid #e2e8f0"] { border: 1.5px solid #e7e7e7 !important; }
 html:not(.theme-dark) [style*="color:#1e293b"], html:not(.theme-dark) [style*="color: #1e293b"] { color: #111111 !important; }
 html:not(.theme-dark) [style*="background:#dc2626"], html:not(.theme-dark) [style*="background: #dc2626"] { background: #111111 !important; }
