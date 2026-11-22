@@ -24418,3 +24418,4 @@ html.theme-dark .tg-meet-cats button.on {
 .tg-meet-pill.ok { background: rgba(16, 185, 129, 0.16); }
 .tg-meet-pill.no { background: rgba(239, 68, 68, 0.16); }
 .tg-meet-pill.deal { background: rgba(245, 158, 11, 0.16); }
+.ad-j-click { display: inline-flex; align-items: center; cursor: pointer; pointer-events: auto; }

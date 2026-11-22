@@ -34795,11 +34795,61 @@ function adIsJoined(id) {
   const me = adJoinMe().uid;
   return (adJoinsMap()[id] || []).some(p => p && p.uid === me);
 }
-function adJoinAvsHTML(id) {
-  const list = adJoinsMap()[id] || [];
-  if (!list.length) return '';
-  return list.slice(0, 5).map(p => `<span class="ad-j-av" title="${escHtml(p.name || '')}">${typeof authorAvHTML === 'function' ? authorAvHTML({ author: p.name || '?', uid: p.uid === 'guest_me' ? '' : (p.uid || '') }) : escHtml((p.name || '?').charAt(0))}</span>`).join('')
-    + (list.length > 5 ? `<span class="ad-j-more">+${list.length - 5}</span>` : '');
+const _adFlashTimers = {};
+function adJoinAvsHTML() { return ''; }
+function _adRenderAvs(list, kind, id, key, shId) {
+  const arr = (list || []).filter(Boolean);
+  if (!arr.length) return '';
+  const act = `event.stopPropagation(); event.preventDefault(); adFlashClick('${artEsc(id)}','${kind}','${artEsc(key || '')}','${artEsc(shId || '')}')`;
+  const inner = arr.slice(0, 5).map(p => `<span class="ad-j-av" title="${escHtml(p.name || '')}">${typeof authorAvHTML === 'function' ? authorAvHTML({ author: p.name || '?', uid: p.uid === 'guest_me' ? '' : (p.uid || '') }) : escHtml((p.name || '?').charAt(0))}</span>`).join('')
+    + (arr.length > 5 ? `<span class="ad-j-more">+${arr.length - 5}</span>` : '');
+  return `<span class="ad-j-click" role="button" tabindex="0" onclick="${act}" title="לחצו לצפייה ברשימה">${inner}</span>`;
+}
+async function adFlashAvs(id, kind, key, shId) {
+  const me = adJoinMe();
+  let list = [];
+  if (kind === 'join') {
+    list = adJoinsMap()[id] || [];
+  } else if (kind === 'rep') {
+    try { subscribeReposts(); } catch (e) {}
+    const m = (typeof repostsData === 'object' && repostsData[key]) || {};
+    list = Object.entries(m).map(([uid, v]) => ({ uid, name: (v && v.name) || 'משתמש' }));
+    if (!list.length && typeof repostIsMine === 'function' && repostIsMine(key)) list = [me];
+  } else if (kind === 'like') {
+    list = [me];
+    if (key && typeof db !== 'undefined') {
+      try {
+        const snap = await get(ref(db, `website/item_likers/${key}`));
+        const v = snap.val() || {};
+        const remote = Object.entries(v).map(([uid, x]) => ({ uid, name: (x && x.name) || 'משתמש' }));
+        if (remote.length) list = remote;
+      } catch (e) {}
+    }
+  }
+  const html = _adRenderAvs(list, kind, id, key, shId);
+  const boxes = document.querySelectorAll(`[data-join-avs="${CSS.escape(id)}"]`);
+  boxes.forEach(el => {
+    el.innerHTML = html;
+    if (html && typeof avatarHydrate === 'function') avatarHydrate(el);
+  });
+  clearTimeout(_adFlashTimers[id]);
+  if (html) {
+    _adFlashTimers[id] = setTimeout(() => {
+      document.querySelectorAll(`[data-join-avs="${CSS.escape(id)}"]`).forEach(el => { el.innerHTML = ''; });
+    }, 3000);
+  }
+}
+function adFlashClick(id, kind, key, shId) {
+  if (kind === 'like' && typeof likersOpen === 'function') { likersOpen(key, id, shId); return; }
+  if (kind === 'rep' && typeof repostersOpen === 'function') { repostersOpen(key); return; }
+  if (kind === 'join') {
+    const map = {};
+    (adJoinsMap()[id] || []).forEach(p => { if (p) map[p.uid || p.name] = { name: p.name || 'משתמש', uid: p.uid === 'guest_me' ? '' : (p.uid || '') }; });
+    if (typeof openMSheet === 'function' && typeof peopleListHTML === 'function') {
+      openMSheet('חברים שהצטרפו', peopleListHTML(map, 'עדיין אין חברים שהצטרפו.'));
+      document.getElementById('m-sheet')?.classList.add('pl-sheet');
+    }
+  }
 }
 function adJoinToggle(id) {
   const m = adJoinsMap(), me = adJoinMe(), list = Array.isArray(m[id]) ? m[id].slice() : [];
@@ -34809,14 +34859,11 @@ function adJoinToggle(id) {
   if (list.length) m[id] = list; else delete m[id];
   try { localStorage.setItem('bw_ad_joins', JSON.stringify(m)); } catch (e) {}
   document.querySelectorAll(`[data-join-btn="${CSS.escape(id)}"]`).forEach(b => b.classList.toggle('on', on));
-  const html = adJoinAvsHTML(id);
-  document.querySelectorAll(`[data-join-avs="${CSS.escape(id)}"]`).forEach(el => {
-    el.innerHTML = html;
-    if (typeof avatarHydrate === 'function') avatarHydrate(el);
-  });
+  if (on) adFlashAvs(id, 'join');
+  else document.querySelectorAll(`[data-join-avs="${CSS.escape(id)}"]`).forEach(el => { el.innerHTML = ''; });
   if (typeof showCopyToast === 'function') showCopyToast(on ? 'הצטרפת למודעה' : 'ביטלת הצטרפות למודעה');
 }
-window.adJoinToggle = adJoinToggle;
+window.adJoinToggle = adJoinToggle; window.adFlashAvs = adFlashAvs; window.adFlashClick = adFlashClick;
 
 (function ensureBwIgGrad() {
   try {
@@ -34846,9 +34893,9 @@ function rentHoverHTML(x) {
   // בכרטיס: קנייה (ירוק) ומשא ומתן (כתום) גלויים; לייק, ריפוסט, שמירה ודיווח — בתוך "⋯"
   const buy = mktCartable(x) ? `rentCartAdd('${id}')` : `rentOpen('${id}')`;
   return `<span class="mk-sg-hov mk-act2 ig-act2">
-    ${b('לייק', 'M12 20.5l-1.4-1.3C5.4 14.5 2 11.4 2 7.6 2 4.5 4.4 2 7.5 2c1.7 0 3.4.8 4.5 2.1C13.1 2.8 14.8 2 16.5 2 19.6 2 22 4.5 22 7.6c0 3.8-3.4 6.9-8.6 11.6z', (sh ? `photoToggleLike('${sh}')` : `rentMark(this, 'like', '${id}'); likersWrite('${artEsc(likeId)}', this.classList.contains('on'))`), liked, ` data-people="like" data-pid="${escHtml(likeId)}" data-iid="${escHtml(x.id)}"` + (sh ? ` data-like="${escHtml(x.shId)}"` : ''), 'mk-a-like', cnt(Number(itemLikesData[likeId]) || '', ` data-likes-n="${escHtml(likeId)}"`))}
+    ${b('לייק', 'M12 20.5l-1.4-1.3C5.4 14.5 2 11.4 2 7.6 2 4.5 4.4 2 7.5 2c1.7 0 3.4.8 4.5 2.1C13.1 2.8 14.8 2 16.5 2 19.6 2 22 4.5 22 7.6c0 3.8-3.4 6.9-8.6 11.6z', (sh ? `photoToggleLike('${sh}'); adFlashAvs('${id}','like','${artEsc(likeId)}','${sh}')` : `rentMark(this, 'like', '${id}'); likersWrite('${artEsc(likeId)}', this.classList.contains('on')); if(this.classList.contains('on')) adFlashAvs('${id}','like','${artEsc(likeId)}')`), liked, ` data-people="like" data-pid="${escHtml(likeId)}" data-iid="${escHtml(x.id)}"` + (sh ? ` data-like="${escHtml(x.shId)}"` : ''), 'mk-a-like', cnt(Number(itemLikesData[likeId]) || '', ` data-likes-n="${escHtml(likeId)}"`))}
     ${b('תגובות', 'M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z', `igCommentsOpen('${artEsc(rk)}', '${artEsc(x.title || '')}')`, false, '', 'mk-a-cmt')}
-    ${b('ריפוסט', 'M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3', `repostersOpen('${artEsc(rk)}')`, repostIsMine(rk), ` data-item="${escHtml(rk)}" data-people="rep" data-pid="${escHtml(rk)}"`, 'pti-repost mk-a-rep', cnt(repostCount(rk) || ''))}
+    ${b('ריפוסט', 'M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3', `repostersOpen('${artEsc(rk)}'); adFlashAvs('${id}','rep','${artEsc(rk)}')`, repostIsMine(rk), ` data-item="${escHtml(rk)}" data-people="rep" data-pid="${escHtml(rk)}"`, 'pti-repost mk-a-rep', cnt(repostCount(rk) || ''))}
     ${b('הודעה בפרטי', 'M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2zM22 6l-10 7L2 6', `messageUploader('${id}', '${artEsc(x.title || '')}', '${artEsc(x.authorId || x.uid || '')}', '${artEsc(x.author || x.by || x.user || '')}')`, false, '', 'mk-a-share')}
     <span role="button" tabindex="0" class="mk-a-deal${offered ? ' on' : ''}" data-deal-id="${escHtml(x.id)}"${x.shId ? ` data-deal-sh="${escHtml(x.shId)}"` : ''} aria-label="משא ומתן" title="משא ומתן — הצעת מחיר" onclick="${stop}mkCardHaggle(this, '${id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><circle cx="7.5" cy="7.5" r="1.2"/></svg></span>
     ${b('הצטרף', 'M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M8.5 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM20 8v6M17 11h6', `adJoinToggle('${id}')`, adIsJoined(x.id), ` data-join-btn="${escHtml(x.id)}"`, 'mk-a-join')}
