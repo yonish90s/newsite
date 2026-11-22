@@ -2151,15 +2151,18 @@ html:not(.theme-dark) body .mk-watch .mk-head .mk-rate svg { color: #a7a7a7 !imp
 html:not(.theme-dark) .tg-pill { color: #111111; }
 html:not(.theme-dark) body:not(#_):not(#_):not(#_) .tg-pills .tg-pill.on { background: #111111 !important; border-color: #111111 !important; }
 html:not(.theme-dark) .tg-arch-btn { color: #a2a2a2; }
-html:not(.theme-dark) body:not(#_):not(#_):not(#_) #auth-modal .au-card.au-simple { background: linear-gradient(180deg, #f7f7f7 0%, #f7f7f7 100%) !important; }
-html:not(.theme-dark) .au-map-kicker em { color: #111111; }
-html:not(.theme-dark) .au-map-desc { color: #111111; }
-html:not(.theme-dark) .au-map-canvas { background: radial-gradient(circle at 50% 45%, rgba(255, 255, 255, .92) 0%, rgba(255,255,255,0.96) 100%); color: #737373; }
-html:not(.theme-dark) .au-stk-1 { background: #777777; }
-html:not(.theme-dark) .au-stk-2 { background: #a7a7a7; }
-html:not(.theme-dark) .au-stk-3 { background: #808080; }
-html:not(.theme-dark) .au-stk-4 { background: #111111; }
-html:not(.theme-dark) .au-stk-5 { background: #808080; }
+html:not(.theme-dark) body:not(#_):not(#_):not(#_) #auth-modal .au-card.au-simple { color: #111111 !important; }
+html:not(.theme-dark) .au-photo-hero { background: #111111; }
+html:not(.theme-dark) .au-photo-badge { color: #111111; }
+html:not(.theme-dark) .au-photo-badge small { color: #111111; }
+html:not(.theme-dark) .au-badge-ico { background: #111111; }
+html:not(.theme-dark) .au-wel-brand { color: #111111; }
+html:not(.theme-dark) .au-wel-brand span { color: #111111; }
+html:not(.theme-dark) .au-trust-box small { color: #a2a2a2; }
+html:not(.theme-dark) .au-trust-logos { color: #111111; }
+html:not(.theme-dark) .au-cta-primary { background: #111111; box-shadow: 0 6px 18px rgba(17,17,17,0.28); }
+html:not(.theme-dark) body:not(#_):not(#_):not(#_) #auth-modal .au-card.au-simple .au-social { color: #111111 !important; }
+html:not(.theme-dark) .au-login-line { color: #727272; }
 html:not(.theme-dark) body .lib-theme { color: #111111; }
 html:not(.theme-dark) .mkpub-sched-sw button.on { background: #111111; border-color: #111111; }
 html:not(.theme-dark) .mkpub-sched-presets button { color: #111111; }

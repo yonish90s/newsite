@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, signInWithPopup, GoogleAuthProvider, FacebookAuthProvider, signOut, onAuthStateChanged, signInAnonymously, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, EmailAuthProvider, linkWithCredential, setPersistence, browserLocalPersistence, browserSessionPersistence, RecaptchaVerifier, linkWithPhoneNumber } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider, FacebookAuthProvider, OAuthProvider, signOut, onAuthStateChanged, signInAnonymously, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, EmailAuthProvider, linkWithCredential, setPersistence, browserLocalPersistence, browserSessionPersistence, RecaptchaVerifier, linkWithPhoneNumber } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getDatabase, ref, set, get, child, onValue, push, update, increment, runTransaction, onDisconnect } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 // מסך מלא (מצב מחשב) — מוגדר מוקדם כדי שבוני העמודים יוכלו לקרוא אותו
@@ -4106,6 +4106,31 @@ document.addEventListener('DOMContentLoaded', () => {
         .catch((error) => {
           console.error("שגיאה מפורטת בהתחברות:", error);
           alert("התחברות נכשלה. קוד שגיאה: " + error.code + "\nהודעה: " + error.message);
+        });
+    });
+  }
+
+  // התחברות / הרשמה עם Apple
+  const authAppleLoginBtn = document.getElementById('auth-apple-login-btn');
+  if (authAppleLoginBtn && authModal) {
+    authAppleLoginBtn.addEventListener('click', () => {
+      authModal.style.display = 'none';
+      const ap = new OAuthProvider('apple.com');
+      ap.addScope('email');
+      ap.addScope('name');
+      signInWithPopup(auth, ap)
+        .then((result) => {
+          const user = result.user;
+          if (user.metadata && user.metadata.creationTime === user.metadata.lastSignInTime && typeof openSignupSteps === 'function') openSignupSteps();
+          else if (typeof showCopyToast === 'function') showCopyToast('התחברת בהצלחה');
+        })
+        .catch((error) => {
+          console.error('apple login failed', error);
+          if (error && error.code === 'auth/popup-closed-by-user') return;
+          const msg = error && error.code === 'auth/operation-not-allowed' ? 'ההתחברות עם Apple עוד לא הופעלה — נסו בינתיים עם Google'
+            : error && error.code === 'auth/account-exists-with-different-credential' ? 'כבר יש חשבון עם המייל הזה — התחברו עם Google'
+            : 'ההתחברות עם Apple נכשלה — נסו שוב';
+          if (typeof showCopyToast === 'function') showCopyToast(msg); else alert(msg);
         });
     });
   }

@@ -22727,70 +22727,134 @@ html body .tg-list .tg-row-main { border-bottom: 0 !important; padding: 6px 0 !i
 .tg-arch-btn svg { width: 16px; height: 16px; }
 .tg-arch-btn:hover { background: rgba(128, 128, 128, .14); color: #ffffff; }
 
-/* עיצוב מסך כניסה בסגנון מפה ומדבקות מותאם לאתר */
+/* עיצוב מסך כניסה בסגנון כרטיס קבלת פנים עם תמונה וכפתור Apple */
 html body:not(#_):not(#_):not(#_) #auth-modal .au-card.au-simple {
-  background: linear-gradient(180deg, #faf7f2 0%, #f5efe6 100%) !important;
-  color: #1c1917 !important;
-  padding: 20px 18px 18px !important;
-  gap: 10px !important;
-  max-width: 420px !important;
-  border-radius: 26px !important;
+  background: #f5f5f7 !important;
+  color: #111827 !important;
+  padding: 0 !important;
+  gap: 0 !important;
+  max-width: 390px !important;
+  border-radius: 28px !important;
+  overflow-x: hidden !important;
   overflow-y: auto !important;
 }
 html.theme-dark body:not(#_):not(#_):not(#_) #auth-modal .au-card.au-simple {
-  background: linear-gradient(180deg, #16181f 0%, #101217 100%) !important;
+  background: #14151b !important;
   color: #f4f4f5 !important;
-  border: 1px solid rgba(255, 255, 255, .09) !important;
+  border: 1px solid rgba(255, 255, 255, .1) !important;
 }
-.au-map-hero { display: flex; flex-direction: column; gap: 10px; padding-top: 8px; }
-.au-map-head { text-align: right; padding: 0 4px; }
-.au-map-kicker { display: flex; flex-direction: column; line-height: 1.02; font-size: 27px; font-weight: 900; letter-spacing: -.02em; }
-.au-map-kicker em { font-style: italic; color: #4d6b3c; font-family: Georgia, 'Times New Roman', serif; font-weight: 700; }
-html.theme-dark .au-map-kicker em { color: #86efac; }
-.au-map-kicker span { display: inline-flex; align-items: center; gap: 6px; }
-.au-sparks { width: 28px; height: 22px; flex: none; }
-.au-map-desc { margin: 6px 0 0; font-size: 13px; line-height: 1.45; color: #57534e; }
-html.theme-dark .au-map-desc { color: #a1a1aa; }
-.au-map-canvas {
+#auth-modal .au-card.au-simple .au-close {
+  z-index: 5 !important;
+  top: 12px !important;
+  left: 12px !important;
+  background: rgba(0, 0, 0, .42) !important;
+  color: #ffffff !important;
+  backdrop-filter: blur(8px);
+}
+.au-photo-hero {
   position: relative;
-  height: 162px;
-  border-radius: 20px;
+  width: 100%;
+  height: 196px;
+  border-radius: 0 0 24px 24px;
   overflow: hidden;
-  background: radial-gradient(circle at 50% 45%, rgba(255, 255, 255, .92) 0%, rgba(246, 239, 228, .96) 100%);
-  border: 1.5px solid rgba(0, 0, 0, .06);
-  color: #78716c;
+  flex: none;
+  background: #1f2937;
 }
-html.theme-dark .au-map-canvas {
-  background: radial-gradient(circle at 50% 45%, #1e212b 0%, #14161d 100%);
-  border-color: rgba(255, 255, 255, .08);
-  color: #94a3b8;
-}
-.au-map-bg { position: absolute; inset: 0; width: 100%; height: 100%; }
-.au-stk {
+.au-photo-hero img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.au-photo-badge {
   position: absolute;
+  bottom: 12px;
+  left: 12px;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 5px 11px;
+  gap: 8px;
+  padding: 6px 12px;
   border-radius: 999px;
-  font-size: 11.5px;
-  font-weight: 800;
-  color: #ffffff;
-  border: 2.5px solid #ffffff;
-  box-shadow: 0 5px 14px rgba(0, 0, 0, .16);
-  white-space: nowrap;
+  background: rgba(255, 255, 255, .86);
+  color: #111827;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .18);
 }
-.au-stk-1 { top: 14px; right: 14px; background: #ef4444; transform: rotate(2deg); }
-.au-stk-2 { top: 20px; left: 14px; background: #f59e0b; transform: rotate(-3deg); }
-.au-stk-3 { bottom: 48px; right: 16px; background: #0ea5e9; transform: rotate(-2deg); }
-.au-stk-4 { bottom: 44px; left: 16px; background: #7c3aed; transform: rotate(2.5deg); }
-.au-stk-5 { bottom: 10px; left: 50%; transform: translateX(-50%) rotate(-1deg); background: #10b981; }
-html body:not(#_):not(#_):not(#_) #auth-modal .au-card.au-simple .au-title { font-size: 19px !important; margin: 2px 0 0 !important; text-align: center !important; }
+.au-photo-badge div { display: flex; flex-direction: column; line-height: 1.15; }
+.au-photo-badge b { font-size: 12px; font-weight: 800; }
+.au-photo-badge small { font-size: 10.5px; color: #4b5563; }
+.au-badge-ico {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: #4f46e5; color: #ffffff;
+  display: grid; place-items: center; font-size: 12px;
+}
+.au-wel-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 20px 20px;
+}
+.au-wel-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #374151;
+  align-self: flex-start;
+}
+.au-wel-brand span { color: #4f46e5; }
+html.theme-dark .au-wel-brand { color: #d1d5db; }
+html body:not(#_):not(#_):not(#_) #auth-modal .au-card.au-simple .au-title {
+  font-size: 22px !important;
+  font-weight: 900 !important;
+  line-height: 1.18 !important;
+  margin: 0 !important;
+  text-align: right !important;
+}
 html body:not(#_):not(#_):not(#_) #auth-modal .au-card.au-simple .au-sub { display: none !important; }
+.au-trust-box {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, .06);
+  border-radius: 16px;
+  padding: 10px 12px;
+  text-align: center;
+}
+.au-trust-box small { display: block; font-size: 10.5px; font-weight: 700; color: #9ca3af; margin-bottom: 6px; }
+.au-trust-logos { display: flex; align-items: center; justify-content: space-around; gap: 6px; font-size: 12px; font-weight: 800; color: #374151; }
+html.theme-dark .au-trust-box { background: #1e2029; border-color: rgba(255, 255, 255, .08); }
+html.theme-dark .au-trust-logos { color: #e5e7eb; }
+.au-cta-primary {
+  width: 100%;
+  height: 46px;
+  border-radius: 999px;
+  border: 0;
+  background: #4338ca;
+  color: #ffffff;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(67, 56, 202, .28);
+}
+html body:not(#_):not(#_):not(#_) #auth-modal .au-card.au-simple .au-social {
+  height: 46px !important;
+  border-radius: 999px !important;
+  background: #ffffff !important;
+  color: #111827 !important;
+  border: 1px solid rgba(0, 0, 0, .08) !important;
+  font-size: 14.5px !important;
+  font-weight: 700 !important;
+}
+html.theme-dark body:not(#_):not(#_):not(#_) #auth-modal .au-card.au-simple .au-social {
+  background: #232530 !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, .12) !important;
+}
+.au-login-line { margin: 2px 0 0; text-align: center; font-size: 13px; color: #6b7280; }
+.au-card.au-form-on .au-trust-box,
+.au-card.au-form-on .au-cta-primary { display: none !important; }
 html.theme-dark body:not(#_):not(#_):not(#_) #auth-modal .au-card.au-simple .au-title,
-html.theme-dark body:not(#_):not(#_):not(#_) #auth-modal .au-card.au-simple .au-mail-toggle,
 html.theme-dark body:not(#_):not(#_):not(#_) #auth-modal .au-card.au-simple .au-terms { color: #e4e4e7 !important; }
-html.theme-dark body:not(#_):not(#_):not(#_) #auth-modal .au-card.au-simple .au-close { background: rgba(255, 255, 255, .14) !important; color: #ffffff !important; }
 
 /* מצב כהה: החלפת כל הטקסט והאייקונים האדומים ב-#m-top ללבן והצגת כפתור הבהירות */
 html.theme-dark body #m-top .mt-circ,
