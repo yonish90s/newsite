@@ -39412,7 +39412,7 @@ async function _dmMeetSetPoint(lat, lng, label) {
   _dmMeetState.lat = lat; _dmMeetState.lng = lng;
   if (label) _dmMeetState.label = label;
   const lbl = document.getElementById('dm-meet-lbl');
-  if (lbl) lbl.textContent = _dmMeetState.label || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+  if (lbl) lbl.value = _dmMeetState.label || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
   const apple = document.getElementById('dm-meet-apple');
   if (apple) apple.href = `https://www.google.com/maps/search/?api=1&query=${lat.toFixed(6)},${lng.toFixed(6)}`;
   if (_dmMeetState.map && window.L) {
@@ -39426,7 +39426,7 @@ async function _dmMeetSetPoint(lat, lng, label) {
       const name = j && (j.name || (j.address && [j.address.road, j.address.city || j.address.town || j.address.village].filter(Boolean).join(', ')) || j.display_name);
       if (name) {
         _dmMeetState.label = String(name).split(',').slice(0, 2).join(', ').trim();
-        if (lbl) lbl.textContent = _dmMeetState.label;
+        if (lbl) lbl.value = _dmMeetState.label;
       }
     } catch (e) {}
   }
@@ -39455,8 +39455,8 @@ async function dmMeetOpen() {
     </div>
     <div id="dm-meet-map" class="tg-meet-map"><div class="tg-empty">טוען מפה…</div></div>
     <div class="tg-meet-foot">
-      <span id="dm-meet-lbl" class="tg-meet-lbl">${escHtml(_dmMeetState.label || 'לחצו על המפה לבחירת מקום')}</span>
-      <input id="dm-meet-dt" class="tg-meet-when" type="datetime-local" value="${escHtml(_dmMeetState.dtVal || '')}">
+      <input id="dm-meet-lbl" class="tg-meet-when" type="text" maxlength="80" placeholder="שם המקום (אפשר לערוך)…" value="${escHtml(_dmMeetState.label || '')}">
+      <input id="dm-meet-dt" class="tg-meet-when" type="datetime-local" aria-label="יום ושעה" value="${escHtml(_dmMeetState.dtVal || '')}">
       <button type="button" class="tg-meet-go" onclick="dmMeetSend()">${_dmMeetState.counterMsgId ? 'שליחת הצעה נגדית' : 'שליחת פגישה'}</button>
     </div>`;
   host.appendChild(pop);
@@ -39504,6 +39504,8 @@ function dmMeetUseMyLoc() {
 async function dmMeetSend() {
   const u = auth.currentUser;
   if (!u || !dmActiveConv) return;
+  const lblEl = document.getElementById('dm-meet-lbl');
+  const customLabel = (lblEl ? lblEl.value : '').trim().slice(0, 80);
   const dtEl = document.getElementById('dm-meet-dt');
   const dtRaw = dtEl ? dtEl.value : '';
   const whenTs = dtRaw ? new Date(dtRaw).getTime() : 0;
@@ -39517,7 +39519,7 @@ async function dmMeetSend() {
     convId,
     lat: _dmMeetState.lat,
     lng: _dmMeetState.lng,
-    label: _dmMeetState.label || 'נקודת מפגש',
+    label: customLabel || _dmMeetState.label || 'נקודת מפגש',
     when,
     whenTs: whenTs || now,
     dtVal: dtRaw,
