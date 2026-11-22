@@ -23877,3 +23877,38 @@ html body:not(#_):not(#_):not(#_) .dls-tabs button.on.has-new {
     font-size: 9px !important;
   }
 }
+
+/* גודל כתב כללי אחיד וקריא באתר (15px / line-height 1.5) */
+html, body {
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+}
+html body:not(#_):not(#_):not(#_) :is(
+  #mainContent p,
+  #mainContent li,
+  #mainContent textarea,
+  #mainContent input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  .mk-d-desc,
+  .mk-desc,
+  .mk-rev-txt,
+  .tw-body,
+  .ig-cap,
+  .tg-msg-txt,
+  .art-detail-body,
+  .fo-body,
+  .mkpub-xbody,
+  .mkpub-xtitle
+) {
+  font-size: 15px !important;
+  line-height: 1.5 !important;
+}
+html body:not(#_):not(#_):not(#_) :is(
+  .mk-sg-title,
+  .dls-tx b,
+  .mk-rv-name,
+  .fo-title
+) {
+  font-size: 15px !important;
+  line-height: 1.4 !important;
+}
