@@ -38898,22 +38898,8 @@ function storiesBarHTML() {
     <span class="st-sugg-label">${followed.length ? 'הצעות' : 'הצעות לסטורי'}</span>
     <div class="st-sugg-list">${suggShuf.map(g => storyCircleHTML(g, true)).join('')}</div>
   </div>` : '';
-  const openCls = window._stBarOpen ? ' is-open' : '';
-  const cnt = (mine.length ? 1 : 0) + followed.length + suggShuf.length;
-  return `<section class="st-bar${openCls}" aria-label="סטוריז ל-24 שעות">
-    <button type="button" class="st-toggle" onclick="stBarToggle(this)">
-      <span class="st-toggle-l"><b>סטוריז</b>${cnt ? ` <small>(${cnt})</small>` : ''}</span>
-    </button>
-    <div class="st-track">${mineHTML}${folHTML}${suggHTML}</div>
-  </section>`;
+  return `<section class="st-bar" aria-label="סטוריז ל-24 שעות"><div class="st-track">${mineHTML}${folHTML}${suggHTML}</div></section>`;
 }
-function stBarToggle(btn) {
-  const bar = btn && btn.closest('.st-bar');
-  if (!bar) return;
-  window._stBarOpen = !bar.classList.contains('is-open');
-  bar.classList.toggle('is-open', window._stBarOpen);
-}
-window.stBarToggle = stBarToggle;
 function storiesRefreshDOM() {
   const bars = document.querySelectorAll('.st-bar');
   if (!bars.length) return;
