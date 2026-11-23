@@ -24921,6 +24921,24 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_) #messages-modal .tg-msg .tg-bu
   background: #1f2229 !important;
   border-color: rgba(255, 255, 255, .08) !important;
 }
+/* פרטי העסקה + חלון ההתחברות על כל המסך במובייל בדיוק כמו העגלה */
+@media (max-width: 900px) {
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .mkpub-card.dl-card,
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) #auth-modal .au-card.au-simple {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    overflow-y: auto !important;
+  }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) #auth-modal {
+    padding: 0 !important;
+  }
+}
 
 /* מובייל: מרווח מתחת לשורה העליונה הקבועה כדי שכל הסטוריז יהיו גלויים */
 @media (max-width: 700px) {
