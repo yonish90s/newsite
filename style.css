@@ -24921,6 +24921,47 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_) #messages-modal .tg-msg .tg-bu
     padding: 0 !important;
   }
 }
+/* תפריט רשימה נפתח למטה בלחיצה על כפתור הקווים */
+.mt-drop {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 10px;
+  min-width: 210px;
+  background: #ffffff;
+  color: #111827;
+  border: 1px solid rgba(0, 0, 0, .09);
+  border-radius: 16px;
+  padding: 6px;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, .24);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  z-index: 100010;
+  direction: rtl;
+}
+html.theme-dark .mt-drop {
+  background: #181a20;
+  color: #f4f4f5;
+  border-color: rgba(255, 255, 255, .12);
+}
+.mt-drop-it {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: right;
+  cursor: pointer;
+}
+.mt-drop-it:hover, .mt-drop-it:active { background: rgba(128, 128, 128, .14); }
+.mt-drop-it svg { width: 18px; height: 18px; flex: none; opacity: .88; }
 
 /* מובייל: מרווח מתחת לשורה העליונה הקבועה כדי שכל הסטוריז יהיו גלויים */
 @media (max-width: 700px) {
