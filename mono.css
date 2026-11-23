@@ -2286,8 +2286,6 @@ html:not(.theme-dark) .pp-plus { color: #111111; }
 html:not(.theme-dark) .pp-save { background: #727272; }
 html:not(.theme-dark) .pp-plan.on { border-color: #828282; background: linear-gradient(180deg, rgba(130,130,130,0.14) 0%, rgba(102,102,102,0.62) 100%); box-shadow: 0 0 0 1px #828282; }
 html:not(.theme-dark) .pp-cta { background: #787878; }
-html:not(.theme-dark) body:not(#_):not(#_):not(#_):not(#_) #messages-modal .tg-msg.mine .tg-bubble { background: #111111 !important; }
-html:not(.theme-dark) body:not(#_):not(#_):not(#_):not(#_) #messages-modal .tg-msg.theirs .tg-bubble { background: #111111 !important; }
 html:not(.theme-dark) body:not(#_):not(#_):not(#_):not(#_):not(#_) #messages-modal .tg-msg .tg-bubble.has-meet { background: #111111 !important; }
 html:not(.theme-dark) body:not(#_):not(#_):not(#_):not(#_):not(#_) #messages-modal .tg-msg .tg-bubble.has-meet .tg-meet-card { background: #111111 !important; }
 html:not(.theme-dark) .mt-drop { color: #111111; }

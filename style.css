@@ -24850,19 +24850,21 @@ html body .subscription-page-wrapper:has(.pp-full) { max-width: 100% !important;
   font-weight: 900;
   cursor: pointer;
 }
-/* 2) בועות הודעה בסגנון WhatsApp Dark: ירוק כהה לנשלח, שחור/אפור כהה למתקבל */
-html body:not(#_):not(#_):not(#_):not(#_) #messages-modal .tg-msg.mine .tg-bubble {
-  background: #005c4b !important;
+/* 2) בועות הודעה: ירוק בהיר לנשלח ואפור למתקבל */
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) #messages-modal .tg-msg.mine .tg-bubble,
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) #messages-modal .tg-msg.mine .tg-bubble {
+  background: rgb(34, 197, 94) !important;
   color: #ffffff !important;
   border-color: transparent !important;
 }
-html body:not(#_):not(#_):not(#_):not(#_) #messages-modal .tg-msg.mine .tg-msg-time { color: rgba(255, 255, 255, .72) !important; }
-html body:not(#_):not(#_):not(#_):not(#_) #messages-modal .tg-msg.theirs .tg-bubble {
-  background: #202c33 !important;
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) #messages-modal .tg-msg.mine .tg-msg-time { color: rgba(255, 255, 255, .82) !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) #messages-modal .tg-msg.theirs .tg-bubble,
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) #messages-modal .tg-msg.theirs .tg-bubble {
+  background: rgb(63, 63, 70) !important;
   color: #ffffff !important;
   border-color: transparent !important;
 }
-html body:not(#_):not(#_):not(#_):not(#_) #messages-modal .tg-msg.theirs .tg-msg-time { color: rgba(255, 255, 255, .62) !important; }
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) #messages-modal .tg-msg.theirs .tg-msg-time { color: rgba(255, 255, 255, .72) !important; }
 /* 3) שורה עליונה נקייה עם אייקונים בלי עיגולים וכיתוב לוגו נקי */
 html body:not(#_):not(#_):not(#_):not(#_) #m-top .mt-acts .mt-circ {
   background: transparent !important;
