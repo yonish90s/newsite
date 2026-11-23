@@ -4949,7 +4949,7 @@ html.theme-dark.theme-dark .prf-card { background: #121212 !important; border-co
 html.theme-dark .prf-title { color: #f5f5f5 !important; }
 html.theme-dark .prf-row { background: #000000 !important; border: 1px solid #262626 !important; }
 html.theme-dark.theme-dark .prf-row { background: #121212 !important; border-color: rgba(255, 255, 255, 0.1) !important; }
-html.theme-dark .prf-row span { color: #a8a8a8 !important; }
+html.theme-dark .prf-row > span { color: #a8a8a8 !important; }
 html.theme-dark .prf-row input { color: #f5f5f5 !important; }
 html.theme-dark .prf-save { background: linear-gradient(135deg, #8b5cf6, #e4202b) !important; }
 html.theme-dark .prf-ver-badge.req { color: #ffffff !important; background: rgba(228, 32, 43, 0.14) !important; }

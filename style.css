@@ -24154,13 +24154,13 @@ html.theme-dark .prf-row {
   background: #1c1d24;
   border-color: rgba(255, 255, 255, 0.08);
 }
-.prf-row span {
+.prf-row > span {
   flex: 0 0 110px;
   font-size: 14px;
   font-weight: 700;
   color: #374151;
 }
-html.theme-dark .prf-row span {
+html.theme-dark .prf-row > span {
   color: #e4e4e7;
 }
 .prf-row input {
@@ -24230,18 +24230,22 @@ html.theme-dark .prf-ver-btn {
   color: #c4b5fd;
   border-color: rgba(196, 181, 253, 0.35);
 }
+.prf-row .prf-av-box,
 .prf-av-box {
-  width: 38px;
-  height: 38px;
+  width: 38px !important;
+  height: 38px !important;
   border-radius: 50%;
   overflow: hidden;
-  flex: 0 0 38px;
-  background: transparent;
-  border: 0;
+  flex: 0 0 38px !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
 }
+html.theme-dark .prf-row .prf-av-box,
 html.theme-dark .prf-av-box {
-  background: transparent;
-  border: 0;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
 }
 .prf-av-box svg,
 .prf-av-box img {
