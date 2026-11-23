@@ -35046,30 +35046,14 @@ function adFlashClick(id, kind, key, shId) {
 function adJoinToggle(id) {
   const m = adJoinsMap(), me = adJoinMe(), list = Array.isArray(m[id]) ? m[id].slice() : [];
   const idx = list.findIndex(p => p && p.uid === me.uid);
-  if (idx >= 0) {
-    list.splice(idx, 1);
-    if (list.length) m[id] = list; else delete m[id];
-    try { localStorage.setItem('bw_ad_joins', JSON.stringify(m)); } catch (e) {}
-    document.querySelectorAll(`[data-join-btn="${CSS.escape(id)}"]`).forEach(b => b.classList.remove('on'));
-    document.querySelectorAll(`[data-join-avs="${CSS.escape(id)}"]`).forEach(el => { el.innerHTML = ''; });
-    if (typeof showCopyToast === 'function') showCopyToast('ביטלת הגעה למקום');
-    return;
-  }
-  openWheelDatePicker({
-    title: 'מתי אני במסעדה?',
-    withTime: false,
-    onConfirm: ({ isoDate, label }) => {
-      const m2 = adJoinsMap(), me2 = adJoinMe(), list2 = Array.isArray(m2[id]) ? m2[id].slice() : [];
-      const idx2 = list2.findIndex(p => p && p.uid === me2.uid);
-      const entry = { ...me2, date: isoDate, dateLabel: label };
-      if (idx2 >= 0) list2[idx2] = entry; else list2.push(entry);
-      m2[id] = list2;
-      try { localStorage.setItem('bw_ad_joins', JSON.stringify(m2)); } catch (e) {}
-      document.querySelectorAll(`[data-join-btn="${CSS.escape(id)}"]`).forEach(b => b.classList.add('on'));
-      adFlashAvs(id, 'join');
-      if (typeof showCopyToast === 'function') showCopyToast(`✓ נקבע תאריך: ${label}`);
-    }
-  });
+  const on = idx < 0;
+  if (on) list.push(me); else list.splice(idx, 1);
+  if (list.length) m[id] = list; else delete m[id];
+  try { localStorage.setItem('bw_ad_joins', JSON.stringify(m)); } catch (e) {}
+  document.querySelectorAll(`[data-join-btn="${CSS.escape(id)}"]`).forEach(b => b.classList.toggle('on', on));
+  if (on) adFlashAvs(id, 'join');
+  else document.querySelectorAll(`[data-join-avs="${CSS.escape(id)}"]`).forEach(el => { el.innerHTML = ''; });
+  if (typeof showCopyToast === 'function') showCopyToast(on ? 'הצטרפת למודעה' : 'ביטלת הצטרפות למודעה');
 }
 window.adJoinToggle = adJoinToggle; window.adFlashAvs = adFlashAvs; window.adFlashClick = adFlashClick;
 
