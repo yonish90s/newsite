@@ -5018,6 +5018,10 @@ html.theme-dark .pro-plan { background: rgba(18, 23, 29, 0.07) !important; borde
 html.theme-dark .pro-cta { background: linear-gradient(135deg, #121212 0%, #121212 100%) !important; color: #f5f5f5 !important; }
 html.theme-dark .pro-more-in { background: rgba(18, 23, 29, 0.05) !important; }
 html.theme-dark .mt-brand-txt { color: #f5f5f5 !important; }
+@media (max-width: 700px) {
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) .tw-feed-list > .tw-post { border: 1px solid rgba(255, 255, 255, 0.064) !important; }
+html.theme-dark.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) .tw-feed-list > .tw-post { border-color: rgba(255, 255, 255, 0.1) !important; }
+}
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #f5f5f5 !important; }
 html.theme-dark [style*="color:#111111"] { color: #f5f5f5 !important; }
