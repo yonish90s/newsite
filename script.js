@@ -38597,7 +38597,7 @@ Object.assign(window, { phoneVerifyOpen, pvSend, pvBack, pvClose });
           <button type="button" class="mt-circ mt-theme" onclick="mtToggleActs()" aria-label="תפריט" title="תפריט">${ic('<path d="M4 7h16M4 12h16M4 17h16"/>')}</button>
         </div>
       </div>
-      <nav class="mt-tabs"><button type="button" data-t="home" onclick="mtTab('home')">בית</button><button type="button" data-t="feed" onclick="mtTab('feed')">במעקב</button><button type="button" data-t="deals" class="mt-dls" onclick="mtTab('deals')">עסקאות<i class="mt-apv-n mt-dls-n"></i></button><button type="button" data-t="saved" onclick="mtTab('saved')">שמורים</button><button type="button" data-t="other" onclick="mtTab('other')">אחר</button><button type="button" data-t="details" onclick="mtTab('details')">אישי</button><button type="button" data-t="apv" class="mt-apv" hidden onclick="mtTab('apv')">אישור<i class="mt-apv-n"></i></button><span class="mt-count" aria-live="polite"></span></nav>`;
+      <nav class="mt-tabs"><button type="button" data-t="home" onclick="mtTab('home')">בית</button><button type="button" data-t="feed" onclick="mtTab('feed')">במעקב</button><button type="button" data-t="deals" class="mt-dls" onclick="mtTab('deals')">עסקאות<i class="mt-apv-n mt-dls-n"></i></button><button type="button" data-t="saved" onclick="mtTab('saved')">שמורים</button><button type="button" data-t="details" onclick="mtTab('details')">אישי</button><button type="button" data-t="apv" class="mt-apv" hidden onclick="mtTab('apv')">אישור<i class="mt-apv-n"></i></button><span class="mt-count" aria-live="polite"></span></nav>`;
     document.body.appendChild(el);
     document.documentElement.classList.add('has-mtop');
     mtSync();
@@ -38698,11 +38698,11 @@ function mtSync() {
   mtMePaint();
   const el = document.getElementById('m-top'); if (!el) return;
   const prf = !!document.querySelector('.prf-page');
-  const svd = !prf && !!document.querySelector('.svd-page'), dls = !prf && !svd && !!document.querySelector('.dls-page'), apv = !prf && !!document.querySelector('.apv-page'), dash = !prf && !!document.querySelector('.ua-page'), feed = !prf && !svd && !apv && !dls && !dash && !!document.querySelector('.fd-page'), other = !prf && !svd && !apv && !dls && !dash && !feed && !!document.querySelector('.rent-page') && !(typeof rentUI !== 'undefined' && (rentUI.open || rentUI.seller)), home = !prf && !svd && !feed && !apv && !dls && !dash && !other && !!document.querySelector('.lib-page');
-  el.querySelectorAll('.mt-tabs button').forEach(b => b.classList.toggle('on', (b.dataset.t === 'feed' && feed) || (b.dataset.t === 'home' && home) || (b.dataset.t === 'apv' && apv) || (b.dataset.t === 'deals' && dls) || (b.dataset.t === 'dash' && dash) || (b.dataset.t === 'saved' && svd) || (b.dataset.t === 'other' && other) || (b.dataset.t === 'details' && prf)));
+  const svd = !prf && !!document.querySelector('.svd-page'), dls = !prf && !svd && !!document.querySelector('.dls-page'), apv = !prf && !!document.querySelector('.apv-page'), dash = !prf && !!document.querySelector('.ua-page'), feed = !prf && !svd && !apv && !dls && !dash && !!document.querySelector('.fd-page'), home = !prf && !svd && !feed && !apv && !dls && !dash && !!document.querySelector('.lib-page');
+  el.querySelectorAll('.mt-tabs button').forEach(b => b.classList.toggle('on', (b.dataset.t === 'feed' && feed) || (b.dataset.t === 'home' && home) || (b.dataset.t === 'apv' && apv) || (b.dataset.t === 'deals' && dls) || (b.dataset.t === 'dash' && dash) || (b.dataset.t === 'saved' && svd) || (b.dataset.t === 'details' && prf)));
   const homeBtn = el.querySelector('.mt-home');
   if (homeBtn) {
-    const hideBack = home || feed || dls || svd || other || prf || apv;
+    const hideBack = home || feed || dls || svd || prf || apv;
     homeBtn.style.display = hideBack ? 'none' : '';
     homeBtn.style.pointerEvents = hideBack ? 'none' : '';
   }
@@ -38737,7 +38737,6 @@ function mtTab(t) {
   else if (t === 'dash') { openUserAnalytics(); }
   else if (t === 'saved') { if (typeof svdOpen === 'function') svdOpen(); }
   else if (t === 'details') { if (typeof detailsOpen === 'function') detailsOpen(); }
-  else if (t === 'other') { window.__mktWanted = true; window.__rentFromHome = false; if (typeof rentUI !== 'undefined') Object.assign(rentUI, { open: null, seller: null }); if (typeof navigateToPage === 'function') navigateToPage('page-rent-main'); }
   else { if (typeof fbReset === 'function' && typeof rentUI !== 'undefined') Object.assign(rentUI, { open: null, seller: null }); goToHomePage(); }
   try { window.scrollTo({ top: 0 }); } catch (e) {}
   setTimeout(mtSync, 200);
