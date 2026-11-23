@@ -24866,13 +24866,16 @@ html.theme-dark body:not(#_):not(#_):not(#_):not(#_):not(#_) #messages-modal .tg
 }
 html body:not(#_):not(#_):not(#_):not(#_):not(#_) #messages-modal .tg-msg.theirs .tg-msg-time { color: rgba(255, 255, 255, .72) !important; }
 /* 3) שורה עליונה נקייה עם אייקונים בלי עיגולים וכיתוב לוגו נקי */
-html body:not(#_):not(#_):not(#_):not(#_) #m-top .mt-acts .mt-circ {
+html body:not(#_):not(#_):not(#_):not(#_) #m-top .mt-acts .mt-circ,
+html body:not(#_):not(#_):not(#_):not(#_) #m-top .mt-theme {
   background: transparent !important;
   border: 0 !important;
   box-shadow: none !important;
 }
 html body:not(#_):not(#_):not(#_):not(#_) #m-top .mt-acts .mt-circ::before,
-html body:not(#_):not(#_):not(#_):not(#_) #m-top .mt-acts .mt-circ::after { display: none !important; content: none !important; }
+html body:not(#_):not(#_):not(#_):not(#_) #m-top .mt-acts .mt-circ::after,
+html body:not(#_):not(#_):not(#_):not(#_) #m-top .mt-theme::before,
+html body:not(#_):not(#_):not(#_):not(#_) #m-top .mt-theme::after { display: none !important; content: none !important; }
 html body:not(#_):not(#_):not(#_):not(#_) #m-top .mt-brand-txt {
   font-size: 18px !important;
   font-weight: 700 !important;
@@ -24927,7 +24930,8 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_) #messages-modal .tg-msg .tg-bu
 .mt-drop {
   position: absolute;
   top: calc(100% + 4px);
-  right: 10px;
+  left: 10px;
+  right: auto;
   min-width: 210px;
   background: #ffffff;
   color: #111827;
