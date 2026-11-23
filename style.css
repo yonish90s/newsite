@@ -24911,6 +24911,16 @@ html body:not(#_):not(#_):not(#_):not(#_) .dls-page :is(.dls-box, .dls-list) {
   border-radius: 0 !important;
   border-inline: 0 !important;
 }
+/* בועת פגישה בצ'אט: רקע שחור בהיר נקי מסביב לכרטיס (בלי אדום) */
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) #messages-modal .tg-msg .tg-bubble.has-meet {
+  background: #181a20 !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, .08) !important;
+}
+html body:not(#_):not(#_):not(#_):not(#_):not(#_) #messages-modal .tg-msg .tg-bubble.has-meet .tg-meet-card {
+  background: #1f2229 !important;
+  border-color: rgba(255, 255, 255, .08) !important;
+}
 
 /* מובייל: מרווח מתחת לשורה העליונה הקבועה כדי שכל הסטוריז יהיו גלויים */
 @media (max-width: 700px) {

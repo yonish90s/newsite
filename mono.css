@@ -2288,6 +2288,8 @@ html:not(.theme-dark) .pp-plan.on { border-color: #828282; background: linear-gr
 html:not(.theme-dark) .pp-cta { background: #787878; }
 html:not(.theme-dark) body:not(#_):not(#_):not(#_):not(#_) #messages-modal .tg-msg.mine .tg-bubble { background: #111111 !important; }
 html:not(.theme-dark) body:not(#_):not(#_):not(#_):not(#_) #messages-modal .tg-msg.theirs .tg-bubble { background: #111111 !important; }
+html:not(.theme-dark) body:not(#_):not(#_):not(#_):not(#_):not(#_) #messages-modal .tg-msg .tg-bubble.has-meet { background: #111111 !important; }
+html:not(.theme-dark) body:not(#_):not(#_):not(#_):not(#_):not(#_) #messages-modal .tg-msg .tg-bubble.has-meet .tg-meet-card { background: #111111 !important; }
 html:not(.theme-dark) [style*="border:1.5px solid #e2e8f0"], html:not(.theme-dark) [style*="border: 1.5px solid #e2e8f0"] { border: 1.5px solid #e7e7e7 !important; }
 html:not(.theme-dark) [style*="color:#1e293b"], html:not(.theme-dark) [style*="color: #1e293b"] { color: #111111 !important; }
 html:not(.theme-dark) [style*="background:#dc2626"], html:not(.theme-dark) [style*="background: #dc2626"] { background: #111111 !important; }
