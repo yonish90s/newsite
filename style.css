@@ -24235,13 +24235,13 @@ html.theme-dark .prf-ver-btn {
   height: 38px;
   border-radius: 50%;
   overflow: hidden;
-  flex: none;
-  background: #f3f4f6;
-  border: 1px solid rgba(0, 0, 0, 0.12);
+  flex: 0 0 38px;
+  background: transparent;
+  border: 0;
 }
 html.theme-dark .prf-av-box {
-  background: #27272a;
-  border-color: rgba(255, 255, 255, 0.14);
+  background: transparent;
+  border: 0;
 }
 .prf-av-box svg,
 .prf-av-box img {
