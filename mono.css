@@ -2281,6 +2281,13 @@ html:not(.theme-dark) .pro-orb.is-green { background: radial-gradient(circle at 
 html:not(.theme-dark) .pro-pill { background: linear-gradient(135deg, #e3e3e3, #e2e2e2); color: #111111; }
 html:not(.theme-dark) .pro-cta { background: linear-gradient(135deg, #e8e8e8 0%, #e5e5e5 100%); color: #111111; }
 html:not(.theme-dark) .mt-brand-txt { color: #111111; }
+html:not(.theme-dark) .pp-full { background: radial-gradient(circle at 50% 0%, #111111 0%, #111111 32%, #111113 65%); }
+html:not(.theme-dark) .pp-plus { color: #111111; }
+html:not(.theme-dark) .pp-save { background: #727272; }
+html:not(.theme-dark) .pp-plan.on { border-color: #828282; background: linear-gradient(180deg, rgba(130,130,130,0.14) 0%, rgba(102,102,102,0.62) 100%); box-shadow: 0 0 0 1px #828282; }
+html:not(.theme-dark) .pp-cta { background: #787878; }
+html:not(.theme-dark) body:not(#_):not(#_):not(#_):not(#_) #messages-modal .tg-msg.mine .tg-bubble { background: #111111 !important; }
+html:not(.theme-dark) body:not(#_):not(#_):not(#_):not(#_) #messages-modal .tg-msg.theirs .tg-bubble { background: #111111 !important; }
 html:not(.theme-dark) [style*="border:1.5px solid #e2e8f0"], html:not(.theme-dark) [style*="border: 1.5px solid #e2e8f0"] { border: 1.5px solid #e7e7e7 !important; }
 html:not(.theme-dark) [style*="color:#1e293b"], html:not(.theme-dark) [style*="color: #1e293b"] { color: #111111 !important; }
 html:not(.theme-dark) [style*="background:#dc2626"], html:not(.theme-dark) [style*="background: #dc2626"] { background: #111111 !important; }

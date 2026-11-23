@@ -25094,6 +25094,19 @@ function shopRowHTML(f) {
       <span class="shop-item-price">+${shopMoney(f.price)}</span>
     </button>`;
 }
+let _proPlanIdx = 2;
+const PRO_PLANS = [
+  { num: '6', unit: 'חודשים', save: 'חיסכון 64%', mo: '₪66.64/לחודש', cta: 'קבל 6 חודשים ב-₪66.64/לחודש' },
+  { num: '3', unit: 'חודשים', save: 'חיסכון 45%', mo: '₪99.96/לחודש', cta: 'קבל 3 חודשים ב-₪99.96/לחודש' },
+  { num: '1', unit: 'חודש',   save: '',           mo: '₪199.90/לחודש', cta: 'קבל חודש 1 ב-₪199.90' }
+];
+function proPickPlan(idx) {
+  _proPlanIdx = idx;
+  document.querySelectorAll('.pp-plan').forEach((el, i) => el.classList.toggle('on', i === idx));
+  const btn = document.getElementById('pp-cta-btn');
+  if (btn && PRO_PLANS[idx]) btn.textContent = PRO_PLANS[idx].cta;
+}
+window.proPickPlan = proPickPlan;
 function proStartTrial() {
   SHOP_FEATURES.forEach(f => shopSel.add(f.id));
   shopSave();
@@ -25101,50 +25114,34 @@ function proStartTrial() {
 }
 window.proStartTrial = proStartTrial;
 function shopListHTML() {
-  const proTotal = SHOP_FEATURES.reduce((s, f) => s + f.price, 0);
-  return `<div class="pro-wall">
-    <div class="pro-top">
-      <button type="button" class="pro-back" onclick="if(typeof navigateToPage==='function')navigateToPage('page-rent-main')" aria-label="חזרה">→</button>
-      <button type="button" class="pro-skip" onclick="if(typeof navigateToPage==='function')navigateToPage('page-rent-main')">דלג</button>
+  const cur = PRO_PLANS[_proPlanIdx] || PRO_PLANS[2];
+  return `<div class="pp-full">
+    <div class="pp-hero">
+      <button type="button" class="pp-x" onclick="if(typeof navigateToPage==='function')navigateToPage('page-rent-main')" aria-label="סגירה">✕</button>
+      <div class="pp-brand"><span class="pp-line"></span><em>Black1White00</em><span class="pp-line"></span></div>
+      <div class="pp-title">PREMIUM</div>
+      <div class="pp-plus">PLUS</div>
+      <div class="pp-heart">💗</div>
+      <p class="pp-tag">הלייקים והפרופיל שלך, תמיד בראש</p>
     </div>
-    <div class="pro-deck" aria-hidden="true">
-      <div class="pro-card is-left">
-        <div class="pro-orb is-red"><i></i><i></i></div>
-        <b>@VIP</b><small>גלישה ללא פרסומות</small>
-      </div>
-      <div class="pro-card is-mid">
-        <span class="pro-lock">🔒</span>
-        <div class="pro-orb is-main"><i></i><i></i></div>
-        <b>@Pro</b><small>גישה מלאה להכול</small>
-      </div>
-      <div class="pro-card is-right">
-        <div class="pro-orb is-green"><i></i><i></i></div>
-        <b>@Boost</b><small>חשיפה וקידום</small>
-      </div>
+    <div class="pp-plans">
+      ${PRO_PLANS.map((p, i) => `<button type="button" class="pp-plan${i === _proPlanIdx ? ' on' : ''}" onclick="proPickPlan(${i})">
+        ${p.save ? `<span class="pp-save">${p.save}</span>` : ''}
+        <b>${p.num}</b>
+        <small>${p.unit}</small>
+        <div class="pp-price">${p.mo}</div>
+      </button>`).join('')}
     </div>
-    <div class="pro-badge-row"><span class="pro-pill">💎 PRO</span><span>שדרוגים</span></div>
-    <h1 class="pro-h1">יותר אפשרויות.<br>יותר יתרונות.</h1>
-    <p class="pro-sub">גישה מלאה לכל הכלים, השדרוגים והטבות הקהילה.</p>
-    <div class="pro-plan" onclick="proStartTrial()">
-      <div class="pro-plan-tx"><b>Pro</b><small>גישה לכל פיצ׳רי ה-PRO באתר</small></div>
-      <div class="pro-plan-pr"><b>${shopMoney(proTotal)}</b><span> / לחודש</span></div>
+    <div class="pp-feats">
+      <div class="pp-feats-h">יתרונות BlackWhite Premium Plus:</div>
+      <div class="pp-feat"><span>💗</span><b>לייקים בעדיפות עליונה</b></div>
+      <div class="pp-feat"><span>💬</span><b>אישורי קריאה בהודעות</b></div>
+      <div class="pp-feat"><span>💘</span><b>15 סופר-לייקים שבועיים</b></div>
+      <div class="pp-feat"><span>👀</span><b>לראות מי עשה לך לייק</b></div>
+      <div class="pp-feat"><span>⚡</span><b>קידום חודשי חינם לפרופיל</b></div>
     </div>
-    <button type="button" class="pro-cta" onclick="proStartTrial()">התחל 3 ימי ניסיון בחינם <span>‹</span></button>
-    <div class="pro-legal">
-      <a href="#" onclick="event.preventDefault(); openLegal('terms')">תנאי שימוש</a>
-      <span>|</span>
-      <a href="#" onclick="event.preventDefault(); openLegal('privacy')">מדיניות פרטיות</a>
-    </div>
-    <details class="pro-more">
-      <summary>בחירת שדרוגים בודדים (${shopSel.size})</summary>
-      <div class="pro-more-in">
-        ${SHOP_GROUPS.map(g => `<section class="shop-sec">
-          <h2>${g.title} <span class="shop-opt">אופציונלי</span></h2>
-          ${SHOP_FEATURES.filter(f => f.g === g.id).map(shopRowHTML).join('')}
-        </section>`).join('')}
-        ${shopBarHTML()}
-      </div>
-    </details>
+    <p class="pp-fine">בלחיצה על הכפתור תופנו להשלמת ההצטרפות. ניתן לבטל בכל עת בהגדרות החשבון, ובכך הנכם מאשרים את <a href="#" onclick="event.preventDefault(); openLegal('terms')">תנאי השימוש</a>.</p>
+    <button type="button" class="pp-cta" id="pp-cta-btn" onclick="proStartTrial()">${cur.cta}</button>
   </div>`;
 }
 function shopCheckoutHTML() {
@@ -38612,7 +38609,7 @@ Object.assign(window, { phoneVerifyOpen, pvSend, pvBack, pvClose });
           <button type="button" class="mt-circ mt-theme" onclick="mtToggleActs()" aria-label="הצגת כפתורים בשורה העליונה" title="עוד כפתורים">${ic('<path d="M4 7h16M4 12h16M4 17h16"/>')}</button>
         </div>
         <div class="mt-left-brand">
-          <button type="button" class="mt-brand-txt" dir="ltr" onclick="mtTab('home')" aria-label="blackwhite">black<span>white</span></button>
+          <button type="button" class="mt-brand-txt" dir="ltr" onclick="mtTab('home')" aria-label="Black1White00">Black1White00</button>
           <button type="button" class="mt-circ mt-me" onclick="mtMe()" aria-label="המשתמש שלי"></button>
         </div>
       </div>

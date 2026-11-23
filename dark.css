@@ -5018,6 +5018,17 @@ html.theme-dark .pro-plan { background: rgba(18, 23, 29, 0.07) !important; borde
 html.theme-dark .pro-cta { background: linear-gradient(135deg, #121212 0%, #121212 100%) !important; color: #f5f5f5 !important; }
 html.theme-dark .pro-more-in { background: rgba(18, 23, 29, 0.05) !important; }
 html.theme-dark .mt-brand-txt { color: #f5f5f5 !important; }
+html.theme-dark .pp-full { background: radial-gradient(circle at 50% 0%, #3b1038 0%, #121212 32%, #121212 65%) !important; }
+html.theme-dark .pp-line { background: rgba(18, 23, 29, 0.4) !important; }
+html.theme-dark .pp-plus { background: #000000 !important; color: #f5f5f5 !important; }
+html.theme-dark .pp-plan { border: 1.5px solid rgba(255, 255, 255, 0.1) !important; background: rgba(18, 23, 29, 0.04) !important; }
+html.theme-dark .pp-price { border-top: 1px solid rgba(255, 255, 255, 0.1) !important; }
+html.theme-dark .pp-plan.on { border-color: #ffffff !important; background: linear-gradient(180deg, rgba(228, 32, 43, 0.14) 0%, rgba(228, 32, 43, 0.62) 100%) !important; }
+html.theme-dark .pp-plan.on::after { background: #000000 !important; }
+html.theme-dark .pp-feats { background: rgba(18, 23, 29, 0.05) !important; }
+html.theme-dark .pp-feats-h { border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important; }
+html.theme-dark .pp-cta { background: #e4202b !important; }
+html.theme-dark body:not(#_):not(#_):not(#_):not(#_) #messages-modal .tg-msg.mine .tg-bubble { background: #e4202b !important; }
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #f5f5f5 !important; }
 html.theme-dark [style*="color:#111111"] { color: #f5f5f5 !important; }

@@ -24769,6 +24769,123 @@ html.theme-dark .mt-brand-txt span { color: #d4d4d8; opacity: .85; }
     scroll-snap-type: x proximity !important;
   }
 }
+/* 1) מנוי Premium Plus על כל המסך */
+html body #mainContent:has(.pp-full) { padding: 0 !important; max-width: 100% !important; }
+html body .subscription-page-wrapper:has(.pp-full) { max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
+.pp-full {
+  min-height: 100dvh;
+  width: 100%;
+  background: radial-gradient(circle at 50% 0%, #3b1038 0%, #160c18 32%, #111113 65%);
+  color: #ffffff;
+  padding: calc(14px + env(safe-area-inset-top, 0px)) 16px calc(24px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  box-sizing: border-box;
+  direction: rtl;
+}
+.pp-hero { position: relative; width: 100%; max-width: 440px; padding-top: 8px; margin-bottom: 14px; }
+.pp-x { position: absolute; top: 0; left: 0; width: 34px; height: 34px; border: 0; background: transparent; color: rgba(255, 255, 255, .85); font-size: 20px; cursor: pointer; display: grid; place-items: center; }
+.pp-brand { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 4px; }
+.pp-line { height: 1px; width: 48px; background: rgba(255, 255, 255, .4); }
+.pp-brand em { font-style: italic; font-weight: 800; font-size: 16px; color: #ffffff; }
+.pp-title { font-size: 28px; font-weight: 900; letter-spacing: .24em; color: #ffffff; line-height: 1.1; }
+.pp-plus { display: inline-block; margin-top: 4px; padding: 2px 14px; border-radius: 7px; background: #ffffff; color: #160c18; font-size: 14px; font-weight: 900; letter-spacing: .18em; }
+.pp-heart { font-size: 28px; margin: 10px 0 4px; }
+.pp-tag { margin: 0; font-size: 14px; font-weight: 700; color: rgba(255, 255, 255, .92); }
+.pp-plans { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; width: 100%; max-width: 440px; margin: 10px 0 14px; }
+.pp-plan {
+  position: relative;
+  border: 1.5px solid rgba(255, 255, 255, .35);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, .04);
+  color: #ffffff;
+  padding: 16px 6px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  cursor: pointer;
+  font: inherit;
+}
+.pp-plan b { font-size: 22px; font-weight: 900; line-height: 1.1; }
+.pp-plan small { font-size: 11px; font-weight: 700; letter-spacing: .04em; opacity: .9; }
+.pp-save {
+  position: absolute;
+  top: -10px;
+  background: #6b7280;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.pp-price { width: 100%; margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255, 255, 255, .2); font-size: 12px; font-weight: 700; }
+.pp-plan.on {
+  border-color: #ec4899;
+  background: linear-gradient(180deg, rgba(236, 72, 153, .14) 0%, rgba(219, 39, 119, .62) 100%);
+  box-shadow: 0 0 0 1px #ec4899;
+}
+.pp-plan.on::after { content: ''; position: absolute; bottom: -10px; width: 42px; height: 4px; border-radius: 999px; background: #ffffff; }
+.pp-feats {
+  width: 100%;
+  max-width: 440px;
+  background: rgba(255, 255, 255, .05);
+  border-radius: 12px;
+  padding: 14px;
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  margin-bottom: 14px;
+}
+.pp-feats-h { font-size: 12.5px; font-weight: 700; color: rgba(255, 255, 255, .75); padding-bottom: 4px; border-bottom: 1px solid rgba(255, 255, 255, .08); }
+.pp-feat { display: flex; align-items: center; gap: 12px; font-size: 14.5px; }
+.pp-feat span { font-size: 18px; width: 24px; text-align: center; }
+.pp-feat b { font-weight: 700; color: #ffffff; }
+.pp-fine { max-width: 420px; font-size: 11px; line-height: 1.45; color: rgba(255, 255, 255, .58); margin: 0 0 14px; }
+.pp-fine a { color: #ffffff; font-weight: 700; text-decoration: underline; }
+.pp-cta {
+  width: 100%;
+  max-width: 440px;
+  height: 52px;
+  border-radius: 999px;
+  border: 0;
+  background: #5b6ef5;
+  color: #ffffff;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 900;
+  cursor: pointer;
+}
+/* 2) בועות הודעה בסגנון WhatsApp Dark: ירוק כהה לנשלח, שחור/אפור כהה למתקבל */
+html body:not(#_):not(#_):not(#_):not(#_) #messages-modal .tg-msg.mine .tg-bubble {
+  background: #005c4b !important;
+  color: #ffffff !important;
+  border-color: transparent !important;
+}
+html body:not(#_):not(#_):not(#_):not(#_) #messages-modal .tg-msg.mine .tg-msg-time { color: rgba(255, 255, 255, .72) !important; }
+html body:not(#_):not(#_):not(#_):not(#_) #messages-modal .tg-msg.theirs .tg-bubble {
+  background: #202c33 !important;
+  color: #ffffff !important;
+  border-color: transparent !important;
+}
+html body:not(#_):not(#_):not(#_):not(#_) #messages-modal .tg-msg.theirs .tg-msg-time { color: rgba(255, 255, 255, .62) !important; }
+/* 3) שורה עליונה נקייה עם אייקונים בלי עיגולים וכיתוב לוגו נקי */
+html body:not(#_):not(#_):not(#_):not(#_) #m-top .mt-acts .mt-circ {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+html body:not(#_):not(#_):not(#_):not(#_) #m-top .mt-acts .mt-circ::before,
+html body:not(#_):not(#_):not(#_):not(#_) #m-top .mt-acts .mt-circ::after { display: none !important; content: none !important; }
+html body:not(#_):not(#_):not(#_):not(#_) #m-top .mt-brand-txt {
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.02em !important;
+}
 
 /* מובייל: מרווח מתחת לשורה העליונה הקבועה כדי שכל הסטוריז יהיו גלויים */
 @media (max-width: 700px) {
