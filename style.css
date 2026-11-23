@@ -23488,7 +23488,7 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_
   .tw-media.tw-multi .tw-strip img,
   .mp-slides .mp-slide { scroll-snap-stop: normal !important; transform: translateZ(0); }
   .tw-media.tw-multi .tw-strip {
-    touch-action: pan-x !important;
+    touch-action: pan-x pan-y !important;
     scroll-snap-type: x mandatory !important;
     -webkit-overflow-scrolling: touch !important;
     overscroll-behavior-x: contain !important;
