@@ -38922,7 +38922,6 @@ function storiesBarHTML() {
   return `<section class="st-bar${openCls}" aria-label="סטוריז ל-24 שעות">
     <button type="button" class="st-toggle" onclick="stBarToggle(this)">
       <span class="st-toggle-l"><b>סטוריז</b>${cnt ? ` <small>(${cnt})</small>` : ''}</span>
-      <span class="st-toggle-r">${window._stBarOpen ? 'סגור ▲' : 'פתח ▼'}</span>
     </button>
     <div class="st-track">${mineHTML}${folHTML}${suggHTML}</div>
   </section>`;
@@ -38932,8 +38931,6 @@ function stBarToggle(btn) {
   if (!bar) return;
   window._stBarOpen = !bar.classList.contains('is-open');
   bar.classList.toggle('is-open', window._stBarOpen);
-  const r = btn.querySelector('.st-toggle-r');
-  if (r) r.textContent = window._stBarOpen ? 'סגור ▲' : 'פתח ▼';
 }
 window.stBarToggle = stBarToggle;
 function storiesRefreshDOM() {
