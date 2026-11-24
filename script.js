@@ -38757,12 +38757,7 @@ function storiesSubscribe() {
 function storyDemoGroups() {
   const now = Date.now(), H = 3600 * 1000;
   const raw = [
-    { owner: 'נועה לוי', city: 'תל אביב', items: [{ id: 'dm_noa_1', img: 'rent/t/camera.jpg?v=2', caption: 'מצלמת Nikon D850 במצב נדיר 📸', t: now - 2 * H }, { id: 'dm_noa_2', img: 'rent/t/projector.jpg?v=2', caption: 'מקרן Full HD לערבי סרטים ✨', t: now - 1.2 * H }] },
-    { owner: 'אלון כהן', city: 'רמת גן', items: [{ id: 'dm_alon_1', img: 'rent/t/u-sofa.jpg?v=2', caption: 'ספה תלת-מושבית מעור במצב מצוין 🛋️', t: now - 3.5 * H }] },
-    { owner: 'מאפיית השכונה', city: 'תל אביב', items: [{ id: 'dm_bak_1', img: 'rent/biz-bakery.svg', caption: 'מאפים חמים מהתנור כל בוקר 🥐', t: now - 4 * H }] },
-    { owner: 'דניאל מזרחי', city: 'חיפה', items: [{ id: 'dm_dan_1', img: 'rent/t/u-guitar.jpg?v=2', caption: 'גיטרה Gibson Les Paul עם נרתיק קשיח 🎸', t: now - 6 * H }] },
-    { owner: 'מאיה שפירא', city: 'הרצליה', items: [{ id: 'dm_maya_1', img: 'rent/t/p3d-farm.jpg?v=2', caption: 'הדפסות תלת מימד מוכנות תוך יום 🧊', t: now - 8 * H }] },
-    { owner: 'רון אברהם', city: 'ראשון לציון', items: [{ id: 'dm_ron_1', img: 'rent/t/u-bike.jpg?v=2', caption: 'אופני עיר קלים ונוחים 🚲', t: now - 11 * H }] }
+    { owner: 'נועה לוי', city: 'תל אביב', items: [{ id: 'dm_noa_1', img: 'rent/t/camera.jpg?v=2', caption: 'מצלמת Nikon D850 במצב נדיר 📸', t: now - 2 * H }] }
   ];
   return raw.map(g => ({
     key: 'demo_' + igDemoKeyOf(g.owner),
