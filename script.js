@@ -8346,6 +8346,7 @@ Object.assign(window, { qpAgentPublish, qpAgentHandoff });
 async function qpPublish() {
   if (uploadBlockedNow(true)) { qpBubble('bot', 'הגעת למגבלת ההעלאות להיום. אפשר להעלות עד 4 מודעות ביום, אז נסו שוב מחר.'); return; }
   qpBubble('bot', '⏳ מפרסם את התוכן...');
+  if (!auth.currentUser && typeof ensureGuestSignedIn === 'function') { try { await ensureGuestSignedIn(); } catch (e) {} }
   const user = auth.currentUser;
   let nickname = 'משתמש', email = '', telegram = '';
   if (user) {
@@ -8432,6 +8433,20 @@ async function qpPublish() {
       // תמונות או מוצרי יד שניה — מתפרסם לעמוד הנוכחי לפי הסקשן
       const sec = (qpData.pageSection === 'secondhand') ? 'secondhand' : 'photos';
       // נפתח מלשונית ההעלאה: שומרים ישר לרשימת המוצרים, בלי לפתוח עמוד מאחורי החלון
+      if (sec === 'secondhand' || qpData.isProduct) {
+        const rentRec = {
+          id: album.id, shId: album.id, kind: 'used', offer: album.offerType || 'מכירה',
+          title: album.title, price: parseFloat(String(album.price || '').replace(/[^\d.]/g, '')) || 0,
+          priceTxt: album.price || '', unitTxt: album.priceUnit || '', city: album.region || '',
+          owner: album.author || 'משתמש', uid: (auth.currentUser && auth.currentUser.uid) || album.authorId || '',
+          t: Number(album.createdAt) || Date.now(), publishAt: album.publishAt || null,
+          stock: album.stock, img: album.image || '', images: Array.isArray(album.images) ? album.images : [],
+          bizName: album.bizName || '', video: album.video || '', link: album.link || '',
+          pk: album.projectKind || '', pd: album.projectArea || '', dept: album.dept || '',
+          hashtags: Array.isArray(album.hashtags) ? album.hashtags : [], desc: album.summary || ''
+        };
+        try { await set(ref(db, `website/rentals/${album.id}`), rentRec); } catch (e) {}
+      }
       const shPage = sec === 'secondhand' && !mainContent.querySelector('.secondhand-page') && Array.isArray(pages) && pages.find(p => p && p.id === 'page-secondhand-main');
       if (shPage) {
         let list = [];
@@ -34232,24 +34247,35 @@ function usedAll() {
   _usedCache = { src, at: now, out };
   return out;
 }
-// מודעה של גולש מוסרת אחרי חודש: נעלמת מיד לכולם, ונמחקת לגמרי כשהמנהל נכנס לאתר
-const MKT_TTL = 30 * 864e5;
+// מודעה של גולש מוסרת אחרי שבוע (7 ימים): נעלמת מיד לכולם, ונמחקת לגמרי ממסד הנתונים
+const MKT_TTL = 7 * 864e5;
 const mktExpired = t => Number(t) > 1e12 && Date.now() - Number(t) > MKT_TTL;
 let mktPurged = false;
 function mktPurgeExpired() {
-  if (mktPurged || !(typeof isAdmin === 'function' && isAdmin()) || rentData === null || typeof pages === 'undefined' || !Array.isArray(pages)) return;
+  if (rentData === null) return;
+  const adminNow = typeof isAdmin === 'function' && isAdmin();
+  const myUid = (typeof auth !== 'undefined' && auth.currentUser) ? auth.currentUser.uid : '';
+  // כל משתמש מוחק את המודעות שפגו תוקפן שבבעלותו מ-website/rentals; מנהל מוחק את כולן כולל pages/media
+  (rentData || []).filter(r => mktExpired(r.t) && (adminNow || (myUid && r.uid === myUid))).forEach(r => {
+    set(ref(db, `website/rentals/${r.id}`), null).catch(() => {});
+  });
+  if (mktPurged || !adminNow || typeof pages === 'undefined' || !Array.isArray(pages)) return;
   mktPurged = true;
   try {
     const pg = pages.find(x => x && x.id === 'page-secondhand-main');
     const m = pg && (pg.content || '').match(/data-photos-json="([^"]*)"/);
     const old = (m ? (JSON.parse(decodeURIComponent(m[1])) || []) : []).filter(x => x && x.id && mktExpired(x.createdAt));
     old.forEach(x => { removeItemFromStoredPages(x.id); set(ref(db, `website/media/${x.id}`), null).catch(() => {}); });
-    (rentData || []).filter(r => mktExpired(r.t)).forEach(r => set(ref(db, `website/rentals/${r.id}`), null).catch(() => {}));
   } catch (e) {}
 }
 let mktHidden = (() => { try { return JSON.parse(localStorage.getItem('bw_mkt_hidden') || '{}') || {}; } catch (e) { return {}; } })();   // מודעות שהמנהל הסיר (website/market_hidden + שמירה מקומית)
 function mktHideSave() { try { localStorage.setItem('bw_mkt_hidden', JSON.stringify(mktHidden)); } catch (e) {} }
-function mktAll() { return rentAll().concat(usedAll()).filter(r => !mktHidden[r.id]); }
+function mktAll() {
+  const rList = rentAll();
+  const seen = new Set(rList.map(r => r.shId || r.id));
+  const uList = usedAll().filter(u => !seen.has(u.shId || u.id));
+  return rList.concat(uList).filter(r => !mktHidden[r.id]);
+}
 function mktGo() {
   window.__mktWanted = false;
   if (typeof rentUI !== 'undefined') Object.assign(rentUI, { open: null, seller: null });
@@ -34583,7 +34609,12 @@ function rentSubscribe() {
   } catch (e) { rentData = []; }
 }
 function rentAll() {
-  return (rentData || []).filter(r => !mktExpired(r.t));
+  const now = Date.now();
+  return (rentData || []).filter(r => !mktExpired(r.t) && (!r.publishAt || Number(r.publishAt) <= now)).map(r => {
+    if (r.video && !r.hv && typeof mkVideoParse === 'function') r.hv = mkVideoParse(r.video);
+    if (!r.htags && Array.isArray(r.hashtags)) r.htags = r.hashtags;
+    return r;
+  });
 }
 function rentCatOf(id) { return RENT_CATS.find(c => c.id === id) || RENT_CATS[RENT_CATS.length - 1]; }
 // מחיר קצר: מספר, שקל ויחידה — "100 ₪" או "100 ₪ לחודש"
