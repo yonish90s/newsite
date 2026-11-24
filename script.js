@@ -30872,7 +30872,8 @@ document.documentElement.classList.toggle('mtabs-off', MTABS_HIDDEN);
     if (t) { b.title = t; if (!b.getAttribute('aria-label')) b.setAttribute('aria-label', t); }
   });
   let tm = 0;
-  new MutationObserver(() => { clearTimeout(tm); tm = setTimeout(run, 80); }).observe(document.documentElement, { childList: true, subtree: true });
+  const mc = document.getElementById('mainContent');
+  if (mc) new MutationObserver(() => { clearTimeout(tm); tm = setTimeout(run, 150); }).observe(mc, { childList: true });
 })();
 
 function imgTapToggle(btn, e) {
@@ -31105,10 +31106,12 @@ function deepLinkSync() {
       setTimeout(() => below.forEach(el => { if (el.isConnected && getComputedStyle(el).opacity === '0' && el.getBoundingClientRect().top < window.innerHeight) gsap.set(el, { clearProps: 'transform,opacity' }); }), 2500);
     };
     let t = 0;
-    new MutationObserver(() => { clearTimeout(t); t = setTimeout(reveal, 120); }).observe(document.body, { childList: true, subtree: true });
+    const mc = document.getElementById('mainContent');
+    if (mc) new MutationObserver(() => { clearTimeout(t); t = setTimeout(reveal, 200); }).observe(mc, { childList: true });
     reveal();
   };
-  load('https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js')
+  const isMob = window.matchMedia && window.matchMedia('(max-width: 900px), (pointer: coarse)').matches;
+  if (!isMob) load('https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js')
     .then(() => load('https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js'))
     .then(start).catch(() => {});
 })();
@@ -31157,11 +31160,12 @@ function likeCountsPaint(likes) {
     }
   };
   let t = 0;
-  const run = () => { t = 0; scan(); pageFade(); };
+  const run = () => { t = 0; scan(document.getElementById('mainContent') || document); pageFade(); };
   const start = () => {
     document.documentElement.classList.add('img-fade');
     run();
-    new MutationObserver(() => { if (!t) t = requestAnimationFrame(run); }).observe(document.body, { childList: true, subtree: true });
+    const mc = document.getElementById('mainContent');
+    if (mc) new MutationObserver(() => { if (!t) t = requestAnimationFrame(run); }).observe(mc, { childList: true });
   };
   if (document.body) start(); else document.addEventListener('DOMContentLoaded', start);
 })();
@@ -32879,7 +32883,8 @@ document.addEventListener('keydown', e => {
     if (t) { if (!b.getAttribute('aria-label')) b.setAttribute('aria-label', t); if (!b.title) b.title = t; }
   });
   let q = 0;
-  new MutationObserver(() => { clearTimeout(q); q = setTimeout(run, 50); }).observe(document.body, { childList: true, subtree: true });
+  const mc = document.getElementById('mainContent');
+  if (mc) new MutationObserver(() => { clearTimeout(q); q = setTimeout(run, 120); }).observe(mc, { childList: true });
   run();
 })();
 
@@ -36320,7 +36325,8 @@ function mkInvOpen(likeId) {
 window.mkInvOpen = mkInvOpen;
 (function mkInvWatch() {
   let t = 0;
-  try { new MutationObserver(() => { if (t) return; t = setTimeout(() => { t = 0; document.querySelectorAll('.mk-inv:not([data-done])').forEach(mkInvFill); }, 120); }).observe(document.body, { childList: true, subtree: true }); } catch (e) {}
+  const mc = document.getElementById('mainContent');
+  try { if (mc) new MutationObserver(() => { if (t) return; t = setTimeout(() => { t = 0; mc.querySelectorAll('.mk-inv:not([data-done])').forEach(mkInvFill); }, 150); }).observe(mc, { childList: true }); } catch (e) {}
 })();
 function rentBack() {
   if (window.__rentFromHome) { window.__rentFromHome = false; if (typeof goToHomePage === 'function') { goToHomePage(); return; } }
@@ -38496,7 +38502,8 @@ Object.assign(window, { phoneVerifyOpen, pvSend, pvBack, pvClose });
   if (document.body) apply(); else document.addEventListener('DOMContentLoaded', apply);
   // הלשונית הפעילה מתעדכנת לפי מה שמוצג
   let q = 0;
-  try { new MutationObserver(() => { if (q) return; q = setTimeout(() => { q = 0; mtSync(); }, 150); }).observe(document.body, { childList: true, subtree: true }); } catch (e) {}
+  const mc = document.getElementById('mainContent');
+  try { if (mc) new MutationObserver(() => { if (q) return; q = setTimeout(() => { q = 0; mtSync(); }, 150); }).observe(mc, { childList: true }); } catch (e) {}
 })();
 // עיגול המשתמש: תמונת הפרופיל (ושם בתווית), או "אורח"
 function mtMePaint() {
