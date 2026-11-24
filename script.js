@@ -8396,7 +8396,7 @@ async function qpPublish() {
     loanPeriod: qpData.loanPeriod || '',
     loanTerms: (qpData.offerType === 'השאלה' && Array.isArray(qpData.loanTerms)) ? qpData.loanTerms.slice(0, 15) : [],
     section: qpData.pageSection === 'secondhand' ? 'secondhand' : 'photos',
-    approved: isAdminNow
+    approved: true
   };
   try {
     if (qpData.communityId) {
@@ -8426,7 +8426,7 @@ async function qpPublish() {
       }
       if (typeof saveToStorage === 'function') saveToStorage();
       if (!isAdminNow && typeof pushPendingSubmission === 'function') pushPendingSubmission(album);
-      uploadMarkToday(); qpBubble('bot', '✅ המודעה פורסמה בהצלחה!' + (isAdminNow ? '' : '<br>ממתינה לאישור מנהל ותופיע בקרוב.'));
+      uploadMarkToday(); qpBubble('bot', '✅ המודעה פורסמה בהצלחה!');
       setTimeout(() => { if (typeof renderPage === 'function') renderPage(); }, 2200);
     } else {
       // תמונות או מוצרי יד שניה — מתפרסם לעמוד הנוכחי לפי הסקשן
@@ -8442,7 +8442,7 @@ async function qpPublish() {
         shPage.content = shPage.content.replace(/data-photos-json="[^"]*"/, `data-photos-json="${encodeURIComponent(JSON.stringify(list))}"`);
         if (typeof saveToStorage === 'function') saveToStorage();
         if (!isAdminNow && typeof pushPendingSubmission === 'function') pushPendingSubmission(album);
-        uploadMarkToday(); qpBubble('bot', '✅ המוצר פורסם בהצלחה!' + (isAdminNow ? '' : '<br>ממתין לאישור מנהל ויופיע בקרוב.'));
+        uploadMarkToday(); qpBubble('bot', '✅ המוצר פורסם בהצלחה!');
         setTimeout(() => { const md = document.getElementById('quick-publish-modal'); if (md) md.style.display = 'none'; mktGo('all'); }, 2000);
         return;
       }
@@ -8452,7 +8452,7 @@ async function qpPublish() {
       if (typeof saveCurrentPageContent === 'function') saveCurrentPageContent();
       if (!isAdminNow && typeof pushPendingSubmission === 'function') pushPendingSubmission(album);
       const what = sec === 'secondhand' ? 'המוצר פורסם' : 'המודעה פורסמה';
-      uploadMarkToday(); qpBubble('bot', `✅ ${what} בהצלחה!` + (isAdminNow ? '' : '<br>ממתין לאישור מנהל ויופיע בקרוב.'));
+      uploadMarkToday(); qpBubble('bot', `✅ ${what} בהצלחה!`);
       setTimeout(() => {
         const m = document.getElementById('quick-publish-modal'); if (m) m.style.display = 'none';
         if (sec === 'secondhand') mktGo('all');
@@ -34527,7 +34527,10 @@ async function mkPubSend() {
   const qm = document.getElementById('quick-publish-modal'); if (qm) qm.style.display = 'none';
   if (/✅/.test(out)) {
     mkPubClose();
-    const whenTxt = publishAt ? `תעלה ב־${new Date(publishAt).toLocaleString('he-IL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}` : (typeof isAdmin === 'function' && isAdmin() ? title : 'תופיע בשוק אחרי אישור מנהל');
+    if (typeof _usedCache !== 'undefined') _usedCache.at = 0;
+    if (typeof libRefresh === 'function') libRefresh();
+    if (typeof rentRender === 'function') rentRender();
+    const whenTxt = publishAt ? `תעלה ב־${new Date(publishAt).toLocaleString('he-IL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}` : title;
     glassBanner({ title: publishAt ? 'המודעה תוזמנה' : 'המודעה פורסמה', sub: whenTxt, icon: 'ok', ms: 3000 });
   } else { go.disabled = false; go.textContent = publishAt ? 'תזמון מודעה' : 'פרסום'; fail(/מחר/.test(out) ? 'כבר העלית מודעה היום. אפשר להעלות מודעה אחת ביום.' : 'הפרסום נכשל. נסו שוב.'); }
 }
@@ -38921,9 +38924,11 @@ async function storyUploadSend() {
   }
   const cap = ((document.getElementById('st-up-cap') || {}).value || '').trim().slice(0, 140);
   if (go) { go.disabled = true; go.textContent = 'מעלה סטורי…'; }
-  const u = auth.currentUser, reg = u && !u.isAnonymous;
-  const uid = reg ? u.uid : '';
-  const name = reg ? String((typeof liveChatUserName === 'function' && liveChatUserName()) || u.displayName || 'אני').slice(0, 60) : 'הסטורי שלי';
+  let u = auth.currentUser;
+  if (!u && typeof ensureGuestSignedIn === 'function') { try { await ensureGuestSignedIn(); u = auth.currentUser; } catch (e) {} }
+  const reg = u && !u.isAnonymous;
+  const uid = u ? u.uid : '';
+  const name = reg ? String((typeof liveChatUserName === 'function' && liveChatUserName()) || u.displayName || 'אני').slice(0, 60) : 'אורח';
   const now = Date.now();
   const created = storyUpState.imgs.map((img, idx) => ({
     id: 'st_' + (now + idx) + '_' + Math.random().toString(36).slice(2, 6),
@@ -38938,8 +38943,8 @@ async function storyUploadSend() {
     const prev = storyGuestList();
     localStorage.setItem('bw_guest_stories', JSON.stringify(prev.concat(created).slice(-12)));
   } catch (e) {}
-  // למשתמש מחובר — סנכרון ל-Firebase כדי שכל העוקבים יראו את הסטורי ל-24 שעות
-  if (reg) {
+  // סנכרון ל-Firebase גם עבור משתמש אנונימי כדי שהסטורי יעלה ישר באתר
+  if (uid) {
     for (const s of created) {
       const payload = { uid: s.uid, name: s.name, img: s.img, t: s.t };
       if (s.caption) payload.caption = s.caption;
