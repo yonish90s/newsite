@@ -8344,7 +8344,7 @@ async function qpAgentHandoff() {
 Object.assign(window, { qpAgentPublish, qpAgentHandoff });
 
 async function qpPublish() {
-  if (uploadBlockedNow(true)) { qpBubble('bot', 'כבר העלית מודעה היום. אפשר להעלות מודעה אחת ביום, אז נסו שוב מחר.'); return; }
+  if (uploadBlockedNow(true)) { qpBubble('bot', 'הגעת למגבלת ההעלאות להיום. אפשר להעלות עד 2 מודעות ביום, אז נסו שוב מחר.'); return; }
   qpBubble('bot', '⏳ מפרסם את התוכן...');
   const user = auth.currentUser;
   let nickname = 'משתמש', email = '', telegram = '';
@@ -34264,22 +34264,33 @@ function mktOpenUsed(shId) {
   try { navigateToPage('page-secondhand-main'); } finally { window.__shDirect = false; }
   setTimeout(() => { if (typeof photoOpenDetail === 'function') photoOpenDetail(shId); }, 80);
 }
-// מגבלת העלאה: מודעה אחת ביום לכל משתמש (המנהל פטור). נשמר בדפדפן, ואצל משתמש מחובר גם בחשבון
+// מגבלת העלאה: עד 2 מודעות ביום לכל משתמש (המנהל פטור). נשמר בדפדפן, ואצל משתמש מחובר גם בחשבון
+const UPLOAD_DAILY_LIMIT = 2;
 const uploadToday = () => new Date().toLocaleDateString('en-CA');
 let uploadDayDB = '';
+function uploadCountFor(val, d) {
+  const s = String(val || '');
+  if (s === d) return 1;
+  if (s.startsWith(d + '|')) return Math.max(0, parseInt(s.slice(d.length + 1), 10) || 0);
+  return 0;
+}
 function uploadBlockedNow(quiet) {
   if (typeof isAdmin === 'function' && isAdmin()) return false;
+  const d = uploadToday();
   let local = ''; try { local = localStorage.getItem('bw_upload_day') || ''; } catch (e) {}
-  if (local !== uploadToday() && uploadDayDB !== uploadToday()) return false;
-  if (!quiet) glassBanner({ title: 'כבר העלית מודעה היום', sub: 'אפשר להעלות מודעה אחת ביום. נסו שוב מחר.', icon: 'del', ms: 2600 });
+  if (Math.max(uploadCountFor(local, d), uploadCountFor(uploadDayDB, d)) < UPLOAD_DAILY_LIMIT) return false;
+  if (!quiet) glassBanner({ title: 'הגעת למגבלת ההעלאות להיום', sub: 'אפשר להעלות עד 2 מודעות ביום. נסו שוב מחר.', icon: 'del', ms: 2600 });
   return true;
 }
 function uploadMarkToday() {
   if (typeof isAdmin === 'function' && isAdmin()) return;
   const d = uploadToday(), u = auth.currentUser;
-  try { localStorage.setItem('bw_upload_day', d); } catch (e) {}
-  uploadDayDB = d;
-  if (u) set(ref(db, `website/upload_day/${u.uid}`), d).catch(() => {});
+  let local = ''; try { local = localStorage.getItem('bw_upload_day') || ''; } catch (e) {}
+  const next = Math.max(uploadCountFor(local, d), uploadCountFor(uploadDayDB, d)) + 1;
+  const v = `${d}|${next}`;
+  try { localStorage.setItem('bw_upload_day', v); } catch (e) {}
+  uploadDayDB = v;
+  if (u) set(ref(db, `website/upload_day/${u.uid}`), v).catch(() => {});
 }
 try { onAuthStateChanged(auth, async u => { uploadDayDB = ''; if (!u) return; try { uploadDayDB = (await get(ref(db, `website/upload_day/${u.uid}`))).val() || ''; } catch (e) {} }); } catch (e) {}
 // חלון "פרסום מודעה": תמונות, כותרת ומחיר. עובר באותו מסלול כמו ההעלאה בשיחה (אישור מנהל, מודעה אחת ביום)
@@ -34532,7 +34543,7 @@ async function mkPubSend() {
     if (typeof rentRender === 'function') rentRender();
     const whenTxt = publishAt ? `תעלה ב־${new Date(publishAt).toLocaleString('he-IL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}` : title;
     glassBanner({ title: publishAt ? 'המודעה תוזמנה' : 'המודעה פורסמה', sub: whenTxt, icon: 'ok', ms: 3000 });
-  } else { go.disabled = false; go.textContent = publishAt ? 'תזמון מודעה' : 'פרסום'; fail(/מחר/.test(out) ? 'כבר העלית מודעה היום. אפשר להעלות מודעה אחת ביום.' : 'הפרסום נכשל. נסו שוב.'); }
+  } else { go.disabled = false; go.textContent = publishAt ? 'תזמון מודעה' : 'פרסום'; fail(/מחר/.test(out) ? 'הגעת למגבלת ההעלאות להיום. אפשר להעלות עד 2 מודעות ביום.' : 'הפרסום נכשל. נסו שוב.'); }
 }
 Object.assign(window, { mkPubOpen, mkPubClose, mkPubAdd, mkPubDel, mkPubSend, mkPubType, mkPubKind });
 function mktPublish(sec) {
