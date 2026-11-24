@@ -25005,3 +25005,8 @@ button, a, input, select, textarea, [onclick] {
     -webkit-backdrop-filter: none !important;
   }
 }
+
+/* Hide mobile tabs bar (.mt-tabs) when viewing a listing or another user's profile */
+html.mt-hide-tabs body #m-top .mt-tabs {
+  display: none !important;
+}

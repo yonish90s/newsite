@@ -17157,6 +17157,7 @@ async function openUserPage(authorId, authorName) {
   }
   if (typeof mainContent === 'undefined' || !mainContent) return;
   mainContent.innerHTML = buildUserPageHTML(authorId, authorName);
+  if (typeof mtSync === 'function') mtSync();
   try { window.scrollTo(0, 0); } catch (e) {}
   if (typeof photoApplyFilters === 'function') photoApplyFilters();
 
@@ -38591,6 +38592,12 @@ function mtSync() {
   mtMePaint();
   const el = document.getElementById('m-top'); if (!el) return;
   const prf = !!document.querySelector('.prf-page');
+  const isListing = !!(document.querySelector('.rent-page :is(.mk-watch, .rn-det)') || (typeof rentUI !== 'undefined' && rentUI.open));
+  const isUserProf = !!(document.querySelector('.user-page') || (typeof rentUI !== 'undefined' && rentUI.seller));
+  const hideTabs = isListing || isUserProf;
+  document.documentElement.classList.toggle('mt-hide-tabs', hideTabs);
+  const tabsEl = el.querySelector('.mt-tabs');
+  if (tabsEl) tabsEl.hidden = hideTabs;
   const svd = !prf && !!document.querySelector('.svd-page'), dls = !prf && !svd && !!document.querySelector('.dls-page'), apv = !prf && !!document.querySelector('.apv-page'), dash = !prf && !!document.querySelector('.ua-page'), feed = !prf && !svd && !apv && !dls && !dash && !!document.querySelector('.fd-page'), home = !prf && !svd && !feed && !apv && !dls && !dash && !!document.querySelector('.lib-page');
   el.querySelectorAll('.mt-tabs button').forEach(b => b.classList.toggle('on', (b.dataset.t === 'feed' && feed) || (b.dataset.t === 'home' && home) || (b.dataset.t === 'apv' && apv) || (b.dataset.t === 'deals' && dls) || (b.dataset.t === 'dash' && dash) || (b.dataset.t === 'saved' && svd) || (b.dataset.t === 'details' && prf)));
   const homeBtn = el.querySelector('.mt-home');
