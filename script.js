@@ -34306,7 +34306,6 @@ function mkPubOpen() {
         <span class="mkpub-xav">${myAv}</span>
         <button type="button" id="mkpub-aud-btn" class="mkpub-aud-pill" onclick="mkPubAudienceOpen()"><span>כולם · השוק</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></button>
       </div>
-      <button type="button" class="mkpub-go mkpub-xpost" id="mkpub-go" onclick="mkPubSend()">פרסום</button>
     </div>
     <div class="mkpub-xcompose">
       <input id="mkpub-title" class="mkpub-xtitle" maxlength="32" placeholder="כותרת המודעה…" oninput="mkPubAuto()">
@@ -34352,9 +34351,8 @@ function mkPubOpen() {
     <p class="mkpub-err" id="mkpub-err" hidden></p>
     <div class="mkpub-xbar" role="toolbar" aria-label="אפשרויות פרסום">
       <button type="button" onclick="mkPubAdd()" title="הוספת תמונה" aria-label="הוספת תמונה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></button>
-      <button type="button" onclick="mkPubTogglePane('meta')" title="מחיר, סוג ומלאי" aria-label="מחיר, סוג ומלאי"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><circle cx="7.5" cy="7.5" r="1.2"/></svg></button>
-      <button type="button" id="mkpub-tb-sched" onclick="mkPubSchedMode(!mkPub.scheduled)" title="תזמון פרסום" aria-label="תזמון פרסום"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></button>
       <button type="button" onclick="mkPubTogglePane('link')" title="קישור או סרטון" aria-label="קישור או סרטון"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button>
+      <button type="button" class="mkpub-go mkpub-xpost" id="mkpub-go" onclick="mkPubSend()">פרסום</button>
     </div>
   </div>`;
   m.addEventListener('click', e => { if (e.target === m) mkPubClose(); });

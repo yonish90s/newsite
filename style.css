@@ -23075,6 +23075,7 @@ html.theme-dark .mkpub-xp { background: rgba(255, 255, 255, .06); }
 .mkpub-xrow2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .mkpub-xreply { font-size: 13px; font-weight: 600; color: #1d9bf0; padding: 6px 0; border-top: 1px solid rgba(128, 128, 128, .18); }
 .mkpub-xbar { display: flex; align-items: center; gap: 16px; padding-top: 4px; }
+.mkpub-xbar .mkpub-xpost { margin-inline-start: auto !important; }
 .mkpub-xbar button { border: 0; background: transparent; color: #1d9bf0; padding: 6px; border-radius: 50%; cursor: pointer; display: grid; place-items: center; }
 .mkpub-xbar button svg { width: 20px; height: 20px; }
 .mkpub-aud-sheet { position: fixed; inset: 0; z-index: 2147483001; background: rgba(0, 0, 0, .55); display: flex; align-items: flex-end; justify-content: center; direction: rtl; }
