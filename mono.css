@@ -2270,9 +2270,9 @@ html:not(.theme-dark) .wdp-btn.cancel { color: #111111; }
 html:not(.theme-dark) .wdp-btn.ok { background: #111111; }
 html:not(.theme-dark) body:not(#_):not(#_):not(#_) #m-top .mt-filter.is-filtered { border-color: #7a7a7a !important; color: #7a7a7a !important; }
 html:not(.theme-dark) .hdf-opt { color: #111111; }
-html:not(.theme-dark) .hdf-opt.on { border-color: #111111; background: rgba(17,17,17,0.08); }
+html:not(.theme-dark) body:not(#_):not(#_):not(#_):not(#_):not(#_) .hdf-opt.on { border-color: rgba(17,17,17,0.45) !important; background: linear-gradient(135deg, rgba(17,17,17,0.12), rgba(130,130,130,0.1)) !important; }
 html:not(.theme-dark) .hdf-tx small { color: #727272; }
-html:not(.theme-dark) .hdf-chk { color: #111111; }
+html:not(.theme-dark) body:not(#_):not(#_):not(#_):not(#_):not(#_) .hdf-chk { color: #111111 !important; }
 html:not(.theme-dark) .pro-wall { background: radial-gradient(circle at 50% 18%, #111111 0%, #0b0b0e 65%); }
 html:not(.theme-dark) .pro-card { background: linear-gradient(180deg, rgba(17,17,17,0.92) 0%, rgba(17,17,17,0.96) 100%); }
 html:not(.theme-dark) .pro-orb.is-main { background: radial-gradient(circle at 30% 25%, #dadada 0%, #111111 48%, #111111 100%); }
