@@ -8443,7 +8443,7 @@ async function qpPublish() {
         if (typeof saveToStorage === 'function') saveToStorage();
         if (!isAdminNow && typeof pushPendingSubmission === 'function') pushPendingSubmission(album);
         uploadMarkToday(); qpBubble('bot', '✅ המוצר פורסם בהצלחה!');
-        setTimeout(() => { const md = document.getElementById('quick-publish-modal'); if (md) md.style.display = 'none'; mktGo('all'); }, 2000);
+        setTimeout(() => { const md = document.getElementById('quick-publish-modal'); if (md) md.style.display = 'none'; if (typeof libOpen === 'function') libOpen(); else goToHomePage(); }, 2000);
         return;
       }
       const albums = photoGetAlbums();
@@ -8455,7 +8455,7 @@ async function qpPublish() {
       uploadMarkToday(); qpBubble('bot', `✅ ${what} בהצלחה!`);
       setTimeout(() => {
         const m = document.getElementById('quick-publish-modal'); if (m) m.style.display = 'none';
-        if (sec === 'secondhand') mktGo('all');
+        if (sec === 'secondhand') { if (typeof libOpen === 'function') libOpen(); else goToHomePage(); }
       }, 2000);
     }
   } catch (e) {
@@ -14159,16 +14159,11 @@ function homeGridCardsHTML() {
 // העמוד הראשי מציג את השוק. להחזרת הקרוסלה ורשת התמונות: false
 const HOME_MARKET = true;
 function homeGridHTML(photos, comics, stories) {
-  if (HOME_MARKET && HOME_LIBRARY && !window.__mktWanted && typeof libHTML === 'function' && !(rentUI.open || rentUI.seller)) {
+  if (HOME_MARKET && typeof libHTML === 'function') {
     setTimeout(rentSubscribe, 0);
     setTimeout(() => { clearInterval(libTimer); libTimer = setInterval(() => libHero(1), 6500); try { mtSync(); } catch (e) {} }, 0);
-    let h = ''; try { h = libHTML(); } catch (e) { h = ''; }   // אם הספרייה עוד לא מוכנה (בטעינה מוקדמת) — נופלים לשוק
-    if (h) return `<div class="lib-page"><div class="lib-main">${h}</div></div>`;
-  }
-  if (HOME_MARKET) {
-    setTimeout(rentSubscribe, 0);
-    rentUI.open = null; rentUI.sec = 'all'; rentUI.cat = 'all';
-    return `<div class="rent-page mk-home" data-page-id="page-rent-main"><div class="rn-inner">${rentViewHTML()}</div></div>`;
+    let h = ''; try { h = libHTML(); } catch (e) { h = ''; }
+    return `<div class="lib-page"><div class="lib-main">${h}</div></div>`;
   }
   const ok = x => x && x.approved !== false && x.id;
   _hgItems = (photos || []).filter(ok).map(x => ({ x, kind: 'photo' }))
@@ -34251,12 +34246,12 @@ function mktPurgeExpired() {
 let mktHidden = (() => { try { return JSON.parse(localStorage.getItem('bw_mkt_hidden') || '{}') || {}; } catch (e) { return {}; } })();   // מודעות שהמנהל הסיר (website/market_hidden + שמירה מקומית)
 function mktHideSave() { try { localStorage.setItem('bw_mkt_hidden', JSON.stringify(mktHidden)); } catch (e) {} }
 function mktAll() { return rentAll().concat(usedAll()).filter(r => !mktHidden[r.id]); }
-function mktGo(sec) {
-  window.__mktWanted = true;   // בחירה מפורשת בשוק — לא מחזירים לספרייה
-  rentUI.sec = sec || 'all'; rentUI.open = null; rentUI.seller = null; rentUI.cat = 'all';
-  Object.assign(rentUI, { offer: 'all', owner: 'all', min: null, max: null, pk: 'all', pa: 'all', pd: 'all', dept: 'all' });
-  if (typeof activePageId !== 'undefined' && activePageId === 'page-rent-main' && mainContent && mainContent.querySelector('.rent-page')) { rentRender(); try { window.scrollTo({ top: 0 }); } catch (e) {} return; }
-  navigateToPage('page-rent-main');
+function mktGo() {
+  window.__mktWanted = false;
+  if (typeof rentUI !== 'undefined') Object.assign(rentUI, { open: null, seller: null });
+  if (typeof libOpen === 'function') libOpen();
+  else if (typeof goToHomePage === 'function') goToHomePage();
+  try { window.scrollTo({ top: 0 }); } catch (e) {}
 }
 // מוצר יד 2 אמיתי נפתח בעמוד המוצר המקורי שלו
 function mktOpenUsed(shId) {
@@ -36022,52 +36017,6 @@ function deptPick(id) {
   rentRender();
 }
 window.deptPick = deptPick;
-function rentViewHTML() {
-  const all = mktAll();
-  const cities = [...new Set(all.map(r => r.city).filter(Boolean))].sort();
-  const eq = all.filter(r => mktSecOf(r) === 'rent');
-  const count = id => id === 'all' ? eq.length : eq.filter(r => r.cat === id).length;
-  const secCount = id => id === 'all' ? all.length : all.filter(r => mktSecOf(r) === id).length;
-  const sec = MKT_SECS.find(x => x.id === rentUI.sec) || MKT_SECS[0];
-  const pubBtn = rentUI.sec === 'all'
-    ? `<button type="button" class="rn-pub" onclick="mkPubOpen()">+ פרסום מודעה</button>`
-    : `<button type="button" class="rn-pub" onclick="mkPubOpen()">+ פרסום מודעה</button>`;
-  // שורת הכותרת: פרסום מודעה, מיון (חם / חדש / פופולרי / הכי זול) והאשטאגים שמסננים את המודעות
-  const sv = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
-  const sorts = [
-    ['trend', 'חם עכשיו', '<path d="M12 22c4 0 7-2.7 7-7 0-4-3-6-4-9-1.5 2-2 3.5-2 5-1.5-1-2.5-3-2.5-5C7 8 5 11 5 15c0 4.3 3 7 7 7z"/>'],
-    ['new', 'חדש', '<path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v5h-5"/><path d="M12 8v4l3 2"/>'],
-    ['popular', 'פופולרי', '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'],
-    ['cheap', 'הכי זול', '<path d="M20 12 12 20 4 12V4h8z"/><circle cx="8.5" cy="8.5" r="1.5"/>']
-  ];
-  if (mkGeo) sorts.push(['near', 'הכי קרוב', '<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>']);
-  const tags = [['sec', 'used', 'יד2'], ['sec', 'biz', 'עסקים'], ['offer', 'מכירה', 'מכירה'], ['offer', 'החלפה', 'החלפה'], ['offer', 'השאלה', 'השאלה'], ['sec', 'rent', 'השכרה'],
-    ...RENT_CATS.filter(c => !c.store && c.id !== 'all').map(c => ['cat', c.id, c.name.replace(/\s+/g, '_')]), ['sec', 'store', 'אחסון'],
-    ['sec', 'proj', 'פרויקטים'], ['pd', 'elec', 'חשמל'], ['pa', 'phys', 'מוצרים_פיזיים'], ['pa', 'fun', 'פנאי'], ['pk', '3d', 'תלת_מימד']];
-  const tagOn = (k, v) => k === 'sec' ? rentUI.sec === v && rentUI.cat === 'all' && rentUI.offer === 'all' && rentUI.pk === 'all' && rentUI.pa === 'all' : rentUI[k] === v;
-  const total = rentList().length;
-  return `${!rentUI.open && !rentUI.seller ? homeComposerHTML() : ''}<header class="rn-head">
-      ${pubBtn}
-      <span class="rn-count">${total.toLocaleString('he-IL')} ${total === 1 ? 'מודעה' : 'מודעות'}</span>
-      <button type="button" class="rn-fbtn${rentFilterOpen() ? ' on' : ''}" onclick="rentFilterToggle()" aria-label="סינון וקטגוריות"><span class="rn-fbtn-t">סינון</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg></button>
-      <button type="button" class="rn-geo${mkGeo ? ' on' : ''}" onclick="mkGeoToggle()" title="${mkGeo ? 'כיבוי המיקום' : 'הצגת המרחק מכל מודעה'}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>${mkGeo ? 'המיקום פעיל' : 'הפעלת מיקום'}</button>
-      <nav class="rn-sorts" aria-label="מיון">${sorts.map(([v, t, d]) => `<button type="button" class="rn-sort${rentUI.sort === v ? ' on' : ''}" onclick="rentSet('sort', '${v}')">${sv(d)}${t}</button>`).join('')}</nav>
-
-    </header>${deptCirclesHTML()}${filterBarHTML()}${subPromoBannerHTML()}
-    <nav class="rn-secs">${MKT_SECS.slice(0, 1).map(x => `<button type="button" class="rn-sec${rentUI.sec === x.id ? ' on' : ''}" onclick="mktGo('${x.id}')"><span>${x.ic}</span>${x.name}<small>${secCount(x.id)}</small></button>`).join('')}</nav>
-    <div class="rn-bar">
-      <input type="search" class="rn-q" placeholder="${rentUI.sec === 'store' ? 'איפה לאחסן? למשל: מחסן בתל אביב' : rentUI.sec === 'used' ? 'מה מחפשים? למשל: ספה, מקרר, אופניים' : 'מה צריך? למשל: מדפסת תלת מימד בתל אביב'}" value="${escHtml(rentUI.q)}" oninput="rentSet('q', this.value)">
-      <select class="rn-sel" onchange="rentSet('city', this.value)" aria-label="עיר"><option value="all">כל הארץ</option>${cities.map(c => `<option${rentUI.city === c ? ' selected' : ''}>${escHtml(c)}</option>`).join('')}</select>
-      <select class="rn-sel" onchange="rentSet('sort', this.value)" aria-label="מיון">${[['new', 'הכי חדש'], ['cheap', 'הכי זול'], ['rating', 'דירוג גבוה']].map(([v, t]) => `<option value="${v}"${rentUI.sort === v ? ' selected' : ''}>${t}</option>`).join('')}</select>
-    </div>
-    ${rentUI.sec === 'proj' ? projNavHTML() : ''}
-    ${rentUI.sec === 'rent' ? `<nav class="rn-cats">${RENT_CATS.filter(c => !c.store).map(c => `<button type="button" class="rn-cat${rentUI.cat === c.id ? ' on' : ''}" onclick="rentSet('cat', '${c.id}')">${c.ic} ${c.name} <small>${count(c.id)}</small></button>`).join('')}</nav>` : ''}
-    <div class="rn-layout${rentFilterOpen() ? ' f-open' : ''}">
-      <aside class="mk-fside rn-fpanel" aria-label="סינון"></aside>
-      <div class="rn-grid">${rentGridHTML()}</div>
-    </div>
-    `;
-}
 // כרטיס הצטרפות למנוי עם כפתור סגירה (✕)
 function subPromoBannerHTML() {
   if (window.__subPromoClosed) return '';
@@ -36114,10 +36063,8 @@ function buildRentPage() {
     setTimeout(() => { if (rentUI.open === open.id) rentRender(); }, 0);
     return `<div class="rent-page" data-page-id="page-rent-main"><div class="rn-inner">${rentDetailHTML(open)}</div></div>`;
   }
-  setTimeout(() => { rentSideSync(); mkTitleMore(); }, 0);
-  setTimeout(mkTitleMore, 900);
   rentUI.open = null;
-  return `<div class="rent-page" data-page-id="page-rent-main"><div class="rn-inner">${rentViewHTML()}</div></div>`;
+  return `<div class="lib-page"><div class="lib-main">${typeof libHTML === 'function' ? libHTML() : ''}</div></div>`;
 }
 // העמודה שנפתחת מהצד בעמוד הראשי: קטגוריות וסינון מהמודעות שבשוק
 function rentSideHTML() {
@@ -36271,8 +36218,8 @@ function rentRender(gridOnly) {
     return;
   }
   if (open && mainContent) { const stTop = mainContent.querySelector(':scope > .site-top'); if (stTop) stTop.remove(); }
-  el.innerHTML = open ? rentDetailHTML(open) : rentUI.seller ? rentSellerHTML(rentUI.seller) : rentViewHTML();
-  if (!open && !rentUI.seller) { rentSideSync(); requestAnimationFrame(mkTitleMore); }
+  if (!open && !rentUI.seller) { if (typeof libOpen === 'function') libOpen(); return; }
+  el.innerHTML = open ? rentDetailHTML(open) : rentSellerHTML(rentUI.seller);
   if (open) {
     rentStickFix(); requestAnimationFrame(rentStickFix); setTimeout(rentStickFix, 120);
     rentFitPage(); requestAnimationFrame(rentFitPage); setTimeout(rentFitPage, 120); setTimeout(rentFitPage, 700);
