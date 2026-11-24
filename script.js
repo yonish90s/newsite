@@ -34138,10 +34138,8 @@ function mktLinkUrl(u) {
   return /^https?:\/\/[\w-]+(\.[\w-]+)+([/?#]\S*)?$/i.test(u) ? u : '';
 }
 const mktLinkHost = u => String(u || '').replace(/^https?:\/\//i, '').replace(/^www\./i, '').replace(/\/$/, '');
-// דוגמה יחידה (מוצגת כשאין מודעות אמיתיות)
-const USED_DEMO = [
-  { id: 'u1', offer: 'מכירה', img: 'rent/u-sofa.jpg', title: 'ספה תלת-מושבית מעור, במצב מצוין', price: 1200, city: 'גבעתיים', owner: 'הילה רוזן', t: -5, desc: 'ספה נוחה מעור שחור, 3 מושבים. בלי קרעים, מבית ללא בעלי חיים. איסוף עצמי מקומה 2 עם מעלית.', specs: ['רוחב 2.1 מ׳', 'עור אמיתי', 'איסוף עצמי'] }
-].map(r => Object.assign({ demo: true, kind: 'used' }, r, { t: Date.now() + r.t * 3600e3 }));
+// ללא מודעות דוגמה — מוצגות רק מודעות אמיתיות של משתמשים
+const USED_DEMO = [];
 const BIZ_DEMO = [];
 const PROJ_DEMO = [];
 // מוצרי יד 2 אמיתיים — מגיעים מעמוד "מוצרי גולשים" (נשמרים בתוכן העמוד)
@@ -35214,7 +35212,9 @@ function homeDateFeedHTML(baseList) {
     [arr[i], arr[j]] = [arr[j], arr[i]];
   }
   const filtered = arr.slice(0, 40);
-  return filtered.length ? filtered.map(twPostHTML).join('') : '<div class="rn-empty">אין מודעות בטווח התאריכים שנבחר.</div>';
+  return filtered.length ? filtered.map(twPostHTML).join('') : (homeDateTab === 'all'
+    ? '<div class="rn-empty">עדיין אין מודעות באתר — היו הראשונים לפרסם!<div style="margin-top:12px"><button type="button" class="mk-btn primary" onclick="mkPubOpen()">+ פרסום מודעה</button></div></div>'
+    : '<div class="rn-empty">אין מודעות בטווח התאריכים שנבחר.</div>');
 }
 function homeDateSetTab(t) {
   homeDateTab = t;
@@ -38726,20 +38726,9 @@ function storiesSubscribe() {
   try { onAuthStateChanged(auth, () => setTimeout(storiesRefreshDOM, 100)); } catch (e) {}
   setInterval(() => { storyPurgeExpired(); storiesRefreshDOM(); }, 5 * 60 * 1000);
 }
-// סטוריז לדוגמה של מוכרים באתר (משתמשים בקבצי התמונות הקיימים באתר — 0 זיכרון במסד הנתונים)
+// ללא סטוריז לדוגמה — מוצגים רק סטוריז אמיתיים של משתמשים
 function storyDemoGroups() {
-  const now = Date.now(), H = 3600 * 1000;
-  const raw = [
-    { owner: 'נועה לוי', city: 'תל אביב', items: [{ id: 'dm_noa_1', img: 'rent/t/camera.jpg?v=2', caption: 'מצלמת Nikon D850 במצב נדיר 📸', t: now - 2 * H }] }
-  ];
-  return raw.map(g => ({
-    key: 'demo_' + igDemoKeyOf(g.owner),
-    uid: '',
-    name: g.owner,
-    demo: true,
-    items: g.items.map(it => Object.assign({}, it, { name: g.owner, uid: '' })),
-    lastT: Math.max(...g.items.map(i => i.t))
-  }));
+  return [];
 }
 function storiesBuildGroups() {
   storyPurgeExpired();
