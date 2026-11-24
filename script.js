@@ -8344,7 +8344,7 @@ async function qpAgentHandoff() {
 Object.assign(window, { qpAgentPublish, qpAgentHandoff });
 
 async function qpPublish() {
-  if (uploadBlockedNow(true)) { qpBubble('bot', 'הגעת למגבלת ההעלאות להיום. אפשר להעלות עד 2 מודעות ביום, אז נסו שוב מחר.'); return; }
+  if (uploadBlockedNow(true)) { qpBubble('bot', 'הגעת למגבלת ההעלאות להיום. אפשר להעלות עד 3 מודעות ביום, אז נסו שוב מחר.'); return; }
   qpBubble('bot', '⏳ מפרסם את התוכן...');
   const user = auth.currentUser;
   let nickname = 'משתמש', email = '', telegram = '';
@@ -34259,8 +34259,8 @@ function mktOpenUsed(shId) {
   try { navigateToPage('page-secondhand-main'); } finally { window.__shDirect = false; }
   setTimeout(() => { if (typeof photoOpenDetail === 'function') photoOpenDetail(shId); }, 80);
 }
-// מגבלת העלאה: עד 2 מודעות ביום לכל משתמש (המנהל פטור). נשמר בדפדפן, ואצל משתמש מחובר גם בחשבון
-const UPLOAD_DAILY_LIMIT = 2;
+// מגבלת העלאה: עד 3 מודעות ביום לכל משתמש (המנהל פטור). נשמר בדפדפן, ואצל משתמש מחובר גם בחשבון
+const UPLOAD_DAILY_LIMIT = 3;
 const uploadToday = () => new Date().toLocaleDateString('en-CA');
 let uploadDayDB = '';
 function uploadCountFor(val, d) {
@@ -34274,7 +34274,7 @@ function uploadBlockedNow(quiet) {
   const d = uploadToday();
   let local = ''; try { local = localStorage.getItem('bw_upload_day') || ''; } catch (e) {}
   if (Math.max(uploadCountFor(local, d), uploadCountFor(uploadDayDB, d)) < UPLOAD_DAILY_LIMIT) return false;
-  if (!quiet) glassBanner({ title: 'הגעת למגבלת ההעלאות להיום', sub: 'אפשר להעלות עד 2 מודעות ביום. נסו שוב מחר.', icon: 'del', ms: 2600 });
+  if (!quiet) glassBanner({ title: 'הגעת למגבלת ההעלאות להיום', sub: 'אפשר להעלות עד 3 מודעות ביום. נסו שוב מחר.', icon: 'del', ms: 2600 });
   return true;
 }
 function uploadMarkToday() {
@@ -34538,7 +34538,7 @@ async function mkPubSend() {
     if (typeof rentRender === 'function') rentRender();
     const whenTxt = publishAt ? `תעלה ב־${new Date(publishAt).toLocaleString('he-IL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}` : title;
     glassBanner({ title: publishAt ? 'המודעה תוזמנה' : 'המודעה פורסמה', sub: whenTxt, icon: 'ok', ms: 3000 });
-  } else { go.disabled = false; go.textContent = publishAt ? 'תזמון מודעה' : 'פרסום'; fail(/מחר/.test(out) ? 'הגעת למגבלת ההעלאות להיום. אפשר להעלות עד 2 מודעות ביום.' : 'הפרסום נכשל. נסו שוב.'); }
+  } else { go.disabled = false; go.textContent = publishAt ? 'תזמון מודעה' : 'פרסום'; fail(/מחר/.test(out) ? 'הגעת למגבלת ההעלאות להיום. אפשר להעלות עד 3 מודעות ביום.' : 'הפרסום נכשל. נסו שוב.'); }
 }
 Object.assign(window, { mkPubOpen, mkPubClose, mkPubAdd, mkPubDel, mkPubSend, mkPubType, mkPubKind });
 function mktPublish(sec) {
