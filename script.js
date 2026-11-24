@@ -34137,39 +34137,12 @@ function mktLinkUrl(u) {
   return /^https?:\/\/[\w-]+(\.[\w-]+)+([/?#]\S*)?$/i.test(u) ? u : '';
 }
 const mktLinkHost = u => String(u || '').replace(/^https?:\/\//i, '').replace(/^www\./i, '').replace(/\/$/, '');
-// דוגמאות יד 2 (מוצגות כשיש מעט מוצרים אמיתיים)
+// דוגמה יחידה (מוצגת כשאין מודעות אמיתיות)
 const USED_DEMO = [
-  { id: 'u1', offer: 'מכירה', img: 'rent/u-sofa.jpg', title: 'ספה תלת-מושבית מעור, במצב מצוין', price: 1200, city: 'גבעתיים', owner: 'הילה רוזן', t: -5, desc: 'ספה נוחה מעור שחור, 3 מושבים. בלי קרעים, מבית ללא בעלי חיים. איסוף עצמי מקומה 2 עם מעלית.', specs: ['רוחב 2.1 מ׳', 'עור אמיתי', 'איסוף עצמי'] },
-  { id: 'u2', offer: 'מכירה', img: 'rent/u-fridge.jpg', title: 'מקרר Panasonic דו-דלתי, 4 שנים', price: 1450, city: 'חולון', owner: 'שמעון לוי', t: -22, desc: 'מקרר שקט וחסכוני, מקפיא למטה. עובר דירה ולכן מוכר. אפשר לבוא לראות שעובד.', specs: ['320 ליטר', 'No Frost', 'הובלה בתיאום'] },
-  { id: 'u3', offer: 'החלפה', img: 'rent/u-guitar.jpg', title: 'גיטרה Gibson Les Paul להחלפה', price: 0, city: 'חיפה', owner: 'עומר נחום', t: -54, desc: 'גיטרה במצב מצוין עם תיק קשיח. מחפש להחליף בקלידים / סינתיסייזר באותה רמה.', specs: ['כולל תיק קשיח', 'מיתרים חדשים', 'החלפה בלבד'] },
-  { id: 'u4', offer: 'השאלה', img: 'rent/u-bike.jpg', title: 'אופני עיר להשאלה לשבוע–חודש', price: 60, unit: 'month', city: 'תל אביב', owner: 'נטע קפלן', t: -80, desc: 'אופני עיר קלים ונוחים, עם מנעול. מתאים למי שמגיע לעיר לתקופה קצרה.', specs: ['כולל מנעול', 'פיקדון ₪300', 'תחזוקה כלולה'] }
+  { id: 'u1', offer: 'מכירה', img: 'rent/u-sofa.jpg', title: 'ספה תלת-מושבית מעור, במצב מצוין', price: 1200, city: 'גבעתיים', owner: 'הילה רוזן', t: -5, desc: 'ספה נוחה מעור שחור, 3 מושבים. בלי קרעים, מבית ללא בעלי חיים. איסוף עצמי מקומה 2 עם מעלית.', specs: ['רוחב 2.1 מ׳', 'עור אמיתי', 'איסוף עצמי'] }
 ].map(r => Object.assign({ demo: true, kind: 'used' }, r, { t: Date.now() + r.t * 3600e3 }));
-// דוגמאות לעסקים (מוצגות כשיש מעט עסקים אמיתיים)
-const BIZ_DEMO = [
-  { id: 'bz8', img: 'rent/biz-bakery.svg', hv: { p: 'er', id: 'nwU5bccY' }, sponsored: true, bizName: 'סטודיו אלבום', title: 'מודעת וידאו — אלבום בצפייה ישירה', price: 220, link: 'https://www.erome.com/a/nwU5bccY', city: 'תל אביב', owner: 'סטודיו אלבום', t: -0.2, desc: 'מודעה עם סרטון שרץ ישירות בתוך המודעה.', specs: ['וידאו חי', 'מסך מלא', 'איכות HD'] },
-  { id: 'bz7', img: 'rent/biz-bakery.svg', hv: { p: 'ph', id: '6ad1d8195baa2' }, sponsored: true, bizName: 'סטודיו וידאו', title: 'מודעת וידאו — צפייה ישירה', price: 290, link: 'https://www.pornhub.com/view_video.php?viewkey=6ad1d8195baa2', city: 'תל אביב', owner: 'סטודיו וידאו', t: -0.5, desc: 'מודעה עם סרטון שרץ ישירות בתוך המודעה.', specs: ['וידאו חי', 'מסך מלא', 'איכות HD'] },
-  { id: 'bz6', img: 'rent/biz-bakery.svg', hv: { p: 'rg', id: 'leafycompetenttortoise' }, sponsored: true, bizName: 'סטודיו מדיה', title: 'מודעת וידאו — סרטון בפעולה', price: 250, link: 'https://www.redgifs.com/watch/leafycompetenttortoise', city: 'תל אביב', owner: 'סטודיו מדיה', t: -1, desc: 'מודעה עם סרטון שרץ ישירות בתוך המודעה.', specs: ['וידאו חי', 'מסך מלא', 'איכות HD'] },
-  { id: 'bz1', img: 'rent/biz-bakery.svg', bizName: 'מאפיית השכונה', title: 'מגש מאפים לאירוע — 40 יחידות', price: 180, link: 'https://example.com/bakery', city: 'הרצליה', owner: 'מאפיית השכונה', t: -4, desc: 'קרואסונים, בורקסים ומאפים מתוקים, טריים מהבוקר. משלוח עד הבית באזור השרון.', specs: ['40 יחידות', 'משלוח בשרון', 'הזמנה יום מראש'] },
-  { id: 'bz2', img: 'rent/biz-phone.svg', hv: { p: 'yt', id: 'UTA7ak0ZxA0' }, bizName: 'מעבדת פיקס-טק', title: 'החלפת מסך לאייפון — באותו יום', price: 390, link: 'https://example.com/fixtech', city: 'תל אביב', owner: 'מעבדת פיקס-טק', t: -10, desc: 'מסך איכותי עם אחריות לחצי שנה. מגיעים בבוקר, אוספים אחר הצהריים.', specs: ['אחריות 6 חודשים', 'תוך 3 שעות', 'כל הדגמים'] },
-  { id: 'bz5', img: 'rent/biz-phone.svg', hv: { p: 'ody', path: '@prophoneyoutube:b/how-to-huawei-p-smart-2019-screen:5' }, bizName: 'מעבדת פרו-פון', title: 'החלפת מסך ל-Huawei — סרטון מהמעבדה', price: 260, link: '', city: 'חיפה', owner: 'מעבדת פרו-פון', t: -14, desc: 'כך נראית החלפת מסך אצלנו, מההתחלה ועד הסוף. מסך מקורי, אחריות לשלושה חודשים.', specs: ['אחריות 3 חודשים', 'תוך שעתיים', 'Huawei ו-Samsung'] },
-  { id: 'bz3', img: 'rent/biz-wood.svg', bizName: 'נגריית עץ ושורש', title: 'שולחן אוכל מעץ מלא לפי מידה', price: 3200, link: '', city: 'קריית אתא', owner: 'נגריית עץ ושורש', t: -28, desc: 'שולחנות מעץ אלון ואגוז, בעבודת יד. בוחרים מידה, גוון ורגליים.', specs: ['עץ מלא', 'לפי מידה', 'אספקה תוך 3 שבועות'] },
-  { id: 'bz4', img: 'rent/biz-print.svg', bizName: 'דפוס הצבע', title: '500 כרטיסי ביקור כולל עיצוב', price: 150, link: 'https://example.com/print', city: 'ירושלים', owner: 'דפוס הצבע', t: -48, desc: 'כרטיסי ביקור על נייר עבה, עם עיצוב בחינם. מוכן תוך יומיים.', specs: ['500 יחידות', 'עיצוב חינם', 'מוכן תוך יומיים'] }
-].map(r => Object.assign({ demo: true, kind: 'used', offer: 'עסק' }, r, { t: Date.now() + r.t * 3600e3 }));
-// דוגמאות לפרויקטים של גולשים (מוצגות כשיש מעט פרויקטים אמיתיים)
-const PROJ_DEMO = [
-  { id: 'pj1', pd: 'web', pk: 'site', img: 'rent/proj-shop.svg', title: 'חנות אונליין לקרמיקה שבניתי לבד', price: 0, link: 'https://example.com/ceramics', city: 'רמת גן', owner: 'נועה ברק', t: -3, desc: 'אתר חנות מלא: קטלוג, עגלה ותשלום. בניתי ב-HTML, CSS ו-JavaScript, עם מסד נתונים ב-Firebase. אשמח לשמוע מה אתם חושבים.', specs: ['HTML / CSS / JS', 'Firebase', 'מותאם לנייד'] },
-  { id: 'pj2', pd: 'sport', pk: 'site', img: 'rent/proj-blog.svg', title: 'בלוג טיולים בארץ — מסלולים ומפות', price: 0, link: 'https://example.com/trails', city: 'ירושלים', owner: 'אלון שגיא', t: -14, desc: 'בלוג שאני כותב כבר שנה, עם מסלולי הליכה, מפות ותמונות. פתוח לשיתופי פעולה.', specs: ['WordPress', '120 מסלולים', 'מפות אינטראקטיביות'] },
-  { id: 'pj3', pd: 'apps', pk: 'app', img: 'rent/proj-app.svg', title: 'אפליקציה לקניות משותפות לבית', price: 0, link: 'https://example.com/shoplist', city: 'באר שבע', owner: 'דנה אור', t: -30, desc: 'רשימת קניות שכל בני הבית מעדכנים יחד בזמן אמת. מחפשת אנשים שינסו ויגידו מה חסר.', specs: ['React Native', 'אנדרואיד ו-iPhone', 'חינם'] },
-  { id: 'pj4', pd: 'd3', pk: '3d', img: 'rent/proj-3d-vase.svg', title: 'אגרטל Low-Poly להדפסה', price: 25, link: 'https://example.com/vase-stl', city: 'חיפה', owner: 'מאיה לוי', t: -8, desc: 'מודל שעיצבתי ב-Blender. מגיע כקובץ STL מוכן להדפסה, בלי תמיכות. אפשר גם להזמין מודפס.', specs: ['Blender', 'קובץ STL', 'גובה 18 ס״מ'] },
-  { id: 'pj5', pd: 'edu', pk: '3d', img: 'rent/proj-3d-gears.svg', title: 'מנגנון גלגלי שיניים מודפס', price: 0, link: '', city: 'תל אביב', owner: 'רון כהן', t: -20, desc: 'פרויקט לימודי: מנגנון שמסתובב בלי ברגים, מודפס בחלק אחד. הקבצים חינם למי שרוצה.', specs: ['Fusion 360', 'PLA', 'הדפסה ב-6 שעות'] },
-  { id: 'pj6', pd: 'home', pk: '3d', img: 'rent/proj-3d-house.svg', title: 'הדמיית בית בתלת מימד ללקוח', price: 0, link: 'https://example.com/house-3d', city: 'נתניה', owner: 'עומר נחום', t: -44, desc: 'הדמיה של בית פרטי שהכנתי לאדריכלית. מקבל עבודות דומות.', specs: ['SketchUp', 'רינדור', 'מקבל הזמנות'] }
-  ,{ id: 'pj7', pd: 'elec', pk: 'other', img: 'rent/proj-elec-lamp.svg', title: 'מנורת LED חכמה שנדלקת מהטלפון', price: 90, link: '', city: 'פתח תקווה', owner: 'יואב מזרחי', t: -5, desc: 'בניתי מנורה עם ESP32 ופס לדים. מדליקים, משנים צבע ומתזמנים מהטלפון דרך ה-Wi-Fi של הבית. אפשר להזמין אחת מוכנה.', specs: ['ESP32', 'לדים WS2812', 'גוף מודפס בתלת מימד'] },
-  { id: 'pj8', pd: 'garden', pk: 'other', img: 'rent/proj-garden.svg', title: 'בקר השקיה שבודק לחות באדמה', price: 0, link: 'https://example.com/smart-water', city: 'רחובות', owner: 'שירה גולן', t: -12, desc: 'חיישן לחות + ברז חשמלי: הגינה מושקית רק כשהאדמה יבשה. חוסך בערך 40% מים. השרטוטים והקוד פתוחים לכולם.', specs: ['Arduino', 'חיישן לחות', 'קוד פתוח'] },
-  { id: 'pj9', pd: 'energy', pk: 'other', img: 'rent/proj-solar.svg', title: 'מטען סולארי מתקפל לטיולים', price: 140, link: '', city: 'מצפה רמון', owner: 'איתי רז', t: -26, desc: 'פאנל סולארי קטן עם סוללה, נטען ביום ומטעין טלפון בלילה. בניתי לטיולים במדבר ועכשיו מכין גם לאחרים.', specs: ['10W', 'סוללה 10,000mAh', 'USB-C'] },
-  { id: 'pj10', pd: 'games', pk: 'app', img: 'rent/proj-game.svg', title: 'משחק פלטפורמה שבניתי ב-Unity', price: 0, link: 'https://example.com/pixel-jump', city: 'אשדוד', owner: 'עידו פרץ', t: -9, desc: 'משחק קפיצות עם 12 שלבים, גרפיקה בסגנון פיקסלים ומוזיקה שהלחנתי. רץ בדפדפן, אשמח לשמוע מה דעתכם.', specs: ['Unity', '12 שלבים', 'רץ בדפדפן'] },
-  { id: 'pj11', pd: 'toys', pk: '3d', img: 'rent/proj-boardgame.svg', title: 'משחק קופסה משפחתי מודפס', price: 120, link: '', city: 'כפר סבא', owner: 'מיכל דהן', t: -36, desc: 'משחק אסטרטגיה ל-2–4 שחקנים שהמצאתי עם הילדים. לוח, כלים וקוביות — הכול מודפס בתלת מימד.', specs: ['2–4 שחקנים', 'גיל 8+', 'PLA צבעוני'] },
-  { id: 'pj12', pd: 'health', pk: '3d', img: 'rent/proj-health.svg', title: 'פותחן צנצנות ביד אחת', price: 35, link: '', city: 'חדרה', owner: 'אבי שושן', t: -50, desc: 'עיצבתי לסבתא שלי פותחן שנצמד לשיש ופותח צנצנת ביד אחת. מדפיס לכל מי שצריך במחיר החומר.', specs: ['ביד אחת', 'נצמד לשיש', 'מותאם לכל גודל צנצנת'] }
-].map(r => Object.assign({ demo: true, kind: 'used', offer: 'פרויקט' }, r, { t: Date.now() + r.t * 3600e3 }));
+const BIZ_DEMO = [];
+const PROJ_DEMO = [];
 // מוצרי יד 2 אמיתיים — מגיעים מעמוד "מוצרי גולשים" (נשמרים בתוכן העמוד)
 // ===== סיווג אוטומטי למחלקות + האשטאגים: לפי הכותרת והתיאור, בלי שהמפרסם צריך לבחור =====
 const MKT_DEPTS = [
@@ -34250,8 +34223,7 @@ function usedAll() {
     bizName: String(x.bizName || '').slice(0, 60), video: '', hv: mkVideoParse(x.video), link: mktLinkUrl(x.link), pk: PROJ_KINDS[x.projectKind] ? x.projectKind : '', pd: PROJ_SUB[x.projectArea] ? x.projectArea : '',
     raw: x, images: (Array.isArray(x.images) ? x.images : []).filter(Boolean), desc: String(x.summary || x.body || '').trim(),
     specs: [x.loanPeriod ? 'תקופת השאלה: ' + x.loanPeriod : ''].concat(Array.isArray(x.loanTerms) ? x.loanTerms.filter(v => typeof v === 'string') : []).filter(Boolean).slice(0, 8) }));
-  const realProj = real.filter(mktIsProj).length, realBiz = real.filter(mktIsBiz).length;
-  const out = real.concat(real.length - realProj - realBiz < 6 ? USED_DEMO : [], realBiz < 4 ? BIZ_DEMO : [], realProj < 4 ? PROJ_DEMO : []);
+  const out = real.length ? real : USED_DEMO;
   out.forEach(r => {
     if (r.dept && r.htags) return;
     const saved = r.raw && r.raw.dept;
@@ -34581,48 +34553,7 @@ const RENT_IDEAS = [
 const rentIdeaSVG = i => `<svg viewBox="0 0 80 60" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${i.svg}</svg>`;
 const RENT_SITE_FEE = 0.05;   // עמלת האתר על כל השכרה (5%), מוצגת לשוכר בפירוט המחיר
 // דוגמאות: ציוד אצל גולשים (מוצגות בכל קטגוריה כל עוד אין בה מודעות אמיתיות). תמונות: Wikimedia Commons, בתיקייה rent/
-const RENT_DEMO = [
-  { id: 'd1', cat: '3d', img: 'rent/p3d-farm.jpg', title: 'חוות 4 מדפסות Prusa', price: 320, unit: 'kg', min: 0.05, city: 'תל אביב', owner: 'רון כהן', rating: 4.9, reviews: 38, t: -2,
-    desc: 'ארבע מדפסות שעובדות במקביל, אז גם הזמנה של עשרות חלקים מוכנה מהר. שולחים קובץ STL/3MF, אני מדפיס ומתאם איסוף.', specs: ['25×21×21 ס״מ לכל מדפסת', 'PLA / PETG / TPU', 'אספקה: 1–2 ימים'] },
-  { id: 'd2', cat: '3d', img: 'rent/p3d-prusa-mk2.jpg', title: 'Prusa i3 MK3 בסדנה עם הדרכה', price: 260, unit: 'kg', min: 0.1, city: 'חיפה', owner: 'מאיה לוי', rating: 4.8, reviews: 21, t: -6,
-    desc: 'באים לסדנה ומדפיסים בעצמכם. בפעם הראשונה — חצי שעה הדרכה בחינם. פילמנט PLA כלול במחיר.', specs: ['25×21×21 ס״מ', 'PLA כלול, PETG בתוספת', 'חניה חינם ליד הסדנה'] },
-  { id: 'd3', cat: '3d', img: 'rent/p3d-resin.jpg', title: 'Elegoo Mars — הדפסת שרף', price: 900, unit: 'kg', min: 0.02, city: 'ירושלים', owner: 'דניאל אברהם', rating: 5.0, reviews: 12, t: -26,
-    desc: 'הדפסת שרף לפרטים קטנים במיוחד: מיניאטורות, תכשיטים ודגמים. כולל שטיפה וייבוש UV.', specs: ['רזולוציה גבוהה', 'שרף אפור / שקוף', 'עד 12×7×15 ס״מ'] },
-  { id: 'd4', cat: '3d', img: 'rent/p3d-imprimante.jpg', title: 'Creality Ender 3 — לפי קילו', price: 190, unit: 'kg', min: 0.1, city: 'ראשון לציון', owner: 'אלון מזרחי', rating: 4.6, reviews: 17, t: -48,
-    desc: 'הדרך הכי זולה להדפיס: מעמדים, קופסאות, חלקי חילוף לבית. אפשר גם משלוח עד הבית.', specs: ['22×22×25 ס״מ', 'PLA / PETG', 'משלוח בתוספת ₪25'] },
-  { id: 'd5', cat: '3d', img: 'rent/p3d-prusa-metal.jpg', title: 'מדפסת Prusa i3 להשכרה הביתה', price: 90, unit: 'day', min: 2, city: 'באר שבע', owner: 'נועה פרץ', rating: 4.7, reviews: 9, t: -72,
-    desc: 'לוקחים את המדפסת הביתה ליומיים ומעלה. מגיעה מכוילת, עם 1 ק״ג PLA ומדריך קצר.', specs: ['כולל 1 ק״ג PLA', 'פיקדון ₪500 שמוחזר', 'הדרכה בטלפון'] },
-  { id: 'd6', cat: '3d', img: 'rent/p3d-shields.jpg', title: 'הדפסה סדרתית של חלקים קטנים', price: 290, unit: 'kg', min: 0.05, city: 'נתניה', owner: 'עידו שלום', rating: 4.9, reviews: 44, t: -120,
-    desc: 'מחזיקי מפתחות, ווים לקיר, חלקי חילוף קטנים. שולחים קובץ או בוחרים דגם מוכן — מוכן תוך כמה שעות.', specs: ['עד 18×18×18 ס״מ', 'PLA במגוון צבעים', 'איסוף עצמי'] },
-  { id: 'p1', cat: 'printer', img: 'rent/laser.jpg', title: 'מדפסת לייזר Brother מהירה', price: 0.4, unit: 'page', min: 10, city: 'פתח תקווה', owner: 'שירה גולן', rating: 4.8, reviews: 63, t: -3,
-    desc: 'שולחים PDF במייל או בוואטסאפ, ואוספים מהלובי תוך שעה. מושלם לעבודות, חוזים וטפסים.', specs: ['A4 שחור-לבן', 'דו-צדדי', 'נייר כלול'] },
-  { id: 'p2', cat: 'printer', img: 'rent/mfp.jpg', title: 'מכונת צילום Ricoh בצבע', price: 1.5, unit: 'page', min: 5, city: 'תל אביב', owner: 'משרד שחר', rating: 4.7, reviews: 29, t: -20,
-    desc: 'מכונה משרדית גדולה: הדפסה בצבע, A3, סריקה למייל וכריכה. אפשר להגיע ולהדפיס בעצמכם בשעות המשרד.', specs: ['צבע / שחור-לבן', 'A4 ו-A3', 'סריקה למייל'] },
-  { id: 'p3', cat: 'printer', img: 'rent/inkjet.jpg', title: 'מדפסת צבע Epson לתמונות', price: 1, unit: 'page', min: 1, city: 'מודיעין', owner: 'אבי דהן', rating: 4.5, reviews: 14, t: -50,
-    desc: 'הדפסת תמונות ועבודות צבעוניות לילדים. גם נייר צילום מבריק בתוספת קטנה.', specs: ['צבע מלא', 'נייר צילום ₪2', 'איסוף מהבית'] },
-  { id: 't1', cat: 'tools', img: 'rent/drill.jpg', title: 'מברגה נטענת Panasonic + ביטים', price: 35, unit: 'day', min: 1, city: 'תל אביב', owner: 'יוסי ברק', rating: 4.9, reviews: 52, t: -1,
-    desc: 'לתליית מדפים, תמונות והרכבת רהיטים. מגיעה עם 2 סוללות טעונות, סט ביטים ומקדחים לקיר.', specs: ['2 סוללות', 'מקדחים לבטון ולעץ', 'פיקדון ₪200'] },
-  { id: 't2', cat: 'tools', img: 'rent/washer.jpg', title: 'מכונת שטיפה בלחץ לחצר ולרכב', price: 90, unit: 'day', min: 1, city: 'אשדוד', owner: 'מוטי אזולאי', rating: 4.6, reviews: 18, t: -30,
-    desc: 'מנקה אבנים, דקים, רכב ומרפסות בקלות. כולל צינור 10 מ׳ וראש סיבובי.', specs: ['צינור 10 מ׳', 'ראש סיבובי', 'פיקדון ₪300'] },
-  { id: 'c1', cat: 'photo', img: 'rent/camera.jpg', title: 'מצלמת Nikon D850 + עדשה 24-70', price: 180, unit: 'day', min: 1, city: 'רמת גן', owner: 'ליאור צילום', rating: 5.0, reviews: 27, t: -8,
-    desc: 'מצלמה מקצועית לאירועים, צילומי מוצר ופורטרטים. כוללת 2 סוללות, כרטיס 128GB ותיק.', specs: ['45 מגה-פיקסל', 'עדשה 24-70 f/2.8', 'פיקדון ₪2,000'] },
-  { id: 'c2', cat: 'photo', img: 'rent/projector.jpg', title: 'מקרן לערבי סרטים, מצגות ואירועים', price: 80, unit: 'day', min: 1, city: 'הרצליה', owner: 'גל אורן', rating: 4.8, reviews: 33, t: -40,
-    desc: 'מקרן בהיר עם כבל HDMI ומסך נייד 100 אינץ׳. מתאים לסרט בחצר או למצגת במשרד.', specs: ['Full HD', 'מסך 100 אינץ׳ בתוספת ₪30', 'רמקול בלוטות׳ כלול'] },
-  { id: 'o1', cat: 'other', img: 'rent/sewing.jpg', title: 'מכונת תפירה לתיקונים', price: 30, unit: 'day', min: 1, city: 'כפר סבא', owner: 'רותי שמש', rating: 4.7, reviews: 11, t: -96,
-    desc: 'מכונה וותיקה ואמינה שעובדת מצוין. כולל חוטים בסיסיים ושיעור קצר אם צריך.', specs: ['חוטים כלולים', 'הדרכה של 15 דק׳', 'איסוף עצמי'] },
-  { id: 's1', cat: 'storage', img: 'rent/s-units.jpg', title: 'יחידת אחסון 4 מ״ר, גישה 24/7', price: 55, unit: 'm2', min: 2, city: 'ראשון לציון', owner: 'מחסני השכונה', rating: 4.8, reviews: 41, t: -4,
-    desc: 'יחידה נעולה במבנה מקורה עם מצלמות. אתם מחזיקים את המפתח ונכנסים מתי שרוצים. מתאים לרהיטים בזמן מעבר דירה.', specs: ['גישה 24/7', 'מצלמות אבטחה', 'עגלות להעמסה'] },
-  { id: 's2', cat: 'storage', img: 'rent/s-attic.jpg', title: 'עליית גג יבשה לארגזים', price: 25, unit: 'box', min: 3, city: 'רעננה', owner: 'משפחת כרמי', rating: 4.9, reviews: 12, t: -18,
-    desc: 'עליית גג נקייה ויבשה בבית פרטי. מאחסנים לכם ארגזים, מזוודות וקישוטי חג. מתאמים הגעה מראש.', specs: ['יבש ומאוורר', 'עד 20 ארגזים', 'גישה בתיאום'] },
-  { id: 's3', cat: 'storage', img: 'rent/s-container.jpg', title: 'מכולה 20 רגל בחצר — לציוד גדול', price: 650, unit: 'month', min: 1, city: 'כפר יונה', owner: 'אבי חקלאי', rating: 4.6, reviews: 8, t: -36,
-    desc: 'מכולה שלמה רק לכם, בחצר סגורה עם שער. מתאימה לציוד בנייה, רהיטים או מלאי של עסק קטן.', specs: ['15 מ״ר', 'גישה ברכב עד הדלת', 'מנעול שלכם'] },
-  { id: 's4', cat: 'storage', img: 'rent/s-shelves.jpg', title: 'מדף בחדר אחסון לציוד קטן', price: 15, unit: 'box', min: 1, city: 'פתח תקווה', owner: 'דנה שושן', rating: 4.7, reviews: 19, t: -60,
-    desc: 'מקום על מדף בחדר אחסון בבניין. מתאים לכמה ארגזים או משחקים שאין להם מקום בבית.', specs: ['ארגז עד 60×40 ס״מ', 'מקורה ונעול', 'גישה בערבים'] },
-  { id: 's5', cat: 'storage', img: 'rent/s-boxes.jpg', title: 'אחסון ארגזים במעבר דירה', price: 20, unit: 'box', min: 5, city: 'ירושלים', owner: 'עברנו בקלות', rating: 4.8, reviews: 57, t: -90,
-    desc: 'אוספים מכם את הארגזים, מאחסנים במחסן יבש ומחזירים לדירה החדשה. מחיר לארגז לחודש, האיסוף בתוספת.', specs: ['איסוף והחזרה ₪150', 'ביטוח בסיסי', 'מינימום 5 ארגזים'] },
-  { id: 's6', cat: 'storage', img: 'rent/s-parking.jpg', title: 'חניה מקורה פנויה לרכב', price: 300, unit: 'month', min: 1, city: 'חיפה', owner: 'יעקב פרידמן', rating: 4.5, reviews: 6, t: -130,
-    desc: 'חניה מקורה בחניון פתוח של בניין, מתאימה גם לאחסון סירה קטנה או נגרר. שלט לשער כלול.', specs: ['מקורה', 'שלט לשער', 'ליד הכניסה'] }
-].map(r => Object.assign({ demo: true }, r, { t: Date.now() + r.t * 3600e3 }));
+const RENT_DEMO = [];
 let rentData = null, rentUnsub = null;
 const rentUI = { sec: 'all', cat: 'all', q: '', city: 'all', sort: 'new', offer: 'all', owner: 'all', min: null, max: null, pk: 'all', pa: 'all', pd: 'all', dept: 'all', since: 0, fPrice: false, fStock: false, fPhoto: false, fVideo: false };
 function rentSubscribe() {
@@ -34641,9 +34572,7 @@ function rentSubscribe() {
   } catch (e) { rentData = []; }
 }
 function rentAll() {
-  const real = (rentData || []).filter(r => !mktExpired(r.t));
-  const demo = RENT_DEMO.filter(d => !real.some(r => r.cat === d.cat));
-  return real.concat(demo);
+  return (rentData || []).filter(r => !mktExpired(r.t));
 }
 function rentCatOf(id) { return RENT_CATS.find(c => c.id === id) || RENT_CATS[RENT_CATS.length - 1]; }
 // מחיר קצר: מספר, שקל ויחידה — "100 ₪" או "100 ₪ לחודש"
