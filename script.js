@@ -25845,12 +25845,10 @@ function srchRun(q) {
 (function srchWire() {
   const go = () => {
     const inp = document.getElementById('hdr-search-q'); if (!inp) return setTimeout(go, 400);
-    inp.addEventListener('focus', srchOpen);
-    inp.addEventListener('click', srchOpen);
-    inp.addEventListener('blur', () => setTimeout(srchClose, 120));
-    inp.addEventListener('input', () => { clearTimeout(window.__srchT); window.__srchT = setTimeout(srchOpen, 120); });
-    inp.addEventListener('keydown', e => { if (e.key === 'Escape') { srchClose(); inp.blur(); } });
-    window.addEventListener('resize', () => { if (document.querySelector('#srch-panel.show')) srchOpen(); });
+    const openMobStyle = () => { srchClose(); inp.blur(); openSiteSearch(); };
+    inp.addEventListener('focus', openMobStyle);
+    inp.addEventListener('click', openMobStyle);
+    inp.addEventListener('keydown', e => { if (e.key === 'Escape') { srchClose(); closeSiteSearch(); inp.blur(); } });
   };
   go();
 })();
