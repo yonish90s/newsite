@@ -35125,7 +35125,6 @@ function libRowHTML(id, title, html) {
   return `<section class="lib-row"><header><h2>${title}</h2><span class="lib-arrows"><button type="button" class="lib-all" onclick="mktGo('all')">הכל</button><button type="button" onclick="libScroll('${id}', 1)" aria-label="הקודם">‹</button><button type="button" onclick="libScroll('${id}', -1)" aria-label="הבא">›</button></span></header><div class="lib-track" id="${id}">${html}</div></section>`;
 }
 function homeViewGet() {
-  if (!window.matchMedia('(max-width: 700px)').matches) return 'cards';
   try {
     const s = localStorage.getItem('bw_home_view');
     if (s === 'cards' || s === 'twitter') return s;
