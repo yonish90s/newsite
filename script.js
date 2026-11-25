@@ -34274,7 +34274,7 @@ function mktLinkUrl(u) {
 const mktLinkHost = u => String(u || '').replace(/^https?:\/\//i, '').replace(/^www\./i, '').replace(/\/$/, '');
 // דוגמה יחידה (מוצגת כשאין מודעות אמיתיות)
 const USED_DEMO = [
-  { id: 'u1', offer: 'מכירה', img: 'rent/u-sofa.jpg', title: 'ספה תלת-מושבית מעור, במצב מצוין', price: 1200, city: 'גבעתיים', owner: 'הילה רוזן', t: -5, desc: 'ספה נוחה מעור שחור, 3 מושבים. בלי קרעים, מבית ללא בעלי חיים. איסוף עצמי מקומה 2 עם מעלית.', specs: ['רוחב 2.1 מ׳', 'עור אמיתי', 'איסוף עצמי'] }
+  { id: 'u1', offer: 'מכירה', img: 'rent/ikea-table.jpg', title: 'שולחן עץ מעוצב מאיקאה, כחדש', price: 750, city: 'גבעתיים', owner: 'הילה רוזן', t: -5, desc: 'שולחן יפהפה בסגנון סקנדינבי של איקאה מעץ אלון בהיר. שמור מאוד, ללא שריטות, מתאים לפינת אוכל או עבודה. איסוף עצמי.', specs: ['אורך 160 ס״מ', 'עץ אלון בהיר', 'מצב כחדש'] }
 ].map(r => Object.assign({ demo: true, kind: 'used' }, r, { t: Date.now() + r.t * 3600e3 }));
 const BIZ_DEMO = [];
 const PROJ_DEMO = [];
