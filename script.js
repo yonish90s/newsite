@@ -34274,7 +34274,7 @@ function usedAll() {
     bizName: String(x.bizName || '').slice(0, 60), video: '', hv: mkVideoParse(x.video), link: mktLinkUrl(x.link), pk: PROJ_KINDS[x.projectKind] ? x.projectKind : '', pd: PROJ_SUB[x.projectArea] ? x.projectArea : '',
     raw: x, images: (Array.isArray(x.images) ? x.images : []).filter(Boolean), desc: String(x.summary || x.body || '').trim(),
     specs: [x.loanPeriod ? 'תקופת השאלה: ' + x.loanPeriod : ''].concat(Array.isArray(x.loanTerms) ? x.loanTerms.filter(v => typeof v === 'string') : []).filter(Boolean).slice(0, 8) }));
-  const out = real.length ? real : USED_DEMO;
+  const out = real.concat(USED_DEMO);
   out.forEach(r => {
     if (r.dept && r.htags) return;
     const saved = r.raw && r.raw.dept;
@@ -34336,13 +34336,8 @@ function uploadCountFor(val, d) {
   if (s.startsWith(d + '|')) return Math.max(0, parseInt(s.slice(d.length + 1), 10) || 0);
   return 0;
 }
-function uploadBlockedNow(quiet) {
-  if (typeof isAdmin === 'function' && isAdmin()) return false;
-  const d = uploadToday();
-  let local = ''; try { local = localStorage.getItem('bw_upload_day') || ''; } catch (e) {}
-  if (Math.max(uploadCountFor(local, d), uploadCountFor(uploadDayDB, d)) < UPLOAD_DAILY_LIMIT) return false;
-  if (!quiet) glassBanner({ title: 'הגעת למגבלת ההעלאות להיום', sub: 'אפשר להעלות עד 4 מודעות ביום. נסו שוב מחר.', icon: 'del', ms: 2600 });
-  return true;
+function uploadBlockedNow() {
+  return false;
 }
 function uploadMarkToday() {
   if (typeof isAdmin === 'function' && isAdmin()) return;
