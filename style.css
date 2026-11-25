@@ -25194,33 +25194,13 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_
 /* Desktop mobile-parity: navigation tabs bar (.desk-tabs) + header quick actions */
 .desk-tabs { display: none; }
 @media (min-width: 701px) {
-  .desk-tabs {
-    position: fixed;
-    top: 76px;
-    left: 0;
-    right: 0;
-    z-index: 998;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 24px;
-    padding: 0 28px;
-    height: 46px;
-    direction: rtl;
-    background: rgba(255, 255, 255, .94);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-bottom: 1px solid rgba(0, 0, 0, .07);
-    box-sizing: border-box;
-  }
-  .desk-view-slot {
-    display: inline-flex;
-    align-items: center;
-    margin-inline-start: 12px;
-  }
-  .desk-view-slot[hidden] { display: none; }
+  .desk-tabs { display: none !important; }
   html body:not(#_):not(#_):not(#_) .home-view-bar {
-    display: none !important;
+    display: flex !important;
+    width: 100% !important;
+    max-width: 1400px !important;
+    margin: 10px auto 14px !important;
+    justify-content: center !important;
   }
   html.theme-dark .desk-tabs {
     background: rgba(17, 18, 22, .94);
@@ -25276,10 +25256,6 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_
   }
   .desk-tabs .mt-apv-n:empty { display: none; }
   .desk-tabs .mt-dls.has-deals .mt-apv-n { background: #f59e0b; }
-  html:not(.mt-hide-tabs) body main.center-content,
-  html:not(.mt-hide-tabs) body .center-content {
-    padding-top: 128px !important;
-  }
   #hdr-pub-btn {
     color: #7c3aed !important;
   }
