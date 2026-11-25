@@ -27833,7 +27833,50 @@ function renderMobileMenu() {
     </aside>`;
   if (typeof avatarHydrate === 'function') avatarHydrate(m);
 }
+function deskMegaClose() {
+  const el = document.getElementById('desk-mega');
+  if (el) el.classList.remove('open');
+  document.documentElement.classList.remove('dmega-open');
+}
+function deskMegaToggle() {
+  let el = document.getElementById('desk-mega');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'desk-mega';
+    el.className = 'desk-mega';
+    el.innerHTML = `<div class="dm-bd" onclick="deskMegaClose()"></div>
+      <div class="dm-panel" role="dialog" aria-label="תפריט האתר">
+        <div class="dm-cols">
+          <div class="dm-col dm-feat">
+            <button type="button" class="dm-fitem" onclick="deskMegaClose(); mkPubOpen()"><b>פרסום מודעה</b><small>העלאת מודעה חדשה לשוק תוך דקה</small></button>
+            <button type="button" class="dm-fitem" onclick="deskMegaClose(); mtTab('home')"><b>השוק — כל המודעות</b><small>יד 2, השכרה, עסקים, פרויקטים ואחסון</small></button>
+            <button type="button" class="dm-fitem" onclick="deskMegaClose(); mtTab('deals')"><b>עסקאות והקניות שלי</b><small>מעקב אחר עסקאות, הצעות מחיר וקניות</small></button>
+          </div>
+          <div class="dm-col dm-links">
+            <button type="button" onclick="deskMegaClose(); mtTab('feed')">במעקב</button>
+            <button type="button" onclick="deskMegaClose(); if(typeof svdOpen==='function')svdOpen()">שמורים</button>
+            <button type="button" onclick="deskMegaClose(); openMessages()">הודעות</button>
+            <button type="button" onclick="deskMegaClose(); mtTab('details')">אישי</button>
+            <button type="button" onclick="deskMegaClose(); if(typeof openLikesDrawer==='function')openLikesDrawer()">הלייקים שלי</button>
+          </div>
+          <div class="dm-col dm-links">
+            <button type="button" onclick="deskMegaClose(); navigateToPage('page-subscription-main')"><span>מנוי</span><em class="dm-badge">מומלץ</em></button>
+            <button type="button" onclick="deskMegaClose(); if(typeof openHistoryDrawer==='function')openHistoryDrawer()">היסטוריית צפייה</button>
+            <button type="button" onclick="deskMegaClose(); if(typeof openOffersPanel==='function')openOffersPanel()">הצעות</button>
+            <button type="button" onclick="deskMegaClose(); if(typeof homeDateFilterOpen==='function')homeDateFilterOpen()">סינון לפי זמן</button>
+            <button type="button" onclick="deskMegaClose(); openSiteSearch()">חיפוש באתר</button>
+          </div>
+        </div>
+      </div>`;
+    document.body.appendChild(el);
+  }
+  const open = !el.classList.contains('open');
+  el.classList.toggle('open', open);
+  document.documentElement.classList.toggle('dmega-open', open);
+}
+window.deskMegaToggle = deskMegaToggle; window.deskMegaClose = deskMegaClose;
 function openMobileMenu() {
+  if (window.matchMedia && window.matchMedia('(min-width: 701px)').matches) { deskMegaToggle(); return; }
   let m = document.getElementById('mnav');
   if (!m) { m = document.createElement('div'); m.id = 'mnav'; m.className = 'mnav'; document.body.appendChild(m); }
   renderMobileMenu();
@@ -27847,7 +27890,7 @@ function closeMobileMenu() {
   setTimeout(() => { if (!m.classList.contains('show')) m.style.display = 'none'; }, 260);
 }
 function mnavToggleMore() { mnavMore = !mnavMore; renderMobileMenu(); }
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMobileMenu(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeMobileMenu(); deskMegaClose(); } });
 Object.assign(window, { openMobileMenu, closeMobileMenu, renderMobileMenu, mnavToggleMore });
 
 // ============================================================

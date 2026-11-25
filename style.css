@@ -25804,3 +25804,105 @@ html body:has(.subscription-page, .pp-full) .st-bar { display: none !important; 
     left: 8px !important;
   }
 }
+
+/* Desktop single unified 3-column mega-menu (#desk-mega, WhiteBIT-style; mobile unaffected) */
+.desk-mega { display: none; }
+@media (min-width: 701px) {
+  .desk-mega.open { display: block; }
+  .desk-mega .dm-bd {
+    position: fixed;
+    inset: 0;
+    z-index: 9990;
+    background: rgba(0, 0, 0, .48);
+  }
+  .desk-mega .dm-panel {
+    position: fixed;
+    top: 84px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(920px, 92vw);
+    z-index: 9991;
+    background: #0d0f14;
+    color: #f4f4f5;
+    border: 1px solid rgba(255, 255, 255, .12);
+    border-radius: 18px;
+    padding: 24px 28px;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, .65);
+    direction: rtl;
+    box-sizing: border-box;
+  }
+  html:not(.theme-dark) .desk-mega .dm-panel {
+    background: #ffffff;
+    color: #111827;
+    border-color: rgba(0, 0, 0, .1);
+    box-shadow: 0 24px 64px rgba(0, 0, 0, .16);
+  }
+  .desk-mega .dm-cols {
+    display: grid;
+    grid-template-columns: 1.35fr 1fr 1fr;
+    gap: 28px;
+    align-items: start;
+  }
+  .desk-mega .dm-col {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .desk-mega .dm-fitem {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
+    padding: 10px 12px;
+    border: 0;
+    border-radius: 12px;
+    background: transparent;
+    color: inherit;
+    text-align: right;
+    cursor: pointer;
+    font: inherit;
+    transition: background .14s ease;
+  }
+  .desk-mega .dm-fitem b {
+    font-size: 16px;
+    font-weight: 800;
+  }
+  .desk-mega .dm-fitem small {
+    font-size: 13px;
+    color: #9ca3af;
+    line-height: 1.35;
+  }
+  .desk-mega .dm-links button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 12px;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    text-align: right;
+    cursor: pointer;
+    transition: background .14s ease;
+  }
+  .desk-mega .dm-fitem:hover,
+  .desk-mega .dm-links button:hover {
+    background: rgba(255, 255, 255, .08);
+  }
+  html:not(.theme-dark) .desk-mega .dm-fitem:hover,
+  html:not(.theme-dark) .desk-mega .dm-links button:hover {
+    background: rgba(0, 0, 0, .05);
+  }
+  .desk-mega .dm-badge {
+    font-style: normal;
+    font-size: 11.5px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 6px;
+    background: rgba(16, 185, 129, .18);
+    color: #34d399;
+  }
+}
