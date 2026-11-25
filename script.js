@@ -31178,7 +31178,8 @@ function likeCountsPaint(likes) {
   let t = 0;
   const run = () => { t = 0; scan(document.getElementById('mainContent') || document); pageFade(); };
   const start = () => {
-    document.documentElement.classList.add('img-fade');
+    document.addEventListener('load', e => { if (e.target && e.target.tagName === 'IMG') e.target.dataset.ld = '1'; }, true);
+    document.addEventListener('error', e => { if (e.target && e.target.tagName === 'IMG') e.target.dataset.ld = '1'; }, true);
     run();
     const mc = document.getElementById('mainContent');
     if (mc) new MutationObserver(() => { if (!t) t = requestAnimationFrame(run); }).observe(mc, { childList: true });
