@@ -25529,3 +25529,20 @@ html body:has(.subscription-page, .pp-full) .st-bar { display: none !important; 
     min-height: 50px !important;
   }
 }
+
+/* Make Instagram-style feed post action icons (.ig-act2) 2x larger on desktop */
+@media (min-width: 701px) {
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .ig-act2 {
+    gap: 20px !important;
+    padding: 6px 0 !important;
+  }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .ig-act2 svg {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    min-height: 28px !important;
+  }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .ig-act2 .mk-n {
+    font-size: 17px !important;
+  }
+}
