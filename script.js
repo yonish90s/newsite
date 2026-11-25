@@ -25810,6 +25810,77 @@ function ssDeskEmptyHTML() {
   return `<div class="ss-cmd-sec">עמודים</div><div class="ss-cmd-list">${items}</div>
     <div class="ss-cmd-foot"><span><kbd>↑</kbd><kbd>↓</kbd> ניווט</span><span><kbd>↵</kbd> בחירה</span><span><kbd>esc</kbd> סגירה</span></div>`;
 }
+function ssCommMap() { try { return JSON.parse(localStorage.getItem('bw_comm_follows') || '{}') || {}; } catch (e) { return {}; } }
+function ssCommFollow(btn, id) {
+  const m = ssCommMap();
+  const on = !m[id];
+  if (on) m[id] = 1; else delete m[id];
+  try { localStorage.setItem('bw_comm_follows', JSON.stringify(m)); } catch (e) {}
+  if (btn) {
+    btn.classList.toggle('on', on);
+    btn.textContent = on ? 'במעקב ✓' : 'עקוב';
+  }
+}
+window.ssCommFollow = ssCommFollow;
+function ssDeskSearchHTML(q, raw) {
+  const people = typeof ssFindUsers === 'function' ? ssFindUsers(q) : [];
+  const allOther = siteSearchCollect(q);
+  ssxOther = allOther.slice(0, 12);
+  const comms = allOther.filter(it => it.kind === 'community').slice(0, 6);
+  const rest = allOther.filter(it => it.kind !== 'community').slice(0, 8);
+  const L = typeof ssxListings === 'function' ? ssxListings(q).slice(0, 6) : [];
+  const ic = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+  const commSvg = '<circle cx="12" cy="8" r="3"/><circle cx="5" cy="10" r="2.2"/><circle cx="19" cy="10" r="2.2"/><path d="M6.5 20v-1.5a5.5 5.5 0 0 1 11 0V20"/>';
+  const itemSvg = '<path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.5"/>';
+  const pageSvg = '<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/>';
+  let first = true;
+  const actCls = () => { if (!first) return ''; first = false; return ' is-act'; };
+  const cMap = ssCommMap();
+  const pplRows = people.slice(0, 6).map(u => {
+    const h = typeof profileHandle === 'function' ? profileHandle(u.name) : '';
+    const fon = u.uid ? (typeof isFollowing === 'function' && isFollowing(u.uid)) : (typeof igDemoFollowing === 'function' && igDemoFollowing(igDemoKeyOf(u.name || '')));
+    const key = u.uid || (typeof igDemoKeyOf === 'function' ? igDemoKeyOf(u.name || '') : u.name || '');
+    const sub = u.demo ? 'מוכר לדוגמה' : (h ? '@' + h : '');
+    return `<button type="button" class="ss-cmd-row${actCls()}" onclick="ssOpenUser('${artEsc(u.uid)}','${artEsc(u.name || '')}')">
+      <span class="ss-cmd-av">${authorAvHTML({ authorId: u.uid, author: u.name })}</span>
+      <span class="ss-cmd-tx"><b>${escHtml(u.name)}</b>${sub ? `<small dir="ltr">${escHtml(sub)}</small>` : ''}</span>
+      <span role="button" tabindex="0" class="ss-cmd-follow ssx-fbtn${fon ? ' on' : ''}" data-fol="${escHtml(key)}" onclick="event.stopPropagation(); event.preventDefault(); mkCardFollow(this, '${artEsc(u.uid || '')}', '${artEsc(u.name || '')}'); this.textContent=this.classList.contains('on')?'במעקב ✓':'עקוב'">${fon ? 'במעקב ✓' : 'עקוב'}</span>
+    </button>`;
+  }).join('');
+  const commRows = comms.map(c => {
+    const idx = ssxOther.indexOf(c);
+    const on = !!cMap[c.id];
+    const openCall = idx >= 0 ? `siteSearchOpen(${idx})` : `closeSiteSearch(); navigateToPage('page-communities-main')`;
+    return `<button type="button" class="ss-cmd-row${actCls()}" onclick="${openCall}">
+      ${ic(commSvg)}
+      <span class="ss-cmd-tx"><b>${escHtml(c.title)}</b>${c.sub ? `<small>${escHtml(String(c.sub).slice(0, 48))}</small>` : ''}</span>
+      <span role="button" tabindex="0" class="ss-cmd-follow${on ? ' on' : ''}" onclick="event.stopPropagation(); event.preventDefault(); ssCommFollow(this, '${artEsc(c.id)}')">${on ? 'במעקב ✓' : 'עקוב'}</span>
+    </button>`;
+  }).join('');
+  const listRows = L.map(r => {
+    const price = Number(r.price) > 0 ? '₪' + mktDiscP(r.price).toLocaleString('he-IL', { maximumFractionDigits: 2 }) : '';
+    const sub = [price, r.city || ''].filter(Boolean).join(' · ');
+    return `<button type="button" class="ss-cmd-row${actCls()}" onclick="closeSiteSearch(); rentOpen('${artEsc(r.id)}')">
+      ${ic(itemSvg)}
+      <span class="ss-cmd-tx"><b>${escHtml(r.title)}</b>${sub ? `<small>${escHtml(sub)}</small>` : ''}</span>
+    </button>`;
+  }).join('');
+  const restRows = rest.map(it => {
+    const idx = ssxOther.indexOf(it);
+    return `<button type="button" class="ss-cmd-row${actCls()}" onclick="siteSearchOpen(${idx})">
+      ${ic(pageSvg)}
+      <span class="ss-cmd-tx"><b>${escHtml(it.title)}</b><small>${escHtml(it.label || '')}</small></span>
+    </button>`;
+  }).join('');
+  const sections = [
+    pplRows ? `<div class="ss-cmd-sec">משתמשים</div><div class="ss-cmd-list">${pplRows}</div>` : '',
+    commRows ? `<div class="ss-cmd-sec">קבוצות</div><div class="ss-cmd-list">${commRows}</div>` : '',
+    listRows ? `<div class="ss-cmd-sec">מודעות</div><div class="ss-cmd-list">${listRows}</div>` : '',
+    restRows ? `<div class="ss-cmd-sec">עמודים ותוכן</div><div class="ss-cmd-list">${restRows}</div>` : ''
+  ].filter(Boolean).join('');
+  const empty = `<div class="ss-hint">לא נמצאו תוצאות עבור "${escHtml(String(raw || '').trim())}"</div>`;
+  return `${sections || empty}<div class="ss-cmd-foot"><span><kbd>↑</kbd><kbd>↓</kbd> ניווט</span><span><kbd>↵</kbd> בחירה</span><span><kbd>esc</kbd> סגירה</span></div>`;
+}
 function openSiteSearch() {
   siteSearchEnsureDom();
   try { if (typeof subscribeCommunities === 'function') subscribeCommunities(); } catch (e) {}
@@ -25982,14 +26053,14 @@ function siteSearchRender(raw) {
   const q = String(raw || '').trim().toLowerCase();
   const clr = document.querySelector('.ss-clear');
   if (clr) clr.style.visibility = q ? 'visible' : 'hidden';
+  const isDesk = window.matchMedia && window.matchMedia('(min-width: 701px)').matches;
   if (!q) {
     siteSearchLast = [];
-    const isDesk = window.matchMedia && window.matchMedia('(min-width: 701px)').matches;
     box.innerHTML = isDesk ? ssDeskEmptyHTML() : ssxEmptyHTML();
     if (typeof avatarHydrate === 'function') avatarHydrate(box);
     return;
   }
-  if (!siteSearchScope.size) { box.innerHTML = ssxHTML(q, raw); if (typeof avatarHydrate === 'function') avatarHydrate(box); siteSearchLast = ssxOther; return; }
+  if (!siteSearchScope.size) { box.innerHTML = isDesk ? ssDeskSearchHTML(q, raw) : ssxHTML(q, raw); if (typeof avatarHydrate === 'function') avatarHydrate(box); siteSearchLast = ssxOther; return; }
   let all = siteSearchCollect(q);
   if (siteSearchScope.size) all = all.filter(it => siteSearchScope.has(it.kind));
   const items = all.slice(0, 30);
