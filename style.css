@@ -25506,3 +25506,26 @@ html body:has(.subscription-page, .pp-full) .st-bar { display: none !important; 
     height: 22px !important;
   }
 }
+
+/* Make listing action pills (.mk-galacts) and write review button (.mk-rv-write) 2x larger on desktop */
+@media (min-width: 701px) {
+  html body:not(#_):not(#_):not(#_) .mk-watch .mk-galacts {
+    gap: 14px !important;
+    flex-wrap: wrap !important;
+  }
+  html body:not(#_):not(#_):not(#_) .mk-watch .mk-galacts > * {
+    font-size: 19px !important;
+    min-height: 48px !important;
+    padding: 10px 22px !important;
+    gap: 10px !important;
+  }
+  html body:not(#_):not(#_):not(#_) .mk-watch .mk-galacts svg {
+    width: 24px !important;
+    height: 24px !important;
+  }
+  html body:not(#_):not(#_):not(#_) .mk-watch .mk-rv-write {
+    font-size: 20px !important;
+    padding: 14px 28px !important;
+    min-height: 50px !important;
+  }
+}
