@@ -25014,13 +25014,16 @@ html.mt-hide-tabs body #m-top .mt-tabs {
 /* Desktop large Reddit-style feed + Large/Small view switcher */
 .home-view-bar {
   display: flex;
-  justify-content: flex-end;
-  max-width: 700px;
-  margin: 0 auto 10px;
+  justify-content: flex-start;
+  max-width: 1400px;
+  margin: 0 0 12px auto;
   padding: 0 4px;
 }
+.home-view-bar .tw-view-sw {
+  margin-inline-start: 0;
+}
 html:not(.tw-feed) .home-view-bar {
-  max-width: 1200px;
+  max-width: 1400px;
 }
 .tw-vbtn {
   width: auto !important;
@@ -25033,57 +25036,59 @@ html:not(.tw-feed) .home-view-bar {
 }
 @media (min-width: 701px) {
   .tw-feed-list {
-    max-width: 700px;
-    gap: 14px;
+    width: 100%;
+    max-width: 1400px !important;
+    margin: 0 0 0 auto !important;
+    gap: 18px;
   }
   .tw-post {
-    padding: 16px 18px;
-    border-radius: 16px;
+    padding: 20px 24px;
+    border-radius: 18px;
     border: 1px solid rgba(0, 0, 0, .09);
     background: #ffffff;
-    gap: 10px;
+    gap: 12px;
   }
   html.theme-dark .tw-post {
     background: #14151a;
     border-color: rgba(255, 255, 255, .1);
   }
   .tw-av .au-av {
-    width: 28px !important;
-    height: 28px !important;
-    min-width: 28px !important;
-    font-size: 12px !important;
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    font-size: 14px !important;
   }
   .tw-head {
-    font-size: 13px !important;
-    gap: 8px !important;
+    font-size: 14.5px !important;
+    gap: 10px !important;
   }
   .tw-who {
-    font-size: 13.5px !important;
+    font-size: 15px !important;
   }
   .tw-meta {
-    font-size: 12px !important;
+    font-size: 13px !important;
   }
   .tw-head .mk-sg-price {
-    font-size: 12.5px !important;
-    padding: 3px 10px !important;
+    font-size: 14px !important;
+    padding: 4px 12px !important;
   }
   .tw-text b {
-    font-size: 18px;
+    font-size: 22px;
     line-height: 1.4;
   }
   .tw-text small {
-    font-size: 14px;
-    line-height: 1.5;
+    font-size: 16px;
+    line-height: 1.55;
   }
   .tw-media {
-    max-height: 520px;
-    border-radius: 14px;
+    max-height: 760px;
+    border-radius: 16px;
   }
 }
 
 /* Rows mode (.tw-rows-mode): compact horizontal rows that expand into full large cards on hover */
 .tw-rows-mode {
-  max-width: 780px;
+  max-width: 1400px !important;
   gap: 6px !important;
 }
 .tw-rows-mode .tw-post {
