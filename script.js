@@ -14600,8 +14600,15 @@ const XR_IC = {
   user: '<circle cx="12" cy="8" r="4.2"/><path d="M3.5 21a8.5 8.5 0 0 1 17 0z"/>'
 };
 const xrSvg = (k, w) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w || 1.9}" stroke-linecap="round" stroke-linejoin="round">${XR_IC[k] || ''}</svg>`;
-function xrState() { try { return JSON.parse(localStorage.getItem('xr_state') || '{}'); } catch (e) { return {}; } }
-function xrSave(st) { try { localStorage.setItem('xr_state', JSON.stringify(st)); } catch (e) {} }
+function xrState() {
+  const def = { open: false, shut: { agents: true, tools: true, assets: true, inspire: true, more: true } };
+  try {
+    const s = JSON.parse(localStorage.getItem('xr_state_v2') || 'null');
+    if (s && typeof s === 'object') return Object.assign(def, s, { shut: Object.assign({}, def.shut, s.shut || {}) });
+  } catch (e) {}
+  return def;
+}
+function xrSave(st) { try { localStorage.setItem('xr_state_v2', JSON.stringify(st)); } catch (e) {} }
 function xrToggle(force) {
   const st = xrState(); st.open = force !== undefined ? !!force : !st.open; xrSave(st);
   const el = document.getElementById('side-rail'); if (el) el.classList.toggle('xr-open', st.open);
