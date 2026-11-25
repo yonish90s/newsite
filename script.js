@@ -25747,6 +25747,11 @@ let siteSearchTimer = 0;
 function siteSearchEnsureDom() {
   if (document.getElementById('site-search')) return;
   const header = document.body;
+  const bd = document.createElement('div');
+  bd.id = 'ss-backdrop';
+  bd.className = 'ss-backdrop';
+  bd.onclick = () => closeSiteSearch();
+  header.appendChild(bd);
   const bar = document.createElement('div');
   bar.id = 'site-search';
   bar.className = 'ss-bar';
@@ -25756,9 +25761,10 @@ function siteSearchEnsureDom() {
     </button>
     <div class="ss-field">
       <svg class="ss-mag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
-      <input id="site-search-input" type="search" placeholder="חיפוש" autocomplete="off" enterkeyhint="search" aria-label="חיפוש באתר"
-        oninput="siteSearchInput(this.value)" onkeydown="if(event.key==='Escape'){closeSiteSearch()} else if(event.key==='Enter'){event.preventDefault(); siteSearchOpenFirst()}">
+      <input id="site-search-input" type="search" placeholder="חיפוש בשוק, עמודים, משתמשים..." autocomplete="off" enterkeyhint="search" aria-label="חיפוש באתר"
+        oninput="siteSearchInput(this.value)" onkeydown="ssDeskKey(event)">
       <button type="button" class="ss-clear" onclick="siteSearchClear()" aria-label="ניקוי">✕</button>
+      <button type="button" class="ss-esc" onclick="closeSiteSearch()">esc</button>
     </div>
     <button type="button" class="ss-fbtn" onclick="ssxFilterOpen()" aria-label="סינון" title="סינון"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg></button>
     <button type="button" class="ss-cancel" onclick="closeSiteSearch()">ביטול</button>`;
@@ -25768,6 +25774,41 @@ function siteSearchEnsureDom() {
   res.className = 'ss-results';
   res.addEventListener('click', (e) => { if (e.target === res) closeSiteSearch(); });
   document.body.appendChild(res);
+}
+function ssDeskKey(e) {
+  if (e.key === 'Escape') { closeSiteSearch(); return; }
+  const box = document.getElementById('site-search-results');
+  const rows = box ? [...box.querySelectorAll('.ss-cmd-row, .ss-item, .ssx-row')] : [];
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+    if (!rows.length) return;
+    e.preventDefault();
+    const cur = rows.findIndex(r => r.classList.contains('is-act'));
+    const next = e.key === 'ArrowDown' ? (cur + 1) % rows.length : (cur <= 0 ? rows.length - 1 : cur - 1);
+    rows.forEach((r, i) => r.classList.toggle('is-act', i === next));
+    rows[next].scrollIntoView({ block: 'nearest' });
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    const act = box && box.querySelector('.is-act');
+    if (act) act.click();
+    else siteSearchOpenFirst();
+  }
+}
+window.ssDeskKey = ssDeskKey;
+function ssDeskEmptyHTML() {
+  const ic = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+  const row = (icon, label, act, active) => `<button type="button" class="ss-cmd-row${active ? ' is-act' : ''}" onclick="closeSiteSearch(); ${act}">${ic(icon)}<span>${label}</span></button>`;
+  const items = [
+    row('<path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V20h14V9.5"/>', 'בית — כל המודעות', 'mtTab(\'home\')', true),
+    row('<path d="M12 5v14M5 12h14"/>', 'פרסום מודעה חדשה', 'mkPubOpen()'),
+    row('<path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M17 11h6"/>', 'במעקב', 'mtTab(\'feed\')'),
+    row('<path d="M4 7h11M4 7l3-3M4 7l3 3M20 17H9M20 17l-3-3M20 17l-3 3"/>', 'עסקאות', 'mtTab(\'deals\')'),
+    row('<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>', 'אישי', 'mtTab(\'details\')'),
+    row('<path d="M6 4h12v17l-6-4.5L6 21z"/>', 'שמורים', 'if(typeof svdOpen===\'function\')svdOpen()'),
+    row('<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>', 'הודעות', 'openMessages()'),
+    row('<path d="M6 3h12l4 6-10 13L2 9z"/>', 'מנוי', 'navigateToPage(\'page-subscription-main\')')
+  ].join('');
+  return `<div class="ss-cmd-sec">עמודים</div><div class="ss-cmd-list">${items}</div>
+    <div class="ss-cmd-foot"><span><kbd>↑</kbd><kbd>↓</kbd> ניווט</span><span><kbd>↵</kbd> בחירה</span><span><kbd>esc</kbd> סגירה</span></div>`;
 }
 function openSiteSearch() {
   siteSearchEnsureDom();
@@ -25943,7 +25984,8 @@ function siteSearchRender(raw) {
   if (clr) clr.style.visibility = q ? 'visible' : 'hidden';
   if (!q) {
     siteSearchLast = [];
-    box.innerHTML = ssxEmptyHTML();
+    const isDesk = window.matchMedia && window.matchMedia('(min-width: 701px)').matches;
+    box.innerHTML = isDesk ? ssDeskEmptyHTML() : ssxEmptyHTML();
     if (typeof avatarHydrate === 'function') avatarHydrate(box);
     return;
   }

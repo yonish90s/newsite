@@ -2306,6 +2306,11 @@ html:not(.theme-dark) .lib-desk-nav button.on { color: #111111 !important; borde
 html:not(.theme-dark) .lib-desk-nav .mt-apv-n { background: #777777; }
 html:not(.theme-dark) .lib-desk-nav .mt-dls.has-deals .mt-apv-n { background: #a7a7a7; }
 }
+@media (min-width: 701px) {
+html:not(.theme-dark).ss-open #site-search .ss-esc { color: #a2a2a2; }
+html:not(.theme-dark) .ss-cmd-sec { color: #a2a2a2; }
+html:not(.theme-dark) .ss-cmd-foot { color: #a2a2a2; }
+}
 html:not(.theme-dark) [style*="border:1.5px solid #e2e8f0"], html:not(.theme-dark) [style*="border: 1.5px solid #e2e8f0"] { border: 1.5px solid #e7e7e7 !important; }
 html:not(.theme-dark) [style*="color:#1e293b"], html:not(.theme-dark) [style*="color: #1e293b"] { color: #111111 !important; }
 html:not(.theme-dark) [style*="background:#dc2626"], html:not(.theme-dark) [style*="background: #dc2626"] { background: #111111 !important; }
