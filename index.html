@@ -51,9 +51,9 @@
   <!-- ספריית localforage לשמירת תמונות -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
   <!-- קישור לקובץ העיצוב החיצוני (עם פרמטר למניעת שמירה במטמון) -->
-  <link rel="stylesheet" href="./style.min.css?v=2552">
+  <link rel="stylesheet" href="./style.min.css?v=2553">
   <link rel="stylesheet" id="mono-css" href="./mono.min.css?v=338">
-  <link rel="stylesheet" id="dark-css" data-href="./dark.min.css?v=702" media="not all">
+  <link rel="stylesheet" id="dark-css" data-href="./dark.min.css?v=703" media="not all">
   <script>
     // קישור ישיר לפריט (#p/…, #s/…, #n/…) — מסמנים מיד, כדי שהכתובת לא תימחק לפני שהפריט נפתח
     window.__deepLinkOpening = /^#[psn]\//.test(location.hash || '');
@@ -1271,6 +1271,7 @@ html.theme-dark .pl-bar { background: #2a2f37; }
     <p class="cookie-bar-text">אנו משתמשים בעוגיות.&nbsp;<a href="#" class="cookie-more" onclick="event.preventDefault(); window.openLegal ? openLegal('privacy') : cookieOpenPolicy()">פרטים</a></p>
     <div class="cookie-bar-btns">
       <button type="button" class="cookie-btn yes" onclick="cookieChoose('yes')">אישור</button>
+      <button type="button" class="cookie-btn cookie-manage" onclick="window.openLegal ? openLegal('privacy') : cookieOpenPolicy()">ניהול</button>
       <button type="button" class="cookie-btn" onclick="cookieChoose('no')">דחייה</button>
     </div>
   </div>
