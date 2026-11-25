@@ -5042,6 +5042,12 @@ html.theme-dark .desk-tabs .mt-apv-n { background: #e4202b !important; }
 html.theme-dark #hdr-pub-btn { color: #ffffff !important; }
 html.theme-dark #hdr-dm-btn.has-unread::after { background: #e4202b !important; }
 }
+@media (min-width: 701px) {
+html.theme-dark .lib-desk-nav button { color: #a8a8a8 !important; }
+html.theme-dark .lib-desk-nav button:hover { color: #f5f5f5 !important; }
+html.theme-dark .lib-desk-nav button.on { color: #f5f5f5 !important; }
+html.theme-dark .lib-desk-nav .mt-apv-n { background: #e4202b !important; }
+}
 /* inline */
 html.theme-dark [style*="color:#333333"] { color: #f5f5f5 !important; }
 html.theme-dark [style*="color:#111111"] { color: #f5f5f5 !important; }

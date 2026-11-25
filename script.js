@@ -35349,7 +35349,7 @@ function libHTML() {
   const depts = typeof MKT_DEPTS !== 'undefined' ? MKT_DEPTS.filter(d => base.some(r => r.dept === d.id)) : [];
   const circHTML = depts.length ? `<nav class="lib-circs" aria-label="מחלקות">${depts.map(d => `<button type="button" class="lib-circ" onclick="libDept('${d.id}')"><span><svg viewBox="0 0 64 64" fill="none" stroke="#111" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">${(typeof DEPT_ART !== 'undefined' && (DEPT_ART[d.id] || DEPT_ART.other)) || ''}</svg></span><b>${escHtml(d.name)}</b></button>`).join('')}</nav>` : '';
   return `<header class="lib-head"><span class="lib-brand"><img src="./logo.png?v=2" alt=""><b>ספרייה</b></span><button type="button" class="lib-theme" onclick="toggleSiteTheme()" title="בהיר / כהה" aria-label="בהיר / כהה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg></button><button type="button" class="lib-cta" onclick="mkPubOpen()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>פרסום מודעה</button></header>
-    <div class="home-view-bar">${homeViewSwHTML()}</div>
+    <div class="home-view-bar"><nav class="lib-desk-nav" aria-label="ניווט ראשי"><button type="button" class="on" data-t="home" onclick="mtTab('home')">בית</button><button type="button" data-t="feed" onclick="mtTab('feed')">במעקב</button><button type="button" data-t="deals" class="mt-dls" onclick="mtTab('deals')">עסקאות<i class="mt-apv-n mt-dls-n"></i></button><button type="button" data-t="details" onclick="mtTab('details')">אישי</button><button type="button" data-t="apv" class="mt-apv" hidden onclick="mtTab('apv')">אישור<i class="mt-apv-n"></i></button></nav>${homeViewSwHTML()}</div>
     ${(homeViewGet() === 'twitter' || homeViewGet() === 'rows') ? `<div class="tw-feed-list${homeViewGet() === 'rows' ? ' tw-rows-mode' : ''}" id="home-tw-list">${homeDateFeedHTML(all)}</div>` : `
     ${filtered ? '' : heroHTML}${libBarHTML(depts)}
     ${filtered ? `<section class="lib-row lib-res"><header><h2>${all.length} תוצאות</h2></header>${all.length ? `<div class="lib-grid">${all.slice().sort(LIB_SORTS[libF.sort].f).map(r => libCardHTML(r)).join('')}</div>` : '<div class="lib-empty">אין מודעות שמתאימות לסינון הזה</div>'}</section>` : `
@@ -35519,8 +35519,8 @@ function dlsRefresh() { const el = document.querySelector('.dls-page'); if (el) 
 function dlsSetTab(t) { dlsTab = t; dlsRefresh(); }
 function dlsTabPaint() {
   const n = Object.values(offersMap || {}).filter(offersMyTurn).length;
-  document.querySelectorAll('#m-top .mt-dls-n, .desk-tabs .mt-dls-n').forEach(i => { i.textContent = n ? (n > 9 ? '9+' : String(n)) : ''; });
-  document.querySelectorAll('#m-top .mt-tabs .mt-dls, .desk-tabs .mt-dls').forEach(btn => btn.classList.toggle('has-deals', n > 0));
+  document.querySelectorAll('#m-top .mt-dls-n, .lib-desk-nav .mt-dls-n').forEach(i => { i.textContent = n ? (n > 9 ? '9+' : String(n)) : ''; });
+  document.querySelectorAll('#m-top .mt-tabs .mt-dls, .lib-desk-nav .mt-dls').forEach(btn => btn.classList.toggle('has-deals', n > 0));
 }
 Object.assign(window, { dlsOpen, dlsSetTab });
 // ===== דף "שמורים": מסודר בשורות כמו לוח עסקאות + סינון לפי השבוע / החודש / טווח חודשים =====
@@ -35654,7 +35654,7 @@ function apvQueue() {
 }
 function apvPendingCount() { try { return pendingRequestsAll().length; } catch (e) { return 0; } }
 function apvTabPaint() {
-  const btns = document.querySelectorAll('#m-top .mt-apv, .desk-tabs .mt-apv');
+  const btns = document.querySelectorAll('#m-top .mt-apv, .lib-desk-nav .mt-apv');
   if (!btns.length) return;
   const on = isAdmin();
   btns.forEach(b => { b.hidden = !on; });
@@ -38668,7 +38668,7 @@ function mtSync() {
   const hideTabs = isListing || isUserProf;
   document.documentElement.classList.toggle('mt-hide-tabs', hideTabs);
   const svd = !prf && !!document.querySelector('.svd-page'), dls = !prf && !svd && !!document.querySelector('.dls-page'), apv = !prf && !!document.querySelector('.apv-page'), dash = !prf && !!document.querySelector('.ua-page'), feed = !prf && !svd && !apv && !dls && !dash && !!document.querySelector('.fd-page'), home = !prf && !svd && !feed && !apv && !dls && !dash && !!document.querySelector('.lib-page');
-  document.querySelectorAll('#m-top .mt-tabs button, .desk-tabs button').forEach(b => b.classList.toggle('on', (b.dataset.t === 'feed' && feed) || (b.dataset.t === 'home' && home) || (b.dataset.t === 'apv' && apv) || (b.dataset.t === 'deals' && dls) || (b.dataset.t === 'dash' && dash) || (b.dataset.t === 'saved' && svd) || (b.dataset.t === 'details' && prf)));
+  document.querySelectorAll('#m-top .mt-tabs button, .lib-desk-nav button').forEach(b => b.classList.toggle('on', (b.dataset.t === 'feed' && feed) || (b.dataset.t === 'home' && home) || (b.dataset.t === 'apv' && apv) || (b.dataset.t === 'deals' && dls) || (b.dataset.t === 'dash' && dash) || (b.dataset.t === 'saved' && svd) || (b.dataset.t === 'details' && prf)));
   const dmUnread = (typeof dmUnreadCount === 'function' ? dmUnreadCount() : 0) > 0;
   const hdrDm = document.getElementById('hdr-dm-btn');
   if (hdrDm) hdrDm.classList.toggle('has-unread', dmUnread);

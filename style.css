@@ -25307,3 +25307,62 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_
     justify-content: flex-start !important;
   }
 }
+
+/* Desktop inline nav + view switcher centered right above the listing feed */
+.lib-desk-nav { display: none; }
+@media (min-width: 701px) {
+  html body:not(#_):not(#_):not(#_) .home-view-bar {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 24px !important;
+    width: 100% !important;
+    max-width: 1400px !important;
+    margin: 4px auto 16px !important;
+    direction: rtl;
+  }
+  .lib-desk-nav {
+    display: inline-flex;
+    align-items: center;
+    gap: 22px;
+  }
+  .lib-desk-nav button {
+    position: relative;
+    font: inherit;
+    font-size: 14.5px !important;
+    font-weight: 700 !important;
+    color: #6b7280 !important;
+    background: transparent !important;
+    border: 0 !important;
+    border-bottom: 2.5px solid transparent !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding: 8px 4px !important;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+  }
+  .lib-desk-nav button:hover { color: #111827 !important; }
+  .lib-desk-nav button.on {
+    color: #111827 !important;
+    font-weight: 800 !important;
+    border-bottom-color: #8b5cf6 !important;
+  }
+  html.theme-dark .lib-desk-nav button { color: #a1a1aa !important; }
+  html.theme-dark .lib-desk-nav button:hover,
+  html.theme-dark .lib-desk-nav button.on { color: #f4f4f5 !important; }
+  .lib-desk-nav .mt-apv-n {
+    font-style: normal;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: #ef4444;
+    color: #fff;
+    line-height: 16px;
+  }
+  .lib-desk-nav .mt-apv-n:empty { display: none; }
+  .lib-desk-nav .mt-dls.has-deals .mt-apv-n { background: #f59e0b; }
+}
