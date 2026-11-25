@@ -25407,3 +25407,8 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_
 
 /* Hide stories bar (.st-bar) on the Subscription page */
 html body:has(.subscription-page, .pp-full) .st-bar { display: none !important; }
+
+/* Hide view switcher (.home-view-bar) on mobile */
+@media (max-width: 700px) {
+  html body:not(#_):not(#_):not(#_) .home-view-bar { display: none !important; }
+}
