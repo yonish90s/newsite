@@ -34172,8 +34172,10 @@ function mktLinkUrl(u) {
   return /^https?:\/\/[\w-]+(\.[\w-]+)+([/?#]\S*)?$/i.test(u) ? u : '';
 }
 const mktLinkHost = u => String(u || '').replace(/^https?:\/\//i, '').replace(/^www\./i, '').replace(/\/$/, '');
-// ללא מודעות דוגמה — מוצגות רק מודעות אמיתיות של משתמשים
-const USED_DEMO = [];
+// דוגמה יחידה (מוצגת כשאין מודעות אמיתיות)
+const USED_DEMO = [
+  { id: 'u1', offer: 'מכירה', img: 'rent/u-sofa.jpg', title: 'ספה תלת-מושבית מעור, במצב מצוין', price: 1200, city: 'גבעתיים', owner: 'הילה רוזן', t: -5, desc: 'ספה נוחה מעור שחור, 3 מושבים. בלי קרעים, מבית ללא בעלי חיים. איסוף עצמי מקומה 2 עם מעלית.', specs: ['רוחב 2.1 מ׳', 'עור אמיתי', 'איסוף עצמי'] }
+].map(r => Object.assign({ demo: true, kind: 'used' }, r, { t: Date.now() + r.t * 3600e3 }));
 const BIZ_DEMO = [];
 const PROJ_DEMO = [];
 // מוצרי יד 2 אמיתיים — מגיעים מעמוד "מוצרי גולשים" (נשמרים בתוכן העמוד)
