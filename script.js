@@ -27921,11 +27921,11 @@ function composerBarHTML() {
   return `<div class="cmp-bar">
     <span class="au-av cmp-av"${reg ? ` data-av-uid="${escHtml(u.uid)}"` : ''}>${escHtml((first || 'א').charAt(0))}</span>
     <span class="cmp-wrapf"><input type="text" class="cmp-input cmp-field" maxlength="120" autocomplete="off" enterkeyhint="send" aria-label="פרסום מהיר" placeholder="מה בא לך לשתף${first ? ', ' + escHtml(first) : ''}? הקלידו / להעלאה מהירה"></span>
-    <div class="cmp-ofx-wrap" aria-label="הצעות שקיבלת">${cmpOffersInner()}</div>
     <div class="cmp-icons">
       ${ic('pic', 'תמונות', 'composerPhoto()', '<g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="m21 16-5-5-9 9"/></g>')}
     </div>
-  </div>`;
+  </div>
+  <div class="cmp-ofx-wrap" aria-label="הצעות שקיבלת">${cmpOffersInner()}</div>`;
 }
 function composerPhoto() { openQuickPublish(); setTimeout(() => { if (typeof qpAddImage === 'function') qpAddImage(); }, 250); }
 window.composerPhoto = composerPhoto;
@@ -32341,7 +32341,9 @@ Object.assign(window, { walletOpen, walletClose });
     if (!held.wallet) held.wallet = walletPillEl();
     if (!held.ticket) held.ticket = ticketPillEl(); else ticketPillPaint(held.ticket);
     if (!held.prize) held.prize = prizePillEl();
-    const btns = ['dm', 'chat', 'a11y', 'wallet', 'ticket', 'prize'].map(k => held[k]).filter(Boolean);
+    const isDesk = window.innerWidth >= 701;
+    const btns = (isDesk ? ['dm', 'chat', 'a11y', 'ticket', 'prize'] : ['dm', 'chat', 'a11y', 'wallet', 'ticket', 'prize']).map(k => held[k]).filter(Boolean);
+    if (isDesk && held.wallet && held.wallet.parentElement !== document.body) document.body.appendChild(held.wallet);
     if (wrap) {
       let box = wrap.querySelector(':scope > .cmp-fabs');
       if (!box) { box = document.createElement('div'); box.className = 'cmp-fabs'; wrap.appendChild(box); }
