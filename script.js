@@ -35251,7 +35251,7 @@ function homeDateFeedHTML(baseList) {
 }
 function homeDateSetTab(t) {
   homeDateTab = t;
-  document.querySelectorAll('#m-top .mt-filter').forEach(b => b.classList.toggle('is-filtered', homeDateTab !== 'all'));
+  document.querySelectorAll('#m-top .mt-filter, #hdr-filter-btn').forEach(b => b.classList.toggle('is-filtered', homeDateTab !== 'all'));
   const libMain = document.querySelector('.lib-page .lib-main');
   if (libMain) { libMain.innerHTML = libHTML(); if (typeof avatarHydrate === 'function') avatarHydrate(libMain); }
 }
@@ -35485,11 +35485,9 @@ function dlsOpen() {
 function dlsRefresh() { const el = document.querySelector('.dls-page'); if (el) { el.innerHTML = dlsHTML(); if (dlsTab === 'dash' && typeof openUserAnalytics === 'function') openUserAnalytics('#dls-dash-host'); } }
 function dlsSetTab(t) { dlsTab = t; dlsRefresh(); }
 function dlsTabPaint() {
-  const i = document.querySelector('#m-top .mt-dls-n');
-  const btn = document.querySelector('#m-top .mt-tabs .mt-dls');
   const n = Object.values(offersMap || {}).filter(offersMyTurn).length;
-  if (i) i.textContent = n ? (n > 9 ? '9+' : String(n)) : '';
-  if (btn) btn.classList.toggle('has-deals', n > 0);
+  document.querySelectorAll('#m-top .mt-dls-n, .desk-tabs .mt-dls-n').forEach(i => { i.textContent = n ? (n > 9 ? '9+' : String(n)) : ''; });
+  document.querySelectorAll('#m-top .mt-tabs .mt-dls, .desk-tabs .mt-dls').forEach(btn => btn.classList.toggle('has-deals', n > 0));
 }
 Object.assign(window, { dlsOpen, dlsSetTab });
 // ===== דף "שמורים": מסודר בשורות כמו לוח עסקאות + סינון לפי השבוע / החודש / טווח חודשים =====
@@ -35623,11 +35621,17 @@ function apvQueue() {
 }
 function apvPendingCount() { try { return pendingRequestsAll().length; } catch (e) { return 0; } }
 function apvTabPaint() {
-  const b = document.querySelector('#m-top .mt-apv'); if (!b) return;
-  const on = isAdmin(); b.hidden = !on; if (!on) return;
+  const btns = document.querySelectorAll('#m-top .mt-apv, .desk-tabs .mt-apv');
+  if (!btns.length) return;
+  const on = isAdmin();
+  btns.forEach(b => { b.hidden = !on; });
+  if (!on) return;
   apvSubscribe();
-  const n = apvQueue().length + apvPendingCount(), i = b.querySelector('.mt-apv-n');
-  if (i) i.textContent = n ? (n > 99 ? '99+' : String(n)) : '';
+  const n = apvQueue().length + apvPendingCount();
+  btns.forEach(b => {
+    const i = b.querySelector('.mt-apv-n');
+    if (i) i.textContent = n ? (n > 99 ? '99+' : String(n)) : '';
+  });
 }
 function apvRowHTML(r) {
   const img = r.img || (r.images || [])[0] || '';
@@ -38624,16 +38628,22 @@ Object.assign(window, { mtSettingsOpen, mtSettingsRefresh });
 try { onAuthStateChanged(auth, () => setTimeout(mtMePaint, 300)); } catch (e) {}
 function mtSync() {
   mtMePaint();
-  const el = document.getElementById('m-top'); if (!el) return;
+  const el = document.getElementById('m-top');
   const prf = !!document.querySelector('.prf-page');
   const isListing = !!(document.querySelector('.rent-page :is(.mk-watch, .rn-det)') || (typeof rentUI !== 'undefined' && rentUI.open));
   const isUserProf = !!(document.querySelector('.user-page') || (typeof rentUI !== 'undefined' && rentUI.seller));
   const hideTabs = isListing || isUserProf;
   document.documentElement.classList.toggle('mt-hide-tabs', hideTabs);
+  const svd = !prf && !!document.querySelector('.svd-page'), dls = !prf && !svd && !!document.querySelector('.dls-page'), apv = !prf && !!document.querySelector('.apv-page'), dash = !prf && !!document.querySelector('.ua-page'), feed = !prf && !svd && !apv && !dls && !dash && !!document.querySelector('.fd-page'), home = !prf && !svd && !feed && !apv && !dls && !dash && !!document.querySelector('.lib-page');
+  document.querySelectorAll('#m-top .mt-tabs button, .desk-tabs button').forEach(b => b.classList.toggle('on', (b.dataset.t === 'feed' && feed) || (b.dataset.t === 'home' && home) || (b.dataset.t === 'apv' && apv) || (b.dataset.t === 'deals' && dls) || (b.dataset.t === 'dash' && dash) || (b.dataset.t === 'saved' && svd) || (b.dataset.t === 'details' && prf)));
+  const dmUnread = (typeof dmUnreadCount === 'function' ? dmUnreadCount() : 0) > 0;
+  const hdrDm = document.getElementById('hdr-dm-btn');
+  if (hdrDm) hdrDm.classList.toggle('has-unread', dmUnread);
+  const hdrFlt = document.getElementById('hdr-filter-btn');
+  if (hdrFlt && typeof homeDateTab !== 'undefined') hdrFlt.classList.toggle('is-filtered', homeDateTab !== 'all');
+  if (!el) { dlsTabPaint(); apvTabPaint(); return; }
   const tabsEl = el.querySelector('.mt-tabs');
   if (tabsEl) tabsEl.hidden = hideTabs;
-  const svd = !prf && !!document.querySelector('.svd-page'), dls = !prf && !svd && !!document.querySelector('.dls-page'), apv = !prf && !!document.querySelector('.apv-page'), dash = !prf && !!document.querySelector('.ua-page'), feed = !prf && !svd && !apv && !dls && !dash && !!document.querySelector('.fd-page'), home = !prf && !svd && !feed && !apv && !dls && !dash && !!document.querySelector('.lib-page');
-  el.querySelectorAll('.mt-tabs button').forEach(b => b.classList.toggle('on', (b.dataset.t === 'feed' && feed) || (b.dataset.t === 'home' && home) || (b.dataset.t === 'apv' && apv) || (b.dataset.t === 'deals' && dls) || (b.dataset.t === 'dash' && dash) || (b.dataset.t === 'saved' && svd) || (b.dataset.t === 'details' && prf)));
   const homeBtn = el.querySelector('.mt-home');
   if (homeBtn) {
     const hideBack = home || feed || dls || svd || prf || apv;
@@ -38645,7 +38655,7 @@ function mtSync() {
   const cartEl = el.querySelector('.mt-cart');
   if (cartEl) cartEl.classList.toggle('has-items', (typeof cartCount === 'function' ? cartCount() : 0) > 0);
   const dmEl = el.querySelector('.mt-dm');
-  if (dmEl) dmEl.classList.toggle('has-unread', (typeof dmUnreadCount === 'function' ? dmUnreadCount() : 0) > 0);
+  if (dmEl) dmEl.classList.toggle('has-unread', dmUnread);
   const c = el.querySelector('.mt-count');
   if (c) {
     const sum = typeof cartSum === 'function' ? Math.round(cartSum()) : 0;

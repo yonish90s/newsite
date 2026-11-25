@@ -25190,3 +25190,92 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_
   padding: 14px 20px 20px !important;
   box-sizing: border-box !important;
 }
+
+/* Desktop mobile-parity: navigation tabs bar (.desk-tabs) + header quick actions */
+.desk-tabs { display: none; }
+@media (min-width: 701px) {
+  .desk-tabs {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 24px;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 4px 20px 0;
+    direction: rtl;
+    border-top: 1px solid rgba(0, 0, 0, .06);
+  }
+  html.theme-dark .desk-tabs {
+    border-top-color: rgba(255, 255, 255, .08);
+  }
+  html.mt-hide-tabs .desk-tabs {
+    display: none !important;
+  }
+  .desk-tabs button {
+    position: relative;
+    font: inherit;
+    font-size: 14.5px;
+    font-weight: 700;
+    color: #6b7280;
+    background: none;
+    border: 0;
+    border-bottom: 2.5px solid transparent;
+    padding: 8px 4px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: color .15s ease, border-color .15s ease;
+  }
+  .desk-tabs button:hover {
+    color: #111827;
+  }
+  .desk-tabs button.on {
+    color: #111827;
+    font-weight: 800;
+    border-bottom-color: #8b5cf6;
+  }
+  html.theme-dark .desk-tabs button {
+    color: #a1a1aa;
+  }
+  html.theme-dark .desk-tabs button:hover,
+  html.theme-dark .desk-tabs button.on {
+    color: #f4f4f5;
+  }
+  .desk-tabs .mt-apv-n {
+    font-style: normal;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: #ef4444;
+    color: #fff;
+    line-height: 16px;
+  }
+  .desk-tabs .mt-apv-n:empty { display: none; }
+  .desk-tabs .mt-dls.has-deals .mt-apv-n { background: #f59e0b; }
+  html:not(.mt-hide-tabs) body main.center-content,
+  html:not(.mt-hide-tabs) body .center-content {
+    padding-top: 96px !important;
+  }
+  #hdr-pub-btn {
+    color: #7c3aed !important;
+  }
+  html.theme-dark #hdr-pub-btn {
+    color: #a78bfa !important;
+  }
+  #hdr-filter-btn.is-filtered {
+    color: #8b5cf6 !important;
+    box-shadow: inset 0 0 0 1.5px #8b5cf6 !important;
+  }
+  #hdr-dm-btn.has-unread::after {
+    content: "";
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #ef4444;
+  }
+}
