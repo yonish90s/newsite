@@ -27663,9 +27663,7 @@ function setSiteTheme(mode) {
   applySiteTheme();
 }
 function applySiteTheme() {
-  const isMob = window.matchMedia ? window.matchMedia('(max-width: 900px)').matches : window.innerWidth <= 900;
-  let mode = document.documentElement.dataset.themeMode || (isMob ? 'dark' : 'light');
-  if (!isMob && !window.__deskThemeManual) mode = 'light';
+  let mode = document.documentElement.dataset.themeMode || 'dark';
   const dark = mode === 'dark' || (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
   const dc = document.getElementById('dark-css'); if (dc) { if (!dc.getAttribute('href')) dc.href = dc.dataset.href; dc.media = dark ? 'all' : 'not all'; }
   document.documentElement.classList.toggle('theme-dark', dark);

@@ -45,7 +45,7 @@
   <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js" crossorigin>
   <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js" crossorigin>
   <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js" crossorigin>
-  <link rel="modulepreload" href="./script.min.js?v=2312">
+  <link rel="modulepreload" href="./script.min.js?v=2313">
   <!-- ספריית interact.js לגרירה ושינוי גודל (נטענת בדחייה למניעת עיכוב) -->
   <script defer src="https://cdn.jsdelivr.net/npm/interactjs@1.10.28/dist/interact.min.js"></script>
   <!-- ספריית localforage לשמירת תמונות -->
@@ -57,14 +57,11 @@
   <script>
     // קישור ישיר לפריט (#p/…, #s/…, #n/…) — מסמנים מיד, כדי שהכתובת לא תימחק לפני שהפריט נפתח
     window.__deepLinkOpening = /^#[psn]\//.test(location.hash || '');
-    // מצב בהיר/כהה — נקבע לפני שהדף מצויר כדי שלא יהבהב (בחירה שמורה, אחרת בהיר)
+    // מצב בהיר/כהה — נקבע לפני שהדף מצויר כדי שלא יהבהב (בחירה שמורה, אחרת כהה)
     (function () {
-      var isMob = window.matchMedia && matchMedia('(max-width: 900px)').matches;
-      var t = 'light';
-      if (isMob) {
-        try { t = localStorage.getItem('site_theme'); } catch (e) {}
-        if (t !== 'light' && t !== 'dark' && t !== 'system') t = 'dark';
-      }
+      var t = '';
+      try { t = localStorage.getItem('site_theme') || ''; } catch (e) {}
+      if (t !== 'light' && t !== 'dark' && t !== 'system') t = 'dark';
       document.documentElement.dataset.themeMode = t;
       if (t === 'system') t = window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';   // "לפי המכשיר"
       if (t === 'dark') { document.documentElement.classList.add('theme-dark'); var dc = document.getElementById('dark-css'); if (dc) { dc.href = dc.dataset.href; dc.media = 'all'; } }
@@ -1332,7 +1329,7 @@ html.theme-dark .pl-bar { background: #2a2f37; }
     </ul>
     <p>ההצטרפות חינם. מפרסמים מודעה או פרויקט בכמה שניות, ומקבלים הצעות מגולשים.</p>
   </section>
-  <script type="module" src="./script.min.js?v=2312"></script>
+  <script type="module" src="./script.min.js?v=2313"></script>
   <script defer src="./a11y.js?v=1"></script>
 </body>
 </html>
