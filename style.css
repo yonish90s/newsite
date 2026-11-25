@@ -25010,3 +25010,73 @@ button, a, input, select, textarea, [onclick] {
 html.mt-hide-tabs body #m-top .mt-tabs {
   display: none !important;
 }
+
+/* Desktop large Reddit-style feed + Large/Small view switcher */
+.home-view-bar {
+  display: flex;
+  justify-content: flex-end;
+  max-width: 700px;
+  margin: 0 auto 10px;
+  padding: 0 4px;
+}
+html:not(.tw-feed) .home-view-bar {
+  max-width: 1200px;
+}
+.tw-vbtn {
+  width: auto !important;
+  padding: 4px 10px !important;
+  gap: 5px;
+  display: inline-flex !important;
+  align-items: center;
+  font-size: 12.5px;
+  font-weight: 700;
+}
+@media (min-width: 701px) {
+  .tw-feed-list {
+    max-width: 700px;
+    gap: 14px;
+  }
+  .tw-post {
+    padding: 16px 18px;
+    border-radius: 16px;
+    border: 1px solid rgba(0, 0, 0, .09);
+    background: #ffffff;
+    gap: 10px;
+  }
+  html.theme-dark .tw-post {
+    background: #14151a;
+    border-color: rgba(255, 255, 255, .1);
+  }
+  .tw-av .au-av {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    font-size: 12px !important;
+  }
+  .tw-head {
+    font-size: 13px !important;
+    gap: 8px !important;
+  }
+  .tw-who {
+    font-size: 13.5px !important;
+  }
+  .tw-meta {
+    font-size: 12px !important;
+  }
+  .tw-head .mk-sg-price {
+    font-size: 12.5px !important;
+    padding: 3px 10px !important;
+  }
+  .tw-text b {
+    font-size: 18px;
+    line-height: 1.4;
+  }
+  .tw-text small {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .tw-media {
+    max-height: 520px;
+    border-radius: 14px;
+  }
+}
