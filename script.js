@@ -38674,6 +38674,11 @@ function mtSync() {
   if (hdrDm) hdrDm.classList.toggle('has-unread', dmUnread);
   const hdrFlt = document.getElementById('hdr-filter-btn');
   if (hdrFlt && typeof homeDateTab !== 'undefined') hdrFlt.classList.toggle('is-filtered', homeDateTab !== 'all');
+  const dSlot = document.getElementById('desk-view-slot');
+  if (dSlot) {
+    if (home && typeof homeViewSwHTML === 'function') { dSlot.hidden = false; dSlot.innerHTML = homeViewSwHTML(); }
+    else { dSlot.hidden = true; dSlot.innerHTML = ''; }
+  }
   if (!el) { dlsTabPaint(); apvTabPaint(); return; }
   const tabsEl = el.querySelector('.mt-tabs');
   if (tabsEl) tabsEl.hidden = hideTabs;

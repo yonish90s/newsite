@@ -25202,16 +25202,25 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_
     z-index: 998;
     display: flex;
     align-items: center;
-    justify-content: flex-start;
-    gap: 28px;
+    justify-content: center;
+    gap: 24px;
     padding: 0 28px;
-    height: 44px;
+    height: 46px;
     direction: rtl;
     background: rgba(255, 255, 255, .94);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border-bottom: 1px solid rgba(0, 0, 0, .07);
     box-sizing: border-box;
+  }
+  .desk-view-slot {
+    display: inline-flex;
+    align-items: center;
+    margin-inline-start: 12px;
+  }
+  .desk-view-slot[hidden] { display: none; }
+  html body:not(#_):not(#_):not(#_) .home-view-bar {
+    display: none !important;
   }
   html.theme-dark .desk-tabs {
     background: rgba(17, 18, 22, .94);
