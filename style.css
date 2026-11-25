@@ -25476,3 +25476,33 @@ html body:has(.subscription-page, .pp-full) .st-bar { display: none !important; 
     padding: 6px 16px !important;
   }
 }
+
+/* Make profile pages (.user-page, .prf-page, .pf-desk, .ig-prof) much larger on desktop */
+@media (min-width: 701px) {
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.user-page .pf-inner, .prf-page) {
+    max-width: 1400px !important;
+    width: 100% !important;
+    margin: 0 auto !important;
+  }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.pf-desk .pf-avatar, .ig-prof .au-av) {
+    width: 112px !important;
+    height: 112px !important;
+    min-width: 112px !important;
+    font-size: 40px !important;
+  }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.md-name, .ig-p-name) {
+    font-size: 32px !important;
+  }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.pf-stats, .ig-p-stats) {
+    font-size: 18px !important;
+    gap: 24px !important;
+  }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) :is(.pf-tabs2 button, .md-tabs button) {
+    font-size: 17px !important;
+    padding: 12px 16px !important;
+  }
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) .pf-desk .pfa-card .mk-stars svg {
+    width: 22px !important;
+    height: 22px !important;
+  }
+}
