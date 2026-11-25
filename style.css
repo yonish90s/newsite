@@ -25547,3 +25547,26 @@ html body:has(.subscription-page, .pp-full) .st-bar { display: none !important; 
     font-size: 17px !important;
   }
 }
+
+/* Enlarge quantity stepper (.mk-stepper / .mk-stp-ctrl) on desktop */
+@media (min-width: 701px) {
+  html body:not(#_):not(#_):not(#_) .mk-watch .mk-galacts .mk-stepper {
+    padding: 0 !important;
+    min-height: 0 !important;
+  }
+  html body:not(#_):not(#_):not(#_) .mk-watch .mk-galacts .mk-stp-ctrl {
+    min-height: 52px !important;
+    padding: 0 12px !important;
+    gap: 14px !important;
+  }
+  html body:not(#_):not(#_):not(#_) .mk-watch .mk-galacts .mk-stp-btn {
+    width: 38px !important;
+    height: 38px !important;
+    font-size: 24px !important;
+  }
+  html body:not(#_):not(#_):not(#_) .mk-watch .mk-galacts .mk-stp-val {
+    font-size: 22px !important;
+    min-width: 24px !important;
+    text-align: center !important;
+  }
+}
