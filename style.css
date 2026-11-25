@@ -25404,3 +25404,6 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_
     min-height: 140px !important;
   }
 }
+
+/* Hide stories bar (.st-bar) on the Subscription page */
+html body:has(.subscription-page, .pp-full) .st-bar { display: none !important; }
