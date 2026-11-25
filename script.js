@@ -19501,7 +19501,7 @@ async function openMessages() {
   if (!modal) { modal = document.createElement('div'); modal.id = 'messages-modal'; document.body.appendChild(modal); }
   dmSearchQuery = '';
   // במחשב: חלון קטן צף בפינה (כמו באינסטגרם), עם אפשרות להגדיל; במובייל — מסך מלא כמו קודם
-  modal.className = 'tg-modal' + (window.matchMedia('(min-width: 900px)').matches && !dmExpanded ? ' tg-compact' : '');
+  modal.className = 'tg-modal';
   modal.innerHTML = `
     <div class="tg-backdrop" onclick="closeMessages()"></div>
     <aside class="tg-panel" role="dialog" aria-label="הודעות">
