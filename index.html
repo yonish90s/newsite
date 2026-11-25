@@ -69,6 +69,73 @@
   </script>
 </head>
 <body class="light-mode">
+  <!-- פתיח כניסה קצר (שנייה אחת): שם האתר בלבן על רקע כהה ואז נפתח -->
+  <div id="site-intro" aria-hidden="true">
+    <style>
+      #site-intro {
+        position: fixed;
+        inset: 0;
+        z-index: 2000000;
+        background: #090a0d;
+        color: #ffffff;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        transition: transform .55s cubic-bezier(.77, 0, .175, 1), opacity .45s ease;
+        will-change: transform, opacity;
+      }
+      #site-intro .si-word {
+        font-family: 'Heebo', system-ui, -apple-system, sans-serif;
+        font-size: clamp(30px, 6vw, 56px);
+        font-weight: 800;
+        letter-spacing: -0.04em;
+        color: #ffffff;
+        overflow: hidden;
+        line-height: 1.08;
+      }
+      #site-intro .si-word span {
+        display: inline-block;
+        animation: siRise .55s cubic-bezier(.22, 1, .36, 1) both;
+      }
+      #site-intro .si-sub {
+        font-family: 'Heebo', system-ui, -apple-system, sans-serif;
+        font-size: 13px;
+        font-weight: 500;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, .58);
+        animation: siFade .55s .12s ease both;
+      }
+      #site-intro.si-hide {
+        transform: translateY(-100%);
+        opacity: 0;
+        pointer-events: none;
+      }
+      @keyframes siRise {
+        from { transform: translateY(110%); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+      }
+      @keyframes siFade {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+    </style>
+    <div class="si-word" dir="ltr"><span>Black1White00</span></div>
+    <div class="si-sub">שיתוף רעיונות</div>
+    <script>
+      (function () {
+        var el = document.getElementById('site-intro');
+        if (!el) return;
+        var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        setTimeout(function () {
+          el.classList.add('si-hide');
+          setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 600);
+        }, reduced ? 80 : 950);
+      })();
+    </script>
+  </div>
   <!-- שער אישור גיל (Age Gate Overlay) -->
   <div id="age-gate-overlay" style="display: none; position: fixed; inset: 0; z-index: 1000000; background-color: #f4f4f4; font-family: system-ui, -apple-system, sans-serif; align-items: center; justify-content: center; overflow-y: auto; direction: rtl; padding: 20px;">
     <style>
