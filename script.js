@@ -8432,7 +8432,13 @@ async function qpPublish() {
     } else {
       // תמונות או מוצרי יד שניה — מתפרסם לעמוד הנוכחי לפי הסקשן
       const sec = (qpData.pageSection === 'secondhand') ? 'secondhand' : 'photos';
-      // נפתח מלשונית ההעלאה: שומרים ישר לרשימת המוצרים, בלי לפתוח עמוד מאחורי החלון
+      // שמירה מקומית מיידית (ל-7 ימים) כדי שהמודעה לא תיעלם ברענון, ובמקביל שמירה ל-Firebase
+      try {
+        const loc = JSON.parse(localStorage.getItem('bw_local_listings') || '[]') || [];
+        const clean = (Array.isArray(loc) ? loc : []).filter(x => x && x.id !== album.id && !(typeof mktExpired === 'function' && mktExpired(x.createdAt)));
+        clean.unshift(album);
+        localStorage.setItem('bw_local_listings', JSON.stringify(clean.slice(0, 40)));
+      } catch (e) {}
       if (sec === 'secondhand' || qpData.isProduct) {
         const rentRec = {
           id: album.id, shId: album.id, kind: 'used', offer: album.offerType || 'מכירה',
@@ -8446,6 +8452,15 @@ async function qpPublish() {
           hashtags: Array.isArray(album.hashtags) ? album.hashtags : [], desc: album.summary || ''
         };
         try { await set(ref(db, `website/rentals/${album.id}`), rentRec); } catch (e) {}
+        if (!isAdminNow) {
+          try {
+            await push(ref(db, 'website/user_submissions'), {
+              submissionType: 'content', album, name: album.author || 'אורח',
+              text: 'מודעה חדשה: ' + (album.title || ''),
+              uid: (auth.currentUser && auth.currentUser.uid) || '', registered: !!auth.currentUser, timestamp: Date.now()
+            });
+          } catch (e) {}
+        }
       }
       const shPage = sec === 'secondhand' && !mainContent.querySelector('.secondhand-page') && Array.isArray(pages) && pages.find(p => p && p.id === 'page-secondhand-main');
       if (shPage) {
@@ -9209,6 +9224,9 @@ function subscribeUserSubmissions() {
     userSubmissionsData = snap.val() || {};
     const listEl = document.getElementById('info-submissions-list');
     if (listEl) listEl.innerHTML = infoSubmissionsListHTML();
+    if (typeof _usedCache !== 'undefined') _usedCache.at = 0;
+    if (typeof libRefresh === 'function') libRefresh();
+    if (typeof rentRender === 'function') rentRender();
   });
 }
 
@@ -34228,11 +34246,27 @@ function usedAll() {
   const pg = (typeof pages !== 'undefined' && Array.isArray(pages)) ? pages.find(x => x && x.id === 'page-secondhand-main') : null;
   const src = pg ? pg.content || '' : '';
   const now = Date.now();
-  if (_usedCache.out && _usedCache.src === src && now - _usedCache.at < 30000) return _usedCache.out;
+  const subsLen = typeof userSubmissionsData === 'object' && userSubmissionsData ? Object.keys(userSubmissionsData).length : 0;
+  let locRaw = '';
+  try { locRaw = localStorage.getItem('bw_local_listings') || ''; } catch (e) {}
+  const cacheKey = src + '|' + subsLen + '|' + locRaw.length;
+  if (_usedCache.out && _usedCache.src === cacheKey && now - _usedCache.at < 30000) return _usedCache.out;
   let raw = [];
   try {
     const m = src.match(/data-photos-json="([^"]*)"/);
-    raw = (m ? (JSON.parse(decodeURIComponent(m[1])) || []) : []).filter(x => x && x.id && x.title && !x.isAdult && x.approved !== false && !x.adminOnly && !mktExpired(x.createdAt) && (!x.publishAt || Number(x.publishAt) <= now)); } catch (e) {}
+    const fromPg = m ? (JSON.parse(decodeURIComponent(m[1])) || []) : [];
+    const fromSubs = (typeof userSubmissionsData === 'object' && userSubmissionsData ? Object.values(userSubmissionsData) : [])
+      .filter(v => v && v.submissionType === 'content' && v.album && v.album.id && v.album.approved !== false)
+      .map(v => v.album);
+    let fromLoc = [];
+    try { fromLoc = JSON.parse(locRaw || '[]') || []; } catch (e) {}
+    const seen = new Set();
+    raw = [...(Array.isArray(fromLoc) ? fromLoc : []), ...fromSubs, ...fromPg].filter(x => {
+      if (!x || !x.id || !x.title || seen.has(x.id)) return false;
+      seen.add(x.id);
+      return !x.isAdult && x.approved !== false && !x.adminOnly && !mktExpired(x.createdAt) && (!x.publishAt || Number(x.publishAt) <= now);
+    });
+  } catch (e) {}
   const real = raw.map(x => ({ id: 'sh_' + x.id, shId: x.id, kind: 'used', offer: x.offerType || x.category || 'מכירה', title: x.title, price: parseFloat(String(x.price || '').replace(/[^\d.]/g, '')) || 0, priceTxt: x.price || '',
     unitTxt: x.priceUnit || '', city: x.region || '', owner: x.author || '', uid: x.authorId || '', t: Number(x.createdAt) || 0, stock: Number.isFinite(Number(x.stock)) && x.stock !== null && x.stock !== '' ? Number(x.stock) : null, img: x.image || (Array.isArray(x.images) && x.images[0]) || '',
     bizName: String(x.bizName || '').slice(0, 60), video: '', hv: mkVideoParse(x.video), link: mktLinkUrl(x.link), pk: PROJ_KINDS[x.projectKind] ? x.projectKind : '', pd: PROJ_SUB[x.projectArea] ? x.projectArea : '',
@@ -34245,7 +34279,7 @@ function usedAll() {
     r.dept = MKT_DEPT[saved] ? saved : mktIsBiz(r) && mktAutoDept(r.title, r.desc) === 'other' ? 'services' : mktAutoDept(r.title, (r.desc || '') + ' ' + (r.bizName || ''));
     r.htags = Array.isArray(r.raw && r.raw.hashtags) && r.raw.hashtags.length ? r.raw.hashtags.filter(t => typeof t === 'string').slice(0, 7) : mktAutoTags(r);
   });
-  _usedCache = { src, at: now, out };
+  _usedCache = { src: cacheKey, at: now, out };
   return out;
 }
 // מודעה של גולש מוסרת אחרי שבוע (7 ימים): נעלמת מיד לכולם, ונמחקת לגמרי ממסד הנתונים
@@ -34596,6 +34630,7 @@ let rentData = null, rentUnsub = null;
 const rentUI = { sec: 'all', cat: 'all', q: '', city: 'all', sort: 'new', offer: 'all', owner: 'all', min: null, max: null, pk: 'all', pa: 'all', pd: 'all', dept: 'all', since: 0, fPrice: false, fStock: false, fPhoto: false, fVideo: false };
 function rentSubscribe() {
   if (rentUnsub) return;
+  try { if (typeof subscribeUserSubmissions === 'function') subscribeUserSubmissions(); } catch (e) {}
   try {
     rentUnsub = onValue(ref(db, 'website/rentals'), snap => {
       const v = snap.val() || {};

@@ -25292,3 +25292,29 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_
     background: #ef4444;
   }
 }
+
+/* Force full desktop container width for listings feed so cards are truly wide on desktop */
+@media (min-width: 701px) {
+  html body:not(#_):not(#_):not(#_) #mainContent:has(> .lib-page) {
+    max-width: 100% !important;
+    width: 100% !important;
+    padding-left: 28px !important;
+    padding-right: 28px !important;
+    box-sizing: border-box !important;
+  }
+  html body:not(#_):not(#_):not(#_) .lib-page,
+  html body:not(#_):not(#_):not(#_) .lib-page .lib-main {
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+  html body:not(#_):not(#_):not(#_) .tw-feed-list,
+  html body:not(#_):not(#_):not(#_) .home-view-bar {
+    width: 100% !important;
+    max-width: 1400px !important;
+    margin-inline-start: 0 !important;
+    margin-inline-end: auto !important;
+  }
+}
