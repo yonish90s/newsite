@@ -25570,3 +25570,12 @@ html body:has(.subscription-page, .pp-full) .st-bar { display: none !important; 
     text-align: center !important;
   }
 }
+
+/* Reduce .ig-prof card width by 25% (a quarter) on desktop */
+@media (min-width: 701px) {
+  html body:not(#_):not(#_):not(#_):not(#_):not(#_) .ig-prof {
+    max-width: 75% !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+}
