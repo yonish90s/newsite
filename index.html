@@ -51,7 +51,7 @@
   <!-- ספריית localforage לשמירת תמונות -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
   <!-- קישור לקובץ העיצוב החיצוני (עם פרמטר למניעת שמירה במטמון) -->
-  <link rel="stylesheet" href="./style.min.css?v=2548">
+  <link rel="stylesheet" href="./style.min.css?v=2549">
   <link rel="stylesheet" id="mono-css" href="./mono.min.css?v=338">
   <link rel="stylesheet" id="dark-css" data-href="./dark.min.css?v=701" media="not all">
   <script>
@@ -69,7 +69,7 @@
   </script>
 </head>
 <body class="light-mode">
-  <!-- פתיח כניסה קצר (שנייה אחת): שם האתר בלבן על רקע כהה ואז נפתח -->
+  <!-- פתיח כניסה קצר (2 שניות): סמל האתר ושם האתר בלבן על רקע כהה ואז נפתח -->
   <div id="site-intro" aria-hidden="true">
     <style>
       #site-intro {
@@ -82,9 +82,16 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 10px;
+        gap: 16px;
         transition: transform .55s cubic-bezier(.77, 0, .175, 1), opacity .45s ease;
         will-change: transform, opacity;
+      }
+      #site-intro .si-mark {
+        width: clamp(56px, 9vw, 76px);
+        height: clamp(56px, 9vw, 76px);
+        border-radius: 18px;
+        display: block;
+        animation: siFade .55s cubic-bezier(.22, 1, .36, 1) both;
       }
       #site-intro .si-word {
         font-family: 'Heebo', system-ui, -apple-system, sans-serif;
@@ -97,16 +104,7 @@
       }
       #site-intro .si-word span {
         display: inline-block;
-        animation: siRise .55s cubic-bezier(.22, 1, .36, 1) both;
-      }
-      #site-intro .si-sub {
-        font-family: 'Heebo', system-ui, -apple-system, sans-serif;
-        font-size: 13px;
-        font-weight: 500;
-        letter-spacing: 0.18em;
-        text-transform: uppercase;
-        color: rgba(255, 255, 255, .58);
-        animation: siFade .55s .12s ease both;
+        animation: siRise .55s .08s cubic-bezier(.22, 1, .36, 1) both;
       }
       #site-intro.si-hide {
         transform: translateY(-100%);
@@ -118,12 +116,12 @@
         to { transform: translateY(0); opacity: 1; }
       }
       @keyframes siFade {
-        from { opacity: 0; transform: translateY(8px); }
-        to { opacity: 1; transform: translateY(0); }
+        from { opacity: 0; transform: translateY(8px) scale(0.94); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
       }
     </style>
+    <img class="si-mark" src="./icon-site.svg?v=3" alt="">
     <div class="si-word" dir="ltr"><span>Black1White00</span></div>
-    <div class="si-sub">שיתוף רעיונות</div>
     <script>
       (function () {
         var el = document.getElementById('site-intro');
@@ -132,7 +130,7 @@
         setTimeout(function () {
           el.classList.add('si-hide');
           setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 600);
-        }, reduced ? 80 : 3000);
+        }, reduced ? 80 : 2000);
       })();
     </script>
   </div>
