@@ -27478,68 +27478,7 @@ function footerSocialRowHTML() {
 }
 
 function buildSiteFooterHTML() {
-  const cleanTitle = t => String(t || '').replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{1F000}-\u{1F2FF}]/gu, '').trim();
-  const link = (pageId, fallback) => {
-    const p = pages.find(x => x && x.id === pageId);
-    if (!p) return '';
-    return `<li><a href="#" onclick="event.preventDefault(); navigateToPage('${pageId}')">${escHtml(cleanTitle(p.title) || fallback)}</a></li>`;
-  };
-  const contentLinks = [
-    link('page-ideas-main', 'רעיונות'), link('page-news-main', 'חדשות'), link('page-questions-main', 'שאלות גולשים')
-  ].join('');
-  const communityLinks = [
-    link('page-offers-main', 'הצעות'),
-    
-    link('page-subscription-main', 'מנוי')
-  ].join('');
-  const social = Object.keys(SITE_FOOTER_SOCIAL).filter(k => SITE_FOOTER_SOCIAL[k]).map(k => {
-    const raw = SITE_FOOTER_SOCIAL[k];
-    const href = safeUrl(k === 'email' ? 'mailto:' + raw : raw);
-    if (!href || href === '#') return '';
-    return `<a class="site-footer-social" href="${escHtml(href)}" target="_blank" rel="noopener" aria-label="${k}">${SITE_FOOTER_ICONS[k]}</a>`;
-  }).join('');
-  const year = new Date().getFullYear();
-  return `
-    <footer class="site-footer" role="contentinfo">
-      <div class="site-footer-inner">
-        <div class="site-footer-cols">
-          <div class="site-footer-col">
-            <h4>על האתר</h4>
-            <ul>
-              <li><a href="#" onclick="event.preventDefault(); goToHomePage()">דף הבית</a></li>
-              <li><a href="#" onclick="event.preventDefault(); document.querySelector('.a11y-launcher')?.click()">הגדרות נגישות</a></li>
-              <li><a href="#" onclick="event.preventDefault(); investOpen('invest')">💛 תמכו / השקיעו בנו</a></li>
-            </ul>
-          </div>
-          ${contentLinks ? `<div class="site-footer-col"><h4>תוכן</h4><ul>${contentLinks}</ul></div>` : ''}
-          ${communityLinks ? `<div class="site-footer-col"><h4>קהילה</h4><ul>${communityLinks}</ul></div>` : ''}
-          <div class="site-footer-col">
-            <h4>מידע משפטי</h4>
-            <ul>
-              <li><a href="#" onclick="event.preventDefault(); openLegal('terms')">תנאי שימוש</a></li>
-              <li><a href="#" onclick="event.preventDefault(); openLegal('privacy')">מדיניות פרטיות</a></li>
-              <li><a href="#" onclick="event.preventDefault(); openLegal('a11y')">הצהרת נגישות</a></li>
-              <li><a href="#" onclick="event.preventDefault(); openLegal('refund')">ביטולים והחזרים</a></li>
-              <li><a href="#" onclick="event.preventDefault(); openLegal('report')">דיווח והסרת תוכן</a></li>
-              <li><a href="#" onclick="event.preventDefault(); openLegal('mydata')">המידע שלי</a></li>
-            </ul>
-          </div>
-          <div class="site-footer-col">
-            <h4>צרו קשר</h4>
-            <ul>
-              <li><a href="#" onclick="event.preventDefault(); openMessages()">שלחו לנו הודעה</a></li>
-              ${SITE_FOOTER_SOCIAL.email ? `<li><a href="mailto:${escHtml(SITE_FOOTER_SOCIAL.email)}">${escHtml(SITE_FOOTER_SOCIAL.email)}</a></li>` : ''}
-            </ul>
-            ${social ? `<div class="site-footer-socials">${social}</div>` : ''}
-          </div>
-        </div>
-        <div class="site-footer-bottom">
-          <img src="./logo.png?v=2" alt="" class="site-footer-logo">
-          <span>© ${year} כל הזכויות שמורות.</span><small class="ft-credit">תמונות הדוגמה: Wikimedia Commons</small>
-          ${footerSocialRowHTML()}
-        </div>
-      </div>
-    </footer>`;
+  return '';
 }
 
 // ==========================================
