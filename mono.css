@@ -2290,9 +2290,9 @@ html:not(.theme-dark) body:not(#_):not(#_):not(#_):not(#_):not(#_) #messages-mod
 html:not(.theme-dark) body:not(#_):not(#_):not(#_):not(#_):not(#_) #messages-modal .tg-msg .tg-bubble.has-meet .tg-meet-card { background: #111111 !important; }
 html:not(.theme-dark) .mt-drop { color: #111111; }
 @media (min-width: 701px) {
-html:not(.theme-dark) .desk-tabs button { color: #727272; }
-html:not(.theme-dark) .desk-tabs button:hover { color: #111111; }
-html:not(.theme-dark) .desk-tabs button.on { color: #111111; border-bottom-color: #7c7c7c; }
+html:not(.theme-dark) .desk-tabs button { color: #727272 !important; }
+html:not(.theme-dark) .desk-tabs button:hover { color: #111111 !important; }
+html:not(.theme-dark) .desk-tabs button.on { color: #111111 !important; border-bottom-color: #7c7c7c !important; }
 html:not(.theme-dark) .desk-tabs .mt-apv-n { background: #777777; }
 html:not(.theme-dark) .desk-tabs .mt-dls.has-deals .mt-apv-n { background: #a7a7a7; }
 html:not(.theme-dark) #hdr-pub-btn { color: #111111 !important; }

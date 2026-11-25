@@ -5035,8 +5035,8 @@ html.theme-dark .tw-post { border: 1px solid rgba(255, 255, 255, 0.072) !importa
 html.theme-dark.theme-dark .tw-post { background: #121212 !important; border-color: rgba(255, 255, 255, 0.1) !important; }
 }
 @media (min-width: 701px) {
-html.theme-dark .desk-tabs { border-top: 1px solid rgba(255, 255, 255, 0.048) !important; }
-html.theme-dark.theme-dark .desk-tabs { border-top-color: rgba(255, 255, 255, 0.1) !important; }
+html.theme-dark .desk-tabs { background: rgba(18, 23, 29, 0.94) !important; border-bottom: 1px solid rgba(255, 255, 255, 0.056) !important; }
+html.theme-dark.theme-dark .desk-tabs { border-bottom-color: rgba(255, 255, 255, 0.1) !important; }
 html.theme-dark .desk-tabs button { color: #a8a8a8 !important; }
 html.theme-dark .desk-tabs button:hover { color: #f5f5f5 !important; }
 html.theme-dark .desk-tabs button.on { color: #f5f5f5 !important; }

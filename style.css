@@ -25195,18 +25195,27 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_
 .desk-tabs { display: none; }
 @media (min-width: 701px) {
   .desk-tabs {
+    position: fixed;
+    top: 76px;
+    left: 0;
+    right: 0;
+    z-index: 998;
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    gap: 24px;
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 4px 20px 0;
+    gap: 28px;
+    padding: 0 28px;
+    height: 44px;
     direction: rtl;
-    border-top: 1px solid rgba(0, 0, 0, .06);
+    background: rgba(255, 255, 255, .94);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(0, 0, 0, .07);
+    box-sizing: border-box;
   }
   html.theme-dark .desk-tabs {
-    border-top-color: rgba(255, 255, 255, .08);
+    background: rgba(17, 18, 22, .94);
+    border-bottom-color: rgba(255, 255, 255, .08);
   }
   html.mt-hide-tabs .desk-tabs {
     display: none !important;
@@ -25214,33 +25223,37 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_
   .desk-tabs button {
     position: relative;
     font: inherit;
-    font-size: 14.5px;
-    font-weight: 700;
-    color: #6b7280;
-    background: none;
-    border: 0;
-    border-bottom: 2.5px solid transparent;
-    padding: 8px 4px;
+    font-size: 14.5px !important;
+    font-weight: 700 !important;
+    color: #6b7280 !important;
+    background: transparent !important;
+    border: 0 !important;
+    border-bottom: 2.5px solid transparent !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding: 10px 4px !important;
+    height: 100%;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     gap: 5px;
+    white-space: nowrap;
     transition: color .15s ease, border-color .15s ease;
   }
   .desk-tabs button:hover {
-    color: #111827;
+    color: #111827 !important;
   }
   .desk-tabs button.on {
-    color: #111827;
-    font-weight: 800;
-    border-bottom-color: #8b5cf6;
+    color: #111827 !important;
+    font-weight: 800 !important;
+    border-bottom-color: #8b5cf6 !important;
   }
   html.theme-dark .desk-tabs button {
-    color: #a1a1aa;
+    color: #a1a1aa !important;
   }
   html.theme-dark .desk-tabs button:hover,
   html.theme-dark .desk-tabs button.on {
-    color: #f4f4f5;
+    color: #f4f4f5 !important;
   }
   .desk-tabs .mt-apv-n {
     font-style: normal;
@@ -25256,7 +25269,7 @@ html body:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_
   .desk-tabs .mt-dls.has-deals .mt-apv-n { background: #f59e0b; }
   html:not(.mt-hide-tabs) body main.center-content,
   html:not(.mt-hide-tabs) body .center-content {
-    padding-top: 96px !important;
+    padding-top: 128px !important;
   }
   #hdr-pub-btn {
     color: #7c3aed !important;
