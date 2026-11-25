@@ -25440,3 +25440,39 @@ html body:has(.subscription-page, .pp-full) .st-bar { display: none !important; 
     max-height: 88dvh !important;
   }
 }
+
+/* Make listing detail header (.mk-watch .mk-head) 2x larger on desktop */
+@media (min-width: 701px) {
+  html body:not(#_):not(#_):not(#_) .mk-watch .mk-head {
+    gap: 18px !important;
+    padding: 16px 8px !important;
+    font-size: 20px !important;
+  }
+  html body:not(#_):not(#_):not(#_) .mk-watch .mk-head .rn-back {
+    width: 48px !important;
+    height: 48px !important;
+    font-size: 26px !important;
+  }
+  html body:not(#_):not(#_):not(#_) .mk-watch .mk-head .mk-seller {
+    font-size: 20px !important;
+    gap: 12px !important;
+  }
+  html body:not(#_):not(#_):not(#_) .mk-watch .mk-head .mk-seller .au-av {
+    width: 48px !important;
+    height: 48px !important;
+    min-width: 48px !important;
+    font-size: 20px !important;
+  }
+  html body:not(#_):not(#_):not(#_) .mk-watch .mk-head .mk-seller .verified-seal {
+    width: 24px !important;
+    height: 24px !important;
+  }
+  html body:not(#_):not(#_):not(#_) .mk-watch .mk-head .mk-rate svg {
+    width: 26px !important;
+    height: 26px !important;
+  }
+  html body:not(#_):not(#_):not(#_) .mk-watch .mk-head .mk-city {
+    font-size: 18px !important;
+    padding: 6px 16px !important;
+  }
+}
