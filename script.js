@@ -35127,17 +35127,18 @@ function libRowHTML(id, title, html) {
 function homeViewGet() {
   try {
     const s = localStorage.getItem('bw_home_view');
-    if (s === 'cards' || s === 'twitter') return s;
+    if (s === 'cards' || s === 'twitter' || s === 'rows') return s;
   } catch (e) {}
   return 'twitter';
 }
 function homeViewSync() {
   const m = homeViewGet();
-  document.documentElement.classList.toggle('tw-feed', m === 'twitter');
+  document.documentElement.classList.toggle('tw-feed', m === 'twitter' || m === 'rows');
+  document.documentElement.classList.toggle('tw-rows', m === 'rows');
   document.querySelectorAll('.tw-vbtn').forEach(b => b.classList.toggle('on', b.dataset.v === m));
 }
 function setHomeView(m) {
-  const mode = m === 'twitter' ? 'twitter' : 'cards';
+  const mode = (m === 'twitter' || m === 'rows') ? m : 'cards';
   try { localStorage.setItem('bw_home_view', mode); } catch (e) {}
   homeViewSync();
   const libMain = document.querySelector('.lib-page .lib-main');
@@ -35147,9 +35148,11 @@ function setHomeView(m) {
   }
 }
 function homeViewSwHTML() {
+  const cur = homeViewGet();
   return `<div class="tw-view-sw" role="group" aria-label="בחירת תצוגה">
-    <button type="button" class="tw-vbtn${homeViewGet() === 'twitter' ? ' on' : ''}" data-v="twitter" onclick="setHomeView('twitter')" title="תצוגה גדולה" aria-label="תצוגה גדולה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M7 9h10M7 13h6"/></svg><span>גדול</span></button>
-    <button type="button" class="tw-vbtn${homeViewGet() === 'cards' ? ' on' : ''}" data-v="cards" onclick="setHomeView('cards')" title="תצוגה קטנה" aria-label="תצוגה קטנה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span>קטן</span></button>
+    <button type="button" class="tw-vbtn${cur === 'twitter' ? ' on' : ''}" data-v="twitter" onclick="setHomeView('twitter')" title="תצוגה גדולה" aria-label="תצוגה גדולה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M7 9h10M7 13h6"/></svg><span>גדול</span></button>
+    <button type="button" class="tw-vbtn${cur === 'rows' ? ' on' : ''}" data-v="rows" onclick="setHomeView('rows')" title="תצוגת שורות (הגדלה במעבר עכבר)" aria-label="תצוגת שורות"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg><span>שורות</span></button>
+    <button type="button" class="tw-vbtn${cur === 'cards' ? ' on' : ''}" data-v="cards" onclick="setHomeView('cards')" title="תצוגה קטנה" aria-label="תצוגה קטנה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span>קטן</span></button>
   </div>`;
 }
 // גלריה בכרטיס הפיד: מעדכן נקודות לפי המיקום, וחצים עוברים תמונה (גם ב-RTL, שבו scrollLeft שלילי)
@@ -35314,7 +35317,7 @@ function libHTML() {
   const circHTML = depts.length ? `<nav class="lib-circs" aria-label="מחלקות">${depts.map(d => `<button type="button" class="lib-circ" onclick="libDept('${d.id}')"><span><svg viewBox="0 0 64 64" fill="none" stroke="#111" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">${(typeof DEPT_ART !== 'undefined' && (DEPT_ART[d.id] || DEPT_ART.other)) || ''}</svg></span><b>${escHtml(d.name)}</b></button>`).join('')}</nav>` : '';
   return `<header class="lib-head"><span class="lib-brand"><img src="./logo.png?v=2" alt=""><b>ספרייה</b></span><button type="button" class="lib-theme" onclick="toggleSiteTheme()" title="בהיר / כהה" aria-label="בהיר / כהה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg></button><button type="button" class="lib-cta" onclick="mkPubOpen()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>פרסום מודעה</button></header>
     <div class="home-view-bar">${homeViewSwHTML()}</div>
-    ${homeViewGet() === 'twitter' ? `<div class="tw-feed-list" id="home-tw-list">${homeDateFeedHTML(all)}</div>` : `
+    ${(homeViewGet() === 'twitter' || homeViewGet() === 'rows') ? `<div class="tw-feed-list${homeViewGet() === 'rows' ? ' tw-rows-mode' : ''}" id="home-tw-list">${homeDateFeedHTML(all)}</div>` : `
     ${filtered ? '' : heroHTML}${libBarHTML(depts)}
     ${filtered ? `<section class="lib-row lib-res"><header><h2>${all.length} תוצאות</h2></header>${all.length ? `<div class="lib-grid">${all.slice().sort(LIB_SORTS[libF.sort].f).map(r => libCardHTML(r)).join('')}</div>` : '<div class="lib-empty">אין מודעות שמתאימות לסינון הזה</div>'}</section>` : `
     ${top.length ? libRowHTML('lib-top', 'המובילים', topHTML) : ''}
