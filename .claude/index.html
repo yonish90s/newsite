@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+    <meta name="robots" content="noai, noimageai">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <!-- שם של האתר + תיאור ותמונה לשיתוף (גוגל, וואטסאפ, פייסבוק, X) -->
+  <title>שיתוף רעיונות — קהילה ושוק של גולשים</title>
+  <meta name="description" content="שיתוף רעיונות — קהילה ישראלית לשיתוף רעיונות ופרויקטים: אתרים, אפליקציות ויצירות בתלת מימד, יד 2 ועסקים, השכרת ציוד, פורומים וחדשות. מפרסמים, מתייעצים וקונים במקום אחד.">
+  <meta name="keywords" content="שיתוף רעיונות, רעיונות, פרויקטים, יד 2, יד שנייה, השכרת ציוד, מדפסת תלת מימד, הדפסה בתלת מימד, יצירות תלת מימד, אתרים, אפליקציות, משחקים, עסקים, פורומים, קהילה, חדשות, black1white00">
+  <meta name="application-name" content="שיתוף רעיונות">
+  <meta name="apple-mobile-web-app-title" content="שיתוף רעיונות">
+  <link rel="canonical" href="https://black1white00.com/">
+  <!-- מידע מובנה לגוגל: שם האתר (כולל השם הישן), תיאור ולוגו -->
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@graph":[
+    {"@type":"WebSite","@id":"https://black1white00.com/#website","url":"https://black1white00.com/","name":"שיתוף רעיונות","alternateName":["Black1White00","שיתוף רעיונות — קהילה ושוק של גולשים"],"inLanguage":"he-IL","description":"קהילה ישראלית לשיתוף רעיונות ופרויקטים: אתרים, אפליקציות ויצירות בתלת מימד, יד 2 ועסקים, השכרת ציוד, פורומים וחדשות.","publisher":{"@id":"https://black1white00.com/#org"}},
+    {"@type":"Organization","@id":"https://black1white00.com/#org","name":"שיתוף רעיונות","alternateName":"Black1White00","url":"https://black1white00.com/","logo":"https://black1white00.com/icon-512.png?v=2"}
+  ]}
+  </script>
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="שיתוף רעיונות">
+  <meta property="og:locale" content="he_IL">
+  <meta property="og:url" content="https://black1white00.com/">
+  <meta property="og:title" content="שיתוף רעיונות — קהילה ושוק של גולשים">
+  <meta property="og:description" content="קהילה ישראלית לשיתוף רעיונות ופרויקטים: אתרים, אפליקציות ותלת מימד, יד 2 ועסקים, השכרת ציוד, פורומים וחדשות.">
+  <meta property="og:image" content="https://black1white00.com/logo-black-white.png">
+  <meta property="og:image:width" content="630">
+  <meta property="og:image:height" content="422">
+  <meta property="og:image:alt" content="שיתוף רעיונות">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="שיתוף רעיונות — קהילה ושוק של גולשים">
+  <meta name="twitter:description" content="קהילה ישראלית לשיתוף רעיונות ופרויקטים, יד 2 ועסקים, השכרת ציוד ופורומים.">
+  <meta name="twitter:image" content="https://black1white00.com/logo-black-white.png">
+  <meta name="theme-color" content="#111111">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/icon-192.png?v=2">
+  <script>if ('serviceWorker' in navigator) window.addEventListener('load', function () { navigator.serviceWorker.register('/sw.js').catch(function () {}); });</script>
+  <link rel="icon" type="image/svg+xml" href="/icon-site.svg?v=1">
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://newsite-f76e2-default-rtdb.firebaseio.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="modulepreload" href="./script.min.js?v=2195">
+  <!-- ספריית interact.js לגרירה ושינוי גודל (נטענת בדחייה למניעת עיכוב) -->
+  <script defer src="https://cdn.jsdelivr.net/npm/interactjs@1.10.28/dist/interact.min.js"></script>
+  <!-- ספריית localforage לשמירת תמונות -->
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
+  <!-- קישור לקובץ העיצוב החיצוני (עם פרמטר למניעת שמירה במטמון) -->
+  <link rel="stylesheet" href="./style.min.css?v=2368">
+  <link rel="stylesheet" id="mono-css" href="./mono.min.css?v=249">
+  <link rel="stylesheet" id="dark-css" data-href="./dark.min.css?v=607" media="not all">
+  <script>
+    // קישור ישיר לפריט (#p/…, #s/…, #n/…) — מסמנים מיד, כדי שהכתובת לא תימחק לפני שהפריט נפתח
+    window.__deepLinkOpening = /^#[psn]\//.test(location.hash || '');
+    // מצב בהיר/כהה — נקבע לפני שהדף מצויר כדי שלא יהבהב (בחירה שמורה, אחרת בהיר)
+    (function () {
+      var t = null;
+      t = 'light';   // האתר במצב בהיר בלבד
+      try { localStorage.removeItem('site_theme'); } catch (e) {}
+      document.documentElement.dataset.themeMode = t;
+      if (t === 'system') t = window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';   // "לפי המכשיר"
+      if (t === 'dark') { document.documentElement.classList.add('theme-dark'); var dc = document.getElementById('dark-css'); if (dc) { dc.href = dc.dataset.href; dc.media = 'all'; } }
+    })();
+  </script>
+</head>
+<body class="light-mode">
+  <!-- שער אישור גיל (Age Gate Overlay) -->
+  <div id="age-gate-overlay" style="display: flex; position: fixed; inset: 0; z-index: 1000000; background-color: #f4f4f4; font-family: system-ui, -apple-system, sans-serif; align-items: center; justify-content: center; overflow-y: auto; direction: rtl; padding: 20px;">
+    <style>
+      #age-gate-overlay {
+        --gate-bg: #f4f4f4;
+        --card-bg: #ffffff;
+        --note-bg: #fefcbf;
+        --brand-red: #991b1b;
+      }
+      .gate-paper-card {
+        background: var(--card-bg);
+        border-radius: 4px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        padding: 40px;
+        position: relative;
+        width: 100%;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        border: 1px solid #e5e5e5;
+      }
+      .gate-notes-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        width: 100%;
+        margin-bottom: 20px;
+      }
+      .gate-note {
+        background: var(--note-bg);
+        box-shadow: 2px 5px 15px rgba(0, 0, 0, 0.06);
+        padding: 24px;
+        border-radius: 2px;
+        font-size: 14px;
+        line-height: 1.6;
+        color: #744210;
+        border-left: 5px solid #ecc94b;
+        text-align: justify;
+      }
+      .gate-note-right {
+        transform: rotate(-1deg);
+      }
+      .gate-note-left {
+        transform: rotate(1deg);
+      }
+      @media (max-width: 768px) {
+        #age-gate-overlay { padding: 10px; align-items: flex-start; }
+        .gate-container { gap: 12px !important; }
+        .gate-notes-grid {
+          grid-template-columns: 1fr;
+          gap: 10px;
+          margin-bottom: 10px;
+        }
+        .gate-paper-card {
+          padding: 14px;
+          box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+        }
+        .gate-paper-card > div:first-child { margin-bottom: 14px !important; padding: 6px 16px !important; }
+        .gate-paper-card h1 { font-size: 21px !important; }
+        .gate-note {
+          padding: 12px 14px;
+          font-size: 12px;
+          line-height: 1.45;
+        }
+        .gate-note-right, .gate-note-left {
+          transform: none;
+        }
+        #gate-confirm-btn { padding: 12px 24px !important; font-size: 16px !important; }
+      }
+    </style>
+    <script>
+      (function() {
+        if (sessionStorage.getItem('age_verified') === 'true') {
+          document.write('<style>#age-gate-overlay { display: none !important; }</style>');
+        } else {
+          document.documentElement.classList.add('age-not-verified');
+        }
+      })();
+      function confirmAge() {
+        const isVerified = sessionStorage.getItem('age_verified') === 'true';
+        if (typeof window.updateAgeVerificationUIState === 'function') {
+          window.updateAgeVerificationUIState(isVerified);
+        } else if (!isVerified) {
+          document.documentElement.classList.add('age-not-verified');
+          if (document.body) document.body.classList.add('age-not-verified');
+        }
+        const overlay = document.getElementById('age-gate-overlay');
+        if (overlay) {
+          overlay.style.opacity = '0';
+          overlay.style.transition = 'opacity 0.3s ease';
+          setTimeout(() => overlay.style.setProperty('display', 'none', 'important'), 300);
+        }
+        if (typeof window.hidePreloader === 'function') {
+          window.hidePreloader();
+        }
+        // אחרי אישור ההסכמה — מציגים ישר את עמוד התמונות
+        if (typeof window.goToPhotosPage === 'function') {
+          window.goToPhotosPage();
+        }
+        // ואז מציגים את באנר העוגיות (אם טרם הוחלט)
+        if (typeof window.maybeShowCookieBanner === 'function') {
+          setTimeout(window.maybeShowCookieBanner, 400);
+        }
+        // ואז סיור ההדרכה (פעם אחת)
+        if (typeof window.maybeStartSiteTour === 'function') {
+          window.maybeStartSiteTour();
+        }
+      }
+      window.addEventListener('DOMContentLoaded', () => {
+        const isVerified = sessionStorage.getItem('age_verified') === 'true';
+        if (typeof window.updateAgeVerificationUIState === 'function') {
+          window.updateAgeVerificationUIState(isVerified);
+        } else if (!isVerified) {
+          document.documentElement.classList.add('age-not-verified');
+          if (document.body) document.body.classList.add('age-not-verified');
+        }
+        if (!isVerified) {
+          setTimeout(function() {
+            const btn = document.getElementById('gate-confirm-btn');
+            if (btn) {
+              btn.removeAttribute('disabled');
+              btn.style.opacity = '1';
+              btn.style.cursor = 'pointer';
+              btn.style.pointerEvents = 'auto';
+            }
+          }, 800);
+        }
+      });
+    </script>
+    <div class="gate-container" style="max-width: 900px; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 24px; margin: auto;">
+      
+      <!-- דף הנייר המרכזי -->
+      <div class="gate-paper-card">
+        <!-- כותרת ראשית של השער -->
+        <div style="background: rgba(0, 0, 0, 0.015); border: 2px dashed #111111; padding: 10px 30px; border-radius: 8px; margin-bottom: 30px;">
+          <h1 style="margin: 0; font-size: 32px; font-weight: 900; color: #b91c1c; letter-spacing: 1px; font-family: system-ui;">הכרויות דרך המיטה</h1>
+        </div>
+
+        <!-- שתי פתקיות צהובות side by side -->
+        <div class="gate-notes-grid">
+          <!-- פתקית ימין -->
+          <div class="gate-note gate-note-right">
+            כניסה לאתר זה, לרבות גלישה ועיון בתכנים, שימוש בקישורים, העלאה או הורדה של קבצים, מהווה הסכמה מלאה ובלתי מסויגת ל<a href="#" style="color: #111111; font-weight: bold; text-decoration: underline;">תנאי השימוש</a> ול<a href="#" style="color: #111111; font-weight: bold; text-decoration: underline;">מדיניות הפרטיות</a> שלנו. מסמכים אלו יוצרים הסכם משפטי מחייב ביניכם לבין הנהלת האתר.
+          </div>
+
+          <!-- פתקית שמאל -->
+          <div class="gate-note gate-note-left">
+            בכניסתכם לאתר אתם מצהירים ומתחייבים כי הנכם בני 18 ומעלה, וכי לא תאפשרו לקטינים לגשת לתכני האתר. ידוע לכם כי האתר מכיל חומרים המיועדים למבוגרים בלבד (כולל תכנים אירוטיים, מיניים וגרפיים) ואתם מעוניינים לצפות בהם מרצונכם החופשי. כמו כן, אתם מוותרים על כל טענה או דרישה כלפי האתר או מפעיליו בגין צפייה בתכנים אלו, ומצהירים שאין מניעה חוקית לצפייתכם בהם.
+          </div>
+        </div>
+      </div>
+
+      <!-- כפתורי אישור ויציאה מתחת לדף הנייר -->
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 16px; margin-top: 10px;">
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 12px;">
+          <button id="gate-confirm-btn" onclick="confirmAge()" disabled style="background: #991b1b; color: white; border: none; padding: 16px 40px; border-radius: 50px; font-size: 20px; font-weight: 800; cursor: not-allowed; opacity: 0.5; pointer-events: none; box-shadow: 0 4px 15px rgba(153, 27, 27, 0.4); transition: all 0.2s; text-align: center;">
+            כניסה להכרויות דרך המיטה
+            <span style="display: block; font-size: 12px; font-weight: normal; opacity: 0.8; margin-top: 2px;">והסכמה לתנאי השימוש</span>
+          </button>
+        </div>
+        <a href="https://www.google.com" style="color: #991b1b; text-decoration: none; font-weight: bold; font-size: 16px; transition: opacity 0.2s;">יציאה</a>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- באנר העוגיות נמצא בתחתית הדף (cookie-bar) -->
+
+  <!-- המעטפת הראשית של כל האתר, מסדרת את הכל בעמודה אחת -->
+  <div class="main-layout">
+    
+    <!-- הסרגל העליון של האתר (Apple Nav) -->
+    <header class="apple-nav">
+      <div class="apple-nav-content">
+        <!-- חזרה — מימין ללוגו, מופיע רק כשיש לאן לחזור -->
+        <button type="button" id="hdr-back" class="hdr-back" onclick="hdrBack()" aria-label="חזרה" title="חזרה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+        <!-- לוגו האתר -->
+        <div class="logo-area" style="cursor: pointer;" title="לוגו האתר - חזרה לדף הבית" onclick="if(typeof goToHomePage === 'function') goToHomePage();">
+          <img id="main-logo" src="./icon-site.svg?v=1" alt="שיתוף רעיונות" style="height: 22px; width: auto; display: block; cursor: pointer;">
+        </div>
+        
+        <!-- מחשב: שורת חיפוש גדולה בכותרת (בסגנון dribbble) -->
+        <form class="hdr-search" role="search" onsubmit="event.preventDefault(); hdrSearchGo();">
+          <input id="hdr-search-q" type="search" placeholder="מחפשים מוצר כלשהו" autocomplete="off" aria-label="חיפוש באתר" oninput="this.closest('form').classList.toggle('has-q', !!this.value)">
+          <button type="button" class="hdr-search-x" onclick="var i=document.getElementById('hdr-search-q'); i.value=''; i.focus(); this.closest('form').classList.remove('has-q');" aria-label="ניקוי">×</button>
+          <button type="submit" class="hdr-search-go" aria-label="חיפוש"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg></button>
+        </form>
+
+        <!-- תפריט הניווט העליון המרכזי -->
+        <nav class="nav-links" dir="ltr" style="display: flex; gap: 32px; align-items: center;">
+          <a href="#" class="active-top-nav" data-page-id="page-photos-main">תמונות 🖼️</a>
+          <a href="#" data-page-id="page-stories-main">קומיקס</a>
+          <a href="#" data-page-id="page-ideas-main">רעיונות 💡</a>
+          <a href="#" data-page-id="page-news-main">חדשות 📰</a>
+          <a href="#" data-page-id="page-communities-main">קהילה 👥</a>
+          <a href="#" data-page-id="page-subscription-main">מנוי 💎</a>
+        </nav>
+        
+        <!-- כפתור אורח/מנהל + 3 אייקונים (לב, שעון, כדור הארץ) + סמל בטריה + כפתור הבית + פעמון התראות -->
+        <div class="right-icons" style="display: flex; gap: 10px; align-items: center;">
+          <div id="theme-toggle-btn" class="theme-seg" role="radiogroup" aria-label="מצב תצוגה">
+            <button type="button" data-mode="system" onclick="setSiteTheme('system')" title="לפי המכשיר" aria-label="לפי המכשיר"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M12 16v4M8 20h8"/></svg></button>
+            <button type="button" data-mode="light" onclick="setSiteTheme('light')" title="מצב בהיר" aria-label="מצב בהיר"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.6"/><path d="M12 3v1.6M12 19.4V21M5.6 5.6l1.1 1.1M17.3 17.3l1.1 1.1M3 12h1.6M19.4 12H21M5.6 18.4l1.1-1.1M17.3 6.7l1.1-1.1"/></svg></button>
+            <button type="button" data-mode="dark" onclick="setSiteTheme('dark')" title="מצב כהה" aria-label="מצב כהה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z"/><path d="M18 3v4M16 5h4"/></svg></button>
+          </div>
+          <button id="header-search-btn" class="notif-bell" onclick="openSiteSearch()" title="חיפוש באתר" aria-label="חיפוש באתר">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>
+          </button>
+          <button id="header-likes-btn" class="notif-bell" onclick="openLikesDrawer()" title="הלייקים שלי">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/></svg>
+          </button>
+          <button id="header-history-btn" class="notif-bell" onclick="openHistoryDrawer()" title="היסטוריית צפייה">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 12a8.5 8.5 0 1 0 2.5-6"/><path d="M3.5 4.5V8H7"/><path d="M12 8v4.2l2.8 1.8"/></svg>
+          </button>
+          <button id="header-lang-btn" class="notif-bell" onclick="openLanguageModal(event)" title="שפה / Language">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M3.8 9.5h16.4M3.8 14.5h16.4"/><path d="M12 3.5c2.3 2.4 3.4 5.2 3.4 8.5s-1.1 6.1-3.4 8.5c-2.3-2.4-3.4-5.2-3.4-8.5S9.7 5.9 12 3.5z"/></svg>
+          </button>
+          <button id="battery-task-btn" class="notif-bell" onclick="openBatteryTasksModal()" title="משימות והתקדמות באתר">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="6" width="16" height="12" rx="2.5" ry="2.5"></rect>
+              <line x1="21" y1="11" x2="21" y2="13"></line>
+              <rect id="battery-fill-rect" x="4.5" y="8.5" width="11" height="7" rx="1" fill="#ffffff" stroke="none"></rect>
+            </svg>
+          </button>
+          <button id="offers-btn" class="notif-bell" onclick="openOffersPanel()" title="הצעות" aria-label="הצעות">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"></path><circle cx="7.5" cy="7.5" r="1.5"></circle></svg>
+            <span id="offers-badge" class="notif-badge" style="display:none"></span>
+          </button>
+          <button id="notif-bell" class="notif-bell" onclick="toggleNotifications(event)" title="התראות">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+            <span id="notif-badge" class="notif-badge" style="display:none"></span>
+          </button>
+          <button id="manager-btn" class="manager-btn">אורח</button>
+          <button id="mnav-btn" class="mnav-btn" onclick="openMobileMenu()" aria-label="תפריט" title="תפריט"><span></span><span></span><span></span></button>
+        </div>
+        <div id="notif-panel" class="notif-panel" style="display:none"></div>
+      </div>
+    </header>
+
+    <!-- מעטפת התוכן: מחלקת את המסך לאזור מרכזי ולתפריט צדדי -->
+    <div class="content-wrapper">
+      
+      <!-- האזור המרכזי הראשי (כאן יתחלף התוכן כשנלחץ על כפתורים) -->
+      <main class="center-content" id="mainContent">
+      </main>
+
+
+      <!-- סרגל כלים מרחף בתחתית המסך -->
+      <div class="floating-toolbar minimized" id="floating-toolbar" style="display: none;">
+        <!-- ידית גרירה -->
+        <div class="toolbar-drag-handle" title="גרור לשנות מיקום" style="cursor: grab; display: flex; align-items: center; justify-content: center; padding: 0 10px; font-size: 22px; font-weight: bold; color: #888888;">∷</div>
+        <!-- כפתור הרחבה/מזעור -->
+        <button id="btn-minimize-toolbar" class="float-btn" style="padding: 5px 10px; font-size: 16px; font-weight: bold; background: transparent; border: 1px solid #dddddd; box-shadow: none; color: #333333; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;" title="הרחב">+</button>
+        
+        <!-- קו מפריד -->
+        <div class="toolbar-separator" style="width: 1px; background: #dddddd; margin: 0 5px;"></div>
+      
+        <button id="btn-add-page" class="float-btn edit-float-btn" style="background: #2196F3; color: white;">+ הוסף עמוד</button>
+        <button id="btn-manage-pages" class="float-btn edit-float-btn" style="background: #555555; color: white;">ניהול עמודים 🗂️</button>
+        <button id="btn-add-hidden-page" class="float-btn edit-float-btn" style="background: #111111; color: #ffffff;">+ דף מוסתר 🔒</button>
+        <button id="btn-add-articles-page" class="float-btn edit-float-btn" style="background: #111111; color: #ffffff;">דף כתבות 📰</button>
+        <button id="btn-add-photos-page" class="float-btn edit-float-btn" style="background: #10b981; color: #262626;">דף תמונות 🖼️</button>
+        <button id="btn-add-community-page" class="float-btn edit-float-btn" style="background: #111111; color: #ffffff;">דף קהילה 👥</button>
+        <button id="btn-edit-mode" class="float-btn edit-float-btn">מצב עריכה ✏️</button>
+        <button id="btn-save-site" class="float-btn edit-float-btn" style="background: #4CAF50; color: #262626;">שמור שינויים 💾</button>
+        <button id="btn-reset-site" class="float-btn edit-float-btn" style="background: #f44336; color: white;">איפוס אתר 🗑️</button>
+        <button id="btn-add-bg" class="float-btn add-float-btn">הוסף רקע 🎨</button>
+        <button id="btn-add-image" class="float-btn add-float-btn">הוסף תמונה 🖼️</button>
+        <button id="btn-add-video" class="float-btn add-float-btn">הוסף וידאו 📹</button>
+        <button id="btn-add-loop-video" class="float-btn add-float-btn">וידאו בלופ 🔁</button>
+        <button id="btn-make-slideshow" class="float-btn add-float-btn">הוסף מצגת 🎞️</button>
+        <button id="btn-make-download" class="float-btn add-float-btn">הפוך להורדה 📥</button>
+        <button id="btn-add-text" class="float-btn add-float-btn">הוסף טקסט 📝</button>
+        <button id="btn-block" class="float-btn add-float-btn">בלוק 📦</button>
+        <button id="btn-split-el" class="float-btn edit-float-btn">חתוך ✂️</button>
+        <button id="btn-add-hotspot" class="float-btn add-float-btn">אזור לחיץ 🎯</button>
+        <button id="btn-restore-chat" class="float-btn edit-float-btn" style="background: #111111; color: #ffffff; display: none;">שחזר צ'אט 💬</button>
+      </div>
+      
+    </div>
+  </div>
+
+<!-- מודאל קישור לדף פנימי -->
+<div id="page-link-modal" style="display:none; position:fixed; inset:0; background:rgba(0, 0, 0, 0.5); z-index:99999; align-items:center; justify-content:center; direction:rtl;">
+  <div style="background:#ffffff; border-radius:16px; padding:28px; width:90%; max-width:420px; box-shadow:0 20px 60px rgba(0, 0, 0, 0.25);">
+    <h3 style="margin:0 0 18px; font-size:18px; font-weight:700;">קשר אלמנט לדף פנימי</h3>
+    <p style="font-size:13px; color:#666666; margin:0 0 16px;">בחר דף שייפתח כשלוחצים על האלמנט:</p>
+    <select id="page-link-select" style="width:100%; padding:10px 12px; border:1.5px solid #dddddd; border-radius:8px; font-size:14px; direction:rtl; margin-bottom:20px;">
+      <option value="">— ללא קישור —</option>
+    </select>
+    <div style="display:flex; gap:10px; justify-content:flex-end;">
+      <button id="page-link-cancel" style="background:#f5f5f5; border:none; border-radius:8px; padding:9px 20px; font-size:14px; cursor:pointer;">ביטול</button>
+      <button id="page-link-save" style="background:#111111; color:#ffffff; border:none; border-radius:8px; padding:9px 20px; font-size:14px; font-weight:600; cursor:pointer;">שמור קישור</button>
+    </div>
+  </div>
+</div>
+<!-- WEBSITE PRELOADER — BLACK1WHITE00 LOGO (נבנה בקוד: חד בכל מסך) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<div id="website-preloader" role="status" aria-label="האתר נטען">
+  <div class="pl-card">
+    <img class="pl-mark" src="./logo.png" alt="" width="76" height="76">
+    <div class="pl-name" dir="ltr">Black1White00<span>.com</span></div>
+    <div class="pl-bar" aria-hidden="true"><div class="pl-bar-fill"></div></div>
+  </div>
+</div>
+
+<style>
+/* מסך טעינה נקי: לוגו, שם האתר ופס התקדמות כחול דק */
+#website-preloader {
+  position: fixed; inset: 0; z-index: 9999999;
+  display: grid; place-items: center;
+  background: #ffffff;
+  transition: opacity 0.4s ease, visibility 0.4s ease;
+}
+html.theme-dark #website-preloader { background: #111111; }
+.pl-card { background: none !important; box-shadow: none !important; border: 0 !important; display: flex; flex-direction: column; align-items: center; gap: 18px; animation: pl-in .5s cubic-bezier(.2, .8, .2, 1) both; }
+.pl-mark { width: 76px; height: 76px; border-radius: 22px; box-shadow: 0 16px 34px -16px rgba(17, 17, 17, .45); animation: pl-breathe 1.8s ease-in-out infinite; }
+.pl-name { font: 800 22px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; letter-spacing: -0.3px; color: #111111; }
+.pl-name span { color: #8a8a93; font-weight: 600; }
+html.theme-dark .pl-name { color: #eceef1; }
+.pl-bar { position: relative; width: 160px; height: 4px; border-radius: 99px; background: #ececee; overflow: hidden; }
+html.theme-dark .pl-bar { background: #2a2f37; }
+.pl-bar-fill { position: absolute; inset: 0 auto 0 0; width: 38%; border-radius: 99px; background: #2f6fdb; animation: pl-slide 1.1s cubic-bezier(.45, 0, .55, 1) infinite; }
+@keyframes pl-in { from { opacity: 0; transform: translateY(8px) scale(.98); } to { opacity: 1; transform: none; } }
+@keyframes pl-breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+@keyframes pl-slide { 0% { transform: translateX(-110%); } 100% { transform: translateX(290%); } }
+@media (prefers-reduced-motion: reduce) { .pl-card, .pl-mark, .pl-bar-fill { animation: none; } }
+</style>
+
+<script>
+  window.__siteReady = false;
+
+  function hidePreloader() {
+    window.__siteReady = true;
+    const preloader = document.getElementById('website-preloader');
+    if (preloader) {
+      preloader.style.opacity = '0';
+      preloader.style.visibility = 'hidden';
+      setTimeout(() => preloader.remove(), 400);
+    }
+  }
+  window.hidePreloader = hidePreloader;
+
+  // גיבוי בטיחותי למקרה של עיכוב בטעינת האתר
+  let preloaderSafetyTimer = null;
+  function armPreloaderSafety() {
+    if (preloaderSafetyTimer) return;
+    preloaderSafetyTimer = setTimeout(hidePreloader, 4500);
+  }
+  window.armPreloaderSafety = armPreloaderSafety;
+
+  armPreloaderSafety();
+
+  if (localStorage.getItem('theme') === 'dark') {
+    document.body.classList.add('dark-theme');
+  }
+</script>
+
+
+
+<!-- חלונית בחירת קישור (Link Modal) -->
+<div id="link-modal" class="modal-overlay" style="display: none;">
+  <div class="modal-content">
+    <h3>הגדרת קישור</h3>
+    
+    <label for="link-internal-select">בחר עמוד פנימי באתר:</label>
+    <select id="link-internal-select">
+      <!-- Options will be dynamically populated -->
+    </select>
+
+    <div style="margin: 15px 0; text-align: center; font-weight: bold;">-- או --</div>
+
+    <label for="link-external-input">הזן קישור חיצוני (https://...):</label>
+    <input type="text" id="link-external-input" placeholder="https://google.com">
+
+    <div class="modal-actions" style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
+      <button id="btn-cancel-link" class="modal-btn cancel-btn">ביטול</button>
+      <button id="btn-remove-link" class="modal-btn danger-btn">הסר קישור</button>
+      <button id="btn-save-link" class="modal-btn save-btn">שמור</button>
+    </div>
+  </div>
+</div>
+
+<!-- מודל ניהול עמודים -->
+<div id="manage-pages-modal" style="display:none; position:fixed; inset:0; background:rgba(0, 0, 0, 0.5); z-index:99999; align-items:center; justify-content:center; direction:rtl;">
+  <div style="background:#ffffff; border-radius:16px; padding:28px; width:90%; max-width:420px; max-height:80vh; overflow-y:auto; display:flex; flex-direction:column; gap:0;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
+      <h3 style="margin:0; font-size:18px;">ניהול עמודים</h3>
+      <button id="manage-pages-close" style="background:none; border:none; font-size:20px; cursor:pointer; color:#888888;">✕</button>
+    </div>
+    <div id="manage-pages-list" style="display:flex; flex-direction:column; gap:8px;"></div>
+  </div>
+</div>
+
+<!-- מודאל התחברות מעוצב בסגנון אפל/מינימליסטי -->
+
+<!-- מודל הוספת כתבה -->
+<!-- מודל הוספת כתבה -->
+<div id="article-modal" style="display:none; position:fixed; inset:0; background:rgba(0, 0, 0, 0.6); z-index:99999; align-items:center; justify-content:center; direction:rtl;">
+  <div style="background:#ffffff; border-radius:16px; padding:28px; width:90%; max-width:460px; max-height:85vh; overflow-y:auto; display:flex; flex-direction:column; gap:12px;">
+    <h3 style="margin:0 0 4px; font-size:18px;">הוספת כתבה חדשה</h3>
+    <label style="font-size:13px; font-weight:600;">כותרת <span style="color:red">*</span></label>
+    <input id="art-title" type="text" placeholder="כותרת הכתבה" style="padding:9px 12px; border:1px solid #dddddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+    <label style="font-size:13px; font-weight:600;">תקציר</label>
+    <textarea id="art-summary" rows="3" placeholder="תיאור קצר של הכתבה..." style="padding:9px 12px; border:1px solid #dddddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box; resize:vertical;"></textarea>
+    <label style="font-size:13px; font-weight:600;">שם הכותב</label>
+    <input id="art-author" type="text" placeholder="שם הכותב" style="padding:9px 12px; border:1px solid #dddddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+    <label style="font-size:13px; font-weight:600;">קטגוריה</label>
+    <input id="art-category" type="text" placeholder="למשל: חדשות, סקירות, טכנולוגיה" style="padding:9px 12px; border:1px solid #dddddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+    <label style="font-size:13px; font-weight:600;">תוכן הכתבה</label>
+    <textarea id="art-body" rows="6" placeholder="כתוב את תוכן הכתבה המלא כאן..." style="padding:9px 12px; border:1px solid #dddddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box; resize:vertical;"></textarea>
+    <label style="font-size:13px; font-weight:600;">קישור חיצוני (URL) — אופציונלי</label>
+    <input id="art-link" type="url" placeholder="https://..." style="padding:9px 12px; border:1px solid #dddddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+    <label style="font-size:13px; font-weight:600;">תמונה</label>
+    <button id="art-img-pick" style="padding:9px 12px; border:1px dashed #bbbbbb; border-radius:8px; background:#f9f9f9; cursor:pointer; font-size:13px; text-align:right;">לחץ לבחירת תמונה מהמחשב</button>
+    <img id="art-img-preview" src="" alt="" style="display:none; max-height:140px; border-radius:8px; object-fit:cover; width:100%;">
+    <div style="display:flex; gap:10px; margin-top:4px;">
+      <button id="art-cancel" style="flex:1; padding:10px; border:1px solid #dddddd; border-radius:8px; background:#ffffff; cursor:pointer; font-size:14px;">ביטול</button>
+      <button id="art-save" style="flex:1; padding:10px; border:none; border-radius:8px; background:#111111; color:#ffffff; cursor:pointer; font-size:14px; font-weight:700;">שמור כתבה</button>
+    </div>
+  </div>
+</div>
+
+<!-- מודל הוספת סיפור -->
+
+
+<!-- מודל ניהול קטגוריות סיפורים -->
+<div id="story-categories-modal" style="display:none; position:fixed; inset:0; background:rgba(0, 0, 0, 0.6); z-index:99999; align-items:center; justify-content:center; direction:rtl;">
+  <div style="background:#ffffff; border-radius:16px; padding:24px; width:90%; max-width:420px; max-height:85vh; overflow-y:auto; display:flex; flex-direction:column; gap:16px;">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <h3 id="story-categories-modal-title" style="margin:0; font-size:18px; font-weight:800; color:#111111;">🏷️ ניהול קטגוריות</h3>
+      <button onclick="closeStoryCategoriesModal()" style="background:none; border:none; font-size:20px; cursor:pointer; color:#888888;">✕</button>
+    </div>
+    
+    <div style="display:flex; gap:8px;">
+      <input id="new-story-cat-input" type="text" placeholder="שם קטגוריה חדשה..." style="flex:1; padding:10px 14px; border:1px solid #dddddd; border-radius:8px; font-size:14px; box-sizing:border-box;">
+      <button onclick="addStoryCategory()" style="background:#111111; color:#ffffff; border:none; padding:10px 16px; border-radius:8px; font-weight:700; cursor:pointer; font-size:14px; flex-shrink:0;">➕ הוסף</button>
+    </div>
+
+    <div id="story-categories-list-container" style="display:flex; flex-direction:column; gap:8px; max-height:280px; overflow-y:auto;"></div>
+
+    <div style="display:flex; justify-content:flex-end; margin-top:8px;">
+      <button onclick="closeStoryCategoriesModal()" style="background:#f3f4f6; color:#333333; border:none; padding:10px 20px; border-radius:8px; font-weight:700; cursor:pointer; font-size:14px;">סגור</button>
+    </div>
+  </div>
+</div>
+
+<!-- מודל הוספת תמונות (אלבום/גלריה) -->
+<div id="photo-modal" style="display:none; position:fixed; inset:0; background:rgba(0, 0, 0, 0.6); z-index:99999; align-items:center; justify-content:center; direction:rtl;">
+  <div style="background:#ffffff; border-radius:16px; padding:28px; width:90%; max-width:600px; max-height:85vh; overflow-y:auto; display:flex; flex-direction:column; gap:12px;">
+    <h3 style="margin:0 0 4px; font-size:18px;">הוספת גלריית תמונות חדשה</h3>
+    <div class="photo-form-grid">
+      <div class="photo-field">
+        <label style="font-size:13px; font-weight:600;">כותרת <span style="color:red">*</span></label>
+        <input id="photo-title" type="text" placeholder="כותרת הגלריה" style="padding:9px 12px; border:1px solid #dddddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+      </div>
+      <div class="photo-field">
+        <label style="font-size:13px; font-weight:600;">תקציר</label>
+        <textarea id="photo-summary" rows="2" placeholder="תיאור קצר... אפשר להוסיף #תגיות" style="padding:9px 12px; border:1px solid #dddddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box; resize:vertical;"></textarea>
+      </div>
+      <div class="photo-field">
+        <label style="font-size:13px; font-weight:600;">קטגוריה <span style="color:red">*</span></label>
+        <select id="photo-category" style="padding:9px 12px; border:1px solid #dddddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box; background: white;">
+          <option value="גבר">גבר</option>
+          <option value="אישה">אישה</option>
+          <option value="זוג">זוג</option>
+          <option value="כלובון">כלובון</option>
+          <option value="תמונות גוף">תמונות גוף</option>
+        </select>
+      </div>
+      <div class="photo-field" id="photo-field-age">
+        <label style="font-size:13px; font-weight:600;">גיל</label>
+        <input id="photo-age" type="number" min="18" max="99" inputmode="numeric" placeholder="לדוגמה: 24" style="padding:9px 12px; border:1px solid #dddddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box; background: white;">
+      </div>
+      <div class="photo-field" id="photo-field-size">
+        <label style="font-size:13px; font-weight:600;">אורך / היקף (ס״מ) — אופציונלי</label>
+        <div style="display:flex; gap:8px;">
+          <input id="photo-length" type="number" min="1" max="60" step="0.5" inputmode="decimal" placeholder="אורך" style="padding:9px 12px; border:1px solid #dddddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box; background: white;">
+          <input id="photo-girth" type="number" min="1" max="60" step="0.5" inputmode="decimal" placeholder="היקף" style="padding:9px 12px; border:1px solid #dddddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box; background: white;">
+        </div>
+      </div>
+      <div class="photo-field" id="photo-field-offer" style="display:none;">
+        <label style="font-size:13px; font-weight:600;">סוג ההצעה <span style="color:red">*</span></label>
+        <select id="photo-offer-type" onchange="photoOfferTypeChanged()" style="padding:9px 12px; border:1px solid #dddddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box; background:white;">
+          <option value="מכירה">מכירה</option>
+          <option value="השאלה">השאלה</option>
+          <option value="החלפה">החלפה</option>
+        </select>
+      </div>
+      <div class="photo-field" id="photo-field-offerval" style="display:none;">
+        <label id="photo-offerval-label" style="font-size:13px; font-weight:600;">מחיר (₪)</label>
+        <input id="photo-offer-value" type="text" placeholder="לדוגמה: 250" style="padding:9px 12px; border:1px solid #dddddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+      </div>
+      <div class="photo-field" id="photo-field-contract" style="display:none; grid-column:1 / -1;">
+        <label style="font-size:13px; font-weight:600;">📜 תנאי חוזה ההשאלה — הוסיפו/הסירו סעיפים</label>
+        <div id="photo-contract-list" style="display:flex; flex-direction:column; gap:6px; margin:6px 0;"></div>
+        <div style="display:flex; gap:6px;">
+          <input id="photo-contract-input" type="text" placeholder="הוספת סעיף חדש..." onkeydown="if(event.key==='Enter'){event.preventDefault(); photoContractAdd();}" style="flex:1; padding:9px 12px; border:1px solid #dddddd; border-radius:8px; font-size:14px; box-sizing:border-box;">
+          <button type="button" onclick="photoContractAdd()" style="background:#0f172a; color:#ffffff; border:none; border-radius:8px; padding:0 16px; font-weight:800; cursor:pointer;">➕ הוסף</button>
+        </div>
+      </div>
+      <div class="photo-field">
+        <label style="font-size:13px; font-weight:600;">מיקום</label>
+        <select id="photo-region" style="padding:9px 12px; border:1px solid #dddddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box; background: white;">
+          <option value="">לא צוין</option>
+          <option value="צפון">צפון</option>
+          <option value="מרכז">מרכז</option>
+          <option value="דרום">דרום</option>
+        </select>
+      </div>
+      <div class="photo-field">
+        <label style="font-size:13px; font-weight:600;">טלגרם (שם משתמש או קישור) — אופציונלי</label>
+        <input id="photo-telegram" type="text" placeholder="לדוגמה: @username" style="padding:9px 12px; border:1px solid #dddddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+      </div>
+      <div class="photo-field">
+        <label style="font-size:13px; font-weight:600;">אימייל ליצירת קשר — אופציונלי</label>
+        <input id="photo-email" type="text" placeholder="לדוגמה: example@mail.com" style="padding:9px 12px; border:1px solid #dddddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+      </div>
+      
+    </div>
+
+    <label style="font-size:13px; font-weight:600;">גלריית תמונות (עד 5 תמונות) <span style="color:red">*</span></label>
+    <div style="display:grid; grid-template-columns:repeat(5, 1fr); gap:8px;">
+      <div style="display:flex; flex-direction:column; align-items:center; gap:4px;">
+        <button id="photo-img-pick-1" style="width:100%; aspect-ratio:1; border:1px dashed #bbbbbb; border-radius:8px; background:#f9f9f9; cursor:pointer; font-size:14px; padding:0; height:45px;">1️⃣</button>
+        <img id="photo-img-preview-1" style="display:none; width:100%; aspect-ratio:1; border-radius:8px; object-fit:cover; height:45px;">
+      </div>
+      <div style="display:flex; flex-direction:column; align-items:center; gap:4px;">
+        <button id="photo-img-pick-2" style="width:100%; aspect-ratio:1; border:1px dashed #bbbbbb; border-radius:8px; background:#f9f9f9; cursor:pointer; font-size:14px; padding:0; height:45px;">2️⃣</button>
+        <img id="photo-img-preview-2" style="display:none; width:100%; aspect-ratio:1; border-radius:8px; object-fit:cover; height:45px;">
+      </div>
+      <div style="display:flex; flex-direction:column; align-items:center; gap:4px;">
+        <button id="photo-img-pick-3" style="width:100%; aspect-ratio:1; border:1px dashed #bbbbbb; border-radius:8px; background:#f9f9f9; cursor:pointer; font-size:14px; padding:0; height:45px;">3️⃣</button>
+        <img id="photo-img-preview-3" style="display:none; width:100%; aspect-ratio:1; border-radius:8px; object-fit:cover; height:45px;">
+      </div>
+      <div style="display:flex; flex-direction:column; align-items:center; gap:4px;">
+        <button id="photo-img-pick-4" style="width:100%; aspect-ratio:1; border:1px dashed #bbbbbb; border-radius:8px; background:#f9f9f9; cursor:pointer; font-size:14px; padding:0; height:45px;">4️⃣</button>
+        <img id="photo-img-preview-4" style="display:none; width:100%; aspect-ratio:1; border-radius:8px; object-fit:cover; height:45px;">
+      </div>
+      <div style="display:flex; flex-direction:column; align-items:center; gap:4px;">
+        <button id="photo-img-pick-5" style="width:100%; aspect-ratio:1; border:1px dashed #bbbbbb; border-radius:8px; background:#f9f9f9; cursor:pointer; font-size:14px; padding:0; height:45px;">5️⃣</button>
+        <img id="photo-img-preview-5" style="display:none; width:100%; aspect-ratio:1; border-radius:8px; object-fit:cover; height:45px;">
+      </div>
+    </div>
+
+    <div style="display:flex; align-items:center; gap:8px; background: rgba(185, 28, 28, 0.05); padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(185, 28, 28, 0.25); margin-top: 4px;">
+      <input type="checkbox" id="photo-is-adult" style="width: 18px; height: 18px; cursor: pointer; accent-color: #b91c1c;">
+      <label for="photo-is-adult" style="font-size: 13px; font-weight: 700; color: #b91c1c; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+        🔞 תוכן מעל גיל 18 (יטושטש עד לאישור גיל)
+      </label>
+    </div>
+
+    <div style="display:flex; gap:10px; margin-top:8px;">
+      <button id="photo-cancel" style="flex:1; padding:10px; border:1px solid #dddddd; border-radius:8px; background:#ffffff; cursor:pointer; font-size:14px;">ביטול</button>
+      <button id="photo-save" style="flex:1; padding:10px; border:none; border-radius:8px; background:#111111; color:#ffffff; cursor:pointer; font-size:14px; font-weight:700;">שמור גלריה</button>
+    </div>
+  </div>
+</div>
+
+<!-- מודל יצירת קהילה -->
+<div id="community-modal" style="display:none; position:fixed; inset:0; background:rgba(0, 0, 0, 0.6); z-index:99999; align-items:center; justify-content:center; direction:rtl;">
+  <div style="background:#ffffff; border-radius:16px; padding:28px; width:90%; max-width:440px; max-height:85vh; overflow-y:auto; display:flex; flex-direction:column; gap:12px;">
+    <h3 style="margin:0 0 4px; font-size:18px;">🏘️ יצירת קהילה חדשה</h3>
+    <label style="font-size:13px; font-weight:600;">שם הקהילה <span style="color:red">*</span></label>
+    <input id="community-name" type="text" placeholder="לדוגמה: אספני רכב" style="padding:9px 12px; border:1px solid #dddddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+    <label style="font-size:13px; font-weight:600;">תיאור קצר (אופציונלי)</label>
+    <textarea id="community-desc" rows="2" placeholder="על מה הקהילה?" style="padding:9px 12px; border:1px solid #dddddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box; resize:vertical;"></textarea>
+    <label style="font-size:13px; font-weight:600;">תמונת קהילה (אופציונלי)</label>
+    <div style="display:flex; align-items:center; gap:12px;">
+      <button type="button" id="community-img-pick" style="padding:10px 16px; border:1px dashed #bbbbbb; border-radius:10px; background:#f9f9f9; cursor:pointer; font-size:14px; font-weight:700; color:#334155;">📷 בחר תמונה</button>
+      <img id="community-img-preview" style="display:none; width:64px; height:64px; border-radius:12px; object-fit:cover; border:1px solid #e2e8f0;">
+    </div>
+    <label style="font-size:13px; font-weight:600;">סינונים מותאמים אישית (אופציונלי)</label>
+    <div style="font-size:11.5px; color:#64748b; line-height:1.5; margin-top:-6px;">שורה לכל סינון בפורמט <b>שם: אפשרות1, אפשרות2</b>. לדוגמה:<br>צבע: אדום, כחול, ירוק<br>מצב: חדש, משומש</div>
+    <textarea id="community-filters" rows="3" placeholder="צבע: אדום, כחול&#10;מצב: חדש, משומש" style="padding:9px 12px; border:1px solid #dddddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box; resize:vertical; direction:rtl;"></textarea>
+    <label style="display:flex; align-items:center; gap:8px; background:rgba(34,197,94,0.06); border:1px solid rgba(34,197,94,0.3); border-radius:8px; padding:10px 12px; cursor:pointer; font-size:13.5px; font-weight:700; color:#166534;">
+      <input type="checkbox" id="community-has-price" style="width:18px; height:18px; accent-color:#16a34a; cursor:pointer;">
+      💰 מודעות בקהילה זו כוללות מחיר
+    </label>
+    <div style="display:flex; gap:10px; margin-top:8px;">
+      <button id="community-cancel" style="flex:1; padding:10px; border:1px solid #dddddd; border-radius:8px; background:#ffffff; cursor:pointer; font-size:14px;">ביטול</button>
+      <button id="community-save" style="flex:1; padding:10px; border:none; border-radius:8px; background:#111111; color:#ffffff; cursor:pointer; font-size:14px; font-weight:700;">צור קהילה</button>
+    </div>
+  </div>
+</div>
+
+<!-- מודל הוספת הצעה -->
+<div id="offer-modal" style="display:none; position:fixed; inset:0; background:rgba(0, 0, 0, 0.6); z-index:99999; align-items:center; justify-content:center; direction:rtl;">
+  <div style="background:#ffffff; border-radius:16px; padding:28px; width:90%; max-width:440px; max-height:85vh; overflow-y:auto; display:flex; flex-direction:column; gap:12px;">
+    <h3 style="margin:0 0 4px; font-size:18px;">🔥 הוספת הצעה מפורטת</h3>
+    
+    <label style="font-size:13px; font-weight:600;">מה מחפשים / מה ההצעה? <span style="color:red">*</span></label>
+    <textarea id="offer-text" rows="2" placeholder="לדוגמה: יוצאים לבר בתל אביב / יושבים בים / מסיבה..." style="padding:9px 12px; border:1px solid #dddddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box; resize:vertical;"></textarea>
+    
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+      <div>
+        <label style="font-size:13px; font-weight:600;">📍 איפה / מיקום? <span style="color:red">*</span></label>
+        <input id="offer-location" type="text" placeholder="למשל: תל אביב, מרכז..." style="padding:9px 12px; border:1px solid #dddddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+      </div>
+      <div>
+        <label style="font-size:13px; font-weight:600;">⏰ למתי? <span style="color:red">*</span></label>
+        <input id="offer-when" type="text" placeholder="למשל: עכשיו / 22:00..." style="padding:9px 12px; border:1px solid #dddddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+      <div>
+        <label style="font-size:13px; font-weight:600;">👥 כמה רוצים לצרף?</label>
+        <input id="offer-max-participants" type="number" min="1" max="50" value="4" style="padding:9px 12px; border:1px solid #dddddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+      </div>
+      <div>
+        <label style="font-size:13px; font-weight:600;">המין שלך <span style="color:red">*</span></label>
+        <select id="offer-gender" style="padding:9px 12px; border:1px solid #dddddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box; background: white;">
+          <option value="גבר">♂️ גבר</option>
+          <option value="אישה">♀️ אישה</option>
+        </select>
+      </div>
+    </div>
+
+    <label style="font-size:13px; font-weight:600;">תוקף ההצעה (שעות)</label>
+    <input id="offer-hours" type="number" min="0.5" max="72" step="0.5" value="8" style="padding:9px 12px; border:1px solid #dddddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+    <div style="font-size:11.5px; color:#64748b;">כשהטיימר יסתיים ההצעה תיעלם אוטומטית.</div>
+
+    <div style="display:flex; gap:10px; margin-top:8px;">
+      <button onclick="document.getElementById('offer-modal').style.display='none'" style="flex:1; padding:10px; border:1px solid #dddddd; border-radius:8px; background:#ffffff; cursor:pointer; font-size:14px;">ביטול</button>
+      <button onclick="saveOffer()" style="flex:1; padding:10px; border:none; border-radius:8px; background:#111111; color:#ffffff; cursor:pointer; font-size:14px; font-weight:700;">פרסם הצעה</button>
+    </div>
+  </div>
+</div>
+
+<!-- מודל לבחירת מין בעת הצטרפות להצעה -->
+<div id="join-gender-modal" style="display:none; position:fixed; inset:0; background:rgba(0, 0, 0, 0.6); z-index:999999; align-items:center; justify-content:center; direction:rtl;">
+  <div style="background:#ffffff; border-radius:16px; padding:24px; width:90%; max-width:360px; text-align:center; display:flex; flex-direction:column; gap:16px;">
+    <h3 style="margin:0; font-size:18px; font-weight:800; color:#0f172a;">בחירת מין להצטרפות ✋</h3>
+    <p style="margin:0; font-size:13.5px; color:#64748b;">כדי שנוכל לחלק בין גברים לנשים בהצעה, נא לבחור:</p>
+    <div style="display:flex; gap:12px;">
+      <button onclick="submitJoinWithGender('גבר')" style="flex:1; padding:14px; border:2px solid #111111; border-radius:12px; background:#f6f7f9; color:#000000; font-size:16px; font-weight:800; cursor:pointer; transition:all 0.15s ease;">
+        ♂️ גבר
+      </button>
+      <button onclick="submitJoinWithGender('אישה')" style="flex:1; padding:14px; border:2px solid #111111; border-radius:12px; background:#f5f5f5; color:#be185d; font-size:16px; font-weight:800; cursor:pointer; transition:all 0.15s ease;">
+        ♀️ אישה
+      </button>
+    </div>
+    <button onclick="document.getElementById('join-gender-modal').style.display='none'" style="background:none; border:none; color:#94a3b8; font-size:13px; cursor:pointer;">ביטול</button>
+  </div>
+</div>
+
+<!-- מודל שאלת גולשים -->
+<div id="question-modal" style="display:none; position:fixed; inset:0; background:rgba(0, 0, 0, 0.6); z-index:99999; align-items:center; justify-content:center; direction:rtl;">
+  <div style="background:#ffffff; border-radius:16px; padding:28px; width:90%; max-width:460px; max-height:85vh; overflow-y:auto; display:flex; flex-direction:column; gap:12px;">
+    <h3 style="margin:0 0 4px; font-size:18px;">❓ שאל שאלה חדשה</h3>
+    <label style="font-size:13px; font-weight:600;">השאלה <span style="color:red">*</span></label>
+    <input id="question-title" type="text" placeholder="לדוגמה: איך יודעים שזה אהבה?" style="padding:9px 12px; border:1px solid #dddddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+    <label style="font-size:13px; font-weight:600;">פירוט (אופציונלי)</label>
+    <textarea id="question-text" rows="3" placeholder="ספרו עוד על הסיטואציה..." style="padding:9px 12px; border:1px solid #dddddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box; resize:vertical;"></textarea>
+    <label style="font-size:13px; font-weight:600;">קטגוריה</label>
+    <select id="question-category" style="padding:9px 12px; border:1px solid #dddddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box; background:white;">
+      <option value="כללי">כללי</option>
+      <option value="זוגיות">זוגיות</option>
+      <option value="עבודה וקריירה">עבודה וקריירה</option>
+      <option value="הורות ומשפחה">הורות ומשפחה</option>
+      <option value="בריאות ונפש">בריאות ונפש</option>
+      <option value="בין הסדינים">בין הסדינים</option>
+      <option value="מצבים ואנשים">מצבים ואנשים</option>
+    </select>
+    <div style="display:flex; gap:10px;">
+      <div style="flex:1;">
+        <label style="font-size:13px; font-weight:600;">גיל (אופציונלי)</label>
+        <input id="question-age" type="number" min="0" placeholder="גיל" style="padding:9px 12px; border:1px solid #dddddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+      </div>
+      <div style="flex:1;">
+        <label style="font-size:13px; font-weight:600;">שם (אופציונלי)</label>
+        <input id="question-name" type="text" placeholder="שם או כינוי" style="padding:9px 12px; border:1px solid #dddddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+      </div>
+    </div>
+    <label style="display:flex; align-items:center; gap:8px; font-size:13.5px; font-weight:700; color:#334155; cursor:pointer;">
+      <input type="checkbox" id="question-anon" style="width:18px; height:18px; accent-color:#111111; cursor:pointer;">
+      🕶️ לשאול בעילום שם (אנונימי)
+    </label>
+    <div style="display:flex; gap:10px; margin-top:8px;">
+      <button onclick="document.getElementById('question-modal').style.display='none'" style="flex:1; padding:10px; border:1px solid #dddddd; border-radius:8px; background:#ffffff; cursor:pointer; font-size:14px;">ביטול</button>
+      <button onclick="saveQuestion()" style="flex:1; padding:10px; border:none; border-radius:8px; background:#111111; color:#ffffff; cursor:pointer; font-size:14px; font-weight:700;">פרסם שאלה</button>
+    </div>
+  </div>
+</div>
+
+<!-- מודל הוספת קורס -->
+<div id="course-modal" style="display:none; position:fixed; inset:0; background:rgba(0, 0, 0, 0.6); z-index:99999; align-items:center; justify-content:center; direction:rtl;">
+  <div style="background:#ffffff; border-radius:16px; padding:28px; width:90%; max-width:460px; max-height:85vh; overflow-y:auto; display:flex; flex-direction:column; gap:12px;">
+    <h3 style="margin:0 0 4px; font-size:18px;">הוספת קורס/סרטון חדש</h3>
+    <label style="font-size:13px; font-weight:600;">שם הקורס / שיעור <span style="color:red">*</span></label>
+    <input id="course-title" type="text" placeholder="שם הקורס או השיעור" style="padding:9px 12px; border:1px solid #dddddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+    <label style="font-size:13px; font-weight:600;">תקציר</label>
+    <textarea id="course-summary" rows="3" placeholder="תיאור קצר של הקורס..." style="padding:9px 12px; border:1px solid #dddddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box; resize:vertical;"></textarea>
+    <label style="font-size:13px; font-weight:600;">שם המרצה / מורה</label>
+    <input id="course-author" type="text" placeholder="שם המרצה" style="padding:9px 12px; border:1px solid #dddddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+    <label style="font-size:13px; font-weight:600;">קטגוריה</label>
+    <input id="course-category" type="text" placeholder="למשל: תכנות, שיווק, עיצוב" style="padding:9px 12px; border:1px solid #dddddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+    
+    <label style="font-size:13px; font-weight:600;">תמונת שער (קאבר)</label>
+    <button id="course-img-pick" style="padding:9px 12px; border:1px dashed #bbbbbb; border-radius:8px; background:#f9f9f9; cursor:pointer; font-size:13px; text-align:right;">לחץ לבחירת תמונה</button>
+    <img id="course-img-preview" src="" alt="" style="display:none; max-height:100px; border-radius:8px; object-fit:cover; width:100%;">
+    
+    <label style="font-size:13px; font-weight:600;">סרטון השיעור (קישור מ-Vimeo/YouTube או קובץ מקומי) <span style="color:red">*</span></label>
+    <input id="course-vid-url" type="text" placeholder="הדבק קישור (למשל: https://vimeo.com/1205176242)" style="padding:9px 12px; border:1px solid #dddddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+    <div style="text-align:center; font-size:11px; color:#999999; margin:2px 0;">- או -</div>
+    <button id="course-vid-pick" style="padding:9px 12px; border:1px dashed #bbbbbb; border-radius:8px; background:#f9f9f9; cursor:pointer; font-size:13px; text-align:right; width:100%;">בחר קובץ מקומי מהמחשב (עד 10 שניות)</button>
+    <video id="course-vid-preview" controls muted playsinline style="display:none; max-height:120px; border-radius:8px; width:100%; margin-top:5px;"></video>
+
+    <div style="display:flex; gap:10px; margin-top:4px;">
+      <button id="course-cancel" style="flex:1; padding:10px; border:1px solid #dddddd; border-radius:8px; background:#ffffff; cursor:pointer; font-size:14px;">ביטול</button>
+      <button id="course-save" style="flex:1; padding:10px; border:none; border-radius:8px; background:#2196F3; color:#ffffff; cursor:pointer; font-size:14px; font-weight:700;">שמור שיעור</button>
+    </div>
+  </div>
+</div>
+
+<!-- מודאל הוספת מוצר לחנות -->
+
+
+<div id="auth-modal" class="auth-modal-overlay">
+  <div class="auth-modal-card au-card au-simple" role="dialog" aria-label="התחברות">
+    <button id="auth-modal-close" class="au-close" aria-label="סגור">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+
+    <!-- צד התמונה: המנהל בוחר את התמונה -->
+    <aside class="au-side">
+      <h2>הכול מתחיל כאן</h2>
+      <ul>
+        <li>קומיקס של גולשים</li>
+        <li>השוק: יד 2, השכרת ציוד ואחסון</li>
+        <li>קהילה ופורומים בדיסקרטיות</li>
+      </ul>
+      <img class="au-side-img" alt="" hidden>
+      <!-- מבצע: מעלים ומרוויחים מטבעות — דמות מטבע מצוירת וגשם מטבעות -->
+      <div class="au-coins">
+        <svg class="au-coins-art" viewBox="0 0 260 210" aria-hidden="true">
+          <g class="auc-rain">
+            <svg x="18" y="14" width="30" height="30" viewBox="0 0 64 64"><use href="#bw-coin"/></svg>
+            <svg x="206" y="6" width="36" height="36" viewBox="0 0 64 64"><use href="#bw-coin"/></svg>
+            <svg x="40" y="104" width="24" height="24" viewBox="0 0 64 64"><use href="#bw-coin"/></svg>
+            <svg x="214" y="96" width="26" height="26" viewBox="0 0 64 64"><use href="#bw-coin"/></svg>
+          </g>
+          <g fill="#f7c948"><path d="M64 52l3 8 8 3-8 3-3 8-3-8-8-3 8-3z"/><path d="M196 62l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/><path d="M182 150l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" fill="#ffffff" opacity=".8"/></g>
+          <ellipse cx="130" cy="196" rx="54" ry="8" fill="#000" opacity=".12"/>
+          <!-- רגליים ונעליים -->
+          <path d="M112 166v18M148 166v18" stroke="#7a5306" stroke-width="7" stroke-linecap="round"/>
+          <ellipse cx="106" cy="188" rx="14" ry="7" fill="#e5484d"/><ellipse cx="154" cy="188" rx="14" ry="7" fill="#e5484d"/>
+          <!-- ידיים: אחת מנופפת, אחת מחזיקה מטבע קטן -->
+          <path d="M80 112c-16-6-24-22-22-36" stroke="#c9900f" stroke-width="8" stroke-linecap="round" fill="none"/>
+          <circle cx="58" cy="74" r="8" fill="#ffd66b" stroke="#c9900f" stroke-width="2.5"/>
+          <path d="M180 116c14 2 24 12 26 24" stroke="#c9900f" stroke-width="8" stroke-linecap="round" fill="none"/>
+          <svg x="194" y="126" width="34" height="34" viewBox="0 0 64 64"><use href="#bw-coin"/></svg>
+          <!-- גוף: המטבע של האתר -->
+          <circle cx="130" cy="111" r="62" fill="#7a5306" opacity=".45"/>
+          <circle cx="130" cy="108" r="62" fill="url(#bwc-rim)"/>
+          <circle cx="130" cy="108" r="52" fill="url(#bwc-in)"/>
+          <circle cx="130" cy="108" r="49" fill="url(#bwc-face)"/>
+          <path d="M92 86a44 44 0 0 1 30-24" stroke="#fffbe6" stroke-width="5" stroke-linecap="round" fill="none" opacity=".7"/>
+          <!-- פנים -->
+          <g transform="translate(130 104)">
+            <ellipse cx="-17" cy="-8" rx="9" ry="11" fill="#fff"/><ellipse cx="17" cy="-8" rx="9" ry="11" fill="#fff"/>
+            <circle cx="-15" cy="-6" r="5" fill="#2b1d06"/><circle cx="19" cy="-6" r="5" fill="#2b1d06"/>
+            <circle cx="-13" cy="-9" r="1.8" fill="#fff"/><circle cx="21" cy="-9" r="1.8" fill="#fff"/>
+            <ellipse cx="-30" cy="10" rx="7" ry="4.5" fill="#f28c6a" opacity=".55"/><ellipse cx="30" cy="10" rx="7" ry="4.5" fill="#f28c6a" opacity=".55"/>
+            <path d="M-14 12c6 12 22 12 28 0" fill="#7a2b12" stroke="#5a1f0c" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M-6 18c4 3 8 3 12 0" stroke="#f28c6a" stroke-width="3" stroke-linecap="round" fill="none"/>
+          </g>
+        </svg>
+        <h3>באו תעלו — ותזכו במטבעות! 🪙</h3>
+        <p>כל העלאה, מכירה ותגובה צוברת לכם מטבעות לארנק.</p>
+      </div>
+      <div class="au-side-admin">
+        <label>החלפת תמונה<input type="file" accept="image/*" hidden onchange="loginImagePick(this)"></label>
+        <button type="button" onclick="loginImageRemove()">הסרה</button>
+      </div>
+    </aside>
+
+    <!-- כרטיס מותג -->
+    <div class="au-hero">
+      <div class="au-hero-text">
+        <div class="au-brand" dir="ltr">Black1White<span>00</span></div>
+        <p>תמונות, קומיקס וקהילה<br>במקום אחד, בדיסקרטיות.</p>
+        <span class="au-chip">פרטי · מאובטח · בלי מייל</span>
+      </div>
+      <svg class="au-hero-art" viewBox="0 0 160 140" aria-hidden="true">
+        <rect x="38" y="22" width="78" height="96" rx="12" transform="rotate(-12 77 70)" fill="#2b2522" opacity=".9"/>
+        <rect x="52" y="16" width="78" height="96" rx="12" transform="rotate(8 91 64)" fill="#fff" stroke="#2b2522" stroke-width="3"/>
+        <rect x="62" y="28" width="58" height="46" rx="7" transform="rotate(8 91 51)" fill="#a1a1aa" opacity=".55"/>
+        <path d="M78 66l12-14 9 10 6-6 10 12z" transform="rotate(8 91 64)" fill="#2b2522" opacity=".75"/>
+        <circle cx="105" cy="40" r="5" transform="rotate(8 91 64)" fill="#2b2522" opacity=".75"/>
+        <path d="M118 92c-6-6-16-1-12 7 2 4 12 11 12 11s10-7 12-11c4-8-6-13-12-7z" fill="#e5484d" stroke="#2b2522" stroke-width="2.5"/>
+        <rect x="14" y="78" width="50" height="30" rx="15" fill="#fff" stroke="#2b2522" stroke-width="3"/>
+        <circle cx="29" cy="93" r="3" fill="#2b2522"/><circle cx="39" cy="93" r="3" fill="#2b2522"/><circle cx="49" cy="93" r="3" fill="#2b2522"/>
+      </svg>
+    </div>
+
+    <h3 class="au-title" id="au-title">כניסה או הרשמה</h3>
+    <p class="au-sub" id="au-sub">המשיכו עם החשבון שלכם בלחיצה אחת</p>
+
+    <form id="auth-username-form" class="au-form" onsubmit="event.preventDefault(); authUsernameLogin();" autocomplete="on">
+      <label class="au-field">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0 1 14 0v1"/></svg>
+        <input id="auth-username" type="text" name="username" placeholder="שם משתמש" autocomplete="username" maxlength="24" required>
+      </label>
+      <label class="au-field">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+        <input id="auth-password" type="password" name="password" placeholder="סיסמה" autocomplete="current-password" minlength="6" maxlength="64" required>
+        <button type="button" class="au-eye" onclick="authTogglePassword(this)" aria-label="הצגת הסיסמה">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><path class="au-eye-slash" d="M4 4l16 16"/></svg>
+        </button>
+      </label>
+      <div class="au-row">
+        <label class="au-remember"><input type="checkbox" id="auth-remember" checked><span class="au-box" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>השאר אותי מחובר</label>
+        <button type="button" class="au-link" onclick="authForgotPassword()">שכחתם סיסמה?</button>
+      </div>
+      <button id="auth-username-btn" class="au-submit" type="submit">כניסה</button>
+      <div id="auth-username-msg" class="auth-up-msg" role="status"></div>
+    </form>
+
+    <div class="au-or"><span>או המשיכו עם</span></div>
+    <button id="auth-google-login-btn" type="button" class="au-social">
+      <svg width="20" height="20" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.63-.06-1.25-.16-1.84H9v3.47h4.84c-.21 1.12-.84 2.07-1.8 2.71v2.24h2.91c1.7-1.56 2.69-3.86 2.69-6.58z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.91-2.24c-.8.54-1.84.87-3.05.87-2.35 0-4.33-1.58-5.04-3.71H.95v2.3A9 9 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.96 10.74A5.4 5.4 0 0 1 3.6 9c0-.6.1-1.19.29-1.74V4.96H.95A8.99 8.99 0 0 0 0 9c0 1.48.36 2.89.99 4.13l2.97-2.39z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.59C13.47.89 11.43 0 9 0 5.02 0 1.57 2.29.21 5.62l3.04 2.36c.7-2.13 2.68-3.71 5.04-3.71z"/></svg>
+      <span>המשך עם Google</span>
+    </button>
+    <button id="auth-facebook-login-btn" type="button" class="au-social au-fb">
+      <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path fill="#fff" d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.96.93-1.96 1.89v2.25h3.33l-.53 3.49h-2.8V24C19.61 23.1 24 18.1 24 12.07z"/></svg>
+      <span>המשך עם Facebook</span>
+    </button>
+
+    <button type="button" class="au-link au-mail-toggle" onclick="this.closest('.au-card').classList.add('au-form-on'); this.remove()">או בשם משתמש וסיסמה</button>
+    <p class="au-switch" id="au-switch">אין לכם חשבון? <button type="button" class="au-link strong" onclick="authSetMode('signup')">הרשמה</button></p>
+    <p class="au-terms">בהרשמה אתם מסכימים ל<a href="#" onclick="event.preventDefault(); openLegal('terms')">תנאי השימוש</a> ול<a href="#" onclick="event.preventDefault(); openLegal('privacy')">מדיניות הפרטיות</a>, ומאשרים שאתם מעל גיל 18.</p>
+  </div>
+</div>
+
+<!-- מודל הוספת קישור ממומן -->
+<div id="promoted-site-modal" style="display:none; position:fixed; inset:0; background:rgba(0, 0, 0, 0.6); z-index:99999; align-items:center; justify-content:center; direction:rtl;">
+  <div style="background:#ffffff; border-radius:16px; padding:28px; width:95%; max-width:400px; display:flex; flex-direction:column; gap:12px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);">
+    <h3 style="margin:0 0 4px; font-size:18px;">הוספת אתר לקידום</h3>
+    
+    <label style="font-size:13px; font-weight:600;">שם האתר/הקישור <span style="color:red">*</span></label>
+    <input id="promoted-site-name" type="text" placeholder="למשל: גוגל" style="padding:9px 12px; border:1px solid #dddddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+    
+    <label style="font-size:13px; font-weight:600;">כתובת הקישור (URL) <span style="color:red">*</span></label>
+    <input id="promoted-site-url" type="text" placeholder="https://www.example.com" style="padding:9px 12px; border:1px solid #dddddd; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+    
+    <label style="font-size:13px; font-weight:600;">אייקון של האתר (תמונה ריבועית)</label>
+    <div style="display:flex; align-items:center; gap:12px;">
+      <button id="promoted-site-img-pick" style="flex:1; padding:9px 12px; border:1px dashed #bbbbbb; border-radius:8px; background:#f9f9f9; cursor:pointer; font-size:13px; font-weight:600;">בחר תמונת אייקון</button>
+      <img id="promoted-site-img-preview" style="display:none; width:40px; height:40px; border-radius:4px; object-fit:cover; border:1px solid #eeeeee;">
+    </div>
+
+    <div style="display:flex; gap:10px; margin-top:8px;">
+      <button id="promoted-site-cancel" style="flex:1; padding:10px; border:1px solid #dddddd; border-radius:8px; background:#ffffff; cursor:pointer; font-size:14px;">ביטול</button>
+      <button id="promoted-site-save" style="flex:1; padding:10px; border:none; border-radius:8px; background:#16a34a; color:#ffffff; cursor:pointer; font-size:14px; font-weight:700;">שמור קישור</button>
+    </div>
+  </div>
+</div>
+
+<!-- חלונית הוספת רקע (Background Modal) -->
+<div id="bg-modal" class="modal-overlay" style="display: none;">
+  <div class="modal-content" style="max-width: 300px;">
+    <h3>הוספת רקע</h3>
+    <p style="margin-bottom: 15px;">בחר לאיזה אזור להוסיף רקע:</p>
+    <button id="bg-target-dashboard" class="action-btn" style="width:100%; margin-bottom:10px; padding: 10px;">רקע לדשבורד</button>
+    <button id="bg-target-topnav" class="action-btn" style="width:100%; margin-bottom:10px; padding: 10px;">רקע לסרגל העליון</button>
+    <button id="bg-target-main" class="action-btn" style="width:100%; margin-bottom:10px; padding: 10px;">רקע לשאר האתר</button>
+    
+    <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #eeeeee;">
+      <button id="bg-clear-all" class="action-btn" style="width:100%; background:#f1f1f1; margin-bottom:10px; padding: 10px; color: #333333;">נקה רקעים 🗑️</button>
+      <button onclick="document.getElementById('bg-modal').style.display='none'" class="action-btn" style="width:100%; background:#ff4444; color:white; padding: 10px;">ביטול</button>
+    </div>
+    
+    <input type="file" id="bg-file-input" accept="image/*" style="display:none;">
+  </div>
+</div>
+
+
+
+
+
+
+<!-- צ'אט תמיכה צף גלובלי קבוע -->
+<div class="fab-admin-controls" id="chat-admin-controls" style="display:none">
+  <span class="fab-control-btn hide-btn" id="chat-hide-icon" onclick="event.stopPropagation();adminToggleChatHide()" title="הסתר/הצג" style="cursor:pointer; font-size:16px;">🙈</span>
+  <span class="fab-control-btn delete-btn" onclick="event.stopPropagation();adminDeleteChat()" title="מחק לגמרי" style="cursor:pointer; font-size:16px; margin-right:6px;">🗑️</span>
+</div>
+<button id="global-chat-fab" class="chat-fab" onclick="openMessages()" title="הודעות">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+  <span id="global-chat-badge" class="chat-badge" style="display:none">0</span>
+</button>
+<div id="global-chat-panel" class="chat-panel" style="display:none">
+  <div class="chat-header">
+    <span id="chat-title">צ'אט תמיכה</span>
+    <div style="display:flex; gap:10px; align-items:center;">
+      <button onclick="chatToggleMaximize()" style="background:none; border:none; color:#262626; cursor:pointer; font-size:14px; padding:0; display:flex; align-items:center;" title="מסך מלא">
+        <svg id="maximize-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
+        </svg>
+      </button>
+      <button onclick="chatTogglePanel()" style="background:none; border:none; color:#262626; cursor:pointer; font-size:16px; padding:0; display:flex; align-items:center;">✕</button>
+    </div>
+  </div>
+  <div id="chat-body" class="chat-body">
+    <!-- הודעות או רשימת צ'אטים למנהל ייטענו כאן -->
+  </div>
+  <div id="chat-footer" class="chat-footer">
+    <button onclick="chatSendMessage()" class="chat-send-btn">שלח</button>
+    <input type="text" id="chat-input" class="chat-input" placeholder="הקלד הודעה..." onkeydown="if(event.key==='Enter')chatSendMessage()">
+  </div>
+</div>
+
+<!-- מודל פרופיל משתמש צופה -->
+<div id="user-profile-modal" style="display:none; position:fixed; inset:0; background:rgba(0, 0, 0, 0.65); z-index:1000000; align-items:center; justify-content:center; direction:rtl; font-family:system-ui, -apple-system, sans-serif;">
+  <div class="modal-content" style="max-width: 500px; width:90%; padding:24px; border-radius:24px; background:rgba(255, 255, 255, 0.95); backdrop-filter:blur(10px); border:1px solid rgba(38, 38, 38, 0.25); box-shadow:0 20px 50px rgba(0, 0, 0, 0.15);">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid #eeeeee; padding-bottom:12px;">
+      <h3 style="margin:0; font-size:18px; font-weight:800; color:#111111;">👤 פרופיל יוצר</h3>
+      <button onclick="document.getElementById('user-profile-modal').style.display='none'" style="background:none; border:none; font-size:18px; cursor:pointer; color:#777777; font-weight:bold;">✕</button>
+    </div>
+    
+    <!-- פרטי הפרופיל -->
+    <div style="display:flex; align-items:center; gap:16px; margin-bottom:24px; background:#f9fafb; padding:16px; border-radius:16px; border:1px solid #f3f4f6;">
+      <div style="width:64px; height:64px; border-radius:50%; background:#111111; display:flex; align-items:center; justify-content:center; color:#ffffff; font-size:28px; font-weight:bold; box-shadow:0 4px 10px rgba(0, 0, 0, 0.1);">
+        👤
+      </div>
+      <div>
+        <div style="display:flex; align-items:center; flex-wrap:wrap; gap:8px;">
+          <h4 id="profile-modal-nickname" style="margin:0; font-size:18px; font-weight:800; color:#111111;">טוען...</h4>
+          <span id="profile-modal-status" style="font-size:11px; font-weight:bold; display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:12px;"></span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:4px; font-size:13px; color:#555555; font-weight:500; margin-top:2px;">
+          <div style="display:flex; gap:12px;">
+            <span id="profile-modal-age">גיל: --</span>
+            <span>|</span>
+            <span id="profile-modal-location">אזור: --</span>
+          </div>
+          <div id="profile-modal-contact-info" style="display:flex; gap:8px; margin-top:4px;">
+            <!-- ייטען דינמית -->
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <h4 style="margin:0 0 12px; font-size:14px; font-weight:800; color:#374151;">🖼️ גלריות שהועלו על ידי היוצר</h4>
+    
+    <!-- רשימת הגלריות של המשתמש -->
+    <div id="profile-modal-posts" style="max-height: 250px; overflow-y:auto; display:flex; flex-direction:column; gap:10px; padding-left:4px;">
+      <!-- גלריות ייטענו כאן דינמית -->
+    </div>
+  </div>
+</div>
+
+<!-- מודל שיתוף פוסט קהילה -->
+<div id="community-post-modal" style="display:none; position:fixed; inset:0; background:rgba(0, 0, 0, 0.65); z-index:99999; align-items:center; justify-content:center; direction:rtl; font-family:system-ui, -apple-system, sans-serif;">
+  <div style="background:#ffffff; border-radius:18px; padding:28px; width:90%; max-width:480px; max-height:85vh; overflow-y:auto; display:flex; flex-direction:column; gap:14px; box-shadow:0 20px 50px rgba(0, 0, 0, 0.15);">
+    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eeeeee; padding-bottom:10px;">
+      <h3 id="comm-modal-title" style="margin:0; font-size:18px; font-weight:800; color:#111111;">✏️ שיתוף חדש בקהילה</h3>
+      <button onclick="document.getElementById('community-post-modal').style.display='none'" style="background:none; border:none; font-size:18px; cursor:pointer; color:#777777; font-weight:bold;">✕</button>
+    </div>
+
+    <label style="font-size:13px; font-weight:700; color:#374151;">סוג הפרסום</label>
+    <div style="display:flex; gap:8px;">
+      <button type="button" id="comm-type-share" onclick="setCommPostType('share')" class="comm-type-btn active" style="flex:1; padding:9px; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer;">✍️ שיתוף</button>
+      <button type="button" id="comm-type-poll" onclick="setCommPostType('poll')" class="comm-type-btn" style="flex:1; padding:9px; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer;">🗳️ סקר</button>
+      <button type="button" id="comm-type-question" onclick="setCommPostType('question')" class="comm-type-btn" style="flex:1; padding:9px; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer;">❓ שאלה</button>
+    </div>
+
+    <label id="comm-title-label" style="font-size:13px; font-weight:700; color:#374151;">כותרת *</label>
+    <input id="comm-post-title" type="text" placeholder="מה כותרת השיתוף?" style="padding:10px 14px; border:1px solid #dddddd; border-radius:10px; font-size:14px; width:100%; box-sizing:border-box;">
+
+    <div id="comm-body-wrap" style="display:flex; flex-direction:column; gap:8px;">
+      <label id="comm-body-label" style="font-size:13px; font-weight:700; color:#374151;">תוכן *</label>
+      <textarea id="comm-post-body" rows="6" placeholder="כאן כותבים את השיתוף המלא..." style="padding:10px 14px; border:1px solid #dddddd; border-radius:10px; font-size:14px; width:100%; box-sizing:border-box; resize:vertical; font-family:inherit;"></textarea>
+    </div>
+
+    <div id="comm-poll-wrap" style="display:none; flex-direction:column; gap:8px;">
+      <label style="font-size:13px; font-weight:700; color:#374151;">אפשרויות הסקר (לפחות 2)</label>
+      <input class="comm-poll-opt" type="text" placeholder="אפשרות 1 *" style="padding:10px 14px; border:1px solid #dddddd; border-radius:10px; font-size:14px; width:100%; box-sizing:border-box;">
+      <input class="comm-poll-opt" type="text" placeholder="אפשרות 2 *" style="padding:10px 14px; border:1px solid #dddddd; border-radius:10px; font-size:14px; width:100%; box-sizing:border-box;">
+      <input class="comm-poll-opt" type="text" placeholder="אפשרות 3 (אופציונלי)" style="padding:10px 14px; border:1px solid #dddddd; border-radius:10px; font-size:14px; width:100%; box-sizing:border-box;">
+      <input class="comm-poll-opt" type="text" placeholder="אפשרות 4 (אופציונלי)" style="padding:10px 14px; border:1px solid #dddddd; border-radius:10px; font-size:14px; width:100%; box-sizing:border-box;">
+      <input class="comm-poll-opt" type="text" placeholder="אפשרות 5 (אופציונלי)" style="padding:10px 14px; border:1px solid #dddddd; border-radius:10px; font-size:14px; width:100%; box-sizing:border-box;">
+    </div>
+
+    <label style="font-size:13px; font-weight:700; color:#374151;">צרף תמונה (אופציונלי)</label>
+    <button id="comm-post-img-pick" style="padding:10px 14px; border:1px dashed #bbbbbb; border-radius:10px; background:#f9f9f9; cursor:pointer; font-size:13px; text-align:right; font-weight:600;">📷 לחץ לבחירת תמונה</button>
+    <img id="comm-post-img-preview" src="" alt="" style="display:none; max-height:160px; border-radius:10px; object-fit:cover; width:100%;">
+    
+    <div style="display:flex; gap:10px; margin-top:8px;">
+      <button onclick="document.getElementById('community-post-modal').style.display='none'" style="flex:1; padding:12px; border:1px solid #dddddd; border-radius:10px; background:#ffffff; cursor:pointer; font-size:14px; font-weight:bold; color:#555555;">ביטול</button>
+      <button onclick="submitCommunityPost()" style="flex:1; padding:12px; border:none; border-radius:10px; background:#111111; color:#ffffff; cursor:pointer; font-size:14px; font-weight:bold; box-shadow:0 4px 12px rgba(0, 0, 0, 0.15);">פרסם בקהילה 🚀</button>
+    </div>
+  </div>
+</div>
+
+<!-- מודל הוספת רעיון חדש -->
+<div id="idea-modal" style="display:none; position:fixed; inset:0; background:rgba(0, 0, 0, 0.6); z-index:999999; align-items:center; justify-content:center; direction:rtl; padding:20px;">
+  <div style="background:#ffffff; border-radius:16px; padding:24px; width:100%; max-width:500px; max-height:85vh; overflow-y:auto; display:flex; flex-direction:column; gap:14px; box-shadow:0 20px 60px rgba(0, 0, 0, 0.3);">
+    <h3 style="margin:0; font-size:18px; font-weight:800; color:#0f172a; border-bottom:2px solid #111111; padding-bottom:8px;">💡 הוספת רעיון חדש</h3>
+    
+    <label style="display:flex; flex-direction:column; gap:4px; font-size:13px; font-weight:700;">
+      <span>כותרת הרעיון <span style="color:red">*</span></span>
+      <input type="text" id="idea-title" placeholder="מה הרעיון שלך?" style="padding:10px 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:14px;">
+    </label>
+
+    <label style="display:flex; flex-direction:column; gap:4px; font-size:13px; font-weight:700;">
+      <span>קטגוריה</span>
+      <select id="idea-category" style="padding:10px 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:14px; background:#ffffff;">
+        <option value="רעיונות לעסקים">💼 רעיונות לעסקים</option>
+        <option value="רעיונות כללי">💡 רעיונות כללי</option>
+        <option value="מחקר פרטי">🔬 מחקר פרטי</option>
+        <option value="חוקים">⚖️ חוקים</option>
+        <option value="עיצוב">🎨 עיצוב</option>
+        <option value="פיתוח">💻 פיתוח</option>
+        <option value="קהילה">👥 קהילה</option>
+        <option value="פיצ'רים">⚡ פיצ'רים</option>
+      </select>
+    </label>
+
+    <label style="display:flex; flex-direction:column; gap:4px; font-size:13px; font-weight:700;">
+      <span>תקציר קצר <span style="color:red">*</span></span>
+      <textarea id="idea-summary" rows="2" placeholder="תיאור קצר במשפט או שניים..." style="padding:10px 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:14px; resize:vertical;"></textarea>
+    </label>
+
+    <label style="display:flex; flex-direction:column; gap:4px; font-size:13px; font-weight:700;">
+      <span>פירוט מורחב (אופציונלי)</span>
+      <textarea id="idea-desc" rows="3" placeholder="הסבר מורחב על הרעיון והיתרונות שלו..." style="padding:10px 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:14px; resize:vertical;"></textarea>
+    </label>
+
+    <label style="display:flex; flex-direction:column; gap:4px; font-size:13px; font-weight:700;">
+      <span>🛠️ איך לבצע את הרעיון (שלבי ביצוע - אופציונלי)</span>
+      <textarea id="idea-execution" rows="3" placeholder="רשום כל שלב בשורה נפרדת (למשל: שלב 1: מחקר שוק...)" style="padding:10px 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:14px; resize:vertical;"></textarea>
+    </label>
+
+    <div style="display:flex; gap:10px;">
+      <label style="flex:1; display:flex; flex-direction:column; gap:4px; font-size:13px; font-weight:700;">
+        <span>💰 מחיר מבוקש / תקציב</span>
+        <input type="text" id="idea-price" placeholder="למשל: ₪10,000 או להצעת מחיר" style="padding:10px 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:13.5px;">
+      </label>
+      <label style="flex:1; display:flex; flex-direction:column; gap:4px; font-size:13px; font-weight:700;">
+        <span>⏱️ זמן פיתוח משוער</span>
+        <input type="text" id="idea-time" placeholder="למשל: 1-3 שבועות" style="padding:10px 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:13.5px;">
+      </label>
+    </div>
+
+    <label style="display:flex; flex-direction:column; gap:4px; font-size:13px; font-weight:700;">
+      <span>⚙️ טכנולוגיה / שפות מומלצות</span>
+      <input type="text" id="idea-tech" placeholder="למשל: React, Node.js, Firebase" style="padding:10px 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:13.5px;">
+    </label>
+
+    <div style="display:flex; gap:10px; margin-top:10px;">
+      <button id="idea-cancel" style="flex:1; padding:12px; border:1px solid #cbd5e1; border-radius:10px; background:#ffffff; cursor:pointer; font-size:14px; font-weight:800; color:#475569;">ביטול</button>
+      <button id="idea-save" style="flex:1; padding:12px; border:none; border-radius:10px; background:#111111; color:#ffffff; cursor:pointer; font-size:14px; font-weight:800; box-shadow:0 4px 12px rgba(59,130,246,0.3);">שמור רעיון 🚀</button>
+    </div>
+  </div>
+</div>
+
+<!-- מודאל היסטוריית צפייה -->
+<div id="watch-history-modal" style="display:none; position:fixed; inset:0; background:rgba(0, 0, 0, 0.75); z-index:99999; align-items:center; justify-content:center; direction:rtl; padding:20px; backdrop-filter:blur(8px);">
+  <div class="custom-modal-content" style="max-width:550px; width:100%; background:#ffffff; border:1px solid #e7e7e7; border-radius:16px; padding:24px; color:#262626; box-shadow:0 20px 40px rgba(0, 0, 0, 0.5);">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; border-bottom:1px solid #e7e7e7; padding-bottom:12px;">
+      <h3 style="margin:0; font-size:18px; font-weight:800; display:flex; align-items:center; gap:8px;">🕒 היסטוריית צפייה</h3>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <button onclick="clearWatchHistory()" style="background:#2a2a34; color:#ef4444; border:none; padding:6px 12px; border-radius:8px; font-size:12px; font-weight:bold; cursor:pointer;">🗑️ ניקוי היסטוריה</button>
+        <button onclick="document.getElementById('watch-history-modal').style.display='none'" style="background:none; border:none; color:#818181; font-size:20px; cursor:pointer;">✕</button>
+      </div>
+    </div>
+    <div id="watch-history-list" style="max-height:360px; overflow-y:auto; display:flex; flex-direction:column; gap:10px;">
+      <!-- היסטוריה נטענת דינמית -->
+    </div>
+  </div>
+</div>
+
+<!-- מודאל לייקים ושמורים -->
+<div id="user-likes-saves-modal" style="display:none; position:fixed; inset:0; background:rgba(0, 0, 0, 0.75); z-index:99999; align-items:center; justify-content:center; direction:rtl; padding:20px; backdrop-filter:blur(8px);">
+  <div class="custom-modal-content" style="max-width:550px; width:100%; background:#ffffff; border:1px solid #e7e7e7; border-radius:16px; padding:24px; color:#262626; box-shadow:0 20px 40px rgba(0, 0, 0, 0.5);">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; border-bottom:1px solid #e7e7e7; padding-bottom:12px;">
+      <h3 style="margin:0; font-size:18px; font-weight:800; display:flex; align-items:center; gap:8px;">❤️ הכללים והשמורים שלי</h3>
+      <button onclick="document.getElementById('user-likes-saves-modal').style.display='none'" style="background:none; border:none; color:#818181; font-size:20px; cursor:pointer;">✕</button>
+    </div>
+    <div style="display:flex; gap:10px; margin-bottom:14px;">
+      <button id="tab-likes-btn" onclick="switchLikesTab('likes')" style="flex:1; padding:8px; background:#111111; color:#ffffff; border:none; border-radius:8px; font-weight:bold; cursor:pointer; font-size:13px;">❤️ בלייקים שלי</button>
+      <button id="tab-saves-btn" onclick="switchLikesTab('saves')" style="flex:1; padding:8px; background:#2a2a34; color:#a1a1aa; border:none; border-radius:8px; font-weight:bold; cursor:pointer; font-size:13px;">🔖 בשמורים שלי</button>
+    </div>
+    <div id="user-likes-saves-list" style="max-height:360px; overflow-y:auto; display:flex; flex-direction:column; gap:10px;">
+      <!-- פריטים נטענים דינמית -->
+    </div>
+  </div>
+</div>
+
+<!-- מודאל בחירת שפה -->
+<div id="language-modal" class="notif-panel lang-panel" style="display:none" role="dialog" aria-label="בחירת שפה / Language">
+  <div class="notif-head">שפה / Language</div>
+  <button type="button" id="lang-btn-he" class="lang-option" onclick="selectLanguage('he')">
+    <span>עברית</span>
+    <span id="lang-active-he" class="lang-check"></span>
+  </button>
+  <button type="button" id="lang-btn-en" class="lang-option" onclick="selectLanguage('en')">
+    <span>English</span>
+    <span id="lang-active-en" class="lang-check"></span>
+  </button>
+</div>
+
+  <!-- באנר עוגיות — קופץ בכל כניסה לאתר -->
+  <div id="cookie-bar" class="cookie-bar" role="dialog" aria-live="polite" aria-label="הסכמה לעוגיות">
+    <span class="cookie-bar-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-4.5-4A4 4 0 0 1 13 3.1 10 10 0 0 0 12 2zm-3.5 7a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm6 6a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm-7 2a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm4-4.5a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg></span>
+    <p class="cookie-bar-text">אנו משתמשים בעוגיות.&nbsp;<a href="#" class="cookie-more" onclick="event.preventDefault(); window.openLegal ? openLegal('privacy') : cookieOpenPolicy()">פרטים</a></p>
+    <div class="cookie-bar-btns">
+      <button type="button" class="cookie-btn yes" onclick="cookieChoose('yes')">אישור</button>
+      <button type="button" class="cookie-btn" onclick="cookieChoose('no')">דחייה</button>
+    </div>
+  </div>
+  <div id="cookie-policy" class="cookie-policy" onclick="if(event.target===this) this.style.display='none'">
+    <div class="cookie-policy-card" role="dialog" aria-label="מדיניות פרטיות">
+      <button type="button" class="cookie-policy-x" onclick="document.getElementById('cookie-policy').style.display='none'" aria-label="סגירה">✕</button>
+      <h2>מדיניות פרטיות</h2>
+      <p><b>מה נשמר בדפדפן שלכם:</b> העדפות תצוגה (גודל הגריד, סינונים, שפה, נגישות), פריטים שמורים והיסטוריית צפייה — כדי שהאתר יזכור אתכם.</p>
+      <p><b>סטטיסטיקות:</b> אנחנו סופרים ביקורים ופעולות (לייקים, שמירות, חיפושים) באופן אנונימי — רק מספרים, בלי פרטים אישיים. מי שבוחר "לא מאשר/ת" לא נספר.</p>
+      <p><b>חשבון:</b> בהתחברות עם גוגל נשמרים השם והמייל שלכם, והפרטים שתבחרו להוסיף לפרופיל (טלגרם, מאיפה, דמות).</p>
+      <p><b>מיקום:</b> רק אם תפעילו מיקום במכ"ם — נשמר בקירוב של כ-1 ק"מ, ואפשר להסתיר בכל רגע.</p>
+      <p><b>שיווק:</b> איננו מוכרים מידע אישי לצד שלישי.</p>
+      <p class="cookie-policy-note">לשאלות או בקשה למחיקת מידע — שלחו לנו הודעה דרך האתר.</p>
+    </div>
+  </div>
+  <script>
+    // מוצג עד שהגולש בוחר; הבחירה נשמרת (גם "לא מאשר/ת" — כדי לכבד אותה בסטטיסטיקות)
+    function cookieChoose(v) {
+      try { localStorage.setItem('cookie_consent', v); } catch (e) {}
+      var b = document.getElementById('cookie-bar');
+      if (b) { b.classList.remove('show'); setTimeout(function () { b.style.display = 'none'; b.hidden = true; }, 400); }
+    }
+    function cookieOpenPolicy() { var p = document.getElementById('cookie-policy'); if (p) p.style.display = 'flex'; }
+    function maybeShowCookieBanner() {
+      // מי שכבר בחר (מאשר/ת או לא) — לא רואה את הבאנר שוב. מי שעוד לא בחר — הבאנר נשאר עד שבוחרים
+      var c = ''; try { c = localStorage.getItem('cookie_consent') || ''; } catch (e) {}
+      if (c) return;
+      setTimeout(function () {
+        var b = document.getElementById('cookie-bar'); if (!b) return;
+        b.style.display = ''; b.classList.add('show');
+      }, 900);
+    }
+    window.maybeShowCookieBanner = maybeShowCookieBanner;
+    window.cookieConsent = function (c) { cookieChoose(c === 'accept' ? 'yes' : 'no'); };
+    // בכל כניסה: אם אין מסך אישור גיל מוצג — מציגים מיד; אחרת מסך הגיל קורא ל-maybeShowCookieBanner אחרי האישור
+    window.addEventListener('load', function () {
+      var o = document.getElementById('age-gate-overlay');
+      if (!o || getComputedStyle(o).display === 'none') maybeShowCookieBanner();
+    });
+  </script>
+<!-- מודאל הוספת פוסט חדשות מ-X -->
+<div id="news-add-modal" style="display:none; position:fixed; inset:0; background:rgba(0, 0, 0, 0.7); z-index:999999; align-items:center; justify-content:center; direction:rtl; padding:20px; backdrop-filter:blur(6px);">
+  <div style="background:#ffffff; border:1px solid #e7e7e7; border-radius:18px; padding:24px; width:100%; max-width:520px; max-height:85vh; overflow-y:auto; display:flex; flex-direction:column; gap:16px; box-shadow:0 24px 60px rgba(0, 0, 0, 0.6); color:#262626;">
+    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e7e7e7; padding-bottom:12px;">
+      <h3 style="margin:0; font-size:18px; font-weight:800; display:flex; align-items:center; gap:8px;">
+        <span style="font-size:20px;">📰</span> כתבה חדשה
+      </h3>
+      <button type="button" onclick="closeNewsAddModal()" style="background:none; border:none; color:#818181; font-size:22px; cursor:pointer; line-height:1;">✕</button>
+    </div>
+
+    <label style="display:flex; flex-direction:column; gap:6px; font-size:13px; font-weight:700; color:#818181;">
+      <span>כותרת <span style="color:#f43f5e;">*</span></span>
+      <input type="text" id="news-post-title" maxlength="140" placeholder="למשל: כל מה שחדש החודש" style="padding:11px 14px; border:1px solid #e1e1e1; border-radius:10px; font-size:14px; background:#ffffff; color:#262626;">
+    </label>
+
+    <div style="display:flex; flex-direction:column; gap:6px; font-size:13px; font-weight:700; color:#818181;">
+      <span>תמונה ראשית (אופציונלי)</span>
+      <div class="na-cover-pick">
+        <button type="button" class="na-cover-btn" onclick="document.getElementById('news-post-image-file').click()">העלאה מהמכשיר</button>
+        <input type="file" id="news-post-image-file" accept="image/*" hidden onchange="newsPickCover(this)">
+        <input type="url" id="news-post-image" placeholder="או הדביקו קישור לתמונה" style="padding:11px 14px; border:1px solid #e1e1e1; border-radius:10px; font-size:14px; background:#ffffff; color:#262626; flex:1; min-width:0; direction:ltr; text-align:left;">
+      </div>
+      <img id="news-post-image-prev" alt="" hidden style="max-height:140px; border-radius:10px; object-fit:cover;">
+    </div>
+
+    <label style="display:flex; flex-direction:column; gap:6px; font-size:13px; font-weight:700; color:#818181;">
+      <span>תוכן הכתבה</span>
+      <textarea id="news-post-body" rows="9" maxlength="20000" placeholder="כתבו כאן את הכתבה...&#10;&#10;כדי להוסיף סרטון — הדביקו קישור יוטיוב בשורה נפרדת:&#10;https://www.youtube.com/watch?v=...&#10;&#10;והמשיכו לכתוב מתחתיו." style="padding:11px 14px; border:1px solid #e1e1e1; border-radius:10px; font-size:14px; background:#ffffff; color:#262626; resize:vertical; line-height:1.6;"></textarea>
+      <span style="font-size:11.5px; color:#94a3b8; font-weight:normal;">קישור יוטיוב בשורה משלו הופך לסרטון בתוך הטקסט, בדיוק במקום שבו שמתם אותו.</span>
+    </label>
+
+    <input type="hidden" id="news-post-category" value="כללי">
+
+    <label style="display:flex; flex-direction:column; gap:6px; font-size:13px; font-weight:700; color:#818181;">
+      <span>תקציר קצר (אופציונלי)</span>
+      <textarea id="news-post-desc" rows="2" maxlength="400" placeholder="משפט או שניים שיופיעו ברשימת החדשות" style="padding:11px 14px; border:1px solid #e1e1e1; border-radius:10px; font-size:14px; background:#ffffff; color:#262626; resize:vertical;"></textarea>
+    </label>
+
+    <details class="na-link-opt">
+      <summary>צירוף פוסט מרשת חברתית (אופציונלי)</summary>
+      <input type="url" id="news-tweet-url" placeholder="https://x.com/... · reddit.com/... · facebook.com/... · instagram.com/..." style="padding:11px 14px; border:1px solid #e1e1e1; border-radius:10px; font-size:14px; background:#ffffff; color:#262626; direction:ltr; text-align:left; width:100%; box-sizing:border-box; margin-top:8px;">
+      <span style="font-size:11.5px; color:#94a3b8;">הפוסט יוטמע בסוף הכתבה (צריך להיות ציבורי)</span>
+    </details>
+
+    <div style="display:flex; gap:10px; margin-top:8px;">
+      <button type="button" onclick="closeNewsAddModal()" style="flex:1; padding:12px; border:1px solid #e1e1e1; border-radius:10px; background:#ffffff; cursor:pointer; font-size:14px; font-weight:700; color:#262626;">ביטול</button>
+      <button type="button" onclick="submitNewsPost()" style="flex:1; padding:12px; border:none; border-radius:10px; background:linear-gradient(135deg, #1d9bf0, #0284c7); color:#ffffff; cursor:pointer; font-size:14px; font-weight:800; box-shadow:0 4px 14px rgba(29,155,240,0.35);">פרסום</button>
+    </div>
+  </div>
+</div>
+
+  <!-- מובייל: כפתורי X (סגירה) ונגישות בסרגל הטאבים התחתון + כפתור לפתיחתו מחדש -->
+  <nav id="mtabs" class="mtabs" aria-label="ניווט ראשי">
+    <button type="button" class="mtab" data-tab="products" onclick="navigateToPage('page-secondhand-main')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14l-1.2 11.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg><span>מוצרי גולשים</span></button>
+    <button type="button" class="mtab" data-tab="home" onclick="goToHomePage()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg><span>בית</span></button>
+    <button type="button" class="mtab mtab-plus" data-tab="upload" onclick="openPhotoModal()" aria-label="העלאה"><span class="mtab-plus-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></button>
+    <button type="button" class="mtab" data-tab="forums" onclick="navigateToPage('page-forums-main')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h11a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H9l-4 3.5V15H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/><path d="M19.5 9.5H20a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-.5V21l-3.5-2.5h-4"/></svg><span>פורומים</span></button>
+    <button type="button" class="mtab" data-tab="messages" onclick="openMessages()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 4.5 2.8 11.7c-.9.4-.9 1.6 0 1.9l4.7 1.6 1.8 5.6c.2.7 1.1.9 1.6.4l2.6-2.5 4.9 3.6c.6.4 1.4.1 1.6-.6l3.2-15.6c.2-.9-.6-1.6-1.4-1.3z"/><path d="m7.5 15.2 9.8-7.4"/></svg><span>הודעות</span><b class="dm-open-badge mtab-badge" style="display:none"></b></button>
+    <button type="button" class="mtab" data-tab="close" onclick="mobileTabsSetHidden(true)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6 6 18"/></svg><span>סגירה</span></button>
+  </nav>
+  <button type="button" id="mtab-open" class="mtab-open" onclick="mobileTabsSetHidden(false)" aria-label="הצג תפריט תחתון">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+  </button>
+  <script>
+    // מצב הסרגל נשמר בין ביקורים
+    function mobileTabsSetHidden(h) {
+      document.documentElement.classList.toggle('mtab-hidden', !!h);
+      try { localStorage.setItem('mtab_hidden', h ? '1' : '0'); } catch (e) {}
+    }
+    try { if (localStorage.getItem('mtab_hidden') === '1') document.documentElement.classList.add('mtab-hidden'); } catch (e) {}
+  </script>
+  <!-- על האתר: טקסט קבוע בדף, כדי שמנועי חיפוש וכלי AI שלא מריצים JavaScript יבינו מה יש כאן -->
+  <section id="seo-about" class="seo-about" aria-label="על שיתוף רעיונות">
+    <h2>שיתוף רעיונות — קהילה ושוק של גולשים</h2>
+    <p>שיתוף רעיונות (black1white00.com) הוא אתר ישראלי בעברית שבו גולשים משתפים רעיונות, פרויקטים ויצירות, קונים ומוכרים יד 2, משכירים ציוד ומתייעצים בפורומים.</p>
+    <ul>
+      <li><b>פרויקטים שגולשים בנו:</b> אתרים, אפליקציות, משחקים ויצירות בתלת מימד, מסודרים לפי תחומים — חשמל ואלקטרוניקה, בית ומטבח, גינה, אנרגיה וסביבה, חינוך, בריאות ופנאי.</li>
+      <li><b>יד 2 ועסקים:</b> מכירה, קנייה, החלפה והשאלה של מוצרים, ועסקים שמציעים מוצרים ושירותים — עם הצעות מחיר ומשא ומתן ישירות מול המוכר.</li>
+      <li><b>השכרת ציוד:</b> מדפסות תלת מימד, מדפסות, כלי עבודה, ציוד צילום וסאונד, ושטחי אחסון — משלמים רק על השימוש.</li>
+      <li><b>קהילה:</b> פורומים, שאלות ותשובות, סיפורים, קומיקס, גלריות תמונות וחדשות.</li>
+    </ul>
+    <p>ההצטרפות חינם. מפרסמים מודעה או פרויקט בכמה שניות, ומקבלים הצעות מגולשים.</p>
+  </section>
+  <script type="module" src="./script.min.js?v=2195"></script>
+  <script defer src="./a11y.js?v=1"></script>
+</body>
+</html>

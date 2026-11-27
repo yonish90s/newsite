@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600"><rect width="800" height="600" fill="#1b1f3b"/>
+<rect x="0" y="420" width="800" height="180" fill="#2a9d8f"/><rect x="0" y="420" width="800" height="18" fill="#43aa8b"/>
+<g fill="#fff" opacity=".9"><rect x="90" y="90" width="90" height="26"/><rect x="110" y="70" width="50" height="26"/><rect x="560" y="120" width="110" height="26"/><rect x="590" y="100" width="56" height="22"/></g>
+<rect x="220" y="320" width="140" height="28" fill="#e4572e"/><rect x="460" y="250" width="140" height="28" fill="#e4572e"/>
+<g fill="#ffd166"><rect x="270" y="280" width="20" height="20"/><rect x="510" y="210" width="20" height="20"/><rect x="560" y="210" width="20" height="20"/></g>
+<g><rect x="300" y="360" width="40" height="44" fill="#4a6cf7"/><rect x="308" y="340" width="26" height="24" fill="#ffd6a5"/><rect x="314" y="348" width="5" height="5" fill="#111"/><rect x="304" y="404" width="12" height="16" fill="#111"/><rect x="324" y="404" width="12" height="16" fill="#111"/></g>
+<rect x="640" y="380" width="44" height="40" fill="#9b5de5"/><rect x="648" y="390" width="8" height="8" fill="#fff"/><rect x="668" y="390" width="8" height="8" fill="#fff"/>
+<text x="40" y="50" font-family="monospace" font-size="26" fill="#ffd166">SCORE 01240</text><text x="600" y="50" font-family="monospace" font-size="26" fill="#fff">♥♥♥</text></svg>

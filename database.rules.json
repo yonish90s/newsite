@@ -23,6 +23,13 @@
       "promotedSites": {
         ".read": true
       },
+      "login_image": {
+        ".read": true
+      },
+      "market_hidden": {
+        ".read": true,
+        ".write": "auth != null && (root.child('website/admin_uid').val() === auth.uid || auth.token.email === 'yoni98321@gmail.com')"
+      },
       "socialLinks": {
         ".read": true
       },
@@ -204,6 +211,28 @@
           "$day": {
             ".write": "$day.length <= 12 && newData.isNumber() && newData.val() === (data.exists() ? data.val() : 0) + 1"
           }
+        },
+        "clicks_daily": {
+          ".read": true,
+          "$day": {
+            "$key": {
+              ".write": "$day.length <= 12 && $key.length <= 40 && newData.isNumber() && newData.val() > (data.exists() ? data.val() : 0) && newData.val() <= (data.exists() ? data.val() : 0) + 200"
+            }
+          }
+        },
+        "cart_daily": {
+          ".read": true,
+          "$day": {
+            "$key": {
+              ".write": "$day.length <= 12 && $key.length <= 40 && newData.isNumber() && newData.val() > (data.exists() ? data.val() : 0) && newData.val() <= (data.exists() ? data.val() : 0) + 200"
+            }
+          }
+        },
+        "cart_names": {
+          ".read": true,
+          "$key": {
+            ".write": "$key.length <= 40 && newData.isString() && newData.val().length <= 80"
+          }
         }
       },
       "handles": {
@@ -250,13 +279,34 @@
           }
         }
       },
+      "seller_reviews": {
+        ".read": true,
+        "$targetUid": {
+          "$raterUid": {
+            ".write": "auth != null && ((auth.uid === $raterUid && $raterUid !== $targetUid && auth.provider !== 'anonymous') || (!newData.exists() && root.child('website/admin_uid').val() === auth.uid))",
+            ".validate": "!newData.exists() || (newData.hasChildren(['stars','t']) && newData.child('stars').isNumber() && newData.child('stars').val() >= 1 && newData.child('stars').val() <= 5 && newData.child('t').isNumber() && (!newData.child('text').exists() || (newData.child('text').isString() && newData.child('text').val().length <= 1000)) && (!newData.child('name').exists() || (newData.child('name').isString() && newData.child('name').val().length <= 80)))"
+          }
+        }
+      },
       "dms": {
         "$convId": {
           ".read": "auth != null && ($convId.beginsWith(auth.uid + '__') || $convId.endsWith('__' + auth.uid))",
           "messages": {
             "$msgId": {
-              ".write": "auth != null && !data.exists() && ($convId.beginsWith(auth.uid + '__') || $convId.endsWith('__' + auth.uid))",
-              ".validate": "newData.child('from').val() === auth.uid && newData.child('text').isString() && newData.child('text').val().length <= 1000 && (!newData.child('img').exists() || (newData.child('img').isString() && newData.child('img').val().matches(/^data:image\\/(jpeg|png|webp|gif);base64,/) && newData.child('img').val().length <= 400000))"
+              ".write": "auth != null && ($convId.beginsWith(auth.uid + '__') || $convId.endsWith('__' + auth.uid)) && ((!data.exists() && newData.exists()) || (data.exists() && !newData.exists() && data.child('from').val() === auth.uid))",
+              ".validate": "newData.child('from').val() === auth.uid && newData.child('text').isString() && newData.child('text').val().length <= 1000 && (!newData.child('img').exists() || (newData.child('img').isString() && newData.child('img').val().matches(/^data:image\\/(jpeg|png|webp|gif);base64,/) && newData.child('img').val().length <= 400000)) && (!newData.child('audio').exists() || (newData.child('audio').isString() && newData.child('audio').val().matches(/^data:audio\\/(webm|ogg|mp4|mpeg|mp3|wav|aac|x-m4a)(;codecs=[^;]+)?;base64,/) && newData.child('audio').val().length <= 900000)) && (!newData.child('audioDur').exists() || (newData.child('audioDur').isNumber() && newData.child('audioDur').val() >= 0 && newData.child('audioDur').val() <= 300))"
+            }
+          },
+          "read": {
+            "$uid": {
+              ".write": "auth != null && auth.uid === $uid && ($convId.beginsWith(auth.uid + '__') || $convId.endsWith('__' + auth.uid))",
+              ".validate": "!newData.exists() || newData.isNumber()"
+            }
+          },
+          "typing": {
+            "$uid": {
+              ".write": "auth != null && auth.uid === $uid && ($convId.beginsWith(auth.uid + '__') || $convId.endsWith('__' + auth.uid))",
+              ".validate": "!newData.exists() || newData.isNumber()"
             }
           }
         }
@@ -464,6 +514,13 @@
       "news_posts": {
         ".read": true
       },
+      "upload_day": {
+        "$uid": {
+          ".read": "auth != null && auth.uid === $uid",
+          ".write": "auth != null && auth.uid === $uid",
+          ".validate": "newData.isString() && newData.val().length === 10"
+        }
+      },
       "tinder_likes": {
         "$uid": {
           "$target": {
@@ -603,6 +660,17 @@
           }
         }
       },
+      "ad_viewers": {
+        "$ownerUid": {
+          ".read": "auth != null && auth.uid === $ownerUid",
+          "$itemId": {
+            "$viewerUid": {
+              ".write": "auth != null && auth.uid === $viewerUid",
+              ".validate": "!newData.exists() || (newData.hasChildren(['at','name']) && newData.child('at').isNumber() && newData.child('name').isString() && newData.child('name').val().length <= 60 && (!newData.child('title').exists() || (newData.child('title').isString() && newData.child('title').val().length <= 120)))"
+            }
+          }
+        }
+      },
       "ads": {
         ".read": true
       },
@@ -615,7 +683,7 @@
       "rentals": {
         ".read": true,
         "$id": {
-          ".write": "auth != null && auth.token.firebase.sign_in_provider !== 'anonymous' && ((!data.exists() && newData.child('uid').val() === auth.uid) || (data.exists() && data.child('uid').val() === auth.uid && (!newData.exists() || newData.child('uid').val() === auth.uid)))",
+          ".write": "auth != null && auth.token.firebase.sign_in_provider !== 'anonymous' && ((!data.exists() && newData.child('uid').val() === auth.uid) || (data.exists() && data.child('uid').val() === auth.uid && (!newData.exists() || newData.child('uid').val() === auth.uid)) || (!newData.exists() && (root.child('website/admin_uid').val() === auth.uid || auth.token.email === 'yoni98321@gmail.com')))",
           ".validate": "newData.hasChildren(['uid','owner','cat','title','price','unit','city','t']) && newData.child('cat').isString() && newData.child('cat').val().matches(/^(3d|printer|tools|photo|other|storage)$/) && newData.child('unit').isString() && newData.child('unit').val().matches(/^(kg|hour|day|print|gram|page|m2|box|month)$/) && newData.child('title').isString() && newData.child('title').val().length <= 80 && newData.child('owner').isString() && newData.child('owner').val().length <= 60 && newData.child('city').isString() && newData.child('city').val().length <= 30 && newData.child('price').isNumber() && newData.child('price').val() > 0 && newData.child('price').val() <= 100000 && newData.child('t').isNumber() && newData.child('t').val() <= now + 60000 && (!newData.child('min').exists() || newData.child('min').isNumber()) && (!newData.child('desc').exists() || newData.child('desc').isString() && newData.child('desc').val().length <= 600) && (!newData.child('img').exists() || newData.child('img').isString() && newData.child('img').val().length <= 400000 && newData.child('img').val().beginsWith('data:image/'))"
         }
       },
@@ -631,6 +699,13 @@
           ".validate": "newData.hasChildren(['t','uid','text']) && newData.child('uid').val() === auth.uid && newData.child('t').isNumber() && newData.child('t').val() <= now + 60000 && newData.child('text').isString() && newData.child('text').val().length <= 800 && (!newData.child('stars').exists() || newData.child('stars').isNumber() && newData.child('stars').val() >= 1 && newData.child('stars').val() <= 5) && (!newData.child('topic').exists() || newData.child('topic').isString() && newData.child('topic').val().length <= 30) && (!newData.child('contact').exists() || newData.child('contact').isString() && newData.child('contact').val().length <= 120) && (!newData.child('name').exists() || newData.child('name').isString() && newData.child('name').val().length <= 60) && (!newData.child('page').exists() || newData.child('page').isString() && newData.child('page').val().length <= 60)"
         }
       },
+      "people": {
+        ".read": true,
+        "$uid": {
+          ".write": "auth != null && auth.uid === $uid && auth.token.firebase.sign_in_provider !== 'anonymous'",
+          ".validate": "!newData.exists() || (newData.hasChildren(['name','t']) && newData.child('name').isString() && newData.child('name').val().length >= 1 && newData.child('name').val().length <= 60 && newData.child('t').isNumber() && newData.child('t').val() <= now + 60000)"
+        }
+      },
       "assistant_kb": {
         ".read": true
       },
@@ -641,7 +716,8 @@
         }
       },
       "media": {
-        ".read": true
+        ".read": true,
+        ".write": "auth != null && (root.child('website/admin_uid').val() === auth.uid || auth.token.email === 'yoni98321@gmail.com')"
       },
       "orders": {
         "$id": {
@@ -654,6 +730,91 @@
         "$id": {
           ".write": "auth != null && !data.exists() && $id.matches(/^BW-[0-9]{6}$/)",
           ".validate": "newData.hasChildren(['h','t']) && newData.child('h').isString() && newData.child('h').val().length === 64 && newData.child('t').isNumber() && newData.child('t').val() <= now + 60000"
+        }
+      },
+      "market_stock": {
+        ".read": true,
+        "$uid": {
+          ".write": "auth != null && auth.uid === $uid && auth.token.firebase.sign_in_provider !== 'anonymous'",
+          "$itemId": {
+            ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100000"
+          }
+        }
+      },
+      "wallets": {
+        "$uid": {
+          ".read": "auth != null && auth.uid === $uid",
+          ".write": false
+        }
+      },
+      "public_follows": {
+        "$uid": {
+          ".read": true,
+          ".write": "auth != null && auth.uid === $uid && auth.token.firebase.sign_in_provider !== 'anonymous'",
+          "$target": {
+            ".validate": "newData.hasChildren(['name','t']) && newData.child('name').isString() && newData.child('name').val().length <= 80 && newData.child('t').isNumber() && $target !== $uid"
+          }
+        }
+      },
+      "profile_comments": {
+        "$key": {
+          ".read": true,
+          "$id": {
+            ".write": "auth != null && auth.token.firebase.sign_in_provider !== 'anonymous' && ((!data.exists() && newData.child('uid').val() === auth.uid) || (data.exists() && !newData.exists() && (data.child('uid').val() === auth.uid || root.child('website/admin_uid').val() === auth.uid || ('profile_' + auth.uid) === $key || auth.uid === $key)))",
+            ".validate": "!newData.exists() || (newData.hasChildren(['uid','name','text','t']) && newData.child('text').isString() && newData.child('text').val().length >= 1 && newData.child('text').val().length <= 500 && newData.child('name').isString() && newData.child('name').val().length <= 60 && newData.child('t').isNumber())",
+            "likes": {
+              "$uid": {
+                ".write": "auth != null && auth.uid === $uid && auth.token.firebase.sign_in_provider !== 'anonymous'",
+                ".validate": "newData.val() === true"
+              }
+            },
+            "$other": {
+              ".validate": "$other === 'uid' || $other === 'name' || $other === 'text' || $other === 't'"
+            }
+          }
+        }
+      },
+      "raffle": {
+        ".read": true,
+        "prizes": {
+          ".write": "auth != null && root.child('website/admin_uid').val() === auth.uid",
+          "$place": {
+            ".validate": "$place.matches(/^[123]$/) && newData.child('title').isString() && newData.child('title').val().length >= 1 && newData.child('title').val().length <= 80 && (!newData.child('value').exists() || newData.child('value').isNumber()) && (!newData.child('img').exists() || (newData.child('img').isString() && newData.child('img').val().length <= 400000))"
+          }
+        },
+        "candidates": {
+          ".write": "auth != null && root.child('website/admin_uid').val() === auth.uid",
+          "$id": {
+            ".validate": "newData.child('name').isString() && newData.child('name').val().length >= 1 && newData.child('name').val().length <= 60 && newData.child('t').isNumber() && (!newData.child('desc').exists() || (newData.child('desc').isString() && newData.child('desc').val().length <= 300)) && (!newData.child('img').exists() || (newData.child('img').isString() && newData.child('img').val().length <= 400000))"
+          }
+        },
+        "votes": {
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid && auth.token.firebase.sign_in_provider !== 'anonymous'",
+            ".validate": "newData.isString() && root.child('website/raffle/candidates/' + newData.val()).exists()"
+          }
+        },
+        "plays": {
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid && auth.token.firebase.sign_in_provider !== 'anonymous'",
+            ".validate": "newData.hasChildren(['used','points','name']) && newData.child('used').isNumber() && newData.child('used').val() >= 1 && newData.child('used').val() <= 10000 && (!data.exists() || newData.child('used').val() >= data.child('used').val()) && newData.child('points').isNumber() && newData.child('points').val() >= 0 && newData.child('points').val() <= newData.child('used').val() * 50 && newData.child('name').isString() && newData.child('name').val().length <= 60"
+          }
+        }
+      },
+      "market_reviewed": {
+        ".read": "auth != null && root.child('website/admin_uid').val() === auth.uid",
+        ".write": "auth != null && root.child('website/admin_uid').val() === auth.uid",
+        "$id": {
+          ".validate": "newData.isNumber()"
+        }
+      },
+      "user_stories": {
+        ".read": true,
+        "$uid": {
+          "$storyId": {
+            ".write": "(auth != null && auth.uid === $uid) || (!newData.exists() && data.exists() && (data.child('t').val() < now - 86400000 || (auth != null && (root.child('website/admin_uid').val() === auth.uid || auth.token.email === 'yoni98321@gmail.com'))))",
+            ".validate": "!newData.exists() || (newData.hasChildren(['uid','name','img','t']) && newData.child('uid').val() === $uid && newData.child('name').isString() && newData.child('name').val().length <= 60 && newData.child('img').isString() && newData.child('img').val().length <= 400000 && newData.child('img').val().beginsWith('data:image/') && newData.child('t').isNumber() && newData.child('t').val() <= now + 60000 && (!newData.child('caption').exists() || (newData.child('caption').isString() && newData.child('caption').val().length <= 160)))"
+          }
         }
       }
     }

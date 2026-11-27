@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600"><defs><radialGradient id="g" cx="50%" cy="40%" r="75%"><stop offset="0" stop-color="#fff4dc"/><stop offset="1" stop-color="#f6d9a0"/></radialGradient></defs><rect width="800" height="600" fill="url(#g)"/><ellipse cx="400" cy="500" rx="240" ry="40" fill="#000" opacity=".08"/>
+<circle cx="640" cy="120" r="56" fill="#ffb703"/><g stroke="#ffb703" stroke-width="8" stroke-linecap="round"><path d="M640 30v-14M640 224v-14M550 120h-14M744 120h-14M576 56l-10-10M714 194l-10-10M576 184l-10 10M714 46l-10 10"/></g>
+<polygon points="170,420 300,200 470,200 420,420" fill="#1e3a8a"/><polygon points="420,420 470,200 560,250 520,440" fill="#172554"/>
+<g stroke="#93c5fd" stroke-width="3" opacity=".7"><path d="M213 347h232M256 273h200M245 200l-40 220M300 200l-30 220M355 200l-15 220M410 200l0 220"/></g>
+<rect x="520" y="400" width="120" height="70" rx="12" fill="#334155"/><rect x="535" y="415" width="60" height="16" rx="4" fill="#43aa8b"/><rect x="597" y="418" width="8" height="10" rx="2" fill="#43aa8b"/>
+<path d="M470 420q20 40 50 20" stroke="#111" stroke-width="5" fill="none"/>
+<rect x="250" y="440" width="70" height="120" rx="12" fill="#0f172a" transform="rotate(-12 285 500)"/><rect x="258" y="452" width="54" height="90" rx="6" fill="#47a093" transform="rotate(-12 285 500)"/></svg>

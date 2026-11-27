@@ -189,9 +189,10 @@ def walk(css):
             elif prelude.startswith('@'):
                 pass
             elif '{' not in body:
-                decls = dark_decls(body)
+                raw_sels = [s for s in split_selectors(prelude) if 'theme-dark' not in s]
+                decls = dark_decls(body) if raw_sels else []
                 if decls:
-                    sels = ', '.join(prefix_selector(s) for s in split_selectors(prelude))
+                    sels = ', '.join(prefix_selector(s) for s in raw_sels)
                     local.append(f'{sels} {{ {"; ".join(decls)}; }}')
             k = j
         return local
