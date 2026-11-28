@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 280" width="400" height="280">
+  <rect width="400" height="280" fill="#ffffff"/>
+  <ellipse cx="200" cy="236" rx="64" ry="12" fill="#000000" opacity="0.11">
+    <animate attributeName="rx" values="64;54;64" dur="4s" repeatCount="indefinite"/>
+  </ellipse>
+  <g transform="translate(200 136)">
+    <animateTransform attributeName="transform" type="translate" values="200 136;200 128;200 136" dur="4s" repeatCount="indefinite"/>
+    <!-- 3D Parametric Twisted Vase / Sculptural Lamp in black -->
+    <ellipse cx="0" cy="74" rx="44" ry="14" fill="#000000"/>
+    <path d="M-44,74 C-58,28 -68,-10 -36,-56 C-26,-70 26,-70 36,-56 C68,-10 58,28 44,74 Z" fill="#111111" stroke="#000000" stroke-width="2.5"/>
+    <ellipse cx="0" cy="46" rx="52" ry="13" fill="none" stroke="#ffffff" stroke-width="1.4" opacity="0.25"/>
+    <ellipse cx="0" cy="18" rx="56" ry="14" fill="none" stroke="#ffffff" stroke-width="1.4" opacity="0.30"/>
+    <ellipse cx="0" cy="-10" rx="52" ry="13" fill="none" stroke="#ffffff" stroke-width="1.4" opacity="0.35"/>
+    <ellipse cx="0" cy="-36" rx="42" ry="11" fill="none" stroke="#ffffff" stroke-width="1.4" opacity="0.40"/>
+    <ellipse cx="0" cy="-58" rx="30" ry="9" fill="#262626" stroke="#ffffff" stroke-width="1.6" opacity="0.85"/>
+    <ellipse cx="0" cy="-58" rx="18" ry="5" fill="#000000"/>
+  </g>
+</svg>

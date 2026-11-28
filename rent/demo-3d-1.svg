@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 280" width="400" height="280">
+  <rect width="400" height="280" fill="#ffffff"/>
+  <ellipse cx="200" cy="232" rx="68" ry="14" fill="#000000" opacity="0.10">
+    <animate attributeName="rx" values="68;56;68" dur="3.6s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.10;0.06;0.10" dur="3.6s" repeatCount="indefinite"/>
+  </ellipse>
+  <g>
+    <animateTransform attributeName="transform" type="translate" values="0 0;0 -10;0 0" dur="3.6s" repeatCount="indefinite"/>
+    <g transform="translate(200 132)">
+      <animateTransform attributeName="transform" type="rotate" values="-4;4;-4" dur="5s" repeatCount="indefinite" additive="sum"/>
+      <!-- 3D Isometric Cube in black -->
+      <polygon points="0,-72 64,-36 0,0 -64,-36" fill="#262626" stroke="#000000" stroke-width="2.5" stroke-linejoin="round"/>
+      <polygon points="-64,-36 0,0 0,74 -64,38" fill="#111111" stroke="#000000" stroke-width="2.5" stroke-linejoin="round"/>
+      <polygon points="64,-36 0,0 0,74 64,38" fill="#000000" stroke="#000000" stroke-width="2.5" stroke-linejoin="round"/>
+      <!-- Inner 3D cutout detail -->
+      <polygon points="0,-42 36,-21 0,0 -36,-21" fill="none" stroke="#ffffff" stroke-width="1.6" opacity="0.45"/>
+      <line x1="0" y1="0" x2="0" y2="74" stroke="#ffffff" stroke-width="1.5" opacity="0.3"/>
+    </g>
+  </g>
+</svg>

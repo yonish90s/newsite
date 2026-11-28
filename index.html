@@ -51,9 +51,9 @@
   <!-- ספריית localforage לשמירת תמונות -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
   <!-- קישור לקובץ העיצוב החיצוני (עם פרמטר למניעת שמירה במטמון) -->
-  <link rel="stylesheet" href="./style.min.css?v=2667">
+  <link rel="stylesheet" href="./style.min.css?v=2709">
   <link rel="stylesheet" id="mono-css" href="./mono.min.css?v=338">
-  <link rel="stylesheet" id="dark-css" data-href="./dark.min.css?v=813" media="not all">
+  <link rel="stylesheet" id="dark-css" data-href="./dark.min.css?v=855" media="not all">
   <script>
     // קישור ישיר לפריט (#p/…, #s/…, #n/…) — מסמנים מיד, כדי שהכתובת לא תימחק לפני שהפריט נפתח
     window.__deepLinkOpening = /^#[psn]\//.test(location.hash || '');
@@ -343,6 +343,7 @@
           <button type="button" data-t="deals" class="mt-dls" onclick="mtTab('deals')">עסקאות<i class="mt-apv-n mt-dls-n"></i></button>
           <button type="button" data-t="details" onclick="mtTab('details')">אישי</button>
           <button type="button" class="mt-other-tab" data-t="other" onclick="openOtherShowcasePage()">אחר</button>
+          <button type="button" class="mt-other2-tab" data-t="other2" onclick="openOther2RoomPage()">אחר 2</button>
           <button type="button" data-t="mgmt" onclick="mgmtOpen('store')">מלאי וחנות</button>
           <button type="button" data-t="fab" onclick="fabOpen('hub')">מפעלים ו-3D</button>
           <button type="button" data-t="dist" onclick="mgmtOpen('distributors')">מפיצים ושליחים</button>
@@ -351,6 +352,21 @@
         </nav>
         <div id="hdr-story-slot" class="hdr-story-slot"></div>
         <div class="right-icons" style="display: flex; gap: 10px; align-items: center;">
+          <div id="connect-ai-wrap" class="cai-wrap">
+            <button type="button" id="connect-ai-btn" class="cai-btn" onclick="toggleConnectAiMenu(event)" aria-haspopup="true" aria-expanded="false" title="Connect to your AI" dir="ltr">
+              <span class="cai-label">Connect to your AI</span>
+              <span class="cai-icons" aria-hidden="true">
+                <span class="cai-ico cai-ico-openai">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5a4.2 4.2 0 0 0-3.7 2.2L6.2 8.3a4.2 4.2 0 0 0 .1 4.3l.6 1.1m5.1-11.2a4.2 4.2 0 0 1 3.7 2.2l2.1 3.6a4.2 4.2 0 0 1-.1 4.3l-.6 1.1m-5.1 7.8a4.2 4.2 0 0 1-3.7-2.2l-2.1-3.6a4.2 4.2 0 0 1 .1-4.3l.6-1.1m5.1 11.2a4.2 4.2 0 0 0 3.7-2.2l2.1-3.6a4.2 4.2 0 0 0-.1-4.3l-.6-1.1"/><circle cx="12" cy="12" r="2.6"/></svg>
+                </span>
+                <span class="cai-ico cai-ico-claude">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#d97757" stroke-width="2" stroke-linecap="round"><path d="M12 3v18M4.2 7.5l15.6 9M19.8 7.5l-15.6 9M7.5 4.2l9 15.6M16.5 4.2l-9 15.6"/></svg>
+                </span>
+              </span>
+              <svg class="cai-chev" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div id="connect-ai-menu" class="cai-menu" hidden dir="rtl"></div>
+          </div>
           <div id="theme-toggle-btn" class="theme-seg" role="radiogroup" aria-label="מצב תצוגה">
             <button type="button" data-mode="system" onclick="setSiteTheme('system')" title="לפי המכשיר" aria-label="לפי המכשיר"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M12 16v4M8 20h8"/></svg></button>
             <button type="button" data-mode="light" onclick="setSiteTheme('light')" title="מצב בהיר" aria-label="מצב בהיר"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.6"/><path d="M12 3v1.6M12 19.4V21M5.6 5.6l1.1 1.1M17.3 17.3l1.1 1.1M3 12h1.6M19.4 12H21M5.6 18.4l1.1-1.1M17.3 6.7l1.1-1.1"/></svg></button>
@@ -1413,7 +1429,7 @@ html.theme-dark .pl-bar { background: #2a2f37; }
     </ul>
     <p>ההצטרפות חינם. מפרסמים מודעה או פרויקט בכמה שניות, ומקבלים הצעות מגולשים.</p>
   </section>
-  <script type="module" src="./script.min.js?v=2416"></script>
+  <script type="module" src="./script.min.js?v=2472"></script>
   <script defer src="./a11y.js?v=1"></script>
 </body>
 </html>

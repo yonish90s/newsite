@@ -33348,7 +33348,7 @@ Object.assign(window, { walletOpen, walletClose });
     t = 0;
     const mc = typeof mainContent !== 'undefined' && mainContent;
     if (!mc) return;
-    const live = { dm: document.getElementById('dm-pill'), chat: document.getElementById('global-chat-fab'), a11y: document.querySelector('.a11y-launcher') };
+    const live = { dm: document.getElementById('dm-pill'), chat: document.getElementById('global-chat-fab'), a11y: document.querySelector('.a11y-launcher'), ai: document.getElementById('site-ai-fab') };
     Object.keys(live).forEach(k => { if (live[k]) held[k] = live[k]; });
     if (held.a11y && !a11yHome && held.a11y.parentElement) a11yHome = held.a11y.parentElement;
     const wrap = [...mc.querySelectorAll('.cmp-wrap')].find(w => w.offsetParent);
@@ -33356,7 +33356,7 @@ Object.assign(window, { walletOpen, walletClose });
     if (!held.ticket) held.ticket = ticketPillEl(); else ticketPillPaint(held.ticket);
     if (!held.prize) held.prize = prizePillEl();
     const isDesk = window.innerWidth >= 701;
-    const btns = (isDesk ? ['dm', 'chat', 'a11y', 'ticket', 'prize', 'wallet'] : ['dm', 'chat', 'a11y', 'wallet', 'ticket', 'prize']).map(k => held[k]).filter(Boolean);
+    const btns = (isDesk ? ['dm', 'chat', 'a11y', 'ticket', 'prize', 'wallet', 'ai'] : ['dm', 'chat', 'a11y', 'wallet', 'ticket', 'prize']).map(k => held[k]).filter(Boolean);
     if (isDesk) {
       let col = document.getElementById('desk-fabs-col');
       if (!col) { col = document.createElement('div'); col.id = 'desk-fabs-col'; col.className = 'desk-fabs-col'; document.body.appendChild(col); }
@@ -35228,7 +35228,14 @@ const USED_DEMO = [
   { id: 'u1', offer: 'מכירה', img: 'rent/ikea-table.jpg', title: 'שולחן עץ עגול מעוצב מאיקאה, כחדש', price: 750, city: 'גבעתיים', owner: 'הילה רוזן', t: -5, desc: 'שולחן אוכל עגול ויפהפה בסגנון סקנדינבי של איקאה מעץ אלון טבעי. שמור מאוד, ללא שריטות, איסוף עצמי.', specs: ['קוטר 120 ס״מ', 'עץ אלון טבעי', 'מצב כחדש'] },
   { id: 'g1', offer: 'פרויקט', img: 'rent/demo-gif-1.gif', title: 'מנורת טבעת חכמה לשולחן (GIF דוגמה)', price: 180, city: 'תל אביב', owner: 'רוני', t: -4, desc: 'רעיון למוצר: מנורת LED מסתובבת לשולחן עבודה עם שליטה בצבעים — דוגמה חיה של גיף באתר.' },
   { id: 'g2', offer: 'פרויקט', img: 'rent/demo-gif-2.gif', title: 'סורק תלת־מימד קומפקטי לשולחן (GIF דוגמה)', price: 320, city: 'חיפה', owner: 'דניאל', t: -3, desc: 'רעיון למוצר: גאדג׳ט סריקה מהיר לחפצים קטנים — מוצג כגיף לופ.' },
-  { id: 'g3', offer: 'פרויקט', img: 'rent/demo-gif-3.gif', title: 'חיישן תנועה ומכ״ם חכם לבית (GIF דוגמה)', price: 140, city: 'רמת גן', owner: 'נועה', t: -2, desc: 'רעיון למוצר: חיישן קרבה חכם להדלקת תאורה אוטומטית — דוגמה לגיף קצר.' }
+  { id: 'g3', offer: 'פרויקט', img: 'rent/demo-gif-3.gif', title: 'חיישן תנועה ומכ״ם חכם לבית (GIF דוגמה)', price: 140, city: 'רמת גן', owner: 'נועה', t: -2, desc: 'רעיון למוצר: חיישן קרבה חכם להדלקת תאורה אוטומטית — דוגמה לגיף קצר.' },
+  { id: 'd3d1', offer: 'פרויקט', is3dDemo: true, model3d: 'bamboo', img: 'rent/demo-3d-1.svg', images: ['rent/demo-3d-1.svg'], title: 'במבוק טבעי תלת־מימדי · 20 קק״ל (3D דוגמה)', price: 45, city: 'תל אביב', owner: 'סטודיו 3D', t: -1.5, desc: 'מודל במבוק תלת־מימדי בשחור על רקע לבן · 20 קלוריות ל־100 גרם נצרי במבוק. גררו באצבע לסיבוב 360°.', specs: ['20 קלוריות ל־100 גרם', 'סיבים תזונתיים: 2.2 גרם', 'סיבוב 360° במגע'] },
+  { id: 'd3d2', offer: 'פרויקט', is3dDemo: true, model3d: 'apple', img: 'rent/demo-3d-2.svg', images: ['rent/demo-3d-2.svg'], title: 'תפוח עץ תלת־מימדי · 52 קק״ל (3D דוגמה)', price: 15, city: 'חיפה', owner: 'נוטרי 3D', t: -1, desc: 'מודל תפוח בתלת־מימד בשחור על רקע לבן · 52 קלוריות ל־100 גרם (כ־95 קלוריות לתפוח בינוני). סובבו לכל כיוון.', specs: ['52 קלוריות ל־100 גרם', '95 קלוריות ליחידה', 'סוכרים טבעיים: 10 גרם'] },
+  { id: 'd3d3', offer: 'פרויקט', is3dDemo: true, model3d: 'donut', img: 'rent/demo-3d-3.svg', images: ['rent/demo-3d-3.svg'], title: 'דונאט תלת־מימדי · 452 קק״ל (3D דוגמה)', price: 24, city: 'רעננה', owner: 'מאיה כהן', t: -0.7, desc: 'דונאט תלת־מימדי בשחור על רקע לבן · 452 קלוריות ל־100 גרם (כ־260 קלוריות ליחידה). גררו למעלה ולמטה 360°.', specs: ['452 קלוריות ל־100 גרם', '260 קלוריות ליחידה', 'פחמימות: 51 גרם'] },
+  { id: 'd3d4', offer: 'פרויקט', is3dDemo: true, model3d: 'burger', img: 'rent/demo-3d-1.svg', images: ['rent/demo-3d-1.svg'], title: 'המבורגר תלת־מימדי · 295 קק״ל (3D דוגמה)', price: 58, city: 'ירושלים', owner: 'שף 3D', t: -0.4, desc: 'המבורגר תלת־מימדי בשחור על רקע לבן · 295 קלוריות ל־100 גרם (כ־540 קלוריות למנה). סובבו באצבע 360°.', specs: ['295 קלוריות ל־100 גרם', '540 קלוריות למנה', 'חלבון: 26 גרם'] },
+  { id: 'd3d5', offer: 'מכירה', is3dDemo: true, model3d: 'milk', img: 'rent/demo-3d-1.svg', images: ['rent/demo-3d-1.svg'], title: 'חלב טרי 3% בקרטון · 58 קק״ל (סובבו לאחור)', price: 7.2, city: 'תל אביב', owner: 'סופר 3D', t: -0.3, desc: 'קרטון חלב תלת־מימדי: סובבו את האריזה מאחורה כדי לראות את טבלת הקלוריות והערכים התזונתיים (58 קק״ל ל־100 מ״ל).', specs: ['58 קלוריות ל־100 מ״ל', 'חלבון: 3.3 גרם', 'שומן: 3.0 גרם', 'פחמימות: 4.8 גרם'] },
+  { id: 'd3d6', offer: 'מכירה', is3dDemo: true, model3d: 'yogurt', img: 'rent/demo-3d-2.svg', images: ['rent/demo-3d-2.svg'], title: 'יוגורט ביו טבעי 1.5% · 49 קק״ל (סובבו לאחור)', price: 6.5, city: 'חיפה', owner: 'סופר 3D', t: -0.2, desc: 'אריזת יוגורט בתלת־מימד: סובבו לצד האחורי לצפייה בסימון התזונתי ובקלוריות (49 קק״ל ל־100 גרם).', specs: ['49 קלוריות ל־100 גרם', 'חלבון: 4.5 גרם', 'סידן: 140 מ״ג'] },
+  { id: 'd3d7', offer: 'מכירה', is3dDemo: true, model3d: 'oats', img: 'rent/demo-3d-3.svg', images: ['rent/demo-3d-3.svg'], title: 'שיבולת שועל מלאה · 389 קק״ל (סובבו לאחור)', price: 14.9, city: 'רמת גן', owner: 'טבע 3D', t: -0.1, desc: 'קופסת שיבולת שועל בתלת־מימד: סובבו 180° לאחור כדי לקרוא את התווית והקלוריות (389 קק״ל ל־100 גרם).', specs: ['389 קלוריות ל־100 גרם', 'חלבון: 16.9 גרם', 'סיבים: 10.6 גרם'] }
 ].map(r => Object.assign({ demo: true, kind: 'used' }, r, { t: Date.now() + r.t * 3600e3 }));
 const BIZ_DEMO = [];
 const PROJ_DEMO = [];
@@ -35425,8 +35432,8 @@ function mkPubOpen() {
       </div>
     </div>
     <div class="mkpub-xcompose">
-      <input id="mkpub-title" class="mkpub-xtitle" maxlength="32" placeholder="כותרת המודעה…" oninput="mkPubAuto()">
-      <textarea id="mkpub-desc" class="mkpub-xbody" oninput="mkPubAuto()" rows="3" maxlength="1000" placeholder="מה קורה? תארו מה מוכרים או משתפים…"></textarea>
+      <input id="mkpub-title" class="mkpub-xtitle" maxlength="120" placeholder="כותרת המודעה…" oninput="mkPubAuto()">
+      <textarea id="mkpub-desc" class="mkpub-xbody" oninput="mkPubAuto()" rows="6" maxlength="5000" placeholder="מה קורה? תארו מה מוכרים או משתפים…"></textarea>
       <div class="mkpub-imgs" id="mkpub-imgs" hidden></div>
     </div>
     <div class="mkpub-auto" id="mkpub-auto" hidden>
@@ -35914,7 +35921,7 @@ const DEMO_EXTRA_POOL = {
   used: ['rent/u-sofa.jpg', 'rent/u-fridge.jpg', 'rent/u-guitar.jpg', 'rent/u-bike.jpg', 'rent/camera.jpg']
 };
 [USED_DEMO, RENT_DEMO].forEach(l => l.forEach(d => {
-  if (!Array.isArray(d.images) || d.images.length < 2) {
+  if (!d.is3dDemo && (!Array.isArray(d.images) || d.images.length < 2)) {
     const pool = DEMO_EXTRA_POOL[d.cat] || DEMO_EXTRA_POOL.used;
     d.images = [d.img, ...pool.filter(x => x !== d.img)].filter(Boolean).slice(0, 5);
   }
@@ -36451,15 +36458,18 @@ function twPostHTML(r) {
   const imgs = [...new Set([r.img, ...(r.images || [])].filter(x => typeof x === 'string' && x))].slice(0, 10);
   const strip = imgs.length > 1 ? `<div class="tw-strip" onscroll="twStripDots(this)">${imgs.map((s, i) => `<img src="${escHtml(s)}" alt="${escHtml(r.title)}${i ? ' ' + (i + 1) : ''}" loading="eager" decoding="async">`).join('')}</div>    <span class="tw-dots">${imgs.map((_, i) => `<i${i ? '' : ' class="on"'}></i>`).join('')}</span>` : '';
   const isGif = u => /\.gif(?:$|\?)|^data:image\/gif/i.test(String(u || ''));
-  const gifBadge = imgs.some(isGif) ? '<span class="tw-gif-badge">GIF</span>' : '';
+  const is3d = Boolean(r.is3dDemo) || imgs.some(u => /demo-3d-|\.glb(?:$|\?)|\.gltf(?:$|\?)/i.test(String(u || '')));
+  const gifBadge = is3d ? '<span class="tw-gif-badge">3D</span>' : imgs.some(isGif) ? '<span class="tw-gif-badge">GIF</span>' : '';
   const uNow = typeof auth !== 'undefined' && auth.currentUser;
-  const isLocked = typeof hasVipSub === 'function' && !hasVipSub() && !(uNow && r.uid && uNow.uid === r.uid);
+  const isLocked = !r.model3d && !r.is3dDemo && typeof hasVipSub === 'function' && !hasVipSub() && !(uNow && r.uid && uNow.uid === r.uid);
   const lockBadge = isLocked ? '<span class="mk-lock-badge" title="נעול למנויי VIP">🔒 מודעה נעולה</span>' : '';
-  const media = strip ? `<div class="tw-media tw-multi">${strip}${gifBadge}${lockBadge}<span class="ad-join-avs" data-join-avs="${escHtml(r.id)}">${adJoinAvsHTML(r.id)}</span></div>` : src ? `<div class="tw-media">${gifBadge}${lockBadge}<img src="${escHtml(src)}" alt="${escHtml(r.title)}" loading="lazy" decoding="async"><span class="ad-join-avs" data-join-avs="${escHtml(r.id)}">${adJoinAvsHTML(r.id)}</span></div>` : `<div class="tw-media tw-media-th">${lockBadge}${rentThumb(r)}<span class="ad-join-avs" data-join-avs="${escHtml(r.id)}">${adJoinAvsHTML(r.id)}</span></div>`;
+  const media = r.model3d
+    ? `<div class="tw-media mk-3d-wrap">${gifBadge}${lockBadge}<canvas class="mk-3d-canvas" data-model="${escHtml(r.model3d)}"></canvas><span class="mk-3d-hint">↻ גררו 360°</span><span class="ad-join-avs" data-join-avs="${escHtml(r.id)}">${adJoinAvsHTML(r.id)}</span></div>`
+    : strip ? `<div class="tw-media tw-multi">${strip}${gifBadge}${lockBadge}<span class="ad-join-avs" data-join-avs="${escHtml(r.id)}">${adJoinAvsHTML(r.id)}</span></div>` : src ? `<div class="tw-media">${gifBadge}${lockBadge}<img src="${escHtml(src)}" alt="${escHtml(r.title)}" loading="lazy" decoding="async"><span class="ad-join-avs" data-join-avs="${escHtml(r.id)}">${adJoinAvsHTML(r.id)}</span></div>` : `<div class="tw-media tw-media-th">${lockBadge}${rentThumb(r)}<span class="ad-join-avs" data-join-avs="${escHtml(r.id)}">${adJoinAvsHTML(r.id)}</span></div>`;
   const when = r.t ? new Date(r.t).toLocaleDateString('he-IL') : '';
   const desc = String(r.desc || '').trim();
   const descHTML = desc ? `<span class="tw-desc-wrap"><small class="tw-desc">${escHtml(desc)}</small>${desc.length > 75 ? `<button type="button" class="tw-more" onclick="event.stopPropagation(); const w=this.parentElement; w.classList.toggle('open'); this.textContent=w.classList.contains('open')?'פחות':'עוד'">עוד</button>` : ''}</span>` : '';
-  return `<article class="tw-post" role="button" tabindex="0" data-id="${escHtml(r.id)}" onclick="const st=this.querySelector('.tw-strip'); if(st&&st._swipedAt&&Date.now()-st._swipedAt<280)return; rentOpen('${artEsc(r.id)}')" onkeydown="if((event.key==='Enter'||event.key===' ')&&event.target===this){event.preventDefault();this.click();}">
+  return `<article class="tw-post" role="button" tabindex="0" data-id="${escHtml(r.id)}" onclick="const st=this.querySelector('.tw-strip'); if(st&&st._swipedAt&&Date.now()-st._swipedAt<280)return; const c3d=this.querySelector('.mk-3d-canvas'); if(c3d&&c3d._draggedAt&&Date.now()-c3d._draggedAt<320)return; rentOpen('${artEsc(r.id)}')" onkeydown="if((event.key==='Enter'||event.key===' ')&&event.target===this){event.preventDefault();this.click();}">
     <header class="tw-head">
       ${isUserVerified(r.uid || '', mktWho(r), r.verified) ? verifiedSealHTML(13) : ''}
       <div class="tw-av" onclick="event.stopPropagation(); rentOpenSeller('${artEsc(r.uid || '')}', '${artEsc(r.owner || '')}')">${authorAvHTML({ author: mktWho(r) || '?', uid: r.uid || '' })}</div>
@@ -36592,7 +36602,7 @@ function libHTML() {
   const depts = typeof MKT_DEPTS !== 'undefined' ? MKT_DEPTS.filter(d => base.some(r => r.dept === d.id)) : [];
   const circHTML = depts.length ? `<nav class="lib-circs" aria-label="מחלקות">${depts.map(d => `<button type="button" class="lib-circ" onclick="libDept('${d.id}')"><span><svg viewBox="0 0 64 64" fill="none" stroke="#111" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">${(typeof DEPT_ART !== 'undefined' && (DEPT_ART[d.id] || DEPT_ART.other)) || ''}</svg></span><b>${escHtml(d.name)}</b></button>`).join('')}</nav>` : '';
   return `<header class="lib-head"><span class="lib-brand"><img src="./logo.png?v=2" alt=""><b>ספרייה</b></span><button type="button" class="lib-theme" onclick="toggleSiteTheme()" title="בהיר / כהה" aria-label="בהיר / כהה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg></button><button type="button" class="lib-cta" onclick="mkPubOpen()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>פרסום מודעה</button></header>
-    <div class="home-view-bar"><nav class="lib-desk-nav" aria-label="ניווט ראשי"><button type="button" class="on" data-t="home" onclick="mtTab('home')">בית</button><button type="button" data-t="feed" onclick="mtTab('feed')">במעקב</button><button type="button" data-t="deals" class="mt-dls" onclick="mtTab('deals')">עסקאות<i class="mt-apv-n mt-dls-n"></i></button><button type="button" data-t="details" onclick="mtTab('details')">אישי</button><button type="button" class="mt-other-tab" data-t="other" onclick="openOtherShowcasePage()">אחר</button><button type="button" data-t="mgmt" onclick="mgmtOpen('store')">מלאי וחנות</button><button type="button" data-t="fab" onclick="fabOpen('hub')">מפעלים ו-3D</button><button type="button" data-t="dist" onclick="mgmtOpen('distributors')">מפיצים ושליחים</button><button type="button" data-t="sub" class="hdr-sub-btn" onclick="subPageOpen()">💎 מנוי</button><button type="button" data-t="dist" onclick="mgmtOpen('distributors')">מפיצים ושליחים</button><button type="button" data-t="sub" class="hdr-sub-btn" onclick="subPageOpen()">💎 מנוי</button><button type="button" data-t="apv" class="mt-apv" hidden onclick="mtTab('apv')">אישור<i class="mt-apv-n"></i></button></nav>${homeViewSwHTML()}</div>
+    <div class="home-view-bar"><nav class="lib-desk-nav" aria-label="ניווט ראשי"><button type="button" class="on" data-t="home" onclick="mtTab('home')">בית</button><button type="button" data-t="feed" onclick="mtTab('feed')">במעקב</button><button type="button" data-t="deals" class="mt-dls" onclick="mtTab('deals')">עסקאות<i class="mt-apv-n mt-dls-n"></i></button><button type="button" data-t="details" onclick="mtTab('details')">אישי</button><button type="button" class="mt-other-tab" data-t="other" onclick="openOtherShowcasePage()">אחר</button><button type="button" class="mt-other2-tab" data-t="other2" onclick="openOther2RoomPage()">אחר 2</button><button type="button" data-t="mgmt" onclick="mgmtOpen('store')">מלאי וחנות</button><button type="button" data-t="fab" onclick="fabOpen('hub')">מפעלים ו-3D</button><button type="button" data-t="dist" onclick="mgmtOpen('distributors')">מפיצים ושליחים</button><button type="button" data-t="sub" class="hdr-sub-btn" onclick="subPageOpen()">💎 מנוי</button><button type="button" data-t="dist" onclick="mgmtOpen('distributors')">מפיצים ושליחים</button><button type="button" data-t="sub" class="hdr-sub-btn" onclick="subPageOpen()">💎 מנוי</button><button type="button" data-t="apv" class="mt-apv" hidden onclick="mtTab('apv')">אישור<i class="mt-apv-n"></i></button></nav>${homeViewSwHTML()}</div>
     ${(homeViewGet() === 'twitter' || homeViewGet() === 'rows') ? `<div class="tw-feed-list${homeViewGet() === 'rows' ? ' tw-rows-mode' : ''}" id="home-tw-list">${homeDateFeedHTML(all)}</div>` : `
     ${filtered ? '' : heroHTML}${libBarHTML(depts)}
     ${filtered ? `<section class="lib-row lib-res"><header><h2>${all.length} תוצאות</h2></header>${all.length ? `<div class="lib-grid">${all.slice().sort(LIB_SORTS[libF.sort].f).map(r => libCardHTML(r)).join('')}</div>` : '<div class="lib-empty">אין מודעות שמתאימות לסינון הזה</div>'}</section>` : `
@@ -36617,7 +36627,7 @@ function openOtherShowcasePage() {
   try { rentSubscribe(); } catch (e) {}
   window.__detailOpen = false;
   mainContent.innerHTML = `<div class="lib-page other-showcase-page"><div class="lib-main">
-    <div class="home-view-bar"><nav class="lib-desk-nav" aria-label="ניווט ראשי"><button type="button" data-t="home" onclick="mtTab('home')">בית</button><button type="button" data-t="feed" onclick="mtTab('feed')">במעקב</button><button type="button" data-t="deals" class="mt-dls" onclick="mtTab('deals')">עסקאות<i class="mt-apv-n mt-dls-n"></i></button><button type="button" data-t="details" onclick="mtTab('details')">אישי</button><button type="button" class="mt-other-tab on" data-t="other" onclick="openOtherShowcasePage()">אחר</button><button type="button" data-t="mgmt" onclick="mgmtOpen('store')">מלאי וחנות</button><button type="button" data-t="fab" onclick="fabOpen('hub')">מפעלים ו-3D</button><button type="button" data-t="dist" onclick="mgmtOpen('distributors')">מפיצים ושליחים</button><button type="button" data-t="sub" class="hdr-sub-btn" onclick="subPageOpen()">💎 מנוי</button><button type="button" data-t="dist" onclick="mgmtOpen('distributors')">מפיצים ושליחים</button><button type="button" data-t="sub" class="hdr-sub-btn" onclick="subPageOpen()">💎 מנוי</button><button type="button" data-t="apv" class="mt-apv" hidden onclick="mtTab('apv')">אישור<i class="mt-apv-n"></i></button></nav></div>
+    <div class="home-view-bar"><nav class="lib-desk-nav" aria-label="ניווט ראשי"><button type="button" data-t="home" onclick="mtTab('home')">בית</button><button type="button" data-t="feed" onclick="mtTab('feed')">במעקב</button><button type="button" data-t="deals" class="mt-dls" onclick="mtTab('deals')">עסקאות<i class="mt-apv-n mt-dls-n"></i></button><button type="button" data-t="details" onclick="mtTab('details')">אישי</button><button type="button" class="mt-other-tab on" data-t="other" onclick="openOtherShowcasePage()">אחר</button><button type="button" class="mt-other2-tab" data-t="other2" onclick="openOther2RoomPage()">אחר 2</button><button type="button" data-t="mgmt" onclick="mgmtOpen('store')">מלאי וחנות</button><button type="button" data-t="fab" onclick="fabOpen('hub')">מפעלים ו-3D</button><button type="button" data-t="dist" onclick="mgmtOpen('distributors')">מפיצים ושליחים</button><button type="button" data-t="sub" class="hdr-sub-btn" onclick="subPageOpen()">💎 מנוי</button><button type="button" data-t="dist" onclick="mgmtOpen('distributors')">מפיצים ושליחים</button><button type="button" data-t="sub" class="hdr-sub-btn" onclick="subPageOpen()">💎 מנוי</button><button type="button" data-t="apv" class="mt-apv" hidden onclick="mtTab('apv')">אישור<i class="mt-apv-n"></i></button></nav></div>
     ${deskCharsStageHTML()}
     ${dcShelvesHTML()}
   </div></div>`;
@@ -36628,6 +36638,582 @@ function openOtherShowcasePage() {
   try { window.scrollTo(0, 0); } catch (e) {}
 }
 window.openOtherShowcasePage = openOtherShowcasePage;
+let _other2Filter = 'all';
+function openOther2RoomPage(filter) {
+  if (typeof mainContent === 'undefined' || !mainContent) return;
+  if (filter) _other2Filter = filter;
+  try { rentSubscribe(); } catch (e) {}
+  window.__detailOpen = false;
+  const u = typeof auth !== 'undefined' && auth.currentUser;
+  const myUid = u && !u.isAnonymous ? u.uid : '';
+  const allMkt = typeof mktAll === 'function' ? mktAll() : [];
+  let myMkt = myUid ? allMkt.filter(r => r && r.uid === myUid) : [];
+  const storeItems = (typeof mgmtItems !== 'undefined' && Array.isArray(mgmtItems)) ? mgmtItems : [];
+  const combined = [];
+  const seenIds = new Set();
+  myMkt.forEach(r => {
+    const st = typeof mktStock === 'function' ? mktStock(r) : (r.stock === 0 ? 0 : 1);
+    const qty = st === null || st === undefined ? 1 : Number(st);
+    seenIds.add(r.id);
+    combined.push({ id: r.id, title: r.title || 'מוצר', price: r.price, img: r.img || '', desc: r.desc || '', specs: Array.isArray(r.specs) ? r.specs : [], city: r.city || '', owner: r.owner || '', qty, inStock: qty > 0, source: 'mkt' });
+  });
+  storeItems.forEach(it => {
+    if (!it || seenIds.has(it.id)) return;
+    const qty = Number(it.stock ?? 0);
+    combined.push({ id: it.id, title: it.name || it.title || 'מוצר', price: it.price, img: it.img || '', desc: it.desc || '', specs: Array.isArray(it.specs) ? it.specs : [], city: '', owner: '', qty, inStock: qty > 0, source: 'mgmt' });
+  });
+  const usingFallback = combined.length === 0;
+  const baseList = usingFallback ? allMkt.slice(0, 12).map(r => {
+    const st = typeof mktStock === 'function' ? mktStock(r) : 1;
+    const qty = st === null || st === undefined ? 1 : Number(st);
+    return { id: r.id, title: r.title || 'מוצר', price: r.price, img: r.img || '', desc: r.desc || '', specs: Array.isArray(r.specs) ? r.specs : [], city: r.city || '', owner: r.owner || '', qty, inStock: qty > 0, source: 'mkt' };
+  }) : combined;
+  // קטלוג של 20 מוצרים שונים כך שבכל אחת מ-20 השורות יהיה מוצר ייחודי (3 יחידות זהות בשורה)
+  const OTHER2_EXTRA = [
+    { id: 'o2_1', title: 'שולחן אלון סקנדינבי', price: 750, desc: 'שולחן עץ אלון טבעי בגימור מט.', specs: ['קוטר 120 ס״מ', 'עץ אלון מלא', 'גימור עמיד למים'], inStock: true, qty: 3, shapeIdx: 1 },
+    { id: 'o2_2', title: 'מנורת שולחן מינימליסטית', price: 180, desc: 'מנורת LED חמה לשולחן עבודה.', specs: ['עוצמה 12W', 'דימר מגע', 'צבע שחור/זהב'], inStock: true, qty: 5, shapeIdx: 3 },
+    { id: 'o2_3', title: 'מארז חלב טרי 3% (1 ליטר)', price: 7.2, desc: 'קרטון חלב טרי עם סימון תזונתי מלא.', specs: ['58 קק״ל ל־100 מ״ל', 'חלבון: 3.3 ג׳', 'תוקף ארוך'], inStock: true, qty: 12, shapeIdx: 2 },
+    { id: 'o2_4', title: 'ארגז אחסון מודולרי', price: 65, desc: 'ארגז קשיח לארגון מדפים ומחסן.', specs: ['נפח 35 ליטר', 'נערם לגובה', 'פלסטיק ממוחזר'], inStock: true, qty: 8, shapeIdx: 0 },
+    { id: 'o2_5', title: 'שידת צד מעוצבת', price: 420, desc: 'שידת עץ קומפקטית לסלון או חדר שינה.', specs: ['רוחב 45 ס״מ', 'רגלי עץ מלא', 'הרכבה מהירה'], inStock: true, qty: 2, shapeIdx: 1 },
+    { id: 'o2_6', title: 'מנורת לילה חכמה', price: 210, desc: 'תאורה חכמה בשליטה מהנייד.', specs: ['חיבור Wi-Fi', '16 מיליון גוונים', 'טיימר אוטומטי'], inStock: true, qty: 4, shapeIdx: 3 },
+    { id: 'o2_7', title: 'קופסת שיבולת שועל מלאה', price: 14.9, desc: 'שיבולת שועל איכותית לארוחת בוקר.', specs: ['389 קק״ל ל־100 גרם', 'חלבון: 16.9 ג׳', 'משקל 500 גרם'], inStock: true, qty: 9, shapeIdx: 2 },
+    { id: 'o2_8', title: 'מדפסת תלת־מימד קומפקטית', price: 1290, desc: 'מדפסת FDM מדויקת לבית ולסטודיו.', specs: ['נפח הדפסה 22×22 ס״מ', 'חימום מהיר', 'שקטה במיוחד'], inStock: true, qty: 2, shapeIdx: 0 },
+    { id: 'o2_9', title: 'שולחן מחשב פינתי', price: 890, desc: 'שולחן עבודה רחב עם תיעול כבלים.', specs: ['אורך 140 ס״מ', 'מסגרת מתכת', 'משטח אלון'], inStock: true, qty: 3, shapeIdx: 1 },
+    { id: 'o2_10', title: 'מנורת קריאה מתכווננת', price: 145, desc: 'זרוע גמישה לקריאה נוחה.', specs: ['3 דרגות אור', 'קליפס שולחני', 'USB-C'], inStock: true, qty: 6, shapeIdx: 3 },
+    { id: 'o2_11', title: 'יוגורט ביו טבעי 1.5%', price: 6.5, desc: 'גביע יוגורט עשיר בחלבון וסידן.', specs: ['49 קק״ל ל־100 גרם', 'חלבון: 4.5 ג׳', 'סידן: 140 מ״ג'], inStock: true, qty: 15, shapeIdx: 2 },
+    { id: 'o2_12', title: 'סט גלילי פילמנט PLA', price: 95, desc: 'חומר הדפסה איכותי ללא סתימות.', specs: ['קוטר 1.75 מ״מ', 'משקל 1 ק״ג', 'דיוק ±0.02 מ״מ'], inStock: true, qty: 7, shapeIdx: 0 },
+    { id: 'o2_13', title: 'שולחן קפה נמוך', price: 540, desc: 'שולחן מרכזי לסלון בעיצוב נקי.', specs: ['90×60 ס״מ', 'עץ מלא', 'ציפוי לכה מט'], inStock: true, qty: 4, shapeIdx: 1 },
+    { id: 'o2_14', title: 'מנורת סטודיו לצילום', price: 310, desc: 'תאורה רכה ומאוזנת לצילום מוצרים.', specs: ['CRI 96+', 'טמפרטורה 3200K–5600K', 'חצובה כלולה'], inStock: true, qty: 3, shapeIdx: 3 },
+    { id: 'o2_15', title: 'קרטון משקה שקדים טבעי', price: 12.5, desc: 'משקה צמחי ללא תוספת סוכר.', specs: ['24 קק״ל ל־100 מ״ל', 'ללא לקטוז', '1 ליטר'], inStock: true, qty: 10, shapeIdx: 2 },
+    { id: 'o2_16', title: 'קופסת כלי עבודה מקצועית', price: 240, desc: 'מארז ברגים ומפתחות מסודר.', specs: ['48 חלקים', 'פלדת כרום-ונדיום', 'מארז נשיאה'], inStock: true, qty: 5, shapeIdx: 0 },
+    { id: 'o2_17', title: 'שולחן מרפסת מתקפל', price: 320, desc: 'שולחן קומפקטי ועמיד לתנאי חוץ.', specs: ['מתקפל בשנייה', 'עץ עמיד לגשם', 'משקל קל'], inStock: false, qty: 0, shapeIdx: 1 },
+    { id: 'o2_18', title: 'מנורת קיר סולארית', price: 115, desc: 'נטענת מהשמש עם חיישן תנועה.', specs: ['עמיד למים IP65', 'סוללה 2200mAh', 'אור לבן נקי'], inStock: true, qty: 11, shapeIdx: 3 },
+    { id: 'o2_19', title: 'מארז חטיף חלבון שוקולד', price: 11.9, desc: 'חטיף אנרגיה עשיר בחלבון.', specs: ['190 קק״ל ליחידה', '20 ג׳ חלבון', 'ללא גלוטן'], inStock: false, qty: 0, shapeIdx: 2 },
+    { id: 'o2_20', title: 'תיבת תצוגה אקרילית', price: 135, desc: 'תיבה שקופה להגנה על דגמים.', specs: ['30×30×35 ס״מ', 'מוגנת אבק', 'בסיס שחור'], inStock: true, qty: 6, shapeIdx: 0 }
+  ];
+
+  // איחוד מוצרי המוכר עם השלמה ל-20 מוצרים שונים (שורה לכל מוצר, 3 יחידות זהות בשורה)
+  const uniqueCatalog = [];
+  const usedTitles = new Set();
+  baseList.forEach((item, i) => {
+    const t = String(item.title || '').trim();
+    if (usedTitles.has(t)) return;
+    usedTitles.add(t);
+    uniqueCatalog.push(Object.assign({}, item, { shapeIdx: item.shapeIdx != null ? item.shapeIdx : (i % 4) }));
+  });
+  OTHER2_EXTRA.forEach(ex => {
+    if (uniqueCatalog.length >= 20) return;
+    if (!usedTitles.has(ex.title)) {
+      usedTitles.add(ex.title);
+      uniqueCatalog.push(Object.assign({ source: 'demo-o2' }, ex));
+    }
+  });
+
+  const inCount = uniqueCatalog.filter(x => x.inStock).length;
+  const outCount = uniqueCatalog.filter(x => !x.inStock).length;
+  const shown = _other2Filter === 'in' ? uniqueCatalog.filter(x => x.inStock)
+    : _other2Filter === 'out' ? uniqueCatalog.filter(x => !x.inStock)
+    : uniqueCatalog;
+
+  // בניית 20 שורות שונות — בכל שורה מוצר אחד שונה, ו-3 יחידות זהות ממנו
+  const roomRows = [];
+  shown.forEach((src, r) => {
+    for (let c = 0; c < 3; c++) {
+      roomRows.push(Object.assign({}, src, { rowIdx: r, colIdx: c, shapeIdx: src.shapeIdx != null ? src.shapeIdx : (r % 4) }));
+    }
+  });
+
+  mainContent.innerHTML = `<div class="lib-page other2-room-page"><div class="lib-main">
+    <div class="home-view-bar"><nav class="lib-desk-nav" aria-label="ניווט ראשי"><button type="button" data-t="home" onclick="mtTab('home')">בית</button><button type="button" data-t="feed" onclick="mtTab('feed')">במעקב</button><button type="button" data-t="deals" class="mt-dls" onclick="mtTab('deals')">עסקאות<i class="mt-apv-n mt-dls-n"></i></button><button type="button" data-t="details" onclick="mtTab('details')">אישי</button><button type="button" class="mt-other-tab" data-t="other" onclick="openOtherShowcasePage()">אחר</button><button type="button" class="mt-other2-tab on" data-t="other2" onclick="openOther2RoomPage()">אחר 2</button><button type="button" data-t="mgmt" onclick="mgmtOpen('store')">מלאי וחנות</button><button type="button" data-t="fab" onclick="fabOpen('hub')">מפעלים ו-3D</button><button type="button" data-t="dist" onclick="mgmtOpen('distributors')">מפיצים ושליחים</button><button type="button" data-t="sub" class="hdr-sub-btn" onclick="subPageOpen()">💎 מנוי</button><button type="button" data-t="apv" class="mt-apv" hidden onclick="mtTab('apv')">אישור<i class="mt-apv-n"></i></button></nav></div>
+    <section class="other2-room-wrap" dir="rtl">
+      <div class="other2-room-head">
+        <div>
+          <h2>חדר המוצרים שלי ב־3D</h2>
+          <p>${usingFallback ? 'מציג מוצרים לדוגמה בחדר (פרסמו מוצר משלכם כדי לראות את המלאי האישי שלכם)' : 'כל המוצרים שאתם מוכרים מסודרים בחדר — ירוק = יש במלאי, אדום מקווקו = חסר במלאי'}</p>
+        </div>
+        <div class="other2-filters">
+          <button type="button" class="${_other2Filter === 'all' ? 'on' : ''}" onclick="openOther2RoomPage('all')">הכל (${uniqueCatalog.length})</button>
+          <button type="button" class="${_other2Filter === 'in' ? 'on' : ''}" onclick="openOther2RoomPage('in')">✓ יש במלאי (${inCount})</button>
+          <button type="button" class="${_other2Filter === 'out' ? 'on' : ''}" onclick="openOther2RoomPage('out')">✕ חסר במלאי (${outCount})</button>
+          <button type="button" id="other2-sel-all">בחר הכל</button>
+        </div>
+      </div>
+      <div class="other2-canvas-box">
+        <canvas id="other2-room-canvas" class="other2-room-canvas"></canvas>
+        <aside id="other2-spec-panel" class="other2-spec-panel" hidden dir="rtl" aria-label="מפרט המוצר"></aside>
+      </div>
+      <div class="other2-zoom-ctrls" aria-label="שליטה במצלמה">
+        <button type="button" id="other2-move-fwd" aria-label="קדימה">▲</button>
+        <button type="button" id="other2-move-back" aria-label="אחורה">▼</button>
+        <button type="button" id="other2-zoom-in" aria-label="זום אין">+</button>
+        <button type="button" id="other2-zoom-out" aria-label="זום אאוט">−</button>
+      </div>
+    </section>
+  </div></div>`;
+  if (typeof window.__mTabsSync === 'function') { try { window.__mTabsSync(); } catch (e) {} }
+  document.querySelectorAll('.lib-desk-nav button, #m-top .mt-tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === 'other2'));
+  _other2InitRoomCanvas(roomRows);
+  try { window.scrollTo(0, 0); } catch (e) {}
+}
+function _other2InitRoomCanvas(items) {
+  const cv = document.getElementById('other2-room-canvas');
+  if (!cv) return;
+  let yaw = 0, pitch = 0.40, camX = 0, camZ = 7.6, fYaw = 0.45, fPitch = 0.32, zoom = 1.0, dragging = false, lx = 0, ly = 0, moved = 0, pinchDist = 0, selectedIdx = -1, hoverIdx = -1, selectAllOn = false, hitBoxes = [];
+  const draw = () => {
+    if (!cv.isConnected) return;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const w = cv.clientWidth || 720, h = cv.clientHeight || 380;
+    if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) {
+      cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+    }
+    const ctx = cv.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    // רקע שחור כהה עם תאורה עמומה טבעית קבועה
+    const sx = w * 0.5, sySpot = h * 0.44;
+    const bg = ctx.createRadialGradient(sx, sySpot, 10, sx, sySpot, Math.max(w, h) * 0.65);
+    bg.addColorStop(0, '#181a22');
+    bg.addColorStop(0.45, '#0b0c10');
+    bg.addColorStop(1, '#020203');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, w, h);
+
+    const cy = Math.cos(yaw), sy = Math.sin(yaw), cp = Math.cos(pitch), sp = Math.sin(pitch);
+    const scale = Math.min(w, h) * 0.44 * zoom;
+    const proj = (x, y, z) => {
+      const dx = x - camX, dz = z - camZ;
+      const x1 = dx * cy - dz * sy;
+      const z1 = dx * sy + dz * cy;
+      const y2 = y * cp - z1 * sp;
+      const z2 = y * sp + z1 * cp;
+      const p = 4.4 / Math.max(0.45, 4.4 - z2);
+      return [w / 2 + x1 * scale * p, h * 0.56 - y2 * scale * p, z2];
+    };
+    const drawPoly = (pts3, fill, stroke, lw = 1.4) => {
+      const pts = pts3.map(p => proj(...p));
+      ctx.beginPath();
+      pts.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]));
+      ctx.closePath();
+      ctx.fillStyle = fill;
+      ctx.fill();
+      if (stroke) {
+        ctx.strokeStyle = stroke;
+        ctx.lineWidth = lw;
+        ctx.lineJoin = 'round';
+        ctx.stroke();
+      }
+      return pts;
+    };
+    const faceZ = pts3 => pts3.reduce((s, p) => s + proj(...p)[2], 0) / pts3.length;
+
+    const Rw = 2.1, Rd = 11.2, H0 = -0.35;
+    const outline = 'rgba(255, 255, 255, 0.14)';
+
+    // בסיס דיורמה בשחור־פחם אלגנטי
+    const layers = [
+      [H0 - 0.34, H0 - 0.22, '#050507', '#030304'],
+      [H0 - 0.22, H0 - 0.10, '#0d0f14', '#090a0e'],
+      [H0 - 0.10, H0, '#161922', '#11131a']
+    ];
+    const sideDefs = [
+      { pts: (y0, y1) => [[-Rw,y0,Rd],[Rw,y0,Rd],[Rw,y1,Rd],[-Rw,y1,Rd]], nz: [0, 0, 1] },
+      { pts: (y0, y1) => [[Rw,y0,Rd],[Rw,y0,-Rd],[Rw,y1,-Rd],[Rw,y1,Rd]], nz: [1, 0, 0] },
+      { pts: (y0, y1) => [[Rw,y0,-Rd],[-Rw,y0,-Rd],[-Rw,y1,-Rd],[Rw,y1,-Rd]], nz: [0, 0, -1] },
+      { pts: (y0, y1) => [[-Rw,y0,-Rd],[-Rw,y0,Rd],[-Rw,y1,Rd],[-Rw,y1,-Rd]], nz: [-1, 0, 0] }
+    ];
+    const visSides = sideDefs.map(sd => {
+      const rz = sd.nz[0] * sy + sd.nz[2] * cy;
+      const vz = rz * cp;
+      return { sd, front: vz > 0, zAvg: faceZ(sd.pts(H0 - 0.2, H0)) };
+    });
+
+    // צדדי השכבות הפונים למצלמה
+    visSides.filter(s => s.front).sort((a, b) => a.zAvg - b.zAvg).forEach(({ sd }, si) => {
+      layers.forEach(([y0, y1, c1, c2]) => {
+        drawPoly(sd.pts(y0, y1), si % 2 ? c2 : c1, outline, 1.2);
+      });
+    });
+
+    // רצפת המשטח בשחור כהה עם אריחים עדינים
+    drawPoly([[-Rw,H0,-Rd],[Rw,H0,-Rd],[Rw,H0,Rd],[-Rw,H0,Rd]], '#0c0d12', outline, 1.4);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
+    ctx.lineWidth = 1;
+    for (let g = -2; g <= 2; g++) {
+      const t = (g / 3) * Rw;
+      const a = proj(t, H0, -Rd), b = proj(t, H0, Rd);
+      ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
+    }
+    for (let g = -18; g <= 18; g++) {
+      const tz = (g / 18) * Rd;
+      const c = proj(-Rw, H0, tz), d = proj(Rw, H0, tz);
+      ctx.beginPath(); ctx.moveTo(c[0], c[1]); ctx.lineTo(d[0], d[1]); ctx.stroke();
+    }
+
+    // הצבת כל המוצרים במרווחים נדיבים כמו בחנות יוקרה (20 שורות × 3 יחידות)
+    const list = items;
+    if (!list.length) {
+      ctx.fillStyle = '#6b5340';
+      ctx.font = '800 15px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('החדר ריק — אין מוצרים בתצוגה זו', w / 2, h * 0.48);
+      return;
+    }
+    const maxRow = list.reduce((m, it, i) => Math.max(m, it.rowIdx != null ? it.rowIdx : Math.floor(i / 3)), 0);
+    const totalRows = Math.max(1, maxRow + 1);
+    const objs = list.map((it, idx) => {
+      const c = it.colIdx != null ? it.colIdx : (idx % 3);
+      const r = it.rowIdx != null ? it.rowIdx : Math.floor(idx / 3);
+      const px = (c - 1) * 1.18;
+      const pz = totalRows === 1 ? 0 : ((r / (totalRows - 1)) - 0.5) * (Rd * 1.84);
+      const shapeIdx = it.shapeIdx != null ? it.shapeIdx : (r % 4);
+      return { it, origIdx: idx, shapeIdx, px, pz, zDepth: proj(px, H0 + 0.22, pz)[2] };
+    }).sort((a, b) => a.zDepth - b.zDepth);
+
+    hitBoxes = [];
+    objs.forEach(({ it, origIdx, shapeIdx, px, pz, zDepth }) => {
+      if (zDepth > 4.2) return;
+      const idx = origIdx;
+      const objPolys = [];
+      const ps = 0.26;
+      // ריבוע סימון על הרצפה למוצר שעליו מצביעים או כשלחוץ "בחר הכל"
+      if (selectAllOn || idx === hoverIdx) {
+        drawPoly([[px-ps,H0+0.006,pz-ps],[px+ps,H0+0.006,pz-ps],[px+ps,H0+0.006,pz+ps],[px-ps,H0+0.006,pz+ps]],
+          it.inStock ? 'rgba(16, 185, 129, 0.22)' : 'rgba(239, 68, 68, 0.22)', it.inStock ? '#34d399' : '#f87171', 1.8);
+      }
+
+      const drawBox3 = (cx, y0, cz, sx, sy, sz, topCol, sideColA, sideColB, strokeCol) => {
+        const faces = [
+          { pts: [[cx-sx,y0+sy,cz-sz],[cx+sx,y0+sy,cz-sz],[cx+sx,y0+sy,cz+sz],[cx-sx,y0+sy,cz+sz]], col: topCol, z: 0 },
+          { pts: [[cx-sx,y0,cz+sz],[cx+sx,y0,cz+sz],[cx+sx,y0+sy,cz+sz],[cx-sx,y0+sy,cz+sz]], col: sideColA, z: 0 },
+          { pts: [[cx+sx,y0,cz+sz],[cx+sx,y0,cz-sz],[cx+sx,y0+sy,cz-sz],[cx+sx,y0+sy,cz+sz]], col: sideColB, z: 0 },
+          { pts: [[cx+sx,y0,cz-sz],[cx-sx,y0,cz-sz],[cx-sx,y0+sy,cz-sz],[cx+sx,y0+sy,cz-sz]], col: sideColA, z: 0 },
+          { pts: [[cx-sx,y0,cz-sz],[cx-sx,y0,cz+sz],[cx-sx,y0+sy,cz+sz],[cx-sx,y0+sy,cz-sz]], col: sideColB, z: 0 }
+        ];
+        faces.forEach(f => { f.z = faceZ(f.pts); });
+        faces.sort((a, b) => a.z - b.z).forEach(f => objPolys.push(drawPoly(f.pts, f.col, strokeCol, 1.1)));
+      };
+
+      const s = 0.14, bh = it.inStock ? 0.30 : 0.24;
+      const shape = shapeIdx;
+      if (it.inStock) {
+        if (shape === 1) {
+          const lw = 0.032, lh = 0.24;
+          [[-0.12,-0.12],[0.12,-0.12],[0.12,0.12],[-0.12,0.12]].forEach(([lx, lz]) => {
+            drawBox3(px + lx, H0, pz + lz, lw, lh, lw, '#92400e', '#78350f', '#5c280b', '#3b1a06');
+          });
+          drawBox3(px, H0 + lh, pz, 0.18, 0.055, 0.18, '#f59e0b', '#d97706', '#b45309', '#451a03');
+        } else if (shape === 2) {
+          drawBox3(px, H0, pz, 0.13, 0.42, 0.13, '#fef3c7', '#1e293b', '#0f172a', '#020617');
+        } else if (shape === 3) {
+          drawBox3(px, H0, pz, 0.12, 0.05, 0.12, '#64748b', '#475569', '#334155', '#0f172a');
+          drawBox3(px, H0 + 0.05, pz, 0.025, 0.22, 0.025, '#94a3b8', '#64748b', '#475569', '#0f172a');
+          drawBox3(px, H0 + 0.27, pz, 0.13, 0.13, 0.13, '#fde047', '#facc15', '#eab308', '#713f12');
+        } else {
+          drawBox3(px, H0, pz, s, bh, s, '#34d399', '#1f2937', '#111827', '#0f172a');
+        }
+      } else {
+        const pts = [
+          [px-s, H0, pz-s], [px+s, H0, pz-s], [px+s, H0, pz+s], [px-s, H0, pz+s],
+          [px-s, H0+bh, pz-s], [px+s, H0+bh, pz-s], [px+s, H0+bh, pz+s], [px-s, H0+bh, pz+s]
+        ].map(v => proj(...v));
+        [[0,1,2,3],[4,5,6,7],[0,1,5,4],[1,2,6,5],[2,3,7,6],[3,0,4,7]].forEach(f => objPolys.push(f.map(k => pts[k])));
+        ctx.setLineDash([4, 3]);
+        ctx.strokeStyle = '#dc2626';
+        ctx.lineWidth = 1.4;
+        [[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]].forEach(([a, b]) => {
+          ctx.beginPath(); ctx.moveTo(pts[a][0], pts[a][1]); ctx.lineTo(pts[b][0], pts[b][1]); ctx.stroke();
+        });
+        ctx.setLineDash([]);
+      }
+
+      const objTopH = it.inStock ? (shape === 2 ? 0.42 : shape === 3 ? 0.40 : shape === 1 ? 0.30 : bh) : bh;
+      const mid = proj(px, H0 + objTopH * 0.5, pz);
+      const top = proj(px, H0 + objTopH + 0.16, pz);
+      hitBoxes.push({ idx, shapeIdx, it, x: mid[0], y: mid[1], polys: objPolys, zDepth, top });
+    });
+
+    // אלומת פנס / תאורה עמומה טבעית מלמעלה בחדר השחור
+    if (selectedIdx < 0) {
+      const beamR = Math.min(w, h) * 0.56;
+      const cone = ctx.createLinearGradient(w * 0.5, 0, sx, sySpot);
+      cone.addColorStop(0, 'rgba(255, 240, 195, 0.13)');
+      cone.addColorStop(1, 'rgba(255, 240, 195, 0.0)');
+      ctx.save();
+      ctx.fillStyle = cone;
+      ctx.beginPath();
+      ctx.moveTo(w * 0.5 - 48, 0);
+      ctx.lineTo(w * 0.5 + 48, 0);
+      ctx.lineTo(sx + beamR * 0.85, sySpot + beamR * 0.30);
+      ctx.lineTo(sx - beamR * 0.85, sySpot + beamR * 0.30);
+      ctx.closePath();
+      ctx.fill();
+
+      const vig = ctx.createRadialGradient(sx, sySpot, beamR * 0.22, sx, sySpot, Math.max(w, h) * 0.72);
+      vig.addColorStop(0, 'rgba(255, 236, 179, 0.06)');
+      vig.addColorStop(0.45, 'rgba(0, 0, 0, 0.24)');
+      vig.addColorStop(1, 'rgba(0, 0, 0, 0.76)');
+      ctx.fillStyle = vig;
+      ctx.fillRect(0, 0, w, h);
+      ctx.restore();
+    }
+
+    // כשנבחר מוצר: מסך לבן נקי, המוצר מוצג לבד בפרונט וניתן לסיבוב 360° עם תווית המחיר האדומה
+    const sel = hitBoxes.find(h => h.idx === selectedIdx);
+    if (sel) {
+      const { it, idx, shapeIdx } = sel;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, w, h);
+
+      const fScale = Math.min(w, h) * 0.56 * zoom;
+      const fCx = w >= 520 ? w * 0.30 : w * 0.50;
+      const fCy = w >= 520 ? h * 0.56 : h * 0.36;
+      const fc = Math.cos(fYaw), fs = Math.sin(fYaw), fp = Math.cos(fPitch), fsp = Math.sin(fPitch);
+      const fProj = (x, y, z) => {
+        const x1 = x * fc - z * fs, z1 = x * fs + z * fc;
+        const y2 = y * fp - z1 * fsp, z2 = y * fsp + z1 * fp;
+        const p = 3.8 / Math.max(0.9, 3.8 - z2);
+        return [fCx + x1 * fScale * p, fCy - y2 * fScale * p, z2];
+      };
+      const fDrawPoly = (pts3, fill, stroke, lw = 1.6) => {
+        const pts = pts3.map(p => fProj(...p));
+        ctx.beginPath();
+        pts.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]));
+        ctx.closePath();
+        ctx.fillStyle = fill; ctx.fill();
+        if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = lw; ctx.lineJoin = 'round'; ctx.stroke(); }
+      };
+      const fFaceZ = pts3 => pts3.reduce((s, p) => s + fProj(...p)[2], 0) / pts3.length;
+      const fBox = (cx, y0, cz, sx, sy, sz, topCol, sideColA, sideColB, strokeCol) => {
+        const faces = [
+          { pts: [[cx-sx,y0+sy,cz-sz],[cx+sx,y0+sy,cz-sz],[cx+sx,y0+sy,cz+sz],[cx-sx,y0+sy,cz+sz]], col: topCol, z: 0 },
+          { pts: [[cx-sx,y0,cz+sz],[cx+sx,y0,cz+sz],[cx+sx,y0+sy,cz+sz],[cx-sx,y0+sy,cz+sz]], col: sideColA, z: 0 },
+          { pts: [[cx+sx,y0,cz+sz],[cx+sx,y0,cz-sz],[cx+sx,y0+sy,cz-sz],[cx+sx,y0+sy,cz+sz]], col: sideColB, z: 0 },
+          { pts: [[cx+sx,y0,cz-sz],[cx-sx,y0,cz-sz],[cx-sx,y0+sy,cz-sz],[cx+sx,y0+sy,cz-sz]], col: sideColA, z: 0 },
+          { pts: [[cx-sx,y0,cz-sz],[cx-sx,y0,cz+sz],[cx-sx,y0+sy,cz+sz],[cx-sx,y0+sy,cz-sz]], col: sideColB, z: 0 }
+        ];
+        faces.forEach(f => { f.z = fFaceZ(f.pts); });
+        faces.sort((a, b) => a.z - b.z).forEach(f => fDrawPoly(f.pts, f.col, strokeCol, 1.5));
+      };
+
+      const shape = shapeIdx, s = 0.22, bh = it.inStock ? 0.44 : 0.36;
+      const yOff = -0.20;
+      if (it.inStock) {
+        if (shape === 1) {
+          const lw = 0.044, lh = 0.32;
+          [[-0.16,-0.16],[0.16,-0.16],[0.16,0.16],[-0.16,0.16]].forEach(([lx, lz]) => {
+            fBox(lx, yOff, lz, lw, lh, lw, '#92400e', '#78350f', '#5c280b', '#3b1a06');
+          });
+          fBox(0, yOff + lh, 0, 0.25, 0.075, 0.25, '#f59e0b', '#d97706', '#b45309', '#451a03');
+        } else if (shape === 2) {
+          fBox(0, yOff, 0, 0.18, 0.54, 0.18, '#fef3c7', '#1e293b', '#0f172a', '#020617');
+        } else if (shape === 3) {
+          fBox(0, yOff, 0, 0.16, 0.07, 0.16, '#64748b', '#475569', '#334155', '#0f172a');
+          fBox(0, yOff + 0.07, 0, 0.035, 0.28, 0.035, '#94a3b8', '#64748b', '#475569', '#0f172a');
+          fBox(0, yOff + 0.35, 0, 0.18, 0.18, 0.18, '#fde047', '#facc15', '#eab308', '#713f12');
+        } else {
+          fBox(0, yOff, 0, s, bh, s, '#34d399', '#1f2937', '#111827', '#0f172a');
+        }
+      } else {
+        const pts = [
+          [-s,yOff,-s],[s,yOff,-s],[s,yOff,s],[-s,yOff,s],[-s,yOff+bh,-s],[s,yOff+bh,-s],[s,yOff+bh,s],[-s,yOff+bh,s]
+        ].map(v => fProj(...v));
+        ctx.setLineDash([5, 4]); ctx.strokeStyle = '#dc2626'; ctx.lineWidth = 2;
+        [[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]].forEach(([a, b]) => {
+          ctx.beginPath(); ctx.moveTo(pts[a][0], pts[a][1]); ctx.lineTo(pts[b][0], pts[b][1]); ctx.stroke();
+        });
+        ctx.setLineDash([]);
+      }
+
+      const topH = it.inStock ? (shape === 2 ? 0.54 : shape === 3 ? 0.53 : shape === 1 ? 0.40 : bh) : bh;
+      const topPt = fProj(0, yOff + topH + 0.16, 0);
+      const rawP = Number(it.price) > 0 ? Number(it.price) : [120, 75, 45, 160, 58, 95][idx % 6];
+      const pTxt = `₪${rawP.toLocaleString('he-IL', { maximumFractionDigits: 2 })}`;
+      ctx.font = '900 15px sans-serif';
+      const pw = ctx.measureText(pTxt).width + 28;
+      const py = Math.max(16, topPt[1] - 18);
+      ctx.fillStyle = '#dc2626';
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(topPt[0] - pw / 2, py, pw, 28, 9);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(topPt[0] + pw / 2 - 9, py + 14, 2.8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.textAlign = 'center';
+      ctx.fillText(pTxt, topPt[0] - 4, py + 19.5);
+
+      // כפתור ✕ קטן בפינה לחזרה לחדר
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+      ctx.beginPath();
+      ctx.arc(w - 26, 26, 15, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '900 14px sans-serif';
+      ctx.fillText('✕', w - 26, 31);
+    }
+  };
+  draw();
+  const setZoom = z => { zoom = Math.max(0.55, Math.min(2.4, z)); draw(); };
+  const moveCam = (dz, dx = 0) => {
+    camZ = Math.max(-11.5, Math.min(12.5, camZ + dz));
+    camX = Math.max(-2.2, Math.min(2.2, camX + dx));
+    draw();
+  };
+  const zin = document.getElementById('other2-zoom-in');
+  const zout = document.getElementById('other2-zoom-out');
+  const mfwd = document.getElementById('other2-move-fwd');
+  const mback = document.getElementById('other2-move-back');
+  const bindHold = (el, fn) => {
+    if (!el) return;
+    let t = 0;
+    const stop = () => { clearInterval(t); t = 0; };
+    el.addEventListener('mousedown', () => { fn(); stop(); t = setInterval(fn, 70); });
+    el.addEventListener('touchstart', e => { e.preventDefault(); fn(); stop(); t = setInterval(fn, 70); }, { passive: false });
+    ['mouseup', 'mouseleave', 'touchend', 'touchcancel'].forEach(ev => el.addEventListener(ev, stop));
+  };
+  if (zin) zin.addEventListener('click', () => setZoom(zoom * 1.18));
+  if (zout) zout.addEventListener('click', () => setZoom(zoom * 0.85));
+  bindHold(mfwd, () => moveCam(-0.45));
+  bindHold(mback, () => moveCam(0.45));
+  if (window._other2KeyFn) window.removeEventListener('keydown', window._other2KeyFn);
+  window._other2KeyFn = e => {
+    if (!cv.isConnected || selectedIdx >= 0) return;
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+      if (document.activeElement && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)) return;
+      e.preventDefault();
+      if (e.key === 'ArrowUp') moveCam(-0.9);
+      else if (e.key === 'ArrowDown') moveCam(0.9);
+      else if (e.key === 'ArrowLeft') moveCam(0, -0.45);
+      else if (e.key === 'ArrowRight') moveCam(0, 0.45);
+    }
+  };
+  window.addEventListener('keydown', window._other2KeyFn);
+  const tDist = ts => Math.hypot(ts[0].clientX - ts[1].clientX, ts[0].clientY - ts[1].clientY);
+  const renderSpecPanel = (selObj) => {
+    const spEl = document.getElementById('other2-spec-panel');
+    if (!spEl) return;
+    if (!selObj) { spEl.hidden = true; spEl.innerHTML = ''; return; }
+    const { it, idx, shapeIdx } = selObj;
+    const rawP = Number(it.price) > 0 ? Number(it.price) : [120, 75, 45, 160, 58, 95][idx % 6];
+    const pTxt = `₪${rawP.toLocaleString('he-IL', { maximumFractionDigits: 2 })}`;
+    const defSpecs = shapeIdx === 1
+      ? ['חומר: עץ מלא איכותי', 'סוג: שולחן תצוגה / אוכל', 'תצוגה: 360° אינטראקטיבית']
+      : shapeIdx === 2
+        ? ['אריזה: קרטון קשיח', 'סימון תזונתי / מפרט מלא', 'תצוגה: 360° אינטראקטיבית']
+        : shapeIdx === 3
+          ? ['גוף מתכת + אהיל מאיר', 'חיסכון בחשמל LED', 'תצוגה: 360° אינטראקטיבית']
+          : ['מארז קשיח ועמיד', 'זמין למשלוח ואיסוף', 'תצוגה: 360° אינטראקטיבית'];
+    const specs = (it.specs && it.specs.length) ? it.specs : defSpecs;
+    spEl.innerHTML = `
+      <div class="other2-sp-head">
+        <span class="other2-st-pill ${it.inStock ? 'ok' : 'no'}">${it.inStock ? `✓ יש במלאי (${it.qty})` : '✕ חסר במלאי'}</span>
+        <span class="other2-sp-price">${pTxt}</span>
+      </div>
+      <h3 class="other2-sp-title">${escHtml(it.title || 'מוצר')}</h3>
+      ${it.desc ? `<p class="other2-sp-desc">${escHtml(it.desc)}</p>` : ''}
+      <ul class="other2-sp-list">${specs.map(s => `<li>• ${escHtml(s)}</li>`).join('')}</ul>
+      ${(it.city || it.owner) ? `<div class="other2-sp-meta">${[it.owner, it.city].filter(Boolean).map(escHtml).join(' · ')}</div>` : ''}
+      <div class="other2-sp-acts">
+        ${it.source === 'mkt' ? `<button type="button" class="other2-sp-open" onclick="rentOpen('${artEsc(it.id)}')">לדף המוצר ←</button>` : ''}
+        <button type="button" class="other2-sp-close" id="other2-sp-close">חזרה לחדר</button>
+      </div>
+    `;
+    spEl.hidden = false;
+    const cb = document.getElementById('other2-sp-close');
+    if (cb) cb.onclick = () => { selectedIdx = -1; renderSpecPanel(null); draw(); };
+  };
+  const selAllBtn = document.getElementById('other2-sel-all');
+  if (selAllBtn) selAllBtn.onclick = () => {
+    selectAllOn = !selectAllOn;
+    selAllBtn.classList.toggle('on', selectAllOn);
+    selAllBtn.textContent = selectAllOn ? 'בטל בחירה' : 'בחר הכל';
+    draw();
+  };
+  const ptInPoly = (x, y, pts) => {
+    let inside = false;
+    for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+      const xi = pts[i][0], yi = pts[i][1], xj = pts[j][0], yj = pts[j][1];
+      if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / ((yj - yi) || 1e-6) + xi)) inside = !inside;
+    }
+    return inside;
+  };
+  const findHit = (x, y) => {
+    for (let i = hitBoxes.length - 1; i >= 0; i--) {
+      const h = hitBoxes[i];
+      if (h.polys && h.polys.some(pts => ptInPoly(x, y, pts))) return h;
+    }
+    return null;
+  };
+  const pickObj = (cx, cy) => {
+    const rect = cv.getBoundingClientRect();
+    const x = cx - rect.left, y = cy - rect.top;
+    if (selectedIdx >= 0) {
+      if (Math.hypot(x - (rect.width - 26), y - 26) <= 26) { selectedIdx = -1; renderSpecPanel(null); draw(); }
+      return;
+    }
+    const best = findHit(x, y) || (hoverIdx >= 0 ? hitBoxes.find(h => h.idx === hoverIdx) : null);
+    if (best) { selectedIdx = best.idx; fYaw = 0.45; fPitch = 0.32; renderSpecPanel(best); }
+    else { renderSpecPanel(null); }
+    draw();
+  };
+  const rotDrag = (dx, dy) => {
+    if (selectedIdx >= 0) {
+      fYaw += dx * 0.012;
+      fPitch += dy * 0.012;
+    } else {
+      yaw += dx * 0.01;
+      pitch = Math.max(0.12, Math.min(1.15, pitch + dy * 0.01));
+    }
+    draw();
+  };
+  cv.addEventListener('touchstart', e => {
+    if (e.touches.length === 2) { dragging = false; pinchDist = tDist(e.touches); }
+    else if (e.touches.length === 1) { pinchDist = 0; dragging = true; moved = 0; lx = e.touches[0].clientX; ly = e.touches[0].clientY; }
+  }, { passive: true });
+  cv.addEventListener('touchmove', e => {
+    if (e.touches.length === 2) {
+      e.preventDefault();
+      const d = tDist(e.touches);
+      if (pinchDist > 0) setZoom(zoom * (d / pinchDist));
+      pinchDist = d;
+      return;
+    }
+    if (!dragging || e.touches.length !== 1) return;
+    e.preventDefault();
+    const dx = e.touches[0].clientX - lx, dy = e.touches[0].clientY - ly;
+    moved += Math.abs(dx) + Math.abs(dy);
+    lx = e.touches[0].clientX; ly = e.touches[0].clientY;
+    rotDrag(dx, dy);
+  }, { passive: false });
+  cv.addEventListener('touchend', e => {
+    if (e.touches.length < 2) pinchDist = 0;
+    if (e.touches.length === 0) {
+      if (dragging && moved <= 12) pickObj(lx, ly);
+      dragging = false;
+    }
+  }, { passive: true });
+  cv.addEventListener('wheel', e => { e.preventDefault(); setZoom(zoom * (e.deltaY > 0 ? 0.92 : 1.08)); }, { passive: false });
+  cv.addEventListener('mousedown', e => { dragging = true; moved = 0; lx = e.clientX; ly = e.clientY; });
+  window.addEventListener('mousemove', e => {
+    if (!dragging && selectedIdx < 0) {
+      const rect = cv.getBoundingClientRect();
+      if (e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom) {
+        const best = findHit(e.clientX - rect.left, e.clientY - rect.top);
+        const nextHov = best ? best.idx : -1;
+        if (nextHov !== hoverIdx) { hoverIdx = nextHov; cv.style.cursor = best ? 'pointer' : 'grab'; draw(); }
+      } else if (hoverIdx !== -1) {
+        hoverIdx = -1; cv.style.cursor = 'grab'; draw();
+      }
+    }
+    if (!dragging) return;
+    const dx = e.clientX - lx, dy = e.clientY - ly; moved += Math.abs(dx) + Math.abs(dy); lx = e.clientX; ly = e.clientY; rotDrag(dx, dy);
+  });
+  window.addEventListener('mouseup', e => { if (dragging && moved <= 12) pickObj(e.clientX, e.clientY); dragging = false; });
+}
+window.openOther2RoomPage = openOther2RoomPage;
 let libTimer = 0;
 function libHero(step, to) {
   const h = document.querySelector('.lib-page .lib-hero'); if (!h) { clearInterval(libTimer); return; }
@@ -37536,7 +38122,7 @@ function rentMiniHTML(x) {
   // בידול: עסק — מסגרת ירוקה, תג "עסק" וסמל חנות ליד שם העסק; יד 2 — תג אפור
   const sec = mktSecOf(x), biz = sec === 'biz';
   const uNow = typeof auth !== 'undefined' && auth.currentUser;
-  const isLocked = typeof hasVipSub === 'function' && !hasVipSub() && !(uNow && x.uid && uNow.uid === x.uid);
+  const isLocked = !x.model3d && !x.is3dDemo && typeof hasVipSub === 'function' && !hasVipSub() && !(uNow && x.uid && uNow.uid === x.uid);
   const badge = isLocked ? '<span class="mk-lock-badge" title="נעול למנויי VIP">🔒 מודעה נעולה</span>' : '';
   return `<div role="button" tabindex="0" class="mk-sg${biz ? ' is-biz' : sec === 'used' ? ' is-used' : ''}" data-id="${escHtml(x.id)}" onclick="rentOpen('${artEsc(x.id)}')" onkeydown="if((event.key==='Enter'||event.key===' ')&&event.target===this){event.preventDefault();this.click();}"><span class="mk-sg-meta"><span class="mk-sg-who" role="button" tabindex="0" title="${escHtml(mktWho(x))}" aria-label="${escHtml(mktWho(x))}" onclick="event.stopPropagation(); rentOpenSeller('${artEsc(x.uid || '')}', '${artEsc(x.owner || '')}')">${isUserVerified(x.uid || '', mktWho(x), x.verified) ? verifiedSealHTML(13) : ''}${authorAvHTML({ author: mktWho(x) || '?', uid: x.uid || '' })}<b>${biz ? BIZ_IC : ''}${escHtml(mktWho(x))}</b></span><small class="mk-sg-city${mkKmTo(x.city) !== null ? ' km' : ''}">${escHtml(mkWhereTxt(x))}</small>${mkMobStatHTML(x)}<small class="mk-sg-price">${rentTypeIcon(x)}${Number(x.price) > 0 ? `${mktDiscP(x.price).toLocaleString('he-IL', { maximumFractionDigits: 2 })}&nbsp;₪${mktWasHTML(x.price)}` : mktIsProj(x) ? escHtml((PROJ_SUB[x.pd] || {}).name || PROJ_KINDS[x.pk] || 'פרויקט') : ''}${x.uid ? `<i data-sg-rate="${escHtml(x.uid)}"></i>` : ''}</small></span><b class="mk-sg-title"><span class="mk-sg-tt">${escHtml(x.title)}</span><span class="mk-sg-more" role="button" tabindex="0" onclick="event.stopPropagation(); event.preventDefault(); this.parentElement.classList.toggle('open')"><span>עוד</span><span>פחות</span></span></b><span class="mk-sg-img">${rentThumb(x)}${badge}${del}${mktSoldOut(x) ? '<i class="mk-sg-out">אזל</i>' : ''}<span class="ad-join-avs" data-join-avs="${escHtml(x.id)}">${adJoinAvsHTML(x.id)}</span></span><span class="mk-sg-acts">${rentHoverHTML(x)}</span></div>`;
 }
@@ -38120,7 +38706,7 @@ window.hasVipSub = hasVipSub;
 function rentDetailHTML(r) {
   const uNow = typeof auth !== 'undefined' && auth.currentUser;
   const isOwnerNow = !!(uNow && r.uid && uNow.uid === r.uid);
-  const vipLocked = !hasVipSub() && !isOwnerNow;
+  const vipLocked = !r.model3d && !r.is3dDemo && !hasVipSub() && !isOwnerNow;
   const qty = rentMin(r);
   const sec = mktSecOf(r);
   const ic = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
@@ -38194,15 +38780,15 @@ function rentDetailHTML(r) {
     <div class="mp mk-pg${vipLocked ? ' is-vip-locked' : ''}">
       ${vipLocked ? `<div class="mk-vip-gate" role="dialog" aria-label="תוכן נעול למנויים">
         <div class="mk-vip-card">
-          <div class="mk-vip-ic">🔒</div>
+          <div class="mk-vip-ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2.5"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
           <h3>המודעה נעולה</h3>
-          <p>כדי לחשוף את פרטי המודעה ״${escHtml(r.title || '')}״, תמונות, קבצים ויצירת קשר — יש להפעיל מנוי VIP.</p>
-          <button type="button" class="mk-vip-go" onclick="subPageOpen()">💎 שדרג למנוי כדי לחשוף</button>
+          <p>כדי לחשוף את פרטי המודעה ״${escHtml(r.title || '')}״, התמונות, הקבצים ויצירת הקשר — יש להפעיל מנוי&nbsp;VIP.</p>
+          <button type="button" class="mk-vip-go" onclick="subPageOpen()"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12l4 6-10 13L2 9z"/></svg><span>שדרג למנוי כדי לחשוף</span></button>
           <button type="button" class="mk-vip-back" onclick="rentBack()">חזרה</button>
         </div>
       </div>` : ''}
       <div class="rn-det-gal mp-gal">
-        <div class="rn-det-img mp-img${!r.hv && imgs.length > 1 ? ' is-carousel' : ''}" data-idx="0"${r.hv ? '' : (imgs.length > 1 ? '' : ' ondblclick="mkZoomOpen(this)" ontouchend="mkTapZoom(event, this)"')}>${r.hv || !imgs.length ? rentThumb(full && full.length ? { ...r, img: full[0] } : r, true) : `<div class="mp-slides" dir="ltr" onscroll="mpSlideSync(this)">${imgs.map((u, i) => `<div class="mp-slide" data-idx="${i}" ondblclick="mkZoomOpen(this.closest('.mp-img'), ${i})" ontouchend="mkTapZoom(event, this.closest('.mp-img'), ${i})"><img src="${escHtml(u)}" alt="${escHtml(r.title || '')} — תמונה ${i + 1}" loading="eager" decoding="async"></div>`).join('')}</div>${imgs.length > 1 ? `<span class="mp-cnt" dir="ltr">1/${imgs.length}</span>` : ''}`}<span class="ad-join-avs" data-join-avs="${escHtml(r.id)}">${adJoinAvsHTML(r.id)}</span></div>
+        <div class="rn-det-img mp-img${!r.hv && !r.model3d && imgs.length > 1 ? ' is-carousel' : ''}" data-idx="0"${r.hv || r.model3d ? '' : (imgs.length > 1 ? '' : ' ondblclick="mkZoomOpen(this)" ontouchend="mkTapZoom(event, this)"')}>${r.model3d ? `<div class="mk-3d-wrap mk-3d-det"><canvas class="mk-3d-canvas" data-model="${escHtml(r.model3d)}"></canvas><span class="mk-3d-hint">↻ גררו לסיבוב 360°</span></div>` : r.hv || !imgs.length ? rentThumb(full && full.length ? { ...r, img: full[0] } : r, true) : `<div class="mp-slides" dir="ltr" onscroll="mpSlideSync(this)">${imgs.map((u, i) => `<div class="mp-slide" data-idx="${i}" ondblclick="mkZoomOpen(this.closest('.mp-img'), ${i})" ontouchend="mkTapZoom(event, this.closest('.mp-img'), ${i})"><img src="${escHtml(u)}" alt="${escHtml(r.title || '')} — תמונה ${i + 1}" loading="eager" decoding="async"></div>`).join('')}</div>${imgs.length > 1 ? `<span class="mp-cnt" dir="ltr">1/${imgs.length}</span>` : ''}`}<span class="ad-join-avs" data-join-avs="${escHtml(r.id)}">${adJoinAvsHTML(r.id)}</span></div>
         ${!r.hv && imgs.length > 1 ? `<div class="mp-dots" dir="ltr" role="tablist" aria-label="תמונות המודעה">${imgs.map((_, i) => `<button type="button" class="mp-dot${i ? '' : ' on'}" onclick="mpSlideGo(this, ${i})" aria-label="תמונה ${i + 1} מתוך ${imgs.length}"></button>`).join('')}</div>` : ''}
         ${imgs.length ? `<div class="mk-vthumbs bb-thumbs${imgs.length > 7 ? ' has-more' : ''}">
           <div class="mp-thumbs">${imgs.map((u, i) => `<button type="button" class="${i ? '' : 'on'}${i >= 6 && imgs.length > 7 ? ' bb-extra' : ''}" onclick="rentDetPick(this)" aria-label="תמונה ${i + 1}"><img src="${escHtml(u)}" alt="" loading="lazy"></button>`).join('')}${imgs.length > 7 ? `<button type="button" class="bb-more" onclick="this.closest('.bb-thumbs').classList.add('open')" aria-label="עוד ${imgs.length - 6} תמונות"><b>+${imgs.length - 6}</b><small>עוד</small></button>` : ''}</div>
@@ -40413,7 +40999,7 @@ Object.assign(window, { phoneVerifyOpen, pvSend, pvBack, pvClose });
           <button type="button" class="mt-circ mt-theme" onclick="mtToggleActs()" aria-label="תפריט" title="תפריט">${ic('<path d="M4 7h16M4 12h16M4 17h16"/>')}</button>
         </div>
       </div>
-      <nav class="mt-tabs"><button type="button" data-t="home" onclick="mtTab('home')">בית</button><button type="button" data-t="feed" onclick="mtTab('feed')">במעקב</button><button type="button" data-t="deals" class="mt-dls" onclick="mtTab('deals')">עסקאות<i class="mt-apv-n mt-dls-n"></i></button><button type="button" data-t="details" onclick="mtTab('details')">אישי</button><button type="button" data-t="apv" class="mt-apv" hidden onclick="mtTab('apv')">אישור<i class="mt-apv-n"></i></button><span class="mt-count" aria-live="polite"></span></nav>`;
+      <nav class="mt-tabs"><button type="button" data-t="home" onclick="mtTab('home')">בית</button><button type="button" data-t="feed" onclick="mtTab('feed')">במעקב</button><button type="button" data-t="deals" class="mt-dls" onclick="mtTab('deals')">עסקאות<i class="mt-apv-n mt-dls-n"></i></button><button type="button" data-t="details" onclick="mtTab('details')">אישי</button><button type="button" class="mt-other2-tab" data-t="other2" onclick="openOther2RoomPage()">אחר 2</button><button type="button" data-t="apv" class="mt-apv" hidden onclick="mtTab('apv')">אישור<i class="mt-apv-n"></i></button><span class="mt-count" aria-live="polite"></span></nav>`;
     document.body.appendChild(el);
     document.documentElement.classList.add('has-mtop');
     mtSync();
@@ -43378,3 +43964,980 @@ function mgmtToggleSeries(k) {
   mgmtRender();
 }
 Object.assign(window, { mgmtOpen, mgmtRender, mgmtToggleMoney, mgmtSetRange, mgmtToggleSeries, mgmtTipShow, mgmtTipHide, mgmtPickNewImg, mgmtPickRowImg, mgmtStepStock, mgmtAddItem, mgmtSaveItem, mgmtDelItem, mgmtAddBooking, mgmtSaveBooking, mgmtDelBooking, mgmtSaveSchedule, mgmtAddSale, mgmtSaveSale, mgmtDelSale, mgmtAddDist, mgmtSaveDist, mgmtDelDist, mgmtAddSup, mgmtSaveSup, mgmtDelSup });
+
+
+// ===== מנוע 3D קל משקל על Canvas (רקע לבן, אובייקט שחור, סיבוב 360° מלא במגע/עכבר) =====
+(function () {
+  function buildMesh(kind) {
+    const V = [], F = [];
+    const addLathe = (rings, seg, ox = 0, oy = 0, oz = 0) => {
+      const base = V.length;
+      rings.forEach(([y, r]) => {
+        for (let i = 0; i < seg; i++) {
+          const a = (i / seg) * Math.PI * 2;
+          V.push([ox + Math.cos(a) * r, oy + y, oz + Math.sin(a) * r]);
+        }
+      });
+      for (let r = 0; r < rings.length - 1; r++) {
+        for (let i = 0; i < seg; i++) {
+          const j = (i + 1) % seg;
+          F.push([base + r * seg + i, base + r * seg + j, base + (r + 1) * seg + j, base + (r + 1) * seg + i]);
+        }
+      }
+      const bot = [], top = [];
+      for (let i = 0; i < seg; i++) {
+        bot.push(base + seg - 1 - i);
+        top.push(base + (rings.length - 1) * seg + i);
+      }
+      F.push(bot, top);
+    };
+    if (kind === 'bamboo') {
+      // במבוק: גבעולים מפרקיים + עלה אלכסוני
+      addLathe([[-0.92,0.22],[-0.35,0.21],[-0.30,0.25],[-0.25,0.21],[0.30,0.20],[0.35,0.24],[0.40,0.20],[0.92,0.19]], 10, -0.18, 0, 0);
+      addLathe([[-0.82,0.15],[-0.20,0.14],[-0.16,0.18],[-0.12,0.14],[0.45,0.13],[0.50,0.17],[0.54,0.13],[0.86,0.12]], 10, 0.28, -0.05, 0.14);
+      // עלה במבוק בולט
+      const lb = V.length;
+      V.push([0.02,0.34,0.14],[0.56,0.68,0.26],[0.78,0.58,0.10],[0.34,0.40,-0.02]);
+      F.push([lb,lb+1,lb+2,lb+3],[lb,lb+3,lb+2,lb+1]);
+    } else if (kind === 'apple') {
+      // תפוח תלת־מימדי + גבעול
+      addLathe([[-0.66,0.22],[-0.72,0.52],[-0.42,0.78],[0.02,0.86],[0.48,0.76],[0.70,0.46],[0.58,0.18]], 12, 0, -0.05, 0);
+      addLathe([[0.56,0.06],[0.95,0.08]], 6, 0.04, 0, 0);
+    } else if (kind === 'donut') {
+      // דונאט (טורוס תלת־מימדי)
+      const maj = 0.62, min = 0.28, sMaj = 16, sMin = 10;
+      for (let i = 0; i < sMaj; i++) {
+        const u = (i / sMaj) * Math.PI * 2, cu = Math.cos(u), su = Math.sin(u);
+        for (let j = 0; j < sMin; j++) {
+          const v = (j / sMin) * Math.PI * 2, r = maj + min * Math.cos(v);
+          V.push([r * cu, min * Math.sin(v), r * su]);
+        }
+      }
+      for (let i = 0; i < sMaj; i++) {
+        const ni = (i + 1) % sMaj;
+        for (let j = 0; j < sMin; j++) {
+          const nj = (j + 1) % sMin;
+          F.push([i * sMin + j, ni * sMin + j, ni * sMin + nj, i * sMin + nj]);
+        }
+      }
+    } else if (kind === 'burger') {
+      // המבורגר תלת־מימדי: לחמנייה תחתונה, קציצה, לחמנייה עליונה
+      addLathe([[-0.65,0.68],[-0.45,0.78],[-0.32,0.76]], 12);
+      addLathe([[-0.30,0.82],[-0.06,0.84],[0.06,0.82]], 12);
+      addLathe([[0.10,0.78],[0.38,0.72],[0.62,0.48],[0.72,0.16]], 12);
+    } else if (kind === 'milk' || kind === 'oats' || kind === 'yogurt') {
+      // אריזות מוצר 3D עם חזית וגב (סימון תזונתי וקלוריות מאחורה)
+      const isMilk = kind === 'milk', isYogurt = kind === 'yogurt';
+      const w = isYogurt ? 0.56 : 0.48, y0 = -0.82, y1 = isMilk ? 0.42 : 0.82, d = isYogurt ? 0.56 : 0.44;
+      const b = V.length;
+      V.push([-w,y0,d],[w,y0,d],[w,y1,d],[-w,y1,d],[-w,y0,-d],[w,y0,-d],[w,y1,-d],[-w,y1,-d]);
+      const frontLbl = isMilk
+        ? ['חלב טרי', '3% שומן', '1 ליטר', '58 קק״ל']
+        : isYogurt
+          ? ['יוגורט ביו', 'טבעי 1.5%', '200 גרם', '49 קק״ל']
+          : ['שיבולת שועל', 'מלאה 100%', '500 גרם', '389 קק״ל'];
+      const backLbl = isMilk
+        ? ['סימון תזונתי', 'ל־100 מ״ל', 'אנרגיה: 58 קק״ל', 'חלבון: 3.3 ג׳', 'שומן: 3.0 ג׳', 'פחמימות: 4.8 ג׳']
+        : isYogurt
+          ? ['סימון תזונתי', 'ל־100 גרם', 'אנרגיה: 49 קק״ל', 'חלבון: 4.5 ג׳', 'שומן: 1.5 ג׳', 'סידן: 140 מ״ג']
+          : ['סימון תזונתי', 'ל־100 גרם', 'אנרגיה: 389 קק״ל', 'חלבון: 16.9 ג׳', 'שומן: 6.9 ג׳', 'סיבים: 10.6 ג׳'];
+      F.push(
+        Object.assign([b+0,b+1,b+2,b+3], { lbl: frontLbl, isBack: false }),
+        Object.assign([b+5,b+4,b+7,b+6], { lbl: backLbl, isBack: true }),
+        [b+1,b+5,b+6,b+2], [b+4,b+0,b+3,b+7], [b+4,b+5,b+1,b+0]
+      );
+      if (isMilk) {
+        // גג משופע של קרטון חלב + פקק
+        const r = V.length;
+        V.push([-w,0.82,0],[w,0.82,0],[-w,0.98,0],[w,0.98,0]);
+        F.push([b+3,b+2,r+1,r+0], [b+6,b+7,r+0,r+1], [b+2,b+6,r+1], [b+7,b+3,r+0], [r+0,r+1,r+3,r+2], [r+1,r+0,r+2,r+3]);
+        addLathe([[0.60,0.14],[0.78,0.14]], 8, 0.22, 0, 0.16);
+      } else {
+        // מכסה עליון
+        F.push([b+3,b+2,b+6,b+7]);
+        if (isYogurt) addLathe([[0.82,0.62],[0.92,0.62]], 12, 0, 0, 0);
+      }
+    } else {
+      const s = 0.72;
+      V.push([-s,-s,-s],[s,-s,-s],[s,s,-s],[-s,s,-s],[-s,-s,s],[s,-s,s],[s,s,s],[-s,s,s]);
+      F.push([0,3,2,1],[4,5,6,7],[0,1,5,4],[2,3,7,6],[1,2,6,5],[0,4,7,3]);
+    }
+    return { V, F };
+  }
+  const mulM = (A, B) => {
+    const O = [0,0,0,0,0,0,0,0,0];
+    for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++)
+      O[r*3+c] = A[r*3]*B[c] + A[r*3+1]*B[3+c] + A[r*3+2]*B[6+c];
+    return O;
+  };
+  const rotX = a => { const c = Math.cos(a), s = Math.sin(a); return [1,0,0, 0,c,-s, 0,s,c]; };
+  const rotY = a => { const c = Math.cos(a), s = Math.sin(a); return [c,0,s, 0,1,0, -s,0,c]; };
+
+  function attach3d(cv) {
+    if (!cv || cv._mk3dInit) return;
+    cv._mk3dInit = true;
+    const mesh = buildMesh(cv.dataset.model || 'cube');
+    let M = mulM(rotX(0.38), rotY(-0.48));
+    let vx = 0, vy = 0, zoom = 1, dragging = false, lx = 0, ly = 0, moved = 0, raf = 0, pinchDist = 0;
+
+    function draw() {
+      if (!cv.isConnected) return;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const w = cv.clientWidth || 320, h = cv.clientHeight || 220;
+      if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) {
+        cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+      }
+      const ctx = cv.getContext('2d');
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, w, h);
+
+      const scale = Math.min(w, h) * 0.42 * zoom;
+      const cx = w / 2, cy = h / 2;
+      const P = mesh.V.map(([x, y, z]) => {
+        const rx = M[0]*x + M[1]*y + M[2]*z;
+        const ry = M[3]*x + M[4]*y + M[5]*z;
+        const rz = M[6]*x + M[7]*y + M[8]*z;
+        const p = 3.2 / (3.2 - rz);
+        return [cx + rx * scale * p, cy - ry * scale * p, rz, rx, ry];
+      });
+
+      const faces = [];
+      for (const idx of mesh.F) {
+        const p0 = P[idx[0]], p1 = P[idx[1]], p2 = P[idx[2]];
+        const ax = p1[3] - p0[3], ay = p1[4] - p0[4], az = p1[2] - p0[2];
+        const bx = p2[3] - p0[3], by = p2[4] - p0[4], bz = p2[2] - p0[2];
+        const nx = ay * bz - az * by, ny = az * bx - ax * bz, nz = ax * by - ay * bx;
+        if (nz <= 0) continue;
+        const nl = Math.hypot(nx, ny, nz) || 1;
+        const light = Math.max(0, (nx * 0.4 + ny * 0.65 + nz * 0.64) / nl);
+        let zAvg = 0; for (const k of idx) zAvg += P[k][2];
+        faces.push({ idx, z: zAvg / idx.length, light, nzRatio: nz / nl, lbl: idx.lbl, isBack: idx.isBack });
+      }
+      faces.sort((a, b) => a.z - b.z);
+
+      for (const f of faces) {
+        const shade = Math.round(6 + f.light * 46);
+        ctx.beginPath();
+        f.idx.forEach((k, i) => i ? ctx.lineTo(P[k][0], P[k][1]) : ctx.moveTo(P[k][0], P[k][1]));
+        ctx.closePath();
+        ctx.fillStyle = `rgb(${shade},${shade},${shade})`;
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+
+        if (f.lbl && f.nzRatio > 0.25 && f.idx.length === 4) {
+          const bl = P[f.idx[0]], tr = P[f.idx[2]], tl = P[f.idx[3]];
+          const ux = tr[0] - tl[0], uy = tr[1] - tl[1];
+          const vx = bl[0] - tl[0], vy = bl[1] - tl[1];
+          ctx.save();
+          ctx.transform(ux / 120, uy / 120, vx / 160, vy / 160, tl[0], tl[1]);
+          ctx.fillStyle = f.isBack ? 'rgba(255,255,255,0.94)' : 'rgba(255,255,255,0.14)';
+          ctx.strokeStyle = 'rgba(255,255,255,0.45)';
+          ctx.lineWidth = 1.5;
+          ctx.fillRect(10, 12, 100, 136);
+          ctx.strokeRect(10, 12, 100, 136);
+          ctx.textAlign = 'center';
+          ctx.direction = 'rtl';
+          f.lbl.forEach((line, li) => {
+            if (f.isBack) {
+              ctx.fillStyle = li === 2 ? '#000000' : '#111111';
+              ctx.font = li === 0 ? '900 12px sans-serif' : li === 2 ? '900 11px sans-serif' : '700 9.5px sans-serif';
+              ctx.fillText(line, 60, 32 + li * 20, 92);
+              if (li === 1) {
+                ctx.fillStyle = 'rgba(0,0,0,0.22)';
+                ctx.fillRect(18, 56, 84, 1.5);
+              }
+            } else {
+              ctx.fillStyle = '#ffffff';
+              ctx.font = li === 0 ? '900 14px sans-serif' : li === 3 ? '900 12px sans-serif' : '700 10.5px sans-serif';
+              ctx.fillText(line, 60, 44 + li * 24, 92);
+            }
+          });
+          ctx.restore();
+        }
+      }
+    }
+
+    function step() {
+      if (!cv.isConnected) { raf = 0; return; }
+      if (!dragging) {
+        if (Math.abs(vx) < 0.0003 && Math.abs(vy) < 0.0003) { vx = 0; vy = 0; raf = 0; draw(); return; }
+        M = mulM(rotX(vx), mulM(rotY(vy), M));
+        vx *= 0.90; vy *= 0.90;
+      }
+      draw();
+      raf = requestAnimationFrame(step);
+    }
+
+    const startDrag = (x, y) => { dragging = true; lx = x; ly = y; moved = 0; vx = 0; vy = 0; };
+    const moveDrag = (x, y) => {
+      if (!dragging) return;
+      const dx = x - lx, dy = y - ly;
+      moved += Math.abs(dx) + Math.abs(dy);
+      lx = x; ly = y;
+      const dPitch = dy * 0.014;
+      const dYaw = dx * 0.014;
+      M = mulM(rotX(dPitch), mulM(rotY(dYaw), M));
+      vx = dPitch; vy = dYaw;
+      if (moved > 5) cv._draggedAt = Date.now();
+      draw();
+    };
+    const endDrag = () => {
+      if (dragging && moved > 5) cv._draggedAt = Date.now();
+      dragging = false;
+      if (!raf && (Math.abs(vx) >= 0.0003 || Math.abs(vy) >= 0.0003)) raf = requestAnimationFrame(step);
+    };
+
+    const setZoom = z => { zoom = Math.max(0.55, Math.min(2.4, z)); draw(); };
+    const tDist = ts => Math.hypot(ts[0].clientX - ts[1].clientX, ts[0].clientY - ts[1].clientY);
+    cv.addEventListener('touchstart', e => {
+      e.stopPropagation();
+      if (e.touches.length === 2) { dragging = false; pinchDist = tDist(e.touches); }
+      else if (e.touches.length === 1) { pinchDist = 0; startDrag(e.touches[0].clientX, e.touches[0].clientY); }
+    }, { passive: true });
+    cv.addEventListener('touchmove', e => {
+      if (e.touches.length === 2) {
+        e.preventDefault(); e.stopPropagation();
+        const d = tDist(e.touches);
+        if (pinchDist > 0) setZoom(zoom * (d / pinchDist));
+        pinchDist = d;
+        return;
+      }
+      if (!dragging || e.touches.length !== 1) return;
+      e.preventDefault();
+      e.stopPropagation();
+      moveDrag(e.touches[0].clientX, e.touches[0].clientY);
+    }, { passive: false });
+    cv.addEventListener('touchend', e => {
+      e.stopPropagation();
+      if (e.touches.length < 2) pinchDist = 0;
+      if (e.touches.length === 0) endDrag();
+    }, { passive: true });
+    cv.addEventListener('wheel', e => { e.preventDefault(); e.stopPropagation(); setZoom(zoom * (e.deltaY > 0 ? 0.92 : 1.08)); }, { passive: false });
+    cv.addEventListener('mousedown', e => { e.stopPropagation(); startDrag(e.clientX, e.clientY); });
+    window.addEventListener('mousemove', e => { if (dragging) moveDrag(e.clientX, e.clientY); });
+    window.addEventListener('mouseup', () => { if (dragging) endDrag(); });
+
+    raf = requestAnimationFrame(step);
+  }
+
+  function scan3d() { document.querySelectorAll('canvas.mk-3d-canvas').forEach(attach3d); }
+  const mo = new MutationObserver(scan3d);
+  if (document.body) mo.observe(document.body, { childList: true, subtree: true });
+  else document.addEventListener('DOMContentLoaded', () => { mo.observe(document.body, { childList: true, subtree: true }); scan3d(); });
+  scan3d();
+})();
+
+
+// ===== שורת מבצע חודשית במחשב: 30% הנחה במנוי + טיימר עד סוף החודש =====
+(function () {
+  function initVipPromoBar() {
+    if (document.getElementById('vip-promo-top-bar')) return;
+    try { if (sessionStorage.getItem('vip_promo_bar_closed') === '1') return; } catch (e) {}
+    const bar = document.createElement('div');
+    bar.id = 'vip-promo-top-bar';
+    bar.className = 'vip-promo-bar';
+    bar.setAttribute('dir', 'rtl');
+    bar.innerHTML = `
+      <div class="vip-promo-in">
+        <span class="vip-promo-txt">מבצע חודשי — <u>30% הנחה</u> במנוי באתר</span>
+        <div class="vip-promo-cd" aria-label="זמן שנותר למבצע החודשי">
+          <div class="vip-cd-u"><b id="vip-cd-d">00</b><span>ימים</span></div>
+          <div class="vip-cd-u"><b id="vip-cd-h">00</b><span>שעות</span></div>
+          <div class="vip-cd-u"><b id="vip-cd-m">00</b><span>דקות</span></div>
+          <div class="vip-cd-u"><b id="vip-cd-s">00</b><span>שניות</span></div>
+        </div>
+        <button type="button" class="vip-promo-cta" onclick="if(typeof subPageOpen==='function')subPageOpen();else if(typeof navigateToPage==='function')navigateToPage('page-subscription-main');"><span>למסלולי המנוי ←</span></button>
+      </div>
+      <button type="button" class="vip-promo-x" aria-label="סגירת שורת המבצע" onclick="try{sessionStorage.setItem('vip_promo_bar_closed','1')}catch(e){}document.getElementById('vip-promo-top-bar')?.remove()">✕</button>
+    `;
+    const hdr = document.querySelector('header.apple-nav');
+    if (hdr && hdr.parentNode) hdr.parentNode.insertBefore(bar, hdr);
+    else if (document.body) document.body.prepend(bar);
+
+    const pad = n => String(Math.max(0, n)).padStart(2, '0');
+    function tick() {
+      if (!bar.isConnected) return;
+      const now = new Date();
+      const end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+      const diff = Math.max(0, end.getTime() - now.getTime());
+      const totS = Math.floor(diff / 1000);
+      const d = Math.floor(totS / 86400);
+      const h = Math.floor((totS % 86400) / 3600);
+      const m = Math.floor((totS % 3600) / 60);
+      const s = totS % 60;
+      const elD = document.getElementById('vip-cd-d');
+      const elH = document.getElementById('vip-cd-h');
+      const elM = document.getElementById('vip-cd-m');
+      const elS = document.getElementById('vip-cd-s');
+      if (elD) elD.textContent = pad(d);
+      if (elH) elH.textContent = pad(h);
+      if (elM) elM.textContent = pad(m);
+      if (elS) elS.textContent = pad(s);
+    }
+    tick();
+    const timer = setInterval(() => {
+      if (!bar.isConnected) { clearInterval(timer); return; }
+      tick();
+    }, 1000);
+  }
+  if (document.body) initVipPromoBar();
+  else document.addEventListener('DOMContentLoaded', initVipPromoBar);
+})();
+
+
+// ===== עוזר AI חינמי באתר (חיפוש חכם, המלצות מוצרים, פעולות מהירות + תמיכה ב-WebLLM מקומי) =====
+(function () {
+  let aiMode = 'gemini'; // ברירת מחדל: Gemini 2.5 Flash-Lite בענן (עד 2 בקשות למשתמש, עם גיבוי אוטומטי)
+  let webllmEngine = null;
+  let webllmLoading = false;
+  const aiMsgs = [
+    { role: 'ai', text: 'היי! אני עוזר ה־AI החינמי של האתר ✨\nאפשר לשאול אותי כל שאלה או לבקש עזרה באתר.', chips: [] }
+  ];
+
+  function aiRunAction(act) {
+    if (!act) return;
+    if (act === 'nav:other2' && typeof openOther2RoomPage === 'function') { aiToggle(false); openOther2RoomPage(); return; }
+    if (act === 'nav:sub' && typeof subPageOpen === 'function') { aiToggle(false); subPageOpen(); return; }
+    if (act === 'nav:pub' && typeof mkPubOpen === 'function') { aiToggle(false); mkPubOpen(); return; }
+    if (act.startsWith('open:') && typeof rentOpen === 'function') { aiToggle(false); rentOpen(act.slice(5)); return; }
+    if (act === 'mode:site' || act === 'mode:webllm') {
+      const m = act.slice(5);
+      aiMode = m;
+      const sel = document.getElementById('site-ai-model');
+      if (sel) sel.value = m;
+      aiMsgs.push({ role: 'ai', text: m === 'webllm' ? 'עברתי למודל המקומי החינמי (SmolLM2) — ללא הגבלת בקשות!' : 'עברתי לעוזר האתר החינמי — מהיר וללא הגבלת בקשות!', chips: [] });
+      aiRenderMsgs();
+      return;
+    }
+    if (act === 'cfg:gemini') {
+      const cur = localStorage.getItem('site_gemini_endpoint') || window.SITE_GEMINI_ENDPOINT || '';
+      const url = prompt('הזינו כתובת שרת / Cloud Function עבור Gemini 2.5 Flash (למשל https://.../api/gemini):', cur);
+      if (url !== null) {
+        localStorage.setItem('site_gemini_endpoint', url.trim());
+        aiMsgs.push({ role: 'ai', text: url.trim() ? '✓ כתובת השרת ל־Gemini 2.5 Flash נשמרה! אפשר לשאול עכשיו.' : 'כתובת השרת נוקתה.', chips: [] });
+        aiRenderMsgs();
+      }
+      return;
+    }
+    if (act.startsWith('query:')) {
+      const q = act.slice(6);
+      const inp = document.getElementById('site-ai-in');
+      if (inp) { inp.value = q; aiSend(); }
+    }
+  }
+  window._siteAiAct = aiRunAction;
+
+  function aiSiteReply(q) {
+    const t = String(q || '').trim();
+    const low = t.toLowerCase();
+    const all = typeof mktAll === 'function' ? mktAll() : [];
+
+    if (/^(?:היי|שלום|אהלן|מה\s*קורה|מה\s*נשמע|מה\s*המצב|בוקר\s*טוב|ערב\s*טוב)[?!.\s]*$/i.test(low)) {
+      return {
+        text: 'הכל מעולה! 😊 איך אפשר לעזור לך היום באתר? אפשר לשאול כל שאלה, לחפש מוצרים, או לקפוץ לחדר ה־3D.',
+        chips: [{ label: '🏢 חדר 3D (אחר 2)', act: 'nav:other2' }, { label: '💎 מבצע 30% מנוי', act: 'nav:sub' }]
+      };
+    }
+    if (/^\/?(?:חדר|3d|תלת|אחר\s*2)/.test(low) && /חדר|אחר/.test(low)) {
+      return { text: 'פתחתי לך גישה מהירה לחדר התלת־מימד (אחר 2) עם 20 שורות המוצרים:', chips: [{ label: '🏢 כניסה לחדר 3D (אחר 2)', act: 'nav:other2' }] };
+    }
+    if (/מנוי|הנחה|30%|vip/.test(low)) {
+      return { text: 'יש עכשיו מבצע חודשי של **30% הנחה** במנוי האתר (עד סוף החודש). לחיצה כאן תפתח את מסלולי המנוי:', chips: [{ label: '💎 מעבר למסלולי המנוי', act: 'nav:sub' }] };
+    }
+    if (/פרסם|פרסום|למכור|העלאה/.test(low)) {
+      return { text: 'אפשר לפרסם מודעה חדשה תוך שניות דרך מסך הפרסום:', chips: [{ label: '➕ פתיחת פרסום מודעה', act: 'nav:pub' }] };
+    }
+    if (/קלורי|חלב|יוגורט|שיבולת|דונאט|המבורגר|במבוק|תפוח/.test(low)) {
+      const food = all.filter(r => r && /קק״ל|קלורי|חלב|יוגורט|שיבולת|דונאט|המבורגר|במבוק|תפוח/.test((r.title || '') + ' ' + (r.desc || '')));
+      if (food.length) {
+        return {
+          text: `מצאתי ${food.length} מוצרי מזון ו־3D עם פירוט קלוריות (סובבו את אריזת החלב/יוגורט לאחור לראות את התווית):`,
+          chips: food.slice(0, 4).map(r => ({ label: `${r.title} (${Number(r.price) > 0 ? '₪' + r.price : '3D'})`, act: 'open:' + r.id }))
+        };
+      }
+    }
+
+    // חיפוש מחיר מקסימלי ("עד 200", "מתחת ל-100")
+    const maxM = low.match(/(?:עד|מתחת\s*ל?-?)\s*(\d+)/);
+    const maxP = maxM ? Number(maxM[1]) : 0;
+    const words = low.replace(/[^\p{L}\p{N}\s]/gu, ' ').split(/\s+/).filter(w => w.length >= 2 && !['מצא', 'תמצא', 'לי', 'את', 'של', 'עם', 'עד', 'מתחת', 'מחיר', 'רוצה', 'חפש', 'הראה'].includes(w));
+
+    let hits = all.filter(r => {
+      if (!r || !r.title) return false;
+      if (maxP && !(Number(r.price) > 0 && Number(r.price) <= maxP)) return false;
+      if (!words.length) return true;
+      const hay = `${r.title} ${r.desc || ''} ${r.city || ''} ${r.owner || ''} ${r.offer || ''}`.toLowerCase();
+      return words.some(w => hay.includes(w));
+    });
+
+    if (!hits.length && maxP) hits = all.filter(r => Number(r.price) > 0 && Number(r.price) <= maxP);
+    if (hits.length) {
+      return {
+        text: `מצאתי ${hits.length} תוצאות מתאימות באתר${maxP ? ` עד ₪${maxP}` : ''}:`,
+        chips: hits.slice(0, 5).map(r => ({
+          label: `${String(r.title).slice(0, 32)}${Number(r.price) > 0 ? ` · ₪${r.price}` : ''}`,
+          act: 'open:' + r.id
+        }))
+      };
+    }
+
+    return {
+      text: `לא מצאתי מוצר תואם ל־"${t}", אבל אפשר לעבור לאחד האזורים המרכזיים או לחפש מילה אחרת:`,
+      chips: [
+        { label: '🏢 חדר המוצרים ב־3D', act: 'nav:other2' },
+        { label: '➕ פרסום מודעה', act: 'nav:pub' },
+        { label: '💎 מנוי 30% הנחה', act: 'nav:sub' }
+      ]
+    };
+  }
+
+  async function aiWebLlmReply(q) {
+    if (!navigator.gpu) {
+      return { text: 'הדפדפן/מכשיר הנוכחי לא תומך ב־WebGPU להרצת מודל מקומי. ממשיך לעבוד עם עוזר האתר החינמי!', chips: [] };
+    }
+    if (!webllmEngine && !webllmLoading) {
+      webllmLoading = true;
+      aiMsgs.push({ role: 'ai', text: 'מוריד מודל שפה חינמי קטן לדפדפן (Qwen2.5-0.5B)... זה לוקח רגע בפעם הראשונה.', chips: [] });
+      aiRenderMsgs();
+      try {
+        const mod = await import('https://esm.run/@mlc-ai/web-llm');
+        try {
+          webllmEngine = await mod.CreateMLCEngine('SmolLM2-360M-Instruct-q4f16_1-MLC');
+        } catch (e1) {
+          webllmEngine = await mod.CreateMLCEngine('Qwen2.5-0.5B-Instruct-q4f16_1-MLC');
+        }
+      } catch (e) {
+        webllmLoading = false;
+        return aiSiteReply(q);
+      }
+      webllmLoading = false;
+    }
+    if (!webllmEngine) return aiSiteReply(q);
+    try {
+      const res = await webllmEngine.chat.completions.create({
+        messages: [
+          { role: 'system', content: 'אתה עוזר AI באתר ישראלי. חובה עליך לענות אך ורק בעברית! לעולם אל תענה באנגלית בשום מצב.' },
+          { role: 'user', content: q }
+        ],
+        max_tokens: 220
+      });
+      const txt = (res && res.choices && res.choices[0] && res.choices[0].message && res.choices[0].message.content) || '';
+      return { text: txt.trim() || aiSiteReply(q).text, chips: [] };
+    } catch (e) {
+      return aiSiteReply(q);
+    }
+  }
+
+  let aiPendingImg = null;
+  function aiShowImgPrev() {
+    const prev = document.getElementById('site-ai-img-prev');
+    if (!prev) return;
+    if (!aiPendingImg) { prev.style.display = 'none'; prev.innerHTML = ''; return; }
+    prev.style.display = 'flex';
+    prev.innerHTML = `<div class="sai-img-chip"><img src="${aiPendingImg.dataUrl}" alt="תמונה מצורפת"><button type="button" onclick="_siteAiClearImg()" aria-label="הסרת תמונה">✕</button></div>`;
+  }
+  function aiReadImgFile(file) {
+    if (!file || !file.type || !file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const dataUrl = String(ev.target && ev.target.result || '');
+      const img = new Image();
+      img.onload = () => {
+        const max = 1280;
+        let w = img.width, h = img.height;
+        if (w > max || h > max) {
+          if (w >= h) { h = Math.round(h * max / w); w = max; }
+          else { w = Math.round(w * max / h); h = max; }
+        }
+        const c = document.createElement('canvas');
+        c.width = w; c.height = h;
+        c.getContext('2d').drawImage(img, 0, 0, w, h);
+        const outUrl = c.toDataURL('image/jpeg', 0.85);
+        aiPendingImg = { dataUrl: outUrl, mimeType: 'image/jpeg', base64: outUrl.split(',')[1] || '' };
+        aiShowImgPrev();
+      };
+      img.src = dataUrl;
+    };
+    reader.readAsDataURL(file);
+  }
+  window._siteAiPickImg = inp => {
+    const f = inp && inp.files && inp.files[0];
+    if (f) aiReadImgFile(f);
+    if (inp) inp.value = '';
+  };
+  window._siteAiClearImg = () => { aiPendingImg = null; aiShowImgPrev(); };
+
+  async function aiGeminiReply(q, img) {
+    const endpoint = (typeof localStorage !== 'undefined' && localStorage.getItem('site_gemini_endpoint')) || window.SITE_GEMINI_ENDPOINT || 'https://gemini-proxy.yoni98321.workers.dev';
+    if (!endpoint) {
+      const fallback = aiSiteReply(q);
+      return {
+        text: `${fallback.text}\n\n💡 כדי להפעיל תשובות מלאות מ־**Gemini 3.5 Flash-Lite** בענן, יש לחבר כתובת שרת (Cloud Function / Worker) שמחזיקה את מפתח ה־API.`,
+        chips: [{ label: '⚙️ הגדרת כתובת שרת Gemini', act: 'cfg:gemini' }, ...(fallback.chips || [])]
+      };
+    }
+    try {
+      const ac = new AbortController();
+      const tm = setTimeout(() => ac.abort(), 12000);
+      const promptText = `הנחיה מחייבת: ענה אך ורק בעברית! לעולם אל תענה באנגלית, גם אם המשתמש שואל בסימן שאלה או באנגלית. שמור על תשובה קצרה וברורה.\n\nשאלת המשתמש: ${q}`;
+      const payload = {
+        prompt: promptText,
+        model: 'gemini-3.5-flash-lite',
+        thinkingBudget: 0
+      };
+      if (img && img.base64) {
+        payload.imageBase64 = img.base64;
+        payload.imageMimeType = img.mimeType || 'image/jpeg';
+        payload.inlineData = { mimeType: payload.imageMimeType, data: img.base64 };
+      }
+      const r = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: ac.signal,
+        body: JSON.stringify(payload)
+      });
+      clearTimeout(tm);
+      const j = await r.json();
+      if (j && j.error) {
+        return { text: `⚠️ שגיאת Gemini: ${j.error}`, chips: [] };
+      }
+      const txt = (j && (j.text || j.reply || j.answer || (j.candidates && j.candidates[0] && j.candidates[0].content && j.candidates[0].content.parts && j.candidates[0].content.parts[0] && j.candidates[0].content.parts[0].text))) || '';
+      if (txt.trim()) {
+        return { text: txt.trim(), chips: [] };
+      }
+      return { text: '⚠️ השרת של Gemini החזיר תשובה ריקה — בדקו ב־Cloudflare שהמפתח `GEMINI_API_KEY` תקין.', chips: [] };
+    } catch (e) {
+      return { text: '⚠️ לא ניתן להתחבר לשרת Gemini כרגע, עובר לגיבוי מקומי:\n\n' + aiSiteReply(q).text, chips: [] };
+    }
+  }
+
+  function aiRenderMsgs() {
+    const box = document.getElementById('site-ai-msgs');
+    if (!box) return;
+    box.innerHTML = aiMsgs.map(m => `
+      <div class="sai-msg ${m.role}">
+        <div class="sai-bubble">${m.img ? `<img class="sai-msg-img" src="${m.img}" alt="תמונה מצורפת">` : ''}${escHtml(m.text).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>')}</div>
+        ${m.chips && m.chips.length ? `<div class="sai-chips">${m.chips.map(c => `<button type="button" onclick="_siteAiAct('${artEsc(c.act)}')">${escHtml(c.label)}</button>`).join('')}</div>` : ''}
+      </div>
+    `).join('');
+    box.scrollTop = box.scrollHeight;
+  }
+
+  async function aiSend() {
+    const inp = document.getElementById('site-ai-in');
+    if (!inp) return;
+    const rawQ = inp.value.trim();
+    const img = aiPendingImg;
+    if (!rawQ && !img) return;
+    const q = rawQ || 'תאר/י ונתח/י את התמונה הזו בעברית.';
+    inp.value = '';
+    aiPendingImg = null;
+    aiShowImgPrev();
+    aiMsgs.push({ role: 'user', text: rawQ || '📎 תמונה מצורפת', img: img ? img.dataUrl : '', chips: [] });
+    if (aiMode !== 'site') {
+      aiMsgs.push({ role: 'ai', text: '•••', chips: [], _typing: true });
+    }
+    aiRenderMsgs();
+    const rep = aiMode === 'connected' && window.SiteAIConnect ? await window.SiteAIConnect.send(q, img) : aiMode === 'gemini' ? await aiGeminiReply(q, img) : aiMode === 'webllm' ? await aiWebLlmReply(q) : aiSiteReply(q);
+    if (aiMsgs.length && aiMsgs[aiMsgs.length - 1]._typing) aiMsgs.pop();
+    aiMsgs.push({ role: 'ai', text: rep.text, chips: rep.chips || [] });
+    aiRenderMsgs();
+  }
+  window._siteAiSend = aiSend;
+
+  function aiVoice() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) { if (typeof showCopyToast === 'function') showCopyToast('הדפדפן לא תומך בזיהוי קולי'); return; }
+    const rec = new SR();
+    rec.lang = 'he-IL';
+    rec.onresult = e => {
+      const txt = e.results && e.results[0] && e.results[0][0] && e.results[0][0].transcript;
+      const inp = document.getElementById('site-ai-in');
+      if (inp && txt) { inp.value = txt; aiSend(); }
+    };
+    rec.start();
+  }
+  window._siteAiVoice = aiVoice;
+
+  function aiToggle(open) {
+    let modal = document.getElementById('site-ai-modal');
+    if (open === false) { if (modal) modal.classList.remove('open'); return; }
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'site-ai-modal';
+      modal.className = 'sai-modal';
+      modal.setAttribute('dir', 'rtl');
+      modal.innerHTML = `
+        <div class="sai-backdrop" onclick="_siteAiToggle(false)"></div>
+        <div class="sai-shell">
+          <div class="sai-top">
+            <span>✨ עוזר AI חינמי באתר</span>
+            <button type="button" class="sai-close" onclick="_siteAiToggle(false)" aria-label="סגירה">✕</button>
+          </div>
+          <div id="site-ai-msgs" class="sai-msgs"></div>
+          <div class="sai-prompt-box">
+            <div id="site-ai-img-prev" class="sai-img-prev" style="display:none"></div>
+            <input id="site-ai-file" type="file" accept="image/*" style="display:none" onchange="_siteAiPickImg(this)">
+            <textarea id="site-ai-in" rows="2" placeholder="שאל כל דבר, @ לאזכור מוצר, / לפעולות..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();_siteAiSend();}"></textarea>
+            <div class="sai-prompt-foot">
+              <div class="sai-foot-r">
+                <button type="button" class="sai-plus" title="פעולות מהירות" onclick="_siteAiAct('query:/')">+</button>
+                <select id="site-ai-model" class="sai-model-sel" aria-label="בחירת מודל" onchange="window._siteAiSetMode(this.value)">
+                  <option value="gemini" selected>⚡ Gemini 3.5 Flash-Lite (ברירת מחדל)</option>
+                  <option value="webllm">🧠 SmolLM2 (חינמי ומהיר)</option>
+                  <option value="site">✨ עוזר האתר (מיידי)</option>
+                </select>
+              </div>
+              <div class="sai-foot-l">
+                <button type="button" class="sai-img-btn" title="צירוף תמונה" onclick="document.getElementById('site-ai-file')?.click()" aria-label="צירוף תמונה">
+                  <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M21 15l-5-5L5 20"/></svg>
+                </button>
+                <button type="button" class="sai-mic" title="דיבור" onclick="_siteAiVoice()" aria-label="חיפוש קולי">
+                  <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 17v4M8 21h8"/></svg>
+                </button>
+                <button type="button" class="sai-send" onclick="_siteAiSend()" aria-label="שליחה">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.8L18.5 9.5l-4.7 1.7L12 16l-1.8-4.8L5.5 9.5l4.7-1.7z"/><path d="M5 19l1-2.5L8.5 15.5 6 14.5 5 12l-1 2.5-2.5 1 2.5 1z"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+    }
+    if (window.SiteAIConnect && typeof window.SiteAIConnect.syncSelect === 'function') window.SiteAIConnect.syncSelect();
+    modal.classList.toggle('open', open === true ? true : !modal.classList.contains('open'));
+    aiRenderMsgs();
+    const inp = document.getElementById('site-ai-in');
+    if (inp && modal.classList.contains('open')) setTimeout(() => inp.focus(), 60);
+  }
+  window._siteAiToggle = aiToggle;
+  window._siteAiSetMode = m => { aiMode = (m === 'webllm' || m === 'gemini' || m === 'connected') ? m : 'site'; };
+
+  function initAiFab() {
+    if (document.getElementById('site-ai-fab') || !document.body) return;
+    const fab = document.createElement('button');
+    fab.id = 'site-ai-fab';
+    fab.type = 'button';
+    fab.className = 'sai-fab';
+    fab.setAttribute('aria-label', 'פתיחת עוזר AI חינמי');
+    fab.innerHTML = '<span>✨</span><b>AI חינמי</b>';
+    fab.onclick = () => aiToggle(true);
+    document.body.appendChild(fab);
+  }
+  if (document.body) initAiFab();
+  else document.addEventListener('DOMContentLoaded', initAiFab);
+})();
+
+(function initConnectToYourAI() {
+  const KEY = 'site_ai_connect_cfg';
+  const DEFAULTS = {
+    openai: { label: 'ChatGPT (OpenAI)', model: 'gpt-4o-mini', placeholder: 'sk-...' },
+    claude: { label: 'Claude (Anthropic)', model: 'claude-3-5-haiku-latest', placeholder: 'sk-ant-...' },
+    gemini: { label: 'Gemini (Google)', model: 'gemini-2.5-flash', placeholder: 'AIza...' },
+    custom: { label: 'שרת / Endpoint מותאם אישית', model: '', placeholder: 'מפתח אופציונלי (Bearer)' }
+  };
+
+  function getConfig() {
+    try {
+      const raw = localStorage.getItem(KEY);
+      if (raw) return JSON.parse(raw);
+    } catch (_) {}
+    return window.SITE_AI_CONNECT_CONFIG || null;
+  }
+
+  function setConfig(cfg) {
+    try {
+      if (!cfg || (!cfg.apiKey && !cfg.endpoint)) localStorage.removeItem(KEY);
+      else localStorage.setItem(KEY, JSON.stringify(cfg));
+    } catch (_) {}
+    paintBtn();
+    syncSelect();
+  }
+
+  function isConnected() {
+    const c = getConfig();
+    return !!(c && (c.apiKey || c.endpoint));
+  }
+
+  function paintBtn() {
+    const btn = document.getElementById('connect-ai-btn');
+    if (btn) btn.classList.toggle('is-connected', isConnected());
+  }
+
+  function syncSelect() {
+    const sel = document.getElementById('site-ai-model');
+    if (!sel) return;
+    let opt = sel.querySelector('option[value="connected"]');
+    const cfg = getConfig();
+    if (isConnected()) {
+      const name = (DEFAULTS[cfg.provider] && DEFAULTS[cfg.provider].label) || 'AI מחובר';
+      if (!opt) {
+        opt = document.createElement('option');
+        opt.value = 'connected';
+        sel.insertBefore(opt, sel.firstChild);
+      }
+      opt.textContent = `🔌 ${name}`;
+    } else if (opt) {
+      if (sel.value === 'connected') {
+        sel.value = 'gemini';
+        if (window._siteAiSetMode) window._siteAiSetMode('gemini');
+      }
+      opt.remove();
+    }
+  }
+
+  function getContextPrompt() {
+    const activeTab = document.querySelector('.hdr-desk-nav button.on')?.textContent?.trim() || 'דף הבית';
+    return `הנחיה: עזור לי לגבי האתר "${document.title}" (${location.href}). אני נמצא כרגע באזור: ${activeTab}.`;
+  }
+
+  function openIn(target) {
+    closeMenu();
+    const prompt = getContextPrompt();
+    const enc = encodeURIComponent(prompt);
+    if (target === 'chatgpt') {
+      window.open(`https://chatgpt.com/?q=${enc}`, '_blank', 'noopener');
+    } else if (target === 'claude') {
+      window.open(`https://claude.ai/new?q=${enc}`, '_blank', 'noopener');
+    } else if (target === 'gemini') {
+      navigator.clipboard?.writeText(prompt).catch(() => {});
+      if (typeof showCopyToast === 'function') showCopyToast('הפרומפט הועתק — הדבק ב-Gemini');
+      window.open('https://gemini.google.com/app', '_blank', 'noopener');
+    } else if (target === 'copy') {
+      navigator.clipboard?.writeText(prompt).then(() => {
+        if (typeof showCopyToast === 'function') showCopyToast('הפרומפט הועתק ללוח!');
+      }).catch(() => {});
+    }
+  }
+
+  function closeMenu() {
+    const wrap = document.getElementById('connect-ai-wrap');
+    const menu = document.getElementById('connect-ai-menu');
+    const btn = document.getElementById('connect-ai-btn');
+    if (wrap) wrap.classList.remove('open');
+    if (menu) menu.hidden = true;
+    if (btn) btn.setAttribute('aria-expanded', 'false');
+  }
+
+  function renderMenu() {
+    const menu = document.getElementById('connect-ai-menu');
+    if (!menu) return;
+    const cfg = getConfig();
+    const connText = isConnected()
+      ? `מחובר: ${(DEFAULTS[cfg.provider] && DEFAULTS[cfg.provider].label) || cfg.provider}`
+      : 'חבר מפתח API / שרת אישי';
+    menu.innerHTML = `
+      <button type="button" class="cai-item" onclick="window.SiteAIConnect.openIn('chatgpt')">
+        <span class="cai-item-main"><span>🟢</span><span>פתח ב-ChatGPT</span></span>
+        <span class="cai-item-sub">↗</span>
+      </button>
+      <button type="button" class="cai-item" onclick="window.SiteAIConnect.openIn('claude')">
+        <span class="cai-item-main"><span>🟠</span><span>פתח ב-Claude</span></span>
+        <span class="cai-item-sub">↗</span>
+      </button>
+      <button type="button" class="cai-item" onclick="window.SiteAIConnect.openIn('gemini')">
+        <span class="cai-item-main"><span>🔵</span><span>פתח ב-Gemini</span></span>
+        <span class="cai-item-sub">↗</span>
+      </button>
+      <button type="button" class="cai-item" onclick="window.SiteAIConnect.openIn('copy')">
+        <span class="cai-item-main"><span>📋</span><span>העתק פרומפט לאתר</span></span>
+        <span class="cai-item-sub">העתק</span>
+      </button>
+      <div class="cai-sep"></div>
+      <button type="button" class="cai-item" onclick="window.SiteAIConnect.openSettings()">
+        <span class="cai-item-main"><span>🔌</span><span>${escHtml(connText)}</span></span>
+        <span class="cai-item-sub">הגדרות</span>
+      </button>
+    `;
+  }
+
+  window.toggleConnectAiMenu = function toggleConnectAiMenu(e) {
+    if (e) e.stopPropagation();
+    const wrap = document.getElementById('connect-ai-wrap');
+    const menu = document.getElementById('connect-ai-menu');
+    const btn = document.getElementById('connect-ai-btn');
+    if (!wrap || !menu || !btn) return;
+    const willOpen = menu.hidden;
+    if (willOpen) {
+      renderMenu();
+      menu.hidden = false;
+      wrap.classList.add('open');
+      btn.setAttribute('aria-expanded', 'true');
+    } else {
+      closeMenu();
+    }
+  };
+
+  document.addEventListener('click', e => {
+    const wrap = document.getElementById('connect-ai-wrap');
+    if (wrap && !wrap.contains(e.target)) closeMenu();
+  });
+
+  function openSettings() {
+    closeMenu();
+    let modal = document.getElementById('connect-ai-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'connect-ai-modal';
+      modal.className = 'cai-modal';
+      modal.setAttribute('dir', 'rtl');
+      document.body.appendChild(modal);
+    }
+    const cfg = getConfig() || { provider: 'openai', apiKey: '', model: '', endpoint: '' };
+    const p = cfg.provider || 'openai';
+    const def = DEFAULTS[p] || DEFAULTS.openai;
+    modal.innerHTML = `
+      <div class="cai-modal-backdrop" onclick="document.getElementById('connect-ai-modal').classList.remove('open')"></div>
+      <div class="cai-modal-card">
+        <div class="cai-modal-head">
+          <h3>🔌 Connect to your AI — חיבור AI אישי</h3>
+          <button type="button" class="sai-close" onclick="document.getElementById('connect-ai-modal').classList.remove('open')" aria-label="סגירה">✕</button>
+        </div>
+        <div class="cai-field">
+          <label for="cai-prov">ספק AI</label>
+          <select id="cai-prov" onchange="window.SiteAIConnect._onProvChange(this.value)">
+            <option value="openai" ${p === 'openai' ? 'selected' : ''}>ChatGPT (OpenAI)</option>
+            <option value="claude" ${p === 'claude' ? 'selected' : ''}>Claude (Anthropic)</option>
+            <option value="gemini" ${p === 'gemini' ? 'selected' : ''}>Gemini (Google)</option>
+            <option value="custom" ${p === 'custom' ? 'selected' : ''}>שרת / Endpoint מותאם אישית (Webhook / Proxy)</option>
+          </select>
+        </div>
+        <div class="cai-field" id="cai-ep-row" style="display:${p === 'custom' ? 'flex' : 'none'}">
+          <label for="cai-ep">כתובת השרת (Endpoint URL)</label>
+          <input id="cai-ep" type="url" dir="ltr" value="${escHtml(cfg.endpoint || '')}" placeholder="https://your-worker.workers.dev/chat">
+        </div>
+        <div class="cai-field">
+          <label for="cai-key">מפתח API (נשמר מקומית בדפדפן שלך בלבד)</label>
+          <input id="cai-key" type="password" dir="ltr" value="${escHtml(cfg.apiKey || '')}" placeholder="${escHtml(def.placeholder)}">
+        </div>
+        <div class="cai-field">
+          <label for="cai-model">שם מודל (אופציונלי)</label>
+          <input id="cai-model" type="text" dir="ltr" value="${escHtml(cfg.model || '')}" placeholder="${escHtml(def.model || 'gpt-4o-mini')}">
+        </div>
+        <div class="cai-modal-acts">
+          <button type="button" class="cai-save-btn" onclick="window.SiteAIConnect.saveFromModal()">שמור וחבר</button>
+          ${isConnected() ? `<button type="button" class="cai-del-btn" onclick="window.SiteAIConnect.disconnect()">נתק</button>` : ''}
+        </div>
+        <details class="cai-dev-box">
+          <summary style="cursor:pointer;font-weight:700;">איך לחבר דרך קוד / שרת משלך?</summary>
+          <div style="margin-top:6px;">אפשר להזין כאן מפתח API ישירות, או להגדיר שרת Proxy / Cloudflare Worker שמקבל בקשת <code>POST</code> ומחזיר <code>{ "text": "..." }</code>:</div>
+          <code>window.SITE_AI_CONNECT_CONFIG = {
+  provider: 'custom',
+  endpoint: 'https://your-worker.workers.dev/ai',
+  apiKey: 'optional-token'
+};</code>
+        </details>
+      </div>
+    `;
+    modal.classList.add('open');
+  }
+
+  function _onProvChange(val) {
+    const epRow = document.getElementById('cai-ep-row');
+    const keyEl = document.getElementById('cai-key');
+    const modEl = document.getElementById('cai-model');
+    const def = DEFAULTS[val] || DEFAULTS.openai;
+    if (epRow) epRow.style.display = val === 'custom' ? 'flex' : 'none';
+    if (keyEl) keyEl.placeholder = def.placeholder;
+    if (modEl) modEl.placeholder = def.model || 'model-name';
+  }
+
+  function saveFromModal() {
+    const provider = document.getElementById('cai-prov')?.value || 'openai';
+    const apiKey = document.getElementById('cai-key')?.value.trim() || '';
+    const model = document.getElementById('cai-model')?.value.trim() || '';
+    const endpoint = document.getElementById('cai-ep')?.value.trim() || '';
+    if (!apiKey && !endpoint) {
+      if (typeof showCopyToast === 'function') showCopyToast('יש להזין מפתח API או כתובת Endpoint');
+      return;
+    }
+    setConfig({ provider, apiKey, model, endpoint });
+    document.getElementById('connect-ai-modal')?.classList.remove('open');
+    const sel = document.getElementById('site-ai-model');
+    if (sel) {
+      sel.value = 'connected';
+      if (window._siteAiSetMode) window._siteAiSetMode('connected');
+    }
+    if (typeof showCopyToast === 'function') showCopyToast('ה-AI חובר בהצלחה! זמין גם בתוך עוזר ה-AI');
+  }
+
+  function disconnect() {
+    setConfig(null);
+    document.getElementById('connect-ai-modal')?.classList.remove('open');
+    if (typeof showCopyToast === 'function') showCopyToast('החיבור נותק');
+  }
+
+  async function send(q, img) {
+    const cfg = getConfig();
+    if (!cfg || (!cfg.apiKey && !cfg.endpoint)) {
+      return { text: '⚠️ לא מוגדר חיבור AI פעיל. לחץ על "Connect to your AI" כדי לחבר.', chips: [] };
+    }
+    const p = cfg.provider || 'openai';
+    const model = cfg.model || (DEFAULTS[p] && DEFAULTS[p].model) || '';
+    try {
+      if (p === 'openai') {
+        const content = img && img.dataUrl
+          ? [{ type: 'text', text: q }, { type: 'image_url', image_url: { url: img.dataUrl } }]
+          : q;
+        const r = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${cfg.apiKey}` },
+          body: JSON.stringify({ model, messages: [{ role: 'user', content }] })
+        });
+        const j = await r.json();
+        if (j.error) return { text: `⚠️ OpenAI: ${j.error.message || JSON.stringify(j.error)}`, chips: [] };
+        return { text: (j.choices?.[0]?.message?.content || '').trim() || '⚠️ תשובה ריקה מ-OpenAI', chips: [] };
+      }
+      if (p === 'claude') {
+        const content = img && img.base64
+          ? [{ type: 'image', source: { type: 'base64', media_type: img.mimeType || 'image/jpeg', data: img.base64 } }, { type: 'text', text: q }]
+          : q;
+        const r = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': cfg.apiKey,
+            'anthropic-version': '2023-06-01',
+            'anthropic-dangerous-direct-browser-access': 'true'
+          },
+          body: JSON.stringify({ model, max_tokens: 1024, messages: [{ role: 'user', content }] })
+        });
+        const j = await r.json();
+        if (j.error) return { text: `⚠️ Claude: ${j.error.message || JSON.stringify(j.error)}`, chips: [] };
+        return { text: (j.content?.[0]?.text || '').trim() || '⚠️ תשובה ריקה מ-Claude', chips: [] };
+      }
+      if (p === 'gemini') {
+        const parts = [{ text: q }];
+        if (img && img.base64) parts.push({ inline_data: { mime_type: img.mimeType || 'image/jpeg', data: img.base64 } });
+        const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(cfg.apiKey)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents: [{ parts }] })
+        });
+        const j = await r.json();
+        if (j.error) return { text: `⚠️ Gemini: ${j.error.message || JSON.stringify(j.error)}`, chips: [] };
+        return { text: (j.candidates?.[0]?.content?.parts?.[0]?.text || '').trim() || '⚠️ תשובה ריקה מ-Gemini', chips: [] };
+      }
+      const headers = { 'Content-Type': 'application/json' };
+      if (cfg.apiKey) headers['Authorization'] = `Bearer ${cfg.apiKey}`;
+      const r = await fetch(cfg.endpoint, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ prompt: q, model, imageBase64: img?.base64 || '', imageMimeType: img?.mimeType || '' })
+      });
+      const j = await r.json();
+      const txt = j?.text || j?.reply || j?.answer || j?.choices?.[0]?.message?.content || '';
+      return { text: String(txt).trim() || '⚠️ תשובה ריקה מהשרת המותאם', chips: [] };
+    } catch (err) {
+      return { text: `⚠️ שגיאת חיבור: ${err && err.message ? err.message : err}`, chips: [] };
+    }
+  }
+
+  window.SiteAIConnect = { getConfig, setConfig, isConnected, syncSelect, openIn, openSettings, saveFromModal, disconnect, send, _onProvChange };
+  if (document.body) paintBtn();
+  else document.addEventListener('DOMContentLoaded', paintBtn);
+})();
